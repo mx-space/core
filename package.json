@@ -2,14 +2,26 @@
   "name": "server-next",
   "version": "0.0.1",
   "description": "",
-  "author": "",
+  "author": "Innei",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --ignore-path ./.prettierignore --write "
+    ]
+  },
+  "homepage": "https://github.com/mx-space/server-next#readme",
   "scripts": {
+    "prepare": "husky install",
     "prebuild": "rimraf dist",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
+    "start": "cross-env NODE_ENV=development nest start -w",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
@@ -23,10 +35,22 @@
   "dependencies": {
     "@nestjs/common": "^8.0.4",
     "@nestjs/core": "^8.0.4",
-    "@nestjs/platform-express": "^8.0.4",
+    "@nestjs/platform-fastify": "^8.0.4",
+    "@nestjs/swagger": "^5.0.8",
+    "@typegoose/auto-increment": "^0.6.0",
+    "@typegoose/typegoose": "^7.6.3",
+    "fastify-swagger": "^4.8.3",
+    "husky": "^7.0.1",
+    "lint-staged": "^11.1.0",
+    "mongoose": "^5.13.3",
+    "mongoose-lean-virtuals": "^0.8.0",
+    "passport": "^0.4.1",
+    "passport-jwt": "^4.0.0",
+    "passport-local": "^1.0.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "rxjs": "^7.2.0"
+    "rxjs": "^7.2.0",
+    "snakecase-keys": "^4.0.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.2",
@@ -38,6 +62,7 @@
     "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "4.28.4",
     "@typescript-eslint/parser": "4.28.4",
+    "cross-env": "^7.0.3",
     "eslint": "^7.31.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.4.0",
