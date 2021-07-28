@@ -9,7 +9,7 @@ specifiers:
   '@nestjs/swagger': ^5.0.8
   '@nestjs/testing': ^8.0.4
   '@typegoose/auto-increment': ^0.6.0
-  '@typegoose/typegoose': ^7.6.3
+  '@typegoose/typegoose': 8.0.0
   '@types/express': ^4.17.13
   '@types/jest': ^26.0.24
   '@types/node': ^16.4.0
@@ -49,7 +49,7 @@ dependencies:
   '@nestjs/platform-fastify': 8.0.4_dbb23fa745e40b87eda38a58a66b6bd5
   '@nestjs/swagger': 5.0.8_8a33bebe899fbeffdca6cb260e5489d3
   '@typegoose/auto-increment': 0.6.0_mongoose@5.13.3
-  '@typegoose/typegoose': 7.6.3_mongoose@5.13.3
+  '@typegoose/typegoose': 8.0.0_mongoose@5.13.3
   chalk: 4.1.1
   fastify-swagger: 4.8.3
   husky: 7.0.1
@@ -997,12 +997,11 @@ packages:
       tslib: 2.3.0
     dev: false
 
-  /@typegoose/typegoose/7.6.3_mongoose@5.13.3:
-    resolution: {integrity: sha512-u12nUEmpMa0e+K8UuzAZvSnWZ7JZGo0yMs7HR4mG47gJJhVe/PIAzfXVPV+CJQBZrMSPyaEZ6HRKjmDxnjEgFg==}
-    engines: {node: '>=10.15.0'}
+  /@typegoose/typegoose/8.0.0_mongoose@5.13.3:
+    resolution: {integrity: sha512-UUzeXOXq6VQ3eUvWW8fvQkifsj92Rso8vCa7pQPGQgV4StHQxSxb6/7cASptxXMiDxeKZGPg1yP5ABymDQiASQ==}
+    engines: {node: '>=12.22.0'}
     peerDependencies:
-      '@types/mongoose': ~5.10.2
-      mongoose: 5.10.0 - 5.10.18
+      mongoose: ~5.13.3
     dependencies:
       lodash: 4.17.21
       loglevel: 1.7.1
