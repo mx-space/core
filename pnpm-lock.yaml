@@ -10,6 +10,7 @@ specifiers:
   '@nestjs/testing': ^8.0.4
   '@typegoose/auto-increment': ^0.6.0
   '@typegoose/typegoose': 8.0.0
+  '@types/bcrypt': ^5.0.0
   '@types/express': ^4.17.13
   '@types/jest': ^26.0.24
   '@types/node': ^16.4.0
@@ -53,6 +54,7 @@ dependencies:
   '@nestjs/swagger': 5.0.8_00ec01bd1a1595869e3c10a21b92c5e7
   '@typegoose/auto-increment': 0.6.0_mongoose@5.13.3
   '@typegoose/typegoose': 8.0.0_mongoose@5.13.3
+  '@types/bcrypt': 5.0.0
   bcrypt: 5.0.1
   chalk: 4.1.1
   class-transformer: 0.4.0
@@ -1067,6 +1069,12 @@ packages:
       '@babel/types': 7.14.8
     dev: true
 
+  /@types/bcrypt/5.0.0:
+    resolution: {integrity: sha512-agtcFKaruL8TmcvqbndlqHPSJgsolhf/qPWchFlgnW1gECTN/nKbFcoFnvKAQRFfKbh+BO6A3SWdJu9t+xF3Lw==}
+    dependencies:
+      '@types/node': 16.4.6
+    dev: false
+
   /@types/body-parser/1.19.1:
     resolution: {integrity: sha512-a6bTJ21vFOGIkwM0kzh9Yr89ziVxq4vYH2fQ6N8AeipEzai/cFK6aGMArIkUeIdRIgpwQa+2bXiLuUJCpSf2Cg==}
     dependencies:
@@ -1179,6 +1187,10 @@ packages:
 
   /@types/node/16.4.1:
     resolution: {integrity: sha512-UW7cbLqf/Wu5XH2RKKY1cHwUNLicIDRLMraYKz+HHAerJ0ZffUEk+fMnd8qU2JaS6cAy0r8tsaf7yqHASf/Y0Q==}
+    dev: false
+
+  /@types/node/16.4.6:
+    resolution: {integrity: sha512-FKyawK3o5KL16AwbeFajen8G4K3mmqUrQsehn5wNKs8IzlKHE8TfnSmILXVMVziAEcnB23u1RCFU1NT6hSyr7Q==}
     dev: false
 
   /@types/parse-json/4.0.0:
