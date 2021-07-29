@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  prod:
+    container_name: mx-space-server
+    image: mx-space-server:1.0.0
+    build:
+      context: .
+      target: production
+      dockerfile: ./Dockerfile
+    command: npm run start:prod
+    ports:
+      - 2333:2333
+    networks:
+      - nesjs-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
+
+networks:
+  nesjs-network:
