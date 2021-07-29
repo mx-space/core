@@ -5,7 +5,8 @@ import { fastifyApp } from './core/adapt/fastify'
 import { isDev } from './utils'
 import { Logger } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-const PORT = parseInt(process.env.PORT) || 2333
+// const PORT = parseInt(process.env.PORT) || 2333
+const PORT = 2333
 const APIVersion = 1
 const Origin = process.env.ORIGIN || ''
 
