@@ -1,4 +1,4 @@
-import { prop } from '@typegoose/typegoose'
+import { prop, modelOptions } from '@typegoose/typegoose'
 import { IsNotEmpty, IsString } from 'class-validator'
 export class BaseModel {
   created?: Date

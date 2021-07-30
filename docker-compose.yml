@@ -1,6 +1,8 @@
 version: '3.8'
 
 services:
+  links:
+    - redis
   prod:
     container_name: mx-space-server
     image: mx-space-server:1.0.0
@@ -12,11 +14,17 @@ services:
     ports:
       - 2333:2333
     networks:
-      - nesjs-network
+      - nestjs-network
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
     restart: unless-stopped
 
+redis:
+  image: redis
+  container_name: cache
+  expose:
+    - 6379
+
 networks:
-  nesjs-network:
+  nestjs-network:

@@ -7,13 +7,14 @@ WORKDIR /usr/src/app
 COPY package.json ./
 COPY pnpm-lock.yaml ./
 
-RUN pnpm install glob rimraf
+RUN pnpm install -D glob rimraf @vercel/ncc
 
-RUN pnpm install --only=development
+RUN pnpm install
+RUN pnpm run build
+COPY . .
+RUN pnpm run bundle
 
 COPY . .
-
-RUN pnpm run build
 
 FROM node:16 as production
 
@@ -24,13 +25,9 @@ ENV NODE_ENV=${NODE_ENV}
 
 WORKDIR /usr/src/app
 
-COPY package.json ./
-COPY pnpm-lock.yaml ./
+RUN pnpm i -g pm2
 
-RUN pnpm install --only=production
-RUN pnpm install pm2 --D
-COPY . .
+COPY --from=development /usr/src/app/build ./dist
 
-COPY --from=development /usr/src/app/dist ./dist
-
-CMD ["pm2-prod", "ecosystem.config.js"]
+EXPOSE 2333
+CMD ["pm2-runtime", "ecosystem.config.js"]

@@ -1,6 +1,6 @@
 {
   "name": "server-next",
-  "version": "0.0.1",
+  "version": "3.0.0-alpha.0",
   "description": "",
   "author": "Innei",
   "private": true,
@@ -20,6 +20,8 @@
     "prepare": "husky install",
     "prebuild": "rimraf dist",
     "build": "nest build",
+    "prebundle": "rimraf build",
+    "bundle": "ncc build dist/main.js -o build && ln -s build/index.js build/main.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "cross-env NODE_ENV=development nest start -w",
     "start:dev": "nest start --watch",
@@ -48,6 +50,7 @@
     "chalk": "^4.1.1",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
+    "fastify": "^3.19.2",
     "fastify-swagger": "^4.8.3",
     "husky": "^7.0.1",
     "lint-staged": "^11.1.0",
@@ -60,6 +63,9 @@
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "snakecase-keys": "^4.0.2"
+  },
+  "optionalDependencies": {
+    "@vercel/ncc": "latest"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.2",
