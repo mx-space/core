@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { AppController } from './app.controller'
-import { AppService } from './app.service'
 
 describe('AppController', () => {
   let appController: AppController
@@ -8,15 +7,19 @@ describe('AppController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
     }).compile()
 
     appController = app.get<AppController>(AppController)
   })
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!')
+    it('should return has schema object', async () => {
+      const obj = await appController.appInfo()
+      expect(Object.keys(obj)).toStrictEqual(['name', 'version', 'hash'])
+    })
+
+    it('should return pong', () => {
+      expect(appController.ping()).toBe('pong')
     })
   })
 })
