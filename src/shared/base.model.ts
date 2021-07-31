@@ -1,4 +1,4 @@
-import { prop } from '@typegoose/typegoose'
+import { modelOptions, prop } from '@typegoose/typegoose'
 import { IsNotEmpty, IsString } from 'class-validator'
 export class BaseModel {
   created?: Date
@@ -47,4 +47,16 @@ export abstract class WriteBaseModel extends BaseCommentIndexModel {
 
   @prop({ default: () => new Date() })
   modified: Date
+}
+
+@modelOptions({
+  schemaOptions: { id: false, _id: false },
+  options: { customName: 'count' },
+})
+export class CountMixed {
+  @prop({ default: 0 })
+  read?: number
+
+  @prop({ default: 0 })
+  like?: number
 }

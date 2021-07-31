@@ -1,14 +1,15 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
-import { fastifyApp } from './core/adapt/fastify'
+import { fastifyApp } from './common/adapt/fastify'
 import { isDev } from './utils'
 import { Logger } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { CROSS_DOMAIN } from './app.config'
 // const PORT = parseInt(process.env.PORT) || 2333
 const PORT = 2333
 const APIVersion = 1
-const Origin = process.env.ORIGIN || ''
+const Origin = CROSS_DOMAIN.allowedOrigins
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -16,7 +17,7 @@ async function bootstrap() {
     fastifyApp,
   )
 
-  const hosts = Origin.split(',').map((host) => new RegExp(host, 'i'))
+  const hosts = Origin.map((host) => new RegExp(host, 'i'))
 
   app.enableCors({
     origin: (origin, callback) => {
@@ -47,6 +48,7 @@ async function bootstrap() {
     if (isDev) {
       Logger.debug(`http://localhost:${PORT}/api-docs`)
     }
+
     Logger.log('Server is up.')
   })
 }
