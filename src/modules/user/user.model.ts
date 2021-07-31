@@ -1,7 +1,13 @@
-import { DocumentType, modelOptions, prop } from '@typegoose/typegoose'
+import {
+  DocumentType,
+  modelOptions,
+  prop,
+  Severity,
+} from '@typegoose/typegoose'
 import { Schema } from 'mongoose'
-import { BaseModel } from 'src/shared/base.module'
+
 import { hashSync } from 'bcrypt'
+import { BaseModel } from 'src/shared/base.model'
 export type UserDocument = DocumentType<UserModel>
 
 export class OAuthModel {
@@ -25,7 +31,7 @@ export class TokenModel {
   name: string
 }
 
-@modelOptions({ options: { customName: 'User' } })
+@modelOptions({ options: { customName: 'User', allowMixed: Severity.ALLOW } })
 export class UserModel extends BaseModel {
   @prop({ required: true, unique: true, trim: true })
   username!: string
