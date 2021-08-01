@@ -45,8 +45,8 @@ export abstract class WriteBaseModel extends BaseCommentIndexModel {
   @prop({ type: Image })
   images?: Image[]
 
-  @prop({ default: () => new Date() })
-  modified: Date
+  @prop({ default: null })
+  modified: Date | null
 }
 
 @modelOptions({
