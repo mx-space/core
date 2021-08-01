@@ -4,8 +4,8 @@ import { AppController } from './app.controller'
 import { InitModule } from './modules/init/init.module'
 import { UserModule } from './modules/user/user.module'
 import { HelperModule } from './modules/helper/helper.module'
-import { PostModule } from './modules/post/post.module';
-import { CategoryModule } from './modules/category/category.module';
+import { PostModule } from './modules/post/post.module'
+import { CategoryModule } from './modules/category/category.module'
 
 @Module({
   imports: [
