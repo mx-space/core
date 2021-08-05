@@ -44,7 +44,7 @@
     "@nestjs/platform-fastify": "^8.0.4",
     "@nestjs/swagger": "^5.0.8",
     "@typegoose/auto-increment": "^0.6.0",
-    "@typegoose/typegoose": "8.0.0",
+    "@typegoose/typegoose": "8.1.1",
     "@types/bcrypt": "^5.0.0",
     "argv": "^0.0.2",
     "bcrypt": "^5.0.1",
