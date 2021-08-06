@@ -10,7 +10,7 @@ specifiers:
   '@nestjs/schematics': ^8.0.2
   '@nestjs/swagger': ^5.0.8
   '@nestjs/testing': ^8.0.4
-  '@typegoose/auto-increment': ^0.6.0
+  '@typegoose/auto-increment': 0.9.0
   '@typegoose/typegoose': 8.0.0
   '@types/bcrypt': ^5.0.0
   '@types/express': ^4.17.13
@@ -60,7 +60,7 @@ dependencies:
   '@nestjs/passport': 8.0.0_8ffbbd1dfbd3e60a0a9ef125c15ec754
   '@nestjs/platform-fastify': 8.0.4_dbb23fa745e40b87eda38a58a66b6bd5
   '@nestjs/swagger': 5.0.8_00ec01bd1a1595869e3c10a21b92c5e7
-  '@typegoose/auto-increment': 0.6.0_mongoose@5.13.3
+  '@typegoose/auto-increment': 0.9.0_mongoose@5.13.3
   '@typegoose/typegoose': 8.0.0_mongoose@5.13.3
   '@types/bcrypt': 5.0.0
   argv: 0.0.2
@@ -1054,12 +1054,11 @@ packages:
     resolution: {integrity: sha512-eZxlbI8GZscaGS7kkc/trHTT5xgrjH3/1n2JDwusC9iahPKWMRvRjJSAN5mCXviuTGQ/lHnhvv8Q1YTpnfz9gA==}
     dev: true
 
-  /@typegoose/auto-increment/0.6.0_mongoose@5.13.3:
-    resolution: {integrity: sha512-LLRJ7CoUbcRHtRUDhHV8g6KFhiR72VdYH24kgUa6cXRIDpB8rawIbyr5eZzd/2s7mrKyNtfpTlnJAjw5ZaIGYg==}
-    engines: {node: '>=10.15.0'}
+  /@typegoose/auto-increment/0.9.0_mongoose@5.13.3:
+    resolution: {integrity: sha512-BgL4oLL81zDmVBMyexO0zZ21kXSe4IdeQZJzg+NN6JLbk8Q7IH3KWJX6tJNvbb6lMk8ZPDHPrV5Mnpf7xFRYWA==}
+    engines: {node: '>=12.22.0'}
     peerDependencies:
-      '@types/mongoose': ^5.7.32
-      mongoose: ^5.9.25
+      mongoose: ~5.13.3
     dependencies:
       loglevel: 1.7.1
       mongoose: 5.13.3
