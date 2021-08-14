@@ -1,7 +1,7 @@
-import { forwardRef } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
-import { getFakeCategoryModel, getFakePostModel } from 'test/db-model.mock'
-import { CategoryModule } from '../category/category.module'
+import { getFakeCategoryModel } from 'test/db-model.mock'
+import { CategoryService } from '../category/category.service'
+import { DbModule } from '../helper/db.module'
 import { PostService } from './post.service'
 
 describe('PostService', () => {
@@ -9,8 +9,8 @@ describe('PostService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [getFakePostModel(), getFakeCategoryModel(), PostService],
-      imports: [forwardRef(() => CategoryModule)],
+      providers: [PostService, CategoryService, getFakeCategoryModel()],
+      imports: [DbModule],
     }).compile()
 
     service = module.get<PostService>(PostService)
