@@ -10,6 +10,7 @@ import { CROSS_DOMAIN } from './app.config'
 const PORT = 2333
 const APIVersion = 1
 const Origin = CROSS_DOMAIN.allowedOrigins
+declare const module: any
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -51,5 +52,10 @@ async function bootstrap() {
 
     Logger.log('Server is up.')
   })
+
+  if (module.hot) {
+    module.hot.accept()
+    module.hot.dispose(() => app.close())
+  }
 }
 bootstrap()

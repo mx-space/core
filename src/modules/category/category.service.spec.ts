@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { getFakeCategoryModel, getFakePostModel } from 'test/db-model.mock'
+import { DbModule } from '../helper/db.module'
 import { PostModule } from '../post/post.module'
 import { CategoryService } from './category.service'
 
@@ -8,8 +8,8 @@ describe('CategoryService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [getFakePostModel(), getFakeCategoryModel(), CategoryService],
-      imports: [PostModule],
+      providers: [CategoryService],
+      imports: [PostModule, DbModule],
     }).compile()
 
     service = module.get<CategoryService>(CategoryService)
