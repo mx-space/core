@@ -65,7 +65,7 @@
     "rimraf": "^3.0.2",
     "rxjs": "^7.3.0",
     "snakecase-keys": "^4.0.2",
-    "zx": "^2.1.0"
+    "zx": "3.1.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.1.1",

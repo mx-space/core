@@ -54,7 +54,7 @@ specifiers:
   typescript: ^4.3.5
   webpack: ^5.50.0
   webpack-node-externals: ^3.0.0
-  zx: ^2.1.0
+  zx: 3.1.0
 
 dependencies:
   '@nestjs/common': 8.0.6_7de7ece315067f012f2001b6a7f20971
@@ -85,7 +85,7 @@ dependencies:
   rimraf: 3.0.2
   rxjs: 7.3.0
   snakecase-keys: 4.0.2
-  zx: 2.1.0
+  zx: 3.1.0
 
 devDependencies:
   '@nestjs/cli': 8.1.1
@@ -3043,7 +3043,7 @@ packages:
     resolution: {integrity: sha512-C5owb14u9eJwizKGdchcDUQeFtlSHHthBk8pbX9Vc1PFZrLombudjDnNns88aYslCyF6IY5SUw3Roz6xShcEIQ==}
     engines: {node: '>=12'}
     dependencies:
-      graceful-fs: 4.2.6
+      graceful-fs: 4.2.8
       jsonfile: 6.1.0
       universalify: 2.0.0
 
@@ -3179,9 +3179,9 @@ packages:
       slash: 3.0.0
     dev: true
 
-  /globby/12.0.0:
-    resolution: {integrity: sha512-3mOIUduqSMHm6gNjIw9E641TZ93NB8lFVt+6MKIw6vUaIS5aSsw/6cl0gT86z1IoKlaL90BiOQlA593GUMlzEA==}
-    engines: {node: '>=12.20'}
+  /globby/12.0.1:
+    resolution: {integrity: sha512-AofdCGi+crQ1uN9+nMbTnvC4XGNPJN9hRiPf+A76lUZIZoWoj4Z9iyUQGge7xCGKgR/7ejB36qoIlLoDBc7fYw==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dependencies:
       array-union: 3.0.1
       dir-glob: 3.0.1
@@ -3193,6 +3193,7 @@ packages:
 
   /graceful-fs/4.2.6:
     resolution: {integrity: sha512-nTnJ528pbqxYanhpDYsi4Rd8MAeaBA67+RZ10CM1m3bTAVFEDcd5AuA4a6W5YkGZ1iNXHzZz8T6TBKLeBuNriQ==}
+    dev: true
 
   /graceful-fs/4.2.8:
     resolution: {integrity: sha512-qkIilPUYcNhJpd33n0GBXTB1MMPp14TxEsEs0pTrsSVucApsYzW5V+Q8Qxhik6KU3evy+qkAAowTByymK0avdg==}
@@ -6351,8 +6352,8 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /zx/2.1.0:
-    resolution: {integrity: sha512-7mCJ92ev894l94w5aXkdQoZ9iE6qXERLMPp/uMhTumGKtyhvN8tWprqFFHiXGS/31HxEy1NtNd9NHmYjGHd85A==}
+  /zx/3.1.0:
+    resolution: {integrity: sha512-Dwm75vWiWPsZhZXRUmneeZQlMbRXJBDLMy+QGDyKDID2+Dkp6LCzlXTrW7VOmU66K1/w8dEcJ5r3zFCDW0kx1Q==}
     engines: {node: '>= 14.8.0'}
     hasBin: true
     dependencies:
@@ -6362,7 +6363,7 @@ packages:
       '@types/node-fetch': 2.5.12
       chalk: 4.1.2
       fs-extra: 10.0.0
-      globby: 12.0.0
+      globby: 12.0.1
       minimist: 1.2.5
       node-fetch: 2.6.1
       which: 2.0.2
