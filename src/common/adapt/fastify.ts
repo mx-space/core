@@ -1,6 +1,6 @@
 import { FastifyAdapter } from '@nestjs/platform-fastify'
 
-export const fastifyApp = new FastifyAdapter({
+export const fastifyApp: FastifyAdapter = new FastifyAdapter({
   trustProxy: true,
 })
 

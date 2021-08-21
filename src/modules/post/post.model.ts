@@ -1,6 +1,6 @@
 import { index, modelOptions, prop, Ref, Severity } from '@typegoose/typegoose'
 import { Schema } from 'mongoose'
-import { CountMixed as Count, WriteBaseModel } from '~/shared/base.model'
+import { CountMixed as Count, WriteBaseModel } from '~/shared/model/base.model'
 import { CategoryModel as Category } from '../category/category.model'
 
 @index({ slug: 1 })
