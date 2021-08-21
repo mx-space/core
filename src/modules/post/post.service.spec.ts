@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { getFakeCategoryModel } from 'test/db-model.mock'
 import { CategoryService } from '../category/category.service'
-import { DbModule } from '../helper/db.module'
+import { DbModule } from '../../processors/database/database.module'
 import { PostService } from './post.service'
 
 describe('PostService', () => {

@@ -1,5 +1,5 @@
 import { DocumentType, index, modelOptions, prop } from '@typegoose/typegoose'
-import { BaseModel } from '~/shared/base.model'
+import { BaseModel } from '~/shared/model/base.model'
 
 export type CategoryDocument = DocumentType<CategoryModel>
 

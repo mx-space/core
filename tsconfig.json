@@ -11,6 +11,7 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": ".",
+    "noImplicitAny": false,
     "incremental": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,

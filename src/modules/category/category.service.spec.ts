@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { DbModule } from '../helper/db.module'
+import { DbModule } from '../../processors/database/database.module'
 import { PostModule } from '../post/post.module'
 import { CategoryService } from './category.service'
 

@@ -9,8 +9,6 @@ export class CategoryService {
   constructor(
     @InjectModel(CategoryModel)
     private readonly categoryModel: ReturnModelType<typeof CategoryModel>,
-
-    private postService: PostService,
   ) {}
 
   findCategoryById(categoryId: string) {
