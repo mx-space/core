@@ -1,7 +1,9 @@
 import { Controller, Get } from '@nestjs/common'
 import PKG from '../package.json'
 import { execSync } from 'child_process'
+import { ApiTags } from '@nestjs/swagger'
 @Controller()
+@ApiTags('Root')
 export class AppController {
   @Get()
   async appInfo(): Promise<IAppInfo> {

@@ -7,7 +7,7 @@ import {
 import { Schema } from 'mongoose'
 
 import { hashSync } from 'bcrypt'
-import { BaseModel } from 'src/shared/base.model'
+import { BaseModel } from '~/shared/model/base.model'
 export type UserDocument = DocumentType<UserModel>
 
 export class OAuthModel {
