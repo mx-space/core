@@ -976,10 +976,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/ioredis@4.26.7":
-  version "4.26.7"
-  resolved "https://registry.yarnpkg.com/@types/ioredis/-/ioredis-4.26.7.tgz#8c8174b9db38f71f0e372174c66a031a2ca7d9cf"
-  integrity sha512-TOGRR+e1to00CihjgPNygD7+G7ruVnMi62YdIvGUBRfj11k/aWq+Fv5Ea8St0Oy56NngTBfA8GvLn1uvHvhX6Q==
+"@types/ioredis@4.27.1":
+  version "4.27.1"
+  resolved "https://registry.yarnpkg.com/@types/ioredis/-/ioredis-4.27.1.tgz#f1c2d8a4341ed5ff9f4dd7aebfb38e275e3b3197"
+  integrity sha512-+JichYPCtVapxi5Z+7V/8Uhn+4Piz+rkb03JQTQ0kW0pkV71+bmzSTkpwmIqa7FfWIszp0VbRyN8gfgWDNQMdA==
   dependencies:
     "@types/node" "*"
 

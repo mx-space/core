@@ -78,7 +78,7 @@
     "@nestjs/cli": "^8.1.1",
     "@nestjs/schematics": "^8.0.2",
     "@nestjs/testing": "^8.0.6",
-    "@types/ioredis": "4.26.7",
+    "@types/ioredis": "4.27.1",
     "@types/jest": "^27.0.1",
     "@types/lodash": "^4.14.172",
     "@types/node": "^16.7.1",
