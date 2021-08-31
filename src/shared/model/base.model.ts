@@ -1,6 +1,8 @@
+import { ApiHideProperty } from '@nestjs/swagger'
 import { modelOptions, prop } from '@typegoose/typegoose'
-import { IsNotEmpty, IsString } from 'class-validator'
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator'
 export class BaseModel {
+  @ApiHideProperty()
   created?: Date
 }
 
@@ -26,9 +28,12 @@ class Image {
 
 export abstract class BaseCommentIndexModel extends BaseModel {
   @prop({ default: 0 })
+  @ApiHideProperty()
   commentsIndex?: number
 
   @prop({ default: true })
+  @IsBoolean()
+  @IsOptional()
   allowComment: boolean
 }
 
@@ -43,9 +48,11 @@ export abstract class WriteBaseModel extends BaseCommentIndexModel {
   text: string
 
   @prop({ type: Image })
+  @ApiHideProperty()
   images?: Image[]
 
   @prop({ default: null })
+  @ApiHideProperty()
   modified: Date | null
 }
 
