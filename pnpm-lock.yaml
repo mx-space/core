@@ -79,7 +79,6 @@ dependencies:
   '@nestjs/websockets': 8.0.6_d9cb7157596bf7c6176480174d173b36
   '@typegoose/auto-increment': 0.9.0_mongoose@5.13.8
   '@typegoose/typegoose': 8.2.0_mongoose@5.13.8
-  '@types/bcrypt': 5.0.0
   argv: 0.0.2
   bcrypt: 5.0.1
   cache-manager: 3.4.4
@@ -107,6 +106,7 @@ devDependencies:
   '@nestjs/cli': 8.1.1
   '@nestjs/schematics': 8.0.3_typescript@4.4.2
   '@nestjs/testing': 8.0.6_67f7e5db8827badcb202b1d38f6b1aea
+  '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.2
   '@types/ioredis': 4.27.1
   '@types/jest': 27.0.1
@@ -1233,7 +1233,7 @@ packages:
     resolution: {integrity: sha512-agtcFKaruL8TmcvqbndlqHPSJgsolhf/qPWchFlgnW1gECTN/nKbFcoFnvKAQRFfKbh+BO6A3SWdJu9t+xF3Lw==}
     dependencies:
       '@types/node': 16.7.8
-    dev: false
+    dev: true
 
   /@types/body-parser/1.19.1:
     resolution: {integrity: sha512-a6bTJ21vFOGIkwM0kzh9Yr89ziVxq4vYH2fQ6N8AeipEzai/cFK6aGMArIkUeIdRIgpwQa+2bXiLuUJCpSf2Cg==}
