@@ -7,11 +7,11 @@ import {
   Logger,
 } from '@nestjs/common'
 import { FastifyReply, FastifyRequest } from 'fastify'
+import { writeFileSync } from 'fs'
+import { resolve } from 'path'
+import { LOGGER_DIR } from '~/constants/path.constant'
 import { isDev } from '~/utils/index.util'
 import { getIp } from '../../utils/ip.util'
-import { writeFileSync } from 'fs'
-import { LOGGER_DIR } from '~/constants/path.constant'
-import { resolve } from 'path'
 type myError = {
   readonly status: number
   readonly statusCode?: number

@@ -1,4 +1,4 @@
-export enum RedisNames {
+export enum RedisKeys {
   Access = 'access',
   Like = 'like',
   Read = 'read',

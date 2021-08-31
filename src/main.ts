@@ -1,17 +1,17 @@
+import { Logger } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
-import { AppModule } from './app.module'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
-import { fastifyApp } from './common/adapt/fastify'
-import { isDev } from './utils/index.util'
-import { CacheInterceptor, Logger } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { CROSS_DOMAIN } from './app.config'
+import { AppModule } from './app.module'
+import { fastifyApp } from './common/adapt/fastify'
+import { SpiderGuard } from './common/guard/spider.guard'
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import {
   JSONSerializeInterceptor,
   ResponseInterceptor,
 } from './common/interceptors/response.interceptors'
-import { SpiderGuard } from './common/guard/spider.guard'
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
+import { isDev } from './utils/index.util'
 // const PORT = parseInt(process.env.PORT) || 2333
 const PORT = 2333
 const APIVersion = 1

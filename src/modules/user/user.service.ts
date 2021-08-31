@@ -6,9 +6,13 @@ import {
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 import { compareSync } from 'bcrypt'
+import dayjs from 'dayjs'
 import { nanoid } from 'nanoid'
 import { InjectModel } from 'nestjs-typegoose'
+import { RedisKeys } from '~/constants/cache.constant'
+import { CacheService } from '~/processors/cache/cache.service'
 import { getAvatar } from '~/utils/index.util'
+import { getRedisKey } from '~/utils/redis.util'
 import { AuthService } from '../auth/auth.service'
 import { UserDocument, UserModel } from './user.model'
 
@@ -19,6 +23,7 @@ export class UserService {
     @InjectModel(UserModel)
     private readonly userModel: ReturnModelType<typeof UserModel>,
     private readonly authService: AuthService,
+    private readonly redis: CacheService,
   ) {}
 
   async getMasterInfo(getLoginIp = false) {
@@ -100,30 +105,19 @@ export class UserService {
       lastLoginIp: ip,
     })
     // save to redis
-    new Promise(async (resolve) => {
-      // const redisClient = this.redisService.getClient(RedisNames.LoginRecord)
-      // const dateFormat = dayjs().format('YYYY-MM-DD')
-      // const value = JSON.parse(
-      //   (await redisClient.get(dateFormat)) || '[]',
-      // ) as LoginRecord[]
-      // const stringify = fastJson({
-      //   title: 'login-record schema',
-      //   type: 'array',
-      //   items: {
-      //     type: 'object',
-      //     properties: {
-      //       ip: { type: 'string' },
-      //       date: { type: 'string' },
-      //     },
-      //   },
-      // })
-      // await redisClient.set(
-      //   dateFormat,
-      //   stringify(value.concat({ date: new Date().toISOString(), ip })),
-      // )
-      // resolve(null)
+    process.nextTick(async () => {
+      const redisClient = this.redis.getClient()
+      const dateFormat = dayjs().format('YYYY-MM-DD')
+
+      await redisClient.sadd(
+        getRedisKey(RedisKeys.LoginRecord, dateFormat),
+        JSON.stringify({ date: new Date().toISOString(), ip }),
+      )
     })
+
     this.Logger.warn('主人已登录, IP: ' + ip)
     return PrevFootstep
   }
+
+  // TODO 获取最近登陆次数 时间 从 Redis 取
 }

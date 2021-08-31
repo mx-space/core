@@ -9,17 +9,18 @@ import {
   SerializeOptions,
   UseGuards,
 } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { HttpCache } from '~/common/decorator/cache.decorator'
 import { CurrentUser } from '~/common/decorator/current-user.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
+import { IsMaster } from '~/common/decorator/role.decorator'
+import { getAvatar } from '~/utils/index.util'
 import { AuthService } from '../auth/auth.service'
 import { RolesGuard } from '../auth/roles.guard'
+import { LoginDto, UserDto, UserPatchDto } from './dto/user.dto'
 import { UserDocument, UserModel } from './user.model'
 import { UserService } from './user.service'
-import { IsMaster } from '~/common/decorator/role.decorator'
-import { AuthGuard } from '@nestjs/passport'
-import { getAvatar } from '~/utils/index.util'
-import { LoginDto, UserDto, UserPatchDto } from './dto/user.dto'
 
 @ApiTags('User Routes')
 @Controller(['master', 'user'])
@@ -50,6 +51,7 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: '登录' })
   @UseGuards(AuthGuard('local'))
+  @HttpCache({ disable: true })
   async login(
     @Body() dto: LoginDto,
     @CurrentUser() user: UserDocument,
@@ -76,14 +78,16 @@ export class UserController {
   @ApiOperation({ summary: '判断当前 Token 是否有效 ' })
   @ApiBearerAuth()
   @UseGuards(RolesGuard)
+  @HttpCache({ disable: true })
   checkLogged(@IsMaster() isMaster: boolean) {
-    return { ok: Number(isMaster), isGuest: !isMaster }
+    return { ok: +isMaster, isGuest: !isMaster }
   }
 
   @Patch()
   @ApiOperation({ summary: '修改主人的信息 ' })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
+  @HttpCache({ disable: true })
   async patchMasterData(
     @Body() body: UserPatchDto,
     @CurrentUser() user: UserDocument,

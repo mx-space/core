@@ -7,9 +7,8 @@
  * @Coding with Love
  */
 
-import { FastifyRequest } from 'fastify'
+import type { FastifyRequest } from 'fastify'
 import { IncomingMessage } from 'http'
-
 export const getIp = (request: FastifyRequest | IncomingMessage) => {
   const _ = request as any
 

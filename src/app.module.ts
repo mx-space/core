@@ -1,5 +1,4 @@
 import {
-  CacheInterceptor,
   MiddlewareConsumer,
   Module,
   NestModule,
@@ -60,8 +59,8 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AnalyzeMiddleware)
-      .forRoutes({ path: '*', method: RequestMethod.GET })
+      .forRoutes({ path: '(.*?)', method: RequestMethod.GET })
       .apply(SkipBrowserDefaultRequestMiddleware, SecurityMiddleware)
-      .forRoutes({ path: '*', method: RequestMethod.ALL })
+      .forRoutes({ path: '(.*?)', method: RequestMethod.ALL })
   }
 }
