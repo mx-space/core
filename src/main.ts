@@ -3,7 +3,7 @@ import { AppModule } from './app.module'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { fastifyApp } from './common/adapt/fastify'
 import { isDev } from './utils'
-import { Logger } from '@nestjs/common'
+import { CacheInterceptor, Logger } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { CROSS_DOMAIN } from './app.config'
 // const PORT = parseInt(process.env.PORT) || 2333

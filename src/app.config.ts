@@ -1,4 +1,5 @@
 import argv from 'argv'
+import { isDev } from './utils'
 export const CROSS_DOMAIN = {
   allowedOrigins: [
     'innei.ren',
@@ -24,5 +25,8 @@ export const REDIS = {
   port: argv.redis_port || 6379,
   password: (argv.redis_password || null) as string,
   ttl: null,
-  defaultCacheTTL: 60 * 60 * 24,
+  httpCacheTTL: 5,
+  max: 5,
+  disableApiCache:
+    (isDev || argv.disableCache) && !process.env['ENABLE_CACHE_DEBUG'],
 }

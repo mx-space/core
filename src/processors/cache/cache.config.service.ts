@@ -31,6 +31,7 @@ export class CacheConfigService implements CacheOptionsFactory {
       // https://github.com/dabroek/node-cache-manager-redis-store/blob/master/CHANGELOG.md#breaking-changes
       // Any value (undefined | null) return true (cacheable) after redisStore v2.0.0
       is_cacheable_value: () => true,
+      max: REDIS.max,
       ...redisOptions,
     }
   }

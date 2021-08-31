@@ -1,6 +1,8 @@
-import { Module } from '@nestjs/common'
+import { CacheInterceptor, Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
+import { APP_INTERCEPTOR } from '@nestjs/core'
 import { AppController } from './app.controller'
+import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
 import { AuthModule } from './modules/auth/auth.module'
 // must after post
 import { CategoryModule } from './modules/category/category.module'
@@ -38,5 +40,11 @@ import { HelperModule } from './processors/helper/helper.module'
     HelperModule,
   ],
   controllers: [AppController],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpCacheInterceptor,
+    },
+  ],
 })
 export class AppModule {}
