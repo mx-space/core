@@ -1,7 +1,7 @@
 import { applyDecorators, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { ApiBearerAuth, ApiUnauthorizedResponse } from '@nestjs/swagger'
-import { isDev } from '~/utils'
+import { isDev } from '~/utils/index.util'
 
 export function Auth() {
   const decorators = []

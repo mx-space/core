@@ -1,8 +1,17 @@
-import { CacheInterceptor, Module } from '@nestjs/common'
+import {
+  CacheInterceptor,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { AppController } from './app.controller'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
+import { AnalyzeMiddleware } from './common/middlewares/analyze.middleware'
+import { SkipBrowserDefaultRequestMiddleware } from './common/middlewares/favicon.middleware'
+import { SecurityMiddleware } from './common/middlewares/security.middleware'
 import { AuthModule } from './modules/auth/auth.module'
 // must after post
 import { CategoryModule } from './modules/category/category.module'
@@ -47,4 +56,12 @@ import { HelperModule } from './processors/helper/helper.module'
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AnalyzeMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.GET })
+      .apply(SkipBrowserDefaultRequestMiddleware, SecurityMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL })
+  }
+}

@@ -9,7 +9,7 @@
 
 import { createParamDecorator, ExecutionContext } from '@nestjs/common'
 import { FastifyRequest } from 'fastify'
-import { getIp } from '~/utils/ip'
+import { getIp } from '~/utils/ip.util'
 
 export type IpRecord = {
   ip: string

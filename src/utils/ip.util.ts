@@ -24,3 +24,10 @@ export const getIp = (request: FastifyRequest | IncomingMessage) => {
   }
   return ip
 }
+
+export const parseRelativeUrl = (path: string) => {
+  if (!path || !path.startsWith('/')) {
+    return new URL('http://a.com')
+  }
+  return new URL('http://a.com' + path)
+}

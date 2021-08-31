@@ -8,7 +8,7 @@
  */
 import { homedir } from 'os'
 import { join } from 'path'
-import { isDev } from '~/utils'
+import { isDev } from '~/utils/index.util'
 
 export const HOME = homedir()
 

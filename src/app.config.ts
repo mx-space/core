@@ -1,5 +1,5 @@
 import argv from 'argv'
-import { isDev } from './utils'
+import { isDev } from './utils/index.util'
 export const CROSS_DOMAIN = {
   allowedOrigins: [
     'innei.ren',

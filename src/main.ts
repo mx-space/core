@@ -2,10 +2,16 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { fastifyApp } from './common/adapt/fastify'
-import { isDev } from './utils'
+import { isDev } from './utils/index.util'
 import { CacheInterceptor, Logger } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { CROSS_DOMAIN } from './app.config'
+import {
+  JSONSerializeInterceptor,
+  ResponseInterceptor,
+} from './common/interceptors/response.interceptors'
+import { SpiderGuard } from './common/guard/spider.guard'
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 // const PORT = parseInt(process.env.PORT) || 2333
 const PORT = 2333
 const APIVersion = 1
@@ -30,6 +36,10 @@ async function bootstrap() {
   })
 
   app.setGlobalPrefix(isDev ? '' : `api/v${APIVersion}`)
+  app.useGlobalInterceptors(new ResponseInterceptor())
+  app.useGlobalInterceptors(new JSONSerializeInterceptor())
+  app.useGlobalInterceptors(new LoggingInterceptor())
+  app.useGlobalGuards(new SpiderGuard())
   if (isDev) {
     const options = new DocumentBuilder()
       .setTitle('API')
