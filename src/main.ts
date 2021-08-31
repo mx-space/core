@@ -39,6 +39,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor())
   app.useGlobalInterceptors(new JSONSerializeInterceptor())
   app.useGlobalInterceptors(new LoggingInterceptor())
+
   app.useGlobalGuards(new SpiderGuard())
   if (isDev) {
     const options = new DocumentBuilder()

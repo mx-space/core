@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   Logger,
   UnprocessableEntityException,
@@ -11,7 +12,7 @@ import { nanoid } from 'nanoid'
 import { InjectModel } from 'nestjs-typegoose'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
-import { getAvatar } from '~/utils/index.util'
+import { getAvatar, sleep } from '~/utils/index.util'
 import { getRedisKey } from '~/utils/redis.util'
 import { AuthService } from '../auth/auth.service'
 import { UserDocument, UserModel } from './user.model'
@@ -25,6 +26,20 @@ export class UserService {
     private readonly authService: AuthService,
     private readonly redis: CacheService,
   ) {}
+
+  async login(username: string, password: string) {
+    const user = await this.userModel.findOne({ username }).select('+password')
+    if (!user) {
+      await sleep(3000)
+      throw new ForbiddenException('用户名不正确')
+    }
+    if (!compareSync(password, user.password)) {
+      await sleep(3000)
+      throw new ForbiddenException('密码不正确')
+    }
+
+    return user
+  }
 
   async getMasterInfo(getLoginIp = false) {
     const user = await this.userModel

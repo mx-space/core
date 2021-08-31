@@ -1,11 +1,10 @@
-import { HttpModule, Module } from '@nestjs/common'
+import { Module } from '@nestjs/common'
 import { JwtModule } from '@nestjs/jwt'
 import { PassportModule } from '@nestjs/passport'
+import { AdminEventsGateway } from '../../processors/gateway/admin/events.gateway'
+import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
 import { JwtStrategy } from './jwt.strategy'
-import { LocalStrategy } from './local.strategy'
-import { AuthController } from './auth.controller'
-import { AdminEventsGateway } from '../../processors/gateway/admin/events.gateway'
 
 const jwtModule = JwtModule.registerAsync({
   useFactory() {
@@ -18,9 +17,9 @@ const jwtModule = JwtModule.registerAsync({
   },
 })
 @Module({
-  imports: [PassportModule, jwtModule, HttpModule],
-  providers: [AuthService, JwtStrategy, LocalStrategy, AdminEventsGateway],
+  imports: [PassportModule, jwtModule],
+  providers: [AuthService, JwtStrategy, AdminEventsGateway],
   controllers: [AuthController],
-  exports: [JwtStrategy, LocalStrategy, AuthService, jwtModule],
+  exports: [JwtStrategy, AuthService, jwtModule],
 })
 export class AuthModule {}

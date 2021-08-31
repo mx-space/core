@@ -2,8 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
-  HttpStatus,
   Patch,
   Post,
   SerializeOptions,
@@ -48,15 +46,10 @@ export class UserController {
   }
 
   @Post('login')
-  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: '登录' })
-  @UseGuards(AuthGuard('local'))
   @HttpCache({ disable: true })
-  async login(
-    @Body() dto: LoginDto,
-    @CurrentUser() user: UserDocument,
-    @IpLocation() ipLocation: IpRecord,
-  ) {
+  async login(@Body() dto: LoginDto, @IpLocation() ipLocation: IpRecord) {
+    const user = await this.userService.login(dto.username, dto.password)
     const footstep = await this.userService.recordFootstep(ipLocation.ip)
     const { name, username, created, url, mail } = user
     const avatar = user.avatar ?? getAvatar(mail)

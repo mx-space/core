@@ -4,14 +4,19 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  Inject,
   Logger,
 } from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { writeFileSync } from 'fs'
 import { resolve } from 'path'
+import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 import { LOGGER_DIR } from '~/constants/path.constant'
+import { REFLECTOR } from '~/constants/system.constant'
 import { isDev } from '~/utils/index.util'
 import { getIp } from '../../utils/ip.util'
+import { LoggingInterceptor } from '../interceptors/logging.interceptor'
 type myError = {
   readonly status: number
   readonly statusCode?: number
@@ -22,6 +27,7 @@ type myError = {
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger('捕获异常')
+  constructor(@Inject(REFLECTOR) private reflector: Reflector) {}
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp()
     const response = ctx.getResponse<FastifyReply>()
@@ -52,6 +58,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
           (exception as myError)?.message
         } \n ${(exception as Error).stack || ''} \n`,
         { encoding: 'utf-8', flag: 'a+' },
+      )
+    }
+    // @ts-ignore
+    const prevRequestTs = this.reflector.get(HTTP_REQUEST_TIME, request as any)
+
+    if (prevRequestTs) {
+      const content = request.method + ' -> ' + request.url
+      Logger.debug(
+        '--- 响应请求：' + content + ` +${+new Date() - prevRequestTs}ms`,
+        LoggingInterceptor.name,
       )
     }
 

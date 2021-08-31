@@ -9,3 +9,7 @@ export function getAvatar(mail: string) {
   }
   return `https://sdn.geekzu.org/avatar/${md5(mail)}`
 }
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}

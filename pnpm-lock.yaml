@@ -50,7 +50,6 @@ specifiers:
   nestjs-typegoose: ^7.1.38
   passport: ^0.4.1
   passport-jwt: ^4.0.0
-  passport-local: ^1.0.0
   prettier: ^2.3.2
   redis: 3.1.2
   reflect-metadata: ^0.1.13
@@ -97,7 +96,6 @@ dependencies:
   nestjs-typegoose: 7.1.38_bb3ea2c1752afb15cff36bd3a0bffc79
   passport: 0.4.1
   passport-jwt: 4.0.0
-  passport-local: 1.0.0
   redis: 3.1.2
   reflect-metadata: 0.1.13
   rxjs: 7.3.0
@@ -5203,13 +5201,6 @@ packages:
     resolution: {integrity: sha512-BwC0n2GP/1hMVjR4QpnvqA61TxenUMlmfNjYNgK0ZAs0HK4SOQkHcSv4L328blNTLtHq7DbmvyNJiH+bn6C5Mg==}
     dependencies:
       jsonwebtoken: 8.5.1
-      passport-strategy: 1.0.0
-    dev: false
-
-  /passport-local/1.0.0:
-    resolution: {integrity: sha1-H+YyaMkudWBmJkN+O5BmYsFbpu4=}
-    engines: {node: '>= 0.4.0'}
-    dependencies:
       passport-strategy: 1.0.0
     dev: false
 
