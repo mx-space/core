@@ -1,5 +1,13 @@
+import { PartialType } from '@nestjs/mapped-types'
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
-import { index, modelOptions, prop, Ref, Severity } from '@typegoose/typegoose'
+import {
+  index,
+  modelOptions,
+  plugin,
+  prop,
+  Ref,
+  Severity,
+} from '@typegoose/typegoose'
 import {
   ArrayUnique,
   IsBoolean,
@@ -8,6 +16,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator'
+import Paginate from 'mongoose-paginate-v2'
 import { CountMixed as Count, WriteBaseModel } from '~/shared/model/base.model'
 import { CategoryModel as Category } from '../category/category.model'
 
@@ -15,6 +24,7 @@ import { CategoryModel as Category } from '../category/category.model'
 @index({ modified: -1 })
 @index({ text: 'text' })
 @modelOptions({ options: { customName: 'Post', allowMixed: Severity.ALLOW } })
+@plugin(Paginate)
 export class PostModel extends WriteBaseModel {
   @prop({ trim: true, unique: true, required: true })
   @IsString()
@@ -63,3 +73,5 @@ export class PostModel extends WriteBaseModel {
   @ApiHideProperty()
   count?: Count
 }
+
+export class PartialPostModel extends PartialType(PostModel) {}

@@ -5,23 +5,23 @@
  * @author Surmon <https://github.com/surmon-china>
  */
 
-import { tap } from 'rxjs/operators'
-import { Observable, of } from 'rxjs'
-import { Reflector } from '@nestjs/core'
 import {
-  HttpAdapterHost,
-  NestInterceptor,
-  ExecutionContext,
   CallHandler,
+  ExecutionContext,
+  HttpAdapterHost,
   Inject,
   Injectable,
+  NestInterceptor,
   RequestMethod,
 } from '@nestjs/common'
-import { CacheService } from '~/processors/cache/cache.service'
-import * as SYSTEM from '~/constants/system.constant'
-import * as META from '~/constants/meta.constant'
-import { REDIS } from '~/app.config'
+import { Reflector } from '@nestjs/core'
 import { IncomingMessage } from 'http'
+import { Observable, of } from 'rxjs'
+import { tap } from 'rxjs/operators'
+import { REDIS } from '~/app.config'
+import * as META from '~/constants/meta.constant'
+import * as SYSTEM from '~/constants/system.constant'
+import { CacheService } from '~/processors/cache/cache.service'
 /**
  * @class HttpCacheInterceptor
  * @classdesc 弥补框架不支持单独定义 ttl 参数以及单请求应用的缺陷
@@ -90,14 +90,6 @@ export class HttpCacheInterceptor implements NestInterceptor {
       context.getHandler(),
     )
     const isMatchedCache = isHttpApp && isGetRequest && cacheKey
-    // const requestUrl = httpServer.getRequestUrl(request);
-    // console.log('isMatchedCache', isMatchedCache, 'requestUrl', requestUrl, 'cacheKey', cacheKey);
-    // 缓存命中策略 -> http -> GET -> cachekey -> url -> undefined
     return isMatchedCache ? cacheKey : undefined
-    /*
-     return undefined;
-     return isMatchedCache ? requestUrl : undefined;
-     return isMatchedCache ? (cacheKey || requestUrl) : undefined;
-     */
   }
 }

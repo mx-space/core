@@ -13,4 +13,8 @@ export class CategoryService {
   findCategoryById(categoryId: string) {
     return this.categoryModel.findById(categoryId)
   }
+
+  get model() {
+    return this.categoryModel
+  }
 }

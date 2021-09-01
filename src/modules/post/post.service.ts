@@ -4,8 +4,8 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
 import { omit } from 'lodash'
+import { FilterQuery, PaginateOptions } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { EventTypes } from '~/processors/gateway/events.types'
@@ -17,11 +17,21 @@ import { PostModel } from './post.model'
 export class PostService {
   constructor(
     @InjectModel(PostModel)
-    private readonly postModel: ReturnModelType<typeof PostModel>,
+    private readonly postModel: MongooseModel<PostModel>,
     @Inject(forwardRef(() => CategoryService))
     private categoryService: CategoryService,
     private readonly webgateway: WebEventsGateway,
   ) {}
+
+  get model() {
+    return this.postModel
+  }
+  findWithPaginator(
+    condition?: FilterQuery<PostModel>,
+    options?: PaginateOptions,
+  ) {
+    return this.postModel.paginate(condition as any, options)
+  }
 
   async create(post: PostModel) {
     const { categoryId } = post
@@ -66,13 +76,23 @@ export class PostService {
     // 看看 category 改了没
     const { categoryId } = data
     if (categoryId) {
+      const category = await this.categoryService.findCategoryById(
+        categoryId as any as string,
+      )
+      if (!category) {
+        throw new BadRequestException('分类不存在')
+      }
     }
-    this.postModel.updateOne(
+    await this.postModel.updateOne(
       {
         _id: id,
       },
       omit(data, ['id', '_id']),
     )
+  }
+
+  async getCategoryBySlug(slug: string) {
+    return await this.categoryService.model.findOne({ slug })
   }
 
   async isAvailableSlug(slug: string) {

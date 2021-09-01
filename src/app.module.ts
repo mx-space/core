@@ -9,6 +9,10 @@ import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { AppController } from './app.controller'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
+import {
+  JSONSerializeInterceptor,
+  ResponseInterceptor,
+} from './common/interceptors/response.interceptors'
 import { AnalyzeMiddleware } from './common/middlewares/analyze.middleware'
 import { SkipBrowserDefaultRequestMiddleware } from './common/middlewares/favicon.middleware'
 import { SecurityMiddleware } from './common/middlewares/security.middleware'
@@ -53,6 +57,14 @@ import { HelperModule } from './processors/helper/helper.module'
     {
       provide: APP_INTERCEPTOR,
       useClass: HttpCacheInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: JSONSerializeInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
     },
     {
       provide: APP_FILTER,

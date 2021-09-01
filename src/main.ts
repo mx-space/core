@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common'
+import { Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
@@ -7,10 +7,6 @@ import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapt/fastify'
 import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
-import {
-  JSONSerializeInterceptor,
-  ResponseInterceptor,
-} from './common/interceptors/response.interceptors'
 import { isDev } from './utils/index.util'
 // const PORT = parseInt(process.env.PORT) || 2333
 const PORT = 2333
@@ -36,9 +32,17 @@ async function bootstrap() {
   })
 
   app.setGlobalPrefix(isDev ? '' : `api/v${APIVersion}`)
-  app.useGlobalInterceptors(new ResponseInterceptor())
-  app.useGlobalInterceptors(new JSONSerializeInterceptor())
   app.useGlobalInterceptors(new LoggingInterceptor())
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      errorHttpStatusCode: 422,
+      forbidUnknownValues: true,
+      enableDebugMessages: isDev,
+      stopAtFirstError: true,
+    }),
+  )
 
   app.useGlobalGuards(new SpiderGuard())
   if (isDev) {

@@ -13,11 +13,14 @@ import {
   NestInterceptor,
   UnprocessableEntityException,
 } from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
 import { isArrayLike, isObjectLike } from 'lodash'
+import { PaginateResult } from 'mongoose'
 import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
-
 import snakecaseKeys from 'snakecase-keys'
+import { HTTP_RES_TRANSFORM_PAGINATE } from '~/constants/meta.constant'
+import { Paginator } from '~/shared/model/base.model'
 
 export interface Response<T> {
   data: T
@@ -25,6 +28,7 @@ export interface Response<T> {
 
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
+  constructor(private readonly reflector: Reflector) {}
   intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -38,15 +42,39 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
         : { data }
     }
     return next.handle().pipe(
-      map((data) =>
-        typeof data === 'undefined'
-          ? // HINT: hack way to solve `undefined` as cache value set into redis got an error.
-            ''
-          : typeof data === 'object' && data !== null
-          ? { ...reorganize(data) }
-          : data,
-      ),
+      map((data) => {
+        if (typeof data === 'undefined') {
+          return ''
+        }
+        if (
+          this.reflector.get(HTTP_RES_TRANSFORM_PAGINATE, context.getHandler())
+        ) {
+          return this.transformDataToPaginate(data)
+        }
+        if (typeof data === 'object' && data !== null) {
+          return reorganize(data)
+        }
+
+        return data
+      }),
     )
+  }
+
+  private transformDataToPaginate(data: PaginateResult<T>): {
+    data: T[]
+    pagination: Paginator
+  } {
+    return {
+      data: data.docs,
+      pagination: {
+        total: data.totalDocs,
+        currentPage: data.page as number,
+        totalPage: data.totalPages as number,
+        size: data.limit,
+        hasNextPage: data.hasNextPage,
+        hasPrevPage: data.hasPrevPage,
+      },
+    }
   }
 }
 

@@ -20,8 +20,6 @@ export class CacheService {
   private logger = new Logger(CacheService.name)
 
   constructor(@Inject(CACHE_MANAGER) cache: Cache) {
-    console.log(cache)
-
     this.cache = cache
     this.redisClient.on('ready', () => {
       this.logger.log('Redis 已准备好！')

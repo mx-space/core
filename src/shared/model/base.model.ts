@@ -1,9 +1,31 @@
 import { ApiHideProperty } from '@nestjs/swagger'
 import { modelOptions, prop } from '@typegoose/typegoose'
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+
 export class BaseModel {
   @ApiHideProperty()
   created?: Date
+}
+
+export interface Paginator {
+  /**
+   * 总条数
+   */
+  total: number
+  /**
+   * 一页多少条
+   */
+  size: number
+  /**
+   * 当前页
+   */
+  currentPage: number
+  /**
+   * 总页数
+   */
+  totalPage: number
+  hasNextPage: boolean
+  hasPrevPage: boolean
 }
 
 @modelOptions({
