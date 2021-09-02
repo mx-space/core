@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   NotFoundException,
@@ -13,10 +14,13 @@ import {
 } from '@nestjs/common'
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Types } from 'mongoose'
+import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
-import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
+import { UpdateDocumentCount } from '~/common/decorator/update-count.decorator'
+import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { MongoIdDto } from '~/shared/dto/id.dto'
+import { SearchDto } from '~/shared/dto/search.dto'
 import {
   addConditionToSeeHideContent,
   addYearCondition,
@@ -52,12 +56,27 @@ export class PostController {
     )
   }
 
+  @Get('/:id')
+  @UpdateDocumentCount('Post')
+  async getById(@Param() params: MongoIdDto) {
+    const { id } = params
+    const doc = await this.postService.model.findById(id)
+    if (!doc) {
+      throw new CannotFindException()
+    }
+    return doc
+  }
+
+  @Get('/latest')
+  @UpdateDocumentCount('Post')
+  async getLatest() {
+    return this.postService.model.findOne().sort({ created: -1 })
+  }
+
   @Get('/:category/:slug')
   @ApiOperation({ summary: '根据分类名和自定义别名获取' })
-  async getByCateAndSlug(
-    @Param() params: CategoryAndSlug,
-    @IpLocation() location: IpRecord,
-  ) {
+  @UpdateDocumentCount('Post')
+  async getByCateAndSlug(@Param() params: CategoryAndSlug) {
     const { category, slug } = params
 
     const categoryDocument = await this.postService.getCategoryBySlug(category)
@@ -74,14 +93,13 @@ export class PostController {
       .populate('category')
 
     if (!postDocument) {
-      throw new NotFoundException('该文章未找到 (｡ŏ_ŏ)')
+      throw new CannotFindException()
     }
-    // TODO
-    // this.service.updateReadCount(postDocument, location.ip)
     return postDocument
   }
 
   @Post('/')
+  @Auth()
   async create(@Body() body: PostModel) {
     const _id = Types.ObjectId()
 
@@ -92,6 +110,7 @@ export class PostController {
   }
 
   @Put('/:id')
+  @Auth()
   async update(@Param() params: MongoIdDto, @Body() body: PostModel) {
     await this.postService.updateById(params.id, body)
     return this.postService.findById(params.id)
@@ -99,7 +118,36 @@ export class PostController {
 
   @Patch('/:id')
   @HttpCode(204)
+  @Auth()
   async patch(@Param() params: MongoIdDto, @Body() body: PartialPostModel) {
     return await this.postService.updateById(params.id, body)
+  }
+
+  @Delete(':id')
+  @Auth()
+  @HttpCode(204)
+  async deletePost(@Param() params: MongoIdDto) {
+    const { id } = params
+    await this.postService.deletePost(id)
+
+    return
+  }
+
+  @Get('search')
+  async searchPost(@Query() query: SearchDto) {
+    const { keyword, page, size } = query
+    const select = '_id title created modified categoryId slug'
+    const keywordArr = keyword
+      .split(/\s+/)
+      .map((item) => new RegExp(String(item), 'ig'))
+    return await this.postService.findWithPaginator(
+      { $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }] },
+      {
+        limit: size,
+        page,
+        select,
+        populate: 'categoryId',
+      },
+    )
   }
 }

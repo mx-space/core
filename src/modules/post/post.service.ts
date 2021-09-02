@@ -11,6 +11,7 @@ import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CategoryService } from '../category/category.service'
+import { CommentModel } from '../comment/comment.model'
 import { PostModel } from './post.model'
 
 @Injectable()
@@ -18,6 +19,9 @@ export class PostService {
   constructor(
     @InjectModel(PostModel)
     private readonly postModel: MongooseModel<PostModel>,
+    @InjectModel(CommentModel)
+    private readonly commentModel: MongooseModel<CommentModel>,
+
     @Inject(forwardRef(() => CategoryService))
     private categoryService: CategoryService,
     private readonly webgateway: WebEventsGateway,
@@ -51,6 +55,7 @@ export class PostService {
       created: new Date(),
       modified: null,
     })
+
     // TODO: clean cache
     process.nextTick(async () => {
       this.webgateway.broadcast(EventTypes.POST_CREATE, {
@@ -89,6 +94,16 @@ export class PostService {
       },
       omit(data, ['id', '_id']),
     )
+  }
+
+  async deletePost(id: string) {
+    await Promise.all([
+      this.model.deleteOne({ _id: id }),
+      this.commentModel.deleteMany({ pid: id }),
+    ])
+    process.nextTick(() => {
+      this.webgateway.broadcast(EventTypes.POST_DELETE, id)
+    })
   }
 
   async getCategoryBySlug(slug: string) {
