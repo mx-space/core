@@ -55,6 +55,10 @@ export class UserService {
   async hasMaster() {
     return !!(await this.userModel.countDocuments())
   }
+
+  getMaster() {
+    return this.userModel.findOne().lean()
+  }
   async createMaster(
     model: Pick<UserModel, 'username' | 'name' | 'password'> &
       Partial<Pick<UserModel, 'introduce' | 'avatar' | 'url'>>,
