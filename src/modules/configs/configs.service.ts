@@ -1,37 +1,63 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 import { InjectModel } from 'nestjs-typegoose'
-import { UserModel } from '../user/user.model'
+import { UserService } from '../user/user.service'
 import { BackupOptions, MailOptionsDto, SEODto, UrlDto } from './configs.dto'
 import { IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
 
+const defaultConfig = {
+  seo: {
+    title: 'mx-space',
+    description: 'Hello World~',
+  },
+  url: {
+    wsUrl: 'http://localhost:8080', //todo
+    adminUrl: 'http://localhost:9528',
+    serverUrl: 'http://localhost:2333',
+    webUrl: 'http://localhost:2323',
+  },
+  mailOptions: {} as MailOptionsDto,
+  commentOptions: { antiSpam: false },
+  backupOptions: { enable: false } as BackupOptions,
+  baiduSearchOptions: { enable: false },
+}
 @Injectable()
 export class ConfigsService {
-  private config: IConfig = {
-    seo: {
-      title: 'mx-space',
-      description: 'Hello World~',
-    },
-    url: {
-      wsUrl: 'http://localhost:8080', //todo
-      adminUrl: 'http://localhost:9528',
-      serverUrl: 'http://localhost:2333',
-      webUrl: 'http://localhost:2323',
-    },
-    mailOptions: {} as MailOptionsDto,
-    commentOptions: { antiSpam: false },
-    backupOptions: { enable: false } as BackupOptions,
-    baiduSearchOptions: { enable: false },
-  }
-
+  private config: IConfig = defaultConfig
+  private logger: Logger
   constructor(
     @InjectModel(OptionModel)
     private readonly optionModel: ReturnModelType<typeof OptionModel>,
-    @InjectModel(UserModel)
-    private readonly userModel: ReturnModelType<typeof UserModel>,
+    private readonly userService: UserService,
   ) {
     this.configInit()
+    this.logger = new Logger(ConfigsService.name)
+  }
+  private configInitd = false
+  public waitForConfigReady() {
+    return new Promise<IConfig>(async (r, j) => {
+      const maxCount = 5
+      let curCount = 0
+
+      const check = () => {
+        if (curCount >= maxCount) {
+          j('检查数据库连接')
+          timer = clearTimeout(timer)
+        }
+        if (this.configInitd) {
+          r({ ...this.config })
+          timer = clearTimeout(timer)
+        } else {
+          check()
+        }
+        curCount += 1
+      }
+
+      let timer: any = setTimeout(() => {
+        check()
+      }, 1000)
+    })
   }
 
   protected async configInit() {
@@ -41,6 +67,8 @@ export class ConfigsService {
       const value = field.value
       this.config[name] = value
     })
+    this.configInitd = true
+    this.logger.log('Config 已经加载完毕！')
   }
 
   public get seo() {
@@ -79,11 +107,7 @@ export class ConfigsService {
     return this.config[key]
   }
 
-  public async getMaster() {
-    const master = await this.userModel.findOne()
-    if (!master) {
-      throw new UnprocessableEntityException('未初始化')
-    }
-    return master
+  get getMaster() {
+    return this.userService.getMaster
   }
 }

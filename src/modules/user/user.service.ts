@@ -56,9 +56,14 @@ export class UserService {
     return !!(await this.userModel.countDocuments())
   }
 
-  getMaster() {
-    return this.userModel.findOne().lean()
+  public async getMaster() {
+    const master = await this.userModel.findOne().lean()
+    if (!master) {
+      throw new BadRequestException('我还没有主人')
+    }
+    return master
   }
+
   async createMaster(
     model: Pick<UserModel, 'username' | 'name' | 'password'> &
       Partial<Pick<UserModel, 'introduce' | 'avatar' | 'url'>>,
