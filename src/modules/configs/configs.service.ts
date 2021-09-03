@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 import { InjectModel } from 'nestjs-typegoose'
+import { sleep } from '~/utils/index.util'
 import { UserService } from '../user/user.service'
-import { BackupOptions, MailOptionsDto, SEODto, UrlDto } from './configs.dto'
+import { BackupOptions, MailOptionsDto } from './configs.dto'
 import { IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
 
@@ -37,26 +38,26 @@ export class ConfigsService {
   private configInitd = false
   public waitForConfigReady() {
     return new Promise<IConfig>(async (r, j) => {
-      const maxCount = 5
-      let curCount = 0
-
-      const check = () => {
-        if (curCount >= maxCount) {
-          j('检查数据库连接')
-          timer = clearTimeout(timer)
-        }
-        if (this.configInitd) {
-          r({ ...this.config })
-          timer = clearTimeout(timer)
-        } else {
-          check()
-        }
-        curCount += 1
+      // 开始等待, 后续调用直接返回
+      if (this.configInitd) {
+        r(this.config)
+        return
       }
 
-      let timer: any = setTimeout(() => {
-        check()
-      }, 1000)
+      const maxCount = 10
+      let curCount = 0
+      do {
+        if (this.configInitd) {
+          r({ ...this.config })
+          return
+        }
+        await sleep(100)
+        curCount += 1
+      } while (curCount < maxCount)
+
+      j(`重试 ${curCount} 次获取配置失败, 请检查数据库连接`)
+
+      return
     })
   }
 
@@ -77,14 +78,6 @@ export class ConfigsService {
 
   public get url() {
     return this.config.url
-  }
-
-  async setSEO(seo: SEODto) {
-    return await this.patch('seo', seo)
-  }
-
-  async setUrl(url: UrlDto) {
-    return await this.patch('url', url)
   }
 
   public get<T extends keyof IConfig>(key: T): Readonly<IConfig[T]> {

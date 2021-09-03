@@ -22,6 +22,7 @@ import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
 import { InitModule } from './modules/init/init.module'
+import { OptionModule } from './modules/option/option.module'
 import { PostModule } from './modules/post/post.module'
 import { UserModule } from './modules/user/user.module'
 import { CacheModule } from './processors/cache/cache.module'
@@ -52,6 +53,7 @@ import { HelperModule } from './processors/helper/helper.module'
     UserModule,
     CommentModule,
     ConfigsModule,
+    OptionModule,
 
     GatewayModule,
     HelperModule,
