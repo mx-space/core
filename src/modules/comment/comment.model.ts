@@ -12,11 +12,10 @@ function autoPopulateSubs(next: () => void) {
 }
 
 export enum CommentRefTypes {
-  PostModel = 'PostModel',
-  NoteModel = 'NoteModel',
-  PageModel = 'PageModel',
+  Post = 'Post',
+  Note = 'Note',
+  Page = 'Page',
 }
-
 export enum CommentState {
   Unread,
   Read,

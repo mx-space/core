@@ -26,7 +26,9 @@ export class UserService {
     private readonly authService: AuthService,
     private readonly redis: CacheService,
   ) {}
-
+  public get model() {
+    return this.userModel
+  }
   async login(username: string, password: string) {
     const user = await this.userModel.findOne({ username }).select('+password')
     if (!user) {
