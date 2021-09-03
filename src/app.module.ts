@@ -18,8 +18,9 @@ import { AnalyzeMiddleware } from './common/middlewares/analyze.middleware'
 import { SkipBrowserDefaultRequestMiddleware } from './common/middlewares/favicon.middleware'
 import { SecurityMiddleware } from './common/middlewares/security.middleware'
 import { AuthModule } from './modules/auth/auth.module'
-// must after post
 import { CategoryModule } from './modules/category/category.module'
+import { CommentModule } from './modules/comment/comment.module'
+import { ConfigsModule } from './modules/configs/configs.module'
 import { InitModule } from './modules/init/init.module'
 import { PostModule } from './modules/post/post.module'
 import { UserModule } from './modules/user/user.module'
@@ -49,6 +50,8 @@ import { HelperModule } from './processors/helper/helper.module'
     CategoryModule,
     AuthModule,
     UserModule,
+    CommentModule,
+    ConfigsModule,
 
     GatewayModule,
     HelperModule,

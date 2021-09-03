@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common'
 import { TypegooseModule } from 'nestjs-typegoose'
 import { MONGO_DB } from '~/app.config'
 import { CommentModel } from '~/modules/comment/comment.model'
+import { OptionModel } from '~/modules/configs/configs.model'
 import { NoteModel } from '~/modules/note/note.model'
 import { PageModel } from '~/modules/page/page.model'
 import { CategoryModel } from '../../modules/category/category.model'
@@ -15,6 +16,7 @@ const models = TypegooseModule.forFeature([
   CommentModel,
   NoteModel,
   PageModel,
+  OptionModel,
 ])
 @Module({
   imports: [
