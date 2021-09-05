@@ -1,11 +1,11 @@
 import { Controller, Get } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
+import { ApiName } from '~/common/decorator/openapi.decorator'
 import { UserService } from '../user/user.service'
 
 @Controller({
   path: '/init',
 })
-@ApiTags('Init Routes')
+@ApiName
 export class InitController {
   constructor(private readonly userService: UserService) {}
 

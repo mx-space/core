@@ -9,10 +9,11 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { HttpCache } from '~/common/decorator/cache.decorator'
 import { CurrentUser } from '~/common/decorator/current-user.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
+import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { getAvatar } from '~/utils/index.util'
 import { AuthService } from '../auth/auth.service'
@@ -21,7 +22,7 @@ import { LoginDto, UserDto, UserPatchDto } from './user.dto'
 import { UserDocument, UserModel } from './user.model'
 import { UserService } from './user.service'
 
-@ApiTags('User Routes')
+@ApiName
 @Controller(['master', 'user'])
 export class UserController {
   constructor(

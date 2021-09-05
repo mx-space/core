@@ -11,10 +11,11 @@ import {
   Query,
   Req,
 } from '@nestjs/common'
-import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
+import { ApiOperation, ApiParam } from '@nestjs/swagger'
 import { DocumentType } from '@typegoose/typegoose'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
+import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { EventTypes } from '~/processors/gateway/events.types'
@@ -31,7 +32,7 @@ import {
 import { CommentModel, CommentRefTypes, CommentState } from './comment.model'
 import { CommentService } from './comment.service'
 @Controller({ path: 'comments' })
-@ApiTags('Comment Routes')
+@ApiName
 export class CommentController {
   constructor(
     private readonly commentService: CommentService,

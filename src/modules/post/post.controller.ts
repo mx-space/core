@@ -12,10 +12,11 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
-import { ApiOperation, ApiTags } from '@nestjs/swagger'
+import { ApiOperation } from '@nestjs/swagger'
 import { Types } from 'mongoose'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
+import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { UpdateDocumentCount } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -31,7 +32,7 @@ import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'
 
 @Controller('posts')
-@ApiTags('Post Routes')
+@ApiName
 @UseGuards(RolesGuard)
 export class PostController {
   constructor(private readonly postService: PostService) {}

@@ -1,12 +1,3 @@
-/*
- * @Author: Innei
- * @Date: 2020-05-26 11:10:24
- * @LastEditTime: 2020-05-30 14:12:53
- * @LastEditors: Innei
- * @FilePath: /mx-server/src/auth/auth.controller.ts
- * @Copyright
- */
-
 import {
   Body,
   Controller,
@@ -17,7 +8,7 @@ import {
   Scope,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
 import {
   IsDate,
@@ -27,11 +18,10 @@ import {
   IsString,
 } from 'class-validator'
 import { Auth } from '~/common/decorator/auth.decorator'
-import { IsGuest, IsMaster as Master } from '~/common/decorator/role.decorator'
+import { ApiName } from '~/common/decorator/openapi.decorator'
+import { IsMaster as Master } from '~/common/decorator/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-
 import { AdminEventsGateway } from '../../processors/gateway/admin/events.gateway'
-
 import { AuthService } from './auth.service'
 import { RolesGuard } from './roles.guard'
 
@@ -50,7 +40,7 @@ export class TokenDto {
   path: 'auth',
   scope: Scope.REQUEST,
 })
-@ApiTags('Auth Routes')
+@ApiName
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
