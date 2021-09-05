@@ -5,7 +5,7 @@ import {
   RequestMethod,
 } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { AppController } from './app.controller'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
@@ -18,6 +18,7 @@ import { AnalyzeMiddleware } from './common/middlewares/analyze.middleware'
 import { SkipBrowserDefaultRequestMiddleware } from './common/middlewares/favicon.middleware'
 import { SecurityMiddleware } from './common/middlewares/security.middleware'
 import { AuthModule } from './modules/auth/auth.module'
+import { RolesGuard } from './modules/auth/roles.guard'
 import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
@@ -78,10 +79,13 @@ import { HelperModule } from './processors/helper/helper.module'
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
     },
-
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
 })

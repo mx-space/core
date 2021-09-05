@@ -15,6 +15,7 @@ import { map } from 'rxjs'
 import { ArticleType } from '~/constants/article.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { HTTP_RES_UPDATE_DOC_COUNT_TYPE } from '~/constants/meta.constant'
+import { NoteModel } from '~/modules/note/note.model'
 import { PostModel } from '~/modules/post/post.model'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getIp } from '~/utils/ip.util'
@@ -27,6 +28,8 @@ export class CountingInterceptor<T> implements NestInterceptor<T, any> {
     private readonly reflector: Reflector,
     @InjectModel(PostModel)
     private readonly postModel: MongooseModel<PostModel>,
+    @InjectModel(NoteModel)
+    private readonly noteModel: MongooseModel<NoteModel>,
     private readonly redis: CacheService,
   ) {
     this.logger = new Logger(CountingInterceptor.name)
@@ -69,6 +72,7 @@ export class CountingInterceptor<T> implements NestInterceptor<T, any> {
     }
     const modelMap = {
       Post: this.postModel,
+      Note: this.noteModel,
     } as const
 
     const model = modelMap[type]

@@ -1,10 +1,18 @@
 import { ApiHideProperty } from '@nestjs/swagger'
-import { modelOptions, prop } from '@typegoose/typegoose'
+import { modelOptions, plugin, prop } from '@typegoose/typegoose'
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import mongooseLeanVirtuals from 'mongoose-lean-virtuals'
+import Paginate from 'mongoose-paginate-v2'
 
+@plugin(mongooseLeanVirtuals)
+@plugin(Paginate)
 export class BaseModel {
   @ApiHideProperty()
   created?: Date
+
+  static get protectedKeys() {
+    return ['created']
+  }
 }
 
 export interface Paginator {
@@ -57,6 +65,10 @@ export abstract class BaseCommentIndexModel extends BaseModel {
   @IsBoolean()
   @IsOptional()
   allowComment: boolean
+
+  static get protectedKeys() {
+    return ['commentsIndex'].concat(super.protectedKeys)
+  }
 }
 
 @modelOptions({
@@ -84,6 +96,10 @@ export abstract class WriteBaseModel extends BaseCommentIndexModel {
   @prop({ default: null })
   @ApiHideProperty()
   modified: Date | null
+
+  static get protectedKeys() {
+    return super.protectedKeys
+  }
 }
 
 @modelOptions({

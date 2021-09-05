@@ -1,3 +1,5 @@
+import { isObject } from 'lodash'
+
 export * from './ip.util'
 export const isDev = process.env.NODE_ENV == 'development'
 
@@ -43,4 +45,18 @@ export function arrDifference(a1: string[], a2: string[]) {
   }
 
   return diff
+}
+
+export const deleteKeys = <T extends KV>(
+  target: T,
+  keys: readonly (keyof T)[],
+): Partial<T> => {
+  if (!isObject(target)) {
+    throw new TypeError('target must be Object, got ' + target)
+  }
+
+  for (const key of keys) {
+    Reflect.deleteProperty(target, key)
+  }
+  return target
 }

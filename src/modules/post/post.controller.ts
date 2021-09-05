@@ -10,7 +10,6 @@ import {
   Post,
   Put,
   Query,
-  UseGuards,
 } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 import { Types } from 'mongoose'
@@ -26,14 +25,12 @@ import {
   addConditionToSeeHideContent,
   addYearCondition,
 } from '~/utils/query.util'
-import { RolesGuard } from '../auth/roles.guard'
 import { CategoryAndSlug, PostQueryDto } from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'
 
 @Controller('posts')
 @ApiName
-@UseGuards(RolesGuard)
 export class PostController {
   constructor(private readonly postService: PostService) {}
 

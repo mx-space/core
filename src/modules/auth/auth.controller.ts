@@ -6,7 +6,6 @@ import {
   Post,
   Query,
   Scope,
-  UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
@@ -23,7 +22,6 @@ import { IsMaster as Master } from '~/common/decorator/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { AdminEventsGateway } from '../../processors/gateway/admin/events.gateway'
 import { AuthService } from './auth.service'
-import { RolesGuard } from './roles.guard'
 
 export class TokenDto {
   @IsDate()
@@ -50,7 +48,6 @@ export class AuthController {
   @Get()
   @ApiOperation({ summary: '判断当前 Token 是否有效 ' })
   @ApiBearerAuth()
-  @UseGuards(RolesGuard)
   checkLogged(@Master() isMaster: boolean) {
     return { ok: ~~isMaster, isGuest: !isMaster }
   }

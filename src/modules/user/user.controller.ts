@@ -17,7 +17,6 @@ import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { getAvatar } from '~/utils/index.util'
 import { AuthService } from '../auth/auth.service'
-import { RolesGuard } from '../auth/roles.guard'
 import { LoginDto, UserDto, UserPatchDto } from './user.dto'
 import { UserDocument, UserModel } from './user.model'
 import { UserService } from './user.service'
@@ -32,7 +31,6 @@ export class UserController {
 
   @Get()
   @ApiOperation({ summary: '获取主人信息' })
-  @UseGuards(RolesGuard)
   async getMasterInfo(@IsMaster() isMaster: boolean) {
     return await this.userService.getMasterInfo(isMaster)
   }
@@ -73,7 +71,6 @@ export class UserController {
   @Get('check_logged')
   @ApiOperation({ summary: '判断当前 Token 是否有效 ' })
   @ApiBearerAuth()
-  @UseGuards(RolesGuard)
   @HttpCache({ disable: true })
   checkLogged(@IsMaster() isMaster: boolean) {
     return { ok: +isMaster, isGuest: !isMaster }

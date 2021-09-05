@@ -111,7 +111,7 @@ export class PostService {
       {
         _id: id,
       },
-      omit(data, ['id', '_id', 'created']),
+      omit(data, PostModel.protectedKeys),
     )
     process.nextTick(async () => {
       // 更新图片信息缓存
