@@ -104,12 +104,6 @@ export class PostService {
     if ([data.text, data.title, data.slug].some((i) => isDefined(i))) {
       const now = new Date()
 
-      this.logger.debug(
-        '[' +
-          (data.title ?? oldDocument.title) +
-          '] 更新修改时间' +
-          now.toISOString(),
-      )
       data.modified = now
     }
 

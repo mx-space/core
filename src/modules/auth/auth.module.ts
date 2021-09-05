@@ -8,14 +8,15 @@ import { AuthService } from './auth.service'
 import { JwtStrategy } from './jwt.strategy'
 
 export const __secret =
-  SECURITY.jwtSecret || process.env.SECRET || 'asdhaisouxcjzuoiqdnasjduw'
+  SECURITY.jwtSecret || process.env.SECRET || 'asjhczxiucipoiopiqm2376'
 
 const jwtModule = JwtModule.registerAsync({
   useFactory() {
     return {
       secret: __secret,
       signOptions: {
-        expiresIn: '7d',
+        expiresIn: SECURITY.jwtExpire,
+        algorithm: 'HS256',
       },
     }
   },
