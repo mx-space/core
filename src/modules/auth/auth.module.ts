@@ -7,11 +7,13 @@ import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
 import { JwtStrategy } from './jwt.strategy'
 
+export const __secret =
+  SECURITY.jwtSecret || process.env.SECRET || 'asdhaisouxcjzuoiqdnasjduw'
+
 const jwtModule = JwtModule.registerAsync({
   useFactory() {
     return {
-      secret:
-        SECURITY.jwtSecret || process.env.SECRET || 'asdhaisouxcjzuoiqdnasjduw',
+      secret: __secret,
       signOptions: {
         expiresIn: '7d',
       },

@@ -17,7 +17,7 @@ import { IsMaster } from '~/common/decorator/role.decorator'
 import { getAvatar } from '~/utils/index.util'
 import { AuthService } from '../auth/auth.service'
 import { RolesGuard } from '../auth/roles.guard'
-import { LoginDto, UserDto, UserPatchDto } from './dto/user.dto'
+import { LoginDto, UserDto, UserPatchDto } from './user.dto'
 import { UserDocument, UserModel } from './user.model'
 import { UserService } from './user.service'
 

@@ -56,7 +56,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
         `[${new Date().toISOString()}] ${decodeURI(request.raw.url)}: ${
           (exception as any)?.response?.message ||
           (exception as myError)?.message
-        } \n ${(exception as Error).stack || ''} \n`,
+        }\n`,
+        // ${(exception as Error).stack || ''}\n`,
         { encoding: 'utf-8', flag: 'a+' },
       )
     }

@@ -44,22 +44,22 @@ class UserOptionDto {
 export class UserDto extends UserOptionDto {
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: '用户名？' })
   readonly username: string
 
   @IsString()
   @ApiProperty()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: '密码？' })
   readonly password: string
 }
 
 export class LoginDto {
   @ApiProperty({ required: true })
-  @IsString()
+  @IsString({ message: '用户名？' })
   username: string
 
   @ApiProperty({ required: true })
-  @IsString()
+  @IsString({ message: '密码？' })
   password: string
 }
 
