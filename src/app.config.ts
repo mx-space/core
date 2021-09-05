@@ -1,4 +1,5 @@
 import argv from 'argv'
+import type { AxiosRequestConfig } from 'axios'
 import { isDev } from './utils/index.util'
 export const CROSS_DOMAIN = {
   allowedOrigins: [
@@ -29,4 +30,12 @@ export const REDIS = {
   max: 5,
   disableApiCache:
     (isDev || argv.disableCache) && !process.env['ENABLE_CACHE_DEBUG'],
+}
+
+export const AXIOS_CONFIG: AxiosRequestConfig = {
+  timeout: 10000,
+}
+
+export const SECURITY = {
+  jwtSecret: argv.jwtSecret || 'asjhczxiucipoiopiqm2376',
 }

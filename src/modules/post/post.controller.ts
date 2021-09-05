@@ -58,10 +58,10 @@ export class PostController {
 
   @Get('/:id')
   @UpdateDocumentCount('Post')
-  async getById(@Param() params: MongoIdDto) {
+  async getById(@Param() params: MongoIdDto, @IsMaster() isMaster: boolean) {
     const { id } = params
     const doc = await this.postService.model.findById(id)
-    if (!doc) {
+    if (!doc || (doc.hide && !isMaster)) {
       throw new CannotFindException()
     }
     return doc
@@ -69,14 +69,20 @@ export class PostController {
 
   @Get('/latest')
   @UpdateDocumentCount('Post')
-  async getLatest() {
-    return this.postService.model.findOne().sort({ created: -1 })
+  async getLatest(@IsMaster() isMaster: boolean) {
+    return this.postService.model
+      .findOne({ ...addConditionToSeeHideContent(isMaster) })
+      .sort({ created: -1 })
+      .lean()
   }
 
   @Get('/:category/:slug')
   @ApiOperation({ summary: '根据分类名和自定义别名获取' })
   @UpdateDocumentCount('Post')
-  async getByCateAndSlug(@Param() params: CategoryAndSlug) {
+  async getByCateAndSlug(
+    @Param() params: CategoryAndSlug,
+    @IsMaster() isMaster: boolean,
+  ) {
     const { category, slug } = params
 
     const categoryDocument = await this.postService.getCategoryBySlug(category)
@@ -92,10 +98,10 @@ export class PostController {
       })
       .populate('category')
 
-    if (!postDocument) {
+    if (!postDocument || (postDocument.hide && !isMaster)) {
       throw new CannotFindException()
     }
-    return postDocument
+    return postDocument.toJSON()
   }
 
   @Post('/')
@@ -105,6 +111,8 @@ export class PostController {
 
     return await this.postService.create({
       ...body,
+      created: new Date(),
+      modified: null,
       slug: body.slug ?? _id.toHexString(),
     })
   }
@@ -134,14 +142,17 @@ export class PostController {
   }
 
   @Get('search')
-  async searchPost(@Query() query: SearchDto) {
+  async searchPost(@Query() query: SearchDto, @IsMaster() isMaster: boolean) {
     const { keyword, page, size } = query
     const select = '_id title created modified categoryId slug'
     const keywordArr = keyword
       .split(/\s+/)
       .map((item) => new RegExp(String(item), 'ig'))
     return await this.postService.findWithPaginator(
-      { $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }] },
+      {
+        $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }],
+        ...addConditionToSeeHideContent(isMaster),
+      },
       {
         limit: size,
         page,

@@ -19,15 +19,18 @@ import { PostModel } from '~/modules/post/post.model'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
-
+// ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> HttpCacheInterceptor
 @Injectable()
 export class CountingInterceptor<T> implements NestInterceptor<T, any> {
+  private logger: Logger
   constructor(
     private readonly reflector: Reflector,
     @InjectModel(PostModel)
     private readonly postModel: MongooseModel<PostModel>,
     private readonly redis: CacheService,
-  ) {}
+  ) {
+    this.logger = new Logger(CountingInterceptor.name)
+  }
 
   intercept(context: ExecutionContext, next: CallHandler) {
     const handler = context.getHandler()
@@ -57,11 +60,11 @@ export class CountingInterceptor<T> implements NestInterceptor<T, any> {
     ip: string,
   ) {
     if (!ip) {
-      Logger.debug('无法更新阅读计数, IP 无效')
+      this.logger.debug('无法更新阅读计数, IP 无效')
       return
     }
     if (!id) {
-      Logger.debug('无法更新阅读计数, ID 不存在')
+      this.logger.debug('无法更新阅读计数, ID 不存在')
       return
     }
     const modelMap = {
@@ -77,7 +80,7 @@ export class CountingInterceptor<T> implements NestInterceptor<T, any> {
       ip,
     )
     if (isReadBefore) {
-      Logger.debug('已经增加过计数了, ' + id)
+      this.logger.debug('已经增加过计数了, ' + id)
       return
     }
     const doc = await model.findOne({ _id: id })
@@ -85,6 +88,6 @@ export class CountingInterceptor<T> implements NestInterceptor<T, any> {
       redis.sadd(getRedisKey(RedisKeys.Read, doc._id), ip),
       doc.updateOne({ $inc: { 'count.read': 1 } }),
     ])
-    Logger.debug('增加计数, ' + doc.title)
+    this.logger.debug('增加计数, ' + doc.title)
   }
 }

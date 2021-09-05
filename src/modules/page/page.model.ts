@@ -5,12 +5,10 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
-  IsObject,
   IsOptional,
   IsString,
   Min,
 } from 'class-validator'
-import { Schema } from 'mongoose'
 import { WriteBaseModel } from '~/shared/model/base.model'
 import { IsNilOrString } from '~/utils/validator/isNilOrString'
 
@@ -52,10 +50,4 @@ export class PageModel extends WriteBaseModel {
   @IsEnum(pageType)
   @IsOptional()
   type?: string
-
-  @ApiProperty({ description: 'Other Options', required: false })
-  @prop({ type: Schema.Types.Mixed })
-  @IsOptional()
-  @IsObject()
-  options?: Record<string, any>
 }

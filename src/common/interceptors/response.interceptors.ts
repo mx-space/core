@@ -97,10 +97,11 @@ export class JSONSerializeInterceptor implements NestInterceptor {
       })
     } else {
       // if is Object
-
       if (obj.toJSON || obj.toObject) {
         obj = obj.toJSON?.() ?? obj.toObject?.()
       }
+
+      Reflect.deleteProperty(obj, '__v')
 
       const keys = Object.keys(obj)
       for (const key of keys) {
@@ -116,12 +117,13 @@ export class JSONSerializeInterceptor implements NestInterceptor {
           if (!isObjectLike(obj[key])) {
             continue
           }
+          Reflect.deleteProperty(obj[key], '__v')
         }
         obj[key] = this.serialize(obj[key])
         // obj[key] = snakecaseKeys(obj[key])
       }
       obj = snakecaseKeys(obj)
-      delete obj.v
+      // delete obj.v
     }
     return obj
   }

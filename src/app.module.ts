@@ -22,6 +22,7 @@ import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
 import { InitModule } from './modules/init/init.module'
+import { NoteModule } from './modules/note/note.module'
 import { OptionModule } from './modules/option/option.module'
 import { PostModule } from './modules/post/post.module'
 import { UserModule } from './modules/user/user.module'
@@ -48,6 +49,7 @@ import { HelperModule } from './processors/helper/helper.module'
     InitModule,
     UserModule,
     PostModule,
+    NoteModule,
     CategoryModule,
     AuthModule,
     UserModule,
@@ -66,16 +68,17 @@ import { HelperModule } from './processors/helper/helper.module'
     },
     {
       provide: APP_INTERCEPTOR,
+      useClass: CountingInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
       useClass: JSONSerializeInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
     },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: CountingInterceptor,
-    },
+
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,

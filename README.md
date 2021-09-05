@@ -1,5 +1,14 @@
 # MX server next generation
 
+
+Intercept life cycle
+
+```
+ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> HttpCacheInterceptor
+```
+
+---
+
 2021-08-31
 
 开始写了

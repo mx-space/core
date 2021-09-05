@@ -59,6 +59,14 @@ export abstract class BaseCommentIndexModel extends BaseModel {
   allowComment: boolean
 }
 
+@modelOptions({
+  schemaOptions: {
+    timestamps: {
+      createdAt: 'created',
+      updatedAt: null,
+    },
+  },
+})
 export abstract class WriteBaseModel extends BaseCommentIndexModel {
   @prop({ trim: true, index: true, required: true })
   @IsString()
@@ -89,3 +97,5 @@ export class CountMixed {
   @prop({ default: 0 })
   like?: number
 }
+
+export type { Image as TextImageRecordType }

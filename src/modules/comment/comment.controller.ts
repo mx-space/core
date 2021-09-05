@@ -11,7 +11,7 @@ import {
   Query,
   Req,
 } from '@nestjs/common'
-import { ApiOperation, ApiParam } from '@nestjs/swagger'
+import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
 import { DocumentType } from '@typegoose/typegoose'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
@@ -30,7 +30,8 @@ import {
 } from './comment.dto'
 import { CommentModel, CommentRefTypes, CommentState } from './comment.model'
 import { CommentService } from './comment.service'
-@Controller()
+@Controller({ path: 'comments' })
+@ApiTags('Comment Routes')
 export class CommentController {
   constructor(
     private readonly commentService: CommentService,
