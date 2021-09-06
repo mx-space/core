@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types'
 import { ApiProperty } from '@nestjs/swagger'
 import { modelOptions, prop } from '@typegoose/typegoose'
 import { Transform } from 'class-transformer'
@@ -11,7 +12,6 @@ import {
 } from 'class-validator'
 import { WriteBaseModel } from '~/shared/model/base.model'
 import { IsNilOrString } from '~/utils/validator/isNilOrString'
-
 export const pageType = ['md', 'html', 'frame']
 
 @modelOptions({
@@ -51,3 +51,5 @@ export class PageModel extends WriteBaseModel {
   @IsOptional()
   type?: string
 }
+
+export class PartialPageModel extends PartialType(PageModel) {}

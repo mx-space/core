@@ -25,6 +25,7 @@ import { ConfigsModule } from './modules/configs/configs.module'
 import { InitModule } from './modules/init/init.module'
 import { NoteModule } from './modules/note/note.module'
 import { OptionModule } from './modules/option/option.module'
+import { PageModule } from './modules/page/page.module'
 import { PostModule } from './modules/post/post.module'
 import { UserModule } from './modules/user/user.module'
 import { CacheModule } from './processors/cache/cache.module'
@@ -51,6 +52,7 @@ import { HelperModule } from './processors/helper/helper.module'
     UserModule,
     PostModule,
     NoteModule,
+    PageModule,
     CategoryModule,
     AuthModule,
     UserModule,

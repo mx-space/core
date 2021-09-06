@@ -1,0 +1,97 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common'
+import { Auth } from '~/common/decorator/auth.decorator'
+import { Paginator } from '~/common/decorator/http.decorator'
+import { ApiName } from '~/common/decorator/openapi.decorator'
+import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { MongoIdDto } from '~/shared/dto/id.dto'
+import { PagerDto } from '~/shared/dto/pager.dto'
+import { PageModel, PartialPageModel } from './page.model'
+import { PageService } from './page.service'
+
+@Controller('pages')
+@ApiName
+export class PageController {
+  constructor(private readonly pageService: PageService) {}
+
+  @Get('/')
+  @Paginator
+  async getPagesSummary(@Query() query: PagerDto) {
+    const { size, select, page } = query
+
+    return await this.pageService.model.paginate(
+      {},
+      {
+        limit: size,
+        page,
+        select,
+      },
+    )
+  }
+
+  @Get('/:id')
+  async getPageById(@Param() params: MongoIdDto) {
+    const page = this.pageService.model.findById(params.id)
+    if (!page) {
+      throw new CannotFindException()
+    }
+    return page
+  }
+
+  @Get('/slug/:slug')
+  async getPageBySlug(@Param('slug') slug: string) {
+    const page = await this.pageService.model.findOne({
+      slug,
+    })
+
+    if (!page) {
+      throw new CannotFindException()
+    }
+    return page
+  }
+
+  @Post('/')
+  @Auth()
+  async create(@Body() body: PageModel) {
+    return await this.pageService.create(body)
+  }
+
+  @Put('/:id')
+  @Auth()
+  async modify(@Body() body: PageModel, @Param() params: MongoIdDto) {
+    const { id } = params
+    await this.pageService.updateById(id, body)
+
+    return await this.pageService.model.findById(id)
+  }
+
+  @Patch('/:id')
+  @Auth()
+  @HttpCode(204)
+  async patch(@Body() body: PartialPageModel, @Param() params: MongoIdDto) {
+    const { id } = params
+    await this.pageService.updateById(id, body)
+
+    return
+  }
+
+  @Delete('/:id')
+  @Auth()
+  @HttpCode(204)
+  async deletePage(@Param() params: MongoIdDto) {
+    await this.pageService.model.deleteOne({
+      _id: params.id,
+    })
+    return
+  }
+}

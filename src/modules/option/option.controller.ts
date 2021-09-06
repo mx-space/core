@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -24,16 +25,16 @@ class ConfigKeyDto {
 @Auth()
 export class OptionController {
   constructor(
-    private readonly adminService: OptionService,
+    private readonly optionService: OptionService,
     private readonly configs: ConfigsService,
   ) {}
 
-  @Get()
+  @Get('/')
   getOption() {
     return this.configs.getConfig()
   }
 
-  @Get(':key')
+  @Get('/:key')
   getOptionKey(@Param('key') key: keyof IConfig) {
     if (typeof key !== 'string' && !key) {
       throw new UnprocessableEntityException(
@@ -42,16 +43,16 @@ export class OptionController {
     }
     const value = this.configs.get(key)
     if (!value) {
-      throw new UnprocessableEntityException('key is not exists.')
+      throw new BadRequestException('key is not exists.')
     }
     return { data: value }
   }
 
-  @Patch(':key')
+  @Patch('/:key')
   patch(@Param() params: ConfigKeyDto, @Body() body: Record<string, any>) {
     if (typeof body !== 'object') {
       throw new UnprocessableEntityException('body must be object')
     }
-    return this.adminService.patchAndValid(params.key, body)
+    return this.optionService.patchAndValid(params.key, body)
   }
 }
