@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common'
 import chalk from 'chalk'
 import { mkdirSync } from 'fs'
-import { DATA_DIR, LOGGER_DIR, TEMP_DIR } from 'src/constants/path.constant'
+import { DATA_DIR, LOGGER_DIR, TEMP_DIR } from '~/constants/path.constant'
 
 @Injectable()
 export class InitService {
