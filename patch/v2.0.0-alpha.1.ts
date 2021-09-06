@@ -12,6 +12,6 @@ patch(async ({ models: { note, post, category } }) => {
         },
       )
     }),
-    category.aggregate([{ $unset: 'count' }]),
+    category.updateMany({}, { $unset: { count: '' } }),
   ])
 })

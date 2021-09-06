@@ -8,6 +8,7 @@ specifiers:
   '@nestjs/config': ^1.0.1
   '@nestjs/core': ^8.0.6
   '@nestjs/jwt': ^8.0.0
+  '@nestjs/mapped-types': '*'
   '@nestjs/passport': ^8.0.1
   '@nestjs/platform-fastify': ^8.0.6
   '@nestjs/platform-socket.io': 8.0.6
@@ -52,6 +53,7 @@ specifiers:
   lint-staged: ^11.1.2
   lodash: '*'
   mongoose: '*'
+  mongoose-lean-id: ^0.2.0
   mongoose-lean-virtuals: ^0.8.0
   mongoose-paginate-v2: ^1.4.2
   nanoid: ^3.1.25
@@ -82,6 +84,7 @@ dependencies:
   '@nestjs/config': 1.0.1_e2399148d990aa1f9a4b6ba2ac7a5b74
   '@nestjs/core': 8.0.6_214ebf00327c8ed1d6618d61764e6a91
   '@nestjs/jwt': 8.0.0_@nestjs+common@8.0.6
+  '@nestjs/mapped-types': 1.0.0_98ff46db2ce9f8b87e20a19aa1e55592
   '@nestjs/passport': 8.0.1_2c02db70fddcb59258fa0eed39c4b725
   '@nestjs/platform-fastify': 8.0.6_67f7e5db8827badcb202b1d38f6b1aea
   '@nestjs/platform-socket.io': 8.0.6_875c1aa90becd3a53d7e39e33971fbfe
@@ -105,6 +108,7 @@ dependencies:
   inquirer: 8.1.1
   lodash: 4.17.21
   mongoose: 5.13.8
+  mongoose-lean-id: 0.2.0_mongoose@5.13.8
   mongoose-lean-virtuals: 0.8.0_mongoose@5.13.8
   mongoose-paginate-v2: 1.4.2
   nanoid: 3.1.25
@@ -5128,6 +5132,14 @@ packages:
       safe-buffer: 5.2.1
     optionalDependencies:
       saslprep: 1.0.3
+    dev: false
+
+  /mongoose-lean-id/0.2.0_mongoose@5.13.8:
+    resolution: {integrity: sha512-ioC++wVTfprE2wh7Baw4jdZ1mCIpK3uw74sWf53enNCKZHVhKsL7fMyB1ryb4SmGwOj4StebTGy7YwimjZ0Qlg==}
+    peerDependencies:
+      mongoose: 4.x || 5.x
+    dependencies:
+      mongoose: 5.13.8
     dev: false
 
   /mongoose-lean-virtuals/0.8.0_mongoose@5.13.8:

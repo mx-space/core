@@ -43,6 +43,7 @@
     "@nestjs/config": "^1.0.1",
     "@nestjs/core": "^8.0.6",
     "@nestjs/jwt": "^8.0.0",
+    "@nestjs/mapped-types": "*",
     "@nestjs/passport": "^8.0.1",
     "@nestjs/platform-fastify": "^8.0.6",
     "@nestjs/platform-socket.io": "8.0.6",
@@ -59,12 +60,14 @@
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
     "dayjs": "^1.10.6",
+    "dotenv": "*",
     "ejs": "^3.1.6",
     "fastify-swagger": "^4.9.0",
     "image-size": "^1.0.0",
+    "inquirer": "*",
     "lodash": "*",
     "mongoose": "*",
-    "dotenv": "*",
+    "mongoose-lean-id": "^0.2.0",
     "mongoose-lean-virtuals": "^0.8.0",
     "mongoose-paginate-v2": "^1.4.2",
     "nanoid": "^3.1.25",
@@ -76,8 +79,7 @@
     "redis": "3.1.2",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.3.0",
-    "snakecase-keys": "^4.0.2",
-    "inquirer": "*"
+    "snakecase-keys": "^4.0.2"
   },
   "devDependencies": {
     "@innei-util/eslint-config-ts": "^0.2.3",

@@ -1,11 +1,12 @@
 import { ApiHideProperty } from '@nestjs/swagger'
 import { modelOptions, plugin, prop } from '@typegoose/typegoose'
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import LeanId from 'mongoose-lean-id'
 import mongooseLeanVirtuals from 'mongoose-lean-virtuals'
 import Paginate from 'mongoose-paginate-v2'
-
 @plugin(mongooseLeanVirtuals)
 @plugin(Paginate)
+@plugin(LeanId)
 export class BaseModel {
   @ApiHideProperty()
   created?: Date

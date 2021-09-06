@@ -3,7 +3,6 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
 import {
   IsBoolean,
-  IsEnum,
   IsMongoId,
   IsNotEmpty,
   IsOptional,
@@ -11,28 +10,7 @@ import {
 } from 'class-validator'
 import { uniq } from 'lodash'
 import { IsBooleanOrString } from '~/utils/validator/isBooleanOrString'
-
-export enum CategoryType {
-  Category,
-  Tag,
-}
-
-export class CategoryDto {
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  name: string
-
-  @IsEnum(CategoryType)
-  @IsOptional()
-  @ApiProperty({ enum: [0, 1] })
-  type?: CategoryType
-
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  slug?: string
-}
+import { CategoryType } from './category.model'
 
 export class SlugOrIdDto {
   @IsString()
