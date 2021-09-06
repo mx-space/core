@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -15,10 +16,12 @@ import { ApiOperation } from '@nestjs/swagger'
 import { Types } from 'mongoose'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
+import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { UpdateDocumentCount } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { CountingService } from '~/processors/helper/helper.counting.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { SearchDto } from '~/shared/dto/search.dto'
 import {
@@ -32,7 +35,10 @@ import { PostService } from './post.service'
 @Controller('posts')
 @ApiName
 export class PostController {
-  constructor(private readonly postService: PostService) {}
+  constructor(
+    private readonly postService: PostService,
+    private readonly countingService: CountingService,
+  ) {}
 
   @Get('/')
   @Paginator
@@ -140,6 +146,7 @@ export class PostController {
   }
 
   @Get('search')
+  @Paginator
   async searchPost(@Query() query: SearchDto, @IsMaster() isMaster: boolean) {
     const { keyword, page, size } = query
     const select = '_id title created modified categoryId slug'
@@ -149,7 +156,7 @@ export class PostController {
     return await this.postService.findWithPaginator(
       {
         $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }],
-        ...addConditionToSeeHideContent(isMaster),
+        $and: [{ ...addConditionToSeeHideContent(isMaster) }],
       },
       {
         limit: size,
@@ -158,5 +165,25 @@ export class PostController {
         populate: 'categoryId',
       },
     )
+  }
+
+  @Get('_thumbs-up')
+  @HttpCode(204)
+  async thumbsUpArticle(
+    @Query() query: MongoIdDto,
+    @IpLocation() location: IpRecord,
+  ) {
+    const { ip } = location
+    const { id } = query
+    try {
+      const res = await this.countingService.updateLikeCount('Post', id, ip)
+      if (!res) {
+        throw new BadRequestException('你已经支持过啦!')
+      }
+    } catch (e: any) {
+      throw new BadRequestException(e)
+    }
+
+    return
   }
 }

@@ -1,10 +1,13 @@
 import {
+  BadRequestException,
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   HttpCode,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -17,19 +20,29 @@ import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { UpdateDocumentCount } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { CountingService } from '~/processors/helper/helper.counting.service'
+import { IntIdOrMongoIdDto, MongoIdDto } from '~/shared/dto/id.dto'
+import { SearchDto } from '~/shared/dto/search.dto'
 import {
   addConditionToSeeHideContent,
   addYearCondition,
 } from '~/utils/query.util'
-import { ListQueryDto, NoteQueryDto, PasswordQueryDto } from './note.dto'
+import {
+  ListQueryDto,
+  NidType,
+  NoteQueryDto,
+  PasswordQueryDto,
+} from './note.dto'
 import { NoteModel, PartialNoteModel } from './note.model'
 import { NoteService } from './note.service'
 
 @ApiName
 @Controller({ path: 'notes' })
 export class NoteController {
-  constructor(private readonly noteService: NoteService) {}
+  constructor(
+    private readonly noteService: NoteService,
+    private readonly countingService: CountingService,
+  ) {}
 
   @Get('latest')
   @ApiOperation({ summary: '获取最新发布一篇记录' })
@@ -45,7 +58,6 @@ export class NoteController {
       isMaster ? '+location +coordinates' : '-location -coordinates',
     )
 
-    // this.noteService.shouldAddReadCount(latest, location.ip)
     return { data: latest.toObject(), next: next.toObject() }
   }
 
@@ -201,11 +213,108 @@ export class NoteController {
     return await this.noteService.model.findById(params.id)
   }
 
-  @Put('/:id')
+  @Patch('/:id')
   @HttpCode(204)
   @Auth()
   async patch(@Body() body: PartialNoteModel, @Param() params: MongoIdDto) {
     await this.noteService.updateById(params.id, body)
     return
+  }
+
+  @Get('like/:id')
+  @HttpCode(204)
+  async likeNote(
+    @Param() param: IntIdOrMongoIdDto,
+    @IpLocation() location: IpRecord,
+  ) {
+    const id =
+      typeof param.id === 'number'
+        ? (await this.noteService.model.findOne({ nid: param.id }).lean())._id
+        : param.id
+    if (!id) {
+      throw new CannotFindException()
+    }
+    try {
+      const res = await this.countingService.updateLikeCount(
+        'Note',
+        id,
+        location.ip,
+      )
+      if (!res) {
+        throw new BadRequestException('你已经喜欢过啦!')
+      }
+      return
+    } catch (e: any) {
+      throw new BadRequestException(e)
+    }
+  }
+
+  @Delete(':id')
+  @Auth()
+  @HttpCode(204)
+  async deleteNote(@Param() params: MongoIdDto) {
+    await this.noteService.deleteById(params.id)
+  }
+
+  @ApiOperation({ summary: '根据 nid 查找' })
+  @Get('/nid/:nid')
+  @UpdateDocumentCount('Note')
+  async getNoteByNid(
+    @Param() params: NidType,
+    @IsMaster() isMaster: boolean,
+    @Query() query: PasswordQueryDto,
+    @Query('single') isSingle?: boolean,
+  ) {
+    const id = await this.noteService.getIdByNid(params.nid)
+    if (!id) {
+      throw new CannotFindException()
+    }
+    return await this.getOneNote({ id }, isMaster, query, isSingle)
+  }
+
+  @ApiOperation({ summary: '根据 nid 修改' })
+  @Put('/nid/:nid')
+  @Auth()
+  async modifyNoteByNid(@Param() params: NidType, @Body() body: NoteModel) {
+    const id = await this.noteService.getIdByNid(params.nid)
+    if (!id) {
+      throw new CannotFindException()
+    }
+    return await this.modify(body, {
+      id,
+    })
+  }
+
+  @ApiOperation({ summary: '搜索' })
+  @Get('/search')
+  @Paginator
+  async searchNote(@Query() query: SearchDto, @IsMaster() isMaster: boolean) {
+    const { keyword, page, size } = query
+    const select = '_id title created modified nid'
+
+    const keywordArr = keyword
+      .split(/\s+/)
+      .map((item) => new RegExp(String(item), 'ig'))
+
+    return await this.noteService.model.paginate(
+      {
+        $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }],
+        $and: [
+          { password: { $in: [undefined, null] } },
+          { hide: { $in: isMaster ? [false, true] : [false] } },
+          {
+            $or: [
+              { secret: { $in: [undefined, null] } },
+              { secret: { $lte: new Date() } },
+            ],
+          },
+        ],
+      },
+      {
+        limit: size,
+        page,
+        select,
+      },
+    )
   }
 }

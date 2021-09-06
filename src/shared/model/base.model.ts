@@ -11,7 +11,7 @@ export class BaseModel {
   created?: Date
 
   static get protectedKeys() {
-    return ['created']
+    return ['created', 'id', '_id']
   }
 }
 

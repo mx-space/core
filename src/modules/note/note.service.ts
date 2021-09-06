@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
 import { compareSync } from 'bcrypt'
+import { isDefined } from 'class-validator'
+import { pick } from 'lodash'
 import { FilterQuery } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -91,14 +93,15 @@ export class NoteService {
   }
 
   public async updateById(id: string, doc: Partial<NoteModel>) {
-    console.log(NoteModel.protectedKeys)
-
-    deleteKeys(doc, NoteModel.protectedKeys as any)
+    deleteKeys(doc, ...NoteModel.protectedKeys)
+    if (['title', 'text'].some((key) => isDefined(doc[key]))) {
+      doc.modified = new Date()
+    }
     await this.noteModel.updateOne(
       {
         _id: id,
       },
-      { ...doc, modified: new Date() },
+      { ...doc },
     )
     process.nextTick(async () => {
       Promise.all([
@@ -113,6 +116,42 @@ export class NoteService {
       // TODO clean cache
       // refreshKeyedCache(this.cacheManager)
     })
+  }
+
+  async deleteById(id: string) {
+    const doc = await this.noteModel.findById(id)
+    if (!doc) {
+      throw new CannotFindException()
+    }
+
+    await this.noteModel.deleteOne({
+      _id: id,
+    })
+
+    process.nextTick(async () => {
+      await Promise.all([
+        this.webGateway.broadcast(
+          EventTypes.NOTE_DELETE,
+          pick(doc, ['_id', 'id', 'nid', 'created', 'modified']),
+        ),
+      ])
+    })
+  }
+
+  /**
+   * 查找 nid 时候正确，返回 _id
+   *
+   * @param {number} nid
+   * @returns {Types.ObjectId}
+   */
+  async getIdByNid(nid: number) {
+    const document = await this.model.findOne({
+      nid,
+    })
+    if (!document) {
+      return null
+    }
+    return document._id
   }
 
   async needCreateDefult() {

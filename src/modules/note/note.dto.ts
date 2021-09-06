@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer'
 import {
   IsDefined,
-  IsEnum,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -15,11 +15,11 @@ import { PagerDto } from '~/shared/dto/pager.dto'
 
 export class NoteQueryDto extends PagerDto {
   @IsOptional()
-  @IsEnum(['title', 'created', 'modified', 'weather', 'mood'])
+  @IsIn(['title', 'created', 'modified', 'weather', 'mood'])
   sortBy?: string
 
   @IsOptional()
-  @IsEnum([1, -1])
+  @IsIn([1, -1])
   @ValidateIf((o) => o.sortBy)
   @Transform(({ value: v }) => v | 0)
   sortOrder?: 1 | -1

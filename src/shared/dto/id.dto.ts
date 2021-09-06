@@ -1,19 +1,26 @@
+import { UnprocessableEntityException } from '@nestjs/common'
 import { ApiProperty } from '@nestjs/swagger'
-import { IsMongoId } from 'class-validator'
-import { IsBooleanOrString } from '~/utils/validator/isBooleanOrString'
+import { Transform } from 'class-transformer'
+import { IsDefined, isMongoId, IsMongoId } from 'class-validator'
 
 export class MongoIdDto {
   @IsMongoId()
-  @ApiProperty({
-    name: 'id',
-    // enum: ['5e6f67e75b303781d2807279', '5e6f67e75b303781d280727f'],
-    example: '5e6f67e75b303781d2807278',
-  })
+  @ApiProperty({ example: '5e6f67e75b303781d2807278' })
   id: string
 }
 
 export class IntIdOrMongoIdDto {
-  @IsBooleanOrString()
-  @ApiProperty({ example: ['12', '5e6f67e75b303781d2807278'] })
+  @IsDefined()
+  @Transform(({ value }) => {
+    if (isMongoId(value)) {
+      return value
+    }
+    const nid = +value
+    if (!isNaN(nid)) {
+      return nid
+    }
+    throw new UnprocessableEntityException('Invalid id')
+  })
+  @ApiProperty({ example: [12, '5e6f67e75b303781d2807278'] })
   id: string | number
 }

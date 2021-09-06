@@ -47,16 +47,35 @@ export function arrDifference(a1: string[], a2: string[]) {
   return diff
 }
 
-export const deleteKeys = <T extends KV>(
+export function deleteKeys<T extends KV>(
+  target: T,
+  keys: (keyof T)[],
+): Partial<T>
+export function deleteKeys<T extends KV>(
   target: T,
   keys: readonly (keyof T)[],
-): Partial<T> => {
+): Partial<T>
+export function deleteKeys<T extends KV>(
+  target: T,
+  ...keys: string[]
+): Partial<T>
+export function deleteKeys<T extends KV>(
+  target: T,
+  ...keys: any[]
+): Partial<T> {
   if (!isObject(target)) {
     throw new TypeError('target must be Object, got ' + target)
   }
 
-  for (const key of keys) {
-    Reflect.deleteProperty(target, key)
+  if (Array.isArray(keys[0])) {
+    for (const key of keys[0]) {
+      Reflect.deleteProperty(target, key)
+    }
+  } else {
+    for (const key of keys) {
+      Reflect.deleteProperty(target, key)
+    }
   }
+
   return target
 }
