@@ -30,6 +30,7 @@ specifiers:
   '@types/passport-local': ^1.0.34
   '@types/redis': 2.8.31
   '@types/supertest': ^2.0.11
+  '@types/ua-parser-js': ^0.7.36
   argv: ^0.0.2
   axios: '*'
   bcrypt: ^5.0.1
@@ -77,6 +78,7 @@ specifiers:
   ts-node: ^10.2.1
   tsconfig-paths: ^3.10.1
   typescript: ^4.3.5
+  ua-parser-js: ^0.7.28
   webpack: ^5.51.1
   webpack-node-externals: ^3.0.0
 
@@ -123,6 +125,7 @@ dependencies:
   reflect-metadata: 0.1.13
   rxjs: 7.3.0
   snakecase-keys: 4.0.2
+  ua-parser-js: 0.7.28
 
 devDependencies:
   '@innei-util/eslint-config-ts': 0.2.3_typescript@4.4.2
@@ -142,6 +145,7 @@ devDependencies:
   '@types/passport-local': 1.0.34
   '@types/redis': 2.8.31
   '@types/supertest': 2.0.11
+  '@types/ua-parser-js': 0.7.36
   cross-env: 7.0.3
   eslint: 7.32.0
   fastify: 3.20.1
@@ -1616,6 +1620,10 @@ packages:
     resolution: {integrity: sha512-uci4Esokrw9qGb9bvhhSVEjd6rkny/dk5PK/Qz4yxKiyppEI+dOPlNrZBahE3i+PoKFYyDxChVXZ/ysS/nrm1Q==}
     dependencies:
       '@types/superagent': 4.1.12
+    dev: true
+
+  /@types/ua-parser-js/0.7.36:
+    resolution: {integrity: sha512-N1rW+njavs70y2cApeIw1vLMYXRwfBy+7trgavGuuTfOd7j1Yh7QTRc/yqsPl6ncokt72ZXuxEU0PiCp9bSwNQ==}
     dev: true
 
   /@types/validator/13.6.3:
@@ -6798,6 +6806,10 @@ packages:
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true
+
+  /ua-parser-js/0.7.28:
+    resolution: {integrity: sha512-6Gurc1n//gjp9eQNXjD9O3M/sMwVtN5S8Lv9bvOYBfKfDNiIIhqiyi01vMBO45u4zkDE420w/e0se7Vs+sIg+g==}
+    dev: false
 
   /unbox-primitive/1.0.1:
     resolution: {integrity: sha512-tZU/3NqK3dA5gpE1KtyiJUrEB0lxnGkMFHptJ7q6ewdZ8s12QrODwNbhIJStmJkd1QDXa1NRA8aF2A1zk/Ypyw==}

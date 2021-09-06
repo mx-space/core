@@ -17,6 +17,7 @@ import {
 import { AnalyzeMiddleware } from './common/middlewares/analyze.middleware'
 import { SkipBrowserDefaultRequestMiddleware } from './common/middlewares/favicon.middleware'
 import { SecurityMiddleware } from './common/middlewares/security.middleware'
+import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { RolesGuard } from './modules/auth/roles.guard'
 import { CategoryModule } from './modules/category/category.module'
@@ -39,6 +40,7 @@ import { HelperModule } from './processors/helper/helper.module'
 @Module({
   imports: [
     DbModule,
+    InitModule,
     CacheModule,
     ConfigModule.forRoot({
       envFilePath: [
@@ -51,20 +53,20 @@ import { HelperModule } from './processors/helper/helper.module'
       isGlobal: true,
     }),
 
-    InitModule,
-    UserModule,
-    PostModule,
-    NoteModule,
-    PageModule,
-    CategoryModule,
-    ProjectModule,
-    SayModule,
-    LinkModule,
+    AnalyzeModule,
     AuthModule,
-    UserModule,
+    CategoryModule,
     CommentModule,
     ConfigsModule,
+    LinkModule,
+    NoteModule,
     OptionModule,
+    PageModule,
+    PostModule,
+    ProjectModule,
+    SayModule,
+    UserModule,
+    UserModule,
 
     GatewayModule,
     HelperModule,

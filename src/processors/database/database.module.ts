@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common'
 import { TypegooseModule } from 'nestjs-typegoose'
 import { MONGO_DB } from '~/app.config'
+import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { CommentModel } from '~/modules/comment/comment.model'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { LinkModel } from '~/modules/link/link.model'
@@ -23,6 +24,7 @@ const models = TypegooseModule.forFeature([
   LinkModel,
   ProjectModel,
   SayModel,
+  AnalyzeModel,
 ])
 @Module({
   imports: [
