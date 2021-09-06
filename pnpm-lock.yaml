@@ -62,6 +62,7 @@ specifiers:
   nodemailer: ^6.6.3
   passport: ^0.4.1
   passport-jwt: ^4.0.0
+  pluralize: '*'
   prettier: ^2.3.2
   redis: 3.1.2
   reflect-metadata: ^0.1.13
@@ -117,6 +118,7 @@ dependencies:
   nodemailer: 6.6.3
   passport: 0.4.1
   passport-jwt: 4.0.0
+  pluralize: 8.0.0
   redis: 3.1.2
   reflect-metadata: 0.1.13
   rxjs: 7.3.0
@@ -5684,7 +5686,6 @@ packages:
   /pluralize/8.0.0:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
     engines: {node: '>=4'}
-    dev: true
 
   /pngjs/3.4.0:
     resolution: {integrity: sha512-NCrCHhWmnQklfH4MtJMRjZ2a8c80qXeMlQMv2uVp9ISJMTt562SbGd6n2oq0PaPgKm7Z6pL9E2UlLIhC+SHL3w==}

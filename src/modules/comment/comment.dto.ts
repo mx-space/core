@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import {
   IsEmail,
   IsEnum,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -54,7 +55,7 @@ export class CommentRefTypesDto {
 
 export class StateDto {
   @IsInt()
-  @IsEnum([0, 1, 2])
+  @IsIn([0, 1, 2])
   @ApiProperty()
   state: number
 }

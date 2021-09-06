@@ -11,4 +11,3 @@ export class OptionModel {
   @prop({ type: Schema.Types.Mixed })
   value: any
 }
-export const ConfigModel = OptionModel

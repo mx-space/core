@@ -6,6 +6,8 @@ import { OptionModel } from '~/modules/configs/configs.model'
 import { LinkModel } from '~/modules/link/link.model'
 import { NoteModel } from '~/modules/note/note.model'
 import { PageModel } from '~/modules/page/page.model'
+import { ProjectModel } from '~/modules/project/project.model'
+import { SayModel } from '~/modules/say/say.model'
 import { CategoryModel } from '../../modules/category/category.model'
 import { PostModel } from '../../modules/post/post.model'
 import { UserModel } from '../../modules/user/user.model'
@@ -19,6 +21,8 @@ const models = TypegooseModule.forFeature([
   PageModel,
   OptionModel,
   LinkModel,
+  ProjectModel,
+  SayModel,
 ])
 @Module({
   imports: [
