@@ -1,4 +1,13 @@
-import { Body, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common'
 import { InjectModel } from 'nestjs-typegoose'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { BaseCrudFactory } from '~/utils/crud.util'
@@ -7,6 +16,7 @@ import { LinkQueryDto } from './link.dto'
 import { LinkModel } from './link.model'
 import { LinkService } from './link.service'
 
+@Controller(['links', 'friends'])
 export class LinkController extends BaseCrudFactory({
   model: LinkModel,
 }) {
