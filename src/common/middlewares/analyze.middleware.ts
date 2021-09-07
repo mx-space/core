@@ -5,7 +5,7 @@ import { IncomingMessage, ServerResponse } from 'http'
 import { InjectModel } from 'nestjs-typegoose'
 import { UAParser } from 'ua-parser-js'
 import { RedisKeys } from '~/constants/cache.constant'
-import { localBotListDataFilePath } from '~/constants/path.constant'
+import { LOCAL_BOT_LIST_DATA_FILE_PATH } from '~/constants/path.constant'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { CacheService } from '~/processors/cache/cache.service'
@@ -40,7 +40,7 @@ export class AnalyzeMiddleware implements NestMiddleware {
     try {
       return this.pickPattern2Regexp(
         JSON.parse(
-          readFileSync(localBotListDataFilePath, {
+          readFileSync(LOCAL_BOT_LIST_DATA_FILE_PATH, {
             encoding: 'utf-8',
           }),
         ),

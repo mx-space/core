@@ -12,4 +12,8 @@ export const DATA_DIR = isDev
 
 export const LOGGER_DIR = join(DATA_DIR, 'log')
 
-export const localBotListDataFilePath = join(DATA_DIR, 'bot_list.json')
+export const LOCAL_BOT_LIST_DATA_FILE_PATH = join(DATA_DIR, 'bot_list.json')
+
+export const BACKUP_DIR = !isDev
+  ? join(DATA_DIR, 'backup')
+  : join(TEMP_DIR, 'backup')

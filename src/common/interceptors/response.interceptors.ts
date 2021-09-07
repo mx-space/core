@@ -16,8 +16,8 @@ import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 import snakecaseKeys from 'snakecase-keys'
 import { HTTP_RES_TRANSFORM_PAGINATE } from '~/constants/meta.constant'
+import * as SYSTEM from '~/constants/system.constant'
 import { Paginator } from '~/shared/model/base.model'
-
 export interface Response<T> {
   data: T
 }
@@ -29,6 +29,17 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<Response<T>> {
+    const handler = context.getHandler()
+
+    // 跳过 bypass 装饰的请求
+    const bypass = this.reflector.get<boolean>(
+      SYSTEM.RESPONSE_PASSTHROUGH_METADATA,
+      handler,
+    )
+    if (bypass) {
+      return next.handle()
+    }
+
     const reorganize = (data) => {
       if (!data) {
         throw new UnprocessableEntityException('数据丢失了(｡ ́︿ ̀｡)')
@@ -37,13 +48,12 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
         ? { ...data }
         : { data }
     }
-    const handler = context.getHandler()
 
     return next.handle().pipe(
       map((data) => {
         if (typeof data === 'undefined') {
           context.switchToHttp().getResponse().status(204)
-          return
+          return data
         }
         // 分页转换
         if (this.reflector.get(HTTP_RES_TRANSFORM_PAGINATE, handler)) {

@@ -1,12 +1,7 @@
-/*
- * @Author: Innei
- * @Date: 2020-05-10 15:31:44
- * @LastEditTime: 2020-07-08 21:42:06
- * @LastEditors: Innei
- * @FilePath: /mx-server/src/utils/ip.ts
- * @Coding with Love
+/**
+ * @module utils/ip
+ * @description IP utility functions
  */
-
 import type { FastifyRequest } from 'fastify'
 import { IncomingMessage } from 'http'
 export const getIp = (request: FastifyRequest | IncomingMessage) => {

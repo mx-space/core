@@ -20,6 +20,7 @@ import { SecurityMiddleware } from './common/middlewares/security.middleware'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { RolesGuard } from './modules/auth/roles.guard'
+import { BackupModule } from './modules/backup/backup.module'
 import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
@@ -55,6 +56,7 @@ import { HelperModule } from './processors/helper/helper.module'
 
     AnalyzeModule,
     AuthModule,
+    BackupModule,
     CategoryModule,
     CommentModule,
     ConfigsModule,

@@ -1,12 +1,8 @@
-/*
- * @Author: Innei
- * @Date: 2020-04-30 19:09:37
- * @LastEditTime: 2020-07-08 21:35:06
- * @LastEditors: Innei
- * @FilePath: /mx-server/src/core/guards/spider.guard.ts
- * @Coding with Love
+/**
+ * @module common/guard/spider.guard
+ * @description 禁止爬虫的守卫
+ * @author Innei <https://innei.ren>
  */
-
 import {
   CanActivate,
   ExecutionContext,

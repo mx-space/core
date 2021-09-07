@@ -7,11 +7,13 @@ import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapt/fastify'
 import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
-import { isDev } from './utils/index.util'
-// const PORT = parseInt(process.env.PORT) || 2333
+import './utils/global.util'
+import './zx.global-fix'
+
 const PORT = 2333
 const APIVersion = 1
 const Origin = CROSS_DOMAIN.allowedOrigins
+
 declare const module: any
 
 async function bootstrap() {
