@@ -32,6 +32,7 @@ specifiers:
   '@types/redis': 2.8.31
   '@types/supertest': ^2.0.11
   '@types/ua-parser-js': ^0.7.36
+  '@vercel/ncc': ^0.30.0
   argv: ^0.0.2
   axios: '*'
   bcrypt: ^5.0.1
@@ -160,6 +161,7 @@ devDependencies:
   '@types/redis': 2.8.31
   '@types/supertest': 2.0.11
   '@types/ua-parser-js': 0.7.36
+  '@vercel/ncc': 0.30.0
   cross-env: 7.0.3
   eslint: 7.32.0
   fastify: 3.20.1
@@ -1789,6 +1791,11 @@ packages:
     dependencies:
       '@typescript-eslint/types': 4.30.0
       eslint-visitor-keys: 2.1.0
+    dev: true
+
+  /@vercel/ncc/0.30.0:
+    resolution: {integrity: sha512-16ePj2GkwjomvE0HLL5ny+d+sudOwvZNYW8vjpMh3cyWdFxoMI8KSQiolVxeHBULbU1C5mVxLK5nL9NtnnpIew==}
+    hasBin: true
     dev: true
 
   /@vibrant/color/3.2.1-alpha.1:

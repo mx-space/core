@@ -35,3 +35,5 @@ lerna-debug.log*
 
 patch/dist
 tmp
+out
+release.zip
