@@ -54,6 +54,8 @@ specifiers:
   inquirer: '*'
   ioredis: '*'
   jest: 27.1.0
+  js-yaml: '*'
+  jszip: ^3.7.1
   lint-staged: ^11.1.2
   lodash: '*'
   mkdirp: '*'
@@ -117,6 +119,8 @@ dependencies:
   fastify-swagger: 4.9.1
   image-size: 1.0.0
   inquirer: 8.1.1
+  js-yaml: 4.1.0
+  jszip: 3.7.1
   lodash: 4.17.21
   mkdirp: 1.0.4
   mongoose: 5.13.8
@@ -4059,6 +4063,10 @@ packages:
       queue: 6.0.2
     dev: false
 
+  /immediate/3.0.6:
+    resolution: {integrity: sha1-nbHb0Pr43m++D13V5Wu2BigN5ps=}
+    dev: false
+
   /import-fresh/3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
     engines: {node: '>=6'}
@@ -5043,6 +5051,15 @@ packages:
       verror: 1.10.0
     dev: false
 
+  /jszip/3.7.1:
+    resolution: {integrity: sha512-ghL0tz1XG9ZEmRMcEN2vt7xabrDdqHHeykgARpmZ0BiIctWxM47Vt63ZO2dnp4QYt/xJVLLy5Zv1l/xRdh2byg==}
+    dependencies:
+      lie: 3.3.0
+      pako: 1.0.11
+      readable-stream: 2.3.7
+      set-immediate-shim: 1.0.1
+    dev: false
+
   /jwa/1.4.1:
     resolution: {integrity: sha512-qiLX/xhEEFKUAJ6FiBMbes3w9ATzyk5W7Hvzpa/SLYdxNtng+gcurvrI7TbACjIXlsJyr05/S1oUhZrc63evQA==}
     dependencies:
@@ -5090,6 +5107,12 @@ packages:
 
   /libphonenumber-js/1.9.25:
     resolution: {integrity: sha512-LsSjcmXXGujESsrOsF2rrLdmuABj3OluCzPJKVNslJ2qc7xF5KdKXN8y0OcxHVurqosVf1/r4itrVrKSrlbVHA==}
+    dev: false
+
+  /lie/3.3.0:
+    resolution: {integrity: sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ==}
+    dependencies:
+      immediate: 3.0.6
     dev: false
 
   /light-my-request/4.4.1:
@@ -6498,6 +6521,11 @@ packages:
 
   /set-cookie-parser/2.4.8:
     resolution: {integrity: sha512-edRH8mBKEWNVIVMKejNnuJxleqYE/ZSdcT8/Nem9/mmosx12pctd80s2Oy00KNZzrogMZS5mauK2/ymL1bvlvg==}
+
+  /set-immediate-shim/1.0.1:
+    resolution: {integrity: sha1-SysbJ+uAip+NzEgaWOXlb1mfP2E=}
+    engines: {node: '>=0.10.0'}
+    dev: false
 
   /setprototypeof/1.1.1:
     resolution: {integrity: sha512-JvdAWfbXeIGaZ9cILp38HntZSFSo3mWg6xGcJJsd+d4aRMOqauag1C63dJfDw7OaMYwEbHMOxEZ1lqVRYP2OAw==}

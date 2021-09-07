@@ -27,12 +27,14 @@ import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
 import { InitModule } from './modules/init/init.module'
 import { LinkModule } from './modules/link/link.module'
+import { MarkdownModule } from './modules/markdown/markdown.module'
 import { NoteModule } from './modules/note/note.module'
 import { OptionModule } from './modules/option/option.module'
 import { PageModule } from './modules/page/page.module'
 import { PostModule } from './modules/post/post.module'
 import { ProjectModule } from './modules/project/project.module'
 import { SayModule } from './modules/say/say.module'
+import { ToolModule } from './modules/tool/tool.module'
 import { UserModule } from './modules/user/user.module'
 import { CacheModule } from './processors/cache/cache.module'
 import { DbModule } from './processors/database/database.module'
@@ -63,12 +65,14 @@ import { HelperModule } from './processors/helper/helper.module'
     CommentModule,
     ConfigsModule,
     LinkModule,
+    MarkdownModule,
     NoteModule,
     OptionModule,
     PageModule,
     PostModule,
     ProjectModule,
     SayModule,
+    ToolModule,
     UserModule,
     UserModule,
 
