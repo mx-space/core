@@ -285,8 +285,10 @@ export class AnalyzeService {
 
   async getTodayAccessIp(): Promise<string[]> {
     const redis = this.cacheService.getClient()
-    const fromRedisIps = await redis.get(getRedisKey(RedisKeys.Access, 'ips'))
-    const ips = fromRedisIps ? JSON.parse(fromRedisIps) : []
-    return ips
+    const fromRedisIps = await redis.smembers(
+      getRedisKey(RedisKeys.Access, 'ips'),
+    )
+
+    return fromRedisIps
   }
 }

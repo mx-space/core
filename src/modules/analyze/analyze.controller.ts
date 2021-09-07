@@ -122,10 +122,10 @@ export class AnalyzeController {
       })
       .reverse()
 
-    const paths = await this.service.getRangeOfTopPathVisitor()
-
-    const total = await this.service.getCallTime()
-
+    const [paths, total] = await Promise.all([
+      this.service.getRangeOfTopPathVisitor(),
+      this.service.getCallTime(),
+    ])
     return {
       today: dayData.flat(1),
       weeks: weekData.flat(1),
@@ -140,21 +140,15 @@ export class AnalyzeController {
   @Get('/like')
   async getTodayLikedArticle() {
     const client = this.cacheService.getClient()
-    const keys = await client.keys(getRedisKey(RedisKeys.Like, '*mx_like*'))
-    return await Promise.all(
+    const keys = await client.keys(getRedisKey(RedisKeys.Like, '*'))
+
+    return Promise.all(
       keys.map(async (key) => {
         const id = key.split('_').pop()
-        const json = await client.get(id)
+
         return {
-          [id]: (
-            JSON.parse(json) as {
-              ip: string
-              created: string
-            }[]
-          ).sort(
-            (a, b) =>
-              new Date(a.created).getTime() - new Date(b.created).getTime(),
-          ),
+          id,
+          ips: await client.smembers(getRedisKey(RedisKeys.Like, id)),
         }
       }),
     )

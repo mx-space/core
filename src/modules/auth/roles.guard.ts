@@ -20,6 +20,7 @@ declare interface Request {
 export class RolesGuard extends AuthGuard('jwt') implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request: Request = context.switchToHttp().getRequest()
+
     let isMaster = false
     if (request.headers['authorization']) {
       try {

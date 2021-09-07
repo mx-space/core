@@ -135,7 +135,7 @@ export class PostController {
     return await this.postService.updateById(params.id, body)
   }
 
-  @Delete(':id')
+  @Delete('/:id')
   @Auth()
   @HttpCode(204)
   async deletePost(@Param() params: MongoIdDto) {
@@ -145,7 +145,7 @@ export class PostController {
     return
   }
 
-  @Get('search')
+  @Get('/search')
   @Paginator
   async searchPost(@Query() query: SearchDto, @IsMaster() isMaster: boolean) {
     const { keyword, page, size } = query
@@ -167,7 +167,7 @@ export class PostController {
     )
   }
 
-  @Get('_thumbs-up')
+  @Get('/_thumbs-up')
   @HttpCode(204)
   async thumbsUpArticle(
     @Query() query: MongoIdDto,

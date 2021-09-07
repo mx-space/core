@@ -1,24 +1,38 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import COS from 'cos-nodejs-sdk-v5'
 import dayjs from 'dayjs'
-import { existsSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import mkdirp from 'mkdirp'
+import { InjectModel } from 'nestjs-typegoose'
 import { join } from 'path'
 import { $, cd } from 'zx'
+import { RedisKeys } from '~/constants/cache.constant'
 import {
   BACKUP_DIR,
   LOCAL_BOT_LIST_DATA_FILE_PATH,
+  TEMP_DIR,
 } from '~/constants/path.constant'
+import { AggregateService } from '~/modules/aggregate/aggregate.service'
+import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { isDev } from '~/utils/index.util'
+import { getRedisKey } from '~/utils/redis.util'
+import { CacheService } from '../cache/cache.service'
 import { HttpService } from './helper.http.service'
+
 @Injectable()
 export class CronService {
   private logger: Logger
   constructor(
     private readonly http: HttpService,
     private readonly configs: ConfigsService,
+    @InjectModel(AnalyzeModel)
+    private readonly analyzeModel: MongooseModel<AnalyzeModel>,
+    private readonly cacheService: CacheService,
+
+    @Inject(forwardRef(() => AggregateService))
+    private readonly aggregateService: AggregateService,
   ) {
     this.logger = new Logger(CronService.name)
   }
@@ -115,6 +129,92 @@ export class CronService {
     })
 
     return readFileSync(join(backupDirPath, 'backup-' + dateDir + '.zip'))
+  }
+
+  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT, {
+    name: 'clear_access',
+  })
+  async cleanAccessRecord() {
+    const now = new Date().getTime()
+    const cleanDate = new Date(now - 7 * 60 * 60 * 24 * 1000)
+
+    await this.analyzeModel.deleteMany({
+      created: {
+        $lte: cleanDate,
+      },
+    })
+  }
+  /**
+   * @description 每天凌晨删除缓存
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'reset_ua' })
+  async resetIPAccess() {
+    await this.cacheService
+      .getClient()
+      .del(getRedisKey(RedisKeys.Access, 'ips'))
+  }
+
+  /**
+   * @description 每天凌晨删除缓存
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'reset_like_article' })
+  async resetLikedOrReadArticleRecord() {
+    const redis = this.cacheService.getClient()
+
+    await Promise.all(
+      [
+        redis.keys(getRedisKey(RedisKeys.Like, '*')),
+        redis.keys(getRedisKey(RedisKeys.Read, '*')),
+      ].map(async (keys) => {
+        return keys.then((keys) => keys.map((key) => redis.del(key)))
+      }),
+    )
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  cleanTempDirectory() {
+    rmSync(TEMP_DIR, { recursive: true })
+    mkdirp.sync(TEMP_DIR)
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  pushToBaiduSearch() {
+    return new Promise(async (resolve, reject) => {
+      const configs = this.configs.get('baiduSearchOptions')
+      if (configs.enable) {
+        const token = configs.token
+        if (!token) {
+          this.logger.error('[BaiduSearchPushTask] token 为空')
+          return reject('token is empty')
+        }
+        const siteUrl = this.configs.get('url').webUrl
+
+        const pushUrls = await this.aggregateService.getSiteMapContent()
+        const urls = pushUrls
+          .map((item) => {
+            return item.url
+          })
+          .join('\n')
+
+        try {
+          const res = await this.http.axiosRef.post(
+            `http://data.zz.baidu.com/urls?site=${siteUrl}&token=${token}`,
+            urls,
+            {
+              headers: {
+                'Content-Type': 'text/plain',
+              },
+            },
+          )
+          this.logger.log(`提交结果: ${JSON.stringify(res.data)}`)
+          return resolve(res.data)
+        } catch (e) {
+          this.logger.error('百度推送错误: ' + e.message)
+          return reject(e)
+        }
+      }
+      return resolve(null)
+    })
   }
 
   private get nowStr() {

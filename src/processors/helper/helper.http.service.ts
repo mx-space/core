@@ -4,7 +4,7 @@ import axios from 'axios'
 import { AXIOS_CONFIG } from '~/app.config'
 @Injectable()
 export class HttpService {
-  http: AxiosInstance
+  private http: AxiosInstance
   constructor() {
     this.http = axios.create(AXIOS_CONFIG)
   }

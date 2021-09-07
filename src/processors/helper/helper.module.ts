@@ -1,5 +1,6 @@
-import { Global, Module, Provider } from '@nestjs/common'
+import { forwardRef, Global, Module, Provider } from '@nestjs/common'
 import { ScheduleModule } from '@nestjs/schedule'
+import { AggregateModule } from '~/modules/aggregate/aggregate.module'
 import { CountingService } from './helper.counting.service'
 import { CronService } from './helper.cron.service'
 import { EmailService } from './helper.email.service'
@@ -17,7 +18,7 @@ const providers: Provider<any>[] = [
 ]
 
 @Module({
-  imports: [ScheduleModule.forRoot()],
+  imports: [ScheduleModule.forRoot(), forwardRef(() => AggregateModule)],
   providers: providers,
   exports: providers,
 })
