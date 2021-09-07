@@ -1,7 +1,10 @@
 # MX server next generation
 
+[![wakatime](https://wakatime.com/badge/github/mx-space/server-next.svg)](https://wakatime.com/badge/github/mx-space/server-next)
 
-Intercept life cycle
+---
+
+Interceptor Dataflow
 
 ```
 ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> HttpCacheInterceptor

@@ -17,6 +17,7 @@ import {
 import { AnalyzeMiddleware } from './common/middlewares/analyze.middleware'
 import { SkipBrowserDefaultRequestMiddleware } from './common/middlewares/favicon.middleware'
 import { SecurityMiddleware } from './common/middlewares/security.middleware'
+import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { RolesGuard } from './modules/auth/roles.guard'
@@ -54,6 +55,7 @@ import { HelperModule } from './processors/helper/helper.module'
       isGlobal: true,
     }),
 
+    AggregateModule,
     AnalyzeModule,
     AuthModule,
     BackupModule,
