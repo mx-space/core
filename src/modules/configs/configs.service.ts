@@ -101,6 +101,7 @@ export class ConfigsService {
   }
 
   get getMaster() {
-    return this.userService.getMaster
+    // HINT: 需要注入 this 的指向
+    return this.userService.getMaster.bind(this.userService)
   }
 }

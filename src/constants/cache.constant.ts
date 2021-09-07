@@ -9,3 +9,9 @@ export enum RedisKeys {
 export enum RedisItems {
   Ips = 'ips',
 }
+
+export enum CacheKeys {
+  AggregateCatch = 'aggregate_catch',
+  SiteMapCatch = 'aggregate_sitemap_catch',
+  RSS = 'rss',
+}

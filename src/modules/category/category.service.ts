@@ -6,7 +6,7 @@ import { InjectModel } from 'nestjs-typegoose'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { PostModel } from '../post/post.model'
 import { PostService } from '../post/post.service'
-import { CategoryModel } from './category.model'
+import { CategoryModel, CategoryType } from './category.model'
 
 @Injectable()
 export class CategoryService {
@@ -31,7 +31,7 @@ export class CategoryService {
   }
 
   async findAllCategory() {
-    const data = await this.model.find().lean()
+    const data = await this.model.find({ type: CategoryType.Category }).lean()
     const counts = await Promise.all(
       data.map((item) => {
         const id = item._id

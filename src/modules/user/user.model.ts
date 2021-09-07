@@ -4,10 +4,10 @@ import {
   prop,
   Severity,
 } from '@typegoose/typegoose'
-import { Schema } from 'mongoose'
-
 import { hashSync } from 'bcrypt'
+import { Schema } from 'mongoose'
 import { BaseModel } from '~/shared/model/base.model'
+
 export type UserDocument = DocumentType<UserModel>
 
 export class OAuthModel {
@@ -72,7 +72,7 @@ export class UserModel extends BaseModel {
   @prop({ type: Schema.Types.Mixed })
   socialIds?: any
 
-  @prop({ select: true, required: true })
+  @prop({ select: false, required: true })
   authCode!: string
 
   @prop({ type: TokenModel, select: false })
