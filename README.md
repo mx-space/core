@@ -1,5 +1,18 @@
 # MX server next generation
 
+Quick usage
+
+Requirement:
+  - Node.js 16+
+
+If you're using Ubuntu you can just download the latest [release](https://github.com/mx-space/server-next/releases/latest) and unzip it.
+
+```
+node index.js
+```
+
+---
+
 [![wakatime](https://wakatime.com/badge/github/mx-space/server-next.svg)](https://wakatime.com/badge/github/mx-space/server-next)
 
 ---
