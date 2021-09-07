@@ -46,15 +46,19 @@ export class HttpCacheInterceptor implements NestInterceptor {
     if (REDIS.disableApiCache) {
       return call$
     }
+    const http = context.switchToHttp()
+    const request = http.getRequest<IncomingMessage>()
+
+    // 只有 GET 请求才会缓存
+    if (request.method.toLowerCase() !== 'get') {
+      return call$
+    }
+
     const handler = context.getHandler()
     const isDisableCache = this.reflector.get(META.HTTP_CACHE_DISABLE, handler)
-    const key =
-      this.trackBy(context) ||
-      `api-cache:${
-        (context.switchToHttp().getRequest() as IncomingMessage).url
-      }`
+    const key = this.trackBy(context) || `api-cache:${request.url}`
 
-    if (!key || isDisableCache) {
+    if (!isDisableCache) {
       return call$
     }
 

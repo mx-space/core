@@ -88,7 +88,7 @@ export class PostService {
   async updateById(id: string, data: Partial<PostModel>) {
     const oldDocument = await this.postModel.findById(id).lean()
     if (!oldDocument) {
-      throw new BadRequestException('原记录不存在')
+      throw new BadRequestException('文章不存在')
     }
     // 看看 category 改了没
     const { categoryId } = data

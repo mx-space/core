@@ -1,8 +1,8 @@
 import { Controller, Delete, Get, HttpCode, Query } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
 import dayjs from 'dayjs'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
+import { ApiName } from '~/common/decorator/openapi.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
@@ -12,7 +12,7 @@ import { AnalyzeDto } from './analyze.dto'
 import { AnalyzeService } from './analyze.service'
 
 @Controller('analyze')
-@ApiTags('Analyze Routes')
+@ApiName
 @Auth()
 export class AnalyzeController {
   constructor(

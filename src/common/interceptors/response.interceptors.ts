@@ -42,7 +42,8 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
     return next.handle().pipe(
       map((data) => {
         if (typeof data === 'undefined') {
-          return ''
+          context.switchToHttp().getResponse().status(204)
+          return
         }
         // 分页转换
         if (this.reflector.get(HTTP_RES_TRANSFORM_PAGINATE, handler)) {

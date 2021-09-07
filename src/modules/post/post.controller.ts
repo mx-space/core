@@ -110,6 +110,7 @@ export class PostController {
 
   @Post('/')
   @Auth()
+  @HttpCode(201)
   async create(@Body() body: PostModel) {
     const _id = Types.ObjectId()
 
@@ -129,7 +130,6 @@ export class PostController {
   }
 
   @Patch('/:id')
-  @HttpCode(204)
   @Auth()
   async patch(@Param() params: MongoIdDto, @Body() body: PartialPostModel) {
     return await this.postService.updateById(params.id, body)
