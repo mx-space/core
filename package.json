@@ -1,6 +1,6 @@
 {
   "name": "server-next",
-  "version": "3.0.0-alpha.1",
+  "version": "3.0.0-alpha.2",
   "description": "",
   "author": "Innei <https://innei.ren>",
   "private": true,
@@ -75,7 +75,6 @@
     "js-yaml": "*",
     "jszip": "^3.7.1",
     "lodash": "*",
-    "ts-morph": "*",
     "mkdirp": "*",
     "mongoose": "*",
     "mongoose-lean-id": "^0.2.0",
@@ -92,6 +91,7 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.3.0",
     "snakecase-keys": "^4.0.2",
+    "ts-morph": "*",
     "ua-parser-js": "^0.7.28",
     "zx": "^4.1.1"
   },
