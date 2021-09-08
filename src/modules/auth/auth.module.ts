@@ -7,7 +7,7 @@ import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
 import { JwtStrategy } from './jwt.strategy'
 
-export const __secret =
+export const __secret: any =
   SECURITY.jwtSecret || process.env.SECRET || 'asjhczxiucipoiopiqm2376'
 
 const jwtModule = JwtModule.registerAsync({

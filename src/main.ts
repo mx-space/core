@@ -10,8 +10,10 @@ import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapt/fastify'
 import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
-import argv from 'argv'
-const PORT = argv.port || 2333
+import { argv } from 'yargs'
+
+const PORT: number = +argv.port || 2333
+
 const APIVersion = 1
 const Origin = CROSS_DOMAIN.allowedOrigins
 
