@@ -8,20 +8,18 @@
  */
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
+import { getNestExectionContextRequest } from '~/utils/nest.util'
 
 /**
  * 区分游客和主人的守卫
  */
 
-declare interface Request {
-  [name: string]: any
-}
 @Injectable()
 export class RolesGuard extends AuthGuard('jwt') implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request: Request = context.switchToHttp().getRequest()
-
     let isMaster = false
+    const request = this.getRequest(context)
+
     if (request.headers['authorization']) {
       try {
         isMaster = (await super.canActivate(context)) as boolean
@@ -30,5 +28,9 @@ export class RolesGuard extends AuthGuard('jwt') implements CanActivate {
     request.isGuest = !isMaster
     request.isMaster = isMaster
     return true
+  }
+
+  getRequest(context: ExecutionContext) {
+    return getNestExectionContextRequest(context)
   }
 }

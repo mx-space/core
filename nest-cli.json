@@ -4,6 +4,17 @@
   "compilerOptions": {
     "plugins": [
       {
+        "name": "@nestjs/graphql",
+        "options": {
+          "typeFileNameSuffix": [
+            ".input.ts",
+            ".args.ts",
+            ".dto.ts",
+            ".model.ts"
+          ]
+        }
+      },
+      {
         "name": "@nestjs/swagger",
         "options": {
           "classValidatorShim": false,

@@ -1,3 +1,4 @@
+import { ObjectType, registerEnumType } from '@nestjs/graphql'
 import { PartialType } from '@nestjs/mapped-types'
 import { DocumentType, index, modelOptions, prop } from '@typegoose/typegoose'
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator'
@@ -10,8 +11,13 @@ export enum CategoryType {
   Tag,
 }
 
+registerEnumType(CategoryType, {
+  name: 'CategoryType',
+})
+
 @index({ slug: -1 })
 @modelOptions({ options: { customName: 'Category' } })
+@ObjectType()
 export class CategoryModel extends BaseModel {
   @prop({ unique: true, trim: true, required: true })
   @IsString()

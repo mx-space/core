@@ -16,13 +16,13 @@ import {
   RequestMethod,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import { IncomingMessage } from 'http'
 import { Observable, of } from 'rxjs'
 import { tap } from 'rxjs/operators'
 import { REDIS } from '~/app.config'
 import * as META from '~/constants/meta.constant'
 import * as SYSTEM from '~/constants/system.constant'
 import { CacheService } from '~/processors/cache/cache.service'
+import { getNestExectionContextRequest } from '~/utils/nest.util'
 /**
  * @class HttpCacheInterceptor
  * @classdesc 弥补框架不支持单独定义 ttl 参数以及单请求应用的缺陷
@@ -47,8 +47,8 @@ export class HttpCacheInterceptor implements NestInterceptor {
     if (REDIS.disableApiCache) {
       return call$
     }
-    const http = context.switchToHttp()
-    const request = http.getRequest<IncomingMessage>()
+
+    const request = this.getRequest(context)
 
     // 只有 GET 请求才会缓存
     if (request.method.toLowerCase() !== 'get') {
@@ -63,8 +63,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
       return call$
     }
 
-    const target = context.getHandler()
-    const metaTTL = this.reflector.get(META.HTTP_CACHE_TTL_METADATA, target)
+    const metaTTL = this.reflector.get(META.HTTP_CACHE_TTL_METADATA, handler)
     const ttl = metaTTL || REDIS.httpCacheTTL
 
     try {
@@ -84,7 +83,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
    * @description 目前的命中规则是：必须手动设置了 CacheKey 才会启用缓存机制，默认 ttl 为 APP_CONFIG.REDIS.defaultCacheTTL
    */
   trackBy(context: ExecutionContext): string | undefined {
-    const request = context.switchToHttp().getRequest()
+    const request = this.getRequest(context)
     const httpServer = this.httpAdapterHost.httpAdapter
     const isHttpApp = Boolean(httpServer?.getRequestMethod)
     const isGetRequest =
@@ -96,5 +95,9 @@ export class HttpCacheInterceptor implements NestInterceptor {
     )
     const isMatchedCache = isHttpApp && isGetRequest && cacheKey
     return isMatchedCache ? cacheKey : undefined
+  }
+
+  get getRequest() {
+    return getNestExectionContextRequest.bind(this)
   }
 }

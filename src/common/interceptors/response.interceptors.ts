@@ -11,13 +11,12 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { isArrayLike, isObjectLike } from 'lodash'
-import { PaginateResult } from 'mongoose'
 import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 import snakecaseKeys from 'snakecase-keys'
 import { HTTP_RES_TRANSFORM_PAGINATE } from '~/constants/meta.constant'
 import * as SYSTEM from '~/constants/system.constant'
-import { Paginator } from '~/shared/model/base.model'
+import { transformDataToPaginate } from '~/utils/transfrom.util'
 export interface Response<T> {
   data: T
 }
@@ -29,6 +28,9 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<Response<T>> {
+    if (!context.switchToHttp().getRequest()) {
+      return next.handle()
+    }
     const handler = context.getHandler()
 
     // 跳过 bypass 装饰的请求
@@ -57,7 +59,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
         }
         // 分页转换
         if (this.reflector.get(HTTP_RES_TRANSFORM_PAGINATE, handler)) {
-          return this.transformDataToPaginate(data)
+          return transformDataToPaginate(data)
         }
 
         // 对象转换成标准结构
@@ -69,27 +71,14 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
       }),
     )
   }
-
-  private transformDataToPaginate(data: PaginateResult<T>): {
-    data: T[]
-    pagination: Paginator
-  } {
-    return {
-      data: data.docs,
-      pagination: {
-        total: data.totalDocs,
-        currentPage: data.page as number,
-        totalPage: data.totalPages as number,
-        size: data.limit,
-        hasNextPage: data.hasNextPage,
-        hasPrevPage: data.hasPrevPage,
-      },
-    }
-  }
 }
 
 export class JSONSerializeInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    if (!context.switchToHttp().getRequest()) {
+      return next.handle()
+    }
+
     return next.handle().pipe(
       map((data) => {
         return this.serialize(data)

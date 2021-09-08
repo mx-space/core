@@ -13,6 +13,7 @@ import { map } from 'rxjs'
 import { HTTP_RES_UPDATE_DOC_COUNT_TYPE } from '~/constants/meta.constant'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { getIp } from '~/utils/ip.util'
+import { getNestExectionContextRequest } from '~/utils/nest.util'
 // ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> HttpCacheInterceptor
 @Injectable()
 export class CountingInterceptor<T> implements NestInterceptor<T, any> {
@@ -34,12 +35,16 @@ export class CountingInterceptor<T> implements NestInterceptor<T, any> {
           this.countingService.updateReadCount(
             documentType as any,
             data.id || data?.data?.id,
-            getIp(context.switchToHttp().getRequest()),
+            getIp(this.getRequest(context)),
           )
         }
 
         return data
       }),
     )
+  }
+
+  get getRequest() {
+    return getNestExectionContextRequest.bind(this)
   }
 }

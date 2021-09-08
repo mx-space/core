@@ -1,3 +1,6 @@
+import './utils/global.util'
+import './zx.global-fix'
+
 import { Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
@@ -7,10 +10,8 @@ import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapt/fastify'
 import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
-import './utils/global.util'
-import './zx.global-fix'
-
-const PORT = 2333
+import argv from 'argv'
+const PORT = argv.port || 2333
 const APIVersion = 1
 const Origin = CROSS_DOMAIN.allowedOrigins
 
@@ -64,7 +65,8 @@ async function bootstrap() {
 
   await app.listen(PORT, '0.0.0.0', () => {
     if (isDev) {
-      Logger.debug(`http://localhost:${PORT}/api-docs`)
+      Logger.debug(`OpenApi: http://localhost:${PORT}/api-docs`)
+      Logger.debug(`GraphQL playground: http://localhost:${PORT}/graphql`)
     }
 
     Logger.log('Server is up.')

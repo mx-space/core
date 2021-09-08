@@ -1,3 +1,4 @@
+import { Field, ObjectType } from '@nestjs/graphql'
 import { ApiHideProperty } from '@nestjs/swagger'
 import { modelOptions, plugin, prop } from '@typegoose/typegoose'
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator'
@@ -7,8 +8,10 @@ import Paginate from 'mongoose-paginate-v2'
 @plugin(mongooseLeanVirtuals)
 @plugin(Paginate)
 @plugin(LeanId)
+@ObjectType()
 export class BaseModel {
   @ApiHideProperty()
+  @Field(() => Date)
   created?: Date
 
   static get protectedKeys() {
@@ -16,30 +19,32 @@ export class BaseModel {
   }
 }
 
-export interface Paginator {
+@ObjectType()
+export class Paginator {
   /**
    * 总条数
    */
-  total: number
+  readonly total: number
   /**
    * 一页多少条
    */
-  size: number
+  readonly size: number
   /**
    * 当前页
    */
-  currentPage: number
+  readonly currentPage: number
   /**
    * 总页数
    */
-  totalPage: number
-  hasNextPage: boolean
-  hasPrevPage: boolean
+  readonly totalPage: number
+  readonly hasNextPage: boolean
+  readonly hasPrevPage: boolean
 }
 
 @modelOptions({
   schemaOptions: { _id: false },
 })
+@ObjectType()
 class Image {
   @prop()
   width?: number
@@ -57,6 +62,7 @@ class Image {
   src: string
 }
 
+@ObjectType()
 export abstract class BaseCommentIndexModel extends BaseModel {
   @prop({ default: 0 })
   @ApiHideProperty()
@@ -80,6 +86,7 @@ export abstract class BaseCommentIndexModel extends BaseModel {
     },
   },
 })
+@ObjectType()
 export abstract class WriteBaseModel extends BaseCommentIndexModel {
   @prop({ trim: true, index: true, required: true })
   @IsString()
@@ -92,6 +99,7 @@ export abstract class WriteBaseModel extends BaseCommentIndexModel {
 
   @prop({ type: Image })
   @ApiHideProperty()
+  @Field(() => Image, { nullable: true })
   images?: Image[]
 
   @prop({ default: null })
@@ -107,6 +115,7 @@ export abstract class WriteBaseModel extends BaseCommentIndexModel {
   schemaOptions: { id: false, _id: false },
   options: { customName: 'count' },
 })
+@ObjectType()
 export class CountMixed {
   @prop({ default: 0 })
   read?: number

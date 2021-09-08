@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
+import { GraphQLModule } from '@nestjs/graphql'
+import { join } from 'path/posix'
 import { AppController } from './app.controller'
+import { AppResolver } from './app.resolver'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
 import { CountingInterceptor } from './common/interceptors/counting.interceptor'
@@ -56,6 +59,12 @@ import { HelperModule } from './processors/helper/helper.module'
       ],
       isGlobal: true,
     }),
+    GraphQLModule.forRoot({
+      debug: isDev,
+      playground: isDev,
+      autoSchemaFile: join(process.cwd(), 'schema.gql'),
+      context: ({ req }) => ({ req }),
+    }),
 
     AggregateModule,
     AnalyzeModule,
@@ -81,6 +90,8 @@ import { HelperModule } from './processors/helper/helper.module'
   ],
   controllers: [AppController],
   providers: [
+    AppResolver,
+
     {
       provide: APP_INTERCEPTOR,
       useClass: HttpCacheInterceptor,

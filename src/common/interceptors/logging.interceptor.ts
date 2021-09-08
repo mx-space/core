@@ -14,6 +14,7 @@ import {
   NestInterceptor,
   SetMetadata,
 } from '@nestjs/common'
+import { GqlExecutionContext } from '@nestjs/graphql'
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
@@ -34,11 +35,11 @@ export class LoggingInterceptor implements NestInterceptor {
     if (!isDev) {
       return call$
     }
-    const request = context.switchToHttp().getRequest()
+    const request = this.getRequest(context)
     const content = request.method + ' -> ' + request.url
     Logger.debug('+++ 收到请求：' + content, LoggingInterceptor.name)
     const now = +new Date()
-    SetMetadata(HTTP_REQUEST_TIME, now)(context.switchToHttp().getRequest())
+    SetMetadata(HTTP_REQUEST_TIME, now)(this.getRequest(context))
 
     return call$.pipe(
       tap(() =>
@@ -47,5 +48,14 @@ export class LoggingInterceptor implements NestInterceptor {
         ),
       ),
     )
+  }
+
+  getRequest(context: ExecutionContext) {
+    const req = context.switchToHttp().getRequest<KV>()
+    if (req) {
+      return req
+    }
+    const ctx = GqlExecutionContext.create(context)
+    return ctx.getContext().req
   }
 }

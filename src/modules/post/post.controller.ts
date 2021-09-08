@@ -28,7 +28,7 @@ import {
   addConditionToSeeHideContent,
   addYearCondition,
 } from '~/utils/query.util'
-import { CategoryAndSlug, PostQueryDto } from './post.dto'
+import { CategoryAndSlugDto, PostQueryDto } from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'
 
@@ -84,7 +84,7 @@ export class PostController {
   @ApiOperation({ summary: '根据分类名和自定义别名获取' })
   @UpdateDocumentCount('Post')
   async getByCateAndSlug(
-    @Param() params: CategoryAndSlug,
+    @Param() params: CategoryAndSlugDto,
     @IsMaster() isMaster: boolean,
   ) {
     const { category, slug } = params
