@@ -8,8 +8,9 @@ import {
   Logger,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
+import { GqlArgumentsHost } from '@nestjs/graphql'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { writeFileSync } from 'fs'
+import { WriteStream } from 'fs'
 import { resolve } from 'path'
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 import { LOGGER_DIR } from '~/constants/path.constant'
@@ -27,9 +28,15 @@ type myError = {
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger('捕获异常')
-  constructor(@Inject(REFLECTOR) private reflector: Reflector) {}
+  private readonly errorLogPipe: WriteStream
+  constructor(@Inject(REFLECTOR) private reflector: Reflector) {
+    this.errorLogPipe = fs.createWriteStream(resolve(LOGGER_DIR, 'error.log'), {
+      flags: 'a+',
+      encoding: 'utf-8',
+    })
+  }
   catch(exception: unknown, host: ArgumentsHost) {
-    const ctx = host.switchToHttp()
+    const ctx = GqlArgumentsHost.create(host).switchToHttp()
     const response = ctx.getResponse<FastifyReply>()
     const request = ctx.getRequest<FastifyRequest>()
 
@@ -39,7 +46,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : (exception as myError)?.status ||
           (exception as myError)?.statusCode ||
           HttpStatus.INTERNAL_SERVER_ERROR
-    if (isDev) {
+    if (isDev || status === HttpStatus.INTERNAL_SERVER_ERROR) {
       console.error(exception)
     } else {
       const ip = getIp(request)
@@ -50,16 +57,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
           ''
         } Path: ${decodeURI(request.raw.url)}`,
       )
-
-      writeFileSync(
-        resolve(LOGGER_DIR, 'error.log'),
-        `[${new Date().toISOString()}] ${decodeURI(request.raw.url)}: ${
-          (exception as any)?.response?.message ||
-          (exception as myError)?.message
-        }\n`,
-        // ${(exception as Error).stack || ''}\n`,
-        { encoding: 'utf-8', flag: 'a+' },
-      )
+      if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+        this.errorLogPipe.write(
+          `[${new Date().toISOString()}] ${decodeURI(request.raw.url)}: ${
+            (exception as any)?.response?.message ||
+            (exception as myError)?.message
+          }\n` + (exception as Error).stack,
+        )
+      }
     }
     // @ts-ignore
     const prevRequestTs = this.reflector.get(HTTP_REQUEST_TIME, request as any)

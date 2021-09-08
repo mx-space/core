@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { Reflector } from '@nestjs/core'
 import { InjectModel } from 'nestjs-typegoose'
 import { ArticleType } from '~/constants/article.constant'
 import { RedisKeys } from '~/constants/cache.constant'
@@ -12,7 +11,6 @@ import { CacheService } from '../cache/cache.service'
 export class CountingService {
   private logger: Logger
   constructor(
-    private readonly reflector: Reflector,
     @InjectModel(PostModel)
     private readonly postModel: MongooseModel<PostModel>,
     @InjectModel(NoteModel)

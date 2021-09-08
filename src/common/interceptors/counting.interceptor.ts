@@ -34,7 +34,8 @@ export class CountingInterceptor<T> implements NestInterceptor<T, any> {
         if (documentType) {
           this.countingService.updateReadCount(
             documentType as any,
-            data.id || data?.data?.id,
+            // _id 兼容 GQL 不过 JSONSerializeInterceptor ResponseInterceptor 转换
+            data.id || data?.data?.id || data._id || data?.data?._id,
             getIp(this.getRequest(context)),
           )
         }

@@ -74,6 +74,6 @@ export class PostResolver {
     if (!postDocument || (postDocument.hide && !isMaster)) {
       throw new CannotFindException()
     }
-    return postDocument.toJSON()
+    return postDocument
   }
 }

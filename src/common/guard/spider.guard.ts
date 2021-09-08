@@ -9,9 +9,9 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common'
-import { FastifyRequest } from 'fastify'
 import { Observable } from 'rxjs'
 import { isDev } from '~/utils/index.util'
+import { getNestExectionContextRequest } from '~/utils/nest.util'
 
 @Injectable()
 export class SpiderGuard implements CanActivate {
@@ -21,8 +21,8 @@ export class SpiderGuard implements CanActivate {
     if (isDev) {
       return true
     }
-    const http = context.switchToHttp()
-    const request = http.getRequest<FastifyRequest>()
+
+    const request = this.getRequest(context)
     const headers = request.headers
     const ua: string = headers['user-agent'] || ''
     const isSpiderUA = !!ua.match(/(Scrapy|Curl|HttpClient|python|requests)/i)
@@ -30,5 +30,9 @@ export class SpiderGuard implements CanActivate {
       return true
     }
     throw new ForbiddenException('爬虫, 禁止')
+  }
+
+  getRequest(context: ExecutionContext) {
+    return getNestExectionContextRequest(context)
   }
 }
