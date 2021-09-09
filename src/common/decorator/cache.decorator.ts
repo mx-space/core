@@ -5,8 +5,7 @@
  * @author Surmon <https://github.com/surmon-china>
  */
 
-import lodash from 'lodash'
-import { SetMetadata, CacheKey, CacheTTL } from '@nestjs/common'
+import { CacheKey, CacheTTL, SetMetadata } from '@nestjs/common'
 import * as META from '~/constants/meta.constant'
 
 // 缓存器配置

@@ -1,8 +1,9 @@
 import Vibrant = require('node-vibrant')
 import { ISizeCalculationResult } from 'image-size/dist/types/interface'
 
+//TODO use ast to parse markdown
 export const pickImagesFromMarkdown = (text: string) => {
-  const reg = /(?<=\!\[.*\]\()(.+)(?=\))/g
+  const reg = /(?<=!\[.*\]\()(.+)(?=\))/g
   const images = [] as string[]
   for (const r of text.matchAll(reg)) {
     images.push(r[0])

@@ -37,6 +37,7 @@ export class ConfigsService {
   }
   private configInitd = false
   public waitForConfigReady() {
+    // eslint-disable-next-line no-async-promise-executor
     return new Promise<IConfig>(async (r, j) => {
       // 开始等待, 后续调用直接返回
       if (this.configInitd) {

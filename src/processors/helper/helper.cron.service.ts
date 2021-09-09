@@ -178,43 +178,40 @@ export class CronService {
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_3AM)
-  pushToBaiduSearch() {
-    return new Promise(async (resolve, reject) => {
-      const configs = this.configs.get('baiduSearchOptions')
-      if (configs.enable) {
-        const token = configs.token
-        if (!token) {
-          this.logger.error('[BaiduSearchPushTask] token 为空')
-          return reject('token is empty')
-        }
-        const siteUrl = this.configs.get('url').webUrl
-
-        const pushUrls = await this.aggregateService.getSiteMapContent()
-        const urls = pushUrls
-          .map((item) => {
-            return item.url
-          })
-          .join('\n')
-
-        try {
-          const res = await this.http.axiosRef.post(
-            `http://data.zz.baidu.com/urls?site=${siteUrl}&token=${token}`,
-            urls,
-            {
-              headers: {
-                'Content-Type': 'text/plain',
-              },
-            },
-          )
-          this.logger.log(`提交结果: ${JSON.stringify(res.data)}`)
-          return resolve(res.data)
-        } catch (e) {
-          this.logger.error('百度推送错误: ' + e.message)
-          return reject(e)
-        }
+  async pushToBaiduSearch() {
+    const configs = this.configs.get('baiduSearchOptions')
+    if (configs.enable) {
+      const token = configs.token
+      if (!token) {
+        this.logger.error('[BaiduSearchPushTask] token 为空')
+        return
       }
-      return resolve(null)
-    })
+      const siteUrl = this.configs.get('url').webUrl
+
+      const pushUrls = await this.aggregateService.getSiteMapContent()
+      const urls = pushUrls
+        .map((item) => {
+          return item.url
+        })
+        .join('\n')
+
+      try {
+        const res = await this.http.axiosRef.post(
+          `http://data.zz.baidu.com/urls?site=${siteUrl}&token=${token}`,
+          urls,
+          {
+            headers: {
+              'Content-Type': 'text/plain',
+            },
+          },
+        )
+        this.logger.log(`提交结果: ${JSON.stringify(res.data)}`)
+        return res.data
+      } catch (e) {
+        this.logger.error('百度推送错误: ' + e.message)
+      }
+    }
+    return null
   }
 
   private get nowStr() {
