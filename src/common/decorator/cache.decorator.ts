@@ -39,3 +39,7 @@ export function HttpCache(option: ICacheOption): MethodDecorator {
     return descriptor
   }
 }
+
+HttpCache.disable = (_, __, descriptor) => {
+  SetMetadata(META.HTTP_CACHE_DISABLE, true)(descriptor.value)
+}

@@ -15,6 +15,7 @@ import {
 import { ApiOperation } from '@nestjs/swagger'
 import { Types } from 'mongoose'
 import { Auth } from '~/common/decorator/auth.decorator'
+import { HttpCache } from '~/common/decorator/cache.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -146,6 +147,7 @@ export class PostController {
   }
 
   @Get('/search')
+  @HttpCache.disable
   @Paginator
   async searchPost(@Query() query: SearchDto, @IsMaster() isMaster: boolean) {
     const { keyword, page, size } = query

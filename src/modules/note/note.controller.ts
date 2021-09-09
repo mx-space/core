@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 import { Auth } from '~/common/decorator/auth.decorator'
+import { HttpCache } from '~/common/decorator/cache.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -201,8 +202,6 @@ export class NoteController {
   @Post('/')
   @Auth()
   async create(@Body() body: NoteModel) {
-    // TODO clean cache
-    // refreshKeyedCache(this.cacheManager)
     return await this.noteService.create(body)
   }
 
@@ -287,6 +286,7 @@ export class NoteController {
 
   @ApiOperation({ summary: '搜索' })
   @Get('/search')
+  @HttpCache.disable
   @Paginator
   async searchNote(@Query() query: SearchDto, @IsMaster() isMaster: boolean) {
     const { keyword, page, size } = query

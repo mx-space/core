@@ -7,7 +7,7 @@ import mkdirp from 'mkdirp'
 import { InjectModel } from 'nestjs-typegoose'
 import { join } from 'path'
 import { $, cd } from 'zx'
-import { RedisKeys } from '~/constants/cache.constant'
+import { RedisItems, RedisKeys } from '~/constants/cache.constant'
 import {
   BACKUP_DIR,
   LOCAL_BOT_LIST_DATA_FILE_PATH,
@@ -151,7 +151,7 @@ export class CronService {
   async resetIPAccess() {
     await this.cacheService
       .getClient()
-      .del(getRedisKey(RedisKeys.Access, 'ips'))
+      .del(getRedisKey(RedisKeys.Access, RedisItems.Ips))
   }
 
   /**

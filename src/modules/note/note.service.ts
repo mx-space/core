@@ -6,6 +6,7 @@ import { pick } from 'lodash'
 import { FilterQuery } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { CacheService } from '~/processors/cache/cache.service'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { ImageService } from '~/processors/helper/helper.image.service'
@@ -19,6 +20,7 @@ export class NoteService {
     private readonly noteModel: MongooseModel<NoteModel>,
     private readonly imageService: ImageService,
     private readonly webGateway: WebEventsGateway,
+    private readonly cacheService: CacheService,
   ) {
     this.needCreateDefult()
   }
@@ -82,6 +84,7 @@ export class NoteService {
     const doc = await this.noteModel.create(document)
     process.nextTick(async () => {
       await Promise.all([
+        this.cacheService.clearAggregateCache(),
         this.imageService.recordImageDimensions(this.noteModel, doc._id),
         doc.hide || doc.password
           ? null
@@ -104,7 +107,8 @@ export class NoteService {
       { ...doc },
     )
     process.nextTick(async () => {
-      Promise.all([
+      await Promise.all([
+        this.cacheService.clearAggregateCache(),
         this.imageService.recordImageDimensions(this.noteModel, id),
         this.model.findById(id).then((doc) => {
           if (doc.hide || doc.password) {
@@ -112,9 +116,6 @@ export class NoteService {
           }
         }),
       ])
-
-      // TODO clean cache
-      // refreshKeyedCache(this.cacheManager)
     })
   }
 

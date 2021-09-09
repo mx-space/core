@@ -59,7 +59,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
     const isDisableCache = this.reflector.get(META.HTTP_CACHE_DISABLE, handler)
     const key = this.trackBy(context) || `api-cache:${request.url}`
 
-    if (!isDisableCache) {
+    if (isDisableCache) {
       return call$
     }
 
@@ -68,12 +68,18 @@ export class HttpCacheInterceptor implements NestInterceptor {
 
     try {
       const value = await this.cacheManager.get(key)
+
       return value
         ? of(value)
         : call$.pipe(
-            tap((response) => this.cacheManager.set(key, response, { ttl })),
+            tap(
+              (response) =>
+                response && this.cacheManager.set(key, response, { ttl }),
+            ),
           )
     } catch (error) {
+      console.error(error)
+
       return call$
     }
   }

@@ -3,13 +3,13 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  Logger,
 } from '@nestjs/common'
 import { isDefined } from 'class-validator'
 import { omit } from 'lodash'
 import { FilterQuery, PaginateOptions } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { CacheService } from '~/processors/cache/cache.service'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { ImageService } from '~/processors/helper/helper.image.service'
@@ -19,7 +19,6 @@ import { PostModel } from './post.model'
 
 @Injectable()
 export class PostService {
-  private logger: Logger
   constructor(
     @InjectModel(PostModel)
     private readonly postModel: MongooseModel<PostModel>,
@@ -30,9 +29,8 @@ export class PostService {
     private categoryService: CategoryService,
     private readonly webgateway: WebEventsGateway,
     private readonly imageService: ImageService,
-  ) {
-    this.logger = new Logger(PostService.name)
-  }
+    private readonly cacheService: CacheService,
+  ) {}
 
   get model() {
     return this.postModel
@@ -63,9 +61,9 @@ export class PostService {
       modified: null,
     })
 
-    // TODO: clean cache
     process.nextTick(async () => {
       await Promise.all([
+        this.cacheService.clearAggregateCache(),
         this.webgateway.broadcast(EventTypes.POST_CREATE, {
           ...res.toJSON(),
           category,
@@ -121,6 +119,7 @@ export class PostService {
           EventTypes.POST_UPDATE,
           await this.postModel.findById(id),
         ),
+        this.cacheService.clearAggregateCache(),
       ])
     })
   }

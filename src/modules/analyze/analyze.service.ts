@@ -3,7 +3,7 @@ import { ReturnModelType } from '@typegoose/typegoose'
 import dayjs from 'dayjs'
 import { merge } from 'lodash'
 import { InjectModel } from 'nestjs-typegoose'
-import { RedisKeys } from '~/constants/cache.constant'
+import { RedisItems, RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { OptionModel } from '../configs/configs.model'
@@ -286,7 +286,7 @@ export class AnalyzeService {
   async getTodayAccessIp(): Promise<string[]> {
     const redis = this.cacheService.getClient()
     const fromRedisIps = await redis.smembers(
-      getRedisKey(RedisKeys.Access, 'ips'),
+      getRedisKey(RedisKeys.Access, RedisItems.Ips),
     )
 
     return fromRedisIps
