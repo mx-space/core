@@ -1,5 +1,8 @@
 lockfileVersion: 5.3
 
+overrides:
+  typescript: ^4.4.2
+
 specifiers:
   '@innei-util/eslint-config-ts': latest
   '@innei-util/prettier': latest
@@ -87,7 +90,7 @@ specifiers:
   ts-morph: '*'
   ts-node: ^10.2.1
   tsconfig-paths: ^3.10.1
-  typescript: ^4.3.5
+  typescript: ^4.4.2
   ua-parser-js: ^0.7.28
   webpack: ^5
   webpack-node-externals: ^3.0.0
@@ -1136,7 +1139,7 @@ packages:
       '@angular-devkit/core': 12.1.4
       '@angular-devkit/schematics': 12.1.4
       '@angular-devkit/schematics-cli': 12.1.4
-      '@nestjs/schematics': 8.0.3_typescript@4.3.5
+      '@nestjs/schematics': 8.0.3_typescript@4.4.2
       chalk: 3.0.0
       chokidar: 3.5.2
       cli-table3: 0.5.1
@@ -1152,7 +1155,7 @@ packages:
       tree-kill: 1.2.2
       tsconfig-paths: 3.10.1
       tsconfig-paths-webpack-plugin: 3.5.1
-      typescript: 4.3.5
+      typescript: 4.4.2
       webpack: 5.45.1
       webpack-node-externals: 3.0.0
     transitivePeerDependencies:
@@ -1375,19 +1378,6 @@ packages:
       reflect-metadata: 0.1.13
       uuid: 8.3.2
     dev: false
-
-  /@nestjs/schematics/8.0.3_typescript@4.3.5:
-    resolution: {integrity: sha512-A5qyS9yv6v2RIBqbsyYG57NfYA8Jm/aypRV1nc7JXjhdfDHwWKqCsgQ/7/82vVjhlvVAfr5x/dpCWqcF3XYd7w==}
-    peerDependencies:
-      typescript: ^3.4.5 || ^4.3.5
-    dependencies:
-      '@angular-devkit/core': 12.0.5
-      '@angular-devkit/schematics': 12.0.5
-      fs-extra: 10.0.0
-      jsonc-parser: 3.0.0
-      pluralize: 8.0.0
-      typescript: 4.3.5
-    dev: true
 
   /@nestjs/schematics/8.0.3_typescript@4.4.2:
     resolution: {integrity: sha512-A5qyS9yv6v2RIBqbsyYG57NfYA8Jm/aypRV1nc7JXjhdfDHwWKqCsgQ/7/82vVjhlvVAfr5x/dpCWqcF3XYd7w==}
@@ -8039,12 +8029,6 @@ packages:
     resolution: {integrity: sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==}
     dependencies:
       is-typedarray: 1.0.0
-    dev: true
-
-  /typescript/4.3.5:
-    resolution: {integrity: sha512-DqQgihaQ9cUrskJo9kIyW/+g0Vxsk8cDtZ52a3NGh0YNTfpUSArXSohyUGnvbPazEPLu398C0UxmKSOrPumUzA==}
-    engines: {node: '>=4.2.0'}
-    hasBin: true
     dev: true
 
   /typescript/4.4.2:
