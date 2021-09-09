@@ -36,6 +36,7 @@ import { OptionModule } from './modules/option/option.module'
 import { PageModule } from './modules/page/page.module'
 import { PostModule } from './modules/post/post.module'
 import { ProjectModule } from './modules/project/project.module'
+import { RecentlyModule } from './modules/recently/recently.module'
 import { SayModule } from './modules/say/say.module'
 import { ToolModule } from './modules/tool/tool.module'
 import { UserModule } from './modules/user/user.module'
@@ -80,6 +81,7 @@ import { HelperModule } from './processors/helper/helper.module'
     PageModule,
     PostModule,
     ProjectModule,
+    RecentlyModule,
     SayModule,
     ToolModule,
     UserModule,

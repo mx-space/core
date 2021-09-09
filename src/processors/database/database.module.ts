@@ -8,23 +8,25 @@ import { LinkModel } from '~/modules/link/link.model'
 import { NoteModel } from '~/modules/note/note.model'
 import { PageModel } from '~/modules/page/page.model'
 import { ProjectModel } from '~/modules/project/project.model'
+import { RecentlyModel } from '~/modules/recently/recently.model'
 import { SayModel } from '~/modules/say/say.model'
 import { CategoryModel } from '../../modules/category/category.model'
 import { PostModel } from '../../modules/post/post.model'
 import { UserModel } from '../../modules/user/user.model'
 
 const models = TypegooseModule.forFeature([
-  UserModel,
-  PostModel,
+  AnalyzeModel,
   CategoryModel,
   CommentModel,
-  NoteModel,
-  PageModel,
-  OptionModel,
   LinkModel,
+  NoteModel,
+  OptionModel,
+  PageModel,
+  PostModel,
   ProjectModel,
+  RecentlyModel,
   SayModel,
-  AnalyzeModel,
+  UserModel,
 ])
 @Module({
   imports: [
