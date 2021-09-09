@@ -157,8 +157,8 @@ export class AggregateService {
       }
       default: {
         const tasks = await Promise.all([getPosts(), getNotes()])
-        data.posts = [tasks[0]]
-        data.notes = [tasks[1]]
+        data.posts = tasks[0]
+        data.notes = tasks[1]
       }
     }
 

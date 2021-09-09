@@ -7,7 +7,6 @@ import {
   ExecutionContext,
   Injectable,
   NestInterceptor,
-  UnprocessableEntityException,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { isArrayLike, isObjectLike } from 'lodash'
@@ -42,15 +41,6 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
       return next.handle()
     }
 
-    const reorganize = (data) => {
-      if (!data) {
-        throw new UnprocessableEntityException('数据丢失了(｡ ́︿ ̀｡)')
-      }
-      return typeof data !== 'object' || data.__proto__.constructor === Object
-        ? { ...data }
-        : { data }
-    }
-
     return next.handle().pipe(
       map((data) => {
         if (typeof data === 'undefined') {
@@ -60,11 +50,6 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
         // 分页转换
         if (this.reflector.get(HTTP_RES_TRANSFORM_PAGINATE, handler)) {
           return transformDataToPaginate(data)
-        }
-
-        // 对象转换成标准结构
-        if (typeof data === 'object' && data !== null) {
-          return reorganize(data)
         }
 
         return data

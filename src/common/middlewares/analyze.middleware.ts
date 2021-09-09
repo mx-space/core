@@ -106,7 +106,7 @@ export class AnalyzeMiddleware implements NestMiddleware {
       // ip access in redis
       const client = this.cacheService.getClient()
 
-      const count = await client.sadd(getRedisKey(RedisKeys.Access, 'ips'))
+      const count = await client.sadd(getRedisKey(RedisKeys.Access, 'ips'), ip)
       if (count) {
         // record uv to db
         process.nextTick(async () => {
