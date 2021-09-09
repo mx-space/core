@@ -7,7 +7,7 @@ import { BackupOptions, MailOptionsDto } from './configs.dto'
 import { IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
 
-const defaultConfig = {
+const defaultConfig: IConfig = {
   seo: {
     title: 'mx-space',
     description: 'Hello World~',
@@ -22,7 +22,9 @@ const defaultConfig = {
   commentOptions: { antiSpam: false },
   backupOptions: { enable: false } as BackupOptions,
   baiduSearchOptions: { enable: false },
+  algoliaSearchOptions: { enable: false, apiKey: '', appId: '', indexName: '' },
 }
+
 @Injectable()
 export class ConfigsService {
   private config: IConfig = defaultConfig

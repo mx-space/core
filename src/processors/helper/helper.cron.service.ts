@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
+import algoliasearch from 'algoliasearch'
 import COS from 'cos-nodejs-sdk-v5'
 import dayjs from 'dayjs'
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
@@ -16,6 +17,9 @@ import {
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { NoteService } from '~/modules/note/note.service'
+import { PageService } from '~/modules/page/page.service'
+import { PostService } from '~/modules/post/post.service'
 import { isDev } from '~/utils/index.util'
 import { getRedisKey } from '~/utils/redis.util'
 import { CacheService } from '../cache/cache.service'
@@ -33,6 +37,15 @@ export class CronService {
 
     @Inject(forwardRef(() => AggregateService))
     private readonly aggregateService: AggregateService,
+
+    @Inject(forwardRef(() => PostService))
+    private readonly postService: PostService,
+
+    @Inject(forwardRef(() => NoteService))
+    private readonly noteService: NoteService,
+
+    @Inject(forwardRef(() => PageService))
+    private readonly pageService: PageService,
   ) {
     this.logger = new Logger(CronService.name)
   }
@@ -212,6 +225,80 @@ export class CronService {
       }
     }
     return null
+  }
+
+  /**
+   * @description 每天凌晨推送一遍 algoliasearch
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_NOON)
+  async pushToAlgoliaSearch() {
+    const configs = this.configs.get('algoliaSearchOptions')
+    if (configs.enable) {
+      const client = algoliasearch(configs.appId, configs.apiKey)
+      const index = client.initIndex(configs.indexName)
+      const documents: Record<'title' | 'text' | 'type' | 'id', string>[] = []
+      const combineDocuments = await Promise.all([
+        this.postService.model
+          .find({ hide: false }, 'title text')
+          .lean()
+          .then((list) => {
+            return list.map((data) => {
+              Reflect.deleteProperty(data, '_id')
+              return {
+                ...data,
+                type: 'post',
+              }
+            })
+          }),
+        this.pageService.model
+          .find({}, 'title text')
+          .lean()
+          .then((list) => {
+            return list.map((data) => {
+              Reflect.deleteProperty(data, '_id')
+              return {
+                ...data,
+                type: 'page',
+              }
+            })
+          }),
+        this.noteService.model
+          .find(
+            {
+              hide: false,
+              $or: [
+                { password: undefined },
+                { password: null },
+                { password: { $exists: false } },
+              ],
+            },
+            'title text nid',
+          )
+          .lean()
+          .then((list) => {
+            return list.map((data) => {
+              const id = data.nid.toString()
+              Reflect.deleteProperty(data, '_id')
+              Reflect.deleteProperty(data, 'nid')
+              return {
+                ...data,
+                type: 'note',
+                id,
+              }
+            })
+          }),
+      ])
+      combineDocuments.forEach((documents_: any) => {
+        documents.push(...documents_)
+      })
+      try {
+        await index.saveObjects(documents, {
+          autoGenerateObjectIDIfNotExist: true,
+        })
+      } catch {
+        Logger.error('algolia推送错误', 'AlgoliaSearch')
+      }
+    }
   }
 
   private get nowStr() {

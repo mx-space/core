@@ -1,4 +1,5 @@
 import {
+  AlgoliaSearchOptions,
   BackupOptions,
   BaiduSearchOptions,
   CommentOptions,
@@ -6,6 +7,7 @@ import {
   SEODto,
   UrlDto,
 } from './configs.dto'
+
 export interface IConfig {
   seo: SEODto
   url: UrlDto
@@ -13,6 +15,7 @@ export interface IConfig {
   commentOptions: CommentOptions
   backupOptions: BackupOptions
   baiduSearchOptions: BaiduSearchOptions
+  algoliaSearchOptions: AlgoliaSearchOptions
 }
 
 export type IConfigKeys = keyof IConfig

@@ -20,7 +20,7 @@ class ConfigKeyDto {
   key: keyof IConfig
 }
 
-@Controller(['options', 'config', 'setting'])
+@Controller(['options', 'config', 'setting', 'configs', 'option'])
 @ApiTags('Option Routes')
 @Auth()
 export class OptionController {

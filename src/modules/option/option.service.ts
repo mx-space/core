@@ -16,6 +16,7 @@ import { ClassConstructor, plainToClass } from 'class-transformer'
 import { validateSync, ValidatorOptions } from 'class-validator'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import {
+  AlgoliaSearchOptions,
   BackupOptions,
   BaiduSearchOptions,
   CommentOptions,
@@ -70,6 +71,10 @@ export class OptionService {
         this.validWithDto(BaiduSearchOptions, value)
 
         return this.configs.patch('baiduSearchOptions', value)
+      }
+      case 'algoliaSearchOptions': {
+        this.validWithDto(AlgoliaSearchOptions, value)
+        return this.configs.patch('algoliaSearchOptions', value)
       }
       default: {
         throw new UnprocessableEntityException('设置不存在')

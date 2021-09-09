@@ -122,10 +122,28 @@ export class BackupOptions {
 export class BaiduSearchOptions {
   @IsOptional()
   @IsBoolean()
-  enable?: boolean
+  enable: boolean
 
   @IsOptional()
   @IsString()
   @IsNotEmpty()
   token?: string
+}
+
+export class AlgoliaSearchOptions {
+  @IsBoolean()
+  @IsOptional()
+  enable: boolean
+
+  @IsString()
+  @IsOptional()
+  apiKey?: string
+
+  @IsString()
+  @IsOptional()
+  appId?: string
+
+  @IsString()
+  @IsOptional()
+  indexName?: string
 }
