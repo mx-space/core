@@ -8,25 +8,20 @@ import {
   Post,
   Query,
 } from '@nestjs/common'
-import { InjectModel } from 'nestjs-typegoose'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { BaseCrudFactory } from '~/utils/crud.util'
-import { SayModel } from '../say/say.model'
 import { LinkQueryDto } from './link.dto'
 import { LinkModel } from './link.model'
 import { LinkService } from './link.service'
 
 @Controller(['links', 'friends'])
-export class LinkController extends BaseCrudFactory({
+export class LinkControllerCrud extends BaseCrudFactory({
   model: LinkModel,
-}) {
-  constructor(
-    private readonly linkService: LinkService,
-    // FIXME: dup inject
-    @InjectModel(SayModel) private readonly sayModel: MongooseModel<SayModel>,
-  ) {
-    super(sayModel)
-  }
+}) {}
+
+@Controller(['links', 'friends'])
+export class LinkController {
+  constructor(private readonly linkService: LinkService) {}
 
   @Get('/state')
   @Auth()

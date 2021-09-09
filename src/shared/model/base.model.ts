@@ -3,11 +3,26 @@ import { ApiHideProperty } from '@nestjs/swagger'
 import { modelOptions, plugin, prop } from '@typegoose/typegoose'
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator'
 import LeanId from 'mongoose-lean-id'
-import mongooseLeanVirtuals from 'mongoose-lean-virtuals'
+import {
+  default as leanVirtuals,
+  default as mongooseLeanVirtuals,
+} from 'mongoose-lean-virtuals'
 import Paginate from 'mongoose-paginate-v2'
+
+@plugin(leanVirtuals)
 @plugin(mongooseLeanVirtuals)
 @plugin(Paginate)
 @plugin(LeanId)
+@modelOptions({
+  schemaOptions: {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+    timestamps: {
+      createdAt: 'created',
+      updatedAt: null,
+    },
+  },
+})
 @ObjectType()
 export class BaseModel {
   @ApiHideProperty()
@@ -78,14 +93,6 @@ export abstract class BaseCommentIndexModel extends BaseModel {
   }
 }
 
-@modelOptions({
-  schemaOptions: {
-    timestamps: {
-      createdAt: 'created',
-      updatedAt: null,
-    },
-  },
-})
 @ObjectType()
 export abstract class WriteBaseModel extends BaseCommentIndexModel {
   @prop({ trim: true, index: true, required: true })

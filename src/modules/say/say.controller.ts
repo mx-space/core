@@ -14,7 +14,7 @@ export class SayController extends BaseCrudFactory({ model: SayModel }) {
     if (!res.length) {
       throw new CannotFindException()
     }
-    return sample(res)
+    return { data: sample(res) }
   }
 
   @Post('/')

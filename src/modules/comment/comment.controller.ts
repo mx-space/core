@@ -14,6 +14,7 @@ import {
 import { ApiOperation, ApiParam } from '@nestjs/swagger'
 import { DocumentType } from '@typegoose/typegoose'
 import { Auth } from '~/common/decorator/auth.decorator'
+import { HTTPDecorators, Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
@@ -39,14 +40,15 @@ export class CommentController {
     private readonly gateway: SharedGateway,
   ) {}
 
-  @Get()
+  @Get('/')
   @Auth()
+  @Paginator
   async getRecentlyComments(@Query() query: PagerDto) {
     const { size = 10, page = 1, state = 0 } = query
     return await this.commentService.getComments({ size, page, state })
   }
 
-  @Get(':id')
+  @Get('/:id')
   @ApiOperation({ summary: '根据 comment id 获取评论, 包括子评论' })
   async getComments(@Param() params: MongoIdDto) {
     const { id } = params
@@ -62,6 +64,7 @@ export class CommentController {
   }
 
   @Get('/ref/:id')
+  @HTTPDecorators.Paginator
   @ApiParam({
     name: 'id',
     description: 'refId',
@@ -95,7 +98,7 @@ export class CommentController {
     return comments
   }
 
-  @Post(':id')
+  @Post('/:id')
   @ApiOperation({ summary: '根据文章的 _id 评论' })
   async comment(
     @Param() params: MongoIdDto,
@@ -242,7 +245,7 @@ export class CommentController {
     return await this.replyByCid(params, model, undefined, true, ipLocation)
   }
 
-  @Patch(':id')
+  @Patch('/:id')
   @ApiOperation({ summary: '修改评论的状态' })
   @HttpCode(204)
   @Auth()
@@ -267,7 +270,7 @@ export class CommentController {
     }
   }
 
-  @Delete(':id')
+  @Delete('/:id')
   @Auth()
   async deleteComment(@Param() params: MongoIdDto) {
     const { id } = params

@@ -19,7 +19,7 @@ export class PageService {
   }
 
   public async create(doc: PageModel) {
-    const res = await this.model.create(doc)
+    const res = await this.model.create({ ...doc, created: new Date() })
     process.nextTick(async () => {
       await Promise.all([
         this.imageService.recordImageDimensions(this.pageModel, res._id),
@@ -29,7 +29,7 @@ export class PageService {
   }
 
   public async updateById(id: string, doc: Partial<PageModel>) {
-    await this.model.updateOne({ _id: id }, doc)
+    await this.model.updateOne({ _id: id, modified: new Date() }, doc)
     process.nextTick(async () => {
       await Promise.all([
         this.imageService.recordImageDimensions(this.pageModel, id),

@@ -51,17 +51,14 @@ export function BaseCrudFactory<
     @Get('/')
     @Paginator
     async gets(@Query() pager: PagerDto) {
-      const { size, page, select } = pager
-
-      return await this._model.paginate(
-        {},
-        {
-          limit: size,
-          page,
-          sort: { created: -1 },
-          select,
-        },
-      )
+      const { size, page, select, state } = pager
+      // @ts-ignore
+      return await this._model.paginate(state !== undefined ? { state } : {}, {
+        limit: size,
+        page,
+        sort: { created: -1 },
+        select,
+      })
     }
     @Get('/all')
     async getAll() {
@@ -71,21 +68,31 @@ export function BaseCrudFactory<
     @Post('/')
     @Auth()
     async create(@Body() body: Dto) {
-      return await this._model.create(body)
+      return await this._model.create({ ...body, created: new Date() })
     }
 
     @Put('/:id')
     @Auth()
     async update(@Body() body: Dto, @Param() param: MongoIdDto) {
-      await this._model.updateOne({ _id: param.id as any }, body as any).lean()
-      return this._model.findById(param.id as any)
+      await this._model
+        .updateOne({ _id: param.id as any }, {
+          ...body,
+          modified: new Date(),
+        } as any)
+        .lean()
+      return this._model.findById(param.id as any).lean()
     }
 
     @Patch('/:id')
     @Auth()
     @HttpCode(204)
     async patch(@Body() body: PDto, @Param() param: MongoIdDto) {
-      await this._model.updateOne({ _id: param.id as any }, body)
+      await this._model
+        .updateOne({ _id: param.id as any }, {
+          ...body,
+          modified: new Date(),
+        } as any)
+        .lean()
       return
     }
 

@@ -44,7 +44,7 @@ export class PostController {
   @Get('/')
   @Paginator
   async getPaginate(@Query() query: PostQueryDto, @IsMaster() master: boolean) {
-    const { size, select = '-text', page, year, sortBy, sortOrder } = query
+    const { size, select, page, year, sortBy, sortOrder } = query
 
     return await this.postService.findWithPaginator(
       {

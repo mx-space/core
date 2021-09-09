@@ -9,7 +9,7 @@ export function getAvatar(mail: string) {
   if (!mail) {
     return ''
   }
-  return `https://sdn.geekzu.org/avatar/${md5(mail)}`
+  return `https://sdn.geekzu.org/avatar/${md5(mail)}?d=retro`
 }
 
 export function sleep(ms: number) {

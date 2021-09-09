@@ -24,7 +24,7 @@ export class AnalyzeService {
   }
 
   async getRangeAnalyzeData(
-    from = new Date(new Date().getTime() - 1000 * 24 * 3600 * 3),
+    from = new Date('2020-1-1'),
     to = new Date(),
     options?: {
       limit?: number

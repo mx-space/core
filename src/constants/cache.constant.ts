@@ -4,7 +4,10 @@ export enum RedisKeys {
   Read = 'read',
   LoginRecord = 'login_record',
   MaxOnlineCount = 'max_online_count',
+  IpInfoMap = 'ip_info_map',
+  LikeSite = 'like_site',
 }
+
 export enum RedisItems {
   Ips = 'ips',
 }

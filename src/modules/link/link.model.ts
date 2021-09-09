@@ -33,7 +33,7 @@ export class LinkModel extends BaseModel {
   name: string
 
   @prop({ required: true, trim: true, unique: true })
-  @IsUrl({ require_protocol: true })
+  @IsUrl({ require_protocol: true, protocols: ['https'] })
   url: string
 
   @IsOptional()
