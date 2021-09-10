@@ -15,7 +15,7 @@ import { MyLogger } from './processors/logger/logger.service'
 
 const PORT: number = +argv.port || 2333
 
-const APIVersion = 1
+const APIVersion = 2
 const Origin = CROSS_DOMAIN.allowedOrigins
 
 declare const module: any
