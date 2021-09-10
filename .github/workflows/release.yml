@@ -65,11 +65,14 @@ jobs:
     steps:
       - name: Exec deploy script with SSH
         uses: appleboy/ssh-action@master
+        env:
+          JWTSECRET: ${{ secrets.JWTSECRET }}
         with:
           command_timeout: 10m
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASSWORD }}
+          envs: JWTSECRET
           script: |
             whoami
             cd
@@ -77,5 +80,3 @@ jobs:
             cd mx
             ls -a
             node server-deploy.js --jwtSecret=$JWTSECRET
-    env:
-      JWTSECRET: ${{ secrets.JWTSECRET }}
