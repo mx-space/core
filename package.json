@@ -56,7 +56,7 @@
     "@typegoose/auto-increment": "^0.9.0",
     "@typegoose/typegoose": "8.2.0",
     "algoliasearch": "^4.10.5",
-    "apollo-server-fastify": "^3.3.0",
+    "apollo-server-fastify": "3.3.0",
     "axios": "*",
     "bcrypt": "^5.0.1",
     "cache-manager": "3.4.4",
