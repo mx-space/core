@@ -59,7 +59,7 @@ export class NoteController {
       isMaster ? '+location +coordinates' : '-location -coordinates',
     )
 
-    return { data: latest.toObject(), next: next.toObject() }
+    return { data: latest, next: next }
   }
 
   @Get('/')

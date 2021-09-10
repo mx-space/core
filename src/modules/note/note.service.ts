@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
 import { compareSync } from 'bcrypt'
-import { isDefined } from 'class-validator'
+import { isDefined, isMongoId } from 'class-validator'
 import { pick } from 'lodash'
 import { FilterQuery } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
@@ -39,7 +39,7 @@ export class NoteService {
       .sort({
         created: -1,
       })
-      .exec()
+      .lean()
 
     if (!latest) {
       throw new CannotFindException()
@@ -58,6 +58,7 @@ export class NoteService {
         created: -1,
       })
       .select('nid _id')
+      .lean()
 
     return {
       latest,
@@ -146,13 +147,23 @@ export class NoteService {
    * @returns {Types.ObjectId}
    */
   async getIdByNid(nid: number) {
-    const document = await this.model.findOne({
-      nid,
-    })
+    const document = await this.model
+      .findOne({
+        nid,
+      })
+      .lean()
     if (!document) {
       return null
     }
     return document._id
+  }
+
+  async findOneByIdOrNid(unique: any) {
+    const res = isMongoId(unique)
+      ? await this.model.findById(unique)
+      : await this.getIdByNid(unique)
+
+    return res
   }
 
   async needCreateDefult() {

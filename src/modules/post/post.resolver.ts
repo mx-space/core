@@ -16,6 +16,7 @@ import { PostService } from './post.service'
 @Resolver()
 export class PostResolver {
   constructor(private readonly postService: PostService) {}
+
   @Query(() => PostModel)
   @UpdateDocumentCount('Post')
   public async getPostById(

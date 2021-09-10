@@ -24,17 +24,59 @@ type CountMixed {
   like: Float
 }
 
-type CategoryModel {
+type Coordinate {
+  latitude: Float!
+  longitude: Float!
+}
+
+type NoteMusic {
+  type: String!
+  id: String!
+}
+
+type NoteModel {
   created: DateTime
-  name: String!
-  type: CategoryType
-  slug: String!
+  commentsIndex: Float
+  allowComment: Boolean!
+  images: Image
+  title: String!
+  text: String!
+  modified: DateTime!
+  coordinates: Coordinate
+  count: CountMixed
+  music: [NoteMusic!]
+  nid: Float!
+  hide: Boolean!
+  password: String
+  secret: DateTime
+  mood: String
+  weather: String
+  hasMemory: Boolean
+  location: String
 }
 
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+type NoteItemAggregateModel {
+  data: NoteModel!
+  prev: NoteModel
+  next: NoteModel
+}
+
+type NotePaginatorModel {
+  data: [NoteModel!]!
+  pagination: Paginator!
+}
+
+type CategoryModel {
+  created: DateTime
+  name: String!
+  type: CategoryType
+  slug: String!
+}
 
 enum CategoryType {
   Category
@@ -69,4 +111,7 @@ type Query {
   getPostById(id: ID!): PostModel!
   getPostList(size: Float, page: Float, select: String, year: Float, state: Float, sortOrder: Int, sortBy: String): PostPaginatorModel!
   getByCateAndSlug(category: String!, slug: String!): PostModel!
+  getNoteById(password: String, nid: Int, id: ID): NoteItemAggregateModel!
+  getLastestNote: NoteItemAggregateModel!
+  getNotesWithPager(size: Float, page: Float, select: String, year: Float, state: Float, sortOrder: Int, sortBy: String): NotePaginatorModel!
 }

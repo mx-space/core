@@ -1,3 +1,4 @@
+import { ArgsType, Field, Int } from '@nestjs/graphql'
 import { Transform } from 'class-transformer'
 import {
   IsDefined,
@@ -13,6 +14,7 @@ import {
 } from 'class-validator'
 import { PagerDto } from '~/shared/dto/pager.dto'
 
+@ArgsType()
 export class NoteQueryDto extends PagerDto {
   @IsOptional()
   @IsIn(['title', 'created', 'modified', 'weather', 'mood'])
@@ -22,6 +24,7 @@ export class NoteQueryDto extends PagerDto {
   @IsIn([1, -1])
   @ValidateIf((o) => o.sortBy)
   @Transform(({ value: v }) => v | 0)
+  @Field(() => Int)
   sortOrder?: 1 | -1
 }
 
@@ -32,15 +35,6 @@ export class PasswordQueryDto {
   password?: string
 }
 
-export class NoteMusicDto {
-  @IsString()
-  @IsNotEmpty()
-  type: string
-
-  @IsString()
-  @IsNotEmpty()
-  id: string
-}
 export class ListQueryDto {
   @IsNumber()
   @Max(20)
@@ -57,3 +51,5 @@ export class NidType {
   @Transform(({ value: val }) => parseInt(val))
   nid: number
 }
+
+export { NoteMusic as NoteMusicDto } from './note.model'
