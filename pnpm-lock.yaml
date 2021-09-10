@@ -51,7 +51,7 @@ specifiers:
   dayjs: ^1.10.6
   dotenv: '*'
   ejs: ^3.1.6
-  eslint: ^7
+  eslint: '*'
   fastify: '*'
   fastify-multipart: ^4.0.7
   fastify-swagger: ^4.11.0
@@ -93,7 +93,7 @@ specifiers:
   tsconfig-paths: ^3.10.1
   typescript: ^4.4.2
   ua-parser-js: ^0.7.28
-  webpack: ^5
+  webpack: '*'
   webpack-node-externals: ^3.0.0
   yargs: '*'
   zx: ^4.2.0
