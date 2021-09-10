@@ -69,4 +69,9 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASSWORD }}
-          script: sh ~/mx/deploy.sh
+          script: |
+            whoami
+            cd
+            ls -a
+            source ~/.zshrc
+            sh ~/mx/deploy.sh
