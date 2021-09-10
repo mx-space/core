@@ -17,6 +17,7 @@ import { InjectModel } from 'nestjs-typegoose'
 import pluralize from 'pluralize'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
+import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { BaseModel } from '~/shared/model/base.model'
@@ -36,6 +37,7 @@ export function BaseCrudFactory<
   class BaseCrud {
     constructor(
       @InjectModel(model) private readonly _model: MongooseModel<T>,
+      private readonly webgateway: WebEventsGateway,
     ) {}
 
     public get model() {
@@ -45,7 +47,7 @@ export function BaseCrudFactory<
     @Get('/:id')
     async get(@Param() param: MongoIdDto) {
       const { id } = param
-      return await this._model.findById(id)
+      return await this._model.findById(id).lean()
     }
 
     @Get('/')
@@ -60,6 +62,7 @@ export function BaseCrudFactory<
         select,
       })
     }
+
     @Get('/all')
     async getAll() {
       return await this._model.find({}).lean()

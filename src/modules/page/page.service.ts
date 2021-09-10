@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common'
+import { isDefined } from 'class-validator'
+import { omit } from 'lodash'
 import { InjectModel } from 'nestjs-typegoose'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { PostModel } from '../post/post.model'
 import { PageModel } from './page.model'
 
 @Injectable()
@@ -29,7 +32,13 @@ export class PageService {
   }
 
   public async updateById(id: string, doc: Partial<PageModel>) {
-    await this.model.updateOne({ _id: id, modified: new Date() }, doc)
+    if (['text', 'title', 'subtitle'].some((key) => isDefined(doc[key]))) {
+      doc.modified = new Date()
+    }
+    await this.model.updateOne(
+      { _id: id },
+      { ...omit(doc, PostModel.protectedKeys) },
+    )
     process.nextTick(async () => {
       await Promise.all([
         this.imageService.recordImageDimensions(this.pageModel, id),

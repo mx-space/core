@@ -80,7 +80,8 @@ export class BackupController {
       throw new UnprocessableEntityException('参数有误')
     }
 
-    return await this.backupService.rollbackTo(dirname)
+    this.backupService.rollbackTo(dirname)
+    return
   }
 
   @Delete('/')

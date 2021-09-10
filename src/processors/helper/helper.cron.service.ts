@@ -8,6 +8,7 @@ import mkdirp from 'mkdirp'
 import { InjectModel } from 'nestjs-typegoose'
 import { join } from 'path'
 import { $, cd } from 'zx'
+import { MONGO_DB } from '~/app.config'
 import { RedisItems, RedisKeys } from '~/constants/cache.constant'
 import {
   BACKUP_DIR,
@@ -83,7 +84,7 @@ export class CronService {
     const backupDirPath = join(BACKUP_DIR, dateDir)
     mkdirp.sync(backupDirPath)
     try {
-      await $`mongodump -h 127.0.0.1 -d mx-space -o ${backupDirPath} >/dev/null 2>&1`
+      await $`mongodump -h 127.0.0.1 -d ${MONGO_DB.collectionName} -o ${backupDirPath} >/dev/null 2>&1`
       cd(backupDirPath)
       await $`zip -r backup-${dateDir}  mx-space/* && rm -r mx-space`
 
@@ -156,6 +157,8 @@ export class CronService {
         $lte: cleanDate,
       },
     })
+
+    this.logger.log('--> 清理访问记录成功')
   }
   /**
    * @description 每天凌晨删除缓存
@@ -165,6 +168,8 @@ export class CronService {
     await this.cacheService
       .getClient()
       .del(getRedisKey(RedisKeys.Access, RedisItems.Ips))
+
+    this.logger.log('--> 清理 IP 访问记录成功')
   }
 
   /**
@@ -182,12 +187,15 @@ export class CronService {
         return keys.then((keys) => keys.map((key) => redis.del(key)))
       }),
     )
+
+    this.logger.log('--> 清理 API 缓存成功')
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_3AM)
   cleanTempDirectory() {
     rmSync(TEMP_DIR, { recursive: true })
     mkdirp.sync(TEMP_DIR)
+    this.logger.log('--> 清理临时文件成功')
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_3AM)
@@ -218,7 +226,7 @@ export class CronService {
             },
           },
         )
-        this.logger.log(`提交结果: ${JSON.stringify(res.data)}`)
+        this.logger.log(`百度站长提交结果: ${JSON.stringify(res.data)}`)
         return res.data
       } catch (e) {
         this.logger.error('百度推送错误: ' + e.message)
@@ -295,6 +303,7 @@ export class CronService {
         await index.saveObjects(documents, {
           autoGenerateObjectIDIfNotExist: true,
         })
+        this.logger.log('--> 推送到 algoliasearch 成功')
       } catch {
         Logger.error('algolia推送错误', 'AlgoliaSearch')
       }

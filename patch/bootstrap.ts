@@ -22,7 +22,9 @@ const category = getModelForClass(CategoryModel)
 
 const Config = {
   env,
-  db: (mongoose.connection as any).client.db('mx-space-next') as ConnectionBase,
+  db: (mongoose.connection as any).client.db(
+    APP.MONGO_DB.collectionName,
+  ) as ConnectionBase,
   models: {
     post,
     note,

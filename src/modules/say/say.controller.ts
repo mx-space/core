@@ -20,7 +20,7 @@ export class SayController extends BaseCrudFactory({ model: SayModel }) {
   @Post('/')
   @Auth()
   async create(@Body() body: Partial<SayModel>) {
-    const r = await super.post(body)
+    const r = await super.create(body)
     process.nextTick(async () => {
       await this.webgateway.broadcast(EventTypes.SAY_CREATE, r)
     })

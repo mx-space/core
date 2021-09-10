@@ -16,9 +16,12 @@ export const CROSS_DOMAIN = {
 }
 
 export const MONGO_DB = {
-  uri: `mongodb://127.0.0.1:${argv.dbport || '27017'}/${
-    process.env.TEST ? 'mx-space_unitest' : 'mx-space-next'
-  }`,
+  collectionName: 'mx-space-next',
+  get uri() {
+    return `mongodb://127.0.0.1:${argv.dbport || '27017'}/${
+      process.env.TEST ? 'mx-space_unitest' : this.collectionName
+    }`
+  },
 }
 
 export const REDIS = {

@@ -16,6 +16,7 @@ import mkdirp from 'mkdirp'
 import { resolve } from 'path'
 import { join } from 'path/posix'
 import { Readable } from 'stream'
+import { MONGO_DB } from '~/app.config'
 import { BACKUP_DIR } from '~/constants/path.constant'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'
@@ -83,9 +84,9 @@ export class BackupService {
     try {
       cd(tempDirPath)
       await $`unzip backup.zip`
-      await $`mongorestore -h ${
-        process.env.DB_URL || '127.0.0.1'
-      } -d mx-space ./mx-space --drop  >/dev/null 2>&1`
+      await $`mongorestore -h ${process.env.DB_URL || '127.0.0.1'} -d ${
+        MONGO_DB.collectionName
+      } ./mx-space --drop  >/dev/null 2>&1`
 
       this.logger.debug('恢复成功')
       await this.adminGateway.broadcast(
@@ -121,9 +122,9 @@ export class BackupService {
       }
 
       cd(dirPath)
-      await $`mongorestore -h ${
-        process.env.DB_URL || '127.0.0.1'
-      } -d mx-space ./mx-space --drop  >/dev/null 2>&1`
+      await $`mongorestore -h ${process.env.DB_URL || '127.0.0.1'} -d ${
+        MONGO_DB.collectionName
+      } ./mx-space --drop  >/dev/null 2>&1`
     } catch (e) {
       this.logger.error(e)
       throw e
