@@ -2,12 +2,13 @@
 const { $, cd, fetch } = require('zx')
 const fs = require('fs')
 const { sleep } = require('zx')
-
+const { homedir } = require('os')
+const path = require('path')
 const owner = 'mx-space'
 const repo = 'server-next'
 
 async function main() {
-  cd('~/mx')
+  cd(path.resolve(homedir(), 'mx'))
   const res = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/releases/latest`,
   )
@@ -15,7 +16,7 @@ async function main() {
   const downloadUrl = data.assets.find(
     (asset) =>
       asset.name === 'release-ubuntu.zip' || asset.name === 'release.zip',
-  ).browser_download_url
+  )?.browser_download_url
 
   if (!downloadUrl) {
     return

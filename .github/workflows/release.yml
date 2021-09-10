@@ -36,7 +36,7 @@ jobs:
         run: |
           pnpm run bundle
           cd out
-          zip -r ../release-ubuntu.zip ./*
+          zip -r ../release.zip ./*
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -55,7 +55,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
           asset_path: ./release.zip
-          asset_name: release.zip
+          asset_name: release-ubuntu.zip
           asset_content_type: application/zip
   deploy:
     name: Deploy to server
