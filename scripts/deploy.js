@@ -7,6 +7,7 @@ const owner = 'mx-space'
 const repo = 'server-next'
 
 async function main() {
+  cd('~/mx')
   const res = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/releases/latest`,
   )
@@ -35,7 +36,7 @@ async function main() {
   try {
     await $`lsof -i:2333 -P -n | grep LISTEN`
   } catch {
-    await $`pm2 stop ./out/index.js`
+    await $`pm2 stop ./run/index.js`
     throw new Error('server is not running')
   }
 }
