@@ -35,6 +35,7 @@ jobs:
       - name: Build project # This would actually build your project, using zip for an example artifact
         run: |
           pnpm run bundle
+          cp -R assets out
           cd out
           zip -r ../release.zip ./*
       - name: Create Release
@@ -72,6 +73,7 @@ jobs:
           script: |
             whoami
             cd
-            ls -a
             source ~/.zshrc
-            sh ~/mx/deploy.sh
+            cd mx
+            ls -a
+            sh deploy.sh
