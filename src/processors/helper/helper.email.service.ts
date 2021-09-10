@@ -113,10 +113,9 @@ export class EmailService {
     model: LinkModel
     template: LinkApplyEmailType
   }) {
-    const { seo } = await this.configsService.waitForConfigReady()
-    const from = `"${seo.title || 'Mx Space'}" <${
-      (await this.configsService.getMaster()).name
-    }>`
+    const { seo, mailOptions } = await this.configsService.waitForConfigReady()
+    const { user } = mailOptions
+    const from = `"${seo.title || 'Mx Space'}" <${user}>`
     await this.instance.sendMail({
       from,
       to,
@@ -144,10 +143,9 @@ export class EmailService {
     source: RenderProps
     type: ReplyMailType
   }) {
-    const { seo } = await this.configsService.waitForConfigReady()
-    const from = `"${seo.title || 'Mx Space'}" <${
-      (await this.configsService.getMaster()).name
-    }>`
+    const { seo, mailOptions } = await this.configsService.waitForConfigReady()
+    const { user } = mailOptions
+    const from = `"${seo.title || 'Mx Space'}" <${user}>`
     if (type === ReplyMailType.Guest) {
       await this.instance.sendMail({
         from,
