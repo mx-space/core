@@ -32,7 +32,7 @@ async function main() {
   try {
     await $`pm2 stop mx-server`
   } catch {}
-  await $`pm2 start ./run/index.js --name mx-server`
+  await $`pm2 start ./run/index.js --max-memory-restart 250M --name mx-server -- --jwtSecret=CHANGETHIS!!!!!!!`
   console.log('等待 15 秒')
   await sleep(15000)
   try {
