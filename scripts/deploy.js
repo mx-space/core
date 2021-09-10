@@ -27,6 +27,7 @@ async function main() {
   ).then((res) => res.buffer())
   const tmpName = (Math.random() * 10).toString(16)
   fs.writeFileSync(`/tmp/${tmpName}.zip`, buffer, { flag: 'w' })
+  await $`rm -rf ./run`
   await $`unzip /tmp/${tmpName}.zip -d ./run`
   try {
     await $`pm2 stop mx-server`
