@@ -1,6 +1,17 @@
 {
   "extends": [
-    "config:base"
+    "config:base",
+    ":automergePatch",
+    ":automergeTypes",
+    ":automergeTesters",
+    ":automergeLinters",
+    ":rebaseStalePrs"
   ],
-  "enabled": false
+  "packageRules": [
+    {
+      "updateTypes": ["major"],
+      "labels": ["UPDATE-MAJOR"]
+    }
+  ],
+  "enabled": true
 }
