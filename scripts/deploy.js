@@ -7,6 +7,8 @@ const path = require('path')
 const owner = 'mx-space'
 const repo = 'server-next'
 
+const argv = process.argv.slice(2)
+
 async function main() {
   cd(path.resolve(homedir(), 'mx'))
   const res = await fetch(
@@ -32,7 +34,7 @@ async function main() {
   try {
     await $`pm2 stop mx-server`
   } catch {}
-  await $`pm2 start ./run/index.js --max-memory-restart 250M --name mx-server -- --jwtSecret=CHANGETHIS!!!!!!!`
+  await $`pm2 start ./run/index.js --max-memory-restart 250M --name mx-server -- ${argv}`
   console.log('等待 15 秒')
   await sleep(15000)
   try {
