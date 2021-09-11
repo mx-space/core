@@ -5,13 +5,20 @@ import {
   Get,
   Param,
   Patch,
+  Put,
+  Query,
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { IsNotEmpty, IsString } from 'class-validator'
 import { Auth } from '~/common/decorator/auth.decorator'
+import {
+  EmailService,
+  ReplyMailType,
+} from '~/processors/helper/helper.email.service'
 import { IConfig } from '../configs/configs.interface'
 import { ConfigsService } from '../configs/configs.service'
+import { ReplyEmailBodyDto, ReplyEmailTypeDto } from './dtos/email.dto'
 import { OptionService } from './option.service'
 
 class ConfigKeyDto {
@@ -27,6 +34,7 @@ export class OptionController {
   constructor(
     private readonly optionService: OptionService,
     private readonly configs: ConfigsService,
+    private readonly emailService: EmailService,
   ) {}
 
   @Get('/')
@@ -54,5 +62,27 @@ export class OptionController {
       throw new UnprocessableEntityException('body must be object')
     }
     return this.optionService.patchAndValid(params.key, body)
+  }
+
+  @Get('/email/template/reply')
+  getEmailReplyTemplate(@Query() { type }: ReplyEmailTypeDto) {
+    const template = this.emailService.readTemplate(
+      type === 'guest' ? ReplyMailType.Guest : ReplyMailType.Owner,
+    )
+    return template
+  }
+
+  @Put('/email/template/reply')
+  writeEmailReplyTemplate(
+    @Query() { type }: ReplyEmailTypeDto,
+    @Body() body: ReplyEmailBodyDto,
+  ) {
+    this.emailService.writeTemplate(
+      type === 'guest' ? ReplyMailType.Guest : ReplyMailType.Owner,
+      body.source,
+    )
+    return {
+      source: body.source,
+    }
   }
 }

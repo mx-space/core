@@ -25,6 +25,7 @@ specifiers:
   '@typegoose/typegoose': 8.2.0
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.2
+  '@types/ejs': ^3.1.0
   '@types/ioredis': 4.27.2
   '@types/jest': 27.0.1
   '@types/lodash': 4.14.172
@@ -162,6 +163,7 @@ devDependencies:
   '@nestjs/testing': 8.0.6_67f7e5db8827badcb202b1d38f6b1aea
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.2
+  '@types/ejs': 3.1.0
   '@types/ioredis': 4.27.2
   '@types/jest': 27.0.1
   '@types/lodash': 4.14.172
@@ -1770,6 +1772,10 @@ packages:
 
   /@types/cors/2.8.12:
     resolution: {integrity: sha512-vt+kDhq/M2ayberEtJcIN/hxXy1Pk+59g2FV/ZQceeaTyCtCucjL2Q7FXlFjtWn4n15KCr1NE2lNNFhp0lEThw==}
+
+  /@types/ejs/3.1.0:
+    resolution: {integrity: sha512-DCg+Ka+uDQ31lJ/UtEXVlaeV3d6t81gifaVWKJy4MYVVgvJttyX/viREy+If7fz+tK/gVxTGMtyrFPnm4gjrVA==}
+    dev: true
 
   /@types/eslint-scope/3.7.1:
     resolution: {integrity: sha512-SCFeogqiptms4Fg29WpOTk5nHIzfpKCemSN63ksBQYKTcXoJEmJagV+DhVmbapZzY4/5YaOV1nZwrsU79fFm1g==}

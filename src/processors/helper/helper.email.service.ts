@@ -1,14 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { render } from 'ejs'
-import { readFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'fs'
 import { createTransport } from 'nodemailer'
 import path from 'path'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { LinkModel } from '~/modules/link/link.model'
 
 export enum ReplyMailType {
-  Owner,
-  Guest,
+  Owner = 'owner',
+  Guest = 'guest',
 }
 
 export enum LinkApplyEmailType {
@@ -41,6 +41,29 @@ export class EmailService {
             process.cwd(),
             'assets/email-template/owner.template.ejs',
           ),
+          { encoding: 'utf-8' },
+        )
+    }
+  }
+
+  writeTemplate(type: ReplyMailType, source: string) {
+    switch (type) {
+      case ReplyMailType.Guest:
+        return writeFileSync(
+          path.resolve(
+            process.cwd(),
+            'assets/email-template/guest.template.ejs',
+          ),
+          source,
+          { encoding: 'utf-8' },
+        )
+      case ReplyMailType.Owner:
+        return writeFileSync(
+          path.resolve(
+            process.cwd(),
+            'assets/email-template/owner.template.ejs',
+          ),
+          source,
           { encoding: 'utf-8' },
         )
     }
