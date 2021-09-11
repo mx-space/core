@@ -46,7 +46,7 @@ specifiers:
   chalk: '*'
   class-transformer: 0.4.0
   class-validator: 0.13.1
-  cos-nodejs-sdk-v5: 2.10.1
+  cos-nodejs-sdk-v5: 2.10.2
   cross-env: 7.0.3
   dayjs: 1.10.7
   dotenv: '*'
@@ -122,7 +122,7 @@ dependencies:
   chalk: 4.1.2
   class-transformer: 0.4.0
   class-validator: 0.13.1
-  cos-nodejs-sdk-v5: 2.10.1
+  cos-nodejs-sdk-v5: 2.10.2
   dayjs: 1.10.7
   dotenv: 10.0.0
   ejs: 3.1.6
@@ -3333,8 +3333,8 @@ packages:
       object-assign: 4.1.1
       vary: 1.1.2
 
-  /cos-nodejs-sdk-v5/2.10.1:
-    resolution: {integrity: sha512-0sTURGfTMh1DmJc91CiCQgsNZt0hRlNlkaSK+PKGeVffqCRZFvGSDAZX10OE3iA6vgazi3B6uhNL1xAGvaomcw==}
+  /cos-nodejs-sdk-v5/2.10.2:
+    resolution: {integrity: sha512-yYfN7yY/nkLcM9Yw7XzH2RA47tcq0j2svxoqAgGkxvyWGne7Gf1KFsZATa2dvvBbF9jgWYFkizUQexKth6AHZw==}
     engines: {node: '>= 6'}
     dependencies:
       '@types/node': 14.17.14
