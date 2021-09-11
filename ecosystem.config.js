@@ -1,8 +1,8 @@
 module.exports = {
   apps: [
     {
-      name: 'mx-space-server@next',
-      script: 'dist/src/main.js',
+      name: 'mx-server',
+      script: 'index.js',
       autorestart: true,
       exec_mode: 'cluster',
       watch: false,
