@@ -1,5 +1,5 @@
 // @ts-check
-const { $, cd, fetch } = require('zx')
+const { $, cd, fetch, nothrow } = require('zx')
 const fs = require('fs')
 const { sleep } = require('zx')
 const { homedir } = require('os')
@@ -21,7 +21,7 @@ async function main() {
   )?.browser_download_url
 
   if (!downloadUrl) {
-    return
+    throw new Error('no download url found')
   }
 
   const buffer = await fetch(
@@ -31,16 +31,16 @@ async function main() {
   fs.writeFileSync(`/tmp/${tmpName}.zip`, buffer, { flag: 'w' })
   await $`rm -rf ./run`
   await $`unzip /tmp/${tmpName}.zip -d ./run`
-  try {
-    await $`pm2 stop mx-server`
-  } catch {}
-  await $`pm2 start ./run/index.js --max-memory-restart 250M --name mx-server -- ${argv}`
+  await $`rm /tmp/${tmpName}.zip`
+  cd('./run')
+
+  await nothrow($`pm2 reload ecosystem.config.js -- ${argv}`)
   console.log('等待 15 秒')
   await sleep(15000)
   try {
     await $`lsof -i:2333 -P -n | grep LISTEN`
   } catch {
-    await $`pm2 stop ./run/index.js`
+    await $`pm2 stop ecosystem.config.js`
     throw new Error('server is not running')
   }
 }

@@ -36,6 +36,7 @@ jobs:
         run: |
           pnpm run bundle
           cp -R assets out
+          cp ecosystem.config.js out
           cd out
           zip -r ../release.zip ./*
       - name: Create Release
