@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { render } from 'ejs'
-import { readFileSync, writeFileSync } from 'fs'
+import { writeFileSync } from 'fs'
 import { createTransport } from 'nodemailer'
 import path from 'path'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { LinkModel } from '~/modules/link/link.model'
+import { HttpService } from './helper.http.service'
+import { AssetService } from './hepler.asset.service'
 
 export enum ReplyMailType {
   Owner = 'owner',
@@ -20,27 +22,25 @@ export enum LinkApplyEmailType {
 export class EmailService {
   private instance: ReturnType<typeof createTransport>
   private logger: Logger
-  constructor(private readonly configsService: ConfigsService) {
+  constructor(
+    private readonly configsService: ConfigsService,
+    private readonly assetService: AssetService,
+    private readonly httpService: HttpService,
+  ) {
     this.init()
     this.logger = new Logger(EmailService.name)
   }
 
-  readTemplate(type: ReplyMailType) {
+  async readTemplate(type: ReplyMailType) {
     switch (type) {
       case ReplyMailType.Guest:
-        return readFileSync(
-          path.resolve(
-            process.cwd(),
-            'assets/email-template/guest.template.ejs',
-          ),
+        return this.assetService.getAsset(
+          '/email-template/guest.template.ejs',
           { encoding: 'utf-8' },
         )
       case ReplyMailType.Owner:
-        return readFileSync(
-          path.resolve(
-            process.cwd(),
-            'assets/email-template/owner.template.ejs',
-          ),
+        return this.assetService.getAsset(
+          '/email-template/owner.template.ejs',
           { encoding: 'utf-8' },
         )
     }
@@ -175,7 +175,7 @@ export class EmailService {
         ...{
           subject: `[${seo.title || 'Mx Space'}] 主人给你了新的回复呐`,
           to,
-          html: this.render(this.readTemplate(type), source),
+          html: this.render((await this.readTemplate(type)) as string, source),
         },
       })
     } else
@@ -184,7 +184,7 @@ export class EmailService {
         ...{
           subject: `[${seo.title || 'Mx Space'}] 有新回复了耶~`,
           to,
-          html: this.render(this.readTemplate(type), source),
+          html: this.render((await this.readTemplate(type)) as string, source),
         },
       })
   }

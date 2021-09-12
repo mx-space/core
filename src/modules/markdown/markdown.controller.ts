@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common'
 import { ApiProperty, ApiQuery } from '@nestjs/swagger'
 import { FastifyReply } from 'fastify'
 import JSZip from 'jszip'
@@ -7,18 +7,25 @@ import { Readable } from 'stream'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
+import { HttpService } from '~/processors/helper/helper.http.service'
+import { AssetService } from '~/processors/helper/hepler.asset.service'
+import { MongoIdDto } from '~/shared/dto/id.dto'
 import { CategoryModel } from '../category/category.model'
 import { ArticleType, DataListDto } from './markdown.dto'
 import { MarkdownYAMLProperty } from './markdown.interface'
 import { MarkdownService } from './markdown.service'
 
 @Controller('markdown')
-@Auth()
 @ApiName
 export class MarkdownController {
-  constructor(private readonly service: MarkdownService) {}
+  constructor(
+    private readonly service: MarkdownService,
+    private readonly httpService: HttpService,
+    private readonly assetService: AssetService,
+  ) {}
 
   @Post('/import')
+  @Auth()
   @ApiProperty({ description: '导入 Markdown with YAML 数据' })
   async importArticle(@Body() body: DataListDto) {
     const type = body.type
@@ -34,6 +41,7 @@ export class MarkdownController {
   }
 
   @Get('/export')
+  @Auth()
   @ApiProperty({ description: '导出 Markdown with YAML 数据' })
   @ApiQuery({
     description: '导出的 md 文件名是否为 slug',
@@ -118,7 +126,6 @@ export class MarkdownController {
       Object.entries(map).map(async ([key, arr]) => {
         const zip = await this.service.generateArchive({
           documents: arr,
-          archiveName: key,
           options: {
             slug: !!parseInt(slug),
           },
@@ -141,5 +148,48 @@ export class MarkdownController {
       )
       .type('application/zip')
       .send(readable)
+  }
+
+  @Get('/render/:id')
+  async renderArticle(@Param() params: MongoIdDto, @Res() reply: FastifyReply) {
+    const { id } = params
+    const { html: markdown, document } = await this.service.renderArticle(id)
+    const [theme] = await Promise.all([
+      this.httpService.axiosRef
+        .get(
+          'https://gitee.com/xun7788/mx-server-assets/raw/master/newsprint.css',
+        )
+        .then((r) => r.data),
+    ])
+    const style = await this.assetService.getAsset('markdown.css', {
+      encoding: 'utf8',
+    })
+
+    reply.type('text/html').send(
+      `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <meta name="referrer" content="no-referrer">
+        <style>
+          ${style}
+          ${theme}
+        </style>
+        <title>${document.title}</title>
+      </head>
+      <body>
+      <h1>${document.title}</h1>
+        ${markdown}
+      </body>
+      </html>
+
+    `
+        .split('\n')
+        .map((line) => line.trim())
+        .join('\n'),
+    )
   }
 }

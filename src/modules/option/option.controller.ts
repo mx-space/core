@@ -65,8 +65,8 @@ export class OptionController {
   }
 
   @Get('/email/template/reply')
-  getEmailReplyTemplate(@Query() { type }: ReplyEmailTypeDto) {
-    const template = this.emailService.readTemplate(
+  async getEmailReplyTemplate(@Query() { type }: ReplyEmailTypeDto) {
+    const template = await this.emailService.readTemplate(
       type === 'guest' ? ReplyMailType.Guest : ReplyMailType.Owner,
     )
     return template

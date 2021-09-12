@@ -1,16 +1,23 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 import { dump } from 'js-yaml'
 import JSZip from 'jszip'
 import { omit } from 'lodash'
+import normalize from 'mdurl/encode.js'
 import { Types } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
+import html from 'remark-html'
+import markdown from 'remark-parse'
+import unified from 'unified'
+import u from 'unist-builder'
 import { CategoryModel } from '../category/category.model'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
 import { DatatypeDto } from './markdown.dto'
 import { MarkdownYAMLProperty } from './markdown.interface'
+import rules from './rules'
+
 @Injectable()
 export class MarkdownService {
   private logger: Logger
@@ -156,11 +163,9 @@ export class MarkdownService {
 
   async generateArchive({
     documents,
-    archiveName,
     options = {},
   }: {
     documents: MarkdownYAMLProperty[]
-    archiveName: string
     options: { slug?: boolean }
   }) {
     const zip = new JSZip()
@@ -205,5 +210,73 @@ ${text.trim()}
 `.trim()
 
     return res
+  }
+
+  async renderArticle(id: string) {
+    const tasks = await Promise.all([
+      this.postModel.findById(id).lean(),
+      this.noteModel.findById(id).lean(),
+      this.pageModel.findById(id).lean(),
+    ])
+    const document = tasks.find(Boolean)
+    if (!document) {
+      throw new BadRequestException('文档不存在')
+    }
+    return { html: this.render(document.text), document }
+  }
+
+  private render(text: string) {
+    const parser = unified()
+      .use(markdown)
+      .use(rules)
+      // @ts-ignore
+      .use(html, {
+        allowDangerousHtml: true,
+        handlers: {
+          image: (h, node: any) => {
+            // console.log(node)
+
+            const src = node.url as string
+            const _alt = node.alt as string | undefined
+            const alt = _alt?.match(/^[!¡]/) ? _alt!.replace(/^[¡!]/, '') : ''
+            if (!alt) {
+              return h(node, 'img', { src })
+            }
+            return h(node, 'figure', {}, [
+              h(node, 'img', { src: normalize(src) }),
+              h.augment(
+                node,
+                u(
+                  'raw',
+                  `<figcaption style="text-align: center; margin: 1em auto;">${this.escapeHTMLTag(
+                    alt,
+                  )}</figcaption>`,
+                ),
+              ),
+            ])
+          },
+          spoiler: (h, node: any) => {
+            return h(node, 'del', {
+              class: 'spoiler',
+              style: 'filter: invert(25%);',
+            })
+          },
+        },
+      } as any)
+
+    return parser.processSync(text).toString()
+  }
+
+  private escapeHTMLTag(html: string) {
+    const lt = /</g,
+      gt = />/g,
+      ap = /'/g,
+      ic = /"/g
+    return html
+      .toString()
+      .replace(lt, '&lt;')
+      .replace(gt, '&gt;')
+      .replace(ap, '&#39;')
+      .replace(ic, '&#34;')
   }
 }

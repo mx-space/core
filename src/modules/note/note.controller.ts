@@ -48,10 +48,7 @@ export class NoteController {
   @Get('latest')
   @ApiOperation({ summary: '获取最新发布一篇记录' })
   @UpdateDocumentCount('Note')
-  async getLatestOne(
-    @IsMaster() isMaster: boolean,
-    @IpLocation() location: IpRecord,
-  ) {
+  async getLatestOne(@IsMaster() isMaster: boolean) {
     const { latest, next } = await this.noteService.getLatestOne(
       {
         ...addConditionToSeeHideContent(isMaster),

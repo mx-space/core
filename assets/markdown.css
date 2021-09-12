@@ -1,0 +1,14 @@
+.spoiler {
+  background-color: currentColor;
+  transition: all 0.5s;
+  text-decoration: none;
+}
+
+.spoiler:hover {
+  background-color: transparent;
+}
+
+body {
+  width: 800px;
+  margin: auto;
+}
