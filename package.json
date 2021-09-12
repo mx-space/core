@@ -102,7 +102,7 @@
     "ts-morph": "*",
     "ua-parser-js": "0.7.28",
     "unified": "9.2.2",
-    "unist-builder": "2.0.3",
+    "unist-builder": "3.0.0",
     "yargs": "*",
     "zx": "4.2.0"
   },
