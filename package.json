@@ -38,7 +38,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "patch": "node bin/patch.js"
+    "patch": "node bin/patch.js",
+    "docs": "npx @compodoc/compodoc -p tsconfig.json -s -d docs"
   },
   "dependencies": {
     "@nestjs/common": "8.0.6",
