@@ -101,7 +101,7 @@
     "snakecase-keys": "4.0.2",
     "ts-morph": "*",
     "ua-parser-js": "0.7.28",
-    "unified": "9.2.2",
+    "unified": "10.1.0",
     "unist-builder": "2.0.3",
     "yargs": "*",
     "zx": "4.2.0"
