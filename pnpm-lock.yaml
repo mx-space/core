@@ -83,8 +83,8 @@ specifiers:
   reflect-metadata: 0.1.13
   rehype-stringify: 9.0.2
   remark-gfm: 2.0.0
-  remark-html: ^13.0.1
-  remark-parse: ^5.0.0
+  remark-html: 13.0.2
+  remark-parse: 5.0.0
   remark-rehype: 9.0.0
   rimraf: 3.0.2
   run-script-webpack-plugin: 0.0.11
