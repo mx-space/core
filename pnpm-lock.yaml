@@ -26,11 +26,11 @@ specifiers:
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.2
   '@types/ejs': 3.1.0
-  '@types/html-minifier': ^4.0.1
+  '@types/html-minifier': 4.0.1
   '@types/ioredis': 4.27.2
   '@types/jest': 27.0.1
   '@types/lodash': 4.14.172
-  '@types/marked': ^3.0.0
+  '@types/marked': 3.0.1
   '@types/mongoose-paginate-v2': 1.3.11
   '@types/node': 16.9.1
   '@types/nodemailer': 6.4.4
@@ -58,7 +58,7 @@ specifiers:
   fastify-multipart: 4.0.7
   fastify-swagger: 4.11.0
   graphql: 15.5.3
-  html-minifier: ^4.0.0
+  html-minifier: 4.0.0
   husky: 7.0.2
   image-size: 1.0.0
   inquirer: '*'
@@ -68,7 +68,7 @@ specifiers:
   jszip: 3.7.1
   lint-staged: 11.1.2
   lodash: '*'
-  marked: ^3.0.3
+  marked: 3.0.3
   mdurl: '*'
   mkdirp: '*'
   mongoose: '*'
@@ -100,7 +100,7 @@ specifiers:
   ua-parser-js: 0.7.28
   webpack: '*'
   webpack-node-externals: 3.0.0
-  xss: ^1.0.9
+  xss: 1.0.9
   yargs: '*'
   zx: 4.2.0
 
@@ -178,7 +178,7 @@ devDependencies:
   '@types/ioredis': 4.27.2
   '@types/jest': 27.0.1
   '@types/lodash': 4.14.172
-  '@types/marked': 3.0.0
+  '@types/marked': 3.0.1
   '@types/mongoose-paginate-v2': 1.3.11
   '@types/node': 16.9.1
   '@types/nodemailer': 6.4.4
@@ -1908,8 +1908,8 @@ packages:
     resolution: {integrity: sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==}
     dev: false
 
-  /@types/marked/3.0.0:
-    resolution: {integrity: sha512-vof90OIWT+Tzq3MBRXgV9fsH8PC3WZ4OQg9Qa04vOtP0TcyiNfl7BTonYCmTapHZ5lRZh6ihUYkAy7St1hmk/A==}
+  /@types/marked/3.0.1:
+    resolution: {integrity: sha512-jry/WUAC511P2NBCeiCkfTRCN2VXobeeQa8p8gImOYsRfnuIVfeEsqOJ1pk+CzCwfMCdv3dkTQRCYaNkkFGtxw==}
     dev: true
 
   /@types/mime/1.3.2:
