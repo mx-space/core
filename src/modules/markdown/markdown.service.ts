@@ -299,7 +299,7 @@ ${text.trim()}
 
         code(code, lang) {
           if (lang == 'mermaid') {
-            return '<div class="mermaid">' + code + '</div>'
+            return '<pre class="mermaid">' + code + '</pre>'
           } else {
             return (
               `<pre><code class="language-${lang}">` +
