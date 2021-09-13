@@ -22,7 +22,7 @@
     "prepare": "husky install",
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "bundle": "rimraf out && yarn run build && cd dist/src && npx ncc build main.js -o ../../out -m",
+    "bundle": "rimraf out && yarn run build && cd dist/src && npx ncc build main.js -o ../../out -m -s",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "cross-env NODE_ENV=development nest start -w",
     "start:dev": "nest build --webpack --webpackPath webpack-hmr.config.js --watch",
