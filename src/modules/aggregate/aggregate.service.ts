@@ -175,7 +175,7 @@ export class AggregateService {
         .then((list) =>
           list.map((doc) => ({
             url: new URL(`/${doc.slug}`, baseURL),
-            published_at: doc.modified,
+            published_at: new Date(doc.modified),
           })),
         ),
 
@@ -196,7 +196,7 @@ export class AggregateService {
           list.map((doc) => {
             return {
               url: new URL(`/notes/${doc.nid}`, baseURL),
-              published_at: doc.modified,
+              published_at: new Date(doc.modified),
             }
           }),
         ),
@@ -213,7 +213,7 @@ export class AggregateService {
                 `/posts/${(doc.category as CategoryModel).slug}/${doc.slug}`,
                 baseURL,
               ),
-              published_at: doc.modified,
+              published_at: new Date(doc.modified),
             }
           }),
         ),
