@@ -11,15 +11,22 @@ import {
 import { ApiProperty, ApiQuery } from '@nestjs/swagger'
 import dayjs from 'dayjs'
 import { FastifyReply } from 'fastify'
+import { minify } from 'html-minifier'
 import JSZip from 'jszip'
 import { join } from 'path'
+import { performance } from 'perf_hooks'
 import { Readable } from 'stream'
+import { URL } from 'url'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { AssetService } from '~/processors/helper/hepler.asset.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { CategoryModel } from '../category/category.model'
+import { ConfigsService } from '../configs/configs.service'
+import { NoteModel } from '../note/note.model'
+import { PageModel } from '../page/page.model'
+import { PostModel } from '../post/post.model'
 import { ArticleType, DataListDto } from './markdown.dto'
 import { MarkdownYAMLProperty } from './markdown.interface'
 import { MarkdownService } from './markdown.service'
@@ -31,6 +38,7 @@ export class MarkdownController {
     private readonly service: MarkdownService,
 
     private readonly assetService: AssetService,
+    private readonly configs: ConfigsService,
   ) {}
 
   @Post('/import')
@@ -163,14 +171,33 @@ export class MarkdownController {
   @CacheTTL(60 * 60 * 24)
   async renderArticle(@Param() params: MongoIdDto, @Res() reply: FastifyReply) {
     const { id } = params
-    const { html: markdown, document } = await this.service.renderArticle(id)
+    const now = performance.now()
+    const {
+      html: markdown,
+      document,
+      type,
+    } = await this.service.renderArticle(id)
 
     const style = await this.assetService.getAsset('markdown.css', {
       encoding: 'utf8',
     })
 
+    const relativePath = (() => {
+      switch (type) {
+        case 'post':
+          return `/posts/${((document as PostModel).category as any).slug}/${
+            (document as PostModel).slug
+          }`
+        case 'note':
+          return `/notes/${(document as NoteModel).nid}`
+        case 'page':
+          return `/${(document as PageModel).slug}`
+      }
+    })()
+    const url = new URL(relativePath, this.configs.get('url').webUrl)
     reply.type('text/html').send(
-      `
+      minify(
+        `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -186,26 +213,46 @@ export class MarkdownController {
       </head>
       <body>
       <article>
-
         <h1>${document.title}</h1>
-        <p>本文渲染于 ${dayjs().format('DD/MM/YYYY')}</p>
         ${markdown}
         </article>
-      </body>
+        </body>
+        <footer style="text-align: right; padding: 2em 0;">
+        <p>本文渲染于 ${dayjs().format('llll')}，用时 ${
+          performance.now() - now
+        }ms</p>
+        <p>原文地址：<a href="${url}">${decodeURIComponent(
+          url.toString(),
+        )}</a></p>
+        </footer>
       <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+      <link rel="stylesheet"
+      href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/styles/default.min.css">
+      <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/highlight.min.js"></script>
       <script>
       window.mermaid.initialize({
         theme: 'default',
         startOnLoad: false,
       })
       window.mermaid.init(undefined, '.mermaid')
+
+      document.addEventListener('DOMContentLoaded', (event) => {
+        document.querySelectorAll('pre code').forEach((el) => {
+          hljs.highlightElement(el);
+        });
+      });
       </script>
       </html>
 
-    `
-        .split('\n')
-        .map((line) => line.trim())
-        .join('\n'),
+    `,
+        {
+          removeAttributeQuotes: true,
+          removeComments: true,
+          minifyCSS: true,
+          minifyJS: true,
+          collapseWhitespace: true,
+        },
+      ),
     )
   }
 }

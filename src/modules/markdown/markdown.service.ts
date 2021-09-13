@@ -209,15 +209,20 @@ ${text.trim()}
 
   async renderArticle(id: string) {
     const tasks = await Promise.all([
-      this.postModel.findById(id).lean(),
+      this.postModel.findById(id).populate('category').lean(),
       this.noteModel.findById(id).lean(),
       this.pageModel.findById(id).lean(),
     ])
-    const document = tasks.find(Boolean)
-    if (!document) {
+    const index = tasks.findIndex(Boolean)
+    if (!~index) {
       throw new BadRequestException('文档不存在')
     }
-    return { html: this.render(document.text), document }
+    const document = tasks[index]
+    return {
+      html: this.render(document.text),
+      document,
+      type: ['post', 'note', 'page'][index],
+    }
   }
 
   public render(text: string) {
@@ -296,7 +301,11 @@ ${text.trim()}
           if (lang == 'mermaid') {
             return '<div class="mermaid">' + code + '</div>'
           } else {
-            return '<pre><code>' + code + '</code></pre>'
+            return (
+              `<pre><code class="language-${lang}">` +
+              xss(code) +
+              '</code></pre>'
+            )
           }
         },
       },
