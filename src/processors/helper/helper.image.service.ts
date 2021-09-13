@@ -93,7 +93,7 @@ export class ImageService {
     const size = imageSize(buffer)
 
     // get accent color
-    const accent = await getAverageRGB(buffer, size)
+    const accent = await getAverageRGB(buffer)
 
     return { size, accent }
   }

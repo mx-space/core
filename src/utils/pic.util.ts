@@ -1,19 +1,24 @@
 import Vibrant = require('node-vibrant')
-import { ISizeCalculationResult } from 'image-size/dist/types/interface'
+import { lexer } from 'marked'
 
-//TODO use ast to parse markdown
 export const pickImagesFromMarkdown = (text: string) => {
-  const reg = /(?<=!\[.*\]\()(.+)(?=\))/g
+  const ast = lexer(text)
   const images = [] as string[]
-  for (const r of text.matchAll(reg)) {
-    images.push(r[0])
+  function pickImage(node: any) {
+    if (node.type === 'image') {
+      images.push(node.href)
+      return
+    }
+    if (node.tokens && Array.isArray(node.tokens)) {
+      return node.tokens.forEach(pickImage)
+    }
   }
+  ast.forEach(pickImage)
   return images
 }
 
 export async function getAverageRGB(
   buffer: Buffer,
-  size: ISizeCalculationResult,
 ): Promise<string | undefined> {
   if (!buffer) {
     return undefined

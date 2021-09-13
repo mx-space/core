@@ -18,7 +18,9 @@ module.exports = {
     ...pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/' }),
     '^src/(.*)$': '<rootDir>/src/$1',
     '^test/(.*)$': '<rootDir>/test/$1',
-    src: '<rootDir>/src',
+    '^src$': '<rootDir>/src',
+    '^~/(.*)$': '<rootDir>/src/$1',
+    '^~$': '<rootDir>/src',
     '^test$': '<rootDir>/test',
   },
 }
