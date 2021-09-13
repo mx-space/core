@@ -195,63 +195,62 @@ export class MarkdownController {
       }
     })()
     const url = new URL(relativePath, this.configs.get('url').webUrl)
-    reply.type('text/html').send(
-      minify(
-        `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <meta name="referrer" content="no-referrer">
-        <style>
-          ${style}
-        </style>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mx-space/assets@master/newsprint.css">
-        <title>${document.title}</title>
-      </head>
-      <body>
-      <article>
-        <h1>${document.title}</h1>
-        ${markdown}
-        </article>
-        </body>
-        <footer style="text-align: right; padding: 2em 0;">
-        <p>本文渲染于 ${dayjs().format('llll')}，用时 ${
-          performance.now() - now
-        }ms</p>
-        <p>原文地址：<a href="${url}">${decodeURIComponent(
-          url.toString(),
-        )}</a></p>
-        </footer>
-      <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-      <link rel="stylesheet"
-      href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/styles/default.min.css">
-      <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/highlight.min.js"></script>
-      <script>
-      window.mermaid.initialize({
-        theme: 'default',
-        startOnLoad: false,
-      })
-      window.mermaid.init(undefined, '.mermaid')
+    const html = minify(
+      `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="ie=edge">
+      <meta name="referrer" content="no-referrer">
+      <style>
+        ${style}
+      </style>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mx-space/assets@master/newsprint.css">
+      <title>${document.title}</title>
+    </head>
+    <body>
+    <article>
+      <h1>${document.title}</h1>
+      ${markdown}
+      </article>
+      </body>
+      <footer style="text-align: right; padding: 2em 0;">
+      <p>本文渲染于 ${dayjs().format('llll')}，用时 ${
+        performance.now() - now
+      }ms</p>
+      <p>原文地址：<a href="${url}">${decodeURIComponent(
+        url.toString(),
+      )}</a></p>
+      </footer>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link rel="stylesheet"
+    href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/styles/default.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/highlight.min.js"></script>
+    <script>
+    window.mermaid.initialize({
+      theme: 'default',
+      startOnLoad: false,
+    })
+    window.mermaid.init(undefined, '.mermaid')
 
-      document.addEventListener('DOMContentLoaded', (event) => {
-        document.querySelectorAll('pre code').forEach((el) => {
-          hljs.highlightElement(el);
-        });
+    document.addEventListener('DOMContentLoaded', (event) => {
+      document.querySelectorAll('pre code').forEach((el) => {
+        hljs.highlightElement(el);
       });
-      </script>
-      </html>
+    });
+    </script>
+    </html>
 
-    `,
-        {
-          removeAttributeQuotes: true,
-          removeComments: true,
-          minifyCSS: true,
-          collapseWhitespace: true,
-        },
-      ),
+  `,
+      {
+        removeAttributeQuotes: true,
+        removeComments: true,
+        minifyCSS: true,
+        collapseWhitespace: true,
+      },
     )
+    reply.type('text/html').send(html)
   }
 }

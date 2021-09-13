@@ -1,17 +1,17 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
-import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
-import { Types } from 'mongoose'
+import { DocumentType } from '@typegoose/typegoose'
+import { BeAnObject } from '@typegoose/typegoose/lib/types'
+import { LeanDocument, Types } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { DatabaseService } from '~/processors/database/database.service'
 import {
   EmailService,
   ReplyMailType,
 } from '~/processors/helper/helper.email.service'
+import { WriteBaseModel } from '~/shared/model/base.model'
 import { hasChinese, isDev } from '~/utils/index.util'
 import { ConfigsService } from '../configs/configs.service'
-import { NoteModel } from '../note/note.model'
-import { PageModel } from '../page/page.model'
-import { PostModel } from '../post/post.model'
 import { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json'
 import { CommentModel, CommentRefTypes } from './comment.model'
@@ -22,12 +22,7 @@ export class CommentService {
     @InjectModel(CommentModel)
     private readonly commentModel: MongooseModel<CommentModel>,
 
-    @InjectModel(PostModel)
-    private readonly postModel: ReturnModelType<typeof PostModel>,
-    @InjectModel(NoteModel)
-    private readonly noteModel: ReturnModelType<typeof NoteModel>,
-    @InjectModel(PageModel)
-    private readonly pageModel: ReturnModelType<typeof PageModel>,
+    private readonly databaseService: DatabaseService,
     private readonly configs: ConfigsService,
     private readonly userService: UserService,
     private readonly mailService: EmailService,
@@ -38,16 +33,14 @@ export class CommentService {
   }
 
   private getModelByRefType(type: CommentRefTypes) {
-    const map = new Map(
-      Object.entries({
-        Post: this.postModel,
-        Note: this.noteModel,
-        Page: this.pageModel,
-      }),
-    )
-    return map.get(type) as any as ReturnModelType<
-      typeof NoteModel | typeof PostModel | typeof PageModel
-    >
+    switch (type) {
+      case CommentRefTypes.Note:
+        return this.databaseService.getModelByRefType('Note')
+      case CommentRefTypes.Page:
+        return this.databaseService.getModelByRefType('Page')
+      case CommentRefTypes.Post:
+        return this.databaseService.getModelByRefType('Post')
+    }
   }
 
   async checkSpam(doc: Partial<CommentModel>) {
@@ -95,11 +88,19 @@ export class CommentService {
 
   async createComment(
     id: string,
-    type: CommentRefTypes,
     doc: Partial<CommentModel>,
+    type?: CommentRefTypes,
   ) {
-    const model = this.getModelByRefType(type)
-    const ref = await model.findById(id)
+    let ref: LeanDocument<DocumentType<WriteBaseModel, BeAnObject>>
+    if (type) {
+      const model = this.getModelByRefType(type)
+      ref = await model.findById(id).lean()
+    } else {
+      const { type: type_, document } =
+        await this.databaseService.findGlobalById(id)
+      ref = document
+      type = type_ as any
+    }
     if (!ref) {
       throw new CannotFindException()
     }
@@ -110,11 +111,15 @@ export class CommentService {
       ref: Types.ObjectId(id),
       refType: type,
     })
-    await ref.updateOne({
-      $inc: {
-        commentsIndex: 1,
+
+    await this.databaseService.getModelByRefType(type as any).updateOne(
+      { _id: ref._id },
+      {
+        $inc: {
+          commentsIndex: 1,
+        },
       },
-    })
+    )
 
     return comment
   }
@@ -156,10 +161,15 @@ export class CommentService {
     return { message: '删除成功' }
   }
 
-  async allowComment(id: string, type: CommentRefTypes) {
-    const model = this.getModelByRefType(type)
-    const doc = await model.findById(id)
-    return doc.allowComment ?? true
+  async allowComment(id: string, type?: CommentRefTypes) {
+    if (type) {
+      const model = this.getModelByRefType(type)
+      const doc = await model.findById(id)
+      return doc.allowComment ?? true
+    } else {
+      const { document: doc } = await this.databaseService.findGlobalById(id)
+      return doc.allowComment ?? true
+    }
   }
 
   async getComments({ page, size, state } = { page: 1, size: 10, state: 0 }) {

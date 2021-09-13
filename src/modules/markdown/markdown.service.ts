@@ -7,6 +7,7 @@ import marked from 'marked'
 import { Types } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import xss from 'xss'
+import { DatabaseService } from '~/processors/database/database.service'
 import { CategoryModel } from '../category/category.model'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
@@ -25,6 +26,8 @@ export class MarkdownService {
     private readonly noteModel: ReturnModelType<typeof NoteModel>,
     @InjectModel(PageModel)
     private readonly pageModel: ReturnModelType<typeof PageModel>,
+
+    private readonly databaseService: DatabaseService,
   ) {
     this.logger = new Logger(MarkdownService.name)
   }
@@ -208,20 +211,15 @@ ${text.trim()}
   }
 
   async renderArticle(id: string) {
-    const tasks = await Promise.all([
-      this.postModel.findById(id).populate('category').lean(),
-      this.noteModel.findById(id).lean(),
-      this.pageModel.findById(id).lean(),
-    ])
-    const index = tasks.findIndex(Boolean)
-    if (!~index) {
+    const doc = await this.databaseService.findGlobalById(id)
+
+    if (!doc.document) {
       throw new BadRequestException('文档不存在')
     }
-    const document = tasks[index]
+
     return {
-      html: this.render(document.text),
-      document,
-      type: ['post', 'note', 'page'][index],
+      html: this.render(doc.document.text),
+      ...doc,
     }
   }
 
@@ -243,13 +241,12 @@ ${text.trim()}
             )}\n</span>`
           },
           tokenizer(src, tokens) {
-            const rule = /^\|\|([\s\S]+?)\|\|(?!\|)/ // Regex for the complete token
+            const rule = /^\|\|([\s\S]+?)\|\|(?!\|)/
             const match = rule.exec(src)
             if (match) {
               return {
-                // Token to generate
-                type: 'spoiler', // Should match "name" above
-                raw: match[0], // Text to consume from the source
+                type: 'spoiler',
+                raw: match[0],
                 // @ts-ignore
                 text: this.lexer.inlineTokens(match[1].trim()),
               }
@@ -269,13 +266,12 @@ ${text.trim()}
             return `<a class="mention" rel="noreferrer nofollow" href="https://github.com/${username}" target="_blank">@${username}\n</a>`
           },
           tokenizer(src, tokens) {
-            const rule = /^\((@(\w+\b))\)\s?(?!\[.*?\])/ // Regex for the complete token
+            const rule = /^\((@(\w+\b))\)\s?(?!\[.*?\])/
             const match = rule.exec(src)
             if (match) {
               return {
-                // Token to generate
-                type: 'mention', // Should match "name" above
-                raw: match[0], // Text to consume from the source
+                type: 'mention',
+                raw: match[0],
                 text: this.lexer.inlineTokens(match[1].trim(), []),
               }
             }

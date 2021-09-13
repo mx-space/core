@@ -16,6 +16,7 @@ export enum CommentRefTypes {
   Note = 'Note',
   Page = 'Page',
 }
+
 export enum CommentState {
   Unread,
   Read,

@@ -30,7 +30,7 @@ import {
   StateDto,
   TextOnlyDto,
 } from './comment.dto'
-import { CommentModel, CommentRefTypes, CommentState } from './comment.model'
+import { CommentModel, CommentState } from './comment.model'
 import { CommentService } from './comment.service'
 @Controller({ path: 'comments' })
 @ApiName
@@ -113,23 +113,13 @@ export class CommentController {
     const { ref } = query
 
     const id = params.id
-    if (
-      !(await this.commentService.allowComment(
-        id,
-        ref || CommentRefTypes.Post,
-      )) &&
-      !isMaster
-    ) {
+    if (!(await this.commentService.allowComment(id, ref)) && !isMaster) {
       throw new ForbiddenException('主人禁止了评论')
     }
 
     const model = { ...body, ...ipLocation }
 
-    const comment = await this.commentService.createComment(
-      id,
-      ref || CommentRefTypes.Post,
-      model,
-    )
+    const comment = await this.commentService.createComment(id, model, ref)
 
     process.nextTick(async () => {
       if (await this.commentService.checkSpam(comment)) {

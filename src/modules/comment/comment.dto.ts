@@ -50,7 +50,7 @@ export class CommentRefTypesDto {
   @IsOptional()
   @IsEnum(CommentRefTypes)
   @ApiProperty({ enum: CommentRefTypes, required: false })
-  ref: CommentRefTypes
+  ref?: CommentRefTypes
 }
 
 export class StateDto {

@@ -13,6 +13,7 @@ import { SayModel } from '~/modules/say/say.model'
 import { CategoryModel } from '../../modules/category/category.model'
 import { PostModel } from '../../modules/post/post.model'
 import { UserModel } from '../../modules/user/user.model'
+import { DatabaseService } from './database.service'
 
 const models = TypegooseModule.forFeature([
   AnalyzeModel,
@@ -42,8 +43,8 @@ const models = TypegooseModule.forFeature([
     }),
     models,
   ],
-
-  exports: [models],
+  providers: [DatabaseService],
+  exports: [models, DatabaseService],
 })
 @Global()
 export class DbModule {}
