@@ -12,3 +12,15 @@ body {
   width: 800px;
   margin: auto;
 }
+
+.mermaid {
+  text-align: center;
+}
+
+.mermaid > svg {
+  margin: auto;
+}
+
+img {
+  max-width: 100%;
+}

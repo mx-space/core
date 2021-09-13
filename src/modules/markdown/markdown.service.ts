@@ -3,21 +3,16 @@ import { ReturnModelType } from '@typegoose/typegoose'
 import { dump } from 'js-yaml'
 import JSZip from 'jszip'
 import { omit } from 'lodash'
-import normalize from 'mdurl/encode.js'
+import marked from 'marked'
 import { Types } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
-import html from 'remark-html'
-import markdown from 'remark-parse'
-import unified from 'unified'
-import u from 'unist-builder'
+import xss from 'xss'
 import { CategoryModel } from '../category/category.model'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
 import { DatatypeDto } from './markdown.dto'
 import { MarkdownYAMLProperty } from './markdown.interface'
-import rules from './rules'
-
 @Injectable()
 export class MarkdownService {
   private logger: Logger
@@ -226,57 +221,87 @@ ${text.trim()}
   }
 
   private render(text: string) {
-    const parser = unified()
-      .use(markdown)
-      .use(rules)
-      // @ts-ignore
-      .use(html, {
-        allowDangerousHtml: true,
-        handlers: {
-          image: (h, node: any) => {
-            // console.log(node)
-
-            const src = node.url as string
-            const _alt = node.alt as string | undefined
-            const alt = _alt?.match(/^[!¡]/) ? _alt!.replace(/^[¡!]/, '') : ''
-            if (!alt) {
-              return h(node, 'img', { src })
+    marked.use({
+      gfm: true,
+      sanitize: false,
+      extensions: [
+        {
+          level: 'inline',
+          name: 'spoiler',
+          start(src) {
+            return src.match(/\|/)?.index
+          },
+          renderer(token) {
+            // @ts-ignore
+            return `<span class="spoiler" style="filter: invert(25%)">${this.parser.parseInline(
+              token.text,
+            )}\n</span>`
+          },
+          tokenizer(src, tokens) {
+            const rule = /^\|\|([\s\S]+?)\|\|(?!\|)/ // Regex for the complete token
+            const match = rule.exec(src)
+            if (match) {
+              return {
+                // Token to generate
+                type: 'spoiler', // Should match "name" above
+                raw: match[0], // Text to consume from the source
+                // @ts-ignore
+                text: this.lexer.inlineTokens(match[1].trim()),
+              }
             }
-            return h(node, 'figure', {}, [
-              h(node, 'img', { src: normalize(src) }),
-              h.augment(
-                node,
-                u(
-                  'raw',
-                  `<figcaption style="text-align: center; margin: 1em auto;">${this.escapeHTMLTag(
-                    alt,
-                  )}</figcaption>`,
-                ),
-              ),
-            ])
           },
-          spoiler: (h, node: any) => {
-            return h(node, 'del', {
-              class: 'spoiler',
-              style: 'filter: invert(25%);',
-            })
-          },
+          childTokens: ['text'],
         },
-      } as any)
+        {
+          level: 'inline',
+          name: 'mention',
+          start(src) {
+            return src.match(/\(/)?.index
+          },
+          renderer(token) {
+            // @ts-ignore
+            const username = this.parser.parseInline(token.text).slice(1)
+            return `<a class="mention" rel="noreferrer nofollow" href="https://github.com/${username}" target="_blank">@${username}\n</a>`
+          },
+          tokenizer(src, tokens) {
+            const rule = /^\((@(\w+\b))\)\s?(?!\[.*?\])/ // Regex for the complete token
+            const match = rule.exec(src)
+            if (match) {
+              return {
+                // Token to generate
+                type: 'mention', // Should match "name" above
+                raw: match[0], // Text to consume from the source
+                text: this.lexer.inlineTokens(match[1].trim(), []),
+              }
+            }
+          },
+          childTokens: ['text'],
+        },
+      ],
 
-    return parser.processSync(text).toString()
-  }
+      renderer: {
+        image(src, title, _alt) {
+          const alt = _alt?.match(/^[!¡]/) ? _alt!.replace(/^[¡!]/, '') : ''
+          if (!alt) {
+            return `<img src="${xss(src)}"/>`
+          }
+          return `<figure>
+          <img src="${xss(src)}"/>
+          <figcaption style="text-align: center; margin: 1em auto;">${xss(
+            alt,
+          )}</figcaption></figure>`
+        },
 
-  private escapeHTMLTag(html: string) {
-    const lt = /</g,
-      gt = />/g,
-      ap = /'/g,
-      ic = /"/g
-    return html
-      .toString()
-      .replace(lt, '&lt;')
-      .replace(gt, '&gt;')
-      .replace(ap, '&#39;')
-      .replace(ic, '&#34;')
+        code(code, lang) {
+          if (lang == 'mermaid') {
+            return '<div class="mermaid">' + code + '</div>'
+          } else {
+            return '<pre><code>' + code + '</code></pre>'
+          }
+        },
+      },
+    })
+
+    return marked(text)
   }
 }

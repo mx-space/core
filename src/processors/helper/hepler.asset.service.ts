@@ -21,6 +21,9 @@ export class AssetService {
   }
 
   public assetPath = path.resolve(process.cwd(), 'assets')
+  // 在线资源的地址 `/` 结尾
+  private onlineAssetPath =
+    'https://cdn.jsdelivr.net/gh/mx-space/assets@master/'
 
   private checkRoot() {
     if (!fs.existsSync(this.assetPath)) {
@@ -48,7 +51,7 @@ export class AssetService {
       try {
         // 去线上拉取
         const { data } = await this.httpService.axiosRef.get(
-          `https://gitee.com/xun7788/mx-server-assets/raw/master/` + path,
+          this.onlineAssetPath + path,
         )
 
         fs.mkdirSync(

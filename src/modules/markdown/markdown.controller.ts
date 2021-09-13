@@ -7,7 +7,6 @@ import { Readable } from 'stream'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
-import { HttpService } from '~/processors/helper/helper.http.service'
 import { AssetService } from '~/processors/helper/hepler.asset.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { CategoryModel } from '../category/category.model'
@@ -20,7 +19,7 @@ import { MarkdownService } from './markdown.service'
 export class MarkdownController {
   constructor(
     private readonly service: MarkdownService,
-    private readonly httpService: HttpService,
+
     private readonly assetService: AssetService,
   ) {}
 
@@ -154,13 +153,7 @@ export class MarkdownController {
   async renderArticle(@Param() params: MongoIdDto, @Res() reply: FastifyReply) {
     const { id } = params
     const { html: markdown, document } = await this.service.renderArticle(id)
-    const [theme] = await Promise.all([
-      this.httpService.axiosRef
-        .get(
-          'https://gitee.com/xun7788/mx-server-assets/raw/master/newsprint.css',
-        )
-        .then((r) => r.data),
-    ])
+
     const style = await this.assetService.getAsset('markdown.css', {
       encoding: 'utf8',
     })
@@ -176,14 +169,25 @@ export class MarkdownController {
         <meta name="referrer" content="no-referrer">
         <style>
           ${style}
-          ${theme}
         </style>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mx-space/assets@master/newsprint.css">
         <title>${document.title}</title>
       </head>
       <body>
-      <h1>${document.title}</h1>
+      <article>
+
+        <h1>${document.title}</h1>
         ${markdown}
+        </article>
       </body>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+      <script>
+      window.mermaid.initialize({
+        theme: 'default',
+        startOnLoad: false,
+      })
+      window.mermaid.init(undefined, '.mermaid')
+      </script>
       </html>
 
     `
