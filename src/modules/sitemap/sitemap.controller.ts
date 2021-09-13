@@ -1,6 +1,6 @@
-import { CacheTTL, Controller, Get, Res } from '@nestjs/common'
-import { FastifyReply } from 'fastify'
+import { CacheTTL, Controller, Get, Header } from '@nestjs/common'
 import { minify } from 'html-minifier'
+import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { AggregateService } from '../aggregate/aggregate.service'
 @Controller('sitemap')
@@ -10,7 +10,9 @@ export class SitemapController {
 
   @Get('/')
   @CacheTTL(3600)
-  async getSitemap(@Res() res: FastifyReply) {
+  @HTTPDecorators.Bypass
+  @Header('content-type', 'application/xml')
+  async getSitemap() {
     const content = await this.aggregateService.getSiteMapContent()
 
     const xml = minify(
@@ -28,6 +30,6 @@ export class SitemapController {
   `,
       { collapseWhitespace: true },
     )
-    res.type('application/xml').send(xml)
+    return xml
   }
 }

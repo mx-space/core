@@ -111,6 +111,7 @@ export class MarkdownService {
     }
     return await this.postModel.insertMany(models)
   }
+
   async insertNotesToDb(data: DatatypeDto[]) {
     const models = [] as NoteModel[]
     for await (const item of data) {

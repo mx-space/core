@@ -1,6 +1,6 @@
-import { CacheKey, CacheTTL, Controller, Get, Res } from '@nestjs/common'
-import { FastifyReply } from 'fastify'
+import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
 import xss from 'xss'
+import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 import { AggregateService } from '../aggregate/aggregate.service'
@@ -19,7 +19,9 @@ export class FeedController {
   @Get('/')
   @CacheKey(CacheKeys.RSSCatch)
   @CacheTTL(3600)
-  async rss(@Res() res: FastifyReply) {
+  @HTTPDecorators.Bypass
+  @Header('content-type', 'application/xml')
+  async rss() {
     const { author, data, url } =
       await this.aggregateService.buildRssStructure()
     const { title } = this.configs.get('seo')
@@ -64,6 +66,6 @@ export class FeedController {
         })}
     </feed>`
 
-    return res.type('application/xml').send(xml)
+    return xml
   }
 }

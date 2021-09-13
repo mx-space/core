@@ -3,6 +3,7 @@ import {
   CacheTTL,
   Controller,
   Get,
+  Header,
   Param,
   Post,
   Query,
@@ -168,8 +169,10 @@ export class MarkdownController {
   }
 
   @Get('/render/:id')
+  @Header('content-type', 'text/html')
+  @HTTPDecorators.Bypass
   @CacheTTL(60 * 60 * 24)
-  async renderArticle(@Param() params: MongoIdDto, @Res() reply: FastifyReply) {
+  async renderArticle(@Param() params: MongoIdDto) {
     const { id } = params
     const now = performance.now()
     const {
@@ -183,7 +186,7 @@ export class MarkdownController {
     })
 
     const relativePath = (() => {
-      switch (type) {
+      switch (type.toLowerCase()) {
         case 'post':
           return `/posts/${((document as PostModel).category as any).slug}/${
             (document as PostModel).slug
@@ -195,6 +198,7 @@ export class MarkdownController {
       }
     })()
     const url = new URL(relativePath, this.configs.get('url').webUrl)
+
     const html = minify(
       `
     <!DOCTYPE html>
@@ -242,7 +246,6 @@ export class MarkdownController {
     });
     </script>
     </html>
-
   `,
       {
         removeAttributeQuotes: true,
@@ -251,6 +254,6 @@ export class MarkdownController {
         collapseWhitespace: true,
       },
     )
-    reply.type('text/html').send(html)
+    return html
   }
 }
