@@ -53,6 +53,7 @@ export class CacheService {
       this.redisClient.del(CacheKeys.RSS),
       this.redisClient.del(CacheKeys.SiteMapCatch),
       this.redisClient.del(CacheKeys.AggregateCatch),
+      this.redisClient.del(CacheKeys.SiteMapCatch),
     ])
   }
 }

@@ -5,5 +5,6 @@ import { MarkdownService } from './markdown.service'
 @Module({
   controllers: [MarkdownController],
   providers: [MarkdownService],
+  exports: [MarkdownService],
 })
 export class MarkdownModule {}

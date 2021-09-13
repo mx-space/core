@@ -1,5 +1,15 @@
-import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common'
+import {
+  Body,
+  CacheTTL,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common'
 import { ApiProperty, ApiQuery } from '@nestjs/swagger'
+import dayjs from 'dayjs'
 import { FastifyReply } from 'fastify'
 import JSZip from 'jszip'
 import { join } from 'path'
@@ -150,6 +160,7 @@ export class MarkdownController {
   }
 
   @Get('/render/:id')
+  @CacheTTL(60 * 60 * 24)
   async renderArticle(@Param() params: MongoIdDto, @Res() reply: FastifyReply) {
     const { id } = params
     const { html: markdown, document } = await this.service.renderArticle(id)
@@ -177,6 +188,7 @@ export class MarkdownController {
       <article>
 
         <h1>${document.title}</h1>
+        <p>本文渲染于 ${dayjs().format('DD/MM/YYYY')}</p>
         ${markdown}
         </article>
       </body>

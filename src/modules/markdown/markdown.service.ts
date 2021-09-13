@@ -220,7 +220,7 @@ ${text.trim()}
     return { html: this.render(document.text), document }
   }
 
-  private render(text: string) {
+  public render(text: string) {
     marked.use({
       gfm: true,
       sanitize: false,

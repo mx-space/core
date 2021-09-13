@@ -16,4 +16,5 @@ export const CacheKeys = Object.freeze({
   AggregateCatch: 'mx:aggregate_catch',
   SiteMapCatch: 'mx:aggregate_sitemap_catch',
   RSS: 'mx:rss',
+  RSSCatch: 'mx:rss_catch',
 } as const)
