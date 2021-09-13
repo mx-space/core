@@ -249,7 +249,6 @@ export class MarkdownController {
           removeAttributeQuotes: true,
           removeComments: true,
           minifyCSS: true,
-          minifyJS: true,
           collapseWhitespace: true,
         },
       ),
