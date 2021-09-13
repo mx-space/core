@@ -39,6 +39,7 @@ import { PostModule } from './modules/post/post.module'
 import { ProjectModule } from './modules/project/project.module'
 import { RecentlyModule } from './modules/recently/recently.module'
 import { SayModule } from './modules/say/say.module'
+import { SitemapModule } from './modules/sitemap/sitemap.module'
 import { ToolModule } from './modules/tool/tool.module'
 import { UserModule } from './modules/user/user.module'
 import { CacheModule } from './processors/cache/cache.module'
@@ -85,6 +86,7 @@ import { HelperModule } from './processors/helper/helper.module'
     ProjectModule,
     RecentlyModule,
     SayModule,
+    SitemapModule,
     ToolModule,
     UserModule,
     UserModule,

@@ -1,12 +1,14 @@
 import { CacheKey, CacheTTL, Controller, Get, Res } from '@nestjs/common'
 import { FastifyReply } from 'fastify'
 import xss from 'xss'
+import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 import { AggregateService } from '../aggregate/aggregate.service'
 import { ConfigsService } from '../configs/configs.service'
 import { MarkdownService } from '../markdown/markdown.service'
 
 @Controller({ path: 'feed' })
+@ApiName
 export class FeedController {
   constructor(
     private readonly aggregateService: AggregateService,
