@@ -1,5 +1,5 @@
 import './utils/global.util'
-import './zx.global-fix'
+import './zx.global'
 
 import { Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
