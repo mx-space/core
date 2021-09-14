@@ -29,7 +29,6 @@ import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
 import { FeedModule } from './modules/feed/feed.module'
-import { HealthModule } from './modules/health/health.module'
 import { InitModule } from './modules/init/init.module'
 import { LinkModule } from './modules/link/link.module'
 import { MarkdownModule } from './modules/markdown/markdown.module'
@@ -78,7 +77,7 @@ import { HelperModule } from './processors/helper/helper.module'
     CommentModule,
     ConfigsModule,
     FeedModule,
-    HealthModule,
+    // HealthModule,
     LinkModule,
     MarkdownModule,
     NoteModule,
