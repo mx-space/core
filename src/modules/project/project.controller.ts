@@ -1,6 +1,6 @@
 import { BaseCrudFactory } from '~/utils/crud.util'
 import { ProjectModel } from './project.model'
 
-export class ProjectContoller extends BaseCrudFactory({
+export class ProjectController extends BaseCrudFactory({
   model: ProjectModel,
 }) {}

@@ -242,6 +242,7 @@ export class CronService {
   async pushToAlgoliaSearch() {
     const configs = this.configs.get('algoliaSearchOptions')
     if (configs.enable) {
+      this.logger.log('--> 开始推送到 Algolia')
       const client = algoliasearch(configs.appId, configs.apiKey)
       const index = client.initIndex(configs.indexName)
       const documents: Record<'title' | 'text' | 'type' | 'id', string>[] = []

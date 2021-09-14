@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common'
 import { ClassConstructor, plainToClass } from 'class-transformer'
 import { validateSync, ValidatorOptions } from 'class-validator'
+import { CronService } from '~/processors/helper/helper.cron.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import {
   AlgoliaSearchOptions,
@@ -32,6 +33,7 @@ export class OptionService {
   constructor(
     private readonly configs: ConfigsService,
     private readonly emailService: EmailService,
+    private readonly cronService: CronService,
   ) {}
 
   validOptions: ValidatorOptions = {
@@ -74,7 +76,11 @@ export class OptionService {
       }
       case 'algoliaSearchOptions': {
         this.validWithDto(AlgoliaSearchOptions, value)
-        return this.configs.patch('algoliaSearchOptions', value)
+
+        return this.configs.patch('algoliaSearchOptions', value).then((r) => {
+          this.cronService.pushToAlgoliaSearch()
+          return r
+        })
       }
       default: {
         throw new UnprocessableEntityException('设置不存在')

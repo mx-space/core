@@ -11,6 +11,7 @@ import { join } from 'path/posix'
 import { AppController } from './app.controller'
 import { AppResolver } from './app.resolver'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
+import { RolesGuard } from './common/guard/roles.guard'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
 import { CountingInterceptor } from './common/interceptors/counting.interceptor'
 import {
@@ -23,12 +24,12 @@ import { SecurityMiddleware } from './common/middlewares/security.middleware'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
-import { RolesGuard } from './modules/auth/roles.guard'
 import { BackupModule } from './modules/backup/backup.module'
 import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
 import { FeedModule } from './modules/feed/feed.module'
+import { HealthModule } from './modules/health/health.module'
 import { InitModule } from './modules/init/init.module'
 import { LinkModule } from './modules/link/link.module'
 import { MarkdownModule } from './modules/markdown/markdown.module'
@@ -77,6 +78,7 @@ import { HelperModule } from './processors/helper/helper.module'
     CommentModule,
     ConfigsModule,
     FeedModule,
+    HealthModule,
     LinkModule,
     MarkdownModule,
     NoteModule,

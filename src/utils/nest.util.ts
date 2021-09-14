@@ -1,7 +1,7 @@
 import { ExecutionContext } from '@nestjs/common'
 import { GqlExecutionContext } from '@nestjs/graphql'
 
-export function getNestExectionContextRequest(context: ExecutionContext) {
+export function getNestExecutionContextRequest(context: ExecutionContext) {
   const req = context.switchToHttp().getRequest<KV>()
   if (req) {
     return req

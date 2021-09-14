@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common'
 import { Observable } from 'rxjs'
 import { isDev } from '~/utils/index.util'
-import { getNestExectionContextRequest } from '~/utils/nest.util'
+import { getNestExecutionContextRequest } from '~/utils/nest.util'
 
 @Injectable()
 export class SpiderGuard implements CanActivate {
@@ -33,6 +33,6 @@ export class SpiderGuard implements CanActivate {
   }
 
   getRequest(context: ExecutionContext) {
-    return getNestExectionContextRequest(context)
+    return getNestExecutionContextRequest(context)
   }
 }

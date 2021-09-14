@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { AuthGuard as _AuthGuard } from '@nestjs/passport'
-import { getNestExectionContextRequest } from '~/utils/nest.util'
+import { getNestExecutionContextRequest } from '~/utils/nest.util'
 
 /**
  * JWT auth guard
@@ -19,6 +19,6 @@ export class JWTAuthGuard extends _AuthGuard('jwt') implements CanActivate {
   }
 
   getRequest(context: ExecutionContext) {
-    return getNestExectionContextRequest(context)
+    return getNestExecutionContextRequest(context)
   }
 }

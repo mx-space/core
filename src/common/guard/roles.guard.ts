@@ -8,7 +8,7 @@
  */
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { getNestExectionContextRequest } from '~/utils/nest.util'
+import { getNestExecutionContextRequest } from '~/utils/nest.util'
 
 /**
  * 区分游客和主人的守卫
@@ -31,6 +31,6 @@ export class RolesGuard extends AuthGuard('jwt') implements CanActivate {
   }
 
   getRequest(context: ExecutionContext) {
-    return getNestExectionContextRequest(context)
+    return getNestExecutionContextRequest(context)
   }
 }

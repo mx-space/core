@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { ProjectContoller } from './project.controller'
+import { ProjectController } from './project.controller'
 
-@Module({ controllers: [ProjectContoller] })
+@Module({ controllers: [ProjectController] })
 export class ProjectModule {}
