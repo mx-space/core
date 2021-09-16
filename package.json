@@ -112,7 +112,7 @@
     "@types/cache-manager": "3.4.2",
     "@types/ejs": "3.1.0",
     "@types/html-minifier": "4.0.1",
-    "@types/ioredis": "4.27.2",
+    "@types/ioredis": "4.27.3",
     "@types/jest": "27.0.1",
     "@types/lodash": "4.14.173",
     "@types/marked": "3.0.1",
