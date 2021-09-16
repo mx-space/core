@@ -38,7 +38,7 @@ specifiers:
   '@types/redis': 2.8.32
   '@types/supertest': 2.0.11
   '@types/ua-parser-js': 0.7.36
-  '@vercel/ncc': 0.30.0
+  '@vercel/ncc': 0.31.1
   algoliasearch: 4.10.5
   apollo-server-fastify: 3.3.0
   axios: '*'
@@ -186,7 +186,7 @@ devDependencies:
   '@types/redis': 2.8.32
   '@types/supertest': 2.0.11
   '@types/ua-parser-js': 0.7.36
-  '@vercel/ncc': 0.30.0
+  '@vercel/ncc': 0.31.1
   cross-env: 7.0.3
   eslint: 7.32.0
   fastify: 3.20.1
@@ -2170,8 +2170,8 @@ packages:
       eslint-visitor-keys: 2.1.0
     dev: true
 
-  /@vercel/ncc/0.30.0:
-    resolution: {integrity: sha512-16ePj2GkwjomvE0HLL5ny+d+sudOwvZNYW8vjpMh3cyWdFxoMI8KSQiolVxeHBULbU1C5mVxLK5nL9NtnnpIew==}
+  /@vercel/ncc/0.31.1:
+    resolution: {integrity: sha512-g0FAxwdViI6UzsiVz5HssIHqjcPa1EHL6h+2dcJD893SoCJaGdqqgUF09xnMW6goWnnhbLvgiKlgJWrJa+7qYA==}
     hasBin: true
     dev: true
 
