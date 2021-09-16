@@ -1,6 +1,6 @@
 import { WebSocketServer } from '@nestjs/websockets'
-import { EventTypes } from './events.types'
 import { Server, Socket } from 'socket.io'
+import { EventTypes } from './events.types'
 export function gatewayMessageFormat(type: EventTypes, message: any) {
   return {
     type,
@@ -23,7 +23,7 @@ export class BaseGateway {
   }
   handleDisconnect(client: Socket) {
     for (let i = 0; i < this.wsClients.length; i++) {
-      if (this.wsClients[i] === client) {
+      if (this.wsClients[i].id === client.id) {
         this.wsClients.splice(i, 1)
         break
       }
@@ -33,6 +33,7 @@ export class BaseGateway {
     )
   }
   handleConnect(client: Socket) {
+    this.wsClients.push(client)
     client.send(
       gatewayMessageFormat(EventTypes.GATEWAY_CONNECT, 'WebSocket 已连接'),
     )

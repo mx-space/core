@@ -59,7 +59,6 @@ export class WebEventsGateway
   }
 
   async handleConnection(client: SocketIO.Socket) {
-    this.wsClients.push(client)
     this.broadcast(EventTypes.VISITOR_ONLINE, await this.sendOnlineNumber())
 
     process.nextTick(async () => {

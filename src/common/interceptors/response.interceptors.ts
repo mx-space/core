@@ -59,9 +59,22 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
   }
 }
 
+@Injectable()
 export class JSONSerializeInterceptor implements NestInterceptor {
+  constructor(private readonly reflector: Reflector) {}
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    if (!context.switchToHttp().getRequest()) {
+    const handler = context.getHandler()
+    // 跳过 bypass 装饰的请求
+    const bypass = this.reflector.get<boolean>(
+      SYSTEM.RESPONSE_PASSTHROUGH_METADATA,
+      handler,
+    )
+    if (bypass) {
+      return next.handle()
+    }
+    const http = context.switchToHttp()
+
+    if (!http.getRequest()) {
       return next.handle()
     }
 

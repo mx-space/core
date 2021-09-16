@@ -47,6 +47,8 @@ export enum EventTypes {
   IMAGE_FETCH = 'IMAGE_FETCH',
 
   ADMIN_NOTIFICATION = 'ADMIN_NOTIFICATION',
+
+  STDOUT = 'STDOUT',
 }
 
 export type NotificationTypes = 'error' | 'warn' | 'success' | 'info'

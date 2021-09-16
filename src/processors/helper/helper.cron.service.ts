@@ -9,6 +9,7 @@ import { InjectModel } from 'nestjs-typegoose'
 import { join } from 'path'
 import { $, cd } from 'zx'
 import { MONGO_DB } from '~/app.config'
+import { CronDescription } from '~/common/decorator/cron-description.decorator'
 import { RedisItems, RedisKeys } from '~/constants/cache.constant'
 import {
   BACKUP_DIR,
@@ -54,7 +55,8 @@ export class CronService {
    *
    * @description 每天凌晨更新 Bot 列表
    */
-  @Cron(CronExpression.EVERY_WEEK)
+  @Cron(CronExpression.EVERY_WEEK, { name: 'updateBotList' })
+  @CronDescription('更新 Bot 列表')
   async updateBotList() {
     try {
       const { data: json } = await this.http.axiosRef.get(
@@ -72,7 +74,8 @@ export class CronService {
     }
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_1AM, { name: 'backup' })
+  @Cron(CronExpression.EVERY_DAY_AT_1AM, { name: 'backupDB' })
+  @CronDescription('备份 DB 并上传 COS')
   async backupDB({ uploadCOS = true }: { uploadCOS?: boolean } = {}) {
     if (!this.configs.get('backupOptions').enable) {
       return
@@ -94,7 +97,8 @@ export class CronService {
         console.log(e)
       }
       this.logger.error(
-        '--> 备份失败, 请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致',
+        '--> 备份失败, 请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致, ' +
+          e.message,
       )
       return
     }
@@ -136,7 +140,7 @@ export class CronService {
           if (!err) {
             this.logger.log('--> 上传成功')
           } else {
-            this.logger.error('--> 上传失败了' + err)
+            this.logger.error('--> 上传失败了' + err.message)
           }
         },
       )
@@ -146,8 +150,9 @@ export class CronService {
   }
 
   @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT, {
-    name: 'clear_access',
+    name: 'cleanAccessRecord',
   })
+  @CronDescription('清理访问记录')
   async cleanAccessRecord() {
     const now = new Date().getTime()
     const cleanDate = new Date(now - 7 * 60 * 60 * 24 * 1000)
@@ -163,7 +168,8 @@ export class CronService {
   /**
    * @description 每天凌晨删除缓存
    */
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'reset_ua' })
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'resetIPAccess' })
+  @CronDescription('清理 IP 访问记录')
   async resetIPAccess() {
     await this.cacheService
       .getClient()
@@ -175,7 +181,10 @@ export class CronService {
   /**
    * @description 每天凌晨删除缓存
    */
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'reset_like_article' })
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
+    name: 'resetLikedOrReadArticleRecord',
+  })
+  @CronDescription('清理喜欢数成功')
   async resetLikedOrReadArticleRecord() {
     const redis = this.cacheService.getClient()
 
@@ -188,17 +197,19 @@ export class CronService {
       }),
     )
 
-    this.logger.log('--> 清理 API 缓存成功')
+    this.logger.log('--> 清理喜欢数成功')
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  @Cron(CronExpression.EVERY_DAY_AT_3AM, { name: 'cleanTempDirectory' })
+  @CronDescription('清理临时文件')
   cleanTempDirectory() {
     rmSync(TEMP_DIR, { recursive: true })
     mkdirp.sync(TEMP_DIR)
     this.logger.log('--> 清理临时文件成功')
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  @Cron(CronExpression.EVERY_DAY_AT_3AM, { name: 'pushToBaiduSearch' })
+  @CronDescription('推送到百度搜索')
   async pushToBaiduSearch() {
     const configs = this.configs.get('baiduSearchOptions')
     if (configs.enable) {
@@ -236,9 +247,10 @@ export class CronService {
   }
 
   /**
-   * @description 每天凌晨推送一遍 algoliasearch
+   * @description 每天凌晨推送一遍 Algolia Search
    */
-  @Cron(CronExpression.EVERY_DAY_AT_NOON)
+  @Cron(CronExpression.EVERY_DAY_AT_NOON, { name: 'pushToAlgoliaSearch' })
+  @CronDescription('推送到 Algolia Search')
   async pushToAlgoliaSearch() {
     const configs = this.configs.get('algoliaSearchOptions')
     if (configs.enable) {
