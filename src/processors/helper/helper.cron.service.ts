@@ -111,10 +111,10 @@ export class CronService {
       const backupOptions = this.configs.get('backupOptions')
 
       if (
-        !backupOptions.Bucket ||
-        !backupOptions.Region ||
-        !backupOptions.SecretId ||
-        !backupOptions.SecretKey
+        !backupOptions.bucket ||
+        !backupOptions.region ||
+        !backupOptions.secretId ||
+        !backupOptions.secretKey
       ) {
         return
       }
@@ -126,14 +126,14 @@ export class CronService {
       }
       this.logger.log('--> 开始上传到 COS')
       const cos = new COS({
-        SecretId: backupOptions.SecretId,
-        SecretKey: backupOptions.SecretKey,
+        SecretId: backupOptions.secretId,
+        SecretKey: backupOptions.secretKey,
       })
       // 分片上传
       cos.sliceUploadFile(
         {
-          Bucket: backupOptions.Bucket,
-          Region: backupOptions.Region,
+          Bucket: backupOptions.bucket,
+          Region: backupOptions.region,
           Key: `backup-${dateDir}.zip`,
           FilePath: backupFilePath,
         },

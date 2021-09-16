@@ -104,19 +104,19 @@ export class BackupOptions {
 
   @IsString()
   @IsOptional()
-  SecretId?: string
+  secretId?: string
 
   @IsOptional()
   @IsString()
-  SecretKey?: string
+  secretKey?: string
 
   @IsOptional()
   @IsString()
-  Bucket?: string
+  bucket?: string
 
   @IsString()
   @IsOptional()
-  Region: string
+  region: string
 }
 
 export class BaiduSearchOptions {
