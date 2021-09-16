@@ -109,6 +109,7 @@ export class CronService {
         return
       }
       const backupOptions = this.configs.get('backupOptions')
+
       if (
         !backupOptions.Bucket ||
         !backupOptions.Region ||
@@ -140,7 +141,7 @@ export class CronService {
           if (!err) {
             this.logger.log('--> 上传成功')
           } else {
-            this.logger.error('--> 上传失败了' + err.message)
+            this.logger.error('--> 上传失败了')
           }
         },
       )

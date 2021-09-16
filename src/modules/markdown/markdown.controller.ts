@@ -197,7 +197,10 @@ export class MarkdownController {
           return `/${(document as PageModel).slug}`
       }
     })()
-    const url = new URL(relativePath, this.configs.get('url').webUrl)
+    const {
+      url: { webUrl },
+    } = await this.configs.waitForConfigReady()
+    const url = new URL(relativePath, webUrl)
 
     const html = minify(
       `

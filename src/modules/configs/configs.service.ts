@@ -66,7 +66,7 @@ export class ConfigsService {
 
   protected async configInit() {
     const configs = await this.optionModel.find().lean()
-    configs.map((field) => {
+    configs.forEach((field) => {
       const name = field.name as keyof IConfig
       const value = field.value
       this.config[name] = value

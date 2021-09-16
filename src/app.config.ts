@@ -1,6 +1,5 @@
 import type { AxiosRequestConfig } from 'axios'
 import { argv } from 'yargs'
-import { isDev } from './utils/index.util'
 
 console.log(argv)
 
