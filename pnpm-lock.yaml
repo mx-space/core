@@ -88,7 +88,7 @@ specifiers:
   rimraf: 3.0.2
   run-script-webpack-plugin: 0.0.11
   rxjs: 7.3.0
-  snakecase-keys: 4.0.2
+  snakecase-keys: 5.0.0
   socket.io: '*'
   supertest: 6.1.6
   ts-jest: 27.0.5
@@ -158,7 +158,7 @@ dependencies:
   redis: 3.1.2
   reflect-metadata: 0.1.13
   rxjs: 7.3.0
-  snakecase-keys: 4.0.2
+  snakecase-keys: 5.0.0
   ts-morph: 12.0.0
   ua-parser-js: 0.7.28
   xss: 1.0.9
@@ -7502,8 +7502,8 @@ packages:
       tslib: 2.3.1
     dev: false
 
-  /snakecase-keys/4.0.2:
-    resolution: {integrity: sha512-ZFCo3zZtNN43cy2j4fQDHPxS557Uuzn887FBmDdaSB41D8l/MayuvaSrIlCXGFhZ8sXwrHiNaZiIPpKzi88gog==}
+  /snakecase-keys/5.0.0:
+    resolution: {integrity: sha512-G13idFUoQ9lueFszdktpzj+p0yE4+w/Kk5g/AD3cY8Wqww3Kuz4xlrUMTFvdwCd91JDAAYOgmg6Z8MnJ4XoD4Q==}
     engines: {node: '>=12'}
     dependencies:
       map-obj: 4.2.1
