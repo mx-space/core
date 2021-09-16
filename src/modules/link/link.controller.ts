@@ -9,17 +9,34 @@ import {
   Query,
 } from '@nestjs/common'
 import { Auth } from '~/common/decorator/auth.decorator'
+import { Paginator } from '~/common/decorator/http.decorator'
+import { IsMaster } from '~/common/decorator/role.decorator'
+import { PagerDto } from '~/shared/dto/pager.dto'
 import { BaseCrudFactory } from '~/utils/crud.util'
 import { LinkQueryDto } from './link.dto'
 import { LinkModel } from './link.model'
 import { LinkService } from './link.service'
 
-@Controller(['links', 'friends'])
+const paths = ['links', 'friends']
+@Controller(paths)
 export class LinkControllerCrud extends BaseCrudFactory({
   model: LinkModel,
-}) {}
+}) {
+  @Get('/')
+  @Paginator
+  async gets(@Query() pager: PagerDto, @IsMaster() isMaster: boolean) {
+    const { size, page, state } = pager
+    // @ts-ignore
+    return await this._model.paginate(state !== undefined ? { state } : {}, {
+      limit: size,
+      page,
+      sort: { created: -1 },
+      select: isMaster ? '' : '-email',
+    })
+  }
+}
 
-@Controller(['links', 'friends'])
+@Controller(paths)
 export class LinkController {
   constructor(private readonly linkService: LinkService) {}
 

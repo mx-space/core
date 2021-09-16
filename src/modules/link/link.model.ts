@@ -1,13 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { modelOptions, prop } from '@typegoose/typegoose'
-import {
-  IsBoolean,
-  IsEmail,
-  IsEnum,
-  IsOptional,
-  IsString,
-  IsUrl,
-} from 'class-validator'
+import { IsEmail, IsEnum, IsOptional, IsString, IsUrl } from 'class-validator'
 import { range } from 'lodash'
 import { BaseModel } from '~/shared/model/base.model'
 
@@ -53,7 +46,7 @@ export class LinkModel extends BaseModel {
   type?: LinkType
 
   @IsOptional()
-  @IsBoolean()
+  @IsEnum(LinkState)
   @prop({ default: LinkState.Pass })
   state: LinkState
 
@@ -62,5 +55,8 @@ export class LinkModel extends BaseModel {
   email?: string
   get hide() {
     return this.state === LinkState.Audit
+  }
+  set hide(value) {
+    this.state = value ? LinkState.Audit : LinkState.Pass
   }
 }
