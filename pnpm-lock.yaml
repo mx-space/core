@@ -55,7 +55,7 @@ specifiers:
   ejs: 3.1.6
   eslint: '*'
   fastify: '*'
-  fastify-multipart: 4.0.7
+  fastify-multipart: 5.0.0
   fastify-swagger: 4.11.0
   graphql: 15.5.3
   html-minifier: 4.0.0
@@ -132,7 +132,7 @@ dependencies:
   dayjs: 1.10.7
   dotenv: 10.0.0
   ejs: 3.1.6
-  fastify-multipart: 4.0.7
+  fastify-multipart: 5.0.0
   fastify-swagger: 4.11.0
   graphql: 15.5.3
   html-minifier: 4.0.0
@@ -4160,8 +4160,8 @@ packages:
       fastify-plugin: 3.0.0
     dev: false
 
-  /fastify-multipart/4.0.7:
-    resolution: {integrity: sha512-bV6QB3mmDYdrYwIrUrkGplutQLUUSzXFXtkCL2HRw5eLXyv9+DD5Gb5GJNDtKYCiCtyaGLbJmt2rLsF6A3WCUw==}
+  /fastify-multipart/5.0.0:
+    resolution: {integrity: sha512-T0+lmisyJEKGGLWY0nOAu0hyIK2wZa5Eki+U2K6f2HE6les31CS4IxaZSG4zcBqTG6BnUXgPnhUcQ4xKsthrdA==}
     dependencies:
       busboy: 0.3.1
       deepmerge: 4.2.2
