@@ -265,6 +265,7 @@ export class CronService {
           .lean()
           .then((list) => {
             return list.map((data) => {
+              Reflect.set(data, 'objectID', data._id)
               Reflect.deleteProperty(data, '_id')
               return {
                 ...data,
@@ -277,6 +278,7 @@ export class CronService {
           .lean()
           .then((list) => {
             return list.map((data) => {
+              Reflect.set(data, 'objectID', data._id)
               Reflect.deleteProperty(data, '_id')
               return {
                 ...data,
@@ -300,6 +302,7 @@ export class CronService {
           .then((list) => {
             return list.map((data) => {
               const id = data.nid.toString()
+              Reflect.set(data, 'objectID', data._id)
               Reflect.deleteProperty(data, '_id')
               Reflect.deleteProperty(data, 'nid')
               return {
@@ -314,8 +317,9 @@ export class CronService {
         documents.push(...documents_)
       })
       try {
+        await index.clearObjects()
         await index.saveObjects(documents, {
-          autoGenerateObjectIDIfNotExist: true,
+          autoGenerateObjectIDIfNotExist: false,
         })
         this.logger.log('--> 推送到 algoliasearch 成功')
       } catch {

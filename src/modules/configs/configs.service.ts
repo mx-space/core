@@ -1,13 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
+import { cloneDeep } from 'lodash'
 import { InjectModel } from 'nestjs-typegoose'
 import { sleep } from '~/utils/index.util'
 import { UserService } from '../user/user.service'
-import { BackupOptions, MailOptionsDto } from './configs.dto'
+import { BackupOptionsDto, MailOptionsDto } from './configs.dto'
 import { IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
 
-const defaultConfig: IConfig = {
+const generateDefaultConfig: () => IConfig = () => ({
   seo: {
     title: 'mx-space',
     description: 'Hello World~',
@@ -20,14 +21,14 @@ const defaultConfig: IConfig = {
   },
   mailOptions: {} as MailOptionsDto,
   commentOptions: { antiSpam: false },
-  backupOptions: { enable: false } as BackupOptions,
+  backupOptions: { enable: false } as BackupOptionsDto,
   baiduSearchOptions: { enable: false },
   algoliaSearchOptions: { enable: false, apiKey: '', appId: '', indexName: '' },
-}
+})
 
 @Injectable()
 export class ConfigsService {
-  private config: IConfig = defaultConfig
+  private config: IConfig = generateDefaultConfig()
   private logger: Logger
   constructor(
     @InjectModel(OptionModel)
@@ -75,19 +76,11 @@ export class ConfigsService {
     this.logger.log('Config 已经加载完毕！')
   }
 
-  public get seo() {
-    return this.config.seo
-  }
-
-  public get url() {
-    return this.config.url
-  }
-
   public get<T extends keyof IConfig>(key: T): Readonly<IConfig[T]> {
-    return this.config[key] as Readonly<IConfig[T]>
+    return cloneDeep(this.config[key]) as Readonly<IConfig[T]>
   }
   public getConfig(): Readonly<IConfig> {
-    return this.config
+    return cloneDeep(this.config)
   }
 
   public async patch<T extends keyof IConfig>(key: T, data: IConfig[T]) {
@@ -98,9 +91,10 @@ export class ConfigsService {
     )
     const newData = (await this.optionModel.findOne({ name: key as string }))
       .value
+
     this.config[key] = newData
 
-    return this.config[key]
+    return cloneDeep(this.config[key])
   }
 
   get getMaster() {

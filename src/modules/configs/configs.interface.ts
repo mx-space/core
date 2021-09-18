@@ -1,21 +1,21 @@
 import {
-  AlgoliaSearchOptions,
-  BackupOptions,
-  BaiduSearchOptions,
-  CommentOptions,
+  AlgoliaSearchOptionsDto,
+  BackupOptionsDto,
+  BaiduSearchOptionsDto,
+  CommentOptionsDto,
   MailOptionsDto,
-  SEODto,
+  SeoDto,
   UrlDto,
 } from './configs.dto'
 
 export interface IConfig {
-  seo: SEODto
+  seo: SeoDto
   url: UrlDto
   mailOptions: MailOptionsDto
-  commentOptions: CommentOptions
-  backupOptions: BackupOptions
-  baiduSearchOptions: BaiduSearchOptions
-  algoliaSearchOptions: AlgoliaSearchOptions
+  commentOptions: CommentOptionsDto
+  backupOptions: BackupOptionsDto
+  baiduSearchOptions: BaiduSearchOptionsDto
+  algoliaSearchOptions: AlgoliaSearchOptionsDto
 }
 
 export type IConfigKeys = keyof IConfig

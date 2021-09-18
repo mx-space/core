@@ -11,7 +11,7 @@ import {
   ValidateNested,
 } from 'class-validator'
 
-export class SEODto {
+export class SeoDto {
   @IsString({ message: '标题必须是字符串' })
   @IsNotEmpty({ message: '不能为空!!' })
   @IsOptional()
@@ -80,7 +80,7 @@ export class MailOptionsDto {
   options?: MailOption
 }
 
-export class CommentOptions {
+export class CommentOptionsDto {
   @IsBoolean()
   @IsOptional()
   antiSpam: boolean
@@ -97,7 +97,7 @@ export class CommentOptions {
   disableNoChinese?: boolean
 }
 
-export class BackupOptions {
+export class BackupOptionsDto {
   @IsBoolean()
   @IsOptional()
   enable: boolean
@@ -119,7 +119,7 @@ export class BackupOptions {
   region: string
 }
 
-export class BaiduSearchOptions {
+export class BaiduSearchOptionsDto {
   @IsOptional()
   @IsBoolean()
   enable: boolean
@@ -130,7 +130,7 @@ export class BaiduSearchOptions {
   token?: string
 }
 
-export class AlgoliaSearchOptions {
+export class AlgoliaSearchOptionsDto {
   @IsBoolean()
   @IsOptional()
   enable: boolean

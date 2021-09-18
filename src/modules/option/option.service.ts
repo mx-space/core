@@ -7,26 +7,25 @@
  * @Coding with Love
  */
 
-import {
-  Injectable,
-  UnprocessableEntityException,
-  ValidationPipe,
-} from '@nestjs/common'
+import { BadRequestException, Injectable, ValidationPipe } from '@nestjs/common'
+import camelcaseKeys from 'camelcase-keys'
 import { ClassConstructor, plainToClass } from 'class-transformer'
 import { validateSync, ValidatorOptions } from 'class-validator'
 import { CronService } from '~/processors/helper/helper.cron.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
-import {
-  AlgoliaSearchOptions,
-  BackupOptions,
-  BaiduSearchOptions,
-  CommentOptions,
-  MailOptionsDto,
-  SEODto,
-  UrlDto,
-} from '../configs/configs.dto'
+import * as optionDtos from '../configs/configs.dto'
+import { AlgoliaSearchOptionsDto, MailOptionsDto } from '../configs/configs.dto'
 import { IConfig } from '../configs/configs.interface'
 import { ConfigsService } from '../configs/configs.service'
+
+const map: Record<string, any> = Object.entries(optionDtos).reduce(
+  (obj, [key, value]) => ({
+    ...obj,
+    [`${key.charAt(0).toLowerCase() + key.slice(1).replace(/Dto$/, '')}`]:
+      value,
+  }),
+  {},
+)
 
 @Injectable()
 export class OptionService {
@@ -42,16 +41,9 @@ export class OptionService {
   }
   validate = new ValidationPipe(this.validOptions)
   patchAndValid(key: keyof IConfig, value: any) {
-    switch (key) {
-      case 'url': {
-        this.validWithDto(UrlDto, value)
-        return this.configs.patch('url', value)
-      }
-      case 'commentOptions': {
-        this.validWithDto(CommentOptions, value)
-        return this.configs.patch('commentOptions', value)
-      }
+    value = camelcaseKeys(value, { deep: true })
 
+    switch (key) {
       case 'mailOptions': {
         this.validWithDto(MailOptionsDto, value)
         const task = this.configs.patch('mailOptions', value)
@@ -61,29 +53,24 @@ export class OptionService {
         })
         return task
       }
-      case 'seo': {
-        this.validWithDto(SEODto, value)
-        return this.configs.patch('seo', value)
-      }
-      case 'backupOptions': {
-        this.validWithDto(BackupOptions, value)
-        return this.configs.patch('backupOptions', value)
-      }
-      case 'baiduSearchOptions': {
-        this.validWithDto(BaiduSearchOptions, value)
 
-        return this.configs.patch('baiduSearchOptions', value)
-      }
       case 'algoliaSearchOptions': {
-        this.validWithDto(AlgoliaSearchOptions, value)
-
-        return this.configs.patch('algoliaSearchOptions', value).then((r) => {
-          this.cronService.pushToAlgoliaSearch()
-          return r
-        })
+        return this.configs
+          .patch(
+            'algoliaSearchOptions',
+            this.validWithDto(AlgoliaSearchOptionsDto, value),
+          )
+          .then((r) => {
+            this.cronService.pushToAlgoliaSearch()
+            return r
+          })
       }
       default: {
-        throw new UnprocessableEntityException('设置不存在')
+        const dto = map[key]
+        if (!dto) {
+          throw new BadRequestException('设置不存在')
+        }
+        return this.configs.patch(key, this.validWithDto(dto, value))
       }
     }
   }
@@ -95,6 +82,6 @@ export class OptionService {
       const error = this.validate.createExceptionFactory()(errors as any[])
       throw error
     }
-    return true
+    return validModel
   }
 }
