@@ -75,7 +75,7 @@ specifiers:
   mkdirp: '*'
   mongoose: '*'
   mongoose-lean-id: 0.2.0
-  mongoose-lean-virtuals: 0.8.0
+  mongoose-lean-virtuals: 0.8.1
   mongoose-paginate-v2: 1.4.2
   nanoid: 3.1.25
   nestjs-typegoose: 7.1.38
@@ -150,7 +150,7 @@ dependencies:
   mkdirp: 1.0.4
   mongoose: 5.13.8
   mongoose-lean-id: 0.2.0_mongoose@5.13.8
-  mongoose-lean-virtuals: 0.8.0_mongoose@5.13.8
+  mongoose-lean-virtuals: 0.8.1_mongoose@5.13.8
   mongoose-paginate-v2: 1.4.2
   nanoid: 3.1.25
   nestjs-typegoose: 7.1.38_f0beb707a3331ecd8c4cf608a6761809
@@ -6298,14 +6298,14 @@ packages:
       mongoose: 5.13.8
     dev: false
 
-  /mongoose-lean-virtuals/0.8.0_mongoose@5.13.8:
-    resolution: {integrity: sha512-pOdHnLPXtPoVJgx/Fjju2eejaoWjiE3OEaYosF0ELnpUv8KxoIOjNdHLgKyhD+7W7Nd0S755LzZJgSESE2/acg==}
+  /mongoose-lean-virtuals/0.8.1_mongoose@5.13.8:
+    resolution: {integrity: sha512-XbL6V1Yg5mMtiCPZ0nsoq/55qhxOfdo/LX8cGTe5scTkk2BIzkOBFED+s8mLxWK0o0yVxigSTiF+tAdBp89QfQ==}
     peerDependencies:
       mongoose: '>=5.11.10'
     dependencies:
       array.prototype.flat: 1.2.3
       mongoose: 5.13.8
-      mpath: 0.5.2
+      mpath: 0.8.4
     dev: false
 
   /mongoose-legacy-pluralize/1.0.2_mongoose@5.13.8:
@@ -6347,13 +6347,13 @@ packages:
       - snappy
     dev: false
 
-  /mpath/0.5.2:
-    resolution: {integrity: sha512-NOeCoW6AYc3hLi30npe7uzbD9b4FQZKH40YKABUCCvaKKL5agj6YzvHoNx8jQpDMNPgIa5bvSZQbQpWBAVD0Kw==}
+  /mpath/0.8.3:
+    resolution: {integrity: sha512-eb9rRvhDltXVNL6Fxd2zM9D4vKBxjVVQNLNijlj7uoXUy19zNDsIif5zR+pWmPCWNKwAtqyo4JveQm4nfD5+eA==}
     engines: {node: '>=4.0.0'}
     dev: false
 
-  /mpath/0.8.3:
-    resolution: {integrity: sha512-eb9rRvhDltXVNL6Fxd2zM9D4vKBxjVVQNLNijlj7uoXUy19zNDsIif5zR+pWmPCWNKwAtqyo4JveQm4nfD5+eA==}
+  /mpath/0.8.4:
+    resolution: {integrity: sha512-DTxNZomBcTWlrMW76jy1wvV37X/cNNxPW1y2Jzd4DZkAaC5ZGsm8bfGfNOthcDuRJujXLqiuS6o3Tpy0JEoh7g==}
     engines: {node: '>=4.0.0'}
     dev: false
 

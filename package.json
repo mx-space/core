@@ -85,7 +85,7 @@
     "mkdirp": "*",
     "mongoose": "*",
     "mongoose-lean-id": "0.2.0",
-    "mongoose-lean-virtuals": "0.8.0",
+    "mongoose-lean-virtuals": "0.8.1",
     "mongoose-paginate-v2": "1.4.2",
     "nanoid": "3.1.25",
     "nestjs-typegoose": "7.1.38",
