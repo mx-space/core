@@ -1,4 +1,5 @@
 import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
+import { minify } from 'html-minifier'
 import xss from 'xss'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -7,7 +8,7 @@ import { AggregateService } from '../aggregate/aggregate.service'
 import { ConfigsService } from '../configs/configs.service'
 import { MarkdownService } from '../markdown/markdown.service'
 
-@Controller({ path: 'feed' })
+@Controller('feed')
 @ApiName
 export class FeedController {
   constructor(
@@ -44,26 +45,36 @@ export class FeedController {
           <title>${title}</title>
           <link>${xss(url)}</link>
       </image>
-        ${data.map((item) => {
-          return `<entry>
+        ${data
+          .map((item) => {
+            return `<entry>
             <title>${item.title}</title>
-            <link href="${xss(item.link)}"/>
+            <link href='${xss(item.link)}'/>
             <id>${xss(item.link)}</id>
             <published>${item.created}</published>
             <updated>${item.modified}</updated>
-            <content type="html"><![CDATA[
-              <blockquote>该渲染由 marked 生成, 可能存在部分语句不通或者排版问题, 最佳体验请前往: <a href="${xss(
-                item.link,
-              )}">${xss(item.link)}</a></blockquote>
+            <content type='html'><![CDATA[
+              ${minify(
+                `<blockquote>该渲染由 marked 生成, 可能存在部分语句不通或者排版问题, 最佳体验请前往: <a href='${xss(
+                  item.link,
+                )}'>${xss(item.link)}</a></blockquote>
               ${this.markdownService.render(item.text)}
-              <p>
-              <a href="${xss(item.link) + '#comments'}">评论</a>
-              </p>
+              <p style='text-align: right'>
+              <a href='${xss(item.link) + '#comments'}'>看完了？说点什么呢</a>
+              </p>`,
+                {
+                  collapseWhitespace: true,
+                  removeAttributeQuotes: true,
+                  removeComments: true,
+                  removeTagWhitespace: true,
+                },
+              )}
             ]]>
             </content>
             </entry>
           `
-        })}
+          })
+          .join('')}
     </feed>`
 
     return xml
