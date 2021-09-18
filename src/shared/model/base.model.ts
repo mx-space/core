@@ -109,6 +109,7 @@ export abstract class WriteBaseModel extends BaseCommentIndexModel {
 
   @prop({ default: null })
   @ApiHideProperty()
+  @Field(() => Date, { nullable: true })
   modified: Date | null
 
   static get protectedKeys() {
