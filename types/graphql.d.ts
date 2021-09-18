@@ -33,6 +33,48 @@ export class CountMixed {
   like?: Nullable<number>
 }
 
+export class Coordinate {
+  latitude: number
+  longitude: number
+}
+
+export class NoteMusic {
+  type: string
+  id: string
+}
+
+export class NoteModel {
+  created?: Nullable<DateTime>
+  commentsIndex?: Nullable<number>
+  allowComment: boolean
+  images?: Nullable<Image>
+  title: string
+  text: string
+  modified: DateTime
+  coordinates?: Nullable<Coordinate>
+  count?: Nullable<CountMixed>
+  music?: Nullable<NoteMusic[]>
+  nid: number
+  hide: boolean
+  password?: Nullable<string>
+  secret?: Nullable<DateTime>
+  mood?: Nullable<string>
+  weather?: Nullable<string>
+  hasMemory?: Nullable<boolean>
+  location?: Nullable<string>
+}
+
+export class NoteItemAggregateModel {
+  data: NoteModel
+  prev?: Nullable<NoteModel>
+  next?: Nullable<NoteModel>
+}
+
+export class NotePaginatorModel {
+  data: NoteModel[]
+  pagination: Paginator
+}
+
 export class CategoryModel {
   created?: Nullable<DateTime>
   name: string
@@ -79,6 +121,23 @@ export abstract class IQuery {
     category: string,
     slug: string,
   ): PostModel | Promise<PostModel>
+  abstract getNoteById(
+    password?: Nullable<string>,
+    nid?: Nullable<number>,
+    id?: Nullable<string>,
+  ): NoteItemAggregateModel | Promise<NoteItemAggregateModel>
+  abstract getLastestNote():
+    | NoteItemAggregateModel
+    | Promise<NoteItemAggregateModel>
+  abstract getNotesWithPager(
+    size?: Nullable<number>,
+    page?: Nullable<number>,
+    select?: Nullable<string>,
+    year?: Nullable<number>,
+    state?: Nullable<number>,
+    sortOrder?: Nullable<number>,
+    sortBy?: Nullable<string>,
+  ): NotePaginatorModel | Promise<NotePaginatorModel>
 }
 
 export type DateTime = any

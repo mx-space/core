@@ -1,4 +1,4 @@
-import { Field, ObjectType } from '@nestjs/graphql'
+import { Field, ID, ObjectType } from '@nestjs/graphql'
 import { ApiHideProperty } from '@nestjs/swagger'
 import { modelOptions, plugin, prop } from '@typegoose/typegoose'
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator'
@@ -24,6 +24,8 @@ export class BaseModel {
   @ApiHideProperty()
   @Field(() => Date)
   created?: Date
+  @Field(() => ID)
+  id?: string
 
   static get protectedKeys() {
     return ['created', 'id', '_id']

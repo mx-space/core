@@ -7,7 +7,7 @@
  * @Coding with Love
  */
 
-import { ArgsType } from '@nestjs/graphql'
+import { ArgsType, Field, Int } from '@nestjs/graphql'
 import { ApiProperty } from '@nestjs/swagger'
 import { Expose, Transform } from 'class-transformer'
 import {
@@ -31,6 +31,7 @@ export class PagerDto {
     toClassOnly: true,
   })
   @ApiProperty({ example: 10 })
+  @Field(() => Int)
   size?: number
 
   @Transform(({ value: val }) => (val ? parseInt(val) : 1), {
@@ -40,6 +41,7 @@ export class PagerDto {
   @IsInt()
   @Expose()
   @ApiProperty({ example: 1 })
+  @Field(() => Int)
   page?: number
 
   @IsOptional()

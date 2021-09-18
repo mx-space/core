@@ -5,7 +5,7 @@ import {
 import { Args, Query, Resolver } from '@nestjs/graphql'
 import { DocumentType } from '@typegoose/typegoose'
 import { IsMaster } from '~/common/decorator/role.decorator'
-import { UpdateDocumentCount } from '~/common/decorator/update-count.decorator'
+import { VisitDocument } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import {
   addConditionToSeeHideContent,
@@ -26,7 +26,7 @@ export class NoteResolver {
   constructor(private readonly service: NoteService) {}
 
   @Query(() => NoteItemAggregateModel)
-  @UpdateDocumentCount('Note')
+  @VisitDocument('Note')
   async getNoteById(
     @Args() args: NidOrIdArgsDto,
     @IsMaster() isMaster: boolean,
@@ -39,6 +39,10 @@ export class NoteResolver {
     const currentNote = (await this.service.findOneByIdOrNid(
       id ?? nid,
     )) as DocumentType<NoteModel>
+
+    if (!currentNote) {
+      throw new CannotFindException()
+    }
     if (
       (!this.service.checkPasswordToAccess(currentNote, password) ||
         currentNote.hide) &&
@@ -69,7 +73,7 @@ export class NoteResolver {
   }
 
   @Query(() => NoteItemAggregateModel)
-  @UpdateDocumentCount('Note')
+  @VisitDocument('Note')
   async getLastestNote(@IsMaster() isMaster: boolean) {
     const doc = (await this.service.model
       .findOne({ ...addConditionToSeeHideContent(isMaster) })

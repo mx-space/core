@@ -36,6 +36,7 @@ type NoteMusic {
 
 type NoteModel {
   created: DateTime
+  id: ID
   commentsIndex: Float
   allowComment: Boolean!
   images: Image
@@ -73,6 +74,7 @@ type NotePaginatorModel {
 
 type CategoryModel {
   created: DateTime
+  id: ID
   name: String!
   type: CategoryType
   slug: String!
@@ -85,6 +87,7 @@ enum CategoryType {
 
 type PostModel {
   created: DateTime
+  id: ID
   commentsIndex: Float
   allowComment: Boolean!
   images: Image
@@ -109,9 +112,9 @@ type PostPaginatorModel {
 type Query {
   sayHello: String!
   getPostById(id: ID!): PostModel!
-  getPostList(size: Float, page: Float, select: String, year: Float, state: Float, sortOrder: Int, sortBy: String): PostPaginatorModel!
+  getPostList(size: Int, page: Int, select: String, year: Float, state: Float, sortOrder: Int, sortBy: String): PostPaginatorModel!
   getByCateAndSlug(category: String!, slug: String!): PostModel!
   getNoteById(password: String, nid: Int, id: ID): NoteItemAggregateModel!
   getLastestNote: NoteItemAggregateModel!
-  getNotesWithPager(size: Float, page: Float, select: String, year: Float, state: Float, sortOrder: Int, sortBy: String): NotePaginatorModel!
+  getNotesWithPager(size: Int, page: Int, select: String, year: Float, state: Float, sortOrder: Int, sortBy: String): NotePaginatorModel!
 }

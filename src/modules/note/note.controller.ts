@@ -19,7 +19,7 @@ import { Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
-import { UpdateDocumentCount } from '~/common/decorator/update-count.decorator'
+import { VisitDocument } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { IntIdOrMongoIdDto, MongoIdDto } from '~/shared/dto/id.dto'
@@ -47,7 +47,7 @@ export class NoteController {
 
   @Get('latest')
   @ApiOperation({ summary: '获取最新发布一篇记录' })
-  @UpdateDocumentCount('Note')
+  @VisitDocument('Note')
   async getLatestOne(@IsMaster() isMaster: boolean) {
     const { latest, next } = await this.noteService.getLatestOne(
       {
@@ -79,7 +79,7 @@ export class NoteController {
   }
 
   @Get(':id')
-  @UpdateDocumentCount('Note')
+  @VisitDocument('Note')
   async getOneNote(
     @Param() params: MongoIdDto,
     @IsMaster() isMaster: boolean,
@@ -254,7 +254,7 @@ export class NoteController {
 
   @ApiOperation({ summary: '根据 nid 查找' })
   @Get('/nid/:nid')
-  @UpdateDocumentCount('Note')
+  @VisitDocument('Note')
   async getNoteByNid(
     @Param() params: NidType,
     @IsMaster() isMaster: boolean,

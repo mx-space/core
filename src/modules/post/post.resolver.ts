@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common'
 import { Args, Query, Resolver } from '@nestjs/graphql'
 import { IsMaster } from '~/common/decorator/role.decorator'
-import { UpdateDocumentCount } from '~/common/decorator/update-count.decorator'
+import { VisitDocument } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import {
@@ -18,7 +18,7 @@ export class PostResolver {
   constructor(private readonly postService: PostService) {}
 
   @Query(() => PostModel)
-  @UpdateDocumentCount('Post')
+  @VisitDocument('Post')
   public async getPostById(
     @Args() { id }: MongoIdDto,
     @IsMaster() isMaster: boolean,
@@ -53,7 +53,7 @@ export class PostResolver {
   }
 
   @Query(() => PostModel)
-  @UpdateDocumentCount('Post')
+  @VisitDocument('Post')
   async getByCateAndSlug(
     @Args() args: CategoryAndSlugDto,
     @IsMaster() isMaster: boolean,

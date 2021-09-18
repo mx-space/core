@@ -159,11 +159,12 @@ export class NoteService {
   }
 
   async findOneByIdOrNid(unique: any) {
-    const res = isMongoId(unique)
-      ? await this.model.findById(unique)
-      : await this.getIdByNid(unique)
+    if (!isMongoId(unique)) {
+      const id = await this.getIdByNid(unique)
+      return this.model.findOne({ _id: id })
+    }
 
-    return res
+    return this.model.findById(unique)
   }
 
   async needCreateDefult() {

@@ -20,7 +20,7 @@ import { Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
-import { UpdateDocumentCount } from '~/common/decorator/update-count.decorator'
+import { VisitDocument } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -62,7 +62,7 @@ export class PostController {
   }
 
   @Get('/:id')
-  @UpdateDocumentCount('Post')
+  @VisitDocument('Post')
   async getById(@Param() params: MongoIdDto, @IsMaster() isMaster: boolean) {
     const { id } = params
     const doc = await this.postService.model.findById(id)
@@ -73,7 +73,7 @@ export class PostController {
   }
 
   @Get('/latest')
-  @UpdateDocumentCount('Post')
+  @VisitDocument('Post')
   async getLatest(@IsMaster() isMaster: boolean) {
     return this.postService.model
       .findOne({ ...addConditionToSeeHideContent(isMaster) })
@@ -83,7 +83,7 @@ export class PostController {
 
   @Get('/:category/:slug')
   @ApiOperation({ summary: '根据分类名和自定义别名获取' })
-  @UpdateDocumentCount('Post')
+  @VisitDocument('Post')
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,
     @IsMaster() isMaster: boolean,
