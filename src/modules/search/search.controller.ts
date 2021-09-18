@@ -1,8 +1,14 @@
-import { Controller, Get, Param, Query } from '@nestjs/common'
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Param,
+  Query,
+} from '@nestjs/common'
 import { HttpCache } from '~/common/decorator/cache.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
-import { SearchDto } from '~/shared/dto/search.dto'
+import { SearchDto } from '~/modules/search/search.dto'
 import { SearchService } from './search.service'
 
 @Controller('search')
@@ -10,7 +16,7 @@ import { SearchService } from './search.service'
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
-  @Get('/search/:type')
+  @Get('/:type')
   @HttpCache.disable
   searchByType(
     @Query() query: SearchDto,
@@ -26,7 +32,13 @@ export class SearchController {
         return this.searchService.searchNote(query, isMaster)
 
       default:
-        return this.searchService.searchAlgolia(query)
+        throw new BadRequestException(`Invalid search type: ${type}`)
     }
+  }
+
+  @Get('/')
+  // TODO: now only support search by algolia
+  async search(@Query() query: SearchDto) {
+    return this.searchService.searchAlgolia(query)
   }
 }

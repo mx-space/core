@@ -6,8 +6,8 @@ import {
   Injectable,
 } from '@nestjs/common'
 import algoliasearch from 'algoliasearch'
+import { SearchDto } from '~/modules/search/search.dto'
 import { DatabaseService } from '~/processors/database/database.service'
-import { SearchDto } from '~/shared/dto/search.dto'
 import { Pagination } from '~/shared/interface/paginator.interface'
 import { addConditionToSeeHideContent } from '~/utils/query.util'
 import { transformDataToPaginate } from '~/utils/transfrom.util'
@@ -83,14 +83,20 @@ export class SearchService {
   }
 
   async searchAlgolia(searchOption: SearchDto): Promise<
-    Pagination<any> & {
-      raw: SearchResponse<{
+    | SearchResponse<{
         id: string
         text: string
         title: string
         type: 'post' | 'note' | 'page'
       }>
-    }
+    | (Pagination<any> & {
+        raw: SearchResponse<{
+          id: string
+          text: string
+          title: string
+          type: 'post' | 'note' | 'page'
+        }>
+      })
   > {
     const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
     if (!algoliaSearchOptions.enable) {
@@ -112,6 +118,9 @@ export class SearchService {
       page: page,
       hitsPerPage: size,
     })
+    if (searchOption.rawAlgolia) {
+      return search
+    }
     const data = []
     const tasks = search.hits.map((hit) => {
       const { type, objectID } = hit
