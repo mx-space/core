@@ -40,7 +40,7 @@ export class CommentModel extends BaseModel {
   @prop({ trim: true, required: true })
   author!: string
 
-  @prop({ trim: true })
+  @prop({ trim: true, select: false })
   mail?: string
 
   @prop({ trim: true })

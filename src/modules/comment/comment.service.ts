@@ -176,7 +176,7 @@ export class CommentService {
     const queryList = await this.commentModel.paginate(
       { state },
       {
-        select: '+ip +agent -children',
+        select: '+ip +agent +mail -children',
         page,
         limit: size,
         populate: [

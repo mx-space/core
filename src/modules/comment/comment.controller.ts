@@ -76,7 +76,7 @@ export class CommentController {
     @Query() query: PagerDto,
   ) {
     const { id } = params
-    const { page = 1, size = 10, select } = query
+    const { page = 1, size = 10 } = query
     const comments = await this.commentService.model.paginate(
       {
         parent: undefined,
@@ -91,7 +91,6 @@ export class CommentController {
       {
         limit: size,
         page,
-        select,
         sort: { created: -1 },
       },
     )
