@@ -1,4 +1,4 @@
-import { SearchResponse } from '@algolia/client-search'
+import type { SearchResponse } from '@algolia/client-search'
 import {
   BadRequestException,
   forwardRef,
@@ -114,7 +114,7 @@ export class SearchService {
     })
     const data = []
     const tasks = search.hits.map((hit) => {
-      const { id, type, objectID } = hit
+      const { type, objectID } = hit
 
       const model = this.databaseService.getModelByRefType(type as any)
       if (!model) {

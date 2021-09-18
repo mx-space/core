@@ -155,12 +155,11 @@ export class CronService {
   })
   @CronDescription('清理访问记录')
   async cleanAccessRecord() {
-    const now = new Date().getTime()
-    const cleanDate = new Date(now - 7 * 60 * 60 * 24 * 1000)
+    const cleanDate = dayjs().add(-7, 'd')
 
     await this.analyzeModel.deleteMany({
-      created: {
-        $lte: cleanDate,
+      timestamp: {
+        $lte: cleanDate.toDate(),
       },
     })
 

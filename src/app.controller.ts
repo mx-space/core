@@ -100,7 +100,7 @@ export class AppController {
   @Auth()
   async cleanCatch() {
     const redis = this.cacheService.getClient()
-    const keys: string[] = await redis.keys('mx*')
+    const keys: string[] = await redis.keys('mx-api-cache:*')
     await Promise.all(keys.map((key) => redis.del(key)))
 
     return

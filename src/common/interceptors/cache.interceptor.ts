@@ -57,7 +57,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
 
     const handler = context.getHandler()
     const isDisableCache = this.reflector.get(META.HTTP_CACHE_DISABLE, handler)
-    const key = this.trackBy(context) || `api-cache:${request.url}`
+    const key = this.trackBy(context) || `mx-api-cache:${request.url}`
 
     if (isDisableCache) {
       return call$
