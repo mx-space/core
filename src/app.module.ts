@@ -40,6 +40,7 @@ import { PostModule } from './modules/post/post.module'
 import { ProjectModule } from './modules/project/project.module'
 import { RecentlyModule } from './modules/recently/recently.module'
 import { SayModule } from './modules/say/say.module'
+import { SearchModule } from './modules/search/search.module'
 import { SitemapModule } from './modules/sitemap/sitemap.module'
 import { ToolModule } from './modules/tool/tool.module'
 import { UserModule } from './modules/user/user.module'
@@ -88,6 +89,7 @@ import { HelperModule } from './processors/helper/helper.module'
     ProjectModule,
     RecentlyModule,
     SayModule,
+    SearchModule,
     SitemapModule,
     ToolModule,
     UserModule,

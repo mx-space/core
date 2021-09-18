@@ -14,7 +14,6 @@ import {
 } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 import { Auth } from '~/common/decorator/auth.decorator'
-import { HttpCache } from '~/common/decorator/cache.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -23,7 +22,6 @@ import { VisitDocument } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { IntIdOrMongoIdDto, MongoIdDto } from '~/shared/dto/id.dto'
-import { SearchDto } from '~/shared/dto/search.dto'
 import {
   addConditionToSeeHideContent,
   addYearCondition,
@@ -279,39 +277,5 @@ export class NoteController {
     return await this.modify(body, {
       id,
     })
-  }
-
-  @ApiOperation({ summary: '搜索' })
-  @Get('/search')
-  @HttpCache.disable
-  @Paginator
-  async searchNote(@Query() query: SearchDto, @IsMaster() isMaster: boolean) {
-    const { keyword, page, size } = query
-    const select = '_id title created modified nid'
-
-    const keywordArr = keyword
-      .split(/\s+/)
-      .map((item) => new RegExp(String(item), 'ig'))
-
-    return await this.noteService.model.paginate(
-      {
-        $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }],
-        $and: [
-          { password: { $in: [undefined, null] } },
-          { hide: { $in: isMaster ? [false, true] : [false] } },
-          {
-            $or: [
-              { secret: { $in: [undefined, null] } },
-              { secret: { $lte: new Date() } },
-            ],
-          },
-        ],
-      },
-      {
-        limit: size,
-        page,
-        select,
-      },
-    )
   }
 }

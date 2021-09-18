@@ -4,6 +4,7 @@ overrides:
   typescript: 4.4.3
 
 specifiers:
+  '@algolia/client-search': '*'
   '@innei-util/eslint-config-ts': latest
   '@innei-util/prettier': latest
   '@nestjs/cli': 8.1.1
@@ -106,6 +107,7 @@ specifiers:
   zx: 4.2.0
 
 dependencies:
+  '@algolia/client-search': 4.10.5
   '@nestjs/common': 8.0.6_4d0c20d2c2a765e9ff99ebac79ad2484
   '@nestjs/config': 1.0.1_e2399148d990aa1f9a4b6ba2ac7a5b74
   '@nestjs/core': 8.0.6_214ebf00327c8ed1d6618d61764e6a91

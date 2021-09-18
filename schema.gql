@@ -40,9 +40,9 @@ type NoteModel {
   commentsIndex: Float
   allowComment: Boolean!
   images: Image
+  modified: DateTime
   title: String!
   text: String!
-  modified: DateTime!
   coordinates: Coordinate
   count: CountMixed
   music: [NoteMusic!]
@@ -91,9 +91,9 @@ type PostModel {
   commentsIndex: Float
   allowComment: Boolean!
   images: Image
+  modified: DateTime
   title: String!
   text: String!
-  modified: DateTime!
   categoryId: String!
   category: CategoryModel
   count: CountMixed

@@ -317,7 +317,7 @@ export class CronService {
         documents.push(...documents_)
       })
       try {
-        await index.clearObjects()
+        // await index.clearObjects()
         await index.saveObjects(documents, {
           autoGenerateObjectIDIfNotExist: false,
         })

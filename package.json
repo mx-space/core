@@ -42,6 +42,7 @@
     "docs": "npx @compodoc/compodoc -p tsconfig.json -s -d docs"
   },
   "dependencies": {
+    "@algolia/client-search": "*",
     "@nestjs/common": "8.0.6",
     "@nestjs/config": "1.0.1",
     "@nestjs/core": "8.0.6",

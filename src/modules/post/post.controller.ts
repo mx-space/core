@@ -15,7 +15,6 @@ import {
 import { ApiOperation } from '@nestjs/swagger'
 import { Types } from 'mongoose'
 import { Auth } from '~/common/decorator/auth.decorator'
-import { HttpCache } from '~/common/decorator/cache.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -24,7 +23,6 @@ import { VisitDocument } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import { SearchDto } from '~/shared/dto/search.dto'
 import {
   addConditionToSeeHideContent,
   addYearCondition,
@@ -144,29 +142,6 @@ export class PostController {
     await this.postService.deletePost(id)
 
     return
-  }
-
-  @Get('/search')
-  @HttpCache.disable
-  @Paginator
-  async searchPost(@Query() query: SearchDto, @IsMaster() isMaster: boolean) {
-    const { keyword, page, size } = query
-    const select = '_id title created modified categoryId slug'
-    const keywordArr = keyword
-      .split(/\s+/)
-      .map((item) => new RegExp(String(item), 'ig'))
-    return await this.postService.findWithPaginator(
-      {
-        $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }],
-        $and: [{ ...addConditionToSeeHideContent(isMaster) }],
-      },
-      {
-        limit: size,
-        page,
-        select,
-        populate: 'categoryId',
-      },
-    )
   }
 
   @Get('/_thumbs-up')

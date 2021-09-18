@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
+import { Interval } from '@nestjs/schedule'
 import { ReturnModelType } from '@typegoose/typegoose'
 import { cloneDeep } from 'lodash'
 import { InjectModel } from 'nestjs-typegoose'
@@ -35,7 +36,9 @@ export class ConfigsService {
     private readonly optionModel: ReturnModelType<typeof OptionModel>,
     private readonly userService: UserService,
   ) {
-    this.configInit()
+    this.configInit().then(() => {
+      this.logger.log('Config 已经加载完毕！')
+    })
     this.logger = new Logger(ConfigsService.name)
   }
   private configInitd = false
@@ -73,7 +76,15 @@ export class ConfigsService {
       this.config[name] = value
     })
     this.configInitd = true
-    this.logger.log('Config 已经加载完毕！')
+  }
+
+  // 10 分钟自动同步一次
+  @Interval(1000 * 60 * 10)
+  private async syncConfig() {
+    this.configInitd = false
+    this.config = generateDefaultConfig() as any
+    await this.configInit()
+    this.logger.log('Config 已经同步完毕！')
   }
 
   public get<T extends keyof IConfig>(key: T): Readonly<IConfig[T]> {
