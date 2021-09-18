@@ -119,10 +119,8 @@ export class JSONSerializeInterceptor implements NestInterceptor {
           Reflect.deleteProperty(obj[key], '__v')
         }
         obj[key] = this.serialize(obj[key])
-        // obj[key] = snakecaseKeys(obj[key])
       }
       obj = snakecaseKeys(obj)
-      // delete obj.v
     }
     return obj
   }
