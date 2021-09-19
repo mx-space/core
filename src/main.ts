@@ -1,7 +1,7 @@
 import './utils/global.util'
 import './zx.global'
 
-import { Logger, ValidationPipe } from '@nestjs/common'
+import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
@@ -38,7 +38,12 @@ async function bootstrap() {
     credentials: true,
   })
 
-  app.setGlobalPrefix(isDev ? '' : `api/v${APIVersion}`)
+  app.setGlobalPrefix(isDev ? 'api' : `api/v${APIVersion}`, {
+    exclude: [
+      // { path: 'admin', method: RequestMethod.GET },
+      { path: '/admin', method: RequestMethod.GET },
+    ],
+  })
   app.useGlobalInterceptors(new LoggingInterceptor())
   app.useGlobalPipes(
     new ValidationPipe({

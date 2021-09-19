@@ -36,6 +36,7 @@ import { MarkdownModule } from './modules/markdown/markdown.module'
 import { NoteModule } from './modules/note/note.module'
 import { OptionModule } from './modules/option/option.module'
 import { PageModule } from './modules/page/page.module'
+import { PageProxyModule } from './modules/pageproxy/pageproxy.module'
 import { PostModule } from './modules/post/post.module'
 import { ProjectModule } from './modules/project/project.module'
 import { RecentlyModule } from './modules/recently/recently.module'
@@ -86,6 +87,7 @@ import { HelperModule } from './processors/helper/helper.module'
     OptionModule,
     PageModule,
     PostModule,
+    PageProxyModule,
     ProjectModule,
     RecentlyModule,
     SayModule,

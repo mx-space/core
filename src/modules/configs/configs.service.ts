@@ -25,6 +25,11 @@ const generateDefaultConfig: () => IConfig = () => ({
   backupOptions: { enable: false } as BackupOptionsDto,
   baiduSearchOptions: { enable: false },
   algoliaSearchOptions: { enable: false, apiKey: '', appId: '', indexName: '' },
+  adminExtra: {
+    background:
+      'https://gitee.com/xun7788/my-imagination/raw/master/images/88426823_p0.jpg',
+    gaodemapKey: null,
+  },
 })
 
 @Injectable()

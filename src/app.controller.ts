@@ -25,7 +25,7 @@ export class AppController {
     @InjectModel(OptionModel)
     private readonly optionModel: MongooseModel<OptionModel>,
   ) {}
-  @Get(['/'])
+  @Get(['/', '/info'])
   async appInfo() {
     let hash = ''
     try {

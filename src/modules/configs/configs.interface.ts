@@ -1,4 +1,5 @@
 import {
+  AdminExtraDto,
   AlgoliaSearchOptionsDto,
   BackupOptionsDto,
   BaiduSearchOptionsDto,
@@ -16,6 +17,7 @@ export interface IConfig {
   backupOptions: BackupOptionsDto
   baiduSearchOptions: BaiduSearchOptionsDto
   algoliaSearchOptions: AlgoliaSearchOptionsDto
+  adminExtra: AdminExtraDto
 }
 
 export type IConfigKeys = keyof IConfig

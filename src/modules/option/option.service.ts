@@ -1,12 +1,3 @@
-/*
- * @Author: Innei
- * @Date: 2020-05-08 20:01:58
- * @LastEditTime: 2021-01-15 14:12:43
- * @LastEditors: Innei
- * @FilePath: /server/apps/server/src/shared/options/options.service.ts
- * @Coding with Love
- */
-
 import { BadRequestException, Injectable, ValidationPipe } from '@nestjs/common'
 import camelcaseKeys from 'camelcase-keys'
 import { ClassConstructor, plainToClass } from 'class-transformer'

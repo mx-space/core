@@ -147,3 +147,12 @@ export class AlgoliaSearchOptionsDto {
   @IsOptional()
   indexName?: string
 }
+
+export class AdminExtraDto {
+  @IsString()
+  @IsOptional()
+  background?: string
+  @IsString()
+  @IsOptional()
+  gaodemapKey?: string
+}
