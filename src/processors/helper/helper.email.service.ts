@@ -93,8 +93,8 @@ export class EmailService {
       this.configsService.waitForConfigReady().then(({ mailOptions }) => {
         const { options, user, pass } = mailOptions
         r({
-          host: options.host,
-          port: +options.port || 465,
+          host: options?.host,
+          port: +options?.port || 465,
           auth: { user, pass },
         } as const)
       })
