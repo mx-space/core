@@ -42,7 +42,7 @@ export class ToolController {
   }
 
   @Get('geocode/location')
-  @CacheTTL(1000 * 60 * 60 * 24)
+  @CacheTTL(60 * 60 * 24)
   async callGeocodeLocationApi(@Query() query: GaodeMapLocationDto) {
     const { latitude, longitude } = query
     const data = await this.toolService.getGeoLocationByGaode(
@@ -52,7 +52,7 @@ export class ToolController {
     return data
   }
 
-  @CacheTTL(1000 * 10)
+  @CacheTTL(10)
   @Get('geocode/search')
   async callGeocodeSearchApi(@Query() query: GaodeMapSearchDto) {
     let { keywords } = query

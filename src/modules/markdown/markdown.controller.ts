@@ -171,7 +171,7 @@ export class MarkdownController {
   @Get('/render/:id')
   @Header('content-type', 'text/html')
   @HTTPDecorators.Bypass
-  @CacheTTL(60 * 60 * 24)
+  @CacheTTL(60 * 60)
   async renderArticle(@Param() params: MongoIdDto) {
     const { id } = params
     const now = performance.now()

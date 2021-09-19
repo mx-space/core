@@ -1,5 +1,4 @@
-import { Controller, Get, Header } from '@nestjs/common'
-import { HttpCache } from '~/common/decorator/cache.decorator'
+import { CacheTTL, Controller, Get, Header } from '@nestjs/common'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { ConfigsService } from '../configs/configs.service'
@@ -20,7 +19,7 @@ export class PageProxyController {
   @Get('/qaqdmin')
   @Header('Content-Type', 'text/html')
   @HTTPDecorators.Bypass
-  @HttpCache({ disable: true })
+  @CacheTTL(60 * 10)
   async proxyAdmin() {
     const {
       adminExtra,
