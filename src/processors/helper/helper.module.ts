@@ -9,6 +9,7 @@ import { CronService } from './helper.cron.service'
 import { EmailService } from './helper.email.service'
 import { HttpService } from './helper.http.service'
 import { ImageService } from './helper.image.service'
+import { TaskQueueService } from './helper.tq.service'
 import { UploadService } from './helper.upload.service'
 import { AssetService } from './hepler.asset.service'
 
@@ -20,6 +21,7 @@ const providers: Provider<any>[] = [
   CountingService,
   UploadService,
   AssetService,
+  TaskQueueService,
 ]
 
 @Module({

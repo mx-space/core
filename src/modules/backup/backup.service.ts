@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  Scope,
 } from '@nestjs/common'
 import {
   existsSync,
@@ -22,13 +23,14 @@ import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { getFolderSize } from '~/utils/system.util'
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class BackupService {
   private logger: Logger
 
   constructor(private readonly adminGateway: AdminEventsGateway) {
     this.logger = new Logger(BackupService.name)
   }
+
   async list() {
     const backupPath = BACKUP_DIR
     if (!existsSync(backupPath)) {

@@ -19,7 +19,7 @@ const generateDefaultConfig: () => IConfig = () => ({
     description: 'Hello World~',
   },
   url: {
-    wsUrl: 'http://localhost:8080', //todo
+    wsUrl: 'http://localhost:2333', //todo
     adminUrl: 'http://localhost:9528',
     serverUrl: 'http://localhost:2333',
     webUrl: 'http://localhost:2323',

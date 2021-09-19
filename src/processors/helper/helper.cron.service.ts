@@ -22,7 +22,6 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import { NoteService } from '~/modules/note/note.service'
 import { PageService } from '~/modules/page/page.service'
 import { PostService } from '~/modules/post/post.service'
-import { isDev } from '~/utils/index.util'
 import { getRedisKey } from '~/utils/redis.util'
 import { CacheService } from '../cache/cache.service'
 import { HttpService } from './helper.http.service'
@@ -69,8 +68,9 @@ export class CronService {
       })
 
       return json
-    } catch {
+    } catch (err) {
       this.logger.warn('更新 Bot 列表错误')
+      throw err
     }
   }
 
@@ -93,14 +93,11 @@ export class CronService {
 
       this.logger.log('--> 备份成功')
     } catch (e) {
-      if (isDev) {
-        console.log(e)
-      }
       this.logger.error(
         '--> 备份失败, 请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致, ' +
           e.message,
       )
-      return
+      throw e
     }
 
     //  开始上传 COS
@@ -142,6 +139,7 @@ export class CronService {
             this.logger.log('--> 上传成功')
           } else {
             this.logger.error('--> 上传失败了')
+            throw err
           }
         },
       )
@@ -184,7 +182,7 @@ export class CronService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
     name: 'resetLikedOrReadArticleRecord',
   })
-  @CronDescription('清理喜欢数成功')
+  @CronDescription('清理喜欢数')
   async resetLikedOrReadArticleRecord() {
     const redis = this.cacheService.getClient()
 
@@ -211,14 +209,17 @@ export class CronService {
   @Cron(CronExpression.EVERY_DAY_AT_3AM, { name: 'pushToBaiduSearch' })
   @CronDescription('推送到百度搜索')
   async pushToBaiduSearch() {
-    const configs = this.configs.get('baiduSearchOptions')
+    const {
+      url: { webUrl },
+      baiduSearchOptions: configs,
+    } = await this.configs.waitForConfigReady()
+
     if (configs.enable) {
       const token = configs.token
       if (!token) {
         this.logger.error('[BaiduSearchPushTask] token 为空')
         return
       }
-      const siteUrl = this.configs.get('url').webUrl
 
       const pushUrls = await this.aggregateService.getSiteMapContent()
       const urls = pushUrls
@@ -229,7 +230,7 @@ export class CronService {
 
       try {
         const res = await this.http.axiosRef.post(
-          `http://data.zz.baidu.com/urls?site=${siteUrl}&token=${token}`,
+          `http://data.zz.baidu.com/urls?site=${webUrl}&token=${token}`,
           urls,
           {
             headers: {
@@ -241,6 +242,7 @@ export class CronService {
         return res.data
       } catch (e) {
         this.logger.error('百度推送错误: ' + e.message)
+        throw e
       }
     }
     return null
@@ -321,8 +323,9 @@ export class CronService {
           autoGenerateObjectIDIfNotExist: false,
         })
         this.logger.log('--> 推送到 algoliasearch 成功')
-      } catch {
+      } catch (err) {
         Logger.error('algolia推送错误', 'AlgoliaSearch')
+        throw err
       }
     }
   }

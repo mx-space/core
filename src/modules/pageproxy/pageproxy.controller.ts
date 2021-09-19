@@ -29,7 +29,7 @@ export class PageProxyController {
     if (!adminExtra.enableAdminProxy) {
       return '<h1>Admin Proxy is disabled</h1>'
     }
-    const indexEntryUrl = `https://cdn.jsdelivr.net/gh/mx-space/admin-next@gh-pages/index.html`
+    const indexEntryUrl = `https://raw.githubusercontent.com/mx-space/admin-next/gh-pages/index.html`
     let entry = await (await fetch(indexEntryUrl)).text()
     entry = entry.replace(
       `<!-- injectable script -->`,

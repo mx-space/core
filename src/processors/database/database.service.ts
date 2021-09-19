@@ -5,12 +5,6 @@ import { NoteModel } from '~/modules/note/note.model'
 import { PageModel } from '~/modules/page/page.model'
 import { PostModel } from '~/modules/post/post.model'
 
-declare enum ModelRefTypes {
-  Post,
-  Note,
-  Page,
-}
-
 @Injectable()
 export class DatabaseService {
   constructor(

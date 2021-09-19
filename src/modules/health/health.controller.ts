@@ -18,6 +18,7 @@ import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CRON_DESCRIPTION } from '~/constants/meta.constant'
 import { SCHEDULE_CRON_OPTIONS } from '~/constants/system.constant'
 import { CronService } from '~/processors/helper/helper.cron.service'
+import { TaskQueueService } from '~/processors/helper/helper.tq.service'
 import { PM2QueryDto } from './health.dto'
 
 @Controller({
@@ -31,6 +32,7 @@ export class HealthController {
     private schedulerRegistry: SchedulerRegistry,
     private readonly cronService: CronService,
     private readonly reflector: Reflector,
+    private readonly taskQueue: TaskQueueService,
   ) {}
 
   @Get('/cron')
@@ -71,9 +73,22 @@ export class HealthController {
     if (!hasMethod) {
       throw new BadRequestException(`${name} is not a cron`)
     }
-    process.nextTick(async () => {
-      await this.cronService[name]()
-    })
+    this.taskQueue.add(name, async () =>
+      this.cronService[name].call(this.cronService),
+    )
+  }
+
+  @Get('/cron/task/:name')
+  async getCronTaskStatus(@Param('name') name: string) {
+    if (!isString(name)) {
+      throw new BadRequestException('name must be string')
+    }
+    const task = this.taskQueue.get(name)
+    if (!task) {
+      throw new BadRequestException(`${name} is not a cron in task queue`)
+    }
+
+    return task
   }
 
   @Get('/log/list/pm2')
