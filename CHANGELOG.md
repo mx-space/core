@@ -1,3 +1,12 @@
+## [3.6.4](https://github.com/mx-space/server-next/compare/v3.6.3...v3.6.4) (2021-09-19)
+
+
+### Features
+
+* init module ([ad1ca18](https://github.com/mx-space/server-next/commit/ad1ca186957fcd5f325dbd6d997e43b007b4b8f4))
+
+
+
 ## [3.6.3](https://github.com/mx-space/server-next/compare/v3.6.2...v3.6.3) (2021-09-19)
 
 
