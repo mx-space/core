@@ -6,6 +6,7 @@ import { NoteModel } from '~/modules/note/note.model'
 import { PostModel } from '~/modules/post/post.model'
 import { getRedisKey } from '~/utils/redis.util'
 import { CacheService } from '../cache/cache.service'
+import { DatabaseService } from '../database/database.service'
 
 @Injectable()
 export class CountingService {
@@ -16,15 +17,9 @@ export class CountingService {
     @InjectModel(NoteModel)
     private readonly noteModel: MongooseModel<NoteModel>,
     private readonly redis: CacheService,
+    private readonly databaseService: DatabaseService,
   ) {
     this.logger = new Logger(CountingService.name)
-  }
-
-  get modelMap() {
-    return {
-      Post: this.postModel,
-      Note: this.noteModel,
-    } as const
   }
 
   private checkIdAndIp(id: string, ip: string) {
@@ -48,7 +43,7 @@ export class CountingService {
       return
     }
 
-    const model = this.modelMap[type]
+    const model = this.databaseService.getModelByRefType(type as any)
     const doc = await model.findById(id)
 
     if (!doc) {
@@ -82,7 +77,7 @@ export class CountingService {
       throw '无法获取到 IP'
     }
 
-    const model = this.modelMap[type]
+    const model = this.databaseService.getModelByRefType(type as any)
     const doc = await model.findById(id)
 
     if (!doc) {

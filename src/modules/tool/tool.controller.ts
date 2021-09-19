@@ -1,10 +1,11 @@
-import { Controller, Get, Param } from '@nestjs/common'
+import { CacheTTL, Controller, Get, Param, Query } from '@nestjs/common'
 import { HttpCache } from '~/common/decorator/cache.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
-import { IpDto } from './tool.dto'
+import { ConfigsService } from '../configs/configs.service'
+import { GaodeMapLocationDto, GaodeMapSearchDto, IpDto } from './tool.dto'
 import { ToolService } from './tool.service'
 
 @Controller('tools')
@@ -13,6 +14,7 @@ export class ToolController {
   constructor(
     private readonly toolService: ToolService,
     private readonly cacheService: CacheService,
+    private readonly configs: ConfigsService,
   ) {}
 
   @Get('/ip/:ip')
@@ -37,5 +39,24 @@ export class ToolController {
       JSON.stringify(result),
     )
     return result
+  }
+
+  @Get('geocode/location')
+  @CacheTTL(1000 * 60 * 60 * 24)
+  async callGeocodeLocationApi(@Query() query: GaodeMapLocationDto) {
+    const { latitude, longitude } = query
+    const data = await this.toolService.getGeoLocationByGaode(
+      longitude,
+      latitude,
+    )
+    return data
+  }
+
+  @CacheTTL(1000 * 10)
+  @Get('geocode/search')
+  async callGeocodeSearchApi(@Query() query: GaodeMapSearchDto) {
+    let { keywords } = query
+    keywords = keywords.replace(/\s/g, '|')
+    return this.toolService.searchLocationByGaode(keywords)
   }
 }

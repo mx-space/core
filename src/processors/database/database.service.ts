@@ -29,10 +29,10 @@ export class DatabaseService {
   public getModelByRefType(type: 'note'): ReturnModelType<typeof NoteModel>
   public getModelByRefType(type: 'Page'): ReturnModelType<typeof PageModel>
   public getModelByRefType(type: 'page'): ReturnModelType<typeof PageModel>
-  public getModelByRefType(type: keyof typeof ModelRefTypes) {
+  public getModelByRefType(type: any) {
     type = type.toLowerCase() as any
     // FIXME: lowercase key
-    const map = new Map<keyof typeof ModelRefTypes, any>([
+    const map = new Map<any, any>([
       ['post', this.postModel],
       ['note', this.noteModel],
       ['page', this.pageModel],

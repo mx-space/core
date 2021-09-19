@@ -5,7 +5,6 @@ import { createTransport } from 'nodemailer'
 import path from 'path'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { LinkModel } from '~/modules/link/link.model'
-import { HttpService } from './helper.http.service'
 import { AssetService } from './hepler.asset.service'
 
 export enum ReplyMailType {
@@ -25,7 +24,6 @@ export class EmailService {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly assetService: AssetService,
-    private readonly httpService: HttpService,
   ) {
     this.init()
     this.logger = new Logger(EmailService.name)

@@ -23,6 +23,11 @@ export class CountingInterceptor<T> implements NestInterceptor<T, any> {
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler) {
+    const request = context.switchToHttp().getRequest()
+    // 有登录态跳过更新计数
+    if (request.isMaster) {
+      return next.handle()
+    }
     const handler = context.getHandler()
     return next.handle().pipe(
       map((data) => {

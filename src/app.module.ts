@@ -87,7 +87,6 @@ import { HelperModule } from './processors/helper/helper.module'
     OptionModule,
     PageModule,
     PostModule,
-    PageProxyModule,
     ProjectModule,
     RecentlyModule,
     SayModule,
@@ -96,6 +95,8 @@ import { HelperModule } from './processors/helper/helper.module'
     ToolModule,
     UserModule,
     UserModule,
+
+    PageProxyModule,
 
     GatewayModule,
     HelperModule,

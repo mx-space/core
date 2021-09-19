@@ -38,7 +38,7 @@ async function bootstrap() {
     credentials: true,
   })
 
-  app.setGlobalPrefix(isDev ? 'api' : `api/v${APIVersion}`, {
+  app.setGlobalPrefix(isDev ? '' : `api/v${APIVersion}`, {
     exclude: [
       // { path: 'admin', method: RequestMethod.GET },
       { path: '/admin', method: RequestMethod.GET },

@@ -1,4 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common'
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common'
 import { Interval } from '@nestjs/schedule'
 import { ReturnModelType } from '@typegoose/typegoose'
 import { cloneDeep } from 'lodash'
@@ -93,6 +97,9 @@ export class ConfigsService {
   }
 
   public get<T extends keyof IConfig>(key: T): Readonly<IConfig[T]> {
+    if (!this.configInitd) {
+      throw new InternalServerErrorException('Config 未初始化')
+    }
     return cloneDeep(this.config[key]) as Readonly<IConfig[T]>
   }
   public getConfig(): Readonly<IConfig> {
