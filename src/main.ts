@@ -39,10 +39,7 @@ async function bootstrap() {
   })
 
   app.setGlobalPrefix(isDev ? '' : `api/v${APIVersion}`, {
-    exclude: [
-      // { path: 'admin', method: RequestMethod.GET },
-      { path: '/admin', method: RequestMethod.GET },
-    ],
+    exclude: [{ path: '/qaqdmin', method: RequestMethod.GET }],
   })
   app.useGlobalInterceptors(new LoggingInterceptor())
   app.useGlobalPipes(
