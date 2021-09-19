@@ -68,20 +68,23 @@ export class EmailService {
   }
 
   init() {
-    this.getConfigFromConfigService().then((config) => {
-      this.instance = createTransport({
-        ...config,
-        secure: true,
-        tls: {
-          rejectUnauthorized: false,
-        },
+    this.getConfigFromConfigService()
+      .then((config) => {
+        this.instance = createTransport({
+          ...config,
+          secure: true,
+          tls: {
+            rejectUnauthorized: false,
+          },
+        })
+        this.checkIsReady().then((ready) => {
+          if (ready) {
+            this.logger.log('送信服务已经加载完毕！')
+          }
+        })
       })
-      this.checkIsReady().then((ready) => {
-        if (ready) {
-          this.logger.log('送信服务已经加载完毕！')
-        }
-      })
-    })
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      .catch(() => {})
   }
 
   private getConfigFromConfigService() {
@@ -89,9 +92,14 @@ export class EmailService {
       host: string
       port: number
       auth: { user: string; pass: string }
-    }>((r) => {
+    }>((r, j) => {
       this.configsService.waitForConfigReady().then(({ mailOptions }) => {
         const { options, user, pass } = mailOptions
+        if (!user && !pass) {
+          const message = '邮件件客户端未认证'
+          this.logger.error(message)
+          return j(message)
+        }
         r({
           host: options?.host,
           port: +options?.port || 465,

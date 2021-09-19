@@ -1,17 +1,17 @@
-import {
-  UserModel as User,
-  UserDocument,
-  TokenModel,
-} from '~/modules/user/user.model'
 import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { ReturnModelType, DocumentType } from '@typegoose/typegoose'
+import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+import dayjs from 'dayjs'
+import { isDate, omit } from 'lodash'
 import { customAlphabet } from 'nanoid/async'
 import { InjectModel } from 'nestjs-typegoose'
-import { JwtPayload } from './interfaces/jwt-payload.interface'
+import {
+  TokenModel,
+  UserDocument,
+  UserModel as User,
+} from '~/modules/user/user.model'
 import { TokenDto } from './auth.controller'
-import { isDate, omit } from 'lodash'
-import dayjs from 'dayjs'
+import { JwtPayload } from './interfaces/jwt-payload.interface'
 
 @Injectable()
 export class AuthService {
@@ -63,9 +63,11 @@ export class AuthService {
     return await ap()
   }
 
-  async verifyCustomToken(token: string) {
+  async verifyCustomToken(token: string): Promise<boolean> {
     const user = await this.userModel.findOne({}).lean().select('+apiToken')
-
+    if (!user) {
+      return false
+    }
     const tokens = user.apiToken
     if (!tokens || !Array.isArray(tokens)) {
       return false

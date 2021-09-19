@@ -2,6 +2,7 @@ import { CacheTTL, Controller, Get, Header } from '@nestjs/common'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { ConfigsService } from '../configs/configs.service'
+import { InitService } from '../init/init.service'
 
 interface IInjectableData {
   BASE_API: null | string
@@ -9,12 +10,17 @@ interface IInjectableData {
   GATEWAY: null | string
   LOGIN_BG: null | string
   TITLE: null | string
+
+  INIT: null | boolean
 }
 
 @Controller('/')
 @ApiName
 export class PageProxyController {
-  constructor(private readonly configs: ConfigsService) {}
+  constructor(
+    private readonly configs: ConfigsService,
+    private readonly initService: InitService,
+  ) {}
 
   @Get('/qaqdmin')
   @Header('Content-Type', 'text/html')
@@ -38,6 +44,7 @@ export class PageProxyController {
         LOGIN_BG: adminExtra.background,
         TITLE: adminExtra.title,
         WEB_URL: webUrl,
+        INIT: await this.initService.isInit(),
       } as IInjectableData)}`}</script>`,
     )
     return entry

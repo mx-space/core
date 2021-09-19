@@ -7,5 +7,6 @@ import { OptionService } from './option.service'
   imports: [GatewayModule],
   controllers: [OptionController],
   providers: [OptionService],
+  exports: [OptionService],
 })
 export class OptionModule {}

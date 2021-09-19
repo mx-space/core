@@ -10,7 +10,6 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
-import { IsNotEmpty, IsString } from 'class-validator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import {
   EmailService,
@@ -18,14 +17,9 @@ import {
 } from '~/processors/helper/helper.email.service'
 import { IConfig } from '../configs/configs.interface'
 import { ConfigsService } from '../configs/configs.service'
+import { ConfigKeyDto } from './dtos/config.dto'
 import { ReplyEmailBodyDto, ReplyEmailTypeDto } from './dtos/email.dto'
 import { OptionService } from './option.service'
-
-class ConfigKeyDto {
-  @IsString()
-  @IsNotEmpty()
-  key: keyof IConfig
-}
 
 @Controller(['options', 'config', 'setting', 'configs', 'option'])
 @ApiTags('Option Routes')

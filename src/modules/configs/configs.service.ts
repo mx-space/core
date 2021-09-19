@@ -30,6 +30,8 @@ const generateDefaultConfig: () => IConfig = () => ({
   baiduSearchOptions: { enable: false },
   algoliaSearchOptions: { enable: false, apiKey: '', appId: '', indexName: '' },
   adminExtra: {
+    enableAdminProxy: true,
+    title: '欧尼酱!',
     background:
       'https://gitee.com/xun7788/my-imagination/raw/master/images/88426823_p0.jpg',
     gaodemapKey: null,
@@ -76,6 +78,10 @@ export class ConfigsService {
 
       return
     })
+  }
+
+  public get defaultConfig() {
+    return generateDefaultConfig()
   }
 
   protected async configInit() {

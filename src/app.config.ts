@@ -18,7 +18,7 @@ export const CROSS_DOMAIN = {
 }
 
 export const MONGO_DB = {
-  collectionName: 'mx-space',
+  collectionName: (argv.collection_name as string) || 'mx-space',
   get uri() {
     return `mongodb://127.0.0.1:${argv.dbport || '27017'}/${
       process.env.TEST ? 'mx-space_unitest' : this.collectionName

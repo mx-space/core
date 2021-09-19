@@ -1,6 +1,19 @@
-import { Controller, Get, Scope } from '@nestjs/common'
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  Patch,
+  Scope,
+  UnprocessableEntityException,
+} from '@nestjs/common'
 import { ApiName } from '~/common/decorator/openapi.decorator'
-import { UserService } from '../user/user.service'
+import { ConfigsService } from '../configs/configs.service'
+import { ConfigKeyDto } from '../option/dtos/config.dto'
+import { OptionService } from '../option/option.service'
+import { InitService } from './init.service'
 
 @Controller({
   path: '/init',
@@ -8,12 +21,40 @@ import { UserService } from '../user/user.service'
 })
 @ApiName
 export class InitController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly configs: ConfigsService,
+    private readonly optionService: OptionService,
+    private readonly initService: InitService,
+  ) {}
 
   @Get('/')
   async isInit() {
     return {
-      isInit: await this.userService.hasMaster(),
+      isInit: await this.initService.isInit(),
     }
+  }
+
+  @Get('/configs/default')
+  async getDefaultConfig() {
+    const { isInit } = await this.isInit()
+    if (isInit) {
+      throw new ForbiddenException('默认设置在完成注册之后不可见')
+    }
+    return this.configs.defaultConfig
+  }
+
+  @Patch('/configs/:key')
+  async patch(
+    @Param() params: ConfigKeyDto,
+    @Body() body: Record<string, any>,
+  ) {
+    const { isInit } = await this.isInit()
+    if (isInit) {
+      throw new BadRequestException('已经完成初始化, 请登录后进行设置')
+    }
+    if (typeof body !== 'object') {
+      throw new UnprocessableEntityException('body must be object')
+    }
+    return this.optionService.patchAndValid(params.key, body)
   }
 }
