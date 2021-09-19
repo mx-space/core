@@ -1,3 +1,12 @@
+## [3.6.3](https://github.com/mx-space/server-next/compare/v3.6.2...v3.6.3) (2021-09-19)
+
+
+### Bug Fixes
+
+* destruct nullable ([9ae39c4](https://github.com/mx-space/server-next/commit/9ae39c461d2d9e61b1f12c1c677371f20e011ea3))
+
+
+
 # [Unreleased](https://github.com/mx-space/server-next/compare/v3.6.2...9ae39c461d2d9e61b1f12c1c677371f20e011ea3) (2021-09-19)
 
 
