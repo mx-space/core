@@ -31,7 +31,7 @@ export class PageProxyController {
       adminExtra,
       url: { wsUrl, serverUrl, webUrl },
     } = await this.configs.waitForConfigReady()
-    if (!adminExtra.enableAdminProxy) {
+    if (!adminExtra.enableAdminProxy && !isDev) {
       return '<h1>Admin Proxy is disabled</h1>'
     }
     const indexEntryUrl = `https://raw.githubusercontent.com/mx-space/admin-next/gh-pages/index.html`
