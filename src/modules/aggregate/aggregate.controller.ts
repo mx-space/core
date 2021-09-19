@@ -23,7 +23,7 @@ export class AggregateController {
   @CacheKey(CacheKeys.AggregateCatch)
   @CacheTTL(300)
   async aggregate(@IsMaster() isMaster: boolean) {
-    const [user, categories, pageMeta, lastestNoteNid] = await Promise.all([
+    const tasks = await Promise.allSettled([
       this.configsService.getMaster(),
       this.aggregateService.getAllCategory(),
       this.aggregateService.getAllPages(),
@@ -31,6 +31,13 @@ export class AggregateController {
         .getLatestNote(addConditionToSeeHideContent(isMaster))
         .then((r) => r.nid),
     ])
+    const [user, categories, pageMeta, lastestNoteNid] = tasks.map((t) => {
+      if (t.status === 'fulfilled') {
+        return t.value
+      } else {
+        return null
+      }
+    })
     return {
       user,
       seo: this.configsService.get('seo'),

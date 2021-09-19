@@ -1,7 +1,6 @@
 import { Body, Delete, Get, Param, Post } from '@nestjs/common'
 import { sample } from 'lodash'
 import { Auth } from '~/common/decorator/auth.decorator'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { BaseCrudFactory } from '~/utils/crud.util'
@@ -12,7 +11,7 @@ export class SayController extends BaseCrudFactory({ model: SayModel }) {
   async getRandomOne() {
     const res = await this.model.find({}).lean()
     if (!res.length) {
-      throw new CannotFindException()
+      return { data: null }
     }
     return { data: sample(res) }
   }
