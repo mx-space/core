@@ -51,12 +51,13 @@ export class ConfigsService {
     this.logger = new Logger(ConfigsService.name)
   }
   private configInitd = false
+
   public waitForConfigReady() {
     // eslint-disable-next-line no-async-promise-executor
-    return new Promise<IConfig>(async (r, j) => {
+    return new Promise<Readonly<IConfig>>(async (r, j) => {
       // 开始等待, 后续调用直接返回
       if (this.configInitd) {
-        r(this.config)
+        r(this.getConfig())
         return
       }
 
@@ -64,7 +65,7 @@ export class ConfigsService {
       let curCount = 0
       do {
         if (this.configInitd) {
-          r({ ...this.config })
+          r(this.getConfig())
           return
         }
         await sleep(100)

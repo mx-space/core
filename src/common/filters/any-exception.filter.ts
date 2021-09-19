@@ -27,7 +27,7 @@ type myError = {
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logger = new Logger('捕获异常')
+  private readonly logger = new Logger(AllExceptionsFilter.name)
   private readonly errorLogPipe: WriteStream
   constructor(@Inject(REFLECTOR) private reflector: Reflector) {
     this.errorLogPipe = fs.createWriteStream(resolve(LOGGER_DIR, 'error.log'), {

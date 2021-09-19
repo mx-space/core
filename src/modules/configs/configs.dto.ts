@@ -155,4 +155,15 @@ export class AdminExtraDto {
   @IsString()
   @IsOptional()
   gaodemapKey?: string
+
+  @IsString()
+  @IsOptional()
+  title?: string
+
+  @IsBoolean()
+  @IsOptional()
+  /**
+   * 是否开启后台反代访问
+   */
+  enableAdminProxy?: boolean
 }

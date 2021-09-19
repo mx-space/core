@@ -1,10 +1,14 @@
-import { Injectable, NestMiddleware } from '@nestjs/common'
+import { Injectable, Logger, NestMiddleware } from '@nestjs/common'
 import { IncomingMessage, ServerResponse } from 'http'
 import { parseRelativeUrl } from '~/utils/ip.util'
 // 用于屏蔽 PHP 的请求
 
 @Injectable()
 export class SecurityMiddleware implements NestMiddleware {
+  private logger: Logger
+  constructor() {
+    this.logger = new Logger(SecurityMiddleware.name)
+  }
   async use(req: IncomingMessage, res: ServerResponse, next: () => void) {
     // @ts-ignore
     const url = parseRelativeUrl(req.originalUrl).pathname

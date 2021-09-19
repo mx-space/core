@@ -15,5 +15,8 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": true
   },
-  "material-icon-theme.activeIconPack": "nest"
+  "material-icon-theme.activeIconPack": "nest",
+  "cSpell.words": [
+    "qaqdmin"
+  ]
 }
