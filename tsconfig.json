@@ -16,7 +16,7 @@
     "resolveJsonModule": true,
     "lib": [
       "ES2021",
-      "ES2020",
+      "ES2020"
     ],
     "skipLibCheck": true,
     "paths": {
