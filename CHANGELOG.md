@@ -1,3 +1,12 @@
+## [3.6.6](https://github.com/mx-space/server-next/compare/v3.6.5...v3.6.6) (2021-09-20)
+
+
+### Bug Fixes
+
+* add tslib 2021 ([76c5eb2](https://github.com/mx-space/server-next/commit/76c5eb2498eec5c8d64f33a214c1cc1472f355ee))
+
+
+
 ## [3.6.5](https://github.com/mx-space/server-next/compare/v3.6.4...v3.6.5) (2021-09-20)
 
 
