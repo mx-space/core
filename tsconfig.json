@@ -7,13 +7,17 @@
     "experimentalDecorators": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "target": "es2017",
+    "target": "ES2019",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": ".",
     "noImplicitAny": false,
     "incremental": true,
     "resolveJsonModule": true,
+    "lib": [
+      "ES2021",
+      "ES2020",
+    ],
     "skipLibCheck": true,
     "paths": {
       "~": [

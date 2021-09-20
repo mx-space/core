@@ -36,9 +36,10 @@ export class PageProxyController {
     }
     const indexEntryUrl = `https://raw.githubusercontent.com/mx-space/admin-next/gh-pages/index.html`
     const indexEntryCdnUrl = `https://cdn.jsdelivr.net/gh/mx-space/admin-next@gh-pages/index.html?t=${+new Date()}`
-    let entry = await Promise.race([
+    let entry = await Promise.any([
       // 龟兔赛跑, 乌龟先跑
-      (await fetch(indexEntryUrl)).text(),
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      fetch(indexEntryUrl).then((res) => res.text()),
       sleep(1000).then(async () => (await fetch(indexEntryCdnUrl)).text()),
     ])
     entry = entry.replace(
