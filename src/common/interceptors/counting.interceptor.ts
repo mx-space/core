@@ -23,7 +23,8 @@ export class CountingInterceptor<T> implements NestInterceptor<T, any> {
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler) {
-    const request = context.switchToHttp().getRequest()
+    const request = this.getRequest(context)
+
     // 有登录态跳过更新计数
     if (request.isMaster) {
       return next.handle()
@@ -36,7 +37,7 @@ export class CountingInterceptor<T> implements NestInterceptor<T, any> {
           HTTP_RES_UPDATE_DOC_COUNT_TYPE,
           handler,
         )
-        if (documentType) {
+        if (documentType && data) {
           this.countingService.updateReadCount(
             documentType as any,
             // _id 兼容 GQL 不过 JSONSerializeInterceptor ResponseInterceptor 转换
