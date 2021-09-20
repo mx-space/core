@@ -1,4 +1,5 @@
-import { Controller, Get, Header } from '@nestjs/common'
+import { Controller, Get, Header, Query, Session } from '@nestjs/common'
+import * as secureSession from 'fastify-secure-session'
 import { API_VERSION } from '~/app.config'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -7,6 +8,7 @@ import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { ConfigsService } from '../configs/configs.service'
 import { InitService } from '../init/init.service'
+import { PageProxyDebugDto } from './pageproxy.dto'
 
 interface IInjectableData {
   BASE_API: null | string
@@ -30,7 +32,10 @@ export class PageProxyController {
   @Get('/qaqdmin')
   @Header('Content-Type', 'text/html')
   @HTTPDecorators.Bypass
-  async proxyAdmin() {
+  async proxyAdmin(
+    @Session() session: secureSession.Session,
+    @Query() query: PageProxyDebugDto,
+  ) {
     const {
       adminExtra,
       url: { webUrl },
@@ -38,23 +43,56 @@ export class PageProxyController {
     if (!adminExtra.enableAdminProxy && !isDev) {
       return '<h1>Admin Proxy is disabled</h1>'
     }
+    const {
+      __apiUrl: apiUrl,
+      __gatewayUrl: gatewayUrl,
+      __onlyGithub: onlyGithub,
+      __debug: debug,
+    } = query
+    session.options({ maxAge: 1000 * 60 * 10 })
+    if (apiUrl) {
+      session.set('__apiUrl', apiUrl)
+    }
+
+    if (gatewayUrl) {
+      session.set('__gatewayUrl', gatewayUrl)
+    }
+
+    if (debug === false) {
+      session.delete()
+    }
 
     let entry =
-      (await this.cacheService.get<string>(getRedisKey(RedisKeys.AdminPage))) ||
+      (!onlyGithub &&
+        (await this.cacheService.get<string>(
+          getRedisKey(RedisKeys.AdminPage),
+        ))) ||
       (await (async () => {
         const indexEntryUrl = `https://raw.githubusercontent.com/mx-space/admin-next/gh-pages/index.html`
         const indexEntryCdnUrl = `https://cdn.jsdelivr.net/gh/mx-space/admin-next@gh-pages/index.html?t=${+new Date()}`
-        return await Promise.any([
+        const tasks = [
           // 龟兔赛跑, 乌龟先跑
           // eslint-disable-next-line @typescript-eslint/no-empty-function
           fetch(indexEntryUrl).then((res) => res.text()),
-          sleep(1000).then(async () => (await fetch(indexEntryCdnUrl)).text()),
-        ])
+        ]
+        if (!onlyGithub) {
+          tasks.push(
+            sleep(1000).then(async () =>
+              (await fetch(indexEntryCdnUrl)).text(),
+            ),
+          )
+        }
+        return await Promise.any(tasks)
       })())
 
     await this.cacheService.set(getRedisKey(RedisKeys.AdminPage), entry, {
       ttl: 10 * 60,
     })
+
+    const sessionInjectableData = {
+      BASE_API: session.get('__apiUrl'),
+      GATEWAY: session.get('__gatewayUrl'),
+    }
 
     entry = entry.replace(
       `<!-- injectable script -->`,
@@ -64,10 +102,18 @@ export class PageProxyController {
         WEB_URL: webUrl,
         INIT: await this.initService.isInit(),
       } as IInjectableData)}`}
-      window.injectData.BASE_API = location.origin + '${
-        !isDev ? '/api/v' + API_VERSION : ''
-      }';
-      window.injectData.GATEWAY = location.origin;
+     ${
+       sessionInjectableData.BASE_API
+         ? `window.injectData.BASE_API = '${sessionInjectableData.BASE_API}'`
+         : `window.injectData.BASE_API = location.origin + '${
+             !isDev ? '/api/v' + API_VERSION : ''
+           }';`
+     }
+      ${
+        sessionInjectableData.GATEWAY
+          ? `window.injectData.GATEWAY = '${sessionInjectableData.GATEWAY}';`
+          : `window.injectData.GATEWAY = location.origin;`
+      }
       </script>`,
     )
     return entry

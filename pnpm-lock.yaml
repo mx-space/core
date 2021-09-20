@@ -58,6 +58,7 @@ specifiers:
   eslint: '*'
   fastify: '*'
   fastify-multipart: 5.0.0
+  fastify-secure-session: ^2.3.1
   fastify-swagger: 4.12.0
   graphql: 15.5.3
   html-minifier: 4.0.0
@@ -137,6 +138,7 @@ dependencies:
   dotenv: 10.0.0
   ejs: 3.1.6
   fastify-multipart: 5.0.0
+  fastify-secure-session: 2.3.1
   fastify-swagger: 4.12.0
   graphql: 15.5.3
   html-minifier: 4.0.0
@@ -3390,6 +3392,11 @@ packages:
       safe-buffer: 5.1.2
     dev: true
 
+  /cookie-signature/1.1.0:
+    resolution: {integrity: sha512-Alvs19Vgq07eunykd3Xy2jF0/qSNv2u7KDbAek9H5liV1UMijbqFs5cycZvv5dVsvseT/U4H8/7/w8Koh35C4A==}
+    engines: {node: '>=6.6.0'}
+    dev: false
+
   /cookie/0.4.1:
     resolution: {integrity: sha512-ZwrFkGJxUR3EIoXtO+yVE69Eb7KlixbaeAWfBQB9vVsNn/o+Yw69gBWSSDK825hQNdN+wF8zELf3dFNl/kxkUA==}
     engines: {node: '>= 0.6'}
@@ -4169,6 +4176,14 @@ packages:
       fastify-plugin: 2.3.4
     dev: false
 
+  /fastify-cookie/5.3.1:
+    resolution: {integrity: sha512-ubiC5ydvgqaXOydeg3G+SFEiTJtsyNPde6ForXi+UG66aDbsHlWNLJTQZg4BopXv+MJ0SzlShGVCWv26mgAwpw==}
+    dependencies:
+      cookie: 0.4.1
+      cookie-signature: 1.1.0
+      fastify-plugin: 3.0.0
+    dev: false
+
   /fastify-cors/6.0.2:
     resolution: {integrity: sha512-sE0AOyzmj5hLLRRVgenjA6G2iOGX35/1S3QGYB9rr9TXelMZB3lFrXy4CzwYVOMiujJeMiLgO4J7eRm8sQSv8Q==}
     dependencies:
@@ -4205,6 +4220,15 @@ packages:
 
   /fastify-plugin/3.0.0:
     resolution: {integrity: sha512-ZdCvKEEd92DNLps5n0v231Bha8bkz1DjnPP/aEz37rz/q42Z5JVLmgnqR4DYuNn3NXAO3IDCPyRvgvxtJ4Ym4w==}
+    dev: false
+
+  /fastify-secure-session/2.3.1:
+    resolution: {integrity: sha512-6XsatyRSiX0UQB0MOPlU/PC9yn3seImefS1yv8C0bAyjAJ876839eHKPrclwNKBVX+9SUX+LdJGJTBi8DSU63g==}
+    hasBin: true
+    dependencies:
+      fastify-cookie: 5.3.1
+      fastify-plugin: 3.0.0
+      sodium-native: 3.2.1
     dev: false
 
   /fastify-static/4.2.3:
@@ -4835,6 +4859,10 @@ packages:
 
   /inherits/2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
+
+  /ini/1.3.8:
+    resolution: {integrity: sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==}
+    dev: false
 
   /inquirer/7.3.3:
     resolution: {integrity: sha512-JG3eIAj5V9CwcGvuOmoo6LB9kbAYT8HXffUl6memuszlwDC/qvFAJw49XJ5NROSFNPxp3iQg1GqkFhaY/CR0IA==}
@@ -6447,6 +6475,11 @@ packages:
     engines: {node: 4.x || >=6.0.0}
     dev: false
 
+  /node-gyp-build/4.3.0:
+    resolution: {integrity: sha512-iWjXZvmboq0ja1pUGULQBexmxq8CV4xBhX7VDOTbL7ZR4FOowwY/VOtRxBN/yKxmdGoIp4j5ysNT4u3S2pDQ3Q==}
+    hasBin: true
+    dev: false
+
   /node-int64/0.4.0:
     resolution: {integrity: sha1-h6kGXNs1XTGC2PlM4RGIuCXGijs=}
     dev: true
@@ -7580,6 +7613,14 @@ packages:
       - bufferutil
       - supports-color
       - utf-8-validate
+
+  /sodium-native/3.2.1:
+    resolution: {integrity: sha512-EgDZ/Z7PxL2kCasKk7wnRkV8W9kvwuIlHuHXAxkQm3FF0MgVsjyLBXGjSRGhjE6u7rhSpk3KaMfFM23bfMysIQ==}
+    requiresBuild: true
+    dependencies:
+      ini: 1.3.8
+      node-gyp-build: 4.3.0
+    dev: false
 
   /sonic-boom/1.4.1:
     resolution: {integrity: sha512-LRHh/A8tpW7ru89lrlkU4AszXt1dbwSjVWguGrmlxE7tawVmDBlI1PILMkXAxJTwqhgsEeTHzj36D5CmHgQmNg==}

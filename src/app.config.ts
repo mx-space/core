@@ -1,6 +1,6 @@
 import type { AxiosRequestConfig } from 'axios'
-import { argv } from 'yargs'
-
+import yargs from 'yargs'
+const argv = yargs.argv as any
 console.log(argv)
 
 export const API_VERSION = 2
@@ -47,4 +47,9 @@ export const SECURITY = {
   jwtExpire: '7d',
   // 跳过登陆鉴权
   skipAuth: argv.skipAuth ?? false,
+  get secret() {
+    return this.jwtSecret
+  },
+  // 必须 16 位
+  salt: argv.salt || 'axczswrasxzfqxsa',
 }
