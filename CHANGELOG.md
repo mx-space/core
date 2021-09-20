@@ -1,3 +1,17 @@
+## [3.6.5](https://github.com/mx-space/server-next/compare/v3.6.4...v3.6.5) (2021-09-20)
+
+
+### Bug Fixes
+
+* empty data compatibility ([581ca9e](https://github.com/mx-space/server-next/commit/581ca9e95a966bceb8727895946e3b07406c86b9))
+
+
+### Features
+
+* pageproxy enable in dev mode ([0391607](https://github.com/mx-space/server-next/commit/03916079b9be78dbcfef2fe11671befe5d3d4621))
+
+
+
 ## [3.6.4](https://github.com/mx-space/server-next/compare/v3.6.3...v3.6.4) (2021-09-19)
 
 
