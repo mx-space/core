@@ -1,3 +1,13 @@
+## [3.6.7](https://github.com/mx-space/server-next/compare/v3.6.6...v3.6.7) (2021-09-20)
+
+
+### Bug Fixes
+
+* jest parse json error ([997d84c](https://github.com/mx-space/server-next/commit/997d84cf150b9a3e08fafacd56f3ba6adc5b463b))
+* pageproxy cache entty ([b36badc](https://github.com/mx-space/server-next/commit/b36badc081576d32a6aa59e3d1d966c295708a55))
+
+
+
 ## [3.6.6](https://github.com/mx-space/server-next/compare/v3.6.5...v3.6.6) (2021-09-20)
 
 
