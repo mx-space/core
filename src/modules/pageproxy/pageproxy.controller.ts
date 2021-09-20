@@ -35,7 +35,12 @@ export class PageProxyController {
       return '<h1>Admin Proxy is disabled</h1>'
     }
     const indexEntryUrl = `https://raw.githubusercontent.com/mx-space/admin-next/gh-pages/index.html`
-    let entry = await (await fetch(indexEntryUrl)).text()
+    const indexEntryCdnUrl = `https://cdn.jsdelivr.net/gh/mx-space/admin-next@gh-pages/index.html?t=${+new Date()}`
+    let entry = await Promise.race([
+      // 龟兔赛跑, 乌龟先跑
+      (await fetch(indexEntryUrl)).text(),
+      sleep(1000).then(async () => (await fetch(indexEntryCdnUrl)).text()),
+    ])
     entry = entry.replace(
       `<!-- injectable script -->`,
       `<script>${`window.injectData = ${JSON.stringify({

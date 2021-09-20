@@ -7,6 +7,7 @@ import { Interval } from '@nestjs/schedule'
 import { ReturnModelType } from '@typegoose/typegoose'
 import { cloneDeep } from 'lodash'
 import { InjectModel } from 'nestjs-typegoose'
+import { API_VERSION } from '~/app.config'
 import { sleep } from '~/utils/index.util'
 import { UserService } from '../user/user.service'
 import { BackupOptionsDto, MailOptionsDto } from './configs.dto'
@@ -15,14 +16,16 @@ import { OptionModel } from './configs.model'
 
 const generateDefaultConfig: () => IConfig = () => ({
   seo: {
-    title: 'mx-space',
-    description: 'Hello World~',
+    title: '我的小世界呀',
+    description: '哈喽~欢迎光临',
   },
   url: {
-    wsUrl: 'http://localhost:2333', //todo
-    adminUrl: 'http://localhost:9528',
-    serverUrl: 'http://localhost:2333',
-    webUrl: 'http://localhost:2323',
+    wsUrl: 'http://127.0.0.1:2333', //todo
+    adminUrl: 'http://127.0.0.1:9528',
+    serverUrl: isDev
+      ? 'http://127.0.0.1:2333'
+      : 'http://127.0.0.1:2333/api/v' + API_VERSION,
+    webUrl: 'http://127.0.0.1:2323',
   },
   mailOptions: {} as MailOptionsDto,
   commentOptions: { antiSpam: false },

@@ -6,7 +6,7 @@ import { NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { argv } from 'yargs'
-import { CROSS_DOMAIN } from './app.config'
+import { API_VERSION, CROSS_DOMAIN } from './app.config'
 import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapt/fastify'
 import { SpiderGuard } from './common/guard/spider.guard'
@@ -15,7 +15,6 @@ import { MyLogger } from './processors/logger/logger.service'
 
 const PORT: number = +argv.port || 2333
 
-const APIVersion = 2
 const Origin = CROSS_DOMAIN.allowedOrigins
 
 declare const module: any
@@ -38,7 +37,7 @@ async function bootstrap() {
     credentials: true,
   })
 
-  app.setGlobalPrefix(isDev ? '' : `api/v${APIVersion}`, {
+  app.setGlobalPrefix(isDev ? '' : `api/v${API_VERSION}`, {
     exclude: [{ path: '/qaqdmin', method: RequestMethod.GET }],
   })
   app.useGlobalInterceptors(new LoggingInterceptor())
@@ -58,7 +57,7 @@ async function bootstrap() {
     const options = new DocumentBuilder()
       .setTitle('API')
       .setDescription('The blog API description')
-      .setVersion(`${APIVersion}`)
+      .setVersion(`${API_VERSION}`)
       .addSecurity('bearer', {
         type: 'http',
         scheme: 'bearer',
