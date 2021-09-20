@@ -6,6 +6,7 @@ export enum RedisKeys {
   MaxOnlineCount = 'max_online_count',
   IpInfoMap = 'ip_info_map',
   LikeSite = 'like_site',
+  AdminPage = 'admin_next_index_entry',
 }
 
 export enum RedisItems {
