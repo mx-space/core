@@ -1,3 +1,12 @@
+## [3.6.8](https://github.com/mx-space/server-next/compare/v3.6.7...v3.6.8) (2021-09-20)
+
+
+### Features
+
+* pageproxy debug mode ([8b7532d](https://github.com/mx-space/server-next/commit/8b7532dc3d28fb7d9f9f0cdcb22b8f408fe7f19f))
+
+
+
 ## [3.6.7](https://github.com/mx-space/server-next/compare/v3.6.6...v3.6.7) (2021-09-20)
 
 
