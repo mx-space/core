@@ -1,3 +1,13 @@
+## [3.6.9](https://github.com/mx-space/server-next/compare/v3.6.8...v3.6.9) (2021-09-20)
+
+
+### Bug Fixes
+
+* counting interceptor error in gql request ([bc65a2e](https://github.com/mx-space/server-next/commit/bc65a2ef136ada8aecd646ff8937a31690ad713e))
+* **deps:** pin dependency fastify-secure-session to 2.3.1 ([8d463b2](https://github.com/mx-space/server-next/commit/8d463b2f1994a852c89ea9992c95d94f3e1ffe75))
+
+
+
 ## [3.6.8](https://github.com/mx-space/server-next/compare/v3.6.7...v3.6.8) (2021-09-20)
 
 
