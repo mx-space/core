@@ -165,7 +165,6 @@ ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> HttpCa
   1. [User] 用户
 
 - [核心辅助模块 processors](https://github.com/mx-space/server-next/tree/master/src/processors)
-
   1. [cache] Redis 缓存相关
   1. [database] 数据库相关
   1. [gateway] Socket.IO 相关
@@ -175,12 +174,10 @@ ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> HttpCa
   1. [helper] 辅助类
   1. [CountingService] 提供更新阅读计数
   1. [CronService] 维护管理计划任务
-
-     - 自动备份
-     - 推送百度搜索
-     - 清除缓存
-     - etc.
-
+      - 自动备份
+      - 推送百度搜索
+      - 清除缓存
+      - etc.
   1. [EmailService] 送信服务
   1. [HttpService] 请求模块
   1. [ImageService] 图片处理
