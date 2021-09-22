@@ -12,9 +12,9 @@ const beforeHooks = PKG.bump?.before || []
 const afterHooks = PKG.bump?.after || []
 
 const releaseTypes = [
-  'major',
-  'minor',
   'patch',
+  'minor',
+  'major',
   'premajor',
   'preminor',
   'prepatch',

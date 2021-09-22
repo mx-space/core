@@ -1,7 +1,4 @@
 set -e
-git pull --rebase
-pnpm i
-yarn version --no-git-tag-version
 tag=v$(json -f package.json version)
 yarn changelog
 git add .
