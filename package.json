@@ -40,7 +40,23 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "patch": "node bin/patch.js",
     "docs": "npx @compodoc/compodoc -p tsconfig.json -s -d docs",
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
+    "bump": "node scripts/bump-version.js"
+  },
+  "bump": {
+    "before": [
+      "git pull --rebase",
+      "pnpm i"
+    ],
+    "after": [
+      "tag=v$(json -f package.json version)",
+      "yarn changelog",
+      "git add .",
+      "git commit -a -m \"release: $tag\" &>/dev/null",
+      "git push",
+      "git tag -a \"$tag\" -m \"Release $tag\" &>/dev/null",
+      "git push --tags"
+    ]
   },
   "dependencies": {
     "@algolia/client-search": "*",
@@ -107,6 +123,7 @@
     "zx": "4.2.0"
   },
   "devDependencies": {
+    "semver": "*",
     "@innei-util/eslint-config-ts": "latest",
     "@innei-util/prettier": "latest",
     "@nestjs/cli": "8.1.1",
