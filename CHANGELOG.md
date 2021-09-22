@@ -1,3 +1,12 @@
+## [3.6.10](https://github.com/mx-space/server-next/compare/v3.6.9...v3.6.10) (2021-09-22)
+
+
+### Bug Fixes
+
+* mkdir first ([a1d5666](https://github.com/mx-space/server-next/commit/a1d5666a8de5c0c9f11276cb94819fec017c1d92))
+
+
+
 ## [3.6.9](https://github.com/mx-space/server-next/compare/v3.6.8...v3.6.9) (2021-09-20)
 
 
