@@ -9,7 +9,7 @@ const PKG_PATH = join(process.cwd(), './package.json')
 const PKG = JSON.parse(readFileSync(PKG_PATH))
 
 const beforeHooks = PKG.bump?.before || []
-const afterHooks = PKG.bump?.before || []
+const afterHooks = PKG.bump?.after || []
 
 const releaseTypes = [
   'major',
@@ -31,6 +31,19 @@ function generateReleaseTypes(currentVersion, types, pried = 'alpha') {
   })
 }
 
+function execCmd(cmds) {
+  for (const cmd of cmds) {
+    console.log(chalk.green(`Running: ${cmd}`))
+    try {
+      execSync(cmd, { encoding: 'utf8' })
+    } catch (e) {
+      console.log(chalk.red(`Error running command: ${cmd}`))
+      console.log(chalk.yellow(`${e.stderr}`))
+      return
+    }
+  }
+}
+
 async function main() {
   console.log(chalk.yellow('Current Version: ' + PKG.version))
 
@@ -44,28 +57,11 @@ async function main() {
   PKG.version = newVersion
   console.log(chalk.green('Running before hooks.'))
 
-  for (const cmd of beforeHooks) {
-    try {
-      execSync(cmd, { encoding: 'utf8' })
-    } catch (e) {
-      console.log(chalk.red(`Error running command: ${cmd}`))
-      console.log(chalk.yellow(`${e.stderr}`))
-      return
-    }
-  }
+  execCmd(beforeHooks)
 
   writeFileSync(PKG_PATH, JSON.stringify(PKG, null, 2))
 
   console.log(chalk.green('Running after hooks.'))
-
-  for (const cmd of afterHooks) {
-    try {
-      execSync(cmd, { encoding: 'utf-8' })
-    } catch (e) {
-      console.log(chalk.red(`Error running command: ${cmd}`))
-      console.log(chalk.yellow(`${e.stderr}`))
-      return
-    }
-  }
+  execCmd(afterHooks)
 }
 main()
