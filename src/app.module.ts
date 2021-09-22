@@ -1,4 +1,5 @@
 import {
+  Logger,
   MiddlewareConsumer,
   Module,
   NestModule,
@@ -7,6 +8,7 @@ import {
 import { ConfigModule } from '@nestjs/config'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { GraphQLModule } from '@nestjs/graphql'
+import { mkdirSync } from 'fs'
 import { join } from 'path/posix'
 import { AppController } from './app.controller'
 import { AppResolver } from './app.resolver'
@@ -21,6 +23,7 @@ import {
 import { AnalyzeMiddleware } from './common/middlewares/analyze.middleware'
 import { SkipBrowserDefaultRequestMiddleware } from './common/middlewares/favicon.middleware'
 import { SecurityMiddleware } from './common/middlewares/security.middleware'
+import { DATA_DIR, LOGGER_DIR, TEMP_DIR } from './constants/path.constant'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
@@ -50,10 +53,20 @@ import { DbModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
 
+// FIXME
+function mkdirs() {
+  mkdirSync(DATA_DIR, { recursive: true })
+  Logger.log(chalk.blue('数据目录已经建好: ' + DATA_DIR))
+  mkdirSync(TEMP_DIR, { recursive: true })
+  Logger.log(chalk.blue('临时目录已经建好: ' + TEMP_DIR))
+  mkdirSync(LOGGER_DIR, { recursive: true })
+  Logger.log(chalk.blue('日志目录已经建好: ' + LOGGER_DIR))
+}
+mkdirs()
+
 @Module({
   imports: [
     DbModule,
-    InitModule,
     CacheModule,
     ConfigModule.forRoot({
       envFilePath: [
@@ -81,6 +94,7 @@ import { HelperModule } from './processors/helper/helper.module'
     ConfigsModule,
     FeedModule,
     HealthModule,
+    InitModule,
     LinkModule,
     MarkdownModule,
     NoteModule,
