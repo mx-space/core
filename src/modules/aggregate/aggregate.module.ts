@@ -7,6 +7,7 @@ import { LinkModule } from '../link/link.module'
 import { NoteModule } from '../note/note.module'
 import { PageModule } from '../page/page.module'
 import { PostModule } from '../post/post.module'
+import { RecentlyModule } from '../recently/recently.module'
 import { SayModule } from '../say/say.module'
 import { AggregateController } from './aggregate.controller'
 import { AggregateService } from './aggregate.service'
@@ -20,6 +21,7 @@ import { AggregateService } from './aggregate.service'
     forwardRef(() => SayModule),
     forwardRef(() => CommentModule),
     forwardRef(() => LinkModule),
+    forwardRef(() => RecentlyModule),
 
     AnalyzeModule,
     GatewayModule,

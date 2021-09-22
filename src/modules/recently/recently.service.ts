@@ -16,6 +16,10 @@ export class RecentlyService {
     return this.recentlyModel
   }
 
+  async getAll() {
+    return this.model.find().sort({ created: -1 }).lean()
+  }
+
   async getOffset({
     before,
     size,

@@ -19,5 +19,6 @@ export class RecentlyModel extends BaseModel {
   project?: string
   @prop()
   @IsString()
+  @IsOptional()
   language?: string
 }

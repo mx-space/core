@@ -3,7 +3,6 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common'
-import { Interval } from '@nestjs/schedule'
 import { ReturnModelType } from '@typegoose/typegoose'
 import { cloneDeep } from 'lodash'
 import { InjectModel } from 'nestjs-typegoose'
@@ -98,13 +97,13 @@ export class ConfigsService {
   }
 
   // 10 分钟自动同步一次
-  @Interval(1000 * 60 * 10)
-  private async syncConfig() {
-    this.configInitd = false
-    this.config = generateDefaultConfig() as any
-    await this.configInit()
-    this.logger.log('Config 已经同步完毕！')
-  }
+  // @Interval(1000 * 60 * 10)
+  // private async syncConfig() {
+  //   this.configInitd = false
+  //   this.config = generateDefaultConfig() as any
+  //   await this.configInit()
+  //   this.logger.log('Config 已经同步完毕！')
+  // }
 
   public get<T extends keyof IConfig>(key: T): Readonly<IConfig[T]> {
     if (!this.configInitd) {

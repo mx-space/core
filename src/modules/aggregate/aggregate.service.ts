@@ -20,6 +20,7 @@ import { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
 import { PostService } from '../post/post.service'
+import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
 import { TimelineType } from './aggregate.dto'
 import { RSSProps } from './aggregate.interface'
@@ -44,6 +45,8 @@ export class AggregateService {
     private readonly commentService: CommentService,
     @Inject(forwardRef(() => LinkService))
     private readonly linkService: LinkService,
+    @Inject(forwardRef(() => RecentlyService))
+    private readonly recentlyService: RecentlyService,
 
     private readonly configs: ConfigsService,
     private readonly gateway: WebEventsGateway,
@@ -306,6 +309,7 @@ export class AggregateService {
       links,
       linkApply,
       categories,
+      recently,
     ] = await Promise.all([
       this.postService.model.countDocuments(),
       this.noteService.model.countDocuments(),
@@ -328,6 +332,7 @@ export class AggregateService {
         state: LinkState.Audit,
       }),
       this.categoryService.model.countDocuments({}),
+      this.recentlyService.model.countDocuments({}),
     ])
 
     const [todayMaxOnline, todayOnlineTotal] = await Promise.all([
@@ -347,6 +352,7 @@ export class AggregateService {
       pages,
       posts,
       says,
+      recently,
       unreadComments,
       online,
       todayMaxOnline: todayMaxOnline || 0,

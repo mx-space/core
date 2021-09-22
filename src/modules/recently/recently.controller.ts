@@ -17,7 +17,7 @@ import { OffsetDto } from '~/shared/dto/pager.dto'
 import { RecentlyModel } from './recently.model'
 import { RecentlyService } from './recently.service'
 
-@Controller('recently')
+@Controller(['recently', 'shorthand'])
 @ApiName
 export class RecentlyController {
   constructor(private readonly recentlyService: RecentlyService) {}
@@ -25,6 +25,11 @@ export class RecentlyController {
   @Get('/latest')
   async getLatestOne() {
     return await this.recentlyService.getLatestOne()
+  }
+
+  @Get('/all')
+  getAll() {
+    return this.recentlyService.getAll()
   }
 
   @Get('/')
