@@ -68,11 +68,13 @@ async function bootstrap() {
     SwaggerModule.setup('api-docs', app, document)
   }
 
-  await app.listen(PORT, '0.0.0.0', () => {
+  await app.listen(PORT, '0.0.0.0', async () => {
     if (isDev) {
-      Logger.debug(`OpenApi: http://localhost:${PORT}/api-docs`)
-      Logger.debug(`GraphQL playground: http://localhost:${PORT}/graphql`)
-      Logger.debug(`Admin Dashboard: http://localhost:${PORT}/qaqdmin`)
+      const url = await app.getUrl()
+      Logger.debug(`OpenApi: ${url}/api-docs`)
+      Logger.debug(`GraphQL playground: ${url}/graphql`)
+      Logger.debug(`Admin Dashboard: ${url}/qaqdmin`)
+      Logger.debug(`Server listen on: ${url}`)
     }
 
     Logger.log('Server is up.')

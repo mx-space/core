@@ -1,9 +1,8 @@
+#!/usr/bin/env zx
 // @ts-check
-const { $, cd, fetch, nothrow } = require('zx')
-const fs = require('fs')
-const { sleep } = require('zx')
-const { homedir } = require('os')
-const path = require('path')
+const { cd, $, os, fs, path, fetch, nothrow, sleep } = require('zx')
+const { homedir } = os
+
 const owner = 'mx-space'
 const repo = 'server-next'
 
