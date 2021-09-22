@@ -24,15 +24,22 @@
 
 ## 快速开始
 
-需要安装:
+需要以下环境:
 
 - Node.js 16.10+
 - MongoDB
 - Redis
 
-你的系统是 Ubuntu 18+
+使用构建好的版本你的系统必须是 Linux (test on Ubuntu 18, Ubuntu 20, CentOS 8)
 
-下载 [release](https://github.com/mx-space/server-next/releases/latest)，之后解压然后
+```sh
+curl https://cdn.jsdelivr.net/gh/mx-space/server-next@master/scripts/download-latest-asset.js >> download.js
+zx ./download.js
+cd mx-server
+node index.js
+```
+
+或者手动下载 [release](https://github.com/mx-space/server-next/releases/latest)，之后解压然后
 
 ```
 node index.js
