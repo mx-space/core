@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 import { dump } from 'js-yaml'
 import JSZip from 'jszip'
@@ -8,6 +8,7 @@ import { Types } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import xss from 'xss'
 import { DatabaseService } from '~/processors/database/database.service'
+import { AssetService } from '~/processors/helper/hepler.asset.service'
 import { CategoryModel } from '../category/category.model'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
@@ -16,8 +17,9 @@ import { DatatypeDto } from './markdown.dto'
 import { MarkdownYAMLProperty } from './markdown.interface'
 @Injectable()
 export class MarkdownService {
-  private logger: Logger
   constructor(
+    private readonly assetService: AssetService,
+
     @InjectModel(CategoryModel)
     private readonly categoryModel: ReturnModelType<typeof CategoryModel>,
     @InjectModel(PostModel)
@@ -28,9 +30,7 @@ export class MarkdownService {
     private readonly pageModel: ReturnModelType<typeof PageModel>,
 
     private readonly databaseService: DatabaseService,
-  ) {
-    this.logger = new Logger(MarkdownService.name)
-  }
+  ) {}
 
   async insertPostsToDb(data: DatatypeDto[]) {
     let count = 1
@@ -309,5 +309,28 @@ ${text.trim()}
     })
 
     return marked(text)
+  }
+
+  async getRenderedMarkdownHtmlStructure(html: string, title: string) {
+    const style = await this.assetService.getAsset('markdown.css', {
+      encoding: 'utf8',
+    })
+    return {
+      body: [`<article><h1>${title}</h1>${html}</article>`],
+      extraScripts: [
+        '<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>',
+        '<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/highlight.min.js"></script>',
+      ],
+      script: [
+        `window.mermaid.initialize({theme: 'default',startOnLoad: false})`,
+        `window.mermaid.init(undefined, '.mermaid')`,
+        `document.addEventListener('DOMContentLoaded', (event) => {document.querySelectorAll('pre code').forEach((el) => {hljs.highlightElement(el);});})`,
+      ],
+      link: [
+        '<link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/styles/default.min.css">',
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mx-space/assets@master/newsprint.css">',
+      ],
+      style: [style],
+    }
   }
 }

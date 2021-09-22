@@ -4,18 +4,16 @@ import {
   Get,
   HttpCode,
   Post,
-  Req,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
-import { FastifyReply } from 'fastify'
 import { InjectModel } from 'nestjs-typegoose'
 import PKG from '../package.json'
 import { Auth } from './common/decorator/auth.decorator'
 import { HttpCache } from './common/decorator/cache.decorator'
+import { IpLocation, IpRecord } from './common/decorator/ip.decorator'
 import { RedisKeys } from './constants/cache.constant'
 import { OptionModel } from './modules/configs/configs.model'
 import { CacheService } from './processors/cache/cache.service'
-import { getIp } from './utils/ip.util'
 import { getRedisKey } from './utils/redis.util'
 @Controller()
 @ApiTags('Root')
@@ -55,11 +53,7 @@ export class AppController {
   @Post('/like_this')
   @HttpCache.disable
   @HttpCode(204)
-  async likeThis(
-    @Req()
-    req: FastifyReply,
-  ) {
-    const ip = getIp(req as any)
+  async likeThis(@IpLocation() { ip }: IpRecord) {
     const redis = this.cacheService.getClient()
 
     const isLikedBefore = await redis.sismember(

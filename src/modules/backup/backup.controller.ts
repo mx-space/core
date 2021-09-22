@@ -2,17 +2,18 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   Param,
   Patch,
   Post,
   Query,
   Req,
-  Res,
   Scope,
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { ApiProperty, ApiResponseProperty } from '@nestjs/swagger'
-import { FastifyReply, FastifyRequest } from 'fastify'
+import dayjs from 'dayjs'
+import { FastifyRequest } from 'fastify'
 import { Readable } from 'stream'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
@@ -33,20 +34,19 @@ export class BackupController {
 
   @Get('/new')
   @ApiResponseProperty({ type: 'string', format: 'binary' })
+  @Header(
+    'Content-Disposition',
+    `attachment; filename="backup-${dayjs().format('DD/MM/YYYY')}.zip"`,
+  )
+  @Header('Content-Type', 'application/zip')
   @HTTPDecorators.Bypass
-  async createNewBackup(@Res() res: FastifyReply) {
+  async createNewBackup() {
     const buffer = await this.cronService.backupDB({ uploadCOS: false })
     const stream = new Readable()
 
     stream.push(buffer)
     stream.push(null)
-    res
-      .header(
-        'Content-Disposition',
-        `attachment; filename="backup-${new Date().toISOString()}.zip"`,
-      )
-      .type('application/zip')
-      .send(stream)
+    return stream
   }
 
   @Get('/')
@@ -55,9 +55,10 @@ export class BackupController {
   }
 
   @HTTPDecorators.Bypass
+  @Header('Content-Type', 'application/zip')
   @Get('/:dirname')
-  async download(@Param('dirname') dirname: string, @Res() res: FastifyReply) {
-    res.send(this.backupService.getFileStream(dirname))
+  async download(@Param('dirname') dirname: string) {
+    return this.backupService.getFileStream(dirname)
   }
 
   @Post(['/rollback/', '/'])

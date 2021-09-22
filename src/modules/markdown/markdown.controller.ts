@@ -7,11 +7,9 @@ import {
   Param,
   Post,
   Query,
-  Res,
 } from '@nestjs/common'
-import { ApiProperty, ApiQuery } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 import dayjs from 'dayjs'
-import { FastifyReply } from 'fastify'
 import { minify } from 'html-minifier'
 import JSZip from 'jszip'
 import { join } from 'path'
@@ -21,6 +19,7 @@ import { URL } from 'url'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
+import { ArticleTypeEnum } from '~/constants/article.constant'
 import { AssetService } from '~/processors/helper/hepler.asset.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { CategoryModel } from '../category/category.model'
@@ -28,7 +27,7 @@ import { ConfigsService } from '../configs/configs.service'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
-import { ArticleType, DataListDto } from './markdown.dto'
+import { DataListDto, ExportMarkdownQueryDto } from './markdown.dto'
 import { MarkdownYAMLProperty } from './markdown.interface'
 import { MarkdownService } from './markdown.service'
 
@@ -44,15 +43,15 @@ export class MarkdownController {
 
   @Post('/import')
   @Auth()
-  @ApiProperty({ description: '导入 Markdown with YAML 数据' })
+  @ApiProperty({ description: '导入 Markdown YAML 数据' })
   async importArticle(@Body() body: DataListDto) {
     const type = body.type
 
     switch (type) {
-      case ArticleType.Post: {
+      case ArticleTypeEnum.Post: {
         return await this.service.insertPostsToDb(body.data)
       }
-      case ArticleType.Note: {
+      case ArticleTypeEnum.Note: {
         return await this.service.insertNotesToDb(body.data)
       }
     }
@@ -60,21 +59,11 @@ export class MarkdownController {
 
   @Get('/export')
   @Auth()
-  @ApiProperty({ description: '导出 Markdown with YAML 数据' })
-  @ApiQuery({
-    description: '导出的 md 文件名是否为 slug',
-    name: 'slug',
-    required: false,
-    enum: ['0', '1'],
-  })
+  @ApiProperty({ description: '导出 Markdown YAML 数据' })
   @HTTPDecorators.Bypass
-  async exportArticleToMarkdown(
-    @Res() reply: FastifyReply,
-    @Query('slug') slug: string,
-    @Query('yaml') yaml?: boolean,
-    // 是否在第一行显示 文章标题
-    @Query('show_title') showTitle?: boolean,
-  ) {
+  @Header('Content-Type', 'application/zip')
+  async exportArticleToMarkdown(@Query() query: ExportMarkdownQueryDto) {
+    const { show_title: showTitle, slug, yaml } = query
     const allArticles = await this.service.extractAllArticle()
     const { notes, pages, posts } = allArticles
 
@@ -110,7 +99,7 @@ export class MarkdownController {
     const convertPost = posts.map((post) =>
       convertor(post, {
         categories: (post.category as CategoryModel).name,
-        type: 'Post',
+        type: 'post',
         permalink: 'posts/' + post.slug,
       }),
     )
@@ -120,13 +109,14 @@ export class MarkdownController {
         weather: note.weather,
         id: note.nid,
         permalink: 'notes/' + note.nid,
-        type: 'Note',
+        type: 'note',
+        slug: note.nid.toString(),
       }),
     )
     const convertPage = pages.map((page) =>
       convertor(page, {
         subtitle: page.subtitle,
-        type: 'Page',
+        type: 'page',
         permalink: page.slug,
       }),
     )
@@ -145,7 +135,7 @@ export class MarkdownController {
         const zip = await this.service.generateArchive({
           documents: arr,
           options: {
-            slug: !!parseInt(slug),
+            slug,
           },
         })
 
@@ -159,13 +149,7 @@ export class MarkdownController {
     readable.push(await rtzip.generateAsync({ type: 'nodebuffer' }))
     readable.push(null)
 
-    reply
-      .header(
-        'Content-Disposition',
-        `attachment; filename="markdown-${new Date().toISOString()}.zip"`,
-      )
-      .type('application/zip')
-      .send(readable)
+    return readable
   }
 
   @Get('/render/:id')
@@ -173,38 +157,39 @@ export class MarkdownController {
   @HTTPDecorators.Bypass
   @CacheTTL(60 * 60)
   async renderArticle(@Param() params: MongoIdDto) {
-    try {
-      const { id } = params
-      const now = performance.now()
-      const {
-        html: markdown,
-        document,
-        type,
-      } = await this.service.renderArticle(id)
+    const { id } = params
+    const now = performance.now()
+    const {
+      html: markdown,
+      document,
+      type,
+    } = await this.service.renderArticle(id)
 
-      const style = await this.assetService.getAsset('markdown.css', {
-        encoding: 'utf8',
-      })
+    const relativePath = (() => {
+      switch (type.toLowerCase()) {
+        case 'post':
+          return `/posts/${((document as PostModel).category as any).slug}/${
+            (document as PostModel).slug
+          }`
+        case 'note':
+          return `/notes/${(document as NoteModel).nid}`
+        case 'page':
+          return `/${(document as PageModel).slug}`
+      }
+    })()
+    const {
+      url: { webUrl },
+    } = await this.configs.waitForConfigReady()
+    const url = new URL(relativePath, webUrl)
 
-      const relativePath = (() => {
-        switch (type.toLowerCase()) {
-          case 'post':
-            return `/posts/${((document as PostModel).category as any).slug}/${
-              (document as PostModel).slug
-            }`
-          case 'note':
-            return `/notes/${(document as NoteModel).nid}`
-          case 'page':
-            return `/${(document as PageModel).slug}`
-        }
-      })()
-      const {
-        url: { webUrl },
-      } = await this.configs.waitForConfigReady()
-      const url = new URL(relativePath, webUrl)
+    const { style, link, script, extraScripts, body } =
+      await this.service.getRenderedMarkdownHtmlStructure(
+        markdown,
+        document.title,
+      )
 
-      const html = minify(
-        `
+    const html = minify(
+      `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -213,54 +198,43 @@ export class MarkdownController {
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
         <meta name="referrer" content="no-referrer">
         <style>
-          ${style}
+          ${style.join('\n')}
         </style>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mx-space/assets@master/newsprint.css">
+        ${link.join('\n')}
         <title>${document.title}</title>
       </head>
       <body>
-      <article>
-        <h1>${document.title}</h1>
-        ${markdown}
-        </article>
+     ${body.join('\n')}
         </body>
         <footer style="text-align: right; padding: 2em 0;">
         <p>本文渲染于 ${dayjs().format('llll')}，用时 ${
-          performance.now() - now
-        }ms</p>
+        performance.now() - now
+      }ms</p>
         <p>原文地址：<a href="${url}">${decodeURIComponent(
-          url.toString(),
-        )}</a></p>
+        url.toString(),
+      )}</a></p>
         </footer>
-      <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-      <link rel="stylesheet"
-      href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/styles/default.min.css">
-      <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/highlight.min.js"></script>
+      ${extraScripts.join('\n')}
       <script>
-      window.mermaid.initialize({
-        theme: 'default',
-        startOnLoad: false,
-      })
-      window.mermaid.init(undefined, '.mermaid')
-  
-      document.addEventListener('DOMContentLoaded', (event) => {
-        document.querySelectorAll('pre code').forEach((el) => {
-          hljs.highlightElement(el);
-        });
-      });
+      ${script.join(';')}
       </script>
       </html>
     `,
-        {
-          removeAttributeQuotes: true,
-          removeComments: true,
-          minifyCSS: true,
-          collapseWhitespace: true,
-        },
-      )
-      return html
-    } catch {
-      return `404`
-    }
+      {
+        removeAttributeQuotes: true,
+        removeComments: true,
+        minifyCSS: true,
+        collapseWhitespace: true,
+      },
+    )
+    return html
+  }
+
+  @Get('/render/structure/:id')
+  @CacheTTL(60 * 60)
+  async getRenderedMarkdownHtmlStructure(@Param() params: MongoIdDto) {
+    const { id } = params
+    const { html, document } = await this.service.renderArticle(id)
+    return this.service.getRenderedMarkdownHtmlStructure(html, document.title)
   }
 }

@@ -14,8 +14,7 @@ import {
   writeFileSync,
 } from 'fs'
 import mkdirp from 'mkdirp'
-import { resolve } from 'path'
-import { join } from 'path/posix'
+import { join, resolve } from 'path'
 import { Readable } from 'stream'
 import { MONGO_DB } from '~/app.config'
 import { BACKUP_DIR } from '~/constants/path.constant'
