@@ -1,3 +1,14 @@
+## [3.6.11](https://github.com/mx-space/server-next/compare/v3.6.10...v3.6.11) (2021-09-22)
+
+
+### Bug Fixes
+
+* bump script ([3a4663a](https://github.com/mx-space/server-next/commit/3a4663ab7819ac8aaf61d8611c0921afa06102cb))
+* recently & remove sync config ([3f10589](https://github.com/mx-space/server-next/commit/3f10589ad9928d986609972f76d3a4beae6389b5))
+* unqi ip and spam keyword ([a86ebf9](https://github.com/mx-space/server-next/commit/a86ebf9d9f370fd177239750245ae2da09f40a74))
+
+
+
 ## [3.6.10](https://github.com/mx-space/server-next/compare/v3.6.9...v3.6.10) (2021-09-22)
 
 
