@@ -5,11 +5,6 @@ services:
     container_name: mx-server
     image: innei/mx-server:latest
     restart: 'on-failure'
-    build:
-      context: .
-      args:
-        redis_host: 'redis'
-        db_host: 'mongo'
     ports:
       - '2333:2333'
     depends_on:
