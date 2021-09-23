@@ -3,8 +3,8 @@ version: '3.8'
 services:
   app:
     container_name: mx-server
-    image: innei/mx-server:0.2.1
-    restart: 'unless-stopped'
+    image: innei/mx-server:latest
+    restart: 'on-failure'
     build:
       context: .
       args:
