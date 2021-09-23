@@ -47,6 +47,17 @@ node index.js
 
 所有的依赖都打包进了文件无需 node_modules
 
+## Docker 部署
+
+
+```bash
+cd
+mkdir -p mx/server
+cd mx/server
+wget https://cdn.jsdelivr.net/gh/mx-space/server-next@master/docker-compose.yml
+docker-compose up -d
+```
+
 ## 项目结构
 
 ```
