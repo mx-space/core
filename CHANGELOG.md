@@ -1,3 +1,12 @@
+## [3.6.15](https://github.com/mx-space/server-next/compare/v3.6.14...v3.6.15) (2021-09-23)
+
+
+### Bug Fixes
+
+* rss & sitemap cache ([a6d0812](https://github.com/mx-space/server-next/commit/a6d08122ae8f308cb249211e8ff3b9705e8983bc))
+
+
+
 ## [3.6.14](https://github.com/mx-space/server-next/compare/v3.6.13...v3.6.14) (2021-09-23)
 
 
