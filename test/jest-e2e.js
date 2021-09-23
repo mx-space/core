@@ -2,18 +2,16 @@
 const { pathsToModuleNameMapper } = require('ts-jest/utils')
 // In the following statement, replace `./tsconfig` with the path to your `tsconfig` file
 // which contains the path mapping (ie the `compilerOptions.paths` option):
-const { compilerOptions } = require('./tsconfig.json')
-const { cd, $, chalk } = require('zx')
+const { compilerOptions } = require('../tsconfig.json')
+const { $, chalk, cd } = require('zx')
 module.exports = {
   moduleFileExtensions: ['js', 'json', 'ts'],
-  rootDir: '.',
-  testRegex: '.*\\.spec\\.ts$',
+  rootDir: '..',
+  testEnvironment: 'node',
+  testRegex: '.e2e-spec.ts$',
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
   },
-  collectCoverageFrom: ['**/*.(t|j)s'],
-  coverageDirectory: '../coverage',
-  testEnvironment: 'node',
   globals: {
     isDev: process.env.NODE_ENV === 'development',
     $,
