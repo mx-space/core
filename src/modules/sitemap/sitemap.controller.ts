@@ -1,7 +1,8 @@
-import { CacheTTL, Controller, Get, Header } from '@nestjs/common'
+import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
 import { minify } from 'html-minifier'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
+import { CacheKeys } from '~/constants/cache.constant'
 import { AggregateService } from '../aggregate/aggregate.service'
 @Controller('sitemap')
 @ApiName
@@ -10,6 +11,7 @@ export class SitemapController {
 
   @Get('/')
   @CacheTTL(3600)
+  @CacheKey(CacheKeys.SiteMapXmlCatch)
   @HTTPDecorators.Bypass
   @Header('content-type', 'application/xml')
   async getSitemap() {

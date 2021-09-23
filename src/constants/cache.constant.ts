@@ -13,9 +13,10 @@ export enum RedisItems {
   Ips = 'ips',
 }
 
-export const CacheKeys = Object.freeze({
-  AggregateCatch: 'mx-api-cache:aggregate_catch',
-  SiteMapCatch: 'mx-api-cache:aggregate_sitemap_catch',
-  RSS: 'mx-api-cache:rss',
-  RSSCatch: 'mx-api-cache:rss_catch',
-} as const)
+export enum CacheKeys {
+  AggregateCatch = 'mx-api-cache:aggregate_catch',
+  SiteMapCatch = 'mx-api-cache:aggregate_sitemap_catch',
+  SiteMapXmlCatch = 'mx-api-cache:aggregate_sitemap_xml_catch',
+  RSS = 'mx-api-cache:rss',
+  RSSXmlCatch = 'mx-api-cache:rss_xml_catch',
+}

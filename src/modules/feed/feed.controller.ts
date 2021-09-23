@@ -18,7 +18,7 @@ export class FeedController {
   ) {}
 
   @Get('/')
-  @CacheKey(CacheKeys.RSSCatch)
+  @CacheKey(CacheKeys.RSSXmlCatch)
   @CacheTTL(3600)
   @HTTPDecorators.Bypass
   @Header('content-type', 'application/xml')
@@ -27,18 +27,20 @@ export class FeedController {
       await this.aggregateService.buildRssStructure()
     const { title } = this.configs.get('seo')
     const { avatar } = await this.configs.getMaster()
+    const now = new Date()
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
     <feed xmlns="http://www.w3.org/2005/Atom">
       <title>${title}</title>
       <link href="/atom.xml" rel="self"/>
       <link href="/feed" rel="self"/>
       <link href="${xss(url)}"/>
-      <updated>${new Date().toISOString()}</updated>
+      <updated>${now.toISOString()}</updated>
       <id>${xss(url)}</id>
       <author>
         <name>${author}</name>
       </author>
       <generator>${'Mix Space CMS'}</generator>
+      <lastBuildDate>${now.toISOString()}</lastBuildDate>
       <language>zh-CN</language>
       <image>
           <url>${xss(avatar)}</url>

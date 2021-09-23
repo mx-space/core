@@ -51,9 +51,10 @@ export class CacheService {
   public clearAggregateCache() {
     return Promise.all([
       this.redisClient.del(CacheKeys.RSS),
-      this.redisClient.del(CacheKeys.SiteMapCatch),
+      this.redisClient.del(CacheKeys.RSSXmlCatch),
       this.redisClient.del(CacheKeys.AggregateCatch),
       this.redisClient.del(CacheKeys.SiteMapCatch),
+      this.redisClient.del(CacheKeys.SiteMapXmlCatch),
     ])
   }
 }
