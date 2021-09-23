@@ -1,36 +1,34 @@
-FROM node:16 as development
-
-RUN npm i -g pnpm
-
-WORKDIR /usr/src/app
-
-COPY package.json ./
-COPY pnpm-lock.yaml ./
-
-RUN pnpm install glob rimraf
-
-RUN pnpm install --only=development
-
+FROM node:16 as builder
+WORKDIR /app
 COPY . .
-
-RUN pnpm run build
-
-FROM node:16 as production
-
 RUN npm i -g pnpm
+RUN pnpm install
+RUN pnpm bundle
 
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
+FROM node:16
+ARG redis_host
+ARG mongo_host
+RUN apt update
+RUN apt install zip unzip mongo-tools -y
 
-WORKDIR /usr/src/app
+WORKDIR /app
+COPY --from=builder /app/out .
+EXPOSE 2333
+CMD node index.js --redis_host=redis --db_host=mongo
 
-COPY package.json ./
-COPY pnpm-lock.yaml ./
+# FROM node:16-alpine as builder
+# WORKDIR /app
+# COPY . .
+# RUN apk add libtool autoconf automake make g++ python2 python3 --no-cache
+# RUN npm i -g pnpm
+# RUN pnpm install
+# RUN pnpm bundle
 
-RUN pnpm install --only=production
-RUN pnpm install pm2 --D
-COPY . .
+# FROM node:16-alpine
+# RUN apk add zip unzip --no-cache
+# RUN apk add mongodb-tools --no-cache
 
-COPY --from=development /usr/src/app/dist ./dist
-
-CMD ["pm2-prod", "ecosystem.config.js"]
+# WORKDIR /app
+# COPY --from=builder /app/out .
+# EXPOSE 2333
+# CMD ["node", "index.js"]
