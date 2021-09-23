@@ -1,3 +1,18 @@
+## [3.6.14](https://github.com/mx-space/server-next/compare/v3.6.13...v3.6.14) (2021-09-23)
+
+
+### Bug Fixes
+
+* build in docker compose ([ce9f4bc](https://github.com/mx-space/server-next/commit/ce9f4bc86ccfbe85849e6672cc8b1fd7f6a0e825))
+* node type error ([4ebc77e](https://github.com/mx-space/server-next/commit/4ebc77e3f99edbe8ec6636655f352214de31edcb))
+
+
+### Features
+
+* docker compose ([6e89b97](https://github.com/mx-space/server-next/commit/6e89b97ee6b6d0a64ea9e95da31930f20a2143de))
+
+
+
 ## [3.6.13](https://github.com/mx-space/server-next/compare/v3.6.12...v3.6.13) (2021-09-22)
 
 
