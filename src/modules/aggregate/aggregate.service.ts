@@ -4,6 +4,7 @@ import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
 import dayjs from 'dayjs'
 import { pick } from 'lodash'
 import { FilterQuery } from 'mongoose'
+import { URL } from 'url'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
@@ -169,7 +170,9 @@ export class AggregateService {
   }
 
   async getSiteMapContent() {
-    const baseURL = this.configs.get('url').webUrl
+    const {
+      url: { webUrl: baseURL },
+    } = await this.configs.waitForConfigReady()
 
     const combineTasks = await Promise.all([
       this.pageService.model
@@ -240,7 +243,9 @@ export class AggregateService {
     }
   }
   async getRSSFeedContent() {
-    const baseURL = this.configs.get('url').webUrl
+    const {
+      url: { webUrl: baseURL },
+    } = await this.configs.waitForConfigReady()
 
     const [posts, notes] = await Promise.all([
       this.postService.model

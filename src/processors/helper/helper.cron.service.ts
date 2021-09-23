@@ -77,7 +77,8 @@ export class CronService {
   @Cron(CronExpression.EVERY_DAY_AT_1AM, { name: 'backupDB' })
   @CronDescription('备份 DB 并上传 COS')
   async backupDB({ uploadCOS = true }: { uploadCOS?: boolean } = {}) {
-    if (!this.configs.get('backupOptions').enable) {
+    const { backupOptions: configs } = await this.configs.waitForConfigReady()
+    if (!configs.enable) {
       return
     }
     this.logger.log('--> 备份数据库中')
@@ -101,11 +102,11 @@ export class CronService {
     }
 
     //  开始上传 COS
-    process.nextTick(() => {
+    process.nextTick(async () => {
       if (!uploadCOS) {
         return
       }
-      const backupOptions = this.configs.get('backupOptions')
+      const { backupOptions } = await this.configs.waitForConfigReady()
 
       if (
         !backupOptions.bucket ||
@@ -254,7 +255,8 @@ export class CronService {
   @Cron(CronExpression.EVERY_DAY_AT_NOON, { name: 'pushToAlgoliaSearch' })
   @CronDescription('推送到 Algolia Search')
   async pushToAlgoliaSearch() {
-    const configs = this.configs.get('algoliaSearchOptions')
+    const { algoliaSearchOptions: configs } =
+      await this.configs.waitForConfigReady()
     if (configs.enable) {
       this.logger.log('--> 开始推送到 Algolia')
       const client = algoliasearch(configs.appId, configs.apiKey)

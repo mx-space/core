@@ -3,6 +3,7 @@ import { DocumentType } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import { LeanDocument, Types } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
+import { URL } from 'url'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
@@ -219,7 +220,7 @@ export class CommentService {
           text: model.text,
           author: type === ReplyMailType.Guest ? parent.author : model.author,
           master: master.name,
-          link: this.resolveUrlByType(refType, ref),
+          link: await this.resolveUrlByType(refType, ref),
           time: parsedTime,
           mail: ReplyMailType.Owner === type ? model.mail : master.mail,
           ip: model.ip || '',
@@ -228,8 +229,10 @@ export class CommentService {
     })
   }
 
-  resolveUrlByType(type: CommentRefTypes, model: any) {
-    const base = this.configs.get('url').webUrl
+  async resolveUrlByType(type: CommentRefTypes, model: any) {
+    const {
+      url: { webUrl: base },
+    } = await this.configs.waitForConfigReady()
     switch (type) {
       case CommentRefTypes.Note: {
         return new URL('/notes/' + model.nid, base).toString()

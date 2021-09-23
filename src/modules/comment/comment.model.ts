@@ -1,12 +1,27 @@
-import { modelOptions, pre, prop, Ref } from '@typegoose/typegoose'
-import { Types } from 'mongoose'
+import {
+  DocumentType,
+  modelOptions,
+  pre,
+  prop,
+  Ref,
+} from '@typegoose/typegoose'
+import { BeAnObject } from '@typegoose/typegoose/lib/types'
+import { Query, Types } from 'mongoose'
 import { BaseModel } from '~/shared/model/base.model'
 import { getAvatar } from '~/utils/index.util'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
 
-function autoPopulateSubs(next: () => void) {
+function autoPopulateSubs(
+  this: Query<
+    any,
+    DocumentType<CommentModel, BeAnObject>,
+    {},
+    DocumentType<CommentModel, BeAnObject>
+  >,
+  next: () => void,
+) {
   this.populate({ options: { sort: { created: -1 } }, path: 'children' })
   next()
 }
@@ -23,8 +38,8 @@ export enum CommentState {
   Junk,
 }
 
-@pre<Comment>('findOne', autoPopulateSubs)
-@pre<Comment>('find', autoPopulateSubs)
+@pre<CommentModel>('findOne', autoPopulateSubs)
+@pre<CommentModel>('find', autoPopulateSubs)
 @modelOptions({
   options: {
     customName: 'Comment',
