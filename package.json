@@ -82,8 +82,8 @@
     "dayjs": "1.10.7",
     "dotenv": "*",
     "ejs": "3.1.6",
+    "fastify-cookie": "^5.3.1",
     "fastify-multipart": "5.0.0",
-    "fastify-secure-session": "2.3.1",
     "fastify-swagger": "4.12.0",
     "graphql": "15.5.3",
     "html-minifier": "4.0.0",
@@ -93,7 +93,6 @@
     "jszip": "3.7.1",
     "lodash": "*",
     "marked": "3.0.4",
-    "mdurl": "*",
     "mkdirp": "*",
     "mongoose": "*",
     "mongoose-lean-id": "0.2.0",
@@ -117,7 +116,6 @@
     "zx": "4.2.0"
   },
   "devDependencies": {
-    "semver": "*",
     "@innei-util/eslint-config-ts": "latest",
     "@innei-util/prettier": "latest",
     "@nestjs/cli": "8.1.1",
@@ -148,6 +146,7 @@
     "prettier": "2.4.1",
     "rimraf": "3.0.2",
     "run-script-webpack-plugin": "0.0.11",
+    "semver": "*",
     "socket.io": "*",
     "ts-jest": "27.0.5",
     "ts-loader": "9.2.6",

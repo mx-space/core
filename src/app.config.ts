@@ -47,9 +47,4 @@ export const SECURITY = {
   jwtExpire: '7d',
   // 跳过登陆鉴权
   skipAuth: argv.skipAuth ?? false,
-  get secret() {
-    return this.jwtSecret
-  },
-  // 必须 16 位
-  salt: argv.salt || 'axczswrasxzfqxsa',
 }

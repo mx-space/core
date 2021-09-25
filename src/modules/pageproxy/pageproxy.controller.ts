@@ -1,6 +1,7 @@
-import { Controller, Get, Header, Query, Session } from '@nestjs/common'
-import * as secureSession from 'fastify-secure-session'
+import { Controller, Get, Query, Res } from '@nestjs/common'
+import { FastifyReply } from 'fastify'
 import { API_VERSION } from '~/app.config'
+import { Cookies } from '~/common/decorator/cookie.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
@@ -30,18 +31,20 @@ export class PageProxyController {
   ) {}
 
   @Get('/qaqdmin')
-  @Header('Content-Type', 'text/html')
   @HTTPDecorators.Bypass
   async proxyAdmin(
-    @Session() session: secureSession.Session,
+    @Cookies() cookies: KV<string>,
     @Query() query: PageProxyDebugDto,
+    @Res() reply: FastifyReply,
   ) {
     const {
       adminExtra,
       url: { webUrl },
     } = await this.configs.waitForConfigReady()
     if (!adminExtra.enableAdminProxy && !isDev) {
-      return '<h1>Admin Proxy is disabled</h1>'
+      return reply.type('application/json').status(403).send({
+        message: 'admin proxy not enabled',
+      })
     }
     const {
       __apiUrl: apiUrl,
@@ -49,17 +52,18 @@ export class PageProxyController {
       __onlyGithub: onlyGithub,
       __debug: debug,
     } = query
-    session.options({ maxAge: 1000 * 60 * 10 })
+
     if (apiUrl) {
-      session.set('__apiUrl', apiUrl)
+      reply.setCookie('__apiUrl', apiUrl, { maxAge: 1000 * 60 * 10 })
     }
 
     if (gatewayUrl) {
-      session.set('__gatewayUrl', gatewayUrl)
+      reply.setCookie('__gatewayUrl', gatewayUrl, { maxAge: 1000 * 60 * 10 })
     }
 
     if (debug === false) {
-      session.delete()
+      reply.clearCookie('__apiUrl')
+      reply.clearCookie('__gatewayUrl')
     }
 
     let entry =
@@ -89,10 +93,13 @@ export class PageProxyController {
       ttl: 10 * 60,
     })
 
-    const sessionInjectableData = {
-      BASE_API: session.get('__apiUrl'),
-      GATEWAY: session.get('__gatewayUrl'),
-    }
+    const sessionInjectableData =
+      debug === false
+        ? {}
+        : {
+            BASE_API: apiUrl ?? cookies['__apiUrl'],
+            GATEWAY: gatewayUrl ?? cookies['__gatewayUrl'],
+          }
 
     entry = entry.replace(
       `<!-- injectable script -->`,
@@ -116,6 +123,6 @@ export class PageProxyController {
       }
       </script>`,
     )
-    return entry
+    return reply.type('text/html').send(entry)
   }
 }

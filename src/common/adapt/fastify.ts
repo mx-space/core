@@ -1,7 +1,6 @@
 import { FastifyAdapter } from '@nestjs/platform-fastify'
+import fastifyCookie from 'fastify-cookie'
 import FastifyMultipart from 'fastify-multipart'
-import secureSession from 'fastify-secure-session'
-import { SECURITY } from '~/app.config'
 
 const app: FastifyAdapter = new FastifyAdapter({
   trustProxy: true,
@@ -25,11 +24,6 @@ app.getInstance().addHook('onRequest', (request, reply, done) => {
   done()
 })
 
-app.register(secureSession, {
-  secret: SECURITY.secret.slice(10).repeat(4),
-  salt: SECURITY.salt,
-  cookie: {
-    path: '/',
-    httpOnly: true,
-  },
+app.register(fastifyCookie, {
+  secret: 'cookie-secret', // 这个 secret 不太重要, 不存鉴权相关, 无关紧要
 })
