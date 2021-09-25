@@ -11,6 +11,7 @@ import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { CacheService } from '~/processors/cache/cache.service'
 import { CronService } from '~/processors/helper/helper.cron.service'
+import { TaskQueueService } from '~/processors/helper/helper.tq.service'
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
 
@@ -25,6 +26,7 @@ export class AnalyzeMiddleware implements NestMiddleware {
     private readonly options: ReturnModelType<typeof OptionModel>,
     private readonly cronService: CronService,
     private readonly cacheService: CacheService,
+    private readonly taskService: TaskQueueService,
   ) {
     this.init()
   }
@@ -32,9 +34,9 @@ export class AnalyzeMiddleware implements NestMiddleware {
   init() {
     this.parser = new UAParser()
     this.botListData = this.getLocalBotList()
-    this.cronService.updateBotList().then((res) => {
-      this.botListData = this.pickPattern2Regexp(res)
-    })
+    this.taskService.add(this.cronService.updateBotList.name, async () =>
+      this.cronService.updateBotList(),
+    )
   }
 
   getLocalBotList() {

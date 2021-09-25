@@ -10,11 +10,12 @@ import {
   Post,
   Query,
   Req,
+  UseInterceptors,
 } from '@nestjs/common'
 import { ApiOperation, ApiParam } from '@nestjs/swagger'
 import { DocumentType } from '@typegoose/typegoose'
 import { Auth } from '~/common/decorator/auth.decorator'
-import { HTTPDecorators, Paginator } from '~/common/decorator/http.decorator'
+import { CurrentUser } from '~/common/decorator/current-user.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
@@ -24,15 +25,20 @@ import { SharedGateway } from '~/processors/gateway/shared/events.gateway'
 import { ReplyMailType } from '~/processors/helper/helper.email.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
+import { transformDataToPaginate } from '~/utils/transfrom.util'
+import { UserModel } from '../user/user.model'
 import {
   CommentDto,
   CommentRefTypesDto,
   StateDto,
   TextOnlyDto,
 } from './comment.dto'
+import { CommentFilterEmailInterceptor } from './comment.interceptor'
 import { CommentModel, CommentState } from './comment.model'
 import { CommentService } from './comment.service'
+
 @Controller({ path: 'comments' })
+@UseInterceptors(CommentFilterEmailInterceptor)
 @ApiName
 export class CommentController {
   constructor(
@@ -42,10 +48,11 @@ export class CommentController {
 
   @Get('/')
   @Auth()
-  @Paginator
   async getRecentlyComments(@Query() query: PagerDto) {
     const { size = 10, page = 1, state = 0 } = query
-    return await this.commentService.getComments({ size, page, state })
+    return transformDataToPaginate(
+      await this.commentService.getComments({ size, page, state }),
+    )
   }
 
   @Get('/:id')
@@ -64,7 +71,6 @@ export class CommentController {
   }
 
   @Get('/ref/:id')
-  @HTTPDecorators.Paginator
   @ApiParam({
     name: 'id',
     description: 'refId',
@@ -94,7 +100,7 @@ export class CommentController {
         sort: { created: -1 },
       },
     )
-    return comments
+    return transformDataToPaginate(comments)
   }
 
   @Post('/:id')
@@ -196,13 +202,13 @@ export class CommentController {
   @ApiOperation({ summary: '主人专用评论接口 需要登录' })
   @Auth()
   async commentByMaster(
-    @Req() req: any,
+    @CurrentUser() user: UserModel,
     @Param() params: MongoIdDto,
     @Body() body: TextOnlyDto,
     @IpLocation() ipLocation: IpRecord,
     @Query() query: CommentRefTypesDto,
   ) {
-    const { name, mail, url } = req.user
+    const { name, mail, url } = user
     const model: CommentDto = {
       author: name,
       ...body,
