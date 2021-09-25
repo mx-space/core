@@ -5,8 +5,9 @@ import {
   NestInterceptor,
 } from '@nestjs/common'
 import { isDefined } from 'class-validator'
-import { isArrayLike, isObjectLike } from 'lodash'
+import { cloneDeep, isArrayLike, isObjectLike } from 'lodash'
 import { map } from 'rxjs'
+import { getAvatar } from '~/utils/index.util'
 import { getNestExecutionContextRequest } from '~/utils/nest.util'
 @Injectable()
 export class CommentFilterEmailInterceptor implements NestInterceptor {
@@ -22,23 +23,34 @@ export class CommentFilterEmailInterceptor implements NestInterceptor {
         if (!data) {
           return data
         }
+        try {
+          if (isArrayLike(data?.data)) {
+            ;(data?.data).forEach((item: any, i: number) => {
+              // mongoose model -> object
+              data.data[i] = data.data[i].toObject?.() || data.data[i]
+              if (isDefined(item.mail)) {
+                data.data[i].avatar = getAvatar(item.mail)
+                delete data.data[i].mail
+              }
+              if (item.children) {
+                handle({ data: data.data[i].children })
+              }
+            })
+          }
 
-        if (isArrayLike(data?.data)) {
-          ;(data?.data).forEach((item: any, i) => {
-            if (isDefined(item.mail)) {
-              data.data[i].mail = '*'
-            }
-            if (item.children) {
-              handle({ data: item.children })
-            }
-          })
-        }
+          if (isObjectLike(data)) {
+            data = data?.toJSON?.() || data
 
-        if (isObjectLike(data)) {
-          data = data?.toJSON?.() || data
-          Reflect.deleteProperty(data, 'mail')
+            Reflect.deleteProperty(data, 'mail')
+          }
+
+          return cloneDeep(data)
+        } catch (e) {
+          if (isDev) {
+            console.error(e)
+          }
+          return cloneDeep(data)
         }
-        return data
       }),
     )
   }
