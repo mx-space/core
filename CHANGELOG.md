@@ -1,3 +1,15 @@
+## [3.6.16](https://github.com/mx-space/server-next/compare/v3.6.15...v3.6.16) (2021-09-25)
+
+
+### Bug Fixes
+
+* **deps:** update dependency nodemailer to v6.6.4 ([af581b2](https://github.com/mx-space/server-next/commit/af581b22f09409f45821dafe6247696f426664a9))
+* **deps:** update dependency nodemailer to v6.6.5 ([d6c19b8](https://github.com/mx-space/server-next/commit/d6c19b8f3660cbc89c3cf3fab2f75bee30c25348))
+* **deps:** update nest monorepo to v8.0.7 ([fa2d52c](https://github.com/mx-space/server-next/commit/fa2d52ca5bf7d1a79e129aa572fde139210e35c1))
+* hide email public for guest ([e319014](https://github.com/mx-space/server-next/commit/e319014fb6129104ac0d3cd470cf401ee628229e))
+
+
+
 ## [3.6.15](https://github.com/mx-space/server-next/compare/v3.6.14...v3.6.15) (2021-09-23)
 
 
