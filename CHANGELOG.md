@@ -1,3 +1,12 @@
+## [3.6.18](https://github.com/mx-space/server-next/compare/v3.6.17...v3.6.18) (2021-09-25)
+
+
+### Bug Fixes
+
+* script bump use zx ([556bde9](https://github.com/mx-space/server-next/commit/556bde9119cd6fe844fb40a8b50f511cd0aa2629))
+
+
+
 ## [3.6.17](https://github.com/mx-space/server-next/compare/v3.6.16...v3.6.17) (2021-09-25)
 
 
