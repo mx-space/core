@@ -1,3 +1,12 @@
+## [3.6.17](https://github.com/mx-space/server-next/compare/v3.6.16...v3.6.17) (2021-09-25)
+
+
+### Bug Fixes
+
+* comment email mooogse type ([c5277e7](https://github.com/mx-space/server-next/commit/c5277e79581fd354f8cbb9b38be7824a1a127e69))
+
+
+
 ## [3.6.16](https://github.com/mx-space/server-next/compare/v3.6.15...v3.6.16) (2021-09-25)
 
 
