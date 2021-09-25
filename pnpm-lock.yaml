@@ -56,7 +56,7 @@ specifiers:
   ejs: 3.1.6
   eslint: '*'
   fastify: '*'
-  fastify-cookie: ^5.3.1
+  fastify-cookie: 5.3.1
   fastify-multipart: 5.0.0
   fastify-swagger: 4.12.0
   graphql: 15.5.3
