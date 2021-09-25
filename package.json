@@ -45,8 +45,7 @@
   },
   "bump": {
     "before": [
-      "git pull --rebase",
-      "pnpm i"
+      "git pull --rebase"
     ],
     "after": [
       "sh ./create-tags.sh"
