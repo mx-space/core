@@ -1,3 +1,4 @@
+# This only for Debian based systems
 # FROM node:16 as builder
 # WORKDIR /app
 # COPY . .
@@ -16,6 +17,7 @@
 # EXPOSE 2333
 # CMD node index.js --redis_host=redis --db_host=mongo
 
+# Use alpine to build smaller image
 FROM node:16-alpine as builder
 WORKDIR /app
 COPY . .
