@@ -1,9 +1,9 @@
 const { readFileSync, writeFileSync } = require('fs')
 const { join } = require('path')
-const { chalk } = require('zx')
+const { chalk, $ } = require('zx')
+
 const inquirer = require('inquirer')
 const semver = require('semver')
-const { execSync } = require('child_process')
 
 const PKG_PATH = join(process.cwd(), './package.json')
 const PKG = JSON.parse(readFileSync(PKG_PATH))
@@ -31,16 +31,9 @@ function generateReleaseTypes(currentVersion, types, pried = 'alpha') {
   })
 }
 
-function execCmd(cmds) {
+async function execCmd(cmds) {
   for (const cmd of cmds) {
-    console.log(chalk.green(`Running: ${cmd}`))
-    try {
-      execSync(cmd, { encoding: 'utf8' })
-    } catch (e) {
-      console.log(chalk.red(`Error running command: ${cmd}`))
-      console.log(chalk.yellow(`${e.stderr}`))
-      return
-    }
+    await $([cmd])
   }
 }
 
@@ -57,11 +50,11 @@ async function main() {
   PKG.version = newVersion
   console.log(chalk.green('Running before hooks.'))
 
-  execCmd(beforeHooks)
+  await execCmd(beforeHooks)
 
   writeFileSync(PKG_PATH, JSON.stringify(PKG, null, 2))
 
   console.log(chalk.green('Running after hooks.'))
-  execCmd(afterHooks)
+  await execCmd(afterHooks)
 }
 main()
