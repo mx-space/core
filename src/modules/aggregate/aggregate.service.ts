@@ -74,7 +74,7 @@ export class AggregateService {
       .find(condition)
       .sort({ created: -1 })
       .limit(size)
-      .select('_id title name slug avatar nid')
+      .select('_id title name slug avatar nid created')
   }
 
   async topActivity(size = 6, isMaster = false) {
