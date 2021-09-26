@@ -76,7 +76,7 @@ specifiers:
   mongoose-lean-id: 0.2.0
   mongoose-lean-virtuals: 0.8.1
   mongoose-paginate-v2: 1.4.2
-  nanoid: 3.1.25
+  nanoid: 3.1.28
   nestjs-typegoose: 7.1.38
   node-vibrant: 3.2.1-alpha.1
   nodemailer: 6.6.5
@@ -151,7 +151,7 @@ dependencies:
   mongoose-lean-id: 0.2.0_mongoose@5.13.8
   mongoose-lean-virtuals: 0.8.1_mongoose@5.13.8
   mongoose-paginate-v2: 1.4.2
-  nanoid: 3.1.25
+  nanoid: 3.1.28
   nestjs-typegoose: 7.1.38_064905de188039c80c10ec90dab9f91a
   node-vibrant: 3.2.1-alpha.1
   nodemailer: 6.6.5
@@ -6393,8 +6393,8 @@ packages:
   /mute-stream/0.0.8:
     resolution: {integrity: sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==}
 
-  /nanoid/3.1.25:
-    resolution: {integrity: sha512-rdwtIXaXCLFAQbnfqDRnI6jaRHp9fTcYBjtFKE8eezcZ7LuLjhUaQGNeMXf1HmRoCH32CLz6XwX0TtxEOS/A3Q==}
+  /nanoid/3.1.28:
+    resolution: {integrity: sha512-gSu9VZ2HtmoKYe/lmyPFES5nknFrHa+/DT9muUFWFMi6Jh9E1I7bkvlQ8xxf1Kos9pi9o8lBnIOkatMhKX/YUw==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
     dev: false
