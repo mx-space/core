@@ -36,8 +36,7 @@ export class SearchController {
     }
   }
 
-  @Get('/')
-  // TODO: now only support search by algolia
+  @Get('/algolia')
   async search(@Query() query: SearchDto) {
     return this.searchService.searchAlgolia(query)
   }

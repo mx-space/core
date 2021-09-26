@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
-import algoliasearch from 'algoliasearch'
 import COS from 'cos-nodejs-sdk-v5'
 import dayjs from 'dayjs'
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
@@ -22,6 +21,7 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import { NoteService } from '~/modules/note/note.service'
 import { PageService } from '~/modules/page/page.service'
 import { PostService } from '~/modules/post/post.service'
+import { SearchService } from '~/modules/search/search.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { CacheService } from '../cache/cache.service'
 import { HttpService } from './helper.http.service'
@@ -47,6 +47,8 @@ export class CronService {
 
     @Inject(forwardRef(() => PageService))
     private readonly pageService: PageService,
+    @Inject(forwardRef(() => SearchService))
+    private readonly searchService: SearchService,
   ) {
     this.logger = new Logger(CronService.name)
   }
@@ -255,80 +257,76 @@ export class CronService {
   @Cron(CronExpression.EVERY_DAY_AT_NOON, { name: 'pushToAlgoliaSearch' })
   @CronDescription('推送到 Algolia Search')
   async pushToAlgoliaSearch() {
-    const { algoliaSearchOptions: configs } =
-      await this.configs.waitForConfigReady()
-    if (configs.enable) {
-      this.logger.log('--> 开始推送到 Algolia')
-      const client = algoliasearch(configs.appId, configs.apiKey)
-      const index = client.initIndex(configs.indexName)
-      const documents: Record<'title' | 'text' | 'type' | 'id', string>[] = []
-      const combineDocuments = await Promise.all([
-        this.postService.model
-          .find({ hide: false }, 'title text')
-          .lean()
-          .then((list) => {
-            return list.map((data) => {
-              Reflect.set(data, 'objectID', data._id)
-              Reflect.deleteProperty(data, '_id')
-              return {
-                ...data,
-                type: 'post',
-              }
-            })
-          }),
-        this.pageService.model
-          .find({}, 'title text')
-          .lean()
-          .then((list) => {
-            return list.map((data) => {
-              Reflect.set(data, 'objectID', data._id)
-              Reflect.deleteProperty(data, '_id')
-              return {
-                ...data,
-                type: 'page',
-              }
-            })
-          }),
-        this.noteService.model
-          .find(
-            {
-              hide: false,
-              $or: [
-                { password: undefined },
-                { password: null },
-                { password: { $exists: false } },
-              ],
-            },
-            'title text nid',
-          )
-          .lean()
-          .then((list) => {
-            return list.map((data) => {
-              const id = data.nid.toString()
-              Reflect.set(data, 'objectID', data._id)
-              Reflect.deleteProperty(data, '_id')
-              Reflect.deleteProperty(data, 'nid')
-              return {
-                ...data,
-                type: 'note',
-                id,
-              }
-            })
-          }),
-      ])
-      combineDocuments.forEach((documents_: any) => {
-        documents.push(...documents_)
+    const index = await this.searchService.getAlgoliaSearchIndex()
+
+    this.logger.log('--> 开始推送到 Algolia')
+    const documents: Record<'title' | 'text' | 'type' | 'id', string>[] = []
+    const combineDocuments = await Promise.all([
+      this.postService.model
+        .find({ hide: false }, 'title text')
+        .lean()
+        .then((list) => {
+          return list.map((data) => {
+            Reflect.set(data, 'objectID', data._id)
+            Reflect.deleteProperty(data, '_id')
+            return {
+              ...data,
+              type: 'post',
+            }
+          })
+        }),
+      this.pageService.model
+        .find({}, 'title text')
+        .lean()
+        .then((list) => {
+          return list.map((data) => {
+            Reflect.set(data, 'objectID', data._id)
+            Reflect.deleteProperty(data, '_id')
+            return {
+              ...data,
+              type: 'page',
+            }
+          })
+        }),
+      this.noteService.model
+        .find(
+          {
+            hide: false,
+            $or: [
+              { password: undefined },
+              { password: null },
+              { password: { $exists: false } },
+            ],
+          },
+          'title text nid',
+        )
+        .lean()
+        .then((list) => {
+          return list.map((data) => {
+            const id = data.nid.toString()
+            Reflect.set(data, 'objectID', data._id)
+            Reflect.deleteProperty(data, '_id')
+            Reflect.deleteProperty(data, 'nid')
+            return {
+              ...data,
+              type: 'note',
+              id,
+            }
+          })
+        }),
+    ])
+    combineDocuments.forEach((documents_: any) => {
+      documents.push(...documents_)
+    })
+    try {
+      // await index.clearObjects()
+      await index.saveObjects(documents, {
+        autoGenerateObjectIDIfNotExist: false,
       })
-      try {
-        // await index.clearObjects()
-        await index.saveObjects(documents, {
-          autoGenerateObjectIDIfNotExist: false,
-        })
-        this.logger.log('--> 推送到 algoliasearch 成功')
-      } catch (err) {
-        Logger.error('algolia推送错误', 'AlgoliaSearch')
-        throw err
-      }
+      this.logger.log('--> 推送到 algoliasearch 成功')
+    } catch (err) {
+      Logger.error('algolia推送错误', 'AlgoliaSearch')
+      throw err
     }
   }
 

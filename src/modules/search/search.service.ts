@@ -82,6 +82,19 @@ export class SearchService {
     )
   }
 
+  public async getAlgoliaSearchIndex() {
+    const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
+    if (!algoliaSearchOptions.enable) {
+      throw new BadRequestException('algolia not enable.')
+    }
+    const client = algoliasearch(
+      algoliaSearchOptions.appId,
+      algoliaSearchOptions.apiKey,
+    )
+    const index = client.initIndex(algoliaSearchOptions.indexName)
+    return index
+  }
+
   async searchAlgolia(searchOption: SearchDto): Promise<
     | SearchResponse<{
         id: string
@@ -98,17 +111,8 @@ export class SearchService {
         }>
       })
   > {
-    const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
-    if (!algoliaSearchOptions.enable) {
-      throw new BadRequestException('algolia not enable.')
-    }
-
-    const { keyword, page, size } = searchOption
-    const client = algoliasearch(
-      algoliaSearchOptions.appId,
-      algoliaSearchOptions.apiKey,
-    )
-    const index = client.initIndex(algoliaSearchOptions.indexName)
+    const { keyword, size, page } = searchOption
+    const index = await this.getAlgoliaSearchIndex()
     const search = await index.search<{
       id: string
       text: string

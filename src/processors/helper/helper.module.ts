@@ -4,6 +4,7 @@ import { AggregateModule } from '~/modules/aggregate/aggregate.module'
 import { NoteModule } from '~/modules/note/note.module'
 import { PageModule } from '~/modules/page/page.module'
 import { PostModule } from '~/modules/post/post.module'
+import { SearchModule } from '~/modules/search/search.module'
 import { CountingService } from './helper.counting.service'
 import { CronService } from './helper.cron.service'
 import { EmailService } from './helper.email.service'
@@ -32,6 +33,7 @@ const providers: Provider<any>[] = [
     forwardRef(() => PostModule),
     forwardRef(() => NoteModule),
     forwardRef(() => PageModule),
+    forwardRef(() => SearchModule),
   ],
   providers: providers,
   exports: providers,
