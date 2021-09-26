@@ -170,7 +170,7 @@ export class NoteController {
               select,
             )
             .limit(half - 1)
-            .sort({ created: -1 })
+            .sort({ created: 1 })
             .lean()
     const nextList = !half
       ? []
