@@ -5,6 +5,7 @@
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/mx-space/server-next/Deploy?label=deploy&style=flat)](https://github.com/mx-space/server-next/actions?query=workflow:%22Deploy%22)
 [![GitHub license](https://img.shields.io/github/license/mx-space/server-next.svg?style=flat)](https://github.com/mx-space/server-next/blob/main/LICENSE)
 [![wakatime](https://wakatime.com/badge/github/mx-space/server-next.svg)](https://wakatime.com/badge/github/mx-space/server-next)
+[![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/innei/mx-server)](https://hub.docker.com/repository/docker/innei/mx-server)
 
 > **RESTful API service & GraphQL for Mix Space, powered by [`nestjs`](https://github.com/nestjs/nest), required [`mongoDB`](https://www.mongodb.com/) & [`Redis`](https://redis.io/).**
 
