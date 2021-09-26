@@ -1,3 +1,19 @@
+## [3.6.19](https://github.com/mx-space/server-next/compare/v3.6.18...v3.6.19) (2021-09-26)
+
+
+### Bug Fixes
+
+* **deps:** pin dependency fastify-cookie to 5.3.1 ([cb7ec6e](https://github.com/mx-space/server-next/commit/cb7ec6eca09421867dceaa6f274ebf1e178f0bfc))
+* dont npm install in bump stage ([f2b7786](https://github.com/mx-space/server-next/commit/f2b7786bca03c1f44859e5de4108f12d79b5cfb3))
+* sequence of note list ([9abd9c2](https://github.com/mx-space/server-next/commit/9abd9c22c076d254d1197a38dc182caa7e27e0b2))
+
+
+### Features
+
+* add created on api `top` ([242c0e7](https://github.com/mx-space/server-next/commit/242c0e7407b1b52a29677ed7ab6f2e478a071631))
+
+
+
 ## [3.6.18](https://github.com/mx-space/server-next/compare/v3.6.17...v3.6.18) (2021-09-25)
 
 
