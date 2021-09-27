@@ -84,7 +84,7 @@
     "fastify-cookie": "5.3.1",
     "fastify-multipart": "5.0.0",
     "fastify-swagger": "4.12.1",
-    "graphql": "15.5.3",
+    "graphql": "15.6.0",
     "html-minifier": "4.0.0",
     "image-size": "1.0.0",
     "inquirer": "*",
