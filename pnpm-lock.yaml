@@ -22,7 +22,7 @@ specifiers:
   '@nestjs/swagger': 5.0.9
   '@nestjs/testing': 8.0.7
   '@nestjs/websockets': 8.0.7
-  '@typegoose/auto-increment': 0.9.0
+  '@typegoose/auto-increment': 1.0.0
   '@typegoose/typegoose': 8.3.0
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.2
@@ -119,7 +119,7 @@ dependencies:
   '@nestjs/schedule': 1.0.1_92bca3ef6c68a487b78ba06603236e5b
   '@nestjs/swagger': 5.0.9_461381885f24f468849957b9c6fe42b0
   '@nestjs/websockets': 8.0.7_62adc332321c48564f60dec9dc762a1e
-  '@typegoose/auto-increment': 0.9.0_mongoose@5.13.8
+  '@typegoose/auto-increment': 1.0.0_mongoose@5.13.8
   '@typegoose/typegoose': 8.3.0_mongoose@5.13.8
   algoliasearch: 4.10.5
   apollo-server-fastify: 3.3.0_fastify@3.20.1+graphql@15.5.3
@@ -1692,11 +1692,11 @@ packages:
     resolution: {integrity: sha512-eZxlbI8GZscaGS7kkc/trHTT5xgrjH3/1n2JDwusC9iahPKWMRvRjJSAN5mCXviuTGQ/lHnhvv8Q1YTpnfz9gA==}
     dev: true
 
-  /@typegoose/auto-increment/0.9.0_mongoose@5.13.8:
-    resolution: {integrity: sha512-BgL4oLL81zDmVBMyexO0zZ21kXSe4IdeQZJzg+NN6JLbk8Q7IH3KWJX6tJNvbb6lMk8ZPDHPrV5Mnpf7xFRYWA==}
+  /@typegoose/auto-increment/1.0.0_mongoose@5.13.8:
+    resolution: {integrity: sha512-3R2kWcxlmrhhzGcFwdkSnsQPBMylWLPMu7vv0CbC+CKsQ1dK9DJDkliCEqf/dLANLS0FKnVOdd0ZvTWjlPCJTw==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      mongoose: ~5.13.3
+      mongoose: ~6.0.7
     dependencies:
       loglevel: 1.7.1
       mongoose: 5.13.8
