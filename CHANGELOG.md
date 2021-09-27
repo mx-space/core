@@ -1,3 +1,18 @@
+## [3.6.21](https://github.com/mx-space/server-next/compare/v3.6.20...v3.6.21) (2021-09-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @typegoose/auto-increment to v1 ([#73](https://github.com/mx-space/server-next/issues/73)) ([66715d0](https://github.com/mx-space/server-next/commit/66715d00610133bc6957599ac9ee8fa9cd4dea03))
+* **deps:** update dependency graphql to v15.6.0 ([#66](https://github.com/mx-space/server-next/issues/66)) ([db8db82](https://github.com/mx-space/server-next/commit/db8db822cc5f820eb8952984135f8e3630edffbd))
+
+
+### Features
+
+* add author and created to markdown render ([af90344](https://github.com/mx-space/server-next/commit/af9034424c11cdbc642ad42afb1813d37cd986e8))
+
+
+
 ## [3.6.20](https://github.com/mx-space/server-next/compare/v3.6.19...v3.6.20) (2021-09-27)
 
 
