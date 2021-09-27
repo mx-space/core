@@ -1,3 +1,13 @@
+## [3.6.20](https://github.com/mx-space/server-next/compare/v3.6.19...v3.6.20) (2021-09-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency fastify-swagger to v4.12.1 ([08a4753](https://github.com/mx-space/server-next/commit/08a4753c24589b246f8ae2ea76c4ad06454fb3aa))
+* **deps:** update dependency nanoid to v3.1.28 ([28ec5ae](https://github.com/mx-space/server-next/commit/28ec5ae177bf7ef1f75883aad388a2d17b4fd9cb))
+
+
+
 ## [3.6.19](https://github.com/mx-space/server-next/compare/v3.6.18...v3.6.19) (2021-09-26)
 
 
