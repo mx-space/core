@@ -21,7 +21,6 @@ import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
-import { AssetService } from '~/processors/helper/hepler.asset.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { CategoryModel } from '../category/category.model'
 import { ConfigsService } from '../configs/configs.service'
@@ -38,7 +37,6 @@ export class MarkdownController {
   constructor(
     private readonly service: MarkdownService,
 
-    private readonly assetService: AssetService,
     private readonly configs: ConfigsService,
   ) {}
 
@@ -163,11 +161,17 @@ export class MarkdownController {
   ) {
     const { id } = params
     const now = performance.now()
-    const {
-      html: markdown,
-      document,
-      type,
-    } = await this.service.renderArticle(id)
+    const [
+      { html: markdown, document, type },
+      {
+        url: { webUrl },
+      },
+      { name: username },
+    ] = await Promise.all([
+      this.service.renderArticle(id),
+      this.configs.waitForConfigReady(),
+      this.configs.getMaster(),
+    ])
 
     const relativePath = (() => {
       switch (type.toLowerCase()) {
@@ -181,9 +185,7 @@ export class MarkdownController {
           return `/${(document as PageModel).slug}`
       }
     })()
-    const {
-      url: { webUrl },
-    } = await this.configs.waitForConfigReady()
+
     const url = new URL(relativePath, webUrl)
 
     const { style, link, script, extraScripts, body } =
@@ -213,11 +215,15 @@ export class MarkdownController {
       <body>
      ${body.join('\n')}
         </body>
-        <footer style="text-align: right; padding: 2em 0;">
-        <p>本文渲染于 ${dayjs().format('llll')}，用时 ${
-        performance.now() - now
-      }ms</p>
-        <p>原文地址：<a href="${url}">${decodeURIComponent(
+        <footer style="text-align: right; padding: 2em 0; font-size: .8em">
+        <p>本文渲染于 ${dayjs().format(
+          'MM/DD/YY H:mm:ss',
+        )}，由 marked.js 解析生成，用时 ${(performance.now() - now).toFixed(
+        2,
+      )}ms</p>
+        <p>作者：${username}，撰写于${dayjs(document.created).format(
+        'llll',
+      )}，原文地址：<a href="${url}">${decodeURIComponent(
         url.toString(),
       )}</a></p>
         </footer>

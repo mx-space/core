@@ -3,11 +3,14 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
+import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import { cloneDeep } from 'lodash'
+import { LeanDocument } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import { API_VERSION } from '~/app.config'
 import { sleep } from '~/utils/index.util'
+import { UserModel } from '../user/user.model'
 import { UserService } from '../user/user.service'
 import { BackupOptionsDto, MailOptionsDto } from './configs.dto'
 import { IConfig } from './configs.interface'
@@ -131,6 +134,8 @@ export class ConfigsService {
 
   get getMaster() {
     // HINT: 需要注入 this 的指向
-    return this.userService.getMaster.bind(this.userService)
+    return this.userService.getMaster.bind(this.userService) as () => Promise<
+      LeanDocument<DocumentType<UserModel, BeAnObject>>
+    >
   }
 }
