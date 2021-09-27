@@ -23,7 +23,12 @@ import {
 import { AnalyzeMiddleware } from './common/middlewares/analyze.middleware'
 import { SkipBrowserDefaultRequestMiddleware } from './common/middlewares/favicon.middleware'
 import { SecurityMiddleware } from './common/middlewares/security.middleware'
-import { DATA_DIR, LOGGER_DIR, TEMP_DIR } from './constants/path.constant'
+import {
+  ASSET_DIR,
+  DATA_DIR,
+  LOGGER_DIR,
+  TEMP_DIR,
+} from './constants/path.constant'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
@@ -61,6 +66,8 @@ function mkdirs() {
   Logger.log(chalk.blue('临时目录已经建好: ' + TEMP_DIR))
   mkdirSync(LOGGER_DIR, { recursive: true })
   Logger.log(chalk.blue('日志目录已经建好: ' + LOGGER_DIR))
+  mkdirSync(ASSET_DIR, { recursive: true })
+  Logger.log(chalk.blue('资源目录已经建好: ' + ASSET_DIR))
 }
 mkdirs()
 

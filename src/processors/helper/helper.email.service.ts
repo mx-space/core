@@ -1,8 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { render } from 'ejs'
-import { writeFileSync } from 'fs'
 import { createTransport } from 'nodemailer'
-import path from 'path'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { LinkModel } from '~/modules/link/link.model'
 import { AssetService } from './hepler.asset.service'
@@ -47,20 +45,14 @@ export class EmailService {
   writeTemplate(type: ReplyMailType, source: string) {
     switch (type) {
       case ReplyMailType.Guest:
-        return writeFileSync(
-          path.resolve(
-            process.cwd(),
-            'assets/email-template/guest.template.ejs',
-          ),
+        return this.assetService.writeAsset(
+          '/email-template/guest.template.ejs',
           source,
           { encoding: 'utf-8' },
         )
       case ReplyMailType.Owner:
-        return writeFileSync(
-          path.resolve(
-            process.cwd(),
-            'assets/email-template/owner.template.ejs',
-          ),
+        return this.assetService.writeAsset(
+          '/email-template/owner.template.ejs',
           source,
           { encoding: 'utf-8' },
         )

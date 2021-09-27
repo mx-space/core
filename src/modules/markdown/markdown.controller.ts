@@ -16,6 +16,7 @@ import { join } from 'path'
 import { performance } from 'perf_hooks'
 import { Readable } from 'stream'
 import { URL } from 'url'
+import xss from 'xss'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -156,7 +157,10 @@ export class MarkdownController {
   @Header('content-type', 'text/html')
   @HTTPDecorators.Bypass
   @CacheTTL(60 * 60)
-  async renderArticle(@Param() params: MongoIdDto) {
+  async renderArticle(
+    @Param() params: MongoIdDto,
+    @Query('theme') theme: string,
+  ) {
     const { id } = params
     const now = performance.now()
     const {
@@ -201,6 +205,9 @@ export class MarkdownController {
           ${style.join('\n')}
         </style>
         ${link.join('\n')}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mx-space/assets@master/markdown/${
+          xss(theme) || 'newsprint'
+        }.css">
         <title>${document.title}</title>
       </head>
       <body>

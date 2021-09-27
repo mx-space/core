@@ -312,7 +312,7 @@ ${text.trim()}
   }
 
   async getRenderedMarkdownHtmlStructure(html: string, title: string) {
-    const style = await this.assetService.getAsset('markdown.css', {
+    const style = await this.assetService.getAsset('/markdown/markdown.css', {
       encoding: 'utf8',
     })
     return {
@@ -328,7 +328,6 @@ ${text.trim()}
       ],
       link: [
         '<link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/styles/default.min.css">',
-        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mx-space/assets@master/newsprint.css">',
       ],
       style: [style],
     }
