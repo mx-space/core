@@ -80,7 +80,7 @@ specifiers:
   nestjs-typegoose: 7.1.38
   node-vibrant: 3.2.1-alpha.1
   nodemailer: 6.6.5
-  passport: 0.4.1
+  passport: 0.5.0
   passport-jwt: 4.0.0
   pluralize: '*'
   prettier: 2.4.1
@@ -113,7 +113,7 @@ dependencies:
   '@nestjs/graphql': 9.0.4_6f5545487638a0fc5f8f23dfa408506c
   '@nestjs/jwt': 8.0.0_@nestjs+common@8.0.7
   '@nestjs/mapped-types': 1.0.0_9235055d36f9f2c6d3bd542e4c3ac892
-  '@nestjs/passport': 8.0.1_ea3b3438beb9f96752467d8c2c33bb53
+  '@nestjs/passport': 8.0.1_38aa9bfad4b7f471d8e32e88cc96339b
   '@nestjs/platform-fastify': 8.0.7_6ccd7f020aae0bb10815f91d7f482355
   '@nestjs/platform-socket.io': 8.0.7_e7919c2484399eea421a6e188e78ec3c
   '@nestjs/schedule': 1.0.1_92bca3ef6c68a487b78ba06603236e5b
@@ -155,7 +155,7 @@ dependencies:
   nestjs-typegoose: 7.1.38_064905de188039c80c10ec90dab9f91a
   node-vibrant: 3.2.1-alpha.1
   nodemailer: 6.6.5
-  passport: 0.4.1
+  passport: 0.5.0
   passport-jwt: 4.0.0
   pluralize: 8.0.0
   redis: 3.1.2
@@ -1438,14 +1438,14 @@ packages:
       reflect-metadata: 0.1.13
     dev: false
 
-  /@nestjs/passport/8.0.1_ea3b3438beb9f96752467d8c2c33bb53:
+  /@nestjs/passport/8.0.1_38aa9bfad4b7f471d8e32e88cc96339b:
     resolution: {integrity: sha512-vn/ZJLXQKvSf9D0BvEoNFJLfzl9AVqfGtDyQMfWDLbaNpoEB2FyeaHGxdiX6H71oLSrQV78c/yuhfantzwdjdg==}
     peerDependencies:
       '@nestjs/common': ^6.0.0 || ^7.0.0 || ^8.0.0
       passport: ^0.4.0
     dependencies:
       '@nestjs/common': 8.0.7_4d0c20d2c2a765e9ff99ebac79ad2484
-      passport: 0.4.1
+      passport: 0.5.0
     dev: false
 
   /@nestjs/platform-fastify/8.0.7_6ccd7f020aae0bb10815f91d7f482355:
@@ -6820,8 +6820,8 @@ packages:
     engines: {node: '>= 0.4.0'}
     dev: false
 
-  /passport/0.4.1:
-    resolution: {integrity: sha512-IxXgZZs8d7uFSt3eqNjM9NQ3g3uQCW5avD8mRNoXV99Yig50vjuaez6dQK2qC0kVWPRTujxY0dWgGfT09adjYg==}
+  /passport/0.5.0:
+    resolution: {integrity: sha512-ln+ue5YaNDS+fes6O5PCzXKSseY5u8MYhX9H5Co4s+HfYI5oqvnHKoOORLYDUPh+8tHvrxugF2GFcUA1Q1Gqfg==}
     engines: {node: '>= 0.4.0'}
     dependencies:
       passport-strategy: 1.0.0
