@@ -58,7 +58,7 @@ specifiers:
   fastify: '*'
   fastify-cookie: 5.3.1
   fastify-multipart: 5.0.1
-  fastify-swagger: 4.12.1
+  fastify-swagger: 4.12.2
   graphql: 15.6.0
   html-minifier: 4.0.0
   husky: 7.0.2
@@ -117,7 +117,7 @@ dependencies:
   '@nestjs/platform-fastify': 8.0.7_6ccd7f020aae0bb10815f91d7f482355
   '@nestjs/platform-socket.io': 8.0.7_e7919c2484399eea421a6e188e78ec3c
   '@nestjs/schedule': 1.0.1_92bca3ef6c68a487b78ba06603236e5b
-  '@nestjs/swagger': 5.0.9_461381885f24f468849957b9c6fe42b0
+  '@nestjs/swagger': 5.0.9_89221cfb2e693b84d741ba2b390624ff
   '@nestjs/websockets': 8.0.7_62adc332321c48564f60dec9dc762a1e
   '@typegoose/auto-increment': 1.0.0_mongoose@5.13.8
   '@typegoose/typegoose': 8.3.0_mongoose@5.13.8
@@ -137,7 +137,7 @@ dependencies:
   ejs: 3.1.6
   fastify-cookie: 5.3.1
   fastify-multipart: 5.0.1
-  fastify-swagger: 4.12.1
+  fastify-swagger: 4.12.2
   graphql: 15.6.0
   html-minifier: 4.0.0
   image-size: 1.0.0
@@ -1523,7 +1523,7 @@ packages:
       typescript: 4.4.3
     dev: true
 
-  /@nestjs/swagger/5.0.9_461381885f24f468849957b9c6fe42b0:
+  /@nestjs/swagger/5.0.9_89221cfb2e693b84d741ba2b390624ff:
     resolution: {integrity: sha512-KivZeDgn/VeDn81Rnd/0Cbv7M4kuHRb+Rlri+YsUrw3h9or4bxxRiUg7Yjjt368KxfJgR7C3lc6kltvoI7ucQg==}
     peerDependencies:
       '@nestjs/common': ^8.0.0
@@ -1540,7 +1540,7 @@ packages:
       '@nestjs/common': 8.0.7_4d0c20d2c2a765e9ff99ebac79ad2484
       '@nestjs/core': 8.0.7_fe092f54292735b7a8ec01c5c4464487
       '@nestjs/mapped-types': 1.0.0_9235055d36f9f2c6d3bd542e4c3ac892
-      fastify-swagger: 4.12.1
+      fastify-swagger: 4.12.2
       lodash: 4.17.21
       path-to-regexp: 3.2.0
       reflect-metadata: 0.1.13
@@ -4232,8 +4232,8 @@ packages:
       send: 0.17.1
     dev: false
 
-  /fastify-swagger/4.12.1:
-    resolution: {integrity: sha512-QlEIS+gKPRdU1QBtfhF1buptJkQf1k/KmEHueQo2lw2M9q3vJr0VgjDHao4Kf5wcjy6QF0vSq/MFCicSy20M8Q==}
+  /fastify-swagger/4.12.2:
+    resolution: {integrity: sha512-ZUI1PQlxcXoe3CxSC6ZFeDv70wxi8V206ATNA6k7CKNXsMuje1NTXJBgmO0/znlcu2QhsUNoQ2ynvSrWWddYhw==}
     dependencies:
       fastify-plugin: 3.0.0
       fastify-static: 4.2.3
