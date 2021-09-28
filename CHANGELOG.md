@@ -1,3 +1,20 @@
+# [3.7.0](https://github.com/mx-space/server-next/compare/v3.6.21...v3.7.0) (2021-09-28)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @nestjs/graphql to v9.0.5 ([b7b3271](https://github.com/mx-space/server-next/commit/b7b32715806c94895e5964d4fccc472474311e5f))
+* **deps:** update dependency cos-nodejs-sdk-v5 to v2.10.4 ([#83](https://github.com/mx-space/server-next/issues/83)) ([64d1b32](https://github.com/mx-space/server-next/commit/64d1b3217eaaead59ffa7a41efc6cfe6cc89d1c6))
+* **deps:** update dependency fastify-multipart to v5.0.1 ([396233a](https://github.com/mx-space/server-next/commit/396233a29d2a62cdfbd8b2a70402688bddd59733))
+* **deps:** update dependency passport to v0.5.0 ([#74](https://github.com/mx-space/server-next/issues/74)) ([3022736](https://github.com/mx-space/server-next/commit/3022736badde8a0bb08100994682d2291706cced))
+
+
+### Features
+
+* page sort support ([8537b05](https://github.com/mx-space/server-next/commit/8537b050b40996c19b2a0b63bd6e52b60090befb))
+
+
+
 ## [3.6.21](https://github.com/mx-space/server-next/compare/v3.6.20...v3.6.21) (2021-09-27)
 
 
