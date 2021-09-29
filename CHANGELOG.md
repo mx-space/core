@@ -1,3 +1,13 @@
+## [3.7.1](https://github.com/mx-space/server-next/compare/v3.7.0...v3.7.1) (2021-09-29)
+
+
+### Bug Fixes
+
+* backup after force remove temp ([53cdf9a](https://github.com/mx-space/server-next/commit/53cdf9a36ce7e1df84774e44613838ec16cf3080))
+* **deps:** update dependency fastify-swagger to v4.12.2 ([1adf30d](https://github.com/mx-space/server-next/commit/1adf30dfa3943d9f721594daddf3798aef9def37))
+
+
+
 # [3.7.0](https://github.com/mx-space/server-next/compare/v3.6.21...v3.7.0) (2021-09-28)
 
 
