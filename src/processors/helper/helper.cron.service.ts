@@ -92,7 +92,8 @@ export class CronService {
     try {
       await $`mongodump -h 127.0.0.1 -d ${MONGO_DB.collectionName} -o ${backupDirPath} >/dev/null 2>&1`
       cd(backupDirPath)
-      await $`zip -r backup-${dateDir}  mx-space/* && rm -r mx-space`
+      await nothrow($`pwd && ls -a`)
+      await $`zip -r backup-${dateDir}  mx-space/* && rm -rf mx-space`
 
       this.logger.log('--> 备份成功')
     } catch (e) {
