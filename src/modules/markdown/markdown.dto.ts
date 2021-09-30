@@ -75,3 +75,10 @@ export class ExportMarkdownQueryDto {
   @Transform(({ value }) => value === '1' || value === 'true')
   show_title: boolean
 }
+
+export class MarkdownPreviewDto {
+  @IsString()
+  title: string
+  @IsString()
+  md: string
+}

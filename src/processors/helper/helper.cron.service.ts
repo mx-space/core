@@ -90,9 +90,11 @@ export class CronService {
     const backupDirPath = join(BACKUP_DIR, dateDir)
     mkdirp.sync(backupDirPath)
     try {
-      await $`mongodump -h 127.0.0.1 -d ${MONGO_DB.collectionName} -o ${backupDirPath} >/dev/null 2>&1`
+      await $`mongodump -h ${MONGO_DB.host} --port ${MONGO_DB.port} -d ${MONGO_DB.collectionName} -o ${backupDirPath} >/dev/null 2>&1`
       cd(backupDirPath)
-      await nothrow($`pwd && ls -a`)
+      const debug = await nothrow($`pwd && ls -a`)
+      console.error(debug)
+
       await $`zip -r backup-${dateDir}  mx-space/* && rm -rf mx-space`
 
       this.logger.log('--> 备份成功')

@@ -10,14 +10,17 @@ import {
 } from '@nestjs/common'
 import { ApiProperty } from '@nestjs/swagger'
 import dayjs from 'dayjs'
+import { render } from 'ejs'
 import { minify } from 'html-minifier'
 import JSZip from 'jszip'
+import { sample } from 'lodash'
 import { join } from 'path'
 import { performance } from 'perf_hooks'
 import { Readable } from 'stream'
 import { URL } from 'url'
 import xss from 'xss'
 import { Auth } from '~/common/decorator/auth.decorator'
+import { HttpCache } from '~/common/decorator/cache.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
@@ -27,7 +30,11 @@ import { ConfigsService } from '../configs/configs.service'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
-import { DataListDto, ExportMarkdownQueryDto } from './markdown.dto'
+import {
+  DataListDto,
+  ExportMarkdownQueryDto,
+  MarkdownPreviewDto,
+} from './markdown.dto'
 import { MarkdownYAMLProperty } from './markdown.interface'
 import { MarkdownService } from './markdown.service'
 
@@ -188,59 +195,65 @@ export class MarkdownController {
 
     const url = new URL(relativePath, webUrl)
 
-    const { style, link, script, extraScripts, body } =
-      await this.service.getRenderedMarkdownHtmlStructure(
-        markdown,
-        document.title,
-      )
+    const structure = await this.service.getRenderedMarkdownHtmlStructure(
+      markdown,
+      document.title,
+    )
 
-    const html = minify(
-      `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <meta name="referrer" content="no-referrer">
-        <style>
-          ${style.join('\n')}
-        </style>
-        ${link.join('\n')}
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mx-space/assets@master/markdown/${
-          xss(theme) || 'newsprint'
-        }.css">
-        <title>${document.title}</title>
-      </head>
-      <body>
-     ${body.join('\n')}
-        </body>
-        <footer style="text-align: right; padding: 2em 0; font-size: .8em">
-        <p>本文渲染于 ${dayjs().format(
-          'MM/DD/YY H:mm:ss',
-        )}，由 marked.js 解析生成，用时 ${(performance.now() - now).toFixed(
+    const html = render(await this.service.getMarkdownEjsRenderTemplate(), {
+      theme:
+        theme === 'random'
+          ? sample(this.service.getMarkdownRenderTheme())
+          : xss(theme),
+
+      ...structure,
+
+      title: document.title,
+      footer: `<p>本文渲染于 ${dayjs().format(
+        'MM/DD/YY H:mm:ss',
+      )}，由 marked.js 解析生成，用时 ${(performance.now() - now).toFixed(
         2,
       )}ms</p>
-        <p>作者：${username}，撰写于${dayjs(document.created).format(
-        'llll',
-      )}，原文地址：<a href="${url}">${decodeURIComponent(
+      <p>作者：${username}，撰写于${dayjs(document.created).format('llll')}</p>
+        <p>原文地址：<a href="${url}">${decodeURIComponent(
         url.toString(),
       )}</a></p>
-        </footer>
-      ${extraScripts.join('\n')}
-      <script>
-      ${script.join(';')}
-      </script>
-      </html>
-    `,
-      {
-        removeAttributeQuotes: true,
-        removeComments: true,
-        minifyCSS: true,
-        collapseWhitespace: true,
-      },
+        `,
+    })
+
+    return minify(html, {
+      removeAttributeQuotes: true,
+      removeComments: true,
+      minifyCSS: true,
+      collapseWhitespace: true,
+    })
+  }
+
+  /**
+   * 后台预览 Markdown 可用接口, 传入 `title` 和 `md`
+   */
+  @Post('/render')
+  @HttpCache.disable
+  @Auth()
+  @HTTPDecorators.Bypass
+  @Header('content-type', 'text/html')
+  async markdownPreview(
+    @Body() body: MarkdownPreviewDto,
+    @Query('theme') theme: string,
+  ) {
+    const { md, title } = body
+    const html = this.service.renderMarkdownContent(md)
+    const structure = await this.service.getRenderedMarkdownHtmlStructure(
+      html,
+      title,
     )
-    return html
+    return minify(
+      render(await this.service.getMarkdownEjsRenderTemplate(), {
+        ...structure,
+        theme: xss(theme),
+        title: xss(title),
+      }),
+    )
   }
 
   @Get('/render/structure/:id')

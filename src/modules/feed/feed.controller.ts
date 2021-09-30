@@ -60,7 +60,7 @@ export class FeedController {
                 `<blockquote>该渲染由 marked 生成, 可能存在部分语句不通或者排版问题, 最佳体验请前往: <a href='${xss(
                   item.link,
                 )}'>${xss(item.link)}</a></blockquote>
-              ${this.markdownService.render(item.text)}
+              ${this.markdownService.renderMarkdownContent(item.text)}
               <p style='text-align: right'>
               <a href='${xss(item.link) + '#comments'}'>看完了？说点什么呢</a>
               </p>`,

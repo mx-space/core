@@ -211,6 +211,11 @@ ${text.trim()}
     return res
   }
 
+  /**
+   * 根据文章 Id 渲染一篇文章
+   * @param id
+   * @returns
+   */
   async renderArticle(id: string) {
     const doc = await this.databaseService.findGlobalById(id)
 
@@ -219,12 +224,17 @@ ${text.trim()}
     }
 
     return {
-      html: this.render(doc.document.text),
+      html: this.renderMarkdownContent(doc.document.text),
       ...doc,
     }
   }
 
-  public render(text: string) {
+  /**
+   * 渲染 Markdown 文本输出 html
+   * @param text
+   * @returns
+   */
+  public renderMarkdownContent(text: string) {
     marked.use({
       gfm: true,
       sanitize: false,
@@ -319,17 +329,30 @@ ${text.trim()}
       body: [`<article><h1>${title}</h1>${html}</article>`],
       extraScripts: [
         '<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>',
-        '<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/highlight.min.js"></script>',
+        '<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-core.min.js"></script>',
+        '<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>',
+        // '<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/show-language/prism-show-language.min.js" defer></script>',
+        // '<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/normalize-whitespace/prism-normalize-whitespace.min.js" defer></script>',
+        // '<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js" defer></script>',
       ],
       script: [
         `window.mermaid.initialize({theme: 'default',startOnLoad: false})`,
         `window.mermaid.init(undefined, '.mermaid')`,
-        `document.addEventListener('DOMContentLoaded', (event) => {document.querySelectorAll('pre code').forEach((el) => {hljs.highlightElement(el);});})`,
       ],
       link: [
-        '<link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/styles/default.min.css">',
+        '<link href="https://cdn.jsdelivr.net/gh/PrismJS/prism-themes@master/themes/prism-one-light.css" rel="stylesheet" />',
       ],
       style: [style],
     }
+  }
+
+  getMarkdownEjsRenderTemplate() {
+    return this.assetService.getAsset('/render/markdown.ejs', {
+      encoding: 'utf8',
+    })
+  }
+
+  getMarkdownRenderTheme() {
+    return ['newsprint', 'github', 'han', 'gothic'] as const
   }
 }
