@@ -1,3 +1,12 @@
+## [3.7.3](https://github.com/mx-space/server-next/compare/v3.7.2...v3.7.3) (2021-09-30)
+
+
+### Bug Fixes
+
+* package lock update ([fc341d5](https://github.com/mx-space/server-next/commit/fc341d53182c9604f2ec461ef44d4388c1d4ec93))
+
+
+
 ## [3.7.2](https://github.com/mx-space/server-next/compare/v3.7.1...v3.7.2) (2021-09-30)
 
 
