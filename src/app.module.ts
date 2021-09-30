@@ -115,7 +115,6 @@ mkdirs()
     SitemapModule,
     ToolModule,
     UserModule,
-    UserModule,
 
     PageProxyModule,
 
