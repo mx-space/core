@@ -28,7 +28,7 @@ specifiers:
   '@types/cache-manager': 3.4.2
   '@types/ejs': 3.1.0
   '@types/html-minifier': 4.0.1
-  '@types/ioredis': 4.27.5
+  '@types/ioredis': 4.27.4
   '@types/jest': 27.0.2
   '@types/lodash': 4.14.175
   '@types/marked': 3.0.1
@@ -58,14 +58,14 @@ specifiers:
   fastify: '*'
   fastify-cookie: 5.3.1
   fastify-multipart: 5.0.1
-  fastify-swagger: 4.12.3
+  fastify-swagger: 4.12.2
   graphql: 15.6.0
   html-minifier: 4.0.0
   husky: 7.0.2
   image-size: 1.0.0
   inquirer: '*'
   ioredis: '*'
-  jest: 27.2.4
+  jest: 27.2.3
   js-yaml: '*'
   jszip: 3.7.1
   lint-staged: 11.1.2
@@ -117,7 +117,7 @@ dependencies:
   '@nestjs/platform-fastify': 8.0.7_6ccd7f020aae0bb10815f91d7f482355
   '@nestjs/platform-socket.io': 8.0.7_e7919c2484399eea421a6e188e78ec3c
   '@nestjs/schedule': 1.0.1_92bca3ef6c68a487b78ba06603236e5b
-  '@nestjs/swagger': 5.0.9_92efb585600aa2d1b32fbd8b81c1570f
+  '@nestjs/swagger': 5.0.9_89221cfb2e693b84d741ba2b390624ff
   '@nestjs/websockets': 8.0.7_62adc332321c48564f60dec9dc762a1e
   '@typegoose/auto-increment': 1.0.0_mongoose@5.13.8
   '@typegoose/typegoose': 8.3.0_mongoose@5.13.8
@@ -137,7 +137,7 @@ dependencies:
   ejs: 3.1.6
   fastify-cookie: 5.3.1
   fastify-multipart: 5.0.1
-  fastify-swagger: 4.12.3
+  fastify-swagger: 4.12.2
   graphql: 15.6.0
   html-minifier: 4.0.0
   image-size: 1.0.0
@@ -178,7 +178,7 @@ devDependencies:
   '@types/cache-manager': 3.4.2
   '@types/ejs': 3.1.0
   '@types/html-minifier': 4.0.1
-  '@types/ioredis': 4.27.5
+  '@types/ioredis': 4.27.4
   '@types/jest': 27.0.2
   '@types/lodash': 4.14.175
   '@types/marked': 3.0.1
@@ -194,14 +194,14 @@ devDependencies:
   fastify: 3.20.1
   husky: 7.0.2
   ioredis: 4.27.9
-  jest: 27.2.4_ts-node@10.2.1
+  jest: 27.2.3_ts-node@10.2.1
   lint-staged: 11.1.2
   prettier: 2.4.1
   rimraf: 3.0.2
   run-script-webpack-plugin: 0.0.11
   semver: 7.3.5
   socket.io: 4.1.3
-  ts-jest: 27.0.5_52a571d76319e63aeaa66dc9db9e90cc
+  ts-jest: 27.0.5_3f00e57d4cc005a60af484dfb2e33bba
   ts-loader: 9.2.6_typescript@4.4.3+webpack@5.52.0
   ts-node: 10.2.1_ff9a14f10e259f71178ff2c657805ba4
   tsconfig-paths: 3.11.0
@@ -1522,7 +1522,7 @@ packages:
       typescript: 4.4.3
     dev: true
 
-  /@nestjs/swagger/5.0.9_92efb585600aa2d1b32fbd8b81c1570f:
+  /@nestjs/swagger/5.0.9_89221cfb2e693b84d741ba2b390624ff:
     resolution: {integrity: sha512-KivZeDgn/VeDn81Rnd/0Cbv7M4kuHRb+Rlri+YsUrw3h9or4bxxRiUg7Yjjt368KxfJgR7C3lc6kltvoI7ucQg==}
     peerDependencies:
       '@nestjs/common': ^8.0.0
@@ -1539,7 +1539,7 @@ packages:
       '@nestjs/common': 8.0.7_4d0c20d2c2a765e9ff99ebac79ad2484
       '@nestjs/core': 8.0.7_fe092f54292735b7a8ec01c5c4464487
       '@nestjs/mapped-types': 1.0.0_9235055d36f9f2c6d3bd542e4c3ac892
-      fastify-swagger: 4.12.3
+      fastify-swagger: 4.12.2
       lodash: 4.17.21
       path-to-regexp: 3.2.0
       reflect-metadata: 0.1.13
@@ -1859,8 +1859,8 @@ packages:
       '@types/uglify-js': 3.13.1
     dev: true
 
-  /@types/ioredis/4.27.5:
-    resolution: {integrity: sha512-RA8Ba0MPNjCSwukqJlapzu4KRT/MokzauUHbHAfOJtgw93pZ0vX/BBmYvodp2kzIU5bwYycH9n6pGBJaysPqxQ==}
+  /@types/ioredis/4.27.4:
+    resolution: {integrity: sha512-uTAA/woL//GxXQI1e9FuUoDZCpP8yn5LXQdea1IEFyLtb8GP2w3HfOE+SqglF6QSAp/3cZLWzrMhHqWSYI3bfg==}
     dependencies:
       '@types/node': 16.9.2
     dev: true
@@ -4231,8 +4231,8 @@ packages:
       send: 0.17.1
     dev: false
 
-  /fastify-swagger/4.12.3:
-    resolution: {integrity: sha512-mreAFMNVfXuTrsqn8FnkARMpnQNgRbtYaM3jb7I+29JmN0P2Gu/cJ7vB8GocnPz4CUXxaEBdKEwYOM/zpDk0Mw==}
+  /fastify-swagger/4.12.2:
+    resolution: {integrity: sha512-ZUI1PQlxcXoe3CxSC6ZFeDv70wxi8V206ATNA6k7CKNXsMuje1NTXJBgmO0/znlcu2QhsUNoQ2ynvSrWWddYhw==}
     dependencies:
       fastify-plugin: 3.0.0
       fastify-static: 4.2.3
@@ -5641,8 +5641,8 @@ packages:
       supports-color: 8.1.1
     dev: true
 
-  /jest/27.2.4_ts-node@10.2.1:
-    resolution: {integrity: sha512-h4uqb1EQLfPulWyUFFWv9e9Nn8sCqsJ/j3wk/KCY0p4s4s0ICCfP3iMf6hRf5hEhsDyvyrCgKiZXma63gMz16A==}
+  /jest/27.2.3_ts-node@10.2.1:
+    resolution: {integrity: sha512-r4ggA29J5xUg93DpvbsX+AXlFMWE3hZ5Y6BfgTl8PJvWelVezNPkmrsixuGoDBTHTCwScRSH0O4wsoeUgLie2w==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     hasBin: true
     peerDependencies:
@@ -8094,7 +8094,7 @@ packages:
     hasBin: true
     dev: true
 
-  /ts-jest/27.0.5_52a571d76319e63aeaa66dc9db9e90cc:
+  /ts-jest/27.0.5_3f00e57d4cc005a60af484dfb2e33bba:
     resolution: {integrity: sha512-lIJApzfTaSSbtlksfFNHkWOzLJuuSm4faFAfo5kvzOiRAuoN4/eKxVJ2zEAho8aecE04qX6K1pAzfH5QHL1/8w==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     hasBin: true
@@ -8115,7 +8115,7 @@ packages:
       '@types/jest': 27.0.2
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
-      jest: 27.2.4_ts-node@10.2.1
+      jest: 27.2.3_ts-node@10.2.1
       jest-util: 27.1.0
       json5: 2.2.0
       lodash: 4.17.21
