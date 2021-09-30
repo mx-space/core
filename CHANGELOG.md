@@ -1,3 +1,17 @@
+## [3.7.2](https://github.com/mx-space/server-next/compare/v3.7.1...v3.7.2) (2021-09-30)
+
+
+### Bug Fixes
+
+* **deps:** update dependency fastify-swagger to v4.12.3 ([97b8652](https://github.com/mx-space/server-next/commit/97b865227133cddc91689d0f468d454cea058073))
+
+
+### Features
+
+* markdown template ([990ffb5](https://github.com/mx-space/server-next/commit/990ffb5a44ce8c58922d206047823c9a8d030c7c))
+
+
+
 ## [3.7.1](https://github.com/mx-space/server-next/compare/v3.7.0...v3.7.1) (2021-09-29)
 
 
