@@ -1,3 +1,12 @@
+## [3.7.5](https://github.com/mx-space/server-next/compare/v3.7.4...v3.7.5) (2021-10-01)
+
+
+### Bug Fixes
+
+* illegal operation on a directory ([8a27d4b](https://github.com/mx-space/server-next/commit/8a27d4bf76f4ebe01b7dae84379c9fa3b330bd4d))
+
+
+
 ## [3.7.4](https://github.com/mx-space/server-next/compare/v3.7.3...v3.7.4) (2021-10-01)
 
 
