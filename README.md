@@ -153,7 +153,7 @@ docker-compose up -d
 - 拦截器流向
 
 ```
-ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> HttpCacheInterceptor
+ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> AnalyzeInterceptor -> HttpCacheInterceptor
 ```
 
 - [业务逻辑模块](https://github.com/mx-space/server-next/tree/master/src/modules)

@@ -18,12 +18,10 @@ import { GqlExecutionContext } from '@nestjs/graphql'
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
-import { isDev } from '~/utils/index.util'
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   private logger: Logger
-
   constructor() {
     this.logger = new Logger(LoggingInterceptor.name)
   }
@@ -32,9 +30,6 @@ export class LoggingInterceptor implements NestInterceptor {
     next: CallHandler<any>,
   ): Observable<any> {
     const call$ = next.handle()
-    if (!isDev) {
-      return call$
-    }
     const request = this.getRequest(context)
     const content = request.method + ' -> ' + request.url
     Logger.debug('+++ 收到请求：' + content, LoggingInterceptor.name)

@@ -40,7 +40,10 @@ async function bootstrap() {
   app.setGlobalPrefix(isDev ? '' : `api/v${API_VERSION}`, {
     exclude: [{ path: '/qaqdmin', method: RequestMethod.GET }],
   })
-  app.useGlobalInterceptors(new LoggingInterceptor())
+  if (isDev) {
+    app.useGlobalInterceptors(new LoggingInterceptor())
+  }
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

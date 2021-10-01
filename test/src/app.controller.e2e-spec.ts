@@ -48,4 +48,25 @@ describe('AppController (e2e)', () => {
       expect(res.payload).toBeDefined()
     })
   })
+
+  it('GET /admin', () => {
+    return app.inject({ url: '/admin' }).then((res) => {
+      expect(res.statusCode).toBe(200)
+      expect(res.payload).toBe('')
+    })
+  })
+
+  it('GET /wp.php', () => {
+    return app.inject({ url: '/wp.php' }).then((res) => {
+      console.log(res.payload)
+      expect(res.statusCode).toBe(418)
+    })
+  })
+
+  it('GET /favicon.ico', () => {
+    return app.inject({ url: '/favicon.ico' }).then((res) => {
+      expect(res.payload).toBe('')
+      expect(res.statusCode).toBe(204)
+    })
+  })
 })

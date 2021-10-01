@@ -1,10 +1,4 @@
-import {
-  Logger,
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common'
+import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { GraphQLModule } from '@nestjs/graphql'
@@ -14,15 +8,13 @@ import { AppController } from './app.controller'
 import { AppResolver } from './app.resolver'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { RolesGuard } from './common/guard/roles.guard'
+import { AnalyzeInterceptor } from './common/interceptors/analyze.interceptor'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
 import { CountingInterceptor } from './common/interceptors/counting.interceptor'
 import {
   JSONSerializeInterceptor,
   ResponseInterceptor,
 } from './common/interceptors/response.interceptors'
-import { AnalyzeMiddleware } from './common/middlewares/analyze.middleware'
-import { SkipBrowserDefaultRequestMiddleware } from './common/middlewares/favicon.middleware'
-import { SecurityMiddleware } from './common/middlewares/security.middleware'
 import {
   ASSET_DIR,
   DATA_DIR,
@@ -132,6 +124,10 @@ mkdirs()
     },
     {
       provide: APP_INTERCEPTOR,
+      useClass: AnalyzeInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
       useClass: CountingInterceptor,
     },
     {
@@ -142,6 +138,7 @@ mkdirs()
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
     },
+
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
@@ -154,10 +151,11 @@ mkdirs()
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(AnalyzeMiddleware)
-      .forRoutes({ path: '(.*?)', method: RequestMethod.GET })
-      .apply(SkipBrowserDefaultRequestMiddleware, SecurityMiddleware)
-      .forRoutes({ path: '(.*?)', method: RequestMethod.ALL })
+    // FIXME: nestjs 8 middleware bug
+    // consumer
+    //   .apply(AnalyzeMiddleware)
+    //   .forRoutes({ path: '(.*?)', method: RequestMethod.GET })
+    //   .apply(SkipBrowserDefaultRequestMiddleware, SecurityMiddleware)
+    //   .forRoutes({ path: '(.*?)', method: RequestMethod.ALL })
   }
 }
