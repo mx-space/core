@@ -94,11 +94,6 @@ export class BackupService {
         EventTypes.CONTENT_REFRESH,
         'restore_done',
       )
-    } catch (e) {
-      const logDir = '/tmp/mx-space/log'
-      mkdirp.sync(logDir)
-      writeFileSync(logDir, e.message, { encoding: 'utf-8', flag: 'a+' })
-      throw new InternalServerErrorException(e.message)
     } finally {
       rmSync(tempDirPath, { recursive: true })
     }
