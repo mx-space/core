@@ -1,12 +1,13 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
+import { execSync } from 'child_process'
 import COS from 'cos-nodejs-sdk-v5'
 import dayjs from 'dayjs'
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import mkdirp from 'mkdirp'
 import { InjectModel } from 'nestjs-typegoose'
 import { join } from 'path'
-import { $, cd } from 'zx'
+import { $ } from 'zx'
 import { MONGO_DB } from '~/app.config'
 import { CronDescription } from '~/common/decorator/cron-description.decorator'
 import { RedisItems, RedisKeys } from '~/constants/cache.constant'
@@ -91,11 +92,10 @@ export class CronService {
     mkdirp.sync(backupDirPath)
     try {
       await $`mongodump -h ${MONGO_DB.host} --port ${MONGO_DB.port} -d ${MONGO_DB.collectionName} -o ${backupDirPath} >/dev/null 2>&1`
-      cd(backupDirPath)
-      const debug = await nothrow($`pwd && ls -a`)
-      console.error(debug)
 
-      await $`zip -r backup-${dateDir}  mx-space/* && rm -rf mx-space`
+      execSync(`zip -r backup-${dateDir}  mx-space/* && rm -rf mx-space`, {
+        cwd: backupDirPath,
+      })
 
       this.logger.log('--> 备份成功')
     } catch (e) {

@@ -51,9 +51,9 @@ export class BackupService {
     return Promise.all(
       backups.map(async (item) => {
         const { path } = item
-        const { stdout } = await getFolderSize(path)
+        const size = getFolderSize(path)
         delete item.path
-        return { ...item, size: stdout }
+        return { ...item, size }
       }),
     )
   }
