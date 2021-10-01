@@ -1,3 +1,14 @@
+## [3.7.4](https://github.com/mx-space/server-next/compare/v3.7.3...v3.7.4) (2021-10-01)
+
+
+### Bug Fixes
+
+* backup cmd ([855492e](https://github.com/mx-space/server-next/commit/855492e476162e42b76eff04c216a5075b3c1e5e))
+* nestjs middleware bug, use interceptor ([57f04aa](https://github.com/mx-space/server-next/commit/57f04aa669de9136e8e0e2712a50aaeefefc1adc))
+* remove unnessary app info field ([c4cf9b3](https://github.com/mx-space/server-next/commit/c4cf9b3eb00d044dccaa260d015ef1c86c04d588))
+
+
+
 ## [3.7.3](https://github.com/mx-space/server-next/compare/v3.7.2...v3.7.3) (2021-09-30)
 
 
