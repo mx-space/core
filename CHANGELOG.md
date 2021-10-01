@@ -1,3 +1,12 @@
+## [3.7.6](https://github.com/mx-space/server-next/compare/v3.7.5...v3.7.6) (2021-10-01)
+
+
+### Bug Fixes
+
+* mongorestore argv ([10d6d02](https://github.com/mx-space/server-next/commit/10d6d0219fbe455a4df2d820c58b93fd360b4d3a))
+
+
+
 ## [3.7.5](https://github.com/mx-space/server-next/compare/v3.7.4...v3.7.5) (2021-10-01)
 
 
