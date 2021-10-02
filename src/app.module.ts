@@ -82,6 +82,7 @@ mkdirs()
       playground: isDev,
       autoSchemaFile: join(process.cwd(), 'schema.gql'),
       context: ({ req }) => ({ req }),
+      cors: false,
     }),
 
     AggregateModule,

@@ -24,7 +24,7 @@ export class CacheConfigService implements CacheOptionsFactory {
       port: REDIS.port as number,
     }
     if (REDIS.password) {
-      redisOptions.password = REDIS.password
+      redisOptions.password = REDIS.password as any
     }
     return {
       store: redisStore,

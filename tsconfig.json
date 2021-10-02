@@ -10,6 +10,7 @@
     "target": "ES2019",
     "sourceMap": true,
     "outDir": "./dist",
+    "allowJs": true,
     "baseUrl": ".",
     "noImplicitAny": false,
     "incremental": true,

@@ -102,41 +102,45 @@ export class AnalyzeInterceptor implements NestInterceptor {
 
     const url = request.url
 
-    try {
-      this.parser.setUA(request.headers['user-agent'])
+    process.nextTick(async () => {
+      try {
+        this.parser.setUA(request.headers['user-agent'])
 
-      const ua = this.parser.getResult()
+        const ua = this.parser.getResult()
 
-      await this.model.create({
-        ip,
-        ua,
-        path: new URL('http://a.com' + url).pathname,
-      })
-      const apiCallTimeRecord = await this.options.findOne({
-        name: 'apiCallTime',
-      })
-      if (!apiCallTimeRecord) {
-        await this.options.create({
-          name: 'apiCallTime',
-          value: 1,
+        await this.model.create({
+          ip,
+          ua,
+          path: new URL('http://a.com' + url).pathname,
         })
-      } else {
-        await this.options.updateOne(
-          { name: 'apiCallTime' },
-          {
-            $inc: {
-              value: 1,
+        const apiCallTimeRecord = await this.options.findOne({
+          name: 'apiCallTime',
+        })
+        if (!apiCallTimeRecord) {
+          await this.options.create({
+            name: 'apiCallTime',
+            value: 1,
+          })
+        } else {
+          await this.options.updateOne(
+            { name: 'apiCallTime' },
+            {
+              $inc: {
+                value: 1,
+              },
             },
-          },
-        )
-      }
-      // ip access in redis
-      const client = this.cacheService.getClient()
+          )
+        }
+        // ip access in redis
+        const client = this.cacheService.getClient()
 
-      const count = await client.sadd(getRedisKey(RedisKeys.Access, 'ips'), ip)
-      if (count) {
-        // record uv to db
-        process.nextTick(async () => {
+        const count = await client.sadd(
+          getRedisKey(RedisKeys.Access, 'ips'),
+          ip,
+        )
+        if (count) {
+          // record uv to db
+
           const uvRecord = await this.options.findOne({ name: 'uv' })
           if (uvRecord) {
             await uvRecord.updateOne({
@@ -150,11 +154,11 @@ export class AnalyzeInterceptor implements NestInterceptor {
               value: 1,
             })
           }
-        })
+        }
+      } catch (e) {
+        console.error(e)
       }
-    } catch (e) {
-      console.error(e)
-    }
+    })
 
     return call$
   }
