@@ -1,3 +1,14 @@
+## [3.7.7](https://github.com/mx-space/server-next/compare/v3.7.6...v3.7.7) (2021-10-02)
+
+
+### Bug Fixes
+
+* app config shared ([b7db64e](https://github.com/mx-space/server-next/commit/b7db64e3ae3df1ecc945badece9e3e00533a11a1))
+* **deps:** update dependency rxjs to v7.3.1 ([bd55864](https://github.com/mx-space/server-next/commit/bd558641abe5aabd84727a3d357be039699a7857))
+* node patch ([1ea8ab2](https://github.com/mx-space/server-next/commit/1ea8ab211db1f00d69a2a9b81321e28e58f15a24))
+
+
+
 ## [3.7.6](https://github.com/mx-space/server-next/compare/v3.7.5...v3.7.6) (2021-10-01)
 
 
