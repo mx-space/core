@@ -58,7 +58,7 @@ specifiers:
   fastify: '*'
   fastify-cookie: 5.3.1
   fastify-multipart: 5.0.1
-  fastify-swagger: 4.12.2
+  fastify-swagger: 4.12.4
   graphql: 15.6.0
   html-minifier: 4.0.0
   husky: 7.0.2
@@ -117,7 +117,7 @@ dependencies:
   '@nestjs/platform-fastify': 8.0.9_55bf2f8ded7f9ef3f4ad0a170ebe4ad4
   '@nestjs/platform-socket.io': 8.0.9_7e68451a42afe65385b9a2a3e266be16
   '@nestjs/schedule': 1.0.1_8a5acde12789466e235f42cfde47d8b1
-  '@nestjs/swagger': 5.1.0_1020bf308ea41b28adcca05a4e4dee08
+  '@nestjs/swagger': 5.1.0_67ce9f56a8385bfde00d30a82d1c6033
   '@nestjs/websockets': 8.0.9_f1263e9068ff8aaf42bb20237a3628cb
   '@typegoose/auto-increment': 1.0.0_mongoose@5.13.8
   '@typegoose/typegoose': 8.3.0_mongoose@5.13.8
@@ -137,7 +137,7 @@ dependencies:
   ejs: 3.1.6
   fastify-cookie: 5.3.1
   fastify-multipart: 5.0.1
-  fastify-swagger: 4.12.2
+  fastify-swagger: 4.12.4
   graphql: 15.6.0
   html-minifier: 4.0.0
   image-size: 1.0.0
@@ -1505,7 +1505,7 @@ packages:
       typescript: 4.4.3
     dev: true
 
-  /@nestjs/swagger/5.1.0_1020bf308ea41b28adcca05a4e4dee08:
+  /@nestjs/swagger/5.1.0_67ce9f56a8385bfde00d30a82d1c6033:
     resolution: {integrity: sha512-+/Edyzkh3n9Kkw72zzRDHF1ZWK1PlvkkM9lK9fjYaiMjEZ3oaCiSjdwd88vAVX6UIP0nvQkT5VNpSLYU+GK5yg==}
     peerDependencies:
       '@nestjs/common': ^8.0.0
@@ -1522,7 +1522,7 @@ packages:
       '@nestjs/common': 8.0.9_82ca6e21bd08a51a509883dd533f031a
       '@nestjs/core': 8.0.9_52e70c4b6d0a880fc27d6b80ab23839a
       '@nestjs/mapped-types': 1.0.0_6c54869c49aa21767fcdc6746c14b9ef
-      fastify-swagger: 4.12.2
+      fastify-swagger: 4.12.4
       lodash: 4.17.21
       path-to-regexp: 3.2.0
       reflect-metadata: 0.1.13
@@ -4276,13 +4276,13 @@ packages:
       content-disposition: 0.5.3
       encoding-negotiator: 2.0.1
       fastify-plugin: 3.0.0
-      glob: 7.1.7
+      glob: 7.2.0
       readable-stream: 3.6.0
       send: 0.17.1
     dev: false
 
-  /fastify-swagger/4.12.2:
-    resolution: {integrity: sha512-ZUI1PQlxcXoe3CxSC6ZFeDv70wxi8V206ATNA6k7CKNXsMuje1NTXJBgmO0/znlcu2QhsUNoQ2ynvSrWWddYhw==}
+  /fastify-swagger/4.12.4:
+    resolution: {integrity: sha512-M7sN9VDS0wt3w8A6RwZ06sMeUXKFwSSK8Q8u7BaGMqTZ1dE3cKUeIiQWToDWpb4eKjVK1xla3d4NgTtKB6jdAw==}
     dependencies:
       fastify-plugin: 3.0.0
       fastify-static: 4.2.3
@@ -4613,7 +4613,6 @@ packages:
       minimatch: 3.0.4
       once: 1.4.0
       path-is-absolute: 1.0.1
-    dev: true
 
   /global/4.4.0:
     resolution: {integrity: sha512-wv/LAoHdRE3BeTGz53FAamhGlPLhlssK45usmGFThIi4XqnBmjKQ16u+RNbP7WvigRZDxUsM0J3gcQ5yicaL0w==}
