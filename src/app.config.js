@@ -11,7 +11,7 @@ console.log(argv)
 
 exports.API_VERSION = 2
 exports.CROSS_DOMAIN = {
-  allowedOrigins: argv.allowedOrigins
+  allowedOrigins: argv.allowed_origins
     ? argv.allowedOrigins?.split?.(',')
     : [
         'innei.ren',
@@ -45,7 +45,7 @@ exports.REDIS = {
   httpCacheTTL: 5,
   max: 5,
   disableApiCache:
-    (isDev || argv.disableCache) && !process.env['ENABLE_CACHE_DEBUG'],
+    (isDev || argv.disable_cache) && !process.env['ENABLE_CACHE_DEBUG'],
 }
 
 /**
@@ -56,8 +56,8 @@ exports.AXIOS_CONFIG = {
 }
 
 exports.SECURITY = {
-  jwtSecret: argv.jwtSecret || 'asjhczxiucipoiopiqm2376',
+  jwtSecret: argv.jwt_secret || argv.jwtSecret || 'asjhczxiucipoiopiqm2376',
   jwtExpire: '7d',
   // 跳过登陆鉴权
-  skipAuth: argv.skipAuth ?? false,
+  skipAuth: !isDev ? true : argv.skip_auth ?? false,
 }

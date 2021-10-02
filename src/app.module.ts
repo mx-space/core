@@ -1,5 +1,4 @@
 import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { GraphQLModule } from '@nestjs/graphql'
 import { mkdirSync } from 'fs'
@@ -67,16 +66,7 @@ mkdirs()
   imports: [
     DbModule,
     CacheModule,
-    ConfigModule.forRoot({
-      envFilePath: [
-        '.env.development.local',
-        '.env.development',
-        '.env.production.local',
-        '.env.production',
-        '.env',
-      ],
-      isGlobal: true,
-    }),
+
     GraphQLModule.forRoot({
       debug: isDev,
       playground: isDev,

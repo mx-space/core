@@ -10,7 +10,6 @@ specifiers:
   '@innei-util/prettier': latest
   '@nestjs/cli': 8.1.2
   '@nestjs/common': 8.0.9
-  '@nestjs/config': 1.0.1
   '@nestjs/core': 8.0.9
   '@nestjs/graphql': 9.0.5
   '@nestjs/jwt': 8.0.0
@@ -110,7 +109,6 @@ specifiers:
 dependencies:
   '@algolia/client-search': 4.10.5
   '@nestjs/common': 8.0.9_82ca6e21bd08a51a509883dd533f031a
-  '@nestjs/config': 1.0.1_946bf8982b6f3d7b46cf0b296973a2a3
   '@nestjs/core': 8.0.9_52e70c4b6d0a880fc27d6b80ab23839a
   '@nestjs/graphql': 9.0.5_29957df7d179923a6113f29796b4e4b7
   '@nestjs/jwt': 8.0.0_@nestjs+common@8.0.9
@@ -1322,24 +1320,6 @@ packages:
       uuid: 8.3.2
     transitivePeerDependencies:
       - debug
-    dev: false
-
-  /@nestjs/config/1.0.1_946bf8982b6f3d7b46cf0b296973a2a3:
-    resolution: {integrity: sha512-azMl4uYlFIhYsywFxPJT81RxF3Pnn0TZW3EEmr0Wa0Wex8R2xpvBNrCcrOgW3TB1xGMP7eqBrlfsVh5ZP82szg==}
-    peerDependencies:
-      '@nestjs/common': ^7.0.0 || ^8.0.0
-      reflect-metadata: ^0.1.13
-      rxjs: ^6.0.0 || ^7.2.0
-    dependencies:
-      '@nestjs/common': 8.0.9_82ca6e21bd08a51a509883dd533f031a
-      dotenv: 10.0.0
-      dotenv-expand: 5.1.0
-      lodash.get: 4.4.2
-      lodash.has: 4.5.2
-      lodash.set: 4.3.2
-      reflect-metadata: 0.1.13
-      rxjs: 7.3.1
-      uuid: 8.3.2
     dev: false
 
   /@nestjs/core/8.0.9_52e70c4b6d0a880fc27d6b80ab23839a:
@@ -3679,10 +3659,6 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       is-obj: 2.0.0
-    dev: false
-
-  /dotenv-expand/5.1.0:
-    resolution: {integrity: sha512-YXQl1DSa4/PQyRfgrv6aoNjhasp/p4qs9FjJ4q4cQk+8m4r6k4ZSiEyytKG8f8W9gi8WsQtIObNmKd+tMzNTmA==}
     dev: false
 
   /dotenv/10.0.0:
@@ -6095,14 +6071,6 @@ packages:
   /lodash.flatten/4.4.0:
     resolution: {integrity: sha1-8xwiIlqWMtK7+OSt2+8kCqdlph8=}
 
-  /lodash.get/4.4.2:
-    resolution: {integrity: sha1-LRd/ZS+jHpObRDjVNBSZ36OCXpk=}
-    dev: false
-
-  /lodash.has/4.5.2:
-    resolution: {integrity: sha1-0Z9NwQlQWMzL4rDN9O4P5Ko3yGI=}
-    dev: false
-
   /lodash.includes/4.3.0:
     resolution: {integrity: sha1-YLuYqHy5I8aMoeUTJUgzFISfVT8=}
     dev: false
@@ -6136,10 +6104,6 @@ packages:
 
   /lodash.once/4.1.1:
     resolution: {integrity: sha1-DdOXEhPHxW34gJd9UEyI+0cal6w=}
-    dev: false
-
-  /lodash.set/4.3.2:
-    resolution: {integrity: sha1-2HV7HagH3eJIFrDWqEvqGnYjCyM=}
     dev: false
 
   /lodash.sortby/4.7.0:
