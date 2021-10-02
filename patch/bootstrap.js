@@ -1,41 +1,19 @@
-// import { getModelForClass, mongoose } from '@typegoose/typegoose'
-// import { config } from 'dotenv'
-// import { ConnectionBase } from 'mongoose'
-// import * as APP from '../src/app.config.mjs'
-// import { CategoryModel } from '../src/modules/category/category.model'
-// import { NoteModel } from '../src/modules/note/note.model'
-// import { PostModel } from '../src/modules/post/post.model'
-// const env = config().parsed || {}
-// const url = APP.MONGO_DB.uri
+const { MongoClient, Db } = require('mongodb')
+const MONGO_DB = require('../src/app.config').MONGO_DB
 
-// const opt = {
-//   useCreateIndex: true,
-//   useFindAndModify: false,
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-//   autoIndex: true,
-// }
-// mongoose.connect(url, opt)
-// const post = getModelForClass(PostModel)
-// const note = getModelForClass(NoteModel)
-// const category = getModelForClass(CategoryModel)
+/**
+ *
+ * @param {(db: Db) => Promise<any>} cb
+ */
+async function bootstrap(cb) {
+  const client = new MongoClient(`mongodb://${MONGO_DB.host}:${MONGO_DB.port}`)
+  await client.connect()
+  const db = client.db(MONGO_DB.dbName)
 
-// const Config = {
-//   env,
-//   db: (mongoose.connection as any).client.db(
-//     APP.MONGO_DB.collectionName,
-//   ) as ConnectionBase,
-//   models: {
-//     post,
-//     note,
-//     category,
-//   },
-// }
-// async function bootstrap(cb: (config: typeof Config) => any) {
-//   await cb.call(this, Config)
+  await cb(db)
 
-//   mongoose.disconnect()
-//   process.exit()
-// }
+  await client.close()
+  process.exit(0)
+}
 
-// export { bootstrap as patch }
+module.exports = exports.bootstrap = bootstrap

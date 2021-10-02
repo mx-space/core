@@ -93,6 +93,7 @@
     "lodash": "*",
     "marked": "3.0.4",
     "mkdirp": "*",
+    "mongodb": "*",
     "mongoose": "*",
     "mongoose-lean-id": "0.2.0",
     "mongoose-lean-virtuals": "0.8.1",

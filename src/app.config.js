@@ -27,12 +27,12 @@ exports.CROSS_DOMAIN = {
 }
 
 exports.MONGO_DB = {
-  collectionName: argv.collection_name || 'mx-space',
+  dbName: argv.collection_name || 'mx-space',
   host: argv.db_host || '127.0.0.1',
   port: argv.db_port || 27017,
   get uri() {
     return `mongodb://${this.host}:${this.port}/${
-      process.env.TEST ? 'mx-space_unitest' : this.collectionName
+      process.env.TEST ? 'mx-space_unitest' : this.dbName
     }`
   },
 }
