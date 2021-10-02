@@ -1,3 +1,17 @@
+## [3.7.8](https://github.com/mx-space/server-next/compare/v3.7.7...v3.7.8) (2021-10-02)
+
+
+### Bug Fixes
+
+* docker script ([fd7f9c8](https://github.com/mx-space/server-next/commit/fd7f9c870e53a8f96e5ae76e1454917d97c65c7a))
+
+
+### Features
+
+* add env for docker-compose ([9cef745](https://github.com/mx-space/server-next/commit/9cef745dc85017274cc5190c032fdc60fd4ed805))
+
+
+
 ## [3.7.7](https://github.com/mx-space/server-next/compare/v3.7.6...v3.7.7) (2021-10-02)
 
 
