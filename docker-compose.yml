@@ -6,6 +6,8 @@ services:
     image: innei/mx-server:latest
     command: node index.js --redis_host=redis --db_host=mongo --allowed_origins=${ALLOWED_ORIGINS} --jwt_secret=${JWT_SECRET}
     restart: 'on-failure'
+    volumes:
+      - ./data/mx-space:/root/.mx-space
     ports:
       - '2333:2333'
     depends_on:
@@ -21,7 +23,7 @@ services:
     container_name: mongo
     image: mongo
     volumes:
-      - ./data:/data/db
+      - ./data/db:/data/db
     ports:
       - '3344:27017'
     networks:

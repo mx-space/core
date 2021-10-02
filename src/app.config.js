@@ -12,7 +12,7 @@ console.log(argv)
 exports.API_VERSION = 2
 exports.CROSS_DOMAIN = {
   allowedOrigins: argv.allowed_origins
-    ? argv.allowedOrigins?.split?.(',')
+    ? argv.allowed_origins?.split?.(',') || []
     : [
         'innei.ren',
         'shizuri.net',

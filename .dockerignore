@@ -41,3 +41,5 @@ release.zip
 run
 
 data
+assets
+.env
