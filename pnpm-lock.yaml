@@ -19,7 +19,7 @@ specifiers:
   '@nestjs/platform-socket.io': 8.0.7
   '@nestjs/schedule': 1.0.1
   '@nestjs/schematics': 8.0.3
-  '@nestjs/swagger': 5.0.9
+  '@nestjs/swagger': 5.1.0
   '@nestjs/testing': 8.0.7
   '@nestjs/websockets': 8.0.7
   '@typegoose/auto-increment': 1.0.0
@@ -117,7 +117,7 @@ dependencies:
   '@nestjs/platform-fastify': 8.0.7_6ccd7f020aae0bb10815f91d7f482355
   '@nestjs/platform-socket.io': 8.0.7_fc48f24482aae74043b84c3b5cd38828
   '@nestjs/schedule': 1.0.1_92bca3ef6c68a487b78ba06603236e5b
-  '@nestjs/swagger': 5.0.9_89221cfb2e693b84d741ba2b390624ff
+  '@nestjs/swagger': 5.1.0_89221cfb2e693b84d741ba2b390624ff
   '@nestjs/websockets': 8.0.7_42b244521ee0045572bc7d9f51a25080
   '@typegoose/auto-increment': 1.0.0_mongoose@5.13.8
   '@typegoose/typegoose': 8.3.0_mongoose@5.13.8
@@ -1522,8 +1522,8 @@ packages:
       typescript: 4.4.3
     dev: true
 
-  /@nestjs/swagger/5.0.9_89221cfb2e693b84d741ba2b390624ff:
-    resolution: {integrity: sha512-KivZeDgn/VeDn81Rnd/0Cbv7M4kuHRb+Rlri+YsUrw3h9or4bxxRiUg7Yjjt368KxfJgR7C3lc6kltvoI7ucQg==}
+  /@nestjs/swagger/5.1.0_89221cfb2e693b84d741ba2b390624ff:
+    resolution: {integrity: sha512-+/Edyzkh3n9Kkw72zzRDHF1ZWK1PlvkkM9lK9fjYaiMjEZ3oaCiSjdwd88vAVX6UIP0nvQkT5VNpSLYU+GK5yg==}
     peerDependencies:
       '@nestjs/common': ^8.0.0
       '@nestjs/core': ^8.0.0
