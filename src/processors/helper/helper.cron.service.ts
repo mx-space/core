@@ -1,12 +1,14 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
-import { execSync } from 'child_process'
+import { exec } from 'child_process'
 import COS from 'cos-nodejs-sdk-v5'
 import dayjs from 'dayjs'
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
+import { existsSync } from 'fs'
+import { readFile, rm, writeFile } from 'fs/promises'
 import mkdirp from 'mkdirp'
 import { InjectModel } from 'nestjs-typegoose'
 import { join } from 'path'
+import { promisify } from 'util'
 import { $ } from 'zx'
 import { MONGO_DB } from '~/app.config'
 import { CronDescription } from '~/common/decorator/cron-description.decorator'
@@ -65,7 +67,7 @@ export class CronService {
         'https://cdn.jsdelivr.net/gh/atmire/COUNTER-Robots@master/COUNTER_Robots_list.json',
       )
 
-      writeFileSync(LOCAL_BOT_LIST_DATA_FILE_PATH, JSON.stringify(json), {
+      await writeFile(LOCAL_BOT_LIST_DATA_FILE_PATH, JSON.stringify(json), {
         encoding: 'utf-8',
         flag: 'w+',
       })
@@ -93,9 +95,12 @@ export class CronService {
     try {
       await $`mongodump -h ${MONGO_DB.host} --port ${MONGO_DB.port} -d ${MONGO_DB.dbName} -o ${backupDirPath} >/dev/null 2>&1`
 
-      execSync(`zip -r backup-${dateDir}  mx-space/* && rm -rf mx-space`, {
-        cwd: backupDirPath,
-      })
+      await promisify(exec)(
+        `zip -r backup-${dateDir}  mx-space/* && rm -rf mx-space`,
+        {
+          cwd: backupDirPath,
+        },
+      )
 
       this.logger.log('--> 备份成功')
     } catch (e) {
@@ -151,7 +156,7 @@ export class CronService {
       )
     })
 
-    return readFileSync(join(backupDirPath, 'backup-' + dateDir + '.zip'))
+    return readFile(join(backupDirPath, 'backup-' + dateDir + '.zip'))
   }
 
   @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT, {
@@ -206,8 +211,8 @@ export class CronService {
 
   @Cron(CronExpression.EVERY_DAY_AT_3AM, { name: 'cleanTempDirectory' })
   @CronDescription('清理临时文件')
-  cleanTempDirectory() {
-    rmSync(TEMP_DIR, { recursive: true })
+  async cleanTempDirectory() {
+    await rm(TEMP_DIR, { recursive: true })
     mkdirp.sync(TEMP_DIR)
     this.logger.log('--> 清理临时文件成功')
   }

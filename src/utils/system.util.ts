@@ -1,11 +1,14 @@
-import { execSync } from 'child_process'
+import { exec } from 'child_process'
+import { promisify } from 'util'
 
-export function getFolderSize(folderPath: string) {
+export async function getFolderSize(folderPath: string) {
   try {
     return (
-      execSync(`du -shc ${folderPath} | head -n 1 | cut -f1`, {
-        encoding: 'utf-8',
-      }).split('\t')[0] || 'N/A'
+      (
+        await promisify(exec)(`du -shc ${folderPath} | head -n 1 | cut -f1`, {
+          encoding: 'utf-8',
+        })
+      ).stdout.split('\t')[0] || 'N/A'
     )
   } catch {
     return 'N/A'

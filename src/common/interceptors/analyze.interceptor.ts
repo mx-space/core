@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 import { FastifyRequest } from 'fastify'
-import { readFileSync } from 'fs'
+import { readFile } from 'fs/promises'
 import { InjectModel } from 'nestjs-typegoose'
 import { Observable } from 'rxjs'
 import UAParser from 'ua-parser-js'
@@ -45,19 +45,19 @@ export class AnalyzeInterceptor implements NestInterceptor {
     this.init()
   }
 
-  init() {
+  async init() {
     this.parser = new UAParser()
-    this.botListData = this.getLocalBotList()
+    this.botListData = await this.getLocalBotList()
     this.taskService.add(this.cronService.updateBotList.name, async () =>
       this.cronService.updateBotList(),
     )
   }
 
-  getLocalBotList() {
+  async getLocalBotList() {
     try {
       return this.pickPattern2Regexp(
         JSON.parse(
-          readFileSync(LOCAL_BOT_LIST_DATA_FILE_PATH, {
+          await readFile(LOCAL_BOT_LIST_DATA_FILE_PATH, {
             encoding: 'utf-8',
           }),
         ),
@@ -100,7 +100,7 @@ export class AnalyzeInterceptor implements NestInterceptor {
       return call$
     }
 
-    const url = request.url
+    const url = request.url.replace(/^\/api(\/v\d)?/, '')
 
     process.nextTick(async () => {
       try {

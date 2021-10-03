@@ -10,10 +10,8 @@ import { RolesGuard } from './common/guard/roles.guard'
 import { AnalyzeInterceptor } from './common/interceptors/analyze.interceptor'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
 import { CountingInterceptor } from './common/interceptors/counting.interceptor'
-import {
-  JSONSerializeInterceptor,
-  ResponseInterceptor,
-} from './common/interceptors/response.interceptors'
+import { JSONSerializeInterceptor } from './common/interceptors/json-serialize.interceptor'
+import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import {
   DATA_DIR,
   LOGGER_DIR,

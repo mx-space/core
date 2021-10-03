@@ -5,14 +5,8 @@ import {
   Logger,
   Scope,
 } from '@nestjs/common'
-import {
-  existsSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from 'fs'
+import { existsSync, statSync } from 'fs'
+import { readdir, readFile, rm, writeFile } from 'fs/promises'
 import mkdirp from 'mkdirp'
 import { join, resolve } from 'path'
 import { Readable } from 'stream'
@@ -35,7 +29,7 @@ export class BackupService {
     if (!existsSync(backupPath)) {
       return []
     }
-    const backupFilenames = readdirSync(backupPath)
+    const backupFilenames = await readdir(backupPath)
     const backups = []
 
     for (const filename of backupFilenames) {
@@ -51,18 +45,18 @@ export class BackupService {
     return Promise.all(
       backups.map(async (item) => {
         const { path } = item
-        const size = getFolderSize(path)
+        const size = await getFolderSize(path)
         delete item.path
         return { ...item, size }
       }),
     )
   }
 
-  getFileStream(dirname: string) {
+  async getFileStream(dirname: string) {
     const path = this.checkBackupExist(dirname)
     const stream = new Readable()
 
-    stream.push(readFileSync(path))
+    stream.push(await readFile(path))
     stream.push(null)
 
     return stream
@@ -80,7 +74,7 @@ export class BackupService {
     const tempDirPath = '/tmp/mx-space/backup'
     const tempBackupPath = join(tempDirPath, 'backup.zip')
     mkdirp.sync(tempDirPath)
-    writeFileSync(tempBackupPath, buffer)
+    await writeFile(tempBackupPath, buffer)
 
     try {
       cd(tempDirPath)
@@ -95,7 +89,7 @@ export class BackupService {
         'restore_done',
       )
     } finally {
-      rmSync(tempDirPath, { recursive: true })
+      await rm(tempDirPath, { recursive: true })
     }
   }
 
@@ -104,7 +98,7 @@ export class BackupService {
     const dirPath = join(BACKUP_DIR, dirname)
     try {
       if (existsSync(join(join(dirPath, 'mx-space')))) {
-        rmSync(join(dirPath, 'mx-space'), { recursive: true })
+        await rm(join(dirPath, 'mx-space'), { recursive: true })
       }
 
       cd(dirPath)
@@ -126,7 +120,7 @@ export class BackupService {
       throw e
     } finally {
       try {
-        rmSync(join(dirPath, 'mx-space'), { recursive: true })
+        await rm(join(dirPath, 'mx-space'), { recursive: true })
       } catch {}
     }
 
@@ -142,7 +136,7 @@ export class BackupService {
       throw new BadRequestException('文件不存在')
     }
 
-    rmSync(path, { recursive: true })
+    await rm(path, { recursive: true })
     return true
   }
 }
