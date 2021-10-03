@@ -1,3 +1,13 @@
+## [3.7.9](https://github.com/mx-space/server-next/compare/v3.7.8...v3.7.9) (2021-10-03)
+
+
+### Bug Fixes
+
+* **deps:** update dependency fastify-swagger to v4.12.4 ([cc9ad63](https://github.com/mx-space/server-next/commit/cc9ad63ca639d90c76eaa483ec45a17a5c27b16b))
+* Import user module repeatedly ([#92](https://github.com/mx-space/server-next/issues/92)) ([f7c4b42](https://github.com/mx-space/server-next/commit/f7c4b420a8bb924642ba1691d671a7dcbfcaae27))
+
+
+
 ## [3.7.8](https://github.com/mx-space/server-next/compare/v3.7.7...v3.7.8) (2021-10-02)
 
 
