@@ -1,12 +1,14 @@
+import { consola } from './consola.util'
 import './dayjs.util'
 import { isDev } from './index.util'
 
-Object.assign(globalThis, {
-  isDev: isDev,
-})
-
 console.debug = (...rest) => {
   if (isDev) {
-    console.log.call(console, ...rest)
+    consola.log.call(console, ...rest)
   }
 }
+
+Object.assign(globalThis, {
+  isDev: isDev,
+  consola,
+})

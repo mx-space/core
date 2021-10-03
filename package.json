@@ -76,6 +76,7 @@
     "chalk": "*",
     "class-transformer": "0.4.0",
     "class-validator": "0.13.1",
+    "consola": "*",
     "cos-nodejs-sdk-v5": "2.10.4",
     "dayjs": "1.10.7",
     "dotenv": "*",

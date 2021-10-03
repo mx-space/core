@@ -47,7 +47,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           (exception as myError)?.statusCode ||
           HttpStatus.INTERNAL_SERVER_ERROR
     if (isDev || status === HttpStatus.INTERNAL_SERVER_ERROR) {
-      console.error(exception)
+      Logger.error(exception, undefined, 'Catch')
     } else {
       const ip = getIp(request)
       this.logger.warn(
@@ -72,7 +72,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (prevRequestTs) {
       const content = request.method + ' -> ' + request.url
       Logger.debug(
-        '--- 响应请求：' + content + ` +${+new Date() - prevRequestTs}ms`,
+        '--- 响应异常请求：' +
+          content +
+          chalk.yellow(` +${+new Date() - prevRequestTs}ms`),
         LoggingInterceptor.name,
       )
     }

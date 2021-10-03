@@ -3,7 +3,7 @@ import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
 import { join } from 'path'
 import { AppResolver } from '~/app.resolver'
-import { fastifyApp } from '~/common/adapt/fastify'
+import { fastifyApp } from '~/common/adapters/fastify.adapter'
 
 describe('GQL test (e2e)', () => {
   let app: NestFastifyApplication

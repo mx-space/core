@@ -32,14 +32,14 @@ export class LoggingInterceptor implements NestInterceptor {
     const call$ = next.handle()
     const request = this.getRequest(context)
     const content = request.method + ' -> ' + request.url
-    Logger.debug('+++ 收到请求：' + content, LoggingInterceptor.name)
+    this.logger.debug('+++ 收到请求：' + content)
     const now = +new Date()
     SetMetadata(HTTP_REQUEST_TIME, now)(this.getRequest(context))
 
     return call$.pipe(
       tap(() =>
         this.logger.debug(
-          '--- 响应请求：' + content + ` +${+new Date() - now}ms`,
+          '--- 响应请求：' + content + chalk.yellow(` +${+new Date() - now}ms`),
         ),
       ),
     )
