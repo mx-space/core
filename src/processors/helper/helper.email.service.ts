@@ -45,13 +45,13 @@ export class EmailService {
   writeTemplate(type: ReplyMailType, source: string) {
     switch (type) {
       case ReplyMailType.Guest:
-        return this.assetService.writeAsset(
+        return this.assetService.writeUserCustomAsset(
           '/email-template/guest.template.ejs',
           source,
           { encoding: 'utf-8' },
         )
       case ReplyMailType.Owner:
-        return this.assetService.writeAsset(
+        return this.assetService.writeUserCustomAsset(
           '/email-template/owner.template.ejs',
           source,
           { encoding: 'utf-8' },

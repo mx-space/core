@@ -15,10 +15,10 @@ import {
   ResponseInterceptor,
 } from './common/interceptors/response.interceptors'
 import {
-  ASSET_DIR,
   DATA_DIR,
   LOGGER_DIR,
   TEMP_DIR,
+  USER_ASSET_DIR,
 } from './constants/path.constant'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
@@ -57,8 +57,8 @@ function mkdirs() {
   Logger.log(chalk.blue('临时目录已经建好: ' + TEMP_DIR))
   mkdirSync(LOGGER_DIR, { recursive: true })
   Logger.log(chalk.blue('日志目录已经建好: ' + LOGGER_DIR))
-  mkdirSync(ASSET_DIR, { recursive: true })
-  Logger.log(chalk.blue('资源目录已经建好: ' + ASSET_DIR))
+  mkdirSync(USER_ASSET_DIR, { recursive: true })
+  Logger.log(chalk.blue('资源目录已经建好: ' + USER_ASSET_DIR))
 }
 mkdirs()
 

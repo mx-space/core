@@ -6,7 +6,8 @@
 import { Injectable, Logger } from '@nestjs/common'
 import fs from 'fs'
 import path, { join } from 'path'
-import { ASSET_DIR } from '~/constants/path.constant'
+import { promisify } from 'util'
+import { USER_ASSET_DIR } from '~/constants/path.constant'
 import { HttpService } from './helper.http.service'
 
 // 先从 ASSET_DIR 找用户自定义的资源, 没有就从默认的 ASSET_DIR 找, 没有就从网上拉取, 存到默认的 ASSET_DIR
@@ -17,6 +18,9 @@ export class AssetService {
     this.logger = new Logger(AssetService.name)
   }
 
+  /**
+   * 内置资源地址
+   */
   public embedAssetPath = path.resolve(process.cwd(), 'assets')
   // 在线资源的地址 `/` 结尾
   private onlineAssetPath =
@@ -49,8 +53,8 @@ export class AssetService {
     path: string,
     options: Parameters<typeof fs.readFileSync>[1],
   ) {
-    if (fs.existsSync(join(ASSET_DIR, path))) {
-      return fs.readFileSync(join(ASSET_DIR, path), options)
+    if (fs.existsSync(join(USER_ASSET_DIR, path))) {
+      return await promisify(fs.readFile)(join(USER_ASSET_DIR, path), options)
     }
     return null
   }
@@ -77,28 +81,32 @@ export class AssetService {
           })(),
           { recursive: true },
         )
-        fs.writeFileSync(join(this.embedAssetPath, path), data, options)
+        promisify(fs.writeFile)(join(this.embedAssetPath, path), data, options)
         return data
       } catch (e) {
         this.logger.error('本地资源不存在，线上资源无法拉取')
         throw e
       }
     }
-    return fs.readFileSync(join(this.embedAssetPath, path), options)
+    return promisify(fs.readFile)(join(this.embedAssetPath, path), options)
   }
 
-  public writeAsset(
+  public writeUserCustomAsset(
     path: string,
     data: any,
     options: Parameters<typeof fs.writeFileSync>[2],
   ) {
     fs.mkdirSync(
       (() => {
-        const p = join(ASSET_DIR, path).split('/')
+        const p = join(USER_ASSET_DIR, path).split('/')
         return p.slice(0, p.length - 1).join('/')
       })(),
       { recursive: true },
     )
-    fs.writeFileSync(join(ASSET_DIR, path), data, options)
+    fs.writeFileSync(join(USER_ASSET_DIR, path), data, options)
+  }
+
+  public async removeUserCustomAsset(path: string) {
+    return promisify(fs.unlink)(join(USER_ASSET_DIR, path))
   }
 }

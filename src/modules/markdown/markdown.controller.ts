@@ -13,7 +13,6 @@ import dayjs from 'dayjs'
 import { render } from 'ejs'
 import { minify } from 'html-minifier'
 import JSZip from 'jszip'
-import { sample } from 'lodash'
 import { join } from 'path'
 import { performance } from 'perf_hooks'
 import { Readable } from 'stream'
@@ -198,14 +197,10 @@ export class MarkdownController {
     const structure = await this.service.getRenderedMarkdownHtmlStructure(
       markdown,
       document.title,
+      theme,
     )
 
     const html = render(await this.service.getMarkdownEjsRenderTemplate(), {
-      theme:
-        theme === 'random'
-          ? sample(this.service.getMarkdownRenderTheme())
-          : xss(theme),
-
       ...structure,
 
       title: document.title,
@@ -246,11 +241,12 @@ export class MarkdownController {
     const structure = await this.service.getRenderedMarkdownHtmlStructure(
       html,
       title,
+      theme,
     )
     return minify(
       render(await this.service.getMarkdownEjsRenderTemplate(), {
         ...structure,
-        theme: xss(theme),
+
         title: xss(title),
       }),
     )

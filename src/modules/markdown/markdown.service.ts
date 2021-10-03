@@ -321,10 +321,19 @@ ${text.trim()}
     return marked(text)
   }
 
-  async getRenderedMarkdownHtmlStructure(html: string, title: string) {
+  async getRenderedMarkdownHtmlStructure(
+    html: string,
+    title: string,
+    theme = 'newsprint',
+  ) {
     const style = await this.assetService.getAsset('/markdown/markdown.css', {
       encoding: 'utf8',
     })
+
+    const themeStyleSheet = await this.assetService.getAsset(
+      '/markdown/theme/' + theme + '.css',
+      { encoding: 'utf-8' },
+    )
     return {
       body: [`<article><h1>${title}</h1>${html}</article>`],
       extraScripts: [
@@ -342,7 +351,7 @@ ${text.trim()}
       link: [
         '<link href="https://cdn.jsdelivr.net/gh/PrismJS/prism-themes@master/themes/prism-one-light.css" rel="stylesheet" />',
       ],
-      style: [style],
+      style: [style, themeStyleSheet],
     }
   }
 
@@ -352,7 +361,7 @@ ${text.trim()}
     })
   }
 
-  getMarkdownRenderTheme() {
-    return ['newsprint', 'github', 'han', 'gothic'] as const
-  }
+  // getMarkdownRenderTheme() {
+  //   return ['newsprint', 'github', 'han', 'gothic'] as const
+  // }
 }
