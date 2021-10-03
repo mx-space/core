@@ -1,3 +1,12 @@
+## [3.7.10](https://github.com/mx-space/server-next/compare/v3.7.9...v3.7.10) (2021-10-03)
+
+
+### Features
+
+* use custom logger ([0ce61f6](https://github.com/mx-space/server-next/commit/0ce61f62d5ef3e60fa5706eb763341af4d31b21a))
+
+
+
 ## [3.7.9](https://github.com/mx-space/server-next/compare/v3.7.8...v3.7.9) (2021-10-03)
 
 
