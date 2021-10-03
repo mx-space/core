@@ -23,7 +23,7 @@ import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 export class LoggingInterceptor implements NestInterceptor {
   private logger: Logger
   constructor() {
-    this.logger = new Logger(LoggingInterceptor.name)
+    this.logger = new Logger(LoggingInterceptor.name, { timestamp: false })
   }
   intercept(
     context: ExecutionContext,

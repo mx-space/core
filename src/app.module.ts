@@ -46,6 +46,7 @@ import { CacheModule } from './processors/cache/cache.module'
 import { DbModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
+import { LoggerModule } from './processors/logger/logger.module'
 
 // FIXME
 function mkdirs() {
@@ -101,6 +102,7 @@ mkdirs()
 
     GatewayModule,
     HelperModule,
+    LoggerModule,
   ],
   controllers: [AppController],
   providers: [

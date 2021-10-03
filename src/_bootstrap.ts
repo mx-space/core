@@ -20,7 +20,6 @@ async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     fastifyApp,
-    { logger: new MyLogger() },
   )
 
   const hosts = Origin.map((host) => new RegExp(host, 'i'))
@@ -76,7 +75,7 @@ async function bootstrap() {
       consola.success(`Admin Dashboard: ${url}/qaqdmin`)
       consola.success(`Server listen on: ${url}`)
     }
-
+    app.useLogger(app.get(MyLogger))
     Logger.log('Server is up.')
   })
 
