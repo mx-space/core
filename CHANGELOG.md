@@ -1,3 +1,12 @@
+# [3.8.0](https://github.com/mx-space/server-next/compare/v3.7.10...v3.8.0) (2021-10-03)
+
+
+### Bug Fixes
+
+* use logger after listen ([b410e71](https://github.com/mx-space/server-next/commit/b410e71ce114c2e136130d43cd435ba57fdc24b9))
+
+
+
 ## [3.7.10](https://github.com/mx-space/server-next/compare/v3.7.9...v3.7.10) (2021-10-03)
 
 
