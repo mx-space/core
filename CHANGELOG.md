@@ -1,3 +1,12 @@
+# [3.9.0](https://github.com/mx-space/server-next/compare/v3.8.2...v3.9.0) (2021-10-04)
+
+
+### Features
+
+* pageproxy can assign version ([5c6d929](https://github.com/mx-space/server-next/commit/5c6d92952aad1f8a29e5ba191262ac9a9bfc3b14))
+
+
+
 ## [3.8.2](https://github.com/mx-space/server-next/compare/v3.8.1...v3.8.2) (2021-10-04)
 
 
