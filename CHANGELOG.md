@@ -1,3 +1,12 @@
+## [3.8.1](https://github.com/mx-space/server-next/compare/v3.8.0...v3.8.1) (2021-10-04)
+
+
+### Bug Fixes
+
+* markdown import logic ([bb108e4](https://github.com/mx-space/server-next/commit/bb108e47b22de37401e9aad4ce3a6baee1d02f60))
+
+
+
 # [3.8.0](https://github.com/mx-space/server-next/compare/v3.7.10...v3.8.0) (2021-10-03)
 
 
