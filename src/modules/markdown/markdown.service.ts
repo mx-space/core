@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 import { dump } from 'js-yaml'
 import JSZip from 'jszip'
@@ -36,7 +36,7 @@ export class MarkdownService {
     let count = 1
     const categoryNameAndId = (await this.categoryModel.find().lean()).map(
       (c) => {
-        return { name: c.name, _id: c._id }
+        return { name: c.name, _id: c._id, slug: c.slug }
       },
     )
 
@@ -44,7 +44,10 @@ export class MarkdownService {
       if (!name) {
         return
       }
-      const hasCategory = categoryNameAndId.find((c) => name === c.name)
+
+      const hasCategory = categoryNameAndId.find(
+        (c) => name === c.name || name === c.slug,
+      )
 
       if (!hasCategory) {
         const newCategoryDoc = await this.categoryModel.create({
@@ -55,38 +58,19 @@ export class MarkdownService {
         categoryNameAndId.push({
           name: newCategoryDoc.name,
           _id: newCategoryDoc._id,
+          slug: newCategoryDoc.slug,
         })
 
         await newCategoryDoc.save()
         return newCategoryDoc
       } else {
-        await this.categoryModel.updateOne(
-          {
-            _id: hasCategory._id,
-          },
-          {
-            $inc: {
-              count: 1,
-            },
-          },
-        )
         return hasCategory
       }
     }
     const genDate = this.genDate
     const models = [] as PostModel[]
-    const _defaultCategory = await this.categoryModel.findOne()
-    const defaultCategory = new Proxy(_defaultCategory, {
-      get(target) {
-        target.updateOne({
-          $inc: {
-            count: 1,
-          },
-        })
+    const defaultCategory = await this.categoryModel.findOne()
 
-        return target
-      },
-    })
     for await (const item of data) {
       if (!item.meta) {
         models.push({
@@ -109,7 +93,11 @@ export class MarkdownService {
         } as PostModel)
       }
     }
-    return await this.postModel.insertMany(models)
+    return await this.postModel
+      .insertMany(models, { ordered: false })
+      .catch((err) => {
+        Logger.log('一篇文章导入失败', MarkdownService.name)
+      })
   }
 
   async insertNotesToDb(data: DatatypeDto[]) {
