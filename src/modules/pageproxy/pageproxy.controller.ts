@@ -1,4 +1,10 @@
-import { Controller, Get, Query, Res } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  InternalServerErrorException,
+  Query,
+  Res,
+} from '@nestjs/common'
 import { FastifyReply } from 'fastify'
 import { API_VERSION } from '~/app.config'
 import { Cookies } from '~/common/decorator/cookie.decorator'
@@ -66,30 +72,36 @@ export class PageProxyController {
       reply.clearCookie('__gatewayUrl')
     }
 
-    let entry =
+    const source =
       (!onlyGithub &&
-        (await this.cacheService.get<string>(
-          getRedisKey(RedisKeys.AdminPage),
-        ))) ||
+        (await this.cacheService
+          .get<string>(getRedisKey(RedisKeys.AdminPage))
+          .then((text) => text && { text, from: 'redis' }))) ||
       (await (async () => {
         const indexEntryUrl = `https://raw.githubusercontent.com/mx-space/admin-next/gh-pages/index.html`
-        const indexEntryCdnUrl = `https://cdn.jsdelivr.net/gh/mx-space/admin-next@gh-pages/index.html?t=${+new Date()}`
+        const indexEntryCdnUrl = `https://cdn.jsdelivr.net/gh/mx-space/admin-next@gh-pages/index.html`
         const tasks = [
           // 龟兔赛跑, 乌龟先跑
           // eslint-disable-next-line @typescript-eslint/no-empty-function
-          fetch(indexEntryUrl).then((res) => res.text()),
+          fetch(indexEntryUrl)
+            .then((res) => res.text())
+            .then((text) => ({ text, from: 'github' })),
         ]
         if (!onlyGithub) {
           tasks.push(
-            sleep(1000).then(async () =>
-              (await fetch(indexEntryCdnUrl)).text(),
-            ),
+            sleep(1000)
+              .then(async () => (await fetch(indexEntryCdnUrl)).text())
+              .then((text) => ({ text, from: 'jsdelivr' })),
           )
         }
-        return await Promise.any(tasks)
+        return await Promise.any(tasks).catch((e) => {
+          const err = '网络连接异常, 所有请求均失败, 无法获取后台入口文件'
+          reply.type('application/json').status(500).send({ message: err })
+          throw new InternalServerErrorException(err)
+        })
       })())
 
-    await this.cacheService.set(getRedisKey(RedisKeys.AdminPage), entry, {
+    await this.cacheService.set(getRedisKey(RedisKeys.AdminPage), source.text, {
       ttl: 10 * 60,
     })
 
@@ -101,9 +113,11 @@ export class PageProxyController {
             GATEWAY: gatewayUrl ?? cookies['__gatewayUrl'],
           }
 
-    entry = entry.replace(
+    const entry = source.text.replace(
       `<!-- injectable script -->`,
-      `<script>${`window.injectData = ${JSON.stringify({
+      `<script>${`window.page_source='${
+        source.from
+      }'};\nwindow.injectData = ${JSON.stringify({
         LOGIN_BG: adminExtra.background,
         TITLE: adminExtra.title,
         WEB_URL: webUrl,
