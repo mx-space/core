@@ -61,3 +61,8 @@ exports.SECURITY = {
   // 跳过登陆鉴权
   skipAuth: !isDev ? true : argv.skip_auth ?? false,
 }
+
+exports.ADMIN_DASHBOARD = {
+  // 需要获取反代管理面板的版本
+  version: '3.6.10',
+}

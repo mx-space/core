@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer'
-import { IsBoolean, IsIn, IsOptional, IsUrl } from 'class-validator'
+import { IsBoolean, IsIn, IsOptional, IsSemVer, IsUrl } from 'class-validator'
 
 export class PageProxyDebugDto {
   @IsIn([false])
@@ -21,4 +21,17 @@ export class PageProxyDebugDto {
    * If true, always use index.html pull from github.
    */
   __onlyGithub = false
+
+  @IsOptional()
+  @IsSemVer()
+  @Transform(({ value }) => (value === 'latest' ? null : value))
+  __version?: string
+
+  /**
+   * 无缓存访问, redis no
+   */
+  @IsBoolean()
+  @Transform(({ value }) => (value === 'true' ? true : false))
+  @IsOptional()
+  __purge = false
 }

@@ -16,6 +16,11 @@
       "eslint --cache"
     ]
   },
+  "adminRepository": "mx-space/admin-next",
+  "repository": {
+    "directory": "mx-space/server-next",
+    "url": "https://github.com/mx-space/server-next"
+  },
   "homepage": "https://github.com/mx-space/server-next#readme",
   "issues": "https://github.com/mx-space/server-next/issues",
   "scripts": {

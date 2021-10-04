@@ -2,11 +2,13 @@ import {
   Controller,
   Get,
   InternalServerErrorException,
+  Logger,
   Query,
   Res,
 } from '@nestjs/common'
 import { FastifyReply } from 'fastify'
-import { API_VERSION } from '~/app.config'
+import PKG from 'package.json'
+import { ADMIN_DASHBOARD, API_VERSION } from '~/app.config'
 import { Cookies } from '~/common/decorator/cookie.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -16,7 +18,6 @@ import { getRedisKey } from '~/utils/redis.util'
 import { ConfigsService } from '../configs/configs.service'
 import { InitService } from '../init/init.service'
 import { PageProxyDebugDto } from './pageproxy.dto'
-
 interface IInjectableData {
   BASE_API: null | string
   WEB_URL: null | string
@@ -57,8 +58,13 @@ export class PageProxyController {
       __gatewayUrl: gatewayUrl,
       __onlyGithub: onlyGithub,
       __debug: debug,
+      __version: adminVersion = ADMIN_DASHBOARD.version,
+      __purge,
     } = query
 
+    if (__purge) {
+      await this.cacheService.getClient().del(getRedisKey(RedisKeys.AdminPage))
+    }
     if (apiUrl) {
       reply.setCookie('__apiUrl', apiUrl, { maxAge: 1000 * 60 * 10 })
     }
@@ -74,14 +80,25 @@ export class PageProxyController {
 
     const source =
       (!onlyGithub &&
+        !adminVersion &&
         (await this.cacheService
           .get<string>(getRedisKey(RedisKeys.AdminPage))
           .then((text) => text && { text, from: 'redis' }))) ||
       (await (async () => {
-        const indexEntryUrl = `https://raw.githubusercontent.com/mx-space/admin-next/gh-pages/index.html`
-        const indexEntryCdnUrl = `https://cdn.jsdelivr.net/gh/mx-space/admin-next@gh-pages/index.html`
+        let latestVersion = ''
+        // 没有指定版本, 则获取最新版本
+        if (!adminVersion) {
+          // tag_name: v3.6.x
+          const { tag_name } = await fetch(
+            `https://api.github.com/repos/${PKG.adminRepository}/releases/latest`,
+          ).then((data) => data.json())
+          latestVersion = tag_name.replace(/^v/, '')
+        }
+        const v = adminVersion || latestVersion
+        const indexEntryUrl = `https://raw.githubusercontent.com/${PKG.adminRepository}/page_v${v}/index.html`
+        const indexEntryCdnUrl = `https://cdn.jsdelivr.net/gh/${PKG.adminRepository}@page_v${v}/index.html`
+        Logger.debug('use admin version: ' + v, 'PageProxy')
         const tasks = [
-          // 龟兔赛跑, 乌龟先跑
           // eslint-disable-next-line @typescript-eslint/no-empty-function
           fetch(indexEntryUrl)
             .then((res) => res.text())
@@ -89,8 +106,8 @@ export class PageProxyController {
         ]
         if (!onlyGithub) {
           tasks.push(
-            sleep(1000)
-              .then(async () => (await fetch(indexEntryCdnUrl)).text())
+            fetch(indexEntryCdnUrl)
+              .then((res) => res.text())
               .then((text) => ({ text, from: 'jsdelivr' })),
           )
         }
@@ -115,7 +132,7 @@ export class PageProxyController {
 
     const entry = source.text.replace(
       `<!-- injectable script -->`,
-      `<script>${`window.page_source='${
+      `<script>${`window.pageSource='${
         source.from
       }';\nwindow.injectData = ${JSON.stringify({
         LOGIN_BG: adminExtra.background,
