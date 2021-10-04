@@ -67,7 +67,7 @@ export class LinkController {
 
     process.nextTick(async () => {
       if (doc.email) {
-        this.linkService.sendToCandidate(doc)
+        await this.linkService.sendToCandidate(doc)
       }
     })
     return

@@ -117,7 +117,7 @@ export class PageProxyController {
       `<!-- injectable script -->`,
       `<script>${`window.page_source='${
         source.from
-      }'};\nwindow.injectData = ${JSON.stringify({
+      }';\nwindow.injectData = ${JSON.stringify({
         LOGIN_BG: adminExtra.background,
         TITLE: adminExtra.title,
         WEB_URL: webUrl,

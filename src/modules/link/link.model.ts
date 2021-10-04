@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { modelOptions, prop } from '@typegoose/typegoose'
+import { Transform } from 'class-transformer'
 import { IsEmail, IsEnum, IsOptional, IsString, IsUrl } from 'class-validator'
 import { range } from 'lodash'
 import { BaseModel } from '~/shared/model/base.model'
@@ -32,6 +33,8 @@ export class LinkModel extends BaseModel {
   @IsOptional()
   @IsUrl({ require_protocol: true })
   @prop({ trim: true })
+  // 对空字符串处理
+  @Transform(({ value }) => (value === '' ? null : value))
   avatar?: string
 
   @IsOptional()
@@ -52,6 +55,9 @@ export class LinkModel extends BaseModel {
 
   @prop()
   @IsEmail()
+  @IsOptional()
+  // 对空字符串处理
+  @Transform(({ value }) => (value === '' ? null : value))
   email?: string
   get hide() {
     return this.state === LinkState.Audit

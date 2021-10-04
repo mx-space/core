@@ -84,12 +84,11 @@ export class LinkService {
         站点描述: ${model.description}`)
       return
     }
-    process.nextTick(async () => {
-      await this.emailService.sendLinkApplyEmail({
-        model,
-        to: model.email,
-        template: LinkApplyEmailType.ToCandidate,
-      })
+
+    await this.emailService.sendLinkApplyEmail({
+      model,
+      to: model.email,
+      template: LinkApplyEmailType.ToCandidate,
     })
   }
   async sendToMaster(authorName: string, model: LinkModel) {
