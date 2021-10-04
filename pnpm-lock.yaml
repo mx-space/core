@@ -23,7 +23,7 @@ specifiers:
   '@nestjs/testing': 8.0.9
   '@nestjs/websockets': 8.0.9
   '@typegoose/auto-increment': 1.0.0
-  '@typegoose/typegoose': 8.3.0
+  '@typegoose/typegoose': 9.0.2
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.2
   '@types/ejs': 3.1.0
@@ -121,7 +121,7 @@ dependencies:
   '@nestjs/swagger': 5.1.0_67ce9f56a8385bfde00d30a82d1c6033
   '@nestjs/websockets': 8.0.9_f1263e9068ff8aaf42bb20237a3628cb
   '@typegoose/auto-increment': 1.0.0_mongoose@5.13.8
-  '@typegoose/typegoose': 8.3.0_mongoose@5.13.8
+  '@typegoose/typegoose': 9.0.2_mongoose@5.13.8
   algoliasearch: 4.10.5
   apollo-server-fastify: 3.3.0_fastify@3.21.6+graphql@15.6.0
   axios: 0.21.4
@@ -155,7 +155,7 @@ dependencies:
   mongoose-lean-virtuals: 0.8.1_mongoose@5.13.8
   mongoose-paginate-v2: 1.4.2
   nanoid: 3.1.28
-  nestjs-typegoose: 7.1.38_31d2b1d6854c9430ca02ddc56cbbfaca
+  nestjs-typegoose: 7.1.38_d6710a2f6e1bbd9847c25769d64f2519
   node-vibrant: 3.2.1-alpha.1
   nodemailer: 6.6.5
   passport: 0.5.0
@@ -1698,11 +1698,11 @@ packages:
       tslib: 2.3.1
     dev: false
 
-  /@typegoose/typegoose/8.3.0_mongoose@5.13.8:
-    resolution: {integrity: sha512-KlnVD8NE/n0fLI8Fv3+9Iu8N72NUbyFX61ejhTsPq6F+w0KAjRYVRECkorqiAeuL5qnyILlOgthjNjQOXOvONQ==}
+  /@typegoose/typegoose/9.0.2_mongoose@5.13.8:
+    resolution: {integrity: sha512-OrvrK8guxuNIky/VwS+WY22qBbENWUzK3j2mqUg2w+SKZ10PNscCC5z3c7dUDdLQLSwnkYLQ4ExhBxoNhP8fbA==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      mongoose: ~5.13.8
+      mongoose: ~6.0.7
     dependencies:
       lodash: 4.17.21
       loglevel: 1.7.1
@@ -6516,7 +6516,7 @@ packages:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
     dev: true
 
-  /nestjs-typegoose/7.1.38_31d2b1d6854c9430ca02ddc56cbbfaca:
+  /nestjs-typegoose/7.1.38_d6710a2f6e1bbd9847c25769d64f2519:
     resolution: {integrity: sha512-hYgDliG2IS5CJkzRsTbbfwZk+IP0jEyCaxcRqqXvxZaP5miiH9UvGm3K0hg8X5DuVkmsgTzW3+MxOXmcLm9BOA==}
     engines: {node: '>=8.10.0'}
     peerDependencies:
@@ -6527,7 +6527,7 @@ packages:
     dependencies:
       '@nestjs/common': 8.0.9_82ca6e21bd08a51a509883dd533f031a
       '@nestjs/core': 8.0.9_52e70c4b6d0a880fc27d6b80ab23839a
-      '@typegoose/typegoose': 8.3.0_mongoose@5.13.8
+      '@typegoose/typegoose': 9.0.2_mongoose@5.13.8
       is-class: 0.0.9
       mongoose: 5.13.8
       reflect-metadata: 0.1.13
