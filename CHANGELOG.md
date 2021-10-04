@@ -1,3 +1,17 @@
+## [3.8.2](https://github.com/mx-space/server-next/compare/v3.8.1...v3.8.2) (2021-10-04)
+
+
+### Bug Fixes
+
+* apply link email mark optional ([523702f](https://github.com/mx-space/server-next/commit/523702f779c3658d1bd82bcd6a6969059c94ff62))
+
+
+### Features
+
+* add pageproxy page source ([aa7e322](https://github.com/mx-space/server-next/commit/aa7e322baae733e8ab6442b82bdb5eeb6c036f7e))
+
+
+
 ## [3.8.1](https://github.com/mx-space/server-next/compare/v3.8.0...v3.8.1) (2021-10-04)
 
 
