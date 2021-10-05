@@ -1,5 +1,13 @@
 {
+  "compilerOptions": {
+    "sourceMap": false,
+    "declaration": false
+  },
   "extends": "./tsconfig.json",
+  "include": [
+    "src/*",
+    "*.d.ts"
+  ],
   "exclude": [
     "node_modules",
     "test",

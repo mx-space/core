@@ -2,6 +2,7 @@ import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { performance } from 'perf_hooks'
 import { argv } from 'yargs'
 import { API_VERSION, CROSS_DOMAIN } from './app.config'
 import { AppModule } from './app.module'
@@ -67,16 +68,18 @@ async function bootstrap() {
     SwaggerModule.setup('api-docs', app, document)
   }
 
-  await app.listen(PORT, '0.0.0.0', async () => {
-    if (isDev) {
-      const url = await app.getUrl()
-      consola.success(`OpenApi: ${url}/api-docs`)
-      consola.success(`GraphQL playground: ${url}/graphql`)
-      consola.success(`Admin Dashboard: ${url}/qaqdmin`)
-      consola.success(`Server listen on: ${url}`)
-    }
+  await app.listen(PORT, '0.0.0.0', async (err, address) => {
     app.useLogger(app.get(MyLogger))
-    Logger.log('Server is up.')
+    const url = await app.getUrl()
+    if (isDev) {
+      consola.debug(`OpenApi: ${url}/api-docs`)
+      consola.debug(`GraphQL playground: ${url}/graphql`)
+    }
+    consola.success(`Server listen on: ${url}`)
+    consola.success(`Admin Dashboard: ${url}/qaqdmin`)
+    Logger.log(
+      'Server is up. ' + chalk.yellow('+' + (performance.now() | 0) + 'ms'),
+    )
   })
 
   if (module.hot) {
