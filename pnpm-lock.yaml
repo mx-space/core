@@ -45,7 +45,7 @@ specifiers:
   bcrypt: 5.0.1
   cache-manager: 3.4.4
   cache-manager-ioredis: 2.1.0
-  camelcase-keys: 7.0.0
+  camelcase-keys: 7.0.1
   chalk: '*'
   class-transformer: 0.4.0
   class-validator: 0.13.1
@@ -128,7 +128,7 @@ dependencies:
   bcrypt: 5.0.1
   cache-manager: 3.4.4
   cache-manager-ioredis: 2.1.0
-  camelcase-keys: 7.0.0
+  camelcase-keys: 7.0.1
   chalk: 4.1.2
   class-transformer: 0.4.0
   class-validator: 0.13.1
@@ -3104,8 +3104,8 @@ packages:
       tslib: 2.3.1
     dev: false
 
-  /camelcase-keys/7.0.0:
-    resolution: {integrity: sha512-qlQlECgDl5Ev+gkvONaiD4X4TF2gyZKuLBvzx0zLo2UwAxmz3hJP/841aaMHTeH1T7v5HRwoRq91daulXoYWvg==}
+  /camelcase-keys/7.0.1:
+    resolution: {integrity: sha512-P331lEls98pW8JLyodNWfzuz91BEDVA4VpW2/SwXnyv2K495tq1N777xzDbFgnEigfA7UIY0xa6PwR/H9jijjA==}
     engines: {node: '>=12'}
     dependencies:
       camelcase: 6.2.0
