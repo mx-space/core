@@ -1,3 +1,18 @@
+## [3.9.1](https://github.com/mx-space/server-next/compare/v3.9.0...v3.9.1) (2021-10-07)
+
+
+### Bug Fixes
+
+* backup default option and update admin version ([cf4323b](https://github.com/mx-space/server-next/commit/cf4323bfb58cbc7062da6851204f3405658375e5))
+* **deps:** update dependency camelcase-keys to v7.0.1 ([#96](https://github.com/mx-space/server-next/issues/96)) ([eb931e5](https://github.com/mx-space/server-next/commit/eb931e50cdebabfd70be9ce84c44f8db8349b8ed))
+* **deps:** update dependency graphql to v15.6.1 ([#101](https://github.com/mx-space/server-next/issues/101)) ([8675623](https://github.com/mx-space/server-next/commit/8675623bfa639e3a3758882da1b7810f4677663c))
+* **deps:** update dependency marked to v3.0.6 ([95fbb58](https://github.com/mx-space/server-next/commit/95fbb58c6e1377657fba87cf03b49f75c60b1e2b))
+* **deps:** update dependency nanoid to v3.1.29 ([#102](https://github.com/mx-space/server-next/issues/102)) ([0450161](https://github.com/mx-space/server-next/commit/04501612999261626eccd0404e62e54c7a0b7ada))
+* **deps:** update dependency snakecase-keys to v5.1.0 ([#100](https://github.com/mx-space/server-next/issues/100)) ([2983c06](https://github.com/mx-space/server-next/commit/2983c069e2879dd88791ff0f789955928866bdae))
+* **deps:** update nest monorepo to v8.0.10 (patch) ([#87](https://github.com/mx-space/server-next/issues/87)) ([f8f4f89](https://github.com/mx-space/server-next/commit/f8f4f89b135631d737d91367ebcb7fc6d1059931))
+
+
+
 # [3.9.0](https://github.com/mx-space/server-next/compare/v3.8.2...v3.9.0) (2021-10-04)
 
 
