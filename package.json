@@ -96,7 +96,7 @@
     "js-yaml": "*",
     "jszip": "3.7.1",
     "lodash": "*",
-    "marked": "3.0.6",
+    "marked": "3.0.7",
     "mkdirp": "*",
     "mongodb": "*",
     "mongoose": "*",
