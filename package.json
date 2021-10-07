@@ -87,7 +87,7 @@
     "dotenv": "*",
     "ejs": "3.1.6",
     "fastify-cookie": "5.3.1",
-    "fastify-multipart": "5.0.1",
+    "fastify-multipart": "5.0.2",
     "fastify-swagger": "4.12.4",
     "graphql": "15.6.1",
     "html-minifier": "4.0.0",
