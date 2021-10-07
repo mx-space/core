@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -42,6 +43,9 @@ export class BackupController {
   @HTTPDecorators.Bypass
   async createNewBackup() {
     const buffer = await this.cronService.backupDB({ uploadCOS: false })
+    if (typeof buffer == 'undefined') {
+      throw new BadRequestException('请先开启在设置开启备份功能')
+    }
     const stream = new Readable()
 
     stream.push(buffer)

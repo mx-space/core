@@ -31,12 +31,12 @@ const generateDefaultConfig: () => IConfig = () => ({
   },
   mailOptions: {} as MailOptionsDto,
   commentOptions: { antiSpam: false },
-  backupOptions: { enable: false } as BackupOptionsDto,
+  backupOptions: { enable: true } as BackupOptionsDto,
   baiduSearchOptions: { enable: false },
   algoliaSearchOptions: { enable: false, apiKey: '', appId: '', indexName: '' },
   adminExtra: {
     enableAdminProxy: true,
-    title: '欧尼酱!',
+    title: 'おかえり~',
     background:
       'https://gitee.com/xun7788/my-imagination/raw/master/images/88426823_p0.jpg',
     gaodemapKey: null,
