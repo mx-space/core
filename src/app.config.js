@@ -64,5 +64,5 @@ exports.SECURITY = {
 
 exports.ADMIN_DASHBOARD = {
   // 需要获取反代管理面板的版本
-  version: '3.7.1',
+  version: '3.8.0',
 }
