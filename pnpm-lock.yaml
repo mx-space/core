@@ -11,7 +11,7 @@ specifiers:
   '@nestjs/cli': 8.1.2
   '@nestjs/common': 8.0.10
   '@nestjs/core': 8.0.10
-  '@nestjs/graphql': 9.0.5
+  '@nestjs/graphql': 9.0.6
   '@nestjs/jwt': 8.0.0
   '@nestjs/mapped-types': '*'
   '@nestjs/passport': 8.0.1
@@ -111,7 +111,7 @@ dependencies:
   '@algolia/client-search': 4.10.5
   '@nestjs/common': 8.0.10_82ca6e21bd08a51a509883dd533f031a
   '@nestjs/core': 8.0.10_acbc722eca384298fa93b13a20d6763f
-  '@nestjs/graphql': 9.0.5_efd14af54d16469e6b258061abf75278
+  '@nestjs/graphql': 9.0.6_efd14af54d16469e6b258061abf75278
   '@nestjs/jwt': 8.0.0_@nestjs+common@8.0.10
   '@nestjs/mapped-types': 1.0.0_ed441157c9f4a740bd734bceee334cef
   '@nestjs/passport': 8.0.1_3d0d386bffb120794dad4438f11176e6
@@ -1356,10 +1356,10 @@ packages:
       uuid: 8.3.2
     dev: false
 
-  /@nestjs/graphql/9.0.5_efd14af54d16469e6b258061abf75278:
-    resolution: {integrity: sha512-FFNnwWP+vZtJBE+9nz6LPb0DsVKVFkvA8RD8YM9sxs/KKLUoW2PNgIOUkmJAufcP6wG67HIn2zEX77fxykXF9Q==}
+  /@nestjs/graphql/9.0.6_efd14af54d16469e6b258061abf75278:
+    resolution: {integrity: sha512-ednuH135vm3X/wbObkPPz8JVOrkpocjdSRFNsBxe7VLOx8qGS1iqldIofwVMWC8CficIyb9LQdDC9Wxzlgz8gA==}
     peerDependencies:
-      '@apollo/federation': ^0.26.0 || ^0.27.0 || ^0.29.0 || ^0.33.0
+      '@apollo/federation': ^0.26.0 || ^0.27.0 || ^0.29.0 || 0.33.0
       '@apollo/gateway': ^0.29.0 || ^0.32.0 || ^0.33.0 || ^0.35.0 || ^0.38.0 || ^0.42.0
       '@nestjs/common': ^8.0.0
       '@nestjs/core': ^8.0.0
@@ -3179,7 +3179,7 @@ packages:
       braces: 3.0.2
       glob-parent: 5.1.2
       is-binary-path: 2.1.0
-      is-glob: 4.0.1
+      is-glob: 4.0.3
       normalize-path: 3.0.0
       readdirp: 3.6.0
     optionalDependencies:
@@ -5119,6 +5119,7 @@ packages:
     engines: {node: '>=0.10.0'}
     dependencies:
       is-extglob: 2.1.1
+    dev: true
 
   /is-glob/4.0.3:
     resolution: {integrity: sha512-xelSayHH36ZgE7ZWhli7pW34hNbNl8Ojv5KVmkJD4hBdD3th8Tfk9vYasLM+mXWOZhFkgZfxhLSnrwRr4elSSg==}
@@ -8027,7 +8028,7 @@ packages:
       graphql: 15.6.1
       iterall: 1.3.0
       symbol-observable: 1.2.0
-      ws: 7.5.4
+      ws: 7.5.5
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -8820,19 +8821,6 @@ packages:
       utf-8-validate:
         optional: true
 
-  /ws/7.5.4:
-    resolution: {integrity: sha512-zP9z6GXm6zC27YtspwH99T3qTG7bBFv2VIkeHstMLrLlDJuzA7tQ5ls3OJ1hOGGCzTQPniNJoHXIAOS0Jljohg==}
-    engines: {node: '>=8.3.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: ^5.0.2
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
-    dev: false
-
   /ws/7.5.5:
     resolution: {integrity: sha512-BAkMFcAzl8as1G/hArkxOxq3G7pjUqQ3gzYbLL0/5zNkph70e+lCoxBGnm6AW1+/aiNeV4fnKqZ8m4GZewmH2w==}
     engines: {node: '>=8.3.0'}
@@ -8844,7 +8832,6 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
-    dev: true
 
   /ws/8.2.2:
     resolution: {integrity: sha512-Q6B6H2oc8QY3llc3cB8kVmQ6pnJWVQbP7Q5algTcIxx7YEpc0oU4NBVHlztA7Ekzfhw2r0rPducMUiCGWKQRzw==}
