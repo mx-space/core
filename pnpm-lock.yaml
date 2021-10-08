@@ -103,7 +103,7 @@ specifiers:
   ua-parser-js: 0.7.28
   webpack: '*'
   webpack-node-externals: 3.0.0
-  xss: 1.0.9
+  xss: 1.0.10
   yargs: '*'
   zx: 4.2.0
 
@@ -167,7 +167,7 @@ dependencies:
   snakecase-keys: 5.1.0
   ts-morph: 12.0.0
   ua-parser-js: 0.7.28
-  xss: 1.0.9
+  xss: 1.0.10
   yargs: 17.1.1
   zx: 4.2.0
 
@@ -8882,6 +8882,15 @@ packages:
   /xmlchars/2.2.0:
     resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
     dev: true
+
+  /xss/1.0.10:
+    resolution: {integrity: sha512-qmoqrRksmzqSKvgqzN0055UFWY7OKx1/9JWeRswwEVX9fCG5jcYRxa/A2DHcmZX6VJvjzHRQ2STeeVcQkrmLSw==}
+    engines: {node: '>= 0.10.0'}
+    hasBin: true
+    dependencies:
+      commander: 2.20.3
+      cssfilter: 0.0.10
+    dev: false
 
   /xss/1.0.9:
     resolution: {integrity: sha512-2t7FahYnGJys6DpHLhajusId7R0Pm2yTmuL0GV9+mV0ZlaLSnb2toBmppATfg5sWIhZQGlsTLoecSzya+l4EAQ==}

@@ -116,7 +116,7 @@
     "snakecase-keys": "5.1.0",
     "ts-morph": "*",
     "ua-parser-js": "0.7.28",
-    "xss": "1.0.9",
+    "xss": "1.0.10",
     "yargs": "*",
     "zx": "4.2.0"
   },
