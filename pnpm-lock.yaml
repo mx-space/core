@@ -50,7 +50,7 @@ specifiers:
   class-transformer: 0.4.0
   class-validator: 0.13.1
   consola: '*'
-  cos-nodejs-sdk-v5: 2.10.4
+  cos-nodejs-sdk-v5: 2.10.5
   cross-env: 7.0.3
   dayjs: 1.10.7
   dotenv: '*'
@@ -133,7 +133,7 @@ dependencies:
   class-transformer: 0.4.0
   class-validator: 0.13.1
   consola: 2.15.3
-  cos-nodejs-sdk-v5: 2.10.4
+  cos-nodejs-sdk-v5: 2.10.5
   dayjs: 1.10.7
   dotenv: 10.0.0
   ejs: 3.1.6
@@ -3413,13 +3413,13 @@ packages:
       object-assign: 4.1.1
       vary: 1.1.2
 
-  /cos-nodejs-sdk-v5/2.10.4:
-    resolution: {integrity: sha512-j7eNT35oUaeaZ7+w9CIOQdeQo0k1pTdhBAF+UEwJEd9ItPg1+kGD3dEPBUoAA2DhSM20i8JF+U8cqKbEH0mT+g==}
+  /cos-nodejs-sdk-v5/2.10.5:
+    resolution: {integrity: sha512-QIUvRgbaThRFgLZIc/FTaacmNj3FG+wItc20/r0FR7dx42TcanPG6mmvv/WXMqkdAfXNSaecAoivWdhpGGLiqg==}
     engines: {node: '>= 6'}
     dependencies:
       '@types/node': 14.17.14
       conf: 9.0.2
-      mime-types: 2.1.32
+      mime-types: 2.1.33
       request: 2.88.2
       xml2js: 0.4.23
     dev: false
@@ -4492,7 +4492,7 @@ packages:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8
-      mime-types: 2.1.32
+      mime-types: 2.1.33
     dev: false
 
   /form-data/3.0.1:
@@ -6290,21 +6290,9 @@ packages:
       reusify: 1.0.4
     dev: false
 
-  /mime-db/1.49.0:
-    resolution: {integrity: sha512-CIc8j9URtOVApSFCQIF+VBkX1RwXp/oMMOrqdyXSBXq5RWNEsRfyj1kiRnQgmNXmHxPoFIxOroKA3zcU9P+nAA==}
-    engines: {node: '>= 0.6'}
-    dev: false
-
   /mime-db/1.50.0:
     resolution: {integrity: sha512-9tMZCDlYHqeERXEHO9f/hKfNXhre5dK2eE/krIvUjZbS2KPcqGDfNShIWS1uW9XOTKQKqK6qbeOci18rbfW77A==}
     engines: {node: '>= 0.6'}
-
-  /mime-types/2.1.32:
-    resolution: {integrity: sha512-hJGaVS4G4c9TSMYh2n6SQAGrC4RnfU+daP8G7cSCmaqNjiOoUY0VHCMS42pxnQmVF1GWwFhbHWn3RIxCqTmZ9A==}
-    engines: {node: '>= 0.6'}
-    dependencies:
-      mime-db: 1.49.0
-    dev: false
 
   /mime-types/2.1.33:
     resolution: {integrity: sha512-plLElXp7pRDd0bNZHw+nMd52vRYjLwQjygaNg7ddJ2uJtTlmnTCjWuPKxVu6//AdaRuME84SvLW91sIkBqGT0g==}
@@ -7403,7 +7391,7 @@ packages:
       is-typedarray: 1.0.0
       isstream: 0.1.2
       json-stringify-safe: 5.0.1
-      mime-types: 2.1.32
+      mime-types: 2.1.33
       oauth-sign: 0.9.0
       performance-now: 2.1.0
       qs: 6.5.2
