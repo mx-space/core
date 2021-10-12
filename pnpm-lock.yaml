@@ -28,7 +28,7 @@ specifiers:
   '@types/cache-manager': 3.4.2
   '@types/ejs': 3.1.0
   '@types/html-minifier': 4.0.1
-  '@types/ioredis': 4.27.6
+  '@types/ioredis': 4.27.7
   '@types/jest': 27.0.2
   '@types/lodash': 4.14.175
   '@types/marked': 3.0.1
@@ -181,7 +181,7 @@ devDependencies:
   '@types/cache-manager': 3.4.2
   '@types/ejs': 3.1.0
   '@types/html-minifier': 4.0.1
-  '@types/ioredis': 4.27.6
+  '@types/ioredis': 4.27.7
   '@types/jest': 27.0.2
   '@types/lodash': 4.14.175
   '@types/marked': 3.0.1
@@ -1846,8 +1846,8 @@ packages:
       '@types/uglify-js': 3.13.1
     dev: true
 
-  /@types/ioredis/4.27.6:
-    resolution: {integrity: sha512-3FeeDlVQ2sdbvU436XnZzOiDMMgFbKfIsiUF2BnJnH7xxqCbJ1teJwfcu9fLwnfmV0qH2W1Vg3jFrtOehNIkMA==}
+  /@types/ioredis/4.27.7:
+    resolution: {integrity: sha512-MT5pZFirjfZ1dfhWNQXEtc5sskau6qy0a2SbBpiHYJNJWMp/JJO2UJd8rqiwGc55J5V9OJe50mEtXuLMLu1YIw==}
     dependencies:
       '@types/node': 16.9.2
     dev: true
