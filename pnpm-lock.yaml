@@ -81,7 +81,7 @@ specifiers:
   nanoid: 3.1.29
   nestjs-typegoose: 7.1.38
   node-vibrant: 3.2.1-alpha.1
-  nodemailer: 6.6.5
+  nodemailer: 6.7.0
   passport: 0.5.0
   passport-jwt: 4.0.0
   pluralize: '*'
@@ -157,7 +157,7 @@ dependencies:
   nanoid: 3.1.29
   nestjs-typegoose: 7.1.38_045aea6031bee50b85670bbd5efd8ac0
   node-vibrant: 3.2.1-alpha.1
-  nodemailer: 6.6.5
+  nodemailer: 6.7.0
   passport: 0.5.0
   passport-jwt: 4.0.0
   pluralize: 8.0.0
@@ -6636,8 +6636,8 @@ packages:
       url: 0.11.0
     dev: false
 
-  /nodemailer/6.6.5:
-    resolution: {integrity: sha512-C/v856DBijUzHcHIgGpQoTrfsH3suKIRAGliIzCstatM2cAa+MYX3LuyCrABiO/cdJTxgBBHXxV1ztiqUwst5A==}
+  /nodemailer/6.7.0:
+    resolution: {integrity: sha512-AtiTVUFHLiiDnMQ43zi0YgkzHOEWUkhDgPlBXrsDzJiJvB29Alo4OKxHQ0ugF3gRqRQIneCLtZU3yiUo7pItZw==}
     engines: {node: '>=6.0.0'}
     dev: false
 
