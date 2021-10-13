@@ -1,3 +1,12 @@
+## [3.9.3](https://github.com/mx-space/server-next/compare/v3.9.2...v3.9.3) (2021-10-13)
+
+
+### Bug Fixes
+
+* argv import ([46fc667](https://github.com/mx-space/server-next/commit/46fc667b966795214833c7555bcb36b3f94ebd93))
+
+
+
 ## [3.9.2](https://github.com/mx-space/server-next/compare/v3.9.1...v3.9.2) (2021-10-13)
 
 
