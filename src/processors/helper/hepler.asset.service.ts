@@ -70,7 +70,7 @@ export class AssetService {
     if (!this.checkAssetPath(path)) {
       try {
         // 去线上拉取
-        const { data } = await this.httpService.axiosRef.get(
+        const { data } = await this.httpService.axiosRef.get<string>(
           this.onlineAssetPath + path,
         )
 
@@ -81,7 +81,11 @@ export class AssetService {
           })(),
           { recursive: true },
         )
-        promisify(fs.writeFile)(join(this.embedAssetPath, path), data, options)
+        await promisify(fs.writeFile)(
+          join(this.embedAssetPath, path),
+          data,
+          options,
+        )
         return data
       } catch (e) {
         this.logger.error('本地资源不存在，线上资源无法拉取')

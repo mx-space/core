@@ -346,7 +346,7 @@ ${text.trim()}
   getMarkdownEjsRenderTemplate() {
     return this.assetService.getAsset('/render/markdown.ejs', {
       encoding: 'utf8',
-    })
+    }) as Promise<string>
   }
 
   // getMarkdownRenderTheme() {
