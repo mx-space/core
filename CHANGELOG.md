@@ -1,3 +1,23 @@
+## [3.9.2](https://github.com/mx-space/server-next/compare/v3.9.1...v3.9.2) (2021-10-13)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @nestjs/graphql to v9.0.6 ([def3691](https://github.com/mx-space/server-next/commit/def3691ecbcb464e4e6c25ceb1fa4715789c8a86))
+* **deps:** update dependency apollo-server-fastify to v3.4.0 ([#117](https://github.com/mx-space/server-next/issues/117)) ([98c30fa](https://github.com/mx-space/server-next/commit/98c30fa5996ded3ba6b18bbcca8c92b1cf9d8a80))
+* **deps:** update dependency cos-nodejs-sdk-v5 to v2.10.5 ([7405202](https://github.com/mx-space/server-next/commit/74052028751f8f9a096c6da42aa3292274b649bc))
+* **deps:** update dependency fastify-multipart to v5.0.2 ([af9bfbc](https://github.com/mx-space/server-next/commit/af9bfbca4dd4bfeb0133f33394a5b9cf6eb2b2e3))
+* **deps:** update dependency marked to v3.0.7 ([ff188c5](https://github.com/mx-space/server-next/commit/ff188c5c6879eb7f865f0a2cf966847fa3978fff))
+* **deps:** update dependency nodemailer to v6.7.0 ([#115](https://github.com/mx-space/server-next/issues/115)) ([413df05](https://github.com/mx-space/server-next/commit/413df055462cb2c5eaa3d0f9b478630aa75bd044))
+* **deps:** update dependency xss to v1.0.10 ([6d355e0](https://github.com/mx-space/server-next/commit/6d355e056dba96da0e19c2e6a333e8cd25aa559f))
+
+
+### Features
+
+* update admin versiob ([24fa8c0](https://github.com/mx-space/server-next/commit/24fa8c004691614332676b5fc08bff35a5cbbef0))
+
+
+
 ## [3.9.1](https://github.com/mx-space/server-next/compare/v3.9.0...v3.9.1) (2021-10-07)
 
 
