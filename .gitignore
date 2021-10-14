@@ -43,3 +43,6 @@ run
 data
 assets
 .env
+
+scripts/workflow/docker-compose.yml
+scripts/workflow/data
