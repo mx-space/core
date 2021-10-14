@@ -1,3 +1,12 @@
+## [3.9.4](https://github.com/mx-space/server-next/compare/v3.9.3...v3.9.4) (2021-10-14)
+
+
+### Bug Fixes
+
+* **deps:** update dependency nanoid to v3.1.30 ([7fe753c](https://github.com/mx-space/server-next/commit/7fe753c37b6bab9662a2688a5388fad060fcf05d))
+
+
+
 ## [3.9.3](https://github.com/mx-space/server-next/compare/v3.9.2...v3.9.3) (2021-10-13)
 
 
