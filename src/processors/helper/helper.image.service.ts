@@ -80,7 +80,7 @@ export class ImageService {
     const {
       url: { webUrl },
     } = await this.configsService.waitForConfigReady()
-    const { data } = await this.httpService.axiosRef.get(image, {
+    const { data } = await this.httpService.axiosRef.get<any>(image, {
       responseType: 'arraybuffer',
       headers: {
         'user-agent':

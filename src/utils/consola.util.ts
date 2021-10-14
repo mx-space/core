@@ -1,6 +1,6 @@
 import consola_, { FancyReporter, LogLevel } from 'consola'
+import { argv } from 'zx'
 import { isDev } from './index.util'
-const { argv } = require('yargs')
 class DateTimeReporter extends FancyReporter {
   formatDate(date: Date) {
     return date.toLocaleString(undefined, {

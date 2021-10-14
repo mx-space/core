@@ -3,15 +3,12 @@ import { NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { performance } from 'perf_hooks'
-import { API_VERSION, CROSS_DOMAIN } from './app.config'
+import { API_VERSION, CROSS_DOMAIN, PORT } from './app.config'
 import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'
 import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { MyLogger } from './processors/logger/logger.service'
-const { argv } = require('yargs')
-
-const PORT: number = +argv.port || 2333
 
 const Origin = CROSS_DOMAIN.allowedOrigins
 
@@ -68,7 +65,7 @@ async function bootstrap() {
     SwaggerModule.setup('api-docs', app, document)
   }
 
-  await app.listen(PORT, '0.0.0.0', async (err, address) => {
+  await app.listen(+PORT, '0.0.0.0', async (err, address) => {
     app.useLogger(app.get(MyLogger))
     const url = await app.getUrl()
     if (isDev) {

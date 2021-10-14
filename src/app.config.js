@@ -1,14 +1,10 @@
-const yargs = require('yargs')
 const isDev = process.env.NODE_ENV === 'development'
-
+const { argv } = require('zx')
 Object.defineProperty(exports, '__esModule', { value: true })
 
-/**
- * @type {any}
- */
-const argv = yargs.argv
 console.log(argv)
 
+exports.PORT = argv.port || process.env.PORT || 2333
 exports.API_VERSION = 2
 exports.CROSS_DOMAIN = {
   allowedOrigins: argv.allowed_origins
