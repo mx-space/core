@@ -1,3 +1,12 @@
+## [3.9.5](https://github.com/mx-space/server-next/compare/v3.9.4...v3.9.5) (2021-10-14)
+
+
+### Bug Fixes
+
+* downgrade eslint to v7 ([8928574](https://github.com/mx-space/server-next/commit/8928574b7f53495754f242b7cba89513966a23e4))
+
+
+
 ## [3.9.4](https://github.com/mx-space/server-next/compare/v3.9.3...v3.9.4) (2021-10-14)
 
 
