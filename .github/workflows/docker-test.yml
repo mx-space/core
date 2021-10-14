@@ -39,16 +39,16 @@ jobs:
         with:
           context: .
           load: true
-          tags: ${{ env.TEST_TAG }}
+          tags: ${{ steps.meta.outputs.tags }},innei/mx-server:latest
+          labels: ${{ steps.meta.outputs.labels }}
       - name: Test
         run: |
-          sh ./scripts/workflow/test-docker.sh
+          bash ./scripts/workflow/test-docker.sh
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
           push: false
           tags: ${{ steps.meta.outputs.tags }},innei/mx-server:latest
           labels: ${{ steps.meta.outputs.labels }}
