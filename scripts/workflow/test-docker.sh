@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MAX_RETRIES=60
+MAX_RETRIES=20
 # Try running the docker and get the output
 # then try getting homepage in 3 mins
 
@@ -27,7 +27,7 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-RETRY=3
+RETRY=0
 curl -m 10 localhost:2333/api/v2
 
 while [[ $? -ne 0 ]] && [[ $RETRY -lt $MAX_RETRIES ]]; do
