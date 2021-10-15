@@ -53,7 +53,7 @@
       "git pull --rebase"
     ],
     "after": [
-      "sh ./create-tags.sh"
+      "sh ./scripts/create-tags.sh"
     ]
   },
   "dependencies": {
