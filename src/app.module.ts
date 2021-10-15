@@ -1,4 +1,4 @@
-import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
+import { Logger, Module } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { GraphQLModule } from '@nestjs/graphql'
 import { mkdirSync } from 'fs'
@@ -40,6 +40,7 @@ import { RecentlyModule } from './modules/recently/recently.module'
 import { SayModule } from './modules/say/say.module'
 import { SearchModule } from './modules/search/search.module'
 import { SitemapModule } from './modules/sitemap/sitemap.module'
+import { SnippetModule } from './modules/snippet/snippet.module'
 import { ToolModule } from './modules/tool/tool.module'
 import { UserModule } from './modules/user/user.module'
 import { CacheModule } from './processors/cache/cache.module'
@@ -103,6 +104,7 @@ mkdirs()
     GatewayModule,
     HelperModule,
     LoggerModule,
+    SnippetModule,
   ],
   controllers: [AppController],
   providers: [
@@ -139,13 +141,4 @@ mkdirs()
     },
   ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    // FIXME: nestjs 8 middleware bug
-    // consumer
-    //   .apply(AnalyzeMiddleware)
-    //   .forRoutes({ path: '(.*?)', method: RequestMethod.GET })
-    //   .apply(SkipBrowserDefaultRequestMiddleware, SecurityMiddleware)
-    //   .forRoutes({ path: '(.*?)', method: RequestMethod.ALL })
-  }
-}
+export class AppModule {}

@@ -68,7 +68,7 @@ docker-compose up -d
 ├── app.module.ts                 # 主程序根模块，负责各业务模块的聚合
 ├── app.resolver.ts               # 主程序根 GraphQL Resolver
 ├── common                        # 存放中间件
-│   ├── adapt                     # Fastify 适配器的配置
+│   ├── adapters                  # Fastify 适配器的配置
 │   ├── decorator                 # 业务装饰器
 │   ├── exceptions                # 自定义异常
 │   ├── filters                   # 异常处理器
@@ -105,6 +105,7 @@ docker-compose up -d
 │   ├── recently
 │   ├── say
 │   ├── search
+|   ├── snippet
 │   ├── sitemap
 │   ├── tool
 │   └── user
