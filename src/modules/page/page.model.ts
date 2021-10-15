@@ -12,7 +12,11 @@ import {
 } from 'class-validator'
 import { WriteBaseModel } from '~/shared/model/base.model'
 import { IsNilOrString } from '~/utils/validator/isNilOrString'
-export const pageType = ['md', 'html', 'frame']
+export enum PageType {
+  'md' = 'md',
+  'html' = 'html',
+  'json' = 'json',
+}
 
 @modelOptions({
   options: {
@@ -42,12 +46,11 @@ export class PageModel extends WriteBaseModel {
   order!: number
 
   @ApiProperty({
-    description: 'Type (MD | html | frame)',
-    enum: pageType,
+    enum: PageType,
     required: false,
   })
   @prop({ default: 'md' })
-  @IsEnum(pageType)
+  @IsEnum(PageType)
   @IsOptional()
   type?: string
 }
