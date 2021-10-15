@@ -1,4 +1,11 @@
 set -e
+
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+if [[ "$BRANCH" != "master" ]]; then
+  echo 'current branch not on master, abort'
+  exit 1
+fi
+
 tag=v$(json -f package.json version)
 yarn changelog
 git add .
