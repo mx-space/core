@@ -150,7 +150,7 @@
     "run-script-webpack-plugin": "0.0.11",
     "semver": "*",
     "socket.io": "*",
-    "ts-jest": "27.0.6",
+    "ts-jest": "27.0.7",
     "ts-loader": "9.2.6",
     "ts-node": "10.3.0",
     "tsconfig-paths": "3.11.0",
