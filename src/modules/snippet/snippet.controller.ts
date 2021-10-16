@@ -14,7 +14,7 @@ import { MongoIdDto } from '~/shared/dto/id.dto'
 import { SnippetModel } from './snippet.model'
 import { SnippetService } from './snippet.service'
 
-@Controller('snippet')
+@Controller('snippets')
 export class SnippetController {
   constructor(private readonly snippetService: SnippetService) {}
 

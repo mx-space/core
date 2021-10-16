@@ -19,6 +19,7 @@ export class SnippetService {
       name: model.name,
       reference: model.reference || 'root',
     })
+
     if (isExist) {
       throw new BadRequestException('snippet is exist')
     }
@@ -64,11 +65,27 @@ export class SnippetService {
   }
 
   async getSnippetById(id: string) {
-    return this.model.findById(id)
+    const doc = await this.model.findById(id).lean()
+    return this.attachSnippet(doc)
   }
 
   async getSnippetByName(name: string) {
-    return this.model.findOne({ name })
+    const doc = await this.model.findOne({ name }).lean()
+    return this.attachSnippet(doc)
+  }
+
+  async attachSnippet(model: SnippetModel) {
+    switch (model.type) {
+      case SnippetType.JSON: {
+        Reflect.set(model, 'data', JSON.parse(model.raw))
+        break
+      }
+      case SnippetType.Text: {
+        break
+      }
+    }
+
+    return model
   }
 
   // TODO serverless function
