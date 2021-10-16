@@ -92,7 +92,7 @@ specifiers:
   semver: '*'
   snakecase-keys: 5.1.0
   socket.io: '*'
-  ts-jest: 27.0.6
+  ts-jest: 27.0.7
   ts-loader: 9.2.6
   ts-morph: '*'
   ts-node: 10.3.0
@@ -198,7 +198,7 @@ devDependencies:
   run-script-webpack-plugin: 0.0.11
   semver: 7.3.5
   socket.io: 4.2.0
-  ts-jest: 27.0.6_fe15ac987db2e7d4ad38346689ae2fc5
+  ts-jest: 27.0.7_fe15ac987db2e7d4ad38346689ae2fc5
   ts-loader: 9.2.6_typescript@4.4.4+webpack@5.58.2
   ts-node: 10.3.0_f33f745757bdf8465ce51368fffbb2b6
   tsconfig-paths: 3.11.0
@@ -1742,7 +1742,7 @@ packages:
   /@types/bson/4.0.5:
     resolution: {integrity: sha512-vVLwMUqhYJSQ/WKcE60eFqcyuWse5fGH+NMAXHuKrUAPoryq3ATxk5o4bgYNtg5aOM4APVg7Hnb3ASqUYG0PKg==}
     dependencies:
-      '@types/node': 16.7.8
+      '@types/node': 16.9.2
     dev: false
 
   /@types/cache-manager/3.4.2:
@@ -1778,15 +1778,8 @@ packages:
   /@types/eslint-scope/3.7.1:
     resolution: {integrity: sha512-SCFeogqiptms4Fg29WpOTk5nHIzfpKCemSN63ksBQYKTcXoJEmJagV+DhVmbapZzY4/5YaOV1nZwrsU79fFm1g==}
     dependencies:
-      '@types/eslint': 7.28.0
+      '@types/eslint': 7.28.1
       '@types/estree': 0.0.50
-    dev: true
-
-  /@types/eslint/7.28.0:
-    resolution: {integrity: sha512-07XlgzX0YJUn4iG1ocY4IX9DzKSmMGUs6ESKlxWhZRaa0fatIWaHWUVapcuGa8r5HFnTqzj+4OCjd5f7EZ/i/A==}
-    dependencies:
-      '@types/estree': 0.0.50
-      '@types/json-schema': 7.0.9
     dev: true
 
   /@types/eslint/7.28.1:
@@ -1910,7 +1903,7 @@ packages:
     resolution: {integrity: sha512-WcdpPJCakFzcWWD9juKoZbRtQxKIMYF/JIAM4JrNHrMcnJL6/a2NWjXxW7fo9hxboxxkg+icff8d7+WIEvKgYQ==}
     dependencies:
       '@types/bson': 4.0.5
-      '@types/node': 16.7.8
+      '@types/node': 16.9.2
     dev: false
 
   /@types/mongoose-paginate-v2/1.4.0:
@@ -1934,10 +1927,6 @@ packages:
 
   /@types/node/14.17.14:
     resolution: {integrity: sha512-rsAj2u8Xkqfc332iXV12SqIsjVi07H479bOP4q94NAcjzmAvapumEhuVIt53koEf7JFrpjgNKjBga5Pnn/GL8A==}
-    dev: false
-
-  /@types/node/16.7.8:
-    resolution: {integrity: sha512-8upnoQU0OPzbIkm+ZMM0zCeFCkw2s3mS0IWdx0+AAaWqm4fkBb0UJp8Edl7FVKRamYbpJC/aVsHpKWBIbiC7Zg==}
     dev: false
 
   /@types/node/16.9.0:
@@ -8130,8 +8119,8 @@ packages:
     hasBin: true
     dev: true
 
-  /ts-jest/27.0.6_fe15ac987db2e7d4ad38346689ae2fc5:
-    resolution: {integrity: sha512-XWkEBbrkyUWJdK9FwiCVdBZ7ZmT7sxcKtyVEZNmo7u8eQw6NHmtYEM2WpkX9VfnRI0DjSr6INfEHC9vCFhsFnQ==}
+  /ts-jest/27.0.7_fe15ac987db2e7d4ad38346689ae2fc5:
+    resolution: {integrity: sha512-O41shibMqzdafpuP+CkrOL7ykbmLh+FqQrXEmV9CydQ5JBk0Sj0uAEF5TNNe94fZWKm3yYvWa/IbyV4Yg1zK2Q==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     hasBin: true
     peerDependencies:
