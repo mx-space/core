@@ -1,10 +1,18 @@
 import { index, modelOptions, prop } from '@typegoose/typegoose'
+import {
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator'
 import { BaseModel } from '~/shared/model/base.model'
 
 export enum SnippetType {
-  'config:json' = 'json',
-  'config:yml' = 'yml',
-  'function' = 'function',
+  JSON = 'json',
+  Function = 'function',
+  Text = 'text',
 }
 
 @modelOptions({
@@ -18,18 +26,45 @@ export enum SnippetType {
     },
   },
 })
-@index({ name: 1 })
+@index({ name: 1, reference: 1 })
 @index({ type: 1 })
 export class SnippetModel extends BaseModel {
-  @prop({ type: SnippetType, default: SnippetType['config:json'] })
-  type: SnippetModel
+  @prop({ type: SnippetType, default: SnippetType['JSON'] })
+  @IsEnum(SnippetType)
+  type: SnippetType
 
   @prop({ default: false })
+  @IsBoolean()
+  @IsOptional()
   private: boolean
 
   @prop({ require: true })
+  @IsString()
+  @IsNotEmpty()
   raw: string
 
-  @prop({ require: true, unique: true })
+  @prop({ require: true, trim: true })
+  @IsString()
+  @IsNotEmpty()
   name: string
+
+  // 适用于
+  @prop({ default: 'root' })
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty()
+  reference: string
+
+  // 注释
+  @prop({})
+  @IsString()
+  @IsOptional()
+  comment?: string
+
+  // 类型注释
+  @prop({ maxlength: 20 })
+  @MaxLength(20)
+  @IsString()
+  @IsOptional()
+  metatype?: string
 }
