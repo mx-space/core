@@ -24,12 +24,13 @@ export class SnippetService {
       throw new BadRequestException('snippet is exist')
     }
     // 验证正确类型
-    this.validateType(model)
+    await this.validateType(model)
     return await this.model.create({ ...model, created: new Date() })
   }
 
   async update(id: string, model: SnippetModel) {
-    this.validateType(model)
+    await this.validateType(model)
+
     await this.model.updateOne(
       {
         _id: id,
@@ -42,7 +43,7 @@ export class SnippetService {
     await this.model.deleteOne({ _id: id })
   }
 
-  private validateType(model: SnippetModel) {
+  private async validateType(model: SnippetModel) {
     switch (model.type) {
       case SnippetType.JSON: {
         const isValidJSON = JSON.stringify(model.raw)

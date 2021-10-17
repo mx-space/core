@@ -65,6 +65,7 @@ export class SnippetController {
     const { id } = param
 
     await this.snippetService.update(id, body)
+    return await this.snippetService.getSnippetById(id)
   }
 
   @Delete('/:id')
