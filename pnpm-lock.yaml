@@ -18,7 +18,7 @@ specifiers:
   '@nestjs/platform-fastify': 8.1.1
   '@nestjs/platform-socket.io': 8.1.1
   '@nestjs/schedule': 1.0.1
-  '@nestjs/schematics': 8.0.3
+  '@nestjs/schematics': 8.0.4
   '@nestjs/swagger': 5.1.0
   '@nestjs/testing': 8.1.1
   '@nestjs/websockets': 8.1.1
@@ -170,7 +170,7 @@ devDependencies:
   '@innei-util/eslint-config-ts': 0.3.4_typescript@4.4.4
   '@innei-util/prettier': 0.1.3_prettier@2.4.1+typescript@4.4.4
   '@nestjs/cli': 8.1.4_eslint@7.32.0
-  '@nestjs/schematics': 8.0.3_typescript@4.4.4
+  '@nestjs/schematics': 8.0.4_typescript@4.4.4
   '@nestjs/testing': 8.1.1_9569caea4829e1e6a54e03a46e955ce7
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.2
@@ -298,18 +298,6 @@ packages:
       '@algolia/requester-common': 4.10.5
     dev: false
 
-  /@angular-devkit/core/12.0.5:
-    resolution: {integrity: sha512-zVSQV+8/vjUjsUKGlj8Kf5LioA6AXJTGI0yhHW9q1dFX4dPpbW63k0R1UoIB2wJ0F/AbYVgpnPGPe9BBm2fvZA==}
-    engines: {node: ^12.14.1 || >=14.0.0, npm: ^6.11.0 || ^7.5.6, yarn: '>= 1.13.0'}
-    dependencies:
-      ajv: 8.2.0
-      ajv-formats: 2.0.2
-      fast-json-stable-stringify: 2.1.0
-      magic-string: 0.25.7
-      rxjs: 6.6.7
-      source-map: 0.7.3
-    dev: true
-
   /@angular-devkit/core/12.2.10:
     resolution: {integrity: sha512-0qhmS7Qvl0hiRVTHxEC/ipFAfzYofPstw0ZITDpEMw+pgHlOZolOlnFrv8LyOXWNqlSIH5fS9D3WF7Hpm7ApYA==}
     engines: {node: ^12.14.1 || >=14.0.0, npm: ^6.11.0 || ^7.5.6, yarn: '>= 1.13.0'}
@@ -333,15 +321,6 @@ packages:
       inquirer: 8.1.2
       minimist: 1.2.5
       symbol-observable: 4.0.0
-    dev: true
-
-  /@angular-devkit/schematics/12.0.5:
-    resolution: {integrity: sha512-iW3XuDHScr3TXuunlEjF5O01zBpwpLgfr1oEny8PvseFGDlHK4Nj8zNIoIn3Yg936aiFO4GJAC/UXsT8g5vKxQ==}
-    engines: {node: ^12.14.1 || >=14.0.0, npm: ^6.11.0 || ^7.5.6, yarn: '>= 1.13.0'}
-    dependencies:
-      '@angular-devkit/core': 12.0.5
-      ora: 5.4.0
-      rxjs: 6.6.7
     dev: true
 
   /@angular-devkit/schematics/12.2.10:
@@ -1254,7 +1233,7 @@ packages:
       '@angular-devkit/core': 12.2.10
       '@angular-devkit/schematics': 12.2.10
       '@angular-devkit/schematics-cli': 12.2.10
-      '@nestjs/schematics': 8.0.3_typescript@4.4.4
+      '@nestjs/schematics': 8.0.4_typescript@4.4.4
       chalk: 3.0.0
       chokidar: 3.5.2
       cli-table3: 0.6.0
@@ -1481,13 +1460,13 @@ packages:
       uuid: 8.3.2
     dev: false
 
-  /@nestjs/schematics/8.0.3_typescript@4.4.4:
-    resolution: {integrity: sha512-A5qyS9yv6v2RIBqbsyYG57NfYA8Jm/aypRV1nc7JXjhdfDHwWKqCsgQ/7/82vVjhlvVAfr5x/dpCWqcF3XYd7w==}
+  /@nestjs/schematics/8.0.4_typescript@4.4.4:
+    resolution: {integrity: sha512-uEmEfuNuIgsNr4m0wEkXIIG6usegehnpwhtOoxXWwvKO0CFO3POAx4pOazPgC4ky6pJ0XROhE/8O55JtmEw0UQ==}
     peerDependencies:
       typescript: ^3.4.5 || ^4.3.5
     dependencies:
-      '@angular-devkit/core': 12.0.5
-      '@angular-devkit/schematics': 12.0.5
+      '@angular-devkit/core': 12.2.10
+      '@angular-devkit/schematics': 12.2.10
       fs-extra: 10.0.0
       jsonc-parser: 3.0.0
       pluralize: 8.0.0
@@ -2431,15 +2410,6 @@ packages:
       ajv: 7.2.4
     dev: false
 
-  /ajv-formats/2.0.2:
-    resolution: {integrity: sha512-Brah4Uo5/U8v76c6euTwtjVFFaVishwnJrQBYpev1JRh4vjA1F4HY3UzQez41YUCszUCXKagG8v6eVRBHV1gkw==}
-    peerDependenciesMeta:
-      ajv:
-        optional: true
-    dependencies:
-      ajv: 8.6.2
-    dev: true
-
   /ajv-formats/2.1.0:
     resolution: {integrity: sha512-USH2jBb+C/hIpwD2iRjp0pe0k+MvzG0mlSn/FIdCgQhUb9ALPRjt2KIQdfZDS9r0ZIeUAg7gOu9KL0PFqGqr5Q==}
     peerDependenciesMeta:
@@ -2473,15 +2443,6 @@ packages:
       require-from-string: 2.0.2
       uri-js: 4.4.1
     dev: false
-
-  /ajv/8.2.0:
-    resolution: {integrity: sha512-WSNGFuyWd//XO8n/m/EaOlNLtO0yL8EXT/74LqT4khdhpZjP7lkj/kT5uwRmGitKEVp/Oj7ZUHeGfPtgHhQ5CA==}
-    dependencies:
-      fast-deep-equal: 3.1.3
-      json-schema-traverse: 1.0.0
-      require-from-string: 2.0.2
-      uri-js: 4.4.1
-    dev: true
 
   /ajv/8.6.2:
     resolution: {integrity: sha512-9807RlWAgT564wT+DjeyU5OFMPjmzxVobvDFmNAhY+5zD6A2ly3jDp6sgnfyDtlIQ+7H97oc/DGCzzfu9rjw9w==}
@@ -3230,11 +3191,6 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       restore-cursor: 3.1.0
-
-  /cli-spinners/2.6.0:
-    resolution: {integrity: sha512-t+4/y50K/+4xcCRosKkA7W4gTr1MySvLV0q+PxmG7FJ5g+66ChKurYjxBCjHggHH3HA5Hh9cy+lcUGWDqVH+4Q==}
-    engines: {node: '>=6'}
-    dev: true
 
   /cli-spinners/2.6.1:
     resolution: {integrity: sha512-x/5fWmGMnbKQAaNwN+UZlV79qBLM9JFnJuJ03gIi5whrob0xV0ofNVHy9DhwGdsMJQc2OKv0oGmLzvaqvAVv+g==}
@@ -6721,21 +6677,6 @@ packages:
       word-wrap: 1.2.3
     dev: true
 
-  /ora/5.4.0:
-    resolution: {integrity: sha512-1StwyXQGoU6gdjYkyVcqOLnVlbKj+6yPNNOxJVgpt9t4eksKjiriiHuxktLYkgllwk+D6MbC4ihH84L1udRXPg==}
-    engines: {node: '>=10'}
-    dependencies:
-      bl: 4.1.0
-      chalk: 4.1.2
-      cli-cursor: 3.1.0
-      cli-spinners: 2.6.0
-      is-interactive: 1.0.0
-      is-unicode-supported: 0.1.0
-      log-symbols: 4.1.0
-      strip-ansi: 6.0.0
-      wcwidth: 1.0.1
-    dev: true
-
   /ora/5.4.1:
     resolution: {integrity: sha512-5b6Y85tPxZZ7QytO+BQzysW31HJku27cRIlkbAXaNx+BdcVi+LlRFmVXzeF6a7JCwJpyw5c4b+YSVImQIrBpuQ==}
     engines: {node: '>=10'}
@@ -7833,13 +7774,6 @@ packages:
     dependencies:
       ansi-regex: 3.0.0
     dev: false
-
-  /strip-ansi/6.0.0:
-    resolution: {integrity: sha512-AuvKTrTfQNYNIctbR1K/YGTR1756GycPsg7b9bdV9Duqur4gv6aKqHXah67Z8ImS7WEz5QVcOtlfW2rZEugt6w==}
-    engines: {node: '>=8'}
-    dependencies:
-      ansi-regex: 5.0.1
-    dev: true
 
   /strip-ansi/6.0.1:
     resolution: {integrity: sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==}
