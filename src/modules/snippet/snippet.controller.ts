@@ -7,16 +7,31 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common'
 import { Auth } from '~/common/decorator/auth.decorator'
+import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
+import { PagerDto } from '~/shared/dto/pager.dto'
+import { transformDataToPaginate } from '~/utils/transfrom.util'
 import { SnippetModel } from './snippet.model'
 import { SnippetService } from './snippet.service'
 
+@ApiName
 @Controller('snippets')
 export class SnippetController {
   constructor(private readonly snippetService: SnippetService) {}
+
+  @Get('/')
+  @Auth()
+  async getList(@Query() query: PagerDto) {
+    const { page, size } = query
+
+    return transformDataToPaginate(
+      await this.snippetService.model.paginate({}, { page, limit: size }),
+    )
+  }
 
   @Post('/')
   @Auth()
@@ -51,7 +66,7 @@ export class SnippetController {
       throw new ForbiddenException('reference should be string')
     }
 
-    const snippet = await this.snippetService.getSnippetByName(name)
+    const snippet = await this.snippetService.getSnippetByName(name, reference)
 
     if (snippet.private && !isMaster) {
       throw new ForbiddenException('snippet is private')

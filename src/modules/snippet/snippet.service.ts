@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
 import { InjectModel } from 'nestjs-typegoose'
 import { SnippetModel, SnippetType } from './snippet.model'
 
@@ -7,7 +6,7 @@ import { SnippetModel, SnippetType } from './snippet.model'
 export class SnippetService {
   constructor(
     @InjectModel(SnippetModel)
-    private readonly snippetModel: ReturnModelType<typeof SnippetModel>,
+    private readonly snippetModel: MongooseModel<SnippetModel>,
   ) {}
 
   get model() {
@@ -70,8 +69,14 @@ export class SnippetService {
     return this.attachSnippet(doc)
   }
 
-  async getSnippetByName(name: string) {
-    const doc = await this.model.findOne({ name }).lean()
+  /**
+   *
+   * @param name
+   * @param reference 引用类型, 可以理解为 type
+   * @returns
+   */
+  async getSnippetByName(name: string, reference: string) {
+    const doc = await this.model.findOne({ name, reference }).lean()
     return this.attachSnippet(doc)
   }
 
