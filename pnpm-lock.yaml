@@ -58,7 +58,7 @@ specifiers:
   eslint: '*'
   fastify-cookie: 5.3.1
   fastify-multipart: 5.0.2
-  fastify-swagger: 4.12.4
+  fastify-swagger: 4.12.5
   graphql: 15.6.1
   html-minifier: 4.0.0
   husky: 7.0.2
@@ -115,7 +115,7 @@ dependencies:
   '@nestjs/platform-fastify': 8.1.1_9569caea4829e1e6a54e03a46e955ce7
   '@nestjs/platform-socket.io': 8.1.1_6205d1f4c59962368f298fdd8117fae5
   '@nestjs/schedule': 1.0.1_ca8a8c4fec30006bad441fa41a3f81c3
-  '@nestjs/swagger': 5.1.1_50cb73cad906273d3197d015dc9ec031
+  '@nestjs/swagger': 5.1.1_92651aa67a020a5e23c12a19409dbaa1
   '@nestjs/websockets': 8.1.1_85d4e391870510c80003caf89b98dd17
   '@typegoose/auto-increment': 1.0.0_mongoose@5.13.8
   '@typegoose/typegoose': 8.3.0_mongoose@5.13.8
@@ -136,7 +136,7 @@ dependencies:
   ejs: 3.1.6
   fastify-cookie: 5.3.1
   fastify-multipart: 5.0.2
-  fastify-swagger: 4.12.4
+  fastify-swagger: 4.12.5
   graphql: 15.6.1
   html-minifier: 4.0.0
   image-size: 1.0.0
@@ -1473,7 +1473,7 @@ packages:
       typescript: 4.4.4
     dev: true
 
-  /@nestjs/swagger/5.1.1_50cb73cad906273d3197d015dc9ec031:
+  /@nestjs/swagger/5.1.1_92651aa67a020a5e23c12a19409dbaa1:
     resolution: {integrity: sha512-vdfTv/gpibGNwG9gmryG5zdVXR65ia6myteWju9FPpZaoICphzAUZotV23dF75JzpwV2Zv+CGkXOxUiqsjxCdg==}
     peerDependencies:
       '@nestjs/common': ^8.0.0
@@ -1490,7 +1490,7 @@ packages:
       '@nestjs/common': 8.1.1_027dff72494914f4326dff0d419414c2
       '@nestjs/core': 8.1.1_c701dcad3765bfdd3146b0adbc24c4d0
       '@nestjs/mapped-types': 1.0.0_69880b072bf1a4e177f038f9fbb7a28e
-      fastify-swagger: 4.12.4
+      fastify-swagger: 4.12.5
       lodash: 4.17.21
       path-to-regexp: 3.2.0
       reflect-metadata: 0.1.13
@@ -1556,7 +1556,7 @@ packages:
     engines: {node: '>= 8'}
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
-      fastq: 1.12.0
+      fastq: 1.13.0
 
   /@nuxtjs/opencollective/0.3.2:
     resolution: {integrity: sha512-um0xL3fO7Mf4fDxcqx9KryrB7zgRM5JSlvGN5AGkP6JLM5XEKyjeAiPbNxdXVXQ16isuAhYpvP88NgL2BGd6aA==}
@@ -4208,8 +4208,8 @@ packages:
       send: 0.17.1
     dev: false
 
-  /fastify-swagger/4.12.4:
-    resolution: {integrity: sha512-M7sN9VDS0wt3w8A6RwZ06sMeUXKFwSSK8Q8u7BaGMqTZ1dE3cKUeIiQWToDWpb4eKjVK1xla3d4NgTtKB6jdAw==}
+  /fastify-swagger/4.12.5:
+    resolution: {integrity: sha512-6l3z6Yy3s7N8v/ggDhmPKF+rcEIfA9T8bE8ew4ivY0DiR4ShYSTaPrURXm93PEa2Le1avwMNBkpsnK2dAHPjLg==}
     dependencies:
       fastify-plugin: 3.0.0
       fastify-static: 4.2.3
@@ -4247,16 +4247,10 @@ packages:
       - supports-color
     dev: false
 
-  /fastq/1.12.0:
-    resolution: {integrity: sha512-VNX0QkHK3RsXVKr9KrlUv/FoTa0NdbYoHHl7uXHv2rzyHSlxjdNAKug2twd9luJxpcyNeAgf5iPPMutJO67Dfg==}
-    dependencies:
-      reusify: 1.0.4
-
   /fastq/1.13.0:
     resolution: {integrity: sha512-YpkpUnK8od0o1hmeSc7UUs/eB/vIPWJYjKck2QKIzAf71Vm1AAQ3EbuZB3g2JIy+pg+ERD0vqI79KyZiB2e2Nw==}
     dependencies:
       reusify: 1.0.4
-    dev: false
 
   /fb-watchman/2.0.1:
     resolution: {integrity: sha512-DkPJKQeY6kKwmuMretBhr7G6Vodr7bFwDYTXIkfG1gjvNpaxBTQV3PbXg6bR1c1UP4jPOX0jHUbbHANL9vRjVg==}
