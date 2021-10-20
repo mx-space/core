@@ -30,7 +30,7 @@ specifiers:
   '@types/html-minifier': 4.0.1
   '@types/ioredis': 4.27.8
   '@types/jest': 27.0.2
-  '@types/lodash': 4.14.175
+  '@types/lodash': 4.14.176
   '@types/marked': 3.0.1
   '@types/mongoose-paginate-v2': 1.4.0
   '@types/node': 16.9.2
@@ -178,7 +178,7 @@ devDependencies:
   '@types/html-minifier': 4.0.1
   '@types/ioredis': 4.27.8
   '@types/jest': 27.0.2
-  '@types/lodash': 4.14.175
+  '@types/lodash': 4.14.176
   '@types/marked': 3.0.1
   '@types/mongoose-paginate-v2': 1.4.0
   '@types/node': 16.9.2
@@ -1849,8 +1849,8 @@ packages:
       '@types/node': 16.9.2
     dev: true
 
-  /@types/lodash/4.14.175:
-    resolution: {integrity: sha512-XmdEOrKQ8a1Y/yxQFOMbC47G/V2VDO1GvMRnl4O75M4GW/abC5tnfzadQYkqEveqRM1dEJGFFegfPNA2vvx2iw==}
+  /@types/lodash/4.14.176:
+    resolution: {integrity: sha512-xZmuPTa3rlZoIbtDUyJKZQimJV3bxCmzMIO2c9Pz9afyDro6kr7R79GwcB6mRhuoPmV2p1Vb66WOJH7F886WKQ==}
     dev: true
 
   /@types/long/4.0.1:
