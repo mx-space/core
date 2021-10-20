@@ -26,10 +26,13 @@ export class SnippetController {
   @Get('/')
   @Auth()
   async getList(@Query() query: PagerDto) {
-    const { page, size } = query
+    const { page, size, select = '' } = query
 
     return transformDataToPaginate(
-      await this.snippetService.model.paginate({}, { page, limit: size }),
+      await this.snippetService.model.paginate(
+        {},
+        { page, limit: size, select },
+      ),
     )
   }
 
