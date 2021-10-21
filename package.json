@@ -141,7 +141,7 @@
     "@vercel/ncc": "0.31.1",
     "cross-env": "7.0.3",
     "eslint": "*",
-    "husky": "7.0.2",
+    "husky": "7.0.4",
     "ioredis": "*",
     "jest": "27.3.1",
     "lint-staged": "11.2.3",

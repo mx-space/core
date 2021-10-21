@@ -61,7 +61,7 @@ specifiers:
   fastify-swagger: 4.12.5
   graphql: 15.6.1
   html-minifier: 4.0.0
-  husky: 7.0.2
+  husky: 7.0.4
   image-size: 1.0.0
   inquirer: '*'
   ioredis: '*'
@@ -189,7 +189,7 @@ devDependencies:
   '@vercel/ncc': 0.31.1
   cross-env: 7.0.3
   eslint: 7.32.0
-  husky: 7.0.2
+  husky: 7.0.4
   ioredis: 4.28.0
   jest: 27.3.1_ts-node@10.3.0
   lint-staged: 11.2.3
@@ -4724,8 +4724,8 @@ packages:
     engines: {node: '>=10.17.0'}
     dev: true
 
-  /husky/7.0.2:
-    resolution: {integrity: sha512-8yKEWNX4z2YsofXAMT7KvA1g8p+GxtB1ffV8XtpAEGuXNAbCV5wdNKH+qTpw8SM9fh4aMPDR+yQuKfgnreyZlg==}
+  /husky/7.0.4:
+    resolution: {integrity: sha512-vbaCKN2QLtP/vD4yvs6iz6hBEo6wkSzs8HpRah1Z6aGmF2KW5PdYuAd7uX5a+OyBZHBhd+TFLqgjUgytQr4RvQ==}
     engines: {node: '>=12'}
     hasBin: true
     dev: true
