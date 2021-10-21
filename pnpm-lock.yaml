@@ -31,7 +31,7 @@ specifiers:
   '@types/ioredis': 4.27.8
   '@types/jest': 27.0.2
   '@types/lodash': 4.14.176
-  '@types/marked': 3.0.1
+  '@types/marked': 3.0.2
   '@types/mongoose-paginate-v2': 1.4.0
   '@types/node': 16.9.2
   '@types/nodemailer': 6.4.4
@@ -179,7 +179,7 @@ devDependencies:
   '@types/ioredis': 4.27.8
   '@types/jest': 27.0.2
   '@types/lodash': 4.14.176
-  '@types/marked': 3.0.1
+  '@types/marked': 3.0.2
   '@types/mongoose-paginate-v2': 1.4.0
   '@types/node': 16.9.2
   '@types/nodemailer': 6.4.4
@@ -1857,8 +1857,8 @@ packages:
     resolution: {integrity: sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==}
     dev: false
 
-  /@types/marked/3.0.1:
-    resolution: {integrity: sha512-jry/WUAC511P2NBCeiCkfTRCN2VXobeeQa8p8gImOYsRfnuIVfeEsqOJ1pk+CzCwfMCdv3dkTQRCYaNkkFGtxw==}
+  /@types/marked/3.0.2:
+    resolution: {integrity: sha512-mGYI9qFs+i5eYaytWKBbtEMbIkrXGKuhsDpDcj70ogKS2gk1NmgEy9Z3VEKz922Lfms6eITXXqv5idlX7C/irw==}
     dev: true
 
   /@types/mime/1.3.2:
