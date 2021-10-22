@@ -25,6 +25,7 @@ export class BaseModel {
   @Field(() => Date)
   created?: Date
   @Field(() => ID)
+  @ApiHideProperty()
   id?: string
 
   static get protectedKeys() {
