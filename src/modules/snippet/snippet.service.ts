@@ -45,7 +45,7 @@ export class SnippetService {
   private async validateType(model: SnippetModel) {
     switch (model.type) {
       case SnippetType.JSON: {
-        const isValidJSON = JSON.stringify(model.raw)
+        const isValidJSON = JSON.parse(model.raw)
         if (!isValidJSON) {
           throw new BadRequestException('content is not valid json')
         }

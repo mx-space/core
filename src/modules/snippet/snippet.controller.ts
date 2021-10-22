@@ -55,7 +55,7 @@ export class SnippetController {
     return snippet
   }
 
-  @Get('/name/:reference/:name')
+  @Get('/:reference/:name')
   async getSnippetByName(
     @Param('name') name: string,
     @Param('reference') reference: string,

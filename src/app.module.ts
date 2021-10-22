@@ -1,4 +1,4 @@
-import { Logger, Module } from '@nestjs/common'
+import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { GraphQLModule } from '@nestjs/graphql'
 import { mkdirSync } from 'fs'
@@ -12,6 +12,7 @@ import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
 import { CountingInterceptor } from './common/interceptors/counting.interceptor'
 import { JSONSerializeInterceptor } from './common/interceptors/json-serialize.interceptor'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
+import { AttachHeaderTokenMiddleware } from './common/middlewares/attach-auth.middleware'
 import {
   DATA_DIR,
   LOGGER_DIR,
@@ -141,4 +142,8 @@ mkdirs()
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AttachHeaderTokenMiddleware).forRoutes('*')
+  }
+}
