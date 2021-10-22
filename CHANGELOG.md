@@ -1,3 +1,17 @@
+# [3.10.0](https://github.com/mx-space/server-next/compare/v3.9.5...v3.10.0) (2021-10-22)
+
+
+### Bug Fixes
+
+* create-tag script ([6548555](https://github.com/mx-space/server-next/commit/6548555416ea899ed4df4152b18c477e7e9cef96))
+* **deps:** update dependency @nestjs/swagger to v5.1.1 ([1cc7fdf](https://github.com/mx-space/server-next/commit/1cc7fdf7763daee080d13827f831ae2039ee4563))
+* **deps:** update dependency @nestjs/swagger to v5.1.3 ([6097c54](https://github.com/mx-space/server-next/commit/6097c54241b86e506fa8fb64fbb5c6ae26a76bb3))
+* **deps:** update dependency @nestjs/swagger to v5.1.4 ([b3f9adb](https://github.com/mx-space/server-next/commit/b3f9adba7f0b8f22f5d199bafd197e61a95adbf6))
+* **deps:** update dependency fastify-swagger to v4.12.5 ([0800654](https://github.com/mx-space/server-next/commit/08006544b76fc58b8270c65f6c04d9bf74bbe4d1))
+* **deps:** update dependency mongoose-lean-virtuals to v0.9.0 ([#122](https://github.com/mx-space/server-next/issues/122)) ([3f70923](https://github.com/mx-space/server-next/commit/3f709236488fd51d3f2cf662cc74bb8081017e3d))
+
+
+
 ## [3.9.5](https://github.com/mx-space/server-next/compare/v3.9.4...v3.9.5) (2021-10-14)
 
 
