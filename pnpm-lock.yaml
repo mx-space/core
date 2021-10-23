@@ -68,7 +68,7 @@ specifiers:
   jest: 27.3.1
   js-yaml: '*'
   jszip: 3.7.1
-  lint-staged: 11.2.3
+  lint-staged: 11.2.4
   lodash: '*'
   marked: 3.0.7
   mkdirp: '*'
@@ -193,7 +193,7 @@ devDependencies:
   husky: 7.0.4
   ioredis: 4.28.0
   jest: 27.3.1_ts-node@10.3.1
-  lint-staged: 11.2.3
+  lint-staged: 11.2.4
   mockingoose: 2.15.2_mongoose@5.13.8
   prettier: 2.4.1
   rimraf: 3.0.2
@@ -2702,7 +2702,6 @@ packages:
 
   /argparse/2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
-    dev: false
 
   /array-includes/3.1.4:
     resolution: {integrity: sha512-ZTNSQkmWumEbiHO2GF4GmWxYVTiQyJy2XOTa15sdQSrvKn7l+180egQMqlrMOUMCyLMD7pmyQe4mMDUT6Behrw==}
@@ -5703,7 +5702,6 @@ packages:
     hasBin: true
     dependencies:
       argparse: 2.0.1
-    dev: false
 
   /jsbn/0.1.1:
     resolution: {integrity: sha1-peZUwuWi3rXyAdls77yoDA7y9RM=}
@@ -5923,21 +5921,27 @@ packages:
       set-cookie-parser: 2.4.8
     dev: false
 
+  /lilconfig/2.0.3:
+    resolution: {integrity: sha512-EHKqr/+ZvdKCifpNrJCKxBTgk5XupZA3y/aCPY9mxfgBzmgh93Mt/WqjjQ38oMxXuvDokaKiM3lAgvSH2sjtHg==}
+    engines: {node: '>=10'}
+    dev: true
+
   /lines-and-columns/1.1.6:
     resolution: {integrity: sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=}
     dev: true
 
-  /lint-staged/11.2.3:
-    resolution: {integrity: sha512-Tfmhk8O2XFMD25EswHPv+OYhUjsijy5D7liTdxeXvhG2rsadmOLFtyj8lmlfoFFXY8oXWAIOKpoI+lJe1DB1mw==}
+  /lint-staged/11.2.4:
+    resolution: {integrity: sha512-aTUqcPDSV05EyKlMT4N5h7tmnevKfAxI3xZkRb+DHfmcFaoCxfxVvpqlLMCVGy3EYle9JYER2nA5zc4eNTkZVQ==}
     hasBin: true
     dependencies:
       cli-truncate: 2.1.0
       colorette: 1.4.0
       commander: 8.2.0
-      cosmiconfig: 7.0.1
       debug: 4.3.2_supports-color@8.1.1
       enquirer: 2.3.6
       execa: 5.1.1
+      js-yaml: 4.1.0
+      lilconfig: 2.0.3
       listr2: 3.12.2_enquirer@2.3.6
       micromatch: 4.0.4
       normalize-path: 3.0.0
