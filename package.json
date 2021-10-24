@@ -96,7 +96,7 @@
     "js-yaml": "*",
     "jszip": "3.7.1",
     "lodash": "*",
-    "marked": "3.0.7",
+    "marked": "3.0.8",
     "mkdirp": "*",
     "mongoose": "*",
     "mongoose-lean-id": "0.2.0",
