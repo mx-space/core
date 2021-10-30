@@ -1,3 +1,21 @@
+## [3.10.1](https://github.com/mx-space/server-next/compare/v3.10.0...v3.10.1) (2021-10-30)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @nestjs/graphql to v9.1.1 ([#131](https://github.com/mx-space/server-next/issues/131)) ([e5c6618](https://github.com/mx-space/server-next/commit/e5c661882b8c2662ef87ab8ca81608911007653c))
+* **deps:** update dependency algoliasearch to v4.11.0 ([#132](https://github.com/mx-space/server-next/issues/132)) ([e741f69](https://github.com/mx-space/server-next/commit/e741f697bcc71ec51ff3017eebc0ffa2d3d62e18))
+* **deps:** update dependency cos-nodejs-sdk-v5 to v2.10.6 ([25c1576](https://github.com/mx-space/server-next/commit/25c157699541dfaf5b7acfbaf46920a179487eb3))
+* **deps:** update dependency fastify-swagger to v4.12.6 ([54a9fa7](https://github.com/mx-space/server-next/commit/54a9fa7a6fc7008bb6ee1b7546e8d39ce32979e8))
+* **deps:** update dependency graphql to v15.7.2 ([#151](https://github.com/mx-space/server-next/issues/151)) ([b26cb48](https://github.com/mx-space/server-next/commit/b26cb48fac973062869d003a385777d9185ed8ee))
+* **deps:** update dependency marked to v3.0.8 ([7b07846](https://github.com/mx-space/server-next/commit/7b078461b87c2efbfd0208c05fc79195229f1492))
+* **deps:** update dependency ua-parser-js to v0.7.30 ([8b2fac2](https://github.com/mx-space/server-next/commit/8b2fac224b60efd86b8491990748a85cd9bf5391))
+* **deps:** update dependency ua-parser-js to v0.7.31 ([cdf2835](https://github.com/mx-space/server-next/commit/cdf28351899194fbb130e84564a61a69daf1c692))
+* **deps:** update dependency ua-parser-js to v1 ([#142](https://github.com/mx-space/server-next/issues/142)) ([4aa6874](https://github.com/mx-space/server-next/commit/4aa6874357486ffcd7730419967096edfd2bf1a5))
+* **deps:** update nest monorepo to v8.1.2 ([70e5726](https://github.com/mx-space/server-next/commit/70e57264fafb56a4f8308467f6f726ebd70f3091))
+
+
+
 # [3.10.0](https://github.com/mx-space/server-next/compare/v3.9.5...v3.10.0) (2021-10-22)
 
 
