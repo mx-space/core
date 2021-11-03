@@ -28,7 +28,7 @@ specifiers:
   '@types/cache-manager': 3.4.2
   '@types/ejs': 3.1.0
   '@types/html-minifier': 4.0.1
-  '@types/ioredis': 4.27.8
+  '@types/ioredis': 4.28.0
   '@types/jest': 27.0.2
   '@types/lodash': 4.14.176
   '@types/marked': 3.0.2
@@ -169,7 +169,7 @@ dependencies:
 
 devDependencies:
   '@innei-util/eslint-config-ts': 0.3.4_typescript@4.4.4
-  '@innei-util/prettier': 0.1.3_prettier@2.4.1+typescript@4.4.4
+  '@innei-util/prettier': 0.1.4_prettier@2.4.1+typescript@4.4.4
   '@nestjs/cli': 8.1.4_eslint@7.32.0
   '@nestjs/schematics': 8.0.4_typescript@4.4.4
   '@nestjs/testing': 8.1.2_bbf59b1cbf49bba2b2f47e404ee3cb27
@@ -177,7 +177,7 @@ devDependencies:
   '@types/cache-manager': 3.4.2
   '@types/ejs': 3.1.0
   '@types/html-minifier': 4.0.1
-  '@types/ioredis': 4.27.8
+  '@types/ioredis': 4.28.0
   '@types/jest': 27.0.2
   '@types/lodash': 4.14.176
   '@types/marked': 3.0.2
@@ -903,8 +903,8 @@ packages:
       - supports-color
     dev: true
 
-  /@innei-util/prettier/0.1.3_prettier@2.4.1+typescript@4.4.4:
-    resolution: {integrity: sha512-rFSQoLTvDmNwB2mzd7S2zuogGu740Yn1f9Ca+pRwVzwDlriRNoMqlAlZ5YO+O1I5WENp1oD77y80cPo9dLBG3A==}
+  /@innei-util/prettier/0.1.4_prettier@2.4.1+typescript@4.4.4:
+    resolution: {integrity: sha512-8FrwTLARGRl+tMN3xmkkjZLu8j5PVt8A8153MMvJiuCaZW1f7nTloniBtTFJQpklhqKmSj5Zh5BWftHqYpWbBg==}
     dependencies:
       prettier-package-json: 2.6.0
       prettier-plugin-organize-imports: 2.3.4_prettier@2.4.1+typescript@4.4.4
@@ -1840,8 +1840,8 @@ packages:
       '@types/uglify-js': 3.13.1
     dev: true
 
-  /@types/ioredis/4.27.8:
-    resolution: {integrity: sha512-THsyghYuFI6h/UzwEaeSeagRxiDG1P/NIiL5uTjN7bcbQHwDP6nMWJfEmY0iuu3pOzl1j0FgRpAYz7WWX2eW0Q==}
+  /@types/ioredis/4.28.0:
+    resolution: {integrity: sha512-HSA/JQivJgV0e+353gvgu6WVoWvGRe0HyHOnAN2AvbVIhUlJBhNnnkP8gEEokrDWrxywrBkwo8NuDZ6TVPL9XA==}
     dependencies:
       '@types/node': 16.11.6
     dev: true
