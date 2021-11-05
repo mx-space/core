@@ -86,7 +86,7 @@
     "dayjs": "1.10.7",
     "dotenv": "*",
     "ejs": "3.1.6",
-    "fastify-cookie": "5.3.1",
+    "fastify-cookie": "5.3.2",
     "fastify-multipart": "5.0.2",
     "fastify-swagger": "4.12.6",
     "graphql": "15.7.2",
