@@ -131,7 +131,7 @@
     "@types/ioredis": "4.28.1",
     "@types/jest": "27.0.2",
     "@types/lodash": "4.14.176",
-    "@types/marked": "3.0.2",
+    "@types/marked": "3.0.3",
     "@types/mongoose-paginate-v2": "1.4.0",
     "@types/node": "16.11.6",
     "@types/nodemailer": "6.4.4",
