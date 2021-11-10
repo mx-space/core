@@ -3,7 +3,7 @@ import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { TestingModule } from '@nestjs/testing'
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
 
-export const setupApp = async (module: TestingModule) => {
+export const setupE2EApp = async (module: TestingModule) => {
   const app = module.createNestApplication<NestFastifyApplication>(fastifyApp)
   app.useGlobalPipes(
     new ValidationPipe({

@@ -1,8 +1,9 @@
+import marked from 'marked'
+
 import Vibrant = require('node-vibrant')
-import { lexer } from 'marked'
 
 export const pickImagesFromMarkdown = (text: string) => {
-  const ast = lexer(text)
+  const ast = marked.lexer(text)
   const images = [] as string[]
   function pickImage(node: any) {
     if (node.type === 'image') {

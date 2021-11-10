@@ -3,7 +3,7 @@ import { render } from 'ejs'
 import { createTransport } from 'nodemailer'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { LinkModel } from '~/modules/link/link.model'
-import { AssetService } from './hepler.asset.service'
+import { AssetService } from './helper.asset.service'
 
 export enum ReplyMailType {
   Owner = 'owner',

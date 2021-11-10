@@ -8,7 +8,7 @@ import { Types } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import xss from 'xss'
 import { DatabaseService } from '~/processors/database/database.service'
-import { AssetService } from '~/processors/helper/hepler.asset.service'
+import { AssetService } from '~/processors/helper/helper.asset.service'
 import { CategoryModel } from '../category/category.model'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
@@ -281,7 +281,7 @@ ${text.trim()}
 
       renderer: {
         image(src, title, _alt) {
-          const alt = _alt?.match(/^[!¡]/) ? _alt!.replace(/^[¡!]/, '') : ''
+          const alt = _alt?.match(/^[!¡]/) ? _alt.replace(/^[¡!]/, '') : ''
           if (!alt) {
             return `<img src="${xss(src)}"/>`
           }

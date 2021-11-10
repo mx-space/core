@@ -5,6 +5,7 @@ import { NoteModule } from '~/modules/note/note.module'
 import { PageModule } from '~/modules/page/page.module'
 import { PostModule } from '~/modules/post/post.module'
 import { SearchModule } from '~/modules/search/search.module'
+import { AssetService } from './helper.asset.service'
 import { CountingService } from './helper.counting.service'
 import { CronService } from './helper.cron.service'
 import { EmailService } from './helper.email.service'
@@ -12,7 +13,6 @@ import { HttpService } from './helper.http.service'
 import { ImageService } from './helper.image.service'
 import { TaskQueueService } from './helper.tq.service'
 import { UploadService } from './helper.upload.service'
-import { AssetService } from './hepler.asset.service'
 
 const providers: Provider<any>[] = [
   HttpService,

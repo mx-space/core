@@ -2,11 +2,12 @@ import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
 import { getModelToken } from 'nestjs-typegoose'
-import { setupApp } from 'test/helper/register-app.helper'
+import { setupE2EApp } from 'test/helper/register-app.helper'
 import { firstKeyOfMap } from 'test/helper/utils.helper'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
+
 const mockingoose = require('mockingoose')
 
 describe.only('test /snippets', () => {
@@ -34,7 +35,7 @@ describe.only('test /snippets', () => {
       ],
     }).compile()
 
-    app = await setupApp(ref)
+    app = await setupE2EApp(ref)
   })
 
   test('POST /snippets, should 422 with wrong name', async () => {

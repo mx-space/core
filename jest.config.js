@@ -13,8 +13,13 @@ module.exports = {
   },
   collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: '../coverage',
+  extensionsToTreatAsEsm: ['.ts'],
+  preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   globals: {
+    'ts-jest': {
+      useESM: true,
+    },
     isDev: process.env.NODE_ENV === 'development',
     $,
     chalk,
@@ -22,6 +27,7 @@ module.exports = {
   },
   moduleNameMapper: {
     ...pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/' }),
+
     '^src/(.*)$': '<rootDir>/src/$1',
     '^test/(.*)$': '<rootDir>/test/$1',
     '^src$': '<rootDir>/src',
