@@ -195,7 +195,7 @@ export class CommentController {
       this.commentService.sendEmail(comment, ReplyMailType.Owner)
       this.gateway.broadcase(EventTypes.COMMENT_CREATE, comment)
     }
-    return { message: '回复成功!' }
+    return comment
   }
 
   @Post('/master/comment/:id')
