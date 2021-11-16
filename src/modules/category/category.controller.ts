@@ -101,7 +101,7 @@ export class CategoryController {
     }
     if (tag === true) {
       return {
-        tag,
+        tag: query,
         data: await this.categoryService.findArticleWithTag(
           query,
           addConditionToSeeHideContent(isMaster),
