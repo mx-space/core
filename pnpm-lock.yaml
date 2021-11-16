@@ -30,7 +30,7 @@ specifiers:
   '@types/html-minifier': 4.0.1
   '@types/ioredis': 4.28.1
   '@types/jest': 27.0.2
-  '@types/lodash': 4.14.176
+  '@types/lodash': 4.14.177
   '@types/marked': 4.0.0
   '@types/mongoose-paginate-v2': 1.4.0
   '@types/node': 16.11.7
@@ -179,7 +179,7 @@ devDependencies:
   '@types/html-minifier': 4.0.1
   '@types/ioredis': 4.28.1
   '@types/jest': 27.0.2
-  '@types/lodash': 4.14.176
+  '@types/lodash': 4.14.177
   '@types/marked': 4.0.0
   '@types/mongoose-paginate-v2': 1.4.0
   '@types/node': 16.11.7
@@ -1960,8 +1960,8 @@ packages:
       '@types/node': 16.11.7
     dev: true
 
-  /@types/lodash/4.14.176:
-    resolution: {integrity: sha512-xZmuPTa3rlZoIbtDUyJKZQimJV3bxCmzMIO2c9Pz9afyDro6kr7R79GwcB6mRhuoPmV2p1Vb66WOJH7F886WKQ==}
+  /@types/lodash/4.14.177:
+    resolution: {integrity: sha512-0fDwydE2clKe9MNfvXHBHF9WEahRuj+msTuQqOmAApNORFvhMYZKNGGJdCzuhheVjMps/ti0Ak/iJPACMaevvw==}
     dev: true
 
   /@types/long/4.0.1:
@@ -3939,7 +3939,7 @@ packages:
     hasBin: true
     dependencies:
       esprima: 4.0.1
-      estraverse: 5.2.0
+      estraverse: 5.3.0
       esutils: 2.0.3
       optionator: 0.8.3
     optionalDependencies:
@@ -4182,16 +4182,11 @@ packages:
     resolution: {integrity: sha512-KmfKL3b6G+RXvP8N1vr3Tq1kL/oCFgn2NYXEtqP8/L3pKapUA4G8cFVaoF3SU323CD4XypR/ffioHmkti6/Tag==}
     engines: {node: '>=4.0'}
     dependencies:
-      estraverse: 5.2.0
+      estraverse: 5.3.0
     dev: true
 
   /estraverse/4.3.0:
     resolution: {integrity: sha512-39nnKffWz8xN1BU/2c79n9nB9HDzo0niYUqx6xyqUnyoAnQyyWpOTdZEeiCch8BBu515t4wp9ZmgVfVhn9EBpw==}
-    engines: {node: '>=4.0'}
-    dev: true
-
-  /estraverse/5.2.0:
-    resolution: {integrity: sha512-BxbNGGNm0RyRYvUdHpIwv9IWzeM9XClbOxwoATuFdOE7ZE6wHL+HQ5T8hoPM+zHvmKzzsEqhgy0GrQ5X13afiQ==}
     engines: {node: '>=4.0'}
     dev: true
 
