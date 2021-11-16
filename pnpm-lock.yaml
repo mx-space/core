@@ -91,7 +91,7 @@ specifiers:
   run-script-webpack-plugin: 0.0.11
   rxjs: 7.4.0
   semver: '*'
-  snakecase-keys: 5.1.0
+  snakecase-keys: 5.1.2
   socket.io: '*'
   ts-jest: 27.0.7
   ts-loader: 9.2.6
@@ -161,7 +161,7 @@ dependencies:
   redis: 3.1.2
   reflect-metadata: 0.1.13
   rxjs: 7.4.0
-  snakecase-keys: 5.1.0
+  snakecase-keys: 5.1.2
   ts-morph: 12.2.0
   ua-parser-js: 1.0.2
   xss: 1.0.10
@@ -7736,13 +7736,13 @@ packages:
       tslib: 2.3.1
     dev: false
 
-  /snakecase-keys/5.1.0:
-    resolution: {integrity: sha512-RG6LPYD7nz2CHLY+8LqeBGftuNF0XGX1Q77t3d+vy+zZg0Jxr/y+9ji5Gss+8pyuUGymTEj6L/9fBvY6Jp5Thg==}
+  /snakecase-keys/5.1.2:
+    resolution: {integrity: sha512-fvtDQZqPBqYb0dEY97TGuOMbN2NJ05Tj4MaoKwjTKkmjcG6mrd58JYGr23UWZRi6Aqv49Fk4HtjTIStOQenaug==}
     engines: {node: '>=12'}
     dependencies:
       map-obj: 4.2.1
       snake-case: 3.0.4
-      type-fest: 2.3.4
+      type-fest: 2.5.3
     dev: false
 
   /socket.io-adapter/2.3.2:
@@ -8432,8 +8432,8 @@ packages:
     engines: {node: '>=10'}
     dev: false
 
-  /type-fest/2.3.4:
-    resolution: {integrity: sha512-2UdQc7cx8F4Ky81Xj7NYQKPhZVtDFbtorrkairIW66rW7xQj5msAhioXa04HqEdP4MD4K2G6QAF7Zyiw/Hju1Q==}
+  /type-fest/2.5.3:
+    resolution: {integrity: sha512-7VNmE7FlsrdcWjKbtuRuynZz96Gmf35p5DvoR2tbceNP0vd58ISx87PvUUInlhtRC49vSX6qlxEKc7AoiHRirg==}
     engines: {node: '>=12.20'}
     dev: false
 
