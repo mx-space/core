@@ -131,7 +131,7 @@
     "@types/html-minifier": "4.0.1",
     "@types/ioredis": "4.28.1",
     "@types/jest": "27.0.2",
-    "@types/lodash": "4.14.176",
+    "@types/lodash": "4.14.177",
     "@types/marked": "4.0.0",
     "@types/mongoose-paginate-v2": "1.4.0",
     "@types/node": "16.11.7",
