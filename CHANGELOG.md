@@ -1,3 +1,17 @@
+## [3.10.2](https://github.com/mx-space/server-next/compare/v3.10.1...v3.10.2) (2021-11-16)
+
+
+### Bug Fixes
+
+* **category:** return origial enum if truely type ([856b06f](https://github.com/mx-space/server-next/commit/856b06f6ffab1cb0a4b78561d77bad6e869b2381))
+* **comment:** return new comment after reply ([4dfdae6](https://github.com/mx-space/server-next/commit/4dfdae632b178a5a956e401ec40bc472b5c7a7cc))
+* **deps:** update dependency apollo-server-fastify to v3.4.1 ([cb987d8](https://github.com/mx-space/server-next/commit/cb987d821ee87d2b52679aea8ef16ec3b612098c))
+* **deps:** update dependency cos-nodejs-sdk-v5 to v2.10.7 ([fe7363f](https://github.com/mx-space/server-next/commit/fe7363f47832f7cf8f0f7732aa2a360306557d51))
+* **deps:** update dependency fastify-cookie to v5.3.2 ([bf7ba52](https://github.com/mx-space/server-next/commit/bf7ba523d99f060bd441c3dfd5fde2a8a0333847))
+* lint error ([137d723](https://github.com/mx-space/server-next/commit/137d723c864edc08d57baf741e004a0dafa7320f))
+
+
+
 ## [3.10.1](https://github.com/mx-space/server-next/compare/v3.10.0...v3.10.1) (2021-10-30)
 
 
