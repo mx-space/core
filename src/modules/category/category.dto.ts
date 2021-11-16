@@ -57,7 +57,9 @@ export class MultiCategoriesQueryDto {
       case 'tag':
         return CategoryType.Tag
       default:
-        return CategoryType.Category
+        return Object.values(CategoryType).includes(+v)
+          ? +v
+          : CategoryType.Category
     }
   })
   type: CategoryType
