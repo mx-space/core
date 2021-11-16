@@ -139,7 +139,7 @@
     "@types/passport-jwt": "3.0.6",
     "@types/redis": "2.8.32",
     "@types/ua-parser-js": "0.7.36",
-    "@vercel/ncc": "0.31.1",
+    "@vercel/ncc": "0.32.0",
     "cross-env": "7.0.3",
     "eslint": "*",
     "husky": "7.0.4",
