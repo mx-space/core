@@ -76,7 +76,7 @@
     "apollo-server-fastify": "3.5.0",
     "axios": "*",
     "bcrypt": "5.0.1",
-    "cache-manager": "3.4.4",
+    "cache-manager": "3.6.0",
     "cache-manager-ioredis": "2.1.0",
     "camelcase-keys": "7.0.1",
     "chalk": "*",
