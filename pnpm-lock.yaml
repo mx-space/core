@@ -50,7 +50,7 @@ specifiers:
   class-transformer: 0.4.0
   class-validator: 0.13.1
   consola: '*'
-  cos-nodejs-sdk-v5: 2.11.0
+  cos-nodejs-sdk-v5: 2.11.1
   cross-env: 7.0.3
   dayjs: 1.10.7
   dotenv: '*'
@@ -131,7 +131,7 @@ dependencies:
   class-transformer: 0.4.0
   class-validator: 0.13.1
   consola: 2.15.3
-  cos-nodejs-sdk-v5: 2.11.0
+  cos-nodejs-sdk-v5: 2.11.1
   dayjs: 1.10.7
   dotenv: 10.0.0
   ejs: 3.1.6
@@ -3504,8 +3504,8 @@ packages:
       object-assign: 4.1.1
       vary: 1.1.2
 
-  /cos-nodejs-sdk-v5/2.11.0:
-    resolution: {integrity: sha512-nbT2xJ05LLZ5bK2xzD0uxMFF4b9WCJAIPbp1IazQNbKdf5yM8kAwPREHcsahuy8GkwUxalz3aSKejTLMiZKXCA==}
+  /cos-nodejs-sdk-v5/2.11.1:
+    resolution: {integrity: sha512-hKLI4dLoMom3yG4BExv0sWETv9XqkjdDK2cZZQtD1TwesLlRQjyZ8GnJ7D3y+7T/3/pEbsOkb60KVd0aKR+I3w==}
     engines: {node: '>= 6'}
     dependencies:
       '@types/node': 14.17.33
