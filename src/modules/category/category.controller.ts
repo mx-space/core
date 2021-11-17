@@ -50,34 +50,46 @@ export class CategoryController {
   ) {
     const { ids, joint, type = CategoryType.Category } = query // categories is category's mongo id
     if (ids) {
-      return joint
-        ? await Promise.all(
-            ids.map(async (id) => {
-              return await this.postService.model
-                .find(
-                  { categoryId: id, ...addConditionToSeeHideContent(isMaster) },
-                  'title slug _id categoryId created modified',
-                )
-                .sort({ created: -1 })
-                .lean()
-            }),
-          )
-        : await Promise.all(
-            ids.map(async (id) => {
-              const posts = await this.postService.model
-                .find(
-                  { categoryId: id, ...addConditionToSeeHideContent(isMaster) },
-                  'title slug _id created modified',
-                )
-                .sort({ created: -1 })
-                .lean()
-              const category = await this.categoryService.findCategoryById(id)
+      const ignoreKeys = '-text -summary -hide -images -commentsIndex'
+      if (joint) {
+        const map = new Object()
 
-              return {
-                category: { ...category, children: posts },
-              }
-            }),
-          )
+        await Promise.all(
+          ids.map(async (id) => {
+            const item = await this.postService.model
+              .find(
+                { categoryId: id, ...addConditionToSeeHideContent(isMaster) },
+                ignoreKeys,
+              )
+              .sort({ created: -1 })
+              .lean()
+
+            map[id] = item
+            return id
+          }),
+        )
+
+        return { entries: map }
+      } else {
+        const map = new Object()
+
+        await Promise.all(
+          ids.map(async (id) => {
+            const posts = await this.postService.model
+              .find(
+                { categoryId: id, ...addConditionToSeeHideContent(isMaster) },
+                ignoreKeys,
+              )
+              .sort({ created: -1 })
+              .lean()
+            const category = await this.categoryService.findCategoryById(id)
+            map[id] = Object.assign({ ...category, children: posts })
+            return id
+          }),
+        )
+
+        return { entries: map }
+      }
     }
     return type === CategoryType.Category
       ? await this.categoryService.findAllCategory()
