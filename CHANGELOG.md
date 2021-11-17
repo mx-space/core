@@ -1,3 +1,19 @@
+## [3.10.3](https://github.com/mx-space/server-next/compare/v3.10.2...v3.10.3) (2021-11-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency cache-manager to v3.6.0 ([#168](https://github.com/mx-space/server-next/issues/168)) ([e6b506e](https://github.com/mx-space/server-next/commit/e6b506e65b91055d75a9a40c4676a99b53a04ede))
+* **deps:** update dependency cos-nodejs-sdk-v5 to v2.10.10 ([200ab81](https://github.com/mx-space/server-next/commit/200ab815b627fde2f0275ae17a195ff89eaad7fd))
+* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.0 ([#179](https://github.com/mx-space/server-next/issues/179)) ([43c6250](https://github.com/mx-space/server-next/commit/43c6250b7b18922999c133343a6c514771874397))
+* **deps:** update dependency marked to v4.0.3 ([b078f2d](https://github.com/mx-space/server-next/commit/b078f2de2f3aa1cd4b6bc7994ae136b6c3071974))
+* **deps:** update dependency nodemailer to v6.7.1 ([b27e122](https://github.com/mx-space/server-next/commit/b27e122b8a06234bb3071e7f03687451af46e9ef))
+* **deps:** update dependency snakecase-keys to v5.1.2 ([79db46e](https://github.com/mx-space/server-next/commit/79db46e7d780925a271b17369595bb063359a1a7))
+* **deps:** update nest monorepo to v8.2.1 ([e757b86](https://github.com/mx-space/server-next/commit/e757b86bbf3f1fd449450c71e70a1444d16245ea))
+* **tag:** return correct tag name ([64e31b9](https://github.com/mx-space/server-next/commit/64e31b92eeb95f0bb836ff1b3555a63c4531aee8))
+
+
+
 ## [3.10.2](https://github.com/mx-space/server-next/compare/v3.10.1...v3.10.2) (2021-11-16)
 
 
