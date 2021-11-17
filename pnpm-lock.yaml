@@ -17,7 +17,7 @@ specifiers:
   '@nestjs/passport': 8.0.1
   '@nestjs/platform-fastify': 8.2.1
   '@nestjs/platform-socket.io': 8.2.1
-  '@nestjs/schedule': 1.0.1
+  '@nestjs/schedule': 1.0.2
   '@nestjs/schematics': 8.0.5
   '@nestjs/swagger': 5.1.4
   '@nestjs/testing': 8.2.1
@@ -115,7 +115,7 @@ dependencies:
   '@nestjs/passport': 8.0.1_62f1ed64e41c44cb4d17d20abba1f60d
   '@nestjs/platform-fastify': 8.2.1_ff873512c3369c40b8c5889da8731f97
   '@nestjs/platform-socket.io': 8.2.1_c7f8b148ef5eb944c929082185f1c8b1
-  '@nestjs/schedule': 1.0.1_6b00c7ba2d8fc4acf72a1490ec59db4b
+  '@nestjs/schedule': 1.0.2_6b00c7ba2d8fc4acf72a1490ec59db4b
   '@nestjs/swagger': 5.1.4_26409dd9e9a1417ded6a93a8c272b4ed
   '@nestjs/websockets': 8.2.1_2b9cdddd54537f6bb512eeca49e14481
   '@typegoose/auto-increment': 1.0.0_mongoose@5.13.8
@@ -1529,8 +1529,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@nestjs/schedule/1.0.1_6b00c7ba2d8fc4acf72a1490ec59db4b:
-    resolution: {integrity: sha512-EU2tB4rxuEgum8JlorAFvXkU982EYZm/IBa7n6kgkyps5BbxQSFf7iR1CLkP9zODO9ApZTWk5z3q9L3O7vrkoQ==}
+  /@nestjs/schedule/1.0.2_6b00c7ba2d8fc4acf72a1490ec59db4b:
+    resolution: {integrity: sha512-GGRehpSm0nCthYNxAGdTzondPrRvurtKnkQCzIb3Tccqq6PhfS2QiHMwDaCel5/4jhYbR/lZR9UsVr6KSJc2Xg==}
     peerDependencies:
       '@nestjs/common': ^6.10.11 || ^7.0.0 || ^8.0.0
       '@nestjs/core': ^7.0.0 || ^8.0.0
