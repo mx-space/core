@@ -1,3 +1,16 @@
+## [3.11.1](https://github.com/mx-space/server-next/compare/v3.11.0...v3.11.1) (2021-11-19)
+
+
+### Bug Fixes
+
+* add `id` on login  payload ([4803a4d](https://github.com/mx-space/server-next/commit/4803a4dc56c164788a24301dc9edad46056bb3f2))
+* **deps:** update dependency @nestjs/schedule to v1.0.2 ([74eed91](https://github.com/mx-space/server-next/commit/74eed91d3c9d9901e40238f23fd7ca04b2a92029))
+* **deps:** update dependency @nestjs/swagger to v5.1.5 ([75f485f](https://github.com/mx-space/server-next/commit/75f485f0f8e35d356174f14a32c3dfe97c40ce7b))
+* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.1 ([dc967d5](https://github.com/mx-space/server-next/commit/dc967d5f4843a1575aad17830e87e67e9a19db05))
+* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.2 ([654a5aa](https://github.com/mx-space/server-next/commit/654a5aa65a1ac0d7536d99d289d5412b20f582ba))
+
+
+
 # [3.11.0](https://github.com/mx-space/server-next/compare/v3.10.3...v3.11.0) (2021-11-17)
 
 
