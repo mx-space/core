@@ -52,7 +52,7 @@ export class UserController {
   async login(@Body() dto: LoginDto, @IpLocation() ipLocation: IpRecord) {
     const user = await this.userService.login(dto.username, dto.password)
     const footstep = await this.userService.recordFootstep(ipLocation.ip)
-    const { name, username, created, url, mail } = user
+    const { name, username, created, url, mail, id } = user
     const avatar = user.avatar ?? getAvatar(mail)
 
     return {
@@ -65,6 +65,7 @@ export class UserController {
       mail,
       avatar,
       expiresIn: 7,
+      id,
     }
   }
 
