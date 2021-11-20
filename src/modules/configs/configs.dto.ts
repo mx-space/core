@@ -60,8 +60,10 @@ export class UrlDto {
 class MailOption {
   @IsInt()
   @Transform(({ value: val }) => parseInt(val))
+  @IsOptional()
   port: number
   @IsUrl({ require_protocol: false })
+  @IsOptional()
   host: string
 }
 export class MailOptionsDto {

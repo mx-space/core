@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common'
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, merge } from 'lodash'
 import { LeanDocument } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import { API_VERSION } from '~/app.config'
@@ -121,7 +121,7 @@ export class ConfigsService {
   public async patch<T extends keyof IConfig>(key: T, data: IConfig[T]) {
     await this.optionModel.updateOne(
       { name: key as string },
-      { value: { ...this.config[key], ...data } },
+      { value: merge(this.config[key], data) },
       { upsert: true, omitUndefined: true },
     )
     const newData = (await this.optionModel.findOne({ name: key as string }))
