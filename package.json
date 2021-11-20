@@ -5,6 +5,9 @@
   "author": "Innei <https://innei.ren>",
   "private": true,
   "license": "MIT",
+  "dashboard": {
+    "version": "3.9.5"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"

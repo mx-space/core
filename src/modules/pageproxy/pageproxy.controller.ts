@@ -8,13 +8,14 @@ import {
 } from '@nestjs/common'
 import { FastifyReply } from 'fastify'
 import PKG from 'package.json'
-import { ADMIN_DASHBOARD, API_VERSION } from '~/app.config'
+import { API_VERSION } from '~/app.config'
 import { Cookies } from '~/common/decorator/cookie.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
+import { dashboard } from '../../../package.json'
 import { ConfigsService } from '../configs/configs.service'
 import { InitService } from '../init/init.service'
 import { PageProxyDebugDto } from './pageproxy.dto'
@@ -58,7 +59,7 @@ export class PageProxyController {
       __gatewayUrl: gatewayUrl,
       __onlyGithub: onlyGithub,
       __debug: debug,
-      __version: adminVersion = ADMIN_DASHBOARD.version,
+      __version: adminVersion = dashboard.version,
       __purge,
     } = query
 
