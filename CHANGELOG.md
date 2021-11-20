@@ -1,3 +1,13 @@
+## [3.11.2](https://github.com/mx-space/server-next/compare/v3.11.1...v3.11.2) (2021-11-20)
+
+
+### Bug Fixes
+
+* config merge ([cf0b3aa](https://github.com/mx-space/server-next/commit/cf0b3aae18b4b04f00a2b5b8ca7139691a06745c))
+* **deps:** update dependency marked to v4.0.4 ([#190](https://github.com/mx-space/server-next/issues/190)) ([e4467f3](https://github.com/mx-space/server-next/commit/e4467f3943be9deadc6029f98cc155ea850fb5c6))
+
+
+
 ## [3.11.1](https://github.com/mx-space/server-next/compare/v3.11.0...v3.11.1) (2021-11-19)
 
 
