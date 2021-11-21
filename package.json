@@ -6,6 +6,7 @@
   "private": true,
   "license": "MIT",
   "dashboard": {
+    "repo": "mx-space/admin-next",
     "version": "3.9.8"
   },
   "husky": {
@@ -19,7 +20,6 @@
       "eslint --cache"
     ]
   },
-  "adminRepository": "mx-space/admin-next",
   "repository": {
     "directory": "mx-space/server-next",
     "url": "https://github.com/mx-space/server-next"
@@ -84,7 +84,7 @@
     "camelcase-keys": "7.0.1",
     "chalk": "*",
     "class-transformer": "0.4.0",
-    "class-validator": "0.13.2",
+    "class-validator": "0.13.1",
     "consola": "*",
     "cos-nodejs-sdk-v5": "2.11.2",
     "dayjs": "1.10.7",

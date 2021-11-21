@@ -91,13 +91,13 @@ export class PageProxyController {
         if (!adminVersion) {
           // tag_name: v3.6.x
           const { tag_name } = await fetch(
-            `https://api.github.com/repos/${PKG.adminRepository}/releases/latest`,
+            `https://api.github.com/repos/${PKG.dashboard.repo}/releases/latest`,
           ).then((data) => data.json())
           latestVersion = tag_name.replace(/^v/, '')
         }
         const v = adminVersion || latestVersion
-        const indexEntryUrl = `https://raw.githubusercontent.com/${PKG.adminRepository}/page_v${v}/index.html`
-        const indexEntryCdnUrl = `https://cdn.jsdelivr.net/gh/${PKG.adminRepository}@page_v${v}/index.html`
+        const indexEntryUrl = `https://raw.githubusercontent.com/${PKG.dashboard.repo}/page_v${v}/index.html`
+        const indexEntryCdnUrl = `https://cdn.jsdelivr.net/gh/${PKG.dashboard.repo}@page_v${v}/index.html`
         Logger.debug('use admin version: ' + v, 'PageProxy')
         const tasks = [
           // eslint-disable-next-line @typescript-eslint/no-empty-function
