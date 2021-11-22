@@ -2,11 +2,11 @@ import {
   Controller,
   Get,
   InternalServerErrorException,
-  Logger,
   Query,
   Res,
 } from '@nestjs/common'
 import { FastifyReply } from 'fastify'
+import { isNull } from 'lodash'
 import PKG from 'package.json'
 import { API_VERSION } from '~/app.config'
 import { Cookies } from '~/common/decorator/cookie.decorator'
@@ -79,45 +79,60 @@ export class PageProxyController {
       reply.clearCookie('__gatewayUrl')
     }
 
-    const source =
-      (!onlyGithub &&
-        !adminVersion &&
-        (await this.cacheService
-          .get<string>(getRedisKey(RedisKeys.AdminPage))
-          .then((text) => text && { text, from: 'redis' }))) ||
-      (await (async () => {
-        let latestVersion = ''
-        // 没有指定版本, 则获取最新版本
-        if (!adminVersion) {
-          // tag_name: v3.6.x
+    const source: { text: string; from: string } = await (async () => {
+      // adminVersion 如果传入 latest 会被转换 null, 这里要判断 undefined
+      if (!onlyGithub && typeof adminVersion == 'undefined') {
+        const fromRedis = await this.cacheService.get<string>(
+          getRedisKey(RedisKeys.AdminPage),
+        )
+
+        if (fromRedis) {
+          return {
+            text: fromRedis,
+            from: 'redis',
+          }
+        }
+      }
+      let latestVersion = ''
+
+      if (isNull(adminVersion)) {
+        // tag_name: v3.6.x
+        try {
           const { tag_name } = await fetch(
             `https://api.github.com/repos/${PKG.dashboard.repo}/releases/latest`,
           ).then((data) => data.json())
+
           latestVersion = tag_name.replace(/^v/, '')
+        } catch (e) {
+          reply.type('application/json').status(500).send({
+            message: '从获取 GitHub 获取数据失败, 连接超时',
+          })
+          throw e
         }
-        const v = adminVersion || latestVersion
-        const indexEntryUrl = `https://raw.githubusercontent.com/${PKG.dashboard.repo}/page_v${v}/index.html`
-        const indexEntryCdnUrl = `https://cdn.jsdelivr.net/gh/${PKG.dashboard.repo}@page_v${v}/index.html`
-        Logger.debug('use admin version: ' + v, 'PageProxy')
-        const tasks = [
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          fetch(indexEntryUrl)
+      }
+      const v = adminVersion || latestVersion
+      const indexEntryUrl = `https://raw.githubusercontent.com/${PKG.dashboard.repo}/page_v${v}/index.html`
+      const indexEntryCdnUrl = `https://cdn.jsdelivr.net/gh/${PKG.dashboard.repo}@page_v${v}/index.html`
+      const tasks = [
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        fetch(indexEntryUrl)
+          .then((res) => res.text())
+          .then((text) => ({ text, from: 'github' })),
+      ]
+      if (!onlyGithub) {
+        tasks.push(
+          fetch(indexEntryCdnUrl)
             .then((res) => res.text())
-            .then((text) => ({ text, from: 'github' })),
-        ]
-        if (!onlyGithub) {
-          tasks.push(
-            fetch(indexEntryCdnUrl)
-              .then((res) => res.text())
-              .then((text) => ({ text, from: 'jsdelivr' })),
-          )
-        }
-        return await Promise.any(tasks).catch((e) => {
-          const err = '网络连接异常, 所有请求均失败, 无法获取后台入口文件'
-          reply.type('application/json').status(500).send({ message: err })
-          throw new InternalServerErrorException(err)
-        })
-      })())
+            .then((text) => ({ text, from: 'jsdelivr' })),
+        )
+      }
+
+      return await Promise.any(tasks).catch((e) => {
+        const err = '网络连接异常, 所有请求均失败, 无法获取后台入口文件'
+        reply.type('application/json').status(500).send({ message: err })
+        throw new InternalServerErrorException(err)
+      })
+    })()
 
     await this.cacheService.set(getRedisKey(RedisKeys.AdminPage), source.text, {
       ttl: 10 * 60,

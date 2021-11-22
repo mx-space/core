@@ -16,7 +16,9 @@ export class PageProxyDebugDto {
 
   @IsBoolean()
   @IsOptional()
-  @Transform(({ value }) => (value === 'true' ? true : false))
+  @Transform(({ value }) => {
+    return ['', 'true', true].includes(value) ? true : false
+  })
   /**
    * If true, always use index.html pull from github.
    */
