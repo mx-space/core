@@ -1,3 +1,18 @@
+## [3.11.3](https://github.com/mx-space/server-next/compare/v3.11.2...v3.11.3) (2021-11-24)
+
+
+### Bug Fixes
+
+* add auth on `tool` controller ([1bd29b7](https://github.com/mx-space/server-next/commit/1bd29b72e70f082a62171fabc29fc3e10b73df8d))
+* change typo ([49db94c](https://github.com/mx-space/server-next/commit/49db94ca6179f6ae6e991dfba84129dba21cdb72))
+* **deps:** update dependency @nestjs/graphql to v9.1.2 ([e423f92](https://github.com/mx-space/server-next/commit/e423f92558dcbab6e17abec47b3de35a0701778f))
+* **deps:** update dependency class-validator to v0.13.2 ([d739bb3](https://github.com/mx-space/server-next/commit/d739bb3ac4a022ba865054ae7ee1eec1c66bba79))
+* **deps:** update nest monorepo to v8.2.3 ([7438fef](https://github.com/mx-space/server-next/commit/7438feff25a4d10026645cb5c6f9365918330d70))
+* **recently:** multi-choice `before` and `after` ([be4ebd3](https://github.com/mx-space/server-next/commit/be4ebd30c4af872b90dbdad551dd8c825ebfa9c2))
+* update lock file ([c76af4e](https://github.com/mx-space/server-next/commit/c76af4ea11c3fc6db022c35814f201eeee854abd))
+
+
+
 ## [3.11.2](https://github.com/mx-space/server-next/compare/v3.11.1...v3.11.2) (2021-11-20)
 
 
