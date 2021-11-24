@@ -11,7 +11,7 @@ specifiers:
   '@nestjs/cli': 8.1.5
   '@nestjs/common': 8.2.3
   '@nestjs/core': 8.2.3
-  '@nestjs/graphql': 9.1.1
+  '@nestjs/graphql': 9.1.2
   '@nestjs/jwt': 8.0.0
   '@nestjs/mapped-types': '*'
   '@nestjs/passport': 8.0.1
@@ -109,7 +109,7 @@ dependencies:
   '@algolia/client-search': 4.11.0
   '@nestjs/common': 8.2.3_7e4654d7e57c6b6e53cb242e51801469
   '@nestjs/core': 8.2.3_d94e9db1ee8b292b0e4797b239800976
-  '@nestjs/graphql': 9.1.1_1431d99de722d0b997e8261f325eb5f8
+  '@nestjs/graphql': 9.1.2_1431d99de722d0b997e8261f325eb5f8
   '@nestjs/jwt': 8.0.0_@nestjs+common@8.2.3
   '@nestjs/mapped-types': 1.0.0_a7de90e7d9677d0b7f72f4f90bcd5999
   '@nestjs/passport': 8.0.1_42124d4eb17a2eed3a87b6c20a6165ac
@@ -1413,8 +1413,8 @@ packages:
       uuid: 8.3.2
     dev: false
 
-  /@nestjs/graphql/9.1.1_1431d99de722d0b997e8261f325eb5f8:
-    resolution: {integrity: sha512-NHMR+VRHFeHBa8/ACy9RnyMVv/581VvXDWenpPFW5RFnZiy4aNeUDCv6sdCh/EydE4CpWzmdliuUei+NrlLWEQ==}
+  /@nestjs/graphql/9.1.2_1431d99de722d0b997e8261f325eb5f8:
+    resolution: {integrity: sha512-ncxmkKmrswnHJ+jLgc6tbkRET6HAyC3gK6WKt1CdPLjvMnXVpFVpyQMFSenNXxAndInw9IgaiSyiJFdRYZVD/w==}
     peerDependencies:
       '@apollo/federation': ^0.26.0 || ^0.27.0 || ^0.29.0 || ^0.33.0
       '@apollo/gateway': ^0.29.0 || ^0.32.0 || ^0.33.0 || ^0.35.0 || ^0.38.0 || ^0.42.0
@@ -1426,7 +1426,7 @@ packages:
       apollo-server-fastify: ^3.1.2
       graphql: ^15.5.1
       reflect-metadata: ^0.1.13
-      ts-morph: ^11.0.3 || ^12.0.0
+      ts-morph: ^11.0.3 || ^12.0.0 || ^13.0.0
     peerDependenciesMeta:
       '@apollo/federation':
         optional: true
@@ -1453,16 +1453,16 @@ packages:
       chokidar: 3.5.2
       fast-glob: 3.2.7
       graphql: 15.7.2
-      graphql-ws: 5.5.1_graphql@15.7.2
+      graphql-ws: 5.5.5_graphql@15.7.2
       iterall: 1.3.0
       lodash: 4.17.21
       normalize-path: 3.0.0
       reflect-metadata: 0.1.13
-      subscriptions-transport-ws: 0.9.19_graphql@15.7.2
+      subscriptions-transport-ws: 0.11.0_graphql@15.7.2
       ts-morph: 12.2.0
       tslib: 2.3.1
       uuid: 8.3.2
-      ws: 8.2.3
+      ws: 8.3.0
     transitivePeerDependencies:
       - bufferutil
       - class-transformer
@@ -4809,8 +4809,8 @@ packages:
       tslib: 2.3.1
     dev: false
 
-  /graphql-ws/5.5.1_graphql@15.7.2:
-    resolution: {integrity: sha512-QP6OvCnqkdazSoZ6QboWVkCvEmDCOe6u41MzuhkCkYg+jZZbYafUlt3uC/7mvKLrlIyR44QgHOMALqBgg+Ab/w==}
+  /graphql-ws/5.5.5_graphql@15.7.2:
+    resolution: {integrity: sha512-hvyIS71vs4Tu/yUYHPvGXsTgo0t3arU820+lT5VjZS2go0ewp2LqyCgxEN56CzOG7Iys52eRhHBiD1gGRdiQtw==}
     engines: {node: '>=10'}
     peerDependencies:
       graphql: '>=0.11 <=16'
@@ -7941,10 +7941,10 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /subscriptions-transport-ws/0.9.19_graphql@15.7.2:
-    resolution: {integrity: sha512-dxdemxFFB0ppCLg10FTtRqH/31FNRL1y1BQv8209MK5I4CwALb7iihQg+7p65lFcIl8MHatINWBLOqpgU4Kyyw==}
+  /subscriptions-transport-ws/0.11.0_graphql@15.7.2:
+    resolution: {integrity: sha512-8D4C6DIH5tGiAIpp5I0wD/xRlNiZAPGHygzCe7VzyzUoxHtawzjNAY9SUTXU05/EY2NMY9/9GF0ycizkXr1CWQ==}
     peerDependencies:
-      graphql: '>=0.10.0'
+      graphql: ^15.7.2 || ^16.0.0
     dependencies:
       backo2: 1.0.2
       eventemitter3: 3.1.2
@@ -8750,6 +8750,19 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
+
+  /ws/8.3.0:
+    resolution: {integrity: sha512-Gs5EZtpqZzLvmIM59w4igITU57lrtYVFneaa434VROv4thzJyV6UjIL3D42lslWlI+D4KzLYnxSwtfuiO79sNw==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: ^5.0.2
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+    dev: false
 
   /xhr/2.6.0:
     resolution: {integrity: sha512-/eCGLb5rxjx5e3mF1A7s+pLlR6CGyqWN91fv1JgER5mVWg1MZmlhBvy9kjcsOdRk8RrIujotWyJamfyrp+WIcA==}
