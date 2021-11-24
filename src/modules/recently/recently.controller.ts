@@ -36,8 +36,8 @@ export class RecentlyController {
   async getList(@Query() query: OffsetDto) {
     const { before, after, size } = query
 
-    if (!before && !after) {
-      throw new BadRequestException('before or after must choice one')
+    if (before && after) {
+      throw new BadRequestException('you can only choose `before` or `after`')
     }
 
     return await this.recentlyService.getOffset({ before, after, size })
