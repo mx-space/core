@@ -36,7 +36,7 @@ export class RecentlyController {
   async getList(@Query() query: OffsetDto) {
     const { before, after, size } = query
 
-    if (before && after) {
+    if (!before && !after) {
       throw new BadRequestException('before or after must choice one')
     }
 
