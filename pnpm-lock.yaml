@@ -97,7 +97,7 @@ specifiers:
   ts-loader: 9.2.6
   ts-morph: '*'
   ts-node: 10.4.0
-  tsconfig-paths: 3.11.0
+  tsconfig-paths: 3.12.0
   typescript: 4.5.2
   ua-parser-js: 1.0.2
   webpack: '*'
@@ -203,7 +203,7 @@ devDependencies:
   ts-jest: 27.0.7_7e2a439bb7b53c38ff0c1a3c5e04c2c5
   ts-loader: 9.2.6_typescript@4.5.2+webpack@5.63.0
   ts-node: 10.4.0_36929cccfdb926da0bb85cc291f27124
-  tsconfig-paths: 3.11.0
+  tsconfig-paths: 3.12.0
   typescript: 4.5.2
   webpack: 5.63.0
   webpack-node-externals: 3.0.0
@@ -3991,7 +3991,7 @@ packages:
       minimatch: 3.0.4
       object.values: 1.1.5
       resolve: 1.20.0
-      tsconfig-paths: 3.11.0
+      tsconfig-paths: 3.12.0
     dev: true
 
   /eslint-scope/5.1.1:
@@ -8284,11 +8284,20 @@ packages:
     dependencies:
       chalk: 4.1.2
       enhanced-resolve: 5.8.3
-      tsconfig-paths: 3.11.0
+      tsconfig-paths: 3.12.0
     dev: true
 
   /tsconfig-paths/3.11.0:
     resolution: {integrity: sha512-7ecdYDnIdmv639mmDwslG6KQg1Z9STTz1j7Gcz0xa+nshh/gKDAHcPxRbWOsA3SPp0tXP2leTcY9Kw+NAkfZzA==}
+    dependencies:
+      '@types/json5': 0.0.29
+      json5: 1.0.1
+      minimist: 1.2.5
+      strip-bom: 3.0.0
+    dev: true
+
+  /tsconfig-paths/3.12.0:
+    resolution: {integrity: sha512-e5adrnOYT6zqVnWqZu7i/BQ3BnhzvGbjEjejFXO20lKIKpwTaupkCPgEfv4GZK1IBciJUEhYs3J3p75FdaTFVg==}
     dependencies:
       '@types/json5': 0.0.29
       json5: 1.0.1
