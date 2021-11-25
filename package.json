@@ -83,7 +83,7 @@
     "cache-manager-ioredis": "2.1.0",
     "camelcase-keys": "7.0.1",
     "chalk": "*",
-    "class-transformer": "0.4.0",
+    "class-transformer": "0.5.1",
     "class-validator": "0.13.1",
     "consola": "*",
     "cos-nodejs-sdk-v5": "2.11.2",
