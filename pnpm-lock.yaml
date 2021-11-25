@@ -68,7 +68,7 @@ specifiers:
   jest: 27.3.1
   js-yaml: '*'
   jszip: 3.7.1
-  lint-staged: 12.0.3
+  lint-staged: 12.1.2
   lodash: '*'
   marked: 4.0.5
   mkdirp: '*'
@@ -193,7 +193,7 @@ devDependencies:
   husky: 7.0.4
   ioredis: 4.28.0
   jest: 27.3.1_ts-node@10.4.0
-  lint-staged: 12.0.3
+  lint-staged: 12.1.2
   mockingoose: 2.15.2_mongoose@5.13.8
   prettier: 2.4.1
   rimraf: 3.0.2
@@ -6082,28 +6082,34 @@ packages:
       set-cookie-parser: 2.4.8
     dev: false
 
+  /lilconfig/2.0.4:
+    resolution: {integrity: sha512-bfTIN7lEsiooCocSISTWXkiWJkRqtL9wYtYy+8EK3Y41qh3mpwPU0ycTOgjdY9ErwXCc8QyrQp82bdL0Xkm9yA==}
+    engines: {node: '>=10'}
+    dev: true
+
   /lines-and-columns/1.1.6:
     resolution: {integrity: sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=}
     dev: true
 
-  /lint-staged/12.0.3:
-    resolution: {integrity: sha512-/NwNQjrhqz+AjV+e0URbtphvpHNcNdR/W6p9GxO+qIg7cxCxy0uKYO0xORQhZamp1BPjIhRUWsjbLnwEIiPHgQ==}
+  /lint-staged/12.1.2:
+    resolution: {integrity: sha512-bSMcQVqMW98HLLLR2c2tZ+vnDCnx4fd+0QJBQgN/4XkdspGRPc8DGp7UuOEBe1ApCfJ+wXXumYnJmU+wDo7j9A==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     hasBin: true
     dependencies:
       cli-truncate: 3.1.0
       colorette: 2.0.16
       commander: 8.3.0
-      cosmiconfig: 7.0.1
       debug: 4.3.2_supports-color@9.0.2
       enquirer: 2.3.6
       execa: 5.1.1
+      lilconfig: 2.0.4
       listr2: 3.13.3_enquirer@2.3.6
       micromatch: 4.0.4
       normalize-path: 3.0.0
       object-inspect: 1.11.0
       string-argv: 0.3.1
       supports-color: 9.0.2
+      yaml: 1.10.2
     dev: true
 
   /listr2/3.13.3_enquirer@2.3.6:
