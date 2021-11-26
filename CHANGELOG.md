@@ -1,3 +1,17 @@
+## [3.11.4](https://github.com/mx-space/server-next/compare/v3.11.3...v3.11.4) (2021-11-26)
+
+
+### Bug Fixes
+
+* **auth:** !!!accidentally bypassing authentication ([89d36a8](https://github.com/mx-space/server-next/commit/89d36a89a6d4a0355829c91535760782fd7717af))
+* **deps:** update dependency class-transformer to v0.5.1 ([#193](https://github.com/mx-space/server-next/issues/193)) ([6fff33d](https://github.com/mx-space/server-next/commit/6fff33d83d8563d31838a3c7b807b1821a13fcf5))
+* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.3 ([2b7a333](https://github.com/mx-space/server-next/commit/2b7a3336c537999d829c2a035ffa822cafb37998))
+* **deps:** update dependency fastify-cookie to v5.4.0 ([#197](https://github.com/mx-space/server-next/issues/197)) ([6c415cf](https://github.com/mx-space/server-next/commit/6c415cfb50e36fd21993aff798a2317ae9abff55))
+* **deps:** update dependency marked to v4.0.5 ([e86d5d8](https://github.com/mx-space/server-next/commit/e86d5d898ceafdd37d58c44af3c42359c12274a9))
+* **search:** poplute truely field `category` ([c65ef2d](https://github.com/mx-space/server-next/commit/c65ef2ded85f9de6d50c72600253f3d1d5ccf252))
+
+
+
 ## [3.11.3](https://github.com/mx-space/server-next/compare/v3.11.2...v3.11.3) (2021-11-24)
 
 
