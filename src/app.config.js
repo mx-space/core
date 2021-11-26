@@ -1,4 +1,6 @@
 const isDev = process.env.NODE_ENV === 'development'
+const isTEST = process.env.NODE_ENV === 'test'
+
 const { argv } = require('zx')
 Object.defineProperty(exports, '__esModule', { value: true })
 
@@ -28,7 +30,7 @@ exports.MONGO_DB = {
   port: argv.db_port || 27017,
   get uri() {
     return `mongodb://${this.host}:${this.port}/${
-      process.env.TEST ? 'mx-space_unitest' : this.dbName
+      isTEST ? 'mx-space_unitest' : this.dbName
     }`
   },
 }
@@ -55,5 +57,5 @@ exports.SECURITY = {
   jwtSecret: argv.jwt_secret || argv.jwtSecret || 'asjhczxiucipoiopiqm2376',
   jwtExpire: '7d',
   // 跳过登陆鉴权
-  skipAuth: (argv.skip_auth === 'true' ? true : false) ?? false,
+  skipAuth: isTEST ? true : false,
 }
