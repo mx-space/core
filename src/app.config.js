@@ -55,10 +55,5 @@ exports.SECURITY = {
   jwtSecret: argv.jwt_secret || argv.jwtSecret || 'asjhczxiucipoiopiqm2376',
   jwtExpire: '7d',
   // 跳过登陆鉴权
-  skipAuth: !isDev ? true : argv.skip_auth ?? false,
+  skipAuth: (argv.skip_auth === 'true' ? true : false) ?? false,
 }
-
-// exports.ADMIN_DASHBOARD = {
-//   // 需要获取反代管理面板的版本
-//   version: '3.9.3',
-// }
