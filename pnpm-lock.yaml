@@ -70,7 +70,7 @@ specifiers:
   jszip: 3.7.1
   lint-staged: 12.1.2
   lodash: '*'
-  marked: 4.0.5
+  marked: 4.0.6
   mkdirp: '*'
   mockingoose: 2.15.2
   mongoose: '*'
@@ -145,7 +145,7 @@ dependencies:
   js-yaml: 4.1.0
   jszip: 3.7.1
   lodash: 4.17.21
-  marked: 4.0.5
+  marked: 4.0.6
   mkdirp: 1.0.4
   mongoose: 5.13.8
   mongoose-lean-id: 0.2.0_mongoose@5.13.8
@@ -6346,8 +6346,8 @@ packages:
     resolution: {integrity: sha1-5WqpTEyAVaFkBKBnS3jyFffI4ZQ=}
     dev: false
 
-  /marked/4.0.5:
-    resolution: {integrity: sha512-eUToMA5d5lunnipkCN7zFD0RiunCF2Uo6bImEt/Qx8LZMW7oPXTw7R+f+M5V3eS7164HjEDPfW8/TrefuFhDfw==}
+  /marked/4.0.6:
+    resolution: {integrity: sha512-+H0bTf8DM8zLuFBUm/2VklxaCrwlBFgoJzHJcMZCnZ9cPgsllHwKpL6TPLdDeA38yPluMuVKOL1hO5w6HmG5Mg==}
     engines: {node: '>= 12'}
     hasBin: true
     dev: false
