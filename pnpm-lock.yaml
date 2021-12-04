@@ -38,7 +38,7 @@ specifiers:
   '@types/passport-jwt': 3.0.6
   '@types/redis': 2.8.32
   '@types/ua-parser-js': 0.7.36
-  '@vercel/ncc': 0.32.0
+  '@vercel/ncc': 0.33.0
   algoliasearch: 4.11.0
   apollo-server-fastify: 3.5.0
   axios: '*'
@@ -187,7 +187,7 @@ devDependencies:
   '@types/passport-jwt': 3.0.6
   '@types/redis': 2.8.32
   '@types/ua-parser-js': 0.7.36
-  '@vercel/ncc': 0.32.0
+  '@vercel/ncc': 0.33.0
   cross-env: 7.0.3
   eslint: 8.2.0
   husky: 7.0.4
@@ -2252,8 +2252,8 @@ packages:
       eslint-visitor-keys: 2.1.0
     dev: true
 
-  /@vercel/ncc/0.32.0:
-    resolution: {integrity: sha512-S/SxTHHTbBQSOutpgnqEn+LyTfZcq9xMRAnzY05HpGVjxjmfmvg6SWZZkbW/GJIFznMmHGeGOrI1MEBD7efIkA==}
+  /@vercel/ncc/0.33.0:
+    resolution: {integrity: sha512-m21HzXD+L/YHoJTwyCCyGBXD0O2L4KR/Y6SSsS4qvRlz3NAYsiiYahzOsgfWEt4PJxpPVCMGiuWzsvb2tycmyA==}
     hasBin: true
     dev: true
 
