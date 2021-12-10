@@ -1,3 +1,16 @@
+## [3.11.6](https://github.com/mx-space/server-next/compare/v3.11.5...v3.11.6) (2021-12-10)
+
+
+### Bug Fixes
+
+* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.4 ([00a3680](https://github.com/mx-space/server-next/commit/00a3680a46e9755f6dd554d4787e8587d3d16bef))
+* **deps:** update dependency marked to v4.0.6 ([230d0b2](https://github.com/mx-space/server-next/commit/230d0b2400f845a59ac6ee81070af8f46b2166dc))
+* **deps:** update dependency marked to v4.0.7 ([1e3949c](https://github.com/mx-space/server-next/commit/1e3949c413d46838bfd63312e68b3ed3dd763409))
+* **deps:** update dependency nodemailer to v6.7.2 ([4f8bed3](https://github.com/mx-space/server-next/commit/4f8bed30f4238c2668461d241e25810e29df004c))
+* poplaute `category` field in comment list ([4c16b26](https://github.com/mx-space/server-next/commit/4c16b26657d974c3ffce35a1caddebb1bf2a35e9))
+
+
+
 ## [3.11.5](https://github.com/mx-space/server-next/compare/v3.11.4...v3.11.5) (2021-11-26)
 
 
