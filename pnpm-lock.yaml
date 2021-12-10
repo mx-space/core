@@ -57,7 +57,7 @@ specifiers:
   ejs: 3.1.6
   eslint: '*'
   fastify-cookie: 5.4.0
-  fastify-multipart: 5.1.0
+  fastify-multipart: 5.2.1
   fastify-swagger: 4.12.6
   graphql: 15.7.2
   html-minifier: 4.0.0
@@ -136,7 +136,7 @@ dependencies:
   dotenv: 10.0.0
   ejs: 3.1.6
   fastify-cookie: 5.4.0
-  fastify-multipart: 5.1.0
+  fastify-multipart: 5.2.1
   fastify-swagger: 4.12.6
   graphql: 15.7.2
   html-minifier: 4.0.0
@@ -849,6 +849,13 @@ packages:
     resolution: {integrity: sha512-gvCOUNpXsWrIQ3A4aXCLIdblL0tDq42BG/2Xw7oxbil9h11uow10ztS2GuFazNBfjbrsZ5nl+nPl5jDSjj5TSg==}
     dependencies:
       ajv: 6.12.6
+    dev: false
+
+  /@fastify/busboy/1.0.0:
+    resolution: {integrity: sha512-tzTXX1TFEjWCseEsNdIlXXkD+48uJoN+zpqIojUX4pSoMscsbhO/UuVEB5SzJucexqDWOo2ma0ECwdD7hZdrzg==}
+    engines: {node: '>=10.17.0'}
+    dependencies:
+      text-decoding: 1.0.0
     dev: false
 
   /@graphql-tools/merge/6.2.5_graphql@15.7.2:
@@ -3131,13 +3138,6 @@ packages:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
-  /busboy/0.3.1:
-    resolution: {integrity: sha512-y7tTxhGKXcyBxRKAni+awqx8uqaJKrSFSNFSeRG5CsWNdmy2BIK+6VGWEW7TZnIO/533mtMEA4rOevQV815YJw==}
-    engines: {node: '>=4.5.0'}
-    dependencies:
-      dicer: 0.3.0
-    dev: false
-
   /cache-manager-ioredis/2.1.0:
     resolution: {integrity: sha512-TCxbp9ceuFveTKWuNaCX8QjoC41rAlHen4s63u9Yd+iXlw3efYmimc/u935PKPxSdhkXpnMes4mxtK3/yb0L4g==}
     engines: {node: '>=6.0.0'}
@@ -3699,13 +3699,6 @@ packages:
     resolution: {integrity: sha512-TLz+x/vEXm/Y7P7wn1EJFNLxYpUD4TgMosxY6fAVJUnJMbupHBOncxyWUG9OpTaH9EBD7uFI5LfEgmMOc54DsA==}
     engines: {node: '>=8'}
     dev: true
-
-  /dicer/0.3.0:
-    resolution: {integrity: sha512-MdceRRWqltEG2dZqO769g27N/3PXfcKl04VhYnBlo2YhH7zPi88VebsjTKclaOyiuMaGU72hTfw3VkUitGcVCA==}
-    engines: {node: '>=4.5.0'}
-    dependencies:
-      streamsearch: 0.1.2
-    dev: false
 
   /diff-sequences/27.0.6:
     resolution: {integrity: sha512-ag6wfpBFyNXZ0p8pcuIDS//D8H062ZQJ3fzYxjpmeKjnz8W4pekL3AI8VohmyZmsWW2PWaHgjsmqR6L13101VQ==}
@@ -4387,10 +4380,10 @@ packages:
       fastify-plugin: 3.0.0
     dev: false
 
-  /fastify-multipart/5.1.0:
-    resolution: {integrity: sha512-GW099krot2FRJZnrgjm2TczYheemOdv77cUIUjO93l151Sm0mgYjkk27tyVgy45bHg1jLbDjNLIFZtMgwXWptA==}
+  /fastify-multipart/5.2.1:
+    resolution: {integrity: sha512-dy7yogJ4ARaQALGbi4dQtyYziNBuUJgGgTGmp3eS3+roAwLMDBsWz0OvBzJHth4xS/OW/js26xNdW6VlxT8htA==}
     dependencies:
-      busboy: 0.3.1
+      '@fastify/busboy': 1.0.0
       deepmerge: 4.2.2
       end-of-stream: 1.4.4
       fastify-error: 0.3.1
@@ -7844,11 +7837,6 @@ packages:
     engines: {node: '>=4.0.0'}
     dev: false
 
-  /streamsearch/0.1.2:
-    resolution: {integrity: sha1-gIudDlb8Jz2Am6VzOOkpkZoanxo=}
-    engines: {node: '>=0.8.0'}
-    dev: false
-
   /string-argv/0.3.1:
     resolution: {integrity: sha512-a1uQGz7IyVy9YwhqjZIZu1c8JO8dNIe20xBmSS6qu9kv++k3JGzCVmprbNN5Kn+BgzD5E7YYwg1CcjuJMRNsvg==}
     engines: {node: '>=0.6.19'}
@@ -8141,6 +8129,10 @@ packages:
       glob: 7.2.0
       minimatch: 3.0.4
     dev: true
+
+  /text-decoding/1.0.0:
+    resolution: {integrity: sha512-/0TJD42KDnVwKmDK6jj3xP7E2MG7SHAOG4tyTgyUCRPdHwvkquYNLEQltmdMa3owq3TkddCVcTsoctJI8VQNKA==}
+    dev: false
 
   /text-table/0.2.0:
     resolution: {integrity: sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=}
