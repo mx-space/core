@@ -182,7 +182,12 @@ export class CommentService {
         limit: size,
         populate: [
           { path: 'parent', select: '-children' },
-          { path: 'ref', select: 'title _id slug nid' },
+          {
+            path: 'ref',
+            select: 'title _id slug nid categoryId',
+
+            populate: [{ path: 'category', model: 'Category' }],
+          },
         ],
         sort: { created: -1 },
       },
