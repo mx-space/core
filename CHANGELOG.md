@@ -1,3 +1,13 @@
+## [3.11.7](https://github.com/mx-space/server-next/compare/v3.11.6...v3.11.7) (2021-12-16)
+
+
+### Bug Fixes
+
+* **deps:** update dependency fastify-multipart to v5.2.1 ([#216](https://github.com/mx-space/server-next/issues/216)) ([723374a](https://github.com/mx-space/server-next/commit/723374a3477a3b418857a2d93973a696b4fbecaa))
+* fastify resolution ([39580d9](https://github.com/mx-space/server-next/commit/39580d9fae3a808fc0b3d94f3685823061e64dbc))
+
+
+
 ## [3.11.6](https://github.com/mx-space/server-next/compare/v3.11.5...v3.11.6) (2021-12-10)
 
 
