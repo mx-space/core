@@ -164,7 +164,6 @@
     "webpack-node-externals": "3.0.0"
   },
   "resolutions": {
-    "typescript": "4.5.4",
-    "apollo-server-fastify/fastify": "*"
+    "typescript": "4.5.4"
   }
 }
