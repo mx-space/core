@@ -137,7 +137,7 @@
     "@types/lodash": "4.14.178",
     "@types/marked": "4.0.1",
     "@types/mongoose-paginate-v2": "1.4.1",
-    "@types/node": "16.11.12",
+    "@types/node": "16.11.14",
     "@types/nodemailer": "6.4.4",
     "@types/passport-jwt": "3.0.6",
     "@types/redis": "2.8.32",
