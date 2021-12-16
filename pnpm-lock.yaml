@@ -2,7 +2,6 @@ lockfileVersion: 5.3
 
 overrides:
   typescript: 4.5.4
-  apollo-server-fastify/fastify: '*'
 
 specifiers:
   '@algolia/client-search': '*'
