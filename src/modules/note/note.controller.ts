@@ -86,7 +86,7 @@ export class NoteController {
   ) {
     const { id } = params
     const { password } = query
-    const condition = addConditionToSeeHideContent(isMaster)
+    const condition = isMaster ? {} : { hide: false }
     const current = await this.noteService.model
       .findOne({
         _id: id,

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
-import { compareSync } from 'bcrypt'
 import { isDefined, isMongoId } from 'class-validator'
 import { pick } from 'lodash'
 import { FilterQuery } from 'mongoose'
@@ -77,7 +76,7 @@ export class NoteService {
     if (!password) {
       return false
     }
-    const isValid = compareSync(password, doc.password)
+    const isValid = Object.is(password, doc.password)
     return isValid
   }
 
