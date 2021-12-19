@@ -1,3 +1,16 @@
+## [3.11.8](https://github.com/mx-space/server-next/compare/v3.11.7...v3.11.8) (2021-12-19)
+
+
+### Bug Fixes
+
+* **deps:** update dependency marked to v4.0.8 ([1bfc76b](https://github.com/mx-space/server-next/commit/1bfc76b0ba48e7f3282b0f5fbb259a5274314481))
+* **deps:** update dependency passport to v0.5.1 ([e9488bd](https://github.com/mx-space/server-next/commit/e9488bd159d4f2963870b0a42a873b24c2037fca))
+* **deps:** update dependency passport to v0.5.2 ([d7d5194](https://github.com/mx-space/server-next/commit/d7d5194426aa0be5fe4bd6439b99ceeeb2b8f3ce))
+* **deps:** update nest monorepo to v8.2.4 ([71cfa93](https://github.com/mx-space/server-next/commit/71cfa93d8500849b92bf903829e0cec753c4a8a6))
+* note password compare ([dddd7f3](https://github.com/mx-space/server-next/commit/dddd7f3aa28ae4ba08687cb6646869e65dd26a87))
+
+
+
 ## [3.11.7](https://github.com/mx-space/server-next/compare/v3.11.6...v3.11.7) (2021-12-16)
 
 
