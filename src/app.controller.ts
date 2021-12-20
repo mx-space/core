@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   Post,
+  UseInterceptors,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { InjectModel } from 'nestjs-typegoose'
@@ -11,6 +12,7 @@ import PKG from '../package.json'
 import { Auth } from './common/decorator/auth.decorator'
 import { HttpCache } from './common/decorator/cache.decorator'
 import { IpLocation, IpRecord } from './common/decorator/ip.decorator'
+import { AllowAllCorsInterceptor } from './common/interceptors/allow-all-cors.interceptor'
 import { RedisKeys } from './constants/cache.constant'
 import { OptionModel } from './modules/configs/configs.model'
 import { CacheService } from './processors/cache/cache.service'
@@ -23,6 +25,8 @@ export class AppController {
     @InjectModel(OptionModel)
     private readonly optionModel: MongooseModel<OptionModel>,
   ) {}
+
+  @UseInterceptors(AllowAllCorsInterceptor)
   @Get(['/', '/info'])
   async appInfo() {
     return {
@@ -35,6 +39,7 @@ export class AppController {
   }
 
   @Get('/ping')
+  @UseInterceptors(AllowAllCorsInterceptor)
   ping(): 'pong' {
     return 'pong'
   }

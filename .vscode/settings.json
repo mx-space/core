@@ -12,9 +12,6 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "editor.codeActionsOnSave": {
-    "source.organizeImports": true,
-  },
   "material-icon-theme.activeIconPack": "nest",
   "cSpell.words": [
     "qaqdmin"

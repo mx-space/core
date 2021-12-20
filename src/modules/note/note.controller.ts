@@ -43,7 +43,7 @@ export class NoteController {
     private readonly countingService: CountingService,
   ) {}
 
-  @Get('latest')
+  @Get('/latest')
   @ApiOperation({ summary: '获取最新发布一篇记录' })
   @VisitDocument('Note')
   async getLatestOne(@IsMaster() isMaster: boolean) {
