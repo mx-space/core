@@ -2,6 +2,7 @@ import {
   Body,
   CacheTTL,
   Controller,
+  ForbiddenException,
   Get,
   Header,
   Param,
@@ -13,6 +14,7 @@ import dayjs from 'dayjs'
 import { render } from 'ejs'
 import { minify } from 'html-minifier'
 import JSZip from 'jszip'
+import { isNil } from 'lodash'
 import { join } from 'path'
 import { performance } from 'perf_hooks'
 import { Readable } from 'stream'
@@ -22,6 +24,7 @@ import { Auth } from '~/common/decorator/auth.decorator'
 import { HttpCache } from '~/common/decorator/cache.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
+import { IsMaster } from '~/common/decorator/role.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { CategoryModel } from '../category/category.model'
@@ -164,6 +167,7 @@ export class MarkdownController {
   async renderArticle(
     @Param() params: MongoIdDto,
     @Query('theme') theme: string,
+    @IsMaster() isMaster: boolean,
   ) {
     const { id } = params
     const now = performance.now()
@@ -178,6 +182,15 @@ export class MarkdownController {
       this.configs.waitForConfigReady(),
       this.configs.getMaster(),
     ])
+
+    if (!isMaster) {
+      if (
+        ('hide' in document && document.hide) ||
+        ('password' in document && !isNil(document.password))
+      ) {
+        throw new ForbiddenException('该文章已隐藏或加密')
+      }
+    }
 
     const relativePath = (() => {
       switch (type.toLowerCase()) {

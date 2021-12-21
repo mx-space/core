@@ -39,7 +39,7 @@ export class DatabaseService {
   public async findGlobalById(id: string) {
     const doc = await Promise.all([
       this.postModel.findById(id).populate('category').lean(),
-      this.noteModel.findById(id).lean(),
+      this.noteModel.findById(id).lean().select('+password'),
       this.pageModel.findById(id).lean(),
     ])
     const index = doc.findIndex(Boolean)
