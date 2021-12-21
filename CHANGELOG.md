@@ -1,3 +1,17 @@
+## [3.11.9](https://github.com/mx-space/server-next/compare/v3.11.8...v3.11.9) (2021-12-21)
+
+
+### Bug Fixes
+
+* **render:** forhidden no access to see post ([cc72bad](https://github.com/mx-space/server-next/commit/cc72bad121bfa60135c4a772db32a8ce76c4d42c))
+
+
+### Features
+
+* allow root controller method allow all cors ([4d4eaeb](https://github.com/mx-space/server-next/commit/4d4eaeb2b166114fa8103d350020d6722dde5776))
+
+
+
 ## [3.11.8](https://github.com/mx-space/server-next/compare/v3.11.7...v3.11.8) (2021-12-19)
 
 
