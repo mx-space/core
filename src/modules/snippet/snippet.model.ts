@@ -1,4 +1,5 @@
 import { index, modelOptions, prop } from '@typegoose/typegoose'
+import { Transform } from 'class-transformer'
 import {
   IsBoolean,
   IsEnum,
@@ -14,6 +15,7 @@ export enum SnippetType {
   JSON = 'json',
   Function = 'function',
   Text = 'text',
+  YAML = 'yaml',
 }
 
 @modelOptions({
@@ -42,6 +44,7 @@ export class SnippetModel extends BaseModel {
   @prop({ require: true })
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => value.trim())
   raw: string
 
   @prop({ require: true, trim: true })

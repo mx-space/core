@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
+import { load } from 'js-yaml'
 import { InjectModel } from 'nestjs-typegoose'
 import { SnippetModel, SnippetType } from './snippet.model'
-
 @Injectable()
 export class SnippetService {
   constructor(
@@ -45,9 +45,18 @@ export class SnippetService {
   private async validateType(model: SnippetModel) {
     switch (model.type) {
       case SnippetType.JSON: {
-        const isValidJSON = JSON.parse(model.raw)
-        if (!isValidJSON) {
+        try {
+          JSON.parse(model.raw)
+        } catch {
           throw new BadRequestException('content is not valid json')
+        }
+        break
+      }
+      case SnippetType.YAML: {
+        try {
+          load(model.raw)
+        } catch {
+          throw new BadRequestException('content is not valid yaml')
         }
         break
       }
@@ -84,6 +93,10 @@ export class SnippetService {
     switch (model.type) {
       case SnippetType.JSON: {
         Reflect.set(model, 'data', JSON.parse(model.raw))
+        break
+      }
+      case SnippetType.YAML: {
+        Reflect.set(model, 'data', load(model.raw))
         break
       }
       case SnippetType.Text: {

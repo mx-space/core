@@ -29,6 +29,7 @@ specifiers:
   '@types/html-minifier': 4.0.1
   '@types/ioredis': 4.28.5
   '@types/jest': 27.0.3
+  '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.178
   '@types/marked': 4.0.1
   '@types/mongoose-paginate-v2': 1.4.1
@@ -178,6 +179,7 @@ devDependencies:
   '@types/html-minifier': 4.0.1
   '@types/ioredis': 4.28.5
   '@types/jest': 27.0.3
+  '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.178
   '@types/marked': 4.0.1
   '@types/mongoose-paginate-v2': 1.4.1
@@ -1956,6 +1958,10 @@ packages:
     dependencies:
       jest-diff: 27.3.1
       pretty-format: 27.3.1
+    dev: true
+
+  /@types/js-yaml/4.0.5:
+    resolution: {integrity: sha512-FhpRzf927MNQdRZP0J5DLIdTXhjLYzeUTmLAu69mnVksLH9CJY3IuSeEgbKUki7GQZm0WqDkGzyxju2EZGD2wA==}
     dev: true
 
   /@types/json-schema/7.0.9:
