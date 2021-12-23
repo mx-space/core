@@ -35,7 +35,9 @@ export class PageController {
         limit: size,
         page,
         select,
-        sort: sortBy ? { [sortBy]: sortOrder || -1 } : { modified: -1 },
+        sort: sortBy
+          ? { [sortBy]: sortOrder || -1 }
+          : { order: -1, modified: -1 },
       },
     )
   }

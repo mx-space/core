@@ -59,7 +59,13 @@ export class AggregateService {
   }
 
   getAllPages() {
-    return this.pageService.model.find({}, 'title _id slug order').lean()
+    return this.pageService.model
+      .find({}, 'title _id slug order')
+      .sort({
+        order: -1,
+        modified: -1,
+      })
+      .lean()
   }
 
   async getLatestNote(cond: FilterQuery<DocumentType<NoteModel>> = {}) {
