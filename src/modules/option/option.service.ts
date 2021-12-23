@@ -52,7 +52,9 @@ export class OptionService {
             this.validWithDto(AlgoliaSearchOptionsDto, value),
           )
           .then((r) => {
-            this.cronService.pushToAlgoliaSearch()
+            if (r.enable) {
+              this.cronService.pushToAlgoliaSearch()
+            }
             return r
           })
       }
