@@ -1,3 +1,17 @@
+# [3.12.0](https://github.com/mx-space/server-next/compare/v3.11.9...v3.12.0) (2021-12-23)
+
+
+### Bug Fixes
+
+* **algolia:** repush if config enable ([4681da9](https://github.com/mx-space/server-next/commit/4681da94e4f8aaa7c5091b1c4f6663d4d38bc033))
+
+
+### Features
+
+* **snippet:** yaml support ([99a2ef0](https://github.com/mx-space/server-next/commit/99a2ef0dcf7afd1d5a46a28e2e6ee5c3e59ab671))
+
+
+
 ## [3.11.9](https://github.com/mx-space/server-next/compare/v3.11.8...v3.11.9) (2021-12-21)
 
 
