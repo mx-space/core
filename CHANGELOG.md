@@ -1,3 +1,12 @@
+## [3.12.1](https://github.com/mx-space/server-next/compare/v3.12.0...v3.12.1) (2021-12-23)
+
+
+### Bug Fixes
+
+* page order ([fa66448](https://github.com/mx-space/server-next/commit/fa66448cb205e92da1b650b9f7cad9e6ad1fd311))
+
+
+
 # [3.12.0](https://github.com/mx-space/server-next/compare/v3.11.9...v3.12.0) (2021-12-23)
 
 
