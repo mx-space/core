@@ -26,7 +26,7 @@ specifiers:
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.2
   '@types/ejs': 3.1.0
-  '@types/html-minifier': 4.0.1
+  '@types/html-minifier': 4.0.2
   '@types/ioredis': 4.28.5
   '@types/jest': 27.0.3
   '@types/js-yaml': 4.0.5
@@ -176,7 +176,7 @@ devDependencies:
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.2
   '@types/ejs': 3.1.0
-  '@types/html-minifier': 4.0.1
+  '@types/html-minifier': 4.0.2
   '@types/ioredis': 4.28.5
   '@types/jest': 27.0.3
   '@types/js-yaml': 4.0.5
@@ -1923,8 +1923,8 @@ packages:
       '@types/node': 16.11.17
     dev: true
 
-  /@types/html-minifier/4.0.1:
-    resolution: {integrity: sha512-6u58FWQbWP45bsxVeMJo0yk2LEsjjZsCwn0JDe/i5Edk3L+b9TR5eZ2FGaMCrLdtGYpME5AGxUqv8o+3hWKogw==}
+  /@types/html-minifier/4.0.2:
+    resolution: {integrity: sha512-4IkmkXJP/25R2fZsCHDX2abztXuQRzUAZq39PfCMz2loLFj8vS9y7aF6vDl58koXSTpsF+eL4Lc5Y4Aww/GCTQ==}
     dependencies:
       '@types/clean-css': 4.2.5
       '@types/relateurl': 0.2.29
