@@ -32,7 +32,7 @@ specifiers:
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.178
   '@types/marked': 4.0.1
-  '@types/mongoose-paginate-v2': 1.4.1
+  '@types/mongoose-paginate-v2': 1.4.2
   '@types/node': 16.11.17
   '@types/nodemailer': 6.4.4
   '@types/passport-jwt': 3.0.6
@@ -182,7 +182,7 @@ devDependencies:
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.178
   '@types/marked': 4.0.1
-  '@types/mongoose-paginate-v2': 1.4.1
+  '@types/mongoose-paginate-v2': 1.4.2
   '@types/node': 16.11.17
   '@types/nodemailer': 6.4.4
   '@types/passport-jwt': 3.0.6
@@ -2011,8 +2011,8 @@ packages:
       '@types/node': 16.11.17
     dev: false
 
-  /@types/mongoose-paginate-v2/1.4.1:
-    resolution: {integrity: sha512-+xlRAhyLsDcYnGvbOs5+xMC8Ruvkaj8F87bP4jvu3oXBe+yK0B6GcsCYmUQyvZseTj5rPX0YiPj8cckYHhrtxQ==}
+  /@types/mongoose-paginate-v2/1.4.2:
+    resolution: {integrity: sha512-xyLB114Ntk0Pwzaxmrdqn1fVdgNqYxWuXiLHs8qkPLYVoJOFxQAkK1Z5gbdROfPsrWmHy9JIYKbBrHzDBn38yA==}
     dependencies:
       mongoose: 6.0.14
     transitivePeerDependencies:
@@ -3109,13 +3109,6 @@ packages:
     resolution: {integrity: sha512-EvVNVeGo4tHxwi8L6bPj3y3itEvStdwvvlojVxxbyYfoaxJ6keLgrTuKdyfEAszFK+H3olzBuafE0yoh0D1gdg==}
     engines: {node: '>=0.6.19'}
     dev: false
-
-  /bson/4.5.2:
-    resolution: {integrity: sha512-8CEMJpwc7qlQtrn2rney38jQSEeMar847lz0LyitwRmVknAW8iHXrzW4fTjHfyWm0E3sukyD/zppdH+QU1QefA==}
-    engines: {node: '>=6.9.0'}
-    dependencies:
-      buffer: 5.7.1
-    dev: true
 
   /bson/4.6.0:
     resolution: {integrity: sha512-8jw1NU1hglS+Da1jDOUYuNcBJ4cNHCFIqzlwoFNnsTOg2R/ox0aTYcTiBN4dzRa9q7Cvy6XErh3L8ReTEb9AQQ==}
@@ -6580,7 +6573,7 @@ packages:
     resolution: {integrity: sha512-SZ0kBlHrz/G70yWdVXLfM/gH4NsY85+as4MZRdtWxBTDEcmoE3rCFAz1/Ho2ycg5mJAeOBwdGZw4a5sn/WrwUA==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      bson: 4.5.2
+      bson: 4.6.0
       kareem: 2.3.2
       mongodb: 4.1.4
       mpath: 0.8.4
