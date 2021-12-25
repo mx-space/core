@@ -46,16 +46,20 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : (exception as myError)?.status ||
           (exception as myError)?.statusCode ||
           HttpStatus.INTERNAL_SERVER_ERROR
+
+    const message =
+      (exception as any)?.response?.message ||
+      (exception as myError)?.message ||
+      ''
     if (isDev || status === HttpStatus.INTERNAL_SERVER_ERROR) {
+      Logger.error(message, undefined, 'Catch')
       Logger.error(exception, undefined, 'Catch')
     } else {
       const ip = getIp(request)
       this.logger.warn(
-        `IP: ${ip} 错误信息: (${status}) ${
-          (exception as any)?.response?.message ||
-          (exception as myError)?.message ||
-          ''
-        } Path: ${decodeURI(request.raw.url)}`,
+        `IP: ${ip} 错误信息: (${status}) ${message} Path: ${decodeURI(
+          request.raw.url,
+        )}`,
       )
       if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
         this.errorLogPipe.write(
