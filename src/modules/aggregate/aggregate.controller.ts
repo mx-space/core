@@ -1,10 +1,10 @@
 import { CacheKey, CacheTTL, Controller, Get, Query } from '@nestjs/common'
 import { ApiProperty } from '@nestjs/swagger'
+import { omit } from 'lodash'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
-import { addConditionToSeeHideContent } from '~/utils/query.util'
 import { AnalyzeService } from '../analyze/analyze.service'
 import { ConfigsService } from '../configs/configs.service'
 import { TimelineQueryDto, TopQueryDto } from './aggregate.dto'
@@ -27,11 +27,10 @@ export class AggregateController {
       this.configsService.getMaster(),
       this.aggregateService.getAllCategory(),
       this.aggregateService.getAllPages(),
-      this.aggregateService
-        .getLatestNote(addConditionToSeeHideContent(isMaster))
-        .then((r) => r.nid),
+      this.configsService.get('url'),
+      this.configsService.get('seo'),
     ])
-    const [user, categories, pageMeta, lastestNoteNid] = tasks.map((t) => {
+    const [user, categories, pageMeta, url, seo] = tasks.map((t) => {
       if (t.status === 'fulfilled') {
         return t.value
       } else {
@@ -40,10 +39,10 @@ export class AggregateController {
     })
     return {
       user,
-      seo: this.configsService.get('seo'),
+      seo,
+      url: omit(url, ['adminUrl']),
       categories,
       pageMeta,
-      lastestNoteNid,
     }
   }
 
