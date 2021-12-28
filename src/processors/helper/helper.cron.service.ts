@@ -265,6 +265,10 @@ export class CronService {
   @Cron(CronExpression.EVERY_DAY_AT_NOON, { name: 'pushToAlgoliaSearch' })
   @CronDescription('推送到 Algolia Search')
   async pushToAlgoliaSearch() {
+    const configs = await this.configs.waitForConfigReady()
+    if (!configs.algoliaSearchOptions.enable) {
+      return
+    }
     const index = await this.searchService.getAlgoliaSearchIndex()
 
     this.logger.log('--> 开始推送到 Algolia')
