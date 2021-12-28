@@ -1,3 +1,20 @@
+## [3.12.2](https://github.com/mx-space/server-next/compare/v3.12.1...v3.12.2) (2021-12-28)
+
+
+### Bug Fixes
+
+* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.5 ([b07bd66](https://github.com/mx-space/server-next/commit/b07bd66e7b57b3e064e9347c02e2953bbf950e92))
+* **deps:** update dependency cos-nodejs-sdk-v5 to v2.11.6 ([36d675f](https://github.com/mx-space/server-next/commit/36d675f8d4e5b123c3651cca70a16a856e091b3e))
+* **search:** search cron lead judge ([1c601e2](https://github.com/mx-space/server-next/commit/1c601e25a9efcc380931715e13d70984dcaf27a4))
+
+
+### Features
+
+* add error message output in dev ([759c807](https://github.com/mx-space/server-next/commit/759c807a207bbe7f214d72b41e906a701a503b56))
+* **aggregate:** add `url` ([497796f](https://github.com/mx-space/server-next/commit/497796f33792175ff22e3fd0c5def1e58513dbc3))
+
+
+
 ## [3.12.1](https://github.com/mx-space/server-next/compare/v3.12.0...v3.12.1) (2021-12-23)
 
 
