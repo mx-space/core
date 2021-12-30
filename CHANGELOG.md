@@ -1,3 +1,7 @@
+## [3.12.3](https://github.com/mx-space/server-next/compare/v3.12.2...v3.12.3) (2021-12-30)
+
+
+
 ## [3.12.2](https://github.com/mx-space/server-next/compare/v3.12.1...v3.12.2) (2021-12-28)
 
 
