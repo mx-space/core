@@ -48,6 +48,7 @@ jobs:
       - name: Test
         run: |
           bash ./scripts/workflow/test-docker.sh
+          sudo rm -rf ./data
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
