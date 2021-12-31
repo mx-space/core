@@ -100,11 +100,12 @@ export class SnippetService {
         break
       }
       case SnippetType.Text: {
+        Reflect.set(model, 'data', model.raw)
         break
       }
     }
 
-    return model
+    return model as SnippetModel & { data: any }
   }
 
   // TODO serverless function

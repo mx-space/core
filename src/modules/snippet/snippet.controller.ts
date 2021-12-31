@@ -74,7 +74,7 @@ export class SnippetController {
     if (snippet.private && !isMaster) {
       throw new ForbiddenException('snippet is private')
     }
-    return snippet
+    return snippet.data
   }
 
   @Put('/:id')
