@@ -1,3 +1,12 @@
+## [3.12.4](https://github.com/mx-space/server-next/compare/v3.12.3...v3.12.4) (2021-12-31)
+
+
+### Bug Fixes
+
+* change return payload on snippet api ([9573f47](https://github.com/mx-space/server-next/commit/9573f474797f95937d92a0fea2d786b5dbf3711e))
+
+
+
 ## [3.12.3](https://github.com/mx-space/server-next/compare/v3.12.2...v3.12.3) (2021-12-30)
 
 
