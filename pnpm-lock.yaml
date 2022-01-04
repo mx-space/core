@@ -27,13 +27,13 @@ specifiers:
   '@types/cache-manager': 3.4.2
   '@types/ejs': 3.1.0
   '@types/html-minifier': 4.0.2
-  '@types/ioredis': 4.28.7
+  '@types/ioredis': 4.28.5
   '@types/jest': 27.4.0
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.178
   '@types/marked': 4.0.1
   '@types/mongoose-paginate-v2': 1.4.2
-  '@types/node': 16.11.18
+  '@types/node': 16.11.17
   '@types/nodemailer': 6.4.4
   '@types/passport-jwt': 3.0.6
   '@types/redis': 2.8.32
@@ -68,7 +68,7 @@ specifiers:
   jest: 27.4.5
   js-yaml: '*'
   jszip: 3.7.1
-  lint-staged: 12.1.5
+  lint-staged: 12.1.4
   lodash: '*'
   marked: 4.0.8
   mkdirp: '*'
@@ -177,13 +177,13 @@ devDependencies:
   '@types/cache-manager': 3.4.2
   '@types/ejs': 3.1.0
   '@types/html-minifier': 4.0.2
-  '@types/ioredis': 4.28.7
+  '@types/ioredis': 4.28.5
   '@types/jest': 27.4.0
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.178
   '@types/marked': 4.0.1
   '@types/mongoose-paginate-v2': 1.4.2
-  '@types/node': 16.11.18
+  '@types/node': 16.11.17
   '@types/nodemailer': 6.4.4
   '@types/passport-jwt': 3.0.6
   '@types/redis': 2.8.32
@@ -194,7 +194,7 @@ devDependencies:
   husky: 7.0.4
   ioredis: 4.28.0
   jest: 27.4.5_ts-node@10.4.0
-  lint-staged: 12.1.5
+  lint-staged: 12.1.4
   mockingoose: 2.15.2_mongoose@5.13.8
   prettier: 2.5.1
   rimraf: 3.0.2
@@ -203,7 +203,7 @@ devDependencies:
   socket.io: 4.3.2
   ts-jest: 27.1.2_334772dd386c536d54092d15fe05a291
   ts-loader: 9.2.6_typescript@4.5.4+webpack@5.63.0
-  ts-node: 10.4.0_32a42c67ff22b3d3d049bb033f84d801
+  ts-node: 10.4.0_00264fd83560919cd06c986889baae0a
   tsconfig-paths: 3.12.0
   typescript: 4.5.4
   webpack: 5.63.0
@@ -1931,8 +1931,8 @@ packages:
       '@types/uglify-js': 3.13.1
     dev: true
 
-  /@types/ioredis/4.28.7:
-    resolution: {integrity: sha512-jnSGCD2/TPk02j6v6CGqaCEl0LbmLgK6jUuk/AFaSNUBV+SCHiG7E7fnwJreN6hw9GqtLAFkJs4zFbkJrz11mQ==}
+  /@types/ioredis/4.28.5:
+    resolution: {integrity: sha512-bp5mdpzscWZMEE/jLvvzze5TZFYGhynB1am69l/a0XPqZRXWpbswY6lb5buEht57jOnw5pPG5zL9pFUWw1nggw==}
     dependencies:
       '@types/node': 16.11.18
     dev: true
@@ -2033,6 +2033,10 @@ packages:
   /@types/node/14.17.33:
     resolution: {integrity: sha512-noEeJ06zbn3lOh4gqe2v7NMGS33jrulfNqYFDjjEbhpDEHR5VTxgYNQSBqBlJIsBJW3uEYDgD6kvMnrrhGzq8g==}
     dev: false
+
+  /@types/node/16.11.17:
+    resolution: {integrity: sha512-C1vTZME8cFo8uxY2ui41xcynEotVkczIVI5AjLmy5pkpBv/FtG+jhtOlfcPysI8VRVwoOMv6NJm44LGnoMSWkw==}
+    dev: true
 
   /@types/node/16.11.18:
     resolution: {integrity: sha512-7N8AOYWWYuw0g+K+GKCmIwfU1VMHcexYNpLPYzFZ4Uq2W6C/ptfeC7XhXgy/4pcwhz/9KoS5yijMfnYQ0u0Udw==}
@@ -5474,7 +5478,7 @@ packages:
       micromatch: 4.0.4
       pretty-format: 27.4.2
       slash: 3.0.0
-      ts-node: 10.4.0_32a42c67ff22b3d3d049bb033f84d801
+      ts-node: 10.4.0_00264fd83560919cd06c986889baae0a
     transitivePeerDependencies:
       - bufferutil
       - canvas
@@ -6098,8 +6102,8 @@ packages:
     resolution: {integrity: sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=}
     dev: true
 
-  /lint-staged/12.1.5:
-    resolution: {integrity: sha512-WyKb+0sNKDTd1LwwAfTBPp0XmdaKkAOEbg4oHE4Kq2+oQVchg/VAcjVQtSqZih1izNsTURjc2EkhG/syRQUXdA==}
+  /lint-staged/12.1.4:
+    resolution: {integrity: sha512-RgDz9nsFsE0/5eL9Vat0AvCuk0+j5mEuzBIVfrRH5FRtt5wibYe8zTjZs2nuqLFrLAGQGYnj8+HJxolcj08i/A==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     hasBin: true
     dependencies:
@@ -8286,7 +8290,7 @@ packages:
       code-block-writer: 10.1.1
     dev: false
 
-  /ts-node/10.4.0_32a42c67ff22b3d3d049bb033f84d801:
+  /ts-node/10.4.0_00264fd83560919cd06c986889baae0a:
     resolution: {integrity: sha512-g0FlPvvCXSIO1JDF6S232P5jPYqBkRL9qly81ZgAOSU7rwI0stphCgd2kLiCrU9DjQCrJMWEqcNSjQL02s6d8A==}
     hasBin: true
     peerDependencies:
@@ -8305,7 +8309,7 @@ packages:
       '@tsconfig/node12': 1.0.9
       '@tsconfig/node14': 1.0.1
       '@tsconfig/node16': 1.0.2
-      '@types/node': 16.11.18
+      '@types/node': 16.11.17
       acorn: 8.5.0
       acorn-walk: 8.1.1
       arg: 4.1.3
