@@ -132,7 +132,7 @@
     "@types/cache-manager": "3.4.2",
     "@types/ejs": "3.1.0",
     "@types/html-minifier": "4.0.2",
-    "@types/ioredis": "4.28.6",
+    "@types/ioredis": "4.28.7",
     "@types/jest": "27.4.0",
     "@types/js-yaml": "4.0.5",
     "@types/lodash": "4.14.178",
