@@ -1,3 +1,12 @@
+## [3.12.6](https://github.com/mx-space/server-next/compare/v3.12.5...v3.12.6) (2022-01-04)
+
+
+### Bug Fixes
+
+* update deps yaml ([bdad503](https://github.com/mx-space/server-next/commit/bdad5038018a6c5b9566da50589f15537031859d))
+
+
+
 ## [3.12.5](https://github.com/mx-space/server-next/compare/v3.12.4...v3.12.5) (2022-01-04)
 
 
