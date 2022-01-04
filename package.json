@@ -7,7 +7,7 @@
   "license": "MIT",
   "dashboard": {
     "repo": "mx-space/admin-next",
-    "version": "3.11.0"
+    "version": "3.11.1"
   },
   "husky": {
     "hooks": {
@@ -30,6 +30,7 @@
     "prepare": "husky install",
     "prebuild": "rimraf dist",
     "build": "nest build",
+    "dev": "npm run start",
     "bundle": "rimraf out && yarn run build && cd dist/src && npx ncc build main.js -o ../../out -m",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "cross-env NODE_ENV=development nest start -w --path tsconfig.json",
