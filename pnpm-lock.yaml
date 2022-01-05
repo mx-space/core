@@ -56,7 +56,7 @@ specifiers:
   dotenv: '*'
   ejs: 3.1.6
   eslint: '*'
-  fastify-cookie: 5.4.0
+  fastify-cookie: 5.5.0
   fastify-multipart: 5.2.1
   fastify-swagger: 4.12.6
   graphql: 15.7.2
@@ -135,7 +135,7 @@ dependencies:
   dayjs: 1.10.7
   dotenv: 10.0.0
   ejs: 3.1.6
-  fastify-cookie: 5.4.0
+  fastify-cookie: 5.5.0
   fastify-multipart: 5.2.1
   fastify-swagger: 4.12.6
   graphql: 15.7.2
@@ -4490,8 +4490,8 @@ packages:
       fastify-plugin: 3.0.0
     dev: false
 
-  /fastify-cookie/5.4.0:
-    resolution: {integrity: sha512-uKTbOLx6pSyKqA9oD2G9hpMuRTVtKRm98bRwJVg4ga7GCm+RR6771stmfhbblXxHHcQQHuHvwdOdPeHJjr2sgg==}
+  /fastify-cookie/5.5.0:
+    resolution: {integrity: sha512-XhexnjmAR4CUh3Cz6Ko0is+pa8k1bS6+nkf/i3viv4p7R1fwGtGhAXuz+b4nEM0x7pvdi5ApKY73Bp5CELZP7g==}
     dependencies:
       cookie-signature: 1.1.0
       fastify-plugin: 3.0.0
