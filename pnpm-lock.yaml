@@ -58,7 +58,7 @@ specifiers:
   eslint: '*'
   fastify-cookie: 5.5.0
   fastify-multipart: 5.2.1
-  fastify-swagger: 4.12.6
+  fastify-swagger: 4.13.0
   graphql: 15.7.2
   html-minifier: 4.0.0
   husky: 7.0.4
@@ -116,7 +116,7 @@ dependencies:
   '@nestjs/platform-fastify': 8.2.4_4074b1ae164556f5db19ac4b8b5667b7
   '@nestjs/platform-socket.io': 8.2.4_1c4964e48d38610fbbe8487524f39f27
   '@nestjs/schedule': 1.0.2_89be6bb8102e541c46529b8f98da1114
-  '@nestjs/swagger': 5.1.5_dffa48dab9a579d76a41bf3e787adc43
+  '@nestjs/swagger': 5.1.5_f95743bc6d6a4b18693cbd8b13de8746
   '@nestjs/websockets': 8.2.4_50e7e83b94c92b6b4879bcfe891e22ac
   '@typegoose/auto-increment': 1.0.0_mongoose@5.13.8
   '@typegoose/typegoose': 8.3.0_mongoose@5.13.8
@@ -137,7 +137,7 @@ dependencies:
   ejs: 3.1.6
   fastify-cookie: 5.5.0
   fastify-multipart: 5.2.1
-  fastify-swagger: 4.12.6
+  fastify-swagger: 4.13.0
   graphql: 15.7.2
   html-minifier: 4.0.0
   image-size: 1.0.0
@@ -1593,7 +1593,7 @@ packages:
       - chokidar
     dev: true
 
-  /@nestjs/swagger/5.1.5_dffa48dab9a579d76a41bf3e787adc43:
+  /@nestjs/swagger/5.1.5_f95743bc6d6a4b18693cbd8b13de8746:
     resolution: {integrity: sha512-jvsgciVEFcYVVEuLdNAmgJDpFSQzIoukg+Ovz1vJ97OeCprx0sVhmocn13nCl/dEwIkwoM3eby9OiaccX0A+3A==}
     peerDependencies:
       '@nestjs/common': ^8.0.0
@@ -1610,7 +1610,7 @@ packages:
       '@nestjs/common': 8.2.4_3054dd3a94398fb1c50fc2c2c9ad5f2e
       '@nestjs/core': 8.2.4_c8363e3b73b02ee26cc0737b29397fd2
       '@nestjs/mapped-types': 1.0.0_ca732cb901a4dcf3578ab35aa7d0d89a
-      fastify-swagger: 4.12.6
+      fastify-swagger: 4.13.0
       lodash: 4.17.21
       path-to-regexp: 3.2.0
       reflect-metadata: 0.1.13
@@ -4427,14 +4427,14 @@ packages:
       send: 0.17.1
     dev: false
 
-  /fastify-swagger/4.12.6:
-    resolution: {integrity: sha512-XuHyi+aPQETMsB5oOw5m8j8hror/08MSa/7Gpxon3Mu2ZtlulG8q8/XmBGB1UM0WDRifGw456IgO7kVQVPLU8A==}
+  /fastify-swagger/4.13.0:
+    resolution: {integrity: sha512-HQ4059nlrOaJ20opGP+9KXBtxobEgovLOov2BPsqaNkLpFyPcddoYoLeiQur4YuB53rxUE1mnGMLIPXKwvcwbg==}
     dependencies:
       fastify-plugin: 3.0.0
       fastify-static: 4.2.3
       js-yaml: 4.1.0
       json-schema-resolver: 1.3.0
-      openapi-types: 9.3.0
+      openapi-types: 10.0.0
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -6807,8 +6807,8 @@ packages:
     dependencies:
       mimic-fn: 2.1.0
 
-  /openapi-types/9.3.0:
-    resolution: {integrity: sha512-sR23YjmuwDSMsQVZDHbV9mPgi0RyniQlqR0AQxTC2/F3cpSjRFMH3CFPjoWvNqhC4OxPkDYNb2l8Mc1Me6D/KQ==}
+  /openapi-types/10.0.0:
+    resolution: {integrity: sha512-Y8xOCT2eiKGYDzMW9R4x5cmfc3vGaaI4EL2pwhDmodWw1HlK18YcZ4uJxc7Rdp7/gGzAygzH9SXr6GKYIXbRcQ==}
     dev: false
 
   /optional-require/1.0.3:
