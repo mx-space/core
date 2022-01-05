@@ -32,7 +32,7 @@ specifiers:
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.178
   '@types/marked': 4.0.1
-  '@types/mongoose-paginate-v2': 1.4.2
+  '@types/mongoose-paginate-v2': 1.4.3
   '@types/node': 16.11.19
   '@types/nodemailer': 6.4.4
   '@types/passport-jwt': 3.0.6
@@ -182,7 +182,7 @@ devDependencies:
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.178
   '@types/marked': 4.0.1
-  '@types/mongoose-paginate-v2': 1.4.2
+  '@types/mongoose-paginate-v2': 1.4.3
   '@types/node': 16.11.19
   '@types/nodemailer': 6.4.4
   '@types/passport-jwt': 3.0.6
@@ -2109,8 +2109,8 @@ packages:
       '@types/node': 16.11.19
     dev: false
 
-  /@types/mongoose-paginate-v2/1.4.2:
-    resolution: {integrity: sha512-xyLB114Ntk0Pwzaxmrdqn1fVdgNqYxWuXiLHs8qkPLYVoJOFxQAkK1Z5gbdROfPsrWmHy9JIYKbBrHzDBn38yA==}
+  /@types/mongoose-paginate-v2/1.4.3:
+    resolution: {integrity: sha512-FmRDvLpVhRR1MT255R8N1lzYlwrPtNN7d/ZhnkrnyMQ1u3iyc2z9KaQi4y1AuCFdnK8IdTpw3jbRTcUSsjp5BQ==}
     dependencies:
       mongoose: 6.0.14
     transitivePeerDependencies:
