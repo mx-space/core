@@ -1,3 +1,13 @@
+## [3.12.8](https://github.com/mx-space/server-next/compare/v3.12.7...v3.12.8) (2022-01-06)
+
+
+### Bug Fixes
+
+* delete note password field after compare ([8f6c644](https://github.com/mx-space/server-next/commit/8f6c6441c8ee9adcb350dc18292f06ad6c93b658))
+* get note timeline on with password note ([9826adc](https://github.com/mx-space/server-next/commit/9826adc156744a1e0f839b056581d10a1a3fd88e))
+
+
+
 ## [3.12.7](https://github.com/mx-space/server-next/compare/v3.12.6...v3.12.7) (2022-01-06)
 
 
