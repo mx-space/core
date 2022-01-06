@@ -93,6 +93,7 @@ export class NoteController {
         ...condition,
       })
       .select('+password ' + (isMaster ? '+location +coordinates' : ''))
+      .lean()
     if (!current) {
       throw new CannotFindException()
     }
@@ -107,9 +108,10 @@ export class NoteController {
     }
 
     const select = '_id title nid id created modified'
+    const passwordCondition = addConditionToSeeHideContent(isMaster)
     const prev = await this.noteService.model
       .findOne({
-        ...condition,
+        ...passwordCondition,
         created: {
           $gt: current.created,
         },
@@ -119,7 +121,7 @@ export class NoteController {
       .lean()
     const next = await this.noteService.model
       .findOne({
-        ...condition,
+        ...passwordCondition,
         created: {
           $lt: current.created,
         },
@@ -127,7 +129,7 @@ export class NoteController {
       .sort({ created: -1 })
       .select(select)
       .lean()
-
+    delete current.password
     return { data: current, next, prev }
   }
 

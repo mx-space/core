@@ -65,8 +65,8 @@ export class NoteService {
     }
   }
 
-  checkPasswordToAccess(
-    doc: DocumentType<NoteModel>,
+  checkPasswordToAccess<T extends NoteModel>(
+    doc: T,
     password: string,
   ): boolean {
     const hasPassword = doc.password
