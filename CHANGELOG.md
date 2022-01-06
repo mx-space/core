@@ -1,3 +1,13 @@
+## [3.12.7](https://github.com/mx-space/server-next/compare/v3.12.6...v3.12.7) (2022-01-06)
+
+
+### Bug Fixes
+
+* **deps:** update dependency fastify-cookie to v5.5.0 ([#254](https://github.com/mx-space/server-next/issues/254)) ([58a5572](https://github.com/mx-space/server-next/commit/58a557298611c2ed23388b876827f6dc05000c4b))
+* **deps:** update dependency fastify-swagger to v4.13.0 ([#236](https://github.com/mx-space/server-next/issues/236)) ([eb8959a](https://github.com/mx-space/server-next/commit/eb8959a0018169f5187448d87466033b6e46d70c))
+
+
+
 ## [3.12.6](https://github.com/mx-space/server-next/compare/v3.12.5...v3.12.6) (2022-01-04)
 
 
