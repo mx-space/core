@@ -50,14 +50,14 @@
     "test:all": "jest --config ./test/jest-e2e.js && jest",
     "patch": "node bin/patch.js",
     "docs": "npx @compodoc/compodoc -p tsconfig.json -s -d docs",
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-    "bump": "node scripts/bump-version.js"
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
   },
   "bump": {
     "before": [
       "git pull --rebase"
     ],
     "after": [
+      "sh ./scripts/assets-push.sh",
       "sh ./scripts/create-tags.sh"
     ]
   },
