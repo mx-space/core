@@ -145,14 +145,11 @@ export class NoteController {
     const { id } = params
     const select = 'nid _id title created'
     const condition = addConditionToSeeHideContent(isMaster)
+
+    // 当前文档直接找, 不用加条件, 反正里面的东西是看不到的
     const currentDocument = await this.noteService.model
-      .findOne(
-        {
-          _id: id,
-          ...condition,
-        },
-        select,
-      )
+      .findById(id)
+      .select(select)
       .lean()
 
     if (!currentDocument) {
