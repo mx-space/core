@@ -68,7 +68,7 @@ specifiers:
   jest: 27.4.7
   js-yaml: '*'
   jszip: 3.7.1
-  lint-staged: 12.1.6
+  lint-staged: 12.1.7
   lodash: '*'
   marked: 4.0.9
   mkdirp: '*'
@@ -194,7 +194,7 @@ devDependencies:
   husky: 7.0.4
   ioredis: 4.28.0
   jest: 27.4.7_ts-node@10.4.0
-  lint-staged: 12.1.6
+  lint-staged: 12.1.7
   mockingoose: 2.15.2_mongoose@5.13.8
   prettier: 2.5.1
   rimraf: 3.0.2
@@ -6100,8 +6100,8 @@ packages:
     resolution: {integrity: sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=}
     dev: true
 
-  /lint-staged/12.1.6:
-    resolution: {integrity: sha512-Tn7tsxqVVdkR7wXgvZZxGntBEZ16/VFCXpc6EvsHBsTHSBmAOiUOGWmKTLH6wssqz1lUz+UpAQOo/xdhD41ixQ==}
+  /lint-staged/12.1.7:
+    resolution: {integrity: sha512-bltv/ejiLWtowExpjU+s5z8j1Byjg9AlmaAjMmqNbIicY69u6sYIwXGg0dCn0TlkrrY2CphtHIXAkbZ+1VoWQQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     hasBin: true
     dependencies:
