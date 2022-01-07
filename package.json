@@ -150,7 +150,7 @@
     "husky": "7.0.4",
     "ioredis": "*",
     "jest": "27.4.7",
-    "lint-staged": "12.1.4",
+    "lint-staged": "12.1.6",
     "mockingoose": "2.15.2",
     "prettier": "2.5.1",
     "rimraf": "3.0.2",
