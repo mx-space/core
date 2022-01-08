@@ -1,3 +1,13 @@
+## [3.12.9](https://github.com/mx-space/server-next/compare/v3.12.8...v3.12.9) (2022-01-08)
+
+
+### Bug Fixes
+
+* **deps:** update dependency marked to v4.0.9 ([89cb51a](https://github.com/mx-space/server-next/commit/89cb51a333455d55515bce648c767a0576fb51df))
+* **deps:** update dependency mongoose-paginate-v2 to v1.4.3 ([57c22db](https://github.com/mx-space/server-next/commit/57c22db828b40eb3965e67747c6864f82af60a57))
+
+
+
 ## [3.12.8](https://github.com/mx-space/server-next/compare/v3.12.7...v3.12.8) (2022-01-06)
 
 
