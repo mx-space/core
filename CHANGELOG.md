@@ -1,3 +1,14 @@
+## [3.12.10](https://github.com/mx-space/server-next/compare/v3.12.9...v3.12.10) (2022-01-09)
+
+
+### Bug Fixes
+
+* add reset email template api ([395f237](https://github.com/mx-space/server-next/commit/395f237006d6a0b44f118284fc2b207eb2f844f5))
+* **deps:** update dependency fastify-swagger to v4.13.1 ([0ecd731](https://github.com/mx-space/server-next/commit/0ecd731bbbcfe6ca94856b61aed258c0385f3f01))
+* ignore analyzes collection in backup ([8b47aac](https://github.com/mx-space/server-next/commit/8b47aac02ef49cb5a56a42f9edadecfca4adc69b))
+
+
+
 ## [3.12.9](https://github.com/mx-space/server-next/compare/v3.12.8...v3.12.9) (2022-01-08)
 
 
