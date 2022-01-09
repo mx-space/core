@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -13,6 +14,7 @@ import { ApiTags } from '@nestjs/swagger'
 import { Auth } from '~/common/decorator/auth.decorator'
 import {
   EmailService,
+  EmailTemplateRenderProps,
   ReplyMailType,
 } from '~/processors/helper/helper.email.service'
 import { IConfig } from '../configs/configs.interface'
@@ -63,7 +65,19 @@ export class OptionController {
     const template = await this.emailService.readTemplate(
       type === 'guest' ? ReplyMailType.Guest : ReplyMailType.Owner,
     )
-    return template
+    return {
+      template,
+      props: {
+        author: '作者 Author',
+        link: 'https://example.com',
+        mail: 'example@example.com',
+        text: '这是一段回复评论',
+        title: '标题',
+        time: '2020/01/01',
+        master: '你的名字',
+        ip: '0.0.0.0',
+      } as EmailTemplateRenderProps,
+    }
   }
 
   @Put('/email/template/reply')
@@ -78,5 +92,11 @@ export class OptionController {
     return {
       source: body.source,
     }
+  }
+
+  @Delete('/email/template/reply')
+  async deleteEmailReplyTemplate(@Query() { type }: ReplyEmailTypeDto) {
+    await this.emailService.deleteTemplate(type)
+    return
   }
 }

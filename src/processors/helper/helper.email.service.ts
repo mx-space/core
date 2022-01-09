@@ -59,6 +59,20 @@ export class EmailService {
     }
   }
 
+  async deleteTemplate(type: ReplyMailType) {
+    switch (type) {
+      case ReplyMailType.Guest:
+        await this.assetService.removeUserCustomAsset(
+          '/email-template/guest.template.ejs',
+        )
+        break
+      case ReplyMailType.Owner:
+        await this.assetService.removeUserCustomAsset(
+          '/email-template/owner.template.ejs',
+        )
+        break
+    }
+  }
   init() {
     this.getConfigFromConfigService()
       .then((config) => {
@@ -161,7 +175,7 @@ export class EmailService {
     type,
   }: {
     to: string
-    source: RenderProps
+    source: EmailTemplateRenderProps
     type: ReplyMailType
   }) {
     const { seo, mailOptions } = await this.configsService.waitForConfigReady()
@@ -187,7 +201,7 @@ export class EmailService {
       })
   }
 
-  render(template: string, source: RenderProps) {
+  render(template: string, source: EmailTemplateRenderProps) {
     return render(template, {
       text: source.text,
       time: source.time,
@@ -197,7 +211,7 @@ export class EmailService {
       title: source.title,
       master: source.master,
       mail: source.mail,
-    } as RenderProps)
+    } as EmailTemplateRenderProps)
   }
 
   getInstance() {
@@ -205,7 +219,7 @@ export class EmailService {
   }
 }
 
-interface RenderProps {
+export interface EmailTemplateRenderProps {
   author: string
   ip?: string
   text: string
