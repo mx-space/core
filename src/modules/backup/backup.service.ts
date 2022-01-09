@@ -5,22 +5,29 @@ import {
   Logger,
   Scope,
 } from '@nestjs/common'
+import { exec } from 'child_process'
+import dayjs from 'dayjs'
 import { existsSync, statSync } from 'fs'
 import { readdir, readFile, rm, writeFile } from 'fs/promises'
 import mkdirp from 'mkdirp'
 import { join, resolve } from 'path'
 import { Readable } from 'stream'
+import { promisify } from 'util'
 import { MONGO_DB } from '~/app.config'
-import { BACKUP_DIR } from '~/constants/path.constant'
+import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { getFolderSize } from '~/utils/system.util'
+import { ConfigsService } from '../configs/configs.service'
 
 @Injectable({ scope: Scope.REQUEST })
 export class BackupService {
   private logger: Logger
 
-  constructor(private readonly adminGateway: AdminEventsGateway) {
+  constructor(
+    private readonly adminGateway: AdminEventsGateway,
+    private readonly configs: ConfigsService,
+  ) {
     this.logger = new Logger(BackupService.name)
   }
 
@@ -52,6 +59,56 @@ export class BackupService {
     )
   }
 
+  async backup() {
+    const nowStr = dayjs().format('YYYY-MM-DD-HH:mm:ss')
+    const { backupOptions: configs } = await this.configs.waitForConfigReady()
+    if (!configs.enable) {
+      return
+    }
+    this.logger.log('--> 备份数据库中')
+    // 用时间格式命名文件夹
+    const dateDir = nowStr
+
+    const backupDirPath = join(BACKUP_DIR, dateDir)
+    mkdirp.sync(backupDirPath)
+    try {
+      await $`mongodump -h ${MONGO_DB.host} --port ${MONGO_DB.port} -d ${MONGO_DB.dbName} --excludeCollection analyzes -o ${backupDirPath} >/dev/null 2>&1`
+
+      // 打包 DB
+      await promisify(exec)(
+        `zip -r backup-${dateDir}  mx-space/* && rm -rf mx-space`,
+        {
+          cwd: backupDirPath,
+        },
+      )
+
+      // 打包数据目录
+      await promisify(exec)(
+        `rsync -a . ./temp_copy_need --exclude temp_copy_need --exclude backup --exclude log && mv temp_copy_need backup_data && zip -r ${join(
+          backupDirPath,
+          `backup-${dateDir}`,
+        )} ./backup_data && rm -rf backup_data`,
+        {
+          cwd: DATA_DIR,
+        },
+      )
+
+      this.logger.log('--> 备份成功')
+    } catch (e) {
+      this.logger.error(
+        '--> 备份失败, 请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致, ' +
+          e.message,
+      )
+      throw e
+    }
+    const path = join(backupDirPath, 'backup-' + dateDir + '.zip')
+
+    return {
+      buffer: await readFile(path),
+      path,
+    }
+  }
+
   async getFileStream(dirname: string) {
     const path = this.checkBackupExist(dirname)
     const stream = new Readable()
@@ -70,6 +127,7 @@ export class BackupService {
     return path
   }
 
+  // TODO 下面两个方法有重复代码
   async saveTempBackupByUpload(buffer: Buffer) {
     const tempDirPath = '/tmp/mx-space/backup'
     const tempBackupPath = join(tempDirPath, 'backup.zip')

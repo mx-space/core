@@ -1,25 +1,20 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
-import { exec } from 'child_process'
 import COS from 'cos-nodejs-sdk-v5'
 import dayjs from 'dayjs'
 import { existsSync } from 'fs'
-import { readFile, rm, writeFile } from 'fs/promises'
+import { rm, writeFile } from 'fs/promises'
 import mkdirp from 'mkdirp'
 import { InjectModel } from 'nestjs-typegoose'
-import { join } from 'path'
-import { promisify } from 'util'
-import { $ } from 'zx'
-import { MONGO_DB } from '~/app.config'
 import { CronDescription } from '~/common/decorator/cron-description.decorator'
 import { RedisItems, RedisKeys } from '~/constants/cache.constant'
 import {
-  BACKUP_DIR,
   LOCAL_BOT_LIST_DATA_FILE_PATH,
   TEMP_DIR,
 } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
+import { BackupService } from '~/modules/backup/backup.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { NoteService } from '~/modules/note/note.service'
 import { PageService } from '~/modules/page/page.service'
@@ -51,6 +46,8 @@ export class CronService {
     @Inject(forwardRef(() => PageService))
     private readonly pageService: PageService,
     @Inject(forwardRef(() => SearchService))
+    @Inject(forwardRef(() => BackupService))
+    private readonly backupService: BackupService,
     private readonly searchService: SearchService,
   ) {
     this.logger = new Logger(CronService.name)
@@ -82,35 +79,11 @@ export class CronService {
   @Cron(CronExpression.EVERY_DAY_AT_1AM, { name: 'backupDB' })
   @CronDescription('备份 DB 并上传 COS')
   async backupDB({ uploadCOS = true }: { uploadCOS?: boolean } = {}) {
-    const { backupOptions: configs } = await this.configs.waitForConfigReady()
-    if (!configs.enable) {
+    const backup = await this.backupService.backup()
+    if (!backup) {
+      this.logger.log('没有开启备份')
       return
     }
-    this.logger.log('--> 备份数据库中')
-
-    const dateDir = this.nowStr
-
-    const backupDirPath = join(BACKUP_DIR, dateDir)
-    mkdirp.sync(backupDirPath)
-    try {
-      await $`mongodump -h ${MONGO_DB.host} --port ${MONGO_DB.port} -d ${MONGO_DB.dbName} -o ${backupDirPath} >/dev/null 2>&1`
-
-      await promisify(exec)(
-        `zip -r backup-${dateDir}  mx-space/* && rm -rf mx-space`,
-        {
-          cwd: backupDirPath,
-        },
-      )
-
-      this.logger.log('--> 备份成功')
-    } catch (e) {
-      this.logger.error(
-        '--> 备份失败, 请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致, ' +
-          e.message,
-      )
-      throw e
-    }
-
     //  开始上传 COS
     process.nextTick(async () => {
       if (!uploadCOS) {
@@ -126,7 +99,7 @@ export class CronService {
       ) {
         return
       }
-      const backupFilePath = join(backupDirPath, 'backup-' + dateDir + '.zip')
+      const backupFilePath = backup.path
 
       if (!existsSync(backupFilePath)) {
         this.logger.warn('文件不存在, 无法上传到 COS')
@@ -142,7 +115,7 @@ export class CronService {
         {
           Bucket: backupOptions.bucket,
           Region: backupOptions.region,
-          Key: `backup-${dateDir}.zip`,
+          Key: backup.path.slice(backup.path.lastIndexOf('/') + 1),
           FilePath: backupFilePath,
         },
         (err) => {
@@ -155,8 +128,6 @@ export class CronService {
         },
       )
     })
-
-    return readFile(join(backupDirPath, 'backup-' + dateDir + '.zip'))
   }
 
   @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT, {
