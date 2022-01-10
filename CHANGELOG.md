@@ -1,3 +1,13 @@
+# [3.13.0](https://github.com/mx-space/server-next/compare/v3.12.11...v3.13.0) (2022-01-10)
+
+
+### Features
+
+* add debug for dev ([3243d29](https://github.com/mx-space/server-next/commit/3243d29ebf99747a8508de9b0fbdd88032f12daa))
+* add retry on axios req ([2af891d](https://github.com/mx-space/server-next/commit/2af891dcb58206083eb2643282c8d8fd7c4a84ef))
+
+
+
 ## [3.12.11](https://github.com/mx-space/server-next/compare/v3.12.10...v3.12.11) (2022-01-10)
 
 
