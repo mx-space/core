@@ -1,3 +1,12 @@
+## [3.12.11](https://github.com/mx-space/server-next/compare/v3.12.10...v3.12.11) (2022-01-10)
+
+
+### Bug Fixes
+
+* **snippet:** delete field when update ([e3a182f](https://github.com/mx-space/server-next/commit/e3a182f09ed7e815a2e91c3b5141e0e2f46e55a7))
+
+
+
 ## [3.12.10](https://github.com/mx-space/server-next/compare/v3.12.9...v3.12.10) (2022-01-09)
 
 
