@@ -63,7 +63,7 @@ specifiers:
   graphql: 15.7.2
   html-minifier: 4.0.0
   husky: 7.0.4
-  image-size: 1.0.0
+  image-size: 1.0.1
   inquirer: '*'
   ioredis: '*'
   jest: 27.4.7
@@ -142,7 +142,7 @@ dependencies:
   fastify-swagger: 4.13.1
   graphql: 15.7.2
   html-minifier: 4.0.0
-  image-size: 1.0.0
+  image-size: 1.0.1
   inquirer: 8.2.0
   js-yaml: 4.1.0
   jszip: 3.7.1
@@ -5018,8 +5018,8 @@ packages:
     engines: {node: '>=0.9.0'}
     dev: false
 
-  /image-size/1.0.0:
-    resolution: {integrity: sha512-JLJ6OwBfO1KcA+TvJT+v8gbE6iWbj24LyDNFgFEN0lzegn6cC6a/p3NIDaepMsJjQjlUWqIC7wJv8lBFxPNjcw==}
+  /image-size/1.0.1:
+    resolution: {integrity: sha512-VAwkvNSNGClRw9mDHhc5Efax8PLlsOGcUTh0T/LIriC8vPA3U5PdqXWqkz406MoYHMKW8Uf9gWr05T/rYB44kQ==}
     engines: {node: '>=12.0.0'}
     hasBin: true
     dependencies:
