@@ -42,6 +42,7 @@ specifiers:
   algoliasearch: 4.11.0
   apollo-server-fastify: 3.5.0
   axios: '*'
+  axios-retry: 3.2.4
   bcrypt: 5.0.1
   cache-manager: 3.6.0
   cache-manager-ioredis: 2.1.0
@@ -123,6 +124,7 @@ dependencies:
   algoliasearch: 4.11.0
   apollo-server-fastify: 3.5.0_graphql@15.7.2
   axios: 0.24.0
+  axios-retry: 3.2.4
   bcrypt: 5.0.1
   cache-manager: 3.6.0
   cache-manager-ioredis: 2.1.0
@@ -2922,6 +2924,13 @@ packages:
     resolution: {integrity: sha512-xh1Rl34h6Fi1DC2WWKfxUTVqRsNnr6LsKz2+hfwDxQJWmrx8+c7ylaqBMcHfl1U1r2dsifOvKX3LQuLNZ+XSvA==}
     dev: false
 
+  /axios-retry/3.2.4:
+    resolution: {integrity: sha512-Co3UXiv4npi6lM963mfnuH90/YFLKWWDmoBYfxkHT5xtkSSWNqK9zdG3fw5/CP/dsoKB5aMMJCsgab+tp1OxLQ==}
+    dependencies:
+      '@babel/runtime': 7.15.4
+      is-retry-allowed: 2.2.0
+    dev: false
+
   /axios/0.24.0:
     resolution: {integrity: sha512-Q6cWsys88HoPgAaFAVUb0WpPk0O8iTeisR9IMqy9G8AbO4NlpVknrnQS03zzF9PGAWgO3cgletO3VjV/P7VztA==}
     dependencies:
@@ -5266,6 +5275,11 @@ packages:
     dependencies:
       call-bind: 1.0.2
       has-tostringtag: 1.0.0
+
+  /is-retry-allowed/2.2.0:
+    resolution: {integrity: sha512-XVm7LOeLpTW4jV19QSH38vkswxoLud8sQ57YwJVTPWdiaI9I8keEhGFpBlslyVsgdQy4Opg8QOLb8YRgsyZiQg==}
+    engines: {node: '>=10'}
+    dev: false
 
   /is-shared-array-buffer/1.0.1:
     resolution: {integrity: sha512-IU0NmyknYZN0rChcKhRO1X8LYz5Isj/Fsqh8NJOSf+N/hCOTwy29F32Ik7a+QszE63IdvmwdTPDd6cZ5pg4cwA==}

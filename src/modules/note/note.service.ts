@@ -111,9 +111,7 @@ export class NoteService {
         this.cacheService.clearAggregateCache(),
         this.imageService.recordImageDimensions(this.noteModel, id),
         this.model.findById(id).then((doc) => {
-          if (doc.hide || doc.password) {
-            return this.webGateway.broadcast(EventTypes.NOTE_UPDATE, doc)
-          }
+          this.webGateway.broadcast(EventTypes.NOTE_UPDATE, doc)
         }),
       ])
     })

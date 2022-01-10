@@ -79,6 +79,7 @@
     "algoliasearch": "4.11.0",
     "apollo-server-fastify": "3.5.0",
     "axios": "*",
+    "axios-retry": "3.2.4",
     "bcrypt": "5.0.1",
     "cache-manager": "3.6.0",
     "cache-manager-ioredis": "2.1.0",

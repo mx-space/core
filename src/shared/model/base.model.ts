@@ -93,7 +93,7 @@ export abstract class BaseCommentIndexModel extends BaseModel {
 }
 
 @ObjectType()
-export abstract class WriteBaseModel extends BaseCommentIndexModel {
+export class WriteBaseModel extends BaseCommentIndexModel {
   @prop({ trim: true, index: true, required: true })
   @IsString()
   @IsNotEmpty()
