@@ -29,12 +29,13 @@ export class SnippetService {
 
   async update(id: string, model: SnippetModel) {
     await this.validateType(model)
+    delete model.created
 
     await this.model.updateOne(
       {
         _id: id,
       },
-      model,
+      { ...model },
     )
   }
 
