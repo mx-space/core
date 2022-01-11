@@ -1,3 +1,12 @@
+## [3.13.2](https://github.com/mx-space/server-next/compare/v3.13.1...v3.13.2) (2022-01-11)
+
+
+### Bug Fixes
+
+* request scope lead to analyze error ([90d902c](https://github.com/mx-space/server-next/commit/90d902c048706373b65d434d1b61d674e2059a33))
+
+
+
 ## [3.13.1](https://github.com/mx-space/server-next/compare/v3.13.0...v3.13.1) (2022-01-11)
 
 
