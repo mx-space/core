@@ -1,3 +1,14 @@
+## [3.13.1](https://github.com/mx-space/server-next/compare/v3.13.0...v3.13.1) (2022-01-11)
+
+
+### Bug Fixes
+
+* backup cron ([66829b5](https://github.com/mx-space/server-next/commit/66829b58618f9494e8c5d97aa17d125326ef552f))
+* **deps:** update dependency image-size to v1.0.1 ([0a79b6c](https://github.com/mx-space/server-next/commit/0a79b6c6cb36ec34f5e5e1f2019ab1f33c2e0b75))
+* missing deps injection ([31876a7](https://github.com/mx-space/server-next/commit/31876a709b87fea50c9216e0c90f24466269454e))
+
+
+
 # [3.13.0](https://github.com/mx-space/server-next/compare/v3.12.11...v3.13.0) (2022-01-10)
 
 
