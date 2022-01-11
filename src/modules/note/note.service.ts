@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
 import { isDefined, isMongoId } from 'class-validator'
-import { pick } from 'lodash'
 import { FilterQuery } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -128,12 +127,7 @@ export class NoteService {
     })
 
     process.nextTick(async () => {
-      await Promise.all([
-        this.webGateway.broadcast(
-          EventTypes.NOTE_DELETE,
-          pick(doc, ['_id', 'id', 'nid', 'created', 'modified']),
-        ),
-      ])
+      await Promise.all([this.webGateway.broadcast(EventTypes.NOTE_DELETE, id)])
     })
   }
 

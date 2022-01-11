@@ -63,7 +63,7 @@ export function BaseCrudFactory<
 
     @Get('/all')
     async getAll() {
-      return await this._model.find({}).lean()
+      return await this._model.find({}).sort({ created: -1 }).lean()
     }
 
     @Post('/')
