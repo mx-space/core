@@ -45,9 +45,9 @@ export class CronService {
 
     @Inject(forwardRef(() => PageService))
     private readonly pageService: PageService,
-    @Inject(forwardRef(() => SearchService))
     @Inject(forwardRef(() => BackupService))
     private readonly backupService: BackupService,
+    @Inject(forwardRef(() => SearchService))
     private readonly searchService: SearchService,
   ) {
     this.logger = new Logger(CronService.name)
