@@ -3,7 +3,6 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  Scope,
 } from '@nestjs/common'
 import { exec } from 'child_process'
 import dayjs from 'dayjs'
@@ -20,7 +19,7 @@ import { EventTypes } from '~/processors/gateway/events.types'
 import { getFolderSize } from '~/utils/system.util'
 import { ConfigsService } from '../configs/configs.service'
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class BackupService {
   private logger: Logger
 

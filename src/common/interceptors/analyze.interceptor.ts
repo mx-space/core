@@ -23,7 +23,6 @@ import { LOCAL_BOT_LIST_DATA_FILE_PATH } from '~/constants/path.constant'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { CacheService } from '~/processors/cache/cache.service'
-import { CronService } from '~/processors/helper/helper.cron.service'
 import { TaskQueueService } from '~/processors/helper/helper.tq.service'
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
@@ -38,7 +37,6 @@ export class AnalyzeInterceptor implements NestInterceptor {
     private readonly model: ReturnModelType<typeof AnalyzeModel>,
     @InjectModel(OptionModel)
     private readonly options: ReturnModelType<typeof OptionModel>,
-    private readonly cronService: CronService,
     private readonly cacheService: CacheService,
     private readonly taskService: TaskQueueService,
   ) {
@@ -48,9 +46,6 @@ export class AnalyzeInterceptor implements NestInterceptor {
   async init() {
     this.parser = new UAParser()
     this.botListData = await this.getLocalBotList()
-    this.taskService.add(this.cronService.updateBotList.name, async () =>
-      this.cronService.updateBotList(),
-    )
   }
 
   async getLocalBotList() {

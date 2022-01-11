@@ -60,6 +60,7 @@ export class CronService {
   @CronDescription('更新 Bot 列表')
   async updateBotList() {
     try {
+      this.logger.log('--> 更新 Bot 列表')
       const { data: json } = await this.http.axiosRef.get(
         'https://cdn.jsdelivr.net/gh/atmire/COUNTER-Robots@master/COUNTER_Robots_list.json',
       )
