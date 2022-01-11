@@ -18,7 +18,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     fastifyApp,
-    { logger: false },
+    { logger: ['error', 'debug'] },
   )
 
   const hosts = Origin.map((host) => new RegExp(host, 'i'))

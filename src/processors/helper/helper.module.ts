@@ -1,6 +1,7 @@
 import { forwardRef, Global, Module, Provider } from '@nestjs/common'
 import { ScheduleModule } from '@nestjs/schedule'
 import { AggregateModule } from '~/modules/aggregate/aggregate.module'
+import { BackupModule } from '~/modules/backup/backup.module'
 import { NoteModule } from '~/modules/note/note.module'
 import { PageModule } from '~/modules/page/page.module'
 import { PostModule } from '~/modules/post/post.module'
@@ -34,6 +35,7 @@ const providers: Provider<any>[] = [
     forwardRef(() => NoteModule),
     forwardRef(() => PageModule),
     forwardRef(() => SearchModule),
+    forwardRef(() => BackupModule),
   ],
   providers: providers,
   exports: providers,
