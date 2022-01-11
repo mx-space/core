@@ -1,3 +1,12 @@
+## [3.13.3](https://github.com/mx-space/server-next/compare/v3.13.2...v3.13.3) (2022-01-11)
+
+
+### Bug Fixes
+
+* universal curl sort on getAll ([ab6847e](https://github.com/mx-space/server-next/commit/ab6847e9432483dc3df5df7958580d04f4356c39))
+
+
+
 ## [3.13.2](https://github.com/mx-space/server-next/compare/v3.13.1...v3.13.2) (2022-01-11)
 
 
