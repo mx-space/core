@@ -107,7 +107,7 @@
     "mongoose": "*",
     "mongoose-lean-id": "0.2.0",
     "mongoose-lean-virtuals": "0.9.0",
-    "mongoose-paginate-v2": "1.4.3",
+    "mongoose-paginate-v2": "1.5.0",
     "nanoid": "3.1.32",
     "nestjs-typegoose": "7.1.38",
     "node-vibrant": "3.2.1-alpha.1",
