@@ -75,7 +75,7 @@ specifiers:
   mkdirp: '*'
   mockingoose: 2.15.2
   mongoose: '*'
-  mongoose-lean-id: 0.2.0
+  mongoose-lean-id: 0.3.0
   mongoose-lean-virtuals: 0.9.0
   mongoose-paginate-v2: 1.4.3
   nanoid: 3.1.32
@@ -150,7 +150,7 @@ dependencies:
   marked: 4.0.9
   mkdirp: 1.0.4
   mongoose: 5.13.8
-  mongoose-lean-id: 0.2.0_mongoose@5.13.8
+  mongoose-lean-id: 0.3.0_mongoose@5.13.8
   mongoose-lean-virtuals: 0.9.0_mongoose@5.13.8
   mongoose-paginate-v2: 1.4.3
   nanoid: 3.1.32
@@ -6507,10 +6507,10 @@ packages:
       saslprep: 1.0.3
     dev: true
 
-  /mongoose-lean-id/0.2.0_mongoose@5.13.8:
-    resolution: {integrity: sha512-ioC++wVTfprE2wh7Baw4jdZ1mCIpK3uw74sWf53enNCKZHVhKsL7fMyB1ryb4SmGwOj4StebTGy7YwimjZ0Qlg==}
+  /mongoose-lean-id/0.3.0_mongoose@5.13.8:
+    resolution: {integrity: sha512-/eONPzg+tA7/VR4uv0uKxKwH4OCseZShqwbMW572QvlSU0g48zDFTiDuCjZmNykfZgK3ZOwjfLVbXBAAAbXI4Q==}
     peerDependencies:
-      mongoose: 4.x || 5.x
+      mongoose: 4.x || 5.x || 6.x
     dependencies:
       mongoose: 5.13.8
     dev: false
