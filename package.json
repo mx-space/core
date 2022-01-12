@@ -117,7 +117,7 @@
     "pluralize": "*",
     "redis": "3.1.2",
     "reflect-metadata": "0.1.13",
-    "rxjs": "7.4.0",
+    "rxjs": "7.5.2",
     "snakecase-keys": "5.1.2",
     "ts-morph": "*",
     "ua-parser-js": "1.0.2",
