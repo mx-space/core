@@ -1,3 +1,19 @@
+## [3.13.4](https://github.com/mx-space/server-next/compare/v3.13.3...v3.13.4) (2022-01-13)
+
+
+### Bug Fixes
+
+* **deps:** update dependency nanoid to v3.1.31 ([ccb248a](https://github.com/mx-space/server-next/commit/ccb248a9632fe8aeefa9b37f268166b0ad8af2e6))
+* **deps:** update dependency nanoid to v3.1.32 ([#275](https://github.com/mx-space/server-next/issues/275)) ([bb59143](https://github.com/mx-space/server-next/commit/bb5914348265dfec238a65cbea58398d17d6a8e6))
+* test script ([ecbce84](https://github.com/mx-space/server-next/commit/ecbce848fa588a2efa782014acd1a2e66ec46fc5))
+
+
+### Features
+
+* update mongoose to v6 ([409a5e1](https://github.com/mx-space/server-next/commit/409a5e1faccac95ea9afaa6a72976625a5cd2009))
+
+
+
 ## [3.13.3](https://github.com/mx-space/server-next/compare/v3.13.2...v3.13.3) (2022-01-11)
 
 
