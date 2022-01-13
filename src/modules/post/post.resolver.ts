@@ -45,7 +45,6 @@ export class PostResolver {
         page,
         select,
         sort: sortBy ? { [sortBy]: sortOrder || -1 } : { created: -1 },
-        populate: 'category',
       },
     )
 

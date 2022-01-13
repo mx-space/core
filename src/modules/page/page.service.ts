@@ -5,7 +5,6 @@ import { InjectModel } from 'nestjs-typegoose'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { ImageService } from '~/processors/helper/helper.image.service'
-import { PostModel } from '../post/post.model'
 import { PageModel } from './page.model'
 
 @Injectable()
@@ -37,7 +36,7 @@ export class PageService {
     }
     await this.model.updateOne(
       { _id: id },
-      { ...omit(doc, PostModel.protectedKeys) },
+      { ...omit(doc, PageModel.protectedKeys) },
     )
     process.nextTick(async () => {
       await Promise.all([

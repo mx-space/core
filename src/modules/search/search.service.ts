@@ -76,7 +76,6 @@ export class SearchService {
           limit: size,
           page,
           select,
-          populate: 'category',
         },
       ),
     )

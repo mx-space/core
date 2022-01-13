@@ -54,7 +54,6 @@ export class PostController {
         page,
         select,
         sort: sortBy ? { [sortBy]: sortOrder || -1 } : { created: -1 },
-        populate: 'category',
       },
     )
   }
@@ -111,7 +110,7 @@ export class PostController {
   @Auth()
   @HttpCode(201)
   async create(@Body() body: PostModel) {
-    const _id = Types.ObjectId()
+    const _id = new Types.ObjectId()
 
     return await this.postService.create({
       ...body,
@@ -124,8 +123,7 @@ export class PostController {
   @Put('/:id')
   @Auth()
   async update(@Param() params: MongoIdDto, @Body() body: PostModel) {
-    await this.postService.updateById(params.id, body)
-    return this.postService.findById(params.id)
+    return await this.postService.updateById(params.id, body)
   }
 
   @Patch('/:id')

@@ -78,7 +78,7 @@ export class MarkdownService {
           slug: new Date().getTime(),
           text: item.text,
           ...genDate(item),
-          categoryId: Types.ObjectId(defaultCategory._id),
+          categoryId: new Types.ObjectId(defaultCategory._id),
         } as any as PostModel)
       } else {
         const category = await insertOrCreateCategory(

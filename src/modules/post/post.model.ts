@@ -1,7 +1,16 @@
 import { Field, ObjectType } from '@nestjs/graphql'
 import { PartialType } from '@nestjs/mapped-types'
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
-import { index, modelOptions, prop, Ref, Severity } from '@typegoose/typegoose'
+import {
+  DocumentType,
+  index,
+  modelOptions,
+  pre,
+  prop,
+  Ref,
+  Severity,
+} from '@typegoose/typegoose'
+import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import {
   ArrayUnique,
   IsBoolean,
@@ -10,6 +19,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator'
+import { Query } from 'mongoose'
 import {
   CountMixed as Count,
   Paginator,
@@ -20,6 +30,21 @@ import {
   CategoryModel,
 } from '../category/category.model'
 
+function autoPopulateCategory(
+  this: Query<
+    any,
+    DocumentType<PostModel, BeAnObject>,
+    {},
+    DocumentType<PostModel, BeAnObject>
+  >,
+  next: () => void,
+) {
+  this.populate({ path: 'category' })
+  next()
+}
+
+@pre<PostModel>('findOne', autoPopulateCategory)
+@pre<PostModel>('find', autoPopulateCategory)
 @index({ slug: 1 })
 @index({ modified: -1 })
 @index({ text: 'text' })

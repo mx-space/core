@@ -202,8 +202,7 @@ export class NoteController {
   @Put('/:id')
   @Auth()
   async modify(@Body() body: NoteModel, @Param() params: MongoIdDto) {
-    await this.noteService.updateById(params.id, body)
-    return await this.noteService.model.findById(params.id)
+    return await this.noteService.updateById(params.id, body)
   }
 
   @Patch('/:id')

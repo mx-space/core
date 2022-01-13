@@ -99,21 +99,25 @@ export class NoteService {
     if (['title', 'text'].some((key) => isDefined(doc[key]))) {
       doc.modified = new Date()
     }
-    await this.noteModel.updateOne(
+
+    const updated = await this.noteModel.findOneAndUpdate(
       {
         _id: id,
       },
       { ...doc },
+      { new: true },
     )
     process.nextTick(async () => {
       await Promise.all([
         this.cacheService.clearAggregateCache(),
         this.imageService.recordImageDimensions(this.noteModel, id),
         this.model.findById(id).then((doc) => {
+          delete doc.password
           this.webGateway.broadcast(EventTypes.NOTE_UPDATE, doc)
         }),
       ])
     })
+    return updated
   }
 
   async deleteById(id: string) {

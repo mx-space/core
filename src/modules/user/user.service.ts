@@ -108,9 +108,7 @@ export class UserService {
       const newCode = nanoid(10)
       doc.authCode = newCode
     }
-    return await this.userModel
-      .updateOne({ _id: user._id }, doc)
-      .setOptions({ omitUndefined: true })
+    return await this.userModel.updateOne({ _id: user._id }, doc)
   }
 
   /**

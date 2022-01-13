@@ -182,23 +182,38 @@ export class EmailService {
     const { user } = mailOptions
     const from = `"${seo.title || 'Mx Space'}" <${user}>`
     if (type === ReplyMailType.Guest) {
-      await this.instance.sendMail({
+      const options = {
         from,
         ...{
           subject: `[${seo.title || 'Mx Space'}] 主人给你了新的回复呐`,
           to,
           html: this.render((await this.readTemplate(type)) as string, source),
         },
-      })
-    } else
-      await this.instance.sendMail({
+      }
+      if (isDev) {
+        delete options.html
+        Object.assign(options, { source })
+        this.logger.log(options)
+        return
+      }
+      await this.instance.sendMail(options)
+    } else {
+      const options = {
         from,
         ...{
           subject: `[${seo.title || 'Mx Space'}] 有新回复了耶~`,
           to,
           html: this.render((await this.readTemplate(type)) as string, source),
         },
-      })
+      }
+      if (isDev) {
+        delete options.html
+        Object.assign(options, { source })
+        this.logger.log(options)
+        return
+      }
+      await this.instance.sendMail(options)
+    }
   }
 
   render(template: string, source: EmailTemplateRenderProps) {

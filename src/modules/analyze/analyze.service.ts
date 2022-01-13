@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 import dayjs from 'dayjs'
 import { merge } from 'lodash'
+import { PipelineStage } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import { RedisItems, RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
@@ -246,7 +247,7 @@ export class AnalyzeService {
     from = from ?? new Date(new Date().getTime() - 1000 * 24 * 3600 * 7)
     to = to ?? new Date()
 
-    const pipeline = [
+    const pipeline: PipelineStage[] = [
       {
         $match: {
           timestamp: {

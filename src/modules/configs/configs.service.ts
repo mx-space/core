@@ -122,7 +122,7 @@ export class ConfigsService {
     await this.optionModel.updateOne(
       { name: key as string },
       { value: merge(this.config[key], data) },
-      { upsert: true, omitUndefined: true },
+      { upsert: true },
     )
     const newData = (await this.optionModel.findOne({ name: key as string }))
       .value

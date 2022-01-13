@@ -8,7 +8,6 @@ import { isDefined } from 'class-validator'
 import { omit } from 'lodash'
 import { FilterQuery, PaginateOptions } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CacheService } from '~/processors/cache/cache.service'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
@@ -75,14 +74,6 @@ export class PostService {
     return res
   }
 
-  async findById(id: string) {
-    const doc = await this.postModel.findById(id).populate('category')
-    if (!doc) {
-      throw new CannotFindException()
-    }
-    return doc
-  }
-
   async updateById(id: string, data: Partial<PostModel>) {
     const oldDocument = await this.postModel.findById(id).lean()
     if (!oldDocument) {
@@ -105,11 +96,12 @@ export class PostService {
       data.modified = now
     }
 
-    await this.postModel.updateOne(
+    const updated = await this.postModel.findOneAndUpdate(
       {
         _id: id,
       },
       omit(data, PostModel.protectedKeys),
+      { new: true },
     )
     process.nextTick(async () => {
       // 更新图片信息缓存
@@ -122,6 +114,8 @@ export class PostService {
         this.cacheService.clearAggregateCache(),
       ])
     })
+
+    return updated
   }
 
   async deletePost(id: string) {

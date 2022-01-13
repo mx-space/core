@@ -82,7 +82,6 @@ export class ImageService {
       { _id: id },
       // 过滤多余的
       { images: result.filter(({ src }) => newImages.includes(src)) },
-      { omitUndefined: true },
     )
   }
 

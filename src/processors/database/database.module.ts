@@ -36,10 +36,6 @@ const models = TypegooseModule.forFeature([
     TypegooseModule.forRootAsync({
       useFactory: () => ({
         uri: MONGO_DB.uri,
-        useCreateIndex: true,
-        useFindAndModify: false,
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
         autoIndex: true,
       }),
     }),

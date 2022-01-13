@@ -11,7 +11,7 @@ import {
   ReplyMailType,
 } from '~/processors/helper/helper.email.service'
 import { WriteBaseModel } from '~/shared/model/base.model'
-import { hasChinese, isDev } from '~/utils/index.util'
+import { hasChinese } from '~/utils/index.util'
 import { ConfigsService } from '../configs/configs.service'
 import { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json'
@@ -109,7 +109,7 @@ export class CommentService {
     doc.key = `#${commentIndex + 1}`
     const comment = await this.commentModel.create({
       ...doc,
-      ref: Types.ObjectId(id),
+      ref: new Types.ObjectId(id),
       refType: type,
     })
 
@@ -185,8 +185,6 @@ export class CommentService {
           {
             path: 'ref',
             select: 'title _id slug nid categoryId',
-
-            populate: [{ path: 'category', model: 'Category' }],
           },
         ],
         sort: { created: -1 },
@@ -196,20 +194,16 @@ export class CommentService {
     return queryList
   }
 
-  async sendEmail(
-    model: DocumentType<CommentModel>,
-    type: ReplyMailType,
-    debug?: true,
-  ) {
+  async sendEmail(model: DocumentType<CommentModel>, type: ReplyMailType) {
     const enable = this.configs.get('mailOptions').enable
-    if (!enable || (isDev && !debug)) {
+    if (!enable) {
       return
     }
 
     this.userService.model.findOne().then(async (master) => {
       const refType = model.refType
       const refModel = this.getModelByRefType(refType)
-      const ref = await refModel.findById(model.ref).populate('category')
+      const refDoc = await refModel.findById(model.ref).lean()
       const time = new Date(model.created)
       const parent = await this.commentModel.findOne({ _id: model.parent })
 
@@ -221,11 +215,11 @@ export class CommentService {
         to: type === ReplyMailType.Owner ? master.mail : parent.mail,
         type,
         source: {
-          title: ref.title,
+          title: refDoc.title,
           text: model.text,
           author: type === ReplyMailType.Guest ? parent.author : model.author,
           master: master.name,
-          link: await this.resolveUrlByType(refType, ref),
+          link: await this.resolveUrlByType(refType, refDoc),
           time: parsedTime,
           mail: ReplyMailType.Owner === type ? model.mail : master.mail,
           ip: model.ip || '',

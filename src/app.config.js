@@ -54,7 +54,7 @@ exports.AXIOS_CONFIG = {
 }
 
 exports.SECURITY = {
-  jwtSecret: argv.jwt_secret || argv.jwtSecret || 'asjhczxiucipoiopiqm2376',
+  jwtSecret: argv.jwt_secret || argv.jwtSecret,
   jwtExpire: '7d',
   // 跳过登陆鉴权
   skipAuth: isTEST ? true : false,
