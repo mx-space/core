@@ -1,6 +1,6 @@
 {
   "name": "server-next",
-  "version": "3.13.4",
+  "version": "3.13.5",
   "description": "",
   "author": "Innei <https://innei.ren>",
   "private": true,
@@ -100,7 +100,7 @@
     "js-yaml": "*",
     "jszip": "3.7.1",
     "lodash": "*",
-    "marked": "4.0.10",
+    "marked": "4.0.9",
     "mkdirp": "*",
     "mongoose": "*",
     "mongoose-lean-id": "0.3.0",
