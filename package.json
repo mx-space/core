@@ -7,7 +7,7 @@
   "license": "MIT",
   "dashboard": {
     "repo": "mx-space/admin-next",
-    "version": "3.11.8"
+    "version": "3.11.9"
   },
   "husky": {
     "hooks": {
@@ -57,8 +57,7 @@
       "git pull --rebase"
     ],
     "after": [
-      "sh ./scripts/assets-push.sh",
-      "sh ./scripts/create-tags.sh"
+      "sh ./scripts/assets-push.sh"
     ]
   },
   "dependencies": {
