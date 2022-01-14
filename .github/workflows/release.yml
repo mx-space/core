@@ -89,6 +89,7 @@ jobs:
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASSWORD }}
           envs: JWTSECRET
+          script_stop: true
           script: |
             whoami
             cd
