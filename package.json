@@ -150,6 +150,7 @@
     "jest": "27.4.7",
     "lint-staged": "12.1.7",
     "mockingoose": "2.15.2",
+    "mongodb-memory-server": "8.1.0",
     "prettier": "2.5.1",
     "rimraf": "3.0.2",
     "run-script-webpack-plugin": "0.0.11",

@@ -45,4 +45,4 @@ const models = TypegooseModule.forFeature([
   exports: [models, DatabaseService],
 })
 @Global()
-export class DbModule {}
+export class DatabaseModule {}

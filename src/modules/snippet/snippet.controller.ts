@@ -82,8 +82,7 @@ export class SnippetController {
   async update(@Param() param: MongoIdDto, @Body() body: SnippetModel) {
     const { id } = param
 
-    await this.snippetService.update(id, body)
-    return await this.snippetService.getSnippetById(id)
+    return await this.snippetService.update(id, body)
   }
 
   @Delete('/:id')

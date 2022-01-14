@@ -1,30 +1,26 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-const { pathsToModuleNameMapper } = require('ts-jest/utils')
+const { pathsToModuleNameMapper } = require('ts-jest')
 // In the following statement, replace `./tsconfig` with the path to your `tsconfig` file
 // which contains the path mapping (ie the `compilerOptions.paths` option):
 const { compilerOptions } = require('./tsconfig.json')
-const { cd, $, chalk } = require('zx')
+
 module.exports = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
   testRegex: '.*\\.spec\\.ts$',
-  transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
-  },
+
   collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: '../coverage',
   extensionsToTreatAsEsm: ['.ts'],
-  preset: 'ts-jest/presets/default-esm',
+  preset: 'ts-jest',
   testEnvironment: 'node',
   globals: {
     'ts-jest': {
       useESM: true,
     },
     isDev: process.env.NODE_ENV === 'development',
-    $,
-    chalk,
-    cd,
   },
+  setupFiles: ['./test-setup.js'],
   moduleNameMapper: {
     ...pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/' }),
 

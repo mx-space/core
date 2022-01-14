@@ -46,7 +46,7 @@ import { SnippetModule } from './modules/snippet/snippet.module'
 import { ToolModule } from './modules/tool/tool.module'
 import { UserModule } from './modules/user/user.module'
 import { CacheModule } from './processors/cache/cache.module'
-import { DbModule } from './processors/database/database.module'
+import { DatabaseModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
 import { LoggerModule } from './processors/logger/logger.module'
@@ -65,7 +65,7 @@ mkdirs()
 
 @Module({
   imports: [
-    DbModule,
+    DatabaseModule,
     CacheModule,
 
     GraphQLModule.forRoot({

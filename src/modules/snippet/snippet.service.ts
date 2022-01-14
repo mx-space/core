@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { load } from 'js-yaml'
 import { InjectModel } from 'nestjs-typegoose'
 import { SnippetModel, SnippetType } from './snippet.model'
@@ -31,12 +35,7 @@ export class SnippetService {
     await this.validateType(model)
     delete model.created
 
-    await this.model.updateOne(
-      {
-        _id: id,
-      },
-      { ...model },
-    )
+    return await this.model.findByIdAndUpdate(id, { ...model }, { new: true })
   }
 
   async delete(id: string) {
@@ -91,6 +90,9 @@ export class SnippetService {
   }
 
   async attachSnippet(model: SnippetModel) {
+    if (!model) {
+      throw new NotFoundException()
+    }
     switch (model.type) {
       case SnippetType.JSON: {
         Reflect.set(model, 'data', JSON.parse(model.raw))

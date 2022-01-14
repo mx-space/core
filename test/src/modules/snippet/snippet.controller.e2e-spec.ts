@@ -77,29 +77,6 @@ describe.only('test /snippets', () => {
       })
   })
 
-  // test('POST /snippets, should return 201', async () => {
-  //   mockingoose(model).toReturn(
-  //     {
-  //       ...mockPayload1,
-  //     },
-  //     'create',
-  //   )
-  //   await app
-  //     .inject({
-  //       method: 'POST',
-  //       url: '/snippets',
-  //       payload: mockPayload1,
-  //     })
-  //     .then(async (res) => {
-  //       const json = res.json()
-  //       expect(res.statusCode).toBe(201)
-  //       expect(json).toBeDefined()
-  //       expect(json.name).toBe('Snippet_1')
-  //       // set mockingoose
-
-  //     })
-  // })
-
   test('POST /snippets, re-create same of name should return 400', async () => {
     await app
       .inject({
