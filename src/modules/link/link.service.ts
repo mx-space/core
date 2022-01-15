@@ -74,7 +74,7 @@ export class LinkService {
     if (!model.email) {
       return
     }
-    const enable = this.configs.get('mailOptions').enable
+    const enable = (await this.configs.get('mailOptions')).enable
     if (!enable || isDev) {
       console.log(`
       TO: ${model.email}
@@ -92,7 +92,7 @@ export class LinkService {
     })
   }
   async sendToMaster(authorName: string, model: LinkModel) {
-    const enable = this.configs.get('mailOptions').enable
+    const enable = (await this.configs.get('mailOptions')).enable
     if (!enable || isDev) {
       console.log(`来自 ${authorName} 的友链请求:
         站点标题: ${model.name}

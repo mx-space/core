@@ -10,6 +10,8 @@ import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { MyLogger } from './processors/logger/logger.service'
 
+console.log('ENV:', process.env.NODE_ENV)
+
 const Origin = CROSS_DOMAIN.allowedOrigins
 
 declare const module: any

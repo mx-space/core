@@ -39,13 +39,13 @@ export class OptionController {
   }
 
   @Get('/:key')
-  getOptionKey(@Param('key') key: keyof IConfig) {
+  async getOptionKey(@Param('key') key: keyof IConfig) {
     if (typeof key !== 'string' && !key) {
       throw new UnprocessableEntityException(
         'key must be IConfigKeys, got ' + key,
       )
     }
-    const value = this.configs.get(key)
+    const value = await this.configs.get(key)
     if (!value) {
       throw new BadRequestException('key is not exists.')
     }

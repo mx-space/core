@@ -7,6 +7,8 @@ export enum RedisKeys {
   IpInfoMap = 'ip_info_map',
   LikeSite = 'like_site',
   AdminPage = 'admin_next_index_entry',
+
+  ConfigCache = 'config_cache',
 }
 
 export enum RedisItems {

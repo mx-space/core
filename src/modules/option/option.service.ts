@@ -31,32 +31,29 @@ export class OptionService {
     forbidNonWhitelisted: true,
   }
   validate = new ValidationPipe(this.validOptions)
-  patchAndValid(key: keyof IConfig, value: any) {
-    value = camelcaseKeys(value, { deep: true })
+  async patchAndValid<T extends keyof IConfig>(key: T, value: IConfig[T]) {
+    value = camelcaseKeys(value, { deep: true }) as any
 
     switch (key) {
       case 'mailOptions': {
-        this.validWithDto(MailOptionsDto, value)
-        const task = this.configs.patch('mailOptions', value)
-        task.then((dto) => {
-          // re-init after set email option
-          this.emailService.init()
-        })
-        return task
+        const option = await this.configs.patch(
+          'mailOptions',
+          this.validWithDto(MailOptionsDto, value),
+        )
+        this.emailService.init()
+
+        return option
       }
 
       case 'algoliaSearchOptions': {
-        return this.configs
-          .patch(
-            'algoliaSearchOptions',
-            this.validWithDto(AlgoliaSearchOptionsDto, value),
-          )
-          .then((r) => {
-            if (r.enable) {
-              this.cronService.pushToAlgoliaSearch()
-            }
-            return r
-          })
+        const option = await this.configs.patch(
+          'algoliaSearchOptions',
+          this.validWithDto(AlgoliaSearchOptionsDto, value),
+        )
+        if (option.enable) {
+          this.cronService.pushToAlgoliaSearch()
+        }
+        return option
       }
       default: {
         const dto = map[key]

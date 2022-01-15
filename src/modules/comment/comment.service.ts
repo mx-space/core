@@ -46,7 +46,7 @@ export class CommentService {
 
   async checkSpam(doc: Partial<CommentModel>) {
     const res = await (async () => {
-      const commentOptions = this.configs.get('commentOptions')
+      const commentOptions = await this.configs.get('commentOptions')
       if (!commentOptions.antiSpam) {
         return false
       }
@@ -195,7 +195,7 @@ export class CommentService {
   }
 
   async sendEmail(model: DocumentType<CommentModel>, type: ReplyMailType) {
-    const enable = this.configs.get('mailOptions').enable
+    const enable = (await this.configs.get('mailOptions')).enable
     if (!enable) {
       return
     }

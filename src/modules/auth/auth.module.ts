@@ -17,7 +17,10 @@ export const __secret: any =
   SECURITY.jwtSecret ||
   Buffer.from(getMachineId()).toString('base64').slice(0, 15) ||
   'asjhczxiucipoiopiqm2376'
-consola.log('JWT Secret start with :', __secret.slice(0, 5))
+consola.log(
+  'JWT Secret start with :',
+  __secret.slice(0, 5) + '*'.repeat(__secret.length - 5),
+)
 
 const jwtModule = JwtModule.registerAsync({
   useFactory() {

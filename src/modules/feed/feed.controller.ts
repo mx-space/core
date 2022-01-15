@@ -25,7 +25,7 @@ export class FeedController {
   async rss() {
     const { author, data, url } =
       await this.aggregateService.buildRssStructure()
-    const { title } = this.configs.get('seo')
+    const { title } = await this.configs.get('seo')
     const { avatar } = await this.configs.getMaster()
     const now = new Date()
     const xml = `<?xml version="1.0" encoding="UTF-8"?>

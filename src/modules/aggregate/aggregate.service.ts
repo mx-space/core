@@ -238,9 +238,9 @@ export class AggregateService {
 
   async buildRssStructure(): Promise<RSSProps> {
     const data = await this.getRSSFeedContent()
-    const title = this.configs.get('seo').title
+    const title = (await this.configs.get('seo')).title
     const author = (await this.configs.getMaster()).name
-    const url = this.configs.get('url').webUrl
+    const url = (await this.configs.get('url')).webUrl
     return {
       title,
       author,
