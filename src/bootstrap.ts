@@ -10,8 +10,6 @@ import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { MyLogger } from './processors/logger/logger.service'
 
-console.log('ENV:', process.env.NODE_ENV)
-
 const Origin = CROSS_DOMAIN.allowedOrigins
 
 declare const module: any
@@ -70,6 +68,7 @@ async function bootstrap() {
 
   await app.listen(+PORT, '0.0.0.0', async (err, address) => {
     app.useLogger(app.get(MyLogger))
+    consola.info('ENV:', process.env.NODE_ENV)
     const url = await app.getUrl()
     if (isDev) {
       consola.debug(`OpenApi: ${url}/api-docs`)

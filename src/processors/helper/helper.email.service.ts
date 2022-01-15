@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
 import { render } from 'ejs'
 import { createTransport } from 'nodemailer'
+import { EventBusEvents } from '~/constants/event.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { LinkModel } from '~/modules/link/link.model'
 import { AssetService } from './helper.asset.service'
@@ -73,6 +75,7 @@ export class EmailService {
         break
     }
   }
+  @OnEvent(EventBusEvents.EmailInit)
   init() {
     this.getConfigFromConfigService()
       .then((config) => {

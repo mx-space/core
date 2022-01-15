@@ -6,7 +6,7 @@ import { dbHelper } from 'test/helper/db-mock.helper'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
 
-describe.only('test Snippet Service', () => {
+describe('test Snippet Service', () => {
   let service: SnippetService
 
   beforeAll(async () => {

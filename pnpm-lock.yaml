@@ -11,6 +11,7 @@ specifiers:
   '@nestjs/cli': 8.1.8
   '@nestjs/common': 8.2.5
   '@nestjs/core': 8.2.5
+  '@nestjs/event-emitter': 1.0.0
   '@nestjs/graphql': 9.1.2
   '@nestjs/jwt': 8.0.0
   '@nestjs/mapped-types': '*'
@@ -70,9 +71,8 @@ specifiers:
   jszip: 3.7.1
   lint-staged: 12.1.7
   lodash: '*'
-  marked: 4.0.10
+  marked: 4.0.9
   mkdirp: '*'
-  mockingoose: 2.15.2
   mongodb-memory-server: 8.1.0
   mongoose: '*'
   mongoose-lean-id: 0.3.0
@@ -87,6 +87,7 @@ specifiers:
   passport-jwt: 4.0.0
   pluralize: '*'
   prettier: 2.5.1
+  redis-memory-server: 0.5.0
   reflect-metadata: 0.1.13
   rimraf: 3.0.2
   run-script-webpack-plugin: 0.0.11
@@ -109,6 +110,7 @@ dependencies:
   '@algolia/client-search': 4.12.0
   '@nestjs/common': 8.2.5_17d6ce38cc74803538e351a8f2ca91ba
   '@nestjs/core': 8.2.5_b47d24345f8c2ad123c7afb4f52057f0
+  '@nestjs/event-emitter': 1.0.0_8b618827ffa1784f2e7b042a97d87b6c
   '@nestjs/graphql': 9.1.2_4aece87669e37e111f6a4461a47eae19
   '@nestjs/jwt': 8.0.0_@nestjs+common@8.2.5
   '@nestjs/mapped-types': 1.0.1_156c8e2af2c7dad431aaf14c3b14437b
@@ -145,7 +147,7 @@ dependencies:
   js-yaml: 4.1.0
   jszip: 3.7.1
   lodash: 4.17.21
-  marked: 4.0.10
+  marked: 4.0.9
   mkdirp: 1.0.4
   mongoose: 6.1.6
   mongoose-lean-id: 0.3.0_mongoose@6.1.6
@@ -193,9 +195,9 @@ devDependencies:
   ioredis: 4.28.3
   jest: 27.4.7_ts-node@10.4.0
   lint-staged: 12.1.7
-  mockingoose: 2.15.2_mongoose@6.1.6
   mongodb-memory-server: 8.1.0
   prettier: 2.5.1
+  redis-memory-server: 0.5.0
   rimraf: 3.0.2
   run-script-webpack-plugin: 0.0.11
   semver: 7.3.5
@@ -1420,6 +1422,19 @@ packages:
       uuid: 8.3.2
     dev: false
 
+  /@nestjs/event-emitter/1.0.0_8b618827ffa1784f2e7b042a97d87b6c:
+    resolution: {integrity: sha512-dRAou6G89KKYI2iyYfqSVGE6ZTC4WmHkQkFfgh88GLQg8dBqRk92ZY8CRtL2SK32SSelh9bwEDNQn9561uoypA==}
+    peerDependencies:
+      '@nestjs/common': ^7.0.0 || ^8.0.0
+      '@nestjs/core': ^7.0.0 || ^8.0.0
+      reflect-metadata: ^0.1.12
+    dependencies:
+      '@nestjs/common': 8.2.5_17d6ce38cc74803538e351a8f2ca91ba
+      '@nestjs/core': 8.2.5_b47d24345f8c2ad123c7afb4f52057f0
+      eventemitter2: 6.4.4
+      reflect-metadata: 0.1.13
+    dev: false
+
   /@nestjs/graphql/9.1.2_4aece87669e37e111f6a4461a47eae19:
     resolution: {integrity: sha512-ncxmkKmrswnHJ+jLgc6tbkRET6HAyC3gK6WKt1CdPLjvMnXVpFVpyQMFSenNXxAndInw9IgaiSyiJFdRYZVD/w==}
     peerDependencies:
@@ -2136,6 +2151,14 @@ packages:
     dependencies:
       '@types/yargs-parser': 20.2.1
     dev: true
+
+  /@types/yauzl/2.9.2:
+    resolution: {integrity: sha512-8uALY5LTvSuHgloDVUvWP3pIauILm+8/0pDMokuDYIoNsOkSwd5AiHBTSEJjKTDcZr5z8UpgOWZkxBF4iJftoA==}
+    requiresBuild: true
+    dependencies:
+      '@types/node': 16.11.19
+    dev: true
+    optional: true
 
   /@typescript-eslint/eslint-plugin/4.33.0_3289a875d95a672b97ebf589745c66ef:
     resolution: {integrity: sha512-aINiAxGVdOl1eJyVjaWn/YcVAq4Gi/Yo35qHGCnqbWVz61g39D0h23veY/MA0rFFGfxK7TySg2uwDeNv+JgVpg==}
@@ -3269,7 +3292,6 @@ packages:
   /chownr/2.0.0:
     resolution: {integrity: sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ==}
     engines: {node: '>=10'}
-    dev: false
 
   /chrome-trace-event/1.0.3:
     resolution: {integrity: sha512-p3KULyQg4S7NIHixdwbGX+nFHkoBiA4YQmyWtjb8XngSKV124nJmRysgAeujbUVb15vh+RvFUfCPqU7rXk+hZg==}
@@ -4221,6 +4243,10 @@ packages:
       through: 2.3.8
     dev: false
 
+  /eventemitter2/6.4.4:
+    resolution: {integrity: sha512-HLU3NDY6wARrLCEwyGKRBvuWYyvW6mHYv72SJJAH3iJN3a6eVUvkjFkcxah1bcTgGVBBrFdIopBJPhCQFMLyXw==}
+    dev: false
+
   /eventemitter3/3.1.2:
     resolution: {integrity: sha512-tvtQIeLVHjDkJYnzf2dgVMxfuSGJeM/7UCG17TT4EumTfNtF+0nebF/4zWOIkCreAbtNqhGEboB6BWrwqNaw4Q==}
     dev: false
@@ -4290,6 +4316,20 @@ packages:
       chardet: 0.7.0
       iconv-lite: 0.4.24
       tmp: 0.0.33
+
+  /extract-zip/2.0.1:
+    resolution: {integrity: sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==}
+    engines: {node: '>= 10.17.0'}
+    hasBin: true
+    dependencies:
+      debug: 4.3.3
+      get-stream: 5.2.0
+      yauzl: 2.10.0
+    optionalDependencies:
+      '@types/yauzl': 2.9.2
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
 
   /extsprintf/1.3.0:
     resolution: {integrity: sha1-lpGEQOMEGnpBT4xS48V06zw+HgU=}
@@ -4515,6 +4555,10 @@ packages:
       semver-store: 0.3.0
     dev: false
 
+  /find-package-json/1.2.0:
+    resolution: {integrity: sha512-+SOGcLGYDJHtyqHd87ysBhmaeQ95oWspDKnMXBrnQ9Eq4OkLNqejgoaD8xVWu6GPa0B6roa6KinCMEMcVeqONw==}
+    dev: true
+
   /find-up/2.1.0:
     resolution: {integrity: sha1-RdG35QbHF93UgndaK3eSCjwMV6c=}
     engines: {node: '>=4'}
@@ -4657,7 +4701,6 @@ packages:
     engines: {node: '>= 8'}
     dependencies:
       minipass: 3.1.3
-    dev: false
 
   /fs-monkey/1.0.3:
     resolution: {integrity: sha512-cybjIfiiE+pTWicSCLFHSrXZ6EilF30oh91FDP9S2B051prEa7QWfrVTQm10/dDpswBDXZugPa1Ogu8Yh+HV0Q==}
@@ -6178,8 +6221,18 @@ packages:
       p-locate: 4.1.0
     dev: true
 
+  /lockfile/1.0.4:
+    resolution: {integrity: sha512-cvbTwETRfsFh4nHsL1eGWapU1XFi5Ot9E85sWAwia7Y7EgB7vfqcZhTKZ+l7hCGxSPoushMv5GKhT5PdLv03WA==}
+    dependencies:
+      signal-exit: 3.0.5
+    dev: true
+
   /lodash.defaults/4.2.0:
     resolution: {integrity: sha1-0JF4cW/+pN3p5ft7N/bwgCJ0WAw=}
+
+  /lodash.defaultsdeep/4.6.1:
+    resolution: {integrity: sha512-3j8wdDzYuWO3lM3Reg03MuQR957t287Rpcxp1njpEa8oDrikb+FwGdW3n+FELh/A6qib6yPit0j/pv9G/yeAqA==}
+    dev: true
 
   /lodash.flatten/4.4.0:
     resolution: {integrity: sha1-8xwiIlqWMtK7+OSt2+8kCqdlph8=}
@@ -6317,8 +6370,8 @@ packages:
     resolution: {integrity: sha1-5WqpTEyAVaFkBKBnS3jyFffI4ZQ=}
     dev: false
 
-  /marked/4.0.10:
-    resolution: {integrity: sha512-+QvuFj0nGgO970fySghXGmuw+Fd0gD2x3+MqCWLIPf5oxdv1Ka6b2q+z9RP01P/IaKPMEramy+7cNy/Lw8c3hw==}
+  /marked/4.0.9:
+    resolution: {integrity: sha512-HmoFvQwFLxNESeGupeOC+6CLb5WzcCWQmqvVetsErmrI3vrZ6gBumty5IP0ynLPR0zYSoVY7ITC1GffsYIGkog==}
     engines: {node: '>= 12'}
     hasBin: true
     dev: false
@@ -6408,7 +6461,6 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       yallist: 4.0.0
-    dev: false
 
   /minizlib/2.1.2:
     resolution: {integrity: sha512-bAxsR8BVfj60DWXHE3u30oHzfl4G7khkSuPW+qvpd7jFRHm7dLxOjUk1EHACJ/hxLY8phGJ0YhYHZo7jil7Qdg==}
@@ -6416,7 +6468,6 @@ packages:
     dependencies:
       minipass: 3.1.3
       yallist: 4.0.0
-    dev: false
 
   /mkdirp/0.5.5:
     resolution: {integrity: sha512-NKmAlESf6jMGym1++R0Ra7wvhV+wFW63FaSOFPwRahvea0gMUcGUhVeAg/0BC0wiv9ih5NYPB1Wn1UEI1/L+xQ==}
@@ -6429,16 +6480,6 @@ packages:
     resolution: {integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==}
     engines: {node: '>=10'}
     hasBin: true
-    dev: false
-
-  /mockingoose/2.15.2_mongoose@6.1.6:
-    resolution: {integrity: sha512-50mtbAk29Go5hdhzqTmjmE67Z/cB0yPz45u2jrHoGm4nkYnnBq224viWgyKwnxzWw8birnqn98viM2cRBTnJvw==}
-    engines: {node: '>=6.4.0'}
-    peerDependencies:
-      mongoose: '>=4.9.10'
-    dependencies:
-      mongoose: 6.1.6
-    dev: true
 
   /moment-timezone/0.5.33:
     resolution: {integrity: sha512-PTc2vcT8K9J5/9rDEPe5czSIKgLoGsH8UNpA4qZTVw0Vd/Uz19geE9abbIOQKaAQFcnQ3v5YEXrbSc5BpshH+w==}
@@ -7292,6 +7333,31 @@ packages:
     resolution: {integrity: sha1-62LSrbFeTq9GEMBK/hUpOEJQq60=}
     engines: {node: '>=4'}
 
+  /redis-memory-server/0.5.0:
+    resolution: {integrity: sha512-MoqPXeB9pqUa/Klry6HZw94aaOSE8CAB+1Zo1hXvGu/b+k/u79e2u1/CVGsqJ0xJMSkQMPa9duzzdmXll0PCSg==}
+    engines: {node: '>=10.15.0'}
+    requiresBuild: true
+    dependencies:
+      camelcase: 6.3.0
+      cross-spawn: 7.0.3
+      debug: 4.3.3
+      extract-zip: 2.0.1
+      find-cache-dir: 3.3.2
+      find-package-json: 1.2.0
+      get-port: 5.1.1
+      https-proxy-agent: 5.0.0
+      lockfile: 1.0.4
+      lodash.defaultsdeep: 4.6.1
+      mkdirp: 1.0.4
+      rimraf: 3.0.2
+      semver: 7.3.5
+      tar: 6.1.11
+      tmp: 0.2.1
+      uuid: 8.3.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /redis-parser/3.0.0:
     resolution: {integrity: sha1-tm2CjNyv5rS4pCin3vTGvKwxyLQ=}
     engines: {node: '>=4'}
@@ -8035,7 +8101,6 @@ packages:
       minizlib: 2.1.2
       mkdirp: 1.0.4
       yallist: 4.0.0
-    dev: false
 
   /terminal-link/2.1.1:
     resolution: {integrity: sha512-un0FmiRUQNr5PJqy9kP7c40F5BOfpGlYTrxonDChEZB7pzZxRNp/bt+ymiy9/npwXya9KH99nJ/GXFIiUkYGFQ==}
@@ -8468,6 +8533,11 @@ packages:
     deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
     hasBin: true
     dev: false
+
+  /uuid/8.3.0:
+    resolution: {integrity: sha512-fX6Z5o4m6XsXBdli9g7DtWgAx+osMsRRZFKma1mIUsLCz6vRvv+pz5VNbyu9UEDzpMWulZfvpgb/cmDXVulYFQ==}
+    hasBin: true
+    dev: true
 
   /uuid/8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}

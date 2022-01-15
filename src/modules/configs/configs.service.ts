@@ -1,19 +1,42 @@
-import { Injectable, Logger } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  ValidationPipe,
+} from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
+import camelcaseKeys from 'camelcase-keys'
+import { ClassConstructor, plainToClass } from 'class-transformer'
+import { validateSync, ValidatorOptions } from 'class-validator'
 import { cloneDeep, mergeWith } from 'lodash'
 import { LeanDocument } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import { API_VERSION } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
+import { EventBusEvents } from '~/constants/event.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { sleep } from '~/utils/index.util'
 import { getRedisKey } from '~/utils/redis.util'
+import * as optionDtos from '../configs/configs.dto'
 import { UserModel } from '../user/user.model'
 import { UserService } from '../user/user.service'
-import { BackupOptionsDto, MailOptionsDto } from './configs.dto'
+import {
+  AlgoliaSearchOptionsDto,
+  BackupOptionsDto,
+  MailOptionsDto,
+} from './configs.dto'
 import { IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
+const map: Record<string, any> = Object.entries(optionDtos).reduce(
+  (obj, [key, value]) => ({
+    ...obj,
+    [`${key.charAt(0).toLowerCase() + key.slice(1).replace(/Dto$/, '')}`]:
+      value,
+  }),
+  {},
+)
 
 const generateDefaultConfig: () => IConfig = () => ({
   seo: {
@@ -50,6 +73,8 @@ export class ConfigsService {
     private readonly optionModel: ReturnModelType<typeof OptionModel>,
     private readonly userService: UserService,
     private readonly redis: CacheService,
+
+    private readonly eventEmitter: EventEmitter2,
   ) {
     this.configInit().then(() => {
       this.logger.log('Config 已经加载完毕！')
@@ -131,7 +156,10 @@ export class ConfigsService {
     }
   }
 
-  public async patch<T extends keyof IConfig>(key: T, data: IConfig[T]) {
+  public async patch<T extends keyof IConfig>(
+    key: T,
+    data: Partial<IConfig[T]>,
+  ): Promise<IConfig[T]> {
     const config = await this.getConfig()
     const updatedConfigRow = await this.optionModel
       .findOneAndUpdate(
@@ -153,6 +181,60 @@ export class ConfigsService {
     await this.setConfig(mergedFullConfig)
 
     return newData
+  }
+
+  validOptions: ValidatorOptions = {
+    whitelist: true,
+    forbidNonWhitelisted: true,
+  }
+  validate = new ValidationPipe(this.validOptions)
+  async patchAndValid<T extends keyof IConfig>(
+    key: T,
+    value: Partial<IConfig[T]>,
+  ) {
+    value = camelcaseKeys(value, { deep: true }) as any
+
+    switch (key) {
+      case 'mailOptions': {
+        const option = await this.patch(
+          'mailOptions',
+          this.validWithDto(MailOptionsDto, value),
+        )
+        if (option.enable) {
+          this.eventEmitter.emit(EventBusEvents.EmailInit)
+        }
+
+        return option
+      }
+
+      case 'algoliaSearchOptions': {
+        const option = await this.patch(
+          'algoliaSearchOptions',
+          this.validWithDto(AlgoliaSearchOptionsDto, value),
+        )
+        if (option.enable) {
+          this.eventEmitter.emit(EventBusEvents.PushSearch)
+        }
+        return option
+      }
+      default: {
+        const dto = map[key]
+        if (!dto) {
+          throw new BadRequestException('设置不存在')
+        }
+        return this.patch(key, this.validWithDto(dto, value))
+      }
+    }
+  }
+
+  private validWithDto<T extends object>(dto: ClassConstructor<T>, value: any) {
+    const validModel = plainToClass(dto, value)
+    const errors = validateSync(validModel, this.validOptions)
+    if (errors.length > 0) {
+      const error = this.validate.createExceptionFactory()(errors as any[])
+      throw error
+    }
+    return validModel
   }
 
   get getMaster() {

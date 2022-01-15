@@ -12,7 +12,6 @@ import {
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { ConfigsService } from '../configs/configs.service'
 import { ConfigKeyDto } from '../option/dtos/config.dto'
-import { OptionService } from '../option/option.service'
 import { InitService } from './init.service'
 
 @Controller({
@@ -23,7 +22,7 @@ import { InitService } from './init.service'
 export class InitController {
   constructor(
     private readonly configs: ConfigsService,
-    private readonly optionService: OptionService,
+
     private readonly initService: InitService,
   ) {}
 
@@ -55,6 +54,6 @@ export class InitController {
     if (typeof body !== 'object') {
       throw new UnprocessableEntityException('body must be object')
     }
-    return this.optionService.patchAndValid(params.key, body)
+    return this.configs.patchAndValid(params.key, body)
   }
 }

@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import COS from 'cos-nodejs-sdk-v5'
 import dayjs from 'dayjs'
@@ -8,6 +9,7 @@ import mkdirp from 'mkdirp'
 import { InjectModel } from 'nestjs-typegoose'
 import { CronDescription } from '~/common/decorator/cron-description.decorator'
 import { RedisItems, RedisKeys } from '~/constants/cache.constant'
+import { EventBusEvents } from '~/constants/event.constant'
 import {
   LOCAL_BOT_LIST_DATA_FILE_PATH,
   TEMP_DIR,
@@ -236,6 +238,7 @@ export class CronService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_NOON, { name: 'pushToAlgoliaSearch' })
   @CronDescription('推送到 Algolia Search')
+  @OnEvent(EventBusEvents.PushSearch)
   async pushToAlgoliaSearch() {
     const configs = await this.configs.waitForConfigReady()
     if (!configs.algoliaSearchOptions.enable) {

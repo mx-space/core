@@ -21,14 +21,13 @@ import { IConfig } from '../configs/configs.interface'
 import { ConfigsService } from '../configs/configs.service'
 import { ConfigKeyDto } from './dtos/config.dto'
 import { ReplyEmailBodyDto, ReplyEmailTypeDto } from './dtos/email.dto'
-import { OptionService } from './option.service'
 
 @Controller(['options', 'config', 'setting', 'configs', 'option'])
 @ApiTags('Option Routes')
 @Auth()
 export class OptionController {
   constructor(
-    private readonly optionService: OptionService,
+    private readonly configsService: ConfigsService,
     private readonly configs: ConfigsService,
     private readonly emailService: EmailService,
   ) {}
@@ -57,7 +56,7 @@ export class OptionController {
     if (typeof body !== 'object') {
       throw new UnprocessableEntityException('body must be object')
     }
-    return this.optionService.patchAndValid(params.key, body)
+    return this.configsService.patchAndValid(params.key, body)
   }
 
   @Get('/email/template/reply')
