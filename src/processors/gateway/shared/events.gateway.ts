@@ -10,8 +10,8 @@ export class SharedGateway {
     private readonly web: WebEventsGateway,
   ) {}
 
-  async broadcase(event: EventTypes, data: any) {
-    await this.admin.broadcast(event, data)
-    await this.web.broadcast(event, data)
+  broadcase(event: EventTypes, data: any) {
+    this.admin.broadcast(event, data)
+    this.web.broadcast(event, data)
   }
 }

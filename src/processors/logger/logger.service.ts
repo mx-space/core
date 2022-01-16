@@ -53,15 +53,14 @@ export class MyLogger extends ConsoleLogger {
     this.print('verbose', message, context, ...argv)
   }
 
-  error(message: any, trace?: string, context?: string) {
-    const formatMessage = this.formatMessage(message, 'debug')
-    if (context) {
-      consola.error(`[${chalk.yellow(context)}] `, formatMessage)
+  error(message: any, context?: string, ...argv: any[]) {
+    const trace = context
+    const _context = argv[0]
+
+    if (!trace && _context) {
+      this.print('error', message, _context, ...argv.slice(1))
     } else {
-      consola.error(this.defaultContextPrefix, formatMessage)
-    }
-    if (trace) {
-      consola.trace(trace)
+      this.print('error', message, context, ...argv)
     }
   }
 

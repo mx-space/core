@@ -10,17 +10,18 @@ exports.PORT = argv.port || process.env.PORT || 2333
 exports.API_VERSION = 2
 exports.CROSS_DOMAIN = {
   allowedOrigins: argv.allowed_origins
-    ? argv.allowed_origins?.split?.(',') || []
+    ? argv.allowed_origins?.split?.(',')
     : [
         'innei.ren',
         'shizuri.net',
-        'localhost:9528',
-        'localhost:2323',
+        'localhost',
         '127.0.0.1',
         'mbp.cc',
         'local.innei.test',
         '22333322.xyz',
+        '.*dev',
       ],
+
   // allowedReferer: 'innei.ren',
 }
 

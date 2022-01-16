@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
 import { JwtService } from '@nestjs/jwt'
 import {
   GatewayMetadata,
@@ -6,12 +7,15 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
-  WsException,
+  WebSocketServer,
 } from '@nestjs/websockets'
+import { Emitter } from '@socket.io/redis-emitter'
 import SocketIO, { Socket } from 'socket.io'
+import { EventBusEvents } from '~/constants/event.constant'
+import { CacheService } from '~/processors/cache/cache.service'
 import { AuthService } from '../../../modules/auth/auth.service'
 import { BaseGateway } from '../base.gateway'
-import { EventTypes, NotificationTypes } from '../events.types'
+import { EventTypes } from '../events.types'
 @WebSocketGateway<GatewayMetadata>({ namespace: 'admin' })
 export class AdminEventsGateway
   extends BaseGateway
@@ -20,12 +24,19 @@ export class AdminEventsGateway
   constructor(
     private readonly jwtService: JwtService,
     private readonly authService: AuthService,
+    private readonly cacheService: CacheService,
   ) {
     super()
     this.bindStdOut()
   }
+
+  tokenSocketIdMap = new Map<string, string>()
+
+  @WebSocketServer()
+  private namespace: SocketIO.Namespace
+
   async authFailed(client: SocketIO.Socket) {
-    client.send(this.messageFormat(EventTypes.AUTH_FAILED, '认证失败'))
+    client.send(this.gatewayMessageFormat(EventTypes.AUTH_FAILED, '认证失败'))
     client.disconnect()
   }
 
@@ -61,6 +72,9 @@ export class AdminEventsGateway
     }
 
     super.handleConnect(client)
+
+    const sid = client.id
+    this.tokenSocketIdMap.set(token.toString(), sid)
   }
 
   @SubscribeMessage('unlog')
@@ -78,18 +92,18 @@ export class AdminEventsGateway
     this.unsubscribeStdOut(client)
   }
 
+  @OnEvent(EventBusEvents.TokenExpired)
   handleTokenExpired(token: string) {
-    this.wsClients.some((client) => {
-      const _token =
-        client.handshake.query.token ||
-        client.handshake.headers['authorization']
-      if (token === _token) {
-        client.disconnect()
-        super.handleDisconnect(client)
-        return true
-      }
-      return false
-    })
+    const server = this.namespace.server
+    const sid = this.tokenSocketIdMap.get(token)
+
+    const socket = server.of('/admin').sockets.get(sid)
+    if (socket) {
+      socket.disconnect()
+      super.handleDisconnect(socket)
+      return true
+    }
+    return false
   }
 
   subscribeStdOutClient: Socket[] = []
@@ -112,7 +126,7 @@ export class AdminEventsGateway
   bindStdOut() {
     const handler = (data: any) => {
       this.subscribeStdOutClient.forEach((client) => {
-        client.send(this.messageFormat(EventTypes.STDOUT, data))
+        client.send(this.gatewayMessageFormat(EventTypes.STDOUT, data))
       })
     }
     const stream = {
@@ -132,24 +146,8 @@ export class AdminEventsGateway
     }
   }
 
-  sendNotification({
-    payload,
-    id,
-    type,
-  }: {
-    payload?: {
-      type: NotificationTypes
-      message: string
-    }
-    id: string
-    type?: EventTypes
-  }) {
-    const socket = super.findClientById(id)
-    if (!socket) {
-      throw new WsException('Socket 未找到, 无法发送消息')
-    }
-    socket.send(
-      super.messageFormat(type ?? EventTypes.ADMIN_NOTIFICATION, payload),
-    )
+  broadcast(event: EventTypes, data: any) {
+    const client = new Emitter(this.cacheService.getClient())
+    client.of('/admin').emit('message', this.gatewayMessageFormat(event, data))
   }
 }

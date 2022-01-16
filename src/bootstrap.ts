@@ -6,11 +6,13 @@ import { performance } from 'perf_hooks'
 import { API_VERSION, CROSS_DOMAIN, PORT } from './app.config'
 import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'
+import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { MyLogger } from './processors/logger/logger.service'
-
-const Origin = CROSS_DOMAIN.allowedOrigins
+const Origin = Array.isArray(CROSS_DOMAIN.allowedOrigins)
+  ? CROSS_DOMAIN.allowedOrigins
+  : false
 
 declare const module: any
 
@@ -21,20 +23,26 @@ async function bootstrap() {
     { logger: ['error', 'debug'] },
   )
 
-  const hosts = Origin.map((host) => new RegExp(host, 'i'))
+  const hosts = Origin && Origin.map((host) => new RegExp(host, 'i'))
 
-  app.enableCors({
-    origin: (origin, callback) => {
-      const allow = hosts.some((host) => host.test(origin))
+  // Origin 如果不是数组就全部允许跨域
+  app.enableCors(
+    Origin
+      ? {
+          origin: (origin, callback) => {
+            const allow = hosts.some((host) => host.test(origin))
 
-      callback(null, allow)
-    },
-    credentials: true,
-  })
+            callback(null, allow)
+          },
+          credentials: true,
+        }
+      : undefined,
+  )
 
   app.setGlobalPrefix(isDev ? '' : `api/v${API_VERSION}`, {
     exclude: [{ path: '/qaqdmin', method: RequestMethod.GET }],
   })
+
   if (isDev) {
     app.useGlobalInterceptors(new LoggingInterceptor())
   }
@@ -49,8 +57,9 @@ async function bootstrap() {
       stopAtFirstError: true,
     }),
   )
-
   app.useGlobalGuards(new SpiderGuard())
+  app.useWebSocketAdapter(new RedisIoAdapter(app))
+
   if (isDev) {
     const options = new DocumentBuilder()
       .setTitle('API')

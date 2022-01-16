@@ -304,7 +304,7 @@ export class AggregateService {
   }
 
   async getCounts() {
-    const online = this.gateway.wsClients.length
+    const online = this.gateway.currentClientCount
 
     const redisClient = this.cacheService.getClient()
     const dateFormat = dayjs().format('YYYY-MM-DD')

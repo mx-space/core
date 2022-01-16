@@ -1,12 +1,3 @@
-/*
- * @Author: Innei
- * @Date: 2020-05-21 11:05:42
- * @LastEditTime: 2020-06-07 15:15:08
- * @LastEditors: Innei
- * @FilePath: /mx-server/src/gateway/events.types.ts
- * @MIT
- */
-
 export enum EventTypes {
   GATEWAY_CONNECT = 'GATEWAY_CONNECT',
   GATEWAY_DISCONNECT = 'GATEWAY_DISCONNECT',

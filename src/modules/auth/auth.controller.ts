@@ -7,6 +7,7 @@ import {
   Query,
   Scope,
 } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
 import {
@@ -19,8 +20,8 @@ import {
 import { Auth } from '~/common/decorator/auth.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster as Master } from '~/common/decorator/role.decorator'
+import { EventBusEvents } from '~/constants/event.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import { AdminEventsGateway } from '../../processors/gateway/admin/events.gateway'
 import { AuthService } from './auth.service'
 
 export class TokenDto {
@@ -42,7 +43,7 @@ export class TokenDto {
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly adminGateway: AdminEventsGateway,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @Get()
@@ -85,7 +86,8 @@ export class AuthController {
   async deleteToken(@Query() query: MongoIdDto) {
     const { id } = query
     await this.authService.deleteToken(id)
-    this.adminGateway.handleTokenExpired(id)
+
+    this.eventEmitter.emit(EventBusEvents.TokenExpired, id)
     return 'OK'
   }
 }

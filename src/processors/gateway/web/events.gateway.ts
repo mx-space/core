@@ -1,11 +1,3 @@
-/*
- * @Author: Innei
- * @Date: 2020-05-21 18:59:01
- * @LastEditTime: 2021-02-24 21:22:29
- * @LastEditors: Innei
- * @FilePath: /server/apps/server/src/gateway/web/events.gateway.ts
- * @Copyright
- */
 import {
   ConnectedSocket,
   GatewayMetadata,
@@ -14,7 +6,9 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets'
+import { Emitter } from '@socket.io/redis-emitter'
 import { plainToClass } from 'class-transformer'
 import { validate } from 'class-validator'
 import dayjs from 'dayjs'
@@ -37,9 +31,12 @@ export class WebEventsGateway
     super()
   }
 
+  @WebSocketServer()
+  private namespace: SocketIO.Namespace
+
   async sendOnlineNumber() {
     return {
-      online: this.wsClients.length,
+      online: this.currentClientCount,
       timestamp: new Date().toISOString(),
     }
   }
@@ -58,30 +55,41 @@ export class WebEventsGateway
     })
   }
 
-  async handleConnection(client: SocketIO.Socket) {
+  get currentClientCount() {
+    const server = this.namespace.server
+    const clientCount = server.of('/web').adapter.rooms.size
+    return clientCount
+  }
+  async handleConnection(socket: SocketIO.Socket) {
     this.broadcast(EventTypes.VISITOR_ONLINE, await this.sendOnlineNumber())
 
     process.nextTick(async () => {
-      // TODO test
       const redisClient = this.cacheService.getClient()
       const dateFormat = dayjs().format('YYYY-MM-DD')
-      const count =
+
+      // get and store max_online_count
+      const maxOnlineCount =
         +(await redisClient.get(
           getRedisKey(RedisKeys.MaxOnlineCount, dateFormat),
         )) || 0
       await redisClient.set(
         getRedisKey(RedisKeys.MaxOnlineCount, dateFormat),
-        Math.max(count, this.wsClients.length),
+        Math.max(maxOnlineCount, this.currentClientCount),
       )
       const key = getRedisKey(RedisKeys.MaxOnlineCount, dateFormat) + '_total'
       const totalCount = +(await redisClient.get(key)) || 0
       await redisClient.set(key, totalCount + 1)
     })
 
-    super.handleConnect(client)
+    super.handleConnect(socket)
   }
   async handleDisconnect(client: SocketIO.Socket) {
     super.handleDisconnect(client)
     this.broadcast(EventTypes.VISITOR_OFFLINE, await this.sendOnlineNumber())
+  }
+
+  broadcast(event: EventTypes, data: any) {
+    const client = new Emitter(this.cacheService.getClient())
+    client.of('/web').emit('message', this.gatewayMessageFormat(event, data))
   }
 }
