@@ -123,7 +123,7 @@
     "snakecase-keys": "5.1.2",
     "ua-parser-js": "1.0.2",
     "xss": "1.0.10",
-    "zx": "4.2.0"
+    "zx": "4.3.0"
   },
   "devDependencies": {
     "@innei-util/eslint-config-ts": "latest",
