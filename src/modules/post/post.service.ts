@@ -4,11 +4,12 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { isDefined } from 'class-validator'
 import { omit } from 'lodash'
 import { FilterQuery, PaginateOptions } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
-import { CacheService } from '~/processors/cache/cache.service'
+import { EventBusEvents } from '~/constants/event.constant'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { ImageService } from '~/processors/helper/helper.image.service'
@@ -28,7 +29,7 @@ export class PostService {
     private categoryService: CategoryService,
     private readonly webgateway: WebEventsGateway,
     private readonly imageService: ImageService,
-    private readonly cacheService: CacheService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   get model() {
@@ -61,8 +62,8 @@ export class PostService {
     })
 
     process.nextTick(async () => {
+      this.eventEmitter.emit(EventBusEvents.CleanAggregateCache)
       await Promise.all([
-        this.cacheService.clearAggregateCache(),
         this.webgateway.broadcast(EventTypes.POST_CREATE, {
           ...res.toJSON(),
           category,
@@ -104,6 +105,8 @@ export class PostService {
       { new: true },
     )
     process.nextTick(async () => {
+      this.eventEmitter.emit(EventBusEvents.CleanAggregateCache)
+
       // 更新图片信息缓存
       await Promise.all([
         this.imageService.recordImageDimensions(this.postModel, id),
@@ -111,7 +114,6 @@ export class PostService {
           EventTypes.POST_UPDATE,
           await this.postModel.findById(id),
         ),
-        this.cacheService.clearAggregateCache(),
       ])
     })
 

@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { DocumentType } from '@typegoose/typegoose'
 import { isDefined, isMongoId } from 'class-validator'
 import { FilterQuery } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { CacheService } from '~/processors/cache/cache.service'
+import { EventBusEvents } from '~/constants/event.constant'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { ImageService } from '~/processors/helper/helper.image.service'
@@ -18,7 +19,7 @@ export class NoteService {
     private readonly noteModel: MongooseModel<NoteModel>,
     private readonly imageService: ImageService,
     private readonly webGateway: WebEventsGateway,
-    private readonly cacheService: CacheService,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     this.needCreateDefult()
   }
@@ -82,8 +83,8 @@ export class NoteService {
   public async create(document: NoteModel) {
     const doc = await this.noteModel.create(document)
     process.nextTick(async () => {
+      this.eventEmitter.emit(EventBusEvents.CleanAggregateCache)
       await Promise.all([
-        this.cacheService.clearAggregateCache(),
         this.imageService.recordImageDimensions(this.noteModel, doc._id),
         doc.hide || doc.password
           ? null
@@ -108,8 +109,8 @@ export class NoteService {
       { new: true },
     )
     process.nextTick(async () => {
+      this.eventEmitter.emit(EventBusEvents.CleanAggregateCache)
       await Promise.all([
-        this.cacheService.clearAggregateCache(),
         this.imageService.recordImageDimensions(this.noteModel, id),
         this.model.findById(id).then((doc) => {
           delete doc.password

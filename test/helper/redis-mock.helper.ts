@@ -1,6 +1,5 @@
 import IORedis from 'ioredis'
 import RedisMemoryServer from 'redis-memory-server'
-import { CacheKeys } from '~/constants/cache.constant'
 
 export class MockCacheService {
   private client: IORedis.Redis
@@ -22,16 +21,6 @@ export class MockCacheService {
 
   public getClient() {
     return this.redisClient
-  }
-
-  public clearAggregateCache() {
-    return Promise.all([
-      this.redisClient.del(CacheKeys.RSS),
-      this.redisClient.del(CacheKeys.RSSXmlCatch),
-      this.redisClient.del(CacheKeys.AggregateCatch),
-      this.redisClient.del(CacheKeys.SiteMapCatch),
-      this.redisClient.del(CacheKeys.SiteMapXmlCatch),
-    ])
   }
 }
 

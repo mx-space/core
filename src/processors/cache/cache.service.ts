@@ -1,7 +1,6 @@
 import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 import { Redis } from 'ioredis'
-import { CacheKeys } from '~/constants/cache.constant'
 
 // Cache 客户端管理器
 
@@ -46,15 +45,5 @@ export class CacheService {
 
   public getClient() {
     return this.redisClient
-  }
-
-  public clearAggregateCache() {
-    return Promise.all([
-      this.redisClient.del(CacheKeys.RSS),
-      this.redisClient.del(CacheKeys.RSSXmlCatch),
-      this.redisClient.del(CacheKeys.AggregateCatch),
-      this.redisClient.del(CacheKeys.SiteMapCatch),
-      this.redisClient.del(CacheKeys.SiteMapXmlCatch),
-    ])
   }
 }

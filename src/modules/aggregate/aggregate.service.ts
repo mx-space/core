@@ -1,11 +1,13 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
 import dayjs from 'dayjs'
 import { pick } from 'lodash'
 import { FilterQuery } from 'mongoose'
 import { URL } from 'url'
-import { RedisKeys } from '~/constants/cache.constant'
+import { CacheKeys, RedisKeys } from '~/constants/cache.constant'
+import { EventBusEvents } from '~/constants/event.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { addYearCondition } from '~/utils/query.util'
@@ -369,5 +371,16 @@ export class AggregateService {
       todayMaxOnline: todayMaxOnline || 0,
       todayOnlineTotal: todayOnlineTotal || 0,
     }
+  }
+
+  @OnEvent(EventBusEvents.CleanAggregateCache, { async: true })
+  public clearAggregateCache() {
+    return Promise.all([
+      this.cacheService.getClient().del(CacheKeys.RSS),
+      this.cacheService.getClient().del(CacheKeys.RSSXmlCatch),
+      this.cacheService.getClient().del(CacheKeys.AggregateCatch),
+      this.cacheService.getClient().del(CacheKeys.SiteMapCatch),
+      this.cacheService.getClient().del(CacheKeys.SiteMapXmlCatch),
+    ])
   }
 }
