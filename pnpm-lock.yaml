@@ -26,7 +26,7 @@ specifiers:
   '@socket.io/redis-adapter': 7.1.0
   '@socket.io/redis-emitter': 4.1.1
   '@typegoose/auto-increment': 1.0.0
-  '@typegoose/typegoose': 9.4.0
+  '@typegoose/typegoose': 9.5.0
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.2
   '@types/ejs': 3.1.0
@@ -125,7 +125,7 @@ dependencies:
   '@socket.io/redis-adapter': 7.1.0
   '@socket.io/redis-emitter': 4.1.1
   '@typegoose/auto-increment': 1.0.0_mongoose@6.1.6
-  '@typegoose/typegoose': 9.4.0_mongoose@6.1.6
+  '@typegoose/typegoose': 9.5.0_mongoose@6.1.6
   algoliasearch: 4.12.0
   apollo-server-fastify: 3.6.1_graphql@15.7.2
   axios: 0.24.0
@@ -158,7 +158,7 @@ dependencies:
   mongoose-lean-virtuals: 0.9.0_mongoose@6.1.6
   mongoose-paginate-v2: 1.5.0
   nanoid: 3.1.32
-  nestjs-typegoose: 7.1.38_56251181971f5f76b922ec661bc1baba
+  nestjs-typegoose: 7.1.38_ac6c215ea6333905d1e15b6f6df13e12
   node-machine-id: 1.1.12
   node-vibrant: 3.2.1-alpha.1
   nodemailer: 6.7.2
@@ -1833,11 +1833,11 @@ packages:
       tslib: 2.3.1
     dev: false
 
-  /@typegoose/typegoose/9.4.0_mongoose@6.1.6:
-    resolution: {integrity: sha512-Jazwurq+RI2M4igLioQezQGb2ZGwZuhE4wPpwllez+rnVc9kSWmrc0Iuc9qWfdN8cCKed6Hy4UxJRwPYqOrgHg==}
+  /@typegoose/typegoose/9.5.0_mongoose@6.1.6:
+    resolution: {integrity: sha512-efRfxBpVxUivyQwfHbEcAHMPzibANKcZN85bxmBYuPY5yt9ocuozWXBn6Jy4sKXtmAf/Di0nLZNTJgIClB8EnQ==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      mongoose: ~6.1.3
+      mongoose: ~6.1.6
     dependencies:
       lodash: 4.17.21
       loglevel: 1.8.0
@@ -6655,7 +6655,7 @@ packages:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
     dev: true
 
-  /nestjs-typegoose/7.1.38_56251181971f5f76b922ec661bc1baba:
+  /nestjs-typegoose/7.1.38_ac6c215ea6333905d1e15b6f6df13e12:
     resolution: {integrity: sha512-hYgDliG2IS5CJkzRsTbbfwZk+IP0jEyCaxcRqqXvxZaP5miiH9UvGm3K0hg8X5DuVkmsgTzW3+MxOXmcLm9BOA==}
     engines: {node: '>=8.10.0'}
     peerDependencies:
@@ -6666,7 +6666,7 @@ packages:
     dependencies:
       '@nestjs/common': 8.2.5_17d6ce38cc74803538e351a8f2ca91ba
       '@nestjs/core': 8.2.5_b47d24345f8c2ad123c7afb4f52057f0
-      '@typegoose/typegoose': 9.4.0_mongoose@6.1.6
+      '@typegoose/typegoose': 9.5.0_mongoose@6.1.6
       is-class: 0.0.9
       mongoose: 6.1.6
       reflect-metadata: 0.1.13
