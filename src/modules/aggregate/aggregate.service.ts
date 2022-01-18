@@ -304,12 +304,11 @@ export class AggregateService {
   }
 
   async getCounts() {
-    const online = this.gateway.currentClientCount
-
     const redisClient = this.cacheService.getClient()
     const dateFormat = dayjs().format('YYYY-MM-DD')
 
     const [
+      online,
       posts,
       notes,
       pages,
@@ -322,6 +321,7 @@ export class AggregateService {
       categories,
       recently,
     ] = await Promise.all([
+      this.gateway.getcurrentClientCount(),
       this.postService.model.countDocuments(),
       this.noteService.model.countDocuments(),
       this.categoryService.model.countDocuments(),

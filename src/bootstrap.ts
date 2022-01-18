@@ -2,9 +2,11 @@ import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import cluster from 'cluster'
 import { performance } from 'perf_hooks'
-import { API_VERSION, CROSS_DOMAIN, PORT } from './app.config'
+import { API_VERSION, CLUSTER, CROSS_DOMAIN, PORT } from './app.config'
 import { AppModule } from './app.module'
+import { Cluster } from './cluster'
 import { fastifyApp } from './common/adapters/fastify.adapter'
 import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { SpiderGuard } from './common/guard/spider.guard'
@@ -79,12 +81,15 @@ async function bootstrap() {
     app.useLogger(app.get(MyLogger))
     consola.info('ENV:', process.env.NODE_ENV)
     const url = await app.getUrl()
+    const pid = process.pid
+    const env = cluster.isPrimary
+    const prefix = env ? 'P' : 'W'
     if (isDev) {
-      consola.debug(`OpenApi: ${url}/api-docs`)
-      consola.debug(`GraphQL playground: ${url}/graphql`)
+      consola.debug(`[${prefix + pid}] OpenApi: ${url}/api-docs`)
+      consola.debug(`[${prefix + pid}] GraphQL playground: ${url}/graphql`)
     }
-    consola.success(`Server listen on: ${url}`)
-    consola.success(`Admin Dashboard: ${url}/qaqdmin`)
+    consola.success(`[${prefix + pid}] Server listen on: ${url}`)
+    consola.success(`[${prefix + pid}] Admin Dashboard: ${url}/qaqdmin`)
     Logger.log(
       'Server is up. ' + chalk.yellow('+' + (performance.now() | 0) + 'ms'),
     )
@@ -95,4 +100,9 @@ async function bootstrap() {
     module.hot.dispose(() => app.close())
   }
 }
-bootstrap()
+
+if (CLUSTER.enable) {
+  Cluster.register(+CLUSTER.workers, bootstrap)
+} else {
+  bootstrap()
+}

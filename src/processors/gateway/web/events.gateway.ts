@@ -36,7 +36,7 @@ export class WebEventsGateway
 
   async sendOnlineNumber() {
     return {
-      online: this.currentClientCount,
+      online: await this.getcurrentClientCount(),
       timestamp: new Date().toISOString(),
     }
   }
@@ -55,10 +55,10 @@ export class WebEventsGateway
     })
   }
 
-  get currentClientCount() {
+  async getcurrentClientCount() {
     const server = this.namespace.server
-    const clientCount = server.of('/web').adapter.rooms.size
-    return clientCount
+    const sockets = await server.of('/web').adapter.sockets(new Set())
+    return sockets.size
   }
   async handleConnection(socket: SocketIO.Socket) {
     this.broadcast(EventTypes.VISITOR_ONLINE, await this.sendOnlineNumber())
@@ -74,7 +74,7 @@ export class WebEventsGateway
         )) || 0
       await redisClient.set(
         getRedisKey(RedisKeys.MaxOnlineCount, dateFormat),
-        Math.max(maxOnlineCount, this.currentClientCount),
+        Math.max(maxOnlineCount, await this.getcurrentClientCount()),
       )
       const key = getRedisKey(RedisKeys.MaxOnlineCount, dateFormat) + '_total'
       const totalCount = +(await redisClient.get(key)) || 0

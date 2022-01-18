@@ -1,5 +1,6 @@
 /* eslint-disable prefer-rest-params */
 import { ConsoleLogger, ConsoleLoggerOptions } from '@nestjs/common'
+import cluster from 'cluster'
 import { performance } from 'perf_hooks'
 
 export class MyLogger extends ConsoleLogger {
@@ -68,16 +69,26 @@ export class MyLogger extends ConsoleLogger {
     const print = consola[level]
     const formatMessage = this.formatMessage(message, level)
     const diff = this._updateAndGetTimestampDiff()
+
+    const workerPrefix = cluster.isWorker
+      ? chalk.hex('#fab1a0')(`*Worker - ${cluster.worker.id}*`)
+      : ''
     if (context && !argv.length) {
-      print(`[${chalk.yellow(context)}] `, formatMessage, diff)
+      print(`${workerPrefix} [${chalk.yellow(context)}] `, formatMessage, diff)
     } else if (!argv.length) {
-      print(this.defaultContextPrefix, formatMessage, diff)
+      print(`${workerPrefix} ` + this.defaultContextPrefix, formatMessage, diff)
     } else {
-      print(this.defaultContextPrefix, message, context, ...argv, diff)
+      print(
+        `${workerPrefix} ` + this.defaultContextPrefix,
+        message,
+        context,
+        ...argv,
+        diff,
+      )
     }
   }
 
   private defaultContextPrefix = this.context
     ? `[${chalk.yellow(this.context)}] `
-    : `[${chalk.hex('#fd79a8')('MixSpaceServer')}] `
+    : `[${chalk.hex('#fd79a8')('MServer')}] `
 }

@@ -316,8 +316,4 @@ export class CronService {
       throw err
     }
   }
-
-  private get nowStr() {
-    return dayjs().format('YYYY-MM-DD-HH:mm:ss')
-  }
 }

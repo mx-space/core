@@ -1,6 +1,7 @@
 import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { GraphQLModule } from '@nestjs/graphql'
+import cluster from 'cluster'
 import { mkdirSync } from 'fs'
 import { join } from 'path'
 import { AppController } from './app.controller'
@@ -61,7 +62,10 @@ function mkdirs() {
   mkdirSync(USER_ASSET_DIR, { recursive: true })
   Logger.log(chalk.blue('资源目录已经建好: ' + USER_ASSET_DIR))
 }
-mkdirs()
+
+if (cluster.isPrimary) {
+  mkdirs()
+}
 
 @Module({
   imports: [

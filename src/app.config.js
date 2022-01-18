@@ -1,10 +1,13 @@
 const isDev = process.env.NODE_ENV === 'development'
 const isTEST = process.env.NODE_ENV === 'test'
 
+const cluster = require('cluster')
 const { argv } = require('zx')
 Object.defineProperty(exports, '__esModule', { value: true })
 
-console.log(argv)
+if (cluster.isPrimary) {
+  console.log(argv)
+}
 
 exports.PORT = argv.port || process.env.PORT || 2333
 exports.API_VERSION = 2
@@ -59,4 +62,9 @@ exports.SECURITY = {
   jwtExpire: '7d',
   // 跳过登陆鉴权
   skipAuth: isTEST ? true : false,
+}
+
+exports.CLUSTER = {
+  enable: argv.cluster ?? false,
+  workers: argv.cluster_workers ?? 8,
 }
