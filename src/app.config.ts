@@ -1,13 +1,10 @@
-const isDev = process.env.NODE_ENV === 'development'
-const isTEST = process.env.NODE_ENV === 'test'
+const isTEST = !!process.env.TEST
+import cluster from 'cluster'
+import { argv } from 'zx'
 
-const cluster = require('cluster')
-const { argv } = require('zx')
-Object.defineProperty(exports, '__esModule', { value: true })
-
-exports.PORT = argv.port || process.env.PORT || 2333
-exports.API_VERSION = 2
-exports.CROSS_DOMAIN = {
+export const PORT = argv.port || process.env.PORT || 2333
+export const API_VERSION = 2
+export const CROSS_DOMAIN = {
   allowedOrigins: argv.allowed_origins
     ? argv.allowed_origins?.split?.(',')
     : [
@@ -24,7 +21,7 @@ exports.CROSS_DOMAIN = {
   // allowedReferer: 'innei.ren',
 }
 
-exports.MONGO_DB = {
+export const MONGO_DB = {
   dbName: argv.collection_name || 'mx-space',
   host: argv.db_host || '127.0.0.1',
   port: argv.db_port || 27017,
@@ -35,7 +32,7 @@ exports.MONGO_DB = {
   },
 }
 
-exports.REDIS = {
+export const REDIS = {
   host: argv.redis_host || 'localhost',
   port: argv.redis_port || 6379,
   password: argv.redis_password || null,
@@ -49,22 +46,22 @@ exports.REDIS = {
 /**
  * @type {import('axios').AxiosRequestConfig}
  */
-exports.AXIOS_CONFIG = {
+export const AXIOS_CONFIG = {
   timeout: 10000,
 }
 
-exports.SECURITY = {
+export const SECURITY = {
   jwtSecret: argv.jwt_secret || argv.jwtSecret,
   jwtExpire: '7d',
   // 跳过登陆鉴权
   skipAuth: isTEST ? true : false,
 }
 
-exports.CLUSTER = {
+export const CLUSTER = {
   enable: argv.cluster ?? false,
   workers: argv.cluster_workers,
 }
 
-if (!exports.CLUSTER.enable || cluster.isPrimary) {
+if (!CLUSTER.enable || cluster.isPrimary) {
   console.log(argv)
 }

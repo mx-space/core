@@ -48,3 +48,5 @@ scripts/workflow/docker-compose.yml
 scripts/workflow/data
 
 schema.gql
+
+app.config.js

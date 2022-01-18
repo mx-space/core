@@ -1,7 +1,7 @@
 import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 import { Redis } from 'ioredis'
-import { redisSubPub } from '~/utils'
+import { redisSubPub } from '~/utils/redis-subpub.util'
 
 // Cache 客户端管理器
 
