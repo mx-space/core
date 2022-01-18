@@ -6,7 +6,7 @@
   "private": true,
   "license": "MIT",
   "dashboard": {
-    "repo": "mx-space/admin",
+    "repo": "mx-space/admin-next",
     "version": "3.11.11"
   },
   "husky": {
