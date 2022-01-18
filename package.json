@@ -140,7 +140,7 @@
     "@types/lodash": "4.14.178",
     "@types/marked": "4.0.1",
     "@types/mongoose-paginate-v2": "1.4.3",
-    "@types/node": "16.11.20",
+    "@types/node": "16.11.21",
     "@types/nodemailer": "6.4.4",
     "@types/passport-jwt": "3.0.6",
     "@types/ua-parser-js": "0.7.36",
