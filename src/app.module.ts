@@ -4,6 +4,7 @@ import { GraphQLModule } from '@nestjs/graphql'
 import cluster from 'cluster'
 import { mkdirSync } from 'fs'
 import { join } from 'path'
+import { CLUSTER } from './app.config'
 import { AppController } from './app.controller'
 import { AppResolver } from './app.resolver'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
@@ -63,7 +64,7 @@ function mkdirs() {
   Logger.log(chalk.blue('资源目录已经建好: ' + USER_ASSET_DIR))
 }
 
-if (cluster.isPrimary) {
+if (!CLUSTER.enable || cluster.isPrimary) {
   mkdirs()
 }
 

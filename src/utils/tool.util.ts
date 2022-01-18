@@ -54,3 +54,11 @@ export function deleteKeys<T extends KV>(
 
   return target
 }
+
+export const safeJSONParse = (p: any) => {
+  try {
+    return JSON.parse(p)
+  } catch {
+    return null
+  }
+}

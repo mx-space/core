@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common'
+import IORedis from 'ioredis'
 import { isAsyncFunction } from 'util/types'
+import { safeJSONParse } from '~/utils'
+import { CacheService } from '../cache/cache.service'
 
-type ITask = Map<
+type ITask = RedisMap<
   string,
   {
     status: 'pending' | 'fulfill' | 'reject'
@@ -13,8 +16,8 @@ type ITask = Map<
 @Injectable()
 export class TaskQueueService {
   tasks: ITask
-  constructor() {
-    this.tasks = new Map()
+  constructor(private readonly redis: CacheService) {
+    this.tasks = new RedisMap(redis.getClient(), 'tq')
   }
 
   add(name: string, task: () => Promise<any>) {
@@ -50,12 +53,27 @@ export class TaskQueueService {
     }
   }
 
-  get(name: string) {
-    const task = this.tasks.get(name)
+  async get(name: string) {
+    const task = await this.tasks.get(name)
     return !task ? null : { ...task }
   }
+}
 
-  get length() {
-    return this.tasks.size
+class RedisMap<K extends string, V = unknown> {
+  constructor(
+    private readonly redis: IORedis.Redis,
+    private readonly hashName: string,
+  ) {
+    this.hashName = RedisMap.key + `${hashName}#`
+  }
+
+  static key = 'redis-map#'
+  async get(key: K) {
+    const res = await this.redis.hget(this.hashName, key)
+
+    return safeJSONParse(res) as V | null
+  }
+  set(key: K, data: V) {
+    return this.redis.hset(this.hashName, key, JSON.stringify(data))
   }
 }

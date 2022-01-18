@@ -83,7 +83,7 @@ export class HealthController {
     if (!isString(name)) {
       throw new BadRequestException('name must be string')
     }
-    const task = this.taskQueue.get(name)
+    const task = await this.taskQueue.get(name)
     if (!task) {
       throw new BadRequestException(`${name} is not a cron in task queue`)
     }

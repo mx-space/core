@@ -5,10 +5,6 @@ const cluster = require('cluster')
 const { argv } = require('zx')
 Object.defineProperty(exports, '__esModule', { value: true })
 
-if (cluster.isPrimary) {
-  console.log(argv)
-}
-
 exports.PORT = argv.port || process.env.PORT || 2333
 exports.API_VERSION = 2
 exports.CROSS_DOMAIN = {
@@ -65,6 +61,10 @@ exports.SECURITY = {
 }
 
 exports.CLUSTER = {
-  enable: argv.cluster ?? true,
-  workers: argv.cluster_workers ?? 2,
+  enable: argv.cluster ?? false,
+  workers: argv.cluster_workers,
+}
+
+if (!exports.CLUSTER.enable || cluster.isPrimary) {
+  console.log(argv)
 }

@@ -1,7 +1,6 @@
 import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import cluster from 'cluster'
 import { performance } from 'perf_hooks'
 import { API_VERSION, CLUSTER, CROSS_DOMAIN, PORT } from './app.config'
@@ -63,6 +62,7 @@ async function bootstrap() {
   app.useWebSocketAdapter(new RedisIoAdapter(app))
 
   if (isDev) {
+    const { DocumentBuilder, SwaggerModule } = await import('@nestjs/swagger')
     const options = new DocumentBuilder()
       .setTitle('API')
       .setDescription('The blog API description')
@@ -102,7 +102,7 @@ async function bootstrap() {
 }
 
 if (CLUSTER.enable) {
-  Cluster.register(+CLUSTER.workers, bootstrap)
+  Cluster.register(parseInt(CLUSTER.workers) || os.cpus().length, bootstrap)
 } else {
   bootstrap()
 }

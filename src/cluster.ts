@@ -36,8 +36,10 @@ export class Cluster {
         consola.info('Worker %s is online', worker.process.pid)
       })
       cluster.on('exit', (worker, code, signal) => {
-        consola.info(`Worker ${worker.process.pid} died. Restarting`)
-        cluster.fork()
+        if (code !== 0) {
+          consola.info(`Worker ${worker.process.pid} died. Restarting`)
+          cluster.fork()
+        }
       })
     } else {
       callback()

@@ -8,7 +8,7 @@ module.exports = {
       watch: false,
       max_memory_restart: '230M',
       env: {
-        NODE_ENV: 'development',
+        NODE_ENV: 'production',
       },
 
       args: '--allowed_origins=dev.* --cluster',

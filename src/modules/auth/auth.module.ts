@@ -3,7 +3,7 @@ import { JwtModule } from '@nestjs/jwt'
 import { PassportModule } from '@nestjs/passport'
 import cluster from 'cluster'
 import { machineIdSync } from 'node-machine-id'
-import { SECURITY } from '~/app.config'
+import { CLUSTER, SECURITY } from '~/app.config'
 import { AdminEventsGateway } from '../../processors/gateway/admin/events.gateway'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
@@ -18,7 +18,7 @@ export const __secret: any =
   Buffer.from(getMachineId()).toString('base64').slice(0, 15) ||
   'asjhczxiucipoiopiqm2376'
 
-if (cluster.isPrimary) {
+if (!CLUSTER.enable || cluster.isPrimary) {
   consola.log(
     'JWT Secret start with :',
     __secret.slice(0, 5) + '*'.repeat(__secret.length - 5),
