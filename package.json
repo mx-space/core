@@ -7,7 +7,7 @@
   "license": "MIT",
   "dashboard": {
     "repo": "mx-space/admin-next",
-    "version": "3.11.10"
+    "version": "3.11.11"
   },
   "husky": {
     "hooks": {
