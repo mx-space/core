@@ -1,6 +1,7 @@
 import consola_, { FancyReporter, LogLevel } from 'consola'
 import { argv } from 'zx'
-import { isDev } from './index.util'
+import { isDev } from './tool.util'
+
 class DateTimeReporter extends FancyReporter {
   formatDate(date: Date) {
     return date.toLocaleString(undefined, {

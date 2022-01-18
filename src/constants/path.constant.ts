@@ -1,6 +1,6 @@
 import { homedir } from 'os'
 import { join } from 'path'
-import { isDev } from '~/utils/index.util'
+import { isDev } from '~/utils'
 
 export const HOME = homedir()
 

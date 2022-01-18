@@ -6,7 +6,7 @@ import {
   EmailService,
   LinkApplyEmailType,
 } from '~/processors/helper/helper.email.service'
-import { isDev } from '~/utils/index.util'
+import { isDev } from '~/utils'
 import { ConfigsService } from '../configs/configs.service'
 import { LinkModel, LinkState, LinkType } from './link.model'
 

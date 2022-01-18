@@ -7,7 +7,7 @@ import {
 import { isDefined } from 'class-validator'
 import { cloneDeep, isArrayLike, isObjectLike } from 'lodash'
 import { map } from 'rxjs'
-import { getAvatar } from '~/utils/index.util'
+import { getAvatar } from '~/utils'
 import { getNestExecutionContextRequest } from '~/utils/nest.util'
 @Injectable()
 export class CommentFilterEmailInterceptor implements NestInterceptor {

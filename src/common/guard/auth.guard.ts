@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { AuthGuard as _AuthGuard } from '@nestjs/passport'
 import { mockUser1 } from '~/mock/user.mock'
-import { isTest } from '~/utils/index.util'
+import { isTest } from '~/utils'
 import { getNestExecutionContextRequest } from '~/utils/nest.util'
 
 /**

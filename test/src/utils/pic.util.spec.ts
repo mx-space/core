@@ -1,4 +1,4 @@
-import { sleep } from '~/utils/index.util'
+import { sleep } from '~/utils'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
 
 describe('src/utils/pic.util', () => {

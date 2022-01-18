@@ -8,7 +8,7 @@ import { CacheService } from '~/processors/cache/cache.service'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { ImageService } from '~/processors/helper/helper.image.service'
-import { deleteKeys } from '~/utils/index.util'
+import { deleteKeys } from '~/utils'
 import { NoteModel } from './note.model'
 
 @Injectable()

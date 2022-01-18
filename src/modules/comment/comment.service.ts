@@ -11,7 +11,7 @@ import {
   ReplyMailType,
 } from '~/processors/helper/helper.email.service'
 import { WriteBaseModel } from '~/shared/model/base.model'
-import { hasChinese } from '~/utils/index.util'
+import { hasChinese } from '~/utils'
 import { ConfigsService } from '../configs/configs.service'
 import { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json'

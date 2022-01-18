@@ -8,7 +8,7 @@ import {
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import { Query, Types } from 'mongoose'
 import { BaseModel } from '~/shared/model/base.model'
-import { getAvatar } from '~/utils/index.util'
+import { getAvatar } from '~/utils'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'

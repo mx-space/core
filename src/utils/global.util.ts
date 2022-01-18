@@ -1,6 +1,6 @@
+import { isDev } from '.'
 import { consola } from './consola.util'
 import './dayjs.util'
-import { isDev } from './index.util'
 
 console.debug = (...rest) => {
   if (isDev) {

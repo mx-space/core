@@ -10,7 +10,7 @@ import {
   Injectable,
 } from '@nestjs/common'
 import { Observable } from 'rxjs'
-import { isDev } from '~/utils/index.util'
+import { isDev } from '~/utils'
 import { getNestExecutionContextRequest } from '~/utils/nest.util'
 
 @Injectable()

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
+import cluster from 'cluster'
 import { render } from 'ejs'
 import { createTransport } from 'nodemailer'
 import { EventBusEvents } from '~/constants/event.constant'
@@ -27,6 +28,22 @@ export class EmailService {
   ) {
     this.init()
     this.logger = new Logger(EmailService.name)
+
+    if (cluster.isWorker) {
+      // listen email option change in node cluster
+      process.on('message', (message: any) => {
+        const { event } = message
+
+        switch (event) {
+          case EventBusEvents.EmailInit:
+            this.init()
+            break
+
+          default:
+            break
+        }
+      })
+    }
   }
 
   async readTemplate(type: ReplyMailType) {

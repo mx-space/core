@@ -15,7 +15,7 @@ import { resolve } from 'path'
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 import { LOGGER_DIR } from '~/constants/path.constant'
 import { REFLECTOR } from '~/constants/system.constant'
-import { isDev } from '~/utils/index.util'
+import { isDev } from '~/utils'
 import { getIp } from '../../utils/ip.util'
 import { LoggingInterceptor } from '../interceptors/logging.interceptor'
 type myError = {

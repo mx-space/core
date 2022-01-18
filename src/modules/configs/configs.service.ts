@@ -10,6 +10,7 @@ import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import camelcaseKeys from 'camelcase-keys'
 import { ClassConstructor, plainToClass } from 'class-transformer'
 import { validateSync, ValidatorOptions } from 'class-validator'
+import cluster from 'cluster'
 import { cloneDeep, mergeWith } from 'lodash'
 import { LeanDocument } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
@@ -17,7 +18,7 @@ import { API_VERSION } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event.constant'
 import { CacheService } from '~/processors/cache/cache.service'
-import { sleep } from '~/utils/index.util'
+import { sleep, workerEmit } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 import * as optionDtos from '../configs/configs.dto'
 import { UserModel } from '../user/user.model'
@@ -201,7 +202,11 @@ export class ConfigsService {
           this.validWithDto(MailOptionsDto, value),
         )
         if (option.enable) {
-          this.eventEmitter.emit(EventBusEvents.EmailInit)
+          if (cluster.isPrimary) {
+            this.eventEmitter.emit(EventBusEvents.EmailInit)
+          } else {
+            workerEmit(EventBusEvents.EmailInit)
+          }
         }
 
         return option
