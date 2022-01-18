@@ -18,7 +18,7 @@ import { API_VERSION } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event.constant'
 import { CacheService } from '~/processors/cache/cache.service'
-import { sleep, workerEmit } from '~/utils'
+import { sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 import * as optionDtos from '../configs/configs.dto'
 import { UserModel } from '../user/user.model'
@@ -89,30 +89,22 @@ export class ConfigsService {
     await redis.set(getRedisKey(RedisKeys.ConfigCache), JSON.stringify(config))
   }
 
-  public waitForConfigReady() {
-    // eslint-disable-next-line no-async-promise-executor
-    return new Promise<Readonly<IConfig>>(async (r, j) => {
-      // 开始等待, 后续调用直接返回
+  public async waitForConfigReady() {
+    if (this.configInitd) {
+      return await this.getConfig()
+    }
+
+    const maxCount = 10
+    let curCount = 0
+    do {
       if (this.configInitd) {
-        r(await this.getConfig())
-        return
+        return await this.getConfig()
       }
+      await sleep(100)
+      curCount += 1
+    } while (curCount < maxCount)
 
-      const maxCount = 10
-      let curCount = 0
-      do {
-        if (this.configInitd) {
-          r(await this.getConfig())
-          return
-        }
-        await sleep(100)
-        curCount += 1
-      } while (curCount < maxCount)
-
-      j(`重试 ${curCount} 次获取配置失败, 请检查数据库连接`)
-
-      return
-    })
+    throw `重试 ${curCount} 次获取配置失败, 请检查数据库连接`
   }
 
   public get defaultConfig() {
@@ -205,7 +197,7 @@ export class ConfigsService {
           if (cluster.isPrimary) {
             this.eventEmitter.emit(EventBusEvents.EmailInit)
           } else {
-            workerEmit(EventBusEvents.EmailInit)
+            this.redis.publish(EventBusEvents.EmailInit, '')
           }
         }
 

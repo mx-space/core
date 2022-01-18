@@ -6,6 +6,7 @@ import { createTransport } from 'nodemailer'
 import { EventBusEvents } from '~/constants/event.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { LinkModel } from '~/modules/link/link.model'
+import { CacheService } from '../cache/cache.service'
 import { AssetService } from './helper.asset.service'
 
 export enum ReplyMailType {
@@ -25,23 +26,14 @@ export class EmailService {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly assetService: AssetService,
+    private readonly cacheService: CacheService,
   ) {
     this.init()
     this.logger = new Logger(EmailService.name)
 
     if (cluster.isWorker) {
-      // listen email option change in node cluster
-      process.on('message', (message: any) => {
-        const { event } = message
-
-        switch (event) {
-          case EventBusEvents.EmailInit:
-            this.init()
-            break
-
-          default:
-            break
-        }
+      cacheService.subscribe(EventBusEvents.EmailInit, () => {
+        this.init()
       })
     }
   }

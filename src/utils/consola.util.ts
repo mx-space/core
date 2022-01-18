@@ -11,8 +11,10 @@ class DateTimeReporter extends FancyReporter {
     })
   }
 }
-export const consola = consola_.create({
+const consola = consola_.create({
   reporters: [new DateTimeReporter()],
   level: isDev || argv.verbose ? LogLevel.Trace : LogLevel.Info,
 })
+// HINT: must be called before any other log calls, export it in the end of your file
 consola.wrapAll()
+export { consola }
