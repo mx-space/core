@@ -65,6 +65,6 @@ exports.SECURITY = {
 }
 
 exports.CLUSTER = {
-  enable: argv.cluster ?? false,
-  workers: argv.cluster_workers ?? 8,
+  enable: argv.cluster ?? true,
+  workers: argv.cluster_workers ?? 2,
 }
