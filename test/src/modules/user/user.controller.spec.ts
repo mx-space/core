@@ -3,6 +3,7 @@ import { registerGlobal } from 'test/register-global'
 import { AuthService } from '~/modules/auth/auth.service'
 import { UserController } from '~/modules/user/user.controller'
 import { UserService } from '~/modules/user/user.service'
+import { CacheService } from '~/processors/cache/cache.service'
 registerGlobal()
 describe('test UserModule controller', () => {
   let userController: UserController
@@ -10,7 +11,11 @@ describe('test UserModule controller', () => {
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       controllers: [UserController],
-      providers: [UserService, AuthService],
+      providers: [
+        UserService,
+        AuthService,
+        { provide: CacheService, useValue: {} },
+      ],
     })
       .overrideProvider(UserService)
       .useValue({
