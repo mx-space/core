@@ -11,7 +11,6 @@ import { JwtStrategy } from './jwt.strategy'
 
 const getMachineId = () => {
   const id = machineIdSync()
-  if (cluster.isPrimary) consola.log('machine-id: ', id)
   return id
 }
 export const __secret: any =
