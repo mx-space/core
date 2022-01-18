@@ -75,7 +75,7 @@ specifiers:
   lodash: '*'
   marked: 4.0.9
   mkdirp: '*'
-  mongodb-memory-server: 8.1.0
+  mongodb-memory-server: 8.2.0
   mongoose: '*'
   mongoose-lean-id: 0.3.0
   mongoose-lean-virtuals: 0.9.0
@@ -199,7 +199,7 @@ devDependencies:
   ioredis: 4.28.3
   jest: 27.4.7_ts-node@10.4.0
   lint-staged: 12.1.7
-  mongodb-memory-server: 8.1.0
+  mongodb-memory-server: 8.2.0
   prettier: 2.5.1
   redis-memory-server: 0.5.0
   rimraf: 3.0.2
@@ -3252,6 +3252,7 @@ packages:
   /camelcase/6.2.0:
     resolution: {integrity: sha512-c7wVvbw3f37nuobQNtgsgG9POC9qMbNuMQmTCqZv23b6MIz0fcYpBiOlv9gEN/hdLdnZTDQhg6e9Dq5M1vKvfg==}
     engines: {node: '>=10'}
+    dev: false
 
   /camelcase/6.3.0:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
@@ -5866,7 +5867,7 @@ packages:
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
       '@jest/types': 27.4.2
-      camelcase: 6.2.0
+      camelcase: 6.3.0
       chalk: 4.1.2
       jest-get-type: 27.4.0
       leven: 3.1.0
@@ -6522,8 +6523,8 @@ packages:
       '@types/whatwg-url': 8.2.1
       whatwg-url: 11.0.0
 
-  /mongodb-memory-server-core/8.1.0:
-    resolution: {integrity: sha512-U9NZc07OqiOOymrYn6g9yrAaB2VLp5RFUJ+vhjxcgrvZ/7tHQVX2OmhQfOlevzW1Pt1KvFhqe7ysioysPxQXYg==}
+  /mongodb-memory-server-core/8.2.0:
+    resolution: {integrity: sha512-7NO+PJQ74wpo/e/fJYIvjjkbhMRn27yFTQzZZKf94y1Cqw/2pJZ+RSI8QJclT53/lyVyx0BLgA/ik6viKy4hDg==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@types/tmp': 0.2.3
@@ -6546,12 +6547,12 @@ packages:
       - supports-color
     dev: true
 
-  /mongodb-memory-server/8.1.0:
-    resolution: {integrity: sha512-nV3bS2XxguZC/KUAgNyX/bYruxlW/xdwYKIcbq4VTWiSFdwXJAcn4gh1WVrlMcfRFOYF4Pyk/NrZeeuqpbM+Bw==}
+  /mongodb-memory-server/8.2.0:
+    resolution: {integrity: sha512-ahp93rbJzvqVInJ6EOH4pkdfcm3+5gGQ0WjTQvyB8X3n61jn7yITKGCE0wwvg5JME32XemiQUNAp44XdlD+fpg==}
     engines: {node: '>=12.22.0'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 8.1.0
+      mongodb-memory-server-core: 8.2.0
       tslib: 2.3.1
     transitivePeerDependencies:
       - supports-color
