@@ -11,6 +11,7 @@ import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { MyLogger } from './processors/logger/logger.service'
+import { isTest } from './utils'
 const Origin = Array.isArray(CROSS_DOMAIN.allowedOrigins)
   ? CROSS_DOMAIN.allowedOrigins
   : false
@@ -59,7 +60,7 @@ async function bootstrap() {
     }),
   )
   app.useGlobalGuards(new SpiderGuard())
-  app.useWebSocketAdapter(new RedisIoAdapter(app))
+  !isTest && app.useWebSocketAdapter(new RedisIoAdapter(app))
 
   if (isDev) {
     const { DocumentBuilder, SwaggerModule } = await import('@nestjs/swagger')
