@@ -55,7 +55,8 @@
   },
   "bump": {
     "before": [
-      "git pull --rebase"
+      "git pull --rebase",
+      "ni"
     ],
     "after": [
       "sh ./scripts/assets-push.sh"
