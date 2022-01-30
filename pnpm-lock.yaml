@@ -20,7 +20,7 @@ specifiers:
   '@nestjs/platform-socket.io': 8.2.5
   '@nestjs/schedule': 1.0.2
   '@nestjs/schematics': 8.0.5
-  '@nestjs/swagger': 5.1.5
+  '@nestjs/swagger': 5.2.0
   '@nestjs/testing': 8.2.5
   '@nestjs/websockets': 8.2.5
   '@socket.io/redis-adapter': 7.1.0
@@ -119,7 +119,7 @@ dependencies:
   '@nestjs/platform-fastify': 8.2.5_dd9ef2e1e23f087665d46fe53bbbed58
   '@nestjs/platform-socket.io': 8.2.5_b5f36ec2f62cc3c8d3cc21b80f334ad8
   '@nestjs/schedule': 1.0.2_8b618827ffa1784f2e7b042a97d87b6c
-  '@nestjs/swagger': 5.1.5_dff4c2a81d6d21516e1ab341abe507be
+  '@nestjs/swagger': 5.2.0_dff4c2a81d6d21516e1ab341abe507be
   '@nestjs/websockets': 8.2.5_216d73995b79f49b555b0d7d53934f1f
   '@socket.io/redis-adapter': 7.1.0
   '@socket.io/redis-emitter': 4.1.1
@@ -1706,8 +1706,8 @@ packages:
       - chokidar
     dev: true
 
-  /@nestjs/swagger/5.1.5_dff4c2a81d6d21516e1ab341abe507be:
-    resolution: {integrity: sha512-jvsgciVEFcYVVEuLdNAmgJDpFSQzIoukg+Ovz1vJ97OeCprx0sVhmocn13nCl/dEwIkwoM3eby9OiaccX0A+3A==}
+  /@nestjs/swagger/5.2.0_dff4c2a81d6d21516e1ab341abe507be:
+    resolution: {integrity: sha512-wcW2KCe7irwBw0WKsb03uFk4gnjqNcAcJxXGZxi6ljFiDgyLrQtx5MpE95o703tnn4V/hZR8MqMNFOXuup7Pqw==}
     peerDependencies:
       '@nestjs/common': ^8.0.0
       '@nestjs/core': ^8.0.0
@@ -1722,7 +1722,7 @@ packages:
     dependencies:
       '@nestjs/common': 8.2.5_17d6ce38cc74803538e351a8f2ca91ba
       '@nestjs/core': 8.2.5_b47d24345f8c2ad123c7afb4f52057f0
-      '@nestjs/mapped-types': 1.0.0_156c8e2af2c7dad431aaf14c3b14437b
+      '@nestjs/mapped-types': 1.0.1_156c8e2af2c7dad431aaf14c3b14437b
       fastify-swagger: 4.13.1
       lodash: 4.17.21
       path-to-regexp: 3.2.0
@@ -2829,7 +2829,7 @@ packages:
     engines: {node: '>= 8'}
     dependencies:
       normalize-path: 3.0.0
-      picomatch: 2.3.0
+      picomatch: 2.3.1
 
   /apollo-datasource/3.3.1:
     resolution: {integrity: sha512-Z3a8rEUXVPIZ1p8xrFL8bcNhWmhOmovgDArvwIwmJOBnh093ZpRfO+ESJEDAN4KswmyzCLDAwjsW4zQOONdRUw==}
@@ -6499,7 +6499,7 @@ packages:
     engines: {node: '>=8.6'}
     dependencies:
       braces: 3.0.2
-      picomatch: 2.3.0
+      picomatch: 2.3.1
 
   /middie/5.3.0:
     resolution: {integrity: sha512-uq6Ob4dmmHeT6rJpBDWVwSxBzxzKlBvnrZdLSRJeuhHzljvZ6ccgLP/HaShgfiYrQvekRH0KUe/G1WTu/IrXsQ==}
@@ -7194,14 +7194,9 @@ packages:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
     dev: true
 
-  /picomatch/2.3.0:
-    resolution: {integrity: sha512-lY1Q/PiJGC2zOv/z391WOTD+Z02bCgsFfvxoXXf6h7kv9o+WmsmzYqrAwY63sNgOxE4xEdq0WyUnXfKeBrSvYw==}
-    engines: {node: '>=8.6'}
-
   /picomatch/2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
-    dev: true
 
   /pino-std-serializers/3.2.0:
     resolution: {integrity: sha512-EqX4pwDPrt3MuOAAUBMU0Tk5kR/YcCM5fNPEzgCO2zJ5HfX0vbiH9HbJglnyeQsN96Kznae6MWD47pZB5avTrg==}
@@ -7437,7 +7432,7 @@ packages:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
     dependencies:
-      picomatch: 2.3.0
+      picomatch: 2.3.1
 
   /rechoir/0.6.2:
     resolution: {integrity: sha1-hSBLVNuoLVdC4oyWdW70OvUOM4Q=}

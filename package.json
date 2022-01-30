@@ -74,7 +74,7 @@
     "@nestjs/platform-fastify": "8.2.5",
     "@nestjs/platform-socket.io": "8.2.5",
     "@nestjs/schedule": "1.0.2",
-    "@nestjs/swagger": "5.1.5",
+    "@nestjs/swagger": "5.2.0",
     "@nestjs/websockets": "8.2.5",
     "@socket.io/redis-adapter": "7.1.0",
     "@socket.io/redis-emitter": "4.1.1",
