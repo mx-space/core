@@ -1,7 +1,17 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql'
 import { ApiHideProperty } from '@nestjs/swagger'
 import { modelOptions, plugin, prop } from '@typegoose/typegoose'
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { Type } from 'class-transformer'
+import {
+  IsBoolean,
+  IsHexColor,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUrl,
+  ValidateNested,
+} from 'class-validator'
 import LeanId from 'mongoose-lean-id'
 import { default as mongooseLeanVirtuals } from 'mongoose-lean-virtuals'
 import Paginate from 'mongoose-paginate-v2'
@@ -59,20 +69,30 @@ export class Paginator {
   schemaOptions: { _id: false },
 })
 @ObjectType()
-class Image {
+abstract class ImageModel {
   @prop()
+  @IsOptional()
+  @IsNumber()
   width?: number
 
   @prop()
+  @IsOptional()
+  @IsNumber()
   height?: number
 
   @prop()
+  @IsOptional()
+  @IsHexColor()
   accent?: string
 
   @prop()
+  @IsString()
+  @IsOptional()
   type?: string
 
   @prop()
+  @IsOptional()
+  @IsUrl()
   src: string
 }
 
@@ -103,10 +123,13 @@ export class WriteBaseModel extends BaseCommentIndexModel {
   @IsString()
   text: string
 
-  @prop({ type: Image })
+  @prop({ type: ImageModel })
   @ApiHideProperty()
-  @Field(() => Image, { nullable: true })
-  images?: Image[]
+  @Field(() => ImageModel, { nullable: true })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ImageModel)
+  images?: ImageModel[]
 
   @prop({ default: null })
   @ApiHideProperty()
@@ -131,4 +154,4 @@ export class CountMixed {
   like?: number
 }
 
-export type { Image as TextImageRecordType }
+export type { ImageModel as TextImageRecordType }
