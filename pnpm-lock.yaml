@@ -59,7 +59,7 @@ specifiers:
   ejs: 3.1.6
   eslint: '*'
   fastify-cookie: 5.5.0
-  fastify-multipart: 5.2.1
+  fastify-multipart: 5.3.0
   fastify-swagger: 4.13.1
   graphql: 15.7.2
   html-minifier: 4.0.0
@@ -140,7 +140,7 @@ dependencies:
   dayjs: 1.10.7
   ejs: 3.1.6
   fastify-cookie: 5.5.0
-  fastify-multipart: 5.2.1
+  fastify-multipart: 5.3.0
   fastify-swagger: 4.13.1
   graphql: 15.7.2
   html-minifier: 4.0.0
@@ -2829,7 +2829,7 @@ packages:
     engines: {node: '>= 8'}
     dependencies:
       normalize-path: 3.0.0
-      picomatch: 2.3.0
+      picomatch: 2.3.1
 
   /apollo-datasource/3.3.1:
     resolution: {integrity: sha512-Z3a8rEUXVPIZ1p8xrFL8bcNhWmhOmovgDArvwIwmJOBnh093ZpRfO+ESJEDAN4KswmyzCLDAwjsW4zQOONdRUw==}
@@ -4517,8 +4517,8 @@ packages:
       fastify-plugin: 3.0.0
     dev: false
 
-  /fastify-multipart/5.2.1:
-    resolution: {integrity: sha512-dy7yogJ4ARaQALGbi4dQtyYziNBuUJgGgTGmp3eS3+roAwLMDBsWz0OvBzJHth4xS/OW/js26xNdW6VlxT8htA==}
+  /fastify-multipart/5.3.0:
+    resolution: {integrity: sha512-SsPhHh8BtqAsONXUj7LH7drp6wPxeRE56dmRmXv3bjqXWYZvYBIEMPWbFk6dL1922APTBsYNn2uvGcQv16oVkg==}
     dependencies:
       '@fastify/busboy': 1.0.0
       deepmerge: 4.2.2
@@ -6499,7 +6499,7 @@ packages:
     engines: {node: '>=8.6'}
     dependencies:
       braces: 3.0.2
-      picomatch: 2.3.0
+      picomatch: 2.3.1
 
   /middie/5.3.0:
     resolution: {integrity: sha512-uq6Ob4dmmHeT6rJpBDWVwSxBzxzKlBvnrZdLSRJeuhHzljvZ6ccgLP/HaShgfiYrQvekRH0KUe/G1WTu/IrXsQ==}
@@ -7194,14 +7194,9 @@ packages:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
     dev: true
 
-  /picomatch/2.3.0:
-    resolution: {integrity: sha512-lY1Q/PiJGC2zOv/z391WOTD+Z02bCgsFfvxoXXf6h7kv9o+WmsmzYqrAwY63sNgOxE4xEdq0WyUnXfKeBrSvYw==}
-    engines: {node: '>=8.6'}
-
   /picomatch/2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
-    dev: true
 
   /pino-std-serializers/3.2.0:
     resolution: {integrity: sha512-EqX4pwDPrt3MuOAAUBMU0Tk5kR/YcCM5fNPEzgCO2zJ5HfX0vbiH9HbJglnyeQsN96Kznae6MWD47pZB5avTrg==}
@@ -7437,7 +7432,7 @@ packages:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
     dependencies:
-      picomatch: 2.3.0
+      picomatch: 2.3.1
 
   /rechoir/0.6.2:
     resolution: {integrity: sha1-hSBLVNuoLVdC4oyWdW70OvUOM4Q=}
