@@ -1,7 +1,5 @@
 import { marked } from 'marked'
 
-import Vibrant = require('node-vibrant')
-
 export const pickImagesFromMarkdown = (text: string) => {
   const ast = marked.lexer(text)
   const images = [] as string[]
@@ -24,6 +22,7 @@ export async function getAverageRGB(
   if (!buffer) {
     return undefined
   }
+  const Vibrant = require('node-vibrant')
   try {
     const res = await Vibrant.from(buffer).getPalette()
 
