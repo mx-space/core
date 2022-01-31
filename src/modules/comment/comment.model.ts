@@ -7,6 +7,7 @@ import {
 } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import { Query, Types } from 'mongoose'
+import { URL } from 'url'
 import { BaseModel } from '~/shared/model/base.model'
 import { getAvatar } from '~/utils'
 import { NoteModel } from '../note/note.model'
@@ -58,7 +59,12 @@ export class CommentModel extends BaseModel {
   @prop({ trim: true })
   mail?: string
 
-  @prop({ trim: true })
+  @prop({
+    trim: true,
+    set(val) {
+      return new URL(val).origin
+    },
+  })
   url?: string
 
   @prop({ required: true })

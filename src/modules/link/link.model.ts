@@ -1,7 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { modelOptions, prop } from '@typegoose/typegoose'
 import { Transform } from 'class-transformer'
-import { IsEmail, IsEnum, IsOptional, IsString, IsUrl } from 'class-validator'
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+} from 'class-validator'
 import { range } from 'lodash'
 import { URL } from 'url'
 import { BaseModel } from '~/shared/model/base.model'
@@ -24,6 +31,7 @@ export enum LinkState {
 export class LinkModel extends BaseModel {
   @prop({ required: true, trim: true, unique: true })
   @IsString()
+  @MaxLength(30)
   /**
    * name is site name
    */
@@ -48,11 +56,13 @@ export class LinkModel extends BaseModel {
   @prop({ trim: true })
   // 对空字符串处理
   @Transform(({ value }) => (value === '' ? null : value))
+  @MaxLength(200)
   avatar?: string
 
   @IsOptional()
   @IsString()
   @prop({ trim: true })
+  @MaxLength(150)
   description?: string
 
   @IsOptional()
@@ -71,6 +81,7 @@ export class LinkModel extends BaseModel {
   @IsOptional()
   // 对空字符串处理
   @Transform(({ value }) => (value === '' ? null : value))
+  @MaxLength(50)
   email?: string
   get hide() {
     return this.state === LinkState.Audit
