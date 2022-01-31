@@ -1,13 +1,12 @@
 {
-  "name": "server-next",
+  "name": "@mx-space/server",
   "version": "3.15.3",
-  "description": "",
   "author": "Innei <https://innei.ren>",
   "private": true,
   "license": "MIT",
   "dashboard": {
     "repo": "mx-space/admin-next",
-    "version": "3.13.0"
+    "version": "3.13.1"
   },
   "husky": {
     "hooks": {
