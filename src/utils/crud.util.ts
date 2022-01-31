@@ -75,25 +75,23 @@ export function BaseCrudFactory<
     @Put('/:id')
     @Auth()
     async update(@Body() body: Dto, @Param() param: MongoIdDto) {
-      await this._model
-        .updateOne({ _id: param.id as any }, {
-          ...body,
-          modified: new Date(),
-        } as any)
+      return await this._model
+        .findOneAndUpdate(
+          { _id: param.id as any },
+          {
+            ...body,
+            modified: new Date(),
+          } as any,
+          { new: true },
+        )
         .lean()
-      return this._model.findById(param.id as any).lean()
     }
 
     @Patch('/:id')
     @Auth()
     @HttpCode(204)
     async patch(@Body() body: PDto, @Param() param: MongoIdDto) {
-      await this._model
-        .updateOne({ _id: param.id as any }, {
-          ...body,
-          modified: new Date(),
-        } as any)
-        .lean()
+      await this.update(body, param)
       return
     }
 

@@ -3,6 +3,7 @@ import { modelOptions, prop } from '@typegoose/typegoose'
 import { Transform } from 'class-transformer'
 import { IsEmail, IsEnum, IsOptional, IsString, IsUrl } from 'class-validator'
 import { range } from 'lodash'
+import { URL } from 'url'
 import { BaseModel } from '~/shared/model/base.model'
 
 export enum LinkType {
@@ -13,6 +14,8 @@ export enum LinkType {
 export enum LinkState {
   Pass,
   Audit,
+  Outdate,
+  Banned,
 }
 /**
  * Link Model also used to validate dto
@@ -26,8 +29,18 @@ export class LinkModel extends BaseModel {
    */
   name: string
 
-  @prop({ required: true, trim: true, unique: true })
-  @IsUrl({ require_protocol: true, protocols: ['https'] })
+  @prop({
+    required: true,
+    trim: true,
+    unique: true,
+    set(val) {
+      return new URL(val).origin
+    },
+  })
+  @IsUrl(
+    { require_protocol: true, protocols: ['https'] },
+    { message: 'only https protocol support' },
+  )
   url: string
 
   @IsOptional()
@@ -63,6 +76,6 @@ export class LinkModel extends BaseModel {
     return this.state === LinkState.Audit
   }
   set hide(value) {
-    this.state = value ? LinkState.Audit : LinkState.Pass
+    return
   }
 }

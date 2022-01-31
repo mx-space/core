@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import { InjectModel } from 'nestjs-typegoose'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'
@@ -6,6 +6,7 @@ import {
   EmailService,
   LinkApplyEmailType,
 } from '~/processors/helper/helper.email.service'
+import { HttpService } from '~/processors/helper/helper.http.service'
 import { isDev } from '~/utils'
 import { ConfigsService } from '../configs/configs.service'
 import { LinkModel, LinkState, LinkType } from './link.model'
@@ -18,6 +19,7 @@ export class LinkService {
     private readonly emailService: EmailService,
     private readonly configs: ConfigsService,
     private readonly adminGateway: AdminEventsGateway,
+    private readonly http: HttpService,
   ) {}
 
   public get model() {
@@ -31,8 +33,8 @@ export class LinkService {
         state: LinkState.Audit,
       })
 
-      process.nextTick(async () => {
-        await this.adminGateway.broadcast(EventTypes.LINK_APPLY, doc)
+      process.nextTick(() => {
+        this.adminGateway.broadcast(EventTypes.LINK_APPLY, doc)
       })
     } catch {
       throw new BadRequestException('请不要重复申请友链哦')
@@ -53,7 +55,7 @@ export class LinkService {
   }
 
   async getCount() {
-    const [audit, friends, collection] = await Promise.all([
+    const [audit, friends, collection, outdate, banned] = await Promise.all([
       this.model.countDocuments({ state: LinkState.Audit }),
       this.model.countDocuments({
         type: LinkType.Friend,
@@ -62,11 +64,19 @@ export class LinkService {
       this.model.countDocuments({
         type: LinkType.Collection,
       }),
+      this.model.countDocuments({
+        state: LinkState.Outdate,
+      }),
+      this.model.countDocuments({
+        state: LinkState.Banned,
+      }),
     ])
     return {
       audit,
       friends,
       collection,
+      outdate,
+      banned,
     }
   }
 
@@ -77,7 +87,7 @@ export class LinkService {
     const enable = (await this.configs.get('mailOptions')).enable
     if (!enable || isDev) {
       console.log(`
-      TO: ${model.email}
+      To: ${model.email}
       你的友链已通过
         站点标题: ${model.name}
         站点网站: ${model.url}
@@ -110,5 +120,39 @@ export class LinkService {
         template: LinkApplyEmailType.ToMaster,
       })
     })
+  }
+  /** 确定友链存活状态 */
+  async checkLinkHealth() {
+    const links = await this.model.find({ state: LinkState.Pass })
+    const health = await Promise.all(
+      links.map(({ id, url }) => {
+        Logger.debug(
+          `检查友链 ${id} 的健康状态: GET -> ${url}`,
+          LinkService.name,
+        )
+        return this.http.axiosRef
+          .get(url)
+          .then((res) => {
+            return {
+              status: res.status,
+              id,
+            }
+          })
+          .catch((err) => {
+            return {
+              id,
+              status: err.response?.status || 'ERROR',
+              message: err.message,
+            }
+          })
+      }),
+    ).then((arr) =>
+      arr.reduce((acc, cur) => {
+        acc[cur.id] = cur
+        return acc
+      }, {}),
+    )
+
+    return health
   }
 }

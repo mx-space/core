@@ -22,6 +22,7 @@ export async function getAverageRGB(
   if (!buffer) {
     return undefined
   }
+
   const Vibrant = require('node-vibrant')
   try {
     const res = await Vibrant.from(buffer).getPalette()

@@ -48,6 +48,7 @@ export class LinkController {
     return await this.linkService.getCount()
   }
 
+  /** 申请友链 */
   @Post('/audit')
   @HttpCode(204)
   async applyForLink(@Body() body: LinkModel, @Query() query: LinkQueryDto) {
@@ -71,5 +72,11 @@ export class LinkController {
       }
     })
     return
+  }
+
+  @Auth()
+  @Get('/health')
+  async checkHealth() {
+    return this.linkService.checkLinkHealth()
   }
 }
