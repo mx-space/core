@@ -131,7 +131,13 @@ export class LinkService {
           LinkService.name,
         )
         return this.http.axiosRef
-          .get(url)
+          .get(url, {
+            timeout: 5000,
+            'axios-retry': {
+              retries: 1,
+              shouldResetTimeout: true,
+            },
+          })
           .then((res) => {
             return {
               status: res.status,
