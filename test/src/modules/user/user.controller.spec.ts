@@ -1,10 +1,9 @@
 import { Test } from '@nestjs/testing'
-import { registerGlobal } from 'test/register-global'
 import { AuthService } from '~/modules/auth/auth.service'
 import { UserController } from '~/modules/user/user.controller'
 import { UserService } from '~/modules/user/user.service'
 import { CacheService } from '~/processors/cache/cache.service'
-registerGlobal()
+
 describe('test UserModule controller', () => {
   let userController: UserController
 

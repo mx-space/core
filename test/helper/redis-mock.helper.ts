@@ -1,5 +1,6 @@
 import IORedis from 'ioredis'
 import RedisMemoryServer from 'redis-memory-server'
+import { CacheService } from '~/processors/cache/cache.service'
 
 export class MockCacheService {
   private client: IORedis.Redis
@@ -24,19 +25,24 @@ export class MockCacheService {
   }
 }
 
-export const createMockRedis = async () => {
-  const redisServer = new RedisMemoryServer()
+const createMockRedis = async () => {
+  const redisServer = new RedisMemoryServer({})
 
   const redisHost = await redisServer.getHost()
   const redisPort = await redisServer.getPort()
 
-  const service = new MockCacheService(redisPort, redisHost)
+  const cacheService = new MockCacheService(redisPort, redisHost)
 
   return {
-    service,
+    connect: () => null,
+    CacheService: cacheService,
+    // token: 'CacheService' as const,
+    token: CacheService,
     async close() {
-      await service.getClient().quit()
+      await cacheService.getClient().quit()
       await redisServer.stop()
     },
   }
 }
+
+export const redisHelper = createMockRedis()

@@ -4,10 +4,7 @@ import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
 import { getModelToken } from 'nestjs-typegoose'
 import { dbHelper } from 'test/helper/db-mock.helper'
-import {
-  createMockRedis,
-  MockCacheService,
-} from 'test/helper/redis-mock.helper'
+import { MockCacheService, redisHelper } from 'test/helper/redis-mock.helper'
 import { RedisKeys } from '~/constants/cache.constant'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
@@ -17,18 +14,18 @@ import { getRedisKey } from '~/utils/redis.util'
 
 describe('Test ConfigsService', () => {
   let service: ConfigsService
-  let closeRedis: any
+
   let redisService: MockCacheService
   afterAll(async () => {
     await dbHelper.clear()
     await dbHelper.close()
-    await closeRedis()
+    await (await redisHelper).close()
   })
   const optionModel = getModelForClass(OptionModel)
   const mockEmitFn = jest.fn()
   beforeAll(async () => {
-    const { service: redisService$, close } = await createMockRedis()
-    closeRedis = close
+    const { CacheService: redisService$ } = await redisHelper
+
     redisService = redisService$
     await dbHelper.connect()
 

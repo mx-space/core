@@ -1,3 +1,10 @@
+import { getModelForClass } from '@typegoose/typegoose'
+import {
+  AnyParamConstructor,
+  BeAnObject,
+  IModelOptions,
+  ReturnModelType,
+} from '@typegoose/typegoose/lib/types'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import mongoose from 'mongoose'
 
@@ -42,4 +49,11 @@ export const dbHelper = {
   connect,
   close: closeDatabase,
   clear: clearDatabase,
+
+  getModel<U extends AnyParamConstructor<any>, QueryHelpers = BeAnObject>(
+    cl: U,
+    options?: IModelOptions,
+  ): ReturnModelType<U, QueryHelpers> {
+    return getModelForClass(cl, options)
+  },
 }

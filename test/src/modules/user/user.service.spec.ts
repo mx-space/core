@@ -1,12 +1,10 @@
 import { BadRequestException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { getModelToken } from 'nestjs-typegoose'
-import { registerGlobal } from 'test/register-global'
 import { AuthService } from '~/modules/auth/auth.service'
 import { UserModel } from '~/modules/user/user.model'
 import { UserService } from '~/modules/user/user.service'
 import { CacheService } from '~/processors/cache/cache.service'
-registerGlobal()
 
 describe('test UserModule service', () => {
   let userService: UserService
