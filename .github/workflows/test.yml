@@ -4,13 +4,10 @@
 name: Node.js Test CI
 
 on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+  workflow_call:
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     strategy:
