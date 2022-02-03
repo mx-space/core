@@ -59,73 +59,82 @@ export class AnalyzeController {
 
   @Get('/aggregate')
   async getFragment() {
-    const day = await this.service.getIpAndPvAggregate('day', true)
+    const getIpAndPvAggregate = async () => {
+      const day = await this.service.getIpAndPvAggregate('day', true)
 
-    const now = new Date()
-    const nowHour = now.getHours()
-    const dayData = Array(24)
-      .fill(undefined)
-      .map((v, i) => {
-        return [
-          {
-            hour: i === nowHour ? '现在' : i + '时',
-            key: 'ip',
-            value: day[i.toString().padStart(2, '0')]?.ip || 0,
-          },
-          {
-            hour: i === nowHour ? '现在' : i + '时',
-            key: 'pv',
-            value: day[i.toString().padStart(2, '0')]?.pv || 0,
-          },
-        ]
-      })
-    const all = (await this.service.getIpAndPvAggregate('all')) as any[]
-
-    const weekData = all
-      .slice(0, 7)
-      .map((item) => {
-        const date =
-          '周' +
-          ['日', '一', '二', '三', '四', '五', '六'][
-            dayjs(item.date).get('day')
+      const now = new Date()
+      const nowHour = now.getHours()
+      const dayData = Array(24)
+        .fill(undefined)
+        .map((v, i) => {
+          return [
+            {
+              hour: i === nowHour ? '现在' : i + '时',
+              key: 'ip',
+              value: day[i.toString().padStart(2, '0')]?.ip || 0,
+            },
+            {
+              hour: i === nowHour ? '现在' : i + '时',
+              key: 'pv',
+              value: day[i.toString().padStart(2, '0')]?.pv || 0,
+            },
           ]
-        return [
-          {
-            day: date,
-            key: 'ip',
-            value: item.ip,
-          },
-          {
-            day: date,
-            key: 'pv',
-            value: item.pv,
-          },
-        ]
-      })
-      .reverse()
+        })
+      const all = (await this.service.getIpAndPvAggregate('all')) as any[]
 
-    const monthData = all
-      .slice(0, 30)
-      .map((item) => {
-        return [
-          {
-            date: item.date.split('-').slice(1, 3).join('-'),
-            key: 'ip',
-            value: item.ip,
-          },
-          {
-            date: item.date.split('-').slice(1, 3).join('-'),
-            key: 'pv',
-            value: item.pv,
-          },
-        ]
-      })
-      .reverse()
+      const weekData = all
+        .slice(0, 7)
+        .map((item) => {
+          const date =
+            '周' +
+            ['日', '一', '二', '三', '四', '五', '六'][
+              dayjs(item.date).get('day')
+            ]
+          return [
+            {
+              day: date,
+              key: 'ip',
+              value: item.ip,
+            },
+            {
+              day: date,
+              key: 'pv',
+              value: item.pv,
+            },
+          ]
+        })
+        .reverse()
 
-    const [paths, total] = await Promise.all([
-      this.service.getRangeOfTopPathVisitor(),
-      this.service.getCallTime(),
-    ])
+      const monthData = all
+        .slice(0, 30)
+        .map((item) => {
+          return [
+            {
+              date: item.date.split('-').slice(1, 3).join('-'),
+              key: 'ip',
+              value: item.ip,
+            },
+            {
+              date: item.date.split('-').slice(1, 3).join('-'),
+              key: 'pv',
+              value: item.pv,
+            },
+          ]
+        })
+        .reverse()
+      return {
+        dayData,
+        weekData,
+        monthData,
+      }
+    }
+    const [paths, total, today_ips, { dayData, monthData, weekData }] =
+      await Promise.all([
+        this.service.getRangeOfTopPathVisitor(),
+        this.service.getCallTime(),
+        this.service.getTodayAccessIp(),
+        getIpAndPvAggregate(),
+      ])
     return {
       today: dayData.flat(1),
       weeks: weekData.flat(1),
@@ -133,7 +142,7 @@ export class AnalyzeController {
       paths: paths.slice(50),
 
       total,
-      today_ips: await this.service.getTodayAccessIp(),
+      today_ips,
     }
   }
 

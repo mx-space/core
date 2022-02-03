@@ -4,7 +4,7 @@ import dayjs from 'dayjs'
 import { merge } from 'lodash'
 import { PipelineStage } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
-import { RedisItems, RedisKeys } from '~/constants/cache.constant'
+import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { OptionModel } from '../configs/configs.model'
@@ -133,103 +133,104 @@ export class AnalyzeService {
       }
     }
 
-    const res = await this.analyzeModel.aggregate([
-      { $match: cond },
-      {
-        $project: {
-          _id: 1,
-          timestamp: 1,
-          hour: {
-            $dateToString: {
-              format: '%H',
-              date: { $subtract: ['$timestamp', 0] },
-              timezone: '+08:00',
+    const [res, res2] = await Promise.all([
+      this.analyzeModel.aggregate([
+        { $match: cond },
+        {
+          $project: {
+            _id: 1,
+            timestamp: 1,
+            hour: {
+              $dateToString: {
+                format: '%H',
+                date: { $subtract: ['$timestamp', 0] },
+                timezone: '+08:00',
+              },
             },
-          },
-          date: {
-            $dateToString: {
-              format: '%Y-%m-%d',
-              date: { $subtract: ['$timestamp', 0] },
-              timezone: '+08:00',
+            date: {
+              $dateToString: {
+                format: '%Y-%m-%d',
+                date: { $subtract: ['$timestamp', 0] },
+                timezone: '+08:00',
+              },
             },
           },
         },
-      },
-      {
-        $group: {
-          _id: type === 'day' ? '$hour' : '$date',
+        {
+          $group: {
+            _id: type === 'day' ? '$hour' : '$date',
 
-          pv: {
-            $sum: 1,
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          ...(type === 'day' ? { hour: '$_id' } : { date: '$_id' }),
-          pv: 1,
-        },
-      },
-      {
-        $sort: {
-          date: -1,
-        },
-      },
-    ])
-
-    const res2 = await this.analyzeModel.aggregate([
-      { $match: cond },
-      {
-        $project: {
-          _id: 1,
-          timestamp: 1,
-          ip: 1,
-          hour: {
-            $dateToString: {
-              format: '%H',
-              date: { $subtract: ['$timestamp', 0] },
-              timezone: '+08:00',
-            },
-          },
-          date: {
-            $dateToString: {
-              format: '%Y-%m-%d',
-              date: { $subtract: ['$timestamp', 0] },
-              timezone: '+08:00',
+            pv: {
+              $sum: 1,
             },
           },
         },
-      },
-      {
-        $group: {
-          _id:
-            type === 'day'
-              ? { ip: '$ip', hour: '$hour' }
-              : { ip: '$ip', date: '$date' },
-        },
-      },
-
-      {
-        $group: {
-          _id: type === 'day' ? '$_id.hour' : '$_id.date',
-          ip: {
-            $sum: 1,
+        {
+          $project: {
+            _id: 0,
+            ...(type === 'day' ? { hour: '$_id' } : { date: '$_id' }),
+            pv: 1,
           },
         },
-      },
-      {
-        $project: {
-          _id: 0,
-          ...(type === 'day' ? { hour: '$_id' } : { date: '$_id' }),
-          ip: 1,
+        {
+          $sort: {
+            date: -1,
+          },
         },
-      },
-      {
-        $sort: {
-          date: -1,
+      ]),
+      this.analyzeModel.aggregate([
+        { $match: cond },
+        {
+          $project: {
+            _id: 1,
+            timestamp: 1,
+            ip: 1,
+            hour: {
+              $dateToString: {
+                format: '%H',
+                date: { $subtract: ['$timestamp', 0] },
+                timezone: '+08:00',
+              },
+            },
+            date: {
+              $dateToString: {
+                format: '%Y-%m-%d',
+                date: { $subtract: ['$timestamp', 0] },
+                timezone: '+08:00',
+              },
+            },
+          },
         },
-      },
+        {
+          $group: {
+            _id:
+              type === 'day'
+                ? { ip: '$ip', hour: '$hour' }
+                : { ip: '$ip', date: '$date' },
+          },
+        },
+
+        {
+          $group: {
+            _id: type === 'day' ? '$_id.hour' : '$_id.date',
+            ip: {
+              $sum: 1,
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            ...(type === 'day' ? { hour: '$_id' } : { date: '$_id' }),
+            ip: 1,
+          },
+        },
+        {
+          $sort: {
+            date: -1,
+          },
+        },
+      ]),
     ])
     const arr = merge(res, res2)
     if (returnObj) {
@@ -286,9 +287,7 @@ export class AnalyzeService {
 
   async getTodayAccessIp(): Promise<string[]> {
     const redis = this.cacheService.getClient()
-    const fromRedisIps = await redis.smembers(
-      getRedisKey(RedisKeys.Access, RedisItems.Ips),
-    )
+    const fromRedisIps = await redis.smembers(getRedisKey(RedisKeys.AccessIp))
 
     return fromRedisIps
   }

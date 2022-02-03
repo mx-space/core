@@ -8,7 +8,7 @@ import { rm, writeFile } from 'fs/promises'
 import mkdirp from 'mkdirp'
 import { InjectModel } from 'nestjs-typegoose'
 import { CronDescription } from '~/common/decorator/cron-description.decorator'
-import { RedisItems, RedisKeys } from '~/constants/cache.constant'
+import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event.constant'
 import {
   LOCAL_BOT_LIST_DATA_FILE_PATH,
@@ -154,9 +154,7 @@ export class CronService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'resetIPAccess' })
   @CronDescription('清理 IP 访问记录')
   async resetIPAccess() {
-    await this.cacheService
-      .getClient()
-      .del(getRedisKey(RedisKeys.Access, RedisItems.Ips))
+    await this.cacheService.getClient().del(getRedisKey(RedisKeys.AccessIp))
 
     this.logger.log('--> 清理 IP 访问记录成功')
   }

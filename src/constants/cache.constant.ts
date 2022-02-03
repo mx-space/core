@@ -1,5 +1,5 @@
 export enum RedisKeys {
-  Access = 'access',
+  AccessIp = 'access_ip',
   Like = 'like',
   Read = 'read',
   LoginRecord = 'login_record',
@@ -9,10 +9,6 @@ export enum RedisKeys {
   AdminPage = 'admin_next_index_entry',
 
   ConfigCache = 'config_cache',
-}
-
-export enum RedisItems {
-  Ips = 'ips',
 }
 
 export enum CacheKeys {

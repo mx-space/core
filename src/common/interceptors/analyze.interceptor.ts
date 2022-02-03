@@ -127,10 +127,7 @@ export class AnalyzeInterceptor implements NestInterceptor {
         // ip access in redis
         const client = this.cacheService.getClient()
 
-        const count = await client.sadd(
-          getRedisKey(RedisKeys.Access, 'ips'),
-          ip,
-        )
+        const count = await client.sadd(getRedisKey(RedisKeys.AccessIp), ip)
         if (count) {
           // record uv to db
 
