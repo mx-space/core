@@ -112,14 +112,20 @@ export class SearchService {
   > {
     const { keyword, size, page } = searchOption
     const index = await this.getAlgoliaSearchIndex()
+
     const search = await index.search<{
       id: string
       text: string
       title: string
       type: 'post' | 'note' | 'page'
     }>(keyword, {
-      page: page,
+      // start with 0
+      page: page - 1,
       hitsPerPage: size,
+      attributesToRetrieve: ['*'],
+      snippetEllipsisText: '...',
+      responseFields: ['*'],
+      facets: ['*'],
     })
     if (searchOption.rawAlgolia) {
       return search
