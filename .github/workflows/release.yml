@@ -1,5 +1,16 @@
 on:
   workflow_call:
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+      JWTSECRET:
+        required: true
+      HOST:
+        required: true
+      USER:
+        required: true
+      PASSWORD:
+        required: true
 
 name: Release
 

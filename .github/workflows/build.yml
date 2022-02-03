@@ -74,3 +74,9 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs: [build, test]
     uses: ./.github/workflows/release.yml
+    with:
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      JWTSECRET: ${{secrets.JWTSECRET}}
+      HOST: ${{secrets.HOST}}
+      USER: ${{secrets.USER}}
+      PASSWORD: ${{secrets.PASSWORD}}
