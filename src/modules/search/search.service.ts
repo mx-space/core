@@ -135,7 +135,6 @@ export class SearchService {
       return model
         .findById(objectID)
         .select('_id title created modified categoryId slug nid')
-        .populate('category')
         .lean()
         .then((doc) => {
           Reflect.set(doc, 'type', type)

@@ -304,10 +304,16 @@ export class CronService {
       documents.push(...documents_)
     })
     try {
-      // await index.clearObjects()
-      await index.saveObjects(documents, {
-        autoGenerateObjectIDIfNotExist: false,
-      })
+      await Promise.all([
+        index.clearObjects(),
+        index.saveObjects(documents, {
+          autoGenerateObjectIDIfNotExist: false,
+        }),
+        index.setSettings({
+          attributesToHighlight: ['text', 'title'],
+        }),
+      ])
+
       this.logger.log('--> 推送到 algoliasearch 成功')
     } catch (err) {
       Logger.error('algolia推送错误', 'AlgoliaSearch')
