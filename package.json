@@ -149,7 +149,7 @@
     "eslint": "*",
     "husky": "7.0.4",
     "ioredis": "4.28.3",
-    "jest": "27.4.7",
+    "jest": "27.5.0",
     "lint-staged": "12.3.2",
     "prettier": "2.5.1",
     "rimraf": "3.0.2",
