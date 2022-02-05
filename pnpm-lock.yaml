@@ -74,7 +74,7 @@ specifiers:
   lodash: '*'
   marked: 4.0.12
   mkdirp: '*'
-  mongodb-memory-server: 8.2.0
+  mongodb-memory-server: 8.2.1
   mongoose: '*'
   mongoose-lean-id: 0.3.0
   mongoose-lean-virtuals: 0.9.0
@@ -171,7 +171,7 @@ dependencies:
   zx: 4.3.0
 
 optionalDependencies:
-  mongodb-memory-server: 8.2.0
+  mongodb-memory-server: 8.2.1
   redis-memory-server: 0.5.0
 
 devDependencies:
@@ -3371,12 +3371,11 @@ packages:
   /camelcase/6.2.0:
     resolution: {integrity: sha512-c7wVvbw3f37nuobQNtgsgG9POC9qMbNuMQmTCqZv23b6MIz0fcYpBiOlv9gEN/hdLdnZTDQhg6e9Dq5M1vKvfg==}
     engines: {node: '>=10'}
+    dev: false
 
   /camelcase/6.3.0:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
-    dev: false
-    optional: true
 
   /caniuse-lite/1.0.30001299:
     resolution: {integrity: sha512-iujN4+x7QzqA2NCSrS5VUy+4gLmRd4xv6vbBBsmfVqTx8bLAD8097euLqQgKxSVLvxjSDcvF1T/i9ocgnUFexw==}
@@ -5956,7 +5955,7 @@ packages:
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
       '@jest/types': 27.4.2
-      camelcase: 6.2.0
+      camelcase: 6.3.0
       chalk: 4.1.2
       jest-get-type: 27.4.0
       leven: 3.1.0
@@ -6608,8 +6607,8 @@ packages:
       '@types/whatwg-url': 8.2.1
       whatwg-url: 11.0.0
 
-  /mongodb-memory-server-core/8.2.0:
-    resolution: {integrity: sha512-7NO+PJQ74wpo/e/fJYIvjjkbhMRn27yFTQzZZKf94y1Cqw/2pJZ+RSI8QJclT53/lyVyx0BLgA/ik6viKy4hDg==}
+  /mongodb-memory-server-core/8.2.1:
+    resolution: {integrity: sha512-COotQm1bFOGfsr2UjuJuucmsx0CIyUowJxtpXMAANq8spEka+GXlOz6KTYIljUve6k3rQ2FdkTkvGy+8sDRjvA==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@types/tmp': 0.2.3
@@ -6633,12 +6632,12 @@ packages:
     dev: false
     optional: true
 
-  /mongodb-memory-server/8.2.0:
-    resolution: {integrity: sha512-ahp93rbJzvqVInJ6EOH4pkdfcm3+5gGQ0WjTQvyB8X3n61jn7yITKGCE0wwvg5JME32XemiQUNAp44XdlD+fpg==}
+  /mongodb-memory-server/8.2.1:
+    resolution: {integrity: sha512-/P99BBeWTYCpNIkr4MTTglCffW2md0sH7Iv7SXbmeZPUxFMEyZR8f6CF2ZLBGOBgefbzxGqAJzmryY/4pK1C5g==}
     engines: {node: '>=12.22.0'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 8.2.0
+      mongodb-memory-server-core: 8.2.1
       tslib: 2.3.1
     transitivePeerDependencies:
       - supports-color
