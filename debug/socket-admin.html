@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <pre id="log"></pre>
+  </body>
+  <script
+    src="https://cdn.socket.io/4.4.1/socket.io.min.js"
+    integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H"
+    crossorigin="anonymous"
+  ></script>
+  <script>
+    // admin
+    const socket = io('http://localhost:2333/admin', {
+      transports: ['websocket'],
+      query: {
+        token: '',
+      },
+    })
+    socket.connect()
+
+    socket.on('connect', () => {
+      console.log('connect')
+    })
+
+    socket.on('disconnect', () => {
+      console.log('disconnect')
+    })
+
+    socket.on('message', (data) => {
+      log.innerHTML += `<code>${JSON.stringify(data)}</code><br/>`
+    })
+  </script>
+</html>
