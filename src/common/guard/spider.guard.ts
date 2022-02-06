@@ -25,11 +25,13 @@ export class SpiderGuard implements CanActivate {
     const request = this.getRequest(context)
     const headers = request.headers
     const ua: string = headers['user-agent'] || ''
-    const isSpiderUA = !!ua.match(/(Scrapy|Curl|HttpClient|python|requests)/i)
+    const isSpiderUA =
+      !!ua.match(/(Scrapy|HttpClient|axios|python|requests)/i) &&
+      !ua.match(/(mx-space|rss|google|baidu|bing)/gi)
     if (ua && !isSpiderUA) {
       return true
     }
-    throw new ForbiddenException('爬虫, 禁止')
+    throw new ForbiddenException('爬虫是被禁止的哦')
   }
 
   getRequest(context: ExecutionContext) {

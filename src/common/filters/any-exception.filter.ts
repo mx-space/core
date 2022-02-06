@@ -28,13 +28,8 @@ type myError = {
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name)
-  private readonly errorLogPipe: WriteStream
-  constructor(@Inject(REFLECTOR) private reflector: Reflector) {
-    this.errorLogPipe = fs.createWriteStream(resolve(LOGGER_DIR, 'error.log'), {
-      flags: 'a+',
-      encoding: 'utf-8',
-    })
-  }
+  private errorLogPipe: WriteStream
+  constructor(@Inject(REFLECTOR) private reflector: Reflector) {}
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = GqlArgumentsHost.create(host).switchToHttp()
     const response = ctx.getResponse<FastifyReply>()
@@ -54,6 +49,24 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (isDev || status === HttpStatus.INTERNAL_SERVER_ERROR) {
       Logger.error(message, undefined, 'Catch')
       Logger.error(exception, undefined, 'Catch')
+
+      if (!isDev) {
+        this.errorLogPipe =
+          this.errorLogPipe ??
+          fs.createWriteStream(resolve(LOGGER_DIR, 'error.log'), {
+            flags: 'a+',
+            encoding: 'utf-8',
+          })
+
+        this.errorLogPipe.write(
+          `[${new Date().toISOString()}] ${decodeURI(request.raw.url)}: ${
+            (exception as any)?.response?.message ||
+            (exception as myError)?.message
+          }\n` +
+            (exception as Error).stack +
+            '\n',
+        )
+      }
     } else {
       const ip = getIp(request)
       this.logger.warn(
@@ -61,14 +74,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
           request.raw.url,
         )}`,
       )
-      if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
-        this.errorLogPipe.write(
-          `[${new Date().toISOString()}] ${decodeURI(request.raw.url)}: ${
-            (exception as any)?.response?.message ||
-            (exception as myError)?.message
-          }\n` + (exception as Error).stack,
-        )
-      }
     }
     // @ts-ignore
     const prevRequestTs = this.reflector.get(HTTP_REQUEST_TIME, request as any)
