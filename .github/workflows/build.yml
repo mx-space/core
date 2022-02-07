@@ -42,6 +42,14 @@ jobs:
       - name: Build project
         run: |
           npm run bundle
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.7.0
+        with:
+          mongodb-version: 4.4
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 6
       - name: Test Bundle Server
         run: |
           bash scripts/workflow/test-server.sh

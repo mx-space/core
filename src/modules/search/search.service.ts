@@ -87,12 +87,10 @@ export class SearchService {
       throw new BadRequestException('algolia not enable.')
     }
     const client = algoliasearch(
-      isDev ? 'XXYIULEDML' : algoliaSearchOptions.appId,
+      algoliaSearchOptions.appId,
       algoliaSearchOptions.apiKey,
     )
-    const index = client.initIndex(
-      isDev ? 'dev_space' : algoliaSearchOptions.indexName,
-    )
+    const index = client.initIndex(algoliaSearchOptions.indexName)
     return index
   }
 

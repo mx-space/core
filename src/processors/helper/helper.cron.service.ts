@@ -239,7 +239,7 @@ export class CronService {
   @OnEvent(EventBusEvents.PushSearch)
   async pushToAlgoliaSearch() {
     const configs = await this.configs.waitForConfigReady()
-    if (!configs.algoliaSearchOptions.enable) {
+    if (!configs.algoliaSearchOptions.enable || isDev) {
       return
     }
     const index = await this.searchService.getAlgoliaSearchIndex()
