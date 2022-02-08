@@ -29,6 +29,7 @@ specifiers:
   '@typegoose/typegoose': 9.6.0
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.2
+  '@types/cron': 1.7.3
   '@types/ejs': 3.1.0
   '@types/html-minifier': 4.0.2
   '@types/ioredis': 4.28.7
@@ -54,6 +55,7 @@ specifiers:
   class-validator: 0.13.2
   consola: '*'
   cos-nodejs-sdk-v5: 2.11.6
+  cron: '*'
   cross-env: 7.0.3
   dayjs: 1.10.7
   ejs: 3.1.6
@@ -182,6 +184,7 @@ devDependencies:
   '@nestjs/testing': 8.2.6_732a54a2558f64827b8cc4f9baac4f1f
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.2
+  '@types/cron': 1.7.3
   '@types/ejs': 3.1.0
   '@types/html-minifier': 4.0.2
   '@types/ioredis': 4.28.7
@@ -195,6 +198,7 @@ devDependencies:
   '@types/passport-jwt': 3.0.6
   '@types/ua-parser-js': 0.7.36
   '@vercel/ncc': 0.33.1
+  cron: 1.7.2
   cross-env: 7.0.3
   eslint: 8.8.0
   husky: 7.0.4
@@ -2151,6 +2155,13 @@ packages:
   /@types/cors/2.8.12:
     resolution: {integrity: sha512-vt+kDhq/M2ayberEtJcIN/hxXy1Pk+59g2FV/ZQceeaTyCtCucjL2Q7FXlFjtWn4n15KCr1NE2lNNFhp0lEThw==}
 
+  /@types/cron/1.7.3:
+    resolution: {integrity: sha512-iPmUXyIJG1Js+ldPYhOQcYU3kCAQ2FWrSkm1FJPoii2eYSn6wEW6onPukNTT0bfiflexNSRPl6KWmAIqS+36YA==}
+    dependencies:
+      '@types/node': 16.11.22
+      moment: 2.29.1
+    dev: true
+
   /@types/ejs/3.1.0:
     resolution: {integrity: sha512-DCg+Ka+uDQ31lJ/UtEXVlaeV3d6t81gifaVWKJy4MYVVgvJttyX/viREy+If7fz+tK/gVxTGMtyrFPnm4gjrVA==}
     dev: true
@@ -3873,7 +3884,6 @@ packages:
     resolution: {integrity: sha512-+SaJ2OfeRvfQqwXQ2kgr0Y5pzBR/lijf5OpnnaruwWnmI799JfWr2jN2ItOV9s3A/+TFOt6mxvKzQq5F0Jp6VQ==}
     dependencies:
       moment-timezone: 0.5.33
-    dev: false
 
   /cross-env/7.0.3:
     resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
@@ -6750,11 +6760,9 @@ packages:
     resolution: {integrity: sha512-PTc2vcT8K9J5/9rDEPe5czSIKgLoGsH8UNpA4qZTVw0Vd/Uz19geE9abbIOQKaAQFcnQ3v5YEXrbSc5BpshH+w==}
     dependencies:
       moment: 2.29.1
-    dev: false
 
   /moment/2.29.1:
     resolution: {integrity: sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==}
-    dev: false
 
   /mongodb-connection-string-url/2.4.2:
     resolution: {integrity: sha512-mZUXF6nUzRWk5J3h41MsPv13ukWlH4jOMSk6astVeoZ1EbdTJyF5I3wxKkvqBAOoVtzLgyEYUvDjrGdcPlKjAw==}
@@ -7597,7 +7605,7 @@ packages:
     resolution: {integrity: sha1-hSBLVNuoLVdC4oyWdW70OvUOM4Q=}
     engines: {node: '>= 0.10'}
     dependencies:
-      resolve: 1.22.0
+      resolve: 1.21.0
     dev: true
 
   /redis-commands/1.7.0:
@@ -7716,6 +7724,15 @@ packages:
   /resolve.exports/1.1.0:
     resolution: {integrity: sha512-J1l+Zxxp4XK3LUDZ9m60LRJF/mAe4z6a4xyabPHk7pvK5t35dACV32iIjJDFeWZFfZlO29w6SZ67knR0tHzJtQ==}
     engines: {node: '>=10'}
+    dev: true
+
+  /resolve/1.21.0:
+    resolution: {integrity: sha512-3wCbTpk5WJlyE4mSOtDLhqQmGFi0/TD9VPwmiolnk8U0wRgMEktqCXd3vy5buTO3tljvalNvKrjHEfrd2WpEKA==}
+    hasBin: true
+    dependencies:
+      is-core-module: 2.8.1
+      path-parse: 1.0.7
+      supports-preserve-symlinks-flag: 1.0.0
     dev: true
 
   /resolve/1.22.0:

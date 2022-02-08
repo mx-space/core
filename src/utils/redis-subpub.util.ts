@@ -23,13 +23,31 @@ class RedisSubPub {
     await this.pubClient.publish(channel, JSON.stringify(data))
   }
 
+  ctc = new Map<Function, Callback>()
+
   public async subscribe(event: string, callback: (data: any) => void) {
     const channel = this.channelPrefix + event
     this.subClient.subscribe(channel)
-    this.subClient.on('message', (channel, message) => {
+    const cb = (channel, message) => {
       callback(JSON.parse(message))
-    })
+    }
+
+    this.ctc.set(callback, cb)
+    this.subClient.on('message', cb)
+  }
+
+  public async unsubscribe(event: string, callback: (data: any) => void) {
+    const channel = this.channelPrefix + event
+    this.subClient.unsubscribe(channel)
+    const cb = this.ctc.get(callback)
+    if (cb) {
+      this.subClient.off('message', cb)
+
+      this.ctc.delete(callback)
+    }
   }
 }
 
 export const redisSubPub = new RedisSubPub()
+
+type Callback = (channel: string, message: string) => void

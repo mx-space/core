@@ -13,7 +13,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { WriteStream } from 'fs'
 import { resolve } from 'path'
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
-import { LOGGER_DIR } from '~/constants/path.constant'
+import { LOG_DIR } from '~/constants/path.constant'
 import { REFLECTOR } from '~/constants/system.constant'
 import { isDev } from '~/utils'
 import { getIp } from '../../utils/ip.util'
@@ -53,7 +53,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (!isDev) {
         this.errorLogPipe =
           this.errorLogPipe ??
-          fs.createWriteStream(resolve(LOGGER_DIR, 'error.log'), {
+          fs.createWriteStream(resolve(LOG_DIR, 'error.log'), {
             flags: 'a+',
             encoding: 'utf-8',
           })

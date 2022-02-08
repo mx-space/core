@@ -4,7 +4,6 @@ import { PassportModule } from '@nestjs/passport'
 import cluster from 'cluster'
 import { machineIdSync } from 'node-machine-id'
 import { CLUSTER, SECURITY } from '~/app.config'
-import { AdminEventsGateway } from '../../processors/gateway/admin/events.gateway'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
 import { JwtStrategy } from './jwt.strategy'
@@ -38,7 +37,7 @@ const jwtModule = JwtModule.registerAsync({
 })
 @Module({
   imports: [PassportModule, jwtModule],
-  providers: [AuthService, JwtStrategy, AdminEventsGateway],
+  providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
   exports: [JwtStrategy, AuthService, jwtModule],
 })

@@ -1,4 +1,3 @@
-import { Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { JwtService } from '@nestjs/jwt'
 import {
@@ -10,9 +9,12 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets'
 import { Emitter } from '@socket.io/redis-emitter'
+import { resolve } from 'path'
 import SocketIO, { Socket } from 'socket.io'
 import { EventBusEvents } from '~/constants/event.constant'
+import { LOG_DIR } from '~/constants/path.constant'
 import { CacheService } from '~/processors/cache/cache.service'
+import { getTodayLogFilePath } from '~/utils/consola.util'
 import { AuthService } from '../../../modules/auth/auth.service'
 import { BaseGateway } from '../base.gateway'
 import { EventTypes } from '../events.types'
@@ -27,7 +29,6 @@ export class AdminEventsGateway
     private readonly cacheService: CacheService,
   ) {
     super()
-    this.bindStdOut()
   }
 
   tokenSocketIdMap = new Map<string, string>()
@@ -77,16 +78,41 @@ export class AdminEventsGateway
     this.tokenSocketIdMap.set(token.toString(), sid)
   }
 
+  subscribeSocketToHandlerMap = new Map<string, Function>()
+
+  @SubscribeMessage('log')
+  async subscribeStdOut(client: Socket) {
+    if (this.subscribeSocketToHandlerMap.has(client.id)) {
+      return
+    }
+
+    const queue = [] as Function[]
+    const handler = (data) => {
+      queue.push(() =>
+        client.send(this.gatewayMessageFormat(EventTypes.STDOUT, data)),
+      )
+
+      queue.shift()()
+    }
+
+    this.subscribeSocketToHandlerMap.set(client.id, handler)
+    this.cacheService.subscribe('log', handler)
+
+    fs.createReadStream(resolve(LOG_DIR, getTodayLogFilePath()), {
+      encoding: 'utf-8',
+      highWaterMark: 20,
+    }).on('data', handler)
+  }
+
   @SubscribeMessage('unlog')
   unsubscribeStdOut(client: Socket) {
-    const idx = this.subscribeStdOutClient.findIndex(
-      (client_) => client_ === client,
-    )
-    Logger.debug(chalk.yellow(client.id, idx))
-    if (~idx) {
-      this.subscribeStdOutClient.splice(idx, 1)
+    const cb = this.subscribeSocketToHandlerMap.get(client.id)
+    if (cb) {
+      this.cacheService.unsubscribe('log', cb as any)
     }
+    this.subscribeSocketToHandlerMap.delete(client.id)
   }
+
   handleDisconnect(client: SocketIO.Socket) {
     super.handleDisconnect(client)
     this.unsubscribeStdOut(client)
@@ -104,46 +130,6 @@ export class AdminEventsGateway
       return true
     }
     return false
-  }
-
-  subscribeStdOutClient: Socket[] = []
-
-  @SubscribeMessage('log')
-  async subscribeStdOut(client: Socket) {
-    if (
-      this.subscribeStdOutClient.includes(client) ||
-      this.subscribeStdOutClient.some((client_) => client_.id === client.id)
-    ) {
-      return
-    }
-    this.subscribeStdOutClient.push(client)
-    Logger.debug(
-      chalk.yellow(client.id, this.subscribeStdOutClient.length),
-      'SubscribeStdOut',
-    )
-  }
-
-  bindStdOut() {
-    const handler = (data: any) => {
-      this.subscribeStdOutClient.forEach((client) => {
-        client.send(this.gatewayMessageFormat(EventTypes.STDOUT, data))
-      })
-    }
-    const stream = {
-      stdout: process.stdout.write,
-      stderr: process.stderr.write,
-    }
-
-    process.stdout.write = function (...rest: any[]) {
-      handler(rest[0])
-
-      return stream.stdout.apply(this, rest)
-    }
-    process.stderr.write = function (...rest: any[]) {
-      handler(rest[0])
-
-      return stream.stderr.apply(this, rest)
-    }
   }
 
   broadcast(event: EventTypes, data: any) {

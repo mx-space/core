@@ -11,7 +11,7 @@ export const DATA_DIR = isDev
   : join(HOME, '.mx-space')
 
 export const USER_ASSET_DIR = join(DATA_DIR, 'assets')
-export const LOGGER_DIR = join(DATA_DIR, 'log')
+export const LOG_DIR = join(DATA_DIR, 'log')
 
 export const LOCAL_BOT_LIST_DATA_FILE_PATH = join(DATA_DIR, 'bot_list.json')
 

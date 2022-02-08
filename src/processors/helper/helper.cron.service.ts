@@ -4,14 +4,16 @@ import { Cron, CronExpression } from '@nestjs/schedule'
 import COS from 'cos-nodejs-sdk-v5'
 import dayjs from 'dayjs'
 import { existsSync } from 'fs'
-import { rm, writeFile } from 'fs/promises'
+import { readdir, rm, writeFile } from 'fs/promises'
 import mkdirp from 'mkdirp'
 import { InjectModel } from 'nestjs-typegoose'
+import { join } from 'path'
 import { CronDescription } from '~/common/decorator/cron-description.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event.constant'
 import {
   LOCAL_BOT_LIST_DATA_FILE_PATH,
+  LOG_DIR,
   TEMP_DIR,
 } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
@@ -187,6 +189,26 @@ export class CronService {
     await rm(TEMP_DIR, { recursive: true })
     mkdirp.sync(TEMP_DIR)
     this.logger.log('--> 清理临时文件成功')
+  }
+
+  @Cron(CronExpression.EVERY_WEEKEND, { name: 'cleanTempDirectory' })
+  @CronDescription('清理日志文件')
+  async cleanLogFile() {
+    await rm(LOG_DIR, { recursive: true })
+    mkdirp.sync(LOG_DIR)
+
+    const files = (await readdir(LOG_DIR)).filter(
+      (file) => file !== 'error.log',
+    )
+    for (const file of files) {
+      const filePath = join(LOG_DIR, file)
+      const state = fs.statSync(filePath)
+      const oldThanWeek = dayjs().diff(state.mtime, 'day') > 7
+      if (oldThanWeek) {
+        fs.rm(filePath)
+      }
+    }
+    this.logger.log('--> 清理日志文件成功')
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_3AM, { name: 'pushToBaiduSearch' })

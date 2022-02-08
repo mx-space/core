@@ -17,7 +17,7 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { AttachHeaderTokenMiddleware } from './common/middlewares/attach-auth.middleware'
 import {
   DATA_DIR,
-  LOGGER_DIR,
+  LOG_DIR,
   TEMP_DIR,
   USER_ASSET_DIR,
 } from './constants/path.constant'
@@ -58,8 +58,8 @@ function mkdirs() {
   Logger.log(chalk.blue('数据目录已经建好: ' + DATA_DIR))
   mkdirSync(TEMP_DIR, { recursive: true })
   Logger.log(chalk.blue('临时目录已经建好: ' + TEMP_DIR))
-  mkdirSync(LOGGER_DIR, { recursive: true })
-  Logger.log(chalk.blue('日志目录已经建好: ' + LOGGER_DIR))
+  mkdirSync(LOG_DIR, { recursive: true })
+  Logger.log(chalk.blue('日志目录已经建好: ' + LOG_DIR))
   mkdirSync(USER_ASSET_DIR, { recursive: true })
   Logger.log(chalk.blue('资源目录已经建好: ' + USER_ASSET_DIR))
 }

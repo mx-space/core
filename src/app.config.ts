@@ -1,4 +1,5 @@
 const isTEST = !!process.env.TEST
+const isDev = process.env.NODE_ENV === 'development'
 import cluster from 'cluster'
 import { argv } from 'zx'
 
