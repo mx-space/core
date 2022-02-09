@@ -9,7 +9,7 @@ const endpoint = `https://api.github.com/repos/${repo}/releases/latest`
 
 const latestVersion = async () => {
   const res = await axios.get(endpoint)
-  return res.data.tag_name
+  return res.data.tag_name.replace(/^v/, '')
 }
 async function main() {
   const version = await latestVersion()
