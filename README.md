@@ -1,4 +1,4 @@
-# MServer Next
+# MX-Server
 
 [![GitHub stars](https://img.shields.io/github/stars/mx-space/server-next.svg?style=flat)](https://github.com/mx-space/server-next/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues-raw/mx-space/server-next.svg?style=flat)](https://github.com/mx-space/server-next/issues)
