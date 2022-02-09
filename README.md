@@ -1,10 +1,10 @@
 # MX-Server
 
-[![GitHub stars](https://img.shields.io/github/stars/mx-space/server-next.svg?style=flat)](https://github.com/mx-space/server-next/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues-raw/mx-space/server-next.svg?style=flat)](https://github.com/mx-space/server-next/issues)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/mx-space/server-next/Deploy?label=deploy&style=flat)](https://github.com/mx-space/server-next/actions?query=workflow:%22Deploy%22)
-[![GitHub license](https://img.shields.io/github/license/mx-space/server-next.svg?style=flat)](https://github.com/mx-space/server-next/blob/main/LICENSE)
-[![wakatime](https://wakatime.com/badge/github/mx-space/server-next.svg)](https://wakatime.com/badge/github/mx-space/server-next)
+[![GitHub stars](https://img.shields.io/github/stars/mx-space/mx-server.svg?style=flat)](https://github.com/mx-space/mx-server/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues-raw/mx-space/mx-server.svg?style=flat)](https://github.com/mx-space/mx-server/issues)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/mx-space/mx-server/Deploy?label=deploy&style=flat)](https://github.com/mx-space/mx-server/actions?query=workflow:%22Deploy%22)
+[![GitHub license](https://img.shields.io/github/license/mx-space/mx-server.svg?style=flat)](https://github.com/mx-space/mx-server/blob/main/LICENSE)
+[![wakatime](https://wakatime.com/badge/github/mx-space/mx-server.svg)](https://wakatime.com/badge/github/mx-space/mx-server)
 [![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/innei/mx-server)](https://hub.docker.com/repository/docker/innei/mx-server)
 
 > **RESTful API service & GraphQL for Mix Space, powered by [`nestjs`](https://github.com/nestjs/nest), required [`mongoDB`](https://www.mongodb.com/) & [`Redis`](https://redis.io/).**
@@ -34,13 +34,13 @@
 使用构建好的版本你的系统必须是 Linux (test on Ubuntu 18, Ubuntu 20, CentOS 8)
 
 ```sh
-curl https://cdn.jsdelivr.net/gh/mx-space/server-next@master/scripts/download-latest-asset.js >> download.js
+curl https://cdn.jsdelivr.net/gh/mx-space/mx-server@master/scripts/download-latest-asset.js >> download.js
 zx ./download.js
 cd mx-server
 node index.js
 ```
 
-或者手动下载 [release](https://github.com/mx-space/server-next/releases/latest)，之后解压然后
+或者手动下载 [release](https://github.com/mx-space/mx-server/releases/latest)，之后解压然后
 
 ```
 node index.js
@@ -55,7 +55,7 @@ node index.js
 cd
 mkdir -p mx/server
 cd mx/server
-wget https://cdn.jsdelivr.net/gh/mx-space/server-next@master/docker-compose.yml
+wget https://cdn.jsdelivr.net/gh/mx-space/mx-server@master/docker-compose.yml
 docker-compose up -d
 ```
 
@@ -157,7 +157,7 @@ docker-compose up -d
 ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> AnalyzeInterceptor -> HttpCacheInterceptor
 ```
 
-- [业务逻辑模块](https://github.com/mx-space/server-next/tree/master/src/modules)
+- [业务逻辑模块](https://github.com/mx-space/mx-server/tree/master/src/modules)
 
   1. [Aggregate] 聚合
   1. [Analyze] 数据统计
@@ -184,7 +184,7 @@ ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> Analyz
   1. [Tool] 工具接口
   1. [User] 用户
 
-- [核心辅助模块 processors](https://github.com/mx-space/server-next/tree/master/src/processors)
+- [核心辅助模块 processors](https://github.com/mx-space/mx-server/tree/master/src/processors)
   1. [cache] Redis 缓存相关
   1. [database] 数据库相关
   1. [gateway] Socket.IO 相关
