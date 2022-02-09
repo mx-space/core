@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -23,6 +24,7 @@ import { LOG_DIR } from '~/constants/path.constant'
 import { SCHEDULE_CRON_OPTIONS } from '~/constants/system.constant'
 import { CronService } from '~/processors/helper/helper.cron.service'
 import { TaskQueueService } from '~/processors/helper/helper.tq.service'
+import { getTodayLogFilePath } from '~/utils/consola.util'
 import { LogQueryDto, LogTypeDto } from './health.dto'
 @Controller({
   path: 'health',
@@ -156,7 +158,7 @@ export class HealthController {
 
   @Get('/log/:type')
   @HTTPDecorators.Bypass
-  async getPM2Log(
+  async getLog(
     @Query() query: LogQueryDto,
     @Param() params: LogTypeDto,
     @Res() reply: FastifyReply,
@@ -199,5 +201,35 @@ export class HealthController {
     }
     reply.type('text/plain')
     reply.send(stream)
+  }
+
+  @Delete('/log/:type')
+  async deleteLog(@Param() params: LogTypeDto, @Query() query: LogQueryDto) {
+    const { type } = params
+    const { filename } = query
+
+    switch (type) {
+      case 'native': {
+        const logPath = path.join(LOG_DIR, filename)
+        const todayLogFile = getTodayLogFilePath()
+        if (todayLogFile == logPath) {
+          throw new BadRequestException('can not delete today log')
+        }
+
+        if (logPath.endsWith('error.log')) {
+          throw new BadRequestException('can not delete error log')
+        }
+        await fs.rm(logPath)
+        break
+      }
+      case 'pm2': {
+        const logDir = resolve(os.homedir(), '.pm2', 'logs')
+        if (!fs.pathExistsSync(logDir)) {
+          throw new BadRequestException('log dir not exists')
+        }
+        await fs.rm(path.join(logDir, filename))
+        break
+      }
+    }
   }
 }
