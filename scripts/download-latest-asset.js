@@ -1,11 +1,10 @@
 #!/usr/bin/env zx
 /* eslint-disable */
-
+// @ts-check
+const PKG = require('../package.json')
 async function main() {
-  const owner = 'mx-space'
-  const repo = 'server-next'
   const res = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/releases/latest`,
+    `https://api.github.com/repos/${PKG.repository.directory}/releases/latest`,
   )
   const data = await res.json()
   const downloadUrl = data.assets.find(

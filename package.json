@@ -20,11 +20,11 @@
     ]
   },
   "repository": {
-    "directory": "mx-space/server-next",
-    "url": "https://github.com/mx-space/server-next"
+    "directory": "mx-space/mx-server",
+    "url": "https://github.com/mx-space/mx-server"
   },
-  "homepage": "https://github.com/mx-space/server-next#readme",
-  "issues": "https://github.com/mx-space/server-next/issues",
+  "homepage": "https://github.com/mx-space/mx-server#readme",
+  "issues": "https://github.com/mx-space/mx-server/issues",
   "scripts": {
     "prepare": "husky install",
     "prebuild": "rimraf dist",

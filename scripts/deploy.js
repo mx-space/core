@@ -2,16 +2,14 @@
 // @ts-check
 const { cd, $, os, fs, path, fetch, nothrow, sleep } = require('zx')
 const { homedir } = os
-
-const owner = 'mx-space'
-const repo = 'server-next'
+const { repository } = require('../package.json')
 
 const argv = process.argv.slice(2)
 
 async function main() {
   cd(path.resolve(homedir(), 'mx'))
   const res = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/releases/latest`,
+    `https://api.github.com/repos/${repository.directory}/releases/latest`,
   )
   const data = await res.json()
   const downloadUrl = data.assets.find(
