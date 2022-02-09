@@ -5,22 +5,25 @@ import {
   Param,
   Post,
   Query,
+  Res,
   Scope,
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { SchedulerRegistry } from '@nestjs/schedule'
+import type { FastifyReply } from 'fastify'
 import { isFunction, isString } from 'lodash'
 import { resolve } from 'path'
+import { Readable } from 'stream'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CRON_DESCRIPTION } from '~/constants/meta.constant'
+import { LOG_DIR } from '~/constants/path.constant'
 import { SCHEDULE_CRON_OPTIONS } from '~/constants/system.constant'
 import { CronService } from '~/processors/helper/helper.cron.service'
 import { TaskQueueService } from '~/processors/helper/helper.tq.service'
-import { PM2QueryDto } from './health.dto'
-
+import { LogQueryDto, LogTypeDto } from './health.dto'
 @Controller({
   path: 'health',
   scope: Scope.REQUEST,
@@ -91,19 +94,36 @@ export class HealthController {
     return task
   }
 
-  @Get('/log/list/pm2')
-  async getPM2List() {
-    const logDir = resolve(os.homedir(), '.pm2', 'logs')
+  @Get('/log/list/:type')
+  async getPM2List(@Param() params: LogTypeDto) {
+    const { type } = params
+    let logDir: string
+
+    switch (type) {
+      case 'native':
+        logDir = LOG_DIR
+        break
+      case 'pm2':
+        logDir = resolve(os.homedir(), '.pm2', 'logs')
+        break
+    }
 
     if (!fs.pathExistsSync(logDir)) {
       throw new BadRequestException('log dir not exists')
     }
-    const files = fs.readdirSync(logDir)
-    const arr = [] as string[]
-    for (const file of files) {
-      if (file.startsWith('mx-server-') && file.endsWith('.log')) {
-        arr.push(file)
-      }
+    const files = await fs.readdir(logDir)
+    const allFile = [] as string[]
+    switch (type) {
+      case 'pm2':
+        for (const file of files) {
+          if (file.startsWith('mx-server-') && file.endsWith('.log')) {
+            allFile.push(file)
+          }
+        }
+        break
+      case 'native':
+        allFile.push(...files)
+        break
     }
     const res = [] as {
       size: string
@@ -111,34 +131,73 @@ export class HealthController {
       type: string
       index: number
     }[]
-    for (const file of arr) {
+    for (const [i, file] of Object.entries(allFile)) {
       const size = `${(
         fs.statSync(path.join(logDir, file)).size / 1024
       ).toFixed(2)} KiB`
-      const index = parseInt(file.split('-')[3], 10) || 0
-      const type = file.split('-')[2].split('.')[0]
-      res.push({ size, filename: file, index, type })
+      let index: number
+      let _type: string
+
+      switch (type) {
+        case 'pm2':
+          _type = file.split('-')[2].split('.')[0]
+          index = parseInt(file.split('-')[3], 10) || 0
+          break
+        case 'native':
+          _type = 'log'
+          index = +i
+          break
+      }
+      res.push({ size, filename: file, index, type: _type })
     }
 
     return res
   }
 
-  @Get('/log/pm2')
-  async getPM2Log(@Query() query: PM2QueryDto) {
-    const { index, type } = query
-    const logDir = resolve(os.homedir(), '.pm2', 'logs')
+  @Get('/log/:type')
+  @HTTPDecorators.Bypass
+  async getPM2Log(
+    @Query() query: LogQueryDto,
+    @Param() params: LogTypeDto,
+    @Res() reply: FastifyReply,
+  ) {
+    const { type: logType } = params
+    let stream: Readable
+    switch (logType) {
+      case 'pm2': {
+        const { index, type = 'out', filename: __filename } = query
+        const logDir = resolve(os.homedir(), '.pm2', 'logs')
 
-    if (!fs.pathExistsSync(logDir)) {
-      throw new BadRequestException('log dir not exists')
+        if (!fs.pathExistsSync(logDir)) {
+          throw new BadRequestException('log dir not exists')
+        }
+        const filename =
+          __filename ?? `mx-server-${type}${index === 0 ? '' : '-' + index}.log`
+        const logPath = path.join(logDir, filename)
+        if (!fs.existsSync(logPath)) {
+          throw new BadRequestException('log file not exists')
+        }
+        stream = fs.createReadStream(logPath, {
+          encoding: 'utf8',
+        })
+
+        break
+      }
+      case 'native': {
+        const { filename } = query
+        const logDir = LOG_DIR
+        if (!filename) {
+          throw new UnprocessableEntityException('filename must be string')
+        }
+
+        stream = fs.createReadStream(path.join(logDir, filename), {
+          encoding: 'utf-8',
+        })
+
+        break
+      }
     }
-    const filename = `mx-server-${type}${index === 0 ? '' : '-' + index}.log`
-    const logPath = path.join(logDir, filename)
-    if (!fs.existsSync(logPath)) {
-      throw new BadRequestException('log file not exists')
-    }
-    const data = fs.readFileSync(logPath, {
-      encoding: 'utf8',
-    })
-    return { data }
+    reply.type('text/plain')
+    reply.send(stream)
   }
 }

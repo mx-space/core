@@ -86,22 +86,22 @@ export class AdminEventsGateway
       return
     }
 
-    const queue = [] as Function[]
     const handler = (data) => {
-      queue.push(() =>
-        client.send(this.gatewayMessageFormat(EventTypes.STDOUT, data)),
-      )
-
-      queue.shift()()
+      client.send(this.gatewayMessageFormat(EventTypes.STDOUT, data))
     }
 
     this.subscribeSocketToHandlerMap.set(client.id, handler)
-    this.cacheService.subscribe('log', handler)
 
-    fs.createReadStream(resolve(LOG_DIR, getTodayLogFilePath()), {
-      encoding: 'utf-8',
-      highWaterMark: 20,
-    }).on('data', handler)
+    const stream = fs
+      .createReadStream(resolve(LOG_DIR, getTodayLogFilePath()), {
+        encoding: 'utf-8',
+        highWaterMark: 32 * 1024,
+      })
+      .on('data', handler)
+      .on('end', () => {
+        this.cacheService.subscribe('log', handler)
+        stream.close()
+      })
   }
 
   @SubscribeMessage('unlog')

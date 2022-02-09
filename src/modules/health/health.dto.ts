@@ -1,11 +1,29 @@
 import { Transform } from 'class-transformer'
-import { IsIn, IsInt, Min } from 'class-validator'
+import {
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateIf,
+} from 'class-validator'
 
-export class PM2QueryDto {
+export class LogQueryDto {
   @IsIn(['out', 'error'])
-  type: 'out' | 'error'
+  @ValidateIf((o: LogQueryDto) => typeof o.filename === 'undefined')
+  type?: 'out' | 'error'
   @IsInt()
   @Min(0)
   @Transform(({ value }) => +value)
+  @ValidateIf((o: LogQueryDto) => typeof o.filename === 'undefined')
   index: number
+
+  @IsString()
+  @IsOptional()
+  filename?: string
+}
+
+export class LogTypeDto {
+  @IsIn(['pm2', 'native'])
+  type: 'pm2' | 'native'
 }
