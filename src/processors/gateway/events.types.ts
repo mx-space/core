@@ -40,6 +40,8 @@ export enum EventTypes {
   ADMIN_NOTIFICATION = 'ADMIN_NOTIFICATION',
 
   STDOUT = 'STDOUT',
+
+  PTY = 'pty',
 }
 
 export type NotificationTypes = 'error' | 'warn' | 'success' | 'info'

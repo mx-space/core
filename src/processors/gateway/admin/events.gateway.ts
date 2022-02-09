@@ -9,6 +9,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets'
 import { Emitter } from '@socket.io/redis-emitter'
+import { IPty, spawn } from 'node-pty'
 import { resolve } from 'path'
 import SocketIO, { Socket } from 'socket.io'
 import { EventBusEvents } from '~/constants/event.constant'
@@ -18,6 +19,7 @@ import { getTodayLogFilePath } from '~/utils/consola.util'
 import { AuthService } from '../../../modules/auth/auth.service'
 import { BaseGateway } from '../base.gateway'
 import { EventTypes } from '../events.types'
+
 @WebSocketGateway<GatewayMetadata>({ namespace: 'admin' })
 export class AdminEventsGateway
   extends BaseGateway
@@ -78,11 +80,11 @@ export class AdminEventsGateway
     this.tokenSocketIdMap.set(token.toString(), sid)
   }
 
-  subscribeSocketToHandlerMap = new Map<string, Function>()
+  subscribeSocketToHandlerMap = new WeakMap<Socket, Function>()
 
   @SubscribeMessage('log')
   async subscribeStdOut(client: Socket) {
-    if (this.subscribeSocketToHandlerMap.has(client.id)) {
+    if (this.subscribeSocketToHandlerMap.has(client)) {
       return
     }
 
@@ -90,7 +92,7 @@ export class AdminEventsGateway
       client.send(this.gatewayMessageFormat(EventTypes.STDOUT, data))
     }
 
-    this.subscribeSocketToHandlerMap.set(client.id, handler)
+    this.subscribeSocketToHandlerMap.set(client, handler)
 
     const stream = fs
       .createReadStream(resolve(LOG_DIR, getTodayLogFilePath()), {
@@ -106,16 +108,55 @@ export class AdminEventsGateway
 
   @SubscribeMessage('unlog')
   unsubscribeStdOut(client: Socket) {
-    const cb = this.subscribeSocketToHandlerMap.get(client.id)
+    const cb = this.subscribeSocketToHandlerMap.get(client)
     if (cb) {
       this.cacheService.unsubscribe('log', cb as any)
     }
-    this.subscribeSocketToHandlerMap.delete(client.id)
+    this.subscribeSocketToHandlerMap.delete(client)
+  }
+
+  socket2ptyMap = new WeakMap<Socket, IPty>()
+
+  @SubscribeMessage('pty')
+  pty(client: Socket, data?: { cols: number; rows: number }) {
+    const pty = spawn(
+      os.platform() === 'win32' ? 'powershell.exe' : 'bash',
+      [],
+      {
+        cwd: os.homedir(),
+        cols: data?.cols || 30,
+        rows: data?.rows || 80,
+      },
+    )
+
+    pty.onData((data) => {
+      client.send(this.gatewayMessageFormat(EventTypes.PTY, data))
+    })
+
+    this.socket2ptyMap.set(client, pty)
+  }
+
+  @SubscribeMessage('pty-input')
+  async ptyInput(client: Socket, data: string) {
+    const pty = this.socket2ptyMap.get(client)
+    if (pty) {
+      pty.write(data)
+    }
+  }
+
+  @SubscribeMessage('pty-exit')
+  async ptyExit(client: Socket) {
+    const pty = this.socket2ptyMap.get(client)
+    if (pty) {
+      pty.kill()
+    }
+    this.socket2ptyMap.delete(client)
   }
 
   handleDisconnect(client: SocketIO.Socket) {
     super.handleDisconnect(client)
     this.unsubscribeStdOut(client)
+    this.ptyExit(client)
   }
 
   @OnEvent(EventBusEvents.TokenExpired)
