@@ -1,6 +1,7 @@
 import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 import { Redis } from 'ioredis'
+import type { RedisSubPub } from '../../utils/redis-subpub.util'
 
 // Cache 客户端管理器
 
@@ -43,21 +44,24 @@ export class CacheService {
     return this.cache.set(key, value, options)
   }
 
+  private _redisSubPub: RedisSubPub
+
+  get redisSubPub(): RedisSubPub {
+    return (
+      this._redisSubPub ??
+      (this._redisSubPub = require('../../utils/redis-subpub.util').redisSubPub)
+    )
+  }
   public async publish(event: string, data: any) {
-    const { redisSubPub } = await import('../../utils/redis-subpub.util')
-    return redisSubPub.publish(event, data)
+    return this.redisSubPub.publish(event, data)
   }
 
   public async subscribe(event: string, callback: (data: any) => void) {
-    const { redisSubPub } = await import('../../utils/redis-subpub.util')
-
-    return redisSubPub.subscribe(event, callback)
+    return this.redisSubPub.subscribe(event, callback)
   }
 
   public async unsubscribe(event: string, callback: (data: any) => void) {
-    const { redisSubPub } = await import('../../utils/redis-subpub.util')
-
-    return redisSubPub.unsubscribe(event, callback)
+    return this.redisSubPub.unsubscribe(event, callback)
   }
 
   public getClient() {

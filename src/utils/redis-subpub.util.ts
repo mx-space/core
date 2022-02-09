@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common'
 import IORedis from 'ioredis'
 import { REDIS } from '~/app.config'
 import { isTest } from './tool.util'
@@ -20,16 +21,26 @@ class RedisSubPub {
   }
   public async publish(event: string, data: any) {
     const channel = this.channelPrefix + event
-    await this.pubClient.publish(channel, JSON.stringify(data))
+    const _data = JSON.stringify(data)
+    if (event !== 'log') {
+      Logger.debug(`发布事件：${channel} <- ` + _data, RedisSubPub.name)
+    }
+    await this.pubClient.publish(channel, _data)
   }
 
   ctc = new WeakMap<Function, Callback>()
 
   public async subscribe(event: string, callback: (data: any) => void) {
-    const channel = this.channelPrefix + event
-    this.subClient.subscribe(channel)
+    const myChannel = this.channelPrefix + event
+    this.subClient.subscribe(myChannel)
+
     const cb = (channel, message) => {
-      callback(JSON.parse(message))
+      if (channel === myChannel) {
+        if (event !== 'log') {
+          Logger.debug(`接收事件：${channel} -> ` + message, RedisSubPub.name)
+        }
+        callback(JSON.parse(message))
+      }
     }
 
     this.ctc.set(callback, cb)
@@ -51,3 +62,5 @@ class RedisSubPub {
 export const redisSubPub = new RedisSubPub()
 
 type Callback = (channel: string, message: string) => void
+
+export type { RedisSubPub }
