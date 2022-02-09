@@ -1,3 +1,4 @@
+import getColors from 'get-image-colors'
 import { marked } from 'marked'
 
 export const pickImagesFromMarkdown = (text: string) => {
@@ -18,17 +19,18 @@ export const pickImagesFromMarkdown = (text: string) => {
 
 export async function getAverageRGB(
   buffer: Buffer,
+  type: string,
 ): Promise<string | undefined> {
   if (!buffer) {
     return undefined
   }
 
-  const Vibrant = require('node-vibrant')
   try {
-    const res = await Vibrant.from(buffer).getPalette()
+    const colors = await getColors(buffer, type)
 
-    return res.Muted.hex
-  } catch {
+    return colors[0].hex()
+  } catch (err) {
+    console.error(err.message)
     return undefined
   }
 }

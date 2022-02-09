@@ -89,7 +89,7 @@ export class ImageService {
     const {
       url: { webUrl },
     } = await this.configsService.waitForConfigReady()
-    const { data } = await this.httpService.axiosRef.get<any>(image, {
+    const { data, headers } = await this.httpService.axiosRef.get<any>(image, {
       responseType: 'arraybuffer',
       headers: {
         'user-agent':
@@ -98,11 +98,13 @@ export class ImageService {
       },
     })
 
+    const imageType = headers['content-type']
+
     const buffer = Buffer.from(data)
     const size = imageSize(buffer)
 
     // get accent color
-    const accent = await getAverageRGB(buffer)
+    const accent = await getAverageRGB(buffer, imageType)
 
     return { size, accent }
   }
