@@ -6,7 +6,7 @@
   "license": "MIT",
   "dashboard": {
     "repo": "mx-space/admin-next",
-    "version": "3.13.1"
+    "version": "v3.14.0"
   },
   "husky": {
     "hooks": {
@@ -55,7 +55,8 @@
   "bump": {
     "before": [
       "git pull --rebase",
-      "ni"
+      "ni",
+      "node scripts/get-latest-admin-version.js"
     ],
     "after": [
       "sh ./scripts/assets-push.sh"
