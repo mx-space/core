@@ -2,7 +2,7 @@ lockfileVersion: 5.3
 
 overrides:
   typescript: 4.5.4
-  ioredis: 4.28.3
+  ioredis: 4.28.5
 
 specifiers:
   '@algolia/client-search': '*'
@@ -33,7 +33,7 @@ specifiers:
   '@types/ejs': 3.1.0
   '@types/get-image-colors': 4.0.1
   '@types/html-minifier': 4.0.2
-  '@types/ioredis': 4.28.7
+  '@types/ioredis': 4.28.8
   '@types/jest': 27.4.0
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.178
@@ -70,7 +70,7 @@ specifiers:
   husky: 7.0.4
   image-size: 1.0.1
   inquirer: '*'
-  ioredis: 4.28.3
+  ioredis: 4.28.5
   jest: 27.5.0
   js-yaml: '*'
   jszip: 3.7.1
@@ -191,7 +191,7 @@ devDependencies:
   '@types/ejs': 3.1.0
   '@types/get-image-colors': 4.0.1
   '@types/html-minifier': 4.0.2
-  '@types/ioredis': 4.28.7
+  '@types/ioredis': 4.28.8
   '@types/jest': 27.4.0
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.178
@@ -206,7 +206,7 @@ devDependencies:
   cross-env: 7.0.3
   eslint: 8.8.0
   husky: 7.0.4
-  ioredis: 4.28.3
+  ioredis: 4.28.5
   jest: 27.5.0_ts-node@10.4.0
   lint-staged: 12.3.3
   prettier: 2.5.1
@@ -1970,8 +1970,8 @@ packages:
       '@types/uglify-js': 3.13.1
     dev: true
 
-  /@types/ioredis/4.28.7:
-    resolution: {integrity: sha512-jnSGCD2/TPk02j6v6CGqaCEl0LbmLgK6jUuk/AFaSNUBV+SCHiG7E7fnwJreN6hw9GqtLAFkJs4zFbkJrz11mQ==}
+  /@types/ioredis/4.28.8:
+    resolution: {integrity: sha512-mULOyO2smtvkE1zmzRRA4P0+1UjEqusi014kXOL1q3CY0RgqkR5/wKvv+vAJbPw2Q66wPyylKeevUy+m/FaRMg==}
     dependencies:
       '@types/node': 16.11.24
     dev: true
@@ -3164,7 +3164,7 @@ packages:
     resolution: {integrity: sha512-TCxbp9ceuFveTKWuNaCX8QjoC41rAlHen4s63u9Yd+iXlw3efYmimc/u935PKPxSdhkXpnMes4mxtK3/yb0L4g==}
     engines: {node: '>=6.0.0'}
     dependencies:
-      ioredis: 4.28.3
+      ioredis: 4.28.5
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -5181,8 +5181,8 @@ packages:
     engines: {node: '>= 0.10'}
     dev: true
 
-  /ioredis/4.28.3:
-    resolution: {integrity: sha512-9JOWVgBnuSxpIgfpjc1OeY1OLmA4t2KOWWURTDRXky+eWO0LZhI33pQNT9gYxANUXfh5p/zYephYni6GPRsksQ==}
+  /ioredis/4.28.5:
+    resolution: {integrity: sha512-3GYo0GJtLqgNXj4YhrisLaNNvWSNwSS2wS4OELGfGxH8I69+XfNdnmV1AyN+ZqMh0i7eX+SWjrwFKDBDgfBC1A==}
     engines: {node: '>=6'}
     dependencies:
       cluster-key-slot: 1.1.0
