@@ -1,7 +1,7 @@
 FROM node:16-alpine as builder
 WORKDIR /app
 COPY . .
-RUN apk add git make gcc g++
+RUN apk add git make gcc g++ python alpine-sdk
 RUN git clone https://github.com/mx-space/assets.git --depth=1
 RUN rm -rf assets/.git
 RUN npm i -g pnpm

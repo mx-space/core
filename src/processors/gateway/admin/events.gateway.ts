@@ -86,7 +86,8 @@ export class AdminEventsGateway
   subscribeSocketToHandlerMap = new WeakMap<Socket, Function>()
 
   @SubscribeMessage('log')
-  async subscribeStdOut(client: Socket) {
+  async subscribeStdOut(client: Socket, data?: { prevLog?: boolean }) {
+    const { prevLog = true } = data || {}
     if (this.subscribeSocketToHandlerMap.has(client)) {
       return
     }
@@ -96,17 +97,20 @@ export class AdminEventsGateway
     }
 
     this.subscribeSocketToHandlerMap.set(client, handler)
-
-    const stream = fs
-      .createReadStream(resolve(LOG_DIR, getTodayLogFilePath()), {
-        encoding: 'utf-8',
-        highWaterMark: 32 * 1024,
-      })
-      .on('data', handler)
-      .on('end', () => {
-        this.cacheService.subscribe('log', handler)
-        stream.close()
-      })
+    if (prevLog) {
+      const stream = fs
+        .createReadStream(resolve(LOG_DIR, getTodayLogFilePath()), {
+          encoding: 'utf-8',
+          highWaterMark: 32 * 1024,
+        })
+        .on('data', handler)
+        .on('end', () => {
+          this.cacheService.subscribe('log', handler)
+          stream.close()
+        })
+    } else {
+      this.cacheService.subscribe('log', handler)
+    }
   }
 
   @SubscribeMessage('unlog')

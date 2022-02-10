@@ -11,6 +11,7 @@ import { createWriteStream, WriteStream } from 'fs'
 import { resolve } from 'path'
 import { argv } from 'zx'
 import { LOG_DIR } from '~/constants/path.constant'
+import type { RedisSubPub } from './redis-subpub.util'
 import { isDev, isTest } from './tool.util'
 
 export const getTodayLogFilePath = () =>
@@ -49,20 +50,26 @@ class DateTimeReporter extends FancyReporter {
       dateStyle: 'short',
     })
   }
+
+  subpub: RedisSubPub
   public log(logObj: ConsolaReporterLogObject, args: ConsolaReporterArgs) {
     super.log(logObj, args)
 
     if (!isTest) {
-      import('./redis-subpub.util').then(({ redisSubPub }) => {
-        // HACK: consola not officially interface of formatLogObj method
+      ;(async () => {
+        this.subpub =
+          this.subpub || (await import('./redis-subpub.util')).redisSubPub
+
         const formatOutput =
+          `${chalk.gray(dayjs().format('HH:mm:ss'))} ` +
           // @ts-expect-error
-          super.formatLogObj(logObj, { width: args.columns || 0 }) + '\n'
+          super.formatLogObj(logObj, { width: args.columns || 0 }) +
+          '\n'
         if (this.fs) {
           this.fs.write(formatOutput)
         }
-        redisSubPub.publish('log', formatOutput)
-      })
+        this.subpub.publish('log', formatOutput)
+      })()
     }
   }
 }
