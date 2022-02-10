@@ -138,7 +138,7 @@
     "@types/ejs": "3.1.0",
     "@types/get-image-colors": "4.0.1",
     "@types/html-minifier": "4.0.2",
-    "@types/ioredis": "4.28.7",
+    "@types/ioredis": "4.28.8",
     "@types/jest": "27.4.0",
     "@types/js-yaml": "4.0.5",
     "@types/lodash": "4.14.178",
@@ -175,6 +175,6 @@
   },
   "resolutions": {
     "typescript": "4.5.4",
-    "ioredis": "4.28.3"
+    "ioredis": "4.28.5"
   }
 }
