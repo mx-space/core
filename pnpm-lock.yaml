@@ -45,7 +45,7 @@ specifiers:
   '@types/ua-parser-js': 0.7.36
   '@vercel/ncc': 0.33.1
   algoliasearch: 4.12.1
-  apollo-server-fastify: 3.6.1
+  apollo-server-fastify: 3.6.3
   axios: '*'
   axios-retry: 3.2.4
   bcrypt: 5.0.1
@@ -116,7 +116,7 @@ dependencies:
   '@nestjs/common': 8.2.6_17d6ce38cc74803538e351a8f2ca91ba
   '@nestjs/core': 8.2.6_d8b9c8d4a84f1e051cb4eb753474a5ae
   '@nestjs/event-emitter': 1.0.0_d86dd164971a98d71cc003a4f36ff106
-  '@nestjs/graphql': 9.1.2_cb6d44b2706656267e7b0d2cc927b156
+  '@nestjs/graphql': 9.1.2_91c3bca9040680d7e362a9e419843305
   '@nestjs/jwt': 8.0.0_@nestjs+common@8.2.6
   '@nestjs/mapped-types': 1.0.1_cda5296fe38bb7a3dcdb892503001834
   '@nestjs/passport': 8.1.0_469354efd308cbdee43194b5fd6a2c15
@@ -130,7 +130,7 @@ dependencies:
   '@typegoose/auto-increment': 1.1.0_mongoose@6.2.0
   '@typegoose/typegoose': 9.6.2_mongoose@6.2.0
   algoliasearch: 4.12.1
-  apollo-server-fastify: 3.6.1_graphql@15.8.0
+  apollo-server-fastify: 3.6.3_graphql@15.8.0
   axios: 0.25.0
   axios-retry: 3.2.4
   bcrypt: 5.0.1
@@ -1277,13 +1277,14 @@ packages:
       detect-libc: 1.0.3
       https-proxy-agent: 5.0.0
       make-dir: 3.1.0
-      node-fetch: 2.6.6
+      node-fetch: 2.6.7
       nopt: 5.0.0
       npmlog: 4.1.2
       rimraf: 3.0.2
       semver: 7.3.5
       tar: 6.1.11
     transitivePeerDependencies:
+      - encoding
       - supports-color
     dev: false
 
@@ -1398,7 +1399,7 @@ packages:
       reflect-metadata: 0.1.13
     dev: false
 
-  /@nestjs/graphql/9.1.2_cb6d44b2706656267e7b0d2cc927b156:
+  /@nestjs/graphql/9.1.2_91c3bca9040680d7e362a9e419843305:
     resolution: {integrity: sha512-ncxmkKmrswnHJ+jLgc6tbkRET6HAyC3gK6WKt1CdPLjvMnXVpFVpyQMFSenNXxAndInw9IgaiSyiJFdRYZVD/w==}
     peerDependencies:
       '@apollo/federation': ^0.26.0 || ^0.27.0 || ^0.29.0 || ^0.33.0
@@ -1434,7 +1435,7 @@ packages:
       '@nestjs/common': 8.2.6_17d6ce38cc74803538e351a8f2ca91ba
       '@nestjs/core': 8.2.6_d8b9c8d4a84f1e051cb4eb753474a5ae
       '@nestjs/mapped-types': 1.0.0_cda5296fe38bb7a3dcdb892503001834
-      apollo-server-fastify: 3.6.1_graphql@15.8.0
+      apollo-server-fastify: 3.6.3_graphql@15.8.0
       chokidar: 3.5.2
       fast-glob: 3.2.7
       graphql: 15.8.0
@@ -2711,8 +2712,8 @@ packages:
       lru-cache: 6.0.0
     dev: false
 
-  /apollo-server-core/3.6.2_graphql@15.8.0:
-    resolution: {integrity: sha512-GNx41BnpH/yvGv7nTt4bQXuH5BDVs9CBQawfOcgtVdoVoWkazv1Dwy1muqPa7WDt2rk9oY+P6QymtJpBAtmzhg==}
+  /apollo-server-core/3.6.3_graphql@15.8.0:
+    resolution: {integrity: sha512-TFJmAlI6vPp1MHOSXqYkE6leAyMekWv/D/3ma11uETkcd3EPjERGmxtTXPJElMVEkOK9BEElYKthCrH7bjYLuw==}
     engines: {node: '>=12.0'}
     peerDependencies:
       graphql: ^15.3.0 || ^16.0.0
@@ -2760,16 +2761,15 @@ packages:
       graphql: 15.8.0
     dev: false
 
-  /apollo-server-fastify/3.6.1_graphql@15.8.0:
-    resolution: {integrity: sha512-6YHyNN3GAine3OBEPAeprYoaJlGpuuhC9+/cfuYTNAWicFydC+a7Rs9bYV8QofVmkjVyoNP3/+HTGsVwXbWvkA==}
+  /apollo-server-fastify/3.6.3_graphql@15.8.0:
+    resolution: {integrity: sha512-UtmIcUbZyupsFHn0G+6AJ0de6P6bkidKAzMzEwS9r1zw+dGnp8H11A8pZBDqn8Csb9Xa3g2qj8z6pXlbyDQXKw==}
     engines: {node: '>=12.0'}
     peerDependencies:
       fastify: ^3.17.0
       graphql: ^15.3.0 || ^16.0.0
     dependencies:
-      apollo-server-core: 3.6.2_graphql@15.8.0
+      apollo-server-core: 3.6.3_graphql@15.8.0
       apollo-server-types: 3.5.1_graphql@15.8.0
-      fast-json-stringify: 2.7.13
       fastify-accepts: 2.1.0
       fastify-cors: 6.0.2
       graphql: 15.8.0
@@ -3076,6 +3076,7 @@ packages:
       '@mapbox/node-pre-gyp': 1.0.5
       node-addon-api: 3.2.1
     transitivePeerDependencies:
+      - encoding
       - supports-color
     dev: false
 
@@ -6763,13 +6764,6 @@ packages:
     dependencies:
       lodash: 4.17.21
     dev: true
-
-  /node-fetch/2.6.6:
-    resolution: {integrity: sha512-Z8/6vRlTUChSdIgMa51jxQ4lrw/Jy5SOW10ObaA47/RElsAN2c5Pn8bTgFGWn/ibwzXTE8qwr1Yzx28vsecXEA==}
-    engines: {node: 4.x || >=6.0.0}
-    dependencies:
-      whatwg-url: 5.0.0
-    dev: false
 
   /node-fetch/2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
