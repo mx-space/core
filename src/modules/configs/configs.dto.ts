@@ -191,4 +191,8 @@ export class TerminalOptionsDto {
   )
   @Exclude({ toPlainOnly: true })
   password?: string
+
+  @IsOptional()
+  @IsString()
+  script?: string
 }

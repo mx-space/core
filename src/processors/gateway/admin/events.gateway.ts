@@ -175,7 +175,10 @@ export class AdminEventsGateway
         rows: data?.rows || 80,
       },
     )
-
+    if (terminalOptions.script) {
+      pty.write(terminalOptions.script)
+      pty.write('\n')
+    }
     pty.onData((data) => {
       client.send(this.gatewayMessageFormat(EventTypes.PTY, data))
     })
