@@ -130,7 +130,7 @@
     "@innei-util/eslint-config-ts": "latest",
     "@innei-util/prettier": "0.2.2",
     "@nestjs/cli": "8.2.0",
-    "@nestjs/schematics": "8.0.5",
+    "@nestjs/schematics": "8.0.6",
     "@nestjs/testing": "8.2.6",
     "@types/bcrypt": "5.0.0",
     "@types/cache-manager": "3.4.2",
