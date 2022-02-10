@@ -53,7 +53,8 @@ describe('Test ConfigsService', () => {
     const config = await service.getConfig()
 
     expect(config).toBeDefined()
-    expect(config).toStrictEqual(service.defaultConfig)
+    // use `toEqual` instead of `toStrictEqual` baseuse config is InstanceType of IConfig
+    expect(config).toEqual(service.defaultConfig)
   })
 
   describe('patch config should apply change between db and redis', () => {

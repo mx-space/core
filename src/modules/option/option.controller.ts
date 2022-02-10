@@ -49,7 +49,7 @@ export class OptionController {
     if (!value) {
       throw new BadRequestException('key is not exists.')
     }
-    return { data: value }
+    return { data: instanceToPlain(value) }
   }
 
   @Patch('/:key')

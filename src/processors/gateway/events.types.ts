@@ -42,6 +42,7 @@ export enum EventTypes {
   STDOUT = 'STDOUT',
 
   PTY = 'pty',
+  PTY_MESSAGE = 'pty_message',
 }
 
 export type NotificationTypes = 'error' | 'warn' | 'success' | 'info'

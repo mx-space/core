@@ -2,10 +2,11 @@ import { Socket } from 'socket.io'
 import { EventTypes } from './events.types'
 
 export abstract class BaseGateway {
-  public gatewayMessageFormat(type: EventTypes, message: any) {
+  public gatewayMessageFormat(type: EventTypes, message: any, code?: number) {
     return {
       type,
       data: message,
+      code,
     }
   }
 

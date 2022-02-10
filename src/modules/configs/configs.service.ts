@@ -8,12 +8,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import camelcaseKeys from 'camelcase-keys'
-import {
-  ClassConstructor,
-  instanceToPlain,
-  plainToClass,
-  plainToInstance,
-} from 'class-transformer'
+import { ClassConstructor, plainToInstance } from 'class-transformer'
 import { validateSync, ValidatorOptions } from 'class-validator'
 import cluster from 'cluster'
 import { cloneDeep, mergeWith } from 'lodash'
@@ -145,7 +140,7 @@ export class ConfigsService {
     return new Promise((resolve, reject) => {
       this.waitForConfigReady()
         .then((config) => {
-          resolve(instanceToPlain(config[key]) as any)
+          resolve(config[key])
         })
         .catch(reject)
     })
@@ -250,7 +245,7 @@ export class ConfigsService {
   }
 
   private validWithDto<T extends object>(dto: ClassConstructor<T>, value: any) {
-    const validModel = plainToClass(dto, value)
+    const validModel = plainToInstance(dto, value)
     const errors = validateSync(validModel, this.validOptions)
     if (errors.length > 0) {
       const error = this.validate.createExceptionFactory()(errors as any[])

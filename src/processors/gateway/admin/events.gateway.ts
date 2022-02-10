@@ -9,11 +9,13 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets'
 import { Emitter } from '@socket.io/redis-emitter'
+import { isNil } from 'lodash'
 import { IPty, spawn } from 'node-pty'
 import { resolve } from 'path'
 import SocketIO, { Socket } from 'socket.io'
 import { EventBusEvents } from '~/constants/event.constant'
 import { LOG_DIR } from '~/constants/path.constant'
+import { ConfigsService } from '~/modules/configs/configs.service'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getTodayLogFilePath } from '~/utils/consola.util'
 import { AuthService } from '../../../modules/auth/auth.service'
@@ -29,6 +31,7 @@ export class AdminEventsGateway
     private readonly jwtService: JwtService,
     private readonly authService: AuthService,
     private readonly cacheService: CacheService,
+    private readonly configService: ConfigsService,
   ) {
     super()
   }
@@ -118,7 +121,45 @@ export class AdminEventsGateway
   socket2ptyMap = new WeakMap<Socket, IPty>()
 
   @SubscribeMessage('pty')
-  async pty(client: Socket, data?: { cols: number; rows: number }) {
+  async pty(
+    client: Socket,
+    data?: { password?: string; cols: number; rows: number },
+  ) {
+    const password = data?.password
+    const terminalOptions = await this.configService.get('terminalOptions')
+    if (!terminalOptions.enable) {
+      client.send(
+        this.gatewayMessageFormat(EventTypes.PTY_MESSAGE, 'PTY 已禁用'),
+      )
+
+      return
+    }
+
+    const isValidPassword = isNil(terminalOptions.password)
+      ? true
+      : password === terminalOptions.password
+
+    if (!isValidPassword) {
+      if (typeof password === 'undefined' || password === '') {
+        client.send(
+          this.gatewayMessageFormat(
+            EventTypes.PTY_MESSAGE,
+            'PTY 验证未通过：需要密码验证',
+            10000,
+          ),
+        )
+      } else {
+        client.send(
+          this.gatewayMessageFormat(
+            EventTypes.PTY_MESSAGE,
+            'PTY 验证未通过：密码错误',
+            10001,
+          ),
+        )
+      }
+
+      return
+    }
     const zsh = await nothrow($`zsh --version`)
 
     const pty = spawn(
