@@ -10,13 +10,19 @@ import { JwtStrategy } from './jwt.strategy'
 
 const getMachineId = () => {
   const id = machineIdSync()
+
+  if (isDev && cluster.isPrimary) {
+    console.log(id)
+  }
   return id
 }
 export const __secret: any =
   SECURITY.jwtSecret ||
   Buffer.from(getMachineId()).toString('base64').slice(0, 15) ||
   'asjhczxiucipoiopiqm2376'
-
+if (isDev && cluster.isPrimary) {
+  console.log(__secret)
+}
 if (!CLUSTER.enable || cluster.isPrimary) {
   consola.log(
     'JWT Secret start with :',

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { Transform, Type } from 'class-transformer'
+import { Exclude, Transform, Type } from 'class-transformer'
 import {
   ArrayUnique,
   IsBoolean,
@@ -76,6 +76,7 @@ export class MailOptionsDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @Exclude({ toPlainOnly: true })
   pass: string
 
   @ValidateNested()
@@ -114,6 +115,7 @@ export class BackupOptionsDto {
 
   @IsOptional()
   @IsString()
+  @Exclude({ toPlainOnly: true })
   secretKey?: string
 
   @IsOptional()
@@ -133,6 +135,7 @@ export class BaiduSearchOptionsDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @Exclude({ toPlainOnly: true })
   token?: string
 }
 
@@ -143,6 +146,7 @@ export class AlgoliaSearchOptionsDto {
 
   @IsString()
   @IsOptional()
+  @Exclude({ toPlainOnly: true })
   apiKey?: string
 
   @IsString()
@@ -160,6 +164,7 @@ export class AdminExtraDto {
   background?: string
   @IsString()
   @IsOptional()
+  @Exclude({ toPlainOnly: true })
   gaodemapKey?: string
 
   @IsString()
@@ -172,4 +177,18 @@ export class AdminExtraDto {
    * 是否开启后台反代访问
    */
   enableAdminProxy?: boolean
+}
+
+export class TerminalOptionsDto {
+  @IsOptional()
+  @IsBoolean()
+  enable: boolean
+
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) =>
+    typeof value == 'string' && value.length == 0 ? null : value,
+  )
+  @Exclude({ toPlainOnly: true })
+  password?: string
 }

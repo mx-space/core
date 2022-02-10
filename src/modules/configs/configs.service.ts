@@ -8,7 +8,12 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import camelcaseKeys from 'camelcase-keys'
-import { ClassConstructor, plainToClass } from 'class-transformer'
+import {
+  ClassConstructor,
+  instanceToPlain,
+  plainToClass,
+  plainToInstance,
+} from 'class-transformer'
 import { validateSync, ValidatorOptions } from 'class-validator'
 import cluster from 'cluster'
 import { cloneDeep, mergeWith } from 'lodash'
@@ -28,14 +33,20 @@ import {
   BackupOptionsDto,
   MailOptionsDto,
 } from './configs.dto'
-import { IConfig } from './configs.interface'
+import { IConfig, IConfigKeys } from './configs.interface'
 import { OptionModel } from './configs.model'
+
+const allOptionKeys: Set<IConfigKeys> = new Set()
 const map: Record<string, any> = Object.entries(optionDtos).reduce(
-  (obj, [key, value]) => ({
-    ...obj,
-    [`${key.charAt(0).toLowerCase() + key.slice(1).replace(/Dto$/, '')}`]:
-      value,
-  }),
+  (obj, [key, value]) => {
+    const optionKey = (key.charAt(0).toLowerCase() +
+      key.slice(1).replace(/Dto$/, '')) as IConfigKeys
+    allOptionKeys.add(optionKey)
+    return {
+      ...obj,
+      [`${optionKey}`]: value,
+    }
+  },
   {},
 )
 
@@ -63,6 +74,9 @@ const generateDefaultConfig: () => IConfig = () => ({
     background:
       'https://gitee.com/xun7788/my-imagination/raw/master/images/88426823_p0.jpg',
     gaodemapKey: null,
+  },
+  terminalOptions: {
+    enable: false,
   },
 })
 
@@ -116,6 +130,10 @@ export class ConfigsService {
     const mergedConfig = generateDefaultConfig()
     configs.forEach((field) => {
       const name = field.name as keyof IConfig
+
+      if (!allOptionKeys.has(name)) {
+        return
+      }
       const value = field.value
       mergedConfig[name] = value
     })
@@ -127,7 +145,7 @@ export class ConfigsService {
     return new Promise((resolve, reject) => {
       this.waitForConfigReady()
         .then((config) => {
-          resolve(config[key])
+          resolve(instanceToPlain(config[key]) as any)
         })
         .catch(reject)
     })
@@ -138,7 +156,14 @@ export class ConfigsService {
 
     if (configCache) {
       try {
-        return JSON.parse(configCache)
+        try {
+          return plainToInstance<IConfig, any>(
+            IConfig as any,
+            JSON.parse(configCache) as any,
+          ) as any as IConfig
+        } catch {
+          return JSON.parse(configCache) as any
+        }
       } catch {
         await this.configInit()
         return await this.getConfig()

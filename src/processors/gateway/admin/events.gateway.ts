@@ -118,9 +118,15 @@ export class AdminEventsGateway
   socket2ptyMap = new WeakMap<Socket, IPty>()
 
   @SubscribeMessage('pty')
-  pty(client: Socket, data?: { cols: number; rows: number }) {
+  async pty(client: Socket, data?: { cols: number; rows: number }) {
+    const zsh = await nothrow($`zsh --version`)
+
     const pty = spawn(
-      os.platform() === 'win32' ? 'powershell.exe' : 'bash',
+      os.platform() === 'win32'
+        ? 'powershell.exe'
+        : zsh.exitCode == 0
+        ? 'zsh'
+        : 'bash',
       [],
       {
         cwd: os.homedir(),

@@ -11,6 +11,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
+import { instanceToPlain } from 'class-transformer'
 import { Auth } from '~/common/decorator/auth.decorator'
 import {
   EmailService,
@@ -34,7 +35,7 @@ export class OptionController {
 
   @Get('/')
   getOption() {
-    return this.configs.getConfig()
+    return instanceToPlain(this.configs.getConfig())
   }
 
   @Get('/:key')
@@ -67,11 +68,11 @@ export class OptionController {
     return {
       template,
       props: {
-        author: '作者 Author',
+        author: '评论人Kemmer',
         link: 'https://example.com',
         mail: 'example@example.com',
         text: '这是一段回复评论',
-        title: '标题',
+        title: '文章的标题',
         time: '2020/01/01',
         master: '你的名字',
         ip: '0.0.0.0',
