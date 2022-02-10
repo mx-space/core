@@ -120,7 +120,7 @@
     "passport-jwt": "4.0.0",
     "pluralize": "*",
     "reflect-metadata": "0.1.13",
-    "rxjs": "7.5.2",
+    "rxjs": "7.5.4",
     "snakecase-keys": "5.1.2",
     "ua-parser-js": "1.0.2",
     "xss": "1.0.10",
