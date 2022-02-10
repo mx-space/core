@@ -79,7 +79,7 @@
     "@socket.io/redis-adapter": "7.1.0",
     "@socket.io/redis-emitter": "4.1.1",
     "@typegoose/auto-increment": "1.1.0",
-    "@typegoose/typegoose": "9.6.0",
+    "@typegoose/typegoose": "9.6.2",
     "algoliasearch": "4.12.1",
     "apollo-server-fastify": "3.6.1",
     "axios": "*",
