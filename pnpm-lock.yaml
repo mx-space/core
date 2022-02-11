@@ -79,7 +79,7 @@ specifiers:
   mongoose: '*'
   mongoose-lean-id: 0.3.0
   mongoose-lean-virtuals: 0.9.0
-  mongoose-paginate-v2: 1.6.1
+  mongoose-paginate-v2: 1.6.2
   nanoid: 3.2.0
   nestjs-typegoose: 7.1.38
   node-machine-id: 1.1.12
@@ -153,7 +153,7 @@ dependencies:
   mongoose: 6.2.0
   mongoose-lean-id: 0.3.0_mongoose@6.2.0
   mongoose-lean-virtuals: 0.9.0_mongoose@6.2.0
-  mongoose-paginate-v2: 1.6.1
+  mongoose-paginate-v2: 1.6.2
   nanoid: 3.2.0
   nestjs-typegoose: 7.1.38_dc6409a2c79e8e63c119b593126fae97
   node-machine-id: 1.1.12
@@ -6193,8 +6193,8 @@ packages:
       mpath: 0.8.4
     dev: false
 
-  /mongoose-paginate-v2/1.6.1:
-    resolution: {integrity: sha512-h4WHJxvkv1MFL+8h/O7QJR91nU93FRff3JwBG6wLJaqTltgVl4NWxNR3wyiKsC2nOvFwPqlt6TwafIby4/1VfA==}
+  /mongoose-paginate-v2/1.6.2:
+    resolution: {integrity: sha512-mS5Um2l3moy7R0i1D4IO2WPs+VTxQ8PMbdlojOdfGXRFT4nCDx2BbjGRYcn06s3a35GVP97Bjs8pL4o+L2NDXA==}
     engines: {node: '>=4.0.0'}
     dev: false
 
