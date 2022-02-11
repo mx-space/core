@@ -1,13 +1,3 @@
-/*
- * @Author: Innei
- * @Date: 2020-06-06 18:28:53
- * @LastEditTime: 2020-07-12 11:06:06
- * @LastEditors: Innei
- * @FilePath: /mx-server/src/shared/base/dto/pager.dto.ts
- * @Coding with Love
- */
-
-import { ArgsType, Field, Int } from '@nestjs/graphql'
 import { ApiProperty } from '@nestjs/swagger'
 import { Expose, Transform } from 'class-transformer'
 import {
@@ -21,7 +11,6 @@ import {
   ValidateIf,
 } from 'class-validator'
 
-@ArgsType()
 export class PagerDto {
   @Min(1)
   @Max(50)
@@ -31,7 +20,6 @@ export class PagerDto {
     toClassOnly: true,
   })
   @ApiProperty({ example: 10 })
-  @Field(() => Int)
   size?: number
 
   @Transform(({ value: val }) => (val ? parseInt(val) : 1), {
@@ -41,7 +29,6 @@ export class PagerDto {
   @IsInt()
   @Expose()
   @ApiProperty({ example: 1 })
-  @Field(() => Int)
   page?: number
 
   @IsOptional()

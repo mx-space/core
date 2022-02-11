@@ -1,14 +1,11 @@
 import { UnprocessableEntityException } from '@nestjs/common'
-import { ArgsType, Field, ID } from '@nestjs/graphql'
 import { ApiProperty } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
 import { IsDefined, isMongoId, IsMongoId } from 'class-validator'
 
-@ArgsType()
 export class MongoIdDto {
   @IsMongoId()
   @ApiProperty({ example: '5e6f67e75b303781d2807278' })
-  @Field(() => ID)
   id: string
 }
 

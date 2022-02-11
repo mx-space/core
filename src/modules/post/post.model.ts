@@ -1,4 +1,3 @@
-import { Field, ObjectType } from '@nestjs/graphql'
 import { PartialType } from '@nestjs/mapped-types'
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
 import {
@@ -25,10 +24,7 @@ import {
   Paginator,
   WriteBaseModel,
 } from '~/shared/model/base.model'
-import {
-  CategoryModel as Category,
-  CategoryModel,
-} from '../category/category.model'
+import { CategoryModel as Category } from '../category/category.model'
 
 function autoPopulateCategory(
   this: Query<
@@ -49,7 +45,6 @@ function autoPopulateCategory(
 @index({ modified: -1 })
 @index({ text: 'text' })
 @modelOptions({ options: { customName: 'Post', allowMixed: Severity.ALLOW } })
-@ObjectType()
 export class PostModel extends WriteBaseModel {
   @prop({ trim: true, unique: true, required: true })
   @IsString()
@@ -65,7 +60,6 @@ export class PostModel extends WriteBaseModel {
   @prop({ ref: () => Category, required: true })
   @IsMongoId()
   @ApiProperty({ example: '5eb2c62a613a5ab0642f1f7a' })
-  @Field(() => String)
   categoryId: Ref<Category>
 
   @prop({
@@ -75,7 +69,6 @@ export class PostModel extends WriteBaseModel {
     justOne: true,
   })
   @ApiHideProperty()
-  @Field(() => CategoryModel, { nullable: true })
   public category: Ref<Category>
 
   @prop({ default: false })
@@ -98,7 +91,6 @@ export class PostModel extends WriteBaseModel {
   tags?: string[]
   @prop({ type: Count, default: { read: 0, like: 0 }, _id: false })
   @ApiHideProperty()
-  @Field(() => Count, { nullable: true })
   count?: Count
 
   static get protectedKeys() {
@@ -108,7 +100,6 @@ export class PostModel extends WriteBaseModel {
 
 export class PartialPostModel extends PartialType(PostModel) {}
 
-@ObjectType()
 export class PostPaginatorModel {
   data: PostModel[]
   pagination: Paginator

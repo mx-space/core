@@ -8,7 +8,6 @@ import {
   Logger,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import { GqlArgumentsHost } from '@nestjs/graphql'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { WriteStream } from 'fs'
 import { resolve } from 'path'
@@ -18,6 +17,7 @@ import { REFLECTOR } from '~/constants/system.constant'
 import { isDev } from '~/utils'
 import { getIp } from '../../utils/ip.util'
 import { LoggingInterceptor } from '../interceptors/logging.interceptor'
+
 type myError = {
   readonly status: number
   readonly statusCode?: number
@@ -31,7 +31,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private errorLogPipe: WriteStream
   constructor(@Inject(REFLECTOR) private reflector: Reflector) {}
   catch(exception: unknown, host: ArgumentsHost) {
-    const ctx = GqlArgumentsHost.create(host).switchToHttp()
+    const ctx = host.switchToHttp()
     const response = ctx.getResponse<FastifyReply>()
     const request = ctx.getRequest<FastifyRequest>()
 

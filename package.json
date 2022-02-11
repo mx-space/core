@@ -6,7 +6,7 @@
   "license": "MIT",
   "dashboard": {
     "repo": "mx-space/mx-admin",
-    "version": "3.14.3"
+    "version": "3.15.1"
   },
   "husky": {
     "hooks": {
@@ -67,7 +67,6 @@
     "@nestjs/common": "8.2.6",
     "@nestjs/core": "8.2.6",
     "@nestjs/event-emitter": "1.0.0",
-    "@nestjs/graphql": "9.1.2",
     "@nestjs/jwt": "8.0.0",
     "@nestjs/mapped-types": "*",
     "@nestjs/passport": "8.1.0",
@@ -81,7 +80,6 @@
     "@typegoose/auto-increment": "1.1.0",
     "@typegoose/typegoose": "9.6.2",
     "algoliasearch": "4.12.1",
-    "apollo-server-fastify": "3.6.3",
     "axios": "*",
     "axios-retry": "3.2.4",
     "bcrypt": "5.0.1",
@@ -98,7 +96,6 @@
     "fastify-multipart": "5.3.0",
     "fastify-swagger": "4.15.0",
     "get-image-colors": "4.0.1",
-    "graphql": "15.8.0",
     "html-minifier": "4.0.0",
     "image-size": "1.0.1",
     "inquirer": "*",

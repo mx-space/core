@@ -87,7 +87,6 @@ async function bootstrap() {
     const prefix = env ? 'P' : 'W'
     if (isDev) {
       consola.debug(`[${prefix + pid}] OpenApi: ${url}/api-docs`)
-      consola.debug(`[${prefix + pid}] GraphQL playground: ${url}/graphql`)
     }
     consola.success(`[${prefix + pid}] Server listen on: ${url}`)
     consola.success(`[${prefix + pid}] Admin Dashboard: ${url}/qaqdmin`)

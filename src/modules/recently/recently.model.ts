@@ -1,9 +1,7 @@
-import { ObjectType } from '@nestjs/graphql'
 import { modelOptions, prop } from '@typegoose/typegoose'
 import { IsOptional, IsString } from 'class-validator'
 import { BaseModel } from '~/shared/model/base.model'
 
-@ObjectType()
 @modelOptions({
   options: {
     customName: 'Recently',

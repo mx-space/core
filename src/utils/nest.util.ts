@@ -1,11 +1,12 @@
 import { ExecutionContext } from '@nestjs/common'
-import { GqlExecutionContext } from '@nestjs/graphql'
-
-export function getNestExecutionContextRequest(context: ExecutionContext) {
-  const req = context.switchToHttp().getRequest<KV>()
-  if (req) {
-    return req
-  }
-  const ctx = GqlExecutionContext.create(context)
-  return ctx.getContext().req
+import type { FastifyRequest } from 'fastify'
+export function getNestExecutionContextRequest(
+  context: ExecutionContext,
+): FastifyRequest & KV {
+  return context.switchToHttp().getRequest<FastifyRequest>()
+  // if (req) {
+  //   return req
+  // }
+  // const ctx = GqlExecutionContext.create(context)
+  // return ctx.getContext().req
 }

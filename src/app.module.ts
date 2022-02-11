@@ -1,12 +1,9 @@
 import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
-import { GraphQLModule } from '@nestjs/graphql'
 import cluster from 'cluster'
 import { mkdirSync } from 'fs'
-import { join } from 'path'
 import { CLUSTER } from './app.config'
 import { AppController } from './app.controller'
-import { AppResolver } from './app.resolver'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { RolesGuard } from './common/guard/roles.guard'
 import { AnalyzeInterceptor } from './common/interceptors/analyze.interceptor'
@@ -52,6 +49,7 @@ import { DatabaseModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
 import { LoggerModule } from './processors/logger/logger.module'
+
 // FIXME
 function mkdirs() {
   mkdirSync(DATA_DIR, { recursive: true })
@@ -72,14 +70,6 @@ if (!CLUSTER.enable || cluster.isPrimary) {
   imports: [
     DatabaseModule,
     CacheModule,
-
-    GraphQLModule.forRoot({
-      debug: isDev,
-      playground: isDev,
-      autoSchemaFile: join(process.cwd(), 'schema.gql'),
-      context: ({ req }) => ({ req }),
-      cors: false,
-    }),
 
     AggregateModule,
     AnalyzeModule,
@@ -116,8 +106,6 @@ if (!CLUSTER.enable || cluster.isPrimary) {
   ].filter(Boolean),
   controllers: [AppController],
   providers: [
-    AppResolver,
-
     {
       provide: APP_INTERCEPTOR,
       useClass: HttpCacheInterceptor,

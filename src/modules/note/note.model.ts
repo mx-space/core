@@ -1,12 +1,3 @@
-/*
- * @Author: Innei
- * @Date: 2021-01-01 13:25:04
- * @LastEditTime: 2021-03-12 11:13:52
- * @LastEditors: Innei
- * @FilePath: /server/libs/db/src/models/note.model.ts
- * Mark: Coding with Love
- */
-import { Field, ObjectType } from '@nestjs/graphql'
 import { PartialType } from '@nestjs/mapped-types'
 import { AutoIncrementID } from '@typegoose/auto-increment'
 import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
@@ -27,7 +18,6 @@ import {
 } from '~/shared/model/base.model'
 
 @modelOptions({ schemaOptions: { id: false, _id: false } })
-@ObjectType()
 export class Coordinate {
   @IsNumber()
   @prop()
@@ -43,7 +33,6 @@ export class Coordinate {
     _id: false,
   },
 })
-@ObjectType()
 export class NoteMusic {
   @IsString()
   @IsNotEmpty()
@@ -68,7 +57,6 @@ export class NoteMusic {
 @index({ text: 'text' })
 @index({ modified: -1 })
 @index({ nid: -1 })
-@ObjectType()
 export class NoteModel extends WriteBaseModel {
   @prop()
   @IsString()
@@ -117,7 +105,6 @@ export class NoteModel extends WriteBaseModel {
   @ValidateNested()
   @Type(() => Coordinate)
   @IsOptional()
-  @Field(() => Coordinate, { nullable: true })
   coordinates?: Coordinate
 
   @prop({ select: false })
@@ -126,14 +113,12 @@ export class NoteModel extends WriteBaseModel {
   location?: string
 
   @prop({ type: CountMixed, default: { read: 0, like: 0 }, _id: false })
-  @Field(() => CountMixed, { nullable: true })
   count?: CountMixed
 
   @prop({ type: [NoteMusic] })
   @ValidateNested({ each: true })
   @IsOptional()
   @Type(() => NoteMusic)
-  @Field(() => [NoteMusic], { nullable: true })
   music?: NoteMusic[]
 
   static get protectedKeys() {
@@ -143,17 +128,14 @@ export class NoteModel extends WriteBaseModel {
 
 export class PartialNoteModel extends PartialType(NoteModel) {}
 
-@ObjectType()
 export class NoteItemAggregateModel {
-  @Field(() => NoteModel)
   data: NoteModel
-  @Field(() => NoteModel, { nullable: true })
+
   prev?: NoteModel
-  @Field(() => NoteModel, { nullable: true })
+
   next?: NoteModel
 }
 
-@ObjectType()
 export class NotePaginatorModel {
   data: NoteModel[]
   pagination: Paginator

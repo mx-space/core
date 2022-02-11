@@ -1,4 +1,3 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql'
 import { ApiHideProperty } from '@nestjs/swagger'
 import { modelOptions, plugin, prop } from '@typegoose/typegoose'
 import { Type } from 'class-transformer'
@@ -29,12 +28,10 @@ import Paginate from 'mongoose-paginate-v2'
     },
   },
 })
-@ObjectType()
 export class BaseModel {
   @ApiHideProperty()
-  @Field(() => Date)
   created?: Date
-  @Field(() => ID)
+
   @ApiHideProperty()
   id?: string
 
@@ -43,7 +40,6 @@ export class BaseModel {
   }
 }
 
-@ObjectType()
 export class Paginator {
   /**
    * 总条数
@@ -68,7 +64,6 @@ export class Paginator {
 @modelOptions({
   schemaOptions: { _id: false },
 })
-@ObjectType()
 abstract class ImageModel {
   @prop()
   @IsOptional()
@@ -96,7 +91,6 @@ abstract class ImageModel {
   src: string
 }
 
-@ObjectType()
 export abstract class BaseCommentIndexModel extends BaseModel {
   @prop({ default: 0 })
   @ApiHideProperty()
@@ -112,7 +106,6 @@ export abstract class BaseCommentIndexModel extends BaseModel {
   }
 }
 
-@ObjectType()
 export class WriteBaseModel extends BaseCommentIndexModel {
   @prop({ trim: true, index: true, required: true })
   @IsString()
@@ -125,7 +118,6 @@ export class WriteBaseModel extends BaseCommentIndexModel {
 
   @prop({ type: ImageModel })
   @ApiHideProperty()
-  @Field(() => ImageModel, { nullable: true })
   @IsOptional()
   @ValidateNested()
   @Type(() => ImageModel)
@@ -133,7 +125,6 @@ export class WriteBaseModel extends BaseCommentIndexModel {
 
   @prop({ default: null })
   @ApiHideProperty()
-  @Field(() => Date, { nullable: true })
   modified: Date | null
 
   static get protectedKeys() {
@@ -145,7 +136,6 @@ export class WriteBaseModel extends BaseCommentIndexModel {
   schemaOptions: { id: false, _id: false },
   options: { customName: 'count' },
 })
-@ObjectType()
 export class CountMixed {
   @prop({ default: 0 })
   read?: number

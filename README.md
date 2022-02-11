@@ -4,12 +4,12 @@
 [![GitHub issues](https://img.shields.io/github/issues-raw/mx-space/mx-server.svg?style=flat)](https://github.com/mx-space/mx-server/issues)
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/mx-space/mx-server/Deploy?label=deploy&style=flat)](https://github.com/mx-space/mx-server/actions?query=workflow:%22Deploy%22)
 [![GitHub license](https://img.shields.io/github/license/mx-space/mx-server.svg?style=flat)](https://github.com/mx-space/mx-server/blob/main/LICENSE)
-[![wakatime](https://wakatime.com/badge/github/mx-space/mx-server.svg)](https://wakatime.com/badge/github/mx-space/mx-server)
+[![wakatime](https://wakatime.com/badge/user/9213dc96-df0d-4e66-b0bb-50f9e04e988c/project/3e6fb54a-082c-4110-bccc-b641bad13882.svg)](https://wakatime.com/badge/user/9213dc96-df0d-4e66-b0bb-50f9e04e988c/project/3e6fb54a-082c-4110-bccc-b641bad13882)
 [![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/innei/mx-server)](https://hub.docker.com/repository/docker/innei/mx-server)
 
-> **RESTful API service & GraphQL for Mix Space, powered by [`nestjs`](https://github.com/nestjs/nest), required [`mongoDB`](https://www.mongodb.com/) & [`Redis`](https://redis.io/).**
+> **RESTful API service for Mix Space, powered by [`nestjs`](https://github.com/nestjs/nest), required [`mongoDB`](https://www.mongodb.com/) & [`Redis`](https://redis.io/).**
 
-> **适用于 Mix Space 的 RESTful API & GraphQL 服务端应用；基于 [`nestjs`](https://github.com/nestjs/nest) (nodejs)，需安装 [`mongoDB`](https://www.mongodb.com/) 和 [`Redis`](https://redis.io/) 方可完整运行。**
+> **适用于 Mix Space 的 RESTful API 服务端应用；基于 [`nestjs`](https://github.com/nestjs/nest) (nodejs)，需安装 [`mongoDB`](https://www.mongodb.com/) 和 [`Redis`](https://redis.io/) 方可完整运行。**
 
 > v3 还是使用 [`nestjs`](https://github.com/nestjs/nest) 进行重构，之前的版本在 [此仓库](https://github.com/mx-space/server)。
 
@@ -66,7 +66,6 @@ docker-compose up -d
 ├── app.config.ts                 # 主程序配置，数据库、程序、第三方，一切可配置项
 ├── app.controller.ts             # 主程序根控制器
 ├── app.module.ts                 # 主程序根模块，负责各业务模块的聚合
-├── app.resolver.ts               # 主程序根 GraphQL Resolver
 ├── common                        # 存放中间件
 │   ├── adapters                  # Fastify 适配器的配置
 │   ├── decorator                 # 业务装饰器
