@@ -112,7 +112,7 @@ export class PageProxyController {
       }
       const v = adminVersion || latestVersion
       const indexEntryUrl = `https://raw.githubusercontent.com/${PKG.dashboard.repo}/page_v${v}/index.html`
-      const indexEntryCdnUrl = `https://cdn.jsdelivr.net/gh/${PKG.dashboard.repo}@page_v${v}/index.html`
+      const indexEntryCdnUrl = `https://fastly.jsdelivr.net/gh/${PKG.dashboard.repo}@page_v${v}/index.html`
       const tasks = [
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         fetch(indexEntryUrl)
