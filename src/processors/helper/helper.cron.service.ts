@@ -194,9 +194,6 @@ export class CronService {
   @Cron(CronExpression.EVERY_WEEKEND, { name: 'cleanTempDirectory' })
   @CronDescription('清理日志文件')
   async cleanLogFile() {
-    await rm(LOG_DIR, { recursive: true })
-    mkdirp.sync(LOG_DIR)
-
     const files = (await readdir(LOG_DIR)).filter(
       (file) => file !== 'error.log',
     )

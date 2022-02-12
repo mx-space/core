@@ -31,7 +31,7 @@ export class SpiderGuard implements CanActivate {
     if (ua && !isSpiderUA) {
       return true
     }
-    throw new ForbiddenException('爬虫是被禁止的哦')
+    throw new ForbiddenException('爬虫是被禁止的哦，UA: ' + ua)
   }
 
   getRequest(context: ExecutionContext) {
