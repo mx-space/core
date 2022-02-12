@@ -1,7 +1,6 @@
-const isTEST = !!process.env.TEST
-const isDev = process.env.NODE_ENV === 'development'
 import cluster from 'cluster'
 import { argv } from 'zx'
+import { isDev, isTest } from './global/env.global'
 
 export const PORT = argv.port || process.env.PORT || 2333
 export const API_VERSION = 2
@@ -28,7 +27,7 @@ export const MONGO_DB = {
   port: argv.db_port || 27017,
   get uri() {
     return `mongodb://${this.host}:${this.port}/${
-      isTEST ? 'mx-space_unitest' : this.dbName
+      isTest ? 'mx-space_unitest' : this.dbName
     }`
   },
 }
@@ -55,7 +54,7 @@ export const SECURITY = {
   jwtSecret: argv.jwt_secret || argv.jwtSecret,
   jwtExpire: '7d',
   // 跳过登陆鉴权
-  skipAuth: isTEST ? true : false,
+  skipAuth: isTest ? true : false,
 }
 
 export const CLUSTER = {

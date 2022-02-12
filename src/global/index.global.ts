@@ -1,6 +1,9 @@
-import { consola } from './consola.util'
-import './dayjs.util'
-import { isDev } from './tool.util'
+import 'zx/globals'
+import { consola } from './consola.global'
+import './dayjs.global'
+import { isDev } from './env.global'
+
+$.verbose = isDev
 
 console.debug = (...rest) => {
   if (isDev) {

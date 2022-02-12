@@ -1,9 +1,5 @@
 import { isObject } from 'lodash'
 
-export const isDev = process.env.NODE_ENV == 'development'
-
-export const isTest = !!process.env.TEST
-
 export const md5 = (text: string) =>
   require('crypto').createHash('md5').update(text).digest('hex')
 

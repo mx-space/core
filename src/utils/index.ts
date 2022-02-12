@@ -1,5 +1,4 @@
 export * from './crud.util'
-export * from './dayjs.util'
 export * from './ip.util'
 export * from './nest.util'
 export * from './query.util'

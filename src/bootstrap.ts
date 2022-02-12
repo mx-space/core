@@ -3,22 +3,21 @@ import { NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import cluster from 'cluster'
 import { performance } from 'perf_hooks'
-import { API_VERSION, CLUSTER, CROSS_DOMAIN, PORT } from './app.config'
+import { API_VERSION, CROSS_DOMAIN, PORT } from './app.config'
 import { AppModule } from './app.module'
-import { Cluster } from './cluster'
 import { fastifyApp } from './common/adapters/fastify.adapter'
 import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
+import { isTest } from './global/env.global'
 import { MyLogger } from './processors/logger/logger.service'
-import { isTest } from './utils'
 const Origin = Array.isArray(CROSS_DOMAIN.allowedOrigins)
   ? CROSS_DOMAIN.allowedOrigins
   : false
 
 declare const module: any
 
-async function bootstrap() {
+export async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     fastifyApp,
@@ -99,10 +98,4 @@ async function bootstrap() {
     module.hot.accept()
     module.hot.dispose(() => app.close())
   }
-}
-
-if (CLUSTER.enable) {
-  Cluster.register(parseInt(CLUSTER.workers) || os.cpus().length, bootstrap)
-} else {
-  bootstrap()
 }

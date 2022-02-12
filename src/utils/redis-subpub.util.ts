@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common'
 import IORedis from 'ioredis'
 import { REDIS } from '~/app.config'
-import { isTest } from './tool.util'
+import { isTest } from '../global/env.global'
 class RedisSubPub {
   public pubClient: IORedis.Redis
   public subClient: IORedis.Redis

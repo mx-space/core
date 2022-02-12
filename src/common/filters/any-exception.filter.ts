@@ -14,7 +14,7 @@ import { resolve } from 'path'
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 import { LOG_DIR } from '~/constants/path.constant'
 import { REFLECTOR } from '~/constants/system.constant'
-import { isDev } from '~/utils'
+import { isDev } from '~/global/env.global'
 import { getIp } from '../../utils/ip.util'
 import { LoggingInterceptor } from '../interceptors/logging.interceptor'
 

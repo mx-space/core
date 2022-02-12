@@ -10,9 +10,9 @@ import { createWriteStream, WriteStream } from 'fs'
 import { resolve } from 'path'
 import { argv } from 'zx'
 import { LOG_DIR } from '~/constants/path.constant'
-import { isDev, isTest } from '../global/env.global'
-import type { RedisSubPub } from './redis-subpub.util'
-import { getShortDate, getShortTime } from './time.util'
+import type { RedisSubPub } from '../utils/redis-subpub.util'
+import { getShortDate, getShortTime } from '../utils/time.util'
+import { isDev, isTest } from './env.global'
 
 export const getTodayLogFilePath = () =>
   resolve(LOG_DIR, 'stdout_' + getShortDate(new Date()) + '.log')
@@ -58,7 +58,8 @@ class DateTimeReporter extends FancyReporter {
     if (!isTest) {
       ;(async () => {
         this.subpub =
-          this.subpub || (await import('./redis-subpub.util')).redisSubPub
+          this.subpub ||
+          (await import('../utils/redis-subpub.util')).redisSubPub
 
         const formatOutput =
           `${chalk.gray(getShortTime(new Date()))} ` +
