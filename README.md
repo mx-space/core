@@ -50,7 +50,6 @@ node index.js
 
 ## Docker 部署
 
-
 ```bash
 cd
 mkdir -p mx/server
@@ -194,10 +193,10 @@ ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> Analyz
   1. [helper] 辅助类
   1. [CountingService] 提供更新阅读计数
   1. [CronService] 维护管理计划任务
-      - 自动备份
-      - 推送百度搜索
-      - 清除缓存
-      - etc.
+     - 自动备份
+     - 推送百度搜索
+     - 清除缓存
+     - etc.
   1. [EmailService] 送信服务
   1. [HttpService] 请求模块
   1. [ImageService] 图片处理
@@ -224,4 +223,4 @@ Thanks
 
 # 许可
 
-This project is GPLv3 licensed. 2021 Innei
+This project is licensed under AGPLv3 licensed. 2021 Innei
