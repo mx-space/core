@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { Cron, CronExpression } from '@nestjs/schedule'
+import cluster from 'cluster'
 import COS from 'cos-nodejs-sdk-v5'
 import dayjs from 'dayjs'
 import { existsSync } from 'fs'
@@ -8,6 +9,7 @@ import { readdir, rm, writeFile } from 'fs/promises'
 import mkdirp from 'mkdirp'
 import { InjectModel } from 'nestjs-typegoose'
 import { join } from 'path'
+import { isMainCluster } from '~/app.config'
 import { CronDescription } from '~/common/decorator/cron-description.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event.constant'
@@ -55,6 +57,27 @@ export class CronService {
     private readonly searchService: SearchService,
   ) {
     this.logger = new Logger(CronService.name)
+
+    if (isMainCluster || cluster.isWorker) {
+      Object.getOwnPropertyNames(this.constructor.prototype)
+        .filter((name) => name != 'constructor')
+        .forEach((name) => {
+          const metaKeys = Reflect.getOwnMetadataKeys(this[name])
+          const metaMap = new Map<any, any>()
+          for (const key of metaKeys) {
+            metaMap.set(key, Reflect.getOwnMetadata(key, this[name]))
+          }
+          const originMethod = this[name]
+          this[name] = (...args) => {
+            if (cluster.worker.id === 1 || isMainCluster) {
+              originMethod.call(this, ...args)
+            }
+          }
+          for (const metaKey of metaKeys) {
+            Reflect.defineMetadata(metaKey, metaMap.get(metaKey), this[name])
+          }
+        })
+    }
   }
   /**
    *
@@ -66,14 +89,14 @@ export class CronService {
     try {
       this.logger.log('--> 更新 Bot 列表')
       const { data: json } = await this.http.axiosRef.get(
-        'https://cdn.jsdelivr.net/gh/atmire/COUNTER-Robots@master/COUNTER_Robots_list.json',
+        'https://fastly.jsdelivr.net/gh/atmire/COUNTER-Robots@master/COUNTER_Robots_list.json',
       )
 
       await writeFile(LOCAL_BOT_LIST_DATA_FILE_PATH, JSON.stringify(json), {
         encoding: 'utf-8',
         flag: 'w+',
       })
-
+      this.logger.log('--> 更新 Bot 列表成功')
       return json
     } catch (err) {
       this.logger.warn('更新 Bot 列表错误')
