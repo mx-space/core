@@ -37,6 +37,7 @@ import { PageModule } from './modules/page/page.module'
 import { PageProxyModule } from './modules/pageproxy/pageproxy.module'
 import { PostModule } from './modules/post/post.module'
 import { ProjectModule } from './modules/project/project.module'
+import { PTYModule } from './modules/pty/pty.module'
 import { RecentlyModule } from './modules/recently/recently.module'
 import { SayModule } from './modules/say/say.module'
 import { SearchModule } from './modules/search/search.module'
@@ -87,6 +88,7 @@ if (!CLUSTER.enable || cluster.isPrimary) {
     OptionModule,
     PageModule,
     PostModule,
+    PTYModule,
     ProjectModule,
     RecentlyModule,
     SayModule,

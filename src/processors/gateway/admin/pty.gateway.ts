@@ -7,6 +7,7 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets'
 import { isNil } from 'lodash'
+import { nanoid } from 'nanoid'
 import { IPty, spawn } from 'node-pty'
 import { Socket } from 'socket.io'
 import { RedisKeys } from '~/constants/cache.constant'
@@ -88,13 +89,28 @@ export class PTYGateway
       },
     )
 
-    this.cacheService
-      .getClient()
-      .hset(
-        getRedisKey(RedisKeys.PTYSession),
-        pty.pid,
-        JSON.stringify(Intl.DateTimeFormat().format(new Date())),
-      )
+    const nid = nanoid()
+
+    this.cacheService.getClient().hset(
+      getRedisKey(RedisKeys.PTYSession),
+      nid,
+
+      new Date().toISOString() + ',' + client.conn.remoteAddress,
+    )
+    pty.onExit(async () => {
+      const hvalue = await this.cacheService
+        .getClient()
+        .hget(getRedisKey(RedisKeys.PTYSession), nid)
+      if (hvalue) {
+        this.cacheService
+          .getClient()
+          .hset(
+            getRedisKey(RedisKeys.PTYSession),
+            nid,
+            hvalue + ',' + new Date().toISOString(),
+          )
+      }
+    })
 
     if (terminalOptions.script) {
       pty.write(terminalOptions.script)

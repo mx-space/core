@@ -101,6 +101,7 @@ docker-compose up -d
 │   ├── pageproxy
 │   ├── post
 │   ├── project
+│   ├── pty
 │   ├── recently
 │   ├── say
 │   ├── search

@@ -15,7 +15,7 @@ export const getShortDate = (date: Date) => {
     .format(date)
     .replace(/\//g, '-')
 }
-
+/** 2-12-22, 21:31:42 */
 export const getShortDateTime = (date: Date) => {
   return Intl.DateTimeFormat('en-US', {
     dateStyle: 'short',
