@@ -9,7 +9,7 @@ RUN pnpm install
 RUN pnpm bundle
 
 FROM node:16-alpine
-RUN apk add zip unzip mongodb-tools --no-cache
+RUN apk add zip unzip mongodb-tools bash --no-cache
 
 WORKDIR /app
 COPY --from=builder /app/out .
