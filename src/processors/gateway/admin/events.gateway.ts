@@ -13,10 +13,12 @@ import { isNil } from 'lodash'
 import { IPty, spawn } from 'node-pty'
 import { resolve } from 'path'
 import SocketIO, { Socket } from 'socket.io'
+import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event.constant'
 import { LOG_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { CacheService } from '~/processors/cache/cache.service'
+import { getRedisKey } from '~/utils'
 import { getTodayLogFilePath } from '~/utils/consola.util'
 import { AuthService } from '../../../modules/auth/auth.service'
 import { BaseGateway } from '../base.gateway'
@@ -179,6 +181,15 @@ export class AdminEventsGateway
         rows: data?.rows || 80,
       },
     )
+
+    this.cacheService
+      .getClient()
+      .hset(
+        getRedisKey(RedisKeys.PTYSession),
+        pty.pid,
+        JSON.stringify(Intl.DateTimeFormat().format(new Date())),
+      )
+
     if (terminalOptions.script) {
       pty.write(terminalOptions.script)
       pty.write('\n')

@@ -7,12 +7,11 @@ import {
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 import { compareSync } from 'bcrypt'
-import dayjs from 'dayjs'
 import { nanoid } from 'nanoid'
 import { InjectModel } from 'nestjs-typegoose'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
-import { getAvatar, sleep } from '~/utils'
+import { getAvatar, getShortDate, sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 import { AuthService } from '../auth/auth.service'
 import { UserDocument, UserModel } from './user.model'
@@ -131,7 +130,7 @@ export class UserService {
     // save to redis
     process.nextTick(async () => {
       const redisClient = this.redis.getClient()
-      const dateFormat = dayjs().format('YYYY-MM-DD')
+      const dateFormat = getShortDate(new Date())
 
       await redisClient.sadd(
         getRedisKey(RedisKeys.LoginRecord, dateFormat),

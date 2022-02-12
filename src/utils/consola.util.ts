@@ -6,16 +6,16 @@ import consola_, {
   LogLevel,
 } from 'consola'
 import { CronJob } from 'cron'
-import dayjs from 'dayjs'
 import { createWriteStream, WriteStream } from 'fs'
 import { resolve } from 'path'
 import { argv } from 'zx'
 import { LOG_DIR } from '~/constants/path.constant'
 import type { RedisSubPub } from './redis-subpub.util'
+import { getShortDate, getShortTime } from './time.util'
 import { isDev, isTest } from './tool.util'
 
 export const getTodayLogFilePath = () =>
-  resolve(LOG_DIR, 'stdout_' + dayjs().format('YYYY-MM-DD') + '.log')
+  resolve(LOG_DIR, 'stdout_' + getShortDate(new Date()) + '.log')
 class DateTimeReporter extends FancyReporter {
   private fs: WriteStream
   private job: CronJob
@@ -61,7 +61,7 @@ class DateTimeReporter extends FancyReporter {
           this.subpub || (await import('./redis-subpub.util')).redisSubPub
 
         const formatOutput =
-          `${chalk.gray(dayjs().format('HH:mm:ss'))} ` +
+          `${chalk.gray(getShortTime(new Date()))} ` +
           // @ts-expect-error
           super.formatLogObj(logObj, { width: args.columns || 0 }) +
           '\n'

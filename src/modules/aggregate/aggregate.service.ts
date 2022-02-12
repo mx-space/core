@@ -12,6 +12,7 @@ import { CacheService } from '~/processors/cache/cache.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { addYearCondition } from '~/utils/query.util'
 import { getRedisKey } from '~/utils/redis.util'
+import { getShortDate } from '~/utils/time.util'
 import { CategoryModel } from '../category/category.model'
 import { CategoryService } from '../category/category.service'
 import { CommentState } from '../comment/comment.model'
@@ -307,7 +308,7 @@ export class AggregateService {
 
   async getCounts() {
     const redisClient = this.cacheService.getClient()
-    const dateFormat = dayjs().format('YYYY-MM-DD')
+    const dateFormat = getShortDate(new Date())
 
     const [
       online,

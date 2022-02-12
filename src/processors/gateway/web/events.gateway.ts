@@ -11,11 +11,11 @@ import {
 import { Emitter } from '@socket.io/redis-emitter'
 import { plainToClass } from 'class-transformer'
 import { validate } from 'class-validator'
-import dayjs from 'dayjs'
 import SocketIO from 'socket.io'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
+import { getShortDate } from '~/utils/time.util'
 import { BaseGateway } from '../base.gateway'
 import { EventTypes } from '../events.types'
 import { DanmakuDto } from './dtos/danmaku.dto'
@@ -65,7 +65,7 @@ export class WebEventsGateway
 
     process.nextTick(async () => {
       const redisClient = this.cacheService.getClient()
-      const dateFormat = dayjs().format('YYYY-MM-DD')
+      const dateFormat = getShortDate(new Date())
 
       // get and store max_online_count
       const maxOnlineCount =

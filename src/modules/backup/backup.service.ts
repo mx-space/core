@@ -5,7 +5,6 @@ import {
   Logger,
 } from '@nestjs/common'
 import { exec } from 'child_process'
-import dayjs from 'dayjs'
 import { existsSync, statSync } from 'fs'
 import { readdir, readFile, rm, writeFile } from 'fs/promises'
 import mkdirp from 'mkdirp'
@@ -16,6 +15,7 @@ import { MONGO_DB } from '~/app.config'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'
+import { getMediumDateTime } from '~/utils'
 import { getFolderSize } from '~/utils/system.util'
 import { ConfigsService } from '../configs/configs.service'
 
@@ -59,14 +59,13 @@ export class BackupService {
   }
 
   async backup() {
-    const nowStr = dayjs().format('YYYY-MM-DD-HH:mm:ss')
     const { backupOptions: configs } = await this.configs.waitForConfigReady()
     if (!configs.enable) {
       return
     }
     this.logger.log('--> 备份数据库中')
     // 用时间格式命名文件夹
-    const dateDir = nowStr
+    const dateDir = getMediumDateTime(new Date())
 
     const backupDirPath = join(BACKUP_DIR, dateDir)
     mkdirp.sync(backupDirPath)
@@ -96,7 +95,7 @@ export class BackupService {
     } catch (e) {
       this.logger.error(
         '--> 备份失败, 请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致, ' +
-          e.message,
+          e.message || e.stderr,
       )
       throw e
     }

@@ -22,7 +22,7 @@ export class AggregateController {
   @Get('/')
   @CacheKey(CacheKeys.AggregateCatch)
   @CacheTTL(300)
-  async aggregate(@IsMaster() isMaster: boolean) {
+  async aggregate() {
     const tasks = await Promise.allSettled([
       this.configsService.getMaster(),
       this.aggregateService.getAllCategory(),
