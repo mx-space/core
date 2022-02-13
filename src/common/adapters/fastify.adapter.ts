@@ -31,13 +31,16 @@ app.getInstance().addHook('onRequest', (request, reply, done) => {
       'Eh. PHP is not support on this machine. Yep, I also think PHP is bestest programming language. But for me it is beyond my reach.'
 
     return reply.code(418).send()
-  } else if (url.match(/\/(adminer|admin|wp-login)$/g)) {
+  } else if (url.match(/\/(adminer|admin|wp-login|phpMyAdmin|\.env)$/gi)) {
+    const ua = request.raw.headers['user-agent']
+    const isMxSpaceClient = ua.match('mx-space')
     reply.raw.statusMessage = 'Hey, What the fuck are you doing!'
-    return reply.code(200).send()
+    reply.raw.statusCode = isMxSpaceClient ? 666 : 200
+    return reply.send('Check request log to find an egg.')
   }
 
   // skip favicon request
-  if (url.match(/favicon.ico$/) || url.match(/manifest.json$/)) {
+  if (url.match(/favicon\.ico$/) || url.match(/manifest\.json$/)) {
     return reply.code(204).send()
   }
 

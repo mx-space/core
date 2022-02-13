@@ -22,9 +22,9 @@ import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CRON_DESCRIPTION } from '~/constants/meta.constant'
 import { LOG_DIR } from '~/constants/path.constant'
 import { SCHEDULE_CRON_OPTIONS } from '~/constants/system.constant'
+import { getTodayLogFilePath } from '~/global/consola.global'
 import { CronService } from '~/processors/helper/helper.cron.service'
 import { TaskQueueService } from '~/processors/helper/helper.tq.service'
-import { getTodayLogFilePath } from '~/utils/consola.util'
 import { LogQueryDto, LogTypeDto } from './health.dto'
 @Controller({
   path: 'health',

@@ -10,8 +10,8 @@ import { createWriteStream, WriteStream } from 'fs'
 import { resolve } from 'path'
 import { argv } from 'zx'
 import { LOG_DIR } from '~/constants/path.constant'
-import type { RedisSubPub } from '../utils/redis-subpub.util'
-import { getShortDate, getShortTime } from '../utils/time.util'
+import { redisSubPub } from '../utils/redis-subpub.util'
+import { getShortDate } from '../utils/time.util'
 import { isDev, isTest } from './env.global'
 
 export const getTodayLogFilePath = () =>
@@ -44,6 +44,7 @@ class DateTimeReporter extends FancyReporter {
     })
     this.job.start()
   }
+  // consola right time formater
   formatDate(date: Date) {
     return date.toLocaleString(undefined, {
       hour12: false,
@@ -52,25 +53,20 @@ class DateTimeReporter extends FancyReporter {
     })
   }
 
-  subpub: RedisSubPub
   public log(logObj: ConsolaReporterLogObject, args: ConsolaReporterArgs) {
     super.log(logObj, args)
 
     if (!isTest) {
       ;(async () => {
-        this.subpub =
-          this.subpub ||
-          (await import('../utils/redis-subpub.util')).redisSubPub
-
         const formatOutput =
-          `${chalk.gray(getShortTime(new Date()))} ` +
+          `${chalk.gray(this.formatDate(new Date()))} ` +
           // @ts-expect-error
           super.formatLogObj(logObj, { width: args.columns || 0 }) +
           '\n'
         if (this.fs) {
           this.fs.write(formatOutput)
         }
-        this.subpub.publish('log', formatOutput)
+        redisSubPub.publish('log', formatOutput)
       })()
     }
   }
@@ -79,6 +75,11 @@ const consola = consola_.create({
   reporters: [new DateTimeReporter()],
   level: isDev || argv.verbose ? LogLevel.Trace : LogLevel.Info,
 })
+
+const console = global.console
+const stdout = process.stdout
+const stderr = process.stderr
+
 // HINT: must be called before any other log calls, export it in the end of your file
 consola.wrapAll()
 export { consola }
