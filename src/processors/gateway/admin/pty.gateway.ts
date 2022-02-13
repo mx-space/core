@@ -14,7 +14,7 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { CacheService } from '~/processors/cache/cache.service'
-import { getRedisKey } from '~/utils'
+import { getIp, getRedisKey } from '~/utils'
 import { EventTypes } from '../events.types'
 import { AuthGateway } from './auth.gateway'
 
@@ -90,12 +90,17 @@ export class PTYGateway
     )
 
     const nid = nanoid()
+    const ip =
+      client.handshake.headers['x-forwarded-for'] ||
+      client.handshake.address ||
+      getIp(client.request) ||
+      client.conn.remoteAddress
 
     this.cacheService.getClient().hset(
       getRedisKey(RedisKeys.PTYSession),
       nid,
 
-      new Date().toISOString() + ',' + client.conn.remoteAddress,
+      new Date().toISOString() + ',' + ip,
     )
     pty.onExit(async () => {
       const hvalue = await this.cacheService
