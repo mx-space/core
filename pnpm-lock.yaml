@@ -42,7 +42,7 @@ specifiers:
   '@types/nodemailer': 6.4.4
   '@types/passport-jwt': 3.0.6
   '@types/ua-parser-js': 0.7.36
-  '@vercel/ncc': 0.33.2
+  '@vercel/ncc': 0.33.3
   algoliasearch: 4.12.1
   axios: '*'
   axios-retry: 3.2.4
@@ -195,7 +195,7 @@ devDependencies:
   '@types/nodemailer': 6.4.4
   '@types/passport-jwt': 3.0.6
   '@types/ua-parser-js': 0.7.36
-  '@vercel/ncc': 0.33.2
+  '@vercel/ncc': 0.33.3
   cron: 1.7.2
   cross-env: 7.0.3
   eslint: 8.8.0
@@ -2097,8 +2097,8 @@ packages:
       eslint-visitor-keys: 3.2.0
     dev: true
 
-  /@vercel/ncc/0.33.2:
-    resolution: {integrity: sha512-rzl7vNljla3/qZeHDlk8k+4LYGI793LewFgrnPRBBMdpUdJNoy8wJ/bYDzKWbTbmPfWzHgkiBZsynW12JrAMdg==}
+  /@vercel/ncc/0.33.3:
+    resolution: {integrity: sha512-JGZ11QV+/ZcfudW2Cz2JVp54/pJNXbsuWRgSh2ZmmZdQBKXqBtIGrwI1Wyx8nlbzAiEFe7FHi4K1zX4//jxTnQ==}
     hasBin: true
     dev: true
 

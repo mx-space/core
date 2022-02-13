@@ -145,7 +145,7 @@
     "@types/nodemailer": "6.4.4",
     "@types/passport-jwt": "3.0.6",
     "@types/ua-parser-js": "0.7.36",
-    "@vercel/ncc": "0.33.2",
+    "@vercel/ncc": "0.33.3",
     "cron": "*",
     "cross-env": "7.0.3",
     "eslint": "*",
