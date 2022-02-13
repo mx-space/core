@@ -21,7 +21,12 @@
 - **Admin**: [Admin](https://github.com/mx-space/admin-next)
 - 未来可期
 
-接口文档通过开发环境 Swagger 查阅，接口大概有 120+ 个
+接口文档通过开发环境 Swagger 查阅。
+
+现有的比较有意思的一些小玩意的实现：
+
+- 实时日志输出。通过 Socket.IO + 劫持 `process.stdout` 实现。
+- PTY 支持。
 
 ## 快速开始
 
