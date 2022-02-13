@@ -8,7 +8,7 @@ module.exports = {
       watch: false,
       instances: 2,
       max_memory_restart: '230M',
-
+      args: '--color',
       env: {
         NODE_ENV: 'production',
       },

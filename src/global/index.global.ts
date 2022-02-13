@@ -9,7 +9,7 @@ import {
   TEMP_DIR,
   USER_ASSET_DIR,
 } from '~/constants/path.constant'
-import { consola } from './consola.global'
+import { consola, registerStdLogger } from './consola.global'
 import './dayjs.global'
 import { isDev } from './env.global'
 
@@ -29,20 +29,19 @@ function mkdirs() {
 
 function registerGlobal() {
   $.verbose = isDev
-
+  Object.assign(globalThis, {
+    isDev: isDev,
+    consola,
+  })
   console.debug = (...rest) => {
     if (isDev) {
       consola.log.call(console, ...rest)
     }
   }
-
-  Object.assign(globalThis, {
-    isDev: isDev,
-    consola,
-  })
 }
 
 export function register() {
+  registerStdLogger()
   mkdirs()
   registerGlobal()
 }
