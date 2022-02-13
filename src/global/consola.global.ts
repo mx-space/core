@@ -42,6 +42,7 @@ class DateTimeReporter extends FancyReporter {
         '\n========================================================\n',
       )
     })
+    this.job.start()
   }
   formatDate(date: Date) {
     return date.toLocaleString(undefined, {

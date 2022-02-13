@@ -213,25 +213,28 @@ export class CronService {
     mkdirp.sync(TEMP_DIR)
     this.logger.log('--> 清理临时文件成功')
   }
-
-  @Cron(CronExpression.EVERY_WEEKEND, { name: 'cleanTempDirectory' })
+  //“At 00:05.”
+  @Cron('5 0 * * *', { name: 'cleanTempDirectory' })
   @CronDescription('清理日志文件')
   async cleanLogFile() {
     const files = (await readdir(LOG_DIR)).filter(
       (file) => file !== 'error.log',
     )
+    const rmTaskArr = [] as Promise<any>[]
     for (const file of files) {
       const filePath = join(LOG_DIR, file)
       const state = fs.statSync(filePath)
       const oldThanWeek = dayjs().diff(state.mtime, 'day') > 7
       if (oldThanWeek) {
-        fs.rm(filePath)
+        rmTaskArr.push(rm(filePath))
       }
     }
+
+    await Promise.all(rmTaskArr)
     this.logger.log('--> 清理日志文件成功')
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_3AM, { name: 'pushToBaiduSearch' })
+  @Cron(CronExpression.EVERY_DAY_AT_1AM, { name: 'pushToBaiduSearch' })
   @CronDescription('推送到百度搜索')
   async pushToBaiduSearch() {
     const {
@@ -276,7 +279,7 @@ export class CronService {
   /**
    * @description 每天凌晨推送一遍 Algolia Search
    */
-  @Cron(CronExpression.EVERY_DAY_AT_NOON, { name: 'pushToAlgoliaSearch' })
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'pushToAlgoliaSearch' })
   @CronDescription('推送到 Algolia Search')
   @OnEvent(EventBusEvents.PushSearch)
   async pushToAlgoliaSearch() {
