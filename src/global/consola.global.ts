@@ -14,16 +14,19 @@ export const getTodayLogFilePath = () =>
   resolve(LOG_DIR, 'stdout_' + getShortDate(new Date()) + '.log')
 
 class Reporter extends FancyReporter {
+  isInVirtualTerminal = typeof process.stdout.columns === 'undefined' // HACK: if got `undefined` that means in PM2 pty
   protected formatDate(date: Date): string {
-    return ''
+    return this.isInVirtualTerminal ? '' : super.formatDate(date)
   }
 
   protected formatLogObj(): string {
-    return (
-      chalk.gray(getShortTime(new Date())) +
-      ' ' +
-      super.formatLogObj.apply(this, arguments).replace(/^\n/, '')
-    ).trim()
+    return this.isInVirtualTerminal
+      ? (
+          chalk.gray(getShortTime(new Date())) +
+          ' ' +
+          super.formatLogObj.apply(this, arguments).replace(/^\n/, '')
+        ).trimEnd()
+      : super.formatLogObj.apply(this, arguments)
   }
 }
 export const consola = consola_.create({
@@ -76,6 +79,7 @@ export function registerStdLogger() {
   }
 
   consola.wrapAll()
+  // HACK: forhidden pm2 to override this method
   Object.defineProperty(process.stdout, 'write', {
     value: process.stdout.write,
     writable: false,
@@ -87,3 +91,5 @@ export function registerStdLogger() {
     configurable: false,
   })
 }
+
+console.log('cols', process.stdout.columns)
