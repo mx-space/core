@@ -91,5 +91,3 @@ export function registerStdLogger() {
     configurable: false,
   })
 }
-
-console.log('cols', process.stdout.columns)
