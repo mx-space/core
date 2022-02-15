@@ -14,7 +14,7 @@ specifiers:
   '@nestjs/event-emitter': 1.0.0
   '@nestjs/jwt': 8.0.0
   '@nestjs/mapped-types': '*'
-  '@nestjs/passport': 8.1.0
+  '@nestjs/passport': 8.1.1
   '@nestjs/platform-fastify': 8.2.6
   '@nestjs/platform-socket.io': 8.2.6
   '@nestjs/schedule': 1.0.2
@@ -115,7 +115,7 @@ dependencies:
   '@nestjs/event-emitter': 1.0.0_d86dd164971a98d71cc003a4f36ff106
   '@nestjs/jwt': 8.0.0_@nestjs+common@8.2.6
   '@nestjs/mapped-types': 1.0.1_cda5296fe38bb7a3dcdb892503001834
-  '@nestjs/passport': 8.1.0_469354efd308cbdee43194b5fd6a2c15
+  '@nestjs/passport': 8.1.1_469354efd308cbdee43194b5fd6a2c15
   '@nestjs/platform-fastify': 8.2.6_732a54a2558f64827b8cc4f9baac4f1f
   '@nestjs/platform-socket.io': 8.2.6_d0955af70cd8d4fdf3bdd3e9dd57509c
   '@nestjs/schedule': 1.0.2_d86dd164971a98d71cc003a4f36ff106
@@ -1304,8 +1304,8 @@ packages:
       reflect-metadata: 0.1.13
     dev: false
 
-  /@nestjs/passport/8.1.0_469354efd308cbdee43194b5fd6a2c15:
-    resolution: {integrity: sha512-IJ0AumoIWPzzki8d1TixTLcWJiNhJxzpn9ejAYA0TaKsC2B1zyg58WotTU3U/perCOiiAgjpvTB4vA/7L8K9Mg==}
+  /@nestjs/passport/8.1.1_469354efd308cbdee43194b5fd6a2c15:
+    resolution: {integrity: sha512-GGITD24pQw2p4y8jZ4SYaC8WY+B7vi3nYr72u/+cp7bUQ0i2sHVGdH5jxzkL4J1QD9c3cYxkO3DEszgHkc3RTA==}
     peerDependencies:
       '@nestjs/common': ^6.0.0 || ^7.0.0 || ^8.0.0
       passport: ^0.4.0 || ^0.5.0
