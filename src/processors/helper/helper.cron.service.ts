@@ -5,7 +5,7 @@ import cluster from 'cluster'
 import COS from 'cos-nodejs-sdk-v5'
 import dayjs from 'dayjs'
 import { existsSync } from 'fs'
-import { readdir, rm, writeFile } from 'fs/promises'
+import { readdir, rm } from 'fs/promises'
 import mkdirp from 'mkdirp'
 import { InjectModel } from 'nestjs-typegoose'
 import { join } from 'path'
@@ -13,11 +13,7 @@ import { isMainCluster } from '~/app.config'
 import { CronDescription } from '~/common/decorator/cron-description.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event.constant'
-import {
-  LOCAL_BOT_LIST_DATA_FILE_PATH,
-  LOG_DIR,
-  TEMP_DIR,
-} from '~/constants/path.constant'
+import { LOG_DIR, TEMP_DIR } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { BackupService } from '~/modules/backup/backup.service'
@@ -77,30 +73,6 @@ export class CronService {
             Reflect.defineMetadata(metaKey, metaMap.get(metaKey), this[name])
           }
         })
-    }
-  }
-  /**
-   *
-   * @description 每天凌晨更新 Bot 列表
-   */
-  @Cron(CronExpression.EVERY_WEEK, { name: 'updateBotList' })
-  @CronDescription('更新 Bot 列表')
-  async updateBotList() {
-    try {
-      this.logger.log('--> 更新 Bot 列表')
-      const { data: json } = await this.http.axiosRef.get(
-        'https://fastly.jsdelivr.net/gh/atmire/COUNTER-Robots@master/COUNTER_Robots_list.json',
-      )
-
-      await writeFile(LOCAL_BOT_LIST_DATA_FILE_PATH, JSON.stringify(json), {
-        encoding: 'utf-8',
-        flag: 'w+',
-      })
-      this.logger.log('--> 更新 Bot 列表成功')
-      return json
-    } catch (err) {
-      this.logger.warn('更新 Bot 列表错误')
-      throw err
     }
   }
 
