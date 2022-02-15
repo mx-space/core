@@ -99,7 +99,7 @@
     "html-minifier": "4.0.0",
     "image-size": "1.0.1",
     "inquirer": "*",
-    "isbot": "3.4.2",
+    "isbot": "3.4.3",
     "js-yaml": "*",
     "jszip": "3.7.1",
     "lodash": "*",
