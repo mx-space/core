@@ -8,6 +8,7 @@ specifiers:
   '@algolia/client-search': '*'
   '@innei-util/eslint-config-ts': latest
   '@innei-util/prettier': 0.2.2
+  '@innei/class-validator-jsonschema': 3.1.1
   '@nestjs/cli': 8.2.1
   '@nestjs/common': 8.3.0
   '@nestjs/core': 8.3.0
@@ -111,6 +112,7 @@ specifiers:
 
 dependencies:
   '@algolia/client-search': 4.12.1
+  '@innei/class-validator-jsonschema': 3.1.1_279461c9b8c03a205cdbc4878bc60cf8
   '@nestjs/common': 8.3.0_6686f1d73a399753b561a58a608807ad
   '@nestjs/core': 8.3.0_961db5219d29944bd08c1c4719e5b086
   '@nestjs/event-emitter': 1.0.0_3de812a4f713e6423f627a7d19260915
@@ -913,6 +915,21 @@ packages:
       - supports-color
       - typescript
     dev: true
+
+  /@innei/class-validator-jsonschema/3.1.1_279461c9b8c03a205cdbc4878bc60cf8:
+    resolution: {integrity: sha512-cC+7ONkBW9ZbNhhqMAdgexbx5Lq/YpVYO8A8gFQfRTrXoyIS7zH+RS91IS4zLKlBqHRWT6IEBl1ZE+JI0t//qA==}
+    peerDependencies:
+      class-transformer: ^0.4.0
+      class-validator: ^0.13.1
+    dependencies:
+      class-transformer: 0.5.1
+      class-validator: 0.13.2
+      lodash.groupby: 4.6.0
+      lodash.merge: 4.6.2
+      openapi3-ts: 2.0.1
+      reflect-metadata: 0.1.13
+      tslib: 2.3.1
+    dev: false
 
   /@istanbuljs/load-nyc-config/1.1.0:
     resolution: {integrity: sha512-VjeHSlIzpv/NyD3N0YuHfXOPDIixcA1q2ZV98wsMqcYlPmv2n3Yb2lYP9XMElnaFVXg5A7YLTeLu6V84uQDjmQ==}
@@ -5870,6 +5887,10 @@ packages:
     resolution: {integrity: sha1-Gmo16s5AEoDH8G3d7DUWWrJ+PlM=}
     dev: false
 
+  /lodash.groupby/4.6.0:
+    resolution: {integrity: sha1-Cwih3PaDl8OXhVwyOXg4Mt90A9E=}
+    dev: false
+
   /lodash.includes/4.3.0:
     resolution: {integrity: sha1-YLuYqHy5I8aMoeUTJUgzFISfVT8=}
     dev: false
@@ -6482,6 +6503,12 @@ packages:
 
   /openapi-types/10.0.0:
     resolution: {integrity: sha512-Y8xOCT2eiKGYDzMW9R4x5cmfc3vGaaI4EL2pwhDmodWw1HlK18YcZ4uJxc7Rdp7/gGzAygzH9SXr6GKYIXbRcQ==}
+    dev: false
+
+  /openapi3-ts/2.0.1:
+    resolution: {integrity: sha512-v6X3iwddhi276siej96jHGIqTx3wzVfMTmpGJEQDt7GPI7pI6sywItURLzpEci21SBRpPN/aOWSF5mVfFVNmcg==}
+    dependencies:
+      yaml: 1.10.2
     dev: false
 
   /optional/0.1.4:
@@ -8351,7 +8378,6 @@ packages:
   /yaml/1.10.2:
     resolution: {integrity: sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==}
     engines: {node: '>= 6'}
-    dev: true
 
   /yargs-parser/20.2.9:
     resolution: {integrity: sha512-y11nGElTIV+CT3Zv9t7VKl+Q3hTQoT9a1Qzezhhl6Rp21gJ/IVTW7Z3y9EWXhuUBC2Shnf+DX0antecpAwSP8w==}

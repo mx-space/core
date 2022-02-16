@@ -14,7 +14,7 @@ import {
   Query,
 } from '@nestjs/common'
 import { ApiQuery } from '@nestjs/swagger'
-import { Types } from 'mongoose'
+import { isValidObjectId } from 'mongoose'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
@@ -121,7 +121,7 @@ export class CategoryController {
       }
     }
 
-    const isId = Types.ObjectId.isValid(query)
+    const isId = isValidObjectId(query)
     const res = isId
       ? await this.categoryService.model
           .findById(query)
