@@ -19,11 +19,8 @@ import {
   IsString,
 } from 'class-validator'
 import { Query } from 'mongoose'
-import {
-  CountMixed as Count,
-  Paginator,
-  WriteBaseModel,
-} from '~/shared/model/base.model'
+import { Paginator } from '~/shared/interface/paginator.interface'
+import { CountMixed as Count, WriteBaseModel } from '~/shared/model/base.model'
 import { CategoryModel as Category } from '../category/category.model'
 
 function autoPopulateCategory(

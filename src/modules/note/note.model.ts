@@ -11,11 +11,8 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator'
-import {
-  CountMixed,
-  Paginator,
-  WriteBaseModel,
-} from '~/shared/model/base.model'
+import { Paginator } from '~/shared/interface/paginator.interface'
+import { CountMixed, WriteBaseModel } from '~/shared/model/base.model'
 
 @modelOptions({ schemaOptions: { id: false, _id: false } })
 export class Coordinate {
