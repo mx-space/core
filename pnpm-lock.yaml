@@ -77,7 +77,7 @@ specifiers:
   lodash: '*'
   marked: 4.0.12
   mkdirp: '*'
-  mongodb-memory-server: 8.3.0
+  mongodb-memory-server: 8.4.0
   mongoose: '*'
   mongoose-lean-id: 0.3.0
   mongoose-lean-virtuals: 0.9.0
@@ -174,7 +174,7 @@ dependencies:
   zx: 4.3.0
 
 optionalDependencies:
-  mongodb-memory-server: 8.3.0
+  mongodb-memory-server: 8.4.0
   redis-memory-server: 0.5.0
 
 devDependencies:
@@ -6152,8 +6152,8 @@ packages:
       '@types/whatwg-url': 8.2.1
       whatwg-url: 11.0.0
 
-  /mongodb-memory-server-core/8.3.0:
-    resolution: {integrity: sha512-wbHV2PWzE7OmO9KX8gM8W2xY0n1KrrBatqztYRvBcQUMxILYzvAxwieR1flRUx5npIpS3VWTIkac+7sJwd2mCw==}
+  /mongodb-memory-server-core/8.4.0:
+    resolution: {integrity: sha512-xagSOsx+E1ZxT5j4BMci8U3qAHG7o4PGLiwUDavTF6aKTPEAXVQZE8VNR/0Z1cl0nXSOoOO65XhqNSKM7svXng==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@types/tmp': 0.2.3
@@ -6164,7 +6164,7 @@ packages:
       get-port: 5.1.1
       https-proxy-agent: 5.0.0
       md5-file: 5.0.0
-      mongodb: 4.3.1
+      mongodb: 4.4.0
       new-find-package-json: 1.1.0
       semver: 7.3.5
       tar-stream: 2.2.0
@@ -6177,12 +6177,12 @@ packages:
     dev: false
     optional: true
 
-  /mongodb-memory-server/8.3.0:
-    resolution: {integrity: sha512-ItNlGcLqVv4Z+PG1WIASEpEwPFm5P6ckXTm19OxY+Zw8erE33HpNusz3YTakk3F4tU2ALwJmllY9NoL6PAuFAA==}
+  /mongodb-memory-server/8.4.0:
+    resolution: {integrity: sha512-DHMSxQuUtg84z4V6jpyinHsn2AnKzxTZ10AAnodRw8xdiz/a0byCqLkHRfQXGSywCMz9/x/l46YLLDpRfhQ2hQ==}
     engines: {node: '>=12.22.0'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 8.3.0
+      mongodb-memory-server-core: 8.4.0
       tslib: 2.3.1
     transitivePeerDependencies:
       - supports-color
@@ -6199,6 +6199,19 @@ packages:
       socks: 2.6.2
     optionalDependencies:
       saslprep: 1.0.3
+
+  /mongodb/4.4.0:
+    resolution: {integrity: sha512-1hPhutJj6yxxu0ymwsO0uEimTo+QTh3oQP6YHxmLneBFBOGydYFdnmDDuLiGWimAlMdRN9WuDXY+JGp47aeOwA==}
+    engines: {node: '>=12.9.0'}
+    dependencies:
+      bson: 4.6.1
+      denque: 2.0.1
+      mongodb-connection-string-url: 2.4.2
+      socks: 2.6.2
+    optionalDependencies:
+      saslprep: 1.0.3
+    dev: false
+    optional: true
 
   /mongoose-lean-id/0.3.0_mongoose@6.2.0:
     resolution: {integrity: sha512-/eONPzg+tA7/VR4uv0uKxKwH4OCseZShqwbMW572QvlSU0g48zDFTiDuCjZmNykfZgK3ZOwjfLVbXBAAAbXI4Q==}

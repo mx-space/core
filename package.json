@@ -169,7 +169,7 @@
     "webpack-node-externals": "3.0.0"
   },
   "optionalDependencies": {
-    "mongodb-memory-server": "8.3.0",
+    "mongodb-memory-server": "8.4.0",
     "redis-memory-server": "0.5.0"
   },
   "resolutions": {
