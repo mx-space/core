@@ -6,15 +6,28 @@ const { repository } = require('../package.json')
 
 const argv = process.argv.slice(2)
 
+function getOsBuildAssetName() {
+  const platform = process.platform
+  const kernelMap = {
+    darwin: 'macos',
+    linux: 'linux',
+    win32: 'windows',
+  }
+  const os = kernelMap[platform]
+  if (!os) {
+    throw new Error('No current platform build. Please build manually')
+  }
+  return `release-${os}-latest.zip`
+}
+
 async function main() {
   cd(path.resolve(homedir(), 'mx'))
   const res = await fetch(
     `https://api.github.com/repos/${repository.directory}/releases/latest`,
   )
   const data = await res.json()
-  const downloadUrl = data.assets.find(
-    (asset) =>
-      asset.name === 'release-ubuntu.zip' || asset.name === 'release.zip',
+  const downloadUrl = data.assets.find((asset) =>
+    [getOsBuildAssetName(), 'release.zip'].includes(asset.name),
   )?.browser_download_url
 
   if (!downloadUrl) {
