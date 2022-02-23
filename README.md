@@ -36,7 +36,7 @@
 - MongoDB
 - Redis
 
-使用构建好的版本你的系统必须是 Linux (test on Ubuntu 18, Ubuntu 20, CentOS 8)
+现有 Windows(x86)、macOS(x86)、Linux(x86) 的已构建产物。使用以下脚本可免手动构建直接运行。
 
 ```sh
 curl https://cdn.jsdelivr.net/gh/mx-space/mx-server@master/scripts/download-latest-asset.js >> download.js
@@ -51,7 +51,7 @@ node index.js
 node index.js
 ```
 
-所有的依赖都打包进了文件无需 node_modules
+所有的依赖都打包进了产物，无需黑洞一般的 node_modules
 
 ## Docker 部署
 
