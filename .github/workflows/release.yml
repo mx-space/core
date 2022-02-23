@@ -132,6 +132,8 @@ jobs:
         run: |
           pnpm run bundle
       - name: Zip Assets
+        # !! windows
+        shell: bash
         run: |
           git clone https://github.com/mx-space/assets.git --depth=1
           rm -rf assets/.git
