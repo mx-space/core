@@ -1,3 +1,4 @@
+#!env node
 // register global
 import { register } from './global/index.global'
 

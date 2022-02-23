@@ -32,8 +32,8 @@ async function main() {
   const buffer = await fetch(
     'https://small-lake-9960.tukon479.workers.dev/' + downloadUrl,
   ).then((res) => res.buffer())
-  fs.writeFileSync(`release-ubuntu.zip`, buffer, { flag: 'w' })
-  await $`unzip release-ubuntu.zip -d mx-server`
+  fs.writeFileSync(`release-downloaded.zip`, buffer, { flag: 'w' })
+  await $`unzip release-downloaded.zip -d mx-server`
 }
 
 main()
