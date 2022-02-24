@@ -41,7 +41,11 @@ export async function bootstrap() {
   )
 
   app.setGlobalPrefix(isDev ? '' : `api/v${API_VERSION}`, {
-    exclude: [{ path: '/qaqdmin', method: RequestMethod.GET }],
+    exclude: [
+      { path: '/qaqdmin', method: RequestMethod.GET },
+      { path: '/proxy/qaqdmin', method: RequestMethod.GET },
+      { path: '/proxy/*', method: RequestMethod.GET },
+    ],
   })
 
   if (isDev) {

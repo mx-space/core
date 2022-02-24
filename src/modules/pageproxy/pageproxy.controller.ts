@@ -7,7 +7,7 @@ import {
   Res,
 } from '@nestjs/common'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { createReadStream, existsSync } from 'fs'
+import { createReadStream, existsSync, statSync } from 'fs'
 import fs from 'fs/promises'
 import { isNull } from 'lodash'
 import PKG from 'package.json'
@@ -147,16 +147,17 @@ export class PageProxyController {
         message: 'admin proxy not enabled',
       })
     }
-
-    const isAssetPathIsExist = existsSync(LOCAL_ADMIN_ASSET_PATH)
+    const entryPath = path.join(LOCAL_ADMIN_ASSET_PATH, 'index.html')
+    const isAssetPathIsExist = existsSync(entryPath)
     if (!isAssetPathIsExist) {
-      reply.send('admin asset not found')
+      reply.code(404).type('text/html')
+        .send(`<p>Local Admin Assets is not found. Navigator to page proxy in 3 second. </p><script>setTimeout(() => {
+        location.href = '/qaqdmin'
+      }, 3000);</script>`)
+      return
     }
     try {
-      const entry = await fs.readFile(
-        path.join(LOCAL_ADMIN_ASSET_PATH, 'index.html'),
-        'utf8',
-      )
+      const entry = await fs.readFile(entryPath, 'utf8')
 
       reply
         .type('text/html')
@@ -188,6 +189,13 @@ export class PageProxyController {
     const isPathExist = existsSync(path)
     if (!isPathExist) {
       return reply.code(404).send()
+    }
+
+    const isFile = statSync(path).isFile()
+    if (!isFile) {
+      return reply.type('application/json').code(400).send({
+        message: "can't pipe directory",
+      })
     }
     const stream = createReadStream(path)
     const minetype = this.service.getMineTypeByExt(extname(path))
