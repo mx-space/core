@@ -64,6 +64,7 @@ export const CLUSTER = {
 
 if (!CLUSTER.enable || cluster.isPrimary) {
   console.log(argv)
+  console.log('cwd: ', process.cwd())
 }
 
 /** Is main cluster in PM2 */
