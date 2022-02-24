@@ -6,7 +6,7 @@ function getOsBuildAssetName() {
   const platform = process.platform
   const kernelMap = {
     darwin: 'macos',
-    linux: 'linux',
+    linux: 'ubuntu',
     win32: 'windows',
   }
   const os = kernelMap[platform]

@@ -38,6 +38,13 @@ export class PageProxyController {
     @Query() query: PageProxyDebugDto,
     @Res() reply: FastifyReply,
   ) {
+    // if want to access local, skip this route logic
+
+    if (query.__local) {
+      reply.redirect('/proxy/qaqdmin')
+      return
+    }
+
     if ((await this.service.checkCanAccessAdminProxy()) === false) {
       return reply.type('application/json').status(403).send({
         message: 'admin proxy not enabled',

@@ -36,4 +36,8 @@ export class PageProxyDebugDto {
   @Transform(({ value }) => (value === 'true' ? true : false))
   @IsOptional()
   __purge = false
+
+  @IsBoolean()
+  @IsOptional()
+  __local = false
 }
