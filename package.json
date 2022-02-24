@@ -102,7 +102,7 @@
     "inquirer": "*",
     "isbot": "3.4.3",
     "js-yaml": "*",
-    "jsdom": "19",
+    "jsdom": "19.0.0",
     "jszip": "3.7.1",
     "lodash": "*",
     "marked": "4.0.12",

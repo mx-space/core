@@ -73,7 +73,7 @@ specifiers:
   isbot: 3.4.3
   jest: 27.5.1
   js-yaml: '*'
-  jsdom: '19'
+  jsdom: 19.0.0
   jszip: 3.7.1
   lint-staged: 12.3.4
   lodash: '*'
@@ -4234,7 +4234,7 @@ packages:
   /filelist/1.0.2:
     resolution: {integrity: sha512-z7O0IS8Plc39rTCq6i6iHxk43duYOn8uFJiWSewIq0Bww1RNybVHSCjahmcC87ZqAm4OTvFzlzeGu3XAzG1ctQ==}
     dependencies:
-      minimatch: 3.0.4
+      minimatch: 3.1.2
     dev: false
 
   /fill-range/7.0.1:
