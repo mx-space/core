@@ -36,7 +36,7 @@
 - MongoDB
 - Redis
 
-现有 Windows(x86)、macOS(x86)、Linux(x86) 的已构建产物。使用以下脚本可免手动构建直接运行。
+现有 macOS(x86)、Linux(x86) 的已构建产物。使用以下脚本可免手动构建直接运行。
 
 ```sh
 curl https://cdn.jsdelivr.net/gh/mx-space/mx-server@master/scripts/download-latest-asset.js >> download.js
