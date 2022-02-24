@@ -1,5 +1,5 @@
 #!env node
-const { createWriteStream } = require('fs')
+const { createWriteStream, writeFileSync } = require('fs')
 const { join } = require('path')
 const { fetch, $ } = require('zx')
 const {
@@ -12,10 +12,8 @@ const endpoint = `https://api.github.com/repos/${repo}/releases/tags/v${version}
   const downloadUrl = json.assets.find(
     (asset) => asset.name === 'release.zip',
   ).browser_download_url
-  const bufffer = await fetch(downloadUrl).then((res) => res.buffer())
-  const stream = createWriteStream(join(process.cwd(), 'admin-release.zip'))
-  stream.write(bufffer)
-  stream.end()
+  const buffer = await fetch(downloadUrl).then((res) => res.buffer())
+  writeFileSync(join(process.cwd(), 'admin-release.zip'), buffer)
 
   await $`ls -lh`
 
