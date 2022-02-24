@@ -17,6 +17,8 @@ const endpoint = `https://api.github.com/repos/${repo}/releases/tags/v${version}
   stream.write(bufffer)
   stream.end()
 
+  await $`ls -lh`
+
   await $`unzip admin-release.zip -d out`
   await $`mv out/dist out/admin`
   await $`rm -f admin-release.zip`
