@@ -44,6 +44,7 @@ import { LoggerModule } from './processors/logger/logger.module'
 
 @Module({
   imports: [
+    LoggerModule,
     DatabaseModule,
     CacheModule,
 
@@ -63,12 +64,13 @@ import { LoggerModule } from './processors/logger/logger.module'
     OptionModule,
     PageModule,
     PostModule,
-    PTYModule,
     ProjectModule,
+    PTYModule,
     RecentlyModule,
     SayModule,
     SearchModule,
     SitemapModule,
+    SnippetModule,
     ToolModule,
     UserModule,
 
@@ -76,8 +78,6 @@ import { LoggerModule } from './processors/logger/logger.module'
 
     GatewayModule,
     HelperModule,
-    LoggerModule,
-    SnippetModule,
 
     isDev ? DebugModule : null,
   ].filter(Boolean),

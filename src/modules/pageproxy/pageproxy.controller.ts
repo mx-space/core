@@ -3,39 +3,32 @@ import {
   Get,
   InternalServerErrorException,
   Query,
+  Req,
   Res,
 } from '@nestjs/common'
-import { FastifyReply } from 'fastify'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+import { createReadStream, existsSync } from 'fs'
+import fs from 'fs/promises'
 import { isNull } from 'lodash'
 import PKG from 'package.json'
-import { API_VERSION } from '~/app.config'
+import { extname, join } from 'path'
 import { Cookies } from '~/common/decorator/cookie.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
+import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { dashboard } from '../../../package.json'
-import { ConfigsService } from '../configs/configs.service'
-import { InitService } from '../init/init.service'
 import { PageProxyDebugDto } from './pageproxy.dto'
-interface IInjectableData {
-  BASE_API: null | string
-  WEB_URL: null | string
-  GATEWAY: null | string
-  LOGIN_BG: null | string
-  TITLE: null | string
-
-  INIT: null | boolean
-}
+import { PageProxyService } from './pageproxy.service'
 
 @Controller('/')
 @ApiName
 export class PageProxyController {
   constructor(
-    private readonly configs: ConfigsService,
-    private readonly initService: InitService,
     private readonly cacheService: CacheService,
+    private readonly service: PageProxyService,
   ) {}
 
   @Get('/qaqdmin')
@@ -45,11 +38,7 @@ export class PageProxyController {
     @Query() query: PageProxyDebugDto,
     @Res() reply: FastifyReply,
   ) {
-    const {
-      adminExtra,
-      url: { webUrl },
-    } = await this.configs.waitForConfigReady()
-    if (!adminExtra.enableAdminProxy && !isDev) {
+    if ((await this.service.checkCanAccessAdminProxy()) === false) {
       return reply.type('application/json').status(403).send({
         message: 'admin proxy not enabled',
       })
@@ -96,13 +85,9 @@ export class PageProxyController {
       let latestVersion = ''
 
       if (isNull(adminVersion)) {
-        // tag_name: v3.6.x
         try {
-          const { tag_name } = await fetch(
-            `https://api.github.com/repos/${PKG.dashboard.repo}/releases/latest`,
-          ).then((data) => data.json())
-
-          latestVersion = tag_name.replace(/^v/, '')
+          latestVersion =
+            await this.service.getAdminLastestVersionFromGHRelease()
         } catch (e) {
           reply.type('application/json').status(500).send({
             message: '从获取 GitHub 获取数据失败, 连接超时',
@@ -145,31 +130,71 @@ export class PageProxyController {
             BASE_API: apiUrl ?? cookies['__apiUrl'],
             GATEWAY: gatewayUrl ?? cookies['__gatewayUrl'],
           }
+    const entry = await this.service.injectAdminEnv(source.text, {
+      BASE_API: sessionInjectableData.BASE_API,
+      GATEWAY: sessionInjectableData.GATEWAY,
+      from: source.from,
+    })
 
-    const entry = source.text.replace(
-      `<!-- injectable script -->`,
-      `<script>${`window.pageSource='${
-        source.from
-      }';\nwindow.injectData = ${JSON.stringify({
-        LOGIN_BG: adminExtra.background,
-        TITLE: adminExtra.title,
-        WEB_URL: webUrl,
-        INIT: await this.initService.isInit(),
-      } as IInjectableData)}`}
-     ${
-       sessionInjectableData.BASE_API
-         ? `window.injectData.BASE_API = '${sessionInjectableData.BASE_API}'`
-         : `window.injectData.BASE_API = location.origin + '${
-             !isDev ? '/api/v' + API_VERSION : ''
-           }';`
-     }
-      ${
-        sessionInjectableData.GATEWAY
-          ? `window.injectData.GATEWAY = '${sessionInjectableData.GATEWAY}';`
-          : `window.injectData.GATEWAY = location.origin;`
-      }
-      </script>`,
-    )
     return reply.type('text/html').send(entry)
+  }
+
+  @Get('/proxy/qaqdmin')
+  @HTTPDecorators.Bypass
+  async getLocalBundledAdmin(@Res() reply: FastifyReply) {
+    if ((await this.service.checkCanAccessAdminProxy()) === false) {
+      return reply.type('application/json').status(403).send({
+        message: 'admin proxy not enabled',
+      })
+    }
+
+    const isAssetPathIsExist = existsSync(LOCAL_ADMIN_ASSET_PATH)
+    if (!isAssetPathIsExist) {
+      reply.send('admin asset not found')
+    }
+    try {
+      const entry = await fs.readFile(
+        path.join(LOCAL_ADMIN_ASSET_PATH, 'index.html'),
+        'utf8',
+      )
+
+      reply
+        .type('text/html')
+        .send(this.service.rewriteAdminEntryAssetPath(entry))
+    } catch (e) {
+      reply.code(500).send({
+        message: e.message,
+      })
+      isDev && console.error(e)
+    }
+  }
+
+  @Get('/proxy/*')
+  @HTTPDecorators.Bypass
+  async proxyAssetRoute(
+    @Req() request: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
+    if ((await this.service.checkCanAccessAdminProxy()) === false) {
+      return reply.type('application/json').status(403).send({
+        message: 'admin proxy not enabled, proxy assets is forbidden',
+      })
+    }
+
+    const url = request.url
+    const relativePath = url.replace(/^\/proxy\//, '')
+    const path = join(LOCAL_ADMIN_ASSET_PATH, relativePath)
+
+    const isPathExist = existsSync(path)
+    if (!isPathExist) {
+      return reply.code(404).send()
+    }
+    const stream = createReadStream(path)
+    const minetype = this.service.getMineTypeByExt(extname(path))
+    if (minetype) {
+      reply.type(minetype).send(stream)
+    } else {
+      reply.send(stream)
+    }
   }
 }
