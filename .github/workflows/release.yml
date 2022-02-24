@@ -78,7 +78,7 @@ jobs:
           asset_name: release-${{ matrix.os }}.zip
           asset_content_type: application/zip
   deploy:
-    name: Deploy to server
+    name: Deploy To Remote Server
     runs-on: ubuntu-latest
     needs: [build]
     steps:
