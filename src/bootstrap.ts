@@ -93,6 +93,9 @@ export async function bootstrap() {
     }
     consola.success(`[${prefix + pid}] Server listen on: ${url}`)
     consola.success(`[${prefix + pid}] Admin Dashboard: ${url}/qaqdmin`)
+    consola.success(
+      `[${prefix + pid}] Admin Local Dashboard: ${url}/proxy/qaqdmin`,
+    )
     Logger.log(
       'Server is up. ' + chalk.yellow('+' + (performance.now() | 0) + 'ms'),
     )

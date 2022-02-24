@@ -206,6 +206,11 @@ export class PageProxyController {
     }
     const stream = createReadStream(path)
     const minetype = this.service.getMineTypeByExt(extname(path))
+    reply.header('cache-control', 'public, max-age=31536000')
+    reply.header(
+      'expires',
+      new Date(Date.now() + 31536000 * 1000).toUTCString(),
+    )
     if (minetype) {
       reply.type(minetype).send(stream)
     } else {
