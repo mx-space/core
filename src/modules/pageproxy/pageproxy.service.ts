@@ -135,6 +135,16 @@ export class PageProxyService {
       '.json': 'application/json',
     }[ext]
   }
+
+  async getUrlFromConfig() {
+    const config = await this.configs.waitForConfigReady()
+    const url = config.url
+
+    return {
+      BASE_API: url.serverUrl || (isDev ? '/' : '/api/v2'),
+      GATEWAY: url.wsUrl || '/socket.io',
+    }
+  }
 }
 
 export interface IInjectableData {

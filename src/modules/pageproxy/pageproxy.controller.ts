@@ -166,9 +166,13 @@ export class PageProxyController {
     try {
       const entry = await fs.readFile(entryPath, 'utf8')
 
+      const injectEnv = await this.service.injectAdminEnv(entry, {
+        ...(await this.service.getUrlFromConfig()),
+        from: 'server',
+      })
       reply
         .type('text/html')
-        .send(this.service.rewriteAdminEntryAssetPath(entry))
+        .send(this.service.rewriteAdminEntryAssetPath(injectEnv))
     } catch (e) {
       reply.code(500).send({
         message: e.message,

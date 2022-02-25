@@ -14,7 +14,6 @@ import cluster from 'cluster'
 import { cloneDeep, mergeWith } from 'lodash'
 import { LeanDocument } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
-import { API_VERSION } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event.constant'
 import { CacheService } from '~/processors/cache/cache.service'
@@ -51,12 +50,10 @@ const generateDefaultConfig: () => IConfig = () => ({
     description: '哈喽~欢迎光临',
   },
   url: {
-    wsUrl: 'http://127.0.0.1:2333', //todo
-    adminUrl: 'http://127.0.0.1:9528',
-    serverUrl: isDev
-      ? 'http://127.0.0.1:2333'
-      : 'http://127.0.0.1:2333/api/v' + API_VERSION,
-    webUrl: 'http://127.0.0.1:2323',
+    wsUrl: '', //todo
+    adminUrl: '',
+    serverUrl: '',
+    webUrl: '',
   },
   mailOptions: {} as MailOptionsDto,
   commentOptions: { antiSpam: false },
