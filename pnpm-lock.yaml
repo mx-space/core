@@ -61,7 +61,7 @@ specifiers:
   dayjs: 1.10.7
   ejs: 3.1.6
   eslint: '*'
-  fastify-cookie: 5.5.0
+  fastify-cookie: 5.6.0
   fastify-multipart: 5.3.1
   fastify-swagger: 4.15.0
   get-image-colors: 4.0.1
@@ -143,7 +143,7 @@ dependencies:
   cos-nodejs-sdk-v5: 2.11.6
   dayjs: 1.10.7
   ejs: 3.1.6
-  fastify-cookie: 5.5.0
+  fastify-cookie: 5.6.0
   fastify-multipart: 5.3.1
   fastify-swagger: 4.15.0
   get-image-colors: 4.0.1
@@ -4104,11 +4104,11 @@ packages:
       strnum: 1.0.5
     dev: false
 
-  /fastify-cookie/5.5.0:
-    resolution: {integrity: sha512-XhexnjmAR4CUh3Cz6Ko0is+pa8k1bS6+nkf/i3viv4p7R1fwGtGhAXuz+b4nEM0x7pvdi5ApKY73Bp5CELZP7g==}
+  /fastify-cookie/5.6.0:
+    resolution: {integrity: sha512-zmZhw1CugavEZjFToMDz6FTawXw9QQ6bJ1vhhalMLYTbhog8C42+1jIWENKjV6PkiERdDRhXahj9MiYSVNynDw==}
     dependencies:
       cookie-signature: 1.1.0
-      fastify-plugin: 3.0.0
+      fastify-plugin: 3.0.1
     dev: false
 
   /fastify-cors/6.0.2:
@@ -4139,10 +4139,6 @@ packages:
       hexoid: 1.0.0
       secure-json-parse: 2.4.0
       stream-wormhole: 1.1.0
-    dev: false
-
-  /fastify-plugin/3.0.0:
-    resolution: {integrity: sha512-ZdCvKEEd92DNLps5n0v231Bha8bkz1DjnPP/aEz37rz/q42Z5JVLmgnqR4DYuNn3NXAO3IDCPyRvgvxtJ4Ym4w==}
     dev: false
 
   /fastify-plugin/3.0.1:
@@ -4593,7 +4589,7 @@ packages:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 3.0.4
+      minimatch: 3.1.2
       once: 1.4.0
       path-is-absolute: 1.0.1
 
@@ -5194,7 +5190,7 @@ packages:
       async: 0.9.2
       chalk: 2.4.2
       filelist: 1.0.2
-      minimatch: 3.0.4
+      minimatch: 3.1.2
     dev: false
 
   /javascript-natural-sort/0.7.1:
@@ -6300,6 +6296,7 @@ packages:
     resolution: {integrity: sha512-yJHVQEhyqPLUTgt9B83PXu6W3rx4MvvHvSUvToogpwoGDOUQ+yDrR0HRot+yOCdCO7u4hX3pWft6kWBBcqh0UA==}
     dependencies:
       brace-expansion: 1.1.11
+    dev: true
 
   /minimatch/3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
