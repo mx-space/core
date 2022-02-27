@@ -62,19 +62,17 @@ export class AnalyzeController {
     const getIpAndPvAggregate = async () => {
       const day = await this.service.getIpAndPvAggregate('day', true)
 
-      const now = new Date()
-      const nowHour = now.getHours()
       const dayData = Array(24)
         .fill(undefined)
         .map((v, i) => {
           return [
             {
-              hour: i === nowHour ? '现在' : i + '时',
+              hour: i + '时',
               key: 'ip',
               value: day[i.toString().padStart(2, '0')]?.ip || 0,
             },
             {
-              hour: i === nowHour ? '现在' : i + '时',
+              hour: i + '时',
               key: 'pv',
               value: day[i.toString().padStart(2, '0')]?.pv || 0,
             },
