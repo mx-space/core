@@ -15,5 +15,6 @@ RUN apk add zip unzip mongodb-tools bash --no-cache
 WORKDIR /app
 COPY --from=builder /app/out .
 COPY --from=builder /app/assets ./assets
+ENV TZ=Asia/Shanghai
 EXPOSE 2333
 CMD echo "MixSpace Sever Image." && sh
