@@ -12,7 +12,7 @@ specifiers:
   '@nestjs/cli': 8.2.1
   '@nestjs/common': 8.3.1
   '@nestjs/core': 8.3.1
-  '@nestjs/event-emitter': 1.0.0
+  '@nestjs/event-emitter': 1.1.0
   '@nestjs/jwt': 8.0.0
   '@nestjs/mapped-types': '*'
   '@nestjs/passport': 8.2.1
@@ -117,7 +117,7 @@ dependencies:
   '@innei/class-validator-jsonschema': 3.1.1_279461c9b8c03a205cdbc4878bc60cf8
   '@nestjs/common': 8.3.1_6686f1d73a399753b561a58a608807ad
   '@nestjs/core': 8.3.1_c423e260f280a2a10536de6400f1a0cf
-  '@nestjs/event-emitter': 1.0.0_95ddad00f61082c4728bac7152e0edf1
+  '@nestjs/event-emitter': 1.1.0_95ddad00f61082c4728bac7152e0edf1
   '@nestjs/jwt': 8.0.0_@nestjs+common@8.3.1
   '@nestjs/mapped-types': 1.0.1_e5f596918c447b97f853ece51c289107
   '@nestjs/passport': 8.2.1_51b41002fee89f6726dc38c20c85db4c
@@ -1302,8 +1302,8 @@ packages:
       - encoding
     dev: false
 
-  /@nestjs/event-emitter/1.0.0_95ddad00f61082c4728bac7152e0edf1:
-    resolution: {integrity: sha512-dRAou6G89KKYI2iyYfqSVGE6ZTC4WmHkQkFfgh88GLQg8dBqRk92ZY8CRtL2SK32SSelh9bwEDNQn9561uoypA==}
+  /@nestjs/event-emitter/1.1.0_95ddad00f61082c4728bac7152e0edf1:
+    resolution: {integrity: sha512-wxQhrPtXSUSD2y7poyBdp0V2b7xD9jCkcenGVhllx3ILkctEYXyY+rAwwWGnDqDxnrN4/MKexkAQBHa2phsNRw==}
     peerDependencies:
       '@nestjs/common': ^7.0.0 || ^8.0.0
       '@nestjs/core': ^7.0.0 || ^8.0.0
@@ -1311,7 +1311,7 @@ packages:
     dependencies:
       '@nestjs/common': 8.3.1_6686f1d73a399753b561a58a608807ad
       '@nestjs/core': 8.3.1_c423e260f280a2a10536de6400f1a0cf
-      eventemitter2: 6.4.4
+      eventemitter2: 6.4.5
       reflect-metadata: 0.1.13
     dev: false
 
@@ -3969,8 +3969,8 @@ packages:
       through: 2.3.8
     dev: false
 
-  /eventemitter2/6.4.4:
-    resolution: {integrity: sha512-HLU3NDY6wARrLCEwyGKRBvuWYyvW6mHYv72SJJAH3iJN3a6eVUvkjFkcxah1bcTgGVBBrFdIopBJPhCQFMLyXw==}
+  /eventemitter2/6.4.5:
+    resolution: {integrity: sha512-bXE7Dyc1i6oQElDG0jMRZJrRAn9QR2xyyFGmBdZleNmyQX0FqGYmhZIrIrpPfm/w//LTo4tVQGOGQcGCb5q9uw==}
     dev: false
 
   /events/3.3.0:
