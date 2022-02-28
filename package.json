@@ -91,7 +91,7 @@
     "class-validator": "0.13.2",
     "consola": "*",
     "cos-nodejs-sdk-v5": "2.11.6",
-    "dayjs": "1.10.7",
+    "dayjs": "1.10.8",
     "ejs": "3.1.6",
     "fastify-cookie": "5.6.0",
     "fastify-multipart": "5.3.1",
