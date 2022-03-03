@@ -26,7 +26,7 @@ export class SearchController {
     type = type.toLowerCase()
     switch (type) {
       case 'post': {
-        return this.searchService.searchPost(query, isMaster)
+        return this.searchService.searchPost(query)
       }
       case 'note':
         return this.searchService.searchNote(query, isMaster)

@@ -9,7 +9,6 @@ import algoliasearch from 'algoliasearch'
 import { SearchDto } from '~/modules/search/search.dto'
 import { DatabaseService } from '~/processors/database/database.service'
 import { Pagination } from '~/shared/interface/paginator.interface'
-import { addConditionToSeeHideContent } from '~/utils/query.util'
 import { transformDataToPaginate } from '~/utils/transfrom.util'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteService } from '../note/note.service'
@@ -60,7 +59,7 @@ export class SearchService {
     )
   }
 
-  async searchPost(searchOption: SearchDto, showHidden: boolean) {
+  async searchPost(searchOption: SearchDto) {
     const { keyword, page, size } = searchOption
     const select = '_id title created modified categoryId slug'
     const keywordArr = keyword
@@ -70,7 +69,6 @@ export class SearchService {
       await this.postService.findWithPaginator(
         {
           $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }],
-          $and: [{ ...addConditionToSeeHideContent(showHidden) }],
         },
         {
           limit: size,

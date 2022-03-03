@@ -68,11 +68,6 @@ export class PostModel extends WriteBaseModel {
   @ApiHideProperty()
   public category: Ref<Category>
 
-  @prop({ default: false })
-  @IsBoolean()
-  @IsOptional()
-  hide?: boolean
-
   @prop({ default: true })
   @IsBoolean()
   @IsOptional()

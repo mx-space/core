@@ -20,7 +20,6 @@ import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import { addConditionToSeeHideContent } from '~/utils/query.util'
 import { PostService } from '../post/post.service'
 import {
   MultiCategoriesQueryDto,
@@ -57,10 +56,7 @@ export class CategoryController {
         await Promise.all(
           ids.map(async (id) => {
             const item = await this.postService.model
-              .find(
-                { categoryId: id, ...addConditionToSeeHideContent(isMaster) },
-                ignoreKeys,
-              )
+              .find({ categoryId: id }, ignoreKeys)
               .sort({ created: -1 })
               .lean()
 
@@ -76,10 +72,7 @@ export class CategoryController {
         await Promise.all(
           ids.map(async (id) => {
             const posts = await this.postService.model
-              .find(
-                { categoryId: id, ...addConditionToSeeHideContent(isMaster) },
-                ignoreKeys,
-              )
+              .find({ categoryId: id }, ignoreKeys)
               .sort({ created: -1 })
               .lean()
             const category = await this.categoryService.findCategoryById(id)
@@ -114,10 +107,7 @@ export class CategoryController {
     if (tag === true) {
       return {
         tag: query,
-        data: await this.categoryService.findArticleWithTag(
-          query,
-          addConditionToSeeHideContent(isMaster),
-        ),
+        data: await this.categoryService.findArticleWithTag(query),
       }
     }
 
@@ -138,10 +128,7 @@ export class CategoryController {
 
     const children =
       (await this.categoryService.findCategoryPost(res._id, {
-        $and: [
-          tag ? { tags: tag } : {},
-          addConditionToSeeHideContent(isMaster),
-        ],
+        $and: [tag ? { tags: tag } : {}],
       })) || []
     return { data: { ...res, children } }
   }
