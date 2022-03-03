@@ -124,7 +124,7 @@ export class AggregateService {
     const data: any = {}
     const getPosts = () =>
       this.postService.model
-        .find({ hide: false, ...addYearCondition(year) })
+        .find({ ...addYearCondition(year) })
         .sort({ created: sortBy })
         .populate('category')
         .lean()
@@ -151,7 +151,6 @@ export class AggregateService {
         .find(
           {
             hide: false,
-            password: undefined,
             ...addYearCondition(year),
           },
           '_id nid title weather mood created modified hasMemory',

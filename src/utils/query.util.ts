@@ -1,4 +1,4 @@
-export function addConditionToSeeHideContent(canSee: boolean) {
+export function addHidePasswordAndHideCondition(canSee: boolean) {
   return canSee
     ? {
         $or: [{ hide: false }, { hide: true }],

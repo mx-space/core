@@ -23,7 +23,7 @@ import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { IntIdOrMongoIdDto, MongoIdDto } from '~/shared/dto/id.dto'
 import {
-  addConditionToSeeHideContent,
+  addHidePasswordAndHideCondition,
   addYearCondition,
 } from '~/utils/query.util'
 import {
@@ -49,7 +49,7 @@ export class NoteController {
   async getLatestOne(@IsMaster() isMaster: boolean) {
     const { latest, next } = await this.noteService.getLatestOne(
       {
-        ...addConditionToSeeHideContent(isMaster),
+        ...addHidePasswordAndHideCondition(isMaster),
       },
       isMaster ? '+location +coordinates' : '-location -coordinates',
     )
@@ -63,7 +63,7 @@ export class NoteController {
   async getNotes(@IsMaster() isMaster: boolean, @Query() query: NoteQueryDto) {
     const { size, select, page, sortBy, sortOrder, year } = query
     const condition = {
-      ...addConditionToSeeHideContent(isMaster),
+      ...addHidePasswordAndHideCondition(isMaster),
       ...addYearCondition(year),
     }
     return await this.noteService.model.paginate(condition, {
@@ -108,10 +108,10 @@ export class NoteController {
     }
 
     const select = '_id title nid id created modified'
-    const passwordCondition = addConditionToSeeHideContent(isMaster)
+
     const prev = await this.noteService.model
       .findOne({
-        ...passwordCondition,
+        ...condition,
         created: {
           $gt: current.created,
         },
@@ -121,7 +121,7 @@ export class NoteController {
       .lean()
     const next = await this.noteService.model
       .findOne({
-        ...passwordCondition,
+        ...condition,
         created: {
           $lt: current.created,
         },
@@ -144,7 +144,7 @@ export class NoteController {
     const half = size >> 1
     const { id } = params
     const select = 'nid _id title created'
-    const condition = addConditionToSeeHideContent(isMaster)
+    const condition = isMaster ? {} : { hide: false }
 
     // 当前文档直接找, 不用加条件, 反正里面的东西是看不到的
     const currentDocument = await this.noteService.model
