@@ -39,6 +39,7 @@ export class LinkControllerCrud extends BaseCrudFactory({
 }
 
 @Controller(paths)
+@ApiName
 export class LinkController {
   constructor(private readonly linkService: LinkService) {}
 
