@@ -7,6 +7,7 @@ import { AnalyzeInterceptor } from './common/interceptors/analyze.interceptor'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
 import { CountingInterceptor } from './common/interceptors/counting.interceptor'
 import { JSONSerializeInterceptor } from './common/interceptors/json-serialize.interceptor'
+import { QueryInterceptor } from './common/interceptors/query.interceptor'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { AttachHeaderTokenMiddleware } from './common/middlewares/attach-auth.middleware'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
@@ -85,7 +86,12 @@ import { LoggerModule } from './processors/logger/logger.module'
   providers: [
     {
       provide: APP_INTERCEPTOR,
-      useClass: HttpCacheInterceptor,
+      useClass: QueryInterceptor,
+    },
+
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpCacheInterceptor, // 4
     },
     {
       provide: APP_INTERCEPTOR,
@@ -93,15 +99,15 @@ import { LoggerModule } from './processors/logger/logger.module'
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: CountingInterceptor,
+      useClass: CountingInterceptor, // 3
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: JSONSerializeInterceptor,
+      useClass: JSONSerializeInterceptor, // 2
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: ResponseInterceptor,
+      useClass: ResponseInterceptor, // 1
     },
 
     {

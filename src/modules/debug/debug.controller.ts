@@ -1,7 +1,8 @@
-import { Body, Controller, Post, Query } from '@nestjs/common'
+import { Body, Controller, Get, Post, Query } from '@nestjs/common'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
+import { PagerDto } from '~/shared/dto/pager.dto'
 
 @Controller('debug')
 export class DebugController {
@@ -9,6 +10,10 @@ export class DebugController {
     private readonly webEvent: WebEventsGateway,
     private readonly adminEvent: AdminEventsGateway,
   ) {}
+  @Get('qs')
+  async qs(@Query() query: PagerDto) {
+    return query
+  }
 
   @Post('/events')
   async sendEvent(

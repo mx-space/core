@@ -11,7 +11,6 @@ import {
   NestInterceptor,
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
-import { FastifyRequest } from 'fastify'
 import isbot from 'isbot'
 import { InjectModel } from 'nestjs-typegoose'
 import { Observable } from 'rxjs'
@@ -21,6 +20,7 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { CacheService } from '~/processors/cache/cache.service'
+import { getNestExecutionContextRequest } from '~/utils'
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
 
@@ -47,7 +47,7 @@ export class AnalyzeInterceptor implements NestInterceptor {
     next: CallHandler<any>,
   ): Promise<Observable<any>> {
     const call$ = next.handle()
-    const request = this.getRequest(context)
+    const request = getNestExecutionContextRequest(context)
     if (!request) {
       return call$
     }
@@ -129,13 +129,5 @@ export class AnalyzeInterceptor implements NestInterceptor {
     })
 
     return call$
-  }
-
-  getRequest(context: ExecutionContext) {
-    const req = context.switchToHttp().getRequest<KV>()
-    if (req) {
-      return req as FastifyRequest & { user?: any }
-    }
-    return null
   }
 }

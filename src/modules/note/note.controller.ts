@@ -61,12 +61,12 @@ export class NoteController {
   @Paginator
   @ApiOperation({ summary: '获取记录带分页器' })
   async getNotes(@IsMaster() isMaster: boolean, @Query() query: NoteQueryDto) {
-    const { size, select, page, sortBy, sortOrder, year } = query
+    const { size, select, page, sortBy, sortOrder, year, db_query } = query
     const condition = {
       ...addHidePasswordAndHideCondition(isMaster),
       ...addYearCondition(year),
     }
-    return await this.noteService.model.paginate(condition, {
+    return await this.noteService.model.paginate(db_query ?? condition, {
       limit: size,
       page,
       select: isMaster

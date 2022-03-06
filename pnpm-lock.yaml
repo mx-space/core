@@ -44,6 +44,7 @@ specifiers:
   '@types/node': 16.11.26
   '@types/nodemailer': 6.4.4
   '@types/passport-jwt': 3.0.6
+  '@types/qs': 6.9.7
   '@types/ua-parser-js': 0.7.36
   '@vercel/ncc': 0.33.3
   algoliasearch: 4.12.2
@@ -68,6 +69,7 @@ specifiers:
   get-image-colors: 4.0.1
   html-minifier: 4.0.0
   husky: 7.0.4
+  i: 0.3.7
   image-size: 1.0.1
   inquirer: '*'
   ioredis: 4.28.5
@@ -94,6 +96,7 @@ specifiers:
   passport-jwt: 4.0.0
   pluralize: '*'
   prettier: 2.5.1
+  qs: 6.10.3
   redis-memory-server: 0.5.0
   reflect-metadata: 0.1.13
   rimraf: 3.0.2
@@ -169,6 +172,7 @@ dependencies:
   passport: 0.5.2
   passport-jwt: 4.0.0
   pluralize: 8.0.0
+  qs: 6.10.3
   reflect-metadata: 0.1.13
   rxjs: 7.5.4
   snakecase-keys: 5.1.2
@@ -202,12 +206,14 @@ devDependencies:
   '@types/node': 16.11.26
   '@types/nodemailer': 6.4.4
   '@types/passport-jwt': 3.0.6
+  '@types/qs': 6.9.7
   '@types/ua-parser-js': 0.7.36
   '@vercel/ncc': 0.33.3
   cron: 1.7.2
   cross-env: 7.0.3
   eslint: 8.10.0
   husky: 7.0.4
+  i: 0.3.7
   ioredis: 4.28.5
   jest: 27.5.1_ts-node@10.6.0
   lint-staged: 12.3.5
@@ -4701,6 +4707,11 @@ packages:
     hasBin: true
     dev: true
 
+  /i/0.3.7:
+    resolution: {integrity: sha512-FYz4wlXgkQwIPqhzC5TdNMLSE5+GS1IIDJZY/1ZiEPCT2S3COUVZeT5OW4BmW4r5LHLQuOosSwsvnroG9GR59Q==}
+    engines: {node: '>=0.4'}
+    dev: true
+
   /iconv-lite/0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
     engines: {node: '>=0.10.0'}
@@ -6984,6 +6995,13 @@ packages:
   /punycode/2.1.1:
     resolution: {integrity: sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==}
     engines: {node: '>=6'}
+
+  /qs/6.10.3:
+    resolution: {integrity: sha512-wr7M2E0OFRfIfJZjKGieI8lBKb7fRCH4Fv5KNPEs7gJ8jadvotdsS08PzOKR7opXhZ/Xkjtt3WF9g38drmyRqQ==}
+    engines: {node: '>=0.6'}
+    dependencies:
+      side-channel: 1.0.4
+    dev: false
 
   /qs/6.5.2:
     resolution: {integrity: sha512-N5ZAX4/LxJmF+7wN74pUD6qAh9/wnvdQcjq9TZjevvXzSUo7bfmw91saqMjzGS2xq91/odN2dW/WOl7qQHNDGA==}

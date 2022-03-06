@@ -11,7 +11,11 @@ import {
   ValidateIf,
 } from 'class-validator'
 
-export class PagerDto {
+class DbQueryDto {
+  @IsOptional()
+  db_query?: any
+}
+export class PagerDto extends DbQueryDto {
   @Min(1)
   @Max(50)
   @IsInt()
