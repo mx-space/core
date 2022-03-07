@@ -42,3 +42,13 @@ output:
 
 
 ```
+
+
+
+# Serverless Function
+
+```js
+
+function handle() {}
+
+```
