@@ -95,7 +95,7 @@
     "ejs": "3.1.6",
     "fastify-cookie": "5.6.0",
     "fastify-multipart": "5.3.1",
-    "fastify-swagger": "4.17.0",
+    "fastify-swagger": "4.17.1",
     "get-image-colors": "4.0.1",
     "html-minifier": "4.0.0",
     "image-size": "1.0.1",
