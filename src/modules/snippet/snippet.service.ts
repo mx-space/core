@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common'
 import { load } from 'js-yaml'
 import { InjectModel } from 'nestjs-typegoose'
+import { safeEval } from '~/utils/safe-eval.util'
 import { SnippetModel, SnippetType } from './snippet.model'
 @Injectable()
 export class SnippetService {
@@ -60,16 +61,34 @@ export class SnippetService {
         }
         break
       }
-      case SnippetType.Function:
-        // TODO
-        throw new BadRequestException(
-          'Serverless functions are not currently supported',
-        )
+      case SnippetType.Function: {
+        const isValid = await this.isValidServerlessFunction(model.raw)
+        if (!isValid) {
+          throw new BadRequestException('serverless function is not valid')
+        }
+        break
+      }
 
       case SnippetType.Text:
       default: {
         break
       }
+    }
+  }
+
+  async injectContextIntoServerlessFunctionAndCall(functionString: string) {
+    return {}
+  }
+
+  async isValidServerlessFunction(raw: string) {
+    try {
+      return safeEval(`
+    ${raw}
+    // 验证 handler 是否存在并且是函数
+    return typeof handler === 'function'
+    `)
+    } catch (e) {
+      return false
     }
   }
 
@@ -104,6 +123,10 @@ export class SnippetService {
       }
       case SnippetType.Text: {
         Reflect.set(model, 'data', model.raw)
+        break
+      }
+
+      case SnippetType.Function: {
         break
       }
     }
