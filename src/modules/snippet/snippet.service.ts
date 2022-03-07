@@ -77,7 +77,7 @@ export class SnippetService {
   }
 
   async injectContextIntoServerlessFunctionAndCall(functionString: string) {
-    return {}
+    return await safeEval(`${functionString}; return handler()`)
   }
 
   async isValidServerlessFunction(raw: string) {
@@ -127,13 +127,14 @@ export class SnippetService {
       }
 
       case SnippetType.Function: {
+        const res = await this.injectContextIntoServerlessFunctionAndCall(
+          model.raw,
+        )
+        Reflect.set(model, 'data', res)
         break
       }
     }
 
     return model as SnippetModel & { data: any }
   }
-
-  // TODO serverless function
-  // async runSnippet(model: SnippetModel) {}
 }
