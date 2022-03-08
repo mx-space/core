@@ -225,6 +225,9 @@ export class SnippetService {
 
   async getSnippetById(id: string) {
     const doc = await this.model.findById(id).lean()
+    if (!doc) {
+      throw new NotFoundException()
+    }
     return doc
   }
 
