@@ -31,11 +31,11 @@ export class EmailOptionController {
   }
 
   @Put('/template/reply')
-  writeEmailReplyTemplate(
+  async writeEmailReplyTemplate(
     @Query() { type }: ReplyEmailTypeDto,
     @Body() body: ReplyEmailBodyDto,
   ) {
-    this.emailService.writeTemplate(
+    await this.emailService.writeTemplate(
       type === 'guest' ? ReplyMailType.Guest : ReplyMailType.Owner,
       body.source,
     )

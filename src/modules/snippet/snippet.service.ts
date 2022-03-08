@@ -5,9 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { isURL } from 'class-validator'
+import fs from 'fs/promises'
 import { load } from 'js-yaml'
 import { InjectModel } from 'nestjs-typegoose'
 import type PKG from '~/../package.json'
+import { AssetService } from '~/processors/helper/helper.asset.service'
 import { UniqueArray } from '~/ts-hepler/unique'
 import { safeEval } from '~/utils/safe-eval.util'
 import { isBuiltinModule } from '~/utils/sys.util'
@@ -18,6 +20,7 @@ export class SnippetService {
   constructor(
     @InjectModel(SnippetModel)
     private readonly snippetModel: MongooseModel<SnippetModel>,
+    private readonly assetService: AssetService,
   ) {}
 
   get model() {
@@ -85,25 +88,39 @@ export class SnippetService {
   async injectContextIntoServerlessFunctionAndCall(model: SnippetModel) {
     const { raw: functionString } = model
     const logger = new Logger('serverless-function')
+    const document = await this.model.findById(model.id)
     const global = {
       context: {
         model,
-        document: await this.model.findById(model.id),
+        document,
+        name: model.name,
+        reference: model.reference,
 
         // TODO
         // write file to asset
-
+        writeAsset: async (
+          path: string,
+          data: any,
+          options: Parameters<typeof fs.writeFile>[2],
+        ) => {
+          return await this.assetService.writeUserCustomAsset(
+            path,
+            data,
+            options,
+          )
+        },
         // read file to asset
+        readAsset: async (
+          path: string,
+          options: Parameters<typeof fs.readFile>[1],
+        ) => {
+          return await this.assetService.getAsset(path, options)
+        },
       },
       // inject global
       __dirname,
 
       // inject some zx utils
-      $,
-      cd,
-      sleep,
-      nothrow,
-      question,
       fetch,
 
       // inject logger
@@ -121,7 +138,7 @@ export class SnippetService {
         ) {
           const res = await fetch(id)
           const text = await res.text()
-          return safeEval(text)
+          return await safeEval(text)
         }
 
         // 2. if application third part lib
@@ -150,7 +167,6 @@ export class SnippetService {
           'snakecase-keys',
           'ua-parser-js',
           'xss',
-          'zx',
         ]
 
         if (allowedThirdPartLibs.includes(id as any)) {
@@ -174,7 +190,7 @@ export class SnippetService {
 
     return await safeEval(
       `${functionString}; return handler(context, require)`,
-      global,
+      { ...global, global },
     )
   }
 
@@ -192,7 +208,7 @@ export class SnippetService {
 
   async getSnippetById(id: string) {
     const doc = await this.model.findById(id).lean()
-    return this.attachSnippet(doc)
+    return doc
   }
 
   /**
