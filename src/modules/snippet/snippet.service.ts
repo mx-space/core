@@ -7,8 +7,10 @@ import {
 import { isURL } from 'class-validator'
 import fs from 'fs/promises'
 import { load } from 'js-yaml'
+import { cloneDeep } from 'lodash'
 import { InjectModel } from 'nestjs-typegoose'
 import type PKG from '~/../package.json'
+import { DATA_DIR } from '~/constants/path.constant'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { UniqueArray } from '~/ts-hepler/unique'
 import { safeEval } from '~/utils/safe-eval.util'
@@ -104,7 +106,7 @@ export class SnippetService {
           options: Parameters<typeof fs.writeFile>[2],
         ) => {
           return await this.assetService.writeUserCustomAsset(
-            path,
+            path.replace(/\.{2,}/, '.').replace('~', ''),
             data,
             options,
           )
@@ -114,11 +116,14 @@ export class SnippetService {
           path: string,
           options: Parameters<typeof fs.readFile>[1],
         ) => {
-          return await this.assetService.getAsset(path, options)
+          return await this.assetService.getAsset(
+            path.replace(/\.{2,}/, '.').replace('~', ''),
+            options,
+          )
         },
       },
       // inject global
-      __dirname,
+      __dirname: DATA_DIR,
 
       // inject some zx utils
       fetch,
@@ -170,15 +175,27 @@ export class SnippetService {
         ]
 
         if (allowedThirdPartLibs.includes(id as any)) {
-          return require(id)
+          return cloneDeep(require(id))
         }
 
+        // 3. mock built-in module
+
+        const mockModules = {
+          fs: {
+            writeFile: global.context.writeAsset,
+            readFile: global.context.readAsset,
+          },
+        }
+
+        if (Object.keys(mockModules).includes(id)) {
+          return mockModules[id]
+        }
         // fin. is built-in module
         const module = isBuiltinModule(id, ['fs', 'os', 'child_process', 'sys'])
         if (!module) {
           throw new Error(`cannot require ${id}`)
         } else {
-          return require(id)
+          return cloneDeep(require(id))
         }
       },
       process: {
