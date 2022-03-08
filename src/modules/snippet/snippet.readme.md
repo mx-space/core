@@ -36,9 +36,14 @@ async function handler(context, require) {}
 
 ## 注入 Mock 全局对象
 
-1. require
+1. require (异步!!!)
   - 网络模块 (cjs, 无外置依赖) (ps: 需要缓存, 通过 axios 可以请求) <https://gist.github.com/Innei/865b40849d61c2200f1c6ec99c48f716>
-  - 内建模块 (path, http, https, etc.) 或者只需要 remove 一些不安全的模块? (如 os, process, child_process, etc.)
+  - 内建模块 (path, http, https, etc.) 或者只需要 remove 一些不安全的模块? (如 os, process, child_process, etc.),
+
+      ```ts
+      const bannedBuiltinModules = ['fs', 'path', 'os', 'child_process']
+      ```
+
   - 第三方模块 (axios, fastify, etc.)
 1. global, globalThis, self
   - 作废, 或许可以传入 noop 或者不传
@@ -75,4 +80,5 @@ Get /:id 现需要鉴权
 
 Get /:reference/:name 对外公开
 
-请求响应: JSON, 原始类型会被挂载到 `{data: }`. 会进行 JSON snakecase 处理
+<!-- 请求响应: JSON, 原始类型会被挂载到 `{data: }`. 会进行 JSON snakecase 处理 -->
+请求响应: raw data, http bypass
