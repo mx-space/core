@@ -51,6 +51,9 @@ async function handler(context, require) {}
   - 只传入 env, 只读
   - 可传入 stdout, stderr 但是有无必要?
 
+
+TODO: 捕获 safeEval 报错
+
 ## 全局上下文
 
 1. req, res
@@ -76,9 +79,10 @@ Get 公开接口
 
 # Break
 
-Get /:id 现需要鉴权
+Get /:id 现需要鉴权, 不计算 data 属性
 
 Get /:reference/:name 对外公开
 
 <!-- 请求响应: JSON, 原始类型会被挂载到 `{data: }`. 会进行 JSON snakecase 处理 -->
 请求响应: raw data, http bypass
+

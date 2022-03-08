@@ -4,9 +4,9 @@
  * @description 用于获取静态资源的服务
  */
 import { Injectable, Logger } from '@nestjs/common'
-import fs from 'fs'
+import { existsSync } from 'fs'
+import fs from 'fs/promises'
 import path, { join } from 'path'
-import { promisify } from 'util'
 import { USER_ASSET_DIR } from '~/constants/path.constant'
 import { HttpService } from './helper.http.service'
 
@@ -27,7 +27,7 @@ export class AssetService {
     'https://cdn.jsdelivr.net/gh/mx-space/assets@master/'
 
   private checkRoot() {
-    if (!fs.existsSync(this.embedAssetPath)) {
+    if (!existsSync(this.embedAssetPath)) {
       return false
     }
     return true
@@ -43,7 +43,7 @@ export class AssetService {
       return false
     }
     path = join(this.embedAssetPath, path)
-    if (!fs.existsSync(path)) {
+    if (!existsSync(path)) {
       return false
     }
     return true
@@ -51,17 +51,17 @@ export class AssetService {
 
   private async getUserCustomAsset(
     path: string,
-    options: Parameters<typeof fs.readFileSync>[1],
+    options: Parameters<typeof fs.readFile>[1],
   ) {
-    if (fs.existsSync(join(USER_ASSET_DIR, path))) {
-      return await promisify(fs.readFile)(join(USER_ASSET_DIR, path), options)
+    if (existsSync(join(USER_ASSET_DIR, path))) {
+      return await fs.readFile(join(USER_ASSET_DIR, path), options)
     }
     return null
   }
 
   public async getAsset(
     path: string,
-    options: Parameters<typeof fs.readFileSync>[1],
+    options: Parameters<typeof fs.readFile>[1],
   ) {
     // 想找用户自定义的资源入口
     if (await this.getUserCustomAsset(path, options)) {
@@ -74,43 +74,39 @@ export class AssetService {
           this.onlineAssetPath + path,
         )
 
-        fs.mkdirSync(
+        await fs.mkdir(
           (() => {
             const p = join(this.embedAssetPath, path).split('/')
             return p.slice(0, p.length - 1).join('/')
           })(),
           { recursive: true },
         )
-        await promisify(fs.writeFile)(
-          join(this.embedAssetPath, path),
-          data,
-          options,
-        )
+        await fs.writeFile(join(this.embedAssetPath, path), data, options)
         return data
       } catch (e) {
         this.logger.error('本地资源不存在，线上资源无法拉取')
         throw e
       }
     }
-    return promisify(fs.readFile)(join(this.embedAssetPath, path), options)
+    return fs.readFile(join(this.embedAssetPath, path), options)
   }
 
-  public writeUserCustomAsset(
+  public async writeUserCustomAsset(
     path: string,
     data: any,
-    options: Parameters<typeof fs.writeFileSync>[2],
+    options: Parameters<typeof fs.writeFile>[2],
   ) {
-    fs.mkdirSync(
+    await fs.mkdir(
       (() => {
         const p = join(USER_ASSET_DIR, path).split('/')
         return p.slice(0, p.length - 1).join('/')
       })(),
       { recursive: true },
     )
-    fs.writeFileSync(join(USER_ASSET_DIR, path), data, options)
+    return fs.writeFile(join(USER_ASSET_DIR, path), data, options)
   }
 
   public async removeUserCustomAsset(path: string) {
-    return promisify(fs.unlink)(join(USER_ASSET_DIR, path))
+    return fs.unlink(join(USER_ASSET_DIR, path))
   }
 }

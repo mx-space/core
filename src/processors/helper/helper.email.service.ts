@@ -53,7 +53,7 @@ export class EmailService {
     }
   }
 
-  writeTemplate(type: ReplyMailType, source: string) {
+  async writeTemplate(type: ReplyMailType, source: string) {
     switch (type) {
       case ReplyMailType.Guest:
         return this.assetService.writeUserCustomAsset(
