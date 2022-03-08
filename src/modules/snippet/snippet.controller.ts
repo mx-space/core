@@ -10,7 +10,6 @@ import {
   Query,
 } from '@nestjs/common'
 import { Auth } from '~/common/decorator/auth.decorator'
-import { HttpCache } from '~/common/decorator/cache.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -44,7 +43,7 @@ export class SnippetController {
   }
 
   @Get('/:id')
-  @HttpCache({ ttl: 300 })
+  @Auth()
   async getSnippetById(
     @Param() param: MongoIdDto,
     @IsMaster() isMaster: boolean,

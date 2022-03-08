@@ -1,19 +1,16 @@
-
 # 数据区块 (Snippet)
 
 拟定于存储一些动态扩展配置. 一期实现存储 JSON 和 plain text 的区块
 
-二期实现低配云函数
-
 拟定:
 
-JSON: 
+JSON:
 
 ```
 input: json `{"foo":"bar"}`
 
 
-output: 
+output:
 
 {
   metatype: null,
@@ -26,29 +23,56 @@ output:
 }
 ```
 
-serverless function
-
-```
-input: `module.exports = ctx => { return 'foo' }`
-
-output: 
-
-{
-  raw: `module.exports = ctx => { return 'foo' }`,
-  data: 'foo',
-  ....
-
-}
-
-
-```
-
-
-
 # Serverless Function
 
+云函数的 private 只用于鉴权, 入口函数为 handler. 采用 safe-eval, 无法获取 global, require, process 等全局对象.
+
+使用 mock 方式注入
+
 ```js
-
-function handle() {}
-
+async function handler(context, require) {}
 ```
+
+
+## 注入 Mock 全局对象
+
+1. require
+  - 网络模块 (cjs, 无外置依赖) (ps: 需要缓存, 通过 axios 可以请求) <https://gist.github.com/Innei/865b40849d61c2200f1c6ec99c48f716>
+  - 内建模块 (path, http, https, etc.) 或者只需要 remove 一些不安全的模块? (如 os, process, child_process, etc.)
+  - 第三方模块 (axios, fastify, etc.)
+1. global, globalThis, self
+  - 作废, 或许可以传入 noop 或者不传
+1. process
+  - 只传入 env, 只读
+  - 可传入 stdout, stderr 但是有无必要?
+
+## 全局上下文
+
+1. req, res
+
+
+## Sample
+
+1. 简单的 handler
+
+```js
+async function handler() {
+  return 'foo-bar'
+}
+```
+
+Get 公开接口
+
+```json
+{ "data": "foo-bar" }
+```
+
+2. 
+
+# Break
+
+Get /:id 现需要鉴权
+
+Get /:reference/:name 对外公开
+
+请求响应: JSON, 原始类型会被挂载到 `{data: }`. 会进行 JSON snakecase 处理
