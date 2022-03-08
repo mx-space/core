@@ -10,6 +10,8 @@ import {
   Query,
 } from '@nestjs/common'
 import { Auth } from '~/common/decorator/auth.decorator'
+import { HttpCache } from '~/common/decorator/cache.decorator'
+import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -57,6 +59,8 @@ export class SnippetController {
   }
 
   @Get('/:reference/:name')
+  @HTTPDecorators.Bypass
+  @HttpCache({ ttl: 3 })
   async getSnippetByName(
     @Param('name') name: string,
     @Param('reference') reference: string,
