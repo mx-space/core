@@ -60,7 +60,6 @@ describe('test Snippet Service', () => {
   test('get full snippet', async () => {
     const res = await service.getSnippetById(id)
     expect(res.name).toBe(snippet.name)
-    expect(res.data).toBeDefined()
   })
 
   test('modify', async () => {
