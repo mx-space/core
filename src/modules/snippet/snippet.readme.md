@@ -40,7 +40,7 @@ async function handler(context, require) {}
   - 网络模块 (cjs, 无外置依赖) (ps: 需要缓存, 通过 axios 可以请求) <https://gist.github.com/Innei/865b40849d61c2200f1c6ec99c48f716>
   - 内建模块 (path, http, https, etc.) 或者只需要 remove 一些不安全的模块? (如 os, process, child_process, etc.),
 
-      ```ts
+      ```js
       const bannedBuiltinModules = ['fs', 'path', 'os', 'child_process']
       ```
 
