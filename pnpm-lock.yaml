@@ -20,7 +20,7 @@ specifiers:
   '@nestjs/platform-fastify': 8.4.0
   '@nestjs/platform-socket.io': 8.4.0
   '@nestjs/schedule': 1.0.2
-  '@nestjs/schematics': 8.0.7
+  '@nestjs/schematics': 8.0.8
   '@nestjs/swagger': 5.2.0
   '@nestjs/testing': 8.4.0
   '@nestjs/websockets': 8.4.0
@@ -188,7 +188,7 @@ devDependencies:
   '@innei-util/eslint-config-ts': 0.4.0_typescript@4.6.2
   '@innei-util/prettier': 0.2.2_typescript@4.6.2
   '@nestjs/cli': 8.2.2
-  '@nestjs/schematics': 8.0.7_typescript@4.6.2
+  '@nestjs/schematics': 8.0.8_typescript@4.6.2
   '@nestjs/testing': 8.4.0_31e7036b193d6d3c9cadab18cbb4af84
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.3
@@ -364,8 +364,8 @@ packages:
       '@jridgewell/trace-mapping': 0.2.7
     dev: true
 
-  /@angular-devkit/core/13.2.4:
-    resolution: {integrity: sha512-hSw1JWA/6dDAF/xleQRXGtzHphfU49TMUhvAoAmsmmz3NAn03xLy1dtqdIXIf+TkFXVvZDaAB2mW8KfRV67GFg==}
+  /@angular-devkit/core/13.2.5:
+    resolution: {integrity: sha512-WuWp/1R0FtCHPBcJLF13lTLHETtDGFUX0ULfGPRaYB5OVCSQcovVp5UbZTTy/Ss3ub3EOEmJlU8kMJfBrWuq+A==}
     engines: {node: ^12.20.0 || ^14.15.0 || >=16.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
     peerDependencies:
       chokidar: ^3.5.2
@@ -375,24 +375,6 @@ packages:
     dependencies:
       ajv: 8.9.0
       ajv-formats: 2.1.1
-      fast-json-stable-stringify: 2.1.0
-      magic-string: 0.25.7
-      rxjs: 6.6.7
-      source-map: 0.7.3
-    dev: true
-
-  /@angular-devkit/core/13.2.4_chokidar@3.5.3:
-    resolution: {integrity: sha512-hSw1JWA/6dDAF/xleQRXGtzHphfU49TMUhvAoAmsmmz3NAn03xLy1dtqdIXIf+TkFXVvZDaAB2mW8KfRV67GFg==}
-    engines: {node: ^12.20.0 || ^14.15.0 || >=16.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
-    peerDependencies:
-      chokidar: ^3.5.2
-    peerDependenciesMeta:
-      chokidar:
-        optional: true
-    dependencies:
-      ajv: 8.9.0
-      ajv-formats: 2.1.1
-      chokidar: 3.5.3
       fast-json-stable-stringify: 2.1.0
       magic-string: 0.25.7
       rxjs: 6.6.7
@@ -432,24 +414,11 @@ packages:
       - chokidar
     dev: true
 
-  /@angular-devkit/schematics/13.2.4:
-    resolution: {integrity: sha512-VMhYa4cDu5yE31OvHncAd15Rmlchih/Sr6sxFsIwkg4xzRNIIZCtwqxVXgf0TiTN9zrvlvzK7nhPqTGNqqYb2A==}
+  /@angular-devkit/schematics/13.2.5:
+    resolution: {integrity: sha512-kAye6VYiF9JQAoeO+BYhy8eT2QOmhB+WLziRjXoFCBxh5+yXTygTVfs9fD5jmIpHmeu4hd2ErSh69yT5xWcD9g==}
     engines: {node: ^12.20.0 || ^14.15.0 || >=16.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
     dependencies:
-      '@angular-devkit/core': 13.2.4
-      jsonc-parser: 3.0.0
-      magic-string: 0.25.7
-      ora: 5.4.1
-      rxjs: 6.6.7
-    transitivePeerDependencies:
-      - chokidar
-    dev: true
-
-  /@angular-devkit/schematics/13.2.4_chokidar@3.5.3:
-    resolution: {integrity: sha512-VMhYa4cDu5yE31OvHncAd15Rmlchih/Sr6sxFsIwkg4xzRNIIZCtwqxVXgf0TiTN9zrvlvzK7nhPqTGNqqYb2A==}
-    engines: {node: ^12.20.0 || ^14.15.0 || >=16.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
-    dependencies:
-      '@angular-devkit/core': 13.2.4_chokidar@3.5.3
+      '@angular-devkit/core': 13.2.5
       jsonc-parser: 3.0.0
       magic-string: 0.25.7
       ora: 5.4.1
@@ -1235,7 +1204,7 @@ packages:
       '@angular-devkit/core': 13.2.5_chokidar@3.5.3
       '@angular-devkit/schematics': 13.2.5_chokidar@3.5.3
       '@angular-devkit/schematics-cli': 13.2.5_chokidar@3.5.3
-      '@nestjs/schematics': 8.0.7_chokidar@3.5.3+typescript@4.6.2
+      '@nestjs/schematics': 8.0.8_chokidar@3.5.3+typescript@4.6.2
       chalk: 3.0.0
       chokidar: 3.5.3
       cli-table3: 0.6.1
@@ -1427,13 +1396,13 @@ packages:
       uuid: 8.3.2
     dev: false
 
-  /@nestjs/schematics/8.0.7_chokidar@3.5.3+typescript@4.6.2:
-    resolution: {integrity: sha512-7k+eMMBUwvXFp6vwZ5byiLBEQKzjMyIJwO46ginoFugt2AXrOt0iUhR3BKFuWDBZaYQ1l4az86UGw5ohgH3wow==}
+  /@nestjs/schematics/8.0.8_chokidar@3.5.3+typescript@4.6.2:
+    resolution: {integrity: sha512-xIIb5YnMQN/OJQ68+MCapy2bXvTxSWgINoqQbyZWkLL/yTIuROvZCdtV850NPGyr7f7l93VBP0ZPitbFIexy3Q==}
     peerDependencies:
       typescript: ^3.4.5 || ^4.3.5
     dependencies:
-      '@angular-devkit/core': 13.2.4_chokidar@3.5.3
-      '@angular-devkit/schematics': 13.2.4_chokidar@3.5.3
+      '@angular-devkit/core': 13.2.5_chokidar@3.5.3
+      '@angular-devkit/schematics': 13.2.5_chokidar@3.5.3
       fs-extra: 10.0.1
       jsonc-parser: 3.0.0
       pluralize: 8.0.0
@@ -1442,13 +1411,13 @@ packages:
       - chokidar
     dev: true
 
-  /@nestjs/schematics/8.0.7_typescript@4.6.2:
-    resolution: {integrity: sha512-7k+eMMBUwvXFp6vwZ5byiLBEQKzjMyIJwO46ginoFugt2AXrOt0iUhR3BKFuWDBZaYQ1l4az86UGw5ohgH3wow==}
+  /@nestjs/schematics/8.0.8_typescript@4.6.2:
+    resolution: {integrity: sha512-xIIb5YnMQN/OJQ68+MCapy2bXvTxSWgINoqQbyZWkLL/yTIuROvZCdtV850NPGyr7f7l93VBP0ZPitbFIexy3Q==}
     peerDependencies:
       typescript: ^3.4.5 || ^4.3.5
     dependencies:
-      '@angular-devkit/core': 13.2.4
-      '@angular-devkit/schematics': 13.2.4
+      '@angular-devkit/core': 13.2.5
+      '@angular-devkit/schematics': 13.2.5
       fs-extra: 10.0.1
       jsonc-parser: 3.0.0
       pluralize: 8.0.0
