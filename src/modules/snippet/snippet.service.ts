@@ -178,7 +178,10 @@ export class SnippetService {
           'xss',
         ]
 
-        if (allowedThirdPartLibs.includes(id as any)) {
+        if (
+          allowedThirdPartLibs.includes(id as any) ||
+          id.startsWith('@mx-space')
+        ) {
           return cloneDeep(require(id))
         }
 
@@ -194,6 +197,7 @@ export class SnippetService {
         if (Object.keys(mockModules).includes(id)) {
           return mockModules[id]
         }
+
         // fin. is built-in module
         const module = isBuiltinModule(id, ['fs', 'os', 'child_process', 'sys'])
         if (!module) {
