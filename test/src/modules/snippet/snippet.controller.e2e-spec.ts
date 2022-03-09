@@ -7,6 +7,8 @@ import { setupE2EApp } from 'test/helper/register-app.helper'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
+import { AssetService } from '~/processors/helper/helper.asset.service'
+import { HttpService } from '~/processors/helper/helper.http.service'
 
 describe('test /snippets', () => {
   let app: NestFastifyApplication
@@ -33,6 +35,8 @@ describe('test /snippets', () => {
       controllers: [SnippetController],
       providers: [
         SnippetService,
+        AssetService,
+        HttpService,
         {
           provide: getModelToken(SnippetModel.name),
           useValue: model,

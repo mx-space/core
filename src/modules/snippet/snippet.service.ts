@@ -13,6 +13,7 @@ import type PKG from '~/../package.json'
 import { DATA_DIR } from '~/constants/path.constant'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { UniqueArray } from '~/ts-hepler/unique'
+import { safePathJoin } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
 import { isBuiltinModule } from '~/utils/sys.util'
 import { SnippetModel, SnippetType } from './snippet.model'
@@ -106,7 +107,7 @@ export class SnippetService {
           options: Parameters<typeof fs.writeFile>[2],
         ) => {
           return await this.assetService.writeUserCustomAsset(
-            path.replace(/\.{2,}/, '.').replace('~', ''),
+            safePathJoin(path),
             data,
             options,
           )
@@ -116,10 +117,7 @@ export class SnippetService {
           path: string,
           options: Parameters<typeof fs.readFile>[1],
         ) => {
-          return await this.assetService.getAsset(
-            path.replace(/\.{2,}/, '.').replace('~', ''),
-            options,
-          )
+          return await this.assetService.getAsset(safePathJoin(path), options)
         },
       },
       // inject global

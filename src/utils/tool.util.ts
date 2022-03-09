@@ -1,4 +1,5 @@
 import { isObject } from 'lodash'
+import { join } from 'path'
 
 export const md5 = (text: string) =>
   require('crypto').createHash('md5').update(text).digest('hex')
@@ -57,4 +58,19 @@ export const safeJSONParse = (p: any) => {
   } catch {
     return null
   }
+}
+
+/**
+ * remove `..`, `~`
+ * @param path
+ */
+export const safePathJoin = (...path: string[]) => {
+  const newPathArr = path.map((p) =>
+    p
+      .split('/')
+      .map((o) => o.replace(/^(\.{2,}|~)$/, '.'))
+      .join('/'),
+  )
+
+  return join(...newPathArr)
 }

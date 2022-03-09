@@ -9,7 +9,7 @@ class RedisSubPub {
     if (!isTest) {
       this.init()
     } else {
-      !process.env.CI && console.error('[RedisSubPub] 在测试环境不可用！')
+      // !process.env.CI && console.error('[RedisSubPub] 在测试环境不可用！')
     }
   }
 
