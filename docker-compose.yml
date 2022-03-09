@@ -11,6 +11,7 @@ services:
     restart: 'on-failure'
     volumes:
       - ./data/mx-space:/root/.mx-space
+      - ./node_modules:/usr/local/lib/node_modules
     ports:
       - '2333:2333'
     depends_on:
