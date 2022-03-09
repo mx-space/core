@@ -121,7 +121,7 @@
     "pluralize": "*",
     "qs": "6.10.3",
     "reflect-metadata": "0.1.13",
-    "rxjs": "7.5.4",
+    "rxjs": "7.5.5",
     "snakecase-keys": "5.1.2",
     "ua-parser-js": "1.0.2",
     "xss": "1.0.11",
