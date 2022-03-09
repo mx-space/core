@@ -12,6 +12,7 @@ import { InjectModel } from 'nestjs-typegoose'
 import type PKG from '~/../package.json'
 import { DATA_DIR } from '~/constants/path.constant'
 import { AssetService } from '~/processors/helper/helper.asset.service'
+import { HttpService } from '~/processors/helper/helper.http.service'
 import { UniqueArray } from '~/ts-hepler/unique'
 import { safePathJoin } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
@@ -24,6 +25,7 @@ export class SnippetService {
     @InjectModel(SnippetModel)
     private readonly snippetModel: MongooseModel<SnippetModel>,
     private readonly assetService: AssetService,
+    private readonly httpService: HttpService,
   ) {}
 
   get model() {
@@ -139,9 +141,13 @@ export class SnippetService {
         if (
           isURL(id, { protocols: ['http', 'https'], require_protocol: true })
         ) {
-          const res = await fetch(id)
-          const text = await res.text()
-          return await safeEval(text)
+          const text = await this.httpService.getAndCacheRequest(id)
+          return await safeEval(`${text}; return module.exports`, {
+            exports: {},
+            module: {
+              exports: null,
+            },
+          })
         }
 
         // 2. if application third part lib
@@ -205,7 +211,7 @@ export class SnippetService {
 
     return await safeEval(
       `${functionString}; return handler(context, require)`,
-      { ...global, global },
+      { ...global, global, globalThis: global },
     )
   }
 

@@ -5,6 +5,7 @@ import { getModelToken } from 'nestjs-typegoose'
 import { dbHelper } from 'test/helper/db-mock.helper'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
+import { CacheService } from '~/processors/cache/cache.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 
@@ -18,6 +19,7 @@ describe('test Snippet Service', () => {
         SnippetService,
         AssetService,
         HttpService,
+        { provide: CacheService, useValue: {} },
         {
           provide: getModelToken('SnippetModel'),
           useValue: getModelForClass(SnippetModel),
