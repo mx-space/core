@@ -1,4 +1,9 @@
 const { cpus } = require('os')
+const { execSync } = require('child_process')
+const nodePath = execSync(`npm root --quiet -g`, { encoding: 'utf-8' }).split(
+  '\n',
+)[0]
+
 const cpuLen = cpus().length
 module.exports = {
   apps: [
@@ -13,6 +18,7 @@ module.exports = {
       args: '--color',
       env: {
         NODE_ENV: 'production',
+        NODE_PATH: nodePath,
       },
     },
   ],
