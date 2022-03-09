@@ -92,7 +92,7 @@ export class SnippetService {
 
   async injectContextIntoServerlessFunctionAndCall(model: SnippetModel) {
     const { raw: functionString } = model
-    const logger = new Logger('serverless-function')
+    const logger = new Logger('ServerlessFunction/' + model.name)
     const document = await this.model.findById(model.id)
     const global = {
       context: {
