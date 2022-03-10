@@ -177,12 +177,18 @@ export class SnippetService {
       logger,
 
       require: (() => {
-        const __require = (id: string, useCache = true) => {
-          !useCache && delete require.cache[require.resolve(id)]
+        const __require = (id: string) => {
           const module = require(id)
-          !useCache && delete require.cache[require.resolve(id)]
 
-          return module
+          return cloneDeep(module)
+        }
+
+        const __requireNoCache = (id: string) => {
+          delete require.cache[require.resolve(id)]
+          const module = require(id)
+          delete require.cache[require.resolve(id)]
+
+          return cloneDeep(module)
         }
 
         async function $require(
@@ -190,7 +196,6 @@ export class SnippetService {
           id: string,
           useCache = true,
         ) {
-          const require = __require
           if (!id || typeof id !== 'string') {
             throw new Error('require id is not valid')
           }
@@ -242,7 +247,7 @@ export class SnippetService {
             allowedThirdPartLibs.includes(id as any) ||
             trustPackagePrefixes.some((prefix) => id.startsWith(prefix))
           ) {
-            return cloneDeep(require(id, useCache))
+            return useCache ? __require(id) : __requireNoCache(id)
           }
 
           // 3. mock built-in module
@@ -268,7 +273,7 @@ export class SnippetService {
           if (!module) {
             throw new Error(`cannot require ${id}`)
           } else {
-            return cloneDeep(require(id))
+            return __require(id)
           }
         }
 
