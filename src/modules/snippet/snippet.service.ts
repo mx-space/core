@@ -17,6 +17,10 @@ import { UniqueArray } from '~/ts-hepler/unique'
 import { safePathJoin } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
 import { isBuiltinModule } from '~/utils/sys.util'
+import {
+  FunctionContextRequest,
+  FunctionContextResponse,
+} from './function.types'
 import { SnippetModel, SnippetType } from './snippet.model'
 
 @Injectable()
@@ -90,12 +94,18 @@ export class SnippetService {
     }
   }
 
-  async injectContextIntoServerlessFunctionAndCall(model: SnippetModel) {
+  async injectContextIntoServerlessFunctionAndCall(
+    model: SnippetModel,
+    context: { req: FunctionContextRequest; res: FunctionContextResponse },
+  ) {
     const { raw: functionString } = model
     const logger = new Logger('ServerlessFunction/' + model.name)
     const document = await this.model.findById(model.id)
     const global = {
       context: {
+        // inject app req, res
+        ...context,
+
         model,
         document,
         name: model.name,
@@ -178,9 +188,11 @@ export class SnippetService {
           'xss',
         ]
 
+        const trustPackagePrefixes = ['@innei/', '@mx-space/']
+
         if (
           allowedThirdPartLibs.includes(id as any) ||
-          id.startsWith('@mx-space')
+          trustPackagePrefixes.some((prefix) => id.startsWith(prefix))
         ) {
           return cloneDeep(require(id))
         }
@@ -242,12 +254,12 @@ export class SnippetService {
   /**
    *
    * @param name
-   * @param reference 引用类型, 可以理解为 type
+   * @param reference 引用类型, 可以理解为 type, 或者一级分类
    * @returns
    */
   async getSnippetByName(name: string, reference: string) {
     const doc = await this.model.findOne({ name, reference }).lean()
-    return this.attachSnippet(doc)
+    return doc
   }
 
   async attachSnippet(model: SnippetModel) {
@@ -265,12 +277,6 @@ export class SnippetService {
       }
       case SnippetType.Text: {
         Reflect.set(model, 'data', model.raw)
-        break
-      }
-
-      case SnippetType.Function: {
-        const res = await this.injectContextIntoServerlessFunctionAndCall(model)
-        Reflect.set(model, 'data', res)
         break
       }
     }

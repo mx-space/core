@@ -29,7 +29,7 @@
     "prepare": "husky install",
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "dev": "npm run start",
+    "dev": "NODE_PATH=`npm root --quiet -g` npm run start",
     "bundle": "rimraf out && yarn run build && cd dist/src && npx ncc build main.js -o ../../out -m && cd ../.. && chmod +x out/index.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "cross-env NODE_ENV=development nest start -w --path tsconfig.json",

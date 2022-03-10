@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common'
+import { Body, Controller, Get, Post, Query, Request } from '@nestjs/common'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'
@@ -42,7 +42,7 @@ export class DebugController {
 
   @Post('/function')
   @HTTPDecorators.Bypass
-  async runFunction(@Body('function') functionString: string) {
+  async runFunction(@Body('function') functionString: string, @Request() req) {
     const model = new SnippetModel()
     model.name = 'debug'
     model.raw = functionString
@@ -50,6 +50,7 @@ export class DebugController {
     model.type = SnippetType.Function
     return await this.snippetService.injectContextIntoServerlessFunctionAndCall(
       model,
+      { req, res: {} },
     )
   }
 }
