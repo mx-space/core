@@ -1,28 +1,3 @@
-# 数据区块 (Snippet)
-
-拟定于存储一些动态扩展配置. 一期实现存储 JSON 和 plain text 的区块
-
-拟定:
-
-JSON:
-
-```
-input: json `{"foo":"bar"}`
-
-
-output:
-
-{
-  metatype: null,
-  type: 'json',
-  data: {
-    foo: 'bar'
-  },
-  raw: '{"foo":"bar"}',
-  id: xx
-}
-```
-
 # Serverless Function
 
 云函数的 private 只用于鉴权, 入口函数为 handler. 采用 safe-eval, 无法获取 global, require, process 等全局对象.
@@ -55,12 +30,6 @@ async function handler(context, require) {}
 - 只传入 env, 只读
 - 可传入 stdout, stderr 但是有无必要?
 
-TODO: 捕获 safeEval 报错
-
-## 全局上下文
-
-1. req, res
-
 ## Sample
 
 1. 简单的 handler
@@ -89,7 +58,9 @@ Get /:reference/:name 对外公开
 
 请求响应: raw data, http bypass
 
-# Tips
+---
+
+# SF Readme
 
 ## `require`
 
@@ -165,7 +136,6 @@ const remoteModule =
 | `process.env`        | `Readonly<Record<string, string>>` |
 | `process.nextTick()` |                                    |
 
-
 ## Global API
 
 - `fetch` - Fetch API
@@ -178,3 +148,4 @@ And other global api is all banned.
 
 - HTTP Methods: POST, PUT, DELETE, PATCH
 - ResponseType: buffer, stream
+- handle safeEval throw
