@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common'
-import { SnippetService } from '../snippet/snippet.service'
+import { SnippetModule } from '../snippet/snippet.module'
 import { DebugController } from './debug.controller'
 
 @Module({
   controllers: [DebugController],
-  providers: [SnippetService],
+  imports: [SnippetModule],
 })
 export class DebugModule {}

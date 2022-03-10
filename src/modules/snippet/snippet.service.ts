@@ -5,12 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { isURL } from 'class-validator'
-import fs from 'fs/promises'
+import fs, { mkdir, stat } from 'fs/promises'
 import { load } from 'js-yaml'
 import { cloneDeep } from 'lodash'
 import { InjectModel } from 'nestjs-typegoose'
+import { join } from 'path'
+import { nextTick } from 'process'
 import type PKG from '~/../package.json'
-import { DATA_DIR } from '~/constants/path.constant'
+import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { UniqueArray } from '~/ts-hepler/unique'
@@ -30,7 +32,32 @@ export class SnippetService {
     private readonly snippetModel: MongooseModel<SnippetModel>,
     private readonly assetService: AssetService,
     private readonly httpService: HttpService,
-  ) {}
+  ) {
+    nextTick(() => {
+      // Add /includes/plugin to the path, also note that we need to support
+      //   `require('../hello.js')`. We can do that by adding /includes/plugin/a,
+      //   /includes/plugin/a/b, etc.. to the list
+      mkdir(NODE_REQUIRE_PATH, { recursive: true }).then(async () => {
+        const pkgPath = join(NODE_REQUIRE_PATH, 'package.json')
+        const isPackageFileExist = await stat(pkgPath)
+          .then(() => true)
+          .catch(() => false)
+
+        if (!isPackageFileExist) {
+          await fs.writeFile(
+            pkgPath,
+            JSON.stringify({ name: 'modules' }, null, 2),
+          )
+        }
+      })
+
+      module.paths.push(NODE_REQUIRE_PATH)
+
+      // if (isDev) {
+      //   console.log(module.paths)
+      // }
+    })
+  }
 
   get model() {
     return this.snippetModel
@@ -155,7 +182,11 @@ export class SnippetService {
           return module
         }
 
-        async function $require(id: string, useCache = true) {
+        async function $require(
+          this: SnippetService,
+          id: string,
+          useCache = true,
+        ) {
           const require = __require
           if (!id || typeof id !== 'string') {
             throw new Error('require id is not valid')
@@ -202,7 +233,7 @@ export class SnippetService {
             'xss',
           ]
 
-          const trustPackagePrefixes = ['@innei/', '@mx-space/']
+          const trustPackagePrefixes = ['@innei/', '@mx-space/', 'mx-function-']
 
           if (
             allowedThirdPartLibs.includes(id as any) ||
@@ -243,7 +274,6 @@ export class SnippetService {
       process: {
         env: Object.freeze({ ...process.env }),
         nextTick: process.nextTick,
-        cwd: process.cwd,
       },
     }
 

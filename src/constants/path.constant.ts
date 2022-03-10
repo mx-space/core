@@ -21,3 +21,5 @@ export const BACKUP_DIR = !isDev
 export const LOCAL_ADMIN_ASSET_PATH = isDev
   ? join(DATA_DIR, 'admin')
   : join(process.cwd(), './admin')
+
+export const NODE_REQUIRE_PATH = join(DATA_DIR, 'node_modules')
