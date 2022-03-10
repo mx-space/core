@@ -146,82 +146,98 @@ export class SnippetService {
       console: logger,
       logger,
 
-      require: async (id: string) => {
-        if (!id || typeof id !== 'string') {
-          throw new Error('require id is not valid')
-        }
+      require: (function () {
+        async function $require(id: string) {
+          if (!id || typeof id !== 'string') {
+            throw new Error('require id is not valid')
+          }
 
-        // 1. if is remote module
-        if (
-          isURL(id, { protocols: ['http', 'https'], require_protocol: true })
-        ) {
-          const text = await this.httpService.getAndCacheRequest(id)
-          return await safeEval(`${text}; return module.exports`, {
-            exports: {},
-            module: {
-              exports: null,
+          // 1. if is remote module
+          if (
+            isURL(id, { protocols: ['http', 'https'], require_protocol: true })
+          ) {
+            const text = await this.httpService.getAndCacheRequest(id)
+            return await safeEval(`${text}; return module.exports`, {
+              exports: {},
+              module: {
+                exports: null,
+              },
+            })
+          }
+
+          // 2. if application third part lib
+
+          const allowedThirdPartLibs: UniqueArray<
+            (keyof typeof PKG.dependencies)[]
+          > = [
+            'algoliasearch',
+            'axios-retry',
+            'axios',
+            'class-transformer',
+            'class-validator',
+            'dayjs',
+            'ejs',
+            'html-minifier',
+            'image-size',
+            'isbot',
+            'js-yaml',
+            'jsdom',
+            'jszip',
+            'lodash',
+            'marked',
+            'nanoid',
+            'qs',
+            'rxjs',
+            'snakecase-keys',
+            'ua-parser-js',
+            'xss',
+          ]
+
+          const trustPackagePrefixes = ['@innei/', '@mx-space/']
+
+          if (
+            allowedThirdPartLibs.includes(id as any) ||
+            trustPackagePrefixes.some((prefix) => id.startsWith(prefix))
+          ) {
+            return cloneDeep(require(id))
+          }
+
+          // 3. mock built-in module
+
+          const mockModules = {
+            fs: {
+              writeFile: global.context.writeAsset,
+              readFile: global.context.readAsset,
             },
-          })
+          }
+
+          if (Object.keys(mockModules).includes(id)) {
+            return mockModules[id]
+          }
+
+          // fin. is built-in module
+          const module = isBuiltinModule(id, [
+            'fs',
+            'os',
+            'child_process',
+            'sys',
+          ])
+          if (!module) {
+            throw new Error(`cannot require ${id}`)
+          } else {
+            return cloneDeep(require(id))
+          }
         }
-
-        // 2. if application third part lib
-
-        const allowedThirdPartLibs: UniqueArray<
-          (keyof typeof PKG.dependencies)[]
-        > = [
-          'algoliasearch',
-          'axios-retry',
-          'axios',
-          'class-transformer',
-          'class-validator',
-          'dayjs',
-          'ejs',
-          'html-minifier',
-          'image-size',
-          'isbot',
-          'js-yaml',
-          'jsdom',
-          'jszip',
-          'lodash',
-          'marked',
-          'nanoid',
-          'qs',
-          'rxjs',
-          'snakecase-keys',
-          'ua-parser-js',
-          'xss',
-        ]
-
-        const trustPackagePrefixes = ['@innei/', '@mx-space/']
-
-        if (
-          allowedThirdPartLibs.includes(id as any) ||
-          trustPackagePrefixes.some((prefix) => id.startsWith(prefix))
-        ) {
-          return cloneDeep(require(id))
+        $require.resolve = (id: string) => {
+          if (
+            isURL(id, { protocols: ['http', 'https'], require_protocol: true })
+          ) {
+            return id
+          }
+          return require.resolve(id)
         }
-
-        // 3. mock built-in module
-
-        const mockModules = {
-          fs: {
-            writeFile: global.context.writeAsset,
-            readFile: global.context.readAsset,
-          },
-        }
-
-        if (Object.keys(mockModules).includes(id)) {
-          return mockModules[id]
-        }
-
-        // fin. is built-in module
-        const module = isBuiltinModule(id, ['fs', 'os', 'child_process', 'sys'])
-        if (!module) {
-          throw new Error(`cannot require ${id}`)
-        } else {
-          return cloneDeep(require(id))
-        }
-      },
+        return $require
+      })(),
       process: {
         env: Object.freeze({ ...process.env }),
         nextTick: process.nextTick,
