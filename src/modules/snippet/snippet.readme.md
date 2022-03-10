@@ -86,3 +86,8 @@ Get /:reference/:name 对外公开
 <!-- 请求响应: JSON, 原始类型会被挂载到 `{data: }`. 会进行 JSON snakecase 处理 -->
 请求响应: raw data, http bypass
 
+
+# TODO
+
+- HTTP Methods: POST, PUT, DELETE, PATCH
+- ResponseType: buffer, stream
