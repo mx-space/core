@@ -2,4 +2,6 @@
 import type { FastifyRequest } from 'fastify'
 export interface FunctionContextRequest extends FastifyRequest {}
 
-export interface FunctionContextResponse {}
+export interface FunctionContextResponse {
+  throws(code: number, message: any): void
+}

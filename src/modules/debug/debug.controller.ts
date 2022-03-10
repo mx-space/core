@@ -1,9 +1,18 @@
-import { Body, Controller, Get, Post, Query, Request } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Post,
+  Query,
+  Request,
+} from '@nestjs/common'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { PagerDto } from '~/shared/dto/pager.dto'
+import { createMockedContextResponse } from '../snippet/mock-response.util'
 import { SnippetModel, SnippetType } from '../snippet/snippet.model'
 import { SnippetService } from '../snippet/snippet.service'
 
@@ -48,9 +57,10 @@ export class DebugController {
     model.raw = functionString
     model.private = false
     model.type = SnippetType.Function
+    NotFoundException
     return await this.snippetService.injectContextIntoServerlessFunctionAndCall(
       model,
-      { req, res: {} },
+      { req, res: createMockedContextResponse() },
     )
   }
 }

@@ -19,6 +19,7 @@ import { IsMaster } from '~/common/decorator/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/utils/transfrom.util'
+import { createMockedContextResponse } from './mock-response.util'
 import { SnippetModel, SnippetType } from './snippet.model'
 import { SnippetService } from './snippet.service'
 
@@ -89,7 +90,7 @@ export class SnippetController {
     // run serverless function
     return this.snippetService.injectContextIntoServerlessFunctionAndCall(
       snippet,
-      { req, res: {} },
+      { req, res: createMockedContextResponse() },
     )
   }
 

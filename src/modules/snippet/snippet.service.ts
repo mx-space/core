@@ -105,6 +105,10 @@ export class SnippetService {
       context: {
         // inject app req, res
         ...context,
+        ...context.res,
+        query: context.req.query,
+        headers: context.req.headers,
+        params: context.req.params,
 
         model,
         document,
