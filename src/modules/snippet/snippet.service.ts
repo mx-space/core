@@ -101,7 +101,7 @@ export class SnippetService {
     const { raw: functionString } = model
     const logger = new Logger('ServerlessFunction/' + model.name)
     const document = await this.model.findById(model.id)
-    const global = {
+    const globalContext = {
       context: {
         // inject app req, res
         ...context,
@@ -146,8 +146,17 @@ export class SnippetService {
       console: logger,
       logger,
 
-      require: (function () {
-        async function $require(id: string) {
+      require: (() => {
+        const __require = (id: string, useCache = true) => {
+          !useCache && delete require.cache[require.resolve(id)]
+          const module = require(id)
+          !useCache && delete require.cache[require.resolve(id)]
+
+          return module
+        }
+
+        async function $require(id: string, useCache = true) {
+          const require = __require
           if (!id || typeof id !== 'string') {
             throw new Error('require id is not valid')
           }
@@ -199,15 +208,15 @@ export class SnippetService {
             allowedThirdPartLibs.includes(id as any) ||
             trustPackagePrefixes.some((prefix) => id.startsWith(prefix))
           ) {
-            return cloneDeep(require(id))
+            return cloneDeep(require(id, useCache))
           }
 
           // 3. mock built-in module
 
           const mockModules = {
             fs: {
-              writeFile: global.context.writeAsset,
-              readFile: global.context.readAsset,
+              writeFile: globalContext.context.writeAsset,
+              readFile: globalContext.context.readAsset,
             },
           }
 
@@ -228,15 +237,8 @@ export class SnippetService {
             return cloneDeep(require(id))
           }
         }
-        $require.resolve = (id: string) => {
-          if (
-            isURL(id, { protocols: ['http', 'https'], require_protocol: true })
-          ) {
-            return id
-          }
-          return require.resolve(id)
-        }
-        return $require
+
+        return $require.bind(this)
       })(),
       process: {
         env: Object.freeze({ ...process.env }),
@@ -247,7 +249,7 @@ export class SnippetService {
 
     return await safeEval(
       `${functionString}; return handler(context, require)`,
-      { ...global, global, globalThis: global },
+      { ...globalContext, global: globalContext, globalThis: globalContext },
     )
   }
 
