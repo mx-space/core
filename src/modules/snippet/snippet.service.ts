@@ -169,6 +169,9 @@ export class SnippetService {
       // inject some zx utils
       fetch,
 
+      // inject Global API
+      Buffer,
+
       // inject logger
       console: logger,
       logger,
@@ -291,6 +294,7 @@ export class SnippetService {
     return typeof handler === 'function'
     `)
     } catch (e) {
+      console.error(e.message)
       return false
     }
   }

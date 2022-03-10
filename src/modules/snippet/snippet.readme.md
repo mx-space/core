@@ -146,6 +146,9 @@ And other global api is all banned.
 
 # TODO
 
-- HTTP Methods: POST, PUT, DELETE, PATCH
-- ResponseType: buffer, stream
-- handle safeEval throw
+- [ ] HTTP Methods: POST, PUT, DELETE, PATCH
+- [ ] ResponseType: buffer, stream
+- [ ] handle safeEval throw
+- [ ] MongoDb inject (can access db)
+- [ ] set Content-Type
+
