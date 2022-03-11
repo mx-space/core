@@ -73,7 +73,7 @@ specifiers:
   image-size: 1.0.1
   inquirer: '*'
   ioredis: 4.28.5
-  isbot: 3.4.3
+  isbot: 3.4.5
   jest: 27.5.1
   js-yaml: '*'
   jsdom: 19.0.0
@@ -153,7 +153,7 @@ dependencies:
   html-minifier: 4.0.0
   image-size: 1.0.1
   inquirer: 8.2.0
-  isbot: 3.4.3
+  isbot: 3.4.5
   js-yaml: 4.1.0
   jsdom: 19.0.0
   jszip: 3.7.1
@@ -4986,8 +4986,8 @@ packages:
     resolution: {integrity: sha1-u5NdSFgsuhaMBoNJV6VKPgcSTxE=}
     dev: false
 
-  /isbot/3.4.3:
-    resolution: {integrity: sha512-5hAgiY9ysMIJcVQlGHcXptwgZr1yYbIGNBE36a3sPo7cLZ9eLTLx0qOssekFKaTHiXTwd/ZZMTuOS7w4faOmpw==}
+  /isbot/3.4.5:
+    resolution: {integrity: sha512-+KD6q1BBtw0iK9aGBGSfxJ31/ZgizKRjhm8ebgJUBMx0aeeQuIJ1I72beCoIrltIZGrSm4vmrxRxrG5n1aUTtw==}
     engines: {node: '>=12'}
     dev: false
 

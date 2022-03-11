@@ -100,7 +100,7 @@
     "html-minifier": "4.0.0",
     "image-size": "1.0.1",
     "inquirer": "*",
-    "isbot": "3.4.3",
+    "isbot": "3.4.5",
     "js-yaml": "*",
     "jsdom": "19.0.0",
     "jszip": "3.7.1",
