@@ -36,6 +36,11 @@ describe('test serverless function service', () => {
     service = app.get(ServerlessService)
   })
 
+  afterAll(async () => {
+    await dbHelper.clear()
+    await dbHelper.close()
+  })
+
   describe('run serverless function', () => {
     test('case-1', async () => {
       const model = new SnippetModel()
