@@ -12,9 +12,9 @@ import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { createMockedContextResponse } from '../snippet/mock-response.util'
+import { createMockedContextResponse } from '../serverless/mock-response.util'
+import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetModel, SnippetType } from '../snippet/snippet.model'
-import { SnippetService } from '../snippet/snippet.service'
 
 @Controller('debug')
 export class DebugController {
@@ -22,7 +22,7 @@ export class DebugController {
     private readonly webEvent: WebEventsGateway,
     private readonly adminEvent: AdminEventsGateway,
 
-    private readonly snippetService: SnippetService,
+    private readonly serverlessService: ServerlessService,
   ) {}
   @Get('qs')
   async qs(@Query() query: PagerDto) {
@@ -58,7 +58,7 @@ export class DebugController {
     model.private = false
     model.type = SnippetType.Function
     NotFoundException
-    return await this.snippetService.injectContextIntoServerlessFunctionAndCall(
+    return await this.serverlessService.injectContextIntoServerlessFunctionAndCall(
       model,
       { req, res: createMockedContextResponse() },
     )

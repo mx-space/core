@@ -152,3 +152,4 @@ And other global api is all banned.
 - [ ] MongoDb inject (can access db)
 - [ ] set Content-Type
 - [ ] ESM AST Parser
+- [ ] Cron to clean require cache

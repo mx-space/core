@@ -110,6 +110,7 @@ docker-compose up -d
 │   ├── say
 │   ├── search
 |   ├── snippet
+|   ├── serverless
 │   ├── sitemap
 │   ├── tool
 │   └── user

@@ -1,7 +1,8 @@
 /**
  * 数据配置区块
  */
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
+import { ServerlessModule } from '../serverless/serverless.module'
 import { SnippetController } from './snippet.controller'
 import { SnippetService } from './snippet.service'
 
@@ -9,5 +10,6 @@ import { SnippetService } from './snippet.service'
   controllers: [SnippetController],
   exports: [SnippetService],
   providers: [SnippetService],
+  imports: [forwardRef(() => ServerlessModule)],
 })
 export class SnippetModule {}

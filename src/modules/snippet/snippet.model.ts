@@ -49,7 +49,7 @@ export class SnippetModel extends BaseModel {
 
   @prop({ require: true, trim: true })
   @IsNotEmpty()
-  @Matches(/^[a-zA-Z0-9_]{1,30}$/, {
+  @Matches(/^[a-zA-Z0-9_-]{1,30}$/, {
     message: 'name 只能使用英文字母和数字下划线且不超过 30 个字符',
   })
   name: string

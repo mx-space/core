@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common'
-import { SnippetModule } from '../snippet/snippet.module'
+import { ServerlessModule } from '../serverless/serverless.module'
 import { DebugController } from './debug.controller'
 
 @Module({
   controllers: [DebugController],
-  imports: [SnippetModule],
+  imports: [ServerlessModule],
 })
 export class DebugModule {}

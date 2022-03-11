@@ -3,12 +3,10 @@ import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
 import { getModelToken } from 'nestjs-typegoose'
 import { dbHelper } from 'test/helper/db-mock.helper'
-import { createMockedContextResponse } from '~/modules/snippet/mock-response.util'
+import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
 import { CacheService } from '~/processors/cache/cache.service'
-import { AssetService } from '~/processors/helper/helper.asset.service'
-import { HttpService } from '~/processors/helper/helper.http.service'
 
 describe('test Snippet Service', () => {
   let service: SnippetService
@@ -18,11 +16,11 @@ describe('test Snippet Service', () => {
     const moduleRef = Test.createTestingModule({
       providers: [
         SnippetService,
-        AssetService,
-        HttpService,
+
         { provide: CacheService, useValue: {} },
+        { provide: ServerlessService, useValue: {} },
         {
-          provide: getModelToken('SnippetModel'),
+          provide: getModelToken(SnippetModel.name),
           useValue: getModelForClass(SnippetModel),
         },
       ],
@@ -44,6 +42,7 @@ describe('test Snippet Service', () => {
     private: false,
     reference: 'root',
   }
+
   let id = ''
   it('should create one', async () => {
     const res = await service.create(snippet)
@@ -66,104 +65,6 @@ describe('test Snippet Service', () => {
   test('get full snippet', async () => {
     const res = await service.getSnippetById(id)
     expect(res.name).toBe(snippet.name)
-  })
-
-  describe('run serverless function', () => {
-    test('case-1', async () => {
-      const model = new SnippetModel()
-      Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
-        type: SnippetType.Function,
-        raw: async function handler(context, require) {
-          return 1 + 1
-        }.toString(),
-      })
-      const data = await service.injectContextIntoServerlessFunctionAndCall(
-        model,
-        { req: {} as any, res: {} as any },
-      )
-      expect(data).toBe(2)
-    })
-
-    test('case-2: require built-in module', async () => {
-      const model = new SnippetModel()
-      Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
-        type: SnippetType.Function,
-        raw: async function handler(context, require) {
-          return (await require('path')).join('1', '1')
-        }.toString(),
-      })
-      const data = await service.injectContextIntoServerlessFunctionAndCall(
-        model,
-        { req: {} as any, res: {} as any },
-      )
-      expect(data).toBe('1/1')
-    })
-
-    test('case-3: require extend module', async () => {
-      const model = new SnippetModel()
-      Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
-        type: SnippetType.Function,
-        raw: async function handler(context, require) {
-          return (await require('axios')).get.toString()
-        }.toString(),
-      })
-      const data = await service.injectContextIntoServerlessFunctionAndCall(
-        model,
-        { req: {} as any, res: {} as any },
-      )
-      expect(data).toBeDefined()
-    })
-
-    test('case-4: require ban module', async () => {
-      const model = new SnippetModel()
-      Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
-        type: SnippetType.Function,
-        raw: async function handler(context, require) {
-          return await require('os')
-        }.toString(),
-      })
-
-      expect(
-        service.injectContextIntoServerlessFunctionAndCall(model, {
-          req: {} as any,
-          res: {} as any,
-        }),
-      ).rejects.toThrow()
-    })
-
-    test('case-5: require ban extend module', async () => {
-      const model = new SnippetModel()
-      Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
-        type: SnippetType.Function,
-        raw: async function handler(context, require) {
-          return await require('@nestjs/core')
-        }.toString(),
-      })
-
-      expect(
-        service.injectContextIntoServerlessFunctionAndCall(model, {
-          req: {} as any,
-          res: {} as any,
-        }),
-      ).rejects.toThrow()
-    })
-
-    test('case-6: throws', async () => {
-      const model = new SnippetModel()
-      Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
-        type: SnippetType.Function,
-        raw: async function handler(context, require) {
-          return context.throws(404, 'not found')
-        }.toString(),
-      })
-
-      expect(
-        service.injectContextIntoServerlessFunctionAndCall(model, {
-          req: {} as any,
-          res: createMockedContextResponse(),
-        }),
-      ).rejects.toThrow()
-    })
   })
 
   test('modify', async () => {

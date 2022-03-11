@@ -4,12 +4,10 @@ import { getModelForClass } from '@typegoose/typegoose'
 import { getModelToken } from 'nestjs-typegoose'
 import { dbHelper } from 'test/helper/db-mock.helper'
 import { setupE2EApp } from 'test/helper/register-app.helper'
+import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
-import { CacheService } from '~/processors/cache/cache.service'
-import { AssetService } from '~/processors/helper/helper.asset.service'
-import { HttpService } from '~/processors/helper/helper.http.service'
 
 describe('test /snippets', () => {
   let app: NestFastifyApplication
@@ -36,9 +34,15 @@ describe('test /snippets', () => {
       controllers: [SnippetController],
       providers: [
         SnippetService,
-        AssetService,
-        HttpService,
-        { provide: CacheService, useValue: {} },
+
+        {
+          provide: ServerlessService,
+          useValue: {
+            isValidServerlessFunction() {
+              return true
+            },
+          },
+        },
         {
           provide: getModelToken(SnippetModel.name),
           useValue: model,
@@ -55,7 +59,7 @@ describe('test /snippets', () => {
         method: 'POST',
         url: '/snippets',
         payload: {
-          name: 'Snippet-1',
+          name: 'Snippet*1',
           private: false,
           raw: JSON.stringify({ foo: 'bar' }),
           type: SnippetType.JSON,
@@ -122,6 +126,41 @@ describe('test /snippets', () => {
         expect(res.statusCode).toBe(200)
 
         expect(json).toStrictEqual(JSON.parse(mockPayload1.raw))
+      })
+  })
+
+  const snippetFuncType = {
+    type: SnippetType.Function,
+    raw: async function handler(context, require) {
+      return 1 + 1
+    }.toString(),
+    name: 'func-1',
+    private: false,
+    reference: 'root',
+  }
+
+  test('POST /snippets, should create function successfully', async () => {
+    await app
+      .inject({
+        method: 'POST',
+        url: '/snippets',
+        payload: {
+          ...snippetFuncType,
+        },
+      })
+      .then((res) => {
+        expect(res.statusCode).toBe(201)
+      })
+  })
+
+  test('GET /snippets/root/func-1', async () => {
+    await app
+      .inject({
+        method: 'GET',
+        url: '/snippets/root/func-1',
+      })
+      .then((res) => {
+        expect(res.statusCode).toBe(400)
       })
   })
 })

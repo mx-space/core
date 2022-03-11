@@ -33,6 +33,7 @@ import { PTYModule } from './modules/pty/pty.module'
 import { RecentlyModule } from './modules/recently/recently.module'
 import { SayModule } from './modules/say/say.module'
 import { SearchModule } from './modules/search/search.module'
+import { ServerlessModule } from './modules/serverless/serverless.module'
 import { SitemapModule } from './modules/sitemap/sitemap.module'
 import { SnippetModule } from './modules/snippet/snippet.module'
 import { ToolModule } from './modules/tool/tool.module'
@@ -70,6 +71,7 @@ import { LoggerModule } from './processors/logger/logger.module'
     RecentlyModule,
     SayModule,
     SearchModule,
+    ServerlessModule,
     SitemapModule,
     SnippetModule,
     ToolModule,
