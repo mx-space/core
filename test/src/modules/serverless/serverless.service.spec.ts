@@ -133,7 +133,7 @@ describe('test serverless function service', () => {
       expect(
         service.injectContextIntoServerlessFunctionAndCall(model, {
           req: {} as any,
-          res: createMockedContextResponse(),
+          res: createMockedContextResponse({} as any),
         }),
       ).rejects.toThrow()
     })
