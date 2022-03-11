@@ -105,7 +105,7 @@ const remoteModule =
 
 `context.req` Request 对象
 
-~~`context.res`~~ 正在计划中
+`context.res` FunctionContextResponse 对象
 
 `context.throws` 请求抛错，e.g. `context.throws(400, 'bad request')`
 
@@ -147,9 +147,9 @@ And other global api is all banned.
 # TODO
 
 - [ ] HTTP Methods: POST, PUT, DELETE, PATCH
-- [ ] ResponseType: buffer, stream
+- [x] ResponseType: buffer, stream
 - [ ] handle safeEval throw
 - [ ] MongoDb inject (can access db)
-- [ ] set Content-Type
+- [x] set Content-Type
 - [ ] ESM AST Parser
-- [ ] Cron to clean require cache
+- [x] Cron to clean require cache

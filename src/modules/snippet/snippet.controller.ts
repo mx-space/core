@@ -29,13 +29,18 @@ export class SnippetController {
   @Get('/')
   @Auth()
   async getList(@Query() query: PagerDto) {
-    const { page, size, select = '' } = query
+    const { page, size, select = '', db_query } = query
 
     return transformDataToPaginate(
-      await this.snippetService.model.paginate(
-        {},
-        { page, limit: size, select },
-      ),
+      await this.snippetService.model.paginate(db_query ?? {}, {
+        page,
+        limit: size,
+        select,
+        sort: {
+          reference: 1,
+          created: -1,
+        },
+      }),
     )
   }
 
@@ -47,15 +52,10 @@ export class SnippetController {
 
   @Get('/:id')
   @Auth()
-  async getSnippetById(
-    @Param() param: MongoIdDto,
-    @IsMaster() isMaster: boolean,
-  ) {
+  async getSnippetById(@Param() param: MongoIdDto) {
     const { id } = param
     const snippet = await this.snippetService.getSnippetById(id)
-    if (snippet.private && !isMaster) {
-      throw new ForbiddenException('snippet is private')
-    }
+
     return snippet
   }
 

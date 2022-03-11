@@ -8,7 +8,7 @@ import { isURL } from 'class-validator'
 import fs, { mkdir, stat } from 'fs/promises'
 import { cloneDeep } from 'lodash'
 import { InjectModel } from 'nestjs-typegoose'
-import { join } from 'path'
+import path from 'path'
 import { nextTick } from 'process'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { AssetService } from '~/processors/helper/helper.asset.service'
@@ -37,7 +37,7 @@ export class ServerlessService {
       //   `require('../hello.js')`. We can do that by adding /includes/plugin/a,
       //   /includes/plugin/a/b, etc.. to the list
       mkdir(NODE_REQUIRE_PATH, { recursive: true }).then(async () => {
-        const pkgPath = join(NODE_REQUIRE_PATH, 'package.json')
+        const pkgPath = path.join(NODE_REQUIRE_PATH, 'package.json')
 
         const isPackageFileExist = await stat(pkgPath)
           .then(() => true)

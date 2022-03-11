@@ -2,10 +2,10 @@ import {
   Body,
   Controller,
   Get,
-  NotFoundException,
   Post,
   Query,
   Request,
+  Response,
 } from '@nestjs/common'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
@@ -51,16 +51,25 @@ export class DebugController {
 
   @Post('/function')
   @HTTPDecorators.Bypass
-  async runFunction(@Body('function') functionString: string, @Request() req) {
+  async runFunction(
+    @Body('function') functionString: string,
+    @Request() req,
+    @Response() res,
+  ) {
     const model = new SnippetModel()
     model.name = 'debug'
     model.raw = functionString
     model.private = false
     model.type = SnippetType.Function
-    NotFoundException
-    return await this.serverlessService.injectContextIntoServerlessFunctionAndCall(
-      model,
-      { req, res: createMockedContextResponse() },
-    )
+
+    const result =
+      await this.serverlessService.injectContextIntoServerlessFunctionAndCall(
+        model,
+        { req, res: createMockedContextResponse(res) },
+      )
+
+    if (!res.sent) {
+      res.send(result)
+    }
   }
 }
