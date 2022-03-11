@@ -121,9 +121,9 @@ const remoteModule =
 
 `context.document` MongooseDocument<SnippetModel>，可以进行对该记录的数据库操作。（不建议）
 
-`context.name` == model.name
+`context.name` same as model.name
 
-`context.reference` == model.reference
+`context.reference` same as model.reference
 
 `context.writeAsset(path: string, data: any, options)` 该方法用于写入配置文件。考虑安全性，会对 path 进行简单转化，删除所有返回上级的符号, e.g. `./../a` => `./a`
 
@@ -151,4 +151,4 @@ And other global api is all banned.
 - [ ] handle safeEval throw
 - [ ] MongoDb inject (can access db)
 - [ ] set Content-Type
-
+- [ ] ESM AST Parser
