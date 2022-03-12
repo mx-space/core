@@ -41,6 +41,17 @@ export class ServerlessController {
       throw new InternalServerErrorException('code defined file not found')
     }
   }
+  @Get('/:reference/:name/*')
+  @HTTPDecorators.Bypass
+  async runServerlessFunctionWildcard(
+    @Param() param: ServerlessReferenceDto,
+    @IsMaster() isMaster: boolean,
+
+    @Request() req: FastifyRequest,
+    @Response() reply: FastifyReply,
+  ) {
+    return this.runServerlessFunction(param, isMaster, req, reply)
+  }
 
   @Get('/:reference/:name')
   @HTTPDecorators.Bypass

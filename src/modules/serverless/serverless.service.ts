@@ -78,7 +78,8 @@ export class ServerlessService {
         ...context.res,
         query: context.req.query,
         headers: context.req.headers,
-        params: context.req.params,
+        // TODO wildcard params
+        params: Object.assign({}, context.req.params),
 
         model,
         document,
