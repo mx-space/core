@@ -73,4 +73,9 @@ export class SnippetModel extends BaseModel {
   @IsString()
   @IsOptional()
   metatype?: string
+
+  @prop()
+  @IsString()
+  @IsOptional()
+  schema?: string
 }
