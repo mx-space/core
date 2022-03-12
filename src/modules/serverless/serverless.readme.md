@@ -1,6 +1,6 @@
 # Serverless Function
 
-云函数入口：
+这是一个动态的路由处理模块，用于实现云函数，云函数入口为 `handler`：
 
 ```js
 async function handler(context, require) {}
@@ -14,7 +14,6 @@ async function handler() {
 
   const { BiliClient } = extra
   const bl = await context.getMaster().then((user) => user.socialIds.bilibili)
-  // return bl
   const client = new BiliClient(parseInt(bl || uid))
   const bangumi = await client.getFavoriteBangumi(parseInt(len))
   return bangumi
@@ -86,6 +85,8 @@ const remoteModule =
 `context.model` 当前 Snippet 的 Model
 
 `context.document` MongooseDocument<SnippetModel>，可以进行对该记录的数据库操作。（不建议）
+
+`context.getMaster()` Promise<UserModel>，可以获取到主人的信息
 
 `context.name` same as model.name
 
