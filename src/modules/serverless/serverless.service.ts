@@ -11,6 +11,7 @@ import { InjectModel } from 'nestjs-typegoose'
 import path from 'path'
 import { nextTick } from 'process'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
+import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { UniqueArray } from '~/ts-hepler/unique'
@@ -31,6 +32,7 @@ export class ServerlessService {
     private readonly snippetModel: MongooseModel<SnippetModel>,
     private readonly assetService: AssetService,
     private readonly httpService: HttpService,
+    private readonly databaseService: DatabaseService,
   ) {
     nextTick(() => {
       // Add /includes/plugin to the path, also note that we need to support
@@ -82,6 +84,31 @@ export class ServerlessService {
         document,
         name: model.name,
         reference: model.reference,
+        getMaster: async () => {
+          const collection = this.databaseService.db.collection('users')
+          const cur = collection.aggregate([
+            {
+              $project: {
+                id: 1,
+                _id: 1,
+                username: 1,
+                name: 1,
+                introduce: 1,
+                avatar: 1,
+                mail: 1,
+                url: 1,
+                lastLoginTime: 1,
+                lastLoginIp: 1,
+                socialIds: 1,
+              },
+            },
+          ])
+
+          return await cur.next().then((doc) => {
+            cur.close()
+            return doc
+          })
+        },
 
         writeAsset: async (
           path: string,

@@ -6,6 +6,7 @@ import { createMockedContextResponse } from '~/modules/serverless/mock-response.
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { CacheService } from '~/processors/cache/cache.service'
+import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 
@@ -23,6 +24,7 @@ describe('test serverless function service', () => {
           provide: CacheService,
           useValue: {},
         },
+        { provide: DatabaseService, useValue: {} },
 
         {
           provide: getModelToken('SnippetModel'),

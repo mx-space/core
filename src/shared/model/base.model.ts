@@ -26,6 +26,7 @@ import Paginate from 'mongoose-paginate-v2'
       createdAt: 'created',
       updatedAt: null,
     },
+    versionKey: false,
   },
 })
 export class BaseModel {

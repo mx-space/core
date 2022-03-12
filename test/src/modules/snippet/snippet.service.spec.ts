@@ -7,6 +7,7 @@ import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
 import { CacheService } from '~/processors/cache/cache.service'
+import { DatabaseService } from '~/processors/database/database.service'
 
 describe('test Snippet Service', () => {
   let service: SnippetService
@@ -16,7 +17,7 @@ describe('test Snippet Service', () => {
     const moduleRef = Test.createTestingModule({
       providers: [
         SnippetService,
-
+        { provide: DatabaseService, useValue: {} },
         { provide: CacheService, useValue: {} },
         { provide: ServerlessService, useValue: {} },
         {

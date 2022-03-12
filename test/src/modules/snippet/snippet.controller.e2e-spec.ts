@@ -8,6 +8,7 @@ import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
+import { DatabaseService } from '~/processors/database/database.service'
 
 describe('test /snippets', () => {
   let app: NestFastifyApplication
@@ -34,7 +35,7 @@ describe('test /snippets', () => {
       controllers: [SnippetController],
       providers: [
         SnippetService,
-
+        { provide: DatabaseService, useValue: {} },
         {
           provide: ServerlessService,
           useValue: {

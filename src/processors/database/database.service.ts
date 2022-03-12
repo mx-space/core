@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
-import { InjectModel } from 'nestjs-typegoose'
+import { Inject, Injectable } from '@nestjs/common'
+import { mongoose, ReturnModelType } from '@typegoose/typegoose'
+import { getConnectionToken, InjectModel } from 'nestjs-typegoose'
 import { NoteModel } from '~/modules/note/note.model'
 import { PageModel } from '~/modules/page/page.model'
 import { PostModel } from '~/modules/post/post.model'
@@ -14,6 +14,7 @@ export class DatabaseService {
     private readonly noteModel: ReturnModelType<typeof NoteModel>,
     @InjectModel(PageModel)
     private readonly pageModel: ReturnModelType<typeof PageModel>,
+    @Inject(getConnectionToken()) private connection: mongoose.Connection,
   ) {}
 
   // @ts-ignore
@@ -54,5 +55,9 @@ export class DatabaseService {
       document,
       type: ['Post', 'Note', 'Page'][index],
     }
+  }
+
+  public get db() {
+    return this.connection.db
   }
 }
