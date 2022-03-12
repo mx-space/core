@@ -8,6 +8,26 @@
 async function handler(context, require) {}
 ```
 
+## 实例
+
+```js
+async function handler() {
+  const extra = await require('@mx-space/extra')
+
+  const { BiliClient } = extra
+  const bl = await context.getMaster().then(user => user.socialIds.bilibili)
+  // return bl
+  const client = new BiliClient(parseInt(bl || uid))
+  const bangumi = await client.getFavoriteBangumi(parseInt(len))
+  return bangumi
+}
+
+const uid = 1
+const len = 10
+```
+
+更多实例，可以在 [mx-space/snippets](https://github.com/mx-space/snippets) 中 functions 目录下找到。
+
 ## 注入 Mock 全局对象
 
 1. require (异步!!!)
