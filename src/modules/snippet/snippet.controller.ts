@@ -59,6 +59,12 @@ export class SnippetController {
     return snippet
   }
 
+  @Post('/aggregate')
+  @Auth()
+  async aggregate(@Body() body: any) {
+    return this.snippetService.model.aggregate(body)
+  }
+
   @Get('/:reference/:name')
   @HTTPDecorators.Bypass
   @HttpCache({ ttl: 3 })
@@ -86,7 +92,7 @@ export class SnippetController {
 
     if (snippet.type === SnippetType.Function) {
       throw new BadRequestException(
-        'this snippet should run in serverless function scope.',
+        'this snippet should run in serverless function scope',
       )
     }
   }
