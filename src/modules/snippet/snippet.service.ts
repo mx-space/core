@@ -99,6 +99,9 @@ export class SnippetService {
    */
   async getSnippetByName(name: string, reference: string) {
     const doc = await this.model.findOne({ name, reference }).lean()
+    if (!doc) {
+      throw new NotFoundException('snippet is not found')
+    }
     return doc
   }
 

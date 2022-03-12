@@ -58,7 +58,7 @@ export class ServerlessController {
     })
 
     if (!snippet) {
-      throw new NotFoundException('snippet is not found')
+      throw new NotFoundException('serverless function is not exist')
     }
 
     if (snippet.private && !isMaster) {
