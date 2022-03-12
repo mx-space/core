@@ -26,7 +26,7 @@
   "homepage": "https://github.com/mx-space/mx-server#readme",
   "issues": "https://github.com/mx-space/mx-server/issues",
   "scripts": {
-    "prepare": "husky install && git submodule update --init --recursive",
+    "prepare": "husky install",
     "prebuild": "rimraf dist",
     "build": "nest build",
     "dev": "NODE_PATH=`npm root --quiet -g` npm run start",

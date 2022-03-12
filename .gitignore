@@ -41,6 +41,7 @@ release.zip
 run
 
 data
+assets
 .env
 
 scripts/workflow/docker-compose.yml
