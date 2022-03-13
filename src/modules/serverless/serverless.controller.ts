@@ -14,6 +14,7 @@ import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
+import { SnippetType } from '../snippet/snippet.model'
 import { createMockedContextResponse } from './mock-response.util'
 import { ServerlessReferenceDto } from './serverless.dto'
 import { ServerlessService } from './serverless.service'
@@ -66,6 +67,7 @@ export class ServerlessController {
     const snippet = await this.serverlessService.model.findOne({
       name,
       reference,
+      type: SnippetType.Function,
     })
 
     if (!snippet) {
@@ -75,6 +77,7 @@ export class ServerlessController {
     if (snippet.private && !isMaster) {
       throw new ForbiddenException('no permission to run this function')
     }
+
     const result =
       await this.serverlessService.injectContextIntoServerlessFunctionAndCall(
         snippet,

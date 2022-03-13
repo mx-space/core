@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -88,12 +87,6 @@ export class SnippetController {
 
     if (snippet.type !== SnippetType.Function) {
       return this.snippetService.attachSnippet(snippet).then((res) => res.data)
-    }
-
-    if (snippet.type === SnippetType.Function) {
-      throw new BadRequestException(
-        'this snippet should run in serverless function scope',
-      )
     }
   }
 

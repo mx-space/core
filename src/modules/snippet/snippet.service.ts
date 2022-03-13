@@ -98,7 +98,9 @@ export class SnippetService {
    * @returns
    */
   async getSnippetByName(name: string, reference: string) {
-    const doc = await this.model.findOne({ name, reference }).lean()
+    const doc = await this.model
+      .findOne({ name, reference, type: { $ne: SnippetType.Function } })
+      .lean()
     if (!doc) {
       throw new NotFoundException('snippet is not found')
     }
