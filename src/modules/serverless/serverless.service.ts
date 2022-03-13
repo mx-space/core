@@ -286,9 +286,9 @@ export class ServerlessService {
 
   async isValidServerlessFunction(raw: string) {
     try {
+      // 验证 handler 是否存在并且是函数
       return safeEval(`
     ${raw}
-    // 验证 handler 是否存在并且是函数
     return typeof handler === 'function'
     `)
     } catch (e) {

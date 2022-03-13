@@ -10,7 +10,6 @@ import {
   Query,
 } from '@nestjs/common'
 import { Auth } from '~/common/decorator/auth.decorator'
-import { HttpCache } from '~/common/decorator/cache.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
@@ -66,7 +65,6 @@ export class SnippetController {
 
   @Get('/:reference/:name')
   @HTTPDecorators.Bypass
-  @HttpCache({ ttl: 3 })
   async getSnippetByName(
     @Param('name') name: string,
     @Param('reference') reference: string,
@@ -79,6 +77,10 @@ export class SnippetController {
     if (typeof reference !== 'string') {
       throw new ForbiddenException('reference should be string')
     }
+    const cached = await this.snippetService.getCachedSnippet(reference, name)
+    if (cached) {
+      return cached
+    }
 
     const snippet = await this.snippetService.getSnippetByName(name, reference)
     if (snippet.private && !isMaster) {
@@ -86,7 +88,10 @@ export class SnippetController {
     }
 
     if (snippet.type !== SnippetType.Function) {
-      return this.snippetService.attachSnippet(snippet).then((res) => res.data)
+      return this.snippetService.attachSnippet(snippet).then((res) => {
+        this.snippetService.cacheSnippet(res, res.data)
+        return res.data
+      })
     }
   }
 

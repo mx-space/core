@@ -7,6 +7,9 @@ import {
 } from '@nestjs/common'
 import { load } from 'js-yaml'
 import { InjectModel } from 'nestjs-typegoose'
+import { RedisKeys } from '~/constants/cache.constant'
+import { CacheService } from '~/processors/cache/cache.service'
+import { getRedisKey } from '~/utils'
 import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetModel, SnippetType } from './snippet.model'
 
@@ -17,6 +20,7 @@ export class SnippetService {
     private readonly snippetModel: MongooseModel<SnippetModel>,
     @Inject(forwardRef(() => ServerlessService))
     private readonly serverlessService: ServerlessService,
+    private readonly cacheService: CacheService,
   ) {}
 
   get model() {
@@ -40,12 +44,18 @@ export class SnippetService {
   async update(id: string, model: SnippetModel) {
     await this.validateType(model)
     delete model.created
-
-    return await this.model.findByIdAndUpdate(id, { ...model }, { new: true })
+    const old = await this.model.findById(id).lean()
+    await this.deleteCachedSnippet(old.reference, old.name)
+    return await this.model.findByIdAndUpdate(
+      id,
+      { ...model, modified: new Date() },
+      { new: true },
+    )
   }
 
   async delete(id: string) {
-    await this.model.deleteOne({ _id: id })
+    const doc = await this.model.findOneAndDelete({ _id: id }).lean()
+    await this.deleteCachedSnippet(doc.reference, doc.name)
   }
 
   private async validateType(model: SnippetModel) {
@@ -127,5 +137,27 @@ export class SnippetService {
     }
 
     return model as SnippetModel & { data: any }
+  }
+
+  async cacheSnippet(model: SnippetModel, value: any) {
+    const { reference, name } = model
+    const key = `${reference}:${name}`
+    const client = this.cacheService.getClient()
+    await client.hset(
+      getRedisKey(RedisKeys.SnippetCache),
+      key,
+      typeof value !== 'string' ? JSON.stringify(value) : value,
+    )
+  }
+  async getCachedSnippet(reference: string, name: string) {
+    const key = `${reference}:${name}`
+    const client = this.cacheService.getClient()
+    const value = await client.hget(getRedisKey(RedisKeys.SnippetCache), key)
+    return value
+  }
+  async deleteCachedSnippet(reference: string, name: string) {
+    const key = `${reference}:${name}`
+    const client = this.cacheService.getClient()
+    await client.hdel(getRedisKey(RedisKeys.SnippetCache), key)
   }
 }

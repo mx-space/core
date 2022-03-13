@@ -3,11 +3,13 @@ import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
 import { getModelToken } from 'nestjs-typegoose'
 import { dbHelper } from 'test/helper/db-mock.helper'
+import { MockCacheService, redisHelper } from 'test/helper/redis-mock.helper'
 import { setupE2EApp } from 'test/helper/register-app.helper'
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
+import { CacheService } from '~/processors/cache/cache.service'
 import { DatabaseService } from '~/processors/database/database.service'
 
 describe('test /snippets', () => {
@@ -29,13 +31,22 @@ describe('test /snippets', () => {
     raw: JSON.stringify({ foo: 'bar' }),
     type: SnippetType.JSON,
   })
+  let redisService: MockCacheService
 
+  afterAll(async () => {
+    await (await redisHelper).close()
+  })
   beforeAll(async () => {
+    const { CacheService: redisService$ } = await redisHelper
+
+    redisService = redisService$
+
     const ref = await Test.createTestingModule({
       controllers: [SnippetController],
       providers: [
         SnippetService,
         { provide: DatabaseService, useValue: {} },
+        { provide: CacheService, useValue: redisService },
         {
           provide: ServerlessService,
           useValue: {
@@ -161,7 +172,7 @@ describe('test /snippets', () => {
         url: '/snippets/root/func-1',
       })
       .then((res) => {
-        expect(res.statusCode).toBe(400)
+        expect(res.statusCode).toBe(404)
       })
   })
 })

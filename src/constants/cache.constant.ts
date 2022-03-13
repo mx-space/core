@@ -11,8 +11,10 @@ export enum RedisKeys {
   /** 配置项缓存 */
   ConfigCache = 'config_cache',
   PTYSession = 'pty_session',
-
+  /** HTTP 请求缓存 */
   HTTPCache = 'http_cache',
+  /** Snippet 缓存 */
+  SnippetCache = 'snippet_cache',
 }
 
 export enum CacheKeys {
