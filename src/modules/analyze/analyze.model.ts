@@ -1,8 +1,8 @@
 import { ApiHideProperty } from '@nestjs/swagger'
-import { modelOptions, prop, Severity } from '@typegoose/typegoose'
+import { index, modelOptions, prop, Severity } from '@typegoose/typegoose'
 import { SchemaTypes } from 'mongoose'
-import { BaseModel } from '~/shared/model/base.model'
 import type { UAParser } from 'ua-parser-js'
+import { BaseModel } from '~/shared/model/base.model'
 
 @modelOptions({
   schemaOptions: {
@@ -16,6 +16,7 @@ import type { UAParser } from 'ua-parser-js'
     allowMixed: Severity.ALLOW,
   },
 })
+@index({ timestamp: -1 })
 export class AnalyzeModel extends BaseModel {
   @prop()
   ip?: string

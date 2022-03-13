@@ -1,5 +1,5 @@
 import { ApiHideProperty } from '@nestjs/swagger'
-import { modelOptions, plugin, prop } from '@typegoose/typegoose'
+import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
 import { Type } from 'class-transformer'
 import {
   IsBoolean,
@@ -29,6 +29,8 @@ import Paginate from 'mongoose-paginate-v2'
     versionKey: false,
   },
 })
+@index({ created: -1 })
+@index({ created: 1 })
 export class BaseModel {
   @ApiHideProperty()
   created?: Date
