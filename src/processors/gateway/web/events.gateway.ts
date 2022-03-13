@@ -69,16 +69,18 @@ export class WebEventsGateway
 
       // get and store max_online_count
       const maxOnlineCount =
-        +(await redisClient.get(
-          getRedisKey(RedisKeys.MaxOnlineCount, dateFormat),
+        +(await redisClient.hget(
+          getRedisKey(RedisKeys.MaxOnlineCount),
+          dateFormat,
         )) || 0
-      await redisClient.set(
-        getRedisKey(RedisKeys.MaxOnlineCount, dateFormat),
+      await redisClient.hset(
+        getRedisKey(RedisKeys.MaxOnlineCount),
+        dateFormat,
         Math.max(maxOnlineCount, await this.getcurrentClientCount()),
       )
-      const key = getRedisKey(RedisKeys.MaxOnlineCount, dateFormat) + '_total'
-      const totalCount = +(await redisClient.get(key)) || 0
-      await redisClient.set(key, totalCount + 1)
+      const key = getRedisKey(RedisKeys.MaxOnlineCount, 'total')
+      const totalCount = +(await redisClient.hget(key, dateFormat)) || 0
+      await redisClient.hset(key, dateFormat, totalCount + 1)
     })
 
     super.handleConnect(socket)

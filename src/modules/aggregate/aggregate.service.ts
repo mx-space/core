@@ -349,9 +349,10 @@ export class AggregateService {
     ])
 
     const [todayMaxOnline, todayOnlineTotal] = await Promise.all([
-      redisClient.get(getRedisKey(RedisKeys.MaxOnlineCount, dateFormat)),
-      redisClient.get(
-        getRedisKey(RedisKeys.MaxOnlineCount, dateFormat, 'total'),
+      redisClient.hget(getRedisKey(RedisKeys.MaxOnlineCount), dateFormat),
+      redisClient.hget(
+        getRedisKey(RedisKeys.MaxOnlineCount, 'total'),
+        dateFormat,
       ),
     ])
 
