@@ -41,7 +41,7 @@ specifiers:
   '@types/jest': 27.4.1
   '@types/js-yaml': 4.0.5
   '@types/jsdom': 16.2.14
-  '@types/lodash': 4.14.179
+  '@types/lodash': 4.14.180
   '@types/marked': 4.0.2
   '@types/mongoose-paginate-v2': 1.4.3
   '@types/node': 16.11.26
@@ -208,7 +208,7 @@ devDependencies:
   '@types/jest': 27.4.1
   '@types/js-yaml': 4.0.5
   '@types/jsdom': 16.2.14
-  '@types/lodash': 4.14.179
+  '@types/lodash': 4.14.180
   '@types/marked': 4.0.2
   '@types/mongoose-paginate-v2': 1.4.3
   '@types/node': 16.11.26
@@ -1887,8 +1887,8 @@ packages:
       '@types/node': 16.11.26
     dev: true
 
-  /@types/lodash/4.14.179:
-    resolution: {integrity: sha512-uwc1x90yCKqGcIOAT6DwOSuxnrAbpkdPsUOZtwrXb4D/6wZs+6qG7QnIawDuZWg0sWpxl+ltIKCaLoMlna678w==}
+  /@types/lodash/4.14.180:
+    resolution: {integrity: sha512-XOKXa1KIxtNXgASAnwj7cnttJxS4fksBRywK/9LzRV5YxrF80BXZIGeQSuoESQ/VkUj30Ae0+YcuHc15wJCB2g==}
     dev: true
 
   /@types/marked/4.0.2:
