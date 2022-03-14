@@ -32,7 +32,7 @@ export class MyLogger extends ConsoleLogger {
     this.lastTimestampAt = now
     return result
   }
-  private formatMessage(message: any, logLevel = 'log') {
+  protected formatMessage(message: any, logLevel = 'log') {
     const formatMessage =
       typeof message == 'string'
         ? this._getColorByLogLevel(logLevel)(message)
