@@ -273,7 +273,17 @@ export class ServerlessService {
       // }
 
       // fin. is built-in module
-      const module = isBuiltinModule(id, ['fs', 'os', 'child_process', 'sys'])
+      const module = isBuiltinModule(id, [
+        'fs',
+        'os',
+        'child_process',
+        'sys',
+        'process',
+        'vm',
+        'v8',
+        'cluster',
+        'fs/promises',
+      ])
       if (!module) {
         throw new Error(`cannot require ${id}`)
       } else {

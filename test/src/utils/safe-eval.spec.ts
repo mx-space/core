@@ -12,9 +12,7 @@ describe.only('test safe-eval', () => {
   })
 
   it('should can not access to global or process or require', () => {
-    expect(() => {
-      safeEval(`return global`)
-    }).toThrow()
+    expect(safeEval(`return global`)).toStrictEqual({})
 
     expect(() => {
       safeEval(`return process`)
@@ -23,6 +21,14 @@ describe.only('test safe-eval', () => {
     expect(() => {
       safeEval(`return require`)
     }).toThrow()
+  })
+
+  describe('test escape', () => {
+    it('case1', () => {
+      expect(() =>
+        safeEval(`this.constructor.constructor("return process")().exit()`),
+      ).toThrow()
+    })
   })
 
   it('should can access mocked global context', () => {
