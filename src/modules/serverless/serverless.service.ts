@@ -10,12 +10,14 @@ import { cloneDeep } from 'lodash'
 import { InjectModel } from 'nestjs-typegoose'
 import path from 'path'
 import { nextTick } from 'process'
+import { RedisKeys } from '~/constants/cache.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
+import { CacheService } from '~/processors/cache/cache.service'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { UniqueArray } from '~/ts-hepler/unique'
-import { safePathJoin } from '~/utils'
+import { getRedisKey, safePathJoin } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
 import { isBuiltinModule } from '~/utils/sys.util'
 import PKG from '../../../package.json'
@@ -33,6 +35,8 @@ export class ServerlessService {
     private readonly assetService: AssetService,
     private readonly httpService: HttpService,
     private readonly databaseService: DatabaseService,
+
+    private readonly cacheService: CacheService,
   ) {
     nextTick(() => {
       // Add /includes/plugin to the path, also note that we need to support
@@ -80,6 +84,34 @@ export class ServerlessService {
         headers: context.req.headers,
         // TODO wildcard params
         params: Object.assign({}, context.req.params),
+
+        storage: {
+          cache: {
+            get: async (key: string) => {
+              const client = this.cacheService.getClient()
+              return await client.hget(
+                getRedisKey(RedisKeys.ServerlessStorage),
+                key,
+              )
+            },
+            set: async (key: string, value: object | string) => {
+              const client = this.cacheService.getClient()
+              return await client.hset(
+                getRedisKey(RedisKeys.ServerlessStorage),
+                key,
+                typeof value === 'string' ? value : JSON.stringify(value),
+              )
+            },
+            del: async (key: string) => {
+              const client = this.cacheService.getClient()
+              return await client.hdel(
+                getRedisKey(RedisKeys.ServerlessStorage),
+                key,
+              )
+            },
+          },
+          db: {},
+        },
 
         model,
         document,
