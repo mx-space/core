@@ -1,3 +1,4 @@
+import { transformAsync } from '@babel/core'
 import {
   Injectable,
   InternalServerErrorException,
@@ -26,7 +27,6 @@ import {
   FunctionContextRequest,
   FunctionContextResponse,
 } from './function.types'
-
 @Injectable()
 export class ServerlessService {
   constructor(
@@ -188,9 +188,17 @@ export class ServerlessService {
     }
 
     return await safeEval(
-      `${functionString}; return handler(context, require)`,
+      `${await this.convertTypescriptCode(
+        functionString,
+      )}; return handler(context, require)`,
       { ...globalContext, global: globalContext, globalThis: globalContext },
     )
+  }
+
+  private convertTypescriptCode(code: string) {
+    return transformAsync(code, {
+      plugins: [require('@babel/plugin-transform-typescript')],
+    }).then((res) => res.code)
   }
 
   private requireModuleIdSet = new Set<string>()
@@ -330,7 +338,7 @@ export class ServerlessService {
     try {
       // 验证 handler 是否存在并且是函数
       return safeEval(`
-    ${raw}
+    ${await this.convertTypescriptCode(raw)}
     return typeof handler === 'function'
     `)
     } catch (e) {

@@ -64,6 +64,8 @@
   },
   "dependencies": {
     "@algolia/client-search": "*",
+    "@babel/core": "7.17.5",
+    "@babel/plugin-transform-typescript": "7.16.8",
     "@innei/class-validator-jsonschema": "3.1.1",
     "@nestjs/common": "8.4.0",
     "@nestjs/core": "8.4.0",
@@ -134,6 +136,7 @@
     "@nestjs/cli": "8.2.2",
     "@nestjs/schematics": "8.0.8",
     "@nestjs/testing": "8.4.0",
+    "@types/babel__core": "7.1.18",
     "@types/bcrypt": "5.0.0",
     "@types/cache-manager": "3.4.3",
     "@types/cron": "1.7.3",
