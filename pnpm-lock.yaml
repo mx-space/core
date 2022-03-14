@@ -13,19 +13,19 @@ specifiers:
   '@innei-util/prettier': 0.2.2
   '@innei/class-validator-jsonschema': 3.1.1
   '@nestjs/cli': 8.2.2
-  '@nestjs/common': 8.4.0
-  '@nestjs/core': 8.4.0
+  '@nestjs/common': 8.4.1
+  '@nestjs/core': 8.4.1
   '@nestjs/event-emitter': 1.1.0
   '@nestjs/jwt': 8.0.0
   '@nestjs/mapped-types': '*'
   '@nestjs/passport': 8.2.1
-  '@nestjs/platform-fastify': 8.4.0
-  '@nestjs/platform-socket.io': 8.4.0
+  '@nestjs/platform-fastify': 8.4.1
+  '@nestjs/platform-socket.io': 8.4.1
   '@nestjs/schedule': 1.0.2
   '@nestjs/schematics': 8.0.8
   '@nestjs/swagger': 5.2.0
-  '@nestjs/testing': 8.4.0
-  '@nestjs/websockets': 8.4.0
+  '@nestjs/testing': 8.4.1
+  '@nestjs/websockets': 8.4.1
   '@socket.io/redis-adapter': 7.1.0
   '@socket.io/redis-emitter': 4.1.1
   '@typegoose/auto-increment': 1.2.0
@@ -50,7 +50,7 @@ specifiers:
   '@types/qs': 6.9.7
   '@types/ua-parser-js': 0.7.36
   '@vercel/ncc': 0.33.3
-  algoliasearch: 4.12.2
+  algoliasearch: 4.13.0
   axios: '*'
   axios-retry: 3.2.4
   bcrypt: 5.0.1
@@ -111,7 +111,7 @@ specifiers:
   ts-jest: 27.1.3
   ts-loader: 9.2.8
   ts-node: 10.7.0
-  tsconfig-paths: 3.13.0
+  tsconfig-paths: 3.14.0
   typescript: 4.6.2
   ua-parser-js: 1.0.2
   vm2: 3.9.9
@@ -124,22 +124,22 @@ dependencies:
   '@babel/core': 7.17.5
   '@babel/plugin-transform-typescript': 7.16.8_@babel+core@7.17.5
   '@innei/class-validator-jsonschema': 3.1.1_279461c9b8c03a205cdbc4878bc60cf8
-  '@nestjs/common': 8.4.0_add13df2cdecb4b62cd3f7664ea82e18
-  '@nestjs/core': 8.4.0_34b6a0f4a6209c9b2a49b41e2cb68c0b
-  '@nestjs/event-emitter': 1.1.0_1ce925e2290a1cea9e3700e8a60baeb5
-  '@nestjs/jwt': 8.0.0_@nestjs+common@8.4.0
-  '@nestjs/mapped-types': 1.0.1_7c37dec5f311cf2dfddc0f9a032e50d3
-  '@nestjs/passport': 8.2.1_7279ab1fdcd161f1ce2d9179e8fa21f7
-  '@nestjs/platform-fastify': 8.4.0_31e7036b193d6d3c9cadab18cbb4af84
-  '@nestjs/platform-socket.io': 8.4.0_64eab75587c0872cbd3f88f274301b4c
-  '@nestjs/schedule': 1.0.2_1ce925e2290a1cea9e3700e8a60baeb5
-  '@nestjs/swagger': 5.2.0_0ed0ddbb1edeb4fed6e6b1ae620a3d7f
-  '@nestjs/websockets': 8.4.0_d42564d6f0b34e91f06fd42cff8bf32d
+  '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
+  '@nestjs/core': 8.4.1_b4e0a43386936f36c413921c49aca7e6
+  '@nestjs/event-emitter': 1.1.0_891fcd1c5b0f2c9b3aea247fec3c8ce1
+  '@nestjs/jwt': 8.0.0_@nestjs+common@8.4.1
+  '@nestjs/mapped-types': 1.0.1_7d4466f82a71f886e9e64844ca25cf70
+  '@nestjs/passport': 8.2.1_70d98f1edabaa889bf69e4387dc17f8c
+  '@nestjs/platform-fastify': 8.4.1_214a294e539403889bf33d78c1f08a26
+  '@nestjs/platform-socket.io': 8.4.1_3aeea59b5fe79fb74f9812cc70d0ecca
+  '@nestjs/schedule': 1.0.2_891fcd1c5b0f2c9b3aea247fec3c8ce1
+  '@nestjs/swagger': 5.2.0_9e6b9ae5ff02bc74734ded9e9d2f806b
+  '@nestjs/websockets': 8.4.1_cbbf95cc7baa446d560e72f24d5529bf
   '@socket.io/redis-adapter': 7.1.0
   '@socket.io/redis-emitter': 4.1.1
   '@typegoose/auto-increment': 1.2.0_mongoose@6.2.4
   '@typegoose/typegoose': 9.7.0_mongoose@6.2.4
-  algoliasearch: 4.12.2
+  algoliasearch: 4.13.0
   axios: 0.26.0
   axios-retry: 3.2.4
   bcrypt: 5.0.1
@@ -171,7 +171,7 @@ dependencies:
   mongoose-lean-virtuals: 0.9.0_mongoose@6.2.4
   mongoose-paginate-v2: 1.6.3
   nanoid: 3.3.1
-  nestjs-typegoose: 7.1.38_2fa3d1c8173bcf5dfc7704abdac79b62
+  nestjs-typegoose: 7.1.38_994d630353f973f7e3436c85feb8c0e9
   node-machine-id: 1.1.12
   node-pty: 0.10.1
   nodemailer: 6.7.2
@@ -196,7 +196,7 @@ devDependencies:
   '@innei-util/prettier': 0.2.2_typescript@4.6.2
   '@nestjs/cli': 8.2.2
   '@nestjs/schematics': 8.0.8_typescript@4.6.2
-  '@nestjs/testing': 8.4.0_31e7036b193d6d3c9cadab18cbb4af84
+  '@nestjs/testing': 8.4.1_214a294e539403889bf33d78c1f08a26
   '@types/babel__core': 7.1.18
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.3
@@ -233,47 +233,47 @@ devDependencies:
   ts-jest: 27.1.3_c53d1ca518b3b945a0cb74482cae0a36
   ts-loader: 9.2.8_typescript@4.6.2
   ts-node: 10.7.0_045cabcbf8818eda83522fe731c87088
-  tsconfig-paths: 3.13.0
+  tsconfig-paths: 3.14.0
   typescript: 4.6.2
   webpack-node-externals: 3.0.0
 
 packages:
 
-  /@algolia/cache-browser-local-storage/4.12.2:
-    resolution: {integrity: sha512-z8LjFsQc0B6h6LEE3pkUGM4ErVktn6bkFbhnYbTccjmFVQ+wXFJd/D63e0WtaC+hwRB1xq8uKhkz9oojEKEsGA==}
+  /@algolia/cache-browser-local-storage/4.13.0:
+    resolution: {integrity: sha512-nj1vHRZauTqP/bluwkRIgEADEimqojJgoTRCel5f6q8WCa9Y8QeI4bpDQP28FoeKnDRYa3J5CauDlN466jqRhg==}
     dependencies:
-      '@algolia/cache-common': 4.12.2
+      '@algolia/cache-common': 4.13.0
     dev: false
 
   /@algolia/cache-common/4.12.1:
     resolution: {integrity: sha512-UugTER3V40jT+e19Dmph5PKMeliYKxycNPwrPNADin0RcWNfT2QksK9Ff2N2W7UKraqMOzoeDb4LAJtxcK1a8Q==}
     dev: false
 
-  /@algolia/cache-common/4.12.2:
-    resolution: {integrity: sha512-r//r7MF0Na0HxD2BHnjWsDKuI72Z5UEf/Rb/8MC08XKBsjCwBihGxWxycjRcNGjNEIxJBsvRMIEOipcd9qD54g==}
+  /@algolia/cache-common/4.13.0:
+    resolution: {integrity: sha512-f9mdZjskCui/dA/fA/5a+6hZ7xnHaaZI5tM/Rw9X8rRB39SUlF/+o3P47onZ33n/AwkpSbi5QOyhs16wHd55kA==}
     dev: false
 
-  /@algolia/cache-in-memory/4.12.2:
-    resolution: {integrity: sha512-opWpbBUloP1fcTG3wBDnAfcoyNXW5GFDgGtLXrSANdfnelPKkr3O8j01ZTkRlPIuBDR0izGZG8MVWMDlTf71Bw==}
+  /@algolia/cache-in-memory/4.13.0:
+    resolution: {integrity: sha512-hHdc+ahPiMM92CQMljmObE75laYzNFYLrNOu0Q3/eyvubZZRtY2SUsEEgyUEyzXruNdzrkcDxFYa7YpWBJYHAg==}
     dependencies:
-      '@algolia/cache-common': 4.12.2
+      '@algolia/cache-common': 4.13.0
     dev: false
 
-  /@algolia/client-account/4.12.2:
-    resolution: {integrity: sha512-HZqEyeVVjzOlfoSUyc+7+ueEJmRgqSuC+hqQOGECYa5JVno4d8eRVuDAMOb87I2LOdg/WoFMcAtaaRq2gpfV/w==}
+  /@algolia/client-account/4.13.0:
+    resolution: {integrity: sha512-FzFqFt9b0g/LKszBDoEsW+dVBuUe1K3scp2Yf7q6pgHWM1WqyqUlARwVpLxqyc+LoyJkTxQftOKjyFUqddnPKA==}
     dependencies:
-      '@algolia/client-common': 4.12.2
-      '@algolia/client-search': 4.12.2
-      '@algolia/transporter': 4.12.2
+      '@algolia/client-common': 4.13.0
+      '@algolia/client-search': 4.13.0
+      '@algolia/transporter': 4.13.0
     dev: false
 
-  /@algolia/client-analytics/4.12.2:
-    resolution: {integrity: sha512-7ktimzesu+vk3l+eG9w/nQh6/9AoIieCKmoiRIguKh6okGsaSBrcTHvUwIQEIiliqPuAFBk2M8eXYFqOZzwCZw==}
+  /@algolia/client-analytics/4.13.0:
+    resolution: {integrity: sha512-klmnoq2FIiiMHImkzOm+cGxqRLLu9CMHqFhbgSy9wtXZrqb8BBUIUE2VyBe7azzv1wKcxZV2RUyNOMpFqmnRZA==}
     dependencies:
-      '@algolia/client-common': 4.12.2
-      '@algolia/client-search': 4.12.2
-      '@algolia/requester-common': 4.12.2
-      '@algolia/transporter': 4.12.2
+      '@algolia/client-common': 4.13.0
+      '@algolia/client-search': 4.13.0
+      '@algolia/requester-common': 4.13.0
+      '@algolia/transporter': 4.13.0
     dev: false
 
   /@algolia/client-common/4.12.1:
@@ -283,19 +283,19 @@ packages:
       '@algolia/transporter': 4.12.1
     dev: false
 
-  /@algolia/client-common/4.12.2:
-    resolution: {integrity: sha512-+dTicT1lklwOpeoiDspUoRSQYHhrr2IzllrX89/WuTPEBm2eww1xurqrSTQYC0MuVeX1s9/i4k34Q0ZnspypWg==}
+  /@algolia/client-common/4.13.0:
+    resolution: {integrity: sha512-GoXfTp0kVcbgfSXOjfrxx+slSipMqGO9WnNWgeMmru5Ra09MDjrcdunsiiuzF0wua6INbIpBQFTC2Mi5lUNqGA==}
     dependencies:
-      '@algolia/requester-common': 4.12.2
-      '@algolia/transporter': 4.12.2
+      '@algolia/requester-common': 4.13.0
+      '@algolia/transporter': 4.13.0
     dev: false
 
-  /@algolia/client-personalization/4.12.2:
-    resolution: {integrity: sha512-JBW3vYFGIm5sAAy3cLUdmUCpmSAdreo5S1fERg7xgF6KyxGrwyy5BViTNWrOKG+av2yusk1wKydOYJ1Fbpbaxw==}
+  /@algolia/client-personalization/4.13.0:
+    resolution: {integrity: sha512-KneLz2WaehJmNfdr5yt2HQETpLaCYagRdWwIwkTqRVFCv4DxRQ2ChPVW9jeTj4YfAAhfzE6F8hn7wkQ/Jfj6ZA==}
     dependencies:
-      '@algolia/client-common': 4.12.2
-      '@algolia/requester-common': 4.12.2
-      '@algolia/transporter': 4.12.2
+      '@algolia/client-common': 4.13.0
+      '@algolia/requester-common': 4.13.0
+      '@algolia/transporter': 4.13.0
     dev: false
 
   /@algolia/client-search/4.12.1:
@@ -306,46 +306,46 @@ packages:
       '@algolia/transporter': 4.12.1
     dev: false
 
-  /@algolia/client-search/4.12.2:
-    resolution: {integrity: sha512-JIqi14TgfEqAooNbSPBC1ZCk3Pnviqlaz9KofAqWBxSRTpPUFnU/XQCU5ihR0PC68SFVDnU/Y9cak/XotXPUeg==}
+  /@algolia/client-search/4.13.0:
+    resolution: {integrity: sha512-blgCKYbZh1NgJWzeGf+caKE32mo3j54NprOf0LZVCubQb3Kx37tk1Hc8SDs9bCAE8hUvf3cazMPIg7wscSxspA==}
     dependencies:
-      '@algolia/client-common': 4.12.2
-      '@algolia/requester-common': 4.12.2
-      '@algolia/transporter': 4.12.2
+      '@algolia/client-common': 4.13.0
+      '@algolia/requester-common': 4.13.0
+      '@algolia/transporter': 4.13.0
     dev: false
 
   /@algolia/logger-common/4.12.1:
     resolution: {integrity: sha512-fCgrzlXGATNqdFTxwx0GsyPXK+Uqrx1SZ3iuY2VGPPqdt1a20clAG2n2OcLHJpvaa6vMFPlJyWvbqAgzxdxBlQ==}
     dev: false
 
-  /@algolia/logger-common/4.12.2:
-    resolution: {integrity: sha512-iOiJAymLjq137G7+8EQuUEkrgta0cZGMg6scp8s4hJ+X6k+6By4nyptdkCWYwKLsW/Xy927QcIhGlkWV78vQIQ==}
+  /@algolia/logger-common/4.13.0:
+    resolution: {integrity: sha512-8yqXk7rMtmQJ9wZiHOt/6d4/JDEg5VCk83gJ39I+X/pwUPzIsbKy9QiK4uJ3aJELKyoIiDT1hpYVt+5ia+94IA==}
     dev: false
 
-  /@algolia/logger-console/4.12.2:
-    resolution: {integrity: sha512-veuQZyTSqHoHJtr9mLMnYeal9Mee6hCie4eqY+645VbeOrgT9p/kCMbKg5GLJGoLPlXGu7C0XpHyUj5k7/NQyw==}
+  /@algolia/logger-console/4.13.0:
+    resolution: {integrity: sha512-YepRg7w2/87L0vSXRfMND6VJ5d6699sFJBRWzZPOlek2p5fLxxK7O0VncYuc/IbVHEgeApvgXx0WgCEa38GVuQ==}
     dependencies:
-      '@algolia/logger-common': 4.12.2
+      '@algolia/logger-common': 4.13.0
     dev: false
 
-  /@algolia/requester-browser-xhr/4.12.2:
-    resolution: {integrity: sha512-FpFdHNd81tS3zj6Glqd+lt+RV0ljPExKtx+QB+gani6HWZ9YlSCM+Zl82T4ibxN+hmkrMeAyT+TMzS0jiGhGyQ==}
+  /@algolia/requester-browser-xhr/4.13.0:
+    resolution: {integrity: sha512-Dj+bnoWR5MotrnjblzGKZ2kCdQi2cK/VzPURPnE616NU/il7Ypy6U6DLGZ/ZYz+tnwPa0yypNf21uqt84fOgrg==}
     dependencies:
-      '@algolia/requester-common': 4.12.2
+      '@algolia/requester-common': 4.13.0
     dev: false
 
   /@algolia/requester-common/4.12.1:
     resolution: {integrity: sha512-XWIrWQNJ1vIrSuL/bUk3ZwNMNxl+aWz6dNboRW6+lGTcMIwc3NBFE90ogbZKhNrFRff8zI4qCF15tjW+Fyhpow==}
     dev: false
 
-  /@algolia/requester-common/4.12.2:
-    resolution: {integrity: sha512-4szj/lvDQf/u8EyyRBBRZD1ZkKDyLBbckLj7meQDlnbfwnW1UpLwpB2l3XJ9wDmDSftGxUCeTl5oMFe4z9OEvQ==}
+  /@algolia/requester-common/4.13.0:
+    resolution: {integrity: sha512-BRTDj53ecK+gn7ugukDWOOcBRul59C4NblCHqj4Zm5msd5UnHFjd/sGX+RLOEoFMhetILAnmg6wMrRrQVac9vw==}
     dev: false
 
-  /@algolia/requester-node-http/4.12.2:
-    resolution: {integrity: sha512-UXfJNZt2KMwjBjiOa3cJ/PyoXWZa/F1vy6rdyG4xQeZDcLbqKP3O2b+bOJcGPmFbmdwBhtAyMVLt+hvAvAVfOw==}
+  /@algolia/requester-node-http/4.13.0:
+    resolution: {integrity: sha512-9b+3O4QFU4azLhGMrZAr/uZPydvzOR4aEZfSL8ZrpLZ7fbbqTO0S/5EVko+QIgglRAtVwxvf8UJ1wzTD2jvKxQ==}
     dependencies:
-      '@algolia/requester-common': 4.12.2
+      '@algolia/requester-common': 4.13.0
     dev: false
 
   /@algolia/transporter/4.12.1:
@@ -356,12 +356,12 @@ packages:
       '@algolia/requester-common': 4.12.1
     dev: false
 
-  /@algolia/transporter/4.12.2:
-    resolution: {integrity: sha512-PUq79if4CukXsm27ymTQ3eD3juSvMcyJmt6mxCkSFE0zQRL4ert61HBlNH6S9y/quUVe3g7oggfHq3d5pdpqZA==}
+  /@algolia/transporter/4.13.0:
+    resolution: {integrity: sha512-8tSQYE+ykQENAdeZdofvtkOr5uJ9VcQSWgRhQ9h01AehtBIPAczk/b2CLrMsw5yQZziLs5cZ3pJ3478yI+urhA==}
     dependencies:
-      '@algolia/cache-common': 4.12.2
-      '@algolia/logger-common': 4.12.2
-      '@algolia/requester-common': 4.12.2
+      '@algolia/cache-common': 4.13.0
+      '@algolia/logger-common': 4.13.0
+      '@algolia/requester-common': 4.13.0
     dev: false
 
   /@ampproject/remapping/2.1.2:
@@ -1318,8 +1318,8 @@ packages:
       - webpack-cli
     dev: true
 
-  /@nestjs/common/8.4.0_add13df2cdecb4b62cd3f7664ea82e18:
-    resolution: {integrity: sha512-uvm1Ccw0qRka/Gd5Mo5A2MQo9ItwewPes1fE2SBboennPojoiJ4A3iKirtlPuxsL+HQ4oD5eO02OsDyLYL2z6w==}
+  /@nestjs/common/8.4.1_add13df2cdecb4b62cd3f7664ea82e18:
+    resolution: {integrity: sha512-g6beLHvJ2cCIdlW8Uui8rQh3+oxLOBLzDIk3yWH4ocp2HEgOJwF0iUv/pk33tFuwbXESIGMK8K165cpZUjNoxA==}
     peerDependencies:
       cache-manager: '*'
       class-transformer: '*'
@@ -1334,7 +1334,7 @@ packages:
       class-validator:
         optional: true
     dependencies:
-      axios: 0.26.0
+      axios: 0.26.1
       cache-manager: 3.6.0
       class-transformer: 0.5.1
       class-validator: 0.13.2
@@ -1347,8 +1347,8 @@ packages:
       - debug
     dev: false
 
-  /@nestjs/core/8.4.0_34b6a0f4a6209c9b2a49b41e2cb68c0b:
-    resolution: {integrity: sha512-aur62kcyQz81D0GvM038t2JFelxPm9ABt11o5qO5ovTJ5mismZheckwyPA3WHg9wec6skr9v8kBVdZUbjFQJQQ==}
+  /@nestjs/core/8.4.1_b4e0a43386936f36c413921c49aca7e6:
+    resolution: {integrity: sha512-JUV2cy/5z8MS2SRwszLmyOCclMMlyumxIbC1YFFlnSInhu7ODhrHLIMztyGmyAIuaehbOnyXPtHkjl01rHxc5w==}
     requiresBuild: true
     peerDependencies:
       '@nestjs/common': ^8.0.0
@@ -1365,8 +1365,8 @@ packages:
       '@nestjs/websockets':
         optional: true
     dependencies:
-      '@nestjs/common': 8.4.0_add13df2cdecb4b62cd3f7664ea82e18
-      '@nestjs/websockets': 8.4.0_d42564d6f0b34e91f06fd42cff8bf32d
+      '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/websockets': 8.4.1_cbbf95cc7baa446d560e72f24d5529bf
       '@nuxtjs/opencollective': 0.3.2
       fast-safe-stringify: 2.1.1
       iterare: 1.2.1
@@ -1380,30 +1380,30 @@ packages:
       - encoding
     dev: false
 
-  /@nestjs/event-emitter/1.1.0_1ce925e2290a1cea9e3700e8a60baeb5:
+  /@nestjs/event-emitter/1.1.0_891fcd1c5b0f2c9b3aea247fec3c8ce1:
     resolution: {integrity: sha512-wxQhrPtXSUSD2y7poyBdp0V2b7xD9jCkcenGVhllx3ILkctEYXyY+rAwwWGnDqDxnrN4/MKexkAQBHa2phsNRw==}
     peerDependencies:
       '@nestjs/common': ^7.0.0 || ^8.0.0
       '@nestjs/core': ^7.0.0 || ^8.0.0
       reflect-metadata: ^0.1.12
     dependencies:
-      '@nestjs/common': 8.4.0_add13df2cdecb4b62cd3f7664ea82e18
-      '@nestjs/core': 8.4.0_34b6a0f4a6209c9b2a49b41e2cb68c0b
+      '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/core': 8.4.1_b4e0a43386936f36c413921c49aca7e6
       eventemitter2: 6.4.5
       reflect-metadata: 0.1.13
     dev: false
 
-  /@nestjs/jwt/8.0.0_@nestjs+common@8.4.0:
+  /@nestjs/jwt/8.0.0_@nestjs+common@8.4.1:
     resolution: {integrity: sha512-fz2LQgYY2zmuD8S+8UE215anwKyXlnB/1FwJQLVR47clNfMeFMK8WCxmn6xdPhF5JKuV1crO6FVabb1qWzDxqQ==}
     peerDependencies:
       '@nestjs/common': ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
-      '@nestjs/common': 8.4.0_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
       '@types/jsonwebtoken': 8.5.4
       jsonwebtoken: 8.5.1
     dev: false
 
-  /@nestjs/mapped-types/1.0.1_7c37dec5f311cf2dfddc0f9a032e50d3:
+  /@nestjs/mapped-types/1.0.1_7d4466f82a71f886e9e64844ca25cf70:
     resolution: {integrity: sha512-NFvofzSinp00j5rzUd4tf+xi9od6383iY0JP7o0Bnu1fuItAUkWBgc4EKuIQ3D+c2QI3i9pG1kDWAeY27EMGtg==}
     peerDependencies:
       '@nestjs/common': ^7.0.8 || ^8.0.0
@@ -1416,31 +1416,31 @@ packages:
       class-validator:
         optional: true
     dependencies:
-      '@nestjs/common': 8.4.0_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
       class-transformer: 0.5.1
       class-validator: 0.13.2
       reflect-metadata: 0.1.13
     dev: false
 
-  /@nestjs/passport/8.2.1_7279ab1fdcd161f1ce2d9179e8fa21f7:
+  /@nestjs/passport/8.2.1_70d98f1edabaa889bf69e4387dc17f8c:
     resolution: {integrity: sha512-HXEKMLX1x865+lsJB4srwKHBciDNAhWY1Ha+xbxYRbk7J5leGDoHJAmeqe+Wb3NDn5nkboggLV87t0q2mbYc8w==}
     peerDependencies:
       '@nestjs/common': ^6.0.0 || ^7.0.0 || ^8.0.0
       passport: ^0.4.0 || ^0.5.0
     dependencies:
-      '@nestjs/common': 8.4.0_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
       passport: 0.5.2
     dev: false
 
-  /@nestjs/platform-fastify/8.4.0_31e7036b193d6d3c9cadab18cbb4af84:
-    resolution: {integrity: sha512-npSXuCgI9Nnc8icU9Mg+uEwqoBoyUl/9FnV5XpP0d6tZBUoDySA6dbJZy5xpjeB9HJap2L/6yBpsTeEvvtojAg==}
+  /@nestjs/platform-fastify/8.4.1_214a294e539403889bf33d78c1f08a26:
+    resolution: {integrity: sha512-m97X7Roar1txPePpkW9XENgxFrmHQXgAMrUu0nZxvH/KKf+CcHzav1UfY7gzr88+OvSCDeDo9UMDvj2rZT2SSw==}
     peerDependencies:
       '@nestjs/common': ^8.0.0
       '@nestjs/core': ^8.0.0
     dependencies:
-      '@nestjs/common': 8.4.0_add13df2cdecb4b62cd3f7664ea82e18
-      '@nestjs/core': 8.4.0_34b6a0f4a6209c9b2a49b41e2cb68c0b
-      fastify: 3.27.2
+      '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/core': 8.4.1_b4e0a43386936f36c413921c49aca7e6
+      fastify: 3.27.4
       fastify-cors: 6.0.3
       fastify-formbody: 5.2.0
       light-my-request: 4.8.0
@@ -1451,15 +1451,15 @@ packages:
       - supports-color
     dev: false
 
-  /@nestjs/platform-socket.io/8.4.0_64eab75587c0872cbd3f88f274301b4c:
-    resolution: {integrity: sha512-m+ymUL+JA16K798oNXzePXeAl2PVpulNMDrCm91tIyvK+QIV3oGz/V3mcuZLhg5g0KRcTcCWkbIF7zcaJ4hR3g==}
+  /@nestjs/platform-socket.io/8.4.1_3aeea59b5fe79fb74f9812cc70d0ecca:
+    resolution: {integrity: sha512-3svCVdDLsADICUzBjwQ5vpSnObuzW1brs5Z/g8njXJPgHdHOB4jntusamu0rC20c7uiFTQM/WqphfLW01wRiKA==}
     peerDependencies:
       '@nestjs/common': ^8.0.0
       '@nestjs/websockets': ^8.0.0
       rxjs: ^7.1.0
     dependencies:
-      '@nestjs/common': 8.4.0_add13df2cdecb4b62cd3f7664ea82e18
-      '@nestjs/websockets': 8.4.0_d42564d6f0b34e91f06fd42cff8bf32d
+      '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/websockets': 8.4.1_cbbf95cc7baa446d560e72f24d5529bf
       rxjs: 7.5.5
       socket.io: 4.4.1
       tslib: 2.3.1
@@ -1469,15 +1469,15 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@nestjs/schedule/1.0.2_1ce925e2290a1cea9e3700e8a60baeb5:
+  /@nestjs/schedule/1.0.2_891fcd1c5b0f2c9b3aea247fec3c8ce1:
     resolution: {integrity: sha512-GGRehpSm0nCthYNxAGdTzondPrRvurtKnkQCzIb3Tccqq6PhfS2QiHMwDaCel5/4jhYbR/lZR9UsVr6KSJc2Xg==}
     peerDependencies:
       '@nestjs/common': ^6.10.11 || ^7.0.0 || ^8.0.0
       '@nestjs/core': ^7.0.0 || ^8.0.0
       reflect-metadata: ^0.1.12
     dependencies:
-      '@nestjs/common': 8.4.0_add13df2cdecb4b62cd3f7664ea82e18
-      '@nestjs/core': 8.4.0_34b6a0f4a6209c9b2a49b41e2cb68c0b
+      '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/core': 8.4.1_b4e0a43386936f36c413921c49aca7e6
       cron: 1.7.2
       reflect-metadata: 0.1.13
       uuid: 8.3.2
@@ -1513,7 +1513,7 @@ packages:
       - chokidar
     dev: true
 
-  /@nestjs/swagger/5.2.0_0ed0ddbb1edeb4fed6e6b1ae620a3d7f:
+  /@nestjs/swagger/5.2.0_9e6b9ae5ff02bc74734ded9e9d2f806b:
     resolution: {integrity: sha512-wcW2KCe7irwBw0WKsb03uFk4gnjqNcAcJxXGZxi6ljFiDgyLrQtx5MpE95o703tnn4V/hZR8MqMNFOXuup7Pqw==}
     peerDependencies:
       '@nestjs/common': ^8.0.0
@@ -1527,9 +1527,9 @@ packages:
       swagger-ui-express:
         optional: true
     dependencies:
-      '@nestjs/common': 8.4.0_add13df2cdecb4b62cd3f7664ea82e18
-      '@nestjs/core': 8.4.0_34b6a0f4a6209c9b2a49b41e2cb68c0b
-      '@nestjs/mapped-types': 1.0.1_7c37dec5f311cf2dfddc0f9a032e50d3
+      '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/core': 8.4.1_b4e0a43386936f36c413921c49aca7e6
+      '@nestjs/mapped-types': 1.0.1_7d4466f82a71f886e9e64844ca25cf70
       fastify-swagger: 5.0.0
       lodash: 4.17.21
       path-to-regexp: 3.2.0
@@ -1539,8 +1539,8 @@ packages:
       - class-validator
     dev: false
 
-  /@nestjs/testing/8.4.0_31e7036b193d6d3c9cadab18cbb4af84:
-    resolution: {integrity: sha512-Gk9OW4RpiIGDOROHS7O271uJEpIddQP94zlkPOVOu3HPUxntfKbmDU4cDaCqC0PQ9Jtj71C0H1j9RS8ituYLAw==}
+  /@nestjs/testing/8.4.1_214a294e539403889bf33d78c1f08a26:
+    resolution: {integrity: sha512-LOvsLuNh2eRwAtyeoIZWmUZ08wt7QrPrKQujWuRyv+vBYtC+FLHjqreWLpwG2yulNEoQs9Qlr2ubPvFGT1953g==}
     peerDependencies:
       '@nestjs/common': ^8.0.0
       '@nestjs/core': ^8.0.0
@@ -1553,13 +1553,13 @@ packages:
         optional: true
     dependencies:
       optional: 0.1.4
-      '@nestjs/common': 8.4.0_add13df2cdecb4b62cd3f7664ea82e18
-      '@nestjs/core': 8.4.0_34b6a0f4a6209c9b2a49b41e2cb68c0b
+      '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/core': 8.4.1_b4e0a43386936f36c413921c49aca7e6
       tslib: 2.3.1
     dev: true
 
-  /@nestjs/websockets/8.4.0_d42564d6f0b34e91f06fd42cff8bf32d:
-    resolution: {integrity: sha512-Sni9B9j4PeVnXKZHBys4pfCpHjc3Y6AMeM6uMsYnSZXyC9/YR4MsL3tKy251BixfVQ5S0U9UegSkj3PSaOC7Tw==}
+  /@nestjs/websockets/8.4.1_cbbf95cc7baa446d560e72f24d5529bf:
+    resolution: {integrity: sha512-6ozRqLZR87iyKHmiFf4JoslWTy4bSAE+mI19OrRyfYbhpXkNLxe/G/vtJ8bXFJWgPFKY7HjfiFFevZ71nvt3IA==}
     peerDependencies:
       '@nestjs/common': ^8.0.0
       '@nestjs/core': ^8.0.0
@@ -1570,9 +1570,9 @@ packages:
       '@nestjs/platform-socket.io':
         optional: true
     dependencies:
-      '@nestjs/common': 8.4.0_add13df2cdecb4b62cd3f7664ea82e18
-      '@nestjs/core': 8.4.0_34b6a0f4a6209c9b2a49b41e2cb68c0b
-      '@nestjs/platform-socket.io': 8.4.0_64eab75587c0872cbd3f88f274301b4c
+      '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/core': 8.4.1_b4e0a43386936f36c413921c49aca7e6
+      '@nestjs/platform-socket.io': 8.4.1_3aeea59b5fe79fb74f9812cc70d0ecca
       iterare: 1.2.1
       object-hash: 3.0.0
       reflect-metadata: 0.1.13
@@ -2504,23 +2504,23 @@ packages:
       uri-js: 4.4.1
     dev: true
 
-  /algoliasearch/4.12.2:
-    resolution: {integrity: sha512-bn1P9+V415zeDQJtXn+1SwuwedEAv9/LJAxt8XwR6ygH/sMwaHSm2hpkz8wIbCBt/tKQ43TL672Kyxzv5PwGgQ==}
+  /algoliasearch/4.13.0:
+    resolution: {integrity: sha512-oHv4faI1Vl2s+YC0YquwkK/TsaJs79g2JFg5FDm2rKN12VItPTAeQ7hyJMHarOPPYuCnNC5kixbtcqvb21wchw==}
     dependencies:
-      '@algolia/cache-browser-local-storage': 4.12.2
-      '@algolia/cache-common': 4.12.2
-      '@algolia/cache-in-memory': 4.12.2
-      '@algolia/client-account': 4.12.2
-      '@algolia/client-analytics': 4.12.2
-      '@algolia/client-common': 4.12.2
-      '@algolia/client-personalization': 4.12.2
-      '@algolia/client-search': 4.12.2
-      '@algolia/logger-common': 4.12.2
-      '@algolia/logger-console': 4.12.2
-      '@algolia/requester-browser-xhr': 4.12.2
-      '@algolia/requester-common': 4.12.2
-      '@algolia/requester-node-http': 4.12.2
-      '@algolia/transporter': 4.12.2
+      '@algolia/cache-browser-local-storage': 4.13.0
+      '@algolia/cache-common': 4.13.0
+      '@algolia/cache-in-memory': 4.13.0
+      '@algolia/client-account': 4.13.0
+      '@algolia/client-analytics': 4.13.0
+      '@algolia/client-common': 4.13.0
+      '@algolia/client-personalization': 4.13.0
+      '@algolia/client-search': 4.13.0
+      '@algolia/logger-common': 4.13.0
+      '@algolia/logger-console': 4.13.0
+      '@algolia/requester-browser-xhr': 4.13.0
+      '@algolia/requester-common': 4.13.0
+      '@algolia/requester-node-http': 4.13.0
+      '@algolia/transporter': 4.13.0
     dev: false
 
   /ansi-colors/4.1.1:
@@ -2721,6 +2721,14 @@ packages:
 
   /axios/0.26.0:
     resolution: {integrity: sha512-lKoGLMYtHvFrPVt3r+RBMp9nh34N0M8zEfCWqdWZx6phynIEhQqAdydpyBAAG211zlhX9Rgu08cOamy6XjE5Og==}
+    dependencies:
+      follow-redirects: 1.14.9
+    transitivePeerDependencies:
+      - debug
+    dev: false
+
+  /axios/0.26.1:
+    resolution: {integrity: sha512-fPwcX4EvnSHuInCMItEhAGnaSEXRBjtzh9fOtsE6E1G6p7vl7edEeZe11QHf18+6+9gR5PbKV/sGKNaD8YaMeA==}
     dependencies:
       follow-redirects: 1.14.9
     transitivePeerDependencies:
@@ -3807,7 +3815,7 @@ packages:
       minimatch: 3.1.2
       object.values: 1.1.5
       resolve: 1.22.0
-      tsconfig-paths: 3.13.0
+      tsconfig-paths: 3.14.0
     dev: true
 
   /eslint-scope/5.1.1:
@@ -4148,8 +4156,8 @@ packages:
       - supports-color
     dev: false
 
-  /fastify/3.27.2:
-    resolution: {integrity: sha512-InZSbbfdBV8yfsTzX0Ei7aF3r7FjC+DPIf27IlTP5EIhSsvTjvlRNwxDPYYGi2NX2K654Vh+zCGCy/GaSigIuw==}
+  /fastify/3.27.4:
+    resolution: {integrity: sha512-SOfnHBxG9zxCSIvt6aHoR/cao8QBddWmGP/mb5KQKRc+KI1kB7b79M2hCDOTSyHdLAF2OX+oI6X3weeLc+MqKg==}
     dependencies:
       '@fastify/ajv-compiler': 1.1.0
       abstract-logging: 2.0.1
@@ -6449,7 +6457,7 @@ packages:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
     dev: true
 
-  /nestjs-typegoose/7.1.38_2fa3d1c8173bcf5dfc7704abdac79b62:
+  /nestjs-typegoose/7.1.38_994d630353f973f7e3436c85feb8c0e9:
     resolution: {integrity: sha512-hYgDliG2IS5CJkzRsTbbfwZk+IP0jEyCaxcRqqXvxZaP5miiH9UvGm3K0hg8X5DuVkmsgTzW3+MxOXmcLm9BOA==}
     engines: {node: '>=8.10.0'}
     peerDependencies:
@@ -6458,8 +6466,8 @@ packages:
       '@typegoose/typegoose': ^6.2.1 || ^7.0.0
       mongoose: ^5.10.6
     dependencies:
-      '@nestjs/common': 8.4.0_add13df2cdecb4b62cd3f7664ea82e18
-      '@nestjs/core': 8.4.0_34b6a0f4a6209c9b2a49b41e2cb68c0b
+      '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/core': 8.4.1_b4e0a43386936f36c413921c49aca7e6
       '@typegoose/typegoose': 9.7.0_mongoose@6.2.4
       is-class: 0.0.9
       mongoose: 6.2.4
@@ -8051,7 +8059,7 @@ packages:
     dependencies:
       chalk: 4.1.2
       enhanced-resolve: 5.9.2
-      tsconfig-paths: 3.13.0
+      tsconfig-paths: 3.14.0
     dev: true
 
   /tsconfig-paths/3.12.0:
@@ -8063,8 +8071,8 @@ packages:
       strip-bom: 3.0.0
     dev: true
 
-  /tsconfig-paths/3.13.0:
-    resolution: {integrity: sha512-nWuffZppoaYK0vQ1SQmkSsQzJoHA4s6uzdb2waRpD806x9yfq153AdVsWz4je2qZcW+pENrMQXbGQ3sMCkXuhw==}
+  /tsconfig-paths/3.14.0:
+    resolution: {integrity: sha512-cg/1jAZoL57R39+wiw4u/SCC6Ic9Q5NqjBOb+9xISedOYurfog9ZNmKJSxAnb2m/5Bq4lE9lhUcau33Ml8DM0g==}
     dependencies:
       '@types/json5': 0.0.29
       json5: 1.0.1
