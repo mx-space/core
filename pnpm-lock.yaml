@@ -12,7 +12,7 @@ specifiers:
   '@innei-util/eslint-config-ts': latest
   '@innei-util/prettier': 0.2.2
   '@innei/class-validator-jsonschema': 3.1.1
-  '@nestjs/cli': 8.2.2
+  '@nestjs/cli': 8.2.3
   '@nestjs/common': 8.4.1
   '@nestjs/core': 8.4.1
   '@nestjs/event-emitter': 1.1.0
@@ -194,7 +194,7 @@ optionalDependencies:
 devDependencies:
   '@innei-util/eslint-config-ts': 0.4.0_typescript@4.6.2
   '@innei-util/prettier': 0.2.2_typescript@4.6.2
-  '@nestjs/cli': 8.2.2
+  '@nestjs/cli': 8.2.3
   '@nestjs/schematics': 8.0.8_typescript@4.6.2
   '@nestjs/testing': 8.4.1_214a294e539403889bf33d78c1f08a26
   '@types/babel__core': 7.1.18
@@ -405,13 +405,31 @@ packages:
       source-map: 0.7.3
     dev: true
 
-  /@angular-devkit/schematics-cli/13.2.5_chokidar@3.5.3:
-    resolution: {integrity: sha512-/3Q1+wtE+l5XXoXX/7157yh4Wpi+FNEryx5gDcfPJchgtovxj28nzquD0vXnvpyr3Wd8OaMwg6vW4EfL82jRKg==}
+  /@angular-devkit/core/13.2.6_chokidar@3.5.3:
+    resolution: {integrity: sha512-8h2mWdBTN/dYwZuzKMg2IODlOWMdbJcpQG4XVrkk9ejCPP+3aX5Aa3glCe/voN6eBNiRfs8YDM0jxmpN2aWVtg==}
+    engines: {node: ^12.20.0 || ^14.15.0 || >=16.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
+    peerDependencies:
+      chokidar: ^3.5.2
+    peerDependenciesMeta:
+      chokidar:
+        optional: true
+    dependencies:
+      ajv: 8.9.0
+      ajv-formats: 2.1.1
+      chokidar: 3.5.3
+      fast-json-stable-stringify: 2.1.0
+      magic-string: 0.25.7
+      rxjs: 6.6.7
+      source-map: 0.7.3
+    dev: true
+
+  /@angular-devkit/schematics-cli/13.2.6_chokidar@3.5.3:
+    resolution: {integrity: sha512-VdMLn4DoTswjk+1RL+pod8EwLkzh8pMT2OBJ9dhsITru1sr0/2nhsqRwZzZylAXjrFwdfPj1E/vfcAfSkmMGvw==}
     engines: {node: ^12.20.0 || ^14.15.0 || >=16.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
     hasBin: true
     dependencies:
-      '@angular-devkit/core': 13.2.5_chokidar@3.5.3
-      '@angular-devkit/schematics': 13.2.5_chokidar@3.5.3
+      '@angular-devkit/core': 13.2.6_chokidar@3.5.3
+      '@angular-devkit/schematics': 13.2.6_chokidar@3.5.3
       ansi-colors: 4.1.1
       inquirer: 8.2.0
       minimist: 1.2.5
@@ -438,6 +456,19 @@ packages:
     engines: {node: ^12.20.0 || ^14.15.0 || >=16.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
     dependencies:
       '@angular-devkit/core': 13.2.5_chokidar@3.5.3
+      jsonc-parser: 3.0.0
+      magic-string: 0.25.7
+      ora: 5.4.1
+      rxjs: 6.6.7
+    transitivePeerDependencies:
+      - chokidar
+    dev: true
+
+  /@angular-devkit/schematics/13.2.6_chokidar@3.5.3:
+    resolution: {integrity: sha512-mPgSqdnZRuPSMeUA+T+mwVCrq2yhXpcYm1/Rjbhy09CyHs4wSrFv21WHCrE6shlvXpcmwr0n+I0DIeagAPmjUA==}
+    engines: {node: ^12.20.0 || ^14.15.0 || >=16.10.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0'}
+    dependencies:
+      '@angular-devkit/core': 13.2.6_chokidar@3.5.3
       jsonc-parser: 3.0.0
       magic-string: 0.25.7
       ora: 5.4.1
@@ -1248,14 +1279,14 @@ packages:
       - supports-color
     dev: false
 
-  /@nestjs/cli/8.2.2:
-    resolution: {integrity: sha512-ZonmNLCHfTVrZGgYf4mrpivnKGaRzVRAcux+WDbzhQDNIz70s7mdOPShXW1Vpq+7uRJDxlgO1vOMhmg4uEUIDg==}
+  /@nestjs/cli/8.2.3:
+    resolution: {integrity: sha512-p//DACefn40VClXroxzS+2pkSdaXYvKKcr4bFOUBMTdJqT9he+U9ifcJUkg/h1bFU/Y8SS2cUsTyl0ZBHHHRcw==}
     engines: {node: '>= 10.13.0', npm: '>= 6.11.0'}
     hasBin: true
     dependencies:
-      '@angular-devkit/core': 13.2.5_chokidar@3.5.3
-      '@angular-devkit/schematics': 13.2.5_chokidar@3.5.3
-      '@angular-devkit/schematics-cli': 13.2.5_chokidar@3.5.3
+      '@angular-devkit/core': 13.2.6_chokidar@3.5.3
+      '@angular-devkit/schematics': 13.2.6_chokidar@3.5.3
+      '@angular-devkit/schematics-cli': 13.2.6_chokidar@3.5.3
       '@nestjs/schematics': 8.0.8_chokidar@3.5.3+typescript@4.6.2
       chalk: 3.0.0
       chokidar: 3.5.3
@@ -1270,7 +1301,7 @@ packages:
       shelljs: 0.8.5
       source-map-support: 0.5.21
       tree-kill: 1.2.2
-      tsconfig-paths: 3.12.0
+      tsconfig-paths: 3.14.0
       tsconfig-paths-webpack-plugin: 3.5.2
       typescript: 4.6.2
       webpack: 5.70.0
@@ -8017,15 +8048,6 @@ packages:
       chalk: 4.1.2
       enhanced-resolve: 5.9.2
       tsconfig-paths: 3.14.0
-    dev: true
-
-  /tsconfig-paths/3.12.0:
-    resolution: {integrity: sha512-e5adrnOYT6zqVnWqZu7i/BQ3BnhzvGbjEjejFXO20lKIKpwTaupkCPgEfv4GZK1IBciJUEhYs3J3p75FdaTFVg==}
-    dependencies:
-      '@types/json5': 0.0.29
-      json5: 1.0.1
-      minimist: 1.2.5
-      strip-bom: 3.0.0
     dev: true
 
   /tsconfig-paths/3.14.0:

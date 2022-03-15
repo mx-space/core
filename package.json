@@ -133,7 +133,7 @@
   "devDependencies": {
     "@innei-util/eslint-config-ts": "latest",
     "@innei-util/prettier": "0.2.2",
-    "@nestjs/cli": "8.2.2",
+    "@nestjs/cli": "8.2.3",
     "@nestjs/schematics": "8.0.8",
     "@nestjs/testing": "8.4.1",
     "@types/babel__core": "7.1.18",
