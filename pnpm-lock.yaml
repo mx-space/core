@@ -63,7 +63,7 @@ specifiers:
   cos-nodejs-sdk-v5: 2.11.6
   cron: '*'
   cross-env: 7.0.3
-  dayjs: 1.10.8
+  dayjs: 1.11.0
   ejs: 3.1.6
   eslint: '*'
   fastify-cookie: 5.6.0
@@ -150,7 +150,7 @@ dependencies:
   class-validator: 0.13.2
   consola: 2.15.3
   cos-nodejs-sdk-v5: 2.11.6
-  dayjs: 1.10.8
+  dayjs: 1.11.0
   ejs: 3.1.6
   fastify-cookie: 5.6.0
   fastify-multipart: 5.3.1
@@ -3390,8 +3390,8 @@ packages:
       whatwg-url: 10.0.0
     dev: false
 
-  /dayjs/1.10.8:
-    resolution: {integrity: sha512-wbNwDfBHHur9UOzNUjeKUOJ0fCb0a52Wx0xInmQ7Y8FstyajiV1NmK1e00cxsr9YrE9r7yAChE0VvpuY5Rnlow==}
+  /dayjs/1.11.0:
+    resolution: {integrity: sha512-JLC809s6Y948/FuCZPm5IX8rRhQwOiyMb2TfVVQEixG7P8Lm/gt5S7yoQZmC8x1UehI9Pb7sksEt4xx14m+7Ug==}
     dev: false
 
   /debounce-fn/4.0.0:
