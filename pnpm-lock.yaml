@@ -9,6 +9,8 @@ specifiers:
   '@algolia/client-search': '*'
   '@babel/core': 7.17.7
   '@babel/plugin-transform-typescript': 7.16.8
+  '@babel/types': '*'
+  '@babel__types@*': link:@types/@babel__types@*
   '@innei-util/eslint-config-ts': 0.5.0
   '@innei-util/prettier': 0.4.1
   '@innei/class-validator-jsonschema': 3.1.1
@@ -123,6 +125,7 @@ dependencies:
   '@algolia/client-search': 4.12.1
   '@babel/core': 7.17.7
   '@babel/plugin-transform-typescript': 7.16.8_@babel+core@7.17.7
+  '@babel/types': 7.17.0
   '@innei/class-validator-jsonschema': 3.1.1_279461c9b8c03a205cdbc4878bc60cf8
   '@nestjs/common': 8.4.1_add13df2cdecb4b62cd3f7664ea82e18
   '@nestjs/core': 8.4.1_b4e0a43386936f36c413921c49aca7e6
@@ -192,6 +195,7 @@ optionalDependencies:
   redis-memory-server: 0.5.0
 
 devDependencies:
+  '@babel__types@*': link:@types/@babel__types@*
   '@innei-util/eslint-config-ts': 0.5.0_typescript@4.6.2
   '@innei-util/prettier': 0.4.1
   '@nestjs/cli': 8.2.3

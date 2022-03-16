@@ -66,6 +66,7 @@
     "@algolia/client-search": "*",
     "@babel/core": "7.17.7",
     "@babel/plugin-transform-typescript": "7.16.8",
+    "@babel/types": "*",
     "@innei/class-validator-jsonschema": "3.1.1",
     "@nestjs/common": "8.4.1",
     "@nestjs/core": "8.4.1",
@@ -131,6 +132,7 @@
     "zx": "4.3.0"
   },
   "devDependencies": {
+    "@babel__types@*": "link:@types/@babel__types@*",
     "@innei-util/eslint-config-ts": "0.5.0",
     "@innei-util/prettier": "0.4.1",
     "@nestjs/cli": "8.2.3",

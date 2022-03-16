@@ -80,6 +80,10 @@ export class SnippetService {
         const isValid = await this.serverlessService.isValidServerlessFunction(
           model.raw,
         )
+        // if isValid is string, eq error message
+        if (typeof isValid === 'string') {
+          throw new BadRequestException(isValid)
+        }
         if (!isValid) {
           throw new BadRequestException('serverless function is not valid')
         }

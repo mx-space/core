@@ -1,7 +1,8 @@
 import fs, { mkdir, stat } from 'fs/promises'
 import path from 'path'
 import { nextTick } from 'process'
-import { transformAsync } from '@babel/core'
+import * as t from '@babel/types'
+import { parseAsync, transformAsync } from '@babel/core'
 import {
   Injectable,
   InternalServerErrorException,
@@ -293,6 +294,7 @@ export class ServerlessService {
       const trustPackagePrefixes = ['@innei/', '@mx-space/', 'mx-function-']
 
       if (
+        isDev ||
         allowedThirdPartLibs.includes(id as any) ||
         trustPackagePrefixes.some((prefix) => id.startsWith(prefix))
       ) {
@@ -337,13 +339,21 @@ export class ServerlessService {
   async isValidServerlessFunction(raw: string) {
     try {
       // 验证 handler 是否存在并且是函数
-      return safeEval(`
-    ${await this.convertTypescriptCode(raw)}
-    return typeof handler === 'function'
-    `)
+      const ast = (await parseAsync(raw, {
+        plugins: [require('@babel/plugin-transform-typescript')],
+      })) as t.File
+
+      const { body } = ast.program as t.Program
+
+      const hasEntryFunction = body.some(
+        (node) => t.isFunction(node) && node.id && node.id.name === 'handler',
+      )
+      return hasEntryFunction
     } catch (e) {
-      console.error(e.message)
-      return false
+      if (isDev) {
+        console.error(e.message)
+      }
+      return e.message?.split('\n').at(0)
     }
   }
 }
