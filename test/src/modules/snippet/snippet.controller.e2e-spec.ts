@@ -117,7 +117,7 @@ describe('test /snippets', () => {
     await app
       .inject({
         method: 'GET',
-        url: '/snippets/' + id,
+        url: `/snippets/${id}`,
       })
       .then((res) => {
         const json = res.json()
@@ -131,7 +131,7 @@ describe('test /snippets', () => {
     await app
       .inject({
         method: 'GET',
-        url: '/snippets/root/' + mockPayload1.name,
+        url: `/snippets/root/${mockPayload1.name}`,
       })
       .then((res) => {
         const json = res.json()

@@ -1,8 +1,8 @@
+import cluster from 'cluster'
+import { performance } from 'perf_hooks'
 import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
-import cluster from 'cluster'
-import { performance } from 'perf_hooks'
 import { API_VERSION, CROSS_DOMAIN, PORT } from './app.config'
 import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'
@@ -96,9 +96,7 @@ export async function bootstrap() {
     consola.success(
       `[${prefix + pid}] Admin Local Dashboard: ${url}/proxy/qaqdmin`,
     )
-    Logger.log(
-      'Server is up. ' + chalk.yellow('+' + (performance.now() | 0) + 'ms'),
-    )
+    Logger.log(`Server is up. ${chalk.yellow(`+${performance.now() | 0}ms`)}`)
   })
 
   if (module.hot) {

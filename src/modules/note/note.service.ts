@@ -4,13 +4,13 @@ import { DocumentType } from '@typegoose/typegoose'
 import { isDefined, isMongoId } from 'class-validator'
 import { FilterQuery } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
+import { NoteModel } from './note.model'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { EventBusEvents } from '~/constants/event.constant'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { deleteKeys } from '~/utils'
-import { NoteModel } from './note.model'
 
 @Injectable()
 export class NoteService {

@@ -1,3 +1,6 @@
+import { createReadStream, existsSync, statSync } from 'fs'
+import fs from 'fs/promises'
+import { extname, join } from 'path'
 import {
   Controller,
   Get,
@@ -7,11 +10,11 @@ import {
   Res,
 } from '@nestjs/common'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { createReadStream, existsSync, statSync } from 'fs'
-import fs from 'fs/promises'
 import { isNull } from 'lodash'
 import PKG from 'package.json'
-import { extname, join } from 'path'
+import { dashboard } from '../../../package.json'
+import { PageProxyDebugDto } from './pageproxy.dto'
+import { PageProxyService } from './pageproxy.service'
 import { Cookies } from '~/common/decorator/cookie.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -19,9 +22,6 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
-import { dashboard } from '../../../package.json'
-import { PageProxyDebugDto } from './pageproxy.dto'
-import { PageProxyService } from './pageproxy.service'
 
 @Controller('/')
 @ApiName

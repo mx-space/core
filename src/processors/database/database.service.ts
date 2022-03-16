@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { mongoose, ReturnModelType } from '@typegoose/typegoose'
-import { getConnectionToken, InjectModel } from 'nestjs-typegoose'
+import { ReturnModelType, mongoose } from '@typegoose/typegoose'
+import { InjectModel, getConnectionToken } from 'nestjs-typegoose'
 import { NoteModel } from '~/modules/note/note.model'
 import { PageModel } from '~/modules/page/page.model'
 import { PostModel } from '~/modules/post/post.model'

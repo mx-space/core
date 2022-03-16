@@ -1,4 +1,4 @@
-import { modelOptions, prop, Severity } from '@typegoose/typegoose'
+import { Severity, modelOptions, prop } from '@typegoose/typegoose'
 import { Schema } from 'mongoose'
 
 @modelOptions({

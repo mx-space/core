@@ -1,8 +1,8 @@
 import {
   DocumentType,
+  Severity,
   modelOptions,
   prop,
-  Severity,
 } from '@typegoose/typegoose'
 import { hashSync } from 'bcrypt'
 import { Schema } from 'mongoose'

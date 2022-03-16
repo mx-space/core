@@ -1,3 +1,6 @@
+import fs, { mkdir, stat } from 'fs/promises'
+import path from 'path'
+import { nextTick } from 'process'
 import { transformAsync } from '@babel/core'
 import {
   Injectable,
@@ -6,11 +9,14 @@ import {
 } from '@nestjs/common'
 import { Interval } from '@nestjs/schedule'
 import { isURL } from 'class-validator'
-import fs, { mkdir, stat } from 'fs/promises'
 import { cloneDeep } from 'lodash'
 import { InjectModel } from 'nestjs-typegoose'
-import path from 'path'
-import { nextTick } from 'process'
+import PKG from '../../../package.json'
+import { SnippetModel } from '../snippet/snippet.model'
+import {
+  FunctionContextRequest,
+  FunctionContextResponse,
+} from './function.types'
 import { RedisKeys } from '~/constants/cache.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { CacheService } from '~/processors/cache/cache.service'
@@ -21,12 +27,6 @@ import { UniqueArray } from '~/ts-hepler/unique'
 import { getRedisKey, safePathJoin } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
 import { isBuiltinModule } from '~/utils/sys.util'
-import PKG from '../../../package.json'
-import { SnippetModel } from '../snippet/snippet.model'
-import {
-  FunctionContextRequest,
-  FunctionContextResponse,
-} from './function.types'
 @Injectable()
 export class ServerlessService {
   constructor(
@@ -73,7 +73,7 @@ export class ServerlessService {
     context: { req: FunctionContextRequest; res: FunctionContextResponse },
   ) {
     const { raw: functionString } = model
-    const logger = new Logger('ServerlessFunction/' + model.name)
+    const logger = new Logger(`ServerlessFunction/${model.name}`)
     const document = await this.model.findById(model.id)
     const globalContext = {
       context: {

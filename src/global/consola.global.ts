@@ -1,17 +1,17 @@
 /* eslint-disable prefer-rest-params */
-import { CronExpression } from '@nestjs/schedule'
-import consola_, { FancyReporter, LogLevel } from 'consola'
-import { CronJob } from 'cron'
 import { createWriteStream } from 'fs'
 import { resolve } from 'path'
+import consola_, { FancyReporter, LogLevel } from 'consola'
+import { CronJob } from 'cron'
+import { CronExpression } from '@nestjs/schedule'
 import { argv } from 'zx'
-import { LOG_DIR } from '~/constants/path.constant'
 import { redisSubPub } from '../utils/redis-subpub.util'
 import { getShortDate, getShortTime } from '../utils/time.util'
 import { isDev, isTest } from './env.global'
+import { LOG_DIR } from '~/constants/path.constant'
 
 export const getTodayLogFilePath = () =>
-  resolve(LOG_DIR, 'stdout_' + getShortDate(new Date()) + '.log')
+  resolve(LOG_DIR, `stdout_${getShortDate(new Date())}.log`)
 
 class Reporter extends FancyReporter {
   isInVirtualTerminal = typeof process.stdout.columns === 'undefined' // HACK: if got `undefined` that means in PM2 pty
@@ -21,11 +21,9 @@ class Reporter extends FancyReporter {
 
   protected formatLogObj(): string {
     return this.isInVirtualTerminal
-      ? (
-          chalk.gray(getShortTime(new Date())) +
-          ' ' +
-          super.formatLogObj.apply(this, arguments).replace(/^\n/, '')
-        ).trimEnd()
+      ? `${chalk.gray(getShortTime(new Date()))} ${super.formatLogObj
+          .apply(this, arguments)
+          .replace(/^\n/, '')}`.trimEnd()
       : super.formatLogObj.apply(this, arguments)
   }
 }

@@ -1,12 +1,12 @@
 import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
 import { minify } from 'html-minifier'
 import xss from 'xss'
-import { HTTPDecorators } from '~/common/decorator/http.decorator'
-import { ApiName } from '~/common/decorator/openapi.decorator'
-import { CacheKeys } from '~/constants/cache.constant'
 import { AggregateService } from '../aggregate/aggregate.service'
 import { ConfigsService } from '../configs/configs.service'
 import { MarkdownService } from '../markdown/markdown.service'
+import { HTTPDecorators } from '~/common/decorator/http.decorator'
+import { ApiName } from '~/common/decorator/openapi.decorator'
+import { CacheKeys } from '~/constants/cache.constant'
 
 @Controller('feed')
 @ApiName
@@ -62,7 +62,7 @@ export class FeedController {
                 )}'>${xss(item.link)}</a></blockquote>
               ${this.markdownService.renderMarkdownContent(item.text)}
               <p style='text-align: right'>
-              <a href='${xss(item.link) + '#comments'}'>看完了？说点什么呢</a>
+              <a href='${`${xss(item.link)}#comments`}'>看完了？说点什么呢</a>
               </p>`,
                 {
                   collapseWhitespace: true,

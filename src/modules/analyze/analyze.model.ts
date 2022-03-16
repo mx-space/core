@@ -1,5 +1,5 @@
 import { ApiHideProperty } from '@nestjs/swagger'
-import { index, modelOptions, prop, Severity } from '@typegoose/typegoose'
+import { Severity, index, modelOptions, prop } from '@typegoose/typegoose'
 import { SchemaTypes } from 'mongoose'
 import type { UAParser } from 'ua-parser-js'
 import { BaseModel } from '~/shared/model/base.model'

@@ -1,18 +1,18 @@
+import { URL } from 'url'
 import {
   DocumentType,
+  Ref,
   modelOptions,
   pre,
   prop,
-  Ref,
 } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import { Query, Types } from 'mongoose'
-import { URL } from 'url'
-import { BaseModel } from '~/shared/model/base.model'
-import { getAvatar } from '~/utils'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
+import { getAvatar } from '~/utils'
+import { BaseModel } from '~/shared/model/base.model'
 
 function autoPopulateSubs(
   this: Query<

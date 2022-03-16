@@ -1,3 +1,7 @@
+import { join } from 'path'
+import { performance } from 'perf_hooks'
+import { Readable } from 'stream'
+import { URL } from 'url'
 import {
   Body,
   CacheTTL,
@@ -15,19 +19,7 @@ import { render } from 'ejs'
 import { minify } from 'html-minifier'
 import JSZip from 'jszip'
 import { isNil } from 'lodash'
-import { join } from 'path'
-import { performance } from 'perf_hooks'
-import { Readable } from 'stream'
-import { URL } from 'url'
 import xss from 'xss'
-import { Auth } from '~/common/decorator/auth.decorator'
-import { HttpCache } from '~/common/decorator/cache.decorator'
-import { HTTPDecorators } from '~/common/decorator/http.decorator'
-import { ApiName } from '~/common/decorator/openapi.decorator'
-import { IsMaster } from '~/common/decorator/role.decorator'
-import { ArticleTypeEnum } from '~/constants/article.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
-import { getShortDateTime } from '~/utils'
 import { CategoryModel } from '../category/category.model'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteModel } from '../note/note.model'
@@ -40,6 +32,14 @@ import {
 } from './markdown.dto'
 import { MarkdownYAMLProperty } from './markdown.interface'
 import { MarkdownService } from './markdown.service'
+import { Auth } from '~/common/decorator/auth.decorator'
+import { HttpCache } from '~/common/decorator/cache.decorator'
+import { HTTPDecorators } from '~/common/decorator/http.decorator'
+import { ApiName } from '~/common/decorator/openapi.decorator'
+import { IsMaster } from '~/common/decorator/role.decorator'
+import { ArticleTypeEnum } from '~/constants/article.constant'
+import { MongoIdDto } from '~/shared/dto/id.dto'
+import { getShortDateTime } from '~/utils'
 
 @Controller('markdown')
 @ApiName
@@ -109,7 +109,7 @@ export class MarkdownController {
       convertor(post, {
         categories: (post.category as CategoryModel).name,
         type: 'post',
-        permalink: 'posts/' + post.slug,
+        permalink: `posts/${post.slug}`,
       }),
     )
     const convertNote = notes.map((note) =>
@@ -117,7 +117,7 @@ export class MarkdownController {
         mood: note.mood,
         weather: note.weather,
         id: note.nid,
-        permalink: 'notes/' + note.nid,
+        permalink: `notes/${note.nid}`,
         type: 'note',
         slug: note.nid.toString(),
       }),

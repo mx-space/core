@@ -1,14 +1,14 @@
 import { CacheKey, CacheTTL, Controller, Get, Query } from '@nestjs/common'
 import { ApiProperty } from '@nestjs/swagger'
 import { omit } from 'lodash'
-import { Auth } from '~/common/decorator/auth.decorator'
-import { ApiName } from '~/common/decorator/openapi.decorator'
-import { IsMaster } from '~/common/decorator/role.decorator'
-import { CacheKeys } from '~/constants/cache.constant'
 import { AnalyzeService } from '../analyze/analyze.service'
 import { ConfigsService } from '../configs/configs.service'
 import { TimelineQueryDto, TopQueryDto } from './aggregate.dto'
 import { AggregateService } from './aggregate.service'
+import { Auth } from '~/common/decorator/auth.decorator'
+import { ApiName } from '~/common/decorator/openapi.decorator'
+import { IsMaster } from '~/common/decorator/role.decorator'
+import { CacheKeys } from '~/constants/cache.constant'
 
 @Controller('aggregate')
 @ApiName

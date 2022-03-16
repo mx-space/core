@@ -7,14 +7,14 @@ import { marked } from 'marked'
 import { Types } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
 import xss from 'xss'
-import { DatabaseService } from '~/processors/database/database.service'
-import { AssetService } from '~/processors/helper/helper.asset.service'
 import { CategoryModel } from '../category/category.model'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
 import { DatatypeDto } from './markdown.dto'
 import { MarkdownYAMLProperty } from './markdown.interface'
+import { AssetService } from '~/processors/helper/helper.asset.service'
+import { DatabaseService } from '~/processors/database/database.service'
 @Injectable()
 export class MarkdownService {
   constructor(
@@ -74,7 +74,7 @@ export class MarkdownService {
     for await (const item of data) {
       if (!item.meta) {
         models.push({
-          title: '未命名-' + count++,
+          title: `未命名-${count++}`,
           slug: new Date().getTime(),
           text: item.text,
           ...genDate(item),
@@ -294,13 +294,11 @@ ${text.trim()}
 
         code(code, lang) {
           if (lang == 'mermaid') {
-            return '<pre class="mermaid">' + code + '</pre>'
+            return `<pre class="mermaid">${code}</pre>`
           } else {
-            return (
-              `<pre><code class="language-${lang}">` +
-              xss(code) +
-              '</code></pre>'
-            )
+            return `<pre><code class="language-${lang}">${xss(
+              code,
+            )}</code></pre>`
           }
         },
       },
@@ -319,7 +317,7 @@ ${text.trim()}
     })
 
     const themeStyleSheet = await this.assetService.getAsset(
-      '/markdown/theme/' + theme + '.css',
+      `/markdown/theme/${theme}.css`,
       { encoding: 'utf-8' },
     )
     return {

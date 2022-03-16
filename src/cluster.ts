@@ -7,9 +7,9 @@ export class Cluster {
       const cpus = os.cpus().length
 
       consola.info(`Primary server started on ${process.pid}`)
-      consola.info('CPU:' + cpus)
-      //ensure workers exit cleanly
-      process.on('SIGINT', function () {
+      consola.info(`CPU:${cpus}`)
+      // ensure workers exit cleanly
+      process.on('SIGINT', () => {
         consola.info('Cluster shutting down...')
         for (const id in cluster.workers) {
           cluster.workers[id].kill()
@@ -24,15 +24,15 @@ export class Cluster {
         cluster.fork()
       }
 
-      cluster.on('fork', function (worker) {
-        worker.on('message', function (msg) {
-          Object.keys(cluster.workers).forEach(function (id) {
+      cluster.on('fork', (worker) => {
+        worker.on('message', (msg) => {
+          Object.keys(cluster.workers).forEach((id) => {
             cluster.workers[id].send(msg)
           })
         })
       })
 
-      cluster.on('online', function (worker) {
+      cluster.on('online', (worker) => {
         consola.info('Worker %s is online', worker.process.pid)
       })
       cluster.on('exit', (worker, code, signal) => {

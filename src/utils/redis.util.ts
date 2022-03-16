@@ -5,6 +5,6 @@ export const getRedisKey = (
   ...concatKeys: string[]
 ): `mx:${RedisKeys}${string | ''}` => {
   return `mx:${key}${
-    concatKeys && concatKeys.length ? '_' + concatKeys.join('_') : ''
+    concatKeys && concatKeys.length ? `_${concatKeys.join('_')}` : ''
   }`
 }

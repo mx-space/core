@@ -1,3 +1,4 @@
+import { Readable } from 'stream'
 import {
   BadRequestException,
   Controller,
@@ -14,13 +15,12 @@ import {
 } from '@nestjs/common'
 import { ApiProperty, ApiResponseProperty } from '@nestjs/swagger'
 import { FastifyRequest } from 'fastify'
-import { Readable } from 'stream'
+import { BackupService } from './backup.service'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { getMediumDateTime } from '~/utils'
-import { BackupService } from './backup.service'
 
 @Controller({ path: 'backups', scope: Scope.REQUEST })
 @ApiName

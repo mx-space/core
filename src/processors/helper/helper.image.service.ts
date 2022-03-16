@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 import imageSize from 'image-size'
+import { HttpService } from './helper.http.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { TextImageRecordType, WriteBaseModel } from '~/shared/model/base.model'
 import { getAverageRGB, pickImagesFromMarkdown } from '~/utils/pic.util'
-import { HttpService } from './helper.http.service'
 
 @Injectable()
 export class ImageService {
@@ -46,7 +46,7 @@ export class ImageService {
         continue
       }
       const promise = new Promise<TextImageRecordType>((resolve) => {
-        this.logger.log('Get --> ' + src)
+        this.logger.log(`Get --> ${src}`)
         this.getOnlineImageSizeAndMeta(src)
           .then(({ size, accent }) => {
             const filename = src.split('/').pop()

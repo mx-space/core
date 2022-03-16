@@ -4,11 +4,11 @@ import dayjs from 'dayjs'
 import { merge } from 'lodash'
 import { PipelineStage } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
+import { OptionModel } from '../configs/configs.model'
+import { AnalyzeModel } from './analyze.model'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
-import { OptionModel } from '../configs/configs.model'
-import { AnalyzeModel } from './analyze.model'
 
 @Injectable()
 export class AnalyzeService {

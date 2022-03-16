@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectModel } from 'nestjs-typegoose'
+import { CacheService } from '../cache/cache.service'
+import { DatabaseService } from '../database/database.service'
 import { ArticleType } from '~/constants/article.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { NoteModel } from '~/modules/note/note.model'
 import { PostModel } from '~/modules/post/post.model'
 import { getRedisKey } from '~/utils/redis.util'
-import { CacheService } from '../cache/cache.service'
-import { DatabaseService } from '../database/database.service'
 
 @Injectable()
 export class CountingService {
@@ -58,14 +58,14 @@ export class CountingService {
       ip,
     )
     if (isReadBefore) {
-      this.logger.debug('已经增加过计数了, ' + id)
+      this.logger.debug(`已经增加过计数了, ${id}`)
       return
     }
     await Promise.all([
       redis.sadd(getRedisKey(RedisKeys.Read, doc._id), ip),
       doc.updateOne({ $inc: { 'count.read': 1 } }),
     ])
-    this.logger.debug('增加阅读计数, (' + doc.title)
+    this.logger.debug(`增加阅读计数, (${doc.title}`)
   }
 
   public async updateLikeCount(
@@ -91,14 +91,14 @@ export class CountingService {
       ip,
     )
     if (isLikeBefore) {
-      this.logger.debug('已经增加过计数了, ' + id)
+      this.logger.debug(`已经增加过计数了, ${id}`)
       return false
     }
     await Promise.all([
       redis.sadd(getRedisKey(RedisKeys.Like, doc._id), ip),
       doc.updateOne({ $inc: { 'count.like': 1 } }),
     ])
-    this.logger.debug('增加喜欢计数, (' + doc.title)
+    this.logger.debug(`增加喜欢计数, (${doc.title}`)
     return true
   }
 }

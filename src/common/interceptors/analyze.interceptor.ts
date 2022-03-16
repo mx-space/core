@@ -4,6 +4,7 @@
  * @module interceptor/analyze
  * @author Innei <https://github.com/Innei>
  */
+import { URL } from 'url'
 import {
   CallHandler,
   ExecutionContext,
@@ -15,7 +16,6 @@ import isbot from 'isbot'
 import { InjectModel } from 'nestjs-typegoose'
 import { Observable } from 'rxjs'
 import UAParser from 'ua-parser-js'
-import { URL } from 'url'
 import { RedisKeys } from '~/constants/cache.constant'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { OptionModel } from '~/modules/configs/configs.model'
@@ -82,7 +82,7 @@ export class AnalyzeInterceptor implements NestInterceptor {
         await this.model.create({
           ip,
           ua,
-          path: new URL('http://a.com' + url).pathname,
+          path: new URL(`http://a.com${url}`).pathname,
         })
         const apiCallTimeRecord = await this.options.findOne({
           name: 'apiCallTime',

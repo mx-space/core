@@ -1,5 +1,9 @@
 import { Global, Module } from '@nestjs/common'
 import { TypegooseModule } from 'nestjs-typegoose'
+import { CategoryModel } from '../../modules/category/category.model'
+import { PostModel } from '../../modules/post/post.model'
+import { UserModel } from '../../modules/user/user.model'
+import { DatabaseService } from './database.service'
 import { MONGO_DB } from '~/app.config'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { CommentModel } from '~/modules/comment/comment.model'
@@ -11,10 +15,6 @@ import { ProjectModel } from '~/modules/project/project.model'
 import { RecentlyModel } from '~/modules/recently/recently.model'
 import { SayModel } from '~/modules/say/say.model'
 import { SnippetModel } from '~/modules/snippet/snippet.model'
-import { CategoryModel } from '../../modules/category/category.model'
-import { PostModel } from '../../modules/post/post.model'
-import { UserModel } from '../../modules/user/user.model'
-import { DatabaseService } from './database.service'
 
 const models = TypegooseModule.forFeature([
   AnalyzeModel,

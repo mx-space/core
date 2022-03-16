@@ -1,4 +1,4 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common'
+import { ExecutionContext, createParamDecorator } from '@nestjs/common'
 import { FastifyRequest } from 'fastify'
 
 export const Cookies = createParamDecorator(

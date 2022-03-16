@@ -9,6 +9,8 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
+import { SnippetModel, SnippetType } from './snippet.model'
+import { SnippetService } from './snippet.service'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -16,8 +18,6 @@ import { IsMaster } from '~/common/decorator/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/utils/transfrom.util'
-import { SnippetModel, SnippetType } from './snippet.model'
-import { SnippetService } from './snippet.service'
 
 @ApiName
 @Controller('snippets')

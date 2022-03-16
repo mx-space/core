@@ -9,8 +9,8 @@ import {
   IsString,
 } from 'class-validator'
 import { uniq } from 'lodash'
-import { IsBooleanOrString } from '~/utils/validator/isBooleanOrString'
 import { CategoryType } from './category.model'
+import { IsBooleanOrString } from '~/utils/validator/isBooleanOrString'
 
 export class SlugOrIdDto {
   @IsString()

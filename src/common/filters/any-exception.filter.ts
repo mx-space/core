@@ -1,3 +1,5 @@
+import { WriteStream } from 'fs'
+import { resolve } from 'path'
 import {
   ArgumentsHost,
   Catch,
@@ -9,14 +11,12 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { WriteStream } from 'fs'
-import { resolve } from 'path'
+import { getIp } from '../../utils/ip.util'
+import { LoggingInterceptor } from '../interceptors/logging.interceptor'
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 import { LOG_DIR } from '~/constants/path.constant'
 import { REFLECTOR } from '~/constants/system.constant'
 import { isDev } from '~/global/env.global'
-import { getIp } from '../../utils/ip.util'
-import { LoggingInterceptor } from '../interceptors/logging.interceptor'
 
 type myError = {
   readonly status: number
@@ -62,9 +62,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           `[${new Date().toISOString()}] ${decodeURI(request.raw.url)}: ${
             (exception as any)?.response?.message ||
             (exception as myError)?.message
-          }\n` +
-            (exception as Error).stack +
-            '\n',
+          }\n${(exception as Error).stack}\n`,
         )
       }
     } else {
@@ -79,11 +77,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const prevRequestTs = this.reflector.get(HTTP_REQUEST_TIME, request as any)
 
     if (prevRequestTs) {
-      const content = request.method + ' -> ' + request.url
+      const content = `${request.method} -> ${request.url}`
       Logger.debug(
-        '--- 响应异常请求：' +
-          content +
-          chalk.yellow(` +${+new Date() - prevRequestTs}ms`),
+        `--- 响应异常请求：${content}${chalk.yellow(
+          ` +${+new Date() - prevRequestTs}ms`,
+        )}`,
         LoggingInterceptor.name,
       )
     }

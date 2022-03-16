@@ -7,7 +7,7 @@
  * @Coding with Love
  */
 
-import { createParamDecorator, ExecutionContext } from '@nestjs/common'
+import { ExecutionContext, createParamDecorator } from '@nestjs/common'
 import { FastifyRequest } from 'fastify'
 import { getIp } from '~/utils/ip.util'
 

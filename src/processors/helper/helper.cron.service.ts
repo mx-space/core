@@ -1,14 +1,16 @@
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
-import { OnEvent } from '@nestjs/event-emitter'
-import { Cron, CronExpression } from '@nestjs/schedule'
 import cluster from 'cluster'
-import COS from 'cos-nodejs-sdk-v5'
-import dayjs from 'dayjs'
 import { existsSync } from 'fs'
 import { readdir, rm } from 'fs/promises'
+import { join } from 'path'
+import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
+import { Cron, CronExpression } from '@nestjs/schedule'
+import COS from 'cos-nodejs-sdk-v5'
+import dayjs from 'dayjs'
 import mkdirp from 'mkdirp'
 import { InjectModel } from 'nestjs-typegoose'
-import { join } from 'path'
+import { CacheService } from '../cache/cache.service'
+import { HttpService } from './helper.http.service'
 import { isMainCluster } from '~/app.config'
 import { CronDescription } from '~/common/decorator/cron-description.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
@@ -23,8 +25,6 @@ import { PageService } from '~/modules/page/page.service'
 import { PostService } from '~/modules/post/post.service'
 import { SearchService } from '~/modules/search/search.service'
 import { getRedisKey } from '~/utils/redis.util'
-import { CacheService } from '../cache/cache.service'
-import { HttpService } from './helper.http.service'
 
 @Injectable()
 export class CronService {
@@ -185,7 +185,7 @@ export class CronService {
     mkdirp.sync(TEMP_DIR)
     this.logger.log('--> 清理临时文件成功')
   }
-  //“At 00:05.”
+  // “At 00:05.”
   @Cron('5 0 * * *', { name: 'cleanTempDirectory' })
   @CronDescription('清理日志文件')
   async cleanLogFile() {
@@ -241,7 +241,7 @@ export class CronService {
         this.logger.log(`百度站长提交结果: ${JSON.stringify(res.data)}`)
         return res.data
       } catch (e) {
-        this.logger.error('百度推送错误: ' + e.message)
+        this.logger.error(`百度推送错误: ${e.message}`)
         throw e
       }
     }

@@ -2,11 +2,11 @@ import { Injectable, Logger } from '@nestjs/common'
 import type { AxiosInstance } from 'axios'
 import axios from 'axios'
 import axiosRetry from 'axios-retry'
+import { version } from '../../../package.json'
+import { CacheService } from '../cache/cache.service'
 import { AXIOS_CONFIG } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils'
-import { version } from '../../../package.json'
-import { CacheService } from '../cache/cache.service'
 @Injectable()
 export class HttpService {
   private http: AxiosInstance
@@ -16,9 +16,7 @@ export class HttpService {
     this.http = axios.create({
       ...AXIOS_CONFIG,
       headers: {
-        'user-agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 MX-Space/' +
-          version,
+        'user-agent': `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 MX-Space/${version}`,
       },
     })
     axiosRetry(this.http, {

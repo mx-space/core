@@ -1,3 +1,5 @@
+import { resolve } from 'path'
+import { Readable } from 'stream'
 import {
   BadRequestException,
   Controller,
@@ -14,8 +16,7 @@ import { Reflector } from '@nestjs/core'
 import { SchedulerRegistry } from '@nestjs/schedule'
 import type { FastifyReply } from 'fastify'
 import { isFunction, isString } from 'lodash'
-import { resolve } from 'path'
-import { Readable } from 'stream'
+import { LogQueryDto, LogTypeDto } from './health.dto'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -25,7 +26,6 @@ import { SCHEDULE_CRON_OPTIONS } from '~/constants/system.constant'
 import { getTodayLogFilePath } from '~/global/consola.global'
 import { CronService } from '~/processors/helper/helper.cron.service'
 import { TaskQueueService } from '~/processors/helper/helper.tq.service'
-import { LogQueryDto, LogTypeDto } from './health.dto'
 @Controller({
   path: 'health',
   scope: Scope.REQUEST,
@@ -174,7 +174,7 @@ export class HealthController {
           throw new BadRequestException('log dir not exists')
         }
         const filename =
-          __filename ?? `mx-server-${type}${index === 0 ? '' : '-' + index}.log`
+          __filename ?? `mx-server-${type}${index === 0 ? '' : `-${index}`}.log`
         const logPath = path.join(logDir, filename)
         if (!fs.existsSync(logPath)) {
           throw new BadRequestException('log file not exists')

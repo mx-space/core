@@ -1,5 +1,7 @@
 import { Controller, Delete, Get, HttpCode, Query, Scope } from '@nestjs/common'
 import dayjs from 'dayjs'
+import { AnalyzeDto } from './analyze.dto'
+import { AnalyzeService } from './analyze.service'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -8,8 +10,6 @@ import { CacheService } from '~/processors/cache/cache.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { getRedisKey } from '~/utils/redis.util'
 import { getTodayEarly, getWeekStart } from '~/utils/time.util'
-import { AnalyzeDto } from './analyze.dto'
-import { AnalyzeService } from './analyze.service'
 
 @Controller({ path: 'analyze', scope: Scope.REQUEST })
 @ApiName
@@ -67,12 +67,12 @@ export class AnalyzeController {
         .map((v, i) => {
           return [
             {
-              hour: i + '时',
+              hour: `${i}时`,
               key: 'ip',
               value: day[i.toString().padStart(2, '0')]?.ip || 0,
             },
             {
-              hour: i + '时',
+              hour: `${i}时`,
               key: 'pv',
               value: day[i.toString().padStart(2, '0')]?.pv || 0,
             },
@@ -83,11 +83,11 @@ export class AnalyzeController {
       const weekData = all
         .slice(0, 7)
         .map((item) => {
-          const date =
-            '周' +
+          const date = `周${
             ['日', '一', '二', '三', '四', '五', '六'][
               dayjs(item.date).get('day')
             ]
+          }`
           return [
             {
               day: date,

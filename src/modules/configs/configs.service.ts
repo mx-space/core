@@ -1,3 +1,4 @@
+import cluster from 'cluster'
 import {
   BadRequestException,
   Injectable,
@@ -9,16 +10,10 @@ import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import camelcaseKeys from 'camelcase-keys'
 import { ClassConstructor, plainToInstance } from 'class-transformer'
-import { validateSync, ValidatorOptions } from 'class-validator'
-import cluster from 'cluster'
+import { ValidatorOptions, validateSync } from 'class-validator'
 import { cloneDeep, mergeWith } from 'lodash'
 import { LeanDocument } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
-import { RedisKeys } from '~/constants/cache.constant'
-import { EventBusEvents } from '~/constants/event.constant'
-import { CacheService } from '~/processors/cache/cache.service'
-import { sleep } from '~/utils'
-import { getRedisKey } from '~/utils/redis.util'
 import * as optionDtos from '../configs/configs.dto'
 import { UserModel } from '../user/user.model'
 import { UserService } from '../user/user.service'
@@ -29,6 +24,11 @@ import {
 } from './configs.dto'
 import { IConfig, IConfigKeys } from './configs.interface'
 import { OptionModel } from './configs.model'
+import { RedisKeys } from '~/constants/cache.constant'
+import { EventBusEvents } from '~/constants/event.constant'
+import { CacheService } from '~/processors/cache/cache.service'
+import { sleep } from '~/utils'
+import { getRedisKey } from '~/utils/redis.util'
 
 const allOptionKeys: Set<IConfigKeys> = new Set()
 const map: Record<string, any> = Object.entries(optionDtos).reduce(
@@ -50,7 +50,7 @@ const generateDefaultConfig: () => IConfig = () => ({
     description: '哈喽~欢迎光临',
   },
   url: {
-    wsUrl: '', //todo
+    wsUrl: '', // todo
     adminUrl: '',
     serverUrl: '',
     webUrl: '',

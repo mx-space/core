@@ -31,7 +31,7 @@ export function BaseCrudFactory<
 
   class Dto extends model {}
 
-  @ApiTags(tagPrefix + ' Routes')
+  @ApiTags(`${tagPrefix} Routes`)
   @Controller(pluralize(prefix))
   class BaseCrud {
     constructor(

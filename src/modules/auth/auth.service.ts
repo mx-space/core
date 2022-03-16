@@ -5,13 +5,13 @@ import dayjs from 'dayjs'
 import { isDate, omit } from 'lodash'
 import { customAlphabet } from 'nanoid/async'
 import { InjectModel } from 'nestjs-typegoose'
-import {
-  TokenModel,
-  UserDocument,
-  UserModel as User,
-} from '~/modules/user/user.model'
 import { TokenDto } from './auth.controller'
 import { JwtPayload } from './interfaces/jwt-payload.interface'
+import {
+  TokenModel,
+  UserModel as User,
+  UserDocument,
+} from '~/modules/user/user.model'
 
 @Injectable()
 export class AuthService {
@@ -53,11 +53,10 @@ export class AuthService {
 
   async generateAccessToken() {
     const ap = customAlphabet(
-      '1234567890' +
-        Array(26)
-          .fill(null)
-          .map((_, i) => String.fromCharCode(97 + i))
-          .join(''),
+      `1234567890${Array(26)
+        .fill(null)
+        .map((_, i) => String.fromCharCode(97 + i))
+        .join('')}`,
       40,
     )
     return await ap()

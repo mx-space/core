@@ -1,9 +1,13 @@
+import { URL } from 'url'
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import { LeanDocument, Types } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
-import { URL } from 'url'
+import { ConfigsService } from '../configs/configs.service'
+import { UserService } from '../user/user.service'
+import BlockedKeywords from './block-keywords.json'
+import { CommentModel, CommentRefTypes } from './comment.model'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
@@ -12,10 +16,6 @@ import {
 } from '~/processors/helper/helper.email.service'
 import { WriteBaseModel } from '~/shared/model/base.model'
 import { hasChinese } from '~/utils'
-import { ConfigsService } from '../configs/configs.service'
-import { UserService } from '../user/user.service'
-import BlockedKeywords from './block-keywords.json'
-import { CommentModel, CommentRefTypes } from './comment.model'
 @Injectable()
 export class CommentService {
   private readonly logger: Logger = new Logger(CommentService.name)
@@ -234,7 +234,7 @@ export class CommentService {
     } = await this.configs.waitForConfigReady()
     switch (type) {
       case CommentRefTypes.Note: {
-        return new URL('/notes/' + model.nid, base).toString()
+        return new URL(`/notes/${model.nid}`, base).toString()
       }
       case CommentRefTypes.Page: {
         return new URL(`/${model.slug}`, base).toString()

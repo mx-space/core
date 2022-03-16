@@ -1,18 +1,11 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
-import { OnEvent } from '@nestjs/event-emitter'
-import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
-import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
-import dayjs from 'dayjs'
-import { pick } from 'lodash'
-import { FilterQuery } from 'mongoose'
 import { URL } from 'url'
-import { CacheKeys, RedisKeys } from '~/constants/cache.constant'
-import { EventBusEvents } from '~/constants/event.constant'
-import { CacheService } from '~/processors/cache/cache.service'
-import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
-import { addYearCondition } from '~/utils/query.util'
-import { getRedisKey } from '~/utils/redis.util'
-import { getShortDate } from '~/utils/time.util'
+import { FilterQuery } from 'mongoose'
+import { pick } from 'lodash'
+import dayjs from 'dayjs'
+import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
+import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+import { OnEvent } from '@nestjs/event-emitter'
+import { Inject, Injectable, forwardRef } from '@nestjs/common'
 import { CategoryModel } from '../category/category.model'
 import { CategoryService } from '../category/category.service'
 import { CommentState } from '../comment/comment.model'
@@ -28,6 +21,13 @@ import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
 import { TimelineType } from './aggregate.dto'
 import { RSSProps } from './aggregate.interface'
+import { getShortDate } from '~/utils/time.util'
+import { getRedisKey } from '~/utils/redis.util'
+import { addYearCondition } from '~/utils/query.util'
+import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
+import { CacheService } from '~/processors/cache/cache.service'
+import { CacheKeys, RedisKeys } from '~/constants/cache.constant'
+import { EventBusEvents } from '~/constants/event.constant'
 @Injectable()
 export class AggregateService {
   constructor(
@@ -138,10 +138,7 @@ export class AggregateService {
             //     ? item.text.slice(0, 150) + '...'
             //     : item.text),
             url: encodeURI(
-              '/posts/' +
-                (item.category as CategoryModel).slug +
-                '/' +
-                item.slug,
+              `/posts/${(item.category as CategoryModel).slug}/${item.slug}`,
             ),
           })),
         )
@@ -296,7 +293,7 @@ export class AggregateService {
         text: isSecret ? '这篇文章暂时没有公开呢' : note.text,
         created: note.created,
         modified: note.modified,
-        link: new URL('/notes/' + note.nid, baseURL).toString(),
+        link: new URL(`/notes/${note.nid}`, baseURL).toString(),
       }
     })
     return postsRss

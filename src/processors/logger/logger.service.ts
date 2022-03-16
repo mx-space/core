@@ -1,7 +1,7 @@
 /* eslint-disable prefer-rest-params */
-import { ConsoleLogger, ConsoleLoggerOptions } from '@nestjs/common'
 import cluster from 'cluster'
 import { performance } from 'perf_hooks'
+import { ConsoleLogger, ConsoleLoggerOptions } from '@nestjs/common'
 
 export class MyLogger extends ConsoleLogger {
   constructor(context?: string, options?: ConsoleLoggerOptions) {
@@ -76,10 +76,10 @@ export class MyLogger extends ConsoleLogger {
     if (context && !argv.length) {
       print(`${workerPrefix} [${chalk.yellow(context)}] `, formatMessage, diff)
     } else if (!argv.length) {
-      print(`${workerPrefix} ` + this.defaultContextPrefix, formatMessage, diff)
+      print(`${workerPrefix} ${this.defaultContextPrefix}`, formatMessage, diff)
     } else {
       print(
-        `${workerPrefix} ` + this.defaultContextPrefix,
+        `${workerPrefix} ${this.defaultContextPrefix}`,
         message,
         context,
         ...argv,

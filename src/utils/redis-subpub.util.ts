@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common'
 import IORedis from 'ioredis'
-import { REDIS } from '~/app.config'
 import { isTest } from '../global/env.global'
+import { REDIS } from '~/app.config'
 class RedisSubPub {
   public pubClient: IORedis.Redis
   public subClient: IORedis.Redis
@@ -23,7 +23,7 @@ class RedisSubPub {
     const channel = this.channelPrefix + event
     const _data = JSON.stringify(data)
     if (event !== 'log') {
-      Logger.debug(`发布事件：${channel} <- ` + _data, RedisSubPub.name)
+      Logger.debug(`发布事件：${channel} <- ${_data}`, RedisSubPub.name)
     }
     await this.pubClient.publish(channel, _data)
   }
@@ -37,7 +37,7 @@ class RedisSubPub {
     const cb = (channel, message) => {
       if (channel === myChannel) {
         if (event !== 'log') {
-          Logger.debug(`接收事件：${channel} -> ` + message, RedisSubPub.name)
+          Logger.debug(`接收事件：${channel} -> ${message}`, RedisSubPub.name)
         }
         callback(JSON.parse(message))
       }

@@ -13,6 +13,14 @@ import {
   Query,
 } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
+import {
+  ListQueryDto,
+  NidType,
+  NoteQueryDto,
+  PasswordQueryDto,
+} from './note.dto'
+import { NoteModel, PartialNoteModel } from './note.model'
+import { NoteService } from './note.service'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
@@ -26,14 +34,6 @@ import {
   addHidePasswordAndHideCondition,
   addYearCondition,
 } from '~/utils/query.util'
-import {
-  ListQueryDto,
-  NidType,
-  NoteQueryDto,
-  PasswordQueryDto,
-} from './note.dto'
-import { NoteModel, PartialNoteModel } from './note.model'
-import { NoteService } from './note.service'
 
 @ApiName
 @Controller({ path: 'notes' })
@@ -54,7 +54,7 @@ export class NoteController {
       isMaster ? '+location +coordinates' : '-location -coordinates',
     )
 
-    return { data: latest, next: next }
+    return { data: latest, next }
   }
 
   @Get('/')
@@ -92,7 +92,7 @@ export class NoteController {
         _id: id,
         ...condition,
       })
-      .select('+password ' + (isMaster ? '+location +coordinates' : ''))
+      .select(`+password ${isMaster ? '+location +coordinates' : ''}`)
       .lean()
     if (!current) {
       throw new CannotFindException()

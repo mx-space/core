@@ -9,12 +9,12 @@ import { ReturnModelType } from '@typegoose/typegoose'
 import { compareSync } from 'bcrypt'
 import { nanoid } from 'nanoid'
 import { InjectModel } from 'nestjs-typegoose'
+import { AuthService } from '../auth/auth.service'
+import { UserDocument, UserModel } from './user.model'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getAvatar, sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
-import { AuthService } from '../auth/auth.service'
-import { UserDocument, UserModel } from './user.model'
 
 @Injectable()
 export class UserService {
@@ -45,7 +45,7 @@ export class UserService {
   async getMasterInfo(getLoginIp = false) {
     const user = await this.userModel
       .findOne()
-      .select('-authCode' + (getLoginIp ? ' +lastLoginIp' : ''))
+      .select(`-authCode${getLoginIp ? ' +lastLoginIp' : ''}`)
       .lean({ virtuals: true })
     if (!user) {
       throw new BadRequestException('没有完成初始化!')
@@ -137,7 +137,7 @@ export class UserService {
       )
     })
 
-    this.Logger.warn('主人已登录, IP: ' + ip)
+    this.Logger.warn(`主人已登录, IP: ${ip}`)
     return PrevFootstep
   }
 

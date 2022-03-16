@@ -1,4 +1,4 @@
-import { applyDecorators, Controller } from '@nestjs/common'
+import { Controller, applyDecorators } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { Auth } from '~/common/decorator/auth.decorator'
 
@@ -7,8 +7,8 @@ export function OptionController(name?: string, postfixRoute?: string) {
   return applyDecorators(
     Auth(),
     Controller(
-      postfixRoute ? routes.map((route) => route + '/' + postfixRoute) : routes,
+      postfixRoute ? routes.map((route) => `${route}/${postfixRoute}`) : routes,
     ),
-    ApiTags(`${name ? name + ' ' : ''}Option Routes`),
+    ApiTags(`${name ? `${name} ` : ''}Option Routes`),
   )
 }

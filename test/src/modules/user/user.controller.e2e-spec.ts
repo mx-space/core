@@ -33,7 +33,7 @@ describe('AppController (e2e)', () => {
           provide: AuthService,
           useValue: {
             signToken(val) {
-              return '' + val
+              return `${val}`
             },
           },
         },

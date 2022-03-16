@@ -1,21 +1,21 @@
 import {
   BadRequestException,
-  forwardRef,
   Inject,
   Injectable,
+  forwardRef,
 } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { isDefined } from 'class-validator'
 import { omit } from 'lodash'
 import { FilterQuery, PaginateOptions } from 'mongoose'
 import { InjectModel } from 'nestjs-typegoose'
+import { CategoryService } from '../category/category.service'
+import { CommentModel } from '../comment/comment.model'
+import { PostModel } from './post.model'
 import { EventBusEvents } from '~/constants/event.constant'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { ImageService } from '~/processors/helper/helper.image.service'
-import { CategoryService } from '../category/category.service'
-import { CommentModel } from '../comment/comment.model'
-import { PostModel } from './post.model'
 
 @Injectable()
 export class PostService {

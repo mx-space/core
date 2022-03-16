@@ -5,5 +5,5 @@ export const ApiName: ClassDecorator = (target) => {
     return
   }
   const [name] = target.name.split('Controller')
-  ApiTags(name + ' Routes').call(null, target)
+  ApiTags(`${name} Routes`).call(null, target)
 }

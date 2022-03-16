@@ -6,10 +6,10 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets'
 import { Namespace, Socket } from 'socket.io'
-import { EventBusEvents } from '~/constants/event.constant'
-import { AuthService } from '~/modules/auth/auth.service'
 import { BaseGateway } from '../base.gateway'
 import { EventTypes } from '../events.types'
+import { EventBusEvents } from '~/constants/event.constant'
+import { AuthService } from '~/modules/auth/auth.service'
 
 export abstract class AuthGateway
   extends BaseGateway

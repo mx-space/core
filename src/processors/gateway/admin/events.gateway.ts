@@ -1,3 +1,4 @@
+import { resolve } from 'path'
 import { JwtService } from '@nestjs/jwt'
 import {
   GatewayMetadata,
@@ -7,14 +8,13 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets'
 import { Emitter } from '@socket.io/redis-emitter'
-import { resolve } from 'path'
 import SocketIO, { Socket } from 'socket.io'
-import { LOG_DIR } from '~/constants/path.constant'
-import { getTodayLogFilePath } from '~/global/consola.global'
-import { CacheService } from '~/processors/cache/cache.service'
 import { AuthService } from '../../../modules/auth/auth.service'
 import { EventTypes } from '../events.types'
 import { AuthGateway } from './auth.gateway'
+import { LOG_DIR } from '~/constants/path.constant'
+import { getTodayLogFilePath } from '~/global/consola.global'
+import { CacheService } from '~/processors/cache/cache.service'
 
 @WebSocketGateway<GatewayMetadata>({ namespace: 'admin' })
 export class AdminEventsGateway

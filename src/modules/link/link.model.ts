@@ -1,3 +1,4 @@
+import { URL } from 'url'
 import { ApiProperty } from '@nestjs/swagger'
 import { modelOptions, prop } from '@typegoose/typegoose'
 import { Transform } from 'class-transformer'
@@ -10,7 +11,6 @@ import {
   MaxLength,
 } from 'class-validator'
 import { range } from 'lodash'
-import { URL } from 'url'
 import { BaseModel } from '~/shared/model/base.model'
 
 export enum LinkType {

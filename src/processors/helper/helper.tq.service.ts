@@ -1,8 +1,8 @@
+import { isAsyncFunction } from 'util/types'
 import { Injectable } from '@nestjs/common'
 import IORedis from 'ioredis'
-import { isAsyncFunction } from 'util/types'
-import { safeJSONParse } from '~/utils'
 import { CacheService } from '../cache/cache.service'
+import { safeJSONParse } from '~/utils'
 
 type ITask = RedisMap<
   string,
@@ -64,7 +64,7 @@ class RedisMap<K extends string, V = unknown> {
     private readonly redis: IORedis.Redis,
     private readonly hashName: string,
   ) {
-    this.hashName = RedisMap.key + `${hashName}#`
+    this.hashName = `${RedisMap.key}${hashName}#`
   }
 
   static key = 'redis-map#'

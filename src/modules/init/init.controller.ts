@@ -9,10 +9,10 @@ import {
   Scope,
   UnprocessableEntityException,
 } from '@nestjs/common'
-import { ApiName } from '~/common/decorator/openapi.decorator'
 import { ConfigsService } from '../configs/configs.service'
 import { ConfigKeyDto } from '../option/dtos/config.dto'
 import { InitService } from './init.service'
+import { ApiName } from '~/common/decorator/openapi.decorator'
 
 @Controller({
   path: '/init',

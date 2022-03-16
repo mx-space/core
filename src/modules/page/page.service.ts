@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common'
 import { isDefined } from 'class-validator'
 import { omit } from 'lodash'
 import { InjectModel } from 'nestjs-typegoose'
+import { PageModel } from './page.model'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { ImageService } from '~/processors/helper/helper.image.service'
-import { PageModel } from './page.model'
 
 @Injectable()
 export class PageService {

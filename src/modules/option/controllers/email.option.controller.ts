@@ -1,11 +1,11 @@
 import { Body, Delete, Get, Put, Query } from '@nestjs/common'
+import { ReplyEmailBodyDto, ReplyEmailTypeDto } from '../dtos/email.dto'
+import { OptionController } from '../option.decorator'
 import {
   EmailService,
   EmailTemplateRenderProps,
   ReplyMailType,
 } from '~/processors/helper/helper.email.service'
-import { ReplyEmailBodyDto, ReplyEmailTypeDto } from '../dtos/email.dto'
-import { OptionController } from '../option.decorator'
 
 @OptionController('Email', 'email')
 export class EmailOptionController {

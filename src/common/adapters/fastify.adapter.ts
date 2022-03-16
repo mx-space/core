@@ -63,7 +63,7 @@ const logWarn = (desc: string, req: FastifyRequest, context: string) => {
   const ua = req.raw.headers['user-agent']
   Logger.warn(
     // prettier-ignore
-    desc + '\n' +
+    `${desc}\n` +
       `Path: ${req.url}\n` +
       `IP: ${getIp(req)}\n` +
       `UA: ${ua}`,

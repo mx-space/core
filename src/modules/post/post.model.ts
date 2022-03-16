@@ -2,12 +2,12 @@ import { PartialType } from '@nestjs/mapped-types'
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
 import {
   DocumentType,
+  Ref,
+  Severity,
   index,
   modelOptions,
   pre,
   prop,
-  Ref,
-  Severity,
 } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import {
@@ -19,9 +19,9 @@ import {
   IsString,
 } from 'class-validator'
 import { Query } from 'mongoose'
+import { CategoryModel as Category } from '../category/category.model'
 import { Paginator } from '~/shared/interface/paginator.interface'
 import { CountMixed as Count, WriteBaseModel } from '~/shared/model/base.model'
-import { CategoryModel as Category } from '../category/category.model'
 
 function autoPopulateCategory(
   this: Query<

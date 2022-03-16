@@ -1,10 +1,10 @@
+import { URL } from 'url'
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import jsdom from 'jsdom'
-import { URL } from 'url'
-import PKG from '~/../package.json'
-import { API_VERSION } from '~/app.config'
 import { ConfigsService } from '../configs/configs.service'
 import { InitService } from '../init/init.service'
+import PKG from '~/../package.json'
+import { API_VERSION } from '~/app.config'
 @Injectable()
 export class PageProxyService {
   constructor(
@@ -63,7 +63,7 @@ export class PageProxyService {
        BASE_API
          ? `window.injectData.BASE_API = '${BASE_API}'`
          : `window.injectData.BASE_API = location.origin + '${
-             !isDev ? '/api/v' + API_VERSION : ''
+             !isDev ? `/api/v${API_VERSION}` : ''
            }';`
      }
       ${

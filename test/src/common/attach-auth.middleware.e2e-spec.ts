@@ -49,11 +49,11 @@ describe('AuthMiddleware (e2e)', () => {
     app
       .inject({
         method: 'GET',
-        url: '/?token=Bearer ' + token,
+        url: `/?token=Bearer ${token}`,
       })
       .then(async (res) => {
         expect(res.statusCode).toBe(200)
-        expect(res.body).toBe('Bearer ' + token)
+        expect(res.body).toBe(`Bearer ${token}`)
       })
   })
 })

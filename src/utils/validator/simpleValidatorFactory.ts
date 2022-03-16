@@ -8,11 +8,11 @@
  */
 
 import {
-  registerDecorator,
   ValidationArguments,
   ValidationOptions,
   ValidatorConstraint,
   ValidatorConstraintInterface,
+  registerDecorator,
 } from 'class-validator'
 
 export function validatorFactory(validator: (value: any) => boolean) {
@@ -27,7 +27,7 @@ export function validatorFactory(validator: (value: any) => boolean) {
     return function (object: Object, propertyName: string) {
       registerDecorator({
         target: object.constructor,
-        propertyName: propertyName,
+        propertyName,
         options: validationOptions,
         constraints: [],
         validator: IsBooleanOrStringConstraint,

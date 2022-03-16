@@ -1,18 +1,18 @@
 import type { SearchResponse } from '@algolia/client-search'
 import {
   BadRequestException,
-  forwardRef,
   Inject,
   Injectable,
+  forwardRef,
 } from '@nestjs/common'
 import algoliasearch from 'algoliasearch'
+import { ConfigsService } from '../configs/configs.service'
+import { NoteService } from '../note/note.service'
+import { PostService } from '../post/post.service'
 import { SearchDto } from '~/modules/search/search.dto'
 import { DatabaseService } from '~/processors/database/database.service'
 import { Pagination } from '~/shared/interface/paginator.interface'
 import { transformDataToPaginate } from '~/utils/transfrom.util'
-import { ConfigsService } from '../configs/configs.service'
-import { NoteService } from '../note/note.service'
-import { PostService } from '../post/post.service'
 
 @Injectable()
 export class SearchService {

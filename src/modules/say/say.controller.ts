@@ -1,10 +1,10 @@
 import { Body, Delete, Get, Param, Post } from '@nestjs/common'
 import { sample } from 'lodash'
+import { SayModel } from './say.model'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { BaseCrudFactory } from '~/utils/crud.util'
-import { SayModel } from './say.model'
 
 export class SayController extends BaseCrudFactory({ model: SayModel }) {
   @Get('/random')

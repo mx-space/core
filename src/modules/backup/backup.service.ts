@@ -1,23 +1,23 @@
+import { exec } from 'child_process'
+import { existsSync, statSync } from 'fs'
+import { readFile, readdir, rm, writeFile } from 'fs/promises'
+import { join, resolve } from 'path'
+import { Readable } from 'stream'
+import { promisify } from 'util'
+import mkdirp from 'mkdirp'
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common'
-import { exec } from 'child_process'
-import { existsSync, statSync } from 'fs'
-import { readdir, readFile, rm, writeFile } from 'fs/promises'
-import mkdirp from 'mkdirp'
-import { join, resolve } from 'path'
-import { Readable } from 'stream'
-import { promisify } from 'util'
+import { ConfigsService } from '../configs/configs.service'
 import { MONGO_DB } from '~/app.config'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { getMediumDateTime } from '~/utils'
 import { getFolderSize } from '~/utils/system.util'
-import { ConfigsService } from '../configs/configs.service'
 
 @Injectable()
 export class BackupService {
@@ -94,12 +94,12 @@ export class BackupService {
       this.logger.log('--> 备份成功')
     } catch (e) {
       this.logger.error(
-        '--> 备份失败, 请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致, ' +
-          e.message || e.stderr,
+        `--> 备份失败, 请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致, ${e.message}` ||
+          e.stderr,
       )
       throw e
     }
-    const path = join(backupDirPath, 'backup-' + dateDir + '.zip')
+    const path = join(backupDirPath, `backup-${dateDir}.zip`)
 
     return {
       buffer: await readFile(path),
@@ -118,7 +118,7 @@ export class BackupService {
   }
 
   checkBackupExist(dirname: string) {
-    const path = join(BACKUP_DIR, dirname, 'backup-' + dirname + '.zip')
+    const path = join(BACKUP_DIR, dirname, `backup-${dirname}.zip`)
     if (!existsSync(path)) {
       throw new BadRequestException('文件不存在')
     }
