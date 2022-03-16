@@ -166,7 +166,7 @@
     "ioredis": "4.28.5",
     "jest": "27.5.1",
     "lint-staged": "12.3.6",
-    "prettier": "2.5.1",
+    "prettier": "2.6.0",
     "rimraf": "3.0.2",
     "run-script-webpack-plugin": "0.0.11",
     "semver": "*",
