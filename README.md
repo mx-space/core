@@ -64,6 +64,15 @@ wget https://cdn.jsdelivr.net/gh/mx-space/mx-server@master/docker-compose.yml
 docker-compose up -d
 ```
 
+## 开发环境
+
+```
+git clone https://github.com/mx-space/mx-server
+cd mx-server
+pnpm i
+pnpm dev
+```
+
 ## 项目结构
 
 ```
