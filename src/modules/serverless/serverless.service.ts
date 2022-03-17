@@ -268,6 +268,11 @@ export class ServerlessService {
       const allowedThirdPartLibs: UniqueArray<
         (keyof typeof PKG.dependencies)[]
       > = [
+        '@babel/core',
+        '@babel/types',
+        '@babel/plugin-transform-typescript',
+        '@innei/class-validator-jsonschema',
+        '@nestjs/event-emitter',
         'algoliasearch',
         'axios-retry',
         'axios',
@@ -294,7 +299,6 @@ export class ServerlessService {
       const trustPackagePrefixes = ['@innei/', '@mx-space/', 'mx-function-']
 
       if (
-        isDev ||
         allowedThirdPartLibs.includes(id as any) ||
         trustPackagePrefixes.some((prefix) => id.startsWith(prefix))
       ) {
