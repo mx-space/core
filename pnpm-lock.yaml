@@ -83,7 +83,7 @@ specifiers:
   js-yaml: '*'
   jsdom: 19.0.0
   jszip: 3.7.1
-  lint-staged: 12.3.6
+  lint-staged: 12.3.7
   lodash: '*'
   marked: 4.0.12
   mkdirp: '*'
@@ -228,7 +228,7 @@ devDependencies:
   i: 0.3.7
   ioredis: 4.28.5
   jest: 27.5.1_ts-node@10.7.0
-  lint-staged: 12.3.6
+  lint-staged: 12.3.7
   prettier: 2.6.0
   rimraf: 3.0.2
   run-script-webpack-plugin: 0.0.11
@@ -5807,8 +5807,8 @@ packages:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
     dev: true
 
-  /lint-staged/12.3.6:
-    resolution: {integrity: sha512-tVNyl/HsAnplKh4oaoRNzyZLm0PE/6VaBUXvd/gA9zhYCC/+ivZwiwpoT6jOxcLzuIOjP19wW+mfOi7/Bw4c1A==}
+  /lint-staged/12.3.7:
+    resolution: {integrity: sha512-/S4D726e2GIsDVWIk1XGvheCaDm1SJRQp8efamZFWJxQMVEbOwSysp7xb49Oo73KYCdy97mIWinhlxcoNqIfIQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     hasBin: true
     dependencies:
