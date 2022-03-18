@@ -64,7 +64,7 @@
   },
   "dependencies": {
     "@algolia/client-search": "*",
-    "@babel/core": "7.17.7",
+    "@babel/core": "7.17.8",
     "@babel/plugin-transform-typescript": "7.16.8",
     "@babel/types": "*",
     "@innei/class-validator-jsonschema": "3.1.1",
