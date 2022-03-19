@@ -21,6 +21,9 @@ import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { BaseModel } from '~/shared/model/base.model'
 
+export type BaseCrudModuleType<T> = {
+  _model: MongooseModel<T>
+}
 export function BaseCrudFactory<
   T extends AnyParamConstructor<BaseModel & { id?: string }>,
 >({ model }: { model: T }): Type<any> {

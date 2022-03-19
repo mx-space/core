@@ -93,4 +93,16 @@ export class AppController {
 
     return
   }
+
+  @Get('/clean_redis')
+  @HttpCache.disable
+  @Auth()
+  async cleanAllRedisKey() {
+    const redis = this.cacheService.getClient()
+    const keys: string[] = await redis.keys(getRedisKey('*'))
+
+    await Promise.all(keys.map((key) => redis.del(key)))
+
+    return
+  }
 }

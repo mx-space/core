@@ -8,15 +8,16 @@ import {
   Post,
   Query,
 } from '@nestjs/common'
+import type mongoose from 'mongoose'
 import { LinkQueryDto } from './link.dto'
-import { LinkModel } from './link.model'
+import { LinkModel, LinkState } from './link.model'
 import { LinkService } from './link.service'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { BaseCrudFactory } from '~/utils/crud.util'
+import { BaseCrudFactory, BaseCrudModuleType } from '~/utils/crud.util'
 
 const paths = ['links', 'friends']
 @Controller(paths)
@@ -26,15 +27,28 @@ export class LinkControllerCrud extends BaseCrudFactory({
 }) {
   @Get('/')
   @Paginator
-  async gets(@Query() pager: PagerDto, @IsMaster() isMaster: boolean) {
+  async gets(
+    this: BaseCrudModuleType<LinkModel>,
+    @Query() pager: PagerDto,
+    @IsMaster() isMaster: boolean,
+  ) {
     const { size, page, state } = pager
-    // @ts-ignore
+
     return await this._model.paginate(state !== undefined ? { state } : {}, {
       limit: size,
       page,
       sort: { created: -1 },
       select: isMaster ? '' : '-email',
     })
+  }
+
+  @Get('/all')
+  async getAll(this: BaseCrudModuleType<LinkModel>) {
+    // 过滤未通过审核的
+    const condition: mongoose.FilterQuery<LinkModel> = {
+      state: LinkState.Pass,
+    }
+    return await this._model.find(condition).sort({ created: -1 }).lean()
   }
 }
 
