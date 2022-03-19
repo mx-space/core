@@ -145,7 +145,7 @@
     "@types/ejs": "3.1.0",
     "@types/get-image-colors": "4.0.1",
     "@types/html-minifier": "4.0.2",
-    "@types/ioredis": "4.28.9",
+    "@types/ioredis": "4.28.10",
     "@types/jest": "27.4.1",
     "@types/js-yaml": "4.0.5",
     "@types/jsdom": "16.2.14",

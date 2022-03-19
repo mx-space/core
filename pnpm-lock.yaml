@@ -39,7 +39,7 @@ specifiers:
   '@types/ejs': 3.1.0
   '@types/get-image-colors': 4.0.1
   '@types/html-minifier': 4.0.2
-  '@types/ioredis': 4.28.9
+  '@types/ioredis': 4.28.10
   '@types/jest': 27.4.1
   '@types/js-yaml': 4.0.5
   '@types/jsdom': 16.2.14
@@ -208,7 +208,7 @@ devDependencies:
   '@types/ejs': 3.1.0
   '@types/get-image-colors': 4.0.1
   '@types/html-minifier': 4.0.2
-  '@types/ioredis': 4.28.9
+  '@types/ioredis': 4.28.10
   '@types/jest': 27.4.1
   '@types/js-yaml': 4.0.5
   '@types/jsdom': 16.2.14
@@ -1760,8 +1760,8 @@ packages:
       '@types/uglify-js': 3.13.1
     dev: true
 
-  /@types/ioredis/4.28.9:
-    resolution: {integrity: sha512-0uclpMv1u5MeDohCnAvT8FPvCQt9WprBJRFhAatuaRDJpELzHyDg8bV+MCclFfYz0nAbVNO0xoWsud2/NhOJWg==}
+  /@types/ioredis/4.28.10:
+    resolution: {integrity: sha512-69LyhUgrXdgcNDv7ogs1qXZomnfOEnSmrmMFqKgt1XMJxmoOSG/u3wYy13yACIfKuMJ8IhKgHafDO3sx19zVQQ==}
     dependencies:
       '@types/node': 16.11.26
     dev: true
