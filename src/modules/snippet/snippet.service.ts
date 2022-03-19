@@ -45,6 +45,9 @@ export class SnippetService {
     await this.validateType(model)
     delete model.created
     const old = await this.model.findById(id).lean()
+    if (!old) {
+      throw new NotFoundException()
+    }
     await this.deleteCachedSnippet(old.reference, old.name)
     return await this.model.findByIdAndUpdate(
       id,
@@ -161,6 +164,9 @@ export class SnippetService {
   }
   async deleteCachedSnippet(reference: string, name: string) {
     const key = `${reference}:${name}`
+
+    console.log(key)
+
     const client = this.cacheService.getClient()
     await client.hdel(getRedisKey(RedisKeys.SnippetCache), key)
   }
