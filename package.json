@@ -129,7 +129,7 @@
     "ua-parser-js": "1.0.2",
     "vm2": "3.9.9",
     "xss": "1.0.11",
-    "zx": "4.3.0"
+    "zx": "6.0.6"
   },
   "devDependencies": {
     "@babel__types@*": "link:@types/@babel__types@*",
