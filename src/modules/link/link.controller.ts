@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   HttpCode,
   Param,
@@ -9,6 +10,7 @@ import {
   Query,
 } from '@nestjs/common'
 import type mongoose from 'mongoose'
+import { get } from 'lodash'
 import { LinkQueryDto } from './link.dto'
 import { LinkModel, LinkState } from './link.model'
 import { LinkService } from './link.service'
@@ -57,6 +59,13 @@ export class LinkControllerCrud extends BaseCrudFactory({
 export class LinkController {
   constructor(private readonly linkService: LinkService) {}
 
+  @Get('/audit')
+  async canApplyLink() {
+    return {
+      can: await this.linkService.canApplyLink(),
+    }
+  }
+
   @Get('/state')
   @Auth()
   async getLinkCount() {
@@ -67,6 +76,9 @@ export class LinkController {
   @Post('/audit')
   @HttpCode(204)
   async applyForLink(@Body() body: LinkModel, @Query() query: LinkQueryDto) {
+    if (!(await this.linkService.canApplyLink())) {
+      throw new ForbiddenException('主人目前不允许申请友链了！')
+    }
     await this.linkService.applyForLink(body)
     process.nextTick(async () => {
       await this.linkService.sendToMaster(query.author, body)

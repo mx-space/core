@@ -57,6 +57,7 @@ const generateDefaultConfig: () => IConfig = () => ({
   },
   mailOptions: {} as MailOptionsDto,
   commentOptions: { antiSpam: false },
+  friendLinkOptions: { allowApply: true },
   backupOptions: { enable: true } as BackupOptionsDto,
   baiduSearchOptions: { enable: false },
   algoliaSearchOptions: { enable: false, apiKey: '', appId: '', indexName: '' },

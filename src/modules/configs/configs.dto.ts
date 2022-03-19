@@ -244,3 +244,11 @@ export class TerminalOptionsDto {
   @JSONSchemaPlainField('前置脚本')
   script?: string
 }
+
+@JSONSchema({ title: '友链设定' })
+export class FriendLinkOptionsDto {
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('允许申请友链')
+  allowApply: boolean
+}

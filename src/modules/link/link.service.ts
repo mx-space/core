@@ -161,4 +161,10 @@ export class LinkService {
 
     return health
   }
+
+  async canApplyLink() {
+    const configs = await this.configs.get('friendLinkOptions')
+    const can = configs.allowApply
+    return can
+  }
 }

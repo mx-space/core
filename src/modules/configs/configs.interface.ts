@@ -7,6 +7,7 @@ import {
   BackupOptionsDto,
   BaiduSearchOptionsDto,
   CommentOptionsDto,
+  FriendLinkOptionsDto,
   MailOptionsDto,
   SeoDto,
   TerminalOptionsDto,
@@ -28,6 +29,9 @@ export abstract class IConfig {
   @Type(() => CommentOptionsDto)
   @ValidateNested()
   commentOptions: CommentOptionsDto
+  @Type(() => FriendLinkOptionsDto)
+  @ValidateNested()
+  friendLinkOptions: FriendLinkOptionsDto
   @Type(() => BackupOptionsDto)
   @ValidateNested()
   backupOptions: BackupOptionsDto
