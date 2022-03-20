@@ -32,7 +32,7 @@ specifiers:
   '@socket.io/redis-emitter': 4.1.1
   '@typegoose/auto-increment': 1.2.0
   '@typegoose/typegoose': 9.7.0
-  '@types/babel__core': 7.1.18
+  '@types/babel__core': 7.1.19
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.3
   '@types/cron': 1.7.3
@@ -201,7 +201,7 @@ devDependencies:
   '@nestjs/cli': 8.2.3
   '@nestjs/schematics': 8.0.8_typescript@4.6.2
   '@nestjs/testing': 8.4.1_214a294e539403889bf33d78c1f08a26
-  '@types/babel__core': 7.1.18
+  '@types/babel__core': 7.1.19
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.3
   '@types/cron': 1.7.3
@@ -673,12 +673,6 @@ packages:
       '@babel/helper-validator-identifier': 7.16.7
       chalk: 2.4.2
       js-tokens: 4.0.0
-
-  /@babel/parser/7.17.3:
-    resolution: {integrity: sha512-7yJPvPV+ESz2IUTPbOL+YkIGyCqOyNIzdguKQuJGnH7bg1WTIifuM21YqokFt/THWh1AkCRn9IgoykTRCBVpzA==}
-    engines: {node: '>=6.0.0'}
-    hasBin: true
-    dev: true
 
   /@babel/parser/7.17.8:
     resolution: {integrity: sha512-BoHhDJrJXqcg+ZL16Xv39H9n+AqJ4pcDrQBGZN+wHxIysrLZ3/ECwCBUch/1zUNhnsXULcONU3Ei5Hmkfk6kiQ==}
@@ -1623,10 +1617,10 @@ packages:
       tslib: 2.3.1
     dev: false
 
-  /@types/babel__core/7.1.18:
-    resolution: {integrity: sha512-S7unDjm/C7z2A2R9NzfKCK1I+BAALDtxEmsJBwlB3EzNfb929ykjL++1CK9LO++EIp2fQrC8O+BwjKvz6UeDyQ==}
+  /@types/babel__core/7.1.19:
+    resolution: {integrity: sha512-WEOTgRsbYkvA/KCsDwVEGkd7WAr1e3g31VHQ8zy5gul/V1qKullU/BU5I68X5v7V3GnB9eotmom4v5a5gjxorw==}
     dependencies:
-      '@babel/parser': 7.17.3
+      '@babel/parser': 7.17.8
       '@babel/types': 7.17.0
       '@types/babel__generator': 7.6.4
       '@types/babel__template': 7.4.1
@@ -1642,7 +1636,7 @@ packages:
   /@types/babel__template/7.4.1:
     resolution: {integrity: sha512-azBFKemX6kMg5Io+/rdGT0dkGreboUVR0Cdm3fz9QJWpaQGJRQXl7C+6hOTCZcMll7KFyEQpgbYI2lHdsS4U7g==}
     dependencies:
-      '@babel/parser': 7.17.3
+      '@babel/parser': 7.17.8
       '@babel/types': 7.17.0
     dev: true
 
@@ -2625,7 +2619,7 @@ packages:
       '@babel/core': 7.17.8
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/babel__core': 7.1.18
+      '@types/babel__core': 7.1.19
       babel-plugin-istanbul: 6.1.1
       babel-preset-jest: 27.5.1_@babel+core@7.17.8
       chalk: 4.1.2
@@ -2654,7 +2648,7 @@ packages:
     dependencies:
       '@babel/template': 7.16.7
       '@babel/types': 7.17.0
-      '@types/babel__core': 7.1.18
+      '@types/babel__core': 7.1.19
       '@types/babel__traverse': 7.14.2
     dev: true
 
