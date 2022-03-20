@@ -2,6 +2,7 @@ import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 import { Redis } from 'ioredis'
 import type { RedisSubPub } from '../../utils/redis-subpub.util'
+import { getRedisKey } from '~/utils/redis.util'
 
 // Cache 客户端管理器
 
@@ -66,5 +67,22 @@ export class CacheService {
 
   public getClient() {
     return this.redisClient
+  }
+
+  public async cleanCatch() {
+    const redis = this.getClient()
+    const keys: string[] = await redis.keys('mx-api-cache:*')
+    await Promise.all(keys.map((key) => redis.del(key)))
+
+    return
+  }
+
+  public async cleanAllRedisKey() {
+    const redis = this.getClient()
+    const keys: string[] = await redis.keys(getRedisKey('*'))
+
+    await Promise.all(keys.map((key) => redis.del(key)))
+
+    return
   }
 }

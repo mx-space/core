@@ -1,7 +1,7 @@
 import { ModelType } from '@typegoose/typegoose/lib/types'
 import { Consola } from 'consola'
 import { Document, PaginateModel } from 'mongoose'
-import 'zx/globals'
+import 'zx-cjs/globals'
 declare global {
   export type KV<T = any> = Record<string, T>
 

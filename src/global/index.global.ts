@@ -1,5 +1,5 @@
 /* eslint-disable import/order */
-import 'zx/globals'
+import 'zx-cjs/globals'
 import './dayjs.global'
 import { consola, registerStdLogger } from './consola.global'
 

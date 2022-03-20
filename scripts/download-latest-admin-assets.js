@@ -1,7 +1,7 @@
 #!env node
 const { createWriteStream, writeFileSync } = require('fs')
 const { join } = require('path')
-const { fetch, $ } = require('zx')
+const { fetch, $ } = require('zx-cjs')
 const {
   dashboard: { repo, version },
 } = require('../package.json')

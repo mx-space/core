@@ -1,4 +1,4 @@
-const { registerGlobals } = require('zx')
+const { registerGlobals } = require('zx-cjs')
 registerGlobals()
 const globals = { consola: console, isDev: true }
 

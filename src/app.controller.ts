@@ -87,10 +87,7 @@ export class AppController {
   @HttpCache.disable
   @Auth()
   async cleanCatch() {
-    const redis = this.cacheService.getClient()
-    const keys: string[] = await redis.keys('mx-api-cache:*')
-    await Promise.all(keys.map((key) => redis.del(key)))
-
+    await this.cacheService.cleanCatch()
     return
   }
 
@@ -98,11 +95,7 @@ export class AppController {
   @HttpCache.disable
   @Auth()
   async cleanAllRedisKey() {
-    const redis = this.cacheService.getClient()
-    const keys: string[] = await redis.keys(getRedisKey('*'))
-
-    await Promise.all(keys.map((key) => redis.del(key)))
-
+    await this.cacheService.cleanAllRedisKey()
     return
   }
 }

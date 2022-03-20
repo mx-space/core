@@ -1,6 +1,6 @@
 #!/usr/bin/env zx
 // @ts-check
-const { cd, $, os, fs, path, fetch, nothrow, sleep } = require('zx')
+const { cd, $, os, fs, path, fetch, nothrow, sleep } = require('zx-cjs')
 const { homedir } = os
 const { repository } = require('../package.json')
 
@@ -35,7 +35,7 @@ async function main() {
   }
 
   const buffer = await fetch(
-    'https://small-lake-9960.tukon479.workers.dev/' + downloadUrl,
+    `https://small-lake-9960.tukon479.workers.dev/${downloadUrl}`,
   ).then((res) => res.buffer())
   const tmpName = (Math.random() * 10).toString(16)
   fs.writeFileSync(`/tmp/${tmpName}.zip`, buffer, { flag: 'w' })

@@ -47,7 +47,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       (exception as myError)?.message ||
       ''
     if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
-      message && Logger.debug(message, undefined, 'Catch')
+      // message && Logger.debug(message, undefined, 'Catch')
       Logger.error(exception, undefined, 'Catch')
 
       if (!isDev) {

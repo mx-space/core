@@ -1,5 +1,5 @@
 import cluster from 'cluster'
-import { argv } from 'zx'
+import { argv } from 'zx-cjs'
 import { isDev, isTest } from './global/env.global'
 
 export const PORT = argv.port || process.env.PORT || 2333
