@@ -1,5 +1,5 @@
 import { existsSync, statSync } from 'fs'
-import { copyFile, cp, readFile, readdir, rm, writeFile } from 'fs/promises'
+import { readFile, readdir, rm, writeFile } from 'fs/promises'
 import { join, resolve } from 'path'
 import { Readable } from 'stream'
 import mkdirp from 'mkdirp'
@@ -9,16 +9,15 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common'
-import { promiseImpl } from 'ejs'
 import { quiet } from 'zx-cjs'
 import { ConfigsService } from '../configs/configs.service'
 import { MONGO_DB } from '~/app.config'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
+import { CacheService } from '~/processors/cache/cache.service'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { getMediumDateTime } from '~/utils'
 import { getFolderSize } from '~/utils/system.util'
-import { CacheService } from '~/processors/cache/cache.service'
 
 @Injectable()
 export class BackupService {
