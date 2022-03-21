@@ -1,10 +1,9 @@
 import { Global, Module } from '@nestjs/common'
-import { TypegooseModule } from 'nestjs-typegoose'
 import { CategoryModel } from '../../modules/category/category.model'
 import { PostModel } from '../../modules/post/post.model'
 import { UserModel } from '../../modules/user/user.model'
+import { databaseProvider } from './database.provider'
 import { DatabaseService } from './database.service'
-import { MONGO_DB } from '~/app.config'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { CommentModel } from '~/modules/comment/comment.model'
 import { OptionModel } from '~/modules/configs/configs.model'
@@ -15,8 +14,9 @@ import { ProjectModel } from '~/modules/project/project.model'
 import { RecentlyModel } from '~/modules/recently/recently.model'
 import { SayModel } from '~/modules/say/say.model'
 import { SnippetModel } from '~/modules/snippet/snippet.model'
+import { getProviderByTypegooseClass } from '~/transformers/model.transformer'
 
-const models = TypegooseModule.forFeature([
+const models = [
   AnalyzeModel,
   CategoryModel,
   CommentModel,
@@ -30,19 +30,10 @@ const models = TypegooseModule.forFeature([
   SayModel,
   SnippetModel,
   UserModel,
-])
+].map((model) => getProviderByTypegooseClass(model))
 @Module({
-  imports: [
-    TypegooseModule.forRootAsync({
-      useFactory: () => ({
-        uri: MONGO_DB.uri,
-        autoIndex: true,
-      }),
-    }),
-    models,
-  ],
-  providers: [DatabaseService],
-  exports: [models, DatabaseService],
+  providers: [DatabaseService, databaseProvider, ...models],
+  exports: [DatabaseService, databaseProvider, ...models],
 })
 @Global()
 export class DatabaseModule {}

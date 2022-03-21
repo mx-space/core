@@ -11,13 +11,13 @@ import {
 import { Interval } from '@nestjs/schedule'
 import { isURL } from 'class-validator'
 import { cloneDeep } from 'lodash'
-import { InjectModel } from 'nestjs-typegoose'
 import PKG from '../../../package.json'
 import { SnippetModel } from '../snippet/snippet.model'
 import {
   FunctionContextRequest,
   FunctionContextResponse,
 } from './function.types'
+import { InjectModel } from '~/transformers/model.transformer'
 import { RedisKeys } from '~/constants/cache.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { CacheService } from '~/processors/cache/cache.service'

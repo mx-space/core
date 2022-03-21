@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { InjectModel } from 'nestjs-typegoose'
 import { RecentlyModel } from './recently.model'
+import { InjectModel } from '~/transformers/model.transformer'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 

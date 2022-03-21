@@ -1,10 +1,11 @@
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
-import { getModelToken } from 'nestjs-typegoose'
+
 import { AppController } from '~/app.controller'
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { CacheService } from '~/processors/cache/cache.service'
+import { getModelToken } from '~/transformers/model.transformer'
 describe('AppController (e2e)', () => {
   let app: NestFastifyApplication
 

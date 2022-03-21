@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { InjectModel } from 'nestjs-typegoose'
 import { CacheService } from '../cache/cache.service'
 import { DatabaseService } from '../database/database.service'
+import { InjectModel } from '~/transformers/model.transformer'
 import { ArticleType } from '~/constants/article.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { NoteModel } from '~/modules/note/note.model'

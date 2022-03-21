@@ -4,9 +4,9 @@ import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import dayjs from 'dayjs'
 import { isDate, omit } from 'lodash'
 import { customAlphabet } from 'nanoid/async'
-import { InjectModel } from 'nestjs-typegoose'
 import { TokenDto } from './auth.controller'
 import { JwtPayload } from './interfaces/jwt-payload.interface'
+import { InjectModel } from '~/transformers/model.transformer'
 import {
   TokenModel,
   UserModel as User,

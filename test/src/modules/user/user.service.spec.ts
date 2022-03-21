@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import { getModelToken } from 'nestjs-typegoose'
+import { getModelToken } from '~/transformers/model.transformer'
 import { AuthService } from '~/modules/auth/auth.service'
 import { UserModel } from '~/modules/user/user.model'
 import { UserService } from '~/modules/user/user.service'

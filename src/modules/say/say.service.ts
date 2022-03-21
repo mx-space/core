@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { InjectModel } from 'nestjs-typegoose'
 import { SayModel } from './say.model'
+import { InjectModel } from '~/transformers/model.transformer'
 
 @Injectable()
 export class SayService {

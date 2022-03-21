@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing'
-import { getModelToken } from 'nestjs-typegoose'
+import { getModelToken } from '~/transformers/model.transformer'
 import { CategoryModel } from '~/modules/category/category.model'
 import { MarkdownService } from '~/modules/markdown/markdown.service'
 import { NoteModel } from '~/modules/note/note.model'

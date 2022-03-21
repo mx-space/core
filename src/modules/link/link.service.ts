@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
-import { InjectModel } from 'nestjs-typegoose'
 import { ConfigsService } from '../configs/configs.service'
 import { LinkModel, LinkState, LinkType } from './link.model'
+import { InjectModel } from '~/transformers/model.transformer'
 import { isDev } from '~/global/env.global'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'

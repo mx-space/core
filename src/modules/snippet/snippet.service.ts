@@ -6,9 +6,9 @@ import {
   forwardRef,
 } from '@nestjs/common'
 import { load } from 'js-yaml'
-import { InjectModel } from 'nestjs-typegoose'
 import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetModel, SnippetType } from './snippet.model'
+import { InjectModel } from '~/transformers/model.transformer'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils'

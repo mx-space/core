@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
-import { getModelToken } from 'nestjs-typegoose'
 import { dbHelper } from 'test/helper/db-mock.helper'
+import { getModelToken } from '~/transformers/model.transformer'
 import { createMockedContextResponse } from '~/modules/serverless/mock-response.util'
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
