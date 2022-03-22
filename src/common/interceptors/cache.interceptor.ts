@@ -22,7 +22,7 @@ import { REDIS } from '~/app.config'
 import * as META from '~/constants/meta.constant'
 import * as SYSTEM from '~/constants/system.constant'
 import { CacheService } from '~/processors/cache/cache.service'
-import { getNestExecutionContextRequest } from '~/utils/nest.util'
+import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 /**
  * @class HttpCacheInterceptor
  * @classdesc 弥补框架不支持单独定义 ttl 参数以及单请求应用的缺陷

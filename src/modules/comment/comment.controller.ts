@@ -35,8 +35,7 @@ import { SharedGateway } from '~/processors/gateway/shared/events.gateway'
 import { ReplyMailType } from '~/processors/helper/helper.email.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { transformDataToPaginate } from '~/utils/transfrom.util'
-
+import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 @Controller({ path: 'comments' })
 @UseInterceptors(CommentFilterEmailInterceptor)
 @ApiName

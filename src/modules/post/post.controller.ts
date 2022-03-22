@@ -26,7 +26,7 @@ import { VisitDocument } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import { addYearCondition } from '~/utils/query.util'
+import { addYearCondition } from '~/transformers/db-query.transformer'
 
 @Controller('posts')
 @ApiName

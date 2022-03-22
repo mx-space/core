@@ -6,7 +6,8 @@ import {
 } from '@nestjs/common'
 import qs from 'qs'
 import { Observable } from 'rxjs'
-import { getNestExecutionContextRequest } from '~/utils'
+import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+
 /** 此拦截器用于转换 req.query.query -> js object，用于直接数据库查询，需要鉴权  */
 @Injectable()
 export class QueryInterceptor implements NestInterceptor {

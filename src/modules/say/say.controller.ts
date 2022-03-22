@@ -4,7 +4,7 @@ import { SayModel } from './say.model'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import { BaseCrudFactory } from '~/utils/crud.util'
+import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'
 
 export class SayController extends BaseCrudFactory({ model: SayModel }) {
   @Get('/random')

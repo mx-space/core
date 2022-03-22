@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common'
 import { Observable } from 'rxjs'
 import { isDev } from '~/global/env.global'
-import { getNestExecutionContextRequest } from '~/utils/nest.util'
+import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 @Injectable()
 export class SpiderGuard implements CanActivate {

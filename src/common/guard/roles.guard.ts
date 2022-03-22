@@ -8,7 +8,7 @@
  */
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { getNestExecutionContextRequest } from '~/utils/nest.util'
+import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 /**
  * 区分游客和主人的守卫

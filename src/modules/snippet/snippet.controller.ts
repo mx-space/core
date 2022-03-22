@@ -17,8 +17,7 @@ import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { transformDataToPaginate } from '~/utils/transfrom.util'
-
+import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 @ApiName
 @Controller('snippets')
 export class SnippetController {

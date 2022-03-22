@@ -12,7 +12,7 @@ import { PostService } from '../post/post.service'
 import { SearchDto } from '~/modules/search/search.dto'
 import { DatabaseService } from '~/processors/database/database.service'
 import { Pagination } from '~/shared/interface/paginator.interface'
-import { transformDataToPaginate } from '~/utils/transfrom.util'
+import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
 @Injectable()
 export class SearchService {

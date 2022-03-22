@@ -33,7 +33,7 @@ import { IntIdOrMongoIdDto, MongoIdDto } from '~/shared/dto/id.dto'
 import {
   addHidePasswordAndHideCondition,
   addYearCondition,
-} from '~/utils/query.util'
+} from '~/transformers/db-query.transformer'
 
 @ApiName
 @Controller({ path: 'notes' })

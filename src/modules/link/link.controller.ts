@@ -19,7 +19,10 @@ import { Paginator } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { BaseCrudFactory, BaseCrudModuleType } from '~/utils/crud.util'
+import {
+  BaseCrudFactory,
+  BaseCrudModuleType,
+} from '~/transformers/crud-factor.transformer'
 
 const paths = ['links', 'friends']
 @Controller(paths)

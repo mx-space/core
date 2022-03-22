@@ -20,7 +20,8 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { CacheService } from '~/processors/cache/cache.service'
-import { getNestExecutionContextRequest } from '~/utils'
+import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
 

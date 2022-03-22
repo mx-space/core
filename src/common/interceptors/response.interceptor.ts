@@ -14,8 +14,7 @@ import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 import { HTTP_RES_TRANSFORM_PAGINATE } from '~/constants/meta.constant'
 import * as SYSTEM from '~/constants/system.constant'
-import { transformDataToPaginate } from '~/utils/transfrom.util'
-
+import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 export interface Response<T> {
   data: T
 }
