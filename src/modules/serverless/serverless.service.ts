@@ -12,7 +12,6 @@ import {
 import { Interval } from '@nestjs/schedule'
 import { isURL } from 'class-validator'
 import { cloneDeep } from 'lodash'
-import xss from 'xss'
 import PKG from '../../../package.json'
 import { SnippetModel } from '../snippet/snippet.model'
 import {
@@ -191,9 +190,13 @@ export class ServerlessService {
     }
 
     return await safeEval(
-      `${await this.convertTypescriptCode(
-        functionString,
-      )}; return handler(context, require)`,
+      `async function func() {
+        ${await this.convertTypescriptCode(
+          functionString,
+        )}; return handler(context, require)
+      }
+      return func()
+      `,
       {
         ...globalContext,
         global: globalContext,

@@ -1,6 +1,6 @@
 import { safeEval } from '~/utils/safe-eval.util'
 
-describe.only('test safe-eval', () => {
+describe('test safe-eval', () => {
   it('should eval', () => {
     const res = safeEval(`return 1 + 2`)
     expect(res).toBe(3)

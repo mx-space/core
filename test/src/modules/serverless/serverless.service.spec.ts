@@ -140,4 +140,30 @@ describe('test serverless function service', () => {
       ).rejects.toThrow()
     })
   })
+
+  test('case-7: esm default import', async () => {
+    const model = new SnippetModel()
+    Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
+      type: SnippetType.Function,
+      raw: `import axios from 'axios';async function handler(context, require) { return axios }`,
+    })
+    const data = await service.injectContextIntoServerlessFunctionAndCall(
+      model,
+      { req: {} as any, res: {} as any },
+    )
+    expect(typeof data.get).toBe('function')
+  })
+
+  test('case-7: esm named import', async () => {
+    const model = new SnippetModel()
+    Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
+      type: SnippetType.Function,
+      raw: `import {get} from 'axios';async function handler(context, require) { return get }`,
+    })
+    const data = await service.injectContextIntoServerlessFunctionAndCall(
+      model,
+      { req: {} as any, res: {} as any },
+    )
+    expect(typeof data).toBe('function')
+  })
 })

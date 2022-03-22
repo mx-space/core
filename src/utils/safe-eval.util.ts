@@ -4,7 +4,7 @@ export function safeEval(code: string, context = {}) {
     global: {},
   }
 
-  code = `((async () => { ${code} })())`
+  code = `((() => { ${code} })())`
   if (context) {
     Object.keys(context).forEach((key) => {
       sandbox[key] = context[key]
