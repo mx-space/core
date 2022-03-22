@@ -275,7 +275,15 @@ export class ServerlessService {
       } else {
         this.requireModuleIdSet.add(require.resolve(id))
       }
-      return typeof module === 'function' ? module.bind() : cloneDeep(module)
+      const clonedModule = cloneDeep(module)
+      return typeof module === 'function'
+        ? (() => {
+            const newFunc = module.bind()
+
+            Object.setPrototypeOf(newFunc, clonedModule)
+            return newFunc
+          })()
+        : clonedModule
     }
 
     const __requireNoCache = (id: string) => {
