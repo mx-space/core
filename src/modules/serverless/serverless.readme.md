@@ -120,5 +120,5 @@ And other global api is all banned.
 - [ ] handle safeEval throw
 - [ ] MongoDb inject (can access db)
 - [x] set Content-Type
-- [ ] ESM AST Parser
+- [x] ESM AST Parser (ImportStatement)
 - [x] Cron to clean require cache

@@ -1,8 +1,9 @@
 import fs, { mkdir, stat } from 'fs/promises'
 import path from 'path'
 import { nextTick } from 'process'
+import { TransformOptions, parseAsync, transformAsync } from '@babel/core'
 import * as t from '@babel/types'
-import { parseAsync, transformAsync } from '@babel/core'
+import { VariableDeclaration } from '@babel/types'
 import {
   Injectable,
   InternalServerErrorException,
@@ -11,19 +12,20 @@ import {
 import { Interval } from '@nestjs/schedule'
 import { isURL } from 'class-validator'
 import { cloneDeep } from 'lodash'
+import xss from 'xss'
 import PKG from '../../../package.json'
 import { SnippetModel } from '../snippet/snippet.model'
 import {
   FunctionContextRequest,
   FunctionContextResponse,
 } from './function.types'
-import { InjectModel } from '~/transformers/model.transformer'
 import { RedisKeys } from '~/constants/cache.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
+import { InjectModel } from '~/transformers/model.transformer'
 import { UniqueArray } from '~/ts-hepler/unique'
 import { getRedisKey, safePathJoin } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
@@ -196,10 +198,54 @@ export class ServerlessService {
     )
   }
 
+  private getBabelOptions(): TransformOptions {
+    return {
+      plugins: [
+        require('@babel/plugin-transform-typescript'),
+        [
+          require('@babel/plugin-transform-modules-commonjs'),
+          { allowTopLevelThis: false, importInterop: 'node' },
+        ],
+        function transformImport() {
+          return {
+            visitor: {
+              VariableDeclaration(path: babel.NodePath) {
+                const node = path.node as VariableDeclaration
+                if (
+                  node.kind === 'var' &&
+                  node.declarations[0].init?.type === 'CallExpression' &&
+                  (
+                    (node.declarations[0].init as t.CallExpression)
+                      .callee as t.Identifier
+                  )?.name === 'require'
+                ) {
+                  const callee = node.declarations[0].init
+
+                  const _await: t.AwaitExpression = {
+                    argument: node.declarations[0].init,
+                    type: 'AwaitExpression',
+                    start: callee.start,
+                    end: callee.end,
+                    innerComments: [],
+                    loc: callee.loc,
+                    leadingComments: [],
+                    trailingComments: [],
+                  }
+                  node.declarations[0].init = _await
+                }
+              },
+            },
+          }
+        },
+      ],
+    }
+  }
   private convertTypescriptCode(code: string) {
-    return transformAsync(code, {
-      plugins: [require('@babel/plugin-transform-typescript')],
-    }).then((res) => res.code)
+    return transformAsync(code, this.getBabelOptions()).then((res) => {
+      console.log(res.code)
+
+      return res.code
+    })
   }
 
   private requireModuleIdSet = new Set<string>()
@@ -220,7 +266,7 @@ export class ServerlessService {
       } else {
         this.requireModuleIdSet.add(require.resolve(id))
       }
-      return cloneDeep(module)
+      return typeof module === 'function' ? module.bind() : cloneDeep(module)
     }
 
     const __requireNoCache = (id: string) => {
@@ -343,9 +389,7 @@ export class ServerlessService {
   async isValidServerlessFunction(raw: string) {
     try {
       // 验证 handler 是否存在并且是函数
-      const ast = (await parseAsync(raw, {
-        plugins: [require('@babel/plugin-transform-typescript')],
-      })) as t.File
+      const ast = (await parseAsync(raw, this.getBabelOptions())) as t.File
 
       const { body } = ast.program as t.Program
 

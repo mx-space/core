@@ -8,6 +8,7 @@ overrides:
 specifiers:
   '@algolia/client-search': '*'
   '@babel/core': 7.17.8
+  '@babel/plugin-transform-modules-commonjs': 7.17.7
   '@babel/plugin-transform-typescript': 7.16.8
   '@babel/types': '*'
   '@innei-util/eslint-config-ts': 0.5.0
@@ -123,6 +124,7 @@ specifiers:
 dependencies:
   '@algolia/client-search': 4.12.1
   '@babel/core': 7.17.8
+  '@babel/plugin-transform-modules-commonjs': 7.17.7_@babel+core@7.17.8
   '@babel/plugin-transform-typescript': 7.16.8_@babel+core@7.17.8
   '@babel/types': 7.17.0
   '@innei/class-validator-jsonschema': 3.1.1_279461c9b8c03a205cdbc4878bc60cf8
@@ -794,6 +796,21 @@ packages:
     dependencies:
       '@babel/core': 7.17.8
       '@babel/helper-plugin-utils': 7.16.7
+
+  /@babel/plugin-transform-modules-commonjs/7.17.7_@babel+core@7.17.8:
+    resolution: {integrity: sha512-ITPmR2V7MqioMJyrxUo2onHNC3e+MvfFiFIR0RP21d3PtlVb6sfzoxNKiphSZUOM9hEIdzCcZe83ieX3yoqjUA==}
+    engines: {node: '>=6.9.0'}
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    dependencies:
+      '@babel/core': 7.17.8
+      '@babel/helper-module-transforms': 7.17.7
+      '@babel/helper-plugin-utils': 7.16.7
+      '@babel/helper-simple-access': 7.17.7
+      babel-plugin-dynamic-import-node: 2.3.3
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
 
   /@babel/plugin-transform-typescript/7.16.8_@babel+core@7.17.8:
     resolution: {integrity: sha512-bHdQ9k7YpBDO2d0NVfkj51DpQcvwIzIusJ7mEUaMlbZq3Kt/U47j24inXZHQ5MDiYpCs+oZiwnXyKedE8+q7AQ==}
@@ -2626,6 +2643,12 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /babel-plugin-dynamic-import-node/2.3.3:
+    resolution: {integrity: sha512-jZVI+s9Zg3IqA/kdi0i6UDCybUI3aSBLnglhYbSSjKlV7yF1F/5LWv8MakQmvYpnbJDS6fcBL2KzHSxNCMtWSQ==}
+    dependencies:
+      object.assign: 4.1.2
+    dev: false
 
   /babel-plugin-istanbul/6.1.1:
     resolution: {integrity: sha512-Y1IQok9821cC9onCx5otgFfRm7Lm+I+wwxOx738M/WLPZ9Q42m4IG5W0FNX8WLL2gYMZo3JkuXIH2DOpWM+qwA==}
