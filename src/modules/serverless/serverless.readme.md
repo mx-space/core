@@ -64,6 +64,18 @@ const remoteModule =
 
 **注意**：你仍然可以在独立模块中使用主线程的 `require` 方法，所以这并不是一个真正隔离的环境。在使用第三方模块和请注意安全。请不要使用不受信任的模块。由于在同步进程中执行，请不要使用同步的阻塞代码或死循环。多进程建立在 Node Cluster 之上，可以自定义服务运行的进程数。
 
+## `import`
+
+你可以使用 `import` 语法，但是这只是个上面的 `require` 语法糖，因为在 NodeJS 中如果不开启 ESM 的支持，默认智能识别 CJS 格式的语法。
+
+用法如下：
+
+```ts
+import axios from 'axios' // this is ok, will transformer to `var axios = await require('axios')`
+import { render } from 'ejs' // ok, transform to var _ejs = await require("ejs"); _ejs.render
+import * as ejs from 'ejs' // bad, don't recommend
+```
+
 ## `Context`
 
 `handler` 函数的第一个参数接受一个全局上下文对象。

@@ -194,7 +194,15 @@ export class ServerlessService {
       `${await this.convertTypescriptCode(
         functionString,
       )}; return handler(context, require)`,
-      { ...globalContext, global: globalContext, globalThis: globalContext },
+      {
+        ...globalContext,
+        global: globalContext,
+        globalThis: globalContext,
+        exports: {},
+        module: {
+          exports: {},
+        },
+      },
     )
   }
 
@@ -242,8 +250,9 @@ export class ServerlessService {
   }
   private convertTypescriptCode(code: string) {
     return transformAsync(code, this.getBabelOptions()).then((res) => {
-      console.log(res.code)
-
+      if (isDev) {
+        console.log(res.code)
+      }
       return res.code
     })
   }
