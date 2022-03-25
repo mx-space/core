@@ -10,12 +10,13 @@ import { isNil } from 'lodash'
 import { nanoid } from 'nanoid'
 import { IPty, spawn } from 'node-pty'
 import { Socket } from 'socket.io'
-import { EventTypes } from '../events.types'
-import { AuthGateway } from './auth.gateway'
+
 import { RedisKeys } from '~/constants/cache.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { CacheService } from '~/processors/cache/cache.service'
+import { AuthGateway } from '~/processors/gateway/admin/auth.gateway'
+import { EventTypes } from '~/processors/gateway/events.types'
 import { getIp, getRedisKey } from '~/utils'
 
 @WebSocketGateway<GatewayMetadata>({ namespace: 'pty' })
