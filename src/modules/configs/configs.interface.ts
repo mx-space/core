@@ -1,4 +1,4 @@
-import { JSONSchema } from '@innei/class-validator-jsonschema'
+import { JSONSchema } from 'class-validator-jsonschema'
 import { Type } from 'class-transformer'
 import { ValidateNested } from 'class-validator'
 import {

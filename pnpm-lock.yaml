@@ -13,8 +13,6 @@ specifiers:
   '@babel/types': '*'
   '@innei-util/eslint-config-ts': 0.5.1
   '@innei-util/prettier': 0.4.1
-  '@innei/class-validator-jsonschema': 3.1.1
-  '@innei/zx-cjs': 6.0.6
   '@nestjs/cli': 8.2.4
   '@nestjs/common': 8.4.2
   '@nestjs/core': 8.4.2
@@ -62,6 +60,7 @@ specifiers:
   camelcase-keys: 7.0.2
   class-transformer: 0.5.1
   class-validator: 0.13.2
+  class-validator-jsonschema: npm:@innei/class-validator-jsonschema@3.1.1
   consola: '*'
   cos-nodejs-sdk-v5: 2.11.6
   cron: '*'
@@ -119,7 +118,7 @@ specifiers:
   vm2: 3.9.9
   webpack-node-externals: 3.0.0
   xss: 1.0.11
-  zx-cjs: link:./node_modules/@innei/zx-cjs
+  zx-cjs: npm:@innei/zx-cjs@6.0.6
 
 dependencies:
   '@algolia/client-search': 4.12.1
@@ -127,8 +126,6 @@ dependencies:
   '@babel/plugin-transform-modules-commonjs': 7.17.7_@babel+core@7.17.8
   '@babel/plugin-transform-typescript': 7.16.8_@babel+core@7.17.8
   '@babel/types': 7.17.0
-  '@innei/class-validator-jsonschema': 3.1.1_279461c9b8c03a205cdbc4878bc60cf8
-  '@innei/zx-cjs': 6.0.6
   '@nestjs/common': 8.4.2_add13df2cdecb4b62cd3f7664ea82e18
   '@nestjs/core': 8.4.2_08b1f14f521ca613fa34036185d46615
   '@nestjs/event-emitter': 1.1.0_fbb6b2cee8aa0e7ece50e03c9bcb013d
@@ -153,6 +150,7 @@ dependencies:
   camelcase-keys: 7.0.2
   class-transformer: 0.5.1
   class-validator: 0.13.2
+  class-validator-jsonschema: /@innei/class-validator-jsonschema/3.1.1_279461c9b8c03a205cdbc4878bc60cf8
   consola: 2.15.3
   cos-nodejs-sdk-v5: 2.11.6
   dayjs: 1.11.0
@@ -189,7 +187,7 @@ dependencies:
   ua-parser-js: 1.0.2
   vm2: 3.9.9
   xss: 1.0.11
-  zx-cjs: link:node_modules/@innei/zx-cjs
+  zx-cjs: /@innei/zx-cjs/6.0.6
 
 optionalDependencies:
   mongodb-memory-server: 8.4.1

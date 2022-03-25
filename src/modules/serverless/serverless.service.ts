@@ -337,7 +337,7 @@ export class ServerlessService {
         '@babel/core',
         '@babel/types',
         '@babel/plugin-transform-typescript',
-        '@innei/class-validator-jsonschema',
+        'class-validator-jsonschema',
         '@nestjs/event-emitter',
         'algoliasearch',
         'axios-retry',

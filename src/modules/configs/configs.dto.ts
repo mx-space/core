@@ -1,4 +1,4 @@
-import { JSONSchema } from '@innei/class-validator-jsonschema'
+import { JSONSchema } from 'class-validator-jsonschema'
 import { ApiProperty } from '@nestjs/swagger'
 import { Exclude, Transform, Type } from 'class-transformer'
 import {

@@ -1,12 +1,12 @@
 // @ts-ignore
-import { targetConstructorToSchema } from '@innei/class-validator-jsonschema'
-import { ISchemaConverters } from '@innei/class-validator-jsonschema/build/defaultConverters'
-import { IOptions } from '@innei/class-validator-jsonschema/build/options'
+import { targetConstructorToSchema } from 'class-validator-jsonschema'
+import { ISchemaConverters } from 'class-validator-jsonschema/build/defaultConverters'
+import { IOptions } from 'class-validator-jsonschema/build/options'
 import { defaultMetadataStorage } from 'class-transformer/cjs/storage.js'
 import { ValidationTypes, getMetadataStorage } from 'class-validator'
 import { ValidationMetadata } from 'class-validator/types/metadata/ValidationMetadata'
 
-export { JSONSchema as IsSchema } from '@innei/class-validator-jsonschema'
+export { JSONSchema as IsSchema } from 'class-validator-jsonschema'
 
 /**
  * Build json-schema from `class-validator` & `class-tranformer` metadata.

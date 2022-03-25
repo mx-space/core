@@ -1,5 +1,5 @@
-import { JSONSchema } from '@innei/class-validator-jsonschema'
-import { DecoratorSchema } from '@innei/class-validator-jsonschema/build/decorators'
+import { JSONSchema } from 'class-validator-jsonschema'
+import { DecoratorSchema } from 'class-validator-jsonschema/build/decorators'
 
 export const JSONSchemaPasswordField = (
   title: string,
