@@ -100,7 +100,7 @@ specifiers:
   passport: 0.5.2
   passport-jwt: 4.0.0
   pluralize: '*'
-  prettier: 2.6.0
+  prettier: 2.6.1
   qs: 6.10.3
   redis-memory-server: 0.5.0
   reflect-metadata: 0.1.13
@@ -229,7 +229,7 @@ devDependencies:
   ioredis: 4.28.5
   jest: 27.5.1_ts-node@10.7.0
   lint-staged: 12.3.7
-  prettier: 2.6.0
+  prettier: 2.6.1
   rimraf: 3.0.2
   run-script-webpack-plugin: 0.0.11
   semver: 7.3.5
@@ -944,7 +944,7 @@ packages:
   /@innei-util/prettier/0.4.1:
     resolution: {integrity: sha512-wodhITa9pR9141ASldYHX1n5B1gZ6KRorJjAU37Qiva8KaeJ4+FJVCl/O0abSwwuLOgM6GRuYcLmg9b3ZAjLRA==}
     dependencies:
-      prettier: 2.6.0
+      prettier: 2.6.1
       prettier-package-json: 2.6.0
     dev: true
 
@@ -6782,8 +6782,8 @@ packages:
       sort-order: 1.0.1
     dev: true
 
-  /prettier/2.6.0:
-    resolution: {integrity: sha512-m2FgJibYrBGGgQXNzfd0PuDGShJgRavjUoRCw1mZERIWVSXF0iLzLm+aOqTAbLnC3n6JzUhAA8uZnFVghHJ86A==}
+  /prettier/2.6.1:
+    resolution: {integrity: sha512-8UVbTBYGwN37Bs9LERmxCPjdvPxlEowx2urIL6urHzdb3SDq4B/Z6xLFCblrSnE4iKWcS6ziJ3aOYrc1kz/E2A==}
     engines: {node: '>=10.13.0'}
     hasBin: true
     dev: true
