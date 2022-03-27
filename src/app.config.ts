@@ -1,6 +1,7 @@
 import cluster from 'cluster'
 import { argv } from 'zx-cjs'
-import { isDev, isTest } from './global/env.global'
+
+import { cwd, isDev, isTest } from './global/env.global'
 
 export const PORT = argv.port || process.env.PORT || 2333
 export const API_VERSION = 2
@@ -62,11 +63,11 @@ export const CLUSTER = {
   workers: argv.cluster_workers,
 }
 
-if (!CLUSTER.enable || cluster.isPrimary) {
-  console.log(argv)
-  console.log('cwd: ', process.cwd())
-}
-
 /** Is main cluster in PM2 */
 export const isMainCluster =
   process.env.NODE_APP_INSTANCE && parseInt(process.env.NODE_APP_INSTANCE) === 0
+
+if (!CLUSTER.enable || cluster.isPrimary || isMainCluster) {
+  console.log(argv)
+  console.log('cwd: ', cwd)
+}

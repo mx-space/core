@@ -1,14 +1,13 @@
 import { homedir } from 'os'
 import { join } from 'path'
-import { isDev } from '~/global/env.global'
+
+import { cwd, isDev } from '~/global/env.global'
 
 export const HOME = homedir()
 
-export const TEMP_DIR = isDev ? join(process.cwd(), './tmp') : '/tmp/mx-space'
+export const TEMP_DIR = isDev ? join(cwd, './tmp') : '/tmp/mx-space'
 
-export const DATA_DIR = isDev
-  ? join(process.cwd(), './tmp')
-  : join(HOME, '.mx-space')
+export const DATA_DIR = isDev ? join(cwd, './tmp') : join(HOME, '.mx-space')
 
 export const USER_ASSET_DIR = join(DATA_DIR, 'assets')
 export const LOG_DIR = join(DATA_DIR, 'log')
@@ -20,6 +19,6 @@ export const BACKUP_DIR = !isDev
 // 生产环境直接打包到 目录的 admin 下
 export const LOCAL_ADMIN_ASSET_PATH = isDev
   ? join(DATA_DIR, 'admin')
-  : join(process.cwd(), './admin')
+  : join(cwd, './admin')
 
 export const NODE_REQUIRE_PATH = join(DATA_DIR, 'node_modules')

@@ -1,3 +1,5 @@
+import type { FastifyReply, FastifyRequest } from 'fastify'
+
 import {
   CacheTTL,
   Controller,
@@ -9,15 +11,16 @@ import {
   Request,
   Response,
 } from '@nestjs/common'
-import type { FastifyReply, FastifyRequest } from 'fastify'
-import { SnippetType } from '../snippet/snippet.model'
-import { createMockedContextResponse } from './mock-response.util'
-import { ServerlessReferenceDto } from './serverless.dto'
-import { ServerlessService } from './serverless.service'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
+
+import { SnippetType } from '../snippet/snippet.model'
+import { createMockedContextResponse } from './mock-response.util'
+import { ServerlessReferenceDto } from './serverless.dto'
+import { ServerlessService } from './serverless.service'
 
 @ApiName
 @Controller('serverless')
@@ -31,7 +34,7 @@ export class ServerlessController {
   async getCodeDefined() {
     try {
       const text = await fs.readFile(
-        path.join(process.cwd(), 'assets', 'types', 'type.declare.ts'),
+        path.join(cwd, 'assets', 'types', 'type.declare.ts'),
         {
           encoding: 'utf-8',
         },

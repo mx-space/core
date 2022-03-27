@@ -1,11 +1,11 @@
 /* eslint-disable import/order */
-import 'zx-cjs/globals'
-import './dayjs.global'
-import { consola, registerStdLogger } from './consola.global'
-
 import cluster from 'cluster'
 import { mkdirSync } from 'fs'
+import 'zx-cjs/globals'
+
 import { Logger } from '@nestjs/common'
+
+import { CLUSTER } from '~/app.config'
 import {
   DATA_DIR,
   LOG_DIR,
@@ -13,8 +13,9 @@ import {
   USER_ASSET_DIR,
 } from '~/constants/path.constant'
 
-import { isDev } from './env.global'
-import { CLUSTER } from '~/app.config'
+import { consola, registerStdLogger } from './consola.global'
+import './dayjs.global'
+import { cwd, isDev } from './env.global'
 
 // 建立目录
 function mkdirs() {
@@ -35,6 +36,7 @@ function registerGlobal() {
   Object.assign(globalThis, {
     isDev,
     consola,
+    cwd,
   })
   console.debug = (...rest) => {
     if (isDev) {

@@ -6,9 +6,12 @@
 import { existsSync } from 'fs'
 import fs from 'fs/promises'
 import path, { join } from 'path'
+
 import { Injectable, Logger } from '@nestjs/common'
-import { HttpService } from './helper.http.service'
+
 import { USER_ASSET_DIR } from '~/constants/path.constant'
+
+import { HttpService } from './helper.http.service'
 
 // 先从 ASSET_DIR 找用户自定义的资源, 没有就从默认的 ASSET_DIR 找, 没有就从网上拉取, 存到默认的 ASSET_DIR
 @Injectable()
@@ -21,7 +24,7 @@ export class AssetService {
   /**
    * 内置资源地址
    */
-  public embedAssetPath = path.resolve(process.cwd(), 'assets')
+  public embedAssetPath = path.resolve(cwd, 'assets')
   // 在线资源的地址 `/` 结尾
   private onlineAssetPath =
     'https://cdn.jsdelivr.net/gh/mx-space/assets@master/'
