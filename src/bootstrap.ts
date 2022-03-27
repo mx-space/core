@@ -1,8 +1,10 @@
 import cluster from 'cluster'
 import { performance } from 'perf_hooks'
+
 import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
+
 import { API_VERSION, CROSS_DOMAIN, PORT } from './app.config'
 import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'
@@ -11,6 +13,7 @@ import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { isTest } from './global/env.global'
 import { MyLogger } from './processors/logger/logger.service'
+
 const Origin = Array.isArray(CROSS_DOMAIN.allowedOrigins)
   ? CROSS_DOMAIN.allowedOrigins
   : false
@@ -28,7 +31,7 @@ export async function bootstrap() {
 
   // Origin 如果不是数组就全部允许跨域
   app.enableCors(
-    Origin
+    hosts
       ? {
           origin: (origin, callback) => {
             const allow = hosts.some((host) => host.test(origin))

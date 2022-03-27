@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils'
@@ -18,7 +19,8 @@ export class PTYService {
     )
 
     return values
-      .map((value) => {
+      .filter(Boolean)
+      .map((value: string) => {
         const [startTime, ip, endTime] = value.split(',') as [
           string,
           string,

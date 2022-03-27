@@ -1,4 +1,3 @@
-import { ApiProperty } from '@nestjs/swagger'
 import { Expose, Transform } from 'class-transformer'
 import {
   IsInt,
@@ -10,6 +9,8 @@ import {
   Min,
   ValidateIf,
 } from 'class-validator'
+
+import { ApiProperty } from '@nestjs/swagger'
 
 class DbQueryDto {
   @IsOptional()
@@ -24,7 +25,7 @@ export class PagerDto extends DbQueryDto {
     toClassOnly: true,
   })
   @ApiProperty({ example: 10 })
-  size?: number
+  size: number
 
   @Transform(({ value: val }) => (val ? parseInt(val) : 1), {
     toClassOnly: true,
@@ -33,7 +34,7 @@ export class PagerDto extends DbQueryDto {
   @IsInt()
   @Expose()
   @ApiProperty({ example: 1 })
-  page?: number
+  page: number
 
   @IsOptional()
   @IsString()

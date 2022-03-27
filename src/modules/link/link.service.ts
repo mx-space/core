@@ -1,7 +1,10 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common'
-import { ConfigsService } from '../configs/configs.service'
-import { LinkModel, LinkState, LinkType } from './link.model'
-import { InjectModel } from '~/transformers/model.transformer'
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common'
+
 import { isDev } from '~/global/env.global'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'
@@ -10,6 +13,10 @@ import {
   LinkApplyEmailType,
 } from '~/processors/helper/helper.email.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
+import { InjectModel } from '~/transformers/model.transformer'
+
+import { ConfigsService } from '../configs/configs.service'
+import { LinkModel, LinkState, LinkType } from './link.model'
 
 @Injectable()
 export class LinkService {
@@ -50,6 +57,10 @@ export class LinkService {
         },
       )
       .lean()
+
+    if (!doc) {
+      throw new NotFoundException()
+    }
 
     return doc
   }

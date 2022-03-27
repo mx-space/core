@@ -1,4 +1,6 @@
+import { Query, Types } from 'mongoose'
 import { URL } from 'url'
+
 import {
   DocumentType,
   Ref,
@@ -7,12 +9,13 @@ import {
   prop,
 } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
-import { Query, Types } from 'mongoose'
+
+import { BaseModel } from '~/shared/model/base.model'
+import { getAvatar } from '~/utils'
+
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
-import { getAvatar } from '~/utils'
-import { BaseModel } from '~/shared/model/base.model'
 
 function autoPopulateSubs(
   this: Query<
@@ -68,7 +71,7 @@ export class CommentModel extends BaseModel {
   url?: string
 
   @prop({ required: true })
-  text!: string
+  text: string
 
   // 0 : 未读
   // 1 : 已读

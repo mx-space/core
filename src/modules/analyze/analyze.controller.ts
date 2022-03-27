@@ -1,7 +1,7 @@
-import { Controller, Delete, Get, HttpCode, Query, Scope } from '@nestjs/common'
 import dayjs from 'dayjs'
-import { AnalyzeDto } from './analyze.dto'
-import { AnalyzeService } from './analyze.service'
+
+import { Controller, Delete, Get, HttpCode, Query, Scope } from '@nestjs/common'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -10,6 +10,9 @@ import { CacheService } from '~/processors/cache/cache.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { getRedisKey } from '~/utils/redis.util'
 import { getTodayEarly, getWeekStart } from '~/utils/time.util'
+
+import { AnalyzeDto } from './analyze.dto'
+import { AnalyzeService } from './analyze.service'
 
 @Controller({ path: 'analyze', scope: Scope.REQUEST })
 @ApiName
@@ -151,7 +154,7 @@ export class AnalyzeController {
 
     return Promise.all(
       keys.map(async (key) => {
-        const id = key.split('_').pop()
+        const id = key.split('_').pop()!
 
         return {
           id,

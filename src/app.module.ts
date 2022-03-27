@@ -1,5 +1,6 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
+import { MiddlewareConsumer, Module, NestModule, Type } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
+
 import { AppController } from './app.controller'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { RolesGuard } from './common/guard/roles.guard'
@@ -82,8 +83,8 @@ import { LoggerModule } from './processors/logger/logger.module'
     GatewayModule,
     HelperModule,
 
-    isDev ? DebugModule : null,
-  ].filter(Boolean),
+    isDev ? DebugModule : undefined,
+  ].filter(Boolean) as Type<NestModule>[],
   controllers: [AppController],
   providers: [
     {

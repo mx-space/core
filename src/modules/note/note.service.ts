@@ -1,16 +1,19 @@
+import { isDefined, isMongoId } from 'class-validator'
+import { FilterQuery } from 'mongoose'
+
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { DocumentType } from '@typegoose/typegoose'
-import { isDefined, isMongoId } from 'class-validator'
-import { FilterQuery } from 'mongoose'
-import { NoteModel } from './note.model'
-import { InjectModel } from '~/transformers/model.transformer'
+
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { EventBusEvents } from '~/constants/event.constant'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { InjectModel } from '~/transformers/model.transformer'
 import { deleteKeys } from '~/utils'
+
+import { NoteModel } from './note.model'
 
 @Injectable()
 export class NoteService {
@@ -67,7 +70,7 @@ export class NoteService {
 
   checkPasswordToAccess<T extends NoteModel>(
     doc: T,
-    password: string,
+    password?: string,
   ): boolean {
     const hasPassword = doc.password
     if (!hasPassword) {
@@ -113,6 +116,9 @@ export class NoteService {
       await Promise.all([
         this.imageService.recordImageDimensions(this.noteModel, id),
         this.model.findById(id).then((doc) => {
+          if (!doc) {
+            return
+          }
           delete doc.password
           this.webGateway.broadcast(EventTypes.NOTE_UPDATE, doc)
         }),

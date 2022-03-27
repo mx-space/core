@@ -1,3 +1,5 @@
+import { Namespace, Socket } from 'socket.io'
+
 import { OnEvent } from '@nestjs/event-emitter'
 import { JwtService } from '@nestjs/jwt'
 import {
@@ -5,11 +7,12 @@ import {
   OnGatewayDisconnect,
   WebSocketServer,
 } from '@nestjs/websockets'
-import { Namespace, Socket } from 'socket.io'
-import { BaseGateway } from '../base.gateway'
-import { EventTypes } from '../events.types'
+
 import { EventBusEvents } from '~/constants/event.constant'
 import { AuthService } from '~/modules/auth/auth.service'
+
+import { BaseGateway } from '../base.gateway'
+import { EventTypes } from '../events.types'
 
 export abstract class AuthGateway
   extends BaseGateway
@@ -56,7 +59,9 @@ export abstract class AuthGateway
   async handleConnection(client: Socket) {
     const token =
       client.handshake.query.token || client.handshake.headers['authorization']
-
+    if (!token) {
+      return this.authFailed(client)
+    }
     if (!(await this.authToken(token as string))) {
       return this.authFailed(client)
     }
@@ -76,7 +81,9 @@ export abstract class AuthGateway
   handleTokenExpired(token: string) {
     const server = this.namespace.server
     const sid = this.tokenSocketIdMap.get(token)
-
+    if (!sid) {
+      return false
+    }
     const socket = server.of('/admin').sockets.get(sid)
     if (socket) {
       socket.disconnect()

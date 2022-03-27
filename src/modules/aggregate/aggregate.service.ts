@@ -1,11 +1,21 @@
-import { URL } from 'url'
-import { FilterQuery } from 'mongoose'
-import { pick } from 'lodash'
 import dayjs from 'dayjs'
-import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
-import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
-import { OnEvent } from '@nestjs/event-emitter'
+import { pick } from 'lodash'
+import { FilterQuery } from 'mongoose'
+import { URL } from 'url'
+
 import { Inject, Injectable, forwardRef } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
+import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
+
+import { CacheKeys, RedisKeys } from '~/constants/cache.constant'
+import { EventBusEvents } from '~/constants/event.constant'
+import { CacheService } from '~/processors/cache/cache.service'
+import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
+import { addYearCondition } from '~/transformers/db-query.transformer'
+import { getRedisKey } from '~/utils/redis.util'
+import { getShortDate } from '~/utils/time.util'
+
 import { CategoryModel } from '../category/category.model'
 import { CategoryService } from '../category/category.service'
 import { CommentState } from '../comment/comment.model'
@@ -21,13 +31,7 @@ import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
 import { TimelineType } from './aggregate.dto'
 import { RSSProps } from './aggregate.interface'
-import { getShortDate } from '~/utils/time.util'
-import { getRedisKey } from '~/utils/redis.util'
-import { addYearCondition } from '~/transformers/db-query.transformer'
-import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
-import { CacheService } from '~/processors/cache/cache.service'
-import { CacheKeys, RedisKeys } from '~/constants/cache.constant'
-import { EventBusEvents } from '~/constants/event.constant'
+
 @Injectable()
 export class AggregateService {
   constructor(
@@ -120,7 +124,11 @@ export class AggregateService {
     return { notes, posts, says }
   }
 
-  async getTimeline(year: number, type: TimelineType, sortBy: 1 | -1 = 1) {
+  async getTimeline(
+    year: number | undefined,
+    type: TimelineType | undefined,
+    sortBy: 1 | -1 = 1,
+  ) {
     const data: any = {}
     const getPosts = () =>
       this.postService.model
@@ -186,7 +194,9 @@ export class AggregateService {
         .then((list) =>
           list.map((doc) => ({
             url: new URL(`/${doc.slug}`, baseURL),
-            published_at: new Date(doc.modified),
+            published_at: doc.modified
+              ? new Date(doc.modified)
+              : new Date(doc.created!),
           })),
         ),
 
@@ -207,7 +217,9 @@ export class AggregateService {
           list.map((doc) => {
             return {
               url: new URL(`/notes/${doc.nid}`, baseURL),
-              published_at: new Date(doc.modified),
+              published_at: doc.modified
+                ? new Date(doc.modified)
+                : new Date(doc.created!),
             }
           }),
         ),
@@ -224,7 +236,9 @@ export class AggregateService {
                 `/posts/${(doc.category as CategoryModel).slug}/${doc.slug}`,
                 baseURL,
               ),
-              published_at: new Date(doc.modified),
+              published_at: doc.modified
+                ? new Date(doc.modified)
+                : new Date(doc.created!),
             }
           }),
         ),
@@ -276,7 +290,7 @@ export class AggregateService {
       return {
         title: post.title,
         text: post.text,
-        created: post.created,
+        created: post.created!,
         modified: post.modified,
         link: new URL(
           '/posts' + `/${(post.category as CategoryModel).slug}/${post.slug}`,
@@ -291,14 +305,14 @@ export class AggregateService {
       return {
         title: note.title,
         text: isSecret ? '这篇文章暂时没有公开呢' : note.text,
-        created: note.created,
+        created: note.created!,
         modified: note.modified,
         link: new URL(`/notes/${note.nid}`, baseURL).toString(),
       }
     })
     return postsRss
       .concat(notesRss)
-      .sort((a, b) => b.created.getTime() - a.created.getTime())
+      .sort((a, b) => b.created!.getTime() - a.created!.getTime())
       .slice(0, 10)
   }
 

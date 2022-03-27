@@ -1,10 +1,10 @@
-import { join } from 'path'
 import { isObject } from 'lodash'
+import { join } from 'path'
 
 export const md5 = (text: string) =>
   require('crypto').createHash('md5').update(text).digest('hex')
 
-export function getAvatar(mail: string) {
+export function getAvatar(mail: string | undefined) {
   if (!mail) {
     return ''
   }

@@ -1,20 +1,26 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { compareSync } from 'bcrypt'
+import { nanoid } from 'nanoid'
+
 import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
-import { compareSync } from 'bcrypt'
-import { nanoid } from 'nanoid'
-import { AuthService } from '../auth/auth.service'
-import { UserDocument, UserModel } from './user.model'
-import { InjectModel } from '~/transformers/model.transformer'
+
+import { MasterLostException } from '~/common/exceptions/master-lost.exception'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
+import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar, sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
+
+import { AuthService } from '../auth/auth.service'
+import { UserDocument, UserModel } from './user.model'
 
 @Injectable()
 export class UserService {
@@ -97,6 +103,11 @@ export class UserService {
       const currentUser = await this.userModel
         .findById(_id)
         .select('+password +apiToken')
+
+      if (!currentUser) {
+        throw new MasterLostException()
+      }
+
       // 1. 验证新旧密码是否一致
       const isSamePassword = compareSync(password, currentUser.password)
       if (isSamePassword) {
@@ -119,6 +130,9 @@ export class UserService {
    */
   async recordFootstep(ip: string): Promise<Record<string, Date | string>> {
     const master = await this.userModel.findOne()
+    if (!master) {
+      throw new MasterLostException()
+    }
     const PrevFootstep = {
       lastLoginTime: master.lastLoginTime || new Date(1586090559569),
       lastLoginIp: master.lastLoginIp || null,
@@ -138,7 +152,7 @@ export class UserService {
     })
 
     this.Logger.warn(`主人已登录, IP: ${ip}`)
-    return PrevFootstep
+    return PrevFootstep as any
   }
 
   // TODO 获取最近登陆次数 时间 从 Redis 取

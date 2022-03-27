@@ -1,13 +1,19 @@
+/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
+
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import cluster from 'cluster'
-import { Injectable, Logger } from '@nestjs/common'
-import { OnEvent } from '@nestjs/event-emitter'
 import { render } from 'ejs'
 import { createTransport } from 'nodemailer'
-import { CacheService } from '../cache/cache.service'
-import { AssetService } from './helper.asset.service'
+
+import { Injectable, Logger } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
+
 import { EventBusEvents } from '~/constants/event.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { LinkModel } from '~/modules/link/link.model'
+
+import { CacheService } from '../cache/cache.service'
+import { AssetService } from './helper.asset.service'
 
 export enum ReplyMailType {
   Owner = 'owner',
@@ -118,9 +124,10 @@ export class EmailService {
           this.logger.error(message)
           return j(message)
         }
+        // @ts-ignore
         r({
           host: options?.host,
-          port: +options?.port || 465,
+          port: +options?.port! || 465,
           auth: { user, pass },
         } as const)
       })
@@ -203,6 +210,7 @@ export class EmailService {
         },
       }
       if (isDev) {
+        // @ts-ignore
         delete options.html
         Object.assign(options, { source })
         this.logger.log(options)
@@ -219,6 +227,7 @@ export class EmailService {
         },
       }
       if (isDev) {
+        // @ts-ignore
         delete options.html
         Object.assign(options, { source })
         this.logger.log(options)

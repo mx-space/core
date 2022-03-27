@@ -1,14 +1,17 @@
-import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 import { Redis } from 'ioredis'
-import type { RedisSubPub } from '../../utils/redis-subpub.util'
+
+import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common'
+
 import { getRedisKey } from '~/utils/redis.util'
+
+import type { RedisSubPub } from '../../utils/redis-subpub.util'
 
 // Cache 客户端管理器
 
 // 获取器
 export type TCacheKey = string
-export type TCacheResult<T> = Promise<T>
+export type TCacheResult<T> = Promise<T | undefined>
 
 /**
  * @class CacheService

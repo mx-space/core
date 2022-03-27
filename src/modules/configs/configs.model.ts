@@ -1,12 +1,13 @@
-import { Severity, modelOptions, prop } from '@typegoose/typegoose'
 import { Schema } from 'mongoose'
+
+import { Severity, modelOptions, prop } from '@typegoose/typegoose'
 
 @modelOptions({
   options: { allowMixed: Severity.ALLOW, customName: 'Option' },
   schemaOptions: {
     timestamps: {
-      createdAt: null,
-      updatedAt: null,
+      createdAt: false,
+      updatedAt: false,
     },
   },
 })

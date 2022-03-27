@@ -14,16 +14,7 @@ import {
 } from '@nestjs/common'
 import { ApiOperation, ApiParam } from '@nestjs/swagger'
 import { DocumentType } from '@typegoose/typegoose'
-import { UserModel } from '../user/user.model'
-import {
-  CommentDto,
-  CommentRefTypesDto,
-  StateDto,
-  TextOnlyDto,
-} from './comment.dto'
-import { CommentFilterEmailInterceptor } from './comment.interceptor'
-import { CommentModel, CommentState } from './comment.model'
-import { CommentService } from './comment.service'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 import { CurrentUser } from '~/common/decorator/current-user.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
@@ -36,6 +27,18 @@ import { ReplyMailType } from '~/processors/helper/helper.email.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
+
+import { UserModel } from '../user/user.model'
+import {
+  CommentDto,
+  CommentRefTypesDto,
+  StateDto,
+  TextOnlyDto,
+} from './comment.dto'
+import { CommentFilterEmailInterceptor } from './comment.interceptor'
+import { CommentModel, CommentState } from './comment.model'
+import { CommentService } from './comment.service'
+
 @Controller({ path: 'comments' })
 @UseInterceptors(CommentFilterEmailInterceptor)
 @ApiName
@@ -236,6 +239,7 @@ export class CommentController {
       url,
       state: CommentState.Read,
     } as CommentDto
+    // @ts-ignore
     return await this.replyByCid(params, model, undefined, true, ipLocation)
   }
 

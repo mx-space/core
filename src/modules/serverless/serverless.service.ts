@@ -1,6 +1,9 @@
+import { isURL } from 'class-validator'
 import fs, { mkdir, stat } from 'fs/promises'
+import { cloneDeep } from 'lodash'
 import path from 'path'
 import { nextTick } from 'process'
+
 import { TransformOptions, parseAsync, transformAsync } from '@babel/core'
 import * as t from '@babel/types'
 import { VariableDeclaration } from '@babel/types'
@@ -10,14 +13,7 @@ import {
   Logger,
 } from '@nestjs/common'
 import { Interval } from '@nestjs/schedule'
-import { isURL } from 'class-validator'
-import { cloneDeep } from 'lodash'
-import PKG from '../../../package.json'
-import { SnippetModel } from '../snippet/snippet.model'
-import {
-  FunctionContextRequest,
-  FunctionContextResponse,
-} from './function.types'
+
 import { RedisKeys } from '~/constants/cache.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { CacheService } from '~/processors/cache/cache.service'
@@ -29,6 +25,14 @@ import { UniqueArray } from '~/ts-hepler/unique'
 import { getRedisKey, safePathJoin } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
 import { isBuiltinModule } from '~/utils/sys.util'
+
+import PKG from '../../../package.json'
+import { SnippetModel } from '../snippet/snippet.model'
+import {
+  FunctionContextRequest,
+  FunctionContextResponse,
+} from './function.types'
+
 @Injectable()
 export class ServerlessService {
   constructor(
@@ -253,6 +257,9 @@ export class ServerlessService {
   }
   private convertTypescriptCode(code: string) {
     return transformAsync(code, this.getBabelOptions()).then((res) => {
+      if (!res) {
+        throw new InternalServerErrorException('convert code error')
+      }
       if (isDev) {
         console.log(res.code)
       }

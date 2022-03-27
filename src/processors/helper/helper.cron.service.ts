@@ -1,16 +1,15 @@
 import cluster from 'cluster'
+import COS from 'cos-nodejs-sdk-v5'
+import dayjs from 'dayjs'
 import { existsSync } from 'fs'
 import { readdir, rm } from 'fs/promises'
+import mkdirp from 'mkdirp'
 import { join } from 'path'
+
 import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { Cron, CronExpression } from '@nestjs/schedule'
-import COS from 'cos-nodejs-sdk-v5'
-import dayjs from 'dayjs'
-import mkdirp from 'mkdirp'
-import { CacheService } from '../cache/cache.service'
-import { HttpService } from './helper.http.service'
-import { InjectModel } from '~/transformers/model.transformer'
+
 import { isMainCluster } from '~/app.config'
 import { CronDescription } from '~/common/decorator/cron-description.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
@@ -24,7 +23,11 @@ import { NoteService } from '~/modules/note/note.service'
 import { PageService } from '~/modules/page/page.service'
 import { PostService } from '~/modules/post/post.service'
 import { SearchService } from '~/modules/search/search.service'
+import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
+
+import { CacheService } from '../cache/cache.service'
+import { HttpService } from './helper.http.service'
 
 @Injectable()
 export class CronService {
@@ -65,7 +68,7 @@ export class CronService {
           }
           const originMethod = this[name]
           this[name] = (...args) => {
-            if (cluster.worker.id === 1 || isMainCluster) {
+            if (cluster.worker?.id === 1 || isMainCluster) {
               originMethod.call(this, ...args)
             }
           }
