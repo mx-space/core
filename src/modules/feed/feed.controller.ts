@@ -1,12 +1,15 @@
-import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
 import { minify } from 'html-minifier'
 import xss from 'xss'
-import { AggregateService } from '../aggregate/aggregate.service'
-import { ConfigsService } from '../configs/configs.service'
-import { MarkdownService } from '../markdown/markdown.service'
+
+import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
+
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
+
+import { AggregateService } from '../aggregate/aggregate.service'
+import { ConfigsService } from '../configs/configs.service'
+import { MarkdownService } from '../markdown/markdown.service'
 
 @Controller('feed')
 @ApiName
@@ -43,7 +46,7 @@ export class FeedController {
       <lastBuildDate>${now.toISOString()}</lastBuildDate>
       <language>zh-CN</language>
       <image>
-          <url>${xss(avatar)}</url>
+          <url>${xss(avatar || '')}</url>
           <title>${title}</title>
           <link>${xss(url)}</link>
       </image>

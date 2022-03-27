@@ -1,21 +1,26 @@
+import { LeanDocument, Types } from 'mongoose'
 import { URL } from 'url'
+
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
-import { LeanDocument, Types } from 'mongoose'
-import { ConfigsService } from '../configs/configs.service'
-import { UserService } from '../user/user.service'
-import BlockedKeywords from './block-keywords.json'
-import { CommentModel, CommentRefTypes } from './comment.model'
-import { InjectModel } from '~/transformers/model.transformer'
+
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { MasterLostException } from '~/common/exceptions/master-lost.exception'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
   EmailService,
   ReplyMailType,
 } from '~/processors/helper/helper.email.service'
 import { WriteBaseModel } from '~/shared/model/base.model'
+import { InjectModel } from '~/transformers/model.transformer'
 import { hasChinese } from '~/utils'
+
+import { ConfigsService } from '../configs/configs.service'
+import { UserService } from '../user/user.service'
+import BlockedKeywords from './block-keywords.json'
+import { CommentModel, CommentRefTypes } from './comment.model'
+
 @Injectable()
 export class CommentService {
   private readonly logger: Logger = new Logger(CommentService.name)
@@ -44,7 +49,7 @@ export class CommentService {
     }
   }
 
-  async checkSpam(doc: Partial<CommentModel>) {
+  async checkSpam(doc: CommentModel) {
     const res = await (async () => {
       const commentOptions = await this.configs.get('commentOptions')
       if (!commentOptions.antiSpam) {
@@ -55,7 +60,11 @@ export class CommentService {
         return false
       }
       if (commentOptions.blockIps) {
+        if (!doc.ip) {
+          return false
+        }
         const isBlock = commentOptions.blockIps.some((ip) =>
+          // @ts-ignore
           new RegExp(ip, 'ig').test(doc.ip),
         )
         if (isBlock) {
@@ -99,13 +108,13 @@ export class CommentService {
     } else {
       const { type: type_, document } =
         await this.databaseService.findGlobalById(id)
-      ref = document
+      ref = document as any
       type = type_ as any
     }
     if (!ref) {
       throw new CannotFindException()
     }
-    const commentIndex = ref.commentsIndex
+    const commentIndex = ref.commentsIndex || 0
     doc.key = `#${commentIndex + 1}`
     const comment = await this.commentModel.create({
       ...doc,
@@ -166,9 +175,15 @@ export class CommentService {
     if (type) {
       const model = this.getModelByRefType(type)
       const doc = await model.findById(id)
+      if (!doc) {
+        throw new CannotFindException()
+      }
       return doc.allowComment ?? true
     } else {
       const { document: doc } = await this.databaseService.findGlobalById(id)
+      if (!doc) {
+        throw new CannotFindException()
+      }
       return doc.allowComment ?? true
     }
   }
@@ -201,15 +216,25 @@ export class CommentService {
     }
 
     this.userService.model.findOne().then(async (master) => {
+      if (!master) {
+        throw new MasterLostException()
+      }
+
       const refType = model.refType
       const refModel = this.getModelByRefType(refType)
       const refDoc = await refModel.findById(model.ref).lean()
-      const time = new Date(model.created)
-      const parent = await this.commentModel.findOne({ _id: model.parent })
+      const time = new Date(model.created!)
+      const parent = await this.commentModel
+        .findOne({ _id: model.parent })
+        .lean()
 
       const parsedTime = `${time.getDate()}/${
         time.getMonth() + 1
       }/${time.getFullYear()}`
+
+      if (!parent || !parent.mail || !refDoc || !master.mail || !model.mail) {
+        return
+      }
 
       this.mailService.sendCommentNotificationMail({
         to: type === ReplyMailType.Owner ? master.mail : parent.mail,

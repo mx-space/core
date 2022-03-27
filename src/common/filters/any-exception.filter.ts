@@ -1,5 +1,7 @@
+import { FastifyReply, FastifyRequest } from 'fastify'
 import { WriteStream } from 'fs'
 import { resolve } from 'path'
+
 import {
   ArgumentsHost,
   Catch,
@@ -10,13 +12,14 @@ import {
   Logger,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import { FastifyReply, FastifyRequest } from 'fastify'
-import { getIp } from '../../utils/ip.util'
-import { LoggingInterceptor } from '../interceptors/logging.interceptor'
+
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 import { LOG_DIR } from '~/constants/path.constant'
 import { REFLECTOR } from '~/constants/system.constant'
 import { isDev } from '~/global/env.global'
+
+import { getIp } from '../../utils/ip.util'
+import { LoggingInterceptor } from '../interceptors/logging.interceptor'
 
 type myError = {
   readonly status: number
@@ -46,6 +49,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       (exception as any)?.response?.message ||
       (exception as myError)?.message ||
       ''
+
+    const url = request.raw.url!
+
     if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
       // message && Logger.debug(message, undefined, 'Catch')
       Logger.error(exception, undefined, 'Catch')
@@ -59,7 +65,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           })
 
         this.errorLogPipe.write(
-          `[${new Date().toISOString()}] ${decodeURI(request.raw.url)}: ${
+          `[${new Date().toISOString()}] ${decodeURI(url)}: ${
             (exception as any)?.response?.message ||
             (exception as myError)?.message
           }\n${(exception as Error).stack}\n`,
@@ -68,9 +74,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     } else {
       const ip = getIp(request)
       this.logger.warn(
-        `IP: ${ip} 错误信息: (${status}) ${message} Path: ${decodeURI(
-          request.raw.url,
-        )}`,
+        `IP: ${ip} 错误信息: (${status}) ${message} Path: ${decodeURI(url)}`,
       )
     }
     // @ts-ignore

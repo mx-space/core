@@ -1,5 +1,3 @@
-import { PartialType } from '@nestjs/mapped-types'
-import { modelOptions, prop } from '@typegoose/typegoose'
 import { Transform } from 'class-transformer'
 import {
   IsEnum,
@@ -9,8 +7,13 @@ import {
   IsString,
   Min,
 } from 'class-validator'
+
+import { PartialType } from '@nestjs/mapped-types'
+import { modelOptions, prop } from '@typegoose/typegoose'
+
 import { WriteBaseModel } from '~/shared/model/base.model'
 import { IsNilOrString } from '~/utils/validator/isNilOrString'
+
 export enum PageType {
   'md' = 'md',
   'html' = 'html',
@@ -28,7 +31,7 @@ export class PageModel extends WriteBaseModel {
   @IsNotEmpty()
   slug!: string
 
-  @prop({ trim: true })
+  @prop({ trim: true, type: String })
   @IsString()
   @IsOptional()
   @IsNilOrString()

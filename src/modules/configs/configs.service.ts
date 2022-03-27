@@ -1,4 +1,10 @@
+import camelcaseKeys from 'camelcase-keys'
+import { ClassConstructor, plainToInstance } from 'class-transformer'
+import { ValidatorOptions, validateSync } from 'class-validator'
 import cluster from 'cluster'
+import { cloneDeep, mergeWith } from 'lodash'
+import { LeanDocument } from 'mongoose'
+
 import {
   BadRequestException,
   Injectable,
@@ -8,11 +14,14 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
-import camelcaseKeys from 'camelcase-keys'
-import { ClassConstructor, plainToInstance } from 'class-transformer'
-import { ValidatorOptions, validateSync } from 'class-validator'
-import { cloneDeep, mergeWith } from 'lodash'
-import { LeanDocument } from 'mongoose'
+
+import { RedisKeys } from '~/constants/cache.constant'
+import { EventBusEvents } from '~/constants/event.constant'
+import { CacheService } from '~/processors/cache/cache.service'
+import { InjectModel } from '~/transformers/model.transformer'
+import { sleep } from '~/utils'
+import { getRedisKey } from '~/utils/redis.util'
+
 import * as optionDtos from '../configs/configs.dto'
 import { UserModel } from '../user/user.model'
 import { UserService } from '../user/user.service'
@@ -23,12 +32,6 @@ import {
 } from './configs.dto'
 import { IConfig, IConfigKeys } from './configs.interface'
 import { OptionModel } from './configs.model'
-import { InjectModel } from '~/transformers/model.transformer'
-import { RedisKeys } from '~/constants/cache.constant'
-import { EventBusEvents } from '~/constants/event.constant'
-import { CacheService } from '~/processors/cache/cache.service'
-import { sleep } from '~/utils'
-import { getRedisKey } from '~/utils/redis.util'
 
 const allOptionKeys: Set<IConfigKeys> = new Set()
 const map: Record<string, any> = Object.entries(optionDtos).reduce(
@@ -66,7 +69,7 @@ const generateDefaultConfig: () => IConfig = () => ({
     title: 'おかえり~',
     background:
       'https://gitee.com/xun7788/my-imagination/raw/master/images/88426823_p0.jpg',
-    gaodemapKey: null,
+    gaodemapKey: null!,
   },
   terminalOptions: {
     enable: false,

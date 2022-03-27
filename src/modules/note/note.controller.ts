@@ -13,14 +13,7 @@ import {
   Query,
 } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
-import {
-  ListQueryDto,
-  NidType,
-  NoteQueryDto,
-  PasswordQueryDto,
-} from './note.dto'
-import { NoteModel, PartialNoteModel } from './note.model'
-import { NoteService } from './note.service'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
@@ -34,6 +27,15 @@ import {
   addHidePasswordAndHideCondition,
   addYearCondition,
 } from '~/transformers/db-query.transformer'
+
+import {
+  ListQueryDto,
+  NidType,
+  NoteQueryDto,
+  PasswordQueryDto,
+} from './note.dto'
+import { NoteModel, PartialNoteModel } from './note.model'
+import { NoteService } from './note.service'
 
 @ApiName
 @Controller({ path: 'notes' })
@@ -221,7 +223,7 @@ export class NoteController {
   ) {
     const id =
       typeof param.id === 'number'
-        ? (await this.noteService.model.findOne({ nid: param.id }).lean())._id
+        ? (await this.noteService.model.findOne({ nid: param.id }).lean())?._id
         : param.id
     if (!id) {
       throw new CannotFindException()

@@ -12,7 +12,7 @@ export class Cluster {
       process.on('SIGINT', () => {
         consola.info('Cluster shutting down...')
         for (const id in cluster.workers) {
-          cluster.workers[id].kill()
+          cluster.workers[id]?.kill()
         }
         // exit the master process
         process.exit(0)
@@ -26,9 +26,10 @@ export class Cluster {
 
       cluster.on('fork', (worker) => {
         worker.on('message', (msg) => {
-          Object.keys(cluster.workers).forEach((id) => {
-            cluster.workers[id].send(msg)
-          })
+          cluster.workers &&
+            Object.keys(cluster.workers).forEach((id) => {
+              cluster.workers?.[id]?.send(msg)
+            })
         })
       })
 

@@ -4,7 +4,11 @@
  * @module interceptor/analyze
  * @author Innei <https://github.com/Innei>
  */
+import isbot from 'isbot'
+import { Observable } from 'rxjs'
+import UAParser from 'ua-parser-js'
 import { URL } from 'url'
+
 import {
   CallHandler,
   ExecutionContext,
@@ -12,16 +16,13 @@ import {
   NestInterceptor,
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
-import isbot from 'isbot'
-import { Observable } from 'rxjs'
-import UAParser from 'ua-parser-js'
-import { InjectModel } from '~/transformers/model.transformer'
+
 import { RedisKeys } from '~/constants/cache.constant'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-
+import { InjectModel } from '~/transformers/model.transformer'
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
 
@@ -76,7 +77,8 @@ export class AnalyzeInterceptor implements NestInterceptor {
 
     process.nextTick(async () => {
       try {
-        this.parser.setUA(request.headers['user-agent'])
+        request.headers['user-agent'] &&
+          this.parser.setUA(request.headers['user-agent'])
 
         const ua = this.parser.getResult()
 

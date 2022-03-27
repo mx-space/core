@@ -3,6 +3,7 @@
     "module": "CommonJS",
     "declaration": true,
     "removeComments": true,
+    "strictNullChecks": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "esModuleInterop": true,

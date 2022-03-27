@@ -1,5 +1,3 @@
-import { ApiHideProperty } from '@nestjs/swagger'
-import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
 import { Type } from 'class-transformer'
 import {
   IsBoolean,
@@ -15,6 +13,9 @@ import LeanId from 'mongoose-lean-id'
 import { default as mongooseLeanVirtuals } from 'mongoose-lean-virtuals'
 import Paginate from 'mongoose-paginate-v2'
 
+import { ApiHideProperty } from '@nestjs/swagger'
+import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
+
 @plugin(mongooseLeanVirtuals)
 @plugin(Paginate)
 @plugin(LeanId)
@@ -24,7 +25,7 @@ import Paginate from 'mongoose-paginate-v2'
     toObject: { virtuals: true },
     timestamps: {
       createdAt: 'created',
-      updatedAt: null,
+      updatedAt: false,
     },
     versionKey: false,
   },
@@ -70,7 +71,7 @@ abstract class ImageModel {
   @prop()
   @IsOptional()
   @IsUrl()
-  src: string
+  src?: string
 }
 
 export abstract class BaseCommentIndexModel extends BaseModel {
@@ -105,7 +106,7 @@ export class WriteBaseModel extends BaseCommentIndexModel {
   @Type(() => ImageModel)
   images?: ImageModel[]
 
-  @prop({ default: null })
+  @prop({ default: null, type: Date })
   @ApiHideProperty()
   modified: Date | null
 

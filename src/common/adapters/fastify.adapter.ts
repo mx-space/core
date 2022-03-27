@@ -1,9 +1,12 @@
-import { Logger } from '@nestjs/common'
-import { FastifyAdapter } from '@nestjs/platform-fastify'
 import type { FastifyRequest } from 'fastify'
 import fastifyCookie from 'fastify-cookie'
 import FastifyMultipart from 'fastify-multipart'
+
+import { Logger } from '@nestjs/common'
+import { FastifyAdapter } from '@nestjs/platform-fastify'
+
 import { getIp } from '~/utils'
+
 const app: FastifyAdapter = new FastifyAdapter({
   trustProxy: true,
 })
@@ -35,7 +38,7 @@ app.getInstance().addHook('onRequest', (request, reply, done) => {
 
     return reply.code(418).send()
   } else if (url.match(/\/(adminer|admin|wp-login|phpMyAdmin|\.env)$/gi)) {
-    const isMxSpaceClient = ua.match('mx-space')
+    const isMxSpaceClient = ua?.match('mx-space')
     reply.raw.statusMessage = 'Hey, What the fuck are you doing!'
     reply.raw.statusCode = isMxSpaceClient ? 666 : 200
     logWarn(

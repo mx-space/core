@@ -1,6 +1,6 @@
 export type MetaType = {
-  created: Date
-  modified: Date
+  created?: Date | null | undefined
+  modified?: Date | null | undefined
   title: string
   slug: string
 } & Record<string, any>

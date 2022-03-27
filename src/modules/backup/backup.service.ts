@@ -1,16 +1,17 @@
 import { existsSync, statSync } from 'fs'
 import { readFile, readdir, rm, writeFile } from 'fs/promises'
+import mkdirp from 'mkdirp'
 import { join, resolve } from 'path'
 import { Readable } from 'stream'
-import mkdirp from 'mkdirp'
+import { quiet } from 'zx-cjs'
+
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common'
-import { quiet } from 'zx-cjs'
-import { ConfigsService } from '../configs/configs.service'
+
 import { MONGO_DB } from '~/app.config'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { CacheService } from '~/processors/cache/cache.service'
@@ -18,6 +19,8 @@ import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { EventTypes } from '~/processors/gateway/events.types'
 import { getMediumDateTime } from '~/utils'
 import { getFolderSize } from '~/utils/system.util'
+
+import { ConfigsService } from '../configs/configs.service'
 
 @Injectable()
 export class BackupService {
@@ -37,7 +40,7 @@ export class BackupService {
       return []
     }
     const backupFilenames = await readdir(backupPath)
-    const backups = []
+    const backups: { filename: string; path: string }[] = []
 
     for (const filename of backupFilenames) {
       const path = resolve(backupPath, filename)
@@ -53,6 +56,7 @@ export class BackupService {
       backups.map(async (item) => {
         const { path } = item
         const size = await getFolderSize(path)
+        // @ts-ignore
         delete item.path
         return { ...item, size }
       }),

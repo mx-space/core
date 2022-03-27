@@ -1,20 +1,29 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
 import { dump } from 'js-yaml'
 import JSZip from 'jszip'
 import { omit } from 'lodash'
 import { marked } from 'marked'
 import { Types } from 'mongoose'
 import xss from 'xss'
+
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common'
+import { ReturnModelType } from '@typegoose/typegoose'
+
+import { DatabaseService } from '~/processors/database/database.service'
+import { AssetService } from '~/processors/helper/helper.asset.service'
+import { InjectModel } from '~/transformers/model.transformer'
+
 import { CategoryModel } from '../category/category.model'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
 import { DatatypeDto } from './markdown.dto'
 import { MarkdownYAMLProperty } from './markdown.interface'
-import { InjectModel } from '~/transformers/model.transformer'
-import { AssetService } from '~/processors/helper/helper.asset.service'
-import { DatabaseService } from '~/processors/database/database.service'
+
 @Injectable()
 export class MarkdownService {
   constructor(
@@ -40,7 +49,7 @@ export class MarkdownService {
       },
     )
 
-    const insertOrCreateCategory = async (name: string) => {
+    const insertOrCreateCategory = async (name?: string) => {
       if (!name) {
         return
       }
@@ -70,7 +79,9 @@ export class MarkdownService {
     const genDate = this.genDate
     const models = [] as PostModel[]
     const defaultCategory = await this.categoryModel.findOne()
-
+    if (!defaultCategory) {
+      throw new InternalServerErrorException('分类不存在')
+    }
     for await (const item of data) {
       if (!item.meta) {
         models.push({
@@ -214,6 +225,7 @@ ${text.trim()}
     return {
       html: this.renderMarkdownContent(doc.document.text),
       ...doc,
+      document: doc.document,
     }
   }
 
@@ -231,7 +243,7 @@ ${text.trim()}
           level: 'inline',
           name: 'spoiler',
           start(src) {
-            return src.match(/\|/)?.index
+            return src.match(/\|/)?.index ?? -1
           },
           renderer(token) {
             // @ts-ignore
@@ -257,7 +269,7 @@ ${text.trim()}
           level: 'inline',
           name: 'mention',
           start(src) {
-            return src.match(/\(/)?.index
+            return src.match(/\(/)?.index ?? -1
           },
           renderer(token) {
             // @ts-ignore
@@ -281,6 +293,10 @@ ${text.trim()}
 
       renderer: {
         image(src, title, _alt) {
+          if (typeof src !== 'string') {
+            return ''
+          }
+
           const alt = _alt?.match(/^[!¡]/) ? _alt.replace(/^[¡!]/, '') : ''
           if (!alt) {
             return `<img src="${xss(src)}"/>`

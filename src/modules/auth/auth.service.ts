@@ -1,17 +1,21 @@
-import { Injectable } from '@nestjs/common'
-import { JwtService } from '@nestjs/jwt'
-import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import dayjs from 'dayjs'
 import { isDate, omit } from 'lodash'
 import { customAlphabet } from 'nanoid/async'
-import { TokenDto } from './auth.controller'
-import { JwtPayload } from './interfaces/jwt-payload.interface'
-import { InjectModel } from '~/transformers/model.transformer'
+
+import { Injectable } from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
+import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+
+import { MasterLostException } from '~/common/exceptions/master-lost.exception'
 import {
   TokenModel,
   UserModel as User,
   UserDocument,
 } from '~/modules/user/user.model'
+import { InjectModel } from '~/transformers/model.transformer'
+
+import { TokenDto } from './auth.controller'
+import { JwtPayload } from './interfaces/jwt-payload.interface'
 
 @Injectable()
 export class AuthService {
@@ -21,7 +25,11 @@ export class AuthService {
   ) {}
 
   async signToken(_id: string) {
-    const { authCode } = await this.userModel.findById(_id).select('authCode')
+    const user = await this.userModel.findById(_id).select('authCode')
+    if (!user) {
+      throw new MasterLostException()
+    }
+    const authCode = user.authCode
     const payload = {
       _id,
       authCode,
@@ -29,17 +37,27 @@ export class AuthService {
 
     return this.jwtService.sign(payload)
   }
-  async verifyPayload(payload: JwtPayload): Promise<UserDocument> {
+  async verifyPayload(payload: JwtPayload): Promise<UserDocument | null> {
     const user = await this.userModel.findById(payload._id).select('+authCode')
+
+    if (!user) {
+      throw new MasterLostException()
+    }
 
     return user && user.authCode === payload.authCode ? user : null
   }
-  private async getAccessTokens(): Promise<DocumentType<TokenModel>[]> {
+
+  private async getAccessTokens() {
     return (await this.userModel.findOne().select('apiToken').lean())
-      .apiToken as any
+      ?.apiToken as TokenModel[] | undefined
   }
   async getAllAccessToken() {
-    return (await this.getAccessTokens()).map((token) => ({
+    const tokens = await this.getAccessTokens()
+    if (!tokens) {
+      return []
+    }
+    return tokens.map((token) => ({
+      // @ts-ignore
       id: token._id,
       ...omit(token, ['_id', '__v', 'token']),
     })) as any as TokenModel[]
@@ -47,7 +65,11 @@ export class AuthService {
 
   async getTokenSecret(id: string) {
     const tokens = await this.getAccessTokens()
+    if (!tokens) {
+      return null
+    }
     // note: _id is ObjectId not equal to string
+    // @ts-ignore
     return tokens.find((token) => String(token._id) === id)
   }
 

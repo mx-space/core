@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { plainToClass } from 'class-transformer'
+import { validate } from 'class-validator'
+import SocketIO from 'socket.io'
+
 import {
   ConnectedSocket,
   GatewayMetadata,
@@ -9,16 +14,15 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets'
 import { Emitter } from '@socket.io/redis-emitter'
-import { plainToClass } from 'class-transformer'
-import { validate } from 'class-validator'
-import SocketIO from 'socket.io'
-import { BaseGateway } from '../base.gateway'
-import { EventTypes } from '../events.types'
-import { DanmakuDto } from './dtos/danmaku.dto'
+
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
+
+import { BaseGateway } from '../base.gateway'
+import { EventTypes } from '../events.types'
+import { DanmakuDto } from './dtos/danmaku.dto'
 
 @WebSocketGateway<GatewayMetadata>({
   namespace: 'web',
@@ -72,14 +76,15 @@ export class WebEventsGateway
         +(await redisClient.hget(
           getRedisKey(RedisKeys.MaxOnlineCount),
           dateFormat,
-        )) || 0
+        ))! || 0
       await redisClient.hset(
         getRedisKey(RedisKeys.MaxOnlineCount),
         dateFormat,
         Math.max(maxOnlineCount, await this.getcurrentClientCount()),
       )
       const key = getRedisKey(RedisKeys.MaxOnlineCount, 'total')
-      const totalCount = +(await redisClient.hget(key, dateFormat)) || 0
+
+      const totalCount = +(await redisClient.hget(key, dateFormat))! || 0
       await redisClient.hset(key, dateFormat, totalCount + 1)
     })
 

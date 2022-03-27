@@ -1,7 +1,15 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import dayjs from 'dayjs'
+import { render } from 'ejs'
+import { minify } from 'html-minifier'
+import JSZip from 'jszip'
+import { isNil } from 'lodash'
 import { join } from 'path'
 import { performance } from 'perf_hooks'
 import { Readable } from 'stream'
 import { URL } from 'url'
+import xss from 'xss'
+
 import {
   Body,
   CacheTTL,
@@ -14,12 +22,16 @@ import {
   Query,
 } from '@nestjs/common'
 import { ApiProperty } from '@nestjs/swagger'
-import dayjs from 'dayjs'
-import { render } from 'ejs'
-import { minify } from 'html-minifier'
-import JSZip from 'jszip'
-import { isNil } from 'lodash'
-import xss from 'xss'
+
+import { Auth } from '~/common/decorator/auth.decorator'
+import { HttpCache } from '~/common/decorator/cache.decorator'
+import { HTTPDecorators } from '~/common/decorator/http.decorator'
+import { ApiName } from '~/common/decorator/openapi.decorator'
+import { IsMaster } from '~/common/decorator/role.decorator'
+import { ArticleTypeEnum } from '~/constants/article.constant'
+import { MongoIdDto } from '~/shared/dto/id.dto'
+import { getShortDateTime } from '~/utils'
+
 import { CategoryModel } from '../category/category.model'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteModel } from '../note/note.model'
@@ -32,14 +44,6 @@ import {
 } from './markdown.dto'
 import { MarkdownYAMLProperty } from './markdown.interface'
 import { MarkdownService } from './markdown.service'
-import { Auth } from '~/common/decorator/auth.decorator'
-import { HttpCache } from '~/common/decorator/cache.decorator'
-import { HTTPDecorators } from '~/common/decorator/http.decorator'
-import { ApiName } from '~/common/decorator/openapi.decorator'
-import { IsMaster } from '~/common/decorator/role.decorator'
-import { ArticleTypeEnum } from '~/constants/article.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
-import { getShortDateTime } from '~/utils'
 
 @Controller('markdown')
 @ApiName
@@ -80,7 +84,7 @@ export class MarkdownController {
       T extends {
         text: string
         created?: Date
-        modified: Date
+        modified?: Date | null
         title: string
         slug?: string
       },
@@ -89,7 +93,7 @@ export class MarkdownController {
       extraMetaData: Record<string, any> = {},
     ): MarkdownYAMLProperty => {
       const meta = {
-        created: item.created,
+        created: item.created!,
         modified: item.modified,
         title: item.title,
         slug: item.slug || item.title,
@@ -106,14 +110,14 @@ export class MarkdownController {
     }
     // posts
     const convertPost = posts.map((post) =>
-      convertor(post, {
+      convertor(post!, {
         categories: (post.category as CategoryModel).name,
         type: 'post',
         permalink: `posts/${post.slug}`,
       }),
     )
     const convertNote = notes.map((note) =>
-      convertor(note, {
+      convertor(note!, {
         mood: note.mood,
         weather: note.weather,
         id: note.nid,
@@ -123,7 +127,7 @@ export class MarkdownController {
       }),
     )
     const convertPage = pages.map((page) =>
-      convertor(page, {
+      convertor(page!, {
         subtitle: page.subtitle,
         type: 'page',
         permalink: page.slug,
@@ -206,7 +210,7 @@ export class MarkdownController {
       }
     })()
 
-    const url = new URL(relativePath, webUrl)
+    const url = new URL(relativePath!, webUrl)
 
     const structure = await this.service.getRenderedMarkdownHtmlStructure(
       markdown,
@@ -271,6 +275,7 @@ export class MarkdownController {
   async getRenderedMarkdownHtmlStructure(@Param() params: MongoIdDto) {
     const { id } = params
     const { html, document } = await this.service.renderArticle(id)
+
     return this.service.getRenderedMarkdownHtmlStructure(html, document.title)
   }
 }

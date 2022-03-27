@@ -1,10 +1,14 @@
-import { URL } from 'url'
-import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import jsdom from 'jsdom'
-import { ConfigsService } from '../configs/configs.service'
-import { InitService } from '../init/init.service'
+import { URL } from 'url'
+
+import { Injectable, InternalServerErrorException } from '@nestjs/common'
+
 import PKG from '~/../package.json'
 import { API_VERSION } from '~/app.config'
+
+import { ConfigsService } from '../configs/configs.service'
+import { InitService } from '../init/init.service'
+
 @Injectable()
 export class PageProxyService {
   constructor(
@@ -39,7 +43,7 @@ export class PageProxyService {
       from?: string
       BASE_API?: string
       GATEWAY?: string
-      [key: string]: string
+      [key: string]: string | undefined
     },
   ) {
     const config = await this.configs.waitForConfigReady()

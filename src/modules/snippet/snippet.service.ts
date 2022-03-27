@@ -1,3 +1,5 @@
+import { load } from 'js-yaml'
+
 import {
   BadRequestException,
   Inject,
@@ -5,13 +7,14 @@ import {
   NotFoundException,
   forwardRef,
 } from '@nestjs/common'
-import { load } from 'js-yaml'
-import { ServerlessService } from '../serverless/serverless.service'
-import { SnippetModel, SnippetType } from './snippet.model'
-import { InjectModel } from '~/transformers/model.transformer'
+
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
+import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils'
+
+import { ServerlessService } from '../serverless/serverless.service'
+import { SnippetModel, SnippetType } from './snippet.model'
 
 @Injectable()
 export class SnippetService {
@@ -58,6 +61,9 @@ export class SnippetService {
 
   async delete(id: string) {
     const doc = await this.model.findOneAndDelete({ _id: id }).lean()
+    if (!doc) {
+      throw new NotFoundException()
+    }
     await this.deleteCachedSnippet(doc.reference, doc.name)
   }
 
