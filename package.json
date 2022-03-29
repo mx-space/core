@@ -150,7 +150,7 @@
     "@types/jest": "27.4.1",
     "@types/js-yaml": "4.0.5",
     "@types/jsdom": "16.2.14",
-    "@types/lodash": "4.14.180",
+    "@types/lodash": "4.14.181",
     "@types/marked": "4.0.3",
     "@types/mongoose-paginate-v2": "1.4.3",
     "@types/node": "16.11.26",
