@@ -84,7 +84,7 @@ specifiers:
   jest: 27.5.1
   js-yaml: '*'
   jsdom: 19.0.0
-  jszip: 3.7.1
+  jszip: 3.8.0
   lint-staged: 12.3.7
   lodash: '*'
   marked: 4.0.12
@@ -168,7 +168,7 @@ dependencies:
   isbot: 3.4.5
   js-yaml: 4.1.0
   jsdom: 19.0.0
-  jszip: 3.7.1
+  jszip: 3.8.0
   lodash: 4.17.21
   marked: 4.0.12
   mkdirp: 1.0.4
@@ -5776,8 +5776,8 @@ packages:
       verror: 1.10.0
     dev: false
 
-  /jszip/3.7.1:
-    resolution: {integrity: sha512-ghL0tz1XG9ZEmRMcEN2vt7xabrDdqHHeykgARpmZ0BiIctWxM47Vt63ZO2dnp4QYt/xJVLLy5Zv1l/xRdh2byg==}
+  /jszip/3.8.0:
+    resolution: {integrity: sha512-cnpQrXvFSLdsR9KR5/x7zdf6c3m8IhZfZzSblFEHSqBaVwD2nvJ4CuCKLyvKvwBgZm08CgfSoiTBQLm5WW9hGw==}
     dependencies:
       lie: 3.3.0
       pako: 1.0.11
