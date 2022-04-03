@@ -1,4 +1,6 @@
 import { resolve } from 'path'
+import SocketIO, { Socket } from 'socket.io'
+
 import { JwtService } from '@nestjs/jwt'
 import {
   GatewayMetadata,
@@ -8,13 +10,14 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets'
 import { Emitter } from '@socket.io/redis-emitter'
-import SocketIO, { Socket } from 'socket.io'
-import { AuthService } from '../../../modules/auth/auth.service'
-import { EventTypes } from '../events.types'
-import { AuthGateway } from './auth.gateway'
+
 import { LOG_DIR } from '~/constants/path.constant'
 import { getTodayLogFilePath } from '~/global/consola.global'
 import { CacheService } from '~/processors/cache/cache.service'
+
+import { BusinessEvents } from '../../../constants/business-event.constant'
+import { AuthService } from '../../../modules/auth/auth.service'
+import { AuthGateway } from './auth.gateway'
 
 @WebSocketGateway<GatewayMetadata>({ namespace: 'admin' })
 export class AdminEventsGateway
@@ -39,7 +42,7 @@ export class AdminEventsGateway
     }
 
     const handler = (data) => {
-      client.send(this.gatewayMessageFormat(EventTypes.STDOUT, data))
+      client.send(this.gatewayMessageFormat(BusinessEvents.STDOUT, data))
     }
 
     this.subscribeSocketToHandlerMap.set(client, handler)
@@ -73,7 +76,7 @@ export class AdminEventsGateway
     this.unsubscribeStdOut(client)
   }
 
-  broadcast(event: EventTypes, data: any) {
+  override broadcast(event: BusinessEvents, data: any) {
     const client = new Emitter(this.cacheService.getClient())
     client.of('/admin').emit('message', this.gatewayMessageFormat(event, data))
   }

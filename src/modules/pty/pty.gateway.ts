@@ -1,3 +1,8 @@
+import { isNil } from 'lodash'
+import { nanoid } from 'nanoid'
+import { IPty, spawn } from 'node-pty'
+import { Socket } from 'socket.io'
+
 import { JwtService } from '@nestjs/jwt'
 import {
   GatewayMetadata,
@@ -6,17 +11,13 @@ import {
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets'
-import { isNil } from 'lodash'
-import { nanoid } from 'nanoid'
-import { IPty, spawn } from 'node-pty'
-import { Socket } from 'socket.io'
 
+import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { CacheService } from '~/processors/cache/cache.service'
 import { AuthGateway } from '~/processors/gateway/admin/auth.gateway'
-import { EventTypes } from '~/processors/gateway/events.types'
 import { getIp, getRedisKey } from '~/utils'
 
 @WebSocketGateway<GatewayMetadata>({ namespace: 'pty' })
@@ -43,7 +44,7 @@ export class PTYGateway
     const terminalOptions = await this.configService.get('terminalOptions')
     if (!terminalOptions.enable) {
       client.send(
-        this.gatewayMessageFormat(EventTypes.PTY_MESSAGE, 'PTY 已禁用'),
+        this.gatewayMessageFormat(BusinessEvents.PTY_MESSAGE, 'PTY 已禁用'),
       )
 
       return
@@ -57,7 +58,7 @@ export class PTYGateway
       if (typeof password === 'undefined' || password === '') {
         client.send(
           this.gatewayMessageFormat(
-            EventTypes.PTY_MESSAGE,
+            BusinessEvents.PTY_MESSAGE,
             'PTY 验证未通过：需要密码验证',
             10000,
           ),
@@ -65,7 +66,7 @@ export class PTYGateway
       } else {
         client.send(
           this.gatewayMessageFormat(
-            EventTypes.PTY_MESSAGE,
+            BusinessEvents.PTY_MESSAGE,
             'PTY 验证未通过：密码错误',
             10001,
           ),
@@ -123,7 +124,7 @@ export class PTYGateway
       pty.write('\n')
     }
     pty.onData((data) => {
-      client.send(this.gatewayMessageFormat(EventTypes.PTY, data))
+      client.send(this.gatewayMessageFormat(BusinessEvents.PTY, data))
     })
 
     this.socket2ptyMap.set(client, pty)

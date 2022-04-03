@@ -8,14 +8,14 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets'
 
-import { EventBusEvents } from '~/constants/event.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 
-import { BaseGateway } from '../base.gateway'
-import { EventTypes } from '../events.types'
+import { BusinessEvents } from '../../../constants/business-event.constant'
+import { BoardcastBaseGateway } from '../base.gateway'
 
 export abstract class AuthGateway
-  extends BaseGateway
+  extends BoardcastBaseGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
@@ -29,7 +29,9 @@ export abstract class AuthGateway
   protected namespace: Namespace
 
   async authFailed(client: Socket) {
-    client.send(this.gatewayMessageFormat(EventTypes.AUTH_FAILED, '认证失败'))
+    client.send(
+      this.gatewayMessageFormat(BusinessEvents.AUTH_FAILED, '认证失败'),
+    )
     client.disconnect()
   }
 

@@ -13,10 +13,10 @@ import {
 } from '@nestjs/common'
 
 import { MONGO_DB } from '~/app.config'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { CacheService } from '~/processors/cache/cache.service'
-import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
-import { EventTypes } from '~/processors/gateway/events.types'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getMediumDateTime } from '~/utils'
 import { getFolderSize } from '~/utils/system.util'
 
@@ -27,7 +27,8 @@ export class BackupService {
   private logger: Logger
 
   constructor(
-    private readonly adminGateway: AdminEventsGateway,
+    private readonly eventManager: EventManagerService,
+
     private readonly configs: ConfigsService,
     private readonly cacheService: CacheService,
   ) {
@@ -137,9 +138,12 @@ export class BackupService {
     await writeFile(tempBackupPath, buffer)
 
     await this.restore(tempBackupPath)
-    await this.adminGateway.broadcast(
-      EventTypes.CONTENT_REFRESH,
+    await this.eventManager.broadcast(
+      BusinessEvents.CONTENT_REFRESH,
       'restore_done',
+      {
+        scope: EventScope.ALL,
+      },
     )
   }
 
@@ -207,9 +211,12 @@ export class BackupService {
 
     await this.restore(bakFilePath)
 
-    await this.adminGateway.broadcast(
-      EventTypes.CONTENT_REFRESH,
+    await this.eventManager.broadcast(
+      BusinessEvents.CONTENT_REFRESH,
       'restore_done',
+      {
+        scope: EventScope.ALL,
+      },
     )
   }
 

@@ -1,8 +1,13 @@
 import { Socket } from 'socket.io'
-import { EventTypes } from './events.types'
+
+import { BusinessEvents } from '~/constants/business-event.constant'
 
 export abstract class BaseGateway {
-  public gatewayMessageFormat(type: EventTypes, message: any, code?: number) {
+  public gatewayMessageFormat(
+    type: BusinessEvents,
+    message: any,
+    code?: number,
+  ) {
     return {
       type,
       data: message,
@@ -12,12 +17,22 @@ export abstract class BaseGateway {
 
   handleDisconnect(client: Socket) {
     client.send(
-      this.gatewayMessageFormat(EventTypes.GATEWAY_CONNECT, 'WebSocket 断开'),
+      this.gatewayMessageFormat(
+        BusinessEvents.GATEWAY_CONNECT,
+        'WebSocket 断开',
+      ),
     )
   }
   handleConnect(client: Socket) {
     client.send(
-      this.gatewayMessageFormat(EventTypes.GATEWAY_CONNECT, 'WebSocket 已连接'),
+      this.gatewayMessageFormat(
+        BusinessEvents.GATEWAY_CONNECT,
+        'WebSocket 已连接',
+      ),
     )
   }
+}
+
+export abstract class BoardcastBaseGateway extends BaseGateway {
+  broadcast(event: BusinessEvents, data: any) {}
 }

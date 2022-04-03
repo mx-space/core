@@ -1,20 +1,23 @@
 import { Global, Module, Provider, forwardRef } from '@nestjs/common'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
+
+import { AggregateModule } from '~/modules/aggregate/aggregate.module'
+import { BackupModule } from '~/modules/backup/backup.module'
+import { NoteModule } from '~/modules/note/note.module'
+import { PageModule } from '~/modules/page/page.module'
+import { PostModule } from '~/modules/post/post.module'
+import { SearchModule } from '~/modules/search/search.module'
+
 import { AssetService } from './helper.asset.service'
 import { CountingService } from './helper.counting.service'
 import { CronService } from './helper.cron.service'
 import { EmailService } from './helper.email.service'
+import { EventManagerService } from './helper.event.service'
 import { HttpService } from './helper.http.service'
 import { ImageService } from './helper.image.service'
 import { TaskQueueService } from './helper.tq.service'
 import { UploadService } from './helper.upload.service'
-import { SearchModule } from '~/modules/search/search.module'
-import { PostModule } from '~/modules/post/post.module'
-import { PageModule } from '~/modules/page/page.module'
-import { NoteModule } from '~/modules/note/note.module'
-import { BackupModule } from '~/modules/backup/backup.module'
-import { AggregateModule } from '~/modules/aggregate/aggregate.module'
 
 const providers: Provider<any>[] = [
   HttpService,
@@ -25,6 +28,7 @@ const providers: Provider<any>[] = [
   UploadService,
   AssetService,
   TaskQueueService,
+  EventManagerService,
 ]
 
 @Module({

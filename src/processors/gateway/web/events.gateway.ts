@@ -15,20 +15,20 @@ import {
 } from '@nestjs/websockets'
 import { Emitter } from '@socket.io/redis-emitter'
 
+import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
 
-import { BaseGateway } from '../base.gateway'
-import { EventTypes } from '../events.types'
+import { BoardcastBaseGateway } from '../base.gateway'
 import { DanmakuDto } from './dtos/danmaku.dto'
 
 @WebSocketGateway<GatewayMetadata>({
   namespace: 'web',
 })
 export class WebEventsGateway
-  extends BaseGateway
+  extends BoardcastBaseGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(private readonly cacheService: CacheService) {
@@ -44,7 +44,7 @@ export class WebEventsGateway
       timestamp: new Date().toISOString(),
     }
   }
-  @SubscribeMessage(EventTypes.DANMAKU_CREATE)
+  @SubscribeMessage(BusinessEvents.DANMAKU_CREATE)
   createNewDanmaku(
     @MessageBody() data: DanmakuDto,
     @ConnectedSocket() client: SocketIO.Socket,
@@ -54,7 +54,7 @@ export class WebEventsGateway
       if (errors.length > 0) {
         return client.send(errors)
       }
-      this.broadcast(EventTypes.DANMAKU_CREATE, data)
+      this.broadcast(BusinessEvents.DANMAKU_CREATE, data)
       client.send([])
     })
   }
@@ -65,7 +65,7 @@ export class WebEventsGateway
     return sockets.size
   }
   async handleConnection(socket: SocketIO.Socket) {
-    this.broadcast(EventTypes.VISITOR_ONLINE, await this.sendOnlineNumber())
+    this.broadcast(BusinessEvents.VISITOR_ONLINE, await this.sendOnlineNumber())
 
     process.nextTick(async () => {
       const redisClient = this.cacheService.getClient()
@@ -92,10 +92,13 @@ export class WebEventsGateway
   }
   async handleDisconnect(client: SocketIO.Socket) {
     super.handleDisconnect(client)
-    this.broadcast(EventTypes.VISITOR_OFFLINE, await this.sendOnlineNumber())
+    this.broadcast(
+      BusinessEvents.VISITOR_OFFLINE,
+      await this.sendOnlineNumber(),
+    )
   }
 
-  broadcast(event: EventTypes, data: any) {
+  override broadcast(event: BusinessEvents, data: any) {
     const client = new Emitter(this.cacheService.getClient())
     client.of('/web').emit('message', this.gatewayMessageFormat(event, data))
   }

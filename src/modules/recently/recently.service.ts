@@ -1,15 +1,17 @@
 import { Injectable } from '@nestjs/common'
-import { RecentlyModel } from './recently.model'
+
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { EventTypes } from '~/processors/gateway/events.types'
-import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
+
+import { RecentlyModel } from './recently.model'
 
 @Injectable()
 export class RecentlyService {
   constructor(
     @InjectModel(RecentlyModel)
     private readonly recentlyModel: MongooseModel<RecentlyModel>,
-    private readonly gateway: WebEventsGateway,
+    private readonly eventManager: EventManagerService,
   ) {}
 
   public get model() {
@@ -58,7 +60,9 @@ export class RecentlyService {
       project: model.project,
     })
     process.nextTick(async () => {
-      await this.gateway.broadcast(EventTypes.RECENTLY_CREATE, res)
+      await this.eventManager.broadcast(BusinessEvents.RECENTLY_CREATE, res, {
+        scope: EventScope.TO_SYSTEM_VISITOR,
+      })
     })
     return res
   }
@@ -70,7 +74,9 @@ export class RecentlyService {
     const isDeleted = deletedCount === 1
     process.nextTick(async () => {
       if (isDeleted) {
-        await this.gateway.broadcast(EventTypes.RECENTLY_DElETE, { id })
+        await this.eventManager.broadcast(BusinessEvents.RECENTLY_DElETE, id, {
+          scope: EventScope.TO_SYSTEM_VISITOR,
+        })
       }
     })
     return isDeleted

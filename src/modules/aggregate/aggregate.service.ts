@@ -9,7 +9,7 @@ import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
 
 import { CacheKeys, RedisKeys } from '~/constants/cache.constant'
-import { EventBusEvents } from '~/constants/event.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { addYearCondition } from '~/transformers/db-query.transformer'
