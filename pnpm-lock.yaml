@@ -77,7 +77,6 @@ specifiers:
   get-image-colors: 4.0.1
   html-minifier: 4.0.0
   husky: 7.0.4
-  i: 0.3.7
   image-size: 1.0.1
   inquirer: '*'
   ioredis: 4.28.5
@@ -107,7 +106,6 @@ specifiers:
   redis-memory-server: 0.5.0
   reflect-metadata: 0.1.13
   rimraf: 3.0.2
-  run-script-webpack-plugin: 0.0.11
   rxjs: 7.5.5
   semver: '*'
   snakecase-keys: 5.1.2
@@ -119,7 +117,6 @@ specifiers:
   typescript: 4.6.3
   ua-parser-js: 1.0.2
   vm2: 3.9.9
-  webpack-node-externals: 3.0.0
   xss: 1.0.11
   zx-cjs: npm:@innei/zx-cjs@6.0.6
 
@@ -229,13 +226,11 @@ devDependencies:
   cross-env: 7.0.3
   eslint: 8.11.0
   husky: 7.0.4
-  i: 0.3.7
   ioredis: 4.28.5
   jest: 27.5.1_ts-node@10.7.0
   lint-staged: 12.3.7
   prettier: 2.6.2
   rimraf: 3.0.2
-  run-script-webpack-plugin: 0.0.11
   semver: 7.3.5
   socket.io: 4.4.1
   ts-jest: 27.1.4_09df0b53afceeae738c083461fff2641
@@ -243,7 +238,6 @@ devDependencies:
   ts-node: 10.7.0_ddaac8e123aeb260f586984cee874848
   tsconfig-paths: 3.14.1
   typescript: 4.6.3
-  webpack-node-externals: 3.0.0
 
 packages:
 
@@ -4719,11 +4713,6 @@ packages:
     hasBin: true
     dev: true
 
-  /i/0.3.7:
-    resolution: {integrity: sha512-FYz4wlXgkQwIPqhzC5TdNMLSE5+GS1IIDJZY/1ZiEPCT2S3COUVZeT5OW4BmW4r5LHLQuOosSwsvnroG9GR59Q==}
-    engines: {node: '>=0.4'}
-    dev: true
-
   /iconv-lite/0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
     engines: {node: '>=0.10.0'}
@@ -7190,11 +7179,6 @@ packages:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
     dependencies:
       queue-microtask: 1.2.3
-    dev: true
-
-  /run-script-webpack-plugin/0.0.11:
-    resolution: {integrity: sha512-QmuBhiqBPmhQLpO5vMBHVTAGyoPBnrCM5gQ3IzgieiImBXiBbXcIv4kysCT1gilFNFxQk22oKQfiIhWbT/zXCw==}
-    engines: {node: '>=12'}
     dev: true
 
   /rxjs/6.6.7:
