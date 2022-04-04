@@ -171,8 +171,6 @@ export class SnippetService {
   async deleteCachedSnippet(reference: string, name: string) {
     const key = `${reference}:${name}`
 
-    console.log(key)
-
     const client = this.cacheService.getClient()
     await client.hdel(getRedisKey(RedisKeys.SnippetCache), key)
   }

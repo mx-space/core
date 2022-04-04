@@ -24,7 +24,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { UniqueArray } from '~/ts-hepler/unique'
 import { getRedisKey, safePathJoin } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
-import { isBuiltinModule } from '~/utils/sys.util'
+import { isBuiltinModule } from '~/utils/system.util'
 
 import PKG from '../../../package.json'
 import { SnippetModel } from '../snippet/snippet.model'
