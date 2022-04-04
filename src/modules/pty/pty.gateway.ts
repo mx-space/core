@@ -14,6 +14,7 @@ import {
 
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
+import { DATA_DIR } from '~/constants/path.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { CacheService } from '~/processors/cache/cache.service'
@@ -76,16 +77,19 @@ export class PTYGateway
       return
     }
     const zsh = await nothrow($`zsh --version`)
+    const fish = await nothrow($`fish --version`)
 
     const pty = spawn(
       os.platform() === 'win32'
         ? 'powershell.exe'
         : zsh.exitCode == 0
         ? 'zsh'
+        : fish.exitCode == 0
+        ? 'fish'
         : 'bash',
       [],
       {
-        cwd: os.homedir(),
+        cwd: DATA_DIR,
         cols: data?.cols || 30,
         rows: data?.rows || 80,
       },

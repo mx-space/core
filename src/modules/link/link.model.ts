@@ -1,6 +1,3 @@
-import { URL } from 'url'
-import { ApiProperty } from '@nestjs/swagger'
-import { modelOptions, prop } from '@typegoose/typegoose'
 import { Transform } from 'class-transformer'
 import {
   IsEmail,
@@ -11,7 +8,13 @@ import {
   MaxLength,
 } from 'class-validator'
 import { range } from 'lodash'
+import { URL } from 'url'
+
+import { ApiProperty } from '@nestjs/swagger'
+import { modelOptions, prop } from '@typegoose/typegoose'
+
 import { BaseModel } from '~/shared/model/base.model'
+import { IsAllowedUrl } from '~/utils/validator/isAllowedUrl'
 
 export enum LinkType {
   Friend,
@@ -52,7 +55,7 @@ export class LinkModel extends BaseModel {
   url: string
 
   @IsOptional()
-  @IsUrl({ require_protocol: true })
+  @IsAllowedUrl()
   @prop({ trim: true })
   // 对空字符串处理
   @Transform(({ value }) => (value === '' ? null : value))

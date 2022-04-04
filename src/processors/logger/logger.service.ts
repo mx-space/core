@@ -91,5 +91,5 @@ export class MyLogger extends ConsoleLogger {
 
   private defaultContextPrefix = this.context
     ? `[${chalk.yellow(this.context)}] `
-    : `[${chalk.hex('#fd79a8')('MServer')}] `
+    : `[${chalk.hex('#fd79a8')('System')}] `
 }

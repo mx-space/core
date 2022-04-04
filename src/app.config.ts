@@ -67,6 +67,8 @@ export const CLUSTER = {
 export const isMainCluster =
   process.env.NODE_APP_INSTANCE && parseInt(process.env.NODE_APP_INSTANCE) === 0
 
+export const isMainProcess = cluster.isPrimary || isMainCluster
+
 if (!CLUSTER.enable || cluster.isPrimary || isMainCluster) {
   console.log(argv)
   console.log('cwd: ', cwd)

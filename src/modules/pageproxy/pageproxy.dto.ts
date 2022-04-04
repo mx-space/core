@@ -1,16 +1,18 @@
 import { Transform } from 'class-transformer'
 import { IsBoolean, IsIn, IsOptional, IsSemVer, IsUrl } from 'class-validator'
 
+import { IsAllowedUrl } from '~/utils/validator/isAllowedUrl'
+
 export class PageProxyDebugDto {
   @IsIn([false])
   @IsOptional()
   @Transform(({ value }) => (value === 'false' ? false : true))
   __debug: boolean
-  @IsUrl({ require_protocol: true })
+  @IsAllowedUrl()
   @IsOptional()
   __apiUrl?: string
 
-  @IsUrl({ require_protocol: true })
+  @IsAllowedUrl()
   @IsOptional()
   __gatewayUrl?: string
 

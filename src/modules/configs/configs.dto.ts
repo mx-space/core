@@ -1,5 +1,3 @@
-import { JSONSchema } from 'class-validator-jsonschema'
-import { ApiProperty } from '@nestjs/swagger'
 import { Exclude, Transform, Type } from 'class-transformer'
 import {
   ArrayUnique,
@@ -13,6 +11,12 @@ import {
   IsUrl,
   ValidateNested,
 } from 'class-validator'
+import { JSONSchema } from 'class-validator-jsonschema'
+
+import { ApiProperty } from '@nestjs/swagger'
+
+import { IsAllowedUrl } from '~/utils/validator/isAllowedUrl'
+
 import {
   JSONSchemaArrayField,
   JSONSchemaNumberField,
@@ -20,6 +24,7 @@ import {
   JSONSchemaPlainField,
   JSONSchemaToggleField,
 } from './configs.jsonschema.decorator'
+
 @JSONSchema({ title: 'SEO 优化' })
 export class SeoDto {
   @IsString({ message: '标题必须是字符串' })
@@ -42,25 +47,25 @@ export class SeoDto {
 
 @JSONSchema({ title: '网站设置' })
 export class UrlDto {
-  @IsUrl({ require_protocol: true })
+  @IsAllowedUrl()
   @IsOptional()
   @ApiProperty({ example: 'http://127.0.0.1:2323' })
   @JSONSchemaPlainField('前端地址')
   webUrl: string
 
-  @IsUrl({ require_protocol: true })
+  @IsAllowedUrl()
   @IsOptional()
   @ApiProperty({ example: 'http://127.0.0.1:9528' })
   @JSONSchemaPlainField('管理后台地址')
   adminUrl: string
 
-  @IsUrl({ require_protocol: true })
+  @IsAllowedUrl()
   @IsOptional()
   @ApiProperty({ example: 'http://127.0.0.1:2333' })
   @JSONSchemaPlainField('API 地址')
   serverUrl: string
 
-  @IsUrl()
+  @IsAllowedUrl()
   @IsOptional()
   @ApiProperty({ example: 'http://127.0.0.1:8080' })
   @JSONSchemaPlainField('Gateway 地址')

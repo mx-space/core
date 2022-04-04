@@ -64,10 +64,7 @@ export class ServerlessService {
       })
 
       module.paths.push(NODE_REQUIRE_PATH)
-
-      // if (isDev) {
-      //   console.log(module.paths)
-      // }
+      consola.info(module.paths)
     })
   }
 

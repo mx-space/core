@@ -51,6 +51,7 @@ specifiers:
   '@types/passport-jwt': 3.0.6
   '@types/qs': 6.9.7
   '@types/ua-parser-js': 0.7.36
+  '@types/validator': 13.7.2
   '@vercel/ncc': 0.33.3
   algoliasearch: 4.13.0
   axios: '*'
@@ -222,6 +223,7 @@ devDependencies:
   '@types/passport-jwt': 3.0.6
   '@types/qs': 6.9.7
   '@types/ua-parser-js': 0.7.36
+  '@types/validator': 13.7.2
   '@vercel/ncc': 0.33.3
   cron: 1.7.2
   cross-env: 7.0.3
@@ -2034,6 +2036,10 @@ packages:
     resolution: {integrity: sha512-O3MmRAk6ZuAKa9CHgg0Pr0+lUOqoMLpc9AS4R8ano2auvsg7IE8syF3Xh/NPr26TWklxYcqoEEFdzLLs1fV9PQ==}
     dependencies:
       source-map: 0.6.1
+    dev: true
+
+  /@types/validator/13.7.2:
+    resolution: {integrity: sha512-KFcchQ3h0OPQgFirBRPZr5F/sVjxZsOrQHedj3zi8AH3Zv/hOLx2OLR4hxR5HcfoU+33n69ZuOfzthKVdMoTiw==}
     dev: true
 
   /@types/webidl-conversions/6.1.1:

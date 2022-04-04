@@ -1,11 +1,11 @@
 import cluster from 'cluster'
 import { performance } from 'perf_hooks'
 
-import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common'
+import { LogLevel, Logger, RequestMethod, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 
-import { API_VERSION, CROSS_DOMAIN, PORT } from './app.config'
+import { API_VERSION, CROSS_DOMAIN, PORT, isMainProcess } from './app.config'
 import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'
 import { RedisIoAdapter } from './common/adapters/socket.adapter'
@@ -24,7 +24,11 @@ export async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     fastifyApp,
-    { logger: ['error', 'debug'] },
+    {
+      logger: ['error'].concat(
+        isDev ? (['debug'] as any as LogLevel[]) : ([] as LogLevel[]),
+      ) as LogLevel[],
+    },
   )
 
   const hosts = Origin && Origin.map((host) => new RegExp(host, 'i'))
@@ -84,13 +88,17 @@ export async function bootstrap() {
     SwaggerModule.setup('api-docs', app, document)
   }
 
-  await app.listen(+PORT, '0.0.0.0', async (err, address) => {
+  await app.listen(+PORT, '0.0.0.0', async () => {
     app.useLogger(app.get(MyLogger))
     consola.info('ENV:', process.env.NODE_ENV)
     const url = await app.getUrl()
     const pid = process.pid
     const env = cluster.isPrimary
     const prefix = env ? 'P' : 'W'
+    if (!isMainProcess) {
+      return
+    }
+
     if (isDev) {
       consola.debug(`[${prefix + pid}] OpenApi: ${url}/api-docs`)
     }
