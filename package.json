@@ -164,7 +164,7 @@
     "cross-env": "7.0.3",
     "eslint": "*",
     "husky": "7.0.4",
-    "ioredis": "4.28.5",
+    "ioredis": "5.0.3",
     "jest": "27.5.1",
     "lint-staged": "12.3.7",
     "prettier": "2.6.2",
@@ -183,7 +183,7 @@
   },
   "resolutions": {
     "typescript": "4.6.3",
-    "ioredis": "4.28.5",
+    "ioredis": "5.0.3",
     "webpack": "5.71.0"
   }
 }
