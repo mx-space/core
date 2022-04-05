@@ -5,7 +5,7 @@
  * @author Surmon <https://github.com/surmon-china>
  */
 import redisStore from 'cache-manager-ioredis'
-import IORedis from 'ioredis'
+import { RedisOptions } from 'ioredis'
 
 import {
   CacheModuleOptions,
@@ -19,7 +19,7 @@ import { REDIS } from '~/app.config'
 export class CacheConfigService implements CacheOptionsFactory {
   // 缓存配置
   public createCacheOptions(): CacheModuleOptions {
-    const redisOptions: IORedis.RedisOptions = {
+    const redisOptions: RedisOptions = {
       host: REDIS.host as string,
       port: REDIS.port as number,
     }

@@ -1,4 +1,4 @@
-import IORedis from 'ioredis'
+import IORedis, { Redis } from 'ioredis'
 
 import { Logger } from '@nestjs/common'
 
@@ -7,8 +7,8 @@ import { REDIS } from '~/app.config'
 import { isTest } from '../global/env.global'
 
 class RedisSubPub {
-  public pubClient: IORedis.Redis
-  public subClient: IORedis.Redis
+  public pubClient: Redis
+  public subClient: Redis
   constructor(private channelPrefix: string = 'mx-channel#') {
     if (!isTest) {
       this.init()

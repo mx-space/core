@@ -146,7 +146,6 @@
     "@types/fs-extra": "9.0.13",
     "@types/get-image-colors": "4.0.1",
     "@types/html-minifier": "4.0.2",
-    "@types/ioredis": "4.28.10",
     "@types/jest": "27.4.1",
     "@types/js-yaml": "4.0.5",
     "@types/jsdom": "16.2.14",
@@ -164,7 +163,7 @@
     "cross-env": "7.0.3",
     "eslint": "*",
     "husky": "7.0.4",
-    "ioredis": "4.28.5",
+    "ioredis": "5.0.3",
     "jest": "27.5.1",
     "lint-staged": "12.3.7",
     "prettier": "2.6.2",
@@ -183,7 +182,7 @@
   },
   "resolutions": {
     "typescript": "4.6.3",
-    "ioredis": "4.28.5",
+    "ioredis": "^5",
     "webpack": "5.71.0"
   }
 }
