@@ -184,6 +184,6 @@
   "resolutions": {
     "typescript": "4.6.3",
     "ioredis": "4.28.5",
-    "webpack": "5.70.0"
+    "webpack": "5.71.0"
   }
 }
