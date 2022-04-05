@@ -108,7 +108,7 @@
     "isbot": "3.4.5",
     "js-yaml": "*",
     "jsdom": "19.0.0",
-    "jszip": "3.8.0",
+    "jszip": "3.9.0",
     "lodash": "*",
     "marked": "4.0.12",
     "mkdirp": "*",
