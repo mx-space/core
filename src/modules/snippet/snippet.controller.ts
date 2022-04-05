@@ -9,15 +9,21 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
-import { SnippetModel, SnippetType } from './snippet.model'
-import { SnippetService } from './snippet.service'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
+import { DATA_DIR } from '~/constants/path.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
+import { installPKG } from '~/utils'
+
+import { SnippetMoreDto } from './snippet.dto'
+import { SnippetModel, SnippetType } from './snippet.model'
+import { SnippetService } from './snippet.service'
+
 @ApiName
 @Controller('snippets')
 export class SnippetController {
@@ -39,6 +45,31 @@ export class SnippetController {
         },
       }),
     )
+  }
+
+  @Post('/more')
+  @Auth()
+  async createMore(@Body() body: SnippetMoreDto) {
+    const { snippets, packages = [] } = body
+    const tasks = snippets.map((snippet) => this.create(snippet))
+
+    const resultList = await Promise.all(tasks)
+
+    try {
+      if (packages.length) {
+        const tasks2 = packages.map((pkg) => {
+          return installPKG(pkg, DATA_DIR)
+        })
+        await Promise.all(tasks2)
+      }
+    } catch (err) {
+      await Promise.all(
+        resultList.map((doc) => {
+          return doc.remove()
+        }),
+      )
+      throw err
+    }
   }
 
   @Post('/')

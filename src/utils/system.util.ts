@@ -66,6 +66,7 @@ export const installPKG = async (name: string, cwd: string) => {
       const res = await nothrow($`${managerName} --version`)
       if (res.exitCode === 0) {
         manager = managerName
+        break
       }
     }
   }
