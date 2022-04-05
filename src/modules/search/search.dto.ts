@@ -1,6 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
 import { IsEnum, IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+
+import { ApiProperty } from '@nestjs/swagger'
+
 import { PagerDto } from '../../shared/dto/pager.dto'
 
 export class SearchDto extends PagerDto {

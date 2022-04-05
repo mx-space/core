@@ -1,3 +1,5 @@
+import { instanceToPlain } from 'class-transformer'
+
 import {
   BadRequestException,
   Body,
@@ -6,13 +8,14 @@ import {
   Patch,
   UnprocessableEntityException,
 } from '@nestjs/common'
-import { instanceToPlain } from 'class-transformer'
-import { ConfigKeyDto } from '../dtos/config.dto'
-import { OptionController } from '../option.decorator'
+
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { IConfig } from '~/modules/configs/configs.interface'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { classToJsonSchema } from '~/utils/jsonschema.util'
+
+import { ConfigKeyDto } from '../dtos/config.dto'
+import { OptionController } from '../option.decorator'
 
 @OptionController()
 export class BaseOptionController {

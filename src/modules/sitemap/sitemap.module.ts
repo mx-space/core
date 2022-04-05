@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+
 import { AggregateModule } from '../aggregate/aggregate.module'
 import { SitemapController } from './sitemap.controller'
 

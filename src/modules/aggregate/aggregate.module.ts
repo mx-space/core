@@ -1,4 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common'
+
+import { GatewayModule } from '~/processors/gateway/gateway.module'
+
 import { AnalyzeModule } from '../analyze/analyze.module'
 import { CategoryModule } from '../category/category.module'
 import { CommentModule } from '../comment/comment.module'
@@ -10,7 +13,6 @@ import { RecentlyModule } from '../recently/recently.module'
 import { SayModule } from '../say/say.module'
 import { AggregateController } from './aggregate.controller'
 import { AggregateService } from './aggregate.service'
-import { GatewayModule } from '~/processors/gateway/gateway.module'
 
 @Module({
   imports: [

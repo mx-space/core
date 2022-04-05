@@ -1,5 +1,6 @@
 import { Controller, applyDecorators } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 
 export function OptionController(name?: string, postfixRoute?: string) {

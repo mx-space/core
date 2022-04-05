@@ -1,5 +1,3 @@
-import { UnprocessableEntityException } from '@nestjs/common'
-import { ApiProperty } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
 import {
   IsBoolean,
@@ -9,8 +7,13 @@ import {
   IsString,
 } from 'class-validator'
 import { uniq } from 'lodash'
-import { CategoryType } from './category.model'
+
+import { UnprocessableEntityException } from '@nestjs/common'
+import { ApiProperty } from '@nestjs/swagger'
+
 import { IsBooleanOrString } from '~/utils/validator/isBooleanOrString'
+
+import { CategoryType } from './category.model'
 
 export class SlugOrIdDto {
   @IsString()

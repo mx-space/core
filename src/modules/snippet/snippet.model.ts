@@ -1,4 +1,3 @@
-import { index, modelOptions, prop } from '@typegoose/typegoose'
 import { Transform } from 'class-transformer'
 import {
   IsBoolean,
@@ -9,6 +8,9 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator'
+
+import { index, modelOptions, prop } from '@typegoose/typegoose'
+
 import { BaseModel } from '~/shared/model/base.model'
 
 export enum SnippetType {

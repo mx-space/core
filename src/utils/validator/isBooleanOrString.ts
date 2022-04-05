@@ -8,6 +8,7 @@
  */
 import { ValidationOptions, isString } from 'class-validator'
 import { isBoolean, merge } from 'lodash'
+
 import { validatorFactory } from './simpleValidatorFactory'
 
 export function IsBooleanOrString(validationOptions?: ValidationOptions) {

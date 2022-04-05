@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer'
 import { IsEnum, IsOptional, IsString, ValidateIf } from 'class-validator'
+
 import { PagerDto } from '~/shared/dto/pager.dto'
 
 export class PostQueryDto extends PagerDto {

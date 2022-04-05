@@ -2,6 +2,8 @@
  * 处理 Article 类型响应, 增加计数
  * @author Innei
  */
+import { map } from 'rxjs'
+
 import {
   CallHandler,
   ExecutionContext,
@@ -9,11 +11,12 @@ import {
   NestInterceptor,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import { map } from 'rxjs'
+
 import { HTTP_RES_UPDATE_DOC_COUNT_TYPE } from '~/constants/meta.constant'
 import { CountingService } from '~/processors/helper/helper.counting.service'
-import { getIp } from '~/utils/ip.util'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+import { getIp } from '~/utils/ip.util'
+
 // ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> HttpCacheInterceptor
 @Injectable()
 export class CountingInterceptor<T> implements NestInterceptor<T, any> {

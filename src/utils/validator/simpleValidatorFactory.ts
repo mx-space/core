@@ -6,7 +6,6 @@
  * @FilePath: /mx-server/src/common/decorators/simpleValidatorFactory.ts
  * @Coding with Love
  */
-
 import {
   ValidationArguments,
   ValidationOptions,

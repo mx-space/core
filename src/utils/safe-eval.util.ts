@@ -1,4 +1,5 @@
 import vm2 from 'vm2'
+
 export function safeEval(code: string, context = {}) {
   const sandbox = {
     global: {},

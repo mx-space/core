@@ -6,8 +6,8 @@
  * @FilePath: /mx-server/src/gateway/gateway.module.ts
  * @Coding with Love
  */
-
 import { Global, Module } from '@nestjs/common'
+
 import { AuthModule } from '../../modules/auth/auth.module'
 import { AdminEventsGateway } from './admin/events.gateway'
 import { SharedGateway } from './shared/events.gateway'

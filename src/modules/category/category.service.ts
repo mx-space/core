@@ -1,12 +1,15 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common'
-import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { omit } from 'lodash'
 import { FilterQuery } from 'mongoose'
+
+import { Inject, Injectable, forwardRef } from '@nestjs/common'
+import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+
+import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { InjectModel } from '~/transformers/model.transformer'
+
 import { PostModel } from '../post/post.model'
 import { PostService } from '../post/post.service'
 import { CategoryModel, CategoryType } from './category.model'
-import { InjectModel } from '~/transformers/model.transformer'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 
 @Injectable()
 export class CategoryService {

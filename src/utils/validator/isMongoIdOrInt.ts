@@ -6,9 +6,9 @@
  * @FilePath: /server/shared/utils/validator-decorators/isMongoIdOrInt.ts
  * @Mark: Coding with Love
  */
-
 import { ValidationOptions, isInt, isMongoId } from 'class-validator'
 import { merge } from 'lodash'
+
 import { validatorFactory } from './simpleValidatorFactory'
 
 export function IsBooleanOrString(validationOptions?: ValidationOptions) {

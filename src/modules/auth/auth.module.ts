@@ -1,12 +1,15 @@
 import cluster from 'cluster'
+import { machineIdSync } from 'node-machine-id'
+
 import { Module } from '@nestjs/common'
 import { JwtModule } from '@nestjs/jwt'
 import { PassportModule } from '@nestjs/passport'
-import { machineIdSync } from 'node-machine-id'
+
+import { CLUSTER, SECURITY } from '~/app.config'
+
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
 import { JwtStrategy } from './jwt.strategy'
-import { CLUSTER, SECURITY } from '~/app.config'
 
 const getMachineId = () => {
   const id = machineIdSync()

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+
 import { AggregateModule } from '../aggregate/aggregate.module'
 import { MarkdownModule } from '../markdown/markdown.module'
 import { FeedController } from './feed.controller'

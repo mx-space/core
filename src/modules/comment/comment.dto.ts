@@ -1,4 +1,3 @@
-import { ApiProperty } from '@nestjs/swagger'
 import {
   IsEmail,
   IsEnum,
@@ -10,6 +9,9 @@ import {
   IsUrl,
   MaxLength,
 } from 'class-validator'
+
+import { ApiProperty } from '@nestjs/swagger'
+
 import { CommentRefTypes } from './comment.model'
 
 export class CommentDto {

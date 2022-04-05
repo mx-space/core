@@ -1,6 +1,7 @@
-import { JSONSchema } from 'class-validator-jsonschema'
 import { Type } from 'class-transformer'
 import { ValidateNested } from 'class-validator'
+import { JSONSchema } from 'class-validator-jsonschema'
+
 import {
   AdminExtraDto,
   AlgoliaSearchOptionsDto,
@@ -13,6 +14,7 @@ import {
   TerminalOptionsDto,
   UrlDto,
 } from './configs.dto'
+
 @JSONSchema({
   title: '设置',
 })

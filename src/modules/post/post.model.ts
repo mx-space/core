@@ -1,3 +1,13 @@
+import {
+  ArrayUnique,
+  IsBoolean,
+  IsMongoId,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator'
+import { Query } from 'mongoose'
+
 import { PartialType } from '@nestjs/mapped-types'
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
 import {
@@ -10,18 +20,11 @@ import {
   prop,
 } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
-import {
-  ArrayUnique,
-  IsBoolean,
-  IsMongoId,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator'
-import { Query } from 'mongoose'
-import { CategoryModel as Category } from '../category/category.model'
+
 import { Paginator } from '~/shared/interface/paginator.interface'
 import { CountMixed as Count, WriteBaseModel } from '~/shared/model/base.model'
+
+import { CategoryModel as Category } from '../category/category.model'
 
 function autoPopulateCategory(
   this: Query<

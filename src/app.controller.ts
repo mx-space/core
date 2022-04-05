@@ -8,6 +8,8 @@ import {
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 
+import { InjectModel } from '~/transformers/model.transformer'
+
 import PKG from '../package.json'
 import { Auth } from './common/decorator/auth.decorator'
 import { HttpCache } from './common/decorator/cache.decorator'
@@ -17,7 +19,7 @@ import { RedisKeys } from './constants/cache.constant'
 import { OptionModel } from './modules/configs/configs.model'
 import { CacheService } from './processors/cache/cache.service'
 import { getRedisKey } from './utils/redis.util'
-import { InjectModel } from '~/transformers/model.transformer'
+
 @Controller()
 @ApiTags('Root')
 export class AppController {

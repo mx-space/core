@@ -71,9 +71,13 @@ const remoteModule =
 用法如下：
 
 ```ts
-import axios from 'axios' // this is ok, will transformer to `var axios = await require('axios')`
-import { render } from 'ejs' // ok, transform to var _ejs = await require("ejs"); _ejs.render
-import * as ejs from 'ejs' // bad, don't recommend
+import axios from 'axios'
+// this is ok, will transformer to `var axios = await require('axios')`
+import { render } from 'ejs'
+// ok, transform to var _ejs = await require("ejs"); _ejs.render
+import * as ejs from 'ejs'
+
+// bad, don't recommend
 ```
 
 ## `Context`
