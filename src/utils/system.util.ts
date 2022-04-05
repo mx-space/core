@@ -51,6 +51,12 @@ const LOCKS: Record<string, PackageManager> = {
   'package-lock.json': 'npm',
 }
 
+const INSTALL_COMMANDS: Record<PackageManager, string> = {
+  pnpm: 'install',
+  yarn: 'add',
+  npm: 'install',
+}
+
 export const installPKG = async (name: string, cwd: string) => {
   let manager: PackageManager | null = null
   for (const lock of Object.keys(LOCKS)) {
@@ -70,7 +76,9 @@ export const installPKG = async (name: string, cwd: string) => {
       }
     }
   }
-
+  if (!manager) {
+    throw new Error('No package manager found')
+  }
   cd(cwd)
-  await $`${manager} install ${name}`
+  await $`${manager} ${INSTALL_COMMANDS[manager]} ${name}`
 }
