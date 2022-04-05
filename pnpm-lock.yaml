@@ -22,7 +22,7 @@ specifiers:
   '@nestjs/passport': 8.2.1
   '@nestjs/platform-fastify': 8.4.3
   '@nestjs/platform-socket.io': 8.4.3
-  '@nestjs/schedule': 1.0.2
+  '@nestjs/schedule': 1.1.0
   '@nestjs/schematics': 8.0.9
   '@nestjs/swagger': 5.2.1
   '@nestjs/testing': 8.4.3
@@ -134,7 +134,7 @@ dependencies:
   '@nestjs/passport': 8.2.1_bdc4c6d4e53181e1a525c1b5bd912ba2
   '@nestjs/platform-fastify': 8.4.3_2da8a9968be4406723e870d9d23c8df0
   '@nestjs/platform-socket.io': 8.4.3_d45e4137bec02c70432e30ce915071a1
-  '@nestjs/schedule': 1.0.2_e3707db3f627f8174363a48cb9102e98
+  '@nestjs/schedule': 1.1.0_e3707db3f627f8174363a48cb9102e98
   '@nestjs/swagger': 5.2.1_3355817c6a028d8eed0197cb4c1b8d4c
   '@nestjs/websockets': 8.4.3_e26eca4d5f16a7520d9cc541b40f030e
   '@socket.io/redis-adapter': 7.1.0
@@ -1468,8 +1468,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@nestjs/schedule/1.0.2_e3707db3f627f8174363a48cb9102e98:
-    resolution: {integrity: sha512-GGRehpSm0nCthYNxAGdTzondPrRvurtKnkQCzIb3Tccqq6PhfS2QiHMwDaCel5/4jhYbR/lZR9UsVr6KSJc2Xg==}
+  /@nestjs/schedule/1.1.0_e3707db3f627f8174363a48cb9102e98:
+    resolution: {integrity: sha512-0QpbwClUildXqlyoaygG+aIQZNNMv31XDyQxX+Ob1zw/3I8+AVrDlBwZHQ+tlhIcJFR8aG+VTH8xwIjXwtS1UA==}
     peerDependencies:
       '@nestjs/common': ^6.10.11 || ^7.0.0 || ^8.0.0
       '@nestjs/core': ^7.0.0 || ^8.0.0
@@ -1477,7 +1477,7 @@ packages:
     dependencies:
       '@nestjs/common': 8.4.3_add13df2cdecb4b62cd3f7664ea82e18
       '@nestjs/core': 8.4.3_5a5d07c4899748c0cf60f67674da9f58
-      cron: 1.7.2
+      cron: 1.8.2
       reflect-metadata: 0.1.13
       uuid: 8.3.2
     dev: false
@@ -3297,6 +3297,13 @@ packages:
     resolution: {integrity: sha512-+SaJ2OfeRvfQqwXQ2kgr0Y5pzBR/lijf5OpnnaruwWnmI799JfWr2jN2ItOV9s3A/+TFOt6mxvKzQq5F0Jp6VQ==}
     dependencies:
       moment-timezone: 0.5.34
+    dev: true
+
+  /cron/1.8.2:
+    resolution: {integrity: sha512-Gk2c4y6xKEO8FSAUTklqtfSr7oTq0CiPQeLBG5Fl0qoXpZyMcj1SG59YL+hqq04bu6/IuEA7lMkYDAplQNKkyg==}
+    dependencies:
+      moment-timezone: 0.5.34
+    dev: false
 
   /cross-env/7.0.3:
     resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
