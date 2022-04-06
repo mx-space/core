@@ -64,8 +64,8 @@
   },
   "dependencies": {
     "@algolia/client-search": "*",
-    "@babel/core": "7.17.8",
-    "@babel/plugin-transform-modules-commonjs": "7.17.7",
+    "@babel/core": "7.17.9",
+    "@babel/plugin-transform-modules-commonjs": "7.17.9",
     "@babel/plugin-transform-typescript": "7.16.8",
     "@babel/types": "*",
     "@nestjs/common": "8.4.3",
