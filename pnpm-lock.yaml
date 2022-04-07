@@ -56,7 +56,7 @@ specifiers:
   axios: '*'
   axios-retry: 3.2.4
   bcrypt: 5.0.1
-  cache-manager: 3.6.0
+  cache-manager: 3.6.1
   cache-manager-ioredis: 2.1.0
   camelcase-keys: 7.0.2
   class-transformer: 0.5.1
@@ -125,7 +125,7 @@ dependencies:
   '@babel/plugin-transform-modules-commonjs': 7.17.9_@babel+core@7.17.9
   '@babel/plugin-transform-typescript': 7.16.8_@babel+core@7.17.9
   '@babel/types': 7.17.0
-  '@nestjs/common': 8.4.4_add13df2cdecb4b62cd3f7664ea82e18
+  '@nestjs/common': 8.4.4_ea528571bae7e3437ac6e354bb00c0f4
   '@nestjs/core': 8.4.4_833cc2d092821809dd361038e850826a
   '@nestjs/event-emitter': 1.1.0_8a3f4045e53a03a04c90c8adfa35dfce
   '@nestjs/jwt': 8.0.0_@nestjs+common@8.4.4
@@ -144,7 +144,7 @@ dependencies:
   axios: 0.26.1
   axios-retry: 3.2.4
   bcrypt: 5.0.1
-  cache-manager: 3.6.0
+  cache-manager: 3.6.1
   cache-manager-ioredis: 2.1.0
   camelcase-keys: 7.0.2
   class-transformer: 0.5.1
@@ -1302,7 +1302,7 @@ packages:
       - webpack-cli
     dev: true
 
-  /@nestjs/common/8.4.4_add13df2cdecb4b62cd3f7664ea82e18:
+  /@nestjs/common/8.4.4_ea528571bae7e3437ac6e354bb00c0f4:
     resolution: {integrity: sha512-QHi7QcgH/5Jinz+SCfIZJkFHc6Cch1YsAEGFEhi6wSp6MILb0sJMQ1CX06e9tCOAjSlBwaJj4PH0eFCVau5v9Q==}
     peerDependencies:
       cache-manager: '*'
@@ -1319,7 +1319,7 @@ packages:
         optional: true
     dependencies:
       axios: 0.26.1
-      cache-manager: 3.6.0
+      cache-manager: 3.6.1
       class-transformer: 0.5.1
       class-validator: 0.13.2
       iterare: 1.2.1
@@ -1349,7 +1349,7 @@ packages:
       '@nestjs/websockets':
         optional: true
     dependencies:
-      '@nestjs/common': 8.4.4_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.4_ea528571bae7e3437ac6e354bb00c0f4
       '@nestjs/websockets': 8.4.4_3014fe44fe56dc306f12143fbc824279
       '@nuxtjs/opencollective': 0.3.2
       fast-safe-stringify: 2.1.1
@@ -1371,7 +1371,7 @@ packages:
       '@nestjs/core': ^7.0.0 || ^8.0.0
       reflect-metadata: ^0.1.12
     dependencies:
-      '@nestjs/common': 8.4.4_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.4_ea528571bae7e3437ac6e354bb00c0f4
       '@nestjs/core': 8.4.4_833cc2d092821809dd361038e850826a
       eventemitter2: 6.4.5
       reflect-metadata: 0.1.13
@@ -1382,7 +1382,7 @@ packages:
     peerDependencies:
       '@nestjs/common': ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
-      '@nestjs/common': 8.4.4_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.4_ea528571bae7e3437ac6e354bb00c0f4
       '@types/jsonwebtoken': 8.5.4
       jsonwebtoken: 8.5.1
     dev: false
@@ -1400,7 +1400,7 @@ packages:
       class-validator:
         optional: true
     dependencies:
-      '@nestjs/common': 8.4.4_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.4_ea528571bae7e3437ac6e354bb00c0f4
       class-transformer: 0.5.1
       class-validator: 0.13.2
       reflect-metadata: 0.1.13
@@ -1412,7 +1412,7 @@ packages:
       '@nestjs/common': ^6.0.0 || ^7.0.0 || ^8.0.0
       passport: ^0.4.0 || ^0.5.0
     dependencies:
-      '@nestjs/common': 8.4.4_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.4_ea528571bae7e3437ac6e354bb00c0f4
       passport: 0.5.2
     dev: false
 
@@ -1422,7 +1422,7 @@ packages:
       '@nestjs/common': ^8.0.0
       '@nestjs/core': ^8.0.0
     dependencies:
-      '@nestjs/common': 8.4.4_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.4_ea528571bae7e3437ac6e354bb00c0f4
       '@nestjs/core': 8.4.4_833cc2d092821809dd361038e850826a
       fastify: 3.28.0
       fastify-cors: 6.0.3
@@ -1442,7 +1442,7 @@ packages:
       '@nestjs/websockets': ^8.0.0
       rxjs: ^7.1.0
     dependencies:
-      '@nestjs/common': 8.4.4_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.4_ea528571bae7e3437ac6e354bb00c0f4
       '@nestjs/websockets': 8.4.4_3014fe44fe56dc306f12143fbc824279
       rxjs: 7.5.5
       socket.io: 4.4.1
@@ -1460,7 +1460,7 @@ packages:
       '@nestjs/core': ^7.0.0 || ^8.0.0
       reflect-metadata: ^0.1.12
     dependencies:
-      '@nestjs/common': 8.4.4_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.4_ea528571bae7e3437ac6e354bb00c0f4
       '@nestjs/core': 8.4.4_833cc2d092821809dd361038e850826a
       cron: 1.8.2
       reflect-metadata: 0.1.13
@@ -1511,7 +1511,7 @@ packages:
       swagger-ui-express:
         optional: true
     dependencies:
-      '@nestjs/common': 8.4.4_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.4_ea528571bae7e3437ac6e354bb00c0f4
       '@nestjs/core': 8.4.4_833cc2d092821809dd361038e850826a
       '@nestjs/mapped-types': 1.0.1_5a485a6776bce4bf38c75aafd7cb3504
       fastify-swagger: 5.1.0
@@ -1537,7 +1537,7 @@ packages:
         optional: true
     dependencies:
       optional: 0.1.4
-      '@nestjs/common': 8.4.4_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.4_ea528571bae7e3437ac6e354bb00c0f4
       '@nestjs/core': 8.4.4_833cc2d092821809dd361038e850826a
       tslib: 2.3.1
     dev: true
@@ -1554,7 +1554,7 @@ packages:
       '@nestjs/platform-socket.io':
         optional: true
     dependencies:
-      '@nestjs/common': 8.4.4_add13df2cdecb4b62cd3f7664ea82e18
+      '@nestjs/common': 8.4.4_ea528571bae7e3437ac6e354bb00c0f4
       '@nestjs/core': 8.4.4_833cc2d092821809dd361038e850826a
       '@nestjs/platform-socket.io': 8.4.4_b9f517971896b8a0bfcee5255ab89e52
       iterare: 1.2.1
@@ -2631,8 +2631,8 @@ packages:
     resolution: {integrity: sha1-rqdNXmHB+JlhO/ZL2mbUx48v0X0=}
     dev: false
 
-  /async/3.2.0:
-    resolution: {integrity: sha512-TR2mEZFVOj2pLStYxLht7TyfuRzaydfpxr3k9RpHIzMgw7A64dzsdqCxH1WJyQdoe8T10nDXd9wnEigmiuHIZw==}
+  /async/3.2.3:
+    resolution: {integrity: sha512-spZRyzKL5l5BZQrr/6m/SqFdBN0q3OCI0f9rjfBzCMBIP4p75P620rR3gTmaksNOhmzgdxcaxdNfMy6anrbM0g==}
     dev: false
 
   /asynckit/0.4.0:
@@ -2888,10 +2888,10 @@ packages:
       - supports-color
     dev: false
 
-  /cache-manager/3.6.0:
-    resolution: {integrity: sha512-D4GJZhyYgprYM30ZEPOn9kkdwdPUumX3ujbNbl7FYjcRViRvAgY53k6pO/82wNsm7c4aHVgXfR12/3huA47qnA==}
+  /cache-manager/3.6.1:
+    resolution: {integrity: sha512-jxJvGYhN5dUgpriAdsDnnYbKse4dEXI5i3XpwTfPq5utPtXH1uYXWyGLHGlbSlh9Vq4ytrgAUVwY+IodNeKigA==}
     dependencies:
-      async: 3.2.0
+      async: 3.2.3
       lodash: 4.17.21
       lru-cache: 6.0.0
     dev: false
