@@ -9,7 +9,6 @@ import {
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets'
-import { Emitter } from '@socket.io/redis-emitter'
 
 import { LOG_DIR } from '~/constants/path.constant'
 import { getTodayLogFilePath } from '~/global/consola.global'
@@ -30,7 +29,7 @@ export class AdminEventsGateway
     protected readonly authService: AuthService,
     private readonly cacheService: CacheService,
   ) {
-    super(jwtService, authService)
+    super(jwtService, authService, cacheService)
   }
 
   subscribeSocketToHandlerMap = new WeakMap<Socket, Function>()
@@ -75,10 +74,5 @@ export class AdminEventsGateway
   handleDisconnect(client: SocketIO.Socket) {
     super.handleDisconnect(client)
     this.unsubscribeStdOut(client)
-  }
-
-  override broadcast(event: BusinessEvents, data: any) {
-    const client = new Emitter(this.cacheService.getClient())
-    client.of('/admin').emit('message', this.gatewayMessageFormat(event, data))
   }
 }

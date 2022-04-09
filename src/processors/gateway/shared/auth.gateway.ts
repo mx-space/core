@@ -7,9 +7,11 @@ import {
   OnGatewayDisconnect,
   WebSocketServer,
 } from '@nestjs/websockets'
+import { Emitter } from '@socket.io/redis-emitter'
 
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthService } from '~/modules/auth/auth.service'
+import { CacheService } from '~/processors/cache/cache.service'
 
 import { BusinessEvents } from '../../../constants/business-event.constant'
 import { BoardcastBaseGateway } from '../base.gateway'
@@ -33,6 +35,7 @@ export const createAuthGateway = (
     constructor(
       protected readonly jwtService: JwtService,
       protected readonly authService: AuthService,
+      private readonly cacheService: CacheService,
     ) {
       super()
     }
@@ -127,6 +130,13 @@ export const createAuthGateway = (
         return true
       }
       return false
+    }
+
+    override broadcast(event: BusinessEvents, data: any) {
+      const client = new Emitter(this.cacheService.getClient())
+      client
+        .of(`/${namespace}`)
+        .emit('message', this.gatewayMessageFormat(event, data))
     }
   }
 
