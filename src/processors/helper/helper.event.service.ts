@@ -8,6 +8,7 @@ import { EventBusEvents } from '~/constants/event-bus.constant'
 
 import { AdminEventsGateway } from '../gateway/admin/events.gateway'
 import { BoardcastBaseGateway } from '../gateway/base.gateway'
+import { SystemEventsGateway } from '../gateway/system/events.gateway'
 import { WebEventsGateway } from '../gateway/web/events.gateway'
 
 export type EventManagerOptions = {
@@ -30,6 +31,7 @@ export class EventManagerService {
     private readonly webGateway: WebEventsGateway,
 
     private readonly adminGateway: AdminEventsGateway,
+    private readonly systemGateway: SystemEventsGateway,
 
     private readonly emitter2: EventEmitter2,
   ) {
@@ -42,15 +44,33 @@ export class EventManagerService {
 
   private mapScopeToInstance: Record<
     EventScope,
-    (WebEventsGateway | AdminEventsGateway | EventEmitter2)[]
+    (
+      | WebEventsGateway
+      | AdminEventsGateway
+      | EventEmitter2
+      | SystemEventsGateway
+    )[]
   > = {
-    [EventScope.ALL]: [this.webGateway, this.adminGateway, this.emitter2],
+    [EventScope.ALL]: [
+      this.webGateway,
+      this.adminGateway,
+      this.emitter2,
+      this.systemGateway,
+    ],
     [EventScope.TO_VISITOR]: [this.webGateway],
     [EventScope.TO_ADMIN]: [this.adminGateway],
-    [EventScope.TO_SYSTEM]: [this.emitter2],
+    [EventScope.TO_SYSTEM]: [this.emitter2, this.systemGateway],
     [EventScope.TO_VISITOR_ADMIN]: [this.webGateway, this.adminGateway],
-    [EventScope.TO_SYSTEM_VISITOR]: [this.emitter2, this.webGateway],
-    [EventScope.TO_SYSTEM_ADMIN]: [this.emitter2, this.adminGateway],
+    [EventScope.TO_SYSTEM_VISITOR]: [
+      this.emitter2,
+      this.webGateway,
+      this.systemGateway,
+    ],
+    [EventScope.TO_SYSTEM_ADMIN]: [
+      this.emitter2,
+      this.adminGateway,
+      this.systemGateway,
+    ],
   }
 
   #key = 'event-manager'

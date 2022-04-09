@@ -59,7 +59,7 @@ export class AuthService {
     return tokens.map((token) => ({
       // @ts-ignore
       id: token._id,
-      ...omit(token, ['_id', '__v', 'token']),
+      ...omit(token, ['_id', '__v']),
     })) as any as TokenModel[]
   }
 

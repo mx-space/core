@@ -19,9 +19,13 @@ import { BusinessEvents } from '../../../constants/business-event.constant'
 import { AuthService } from '../../../modules/auth/auth.service'
 import { createAuthGateway } from '../shared/auth.gateway'
 
-const AuthGateway = createAuthGateway({ namespace: 'admin', authway: 'jwt' })
-@WebSocketGateway<GatewayMetadata>({ namespace: 'admin' })
-export class AdminEventsGateway
+const AuthGateway = createAuthGateway({
+  namespace: 'admin',
+  authway: 'custom-token',
+})
+
+@WebSocketGateway<GatewayMetadata>({ namespace: 'system' })
+export class SystemEventsGateway
   extends AuthGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {

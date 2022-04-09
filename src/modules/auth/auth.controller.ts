@@ -12,6 +12,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Post,
   Query,
   Scope,
@@ -88,9 +89,23 @@ export class AuthController {
   @Auth()
   async deleteToken(@Query() query: MongoIdDto) {
     const { id } = query
+    const token = await this.authService
+      .getAllAccessToken()
+      .then((models) =>
+        models.find((model) => {
+          return (model as any).id === id
+        }),
+      )
+      .then((model) => {
+        return model?.token
+      })
+
+    if (!token) {
+      throw new NotFoundException(`token ${id} is not found`)
+    }
     await this.authService.deleteToken(id)
 
-    this.eventEmitter.emit(EventBusEvents.TokenExpired, id)
+    this.eventEmitter.emit(EventBusEvents.TokenExpired, token)
     return 'OK'
   }
 }

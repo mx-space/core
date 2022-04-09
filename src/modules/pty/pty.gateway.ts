@@ -18,9 +18,10 @@ import { DATA_DIR } from '~/constants/path.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { CacheService } from '~/processors/cache/cache.service'
-import { AuthGateway } from '~/processors/gateway/admin/auth.gateway'
+import { createAuthGateway } from '~/processors/gateway/shared/auth.gateway'
 import { getIp, getRedisKey } from '~/utils'
 
+const AuthGateway = createAuthGateway({ namespace: 'pty', authway: 'jwt' })
 @WebSocketGateway<GatewayMetadata>({ namespace: 'pty' })
 export class PTYGateway
   extends AuthGateway
