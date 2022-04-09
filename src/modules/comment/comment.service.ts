@@ -232,17 +232,17 @@ export class CommentService {
         time.getMonth() + 1
       }/${time.getFullYear()}`
 
-      if (!parent || !parent.mail || !refDoc || !master.mail || !model.mail) {
+      if (!refDoc || !master.mail) {
         return
       }
 
       this.mailService.sendCommentNotificationMail({
-        to: type === ReplyMailType.Owner ? master.mail : parent.mail,
+        to: type === ReplyMailType.Owner ? master.mail : parent!.mail,
         type,
         source: {
           title: refDoc.title,
           text: model.text,
-          author: type === ReplyMailType.Guest ? parent.author : model.author,
+          author: type === ReplyMailType.Guest ? parent!.author : model.author,
           master: master.name,
           link: await this.resolveUrlByType(refType, refDoc),
           time: parsedTime,
