@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import dayjs from 'dayjs'
 import { render } from 'ejs'
-import { minify } from 'html-minifier'
 import JSZip from 'jszip'
 import { isNil } from 'lodash'
 import { join } from 'path'
@@ -234,12 +233,7 @@ export class MarkdownController {
         `,
     })
 
-    return minify(html, {
-      removeAttributeQuotes: true,
-      removeComments: true,
-      minifyCSS: true,
-      collapseWhitespace: true,
-    })
+    return html.trim()
   }
 
   /**
@@ -261,13 +255,11 @@ export class MarkdownController {
       title,
       theme,
     )
-    return minify(
-      render(await this.service.getMarkdownEjsRenderTemplate(), {
-        ...structure,
+    return render(await this.service.getMarkdownEjsRenderTemplate(), {
+      ...structure,
 
-        title: xss(title),
-      }),
-    )
+      title: xss(title),
+    }).trim()
   }
 
   @Get('/render/structure/:id')

@@ -1,5 +1,3 @@
-import { minify } from 'html-minifier'
-
 import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
 
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
@@ -21,8 +19,7 @@ export class SitemapController {
   async getSitemap() {
     const content = await this.aggregateService.getSiteMapContent()
 
-    const xml = minify(
-      `
+    const xml = `
   <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
   ${content
     .map(
@@ -31,11 +28,10 @@ export class SitemapController {
   <lastmod>${item.published_at?.toISOString() || 'N/A'}</lastmod>
   </url>`,
     )
+
     .join('')}
   </urlset>
-  `,
-      { collapseWhitespace: true },
-    )
+  `.trim()
     return xml
   }
 }

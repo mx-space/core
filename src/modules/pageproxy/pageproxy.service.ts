@@ -1,4 +1,4 @@
-import jsdom from 'jsdom'
+import { parseHTML } from 'linkedom'
 import { URL } from 'url'
 
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
@@ -83,7 +83,7 @@ export class PageProxyService {
     if (!htmlEntry) {
       throw new InternalServerErrorException('htmlEntry is empty')
     }
-    const dom = new jsdom.JSDOM(htmlEntry)
+    const dom = parseHTML(htmlEntry)
     const window = dom.window
     const document = window.document
     const $scripts = document.querySelectorAll(
@@ -117,7 +117,7 @@ export class PageProxyService {
       const url = urlReplacer(originHref)
       $link.href = path.join('/proxy', url.pathname)
     })
-    return dom.serialize()
+    return dom.document.toString()
   }
 
   getMineTypeByExt(ext: string) {
