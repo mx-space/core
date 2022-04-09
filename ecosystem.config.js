@@ -13,7 +13,7 @@ module.exports = {
       autorestart: true,
       exec_mode: 'cluster',
       watch: false,
-      instances: Math.min(2, cpuLen),
+      instances: Math.max(2, cpuLen),
       max_memory_restart: '230M',
       args: '--color',
       env: {
