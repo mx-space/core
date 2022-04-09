@@ -19,9 +19,8 @@
     "lib": [
       "ES2021",
       "ES2020",
-      // for jsdom
       "DOM",
-      "DOM.Iterable",
+      "DOM.Iterable"
     ],
     "skipLibCheck": true,
     "paths": {
