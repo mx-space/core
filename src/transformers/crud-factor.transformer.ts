@@ -36,7 +36,7 @@ export function BaseCrudFactory<
   const tagPrefix =
     pluralizeName.charAt(0).toUpperCase() + pluralizeName.slice(1)
 
-  const eventNamePrefix = `${pluralizeName.toUpperCase()}_`
+  const eventNamePrefix = `${prefix.toUpperCase()}_`
 
   class PDto extends PartialType(model as any) {}
 

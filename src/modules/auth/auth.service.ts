@@ -4,13 +4,14 @@ import { customAlphabet } from 'nanoid/async'
 
 import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+import { ReturnModelType } from '@typegoose/typegoose'
 
 import { MasterLostException } from '~/common/exceptions/master-lost.exception'
 import {
   TokenModel,
   UserModel as User,
   UserDocument,
+  UserModel,
 } from '~/modules/user/user.model'
 import { InjectModel } from '~/transformers/model.transformer'
 
@@ -84,16 +85,18 @@ export class AuthService {
     return await ap()
   }
 
-  async verifyCustomToken(token: string): Promise<boolean> {
+  async verifyCustomToken(
+    token: string,
+  ): Promise<Readonly<[boolean, UserModel | null]>> {
     const user = await this.userModel.findOne({}).lean().select('+apiToken')
     if (!user) {
-      return false
+      return [false, null] as const
     }
     const tokens = user.apiToken
     if (!tokens || !Array.isArray(tokens)) {
-      return false
+      return [false, null] as const
     }
-    return tokens.some((doc) => {
+    const valid = tokens.some((doc) => {
       if (doc.token === token) {
         if (typeof doc.expired === 'undefined') {
           return true
@@ -104,6 +107,8 @@ export class AuthService {
       }
       return false
     })
+
+    return valid ? [true, await this.userModel.findOne().lean()] : [false, null]
   }
 
   async saveToken(model: TokenDto & { token: string }) {

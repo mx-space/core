@@ -9,6 +9,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 
+import { AuthService } from '~/modules/auth/auth.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 /**
@@ -17,15 +18,28 @@ import { getNestExecutionContextRequest } from '~/transformers/get-req.transform
 
 @Injectable()
 export class RolesGuard extends AuthGuard('jwt') implements CanActivate {
+  constructor(private readonly authService: AuthService) {
+    super(authService)
+  }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     let isMaster = false
     const request = this.getRequest(context)
-
-    if (request.headers['authorization']) {
+    const authorization = request.headers.authorization
+    if (authorization) {
       try {
         isMaster = (await super.canActivate(context)) as boolean
       } catch {}
+      if (!isMaster) {
+        const [isValidToken, userModel] =
+          await this.authService.verifyCustomToken(authorization as string)
+        if (isValidToken) {
+          request.user = userModel!
+          isMaster = true
+          return true
+        }
+      }
     }
+
     request.isGuest = !isMaster
     request.isMaster = isMaster
     return true

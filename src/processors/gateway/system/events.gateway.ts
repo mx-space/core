@@ -1,5 +1,3 @@
-import SocketIO from 'socket.io'
-
 import { JwtService } from '@nestjs/jwt'
 import {
   GatewayMetadata,
@@ -29,9 +27,5 @@ export class SystemEventsGateway
     private readonly cacheService: CacheService,
   ) {
     super(jwtService, authService, cacheService)
-  }
-
-  handleDisconnect(client: SocketIO.Socket) {
-    super.handleDisconnect(client)
   }
 }

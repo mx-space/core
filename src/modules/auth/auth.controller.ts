@@ -64,7 +64,9 @@ export class AuthController {
     @Query('id') id?: string,
   ) {
     if (typeof token === 'string') {
-      return await this.authService.verifyCustomToken(token)
+      return await this.authService
+        .verifyCustomToken(token)
+        .then(([isValid, user]) => isValid)
     }
     if (id && typeof id === 'string' && isMongoId(id)) {
       return await this.authService.getTokenSecret(id)

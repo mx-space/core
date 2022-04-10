@@ -55,7 +55,7 @@ export const createAuthGateway = (
         return false
       }
       const validCustomToken = async () => {
-        const verifyCustomToken = await this.authService.verifyCustomToken(
+        const [verifyCustomToken] = await this.authService.verifyCustomToken(
           token,
         )
         if (verifyCustomToken) {

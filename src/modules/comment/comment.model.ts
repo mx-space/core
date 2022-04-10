@@ -53,7 +53,7 @@ export class CommentModel extends BaseModel {
   @prop({ refPath: 'refType' })
   ref: Ref<PostModel | NoteModel | PageModel>
 
-  @prop({ required: true, default: 'PostModel', enum: CommentRefTypes })
+  @prop({ required: true, default: 'Post', enum: CommentRefTypes })
   refType: CommentRefTypes
 
   @prop({ trim: true, required: true })

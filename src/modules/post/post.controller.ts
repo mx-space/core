@@ -61,7 +61,7 @@ export class PostController {
   @VisitDocument('Post')
   async getById(@Param() params: MongoIdDto) {
     const { id } = params
-    const doc = await this.postService.model.findById(id)
+    const doc = await this.postService.model.findById(id).populate('category')
     if (!doc) {
       throw new CannotFindException()
     }
