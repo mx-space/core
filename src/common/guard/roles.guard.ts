@@ -9,6 +9,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 
+import { isTest } from '~/global/env.global'
 import { AuthService } from '~/modules/auth/auth.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
@@ -29,7 +30,8 @@ export class RolesGuard extends AuthGuard('jwt') implements CanActivate {
       try {
         isMaster = (await super.canActivate(context)) as boolean
       } catch {}
-      if (!isMaster) {
+      // FIXME test env
+      if (!isMaster && !isTest) {
         const [isValidToken, userModel] =
           await this.authService.verifyCustomToken(authorization as string)
         if (isValidToken) {

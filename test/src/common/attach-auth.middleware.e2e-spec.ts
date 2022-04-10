@@ -10,6 +10,7 @@ import {
 import { AuthGuard } from '@nestjs/passport'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
+
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
 import { RolesGuard } from '~/common/guard/roles.guard'
 import { AttachHeaderTokenMiddleware } from '~/common/middlewares/attach-auth.middleware'
@@ -36,7 +37,7 @@ describe('AuthMiddleware (e2e)', () => {
       imports: [AppModule],
     })
       .overrideProvider(AuthGuard)
-      .useValue({ canActivate: () => true })
+      .useValue({ canActivate: () => true, verifyCustomToken: () => false })
       .compile()
 
     app = moduleRef.createNestApplication<NestFastifyApplication>(fastifyApp)

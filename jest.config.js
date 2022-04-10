@@ -17,7 +17,7 @@ module.exports = {
   globals: {
     'ts-jest': {
       useESM: true,
-      tsConfig: './test/tsconfig.json',
+      tsconfig: './test/tsconfig.json',
     },
     isDev: process.env.NODE_ENV === 'development',
   },
