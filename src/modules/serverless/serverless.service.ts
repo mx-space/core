@@ -63,7 +63,7 @@ export class ServerlessService {
         }
       })
 
-      module.paths.push(NODE_REQUIRE_PATH)
+      // module.paths.push(NODE_REQUIRE_PATH)
       consola.info(module.paths)
     })
   }
@@ -274,13 +274,33 @@ export class ServerlessService {
 
     this.requireModuleIdSet.clear()
   }
+
+  private resolvePath(id: string) {
+    try {
+      return require.resolve(id)
+    } catch {
+      try {
+        const modulePath = path.resolve(NODE_REQUIRE_PATH, id)
+        const resolvePath = require.resolve(modulePath)
+
+        return resolvePath
+      } catch {
+        throw new InternalServerErrorException(`module "${id}" not found.`)
+      }
+    }
+  }
+
   private inNewContextRequire() {
     const __require = (id: string) => {
-      const module = require(id)
+      const isBuiltin = isBuiltinModule(id)
+
+      const resolvePath = this.resolvePath(id)
+      const module = require(resolvePath)
+      // TODO remove cache in-used package dependencies, because it will not exist in prod
       // eslint-disable-next-line no-empty
-      if (Object.keys(PKG.dependencies).includes(id) || isBuiltinModule(id)) {
+      if (Object.keys(PKG.dependencies).includes(id) || isBuiltin) {
       } else {
-        this.requireModuleIdSet.add(require.resolve(id))
+        this.requireModuleIdSet.add(resolvePath)
       }
       const clonedModule = cloneDeep(module)
       return typeof module === 'function'
@@ -294,7 +314,7 @@ export class ServerlessService {
     }
 
     const __requireNoCache = (id: string) => {
-      delete require.cache[require.resolve(id)]
+      delete require.cache[this.resolvePath(id)]
       const clonedModule = __require(id)
 
       return clonedModule
