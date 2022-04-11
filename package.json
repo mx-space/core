@@ -109,7 +109,7 @@
     "jszip": "3.9.1",
     "linkedom": "0.14.5",
     "lodash": "*",
-    "marked": "4.0.13",
+    "marked": "4.0.14",
     "mkdirp": "*",
     "mongoose": "*",
     "mongoose-lean-id": "0.3.0",
