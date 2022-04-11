@@ -49,7 +49,7 @@ specifiers:
   '@types/qs': 6.9.7
   '@types/ua-parser-js': 0.7.36
   '@types/validator': 13.7.2
-  '@vercel/ncc': 0.33.3
+  '@vercel/ncc': 0.33.4
   algoliasearch: 4.13.0
   axios: '*'
   axios-retry: 3.2.4
@@ -213,7 +213,7 @@ devDependencies:
   '@types/qs': 6.9.7
   '@types/ua-parser-js': 0.7.36
   '@types/validator': 13.7.2
-  '@vercel/ncc': 0.33.3
+  '@vercel/ncc': 0.33.4
   cron: 1.7.2
   cross-env: 7.0.3
   eslint: 8.11.0
@@ -2153,8 +2153,8 @@ packages:
       eslint-visitor-keys: 3.3.0
     dev: true
 
-  /@vercel/ncc/0.33.3:
-    resolution: {integrity: sha512-JGZ11QV+/ZcfudW2Cz2JVp54/pJNXbsuWRgSh2ZmmZdQBKXqBtIGrwI1Wyx8nlbzAiEFe7FHi4K1zX4//jxTnQ==}
+  /@vercel/ncc/0.33.4:
+    resolution: {integrity: sha512-ln18hs7dMffelP47tpkaR+V5Tj6coykNyxJrlcmCormPqRQjB/Gv4cu2FfBG+PMzIfdZp2CLDsrrB1NPU22Qhg==}
     hasBin: true
     dev: true
 
