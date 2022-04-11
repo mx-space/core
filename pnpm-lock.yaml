@@ -104,7 +104,7 @@ specifiers:
   rimraf: 3.0.2
   rxjs: 7.5.5
   semver: '*'
-  snakecase-keys: 5.1.2
+  snakecase-keys: 5.4.0
   socket.io: '*'
   ts-jest: 27.1.4
   ts-loader: 9.2.8
@@ -179,7 +179,7 @@ dependencies:
   qs: 6.10.3
   reflect-metadata: 0.1.13
   rxjs: 7.5.5
-  snakecase-keys: 5.1.2
+  snakecase-keys: 5.4.0
   ua-parser-js: 1.0.2
   vm2: 3.9.9
   xss: 1.0.11
@@ -5985,11 +5985,6 @@ packages:
       tmpl: 1.0.5
     dev: true
 
-  /map-obj/4.2.1:
-    resolution: {integrity: sha512-+WA2/1sPmDj1dlvvJmB5G6JKfY9dpn7EVBUL06+y6PoljPkh+6V1QihwxNkbcGxCRjt2b0F9K0taiCuo7MbdFQ==}
-    engines: {node: '>=8'}
-    dev: false
-
   /map-obj/4.3.0:
     resolution: {integrity: sha512-hdN1wVrZbb29eBGiGjJbeP8JbKjq1urkHJ/LIP/NY48MZ1QVXUsQBV1G1zvYFHn1XE06cwjBsOI2K3Ulnj1YXQ==}
     engines: {node: '>=8'}
@@ -7257,11 +7252,11 @@ packages:
       tslib: 2.3.1
     dev: false
 
-  /snakecase-keys/5.1.2:
-    resolution: {integrity: sha512-fvtDQZqPBqYb0dEY97TGuOMbN2NJ05Tj4MaoKwjTKkmjcG6mrd58JYGr23UWZRi6Aqv49Fk4HtjTIStOQenaug==}
+  /snakecase-keys/5.4.0:
+    resolution: {integrity: sha512-Hxtf01frWTfQQXr5Sw1HrMHdT2YE+D+ZXCrFdxzvQdO8rYglVMZgtybqJGLM8FyHy25OeMzDDOuVjq0Ka40HCA==}
     engines: {node: '>=12'}
     dependencies:
-      map-obj: 4.2.1
+      map-obj: 4.3.0
       snake-case: 3.0.4
       type-fest: 2.5.3
     dev: false
