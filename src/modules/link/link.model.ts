@@ -2,6 +2,7 @@ import { Transform } from 'class-transformer'
 import {
   IsEmail,
   IsEnum,
+  IsNotEmpty,
   IsOptional,
   IsString,
   IsUrl,
@@ -14,7 +15,6 @@ import { ApiProperty } from '@nestjs/swagger'
 import { modelOptions, prop } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
-import { IsAllowedUrl } from '~/utils/validator/isAllowedUrl'
 
 export enum LinkType {
   Friend,
@@ -33,8 +33,8 @@ export enum LinkState {
 @modelOptions({ options: { customName: 'Link' } })
 export class LinkModel extends BaseModel {
   @prop({ required: true, trim: true, unique: true })
-  @IsString()
-  @MaxLength(30)
+  @IsString({ message: '标题是必须的啦' })
+  @MaxLength(20, { message: '标题太长了 www' })
   /**
    * name is site name
    */
@@ -50,12 +50,15 @@ export class LinkModel extends BaseModel {
   })
   @IsUrl(
     { require_protocol: true, protocols: ['https'] },
-    { message: 'only https protocol support' },
+    { message: '只有 HTTPS 被允许哦' },
   )
   url: string
 
   @IsOptional()
-  @IsAllowedUrl()
+  @IsUrl(
+    { require_protocol: true, protocols: ['https'] },
+    { message: '只有 HTTPS 被允许哦' },
+  )
   @prop({ trim: true })
   // 对空字符串处理
   @Transform(({ value }) => (value === '' ? null : value))
@@ -63,9 +66,10 @@ export class LinkModel extends BaseModel {
   avatar?: string
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: '只能是字符串！' })
+  @IsNotEmpty({ message: '不能为空啦' })
   @prop({ trim: true })
-  @MaxLength(150)
+  @MaxLength(50, { message: '超过 50 会坏掉的！' })
   description?: string
 
   @IsOptional()
@@ -80,7 +84,7 @@ export class LinkModel extends BaseModel {
   state: LinkState
 
   @prop()
-  @IsEmail()
+  @IsEmail(undefined, { message: '请输入正确的邮箱！' })
   @IsOptional()
   // 对空字符串处理
   @Transform(({ value }) => (value === '' ? null : value))

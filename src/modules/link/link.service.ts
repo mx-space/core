@@ -47,7 +47,7 @@ export class LinkService {
           scope: EventScope.TO_SYSTEM_ADMIN,
         })
       })
-    } catch {
+    } catch (err) {
       throw new BadRequestException('请不要重复申请友链哦')
     }
   }

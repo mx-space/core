@@ -22,7 +22,7 @@ import {
   BaseCrudModuleType,
 } from '~/transformers/crud-factor.transformer'
 
-import { LinkQueryDto } from './link.dto'
+import { LinkDto } from './link.dto'
 import { LinkModel, LinkState } from './link.model'
 import { LinkService } from './link.service'
 
@@ -80,13 +80,13 @@ export class LinkController {
   /** 申请友链 */
   @Post('/audit')
   @HttpCode(204)
-  async applyForLink(@Body() body: LinkModel, @Query() query: LinkQueryDto) {
+  async applyForLink(@Body() body: LinkDto) {
     if (!(await this.linkService.canApplyLink())) {
       throw new ForbiddenException('主人目前不允许申请友链了！')
     }
     await this.linkService.applyForLink(body)
     process.nextTick(async () => {
-      await this.linkService.sendToMaster(query.author, body)
+      await this.linkService.sendToMaster(body.author, body)
     })
 
     return
