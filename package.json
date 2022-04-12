@@ -107,7 +107,7 @@
     "isbot": "3.4.5",
     "js-yaml": "*",
     "jszip": "3.9.1",
-    "linkedom": "0.14.5",
+    "linkedom": "0.14.6",
     "lodash": "*",
     "marked": "4.0.14",
     "mkdirp": "*",
