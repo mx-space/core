@@ -1,4 +1,3 @@
-import { ApiProperty } from '@nestjs/swagger'
 import { Transform, Type } from 'class-transformer'
 import {
   IsBoolean,
@@ -8,6 +7,9 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator'
+
+import { ApiProperty } from '@nestjs/swagger'
+
 import { ArticleTypeEnum } from '~/constants/article.constant'
 
 export class MetaDto {

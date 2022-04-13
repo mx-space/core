@@ -3,8 +3,8 @@ export interface RSSProps {
   url: string
   author: string
   data: {
-    created: Date
-    modified: Date
+    created: Date | null
+    modified: Date | null
     link: string
     title: string
     text: string

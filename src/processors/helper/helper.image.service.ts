@@ -1,9 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
 import imageSize from 'image-size'
+
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common'
+import { ReturnModelType } from '@typegoose/typegoose'
+
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { TextImageRecordType, WriteBaseModel } from '~/shared/model/base.model'
 import { getAverageRGB, pickImagesFromMarkdown } from '~/utils/pic.util'
+
 import { HttpService } from './helper.http.service'
 
 @Injectable()
@@ -22,6 +29,11 @@ export class ImageService {
   ) {
     const model = _model as any as ReturnModelType<typeof WriteBaseModel>
     const document = await model.findById(id).lean()
+    if (!document) {
+      throw new InternalServerErrorException(
+        `document not found, can not record image dimensions`,
+      )
+    }
     const { text } = document
     const newImages = pickImagesFromMarkdown(text)
 
@@ -46,7 +58,7 @@ export class ImageService {
         continue
       }
       const promise = new Promise<TextImageRecordType>((resolve) => {
-        this.logger.log('Get --> ' + src)
+        this.logger.log(`Get --> ${src}`)
         this.getOnlineImageSizeAndMeta(src)
           .then(({ size, accent }) => {
             const filename = src.split('/').pop()
@@ -81,7 +93,7 @@ export class ImageService {
     await model.updateOne(
       { _id: id },
       // 过滤多余的
-      { images: result.filter(({ src }) => newImages.includes(src)) },
+      { images: result.filter(({ src }) => newImages.includes(src!)) },
     )
   }
 

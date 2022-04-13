@@ -1,15 +1,18 @@
+import { isDefined, isMongoId } from 'class-validator'
+import { FilterQuery } from 'mongoose'
+
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { DocumentType } from '@typegoose/typegoose'
-import { isDefined, isMongoId } from 'class-validator'
-import { FilterQuery } from 'mongoose'
-import { InjectModel } from 'nestjs-typegoose'
+
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { EventBusEvents } from '~/constants/event.constant'
-import { EventTypes } from '~/processors/gateway/events.types'
-import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { InjectModel } from '~/transformers/model.transformer'
 import { deleteKeys } from '~/utils'
+
 import { NoteModel } from './note.model'
 
 @Injectable()
@@ -18,7 +21,7 @@ export class NoteService {
     @InjectModel(NoteModel)
     private readonly noteModel: MongooseModel<NoteModel>,
     private readonly imageService: ImageService,
-    private readonly webGateway: WebEventsGateway,
+    private readonly eventManager: EventManagerService,
     private readonly eventEmitter: EventEmitter2,
   ) {
     this.needCreateDefult()
@@ -67,7 +70,7 @@ export class NoteService {
 
   checkPasswordToAccess<T extends NoteModel>(
     doc: T,
-    password: string,
+    password?: string,
   ): boolean {
     const hasPassword = doc.password
     if (!hasPassword) {
@@ -83,12 +86,20 @@ export class NoteService {
   public async create(document: NoteModel) {
     const doc = await this.noteModel.create(document)
     process.nextTick(async () => {
-      this.eventEmitter.emit(EventBusEvents.CleanAggregateCache)
+      this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+        scope: EventScope.TO_SYSTEM,
+      })
       await Promise.all([
         this.imageService.recordImageDimensions(this.noteModel, doc._id),
         doc.hide || doc.password
           ? null
-          : this.webGateway.broadcast(EventTypes.NOTE_CREATE, doc.toJSON()),
+          : this.eventManager.broadcast(
+              BusinessEvents.NOTE_CREATE,
+              doc.toJSON(),
+              {
+                scope: EventScope.TO_SYSTEM_VISITOR,
+              },
+            ),
       ])
     })
 
@@ -109,12 +120,19 @@ export class NoteService {
       { new: true },
     )
     process.nextTick(async () => {
-      this.eventEmitter.emit(EventBusEvents.CleanAggregateCache)
+      this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+        scope: EventScope.TO_SYSTEM,
+      })
       await Promise.all([
         this.imageService.recordImageDimensions(this.noteModel, id),
         this.model.findById(id).then((doc) => {
+          if (!doc) {
+            return
+          }
           delete doc.password
-          this.webGateway.broadcast(EventTypes.NOTE_UPDATE, doc)
+          this.eventManager.broadcast(BusinessEvents.NOTE_UPDATE, doc, {
+            scope: EventScope.TO_SYSTEM_VISITOR,
+          })
         }),
       ])
     })
@@ -132,7 +150,11 @@ export class NoteService {
     })
 
     process.nextTick(async () => {
-      await Promise.all([this.webGateway.broadcast(EventTypes.NOTE_DELETE, id)])
+      await Promise.all([
+        this.eventManager.broadcast(BusinessEvents.NOTE_DELETE, id, {
+          scope: EventScope.TO_SYSTEM_VISITOR,
+        }),
+      ])
     })
   }
 

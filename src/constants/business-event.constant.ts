@@ -1,4 +1,4 @@
-export enum EventTypes {
+export enum BusinessEvents {
   GATEWAY_CONNECT = 'GATEWAY_CONNECT',
   GATEWAY_DISCONNECT = 'GATEWAY_DISCONNECT',
 
@@ -8,6 +8,7 @@ export enum EventTypes {
   AUTH_FAILED = 'AUTH_FAILED',
 
   COMMENT_CREATE = 'COMMENT_CREATE',
+  COMMENT_DELETE = 'COMMENT_DELETE',
 
   POST_CREATE = 'POST_CREATE',
   POST_UPDATE = 'POST_UPDATE',
@@ -45,4 +46,12 @@ export enum EventTypes {
   PTY_MESSAGE = 'pty_message',
 }
 
-export type NotificationTypes = 'error' | 'warn' | 'success' | 'info'
+export enum EventScope {
+  ALL,
+  TO_VISITOR,
+  TO_ADMIN,
+  TO_SYSTEM,
+  TO_VISITOR_ADMIN,
+  TO_SYSTEM_VISITOR,
+  TO_SYSTEM_ADMIN,
+}

@@ -1,11 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common'
-import { OnEvent } from '@nestjs/event-emitter'
+// TODO  extract logic
 import cluster from 'cluster'
 import { render } from 'ejs'
 import { createTransport } from 'nodemailer'
-import { EventBusEvents } from '~/constants/event.constant'
+
+import { Injectable, Logger } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
+
+import { EventBusEvents } from '~/constants/event-bus.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { LinkModel } from '~/modules/link/link.model'
+
 import { CacheService } from '../cache/cache.service'
 import { AssetService } from './helper.asset.service'
 
@@ -53,7 +56,7 @@ export class EmailService {
     }
   }
 
-  writeTemplate(type: ReplyMailType, source: string) {
+  async writeTemplate(type: ReplyMailType, source: string) {
     switch (type) {
       case ReplyMailType.Guest:
         return this.assetService.writeUserCustomAsset(
@@ -118,9 +121,10 @@ export class EmailService {
           this.logger.error(message)
           return j(message)
         }
+        // @ts-ignore
         r({
           host: options?.host,
-          port: +options?.port || 465,
+          port: parseInt((options?.port as any) || '465'),
           auth: { user, pass },
         } as const)
       })
@@ -142,42 +146,6 @@ export class EmailService {
           r(true)
         }
       })
-    })
-  }
-
-  /**
-   * Notification Link Apply (send to master)
-   *
-   */
-  async sendLinkApplyEmail({
-    to,
-    model,
-    authorName,
-    template,
-  }: {
-    authorName?: string
-    to: string
-    model: LinkModel
-    template: LinkApplyEmailType
-  }) {
-    const { seo, mailOptions } = await this.configsService.waitForConfigReady()
-    const { user } = mailOptions
-    const from = `"${seo.title || 'Mx Space'}" <${user}>`
-    await this.instance.sendMail({
-      from,
-      to,
-      subject:
-        template === LinkApplyEmailType.ToMaster
-          ? `[${seo.title || 'Mx Space'}] 新的朋友 ${authorName}`
-          : `嘿!~, 主人已通过你的友链申请!~`,
-      text:
-        template === LinkApplyEmailType.ToMaster
-          ? `来自 ${model.name} 的友链请求: 
-          站点标题: ${model.name}
-          站点网站: ${model.url}
-          站点描述: ${model.description}
-        `
-          : `你的友链申请: ${model.name}, ${model.url} 已通过`,
     })
   }
 
@@ -203,6 +171,7 @@ export class EmailService {
         },
       }
       if (isDev) {
+        // @ts-ignore
         delete options.html
         Object.assign(options, { source })
         this.logger.log(options)
@@ -219,6 +188,7 @@ export class EmailService {
         },
       }
       if (isDev) {
+        // @ts-ignore
         delete options.html
         Object.assign(options, { source })
         this.logger.log(options)

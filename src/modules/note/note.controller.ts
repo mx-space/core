@@ -13,6 +13,7 @@ import {
   Query,
 } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
@@ -23,9 +24,10 @@ import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { IntIdOrMongoIdDto, MongoIdDto } from '~/shared/dto/id.dto'
 import {
-  addConditionToSeeHideContent,
+  addHidePasswordAndHideCondition,
   addYearCondition,
-} from '~/utils/query.util'
+} from '~/transformers/db-query.transformer'
+
 import {
   ListQueryDto,
   NidType,
@@ -49,24 +51,24 @@ export class NoteController {
   async getLatestOne(@IsMaster() isMaster: boolean) {
     const { latest, next } = await this.noteService.getLatestOne(
       {
-        ...addConditionToSeeHideContent(isMaster),
+        ...addHidePasswordAndHideCondition(isMaster),
       },
       isMaster ? '+location +coordinates' : '-location -coordinates',
     )
 
-    return { data: latest, next: next }
+    return { data: latest, next }
   }
 
   @Get('/')
   @Paginator
   @ApiOperation({ summary: '获取记录带分页器' })
   async getNotes(@IsMaster() isMaster: boolean, @Query() query: NoteQueryDto) {
-    const { size, select, page, sortBy, sortOrder, year } = query
+    const { size, select, page, sortBy, sortOrder, year, db_query } = query
     const condition = {
-      ...addConditionToSeeHideContent(isMaster),
+      ...addHidePasswordAndHideCondition(isMaster),
       ...addYearCondition(year),
     }
-    return await this.noteService.model.paginate(condition, {
+    return await this.noteService.model.paginate(db_query ?? condition, {
       limit: size,
       page,
       select: isMaster
@@ -92,7 +94,7 @@ export class NoteController {
         _id: id,
         ...condition,
       })
-      .select('+password ' + (isMaster ? '+location +coordinates' : ''))
+      .select(`+password ${isMaster ? '+location +coordinates' : ''}`)
       .lean()
     if (!current) {
       throw new CannotFindException()
@@ -108,10 +110,10 @@ export class NoteController {
     }
 
     const select = '_id title nid id created modified'
-    const passwordCondition = addConditionToSeeHideContent(isMaster)
+
     const prev = await this.noteService.model
       .findOne({
-        ...passwordCondition,
+        ...condition,
         created: {
           $gt: current.created,
         },
@@ -121,7 +123,7 @@ export class NoteController {
       .lean()
     const next = await this.noteService.model
       .findOne({
-        ...passwordCondition,
+        ...condition,
         created: {
           $lt: current.created,
         },
@@ -144,7 +146,7 @@ export class NoteController {
     const half = size >> 1
     const { id } = params
     const select = 'nid _id title created'
-    const condition = addConditionToSeeHideContent(isMaster)
+    const condition = isMaster ? {} : { hide: false }
 
     // 当前文档直接找, 不用加条件, 反正里面的东西是看不到的
     const currentDocument = await this.noteService.model
@@ -221,7 +223,7 @@ export class NoteController {
   ) {
     const id =
       typeof param.id === 'number'
-        ? (await this.noteService.model.findOne({ nid: param.id }).lean())._id
+        ? (await this.noteService.model.findOne({ nid: param.id }).lean())?._id
         : param.id
     if (!id) {
       throw new CannotFindException()

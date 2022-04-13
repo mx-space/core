@@ -7,7 +7,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
-import { InjectModel } from 'nestjs-typegoose'
+
+import { InjectModel } from '~/transformers/model.transformer'
+
 import PKG from '../package.json'
 import { Auth } from './common/decorator/auth.decorator'
 import { HttpCache } from './common/decorator/cache.decorator'
@@ -17,6 +19,7 @@ import { RedisKeys } from './constants/cache.constant'
 import { OptionModel } from './modules/configs/configs.model'
 import { CacheService } from './processors/cache/cache.service'
 import { getRedisKey } from './utils/redis.util'
+
 @Controller()
 @ApiTags('Root')
 export class AppController {
@@ -87,10 +90,15 @@ export class AppController {
   @HttpCache.disable
   @Auth()
   async cleanCatch() {
-    const redis = this.cacheService.getClient()
-    const keys: string[] = await redis.keys('mx-api-cache:*')
-    await Promise.all(keys.map((key) => redis.del(key)))
+    await this.cacheService.cleanCatch()
+    return
+  }
 
+  @Get('/clean_redis')
+  @HttpCache.disable
+  @Auth()
+  async cleanAllRedisKey() {
+    await this.cacheService.cleanAllRedisKey()
     return
   }
 }

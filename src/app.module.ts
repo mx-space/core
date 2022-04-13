@@ -1,8 +1,6 @@
-import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
+import { MiddlewareConsumer, Module, NestModule, Type } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
-import cluster from 'cluster'
-import { mkdirSync } from 'fs'
-import { CLUSTER } from './app.config'
+
 import { AppController } from './app.controller'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { RolesGuard } from './common/guard/roles.guard'
@@ -10,14 +8,9 @@ import { AnalyzeInterceptor } from './common/interceptors/analyze.interceptor'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
 import { CountingInterceptor } from './common/interceptors/counting.interceptor'
 import { JSONSerializeInterceptor } from './common/interceptors/json-serialize.interceptor'
+import { QueryInterceptor } from './common/interceptors/query.interceptor'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { AttachHeaderTokenMiddleware } from './common/middlewares/attach-auth.middleware'
-import {
-  DATA_DIR,
-  LOG_DIR,
-  TEMP_DIR,
-  USER_ASSET_DIR,
-} from './constants/path.constant'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
@@ -37,9 +30,11 @@ import { PageModule } from './modules/page/page.module'
 import { PageProxyModule } from './modules/pageproxy/pageproxy.module'
 import { PostModule } from './modules/post/post.module'
 import { ProjectModule } from './modules/project/project.module'
+import { PTYModule } from './modules/pty/pty.module'
 import { RecentlyModule } from './modules/recently/recently.module'
 import { SayModule } from './modules/say/say.module'
 import { SearchModule } from './modules/search/search.module'
+import { ServerlessModule } from './modules/serverless/serverless.module'
 import { SitemapModule } from './modules/sitemap/sitemap.module'
 import { SnippetModule } from './modules/snippet/snippet.module'
 import { ToolModule } from './modules/tool/tool.module'
@@ -50,24 +45,9 @@ import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
 import { LoggerModule } from './processors/logger/logger.module'
 
-// FIXME
-function mkdirs() {
-  mkdirSync(DATA_DIR, { recursive: true })
-  Logger.log(chalk.blue('数据目录已经建好: ' + DATA_DIR))
-  mkdirSync(TEMP_DIR, { recursive: true })
-  Logger.log(chalk.blue('临时目录已经建好: ' + TEMP_DIR))
-  mkdirSync(LOG_DIR, { recursive: true })
-  Logger.log(chalk.blue('日志目录已经建好: ' + LOG_DIR))
-  mkdirSync(USER_ASSET_DIR, { recursive: true })
-  Logger.log(chalk.blue('资源目录已经建好: ' + USER_ASSET_DIR))
-}
-
-if (!CLUSTER.enable || cluster.isPrimary) {
-  mkdirs()
-}
-
 @Module({
   imports: [
+    LoggerModule,
     DatabaseModule,
     CacheModule,
 
@@ -88,10 +68,13 @@ if (!CLUSTER.enable || cluster.isPrimary) {
     PageModule,
     PostModule,
     ProjectModule,
+    PTYModule,
     RecentlyModule,
     SayModule,
     SearchModule,
+    ServerlessModule,
     SitemapModule,
+    SnippetModule,
     ToolModule,
     UserModule,
 
@@ -99,16 +82,19 @@ if (!CLUSTER.enable || cluster.isPrimary) {
 
     GatewayModule,
     HelperModule,
-    LoggerModule,
-    SnippetModule,
 
-    isDev ? DebugModule : null,
-  ].filter(Boolean),
+    isDev ? DebugModule : undefined,
+  ].filter(Boolean) as Type<NestModule>[],
   controllers: [AppController],
   providers: [
     {
       provide: APP_INTERCEPTOR,
-      useClass: HttpCacheInterceptor,
+      useClass: QueryInterceptor,
+    },
+
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpCacheInterceptor, // 4
     },
     {
       provide: APP_INTERCEPTOR,
@@ -116,15 +102,15 @@ if (!CLUSTER.enable || cluster.isPrimary) {
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: CountingInterceptor,
+      useClass: CountingInterceptor, // 3
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: JSONSerializeInterceptor,
+      useClass: JSONSerializeInterceptor, // 2
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: ResponseInterceptor,
+      useClass: ResponseInterceptor, // 1
     },
 
     {

@@ -1,10 +1,10 @@
 import { RedisKeys } from '~/constants/cache.constant'
 
-export const getRedisKey = (
-  key: RedisKeys,
+export const getRedisKey = <T extends string = RedisKeys | '*'>(
+  key: T,
   ...concatKeys: string[]
-): `mx:${RedisKeys}${string | ''}` => {
+): `mx:${T}${string | ''}` => {
   return `mx:${key}${
-    concatKeys && concatKeys.length ? '_' + concatKeys.join('_') : ''
+    concatKeys && concatKeys.length ? `_${concatKeys.join('_')}` : ''
   }`
 }

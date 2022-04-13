@@ -1,15 +1,20 @@
-import { Injectable } from '@nestjs/common'
-import { JwtService } from '@nestjs/jwt'
-import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import dayjs from 'dayjs'
 import { isDate, omit } from 'lodash'
 import { customAlphabet } from 'nanoid/async'
-import { InjectModel } from 'nestjs-typegoose'
+
+import { Injectable } from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
+import { ReturnModelType } from '@typegoose/typegoose'
+
+import { MasterLostException } from '~/common/exceptions/master-lost.exception'
 import {
   TokenModel,
-  UserDocument,
   UserModel as User,
+  UserDocument,
+  UserModel,
 } from '~/modules/user/user.model'
+import { InjectModel } from '~/transformers/model.transformer'
+
 import { TokenDto } from './auth.controller'
 import { JwtPayload } from './interfaces/jwt-payload.interface'
 
@@ -21,7 +26,11 @@ export class AuthService {
   ) {}
 
   async signToken(_id: string) {
-    const { authCode } = await this.userModel.findById(_id).select('authCode')
+    const user = await this.userModel.findById(_id).select('authCode')
+    if (!user) {
+      throw new MasterLostException()
+    }
+    const authCode = user.authCode
     const payload = {
       _id,
       authCode,
@@ -29,50 +38,65 @@ export class AuthService {
 
     return this.jwtService.sign(payload)
   }
-  async verifyPayload(payload: JwtPayload): Promise<UserDocument> {
+  async verifyPayload(payload: JwtPayload): Promise<UserDocument | null> {
     const user = await this.userModel.findById(payload._id).select('+authCode')
+
+    if (!user) {
+      throw new MasterLostException()
+    }
 
     return user && user.authCode === payload.authCode ? user : null
   }
-  private async getAccessTokens(): Promise<DocumentType<TokenModel>[]> {
+
+  private async getAccessTokens() {
     return (await this.userModel.findOne().select('apiToken').lean())
-      .apiToken as any
+      ?.apiToken as TokenModel[] | undefined
   }
   async getAllAccessToken() {
-    return (await this.getAccessTokens()).map((token) => ({
+    const tokens = await this.getAccessTokens()
+    if (!tokens) {
+      return []
+    }
+    return tokens.map((token) => ({
+      // @ts-ignore
       id: token._id,
-      ...omit(token, ['_id', '__v', 'token']),
+      ...omit(token, ['_id', '__v']),
     })) as any as TokenModel[]
   }
 
   async getTokenSecret(id: string) {
     const tokens = await this.getAccessTokens()
+    if (!tokens) {
+      return null
+    }
     // note: _id is ObjectId not equal to string
+    // @ts-ignore
     return tokens.find((token) => String(token._id) === id)
   }
 
   async generateAccessToken() {
     const ap = customAlphabet(
-      '1234567890' +
-        Array(26)
-          .fill(null)
-          .map((_, i) => String.fromCharCode(97 + i))
-          .join(''),
+      `1234567890${Array(26)
+        .fill(null)
+        .map((_, i) => String.fromCharCode(97 + i))
+        .join('')}`,
       40,
     )
     return await ap()
   }
 
-  async verifyCustomToken(token: string): Promise<boolean> {
+  async verifyCustomToken(
+    token: string,
+  ): Promise<Readonly<[boolean, UserModel | null]>> {
     const user = await this.userModel.findOne({}).lean().select('+apiToken')
     if (!user) {
-      return false
+      return [false, null] as const
     }
     const tokens = user.apiToken
     if (!tokens || !Array.isArray(tokens)) {
-      return false
+      return [false, null] as const
     }
-    return tokens.some((doc) => {
+    const valid = tokens.some((doc) => {
       if (doc.token === token) {
         if (typeof doc.expired === 'undefined') {
           return true
@@ -83,6 +107,8 @@ export class AuthService {
       }
       return false
     })
+
+    return valid ? [true, await this.userModel.findOne().lean()] : [false, null]
   }
 
   async saveToken(model: TokenDto & { token: string }) {

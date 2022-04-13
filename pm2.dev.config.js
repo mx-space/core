@@ -10,10 +10,11 @@ module.exports = {
 
       max_memory_restart: '230M',
       env: {
+        DEBUG_COLORS: true,
         NODE_ENV: 'development',
       },
 
-      args: '--allowed_origins=dev.* --cluster',
+      args: '--allowed_origins=dev.* --cluster --color',
     },
   ],
 }

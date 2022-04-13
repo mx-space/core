@@ -1,3 +1,5 @@
+import pluralize from 'pluralize'
+
 import {
   Body,
   Controller,
@@ -13,29 +15,39 @@ import {
 } from '@nestjs/common'
 import { ApiTags, PartialType } from '@nestjs/swagger'
 import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
-import { InjectModel } from 'nestjs-typegoose'
-import pluralize from 'pluralize'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
+import { EventScope } from '~/constants/business-event.constant'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { BaseModel } from '~/shared/model/base.model'
+import { InjectModel } from '~/transformers/model.transformer'
 
+export type BaseCrudModuleType<T> = {
+  _model: MongooseModel<T>
+}
 export function BaseCrudFactory<
   T extends AnyParamConstructor<BaseModel & { id?: string }>,
 >({ model }: { model: T }): Type<any> {
   const prefix = model.name.toLowerCase().replace(/model$/, '')
-  const tagPrefix = prefix.charAt(0).toUpperCase() + prefix.slice(1)
+  const pluralizeName = pluralize(prefix) as string
+  const tagPrefix =
+    pluralizeName.charAt(0).toUpperCase() + pluralizeName.slice(1)
+
+  const eventNamePrefix = `${prefix.toUpperCase()}_`
 
   class PDto extends PartialType(model as any) {}
 
   class Dto extends model {}
 
-  @ApiTags(tagPrefix + ' Routes')
-  @Controller(pluralize(prefix))
+  @ApiTags(`${tagPrefix} Routes`)
+  @Controller(pluralizeName)
   class BaseCrud {
     constructor(
       @InjectModel(model) private readonly _model: MongooseModel<T>,
+      private readonly eventManager: EventManagerService,
     ) {}
 
     public get model() {
@@ -69,7 +81,18 @@ export function BaseCrudFactory<
     @Post('/')
     @Auth()
     async create(@Body() body: Dto) {
-      return await this._model.create({ ...body, created: new Date() })
+      return await this._model
+        .create({ ...body, created: new Date() })
+        .then((res) => {
+          this.eventManager.broadcast(
+            `${eventNamePrefix}CREATE` as any,
+            res.toObject(),
+            {
+              scope: EventScope.TO_SYSTEM_VISITOR,
+            },
+          )
+          return res
+        })
     }
 
     @Put('/:id')
@@ -85,6 +108,12 @@ export function BaseCrudFactory<
           { new: true },
         )
         .lean()
+        .then((res) => {
+          this.eventManager.broadcast(`${eventNamePrefix}UPDATE` as any, res, {
+            scope: EventScope.TO_SYSTEM_VISITOR,
+          })
+          return res
+        })
     }
 
     @Patch('/:id')
@@ -100,6 +129,15 @@ export function BaseCrudFactory<
     @HttpCode(204)
     async delete(@Param() param: MongoIdDto) {
       await this._model.deleteOne({ _id: param.id as any })
+
+      await this.eventManager.broadcast(
+        `${eventNamePrefix}DELETE` as any,
+        param.id,
+        {
+          scope: EventScope.TO_SYSTEM_VISITOR,
+        },
+      )
+
       return
     }
   }

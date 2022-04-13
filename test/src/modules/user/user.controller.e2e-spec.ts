@@ -1,8 +1,8 @@
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
-import { getModelToken } from 'nestjs-typegoose'
 import { dbHelper } from 'test/helper/db-mock.helper'
 import { redisHelper } from 'test/helper/redis-mock.helper'
+import { getModelToken } from '~/transformers/model.transformer'
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
 import { AuthService } from '~/modules/auth/auth.service'
 import { UserController } from '~/modules/user/user.controller'
@@ -33,7 +33,7 @@ describe('AppController (e2e)', () => {
           provide: AuthService,
           useValue: {
             signToken(val) {
-              return '' + val
+              return `${val}`
             },
           },
         },

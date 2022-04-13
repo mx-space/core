@@ -1,27 +1,31 @@
+import { Transform } from 'class-transformer'
+import {
+  IsDate,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  isMongoId,
+} from 'class-validator'
+
 import {
   Body,
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Post,
   Query,
   Scope,
 } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
-import { Transform } from 'class-transformer'
-import {
-  IsDate,
-  isMongoId,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster as Master } from '~/common/decorator/role.decorator'
-import { EventBusEvents } from '~/constants/event.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
+
 import { AuthService } from './auth.service'
 
 export class TokenDto {
@@ -60,7 +64,9 @@ export class AuthController {
     @Query('id') id?: string,
   ) {
     if (typeof token === 'string') {
-      return await this.authService.verifyCustomToken(token)
+      return await this.authService
+        .verifyCustomToken(token)
+        .then(([isValid, user]) => isValid)
     }
     if (id && typeof id === 'string' && isMongoId(id)) {
       return await this.authService.getTokenSecret(id)
@@ -85,9 +91,23 @@ export class AuthController {
   @Auth()
   async deleteToken(@Query() query: MongoIdDto) {
     const { id } = query
+    const token = await this.authService
+      .getAllAccessToken()
+      .then((models) =>
+        models.find((model) => {
+          return (model as any).id === id
+        }),
+      )
+      .then((model) => {
+        return model?.token
+      })
+
+    if (!token) {
+      throw new NotFoundException(`token ${id} is not found`)
+    }
     await this.authService.deleteToken(id)
 
-    this.eventEmitter.emit(EventBusEvents.TokenExpired, id)
+    this.eventEmitter.emit(EventBusEvents.TokenExpired, token)
     return 'OK'
   }
 }

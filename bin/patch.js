@@ -1,10 +1,11 @@
 // @ts-check
-const inquirer = require('inquirer')
-const prompt = inquirer.createPromptModule()
-const package = require('../package.json')
-const { $, chalk } = require('zx')
 const { resolve } = require('path')
 const { readdirSync } = require('fs')
+const inquirer = require('inquirer')
+
+const prompt = inquirer.createPromptModule()
+const { $, chalk } = require('zx-cjs')
+const package = require('../package.json')
 const PATCH_DIR = resolve(process.cwd(), './patch')
 
 async function bootstarp() {
@@ -23,7 +24,7 @@ async function bootstarp() {
     choices: patchFiles.map((f) => f.replace(/\.js$/, '')),
   }).then(async ({ version }) => {
     const patchPath = resolve(PATCH_DIR, `./${version}.js`)
-    console.log(chalk.green('starting patch... ' + patchPath))
+    console.log(chalk.green(`starting patch... ${patchPath}`))
     await $`node ${patchPath}`
   })
 }

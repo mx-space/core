@@ -1,9 +1,11 @@
-import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
-import { minify } from 'html-minifier'
 import xss from 'xss'
+
+import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
+
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
+
 import { AggregateService } from '../aggregate/aggregate.service'
 import { ConfigsService } from '../configs/configs.service'
 import { MarkdownService } from '../markdown/markdown.service'
@@ -43,7 +45,7 @@ export class FeedController {
       <lastBuildDate>${now.toISOString()}</lastBuildDate>
       <language>zh-CN</language>
       <image>
-          <url>${xss(avatar)}</url>
+          <url>${xss(avatar || '')}</url>
           <title>${title}</title>
           <link>${xss(url)}</link>
       </image>
@@ -56,21 +58,13 @@ export class FeedController {
             <published>${item.created}</published>
             <updated>${item.modified}</updated>
             <content type='html'><![CDATA[
-              ${minify(
-                `<blockquote>该渲染由 marked 生成, 可能存在部分语句不通或者排版问题, 最佳体验请前往: <a href='${xss(
-                  item.link,
-                )}'>${xss(item.link)}</a></blockquote>
+              ${`<blockquote>该渲染由 marked 生成, 可能存在部分语句不通或者排版问题, 最佳体验请前往: <a href='${xss(
+                item.link,
+              )}'>${xss(item.link)}</a></blockquote>
               ${this.markdownService.renderMarkdownContent(item.text)}
               <p style='text-align: right'>
-              <a href='${xss(item.link) + '#comments'}'>看完了？说点什么呢</a>
-              </p>`,
-                {
-                  collapseWhitespace: true,
-                  removeAttributeQuotes: true,
-                  removeComments: true,
-                  removeTagWhitespace: true,
-                },
-              )}
+              <a href='${`${xss(item.link)}#comments`}'>看完了？说点什么呢</a>
+              </p>`}
             ]]>
             </content>
             </entry>

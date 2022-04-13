@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common'
+
 import { GatewayModule } from '~/processors/gateway/gateway.module'
+
 import { NoteController } from './note.controller'
 import { NoteService } from './note.service'
 

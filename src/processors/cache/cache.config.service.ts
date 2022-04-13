@@ -4,21 +4,22 @@
  * @module processor/cache/config.service
  * @author Surmon <https://github.com/surmon-china>
  */
+import redisStore from 'cache-manager-ioredis'
+import { RedisOptions } from 'ioredis'
 
 import {
   CacheModuleOptions,
   CacheOptionsFactory,
   Injectable,
 } from '@nestjs/common'
-import redisStore from 'cache-manager-ioredis'
-import IORedis from 'ioredis'
+
 import { REDIS } from '~/app.config'
 
 @Injectable()
 export class CacheConfigService implements CacheOptionsFactory {
   // 缓存配置
   public createCacheOptions(): CacheModuleOptions {
-    const redisOptions: IORedis.RedisOptions = {
+    const redisOptions: RedisOptions = {
       host: REDIS.host as string,
       port: REDIS.port as number,
     }
@@ -27,7 +28,7 @@ export class CacheConfigService implements CacheOptionsFactory {
     }
     return {
       store: redisStore,
-      ttl: REDIS.ttl,
+      ttl: REDIS.ttl ?? undefined,
       // https://github.com/dabroek/node-cache-manager-redis-store/blob/master/CHANGELOG.md#breaking-changes
       // Any value (undefined | null) return true (cacheable) after redisStore v2.0.0
       is_cacheable_value: () => true,

@@ -1,5 +1,3 @@
-import { ApiHideProperty } from '@nestjs/swagger'
-import { modelOptions, plugin, prop } from '@typegoose/typegoose'
 import { Type } from 'class-transformer'
 import {
   IsBoolean,
@@ -15,6 +13,9 @@ import LeanId from 'mongoose-lean-id'
 import { default as mongooseLeanVirtuals } from 'mongoose-lean-virtuals'
 import Paginate from 'mongoose-paginate-v2'
 
+import { ApiHideProperty } from '@nestjs/swagger'
+import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
+
 @plugin(mongooseLeanVirtuals)
 @plugin(Paginate)
 @plugin(LeanId)
@@ -24,10 +25,13 @@ import Paginate from 'mongoose-paginate-v2'
     toObject: { virtuals: true },
     timestamps: {
       createdAt: 'created',
-      updatedAt: null,
+      updatedAt: false,
     },
+    versionKey: false,
   },
 })
+@index({ created: -1 })
+@index({ created: 1 })
 export class BaseModel {
   @ApiHideProperty()
   created?: Date
@@ -38,27 +42,6 @@ export class BaseModel {
   static get protectedKeys() {
     return ['created', 'id', '_id']
   }
-}
-
-export class Paginator {
-  /**
-   * 总条数
-   */
-  readonly total: number
-  /**
-   * 一页多少条
-   */
-  readonly size: number
-  /**
-   * 当前页
-   */
-  readonly currentPage: number
-  /**
-   * 总页数
-   */
-  readonly totalPage: number
-  readonly hasNextPage: boolean
-  readonly hasPrevPage: boolean
 }
 
 @modelOptions({
@@ -88,7 +71,7 @@ abstract class ImageModel {
   @prop()
   @IsOptional()
   @IsUrl()
-  src: string
+  src?: string
 }
 
 export abstract class BaseCommentIndexModel extends BaseModel {
@@ -123,7 +106,7 @@ export class WriteBaseModel extends BaseCommentIndexModel {
   @Type(() => ImageModel)
   images?: ImageModel[]
 
-  @prop({ default: null })
+  @prop({ default: null, type: Date })
   @ApiHideProperty()
   modified: Date | null
 

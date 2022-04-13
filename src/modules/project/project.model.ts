@@ -1,7 +1,9 @@
-import { PartialType } from '@nestjs/swagger'
-import { modelOptions, prop } from '@typegoose/typegoose'
 import { Transform } from 'class-transformer'
 import { IsOptional, IsString, IsUrl, isURL } from 'class-validator'
+
+import { PartialType } from '@nestjs/swagger'
+import { modelOptions, prop } from '@typegoose/typegoose'
+
 import { BaseModel } from '~/shared/model/base.model'
 
 const validateURL = {
@@ -16,6 +18,7 @@ const validateURL = {
     if (!isURL(v, { require_protocol: true })) {
       return false
     }
+    return true
   },
 }
 

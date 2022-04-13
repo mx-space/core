@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common'
+
+import { BusinessEvents } from '~/constants/business-event.constant'
+
 import { AdminEventsGateway } from '../admin/events.gateway'
-import { EventTypes } from '../events.types'
 import { WebEventsGateway } from '../web/events.gateway'
 
 @Injectable()
@@ -10,7 +12,7 @@ export class SharedGateway {
     private readonly web: WebEventsGateway,
   ) {}
 
-  broadcase(event: EventTypes, data: any) {
+  broadcast(event: BusinessEvents, data: any) {
     this.admin.broadcast(event, data)
     this.web.broadcast(event, data)
   }

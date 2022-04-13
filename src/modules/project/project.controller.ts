@@ -1,4 +1,5 @@
-import { BaseCrudFactory } from '~/utils/crud.util'
+import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'
+
 import { ProjectModel } from './project.model'
 
 export class ProjectController extends BaseCrudFactory({

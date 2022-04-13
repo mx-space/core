@@ -1,15 +1,18 @@
+import { Query, Types } from 'mongoose'
+import { URL } from 'url'
+
 import {
   DocumentType,
+  Ref,
   modelOptions,
   pre,
   prop,
-  Ref,
 } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
-import { Query, Types } from 'mongoose'
-import { URL } from 'url'
+
 import { BaseModel } from '~/shared/model/base.model'
 import { getAvatar } from '~/utils'
+
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
@@ -50,14 +53,14 @@ export class CommentModel extends BaseModel {
   @prop({ refPath: 'refType' })
   ref: Ref<PostModel | NoteModel | PageModel>
 
-  @prop({ required: true, default: 'PostModel', enum: CommentRefTypes })
+  @prop({ required: true, default: 'Post', enum: CommentRefTypes })
   refType: CommentRefTypes
 
   @prop({ trim: true, required: true })
   author!: string
 
   @prop({ trim: true })
-  mail?: string
+  mail: string
 
   @prop({
     trim: true,
@@ -68,7 +71,7 @@ export class CommentModel extends BaseModel {
   url?: string
 
   @prop({ required: true })
-  text!: string
+  text: string
 
   // 0 : 未读
   // 1 : 已读

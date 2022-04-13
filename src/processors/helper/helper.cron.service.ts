@@ -1,21 +1,20 @@
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
-import { OnEvent } from '@nestjs/event-emitter'
-import { Cron, CronExpression } from '@nestjs/schedule'
+import cluster from 'cluster'
 import COS from 'cos-nodejs-sdk-v5'
 import dayjs from 'dayjs'
 import { existsSync } from 'fs'
-import { readdir, rm, writeFile } from 'fs/promises'
+import { readdir, rm } from 'fs/promises'
 import mkdirp from 'mkdirp'
-import { InjectModel } from 'nestjs-typegoose'
 import { join } from 'path'
+
+import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
+import { Cron, CronExpression } from '@nestjs/schedule'
+
+import { isMainCluster } from '~/app.config'
 import { CronDescription } from '~/common/decorator/cron-description.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
-import { EventBusEvents } from '~/constants/event.constant'
-import {
-  LOCAL_BOT_LIST_DATA_FILE_PATH,
-  LOG_DIR,
-  TEMP_DIR,
-} from '~/constants/path.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
+import { LOG_DIR, TEMP_DIR } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { BackupService } from '~/modules/backup/backup.service'
@@ -24,7 +23,9 @@ import { NoteService } from '~/modules/note/note.service'
 import { PageService } from '~/modules/page/page.service'
 import { PostService } from '~/modules/post/post.service'
 import { SearchService } from '~/modules/search/search.service'
+import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
+
 import { CacheService } from '../cache/cache.service'
 import { HttpService } from './helper.http.service'
 
@@ -55,29 +56,26 @@ export class CronService {
     private readonly searchService: SearchService,
   ) {
     this.logger = new Logger(CronService.name)
-  }
-  /**
-   *
-   * @description 每天凌晨更新 Bot 列表
-   */
-  @Cron(CronExpression.EVERY_WEEK, { name: 'updateBotList' })
-  @CronDescription('更新 Bot 列表')
-  async updateBotList() {
-    try {
-      this.logger.log('--> 更新 Bot 列表')
-      const { data: json } = await this.http.axiosRef.get(
-        'https://cdn.jsdelivr.net/gh/atmire/COUNTER-Robots@master/COUNTER_Robots_list.json',
-      )
 
-      await writeFile(LOCAL_BOT_LIST_DATA_FILE_PATH, JSON.stringify(json), {
-        encoding: 'utf-8',
-        flag: 'w+',
-      })
-
-      return json
-    } catch (err) {
-      this.logger.warn('更新 Bot 列表错误')
-      throw err
+    if (isMainCluster || cluster.isWorker) {
+      Object.getOwnPropertyNames(this.constructor.prototype)
+        .filter((name) => name != 'constructor')
+        .forEach((name) => {
+          const metaKeys = Reflect.getOwnMetadataKeys(this[name])
+          const metaMap = new Map<any, any>()
+          for (const key of metaKeys) {
+            metaMap.set(key, Reflect.getOwnMetadata(key, this[name]))
+          }
+          const originMethod = this[name]
+          this[name] = (...args) => {
+            if (cluster.worker?.id === 1 || isMainCluster) {
+              originMethod.call(this, ...args)
+            }
+          }
+          for (const metaKey of metaKeys) {
+            Reflect.defineMetadata(metaKey, metaMap.get(metaKey), this[name])
+          }
+        })
     }
   }
 
@@ -190,28 +188,28 @@ export class CronService {
     mkdirp.sync(TEMP_DIR)
     this.logger.log('--> 清理临时文件成功')
   }
-
-  @Cron(CronExpression.EVERY_WEEKEND, { name: 'cleanTempDirectory' })
+  // “At 00:05.”
+  @Cron('5 0 * * *', { name: 'cleanTempDirectory' })
   @CronDescription('清理日志文件')
   async cleanLogFile() {
-    await rm(LOG_DIR, { recursive: true })
-    mkdirp.sync(LOG_DIR)
-
     const files = (await readdir(LOG_DIR)).filter(
       (file) => file !== 'error.log',
     )
+    const rmTaskArr = [] as Promise<any>[]
     for (const file of files) {
       const filePath = join(LOG_DIR, file)
       const state = fs.statSync(filePath)
       const oldThanWeek = dayjs().diff(state.mtime, 'day') > 7
       if (oldThanWeek) {
-        fs.rm(filePath)
+        rmTaskArr.push(rm(filePath))
       }
     }
+
+    await Promise.all(rmTaskArr)
     this.logger.log('--> 清理日志文件成功')
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_3AM, { name: 'pushToBaiduSearch' })
+  @Cron(CronExpression.EVERY_DAY_AT_1AM, { name: 'pushToBaiduSearch' })
   @CronDescription('推送到百度搜索')
   async pushToBaiduSearch() {
     const {
@@ -246,7 +244,7 @@ export class CronService {
         this.logger.log(`百度站长提交结果: ${JSON.stringify(res.data)}`)
         return res.data
       } catch (e) {
-        this.logger.error('百度推送错误: ' + e.message)
+        this.logger.error(`百度推送错误: ${e.message}`)
         throw e
       }
     }
@@ -256,7 +254,7 @@ export class CronService {
   /**
    * @description 每天凌晨推送一遍 Algolia Search
    */
-  @Cron(CronExpression.EVERY_DAY_AT_NOON, { name: 'pushToAlgoliaSearch' })
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'pushToAlgoliaSearch' })
   @CronDescription('推送到 Algolia Search')
   @OnEvent(EventBusEvents.PushSearch)
   async pushToAlgoliaSearch() {

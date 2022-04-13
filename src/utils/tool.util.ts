@@ -1,13 +1,10 @@
 import { isObject } from 'lodash'
-
-export const isDev = process.env.NODE_ENV == 'development'
-
-export const isTest = !!process.env.TEST
+import { join } from 'path'
 
 export const md5 = (text: string) =>
   require('crypto').createHash('md5').update(text).digest('hex')
 
-export function getAvatar(mail: string) {
+export function getAvatar(mail: string | undefined) {
   if (!mail) {
     return ''
   }
@@ -39,7 +36,7 @@ export function deleteKeys<T extends KV>(
   ...keys: any[]
 ): Partial<T> {
   if (!isObject(target)) {
-    throw new TypeError('target must be Object, got ' + target)
+    throw new TypeError(`target must be Object, got ${target}`)
   }
 
   if (Array.isArray(keys[0])) {
@@ -61,4 +58,19 @@ export const safeJSONParse = (p: any) => {
   } catch {
     return null
   }
+}
+
+/**
+ * remove `..`, `~`
+ * @param path
+ */
+export const safePathJoin = (...path: string[]) => {
+  const newPathArr = path.map((p) =>
+    p
+      .split('/')
+      .map((o) => o.replace(/^(\.{2,}|~)$/, '.'))
+      .join('/'),
+  )
+
+  return join(...newPathArr)
 }

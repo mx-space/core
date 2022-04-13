@@ -1,15 +1,3 @@
-import { PartialType } from '@nestjs/mapped-types'
-import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
-import {
-  DocumentType,
-  index,
-  modelOptions,
-  pre,
-  prop,
-  Ref,
-  Severity,
-} from '@typegoose/typegoose'
-import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import {
   ArrayUnique,
   IsBoolean,
@@ -19,11 +7,23 @@ import {
   IsString,
 } from 'class-validator'
 import { Query } from 'mongoose'
+
+import { PartialType } from '@nestjs/mapped-types'
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
 import {
-  CountMixed as Count,
-  Paginator,
-  WriteBaseModel,
-} from '~/shared/model/base.model'
+  DocumentType,
+  Ref,
+  Severity,
+  index,
+  modelOptions,
+  pre,
+  prop,
+} from '@typegoose/typegoose'
+import { BeAnObject } from '@typegoose/typegoose/lib/types'
+
+import { Paginator } from '~/shared/interface/paginator.interface'
+import { CountMixed as Count, WriteBaseModel } from '~/shared/model/base.model'
+
 import { CategoryModel as Category } from '../category/category.model'
 
 function autoPopulateCategory(
@@ -70,11 +70,6 @@ export class PostModel extends WriteBaseModel {
   })
   @ApiHideProperty()
   public category: Ref<Category>
-
-  @prop({ default: false })
-  @IsBoolean()
-  @IsOptional()
-  hide?: boolean
 
   @prop({ default: true })
   @IsBoolean()

@@ -1,3 +1,5 @@
+import { Types } from 'mongoose'
+
 import {
   BadRequestException,
   Body,
@@ -13,7 +15,7 @@ import {
   Query,
 } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
-import { Types } from 'mongoose'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
@@ -23,10 +25,8 @@ import { VisitDocument } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import {
-  addConditionToSeeHideContent,
-  addYearCondition,
-} from '~/utils/query.util'
+import { addYearCondition } from '~/transformers/db-query.transformer'
+
 import { CategoryAndSlugDto, PostQueryDto } from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'
@@ -47,7 +47,6 @@ export class PostController {
     return await this.postService.findWithPaginator(
       {
         ...addYearCondition(year),
-        ...addConditionToSeeHideContent(master),
       },
       {
         limit: size,
@@ -60,10 +59,10 @@ export class PostController {
 
   @Get('/:id')
   @VisitDocument('Post')
-  async getById(@Param() params: MongoIdDto, @IsMaster() isMaster: boolean) {
+  async getById(@Param() params: MongoIdDto) {
     const { id } = params
-    const doc = await this.postService.model.findById(id)
-    if (!doc || (doc.hide && !isMaster)) {
+    const doc = await this.postService.model.findById(id).populate('category')
+    if (!doc) {
       throw new CannotFindException()
     }
     return doc
@@ -71,20 +70,14 @@ export class PostController {
 
   @Get('/latest')
   @VisitDocument('Post')
-  async getLatest(@IsMaster() isMaster: boolean) {
-    return this.postService.model
-      .findOne({ ...addConditionToSeeHideContent(isMaster) })
-      .sort({ created: -1 })
-      .lean()
+  async getLatest() {
+    return this.postService.model.findOne({}).sort({ created: -1 }).lean()
   }
 
   @Get('/:category/:slug')
   @ApiOperation({ summary: '根据分类名和自定义别名获取' })
   @VisitDocument('Post')
-  async getByCateAndSlug(
-    @Param() params: CategoryAndSlugDto,
-    @IsMaster() isMaster: boolean,
-  ) {
+  async getByCateAndSlug(@Param() params: CategoryAndSlugDto) {
     const { category, slug } = params
 
     const categoryDocument = await this.postService.getCategoryBySlug(category)
@@ -100,7 +93,7 @@ export class PostController {
       })
       .populate('category')
 
-    if (!postDocument || (postDocument.hide && !isMaster)) {
+    if (!postDocument) {
       throw new CannotFindException()
     }
     return postDocument.toJSON()

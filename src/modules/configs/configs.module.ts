@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common'
+
 import { UserModule } from '../user/user.module'
 import { ConfigsService } from './configs.service'
 

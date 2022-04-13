@@ -1,18 +1,20 @@
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-} from '@nestjs/common'
-import { EventEmitter2 } from '@nestjs/event-emitter'
 import { isDefined } from 'class-validator'
 import { omit } from 'lodash'
 import { FilterQuery, PaginateOptions } from 'mongoose'
-import { InjectModel } from 'nestjs-typegoose'
-import { EventBusEvents } from '~/constants/event.constant'
-import { EventTypes } from '~/processors/gateway/events.types'
-import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
+
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  forwardRef,
+} from '@nestjs/common'
+
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { InjectModel } from '~/transformers/model.transformer'
+
 import { CategoryService } from '../category/category.service'
 import { CommentModel } from '../comment/comment.model'
 import { PostModel } from './post.model'
@@ -27,9 +29,8 @@ export class PostService {
 
     @Inject(forwardRef(() => CategoryService))
     private categoryService: CategoryService,
-    private readonly webgateway: WebEventsGateway,
     private readonly imageService: ImageService,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly eventManager: EventManagerService,
   ) {}
 
   get model() {
@@ -62,12 +63,20 @@ export class PostService {
     })
 
     process.nextTick(async () => {
-      this.eventEmitter.emit(EventBusEvents.CleanAggregateCache)
+      this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+        scope: EventScope.TO_SYSTEM,
+      })
       await Promise.all([
-        this.webgateway.broadcast(EventTypes.POST_CREATE, {
-          ...res.toJSON(),
-          category,
-        }),
+        this.eventManager.broadcast(
+          BusinessEvents.POST_CREATE,
+          {
+            ...res.toJSON(),
+            category,
+          },
+          {
+            scope: EventScope.TO_SYSTEM_VISITOR,
+          },
+        ),
         this.imageService.recordImageDimensions(this.postModel, res._id),
       ])
     })
@@ -105,14 +114,19 @@ export class PostService {
       { new: true },
     )
     process.nextTick(async () => {
-      this.eventEmitter.emit(EventBusEvents.CleanAggregateCache)
+      this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+        scope: EventScope.TO_SYSTEM,
+      })
 
       // 更新图片信息缓存
       await Promise.all([
         this.imageService.recordImageDimensions(this.postModel, id),
-        this.webgateway.broadcast(
-          EventTypes.POST_UPDATE,
-          await this.postModel.findById(id),
+        this.eventManager.broadcast(
+          BusinessEvents.POST_UPDATE,
+          await this.postModel.findById(id).lean(),
+          {
+            scope: EventScope.TO_SYSTEM_VISITOR,
+          },
         ),
       ])
     })
@@ -125,8 +139,9 @@ export class PostService {
       this.model.deleteOne({ _id: id }),
       this.commentModel.deleteMany({ pid: id }),
     ])
-    process.nextTick(async () => {
-      await this.webgateway.broadcast(EventTypes.POST_DELETE, id)
+    await this.eventManager.broadcast(BusinessEvents.POST_DELETE, id, {
+      scope: EventScope.TO_SYSTEM_VISITOR,
+      nextTick: true,
     })
   }
 

@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common'
 import { isDefined } from 'class-validator'
 import { omit } from 'lodash'
-import { InjectModel } from 'nestjs-typegoose'
-import { EventTypes } from '~/processors/gateway/events.types'
-import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
+
+import { Injectable } from '@nestjs/common'
+
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { InjectModel } from '~/transformers/model.transformer'
+
 import { PageModel } from './page.model'
 
 @Injectable()
@@ -13,7 +16,7 @@ export class PageService {
     @InjectModel(PageModel)
     private readonly pageModel: MongooseModel<PageModel>,
     private readonly imageService: ImageService,
-    private readonly webgateService: WebEventsGateway,
+    private readonly eventManager: EventManagerService,
   ) {}
 
   public get model() {
@@ -41,11 +44,11 @@ export class PageService {
     process.nextTick(async () => {
       await Promise.all([
         this.imageService.recordImageDimensions(this.pageModel, id),
-        this.pageModel
-          .findById(id)
-          .then((doc) =>
-            this.webgateService.broadcast(EventTypes.PAGE_UPDATED, doc),
-          ),
+        this.pageModel.findById(id).then((doc) =>
+          this.eventManager.broadcast(BusinessEvents.PAGE_UPDATED, doc, {
+            scope: EventScope.TO_SYSTEM_VISITOR,
+          }),
+        ),
       ])
     })
   }

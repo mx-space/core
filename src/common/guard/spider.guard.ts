@@ -3,15 +3,17 @@
  * @description 禁止爬虫的守卫
  * @author Innei <https://innei.ren>
  */
+import { Observable } from 'rxjs'
+
 import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
   Injectable,
 } from '@nestjs/common'
-import { Observable } from 'rxjs'
-import { isDev } from '~/utils'
-import { getNestExecutionContextRequest } from '~/utils/nest.util'
+
+import { isDev } from '~/global/env.global'
+import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 @Injectable()
 export class SpiderGuard implements CanActivate {
@@ -31,7 +33,7 @@ export class SpiderGuard implements CanActivate {
     if (ua && !isSpiderUA) {
       return true
     }
-    throw new ForbiddenException('爬虫是被禁止的哦')
+    throw new ForbiddenException(`爬虫是被禁止的哦，UA: ${ua}`)
   }
 
   getRequest(context: ExecutionContext) {

@@ -1,4 +1,3 @@
-import { ApiProperty } from '@nestjs/swagger'
 import {
   IsEmail,
   IsNotEmpty,
@@ -7,6 +6,10 @@ import {
   IsString,
   IsUrl,
 } from 'class-validator'
+
+import { ApiProperty } from '@nestjs/swagger'
+
+import { IsAllowedUrl } from '~/utils/validator/isAllowedUrl'
 
 class UserOptionDto {
   @IsOptional()
@@ -31,7 +34,7 @@ class UserOptionDto {
   name?: string
 
   @ApiProperty({ required: false })
-  @IsUrl({ require_protocol: true })
+  @IsAllowedUrl()
   @IsOptional()
   readonly avatar?: string
 

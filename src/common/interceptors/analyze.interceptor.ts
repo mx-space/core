@@ -4,6 +4,10 @@
  * @module interceptor/analyze
  * @author Innei <https://github.com/Innei>
  */
+import isbot from 'isbot'
+import { Observable } from 'rxjs'
+import UAParser from 'ua-parser-js'
+import { URL } from 'url'
 
 import {
   CallHandler,
@@ -12,24 +16,19 @@ import {
   NestInterceptor,
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
-import { FastifyRequest } from 'fastify'
-import { readFile } from 'fs/promises'
-import { InjectModel } from 'nestjs-typegoose'
-import { Observable } from 'rxjs'
-import UAParser from 'ua-parser-js'
-import { URL } from 'url'
+
 import { RedisKeys } from '~/constants/cache.constant'
-import { LOCAL_BOT_LIST_DATA_FILE_PATH } from '~/constants/path.constant'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { CacheService } from '~/processors/cache/cache.service'
+import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+import { InjectModel } from '~/transformers/model.transformer'
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
 
 @Injectable()
 export class AnalyzeInterceptor implements NestInterceptor {
   private parser: UAParser
-  private botListData: RegExp[] = []
 
   constructor(
     @InjectModel(AnalyzeModel)
@@ -43,25 +42,6 @@ export class AnalyzeInterceptor implements NestInterceptor {
 
   async init() {
     this.parser = new UAParser()
-    this.botListData = await this.getLocalBotList()
-  }
-
-  async getLocalBotList() {
-    try {
-      return this.pickPattern2Regexp(
-        JSON.parse(
-          await readFile(LOCAL_BOT_LIST_DATA_FILE_PATH, {
-            encoding: 'utf-8',
-          }),
-        ),
-      )
-    } catch {
-      return []
-    }
-  }
-
-  private pickPattern2Regexp(data: any): RegExp[] {
-    return data.map((item) => new RegExp(item.pattern))
   }
 
   async intercept(
@@ -69,7 +49,7 @@ export class AnalyzeInterceptor implements NestInterceptor {
     next: CallHandler<any>,
   ): Promise<Observable<any>> {
     const call$ = next.handle()
-    const request = this.getRequest(context)
+    const request = getNestExecutionContextRequest(context)
     if (!request) {
       return call$
     }
@@ -89,7 +69,7 @@ export class AnalyzeInterceptor implements NestInterceptor {
     }
 
     // if user agent is in bot list, skip
-    if (this.botListData.some((rg) => rg.test(request.headers['user-agent']))) {
+    if (isbot(request.headers['user-agent'])) {
       return call$
     }
 
@@ -97,14 +77,15 @@ export class AnalyzeInterceptor implements NestInterceptor {
 
     process.nextTick(async () => {
       try {
-        this.parser.setUA(request.headers['user-agent'])
+        request.headers['user-agent'] &&
+          this.parser.setUA(request.headers['user-agent'])
 
         const ua = this.parser.getResult()
 
         await this.model.create({
           ip,
           ua,
-          path: new URL('http://a.com' + url).pathname,
+          path: new URL(`http://a.com${url}`).pathname,
         })
         const apiCallTimeRecord = await this.options.findOne({
           name: 'apiCallTime',
@@ -151,13 +132,5 @@ export class AnalyzeInterceptor implements NestInterceptor {
     })
 
     return call$
-  }
-
-  getRequest(context: ExecutionContext) {
-    const req = context.switchToHttp().getRequest<KV>()
-    if (req) {
-      return req as FastifyRequest & { user?: any }
-    }
-    return null
   }
 }

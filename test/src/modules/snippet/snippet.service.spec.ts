@@ -1,21 +1,33 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
-import { getModelToken } from 'nestjs-typegoose'
 import { dbHelper } from 'test/helper/db-mock.helper'
+import { redisHelper } from 'test/helper/redis-mock.helper'
+import { getModelToken } from '~/transformers/model.transformer'
+import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
+import { CacheService } from '~/processors/cache/cache.service'
+import { DatabaseService } from '~/processors/database/database.service'
 
 describe('test Snippet Service', () => {
   let service: SnippetService
-
+  afterAll(async () => {
+    await (await redisHelper).close()
+  })
   beforeAll(async () => {
     await dbHelper.connect()
+
+    const redis = await redisHelper
     const moduleRef = Test.createTestingModule({
       providers: [
         SnippetService,
+        { provide: DatabaseService, useValue: {} },
+        { provide: CacheService, useValue: redis.CacheService },
+        { provide: ServerlessService, useValue: {} },
+
         {
-          provide: getModelToken('SnippetModel'),
+          provide: getModelToken(SnippetModel.name),
           useValue: getModelForClass(SnippetModel),
         },
       ],
@@ -37,6 +49,7 @@ describe('test Snippet Service', () => {
     private: false,
     reference: 'root',
   }
+
   let id = ''
   it('should create one', async () => {
     const res = await service.create(snippet)
@@ -51,29 +64,35 @@ describe('test Snippet Service', () => {
     await expect(service.create(snippet)).rejects.toThrow(BadRequestException)
   })
 
-  test('get only data snippet', async () => {
+  test('get snippet by name', async () => {
     const res = await service.getSnippetByName(snippet.name, snippet.reference)
     expect(res.name).toBe(snippet.name)
-    expect(res.data).toBeDefined()
+  })
+
+  test('get snippet by name again from cache', async () => {
+    const res = await service.getSnippetByName(snippet.name, snippet.reference)
+    expect(res.name).toBe(snippet.name)
   })
 
   test('get full snippet', async () => {
     const res = await service.getSnippetById(id)
     expect(res.name).toBe(snippet.name)
-    expect(res.data).toBeDefined()
   })
 
   test('modify', async () => {
     const newSnippet = {
-      name: 'test',
+      ...snippet,
       raw: '{"foo": "b"}',
-      type: SnippetType.JSON,
-      private: true,
-      reference: 'root',
     }
     const res = await service.update(id, newSnippet)
     expect(res.raw).toBe(newSnippet.raw)
   })
+
+  test('get snippet by name after update', async () => {
+    const res = await service.getSnippetByName(snippet.name, snippet.reference)
+    expect(res.raw).toBe('{"foo": "b"}')
+  })
+
   test('delete', async () => {
     await service.delete(id)
     await expect(service.getSnippetById(id)).rejects.toThrow(NotFoundException)

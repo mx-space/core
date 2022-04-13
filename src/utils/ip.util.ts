@@ -5,14 +5,18 @@
 import type { FastifyRequest } from 'fastify'
 import { IncomingMessage } from 'http'
 import { URL } from 'url'
+
 export const getIp = (request: FastifyRequest | IncomingMessage) => {
-  const _ = request as any
+  const req = request as any
 
   let ip: string =
-    _.headers['x-forwarded-for'] ||
-    _.ip ||
-    _.raw.connection.remoteAddress ||
-    _.raw.socket.remoteAddress ||
+    request.headers['x-forwarded-for'] ||
+    request.headers['X-Forwarded-For'] ||
+    request.headers['X-Real-IP'] ||
+    request.headers['x-real-ip'] ||
+    req?.ip ||
+    req?.raw?.connection?.remoteAddress ||
+    req?.raw?.socket?.remoteAddress ||
     undefined
   if (ip && ip.split(',').length > 0) {
     ip = ip.split(',')[0]
@@ -24,5 +28,5 @@ export const parseRelativeUrl = (path: string) => {
   if (!path || !path.startsWith('/')) {
     return new URL('http://a.com')
   }
-  return new URL('http://a.com' + path)
+  return new URL(`http://a.com${path}`)
 }

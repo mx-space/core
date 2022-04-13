@@ -5,10 +5,12 @@ import {
   Param,
   Query,
 } from '@nestjs/common'
+
 import { HttpCache } from '~/common/decorator/cache.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { SearchDto } from '~/modules/search/search.dto'
+
 import { SearchService } from './search.service'
 
 @Controller('search')
@@ -26,7 +28,7 @@ export class SearchController {
     type = type.toLowerCase()
     switch (type) {
       case 'post': {
-        return this.searchService.searchPost(query, isMaster)
+        return this.searchService.searchPost(query)
       }
       case 'note':
         return this.searchService.searchNote(query, isMaster)

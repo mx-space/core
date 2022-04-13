@@ -1,14 +1,17 @@
+import { isDefined } from 'class-validator'
+import { cloneDeep, isArrayLike, isObjectLike } from 'lodash'
+import { map } from 'rxjs'
+
 import {
   CallHandler,
   ExecutionContext,
   Injectable,
   NestInterceptor,
 } from '@nestjs/common'
-import { isDefined } from 'class-validator'
-import { cloneDeep, isArrayLike, isObjectLike } from 'lodash'
-import { map } from 'rxjs'
+
+import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { getAvatar } from '~/utils'
-import { getNestExecutionContextRequest } from '~/utils/nest.util'
+
 @Injectable()
 export class CommentFilterEmailInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler) {

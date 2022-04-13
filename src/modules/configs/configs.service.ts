@@ -1,3 +1,10 @@
+import camelcaseKeys from 'camelcase-keys'
+import { ClassConstructor, plainToInstance } from 'class-transformer'
+import { ValidatorOptions, validateSync } from 'class-validator'
+import cluster from 'cluster'
+import { cloneDeep, mergeWith } from 'lodash'
+import { LeanDocument } from 'mongoose'
+
 import {
   BadRequestException,
   Injectable,
@@ -7,19 +14,14 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
-import camelcaseKeys from 'camelcase-keys'
-import { ClassConstructor, plainToInstance } from 'class-transformer'
-import { validateSync, ValidatorOptions } from 'class-validator'
-import cluster from 'cluster'
-import { cloneDeep, mergeWith } from 'lodash'
-import { LeanDocument } from 'mongoose'
-import { InjectModel } from 'nestjs-typegoose'
-import { API_VERSION } from '~/app.config'
+
 import { RedisKeys } from '~/constants/cache.constant'
-import { EventBusEvents } from '~/constants/event.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
 import { CacheService } from '~/processors/cache/cache.service'
+import { InjectModel } from '~/transformers/model.transformer'
 import { sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
+
 import * as optionDtos from '../configs/configs.dto'
 import { UserModel } from '../user/user.model'
 import { UserService } from '../user/user.service'
@@ -51,15 +53,14 @@ const generateDefaultConfig: () => IConfig = () => ({
     description: '哈喽~欢迎光临',
   },
   url: {
-    wsUrl: 'http://127.0.0.1:2333', //todo
-    adminUrl: 'http://127.0.0.1:9528',
-    serverUrl: isDev
-      ? 'http://127.0.0.1:2333'
-      : 'http://127.0.0.1:2333/api/v' + API_VERSION,
-    webUrl: 'http://127.0.0.1:2323',
+    wsUrl: '', // todo
+    adminUrl: '',
+    serverUrl: '',
+    webUrl: '',
   },
   mailOptions: {} as MailOptionsDto,
   commentOptions: { antiSpam: false },
+  friendLinkOptions: { allowApply: true },
   backupOptions: { enable: true } as BackupOptionsDto,
   baiduSearchOptions: { enable: false },
   algoliaSearchOptions: { enable: false, apiKey: '', appId: '', indexName: '' },
@@ -68,7 +69,7 @@ const generateDefaultConfig: () => IConfig = () => ({
     title: 'おかえり~',
     background:
       'https://gitee.com/xun7788/my-imagination/raw/master/images/88426823_p0.jpg',
-    gaodemapKey: null,
+    gaodemapKey: null!,
   },
   terminalOptions: {
     enable: false,

@@ -1,16 +1,26 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
+import { Observable } from 'rxjs'
+
+import {
+  CanActivate,
+  ExecutionContext,
+  Inject,
+  Injectable,
+} from '@nestjs/common'
 import { AuthGuard as _AuthGuard } from '@nestjs/passport'
+
+import { isTest } from '~/global/env.global'
 import { mockUser1 } from '~/mock/user.mock'
-import { isTest } from '~/utils'
-import { getNestExecutionContextRequest } from '~/utils/nest.util'
+import { AuthService } from '~/modules/auth/auth.service'
+import { UserService } from '~/modules/user/user.service'
+import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 /**
  * JWT auth guard
  */
 
 @Injectable()
-export class JWTAuthGuard extends _AuthGuard('jwt') implements CanActivate {
-  canActivate(context: ExecutionContext) {
+export class AuthGuard extends _AuthGuard('jwt') implements CanActivate {
+  override async canActivate(context: ExecutionContext): Promise<any> {
     const request = this.getRequest(context)
 
     if (typeof request.user !== 'undefined') {
@@ -23,7 +33,7 @@ export class JWTAuthGuard extends _AuthGuard('jwt') implements CanActivate {
       return true
     }
 
-    return super.canActivate(context)
+    return super.canActivate(context) as any
   }
 
   getRequest(context: ExecutionContext) {

@@ -1,13 +1,21 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common'
-import { InjectModel } from 'nestjs-typegoose'
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common'
+
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { isDev } from '~/global/env.global'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
-import { EventTypes } from '~/processors/gateway/events.types'
 import {
   EmailService,
   LinkApplyEmailType,
 } from '~/processors/helper/helper.email.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
-import { isDev } from '~/utils'
+import { InjectModel } from '~/transformers/model.transformer'
+
 import { ConfigsService } from '../configs/configs.service'
 import { LinkModel, LinkState, LinkType } from './link.model'
 
@@ -18,8 +26,9 @@ export class LinkService {
     private readonly linkModel: MongooseModel<LinkModel>,
     private readonly emailService: EmailService,
     private readonly configs: ConfigsService,
-    private readonly adminGateway: AdminEventsGateway,
+    private readonly eventManager: EventManagerService,
     private readonly http: HttpService,
+    private readonly configsService: ConfigsService,
   ) {}
 
   public get model() {
@@ -34,9 +43,11 @@ export class LinkService {
       })
 
       process.nextTick(() => {
-        this.adminGateway.broadcast(EventTypes.LINK_APPLY, doc)
+        this.eventManager.broadcast(BusinessEvents.LINK_APPLY, doc, {
+          scope: EventScope.TO_SYSTEM_ADMIN,
+        })
       })
-    } catch {
+    } catch (err) {
       throw new BadRequestException('请不要重复申请友链哦')
     }
   }
@@ -50,6 +61,10 @@ export class LinkService {
         },
       )
       .lean()
+
+    if (!doc) {
+      throw new NotFoundException()
+    }
 
     return doc
   }
@@ -95,7 +110,7 @@ export class LinkService {
       return
     }
 
-    await this.emailService.sendLinkApplyEmail({
+    await this.sendLinkApplyEmail({
       model,
       to: model.email,
       template: LinkApplyEmailType.ToCandidate,
@@ -113,7 +128,7 @@ export class LinkService {
     process.nextTick(async () => {
       const master = await this.configs.getMaster()
 
-      await this.emailService.sendLinkApplyEmail({
+      await this.sendLinkApplyEmail({
         authorName,
         model,
         to: master.mail,
@@ -121,6 +136,39 @@ export class LinkService {
       })
     })
   }
+
+  async sendLinkApplyEmail({
+    to,
+    model,
+    authorName,
+    template,
+  }: {
+    authorName?: string
+    to: string
+    model: LinkModel
+    template: LinkApplyEmailType
+  }) {
+    const { seo, mailOptions } = await this.configsService.waitForConfigReady()
+    const { user } = mailOptions
+    const from = `"${seo.title || 'Mx Space'}" <${user}>`
+    await this.emailService.getInstance().sendMail({
+      from,
+      to,
+      subject:
+        template === LinkApplyEmailType.ToMaster
+          ? `[${seo.title || 'Mx Space'}] 新的朋友 ${authorName}`
+          : `嘿!~, 主人已通过你的友链申请!~`,
+      text:
+        template === LinkApplyEmailType.ToMaster
+          ? `来自 ${model.name} 的友链请求: 
+          站点标题: ${model.name}
+          站点网站: ${model.url}
+          站点描述: ${model.description}
+        `
+          : `你的友链申请: ${model.name}, ${model.url} 已通过`,
+    })
+  }
+
   /** 确定友链存活状态 */
   async checkLinkHealth() {
     const links = await this.model.find({ state: LinkState.Pass })
@@ -160,5 +208,11 @@ export class LinkService {
     )
 
     return health
+  }
+
+  async canApplyLink() {
+    const configs = await this.configs.get('friendLinkOptions')
+    const can = configs.allowApply
+    return can
   }
 }

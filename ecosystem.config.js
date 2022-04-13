@@ -1,3 +1,10 @@
+const { cpus } = require('os')
+const { execSync } = require('child_process')
+const nodePath = execSync(`npm root --quiet -g`, { encoding: 'utf-8' }).split(
+  '\n',
+)[0]
+
+const cpuLen = cpus().length
 module.exports = {
   apps: [
     {
@@ -6,11 +13,12 @@ module.exports = {
       autorestart: true,
       exec_mode: 'cluster',
       watch: false,
-      instances: 2,
+      instances: Math.max(2, cpuLen),
       max_memory_restart: '230M',
-
+      args: '--color',
       env: {
         NODE_ENV: 'production',
+        NODE_PATH: nodePath,
       },
     },
   ],

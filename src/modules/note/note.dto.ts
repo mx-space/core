@@ -11,6 +11,7 @@ import {
   Min,
   ValidateIf,
 } from 'class-validator'
+
 import { PagerDto } from '~/shared/dto/pager.dto'
 
 export class NoteQueryDto extends PagerDto {

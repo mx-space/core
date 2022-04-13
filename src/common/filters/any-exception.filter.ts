@@ -1,3 +1,7 @@
+import { FastifyReply, FastifyRequest } from 'fastify'
+import { WriteStream } from 'fs'
+import { resolve } from 'path'
+
 import {
   ArgumentsHost,
   Catch,
@@ -8,13 +12,12 @@ import {
   Logger,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import { FastifyReply, FastifyRequest } from 'fastify'
-import { WriteStream } from 'fs'
-import { resolve } from 'path'
+
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 import { LOG_DIR } from '~/constants/path.constant'
 import { REFLECTOR } from '~/constants/system.constant'
-import { isDev } from '~/utils'
+import { isDev } from '~/global/env.global'
+
 import { getIp } from '../../utils/ip.util'
 import { LoggingInterceptor } from '../interceptors/logging.interceptor'
 
@@ -46,8 +49,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       (exception as any)?.response?.message ||
       (exception as myError)?.message ||
       ''
-    if (isDev || status === HttpStatus.INTERNAL_SERVER_ERROR) {
-      Logger.error(message, undefined, 'Catch')
+
+    const url = request.raw.url!
+
+    if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+      // message && Logger.debug(message, undefined, 'Catch')
       Logger.error(exception, undefined, 'Catch')
 
       if (!isDev) {
@@ -59,31 +65,27 @@ export class AllExceptionsFilter implements ExceptionFilter {
           })
 
         this.errorLogPipe.write(
-          `[${new Date().toISOString()}] ${decodeURI(request.raw.url)}: ${
+          `[${new Date().toISOString()}] ${decodeURI(url)}: ${
             (exception as any)?.response?.message ||
             (exception as myError)?.message
-          }\n` +
-            (exception as Error).stack +
-            '\n',
+          }\n${(exception as Error).stack}\n`,
         )
       }
     } else {
       const ip = getIp(request)
       this.logger.warn(
-        `IP: ${ip} 错误信息: (${status}) ${message} Path: ${decodeURI(
-          request.raw.url,
-        )}`,
+        `IP: ${ip} 错误信息: (${status}) ${message} Path: ${decodeURI(url)}`,
       )
     }
     // @ts-ignore
     const prevRequestTs = this.reflector.get(HTTP_REQUEST_TIME, request as any)
 
     if (prevRequestTs) {
-      const content = request.method + ' -> ' + request.url
+      const content = `${request.method} -> ${request.url}`
       Logger.debug(
-        '--- 响应异常请求：' +
-          content +
-          chalk.yellow(` +${+new Date() - prevRequestTs}ms`),
+        `--- 响应异常请求：${content}${chalk.yellow(
+          ` +${+new Date() - prevRequestTs}ms`,
+        )}`,
         LoggingInterceptor.name,
       )
     }

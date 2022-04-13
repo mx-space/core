@@ -14,18 +14,20 @@ import {
 } from '@nestjs/common'
 import { ApiOperation, ApiParam } from '@nestjs/swagger'
 import { DocumentType } from '@typegoose/typegoose'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 import { CurrentUser } from '~/common/decorator/current-user.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { EventTypes } from '~/processors/gateway/events.types'
-import { SharedGateway } from '~/processors/gateway/shared/events.gateway'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ReplyMailType } from '~/processors/helper/helper.email.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { transformDataToPaginate } from '~/utils/transfrom.util'
+import { transformDataToPaginate } from '~/transformers/paginate.transformer'
+
 import { UserModel } from '../user/user.model'
 import {
   CommentDto,
@@ -43,7 +45,7 @@ import { CommentService } from './comment.service'
 export class CommentController {
   constructor(
     private readonly commentService: CommentService,
-    private readonly gateway: SharedGateway,
+    private readonly eventManager: EventManagerService,
   ) {}
 
   @Get('/')
@@ -132,7 +134,13 @@ export class CommentController {
         await comment.save()
       } else if (!isMaster) {
         this.commentService.sendEmail(comment, ReplyMailType.Owner)
-        this.gateway.broadcase(EventTypes.COMMENT_CREATE, comment)
+        await this.eventManager.broadcast(
+          BusinessEvents.COMMENT_CREATE,
+          comment,
+          {
+            scope: EventScope.ALL,
+          },
+        )
       }
     })
 
@@ -193,7 +201,9 @@ export class CommentController {
       this.commentService.sendEmail(comment, ReplyMailType.Guest)
     } else {
       this.commentService.sendEmail(comment, ReplyMailType.Owner)
-      this.gateway.broadcase(EventTypes.COMMENT_CREATE, comment)
+      this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
+        scope: EventScope.ALL,
+      })
     }
     return comment
   }
@@ -237,6 +247,7 @@ export class CommentController {
       url,
       state: CommentState.Read,
     } as CommentDto
+    // @ts-ignore
     return await this.replyByCid(params, model, undefined, true, ipLocation)
   }
 
@@ -269,6 +280,11 @@ export class CommentController {
   @Auth()
   async deleteComment(@Param() params: MongoIdDto) {
     const { id } = params
-    return await this.commentService.deleteComments(id)
+    await this.commentService.deleteComments(id)
+    await this.eventManager.broadcast(BusinessEvents.COMMENT_DELETE, id, {
+      scope: EventScope.TO_SYSTEM_VISITOR,
+      nextTick: true,
+    })
+    return
   }
 }

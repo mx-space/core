@@ -4,16 +4,16 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   Post,
   Query,
 } from '@nestjs/common'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { OffsetDto } from '~/shared/dto/pager.dto'
+
 import { RecentlyModel } from './recently.model'
 import { RecentlyService } from './recently.service'
 
@@ -45,7 +45,6 @@ export class RecentlyController {
 
   @Post('/')
   @Auth()
-  @HttpCode(HttpStatus.CREATED)
   async create(@Body() body: RecentlyModel) {
     const res = await this.recentlyService.create(body)
 
@@ -54,7 +53,6 @@ export class RecentlyController {
 
   @Delete('/:id')
   @Auth()
-  @HttpCode(HttpStatus.NO_CONTENT)
   async del(@Param() { id }: MongoIdDto) {
     const res = await this.recentlyService.delete(id)
     if (!res) {

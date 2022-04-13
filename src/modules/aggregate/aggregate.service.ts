@@ -1,17 +1,21 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
-import { OnEvent } from '@nestjs/event-emitter'
-import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
-import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
 import dayjs from 'dayjs'
 import { pick } from 'lodash'
 import { FilterQuery } from 'mongoose'
 import { URL } from 'url'
+
+import { Inject, Injectable, forwardRef } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
+import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
+
 import { CacheKeys, RedisKeys } from '~/constants/cache.constant'
-import { EventBusEvents } from '~/constants/event.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
-import { addYearCondition } from '~/utils/query.util'
+import { addYearCondition } from '~/transformers/db-query.transformer'
 import { getRedisKey } from '~/utils/redis.util'
+import { getShortDate } from '~/utils/time.util'
+
 import { CategoryModel } from '../category/category.model'
 import { CategoryService } from '../category/category.service'
 import { CommentState } from '../comment/comment.model'
@@ -27,6 +31,7 @@ import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
 import { TimelineType } from './aggregate.dto'
 import { RSSProps } from './aggregate.interface'
+
 @Injectable()
 export class AggregateService {
   constructor(
@@ -119,11 +124,15 @@ export class AggregateService {
     return { notes, posts, says }
   }
 
-  async getTimeline(year: number, type: TimelineType, sortBy: 1 | -1 = 1) {
+  async getTimeline(
+    year: number | undefined,
+    type: TimelineType | undefined,
+    sortBy: 1 | -1 = 1,
+  ) {
     const data: any = {}
     const getPosts = () =>
       this.postService.model
-        .find({ hide: false, ...addYearCondition(year) })
+        .find({ ...addYearCondition(year) })
         .sort({ created: sortBy })
         .populate('category')
         .lean()
@@ -137,10 +146,7 @@ export class AggregateService {
             //     ? item.text.slice(0, 150) + '...'
             //     : item.text),
             url: encodeURI(
-              '/posts/' +
-                (item.category as CategoryModel).slug +
-                '/' +
-                item.slug,
+              `/posts/${(item.category as CategoryModel).slug}/${item.slug}`,
             ),
           })),
         )
@@ -150,7 +156,6 @@ export class AggregateService {
         .find(
           {
             hide: false,
-            password: undefined,
             ...addYearCondition(year),
           },
           '_id nid title weather mood created modified hasMemory',
@@ -189,7 +194,9 @@ export class AggregateService {
         .then((list) =>
           list.map((doc) => ({
             url: new URL(`/${doc.slug}`, baseURL),
-            published_at: new Date(doc.modified),
+            published_at: doc.modified
+              ? new Date(doc.modified)
+              : new Date(doc.created!),
           })),
         ),
 
@@ -210,7 +217,9 @@ export class AggregateService {
           list.map((doc) => {
             return {
               url: new URL(`/notes/${doc.nid}`, baseURL),
-              published_at: new Date(doc.modified),
+              published_at: doc.modified
+                ? new Date(doc.modified)
+                : new Date(doc.created!),
             }
           }),
         ),
@@ -227,7 +236,9 @@ export class AggregateService {
                 `/posts/${(doc.category as CategoryModel).slug}/${doc.slug}`,
                 baseURL,
               ),
-              published_at: new Date(doc.modified),
+              published_at: doc.modified
+                ? new Date(doc.modified)
+                : new Date(doc.created!),
             }
           }),
         ),
@@ -279,7 +290,7 @@ export class AggregateService {
       return {
         title: post.title,
         text: post.text,
-        created: post.created,
+        created: post.created!,
         modified: post.modified,
         link: new URL(
           '/posts' + `/${(post.category as CategoryModel).slug}/${post.slug}`,
@@ -294,20 +305,20 @@ export class AggregateService {
       return {
         title: note.title,
         text: isSecret ? '这篇文章暂时没有公开呢' : note.text,
-        created: note.created,
+        created: note.created!,
         modified: note.modified,
-        link: new URL('/notes/' + note.nid, baseURL).toString(),
+        link: new URL(`/notes/${note.nid}`, baseURL).toString(),
       }
     })
     return postsRss
       .concat(notesRss)
-      .sort((a, b) => b.created.getTime() - a.created.getTime())
+      .sort((a, b) => b.created!.getTime() - a.created!.getTime())
       .slice(0, 10)
   }
 
   async getCounts() {
     const redisClient = this.cacheService.getClient()
-    const dateFormat = dayjs().format('YYYY-MM-DD')
+    const dateFormat = getShortDate(new Date())
 
     const [
       online,
@@ -349,9 +360,10 @@ export class AggregateService {
     ])
 
     const [todayMaxOnline, todayOnlineTotal] = await Promise.all([
-      redisClient.get(getRedisKey(RedisKeys.MaxOnlineCount, dateFormat)),
-      redisClient.get(
-        getRedisKey(RedisKeys.MaxOnlineCount, dateFormat, 'total'),
+      redisClient.hget(getRedisKey(RedisKeys.MaxOnlineCount), dateFormat),
+      redisClient.hget(
+        getRedisKey(RedisKeys.MaxOnlineCount, 'total'),
+        dateFormat,
       ),
     ])
 

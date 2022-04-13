@@ -1,4 +1,5 @@
-import { forwardRef, Module } from '@nestjs/common'
+import { Module, forwardRef } from '@nestjs/common'
+
 import { NoteModule } from '../note/note.module'
 import { PostModule } from '../post/post.module'
 import { SearchController } from './search.controller'

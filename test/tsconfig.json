@@ -6,6 +6,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "esModuleInterop": true,
+    "strictNullChecks": false,
     "allowSyntheticDefaultImports": true,
     "target": "ES2019",
     "sourceMap": true,

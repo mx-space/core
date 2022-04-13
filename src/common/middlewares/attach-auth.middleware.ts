@@ -2,9 +2,10 @@
  * 把 URL Search 上的 `token` 附加到 Header Authorization 上
  * @author Innei <https://innei.ren>
  */
+import { IncomingMessage, ServerResponse } from 'http'
 
 import { Injectable, NestMiddleware } from '@nestjs/common'
-import { IncomingMessage, ServerResponse } from 'http'
+
 import { parseRelativeUrl } from '~/utils/ip.util'
 
 @Injectable()
@@ -15,7 +16,7 @@ export class AttachHeaderTokenMiddleware implements NestMiddleware {
     const parser = parseRelativeUrl(url)
 
     if (parser.searchParams.get('token')) {
-      req.headers.authorization = parser.searchParams.get('token')
+      req.headers.authorization = parser.searchParams.get('token') as string
     }
 
     next()

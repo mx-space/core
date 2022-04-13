@@ -50,3 +50,5 @@ scripts/workflow/data
 schema.gql
 
 app.config.js
+
+webpack-dist

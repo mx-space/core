@@ -1,21 +1,14 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Patch,
-  Post,
-  SerializeOptions,
-  UseGuards,
-} from '@nestjs/common'
-import { AuthGuard } from '@nestjs/passport'
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
+import { Body, Controller, Get, HttpCode, Patch, Post } from '@nestjs/common'
+import { ApiOperation } from '@nestjs/swagger'
+
+import { Auth } from '~/common/decorator/auth.decorator'
 import { HttpCache } from '~/common/decorator/cache.decorator'
 import { CurrentUser } from '~/common/decorator/current-user.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { getAvatar } from '~/utils'
+
 import { AuthService } from '../auth/auth.service'
 import { LoginDto, UserDto, UserPatchDto } from './user.dto'
 import { UserDocument, UserModel } from './user.model'
@@ -36,9 +29,6 @@ export class UserController {
   }
 
   @Post('register')
-  @SerializeOptions({
-    excludePrefixes: ['password'],
-  })
   @ApiOperation({ summary: '注册' })
   async register(@Body() userDto: UserDto) {
     userDto.name = userDto.name ?? userDto.username
@@ -71,17 +61,16 @@ export class UserController {
 
   @Get('check_logged')
   @ApiOperation({ summary: '判断当前 Token 是否有效 ' })
-  @ApiBearerAuth()
-  @HttpCache({ disable: true })
+  @Auth()
+  @HttpCache.disable
   checkLogged(@IsMaster() isMaster: boolean) {
     return { ok: +isMaster, isGuest: !isMaster }
   }
 
   @Patch()
-  @ApiOperation({ summary: '修改主人的信息 ' })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
-  @HttpCache({ disable: true })
+  @ApiOperation({ summary: '修改主人的信息' })
+  @Auth()
+  @HttpCache.disable
   async patchMasterData(
     @Body() body: UserPatchDto,
     @CurrentUser() user: UserDocument,

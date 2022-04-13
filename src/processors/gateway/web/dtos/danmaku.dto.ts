@@ -1,11 +1,12 @@
 import {
-  IsString,
-  IsOptional,
+  IsHexColor,
   IsInt,
   IsNotEmpty,
-  IsHexColor,
+  IsOptional,
+  IsString,
   MaxLength,
 } from 'class-validator'
+
 export class DanmakuDto {
   @IsString()
   @IsNotEmpty()

@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common'
-import IORedis from 'ioredis'
+import { Redis } from 'ioredis'
 import { isAsyncFunction } from 'util/types'
+
+import { Injectable } from '@nestjs/common'
+
 import { safeJSONParse } from '~/utils'
+
 import { CacheService } from '../cache/cache.service'
 
 type ITask = RedisMap<
@@ -61,10 +64,10 @@ export class TaskQueueService {
 
 class RedisMap<K extends string, V = unknown> {
   constructor(
-    private readonly redis: IORedis.Redis,
+    private readonly redis: Redis,
     private readonly hashName: string,
   ) {
-    this.hashName = RedisMap.key + `${hashName}#`
+    this.hashName = `${RedisMap.key}${hashName}#`
   }
 
   static key = 'redis-map#'

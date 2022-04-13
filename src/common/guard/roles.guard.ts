@@ -8,7 +8,10 @@
  */
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { getNestExecutionContextRequest } from '~/utils/nest.util'
+
+import { isTest } from '~/global/env.global'
+import { AuthService } from '~/modules/auth/auth.service'
+import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 /**
  * 区分游客和主人的守卫
@@ -16,15 +19,29 @@ import { getNestExecutionContextRequest } from '~/utils/nest.util'
 
 @Injectable()
 export class RolesGuard extends AuthGuard('jwt') implements CanActivate {
+  constructor(private readonly authService: AuthService) {
+    super(authService)
+  }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     let isMaster = false
     const request = this.getRequest(context)
-
-    if (request.headers['authorization']) {
+    const authorization = request.headers.authorization
+    if (authorization) {
       try {
         isMaster = (await super.canActivate(context)) as boolean
       } catch {}
+      // FIXME test env
+      if (!isMaster && !isTest) {
+        const [isValidToken, userModel] =
+          await this.authService.verifyCustomToken(authorization as string)
+        if (isValidToken) {
+          request.user = userModel!
+          isMaster = true
+          return true
+        }
+      }
     }
+
     request.isGuest = !isMaster
     request.isMaster = isMaster
     return true

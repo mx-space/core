@@ -1,10 +1,13 @@
+import { omit } from 'lodash'
+
 import { CacheKey, CacheTTL, Controller, Get, Query } from '@nestjs/common'
 import { ApiProperty } from '@nestjs/swagger'
-import { omit } from 'lodash'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
+
 import { AnalyzeService } from '../analyze/analyze.service'
 import { ConfigsService } from '../configs/configs.service'
 import { TimelineQueryDto, TopQueryDto } from './aggregate.dto'
@@ -22,7 +25,7 @@ export class AggregateController {
   @Get('/')
   @CacheKey(CacheKeys.AggregateCatch)
   @CacheTTL(300)
-  async aggregate(@IsMaster() isMaster: boolean) {
+  async aggregate() {
     const tasks = await Promise.allSettled([
       this.configsService.getMaster(),
       this.aggregateService.getAllCategory(),

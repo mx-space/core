@@ -1,15 +1,19 @@
+import IORedis, { Redis } from 'ioredis'
+
 import { Logger } from '@nestjs/common'
-import IORedis from 'ioredis'
+
 import { REDIS } from '~/app.config'
-import { isTest } from './tool.util'
+
+import { isTest } from '../global/env.global'
+
 class RedisSubPub {
-  public pubClient: IORedis.Redis
-  public subClient: IORedis.Redis
+  public pubClient: Redis
+  public subClient: Redis
   constructor(private channelPrefix: string = 'mx-channel#') {
     if (!isTest) {
       this.init()
     } else {
-      !process.env.CI && console.error('[RedisSubPub] 在测试环境不可用！')
+      // !process.env.CI && console.error('[RedisSubPub] 在测试环境不可用！')
     }
   }
 
@@ -23,7 +27,7 @@ class RedisSubPub {
     const channel = this.channelPrefix + event
     const _data = JSON.stringify(data)
     if (event !== 'log') {
-      Logger.debug(`发布事件：${channel} <- ` + _data, RedisSubPub.name)
+      Logger.debug(`发布事件：${channel} <- ${_data}`, RedisSubPub.name)
     }
     await this.pubClient.publish(channel, _data)
   }
@@ -37,7 +41,7 @@ class RedisSubPub {
     const cb = (channel, message) => {
       if (channel === myChannel) {
         if (event !== 'log') {
-          Logger.debug(`接收事件：${channel} -> ` + message, RedisSubPub.name)
+          Logger.debug(`接收事件：${channel} -> ${message}`, RedisSubPub.name)
         }
         callback(JSON.parse(message))
       }

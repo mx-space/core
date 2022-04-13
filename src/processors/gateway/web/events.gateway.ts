@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { plainToClass } from 'class-transformer'
+import { validate } from 'class-validator'
+import SocketIO from 'socket.io'
+
 import {
   ConnectedSocket,
   GatewayMetadata,
@@ -9,22 +14,21 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets'
 import { Emitter } from '@socket.io/redis-emitter'
-import { plainToClass } from 'class-transformer'
-import { validate } from 'class-validator'
-import dayjs from 'dayjs'
-import SocketIO from 'socket.io'
+
+import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
-import { BaseGateway } from '../base.gateway'
-import { EventTypes } from '../events.types'
+import { getShortDate } from '~/utils/time.util'
+
+import { BoardcastBaseGateway } from '../base.gateway'
 import { DanmakuDto } from './dtos/danmaku.dto'
 
 @WebSocketGateway<GatewayMetadata>({
   namespace: 'web',
 })
 export class WebEventsGateway
-  extends BaseGateway
+  extends BoardcastBaseGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(private readonly cacheService: CacheService) {
@@ -40,7 +44,7 @@ export class WebEventsGateway
       timestamp: new Date().toISOString(),
     }
   }
-  @SubscribeMessage(EventTypes.DANMAKU_CREATE)
+  @SubscribeMessage(BusinessEvents.DANMAKU_CREATE)
   createNewDanmaku(
     @MessageBody() data: DanmakuDto,
     @ConnectedSocket() client: SocketIO.Socket,
@@ -50,7 +54,7 @@ export class WebEventsGateway
       if (errors.length > 0) {
         return client.send(errors)
       }
-      this.broadcast(EventTypes.DANMAKU_CREATE, data)
+      this.broadcast(BusinessEvents.DANMAKU_CREATE, data)
       client.send([])
     })
   }
@@ -61,34 +65,40 @@ export class WebEventsGateway
     return sockets.size
   }
   async handleConnection(socket: SocketIO.Socket) {
-    this.broadcast(EventTypes.VISITOR_ONLINE, await this.sendOnlineNumber())
+    this.broadcast(BusinessEvents.VISITOR_ONLINE, await this.sendOnlineNumber())
 
     process.nextTick(async () => {
       const redisClient = this.cacheService.getClient()
-      const dateFormat = dayjs().format('YYYY-MM-DD')
+      const dateFormat = getShortDate(new Date())
 
       // get and store max_online_count
       const maxOnlineCount =
-        +(await redisClient.get(
-          getRedisKey(RedisKeys.MaxOnlineCount, dateFormat),
-        )) || 0
-      await redisClient.set(
-        getRedisKey(RedisKeys.MaxOnlineCount, dateFormat),
+        +(await redisClient.hget(
+          getRedisKey(RedisKeys.MaxOnlineCount),
+          dateFormat,
+        ))! || 0
+      await redisClient.hset(
+        getRedisKey(RedisKeys.MaxOnlineCount),
+        dateFormat,
         Math.max(maxOnlineCount, await this.getcurrentClientCount()),
       )
-      const key = getRedisKey(RedisKeys.MaxOnlineCount, dateFormat) + '_total'
-      const totalCount = +(await redisClient.get(key)) || 0
-      await redisClient.set(key, totalCount + 1)
+      const key = getRedisKey(RedisKeys.MaxOnlineCount, 'total')
+
+      const totalCount = +(await redisClient.hget(key, dateFormat))! || 0
+      await redisClient.hset(key, dateFormat, totalCount + 1)
     })
 
     super.handleConnect(socket)
   }
   async handleDisconnect(client: SocketIO.Socket) {
     super.handleDisconnect(client)
-    this.broadcast(EventTypes.VISITOR_OFFLINE, await this.sendOnlineNumber())
+    this.broadcast(
+      BusinessEvents.VISITOR_OFFLINE,
+      await this.sendOnlineNumber(),
+    )
   }
 
-  broadcast(event: EventTypes, data: any) {
+  override broadcast(event: BusinessEvents, data: any) {
     const client = new Emitter(this.cacheService.getClient())
     client.of('/web').emit('message', this.gatewayMessageFormat(event, data))
   }

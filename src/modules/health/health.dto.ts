@@ -19,8 +19,7 @@ export class LogQueryDto {
   index: number
 
   @IsString()
-  @IsOptional()
-  filename?: string
+  filename: string
 }
 
 export class LogTypeDto {

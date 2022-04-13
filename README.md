@@ -21,7 +21,13 @@
 - **Admin**: [Admin](https://github.com/mx-space/admin-next)
 - 未来可期
 
-接口文档通过开发环境 Swagger 查阅，接口大概有 120+ 个
+接口文档通过开发环境 Swagger 查阅。
+
+现有的比较有意思的一些小玩意的实现：
+
+- 实时日志输出。通过 Socket.IO + 劫持 `process.stdout` 实现。
+- PTY 支持。
+- [云函数](./src/modules/serverless/serverless.readme.md)
 
 ## 快速开始
 
@@ -31,7 +37,7 @@
 - MongoDB
 - Redis
 
-使用构建好的版本你的系统必须是 Linux (test on Ubuntu 18, Ubuntu 20, CentOS 8)
+现有 macOS(x86)、Linux(x86) 的已构建产物。使用以下脚本可免手动构建直接运行。
 
 ```sh
 curl https://cdn.jsdelivr.net/gh/mx-space/mx-server@master/scripts/download-latest-asset.js >> download.js
@@ -46,10 +52,9 @@ node index.js
 node index.js
 ```
 
-所有的依赖都打包进了文件无需 node_modules
+所有的依赖都打包进了产物，无需黑洞一般的 node_modules
 
 ## Docker 部署
-
 
 ```bash
 cd
@@ -57,6 +62,15 @@ mkdir -p mx/server
 cd mx/server
 wget https://cdn.jsdelivr.net/gh/mx-space/mx-server@master/docker-compose.yml
 docker-compose up -d
+```
+
+## 开发环境
+
+```
+git clone https://github.com/mx-space/mx-server
+cd mx-server
+pnpm i
+pnpm dev
 ```
 
 ## 项目结构
@@ -101,10 +115,12 @@ docker-compose up -d
 │   ├── pageproxy
 │   ├── post
 │   ├── project
+│   ├── pty
 │   ├── recently
 │   ├── say
 │   ├── search
 |   ├── snippet
+|   ├── serverless
 │   ├── sitemap
 │   ├── tool
 │   └── user
@@ -193,10 +209,10 @@ ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> Analyz
   1. [helper] 辅助类
   1. [CountingService] 提供更新阅读计数
   1. [CronService] 维护管理计划任务
-      - 自动备份
-      - 推送百度搜索
-      - 清除缓存
-      - etc.
+     - 自动备份
+     - 推送百度搜索
+     - 清除缓存
+     - etc.
   1. [EmailService] 送信服务
   1. [HttpService] 请求模块
   1. [ImageService] 图片处理
@@ -223,4 +239,4 @@ Thanks
 
 # 许可
 
-This project is GPLv3 licensed. 2021 Innei
+This project is licensed under AGPLv3 licensed. 2021 Innei

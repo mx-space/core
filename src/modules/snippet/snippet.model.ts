@@ -1,4 +1,3 @@
-import { index, modelOptions, prop } from '@typegoose/typegoose'
 import { Transform } from 'class-transformer'
 import {
   IsBoolean,
@@ -9,6 +8,9 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator'
+
+import { index, modelOptions, prop } from '@typegoose/typegoose'
+
 import { BaseModel } from '~/shared/model/base.model'
 
 export enum SnippetType {
@@ -49,7 +51,7 @@ export class SnippetModel extends BaseModel {
 
   @prop({ require: true, trim: true })
   @IsNotEmpty()
-  @Matches(/^[a-zA-Z0-9_]{1,30}$/, {
+  @Matches(/^[a-zA-Z0-9_-]{1,30}$/, {
     message: 'name 只能使用英文字母和数字下划线且不超过 30 个字符',
   })
   name: string
@@ -67,10 +69,15 @@ export class SnippetModel extends BaseModel {
   @IsOptional()
   comment?: string
 
-  // 类型注释
+  // 元数据类型 （预留二级类型，暂时不用）
   @prop({ maxlength: 20 })
   @MaxLength(20)
   @IsString()
   @IsOptional()
   metatype?: string
+
+  @prop()
+  @IsString()
+  @IsOptional()
+  schema?: string
 }

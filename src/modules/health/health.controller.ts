@@ -1,3 +1,8 @@
+import type { FastifyReply } from 'fastify'
+import { isFunction, isString } from 'lodash'
+import { resolve } from 'path'
+import { Readable } from 'stream'
+
 import {
   BadRequestException,
   Controller,
@@ -12,20 +17,20 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { SchedulerRegistry } from '@nestjs/schedule'
-import type { FastifyReply } from 'fastify'
-import { isFunction, isString } from 'lodash'
-import { resolve } from 'path'
-import { Readable } from 'stream'
+
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CRON_DESCRIPTION } from '~/constants/meta.constant'
 import { LOG_DIR } from '~/constants/path.constant'
 import { SCHEDULE_CRON_OPTIONS } from '~/constants/system.constant'
+import { getTodayLogFilePath } from '~/global/consola.global'
 import { CronService } from '~/processors/helper/helper.cron.service'
 import { TaskQueueService } from '~/processors/helper/helper.tq.service'
-import { getTodayLogFilePath } from '~/utils/consola.util'
+import { formatByteSize } from '~/utils'
+
 import { LogQueryDto, LogTypeDto } from './health.dto'
+
 @Controller({
   path: 'health',
   scope: Scope.REQUEST,
@@ -134,9 +139,8 @@ export class HealthController {
       index: number
     }[]
     for (const [i, file] of Object.entries(allFile)) {
-      const size = `${(
-        fs.statSync(path.join(logDir, file)).size / 1024
-      ).toFixed(2)} KiB`
+      const byteSize = fs.statSync(path.join(logDir, file)).size
+      const size = formatByteSize(byteSize)
       let index: number
       let _type: string
 
@@ -174,7 +178,7 @@ export class HealthController {
           throw new BadRequestException('log dir not exists')
         }
         const filename =
-          __filename ?? `mx-server-${type}${index === 0 ? '' : '-' + index}.log`
+          __filename ?? `mx-server-${type}${index === 0 ? '' : `-${index}`}.log`
         const logPath = path.join(logDir, filename)
         if (!fs.existsSync(logPath)) {
           throw new BadRequestException('log file not exists')
@@ -212,12 +216,10 @@ export class HealthController {
       case 'native': {
         const logPath = path.join(LOG_DIR, filename)
         const todayLogFile = getTodayLogFilePath()
-        if (todayLogFile == logPath) {
-          throw new BadRequestException('can not delete today log')
-        }
 
-        if (logPath.endsWith('error.log')) {
-          throw new BadRequestException('can not delete error log')
+        if (logPath.endsWith('error.log') || todayLogFile === logPath) {
+          await fs.writeFile(logPath, '', { encoding: 'utf8', flag: 'w' })
+          break
         }
         await fs.rm(logPath)
         break

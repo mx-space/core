@@ -9,13 +9,19 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
+
 import { Auth } from '~/common/decorator/auth.decorator'
+import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
+import { DATA_DIR } from '~/constants/path.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { transformDataToPaginate } from '~/utils/transfrom.util'
-import { SnippetModel } from './snippet.model'
+import { transformDataToPaginate } from '~/transformers/paginate.transformer'
+import { installPKG } from '~/utils'
+
+import { SnippetMoreDto } from './snippet.dto'
+import { SnippetModel, SnippetType } from './snippet.model'
 import { SnippetService } from './snippet.service'
 
 @ApiName
@@ -26,14 +32,44 @@ export class SnippetController {
   @Get('/')
   @Auth()
   async getList(@Query() query: PagerDto) {
-    const { page, size, select = '' } = query
+    const { page, size, select = '', db_query } = query
 
     return transformDataToPaginate(
-      await this.snippetService.model.paginate(
-        {},
-        { page, limit: size, select },
-      ),
+      await this.snippetService.model.paginate(db_query ?? {}, {
+        page,
+        limit: size,
+        select,
+        sort: {
+          reference: 1,
+          created: -1,
+        },
+      }),
     )
+  }
+
+  @Post('/more')
+  @Auth()
+  async createMore(@Body() body: SnippetMoreDto) {
+    const { snippets, packages = [] } = body
+    const tasks = snippets.map((snippet) => this.create(snippet))
+
+    const resultList = await Promise.all(tasks)
+
+    try {
+      if (packages.length) {
+        const tasks2 = packages.map((pkg) => {
+          return installPKG(pkg, DATA_DIR)
+        })
+        await Promise.all(tasks2)
+      }
+    } catch (err) {
+      await Promise.all(
+        resultList.map((doc) => {
+          return doc.remove()
+        }),
+      )
+      throw err
+    }
   }
 
   @Post('/')
@@ -43,19 +79,22 @@ export class SnippetController {
   }
 
   @Get('/:id')
-  async getSnippetById(
-    @Param() param: MongoIdDto,
-    @IsMaster() isMaster: boolean,
-  ) {
+  @Auth()
+  async getSnippetById(@Param() param: MongoIdDto) {
     const { id } = param
     const snippet = await this.snippetService.getSnippetById(id)
-    if (snippet.private && !isMaster) {
-      throw new ForbiddenException('snippet is private')
-    }
+
     return snippet
   }
 
+  @Post('/aggregate')
+  @Auth()
+  async aggregate(@Body() body: any) {
+    return this.snippetService.model.aggregate(body)
+  }
+
   @Get('/:reference/:name')
+  @HTTPDecorators.Bypass
   async getSnippetByName(
     @Param('name') name: string,
     @Param('reference') reference: string,
@@ -68,13 +107,22 @@ export class SnippetController {
     if (typeof reference !== 'string') {
       throw new ForbiddenException('reference should be string')
     }
+    const cached = await this.snippetService.getCachedSnippet(reference, name)
+    if (cached) {
+      return cached
+    }
 
     const snippet = await this.snippetService.getSnippetByName(name, reference)
-
     if (snippet.private && !isMaster) {
       throw new ForbiddenException('snippet is private')
     }
-    return snippet.data
+
+    if (snippet.type !== SnippetType.Function) {
+      return this.snippetService.attachSnippet(snippet).then((res) => {
+        this.snippetService.cacheSnippet(res, res.data)
+        return res.data
+      })
+    }
   }
 
   @Put('/:id')

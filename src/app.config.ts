@@ -1,7 +1,7 @@
-const isTEST = !!process.env.TEST
-const isDev = process.env.NODE_ENV === 'development'
 import cluster from 'cluster'
-import { argv } from 'zx'
+import { argv } from 'zx-cjs'
+
+import { cwd, isDev, isTest } from './global/env.global'
 
 export const PORT = argv.port || process.env.PORT || 2333
 export const API_VERSION = 2
@@ -28,7 +28,7 @@ export const MONGO_DB = {
   port: argv.db_port || 27017,
   get uri() {
     return `mongodb://${this.host}:${this.port}/${
-      isTEST ? 'mx-space_unitest' : this.dbName
+      isTest ? 'mx-space_unitest' : this.dbName
     }`
   },
 }
@@ -55,7 +55,7 @@ export const SECURITY = {
   jwtSecret: argv.jwt_secret || argv.jwtSecret,
   jwtExpire: '7d',
   // 跳过登陆鉴权
-  skipAuth: isTEST ? true : false,
+  skipAuth: isTest ? true : false,
 }
 
 export const CLUSTER = {
@@ -63,6 +63,13 @@ export const CLUSTER = {
   workers: argv.cluster_workers,
 }
 
-if (!CLUSTER.enable || cluster.isPrimary) {
+/** Is main cluster in PM2 */
+export const isMainCluster =
+  process.env.NODE_APP_INSTANCE && parseInt(process.env.NODE_APP_INSTANCE) === 0
+
+export const isMainProcess = cluster.isPrimary || isMainCluster
+
+if (!CLUSTER.enable || cluster.isPrimary || isMainCluster) {
   console.log(argv)
+  console.log('cwd: ', cwd)
 }

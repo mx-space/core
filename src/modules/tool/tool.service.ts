@@ -1,12 +1,15 @@
+import { isIPv4, isIPv6 } from 'net'
+import { URLSearchParams } from 'url'
+
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
   UnprocessableEntityException,
 } from '@nestjs/common'
-import { isIPv4, isIPv6 } from 'net'
-import { URLSearchParams } from 'url'
+
 import { HttpService } from '~/processors/helper/helper.http.service'
+
 import { ConfigsService } from '../configs/configs.service'
 import { IP } from './tool.interface'
 
@@ -26,12 +29,12 @@ export class ToolService {
 
     if (isV4) {
       const { data } = await this.httpService.axiosRef.get(
-        'https://api.i-meto.com/ip/v1/qqwry/' + ip,
+        `https://api.i-meto.com/ip/v1/qqwry/${ip}`,
       )
       return data as IP
     } else {
       const { data } = (await this.httpService.axiosRef.get(
-        'http://ip-api.com/json/' + ip,
+        `http://ip-api.com/json/${ip}`,
       )) as any
 
       return {
@@ -53,9 +56,7 @@ export class ToolService {
       throw new BadRequestException('高德地图 API Key 未配置')
     }
     const data = await fetch(
-      'https://restapi.amap.com/v3/geocode/regeo?key=' +
-        gaodemapKey +
-        '&location=' +
+      `https://restapi.amap.com/v3/geocode/regeo?key=${gaodemapKey}&location=` +
         `${longitude},${latitude}`,
     )
       .then((response) => response.json())
@@ -85,7 +86,7 @@ export class ToolService {
     ])
 
     const data = await fetch(
-      'https://restapi.amap.com/v3/place/text?' + params.toString(),
+      `https://restapi.amap.com/v3/place/text?${params.toString()}`,
     )
       .then((response) => response.json())
       // eslint-disable-next-line @typescript-eslint/no-empty-function
