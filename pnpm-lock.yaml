@@ -12,7 +12,7 @@ specifiers:
   '@babel/plugin-transform-typescript': 7.16.8
   '@babel/types': '*'
   '@innei-util/eslint-config-ts': 0.5.1
-  '@innei-util/prettier': 0.5.1
+  '@innei-util/prettier': 0.8.2
   '@nestjs/cli': 8.2.5
   '@nestjs/common': 8.4.4
   '@nestjs/core': 8.4.4
@@ -191,7 +191,7 @@ optionalDependencies:
 
 devDependencies:
   '@innei-util/eslint-config-ts': 0.5.1_typescript@4.6.3
-  '@innei-util/prettier': 0.5.1
+  '@innei-util/prettier': 0.8.2
   '@nestjs/cli': 8.2.5
   '@nestjs/schematics': 8.0.10_typescript@4.6.3
   '@nestjs/testing': 8.4.4_a78378ec5f3cecc3c353ed91b578f3e6
@@ -916,8 +916,8 @@ packages:
       - supports-color
     dev: true
 
-  /@innei-util/prettier/0.5.1:
-    resolution: {integrity: sha512-tzP9dqjbTgwV+dIJf0HqDD+dA5mub+3T/caTyuklkLpsCeRZ57vA3gm/SNy3CX572poNRLz5rpnkn+dMHA6BfA==}
+  /@innei-util/prettier/0.8.2:
+    resolution: {integrity: sha512-PuSnBp2zoX1HfmPPKWdr0uEOUQS/nJYBid5HL4RpV+zAiVrUYDfGK0F9N8ugEvPmP7I3gC85BjFTvNCDciYsgg==}
     dependencies:
       '@trivago/prettier-plugin-sort-imports': /@ianvs/prettier-plugin-sort-imports/3.3.0_prettier@2.6.2
       prettier: 2.6.2
@@ -1611,7 +1611,7 @@ packages:
   /@types/babel__template/7.4.1:
     resolution: {integrity: sha512-azBFKemX6kMg5Io+/rdGT0dkGreboUVR0Cdm3fz9QJWpaQGJRQXl7C+6hOTCZcMll7KFyEQpgbYI2lHdsS4U7g==}
     dependencies:
-      '@babel/parser': 7.17.8
+      '@babel/parser': 7.17.9
       '@babel/types': 7.17.0
     dev: true
 
