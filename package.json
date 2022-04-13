@@ -125,7 +125,7 @@
     "qs": "6.10.3",
     "reflect-metadata": "0.1.13",
     "rxjs": "7.5.5",
-    "snakecase-keys": "5.4.0",
+    "snakecase-keys": "5.4.1",
     "ua-parser-js": "1.0.2",
     "vm2": "3.9.9",
     "xss": "1.0.11",
