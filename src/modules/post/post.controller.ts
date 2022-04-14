@@ -26,6 +26,7 @@ import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
+import { macros } from '~/utils/macros.util'
 
 import { CategoryAndSlugDto, PostQueryDto } from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
@@ -65,6 +66,7 @@ export class PostController {
     if (!doc) {
       throw new CannotFindException()
     }
+    doc.text = macros(doc.text, doc)
     return doc
   }
 

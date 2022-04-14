@@ -223,7 +223,7 @@ ${text.trim()}
     }
 
     return {
-      html: this.renderMarkdownContent(doc.document.text),
+      html: doc.document.text,
       ...doc,
       document: doc.document,
     }
