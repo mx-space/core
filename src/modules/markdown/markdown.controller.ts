@@ -30,6 +30,7 @@ import { IsMaster } from '~/common/decorator/role.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils'
+import { macros } from '~/utils/macros.util'
 
 import { CategoryModel } from '../category/category.model'
 import { ConfigsService } from '../configs/configs.service'
@@ -210,9 +211,11 @@ export class MarkdownController {
     })()
 
     const url = new URL(relativePath!, webUrl)
-
+    const markdownMacros = this.service.renderMarkdownContent(
+      macros(markdown, document),
+    )
     const structure = await this.service.getRenderedMarkdownHtmlStructure(
-      markdown,
+      markdownMacros,
       document.title,
       theme,
     )
