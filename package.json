@@ -148,7 +148,7 @@
     "@types/js-yaml": "4.0.5",
     "@types/lodash": "4.14.181",
     "@types/marked": "4.0.3",
-    "@types/mongoose-paginate-v2": "1.4.3",
+    "@types/mongoose-paginate-v2": "1.6.4",
     "@types/node": "16.11.26",
     "@types/nodemailer": "6.4.4",
     "@types/passport-jwt": "3.0.6",
