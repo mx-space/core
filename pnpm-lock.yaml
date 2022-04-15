@@ -82,7 +82,7 @@ specifiers:
   js-yaml: '*'
   jszip: 3.9.1
   linkedom: 0.14.6
-  lint-staged: 12.3.7
+  lint-staged: 12.3.8
   lodash: '*'
   marked: 4.0.14
   mkdirp: '*'
@@ -222,7 +222,7 @@ devDependencies:
   husky: 7.0.4
   ioredis: 5.0.4
   jest: 27.5.1_ts-node@10.7.0
-  lint-staged: 12.3.7
+  lint-staged: 12.3.8
   prettier: 2.6.2
   rimraf: 3.0.2
   semver: 7.3.5
@@ -3247,19 +3247,6 @@ packages:
     dependencies:
       ms: 2.1.2
 
-  /debug/4.3.3_supports-color@9.2.1:
-    resolution: {integrity: sha512-/zxw5+vh1Tfv+4Qn7a5nsbcJKPaSvCDhojn6FEl9vupwK2VCSDtEiEtqr8DFtzYFOdz63LBkxec7DYuc2jon6Q==}
-    engines: {node: '>=6.0'}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-    dependencies:
-      ms: 2.1.2
-      supports-color: 9.2.1
-    dev: true
-
   /debug/4.3.4:
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
     engines: {node: '>=6.0'}
@@ -3270,6 +3257,19 @@ packages:
         optional: true
     dependencies:
       ms: 2.1.2
+
+  /debug/4.3.4_supports-color@9.2.1:
+    resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
+    engines: {node: '>=6.0'}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+    dependencies:
+      ms: 2.1.2
+      supports-color: 9.2.1
+    dev: true
 
   /decimal.js/10.3.1:
     resolution: {integrity: sha512-V0pfhfr8suzyPGOx3nmq4aHqabehUZn6Ch9kyFpV79TGDTWFmHqUqXdabR7QHqxzrYolF4+tVmJhUG4OURg5dQ==}
@@ -5681,15 +5681,15 @@ packages:
       uhyphen: 0.1.0
     dev: false
 
-  /lint-staged/12.3.7:
-    resolution: {integrity: sha512-/S4D726e2GIsDVWIk1XGvheCaDm1SJRQp8efamZFWJxQMVEbOwSysp7xb49Oo73KYCdy97mIWinhlxcoNqIfIQ==}
+  /lint-staged/12.3.8:
+    resolution: {integrity: sha512-0+UpNaqIwKRSGAFOCcpuYNIv/j5QGVC+xUVvmSdxHO+IfIGoHbFLo3XcPmV/LLnsVj5EAncNHVtlITSoY5qWGQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     hasBin: true
     dependencies:
       cli-truncate: 3.1.0
       colorette: 2.0.16
       commander: 8.3.0
-      debug: 4.3.3_supports-color@9.2.1
+      debug: 4.3.4_supports-color@9.2.1
       execa: 5.1.1
       lilconfig: 2.0.4
       listr2: 4.0.2
