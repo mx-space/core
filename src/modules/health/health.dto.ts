@@ -1,12 +1,5 @@
 import { Transform } from 'class-transformer'
-import {
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsString,
-  Min,
-  ValidateIf,
-} from 'class-validator'
+import { IsIn, IsInt, IsString, Min, ValidateIf } from 'class-validator'
 
 export class LogQueryDto {
   @IsIn(['out', 'error'])

@@ -7,7 +7,6 @@ import {
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { isDev } from '~/global/env.global'
-import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import {
   EmailService,
   LinkApplyEmailType,
