@@ -9,6 +9,7 @@ import {
   Post,
   Put,
   Query,
+  UnprocessableEntityException,
 } from '@nestjs/common'
 
 import { Auth } from '~/common/decorator/auth.decorator'
@@ -55,6 +56,9 @@ export class PageController {
 
   @Get('/slug/:slug')
   async getPageBySlug(@Param('slug') slug: string) {
+    if (typeof slug !== 'string') {
+      throw new UnprocessableEntityException('slug must be string')
+    }
     const page = await this.pageService.model
       .findOne({
         slug,
