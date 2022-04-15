@@ -1,17 +1,8 @@
-import { Observable } from 'rxjs'
-
-import {
-  CanActivate,
-  ExecutionContext,
-  Inject,
-  Injectable,
-} from '@nestjs/common'
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { AuthGuard as _AuthGuard } from '@nestjs/passport'
 
 import { isTest } from '~/global/env.global'
 import { mockUser1 } from '~/mock/user.mock'
-import { AuthService } from '~/modules/auth/auth.service'
-import { UserService } from '~/modules/user/user.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 /**

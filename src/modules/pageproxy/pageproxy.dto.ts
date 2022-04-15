@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer'
-import { IsBoolean, IsIn, IsOptional, IsSemVer, IsUrl } from 'class-validator'
+import { IsBoolean, IsIn, IsOptional, IsSemVer } from 'class-validator'
 
 import { IsAllowedUrl } from '~/utils/validator/isAllowedUrl'
 

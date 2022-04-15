@@ -159,6 +159,7 @@
     "cron": "*",
     "cross-env": "7.0.3",
     "eslint": "*",
+    "eslint-plugin-unused-imports": "2.0.0",
     "husky": "7.0.4",
     "ioredis": "5.0.4",
     "jest": "27.5.1",
