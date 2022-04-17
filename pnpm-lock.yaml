@@ -116,7 +116,7 @@ specifiers:
   ua-parser-js: 1.0.2
   vm2: 3.9.9
   xss: 1.0.11
-  zx-cjs: 6.0.7
+  zx-cjs: 6.1.0
 
 dependencies:
   '@algolia/client-search': 4.12.1
@@ -186,7 +186,7 @@ dependencies:
   ua-parser-js: 1.0.2
   vm2: 3.9.9
   xss: 1.0.11
-  zx-cjs: 6.0.7
+  zx-cjs: 6.1.0
 
 optionalDependencies:
   mongodb-memory-server: 8.4.2
@@ -8242,7 +8242,7 @@ packages:
     engines: {node: '>=10'}
     dev: false
 
-  /zx-cjs/6.0.7:
-    resolution: {integrity: sha512-A02fMTySmfEypIkkA80JdIVOY4ao7xXi0ZCTAb18llYeS/IGXVKTIep+DrcxJLJvtsROmKRmlL4/hNqGzOqCrA==}
+  /zx-cjs/6.1.0:
+    resolution: {integrity: sha512-IM/tGEMSz6c4jFnBwkxADl/AHtvkAUxb/KL7mEjde62Y5GgbaKoZQn5Zym5u4jYGJ0xfpjomWsiNldOdoRShzw==}
     engines: {node: '>= 16.0.0'}
     dev: false
