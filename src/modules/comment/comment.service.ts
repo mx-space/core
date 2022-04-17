@@ -4,7 +4,10 @@ import { URL } from 'url'
 
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import type { DocumentType } from '@typegoose/typegoose'
-import type { BeAnObject } from '@typegoose/typegoose/lib/types'
+import type {
+  BeAnObject,
+  ReturnModelType,
+} from '@typegoose/typegoose/lib/types'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { MasterLostException } from '~/common/exceptions/master-lost.exception'
@@ -16,6 +19,9 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { hasChinese } from '~/utils'
 
 import type { ConfigsService } from '../configs/configs.service'
+import type { NoteModel } from '../note/note.model'
+import type { PageModel } from '../page/page.model'
+import type { PostModel } from '../post/post.model'
 import type { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json'
 import { CommentModel, CommentRefTypes } from './comment.model'
@@ -37,7 +43,12 @@ export class CommentService {
     return this.commentModel
   }
 
-  private getModelByRefType(type: CommentRefTypes) {
+  private getModelByRefType(
+    type: CommentRefTypes,
+  ): ReturnModelType<
+    typeof NoteModel | typeof PostModel | typeof PageModel,
+    BeAnObject
+  > {
     switch (type) {
       case CommentRefTypes.Note:
         return this.databaseService.getModelByRefType('Note')
@@ -103,6 +114,7 @@ export class CommentService {
     let ref: LeanDocument<DocumentType<WriteBaseModel, BeAnObject>>
     if (type) {
       const model = this.getModelByRefType(type)
+
       ref = await model.findById(id).lean()
     } else {
       const { type: type_, document } =
