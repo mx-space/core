@@ -1,5 +1,6 @@
 import pluralize from 'pluralize'
 
+import type { Type } from '@nestjs/common'
 import {
   Body,
   Controller,
@@ -11,18 +12,17 @@ import {
   Post,
   Put,
   Query,
-  Type,
 } from '@nestjs/common'
 import { ApiTags, PartialType } from '@nestjs/swagger'
-import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
+import type { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
 
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { EventScope } from '~/constants/business-event.constant'
-import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { MongoIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
-import { BaseModel } from '~/shared/model/base.model'
+import type { EventManagerService } from '~/processors/helper/helper.event.service'
+import type { MongoIdDto } from '~/shared/dto/id.dto'
+import type { PagerDto } from '~/shared/dto/pager.dto'
+import type { BaseModel } from '~/shared/model/base.model'
 import { InjectModel } from '~/transformers/model.transformer'
 
 export type BaseCrudModuleType<T> = {

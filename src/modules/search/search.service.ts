@@ -8,12 +8,12 @@ import {
   forwardRef,
 } from '@nestjs/common'
 
-import { SearchDto } from '~/modules/search/search.dto'
-import { DatabaseService } from '~/processors/database/database.service'
-import { Pagination } from '~/shared/interface/paginator.interface'
+import type { SearchDto } from '~/modules/search/search.dto'
+import type { DatabaseService } from '~/processors/database/database.service'
+import type { Pagination } from '~/shared/interface/paginator.interface'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
-import { ConfigsService } from '../configs/configs.service'
+import type { ConfigsService } from '../configs/configs.service'
 import { NoteService } from '../note/note.service'
 import { PostService } from '../post/post.service'
 

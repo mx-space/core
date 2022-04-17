@@ -11,11 +11,11 @@ import {
 
 import { Auth } from '~/common/decorator/auth.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
-import { MongoIdDto } from '~/shared/dto/id.dto'
-import { OffsetDto } from '~/shared/dto/pager.dto'
+import type { MongoIdDto } from '~/shared/dto/id.dto'
+import type { OffsetDto } from '~/shared/dto/pager.dto'
 
-import { RecentlyModel } from './recently.model'
-import { RecentlyService } from './recently.service'
+import type { RecentlyModel } from './recently.model'
+import type { RecentlyService } from './recently.service'
 
 @Controller(['recently', 'shorthand'])
 @ApiName

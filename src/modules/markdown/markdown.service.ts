@@ -11,18 +11,18 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
+import type { ReturnModelType } from '@typegoose/typegoose'
 
-import { DatabaseService } from '~/processors/database/database.service'
-import { AssetService } from '~/processors/helper/helper.asset.service'
+import type { DatabaseService } from '~/processors/database/database.service'
+import type { AssetService } from '~/processors/helper/helper.asset.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { CategoryModel } from '../category/category.model'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
-import { DatatypeDto } from './markdown.dto'
-import { MarkdownYAMLProperty } from './markdown.interface'
+import type { DatatypeDto } from './markdown.dto'
+import type { MarkdownYAMLProperty } from './markdown.interface'
 
 @Injectable()
 export class MarkdownService {

@@ -3,13 +3,14 @@ import { merge } from 'lodash'
 import { Injectable, Logger } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 
-import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { EventBusEvents } from '~/constants/event-bus.constant'
+import type { BusinessEvents } from '~/constants/business-event.constant'
+import { EventScope } from '~/constants/business-event.constant'
+import type { EventBusEvents } from '~/constants/event-bus.constant'
 
-import { AdminEventsGateway } from '../gateway/admin/events.gateway'
+import type { AdminEventsGateway } from '../gateway/admin/events.gateway'
 import { BoardcastBaseGateway } from '../gateway/base.gateway'
-import { SystemEventsGateway } from '../gateway/system/events.gateway'
-import { WebEventsGateway } from '../gateway/web/events.gateway'
+import type { SystemEventsGateway } from '../gateway/system/events.gateway'
+import type { WebEventsGateway } from '../gateway/web/events.gateway'
 
 export type EventManagerOptions = {
   scope?: EventScope

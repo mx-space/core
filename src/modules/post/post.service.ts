@@ -1,6 +1,6 @@
 import { isDefined } from 'class-validator'
 import { omit } from 'lodash'
-import { FilterQuery, PaginateOptions } from 'mongoose'
+import type { FilterQuery, PaginateOptions } from 'mongoose'
 import slugify from 'slugify'
 
 import {
@@ -14,8 +14,8 @@ import { BusinessException } from '~/common/exceptions/business.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { ImageService } from '~/processors/helper/helper.image.service'
+import type { EventManagerService } from '~/processors/helper/helper.event.service'
+import type { ImageService } from '~/processors/helper/helper.image.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { CategoryService } from '../category/category.service'

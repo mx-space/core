@@ -6,13 +6,12 @@
  * @FilePath: /mx-server/src/common/decorators/simpleValidatorFactory.ts
  * @Coding with Love
  */
-import {
+import type {
   ValidationArguments,
   ValidationOptions,
-  ValidatorConstraint,
   ValidatorConstraintInterface,
-  registerDecorator,
 } from 'class-validator'
+import { ValidatorConstraint, registerDecorator } from 'class-validator'
 
 export function validatorFactory(validator: (value: any) => boolean) {
   @ValidatorConstraint({ async: true })

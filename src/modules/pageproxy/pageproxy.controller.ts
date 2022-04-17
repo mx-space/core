@@ -19,12 +19,12 @@ import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
-import { CacheService } from '~/processors/cache/cache.service'
+import type { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { dashboard } from '../../../package.json'
-import { PageProxyDebugDto } from './pageproxy.dto'
-import { PageProxyService } from './pageproxy.service'
+import type { PageProxyDebugDto } from './pageproxy.dto'
+import type { PageProxyService } from './pageproxy.service'
 
 @Controller('/')
 @ApiName

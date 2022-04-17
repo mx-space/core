@@ -1,8 +1,10 @@
-import {
+import type {
   ValidationArguments,
   ValidationOptions,
-  ValidatorConstraint,
   ValidatorConstraintInterface,
+} from 'class-validator'
+import {
+  ValidatorConstraint,
   isString,
   registerDecorator,
 } from 'class-validator'

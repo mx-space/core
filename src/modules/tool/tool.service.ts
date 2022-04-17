@@ -8,10 +8,10 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 
-import { HttpService } from '~/processors/helper/helper.http.service'
+import type { HttpService } from '~/processors/helper/helper.http.service'
 
-import { ConfigsService } from '../configs/configs.service'
-import { IP } from './tool.interface'
+import type { ConfigsService } from '../configs/configs.service'
+import type { IP } from './tool.interface'
 
 @Injectable()
 export class ToolService {

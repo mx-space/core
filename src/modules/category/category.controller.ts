@@ -21,20 +21,17 @@ import { Auth } from '~/common/decorator/auth.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import type { MongoIdDto } from '~/shared/dto/id.dto'
 
 import { PostService } from '../post/post.service'
-import {
+import type {
   MultiCategoriesQueryDto,
   MultiQueryTagAndCategoryDto,
   SlugOrIdDto,
 } from './category.dto'
-import {
-  CategoryModel,
-  CategoryType,
-  PartialCategoryModel,
-} from './category.model'
-import { CategoryService } from './category.service'
+import type { CategoryModel, PartialCategoryModel } from './category.model'
+import { CategoryType } from './category.model'
+import type { CategoryService } from './category.service'
 
 @Controller({ path: 'categories' })
 @ApiName

@@ -1,23 +1,22 @@
-import { LeanDocument, Types } from 'mongoose'
+import type { LeanDocument } from 'mongoose'
+import { Types } from 'mongoose'
 import { URL } from 'url'
 
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
-import { DocumentType } from '@typegoose/typegoose'
-import { BeAnObject } from '@typegoose/typegoose/lib/types'
+import type { DocumentType } from '@typegoose/typegoose'
+import type { BeAnObject } from '@typegoose/typegoose/lib/types'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { MasterLostException } from '~/common/exceptions/master-lost.exception'
-import { DatabaseService } from '~/processors/database/database.service'
-import {
-  EmailService,
-  ReplyMailType,
-} from '~/processors/helper/helper.email.service'
-import { WriteBaseModel } from '~/shared/model/base.model'
+import type { DatabaseService } from '~/processors/database/database.service'
+import type { EmailService } from '~/processors/helper/helper.email.service'
+import { ReplyMailType } from '~/processors/helper/helper.email.service'
+import type { WriteBaseModel } from '~/shared/model/base.model'
 import { InjectModel } from '~/transformers/model.transformer'
 import { hasChinese } from '~/utils'
 
-import { ConfigsService } from '../configs/configs.service'
-import { UserService } from '../user/user.service'
+import type { ConfigsService } from '../configs/configs.service'
+import type { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json'
 import { CommentModel, CommentRefTypes } from './comment.model'
 

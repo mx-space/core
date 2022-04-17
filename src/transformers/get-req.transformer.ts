@@ -1,6 +1,6 @@
 import type { FastifyRequest } from 'fastify'
 
-import { ExecutionContext } from '@nestjs/common'
+import type { ExecutionContext } from '@nestjs/common'
 
 import type { UserModel } from '~/modules/user/user.model'
 

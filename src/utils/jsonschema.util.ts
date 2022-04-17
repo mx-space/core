@@ -2,9 +2,9 @@
 import { defaultMetadataStorage } from 'class-transformer/cjs/storage.js'
 import { ValidationTypes, getMetadataStorage } from 'class-validator'
 import { targetConstructorToSchema } from 'class-validator-jsonschema'
-import { ISchemaConverters } from 'class-validator-jsonschema/build/defaultConverters'
-import { IOptions } from 'class-validator-jsonschema/build/options'
-import { ValidationMetadata } from 'class-validator/types/metadata/ValidationMetadata'
+import type { ISchemaConverters } from 'class-validator-jsonschema/build/defaultConverters'
+import type { IOptions } from 'class-validator-jsonschema/build/options'
+import type { ValidationMetadata } from 'class-validator/types/metadata/ValidationMetadata'
 
 export { JSONSchema as IsSchema } from 'class-validator-jsonschema'
 

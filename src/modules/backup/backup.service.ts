@@ -15,12 +15,12 @@ import {
 import { MONGO_DB } from '~/app.config'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
-import { CacheService } from '~/processors/cache/cache.service'
-import { EventManagerService } from '~/processors/helper/helper.event.service'
+import type { CacheService } from '~/processors/cache/cache.service'
+import type { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getMediumDateTime } from '~/utils'
 import { getFolderSize } from '~/utils/system.util'
 
-import { ConfigsService } from '../configs/configs.service'
+import type { ConfigsService } from '../configs/configs.service'
 
 @Injectable()
 export class BackupService {

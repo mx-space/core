@@ -6,14 +6,15 @@
  * @FilePath: /mx-server/src/auth/jwt.strategy.ts
  * @Coding with Love
  */
-import { ExtractJwt, Strategy, StrategyOptions } from 'passport-jwt'
+import type { StrategyOptions } from 'passport-jwt'
+import { ExtractJwt, Strategy } from 'passport-jwt'
 
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'
 
 import { __secret } from './auth.module'
-import { AuthService } from './auth.service'
-import { JwtPayload } from './interfaces/jwt-payload.interface'
+import type { AuthService } from './auth.service'
+import type { JwtPayload } from './interfaces/jwt-payload.interface'
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

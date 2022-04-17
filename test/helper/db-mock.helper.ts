@@ -1,12 +1,13 @@
+import { MongoMemoryServer } from 'mongodb-memory-server'
+import mongoose from 'mongoose'
+
 import { getModelForClass } from '@typegoose/typegoose'
-import {
+import type {
   AnyParamConstructor,
   BeAnObject,
   IModelOptions,
   ReturnModelType,
 } from '@typegoose/typegoose/lib/types'
-import { MongoMemoryServer } from 'mongodb-memory-server'
-import mongoose from 'mongoose'
 
 let mongod: MongoMemoryServer
 

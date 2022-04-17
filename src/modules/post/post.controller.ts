@@ -18,18 +18,19 @@ import { ApiOperation } from '@nestjs/swagger'
 
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
-import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
+import type { IpRecord } from '~/common/decorator/ip.decorator'
+import { IpLocation } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { VisitDocument } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { CountingService } from '~/processors/helper/helper.counting.service'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import type { CountingService } from '~/processors/helper/helper.counting.service'
+import type { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 
-import { CategoryAndSlugDto, PostQueryDto } from './post.dto'
-import { PartialPostModel, PostModel } from './post.model'
-import { PostService } from './post.service'
+import type { CategoryAndSlugDto, PostQueryDto } from './post.dto'
+import type { PartialPostModel, PostModel } from './post.model'
+import type { PostService } from './post.service'
 
 @Controller('posts')
 @ApiName

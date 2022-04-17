@@ -13,7 +13,7 @@ import { PartialType } from '@nestjs/mapped-types'
 import { AutoIncrementID } from '@typegoose/auto-increment'
 import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
 
-import { Paginator } from '~/shared/interface/paginator.interface'
+import type { Paginator } from '~/shared/interface/paginator.interface'
 import { CountMixed, WriteBaseModel } from '~/shared/model/base.model'
 
 @modelOptions({ schemaOptions: { id: false, _id: false } })

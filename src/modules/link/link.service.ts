@@ -7,15 +7,13 @@ import {
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { isDev } from '~/global/env.global'
-import {
-  EmailService,
-  LinkApplyEmailType,
-} from '~/processors/helper/helper.email.service'
-import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { HttpService } from '~/processors/helper/helper.http.service'
+import type { EmailService } from '~/processors/helper/helper.email.service'
+import { LinkApplyEmailType } from '~/processors/helper/helper.email.service'
+import type { EventManagerService } from '~/processors/helper/helper.event.service'
+import type { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
-import { ConfigsService } from '../configs/configs.service'
+import type { ConfigsService } from '../configs/configs.service'
 import { LinkModel, LinkState, LinkType } from './link.model'
 
 @Injectable()

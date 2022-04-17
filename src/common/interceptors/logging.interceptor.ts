@@ -5,17 +5,15 @@
  * @author Surmon <https://github.com/surmon-china>
  * @author Innei <https://github.com/Innei>
  */
-import { Observable } from 'rxjs'
+import type { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
 
-import {
+import type {
   CallHandler,
   ExecutionContext,
-  Injectable,
-  Logger,
   NestInterceptor,
-  SetMetadata,
 } from '@nestjs/common'
+import { Injectable, Logger, SetMetadata } from '@nestjs/common'
 
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'

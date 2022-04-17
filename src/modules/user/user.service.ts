@@ -9,17 +9,18 @@ import {
   Logger,
   UnprocessableEntityException,
 } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
+import type { ReturnModelType } from '@typegoose/typegoose'
 
 import { MasterLostException } from '~/common/exceptions/master-lost.exception'
 import { RedisKeys } from '~/constants/cache.constant'
-import { CacheService } from '~/processors/cache/cache.service'
+import type { CacheService } from '~/processors/cache/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar, sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 
-import { AuthService } from '../auth/auth.service'
-import { UserDocument, UserModel } from './user.model'
+import type { AuthService } from '../auth/auth.service'
+import type { UserDocument } from './user.model'
+import { UserModel } from './user.model'
 
 @Injectable()
 export class UserService {

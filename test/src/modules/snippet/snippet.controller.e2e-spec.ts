@@ -1,16 +1,19 @@
-import { NestFastifyApplication } from '@nestjs/platform-fastify'
+import { dbHelper } from 'test/helper/db-mock.helper'
+import type { MockCacheService } from 'test/helper/redis-mock.helper'
+import { redisHelper } from 'test/helper/redis-mock.helper'
+import { setupE2EApp } from 'test/helper/register-app.helper'
+
+import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
-import { dbHelper } from 'test/helper/db-mock.helper'
-import { MockCacheService, redisHelper } from 'test/helper/redis-mock.helper'
-import { setupE2EApp } from 'test/helper/register-app.helper'
-import { getModelToken } from '~/transformers/model.transformer'
+
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
 import { CacheService } from '~/processors/cache/cache.service'
 import { DatabaseService } from '~/processors/database/database.service'
+import { getModelToken } from '~/transformers/model.transformer'
 
 describe('test /snippets', () => {
   let app: NestFastifyApplication

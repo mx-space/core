@@ -1,23 +1,23 @@
 import { isNil } from 'lodash'
 import { nanoid } from 'nanoid'
-import { IPty, spawn } from 'node-pty'
-import { Socket } from 'socket.io'
+import type { IPty } from 'node-pty'
+import { spawn } from 'node-pty'
+import type { Socket } from 'socket.io'
 
-import { JwtService } from '@nestjs/jwt'
-import {
+import type { JwtService } from '@nestjs/jwt'
+import type {
   GatewayMetadata,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  SubscribeMessage,
-  WebSocketGateway,
 } from '@nestjs/websockets'
+import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { DATA_DIR } from '~/constants/path.constant'
-import { AuthService } from '~/modules/auth/auth.service'
-import { ConfigsService } from '~/modules/configs/configs.service'
-import { CacheService } from '~/processors/cache/cache.service'
+import type { AuthService } from '~/modules/auth/auth.service'
+import type { ConfigsService } from '~/modules/configs/configs.service'
+import type { CacheService } from '~/processors/cache/cache.service'
 import { createAuthGateway } from '~/processors/gateway/shared/auth.gateway'
 import { getIp, getRedisKey } from '~/utils'
 

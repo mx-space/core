@@ -28,21 +28,21 @@ import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import type { MongoIdDto } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils'
 
-import { CategoryModel } from '../category/category.model'
-import { ConfigsService } from '../configs/configs.service'
-import { NoteModel } from '../note/note.model'
-import { PageModel } from '../page/page.model'
-import { PostModel } from '../post/post.model'
-import {
+import type { CategoryModel } from '../category/category.model'
+import type { ConfigsService } from '../configs/configs.service'
+import type { NoteModel } from '../note/note.model'
+import type { PageModel } from '../page/page.model'
+import type { PostModel } from '../post/post.model'
+import type {
   DataListDto,
   ExportMarkdownQueryDto,
   MarkdownPreviewDto,
 } from './markdown.dto'
-import { MarkdownYAMLProperty } from './markdown.interface'
-import { MarkdownService } from './markdown.service'
+import type { MarkdownYAMLProperty } from './markdown.interface'
+import type { MarkdownService } from './markdown.service'
 
 @Controller('markdown')
 @ApiName

@@ -1,14 +1,10 @@
-import { Query, Types } from 'mongoose'
+import type { Query } from 'mongoose'
+import { Types } from 'mongoose'
 import { URL } from 'url'
 
-import {
-  DocumentType,
-  Ref,
-  modelOptions,
-  pre,
-  prop,
-} from '@typegoose/typegoose'
-import { BeAnObject } from '@typegoose/typegoose/lib/types'
+import type { DocumentType, Ref } from '@typegoose/typegoose'
+import { modelOptions, pre, prop } from '@typegoose/typegoose'
+import type { BeAnObject } from '@typegoose/typegoose/lib/types'
 
 import { BaseModel } from '~/shared/model/base.model'
 import { getAvatar } from '~/utils'

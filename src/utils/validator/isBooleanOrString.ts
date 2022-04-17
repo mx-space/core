@@ -6,7 +6,8 @@
  * @FilePath: /mx-server/src/common/decorators/isBooleanOrString.ts
  * @Coding with Love
  */
-import { ValidationOptions, isString } from 'class-validator'
+import type { ValidationOptions } from 'class-validator'
+import { isString } from 'class-validator'
 import { isBoolean, merge } from 'lodash'
 
 import { validatorFactory } from './simpleValidatorFactory'

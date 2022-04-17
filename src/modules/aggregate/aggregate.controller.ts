@@ -8,10 +8,10 @@ import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 
-import { AnalyzeService } from '../analyze/analyze.service'
-import { ConfigsService } from '../configs/configs.service'
-import { TimelineQueryDto, TopQueryDto } from './aggregate.dto'
-import { AggregateService } from './aggregate.service'
+import type { AnalyzeService } from '../analyze/analyze.service'
+import type { ConfigsService } from '../configs/configs.service'
+import type { TimelineQueryDto, TopQueryDto } from './aggregate.dto'
+import type { AggregateService } from './aggregate.service'
 
 @Controller('aggregate')
 @ApiName

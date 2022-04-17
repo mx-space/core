@@ -16,15 +16,13 @@ import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
-import { PagerDto } from '~/shared/dto/pager.dto'
-import {
-  BaseCrudFactory,
-  BaseCrudModuleType,
-} from '~/transformers/crud-factor.transformer'
+import type { PagerDto } from '~/shared/dto/pager.dto'
+import type { BaseCrudModuleType } from '~/transformers/crud-factor.transformer'
+import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'
 
-import { LinkDto } from './link.dto'
+import type { LinkDto } from './link.dto'
 import { LinkModel, LinkState } from './link.model'
-import { LinkService } from './link.service'
+import type { LinkService } from './link.service'
 
 const paths = ['links', 'friends']
 @Controller(paths)

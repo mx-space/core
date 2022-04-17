@@ -4,15 +4,16 @@ import { ApiOperation } from '@nestjs/swagger'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HttpCache } from '~/common/decorator/cache.decorator'
 import { CurrentUser } from '~/common/decorator/current-user.decorator'
-import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
+import type { IpRecord } from '~/common/decorator/ip.decorator'
+import { IpLocation } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { getAvatar } from '~/utils'
 
-import { AuthService } from '../auth/auth.service'
-import { LoginDto, UserDto, UserPatchDto } from './user.dto'
-import { UserDocument, UserModel } from './user.model'
-import { UserService } from './user.service'
+import type { AuthService } from '../auth/auth.service'
+import type { LoginDto, UserDto, UserPatchDto } from './user.dto'
+import type { UserDocument, UserModel } from './user.model'
+import type { UserService } from './user.service'
 
 @ApiName
 @Controller(['master', 'user'])

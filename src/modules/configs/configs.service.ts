@@ -1,9 +1,11 @@
 import camelcaseKeys from 'camelcase-keys'
-import { ClassConstructor, plainToInstance } from 'class-transformer'
-import { ValidatorOptions, validateSync } from 'class-validator'
+import type { ClassConstructor } from 'class-transformer'
+import { plainToInstance } from 'class-transformer'
+import type { ValidatorOptions } from 'class-validator'
+import { validateSync } from 'class-validator'
 import cluster from 'cluster'
 import { cloneDeep, mergeWith } from 'lodash'
-import { LeanDocument } from 'mongoose'
+import type { LeanDocument } from 'mongoose'
 
 import {
   BadRequestException,
@@ -11,26 +13,24 @@ import {
   Logger,
   ValidationPipe,
 } from '@nestjs/common'
-import { EventEmitter2 } from '@nestjs/event-emitter'
-import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
-import { BeAnObject } from '@typegoose/typegoose/lib/types'
+import type { EventEmitter2 } from '@nestjs/event-emitter'
+import type { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+import type { BeAnObject } from '@typegoose/typegoose/lib/types'
 
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import { CacheService } from '~/processors/cache/cache.service'
+import type { CacheService } from '~/processors/cache/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 
 import * as optionDtos from '../configs/configs.dto'
-import { UserModel } from '../user/user.model'
-import { UserService } from '../user/user.service'
-import {
-  AlgoliaSearchOptionsDto,
-  BackupOptionsDto,
-  MailOptionsDto,
-} from './configs.dto'
-import { IConfig, IConfigKeys } from './configs.interface'
+import type { UserModel } from '../user/user.model'
+import type { UserService } from '../user/user.service'
+import type { BackupOptionsDto } from './configs.dto'
+import { AlgoliaSearchOptionsDto, MailOptionsDto } from './configs.dto'
+import type { IConfigKeys } from './configs.interface'
+import { IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
 
 const allOptionKeys: Set<IConfigKeys> = new Set()

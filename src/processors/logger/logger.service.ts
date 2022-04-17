@@ -2,7 +2,8 @@
 import cluster from 'cluster'
 import { performance } from 'perf_hooks'
 
-import { ConsoleLogger, ConsoleLoggerOptions } from '@nestjs/common'
+import type { ConsoleLoggerOptions } from '@nestjs/common'
+import { ConsoleLogger } from '@nestjs/common'
 
 export class MyLogger extends ConsoleLogger {
   constructor(context: string, options: ConsoleLoggerOptions) {

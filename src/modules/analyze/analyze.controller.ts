@@ -6,13 +6,13 @@ import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
-import { CacheService } from '~/processors/cache/cache.service'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import type { CacheService } from '~/processors/cache/cache.service'
+import type { PagerDto } from '~/shared/dto/pager.dto'
 import { getRedisKey } from '~/utils/redis.util'
 import { getTodayEarly, getWeekStart } from '~/utils/time.util'
 
-import { AnalyzeDto } from './analyze.dto'
-import { AnalyzeService } from './analyze.service'
+import type { AnalyzeDto } from './analyze.dto'
+import type { AnalyzeService } from './analyze.service'
 
 @Controller({ path: 'analyze', scope: Scope.REQUEST })
 @ApiName

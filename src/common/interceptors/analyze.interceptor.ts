@@ -5,22 +5,22 @@
  * @author Innei <https://github.com/Innei>
  */
 import isbot from 'isbot'
-import { Observable } from 'rxjs'
+import type { Observable } from 'rxjs'
 import UAParser from 'ua-parser-js'
 import { URL } from 'url'
 
-import {
+import type {
   CallHandler,
   ExecutionContext,
-  Injectable,
   NestInterceptor,
 } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
+import { Injectable } from '@nestjs/common'
+import type { ReturnModelType } from '@typegoose/typegoose'
 
 import { RedisKeys } from '~/constants/cache.constant'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { OptionModel } from '~/modules/configs/configs.model'
-import { CacheService } from '~/processors/cache/cache.service'
+import type { CacheService } from '~/processors/cache/cache.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getIp } from '~/utils/ip.util'

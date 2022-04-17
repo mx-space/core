@@ -9,7 +9,7 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils'
 
 import { version } from '../../../package.json'
-import { CacheService } from '../cache/cache.service'
+import type { CacheService } from '../cache/cache.service'
 
 @Injectable()
 export class HttpService {

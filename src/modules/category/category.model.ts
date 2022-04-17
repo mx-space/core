@@ -1,7 +1,8 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator'
 
 import { PartialType } from '@nestjs/mapped-types'
-import { DocumentType, index, modelOptions, prop } from '@typegoose/typegoose'
+import type { DocumentType } from '@typegoose/typegoose'
+import { index, modelOptions, prop } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
 

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common'
 
-import { BusinessEvents } from '~/constants/business-event.constant'
+import type { BusinessEvents } from '~/constants/business-event.constant'
 
-import { AdminEventsGateway } from '../admin/events.gateway'
-import { WebEventsGateway } from '../web/events.gateway'
+import type { AdminEventsGateway } from '../admin/events.gateway'
+import type { WebEventsGateway } from '../web/events.gateway'
 
 @Injectable()
 export class SharedGateway {

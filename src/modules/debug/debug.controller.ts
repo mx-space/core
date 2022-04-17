@@ -9,12 +9,13 @@ import {
 } from '@nestjs/common'
 
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
-import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import type { BusinessEvents } from '~/constants/business-event.constant'
+import { EventScope } from '~/constants/business-event.constant'
+import type { EventManagerService } from '~/processors/helper/helper.event.service'
+import type { PagerDto } from '~/shared/dto/pager.dto'
 
 import { createMockedContextResponse } from '../serverless/mock-response.util'
-import { ServerlessService } from '../serverless/serverless.service'
+import type { ServerlessService } from '../serverless/serverless.service'
 import { SnippetModel, SnippetType } from '../snippet/snippet.model'
 
 @Controller('debug')

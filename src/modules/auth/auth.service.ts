@@ -3,20 +3,20 @@ import { isDate, omit } from 'lodash'
 import { customAlphabet } from 'nanoid/async'
 
 import { Injectable } from '@nestjs/common'
-import { JwtService } from '@nestjs/jwt'
-import { ReturnModelType } from '@typegoose/typegoose'
+import type { JwtService } from '@nestjs/jwt'
+import type { ReturnModelType } from '@typegoose/typegoose'
 
 import { MasterLostException } from '~/common/exceptions/master-lost.exception'
-import {
+import type {
   TokenModel,
-  UserModel as User,
   UserDocument,
   UserModel,
 } from '~/modules/user/user.model'
+import { UserModel as User } from '~/modules/user/user.model'
 import { InjectModel } from '~/transformers/model.transformer'
 
-import { TokenDto } from './auth.controller'
-import { JwtPayload } from './interfaces/jwt-payload.interface'
+import type { TokenDto } from './auth.controller'
+import type { JwtPayload } from './interfaces/jwt-payload.interface'
 
 @Injectable()
 export class AuthService {

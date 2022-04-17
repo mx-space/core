@@ -1,11 +1,11 @@
-import { Redis } from 'ioredis'
+import type { Redis } from 'ioredis'
 import { isAsyncFunction } from 'util/types'
 
 import { Injectable } from '@nestjs/common'
 
 import { safeJSONParse } from '~/utils'
 
-import { CacheService } from '../cache/cache.service'
+import type { CacheService } from '../cache/cache.service'
 
 type ITask = RedisMap<
   string,

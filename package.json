@@ -111,7 +111,7 @@
     "lodash": "*",
     "marked": "4.0.14",
     "mkdirp": "*",
-    "mongoose": "*",
+    "mongoose": "6.3.0",
     "mongoose-lean-id": "0.3.0",
     "mongoose-lean-virtuals": "0.9.0",
     "mongoose-paginate-v2": "1.6.3",

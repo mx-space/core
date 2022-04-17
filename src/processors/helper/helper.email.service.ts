@@ -7,10 +7,10 @@ import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import { ConfigsService } from '~/modules/configs/configs.service'
+import type { ConfigsService } from '~/modules/configs/configs.service'
 
-import { CacheService } from '../cache/cache.service'
-import { AssetService } from './helper.asset.service'
+import type { CacheService } from '../cache/cache.service'
+import type { AssetService } from './helper.asset.service'
 
 export enum ReplyMailType {
   Owner = 'owner',
