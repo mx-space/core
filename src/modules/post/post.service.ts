@@ -1,6 +1,7 @@
 import { isDefined } from 'class-validator'
 import { omit } from 'lodash'
 import { FilterQuery, PaginateOptions } from 'mongoose'
+import slugify from 'slugify'
 
 import {
   BadRequestException,
@@ -9,7 +10,9 @@ import {
   forwardRef,
 } from '@nestjs/common'
 
+import { BusinessException } from '~/common/exceptions/business.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
@@ -52,11 +55,14 @@ export class PostService {
     if (!category) {
       throw new BadRequestException('分类丢失了 ಠ_ಠ')
     }
-    if (await this.isAvailableSlug(post.slug)) {
-      throw new BadRequestException('slug 重复')
+
+    const slug = post.slug ? slugify(post.slug) : slugify(post.title)
+    if (!(await this.isAvailableSlug(slug))) {
+      throw new BusinessException(ErrorCodeEnum.SlugNotAvailable)
     }
     const res = await this.postModel.create({
       ...post,
+      slug,
       categoryId: category.id,
       created: new Date(),
       modified: null,
@@ -106,6 +112,15 @@ export class PostService {
       data.modified = now
     }
 
+    if (data.slug) {
+      data.slug = slugify(data.slug)
+      const validSlug = await this.isAvailableSlug(data.slug)
+
+      if (!validSlug) {
+        throw new BusinessException(ErrorCodeEnum.SlugNotAvailable)
+      }
+    }
+
     const updated = await this.postModel.findOneAndUpdate(
       {
         _id: id,
@@ -150,6 +165,10 @@ export class PostService {
   }
 
   async isAvailableSlug(slug: string) {
-    return !!(await this.postModel.countDocuments({ slug }))
+    if (slug.includes('/')) {
+      return false
+    }
+
+    return (await this.postModel.countDocuments({ slug })) === 0
   }
 }

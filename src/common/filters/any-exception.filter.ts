@@ -89,16 +89,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
         LoggingInterceptor.name,
       )
     }
-
+    const res = (exception as any).response
     response
       .status(status)
       .type('application/json')
       .send({
         ok: 0,
-        message:
-          (exception as any)?.response?.message ||
-          (exception as any)?.message ||
-          '未知错误',
+        code: res?.code,
+        message: res?.message || (exception as any)?.message || '未知错误',
       })
   }
 }

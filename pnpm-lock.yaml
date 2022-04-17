@@ -105,6 +105,7 @@ specifiers:
   rimraf: 3.0.2
   rxjs: 7.5.5
   semver: '*'
+  slugify: 1.6.5
   snakecase-keys: 5.4.1
   socket.io: '*'
   ts-jest: 27.1.4
@@ -180,6 +181,7 @@ dependencies:
   qs: 6.10.3
   reflect-metadata: 0.1.13
   rxjs: 7.5.5
+  slugify: 1.6.5
   snakecase-keys: 5.4.1
   ua-parser-js: 1.0.2
   vm2: 3.9.9
@@ -7181,6 +7183,11 @@ packages:
       ansi-styles: 6.1.0
       is-fullwidth-code-point: 4.0.0
     dev: true
+
+  /slugify/1.6.5:
+    resolution: {integrity: sha512-8mo9bslnBO3tr5PEVFzMPIWwWnipGS0xVbYf65zxDqfNwmzYn1LpiKNrR6DlClusuvo+hDHd1zKpmfAe83NQSQ==}
+    engines: {node: '>=8.0.0'}
+    dev: false
 
   /smart-buffer/4.2.0:
     resolution: {integrity: sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==}
