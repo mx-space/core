@@ -68,7 +68,7 @@ specifiers:
   ejs: 3.1.6
   eslint: '*'
   eslint-plugin-unused-imports: 2.0.0
-  fastify-cookie: 5.6.0
+  fastify-cookie: 5.6.1
   fastify-multipart: 5.3.1
   fastify-swagger: 5.1.1
   fs-extra: '*'
@@ -153,7 +153,7 @@ dependencies:
   cos-nodejs-sdk-v5: 2.11.6
   dayjs: 1.11.1
   ejs: 3.1.6
-  fastify-cookie: 5.6.0
+  fastify-cookie: 5.6.1
   fastify-multipart: 5.3.1
   fastify-swagger: 5.1.1
   fs-extra: 10.0.1
@@ -3968,8 +3968,8 @@ packages:
       strnum: 1.0.5
     dev: false
 
-  /fastify-cookie/5.6.0:
-    resolution: {integrity: sha512-zmZhw1CugavEZjFToMDz6FTawXw9QQ6bJ1vhhalMLYTbhog8C42+1jIWENKjV6PkiERdDRhXahj9MiYSVNynDw==}
+  /fastify-cookie/5.6.1:
+    resolution: {integrity: sha512-qKFxDOLkrXn2TkxlO/+cK0tWYCTSrJDmuwty6Zl7kD5FtALwcjUHPFzOdR1Gxupb5oWhvbpSHBMx2XS+t9fbQQ==}
     dependencies:
       cookie-signature: 1.1.0
       fastify-plugin: 3.0.1
