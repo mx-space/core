@@ -1,4 +1,4 @@
-import type { RedisKeys } from '~/constants/cache.constant'
+import { RedisKeys } from '~/constants/cache.constant'
 
 export const getRedisKey = <T extends string = RedisKeys | '*'>(
   key: T,

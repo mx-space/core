@@ -1,14 +1,14 @@
-import type { JwtService } from '@nestjs/jwt'
-import type {
+import { JwtService } from '@nestjs/jwt'
+import {
   GatewayMetadata,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  WebSocketGateway,
 } from '@nestjs/websockets'
-import { WebSocketGateway } from '@nestjs/websockets'
 
-import type { CacheService } from '~/processors/cache/cache.service'
+import { CacheService } from '~/processors/cache/cache.service'
 
-import type { AuthService } from '../../../modules/auth/auth.service'
+import { AuthService } from '../../../modules/auth/auth.service'
 import { createAuthGateway } from '../shared/auth.gateway'
 
 const AuthGateway = createAuthGateway({

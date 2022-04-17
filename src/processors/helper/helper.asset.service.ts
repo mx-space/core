@@ -11,7 +11,7 @@ import { Injectable, Logger } from '@nestjs/common'
 
 import { USER_ASSET_DIR } from '~/constants/path.constant'
 
-import type { HttpService } from './helper.http.service'
+import { HttpService } from './helper.http.service'
 
 // 先从 ASSET_DIR 找用户自定义的资源, 没有就从默认的 ASSET_DIR 找, 没有就从网上拉取, 存到默认的 ASSET_DIR
 @Injectable()

@@ -15,15 +15,14 @@ import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { DATA_DIR } from '~/constants/path.constant'
-import type { MongoIdDto } from '~/shared/dto/id.dto'
-import type { PagerDto } from '~/shared/dto/pager.dto'
+import { MongoIdDto } from '~/shared/dto/id.dto'
+import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { installPKG } from '~/utils'
 
-import type { SnippetMoreDto } from './snippet.dto'
-import type { SnippetModel } from './snippet.model'
-import { SnippetType } from './snippet.model'
-import type { SnippetService } from './snippet.service'
+import { SnippetMoreDto } from './snippet.dto'
+import { SnippetModel, SnippetType } from './snippet.model'
+import { SnippetService } from './snippet.service'
 
 @ApiName
 @Controller('snippets')

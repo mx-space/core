@@ -1,10 +1,9 @@
 import cluster from 'cluster'
 import { performance } from 'perf_hooks'
 
-import type { LogLevel } from '@nestjs/common'
-import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common'
+import { LogLevel, Logger, RequestMethod, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
-import type { NestFastifyApplication } from '@nestjs/platform-fastify'
+import { NestFastifyApplication } from '@nestjs/platform-fastify'
 
 import { API_VERSION, CROSS_DOMAIN, PORT, isMainProcess } from './app.config'
 import { AppModule } from './app.module'

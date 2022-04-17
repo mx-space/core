@@ -1,4 +1,4 @@
-import type { UserModel } from '~/modules/user/user.model'
+import { UserModel } from '~/modules/user/user.model'
 
 export const mockUser1: UserModel = {
   id: '1',

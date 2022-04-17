@@ -5,23 +5,25 @@
  * @author Surmon <https://github.com/surmon-china>
  * @author Innei <https://innei.ren>
  */
-import type { Observable } from 'rxjs'
+import { Observable } from 'rxjs'
 import { of } from 'rxjs'
 import { tap } from 'rxjs/operators'
 
-import type {
+import {
   CallHandler,
   ExecutionContext,
   HttpAdapterHost,
+  Inject,
+  Injectable,
   NestInterceptor,
+  RequestMethod,
 } from '@nestjs/common'
-import { Inject, Injectable, RequestMethod } from '@nestjs/common'
-import type { Reflector } from '@nestjs/core'
+import { Reflector } from '@nestjs/core'
 
 import { REDIS } from '~/app.config'
 import * as META from '~/constants/meta.constant'
 import * as SYSTEM from '~/constants/system.constant'
-import type { CacheService } from '~/processors/cache/cache.service'
+import { CacheService } from '~/processors/cache/cache.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 /**

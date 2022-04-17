@@ -6,9 +6,9 @@ import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 
-import type { AggregateService } from '../aggregate/aggregate.service'
-import type { ConfigsService } from '../configs/configs.service'
-import type { MarkdownService } from '../markdown/markdown.service'
+import { AggregateService } from '../aggregate/aggregate.service'
+import { ConfigsService } from '../configs/configs.service'
+import { MarkdownService } from '../markdown/markdown.service'
 
 @Controller('feed')
 @ApiName

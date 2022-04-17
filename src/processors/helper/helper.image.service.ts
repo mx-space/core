@@ -5,16 +5,13 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common'
-import type { ReturnModelType } from '@typegoose/typegoose'
+import { ReturnModelType } from '@typegoose/typegoose'
 
-import type { ConfigsService } from '~/modules/configs/configs.service'
-import type {
-  TextImageRecordType,
-  WriteBaseModel,
-} from '~/shared/model/base.model'
+import { ConfigsService } from '~/modules/configs/configs.service'
+import { TextImageRecordType, WriteBaseModel } from '~/shared/model/base.model'
 import { getAverageRGB, pickImagesFromMarkdown } from '~/utils/pic.util'
 
-import type { HttpService } from './helper.http.service'
+import { HttpService } from './helper.http.service'
 
 @Injectable()
 export class ImageService {

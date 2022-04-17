@@ -6,7 +6,7 @@
  * @FilePath: /server/shared/utils/validator-decorators/isMongoIdOrInt.ts
  * @Mark: Coding with Love
  */
-import type { ValidationOptions } from 'class-validator'
+import { ValidationOptions } from 'class-validator'
 import { isInt, isMongoId } from 'class-validator'
 import { merge } from 'lodash'
 

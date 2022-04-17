@@ -1,11 +1,11 @@
-import type { Cache } from 'cache-manager'
-import type { Redis } from 'ioredis'
+import { Cache } from 'cache-manager'
+import { Redis } from 'ioredis'
 
 import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common'
 
 import { getRedisKey } from '~/utils/redis.util'
 
-import type { RedisSubPub } from '../../utils/redis-subpub.util'
+import { RedisSubPub } from '../../utils/redis-subpub.util'
 
 // Cache 客户端管理器
 

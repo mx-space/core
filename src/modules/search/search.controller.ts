@@ -9,9 +9,9 @@ import {
 import { HttpCache } from '~/common/decorator/cache.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
-import type { SearchDto } from '~/modules/search/search.dto'
+import { SearchDto } from '~/modules/search/search.dto'
 
-import type { SearchService } from './search.service'
+import { SearchService } from './search.service'
 
 @Controller('search')
 @ApiName

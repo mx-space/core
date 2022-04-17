@@ -2,7 +2,7 @@ import { Controller, Get, Scope } from '@nestjs/common'
 
 import { Auth } from '~/common/decorator/auth.decorator'
 
-import type { PTYService } from './pty.service'
+import { PTYService } from './pty.service'
 
 @Auth()
 @Controller({ path: 'pty', scope: Scope.REQUEST })

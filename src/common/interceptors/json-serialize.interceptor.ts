@@ -3,17 +3,16 @@
  * @author Innei
  */
 import { isArrayLike, isObjectLike } from 'lodash'
-import type { Observable } from 'rxjs'
-import { map } from 'rxjs'
+import { Observable, map } from 'rxjs'
 import snakecaseKeys from 'snakecase-keys'
 
-import type {
+import {
   CallHandler,
   ExecutionContext,
+  Injectable,
   NestInterceptor,
 } from '@nestjs/common'
-import { Injectable } from '@nestjs/common'
-import type { Reflector } from '@nestjs/core'
+import { Reflector } from '@nestjs/core'
 
 import { RESPONSE_PASSTHROUGH_METADATA } from '~/constants/system.constant'
 

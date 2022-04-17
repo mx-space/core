@@ -16,27 +16,26 @@ import { ApiOperation } from '@nestjs/swagger'
 
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
-import type { IpRecord } from '~/common/decorator/ip.decorator'
-import { IpLocation } from '~/common/decorator/ip.decorator'
+import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { VisitDocument } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import type { CountingService } from '~/processors/helper/helper.counting.service'
-import type { IntIdOrMongoIdDto, MongoIdDto } from '~/shared/dto/id.dto'
+import { CountingService } from '~/processors/helper/helper.counting.service'
+import { IntIdOrMongoIdDto, MongoIdDto } from '~/shared/dto/id.dto'
 import {
   addHidePasswordAndHideCondition,
   addYearCondition,
 } from '~/transformers/db-query.transformer'
 
-import type {
+import {
   ListQueryDto,
   NidType,
   NoteQueryDto,
   PasswordQueryDto,
 } from './note.dto'
-import type { NoteModel, PartialNoteModel } from './note.model'
-import type { NoteService } from './note.service'
+import { NoteModel, PartialNoteModel } from './note.model'
+import { NoteService } from './note.service'
 
 @ApiName
 @Controller({ path: 'notes' })

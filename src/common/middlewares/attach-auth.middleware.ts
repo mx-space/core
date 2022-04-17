@@ -2,10 +2,9 @@
  * 把 URL Search 上的 `token` 附加到 Header Authorization 上
  * @author Innei <https://innei.ren>
  */
-import type { IncomingMessage, ServerResponse } from 'http'
+import { IncomingMessage, ServerResponse } from 'http'
 
-import type { NestMiddleware } from '@nestjs/common'
-import { Injectable } from '@nestjs/common'
+import { Injectable, NestMiddleware } from '@nestjs/common'
 
 import { parseRelativeUrl } from '~/utils/ip.util'
 

@@ -1,4 +1,4 @@
-import type { FastifyReply, FastifyRequest } from 'fastify'
+import { FastifyReply, FastifyRequest } from 'fastify'
 import { createReadStream, existsSync, statSync } from 'fs'
 import fs from 'fs/promises'
 import { isNull } from 'lodash'
@@ -19,12 +19,12 @@ import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
-import type { CacheService } from '~/processors/cache/cache.service'
+import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { dashboard } from '../../../package.json'
-import type { PageProxyDebugDto } from './pageproxy.dto'
-import type { PageProxyService } from './pageproxy.service'
+import { PageProxyDebugDto } from './pageproxy.dto'
+import { PageProxyService } from './pageproxy.service'
 
 @Controller('/')
 @ApiName

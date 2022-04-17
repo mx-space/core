@@ -6,10 +6,9 @@
  * @link https://github.com/kpfromer/nestjs-typegoose/blob/master/src/typegoose.providers.ts
  * @author Surmon <https://github.com/surmon-china>
  */
-import type { Connection } from 'mongoose'
+import { Connection } from 'mongoose'
 
-import type { Provider } from '@nestjs/common'
-import { Inject } from '@nestjs/common'
+import { Inject, Provider } from '@nestjs/common'
 import { getModelForClass } from '@typegoose/typegoose'
 
 import {

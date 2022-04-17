@@ -1,12 +1,12 @@
 import dayjs from 'dayjs'
 import { merge } from 'lodash'
-import type { PipelineStage } from 'mongoose'
+import { PipelineStage } from 'mongoose'
 
 import { Injectable } from '@nestjs/common'
-import type { ReturnModelType } from '@typegoose/typegoose'
+import { ReturnModelType } from '@typegoose/typegoose'
 
 import { RedisKeys } from '~/constants/cache.constant'
-import type { CacheService } from '~/processors/cache/cache.service'
+import { CacheService } from '~/processors/cache/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 

@@ -1,5 +1,5 @@
 import { JSONSchema } from 'class-validator-jsonschema'
-import type { DecoratorSchema } from 'class-validator-jsonschema/build/decorators'
+import { DecoratorSchema } from 'class-validator-jsonschema/build/decorators'
 
 export const JSONSchemaPasswordField = (
   title: string,

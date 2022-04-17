@@ -5,8 +5,8 @@ import slugify from 'slugify'
 import { Injectable } from '@nestjs/common'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import type { EventManagerService } from '~/processors/helper/helper.event.service'
-import type { ImageService } from '~/processors/helper/helper.image.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { ImageService } from '~/processors/helper/helper.image.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { PageModel } from './page.model'

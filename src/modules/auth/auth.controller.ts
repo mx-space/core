@@ -17,16 +17,16 @@ import {
   Query,
   Scope,
 } from '@nestjs/common'
-import type { EventEmitter2 } from '@nestjs/event-emitter'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 
 import { Auth } from '~/common/decorator/auth.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster as Master } from '~/common/decorator/role.decorator'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import type { MongoIdDto } from '~/shared/dto/id.dto'
+import { MongoIdDto } from '~/shared/dto/id.dto'
 
-import type { AuthService } from './auth.service'
+import { AuthService } from './auth.service'
 
 export class TokenDto {
   @IsDate()

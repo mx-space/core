@@ -1,7 +1,14 @@
-import type { MiddlewareConsumer, NestModule } from '@nestjs/common'
-import { Controller, Get, Module, Req, UseGuards } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  Req,
+  UseGuards,
+} from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import type { NestFastifyApplication } from '@nestjs/platform-fastify'
+import { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
 
 import { fastifyApp } from '~/common/adapters/fastify.adapter'

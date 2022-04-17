@@ -13,33 +13,31 @@ import {
   UseInterceptors,
 } from '@nestjs/common'
 import { ApiOperation, ApiParam } from '@nestjs/swagger'
-import type { DocumentType } from '@typegoose/typegoose'
+import { DocumentType } from '@typegoose/typegoose'
 
 import { Auth } from '~/common/decorator/auth.decorator'
 import { CurrentUser } from '~/common/decorator/current-user.decorator'
-import type { IpRecord } from '~/common/decorator/ip.decorator'
-import { IpLocation } from '~/common/decorator/ip.decorator'
+import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ReplyMailType } from '~/processors/helper/helper.email.service'
-import type { EventManagerService } from '~/processors/helper/helper.event.service'
-import type { MongoIdDto } from '~/shared/dto/id.dto'
-import type { PagerDto } from '~/shared/dto/pager.dto'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { MongoIdDto } from '~/shared/dto/id.dto'
+import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
-import type { UserModel } from '../user/user.model'
-import type {
+import { UserModel } from '../user/user.model'
+import {
   CommentDto,
   CommentRefTypesDto,
   StateDto,
   TextOnlyDto,
 } from './comment.dto'
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
-import type { CommentModel } from './comment.model'
-import { CommentState } from './comment.model'
-import type { CommentService } from './comment.service'
+import { CommentModel, CommentState } from './comment.model'
+import { CommentService } from './comment.service'
 
 @Controller({ path: 'comments' })
 @UseInterceptors(CommentFilterEmailInterceptor)

@@ -4,7 +4,7 @@ import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 
-import type { AggregateService } from '../aggregate/aggregate.service'
+import { AggregateService } from '../aggregate/aggregate.service'
 
 @Controller('sitemap')
 @ApiName

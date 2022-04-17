@@ -18,7 +18,7 @@ import { LOG_DIR, TEMP_DIR } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { BackupService } from '~/modules/backup/backup.service'
-import type { ConfigsService } from '~/modules/configs/configs.service'
+import { ConfigsService } from '~/modules/configs/configs.service'
 import { NoteService } from '~/modules/note/note.service'
 import { PageService } from '~/modules/page/page.service'
 import { PostService } from '~/modules/post/post.service'
@@ -26,8 +26,8 @@ import { SearchService } from '~/modules/search/search.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 
-import type { CacheService } from '../cache/cache.service'
-import type { HttpService } from './helper.http.service'
+import { CacheService } from '../cache/cache.service'
+import { HttpService } from './helper.http.service'
 
 @Injectable()
 export class CronService {

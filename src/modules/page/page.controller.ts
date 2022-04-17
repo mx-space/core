@@ -16,11 +16,11 @@ import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import type { MongoIdDto } from '~/shared/dto/id.dto'
+import { MongoIdDto } from '~/shared/dto/id.dto'
 
-import type { PageQueryDto } from './page.dto'
-import type { PageModel, PartialPageModel } from './page.model'
-import type { PageService } from './page.service'
+import { PageQueryDto } from './page.dto'
+import { PageModel, PartialPageModel } from './page.model'
+import { PageService } from './page.service'
 
 @Controller('pages')
 @ApiName

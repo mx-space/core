@@ -1,7 +1,7 @@
-import type { FastifyReply } from 'fastify'
+import { FastifyReply } from 'fastify'
 import { isFunction, isString } from 'lodash'
 import { resolve } from 'path'
-import type { Readable } from 'stream'
+import { Readable } from 'stream'
 
 import {
   BadRequestException,
@@ -15,8 +15,8 @@ import {
   Scope,
   UnprocessableEntityException,
 } from '@nestjs/common'
-import type { Reflector } from '@nestjs/core'
-import type { SchedulerRegistry } from '@nestjs/schedule'
+import { Reflector } from '@nestjs/core'
+import { SchedulerRegistry } from '@nestjs/schedule'
 
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
@@ -25,11 +25,11 @@ import { CRON_DESCRIPTION } from '~/constants/meta.constant'
 import { LOG_DIR } from '~/constants/path.constant'
 import { SCHEDULE_CRON_OPTIONS } from '~/constants/system.constant'
 import { getTodayLogFilePath } from '~/global/consola.global'
-import type { CronService } from '~/processors/helper/helper.cron.service'
-import type { TaskQueueService } from '~/processors/helper/helper.tq.service'
+import { CronService } from '~/processors/helper/helper.cron.service'
+import { TaskQueueService } from '~/processors/helper/helper.tq.service'
 import { formatByteSize } from '~/utils'
 
-import type { LogQueryDto, LogTypeDto } from './health.dto'
+import { LogQueryDto, LogTypeDto } from './health.dto'
 
 @Controller({
   path: 'health',

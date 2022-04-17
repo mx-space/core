@@ -11,10 +11,10 @@ import {
 
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { IConfig } from '~/modules/configs/configs.interface'
-import type { ConfigsService } from '~/modules/configs/configs.service'
+import { ConfigsService } from '~/modules/configs/configs.service'
 import { classToJsonSchema } from '~/utils/jsonschema.util'
 
-import type { ConfigKeyDto } from '../dtos/config.dto'
+import { ConfigKeyDto } from '../dtos/config.dto'
 import { OptionController } from '../option.decorator'
 
 @OptionController()

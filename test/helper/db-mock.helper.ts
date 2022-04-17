@@ -2,7 +2,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server'
 import mongoose from 'mongoose'
 
 import { getModelForClass } from '@typegoose/typegoose'
-import type {
+import {
   AnyParamConstructor,
   BeAnObject,
   IModelOptions,

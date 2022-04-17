@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import type { EventManagerService } from '~/processors/helper/helper.event.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { RecentlyModel } from './recently.model'

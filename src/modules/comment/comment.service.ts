@@ -1,28 +1,26 @@
-import type { LeanDocument } from 'mongoose'
-import { Types } from 'mongoose'
+import { LeanDocument, Types } from 'mongoose'
 import { URL } from 'url'
 
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
-import type { DocumentType } from '@typegoose/typegoose'
-import type {
-  BeAnObject,
-  ReturnModelType,
-} from '@typegoose/typegoose/lib/types'
+import { DocumentType } from '@typegoose/typegoose'
+import { BeAnObject, ReturnModelType } from '@typegoose/typegoose/lib/types'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { MasterLostException } from '~/common/exceptions/master-lost.exception'
-import type { DatabaseService } from '~/processors/database/database.service'
-import type { EmailService } from '~/processors/helper/helper.email.service'
-import { ReplyMailType } from '~/processors/helper/helper.email.service'
-import type { WriteBaseModel } from '~/shared/model/base.model'
+import { DatabaseService } from '~/processors/database/database.service'
+import {
+  EmailService,
+  ReplyMailType,
+} from '~/processors/helper/helper.email.service'
+import { WriteBaseModel } from '~/shared/model/base.model'
 import { InjectModel } from '~/transformers/model.transformer'
 import { hasChinese } from '~/utils'
 
-import type { ConfigsService } from '../configs/configs.service'
-import type { NoteModel } from '../note/note.model'
-import type { PageModel } from '../page/page.model'
-import type { PostModel } from '../post/post.model'
-import type { UserService } from '../user/user.service'
+import { ConfigsService } from '../configs/configs.service'
+import { NoteModel } from '../note/note.model'
+import { PageModel } from '../page/page.model'
+import { PostModel } from '../post/post.model'
+import { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json'
 import { CommentModel, CommentRefTypes } from './comment.model'
 

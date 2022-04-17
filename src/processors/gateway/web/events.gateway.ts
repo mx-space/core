@@ -1,16 +1,14 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { plainToClass } from 'class-transformer'
 import { validate } from 'class-validator'
-import type SocketIO from 'socket.io'
+import SocketIO from 'socket.io'
 
-import type {
-  GatewayMetadata,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-} from '@nestjs/websockets'
 import {
   ConnectedSocket,
+  GatewayMetadata,
   MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -19,7 +17,7 @@ import { Emitter } from '@socket.io/redis-emitter'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
-import type { CacheService } from '~/processors/cache/cache.service'
+import { CacheService } from '~/processors/cache/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
 

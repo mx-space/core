@@ -1,13 +1,13 @@
 import { omit } from 'lodash'
-import type { FilterQuery } from 'mongoose'
+import { FilterQuery } from 'mongoose'
 
 import { Inject, Injectable, forwardRef } from '@nestjs/common'
-import type { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { InjectModel } from '~/transformers/model.transformer'
 
-import type { PostModel } from '../post/post.model'
+import { PostModel } from '../post/post.model'
 import { PostService } from '../post/post.service'
 import { CategoryModel, CategoryType } from './category.model'
 

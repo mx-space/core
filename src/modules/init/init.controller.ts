@@ -12,9 +12,9 @@ import {
 
 import { ApiName } from '~/common/decorator/openapi.decorator'
 
-import type { ConfigsService } from '../configs/configs.service'
-import type { ConfigKeyDto } from '../option/dtos/config.dto'
-import type { InitService } from './init.service'
+import { ConfigsService } from '../configs/configs.service'
+import { ConfigKeyDto } from '../option/dtos/config.dto'
+import { InitService } from './init.service'
 
 @Controller({
   path: '/init',

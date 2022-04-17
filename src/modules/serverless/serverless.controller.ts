@@ -1,4 +1,4 @@
-import type { FastifyReply, FastifyRequest } from 'fastify'
+import { FastifyReply, FastifyRequest } from 'fastify'
 
 import {
   CacheTTL,
@@ -19,8 +19,8 @@ import { IsMaster } from '~/common/decorator/role.decorator'
 
 import { SnippetType } from '../snippet/snippet.model'
 import { createMockedContextResponse } from './mock-response.util'
-import type { ServerlessReferenceDto } from './serverless.dto'
-import type { ServerlessService } from './serverless.service'
+import { ServerlessReferenceDto } from './serverless.dto'
+import { ServerlessService } from './serverless.service'
 
 @ApiName
 @Controller('serverless')

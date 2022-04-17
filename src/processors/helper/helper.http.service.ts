@@ -1,5 +1,4 @@
-import type { AxiosInstance } from 'axios'
-import axios from 'axios'
+import axios, { AxiosInstance } from 'axios'
 import axiosRetry from 'axios-retry'
 
 import { Injectable, Logger } from '@nestjs/common'
@@ -9,7 +8,7 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils'
 
 import { version } from '../../../package.json'
-import type { CacheService } from '../cache/cache.service'
+import { CacheService } from '../cache/cache.service'
 
 @Injectable()
 export class HttpService {

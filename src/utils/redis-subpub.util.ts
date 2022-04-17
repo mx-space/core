@@ -1,5 +1,4 @@
-import type { Redis } from 'ioredis'
-import IORedis from 'ioredis'
+import IORedis, { Redis } from 'ioredis'
 
 import { Logger } from '@nestjs/common'
 

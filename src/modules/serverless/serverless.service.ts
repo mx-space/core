@@ -4,10 +4,9 @@ import { cloneDeep } from 'lodash'
 import path from 'path'
 import { nextTick } from 'process'
 
-import type { TransformOptions } from '@babel/core'
-import { parseAsync, transformAsync } from '@babel/core'
+import { TransformOptions, parseAsync, transformAsync } from '@babel/core'
 import * as t from '@babel/types'
-import type { VariableDeclaration } from '@babel/types'
+import { VariableDeclaration } from '@babel/types'
 import {
   Injectable,
   InternalServerErrorException,
@@ -17,19 +16,19 @@ import { Interval } from '@nestjs/schedule'
 
 import { RedisKeys } from '~/constants/cache.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
-import type { CacheService } from '~/processors/cache/cache.service'
-import type { DatabaseService } from '~/processors/database/database.service'
-import type { AssetService } from '~/processors/helper/helper.asset.service'
-import type { HttpService } from '~/processors/helper/helper.http.service'
+import { CacheService } from '~/processors/cache/cache.service'
+import { DatabaseService } from '~/processors/database/database.service'
+import { AssetService } from '~/processors/helper/helper.asset.service'
+import { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import type { UniqueArray } from '~/ts-hepler/unique'
+import { UniqueArray } from '~/ts-hepler/unique'
 import { getRedisKey, safePathJoin } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
 import { isBuiltinModule } from '~/utils/system.util'
 
 import PKG from '../../../package.json'
 import { SnippetModel } from '../snippet/snippet.model'
-import type {
+import {
   FunctionContextRequest,
   FunctionContextResponse,
 } from './function.types'

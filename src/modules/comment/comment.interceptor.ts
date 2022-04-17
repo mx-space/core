@@ -2,12 +2,12 @@ import { isDefined } from 'class-validator'
 import { cloneDeep, isArrayLike, isObjectLike } from 'lodash'
 import { map } from 'rxjs'
 
-import type {
+import {
   CallHandler,
   ExecutionContext,
+  Injectable,
   NestInterceptor,
 } from '@nestjs/common'
-import { Injectable } from '@nestjs/common'
 
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { getAvatar } from '~/utils'

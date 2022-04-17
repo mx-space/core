@@ -6,8 +6,8 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import PKG from '~/../package.json'
 import { API_VERSION } from '~/app.config'
 
-import type { ConfigsService } from '../configs/configs.service'
-import type { InitService } from '../init/init.service'
+import { ConfigsService } from '../configs/configs.service'
+import { InitService } from '../init/init.service'
 
 @Injectable()
 export class PageProxyService {

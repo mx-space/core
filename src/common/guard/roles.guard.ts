@@ -6,12 +6,12 @@
  * @FilePath: /server/apps/server/src/auth/roles.guard.ts
  * Mark: Coding with Love
  */
-import type { CanActivate, ExecutionContext } from '@nestjs/common'
+import { CanActivate, ExecutionContext } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 
 import { isTest } from '~/global/env.global'
-import type { AuthService } from '~/modules/auth/auth.service'
+import { AuthService } from '~/modules/auth/auth.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 /**

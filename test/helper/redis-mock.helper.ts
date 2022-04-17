@@ -1,5 +1,4 @@
-import type { Redis } from 'ioredis'
-import IORedis from 'ioredis'
+import IORedis, { Redis } from 'ioredis'
 import RedisMemoryServer from 'redis-memory-server'
 
 import { CacheService } from '~/processors/cache/cache.service'

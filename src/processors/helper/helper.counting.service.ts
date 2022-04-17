@@ -1,14 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common'
 
-import type { ArticleType } from '~/constants/article.constant'
+import { ArticleType } from '~/constants/article.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { NoteModel } from '~/modules/note/note.model'
 import { PostModel } from '~/modules/post/post.model'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 
-import type { CacheService } from '../cache/cache.service'
-import type { DatabaseService } from '../database/database.service'
+import { CacheService } from '../cache/cache.service'
+import { DatabaseService } from '../database/database.service'
 
 @Injectable()
 export class CountingService {

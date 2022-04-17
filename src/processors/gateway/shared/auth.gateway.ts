@@ -1,17 +1,17 @@
-import type { Namespace, Socket } from 'socket.io'
+import { Namespace, Socket } from 'socket.io'
 
 import { OnEvent } from '@nestjs/event-emitter'
-import type { JwtService } from '@nestjs/jwt'
-import type {
+import { JwtService } from '@nestjs/jwt'
+import {
   OnGatewayConnection,
   OnGatewayDisconnect,
+  WebSocketServer,
 } from '@nestjs/websockets'
-import { WebSocketServer } from '@nestjs/websockets'
 import { Emitter } from '@socket.io/redis-emitter'
 
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import type { AuthService } from '~/modules/auth/auth.service'
-import type { CacheService } from '~/processors/cache/cache.service'
+import { AuthService } from '~/modules/auth/auth.service'
+import { CacheService } from '~/processors/cache/cache.service'
 
 import { BusinessEvents } from '../../../constants/business-event.constant'
 import { BoardcastBaseGateway } from '../base.gateway'

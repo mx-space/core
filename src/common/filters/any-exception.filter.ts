@@ -1,16 +1,17 @@
-import type { FastifyReply, FastifyRequest } from 'fastify'
-import type { WriteStream } from 'fs'
+import { FastifyReply, FastifyRequest } from 'fastify'
+import { WriteStream } from 'fs'
 import { resolve } from 'path'
 
-import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 import {
+  ArgumentsHost,
   Catch,
+  ExceptionFilter,
   HttpException,
   HttpStatus,
   Inject,
   Logger,
 } from '@nestjs/common'
-import type { Reflector } from '@nestjs/core'
+import { Reflector } from '@nestjs/core'
 
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 import { LOG_DIR } from '~/constants/path.constant'

@@ -1,15 +1,14 @@
 import { isDefined, isMongoId } from 'class-validator'
-import type { FilterQuery } from 'mongoose'
+import { FilterQuery } from 'mongoose'
 
 import { Injectable } from '@nestjs/common'
-import type { EventEmitter2 } from '@nestjs/event-emitter'
-import type { DocumentType } from '@typegoose/typegoose'
+import { DocumentType } from '@typegoose/typegoose'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import type { EventManagerService } from '~/processors/helper/helper.event.service'
-import type { ImageService } from '~/processors/helper/helper.image.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { ImageService } from '~/processors/helper/helper.image.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { deleteKeys } from '~/utils'
 
@@ -22,7 +21,6 @@ export class NoteService {
     private readonly noteModel: MongooseModel<NoteModel>,
     private readonly imageService: ImageService,
     private readonly eventManager: EventManagerService,
-    private readonly eventEmitter: EventEmitter2,
   ) {
     this.needCreateDefult()
   }

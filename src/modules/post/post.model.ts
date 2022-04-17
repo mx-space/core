@@ -6,15 +6,22 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator'
-import type { Query } from 'mongoose'
+import { Query } from 'mongoose'
 
 import { PartialType } from '@nestjs/mapped-types'
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
-import type { DocumentType, Ref } from '@typegoose/typegoose'
-import { Severity, index, modelOptions, pre, prop } from '@typegoose/typegoose'
-import type { BeAnObject } from '@typegoose/typegoose/lib/types'
+import {
+  DocumentType,
+  Ref,
+  Severity,
+  index,
+  modelOptions,
+  pre,
+  prop,
+} from '@typegoose/typegoose'
+import { BeAnObject } from '@typegoose/typegoose/lib/types'
 
-import type { Paginator } from '~/shared/interface/paginator.interface'
+import { Paginator } from '~/shared/interface/paginator.interface'
 import { CountMixed as Count, WriteBaseModel } from '~/shared/model/base.model'
 
 import { CategoryModel as Category } from '../category/category.model'

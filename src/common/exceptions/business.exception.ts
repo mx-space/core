@@ -1,7 +1,6 @@
 import { HttpException } from '@nestjs/common'
 
-import type { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { ErrorCode } from '~/constants/error-code.constant'
+import { ErrorCode, ErrorCodeEnum } from '~/constants/error-code.constant'
 
 export class BusinessException extends HttpException {
   constructor(code: ErrorCodeEnum) {
