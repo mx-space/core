@@ -77,7 +77,7 @@ specifiers:
   image-size: 1.0.1
   inquirer: '*'
   ioredis: 5.0.4
-  isbot: 3.4.5
+  isbot: 3.4.6
   jest: 27.5.1
   js-yaml: '*'
   jszip: 3.9.1
@@ -160,7 +160,7 @@ dependencies:
   get-image-colors: 4.0.1
   image-size: 1.0.1
   inquirer: 8.2.0
-  isbot: 3.4.5
+  isbot: 3.4.6
   js-yaml: 4.1.0
   jszip: 3.9.1
   linkedom: 0.14.7
@@ -4884,8 +4884,8 @@ packages:
     resolution: {integrity: sha1-u5NdSFgsuhaMBoNJV6VKPgcSTxE=}
     dev: false
 
-  /isbot/3.4.5:
-    resolution: {integrity: sha512-+KD6q1BBtw0iK9aGBGSfxJ31/ZgizKRjhm8ebgJUBMx0aeeQuIJ1I72beCoIrltIZGrSm4vmrxRxrG5n1aUTtw==}
+  /isbot/3.4.6:
+    resolution: {integrity: sha512-EEi3SVCPB4WHtMBaAYzYLgCP7yG9qixseYCf3IG0Yc+howLia+XFPLTT1437rzeViLeDInKOXOdFhs9Fa/xgWQ==}
     engines: {node: '>=12'}
     dev: false
 
