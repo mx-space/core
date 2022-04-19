@@ -40,7 +40,7 @@ specifiers:
   '@types/get-image-colors': 4.0.1
   '@types/jest': 27.4.1
   '@types/js-yaml': 4.0.5
-  '@types/lodash': 4.14.181
+  '@types/lodash': 4.14.182
   '@types/marked': 4.0.3
   '@types/mongoose-paginate-v2': 1.6.4
   '@types/node': 16.11.27
@@ -207,7 +207,7 @@ devDependencies:
   '@types/get-image-colors': 4.0.1
   '@types/jest': 27.4.1
   '@types/js-yaml': 4.0.5
-  '@types/lodash': 4.14.181
+  '@types/lodash': 4.14.182
   '@types/marked': 4.0.3
   '@types/mongoose-paginate-v2': 1.6.4
   '@types/node': 16.11.27
@@ -1773,8 +1773,8 @@ packages:
       '@types/node': 16.11.27
     dev: true
 
-  /@types/lodash/4.14.181:
-    resolution: {integrity: sha512-n3tyKthHJbkiWhDZs3DkhkCzt2MexYHXlX0td5iMplyfwketaOeKboEVBqzceH7juqvEg3q5oUoBFxSLu7zFag==}
+  /@types/lodash/4.14.182:
+    resolution: {integrity: sha512-/THyiqyQAP9AfARo4pF+aCGcyiQ94tX/Is2I7HofNRqoYLgN1PBoOWu2/zTA5zMxzP5EFutMtWtGAFRKUe961Q==}
     dev: true
 
   /@types/marked/4.0.3:
