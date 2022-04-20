@@ -36,7 +36,7 @@
     "start": "cross-env NODE_ENV=development nest start -w --path tsconfig.json",
     "start:debug": "cross-env NODE_ENV=development nest start --debug --watch",
     "start:cluster": "cross-env NODE_ENV=development nest start --watch -- --cluster",
-    "start:prod": "cross-env NODE_ENV=production node dist/main",
+    "start:prod": "cross-env NODE_ENV=production node dist/src/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "prod": "cross-env NODE_ENV=production pm2-runtime start ecosystem.config.js",
     "prod:pm2": "cross-env NODE_ENV=production pm2 restart ecosystem.config.js",
