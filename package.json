@@ -1,12 +1,12 @@
 {
   "name": "@mx-space/mx-server",
-  "version": "3.24.4",
+  "version": "3.24.5",
   "author": "Innei <https://innei.ren>",
   "private": true,
   "license": "AGPLv3",
   "dashboard": {
     "repo": "mx-space/mx-admin",
-    "version": "3.16.17"
+    "version": "3.16.19-alpha.1"
   },
   "husky": {
     "hooks": {
