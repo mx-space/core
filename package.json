@@ -96,7 +96,7 @@
     "consola": "*",
     "cos-nodejs-sdk-v5": "2.11.6",
     "dayjs": "1.11.1",
-    "ejs": "3.1.6",
+    "ejs": "3.1.7",
     "fastify-cookie": "5.6.1",
     "fastify-multipart": "5.3.1",
     "fastify-swagger": "5.1.1",
