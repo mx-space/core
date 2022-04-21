@@ -1,4 +1,4 @@
-import type { FastifyReply, FastifyRequest } from 'fastify'
+import { FastifyReply, FastifyRequest } from 'fastify'
 
 import {
   CacheTTL,

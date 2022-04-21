@@ -1,3 +1,6 @@
+import { MongoMemoryServer } from 'mongodb-memory-server'
+import mongoose from 'mongoose'
+
 import { getModelForClass } from '@typegoose/typegoose'
 import {
   AnyParamConstructor,
@@ -5,8 +8,6 @@ import {
   IModelOptions,
   ReturnModelType,
 } from '@typegoose/typegoose/lib/types'
-import { MongoMemoryServer } from 'mongodb-memory-server'
-import mongoose from 'mongoose'
 
 let mongod: MongoMemoryServer
 

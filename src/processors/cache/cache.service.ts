@@ -5,7 +5,7 @@ import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common'
 
 import { getRedisKey } from '~/utils/redis.util'
 
-import type { RedisSubPub } from '../../utils/redis-subpub.util'
+import { RedisSubPub } from '../../utils/redis-subpub.util'
 
 // Cache 客户端管理器
 

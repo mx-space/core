@@ -13,10 +13,13 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
+import { EventScope } from '~/constants/business-event.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 import { LOG_DIR } from '~/constants/path.constant'
 import { REFLECTOR } from '~/constants/system.constant'
 import { isDev } from '~/global/env.global'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 
 import { getIp } from '../../utils/ip.util'
 import { LoggingInterceptor } from '../interceptors/logging.interceptor'
@@ -32,7 +35,10 @@ type myError = {
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name)
   private errorLogPipe: WriteStream
-  constructor(@Inject(REFLECTOR) private reflector: Reflector) {}
+  constructor(
+    @Inject(REFLECTOR) private reflector: Reflector,
+    private readonly eventManager: EventManagerService,
+  ) {}
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp()
     const response = ctx.getResponse<FastifyReply>()
@@ -55,7 +61,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
       // message && Logger.debug(message, undefined, 'Catch')
       Logger.error(exception, undefined, 'Catch')
-
+      this.eventManager.broadcast(
+        EventBusEvents.SystemException,
+        {
+          message: (exception as Error)?.message,
+          stack: (exception as Error)?.stack,
+        },
+        {
+          scope: EventScope.TO_SYSTEM,
+        },
+      )
       if (!isDev) {
         this.errorLogPipe =
           this.errorLogPipe ??
@@ -89,16 +104,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
         LoggingInterceptor.name,
       )
     }
-
+    const res = (exception as any).response
     response
       .status(status)
       .type('application/json')
       .send({
         ok: 0,
-        message:
-          (exception as any)?.response?.message ||
-          (exception as any)?.message ||
-          '未知错误',
+        code: res?.code,
+        message: res?.message || (exception as any)?.message || '未知错误',
       })
   }
 }

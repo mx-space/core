@@ -1,4 +1,4 @@
-import type { FastifyReply } from 'fastify'
+import { FastifyReply } from 'fastify'
 
 import { HttpException } from '@nestjs/common'
 

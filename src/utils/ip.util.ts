@@ -2,7 +2,7 @@
  * @module utils/ip
  * @description IP utility functions
  */
-import type { FastifyRequest } from 'fastify'
+import { FastifyRequest } from 'fastify'
 import { IncomingMessage } from 'http'
 import { URL } from 'url'
 

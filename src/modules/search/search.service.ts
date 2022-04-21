@@ -1,6 +1,6 @@
 import algoliasearch from 'algoliasearch'
 
-import type { SearchResponse } from '@algolia/client-search'
+import { SearchResponse } from '@algolia/client-search'
 import {
   BadRequestException,
   Inject,

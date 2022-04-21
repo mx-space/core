@@ -1,4 +1,4 @@
-import type { FastifyRequest } from 'fastify'
+import { FastifyRequest } from 'fastify'
 import fastifyCookie from 'fastify-cookie'
 import FastifyMultipart from 'fastify-multipart'
 

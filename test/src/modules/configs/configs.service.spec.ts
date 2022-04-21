@@ -1,15 +1,17 @@
+import { dbHelper } from 'test/helper/db-mock.helper'
+import { MockCacheService, redisHelper } from 'test/helper/redis-mock.helper'
+
 import { BadRequestException } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
-import { dbHelper } from 'test/helper/db-mock.helper'
-import { MockCacheService, redisHelper } from 'test/helper/redis-mock.helper'
-import { getModelToken } from '~/transformers/model.transformer'
+
 import { RedisKeys } from '~/constants/cache.constant'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UserService } from '~/modules/user/user.service'
 import { CacheService } from '~/processors/cache/cache.service'
+import { getModelToken } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 
 describe('Test ConfigsService', () => {

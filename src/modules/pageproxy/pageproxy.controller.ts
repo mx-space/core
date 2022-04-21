@@ -1,4 +1,4 @@
-import type { FastifyReply, FastifyRequest } from 'fastify'
+import { FastifyReply, FastifyRequest } from 'fastify'
 import { createReadStream, existsSync, statSync } from 'fs'
 import fs from 'fs/promises'
 import { isNull } from 'lodash'

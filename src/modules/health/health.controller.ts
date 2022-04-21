@@ -1,4 +1,4 @@
-import type { FastifyReply } from 'fastify'
+import { FastifyReply } from 'fastify'
 import { isFunction, isString } from 'lodash'
 import { resolve } from 'path'
 import { Readable } from 'stream'

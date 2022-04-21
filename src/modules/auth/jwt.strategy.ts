@@ -6,7 +6,8 @@
  * @FilePath: /mx-server/src/auth/jwt.strategy.ts
  * @Coding with Love
  */
-import { ExtractJwt, Strategy, StrategyOptions } from 'passport-jwt'
+import { StrategyOptions } from 'passport-jwt'
+import { ExtractJwt, Strategy } from 'passport-jwt'
 
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'

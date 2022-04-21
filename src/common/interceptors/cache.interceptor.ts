@@ -5,7 +5,8 @@
  * @author Surmon <https://github.com/surmon-china>
  * @author Innei <https://innei.ren>
  */
-import { Observable, of } from 'rxjs'
+import { Observable } from 'rxjs'
+import { of } from 'rxjs'
 import { tap } from 'rxjs/operators'
 
 import {

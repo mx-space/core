@@ -1,4 +1,4 @@
-import type { mongoose } from '@typegoose/typegoose'
+import { mongoose } from '@typegoose/typegoose'
 
 import { Pagination } from '~/shared/interface/paginator.interface'
 
