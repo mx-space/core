@@ -5,7 +5,7 @@ const Reg = {
   '?': /\?\??(.*?)\??\?/g,
 }
 
-function ifConditionGramar(condition: string, model: any) {
+function ifConditionGrammar(condition: string, model: any) {
   const conditionStr = condition.split('|')
   conditionStr.forEach((item: string, index: string | number) => {
     conditionStr[index] = item.replace(/"/g, '')
@@ -54,7 +54,7 @@ export function macros(str: any, model: any): any {
   if (str.search(/\[\[(.*?)\]\]/g) != -1) {
     str = str.replace(/\[\[(.*?)\]\]/g, (match, condition) => {
       if (condition.search(Reg['?']) != -1) {
-        return ifConditionGramar(condition, model)
+        return ifConditionGrammar(condition, model)
       }
       if (condition.search(Reg['$']) != -1) {
         const variable = condition.replace(Reg['$'], '$1').replace(/\s/g, '')

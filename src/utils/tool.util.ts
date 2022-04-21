@@ -1,4 +1,4 @@
-import { isObject } from 'lodash'
+import { cloneDeep, isObject } from 'lodash'
 import { join } from 'path'
 
 export const md5 = (text: string) =>
@@ -73,4 +73,18 @@ export const safePathJoin = (...path: string[]) => {
   )
 
   return join(...newPathArr)
+}
+
+export const deepCloneWithFunction = <T extends object>(object: T): T => {
+  const clonedModule = cloneDeep(object)
+
+  if (typeof object === 'function') {
+    // @ts-expect-error
+    const newFunc = (object as Function).bind()
+
+    Object.setPrototypeOf(newFunc, clonedModule)
+    return newFunc
+  }
+
+  return clonedModule
 }
