@@ -86,7 +86,7 @@ specifiers:
   lodash: '*'
   marked: 4.0.14
   mkdirp: '*'
-  mongodb-memory-server: 8.4.2
+  mongodb-memory-server: 8.5.0
   mongoose: 6.3.0
   mongoose-lean-id: 0.3.0
   mongoose-lean-virtuals: 0.9.0
@@ -189,7 +189,7 @@ dependencies:
   zx-cjs: 6.1.0
 
 optionalDependencies:
-  mongodb-memory-server: 8.4.2
+  mongodb-memory-server: 8.5.0
   redis-memory-server: 0.5.0
 
 devDependencies:
@@ -1173,7 +1173,7 @@ packages:
     hasBin: true
     dependencies:
       detect-libc: 1.0.3
-      https-proxy-agent: 5.0.0
+      https-proxy-agent: 5.0.1
       make-dir: 3.1.0
       node-fetch: 2.6.7
       nopt: 5.0.0
@@ -1918,7 +1918,7 @@ packages:
       functional-red-black-tree: 1.0.1
       ignore: 5.2.0
       regexpp: 3.2.0
-      semver: 7.3.5
+      semver: 7.3.7
       tsutils: 3.21.0_typescript@4.6.3
       typescript: 4.6.3
     transitivePeerDependencies:
@@ -4192,7 +4192,7 @@ packages:
       memfs: 3.4.1
       minimatch: 3.1.2
       schema-utils: 3.1.1
-      semver: 7.3.5
+      semver: 7.3.7
       tapable: 2.2.1
       typescript: 4.6.3
       webpack: 5.72.0
@@ -4556,6 +4556,17 @@ packages:
 
   /https-proxy-agent/5.0.0:
     resolution: {integrity: sha512-EkYm5BcKUGiduxzSt3Eppko+PiNWNEpa4ySk9vTC6wDsQJW9rHSa+UhGNJoRYp7bz6Ht1eaRIa6QaJqO5rCFbA==}
+    engines: {node: '>= 6'}
+    dependencies:
+      agent-base: 6.0.2
+      debug: 4.3.4
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+    optional: true
+
+  /https-proxy-agent/5.0.1:
+    resolution: {integrity: sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==}
     engines: {node: '>= 6'}
     dependencies:
       agent-base: 6.0.2
@@ -5471,7 +5482,7 @@ packages:
       form-data: 3.0.1
       html-encoding-sniffer: 2.0.1
       http-proxy-agent: 4.0.1
-      https-proxy-agent: 5.0.0
+      https-proxy-agent: 5.0.1
       is-potential-custom-element-name: 1.0.1
       nwsapi: 2.2.0
       parse5: 6.0.1
@@ -6051,8 +6062,8 @@ packages:
       whatwg-url: 11.0.0
     dev: false
 
-  /mongodb-memory-server-core/8.4.2:
-    resolution: {integrity: sha512-ntyqbzQ/vwYDEfIEi6k2hxjbtThckgrVmEhgKWyrJ8jX2y6yPfg6Fcx0bk1SVfOtyQj2sruS29vqf6MSYjUUVw==}
+  /mongodb-memory-server-core/8.5.0:
+    resolution: {integrity: sha512-Hv/1QWWUAq5oxkLvQnUFfzprUdJHGA6/i3K5VNUjfiqaDqBteztPAEYXV8NPBxceYYzudoc/py935DNYq+RqVQ==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@types/tmp': 0.2.3
@@ -6061,11 +6072,11 @@ packages:
       debug: 4.3.4
       find-cache-dir: 3.3.2
       get-port: 5.1.1
-      https-proxy-agent: 5.0.0
+      https-proxy-agent: 5.0.1
       md5-file: 5.0.0
-      mongodb: 4.4.0
+      mongodb: 4.5.0
       new-find-package-json: 1.1.0
-      semver: 7.3.5
+      semver: 7.3.7
       tar-stream: 2.2.0
       tmp: 0.2.1
       tslib: 2.3.1
@@ -6076,28 +6087,15 @@ packages:
     dev: false
     optional: true
 
-  /mongodb-memory-server/8.4.2:
-    resolution: {integrity: sha512-DZKwBJVlSVzMQyGQNHSRG3xLC5KhJU8TNDCKnB7ns92ANuJKnbhx1FHop6DFSs5UThcUyg+5L6LxWD9GWn1OBA==}
+  /mongodb-memory-server/8.5.0:
+    resolution: {integrity: sha512-bU6B+sat/qFep5EqZ5KpVM+xYssYKR8/VUZT9SanaP69nSLbYGNwny7b8Egs3DvfLR874uhspGKOOdQV8LEqxA==}
     engines: {node: '>=12.22.0'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 8.4.2
+      mongodb-memory-server-core: 8.5.0
       tslib: 2.3.1
     transitivePeerDependencies:
       - supports-color
-    dev: false
-    optional: true
-
-  /mongodb/4.4.0:
-    resolution: {integrity: sha512-1hPhutJj6yxxu0ymwsO0uEimTo+QTh3oQP6YHxmLneBFBOGydYFdnmDDuLiGWimAlMdRN9WuDXY+JGp47aeOwA==}
-    engines: {node: '>=12.9.0'}
-    dependencies:
-      bson: 4.6.1
-      denque: 2.0.1
-      mongodb-connection-string-url: 2.5.2
-      socks: 2.6.2
-    optionalDependencies:
-      saslprep: 1.0.3
     dev: false
     optional: true
 
