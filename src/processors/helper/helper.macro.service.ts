@@ -1,4 +1,5 @@
 import dayjs from 'dayjs'
+import { marked } from 'marked'
 
 import { BadRequestException, Injectable } from '@nestjs/common'
 
@@ -6,7 +7,7 @@ import { deepCloneWithFunction } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
 
 @Injectable()
-export class TextMarcoService {
+export class TextMacroService {
   static readonly Reg = {
     '#': /^#(.*?)$/g,
     $: /^\$(.*?)$/g,
@@ -61,27 +62,40 @@ export class TextMarcoService {
     return output
   }
 
-  public async replaceTextMarco<T extends object>(
+  public async replaceTextMacro<T extends object>(
     text: string,
     model: T,
   ): Promise<string> {
     const matchedReg = /\[\[\s(.*?)\s\]\]/g
     if (text.search(matchedReg) != -1) {
       text = text.replace(matchedReg, (match, condition) => {
+        const ast = marked.lexer(text)
+
+        // FIXME: shallow find, if same text both in code block and paragraph, the macro in paragraph also will not replace
+        const isInCodeBlock = ast.some((i) => {
+          if (i.type === 'code' || i.type === 'codespan') {
+            return i.raw.includes(condition)
+          }
+        })
+
+        if (isInCodeBlock) {
+          return match
+        }
+
         condition = condition?.trim()
-        if (condition.search(TextMarcoService.Reg['?']) != -1) {
+        if (condition.search(TextMacroService.Reg['?']) != -1) {
           return this.ifConditionGrammar(condition, model)
         }
-        if (condition.search(TextMarcoService.Reg['$']) != -1) {
+        if (condition.search(TextMacroService.Reg['$']) != -1) {
           const variable = condition
-            .replace(TextMarcoService.Reg['$'], '$1')
+            .replace(TextMacroService.Reg['$'], '$1')
             .replace(/\s/g, '')
           return model[variable]
         }
         // eslint-disable-next-line no-useless-escape
-        if (condition.search(TextMarcoService.Reg['#']) != -1) {
+        if (condition.search(TextMacroService.Reg['#']) != -1) {
           // eslint-disable-next-line no-useless-escape
-          const functions = condition.replace(TextMarcoService.Reg['#'], '$1')
+          const functions = condition.replace(TextMacroService.Reg['#'], '$1')
 
           const variables = Object.keys(model).reduce(
             (acc, key) => ({ [`$${key}`]: model[key], ...acc }),
