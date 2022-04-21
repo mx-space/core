@@ -1,6 +1,5 @@
 import { isURL } from 'class-validator'
 import fs, { mkdir, stat } from 'fs/promises'
-import { cloneDeep } from 'lodash'
 import path from 'path'
 import { nextTick } from 'process'
 
@@ -22,7 +21,7 @@ import { AssetService } from '~/processors/helper/helper.asset.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { UniqueArray } from '~/ts-hepler/unique'
-import { getRedisKey, safePathJoin } from '~/utils'
+import { deepCloneWithFunction, getRedisKey, safePathJoin } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
 import { isBuiltinModule } from '~/utils/system.util'
 
@@ -302,15 +301,8 @@ export class ServerlessService {
       } else {
         this.requireModuleIdSet.add(resolvePath)
       }
-      const clonedModule = cloneDeep(module)
-      return typeof module === 'function'
-        ? (() => {
-            const newFunc = module.bind()
-
-            Object.setPrototypeOf(newFunc, clonedModule)
-            return newFunc
-          })()
-        : clonedModule
+      const clonedModule = deepCloneWithFunction(module)
+      return clonedModule
     }
 
     const __requireNoCache = (id: string) => {
