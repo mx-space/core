@@ -5,7 +5,7 @@ import { TextMacroService } from '~/processors/helper/helper.macro.service'
 
 dayjs.extend(relativeTime)
 
-describe.only('test TextMarcoService', () => {
+describe('test TextMarcoService', () => {
   const service = new TextMacroService()
   describe('test if condition', () => {
     test('case 1', async () => {
