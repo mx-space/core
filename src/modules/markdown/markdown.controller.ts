@@ -28,9 +28,9 @@ import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
+import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils'
-import { macros } from '~/utils/macros.util'
 
 import { CategoryModel } from '../category/category.model'
 import { ConfigsService } from '../configs/configs.service'
@@ -52,6 +52,7 @@ export class MarkdownController {
     private readonly service: MarkdownService,
 
     private readonly configs: ConfigsService,
+    private readonly macroService: TextMacroService,
   ) {}
 
   @Post('/import')
@@ -212,7 +213,7 @@ export class MarkdownController {
 
     const url = new URL(relativePath!, webUrl)
     const markdownMacros = this.service.renderMarkdownContent(
-      macros(markdown, document),
+      await this.macroService.replaceTextMacro(markdown, document),
     )
     const structure = await this.service.getRenderedMarkdownHtmlStructure(
       markdownMacros,

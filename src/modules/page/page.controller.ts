@@ -16,6 +16,7 @@ import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 
 import { PageQueryDto } from './page.dto'
@@ -25,7 +26,10 @@ import { PageService } from './page.service'
 @Controller('pages')
 @ApiName
 export class PageController {
-  constructor(private readonly pageService: PageService) {}
+  constructor(
+    private readonly pageService: PageService,
+    private readonly macroService: TextMacroService,
+  ) {}
 
   @Get('/')
   @Paginator
@@ -68,6 +72,9 @@ export class PageController {
     if (!page) {
       throw new CannotFindException()
     }
+
+    page.text = await this.macroService.replaceTextMacro(page.text, page)
+
     return page
   }
 
