@@ -12,7 +12,7 @@ import {
   EmailService,
   ReplyMailType,
 } from '~/processors/helper/helper.email.service'
-import { WriteBaseModel } from '~/shared/model/base.model'
+import { WriteBaseModel } from '~/shared/model/write-base.model'
 import { InjectModel } from '~/transformers/model.transformer'
 import { hasChinese } from '~/utils'
 

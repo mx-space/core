@@ -20,7 +20,6 @@ import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
-import { IsMaster } from '~/common/decorator/role.decorator'
 import { VisitDocument } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
@@ -41,7 +40,7 @@ export class PostController {
 
   @Get('/')
   @Paginator
-  async getPaginate(@Query() query: PostQueryDto, @IsMaster() master: boolean) {
+  async getPaginate(@Query() query: PostQueryDto) {
     const { size, select, page, year, sortBy, sortOrder } = query
 
     return await this.postService.findWithPaginator(

@@ -11,7 +11,7 @@ import {
 import { PartialType } from '@nestjs/mapped-types'
 import { modelOptions, prop } from '@typegoose/typegoose'
 
-import { WriteBaseModel } from '~/shared/model/base.model'
+import { WriteBaseModel } from '~/shared/model/write-base.model'
 import { IsNilOrString } from '~/utils/validator/isNilOrString'
 
 export enum PageType {

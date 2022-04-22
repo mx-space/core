@@ -1,6 +1,7 @@
 /* eslint-disable import/order */
 import cluster from 'cluster'
 import { mkdirSync } from 'fs'
+
 import 'zx-cjs/globals'
 
 import { Logger } from '@nestjs/common'
@@ -14,8 +15,11 @@ import {
 } from '~/constants/path.constant'
 
 import { consola, registerStdLogger } from './consola.global'
+
 import './dayjs.global'
+
 import { cwd, isDev } from './env.global'
+import { registerJSONGlobal } from './json.global'
 
 // 建立目录
 function mkdirs() {
@@ -49,4 +53,5 @@ export function register() {
   registerStdLogger()
   mkdirs()
   registerGlobal()
+  registerJSONGlobal()
 }

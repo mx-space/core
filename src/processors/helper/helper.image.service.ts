@@ -8,7 +8,8 @@ import {
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { TextImageRecordType, WriteBaseModel } from '~/shared/model/base.model'
+import { TextImageRecordType } from '~/shared/model/base.model'
+import { WriteBaseModel } from '~/shared/model/write-base.model'
 import { getAverageRGB, pickImagesFromMarkdown } from '~/utils/pic.util'
 
 import { HttpService } from './helper.http.service'

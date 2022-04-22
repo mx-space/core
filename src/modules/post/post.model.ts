@@ -22,7 +22,8 @@ import {
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
 
 import { Paginator } from '~/shared/interface/paginator.interface'
-import { CountMixed as Count, WriteBaseModel } from '~/shared/model/base.model'
+import { CountModel as Count } from '~/shared/model/count.model'
+import { WriteBaseModel } from '~/shared/model/write-base.model'
 
 import { CategoryModel as Category } from '../category/category.model'
 

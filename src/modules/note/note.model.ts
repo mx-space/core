@@ -14,7 +14,8 @@ import { AutoIncrementID } from '@typegoose/auto-increment'
 import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
 
 import { Paginator } from '~/shared/interface/paginator.interface'
-import { CountMixed, WriteBaseModel } from '~/shared/model/base.model'
+import { CountModel } from '~/shared/model/count.model'
+import { WriteBaseModel } from '~/shared/model/write-base.model'
 
 @modelOptions({ schemaOptions: { id: false, _id: false } })
 export class Coordinate {
@@ -111,8 +112,8 @@ export class NoteModel extends WriteBaseModel {
   @IsOptional()
   location?: string
 
-  @prop({ type: CountMixed, default: { read: 0, like: 0 }, _id: false })
-  count?: CountMixed
+  @prop({ type: CountModel, default: { read: 0, like: 0 }, _id: false })
+  count?: CountModel
 
   @prop({ type: [NoteMusic] })
   @ValidateNested({ each: true })
