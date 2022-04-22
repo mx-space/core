@@ -4,9 +4,11 @@ import slugify from 'slugify'
 
 import { Injectable } from '@nestjs/common'
 
+import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { PageModel } from './page.model'
@@ -18,6 +20,7 @@ export class PageService {
     private readonly pageModel: MongooseModel<PageModel>,
     private readonly imageService: ImageService,
     private readonly eventManager: EventManagerService,
+    private readonly macroService: TextMacroService,
   ) {}
 
   public get model() {
@@ -46,17 +49,33 @@ export class PageService {
       doc.slug = slugify(doc.slug)
     }
 
-    await this.model.updateOne(
-      { _id: id },
-      { ...omit(doc, PageModel.protectedKeys) },
-    )
+    const newDoc = await this.model
+      .findOneAndUpdate(
+        { _id: id },
+        { ...omit(doc, PageModel.protectedKeys) },
+        { new: true },
+      )
+      .lean()
+
+    if (!newDoc) {
+      throw new CannotFindException()
+    }
+
     process.nextTick(async () => {
       await Promise.all([
         this.imageService.recordImageDimensions(this.pageModel, id),
-        this.pageModel.findById(id).then((doc) =>
-          this.eventManager.broadcast(BusinessEvents.PAGE_UPDATED, doc, {
-            scope: EventScope.TO_SYSTEM_VISITOR,
-          }),
+        this.eventManager.broadcast(BusinessEvents.PAGE_UPDATED, newDoc, {
+          scope: EventScope.TO_SYSTEM,
+        }),
+        this.eventManager.broadcast(
+          BusinessEvents.PAGE_UPDATED,
+          {
+            ...newDoc,
+            text: this.macroService.replaceTextMacro(newDoc.text, newDoc),
+          },
+          {
+            scope: EventScope.TO_VISITOR,
+          },
         ),
       ])
     })

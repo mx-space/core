@@ -1,6 +1,6 @@
 import vm2 from 'vm2'
 
-export function safeEval(code: string, context = {}) {
+export function safeEval(code: string, context = {}, options?: vm2.VMOptions) {
   const sandbox = {
     global: {},
   }
@@ -17,6 +17,7 @@ export function safeEval(code: string, context = {}) {
     sandbox,
 
     eval: false,
+    ...options,
   })
 
   return VM.run(code)

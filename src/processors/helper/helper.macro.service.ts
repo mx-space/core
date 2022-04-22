@@ -102,13 +102,20 @@ export class TextMacroService {
             {},
           )
 
-          // TODO catch error
-          return safeEval(`return ${functions}`, {
-            dayjs: deepCloneWithFunction(dayjs),
-            fromNow: (time: Date | string) => dayjs(time).fromNow(),
+          try {
+            return safeEval(
+              `return ${functions}`,
+              {
+                dayjs: deepCloneWithFunction(dayjs),
+                fromNow: (time: Date | string) => dayjs(time).fromNow(),
 
-            ...variables,
-          })
+                ...variables,
+              },
+              { timeout: 1000 },
+            )
+          } catch {
+            return match
+          }
         }
       })
     }
