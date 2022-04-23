@@ -1,11 +1,14 @@
+import { vitest as jest } from 'vitest'
+
 import { JwtModule } from '@nestjs/jwt'
 import { PassportModule } from '@nestjs/passport'
 import { Test } from '@nestjs/testing'
-import { getModelToken } from '~/transformers/model.transformer'
+
 import { SECURITY } from '~/app.config'
 import { AuthService } from '~/modules/auth/auth.service'
 import { JwtStrategy } from '~/modules/auth/jwt.strategy'
 import { UserModel } from '~/modules/user/user.model'
+import { getModelToken } from '~/transformers/model.transformer'
 
 describe('Test AuthService', () => {
   let service: AuthService

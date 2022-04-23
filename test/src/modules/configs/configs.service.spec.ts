@@ -1,5 +1,6 @@
 import { dbHelper } from 'test/helper/db-mock.helper'
 import { MockCacheService, redisHelper } from 'test/helper/redis-mock.helper'
+import { vitest as jest } from 'vitest'
 
 import { BadRequestException } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'

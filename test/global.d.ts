@@ -1,6 +1,7 @@
 import { Consola } from 'consola'
 import { Document, PaginateModel } from 'mongoose'
 
+import 'vitest/globals'
 import 'zx-cjs/globals'
 
 import { ModelType } from '@typegoose/typegoose/lib/types'

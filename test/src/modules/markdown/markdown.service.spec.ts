@@ -1,5 +1,7 @@
+import { vitest as jest } from 'vitest'
+
 import { Test } from '@nestjs/testing'
-import { getModelToken } from '~/transformers/model.transformer'
+
 import { CategoryModel } from '~/modules/category/category.model'
 import { MarkdownService } from '~/modules/markdown/markdown.service'
 import { NoteModel } from '~/modules/note/note.model'
@@ -7,6 +9,8 @@ import { PageModel } from '~/modules/page/page.model'
 import { PostModel } from '~/modules/post/post.model'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
+import { getModelToken } from '~/transformers/model.transformer'
+
 describe('test Markdown Service', () => {
   let service: MarkdownService
 

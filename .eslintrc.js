@@ -2,6 +2,14 @@ module.exports = {
   extends: ['@innei-util/eslint-config-ts'],
   root: true,
   plugins: ['unused-imports', '@typescript-eslint'],
+  overrides: [
+    {
+      files: ['*.config.[tj]s'],
+      rules: {
+        'import/no-default-export': 'off',
+      },
+    },
+  ],
   rules: {
     'no-empty': 'warn',
     'no-fallthrough': 'error',
