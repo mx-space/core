@@ -15,6 +15,10 @@ declare global {
 
   export const consola: Consola
   export const cwd: string
+
+  interface JSON {
+    safeParse: typeof JSON.parse
+  }
 }
 
 export {}
