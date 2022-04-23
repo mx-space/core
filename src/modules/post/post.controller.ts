@@ -26,6 +26,7 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 
+import { CategoryModel } from '../category/category.model'
 import { CategoryAndSlugDto, PostQueryDto } from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'
@@ -57,7 +58,7 @@ export class PostController {
   }
 
   @Get('/:id')
-  @VisitDocument('Post')
+  @Auth()
   async getById(@Param() params: MongoIdDto) {
     const { id } = params
     const doc = await this.postService.model.findById(id).populate('category')
@@ -71,7 +72,17 @@ export class PostController {
   @Get('/latest')
   @VisitDocument('Post')
   async getLatest() {
-    return this.postService.model.findOne({}).sort({ created: -1 }).lean()
+    const last = await this.postService.model
+      .findOne({})
+      .sort({ created: -1 })
+      .lean({ getters: true })
+    if (!last) {
+      throw new CannotFindException()
+    }
+    return this.getByCateAndSlug({
+      category: (last.category as CategoryModel).slug,
+      slug: last.slug,
+    })
   }
 
   @Get('/:category/:slug')

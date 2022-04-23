@@ -50,8 +50,11 @@ export class PageController {
   }
 
   @Get('/:id')
+  @Auth()
   async getPageById(@Param() params: MongoIdDto) {
-    const page = this.pageService.model.findById(params.id).lean()
+    const page = this.pageService.model
+      .findById(params.id)
+      .lean({ getters: true })
     if (!page) {
       throw new CannotFindException()
     }
@@ -67,7 +70,7 @@ export class PageController {
       .findOne({
         slug,
       })
-      .lean()
+      .lean({ getters: true })
 
     if (!page) {
       throw new CannotFindException()

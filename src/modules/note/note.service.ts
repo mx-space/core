@@ -90,7 +90,13 @@ export class NoteService {
       await Promise.all([
         this.imageService.recordImageDimensions(this.noteModel, doc._id),
         doc.hide || doc.password
-          ? null
+          ? this.eventManager.broadcast(
+              BusinessEvents.NOTE_CREATE,
+              doc.toJSON(),
+              {
+                scope: EventScope.TO_SYSTEM,
+              },
+            )
           : this.eventManager.broadcast(
               BusinessEvents.NOTE_CREATE,
               doc.toJSON(),

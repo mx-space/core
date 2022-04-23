@@ -88,6 +88,7 @@ specifiers:
   mkdirp: '*'
   mongodb-memory-server: 8.5.0
   mongoose: 6.3.0
+  mongoose-lean-getters: 0.3.2
   mongoose-lean-id: 0.3.0
   mongoose-lean-virtuals: 0.9.0
   mongoose-paginate-v2: 1.6.3
@@ -168,6 +169,7 @@ dependencies:
   marked: 4.0.14
   mkdirp: 1.0.4
   mongoose: 6.3.0
+  mongoose-lean-getters: 0.3.2_mongoose@6.3.0
   mongoose-lean-id: 0.3.0_mongoose@6.3.0
   mongoose-lean-virtuals: 0.9.0_mongoose@6.3.0
   mongoose-paginate-v2: 1.6.3
@@ -6109,6 +6111,16 @@ packages:
       socks: 2.6.2
     optionalDependencies:
       saslprep: 1.0.3
+    dev: false
+
+  /mongoose-lean-getters/0.3.2_mongoose@6.3.0:
+    resolution: {integrity: sha512-suG2VMC6Mv9oc7NJsD3v6TY6t5Ggr7YbtZH9ygkfEMXgq/xAC0JqAFdIaasPv9o8svYGLyq0d5GlRsP1JYuf4A==}
+    engines: {node: '>= 8'}
+    peerDependencies:
+      mongoose: '>= 5.11.0 | 6.x'
+    dependencies:
+      mongoose: 6.3.0
+      mpath: 0.8.4
     dev: false
 
   /mongoose-lean-id/0.3.0_mongoose@6.3.0:

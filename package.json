@@ -112,6 +112,7 @@
     "marked": "4.0.14",
     "mkdirp": "*",
     "mongoose": "6.3.0",
+    "mongoose-lean-getters": "0.3.2",
     "mongoose-lean-id": "0.3.0",
     "mongoose-lean-virtuals": "0.9.0",
     "mongoose-paginate-v2": "1.6.3",

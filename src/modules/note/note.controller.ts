@@ -79,60 +79,21 @@ export class NoteController {
   }
 
   @Get(':id')
-  @VisitDocument('Note')
-  async getOneNote(
-    @Param() params: MongoIdDto,
-    @IsMaster() isMaster: boolean,
-    @Query() query: PasswordQueryDto,
-    @Query('single') isSingle?: boolean,
-  ) {
+  @Auth()
+  async getOneNote(@Param() params: MongoIdDto) {
     const { id } = params
-    const { password } = query
-    const condition = isMaster ? {} : { hide: false }
+
     const current = await this.noteService.model
       .findOne({
         _id: id,
-        ...condition,
       })
-      .select(`+password ${isMaster ? '+location +coordinates' : ''}`)
-      .lean()
+      .select(`+password +location +coordinates`)
+      .lean({ getters: true })
     if (!current) {
       throw new CannotFindException()
     }
-    if (
-      !this.noteService.checkPasswordToAccess(current, password) &&
-      !isMaster
-    ) {
-      throw new ForbiddenException('不要偷看人家的小心思啦~')
-    }
-    if (isSingle) {
-      return current
-    }
 
-    const select = '_id title nid id created modified'
-
-    const prev = await this.noteService.model
-      .findOne({
-        ...condition,
-        created: {
-          $gt: current.created,
-        },
-      })
-      .sort({ created: 1 })
-      .select(select)
-      .lean()
-    const next = await this.noteService.model
-      .findOne({
-        ...condition,
-        created: {
-          $lt: current.created,
-        },
-      })
-      .sort({ created: -1 })
-      .select(select)
-      .lean()
-    delete current.password
-    return { data: current, next, prev }
+    return current
   }
 
   @Get('/list/:id')
@@ -259,11 +220,53 @@ export class NoteController {
     @Query() query: PasswordQueryDto,
     @Query('single') isSingle?: boolean,
   ) {
-    const id = await this.noteService.getIdByNid(params.nid)
-    if (!id) {
+    const { nid } = params
+    const { password } = query
+    const condition = isMaster ? {} : { hide: false }
+    const current = await this.noteService.model
+      .findOne({
+        nid,
+        ...condition,
+      })
+      .select(`+password ${isMaster ? '+location +coordinates' : ''}`)
+      .lean({ getters: true })
+    if (!current) {
       throw new CannotFindException()
     }
-    return await this.getOneNote({ id }, isMaster, query, isSingle)
+    if (
+      !this.noteService.checkPasswordToAccess(current, password) &&
+      !isMaster
+    ) {
+      throw new ForbiddenException('不要偷看人家的小心思啦~')
+    }
+    if (isSingle) {
+      return current
+    }
+
+    const select = '_id title nid id created modified'
+
+    const prev = await this.noteService.model
+      .findOne({
+        ...condition,
+        created: {
+          $gt: current.created,
+        },
+      })
+      .sort({ created: 1 })
+      .select(select)
+      .lean()
+    const next = await this.noteService.model
+      .findOne({
+        ...condition,
+        created: {
+          $lt: current.created,
+        },
+      })
+      .sort({ created: -1 })
+      .select(select)
+      .lean()
+    delete current.password
+    return { data: current, next, prev }
   }
 
   @ApiOperation({ summary: '根据 nid 修改' })

@@ -138,7 +138,7 @@ export class PostService {
         this.imageService.recordImageDimensions(this.postModel, id),
         this.eventManager.broadcast(
           BusinessEvents.POST_UPDATE,
-          await this.postModel.findById(id).lean(),
+          await this.postModel.findById(id).lean({ getters: true }),
           {
             scope: EventScope.TO_SYSTEM_VISITOR,
           },

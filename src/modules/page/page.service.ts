@@ -55,7 +55,7 @@ export class PageService {
         { ...omit(doc, PageModel.protectedKeys) },
         { new: true },
       )
-      .lean()
+      .lean({ getters: true })
 
     if (!newDoc) {
       throw new CannotFindException()
@@ -71,7 +71,7 @@ export class PageService {
           BusinessEvents.PAGE_UPDATED,
           {
             ...newDoc,
-            text: this.macroService.replaceTextMacro(newDoc.text, newDoc),
+            text: await this.macroService.replaceTextMacro(newDoc.text, newDoc),
           },
           {
             scope: EventScope.TO_VISITOR,

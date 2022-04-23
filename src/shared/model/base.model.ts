@@ -7,8 +7,10 @@ import { index, modelOptions, plugin } from '@typegoose/typegoose'
 
 import { ImageModel } from './image.model'
 
+const mongooseLeanGetters = require('mongoose-lean-getters')
 @plugin(mongooseLeanVirtuals)
 @plugin(Paginate)
+@plugin(mongooseLeanGetters)
 @plugin(LeanId)
 @modelOptions({
   schemaOptions: {
