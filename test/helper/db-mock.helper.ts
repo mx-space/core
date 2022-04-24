@@ -19,7 +19,7 @@ const connect = async () => {
   mongod = await MongoMemoryServer.create()
   const uri = mongod.getUri()
 
-  await mongoose.connect(uri, {
+  return await mongoose.connect(uri, {
     autoIndex: true,
     maxPoolSize: 10,
   })

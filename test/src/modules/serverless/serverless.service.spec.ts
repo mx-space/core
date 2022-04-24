@@ -1,7 +1,9 @@
+import { dbHelper } from 'test/helper/db-mock.helper'
+import { redisHelper } from 'test/helper/redis-mock.helper'
+
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
-import { dbHelper } from 'test/helper/db-mock.helper'
-import { getModelToken } from '~/transformers/model.transformer'
+
 import { createMockedContextResponse } from '~/modules/serverless/mock-response.util'
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
@@ -9,12 +11,15 @@ import { CacheService } from '~/processors/cache/cache.service'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
+import { getModelToken } from '~/transformers/model.transformer'
 
 describe('test serverless function service', () => {
   let service: ServerlessService
 
   beforeAll(async () => {
-    await dbHelper.connect()
+    const connection = await dbHelper.connect()
+
+    await (await redisHelper).connect()
     const moduleRef = Test.createTestingModule({
       providers: [
         ServerlessService,
@@ -22,9 +27,14 @@ describe('test serverless function service', () => {
         AssetService,
         {
           provide: CacheService,
-          useValue: {},
+          useValue: (await redisHelper).CacheService,
         },
-        { provide: DatabaseService, useValue: {} },
+        {
+          provide: DatabaseService,
+          useValue: {
+            db: connection.connection.db,
+          },
+        },
 
         {
           provide: getModelToken('SnippetModel'),
@@ -41,6 +51,7 @@ describe('test serverless function service', () => {
   afterAll(async () => {
     await dbHelper.clear()
     await dbHelper.close()
+    ;(await redisHelper).close()
   })
 
   describe('run serverless function', () => {
