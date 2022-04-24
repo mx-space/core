@@ -31,6 +31,7 @@ import {
   FunctionContextRequest,
   FunctionContextResponse,
 } from './function.types'
+import { ServerlessStorageCollectionName } from './serverless.model'
 
 @Injectable()
 export class ServerlessService {
@@ -70,6 +71,161 @@ export class ServerlessService {
   public get model() {
     return this.snippetModel
   }
+
+  private mockStorageCache() {
+    return {
+      get: async (key: string) => {
+        const client = this.cacheService.getClient()
+        return await client.hget(getRedisKey(RedisKeys.ServerlessStorage), key)
+      },
+      set: async (key: string, value: object | string) => {
+        const client = this.cacheService.getClient()
+        return await client.hset(
+          getRedisKey(RedisKeys.ServerlessStorage),
+          key,
+          typeof value === 'string' ? value : JSON.stringify(value),
+        )
+      },
+      del: async (key: string) => {
+        const client = this.cacheService.getClient()
+        return await client.hdel(getRedisKey(RedisKeys.ServerlessStorage), key)
+      },
+    } as const
+  }
+
+  async mockGetMaster() {
+    const collection = this.databaseService.db.collection('users')
+    const cur = collection.aggregate([
+      {
+        $project: {
+          id: 1,
+          _id: 1,
+          username: 1,
+          name: 1,
+          introduce: 1,
+          avatar: 1,
+          mail: 1,
+          url: 1,
+          lastLoginTime: 1,
+          lastLoginIp: 1,
+          socialIds: 1,
+        },
+      },
+    ])
+
+    return await cur.next().then((doc) => {
+      cur.close()
+      return doc
+    })
+  }
+
+  mockDb(namespace: string) {
+    const db = this.databaseService.db
+    const collection = db.collection(ServerlessStorageCollectionName)
+
+    const checkRecordIsExist = async (key: string) => {
+      const has = await collection
+        .countDocuments({
+          namespace,
+          key,
+        })
+        .then((count) => count > 0)
+
+      return has
+    }
+
+    const updateKey = async (key: string, value: any) => {
+      if (!(await checkRecordIsExist(key))) {
+        throw new InternalServerErrorException('key not exist')
+      }
+
+      return collection.updateOne(
+        {
+          namespace,
+          key,
+        },
+        {
+          $set: {
+            value,
+          },
+        },
+      )
+    }
+
+    return {
+      async get(key: string) {
+        return collection
+          .findOne({
+            namespace,
+            key,
+          })
+          .then((doc) => {
+            return doc?.value ?? null
+          })
+      },
+      async find(condition: KV) {
+        if (typeof condition !== 'object') {
+          throw new InternalServerErrorException('condition must be object')
+        }
+
+        condition.namespace = namespace
+
+        return collection
+          .aggregate([
+            { $match: condition },
+            {
+              $project: {
+                value: 1,
+                key: 1,
+                _id: 1,
+              },
+            },
+          ])
+          .toArray()
+      },
+      async set(key: string, value: any) {
+        if (typeof key !== 'string') {
+          throw new InternalServerErrorException('key must be string')
+        }
+
+        if (await checkRecordIsExist(key)) {
+          return updateKey(key, value)
+        }
+
+        return collection.insertOne({
+          namespace,
+          key,
+          value,
+        })
+      },
+      async insert(key: string, value: any) {
+        const has = await collection
+          .countDocuments({
+            namespace,
+            key,
+          })
+          .then((count) => count > 0)
+
+        if (has) {
+          throw new InternalServerErrorException('key already exists')
+        }
+
+        return collection.insertOne({
+          namespace,
+          key,
+          value,
+        })
+      },
+      update: updateKey,
+      del(key: string) {
+        return collection.deleteOne({
+          namespace,
+          key,
+        })
+      },
+    } as const
+  }
+
   async injectContextIntoServerlessFunctionAndCall(
     model: SnippetModel,
     context: { req: FunctionContextRequest; res: FunctionContextResponse },
@@ -88,62 +244,17 @@ export class ServerlessService {
         params: Object.assign({}, context.req.params),
 
         storage: {
-          cache: {
-            get: async (key: string) => {
-              const client = this.cacheService.getClient()
-              return await client.hget(
-                getRedisKey(RedisKeys.ServerlessStorage),
-                key,
-              )
-            },
-            set: async (key: string, value: object | string) => {
-              const client = this.cacheService.getClient()
-              return await client.hset(
-                getRedisKey(RedisKeys.ServerlessStorage),
-                key,
-                typeof value === 'string' ? value : JSON.stringify(value),
-              )
-            },
-            del: async (key: string) => {
-              const client = this.cacheService.getClient()
-              return await client.hdel(
-                getRedisKey(RedisKeys.ServerlessStorage),
-                key,
-              )
-            },
-          },
-          db: {},
+          cache: this.mockStorageCache(),
+          db: this.mockDb(
+            `${model.reference || '#########debug######'}@${model.name}`,
+          ),
         },
 
         model,
         document,
         name: model.name,
         reference: model.reference,
-        getMaster: async () => {
-          const collection = this.databaseService.db.collection('users')
-          const cur = collection.aggregate([
-            {
-              $project: {
-                id: 1,
-                _id: 1,
-                username: 1,
-                name: 1,
-                introduce: 1,
-                avatar: 1,
-                mail: 1,
-                url: 1,
-                lastLoginTime: 1,
-                lastLoginIp: 1,
-                socialIds: 1,
-              },
-            },
-          ])
-
-          return await cur.next().then((doc) => {
-            cur.close()
-            return doc
-          })
-        },
+        getMaster: this.mockGetMaster.bind(this),
 
         writeAsset: async (
           path: string,

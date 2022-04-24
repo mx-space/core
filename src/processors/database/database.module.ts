@@ -9,6 +9,7 @@ import { PageModel } from '~/modules/page/page.model'
 import { ProjectModel } from '~/modules/project/project.model'
 import { RecentlyModel } from '~/modules/recently/recently.model'
 import { SayModel } from '~/modules/say/say.model'
+import { ServerlessStorageModel } from '~/modules/serverless/serverless.model'
 import { SnippetModel } from '~/modules/snippet/snippet.model'
 import { getProviderByTypegooseClass } from '~/transformers/model.transformer'
 
@@ -30,6 +31,7 @@ const models = [
   ProjectModel,
   RecentlyModel,
   SayModel,
+  ServerlessStorageModel,
   SnippetModel,
   UserModel,
 ].map((model) => getProviderByTypegooseClass(model))

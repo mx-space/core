@@ -38,6 +38,7 @@
   ],
   "exclude": [
     "dist",
-    "tmp"
+    "tmp",
+    "assets/types/type.declare.ts"
   ]
 }

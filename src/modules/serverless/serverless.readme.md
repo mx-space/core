@@ -134,7 +134,7 @@ And other global api is all banned.
 - [ ] HTTP Methods: POST, PUT, DELETE, PATCH
 - [x] ResponseType: buffer, stream
 - [ ] handle safeEval throw
-- [ ] MongoDb inject (can access db)
+- [x] MongoDb inject (can access db)
 - [x] set Content-Type
 - [x] ESM AST Parser (ImportStatement)
 - [x] Cron to clean require cache
