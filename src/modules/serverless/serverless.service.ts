@@ -367,9 +367,9 @@ export class ServerlessService {
       if (!res) {
         throw new InternalServerErrorException('convert code error')
       }
-      if (isDev) {
-        console.log(res.code)
-      }
+
+      console.debug(res.code)
+
       return res.code
     })
   }
