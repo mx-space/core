@@ -114,11 +114,6 @@ export class PostService {
 
     if (data.slug) {
       data.slug = slugify(data.slug)
-      const validSlug = await this.isAvailableSlug(data.slug)
-
-      if (!validSlug) {
-        throw new BusinessException(ErrorCodeEnum.SlugNotAvailable)
-      }
     }
 
     const updated = await this.postModel.findOneAndUpdate(
@@ -165,10 +160,6 @@ export class PostService {
   }
 
   async isAvailableSlug(slug: string) {
-    if (slug.includes('/')) {
-      return false
-    }
-
     return (await this.postModel.countDocuments({ slug })) === 0
   }
 }
