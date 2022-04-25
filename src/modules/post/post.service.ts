@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common'
 
 import { BusinessException } from '~/common/exceptions/business.exception'
+import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
@@ -112,17 +113,23 @@ export class PostService {
       data.modified = now
     }
 
-    if (data.slug) {
-      data.slug = slugify(data.slug)
+    const originDocument = await this.postModel.findById(id)
+
+    if (!originDocument) {
+      throw new CannotFindException()
     }
 
-    const updated = await this.postModel.findOneAndUpdate(
-      {
-        _id: id,
-      },
-      omit(data, PostModel.protectedKeys),
-      { new: true },
-    )
+    if (data.slug && data.slug !== originDocument.slug) {
+      data.slug = slugify(data.slug)
+      const isAvailableSlug = await this.isAvailableSlug(data.slug)
+
+      if (!isAvailableSlug) {
+        throw new BusinessException(ErrorCodeEnum.SlugNotAvailable)
+      }
+    }
+
+    Object.assign(originDocument, omit(data, PostModel.protectedKeys))
+    await originDocument.save()
     process.nextTick(async () => {
       this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
         scope: EventScope.TO_SYSTEM,
@@ -141,7 +148,7 @@ export class PostService {
       ])
     })
 
-    return updated
+    return originDocument.toObject()
   }
 
   async deletePost(id: string) {
