@@ -61,7 +61,7 @@ specifiers:
   class-validator: 0.13.2
   class-validator-jsonschema: npm:@innei/class-validator-jsonschema@3.1.1
   consola: '*'
-  cos-nodejs-sdk-v5: 2.11.6
+  cos-nodejs-sdk-v5: 2.11.7
   cron: '*'
   cross-env: 7.0.3
   dayjs: 1.11.1
@@ -151,7 +151,7 @@ dependencies:
   class-validator: 0.13.2
   class-validator-jsonschema: /@innei/class-validator-jsonschema/3.1.1_279461c9b8c03a205cdbc4878bc60cf8
   consola: 2.15.3
-  cos-nodejs-sdk-v5: 2.11.6
+  cos-nodejs-sdk-v5: 2.11.7
   dayjs: 1.11.1
   ejs: 3.1.7
   fastify-cookie: 5.6.1
@@ -1793,10 +1793,6 @@ packages:
       mongoose-paginate-v2: 1.6.3
     dev: true
 
-  /@types/node/14.17.33:
-    resolution: {integrity: sha512-noEeJ06zbn3lOh4gqe2v7NMGS33jrulfNqYFDjjEbhpDEHR5VTxgYNQSBqBlJIsBJW3uEYDgD6kvMnrrhGzq8g==}
-    dev: false
-
   /@types/node/16.11.28:
     resolution: {integrity: sha512-l/y1ZZpWqevemVQmk0Q1TPohlJTul7u9ysq3bw6xlRDO8z+98JBI6gp4JS0OK8YkWUdYxnJU35H4vOzuiOFIag==}
 
@@ -3083,11 +3079,10 @@ packages:
       object-assign: 4.1.1
       vary: 1.1.2
 
-  /cos-nodejs-sdk-v5/2.11.6:
-    resolution: {integrity: sha512-K5z9g6yQns1h5tVUUt0T+x9SYrB6QYXslIi5bh8FLVtV4U/Gdv3zpedYSU5IvG+ly23ko9u6usdaKvb+x7Bm7Q==}
+  /cos-nodejs-sdk-v5/2.11.7:
+    resolution: {integrity: sha512-7/stUjnhqrLDKioKayZD2gYWfh0OSLAwsylr+eWvSsRg0a+C6XMZL9HbcO2UdHEeIye8NOgsg8Q8djfFtb7ZPQ==}
     engines: {node: '>= 6'}
     dependencies:
-      '@types/node': 14.17.33
       conf: 9.0.2
       mime-types: 2.1.34
       request: 2.88.2
