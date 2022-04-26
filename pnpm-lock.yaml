@@ -82,7 +82,7 @@ specifiers:
   js-yaml: '*'
   jszip: 3.9.1
   linkedom: 0.14.7
-  lint-staged: 12.4.0
+  lint-staged: 12.4.1
   lodash: '*'
   marked: 4.0.14
   mkdirp: '*'
@@ -226,7 +226,7 @@ devDependencies:
   husky: 7.0.4
   ioredis: 5.0.4
   jest: 27.5.1_ts-node@10.7.0
-  lint-staged: 12.4.0
+  lint-staged: 12.4.1
   prettier: 2.6.2
   rimraf: 3.0.2
   semver: 7.3.5
@@ -5688,8 +5688,8 @@ packages:
       uhyphen: 0.1.0
     dev: false
 
-  /lint-staged/12.4.0:
-    resolution: {integrity: sha512-3X7MR0h9b7qf4iXf/1n7RlVAx+EzpAZXoCEMhVSpaBlgKDfH2ewf+QUm7BddFyq29v4dgPP+8+uYpWuSWx035A==}
+  /lint-staged/12.4.1:
+    resolution: {integrity: sha512-PTXgzpflrQ+pODQTG116QNB+Q6uUTDg5B5HqGvNhoQSGt8Qy+MA/6zSnR8n38+sxP5TapzeQGTvoKni0KRS8Vg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     hasBin: true
     dependencies:
