@@ -5,7 +5,6 @@ import {
   Delete,
   ForbiddenException,
   Get,
-  HttpCode,
   Param,
   Patch,
   Post,
@@ -31,8 +30,8 @@ import {
 import {
   ListQueryDto,
   NidType,
+  NotePasswordQueryDto,
   NoteQueryDto,
-  PasswordQueryDto,
 } from './note.dto'
 import { NoteModel, PartialNoteModel } from './note.model'
 import { NoteService } from './note.service'
@@ -169,7 +168,6 @@ export class NoteController {
   }
 
   @Patch('/:id')
-  @HttpCode(204)
   @Auth()
   async patch(@Body() body: PartialNoteModel, @Param() params: MongoIdDto) {
     await this.noteService.updateById(params.id, body)
@@ -177,7 +175,6 @@ export class NoteController {
   }
 
   @Get('like/:id')
-  @HttpCode(204)
   async likeNote(
     @Param() param: IntIdOrMongoIdDto,
     @IpLocation() location: IpRecord,
@@ -206,7 +203,6 @@ export class NoteController {
 
   @Delete(':id')
   @Auth()
-  @HttpCode(204)
   async deleteNote(@Param() params: MongoIdDto) {
     await this.noteService.deleteById(params.id)
   }
@@ -217,11 +213,10 @@ export class NoteController {
   async getNoteByNid(
     @Param() params: NidType,
     @IsMaster() isMaster: boolean,
-    @Query() query: PasswordQueryDto,
-    @Query('single') isSingle?: boolean,
+    @Query() query: NotePasswordQueryDto,
   ) {
     const { nid } = params
-    const { password } = query
+    const { password, single: isSingle } = query
     const condition = isMaster ? {} : { hide: false }
     const current = await this.noteService.model
       .findOne({

@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer'
 import {
+  IsBoolean,
   IsDefined,
   IsIn,
   IsInt,
@@ -26,11 +27,18 @@ export class NoteQueryDto extends PagerDto {
   sortOrder?: 1 | -1
 }
 
-export class PasswordQueryDto {
+export class NotePasswordQueryDto {
   @IsString()
   @IsOptional()
   @IsNotEmpty()
   password?: string
+
+  @IsBoolean()
+  @IsOptional()
+  @Transform(({ value }) => {
+    return value === '1' || value === 'true' || value === true || value === 1
+  })
+  single?: boolean
 }
 
 export class ListQueryDto {
