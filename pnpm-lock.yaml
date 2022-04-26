@@ -110,7 +110,7 @@ specifiers:
   snakecase-keys: 5.4.1
   socket.io: '*'
   ts-jest: 27.1.4
-  ts-loader: 9.2.8
+  ts-loader: 9.2.9
   ts-node: 10.7.0
   tsconfig-paths: 3.14.1
   typescript: 4.6.3
@@ -232,7 +232,7 @@ devDependencies:
   semver: 7.3.5
   socket.io: 4.4.1
   ts-jest: 27.1.4_1a7a295883fc72da5121c34ec472fa0c
-  ts-loader: 9.2.8_typescript@4.6.3
+  ts-loader: 9.2.9_typescript@4.6.3
   ts-node: 10.7.0_6e767a0ea532daad186f94ae9334dde7
   tsconfig-paths: 3.14.1
   typescript: 4.6.3
@@ -7708,8 +7708,8 @@ packages:
       yargs-parser: 20.2.9
     dev: true
 
-  /ts-loader/9.2.8_typescript@4.6.3:
-    resolution: {integrity: sha512-gxSak7IHUuRtwKf3FIPSW1VpZcqF9+MBrHOvBp9cjHh+525SjtCIJKVGjRKIAfxBwDGDGCFF00rTfzB1quxdSw==}
+  /ts-loader/9.2.9_typescript@4.6.3:
+    resolution: {integrity: sha512-b0+vUY2/enb0qYtDQuNlDnJ9900NTiPiJcDJ6sY7ax1CCCwXfYIqPOMm/BwW7jsF1km+Oz8W9s31HLuD+FLIMg==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       typescript: '*'
@@ -7718,7 +7718,7 @@ packages:
       chalk: 4.1.2
       enhanced-resolve: 5.9.2
       micromatch: 4.0.4
-      semver: 7.3.5
+      semver: 7.3.7
       typescript: 4.6.3
     dev: true
 
