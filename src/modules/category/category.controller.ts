@@ -19,7 +19,6 @@ import { ApiQuery } from '@nestjs/swagger'
 
 import { Auth } from '~/common/decorator/auth.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
-import { IsMaster } from '~/common/decorator/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 
@@ -46,10 +45,7 @@ export class CategoryController {
   ) {}
 
   @Get('/')
-  async getCategories(
-    @Query() query: MultiCategoriesQueryDto,
-    @IsMaster() isMaster: boolean,
-  ) {
+  async getCategories(@Query() query: MultiCategoriesQueryDto) {
     const { ids, joint, type = CategoryType.Category } = query // categories is category's mongo id
     if (ids) {
       const ignoreKeys = '-text -summary -hide -images -commentsIndex'
@@ -102,7 +98,6 @@ export class CategoryController {
   async getCategoryById(
     @Param() { query }: SlugOrIdDto,
     @Query() { tag }: MultiQueryTagAndCategoryDto,
-    @IsMaster() isMaster: boolean,
   ) {
     if (!query) {
       throw new BadRequestException()
