@@ -119,6 +119,10 @@ export class CommentModel extends BaseModel {
   })
   public page: Ref<PageModel>
 
+  // IP 归属记录值
+  @prop()
+  public location?: string
+
   public get avatar() {
     return getAvatar(this.mail)
   }

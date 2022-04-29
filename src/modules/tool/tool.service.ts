@@ -1,3 +1,4 @@
+import camelcaseKeys from 'camelcase-keys'
 import { isIPv4, isIPv6 } from 'net'
 import { URLSearchParams } from 'url'
 
@@ -31,20 +32,23 @@ export class ToolService {
       const { data } = await this.httpService.axiosRef.get(
         `https://api.i-meto.com/ip/v1/qqwry/${ip}`,
       )
-      return data as IP
+
+      return camelcaseKeys(data, { deep: true }) as IP
     } else {
       const { data } = (await this.httpService.axiosRef.get(
         `http://ip-api.com/json/${ip}`,
       )) as any
 
-      return {
+      const res = {
         cityName: data.city,
         countryName: data.country,
         ip: data.query,
         ispDomain: data.as,
         ownerDomain: data.org,
         regionName: data.region_name,
-      }
+      } as const
+
+      return res
     }
   }
 
