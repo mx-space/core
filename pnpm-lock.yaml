@@ -90,7 +90,7 @@ specifiers:
   mongoose: 6.3.1
   mongoose-lean-getters: 0.3.2
   mongoose-lean-id: 0.3.0
-  mongoose-lean-virtuals: 0.9.0
+  mongoose-lean-virtuals: 0.9.1
   mongoose-paginate-v2: 1.6.3
   nanoid: 3.3.3
   node-machine-id: 1.1.12
@@ -171,7 +171,7 @@ dependencies:
   mongoose: 6.3.1
   mongoose-lean-getters: 0.3.2_mongoose@6.3.1
   mongoose-lean-id: 0.3.0_mongoose@6.3.1
-  mongoose-lean-virtuals: 0.9.0_mongoose@6.3.1
+  mongoose-lean-virtuals: 0.9.1_mongoose@6.3.1
   mongoose-paginate-v2: 1.6.3
   nanoid: 3.3.3
   node-machine-id: 1.1.12
@@ -6119,8 +6119,8 @@ packages:
       mongoose: 6.3.1
     dev: false
 
-  /mongoose-lean-virtuals/0.9.0_mongoose@6.3.1:
-    resolution: {integrity: sha512-14HwSd6l8X8BotvR5/frxFt4mUQ5/aCWAja14Bt4LS4IIUiqG1Sd8dK21hsBecld55OplSLIaQmPXcxy1U5Yeg==}
+  /mongoose-lean-virtuals/0.9.1_mongoose@6.3.1:
+    resolution: {integrity: sha512-jx4rhXuaQPam/lwef3z/FfYHlKdbFkDr9Qb7JEMeoa7y4pOuyJ83RkcNL25HRaoi4Bt71zKmV1cuJdv243t9aA==}
     peerDependencies:
       mongoose: '>=5.11.10'
     dependencies:
