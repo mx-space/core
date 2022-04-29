@@ -85,7 +85,7 @@
     "@typegoose/typegoose": "9.8.1",
     "algoliasearch": "4.13.0",
     "axios": "*",
-    "axios-retry": "3.2.4",
+    "axios-retry": "3.2.5",
     "bcrypt": "5.0.1",
     "cache-manager": "3.6.1",
     "cache-manager-ioredis": "2.1.0",
