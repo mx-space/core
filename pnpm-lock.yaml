@@ -95,7 +95,7 @@ specifiers:
   nanoid: 3.3.3
   node-machine-id: 1.1.12
   node-pty: 0.10.1
-  nodemailer: 6.7.3
+  nodemailer: 6.7.4
   passport: 0.5.2
   passport-jwt: 4.0.0
   pluralize: '*'
@@ -176,7 +176,7 @@ dependencies:
   nanoid: 3.3.3
   node-machine-id: 1.1.12
   node-pty: 0.10.1
-  nodemailer: 6.7.3
+  nodemailer: 6.7.4
   passport: 0.5.2
   passport-jwt: 4.0.0
   pluralize: 8.0.0
@@ -6273,8 +6273,8 @@ packages:
   /node-releases/2.0.2:
     resolution: {integrity: sha512-XxYDdcQ6eKqp/YjI+tb2C5WM2LgjnZrfYg4vgQt49EK268b6gYCHsBLrK2qvJo4FmCtqmKezb0WZFK4fkrZNsg==}
 
-  /nodemailer/6.7.3:
-    resolution: {integrity: sha512-KUdDsspqx89sD4UUyUKzdlUOper3hRkDVkrKh/89G+d9WKsU5ox51NWS4tB1XR5dPUdR4SP0E3molyEfOvSa3g==}
+  /nodemailer/6.7.4:
+    resolution: {integrity: sha512-TBSS3qS8WG45ycUwEvEA/3UM1o3sLz9jUl4TPUKPz4ImWWM6UgRCb5pLO+HOouDKEj57yNLOrzQlO8+9IjWZoA==}
     engines: {node: '>=6.0.0'}
     dev: false
 
