@@ -75,7 +75,7 @@ const generateDefaultConfig: () => IConfig = () => ({
     enable: false,
   },
   textOptions: {
-    macros: false,
+    macros: true,
   },
 })
 
