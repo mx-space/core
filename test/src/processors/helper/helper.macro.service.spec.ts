@@ -1,12 +1,32 @@
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
+import { Test } from '@nestjs/testing'
+
+import { ConfigsService } from '~/modules/configs/configs.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 
 dayjs.extend(relativeTime)
 
 describe('test TextMarcoService', () => {
-  const service = new TextMacroService()
+  let service: TextMacroService
+
+  beforeAll(async () => {
+    const moduleRef = Test.createTestingModule({
+      providers: [TextMacroService, ConfigsService],
+    })
+      .overrideProvider(ConfigsService)
+      .useValue({
+        get() {
+          return Promise.resolve({
+            macros: true,
+          })
+        },
+      })
+
+    const module = await moduleRef.compile()
+    service = module.get(TextMacroService)
+  })
   describe('test if condition', () => {
     test('case 1', async () => {
       const res = await service.replaceTextMacro(
