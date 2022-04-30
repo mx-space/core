@@ -178,7 +178,7 @@ export class MarkdownController {
     const { id } = params
     const now = performance.now()
     const [
-      { html: markdown, document, type },
+      { html: markdownMacros, document, type },
       {
         url: { webUrl },
       },
@@ -212,9 +212,7 @@ export class MarkdownController {
     })()
 
     const url = new URL(relativePath!, webUrl)
-    const markdownMacros = this.service.renderMarkdownContent(
-      await this.macroService.replaceTextMacro(markdown, document),
-    )
+
     const structure = await this.service.getRenderedMarkdownHtmlStructure(
       markdownMacros,
       document.title,

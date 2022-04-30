@@ -6,8 +6,7 @@
  * @FilePath: /server/apps/server/src/auth/roles.guard.ts
  * Mark: Coding with Love
  */
-import { CanActivate, ExecutionContext } from '@nestjs/common'
-import { Injectable } from '@nestjs/common'
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 
 import { isTest } from '~/global/env.global'

@@ -15,6 +15,7 @@ import { ReturnModelType } from '@typegoose/typegoose'
 
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
+import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { CategoryModel } from '../category/category.model'
@@ -39,6 +40,8 @@ export class MarkdownService {
     private readonly pageModel: ReturnModelType<typeof PageModel>,
 
     private readonly databaseService: DatabaseService,
+
+    private readonly macroService: TextMacroService,
   ) {}
 
   async insertPostsToDb(data: DatatypeDto[]) {
@@ -223,7 +226,12 @@ ${text.trim()}
     }
 
     return {
-      html: doc.document.text,
+      html: this.renderMarkdownContent(
+        await this.macroService.replaceTextMacro(
+          doc.document.text,
+          doc.document,
+        ),
+      ),
       ...doc,
       document: doc.document,
     }

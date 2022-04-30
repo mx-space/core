@@ -1,24 +1,29 @@
 import dayjs from 'dayjs'
+import { FastifyRequest } from 'fastify'
 import { marked } from 'marked'
 
-import { BadRequestException, Injectable, Logger } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+  Scope,
+} from '@nestjs/common'
+import { REQUEST } from '@nestjs/core'
 
+import { UserModel } from '~/modules/user/user.model'
 import { deepCloneWithFunction } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
 
-@Injectable()
-export class TextMacroService {
-  private readonly logger: Logger
-  constructor() {
-    this.logger = new Logger(TextMacroService.name)
-  }
-  static readonly Reg = {
-    '#': /^#(.*?)$/g,
-    $: /^\$(.*?)$/g,
-    '?': /^\?\??(.*?)\??\?$/g,
-  }
+const logger = new Logger('TextMacroService')
+const RegMap = {
+  '#': /^#(.*?)$/g,
+  $: /^\$(.*?)$/g,
+  '?': /^\?\??(.*?)\??\?$/g,
+} as const
 
-  private ifConditionGrammar<T extends object>(text: string, model: T) {
+class HelperStatic {
+  public ifConditionGrammar<T extends object>(text: string, model: T) {
     const conditionSplitter = text.split('|')
     conditionSplitter.forEach((item: string, index: string | number) => {
       conditionSplitter[index] = item.replace(/"/g, '')
@@ -66,9 +71,42 @@ export class TextMacroService {
     return output
   }
 
+  private generateFunctionContext = (variables: object) => {
+    return {
+      // time utils
+      dayjs: deepCloneWithFunction(dayjs),
+      fromNow: (time: Date | string) => dayjs(time).fromNow(),
+
+      // typography
+      center: (text: string) => {
+        return `<p align="center">${text}</p>`
+      },
+      right: (text: string) => {
+        return `<p align="right">${text}</p>`
+      },
+
+      // styling
+      opacity: (text: string, opacity = 0.8) => {
+        return `<span style="opacity: ${opacity}">${text}</span>`
+      },
+      blur: (text: string, blur = 1) => {
+        return `<span style="filter: blur(${blur}px)">${text}</span>`
+      },
+      color: (text: string, color = '') => {
+        return `<span style="color: ${color}">${text}</span>`
+      },
+      size: (text: string, size = '1em') => {
+        return `<span style="font-size: ${size}">${text}</span>`
+      },
+
+      ...variables,
+    }
+  }
   public async replaceTextMacro<T extends object>(
     text: string,
     model: T,
+
+    extraContext: Record<string, any> = {},
   ): Promise<string> {
     try {
       const matchedReg = /\[\[\s(.*?)\s\]\]/g
@@ -88,19 +126,19 @@ export class TextMacroService {
           }
 
           condition = condition?.trim()
-          if (condition.search(TextMacroService.Reg['?']) != -1) {
-            return this.ifConditionGrammar(condition, model)
+          if (condition.search(RegMap['?']) != -1) {
+            return helper.ifConditionGrammar(condition, model)
           }
-          if (condition.search(TextMacroService.Reg['$']) != -1) {
+          if (condition.search(RegMap['$']) != -1) {
             const variable = condition
-              .replace(TextMacroService.Reg['$'], '$1')
+              .replace(RegMap['$'], '$1')
               .replace(/\s/g, '')
-            return model[variable]
+            return model[variable] ?? extraContext[variable]
           }
           // eslint-disable-next-line no-useless-escape
-          if (condition.search(TextMacroService.Reg['#']) != -1) {
+          if (condition.search(RegMap['#']) != -1) {
             // eslint-disable-next-line no-useless-escape
-            const functions = condition.replace(TextMacroService.Reg['#'], '$1')
+            const functions = condition.replace(RegMap['#'], '$1')
 
             const variables = Object.keys(model).reduce(
               (acc, key) => ({ [`$${key}`]: model[key], ...acc }),
@@ -110,12 +148,7 @@ export class TextMacroService {
             try {
               return safeEval(
                 `return ${functions}`,
-                {
-                  dayjs: deepCloneWithFunction(dayjs),
-                  fromNow: (time: Date | string) => dayjs(time).fromNow(),
-
-                  ...variables,
-                },
+                this.generateFunctionContext({ ...variables, ...extraContext }),
                 { timeout: 1000 },
               )
             } catch {
@@ -126,8 +159,29 @@ export class TextMacroService {
       }
       return text
     } catch (err) {
-      this.logger.log(err.message)
+      logger.log(err.message)
       return text
     }
+  }
+}
+
+const helper = new HelperStatic()
+@Injectable({ scope: Scope.REQUEST })
+export class TextMacroService {
+  constructor(
+    @Inject(REQUEST)
+    private readonly request: FastifyRequest & {
+      isMaster: boolean
+      user: UserModel
+    },
+  ) {}
+
+  public replaceTextMacro(text: string, model: object) {
+    const isMaster = this.request.isMaster
+    return helper.replaceTextMacro(text, model, {
+      hideForGuest(text: string) {
+        return isMaster ? text : ''
+      },
+    })
   }
 }
