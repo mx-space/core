@@ -257,3 +257,11 @@ export class FriendLinkOptionsDto {
   @JSONSchemaToggleField('允许申请友链')
   allowApply: boolean
 }
+
+@JSONSchema({ title: '文本设定' })
+export class TextOptionsDto {
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('开启文本宏替换')
+  macros: boolean
+}

@@ -21,6 +21,7 @@ import { IsMaster } from '~/common/decorator/role.decorator'
 import { VisitDocument } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
+import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { IntIdOrMongoIdDto, MongoIdDto } from '~/shared/dto/id.dto'
 import {
   addHidePasswordAndHideCondition,
@@ -42,6 +43,8 @@ export class NoteController {
   constructor(
     private readonly noteService: NoteService,
     private readonly countingService: CountingService,
+
+    private readonly macrosService: TextMacroService,
   ) {}
 
   @Get('/latest')
@@ -228,6 +231,11 @@ export class NoteController {
     if (!current) {
       throw new CannotFindException()
     }
+
+    current.text = await this.macrosService.replaceTextMacro(
+      current.text,
+      current,
+    )
     if (
       !this.noteService.checkPasswordToAccess(current, password) &&
       !isMaster
@@ -262,18 +270,5 @@ export class NoteController {
       .lean()
     delete current.password
     return { data: current, next, prev }
-  }
-
-  @ApiOperation({ summary: '根据 nid 修改' })
-  @Put('/nid/:nid')
-  @Auth()
-  async modifyNoteByNid(@Param() params: NidType, @Body() body: NoteModel) {
-    const id = await this.noteService.getIdByNid(params.nid)
-    if (!id) {
-      throw new CannotFindException()
-    }
-    return await this.modify(body, {
-      id,
-    })
   }
 }

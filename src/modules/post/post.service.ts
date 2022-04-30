@@ -17,6 +17,7 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { CategoryService } from '../category/category.service'
@@ -35,6 +36,7 @@ export class PostService {
     private categoryService: CategoryService,
     private readonly imageService: ImageService,
     private readonly eventManager: EventManagerService,
+    private readonly textMacroService: TextMacroService,
   ) {}
 
   get model() {
@@ -70,18 +72,30 @@ export class PostService {
     })
 
     process.nextTick(async () => {
-      this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
-        scope: EventScope.TO_SYSTEM,
-      })
+      const doc = res.toJSON()
       await Promise.all([
+        this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+          scope: EventScope.TO_SYSTEM,
+        }),
         this.eventManager.broadcast(
           BusinessEvents.POST_CREATE,
           {
-            ...res.toJSON(),
+            ...doc,
             category,
           },
           {
-            scope: EventScope.TO_SYSTEM_VISITOR,
+            scope: EventScope.TO_SYSTEM,
+          },
+        ),
+        this.eventManager.broadcast(
+          BusinessEvents.POST_CREATE,
+          {
+            ...doc,
+            category,
+            text: await this.textMacroService.replaceTextMacro(doc.text, doc),
+          },
+          {
+            scope: EventScope.TO_SYSTEM,
           },
         ),
         this.imageService.recordImageDimensions(this.postModel, res._id),
@@ -131,20 +145,27 @@ export class PostService {
     Object.assign(originDocument, omit(data, PostModel.protectedKeys))
     await originDocument.save()
     process.nextTick(async () => {
-      this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
-        scope: EventScope.TO_SYSTEM,
-      })
-
+      const doc = await this.postModel.findById(id).lean({ getters: true })
       // 更新图片信息缓存
       await Promise.all([
+        this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+          scope: EventScope.TO_SYSTEM,
+        }),
         this.imageService.recordImageDimensions(this.postModel, id),
-        this.eventManager.broadcast(
-          BusinessEvents.POST_UPDATE,
-          await this.postModel.findById(id).lean({ getters: true }),
-          {
-            scope: EventScope.TO_SYSTEM_VISITOR,
-          },
-        ),
+        doc &&
+          this.eventManager.broadcast(
+            BusinessEvents.POST_UPDATE,
+            {
+              ...doc,
+              text: await this.textMacroService.replaceTextMacro(doc.text, doc),
+            },
+            {
+              scope: EventScope.TO_VISITOR,
+            },
+          ),
+        this.eventManager.broadcast(BusinessEvents.POST_UPDATE, doc, {
+          scope: EventScope.TO_SYSTEM,
+        }),
       ])
     })
 

@@ -9,6 +9,7 @@ import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { deleteKeys } from '~/utils'
 
@@ -21,6 +22,8 @@ export class NoteService {
     private readonly noteModel: MongooseModel<NoteModel>,
     private readonly imageService: ImageService,
     private readonly eventManager: EventManagerService,
+
+    private readonly textMacrosService: TextMacroService,
   ) {
     this.needCreateDefult()
   }
@@ -44,6 +47,11 @@ export class NoteService {
     if (!latest) {
       throw new CannotFindException()
     }
+
+    latest.text = await this.textMacrosService.replaceTextMacro(
+      latest.text,
+      latest,
+    )
 
     // 是否存在上一条记录 (旧记录)
     // 统一: next 为较老的记录  prev 为较新的记录
@@ -99,9 +107,15 @@ export class NoteService {
             )
           : this.eventManager.broadcast(
               BusinessEvents.NOTE_CREATE,
-              doc.toJSON(),
               {
-                scope: EventScope.TO_SYSTEM_VISITOR,
+                ...doc.toJSON(),
+                text: await this.textMacrosService.replaceTextMacro(
+                  doc.text,
+                  doc,
+                ),
+              },
+              {
+                scope: EventScope.TO_VISITOR,
               },
             ),
       ])
@@ -129,14 +143,28 @@ export class NoteService {
       })
       await Promise.all([
         this.imageService.recordImageDimensions(this.noteModel, id),
-        this.model.findById(id).then((doc) => {
+        this.model.findById(id).then(async (doc) => {
           if (!doc) {
             return
           }
           delete doc.password
           this.eventManager.broadcast(BusinessEvents.NOTE_UPDATE, doc, {
-            scope: EventScope.TO_SYSTEM_VISITOR,
+            scope: EventScope.TO_SYSTEM,
           })
+
+          this.eventManager.broadcast(
+            BusinessEvents.NOTE_UPDATE,
+            {
+              ...doc,
+              text: await this.textMacrosService.replaceTextMacro(
+                doc.text,
+                doc,
+              ),
+            },
+            {
+              scope: EventScope.TO_VISITOR,
+            },
+          )
         }),
       ])
     })

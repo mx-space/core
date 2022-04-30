@@ -8,5 +8,6 @@ export interface RSSProps {
     link: string
     title: string
     text: string
+    id: string
   }[]
 }

@@ -12,6 +12,7 @@ import {
   MailOptionsDto,
   SeoDto,
   TerminalOptionsDto,
+  TextOptionsDto,
   UrlDto,
 } from './configs.dto'
 
@@ -49,6 +50,10 @@ export abstract class IConfig {
   @Type(() => TerminalOptionsDto)
   @ValidateNested()
   terminalOptions: TerminalOptionsDto
+
+  @Type(() => TextOptionsDto)
+  @ValidateNested()
+  textOptions: TextOptionsDto
 }
 
 export type IConfigKeys = keyof IConfig

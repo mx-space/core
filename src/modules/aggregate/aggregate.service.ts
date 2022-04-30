@@ -288,6 +288,7 @@ export class AggregateService {
 
     const postsRss: RSSProps['data'] = posts.map((post) => {
       return {
+        id: post._id,
         title: post.title,
         text: post.text,
         created: post.created!,
@@ -303,6 +304,7 @@ export class AggregateService {
         ? dayjs(note.secret).isAfter(new Date())
         : false
       return {
+        id: note._id,
         title: note.title,
         text: isSecret ? '这篇文章暂时没有公开呢' : note.text,
         created: note.created!,

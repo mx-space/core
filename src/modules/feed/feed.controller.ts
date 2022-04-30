@@ -49,8 +49,8 @@ export class FeedController {
           <title>${title}</title>
           <link>${xss(url)}</link>
       </image>
-        ${data
-          .map((item) => {
+        ${await Promise.all(
+          data.map(async (item) => {
             return `<entry>
             <title>${item.title}</title>
             <link href='${xss(item.link)}'/>
@@ -61,7 +61,9 @@ export class FeedController {
               ${`<blockquote>该渲染由 marked 生成, 可能存在部分语句不通或者排版问题, 最佳体验请前往: <a href='${xss(
                 item.link,
               )}'>${xss(item.link)}</a></blockquote>
-              ${this.markdownService.renderMarkdownContent(item.text)}
+              ${await this.markdownService
+                .renderArticle(item.id)
+                .then((res) => res.html)}
               <p style='text-align: right'>
               <a href='${`${xss(item.link)}#comments`}'>看完了？说点什么呢</a>
               </p>`}
@@ -69,8 +71,8 @@ export class FeedController {
             </content>
             </entry>
           `
-          })
-          .join('')}
+          }),
+        ).then((res) => res.join(''))}
     </feed>`
 
     return xml

@@ -74,6 +74,9 @@ const generateDefaultConfig: () => IConfig = () => ({
   terminalOptions: {
     enable: false,
   },
+  textOptions: {
+    macros: false,
+  },
 })
 
 @Injectable()

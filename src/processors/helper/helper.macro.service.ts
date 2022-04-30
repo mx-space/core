@@ -1,29 +1,25 @@
 import dayjs from 'dayjs'
-import { FastifyRequest } from 'fastify'
-import { marked } from 'marked'
 
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  Logger,
-  Scope,
-} from '@nestjs/common'
-import { REQUEST } from '@nestjs/core'
+import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 
-import { UserModel } from '~/modules/user/user.model'
+import { ConfigsService } from '~/modules/configs/configs.service'
 import { deepCloneWithFunction } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
 
-const logger = new Logger('TextMacroService')
 const RegMap = {
   '#': /^#(.*?)$/g,
   $: /^\$(.*?)$/g,
   '?': /^\?\??(.*?)\??\?$/g,
 } as const
 
-class HelperStatic {
-  public ifConditionGrammar<T extends object>(text: string, model: T) {
+@Injectable()
+export class TextMacroService {
+  private readonly logger: Logger
+  constructor(private readonly configService: ConfigsService) {
+    this.logger = new Logger(TextMacroService.name)
+  }
+
+  private ifConditionGrammar<T extends object>(text: string, model: T) {
     const conditionSplitter = text.split('|')
     conditionSplitter.forEach((item: string, index: string | number) => {
       conditionSplitter[index] = item.replace(/"/g, '')
@@ -108,80 +104,77 @@ class HelperStatic {
 
     extraContext: Record<string, any> = {},
   ): Promise<string> {
-    try {
-      const matchedReg = /\[\[\s(.*?)\s\]\]/g
-      if (text.search(matchedReg) != -1) {
-        text = text.replace(matchedReg, (match, condition) => {
-          const ast = marked.lexer(text)
-
-          // FIXME: shallow find, if same text both in code block and paragraph, the macro in paragraph also will not replace
-          const isInCodeBlock = ast.some((i) => {
-            if (i.type === 'code' || i.type === 'codespan') {
-              return i.raw.includes(condition)
-            }
-          })
-
-          if (isInCodeBlock) {
-            return match
-          }
-
-          condition = condition?.trim()
-          if (condition.search(RegMap['?']) != -1) {
-            return helper.ifConditionGrammar(condition, model)
-          }
-          if (condition.search(RegMap['$']) != -1) {
-            const variable = condition
-              .replace(RegMap['$'], '$1')
-              .replace(/\s/g, '')
-            return model[variable] ?? extraContext[variable]
-          }
-          // eslint-disable-next-line no-useless-escape
-          if (condition.search(RegMap['#']) != -1) {
-            // eslint-disable-next-line no-useless-escape
-            const functions = condition.replace(RegMap['#'], '$1')
-
-            const variables = Object.keys(model).reduce(
-              (acc, key) => ({ [`$${key}`]: model[key], ...acc }),
-              {},
-            )
-
-            try {
-              return safeEval(
-                `return ${functions}`,
-                this.generateFunctionContext({ ...variables, ...extraContext }),
-                { timeout: 1000 },
-              )
-            } catch {
-              return match
-            }
-          }
-        })
-      }
-      return text
-    } catch (err) {
-      logger.log(err.message)
+    const { macros } = await this.configService.get('textOptions')
+    if (!macros) {
       return text
     }
-  }
-}
+    try {
+      const matchedReg = /\[\[\s(.*?)\s\]\]/g
 
-const helper = new HelperStatic()
-@Injectable({ scope: Scope.REQUEST })
-export class TextMacroService {
-  constructor(
-    @Inject(REQUEST)
-    private readonly request: FastifyRequest & {
-      isMaster: boolean
-      user: UserModel
-    },
-  ) {}
+      const matched = text.search(matchedReg) != -1
 
-  public replaceTextMacro(text: string, model: object) {
-    const isMaster = this.request.isMaster
-    return helper.replaceTextMacro(text, model, {
-      hideForGuest(text: string) {
-        return isMaster ? text : ''
-      },
-    })
+      if (!matched) {
+        return text
+      }
+      // const ast = marked.lexer(text)
+
+      const cacheMap = {} as Record<string, any>
+
+      text = text.replace(matchedReg, (match, condition) => {
+        // FIXME: shallow find, if same text both in code block and paragraph, the macro in paragraph also will not replace
+        // const isInCodeBlock = ast.some((i) => {
+        //   if (i.type === 'code' || i.type === 'codespan') {
+        //     return i.raw.includes(condition)
+        //   }
+        // })
+
+        // if (isInCodeBlock) {
+        //   return match
+        // }
+
+        condition = condition?.trim()
+        if (condition.search(RegMap['?']) != -1) {
+          return this.ifConditionGrammar(condition, model)
+        }
+        if (condition.search(RegMap['$']) != -1) {
+          const variable = condition
+            .replace(RegMap['$'], '$1')
+            .replace(/\s/g, '')
+          return model[variable] ?? extraContext[variable]
+        }
+        // eslint-disable-next-line no-useless-escape
+        if (condition.search(RegMap['#']) != -1) {
+          // eslint-disable-next-line no-useless-escape
+          const functions = condition.replace(RegMap['#'], '$1')
+
+          if (typeof cacheMap[functions] != 'undefined') {
+            return cacheMap[functions]
+          }
+
+          const variables = Object.keys(model).reduce(
+            (acc, key) => ({ [`$${key}`]: model[key], ...acc }),
+            {},
+          )
+
+          try {
+            const result = safeEval(
+              `return ${functions}`,
+              this.generateFunctionContext({ ...variables, ...extraContext }),
+
+              { timeout: 1000 },
+            )
+            cacheMap[functions] = result
+            return result
+          } catch {
+            return match
+          }
+        }
+      })
+
+      return text
+    } catch (err) {
+      this.logger.log(err.message)
+      return text
+    }
   }
 }
