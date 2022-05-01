@@ -102,7 +102,6 @@ export class CommentController {
         limit: size,
         page,
         sort: { created: -1 },
-        lean: true,
       },
     )
     return transformDataToPaginate(comments)
