@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ['@innei-util/eslint-config-ts'],
+  extends: ['@innei/eslint-config-ts'],
   root: true,
   plugins: ['unused-imports', '@typescript-eslint'],
   rules: {

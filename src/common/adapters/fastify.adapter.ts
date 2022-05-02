@@ -1,7 +1,7 @@
 import { FastifyRequest } from 'fastify'
-import fastifyCookie from 'fastify-cookie'
-import FastifyMultipart from 'fastify-multipart'
 
+import fastifyCookie from '@fastify/cookie'
+import FastifyMultipart from '@fastify/multipart'
 import { Logger } from '@nestjs/common'
 import { FastifyAdapter } from '@nestjs/platform-fastify'
 

@@ -1,6 +1,6 @@
 import { FastifyRequest } from 'fastify'
-import { MultipartFile } from 'fastify-multipart'
 
+import { MultipartFile } from '@fastify/multipart'
 import { BadRequestException, Injectable } from '@nestjs/common'
 
 @Injectable()
