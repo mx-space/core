@@ -146,16 +146,18 @@ export class CommentController {
       if (await this.commentService.checkSpam(comment)) {
         comment.state = CommentState.Junk
         await comment.save()
+        return
       } else if (!isMaster) {
         this.commentService.sendEmail(comment, ReplyMailType.Owner)
-        await this.eventManager.broadcast(
-          BusinessEvents.COMMENT_CREATE,
-          comment,
-          {
-            scope: EventScope.ALL,
-          },
-        )
       }
+
+      await this.eventManager.broadcast(
+        BusinessEvents.COMMENT_CREATE,
+        comment,
+        {
+          scope: isMaster ? EventScope.TO_SYSTEM_VISITOR : EventScope.ALL,
+        },
+      )
     })
 
     return comment
