@@ -134,7 +134,9 @@ export class CommentController {
         .then(
           (res) =>
             `${res.cityName ? `${res.cityName}` : ''}${
-              res.regionName ? `-${res.regionName}` : ''
+              res.regionName && res.regionName !== res.cityName
+                ? `-${res.regionName}`
+                : ''
             }` || undefined,
         )
         .catch(() => undefined)
