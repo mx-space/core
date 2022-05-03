@@ -133,11 +133,11 @@ export class CommentController {
         .getIp(ipLocation.ip)
         .then(
           (res) =>
-            `${res.cityName ? `${res.cityName}` : ''}${
+            `${
               res.regionName && res.regionName !== res.cityName
-                ? `-${res.regionName}`
+                ? `${res.regionName}`
                 : ''
-            }` || undefined,
+            }${res.cityName ? `${res.cityName}` : ''}` || undefined,
         )
         .catch(() => undefined)
     }
