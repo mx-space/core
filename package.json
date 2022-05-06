@@ -52,6 +52,13 @@
     "docs": "npx @compodoc/compodoc -p tsconfig.json -s -d docs",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
   },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "webpack"
+      ]
+    }
+  },
   "bump": {
     "before": [
       "git pull --rebase",
@@ -72,7 +79,7 @@
     "@fastify/multipart": "6",
     "@nestjs/common": "8.4.4",
     "@nestjs/core": "8.4.4",
-    "@nestjs/event-emitter": "1.1.0",
+    "@nestjs/event-emitter": "1.1.1",
     "@nestjs/jwt": "8.0.0",
     "@nestjs/mapped-types": "*",
     "@nestjs/passport": "8.2.1",
@@ -81,7 +88,7 @@
     "@nestjs/schedule": "2.0.0",
     "@nestjs/swagger": "5.2.1",
     "@nestjs/websockets": "8.4.4",
-    "@socket.io/redis-adapter": "7.1.0",
+    "@socket.io/redis-adapter": "7.2.0",
     "@socket.io/redis-emitter": "4.1.1",
     "@typegoose/auto-increment": "1.3.0",
     "@typegoose/typegoose": "9.8.1",
@@ -107,7 +114,7 @@
     "isbot": "3.4.6",
     "js-yaml": "*",
     "jszip": "3.9.1",
-    "linkedom": "0.14.7",
+    "linkedom": "0.14.8",
     "lodash": "*",
     "marked": "4.0.15",
     "mkdirp": "*",
@@ -116,10 +123,10 @@
     "mongoose-lean-id": "0.3.0",
     "mongoose-lean-virtuals": "0.9.1",
     "mongoose-paginate-v2": "1.6.3",
-    "nanoid": "3.3.3",
+    "nanoid": "3.3.4",
     "node-machine-id": "1.1.12",
     "node-pty": "0.10.1",
-    "nodemailer": "6.7.4",
+    "nodemailer": "6.7.5",
     "passport": "0.5.2",
     "passport-jwt": "4.0.0",
     "pluralize": "*",
@@ -137,7 +144,7 @@
     "@innei/eslint-config-ts": "latest",
     "@innei/prettier": "latest",
     "@nestjs/cli": "8.2.5",
-    "@nestjs/schematics": "8.0.10",
+    "@nestjs/schematics": "8.0.11",
     "@nestjs/testing": "8.4.4",
     "@types/babel__core": "7.1.19",
     "@types/bcrypt": "5.0.0",
@@ -163,13 +170,13 @@
     "eslint-plugin-unused-imports": "2.0.0",
     "husky": "7.0.4",
     "ioredis": "5.0.4",
-    "jest": "27.5.1",
+    "jest": "28.0.3",
     "lint-staged": "12.4.1",
     "prettier": "2.6.2",
     "rimraf": "3.0.2",
     "semver": "*",
     "socket.io": "*",
-    "ts-jest": "27.1.4",
+    "ts-jest": "28.0.1",
     "ts-loader": "9.3.0",
     "ts-node": "10.7.0",
     "tsconfig-paths": "4.0.0",
