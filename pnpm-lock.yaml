@@ -80,7 +80,7 @@ specifiers:
   jest: 28.1.0
   js-yaml: '*'
   jszip: 3.9.1
-  linkedom: 0.14.8
+  linkedom: 0.14.9
   lint-staged: 12.4.1
   lodash: '*'
   marked: 4.0.15
@@ -163,7 +163,7 @@ dependencies:
   isbot: 3.4.6
   js-yaml: 4.1.0
   jszip: 3.9.1
-  linkedom: 0.14.8
+  linkedom: 0.14.9
   lodash: 4.17.21
   marked: 4.0.15
   mkdirp: 1.0.4
@@ -5795,8 +5795,8 @@ packages:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
     dev: true
 
-  /linkedom/0.14.8:
-    resolution: {integrity: sha512-uYdw1/0jB+FdS760KEcyuIkFhLl6e9V1o/1Yne0lV2+8ZF+mPr2NWGs6rzUeLDe2KOsJc/EsQCL9tCCBVhUdSw==}
+  /linkedom/0.14.9:
+    resolution: {integrity: sha512-ZV4H69VFzOwKp7akxsMtrzcnlP7mlFBvKy1RBsyIccuGX7ewkFlt/1FFfTHSg/BvREXNFFuyZlWoSf48FYAMzA==}
     dependencies:
       css-select: 5.1.0
       cssom: 0.5.0
