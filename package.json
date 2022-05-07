@@ -54,6 +54,9 @@
   },
   "pnpm": {
     "peerDependencyRules": {
+      "allowedVersions": {
+        "class-transformer": "0.5.1"
+      },
       "ignoreMissing": [
         "webpack"
       ]
