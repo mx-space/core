@@ -62,7 +62,7 @@ specifiers:
   class-validator: 0.13.2
   class-validator-jsonschema: npm:@innei/class-validator-jsonschema@3.1.1
   consola: '*'
-  cos-nodejs-sdk-v5: 2.11.7
+  cos-nodejs-sdk-v5: 2.11.8
   cron: '*'
   cross-env: 7.0.3
   dayjs: 1.11.2
@@ -152,7 +152,7 @@ dependencies:
   class-validator: 0.13.2
   class-validator-jsonschema: /@innei/class-validator-jsonschema/3.1.1_e6kgdsnyya5caxg3ysdyxrqm7a
   consola: 2.15.3
-  cos-nodejs-sdk-v5: 2.11.7
+  cos-nodejs-sdk-v5: 2.11.8
   dayjs: 1.11.2
   ejs: 3.1.7
   fastify-swagger: /@fastify/swagger/6.0.1
@@ -2378,7 +2378,7 @@ packages:
       ajv:
         optional: true
     dependencies:
-      ajv: 8.9.0
+      ajv: 8.10.0
     dev: true
 
   /ajv-keywords/3.5.2_ajv@6.12.6:
@@ -2413,7 +2413,6 @@ packages:
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
       uri-js: 4.4.1
-    dev: false
 
   /ajv/8.9.0:
     resolution: {integrity: sha512-qOKJyNj/h+OWx7s5DePL6Zu1KeM9jPZhwBqs+7DzP6bGOvqzVCSf0xueYmVuaC/oQ/VtS2zLMLHdQFbkka+XDQ==}
@@ -3179,12 +3178,12 @@ packages:
       object-assign: 4.1.1
       vary: 1.1.2
 
-  /cos-nodejs-sdk-v5/2.11.7:
-    resolution: {integrity: sha512-7/stUjnhqrLDKioKayZD2gYWfh0OSLAwsylr+eWvSsRg0a+C6XMZL9HbcO2UdHEeIye8NOgsg8Q8djfFtb7ZPQ==}
+  /cos-nodejs-sdk-v5/2.11.8:
+    resolution: {integrity: sha512-utV/HwFroxrji6W5bmPpmd2zVK1DAB4B53x5lmrDZPYMBpPxVs7rmiLQ7e9y2yRl5wUj+1hzUC99VThUHUm5AA==}
     engines: {node: '>= 6'}
     dependencies:
       conf: 9.0.2
-      mime-types: 2.1.34
+      mime-types: 2.1.35
       request: 2.88.2
       xml2js: 0.4.23
     dev: false
@@ -4323,7 +4322,7 @@ packages:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8
-      mime-types: 2.1.34
+      mime-types: 2.1.35
     dev: false
 
   /form-data/4.0.0:
@@ -4448,7 +4447,7 @@ packages:
     dependencies:
       data-uri-to-buffer: 0.0.3
       jpeg-js: 0.4.2
-      mime-types: 2.1.34
+      mime-types: 2.1.35
       ndarray: 1.0.19
       ndarray-pack: 1.2.1
       node-bitmap: 0.0.1
@@ -6111,19 +6110,9 @@ packages:
       reusify: 1.0.4
     dev: false
 
-  /mime-db/1.51.0:
-    resolution: {integrity: sha512-5y8A56jg7XVQx2mbv1lu49NR4dokRnhZYTtL+KGfaa27uq4pSTXkwQkFJl4pkRMyNFz/EtYDSkiiEHx3F7UN6g==}
-    engines: {node: '>= 0.6'}
-
   /mime-db/1.52.0:
     resolution: {integrity: sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg==}
     engines: {node: '>= 0.6'}
-
-  /mime-types/2.1.34:
-    resolution: {integrity: sha512-6cP692WwGIs9XXdOO4++N+7qjqv0rqxxVvJ3VHPh/Sc9mVZcQP+ZGhkKiTvWMQRr2tbHkJP/Yn7Y0npb3ZBs4A==}
-    engines: {node: '>= 0.6'}
-    dependencies:
-      mime-db: 1.51.0
 
   /mime-types/2.1.35:
     resolution: {integrity: sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==}
@@ -6209,7 +6198,7 @@ packages:
       semver: 7.3.7
       tar-stream: 2.2.0
       tmp: 0.2.1
-      tslib: 2.3.1
+      tslib: 2.4.0
       uuid: 8.3.2
       yauzl: 2.10.0
     transitivePeerDependencies:
@@ -7054,7 +7043,7 @@ packages:
       is-typedarray: 1.0.0
       isstream: 0.1.2
       json-stringify-safe: 5.0.1
-      mime-types: 2.1.34
+      mime-types: 2.1.35
       oauth-sign: 0.9.0
       performance-now: 2.1.0
       qs: 6.5.2
@@ -8151,7 +8140,7 @@ packages:
       graceful-fs: 4.2.10
       json-parse-better-errors: 1.0.2
       loader-runner: 4.2.0
-      mime-types: 2.1.34
+      mime-types: 2.1.35
       neo-async: 2.6.2
       schema-utils: 3.1.1
       tapable: 2.2.1

@@ -106,7 +106,7 @@
     "class-validator": "0.13.2",
     "class-validator-jsonschema": "npm:@innei/class-validator-jsonschema@3.1.1",
     "consola": "*",
-    "cos-nodejs-sdk-v5": "2.11.7",
+    "cos-nodejs-sdk-v5": "2.11.8",
     "dayjs": "1.11.2",
     "ejs": "3.1.7",
     "fastify-swagger": "npm:@fastify/swagger@6",
