@@ -107,9 +107,28 @@ export class SnippetController {
     if (typeof reference !== 'string') {
       throw new ForbiddenException('reference should be string')
     }
-    const cached = await this.snippetService.getCachedSnippet(reference, name)
+    let cached: string | null = null
+    if (isMaster) {
+      cached =
+        (
+          await Promise.all(
+            (['public', 'private'] as const).map((type) => {
+              return this.snippetService.getCachedSnippet(reference, name, type)
+            }),
+          )
+        ).find(Boolean) || null
+    } else {
+      cached = await this.snippetService.getCachedSnippet(
+        reference,
+        name,
+        'public',
+      )
+    }
+
     if (cached) {
-      return cached
+      const json = JSON.safeParse(cached)
+
+      return json ? json : cached
     }
 
     const snippet = await this.snippetService.getSnippetByName(name, reference)
