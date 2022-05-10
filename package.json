@@ -171,7 +171,7 @@
     "cross-env": "7.0.3",
     "eslint": "*",
     "eslint-plugin-unused-imports": "2.0.0",
-    "husky": "7.0.4",
+    "husky": "8.0.1",
     "ioredis": "5.0.4",
     "jest": "28.1.0",
     "lint-staged": "12.4.1",
