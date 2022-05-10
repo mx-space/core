@@ -3,7 +3,7 @@ lockfileVersion: 5.4
 overrides:
   typescript: 4.6.4
   ioredis: 5.0.4
-  webpack: 5.72.0
+  webpack: 5.72.1
 
 specifiers:
   '@algolia/client-search': '*'
@@ -1297,7 +1297,7 @@ packages:
       chokidar: 3.5.3
       cli-table3: 0.6.1
       commander: 4.1.1
-      fork-ts-checker-webpack-plugin: 7.2.3_dgip6vjrhmffcc4ihrseicj6om
+      fork-ts-checker-webpack-plugin: 7.2.3_gp3atwgq76mgimstdygasg64n4
       inquirer: 7.3.3
       node-emoji: 1.11.0
       ora: 5.4.1
@@ -1309,7 +1309,7 @@ packages:
       tsconfig-paths: 3.14.1
       tsconfig-paths-webpack-plugin: 3.5.2
       typescript: 4.6.4
-      webpack: 5.72.0
+      webpack: 5.72.1
       webpack-node-externals: 3.0.0
     transitivePeerDependencies:
       - '@swc/core'
@@ -2297,12 +2297,12 @@ packages:
       mime-types: 2.1.35
       negotiator: 0.6.3
 
-  /acorn-import-assertions/1.8.0_acorn@8.7.0:
+  /acorn-import-assertions/1.8.0_acorn@8.7.1:
     resolution: {integrity: sha512-m7VZ3jwz4eK6A4Vtt8Ew1/mNbP24u0FhdyfA7fSvnJR6LMdfOYnmuIrrJAgrYfYJ10F/otaHTtrtrtmHdMNzEw==}
     peerDependencies:
       acorn: ^8
     dependencies:
-      acorn: 8.7.0
+      acorn: 8.7.1
     dev: true
 
   /acorn-jsx/5.3.2_acorn@8.7.1:
@@ -3630,6 +3630,14 @@ packages:
       tapable: 2.2.1
     dev: true
 
+  /enhanced-resolve/5.9.3:
+    resolution: {integrity: sha512-Bq9VSor+kjvW3f9/MiiR4eE3XYgOl7/rS8lnSxbRbF3kS0B2r+Y9w5krBWxZgDxASVZbdYrn5wT4j/Wb0J9qow==}
+    engines: {node: '>=10.13.0'}
+    dependencies:
+      graceful-fs: 4.2.10
+      tapable: 2.2.1
+    dev: true
+
   /entities/1.1.2:
     resolution: {integrity: sha512-f2LZMYl1Fzu7YSBKg+RoROelpOaNrcGmE9AZubeDfrCEia483oW4MI4VyFd5VNHIgQ/7qm1I0wUHK1eJnn2y2w==}
     dev: false
@@ -4283,7 +4291,7 @@ packages:
     resolution: {integrity: sha1-+8cfDEGt6zf5bFd60e1C2P2sypE=}
     dev: false
 
-  /fork-ts-checker-webpack-plugin/7.2.3_dgip6vjrhmffcc4ihrseicj6om:
+  /fork-ts-checker-webpack-plugin/7.2.3_gp3atwgq76mgimstdygasg64n4:
     resolution: {integrity: sha512-9v308zIFTIFkWJBN/4N1A5oqm/ed9hWG6GH+KYTCBjYCEJOmHoVtDIWpfrJ0eD6cPB7V53HEVoJ6bL2In8QRaw==}
     engines: {node: '>=12.13.0', yarn: '>=1.0.0'}
     peerDependencies:
@@ -4308,7 +4316,7 @@ packages:
       semver: 7.3.7
       tapable: 2.2.1
       typescript: 4.6.4
-      webpack: 5.72.0
+      webpack: 5.72.1
     dev: true
 
   /form-data/2.3.3:
@@ -5612,10 +5620,6 @@ packages:
     resolution: {integrity: sha512-OYu7XEzjkCQ3C5Ps3QIZsQfNpqoJyZZA99wd9aWd05NCtC5pWOkShK2mkL6HXQR6/Cy2lbNdPlZBpuQHXE63gA==}
     engines: {node: '>=4'}
     hasBin: true
-
-  /json-parse-better-errors/1.0.2:
-    resolution: {integrity: sha512-mrqyZKfX5EhL7hvqcV6WG1yYjnjeuYDzDhhcAAUrq8Po85NBQBJP+ZDUT75qZQ98IkUoBqdkExkukOU7Ts2wrw==}
-    dev: true
 
   /json-parse-even-better-errors/2.3.1:
     resolution: {integrity: sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w==}
@@ -7661,7 +7665,7 @@ packages:
       supports-hyperlinks: 2.2.0
     dev: true
 
-  /terser-webpack-plugin/5.3.1_webpack@5.72.0:
+  /terser-webpack-plugin/5.3.1_webpack@5.72.1:
     resolution: {integrity: sha512-GvlZdT6wPQKbDNW/GDQzZFg/j4vKU96yl2q6mcUkzKOgW4gwf1Z8cZToUCrz31XHlPWH8MVb1r2tFtdDtTGJ7g==}
     engines: {node: '>= 10.13.0'}
     peerDependencies:
@@ -7684,7 +7688,7 @@ packages:
       serialize-javascript: 6.0.0
       source-map: 0.6.1
       terser: 5.12.0
-      webpack: 5.72.0
+      webpack: 5.72.1
     dev: true
 
   /terser/5.12.0:
@@ -7692,7 +7696,7 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
-      acorn: 8.7.0
+      acorn: 8.7.1
       commander: 2.20.3
       source-map: 0.7.3
       source-map-support: 0.5.21
@@ -8096,8 +8100,8 @@ packages:
     engines: {node: '>=10.13.0'}
     dev: true
 
-  /webpack/5.72.0:
-    resolution: {integrity: sha512-qmSmbspI0Qo5ld49htys8GY9XhS9CGqFoHTsOVAnjBdg0Zn79y135R+k4IR4rKK6+eKaabMhJwiVB7xw0SJu5w==}
+  /webpack/5.72.1:
+    resolution: {integrity: sha512-dXG5zXCLspQR4krZVR6QgajnZOjW2K/djHvdcRaDQvsjV9z9vaW6+ja5dZOYbqBBjF6kGXka/2ZyxNdc+8Jung==}
     engines: {node: '>=10.13.0'}
     hasBin: true
     peerDependencies:
@@ -8111,23 +8115,23 @@ packages:
       '@webassemblyjs/ast': 1.11.1
       '@webassemblyjs/wasm-edit': 1.11.1
       '@webassemblyjs/wasm-parser': 1.11.1
-      acorn: 8.7.0
-      acorn-import-assertions: 1.8.0_acorn@8.7.0
+      acorn: 8.7.1
+      acorn-import-assertions: 1.8.0_acorn@8.7.1
       browserslist: 4.20.3
       chrome-trace-event: 1.0.3
-      enhanced-resolve: 5.9.2
+      enhanced-resolve: 5.9.3
       es-module-lexer: 0.9.3
       eslint-scope: 5.1.1
       events: 3.3.0
       glob-to-regexp: 0.4.1
       graceful-fs: 4.2.10
-      json-parse-better-errors: 1.0.2
+      json-parse-even-better-errors: 2.3.1
       loader-runner: 4.2.0
       mime-types: 2.1.35
       neo-async: 2.6.2
       schema-utils: 3.1.1
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.1_webpack@5.72.0
+      terser-webpack-plugin: 5.3.1_webpack@5.72.1
       watchpack: 2.3.1
       webpack-sources: 3.2.3
     transitivePeerDependencies:
