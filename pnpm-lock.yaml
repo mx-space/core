@@ -36,7 +36,7 @@ specifiers:
   '@types/babel__core': 7.1.19
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.3
-  '@types/cron': 1.7.3
+  '@types/cron': 2.0.0
   '@types/ejs': 3.1.0
   '@types/fs-extra': 9.0.13
   '@types/get-image-colors': 4.0.1
@@ -202,7 +202,7 @@ devDependencies:
   '@types/babel__core': 7.1.19
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.3
-  '@types/cron': 1.7.3
+  '@types/cron': 2.0.0
   '@types/ejs': 3.1.0
   '@types/fs-extra': 9.0.13
   '@types/get-image-colors': 4.0.1
@@ -1764,11 +1764,11 @@ packages:
   /@types/cors/2.8.12:
     resolution: {integrity: sha512-vt+kDhq/M2ayberEtJcIN/hxXy1Pk+59g2FV/ZQceeaTyCtCucjL2Q7FXlFjtWn4n15KCr1NE2lNNFhp0lEThw==}
 
-  /@types/cron/1.7.3:
-    resolution: {integrity: sha512-iPmUXyIJG1Js+ldPYhOQcYU3kCAQ2FWrSkm1FJPoii2eYSn6wEW6onPukNTT0bfiflexNSRPl6KWmAIqS+36YA==}
+  /@types/cron/2.0.0:
+    resolution: {integrity: sha512-xZM08fqvwIXgghtPVkSPKNgC+JoMQ2OHazEvyTKnNf7aWu1aB6/4lBbQFrb03Td2cUGG7ITzMv3mFYnMu6xRaQ==}
     dependencies:
+      '@types/luxon': 2.3.2
       '@types/node': 17.0.31
-      moment: 2.29.1
     dev: true
 
   /@types/ejs/3.1.0:
@@ -1878,6 +1878,10 @@ packages:
 
   /@types/lodash/4.14.182:
     resolution: {integrity: sha512-/THyiqyQAP9AfARo4pF+aCGcyiQ94tX/Is2I7HofNRqoYLgN1PBoOWu2/zTA5zMxzP5EFutMtWtGAFRKUe961Q==}
+    dev: true
+
+  /@types/luxon/2.3.2:
+    resolution: {integrity: sha512-WOehptuhKIXukSUUkRgGbj2c997Uv/iUgYgII8U7XLJqq9W2oF0kQ6frEznRQbdurioz+L/cdaIm4GutTQfgmA==}
     dev: true
 
   /@types/marked/4.0.3:
@@ -6160,6 +6164,7 @@ packages:
 
   /moment/2.29.1:
     resolution: {integrity: sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==}
+    dev: false
 
   /mongodb-connection-string-url/2.5.2:
     resolution: {integrity: sha512-tWDyIG8cQlI5k3skB6ywaEA5F9f5OntrKKsT/Lteub2zgwSUlhqEN2inGgBTm8bpYJf8QYBdA/5naz65XDpczA==}
