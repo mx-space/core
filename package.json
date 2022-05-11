@@ -152,7 +152,7 @@
     "@types/babel__core": "7.1.19",
     "@types/bcrypt": "5.0.0",
     "@types/cache-manager": "3.4.3",
-    "@types/cron": "1.7.3",
+    "@types/cron": "2.0.0",
     "@types/ejs": "3.1.0",
     "@types/fs-extra": "9.0.13",
     "@types/get-image-colors": "4.0.1",
