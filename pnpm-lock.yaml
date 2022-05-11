@@ -62,7 +62,7 @@ specifiers:
   class-validator: 0.13.2
   class-validator-jsonschema: npm:@innei/class-validator-jsonschema@3.1.1
   consola: '*'
-  cos-nodejs-sdk-v5: 2.11.8
+  cos-nodejs-sdk-v5: 2.11.9
   cron: '*'
   cross-env: 7.0.3
   dayjs: 1.11.2
@@ -152,7 +152,7 @@ dependencies:
   class-validator: 0.13.2
   class-validator-jsonschema: /@innei/class-validator-jsonschema/3.1.1_e6kgdsnyya5caxg3ysdyxrqm7a
   consola: 2.15.3
-  cos-nodejs-sdk-v5: 2.11.8
+  cos-nodejs-sdk-v5: 2.11.9
   dayjs: 1.11.2
   ejs: 3.1.7
   fastify-swagger: /@fastify/swagger/6.0.1
@@ -3173,8 +3173,8 @@ packages:
       object-assign: 4.1.1
       vary: 1.1.2
 
-  /cos-nodejs-sdk-v5/2.11.8:
-    resolution: {integrity: sha512-utV/HwFroxrji6W5bmPpmd2zVK1DAB4B53x5lmrDZPYMBpPxVs7rmiLQ7e9y2yRl5wUj+1hzUC99VThUHUm5AA==}
+  /cos-nodejs-sdk-v5/2.11.9:
+    resolution: {integrity: sha512-szsUw/8hx1RWUfMNwgErzYcdPM3EwcmgbylqQf82HPZALMCAcaa7qCeAxVQHNvCumWYeQLy7EEloZjMUyjg7Ug==}
     engines: {node: '>= 6'}
     dependencies:
       conf: 9.0.2
