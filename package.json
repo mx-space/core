@@ -108,7 +108,7 @@
     "consola": "*",
     "cos-nodejs-sdk-v5": "2.11.9",
     "dayjs": "1.11.2",
-    "ejs": "3.1.7",
+    "ejs": "3.1.8",
     "fastify-swagger": "npm:@fastify/swagger@6",
     "fs-extra": "*",
     "get-image-colors": "4.0.1",

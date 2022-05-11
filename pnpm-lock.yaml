@@ -66,7 +66,7 @@ specifiers:
   cron: '*'
   cross-env: 7.0.3
   dayjs: 1.11.2
-  ejs: 3.1.7
+  ejs: 3.1.8
   eslint: '*'
   eslint-plugin-unused-imports: 2.0.0
   fastify-swagger: npm:@fastify/swagger@6
@@ -154,7 +154,7 @@ dependencies:
   consola: 2.15.3
   cos-nodejs-sdk-v5: 2.11.9
   dayjs: 1.11.2
-  ejs: 3.1.7
+  ejs: 3.1.8
   fastify-swagger: /@fastify/swagger/6.0.1
   fs-extra: 10.1.0
   get-image-colors: 4.0.1
@@ -3544,8 +3544,8 @@ packages:
     resolution: {integrity: sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=}
     dev: false
 
-  /ejs/3.1.7:
-    resolution: {integrity: sha512-BIar7R6abbUxDA3bfXrO4DSgwo8I+fB5/1zgujl3HLLjwd6+9iOnrT+t3grn2qbk9vOgBubXOFwX2m9axoFaGw==}
+  /ejs/3.1.8:
+    resolution: {integrity: sha512-/sXZeMlhS0ArkfX2Aw780gJzXSMPnKjtspYZv+f3NiKLlubezAHDU5+9xz6gd3/NhG3txQCo6xlglmTS+oTGEQ==}
     engines: {node: '>=0.10.0'}
     hasBin: true
     dependencies:
