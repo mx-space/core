@@ -37,7 +37,7 @@ specifiers:
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.3
   '@types/cron': 2.0.0
-  '@types/ejs': 3.1.0
+  '@types/ejs': 3.1.1
   '@types/fs-extra': 9.0.13
   '@types/get-image-colors': 4.0.1
   '@types/jest': 27.5.1
@@ -203,7 +203,7 @@ devDependencies:
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 3.4.3
   '@types/cron': 2.0.0
-  '@types/ejs': 3.1.0
+  '@types/ejs': 3.1.1
   '@types/fs-extra': 9.0.13
   '@types/get-image-colors': 4.0.1
   '@types/jest': 27.5.1
@@ -1771,8 +1771,8 @@ packages:
       '@types/node': 17.0.31
     dev: true
 
-  /@types/ejs/3.1.0:
-    resolution: {integrity: sha512-DCg+Ka+uDQ31lJ/UtEXVlaeV3d6t81gifaVWKJy4MYVVgvJttyX/viREy+If7fz+tK/gVxTGMtyrFPnm4gjrVA==}
+  /@types/ejs/3.1.1:
+    resolution: {integrity: sha512-RQul5wEfY7BjWm0sYY86cmUN/pcXWGyVxWX93DFFJvcrxax5zKlieLwA3T77xJGwNcZW0YW6CYG70p1m8xPFmA==}
     dev: true
 
   /@types/eslint-scope/3.7.3:
