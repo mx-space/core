@@ -1,4 +1,4 @@
-# Serverless Function
+# Serverless > Cloud Function
 
 这是一个动态的路由处理模块，用于实现云函数，云函数入口为 `handler`：
 
