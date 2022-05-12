@@ -40,7 +40,7 @@ specifiers:
   '@types/ejs': 3.1.0
   '@types/fs-extra': 9.0.13
   '@types/get-image-colors': 4.0.1
-  '@types/jest': 27.5.0
+  '@types/jest': 27.5.1
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.182
   '@types/marked': 4.0.3
@@ -206,7 +206,7 @@ devDependencies:
   '@types/ejs': 3.1.0
   '@types/fs-extra': 9.0.13
   '@types/get-image-colors': 4.0.1
-  '@types/jest': 27.5.0
+  '@types/jest': 27.5.1
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.182
   '@types/marked': 4.0.3
@@ -229,7 +229,7 @@ devDependencies:
   rimraf: 3.0.2
   semver: 7.3.7
   socket.io: 4.5.0
-  ts-jest: 28.0.2_idho52n4uf7ux6ste52nmmk7t4
+  ts-jest: 28.0.2_7ba6w3dqujb3z2hhr3kd3ksuge
   ts-loader: 9.3.0_typescript@4.6.4
   ts-node: 10.7.0_7vfv75elicf7ijnl73ckmqo2cm
   tsconfig-paths: 4.0.0
@@ -1845,8 +1845,8 @@ packages:
       '@types/istanbul-lib-report': 3.0.0
     dev: true
 
-  /@types/jest/27.5.0:
-    resolution: {integrity: sha512-9RBFx7r4k+msyj/arpfaa0WOOEcaAZNmN+j80KFbFCoSqCJGHTz7YMAMGQW9Xmqm5w6l5c25vbSjMwlikJi5+g==}
+  /@types/jest/27.5.1:
+    resolution: {integrity: sha512-fUy7YRpT+rHXto1YlL+J9rs0uLGyiqVt3ZOTQR+4ROc47yNl8WLdVLgUloBRhOxP1PZvguHl44T3H0wAWxahYQ==}
     dependencies:
       jest-matcher-utils: 27.5.1
       pretty-format: 27.5.1
@@ -7794,7 +7794,7 @@ packages:
     hasBin: true
     dev: true
 
-  /ts-jest/28.0.2_idho52n4uf7ux6ste52nmmk7t4:
+  /ts-jest/28.0.2_7ba6w3dqujb3z2hhr3kd3ksuge:
     resolution: {integrity: sha512-IOZMb3D0gx6IHO9ywPgiQxJ3Zl4ECylEFwoVpENB55aTn5sdO0Ptyx/7noNBxAaUff708RqQL4XBNxxOVjY0vQ==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     hasBin: true
@@ -7816,7 +7816,7 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.17.10
-      '@types/jest': 27.5.0
+      '@types/jest': 27.5.1
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
       jest: 28.1.0_p2brwx6nx5zpemlvbnwk444zqy
