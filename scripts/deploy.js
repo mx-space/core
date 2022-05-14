@@ -34,9 +34,9 @@ async function main() {
     throw new Error('no download url found')
   }
 
-  const buffer = await fetch(
-    `https://small-lake-9960.tukon479.workers.dev/${downloadUrl}`,
-  ).then((res) => res.buffer())
+  const buffer = await fetch(`https://cc.shizuri.net/${downloadUrl}`).then(
+    (res) => res.buffer(),
+  )
   const tmpName = (Math.random() * 10).toString(16)
   fs.writeFileSync(`/tmp/${tmpName}.zip`, buffer, { flag: 'w' })
   await $`rm -rf ./run`

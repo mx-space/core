@@ -29,9 +29,9 @@ async function main() {
     throw new Error('no download url found')
   }
 
-  const buffer = await fetch(
-    'https://small-lake-9960.tukon479.workers.dev/' + downloadUrl,
-  ).then((res) => res.buffer())
+  const buffer = await fetch('https://cc.shizuri.net/' + downloadUrl).then(
+    (res) => res.buffer(),
+  )
   fs.writeFileSync(`release-downloaded.zip`, buffer, { flag: 'w' })
   await $`unzip release-downloaded.zip -d mx-server`
 }
