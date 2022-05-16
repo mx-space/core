@@ -95,7 +95,7 @@ specifiers:
   node-machine-id: 1.1.12
   node-pty: 0.10.1
   nodemailer: 6.7.5
-  passport: 0.5.2
+  passport: 0.5.3
   passport-jwt: 4.0.0
   pluralize: '*'
   prettier: 2.6.2
@@ -131,7 +131,7 @@ dependencies:
   '@nestjs/event-emitter': 1.1.1_vwzjbrckvynfemwboijsh2d5xa
   '@nestjs/jwt': 8.0.0_@nestjs+common@8.4.5
   '@nestjs/mapped-types': 1.0.1_akthuv4zoh6zi6yuexu4w2u5ge
-  '@nestjs/passport': 8.2.1_szo4yn5ruleb3tys26tpj3lyjy
+  '@nestjs/passport': 8.2.1_wcpfk3sfbfzafjomcconjln45y
   '@nestjs/platform-fastify': 8.4.5_ydewkhgqdrhc2o62hf5fyq4ami
   '@nestjs/platform-socket.io': 8.4.5_lydomrx4wz7jszgnhpjmrevehu
   '@nestjs/schedule': 2.0.0_vwzjbrckvynfemwboijsh2d5xa
@@ -176,7 +176,7 @@ dependencies:
   node-machine-id: 1.1.12
   node-pty: 0.10.1
   nodemailer: 6.7.5
-  passport: 0.5.2
+  passport: 0.5.3
   passport-jwt: 4.0.0
   pluralize: 8.0.0
   qs: 6.10.3
@@ -1423,14 +1423,14 @@ packages:
       reflect-metadata: 0.1.13
     dev: false
 
-  /@nestjs/passport/8.2.1_szo4yn5ruleb3tys26tpj3lyjy:
+  /@nestjs/passport/8.2.1_wcpfk3sfbfzafjomcconjln45y:
     resolution: {integrity: sha512-HXEKMLX1x865+lsJB4srwKHBciDNAhWY1Ha+xbxYRbk7J5leGDoHJAmeqe+Wb3NDn5nkboggLV87t0q2mbYc8w==}
     peerDependencies:
       '@nestjs/common': ^6.0.0 || ^7.0.0 || ^8.0.0
       passport: ^0.4.0 || ^0.5.0
     dependencies:
       '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
-      passport: 0.5.2
+      passport: 0.5.3
     dev: false
 
   /@nestjs/platform-fastify/8.4.5_ydewkhgqdrhc2o62hf5fyq4ami:
@@ -2593,7 +2593,7 @@ packages:
     dev: false
 
   /author-regex/1.0.0:
-    resolution: {integrity: sha1-0IiFvmubv5Q5/gh8dihyRfCoFFA=}
+    resolution: {integrity: sha512-KbWgR8wOYRAPekEmMXrYYdc7BRyhn2Ftk7KWfMUnQ43hFdojWEFRxhhRUm3/OFEdPa1r0KAvTTg9YQK57xTe0g==}
     engines: {node: '>=0.8'}
     dev: true
 
@@ -6652,8 +6652,8 @@ packages:
     engines: {node: '>= 0.4.0'}
     dev: false
 
-  /passport/0.5.2:
-    resolution: {integrity: sha512-w9n/Ot5I7orGD4y+7V3EFJCQEznE5RxHamUxcqLT2QoJY0f2JdN8GyHonYFvN0Vz+L6lUJfVhrk2aZz2LbuREw==}
+  /passport/0.5.3:
+    resolution: {integrity: sha512-gGc+70h4gGdBWNsR3FuV3byLDY6KBTJAIExGFXTpQaYfbbcHCBlRRKx7RBQSpqEqc5Hh2qVzRs7ssvSfOpkUEA==}
     engines: {node: '>= 0.4.0'}
     dependencies:
       passport-strategy: 1.0.0
