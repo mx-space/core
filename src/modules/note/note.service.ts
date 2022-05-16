@@ -13,6 +13,8 @@ import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { deleteKeys } from '~/utils'
 
+import { CommentRefTypes } from '../comment/comment.model'
+import { CommentService } from '../comment/comment.service'
 import { NoteModel } from './note.model'
 
 @Injectable()
@@ -22,6 +24,7 @@ export class NoteService {
     private readonly noteModel: MongooseModel<NoteModel>,
     private readonly imageService: ImageService,
     private readonly eventManager: EventManagerService,
+    private readonly commentService: CommentService,
 
     private readonly textMacrosService: TextMacroService,
   ) {
@@ -177,10 +180,15 @@ export class NoteService {
       throw new CannotFindException()
     }
 
-    await this.noteModel.deleteOne({
-      _id: id,
-    })
-
+    await Promise.all([
+      this.noteModel.deleteOne({
+        _id: id,
+      }),
+      this.commentService.model.deleteMany({
+        ref: id,
+        refType: CommentRefTypes.Note,
+      }),
+    ])
     process.nextTick(async () => {
       await Promise.all([
         this.eventManager.broadcast(BusinessEvents.NOTE_DELETE, id, {

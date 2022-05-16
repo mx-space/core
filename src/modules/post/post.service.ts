@@ -21,7 +21,7 @@ import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { CategoryService } from '../category/category.service'
-import { CommentModel } from '../comment/comment.model'
+import { CommentModel, CommentRefTypes } from '../comment/comment.model'
 import { PostModel } from './post.model'
 
 @Injectable()
@@ -175,7 +175,7 @@ export class PostService {
   async deletePost(id: string) {
     await Promise.all([
       this.model.deleteOne({ _id: id }),
-      this.commentModel.deleteMany({ pid: id }),
+      this.commentModel.deleteMany({ ref: id, refType: CommentRefTypes.Post }),
     ])
     await this.eventManager.broadcast(BusinessEvents.POST_DELETE, id, {
       scope: EventScope.TO_SYSTEM_VISITOR,
