@@ -1,7 +1,7 @@
 import { isDefined, isMongoId } from 'class-validator'
 import { FilterQuery } from 'mongoose'
 
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable, forwardRef } from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -24,6 +24,7 @@ export class NoteService {
     private readonly noteModel: MongooseModel<NoteModel>,
     private readonly imageService: ImageService,
     private readonly eventManager: EventManagerService,
+    @Inject(forwardRef(() => CommentService))
     private readonly commentService: CommentService,
 
     private readonly textMacrosService: TextMacroService,
