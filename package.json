@@ -114,7 +114,7 @@
     "get-image-colors": "4.0.1",
     "image-size": "1.0.1",
     "inquirer": "*",
-    "isbot": "3.4.7",
+    "isbot": "3.4.8",
     "js-yaml": "*",
     "jszip": "3.9.1",
     "linkedom": "0.14.9",
