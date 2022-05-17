@@ -172,7 +172,7 @@
     "eslint": "*",
     "eslint-plugin-unused-imports": "2.0.0",
     "husky": "8.0.1",
-    "ioredis": "5.0.4",
+    "ioredis": "5.0.5",
     "jest": "28.1.0",
     "lint-staged": "12.4.1",
     "prettier": "2.6.2",
@@ -191,7 +191,7 @@
   },
   "resolutions": {
     "typescript": "4.6.4",
-    "ioredis": "5.0.4",
+    "ioredis": "5.0.5",
     "webpack": "5.72.1"
   }
 }
