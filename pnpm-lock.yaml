@@ -83,7 +83,7 @@ specifiers:
   linkedom: 0.14.9
   lint-staged: 12.4.1
   lodash: '*'
-  marked: 4.0.15
+  marked: 4.0.16
   mkdirp: '*'
   mongodb-memory-server: 8.5.2
   mongoose: 6.3.3
@@ -165,7 +165,7 @@ dependencies:
   jszip: 3.9.1
   linkedom: 0.14.9
   lodash: 4.17.21
-  marked: 4.0.15
+  marked: 4.0.16
   mkdirp: 1.0.4
   mongoose: 6.3.3
   mongoose-lean-getters: 0.3.2_mongoose@6.3.3
@@ -5985,8 +5985,8 @@ packages:
     engines: {node: '>=8'}
     dev: false
 
-  /marked/4.0.15:
-    resolution: {integrity: sha512-esX5lPdTfG4p8LDkv+obbRCyOKzB+820ZZyMOXJZygZBHrH9b3xXR64X4kT3sPe9Nx8qQXbmcz6kFSMt4Nfk6Q==}
+  /marked/4.0.16:
+    resolution: {integrity: sha512-wahonIQ5Jnyatt2fn8KqF/nIqZM8mh3oRu2+l5EANGMhu6RFjiSG52QNE2eWzFMI94HqYSgN184NurgNG6CztA==}
     engines: {node: '>= 12'}
     hasBin: true
     dev: false
