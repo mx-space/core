@@ -57,5 +57,3 @@ export class NidType {
   @Transform(({ value: val }) => parseInt(val))
   nid: number
 }
-
-export { NoteMusic as NoteMusicDto } from './note.model'

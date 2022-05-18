@@ -2,48 +2,33 @@ import { Transform, Type } from 'class-transformer'
 import {
   IsBoolean,
   IsDate,
+  IsMongoId,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator'
+import { Query } from 'mongoose'
 
 import { PartialType } from '@nestjs/mapped-types'
 import { AutoIncrementID } from '@typegoose/auto-increment'
-import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
+import {
+  DocumentType,
+  Ref,
+  index,
+  modelOptions,
+  plugin,
+  pre,
+  prop,
+} from '@typegoose/typegoose'
+import { BeAnObject } from '@typegoose/typegoose/lib/types'
 
-import { Paginator } from '~/shared/interface/paginator.interface'
 import { CountModel } from '~/shared/model/count.model'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
 
-@modelOptions({ schemaOptions: { id: false, _id: false } })
-export class Coordinate {
-  @IsNumber()
-  @prop()
-  latitude: number
-  @prop()
-  @IsNumber()
-  longitude: number
-}
-
-@modelOptions({
-  schemaOptions: {
-    id: false,
-    _id: false,
-  },
-})
-export class NoteMusic {
-  @IsString()
-  @IsNotEmpty()
-  @prop({ required: true })
-  type: string
-
-  @IsString()
-  @IsNotEmpty()
-  @prop({ required: true })
-  id: string
-}
+import { TopicModel } from '../topic/topic.model'
+import { Coordinate } from './models/coordinate.model'
+import { NoteMusic } from './models/music.model'
 
 @modelOptions({
   options: {
@@ -57,6 +42,8 @@ export class NoteMusic {
 @index({ text: 'text' })
 @index({ modified: -1 })
 @index({ nid: -1 })
+@pre('findOne', autoPopulateTopic)
+@pre('find', autoPopulateTopic)
 export class NoteModel extends WriteBaseModel {
   @prop()
   @IsString()
@@ -121,6 +108,19 @@ export class NoteModel extends WriteBaseModel {
   @Type(() => NoteMusic)
   music?: NoteMusic[]
 
+  @prop()
+  @IsMongoId()
+  @IsOptional()
+  topicId?: Ref<TopicModel>
+
+  @prop({
+    justOne: true,
+    foreignField: '_id',
+    localField: 'topicId',
+    ref: () => TopicModel,
+  })
+  topic?: TopicModel
+
   static get protectedKeys() {
     return ['nid', 'count'].concat(super.protectedKeys)
   }
@@ -128,15 +128,15 @@ export class NoteModel extends WriteBaseModel {
 
 export class PartialNoteModel extends PartialType(NoteModel) {}
 
-export class NoteItemAggregateModel {
-  data: NoteModel
-
-  prev?: NoteModel
-
-  next?: NoteModel
-}
-
-export class NotePaginatorModel {
-  data: NoteModel[]
-  pagination: Paginator
+function autoPopulateTopic(
+  this: Query<
+    any,
+    DocumentType<NoteModel, BeAnObject>,
+    {},
+    DocumentType<NoteModel, BeAnObject>
+  >,
+  next: () => void,
+) {
+  this.populate({ path: 'topic' })
+  next()
 }
