@@ -95,7 +95,7 @@
     "@socket.io/redis-emitter": "4.1.1",
     "@typegoose/auto-increment": "1.3.0",
     "@typegoose/typegoose": "9.8.1",
-    "algoliasearch": "4.13.0",
+    "algoliasearch": "4.13.1",
     "axios": "*",
     "axios-retry": "3.2.5",
     "bcrypt": "5.0.1",
