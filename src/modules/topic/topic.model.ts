@@ -26,6 +26,7 @@ export class TopicModel extends BaseModel {
 
   @prop()
   @IsString()
+  @MaxLength(100, { message: '简介最多 100 个字符' })
   introduce: string
 
   @prop({ unique: true })
