@@ -83,7 +83,7 @@
     "@nestjs/common": "8.4.5",
     "@nestjs/core": "8.4.5",
     "@nestjs/event-emitter": "1.1.1",
-    "@nestjs/jwt": "8.0.0",
+    "@nestjs/jwt": "8.0.1",
     "@nestjs/mapped-types": "*",
     "@nestjs/passport": "8.2.1",
     "@nestjs/platform-fastify": "8.4.5",
