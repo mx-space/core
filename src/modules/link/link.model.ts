@@ -2,7 +2,6 @@ import { Transform } from 'class-transformer'
 import {
   IsEmail,
   IsEnum,
-  IsNotEmpty,
   IsOptional,
   IsString,
   IsUrl,
@@ -66,10 +65,9 @@ export class LinkModel extends BaseModel {
   avatar?: string
 
   @IsOptional()
-  @IsString({ message: '只能是字符串！' })
-  @IsNotEmpty({ message: '不能为空啦' })
+  @IsString()
   @prop({ trim: true })
-  @MaxLength(50, { message: '超过 50 会坏掉的！' })
+  @MaxLength(50, { message: '描述信息超过 50 会坏掉的！' })
   description?: string
 
   @IsOptional()
