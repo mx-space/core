@@ -4,6 +4,7 @@ overrides:
   typescript: 4.6.4
   ioredis: 5.0.5
   webpack: 5.72.1
+  fastify-cors: npm:@fastify/cors@7.0.0
 
 specifiers:
   '@algolia/client-search': '*'
@@ -898,6 +899,13 @@ packages:
       fastify-plugin: 3.0.1
     dev: false
 
+  /@fastify/cors/7.0.0:
+    resolution: {integrity: sha512-nlo6ScwagBNJacAZD3KX90xjWLIoV0vN9QqoX1wUE9ZeZMdvkVkMZCGlxEtr00NshV0X5wDge4w5rwox7rRzSg==}
+    dependencies:
+      fastify-plugin: 3.0.1
+      vary: 1.1.2
+    dev: false
+
   /@fastify/error/2.0.0:
     resolution: {integrity: sha512-wI3fpfDT0t7p8E6dA2eTECzzOd+bZsZCJ2Hcv+Onn2b7ZwK3RwD27uW2QDaMtQhAfWQQP+WNK7nKf0twLsBf9w==}
     dev: false
@@ -1450,7 +1458,7 @@ packages:
       '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
       '@nestjs/core': 8.4.5_edtlba5ql5ozd4n6kwmdg42bj4
       fastify: 3.29.0
-      fastify-cors: 6.1.0
+      fastify-cors: /@fastify/cors/7.0.0
       fastify-formbody: 5.2.0
       light-my-request: 4.10.1
       middie: 6.1.0
@@ -4074,20 +4082,6 @@ packages:
     hasBin: true
     dependencies:
       strnum: 1.0.5
-    dev: false
-
-  /fastify-cors/6.0.3:
-    resolution: {integrity: sha512-fMbXubKKyBHHCfSBtsCi3+7VyVRdhJQmGes5gM+eGKkRErCdm0NaYO0ozd31BQBL1ycoTIjbqOZhJo4RTF/Vlg==}
-    dependencies:
-      fastify-plugin: 3.0.1
-      vary: 1.1.2
-    dev: false
-
-  /fastify-cors/6.1.0:
-    resolution: {integrity: sha512-QBKz32IoY/iuT74CunRY1XOSpjSTIOh9E3FxulXIBhd0D2vdgG0kDvy0eG6HA/88sRfWHeba43LkGEXPz0Rh8g==}
-    dependencies:
-      fastify-cors-deprecated: /fastify-cors/6.0.3
-      process-warning: 1.0.0
     dev: false
 
   /fastify-formbody/5.2.0:

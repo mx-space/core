@@ -108,7 +108,7 @@ export class NoteModel extends WriteBaseModel {
   @Type(() => NoteMusic)
   music?: NoteMusic[]
 
-  @prop()
+  @prop({ ref: () => TopicModel })
   @IsMongoId()
   @IsOptional()
   topicId?: Ref<TopicModel>

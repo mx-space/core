@@ -1,5 +1,5 @@
 import { isDefined, isMongoId } from 'class-validator'
-import { FilterQuery } from 'mongoose'
+import { FilterQuery, PaginateOptions } from 'mongoose'
 
 import { Inject, Injectable, forwardRef } from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
@@ -224,6 +224,26 @@ export class NoteService {
     }
 
     return this.model.findById(unique)
+  }
+
+  async getNotePaginationByTopicId(
+    topicId: string,
+    pagination: PaginateOptions = {},
+    condition?: FilterQuery<NoteModel>,
+  ) {
+    const { page = 1, limit = 10, ...rest } = pagination
+
+    return await this.model.paginate(
+      {
+        topicId,
+        ...condition,
+      },
+      {
+        page,
+        limit,
+        ...rest,
+      },
+    )
   }
 
   async needCreateDefult() {

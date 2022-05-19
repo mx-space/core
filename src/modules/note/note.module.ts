@@ -3,6 +3,7 @@ import { Module, forwardRef } from '@nestjs/common'
 import { GatewayModule } from '~/processors/gateway/gateway.module'
 
 import { CommentModule } from '../comment/comment.module'
+import { TopicModule } from '../topic/topic.module'
 import { NoteController } from './note.controller'
 import { NoteService } from './note.service'
 
@@ -10,6 +11,11 @@ import { NoteService } from './note.service'
   controllers: [NoteController],
   providers: [NoteService],
   exports: [NoteService],
-  imports: [GatewayModule, forwardRef(() => CommentModule)],
+  imports: [
+    GatewayModule,
+    forwardRef(() => CommentModule),
+
+    forwardRef(() => TopicModule),
+  ],
 })
 export class NoteModule {}

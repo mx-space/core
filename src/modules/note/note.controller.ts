@@ -1,3 +1,5 @@
+import { FilterQuery } from 'mongoose'
+
 import {
   BadRequestException,
   Body,
@@ -28,6 +30,7 @@ import {
   addYearCondition,
 } from '~/transformers/db-query.transformer'
 
+import { PageQueryDto } from '../page/page.dto'
 import {
   ListQueryDto,
   NidType,
@@ -270,5 +273,28 @@ export class NoteController {
       .lean()
     delete current.password
     return { data: current, next, prev }
+  }
+
+  @Get('/topics/:id')
+  async getNotesByTopic(
+    @Param() params: MongoIdDto,
+    @Query() query: PageQueryDto,
+    @IsMaster() isMaster: boolean,
+  ) {
+    const { id } = params
+    const { size, page, select = '_id title nid id created modified' } = query
+    const condition: FilterQuery<NoteModel> = isMaster
+      ? { $or: [{ hide: false }, { hide: true }] }
+      : { hide: false }
+
+    return await this.noteService.getNotePaginationByTopicId(
+      id,
+      {
+        page,
+        limit: size,
+        select,
+      },
+      { ...condition },
+    )
   }
 }

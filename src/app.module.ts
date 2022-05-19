@@ -38,6 +38,7 @@ import { ServerlessModule } from './modules/serverless/serverless.module'
 import { SitemapModule } from './modules/sitemap/sitemap.module'
 import { SnippetModule } from './modules/snippet/snippet.module'
 import { ToolModule } from './modules/tool/tool.module'
+import { TopicModule } from './modules/topic/topic.module'
 import { UserModule } from './modules/user/user.module'
 import { CacheModule } from './processors/cache/cache.module'
 import { DatabaseModule } from './processors/database/database.module'
@@ -70,6 +71,7 @@ import { LoggerModule } from './processors/logger/logger.module'
     ProjectModule,
     PTYModule,
     RecentlyModule,
+    TopicModule,
     SayModule,
     SearchModule,
     ServerlessModule,

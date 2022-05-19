@@ -192,6 +192,7 @@
   "resolutions": {
     "typescript": "4.6.4",
     "ioredis": "5.0.5",
-    "webpack": "5.72.1"
+    "webpack": "5.72.1",
+    "fastify-cors": "npm:@fastify/cors@7.0.0"
   }
 }

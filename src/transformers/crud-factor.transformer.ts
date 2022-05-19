@@ -28,9 +28,11 @@ import { InjectModel } from '~/transformers/model.transformer'
 export type BaseCrudModuleType<T> = {
   _model: MongooseModel<T>
 }
+
+export type ClassType<T> = new (...args: any[]) => T
 export function BaseCrudFactory<
   T extends AnyParamConstructor<BaseModel & { id?: string }>,
->({ model }: { model: T }): Type<any> {
+>({ model, classUpper }: { model: T; classUpper?: ClassType<any> }): Type<any> {
   const prefix = model.name.toLowerCase().replace(/model$/, '')
   const pluralizeName = pluralize(prefix) as string
   const tagPrefix =
@@ -42,13 +44,17 @@ export function BaseCrudFactory<
 
   class Dto extends model {}
 
+  const Upper = classUpper || class {}
+
   @ApiTags(`${tagPrefix} Routes`)
   @Controller(pluralizeName)
-  class BaseCrud {
+  class BaseCrud extends Upper {
     constructor(
       @InjectModel(model) private readonly _model: MongooseModel<T>,
       private readonly eventManager: EventManagerService,
-    ) {}
+    ) {
+      super(_model, eventManager)
+    }
 
     public get model() {
       return this._model
