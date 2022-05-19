@@ -23,7 +23,7 @@ import { ServerlessReferenceDto } from './serverless.dto'
 import { ServerlessService } from './serverless.service'
 
 @ApiName
-@Controller(['serverless', 'functions'])
+@Controller(['serverless', 'fn'])
 export class ServerlessController {
   constructor(private readonly serverlessService: ServerlessService) {}
 
