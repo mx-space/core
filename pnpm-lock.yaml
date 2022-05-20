@@ -25,7 +25,7 @@ specifiers:
   '@nestjs/passport': 8.2.1
   '@nestjs/platform-fastify': 8.4.5
   '@nestjs/platform-socket.io': 8.4.5
-  '@nestjs/schedule': 2.0.0
+  '@nestjs/schedule': 2.0.1
   '@nestjs/schematics': 8.0.11
   '@nestjs/swagger': 5.2.1
   '@nestjs/testing': 8.4.5
@@ -135,7 +135,7 @@ dependencies:
   '@nestjs/passport': 8.2.1_wcpfk3sfbfzafjomcconjln45y
   '@nestjs/platform-fastify': 8.4.5_ydewkhgqdrhc2o62hf5fyq4ami
   '@nestjs/platform-socket.io': 8.4.5_lydomrx4wz7jszgnhpjmrevehu
-  '@nestjs/schedule': 2.0.0_vwzjbrckvynfemwboijsh2d5xa
+  '@nestjs/schedule': 2.0.1_vwzjbrckvynfemwboijsh2d5xa
   '@nestjs/swagger': 5.2.1_qmjqmux2qgvao6qvoivoutpo7e
   '@nestjs/websockets': 8.4.5_ffwmkabwda7veewprqdcxvepri
   '@socket.io/redis-adapter': 7.2.0
@@ -1502,8 +1502,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@nestjs/schedule/2.0.0_vwzjbrckvynfemwboijsh2d5xa:
-    resolution: {integrity: sha512-cSWYJu96obpg2Ed8B5G6fhl6S9F/FH7BNf8x+9Ust6U9OqyJxaJf8h6wAhycP7rUXqUNagnllOWjYb9iTa+IVQ==}
+  /@nestjs/schedule/2.0.1_vwzjbrckvynfemwboijsh2d5xa:
+    resolution: {integrity: sha512-NqiCk3P7HDMw55kpefNIzAAQEsP+6dDIXUt4/KQANtAZ+opdLzo8rkzI0j8vDqgYeTh+PKq+V6zwSRjR61xPAQ==}
     peerDependencies:
       '@nestjs/common': ^6.10.11 || ^7.0.0 || ^8.0.0
       '@nestjs/core': ^7.0.0 || ^8.0.0
@@ -1511,7 +1511,7 @@ packages:
     dependencies:
       '@nestjs/common': 8.4.5_6f4lpgcqtymig7zmaqvktdn4oq
       '@nestjs/core': 8.4.5_edtlba5ql5ozd4n6kwmdg42bj4
-      cron: 1.8.2
+      cron: 2.0.0
       reflect-metadata: 0.1.13
       uuid: 8.3.2
     dev: false
@@ -3217,17 +3217,10 @@ packages:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
     dev: true
 
-  /cron/1.8.2:
-    resolution: {integrity: sha512-Gk2c4y6xKEO8FSAUTklqtfSr7oTq0CiPQeLBG5Fl0qoXpZyMcj1SG59YL+hqq04bu6/IuEA7lMkYDAplQNKkyg==}
-    dependencies:
-      moment-timezone: 0.5.34
-    dev: false
-
   /cron/2.0.0:
     resolution: {integrity: sha512-RPeRunBCFr/WEo7WLp8Jnm45F/ziGJiHVvVQEBSDTSGu6uHW49b2FOP2O14DcXlGJRLhwE7TIoDzHHK4KmlL6g==}
     dependencies:
       luxon: 1.28.0
-    dev: true
 
   /cross-env/7.0.3:
     resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
@@ -5962,7 +5955,6 @@ packages:
 
   /luxon/1.28.0:
     resolution: {integrity: sha512-TfTiyvZhwBYM/7QdAVDh+7dBTBA29v4ik0Ce9zda3Mnf8on1S5KJI8P2jKFZ8+5C0jhmr0KwJEO/Wdpm0VeWJQ==}
-    dev: true
 
   /macos-release/2.5.0:
     resolution: {integrity: sha512-EIgv+QZ9r+814gjJj0Bt5vSLJLzswGmSUbUpbi9AIr/fsN2IWFBl2NucV9PAiek+U1STK468tEkxmVYUtuAN3g==}
@@ -6108,16 +6100,6 @@ packages:
     resolution: {integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==}
     engines: {node: '>=10'}
     hasBin: true
-    dev: false
-
-  /moment-timezone/0.5.34:
-    resolution: {integrity: sha512-3zAEHh2hKUs3EXLESx/wsgw6IQdusOT8Bxm3D9UrHPQR7zlMmzwybC8zHEM1tQ4LJwP7fcxrWr8tuBg05fFCbg==}
-    dependencies:
-      moment: 2.29.1
-    dev: false
-
-  /moment/2.29.1:
-    resolution: {integrity: sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==}
     dev: false
 
   /mongodb-connection-string-url/2.5.2:
