@@ -62,9 +62,6 @@ export class ServerlessService {
           )
         }
       })
-
-      // module.paths.push(NODE_REQUIRE_PATH)
-      consola.info(module.paths)
     })
   }
 
