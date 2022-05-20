@@ -56,7 +56,7 @@ specifiers:
   axios: '*'
   axios-retry: 3.2.5
   bcrypt: 5.0.1
-  cache-manager: 3.6.1
+  cache-manager: 3.6.2
   cache-manager-ioredis: 2.1.0
   camelcase-keys: 7.0.2
   class-transformer: 0.5.1
@@ -127,7 +127,7 @@ dependencies:
   '@babel/types': 7.17.10
   '@fastify/cookie': 6.0.0
   '@fastify/multipart': 6.0.0
-  '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
+  '@nestjs/common': 8.4.5_6f4lpgcqtymig7zmaqvktdn4oq
   '@nestjs/core': 8.4.5_edtlba5ql5ozd4n6kwmdg42bj4
   '@nestjs/event-emitter': 1.1.1_vwzjbrckvynfemwboijsh2d5xa
   '@nestjs/jwt': 8.0.1_@nestjs+common@8.4.5
@@ -146,7 +146,7 @@ dependencies:
   axios: 0.27.2
   axios-retry: 3.2.5
   bcrypt: 5.0.1
-  cache-manager: 3.6.1
+  cache-manager: 3.6.2
   cache-manager-ioredis: 2.1.0
   camelcase-keys: 7.0.2
   class-transformer: 0.5.1
@@ -1335,7 +1335,7 @@ packages:
       - webpack-cli
     dev: true
 
-  /@nestjs/common/8.4.5_5jjik4n247rug6wg4nklwaga6q:
+  /@nestjs/common/8.4.5_6f4lpgcqtymig7zmaqvktdn4oq:
     resolution: {integrity: sha512-DL30hLtcmosOWGRFrU1YYB59k+7FGX82sbq2QiXLsEXuSig8ZzFm8LR+tD8CX+aKabU9t1GGc18HLjFud/3sww==}
     peerDependencies:
       cache-manager: '*'
@@ -1352,7 +1352,7 @@ packages:
         optional: true
     dependencies:
       axios: 0.27.2
-      cache-manager: 3.6.1
+      cache-manager: 3.6.2
       class-transformer: 0.5.1
       class-validator: 0.13.2
       iterare: 1.2.1
@@ -1382,7 +1382,7 @@ packages:
       '@nestjs/websockets':
         optional: true
     dependencies:
-      '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
+      '@nestjs/common': 8.4.5_6f4lpgcqtymig7zmaqvktdn4oq
       '@nestjs/websockets': 8.4.5_ffwmkabwda7veewprqdcxvepri
       '@nuxtjs/opencollective': 0.3.2
       fast-safe-stringify: 2.1.1
@@ -1404,7 +1404,7 @@ packages:
       '@nestjs/core': ^7.0.0 || ^8.0.0
       reflect-metadata: ^0.1.12
     dependencies:
-      '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
+      '@nestjs/common': 8.4.5_6f4lpgcqtymig7zmaqvktdn4oq
       '@nestjs/core': 8.4.5_edtlba5ql5ozd4n6kwmdg42bj4
       eventemitter2: 6.4.5
       reflect-metadata: 0.1.13
@@ -1415,7 +1415,7 @@ packages:
     peerDependencies:
       '@nestjs/common': ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
-      '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
+      '@nestjs/common': 8.4.5_6f4lpgcqtymig7zmaqvktdn4oq
       '@types/jsonwebtoken': 8.5.8
       jsonwebtoken: 8.5.1
     dev: false
@@ -1433,7 +1433,7 @@ packages:
       class-validator:
         optional: true
     dependencies:
-      '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
+      '@nestjs/common': 8.4.5_6f4lpgcqtymig7zmaqvktdn4oq
       class-transformer: 0.5.1
       class-validator: 0.13.2
       reflect-metadata: 0.1.13
@@ -1445,7 +1445,7 @@ packages:
       '@nestjs/common': ^6.0.0 || ^7.0.0 || ^8.0.0
       passport: ^0.4.0 || ^0.5.0
     dependencies:
-      '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
+      '@nestjs/common': 8.4.5_6f4lpgcqtymig7zmaqvktdn4oq
       passport: 0.5.3
     dev: false
 
@@ -1455,7 +1455,7 @@ packages:
       '@nestjs/common': ^8.0.0
       '@nestjs/core': ^8.0.0
     dependencies:
-      '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
+      '@nestjs/common': 8.4.5_6f4lpgcqtymig7zmaqvktdn4oq
       '@nestjs/core': 8.4.5_edtlba5ql5ozd4n6kwmdg42bj4
       fastify: 3.29.0
       fastify-cors: /@fastify/cors/7.0.0
@@ -1475,7 +1475,7 @@ packages:
       '@nestjs/websockets': ^8.0.0
       rxjs: ^7.1.0
     dependencies:
-      '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
+      '@nestjs/common': 8.4.5_6f4lpgcqtymig7zmaqvktdn4oq
       '@nestjs/websockets': 8.4.5_ffwmkabwda7veewprqdcxvepri
       rxjs: 7.5.5
       socket.io: 4.5.0
@@ -1493,7 +1493,7 @@ packages:
       '@nestjs/core': ^7.0.0 || ^8.0.0
       reflect-metadata: ^0.1.12
     dependencies:
-      '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
+      '@nestjs/common': 8.4.5_6f4lpgcqtymig7zmaqvktdn4oq
       '@nestjs/core': 8.4.5_edtlba5ql5ozd4n6kwmdg42bj4
       cron: 1.8.2
       reflect-metadata: 0.1.13
@@ -1544,7 +1544,7 @@ packages:
       swagger-ui-express:
         optional: true
     dependencies:
-      '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
+      '@nestjs/common': 8.4.5_6f4lpgcqtymig7zmaqvktdn4oq
       '@nestjs/core': 8.4.5_edtlba5ql5ozd4n6kwmdg42bj4
       '@nestjs/mapped-types': 1.0.1_akthuv4zoh6zi6yuexu4w2u5ge
       fastify-swagger: /@fastify/swagger/6.0.1
@@ -1570,7 +1570,7 @@ packages:
         optional: true
     dependencies:
       optional: 0.1.4
-      '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
+      '@nestjs/common': 8.4.5_6f4lpgcqtymig7zmaqvktdn4oq
       '@nestjs/core': 8.4.5_edtlba5ql5ozd4n6kwmdg42bj4
       tslib: 2.4.0
     dev: true
@@ -1587,7 +1587,7 @@ packages:
       '@nestjs/platform-socket.io':
         optional: true
     dependencies:
-      '@nestjs/common': 8.4.5_5jjik4n247rug6wg4nklwaga6q
+      '@nestjs/common': 8.4.5_6f4lpgcqtymig7zmaqvktdn4oq
       '@nestjs/core': 8.4.5_edtlba5ql5ozd4n6kwmdg42bj4
       '@nestjs/platform-socket.io': 8.4.5_lydomrx4wz7jszgnhpjmrevehu
       iterare: 1.2.1
@@ -2842,11 +2842,11 @@ packages:
       - supports-color
     dev: false
 
-  /cache-manager/3.6.1:
-    resolution: {integrity: sha512-jxJvGYhN5dUgpriAdsDnnYbKse4dEXI5i3XpwTfPq5utPtXH1uYXWyGLHGlbSlh9Vq4ytrgAUVwY+IodNeKigA==}
+  /cache-manager/3.6.2:
+    resolution: {integrity: sha512-JEkwAFT0RmUO4C6LtqpFeEKF2d6T6ELTrosMKPGdDyv6PzZjBDTvPJcbBNFPFNbnYfD06oD1KH3qB4vs7lDBig==}
     dependencies:
       async: 3.2.3
-      lodash: 4.17.21
+      lodash.clonedeep: 4.5.0
       lru-cache: 6.0.0
     dev: false
 
@@ -5811,6 +5811,10 @@ packages:
 
   /lodash.bind/4.2.1:
     resolution: {integrity: sha1-euMBfpOWIqwxt9fX3LGzTbFpDTU=}
+    dev: false
+
+  /lodash.clonedeep/4.5.0:
+    resolution: {integrity: sha1-4j8/nE+Pvd6HJSnBBxhXoIblzO8=}
     dev: false
 
   /lodash.compact/3.0.1:
