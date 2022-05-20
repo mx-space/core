@@ -147,29 +147,32 @@ export class NoteService {
       })
       await Promise.all([
         this.imageService.recordImageDimensions(this.noteModel, id),
-        this.model.findById(id).then(async (doc) => {
-          if (!doc) {
-            return
-          }
-          delete doc.password
-          this.eventManager.broadcast(BusinessEvents.NOTE_UPDATE, doc, {
-            scope: EventScope.TO_SYSTEM,
-          })
+        this.model
+          .findById(id)
+          .lean()
+          .then(async (doc) => {
+            if (!doc) {
+              return
+            }
+            delete doc.password
+            this.eventManager.broadcast(BusinessEvents.NOTE_UPDATE, doc, {
+              scope: EventScope.TO_SYSTEM,
+            })
 
-          this.eventManager.broadcast(
-            BusinessEvents.NOTE_UPDATE,
-            {
-              ...doc,
-              text: await this.textMacrosService.replaceTextMacro(
-                doc.text,
-                doc,
-              ),
-            },
-            {
-              scope: EventScope.TO_VISITOR,
-            },
-          )
-        }),
+            this.eventManager.broadcast(
+              BusinessEvents.NOTE_UPDATE,
+              {
+                ...doc,
+                text: await this.textMacrosService.replaceTextMacro(
+                  doc.text,
+                  doc,
+                ),
+              },
+              {
+                scope: EventScope.TO_VISITOR,
+              },
+            )
+          }),
       ])
     })
     return updated
