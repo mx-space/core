@@ -16,7 +16,7 @@ import {
 import { ApiOperation } from '@nestjs/swagger'
 
 import { Auth } from '~/common/decorator/auth.decorator'
-import { Paginator } from '~/common/decorator/http.decorator'
+import { HTTPDecorators, Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
@@ -276,6 +276,7 @@ export class NoteController {
   }
 
   @Get('/topics/:id')
+  @HTTPDecorators.Paginator
   async getNotesByTopic(
     @Param() params: MongoIdDto,
     @Query() query: PageQueryDto,
