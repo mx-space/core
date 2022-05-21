@@ -24,10 +24,11 @@ import { VisitDocument } from '~/common/decorator/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
+import { PagerDto } from '~/shared/dto/pager.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 
 import { CategoryModel } from '../category/category.model'
-import { CategoryAndSlugDto, PostQueryDto } from './post.dto'
+import { CategoryAndSlugDto } from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'
 
@@ -41,7 +42,7 @@ export class PostController {
 
   @Get('/')
   @Paginator
-  async getPaginate(@Query() query: PostQueryDto) {
+  async getPaginate(@Query() query: PagerDto) {
     const { size, select, page, year, sortBy, sortOrder } = query
 
     return await this.postService.findWithPaginator(

@@ -25,12 +25,12 @@ import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { IntIdOrMongoIdDto, MongoIdDto } from '~/shared/dto/id.dto'
+import { PagerDto } from '~/shared/dto/pager.dto'
 import {
   addHidePasswordAndHideCondition,
   addYearCondition,
 } from '~/transformers/db-query.transformer'
 
-import { PageQueryDto } from '../page/page.dto'
 import {
   ListQueryDto,
   NidType,
@@ -279,11 +279,17 @@ export class NoteController {
   @HTTPDecorators.Paginator
   async getNotesByTopic(
     @Param() params: MongoIdDto,
-    @Query() query: PageQueryDto,
+    @Query() query: PagerDto,
     @IsMaster() isMaster: boolean,
   ) {
     const { id } = params
-    const { size, page, select = '_id title nid id created modified' } = query
+    const {
+      size,
+      page,
+      select = '_id title nid id created modified',
+      sortBy,
+      sortOrder,
+    } = query
     const condition: FilterQuery<NoteModel> = isMaster
       ? { $or: [{ hide: false }, { hide: true }] }
       : { hide: false }
@@ -294,6 +300,7 @@ export class NoteController {
         page,
         limit: size,
         select,
+        sort: sortBy ? { [sortBy]: sortOrder } : undefined,
       },
       { ...condition },
     )

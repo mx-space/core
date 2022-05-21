@@ -1,5 +1,6 @@
 import { Expose, Transform } from 'class-transformer'
 import {
+  IsEnum,
   IsInt,
   IsMongoId,
   IsNotEmpty,
@@ -41,6 +42,27 @@ export class PagerDto extends DbQueryDto {
   @IsNotEmpty()
   @ApiProperty({ required: false })
   select?: string
+
+  @IsOptional()
+  @IsString()
+  sortBy?: string
+
+  @IsOptional()
+  @IsEnum([1, -1])
+  @Transform(({ value: val }) => {
+    // @ts-ignore
+    const isStringNumber = typeof val === 'string' && !isNaN(val)
+
+    if (isStringNumber) {
+      return parseInt(val)
+    } else {
+      return {
+        asc: 1,
+        desc: -1,
+      }[val.toString()]
+    }
+  })
+  sortOrder?: 1 | -1
 
   @IsOptional()
   @Transform(({ value: val }) => parseInt(val))

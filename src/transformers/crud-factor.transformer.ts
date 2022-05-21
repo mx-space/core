@@ -69,12 +69,12 @@ export function BaseCrudFactory<
     @Get('/')
     @Paginator
     async gets(@Query() pager: PagerDto) {
-      const { size, page, select, state } = pager
+      const { size, page, select, state, sortBy, sortOrder } = pager
       // @ts-ignore
       return await this._model.paginate(state !== undefined ? { state } : {}, {
         limit: size,
         page,
-        sort: { created: -1 },
+        sort: sortBy ? { [sortBy]: sortOrder } : { created: -1 },
         select,
       })
     }

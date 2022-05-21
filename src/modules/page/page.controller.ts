@@ -18,8 +18,8 @@ import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
+import { PagerDto } from '~/shared/dto/pager.dto'
 
-import { PageQueryDto } from './page.dto'
 import { PageModel, PartialPageModel } from './page.model'
 import { PageService } from './page.service'
 
@@ -33,7 +33,7 @@ export class PageController {
 
   @Get('/')
   @Paginator
-  async getPagesSummary(@Query() query: PageQueryDto) {
+  async getPagesSummary(@Query() query: PagerDto) {
     const { size, select, page, sortBy, sortOrder } = query
 
     return await this.pageService.model.paginate(

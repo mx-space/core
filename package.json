@@ -15,8 +15,8 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "prettier --ignore-path ./.prettierignore --write ",
-      "eslint --cache"
+      "eslint --cache --fix",
+      "prettier --ignore-path ./.prettierignore --write "
     ]
   },
   "repository": {
@@ -51,16 +51,6 @@
     "patch": "node bin/patch.js",
     "docs": "npx @compodoc/compodoc -p tsconfig.json -s -d docs",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
-  },
-  "pnpm": {
-    "peerDependencyRules": {
-      "allowedVersions": {
-        "class-transformer": "0.5.1"
-      },
-      "ignoreMissing": [
-        "webpack"
-      ]
-    }
   },
   "bump": {
     "before": [
