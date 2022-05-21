@@ -16,6 +16,8 @@ function getOsBuildAssetName() {
   return `release-${os}-latest.zip`
 }
 
+const { appendFileSync } = require('fs')
+
 const PKG = require('../package.json')
 async function main() {
   const res = await fetch(
@@ -30,9 +32,9 @@ async function main() {
   }
 
   const buffer = await fetch('https://cc.shizuri.net/' + downloadUrl).then(
-    (res) => res.buffer(),
+    (res) => res.arrayBuffer(),
   )
-  fs.writeFileSync(`release-downloaded.zip`, buffer, { flag: 'w' })
+  appendFileSync(`release-downloaded.zip`, Buffer.from(buffer))
   await $`unzip release-downloaded.zip -d mx-server`
 }
 

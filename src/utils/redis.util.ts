@@ -5,6 +5,6 @@ export const getRedisKey = <T extends string = RedisKeys | '*'>(
   ...concatKeys: string[]
 ): `mx:${T}${string | ''}` => {
   return `mx:${key}${
-    concatKeys && concatKeys.length ? `_${concatKeys.join('_')}` : ''
+    concatKeys && concatKeys.length ? `:${concatKeys.join('_')}` : ''
   }`
 }
