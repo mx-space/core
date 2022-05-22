@@ -3,7 +3,6 @@ import { Readable } from 'stream'
 
 import { BadRequestException, Injectable } from '@nestjs/common'
 
-import { API_VERSION } from '~/app.config'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 
 import { ConfigsService } from '../configs/configs.service'
@@ -71,8 +70,6 @@ export class FileService {
 
   async resolveFileUrl(type: FileType, name: string) {
     const { serverUrl } = await this.configService.get('url')
-    return `${serverUrl}${
-      isDev ? '' : `/api/v${API_VERSION}`
-    }/objects/${type}/${name}`
+    return `${serverUrl.replace(/\/+$/, '')}/objects/${type}/${name}`
   }
 }
