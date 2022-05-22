@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
+import { customAlphabet } from 'nanoid/async'
 
 import {
   Controller,
@@ -17,9 +18,9 @@ import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { alphabet } from '~/constants/other.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { md5 } from '~/utils'
 
 import { FileQueryDto, FileUploadDto } from './file.dto'
 import { FileService } from './file.service'
@@ -73,7 +74,7 @@ export class FileController {
     const { type = 'file' } = query
 
     const ext = path.extname(file.filename)
-    const filename = md5(file.filename) + ext.toLowerCase()
+    const filename = (await customAlphabet(alphabet)(18)) + ext.toLowerCase()
 
     await this.service.writeFile(type, filename, file.file)
 

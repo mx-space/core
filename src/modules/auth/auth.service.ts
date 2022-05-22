@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { MasterLostException } from '~/common/exceptions/master-lost.exception'
+import { alphabet } from '~/constants/other.constant'
 import {
   TokenModel,
   UserModel as User,
@@ -75,13 +76,7 @@ export class AuthService {
   }
 
   async generateAccessToken() {
-    const ap = customAlphabet(
-      `1234567890${Array(26)
-        .fill(null)
-        .map((_, i) => String.fromCharCode(97 + i))
-        .join('')}`,
-      40,
-    )
+    const ap = customAlphabet(alphabet, 40)
     return await ap()
   }
 
