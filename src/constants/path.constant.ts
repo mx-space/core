@@ -12,6 +12,8 @@ export const DATA_DIR = isDev ? join(cwd, './tmp') : join(HOME, '.mx-space')
 export const USER_ASSET_DIR = join(DATA_DIR, 'assets')
 export const LOG_DIR = join(DATA_DIR, 'log')
 
+export const STATIC_FILE_DIR = join(DATA_DIR, 'static')
+
 export const BACKUP_DIR = !isDev
   ? join(DATA_DIR, 'backup')
   : join(TEMP_DIR, 'backup')

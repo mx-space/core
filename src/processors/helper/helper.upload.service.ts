@@ -5,7 +5,7 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 
 @Injectable()
 export class UploadService {
-  public async validMultipartField(
+  public async getAndValidMultipartField(
     req: FastifyRequest,
   ): Promise<MultipartFile> {
     const data = await req.file()

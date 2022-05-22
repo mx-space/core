@@ -20,6 +20,7 @@ import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
 import { DebugModule } from './modules/debug/debug.module'
 import { FeedModule } from './modules/feed/feed.module'
+import { FileModule } from './modules/file/file.module'
 import { HealthModule } from './modules/health/health.module'
 import { InitModule } from './modules/init/init.module'
 import { LinkModule } from './modules/link/link.module'
@@ -60,6 +61,7 @@ import { LoggerModule } from './processors/logger/logger.module'
     CommentModule,
     ConfigsModule,
     FeedModule,
+    FileModule,
     HealthModule,
     InitModule,
     LinkModule,

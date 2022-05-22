@@ -10,6 +10,7 @@ import { CLUSTER } from '~/app.config'
 import {
   DATA_DIR,
   LOG_DIR,
+  STATIC_FILE_DIR,
   TEMP_DIR,
   USER_ASSET_DIR,
 } from '~/constants/path.constant'
@@ -32,6 +33,9 @@ function mkdirs() {
     Logger.log(chalk.blue(`日志目录已经建好: ${LOG_DIR}`))
     mkdirSync(USER_ASSET_DIR, { recursive: true })
     Logger.log(chalk.blue(`资源目录已经建好: ${USER_ASSET_DIR}`))
+
+    mkdirSync(STATIC_FILE_DIR, { recursive: true })
+    Logger.log(chalk.blue(`文件存放目录已经建好: ${STATIC_FILE_DIR}`))
   }
 }
 
