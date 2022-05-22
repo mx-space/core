@@ -107,7 +107,7 @@
     "inquirer": "*",
     "isbot": "3.5.0",
     "js-yaml": "*",
-    "jszip": "3.9.1",
+    "jszip": "3.10.0",
     "linkedom": "0.14.9",
     "lodash": "*",
     "marked": "4.0.16",
