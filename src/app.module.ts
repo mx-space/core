@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule, Type } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
+import { ThrottlerGuard } from '@nestjs/throttler'
 
 import { AppController } from './app.controller'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
@@ -124,6 +125,10 @@ import { LoggerModule } from './processors/logger/logger.module'
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

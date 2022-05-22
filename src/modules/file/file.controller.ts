@@ -10,9 +10,8 @@ import {
   Query,
   Req,
   Res,
-  UseGuards,
 } from '@nestjs/common'
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler'
+import { Throttle } from '@nestjs/throttler'
 
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
@@ -47,7 +46,6 @@ export class FileController {
   }
 
   @Get('/:type/:name')
-  @UseGuards(ThrottlerGuard)
   @Throttle(10, 60)
   @HTTPDecorators.Bypass
   async get(@Param() params: FileQueryDto, @Res() reply: FastifyReply) {

@@ -37,7 +37,10 @@ const providers: Provider<any>[] = [
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot({}),
+    ThrottlerModule.forRoot({
+      ttl: 60,
+      limit: 240,
+    }),
     EventEmitterModule.forRoot({
       wildcard: false,
       // the delimiter used to segment namespaces

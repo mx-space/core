@@ -1,5 +1,6 @@
 import { UseGuards, applyDecorators } from '@nestjs/common'
 import { ApiBearerAuth, ApiUnauthorizedResponse } from '@nestjs/swagger'
+import { SkipThrottle } from '@nestjs/throttler'
 
 import { SECURITY } from '~/app.config'
 
@@ -14,6 +15,7 @@ export function Auth() {
   decorators.push(
     ApiBearerAuth(),
     ApiUnauthorizedResponse({ description: 'Unauthorized' }),
+    SkipThrottle(true),
   )
   return applyDecorators(...decorators)
 }
