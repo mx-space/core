@@ -1,6 +1,7 @@
 import { Global, Module, Provider, forwardRef } from '@nestjs/common'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
+import { ThrottlerModule } from '@nestjs/throttler'
 
 import { AggregateModule } from '~/modules/aggregate/aggregate.module'
 import { BackupModule } from '~/modules/backup/backup.module'
@@ -36,6 +37,7 @@ const providers: Provider<any>[] = [
 @Module({
   imports: [
     ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot({}),
     EventEmitterModule.forRoot({
       wildcard: false,
       // the delimiter used to segment namespaces

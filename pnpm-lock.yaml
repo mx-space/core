@@ -29,6 +29,7 @@ specifiers:
   '@nestjs/schematics': 8.0.11
   '@nestjs/swagger': 5.2.1
   '@nestjs/testing': 8.4.5
+  '@nestjs/throttler': 2.0.1
   '@nestjs/websockets': 8.4.5
   '@socket.io/redis-adapter': 7.2.0
   '@socket.io/redis-emitter': 4.1.1
@@ -139,6 +140,7 @@ dependencies:
   '@nestjs/platform-socket.io': 8.4.5_lydomrx4wz7jszgnhpjmrevehu
   '@nestjs/schedule': 2.0.1_vwzjbrckvynfemwboijsh2d5xa
   '@nestjs/swagger': 5.2.1_qmjqmux2qgvao6qvoivoutpo7e
+  '@nestjs/throttler': 2.0.1_vwzjbrckvynfemwboijsh2d5xa
   '@nestjs/websockets': 8.4.5_ffwmkabwda7veewprqdcxvepri
   '@socket.io/redis-adapter': 7.2.0
   '@socket.io/redis-emitter': 4.1.1
@@ -1595,6 +1597,19 @@ packages:
       tslib: 2.4.0
     dev: true
 
+  /@nestjs/throttler/2.0.1_vwzjbrckvynfemwboijsh2d5xa:
+    resolution: {integrity: sha512-ginW73rmOjBN27USuGidetEoa8VSGzxW3kEuCquEd5mETEtBfgIm4901b9tuLDnsczttE01imCHZ53J7+AuLJg==}
+    peerDependencies:
+      '@nestjs/common': ^7.0.0 || ^8.0.0
+      '@nestjs/core': ^7.0.0 || ^8.0.0
+      reflect-metadata: ^0.1.13
+    dependencies:
+      '@nestjs/common': 8.4.5_37tgzg5iwyrf23cqcmjxlmljgu
+      '@nestjs/core': 8.4.5_edtlba5ql5ozd4n6kwmdg42bj4
+      md5: 2.3.0
+      reflect-metadata: 0.1.13
+    dev: false
+
   /@nestjs/websockets/8.4.5_ffwmkabwda7veewprqdcxvepri:
     resolution: {integrity: sha512-xKBREaT0N6zYPvL+PKSeElWXdnNYCROmNGsZ/vpnSfnrGAwdSl/QVQ2+HMAgO4xiqmKNQEotvSW+Fs+PvdYx7Q==}
     peerDependencies:
@@ -2942,6 +2957,10 @@ packages:
   /chardet/0.7.0:
     resolution: {integrity: sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==}
 
+  /charenc/0.0.2:
+    resolution: {integrity: sha512-yrLQ/yVUFXkzg7EDQsPieE/53+0RlaWTs+wBrvW36cyilJ2SaDWfl4Yj7MtLTXleV9uEKefbAGUPv2/iWSooRA==}
+    dev: false
+
   /cheerio/0.22.0:
     resolution: {integrity: sha1-qbqoYKP5tZWmuBsahocxIe06Jp4=}
     engines: {node: '>= 0.6'}
@@ -3245,6 +3264,10 @@ packages:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  /crypt/0.0.2:
+    resolution: {integrity: sha1-iNf/fsDfuG9xPch7u0LQRNPmxBs=}
+    dev: false
 
   /css-select/1.2.0:
     resolution: {integrity: sha1-KzoRBTnFNV8c2NMUYj6HCxIeyFg=}
@@ -6006,6 +6029,14 @@ packages:
     hasBin: true
     dev: false
     optional: true
+
+  /md5/2.3.0:
+    resolution: {integrity: sha512-T1GITYmFaKuO91vxyoQMFETst+O71VUPEU3ze5GNzDm0OWdP8v1ziTaAEPUr/3kLsY3Sftgz242A1SetQiDL7g==}
+    dependencies:
+      charenc: 0.0.2
+      crypt: 0.0.2
+      is-buffer: 1.1.6
+    dev: false
 
   /memfs/3.4.1:
     resolution: {integrity: sha512-1c9VPVvW5P7I85c35zAdEr1TD5+F11IToIHIlrVIcflfnzPkJa0ZoYEoEdYDP8KgPFoSZ/opDrUsAoZWym3mtw==}
