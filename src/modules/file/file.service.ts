@@ -38,7 +38,8 @@ export class FileService {
     return new Promise(async (resolve, reject) => {
       const filePath = this.resolveFilePath(type, name)
       if (await this.checkIsExist(filePath)) {
-        throw new BadRequestException('文件已存在')
+        reject(new BadRequestException('文件已存在'))
+        return
       }
       await fs.mkdir(path.dirname(filePath), { recursive: true })
 
