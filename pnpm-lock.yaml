@@ -82,7 +82,7 @@ specifiers:
   isbot: 3.5.0
   jest: 28.1.0
   js-yaml: '*'
-  jszip: 3.9.1
+  jszip: 3.10.0
   linkedom: 0.14.9
   lint-staged: 12.4.1
   lodash: '*'
@@ -167,7 +167,7 @@ dependencies:
   inquirer: 8.2.4
   isbot: 3.5.0
   js-yaml: 4.1.0
-  jszip: 3.9.1
+  jszip: 3.10.0
   linkedom: 0.14.9
   lodash: 4.17.21
   marked: 4.0.16
@@ -5665,13 +5665,13 @@ packages:
       verror: 1.10.0
     dev: false
 
-  /jszip/3.9.1:
-    resolution: {integrity: sha512-H9A60xPqJ1CuC4Ka6qxzXZeU8aNmgOeP5IFqwJbQQwtu2EUYxota3LdsiZWplF7Wgd9tkAd0mdu36nceSaPuYw==}
+  /jszip/3.10.0:
+    resolution: {integrity: sha512-LDfVtOLtOxb9RXkYOwPyNBTQDL4eUbqahtoY6x07GiDJHwSYvn8sHHIw8wINImV3MqbMNve2gSuM1DDqEKk09Q==}
     dependencies:
       lie: 3.3.0
       pako: 1.0.11
       readable-stream: 2.3.7
-      set-immediate-shim: 1.0.1
+      setimmediate: 1.0.5
     dev: false
 
   /jwa/1.4.1:
@@ -7178,9 +7178,8 @@ packages:
     resolution: {integrity: sha512-edRH8mBKEWNVIVMKejNnuJxleqYE/ZSdcT8/Nem9/mmosx12pctd80s2Oy00KNZzrogMZS5mauK2/ymL1bvlvg==}
     dev: false
 
-  /set-immediate-shim/1.0.1:
-    resolution: {integrity: sha1-SysbJ+uAip+NzEgaWOXlb1mfP2E=}
-    engines: {node: '>=0.10.0'}
+  /setimmediate/1.0.5:
+    resolution: {integrity: sha1-KQy7Iy4waULX1+qbg3Mqt4VvgoU=}
     dev: false
 
   /setprototypeof/1.2.0:
