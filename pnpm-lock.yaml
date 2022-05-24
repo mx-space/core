@@ -84,7 +84,7 @@ specifiers:
   js-yaml: '*'
   jszip: 3.10.0
   linkedom: 0.14.9
-  lint-staged: 12.4.1
+  lint-staged: 12.4.2
   lodash: '*'
   marked: 4.0.16
   mime-types: '*'
@@ -231,7 +231,7 @@ devDependencies:
   husky: 8.0.1
   ioredis: 5.0.5
   jest: 28.1.0_p2brwx6nx5zpemlvbnwk444zqy
-  lint-staged: 12.4.1
+  lint-staged: 12.4.2
   prettier: 2.6.2
   rimraf: 3.0.2
   semver: 7.3.7
@@ -2496,7 +2496,7 @@ packages:
       type-fest: 0.21.3
 
   /ansi-regex/2.1.1:
-    resolution: {integrity: sha1-w7M6te42DYbg5ijwRorn7yfWVN8=}
+    resolution: {integrity: sha512-TIGnTpdo+E3+pCyAluZvtED5p5wCqLdezCyhPZzKPcxvFplEt4i+W7OONCKgeZFT3+y5NZZfOOS/Bdcanm1MYA==}
     engines: {node: '>=0.10.0'}
     dev: false
 
@@ -5748,8 +5748,8 @@ packages:
       uhyphen: 0.1.0
     dev: false
 
-  /lint-staged/12.4.1:
-    resolution: {integrity: sha512-PTXgzpflrQ+pODQTG116QNB+Q6uUTDg5B5HqGvNhoQSGt8Qy+MA/6zSnR8n38+sxP5TapzeQGTvoKni0KRS8Vg==}
+  /lint-staged/12.4.2:
+    resolution: {integrity: sha512-JAJGIzY/OioIUtrRePr8go6qUxij//mL+RGGoFKU3VWQRtIHgWoHizSqH0QVn2OwrbXS9Q6CICQjfj+E5qvrXg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     hasBin: true
     dependencies:
@@ -5760,7 +5760,7 @@ packages:
       execa: 5.1.1
       lilconfig: 2.0.4
       listr2: 4.0.2
-      micromatch: 4.0.4
+      micromatch: 4.0.5
       normalize-path: 3.0.0
       object-inspect: 1.12.0
       pidtree: 0.5.0
