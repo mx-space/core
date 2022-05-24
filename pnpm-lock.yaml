@@ -112,7 +112,7 @@ specifiers:
   slugify: 1.6.5
   snakecase-keys: 5.4.2
   socket.io: '*'
-  ts-jest: 28.0.2
+  ts-jest: 28.0.3
   ts-loader: 9.3.0
   ts-node: 10.7.0
   tsconfig-paths: 4.0.0
@@ -236,7 +236,7 @@ devDependencies:
   rimraf: 3.0.2
   semver: 7.3.7
   socket.io: 4.5.0
-  ts-jest: 28.0.2_4ksqq3cqyiyfmuhn4muu6a7fma
+  ts-jest: 28.0.3_4ksqq3cqyiyfmuhn4muu6a7fma
   ts-loader: 9.3.0_typescript@4.6.4
   ts-node: 10.7.0_7vfv75elicf7ijnl73ckmqo2cm
   tsconfig-paths: 4.0.0
@@ -7719,8 +7719,8 @@ packages:
     hasBin: true
     dev: true
 
-  /ts-jest/28.0.2_4ksqq3cqyiyfmuhn4muu6a7fma:
-    resolution: {integrity: sha512-IOZMb3D0gx6IHO9ywPgiQxJ3Zl4ECylEFwoVpENB55aTn5sdO0Ptyx/7noNBxAaUff708RqQL4XBNxxOVjY0vQ==}
+  /ts-jest/28.0.3_4ksqq3cqyiyfmuhn4muu6a7fma:
+    resolution: {integrity: sha512-HzgbEDQ2KgVtDmpXToqAcKTyGHdHsG23i/iUjfxji92G5eT09S1m9UHZd7csF0Bfgh9txM4JzwHnv7r1waFPlw==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     hasBin: true
     peerDependencies:
