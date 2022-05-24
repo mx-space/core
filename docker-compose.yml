@@ -8,10 +8,8 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - NODE_ENV=production
-    restart: 'on-failure'
     volumes:
       - ./data/mx-space:/root/.mx-space
-      - ./data/mx-space/node_modules:/root/.node_modules
     ports:
       - '2333:2333'
     depends_on:
@@ -22,6 +20,7 @@ services:
       - redis
     networks:
       - app-network
+    restart: always
 
   mongo:
     container_name: mongo
@@ -32,7 +31,7 @@ services:
       - '3344:27017'
     networks:
       - app-network
-
+    restart: always
   redis:
     image: redis
     container_name: redis
@@ -41,6 +40,8 @@ services:
       - '3333:6379'
     networks:
       - app-network
+    restart: always
+     
 networks:
   app-network:
     driver: bridge
