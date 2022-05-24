@@ -37,7 +37,7 @@ export class FileController {
   @Auth()
   async getTypes(@Query() query: PagerDto, @Param() params: FileUploadDto) {
     const { type = 'file' } = params
-    const { page, size } = query
+    // const { page, size } = query
     const dir = await this.service.getDir(type)
     return Promise.all(
       dir.map(async (name) => {
@@ -58,6 +58,11 @@ export class FileController {
       const buffer = await this.service.getFile(type, name)
       if (mimetype) {
         reply.type(mimetype)
+        reply.header('cache-control', 'public, max-age=31536000')
+        reply.header(
+          'expires',
+          new Date(Date.now() + 31536000 * 1000).toUTCString(),
+        )
       }
 
       reply.send(buffer)

@@ -120,26 +120,6 @@ export class PageProxyService {
     return dom.document.toString()
   }
 
-  getMineTypeByExt(ext: string) {
-    return {
-      '.css': 'text/css',
-      '.js': 'application/javascript',
-      '.png': 'image/png',
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.ico': 'image/x-icon',
-      '.svg': 'image/svg+xml',
-      '.woff': 'application/font-woff',
-      '.woff2': 'application/font-woff2',
-      '.ttf': 'application/font-ttf',
-      '.eot': 'application/vnd.ms-fontobject',
-      '.html': 'text/html',
-      '.xml': 'text/xml',
-      '.txt': 'text/plain',
-      '.json': 'application/json',
-    }[ext]
-  }
-
   async getUrlFromConfig() {
     const config = await this.configs.waitForConfigReady()
     const url = config.url

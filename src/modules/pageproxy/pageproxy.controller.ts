@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { createReadStream, existsSync, statSync } from 'fs'
 import fs from 'fs/promises'
 import { isNull } from 'lodash'
+import { lookup } from 'mime-types'
 import PKG from 'package.json'
 import { extname, join } from 'path'
 
@@ -212,7 +213,8 @@ export class PageProxyController {
       })
     }
     const stream = createReadStream(path)
-    const minetype = this.service.getMineTypeByExt(extname(path))
+
+    const minetype = lookup(extname(path))
     reply.header('cache-control', 'public, max-age=31536000')
     reply.header(
       'expires',
