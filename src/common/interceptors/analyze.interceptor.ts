@@ -75,6 +75,10 @@ export class AnalyzeInterceptor implements NestInterceptor {
 
     const url = request.url.replace(/^\/api(\/v\d)?/, '')
 
+    if (url.startsWith('/proxy')) {
+      return call$
+    }
+
     process.nextTick(async () => {
       try {
         request.headers['user-agent'] &&
