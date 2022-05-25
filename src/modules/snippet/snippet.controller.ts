@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common'
 
 import { Auth } from '~/common/decorator/auth.decorator'
+import { BanInDemo } from '~/common/decorator/demo.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
@@ -74,6 +75,7 @@ export class SnippetController {
 
   @Post('/')
   @Auth()
+  @BanInDemo
   async create(@Body() body: SnippetModel) {
     return await this.snippetService.create(body)
   }
@@ -146,6 +148,7 @@ export class SnippetController {
 
   @Put('/:id')
   @Auth()
+  @BanInDemo
   async update(@Param() param: MongoIdDto, @Body() body: SnippetModel) {
     const { id } = param
 
@@ -154,6 +157,7 @@ export class SnippetController {
 
   @Delete('/:id')
   @Auth()
+  @BanInDemo
   async delete(@Param() param: MongoIdDto) {
     const { id } = param
     await this.snippetService.delete(id)

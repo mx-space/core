@@ -12,6 +12,7 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets'
 
+import { isInDemoMode } from '~/app.config'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { DATA_DIR } from '~/constants/path.constant'
@@ -42,6 +43,17 @@ export class PTYGateway
     client: Socket,
     data?: { password?: string; cols: number; rows: number },
   ) {
+    if (isInDemoMode) {
+      client.send(
+        this.gatewayMessageFormat(
+          BusinessEvents.PTY_MESSAGE,
+          'PTY 在演示模式下不可用',
+        ),
+      )
+
+      return
+    }
+
     const password = data?.password
     const terminalOptions = await this.configService.get('terminalOptions')
     if (!terminalOptions.enable) {

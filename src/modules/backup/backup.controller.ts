@@ -18,6 +18,7 @@ import {
 import { ApiProperty, ApiResponseProperty } from '@nestjs/swagger'
 
 import { Auth } from '~/common/decorator/auth.decorator'
+import { BanInDemo } from '~/common/decorator/demo.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { UploadService } from '~/processors/helper/helper.upload.service'
@@ -28,6 +29,7 @@ import { BackupService } from './backup.service'
 @Controller({ path: 'backups', scope: Scope.REQUEST })
 @ApiName
 @Auth()
+@BanInDemo
 export class BackupController {
   constructor(
     private readonly backupService: BackupService,

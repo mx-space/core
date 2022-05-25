@@ -79,7 +79,8 @@ export class BackupService {
       await $`mongodump -h ${MONGO_DB.host} --port ${MONGO_DB.port} -d ${MONGO_DB.dbName} --excludeCollection analyzes -o ${backupDirPath} >/dev/null 2>&1`
       // 打包 DB
       cd(backupDirPath)
-      await quiet($`zip -r backup-${dateDir}  mx-space/* && rm -rf mx-space`)
+      await nothrow(quiet($`mv ${MONGO_DB.dbName} mx-space`))
+      await quiet($`zip -r backup-${dateDir} mx-space/* && rm -rf mx-space`)
 
       // 打包数据目录
 
@@ -204,6 +205,7 @@ export class BackupService {
       this.cacheService.cleanAllRedisKey(),
       this.cacheService.cleanCatch(),
     ])
+    await rm(join(dirPath, 'backup_data'), { force: true, recursive: true })
   }
 
   async rollbackTo(dirname: string) {

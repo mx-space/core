@@ -9,6 +9,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 
+import { BanInDemo } from '~/common/decorator/demo.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { IConfig } from '~/modules/configs/configs.interface'
 import { ConfigsService } from '~/modules/configs/configs.service'
@@ -50,6 +51,7 @@ export class BaseOptionController {
   }
 
   @Patch('/:key')
+  @BanInDemo
   patch(@Param() params: ConfigKeyDto, @Body() body: Record<string, any>) {
     if (typeof body !== 'object') {
       throw new UnprocessableEntityException('body must be object')

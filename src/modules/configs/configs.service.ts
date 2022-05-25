@@ -15,11 +15,12 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
 
+import { isInDemoMode } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { sleep } from '~/utils'
+import { banInDemo, sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 
 import * as optionDtos from '../configs/configs.dto'
@@ -61,14 +62,13 @@ const generateDefaultConfig: () => IConfig = () => ({
   mailOptions: {} as MailOptionsDto,
   commentOptions: { antiSpam: false },
   friendLinkOptions: { allowApply: true },
-  backupOptions: { enable: true } as BackupOptionsDto,
+  backupOptions: { enable: isInDemoMode ? false : true } as BackupOptionsDto,
   baiduSearchOptions: { enable: false },
   algoliaSearchOptions: { enable: false, apiKey: '', appId: '', indexName: '' },
   adminExtra: {
     enableAdminProxy: true,
     title: 'おかえり~',
-    background:
-      'https://gitee.com/xun7788/my-imagination/raw/master/images/88426823_p0.jpg',
+    background: '',
     gaodemapKey: null!,
   },
   terminalOptions: {
@@ -209,6 +209,7 @@ export class ConfigsService {
     key: T,
     value: Partial<IConfig[T]>,
   ) {
+    banInDemo()
     value = camelcaseKeys(value, { deep: true }) as any
 
     switch (key) {

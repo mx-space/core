@@ -5,6 +5,9 @@ import { cwd, isDev, isTest } from './global/env.global'
 
 export const PORT = argv.port || process.env.PORT || 2333
 export const API_VERSION = 2
+
+export const isInDemoMode = argv.demo || false
+
 export const CROSS_DOMAIN = {
   allowedOrigins: argv.allowed_origins
     ? argv.allowed_origins?.split?.(',')
@@ -23,7 +26,7 @@ export const CROSS_DOMAIN = {
 }
 
 export const MONGO_DB = {
-  dbName: argv.collection_name || 'mx-space',
+  dbName: argv.collection_name || (isInDemoMode ? 'mx-space_demo' : 'mx-space'),
   host: argv.db_host || '127.0.0.1',
   port: argv.db_port || 27017,
   get uri() {
