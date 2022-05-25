@@ -64,8 +64,8 @@
   },
   "dependencies": {
     "@algolia/client-search": "*",
-    "@babel/core": "7.18.0",
-    "@babel/plugin-transform-modules-commonjs": "7.18.0",
+    "@babel/core": "7.18.2",
+    "@babel/plugin-transform-modules-commonjs": "7.18.2",
     "@babel/plugin-transform-typescript": "7.18.1",
     "@babel/types": "*",
     "@fastify/cookie": "6",
