@@ -4,6 +4,7 @@ import { Readable } from 'stream'
 import { BadRequestException, Injectable } from '@nestjs/common'
 
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
+import { banInDemo } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
 import { FileType } from './file.type'
@@ -33,6 +34,7 @@ export class FileService {
     data: Readable,
     encoding?: BufferEncoding,
   ) {
+    banInDemo()
     // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
       const filePath = this.resolveFilePath(type, name)
@@ -58,6 +60,7 @@ export class FileService {
   }
 
   deleteFile(type: FileType, name: string) {
+    banInDemo()
     return fs.unlink(this.resolveFilePath(type, name)).catch(() => null)
   }
 

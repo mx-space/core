@@ -15,7 +15,7 @@ import { MasterLostException } from '~/common/exceptions/master-lost.exception'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { getAvatar, sleep } from '~/utils'
+import { banInDemo, getAvatar, sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { AuthService } from '../auth/auth.service'
@@ -95,6 +95,7 @@ export class UserService {
    * @param {Partial} data - 部分修改数据
    */
   async patchUserData(user: UserDocument, data: Partial<UserModel>) {
+    banInDemo()
     const { password } = data
     const doc = { ...data }
     if (password !== undefined) {

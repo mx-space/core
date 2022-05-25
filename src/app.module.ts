@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule, Type } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 
+import { isInDemoMode } from './app.config'
 import { AppController } from './app.controller'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { RolesGuard } from './common/guard/roles.guard'
@@ -19,6 +20,7 @@ import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
 import { DebugModule } from './modules/debug/debug.module'
+import { DemoModule } from './modules/demo/demo.module'
 import { FeedModule } from './modules/feed/feed.module'
 import { FileModule } from './modules/file/file.module'
 import { HealthModule } from './modules/health/health.module'
@@ -60,6 +62,7 @@ import { LoggerModule } from './processors/logger/logger.module'
     CategoryModule,
     CommentModule,
     ConfigsModule,
+    isInDemoMode && DemoModule,
     FeedModule,
     FileModule,
     HealthModule,

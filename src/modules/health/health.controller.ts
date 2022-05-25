@@ -19,6 +19,7 @@ import { Reflector } from '@nestjs/core'
 import { SchedulerRegistry } from '@nestjs/schedule'
 
 import { Auth } from '~/common/decorator/auth.decorator'
+import { BanInDemo } from '~/common/decorator/demo.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CRON_DESCRIPTION } from '~/constants/meta.constant'
@@ -73,6 +74,7 @@ export class HealthController {
   }
 
   @Post('/cron/run/:name')
+  @BanInDemo
   async runCron(@Param('name') name: string) {
     if (!isString(name)) {
       throw new UnprocessableEntityException('name must be string')
