@@ -18,7 +18,7 @@ import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getMediumDateTime } from '~/utils'
-import { getFolderSize } from '~/utils/system.util'
+import { getFolderSize, installPKG } from '~/utils/system.util'
 
 import { ConfigsService } from '../configs/configs.service'
 
@@ -188,7 +188,9 @@ export class BackupService {
     }
     // 还原 backup_data
 
-    const backupDataDirFilenames = await readdir(join(dirPath, 'backup_data'))
+    const backupDataDir = join(dirPath, 'backup_data')
+
+    const backupDataDirFilenames = await readdir(backupDataDir)
 
     await Promise.all(
       backupDataDirFilenames.map(async (filename) => {
@@ -201,11 +203,28 @@ export class BackupService {
       }),
     )
 
+    try {
+      const packageJson = await readFile(join(backupDataDir, 'package.json'), {
+        encoding: 'utf-8',
+      })
+      const pkg = JSON.parse(packageJson)
+      if (pkg.dependencies) {
+        await Promise.all(
+          Object.entries(pkg.dependencies).map(([name, version]) => {
+            this.logger.log(`--> 安装依赖 ${name}@${version}`)
+            return installPKG(`${name}@${version}`, DATA_DIR).catch((er) => {
+              this.logger.error(`--> 依赖安装失败：${er.message}`)
+            })
+          }),
+        )
+      }
+    } catch (er) {}
+
     await Promise.all([
       this.cacheService.cleanAllRedisKey(),
       this.cacheService.cleanCatch(),
     ])
-    await rm(join(dirPath, 'backup_data'), { force: true, recursive: true })
+    await rm(backupDataDir, { force: true, recursive: true })
   }
 
   async rollbackTo(dirname: string) {

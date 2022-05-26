@@ -77,7 +77,13 @@ export const installPKG = async (name: string, cwd: string) => {
     }
   }
   if (!manager) {
-    throw new Error('No package manager found')
+    // fallback to npm
+    const npmVersion = await nothrow($`npm -v`)
+    if (npmVersion.exitCode === 0) {
+      manager = 'npm'
+    } else {
+      throw new Error('No package manager found')
+    }
   }
   cd(cwd)
   await $`${manager} ${INSTALL_COMMANDS[manager]} ${name}`
