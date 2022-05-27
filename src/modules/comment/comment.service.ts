@@ -177,7 +177,6 @@ export class CommentService {
         })
       }
     }
-    return { message: '删除成功' }
   }
 
   async allowComment(id: string, type?: CommentRefTypes) {

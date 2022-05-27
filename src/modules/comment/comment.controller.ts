@@ -217,6 +217,9 @@ export class CommentController {
     })
     if (isMaster) {
       this.commentService.sendEmail(comment, ReplyMailType.Guest)
+      this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
+        scope: EventScope.TO_SYSTEM_VISITOR,
+      })
     } else {
       this.commentService.sendEmail(comment, ReplyMailType.Owner)
       this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
