@@ -31,12 +31,18 @@ export class ToolService {
     if (isV4) {
       const { data } = await this.httpService.axiosRef.get(
         `https://api.i-meto.com/ip/v1/qqwry/${ip}`,
+        {
+          timeout: 2000,
+        },
       )
 
       return camelcaseKeys(data, { deep: true }) as IP
     } else {
       const { data } = (await this.httpService.axiosRef.get(
         `http://ip-api.com/json/${ip}`,
+        {
+          timeout: 2000,
+        },
       )) as any
 
       const res = {
