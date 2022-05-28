@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Get,
   Post,
   Query,
   Request,
@@ -12,7 +11,6 @@ import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { PagerDto } from '~/shared/dto/pager.dto'
 
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
@@ -25,17 +23,6 @@ export class DebugController {
     private readonly serverlessService: ServerlessService,
     private readonly eventManager: EventManagerService,
   ) {}
-  @Get('qs')
-  async qs(@Query() query: PagerDto) {
-    return query
-  }
-
-  @Post('ide')
-  @HTTPDecorators.Idempotence({})
-  async post(@Body() body: any) {
-    // throw new BadRequestException('test')
-    return { a: 1 }
-  }
 
   @Post('/events')
   async sendEvent(

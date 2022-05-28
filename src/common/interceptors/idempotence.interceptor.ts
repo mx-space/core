@@ -1,5 +1,5 @@
 import { FastifyRequest } from 'fastify'
-import { catchError, tap } from 'rxjs'
+import { catchError } from 'rxjs'
 
 import {
   CallHandler,
@@ -99,15 +99,12 @@ export class IdempotenceInterceptor implements NestInterceptor {
           return await errorHandler(request)
         }
         throw new ConflictException(errorMessage)
+      } else {
+        await redis.set(idempotenceKey, '1')
+        await redis.expire(idempotenceKey, expired)
       }
     }
     return next.handle().pipe(
-      tap(async () => {
-        if (idempotenceKey) {
-          await redis.set(idempotenceKey, '1')
-          await redis.expire(idempotenceKey, expired)
-        }
-      }),
       catchError(async (err) => {
         if (idempotenceKey) {
           await redis.del(idempotenceKey)
@@ -134,8 +131,6 @@ export class IdempotenceInterceptor implements NestInterceptor {
       }
       Object.assign(obj, { ua, ip })
     }
-
-    console.log('-----', JSON.stringify(obj))
 
     return hashString(JSON.stringify(obj))
   }
