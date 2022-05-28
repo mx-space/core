@@ -91,7 +91,7 @@ specifiers:
   mkdirp: '*'
   mongodb-memory-server: 8.6.0
   mongoose: 6.3.4
-  mongoose-lean-getters: 0.3.2
+  mongoose-lean-getters: 0.3.3
   mongoose-lean-id: 0.3.0
   mongoose-lean-virtuals: 0.9.1
   mongoose-paginate-v2: 1.6.3
@@ -174,7 +174,7 @@ dependencies:
   mime-types: 2.1.35
   mkdirp: 1.0.4
   mongoose: 6.3.4
-  mongoose-lean-getters: 0.3.2_mongoose@6.3.4
+  mongoose-lean-getters: 0.3.3_mongoose@6.3.4
   mongoose-lean-id: 0.3.0_mongoose@6.3.4
   mongoose-lean-virtuals: 0.9.1_mongoose@6.3.4
   mongoose-paginate-v2: 1.6.3
@@ -4205,7 +4205,7 @@ packages:
     optional: true
 
   /find-up/2.1.0:
-    resolution: {integrity: sha1-RdG35QbHF93UgndaK3eSCjwMV6c=}
+    resolution: {integrity: sha512-NWzkk0jSJtTt08+FBFMvXoeZnOJD+jTtsRmBYbAIzJdX6l7dLgR7CTubCM5/eDdPUBvLCeVasP1brfVR/9/EZQ==}
     engines: {node: '>=4'}
     dependencies:
       locate-path: 2.0.0
@@ -4303,7 +4303,7 @@ packages:
     dev: false
 
   /fresh/0.5.2:
-    resolution: {integrity: sha1-PYyt2Q2XZWn6g1qx+OSyOhBWBac=}
+    resolution: {integrity: sha512-zJ2mQYM18rEFOudeV4GShTGIQ7RbzA7ozbU9I/XBpm7kqgMywgmylMwXHxZJmkVoYkna9d2pVXVXPdYTP9ej8Q==}
     engines: {node: '>= 0.6'}
     dev: false
 
@@ -4332,7 +4332,7 @@ packages:
     dev: true
 
   /fs.realpath/1.0.0:
-    resolution: {integrity: sha1-FQStJSMVjKpA20onh8sBQRmU6k8=}
+    resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
   /fsevents/2.3.2:
     resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
@@ -6176,8 +6176,8 @@ packages:
       saslprep: 1.0.3
     dev: false
 
-  /mongoose-lean-getters/0.3.2_mongoose@6.3.4:
-    resolution: {integrity: sha512-suG2VMC6Mv9oc7NJsD3v6TY6t5Ggr7YbtZH9ygkfEMXgq/xAC0JqAFdIaasPv9o8svYGLyq0d5GlRsP1JYuf4A==}
+  /mongoose-lean-getters/0.3.3_mongoose@6.3.4:
+    resolution: {integrity: sha512-fiCPwgGfQYSjwMZb1F76k9qL2NNiCh/IGHv55WQbtYJvNpPWBd2mVPEoXwgOxeBFnjpVmkhR1y+jvK3MI4faPQ==}
     engines: {node: '>= 8'}
     peerDependencies:
       mongoose: '>= 5.11.0 | 6.x'
