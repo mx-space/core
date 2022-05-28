@@ -76,6 +76,7 @@ export class SnippetController {
   @Post('/')
   @Auth()
   @BanInDemo
+  @HTTPDecorators.Idempotence()
   async create(@Body() body: SnippetModel) {
     return await this.snippetService.create(body)
   }

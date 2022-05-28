@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
   Param,
   Patch,
   Post,
@@ -13,7 +12,7 @@ import {
 } from '@nestjs/common'
 
 import { Auth } from '~/common/decorator/auth.decorator'
-import { Paginator } from '~/common/decorator/http.decorator'
+import { HTTPDecorators, Paginator } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
@@ -83,6 +82,7 @@ export class PageController {
 
   @Post('/')
   @Auth()
+  @HTTPDecorators.Idempotence()
   async create(@Body() body: PageModel) {
     return await this.pageService.create(body)
   }
@@ -98,7 +98,6 @@ export class PageController {
 
   @Patch('/:id')
   @Auth()
-  @HttpCode(204)
   async patch(@Body() body: PartialPageModel, @Param() params: MongoIdDto) {
     const { id } = params
     await this.pageService.updateById(id, body)
@@ -108,7 +107,6 @@ export class PageController {
 
   @Delete('/:id')
   @Auth()
-  @HttpCode(204)
   async deletePage(@Param() params: MongoIdDto) {
     await this.pageService.model.deleteOne({
       _id: params.id,

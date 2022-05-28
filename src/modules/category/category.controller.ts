@@ -18,6 +18,7 @@ import {
 import { ApiQuery } from '@nestjs/swagger'
 
 import { Auth } from '~/common/decorator/auth.decorator'
+import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -133,6 +134,7 @@ export class CategoryController {
 
   @Post('/')
   @Auth()
+  @HTTPDecorators.Idempotence()
   async create(@Body() body: CategoryModel) {
     const { name, slug } = body
     return this.categoryService.model.create({ name, slug: slug ?? name })

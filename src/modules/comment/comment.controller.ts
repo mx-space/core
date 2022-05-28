@@ -17,6 +17,7 @@ import { DocumentType } from '@typegoose/typegoose'
 
 import { Auth } from '~/common/decorator/auth.decorator'
 import { CurrentUser } from '~/common/decorator/current-user.decorator'
+import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
@@ -39,6 +40,8 @@ import {
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
 import { CommentModel, CommentState } from './comment.model'
 import { CommentService } from './comment.service'
+
+const idempotenceMessage = '哦吼，这句话你已经说过啦'
 
 @Controller({ path: 'comments' })
 @UseInterceptors(CommentFilterEmailInterceptor)
@@ -109,6 +112,10 @@ export class CommentController {
 
   @Post('/:id')
   @ApiOperation({ summary: '根据文章的 _id 评论' })
+  @HTTPDecorators.Idempotence({
+    expired: 20,
+    errorMessage: idempotenceMessage,
+  })
   async comment(
     @Param() params: MongoIdDto,
     @Body() body: CommentDto,
@@ -171,6 +178,10 @@ export class CommentController {
     description: 'cid',
     example: '5e7370bec56432cbac578e2d',
   })
+  @HTTPDecorators.Idempotence({
+    expired: 20,
+    errorMessage: idempotenceMessage,
+  })
   async replyByCid(
     @Param() params: MongoIdDto,
     @Body() body: CommentDto,
@@ -232,6 +243,10 @@ export class CommentController {
   @Post('/master/comment/:id')
   @ApiOperation({ summary: '主人专用评论接口 需要登录' })
   @Auth()
+  @HTTPDecorators.Idempotence({
+    expired: 20,
+    errorMessage: idempotenceMessage,
+  })
   async commentByMaster(
     @CurrentUser() user: UserModel,
     @Param() params: MongoIdDto,
@@ -254,6 +269,10 @@ export class CommentController {
   @ApiOperation({ summary: '主人专用评论回复 需要登录' })
   @ApiParam({ name: 'id', description: 'cid' })
   @Auth()
+  @HTTPDecorators.Idempotence({
+    expired: 20,
+    errorMessage: idempotenceMessage,
+  })
   async replyByMaster(
     @Req() req: any,
     @Param() params: MongoIdDto,

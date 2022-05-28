@@ -5,7 +5,6 @@ import {
   Controller,
   ForbiddenException,
   Get,
-  HttpCode,
   Param,
   Patch,
   Post,
@@ -13,7 +12,7 @@ import {
 } from '@nestjs/common'
 
 import { Auth } from '~/common/decorator/auth.decorator'
-import { Paginator } from '~/common/decorator/http.decorator'
+import { HTTPDecorators, Paginator } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { PagerDto } from '~/shared/dto/pager.dto'
@@ -79,7 +78,10 @@ export class LinkController {
 
   /** 申请友链 */
   @Post('/audit')
-  @HttpCode(204)
+  @HTTPDecorators.Idempotence({
+    expired: 20,
+    errorMessage: '哦吼，你已经提交过这个友链了',
+  })
   async applyForLink(@Body() body: LinkDto) {
     if (!(await this.linkService.canApplyLink())) {
       throw new ForbiddenException('主人目前不允许申请友链了！')
@@ -94,7 +96,6 @@ export class LinkController {
 
   @Patch('/audit/:id')
   @Auth()
-  @HttpCode(204)
   async approveLink(@Param('id') id: string) {
     const doc = await this.linkService.approveLink(id)
 

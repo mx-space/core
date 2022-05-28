@@ -17,7 +17,7 @@ import {
 import { ApiOperation } from '@nestjs/swagger'
 
 import { Auth } from '~/common/decorator/auth.decorator'
-import { Paginator } from '~/common/decorator/http.decorator'
+import { HTTPDecorators, Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { VisitDocument } from '~/common/decorator/update-count.decorator'
@@ -114,6 +114,7 @@ export class PostController {
   @Post('/')
   @Auth()
   @HttpCode(201)
+  @HTTPDecorators.Idempotence()
   async create(@Body() body: PostModel) {
     const _id = new Types.ObjectId()
 

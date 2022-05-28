@@ -17,7 +17,7 @@ import { ApiTags, PartialType } from '@nestjs/swagger'
 import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
 
 import { Auth } from '~/common/decorator/auth.decorator'
-import { Paginator } from '~/common/decorator/http.decorator'
+import { HTTPDecorators, Paginator } from '~/common/decorator/http.decorator'
 import { EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -85,6 +85,7 @@ export function BaseCrudFactory<
     }
 
     @Post('/')
+    @HTTPDecorators.Idempotence()
     @Auth()
     async create(@Body() body: Dto) {
       return await this._model

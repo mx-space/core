@@ -162,6 +162,7 @@ export class NoteController {
   }
 
   @Post('/')
+  @HTTPDecorators.Idempotence()
   @Auth()
   async create(@Body() body: NoteModel) {
     return await this.noteService.create(body)

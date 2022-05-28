@@ -8,6 +8,7 @@ import { RolesGuard } from './common/guard/roles.guard'
 import { AnalyzeInterceptor } from './common/interceptors/analyze.interceptor'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
 import { CountingInterceptor } from './common/interceptors/counting.interceptor'
+import { IdempotenceInterceptor } from './common/interceptors/idempotence.interceptor'
 import { JSONSerializeInterceptor } from './common/interceptors/json-serialize.interceptor'
 import { QueryInterceptor } from './common/interceptors/query.interceptor'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
@@ -118,6 +119,10 @@ import { LoggerModule } from './processors/logger/logger.module'
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor, // 1
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: IdempotenceInterceptor, // 0
     },
 
     {

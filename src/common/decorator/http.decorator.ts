@@ -1,9 +1,14 @@
 import { SetMetadata, applyDecorators } from '@nestjs/common'
 import { ApiBody, ApiConsumes } from '@nestjs/swagger'
 
-import { HTTP_RES_TRANSFORM_PAGINATE } from '~/constants/meta.constant'
+import {
+  HTTP_IDEMPOTENCE_OPTIONS,
+  HTTP_RES_TRANSFORM_PAGINATE,
+} from '~/constants/meta.constant'
 import * as SYSTEM from '~/constants/system.constant'
 import { FileUploadDto } from '~/shared/dto/file.dto'
+
+import { IdempotenceOption } from '../interceptors/idempotence.interceptor'
 
 export const Paginator: MethodDecorator = (
   target,
@@ -38,8 +43,16 @@ export function FileUpload({ description }: FileDecoratorProps) {
   )
 }
 
+/**
+ * 幂等
+ */
+export const Idempotence: (options?: IdempotenceOption) => MethodDecorator =
+  (options) => (target, key, descriptor: PropertyDescriptor) => {
+    SetMetadata(HTTP_IDEMPOTENCE_OPTIONS, options || {})(descriptor.value)
+  }
 export const HTTPDecorators = {
   Paginator,
   Bypass,
   FileUpload,
+  Idempotence,
 }

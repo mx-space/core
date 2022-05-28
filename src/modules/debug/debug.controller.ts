@@ -30,6 +30,13 @@ export class DebugController {
     return query
   }
 
+  @Post('ide')
+  @HTTPDecorators.Idempotence({})
+  async post(@Body() body: any) {
+    // throw new BadRequestException('test')
+    return { a: 1 }
+  }
+
   @Post('/events')
   async sendEvent(
     @Query('type') type: 'web' | 'admin' | 'all',

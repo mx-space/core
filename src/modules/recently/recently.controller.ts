@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common'
 
 import { Auth } from '~/common/decorator/auth.decorator'
+import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { OffsetDto } from '~/shared/dto/pager.dto'
@@ -44,6 +45,7 @@ export class RecentlyController {
   }
 
   @Post('/')
+  @HTTPDecorators.Idempotence()
   @Auth()
   async create(@Body() body: RecentlyModel) {
     const res = await this.recentlyService.create(body)
