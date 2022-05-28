@@ -96,19 +96,16 @@ export class NoteService {
   public async create(document: NoteModel) {
     const doc = await this.noteModel.create(document)
     process.nextTick(async () => {
-      this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
-        scope: EventScope.TO_SYSTEM,
-      })
       await Promise.all([
+        this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+          scope: EventScope.TO_SYSTEM,
+        }),
+        this.eventManager.emit(BusinessEvents.NOTE_CREATE, doc.toJSON(), {
+          scope: EventScope.TO_SYSTEM,
+        }),
         this.imageService.recordImageDimensions(this.noteModel, doc._id),
         doc.hide || doc.password
-          ? this.eventManager.broadcast(
-              BusinessEvents.NOTE_CREATE,
-              doc.toJSON(),
-              {
-                scope: EventScope.TO_SYSTEM,
-              },
-            )
+          ? null
           : this.eventManager.broadcast(
               BusinessEvents.NOTE_CREATE,
               {
