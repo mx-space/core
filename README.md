@@ -13,13 +13,10 @@
 
 > v3 还是使用 [`nestjs`](https://github.com/nestjs/nest) 进行重构，之前的版本在 [此仓库](https://github.com/mx-space/server)。
 
-配合相关项目一起使用:
+此项目不带主站，可以使用以下项目（选一）进行部署。
 
-- **SSR Blog**:
-  - [Kami](https://github.com/mx-space/kami) powered by NextJS (一个走可爱风路线的个人空间)
-  - 未来会变多吗
-- **Admin**: [Admin](https://github.com/mx-space/admin-next)
-- 未来可期
+- [Kami](https://github.com/mx-space/kami) (老二次元的风格)
+- [Yun](https://github.com/mx-space/mx-web-yun) (简洁的风格)
 
 接口文档通过开发环境 Swagger 查阅。
 
@@ -29,7 +26,17 @@
 - PTY 支持。
 - [云函数](./src/modules/serverless/serverless.readme.md)
 
-## 快速开始
+## Docker 部署（建议）
+
+```bash
+cd
+mkdir -p mx/server
+cd mx/server
+wget https://fastly.jsdelivr.net/gh/mx-space/mx-server@master/docker-compose.yml
+docker-compose up -d
+```
+
+## 宿主部署
 
 需要以下环境:
 
@@ -53,16 +60,6 @@ node index.js
 ```
 
 所有的依赖都打包进了产物，无需黑洞一般的 node_modules
-
-## Docker 部署
-
-```bash
-cd
-mkdir -p mx/server
-cd mx/server
-wget https://cdn.jsdelivr.net/gh/mx-space/mx-server@master/docker-compose.yml
-docker-compose up -d
-```
 
 ## 开发环境
 
