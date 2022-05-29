@@ -10,7 +10,7 @@ specifiers:
   '@algolia/client-search': '*'
   '@babel/core': 7.18.2
   '@babel/plugin-transform-modules-commonjs': 7.18.2
-  '@babel/plugin-transform-typescript': 7.18.1
+  '@babel/plugin-transform-typescript': 7.18.4
   '@babel/types': '*'
   '@fastify/cookie': '6'
   '@fastify/multipart': '6'
@@ -126,7 +126,7 @@ dependencies:
   '@algolia/client-search': 4.13.0
   '@babel/core': 7.18.2
   '@babel/plugin-transform-modules-commonjs': 7.18.2_@babel+core@7.18.2
-  '@babel/plugin-transform-typescript': 7.18.1_@babel+core@7.18.2
+  '@babel/plugin-transform-typescript': 7.18.4_@babel+core@7.18.2
   '@babel/types': 7.17.10
   '@fastify/cookie': 6.0.0
   '@fastify/multipart': 6.0.0
@@ -518,7 +518,7 @@ packages:
     dependencies:
       '@babel/core': 7.18.2
       '@babel/helper-annotate-as-pure': 7.16.7
-      '@babel/helper-environment-visitor': 7.16.7
+      '@babel/helper-environment-visitor': 7.18.2
       '@babel/helper-function-name': 7.17.9
       '@babel/helper-member-expression-to-functions': 7.17.7
       '@babel/helper-optimise-call-expression': 7.16.7
@@ -797,8 +797,8 @@ packages:
       - supports-color
     dev: false
 
-  /@babel/plugin-transform-typescript/7.18.1_@babel+core@7.18.2:
-    resolution: {integrity: sha512-F+RJmL479HJmC0KeqqwEGZMg1P7kWArLGbAKfEi9yPthJyMNjF+DjxFF/halfQvq1Q9GFM4TUbYDNV8xe4Ctqg==}
+  /@babel/plugin-transform-typescript/7.18.4_@babel+core@7.18.2:
+    resolution: {integrity: sha512-l4vHuSLUajptpHNEOUDEGsnpl9pfRLsN1XUoDQDD/YBuXTM+v37SHGS+c6n4jdcZy96QtuUuSvZYMLSSsjH8Mw==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -4725,7 +4725,7 @@ packages:
     dev: true
 
   /inflight/1.0.6:
-    resolution: {integrity: sha1-Sb1jMdfQLQwJvJEKEHW6gWW1bfk=}
+    resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
     dependencies:
       once: 1.4.0
       wrappy: 1.0.2
@@ -4836,7 +4836,7 @@ packages:
     dev: false
 
   /is-arrayish/0.2.1:
-    resolution: {integrity: sha1-d8mYQFJ6qOyxqLppe4BkWnqSap0=}
+    resolution: {integrity: sha512-zz06S8t0ozoDXMG+ube26zeCTNXcKIPJZJi8hBrF4idCLms4CG9QtK7qBl1boi5ODzFpjswb5JPmHCbMpjaYzg==}
     dev: true
 
   /is-bigint/1.0.4:
@@ -5067,7 +5067,7 @@ packages:
     dev: false
 
   /javascript-natural-sort/0.7.1:
-    resolution: {integrity: sha1-+eIwPUUH9tdDVac2ZNFED7Wg71k=}
+    resolution: {integrity: sha512-nO6jcEfZWQXDhOiBtG2KvKyEptz7RVbpGP4vTD2hLBdmNQSsCiicO2Ioinv6UI4y9ukqnBpy+XZ9H6uLNgJTlw==}
     dev: true
 
   /jest-changed-files/28.0.2:
