@@ -113,7 +113,7 @@
     "marked": "4.0.16",
     "mime-types": "*",
     "mkdirp": "*",
-    "mongoose": "6.3.4",
+    "mongoose": "6.3.5",
     "mongoose-lean-getters": "0.3.3",
     "mongoose-lean-id": "0.3.0",
     "mongoose-lean-virtuals": "0.9.1",
