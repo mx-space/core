@@ -167,7 +167,7 @@
     "husky": "8.0.1",
     "ioredis": "5.0.5",
     "jest": "28.1.0",
-    "lint-staged": "12.4.2",
+    "lint-staged": "12.4.3",
     "prettier": "2.6.2",
     "rimraf": "3.0.2",
     "semver": "*",
