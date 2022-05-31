@@ -2,7 +2,7 @@ lockfileVersion: 5.4
 
 overrides:
   typescript: 4.7.2
-  ioredis: 5.0.5
+  ioredis: 5.0.6
   webpack: 5.72.1
   fastify-cors: npm:@fastify/cors@7.0.0
 
@@ -78,7 +78,7 @@ specifiers:
   husky: 8.0.1
   image-size: 1.0.1
   inquirer: '*'
-  ioredis: 5.0.5
+  ioredis: 5.0.6
   isbot: 3.5.0
   jest: 28.1.0
   js-yaml: '*'
@@ -229,7 +229,7 @@ devDependencies:
   eslint: 8.15.0
   eslint-plugin-unused-imports: 2.0.0_eslint@8.15.0
   husky: 8.0.1
-  ioredis: 5.0.5
+  ioredis: 5.0.6
   jest: 28.1.0_4lpxerxtbzhbldi43xpyi3jzbe
   lint-staged: 12.4.3
   prettier: 2.6.2
@@ -2868,7 +2868,7 @@ packages:
     resolution: {integrity: sha512-TCxbp9ceuFveTKWuNaCX8QjoC41rAlHen4s63u9Yd+iXlw3efYmimc/u935PKPxSdhkXpnMes4mxtK3/yb0L4g==}
     engines: {node: '>=6.0.0'}
     dependencies:
-      ioredis: 5.0.5
+      ioredis: 5.0.6
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -4812,8 +4812,8 @@ packages:
     engines: {node: '>= 0.10'}
     dev: true
 
-  /ioredis/5.0.5:
-    resolution: {integrity: sha512-H+u9YB/cBckDO5lt5+S34gGN1EuIBjjaXk31LivQWfX3G1cqZPYCiwF9qCOkqK2NsKVk+saoUN+fLBz5tc2gFw==}
+  /ioredis/5.0.6:
+    resolution: {integrity: sha512-KUm7wPzIet9QrFMoMm09/4bkfVKBUD9KXwBitP3hrNkZ+A6NBndweXGwYIB/7szHcTZgfo7Kvx88SxljJV4D9A==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@ioredis/commands': 1.1.1
@@ -5856,7 +5856,7 @@ packages:
     dev: false
 
   /lodash.defaults/4.2.0:
-    resolution: {integrity: sha1-0JF4cW/+pN3p5ft7N/bwgCJ0WAw=}
+    resolution: {integrity: sha512-qjxPLHd3r5DnsdGacqOMU6pb/avJzdh9tFX2ymgoZE27BmjXrNy/y4LoaiTeAb+O3gL8AfpJGtqfX/ae2leYYQ==}
 
   /lodash.defaultsdeep/4.6.1:
     resolution: {integrity: sha512-3j8wdDzYuWO3lM3Reg03MuQR957t287Rpcxp1njpEa8oDrikb+FwGdW3n+FELh/A6qib6yPit0j/pv9G/yeAqA==}
@@ -5884,7 +5884,7 @@ packages:
     dev: false
 
   /lodash.isarguments/3.1.0:
-    resolution: {integrity: sha1-L1c9hcaiQon/AGY7SRwdM4/zRYo=}
+    resolution: {integrity: sha512-chi4NHZlZqZD18a0imDHnZPrDeBbTtVN7GXMwuGdRH9qotxAjYs3aVLKc7zNOG9eddR5Ksd8rvFEBc9SsggPpg==}
 
   /lodash.isboolean/3.0.3:
     resolution: {integrity: sha1-bC4XHbKiV82WgC/UOwGyDV9YcPY=}
