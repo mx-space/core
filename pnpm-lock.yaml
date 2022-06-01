@@ -42,7 +42,7 @@ specifiers:
   '@types/ejs': 3.1.1
   '@types/fs-extra': 9.0.13
   '@types/get-image-colors': 4.0.1
-  '@types/jest': 27.5.2
+  '@types/jest': 28.1.0
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.182
   '@types/marked': 4.0.3
@@ -212,7 +212,7 @@ devDependencies:
   '@types/ejs': 3.1.1
   '@types/fs-extra': 9.0.13
   '@types/get-image-colors': 4.0.1
-  '@types/jest': 27.5.2
+  '@types/jest': 28.1.0
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.182
   '@types/marked': 4.0.3
@@ -236,7 +236,7 @@ devDependencies:
   rimraf: 3.0.2
   semver: 7.3.7
   socket.io: 4.5.0
-  ts-jest: 28.0.3_grpgzq3exa6kmp7hndj6blpbzq
+  ts-jest: 28.0.3_z6meutgcyb64vu5eeamz376huy
   ts-loader: 9.3.0_typescript@4.7.2
   ts-node: 10.8.0_d3dzpoepv2vpwtk534lmr46iiy
   tsconfig-paths: 4.0.0
@@ -1896,8 +1896,8 @@ packages:
       '@types/istanbul-lib-report': 3.0.0
     dev: true
 
-  /@types/jest/27.5.2:
-    resolution: {integrity: sha512-mpT8LJJ4CMeeahobofYWIjFo0xonRS/HfxnVEPMPFSQdGUt1uHCnoPT7Zhb+sjDU2wz0oKV0OLUR0WzrHNgfeA==}
+  /@types/jest/28.1.0:
+    resolution: {integrity: sha512-ITfF6JJIl9zbEi2k6NmhNE/BiDqfsI/ceqfvdaWaPbcrCpYyyRq4KtDQIWh6vQUru6SqwppODiom/Zhid+np6A==}
     dependencies:
       jest-matcher-utils: 27.5.1
       pretty-format: 27.5.1
@@ -4361,7 +4361,7 @@ packages:
       functions-have-names: 1.2.3
 
   /functional-red-black-tree/1.0.1:
-    resolution: {integrity: sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=}
+    resolution: {integrity: sha512-dsKNQNdj6xA3T+QlADDA7mOSlX0qiMINjn0cgr+eGHGsbSHzTabcIogz2+p/iqP1Xs6EP/sS2SbqH+brGTbq0g==}
     dev: true
 
   /functions-have-names/1.2.3:
@@ -6654,7 +6654,7 @@ packages:
     engines: {node: '>=8'}
 
   /path-is-absolute/1.0.1:
-    resolution: {integrity: sha1-F0uSaHNVNP+8es5r9TpanhtcX18=}
+    resolution: {integrity: sha512-AVbw3UJ2e9bq64vSaS9Am0fje1Pa8pbGqTTsmXfaIiMpnr5DlDhfJOuLj9Sf95ZPVDAUerDfEk88MPmPe7UCQg==}
     engines: {node: '>=0.10.0'}
 
   /path-key/3.1.1:
@@ -7747,7 +7747,7 @@ packages:
     hasBin: true
     dev: true
 
-  /ts-jest/28.0.3_grpgzq3exa6kmp7hndj6blpbzq:
+  /ts-jest/28.0.3_z6meutgcyb64vu5eeamz376huy:
     resolution: {integrity: sha512-HzgbEDQ2KgVtDmpXToqAcKTyGHdHsG23i/iUjfxji92G5eT09S1m9UHZd7csF0Bfgh9txM4JzwHnv7r1waFPlw==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     hasBin: true
@@ -7769,7 +7769,7 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.18.2
-      '@types/jest': 27.5.2
+      '@types/jest': 28.1.0
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
       jest: 28.1.0_4lpxerxtbzhbldi43xpyi3jzbe
