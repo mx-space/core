@@ -19,6 +19,7 @@ import { IsAllowedUrl } from '~/utils/validator/isAllowedUrl'
 
 import {
   JSONSchemaArrayField,
+  JSONSchemaHalfGirdPlainField,
   JSONSchemaNumberField,
   JSONSchemaPasswordField,
   JSONSchemaPlainField,
@@ -50,25 +51,25 @@ export class UrlDto {
   @IsAllowedUrl()
   @IsOptional()
   @ApiProperty({ example: 'http://127.0.0.1:2323' })
-  @JSONSchemaPlainField('前端地址')
+  @JSONSchemaHalfGirdPlainField('前端地址')
   webUrl: string
 
   @IsAllowedUrl()
   @IsOptional()
   @ApiProperty({ example: 'http://127.0.0.1:9528' })
-  @JSONSchemaPlainField('管理后台地址')
+  @JSONSchemaHalfGirdPlainField('管理后台地址')
   adminUrl: string
 
   @IsAllowedUrl()
   @IsOptional()
   @ApiProperty({ example: 'http://127.0.0.1:2333' })
-  @JSONSchemaPlainField('API 地址')
+  @JSONSchemaHalfGirdPlainField('API 地址')
   serverUrl: string
 
   @IsAllowedUrl()
   @IsOptional()
   @ApiProperty({ example: 'http://127.0.0.1:8080' })
-  @JSONSchemaPlainField('Gateway 地址')
+  @JSONSchemaHalfGirdPlainField('Gateway 地址')
   wsUrl: string
 }
 
@@ -76,11 +77,13 @@ class MailOption {
   @IsInt()
   @Transform(({ value: val }) => parseInt(val))
   @IsOptional()
-  @JSONSchemaNumberField('发件邮箱端口')
+  @JSONSchemaNumberField('发件邮箱端口', {
+    'ui:options': { halfGrid: true },
+  })
   port: number
   @IsUrl({ require_protocol: false })
   @IsOptional()
-  @JSONSchemaPlainField('发件邮箱 host')
+  @JSONSchemaHalfGirdPlainField('发件邮箱 host')
   host: string
 }
 @JSONSchema({ title: '邮件通知设置' })
@@ -91,13 +94,15 @@ export class MailOptionsDto {
   enable: boolean
   @IsEmail()
   @IsOptional()
-  @JSONSchemaPlainField('发件邮箱地址')
+  @JSONSchemaHalfGirdPlainField('发件邮箱地址')
   user: string
   @IsString()
   @IsNotEmpty()
   @IsOptional()
   @Exclude({ toPlainOnly: true })
-  @JSONSchemaPasswordField('发件邮箱密码')
+  @JSONSchemaPasswordField('发件邮箱密码', {
+    'ui:options': { halfGrid: true },
+  })
   pass: string
 
   @ValidateNested()
@@ -187,7 +192,6 @@ export class AlgoliaSearchOptionsDto {
   @IsString()
   @IsOptional()
   @Exclude({ toPlainOnly: true })
-  @JSONSchema({ format: 'password' })
   @JSONSchemaPasswordField('ApiKey')
   apiKey?: string
 
@@ -241,7 +245,9 @@ export class TerminalOptionsDto {
     typeof value == 'string' && value.length == 0 ? null : value,
   )
   @Exclude({ toPlainOnly: true })
-  @JSONSchemaPasswordField('设定密码')
+  @JSONSchemaPasswordField('设定密码', {
+    description: '密码为空则不启用密码验证',
+  })
   password?: string
 
   @IsOptional()

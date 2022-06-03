@@ -18,23 +18,37 @@ import {
 
 @JSONSchema({
   title: '设置',
+  ps: ['* 敏感字段不显示，后端默认不返回敏感字段，显示为空'],
 })
 export abstract class IConfig {
-  @Type(() => SeoDto)
-  @ValidateNested()
-  seo: SeoDto
   @Type(() => UrlDto)
   @ValidateNested()
   url: UrlDto
+
+  @Type(() => SeoDto)
+  @ValidateNested()
+  seo: SeoDto
+
+  @ValidateNested()
+  @Type(() => AdminExtraDto)
+  adminExtra: AdminExtraDto
+
+  @Type(() => TextOptionsDto)
+  @ValidateNested()
+  textOptions: TextOptionsDto
+
   @Type(() => MailOptionsDto)
   @ValidateNested()
   mailOptions: MailOptionsDto
+
   @Type(() => CommentOptionsDto)
   @ValidateNested()
   commentOptions: CommentOptionsDto
+
   @Type(() => FriendLinkOptionsDto)
   @ValidateNested()
   friendLinkOptions: FriendLinkOptionsDto
+
   @Type(() => BackupOptionsDto)
   @ValidateNested()
   backupOptions: BackupOptionsDto
@@ -44,16 +58,10 @@ export abstract class IConfig {
   @ValidateNested()
   @Type(() => AlgoliaSearchOptionsDto)
   algoliaSearchOptions: AlgoliaSearchOptionsDto
-  @ValidateNested()
-  @Type(() => AdminExtraDto)
-  adminExtra: AdminExtraDto
+
   @Type(() => TerminalOptionsDto)
   @ValidateNested()
   terminalOptions: TerminalOptionsDto
-
-  @Type(() => TextOptionsDto)
-  @ValidateNested()
-  textOptions: TextOptionsDto
 }
 
 export type IConfigKeys = keyof IConfig

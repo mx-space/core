@@ -187,6 +187,10 @@ export class ConfigsService {
             if (Array.isArray(old)) {
               return newer
             }
+            // 对象合并
+            if (typeof old === 'object' && typeof newer === 'object') {
+              return { ...old, ...newer }
+            }
           }),
         },
         { upsert: true, new: true },
