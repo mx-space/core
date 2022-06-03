@@ -112,7 +112,7 @@ specifiers:
   slugify: 1.6.5
   snakecase-keys: 5.4.2
   socket.io: '*'
-  ts-jest: 28.0.3
+  ts-jest: 28.0.4
   ts-loader: 9.3.0
   ts-node: 10.8.0
   tsconfig-paths: 4.0.0
@@ -236,7 +236,7 @@ devDependencies:
   rimraf: 3.0.2
   semver: 7.3.7
   socket.io: 4.5.0
-  ts-jest: 28.0.3_z6meutgcyb64vu5eeamz376huy
+  ts-jest: 28.0.4_khendlpaw4eq6oiaaraksjy7e4
   ts-loader: 9.3.0_typescript@4.7.2
   ts-node: 10.8.0_d3dzpoepv2vpwtk534lmr46iiy
   tsconfig-paths: 4.0.0
@@ -5911,7 +5911,7 @@ packages:
     dev: false
 
   /lodash.memoize/4.1.2:
-    resolution: {integrity: sha1-vMbEmkKihA7Zl/Mj6tpezRguC/4=}
+    resolution: {integrity: sha512-t7j+NzmgnQzTAYXcsHYLgimltOV1MXHtlOWf6GjL9Kj8GK5FInw5JotxvbOs+IvV1/Dzo04/fCGfLVs7aXb4Ag==}
     dev: true
 
   /lodash.merge/4.6.2:
@@ -7751,13 +7751,12 @@ packages:
     hasBin: true
     dev: true
 
-  /ts-jest/28.0.3_z6meutgcyb64vu5eeamz376huy:
-    resolution: {integrity: sha512-HzgbEDQ2KgVtDmpXToqAcKTyGHdHsG23i/iUjfxji92G5eT09S1m9UHZd7csF0Bfgh9txM4JzwHnv7r1waFPlw==}
+  /ts-jest/28.0.4_khendlpaw4eq6oiaaraksjy7e4:
+    resolution: {integrity: sha512-S6uRDDdCJBvnZqyGjB4VCnwbQrbgdL8WPeP4jevVSpYsBaeGRQAIS08o3Svav2Ex+oXwLgJ/m7F24TNq62kA1A==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     hasBin: true
     peerDependencies:
       '@babel/core': '>=7.0.0-beta.0 <8'
-      '@types/jest': ^27.0.0
       babel-jest: ^28.0.0
       esbuild: '*'
       jest: ^28.0.0
@@ -7765,15 +7764,12 @@ packages:
     peerDependenciesMeta:
       '@babel/core':
         optional: true
-      '@types/jest':
-        optional: true
       babel-jest:
         optional: true
       esbuild:
         optional: true
     dependencies:
       '@babel/core': 7.18.2
-      '@types/jest': 28.1.0
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
       jest: 28.1.0_4lpxerxtbzhbldi43xpyi3jzbe
