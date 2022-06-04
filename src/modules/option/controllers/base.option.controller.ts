@@ -33,7 +33,9 @@ export class BaseOptionController {
   @HTTPDecorators.Bypass
   @Get('/jsonschema')
   getJsonSchema() {
-    return classToJsonSchema(IConfig)
+    return Object.assign(classToJsonSchema(IConfig), {
+      default: this.configs.defaultConfig,
+    })
   }
 
   @Get('/:key')

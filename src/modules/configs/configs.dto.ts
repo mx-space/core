@@ -127,10 +127,23 @@ export class CommentOptionsDto {
   @IsOptional()
   @JSONSchemaArrayField('自定义屏蔽 IP')
   blockIps?: string[]
+
   @IsOptional()
   @IsBoolean()
   @JSONSchemaToggleField('禁止非中文评论')
   disableNoChinese?: boolean
+
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('评论公开归属地')
+  recordIpLocation?: boolean
+
+  @IsOptional()
+  @IsInt()
+  @JSONSchemaNumberField('超时时间', {
+    description: '获取 IP 归属地的超时时间。单位: 毫秒。如获取超时则不记录',
+  })
+  fetchLocationTimeout?: number
 }
 
 @JSONSchema({ title: '备份' })
@@ -253,7 +266,7 @@ export class TerminalOptionsDto {
   @IsOptional()
   @IsString()
   @JSONSchemaPlainField('前置脚本', {
-    'ui:option': {
+    'ui:options': {
       type: 'textarea',
     },
   })

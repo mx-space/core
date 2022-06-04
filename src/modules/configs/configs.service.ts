@@ -15,7 +15,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
 
-import { isInDemoMode } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { CacheService } from '~/processors/cache/cache.service'
@@ -26,11 +25,8 @@ import { getRedisKey } from '~/utils/redis.util'
 import * as optionDtos from '../configs/configs.dto'
 import { UserModel } from '../user/user.model'
 import { UserService } from '../user/user.service'
-import {
-  AlgoliaSearchOptionsDto,
-  BackupOptionsDto,
-  MailOptionsDto,
-} from './configs.dto'
+import { generateDefaultConfig } from './configs.default'
+import { AlgoliaSearchOptionsDto, MailOptionsDto } from './configs.dto'
 import { IConfig, IConfigKeys } from './configs.interface'
 import { OptionModel } from './configs.model'
 
@@ -47,37 +43,6 @@ const map: Record<string, any> = Object.entries(optionDtos).reduce(
   },
   {},
 )
-
-const generateDefaultConfig: () => IConfig = () => ({
-  seo: {
-    title: '我的小世界呀',
-    description: '哈喽~欢迎光临',
-  },
-  url: {
-    wsUrl: '', // todo
-    adminUrl: '',
-    serverUrl: '',
-    webUrl: '',
-  },
-  mailOptions: {} as MailOptionsDto,
-  commentOptions: { antiSpam: false },
-  friendLinkOptions: { allowApply: true },
-  backupOptions: { enable: isInDemoMode ? false : true } as BackupOptionsDto,
-  baiduSearchOptions: { enable: false },
-  algoliaSearchOptions: { enable: false, apiKey: '', appId: '', indexName: '' },
-  adminExtra: {
-    enableAdminProxy: true,
-    title: 'おかえり~',
-    background: '',
-    gaodemapKey: null!,
-  },
-  terminalOptions: {
-    enable: false,
-  },
-  textOptions: {
-    macros: true,
-  },
-})
 
 @Injectable()
 export class ConfigsService {
@@ -134,7 +99,7 @@ export class ConfigsService {
         return
       }
       const value = field.value
-      mergedConfig[name] = value
+      mergedConfig[name] = { ...mergedConfig[name], ...value }
     })
     await this.setConfig(mergedConfig)
     this.configInitd = true

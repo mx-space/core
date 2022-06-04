@@ -12,7 +12,7 @@ export const JSONSchemaPasswordField = (
   return JSONSchema({
     title,
     ...schema,
-    'ui:options': { showPassword: true, ...schema?.['ui:options'] },
+    'ui:options': { type: 'password', ...schema?.['ui:options'] },
   })
 }
 

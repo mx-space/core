@@ -21,7 +21,7 @@ export class ToolService {
     private readonly configs: ConfigsService,
   ) {}
 
-  async getIp(ip: string): Promise<IP> {
+  async getIp(ip: string, timeout = 3000): Promise<IP> {
     const isV4 = isIPv4(ip)
     const isV6 = isIPv6(ip)
     if (!isV4 && !isV6) {
@@ -32,7 +32,7 @@ export class ToolService {
       const { data } = await this.httpService.axiosRef.get(
         `https://api.i-meto.com/ip/v1/qqwry/${ip}`,
         {
-          timeout: 2000,
+          timeout,
         },
       )
 
@@ -41,7 +41,7 @@ export class ToolService {
       const { data } = (await this.httpService.axiosRef.get(
         `http://ip-api.com/json/${ip}`,
         {
-          timeout: 2000,
+          timeout,
         },
       )) as any
 

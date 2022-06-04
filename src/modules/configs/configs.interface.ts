@@ -23,45 +23,45 @@ import {
 export abstract class IConfig {
   @Type(() => UrlDto)
   @ValidateNested()
-  url: UrlDto
+  url: Required<UrlDto>
 
   @Type(() => SeoDto)
   @ValidateNested()
-  seo: SeoDto
+  seo: Required<SeoDto>
 
   @ValidateNested()
   @Type(() => AdminExtraDto)
-  adminExtra: AdminExtraDto
+  adminExtra: Required<AdminExtraDto>
 
   @Type(() => TextOptionsDto)
   @ValidateNested()
-  textOptions: TextOptionsDto
+  textOptions: Required<TextOptionsDto>
 
   @Type(() => MailOptionsDto)
   @ValidateNested()
-  mailOptions: MailOptionsDto
+  mailOptions: Required<MailOptionsDto>
 
   @Type(() => CommentOptionsDto)
   @ValidateNested()
-  commentOptions: CommentOptionsDto
+  commentOptions: Required<CommentOptionsDto>
 
   @Type(() => FriendLinkOptionsDto)
   @ValidateNested()
-  friendLinkOptions: FriendLinkOptionsDto
+  friendLinkOptions: Required<FriendLinkOptionsDto>
 
   @Type(() => BackupOptionsDto)
   @ValidateNested()
-  backupOptions: BackupOptionsDto
+  backupOptions: Required<BackupOptionsDto>
   @Type(() => BaiduSearchOptionsDto)
   @ValidateNested()
-  baiduSearchOptions: BaiduSearchOptionsDto
+  baiduSearchOptions: Required<BaiduSearchOptionsDto>
   @ValidateNested()
   @Type(() => AlgoliaSearchOptionsDto)
-  algoliaSearchOptions: AlgoliaSearchOptionsDto
+  algoliaSearchOptions: Required<AlgoliaSearchOptionsDto>
 
   @Type(() => TerminalOptionsDto)
   @ValidateNested()
-  terminalOptions: TerminalOptionsDto
+  terminalOptions: Required<TerminalOptionsDto>
 }
 
 export type IConfigKeys = keyof IConfig
