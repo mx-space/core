@@ -20,6 +20,7 @@ import { ConfigsService } from '../configs/configs.service'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
+import { ToolService } from '../tool/tool.service'
 import { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json'
 import { CommentModel, CommentRefTypes } from './comment.model'
@@ -35,6 +36,9 @@ export class CommentService {
     private readonly configs: ConfigsService,
     private readonly userService: UserService,
     private readonly mailService: EmailService,
+
+    private readonly toolService: ToolService,
+    private readonly configsService: ConfigsService,
   ) {}
 
   public get model() {
@@ -276,5 +280,32 @@ export class CommentService {
         return new URL(`/${model.category.slug}/${model.slug}`, base).toString()
       }
     }
+  }
+
+  async attachIpLocation(model: Partial<CommentModel>, ip: string) {
+    if (!ip) {
+      return model
+    }
+    const { recordIpLocation, fetchLocationTimeout = 3000 } =
+      await this.configsService.get('commentOptions')
+
+    if (!recordIpLocation) {
+      return model
+    }
+    const newModel = { ...model }
+
+    newModel.location = await this.toolService
+      .getIp(ip, fetchLocationTimeout)
+      .then(
+        (res) =>
+          `${
+            res.regionName && res.regionName !== res.cityName
+              ? `${res.regionName}`
+              : ''
+          }${res.cityName ? `${res.cityName}` : ''}` || undefined,
+      )
+      .catch(() => undefined)
+
+    return newModel
   }
 }

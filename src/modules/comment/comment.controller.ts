@@ -29,7 +29,6 @@ import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
-import { ToolService } from '../tool/tool.service'
 import { UserModel } from '../user/user.model'
 import {
   CommentDto,
@@ -50,7 +49,6 @@ export class CommentController {
   constructor(
     private readonly commentService: CommentService,
     private readonly eventManager: EventManagerService,
-    private readonly toolService: ToolService,
   ) {}
 
   @Get('/')
@@ -133,21 +131,11 @@ export class CommentController {
       throw new ForbiddenException('主人禁止了评论')
     }
 
-    const model: Partial<CommentModel> = { ...body, ...ipLocation }
-
-    if (ipLocation.ip) {
-      model.location = await this.toolService
-        .getIp(ipLocation.ip)
-        .then(
-          (res) =>
-            `${
-              res.regionName && res.regionName !== res.cityName
-                ? `${res.regionName}`
-                : ''
-            }${res.cityName ? `${res.cityName}` : ''}` || undefined,
-        )
-        .catch(() => undefined)
-    }
+    const model: Partial<CommentModel> =
+      await this.commentService.attachIpLocation(
+        { ...body, ...ipLocation },
+        isMaster ? '' : ipLocation.ip,
+      )
 
     const comment = await this.commentService.createComment(id, model, ref)
 
@@ -202,14 +190,18 @@ export class CommentController {
     const commentIndex = parent.commentsIndex
     const key = `${parent.key}#${commentIndex}`
 
-    const model: Partial<CommentModel> = {
-      parent,
-      ref: (parent.ref as DocumentType<any>)._id,
-      refType: parent.refType,
-      ...body,
-      ...ipLocation,
-      key,
-    }
+    const model: Partial<CommentModel> =
+      await this.commentService.attachIpLocation(
+        {
+          parent,
+          ref: (parent.ref as DocumentType<any>)._id,
+          refType: parent.refType,
+          ...body,
+          ...ipLocation,
+          key,
+        },
+        isMaster ? '' : ipLocation.ip,
+      )
 
     const comment = await this.commentService.model.create(model)
 
