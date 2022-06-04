@@ -1,6 +1,10 @@
 import { JSONSchema } from 'class-validator-jsonschema'
 import { DecoratorSchema } from 'class-validator-jsonschema/build/decorators'
 
+export const halfFieldOption = {
+  'ui:options': { halfGrid: true },
+}
+
 export const JSONSchemaPasswordField = (
   title: string,
   schema?: DecoratorSchema,
@@ -20,8 +24,7 @@ export const JSONSchemaPlainField = (title: string, schema?: DecoratorSchema) =>
 
 export const JSONSchemaHalfGirdPlainField: typeof JSONSchemaPlainField = (
   ...rest
-) =>
-  JSONSchemaPlainField.call(null, ...rest, { 'ui:options': { halfGrid: true } })
+) => JSONSchemaPlainField.call(null, ...rest, halfFieldOption)
 
 export const JSONSchemaArrayField = (title: string, schema?: DecoratorSchema) =>
   JSONSchema({

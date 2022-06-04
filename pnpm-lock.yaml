@@ -4,7 +4,8 @@ overrides:
   typescript: 4.7.3
   ioredis: 5.0.6
   webpack: 5.72.1
-  fastify-cors: npm:@fastify/cors@7.0.0
+  fastify-cors: npm:@fastify/cors@^7.0.0
+  fastify-formbody: npm:@fastify/formbody@^6.0.0
 
 specifiers:
   '@algolia/client-search': '*'
@@ -931,6 +932,12 @@ packages:
     resolution: {integrity: sha512-wI3fpfDT0t7p8E6dA2eTECzzOd+bZsZCJ2Hcv+Onn2b7ZwK3RwD27uW2QDaMtQhAfWQQP+WNK7nKf0twLsBf9w==}
     dev: false
 
+  /@fastify/formbody/6.0.1:
+    resolution: {integrity: sha512-yIwCitoES4Sh0tPc6v+uHBqZEKw3CooSZ4kUvO9NC8Y7oRBCW+aC+pTgUZ8M3r2DOzRkNO+Pq0jMQkyL2k8jZQ==}
+    dependencies:
+      fastify-plugin: 3.0.1
+    dev: false
+
   /@fastify/multipart/6.0.0:
     resolution: {integrity: sha512-TwxPH9jE3bEaCdMD1Xqm2YS1aelgJxcNmA/uYAPCzqnVEylDiKCmxCstGulb1W5WdMoyqD5LBGm7AoqDwWTCWQ==}
     dependencies:
@@ -1485,7 +1492,7 @@ packages:
       '@nestjs/core': 8.4.6_vuwl3up5f332jd7oemx5cxyyz4
       fastify: 3.29.0
       fastify-cors: /@fastify/cors/7.0.0
-      fastify-formbody: 5.3.0
+      fastify-formbody: /@fastify/formbody/6.0.1
       light-my-request: 5.0.0
       middie: 6.1.0
       path-to-regexp: 3.2.0
@@ -4102,19 +4109,6 @@ packages:
       strnum: 1.0.5
     dev: false
 
-  /fastify-formbody/5.2.0:
-    resolution: {integrity: sha512-d8Y5hCL82akPyoFiXh2wYOm3es0pV9jqoPo3pO9OV2cNF0cQx39J5WAVXzCh4MSt9Z2qF4Fy5gHlvlyESwjtvg==}
-    dependencies:
-      fastify-plugin: 3.0.1
-    dev: false
-
-  /fastify-formbody/5.3.0:
-    resolution: {integrity: sha512-7cjFV2HE/doojyfTwCLToIFD6Hmbw2jVTbfqZ2lbUZznQWlSXu+MBQgqBU8T2nHcMfqSi9vx6PyX0LwTehuKkg==}
-    dependencies:
-      fastify-formbody-deprecated: /fastify-formbody/5.2.0
-      process-warning: 1.0.0
-    dev: false
-
   /fastify-plugin/3.0.1:
     resolution: {integrity: sha512-qKcDXmuZadJqdTm6vlCqioEbyewF60b/0LOFCcYN1B6BIZGlYJumWWOYs70SFYLDAH4YqdE1cxH/RKMG7rFxgA==}
     dev: false
@@ -4309,7 +4303,7 @@ packages:
     dev: false
 
   /fresh/0.5.2:
-    resolution: {integrity: sha512-zJ2mQYM18rEFOudeV4GShTGIQ7RbzA7ozbU9I/XBpm7kqgMywgmylMwXHxZJmkVoYkna9d2pVXVXPdYTP9ej8Q==}
+    resolution: {integrity: sha1-PYyt2Q2XZWn6g1qx+OSyOhBWBac=}
     engines: {node: '>= 0.6'}
     dev: false
 
@@ -5073,7 +5067,7 @@ packages:
     dev: false
 
   /javascript-natural-sort/0.7.1:
-    resolution: {integrity: sha512-nO6jcEfZWQXDhOiBtG2KvKyEptz7RVbpGP4vTD2hLBdmNQSsCiicO2Ioinv6UI4y9ukqnBpy+XZ9H6uLNgJTlw==}
+    resolution: {integrity: sha1-+eIwPUUH9tdDVac2ZNFED7Wg71k=}
     dev: true
 
   /jest-changed-files/28.0.2:

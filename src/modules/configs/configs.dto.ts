@@ -24,6 +24,7 @@ import {
   JSONSchemaPasswordField,
   JSONSchemaPlainField,
   JSONSchemaToggleField,
+  halfFieldOption,
 } from './configs.jsonschema.decorator'
 
 @JSONSchema({ title: 'SEO 优化' })
@@ -77,9 +78,7 @@ class MailOption {
   @IsInt()
   @Transform(({ value: val }) => parseInt(val))
   @IsOptional()
-  @JSONSchemaNumberField('发件邮箱端口', {
-    'ui:options': { halfGrid: true },
-  })
+  @JSONSchemaNumberField('发件邮箱端口', halfFieldOption)
   port: number
   @IsUrl({ require_protocol: false })
   @IsOptional()
@@ -100,9 +99,7 @@ export class MailOptionsDto {
   @IsNotEmpty()
   @IsOptional()
   @Exclude({ toPlainOnly: true })
-  @JSONSchemaPasswordField('发件邮箱密码', {
-    'ui:options': { halfGrid: true },
-  })
+  @JSONSchemaPasswordField('发件邮箱密码', halfFieldOption)
   pass: string
 
   @ValidateNested()
@@ -147,23 +144,23 @@ export class BackupOptionsDto {
 
   @IsString()
   @IsOptional()
-  @JSONSchemaPlainField('SecretId')
+  @JSONSchemaHalfGirdPlainField('SecretId')
   secretId?: string
 
   @IsOptional()
   @IsString()
   @Exclude({ toPlainOnly: true })
-  @JSONSchemaPasswordField('SecretKey')
+  @JSONSchemaPasswordField('SecretKey', halfFieldOption)
   secretKey?: string
 
   @IsOptional()
   @IsString()
-  @JSONSchemaPlainField('Bucket')
+  @JSONSchemaHalfGirdPlainField('Bucket')
   bucket?: string
 
   @IsString()
   @IsOptional()
-  @JSONSchemaPlainField('地域 Region')
+  @JSONSchemaHalfGirdPlainField('地域 Region')
   region: string
 }
 
@@ -208,28 +205,31 @@ export class AlgoliaSearchOptionsDto {
 
 @JSONSchema({ title: '后台附加设置' })
 export class AdminExtraDto {
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('开启后台管理反代', {
+    description: '是否可以通过 API 访问后台',
+  })
+  /**
+   * 是否开启后台反代访问
+   */
+  enableAdminProxy?: boolean
+
   @IsString()
   @IsOptional()
   @JSONSchemaPlainField('登录页面背景')
   background?: string
-  @IsString()
-  @IsOptional()
-  @Exclude({ toPlainOnly: true })
-  @JSONSchemaPasswordField('高德查询 API Key', { description: '日记地点定位' })
-  gaodemapKey?: string
 
   @IsString()
   @IsOptional()
   @JSONSchemaPlainField('中后台标题')
   title?: string
 
-  @IsBoolean()
+  @IsString()
   @IsOptional()
-  @JSONSchemaToggleField('开启后台管理反代')
-  /**
-   * 是否开启后台反代访问
-   */
-  enableAdminProxy?: boolean
+  @Exclude({ toPlainOnly: true })
+  @JSONSchemaPasswordField('高德查询 API Key', { description: '日记地点定位' })
+  gaodemapKey?: string
 }
 
 @JSONSchema({ title: '终端设定' })
@@ -252,7 +252,11 @@ export class TerminalOptionsDto {
 
   @IsOptional()
   @IsString()
-  @JSONSchemaPlainField('前置脚本')
+  @JSONSchemaPlainField('前置脚本', {
+    'ui:option': {
+      type: 'textarea',
+    },
+  })
   script?: string
 }
 
