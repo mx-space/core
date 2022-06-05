@@ -53,7 +53,7 @@ specifiers:
   '@types/passport-jwt': 3.0.6
   '@types/qs': 6.9.7
   '@types/ua-parser-js': 0.7.36
-  '@types/validator': 13.7.2
+  '@types/validator': 13.7.3
   '@vercel/ncc': 0.34.0
   algoliasearch: 4.13.1
   axios: '*'
@@ -223,7 +223,7 @@ devDependencies:
   '@types/passport-jwt': 3.0.6
   '@types/qs': 6.9.7
   '@types/ua-parser-js': 0.7.36
-  '@types/validator': 13.7.2
+  '@types/validator': 13.7.3
   '@vercel/ncc': 0.34.0
   cron: 2.0.0
   cross-env: 7.0.3
@@ -2028,8 +2028,8 @@ packages:
     resolution: {integrity: sha512-N1rW+njavs70y2cApeIw1vLMYXRwfBy+7trgavGuuTfOd7j1Yh7QTRc/yqsPl6ncokt72ZXuxEU0PiCp9bSwNQ==}
     dev: true
 
-  /@types/validator/13.7.2:
-    resolution: {integrity: sha512-KFcchQ3h0OPQgFirBRPZr5F/sVjxZsOrQHedj3zi8AH3Zv/hOLx2OLR4hxR5HcfoU+33n69ZuOfzthKVdMoTiw==}
+  /@types/validator/13.7.3:
+    resolution: {integrity: sha512-DNviAE5OUcZ5s+XEQHRhERLg8fOp8gSgvyJ4aaFASx5wwaObm+PBwTIMXiOFm1QrSee5oYwEAYb7LMzX2O88gA==}
     dev: true
 
   /@types/webidl-conversions/6.1.1:
@@ -3721,7 +3721,7 @@ packages:
     dev: false
 
   /escape-string-regexp/1.0.5:
-    resolution: {integrity: sha1-G2HAViGQqN/2rjuyzwIAyhMLhtQ=}
+    resolution: {integrity: sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg==}
     engines: {node: '>=0.8.0'}
 
   /escape-string-regexp/2.0.0:

@@ -158,7 +158,7 @@
     "@types/passport-jwt": "3.0.6",
     "@types/qs": "6.9.7",
     "@types/ua-parser-js": "0.7.36",
-    "@types/validator": "13.7.2",
+    "@types/validator": "13.7.3",
     "@vercel/ncc": "0.34.0",
     "cron": "*",
     "cross-env": "7.0.3",
