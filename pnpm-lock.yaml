@@ -3,7 +3,7 @@ lockfileVersion: 5.4
 overrides:
   typescript: 4.7.3
   ioredis: 5.0.6
-  webpack: 5.72.1
+  webpack: 5.73.0
   fastify-cors: npm:@fastify/cors@^7.0.0
   fastify-formbody: npm:@fastify/formbody@^6.0.0
 
@@ -1349,7 +1349,7 @@ packages:
       chokidar: 3.5.3
       cli-table3: 0.6.2
       commander: 4.1.1
-      fork-ts-checker-webpack-plugin: 7.2.11_l2pzpjjnb7ui4zrswmsiz2a6xi
+      fork-ts-checker-webpack-plugin: 7.2.11_jy5w4alwxi2du2dgjfsq7k3iza
       inquirer: 7.3.3
       node-emoji: 1.11.0
       ora: 5.4.1
@@ -1361,7 +1361,7 @@ packages:
       tsconfig-paths: 3.14.1
       tsconfig-paths-webpack-plugin: 3.5.2
       typescript: 4.7.3
-      webpack: 5.72.1
+      webpack: 5.73.0
       webpack-node-externals: 3.0.0
     transitivePeerDependencies:
       - '@swc/core'
@@ -4255,7 +4255,7 @@ packages:
     resolution: {integrity: sha1-+8cfDEGt6zf5bFd60e1C2P2sypE=}
     dev: false
 
-  /fork-ts-checker-webpack-plugin/7.2.11_l2pzpjjnb7ui4zrswmsiz2a6xi:
+  /fork-ts-checker-webpack-plugin/7.2.11_jy5w4alwxi2du2dgjfsq7k3iza:
     resolution: {integrity: sha512-2e5+NyTUTE1Xq4fWo7KFEQblCaIvvINQwUX3jRmEGlgCTc1Ecqw/975EfQrQ0GEraxJTnp8KB9d/c8hlCHUMJA==}
     engines: {node: '>=12.13.0', yarn: '>=1.0.0'}
     peerDependencies:
@@ -4278,7 +4278,7 @@ packages:
       semver: 7.3.7
       tapable: 2.2.1
       typescript: 4.7.3
-      webpack: 5.72.1
+      webpack: 5.73.0
     dev: true
 
   /form-data/2.3.3:
@@ -7638,7 +7638,7 @@ packages:
       supports-hyperlinks: 2.2.0
     dev: true
 
-  /terser-webpack-plugin/5.3.1_webpack@5.72.1:
+  /terser-webpack-plugin/5.3.1_webpack@5.73.0:
     resolution: {integrity: sha512-GvlZdT6wPQKbDNW/GDQzZFg/j4vKU96yl2q6mcUkzKOgW4gwf1Z8cZToUCrz31XHlPWH8MVb1r2tFtdDtTGJ7g==}
     engines: {node: '>= 10.13.0'}
     peerDependencies:
@@ -7659,7 +7659,7 @@ packages:
       serialize-javascript: 6.0.0
       source-map: 0.6.1
       terser: 5.12.0
-      webpack: 5.72.1
+      webpack: 5.73.0
     dev: true
 
   /terser/5.12.0:
@@ -8064,8 +8064,8 @@ packages:
     engines: {node: '>=10.13.0'}
     dev: true
 
-  /webpack/5.72.1:
-    resolution: {integrity: sha512-dXG5zXCLspQR4krZVR6QgajnZOjW2K/djHvdcRaDQvsjV9z9vaW6+ja5dZOYbqBBjF6kGXka/2ZyxNdc+8Jung==}
+  /webpack/5.73.0:
+    resolution: {integrity: sha512-svjudQRPPa0YiOYa2lM/Gacw0r6PvxptHj4FuEKQ2kX05ZLkjbVc5MnPs6its5j7IZljnIqSVo/OsY2X0IpHGA==}
     engines: {node: '>=10.13.0'}
     hasBin: true
     peerDependencies:
@@ -8095,7 +8095,7 @@ packages:
       neo-async: 2.6.2
       schema-utils: 3.1.1
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.1_webpack@5.72.1
+      terser-webpack-plugin: 5.3.1_webpack@5.73.0
       watchpack: 2.3.1
       webpack-sources: 3.2.3
     transitivePeerDependencies:
