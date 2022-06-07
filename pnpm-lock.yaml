@@ -38,7 +38,7 @@ specifiers:
   '@typegoose/typegoose': 9.9.0
   '@types/babel__core': 7.1.19
   '@types/bcrypt': 5.0.0
-  '@types/cache-manager': 3.4.3
+  '@types/cache-manager': 4.0.0
   '@types/cron': 2.0.0
   '@types/ejs': 3.1.1
   '@types/fs-extra': 9.0.13
@@ -208,7 +208,7 @@ devDependencies:
   '@nestjs/testing': 8.4.6_etfae4mmenqzp3rs3pua7csngy
   '@types/babel__core': 7.1.19
   '@types/bcrypt': 5.0.0
-  '@types/cache-manager': 3.4.3
+  '@types/cache-manager': 4.0.0
   '@types/cron': 2.0.0
   '@types/ejs': 3.1.1
   '@types/fs-extra': 9.0.13
@@ -1800,8 +1800,8 @@ packages:
       '@types/node': 17.0.31
     dev: true
 
-  /@types/cache-manager/3.4.3:
-    resolution: {integrity: sha512-71aBXoFYXZW4TnDHHH8gExw2lS28BZaWeKefgsiJI7QYZeJfUEbMKw6CQtzGjlYQcGIWwB76hcCrkVA3YHSvsw==}
+  /@types/cache-manager/4.0.0:
+    resolution: {integrity: sha512-uGnPOCM3PtlqZagds3i8mNyEwKLgZpKgswqmlF2ahmh4D1TN1aLYxYez2PDFDy42IGwLTbuHWSiF62I2jouM7g==}
     dev: true
 
   /@types/chroma-js/2.1.3:
