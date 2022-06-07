@@ -108,7 +108,7 @@
     "isbot": "3.5.0",
     "js-yaml": "*",
     "jszip": "3.10.0",
-    "linkedom": "0.14.9",
+    "linkedom": "0.14.11",
     "lodash": "*",
     "marked": "4.0.16",
     "mime-types": "*",
