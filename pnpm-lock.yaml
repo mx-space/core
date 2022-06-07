@@ -84,7 +84,7 @@ specifiers:
   jest: 28.1.0
   js-yaml: '*'
   jszip: 3.10.0
-  linkedom: 0.14.9
+  linkedom: 0.14.11
   lint-staged: 12.4.3
   lodash: '*'
   marked: 4.0.16
@@ -169,7 +169,7 @@ dependencies:
   isbot: 3.5.0
   js-yaml: 4.1.0
   jszip: 3.10.0
-  linkedom: 0.14.9
+  linkedom: 0.14.11
   lodash: 4.17.21
   marked: 4.0.16
   mime-types: 2.1.35
@@ -2805,7 +2805,7 @@ packages:
       readable-stream: 3.6.0
 
   /boolbase/1.0.0:
-    resolution: {integrity: sha1-aN/1++YMUes3cl6p4+0xDcwed24=}
+    resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
     dev: false
 
   /brace-expansion/1.1.11:
@@ -3513,7 +3513,7 @@ packages:
     dev: false
 
   /domutils/1.5.1:
-    resolution: {integrity: sha1-3NhIiib1Y9YQeeSMn3t+Mjc2gs8=}
+    resolution: {integrity: sha512-gSu5Oi/I+3wDENBsOWBiRK1eoGxcywYSqg3rR960/+EfY0CF4EX1VPkgHOZ3WiS/Jg2DtliF6BhWcHlfpYUcGw==}
     dependencies:
       dom-serializer: 0.1.1
       domelementtype: 1.3.1
@@ -5748,8 +5748,8 @@ packages:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
     dev: true
 
-  /linkedom/0.14.9:
-    resolution: {integrity: sha512-ZV4H69VFzOwKp7akxsMtrzcnlP7mlFBvKy1RBsyIccuGX7ewkFlt/1FFfTHSg/BvREXNFFuyZlWoSf48FYAMzA==}
+  /linkedom/0.14.11:
+    resolution: {integrity: sha512-BC8KrgMoa9oWFaXIpO74FUYvvPxCLlcahbRq3DKMxVyn2hY/on3K2LrBSIv+hl2715CL+VzFCZdtnBhtpxhyuQ==}
     dependencies:
       css-select: 5.1.0
       cssom: 0.5.0
