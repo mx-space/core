@@ -11,7 +11,6 @@ import {
 } from '@nestjs/websockets'
 
 import { LOG_DIR } from '~/constants/path.constant'
-import { getTodayLogFilePath } from '~/global/consola.global'
 import { CacheService } from '~/processors/cache/cache.service'
 
 import { BusinessEvents } from '../../../constants/business-event.constant'
@@ -47,6 +46,7 @@ export class AdminEventsGateway
 
     this.subscribeSocketToHandlerMap.set(client, handler)
     if (prevLog) {
+      const { getTodayLogFilePath } = await import('~/global/consola.global')
       const stream = fs
         .createReadStream(resolve(LOG_DIR, getTodayLogFilePath()), {
           encoding: 'utf-8',

@@ -288,3 +288,28 @@ export class TextOptionsDto {
   @JSONSchemaToggleField('开启文本宏替换')
   macros: boolean
 }
+
+@JSONSchema({ title: 'Bark 通知设定' })
+export class BarkOptionsDto {
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('开启 Bark 通知')
+  enable: boolean
+
+  @IsString()
+  @IsOptional()
+  @JSONSchemaPlainField('设备 Key')
+  key: string
+
+  @IsUrl()
+  @IsOptional()
+  @JSONSchemaPlainField('服务器 URL', {
+    description: '如果不填写, 则使用默认的服务器, https://day.app/',
+  })
+  serverUrl: string
+
+  @IsOptional()
+  @IsBoolean()
+  @JSONSchemaToggleField('开启评论通知')
+  enableComment?: boolean
+}

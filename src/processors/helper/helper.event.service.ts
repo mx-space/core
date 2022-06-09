@@ -82,7 +82,7 @@ export class EventManagerService {
   ): Promise<void>
   emit(
     event: EventBusEvents,
-    data: any,
+    data?: any,
     options?: EventManagerOptions,
   ): Promise<void>
   async emit(event: string, data: any = null, _options?: EventManagerOptions) {
@@ -103,6 +103,7 @@ export class EventManagerService {
         if (instance instanceof EventEmitter2) {
           const isObjectLike = typeof data === 'object' && data !== null
           const payload = isObjectLike ? data : { data }
+          instance.emit(event, payload)
           return instance.emit(this.#key, {
             event,
             payload,

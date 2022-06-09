@@ -11,15 +11,16 @@ import {
   Logger,
   ValidationPipe,
 } from '@nestjs/common'
-import { EventEmitter2 } from '@nestjs/event-emitter'
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
 
+import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { CacheService } from '~/processors/cache/cache.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { banInDemo, sleep } from '~/utils'
+import { sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 
 import * as optionDtos from '../configs/configs.dto'
@@ -53,7 +54,7 @@ export class ConfigsService {
     private readonly userService: UserService,
     private readonly redis: CacheService,
 
-    private readonly eventEmitter: EventEmitter2,
+    private readonly eventManager: EventManagerService,
   ) {
     this.configInit().then(() => {
       this.logger.log('Config 已经加载完毕！')
@@ -165,6 +166,13 @@ export class ConfigsService {
     const mergedFullConfig = Object.assign({}, config, { [key]: newData })
 
     await this.setConfig(mergedFullConfig)
+    this.eventManager.emit(
+      EventBusEvents.ConfigChanged,
+      { ...newData },
+      {
+        scope: EventScope.TO_SYSTEM,
+      },
+    )
 
     return newData
   }
@@ -178,7 +186,6 @@ export class ConfigsService {
     key: T,
     value: Partial<IConfig[T]>,
   ) {
-    banInDemo()
     value = camelcaseKeys(value, { deep: true }) as any
 
     switch (key) {
@@ -189,7 +196,9 @@ export class ConfigsService {
         )
         if (option.enable) {
           if (cluster.isPrimary) {
-            this.eventEmitter.emit(EventBusEvents.EmailInit)
+            this.eventManager.emit(EventBusEvents.EmailInit, null, {
+              scope: EventScope.TO_SYSTEM,
+            })
           } else {
             this.redis.publish(EventBusEvents.EmailInit, '')
           }
@@ -204,7 +213,9 @@ export class ConfigsService {
           this.validWithDto(AlgoliaSearchOptionsDto, value),
         )
         if (option.enable) {
-          this.eventEmitter.emit(EventBusEvents.PushSearch)
+          this.eventManager.emit(EventBusEvents.PushSearch, null, {
+            scope: EventScope.TO_SYSTEM,
+          })
         }
         return option
       }
