@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 import retryAxios from 'axios-retry'
+import { performance } from 'perf_hooks'
 
 import { Injectable, Logger } from '@nestjs/common'
 
