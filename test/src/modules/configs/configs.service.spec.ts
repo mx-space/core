@@ -2,7 +2,6 @@ import { dbHelper } from 'test/helper/db-mock.helper'
 import { MockCacheService, redisHelper } from 'test/helper/redis-mock.helper'
 
 import { BadRequestException } from '@nestjs/common'
-import { EventEmitter2 } from '@nestjs/event-emitter'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
 
@@ -11,6 +10,7 @@ import { OptionModel } from '~/modules/configs/configs.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UserService } from '~/modules/user/user.service'
 import { CacheService } from '~/processors/cache/cache.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getModelToken } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 
@@ -44,7 +44,7 @@ describe('Test ConfigsService', () => {
           provide: CacheService,
           useValue: redisService$,
         },
-        { provide: EventEmitter2, useValue: { emit: mockEmitFn } },
+        { provide: EventManagerService, useValue: { emit: mockEmitFn } },
       ],
     }).compile()
 
@@ -99,34 +99,35 @@ describe('Test ConfigsService', () => {
   })
 
   it('should emit event if enable email option and update search', async () => {
+    // + 1 call time because of `config.changed` event
     await service.patchAndValid('mailOptions', { enable: true })
-    expect(mockEmitFn).toBeCalledTimes(1)
+    expect(mockEmitFn).toBeCalledTimes(3)
     mockEmitFn.mockClear()
 
     await service.patchAndValid('mailOptions', { pass: '*' })
-    expect(mockEmitFn).toBeCalledTimes(1)
+    expect(mockEmitFn).toBeCalledTimes(2)
     mockEmitFn.mockClear()
 
     await service.patchAndValid('mailOptions', { pass: '*', enable: false })
-    expect(mockEmitFn).toBeCalledTimes(0)
+    expect(mockEmitFn).toBeCalledTimes(1)
     mockEmitFn.mockClear()
 
     await service.patchAndValid('algoliaSearchOptions', {
       enable: true,
     })
-    expect(mockEmitFn).toBeCalledTimes(1)
+    expect(mockEmitFn).toBeCalledTimes(2)
     mockEmitFn.mockClear()
 
     await service.patchAndValid('algoliaSearchOptions', {
       indexName: 'x',
     })
-    expect(mockEmitFn).toBeCalledTimes(1)
+    expect(mockEmitFn).toBeCalledTimes(2)
     mockEmitFn.mockClear()
 
     await service.patchAndValid('algoliaSearchOptions', {
       enable: false,
     })
-    expect(mockEmitFn).toBeCalledTimes(0)
+    expect(mockEmitFn).toBeCalledTimes(1)
     mockEmitFn.mockClear()
   })
 })

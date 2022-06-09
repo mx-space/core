@@ -27,7 +27,7 @@ export class HttpService {
   private logger: Logger
   constructor(private readonly cacheService: CacheService) {
     this.logger = new Logger(HttpService.name)
-    this.http = this.bindDebugVerboseInterceptor(
+    this.http = this.bindInterceptors(
       axios.create({
         ...AXIOS_CONFIG,
         headers: {
