@@ -69,8 +69,12 @@ export const CLUSTER = {
 /** Is main cluster in PM2 */
 export const isMainCluster =
   process.env.NODE_APP_INSTANCE && parseInt(process.env.NODE_APP_INSTANCE) === 0
-
 export const isMainProcess = cluster.isPrimary || isMainCluster
+
+export const DEBUG_MODE = {
+  httpRequestVerbose:
+    argv.httpRequestVerbose ?? argv.http_request_verbose ?? true,
+}
 
 if (!CLUSTER.enable || cluster.isPrimary || isMainCluster) {
   console.log(argv)
