@@ -13,8 +13,8 @@ module.exports = {
       autorestart: true,
       exec_mode: 'cluster',
       watch: false,
-      instances: Math.max(2, cpuLen),
-      max_memory_restart: '230M',
+      instances: cpuLen,
+      max_memory_restart: '200M',
       args: '--color',
       env: {
         NODE_ENV: 'production',

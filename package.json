@@ -170,7 +170,6 @@
     "lint-staged": "13.0.1",
     "prettier": "2.6.2",
     "rimraf": "3.0.2",
-    "semver": "*",
     "socket.io": "*",
     "ts-jest": "28.0.4",
     "ts-loader": "9.3.0",
@@ -187,6 +186,7 @@
     "ioredis": "5.0.6",
     "webpack": "5.73.0",
     "fastify-cors": "npm:@fastify/cors@^7.0.0",
-    "fastify-formbody": "npm:@fastify/formbody@^6.0.0"
+    "fastify-formbody": "npm:@fastify/formbody@^6.0.0",
+    "semver": "^7"
   }
 }
