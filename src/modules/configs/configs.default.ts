@@ -32,6 +32,12 @@ export const generateDefaultConfig: () => IConfig = () => ({
     recordIpLocation: true,
     spamKeywords: [],
   },
+  barkOptions: {
+    enable: false,
+    key: '',
+    serverUrl: 'https://api.day.app',
+    enableComment: true,
+  },
   friendLinkOptions: { allowApply: true },
   backupOptions: {
     enable: isInDemoMode ? false : true,

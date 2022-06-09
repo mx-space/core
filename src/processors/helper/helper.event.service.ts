@@ -82,7 +82,7 @@ export class EventManagerService {
   ): Promise<void>
   emit(
     event: EventBusEvents,
-    data: any,
+    data?: any,
     options?: EventManagerOptions,
   ): Promise<void>
   async emit(event: string, data: any = null, _options?: EventManagerOptions) {

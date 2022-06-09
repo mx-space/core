@@ -7,6 +7,7 @@ import {
   AlgoliaSearchOptionsDto,
   BackupOptionsDto,
   BaiduSearchOptionsDto,
+  BarkOptionsDto,
   CommentOptionsDto,
   FriendLinkOptionsDto,
   MailOptionsDto,
@@ -44,6 +45,10 @@ export abstract class IConfig {
   @Type(() => CommentOptionsDto)
   @ValidateNested()
   commentOptions: Required<CommentOptionsDto>
+
+  @Type(() => BarkOptionsDto)
+  @ValidateNested()
+  barkOptions: Required<BarkOptionsDto>
 
   @Type(() => FriendLinkOptionsDto)
   @ValidateNested()

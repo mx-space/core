@@ -11,6 +11,7 @@ import { PostModule } from '~/modules/post/post.module'
 import { SearchModule } from '~/modules/search/search.module'
 
 import { AssetService } from './helper.asset.service'
+import { BarkPushService } from './helper.bark.service'
 import { CountingService } from './helper.counting.service'
 import { CronService } from './helper.cron.service'
 import { EmailService } from './helper.email.service'
@@ -22,16 +23,17 @@ import { TaskQueueService } from './helper.tq.service'
 import { UploadService } from './helper.upload.service'
 
 const providers: Provider<any>[] = [
-  HttpService,
-  EmailService,
-  ImageService,
-  CronService,
-  CountingService,
-  UploadService,
   AssetService,
-  TaskQueueService,
+  BarkPushService,
+  CountingService,
+  CronService,
+  EmailService,
   EventManagerService,
+  HttpService,
+  ImageService,
+  TaskQueueService,
   TextMacroService,
+  UploadService,
 ]
 
 @Module({
