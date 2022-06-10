@@ -12,7 +12,6 @@ import { IdempotenceInterceptor } from './common/interceptors/idempotence.interc
 import { JSONSerializeInterceptor } from './common/interceptors/json-serialize.interceptor'
 import { QueryInterceptor } from './common/interceptors/query.interceptor'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
-import { AttachHeaderTokenMiddleware } from './common/middlewares/attach-auth.middleware'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
@@ -136,7 +135,5 @@ import { LoggerModule } from './processors/logger/logger.module'
   ],
 })
 export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AttachHeaderTokenMiddleware).forRoutes('*')
-  }
+  configure(consumer: MiddlewareConsumer) {}
 }
