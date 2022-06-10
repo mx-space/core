@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { compareSync } from 'bcrypt'
-import { nanoid } from 'nanoid'
 
 import {
   BadRequestException,
@@ -15,7 +14,7 @@ import { MasterLostException } from '~/common/exceptions/master-lost.exception'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { banInDemo, getAvatar, sleep } from '~/utils'
+import { getAvatar, sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { AuthService } from '../auth/auth.service'
@@ -82,7 +81,7 @@ export class UserService {
 
     // @ts-ignore
     const res = await this.userModel.create({ ...model })
-    const token = await this.authService.signToken(res._id)
+    const token = await this.authService.jwtServicePublic.sign(res._id)
     return { token, username: res.username }
   }
 
@@ -94,7 +93,6 @@ export class UserService {
    * @param {Partial} data - 部分修改数据
    */
   async patchUserData(user: UserDocument, data: Partial<UserModel>) {
-    banInDemo()
     const { password } = data
     const doc = { ...data }
     if (password !== undefined) {
@@ -113,9 +111,8 @@ export class UserService {
         throw new UnprocessableEntityException('密码可不能和原来的一样哦')
       }
 
-      // 2. 认证码重新生成
-      const newCode = nanoid(10)
-      doc.authCode = newCode
+      // 2. 撤销所有 token
+      await this.authService.jwtServicePublic.invokeAll()
     }
     return await this.userModel.updateOne({ _id: user._id }, doc)
   }

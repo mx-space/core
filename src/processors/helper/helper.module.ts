@@ -18,6 +18,7 @@ import { EmailService } from './helper.email.service'
 import { EventManagerService } from './helper.event.service'
 import { HttpService } from './helper.http.service'
 import { ImageService } from './helper.image.service'
+import { JWTService } from './helper.jwt.service'
 import { TextMacroService } from './helper.macro.service'
 import { TaskQueueService } from './helper.tq.service'
 import { UploadService } from './helper.upload.service'
@@ -30,6 +31,7 @@ const providers: Provider<any>[] = [
   EmailService,
   EventManagerService,
   HttpService,
+  JWTService,
   ImageService,
   TaskQueueService,
   TextMacroService,

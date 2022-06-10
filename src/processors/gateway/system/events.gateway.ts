@@ -1,4 +1,3 @@
-import { JwtService } from '@nestjs/jwt'
 import {
   GatewayMetadata,
   OnGatewayConnection,
@@ -7,6 +6,7 @@ import {
 } from '@nestjs/websockets'
 
 import { CacheService } from '~/processors/cache/cache.service'
+import { JWTService } from '~/processors/helper/helper.jwt.service'
 
 import { AuthService } from '../../../modules/auth/auth.service'
 import { createAuthGateway } from '../shared/auth.gateway'
@@ -22,7 +22,7 @@ export class SystemEventsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
-    protected readonly jwtService: JwtService,
+    protected readonly jwtService: JWTService,
     protected readonly authService: AuthService,
     private readonly cacheService: CacheService,
   ) {

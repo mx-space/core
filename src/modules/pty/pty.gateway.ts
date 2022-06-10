@@ -3,7 +3,6 @@ import { nanoid } from 'nanoid'
 import { IPty, spawn } from 'node-pty'
 import { Socket } from 'socket.io'
 
-import { JwtService } from '@nestjs/jwt'
 import {
   GatewayMetadata,
   OnGatewayConnection,
@@ -20,6 +19,7 @@ import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { CacheService } from '~/processors/cache/cache.service'
 import { createAuthGateway } from '~/processors/gateway/shared/auth.gateway'
+import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { getIp, getRedisKey } from '~/utils'
 
 const AuthGateway = createAuthGateway({ namespace: 'pty', authway: 'jwt' })
@@ -29,7 +29,7 @@ export class PTYGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
-    protected readonly jwtService: JwtService,
+    protected readonly jwtService: JWTService,
     protected readonly authService: AuthService,
     protected readonly cacheService: CacheService,
     protected readonly configService: ConfigsService,

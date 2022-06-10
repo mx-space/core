@@ -1,7 +1,6 @@
 import { Namespace, Socket } from 'socket.io'
 
 import { OnEvent } from '@nestjs/event-emitter'
-import { JwtService } from '@nestjs/jwt'
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -12,6 +11,7 @@ import { Emitter } from '@socket.io/redis-emitter'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { CacheService } from '~/processors/cache/cache.service'
+import { JWTService } from '~/processors/helper/helper.jwt.service'
 
 import { BusinessEvents } from '../../../constants/business-event.constant'
 import { BoardcastBaseGateway } from '../base.gateway'
@@ -33,7 +33,7 @@ export const createAuthGateway = (
   const { namespace, authway = 'all' } = options
   class AuthGateway extends BoardcastBaseGateway implements IAuthGateway {
     constructor(
-      protected readonly jwtService: JwtService,
+      protected readonly jwtService: JWTService,
       protected readonly authService: AuthService,
       private readonly cacheService: CacheService,
     ) {
@@ -66,9 +66,9 @@ export const createAuthGateway = (
 
       const validJwt = async () => {
         try {
-          const payload = this.jwtService.verify(token)
-          const user = await this.authService.verifyPayload(payload)
-          if (!user) {
+          const ok = await this.jwtService.verify(token)
+
+          if (!ok) {
             return false
           }
         } catch {
