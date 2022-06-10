@@ -5,7 +5,7 @@ export const mockUser1: UserModel = {
   name: 'John Doe',
   mail: 'example@ee.com',
   password: '**********',
-  authCode: '*****',
+
   username: 'johndoe',
   created: new Date('2021/1/1 10:00:11'),
 }
@@ -15,7 +15,7 @@ export const mockUser2: UserModel = {
   name: 'Shawn Carter',
   mail: 'example@ee.com',
   password: '**********',
-  authCode: '*****',
+
   username: 'shawn',
   created: new Date('2020/10/10 19:22:22'),
 }

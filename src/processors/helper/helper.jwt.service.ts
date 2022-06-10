@@ -10,51 +10,61 @@ import { getRedisKey, md5 } from '~/utils'
 
 import { CacheService } from '../cache/cache.service'
 
+const getMachineId = () => {
+  const id = machineIdSync()
+
+  if (isDev && cluster.isPrimary) {
+    console.log(id)
+  }
+  return id
+}
+const secret =
+  SECURITY.jwtSecret ||
+  Buffer.from(getMachineId()).toString('base64').slice(0, 15) ||
+  'asjhczxiucipoiopiqm2376'
+
+if (isDev && cluster.isPrimary) {
+  console.log(secret)
+}
+if (!CLUSTER.enable || cluster.isPrimary) {
+  console.log(
+    'JWT Secret start with :',
+    secret.slice(0, 5) + '*'.repeat(secret.length - 5),
+  )
+}
+
 @Injectable()
 export class JWTService {
-  private secret: string
-  constructor(private readonly cacheService: CacheService) {
-    this.init()
-  }
+  constructor(private readonly cacheService: CacheService) {}
 
-  private init() {
-    const getMachineId = () => {
-      const id = machineIdSync()
-
-      if (isDev && cluster.isPrimary) {
-        console.log(id)
-      }
-      return id
-    }
-    this.secret =
-      SECURITY.jwtSecret ||
-      Buffer.from(getMachineId()).toString('base64').slice(0, 15) ||
-      'asjhczxiucipoiopiqm2376'
-
-    if (isDev && cluster.isPrimary) {
-      console.log(this.secret)
-    }
-    if (!CLUSTER.enable || cluster.isPrimary) {
-      console.log(
-        'JWT Secret start with :',
-        this.secret.slice(0, 5) + '*'.repeat(this.secret.length - 5),
-      )
-    }
-  }
   async verify(token: string) {
     try {
-      verify(token, this.secret)
+      verify(token, secret)
       return await this.isTokenInRedis(token)
-    } catch {
+    } catch (er) {
+      console.debug(er, token)
+
       return false
     }
   }
 
-  async isTokenInRedis(id: string) {
+  async isTokenInRedis(token: string) {
     const redis = this.cacheService.getClient()
     const key = getRedisKey(RedisKeys.JWTStore)
-    const token = await redis.sismember(key, md5(id))
-    return !!token
+    const has = await redis.sismember(key, md5(token))
+    return !!has
+  }
+
+  async invokeToken(token: string) {
+    const redis = this.cacheService.getClient()
+    const key = getRedisKey(RedisKeys.JWTStore)
+    await redis.srem(key, md5(token))
+  }
+
+  async invokeAll() {
+    const redis = this.cacheService.getClient()
+    const key = getRedisKey(RedisKeys.JWTStore)
+    await redis.del(key)
   }
 
   async storeTokenInRedis(token: string) {
@@ -62,8 +72,8 @@ export class JWTService {
     await redis.sadd(getRedisKey(RedisKeys.JWTStore), md5(token))
   }
 
-  sign(id: string, options: SignOptions = { expiresIn: '7d' }): string {
-    const token = sign({ id }, this.secret, options)
+  sign(id: string, options: SignOptions = { expiresIn: '7d' }) {
+    const token = sign({ id }, secret, options)
     this.storeTokenInRedis(token)
     return token
   }

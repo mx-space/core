@@ -1,7 +1,6 @@
 import { resolve } from 'path'
 import SocketIO, { Socket } from 'socket.io'
 
-import { JwtService } from '@nestjs/jwt'
 import {
   GatewayMetadata,
   OnGatewayConnection,
@@ -12,6 +11,7 @@ import {
 
 import { LOG_DIR } from '~/constants/path.constant'
 import { CacheService } from '~/processors/cache/cache.service'
+import { JWTService } from '~/processors/helper/helper.jwt.service'
 
 import { BusinessEvents } from '../../../constants/business-event.constant'
 import { AuthService } from '../../../modules/auth/auth.service'
@@ -24,7 +24,7 @@ export class AdminEventsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
-    protected readonly jwtService: JwtService,
+    protected readonly jwtService: JWTService,
     protected readonly authService: AuthService,
     private readonly cacheService: CacheService,
   ) {

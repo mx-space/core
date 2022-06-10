@@ -12,7 +12,6 @@ import {
   Post,
   Query,
   Res,
-  Scope,
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
@@ -34,7 +33,6 @@ import { LogQueryDto, LogTypeDto } from './health.dto'
 
 @Controller({
   path: 'health',
-  scope: Scope.REQUEST,
 })
 @Auth()
 @ApiName

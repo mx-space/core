@@ -4,6 +4,7 @@ import { ApiOperation } from '@nestjs/swagger'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HttpCache } from '~/common/decorator/cache.decorator'
 import { CurrentUser } from '~/common/decorator/current-user.decorator'
+import { BanInDemo } from '~/common/decorator/demo.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
@@ -46,7 +47,7 @@ export class UserController {
     const avatar = user.avatar ?? getAvatar(mail)
 
     return {
-      token: await this.authService.signToken(user._id),
+      token: this.authService.jwtServicePublic.sign(user._id),
       ...footstep,
       name,
       username,
@@ -71,6 +72,7 @@ export class UserController {
   @ApiOperation({ summary: '修改主人的信息' })
   @Auth()
   @HttpCache.disable
+  @BanInDemo
   async patchMasterData(
     @Body() body: UserPatchDto,
     @CurrentUser() user: UserDocument,

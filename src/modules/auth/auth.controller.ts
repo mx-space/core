@@ -15,7 +15,6 @@ import {
   NotFoundException,
   Post,
   Query,
-  Scope,
 } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
@@ -41,7 +40,6 @@ export class TokenDto {
 
 @Controller({
   path: 'auth',
-  scope: Scope.REQUEST,
 })
 @ApiName
 export class AuthController {
@@ -66,7 +64,7 @@ export class AuthController {
     if (typeof token === 'string') {
       return await this.authService
         .verifyCustomToken(token)
-        .then(([isValid, user]) => isValid)
+        .then(([isValid]) => isValid)
     }
     if (id && typeof id === 'string' && isMongoId(id)) {
       return await this.authService.getTokenSecret(id)

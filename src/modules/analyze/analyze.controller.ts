@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 
-import { Controller, Delete, Get, HttpCode, Query, Scope } from '@nestjs/common'
+import { Controller, Delete, Get, HttpCode, Query } from '@nestjs/common'
 
 import { Auth } from '~/common/decorator/auth.decorator'
 import { Paginator } from '~/common/decorator/http.decorator'
@@ -14,7 +14,7 @@ import { getTodayEarly, getWeekStart } from '~/utils/time.util'
 import { AnalyzeDto } from './analyze.dto'
 import { AnalyzeService } from './analyze.service'
 
-@Controller({ path: 'analyze', scope: Scope.REQUEST })
+@Controller({ path: 'analyze' })
 @ApiName
 @Auth()
 export class AnalyzeController {

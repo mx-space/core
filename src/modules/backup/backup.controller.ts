@@ -12,7 +12,6 @@ import {
   Post,
   Query,
   Req,
-  Scope,
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { ApiProperty, ApiResponseProperty } from '@nestjs/swagger'
@@ -26,7 +25,7 @@ import { getMediumDateTime } from '~/utils'
 
 import { BackupService } from './backup.service'
 
-@Controller({ path: 'backups', scope: Scope.REQUEST })
+@Controller({ path: 'backups' })
 @ApiName
 @Auth()
 @BanInDemo

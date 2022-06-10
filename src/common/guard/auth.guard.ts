@@ -1,5 +1,3 @@
-import jwtoken from 'jsonwebtoken'
-
 import {
   CanActivate,
   ExecutionContext,
@@ -7,8 +5,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 
-import { __secret, isTest } from '~/global/env.global'
+import { isTest } from '~/global/env.global'
 import { mockUser1 } from '~/mock/user.mock'
+import { ConfigsService } from '~/modules/configs/configs.service'
+import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 /**
@@ -17,12 +17,12 @@ import { getNestExecutionContextRequest } from '~/transformers/get-req.transform
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+  constructor(
+    protected readonly jwtService: JWTService,
+    protected readonly configs: ConfigsService,
+  ) {}
   async canActivate(context: ExecutionContext): Promise<any> {
     const request = this.getRequest(context)
-
-    if (typeof request.user !== 'undefined') {
-      return true
-    }
 
     /// for e2e-test mock user
     if (isTest) {
@@ -31,18 +31,21 @@ export class AuthGuard implements CanActivate {
     }
     const query = request.query as any
     const headers = request.headers
-    const Authorization =
+    const Authorization: string =
       headers.authorization || headers.Authorization || query.token
 
     if (!Authorization) {
       throw new UnauthorizedException()
     }
-    const jwt = Authorization.replace('Bearer ', '')
-    try {
-      const payload = jwtoken.verify(jwt, __secret)
-    } catch {
+    const jwt = Authorization.replace(/[Bb]earer /, '')
+    const ok = await this.jwtService.verify(jwt)
+    if (!ok) {
       throw new UnauthorizedException()
     }
+
+    request.user = await this.configs.getMaster()
+    request.token = jwt
+    return true
   }
 
   getRequest(context: ExecutionContext) {
