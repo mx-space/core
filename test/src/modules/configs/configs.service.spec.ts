@@ -101,6 +101,7 @@ describe('Test ConfigsService', () => {
   it('should emit event if enable email option and update search', async () => {
     // + 1 call time because of `config.changed` event
     await service.patchAndValid('mailOptions', { enable: true })
+
     expect(mockEmitFn).toBeCalledTimes(3)
     mockEmitFn.mockClear()
 

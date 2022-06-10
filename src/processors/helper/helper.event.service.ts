@@ -103,7 +103,7 @@ export class EventManagerService {
         if (instance instanceof EventEmitter2) {
           const isObjectLike = typeof data === 'object' && data !== null
           const payload = isObjectLike ? data : { data }
-          instance.emit(event, payload)
+
           return instance.emit(this.#key, {
             event,
             payload,
@@ -168,7 +168,8 @@ export class EventManagerService {
     this.emitter2.on(this.#key, (data) => {
       const { event, payload } = data
       console.debug(`Received event: [${event}]`, payload)
-
+      // emit current event directly
+      this.emitter2.emit(event, payload)
       this.#handlers.forEach((handler) => handler(event, payload))
     })
   }

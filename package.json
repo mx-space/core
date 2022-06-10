@@ -55,6 +55,7 @@
   "bump": {
     "before": [
       "git pull --rebase",
+      "git-cliff > CHANGELOG.md",
       "pnpm i",
       "node scripts/get-latest-admin-version.js"
     ],
