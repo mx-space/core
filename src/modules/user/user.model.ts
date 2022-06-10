@@ -74,9 +74,6 @@ export class UserModel extends BaseModel {
   @prop({ type: Schema.Types.Mixed })
   socialIds?: any
 
-  @prop({ select: false, required: true })
-  authCode!: string
-
   @prop({ type: TokenModel, select: false })
   apiToken?: TokenModel[]
 
