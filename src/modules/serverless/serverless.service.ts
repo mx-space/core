@@ -245,6 +245,9 @@ export class ServerlessService {
           db: this.mockDb(
             `${model.reference || '#########debug######'}@${model.name}`,
           ),
+          dangerousAccessDbInstance: () => {
+            return this.databaseService.db
+          },
         },
 
         model,
@@ -359,16 +362,15 @@ export class ServerlessService {
       ],
     }
   }
-  private convertTypescriptCode(code: string) {
-    return transformAsync(code, this.getBabelOptions()).then((res) => {
-      if (!res) {
-        throw new InternalServerErrorException('convert code error')
-      }
-
-      console.debug(res.code)
-
-      return res.code
-    })
+  private async convertTypescriptCode(
+    code: string,
+  ): Promise<string | null | undefined> {
+    const res = await transformAsync(code, this.getBabelOptions())
+    if (!res) {
+      throw new InternalServerErrorException('convert code error')
+    }
+    console.debug(res.code)
+    return res.code
   }
 
   private requireModuleIdSet = new Set<string>()
