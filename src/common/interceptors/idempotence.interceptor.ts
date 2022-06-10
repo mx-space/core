@@ -1,5 +1,5 @@
 import { FastifyRequest } from 'fastify'
-import { catchError } from 'rxjs'
+import { catchError, tap } from 'rxjs'
 
 import {
   CallHandler,
@@ -24,6 +24,7 @@ const IdempotenceHeaderKey = 'x-idempotence'
 
 export type IdempotenceOption = {
   errorMessage?: string
+  pendingMessage?: string
 
   /**
    * 如果重复请求的话，手动处理异常
@@ -75,6 +76,7 @@ export class IdempotenceInterceptor implements NestInterceptor {
 
     const {
       errorMessage = '相同请求成功后在 60 秒内只能发送一次',
+      pendingMessage = '相同请求正在处理中...',
       handler: errorHandler,
       expired = 60,
       disableGenerateKey = false,
@@ -94,17 +96,28 @@ export class IdempotenceInterceptor implements NestInterceptor {
     SetMetadata(HTTP_IDEMPOTENCE_KEY, idempotenceKey)(handler)
 
     if (idempotenceKey) {
-      if (await redis.get(idempotenceKey).then((val) => val === '1')) {
+      const resultValue: '0' | '1' | null = (await redis.get(
+        idempotenceKey,
+      )) as any
+      if (resultValue !== null) {
         if (errorHandler) {
           return await errorHandler(request)
         }
-        throw new ConflictException(errorMessage)
+
+        const message = {
+          1: errorMessage,
+          0: pendingMessage,
+        }[resultValue]
+        throw new ConflictException(message)
       } else {
-        await redis.set(idempotenceKey, '1')
+        await redis.set(idempotenceKey, '0')
         await redis.expire(idempotenceKey, expired)
       }
     }
     return next.handle().pipe(
+      tap(async () => {
+        idempotenceKey && (await redis.set(idempotenceKey, '1'))
+      }),
       catchError(async (err) => {
         if (idempotenceKey) {
           await redis.del(idempotenceKey)
