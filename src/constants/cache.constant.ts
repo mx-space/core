@@ -18,6 +18,8 @@ export enum RedisKeys {
 
   /** 云函数缓存数据 */
   ServerlessStorage = 'serverless_storage',
+
+  JWTStore = 'jwt_store',
 }
 
 export enum CacheKeys {

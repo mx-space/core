@@ -1,7 +1,13 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
-import { AuthGuard as _AuthGuard } from '@nestjs/passport'
+import jwtoken from 'jsonwebtoken'
 
-import { isTest } from '~/global/env.global'
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common'
+
+import { __secret, isTest } from '~/global/env.global'
 import { mockUser1 } from '~/mock/user.mock'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
@@ -10,8 +16,8 @@ import { getNestExecutionContextRequest } from '~/transformers/get-req.transform
  */
 
 @Injectable()
-export class AuthGuard extends _AuthGuard('jwt') implements CanActivate {
-  override async canActivate(context: ExecutionContext): Promise<any> {
+export class AuthGuard implements CanActivate {
+  async canActivate(context: ExecutionContext): Promise<any> {
     const request = this.getRequest(context)
 
     if (typeof request.user !== 'undefined') {
@@ -23,8 +29,20 @@ export class AuthGuard extends _AuthGuard('jwt') implements CanActivate {
       request.user = { ...mockUser1 }
       return true
     }
+    const query = request.query as any
+    const headers = request.headers
+    const Authorization =
+      headers.authorization || headers.Authorization || query.token
 
-    return super.canActivate(context) as any
+    if (!Authorization) {
+      throw new UnauthorizedException()
+    }
+    const jwt = Authorization.replace('Bearer ', '')
+    try {
+      const payload = jwtoken.verify(jwt, __secret)
+    } catch {
+      throw new UnauthorizedException()
+    }
   }
 
   getRequest(context: ExecutionContext) {

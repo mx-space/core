@@ -79,12 +79,11 @@ export class UserService {
     if (hasMaster) {
       throw new BadRequestException('我已经有一个主人了哦')
     }
-    const authCode = nanoid(10)
 
     // @ts-ignore
-    const res = await this.userModel.create({ ...model, authCode })
+    const res = await this.userModel.create({ ...model })
     const token = await this.authService.signToken(res._id)
-    return { token, username: res.username, authCode: res.authCode }
+    return { token, username: res.username }
   }
 
   /**
