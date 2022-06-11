@@ -81,7 +81,7 @@ export class UserService {
 
     // @ts-ignore
     const res = await this.userModel.create({ ...model })
-    const token = await this.authService.jwtServicePublic.sign(res._id)
+    const token = this.authService.jwtServicePublic.sign(res._id)
     return { token, username: res.username }
   }
 
@@ -112,9 +112,13 @@ export class UserService {
       }
 
       // 2. 撤销所有 token
-      await this.authService.jwtServicePublic.invokeAll()
+      await this.authService.jwtServicePublic.revokeAll()
     }
     return await this.userModel.updateOne({ _id: user._id }, doc)
+  }
+
+  signout(token: string) {
+    return this.authService.jwtServicePublic.revokeToken(token)
   }
 
   /**

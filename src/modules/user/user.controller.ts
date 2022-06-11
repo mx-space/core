@@ -55,7 +55,6 @@ export class UserController {
       url,
       mail,
       avatar,
-      expiresIn: 7,
       id,
     }
   }
@@ -78,5 +77,10 @@ export class UserController {
     @CurrentUser() user: UserDocument,
   ) {
     return await this.userService.patchUserData(user, body)
+  }
+
+  @Post('signout')
+  async singout(@CurrentUser() user: any) {
+    return this.userService.signout(user.token)
   }
 }
