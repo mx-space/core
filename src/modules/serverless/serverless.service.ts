@@ -15,6 +15,7 @@ import { Interval } from '@nestjs/schedule'
 
 import { RedisKeys } from '~/constants/cache.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
+import { isTest } from '~/global/env.global'
 import { CacheService } from '~/processors/cache/cache.service'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
@@ -369,7 +370,7 @@ export class ServerlessService {
     if (!res) {
       throw new InternalServerErrorException('convert code error')
     }
-    console.debug(res.code)
+    !isTest && console.debug(res.code)
     return res.code
   }
 

@@ -6,6 +6,7 @@ import { Injectable } from '@nestjs/common'
 
 import { CLUSTER, SECURITY } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
+import { isTest } from '~/global/env.global'
 import { getRedisKey, md5 } from '~/utils'
 
 import { CacheService } from '../cache/cache.service'
@@ -50,7 +51,7 @@ export class JWTService {
   async verify(token: string) {
     try {
       verify(token, this.secret)
-      return isDev ? true : await this.isTokenInRedis(token)
+      return isDev && !isTest ? true : await this.isTokenInRedis(token)
     } catch (er) {
       console.debug(er, token)
 

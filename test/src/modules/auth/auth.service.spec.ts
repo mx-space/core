@@ -2,6 +2,8 @@ import { Test } from '@nestjs/testing'
 
 import { AuthService } from '~/modules/auth/auth.service'
 import { UserModel } from '~/modules/user/user.model'
+import { CacheService } from '~/processors/cache/cache.service'
+import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { getModelToken } from '~/transformers/model.transformer'
 
 describe('Test AuthService', () => {
@@ -17,6 +19,15 @@ describe('Test AuthService', () => {
   beforeAll(async () => {
     const moduleRef = Test.createTestingModule({
       providers: [
+        { provide: CacheService, useValue: {} },
+        {
+          provide: JWTService,
+          useValue: {
+            sign() {
+              return 'fake token'
+            },
+          },
+        },
         AuthService,
         {
           provide: getModelToken(UserModel.name),
