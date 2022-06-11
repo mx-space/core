@@ -34,8 +34,10 @@ describe('AppController (e2e)', () => {
         {
           provide: AuthService,
           useValue: {
-            signToken(val) {
-              return `${val}`
+            jwtServicePublic: {
+              sign() {
+                return 'fake token'
+              },
             },
           },
         },
@@ -64,7 +66,6 @@ describe('AppController (e2e)', () => {
         const json = JSON.parse(res.payload)
         expect(json.username).toBe('11')
         expect(json.password).toBeUndefined()
-        expect(json.authCode).toBeDefined()
       })
   })
 

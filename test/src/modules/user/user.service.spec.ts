@@ -1,20 +1,25 @@
 import { BadRequestException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import { getModelToken } from '~/transformers/model.transformer'
+
 import { AuthService } from '~/modules/auth/auth.service'
 import { UserModel } from '~/modules/user/user.model'
 import { UserService } from '~/modules/user/user.service'
 import { CacheService } from '~/processors/cache/cache.service'
+import { JWTService } from '~/processors/helper/helper.jwt.service'
+import { getModelToken } from '~/transformers/model.transformer'
 
 describe('test UserModule service', () => {
   let userService: UserService
+
   beforeEach(async () => {
     const storedUserList = []
     const module = await Test.createTestingModule({
+      imports: [CacheService],
       providers: [
         UserService,
         AuthService,
         CacheService,
+        JWTService,
         {
           provide: getModelToken(UserModel.name),
           useValue: {
@@ -44,13 +49,18 @@ describe('test UserModule service', () => {
     })
       .overrideProvider(AuthService)
       .useValue({
-        signToken() {
-          return 'fake token'
+        jwtServicePublic: {
+          sign() {
+            return 'fake token'
+          },
         },
       })
       .overrideProvider(CacheService)
       .useValue({})
+      .overrideProvider(JWTService)
+      .useValue({})
       .compile()
+
     userService = module.get<UserService>(UserService)
   })
 
