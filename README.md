@@ -4,12 +4,10 @@
 [![GitHub issues](https://img.shields.io/github/issues-raw/mx-space/mx-server.svg?style=flat)](https://github.com/mx-space/mx-server/issues)
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/mx-space/mx-server/Deploy?label=deploy&style=flat)](https://github.com/mx-space/mx-server/actions?query=workflow:%22Deploy%22)
 [![GitHub license](https://img.shields.io/github/license/mx-space/mx-server.svg?style=flat)](https://github.com/mx-space/mx-server/blob/main/LICENSE)
-[![wakatime](https://wakatime.com/badge/user/9213dc96-df0d-4e66-b0bb-50f9e04e988c/project/3e6fb54a-082c-4110-bccc-b641bad13882.svg)](https://wakatime.com/badge/user/9213dc96-df0d-4e66-b0bb-50f9e04e988c/project/3e6fb54a-082c-4110-bccc-b641bad13882)
+[![wakatime](https://wakatime.com/badge/user/9213dc96-df0d-4e66-b0bb-50f9e04e988c/project/8afd37d1-7501-426f-824b-50aeeb96bb6f.svg)](https://wakatime.com/badge/user/9213dc96-df0d-4e66-b0bb-50f9e04e988c/project/8afd37d1-7501-426f-824b-50aeeb96bb6f)
 [![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/innei/mx-server)](https://hub.docker.com/repository/docker/innei/mx-server)
 
-> **RESTful API service for Mix Space, powered by [`nestjs`](https://github.com/nestjs/nest), required [`mongoDB`](https://www.mongodb.com/) & [`Redis`](https://redis.io/).**
-
-> **适用于 Mix Space 的 RESTful API 服务端应用；基于 [`nestjs`](https://github.com/nestjs/nest) (nodejs)，需安装 [`mongoDB`](https://www.mongodb.com/) 和 [`Redis`](https://redis.io/) 方可完整运行。**
+> **Mix Space 核心服务；基于 [`nestjs`](https://github.com/nestjs/nest) (nodejs)，需安装 [`mongoDB`](https://www.mongodb.com/) 和 [`Redis`](https://redis.io/) 方可完整运行。**
 
 > v3 还是使用 [`nestjs`](https://github.com/nestjs/nest) 进行重构，之前的版本在 [此仓库](https://github.com/mx-space/server)。
 
@@ -87,40 +85,8 @@ pnpm dev
 │   ├── middlewares               # 传统意义上的中间件
 │   └── pipes                     # 管道
 ├── constants                     # 常量
-│   ├── article.constant.ts
-│   ├── cache.constant.ts
-│   ├── meta.constant.ts
-│   ├── path.constant.ts
-│   └── system.constant.ts
 ├── main.ts                       # 引入配置，启动主程序，引入各种全局服务
 ├── modules                       # 业务逻辑模块
-│   ├── aggregate
-│   ├── analyze
-│   ├── auth
-│   ├── backup
-│   ├── category
-│   ├── comment
-│   ├── configs
-│   ├── feed
-│   ├── health
-│   ├── init
-│   ├── link
-│   ├── markdown
-│   ├── note
-│   ├── option
-│   ├── page
-│   ├── pageproxy
-│   ├── post
-│   ├── project
-│   ├── pty
-│   ├── recently
-│   ├── say
-│   ├── search
-|   ├── snippet
-|   ├── serverless
-│   ├── sitemap
-│   ├── tool
-│   └── user
 ├── processors                      # 核心辅助模块
 │   ├── cache                       # Redis 缓存相关
 │   ├── database                    # Mongo 数据库相关
@@ -132,19 +98,6 @@ pnpm dev
 │   ├── interface                   # 接口
 │   └── model                       # 基本数据模型
 ├── utils                           # 工具类
-│   ├── crud.util.ts
-│   ├── dayjs.util.ts
-│   ├── global.util.ts
-│   ├── index.util.ts
-│   ├── ip.util.ts
-│   ├── nest.util.ts
-│   ├── pic.util.ts
-│   ├── query.util.ts
-│   ├── redis.util.ts
-│   ├── system.util.ts
-│   ├── time.util.ts
-│   ├── transfrom.util.ts
-│   └── validator
 └── zx.global.ts
 
 ```
@@ -216,6 +169,9 @@ ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> Analyz
   1. [TqService] 任务队列
   1. [UploadService] 上传服务
   1. [AssetService] 获取本地资源服务
+  1. [TextMacroService] 文本宏替换服务
+  1. [JWTService] JWT 服务
+  1. [BarkPushService] Bark Push 服务 
 
 ## 开发
 
