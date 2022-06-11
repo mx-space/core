@@ -49,7 +49,7 @@ export class UserService {
   async getMasterInfo(getLoginIp = false) {
     const user = await this.userModel
       .findOne()
-      .select(`-authCode${getLoginIp ? ' +lastLoginIp' : ''}`)
+      .select(`${getLoginIp ? ' +lastLoginIp' : ''}`)
       .lean({ virtuals: true })
     if (!user) {
       throw new BadRequestException('没有完成初始化!')

@@ -14,7 +14,6 @@ describe('Test AuthService', () => {
     id: '1',
     username: 'test-user',
     email: 'tukon@gmail.com',
-    authCode: 'authCode',
   }
   beforeAll(async () => {
     const moduleRef = Test.createTestingModule({
