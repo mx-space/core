@@ -45,7 +45,7 @@ export class PostController {
   async getPaginate(@Query() query: PagerDto) {
     const { size, select, page, year, sortBy, sortOrder } = query
 
-    return await this.postService.findWithPaginator(
+    return await this.postService.model.paginate(
       {
         ...addYearCondition(year),
       },
@@ -55,7 +55,7 @@ export class PostController {
         select,
         sort: sortBy
           ? { [sortBy]: sortOrder || -1 }
-          : { created: -1, pin: -1, pinOrder: -1 },
+          : { pin: -1, pinOrder: -1, created: -1 },
       },
     )
   }

@@ -8,6 +8,7 @@ import {
   forwardRef,
 } from '@nestjs/common'
 
+import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { SearchDto } from '~/modules/search/search.dto'
 import { DatabaseService } from '~/processors/database/database.service'
 import { Pagination } from '~/shared/interface/paginator.interface'
@@ -62,23 +63,22 @@ export class SearchService {
     )
   }
 
+  @HTTPDecorators.Paginator
   async searchPost(searchOption: SearchDto) {
     const { keyword, page, size } = searchOption
     const select = '_id title created modified categoryId slug'
     const keywordArr = keyword
       .split(/\s+/)
       .map((item) => new RegExp(String(item), 'ig'))
-    return transformDataToPaginate(
-      await this.postService.findWithPaginator(
-        {
-          $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }],
-        },
-        {
-          limit: size,
-          page,
-          select,
-        },
-      ),
+    return await this.postService.model.paginate(
+      {
+        $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }],
+      },
+      {
+        limit: size,
+        page,
+        select,
+      },
     )
   }
 

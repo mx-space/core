@@ -151,7 +151,8 @@ export class PostService {
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
-        this.imageService.recordImageDimensions(this.postModel, id),
+        data.text &&
+          this.imageService.recordImageDimensions(this.postModel, id),
         doc &&
           this.eventManager.broadcast(
             BusinessEvents.POST_UPDATE,
