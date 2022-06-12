@@ -35,12 +35,12 @@ export class AuthGuard implements CanActivate {
       headers.authorization || headers.Authorization || query.token
 
     if (!Authorization) {
-      throw new UnauthorizedException()
+      throw new UnauthorizedException('未登录')
     }
     const jwt = Authorization.replace(/[Bb]earer /, '')
     const ok = await this.jwtService.verify(jwt)
     if (!ok) {
-      throw new UnauthorizedException()
+      throw new UnauthorizedException('身份过期')
     }
 
     request.user = await this.configs.getMaster()

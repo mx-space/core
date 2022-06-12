@@ -9,7 +9,7 @@ Object.assign(global, { isDev: false })
 const result = ts.transpileModule(
   readFileSync(appConfigFile, { encoding: 'utf-8' }),
   {
-    compilerOptions: { module: ts.ModuleKind.CommonJS },
+    compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true },
   },
 )
 const complied = result.outputText

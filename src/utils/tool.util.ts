@@ -108,3 +108,31 @@ export const hashString = function (str, seed = 0) {
     Math.imul(h1 ^ (h1 >>> 13), 3266489909)
   return 4294967296 * (2097151 & h2) + (h1 >>> 0)
 }
+
+export async function* asyncPool<T = any>(
+  concurrency: number,
+  iterable: T[],
+  iteratorFn: (item: T, arr: T[]) => any,
+) {
+  const executing = new Set<Promise<any>>()
+  async function consume() {
+    const [promise, value] = await Promise.race(executing)
+    executing.delete(promise)
+    return value
+  }
+  for (const item of iterable) {
+    // Wrap iteratorFn() in an async fn to ensure we get a promise.
+    // Then expose such promise, so it's possible to later reference and
+    // remove it from the executing pool.
+    const promise = (async () => await iteratorFn(item, iterable))().then(
+      (value) => [promise, value],
+    )
+    executing.add(promise)
+    if (executing.size >= concurrency) {
+      yield await consume()
+    }
+  }
+  while (executing.size) {
+    yield await consume()
+  }
+}

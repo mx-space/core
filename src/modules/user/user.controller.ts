@@ -3,7 +3,10 @@ import { ApiOperation } from '@nestjs/swagger'
 
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HttpCache } from '~/common/decorator/cache.decorator'
-import { CurrentUser } from '~/common/decorator/current-user.decorator'
+import {
+  CurrentUser,
+  CurrentUserToken,
+} from '~/common/decorator/current-user.decorator'
 import { BanInDemo } from '~/common/decorator/demo.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -79,8 +82,9 @@ export class UserController {
     return await this.userService.patchUserData(user, body)
   }
 
-  @Post('signout')
-  async singout(@CurrentUser() user: any) {
-    return this.userService.signout(user.token)
+  @Post('logout')
+  @Auth()
+  async singout(@CurrentUserToken() token: string) {
+    return this.userService.signout(token)
   }
 }

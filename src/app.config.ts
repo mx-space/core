@@ -1,7 +1,10 @@
 import cluster from 'cluster'
 import { argv } from 'zx-cjs'
 
-import { cwd, isDev, isTest } from './global/env.global'
+export const isDev = process.env.NODE_ENV == 'development'
+
+export const isTest = !!process.env.TEST
+export const cwd = process.cwd()
 
 export const PORT = argv.port || process.env.PORT || 2333
 export const API_VERSION = 2

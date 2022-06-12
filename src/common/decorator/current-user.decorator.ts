@@ -7,3 +7,9 @@ export const CurrentUser = createParamDecorator(
     return getNestExecutionContextRequest(ctx).user
   },
 )
+
+export const CurrentUserToken = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    return getNestExecutionContextRequest(ctx).token
+  },
+)
