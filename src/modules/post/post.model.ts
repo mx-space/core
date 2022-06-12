@@ -9,6 +9,7 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  isDateString,
 } from 'class-validator'
 import { Query } from 'mongoose'
 
@@ -98,6 +99,10 @@ export class PostModel extends WriteBaseModel {
   @IsDate()
   @IsOptional()
   @Transform(({ value }) => {
+    const isDateIsoString = isDateString(value)
+    if (isDateIsoString) {
+      return new Date(value)
+    }
     if (typeof value != 'boolean') {
       throw new UnprocessableEntityException('pin value must be boolean')
     }

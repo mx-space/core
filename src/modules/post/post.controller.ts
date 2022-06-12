@@ -55,7 +55,7 @@ export class PostController {
         select,
         sort: sortBy
           ? { [sortBy]: sortOrder || -1 }
-          : { pin: -1, pinOrder: -1, created: -1 },
+          : { pinOrder: -1, pin: -1, created: -1 },
       },
     )
   }
