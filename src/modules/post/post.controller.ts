@@ -53,7 +53,9 @@ export class PostController {
         limit: size,
         page,
         select,
-        sort: sortBy ? { [sortBy]: sortOrder || -1 } : { created: -1 },
+        sort: sortBy
+          ? { [sortBy]: sortOrder || -1 }
+          : { created: -1, pin: -1, pinOrder: -1 },
       },
     )
   }
@@ -113,7 +115,6 @@ export class PostController {
 
   @Post('/')
   @Auth()
-  @HttpCode(201)
   @HTTPDecorators.Idempotence()
   async create(@Body() body: PostModel) {
     const _id = new Types.ObjectId()

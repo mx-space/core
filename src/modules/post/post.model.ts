@@ -1,13 +1,18 @@
+import { Transform } from 'class-transformer'
 import {
   ArrayUnique,
   IsBoolean,
+  IsDate,
+  IsInt,
   IsMongoId,
   IsNotEmpty,
   IsOptional,
+  IsPositive,
   IsString,
 } from 'class-validator'
 import { Query } from 'mongoose'
 
+import { UnprocessableEntityException } from '@nestjs/common'
 import { PartialType } from '@nestjs/mapped-types'
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
 import {
@@ -88,6 +93,28 @@ export class PostModel extends WriteBaseModel {
   @prop({ type: Count, default: { read: 0, like: 0 }, _id: false })
   @ApiHideProperty()
   count?: Count
+
+  @prop()
+  @IsDate()
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value != 'boolean') {
+      throw new UnprocessableEntityException('pin value must be boolean')
+    }
+
+    if (value === true) {
+      return new Date()
+    } else {
+      return null
+    }
+  })
+  pin?: Date | null
+
+  @prop()
+  @IsPositive()
+  @IsInt()
+  @IsOptional()
+  pinOrder?: number
 
   static get protectedKeys() {
     return ['count'].concat(super.protectedKeys)
