@@ -6,6 +6,22 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Jwt verfiy
+- Pin sort
+- Pin order
+
+### Features
+
+- Post pin
+
+### Miscellaneous Tasks
+
+- Cleanup
+
+## [3.30.0-alpha.1] - 2022-06-11
+
+### Bug Fixes
+
 - Resolution dependency to reduce size
 - Update dependency cos-nodejs-sdk-v5 to v2.11.10
 - Idempotence pending status (#566)
@@ -33,6 +49,10 @@ All notable changes to this project will be documented in this file.
 ### Testing
 
 - Add case for jwt
+
+### Release
+
+- V3.30.0-alpha.1
 
 ## [3.30.0-alpha.0] - 2022-06-09
 
