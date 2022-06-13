@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 import retryAxios from 'axios-retry'
 import { performance } from 'perf_hooks'
+import { inspect } from 'util'
 
 import { Injectable, Logger } from '@nestjs/common'
 
@@ -27,6 +28,7 @@ export class HttpService {
   private logger: Logger
   constructor(private readonly cacheService: CacheService) {
     this.logger = new Logger(HttpService.name)
+
     this.http = this.bindInterceptors(
       axios.create({
         ...AXIOS_CONFIG,
@@ -161,6 +163,6 @@ data: ${this.prettyStringify(req.data)}`,
   }
 
   private prettyStringify(data: any) {
-    return JSON.stringify(data, null, 2)
+    return inspect(data, { colors: true })
   }
 }
