@@ -65,7 +65,7 @@ specifiers:
   class-validator: 0.13.2
   class-validator-jsonschema: npm:@innei/class-validator-jsonschema@3.1.1
   consola: '*'
-  cos-nodejs-sdk-v5: 2.11.10
+  cos-nodejs-sdk-v5: 2.11.11
   cron: '*'
   cross-env: 7.0.3
   dayjs: 1.11.3
@@ -154,7 +154,7 @@ dependencies:
   class-validator: 0.13.2
   class-validator-jsonschema: /@innei/class-validator-jsonschema/3.1.1_e6kgdsnyya5caxg3ysdyxrqm7a
   consola: 2.15.3
-  cos-nodejs-sdk-v5: 2.11.10
+  cos-nodejs-sdk-v5: 2.11.11
   dayjs: 1.11.3
   ejs: 3.1.8
   fastify-swagger: /@fastify/swagger/6.0.1
@@ -601,7 +601,7 @@ packages:
     resolution: {integrity: sha512-xbWoy/PFoxSWazIToT9Sif+jJTlrMcndIsaOKvTA6u7QEo7ilkRZpjew18/W3c7nm8fXdUDXh02VXTbZ0pGDNw==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/types': 7.18.2
+      '@babel/types': 7.18.4
 
   /@babel/helper-validator-identifier/7.16.7:
     resolution: {integrity: sha512-hsEnFemeiW4D08A5gUAZxLBTXpZ39P+a+DGDsHw1yxqyQ/jzFEnxf5uTEGp+3bzAbNOxU1paTgYS4ECU/IgfDw==}
@@ -2556,7 +2556,7 @@ packages:
     resolution: {integrity: sha512-spZRyzKL5l5BZQrr/6m/SqFdBN0q3OCI0f9rjfBzCMBIP4p75P620rR3gTmaksNOhmzgdxcaxdNfMy6anrbM0g==}
 
   /asynckit/0.4.0:
-    resolution: {integrity: sha1-x57Zf380y48robyXkLzDZkdLS3k=}
+    resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
 
   /atomic-sleep/1.0.0:
     resolution: {integrity: sha512-kNOjDqAh7px0XWNI+4QbzoiR/nTkHAWNud2uvnJquD1/x5a7EQZMJT0AczqK0Qn67oY/TTQ1LbUKajZpp3I9tQ==}
@@ -3124,7 +3124,7 @@ packages:
     dev: false
 
   /core-util-is/1.0.2:
-    resolution: {integrity: sha1-tf1UIgqivFq1eqtxQMlAdUUDwac=}
+    resolution: {integrity: sha512-3lqz5YjWTYnW6dlDa5TLaTCcShfar1e40rmcJVwCBJC6mWlFuj0eCHIElmG1g5kyuJ/GD+8Wn4FFCcz4gJPfaQ==}
     dev: false
 
   /cors/2.8.5:
@@ -3134,8 +3134,8 @@ packages:
       object-assign: 4.1.1
       vary: 1.1.2
 
-  /cos-nodejs-sdk-v5/2.11.10:
-    resolution: {integrity: sha512-5BQjow4HPV8PxbZtRhKrh/LGWnZKbydm2NCsjZqwrKVcO+MIWaBWZPOPRHyn6o5PxDO5oBTiBB15X+P2VuoYpw==}
+  /cos-nodejs-sdk-v5/2.11.11:
+    resolution: {integrity: sha512-8MmOPiMTwZKa0qUU+rjEGbP1pG/hr/HxbW7vLO7suTmTxAjwbOCyUOtp/oQ8y22DatNShLRZJyvOLUMmF9CZeA==}
     engines: {node: '>= 6'}
     dependencies:
       conf: 9.0.2
@@ -7787,13 +7787,13 @@ packages:
     dev: true
 
   /tunnel-agent/0.6.0:
-    resolution: {integrity: sha1-J6XeoGs2sEoKmWZ3SykIaPD8QP0=}
+    resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
     dependencies:
       safe-buffer: 5.2.1
     dev: false
 
   /tweetnacl/0.14.5:
-    resolution: {integrity: sha1-WuaBd/GS1EViadEIr6k/+HQ/T2Q=}
+    resolution: {integrity: sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==}
     dev: false
 
   /type-check/0.4.0:
@@ -7911,7 +7911,7 @@ packages:
     engines: {node: '>= 0.8'}
 
   /verror/1.10.0:
-    resolution: {integrity: sha1-OhBcoXBTr1XW4nDB+CiGguGNpAA=}
+    resolution: {integrity: sha512-ZZKSmDAEFOijERBLkmYfJ+vmk3w+7hOLYDNkRCuRuMJGEmqYNCNLyBBFwWKVMhfwaEF3WOd0Zlw86U/WC/+nYw==}
     engines: {'0': node >=0.6.0}
     dependencies:
       assert-plus: 1.0.0
