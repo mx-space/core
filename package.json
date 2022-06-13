@@ -111,7 +111,7 @@
     "jszip": "3.10.0",
     "linkedom": "0.14.11",
     "lodash": "*",
-    "marked": "4.0.16",
+    "marked": "4.0.17",
     "mime-types": "*",
     "mkdirp": "*",
     "mongoose": "6.3.6",
