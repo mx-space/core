@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Use inspect object
+- Custom token validate
+
+## [3.30.0] - 2022-06-12
+
+### Bug Fixes
+
 - Jwt verfiy
 - Pin sort
 - Pin order
@@ -17,6 +24,10 @@ All notable changes to this project will be documented in this file.
 ### Miscellaneous Tasks
 
 - Cleanup
+
+### Release
+
+- V3.30.0
 
 ## [3.30.0-alpha.1] - 2022-06-11
 
