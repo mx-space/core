@@ -3,7 +3,6 @@ import { isValidObjectId } from 'mongoose'
 import {
   BadRequestException,
   Body,
-  Controller,
   Delete,
   Get,
   HttpCode,
@@ -17,6 +16,7 @@ import {
 } from '@nestjs/common'
 import { ApiQuery } from '@nestjs/swagger'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -36,7 +36,7 @@ import {
 } from './category.model'
 import { CategoryService } from './category.service'
 
-@Controller({ path: 'categories' })
+@ApiController({ path: 'categories' })
 @ApiName
 export class CategoryController {
   constructor(

@@ -1,12 +1,13 @@
-import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
+import { CacheKey, CacheTTL, Get, Header } from '@nestjs/common'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 
 import { AggregateService } from '../aggregate/aggregate.service'
 
-@Controller('sitemap')
+@ApiController('sitemap')
 @ApiName
 export class SitemapController {
   constructor(private readonly aggregateService: AggregateService) {}

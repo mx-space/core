@@ -2,18 +2,10 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
 import { customAlphabet } from 'nanoid/async'
 
-import {
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Query,
-  Req,
-  Res,
-} from '@nestjs/common'
+import { Delete, Get, Param, Post, Query, Req, Res } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -26,7 +18,7 @@ import { FileQueryDto, FileUploadDto } from './file.dto'
 import { FileService } from './file.service'
 
 @ApiName
-@Controller(['objects', 'files'])
+@ApiController(['objects', 'files'])
 export class FileController {
   constructor(
     private readonly service: FileService,

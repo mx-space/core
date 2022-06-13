@@ -1,6 +1,5 @@
 import {
   Body,
-  Controller,
   Delete,
   Get,
   Param,
@@ -11,6 +10,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -22,7 +22,7 @@ import { PagerDto } from '~/shared/dto/pager.dto'
 import { PageModel, PartialPageModel } from './page.model'
 import { PageService } from './page.service'
 
-@Controller('pages')
+@ApiController('pages')
 @ApiName
 export class PageController {
   constructor(

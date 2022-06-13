@@ -2,7 +2,6 @@ import pluralize from 'pluralize'
 
 import {
   Body,
-  Controller,
   Delete,
   Get,
   HttpCode,
@@ -16,6 +15,7 @@ import {
 import { ApiTags, PartialType } from '@nestjs/swagger'
 import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorator/http.decorator'
 import { EventScope } from '~/constants/business-event.constant'
@@ -47,7 +47,7 @@ export function BaseCrudFactory<
   const Upper = classUpper || class {}
 
   @ApiTags(`${tagPrefix} Routes`)
-  @Controller(pluralizeName)
+  @ApiController(pluralizeName)
   class BaseCrud extends Upper {
     constructor(
       @InjectModel(model) private readonly _model: MongooseModel<T>,

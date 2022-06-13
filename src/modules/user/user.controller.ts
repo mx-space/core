@@ -1,6 +1,7 @@
-import { Body, Controller, Get, HttpCode, Patch, Post } from '@nestjs/common'
+import { Body, Get, HttpCode, Patch, Post } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HttpCache } from '~/common/decorator/cache.decorator'
 import {
@@ -19,7 +20,7 @@ import { UserDocument, UserModel } from './user.model'
 import { UserService } from './user.service'
 
 @ApiName
-@Controller(['master', 'user'])
+@ApiController(['master', 'user'])
 export class UserController {
   constructor(
     private readonly userService: UserService,

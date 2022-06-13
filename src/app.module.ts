@@ -35,6 +35,7 @@ import { PostModule } from './modules/post/post.module'
 import { ProjectModule } from './modules/project/project.module'
 import { PTYModule } from './modules/pty/pty.module'
 import { RecentlyModule } from './modules/recently/recently.module'
+import { RenderEjsModule } from './modules/render/render.module'
 import { SayModule } from './modules/say/say.module'
 import { SearchModule } from './modules/search/search.module'
 import { ServerlessModule } from './modules/serverless/serverless.module'
@@ -86,6 +87,7 @@ import { LoggerModule } from './processors/logger/logger.module'
     UserModule,
 
     PageProxyModule,
+    RenderEjsModule,
 
     GatewayModule,
     HelperModule,

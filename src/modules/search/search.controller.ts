@@ -1,11 +1,6 @@
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Param,
-  Query,
-} from '@nestjs/common'
+import { BadRequestException, Get, Param, Query } from '@nestjs/common'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { HttpCache } from '~/common/decorator/cache.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
@@ -13,7 +8,7 @@ import { SearchDto } from '~/modules/search/search.dto'
 
 import { SearchService } from './search.service'
 
-@Controller('search')
+@ApiController('search')
 @ApiName
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}

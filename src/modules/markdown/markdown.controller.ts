@@ -12,7 +12,6 @@ import xss from 'xss'
 import {
   Body,
   CacheTTL,
-  Controller,
   ForbiddenException,
   Get,
   Header,
@@ -22,6 +21,7 @@ import {
 } from '@nestjs/common'
 import { ApiProperty } from '@nestjs/swagger'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HttpCache } from '~/common/decorator/cache.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
@@ -44,7 +44,7 @@ import {
 import { MarkdownYAMLProperty } from './markdown.interface'
 import { MarkdownService } from './markdown.service'
 
-@Controller('markdown')
+@ApiController('markdown')
 @ApiName
 export class MarkdownController {
   constructor(

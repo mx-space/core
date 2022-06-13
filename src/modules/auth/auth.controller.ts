@@ -9,7 +9,6 @@ import {
 
 import {
   Body,
-  Controller,
   Delete,
   Get,
   NotFoundException,
@@ -19,6 +18,7 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster as Master } from '~/common/decorator/role.decorator'
@@ -37,8 +37,7 @@ export class TokenDto {
   @IsNotEmpty()
   name: string
 }
-
-@Controller({
+@ApiController({
   path: 'auth',
 })
 @ApiName

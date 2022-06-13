@@ -1,12 +1,6 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Query,
-  Request,
-  Response,
-} from '@nestjs/common'
+import { Body, Post, Query, Request, Response } from '@nestjs/common'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -17,7 +11,7 @@ import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetModel, SnippetType } from '../snippet/snippet.model'
 
 @ApiName
-@Controller('debug')
+@ApiController('debug')
 export class DebugController {
   constructor(
     private readonly serverlessService: ServerlessService,

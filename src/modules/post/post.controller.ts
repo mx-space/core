@@ -3,7 +3,6 @@ import { Types } from 'mongoose'
 import {
   BadRequestException,
   Body,
-  Controller,
   Delete,
   Get,
   HttpCode,
@@ -16,6 +15,7 @@ import {
 } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
@@ -32,7 +32,7 @@ import { CategoryAndSlugDto } from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'
 
-@Controller('posts')
+@ApiController('posts')
 @ApiName
 export class PostController {
   constructor(

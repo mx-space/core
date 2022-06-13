@@ -9,6 +9,10 @@ export const TEMP_DIR = isDev ? join(cwd, './tmp') : '/tmp/mx-space'
 
 export const DATA_DIR = isDev ? join(cwd, './tmp') : join(HOME, '.mx-space')
 
+export const THEME_DIR = isDev
+  ? join(cwd, './tmp/theme')
+  : join(DATA_DIR, 'theme')
+
 export const USER_ASSET_DIR = join(DATA_DIR, 'assets')
 export const LOG_DIR = join(DATA_DIR, 'log')
 

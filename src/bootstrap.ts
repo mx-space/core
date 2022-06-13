@@ -1,7 +1,7 @@
 import cluster from 'cluster'
 import { performance } from 'perf_hooks'
 
-import { LogLevel, Logger, RequestMethod, ValidationPipe } from '@nestjs/common'
+import { LogLevel, Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 
@@ -46,14 +46,6 @@ export async function bootstrap() {
         }
       : undefined,
   )
-
-  app.setGlobalPrefix(isDev ? '' : `api/v${API_VERSION}`, {
-    exclude: [
-      { path: '/qaqdmin', method: RequestMethod.GET },
-      { path: '/proxy/qaqdmin', method: RequestMethod.GET },
-      { path: '/proxy/*', method: RequestMethod.GET },
-    ],
-  })
 
   if (isDev) {
     app.useGlobalInterceptors(new LoggingInterceptor())
