@@ -55,19 +55,25 @@ export class AuthService {
 
   async generateAccessToken() {
     const ap = customAlphabet(alphabet, 40)
-    return await ap()
+    const nanoid = await ap()
+
+    return `txo${nanoid}`
+  }
+
+  isCustomToken(token: string) {
+    return token.startsWith('txo') && token.length - 3 === 40
   }
 
   async verifyCustomToken(
     token: string,
-  ): Promise<Readonly<[boolean, UserModel | null]>> {
+  ): Promise<[true, UserModel] | [false, null]> {
     const user = await this.userModel.findOne({}).lean().select('+apiToken')
     if (!user) {
-      return [false, null] as const
+      return [false, null]
     }
     const tokens = user.apiToken
     if (!tokens || !Array.isArray(tokens)) {
-      return [false, null] as const
+      return [false, null]
     }
     const valid = tokens.some((doc) => {
       if (doc.token === token) {
@@ -81,7 +87,7 @@ export class AuthService {
       return false
     })
 
-    return valid ? [true, await this.userModel.findOne().lean()] : [false, null]
+    return valid ? [true, user] : [false, null]
   }
 
   async saveToken(model: TokenDto & { token: string }) {

@@ -1,3 +1,5 @@
+import { isJWT } from 'class-validator'
+
 import {
   CanActivate,
   ExecutionContext,
@@ -7,8 +9,8 @@ import {
 
 import { isTest } from '~/global/env.global'
 import { mockUser1 } from '~/mock/user.mock'
+import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 /**
@@ -18,7 +20,7 @@ import { getNestExecutionContextRequest } from '~/transformers/get-req.transform
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    protected readonly jwtService: JWTService,
+    protected readonly authService: AuthService,
     protected readonly configs: ConfigsService,
   ) {}
   async canActivate(context: ExecutionContext): Promise<any> {
@@ -37,8 +39,25 @@ export class AuthGuard implements CanActivate {
     if (!Authorization) {
       throw new UnauthorizedException('未登录')
     }
+
+    if (this.authService.isCustomToken(Authorization)) {
+      const [isValid, userModel] = await this.authService.verifyCustomToken(
+        Authorization,
+      )
+      if (!isValid) {
+        throw new UnauthorizedException('令牌无效')
+      }
+      request.user = userModel
+      request.token = Authorization
+      return true
+    }
+
     const jwt = Authorization.replace(/[Bb]earer /, '')
-    const ok = await this.jwtService.verify(jwt)
+
+    if (!isJWT(jwt)) {
+      throw new UnauthorizedException('令牌无效')
+    }
+    const ok = await this.authService.jwtServicePublic.verify(jwt)
     if (!ok) {
       throw new UnauthorizedException('身份过期')
     }

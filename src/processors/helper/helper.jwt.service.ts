@@ -48,10 +48,6 @@ export class JWTService {
   }
 
   async verify(token: string) {
-    if (isDev && token == 'dev_token_for_test') {
-      return true
-    }
-
     try {
       verify(token, this.secret)
       return await this.isTokenInRedis(token)
@@ -93,7 +89,9 @@ export class JWTService {
   }
 
   sign(id: string) {
-    const token = sign({ id }, this.secret)
+    const token = sign({ id }, this.secret, {
+      expiresIn: '1y',
+    })
     this.storeTokenInRedis(token)
     return token
   }

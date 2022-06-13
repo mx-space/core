@@ -1,3 +1,4 @@
+import { AxiosRequestConfig } from 'axios'
 import cluster from 'cluster'
 import { argv } from 'zx-cjs'
 
@@ -50,10 +51,7 @@ export const REDIS = {
     (isDev || argv.disable_cache) && !process.env['ENABLE_CACHE_DEBUG'],
 }
 
-/**
- * @type {import('axios').AxiosRequestConfig}
- */
-export const AXIOS_CONFIG = {
+export const AXIOS_CONFIG: AxiosRequestConfig = {
   timeout: 10000,
 }
 
