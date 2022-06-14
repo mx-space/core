@@ -4,7 +4,7 @@ services:
   app:
     container_name: mx-server
     image: innei/mx-server:latest
-    command: node index.js --redis_host=redis --db_host=mongo --allowed_origins=${ALLOWED_ORIGINS} --jwt_secret=${JWT_SECRET} --color --cluster
+    command: node index.js --redis_host=redis --db_host=mongo --allowed_origins=${ALLOWED_ORIGINS} --jwt_secret=${JWT_SECRET} --color
     environment:
       - TZ=Asia/Shanghai
       - NODE_ENV=production
@@ -21,6 +21,12 @@ services:
     networks:
       - app-network
     restart: always
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://127.0.0.1:2333/api/v2/ping']
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
 
   mongo:
     container_name: mongo
@@ -41,7 +47,7 @@ services:
     networks:
       - app-network
     restart: always
-     
+
 networks:
   app-network:
     driver: bridge
