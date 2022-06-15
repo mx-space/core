@@ -90,7 +90,7 @@ specifiers:
   marked: 4.0.17
   mime-types: '*'
   mkdirp: '*'
-  mongodb-memory-server: 8.6.0
+  mongodb-memory-server: 8.6.1
   mongoose: 6.3.8
   mongoose-lean-getters: 0.3.3
   mongoose-lean-id: 0.3.0
@@ -192,7 +192,7 @@ dependencies:
   zx-cjs: 6.1.0
 
 optionalDependencies:
-  mongodb-memory-server: 8.6.0
+  mongodb-memory-server: 8.6.1
   redis-memory-server: 0.5.0
 
 devDependencies:
@@ -2749,7 +2749,7 @@ packages:
     dev: false
 
   /buffer-crc32/0.2.13:
-    resolution: {integrity: sha1-DTM+PwDqxQqhRUq9MO+MKl2ackI=}
+    resolution: {integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==}
     dev: false
     optional: true
 
@@ -4045,7 +4045,7 @@ packages:
     dev: true
 
   /fd-slicer/1.1.0:
-    resolution: {integrity: sha1-JcfInLH5B3+IkbvmHY85Dq4lbx4=}
+    resolution: {integrity: sha512-cE1qsB/VwyQozZ+q1dGxR8LBYNZeofhEdUNGSMbQD3Gw2lAzX9Zb3uIU6Ebc/Fmyjo9AWWfnn0AUCHqtevs/8g==}
     dependencies:
       pend: 1.2.0
     dev: false
@@ -6054,8 +6054,8 @@ packages:
       whatwg-url: 11.0.0
     dev: false
 
-  /mongodb-memory-server-core/8.6.0:
-    resolution: {integrity: sha512-vuJfoK1TUPKwmspRxvkMUod34BInHmWF6li3nXlQ9bvaA2Xg4p3GsTkplyuwTBkLgeLL9AwIU0rk3CDwKpym1w==}
+  /mongodb-memory-server-core/8.6.1:
+    resolution: {integrity: sha512-GOe2AOYzqUg9DsSJFA7wbWaqt4pbaulXhM1lgs19s+H0Q/VkFtvB3RpOvnWVLAV5PADg9zTY22ecVI2txTxGow==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@types/tmp': 0.2.3
@@ -6079,12 +6079,12 @@ packages:
     dev: false
     optional: true
 
-  /mongodb-memory-server/8.6.0:
-    resolution: {integrity: sha512-4I3qpIN3Ls5Vs8CPIl7SiT/rQUYmpgP27csDqgkSY7fu09mEqT3ieIC7cRhgx8wuRKr3rTotKMP4G1+Qw7+9Kw==}
+  /mongodb-memory-server/8.6.1:
+    resolution: {integrity: sha512-X/jlNQnsv1+lTMetg9UAxyOG1soJcfS7bQp0WGQ9bi1J97+OyIWiFR7Tx9wwX3A6eQRBL3B1P+5XFIwLk6XZtg==}
     engines: {node: '>=12.22.0'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 8.6.0
+      mongodb-memory-server-core: 8.6.1
       tslib: 2.4.0
     transitivePeerDependencies:
       - supports-color
@@ -6588,7 +6588,7 @@ packages:
     dev: true
 
   /pend/1.2.0:
-    resolution: {integrity: sha1-elfrVQpng/kRUzH89GY9XI4AelA=}
+    resolution: {integrity: sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg==}
     dev: false
     optional: true
 
@@ -8114,7 +8114,7 @@ packages:
     dev: true
 
   /yauzl/2.10.0:
-    resolution: {integrity: sha1-x+sXyT4RLLEIb6bY5R+wZnt5pfk=}
+    resolution: {integrity: sha512-p4a9I6X6nu6IhoGmBqAcbJy1mlC4j27vEPZX9F4L4/vZT3Lyq1VkFHw/V/PUcB9Buo+DG3iHkT0x3Qya58zc3g==}
     dependencies:
       buffer-crc32: 0.2.13
       fd-slicer: 1.1.0
