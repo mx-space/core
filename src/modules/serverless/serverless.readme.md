@@ -80,7 +80,7 @@ import * as ejs from 'ejs'
 // bad, don't recommend
 ```
 
-## `Context`
+## Context
 
 `handler` 函数的第一个参数接受一个全局上下文对象。
 
@@ -114,6 +114,14 @@ import * as ejs from 'ejs'
 
 `context.readAsset(path: string, data: any, options)` 该方法用于读取配置文件。
 
+## `Storage`
+
+可以通过 `context.storage` 访问数据存取层。
+
+- `context.storage.cache` 是一个 Redis Key-Value 存储结构，可保存临时数据。
+- `context.storage.db` 是一个与其他数据隔离的保存在 MongoDB 中的 Key-Value 结构的数据。
+- `context.storage.dangerousAccessDbInstance()` 获取此系统的 MongoConnection 实例，返回 `[Db, mongo]`。可用于真正操作数据库。如字面意思所见这是不安全的行为。
+
 ## `process`
 
 | Key                  | Type                               |
@@ -138,3 +146,5 @@ And other global api is all banned.
 - [x] set Content-Type
 - [x] ESM AST Parser (ImportStatement)
 - [x] Cron to clean require cache
+- [ ] Logger
+- [ ] Debugger

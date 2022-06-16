@@ -1,5 +1,6 @@
 import { isURL } from 'class-validator'
 import fs, { mkdir, stat } from 'fs/promises'
+import { mongo } from 'mongoose'
 import path from 'path'
 import { nextTick } from 'process'
 
@@ -247,7 +248,7 @@ export class ServerlessService {
             `${model.reference || '#########debug######'}@${model.name}`,
           ),
           dangerousAccessDbInstance: () => {
-            return this.databaseService.db
+            return [this.databaseService.db, mongo]
           },
         },
 
@@ -511,15 +512,15 @@ export class ServerlessService {
 
       // fin. is built-in module
       const module = isBuiltinModule(id, [
-        'fs',
-        'os',
         'child_process',
-        'sys',
-        'process',
-        'vm',
-        'v8',
         'cluster',
+        'fs',
         'fs/promises',
+        'os',
+        'process',
+        'sys',
+        'v8',
+        'vm',
       ])
       if (!module) {
         throw new Error(`cannot require ${id}`)
