@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEmail,
   IsEnum,
   IsIn,
@@ -44,7 +45,6 @@ export class CommentDto {
 export class TextOnlyDto {
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
   text: string
 }
 
@@ -55,9 +55,13 @@ export class CommentRefTypesDto {
   ref?: CommentRefTypes
 }
 
-export class StateDto {
+export class CommentStatePatchDto {
   @IsInt()
   @IsIn([0, 1, 2])
-  @ApiProperty()
-  state: number
+  @IsOptional()
+  state?: number
+
+  @IsOptional()
+  @IsBoolean()
+  pin?: boolean
 }

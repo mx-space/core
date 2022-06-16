@@ -95,6 +95,9 @@ export class CommentModel extends BaseModel {
   @prop({ select: false })
   agent?: string
 
+  @prop()
+  pin?: boolean
+
   @prop({
     ref: () => PostModel,
     foreignField: '_id',

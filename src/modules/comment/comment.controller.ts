@@ -1,10 +1,11 @@
+import { isUndefined } from 'lodash'
+
 import {
   Body,
   Controller,
   Delete,
   ForbiddenException,
   Get,
-  HttpCode,
   Param,
   Patch,
   Post,
@@ -33,7 +34,7 @@ import { UserModel } from '../user/user.model'
 import {
   CommentDto,
   CommentRefTypesDto,
-  StateDto,
+  CommentStatePatchDto,
   TextOnlyDto,
 } from './comment.dto'
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
@@ -75,13 +76,10 @@ export class CommentController {
     return data
   }
 
+  // 面向 C 端的评论查询接口
   @Get('/ref/:id')
-  @ApiParam({
-    name: 'id',
-    description: 'refId',
-    example: '5e6f67e85b303781d28072a3',
-  })
   @ApiOperation({ summary: '根据评论的 refId 获取评论, 如 Post Id' })
+  @HTTPDecorators.Paginator
   async getCommentsByRefId(
     @Param() params: MongoIdDto,
     @Query() query: PagerDto,
@@ -102,10 +100,10 @@ export class CommentController {
       {
         limit: size,
         page,
-        sort: { created: -1 },
+        sort: { pin: 1, created: -1 },
       },
     )
-    return transformDataToPaginate(comments)
+    return comments
   }
 
   @Post('/:id')
@@ -285,21 +283,40 @@ export class CommentController {
 
   @Patch('/:id')
   @ApiOperation({ summary: '修改评论的状态' })
-  @HttpCode(204)
   @Auth()
   async modifyCommentState(
     @Param() params: MongoIdDto,
-    @Body() body: StateDto,
+    @Body() body: CommentStatePatchDto,
   ) {
     const { id } = params
-    const { state } = body
+    const { state, pin } = body
+
+    const updateResult = {} as any
+
+    !isUndefined(state) && Reflect.set(updateResult, 'state', state)
+    !isUndefined(pin) && Reflect.set(updateResult, 'pin', pin)
+
+    if (pin) {
+      await this.commentService.model
+        .updateMany(
+          {
+            _id: id,
+          },
+          {
+            $set: {
+              pin: false,
+            },
+          },
+        )
+        .exec()
+    }
 
     try {
       await this.commentService.model.updateOne(
         {
           _id: id,
         },
-        { state },
+        updateResult,
       )
 
       return
