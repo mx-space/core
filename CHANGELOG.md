@@ -6,8 +6,34 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Update dependency marked to v4.0.17
+- Update dependency @babel/core to v7.18.5
+- Update dependency cos-nodejs-sdk-v5 to v2.11.11
+- Update dependency mongoose to v6.3.8
+- Docker add health check
+- Update nest monorepo to v8.4.7
+- Comment pin sort
+- Comment pin only once
+
+### Features
+
+- Comment pin
+
+### Miscellaneous Tasks
+
+- Update dependency ts-jest to v28.0.5
+- Update dependency mongodb-memory-server to v8.6.1
+
+## [3.30.1] - 2022-06-13
+
+### Bug Fixes
+
 - Use inspect object
 - Custom token validate
+
+### Release
+
+- V3.30.1
 
 ## [3.30.0] - 2022-06-12
 
