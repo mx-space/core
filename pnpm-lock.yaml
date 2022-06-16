@@ -85,7 +85,7 @@ specifiers:
   jsonwebtoken: 8.5.1
   jszip: 3.10.0
   linkedom: 0.14.11
-  lint-staged: 13.0.1
+  lint-staged: 13.0.2
   lodash: '*'
   marked: 4.0.17
   mime-types: '*'
@@ -226,7 +226,7 @@ devDependencies:
   husky: 8.0.1
   ioredis: 5.0.6
   jest: 28.1.1_goy62erlyvb53pf5ddoito3lvi
-  lint-staged: 13.0.1
+  lint-staged: 13.0.2
   prettier: 2.6.2
   rimraf: 3.0.2
   socket.io: 4.5.1
@@ -5667,8 +5667,8 @@ packages:
       uhyphen: 0.1.0
     dev: false
 
-  /lint-staged/13.0.1:
-    resolution: {integrity: sha512-Ykaf4QTi0a02BF7cnq7JIPGOJxH4TkNMWhSlJdH9wOekd0X+gog47Jfh/0L31DqZe5AiydLGC7LkPqpaNm+Kvg==}
+  /lint-staged/13.0.2:
+    resolution: {integrity: sha512-qQLfLTh9z34eMzfEHENC+QBskZfxjomrf+snF3xJ4BzilORbD989NLqQ00ughsF/A+PT41e87+WsMFabf9++pQ==}
     engines: {node: ^14.13.1 || >=16.0.0}
     hasBin: true
     dependencies:
@@ -7334,7 +7334,7 @@ packages:
     dev: false
 
   /string-width/1.0.2:
-    resolution: {integrity: sha1-EYvfW4zcUaKn5w0hHgfisLmxB9M=}
+    resolution: {integrity: sha512-0XsVpQLnVCXHJfyEs8tC0zpTVIr5PKKsQtkT29IwupnPTjtPmQ3xT/4yCREF9hYkV/3M3kzcUTSAZT6a6h81tw==}
     engines: {node: '>=0.10.0'}
     dependencies:
       code-point-at: 1.1.0
@@ -7385,7 +7385,7 @@ packages:
       safe-buffer: 5.2.1
 
   /strip-ansi/3.0.1:
-    resolution: {integrity: sha1-ajhfuIU9lS1f8F0Oiq+UJ43GPc8=}
+    resolution: {integrity: sha512-VhumSSbBqDTP8p2ZLKj40UjBCV4+v8bUSEpUb4KjRgWk9pbqGF4REFj6KEagidb2f/M6AzC0EmFyDNGaw9OCzg==}
     engines: {node: '>=0.10.0'}
     dependencies:
       ansi-regex: 2.1.1

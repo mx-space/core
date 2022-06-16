@@ -165,7 +165,7 @@
     "husky": "8.0.1",
     "ioredis": "5.0.6",
     "jest": "28.1.1",
-    "lint-staged": "13.0.1",
+    "lint-staged": "13.0.2",
     "prettier": "2.6.2",
     "rimraf": "3.0.2",
     "socket.io": "*",
