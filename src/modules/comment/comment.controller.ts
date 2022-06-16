@@ -297,18 +297,24 @@ export class CommentController {
     !isUndefined(pin) && Reflect.set(updateResult, 'pin', pin)
 
     if (pin) {
-      await this.commentService.model
-        .updateMany(
+      const currentRefModel = await this.commentService.model
+        .findOne({
+          _id: id,
+        })
+        .lean()
+        .populate('ref')
+
+      const refId = (currentRefModel?.ref as any)?._id
+      if (refId) {
+        await this.commentService.model.updateMany(
           {
-            _id: id,
+            ref: refId,
           },
           {
-            $set: {
-              pin: false,
-            },
+            pin: false,
           },
         )
-        .exec()
+      }
     }
 
     try {
