@@ -178,7 +178,7 @@ export class NoteService {
   async deleteById(id: string) {
     const doc = await this.noteModel.findById(id)
     if (!doc) {
-      throw new CannotFindException()
+      return
     }
 
     await Promise.all([

@@ -5,8 +5,9 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
 import { BeAnObject, ReturnModelType } from '@typegoose/typegoose/lib/types'
 
+import { BusinessException } from '~/common/exceptions/business.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { MasterLostException } from '~/common/exceptions/master-lost.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
   EmailService,
@@ -229,7 +230,7 @@ export class CommentService {
 
     this.userService.model.findOne().then(async (master) => {
       if (!master) {
-        throw new MasterLostException()
+        throw new BusinessException(ErrorCodeEnum.MasterLost)
       }
 
       const refType = model.refType

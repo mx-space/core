@@ -59,7 +59,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const url = request.raw.url!
 
     if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
-      // message && Logger.debug(message, undefined, 'Catch')
       Logger.error(exception, undefined, 'Catch')
       this.eventManager.broadcast(
         EventBusEvents.SystemException,

@@ -10,8 +10,9 @@ import {
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
-import { MasterLostException } from '~/common/exceptions/master-lost.exception'
+import { BusinessException } from '~/common/exceptions/business.exception'
 import { RedisKeys } from '~/constants/cache.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar, sleep } from '~/utils'
@@ -102,7 +103,7 @@ export class UserService {
         .select('+password +apiToken')
 
       if (!currentUser) {
-        throw new MasterLostException()
+        throw new BusinessException(ErrorCodeEnum.MasterLost)
       }
 
       // 1. 验证新旧密码是否一致
@@ -131,7 +132,7 @@ export class UserService {
   async recordFootstep(ip: string): Promise<Record<string, Date | string>> {
     const master = await this.userModel.findOne()
     if (!master) {
-      throw new MasterLostException()
+      throw new BusinessException(ErrorCodeEnum.MasterLost)
     }
     const PrevFootstep = {
       lastLoginTime: master.lastLoginTime || new Date(1586090559569),
