@@ -96,7 +96,7 @@ specifiers:
   mongoose-lean-id: 0.3.0
   mongoose-lean-virtuals: 0.9.1
   mongoose-paginate-v2: 1.6.3
-  nanoid: 3.3.4
+  nanoid: 4.0.0
   node-machine-id: 1.1.12
   node-pty: 0.10.1
   nodemailer: 6.7.5
@@ -176,7 +176,7 @@ dependencies:
   mongoose-lean-id: 0.3.0_mongoose@6.3.8
   mongoose-lean-virtuals: 0.9.1_mongoose@6.3.8
   mongoose-paginate-v2: 1.6.3
-  nanoid: 3.3.4
+  nanoid: 4.0.0
   node-machine-id: 1.1.12
   node-pty: 0.10.1
   nodemailer: 6.7.5
@@ -6186,9 +6186,9 @@ packages:
     resolution: {integrity: sha512-8ZtvEnA2c5aYCZYd1cvgdnU6cqwixRoYg70xPLWUws5ORTa/lnw+u4amixRS/Ac5U5mQVgp9pnlSUnbNWFaWZQ==}
     dev: false
 
-  /nanoid/3.3.4:
-    resolution: {integrity: sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==}
-    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+  /nanoid/4.0.0:
+    resolution: {integrity: sha512-IgBP8piMxe/gf73RTQx7hmnhwz0aaEXYakvqZyE302IXW3HyVNhdNGC+O2MwMAVhLEnvXlvKtGbtJf6wvHihCg==}
+    engines: {node: ^14 || ^16 || >=18}
     hasBin: true
     dev: false
 
