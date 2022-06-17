@@ -14,7 +14,9 @@ import {
 } from '@nestjs/common'
 import { Interval } from '@nestjs/schedule'
 
+import { BizException } from '~/common/exceptions/business.exception'
 import { RedisKeys } from '~/constants/cache.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { isTest } from '~/global/env.global'
 import { CacheService } from '~/processors/cache/cache.service'
@@ -319,7 +321,11 @@ export class ServerlessService {
           exports: {},
         },
       },
-    )
+    ).catch((err) => {
+      return Promise.reject(
+        new BizException(ErrorCodeEnum.ServerlessError, err.message),
+      )
+    })
   }
 
   private getBabelOptions(): TransformOptions {

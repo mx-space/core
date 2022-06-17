@@ -22,6 +22,7 @@ import { isDev } from '~/global/env.global'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 
 import { getIp } from '../../utils/ip.util'
+import { BizException } from '../exceptions/business.exception'
 import { LoggingInterceptor } from '../interceptors/logging.interceptor'
 
 type myError = {
@@ -58,7 +59,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const url = request.raw.url!
 
-    if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (
+      status === HttpStatus.INTERNAL_SERVER_ERROR &&
+      !(exception instanceof BizException)
+    ) {
       Logger.error(exception, undefined, 'Catch')
       this.eventManager.broadcast(
         EventBusEvents.SystemException,
