@@ -9,9 +9,17 @@
   ],
   "packageRules": [
     {
-      "updateTypes": ["major"],
-      "labels": ["UPDATE-MAJOR"]
+      "updateTypes": [
+        "major"
+      ],
+      "labels": [
+        "UPDATE-MAJOR"
+      ]
     }
+  ],
+  "ignoreDeps": [
+    "nanoid",
+    "camelcase-keys"
   ],
   "enabled": true
 }

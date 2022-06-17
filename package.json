@@ -1,5 +1,5 @@
 {
-  "name": "@mx-space/mx-server",
+  "name": "@mx-space/core",
   "version": "3.30.2",
   "author": "Innei <https://innei.ren>",
   "private": true,
@@ -20,11 +20,11 @@
     ]
   },
   "repository": {
-    "directory": "mx-space/mx-server",
-    "url": "https://github.com/mx-space/mx-server"
+    "directory": "mx-space/core",
+    "url": "https://github.com/mx-space/core"
   },
-  "homepage": "https://github.com/mx-space/mx-server#readme",
-  "issues": "https://github.com/mx-space/mx-server/issues",
+  "homepage": "https://github.com/mx-space/core#readme",
+  "issues": "https://github.com/mx-space/core/issues",
   "scripts": {
     "prepare": "husky install",
     "prebuild": "rimraf dist",
@@ -166,7 +166,7 @@
     "ioredis": "5.0.6",
     "jest": "28.1.1",
     "lint-staged": "13.0.2",
-    "prettier": "2.6.2",
+    "prettier": "2.7.1",
     "rimraf": "3.0.2",
     "socket.io": "*",
     "ts-jest": "28.0.5",
