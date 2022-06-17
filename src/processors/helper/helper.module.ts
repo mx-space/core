@@ -22,6 +22,7 @@ import { JWTService } from './helper.jwt.service'
 import { TextMacroService } from './helper.macro.service'
 import { TaskQueueService } from './helper.tq.service'
 import { UploadService } from './helper.upload.service'
+import { UrlBuilderService } from './helper.url-builder.service'
 
 const providers: Provider<any>[] = [
   AssetService,
@@ -33,6 +34,7 @@ const providers: Provider<any>[] = [
   HttpService,
   JWTService,
   ImageService,
+  UrlBuilderService,
   TaskQueueService,
   TextMacroService,
   UploadService,

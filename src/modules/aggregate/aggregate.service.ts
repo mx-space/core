@@ -12,6 +12,7 @@ import { CacheKeys, RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { CacheService } from '~/processors/cache/cache.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
+import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
@@ -55,6 +56,8 @@ export class AggregateService {
     private readonly linkService: LinkService,
     @Inject(forwardRef(() => RecentlyService))
     private readonly recentlyService: RecentlyService,
+
+    private readonly urlService: UrlBuilderService,
 
     private readonly configs: ConfigsService,
     private readonly gateway: WebEventsGateway,
@@ -263,8 +266,10 @@ export class AggregateService {
   }
   async getRSSFeedContent() {
     const {
-      url: { webUrl: baseURL },
+      url: { webUrl },
     } = await this.configs.waitForConfigReady()
+
+    const baseURL = webUrl.replace(/\/$/, '')
 
     const [posts, notes] = await Promise.all([
       this.postService.model
@@ -293,10 +298,7 @@ export class AggregateService {
         text: post.text,
         created: post.created!,
         modified: post.modified,
-        link: new URL(
-          '/posts' + `/${(post.category as CategoryModel).slug}/${post.slug}`,
-          baseURL,
-        ).toString(),
+        link: baseURL + this.urlService.build(post),
       }
     })
     const notesRss: RSSProps['data'] = notes.map((note) => {
@@ -309,7 +311,7 @@ export class AggregateService {
         text: isSecret ? '这篇文章暂时没有公开呢' : note.text,
         created: note.created!,
         modified: note.modified,
-        link: new URL(`/notes/${note.nid}`, baseURL).toString(),
+        link: baseURL + this.urlService.build(note),
       }
     })
     return postsRss

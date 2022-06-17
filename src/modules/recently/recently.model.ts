@@ -1,8 +1,13 @@
-import { IsOptional, IsString } from 'class-validator'
+import { IsMongoId, IsOptional, IsString } from 'class-validator'
 
 import { modelOptions, prop } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
+
+export type RefType = {
+  title: string
+  url: string
+}
 
 @modelOptions({
   options: {
@@ -15,8 +20,21 @@ export class RecentlyModel extends BaseModel {
   content: string
   @prop()
   @IsOptional()
+  @IsMongoId()
+  refId?: string
+
+  ref?: RefType
+
+  /**
+   * @deprecated
+   */
+  @prop()
+  @IsOptional()
   @IsString()
   project?: string
+  /**
+   * @deprecated
+   */
   @prop()
   @IsString()
   @IsOptional()

@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
@@ -12,6 +13,7 @@ export class RecentlyService {
     @InjectModel(RecentlyModel)
     private readonly recentlyModel: MongooseModel<RecentlyModel>,
     private readonly eventManager: EventManagerService,
+    private readonly databaseService: DatabaseService,
   ) {}
 
   public get model() {
@@ -54,10 +56,18 @@ export class RecentlyService {
   }
 
   async create(model: RecentlyModel) {
+    if (model.refId) {
+      const existModel = await this.databaseService.findGlobalById(model.refId)
+      if (!existModel.type) {
+        throw new BadRequestException('ref model not found')
+      }
+    }
+
     const res = await this.model.create({
       content: model.content,
       language: model.language,
       project: model.project,
+      refId: model.refId,
     })
     process.nextTick(async () => {
       await this.eventManager.broadcast(BusinessEvents.RECENTLY_CREATE, res, {

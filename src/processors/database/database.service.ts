@@ -55,7 +55,7 @@ export class DatabaseService {
     const document = doc[index]
     return {
       document,
-      type: ['Post', 'Note', 'Page'][index],
+      type: (['Post', 'Note', 'Page'] as const)[index],
     }
   }
 
