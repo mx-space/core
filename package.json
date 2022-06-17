@@ -166,7 +166,7 @@
     "ioredis": "5.0.6",
     "jest": "28.1.1",
     "lint-staged": "13.0.2",
-    "prettier": "2.6.2",
+    "prettier": "2.7.1",
     "rimraf": "3.0.2",
     "socket.io": "*",
     "ts-jest": "28.0.5",

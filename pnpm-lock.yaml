@@ -101,7 +101,7 @@ specifiers:
   node-pty: 0.10.1
   nodemailer: 6.7.5
   pluralize: '*'
-  prettier: 2.6.2
+  prettier: 2.7.1
   qs: 6.10.5
   redis-memory-server: 0.5.0
   reflect-metadata: 0.1.13
@@ -227,7 +227,7 @@ devDependencies:
   ioredis: 5.0.6
   jest: 28.1.1_goy62erlyvb53pf5ddoito3lvi
   lint-staged: 13.0.2
-  prettier: 2.6.2
+  prettier: 2.7.1
   rimraf: 3.0.2
   socket.io: 4.5.1
   ts-jest: 28.0.5_tfnnxxvxccip6ar2adkwbzxfwe
@@ -980,7 +980,7 @@ packages:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
 
-  /@ianvs/prettier-plugin-sort-imports/3.3.1_prettier@2.6.2:
+  /@ianvs/prettier-plugin-sort-imports/3.3.1_prettier@2.7.1:
     resolution: {integrity: sha512-AXdV6NJPQUu6ME2qLdm1/eu08ipVCiwfJ3p8denC4SXnbjq8OOe1+lz4Y/WF5kYsR4Cm4kV76qZPj9aTTgzrKw==}
     peerDependencies:
       prettier: 2.x
@@ -992,7 +992,7 @@ packages:
       '@babel/types': 7.18.4
       javascript-natural-sort: 0.7.1
       lodash: 4.17.21
-      prettier: 2.6.2
+      prettier: 2.7.1
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -1033,8 +1033,8 @@ packages:
   /@innei/prettier/0.9.2:
     resolution: {integrity: sha512-uhtQroanY4UBvpwnwYtaV8sseAgiqYXBwxQI/e+7+jRtiTT+DiYPixZmko4rtzqPsQHQE81bb4ShuJIiKrnbMQ==}
     dependencies:
-      '@trivago/prettier-plugin-sort-imports': /@ianvs/prettier-plugin-sort-imports/3.3.1_prettier@2.6.2
-      prettier: 2.6.2
+      '@trivago/prettier-plugin-sort-imports': /@ianvs/prettier-plugin-sort-imports/3.3.1_prettier@2.7.1
+      prettier: 2.7.1
       prettier-package-json: 2.6.3
     transitivePeerDependencies:
       - supports-color
@@ -6679,8 +6679,8 @@ packages:
       sort-order: 1.0.1
     dev: true
 
-  /prettier/2.6.2:
-    resolution: {integrity: sha512-PkUpF+qoXTqhOeWL9fu7As8LXsIUZ1WYaJiY/a7McAQzxjk82OF0tibkFXVCDImZtWxbvojFjerkiLb0/q8mew==}
+  /prettier/2.7.1:
+    resolution: {integrity: sha512-ujppO+MkdPqoVINuDFDRLClm7D78qbDt0/NR+wp5FqEZOoTNAjPHWj17QRhu7geIHJfcNhRk1XVQmF8Bp3ye+g==}
     engines: {node: '>=10.13.0'}
     hasBin: true
     dev: true
