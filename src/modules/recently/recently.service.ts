@@ -84,6 +84,8 @@ export class RecentlyService {
       if (!existModel.type) {
         throw new BadRequestException('ref model not found')
       }
+
+      model.refType = existModel.type
     }
 
     const res = await this.model.create({

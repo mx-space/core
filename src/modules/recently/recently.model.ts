@@ -1,10 +1,4 @@
-import {
-  IsEnum,
-  IsMongoId,
-  IsOptional,
-  IsString,
-  ValidateIf,
-} from 'class-validator'
+import { IsMongoId, IsOptional, IsString } from 'class-validator'
 
 import { modelOptions, prop } from '@typegoose/typegoose'
 
@@ -48,9 +42,7 @@ export class RecentlyModel extends BaseModel {
   ref: RefType
 
   @prop({ enum: CommentRefTypes })
-  @IsEnum(CommentRefTypes)
-  @ValidateIf((model) => model.ref)
-  refType: CommentRefTypes
+  refType: string
 
   get refId() {
     return (this.ref as any)?._id ?? this.ref
@@ -58,13 +50,5 @@ export class RecentlyModel extends BaseModel {
 
   set refId(id: string) {
     return
-    // if (!id) {
-    //   return
-    // }
-    // if (this.ref) {
-    //   ;(this.ref as any)._id = id
-    // } else {
-    //   this.ref = id as any
-    // }
   }
 }
