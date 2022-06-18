@@ -1,14 +1,16 @@
+import { dbHelper } from 'test/helper/db-mock.helper'
+import { redisHelper } from 'test/helper/redis-mock.helper'
+
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
-import { dbHelper } from 'test/helper/db-mock.helper'
-import { redisHelper } from 'test/helper/redis-mock.helper'
-import { getModelToken } from '~/transformers/model.transformer'
+
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
-import { CacheService } from '~/processors/cache/cache.service'
 import { DatabaseService } from '~/processors/database/database.service'
+import { CacheService } from '~/processors/redis/cache.service'
+import { getModelToken } from '~/transformers/model.transformer'
 
 describe('test Snippet Service', () => {
   let service: SnippetService

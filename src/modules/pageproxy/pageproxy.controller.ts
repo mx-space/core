@@ -20,7 +20,7 @@ import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
-import { CacheService } from '~/processors/cache/cache.service'
+import { CacheService } from '~/processors/redis/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { dashboard } from '../../../package.json'

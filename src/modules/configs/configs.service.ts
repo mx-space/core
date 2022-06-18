@@ -17,8 +17,9 @@ import { BeAnObject } from '@typegoose/typegoose/lib/types'
 import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import { CacheService } from '~/processors/cache/cache.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { CacheService } from '~/processors/redis/cache.service'
+import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
@@ -53,6 +54,7 @@ export class ConfigsService {
     private readonly optionModel: ReturnModelType<typeof OptionModel>,
     private readonly userService: UserService,
     private readonly redis: CacheService,
+    private readonly subpub: SubPubBridgeService,
 
     private readonly eventManager: EventManagerService,
   ) {
@@ -200,7 +202,7 @@ export class ConfigsService {
               scope: EventScope.TO_SYSTEM,
             })
           } else {
-            this.redis.publish(EventBusEvents.EmailInit, '')
+            this.subpub.publish(EventBusEvents.EmailInit, '')
           }
         }
 

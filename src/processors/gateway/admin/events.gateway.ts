@@ -10,8 +10,9 @@ import {
 } from '@nestjs/websockets'
 
 import { LOG_DIR } from '~/constants/path.constant'
-import { CacheService } from '~/processors/cache/cache.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
+import { CacheService } from '~/processors/redis/cache.service'
+import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 
 import { BusinessEvents } from '../../../constants/business-event.constant'
 import { AuthService } from '../../../modules/auth/auth.service'
@@ -27,6 +28,7 @@ export class AdminEventsGateway
     protected readonly jwtService: JWTService,
     protected readonly authService: AuthService,
     private readonly cacheService: CacheService,
+    private readonly subpub: SubPubBridgeService,
   ) {
     super(jwtService, authService, cacheService)
   }
@@ -54,11 +56,11 @@ export class AdminEventsGateway
         })
         .on('data', handler)
         .on('end', () => {
-          this.cacheService.subscribe('log', handler)
+          this.subpub.subscribe('log', handler)
           stream.close()
         })
     } else {
-      this.cacheService.subscribe('log', handler)
+      this.subpub.subscribe('log', handler)
     }
   }
 
@@ -66,7 +68,7 @@ export class AdminEventsGateway
   unsubscribeStdOut(client: Socket) {
     const cb = this.subscribeSocketToHandlerMap.get(client)
     if (cb) {
-      this.cacheService.unsubscribe('log', cb as any)
+      this.subpub.unsubscribe('log', cb as any)
     }
     this.subscribeSocketToHandlerMap.delete(client)
   }

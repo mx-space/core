@@ -16,7 +16,7 @@ import {
 import { REDIS } from '~/app.config'
 
 @Injectable()
-export class CacheConfigService implements CacheOptionsFactory {
+export class RedisConfigService implements CacheOptionsFactory {
   // 缓存配置
   public createCacheOptions(): CacheModuleOptions {
     const redisOptions: RedisOptions = {

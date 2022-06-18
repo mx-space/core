@@ -9,7 +9,7 @@ import { OnEvent } from '@nestjs/event-emitter'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
-import { CacheService } from '../cache/cache.service'
+import { SubPubBridgeService } from '../redis/subpub.service'
 import { AssetService } from './helper.asset.service'
 
 export enum ReplyMailType {
@@ -29,13 +29,13 @@ export class EmailService {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly assetService: AssetService,
-    private readonly cacheService: CacheService,
+    readonly subpub: SubPubBridgeService,
   ) {
     this.init()
     this.logger = new Logger(EmailService.name)
 
     if (cluster.isWorker) {
-      cacheService.subscribe(EventBusEvents.EmailInit, () => {
+      subpub.subscribe(EventBusEvents.EmailInit, () => {
         this.init()
       })
     }

@@ -17,7 +17,7 @@ import { Emitter } from '@socket.io/redis-emitter'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
-import { CacheService } from '~/processors/cache/cache.service'
+import { CacheService } from '~/processors/redis/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
 

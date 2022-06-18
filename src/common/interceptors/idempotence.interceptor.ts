@@ -17,7 +17,7 @@ import {
   HTTP_IDEMPOTENCE_OPTIONS,
 } from '~/constants/meta.constant'
 import { REFLECTOR } from '~/constants/system.constant'
-import { CacheService } from '~/processors/cache/cache.service'
+import { CacheService } from '~/processors/redis/cache.service'
 import { getIp, getRedisKey, hashString } from '~/utils'
 
 const IdempotenceHeaderKey = 'x-idempotence'

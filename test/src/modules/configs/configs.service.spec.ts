@@ -9,8 +9,9 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UserService } from '~/modules/user/user.service'
-import { CacheService } from '~/processors/cache/cache.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { CacheService } from '~/processors/redis/cache.service'
+import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { getModelToken } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 
@@ -45,6 +46,10 @@ describe('Test ConfigsService', () => {
           useValue: redisService$,
         },
         { provide: EventManagerService, useValue: { emit: mockEmitFn } },
+        {
+          provide: SubPubBridgeService,
+          useValue: {},
+        },
       ],
     }).compile()
 

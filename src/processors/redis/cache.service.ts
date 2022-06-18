@@ -5,8 +5,6 @@ import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common'
 
 import { getRedisKey } from '~/utils/redis.util'
 
-import { RedisSubPub } from '../../utils/redis-subpub.util'
-
 // Cache 客户端管理器
 
 // 获取器
@@ -46,26 +44,6 @@ export class CacheService {
     options?: { ttl: number },
   ): TCacheResult<T> {
     return this.cache.set(key, value, options)
-  }
-
-  private _redisSubPub: RedisSubPub
-
-  get redisSubPub(): RedisSubPub {
-    return (
-      this._redisSubPub ??
-      (this._redisSubPub = require('../../utils/redis-subpub.util').redisSubPub)
-    )
-  }
-  public async publish(event: string, data: any) {
-    return this.redisSubPub.publish(event, data)
-  }
-
-  public async subscribe(event: string, callback: (data: any) => void) {
-    return this.redisSubPub.subscribe(event, callback)
-  }
-
-  public async unsubscribe(event: string, callback: (data: any) => void) {
-    return this.redisSubPub.unsubscribe(event, callback)
   }
 
   public getClient() {

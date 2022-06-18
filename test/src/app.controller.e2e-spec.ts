@@ -4,7 +4,7 @@ import { Test } from '@nestjs/testing'
 import { AppController } from '~/app.controller'
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
 import { OptionModel } from '~/modules/configs/configs.model'
-import { CacheService } from '~/processors/cache/cache.service'
+import { CacheService } from '~/processors/redis/cache.service'
 import { getModelToken } from '~/transformers/model.transformer'
 
 describe('AppController (e2e)', () => {

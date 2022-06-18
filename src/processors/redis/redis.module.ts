@@ -6,18 +6,19 @@
  */
 import { Global, Module, CacheModule as NestCacheModule } from '@nestjs/common'
 
-import { CacheConfigService } from './cache.config.service'
 import { CacheService } from './cache.service'
+import { RedisConfigService } from './redis.config.service'
+import { SubPubBridgeService } from './subpub.service'
 
 @Global()
 @Module({
   imports: [
     NestCacheModule.registerAsync({
-      useClass: CacheConfigService,
-      inject: [CacheConfigService],
+      useClass: RedisConfigService,
+      inject: [RedisConfigService],
     }),
   ],
-  providers: [CacheConfigService, CacheService],
-  exports: [CacheService],
+  providers: [RedisConfigService, CacheService, SubPubBridgeService],
+  exports: [CacheService, SubPubBridgeService],
 })
-export class CacheModule {}
+export class RedisModule {}

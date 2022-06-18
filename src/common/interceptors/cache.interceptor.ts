@@ -23,7 +23,7 @@ import { Reflector } from '@nestjs/core'
 import { REDIS } from '~/app.config'
 import * as META from '~/constants/meta.constant'
 import * as SYSTEM from '~/constants/system.constant'
-import { CacheService } from '~/processors/cache/cache.service'
+import { CacheService } from '~/processors/redis/cache.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 /**

@@ -1,8 +1,9 @@
 import { Test } from '@nestjs/testing'
+
 import { AuthService } from '~/modules/auth/auth.service'
 import { UserController } from '~/modules/user/user.controller'
 import { UserService } from '~/modules/user/user.service'
-import { CacheService } from '~/processors/cache/cache.service'
+import { CacheService } from '~/processors/redis/cache.service'
 
 describe('test UserModule controller', () => {
   let userController: UserController

@@ -15,8 +15,8 @@ import {
 import { MONGO_DB } from '~/app.config'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
-import { CacheService } from '~/processors/cache/cache.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { CacheService } from '~/processors/redis/cache.service'
 import { getMediumDateTime } from '~/utils'
 import { getFolderSize, installPKG } from '~/utils/system.util'
 

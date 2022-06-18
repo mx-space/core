@@ -5,8 +5,8 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets'
 
-import { CacheService } from '~/processors/cache/cache.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
+import { CacheService } from '~/processors/redis/cache.service'
 
 import { AuthService } from '../../../modules/auth/auth.service'
 import { createAuthGateway } from '../shared/auth.gateway'

@@ -10,7 +10,7 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils'
 
 import { version } from '../../../package.json'
-import { CacheService } from '../cache/cache.service'
+import { CacheService } from '../redis/cache.service'
 
 declare module 'axios' {
   interface AxiosRequestConfig {

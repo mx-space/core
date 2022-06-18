@@ -10,8 +10,8 @@ import { Emitter } from '@socket.io/redis-emitter'
 
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthService } from '~/modules/auth/auth.service'
-import { CacheService } from '~/processors/cache/cache.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
+import { CacheService } from '~/processors/redis/cache.service'
 
 import { BusinessEvents } from '../../../constants/business-event.constant'
 import { BoardcastBaseGateway } from '../base.gateway'

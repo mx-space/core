@@ -43,17 +43,17 @@ import { SnippetModule } from './modules/snippet/snippet.module'
 import { ToolModule } from './modules/tool/tool.module'
 import { TopicModule } from './modules/topic/topic.module'
 import { UserModule } from './modules/user/user.module'
-import { CacheModule } from './processors/cache/cache.module'
 import { DatabaseModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
 import { LoggerModule } from './processors/logger/logger.module'
+import { RedisModule } from './processors/redis/redis.module'
 
 @Module({
   imports: [
     LoggerModule,
     DatabaseModule,
-    CacheModule,
+    RedisModule,
 
     AggregateModule,
     AnalyzeModule,

@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common'
 
 import { safeJSONParse } from '~/utils'
 
-import { CacheService } from '../cache/cache.service'
+import { CacheService } from '../redis/cache.service'
 
 type ITask = RedisMap<
   string,

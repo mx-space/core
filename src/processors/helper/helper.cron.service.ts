@@ -26,7 +26,7 @@ import { SearchService } from '~/modules/search/search.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 
-import { CacheService } from '../cache/cache.service'
+import { CacheService } from '../redis/cache.service'
 import { HttpService } from './helper.http.service'
 
 @Injectable()

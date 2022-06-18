@@ -8,7 +8,7 @@ import { CLUSTER, SECURITY } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey, md5 } from '~/utils'
 
-import { CacheService } from '../cache/cache.service'
+import { CacheService } from '../redis/cache.service'
 
 @Injectable()
 export class JWTService {

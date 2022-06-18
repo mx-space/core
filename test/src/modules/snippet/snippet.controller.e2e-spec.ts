@@ -10,8 +10,8 @@ import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
-import { CacheService } from '~/processors/cache/cache.service'
 import { DatabaseService } from '~/processors/database/database.service'
+import { CacheService } from '~/processors/redis/cache.service'
 import { getModelToken } from '~/transformers/model.transformer'
 
 describe('test /snippets', () => {

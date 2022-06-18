@@ -4,8 +4,8 @@ import { Test } from '@nestjs/testing'
 import { AuthService } from '~/modules/auth/auth.service'
 import { UserModel } from '~/modules/user/user.model'
 import { UserService } from '~/modules/user/user.service'
-import { CacheService } from '~/processors/cache/cache.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
+import { CacheService } from '~/processors/redis/cache.service'
 import { getModelToken } from '~/transformers/model.transformer'
 
 describe('test UserModule service', () => {
