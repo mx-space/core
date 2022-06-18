@@ -6,6 +6,35 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Update dependency mongoose to v6.3.9
+- Idepotence ttl
+- Recenly ref
+
+### Documentation
+
+- Add section for serverless fn
+
+### Features
+
+- Url builder
+
+### Miscellaneous Tasks
+
+- Update dependency lint-staged to v13.0.2
+- Ignore deps
+- Update dependency @types/jest to v28.1.2
+- Update dependency typescript to v4.7.4
+
+### Refactor
+
+- Remove unnessary exception
+- Serverless exception
+- Extract subpub from redis
+
+## [3.30.2] - 2022-06-16
+
+### Bug Fixes
+
 - Update dependency marked to v4.0.17
 - Update dependency @babel/core to v7.18.5
 - Update dependency cos-nodejs-sdk-v5 to v2.11.11
@@ -23,6 +52,10 @@ All notable changes to this project will be documented in this file.
 
 - Update dependency ts-jest to v28.0.5
 - Update dependency mongodb-memory-server to v8.6.1
+
+### Release
+
+- V3.30.2
 
 ## [3.30.1] - 2022-06-13
 
@@ -61,7 +94,7 @@ All notable changes to this project will be documented in this file.
 
 - Resolution dependency to reduce size
 - Update dependency cos-nodejs-sdk-v5 to v2.11.10
-- Idempotence pending status (#566)
+- Idempotence pending status ([#566](https://github.com/orhun/git-cliff/issues/566))
 
 ### Documentation
 
@@ -101,12 +134,12 @@ All notable changes to this project will be documented in this file.
 - Update dependency linkedom to v0.14.11
 - Update dependency mongoose to v6.3.6
 - Remove python2 builder
-- Remove python2 in dockerfile (#557)
+- Remove python2 in dockerfile ([#557](https://github.com/orhun/git-cliff/issues/557))
 - Performance import
 
 ### Features
 
-- Bark support (#563)
+- Bark support ([#563](https://github.com/orhun/git-cliff/issues/563))
 
 ### Miscellaneous Tasks
 
@@ -630,8 +663,8 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
-- Update dependency mongodb-memory-server to v8.5.0 (#438)
-- Update dependency lint-staged to v12.4.0 (#446)
+- Update dependency mongodb-memory-server to v8.5.0 ([#438](https://github.com/orhun/git-cliff/issues/438))
+- Update dependency lint-staged to v12.4.0 ([#446](https://github.com/orhun/git-cliff/issues/446))
 
 ### Release
 
@@ -655,8 +688,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency zx-cjs to v6.1.0 (#437)
-- Update dependency @typegoose/auto-increment to v1.3.0 (#439)
+- Update dependency zx-cjs to v6.1.0 ([#437](https://github.com/orhun/git-cliff/issues/437))
+- Update dependency @typegoose/auto-increment to v1.3.0 ([#439](https://github.com/orhun/git-cliff/issues/439))
 - Make ts happy
 - Eslint type style
 - Update dependency fastify-cookie to v5.6.1
@@ -686,11 +719,11 @@ All notable changes to this project will be documented in this file.
 ### Miscellaneous Tasks
 
 - Update dependency @innei-util/prettier to v0.5.1
-- Update dependency @innei-util/prettier to v0.8.2 (#428)
+- Update dependency @innei-util/prettier to v0.8.2 ([#428](https://github.com/orhun/git-cliff/issues/428))
 - Update dependency @types/mongoose-paginate-v2 to v1.6.4
 - Update dependency @types/node to v16.11.27
 - Cleanup
-- Update dependency @innei-util/eslint-config-ts to v0.8.2 (#426)
+- Update dependency @innei-util/eslint-config-ts to v0.8.2 ([#426](https://github.com/orhun/git-cliff/issues/426))
 - Update dependency lint-staged to v12.3.8
 
 ### Release
@@ -715,12 +748,12 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency snakecase-keys to v5.4.0 (#414)
-- Update dependency marked to v4.0.14 (#423)
+- Update dependency snakecase-keys to v5.4.0 ([#414](https://github.com/orhun/git-cliff/issues/414))
+- Update dependency marked to v4.0.14 ([#423](https://github.com/orhun/git-cliff/issues/423))
 
 ### Miscellaneous Tasks
 
-- Update dependency webpack to v5.72.0 (#419)
+- Update dependency webpack to v5.72.0 ([#419](https://github.com/orhun/git-cliff/issues/419))
 
 ### Release
 
@@ -810,12 +843,12 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency jszip to v3.9.0 (#413)
-- Update dependency @nestjs/schedule to v1.1.0 (#406)
+- Update dependency jszip to v3.9.0 ([#413](https://github.com/orhun/git-cliff/issues/413))
+- Update dependency @nestjs/schedule to v1.1.0 ([#406](https://github.com/orhun/git-cliff/issues/406))
 
 ### Miscellaneous Tasks
 
-- Update dependency webpack to v5.71.0 (#411)
+- Update dependency webpack to v5.71.0 ([#411](https://github.com/orhun/git-cliff/issues/411))
 - Update ioredis to v5
 
 ### Release
@@ -844,8 +877,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency jszip to v3.8.0 (#409)
-- Update dependency fastify-swagger to v5.1.0 (#402)
+- Update dependency jszip to v3.8.0 ([#409](https://github.com/orhun/git-cliff/issues/409))
+- Update dependency fastify-swagger to v5.1.0 ([#402](https://github.com/orhun/git-cliff/issues/402))
 - Url allowed for validator
 
 ### Features
@@ -882,7 +915,7 @@ All notable changes to this project will be documented in this file.
 ### Bug Fixes
 
 - Update dependency @nestjs/swagger to v5.2.1
-- Update nest monorepo to v8.4.3 (patch) (#401)
+- Update nest monorepo to v8.4.3 (patch) ([#401](https://github.com/orhun/git-cliff/issues/401))
 
 ### Miscellaneous Tasks
 
@@ -892,7 +925,7 @@ All notable changes to this project will be documented in this file.
 ### Refactor
 
 - Add cwd constant
-- Fix type guard (#404)
+- Fix type guard ([#404](https://github.com/orhun/git-cliff/issues/404))
 
 ### Release
 
@@ -1395,10 +1428,10 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency nanoid to v3.3.0 (#330)
+- Update dependency nanoid to v3.3.0 ([#330](https://github.com/orhun/git-cliff/issues/330))
 - Update dependency isbot to v3.4.3
-- Update nest monorepo to v8.3.0 (#328)
-- Update dependency @nestjs/passport to v8.2.0 (#331)
+- Update nest monorepo to v8.3.0 ([#328](https://github.com/orhun/git-cliff/issues/328))
+- Update dependency @nestjs/passport to v8.2.0 ([#331](https://github.com/orhun/git-cliff/issues/331))
 - Update dependency @nestjs/passport to v8.2.1
 - Update nest monorepo to v8.3.1
 - Update dependency nanoid to v3.3.1
@@ -1413,7 +1446,7 @@ All notable changes to this project will be documented in this file.
 ### Miscellaneous Tasks
 
 - Add funding
-- Update dependency mongodb-memory-server to v8.4.0 (#336)
+- Update dependency mongodb-memory-server to v8.4.0 ([#336](https://github.com/orhun/git-cliff/issues/336))
 - Update pnpm/action-setup action to v2.2.0
 
 ### Refactor
@@ -1517,7 +1550,7 @@ All notable changes to this project will be documented in this file.
 
 ### Pref
 
-- Modify pageproxy indexEntryCdnUrl (#322)
+- Modify pageproxy indexEntryCdnUrl ([#322](https://github.com/orhun/git-cliff/issues/322))
 
 ### Release
 
@@ -1527,12 +1560,12 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency fastify-swagger to v4.15.0 (#307)
+- Update dependency fastify-swagger to v4.15.0 ([#307](https://github.com/orhun/git-cliff/issues/307))
 
 ### Miscellaneous Tasks
 
-- Update pnpm/action-setup action to v2.1.0 (#312)
-- Update dependency ts-node to v10.5.0 (#310)
+- Update pnpm/action-setup action to v2.1.0 ([#312](https://github.com/orhun/git-cliff/issues/312))
+- Update dependency ts-node to v10.5.0 ([#310](https://github.com/orhun/git-cliff/issues/310))
 - Resolve typescript version
 
 ### Break
@@ -1619,7 +1652,7 @@ All notable changes to this project will be documented in this file.
 ### Miscellaneous Tasks
 
 - Update deps
-- Update dependency @types/node to v16.11.22 (#298)
+- Update dependency @types/node to v16.11.22 ([#298](https://github.com/orhun/git-cliff/issues/298))
 - Update admin version
 
 ### Release
@@ -1685,9 +1718,9 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency graphql to v15.8.0 (#219)
-- Update dependency fastify-multipart to v5.3.0 (#291)
-- Update dependency @nestjs/swagger to v5.2.0 (#292)
+- Update dependency graphql to v15.8.0 ([#219](https://github.com/orhun/git-cliff/issues/219))
+- Update dependency fastify-multipart to v5.3.0 ([#291](https://github.com/orhun/git-cliff/issues/291))
+- Update dependency @nestjs/swagger to v5.2.0 ([#292](https://github.com/orhun/git-cliff/issues/292))
 
 ### Features
 
@@ -1696,7 +1729,7 @@ All notable changes to this project will be documented in this file.
 ### Miscellaneous Tasks
 
 - Update dependency @types/marked to v4.0.2
-- Update dependency lint-staged to v12.3.2 (#286)
+- Update dependency lint-staged to v12.3.2 ([#286](https://github.com/orhun/git-cliff/issues/286))
 - Update package
 
 ### Release
@@ -1716,7 +1749,7 @@ All notable changes to this project will be documented in this file.
 ### Miscellaneous Tasks
 
 - Update admin version
-- Update dependency @innei-util/prettier to v0.2.0 (#296)
+- Update dependency @innei-util/prettier to v0.2.0 ([#296](https://github.com/orhun/git-cliff/issues/296))
 - Update admin version
 
 ### Release
@@ -1836,7 +1869,7 @@ All notable changes to this project will be documented in this file.
 ### Bug Fixes
 
 - Update dependency nanoid to v3.1.31
-- Update dependency nanoid to v3.1.32 (#275)
+- Update dependency nanoid to v3.1.32 ([#275](https://github.com/orhun/git-cliff/issues/275))
 - Test script
 
 ### Features
@@ -1957,16 +1990,16 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency fastify-cookie to v5.5.0 (#254)
-- Update dependency fastify-swagger to v4.13.0 (#236)
+- Update dependency fastify-cookie to v5.5.0 ([#254](https://github.com/orhun/git-cliff/issues/254))
+- Update dependency fastify-swagger to v4.13.0 ([#236](https://github.com/orhun/git-cliff/issues/236))
 
 ### Miscellaneous Tasks
 
 - Update dependency @types/node to v16.11.19
 - Update dependency jest to v27.4.6
 - Update dependency @types/mongoose-paginate-v2 to v1.4.3
-- Update supercharge/redis-github-action action to v1.4.0 (#248)
-- Update dependency jest to v27.4.7 (#262)
+- Update supercharge/redis-github-action action to v1.4.0 ([#248](https://github.com/orhun/git-cliff/issues/248))
+- Update dependency jest to v27.4.7 ([#262](https://github.com/orhun/git-cliff/issues/262))
 - Update cdn url
 - Update script
 
@@ -2116,7 +2149,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency fastify-multipart to v5.2.1 (#216)
+- Update dependency fastify-multipart to v5.2.1 ([#216](https://github.com/orhun/git-cliff/issues/216))
 - Fastify resolution
 
 ### Miscellaneous Tasks
@@ -2150,7 +2183,7 @@ All notable changes to this project will be documented in this file.
 - Update dependency jest to v27.4.2
 - Update dependency jest to v27.4.3
 - Update dependency @types/ioredis to v4.28.2
-- Update dependency @vercel/ncc to v0.33.0 (#212)
+- Update dependency @vercel/ncc to v0.33.0 ([#212](https://github.com/orhun/git-cliff/issues/212))
 - Update dependency prettier to v2.5.1
 - Update dependency ts-jest to v27.1.0
 - Update dependency @types/mongoose-paginate-v2 to v1.4.1
@@ -2181,16 +2214,16 @@ All notable changes to this project will be documented in this file.
 
 - Poplute truely field `category`
 - Update dependency marked to v4.0.5
-- Update dependency class-transformer to v0.5.1 (#193)
-- Update dependency fastify-cookie to v5.4.0 (#197)
+- Update dependency class-transformer to v0.5.1 ([#193](https://github.com/orhun/git-cliff/issues/193))
+- Update dependency fastify-cookie to v5.4.0 ([#197](https://github.com/orhun/git-cliff/issues/197))
 - Update dependency cos-nodejs-sdk-v5 to v2.11.3
 - !!!accidentally bypassing authentication
 
 ### Miscellaneous Tasks
 
-- Update dependency lint-staged to v12.1.2 (#194)
-- Update dependency tsconfig-paths to v3.12.0 (#191)
-- Update dependency prettier to v2.5.0 (#201)
+- Update dependency lint-staged to v12.1.2 ([#194](https://github.com/orhun/git-cliff/issues/194))
+- Update dependency tsconfig-paths to v3.12.0 ([#191](https://github.com/orhun/git-cliff/issues/191))
+- Update dependency prettier to v2.5.0 ([#201](https://github.com/orhun/git-cliff/issues/201))
 
 ### Release
 
@@ -2227,13 +2260,13 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency marked to v4.0.4 (#190)
+- Update dependency marked to v4.0.4 ([#190](https://github.com/orhun/git-cliff/issues/190))
 - Config merge
 
 ### Miscellaneous Tasks
 
-- Update supercharge/mongodb-github-action action to v1.7.0 (#174)
-- Update dependency typescript to v4.5.2 (#181)
+- Update supercharge/mongodb-github-action action to v1.7.0 ([#174](https://github.com/orhun/git-cliff/issues/174))
+- Update dependency typescript to v4.5.2 ([#181](https://github.com/orhun/git-cliff/issues/181))
 - Update dashboard version
 
 ### Release
@@ -2291,16 +2324,16 @@ All notable changes to this project will be documented in this file.
 - Update dependency nodemailer to v6.7.1
 - Update dependency snakecase-keys to v5.1.2
 - Update nest monorepo to v8.2.1
-- Update dependency cache-manager to v3.6.0 (#168)
-- Update dependency cos-nodejs-sdk-v5 to v2.11.0 (#179)
+- Update dependency cache-manager to v3.6.0 ([#168](https://github.com/orhun/git-cliff/issues/168))
+- Update dependency cos-nodejs-sdk-v5 to v2.11.0 ([#179](https://github.com/orhun/git-cliff/issues/179))
 
 ### Miscellaneous Tasks
 
 - Pin dependency @types/marked to 4.0.0
 - Update dependency @nestjs/schematics to v8.0.5
 - Update dependency @types/lodash to v4.14.177
-- Update dependency @vercel/ncc to v0.32.0 (#178)
-- Update dependency lint-staged to v12 (#171)
+- Update dependency @vercel/ncc to v0.32.0 ([#178](https://github.com/orhun/git-cliff/issues/178))
+- Update dependency lint-staged to v12 ([#171](https://github.com/orhun/git-cliff/issues/171))
 
 ### Release
 
@@ -2341,14 +2374,14 @@ All notable changes to this project will be documented in this file.
 
 - Update dependency cos-nodejs-sdk-v5 to v2.10.6
 - Update dependency ua-parser-js to v0.7.30
-- Update dependency algoliasearch to v4.11.0 (#132)
+- Update dependency algoliasearch to v4.11.0 ([#132](https://github.com/orhun/git-cliff/issues/132))
 - Update dependency marked to v3.0.8
 - Update nest monorepo to v8.1.2
 - Update dependency fastify-swagger to v4.12.6
 - Update dependency ua-parser-js to v0.7.31
-- Update dependency graphql to v15.7.2 (#151)
-- Update dependency ua-parser-js to v1 (#142)
-- Update dependency @nestjs/graphql to v9.1.1 (#131)
+- Update dependency graphql to v15.7.2 ([#151](https://github.com/orhun/git-cliff/issues/151))
+- Update dependency ua-parser-js to v1 ([#142](https://github.com/orhun/git-cliff/issues/142))
+- Update dependency @nestjs/graphql to v9.1.1 ([#131](https://github.com/orhun/git-cliff/issues/131))
 
 ### Miscellaneous Tasks
 
@@ -2357,7 +2390,7 @@ All notable changes to this project will be documented in this file.
 - Update dependency @types/node to v16.11.6
 - Update dependency lint-staged to v11.2.5
 - Update dependency lint-staged to v11.2.6
-- Update dependency ts-node to v10.4.0 (#143)
+- Update dependency ts-node to v10.4.0 ([#143](https://github.com/orhun/git-cliff/issues/143))
 
 ### Release
 
@@ -2367,7 +2400,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency mongoose-lean-virtuals to v0.9.0 (#122)
+- Update dependency mongoose-lean-virtuals to v0.9.0 ([#122](https://github.com/orhun/git-cliff/issues/122))
 - Create-tag script
 - Update dependency @nestjs/swagger to v5.1.1
 - Update dependency fastify-swagger to v4.12.5
@@ -2382,7 +2415,7 @@ All notable changes to this project will be documented in this file.
 - Update dependency @nestjs/cli to v8.1.4
 - Update dependency @nestjs/schematics to v8.0.4
 - Update dependency @types/ioredis to v4.27.8
-- Update dependency jest to v27.3.1 (#129)
+- Update dependency jest to v27.3.1 ([#129](https://github.com/orhun/git-cliff/issues/129))
 - Update dependency @types/lodash to v4.14.176
 - Update dependency husky to v7.0.4
 - Update dependency @types/marked to v3.0.2
@@ -2450,8 +2483,8 @@ All notable changes to this project will be documented in this file.
 - Update dependency xss to v1.0.10
 - Update dependency @nestjs/graphql to v9.0.6
 - Update dependency cos-nodejs-sdk-v5 to v2.10.5
-- Update dependency nodemailer to v6.7.0 (#115)
-- Update dependency apollo-server-fastify to v3.4.0 (#117)
+- Update dependency nodemailer to v6.7.0 ([#115](https://github.com/orhun/git-cliff/issues/115))
+- Update dependency apollo-server-fastify to v3.4.0 ([#117](https://github.com/orhun/git-cliff/issues/117))
 
 ### Features
 
@@ -2465,7 +2498,7 @@ All notable changes to this project will be documented in this file.
 - Update dependency lint-staged to v11.2.3
 - Update dependency @types/ioredis to v4.27.7
 - Update dependency typescript to v4.4.4
-- Update dependency ts-node to v10.3.0 (#116)
+- Update dependency ts-node to v10.3.0 ([#116](https://github.com/orhun/git-cliff/issues/116))
 - Update deps
 - Update dashboard version
 
@@ -2477,17 +2510,17 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency snakecase-keys to v5.1.0 (#100)
-- Update dependency camelcase-keys to v7.0.1 (#96)
-- Update dependency nanoid to v3.1.29 (#102)
-- Update dependency graphql to v15.6.1 (#101)
-- Update nest monorepo to v8.0.10 (patch) (#87)
+- Update dependency snakecase-keys to v5.1.0 ([#100](https://github.com/orhun/git-cliff/issues/100))
+- Update dependency camelcase-keys to v7.0.1 ([#96](https://github.com/orhun/git-cliff/issues/96))
+- Update dependency nanoid to v3.1.29 ([#102](https://github.com/orhun/git-cliff/issues/102))
+- Update dependency graphql to v15.6.1 ([#101](https://github.com/orhun/git-cliff/issues/101))
+- Update nest monorepo to v8.0.10 (patch) ([#87](https://github.com/orhun/git-cliff/issues/87))
 - Update dependency marked to v3.0.6
 - Backup default option and update admin version
 
 ### Miscellaneous Tasks
 
-- Update dependency lint-staged to v11.2.0 (#99)
+- Update dependency lint-staged to v11.2.0 ([#99](https://github.com/orhun/git-cliff/issues/99))
 - Reduce build time
 - Update dependency @types/ioredis to v4.27.6
 
@@ -2554,7 +2587,7 @@ All notable changes to this project will be documented in this file.
 ### Bug Fixes
 
 - Update dependency fastify-swagger to v4.12.4
-- Import user module repeatedly (#92)
+- Import user module repeatedly ([#92](https://github.com/orhun/git-cliff/issues/92))
 
 ### Refactor
 
@@ -2672,8 +2705,8 @@ All notable changes to this project will be documented in this file.
 ### Bug Fixes
 
 - Update dependency fastify-multipart to v5.0.1
-- Update dependency cos-nodejs-sdk-v5 to v2.10.4 (#83)
-- Update dependency passport to v0.5.0 (#74)
+- Update dependency cos-nodejs-sdk-v5 to v2.10.4 ([#83](https://github.com/orhun/git-cliff/issues/83))
+- Update dependency passport to v0.5.0 ([#74](https://github.com/orhun/git-cliff/issues/74))
 - Update dependency @nestjs/graphql to v9.0.5
 
 ### Features
@@ -2693,8 +2726,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency @typegoose/auto-increment to v1 (#73)
-- Update dependency graphql to v15.6.0 (#66)
+- Update dependency @typegoose/auto-increment to v1 ([#73](https://github.com/orhun/git-cliff/issues/73))
+- Update dependency graphql to v15.6.0 ([#66](https://github.com/orhun/git-cliff/issues/66))
 
 ### Features
 
@@ -3134,7 +3167,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update dependency @typegoose/typegoose to v8.3.0 (#45)
+- Update dependency @typegoose/typegoose to v8.3.0 ([#45](https://github.com/orhun/git-cliff/issues/45))
 - Typo
 - Zx global register
 - Update dependency marked to v3.0.4
@@ -3282,7 +3315,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Pin dependencies (#38)
+- Pin dependencies ([#38](https://github.com/orhun/git-cliff/issues/38))
 - Email from field
 
 ### Miscellaneous Tasks
@@ -3319,13 +3352,13 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Pin dependency apollo-server-fastify to 3.3.0 (#37)
-- Pin dependency algoliasearch to 4.10.5 (#36)
+- Pin dependency apollo-server-fastify to 3.3.0 ([#37](https://github.com/orhun/git-cliff/issues/37))
+- Pin dependency algoliasearch to 4.10.5 ([#36](https://github.com/orhun/git-cliff/issues/36))
 
 ### Miscellaneous Tasks
 
 - Enable bot
-- Pin dependencies (#31)
+- Pin dependencies ([#31](https://github.com/orhun/git-cliff/issues/31))
 - Add license
 
 ### Release
@@ -3519,8 +3552,8 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
-- Configure Renovate (#1)
-- Pin dependencies (#4)
+- Configure Renovate ([#1](https://github.com/orhun/git-cliff/issues/1))
+- Pin dependencies ([#4](https://github.com/orhun/git-cliff/issues/4))
 - Update deps
 - Format
 - Qaq
