@@ -120,7 +120,7 @@ export class CommentController {
     @Query() query: CommentRefTypesDto,
   ) {
     if (!isMaster) {
-      await this.commentService.ValidAuthorName(body.author)
+      await this.commentService.validAuthorName(body.author)
     }
     const { ref } = query
 
@@ -176,7 +176,7 @@ export class CommentController {
     @IpLocation() ipLocation: IpRecord,
   ) {
     if (!isMaster) {
-      await this.commentService.ValidAuthorName(author)
+      await this.commentService.validAuthorName(author)
     }
 
     const { id } = params

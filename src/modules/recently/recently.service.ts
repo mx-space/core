@@ -21,7 +21,15 @@ export class RecentlyService {
   }
 
   async getAll() {
-    return this.model.find().sort({ created: -1 }).lean()
+    return this.model
+      .find()
+      .sort({ created: -1 })
+
+      .populate({
+        path: 'ref',
+        select: '-text',
+      })
+      .lean()
   }
 
   async getOffset({
@@ -49,10 +57,25 @@ export class RecentlyService {
       )
       .limit(size)
       .sort({ _id: -1 })
+      .populate([
+        {
+          path: 'ref',
+          select: '-text',
+        },
+      ])
       .lean()
   }
   async getLatestOne() {
-    return await this.model.findOne().sort({ created: -1 }).lean()
+    return await this.model
+      .findOne()
+      .sort({ created: -1 })
+      .populate([
+        {
+          path: 'ref',
+          select: '-text',
+        },
+      ])
+      .lean()
   }
 
   async create(model: RecentlyModel) {
@@ -67,14 +90,29 @@ export class RecentlyService {
       content: model.content,
       language: model.language,
       project: model.project,
-      refId: model.refId,
+      ref: model.refId,
+      refType: model.refType,
     })
+
+    const withRef = await this.model
+      .findById(res._id)
+      .populate([
+        {
+          path: 'ref',
+          select: '-text',
+        },
+      ])
+      .lean()
     process.nextTick(async () => {
-      await this.eventManager.broadcast(BusinessEvents.RECENTLY_CREATE, res, {
-        scope: EventScope.TO_SYSTEM_VISITOR,
-      })
+      await this.eventManager.broadcast(
+        BusinessEvents.RECENTLY_CREATE,
+        withRef,
+        {
+          scope: EventScope.TO_SYSTEM_VISITOR,
+        },
+      )
     })
-    return res
+    return withRef
   }
 
   async delete(id: string) {

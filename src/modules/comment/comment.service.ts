@@ -148,7 +148,7 @@ export class CommentService {
     return comment
   }
 
-  async ValidAuthorName(author: string): Promise<void> {
+  async validAuthorName(author: string): Promise<void> {
     const isExist = await this.userService.model.findOne({
       name: author,
     })
