@@ -105,6 +105,8 @@ export class PageProxyService {
     }
 
     $scripts.forEach(($script) => {
+      // FIXME cannot get src attar.
+      // @see https://github.com/WebReflection/linkedom/issues/143
       const originSrc = $script.src
 
       const url = urlReplacer(originSrc)
