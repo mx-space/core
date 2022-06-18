@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Remove designated refType
+
+## [3.31.0-alpha.0] - 2022-06-18
+
+### Bug Fixes
+
 - Update dependency mongoose to v6.3.9
 - Idepotence ttl
 - Recenly ref
@@ -30,6 +36,10 @@ All notable changes to this project will be documented in this file.
 - Remove unnessary exception
 - Serverless exception
 - Extract subpub from redis
+
+### Release
+
+- V3.31.0-alpha.0
 
 ## [3.30.2] - 2022-06-16
 
