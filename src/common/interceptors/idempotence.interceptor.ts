@@ -110,13 +110,12 @@ export class IdempotenceInterceptor implements NestInterceptor {
         }[resultValue]
         throw new ConflictException(message)
       } else {
-        await redis.set(idempotenceKey, '0')
-        await redis.expire(idempotenceKey, expired)
+        await redis.set(idempotenceKey, '0', 'EX', expired)
       }
     }
     return next.handle().pipe(
       tap(async () => {
-        idempotenceKey && (await redis.set(idempotenceKey, '1'))
+        idempotenceKey && (await redis.set(idempotenceKey, '1', 'KEEPTTL'))
       }),
       catchError(async (err) => {
         if (idempotenceKey) {
