@@ -4,9 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### Features
+
+- Support json5 for snippet
+
+### Miscellaneous Tasks
+
+- Add comment for fixme
+- Add changelog gerenate
+
+## [3.31.0-alpha.1] - 2022-06-18
+
 ### Bug Fixes
 
 - Remove designated refType
+
+### Release
+
+- V3.31.0-alpha.1
 
 ## [3.31.0-alpha.0] - 2022-06-18
 
