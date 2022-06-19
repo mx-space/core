@@ -93,7 +93,7 @@ specifiers:
   mkdirp: '*'
   mongodb-memory-server: 8.6.1
   mongoose: 6.3.9
-  mongoose-lean-getters: 0.3.3
+  mongoose-lean-getters: 0.3.4
   mongoose-lean-id: 0.3.0
   mongoose-lean-virtuals: 0.9.1
   mongoose-paginate-v2: 1.6.3
@@ -174,7 +174,7 @@ dependencies:
   mime-types: 2.1.35
   mkdirp: 1.0.4
   mongoose: 6.3.9
-  mongoose-lean-getters: 0.3.3_mongoose@6.3.9
+  mongoose-lean-getters: 0.3.4_mongoose@6.3.9
   mongoose-lean-id: 0.3.0_mongoose@6.3.9
   mongoose-lean-virtuals: 0.9.1_mongoose@6.3.9
   mongoose-paginate-v2: 1.6.3
@@ -3514,7 +3514,7 @@ packages:
       es-to-primitive: 1.2.1
       function-bind: 1.1.1
       function.prototype.name: 1.1.5
-      get-intrinsic: 1.1.1
+      get-intrinsic: 1.1.2
       get-symbol-description: 1.0.0
       has: 1.0.3
       has-property-descriptors: 1.0.0
@@ -4450,7 +4450,7 @@ packages:
   /has-property-descriptors/1.0.0:
     resolution: {integrity: sha512-62DVLZGoiEBDHQyqG4w9xCuZ7eJEwNmJRWw2VY84Oedb7WFcA27fiEVe8oUQx9hAUJ4ekurquucTGwsyO1XGdQ==}
     dependencies:
-      get-intrinsic: 1.1.1
+      get-intrinsic: 1.1.2
 
   /has-symbols/1.0.3:
     resolution: {integrity: sha512-l3LCuF6MgDNwTDKkdYGEihYjt5pRPbEg46rtlmnSPlUbgmB8LOIrKJbYYFBSbnPaJexMKtiPO8hmeRjRz2Td+A==}
@@ -6071,8 +6071,8 @@ packages:
       saslprep: 1.0.3
     dev: false
 
-  /mongoose-lean-getters/0.3.3_mongoose@6.3.9:
-    resolution: {integrity: sha512-fiCPwgGfQYSjwMZb1F76k9qL2NNiCh/IGHv55WQbtYJvNpPWBd2mVPEoXwgOxeBFnjpVmkhR1y+jvK3MI4faPQ==}
+  /mongoose-lean-getters/0.3.4_mongoose@6.3.9:
+    resolution: {integrity: sha512-Tf6onZC4/CzgYf5FNbaKlAUw995G7XJBRpyZsdoqJqKCKy+MjV4DbESZ3Y8iSuRHVF4k4/fcpSoyrS3lcKH1aw==}
     engines: {node: '>= 8'}
     peerDependencies:
       mongoose: '>= 5.11.0 | 6.x'
