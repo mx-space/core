@@ -15,6 +15,7 @@ import { BaseModel } from '~/shared/model/base.model'
 
 export enum SnippetType {
   JSON = 'json',
+  JSON5 = 'json5',
   Function = 'function',
   Text = 'text',
   YAML = 'yaml',

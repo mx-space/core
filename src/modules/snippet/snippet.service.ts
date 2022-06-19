@@ -1,4 +1,5 @@
 import { load } from 'js-yaml'
+import JSON5 from 'json5'
 
 import {
   BadRequestException,
@@ -77,6 +78,14 @@ export class SnippetService {
         }
         break
       }
+      case SnippetType.JSON5: {
+        try {
+          JSON5.parse(model.raw)
+        } catch {
+          throw new BadRequestException('content is not valid json5')
+        }
+        break
+      }
       case SnippetType.YAML: {
         try {
           load(model.raw)
@@ -137,6 +146,10 @@ export class SnippetService {
     switch (model.type) {
       case SnippetType.JSON: {
         Reflect.set(model, 'data', JSON.parse(model.raw))
+        break
+      }
+      case SnippetType.JSON5: {
+        Reflect.set(model, 'data', JSON5.parse(model.raw))
         break
       }
       case SnippetType.YAML: {

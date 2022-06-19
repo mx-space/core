@@ -82,6 +82,7 @@ specifiers:
   isbot: 3.5.0
   jest: 28.1.1
   js-yaml: '*'
+  json5: 2.2.1
   jsonwebtoken: 8.5.1
   jszip: 3.10.0
   linkedom: 0.14.11
@@ -164,6 +165,7 @@ dependencies:
   inquirer: 8.2.4
   isbot: 3.5.0
   js-yaml: 4.1.0
+  json5: 2.2.1
   jsonwebtoken: 8.5.1
   jszip: 3.10.0
   linkedom: 0.14.11
