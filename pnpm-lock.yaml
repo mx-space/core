@@ -91,7 +91,7 @@ specifiers:
   marked: 4.0.17
   mime-types: '*'
   mkdirp: '*'
-  mongodb-memory-server: 8.6.1
+  mongodb-memory-server: 8.7.0
   mongoose: 6.3.9
   mongoose-lean-getters: 0.3.4
   mongoose-lean-id: 0.3.0
@@ -194,7 +194,7 @@ dependencies:
   zx-cjs: 6.1.0
 
 optionalDependencies:
-  mongodb-memory-server: 8.6.1
+  mongodb-memory-server: 8.7.0
   redis-memory-server: 0.5.0
 
 devDependencies:
@@ -6022,8 +6022,8 @@ packages:
       whatwg-url: 11.0.0
     dev: false
 
-  /mongodb-memory-server-core/8.6.1:
-    resolution: {integrity: sha512-GOe2AOYzqUg9DsSJFA7wbWaqt4pbaulXhM1lgs19s+H0Q/VkFtvB3RpOvnWVLAV5PADg9zTY22ecVI2txTxGow==}
+  /mongodb-memory-server-core/8.7.0:
+    resolution: {integrity: sha512-dYJ+u9ZP4koCcMzxTwAUDxsG92evcJdXt70spMXrRUVQL7PI5Q83yLOHdqKhjevwfzJwyE8pFCGDGU+Qxs/cUA==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@types/tmp': 0.2.3
@@ -6034,8 +6034,8 @@ packages:
       get-port: 5.1.1
       https-proxy-agent: 5.0.1
       md5-file: 5.0.0
-      mongodb: 4.5.0
-      new-find-package-json: 1.1.0
+      mongodb: 4.7.0
+      new-find-package-json: 2.0.0
       semver: 7.3.7
       tar-stream: 2.2.0
       tmp: 0.2.1
@@ -6047,12 +6047,12 @@ packages:
     dev: false
     optional: true
 
-  /mongodb-memory-server/8.6.1:
-    resolution: {integrity: sha512-X/jlNQnsv1+lTMetg9UAxyOG1soJcfS7bQp0WGQ9bi1J97+OyIWiFR7Tx9wwX3A6eQRBL3B1P+5XFIwLk6XZtg==}
+  /mongodb-memory-server/8.7.0:
+    resolution: {integrity: sha512-xn8RvdqeNfqLsv7LQIFy/VyDLE3AzylddcMGpQzZnVdHVuHEA09m+uGWplU4CkduGyvZTCFP9cbj+kFSX79BDA==}
     engines: {node: '>=12.22.0'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 8.6.1
+      mongodb-memory-server-core: 8.7.0
       tslib: 2.4.0
     transitivePeerDependencies:
       - supports-color
@@ -6070,6 +6070,19 @@ packages:
     optionalDependencies:
       saslprep: 1.0.3
     dev: false
+
+  /mongodb/4.7.0:
+    resolution: {integrity: sha512-HhVar6hsUeMAVlIbwQwWtV36iyjKd9qdhY+s4wcU8K6TOj4Q331iiMy+FoPuxEntDIijTYWivwFJkLv8q/ZgvA==}
+    engines: {node: '>=12.9.0'}
+    dependencies:
+      bson: 4.6.3
+      denque: 2.0.1
+      mongodb-connection-string-url: 2.5.2
+      socks: 2.6.2
+    optionalDependencies:
+      saslprep: 1.0.3
+    dev: false
+    optional: true
 
   /mongoose-lean-getters/0.3.4_mongoose@6.3.9:
     resolution: {integrity: sha512-Tf6onZC4/CzgYf5FNbaKlAUw995G7XJBRpyZsdoqJqKCKy+MjV4DbESZ3Y8iSuRHVF4k4/fcpSoyrS3lcKH1aw==}
@@ -6186,12 +6199,11 @@ packages:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
     dev: true
 
-  /new-find-package-json/1.1.0:
-    resolution: {integrity: sha512-KOH3BNZcTKPzEkaJgG2iSUaurxKmefqRKmCOYH+8xqJytNIgjqU4J88BHfK+gy/UlEzlhccLyuJDJAcCgexSwA==}
+  /new-find-package-json/2.0.0:
+    resolution: {integrity: sha512-lDcBsjBSMlj3LXH2v/FW3txlh2pYTjmbOXPYJD93HI5EwuLzI11tdHSIpUMmfq/IOsldj4Ps8M8flhm+pCK4Ew==}
     engines: {node: '>=12.22.0'}
     dependencies:
       debug: 4.3.4
-      tslib: 2.4.0
     transitivePeerDependencies:
       - supports-color
     dev: false
