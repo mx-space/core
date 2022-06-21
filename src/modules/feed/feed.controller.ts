@@ -1,8 +1,9 @@
+import { uniq } from 'lodash'
 import xss from 'xss'
 
-import { CacheKey, CacheTTL, Get, Header } from '@nestjs/common'
+import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
 
-import { ApiController } from '~/common/decorator/api-controller.decorator'
+import { apiRoutePrefix } from '~/common/decorator/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
@@ -11,7 +12,7 @@ import { AggregateService } from '../aggregate/aggregate.service'
 import { ConfigsService } from '../configs/configs.service'
 import { MarkdownService } from '../markdown/markdown.service'
 
-@ApiController('feed')
+@Controller()
 @ApiName
 export class FeedController {
   constructor(
@@ -20,7 +21,8 @@ export class FeedController {
     private readonly markdownService: MarkdownService,
   ) {}
 
-  @Get('/')
+  // TODO drop 兼容老版本
+  @Get(uniq(['/feed', `${apiRoutePrefix}/feed`, '/atom.xml']))
   @CacheKey(CacheKeys.RSSXmlCatch)
   @CacheTTL(3600)
   @HTTPDecorators.Bypass

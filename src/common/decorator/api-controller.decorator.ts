@@ -2,16 +2,17 @@ import { Controller, ControllerOptions } from '@nestjs/common'
 
 import { API_VERSION } from '~/app.config'
 
-const prefix = isDev ? '' : `/api/v${API_VERSION}`
+export const apiRoutePrefix = isDev ? '' : `/api/v${API_VERSION}`
 export const ApiController: (
   optionOrString?: string | string[] | undefined | ControllerOptions,
 ) => ReturnType<typeof Controller> = (...rest) => {
   const [controller, ...args] = rest
   if (!controller) {
-    return Controller(prefix)
+    return Controller(apiRoutePrefix)
   }
 
-  const transformPath = (path: string) => `${prefix}/${path.replace(/\//, '')}`
+  const transformPath = (path: string) =>
+    `${apiRoutePrefix}/${path.replace(/\//, '')}`
 
   if (typeof controller === 'string') {
     return Controller(transformPath(controller), ...args)
