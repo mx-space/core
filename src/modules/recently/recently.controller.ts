@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Body,
-  Controller,
   Delete,
   Get,
   Param,
@@ -9,6 +8,7 @@ import {
   Query,
 } from '@nestjs/common'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -18,7 +18,7 @@ import { OffsetDto } from '~/shared/dto/pager.dto'
 import { RecentlyModel } from './recently.model'
 import { RecentlyService } from './recently.service'
 
-@Controller(['recently', 'shorthand'])
+@ApiController(['recently', 'shorthand'])
 @ApiName
 export class RecentlyController {
   constructor(private readonly recentlyService: RecentlyService) {}

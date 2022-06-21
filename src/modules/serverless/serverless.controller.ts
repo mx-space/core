@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 
 import {
   CacheTTL,
-  Controller,
   ForbiddenException,
   Get,
   InternalServerErrorException,
@@ -12,6 +11,7 @@ import {
   Response,
 } from '@nestjs/common'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -23,7 +23,7 @@ import { ServerlessReferenceDto } from './serverless.dto'
 import { ServerlessService } from './serverless.service'
 
 @ApiName
-@Controller(['serverless', 'fn'])
+@ApiController(['serverless', 'fn'])
 export class ServerlessController {
   constructor(private readonly serverlessService: ServerlessService) {}
 

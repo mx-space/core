@@ -5,7 +5,6 @@ import { Readable } from 'stream'
 
 import {
   BadRequestException,
-  Controller,
   Delete,
   Get,
   Param,
@@ -17,6 +16,7 @@ import {
 import { Reflector } from '@nestjs/core'
 import { SchedulerRegistry } from '@nestjs/schedule'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { BanInDemo } from '~/common/decorator/demo.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
@@ -31,7 +31,7 @@ import { formatByteSize } from '~/utils'
 
 import { LogQueryDto, LogTypeDto } from './health.dto'
 
-@Controller({
+@ApiController({
   path: 'health',
 })
 @Auth()

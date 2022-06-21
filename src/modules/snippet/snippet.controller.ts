@@ -1,6 +1,5 @@
 import {
   Body,
-  Controller,
   Delete,
   ForbiddenException,
   Get,
@@ -10,6 +9,7 @@ import {
   Query,
 } from '@nestjs/common'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { BanInDemo } from '~/common/decorator/demo.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
@@ -26,7 +26,7 @@ import { SnippetModel, SnippetType } from './snippet.model'
 import { SnippetService } from './snippet.service'
 
 @ApiName
-@Controller('snippets')
+@ApiController('snippets')
 export class SnippetController {
   constructor(private readonly snippetService: SnippetService) {}
 

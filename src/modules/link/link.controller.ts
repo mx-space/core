@@ -2,7 +2,6 @@ import mongoose from 'mongoose'
 
 import {
   Body,
-  Controller,
   ForbiddenException,
   Get,
   Param,
@@ -11,6 +10,7 @@ import {
   Query,
 } from '@nestjs/common'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -26,7 +26,7 @@ import { LinkModel, LinkState } from './link.model'
 import { LinkService } from './link.service'
 
 const paths = ['links', 'friends']
-@Controller(paths)
+@ApiController(paths)
 @ApiName
 export class LinkControllerCrud extends BaseCrudFactory({
   model: LinkModel,
@@ -57,8 +57,7 @@ export class LinkControllerCrud extends BaseCrudFactory({
     return await this._model.find(condition).sort({ created: -1 }).lean()
   }
 }
-
-@Controller(paths)
+@ApiController(paths)
 @ApiName
 export class LinkController {
   constructor(private readonly linkService: LinkService) {}

@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Body,
-  Controller,
   ForbiddenException,
   Get,
   Param,
@@ -10,13 +9,14 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 
 import { ConfigsService } from '../configs/configs.service'
 import { ConfigKeyDto } from '../option/dtos/config.dto'
 import { InitService } from './init.service'
 
-@Controller({
+@ApiController({
   path: '/init',
   scope: Scope.REQUEST,
 })

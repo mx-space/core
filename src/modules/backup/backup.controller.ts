@@ -3,7 +3,6 @@ import { Readable } from 'stream'
 
 import {
   BadRequestException,
-  Controller,
   Delete,
   Get,
   Header,
@@ -16,6 +15,7 @@ import {
 } from '@nestjs/common'
 import { ApiProperty, ApiResponseProperty } from '@nestjs/swagger'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { BanInDemo } from '~/common/decorator/demo.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
@@ -25,7 +25,7 @@ import { getMediumDateTime } from '~/utils'
 
 import { BackupService } from './backup.service'
 
-@Controller({ path: 'backups' })
+@ApiController({ path: 'backups' })
 @ApiName
 @Auth()
 @BanInDemo

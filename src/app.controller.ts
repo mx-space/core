@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Controller,
   Get,
   HttpCode,
   Post,
@@ -8,6 +7,7 @@ import {
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import PKG from '../package.json'
@@ -21,7 +21,7 @@ import { OptionModel } from './modules/configs/configs.model'
 import { CacheService } from './processors/redis/cache.service'
 import { getRedisKey } from './utils/redis.util'
 
-@Controller()
+@ApiController()
 @ApiTags('Root')
 export class AppController {
   constructor(

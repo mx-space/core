@@ -3,7 +3,6 @@ import { FilterQuery } from 'mongoose'
 import {
   BadRequestException,
   Body,
-  Controller,
   Delete,
   ForbiddenException,
   Get,
@@ -15,6 +14,7 @@ import {
 } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
@@ -41,7 +41,7 @@ import { NoteModel, PartialNoteModel } from './note.model'
 import { NoteService } from './note.service'
 
 @ApiName
-@Controller({ path: 'notes' })
+@ApiController({ path: 'notes' })
 export class NoteController {
   constructor(
     private readonly noteService: NoteService,

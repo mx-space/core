@@ -2,7 +2,6 @@ import { isUndefined } from 'lodash'
 
 import {
   Body,
-  Controller,
   Delete,
   ForbiddenException,
   Get,
@@ -16,6 +15,7 @@ import {
 import { ApiOperation, ApiParam } from '@nestjs/swagger'
 import { DocumentType } from '@typegoose/typegoose'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { CurrentUser } from '~/common/decorator/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
@@ -43,7 +43,7 @@ import { CommentService } from './comment.service'
 
 const idempotenceMessage = '哦吼，这句话你已经说过啦'
 
-@Controller({ path: 'comments' })
+@ApiController({ path: 'comments' })
 @UseInterceptors(CommentFilterEmailInterceptor)
 @ApiName
 export class CommentController {

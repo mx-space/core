@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common'
+import { Get } from '@nestjs/common'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 
@@ -7,7 +8,7 @@ import { PTYService } from './pty.service'
 
 @ApiName
 @Auth()
-@Controller({ path: 'pty' })
+@ApiController({ path: 'pty' })
 export class PTYController {
   constructor(private readonly service: PTYService) {}
 

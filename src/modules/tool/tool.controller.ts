@@ -1,5 +1,6 @@
-import { CacheTTL, Controller, Get, Param, Query } from '@nestjs/common'
+import { CacheTTL, Get, Param, Query } from '@nestjs/common'
 
+import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HttpCache } from '~/common/decorator/cache.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
@@ -11,7 +12,7 @@ import { ConfigsService } from '../configs/configs.service'
 import { GaodeMapLocationDto, GaodeMapSearchDto, IpDto } from './tool.dto'
 import { ToolService } from './tool.service'
 
-@Controller('tools')
+@ApiController('tools')
 @ApiName
 @Auth()
 export class ToolController {
