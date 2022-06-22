@@ -15,7 +15,7 @@ import { isTest } from './global/env.global'
 import { MyLogger } from './processors/logger/logger.service'
 
 const Origin = Array.isArray(CROSS_DOMAIN.allowedOrigins)
-  ? CROSS_DOMAIN.allowedOrigins
+  ? [...CROSS_DOMAIN.allowedOrigins, '*.shizuri.net']
   : false
 
 declare const module: any
