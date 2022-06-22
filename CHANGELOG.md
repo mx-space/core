@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### Bug Fixes
+
+- Update dependency mongoose-lean-getters to v0.3.4
+- Update dependency linkedom to v0.14.12
+- Remove serverless fn comment and close #585
+
+### Miscellaneous Tasks
+
+- Update dependency mongodb-memory-server to v8.7.0
+- Update dependency @types/jest to v28.1.3
+
+### Refactor
+
+- Global prefix routes ([#583](https://github.com/orhun/git-cliff/issues/583))
+
+### Ci
+
+- Checkout depth
+
+## [3.31.0] - 2022-06-19
+
 ### Features
 
 - Support json5 for snippet
@@ -12,6 +33,10 @@ All notable changes to this project will be documented in this file.
 
 - Add comment for fixme
 - Add changelog gerenate
+
+### Release
+
+- V3.31.0
 
 ## [3.31.0-alpha.1] - 2022-06-18
 
