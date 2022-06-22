@@ -306,9 +306,8 @@ export class ServerlessService {
 
     return await safeEval(
       `async function func() {
-        ${await this.convertTypescriptCode(
-          functionString,
-        )}; return handler(context, require)
+        ${await this.convertTypescriptCode(functionString)};
+      return handler(context, require)
       }
       return func()
       `,
@@ -330,6 +329,7 @@ export class ServerlessService {
 
   private getBabelOptions(): TransformOptions {
     return {
+      comments: false,
       plugins: [
         require('@babel/plugin-transform-typescript'),
         [
