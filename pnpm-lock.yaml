@@ -118,6 +118,7 @@ specifiers:
   typescript: 4.7.4
   ua-parser-js: 1.0.2
   vm2: 3.9.9
+  wildcard-match: ^5.1.2
   xss: 1.0.13
   zx-cjs: 6.1.0
 
@@ -190,6 +191,7 @@ dependencies:
   snakecase-keys: 5.4.2
   ua-parser-js: 1.0.2
   vm2: 3.9.9
+  wildcard-match: 5.1.2
   xss: 1.0.13
   zx-cjs: 6.1.0
 
@@ -7969,6 +7971,10 @@ packages:
     resolution: {integrity: sha512-QGkOQc8XL6Bt5PwnsExKBPuMKBxnGxWWW3fU55Xt4feHozMUhdUMaBCk290qpm/wG5u/RSKzwdAC4i51YigihA==}
     dependencies:
       string-width: 1.0.2
+    dev: false
+
+  /wildcard-match/5.1.2:
+    resolution: {integrity: sha512-qNXwI591Z88c8bWxp+yjV60Ch4F8Riawe3iGxbzquhy8Xs9m+0+SLFBGb/0yCTIDElawtaImC37fYZ+dr32KqQ==}
     dev: false
 
   /windows-release/4.0.0:

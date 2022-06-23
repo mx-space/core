@@ -1,5 +1,6 @@
 import cluster from 'cluster'
 import { performance } from 'perf_hooks'
+import wcmatch from 'wildcard-match'
 
 import { LogLevel, Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
@@ -14,8 +15,8 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { isTest } from './global/env.global'
 import { MyLogger } from './processors/logger/logger.service'
 
-const Origin = Array.isArray(CROSS_DOMAIN.allowedOrigins)
-  ? [...CROSS_DOMAIN.allowedOrigins, '*.shizuri.net']
+const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
+  ? [...CROSS_DOMAIN.allowedOrigins, '*.shizuri.net', '22333322.xyz']
   : false
 
 declare const module: any
@@ -31,14 +32,13 @@ export async function bootstrap() {
     },
   )
 
-  const hosts = Origin && Origin.map((host) => new RegExp(host, 'i'))
-
   // Origin 如果不是数组就全部允许跨域
   app.enableCors(
-    hosts
+    Origin
       ? {
           origin: (origin, callback) => {
-            const allow = hosts.some((host) => host.test(origin))
+            const currentHost = new URL(origin).host
+            const allow = Origin.some((host) => wcmatch(host)(currentHost))
 
             callback(null, allow)
           },
