@@ -112,7 +112,7 @@ specifiers:
   snakecase-keys: 5.4.2
   socket.io: '*'
   ts-jest: 28.0.5
-  ts-loader: 9.3.0
+  ts-loader: 9.3.1
   ts-node: 10.8.1
   tsconfig-paths: 4.0.0
   typescript: 4.7.4
@@ -235,7 +235,7 @@ devDependencies:
   rimraf: 3.0.2
   socket.io: 4.5.1
   ts-jest: 28.0.5_6oimgx2wyzf35jw5emqiiulwaa
-  ts-loader: 9.3.0_typescript@4.7.4
+  ts-loader: 9.3.1_typescript@4.7.4
   ts-node: 10.8.1_otxvy75putzauz5vaspsflquii
   tsconfig-paths: 4.0.0
   typescript: 4.7.4
@@ -3492,14 +3492,6 @@ packages:
       - supports-color
       - utf-8-validate
 
-  /enhanced-resolve/5.9.2:
-    resolution: {integrity: sha512-GIm3fQfwLJ8YZx2smuHpBKkXC1yOk+OBEmKckVyL0i/ea8mqDEykK3ld5dgH1QYPNyT/lIllxV2LULnxCHaHkA==}
-    engines: {node: '>=10.13.0'}
-    dependencies:
-      graceful-fs: 4.2.10
-      tapable: 2.2.1
-    dev: true
-
   /enhanced-resolve/5.9.3:
     resolution: {integrity: sha512-Bq9VSor+kjvW3f9/MiiR4eE3XYgOl7/rS8lnSxbRbF3kS0B2r+Y9w5krBWxZgDxASVZbdYrn5wT4j/Wb0J9qow==}
     engines: {node: '>=10.13.0'}
@@ -5909,14 +5901,6 @@ packages:
     engines: {node: '>= 8'}
     dev: true
 
-  /micromatch/4.0.4:
-    resolution: {integrity: sha512-pRmzw/XUcwXGpD9aI9q/0XOwLNygjETJ8y0ao0wdqprrzDa4YnxLcz7fQRZr8voh8V10kGhABbNcHVk5wHgWwg==}
-    engines: {node: '>=8.6'}
-    dependencies:
-      braces: 3.0.2
-      picomatch: 2.3.1
-    dev: true
-
   /micromatch/4.0.5:
     resolution: {integrity: sha512-DMy+ERcEW2q8Z2Po+WNXuw3c5YaUSFjAO5GsJqfEl7UjvtIuFKO6ZrKvcItdy98dwFI2N1tg3zNIdKaQT+aNdA==}
     engines: {node: '>=8.6'}
@@ -7605,16 +7589,16 @@ packages:
       yargs-parser: 21.0.1
     dev: true
 
-  /ts-loader/9.3.0_typescript@4.7.4:
-    resolution: {integrity: sha512-2kLLAdAD+FCKijvGKi9sS0OzoqxLCF3CxHpok7rVgCZ5UldRzH0TkbwG9XECKjBzHsAewntC5oDaI/FwKzEUog==}
+  /ts-loader/9.3.1_typescript@4.7.4:
+    resolution: {integrity: sha512-OkyShkcZTsTwyS3Kt7a4rsT/t2qvEVQuKCTg4LJmpj9fhFR7ukGdZwV6Qq3tRUkqcXtfGpPR7+hFKHCG/0d3Lw==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       typescript: '*'
       webpack: ^5.0.0
     dependencies:
       chalk: 4.1.2
-      enhanced-resolve: 5.9.2
-      micromatch: 4.0.4
+      enhanced-resolve: 5.9.3
+      micromatch: 4.0.5
       semver: 7.3.7
       typescript: 4.7.4
     dev: true
