@@ -37,7 +37,12 @@ export async function bootstrap() {
     Origin
       ? {
           origin: (origin, callback) => {
-            const currentHost = new URL(origin).host
+            let currentHost: string
+            try {
+              currentHost = new URL(origin).host
+            } catch {
+              currentHost = origin
+            }
             const allow = Origin.some((host) => wcmatch(host)(currentHost))
 
             callback(null, allow)
