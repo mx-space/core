@@ -99,6 +99,9 @@ export class PostModel extends WriteBaseModel {
   @IsDate()
   @IsOptional()
   @Transform(({ value }) => {
+    if (typeof value === 'undefined') {
+      return value
+    }
     const isDateIsoString = isDateString(value)
     if (isDateIsoString) {
       return new Date(value)
