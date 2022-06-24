@@ -86,7 +86,7 @@ specifiers:
   jsonwebtoken: 8.5.1
   jszip: 3.10.0
   linkedom: 0.14.12
-  lint-staged: 13.0.2
+  lint-staged: 13.0.3
   lodash: '*'
   marked: 4.0.17
   mime-types: '*'
@@ -230,7 +230,7 @@ devDependencies:
   husky: 8.0.1
   ioredis: 5.0.6
   jest: 28.1.1_goy62erlyvb53pf5ddoito3lvi
-  lint-staged: 13.0.2
+  lint-staged: 13.0.3
   prettier: 2.7.1
   rimraf: 3.0.2
   socket.io: 4.5.1
@@ -4263,13 +4263,6 @@ packages:
       pify: 5.0.0
     dev: false
 
-  /get-intrinsic/1.1.1:
-    resolution: {integrity: sha512-kWZrnVM42QCiEA2Ig1bG8zjoIMOgxWwYCEeNdwY6Tv/cOSeGpcoX4pXHfKUxNKVoArnrEr2e9srnAxxGIraS9Q==}
-    dependencies:
-      function-bind: 1.1.1
-      has: 1.0.3
-      has-symbols: 1.0.3
-
   /get-intrinsic/1.1.2:
     resolution: {integrity: sha512-Jfm3OyCxHh9DJyc28qGk+JmfkpO41A4XkneDSujN9MDXrm4oDKdHvndhZ2dN94+ERNfkYJWDclW6k2L/ZGHjXA==}
     dependencies:
@@ -5621,8 +5614,8 @@ packages:
       uhyphen: 0.1.0
     dev: false
 
-  /lint-staged/13.0.2:
-    resolution: {integrity: sha512-qQLfLTh9z34eMzfEHENC+QBskZfxjomrf+snF3xJ4BzilORbD989NLqQ00ughsF/A+PT41e87+WsMFabf9++pQ==}
+  /lint-staged/13.0.3:
+    resolution: {integrity: sha512-9hmrwSCFroTSYLjflGI8Uk+GWAwMB4OlpU4bMJEAT5d/llQwtYKoim4bLOyLCuWFAhWEupE0vkIFqtw/WIsPug==}
     engines: {node: ^14.13.1 || >=16.0.0}
     hasBin: true
     dependencies:
@@ -7064,7 +7057,7 @@ packages:
     resolution: {integrity: sha512-q5XPytqFEIKHkGdiMIrY10mvLRvnQh42/+GoBlFW3b2LXLE2xxJpZFdm94we0BaoV3RwJyGqg5wS7epxTv0Zvw==}
     dependencies:
       call-bind: 1.0.2
-      get-intrinsic: 1.1.1
+      get-intrinsic: 1.1.2
       object-inspect: 1.12.2
 
   /sift/16.0.0:
