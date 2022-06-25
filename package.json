@@ -165,7 +165,7 @@
     "eslint": "*",
     "eslint-plugin-unused-imports": "2.0.0",
     "husky": "8.0.1",
-    "ioredis": "5.0.6",
+    "ioredis": "5.1.0",
     "jest": "28.1.1",
     "lint-staged": "13.0.3",
     "prettier": "2.7.1",
@@ -183,7 +183,7 @@
   },
   "resolutions": {
     "typescript": "4.7.4",
-    "ioredis": "5.0.6",
+    "ioredis": "5.1.0",
     "webpack": "5.73.0",
     "fastify-cors": "npm:@fastify/cors@^7.0.0",
     "fastify-formbody": "npm:@fastify/formbody@^6.0.0",

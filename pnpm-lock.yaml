@@ -2,7 +2,7 @@ lockfileVersion: 5.4
 
 overrides:
   typescript: 4.7.4
-  ioredis: 5.0.6
+  ioredis: 5.1.0
   webpack: 5.73.0
   fastify-cors: npm:@fastify/cors@^7.0.0
   fastify-formbody: npm:@fastify/formbody@^6.0.0
@@ -78,7 +78,7 @@ specifiers:
   husky: 8.0.1
   image-size: 1.0.1
   inquirer: '*'
-  ioredis: 5.0.6
+  ioredis: 5.1.0
   isbot: 3.5.0
   jest: 28.1.1
   js-yaml: '*'
@@ -228,7 +228,7 @@ devDependencies:
   eslint: 8.17.0
   eslint-plugin-unused-imports: 2.0.0_eslint@8.17.0
   husky: 8.0.1
-  ioredis: 5.0.6
+  ioredis: 5.1.0
   jest: 28.1.1_goy62erlyvb53pf5ddoito3lvi
   lint-staged: 13.0.3
   prettier: 2.7.1
@@ -2756,7 +2756,7 @@ packages:
     resolution: {integrity: sha512-TCxbp9ceuFveTKWuNaCX8QjoC41rAlHen4s63u9Yd+iXlw3efYmimc/u935PKPxSdhkXpnMes4mxtK3/yb0L4g==}
     engines: {node: '>=6.0.0'}
     dependencies:
-      ioredis: 5.0.6
+      ioredis: 5.1.0
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -4681,8 +4681,8 @@ packages:
     engines: {node: '>= 0.10'}
     dev: true
 
-  /ioredis/5.0.6:
-    resolution: {integrity: sha512-KUm7wPzIet9QrFMoMm09/4bkfVKBUD9KXwBitP3hrNkZ+A6NBndweXGwYIB/7szHcTZgfo7Kvx88SxljJV4D9A==}
+  /ioredis/5.1.0:
+    resolution: {integrity: sha512-HYHnvwxFwefeUBj0hZFejLvd8Q/YNAfnZlZG/hSRxkRhXMs1H8soMEVccHd1WlLrKkynorXBsAtqDGskOdAfVQ==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@ioredis/commands': 1.1.1
@@ -6769,7 +6769,7 @@ packages:
     dev: true
 
   /redis-errors/1.2.0:
-    resolution: {integrity: sha1-62LSrbFeTq9GEMBK/hUpOEJQq60=}
+    resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
     engines: {node: '>=4'}
 
   /redis-memory-server/0.5.0:
@@ -6799,7 +6799,7 @@ packages:
     optional: true
 
   /redis-parser/3.0.0:
-    resolution: {integrity: sha1-tm2CjNyv5rS4pCin3vTGvKwxyLQ=}
+    resolution: {integrity: sha512-DJnGAeenTdpMEH6uAJRK/uiyEIH9WVsUmoLwzudwGJUwZPp80PDBWPHXSAGNPwNvIXAbe7MSUB1zQFugFml66A==}
     engines: {node: '>=4'}
     dependencies:
       redis-errors: 1.2.0
