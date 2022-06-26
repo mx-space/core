@@ -13,6 +13,7 @@ import { LOG_DIR } from '~/constants/path.constant'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
+import { getTodayLogFilePath } from '~/utils/path.util'
 
 import { BusinessEvents } from '../../../constants/business-event.constant'
 import { AuthService } from '../../../modules/auth/auth.service'
@@ -48,7 +49,6 @@ export class AdminEventsGateway
 
     this.subscribeSocketToHandlerMap.set(client, handler)
     if (prevLog) {
-      const { getTodayLogFilePath } = await import('~/global/consola.global')
       const stream = fs
         .createReadStream(resolve(LOG_DIR, getTodayLogFilePath()), {
           encoding: 'utf-8',
