@@ -22,6 +22,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16.x
+          cache: 'pnpm'
       - name: Start MongoDB
         uses: supercharge/mongodb-github-action@1.7.0
         with:
@@ -38,7 +39,7 @@ jobs:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
       - uses: pnpm/action-setup@v2.2.2
         with:
           version: latest
