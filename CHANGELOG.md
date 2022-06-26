@@ -6,6 +6,17 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- [**breaking**] Change markdown render into ejs controller
+- Login success status code
+
+### Refactor
+
+- Login session with jwt
+
+## [3.32.0] - 2022-06-26
+
+### Bug Fixes
+
 - Hardcode origin
 - Host wildcard
 - Update dependency cos-nodejs-sdk-v5 to v2.11.12
@@ -28,6 +39,10 @@ All notable changes to this project will be documented in this file.
 - Update dependency @nestjs/cli to v8.2.8
 - Update dependency lint-staged to v13.0.3
 - Update dependency ioredis to v5.1.0 ([#592](https://github.com/orhun/git-cliff/issues/592))
+
+### Release
+
+- V3.32.0
 
 ## [3.31.1] - 2022-06-22
 
