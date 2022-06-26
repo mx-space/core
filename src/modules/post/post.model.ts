@@ -124,7 +124,6 @@ export class PostModel extends WriteBaseModel {
   @prop({
     type: Types.ObjectId,
     ref: () => PostModel,
-    justOne: false,
   })
   related?: Partial<PostModel>[]
 
@@ -164,7 +163,16 @@ function autoPopulateRelated(
 ) {
   this.populate({
     path: 'related',
-    select: ['slug', 'title', 'summary', 'created', 'modified', '_id', 'id'],
+    select: [
+      'slug',
+      'title',
+      'summary',
+      'created',
+      'categoryId',
+      'modified',
+      '_id',
+      'id',
+    ],
   })
   next()
 }
