@@ -21,11 +21,13 @@ export class JSONTransformInterceptor implements NestInterceptor {
   constructor(private readonly reflector: Reflector) {}
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const handler = context.getHandler()
+    const classType = context.getClass()
     // 跳过 bypass 装饰的请求
-    const bypass = this.reflector.get<boolean>(
+    const bypass = this.reflector.getAllAndOverride<boolean>(
       RESPONSE_PASSTHROUGH_METADATA,
-      handler,
+      [classType, handler],
     )
+
     if (bypass) {
       return next.handle()
     }

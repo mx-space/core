@@ -10,6 +10,9 @@ import { FileUploadDto } from '~/shared/dto/file.dto'
 
 import { IdempotenceOption } from '../interceptors/idempotence.interceptor'
 
+/**
+ * @description 分页转换
+ */
 export const Paginator: MethodDecorator = (
   target,
   key,
@@ -19,15 +22,9 @@ export const Paginator: MethodDecorator = (
 }
 
 /**
- * @description 跳过响应体处理
+ * @description 跳过响应体处理，JSON 格式的响应体
  */
-export const Bypass: MethodDecorator = (
-  target,
-  key,
-  descriptor: PropertyDescriptor,
-) => {
-  SetMetadata(SYSTEM.RESPONSE_PASSTHROUGH_METADATA, true)(descriptor.value)
-}
+export const Bypass = SetMetadata(SYSTEM.RESPONSE_PASSTHROUGH_METADATA, true)
 
 export declare interface FileDecoratorProps {
   description: string

@@ -33,11 +33,12 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
       return next.handle()
     }
     const handler = context.getHandler()
+    const classType = context.getClass()
 
     // 跳过 bypass 装饰的请求
-    const bypass = this.reflector.get<boolean>(
+    const bypass = this.reflector.getAllAndOverride<boolean>(
       SYSTEM.RESPONSE_PASSTHROUGH_METADATA,
-      handler,
+      [classType, handler],
     )
     if (bypass) {
       return next.handle()
