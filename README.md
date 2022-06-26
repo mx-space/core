@@ -119,7 +119,7 @@ pnpm dev
 - 拦截器流向
 
 ```
-ResponseInterceptor -> JSONSerializeInterceptor -> CountingInterceptor -> AnalyzeInterceptor -> HttpCacheInterceptor
+ResponseInterceptor -> JSONTransformInterceptor -> CountingInterceptor -> AnalyzeInterceptor -> HttpCacheInterceptor
 ```
 
 - [业务逻辑模块](https://github.com/mx-space/mx-server/tree/master/src/modules)

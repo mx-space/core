@@ -1,6 +1,5 @@
 import { isDefined } from 'class-validator'
 import { omit } from 'lodash'
-import { FilterQuery, PaginateOptions } from 'mongoose'
 import slugify from 'slugify'
 
 import {
@@ -11,7 +10,6 @@ import {
 } from '@nestjs/common'
 
 import { BusinessException } from '~/common/exceptions/business.exception'
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
@@ -42,12 +40,6 @@ export class PostService {
   get model() {
     return this.postModel
   }
-  findWithPaginator(
-    condition?: FilterQuery<PostModel>,
-    options?: PaginateOptions,
-  ) {
-    return this.postModel.paginate(condition as any, options)
-  }
 
   async create(post: PostModel) {
     const { categoryId } = post
@@ -63,6 +55,12 @@ export class PostService {
     if (!(await this.isAvailableSlug(slug))) {
       throw new BusinessException(ErrorCodeEnum.SlugNotAvailable)
     }
+
+    // 有关联文章
+
+    const related = await this.checkRelated(post)
+    post.related = related as any
+
     const res = await this.postModel.create({
       ...post,
       slug,
@@ -71,8 +69,8 @@ export class PostService {
       modified: null,
     })
 
+    const doc = res.toJSON()
     process.nextTick(async () => {
-      const doc = res.toJSON()
       await Promise.all([
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
@@ -102,11 +100,11 @@ export class PostService {
       ])
     })
 
-    return res
+    return doc
   }
 
   async updateById(id: string, data: Partial<PostModel>) {
-    const oldDocument = await this.postModel.findById(id).lean()
+    const oldDocument = await this.postModel.findById(id)
     if (!oldDocument) {
       throw new BadRequestException('文章不存在')
     }
@@ -127,13 +125,7 @@ export class PostService {
       data.modified = now
     }
 
-    const originDocument = await this.postModel.findById(id)
-
-    if (!originDocument) {
-      throw new CannotFindException()
-    }
-
-    if (data.slug && data.slug !== originDocument.slug) {
+    if (data.slug && data.slug !== oldDocument.slug) {
       data.slug = slugify(data.slug)
       const isAvailableSlug = await this.isAvailableSlug(data.slug)
 
@@ -142,8 +134,12 @@ export class PostService {
       }
     }
 
-    Object.assign(originDocument, omit(data, PostModel.protectedKeys))
-    await originDocument.save()
+    // 有关联文章
+    const related = await this.checkRelated(data)
+    data.related = related.filter((item) => item !== oldDocument._id) as any
+
+    Object.assign(oldDocument, omit(data, PostModel.protectedKeys))
+    await oldDocument.save()
     process.nextTick(async () => {
       const doc = await this.postModel.findById(id).lean({ getters: true })
       // 更新图片信息缓存
@@ -170,7 +166,7 @@ export class PostService {
       ])
     })
 
-    return originDocument.toObject()
+    return oldDocument.toObject()
   }
 
   async deletePost(id: string) {
@@ -190,5 +186,23 @@ export class PostService {
 
   async isAvailableSlug(slug: string) {
     return (await this.postModel.countDocuments({ slug })) === 0
+  }
+
+  async checkRelated<
+    T extends Partial<Pick<PostModel, 'related' | 'relatedId'>>,
+  >(data: T): Promise<string[]> {
+    const cloned = { ...data }
+    // 有关联文章
+    if (cloned.relatedId && cloned.relatedId.length) {
+      const relatedPosts = await this.postModel.find({
+        _id: { $in: cloned.relatedId },
+      })
+      if (relatedPosts.length !== cloned.relatedId.length) {
+        throw new BadRequestException('关联文章不存在')
+      } else {
+        return relatedPosts.map((i) => i.id)
+      }
+    }
+    return []
   }
 }

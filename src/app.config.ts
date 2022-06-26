@@ -20,7 +20,7 @@ export const CROSS_DOMAIN = {
         '*.innei.ren',
         'shizuri.net',
         '*.shizuri.net',
-        'localhost',
+        'localhost:*',
         '127.0.0.1',
         'mbp.cc',
         'local.innei.test',

@@ -2,19 +2,15 @@
 import consola_, { FancyReporter, LogLevel } from 'consola'
 import { CronJob } from 'cron'
 import { createWriteStream } from 'fs'
-import { resolve } from 'path'
 import { argv } from 'zx-cjs'
 
 import { CronExpression } from '@nestjs/schedule'
 
-import { LOG_DIR } from '~/constants/path.constant'
+import { getTodayLogFilePath } from '~/utils/path.util'
 
 import { redisSubPub } from '../utils/redis-subpub.util'
-import { getShortDate, getShortTime } from '../utils/time.util'
+import { getShortTime } from '../utils/time.util'
 import { isDev, isTest } from './env.global'
-
-export const getTodayLogFilePath = () =>
-  resolve(LOG_DIR, `stdout_${getShortDate(new Date())}.log`)
 
 class Reporter extends FancyReporter {
   isInVirtualTerminal = typeof process.stdout.columns === 'undefined' // HACK: if got `undefined` that means in PM2 pty

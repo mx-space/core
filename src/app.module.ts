@@ -9,7 +9,7 @@ import { AnalyzeInterceptor } from './common/interceptors/analyze.interceptor'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
 import { CountingInterceptor } from './common/interceptors/counting.interceptor'
 import { IdempotenceInterceptor } from './common/interceptors/idempotence.interceptor'
-import { JSONSerializeInterceptor } from './common/interceptors/json-serialize.interceptor'
+import { JSONTransformInterceptor } from './common/interceptors/json-transform.interceptor'
 import { QueryInterceptor } from './common/interceptors/query.interceptor'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
@@ -115,7 +115,7 @@ import { RedisModule } from './processors/redis/redis.module'
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: JSONSerializeInterceptor, // 2
+      useClass: JSONTransformInterceptor, // 2
     },
     {
       provide: APP_INTERCEPTOR,

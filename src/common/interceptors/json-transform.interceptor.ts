@@ -17,7 +17,7 @@ import { Reflector } from '@nestjs/core'
 import { RESPONSE_PASSTHROUGH_METADATA } from '~/constants/system.constant'
 
 @Injectable()
-export class JSONSerializeInterceptor implements NestInterceptor {
+export class JSONTransformInterceptor implements NestInterceptor {
   constructor(private readonly reflector: Reflector) {}
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const handler = context.getHandler()
@@ -55,6 +55,12 @@ export class JSONSerializeInterceptor implements NestInterceptor {
       // if is Object
       if (obj.toJSON || obj.toObject) {
         obj = obj.toJSON?.() ?? obj.toObject?.()
+      }
+
+      // Object Id toJSON => string
+      // so asset again
+      if (!isObjectLike(obj)) {
+        return obj
       }
 
       Reflect.deleteProperty(obj, '__v')
