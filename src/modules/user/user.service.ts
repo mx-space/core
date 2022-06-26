@@ -11,12 +11,10 @@ import {
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { BusinessException } from '~/common/exceptions/business.exception'
-import { RedisKeys } from '~/constants/cache.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar, sleep } from '~/utils'
-import { getRedisKey } from '~/utils/redis.util'
 
 import { AuthService } from '../auth/auth.service'
 import { UserDocument, UserModel } from './user.model'
@@ -80,7 +78,6 @@ export class UserService {
       throw new BadRequestException('我已经有一个主人了哦')
     }
 
-    // @ts-ignore
     const res = await this.userModel.create({ ...model })
     const token = this.authService.jwtServicePublic.sign(res._id)
     return { token, username: res.username }
@@ -142,19 +139,8 @@ export class UserService {
       lastLoginTime: new Date(),
       lastLoginIp: ip,
     })
-    // save to redis
-    process.nextTick(async () => {
-      const redisClient = this.redis.getClient()
-
-      await redisClient.sadd(
-        getRedisKey(RedisKeys.LoginRecord),
-        JSON.stringify({ date: new Date().toISOString(), ip }),
-      )
-    })
 
     this.Logger.warn(`主人已登录, IP: ${ip}`)
     return PrevFootstep as any
   }
-
-  // TODO 获取最近登陆次数 时间 从 Redis 取
 }

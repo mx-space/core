@@ -1,4 +1,4 @@
-import { Body, Get, HttpCode, Patch, Post } from '@nestjs/common'
+import { Body, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 
 import { ApiController } from '~/common/decorator/api-controller.decorator'
@@ -28,22 +28,35 @@ export class UserController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: '获取主人信息' })
   async getMasterInfo(@IsMaster() isMaster: boolean) {
     return await this.userService.getMasterInfo(isMaster)
   }
 
-  @Post('register')
-  @ApiOperation({ summary: '注册' })
+  @Post('/register')
   async register(@Body() userDto: UserDto) {
     userDto.name = userDto.name ?? userDto.username
     return await this.userService.createMaster(userDto as UserModel)
   }
 
-  @Post('login')
-  @ApiOperation({ summary: '登录' })
+  @Put('/login')
+  @Auth()
+  async loginWithToken(
+    @IpLocation() ipLocation: IpRecord,
+    @CurrentUser() user: UserDocument,
+    @CurrentUserToken() token: string,
+  ) {
+    await this.authService.jwtServicePublic.revokeToken(token)
+    await this.userService.recordFootstep(ipLocation.ip)
+    return {
+      token: this.authService.jwtServicePublic.sign(user._id, {
+        ip: ipLocation.ip,
+        ua: ipLocation.agent,
+      }),
+    }
+  }
+
+  @Post('/login')
   @HttpCache({ disable: true })
-  @HttpCode(200)
   async login(@Body() dto: LoginDto, @IpLocation() ipLocation: IpRecord) {
     const user = await this.userService.login(dto.username, dto.password)
     const footstep = await this.userService.recordFootstep(ipLocation.ip)
@@ -51,7 +64,10 @@ export class UserController {
     const avatar = user.avatar ?? getAvatar(mail)
 
     return {
-      token: this.authService.jwtServicePublic.sign(user._id),
+      token: this.authService.jwtServicePublic.sign(user._id, {
+        ip: ipLocation.ip,
+        ua: ipLocation.agent,
+      }),
       ...footstep,
       name,
       username,
@@ -65,14 +81,12 @@ export class UserController {
 
   @Get('check_logged')
   @ApiOperation({ summary: '判断当前 Token 是否有效 ' })
-  @Auth()
   @HttpCache.disable
   checkLogged(@IsMaster() isMaster: boolean) {
     return { ok: +isMaster, isGuest: !isMaster }
   }
 
   @Patch()
-  @ApiOperation({ summary: '修改主人的信息' })
   @Auth()
   @HttpCache.disable
   @BanInDemo
@@ -83,9 +97,27 @@ export class UserController {
     return await this.userService.patchUserData(user, body)
   }
 
-  @Post('logout')
+  @Post('/logout')
   @Auth()
   async singout(@CurrentUserToken() token: string) {
     return this.userService.signout(token)
+  }
+
+  @Get('/session')
+  @Auth()
+  async getAllSession(@CurrentUserToken() token: string) {
+    return this.authService.jwtServicePublic.getAllSignSession(token)
+  }
+
+  @Delete('/session/:tokenId')
+  @Auth()
+  async deleteSession(@Param('tokenId') tokenId: string) {
+    return this.authService.jwtServicePublic.revokeToken(tokenId)
+  }
+
+  @Delete('/session/all')
+  @Auth()
+  async deleteAllSession() {
+    return this.authService.jwtServicePublic.revokeAll()
   }
 }

@@ -65,10 +65,26 @@ export class JWTService {
     return !!has
   }
 
+  async getAllSignSession(currentToken?: string) {
+    const redis = this.cacheService.getClient()
+    const res = await redis.hgetall(getRedisKey(RedisKeys.JWTStore))
+    const hashedCurrent = currentToken && md5(currentToken)
+    return Object.entries(res).map(([k, v]) => {
+      return {
+        ...JSON.parse(v),
+        id: `jwt-${k}`,
+        current: hashedCurrent === k,
+      }
+    })
+  }
+
   async revokeToken(token: string) {
     const redis = this.cacheService.getClient()
     const key = getRedisKey(RedisKeys.JWTStore)
-    await redis.hdel(key, md5(token))
+    await redis.hdel(
+      key,
+      token.startsWith(`jwt-`) ? token.replace(`jwt-`, '') : md5(token),
+    )
   }
 
   async revokeAll() {
@@ -77,22 +93,23 @@ export class JWTService {
     await redis.del(key)
   }
 
-  async storeTokenInRedis(token: string) {
+  async storeTokenInRedis(token: string, info?: any) {
     const redis = this.cacheService.getClient()
     await redis.hset(
       getRedisKey(RedisKeys.JWTStore),
       md5(token),
       JSON.stringify({
         date: new Date().toISOString(),
+        ...info,
       }),
     )
   }
 
-  sign(id: string) {
+  sign(id: string, info?: { ip: string; ua: string }) {
     const token = sign({ id }, this.secret, {
-      expiresIn: '1y',
+      expiresIn: '30d',
     })
-    this.storeTokenInRedis(token)
+    this.storeTokenInRedis(token, info || {})
     return token
   }
 }
