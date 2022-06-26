@@ -6,6 +6,33 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Hardcode origin
+- Host wildcard
+- Update dependency cos-nodejs-sdk-v5 to v2.11.12
+- Local ip cors
+- Pin is undefine
+- Realtime log gatewway
+- Popluate category for related post
+
+### Features
+
+- Related post
+
+### Miscellaneous Tasks
+
+- Update dependency @nestjs/cli to v8.2.7
+- Update dependency mongodb-memory-server to v8.7.1
+- Update dependency ts-loader to v9.3.1
+- Store paw
+- Upadte paw
+- Update dependency @nestjs/cli to v8.2.8
+- Update dependency lint-staged to v13.0.3
+- Update dependency ioredis to v5.1.0 ([#592](https://github.com/orhun/git-cliff/issues/592))
+
+## [3.31.1] - 2022-06-22
+
+### Bug Fixes
+
 - Update dependency mongoose-lean-getters to v0.3.4
 - Update dependency linkedom to v0.14.12
 - Remove serverless fn comment and close #585
@@ -22,6 +49,10 @@ All notable changes to this project will be documented in this file.
 ### Ci
 
 - Checkout depth
+
+### Release
+
+- V3.31.1
 
 ## [3.31.0] - 2022-06-19
 
