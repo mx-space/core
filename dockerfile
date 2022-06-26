@@ -15,6 +15,9 @@ WORKDIR /app
 COPY --from=builder /app/out .
 COPY --from=builder /app/assets ./assets
 ENV TZ=Asia/Shanghai
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nestjs
+USER nestjs
 EXPOSE 2333
 
 CMD echo "MixSpace Sever Image." && sh
