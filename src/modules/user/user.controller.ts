@@ -1,4 +1,13 @@
-import { Body, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common'
+import {
+  Body,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Put,
+} from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 
 import { ApiController } from '~/common/decorator/api-controller.decorator'
@@ -57,6 +66,7 @@ export class UserController {
 
   @Post('/login')
   @HttpCache({ disable: true })
+  @HttpCode(200)
   async login(@Body() dto: LoginDto, @IpLocation() ipLocation: IpRecord) {
     const user = await this.userService.login(dto.username, dto.password)
     const footstep = await this.userService.recordFootstep(ipLocation.ip)
