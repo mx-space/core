@@ -7,11 +7,11 @@ import {
   IsMongoId,
   IsNotEmpty,
   IsOptional,
-  IsPositive,
   IsString,
+  Min,
   isDateString,
 } from 'class-validator'
-import { Query } from 'mongoose'
+import { Query, Types } from 'mongoose'
 
 import { UnprocessableEntityException } from '@nestjs/common'
 import { PartialType } from '@nestjs/mapped-types'
@@ -33,19 +33,7 @@ import { WriteBaseModel } from '~/shared/model/write-base.model'
 
 import { CategoryModel as Category } from '../category/category.model'
 
-function autoPopulateCategory(
-  this: Query<
-    any,
-    DocumentType<PostModel, BeAnObject>,
-    {},
-    DocumentType<PostModel, BeAnObject>
-  >,
-  next: () => void,
-) {
-  this.populate({ path: 'category' })
-  next()
-}
-
+@pre<PostModel>('findOne', autoPopulateRelated)
 @pre<PostModel>('findOne', autoPopulateCategory)
 @pre<PostModel>('find', autoPopulateCategory)
 @index({ slug: 1 })
@@ -119,10 +107,26 @@ export class PostModel extends WriteBaseModel {
   pin?: Date | null
 
   @prop()
-  @IsPositive()
+  @Min(0)
   @IsInt()
   @IsOptional()
+  @Transform(({ obj, value }) => {
+    if (!obj.pin) {
+      return null
+    }
+    return value
+  })
   pinOrder?: number
+
+  @IsOptional()
+  @IsMongoId({ each: true })
+  relatedId?: string[]
+  @prop({
+    type: Types.ObjectId,
+    ref: () => PostModel,
+    justOne: false,
+  })
+  related?: Partial<PostModel>[]
 
   static get protectedKeys() {
     return ['count'].concat(super.protectedKeys)
@@ -134,4 +138,33 @@ export class PartialPostModel extends PartialType(PostModel) {}
 export class PostPaginatorModel {
   data: PostModel[]
   pagination: Paginator
+}
+
+function autoPopulateCategory(
+  this: Query<
+    any,
+    DocumentType<PostModel, BeAnObject>,
+    {},
+    DocumentType<PostModel, BeAnObject>
+  >,
+  next: () => void,
+) {
+  this.populate({ path: 'category' })
+  next()
+}
+
+function autoPopulateRelated(
+  this: Query<
+    any,
+    DocumentType<PostModel, BeAnObject>,
+    {},
+    DocumentType<PostModel, BeAnObject>
+  >,
+  next: () => void,
+) {
+  this.populate({
+    path: 'related',
+    select: ['slug', 'title', 'summary', 'created', 'modified', '_id', 'id'],
+  })
+  next()
 }

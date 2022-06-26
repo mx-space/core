@@ -1,11 +1,8 @@
-import { Types } from 'mongoose'
-
 import {
   BadRequestException,
   Body,
   Delete,
   Get,
-  HttpCode,
   NotFoundException,
   Param,
   Patch,
@@ -117,13 +114,12 @@ export class PostController {
   @Auth()
   @HTTPDecorators.Idempotence()
   async create(@Body() body: PostModel) {
-    const _id = new Types.ObjectId()
-
     return await this.postService.create({
       ...body,
       created: new Date(),
       modified: null,
-      slug: body.slug ?? _id.toHexString(),
+      slug: body.slug,
+      related: body.relatedId as any,
     })
   }
 
@@ -141,7 +137,6 @@ export class PostController {
 
   @Delete('/:id')
   @Auth()
-  @HttpCode(204)
   async deletePost(@Param() params: MongoIdDto) {
     const { id } = params
     await this.postService.deletePost(id)
@@ -150,7 +145,6 @@ export class PostController {
   }
 
   @Get('/_thumbs-up')
-  @HttpCode(204)
   async thumbsUpArticle(
     @Query() query: MongoIdDto,
     @IpLocation() location: IpRecord,
