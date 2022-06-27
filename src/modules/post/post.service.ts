@@ -93,7 +93,7 @@ export class PostService {
             text: await this.textMacroService.replaceTextMacro(doc.text, doc),
           },
           {
-            scope: EventScope.TO_SYSTEM,
+            scope: EventScope.TO_VISITOR,
           },
         ),
         this.imageService.recordImageDimensions(this.postModel, res._id),
