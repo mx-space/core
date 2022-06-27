@@ -6,12 +6,30 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Post event emit twice when create
+
+### Miscellaneous Tasks
+
+- Speed-up ci
+
+### Ci
+
+- Fix
+
+## [3.33.0-alpha.0] - 2022-06-26
+
+### Bug Fixes
+
 - [**breaking**] Change markdown render into ejs controller
 - Login success status code
 
 ### Refactor
 
 - Login session with jwt
+
+### Release
+
+- V3.33.0-alpha.0
 
 ## [3.32.0] - 2022-06-26
 
