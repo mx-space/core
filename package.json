@@ -125,7 +125,7 @@
     "node-pty": "0.10.1",
     "nodemailer": "6.7.5",
     "pluralize": "*",
-    "qs": "6.10.5",
+    "qs": "6.11.0",
     "reflect-metadata": "0.1.13",
     "rxjs": "7.5.5",
     "slugify": "1.6.5",
