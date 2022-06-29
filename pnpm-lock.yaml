@@ -91,7 +91,7 @@ specifiers:
   marked: 4.0.17
   mime-types: '*'
   mkdirp: '*'
-  mongodb-memory-server: 8.7.1
+  mongodb-memory-server: 8.7.2
   mongoose: 6.3.9
   mongoose-lean-getters: 0.3.4
   mongoose-lean-id: 0.3.0
@@ -196,7 +196,7 @@ dependencies:
   zx-cjs: 6.1.0
 
 optionalDependencies:
-  mongodb-memory-server: 8.7.1
+  mongodb-memory-server: 8.7.2
   redis-memory-server: 0.5.0
 
 devDependencies:
@@ -6004,8 +6004,8 @@ packages:
       whatwg-url: 11.0.0
     dev: false
 
-  /mongodb-memory-server-core/8.7.1:
-    resolution: {integrity: sha512-ysMg0G8EqvjkWjO1i7s7mLSJDgLUdq5rms9IhpHX9TkiuRz475j7EUPSvdJGBby7qvgEockZCyEBOil7GlvZSg==}
+  /mongodb-memory-server-core/8.7.2:
+    resolution: {integrity: sha512-ScYLuxJ9NFhxatu+d+1T0ncJI1aeLFIXYaGGi7Gg5jTbnYvldOdZaabxD/LIigFurJOHFFBReJ0A++njOssdIw==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@types/tmp': 0.2.3
@@ -6029,12 +6029,12 @@ packages:
     dev: false
     optional: true
 
-  /mongodb-memory-server/8.7.1:
-    resolution: {integrity: sha512-NIn5pL3Q/bK9H/KRSanpgFuZWrNiTn3y3XUyxE6qm1nFq46z7rmwU0IYZ3STy0O8Gg7r8DzC9xx4/UVFP5HnxA==}
+  /mongodb-memory-server/8.7.2:
+    resolution: {integrity: sha512-uD1lyrCQ40MAxkJTZVLjy+WomHGcmCWxuXqlKujXP64CSH+vPMXRWqRbcfxNesc2C98h6IU7yrHbMp0SmTbvdQ==}
     engines: {node: '>=12.22.0'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 8.7.1
+      mongodb-memory-server-core: 8.7.2
       tslib: 2.4.0
     transitivePeerDependencies:
       - supports-color
@@ -7563,7 +7563,7 @@ packages:
     dev: false
 
   /tr46/0.0.3:
-    resolution: {integrity: sha1-gYT9NH2snNwYWZLzpmIuFLnZq2o=}
+    resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
 
   /tr46/3.0.0:
     resolution: {integrity: sha512-l7FvfAHlcmulp8kr+flpQZmVwtu7nfRV7NZujtN0OqES8EL4O4e0qqzL0DC5gAvx/ZC/9lk6rhcUwYvkBnBnYA==}
@@ -7860,7 +7860,7 @@ packages:
       defaults: 1.0.3
 
   /webidl-conversions/3.0.1:
-    resolution: {integrity: sha1-JFNCdeKnvGvnvIZhHMFq4KVlSHE=}
+    resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
 
   /webidl-conversions/7.0.0:
     resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
@@ -7926,7 +7926,7 @@ packages:
     dev: false
 
   /whatwg-url/5.0.0:
-    resolution: {integrity: sha1-lmRU6HZUYuN2RNNib2dCzotwll0=}
+    resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
     dependencies:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
