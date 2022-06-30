@@ -22,6 +22,7 @@ const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
 declare const module: any
 
 export async function bootstrap() {
+  process.title = `Mix Space (${cluster.isPrimary ? 'master' : 'worker'})`
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     fastifyApp,
