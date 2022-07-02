@@ -6,6 +6,26 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Update babel monorepo to v7.18.6
+- Update dependency qs to v6.11.0 ([#594](https://github.com/orhun/git-cliff/issues/594))
+- Update dependency axios-retry to v3.2.6
+- Update dependency nodemailer to v6.7.6
+- Post pin sort order
+
+### Features
+
+- Add process title
+
+### Miscellaneous Tasks
+
+- Update dependency jest to v28.1.2
+- Update dependency mongodb-memory-server to v8.7.2
+- Update dependency @types/jest to v28.1.4
+
+## [3.33.0] - 2022-06-27
+
+### Bug Fixes
+
 - Post event emit twice when create
 
 ### Miscellaneous Tasks
@@ -15,6 +35,10 @@ All notable changes to this project will be documented in this file.
 ### Ci
 
 - Fix
+
+### Release
+
+- V3.33.0
 
 ## [3.33.0-alpha.0] - 2022-06-26
 
