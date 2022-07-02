@@ -1,5 +1,6 @@
 import { isDefined } from 'class-validator'
 import { omit } from 'lodash'
+import { AggregatePaginateModel, Document } from 'mongoose'
 import slugify from 'slugify'
 
 import {
@@ -26,7 +27,8 @@ import { PostModel } from './post.model'
 export class PostService {
   constructor(
     @InjectModel(PostModel)
-    private readonly postModel: MongooseModel<PostModel>,
+    private readonly postModel: MongooseModel<PostModel> &
+      AggregatePaginateModel<PostModel & Document>,
     @InjectModel(CommentModel)
     private readonly commentModel: MongooseModel<CommentModel>,
 

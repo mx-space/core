@@ -48,6 +48,7 @@ specifiers:
   '@types/lodash': 4.14.182
   '@types/marked': 4.0.3
   '@types/mime-types': 2.1.1
+  '@types/mongoose-aggregate-paginate-v2': 1.0.5
   '@types/node': ^16
   '@types/nodemailer': 6.4.4
   '@types/qs': 6.9.7
@@ -93,6 +94,7 @@ specifiers:
   mkdirp: '*'
   mongodb-memory-server: 8.7.2
   mongoose: 6.3.9
+  mongoose-aggregate-paginate-v2: 1.0.6
   mongoose-lean-getters: 0.3.4
   mongoose-lean-id: 0.3.0
   mongoose-lean-virtuals: 0.9.1
@@ -175,6 +177,7 @@ dependencies:
   mime-types: 2.1.35
   mkdirp: 1.0.4
   mongoose: 6.3.9
+  mongoose-aggregate-paginate-v2: 1.0.6
   mongoose-lean-getters: 0.3.4_mongoose@6.3.9
   mongoose-lean-id: 0.3.0_mongoose@6.3.9
   mongoose-lean-virtuals: 0.9.1_mongoose@6.3.9
@@ -217,6 +220,7 @@ devDependencies:
   '@types/lodash': 4.14.182
   '@types/marked': 4.0.3
   '@types/mime-types': 2.1.1
+  '@types/mongoose-aggregate-paginate-v2': 1.0.5
   '@types/node': 16.11.33
   '@types/nodemailer': 6.4.4
   '@types/qs': 6.9.7
@@ -1878,6 +1882,14 @@ packages:
     resolution: {integrity: sha512-vXOTGVSLR2jMw440moWTC7H19iUyLtP3Z1YTj7cSsubOICinjMxFeb/V57v9QdyyPGbbWolUFSSmSiRSn94tFw==}
     dev: true
 
+  /@types/mongoose-aggregate-paginate-v2/1.0.5:
+    resolution: {integrity: sha512-c3KXTwzW6+BZw2g2TgNgGUyMbotTcI2Ip+NSZWoJjG2UO+8BRjmy+kJUNu64rfdIqWJ1+8h5NLm9w+aVis93Hw==}
+    dependencies:
+      mongoose: 6.3.9
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /@types/node/16.11.33:
     resolution: {integrity: sha512-0PJ0vg+JyU0MIan58IOIFRtSvsb7Ri+7Wltx2qAg94eMOrpg4+uuP3aUHCpxXc1i0jCXiC+zIamSZh3l9AbcQA==}
     dev: true
@@ -1926,14 +1938,12 @@ packages:
 
   /@types/webidl-conversions/6.1.1:
     resolution: {integrity: sha512-XAahCdThVuCFDQLT7R7Pk/vqeObFNL3YqRyFZg+AqAP/W1/w3xHaIxuW7WszQqTbIBOPRcItYJIou3i/mppu3Q==}
-    dev: false
 
   /@types/whatwg-url/8.2.1:
     resolution: {integrity: sha512-2YubE1sjj5ifxievI5Ge1sckb9k/Er66HyR2c+3+I6VDUUg1TLPdYYTEbQ+DjRkS4nTxMJhgWfSfMRD2sl2EYQ==}
     dependencies:
       '@types/node': 17.0.31
       '@types/webidl-conversions': 6.1.1
-    dev: false
 
   /@types/yargs-parser/21.0.0:
     resolution: {integrity: sha512-iO9ZQHkZxHn4mSakYV0vFHAVDyEOIJQrV2uZ06HxEPcx+mt8swXoZHIbaaJ2crJYFfErySgktuTZ3BeLz+XmFA==}
@@ -2742,7 +2752,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       buffer: 5.7.1
-    dev: false
 
   /buffer-crc32/0.2.13:
     resolution: {integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==}
@@ -4714,7 +4723,6 @@ packages:
 
   /ip/1.1.5:
     resolution: {integrity: sha512-rBtCAQAJm8A110nbwn6YdveUnuZH3WrC36IwkRXxDnq53JvXA2NVQvB7IHyKomxK1MJ4VDNw3UtFDdXQ+AvLYA==}
-    dev: false
 
   /ipaddr.js/1.9.1:
     resolution: {integrity: sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==}
@@ -5559,7 +5567,6 @@ packages:
 
   /kareem/2.3.5:
     resolution: {integrity: sha512-qxCyQtp3ioawkiRNQr/v8xw9KIviMSSNmy+63Wubj7KmMn3g7noRXIZB4vPCAP+ETi2SR8eH6CvmlKZuGpoHOg==}
-    dev: false
 
   /kleur/3.0.3:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
@@ -5908,7 +5915,6 @@ packages:
 
   /memory-pager/1.5.0:
     resolution: {integrity: sha512-ZS4Bp4r/Zoeq6+NLJpP+0Zzm0pR8whtGPf1XExKLJBAczGMnSi3It14OiNCStjQjM6NU1okjQGSxgEZN8eBYKg==}
-    dev: false
     optional: true
 
   /merge-stream/2.0.0:
@@ -6002,7 +6008,6 @@ packages:
     dependencies:
       '@types/whatwg-url': 8.2.1
       whatwg-url: 11.0.0
-    dev: false
 
   /mongodb-memory-server-core/8.7.2:
     resolution: {integrity: sha512-ScYLuxJ9NFhxatu+d+1T0ncJI1aeLFIXYaGGi7Gg5jTbnYvldOdZaabxD/LIigFurJOHFFBReJ0A++njOssdIw==}
@@ -6051,7 +6056,6 @@ packages:
       socks: 2.6.2
     optionalDependencies:
       saslprep: 1.0.3
-    dev: false
 
   /mongodb/4.7.0:
     resolution: {integrity: sha512-HhVar6hsUeMAVlIbwQwWtV36iyjKd9qdhY+s4wcU8K6TOj4Q331iiMy+FoPuxEntDIijTYWivwFJkLv8q/ZgvA==}
@@ -6065,6 +6069,11 @@ packages:
       saslprep: 1.0.3
     dev: false
     optional: true
+
+  /mongoose-aggregate-paginate-v2/1.0.6:
+    resolution: {integrity: sha512-UuALu+mjhQa1K9lMQvjLL3vm3iALvNw8PQNIh2gp1b+tO5hUa0NC0Wf6/8QrT9PSJVTihXaD8hQVy3J4e0jO0Q==}
+    engines: {node: '>=4.0.0'}
+    dev: false
 
   /mongoose-lean-getters/0.3.4_mongoose@6.3.9:
     resolution: {integrity: sha512-Tf6onZC4/CzgYf5FNbaKlAUw995G7XJBRpyZsdoqJqKCKy+MjV4DbESZ3Y8iSuRHVF4k4/fcpSoyrS3lcKH1aw==}
@@ -6112,7 +6121,6 @@ packages:
       sift: 16.0.0
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /mpath/0.8.4:
     resolution: {integrity: sha512-DTxNZomBcTWlrMW76jy1wvV37X/cNNxPW1y2Jzd4DZkAaC5ZGsm8bfGfNOthcDuRJujXLqiuS6o3Tpy0JEoh7g==}
@@ -6122,7 +6130,6 @@ packages:
   /mpath/0.9.0:
     resolution: {integrity: sha512-ikJRQTk8hw5DEoFVxHG1Gn9T/xcjtdnOKIU1JTmGjZZlg9LST2mBLmcX3/ICIbgJydT2GOc15RnNy5mHmzfSew==}
     engines: {node: '>=4.0.0'}
-    dev: false
 
   /mquery/4.0.3:
     resolution: {integrity: sha512-J5heI+P08I6VJ2Ky3+33IpCdAvlYGTSUjwTPxkAr8i8EoduPMBX2OY/wa3IKZIQl7MU4SbFk8ndgSKyB/cl1zA==}
@@ -6131,7 +6138,6 @@ packages:
       debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /ms/2.0.0:
     resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
@@ -6970,7 +6976,6 @@ packages:
     requiresBuild: true
     dependencies:
       sparse-bitfield: 3.0.3
-    dev: false
     optional: true
 
   /sax/1.2.4:
@@ -7073,7 +7078,6 @@ packages:
 
   /sift/16.0.0:
     resolution: {integrity: sha512-ILTjdP2Mv9V1kIxWMXeMTIRbOBrqKc4JAXmFMnFq3fKeyQ2Qwa3Dw1ubcye3vR+Y6ofA0b9gNDr/y2t6eUeIzQ==}
-    dev: false
 
   /signal-exit/3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
@@ -7121,7 +7125,6 @@ packages:
   /smart-buffer/4.2.0:
     resolution: {integrity: sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==}
     engines: {node: '>= 6.0.0', npm: '>= 3.0.0'}
-    dev: false
 
   /snake-case/3.0.4:
     resolution: {integrity: sha512-LAOh4z89bGQvl9pFfNF8V146i7o7/CqFPbqzYgP+yYzDIDeS9HaNFtXABamRW+AQzEVODcvE79ljJ+8a9YSdMg==}
@@ -7173,7 +7176,6 @@ packages:
     dependencies:
       ip: 1.1.5
       smart-buffer: 4.2.0
-    dev: false
 
   /sonic-boom/1.4.1:
     resolution: {integrity: sha512-LRHh/A8tpW7ru89lrlkU4AszXt1dbwSjVWguGrmlxE7tawVmDBlI1PILMkXAxJTwqhgsEeTHzj36D5CmHgQmNg==}
@@ -7222,7 +7224,6 @@ packages:
     resolution: {integrity: sha512-kvzhi7vqKTfkh0PZU+2D2PIllw2ymqJKujUcyPMd9Y75Nv4nPbGJZXNhxsgdQab2BmlDct1YnfQCguEvHr7VsQ==}
     dependencies:
       memory-pager: 1.5.0
-    dev: false
     optional: true
 
   /sprintf-js/1.0.3:
@@ -7570,7 +7571,6 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       punycode: 2.1.1
-    dev: false
 
   /tree-kill/1.2.2:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
@@ -7865,7 +7865,6 @@ packages:
   /webidl-conversions/7.0.0:
     resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
     engines: {node: '>=12'}
-    dev: false
 
   /webpack-node-externals/3.0.0:
     resolution: {integrity: sha512-LnL6Z3GGDPht/AigwRh2dvL9PQPFQ8skEpVrWZXLWBYmqcaojHNN0onvHzie6rq7EWKrrBfPYqNEzTJgiwEQDQ==}
@@ -7923,7 +7922,6 @@ packages:
     dependencies:
       tr46: 3.0.0
       webidl-conversions: 7.0.0
-    dev: false
 
   /whatwg-url/5.0.0:
     resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}

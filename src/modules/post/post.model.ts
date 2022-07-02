@@ -12,6 +12,7 @@ import {
   isDateString,
 } from 'class-validator'
 import { Query, Types } from 'mongoose'
+import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
 
 import { UnprocessableEntityException } from '@nestjs/common'
 import { PartialType } from '@nestjs/mapped-types'
@@ -22,6 +23,7 @@ import {
   Severity,
   index,
   modelOptions,
+  plugin,
   pre,
   prop,
 } from '@typegoose/typegoose'
@@ -33,6 +35,7 @@ import { WriteBaseModel } from '~/shared/model/write-base.model'
 
 import { CategoryModel as Category } from '../category/category.model'
 
+@plugin(aggregatePaginate)
 @pre<PostModel>('findOne', autoPopulateRelated)
 @pre<PostModel>('findOne', autoPopulateCategory)
 @pre<PostModel>('find', autoPopulateCategory)
