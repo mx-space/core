@@ -232,7 +232,7 @@ export class ServerlessService {
     context: { req: FunctionContextRequest; res: FunctionContextResponse },
   ) {
     const { raw: functionString } = model
-    const logger = new Logger(`ServerlessFunction/${model.name}`)
+    const logger = new Logger(`fx:${model.reference}/${model.name}`)
     const document = await this.model.findById(model.id)
     const globalContext = {
       context: {
@@ -321,8 +321,12 @@ export class ServerlessService {
         },
       },
     ).catch((err) => {
+      logger.error(err)
       return Promise.reject(
-        new BizException(ErrorCodeEnum.ServerlessError, err.message),
+        new BizException(
+          ErrorCodeEnum.ServerlessError,
+          err.message || 'Unknown error, please check log',
+        ),
       )
     })
   }
