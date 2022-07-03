@@ -16,6 +16,7 @@ import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
+import { AssetService } from '~/processors/helper/helper.asset.service'
 
 import { SnippetType } from '../snippet/snippet.model'
 import { createMockedContextResponse } from './mock-response.util'
@@ -25,7 +26,10 @@ import { ServerlessService } from './serverless.service'
 @ApiName
 @ApiController(['serverless', 'fn'])
 export class ServerlessController {
-  constructor(private readonly serverlessService: ServerlessService) {}
+  constructor(
+    private readonly serverlessService: ServerlessService,
+    private readonly assetService: AssetService,
+  ) {}
 
   @Get('/types')
   @Auth()
@@ -33,12 +37,9 @@ export class ServerlessController {
   @CacheTTL(60 * 60 * 24)
   async getCodeDefined() {
     try {
-      const text = await fs.readFile(
-        path.join(cwd, 'assets', 'types', 'type.declare.ts'),
-        {
-          encoding: 'utf-8',
-        },
-      )
+      const text = await this.assetService.getAsset('/types/type.declare.ts', {
+        encoding: 'utf-8',
+      })
 
       return text
     } catch (e) {
@@ -91,4 +92,8 @@ export class ServerlessController {
       reply.send(result)
     }
   }
+
+  @Get()
+  @Auth()
+  async getDependencyGraph() {}
 }

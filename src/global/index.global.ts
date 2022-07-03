@@ -37,7 +37,7 @@ function mkdirs() {
     mkdirSync(STATIC_FILE_DIR, { recursive: true })
     Logger.log(chalk.blue(`文件存放目录已经建好: ${STATIC_FILE_DIR}`))
     mkdirSync(THEME_DIR, { recursive: true })
-    Logger.log(chalk.blue(`主题目录已经建好: ${THEME_DIR}`))
+    // Logger.log(chalk.blue(`主题目录已经建好: ${THEME_DIR}`))
   }
 }
 
