@@ -49,11 +49,8 @@ export class ServerlessService {
     private readonly cacheService: CacheService,
   ) {
     nextTick(() => {
-      // Add /includes/plugin to the path, also note that we need to support
-      //   `require('../hello.js')`. We can do that by adding /includes/plugin/a,
-      //   /includes/plugin/a/b, etc.. to the list
       mkdir(NODE_REQUIRE_PATH, { recursive: true }).then(async () => {
-        const pkgPath = path.join(NODE_REQUIRE_PATH, 'package.json')
+        const pkgPath = path.join(DATA_DIR, 'package.json')
 
         const isPackageFileExist = await stat(pkgPath)
           .then(() => true)
