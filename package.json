@@ -120,7 +120,7 @@
     "mongoose-lean-getters": "0.3.4",
     "mongoose-lean-id": "0.3.0",
     "mongoose-lean-virtuals": "0.9.1",
-    "mongoose-paginate-v2": "1.6.3",
+    "mongoose-paginate-v2": "1.7.0",
     "nanoid": "3.3.4",
     "node-machine-id": "1.1.12",
     "node-pty": "0.10.1",
