@@ -1,5 +1,6 @@
 import { exec } from 'child_process'
 import { builtinModules } from 'module'
+import { spawn } from 'node-pty'
 import { promisify } from 'util'
 
 export async function getFolderSize(folderPath: string) {
@@ -86,5 +87,13 @@ export const installPKG = async (name: string, cwd: string) => {
     }
   }
   cd(cwd)
-  await $`${manager} ${INSTALL_COMMANDS[manager]} ${name}`
+  // await $`${manager} ${INSTALL_COMMANDS[manager]} ${name}`
+  const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash'
+  const pty = spawn(
+    shell,
+    ['-c', `${manager} ${INSTALL_COMMANDS[manager]} ${name}`],
+    {},
+  )
+
+  return pty
 }
