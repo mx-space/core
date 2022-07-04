@@ -6,6 +6,28 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Record error log throwed in serverless fn
+- Replace directly access code define file
+
+### Features
+
+- Use sse to pipe install deps output
+- Pkg graph
+
+### Miscellaneous Tasks
+
+- Update dependency @types/cache-manager to v4.0.1
+- Update dependency ts-node to v10.8.2
+- Update dependency @types/validator to v13.7.4
+
+### Refactor
+
+- Extract dependency module
+
+## [3.33.1] - 2022-07-02
+
+### Bug Fixes
+
 - Update babel monorepo to v7.18.6
 - Update dependency qs to v6.11.0 ([#594](https://github.com/orhun/git-cliff/issues/594))
 - Update dependency axios-retry to v3.2.6
@@ -21,6 +43,10 @@ All notable changes to this project will be documented in this file.
 - Update dependency jest to v28.1.2
 - Update dependency mongodb-memory-server to v8.7.2
 - Update dependency @types/jest to v28.1.4
+
+### Release
+
+- V3.33.1
 
 ## [3.33.0] - 2022-06-27
 
