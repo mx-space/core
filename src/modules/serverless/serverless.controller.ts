@@ -92,8 +92,4 @@ export class ServerlessController {
       reply.send(result)
     }
   }
-
-  @Get()
-  @Auth()
-  async getDependencyGraph() {}
 }

@@ -1,8 +1,6 @@
 import { nanoid } from 'nanoid'
-import { Observable } from 'rxjs'
 
 import {
-  BadRequestException,
   Body,
   Delete,
   ForbiddenException,
@@ -11,7 +9,6 @@ import {
   Post,
   Put,
   Query,
-  Sse,
 } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorator/api-controller.decorator'
@@ -21,12 +18,11 @@ import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
-import { DATA_DIR } from '~/constants/path.constant'
 import { CacheService } from '~/processors/redis/cache.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
-import { getRedisKey, installPKG } from '~/utils'
+import { getRedisKey } from '~/utils'
 
 import { SnippetMoreDto } from './snippet.dto'
 import { SnippetModel, SnippetType } from './snippet.model'
@@ -84,45 +80,6 @@ export class SnippetController {
     }
 
     return 'OK'
-  }
-
-  @Sse('/install_deps')
-  async installDepsPty(@Query() query: any): Promise<Observable<string>> {
-    const { id } = query
-
-    if (!id) {
-      throw new BadRequestException('id is required')
-    }
-
-    const packageNames = await this.redisService
-      .getClient()
-      .hget(getRedisKey(RedisKeys.DependencyQueue), id)
-
-    if (!packageNames) {
-      throw new BadRequestException('can not get this task')
-    }
-    // const packageNames = 'axios vue'
-
-    const pty = await installPKG(packageNames, DATA_DIR)
-    const observable = new Observable<string>((subscriber) => {
-      pty.onData((data) => {
-        subscriber.next(data)
-      })
-
-      pty.onExit(async ({ exitCode }) => {
-        if (exitCode != 0) {
-          subscriber.next(`Error: Exit code: ${exitCode}`)
-        }
-
-        subscriber.next('任务完成，可关闭此窗口。')
-        subscriber.complete()
-        await this.redisService
-          .getClient()
-          .hdel(getRedisKey(RedisKeys.DependencyQueue), id)
-      })
-    })
-
-    return observable
   }
 
   @Post('/')
