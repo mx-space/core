@@ -18,13 +18,6 @@ export class DebugController {
     private readonly eventManager: EventManagerService,
   ) {}
 
-  @Post('/ide')
-  @HTTPDecorators.Idempotence()
-  async ide() {
-    await sleep(11111)
-    return { a: 1 }
-  }
-
   @Post('/events')
   async sendEvent(
     @Query('type') type: 'web' | 'admin' | 'all',

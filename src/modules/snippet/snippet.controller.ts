@@ -1,5 +1,3 @@
-import { nanoid } from 'nanoid'
-
 import {
   Body,
   Delete,
@@ -17,12 +15,10 @@ import { BanInDemo } from '~/common/decorator/demo.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
-import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/redis/cache.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
-import { getRedisKey } from '~/utils'
 
 import { SnippetMoreDto } from './snippet.dto'
 import { SnippetModel, SnippetType } from './snippet.model'
@@ -57,27 +53,10 @@ export class SnippetController {
   @Post('/more')
   @Auth()
   async createMore(@Body() body: SnippetMoreDto) {
-    const { snippets, packages = [] } = body
+    const { snippets } = body
     const tasks = snippets.map((snippet) => this.create(snippet))
 
     await Promise.all(tasks)
-
-    // if create success, then install packages
-    // install packages in into queue, record in redis and send pty output via sse
-
-    if (packages.length > 0) {
-      const redis = this.redisService.getClient()
-      const currentId = nanoid(6)
-      redis.hset(
-        getRedisKey(RedisKeys.DependencyQueue),
-        currentId,
-        packages.join(' '),
-      )
-
-      return {
-        depsQueueId: currentId,
-      }
-    }
 
     return 'OK'
   }

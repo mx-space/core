@@ -20,11 +20,6 @@ export enum RedisKeys {
   ServerlessStorage = 'serverless_storage',
 
   JWTStore = 'jwt_store',
-
-  /**
-   * install dependencies queue
-   */
-  DependencyQueue = 'dependency_queue',
 }
 
 export enum CacheKeys {
