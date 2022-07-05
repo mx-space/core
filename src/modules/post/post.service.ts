@@ -98,7 +98,11 @@ export class PostService {
             scope: EventScope.TO_VISITOR,
           },
         ),
-        this.imageService.recordImageDimensions(this.postModel, res._id),
+
+        this.imageService.recordImageDimensions(
+          this.postModel as MongooseModel<PostModel>,
+          res._id,
+        ),
       ])
     })
 
@@ -150,7 +154,10 @@ export class PostService {
           scope: EventScope.TO_SYSTEM,
         }),
         data.text &&
-          this.imageService.recordImageDimensions(this.postModel, id),
+          this.imageService.recordImageDimensions(
+            this.postModel as MongooseModel<PostModel>,
+            id,
+          ),
         doc &&
           this.eventManager.broadcast(
             BusinessEvents.POST_UPDATE,
