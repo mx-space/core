@@ -88,7 +88,7 @@
     "@types/jsonwebtoken": "8.5.8",
     "algoliasearch": "4.13.1",
     "axios": "*",
-    "axios-retry": "3.2.6",
+    "axios-retry": "3.3.1",
     "bcrypt": "5.0.1",
     "cache-manager": "4.0.1",
     "cache-manager-ioredis": "2.1.0",
