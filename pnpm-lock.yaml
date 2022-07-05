@@ -98,7 +98,7 @@ specifiers:
   mongoose-lean-getters: 0.3.4
   mongoose-lean-id: 0.3.0
   mongoose-lean-virtuals: 0.9.1
-  mongoose-paginate-v2: 1.6.3
+  mongoose-paginate-v2: 1.7.0
   nanoid: 3.3.4
   node-machine-id: 1.1.12
   node-pty: 0.10.1
@@ -181,7 +181,7 @@ dependencies:
   mongoose-lean-getters: 0.3.4_mongoose@6.3.9
   mongoose-lean-id: 0.3.0_mongoose@6.3.9
   mongoose-lean-virtuals: 0.9.1_mongoose@6.3.9
-  mongoose-paginate-v2: 1.6.3
+  mongoose-paginate-v2: 1.7.0
   nanoid: 3.3.4
   node-machine-id: 1.1.12
   node-pty: 0.10.1
@@ -6103,8 +6103,8 @@ packages:
       mpath: 0.8.4
     dev: false
 
-  /mongoose-paginate-v2/1.6.3:
-    resolution: {integrity: sha512-wxIOcZL7V3+yHIkdTcDk+MtPxjDacEmrZ/4NpwgvOmmEm9SWWsBKRyPd/EmHlRUzk3ylr7fy4QEje1VMg0qpZA==}
+  /mongoose-paginate-v2/1.7.0:
+    resolution: {integrity: sha512-r9bns1sMWRl0QO3YXVZ/uGOL/CYcDXTmapGHlddIgzbfOhVxUWKHKItwJO8rZICF1ooOukLQv8qQLVTc3qSLpQ==}
     engines: {node: '>=4.0.0'}
     dev: false
 
