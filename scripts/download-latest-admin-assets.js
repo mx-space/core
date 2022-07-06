@@ -1,5 +1,5 @@
 #!env node
-const { writeFileSync, appendFileSync } = require('fs')
+const { appendFileSync } = require('fs')
 const { join } = require('path')
 const { fetch, $ } = require('zx-cjs')
 const {

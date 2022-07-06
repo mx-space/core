@@ -44,6 +44,7 @@ import { SitemapModule } from './modules/sitemap/sitemap.module'
 import { SnippetModule } from './modules/snippet/snippet.module'
 import { ToolModule } from './modules/tool/tool.module'
 import { TopicModule } from './modules/topic/topic.module'
+import { UpdateModule } from './modules/update/update.module'
 import { UserModule } from './modules/user/user.module'
 import { DatabaseModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
@@ -79,6 +80,7 @@ import { RedisModule } from './processors/redis/redis.module'
     ProjectModule,
     PTYModule,
     RecentlyModule,
+    UpdateModule,
     TopicModule,
     SayModule,
     SearchModule,
