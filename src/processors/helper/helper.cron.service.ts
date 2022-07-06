@@ -1,4 +1,3 @@
-import cluster from 'cluster'
 import COS from 'cos-nodejs-sdk-v5'
 import dayjs from 'dayjs'
 import { existsSync } from 'fs'
@@ -8,10 +7,11 @@ import { join } from 'path'
 
 import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
-import { Cron, CronExpression } from '@nestjs/schedule'
+import { CronExpression } from '@nestjs/schedule'
 
-import { isInDemoMode, isMainCluster } from '~/app.config'
+import { isInDemoMode } from '~/app.config'
 import { CronDescription } from '~/common/decorator/cron-description.decorator'
+import { CronOnce } from '~/common/decorator/cron-once.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { LOG_DIR, TEMP_DIR } from '~/constants/path.constant'
@@ -56,30 +56,9 @@ export class CronService {
     private readonly searchService: SearchService,
   ) {
     this.logger = new Logger(CronService.name)
-
-    if (isMainCluster || cluster.isWorker) {
-      Object.getOwnPropertyNames(this.constructor.prototype)
-        .filter((name) => name != 'constructor')
-        .forEach((name) => {
-          const metaKeys = Reflect.getOwnMetadataKeys(this[name])
-          const metaMap = new Map<any, any>()
-          for (const key of metaKeys) {
-            metaMap.set(key, Reflect.getOwnMetadata(key, this[name]))
-          }
-          const originMethod = this[name]
-          this[name] = (...args) => {
-            if (cluster.worker?.id === 1 || isMainCluster) {
-              originMethod.call(this, ...args)
-            }
-          }
-          for (const metaKey of metaKeys) {
-            Reflect.defineMetadata(metaKey, metaMap.get(metaKey), this[name])
-          }
-        })
-    }
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_1AM, { name: 'backupDB' })
+  @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'backupDB' })
   @CronDescription('备份 DB 并上传 COS')
   async backupDB({ uploadCOS = true }: { uploadCOS?: boolean } = {}) {
     if (isInDemoMode) {
@@ -136,7 +115,7 @@ export class CronService {
     })
   }
 
-  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT, {
+  @CronOnce(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT, {
     name: 'cleanAccessRecord',
   })
   @CronDescription('清理访问记录')
@@ -154,7 +133,7 @@ export class CronService {
   /**
    * @description 每天凌晨删除缓存
    */
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'resetIPAccess' })
+  @CronOnce(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'resetIPAccess' })
   @CronDescription('清理 IP 访问记录')
   async resetIPAccess() {
     await this.cacheService.getClient().del(getRedisKey(RedisKeys.AccessIp))
@@ -165,7 +144,7 @@ export class CronService {
   /**
    * @description 每天凌晨删除缓存
    */
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
+  @CronOnce(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
     name: 'resetLikedOrReadArticleRecord',
   })
   @CronDescription('清理喜欢数')
@@ -184,7 +163,7 @@ export class CronService {
     this.logger.log('--> 清理喜欢数成功')
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_3AM, { name: 'cleanTempDirectory' })
+  @CronOnce(CronExpression.EVERY_DAY_AT_3AM, { name: 'cleanTempDirectory' })
   @CronDescription('清理临时文件')
   async cleanTempDirectory() {
     await rm(TEMP_DIR, { recursive: true })
@@ -192,7 +171,7 @@ export class CronService {
     this.logger.log('--> 清理临时文件成功')
   }
   // “At 00:05.”
-  @Cron('5 0 * * *', { name: 'cleanTempDirectory' })
+  @CronOnce('5 0 * * *', { name: 'cleanTempDirectory' })
   @CronDescription('清理日志文件')
   async cleanLogFile() {
     const files = (await readdir(LOG_DIR)).filter(
@@ -212,7 +191,7 @@ export class CronService {
     this.logger.log('--> 清理日志文件成功')
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_1AM, { name: 'pushToBaiduSearch' })
+  @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'pushToBaiduSearch' })
   @CronDescription('推送到百度搜索')
   async pushToBaiduSearch() {
     const {
@@ -257,7 +236,9 @@ export class CronService {
   /**
    * @description 每天凌晨推送一遍 Algolia Search
    */
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'pushToAlgoliaSearch' })
+  @CronOnce(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
+    name: 'pushToAlgoliaSearch',
+  })
   @CronDescription('推送到 Algolia Search')
   @OnEvent(EventBusEvents.PushSearch)
   async pushToAlgoliaSearch() {

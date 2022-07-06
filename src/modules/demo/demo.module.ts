@@ -1,8 +1,9 @@
 import { resolve } from 'path'
 
 import { Module } from '@nestjs/common'
-import { Cron, CronExpression } from '@nestjs/schedule'
+import { CronExpression } from '@nestjs/schedule'
 
+import { CronOnce } from '~/common/decorator/cron-once.decorator'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 
 import { BackupModule } from '../backup/backup.module'
@@ -18,7 +19,8 @@ export class DemoModule {
   ) {
     this.reset()
   }
-  @Cron(CronExpression.EVERY_DAY_AT_1AM)
+
+  @CronOnce(CronExpression.EVERY_DAY_AT_1AM)
   reset() {
     this.backupService.restore(
       resolve(this.assetService.embedAssetPath, 'demo-data.zip'),
