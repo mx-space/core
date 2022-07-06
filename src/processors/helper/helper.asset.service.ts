@@ -66,9 +66,10 @@ export class AssetService {
     path: string,
     options: Parameters<typeof fs.readFile>[1],
   ) {
+    const hasCustom = await this.getUserCustomAsset(path, options)
     // 想找用户自定义的资源入口
-    if (await this.getUserCustomAsset(path, options)) {
-      return this.getUserCustomAsset(path, options)
+    if (hasCustom) {
+      return hasCustom
     }
     if (!this.checkAssetPath(path)) {
       try {

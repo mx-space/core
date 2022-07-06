@@ -20,6 +20,7 @@ export class OAuthModel {
 }
 
 export class TokenModel {
+  _id?: string
   @prop()
   created: Date
 
