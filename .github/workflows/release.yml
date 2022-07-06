@@ -45,6 +45,7 @@ jobs:
           version: latest
           run_install: true
       - name: Test
+        timeout-minutes: 10
         run: |
           npm run lint
           npm run test
