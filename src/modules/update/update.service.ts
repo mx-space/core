@@ -1,6 +1,6 @@
-import { appendFile } from 'fs-extra'
-import { rm, writeFile } from 'fs/promises'
-import { Observable } from 'rxjs'
+import { appendFile, rm, writeFile } from 'fs/promises'
+import { spawn } from 'node-pty'
+import { Observable, Subscriber, catchError } from 'rxjs'
 import { Stream } from 'stream'
 import { inspect } from 'util'
 
@@ -16,89 +16,108 @@ const { repo } = dashboard
 export class UpdateService {
   constructor(protected readonly httpService: HttpService) {}
   downloadAdminAsset(version: string) {
-    // @ts-expect-error
-    const observable$ = new Observable<string>(async (subscriber) => {
-      const endpoint = `https://api.github.com/repos/${repo}/releases/tags/v${version}`
+    const observable$ = new Observable<string>((subscriber) => {
+      ;(async () => {
+        const endpoint = `https://api.github.com/repos/${repo}/releases/tags/v${version}`
 
-      subscriber.next(`Downloading admin asset v${version}`)
-      subscriber.next(`Get from ${endpoint}`)
+        subscriber.next(`Downloading admin asset v${version}\n`)
+        subscriber.next(`Get from ${endpoint}\n`)
 
-      const json = await fetch(endpoint)
-        .then((res) => res.json())
-        .catch((err) => {
-          subscriber.next(chalk.red(`Fetching error: ${err.message}`))
+        const json = await fetch(endpoint)
+          .then((res) => res.json())
+          .catch((err) => {
+            subscriber.next(chalk.red(`Fetching error: ${err.message}`))
+            subscriber.complete()
+            return null
+          })
+
+        if (!json) {
+          return
+        }
+
+        const downloadUrl = json.assets?.find(
+          (asset) => asset.name === 'release.zip',
+        )?.browser_download_url
+
+        if (!downloadUrl) {
+          subscriber.next(chalk.red('Download url not found.\n'))
+          subscriber.next(
+            chalk.red(
+              `Full json fetched: \n${inspect(json, false, undefined, true)}`,
+            ),
+          )
           subscriber.complete()
-          return null
-        })
+          return
+        }
 
-      if (!json) {
-        return
-      }
+        const buffer = await fetch(downloadUrl)
+          .then((res) => res.arrayBuffer())
+          .catch((err) => {
+            subscriber.next(chalk.red(`Downloading error: ${err.message}`))
+            subscriber.complete()
+            return null
+          })
 
-      const downloadUrl = json.assets?.find(
-        (asset) => asset.name === 'release.zip',
-      )?.browser_download_url
+        if (!buffer) {
+          return
+        }
 
-      if (!downloadUrl) {
-        subscriber.next(chalk.red('Download url not found'))
-        subscriber.next(
-          chalk.red(
-            `Full json fetched: ${inspect(json, false, undefined, true)}`,
-          ),
+        await rm('admin-release.zip', { force: true })
+
+        await appendFile(
+          path.resolve(process.cwd(), 'admin-release.zip'),
+          Buffer.from(buffer),
         )
-        subscriber.complete()
-        return
-      }
 
-      const buffer = await fetch(downloadUrl)
-        .then((res) => res.arrayBuffer())
-        .catch((err) => {
-          subscriber.next(chalk.red(`Downloading error: ${err.message}`))
-          subscriber.complete()
-          return null
+        const writable = new Stream.Writable({
+          autoDestroy: false,
+          write(chunk) {
+            subscriber.next(chunk.toString())
+          },
         })
+        const folder = LOCAL_ADMIN_ASSET_PATH.replace(/\/admin$/, '')
+        await rm(LOCAL_ADMIN_ASSET_PATH, { force: true, recursive: true })
 
-      if (!buffer) {
-        return
-      }
-      await rm('admin-release.zip', { force: true })
-      await appendFile(
-        path.resolve(process.cwd(), 'admin-release.zip'),
-        Buffer.from(buffer),
-      )
+        await $`ls -lh`.pipe(writable)
 
-      const writable = new Stream.Writable({
-        autoDestroy: false,
-        write(chunk, _encoding, callback) {
-          subscriber.next(chunk.toString())
-        },
-      })
-      const folder = LOCAL_ADMIN_ASSET_PATH.replace(/\/admin$/, '')
-      await rm(LOCAL_ADMIN_ASSET_PATH, { force: true, recursive: true })
+        try {
+          await this.runShellCommandPipeOutput(
+            'unzip',
+            ['-o', 'admin-release.zip', '-d', folder],
+            subscriber,
+          )
 
-      await $`ls -lh`.pipe(writable)
-      await nothrow($`unzip -o admin-release.zip -d ${folder}`)
-      await $`mv ${folder}/dist ${folder}/admin`.pipe(writable)
-      await $`rm -f admin-release.zip`.pipe(writable)
+          await $`mv ${folder}/dist ${LOCAL_ADMIN_ASSET_PATH}`
 
-      await writeFile(
-        path.resolve(LOCAL_ADMIN_ASSET_PATH, 'version'),
-        version,
-        {
-          encoding: 'utf8',
-        },
-      )
+          await $`rm -f admin-release.zip`
 
-      writable.end()
-      writable.destroy()
+          await writeFile(
+            path.resolve(LOCAL_ADMIN_ASSET_PATH, 'version'),
+            version,
+            {
+              encoding: 'utf8',
+            },
+          )
 
-      writable.on('close', () => {
-        subscriber.next(`Downloading finished.`)
-        subscriber.complete()
-      })
+          subscriber.next(chalk.green(`Downloading finished.\n`))
+        } catch (err) {
+          subscriber.next(chalk.red(`Updating error: ${err.message}\n`))
+        } finally {
+          subscriber.complete()
+          writable.end()
+          writable.destroy()
+        }
+
+        await rm('admin-release.zip', { force: true })
+      })()
     })
 
-    return observable$
+    return observable$.pipe(
+      catchError((err) => {
+        console.error(err)
+        return observable$
+      }),
+    )
   }
 
   async getLatestAdminVersion() {
@@ -106,5 +125,23 @@ export class UpdateService {
 
     const res = await this.httpService.axiosRef.get(endpoint)
     return res.data.tag_name.replace(/^v/, '')
+  }
+
+  runShellCommandPipeOutput(
+    command: string,
+    args: any[],
+    subscriber: Subscriber<string>,
+  ) {
+    return new Promise((resolve) => {
+      subscriber.next(`$ ${command} ${args.join(' ')}\n`)
+
+      const pty = spawn(command, args, {})
+      pty.onData((data) => {
+        subscriber.next(data.toString())
+      })
+      pty.onExit(() => {
+        resolve(null)
+      })
+    })
   }
 }
