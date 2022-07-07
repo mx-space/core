@@ -41,10 +41,10 @@ export class DependencyController {
 
       pty.onExit(async ({ exitCode }) => {
         if (exitCode != 0) {
-          subscriber.next(`Error: Exit code: ${exitCode}`)
+          subscriber.next(chalk.red(`Error: Exit code: ${exitCode}\n`))
         }
 
-        subscriber.next('任务完成，可关闭此窗口。')
+        subscriber.next(chalk.green('任务完成，可关闭此窗口。'))
         subscriber.complete()
       })
     })
