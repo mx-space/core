@@ -67,7 +67,7 @@
     "@algolia/client-search": "*",
     "@babel/core": "7.18.6",
     "@babel/plugin-transform-modules-commonjs": "7.18.6",
-    "@babel/plugin-transform-typescript": "7.18.6",
+    "@babel/plugin-transform-typescript": "7.18.8",
     "@babel/types": "*",
     "@fastify/cookie": "6",
     "@fastify/multipart": "6",
