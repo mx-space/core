@@ -47,7 +47,7 @@ export class FileController {
     const mimetype = lookup(ext)
 
     try {
-      const buffer = await this.service.getFile(type, name)
+      const stream = this.service.getFileStream(type, name)
       if (mimetype) {
         reply.type(mimetype)
         reply.header('cache-control', 'public, max-age=31536000')
@@ -57,7 +57,7 @@ export class FileController {
         )
       }
 
-      reply.send(buffer)
+      reply.send(stream)
     } catch {
       throw new CannotFindException()
     }

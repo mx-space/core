@@ -24,8 +24,8 @@ export class FileService {
       .catch(() => false)
   }
 
-  async getFile(type: FileType, name: string) {
-    return await fs.readFile(this.resolveFilePath(type, name))
+  getFileStream(type: FileType, name: string) {
+    return fs.createReadStream(this.resolveFilePath(type, name))
   }
 
   writeFile(

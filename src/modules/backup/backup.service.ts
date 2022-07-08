@@ -2,7 +2,6 @@ import { existsSync, statSync } from 'fs'
 import { readFile, readdir, rm, writeFile } from 'fs/promises'
 import mkdirp from 'mkdirp'
 import { join, resolve } from 'path'
-import { Readable } from 'stream'
 import { quiet } from 'zx-cjs'
 
 import {
@@ -116,10 +115,7 @@ export class BackupService {
 
   async getFileStream(dirname: string) {
     const path = this.checkBackupExist(dirname)
-    const stream = new Readable()
-
-    stream.push(await readFile(path))
-    stream.push(null)
+    const stream = fs.createReadStream(path)
 
     return stream
   }
