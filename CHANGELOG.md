@@ -6,6 +6,34 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Create `package.json`
+- Update dependency @typegoose/auto-increment to v1.4.1 ([#606](https://github.com/orhun/git-cliff/issues/606))
+- Update dependency mongoose-paginate-v2 to v1.7.0 ([#607](https://github.com/orhun/git-cliff/issues/607))
+- Update dependency axios-retry to v3.3.1 ([#597](https://github.com/orhun/git-cliff/issues/597))
+- Make jest happy
+- Update dependency nodemailer to v6.7.7
+
+### Features
+
+- Support upgrage admin dashboard ([#612](https://github.com/orhun/git-cliff/issues/612))
+
+### Miscellaneous Tasks
+
+- Update mongoose
+- Remove debug
+
+### Refactor
+
+- Remove cron clsuter compatibility hack ([#610](https://github.com/orhun/git-cliff/issues/610))
+
+### Ci
+
+- Add timeout
+
+## [3.34.0] - 2022-07-04
+
+### Bug Fixes
+
 - Record error log throwed in serverless fn
 - Replace directly access code define file
 
@@ -23,6 +51,10 @@ All notable changes to this project will be documented in this file.
 ### Refactor
 
 - Extract dependency module
+
+### Release
+
+- V3.34.0
 
 ## [3.33.1] - 2022-07-02
 
