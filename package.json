@@ -136,7 +136,7 @@
     "vm2": "3.9.10",
     "wildcard-match": "^5.1.2",
     "xss": "1.0.13",
-    "zx-cjs": "6.1.0"
+    "zx-cjs": "7.0.7"
   },
   "devDependencies": {
     "@innei/eslint-config-ts": "latest",
