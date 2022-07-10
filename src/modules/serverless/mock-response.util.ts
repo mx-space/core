@@ -19,7 +19,7 @@ export const createMockedContextResponse = (
       return response
     },
     send(data: any) {
-      reply.send(data)
+      return reply.send(data)
     },
     status(code: number, message?: string) {
       reply.raw.statusCode = code

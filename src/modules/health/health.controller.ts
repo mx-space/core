@@ -204,7 +204,7 @@ export class HealthController {
       }
     }
     reply.type('text/plain')
-    reply.send(stream)
+    return reply.send(stream)
   }
 
   @Delete('/log/:type')

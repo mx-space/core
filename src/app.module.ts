@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule, Type } from '@nestjs/common'
+import { Module, NestModule, Type } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 
 import { isInDemoMode } from './app.config'
@@ -140,6 +140,4 @@ import { RedisModule } from './processors/redis/redis.module'
     },
   ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {}
-}
+export class AppModule {}
