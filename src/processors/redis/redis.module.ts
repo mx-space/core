@@ -13,9 +13,9 @@ import { SubPubBridgeService } from './subpub.service'
 @Global()
 @Module({
   imports: [
-    // FIXME
-    NestCacheModule.register({
-      ...new RedisConfigService().createCacheOptions(),
+    NestCacheModule.registerAsync({
+      useClass: RedisConfigService,
+      inject: [RedisConfigService],
     }),
   ],
   providers: [RedisConfigService, CacheService, SubPubBridgeService],
