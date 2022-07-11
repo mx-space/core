@@ -6,6 +6,22 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Update dependency @babel/plugin-transform-typescript to v7.18.8
+- Update dependency mongoose to v6.4.4
+- Pin value when update posts
+
+### Miscellaneous Tasks
+
+- Docker adduser
+
+### Performance
+
+- Use read stream to transfer data
+
+## [3.35.0] - 2022-07-08
+
+### Bug Fixes
+
 - Create `package.json`
 - Update dependency @typegoose/auto-increment to v1.4.1 ([#606](https://github.com/orhun/git-cliff/issues/606))
 - Update dependency mongoose-paginate-v2 to v1.7.0 ([#607](https://github.com/orhun/git-cliff/issues/607))
@@ -29,6 +45,10 @@ All notable changes to this project will be documented in this file.
 ### Ci
 
 - Add timeout
+
+### Release
+
+- V3.35.0
 
 ## [3.34.0] - 2022-07-04
 
