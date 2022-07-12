@@ -142,7 +142,7 @@
     "@innei/eslint-config-ts": "latest",
     "@innei/prettier": "latest",
     "@nestjs/cli": "8.2.8",
-    "@nestjs/schematics": "8.0.11",
+    "@nestjs/schematics": "9.0.1",
     "@nestjs/testing": "8.4.7",
     "@types/babel__core": "7.1.19",
     "@types/bcrypt": "5.0.0",
