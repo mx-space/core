@@ -4,7 +4,7 @@ overrides:
   typescript: 4.7.4
   ioredis: 5.1.0
   webpack: 5.73.0
-  fastify-cors: npm:@fastify/cors@^7.0.0
+  fastify-cors: npm:@fastify/cors@^8.0.0
   fastify-formbody: npm:@fastify/formbody@^6.0.0
   semver: ^7
 
@@ -909,8 +909,8 @@ packages:
       fastify-plugin: 3.0.1
     dev: false
 
-  /@fastify/cors/7.0.0:
-    resolution: {integrity: sha512-nlo6ScwagBNJacAZD3KX90xjWLIoV0vN9QqoX1wUE9ZeZMdvkVkMZCGlxEtr00NshV0X5wDge4w5rwox7rRzSg==}
+  /@fastify/cors/8.0.0:
+    resolution: {integrity: sha512-mB2GsA7aVwq7XG6B2OM1FMpcaiXY69ZbM1h/xDJxLEVu5ITGcs5XYrBIYTMNU2dQtzO6mzXhGd2dEKaCnB7UgQ==}
     dependencies:
       fastify-plugin: 3.0.1
       vary: 1.1.2
@@ -1468,7 +1468,7 @@ packages:
       '@nestjs/common': 8.4.7_rfiwcbffiuhkhhtbrxxsyxpam4
       '@nestjs/core': 8.4.7_t4skuxzx4r7n7cx5cukuogfgiu
       fastify: 3.29.0
-      fastify-cors: /@fastify/cors/7.0.0
+      fastify-cors: /@fastify/cors/8.0.0
       fastify-formbody: /@fastify/formbody/6.0.1
       light-my-request: 5.0.0
       middie: 6.1.0
