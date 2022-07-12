@@ -1,7 +1,6 @@
 import { appendFile, rm, writeFile } from 'fs/promises'
 import { spawn } from 'node-pty'
 import { Observable, Subscriber, catchError } from 'rxjs'
-import { Stream } from 'stream'
 import { inspect } from 'util'
 
 import { Injectable } from '@nestjs/common'
@@ -69,16 +68,8 @@ export class UpdateService {
           Buffer.from(buffer),
         )
 
-        const writable = new Stream.Writable({
-          autoDestroy: false,
-          write(chunk) {
-            subscriber.next(chunk.toString())
-          },
-        })
         const folder = LOCAL_ADMIN_ASSET_PATH.replace(/\/admin$/, '')
         await rm(LOCAL_ADMIN_ASSET_PATH, { force: true, recursive: true })
-
-        await $`ls -lh`.pipe(writable)
 
         try {
           await this.runShellCommandPipeOutput(
@@ -86,10 +77,16 @@ export class UpdateService {
             ['-o', 'admin-release.zip', '-d', folder],
             subscriber,
           )
-
-          await $`mv ${folder}/dist ${LOCAL_ADMIN_ASSET_PATH}`
-
-          await $`rm -f admin-release.zip`
+          await this.runShellCommandPipeOutput(
+            'mv',
+            `${folder}/dist ${LOCAL_ADMIN_ASSET_PATH}`.split(' '),
+            subscriber,
+          )
+          await this.runShellCommandPipeOutput(
+            'rm',
+            ['-rf', 'admin-release.zip'],
+            subscriber,
+          )
 
           await writeFile(
             path.resolve(LOCAL_ADMIN_ASSET_PATH, 'version'),
@@ -104,8 +101,6 @@ export class UpdateService {
           subscriber.next(chalk.red(`Updating error: ${err.message}\n`))
         } finally {
           subscriber.complete()
-          writable.end()
-          writable.destroy()
         }
 
         await rm('admin-release.zip', { force: true })
@@ -133,7 +128,7 @@ export class UpdateService {
     subscriber: Subscriber<string>,
   ) {
     return new Promise((resolve) => {
-      subscriber.next(`$ ${command} ${args.join(' ')}\n`)
+      subscriber.next(`${chalk.yellow(`$`)} ${command} ${args.join(' ')}\n`)
 
       const pty = spawn(command, args, {})
       pty.onData((data) => {
