@@ -72,21 +72,21 @@ export class UpdateService {
         await rm(LOCAL_ADMIN_ASSET_PATH, { force: true, recursive: true })
 
         try {
-          await this.runShellCommandPipeOutput(
-            'unzip',
-            ['-o', 'admin-release.zip', '-d', folder],
-            subscriber,
-          )
-          await this.runShellCommandPipeOutput(
-            'mv',
-            `${folder}/dist ${LOCAL_ADMIN_ASSET_PATH}`.split(' '),
-            subscriber,
-          )
-          await this.runShellCommandPipeOutput(
-            'rm',
-            ['-rf', 'admin-release.zip'],
-            subscriber,
-          )
+          // @ts-ignore
+          const cmds: readonly [string, string[]][] = [
+            `unzip -o admin-release.zip -d ${folder}`,
+            `mv ${folder}/dist ${LOCAL_ADMIN_ASSET_PATH}`,
+            `rm -f admin-release.zip`,
+            // @ts-ignore
+          ].reduce((acc, fullCmd) => {
+            const [cmd, ...args] = fullCmd.split(' ')
+            return [...acc, [cmd, args]] as const
+          }, [])
+
+          for (const exec of cmds) {
+            const [cmd, args] = exec
+            await this.runShellCommandPipeOutput(cmd, args, subscriber)
+          }
 
           await writeFile(
             path.resolve(LOCAL_ADMIN_ASSET_PATH, 'version'),
@@ -139,4 +139,10 @@ export class UpdateService {
       })
     })
   }
+}
+
+const ar = [[1], [2]] as const
+
+for (const i of ar) {
+  console.log(i)
 }
