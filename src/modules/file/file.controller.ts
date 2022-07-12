@@ -57,7 +57,7 @@ export class FileController {
         )
       }
 
-      reply.send(stream)
+      return reply.send(stream)
     } catch {
       throw new CannotFindException()
     }

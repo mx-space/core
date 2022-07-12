@@ -89,7 +89,7 @@ export class ServerlessController {
       )
 
     if (!reply.sent) {
-      reply.send(result)
+      return reply.send(result)
     }
   }
 }

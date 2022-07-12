@@ -62,7 +62,7 @@ export class DebugController {
       )
 
     if (!res.sent) {
-      res.send(result)
+      return res.send(result)
     }
   }
 }

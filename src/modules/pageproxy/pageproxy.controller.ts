@@ -174,14 +174,14 @@ export class PageProxyController {
         ...(await this.service.getUrlFromConfig()),
         from: 'server',
       })
-      reply
+      return reply
         .type('text/html')
         .send(this.service.rewriteAdminEntryAssetPath(injectEnv))
     } catch (e) {
-      reply.code(500).send({
+      isDev && console.error(e)
+      return reply.code(500).send({
         message: e.message,
       })
-      isDev && console.error(e)
     }
   }
 
@@ -203,7 +203,7 @@ export class PageProxyController {
 
     const isPathExist = existsSync(path)
     if (!isPathExist) {
-      return reply.code(404).send()
+      return reply.code(404).send().callNotFound()
     }
 
     const isFile = statSync(path).isFile()
@@ -221,9 +221,9 @@ export class PageProxyController {
       new Date(Date.now() + 31536000 * 1000).toUTCString(),
     )
     if (minetype) {
-      reply.type(minetype).send(stream)
+      return reply.type(minetype).send(stream)
     } else {
-      reply.send(stream)
+      return reply.send(stream)
     }
   }
 }

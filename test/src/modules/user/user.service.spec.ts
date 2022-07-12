@@ -14,7 +14,7 @@ describe('test UserModule service', () => {
   beforeEach(async () => {
     const storedUserList = []
     const module = await Test.createTestingModule({
-      imports: [CacheService],
+      imports: [],
       providers: [
         UserService,
         AuthService,

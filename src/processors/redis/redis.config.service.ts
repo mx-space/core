@@ -26,12 +26,13 @@ export class RedisConfigService implements CacheOptionsFactory {
     if (REDIS.password) {
       redisOptions.password = REDIS.password as any
     }
+
     return {
       store: redisStore,
       ttl: REDIS.ttl ?? undefined,
       // https://github.com/dabroek/node-cache-manager-redis-store/blob/master/CHANGELOG.md#breaking-changes
       // Any value (undefined | null) return true (cacheable) after redisStore v2.0.0
-      is_cacheable_value: () => true,
+      isCacheableValue: () => true,
       max: REDIS.max,
       ...redisOptions,
     }
