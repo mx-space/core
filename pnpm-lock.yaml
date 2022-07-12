@@ -25,7 +25,7 @@ specifiers:
   '@nestjs/mapped-types': '*'
   '@nestjs/platform-fastify': 8.4.7
   '@nestjs/platform-socket.io': 8.4.7
-  '@nestjs/schedule': 2.0.1
+  '@nestjs/schedule': 2.1.0
   '@nestjs/schematics': 8.0.11
   '@nestjs/swagger': 5.2.1
   '@nestjs/testing': 8.4.7
@@ -140,7 +140,7 @@ dependencies:
   '@nestjs/mapped-types': 1.0.1_7zw7e46jhcfuw5vwuwho2brjki
   '@nestjs/platform-fastify': 8.4.7_7tsmhnugyerf5okgqzer2mfqme
   '@nestjs/platform-socket.io': 8.4.7_r6nuebog4bg27giimlqlqtxmem
-  '@nestjs/schedule': 2.0.1_zysgbzrbqurgi5bpxpfkrj3lie
+  '@nestjs/schedule': 2.1.0_zysgbzrbqurgi5bpxpfkrj3lie
   '@nestjs/swagger': 5.2.1_ffn5cqyzbonkkveza57gy5jn2a
   '@nestjs/throttler': 2.0.1_zysgbzrbqurgi5bpxpfkrj3lie
   '@nestjs/websockets': 8.4.7_aheyi6luzvgwkvcv7ramv2w3ee
@@ -1495,11 +1495,11 @@ packages:
       - supports-color
       - utf-8-validate
 
-  /@nestjs/schedule/2.0.1_zysgbzrbqurgi5bpxpfkrj3lie:
-    resolution: {integrity: sha512-NqiCk3P7HDMw55kpefNIzAAQEsP+6dDIXUt4/KQANtAZ+opdLzo8rkzI0j8vDqgYeTh+PKq+V6zwSRjR61xPAQ==}
+  /@nestjs/schedule/2.1.0_zysgbzrbqurgi5bpxpfkrj3lie:
+    resolution: {integrity: sha512-4Xaw56WiW3VsxEPPnj/iDtfjcO+sUZyYAeRxD0gnF5havncxjAnv52Iw7UH3DuzzUA784xPGgGje3Fq0Gu925g==}
     peerDependencies:
-      '@nestjs/common': ^6.10.11 || ^7.0.0 || ^8.0.0
-      '@nestjs/core': ^7.0.0 || ^8.0.0
+      '@nestjs/common': ^7.0.0 || ^8.0.0 || ^9.0.0
+      '@nestjs/core': ^7.0.0 || ^8.0.0 || ^9.0.0
       reflect-metadata: ^0.1.12
     dependencies:
       '@nestjs/common': 8.4.7_rfiwcbffiuhkhhtbrxxsyxpam4
