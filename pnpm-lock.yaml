@@ -5,7 +5,7 @@ overrides:
   ioredis: 5.1.0
   webpack: 5.73.0
   fastify-cors: npm:@fastify/cors@^7.0.0
-  fastify-formbody: npm:@fastify/formbody@^6.0.0
+  fastify-formbody: npm:@fastify/formbody@^7.0.0
   semver: ^7
 
 specifiers:
@@ -490,7 +490,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.18.7
-      '@jridgewell/gen-mapping': 0.3.1
+      '@jridgewell/gen-mapping': 0.3.2
       jsesc: 2.5.2
 
   /@babel/generator/7.18.7:
@@ -920,8 +920,8 @@ packages:
     resolution: {integrity: sha512-wI3fpfDT0t7p8E6dA2eTECzzOd+bZsZCJ2Hcv+Onn2b7ZwK3RwD27uW2QDaMtQhAfWQQP+WNK7nKf0twLsBf9w==}
     dev: false
 
-  /@fastify/formbody/6.0.1:
-    resolution: {integrity: sha512-yIwCitoES4Sh0tPc6v+uHBqZEKw3CooSZ4kUvO9NC8Y7oRBCW+aC+pTgUZ8M3r2DOzRkNO+Pq0jMQkyL2k8jZQ==}
+  /@fastify/formbody/7.0.1:
+    resolution: {integrity: sha512-CY6IfzdtidHbZezyyXv7u9dzmb2Lv92HyOZDqANuFb++5ojsqoqIb8bJz11bSgPK0MDoqww/dH6DxZDMM8N4ng==}
     dependencies:
       fastify-plugin: 3.0.1
     dev: false
@@ -1274,14 +1274,6 @@ packages:
       chalk: 4.1.2
     dev: true
 
-  /@jridgewell/gen-mapping/0.3.1:
-    resolution: {integrity: sha512-GcHwniMlA2z+WFPWuY8lp3fsza0I8xPFMWL5+n8LYyP6PSvPrXf4+n8stDHZY2DM0zy9sVkRDy1jDI4XGzYVqg==}
-    engines: {node: '>=6.0.0'}
-    dependencies:
-      '@jridgewell/set-array': 1.1.2
-      '@jridgewell/sourcemap-codec': 1.4.14
-      '@jridgewell/trace-mapping': 0.3.14
-
   /@jridgewell/gen-mapping/0.3.2:
     resolution: {integrity: sha512-mh65xKQAzI6iBcFzwv28KVWSmCkdRBWoOh+bYQGW3+6OZvbbN3TqMGo5hqYxQniRcH9F2VZIoJCm4pa3BPDK/A==}
     engines: {node: '>=6.0.0'}
@@ -1469,7 +1461,7 @@ packages:
       '@nestjs/core': 8.4.7_t4skuxzx4r7n7cx5cukuogfgiu
       fastify: 3.29.0
       fastify-cors: /@fastify/cors/7.0.0
-      fastify-formbody: /@fastify/formbody/6.0.1
+      fastify-formbody: /@fastify/formbody/7.0.1
       light-my-request: 5.0.0
       middie: 6.1.0
       path-to-regexp: 3.2.0

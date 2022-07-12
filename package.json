@@ -190,7 +190,7 @@
     "ioredis": "5.1.0",
     "webpack": "5.73.0",
     "fastify-cors": "npm:@fastify/cors@^7.0.0",
-    "fastify-formbody": "npm:@fastify/formbody@^6.0.0",
+    "fastify-formbody": "npm:@fastify/formbody@^7.0.0",
     "semver": "^7"
   }
 }
