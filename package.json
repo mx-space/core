@@ -100,7 +100,7 @@
     "cos-nodejs-sdk-v5": "2.11.12",
     "dayjs": "1.11.3",
     "ejs": "3.1.8",
-    "fastify-swagger": "npm:@fastify/swagger@6",
+    "fastify-swagger": "npm:@fastify/swagger@7.4.1",
     "fs-extra": "*",
     "get-image-colors": "4.0.1",
     "image-size": "1.0.1",
