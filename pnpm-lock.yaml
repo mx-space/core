@@ -26,7 +26,7 @@ specifiers:
   '@nestjs/platform-socket.io': 9.0.2
   '@nestjs/schedule': 2.1.0
   '@nestjs/schematics': 9.0.1
-  '@nestjs/swagger': 6.0.1
+  '@nestjs/swagger': 6.0.3
   '@nestjs/testing': 9.0.2
   '@nestjs/throttler': 3.0.0
   '@nestjs/websockets': 9.0.2
@@ -140,7 +140,7 @@ dependencies:
   '@nestjs/platform-fastify': 9.0.2_kzi2snlfuyvst34ob5wwjnlebm
   '@nestjs/platform-socket.io': 9.0.2_gppu4j3m52fypxcldtn77wgxay
   '@nestjs/schedule': 2.1.0_2ykfwlyvwhxhqjy6tiq52imywa
-  '@nestjs/swagger': 6.0.1_apoxkvpwyokvnt6xbrzxs77dse
+  '@nestjs/swagger': 6.0.3_apoxkvpwyokvnt6xbrzxs77dse
   '@nestjs/throttler': 3.0.0_2ykfwlyvwhxhqjy6tiq52imywa
   '@nestjs/websockets': 9.0.2_2ruft3aofrjkia7j75qvx74km4
   '@socket.io/redis-adapter': 7.2.0
@@ -1549,8 +1549,8 @@ packages:
       - chokidar
     dev: true
 
-  /@nestjs/swagger/6.0.1_apoxkvpwyokvnt6xbrzxs77dse:
-    resolution: {integrity: sha512-rNpncETn+twpf3OPUtGO0MssEOd0cEqiklj2TZv+kAU9gmIWtC/p7Hf1hWbSp9C/l8vF1TnquK80oOaS2G0bAA==}
+  /@nestjs/swagger/6.0.3_apoxkvpwyokvnt6xbrzxs77dse:
+    resolution: {integrity: sha512-mpKfa1VOp7c8CPYdS403dO3XP8v6Hq6dI88yzzgmapKLEYPN0cFKXqTF2zULKv+BxqGl7EJM4h3P+cc0I9PStA==}
     peerDependencies:
       '@fastify/static': ^6.0.0
       '@nestjs/common': ^9.0.0
@@ -5365,7 +5365,7 @@ packages:
       '@babel/core': 7.18.6
       '@babel/generator': 7.18.7
       '@babel/plugin-syntax-typescript': 7.18.6_@babel+core@7.18.6
-      '@babel/traverse': 7.18.6
+      '@babel/traverse': 7.18.8
       '@babel/types': 7.18.8
       '@jest/expect-utils': 28.1.1
       '@jest/transform': 28.1.2
