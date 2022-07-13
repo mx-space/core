@@ -9,7 +9,7 @@ services:
       - TZ=Asia/Shanghai
       - NODE_ENV=production
     volumes:
-      - ./data/mx-space:/root/.mx-space
+      - ./data/mx-space:/home/mx/.mx-space
     ports:
       - '2333:2333'
     depends_on:
