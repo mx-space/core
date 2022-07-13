@@ -11,16 +11,11 @@ RUN node scripts/download-latest-admin-assets.js
 
 FROM node:16-alpine
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 mx
-
 RUN apk add zip unzip mongodb-tools bash fish rsync jq --no-cache
 WORKDIR /app
 COPY --from=builder /app/out .
 COPY --from=builder /app/assets ./assets
 ENV TZ=Asia/Shanghai
-
-USER mx
 
 EXPOSE 2333
 CMD echo "MixSpace Sever Image." && sh
