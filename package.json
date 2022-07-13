@@ -129,7 +129,7 @@
     "pluralize": "*",
     "qs": "6.11.0",
     "reflect-metadata": "0.1.13",
-    "rxjs": "7.5.5",
+    "rxjs": "7.5.6",
     "semver": "^7",
     "slugify": "1.6.5",
     "snakecase-keys": "5.4.2",
