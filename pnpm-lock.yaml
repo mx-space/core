@@ -41,7 +41,7 @@ specifiers:
   '@types/ejs': 3.1.1
   '@types/fs-extra': 9.0.13
   '@types/get-image-colors': 4.0.1
-  '@types/jest': 28.1.4
+  '@types/jest': 28.1.5
   '@types/js-yaml': 4.0.5
   '@types/jsonwebtoken': 8.5.8
   '@types/lodash': 4.14.182
@@ -216,7 +216,7 @@ devDependencies:
   '@types/ejs': 3.1.1
   '@types/fs-extra': 9.0.13
   '@types/get-image-colors': 4.0.1
-  '@types/jest': 28.1.4
+  '@types/jest': 28.1.5
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.182
   '@types/marked': 4.0.3
@@ -455,7 +455,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.18.8
-      '@jridgewell/gen-mapping': 0.3.1
+      '@jridgewell/gen-mapping': 0.3.2
       jsesc: 2.5.2
 
   /@babel/generator/7.18.7:
@@ -543,7 +543,7 @@ packages:
       '@babel/helper-split-export-declaration': 7.18.6
       '@babel/helper-validator-identifier': 7.18.6
       '@babel/template': 7.18.6
-      '@babel/traverse': 7.18.6
+      '@babel/traverse': 7.18.8
       '@babel/types': 7.18.8
     transitivePeerDependencies:
       - supports-color
@@ -566,7 +566,7 @@ packages:
       '@babel/helper-environment-visitor': 7.18.6
       '@babel/helper-member-expression-to-functions': 7.18.6
       '@babel/helper-optimise-call-expression': 7.18.6
-      '@babel/traverse': 7.18.6
+      '@babel/traverse': 7.18.8
       '@babel/types': 7.18.8
     transitivePeerDependencies:
       - supports-color
@@ -597,7 +597,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/template': 7.18.6
-      '@babel/traverse': 7.18.6
+      '@babel/traverse': 7.18.8
       '@babel/types': 7.18.8
     transitivePeerDependencies:
       - supports-color
@@ -812,7 +812,7 @@ packages:
       '@babel/helper-function-name': 7.18.6
       '@babel/helper-hoist-variables': 7.18.6
       '@babel/helper-split-export-declaration': 7.18.6
-      '@babel/parser': 7.18.6
+      '@babel/parser': 7.18.8
       '@babel/types': 7.18.8
       debug: 4.3.4
       globals: 11.12.0
@@ -835,7 +835,6 @@ packages:
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
-    dev: true
 
   /@babel/types/7.18.8:
     resolution: {integrity: sha512-qwpdsmraq0aJ3osLJRApsc2ouSJCdnMeZwB0DhbtHAtRpZNZCdlbRnHIgcRKzdE1g0iOGg644fzjOBcdOz9cPw==}
@@ -1270,14 +1269,6 @@ packages:
       '@types/yargs': 17.0.10
       chalk: 4.1.2
     dev: true
-
-  /@jridgewell/gen-mapping/0.3.1:
-    resolution: {integrity: sha512-GcHwniMlA2z+WFPWuY8lp3fsza0I8xPFMWL5+n8LYyP6PSvPrXf4+n8stDHZY2DM0zy9sVkRDy1jDI4XGzYVqg==}
-    engines: {node: '>=6.0.0'}
-    dependencies:
-      '@jridgewell/set-array': 1.1.2
-      '@jridgewell/sourcemap-codec': 1.4.14
-      '@jridgewell/trace-mapping': 0.3.14
 
   /@jridgewell/gen-mapping/0.3.2:
     resolution: {integrity: sha512-mh65xKQAzI6iBcFzwv28KVWSmCkdRBWoOh+bYQGW3+6OZvbbN3TqMGo5hqYxQniRcH9F2VZIoJCm4pa3BPDK/A==}
@@ -1858,8 +1849,8 @@ packages:
       '@types/istanbul-lib-report': 3.0.0
     dev: true
 
-  /@types/jest/28.1.4:
-    resolution: {integrity: sha512-telv6G5N7zRJiLcI3Rs3o+ipZ28EnE+7EvF0pSrt2pZOMnAVI/f+6/LucDxOvcBcTeTL3JMF744BbVQAVBUQRA==}
+  /@types/jest/28.1.5:
+    resolution: {integrity: sha512-TLAC2zXxGnohSP3GxgIyJn7yrTeRPDEyVFyCY1NE2wzg392auI+69uk5EPGjUXuhkq/K208J/TWpLG7J8ebIEQ==}
     dependencies:
       jest-matcher-utils: 28.1.1
       pretty-format: 28.1.1
