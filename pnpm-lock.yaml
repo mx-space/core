@@ -20,7 +20,7 @@ specifiers:
   '@nestjs/cli': 9.0.0
   '@nestjs/common': 9.0.2
   '@nestjs/core': 9.0.2
-  '@nestjs/event-emitter': 1.3.0
+  '@nestjs/event-emitter': 1.2.0
   '@nestjs/mapped-types': '*'
   '@nestjs/platform-fastify': 9.0.2
   '@nestjs/platform-socket.io': 9.0.2
@@ -135,7 +135,7 @@ dependencies:
   '@fastify/static': 6.4.0
   '@nestjs/common': 9.0.2_izy6d3vkkuxhizhra6olmnxmau
   '@nestjs/core': 9.0.2_fk3hvwgkishukxqi5cmfplsic4
-  '@nestjs/event-emitter': 1.3.0_2ykfwlyvwhxhqjy6tiq52imywa
+  '@nestjs/event-emitter': 1.2.0_2ykfwlyvwhxhqjy6tiq52imywa
   '@nestjs/mapped-types': 1.1.0_fubfmafzhxswcpub3szmkalgaa
   '@nestjs/platform-fastify': 9.0.2_kzi2snlfuyvst34ob5wwjnlebm
   '@nestjs/platform-socket.io': 9.0.2_gppu4j3m52fypxcldtn77wgxay
@@ -639,6 +639,7 @@ packages:
     hasBin: true
     dependencies:
       '@babel/types': 7.18.8
+    dev: true
 
   /@babel/plugin-syntax-async-generators/7.8.4_@babel+core@7.18.6:
     resolution: {integrity: sha512-tycmZxkGfZaxhMRbXlPXuVFpdWlXpir2W4AMhSJgRKzk/eDlIXOhb2LHWoLpDF7TEHylV5zNhykX6KAgHJmTNw==}
@@ -799,7 +800,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/code-frame': 7.18.6
-      '@babel/parser': 7.18.8
+      '@babel/parser': 7.18.6
       '@babel/types': 7.18.8
 
   /@babel/traverse/7.18.6:
@@ -1419,8 +1420,8 @@ packages:
     transitivePeerDependencies:
       - encoding
 
-  /@nestjs/event-emitter/1.3.0_2ykfwlyvwhxhqjy6tiq52imywa:
-    resolution: {integrity: sha512-1RrrI1wnYSDDwmp5lpPwqpicE2cx+diyDOY0cvCf/loQgcBrNCcP2MF19cbdlGKiRJBLvUDCvspPUwTrhry7Kw==}
+  /@nestjs/event-emitter/1.2.0_2ykfwlyvwhxhqjy6tiq52imywa:
+    resolution: {integrity: sha512-2oPiz5wBNnRm62+Hkj2pOT04nBQg9DgjiYRhZ546X+NKVsNTxXo0bv0944zdx0vrO4iPRGUZnBxG9dxqzL755g==}
     peerDependencies:
       '@nestjs/common': ^7.0.0 || ^8.0.0 || ^9.0.0
       '@nestjs/core': ^7.0.0 || ^8.0.0 || ^9.0.0
