@@ -104,7 +104,7 @@
     "ejs": "3.1.8",
     "fs-extra": "*",
     "get-image-colors": "4.0.1",
-    "image-size": "1.0.1",
+    "image-size": "1.0.2",
     "inquirer": "*",
     "isbot": "3.5.0",
     "js-yaml": "*",

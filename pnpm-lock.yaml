@@ -76,7 +76,7 @@ specifiers:
   fs-extra: '*'
   get-image-colors: 4.0.1
   husky: 8.0.1
-  image-size: 1.0.1
+  image-size: 1.0.2
   inquirer: '*'
   ioredis: 5.1.0
   isbot: 3.5.0
@@ -164,7 +164,7 @@ dependencies:
   ejs: 3.1.8
   fs-extra: 10.1.0
   get-image-colors: 4.0.1
-  image-size: 1.0.1
+  image-size: 1.0.2
   inquirer: 8.2.4
   isbot: 3.5.0
   js-yaml: 4.1.0
@@ -4631,9 +4631,9 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
-  /image-size/1.0.1:
-    resolution: {integrity: sha512-VAwkvNSNGClRw9mDHhc5Efax8PLlsOGcUTh0T/LIriC8vPA3U5PdqXWqkz406MoYHMKW8Uf9gWr05T/rYB44kQ==}
-    engines: {node: '>=12.0.0'}
+  /image-size/1.0.2:
+    resolution: {integrity: sha512-xfOoWjceHntRb3qFCrh5ZFORYH8XCdYpASltMhZ/Q0KZiOwjdE/Yl2QCiWdwD+lygV5bMCvauzgu5PxBX/Yerg==}
+    engines: {node: '>=14.0.0'}
     hasBin: true
     dependencies:
       queue: 6.0.2
