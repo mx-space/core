@@ -6,6 +6,35 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Search decorator
+- Shell output
+- Update dependency @nestjs/swagger to v6.0.3
+- Update dependency @nestjs/event-emitter to v1.3.0 ([#616](https://github.com/orhun/git-cliff/issues/616))
+- Update dependency image-size to v1.0.2
+- Test docker on pr
+- Update dependency marked to v4.0.18
+- Update dependency rxjs to v7.5.6
+- Update nest monorepo to v9.0.3
+
+### Miscellaneous Tasks
+
+- Update dependency @types/jest to v28.1.5
+- Update dependency jest to v28.1.3
+- Update dependency ioredis to v5.2.0 ([#627](https://github.com/orhun/git-cliff/issues/627))
+- Cleanup
+
+### Refactor
+
+- Exec command
+
+### Revert
+
+- Docker permission
+
+## [3.35.1] - 2022-07-11
+
+### Bug Fixes
+
 - Update dependency @babel/plugin-transform-typescript to v7.18.8
 - Update dependency mongoose to v6.4.4
 - Pin value when update posts
@@ -17,6 +46,10 @@ All notable changes to this project will be documented in this file.
 ### Performance
 
 - Use read stream to transfer data
+
+### Release
+
+- V3.35.1
 
 ## [3.35.0] - 2022-07-08
 
