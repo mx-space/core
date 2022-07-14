@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [3.35.2] - 2022-07-14
 
 ### Bug Fixes
 
@@ -26,6 +26,10 @@ All notable changes to this project will be documented in this file.
 ### Refactor
 
 - Exec command
+
+### Release
+
+- V3.35.2
 
 ### Revert
 
