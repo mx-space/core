@@ -140,9 +140,3 @@ export class UpdateService {
     })
   }
 }
-
-const ar = [[1], [2]] as const
-
-for (const i of ar) {
-  console.log(i)
-}
