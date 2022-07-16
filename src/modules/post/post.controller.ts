@@ -102,6 +102,12 @@ export class PostController {
               as: 'category',
             },
           },
+          {
+            $unwind: {
+              path: '$category',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
         ].filter(Boolean) as PipelineStage[],
       ),
       {
