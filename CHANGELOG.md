@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### Bug Fixes
+
+- Update dependency @nestjs/swagger to v6.0.4
+- Flat lookup `$category`
+
+### Miscellaneous Tasks
+
+- Update dependency ts-jest to v28.0.6
+- Update dependency ts-node to v10.9.1 ([#632](https://github.com/orhun/git-cliff/issues/632))
+- Update dependency @types/jest to v28.1.6
+
+## [3.35.3] - 2022-07-14
+
+### Release
+
+- V3.35.3
+
 ## [3.35.2] - 2022-07-14
 
 ### Bug Fixes
