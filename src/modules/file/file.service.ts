@@ -1,10 +1,13 @@
 import { createWriteStream } from 'fs'
 import { Readable } from 'stream'
 
-import { BadRequestException, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
-import { banInDemo } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
 import { FileType } from './file.type'
@@ -18,13 +21,19 @@ export class FileService {
   }
 
   private async checkIsExist(path: string) {
-    return fs
-      .access(path)
-      .then(() => true)
-      .catch(() => false)
+    try {
+      await fs.access(path)
+      return true
+    } catch {
+      return false
+    }
   }
 
-  getFileStream(type: FileType, name: string) {
+  async getFileStream(type: FileType, name: string) {
+    const exists = await this.checkIsExist(this.resolveFilePath(type, name))
+    if (!exists) {
+      throw new NotFoundException('文件不存在')
+    }
     return fs.createReadStream(this.resolveFilePath(type, name))
   }
 
@@ -34,7 +43,6 @@ export class FileService {
     data: Readable,
     encoding?: BufferEncoding,
   ) {
-    banInDemo()
     // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
       const filePath = this.resolveFilePath(type, name)
@@ -59,16 +67,18 @@ export class FileService {
     })
   }
 
-  deleteFile(type: FileType, name: string) {
-    banInDemo()
-    return fs.unlink(this.resolveFilePath(type, name)).catch(() => null)
+  async deleteFile(type: FileType, name: string) {
+    try {
+      return await fs.unlink(this.resolveFilePath(type, name))
+    } catch {
+      return null
+    }
   }
 
-  getDir(type: FileType) {
-    return fs
-      .mkdir(this.resolveFilePath(type, ''), { recursive: true })
-      .then(() => path.resolve(STATIC_FILE_DIR, type))
-      .then((path) => fs.readdir(path))
+  async getDir(type: FileType) {
+    await fs.mkdir(this.resolveFilePath(type, ''), { recursive: true })
+    const path_1 = path.resolve(STATIC_FILE_DIR, type)
+    return await fs.readdir(path_1)
   }
 
   async resolveFileUrl(type: FileType, name: string) {

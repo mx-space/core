@@ -7,6 +7,7 @@ import { Throttle } from '@nestjs/throttler'
 
 import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
+import { BanInDemo } from '~/common/decorator/demo.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -47,7 +48,7 @@ export class FileController {
     const mimetype = lookup(ext)
 
     try {
-      const stream = this.service.getFileStream(type, name)
+      const stream = await this.service.getFileStream(type, name)
       if (mimetype) {
         reply.type(mimetype)
         reply.header('cache-control', 'public, max-age=31536000')
@@ -66,6 +67,7 @@ export class FileController {
   @HTTPDecorators.FileUpload({ description: 'upload file' })
   @Post('/upload')
   @Auth()
+  @BanInDemo
   async upload(@Query() query: FileUploadDto, @Req() req: FastifyRequest) {
     const file = await this.uploadService.getAndValidMultipartField(req)
     const { type = 'file' } = query
@@ -83,6 +85,7 @@ export class FileController {
 
   @Delete('/:type/:name')
   @Auth()
+  @BanInDemo
   async delete(@Param() params: FileQueryDto) {
     const { type, name } = params
     await this.service.deleteFile(type, name)
