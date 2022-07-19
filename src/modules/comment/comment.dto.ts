@@ -40,6 +40,10 @@ export class CommentDto {
   @ApiProperty({ example: 'http://example.com' })
   @MaxLength(50, { message: '地址不得大于 50 个字符' })
   url?: string
+
+  @IsOptional()
+  @IsBoolean()
+  isWhispers?: boolean
 }
 
 export class TextOnlyDto {

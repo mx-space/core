@@ -1,4 +1,5 @@
 import { isUndefined } from 'lodash'
+import { Document, FilterQuery } from 'mongoose'
 
 import {
   Body,
@@ -63,14 +64,21 @@ export class CommentController {
 
   @Get('/:id')
   @ApiOperation({ summary: '根据 comment id 获取评论, 包括子评论' })
-  async getComments(@Param() params: MongoIdDto) {
+  async getComments(
+    @Param() params: MongoIdDto,
+    @IsMaster() isMaster: boolean,
+  ) {
     const { id } = params
     const data = await this.commentService.model
       .findOne({
         _id: id,
       })
       .populate('parent')
+
     if (!data) {
+      throw new CannotFindException()
+    }
+    if (data.isWhispers && !isMaster) {
       throw new CannotFindException()
     }
     return data
@@ -83,19 +91,40 @@ export class CommentController {
   async getCommentsByRefId(
     @Param() params: MongoIdDto,
     @Query() query: PagerDto,
+    @IsMaster() isMaster: boolean,
   ) {
     const { id } = params
     const { page = 1, size = 10 } = query
+
+    const $orCondition: FilterQuery<CommentModel & Document<any, any, any>>[] =
+      [
+        {
+          state: CommentState.Read,
+        },
+        { state: CommentState.Unread },
+      ]
+
+    if (isMaster) {
+      $orCondition.push(
+        { isWhispers: true },
+        { isWhispers: false },
+        {
+          isWhispers: { $exists: false },
+        },
+      )
+    } else {
+      $orCondition.push(
+        { isWhispers: false },
+        {
+          isWhispers: { $exists: false },
+        },
+      )
+    }
     const comments = await this.commentService.model.paginate(
       {
         parent: undefined,
         ref: id,
-        $or: [
-          {
-            state: CommentState.Read,
-          },
-          { state: CommentState.Unread },
-        ],
+        $or: $orCondition,
       },
       {
         limit: size,
@@ -150,7 +179,11 @@ export class CommentController {
         BusinessEvents.COMMENT_CREATE,
         comment,
         {
-          scope: isMaster ? EventScope.TO_SYSTEM_VISITOR : EventScope.ALL,
+          scope: isMaster
+            ? EventScope.TO_SYSTEM_VISITOR
+            : comment.isWhispers
+            ? EventScope.TO_SYSTEM_ADMIN
+            : EventScope.ALL,
         },
       )
     })
