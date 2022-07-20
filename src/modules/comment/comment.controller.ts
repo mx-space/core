@@ -96,35 +96,44 @@ export class CommentController {
     const { id } = params
     const { page = 1, size = 10 } = query
 
-    const $orCondition: FilterQuery<CommentModel & Document<any, any, any>>[] =
-      [
-        {
-          state: CommentState.Read,
-        },
-        { state: CommentState.Unread },
-      ]
-
-    if (isMaster) {
-      $orCondition.push(
-        { isWhispers: true },
-        { isWhispers: false },
-        {
-          isWhispers: { $exists: false },
-        },
-      )
-    } else {
-      $orCondition.push(
-        { isWhispers: false },
-        {
-          isWhispers: { $exists: false },
-        },
-      )
-    }
-    const comments = await this.commentService.model.paginate(
+    const $and: FilterQuery<CommentModel & Document<any, any, any>>[] = [
       {
         parent: undefined,
         ref: id,
-        $or: $orCondition,
+      },
+      {
+        $or: [
+          {
+            state: CommentState.Read,
+          },
+          { state: CommentState.Unread },
+        ],
+      },
+    ]
+
+    if (isMaster) {
+      $and.push({
+        $or: [
+          { isWhispers: true },
+          { isWhispers: false },
+          {
+            isWhispers: { $exists: false },
+          },
+        ],
+      })
+    } else {
+      $and.push({
+        $or: [
+          { isWhispers: false },
+          {
+            isWhispers: { $exists: false },
+          },
+        ],
+      })
+    }
+    const comments = await this.commentService.model.paginate(
+      {
+        $and,
       },
       {
         limit: size,

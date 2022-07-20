@@ -127,6 +127,7 @@ export class CommentModel extends BaseModel {
   public location?: string
 
   // 悄悄话
+  @prop({ default: false })
   isWhispers?: boolean
 
   public get avatar() {
