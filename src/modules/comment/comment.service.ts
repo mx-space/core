@@ -9,6 +9,7 @@ import { BusinessException } from '~/common/exceptions/business.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
+import { AssetService } from '~/processors/helper/helper.asset.service'
 import {
   EmailService,
   ReplyMailType,
@@ -23,7 +24,6 @@ import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
 import { ToolService } from '../tool/tool.service'
 import { UserService } from '../user/user.service'
-import BlockedKeywords from './block-keywords.json'
 import { CommentModel, CommentRefTypes } from './comment.model'
 
 @Injectable()
@@ -40,6 +40,7 @@ export class CommentService {
 
     private readonly toolService: ToolService,
     private readonly configsService: ConfigsService,
+    private readonly assetService: AssetService,
   ) {}
 
   public get model() {
@@ -86,8 +87,13 @@ export class CommentService {
       }
 
       const customKeywords = commentOptions.spamKeywords || []
-      const isBlock = [...customKeywords, ...BlockedKeywords].some((keyword) =>
-        new RegExp(keyword, 'ig').test(doc.text),
+      const BlockedKeywords = await this.assetService
+        .getCachedAsset(`block-keywords.json`)
+        .then((json) => JSON.safeParse(json))
+        .then((isJson) => isJson ?? [])
+
+      const isBlock = [...customKeywords, ...BlockedKeywords].some(
+        (word) => doc.text.includes(word) || doc.author.includes(word),
       )
 
       if (isBlock) {

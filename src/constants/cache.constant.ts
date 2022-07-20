@@ -20,6 +20,8 @@ export enum RedisKeys {
   ServerlessStorage = 'serverless_storage',
 
   JWTStore = 'jwt_store',
+
+  AssetCached = 'asset_cached',
 }
 
 export enum CacheKeys {

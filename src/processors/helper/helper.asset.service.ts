@@ -9,15 +9,21 @@ import path, { join } from 'path'
 
 import { Injectable, Logger } from '@nestjs/common'
 
+import { RedisKeys } from '~/constants/cache.constant'
 import { USER_ASSET_DIR } from '~/constants/path.constant'
+import { getRedisKey } from '~/utils'
 
+import { CacheService } from '../redis/cache.service'
 import { HttpService } from './helper.http.service'
 
 // 先从 ASSET_DIR 找用户自定义的资源, 没有就从默认的 ASSET_DIR 找, 没有就从网上拉取, 存到默认的 ASSET_DIR
 @Injectable()
 export class AssetService {
   private logger: Logger
-  constructor(private readonly httpService: HttpService) {
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly redisService: CacheService,
+  ) {
     this.logger = new Logger(AssetService.name)
   }
 
@@ -93,6 +99,29 @@ export class AssetService {
       }
     }
     return fs.readFile(join(this.embedAssetPath, path), options)
+  }
+
+  async getCachedAsset(
+    path: string,
+    options?: {
+      ttl?: number
+    },
+  ) {
+    const { ttl } = options || {}
+    const key = getRedisKey(RedisKeys.AssetCached, path)
+    const redis = this.redisService.getClient()
+    const cached = await redis.get(key)
+    if (cached) {
+      return cached
+    }
+
+    const data = (await this.getAsset(path, {
+      encoding: 'utf8',
+    })) as string
+
+    await redis.set(key, data, 'EX', ttl || 60 * 60 * 24)
+
+    return data
   }
 
   public async writeUserCustomAsset(
