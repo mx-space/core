@@ -133,6 +133,11 @@ export class CommentOptionsDto {
   @JSONSchemaToggleField('禁止非中文评论')
   disableNoChinese?: boolean
 
+  @IsOptional()
+  @IsBoolean()
+  @JSONSchemaToggleField('只展示已读评论')
+  commentShouldAudit?: boolean
+
   @IsBoolean()
   @IsOptional()
   @JSONSchemaToggleField('评论公开归属地')

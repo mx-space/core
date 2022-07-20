@@ -31,6 +31,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     fetchLocationTimeout: 3000,
     recordIpLocation: true,
     spamKeywords: [],
+    commentShouldAudit: false,
   },
   barkOptions: {
     enable: false,

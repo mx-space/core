@@ -31,6 +31,7 @@ import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
+import { ConfigsService } from '../configs/configs.service'
 import { UserModel } from '../user/user.model'
 import {
   CommentDto,
@@ -51,6 +52,7 @@ export class CommentController {
   constructor(
     private readonly commentService: CommentService,
     private readonly eventManager: EventManagerService,
+    private readonly configsService: ConfigsService,
   ) {}
 
   @Get('/')
@@ -96,18 +98,27 @@ export class CommentController {
     const { id } = params
     const { page = 1, size = 10 } = query
 
+    const configs = await this.configsService.get('commentOptions')
+    const { commentShouldAudit } = configs
+
     const $and: FilterQuery<CommentModel & Document<any, any, any>>[] = [
       {
         parent: undefined,
         ref: id,
       },
       {
-        $or: [
-          {
-            state: CommentState.Read,
-          },
-          { state: CommentState.Unread },
-        ],
+        $or: commentShouldAudit
+          ? [
+              {
+                state: CommentState.Read,
+              },
+            ]
+          : [
+              {
+                state: CommentState.Read,
+              },
+              { state: CommentState.Unread },
+            ],
       },
     ]
 
@@ -176,12 +187,26 @@ export class CommentController {
     const comment = await this.commentService.createComment(id, model, ref)
 
     process.nextTick(async () => {
+      const configs = await this.configsService.get('commentOptions')
+      const { commentShouldAudit } = configs
       if (await this.commentService.checkSpam(comment)) {
         comment.state = CommentState.Junk
         await comment.save()
         return
       } else if (!isMaster) {
         this.commentService.sendEmail(comment, ReplyMailType.Owner)
+      }
+
+      if (commentShouldAudit) {
+        await this.eventManager.broadcast(
+          BusinessEvents.COMMENT_CREATE,
+          comment,
+          {
+            scope: EventScope.TO_SYSTEM_ADMIN,
+          },
+        )
+
+        return
       }
 
       await this.eventManager.broadcast(
@@ -264,6 +289,16 @@ export class CommentController {
         scope: EventScope.TO_SYSTEM_VISITOR,
       })
     } else {
+      const configs = await this.configsService.get('commentOptions')
+      const { commentShouldAudit } = configs
+
+      if (commentShouldAudit) {
+        this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
+          scope: EventScope.TO_SYSTEM_ADMIN,
+        })
+        return
+      }
+
       this.commentService.sendEmail(comment, ReplyMailType.Owner)
       this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
         scope: EventScope.ALL,
