@@ -6,6 +6,28 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- File is not exist and throw
+- Update nest monorepo to v9.0.4 (patch) ([#639](https://github.com/orhun/git-cliff/issues/639))
+- Update dependency @fastify/cookie to v7.2.0 ([#560](https://github.com/orhun/git-cliff/issues/560))
+- Update dependency @babel/core to v7.18.9 ([#638](https://github.com/orhun/git-cliff/issues/638))
+- Update dependency mongoose to v6.4.5
+- Update dependency dayjs to v1.11.4
+- Update dependency algoliasearch to v4.14.0 ([#640](https://github.com/orhun/git-cliff/issues/640))
+- Update nest monorepo to v9.0.5
+
+### Features
+
+- Comment whispers ([#643](https://github.com/orhun/git-cliff/issues/643))
+
+### Miscellaneous Tasks
+
+- Update dependency ioredis to v5.2.1
+- Update dependency ts-jest to v28.0.7
+
+## [3.35.4] - 2022-07-16
+
+### Bug Fixes
+
 - Update dependency @nestjs/swagger to v6.0.4
 - Flat lookup `$category`
 
@@ -14,6 +36,10 @@ All notable changes to this project will be documented in this file.
 - Update dependency ts-jest to v28.0.6
 - Update dependency ts-node to v10.9.1 ([#632](https://github.com/orhun/git-cliff/issues/632))
 - Update dependency @types/jest to v28.1.6
+
+### Release
+
+- V3.35.4
 
 ## [3.35.3] - 2022-07-14
 
