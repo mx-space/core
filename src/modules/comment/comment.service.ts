@@ -1,7 +1,12 @@
 import { LeanDocument, Types } from 'mongoose'
 import { URL } from 'url'
 
-import { BadRequestException, Injectable, Logger } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
 import { BeAnObject, ReturnModelType } from '@typegoose/typegoose/lib/types'
 
@@ -24,7 +29,7 @@ import { PostModel } from '../post/post.model'
 import { ToolService } from '../tool/tool.service'
 import { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json'
-import { CommentModel, CommentRefTypes } from './comment.model'
+import { CommentModel, CommentRefTypes, CommentState } from './comment.model'
 
 @Injectable()
 export class CommentService {
@@ -126,12 +131,13 @@ export class CommentService {
       type = type_ as any
     }
     if (!ref) {
-      throw new CannotFindException()
+      throw new NotFoundException('评论文章不存在')
     }
     const commentIndex = ref.commentsIndex || 0
     doc.key = `#${commentIndex + 1}`
     const comment = await this.commentModel.create({
       ...doc,
+      state: CommentState.Unread,
       ref: new Types.ObjectId(id),
       refType: type,
     })
