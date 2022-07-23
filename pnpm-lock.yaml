@@ -14,7 +14,7 @@ specifiers:
   '@babel/types': '*'
   '@fastify/cookie': 7.2.0
   '@fastify/multipart': 7.1.0
-  '@fastify/static': 6.4.0
+  '@fastify/static': 6.4.1
   '@innei/eslint-config-ts': latest
   '@innei/prettier': latest
   '@nestjs/cli': 9.0.0
@@ -132,15 +132,15 @@ dependencies:
   '@babel/types': 7.18.8
   '@fastify/cookie': 7.2.0
   '@fastify/multipart': 7.1.0
-  '@fastify/static': 6.4.0
+  '@fastify/static': 6.4.1
   '@nestjs/common': 9.0.5_mgy7w2bm3yhmntrbe3boyroj6m
   '@nestjs/core': 9.0.5_53x7jwdk6xg63ija7ey5qa6upi
   '@nestjs/event-emitter': 1.3.0_ev26p323ioiqcunvdp2dgxxsga
   '@nestjs/mapped-types': 1.1.0_2ugod5dj2hwbwg5i4ceingecfa
-  '@nestjs/platform-fastify': 9.0.5_d63vxwrhdn4ldlqm6ppsimits4
+  '@nestjs/platform-fastify': 9.0.5_saenp6gbhfwibl54dgbqjbzy6u
   '@nestjs/platform-socket.io': 9.0.5_2subad3jvlpemgwqkiyi2f6ksi
   '@nestjs/schedule': 2.1.0_ev26p323ioiqcunvdp2dgxxsga
-  '@nestjs/swagger': 6.0.4_6h7b3s46djod5h3fizy7wpf6je
+  '@nestjs/swagger': 6.0.4_gvegea3zjbzcir27ku65z44dnm
   '@nestjs/throttler': 3.0.0_ev26p323ioiqcunvdp2dgxxsga
   '@nestjs/websockets': 9.0.5_vzeg42df2hcbssjfbsqkgoekei
   '@socket.io/redis-adapter': 7.2.0
@@ -909,6 +909,11 @@ packages:
       - supports-color
     dev: true
 
+  /@fastify/accept-negotiator/1.0.0:
+    resolution: {integrity: sha512-4R/N2KfYeld7A5LGkai+iUFMahXcxxYbDp+XS2B1yuL3cdmZLJ9TlCnNzT3q5xFTqsYm0GPpinLUwfSwjcVjyA==}
+    engines: {node: '>=14'}
+    dev: false
+
   /@fastify/ajv-compiler/3.1.2:
     resolution: {integrity: sha512-m2nzzQJeuVmeGOB9rnII9sZiY8AZ02a9WMQfMBfK1jxdFnxm3FPYKGbYpPjODj4halNogwpolyugbTNpnDCi0A==}
     dependencies:
@@ -980,15 +985,15 @@ packages:
       stream-wormhole: 1.1.0
     dev: false
 
-  /@fastify/static/6.4.0:
-    resolution: {integrity: sha512-1GFNBKh4ArUpHMCwPUILurpfV3+mTvn+6r6aOQUwP8KKqWJtEAQ1blIwjE16JetmgpIYYamcBUUmojjHDfhgKA==}
+  /@fastify/static/6.4.1:
+    resolution: {integrity: sha512-RuNZyZwddGCOcxGeplWM3eBh6pgnSGGeXJX4nLeJX8NzggMWR8XwGI3/DW/S3DFjo8vBPUvdi/Vd/beqQt9Y2w==}
     dependencies:
+      '@fastify/accept-negotiator': 1.0.0
       content-disposition: 0.5.4
-      encoding-negotiator: 2.0.1
-      fastify-plugin: 3.0.1
+      fastify-plugin: 4.0.0
       glob: 8.0.3
       p-limit: 3.1.0
-      readable-stream: 3.6.0
+      readable-stream: 4.1.0
       send: 0.18.0
     transitivePeerDependencies:
       - supports-color
@@ -1481,7 +1486,7 @@ packages:
       reflect-metadata: 0.1.13
     dev: false
 
-  /@nestjs/platform-fastify/9.0.5_d63vxwrhdn4ldlqm6ppsimits4:
+  /@nestjs/platform-fastify/9.0.5_saenp6gbhfwibl54dgbqjbzy6u:
     resolution: {integrity: sha512-vdVV5/F0POFxWMkpnxuA+tTSET3Ltl2zWzz0DTAON52i1dv93DNAv9I6rd7CutSrRMJhOpGCkKbD94MRpw71Pw==}
     peerDependencies:
       '@fastify/static': ^6.0.0
@@ -1497,7 +1502,7 @@ packages:
       '@fastify/cors': 8.0.0
       '@fastify/formbody': 7.0.1
       '@fastify/middie': 8.0.0
-      '@fastify/static': 6.4.0
+      '@fastify/static': 6.4.1
       '@nestjs/common': 9.0.5_mgy7w2bm3yhmntrbe3boyroj6m
       '@nestjs/core': 9.0.5_53x7jwdk6xg63ija7ey5qa6upi
       fastify: 4.2.1
@@ -1569,7 +1574,7 @@ packages:
       - chokidar
     dev: true
 
-  /@nestjs/swagger/6.0.4_6h7b3s46djod5h3fizy7wpf6je:
+  /@nestjs/swagger/6.0.4_gvegea3zjbzcir27ku65z44dnm:
     resolution: {integrity: sha512-YKf9RvCYHAgqkMvUG3xRr0zAcnuN8JsWPfvi7h0hzEXLRhNxByj2FT8Rzj+0fPAe6VZioWXBDpLzshO2PjE48Q==}
     peerDependencies:
       '@fastify/static': ^6.0.0
@@ -1580,7 +1585,7 @@ packages:
       '@fastify/static':
         optional: true
     dependencies:
-      '@fastify/static': 6.4.0
+      '@fastify/static': 6.4.1
       '@nestjs/common': 9.0.5_mgy7w2bm3yhmntrbe3boyroj6m
       '@nestjs/core': 9.0.5_53x7jwdk6xg63ija7ey5qa6upi
       '@nestjs/mapped-types': 1.1.0_2ugod5dj2hwbwg5i4ceingecfa
@@ -3521,11 +3526,6 @@ packages:
     engines: {node: '>= 0.8'}
     dev: false
 
-  /encoding-negotiator/2.0.1:
-    resolution: {integrity: sha512-GSK7qphNR4iPcejfAlZxKDoz3xMhnspwImK+Af5WhePS9jUpK/Oh7rUdyENWu+9rgDflOCTmAojBsgsvM8neAQ==}
-    engines: {node: '>=10.13.0'}
-    dev: false
-
   /end-of-stream/1.4.4:
     resolution: {integrity: sha512-+uw1inIHVPQoaVuHzRyXd21icM+cnt4CzD5rW+NC1wjOUSTOs+Te7FOv7AhN7vS9x/oIyhLP5PR1H+phQAHu5Q==}
     dependencies:
@@ -4055,6 +4055,10 @@ packages:
 
   /fastify-plugin/3.0.1:
     resolution: {integrity: sha512-qKcDXmuZadJqdTm6vlCqioEbyewF60b/0LOFCcYN1B6BIZGlYJumWWOYs70SFYLDAH4YqdE1cxH/RKMG7rFxgA==}
+    dev: false
+
+  /fastify-plugin/4.0.0:
+    resolution: {integrity: sha512-ZJcXPPcqkj7HFDYqbsCuOIAgIZ/sd2b+OnBxNGyxAcUDUJfIpxp4t23CwxO2E7LZpqUrIliA4TnjxTXG8mLoqw==}
     dev: false
 
   /fastify/4.2.1:

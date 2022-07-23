@@ -72,7 +72,7 @@
     "@babel/types": "*",
     "@fastify/cookie": "7.2.0",
     "@fastify/multipart": "7.1.0",
-    "@fastify/static": "6.4.0",
+    "@fastify/static": "6.4.1",
     "@nestjs/common": "9.0.5",
     "@nestjs/core": "9.0.5",
     "@nestjs/event-emitter": "1.3.0",
