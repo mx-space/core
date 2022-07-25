@@ -59,7 +59,7 @@ export const AXIOS_CONFIG: AxiosRequestConfig = {
 
 export const SECURITY = {
   jwtSecret: argv.jwt_secret || argv.jwtSecret,
-  jwtExpire: '7d',
+  jwtExpire: +argv.jwt_expire || 14,
   // 跳过登陆鉴权
   skipAuth: isTest ? true : false,
 }
