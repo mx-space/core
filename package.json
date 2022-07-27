@@ -88,7 +88,7 @@
     "@typegoose/auto-increment": "1.4.1",
     "@typegoose/typegoose": "9.10.1",
     "@types/jsonwebtoken": "8.5.8",
-    "algoliasearch": "4.14.1",
+    "algoliasearch": "4.14.2",
     "axios": "*",
     "axios-retry": "3.3.1",
     "bcrypt": "5.0.1",
