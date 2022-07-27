@@ -6,6 +6,26 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Update dependency algoliasearch to v4.14.1
+- Update dependency mongoose to v6.4.6
+- Update dependency mongoose-lean-getters to v0.3.5
+- Update dependency @fastify/static to v6.4.1
+- Update dependency mongoose to v6.4.7
+- Update dependency mongoose to v6.5.0 ([#654](https://github.com/orhun/git-cliff/issues/654))
+
+### Features
+
+- Table scan to delete outdate token
+
+### Miscellaneous Tasks
+
+- Update dependency ioredis to v5.2.2
+- Update dependency mongodb-memory-server to v8.8.0 ([#651](https://github.com/orhun/git-cliff/issues/651))
+
+## [3.35.5] - 2022-07-20
+
+### Bug Fixes
+
 - File is not exist and throw
 - Update nest monorepo to v9.0.4 (patch) ([#639](https://github.com/orhun/git-cliff/issues/639))
 - Update dependency @fastify/cookie to v7.2.0 ([#560](https://github.com/orhun/git-cliff/issues/560))
@@ -23,6 +43,10 @@ All notable changes to this project will be documented in this file.
 
 - Update dependency ioredis to v5.2.1
 - Update dependency ts-jest to v28.0.7
+
+### Release
+
+- V3.35.5
 
 ## [3.35.4] - 2022-07-16
 
