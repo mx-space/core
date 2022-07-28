@@ -28,6 +28,7 @@ import { getRedisKey } from '~/utils/redis.util'
 
 import { CacheService } from '../redis/cache.service'
 import { HttpService } from './helper.http.service'
+import { JWTService, StoreJWTPayload } from './helper.jwt.service'
 
 @Injectable()
 export class CronService {
@@ -54,6 +55,8 @@ export class CronService {
     private readonly backupService: BackupService,
     @Inject(forwardRef(() => SearchService))
     private readonly searchService: SearchService,
+    @Inject(forwardRef(() => JWTService))
+    private readonly jwtService: JWTService,
   ) {
     this.logger = new Logger(CronService.name)
   }
@@ -323,5 +326,45 @@ export class CronService {
       Logger.error('algolia推送错误', 'AlgoliaSearch')
       throw err
     }
+  }
+  @CronDescription('扫表：删除过期 JWT')
+  @CronOnce(CronExpression.EVERY_DAY_AT_1AM, {
+    name: 'deleteExpiredJWT',
+  })
+  async deleteExpiredJWT() {
+    this.logger.log('--> 开始扫表，清除过期的 token')
+    const redis = this.cacheService.getClient()
+    const keys = await redis.hkeys(getRedisKey(RedisKeys.JWTStore))
+    let deleteCount = 0
+    await Promise.all(
+      keys.map(async (key) => {
+        const value = await redis.hget(getRedisKey(RedisKeys.JWTStore), key)
+        if (!value) {
+          return null
+        }
+        const parsed = JSON.safeParse(value) as StoreJWTPayload
+        if (!parsed) {
+          return null
+        }
+
+        const date = dayjs(new Date(parsed.date))
+        if (date.add(JWTService.expiresDay, 'd').diff(new Date(), 'd') < 0) {
+          this.logger.debug(
+            `--> 删除过期的 token：${key}, 签发于 ${date.format(
+              'YYYY-MM-DD H:mm:ss',
+            )}`,
+          )
+
+          return await redis
+            .hdel(getRedisKey(RedisKeys.JWTStore), key)
+            .then(() => {
+              deleteCount += 1
+            })
+        }
+        return null
+      }),
+    )
+
+    this.logger.log(`--> 删除了 ${deleteCount} 个过期的 token`)
   }
 }

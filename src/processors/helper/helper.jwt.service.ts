@@ -1,13 +1,10 @@
 import cluster from 'cluster'
-import dayjs from 'dayjs'
 import { sign, verify } from 'jsonwebtoken'
 import { machineIdSync } from 'node-machine-id'
 
 import { Injectable, Logger } from '@nestjs/common'
-import { CronExpression } from '@nestjs/schedule'
 
 import { CLUSTER, SECURITY } from '~/app.config'
-import { CronOnce } from '~/common/decorator/cron-once.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey, md5 } from '~/utils'
 
@@ -110,56 +107,18 @@ export class JWTService {
     )
   }
 
-  private readonly expiresDay = SECURITY.jwtExpire
+  public static readonly expiresDay = SECURITY.jwtExpire
 
   sign(id: string, info?: { ip: string; ua: string }) {
     const token = sign({ id }, this.secret, {
-      expiresIn: `${this.expiresDay}d`,
+      expiresIn: `${JWTService.expiresDay}d`,
     })
     this.storeTokenInRedis(token, info || {})
     return token
   }
-
-  @CronOnce(CronExpression.EVERY_DAY_AT_1AM)
-  async scanTable() {
-    this.logger.log('--> 开始扫表，清除过期的 token')
-    const redis = this.cacheService.getClient()
-    const keys = await redis.hkeys(getRedisKey(RedisKeys.JWTStore))
-    let deleteCount = 0
-    await Promise.all(
-      keys.map(async (key) => {
-        const value = await redis.hget(getRedisKey(RedisKeys.JWTStore), key)
-        if (!value) {
-          return null
-        }
-        const parsed = JSON.safeParse(value) as StoreJWTPayload
-        if (!parsed) {
-          return null
-        }
-
-        const date = dayjs(new Date(parsed.date))
-        if (date.add(this.expiresDay, 'd').diff(new Date(), 'd') < 0) {
-          this.logger.debug(
-            `--> 删除过期的 token：${key}, 签发于 ${date.format(
-              'YYYY-MM-DD H:mm:ss',
-            )}`,
-          )
-
-          return await redis
-            .hdel(getRedisKey(RedisKeys.JWTStore), key)
-            .then(() => {
-              deleteCount += 1
-            })
-        }
-        return null
-      }),
-    )
-
-    this.logger.log(`--> 删除了 ${deleteCount} 个过期的 token`)
-  }
 }
 
-interface StoreJWTPayload {
+export interface StoreJWTPayload {
   /**
    * ISODateString
    */
