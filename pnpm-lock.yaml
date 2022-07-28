@@ -33,7 +33,7 @@ specifiers:
   '@socket.io/redis-adapter': 7.2.0
   '@socket.io/redis-emitter': 4.1.1
   '@typegoose/auto-increment': 1.4.1
-  '@typegoose/typegoose': 9.10.1
+  '@typegoose/typegoose': 9.11.0
   '@types/babel__core': 7.1.19
   '@types/bcrypt': 5.0.0
   '@types/cache-manager': 4.0.1
@@ -146,7 +146,7 @@ dependencies:
   '@socket.io/redis-adapter': 7.2.0
   '@socket.io/redis-emitter': 4.1.1
   '@typegoose/auto-increment': 1.4.1_mongoose@6.5.0
-  '@typegoose/typegoose': 9.10.1_mongoose@6.5.0
+  '@typegoose/typegoose': 9.11.0_mongoose@6.5.0
   '@types/jsonwebtoken': 8.5.8
   algoliasearch: 4.14.2
   axios: 0.27.2
@@ -1748,11 +1748,11 @@ packages:
       tslib: 2.4.0
     dev: false
 
-  /@typegoose/typegoose/9.10.1_mongoose@6.5.0:
-    resolution: {integrity: sha512-wHThVHSKNrCAWcasiBrN0hDDN3JRVJmRCHueyungRf/KexFArK/asqffllXSaAXKb1APrJbGGxEWueZR0z9fpw==}
+  /@typegoose/typegoose/9.11.0_mongoose@6.5.0:
+    resolution: {integrity: sha512-abAeJ3pxWVldG0WEV00vs7UyORSLUrFigRDCa71P1GTPRpAzfF28VwYdnDWq+L5b34GYAV7sQTU80ViAX2V18w==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      mongoose: ~6.4.2
+      mongoose: ~6.5.0
     dependencies:
       lodash: 4.17.21
       loglevel: 1.8.0
