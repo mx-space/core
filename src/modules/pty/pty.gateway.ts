@@ -1,4 +1,4 @@
-import { isNil } from 'lodash'
+import { isNil, pick } from 'lodash'
 import { nanoid } from 'nanoid'
 import { IPty, spawn } from 'node-pty'
 import { Socket } from 'socket.io'
@@ -105,6 +105,20 @@ export class PTYGateway
         cwd: DATA_DIR,
         cols: data?.cols || 30,
         rows: data?.rows || 80,
+        env: pick(process.env, [
+          'PATH',
+          'EDITOR',
+          'SHELL',
+          'USER',
+          'VISUAL',
+          'LANG',
+          'TERM',
+          'LANGUAGE',
+
+          // other
+          'N_PREFIX',
+          'N_PRESERVE_NPM',
+        ]) as any,
       },
     )
 
