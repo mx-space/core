@@ -189,7 +189,7 @@
   "resolutions": {
     "typescript": "4.7.4",
     "ioredis": "5.2.2",
-    "webpack": "5.73.0",
+    "webpack": "5.74.0",
     "semver": "^7"
   }
 }
