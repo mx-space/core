@@ -110,7 +110,7 @@
     "js-yaml": "*",
     "json5": "2.2.1",
     "jsonwebtoken": "8.5.1",
-    "jszip": "3.10.0",
+    "jszip": "3.10.1",
     "linkedom": "0.14.12",
     "lodash": "*",
     "marked": "4.0.18",
