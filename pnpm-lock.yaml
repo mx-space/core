@@ -53,7 +53,7 @@ specifiers:
   '@types/qs': 6.9.7
   '@types/semver': 7.3.10
   '@types/ua-parser-js': 0.7.36
-  '@types/validator': 13.7.4
+  '@types/validator': 13.7.5
   '@vercel/ncc': 0.34.0
   algoliasearch: 4.14.2
   axios: '*'
@@ -227,7 +227,7 @@ devDependencies:
   '@types/qs': 6.9.7
   '@types/semver': 7.3.10
   '@types/ua-parser-js': 0.7.36
-  '@types/validator': 13.7.4
+  '@types/validator': 13.7.5
   '@vercel/ncc': 0.34.0
   cron: 2.0.0
   cross-env: 7.0.3
@@ -1981,8 +1981,8 @@ packages:
     resolution: {integrity: sha512-N1rW+njavs70y2cApeIw1vLMYXRwfBy+7trgavGuuTfOd7j1Yh7QTRc/yqsPl6ncokt72ZXuxEU0PiCp9bSwNQ==}
     dev: true
 
-  /@types/validator/13.7.4:
-    resolution: {integrity: sha512-uAaSWegu2lymY18l+s5nmcXu3sFeeTOl1zhSGoYzcr6T3wz1M+3OcW4UjfPhIhHGd13tIMRDsEpR+d8w/MexwQ==}
+  /@types/validator/13.7.5:
+    resolution: {integrity: sha512-9rQHeAqz6Jw3gDhttkmWetoriW5FPbxylv/6h6mXtaj2NKRcOvOmvfcswVdLVpbuy10NrO486K3lCoLgoIhiIA==}
     dev: true
 
   /@types/webidl-conversions/6.1.1:
