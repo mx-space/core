@@ -6,6 +6,35 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Update nest monorepo to v9.0.7
+- Update dependency @typegoose/typegoose to v9.11.0 ([#658](https://github.com/orhun/git-cliff/issues/658))
+- Update babel monorepo to v7.18.10
+- Update dependency jszip to v3.10.1
+- Update dependency @typegoose/auto-increment to v1.6.0 ([#660](https://github.com/orhun/git-cliff/issues/660))
+- Update dependency @nestjs/swagger to v6.0.5
+- Update nest monorepo to v9.0.8
+- Update dependency @babel/plugin-transform-typescript to v7.18.12
+- Upgrade mongoose and refactor
+
+### Features
+
+- Emit download progress
+
+### Miscellaneous Tasks
+
+- Update dependency webpack to v5.74.0 ([#652](https://github.com/orhun/git-cliff/issues/652))
+- Update dependency @types/validator to v13.7.5
+- Update dependency @types/nodemailer to v6.4.5
+- Update dependency tsconfig-paths to v4.1.0 ([#670](https://github.com/orhun/git-cliff/issues/670))
+
+### Refactor
+
+- Change throw error code if not find
+
+## [3.35.7] - 2022-07-28
+
+### Bug Fixes
+
 - Update dependency algoliasearch to v4.14.2
 - Update nest monorepo to v9.0.6 (patch) ([#657](https://github.com/orhun/git-cliff/issues/657))
 - Update dependency @fastify/cookie to v7.3.1 ([#647](https://github.com/orhun/git-cliff/issues/647))
@@ -14,6 +43,10 @@ All notable changes to this project will be documented in this file.
 ### Refactor
 
 - Scan table cron
+
+### Release
+
+- V3.35.7
 
 ## [3.35.6] - 2022-07-27
 
