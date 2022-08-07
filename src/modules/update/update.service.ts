@@ -1,4 +1,6 @@
+import axios from 'axios'
 import { appendFile, rm, writeFile } from 'fs/promises'
+import { throttle } from 'lodash'
 import { spawn } from 'node-pty'
 import { Observable, Subscriber, catchError } from 'rxjs'
 import { inspect } from 'util'
@@ -19,8 +21,7 @@ export class UpdateService {
       ;(async () => {
         const endpoint = `https://api.github.com/repos/${repo}/releases/tags/v${version}`
 
-        subscriber.next(`Downloading admin asset v${version}\n`)
-        subscriber.next(`Get from ${endpoint}\n`)
+        subscriber.next(`Geting release info from ${endpoint}.\n`)
 
         const json = await fetch(endpoint)
           .then((res) => res.json())
@@ -49,8 +50,23 @@ export class UpdateService {
           return
         }
 
-        const buffer = await fetch(downloadUrl)
-          .then((res) => res.arrayBuffer())
+        subscriber.next(
+          `Downloading admin asset v${version}\nFrom: ${downloadUrl}\n`,
+        )
+        const buffer = await axios
+          .get(downloadUrl, {
+            responseType: 'arraybuffer',
+            onDownloadProgress: throttle((ev) => {
+              const total = parseFloat(
+                ev.currentTarget.responseHeaders['Content-Length'],
+              )
+              const current = ev.currentTarget.response.length
+
+              const percentCompleted = Math.floor((current / total) * 100)
+              subscriber.next(`Downloaded ${percentCompleted}}%\n`)
+            }, 1500),
+          })
+          .then((res) => res.data as ArrayBuffer)
           .catch((err) => {
             subscriber.next(chalk.red(`Downloading error: ${err.message}`))
             subscriber.complete()
