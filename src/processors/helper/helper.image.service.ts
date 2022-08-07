@@ -1,15 +1,9 @@
 import imageSize from 'image-size'
 
-import {
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-} from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
+import { Injectable, Logger } from '@nestjs/common'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { TextImageRecordType } from '~/shared/model/base.model'
-import { WriteBaseModel } from '~/shared/model/write-base.model'
+import { ImageModel } from '~/shared/model/image.model'
 import { getAverageRGB, pickImagesFromMarkdown } from '~/utils/pic.util'
 
 import { HttpService } from './helper.http.service'
@@ -24,25 +18,19 @@ export class ImageService {
     this.logger = new Logger(ImageService.name)
   }
 
-  async recordImageDimensions<T extends WriteBaseModel>(
-    _model: MongooseModel<T>,
-    id: string,
+  async saveImageDimensionsFromMarkdownText(
+    text: string,
+    originImages: ImageModel[] | undefined,
+    updateFn: (images: ImageModel[]) => Promise<any>,
   ) {
-    const model = _model as any as ReturnModelType<typeof WriteBaseModel>
-    const document = await model.findById(id).lean()
-    if (!document) {
-      throw new InternalServerErrorException(
-        `document not found, can not record image dimensions`,
-      )
-    }
-    const { text } = document
     const newImages = pickImagesFromMarkdown(text)
 
-    const result = [] as TextImageRecordType[]
+    const result = [] as ImageModel[]
 
-    const oldImages = document.images || []
-    const oldImagesMap = new Map(oldImages.map((image) => [image.src, image]))
-    const task = [] as Promise<TextImageRecordType>[]
+    const oldImagesMap = new Map(
+      (originImages ?? []).map((image) => [image.src, image]),
+    )
+    const task = [] as Promise<ImageModel>[]
     for (const src of newImages) {
       const originImage = oldImagesMap.get(src)
       const keys = new Set(Object.keys(originImage || {}))
@@ -58,7 +46,7 @@ export class ImageService {
         result.push(originImage)
         continue
       }
-      const promise = new Promise<TextImageRecordType>((resolve) => {
+      const promise = new Promise<ImageModel>((resolve) => {
         this.logger.log(`Get --> ${src}`)
         this.getOnlineImageSizeAndMeta(src)
           .then(({ size, accent }) => {
@@ -91,11 +79,7 @@ export class ImageService {
     const images = await Promise.all(task)
     result.push(...images)
 
-    await model.updateOne(
-      { _id: id },
-      // 过滤多余的
-      { images: result.filter(({ src }) => newImages.includes(src!)) },
-    )
+    await updateFn(result.filter(({ src }) => newImages.includes(src!)))
   }
 
   getOnlineImageSizeAndMeta = async (image: string) => {

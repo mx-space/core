@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common'
 import { Interval } from '@nestjs/schedule'
 
-import { BizException } from '~/common/exceptions/business.exception'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { RedisKeys } from '~/constants/cache.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'

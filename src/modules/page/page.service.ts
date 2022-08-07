@@ -33,11 +33,16 @@ export class PageService {
       slug: slugify(doc.slug),
       created: new Date(),
     })
-    process.nextTick(async () => {
-      await Promise.all([
-        this.imageService.recordImageDimensions(this.pageModel, res._id),
-      ])
-    })
+
+    this.imageService.saveImageDimensionsFromMarkdownText(
+      doc.text,
+      res.images,
+      (images) => {
+        res.images = images
+        return res.save()
+      },
+    )
+
     return res
   }
 
@@ -63,7 +68,15 @@ export class PageService {
 
     process.nextTick(async () => {
       await Promise.all([
-        this.imageService.recordImageDimensions(this.pageModel, id),
+        this.imageService.saveImageDimensionsFromMarkdownText(
+          newDoc.text,
+          newDoc.images,
+          (images) => {
+            return this.model
+              .updateOne({ _id: id }, { $set: { images } })
+              .exec()
+          },
+        ),
         this.eventManager.broadcast(BusinessEvents.PAGE_UPDATED, newDoc, {
           scope: EventScope.TO_SYSTEM,
         }),

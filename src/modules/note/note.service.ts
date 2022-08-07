@@ -5,6 +5,7 @@ import { Inject, Injectable, forwardRef } from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -103,7 +104,14 @@ export class NoteService {
         this.eventManager.emit(BusinessEvents.NOTE_CREATE, doc.toJSON(), {
           scope: EventScope.TO_SYSTEM,
         }),
-        this.imageService.recordImageDimensions(this.noteModel, doc._id),
+        this.imageService.saveImageDimensionsFromMarkdownText(
+          doc.text,
+          doc.images,
+          (images) => {
+            doc.images = images
+            return doc.save()
+          },
+        ),
         doc.hide || doc.password
           ? null
           : this.eventManager.broadcast(
@@ -131,19 +139,45 @@ export class NoteService {
       doc.modified = new Date()
     }
 
-    const updated = await this.noteModel.findOneAndUpdate(
-      {
-        _id: id,
-      },
-      { ...doc },
-      { new: true },
-    )
+    const updated = await this.noteModel
+      .findOneAndUpdate(
+        {
+          _id: id,
+        },
+        { ...doc },
+        { new: true },
+      )
+      .lean({
+        getters: true,
+      })
+
+    if (!updated) {
+      throw new NoContentCanBeModifiedException()
+    }
+
     process.nextTick(async () => {
       this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
         scope: EventScope.TO_SYSTEM,
       })
       await Promise.all([
-        this.imageService.recordImageDimensions(this.noteModel, id),
+        this.imageService.saveImageDimensionsFromMarkdownText(
+          updated.text,
+          updated.images,
+          (images) => {
+            return this.model
+              .updateOne(
+                {
+                  _id: id,
+                },
+                {
+                  $set: {
+                    images,
+                  },
+                },
+              )
+              .exec()
+          },
+        ),
         this.model
           .findById(id)
           .lean()

@@ -22,7 +22,7 @@ import { isDev } from '~/global/env.global'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 
 import { getIp } from '../../utils/ip.util'
-import { BizException } from '../exceptions/business.exception'
+import { BizException } from '../exceptions/biz.exception'
 import { LoggingInterceptor } from '../interceptors/logging.interceptor'
 
 type myError = {

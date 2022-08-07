@@ -5,8 +5,6 @@ import Paginate from 'mongoose-paginate-v2'
 import { ApiHideProperty } from '@nestjs/swagger'
 import { index, modelOptions, plugin } from '@typegoose/typegoose'
 
-import { ImageModel } from './image.model'
-
 const mongooseLeanGetters = require('mongoose-lean-getters')
 @plugin(mongooseLeanVirtuals)
 @plugin(Paginate)
@@ -36,5 +34,3 @@ export class BaseModel {
     return ['created', 'id', '_id']
   }
 }
-
-export type { ImageModel as TextImageRecordType }

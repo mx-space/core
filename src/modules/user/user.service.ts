@@ -10,9 +10,8 @@ import {
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
-import { BusinessException } from '~/common/exceptions/business.exception'
+import { BusinessException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar, sleep } from '~/utils'
 
@@ -26,7 +25,6 @@ export class UserService {
     @InjectModel(UserModel)
     private readonly userModel: ReturnModelType<typeof UserModel>,
     private readonly authService: AuthService,
-    private readonly redis: CacheService,
   ) {}
   public get model() {
     return this.userModel

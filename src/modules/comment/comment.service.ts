@@ -10,7 +10,7 @@ import {
 import { DocumentType } from '@typegoose/typegoose'
 import { BeAnObject, ReturnModelType } from '@typegoose/typegoose/lib/types'
 
-import { BusinessException } from '~/common/exceptions/business.exception'
+import { BusinessException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -23,9 +23,6 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { hasChinese } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
-import { NoteModel } from '../note/note.model'
-import { PageModel } from '../page/page.model'
-import { PostModel } from '../post/post.model'
 import { ToolService } from '../tool/tool.service'
 import { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json'
@@ -53,17 +50,14 @@ export class CommentService {
 
   private getModelByRefType(
     type: CommentRefTypes,
-  ): ReturnModelType<
-    typeof NoteModel | typeof PostModel | typeof PageModel,
-    BeAnObject
-  > {
+  ): ReturnModelType<typeof WriteBaseModel> {
     switch (type) {
       case CommentRefTypes.Note:
-        return this.databaseService.getModelByRefType('Note')
+        return this.databaseService.getModelByRefType('Note') as any
       case CommentRefTypes.Page:
-        return this.databaseService.getModelByRefType('Page')
+        return this.databaseService.getModelByRefType('Page') as any
       case CommentRefTypes.Post:
-        return this.databaseService.getModelByRefType('Post')
+        return this.databaseService.getModelByRefType('Post') as any
     }
   }
 

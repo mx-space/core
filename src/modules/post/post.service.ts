@@ -10,7 +10,7 @@ import {
   forwardRef,
 } from '@nestjs/common'
 
-import { BusinessException } from '~/common/exceptions/business.exception'
+import { BusinessException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
@@ -72,6 +72,16 @@ export class PostService {
     })
 
     const doc = res.toJSON()
+
+    this.imageService.saveImageDimensionsFromMarkdownText(
+      doc.text,
+      doc.images,
+      (images) => {
+        res.images = images
+        return res.save()
+      },
+    )
+
     process.nextTick(async () => {
       await Promise.all([
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
@@ -97,11 +107,6 @@ export class PostService {
           {
             scope: EventScope.TO_VISITOR,
           },
-        ),
-
-        this.imageService.recordImageDimensions(
-          this.postModel as MongooseModel<PostModel>,
-          res._id,
         ),
       ])
     })
@@ -154,9 +159,13 @@ export class PostService {
           scope: EventScope.TO_SYSTEM,
         }),
         data.text &&
-          this.imageService.recordImageDimensions(
-            this.postModel as MongooseModel<PostModel>,
-            id,
+          this.imageService.saveImageDimensionsFromMarkdownText(
+            data.text,
+            doc?.images,
+            (images) => {
+              oldDocument.images = images
+              return oldDocument.save()
+            },
           ),
         doc &&
           this.eventManager.broadcast(
