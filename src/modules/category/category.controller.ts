@@ -21,6 +21,7 @@ import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 
 import { PostService } from '../post/post.service'
@@ -171,7 +172,7 @@ export class CategoryController {
     const { id } = params
     const category = await this.categoryService.model.findById(id)
     if (!category) {
-      throw new CannotFindException()
+      throw new NoContentCanBeModifiedException()
     }
     const postsInCategory = await this.categoryService.findPostsInCategory(
       category._id,

@@ -4,7 +4,7 @@ import slugify from 'slugify'
 
 import { Injectable } from '@nestjs/common'
 
-import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
@@ -63,7 +63,7 @@ export class PageService {
       .lean({ getters: true })
 
     if (!newDoc) {
-      throw new CannotFindException()
+      throw new NoContentCanBeModifiedException()
     }
 
     process.nextTick(async () => {

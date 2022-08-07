@@ -12,6 +12,7 @@ import { BeAnObject, ReturnModelType } from '@typegoose/typegoose/lib/types'
 
 import { BusinessException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
@@ -162,7 +163,7 @@ export class CommentService {
   async deleteComments(id: string) {
     const comment = await this.commentModel.findOneAndDelete({ _id: id })
     if (!comment) {
-      throw new CannotFindException()
+      throw new NoContentCanBeModifiedException()
     }
     const { children, parent } = comment
     if (children && children.length > 0) {
