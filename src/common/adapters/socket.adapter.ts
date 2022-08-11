@@ -9,7 +9,10 @@ export class RedisIoAdapter extends IoAdapter {
 
     const { pubClient, subClient } = redisSubPub
 
-    const redisAdapter = createAdapter(pubClient, subClient)
+    const redisAdapter = createAdapter(pubClient, subClient, {
+      key: 'mx-core-socket',
+      requestsTimeout: 3000,
+    })
     server.adapter(redisAdapter)
     return server
   }
