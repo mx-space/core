@@ -69,7 +69,7 @@ specifiers:
   cos-nodejs-sdk-v5: 2.11.12
   cron: '*'
   cross-env: 7.0.3
-  dayjs: 1.11.4
+  dayjs: 1.11.5
   ejs: 3.1.8
   eslint: '*'
   eslint-plugin-unused-imports: 2.0.0
@@ -160,7 +160,7 @@ dependencies:
   class-validator-jsonschema: /@innei/class-validator-jsonschema/3.1.1_e6kgdsnyya5caxg3ysdyxrqm7a
   consola: 2.15.3
   cos-nodejs-sdk-v5: 2.11.12
-  dayjs: 1.11.4
+  dayjs: 1.11.5
   ejs: 3.1.8
   fs-extra: 10.1.0
   get-image-colors: 4.0.1
@@ -3280,8 +3280,8 @@ packages:
     resolution: {integrity: sha1-GK6XmmoMqZSwYlhTkW0mYruuCxo=}
     dev: false
 
-  /dayjs/1.11.4:
-    resolution: {integrity: sha512-Zj/lPM5hOvQ1Bf7uAvewDaUcsJoI6JmNqmHhHl3nyumwe0XHwt8sWdOVAPACJzCebL8gQCi+K49w7iKWnGwX9g==}
+  /dayjs/1.11.5:
+    resolution: {integrity: sha512-CAdX5Q3YW3Gclyo5Vpqkgpj8fSdLQcRuzfX6mC6Phy0nfJ0eGYOeS7m4mt2plDWLAtA4TqTakvbboHvUxfe4iA==}
     dev: false
 
   /debounce-fn/4.0.0:
