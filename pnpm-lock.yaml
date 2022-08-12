@@ -20,7 +20,7 @@ specifiers:
   '@nestjs/cli': 9.0.0
   '@nestjs/common': 9.0.9
   '@nestjs/core': 9.0.9
-  '@nestjs/event-emitter': 1.3.0
+  '@nestjs/event-emitter': 1.3.1
   '@nestjs/mapped-types': '*'
   '@nestjs/platform-fastify': 9.0.9
   '@nestjs/platform-socket.io': 9.0.9
@@ -135,7 +135,7 @@ dependencies:
   '@fastify/static': 6.4.1
   '@nestjs/common': 9.0.9_mgy7w2bm3yhmntrbe3boyroj6m
   '@nestjs/core': 9.0.9_oqqvtrweqbb4y54rh6v6gdx5fa
-  '@nestjs/event-emitter': 1.3.0_ac5kpodkfjj4txbcuwlvaffele
+  '@nestjs/event-emitter': 1.3.1_ac5kpodkfjj4txbcuwlvaffele
   '@nestjs/mapped-types': 1.1.0_on3ajwm5grgod2fedjk5mkvqhe
   '@nestjs/platform-fastify': 9.0.9_cvo6ulfjb3gy5wvi5xcn236fsm
   '@nestjs/platform-socket.io': 9.0.9_ra3nknz26rjwpn6m754wkiuly4
@@ -1441,8 +1441,8 @@ packages:
     transitivePeerDependencies:
       - encoding
 
-  /@nestjs/event-emitter/1.3.0_ac5kpodkfjj4txbcuwlvaffele:
-    resolution: {integrity: sha512-1RrrI1wnYSDDwmp5lpPwqpicE2cx+diyDOY0cvCf/loQgcBrNCcP2MF19cbdlGKiRJBLvUDCvspPUwTrhry7Kw==}
+  /@nestjs/event-emitter/1.3.1_ac5kpodkfjj4txbcuwlvaffele:
+    resolution: {integrity: sha512-AmHkPTe/cP1lbQEm15TIe9IDEAszl5VAR8HjMS2TDtNRuSzwyoJgZUVcRnH7Yk9/2DX5qMtmw6a1MHeR8DD+rw==}
     peerDependencies:
       '@nestjs/common': ^7.0.0 || ^8.0.0 || ^9.0.0
       '@nestjs/core': ^7.0.0 || ^8.0.0 || ^9.0.0
