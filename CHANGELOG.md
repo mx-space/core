@@ -6,6 +6,28 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Update dependency mongoose to v6.5.2
+- Update nest monorepo to v9.0.9
+- Update dependency nodemailer to v6.7.8
+- Update dependency @nestjs/event-emitter to v1.3.1
+- Update dependency dayjs to v1.11.5
+
+### Features
+
+- Make some compatibility with Kami Markdown syntax
+
+### Miscellaneous Tasks
+
+- Update dependency @types/semver to v7.3.11
+- Add redis timeout
+- Update dependency @types/semver to v7.3.12
+- Change copy of rss tip
+- Update deps
+
+## [3.35.8] - 2022-08-07
+
+### Bug Fixes
+
 - Update nest monorepo to v9.0.7
 - Update dependency @typegoose/typegoose to v9.11.0 ([#658](https://github.com/orhun/git-cliff/issues/658))
 - Update babel monorepo to v7.18.10
@@ -30,6 +52,10 @@ All notable changes to this project will be documented in this file.
 ### Refactor
 
 - Change throw error code if not find
+
+### Release
+
+- V3.35.8
 
 ## [3.35.7] - 2022-07-28
 
