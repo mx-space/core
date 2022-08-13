@@ -275,27 +275,105 @@ ${text.trim()}
         },
         {
           level: 'inline',
+          name: 'katex',
+          start(src) {
+            return src.match(/\$/)?.index ?? -1
+          },
+          renderer(token) {
+            return `<span class="katex-render">${token.text}</span>`
+          },
+          tokenizer(src) {
+            const rule = /^\$([\s\S]+?)\$(?!\$)/
+            const match = rule.exec(src)
+            if (match) {
+              return {
+                type: 'katex',
+                raw: match[0],
+                // @ts-ignore
+                text: match[1].trim(),
+              }
+            }
+          },
+        },
+        {
+          level: 'inline',
           name: 'mention',
           start(src) {
             return src.match(/\(/)?.index ?? -1
           },
           renderer(token) {
-            // @ts-ignore
-            const username = this.parser.parseInline(token.text).slice(1)
-            return `<a class="mention" rel="noreferrer nofollow" href="https://github.com/${username}" target="_blank">@${username}\n</a>`
+            const { groups } = token
+            const { prefix, name: username } = groups
+
+            const prefixToUrlMap = {
+              GH: 'https://github.com/',
+              TW: 'https://twitter.com/',
+              TG: 'https://t.me/',
+            }
+            const urlPrefix = prefixToUrlMap[prefix]
+            return `<a target="_blank" class="mention" rel="noreferrer nofollow" href="${urlPrefix}${username}">${username}</a>`
           },
-          tokenizer(src, tokens) {
-            const rule = /^\((@(\w+\b))\)\s?(?!\[.*?\])/
+          tokenizer(src) {
+            const rule =
+              /^\{((?<prefix>(GH)|(TW)|(TG))@(?<name>\w+\b))\}\s?(?!\[.*?\])/
             const match = rule.exec(src)
             if (match) {
+              const { groups } = match
               return {
                 type: 'mention',
                 raw: match[0],
-                text: this.lexer.inlineTokens(match[1].trim(), []),
+                groups,
               }
             }
           },
           childTokens: ['text'],
+        },
+        {
+          level: 'block',
+          name: 'container',
+          start(src) {
+            return src.indexOf(':::')
+          },
+          renderer(token) {
+            const { groups, images, paragraph } = token
+            const { params, content, name } = groups
+
+            switch (name) {
+              case 'gallery':
+                // @ts-expect-error
+                return `<div class="container">${this.parser.parseInline(
+                  images,
+                )}</div>`
+              case 'banner':
+                return `<div class="container ${name} ${params}">${this.parser.parse(
+                  paragraph,
+                )}</div>`
+            }
+            return ''
+          },
+          tokenizer(src) {
+            const shouldCatchContainerName = [
+              'gallery',
+              'banner',
+              /* 'carousel', */
+            ].join('|')
+            const match = new RegExp(
+              `^\\s*::: *(?<name>(${shouldCatchContainerName})) *({(?<params>(.*?))})? *\n(?<content>[\\s\\S]+?)\\s*::: *(?:\n *)+\n?`,
+            ).exec(src)
+            if (match) {
+              const { groups } = match
+              return {
+                type: 'container',
+                raw: match[0],
+                groups,
+                // @ts-expect-error
+                images: this.lexer.inlineTokens(groups.content),
+                // @ts-expect-error
+                paragraph: this.lexer.blockTokens(groups.content),
+              }
+            }
+          },
+          childTokens: ['paragraph', 'image'],
         },
       ],
 
@@ -350,18 +428,24 @@ ${text.trim()}
         '<script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/mermaid/8.9.0/mermaid.min.js"></script>',
         '<script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/prism/1.23.0/components/prism-core.min.js"></script>',
         '<script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/prism/1.23.0/plugins/autoloader/prism-autoloader.min.js"></script>',
-        '<script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/prism/1.23.0/plugins/line-numbers/prism-line-numbers.min.js" />',
+        '<script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/prism/1.23.0/plugins/line-numbers/prism-line-numbers.min.js"></script>',
         // '<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/show-language/prism-show-language.min.js" defer></script>',
         // '<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/normalize-whitespace/prism-normalize-whitespace.min.js" defer></script>',
         // '<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js" defer></script>',
+        '<script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.15.2/katex.min.js" async defer></script>',
       ],
       script: [
         `window.mermaid.initialize({theme: 'default',startOnLoad: false})`,
         `window.mermaid.init(undefined, '.mermaid')`,
+        `window.onload = () => { document.querySelectorAll('.katex-render').forEach(el => { window.katex.render(el.innerHTML, el, {
+          throwOnError: false,
+        }) }) }`,
       ],
       link: [
         '<link href="https://cdn.jsdelivr.net/gh/PrismJS/prism-themes@master/themes/prism-one-light.css" rel="stylesheet" />',
         '<link href="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/prism/1.23.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet" />',
+        // katex
+        '<link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.15.2/katex.min.css" rel="stylesheet" />',
       ],
       style: [style, themeStyleSheet],
     }
