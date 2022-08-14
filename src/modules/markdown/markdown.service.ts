@@ -390,7 +390,7 @@ ${text.trim()}
           return `<figure>
           <img src="${xss(src)}"/>
           <figcaption style="text-align: center; margin: 1em auto;">${xss(
-            alt,
+            title || alt,
           )}</figcaption></figure>`
         },
 

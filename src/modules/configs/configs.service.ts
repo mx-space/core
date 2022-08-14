@@ -101,9 +101,14 @@ export class ConfigsService {
       if (!allOptionKeys.has(name)) {
         return
       }
+      // skip url patch in dev mode
+      if (isDev && name === 'url') {
+        return
+      }
       const value = field.value
       mergedConfig[name] = { ...mergedConfig[name], ...value }
     })
+
     await this.setConfig(mergedConfig)
     this.configInitd = true
   }
