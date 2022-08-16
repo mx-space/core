@@ -6,9 +6,11 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   UnprocessableEntityException,
 } from '@nestjs/common'
 
+import { BizException } from '~/common/exceptions/biz.exception'
 import { HttpService } from '~/processors/helper/helper.http.service'
 
 import { ConfigsService } from '../configs/configs.service'
@@ -16,10 +18,13 @@ import { IP } from './tool.interface'
 
 @Injectable()
 export class ToolService {
+  private readonly logger: Logger
   constructor(
     private readonly httpService: HttpService,
     private readonly configs: ConfigsService,
-  ) {}
+  ) {
+    this.logger = new Logger(ToolService.name)
+  }
 
   async getIp(ip: string, timeout = 3000): Promise<IP> {
     const isV4 = isIPv4(ip)
@@ -27,34 +32,37 @@ export class ToolService {
     if (!isV4 && !isV6) {
       throw new UnprocessableEntityException('Invalid IP')
     }
+    try {
+      if (isV4) {
+        const { data } = await this.httpService.axiosRef.get(
+          `https://api.i-meto.com/ip/v1/qqwry/${ip}`,
+          {
+            timeout,
+          },
+        )
 
-    if (isV4) {
-      const { data } = await this.httpService.axiosRef.get(
-        `https://api.i-meto.com/ip/v1/qqwry/${ip}`,
-        {
-          timeout,
-        },
-      )
+        return camelcaseKeys(data, { deep: true }) as IP
+      } else {
+        const { data } = (await this.httpService.axiosRef.get(
+          `http://ip-api.com/json/${ip}`,
+          {
+            timeout,
+          },
+        )) as any
 
-      return camelcaseKeys(data, { deep: true }) as IP
-    } else {
-      const { data } = (await this.httpService.axiosRef.get(
-        `http://ip-api.com/json/${ip}`,
-        {
-          timeout,
-        },
-      )) as any
+        const res = {
+          cityName: data.city,
+          countryName: data.country,
+          ip: data.query,
+          ispDomain: data.as,
+          ownerDomain: data.org,
+          regionName: data.region_name,
+        } as const
 
-      const res = {
-        cityName: data.city,
-        countryName: data.country,
-        ip: data.query,
-        ispDomain: data.as,
-        ownerDomain: data.org,
-        regionName: data.region_name,
-      } as const
-
-      return res
+        return res
+      }
+    } catch (e) {
+      throw new BizException(`IP API 调用失败, ${e.message}`)
     }
   }
 

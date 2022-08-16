@@ -1,10 +1,11 @@
 export enum ErrorCodeEnum {
-  SlugNotAvailable = 'slug_not_available',
+  NoContentCanBeModified = 1000,
 
-  BanInDemo = 'ban_in_demo',
-  MasterLost = 'master_lost',
-  ServerlessError = 'function_error',
-  NoContentCanBeModified = 'no_content_can_be_modified',
+  SlugNotAvailable = 10000,
+  ServerlessError = 80000,
+
+  MasterLost = 99998,
+  BanInDemo = 999999,
 }
 
 export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(

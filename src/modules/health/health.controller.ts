@@ -137,9 +137,12 @@ export class HealthController {
       filename: string
       type: string
       index: number
+      created: number
     }[]
     for (const [i, file] of Object.entries(allFile)) {
-      const byteSize = fs.statSync(path.join(logDir, file)).size
+      const stat = await fs.stat(path.join(logDir, file))
+      const byteSize = stat.size
+
       const size = formatByteSize(byteSize)
       let index: number
       let _type: string
@@ -154,10 +157,16 @@ export class HealthController {
           index = +i
           break
       }
-      res.push({ size, filename: file, index, type: _type })
+      res.push({
+        size,
+        filename: file,
+        index,
+        type: _type,
+        created: stat.ctimeMs,
+      })
     }
 
-    return res
+    return res.sort((a, b) => b.created - a.created)
   }
 
   @Get('/log/:type')
@@ -183,6 +192,7 @@ export class HealthController {
         if (!fs.existsSync(logPath)) {
           throw new BadRequestException('log file not exists')
         }
+
         stream = fs.createReadStream(logPath, {
           encoding: 'utf8',
         })
