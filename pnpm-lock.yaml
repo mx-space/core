@@ -121,7 +121,7 @@ specifiers:
   ua-parser-js: 1.0.2
   vm2: 3.9.10
   wildcard-match: 5.1.2
-  xss: 1.0.13
+  xss: 1.0.14
   zx-cjs: 6.1.0
 
 dependencies:
@@ -196,7 +196,7 @@ dependencies:
   ua-parser-js: 1.0.2
   vm2: 3.9.10
   wildcard-match: 5.1.2
-  xss: 1.0.13
+  xss: 1.0.14
   zx-cjs: 6.1.0
 
 optionalDependencies:
@@ -8122,8 +8122,8 @@ packages:
     engines: {node: '>=4.0'}
     dev: false
 
-  /xss/1.0.13:
-    resolution: {integrity: sha512-clu7dxTm1e8Mo5fz3n/oW3UCXBfV89xZ72jM8yzo1vR/pIS0w3sgB3XV2H8Vm6zfGnHL0FzvLJPJEBhd86/z4Q==}
+  /xss/1.0.14:
+    resolution: {integrity: sha512-og7TEJhXvn1a7kzZGQ7ETjdQVS2UfZyTlsEdDOqvQF7GoxNfY+0YLCzBy1kPdsDDx4QuNAonQPddpsn6Xl/7sw==}
     engines: {node: '>= 0.10.0'}
     hasBin: true
     dependencies:
