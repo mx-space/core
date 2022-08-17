@@ -35,7 +35,9 @@ export async function bootstrap() {
 
   // Origin 如果不是数组就全部允许跨域
   app.enableCors(
-    Origin
+    isDev
+      ? undefined
+      : Origin
       ? {
           origin: (origin, callback) => {
             let currentHost: string
