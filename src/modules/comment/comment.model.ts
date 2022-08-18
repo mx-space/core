@@ -65,7 +65,11 @@ export class CommentModel extends BaseModel {
   @prop({
     trim: true,
     set(val) {
-      return new URL(val).origin
+      try {
+        return new URL(val).origin
+      } catch {
+        return '#'
+      }
     },
   })
   url?: string
