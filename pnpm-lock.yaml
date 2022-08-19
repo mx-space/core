@@ -79,7 +79,7 @@ specifiers:
   image-size: 1.0.2
   inquirer: '*'
   ioredis: 5.2.2
-  isbot: 3.5.0
+  isbot: 3.5.1
   jest: 28.1.3
   js-yaml: '*'
   json5: 2.2.1
@@ -166,7 +166,7 @@ dependencies:
   get-image-colors: 4.0.1
   image-size: 1.0.2
   inquirer: 8.2.4
-  isbot: 3.5.0
+  isbot: 3.5.1
   js-yaml: 4.1.0
   json5: 2.2.1
   jsonwebtoken: 8.5.1
@@ -204,7 +204,7 @@ optionalDependencies:
   redis-memory-server: 0.5.0
 
 devDependencies:
-  '@innei/eslint-config-ts': 0.9.4
+  '@innei/eslint-config-ts': 0.9.4_typescript@4.7.4
   '@innei/prettier': 0.9.4
   '@nestjs/cli': 9.0.0
   '@nestjs/schematics': 9.0.1_typescript@4.7.4
@@ -1018,8 +1018,10 @@ packages:
       tslib: 2.4.0
     dev: false
 
-  /@innei/eslint-config-ts/0.9.4:
+  /@innei/eslint-config-ts/0.9.4_typescript@4.7.4:
     resolution: {integrity: sha512-T52M6omBVNP6CbRN0sWNf8TjEEocuPTSN+FnVUY7c1P8JfgOTH9PFOG8fEt59UZLxZEIjy26pHGDqATv9inGVA==}
+    peerDependencies:
+      typescript: '>=4'
     dependencies:
       '@typescript-eslint/eslint-plugin': 5.30.7_njno5y7ry2l2lcmiu4tywxkwnq
       '@typescript-eslint/parser': 5.33.0_qugx7qdu5zevzvxaiqyxfiwquq
@@ -4962,8 +4964,8 @@ packages:
     resolution: {integrity: sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==}
     dev: false
 
-  /isbot/3.5.0:
-    resolution: {integrity: sha512-QOFF7IE7hUdzo8pbhCubeiMzKdLZt+W/UwRZWwg+zghmnqXoMwh2V0bi5UT+oIvoD0IWCWjzAtp30ZrrRwJVCg==}
+  /isbot/3.5.1:
+    resolution: {integrity: sha512-IJrUiLudoYIhbNa9EuR7foEyXYPyWDe5Nnd1pTKTyPZKlDA0K5XcVzJEwvNLLstz37KokXP1pZWVKuyW34c4xQ==}
     engines: {node: '>=12'}
     dev: false
 
