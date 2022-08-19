@@ -64,7 +64,7 @@ specifiers:
   camelcase-keys: 7.0.2
   class-transformer: 0.5.1
   class-validator: 0.13.2
-  class-validator-jsonschema: npm:@innei/class-validator-jsonschema@3.1.1
+  class-validator-jsonschema: npm:@innei/class-validator-jsonschema@3.1.2
   consola: '*'
   cos-nodejs-sdk-v5: 2.11.12
   cron: '*'
@@ -157,7 +157,7 @@ dependencies:
   camelcase-keys: 7.0.2
   class-transformer: 0.5.1
   class-validator: 0.13.2
-  class-validator-jsonschema: /@innei/class-validator-jsonschema/3.1.1_e6kgdsnyya5caxg3ysdyxrqm7a
+  class-validator-jsonschema: /@innei/class-validator-jsonschema/3.1.2_e6kgdsnyya5caxg3ysdyxrqm7a
   consola: 2.15.3
   cos-nodejs-sdk-v5: 2.11.12
   dayjs: 1.11.5
@@ -205,7 +205,7 @@ optionalDependencies:
   redis-memory-server: 0.5.0
 
 devDependencies:
-  '@innei/eslint-config-ts': 0.9.4
+  '@innei/eslint-config-ts': 0.9.4_typescript@4.7.4
   '@innei/prettier': 0.9.4
   '@nestjs/cli': 9.0.0
   '@nestjs/schematics': 9.0.1_typescript@4.7.4
@@ -1003,10 +1003,10 @@ packages:
       - supports-color
     dev: true
 
-  /@innei/class-validator-jsonschema/3.1.1_e6kgdsnyya5caxg3ysdyxrqm7a:
-    resolution: {integrity: sha512-cC+7ONkBW9ZbNhhqMAdgexbx5Lq/YpVYO8A8gFQfRTrXoyIS7zH+RS91IS4zLKlBqHRWT6IEBl1ZE+JI0t//qA==}
+  /@innei/class-validator-jsonschema/3.1.2_e6kgdsnyya5caxg3ysdyxrqm7a:
+    resolution: {integrity: sha512-TtexCmngzF7irt9MB0fbT8M2/CH38tdOrxkaqH6rsgumnHDyxzlevSAoKpcxFG7nz3CtN9OjQ2YbgTC7MOIeaQ==}
     peerDependencies:
-      class-transformer: ^0.4.0
+      class-transformer: ^0.4.0 || ^0.5.0
       class-validator: ^0.13.1
     dependencies:
       class-transformer: 0.5.1
@@ -1018,8 +1018,10 @@ packages:
       tslib: 2.4.0
     dev: false
 
-  /@innei/eslint-config-ts/0.9.4:
+  /@innei/eslint-config-ts/0.9.4_typescript@4.7.4:
     resolution: {integrity: sha512-T52M6omBVNP6CbRN0sWNf8TjEEocuPTSN+FnVUY7c1P8JfgOTH9PFOG8fEt59UZLxZEIjy26pHGDqATv9inGVA==}
+    peerDependencies:
+      typescript: '>=4'
     dependencies:
       '@typescript-eslint/eslint-plugin': 5.30.7_njno5y7ry2l2lcmiu4tywxkwnq
       '@typescript-eslint/parser': 5.33.0_qugx7qdu5zevzvxaiqyxfiwquq
