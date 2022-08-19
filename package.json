@@ -154,7 +154,7 @@
     "@types/get-image-colors": "4.0.1",
     "@types/jest": "28.1.7",
     "@types/js-yaml": "4.0.5",
-    "@types/lodash": "4.14.183",
+    "@types/lodash": "4.14.184",
     "@types/marked": "4.0.3",
     "@types/mime-types": "2.1.1",
     "@types/mongoose-aggregate-paginate-v2": "1.0.5",
