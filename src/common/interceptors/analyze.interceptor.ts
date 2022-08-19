@@ -53,7 +53,8 @@ export class AnalyzeInterceptor implements NestInterceptor {
     if (!request) {
       return call$
     }
-    const method = request.routerMethod.toUpperCase()
+
+    const method = request.method.toUpperCase()
     if (method !== 'GET') {
       return call$
     }

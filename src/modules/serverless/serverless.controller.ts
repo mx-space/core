@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 import {
+  All,
   CacheTTL,
   ForbiddenException,
   Get,
@@ -58,7 +59,7 @@ export class ServerlessController {
     return this.runServerlessFunction(param, isMaster, req, reply)
   }
 
-  @Get('/:reference/:name')
+  @All('/:reference/:name')
   @HTTPDecorators.Bypass
   async runServerlessFunction(
     @Param() param: ServerlessReferenceDto,
@@ -74,8 +75,18 @@ export class ServerlessController {
       type: SnippetType.Function,
     })
 
-    if (!snippet) {
-      throw new NotFoundException('serverless function is not exist')
+    const requestMethod = req.method.toUpperCase()
+    if (
+      !snippet ||
+      (snippet.method && snippet.method !== requestMethod) ||
+      // FIXME
+      // TODO compatibility
+      (typeof snippet.method == 'undefined' && requestMethod !== 'GET') ||
+      (typeof snippet.enable != 'undefined' && snippet.enable === false)
+    ) {
+      throw new NotFoundException(
+        'serverless function is not exist or not enabled',
+      )
     }
 
     if (snippet.private && !isMaster) {

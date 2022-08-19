@@ -3,10 +3,12 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  NotFoundException,
   Param,
   Post,
   Put,
   Query,
+  UnprocessableEntityException,
 } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorator/api-controller.decorator'
@@ -15,7 +17,6 @@ import { BanInDemo } from '~/common/decorator/demo.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
-import { CacheService } from '~/processors/redis/cache.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
@@ -27,10 +28,7 @@ import { SnippetService } from './snippet.service'
 @ApiName
 @ApiController('snippets')
 export class SnippetController {
-  constructor(
-    private readonly snippetService: SnippetService,
-    private readonly redisService: CacheService,
-  ) {}
+  constructor(private readonly snippetService: SnippetService) {}
 
   @Get('/')
   @Auth()
@@ -78,6 +76,51 @@ export class SnippetController {
     return snippet
   }
 
+  @Get('/group')
+  @Auth()
+  @HTTPDecorators.Paginator
+  async getGroup(@Query() query: PagerDto) {
+    const { page, size = 30 } = query
+    return this.snippetService.model.aggregatePaginate(
+      this.snippetService.model.aggregate([
+        {
+          $group: {
+            _id: {
+              reference: '$reference',
+            },
+            count: { $sum: 1 },
+          },
+        },
+        {
+          $sort: {
+            '_id.reference': 1,
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            reference: '$_id.reference',
+            count: 1,
+          },
+        },
+      ]),
+      {
+        page,
+        limit: size,
+      },
+    )
+  }
+
+  @Get('/group/:reference')
+  @Auth()
+  async getGroupByReference(@Param('reference') reference: string) {
+    if (typeof reference !== 'string') {
+      throw new UnprocessableEntityException('reference should be string')
+    }
+
+    return this.snippetService.model.find({ reference }).lean()
+  }
+
   @Post('/aggregate')
   @Auth()
   async aggregate(@Body() body: any) {
@@ -123,16 +166,19 @@ export class SnippetController {
     }
 
     const snippet = await this.snippetService.getSnippetByName(name, reference)
+
+    if (snippet.type === SnippetType.Function) {
+      throw new NotFoundException()
+    }
+
     if (snippet.private && !isMaster) {
       throw new ForbiddenException('snippet is private')
     }
 
-    if (snippet.type !== SnippetType.Function) {
-      return this.snippetService.attachSnippet(snippet).then((res) => {
-        this.snippetService.cacheSnippet(res, res.data)
-        return res.data
-      })
-    }
+    return this.snippetService.attachSnippet(snippet).then((res) => {
+      this.snippetService.cacheSnippet(res, res.data)
+      return res.data
+    })
   }
 
   @Put('/:id')

@@ -8,8 +8,9 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator'
+import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
 
-import { index, modelOptions, prop } from '@typegoose/typegoose'
+import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
 
@@ -32,6 +33,7 @@ export enum SnippetType {
     },
   },
 })
+@plugin(aggregatePaginate)
 @index({ name: 1, reference: 1 })
 @index({ type: 1 })
 export class SnippetModel extends BaseModel {
@@ -81,4 +83,15 @@ export class SnippetModel extends BaseModel {
   @IsString()
   @IsOptional()
   schema?: string
+
+  // for function
+  @prop()
+  @IsEnum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
+  @IsOptional()
+  method?: string
+
+  @prop()
+  @IsBoolean()
+  @IsOptional()
+  enable?: boolean
 }

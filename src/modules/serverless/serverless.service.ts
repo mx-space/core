@@ -375,7 +375,7 @@ export class ServerlessService {
   private lruCache = new LRUCache({
     max: 100,
     ttl: 10 * 1000,
-    maxSize: 5000,
+    maxSize: 50000,
     sizeCalculation: (value: string, key: string) => {
       return value.length + key.length
     },
