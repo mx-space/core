@@ -1,5 +1,6 @@
 import { isURL } from 'class-validator'
 import fs, { mkdir, stat } from 'fs/promises'
+import LRUCache from 'lru-cache'
 import { mongo } from 'mongoose'
 import path from 'path'
 import { nextTick } from 'process'
@@ -371,14 +372,29 @@ export class ServerlessService {
       ],
     }
   }
+  private lruCache = new LRUCache({
+    max: 100,
+    ttl: 10 * 1000,
+    maxSize: 5000,
+    sizeCalculation: (value: string, key: string) => {
+      return value.length + key.length
+    },
+  })
   private async convertTypescriptCode(
     code: string,
   ): Promise<string | null | undefined> {
+    if (this.lruCache.has(code)) {
+      return this.lruCache.get(code)
+    }
+
     const res = await transformAsync(code, this.getBabelOptions())
     if (!res) {
       throw new InternalServerErrorException('convert code error')
     }
     !isTest && console.debug(res.code)
+
+    res.code && this.lruCache.set(code, res.code)
+
     return res.code
   }
 

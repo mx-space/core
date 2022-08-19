@@ -88,6 +88,7 @@ specifiers:
   linkedom: 0.14.12
   lint-staged: 13.0.3
   lodash: '*'
+  lru-cache: 7.14.0
   marked: 4.0.18
   mime-types: '*'
   mkdirp: '*'
@@ -114,7 +115,6 @@ specifiers:
   snakecase-keys: 5.4.2
   socket.io: '*'
   ts-jest: 28.0.8
-  ts-loader: 9.3.1
   ts-node: 10.9.1
   tsconfig-paths: 4.1.0
   typescript: 4.7.4
@@ -173,6 +173,7 @@ dependencies:
   jszip: 3.10.1
   linkedom: 0.14.12
   lodash: 4.17.21
+  lru-cache: 7.14.0
   marked: 4.0.18
   mime-types: 2.1.35
   mkdirp: 1.0.4
@@ -204,7 +205,7 @@ optionalDependencies:
   redis-memory-server: 0.5.0
 
 devDependencies:
-  '@innei/eslint-config-ts': 0.9.4_typescript@4.7.4
+  '@innei/eslint-config-ts': 0.9.4
   '@innei/prettier': 0.9.4
   '@nestjs/cli': 9.0.0
   '@nestjs/schematics': 9.0.1_typescript@4.7.4
@@ -241,7 +242,6 @@ devDependencies:
   rimraf: 3.0.2
   socket.io: 4.5.1
   ts-jest: 28.0.8_m5noci3hdgjcbp5i3skppiufvq
-  ts-loader: 9.3.1_typescript@4.7.4
   ts-node: 10.9.1_mc5obqbv5iw2qugqrfomepel3m
   tsconfig-paths: 4.1.0
   typescript: 4.7.4
@@ -1018,10 +1018,8 @@ packages:
       tslib: 2.4.0
     dev: false
 
-  /@innei/eslint-config-ts/0.9.4_typescript@4.7.4:
+  /@innei/eslint-config-ts/0.9.4:
     resolution: {integrity: sha512-T52M6omBVNP6CbRN0sWNf8TjEEocuPTSN+FnVUY7c1P8JfgOTH9PFOG8fEt59UZLxZEIjy26pHGDqATv9inGVA==}
-    peerDependencies:
-      typescript: '>=4'
     dependencies:
       '@typescript-eslint/eslint-plugin': 5.30.7_njno5y7ry2l2lcmiu4tywxkwnq
       '@typescript-eslint/parser': 5.33.0_qugx7qdu5zevzvxaiqyxfiwquq
@@ -2827,7 +2825,7 @@ packages:
     dependencies:
       async: 3.2.3
       lodash.clonedeep: 4.5.0
-      lru-cache: 7.12.0
+      lru-cache: 7.14.0
 
   /call-bind/1.0.2:
     resolution: {integrity: sha512-7O+FbCihrB5WGbFYesctwmTKae6rOiIzmz1icreWJ+0aA7LJfuqhEso2T9ncpcFtzMQtzXf2QGGueWJGTYsqrA==}
@@ -3572,14 +3570,6 @@ packages:
 
   /enhanced-resolve/5.10.0:
     resolution: {integrity: sha512-T0yTFjdpldGY8PmuXXR0PyQ1ufZpEGiHVrp7zHKB7jdR4qlmZHhONVM5AQOAWXuF/w3dnHbEQVrNptJgt7F+cQ==}
-    engines: {node: '>=10.13.0'}
-    dependencies:
-      graceful-fs: 4.2.10
-      tapable: 2.2.1
-    dev: true
-
-  /enhanced-resolve/5.9.3:
-    resolution: {integrity: sha512-Bq9VSor+kjvW3f9/MiiR4eE3XYgOl7/rS8lnSxbRbF3kS0B2r+Y9w5krBWxZgDxASVZbdYrn5wT4j/Wb0J9qow==}
     engines: {node: '>=10.13.0'}
     dependencies:
       graceful-fs: 4.2.10
@@ -5896,8 +5886,8 @@ packages:
     dependencies:
       yallist: 4.0.0
 
-  /lru-cache/7.12.0:
-    resolution: {integrity: sha512-OIP3DwzRZDfLg9B9VP/huWBlpvbkmbfiBy8xmsXp4RPmE4A3MhwNozc5ZJ3fWnSg8fDcdlE/neRTPG2ycEKliw==}
+  /lru-cache/7.14.0:
+    resolution: {integrity: sha512-EIRtP1GrSJny0dqb50QXRUNBxHJhcpxHC++M5tD7RYbvLLn5KVWKsbyswSSqDuU15UFi3bgTQIY8nhDMeF6aDQ==}
     engines: {node: '>=12'}
 
   /luxon/1.28.0:
@@ -7691,20 +7681,6 @@ packages:
       semver: 7.3.7
       typescript: 4.7.4
       yargs-parser: 21.0.1
-    dev: true
-
-  /ts-loader/9.3.1_typescript@4.7.4:
-    resolution: {integrity: sha512-OkyShkcZTsTwyS3Kt7a4rsT/t2qvEVQuKCTg4LJmpj9fhFR7ukGdZwV6Qq3tRUkqcXtfGpPR7+hFKHCG/0d3Lw==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      typescript: '*'
-      webpack: ^5.0.0
-    dependencies:
-      chalk: 4.1.2
-      enhanced-resolve: 5.9.3
-      micromatch: 4.0.5
-      semver: 7.3.7
-      typescript: 4.7.4
     dev: true
 
   /ts-node/10.9.1_mc5obqbv5iw2qugqrfomepel3m:
