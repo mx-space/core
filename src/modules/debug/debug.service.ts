@@ -1,6 +1,13 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable, Scope } from '@nestjs/common'
+import { REQUEST } from '@nestjs/core'
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class DebugService {
-  constructor() {}
+  constructor(@Inject(REQUEST) private req) {
+    console.log('DebugService created')
+  }
+
+  test() {
+    console.log('this.req', this.req.method)
+  }
 }

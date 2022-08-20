@@ -3,7 +3,7 @@ import { performance } from 'perf_hooks'
 import wcmatch from 'wildcard-match'
 
 import { LogLevel, Logger, ValidationPipe } from '@nestjs/common'
-import { NestFactory } from '@nestjs/core'
+import { ContextIdFactory, NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 
 import { API_VERSION, CROSS_DOMAIN, PORT, isMainProcess } from './app.config'
@@ -12,6 +12,7 @@ import { fastifyApp } from './common/adapters/fastify.adapter'
 import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
+import { AggregateByTenantContextIdStrategy } from './common/strategies/context.strategy'
 import { isTest } from './global/env.global'
 import { MyLogger } from './processors/logger/logger.service'
 
@@ -71,6 +72,8 @@ export async function bootstrap() {
   )
   app.useGlobalGuards(new SpiderGuard())
   !isTest && app.useWebSocketAdapter(new RedisIoAdapter(app))
+
+  ContextIdFactory.apply(new AggregateByTenantContextIdStrategy())
 
   if (isDev) {
     const { DocumentBuilder, SwaggerModule } = await import('@nestjs/swagger')

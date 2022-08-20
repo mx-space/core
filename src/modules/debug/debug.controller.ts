@@ -1,4 +1,4 @@
-import { Body, Post, Query, Request, Response } from '@nestjs/common'
+import { Body, Get, Post, Query, Request, Response } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
@@ -9,6 +9,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetModel, SnippetType } from '../snippet/snippet.model'
+import { DebugService } from './debug.service'
 
 @ApiName
 @ApiController('debug')
@@ -16,7 +17,15 @@ export class DebugController {
   constructor(
     private readonly serverlessService: ServerlessService,
     private readonly eventManager: EventManagerService,
+
+    private readonly debugService: DebugService,
   ) {}
+
+  @Get('/test')
+  test() {
+    this.debugService.test()
+    return ''
+  }
 
   @Post('/events')
   async sendEvent(
