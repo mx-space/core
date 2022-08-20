@@ -68,24 +68,22 @@ export class ServerlessController {
     @Request() req: FastifyRequest,
     @Response() reply: FastifyReply,
   ) {
+    const requestMethod = req.method.toUpperCase()
     const { name, reference } = param
     const snippet = await this.serverlessService.model
       .findOne({
         name,
         reference,
         type: SnippetType.Function,
+        method: requestMethod,
       })
       .lean()
 
-    const requestMethod = req.method.toUpperCase()
     const notExistMessage = 'serverless function is not exist or not enabled'
 
     if (!snippet) {
       throw new NotFoundException(notExistMessage)
     }
-    // TODO compatibility
-    snippet.method ??= 'GET'
-    snippet.enable ??= true
 
     if (snippet.method !== requestMethod || !snippet.enable) {
       throw new NotFoundException(notExistMessage)

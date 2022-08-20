@@ -34,9 +34,14 @@ export class SnippetService {
   }
 
   async create(model: SnippetModel) {
+    if (model.type === SnippetType.Function) {
+      model.method ??= 'GET'
+      model.enable ??= true
+    }
     const isExist = await this.model.countDocuments({
       name: model.name,
       reference: model.reference || 'root',
+      method: model.method,
     })
 
     if (isExist) {

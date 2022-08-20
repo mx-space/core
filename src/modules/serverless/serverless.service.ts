@@ -563,14 +563,30 @@ export class ServerlessService {
       const { body } = ast.program as t.Program
 
       const hasEntryFunction = body.some(
-        (node) => t.isFunction(node) && node.id && node.id.name === 'handler',
+        (node: t.Declaration) =>
+          (node.type == 'ExportDefaultDeclaration' &&
+            isHandlerFunction(node.declaration)) ||
+          isHandlerFunction(node),
       )
+
       return hasEntryFunction
     } catch (e) {
       if (isDev) {
         console.error(e.message)
       }
       return e.message?.split('\n').at(0)
+    }
+
+    function isHandlerFunction(
+      node:
+        | t.Declaration
+        | t.FunctionDeclaration
+        | t.ClassDeclaration
+        | t.TSDeclareFunction
+        | t.Expression,
+    ): boolean {
+      // @ts-expect-error
+      return t.isFunction(node) && node?.id?.name === 'handler'
     }
   }
 }
