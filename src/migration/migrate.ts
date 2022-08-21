@@ -8,6 +8,10 @@ import VersionList from './history'
 const { MONGO_DB } = APP_CONFIG
 
 export async function migrateDatabase() {
+  if (!APP_CONFIG.isMainProcess) {
+    return
+  }
+
   const migrateFilePath = path.join(DATA_DIR, 'migrate')
   existsSync(migrateFilePath) || (await fs.writeFile(migrateFilePath, ''))
 

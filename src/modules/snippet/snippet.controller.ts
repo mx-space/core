@@ -48,9 +48,9 @@ export class SnippetController {
     )
   }
 
-  @Post('/more')
+  @Post('/import')
   @Auth()
-  async createMore(@Body() body: SnippetMoreDto) {
+  async importSnippets(@Body() body: SnippetMoreDto) {
     const { snippets } = body
     const tasks = snippets.map((snippet) => this.create(snippet))
 

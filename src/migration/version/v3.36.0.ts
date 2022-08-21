@@ -5,6 +5,8 @@ export default (async function v3360(db: Db) {
   await db.collection('snippets').updateMany(
     {
       type: 'function',
+      method: undefined,
+      enable: undefined,
     },
     {
       $set: {
