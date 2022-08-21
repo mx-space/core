@@ -24,4 +24,12 @@ module.exports = {
       },
     ],
   },
+  overrides: [
+    {
+      files: ['src/migration/**/*.ts'],
+      rules: {
+        'import/no-default-export': 'off',
+      },
+    },
+  ],
 }

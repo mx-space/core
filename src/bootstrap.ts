@@ -14,6 +14,7 @@ import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { AggregateByTenantContextIdStrategy } from './common/strategies/context.strategy'
 import { isTest } from './global/env.global'
+import { migrateDatabase } from './migration/migrate'
 import { MyLogger } from './processors/logger/logger.service'
 
 const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
@@ -24,6 +25,7 @@ declare const module: any
 
 export async function bootstrap() {
   process.title = `Mix Space (${cluster.isPrimary ? 'master' : 'worker'})`
+  await migrateDatabase()
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     fastifyApp,
