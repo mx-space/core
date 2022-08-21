@@ -1,5 +1,6 @@
 import { load } from 'js-yaml'
 import JSON5 from 'json5'
+import { AggregatePaginateModel, Document } from 'mongoose'
 
 import {
   BadRequestException,
@@ -21,7 +22,8 @@ import { SnippetModel, SnippetType } from './snippet.model'
 export class SnippetService {
   constructor(
     @InjectModel(SnippetModel)
-    private readonly snippetModel: MongooseModel<SnippetModel>,
+    private readonly snippetModel: MongooseModel<SnippetModel> &
+      AggregatePaginateModel<SnippetModel & Document>,
     @Inject(forwardRef(() => ServerlessService))
     private readonly serverlessService: ServerlessService,
     private readonly cacheService: CacheService,
@@ -32,26 +34,42 @@ export class SnippetService {
   }
 
   async create(model: SnippetModel) {
+    if (model.type === SnippetType.Function) {
+      model.method ??= 'GET'
+      model.enable ??= true
+    }
     const isExist = await this.model.countDocuments({
       name: model.name,
       reference: model.reference || 'root',
+      method: model.method,
     })
 
     if (isExist) {
       throw new BadRequestException('snippet is exist')
     }
     // 验证正确类型
-    await this.validateType(model)
+    await this.validateTypeAndCleanup(model)
     return await this.model.create({ ...model, created: new Date() })
   }
 
   async update(id: string, model: SnippetModel) {
-    await this.validateType(model)
+    await this.validateTypeAndCleanup(model)
     delete model.created
     const old = await this.model.findById(id).lean()
+
     if (!old) {
       throw new NotFoundException()
     }
+
+    if (
+      old.type === SnippetType.Function &&
+      model.type !== SnippetType.Function
+    ) {
+      throw new BadRequestException(
+        '`type` is not allowed to change if this snippet set to Function type.',
+      )
+    }
+
     await this.deleteCachedSnippet(old.reference, old.name)
     return await this.model.findByIdAndUpdate(
       id,
@@ -68,7 +86,7 @@ export class SnippetService {
     await this.deleteCachedSnippet(doc.reference, doc.name)
   }
 
-  private async validateType(model: SnippetModel) {
+  private async validateTypeAndCleanup(model: SnippetModel) {
     switch (model.type) {
       case SnippetType.JSON: {
         try {
@@ -112,6 +130,14 @@ export class SnippetService {
       default: {
         break
       }
+    }
+    // TODO refactor
+    // cleanup
+    if (model.type !== SnippetType.Function) {
+      const deleteKeys: (keyof SnippetModel)[] = ['enable', 'method']
+      deleteKeys.forEach((key) => {
+        Reflect.deleteProperty(model, key)
+      })
     }
   }
 
