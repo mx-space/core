@@ -6,6 +6,35 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Markdown render of image
+- Update nest monorepo to v9.0.11
+- Update dependency xss to v1.0.14
+- Cast of `url`
+- Update dependency isbot to v3.5.1
+- Update dependency class-validator-jsonschema to v3.1.2
+
+### Features
+
+- Sort of log file list
+- Lru cache for complie typescript code
+- Snippet and function refactor ([#692](https://github.com/orhun/git-cliff/issues/692))
+
+### Miscellaneous Tasks
+
+- Pin dependencies
+- Update dependency ts-jest to v28.0.8
+- Update dependency @types/jest to v28.1.7
+- Update dependency @types/node to v16.11.49
+- Update dependency @types/lodash to v4.14.183
+- Enable cors all in dev
+- Update dependency @types/lodash to v4.14.184
+- Update dependency @types/node to v16.11.50
+- Update dependency @types/node to v16.11.51
+
+## [3.35.9] - 2022-08-13
+
+### Bug Fixes
+
 - Update dependency mongoose to v6.5.2
 - Update nest monorepo to v9.0.9
 - Update dependency nodemailer to v6.7.8
@@ -23,6 +52,10 @@ All notable changes to this project will be documented in this file.
 - Update dependency @types/semver to v7.3.12
 - Change copy of rss tip
 - Update deps
+
+### Release
+
+- V3.35.9
 
 ## [3.35.8] - 2022-08-07
 
