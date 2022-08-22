@@ -1,8 +1,16 @@
 import dayjs from 'dayjs'
 
-import { BadRequestException, Injectable, Logger } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+  Scope,
+} from '@nestjs/common'
+import { REQUEST } from '@nestjs/core'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { Request } from '~/types/request'
 import { deepCloneWithFunction } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
 
@@ -12,10 +20,16 @@ const RegMap = {
   '?': /^\?\??(.*?)\??\?$/g,
 } as const
 
-@Injectable()
+@Injectable({
+  scope: Scope.REQUEST,
+  durable: true,
+})
 export class TextMacroService {
   private readonly logger: Logger
-  constructor(private readonly configService: ConfigsService) {
+  constructor(
+    private readonly configService: ConfigsService,
+    @Inject(REQUEST) private readonly request: Request,
+  ) {
     this.logger = new Logger(TextMacroService.name)
   }
 
@@ -72,6 +86,9 @@ export class TextMacroService {
       // time utils
       dayjs: deepCloneWithFunction(dayjs),
       fromNow: (time: Date | string) => dayjs(time).fromNow(),
+      onlyMe: (text: string) => {
+        return this.request.isMaster ? text : ''
+      },
 
       // typography
       center: (text: string) => {
