@@ -2,15 +2,12 @@ import { AxiosRequestConfig } from 'axios'
 import cluster from 'cluster'
 import { argv } from 'zx-cjs'
 
-export const isDev = process.env.NODE_ENV == 'development'
-
-export const isTest = !!process.env.TEST
-export const cwd = process.cwd()
+import { cwd, isDev, isMainCluster, isTest } from './global/env.global'
 
 export const PORT = argv.port || process.env.PORT || 2333
 export const API_VERSION = 2
 
-export const isInDemoMode = argv.demo || false
+export const DEMO_MODE = argv.demo || false
 
 export const CROSS_DOMAIN = {
   allowedOrigins: argv.allowed_origins
@@ -32,7 +29,7 @@ export const CROSS_DOMAIN = {
 }
 
 export const MONGO_DB = {
-  dbName: argv.collection_name || (isInDemoMode ? 'mx-space_demo' : 'mx-space'),
+  dbName: argv.collection_name || (DEMO_MODE ? 'mx-space_demo' : 'mx-space'),
   host: argv.db_host || '127.0.0.1',
   port: argv.db_port || 27017,
   get uri() {
@@ -68,11 +65,6 @@ export const CLUSTER = {
   enable: argv.cluster ?? false,
   workers: argv.cluster_workers,
 }
-
-/** Is main cluster in PM2 */
-export const isMainCluster =
-  process.env.NODE_APP_INSTANCE && parseInt(process.env.NODE_APP_INSTANCE) === 0
-export const isMainProcess = cluster.isPrimary || isMainCluster
 
 export const DEBUG_MODE = {
   httpRequestVerbose:

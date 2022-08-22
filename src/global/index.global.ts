@@ -6,7 +6,6 @@ import 'zx-cjs/globals'
 
 import { Logger } from '@nestjs/common'
 
-import { CLUSTER } from '~/app.config'
 import {
   DATA_DIR,
   LOG_DIR,
@@ -19,6 +18,8 @@ import {
 import { consola, registerStdLogger } from './consola.global'
 
 import './dayjs.global'
+
+import { CLUSTER } from '~/app.config'
 
 import { cwd, isDev } from './env.global'
 import { registerJSONGlobal } from './json.global'
@@ -56,8 +57,9 @@ function registerGlobal() {
 }
 
 export function register() {
-  registerStdLogger()
-  mkdirs()
   registerGlobal()
+  registerStdLogger()
   registerJSONGlobal()
+
+  mkdirs()
 }

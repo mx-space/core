@@ -1,4 +1,4 @@
-import { isInDemoMode } from '~/app.config'
+import { DEMO_MODE } from '~/app.config'
 
 import { IConfig } from './configs.interface'
 
@@ -41,7 +41,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
   },
   friendLinkOptions: { allowApply: true },
   backupOptions: {
-    enable: isInDemoMode ? false : true,
+    enable: DEMO_MODE ? false : true,
     region: null!,
     bucket: null!,
     secretId: null!,

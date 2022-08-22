@@ -5,7 +5,6 @@ import {
   Get,
   Param,
   Patch,
-  Scope,
   UnprocessableEntityException,
 } from '@nestjs/common'
 
@@ -16,10 +15,7 @@ import { ConfigsService } from '../configs/configs.service'
 import { ConfigKeyDto } from '../option/dtos/config.dto'
 import { InitService } from './init.service'
 
-@ApiController({
-  path: '/init',
-  scope: Scope.REQUEST,
-})
+@ApiController('/init')
 @ApiName
 export class InitController {
   constructor(

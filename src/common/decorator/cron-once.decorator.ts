@@ -2,7 +2,7 @@ import cluster from 'cluster'
 
 import { Cron } from '@nestjs/schedule'
 
-import { isMainProcess } from '~/app.config'
+import { isMainProcess } from '~/global/env.global'
 
 export const CronOnce = (...rest: Parameters<typeof Cron>): MethodDecorator => {
   // If not in cluster mode, and PM2 main worker

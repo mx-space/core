@@ -11,7 +11,7 @@ import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import PKG from '../package.json'
-import { isInDemoMode } from './app.config'
+import { DEMO_MODE } from './app.config'
 import { Auth } from './common/decorator/auth.decorator'
 import { HttpCache } from './common/decorator/cache.decorator'
 import { IpLocation, IpRecord } from './common/decorator/ip.decorator'
@@ -36,7 +36,7 @@ export class AppController {
     return {
       name: PKG.name,
       author: PKG.author,
-      version: isDev ? 'dev' : `${isInDemoMode ? 'demo/' : ''}${PKG.version}`,
+      version: isDev ? 'dev' : `${DEMO_MODE ? 'demo/' : ''}${PKG.version}`,
       homepage: PKG.homepage,
       issues: PKG.issues,
     }

@@ -11,7 +11,7 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets'
 
-import { isInDemoMode } from '~/app.config'
+import { DEMO_MODE } from '~/app.config'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { DATA_DIR } from '~/constants/path.constant'
@@ -43,7 +43,7 @@ export class PTYGateway
     client: Socket,
     data?: { password?: string; cols: number; rows: number },
   ) {
-    if (isInDemoMode) {
+    if (DEMO_MODE) {
       client.send(
         this.gatewayMessageFormat(
           BusinessEvents.PTY_MESSAGE,

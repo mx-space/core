@@ -9,7 +9,7 @@ import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { CronExpression } from '@nestjs/schedule'
 
-import { isInDemoMode } from '~/app.config'
+import { DEMO_MODE } from '~/app.config'
 import { CronDescription } from '~/common/decorator/cron-description.decorator'
 import { CronOnce } from '~/common/decorator/cron-once.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
@@ -64,7 +64,7 @@ export class CronService {
   @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'backupDB' })
   @CronDescription('备份 DB 并上传 COS')
   async backupDB({ uploadCOS = true }: { uploadCOS?: boolean } = {}) {
-    if (isInDemoMode) {
+    if (DEMO_MODE) {
       return
     }
     const backup = await this.backupService.backup()

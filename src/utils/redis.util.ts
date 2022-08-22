@@ -1,8 +1,8 @@
-import { isInDemoMode } from '~/app.config'
+import { DEMO_MODE } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 
 type Prefix = 'mx' | 'mx-demo'
-const prefix = isInDemoMode ? 'mx-demo' : 'mx'
+const prefix = DEMO_MODE ? 'mx-demo' : 'mx'
 
 export const getRedisKey = <T extends string = RedisKeys | '*'>(
   key: T,

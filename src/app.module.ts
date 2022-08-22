@@ -1,7 +1,7 @@
-import { Module, NestModule, Type } from '@nestjs/common'
+import { DynamicModule, Module, NestModule, Type } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 
-import { isInDemoMode } from './app.config'
+import { DEMO_MODE } from './app.config'
 import { AppController } from './app.controller'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { RolesGuard } from './common/guard/roles.guard'
@@ -52,92 +52,97 @@ import { HelperModule } from './processors/helper/helper.module'
 import { LoggerModule } from './processors/logger/logger.module'
 import { RedisModule } from './processors/redis/redis.module'
 
-@Module({
-  imports: [
-    LoggerModule,
-    DatabaseModule,
-    RedisModule,
+@Module({})
+export class AppModule {
+  static register(isInit: boolean): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        LoggerModule,
+        DatabaseModule,
+        RedisModule,
 
-    AggregateModule,
-    AnalyzeModule,
-    AuthModule,
-    BackupModule,
-    CategoryModule,
-    CommentModule,
-    ConfigsModule,
-    isInDemoMode && DemoModule,
-    DependencyModule,
-    FeedModule,
-    FileModule,
-    HealthModule,
-    InitModule,
-    LinkModule,
-    MarkdownModule,
-    NoteModule,
-    OptionModule,
-    PageModule,
-    PostModule,
-    ProjectModule,
-    PTYModule,
-    RecentlyModule,
-    UpdateModule,
-    TopicModule,
-    SayModule,
-    SearchModule,
-    ServerlessModule,
-    SitemapModule,
-    SnippetModule,
-    ToolModule,
-    UserModule,
+        AggregateModule,
+        AnalyzeModule,
+        AuthModule,
+        BackupModule,
+        CategoryModule,
+        CommentModule,
+        ConfigsModule,
+        DEMO_MODE && DemoModule,
+        DependencyModule,
+        FeedModule,
+        FileModule,
+        HealthModule,
+        !isInit && InitModule,
+        LinkModule,
+        MarkdownModule,
+        NoteModule,
+        OptionModule,
+        PageModule,
+        PostModule,
+        ProjectModule,
+        PTYModule,
+        RecentlyModule,
+        UpdateModule,
+        TopicModule,
+        SayModule,
+        SearchModule,
+        ServerlessModule,
+        SitemapModule,
+        SnippetModule,
+        ToolModule,
+        UserModule,
 
-    PageProxyModule,
-    RenderEjsModule,
+        PageProxyModule,
+        RenderEjsModule,
 
-    GatewayModule,
-    HelperModule,
+        GatewayModule,
+        HelperModule,
 
-    isDev ? DebugModule : undefined,
-  ].filter(Boolean) as Type<NestModule>[],
-  controllers: [AppController],
-  providers: [
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: QueryInterceptor,
-    },
+        isDev ? DebugModule : undefined,
+      ].filter(Boolean) as Type<NestModule>[],
+      controllers: [AppController],
+      providers: [
+        {
+          provide: APP_INTERCEPTOR,
+          useClass: QueryInterceptor,
+        },
 
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: HttpCacheInterceptor, // 4
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: AnalyzeInterceptor,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: CountingInterceptor, // 3
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: JSONTransformInterceptor, // 2
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: ResponseInterceptor, // 1
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: IdempotenceInterceptor, // 0
-    },
+        {
+          provide: APP_INTERCEPTOR,
+          useClass: HttpCacheInterceptor, // 4
+        },
+        {
+          provide: APP_INTERCEPTOR,
+          useClass: AnalyzeInterceptor,
+        },
+        {
+          provide: APP_INTERCEPTOR,
+          useClass: CountingInterceptor, // 3
+        },
+        {
+          provide: APP_INTERCEPTOR,
+          useClass: JSONTransformInterceptor, // 2
+        },
+        {
+          provide: APP_INTERCEPTOR,
+          useClass: ResponseInterceptor, // 1
+        },
+        {
+          provide: APP_INTERCEPTOR,
+          useClass: IdempotenceInterceptor, // 0
+        },
 
-    {
-      provide: APP_FILTER,
-      useClass: AllExceptionsFilter,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
-  ],
-})
-export class AppModule {}
+        {
+          provide: APP_FILTER,
+          useClass: AllExceptionsFilter,
+        },
+        {
+          provide: APP_GUARD,
+          useClass: RolesGuard,
+        },
+      ],
+    }
+  }
+}

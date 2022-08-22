@@ -6,16 +6,17 @@ import { LogLevel, Logger, ValidationPipe } from '@nestjs/common'
 import { ContextIdFactory, NestFactory } from '@nestjs/core'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 
-import { API_VERSION, CROSS_DOMAIN, PORT, isMainProcess } from './app.config'
+import { API_VERSION, CROSS_DOMAIN, PORT } from './app.config'
 import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'
 import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { SpiderGuard } from './common/guard/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { AggregateByTenantContextIdStrategy } from './common/strategies/context.strategy'
-import { isTest } from './global/env.global'
+import { isMainProcess, isTest } from './global/env.global'
 import { migrateDatabase } from './migration/migrate'
 import { MyLogger } from './processors/logger/logger.service'
+import { checkInit } from './utils/check-init.util'
 
 const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
   ? [...CROSS_DOMAIN.allowedOrigins, '*.shizuri.net', '22333322.xyz']
@@ -26,8 +27,10 @@ declare const module: any
 export async function bootstrap() {
   process.title = `Mix Space (${cluster.isPrimary ? 'master' : 'worker'})`
   await migrateDatabase()
+  const isInit = await checkInit()
+
   const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
+    AppModule.register(isInit),
     fastifyApp,
     {
       logger: ['error'].concat(

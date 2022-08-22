@@ -7,14 +7,10 @@ import PKG from '~/../package.json'
 import { API_VERSION } from '~/app.config'
 
 import { ConfigsService } from '../configs/configs.service'
-import { InitService } from '../init/init.service'
 
 @Injectable()
 export class PageProxyService {
-  constructor(
-    private readonly configs: ConfigsService,
-    private readonly initService: InitService,
-  ) {}
+  constructor(private readonly configs: ConfigsService) {}
 
   async checkCanAccessAdminProxy() {
     const { adminExtra } = await this.configs.waitForConfigReady()
@@ -61,7 +57,6 @@ export class PageProxyService {
         LOGIN_BG: adminExtra.background,
         TITLE: adminExtra.title,
         WEB_URL: webUrl,
-        INIT: await this.initService.isInit(),
       } as IInjectableData)}`}
      ${
        BASE_API
