@@ -52,97 +52,99 @@ import { HelperModule } from './processors/helper/helper.module'
 import { LoggerModule } from './processors/logger/logger.module'
 import { RedisModule } from './processors/redis/redis.module'
 
-@Module({})
+@Module({
+  imports: [
+    LoggerModule,
+    DatabaseModule,
+    RedisModule,
+
+    AggregateModule,
+    AnalyzeModule,
+    AuthModule,
+    BackupModule,
+    CategoryModule,
+    CommentModule,
+    ConfigsModule,
+    DEMO_MODE && DemoModule,
+    DependencyModule,
+    FeedModule,
+    FileModule,
+    HealthModule,
+
+    LinkModule,
+    MarkdownModule,
+    NoteModule,
+    OptionModule,
+    PageModule,
+    PostModule,
+    ProjectModule,
+    PTYModule,
+    RecentlyModule,
+    UpdateModule,
+    TopicModule,
+    SayModule,
+    SearchModule,
+    ServerlessModule,
+    SitemapModule,
+    SnippetModule,
+    ToolModule,
+    UserModule,
+
+    PageProxyModule,
+    RenderEjsModule,
+
+    GatewayModule,
+    HelperModule,
+
+    isDev && DebugModule,
+  ].filter(Boolean) as Type<NestModule>[],
+  controllers: [AppController],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: QueryInterceptor,
+    },
+
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpCacheInterceptor, // 4
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AnalyzeInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CountingInterceptor, // 3
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: JSONTransformInterceptor, // 2
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor, // 1
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: IdempotenceInterceptor, // 0
+    },
+
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
+})
 export class AppModule {
   static register(isInit: boolean): DynamicModule {
     return {
       module: AppModule,
-      imports: [
-        LoggerModule,
-        DatabaseModule,
-        RedisModule,
-
-        AggregateModule,
-        AnalyzeModule,
-        AuthModule,
-        BackupModule,
-        CategoryModule,
-        CommentModule,
-        ConfigsModule,
-        DEMO_MODE && DemoModule,
-        DependencyModule,
-        FeedModule,
-        FileModule,
-        HealthModule,
-        !isInit && InitModule,
-        LinkModule,
-        MarkdownModule,
-        NoteModule,
-        OptionModule,
-        PageModule,
-        PostModule,
-        ProjectModule,
-        PTYModule,
-        RecentlyModule,
-        UpdateModule,
-        TopicModule,
-        SayModule,
-        SearchModule,
-        ServerlessModule,
-        SitemapModule,
-        SnippetModule,
-        ToolModule,
-        UserModule,
-
-        PageProxyModule,
-        RenderEjsModule,
-
-        GatewayModule,
-        HelperModule,
-
-        isDev ? DebugModule : undefined,
-      ].filter(Boolean) as Type<NestModule>[],
-      controllers: [AppController],
-      providers: [
-        {
-          provide: APP_INTERCEPTOR,
-          useClass: QueryInterceptor,
-        },
-
-        {
-          provide: APP_INTERCEPTOR,
-          useClass: HttpCacheInterceptor, // 4
-        },
-        {
-          provide: APP_INTERCEPTOR,
-          useClass: AnalyzeInterceptor,
-        },
-        {
-          provide: APP_INTERCEPTOR,
-          useClass: CountingInterceptor, // 3
-        },
-        {
-          provide: APP_INTERCEPTOR,
-          useClass: JSONTransformInterceptor, // 2
-        },
-        {
-          provide: APP_INTERCEPTOR,
-          useClass: ResponseInterceptor, // 1
-        },
-        {
-          provide: APP_INTERCEPTOR,
-          useClass: IdempotenceInterceptor, // 0
-        },
-
-        {
-          provide: APP_FILTER,
-          useClass: AllExceptionsFilter,
-        },
-        {
-          provide: APP_GUARD,
-          useClass: RolesGuard,
-        },
-      ],
+      imports: [!isInit && InitModule].filter(Boolean) as Type<NestModule>[],
     }
   }
 }

@@ -1,4 +1,5 @@
-import { AxiosRequestConfig } from 'axios'
+/* eslint-disable @typescript-eslint/consistent-type-imports */
+import type { AxiosRequestConfig } from 'axios'
 import cluster from 'cluster'
 import { argv } from 'zx-cjs'
 
