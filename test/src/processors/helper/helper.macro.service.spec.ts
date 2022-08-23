@@ -1,8 +1,10 @@
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
+import { ContextIdFactory } from '@nestjs/core'
 import { Test } from '@nestjs/testing'
 
+import { AggregateByTenantContextIdStrategy } from '~/common/strategies/context.strategy'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 
@@ -23,9 +25,10 @@ describe('test TextMarcoService', () => {
           })
         },
       })
+    ContextIdFactory.apply(new AggregateByTenantContextIdStrategy())
 
     const module = await moduleRef.compile()
-    service = module.get(TextMacroService)
+    service = await module.resolve(TextMacroService)
   })
   describe('test if condition', () => {
     test('case 1', async () => {
