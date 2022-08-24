@@ -43,7 +43,7 @@ specifiers:
   '@types/get-image-colors': 4.0.1
   '@types/jest': 28.1.8
   '@types/js-yaml': 4.0.5
-  '@types/jsonwebtoken': 8.5.8
+  '@types/jsonwebtoken': 8.5.9
   '@types/lodash': 4.14.184
   '@types/marked': 4.0.3
   '@types/mime-types': 2.1.1
@@ -147,7 +147,7 @@ dependencies:
   '@socket.io/redis-emitter': 4.1.1
   '@typegoose/auto-increment': 1.6.0_mongoose@6.5.2
   '@typegoose/typegoose': 9.11.0_mongoose@6.5.2
-  '@types/jsonwebtoken': 8.5.8
+  '@types/jsonwebtoken': 8.5.9
   algoliasearch: 4.14.2
   axios: 0.27.2
   axios-retry: 3.3.1
@@ -1884,8 +1884,8 @@ packages:
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
     dev: true
 
-  /@types/jsonwebtoken/8.5.8:
-    resolution: {integrity: sha512-zm6xBQpFDIDM6o9r6HSgDeIcLy82TKWctCXEPbJJcXb5AKmi5BNNdLXneixK4lplX3PqIVcwLBCGE/kAGnlD4A==}
+  /@types/jsonwebtoken/8.5.9:
+    resolution: {integrity: sha512-272FMnFGzAVMGtu9tkr29hRL6bZj4Zs1KZNeHLnKqAvp06tAIcarTMwOh8/8bz4FmKRcMxZhZNeUAQsNLoiPhg==}
     dependencies:
       '@types/node': 17.0.31
     dev: false
