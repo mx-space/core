@@ -152,7 +152,7 @@
     "@types/ejs": "3.1.1",
     "@types/fs-extra": "9.0.13",
     "@types/get-image-colors": "4.0.1",
-    "@types/jest": "28.1.7",
+    "@types/jest": "28.1.8",
     "@types/js-yaml": "4.0.5",
     "@types/lodash": "4.14.184",
     "@types/marked": "4.0.3",
