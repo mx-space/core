@@ -3,6 +3,7 @@ import { createAdapter } from '@socket.io/redis-adapter'
 
 import { redisSubPub } from '~/utils/redis-subpub.util'
 
+export const RedisIoAdapterKey = 'mx-core-socket'
 export class RedisIoAdapter extends IoAdapter {
   createIOServer(port: number, options?: any) {
     const server = super.createIOServer(port, options)
@@ -10,7 +11,7 @@ export class RedisIoAdapter extends IoAdapter {
     const { pubClient, subClient } = redisSubPub
 
     const redisAdapter = createAdapter(pubClient, subClient, {
-      key: 'mx-core-socket',
+      key: RedisIoAdapterKey,
       requestsTimeout: 3000,
     })
     server.adapter(redisAdapter)

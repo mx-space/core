@@ -6,7 +6,6 @@ import {
   OnGatewayDisconnect,
   WebSocketServer,
 } from '@nestjs/websockets'
-import { Emitter } from '@socket.io/redis-emitter'
 
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthService } from '~/modules/auth/auth.service'
@@ -134,8 +133,7 @@ export const createAuthGateway = (
     }
 
     override broadcast(event: BusinessEvents, data: any) {
-      const client = new Emitter(this.cacheService.getClient())
-      client
+      this.cacheService.emitter
         .of(`/${namespace}`)
         .emit('message', this.gatewayMessageFormat(event, data))
     }

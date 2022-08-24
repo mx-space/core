@@ -13,7 +13,6 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets'
-import { Emitter } from '@socket.io/redis-emitter'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
@@ -99,7 +98,8 @@ export class WebEventsGateway
   }
 
   override broadcast(event: BusinessEvents, data: any) {
-    const client = new Emitter(this.cacheService.getClient())
-    client.of('/web').emit('message', this.gatewayMessageFormat(event, data))
+    const emitter = this.cacheService.emitter
+
+    emitter.of('/web').emit('message', this.gatewayMessageFormat(event, data))
   }
 }

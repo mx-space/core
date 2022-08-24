@@ -2,7 +2,9 @@ import { Cache } from 'cache-manager'
 import { Redis } from 'ioredis'
 
 import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common'
+import { Emitter } from '@socket.io/redis-emitter'
 
+import { RedisIoAdapterKey } from '~/common/adapters/socket.adapter'
 import { getRedisKey } from '~/utils/redis.util'
 
 // Cache 客户端管理器
@@ -48,6 +50,18 @@ export class CacheService {
 
   public getClient() {
     return this.redisClient
+  }
+
+  private _emitter: Emitter
+
+  public get emitter(): Emitter {
+    if (this._emitter) {
+      return this._emitter
+    }
+    this._emitter = new Emitter(this.redisClient, {
+      key: RedisIoAdapterKey,
+    })
+    return this._emitter
   }
 
   public async cleanCatch() {
