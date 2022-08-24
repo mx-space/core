@@ -6,6 +6,33 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Unit test
+- Update dependency @babel/core to v7.18.13
+- Socket boardcast not working
+
+### Features
+
+- Add new macro
+
+### Miscellaneous Tasks
+
+- Update dependency @types/node to v16.11.52
+- Update dependency @types/node to v16.11.54
+- Update dependency @types/node to v16.11.55
+- Update dependency ioredis to v5.2.3
+
+### Refactor
+
+- App module
+
+### Revert
+
+- Durable of provider
+
+## [3.36.0] - 2022-08-21
+
+### Bug Fixes
+
 - Markdown render of image
 - Update nest monorepo to v9.0.11
 - Update dependency xss to v1.0.14
@@ -30,6 +57,10 @@ All notable changes to this project will be documented in this file.
 - Update dependency @types/lodash to v4.14.184
 - Update dependency @types/node to v16.11.50
 - Update dependency @types/node to v16.11.51
+
+### Release
+
+- V3.36.0
 
 ## [3.35.9] - 2022-08-13
 
