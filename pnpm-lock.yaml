@@ -2,7 +2,7 @@ lockfileVersion: 5.4
 
 overrides:
   typescript: 4.7.4
-  ioredis: 5.2.2
+  ioredis: 5.2.3
   webpack: 5.74.0
   semver: 7.3.7
 
@@ -78,7 +78,7 @@ specifiers:
   husky: 8.0.1
   image-size: 1.0.2
   inquirer: '*'
-  ioredis: 5.2.2
+  ioredis: 5.2.3
   isbot: 3.5.1
   jest: 28.1.3
   js-yaml: '*'
@@ -235,7 +235,7 @@ devDependencies:
   eslint: 8.21.0
   eslint-plugin-unused-imports: 2.0.0_eslint@8.21.0
   husky: 8.0.1
-  ioredis: 5.2.2
+  ioredis: 5.2.3
   jest: 28.1.3_m7yiqtntcxjtszeuupqrtbv2km
   lint-staged: 13.0.3
   prettier: 2.7.1
@@ -2806,7 +2806,7 @@ packages:
     resolution: {integrity: sha512-TCxbp9ceuFveTKWuNaCX8QjoC41rAlHen4s63u9Yd+iXlw3efYmimc/u935PKPxSdhkXpnMes4mxtK3/yb0L4g==}
     engines: {node: '>=6.0.0'}
     dependencies:
-      ioredis: 5.2.2
+      ioredis: 5.2.3
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -3341,10 +3341,6 @@ packages:
   /delegates/1.0.0:
     resolution: {integrity: sha1-hMbhWbgZBP3KWaDvRM2HDTElD5o=}
     dev: false
-
-  /denque/2.0.1:
-    resolution: {integrity: sha512-tfiWc6BQLXNLpNiR5iGd0Ocu3P3VpxfzFiqubLgMfhfOw9WyvgJBd46CClNn9k3qfbjvT//0cf7AlYRX/OslMQ==}
-    engines: {node: '>=0.10'}
 
   /denque/2.1.0:
     resolution: {integrity: sha512-HVQE3AAb/pxF8fQAoiqpvg9i3evqug3hoiwakOyZAwJm+6vZehbkYXZ0l4JxS+I3QxM97v5aaRNhj8v5oBhekw==}
@@ -4746,14 +4742,14 @@ packages:
     engines: {node: '>= 0.10'}
     dev: true
 
-  /ioredis/5.2.2:
-    resolution: {integrity: sha512-wryKc1ur8PcCmNwfcGkw5evouzpbDXxxkMkzPK8wl4xQfQf7lHe11Jotell5ikMVAtikXJEu/OJVaoV51BggRQ==}
+  /ioredis/5.2.3:
+    resolution: {integrity: sha512-gQNcMF23/NpvjCaa1b5YycUyQJ9rBNH2xP94LWinNpodMWVUPP5Ai/xXANn/SM7gfIvI62B5CCvZxhg5pOgyMw==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@ioredis/commands': 1.1.1
       cluster-key-slot: 1.1.0
       debug: 4.3.4
-      denque: 2.0.1
+      denque: 2.1.0
       lodash.defaults: 4.2.0
       lodash.isarguments: 3.1.0
       redis-errors: 1.2.0
