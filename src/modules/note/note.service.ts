@@ -1,4 +1,5 @@
 import { isDefined, isMongoId } from 'class-validator'
+import { omit } from 'lodash'
 import { FilterQuery, PaginateOptions } from 'mongoose'
 
 import { Inject, Injectable, forwardRef } from '@nestjs/common'
@@ -12,7 +13,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { deleteKeys } from '~/utils'
+import { getLessThanNow } from '~/utils'
 
 import { CommentRefTypes } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
@@ -95,6 +96,8 @@ export class NoteService {
   }
 
   public async create(document: NoteModel) {
+    document.created = getLessThanNow(document.created)
+
     const doc = await this.noteModel.create(document)
     process.nextTick(async () => {
       await Promise.all([
@@ -133,10 +136,19 @@ export class NoteService {
     return doc
   }
 
-  public async updateById(id: string, doc: Partial<NoteModel>) {
-    deleteKeys(doc, ...NoteModel.protectedKeys)
-    if (['title', 'text'].some((key) => isDefined(doc[key]))) {
-      doc.modified = new Date()
+  public async updateById(id: string, data: Partial<NoteModel>) {
+    const updatedData = Object.assign(
+      {},
+      omit(data, NoteModel.protectedKeys),
+      data.created
+        ? {
+            created: getLessThanNow(data.created),
+          }
+        : {},
+    )
+
+    if (['title', 'text'].some((key) => isDefined(data[key]))) {
+      data.modified = new Date()
     }
 
     const updated = await this.noteModel
@@ -144,8 +156,8 @@ export class NoteService {
         {
           _id: id,
         },
-        { ...doc },
-        { new: true },
+        updatedData,
+        { new: true, timestamps: false },
       )
       .lean({
         getters: true,

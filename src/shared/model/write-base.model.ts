@@ -1,5 +1,6 @@
-import { Type } from 'class-transformer'
+import { Transform, Type } from 'class-transformer'
 import {
+  IsDate,
   IsNotEmpty,
   IsObject,
   IsOptional,
@@ -33,6 +34,13 @@ export class WriteBaseModel extends BaseCommentIndexModel {
   @prop({ default: null, type: Date })
   @ApiHideProperty()
   modified: Date | null
+
+  @ApiHideProperty()
+  @IsOptional()
+  @IsDate()
+  @Transform(({ value }) => (value ? new Date(value) : void 0))
+  @prop()
+  created?: Date
 
   @prop(
     {

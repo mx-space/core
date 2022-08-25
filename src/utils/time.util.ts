@@ -40,14 +40,12 @@ export const getWeekStart = (today: Date) =>
     .set('minute', 0)
     .toDate()
 
-export const getMonthStart = (today: Date) =>
-  dayjs(today)
-    .set('date', 1)
-    .set('hour', 0)
-    .set('minute', 0)
-    .set('millisecond', 0)
-    .toDate()
+export function getLessThanNow(date: Date | undefined) {
+  const now = new Date()
 
-export function getMonthLength(month: number, year: number) {
-  return new Date(year, month, 0).getDate()
+  if (!date) {
+    return now
+  }
+  const created = date ? (dayjs(date).diff(now) > 0 ? now : date) : now
+  return created
 }

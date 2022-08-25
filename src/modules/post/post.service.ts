@@ -18,6 +18,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { getLessThanNow } from '~/utils'
 
 import { CategoryService } from '../category/category.service'
 import { CommentModel, CommentRefTypes } from '../comment/comment.model'
@@ -67,23 +68,22 @@ export class PostService {
       ...post,
       slug,
       categoryId: category.id,
-      created: new Date(),
+      created: getLessThanNow(post.created),
       modified: null,
     })
 
     const doc = res.toJSON()
 
-    this.imageService.saveImageDimensionsFromMarkdownText(
-      doc.text,
-      doc.images,
-      (images) => {
-        res.images = images
-        return res.save()
-      },
-    )
-
     process.nextTick(async () => {
       await Promise.all([
+        this.imageService.saveImageDimensionsFromMarkdownText(
+          doc.text,
+          doc.images,
+          (images) => {
+            res.images = images
+            return res.save()
+          },
+        ),
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
@@ -149,7 +149,16 @@ export class PostService {
     const related = await this.checkRelated(data)
     data.related = related.filter((item) => item !== oldDocument._id) as any
 
-    Object.assign(oldDocument, omit(data, PostModel.protectedKeys))
+    Object.assign(
+      oldDocument,
+      omit(data, PostModel.protectedKeys),
+      data.created
+        ? {
+            created: getLessThanNow(data.created),
+          }
+        : {},
+    )
+
     await oldDocument.save()
     process.nextTick(async () => {
       const doc = await this.postModel.findById(id).lean({ getters: true })
