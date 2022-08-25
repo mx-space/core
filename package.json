@@ -85,7 +85,7 @@
     "@socket.io/redis-adapter": "7.2.0",
     "@socket.io/redis-emitter": "4.1.1",
     "@typegoose/auto-increment": "1.6.0",
-    "@typegoose/typegoose": "9.11.0",
+    "@typegoose/typegoose": "9.11.2",
     "@types/jsonwebtoken": "8.5.9",
     "algoliasearch": "4.14.2",
     "axios": "*",
