@@ -336,11 +336,10 @@ ${text.trim()}
           },
           renderer(token) {
             const { groups, images, paragraph } = token
-            const { params, content, name } = groups
+            const { params, name } = groups
 
             switch (name) {
               case 'gallery':
-                // @ts-expect-error
                 return `<div class="container">${this.parser.parseInline(
                   images,
                 )}</div>`
@@ -366,8 +365,9 @@ ${text.trim()}
                 type: 'container',
                 raw: match[0],
                 groups,
-                // @ts-expect-error
-                images: this.lexer.inlineTokens(groups.content),
+
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                images: this.lexer.inlineTokens(groups!.content),
                 // @ts-expect-error
                 paragraph: this.lexer.blockTokens(groups.content),
               }
