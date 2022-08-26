@@ -26,7 +26,7 @@ specifiers:
   '@nestjs/platform-socket.io': 9.0.11
   '@nestjs/schedule': 2.1.0
   '@nestjs/schematics': 9.0.1
-  '@nestjs/swagger': 6.0.5
+  '@nestjs/swagger': 6.1.0
   '@nestjs/testing': 9.0.11
   '@nestjs/throttler': 3.0.0
   '@nestjs/websockets': 9.0.11
@@ -140,7 +140,7 @@ dependencies:
   '@nestjs/platform-fastify': 9.0.11_ipnr4fefuhr2x3on7pwr6cwcw4
   '@nestjs/platform-socket.io': 9.0.11_arvkpsejr32vji2s3rye3fygfa
   '@nestjs/schedule': 2.1.0_fvppslgepxggj3fnmtlnh4cori
-  '@nestjs/swagger': 6.0.5_mafirdz2v2yiqi5vgldmeyydne
+  '@nestjs/swagger': 6.1.0_mafirdz2v2yiqi5vgldmeyydne
   '@nestjs/throttler': 3.0.0_fvppslgepxggj3fnmtlnh4cori
   '@nestjs/websockets': 9.0.11_lta74l7a56f7avmhvq6ggypouy
   '@socket.io/redis-adapter': 7.2.0
@@ -1591,8 +1591,8 @@ packages:
       - chokidar
     dev: true
 
-  /@nestjs/swagger/6.0.5_mafirdz2v2yiqi5vgldmeyydne:
-    resolution: {integrity: sha512-Iy6/Xvd+YVC2F6flIDew5/VnpM2m7kK3IMoft0JqQc0RVXEO45+9gSasN6c8E/s0PbOy9de055mivAhFjk/+lA==}
+  /@nestjs/swagger/6.1.0_mafirdz2v2yiqi5vgldmeyydne:
+    resolution: {integrity: sha512-Lflplv216nXkH6By/jMggQjpuH1V67M07tgHXUAZujAwG3LAJ1CfSvzuFckK4MAb54xQTYvFgfVPWkXqvKXzdA==}
     peerDependencies:
       '@fastify/static': ^6.0.0
       '@nestjs/common': ^9.0.0
@@ -1610,7 +1610,7 @@ packages:
       lodash: 4.17.21
       path-to-regexp: 3.2.0
       reflect-metadata: 0.1.13
-      swagger-ui-dist: 4.13.2
+      swagger-ui-dist: 4.14.0
     transitivePeerDependencies:
       - class-transformer
       - class-validator
@@ -7574,8 +7574,8 @@ packages:
     engines: {node: '>= 0.4'}
     dev: true
 
-  /swagger-ui-dist/4.13.2:
-    resolution: {integrity: sha512-jHL6UyIYpvEI7NsuWd0R3hJaPQTg6Oo4qSBo+oVfOEkv6rrQm/475RGSMmZgV6ajp+Sgrp9CqrDjQYAgQqiv1A==}
+  /swagger-ui-dist/4.14.0:
+    resolution: {integrity: sha512-TBzhheU15s+o54Cgk9qxuYcZMiqSm/SkvKnapoGHOF66kz0Y5aGjpzj5BT/vpBbn6rTPJ9tUYXQxuDWfsjiGMw==}
     dev: false
 
   /symbol-observable/4.0.0:
