@@ -45,7 +45,7 @@ specifiers:
   '@types/js-yaml': 4.0.5
   '@types/jsonwebtoken': 8.5.9
   '@types/lodash': 4.14.184
-  '@types/marked': 4.0.3
+  '@types/marked': 4.0.6
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
   '@types/node': 16.11.56
@@ -89,7 +89,7 @@ specifiers:
   lint-staged: 13.0.3
   lodash: '*'
   lru-cache: 7.14.0
-  marked: 4.0.18
+  marked: 4.0.19
   mime-types: '*'
   mkdirp: '*'
   mongodb-memory-server: 8.9.0
@@ -174,7 +174,7 @@ dependencies:
   linkedom: 0.14.12
   lodash: 4.17.21
   lru-cache: 7.14.0
-  marked: 4.0.18
+  marked: 4.0.19
   mime-types: 2.1.35
   mkdirp: 1.0.4
   mongoose: 6.5.3
@@ -220,7 +220,7 @@ devDependencies:
   '@types/jest': 28.1.8
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.184
-  '@types/marked': 4.0.3
+  '@types/marked': 4.0.6
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
   '@types/node': 16.11.56
@@ -1964,8 +1964,8 @@ packages:
     resolution: {integrity: sha512-WOehptuhKIXukSUUkRgGbj2c997Uv/iUgYgII8U7XLJqq9W2oF0kQ6frEznRQbdurioz+L/cdaIm4GutTQfgmA==}
     dev: true
 
-  /@types/marked/4.0.3:
-    resolution: {integrity: sha512-HnMWQkLJEf/PnxZIfbm0yGJRRZYYMhb++O9M36UCTA9z53uPvVoSlAwJr3XOpDEryb7Hwl1qAx/MV6YIW1RXxg==}
+  /@types/marked/4.0.6:
+    resolution: {integrity: sha512-ITAVUzsnVbhy5afxhs4PPPbrv2hKVEDH5BhhaQNQlVG0UNu+9A18XSdYr53nBdHZ0ADEQLl+ciOjXbs7eHdiQQ==}
     dev: true
 
   /@types/mime-types/2.1.1:
@@ -6052,8 +6052,8 @@ packages:
     engines: {node: '>=8'}
     dev: false
 
-  /marked/4.0.18:
-    resolution: {integrity: sha512-wbLDJ7Zh0sqA0Vdg6aqlbT+yPxqLblpAZh1mK2+AO2twQkPywvvqQNfEPVwSSRjZ7dZcdeVBIAgiO7MMp3Dszw==}
+  /marked/4.0.19:
+    resolution: {integrity: sha512-rgQF/OxOiLcvgUAj1Q1tAf4Bgxn5h5JZTp04Fx4XUkVhs7B+7YA9JEWJhJpoO8eJt8MkZMwqLCNeNqj1bCREZQ==}
     engines: {node: '>= 12'}
     hasBin: true
     dev: false
