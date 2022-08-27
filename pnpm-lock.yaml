@@ -55,7 +55,7 @@ specifiers:
   '@types/qs': 6.9.7
   '@types/semver': 7.3.12
   '@types/ua-parser-js': 0.7.36
-  '@types/validator': 13.7.5
+  '@types/validator': 13.7.6
   '@vercel/ncc': 0.34.0
   algoliasearch: 4.14.2
   axios: '*'
@@ -207,7 +207,7 @@ optionalDependencies:
   redis-memory-server: 0.5.0
 
 devDependencies:
-  '@innei/eslint-config-ts': 0.9.4
+  '@innei/eslint-config-ts': 0.9.4_typescript@4.7.2
   '@innei/prettier': 0.9.4
   '@nestjs/cli': 9.1.1
   '@nestjs/schematics': 9.0.1_typescript@4.7.2
@@ -230,7 +230,7 @@ devDependencies:
   '@types/qs': 6.9.7
   '@types/semver': 7.3.12
   '@types/ua-parser-js': 0.7.36
-  '@types/validator': 13.7.5
+  '@types/validator': 13.7.6
   '@vercel/ncc': 0.34.0
   cron: 2.1.0
   cross-env: 7.0.3
@@ -1052,8 +1052,10 @@ packages:
       tslib: 2.4.0
     dev: false
 
-  /@innei/eslint-config-ts/0.9.4:
+  /@innei/eslint-config-ts/0.9.4_typescript@4.7.2:
     resolution: {integrity: sha512-T52M6omBVNP6CbRN0sWNf8TjEEocuPTSN+FnVUY7c1P8JfgOTH9PFOG8fEt59UZLxZEIjy26pHGDqATv9inGVA==}
+    peerDependencies:
+      typescript: '>=4'
     dependencies:
       '@typescript-eslint/eslint-plugin': 5.30.7_avllfqkj7335zpdhprikuvgmy4
       '@typescript-eslint/parser': 5.35.1_bhttdz2kviaiqdfc2p3x7ygkuy
@@ -2022,8 +2024,8 @@ packages:
     resolution: {integrity: sha512-N1rW+njavs70y2cApeIw1vLMYXRwfBy+7trgavGuuTfOd7j1Yh7QTRc/yqsPl6ncokt72ZXuxEU0PiCp9bSwNQ==}
     dev: true
 
-  /@types/validator/13.7.5:
-    resolution: {integrity: sha512-9rQHeAqz6Jw3gDhttkmWetoriW5FPbxylv/6h6mXtaj2NKRcOvOmvfcswVdLVpbuy10NrO486K3lCoLgoIhiIA==}
+  /@types/validator/13.7.6:
+    resolution: {integrity: sha512-uBsnWETsUagQ0n6G2wcXNIufpTNJir0zqzG4p62fhnwzs48d/iuOWEEo0d3iUxN7D+9R/8CSvWGKS+KmaD0mWA==}
     dev: true
 
   /@types/webidl-conversions/6.1.1:
