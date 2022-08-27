@@ -6,6 +6,42 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Update dependency @fastify/cookie to v8 ([#683](https://github.com/orhun/git-cliff/issues/683))
+- Update dependency @types/jsonwebtoken to v8.5.9
+- Update dependency mongoose to v6.5.3
+- Update dependency @typegoose/typegoose to v9.11.2
+- Update dependency isbot to v3.5.2
+- Update dependency @nestjs/swagger to v6.1.0 ([#708](https://github.com/orhun/git-cliff/issues/708))
+- Downgrade ts version
+
+### Features
+
+- Custom created time
+- Test email is working
+
+### Miscellaneous Tasks
+
+- Update dependency mongodb-memory-server to v8.9.0 ([#694](https://github.com/orhun/git-cliff/issues/694))
+- Update dependency @types/jest to v28.1.8
+- Update dependency @types/node to v16.11.56
+- Update dependency jest to v29
+- Update dependency @nestjs/cli to v9.1.1 ([#707](https://github.com/orhun/git-cliff/issues/707))
+- Update markedjs
+
+### Performance
+
+- Ncc pack speed
+
+### Refactor
+
+- Remove cos-sdk
+- Remove pino
+- Remove request@2
+
+## [3.36.1] - 2022-08-24
+
+### Bug Fixes
+
 - Unit test
 - Update dependency @babel/core to v7.18.13
 - Socket boardcast not working
@@ -24,6 +60,10 @@ All notable changes to this project will be documented in this file.
 ### Refactor
 
 - App module
+
+### Release
+
+- V3.36.1
 
 ### Revert
 
