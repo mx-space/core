@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 
 import { UserModel } from '~/modules/user/user.model'
 
-export type Request = FastifyRequest &
+export type AdapterRequest = FastifyRequest &
   (
     | {
         isGuest: true
@@ -16,4 +16,4 @@ export type Request = FastifyRequest &
       }
   ) &
   Record<string, any>
-export type Response = FastifyReply & Record<string, any>
+export type AdapterResponse = FastifyReply & Record<string, any>

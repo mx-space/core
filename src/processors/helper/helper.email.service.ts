@@ -117,8 +117,8 @@ export class EmailService {
       this.configsService.waitForConfigReady().then(({ mailOptions }) => {
         const { options, user, pass } = mailOptions
         if (!user && !pass) {
-          const message = '邮件件客户端未认证'
-          this.logger.error(message)
+          const message = '未启动邮件通知'
+          this.logger.warn(message)
           return j(message)
         }
         // @ts-ignore
@@ -137,7 +137,7 @@ export class EmailService {
 
   // 验证有效性
   private verifyClient() {
-    return new Promise<boolean>((r, j) => {
+    return new Promise<boolean>((r) => {
       this.instance.verify((error) => {
         if (error) {
           this.logger.error('邮件客户端初始化连接失败！')
@@ -209,6 +209,17 @@ export class EmailService {
       master: source.master,
       mail: source.mail,
     } as EmailTemplateRenderProps)
+  }
+
+  async sendTestEmail() {
+    const master = await this.configsService.getMaster()
+    const mailOptons = await this.configsService.get('mailOptions')
+    return this.instance.sendMail({
+      from: `"Mx Space" <${mailOptons.user}>`,
+      to: master.mail,
+      subject: '测试邮件',
+      text: '这是一封测试邮件',
+    })
   }
 
   getInstance() {

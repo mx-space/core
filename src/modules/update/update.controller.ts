@@ -8,6 +8,7 @@ import { dashboard } from '~/../package.json'
 import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
+import { ApiName } from '~/common/decorator/openapi.decorator'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 
 import { UpdateAdminDto } from './update.dto'
@@ -15,6 +16,7 @@ import { UpdateService } from './update.service'
 
 @ApiController('update')
 @Auth()
+@ApiName
 export class UpdateController {
   constructor(private readonly service: UpdateService) {}
 

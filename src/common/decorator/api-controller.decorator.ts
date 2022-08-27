@@ -12,7 +12,7 @@ export const ApiController: (
   }
 
   const transformPath = (path: string) =>
-    `${apiRoutePrefix}/${path.replace(/\//, '')}`
+    `${apiRoutePrefix}/${path.replace(/^\/*/, '')}`
 
   if (typeof controller === 'string') {
     return Controller(transformPath(controller), ...args)

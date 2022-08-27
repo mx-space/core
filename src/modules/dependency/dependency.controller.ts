@@ -6,11 +6,13 @@ import { BadRequestException, Get, Query, Sse } from '@nestjs/common'
 import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
+import { ApiName } from '~/common/decorator/openapi.decorator'
 import { DATA_DIR } from '~/constants/path.constant'
 import { installPKG } from '~/utils'
 
 @ApiController('dependencies')
 @Auth()
+@ApiName
 export class DependencyController {
   constructor() {}
 
