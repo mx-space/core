@@ -9,6 +9,7 @@ import { getIp } from '~/utils'
 
 const app: FastifyAdapter = new FastifyAdapter({
   trustProxy: true,
+  logger: false,
 })
 export { app as fastifyApp }
 
