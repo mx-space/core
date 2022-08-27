@@ -1,19 +1,12 @@
-import COS from 'cos-nodejs-sdk-v5'
 import dayjs from 'dayjs'
-import { existsSync } from 'fs'
 import { readdir, rm } from 'fs/promises'
 import mkdirp from 'mkdirp'
 import { join } from 'path'
 
-import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common'
-import { OnEvent } from '@nestjs/event-emitter'
-import { CronExpression } from '@nestjs/schedule'
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 
 import { DEMO_MODE } from '~/app.config'
-import { CronDescription } from '~/common/decorator/cron-description.decorator'
-import { CronOnce } from '~/common/decorator/cron-once.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
-import { EventBusEvents } from '~/constants/event-bus.constant'
 import { LOG_DIR, TEMP_DIR } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
@@ -23,12 +16,18 @@ import { NoteService } from '~/modules/note/note.service'
 import { PageService } from '~/modules/page/page.service'
 import { PostService } from '~/modules/post/post.service'
 import { SearchService } from '~/modules/search/search.service'
-import { InjectModel } from '~/transformers/model.transformer'
+import { uploadFileToCOS } from '~/utils/cos.util'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { CacheService } from '../redis/cache.service'
 import { HttpService } from './helper.http.service'
 import { JWTService, StoreJWTPayload } from './helper.jwt.service'
+import { OnEvent } from '@nestjs/event-emitter'
+import { CronExpression } from '@nestjs/schedule'
+import { CronDescription } from '~/common/decorator/cron-description.decorator'
+import { CronOnce } from '~/common/decorator/cron-once.decorator'
+import { EventBusEvents } from '~/constants/event-bus.constant'
+import { InjectModel } from '~/transformers/model.transformer'
 
 @Injectable()
 export class CronService {
@@ -54,16 +53,14 @@ export class CronService {
     @Inject(forwardRef(() => BackupService))
     private readonly backupService: BackupService,
     @Inject(forwardRef(() => SearchService))
-    private readonly searchService: SearchService,
-    @Inject(forwardRef(() => JWTService))
-    private readonly jwtService: JWTService,
+    private readonly searchService: SearchService, // @Inject(forwardRef(() => JWTService)) // private readonly jwtService: JWTService,
   ) {
     this.logger = new Logger(CronService.name)
   }
 
   @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'backupDB' })
   @CronDescription('备份 DB 并上传 COS')
-  async backupDB({ uploadCOS = true }: { uploadCOS?: boolean } = {}) {
+  async backupDB() {
     if (DEMO_MODE) {
       return
     }
@@ -74,9 +71,6 @@ export class CronService {
     }
     //  开始上传 COS
     process.nextTick(async () => {
-      if (!uploadCOS) {
-        return
-      }
       const { backupOptions } = await this.configs.waitForConfigReady()
 
       if (
@@ -87,34 +81,26 @@ export class CronService {
       ) {
         return
       }
-      const backupFilePath = backup.path
 
-      if (!existsSync(backupFilePath)) {
-        this.logger.warn('文件不存在, 无法上传到 COS')
-        return
-      }
       this.logger.log('--> 开始上传到 COS')
-      const cos = new COS({
-        SecretId: backupOptions.secretId,
-        SecretKey: backupOptions.secretKey,
-      })
-      // 分片上传
-      cos.sliceUploadFile(
+
+      await uploadFileToCOS(
+        backup.buffer,
+        backup.path.slice(backup.path.lastIndexOf('/') + 1),
         {
-          Bucket: backupOptions.bucket,
-          Region: backupOptions.region,
-          Key: backup.path.slice(backup.path.lastIndexOf('/') + 1),
-          FilePath: backupFilePath,
-        },
-        (err) => {
-          if (!err) {
-            this.logger.log('--> 上传成功')
-          } else {
-            this.logger.error('--> 上传失败了')
-            throw err
-          }
+          bucket: backupOptions.bucket,
+          region: backupOptions.region,
+          secretId: backupOptions.secretId,
+          secretKey: backupOptions.secretKey,
         },
       )
+        .then(() => {
+          this.logger.log('--> 上传成功')
+        })
+        .catch((err) => {
+          this.logger.error('--> 上传失败了')
+          throw err
+        })
     })
   }
 
