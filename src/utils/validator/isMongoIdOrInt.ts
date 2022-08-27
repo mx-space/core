@@ -1,13 +1,4 @@
-/*
- * @Author: Innei
- * @Date: 2021-02-04 15:17:04
- * @LastEditTime: 2021-02-04 15:18:08
- * @LastEditors: Innei
- * @FilePath: /server/shared/utils/validator-decorators/isMongoIdOrInt.ts
- * @Mark: Coding with Love
- */
-import { ValidationOptions } from 'class-validator'
-import { isInt, isMongoId } from 'class-validator'
+import { ValidationOptions, isInt, isMongoId } from 'class-validator'
 import { merge } from 'lodash'
 
 import { validatorFactory } from './simpleValidatorFactory'

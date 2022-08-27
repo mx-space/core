@@ -1,13 +1,4 @@
-/*
- * @Author: Innei
- * @Date: 2020-08-02 12:53:38
- * @LastEditTime: 2020-08-02 13:17:33
- * @LastEditors: Innei
- * @FilePath: /mx-server/src/common/decorators/isBooleanOrString.ts
- * @Coding with Love
- */
-import { ValidationOptions } from 'class-validator'
-import { isString } from 'class-validator'
+import { ValidationOptions, isString } from 'class-validator'
 import { isBoolean, merge } from 'lodash'
 
 import { validatorFactory } from './simpleValidatorFactory'
