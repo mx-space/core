@@ -26,6 +26,7 @@ export async function getAverageRGB(
   }
 
   try {
+    // NOTE: can not pass image url here, because request package is removed manually.
     const colors = await getColors(buffer, type)
 
     return colors[0].hex()

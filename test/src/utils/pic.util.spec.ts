@@ -1,5 +1,6 @@
 import { sleep } from '~/utils'
 import { getAverageRGB, pickImagesFromMarkdown } from '~/utils/pic.util'
+
 describe('src/utils/pic.util', () => {
   test('marked ast', async () => {
     const res = pickImagesFromMarkdown(`
@@ -21,6 +22,6 @@ describe('src/utils/pic.util', () => {
     const buffer = Buffer.from(base64, 'base64')
     const hex = await getAverageRGB(buffer, 'image/png')
 
-    expect(hex.startsWith('#')).toBe(true)
+    expect(hex).toBe('#fbbdd6')
   })
 })

@@ -1,4 +1,4 @@
-// why this, because we need not pino logger, and this logger can not bundle whole package into only one file with ncc.
+// why this, because we dont need pino logger, and this logger can not bundle whole package into only one file with ncc.
 // only work with fastify v4+ with pino v8+
 
 module.exports = {

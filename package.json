@@ -190,6 +190,7 @@
     "ioredis": "5.2.3",
     "webpack": "5.74.0",
     "semver": "7.3.7",
-    "pino": "./external/pino"
+    "pino": "./external/pino",
+    "get-pixels@^3>request": "./external/request"
   }
 }
