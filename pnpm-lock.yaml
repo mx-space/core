@@ -114,7 +114,7 @@ specifiers:
   rxjs: 7.5.6
   semver: 7.3.7
   slugify: 1.6.5
-  snakecase-keys: 5.4.2
+  snakecase-keys: 5.4.3
   socket.io: '*'
   ts-jest: 28.0.8
   ts-node: 10.9.1
@@ -195,7 +195,7 @@ dependencies:
   rxjs: 7.5.6
   semver: 7.3.7
   slugify: 1.6.5
-  snakecase-keys: 5.4.2
+  snakecase-keys: 5.4.3
   ua-parser-js: 1.0.2
   vm2: 3.9.11
   wildcard-match: 5.1.2
@@ -7005,8 +7005,8 @@ packages:
       tslib: 2.4.0
     dev: false
 
-  /snakecase-keys/5.4.2:
-    resolution: {integrity: sha512-6mzBNP9t1ghArxcaCxZNGIJewE9qyH+eUQIGba9I7MJcZoV4WX4fM2Y+/K9+BGHCFB94ZASfoC3F44UxLXce+A==}
+  /snakecase-keys/5.4.3:
+    resolution: {integrity: sha512-XPcDObw0EZYL8Ey50s9DKTtJvZSc7ThhGi05GZeGTiTFv5zl7sODpoHRV16+13CGideUgfFFzNZOuH+u2haM/w==}
     engines: {node: '>=12'}
     dependencies:
       map-obj: 4.3.0
