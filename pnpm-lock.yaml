@@ -121,7 +121,7 @@ specifiers:
   tsconfig-paths: 4.1.0
   typescript: 4.7.2
   ua-parser-js: 1.0.2
-  vm2: 3.9.10
+  vm2: 3.9.11
   wildcard-match: 5.1.2
   xss: 1.0.14
   zx-cjs: 7.0.7-0
@@ -197,7 +197,7 @@ dependencies:
   slugify: 1.6.5
   snakecase-keys: 5.4.2
   ua-parser-js: 1.0.2
-  vm2: 3.9.10
+  vm2: 3.9.11
   wildcard-match: 5.1.2
   xss: 1.0.14
   zx-cjs: 7.0.7-0
@@ -2394,12 +2394,12 @@ packages:
     resolution: {integrity: sha512-Xx54uLJQZ19lKygFXOWsscKUbsBZW0CPykPhVQdhIeIwrbPmJzqeASDInc8nKBnp/JT6igTs82qPXz069H8I/A==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+    dev: true
 
   /acorn/8.8.0:
     resolution: {integrity: sha512-QOxyigPVrpZ2GXT+PFyZTl6TtOFc5egxHIP9IlQ+RbupQuX4RkT/Bee4/kQuC02Xkzg84JcT7oLYtDIQxp+v7w==}
     engines: {node: '>=0.4.0'}
     hasBin: true
-    dev: true
 
   /agent-base/6.0.2:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
@@ -7646,12 +7646,12 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
-  /vm2/3.9.10:
-    resolution: {integrity: sha512-AuECTSvwu2OHLAZYhG716YzwodKCIJxB6u1zG7PgSQwIgAlEaoXH52bxdcvT8GkGjnYK7r7yWDW0m0sOsPuBjQ==}
+  /vm2/3.9.11:
+    resolution: {integrity: sha512-PFG8iJRSjvvBdisowQ7iVF580DXb1uCIiGaXgm7tynMR1uTBlv7UJlB1zdv5KJ+Tmq1f0Upnj3fayoEOPpCBKg==}
     engines: {node: '>=6.0'}
     hasBin: true
     dependencies:
-      acorn: 8.7.1
+      acorn: 8.8.0
       acorn-walk: 8.2.0
     dev: false
 
