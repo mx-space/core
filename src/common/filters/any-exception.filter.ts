@@ -32,6 +32,7 @@ type myError = {
   readonly message?: string
 }
 
+let once = false
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name)
@@ -39,7 +40,38 @@ export class AllExceptionsFilter implements ExceptionFilter {
   constructor(
     @Inject(REFLECTOR) private reflector: Reflector,
     private readonly eventManager: EventManagerService,
-  ) {}
+  ) {
+    this.registerCatchAllExceptionsHook()
+  }
+
+  registerCatchAllExceptionsHook() {
+    if (once) {
+      return
+    }
+    process.on('unhandledRejection', (reason) => {
+      console.error('unhandledRejection: ', reason)
+      this.eventManager.broadcast(
+        EventBusEvents.SystemException,
+        { message: reason },
+        {
+          scope: EventScope.TO_SYSTEM,
+        },
+      )
+    })
+
+    process.on('uncaughtException', (err) => {
+      console.error('uncaughtException: ', err)
+      this.eventManager.broadcast(
+        EventBusEvents.SystemException,
+        { message: err?.message ?? err, stack: err?.stack },
+        {
+          scope: EventScope.TO_SYSTEM,
+        },
+      )
+    })
+    once = true
+  }
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp()
     const response = ctx.getResponse<FastifyReply>()

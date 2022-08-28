@@ -2,10 +2,12 @@
 import cluster from 'cluster'
 import { render } from 'ejs'
 import { createTransport } from 'nodemailer'
+import Mail from 'nodemailer/lib/mailer'
 
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
+import { BizException } from '~/common/exceptions/biz.exception'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
@@ -177,7 +179,7 @@ export class EmailService {
         this.logger.log(options)
         return
       }
-      await this.instance.sendMail(options)
+      await this.send(options)
     } else {
       const options = {
         from,
@@ -194,7 +196,7 @@ export class EmailService {
         this.logger.log(options)
         return
       }
-      await this.instance.sendMail(options)
+      await this.send(options)
     }
   }
 
@@ -224,6 +226,15 @@ export class EmailService {
 
   getInstance() {
     return this.instance
+  }
+
+  async send(options: Mail.Options) {
+    try {
+      return await this.instance.sendMail(options)
+    } catch (err) {
+      this.logger.warn(err.message)
+      throw new BizException('邮件发送失败')
+    }
   }
 }
 
