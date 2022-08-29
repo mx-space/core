@@ -6,6 +6,20 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Catch system uncaught exception
+- Update dependency vm2 to v3.9.11
+- Update dependency snakecase-keys to v5.4.3
+- Update dependency @fastify/cookie to v8.1.0 ([#715](https://github.com/orhun/git-cliff/issues/715))
+
+### Miscellaneous Tasks
+
+- Update dependency @types/validator to v13.7.6
+- Update supercharge/mongodb-github-action action to v1.8.0 ([#711](https://github.com/orhun/git-cliff/issues/711))
+
+## [3.36.2] - 2022-08-27
+
+### Bug Fixes
+
 - Update dependency @fastify/cookie to v8 ([#683](https://github.com/orhun/git-cliff/issues/683))
 - Update dependency @types/jsonwebtoken to v8.5.9
 - Update dependency mongoose to v6.5.3
@@ -37,6 +51,10 @@ All notable changes to this project will be documented in this file.
 - Remove cos-sdk
 - Remove pino
 - Remove request@2
+
+### Release
+
+- V3.36.2
 
 ## [3.36.1] - 2022-08-24
 
