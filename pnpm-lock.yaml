@@ -108,7 +108,7 @@ specifiers:
   pluralize: '*'
   prettier: 2.7.1
   qs: 6.11.0
-  redis-memory-server: 0.5.0
+  redis-memory-server: 0.6.0
   reflect-metadata: 0.1.13
   rimraf: 3.0.2
   rxjs: 7.5.6
@@ -204,7 +204,7 @@ dependencies:
 
 optionalDependencies:
   mongodb-memory-server: 8.9.0
-  redis-memory-server: 0.5.0
+  redis-memory-server: 0.6.0
 
 devDependencies:
   '@innei/eslint-config-ts': 0.9.4_typescript@4.7.2
@@ -3085,7 +3085,7 @@ packages:
     dev: true
 
   /commondir/1.0.1:
-    resolution: {integrity: sha1-3dgA2gxmEnOTzKWVDqloo6rxJTs=}
+    resolution: {integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==}
     dev: false
     optional: true
 
@@ -4477,17 +4477,6 @@ packages:
       toidentifier: 1.0.1
     dev: false
 
-  /https-proxy-agent/5.0.0:
-    resolution: {integrity: sha512-EkYm5BcKUGiduxzSt3Eppko+PiNWNEpa4ySk9vTC6wDsQJW9rHSa+UhGNJoRYp7bz6Ht1eaRIa6QaJqO5rCFbA==}
-    engines: {node: '>= 6'}
-    dependencies:
-      agent-base: 6.0.2
-      debug: 4.3.4
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-    optional: true
-
   /https-proxy-agent/5.0.1:
     resolution: {integrity: sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==}
     engines: {node: '>= 6'}
@@ -4821,7 +4810,7 @@ packages:
     dev: false
 
   /isexe/2.0.0:
-    resolution: {integrity: sha1-6PvzdNxVb/iUehDcsFctYz8s+hA=}
+    resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
   /istanbul-lib-coverage/3.2.0:
     resolution: {integrity: sha512-eOeJ5BHCmHYvQK7xt9GkdHuzuCGS1Y6g9Gvnx3Ym33fz/HpLRYxiS0wHNr+m/MBC8B647Xt608vCDEvhl9c6Mw==}
@@ -6619,19 +6608,19 @@ packages:
     resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
     engines: {node: '>=4'}
 
-  /redis-memory-server/0.5.0:
-    resolution: {integrity: sha512-MoqPXeB9pqUa/Klry6HZw94aaOSE8CAB+1Zo1hXvGu/b+k/u79e2u1/CVGsqJ0xJMSkQMPa9duzzdmXll0PCSg==}
+  /redis-memory-server/0.6.0:
+    resolution: {integrity: sha512-jo80uIfGY2goCY7rXXIOxs7rD/hsTtyWKUE1IA1wraugPxpkz21vEjckdkAvEZ+eawlkn0b+53Fv0N1CNfIOVw==}
     engines: {node: '>=10.15.0'}
     requiresBuild: true
     dependencies:
       camelcase: 6.3.0
       cross-spawn: 7.0.3
-      debug: 4.3.3
+      debug: 4.3.4
       extract-zip: 2.0.1
       find-cache-dir: 3.3.2
       find-package-json: 1.2.0
       get-port: 5.1.1
-      https-proxy-agent: 5.0.0
+      https-proxy-agent: 5.0.1
       lockfile: 1.0.4
       lodash.defaultsdeep: 4.6.1
       mkdirp: 1.0.4
