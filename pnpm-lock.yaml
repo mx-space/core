@@ -91,7 +91,7 @@ specifiers:
   lint-staged: 13.0.3
   lodash: '*'
   lru-cache: 7.14.0
-  marked: 4.0.19
+  marked: 4.1.0
   mime-types: '*'
   mkdirp: '*'
   mongodb-memory-server: 8.9.0
@@ -176,7 +176,7 @@ dependencies:
   linkedom: 0.14.12
   lodash: 4.17.21
   lru-cache: 7.14.0
-  marked: 4.0.19
+  marked: 4.1.0
   mime-types: 2.1.35
   mkdirp: 1.0.4
   mongoose: 6.5.4
@@ -5756,8 +5756,8 @@ packages:
     engines: {node: '>=8'}
     dev: false
 
-  /marked/4.0.19:
-    resolution: {integrity: sha512-rgQF/OxOiLcvgUAj1Q1tAf4Bgxn5h5JZTp04Fx4XUkVhs7B+7YA9JEWJhJpoO8eJt8MkZMwqLCNeNqj1bCREZQ==}
+  /marked/4.1.0:
+    resolution: {integrity: sha512-+Z6KDjSPa6/723PQYyc1axYZpYYpDnECDaU6hkaf5gqBieBkMKYReL5hteF2QizhlMbgbo8umXl/clZ67+GlsA==}
     engines: {node: '>= 12'}
     hasBin: true
     dev: false
