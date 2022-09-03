@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { WriteStream } from 'fs'
 import { resolve } from 'path'
+import { performance } from 'perf_hooks'
 
 import {
   ArgumentsHost,
@@ -48,11 +49,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (once) {
       return
     }
-    process.on('unhandledRejection', (reason) => {
+    process.on('unhandledRejection', (reason: any) => {
       console.error('unhandledRejection: ', reason)
+
       this.eventManager.broadcast(
         EventBusEvents.SystemException,
-        { message: reason },
+        { message: reason?.message ?? reason, stack: reason?.stack || '' },
         {
           scope: EventScope.TO_SYSTEM,
         },
@@ -63,7 +65,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       console.error('uncaughtException: ', err)
       this.eventManager.broadcast(
         EventBusEvents.SystemException,
-        { message: err?.message ?? err, stack: err?.stack },
+        { message: err?.message ?? err, stack: err?.stack || '' },
         {
           scope: EventScope.TO_SYSTEM,
         },
@@ -115,7 +117,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
           })
 
         this.errorLogPipe.write(
-          `[${new Date().toISOString()}] ${decodeURI(url)}: ${
+          `[${new Date().toLocaleString('en-US', {
+            timeStyle: 'medium',
+            dateStyle: 'long',
+          })}] ${decodeURI(url)}: ${
             (exception as any)?.response?.message ||
             (exception as myError)?.message
           }\n${(exception as Error).stack}\n`,
@@ -134,7 +139,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const content = `${request.method} -> ${request.url}`
       Logger.debug(
         `--- 响应异常请求：${content}${chalk.yellow(
-          ` +${+new Date() - prevRequestTs}ms`,
+          ` +${(performance.now() | 0) - prevRequestTs}ms`,
         )}`,
         LoggingInterceptor.name,
       )
