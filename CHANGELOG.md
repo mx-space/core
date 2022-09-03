@@ -6,6 +6,25 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Update dependency snakecase-keys to v5.4.4
+- Update dependency mongoose to v6.5.4
+- Update dependency marked to v4.1.0 ([#718](https://github.com/orhun/git-cliff/issues/718))
+- Update dependency @nestjs/swagger to v6.1.1
+- Unhandled reject message emit
+- Allow across version update in dev
+
+### Miscellaneous Tasks
+
+- Update dependency @types/jest to v29
+- Update dependency @nestjs/schematics to v9.0.2 ([#721](https://github.com/orhun/git-cliff/issues/721))
+- Update dependency redis-memory-server to v0.6.0 ([#720](https://github.com/orhun/git-cliff/issues/720))
+- Update dependency mongodb-memory-server to v8.9.1
+- Update dependency @types/cache-manager to v4.0.2
+
+## [3.36.3] - 2022-08-29
+
+### Bug Fixes
+
 - Catch system uncaught exception
 - Update dependency vm2 to v3.9.11
 - Update dependency snakecase-keys to v5.4.3
@@ -15,6 +34,10 @@ All notable changes to this project will be documented in this file.
 
 - Update dependency @types/validator to v13.7.6
 - Update supercharge/mongodb-github-action action to v1.8.0 ([#711](https://github.com/orhun/git-cliff/issues/711))
+
+### Release
+
+- V3.36.3
 
 ## [3.36.2] - 2022-08-27
 
