@@ -84,6 +84,7 @@ export class UpdateController {
         }
         if (
           !force &&
+          !isDev &&
           (minor(currentVersion) !== minor(latestVersion) ||
             major(currentVersion) !== major(latestVersion))
         ) {
