@@ -12,7 +12,7 @@ export class RedisIoAdapter extends IoAdapter {
 
     const redisAdapter = createAdapter(pubClient, subClient, {
       key: RedisIoAdapterKey,
-      requestsTimeout: 3000,
+      requestsTimeout: 10000,
     })
     server.adapter(redisAdapter)
     return server

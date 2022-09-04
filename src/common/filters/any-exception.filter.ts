@@ -52,13 +52,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
     process.on('unhandledRejection', (reason: any) => {
       console.error('unhandledRejection: ', reason)
 
-      this.eventManager.broadcast(
-        EventBusEvents.SystemException,
-        { message: reason?.message ?? reason, stack: reason?.stack || '' },
-        {
-          scope: EventScope.TO_SYSTEM,
-        },
-      )
+      // this.eventManager.broadcast(
+      //   EventBusEvents.SystemException,
+      //   { message: reason?.message ?? reason, stack: reason?.stack || '' },
+      //   {
+      //     scope: EventScope.TO_SYSTEM,
+      //   },
+      // )
     })
 
     process.on('uncaughtException', (err) => {

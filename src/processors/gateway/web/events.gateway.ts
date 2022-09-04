@@ -23,8 +23,9 @@ import { getShortDate } from '~/utils/time.util'
 import { BoardcastBaseGateway } from '../base.gateway'
 import { DanmakuDto } from './dtos/danmaku.dto'
 
+const namespace = 'web'
 @WebSocketGateway<GatewayMetadata>({
-  namespace: 'web',
+  namespace,
 })
 export class WebEventsGateway
   extends BoardcastBaseGateway
@@ -60,7 +61,7 @@ export class WebEventsGateway
 
   async getcurrentClientCount() {
     const server = this.namespace.server
-    const sockets = await server.of('/web').adapter.sockets(new Set())
+    const sockets = await server.of(`/${namespace}`).adapter.sockets(new Set())
     return sockets.size
   }
   async handleConnection(socket: SocketIO.Socket) {
@@ -100,6 +101,8 @@ export class WebEventsGateway
   override broadcast(event: BusinessEvents, data: any) {
     const emitter = this.cacheService.emitter
 
-    emitter.of('/web').emit('message', this.gatewayMessageFormat(event, data))
+    emitter
+      .of(`/${namespace}`)
+      .emit('message', this.gatewayMessageFormat(event, data))
   }
 }

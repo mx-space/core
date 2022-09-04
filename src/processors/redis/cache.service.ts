@@ -61,6 +61,7 @@ export class CacheService {
     this._emitter = new Emitter(this.redisClient, {
       key: RedisIoAdapterKey,
     })
+
     return this._emitter
   }
 
