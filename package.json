@@ -116,7 +116,7 @@
     "marked": "4.1.0",
     "mime-types": "*",
     "mkdirp": "*",
-    "mongoose": "6.5.4",
+    "mongoose": "6.5.5",
     "mongoose-aggregate-paginate-v2": "1.0.6",
     "mongoose-lean-getters": "0.3.5",
     "mongoose-lean-id": "0.3.0",
