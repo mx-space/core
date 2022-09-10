@@ -33,7 +33,7 @@ specifiers:
   '@nestjs/throttler': 3.0.0
   '@nestjs/websockets': 9.0.11
   '@socket.io/redis-adapter': 7.2.0
-  '@socket.io/redis-emitter': 4.1.1
+  '@socket.io/redis-emitter': 5.0.0
   '@typegoose/auto-increment': 1.6.0
   '@typegoose/typegoose': 9.11.2
   '@types/babel__core': 7.1.19
@@ -146,7 +146,7 @@ dependencies:
   '@nestjs/throttler': 3.0.0_fvppslgepxggj3fnmtlnh4cori
   '@nestjs/websockets': 9.0.11_lta74l7a56f7avmhvq6ggypouy
   '@socket.io/redis-adapter': 7.2.0
-  '@socket.io/redis-emitter': 4.1.1
+  '@socket.io/redis-emitter': 5.0.0
   '@typegoose/auto-increment': 1.6.0_mongoose@6.5.5
   '@typegoose/typegoose': 9.11.2_mongoose@6.5.5
   '@types/jsonwebtoken': 8.5.9
@@ -1726,11 +1726,11 @@ packages:
       - supports-color
     dev: false
 
-  /@socket.io/redis-emitter/4.1.1:
-    resolution: {integrity: sha512-N0wfcfcVJvPF1AjIlZ5efxGCz+8uY6qeCwIaRU+QUCNdqvtXQtlC/MtUJQCwVqs1MWP6Bv3TDuZGC04gIj7YuQ==}
+  /@socket.io/redis-emitter/5.0.0:
+    resolution: {integrity: sha512-95OSnwxZ5Ix0fQaf/Na4tR8Ub5Z3n1LLDS1vWifSlWYip0PlUV1/VMvDVlLtFVZ07DLalEBIsKGKTJM1urAeTg==}
     dependencies:
-      debug: 4.3.3
-      notepack.io: 2.1.3
+      debug: 4.3.4
+      notepack.io: 3.0.1
       socket.io-parser: 4.0.4
     transitivePeerDependencies:
       - supports-color
@@ -3222,18 +3222,6 @@ packages:
     dependencies:
       ms: 2.1.3
     dev: true
-
-  /debug/4.3.3:
-    resolution: {integrity: sha512-/zxw5+vh1Tfv+4Qn7a5nsbcJKPaSvCDhojn6FEl9vupwK2VCSDtEiEtqr8DFtzYFOdz63LBkxec7DYuc2jon6Q==}
-    engines: {node: '>=6.0'}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-    dependencies:
-      ms: 2.1.2
-    dev: false
 
   /debug/4.3.4:
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
@@ -6122,12 +6110,12 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /notepack.io/2.1.3:
-    resolution: {integrity: sha512-AgSt+cP5XMooho1Ppn8NB3FFaVWefV+qZoZncYTUSch2GAEwlYLcIIbT5YVkMlFeNHnfwOvc4HDlbvrB5BRxXA==}
-    dev: false
-
   /notepack.io/2.2.0:
     resolution: {integrity: sha512-9b5w3t5VSH6ZPosoYnyDONnUTF8o0UkBw7JLA6eBlYJWyGT1Q3vQa8Hmuj1/X6RYvHjjygBDgw6fJhe0JEojfw==}
+    dev: false
+
+  /notepack.io/3.0.1:
+    resolution: {integrity: sha512-TKC/8zH5pXIAMVQio2TvVDTtPRX+DJPHDqjRbxogtFiByHyzKmy96RA0JtCQJ+WouyyL4A10xomQzgbUT+1jCg==}
     dev: false
 
   /npm-run-path/4.0.1:
