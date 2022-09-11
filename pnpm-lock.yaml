@@ -43,7 +43,7 @@ specifiers:
   '@types/ejs': 3.1.1
   '@types/fs-extra': 9.0.13
   '@types/get-image-colors': 4.0.1
-  '@types/jest': 29.0.0
+  '@types/jest': 29.0.1
   '@types/js-yaml': 4.0.5
   '@types/jsonwebtoken': 8.5.9
   '@types/lodash': 4.14.185
@@ -219,7 +219,7 @@ devDependencies:
   '@types/ejs': 3.1.1
   '@types/fs-extra': 9.0.13
   '@types/get-image-colors': 4.0.1
-  '@types/jest': 29.0.0
+  '@types/jest': 29.0.1
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.185
   '@types/marked': 4.0.7
@@ -1896,11 +1896,11 @@ packages:
       '@types/istanbul-lib-report': 3.0.0
     dev: true
 
-  /@types/jest/29.0.0:
-    resolution: {integrity: sha512-X6Zjz3WO4cT39Gkl0lZ2baFRaEMqJl5NC1OjElkwtNzAlbkr2K/WJXkBkH5VP0zx4Hgsd2TZYdOEfvp2Dxia+Q==}
+  /@types/jest/29.0.1:
+    resolution: {integrity: sha512-CAZrjLRZs4xEdIrfrdV74xK1Vo/BKQZwUcjJv3gp6gMeV3BsVxMnXTcgtYOKyphT4DPPo7jxVEVhuwJTQn3oPQ==}
     dependencies:
-      expect: 29.0.1
-      pretty-format: 29.0.1
+      expect: 29.0.3
+      pretty-format: 29.0.3
     dev: true
 
   /@types/js-yaml/4.0.5:
@@ -3850,17 +3850,6 @@ packages:
   /exit/0.1.2:
     resolution: {integrity: sha512-Zk/eNKV2zbjpKzrsQ+n1G6poVbErQxJ0LBOJXaKZ1EViLzH+hrLu9cdXI4zw9dBQJslwBEpbQ2P1oS7nDxs6jQ==}
     engines: {node: '>= 0.8.0'}
-    dev: true
-
-  /expect/29.0.1:
-    resolution: {integrity: sha512-yQgemsjLU+1S8t2A7pXT3Sn/v5/37LY8J+tocWtKEA0iEYYc6gfKbbJJX2fxHZmd7K9WpdbQqXUpmYkq1aewYg==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      '@jest/expect-utils': 29.0.3
-      jest-get-type: 29.0.0
-      jest-matcher-utils: 29.0.3
-      jest-message-util: 29.0.3
-      jest-util: 29.0.3
     dev: true
 
   /expect/29.0.3:
@@ -6471,15 +6460,6 @@ packages:
     resolution: {integrity: sha512-ujppO+MkdPqoVINuDFDRLClm7D78qbDt0/NR+wp5FqEZOoTNAjPHWj17QRhu7geIHJfcNhRk1XVQmF8Bp3ye+g==}
     engines: {node: '>=10.13.0'}
     hasBin: true
-    dev: true
-
-  /pretty-format/29.0.1:
-    resolution: {integrity: sha512-iTHy3QZMzuL484mSTYbQIM1AHhEQsH8mXWS2/vd2yFBYnG3EBqGiMONo28PlPgrW7P/8s/1ISv+y7WH306l8cw==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      '@jest/schemas': 29.0.0
-      ansi-styles: 5.2.0
-      react-is: 18.2.0
     dev: true
 
   /pretty-format/29.0.3:
