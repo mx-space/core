@@ -139,7 +139,7 @@ describe('test /snippets', () => {
         const json = res.json()
         expect(res.statusCode).toBe(200)
 
-        expect(json).toStrictEqual(JSON.parse(mockPayload1.raw))
+        expect(json).toStrictEqual(JSON.parse(mockPayload1.raw || '{}'))
       })
   })
 

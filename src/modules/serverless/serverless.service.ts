@@ -1,11 +1,14 @@
 import { isURL } from 'class-validator'
 import fs, { mkdir, stat } from 'fs/promises'
 import LRUCache from 'lru-cache'
+import { createRequire } from 'module'
 import { mongo } from 'mongoose'
-import path from 'path'
+import path, { resolve } from 'path'
 import { nextTick } from 'process'
 
 import { TransformOptions, parseAsync, transformAsync } from '@babel/core'
+import BabelPluginTransformCommonJS from '@babel/plugin-transform-modules-commonjs'
+import BabelPluginTransformTS from '@babel/plugin-transform-typescript'
 import * as t from '@babel/types'
 import { VariableDeclaration } from '@babel/types'
 import {
@@ -232,6 +235,8 @@ export class ServerlessService {
     const { raw: functionString } = model
     const logger = new Logger(`fx:${model.reference}/${model.name}`)
     const document = await this.model.findById(model.id)
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this
     const globalContext = {
       context: {
         // inject app req, res
@@ -293,7 +298,7 @@ export class ServerlessService {
 
       require: this.inNewContextRequire(),
       get import() {
-        return this.require
+        return self.require
       },
 
       process: {
@@ -333,9 +338,9 @@ export class ServerlessService {
     return {
       comments: false,
       plugins: [
-        require('@babel/plugin-transform-typescript'),
+        BabelPluginTransformTS,
         [
-          require('@babel/plugin-transform-modules-commonjs'),
+          BabelPluginTransformCommonJS,
           { allowTopLevelThis: false, importInterop: 'node' },
         ],
         function transformImport() {
@@ -411,25 +416,33 @@ export class ServerlessService {
 
   private resolvePath(id: string) {
     try {
-      return require.resolve(id)
+      return this.require.resolve(id)
     } catch {
       try {
         const modulePath = path.resolve(NODE_REQUIRE_PATH, id)
-        const resolvePath = require.resolve(modulePath)
+        const resolvePath = this.require.resolve(modulePath)
 
         return resolvePath
-      } catch {
+      } catch (err) {
+        delete this.require.cache[id]
+
+        isDev && console.error(err)
+
         throw new InternalServerErrorException(`module "${id}" not found.`)
       }
     }
   }
+
+  private require = isTest
+    ? createRequire(resolve(process.cwd(), './node_modules'))
+    : createRequire(NODE_REQUIRE_PATH)
 
   private inNewContextRequire() {
     const __require = (id: string) => {
       const isBuiltin = isBuiltinModule(id)
 
       const resolvePath = this.resolvePath(id)
-      const module = require(resolvePath)
+      const module = this.require(resolvePath)
       // TODO remove cache in-used package dependencies, because it will not exist in prod
       // eslint-disable-next-line no-empty
       if (Object.keys(PKG.dependencies).includes(id) || isBuiltin) {
@@ -441,7 +454,7 @@ export class ServerlessService {
     }
 
     const __requireNoCache = (id: string) => {
-      delete require.cache[this.resolvePath(id)]
+      delete this.require.cache[this.resolvePath(id)]
       const clonedModule = __require(id)
 
       return clonedModule

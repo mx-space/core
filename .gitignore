@@ -52,3 +52,5 @@ schema.gql
 app.config.js
 
 webpack-dist
+
+admin/
