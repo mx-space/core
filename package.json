@@ -43,7 +43,8 @@
     "prod:pm2": "cross-env NODE_ENV=production pm2 restart ecosystem.config.js",
     "prod:stop": "pm2 stop ecosystem.config.js",
     "prod:debug": "cross-env NODE_ENV=production nest start --debug --watch",
-    "test": "NODE_ENV=development vitest -w",
+    "test": "NODE_ENV=development vitest",
+    "test:watch": "NODE_ENV=development vitest -w",
     "docs": "npx @compodoc/compodoc -p tsconfig.json -s -d docs",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
   },
