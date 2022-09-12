@@ -1,0 +1,70 @@
+import { resolve } from 'path'
+import swc from 'rollup-plugin-swc'
+import tsconfigPath from 'vite-tsconfig-paths'
+import { defineConfig } from 'vitest/config'
+
+const swcPlugin = (() => {
+  const plugin = swc({
+    test: 'ts',
+    jsc: {
+      parser: {
+        syntax: 'typescript',
+        dynamicImport: true,
+        decorators: true,
+      },
+      target: 'es2021',
+      transform: {
+        decoratorMetadata: true,
+      },
+    },
+  })
+
+  const originalTransform = plugin.transform!
+
+  const transform = function (...args: Parameters<typeof originalTransform>) {
+    if (!args[1].endsWith('html')) return originalTransform.apply(this, args)
+  }
+
+  return { ...plugin, transform }
+})()
+
+export default defineConfig({
+  root: './test',
+  test: {
+    include: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
+
+    threads: false,
+    globals: true,
+    globalSetup: [resolve(__dirname, './test/setup.ts')],
+    setupFiles: [resolve(__dirname, './test/setup-global.ts')],
+    environment: 'node',
+    includeSource: [resolve(__dirname, './test')],
+  },
+  resolve: {
+    alias: {
+      'zx-cjs': 'zx',
+    },
+  },
+
+  // esbuild can not emit ts metadata
+  esbuild: false,
+
+  plugins: [
+    swcPlugin,
+    tsconfigPath({
+      projects: [
+        resolve(__dirname, './test/tsconfig.json'),
+        resolve(__dirname, './tsconfig.json'),
+      ],
+    }),
+
+    {
+      name: 'a-vitest-plugin-that-changes-config',
+      config: () => ({
+        test: {
+          setupFiles: ['./setupFiles/add-something-to-global.ts'],
+        },
+      }),
+    },
+  ],
+})

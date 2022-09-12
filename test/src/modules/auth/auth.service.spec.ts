@@ -1,3 +1,5 @@
+import { vi } from 'vitest'
+
 import { Test } from '@nestjs/testing'
 
 import { AuthService } from '~/modules/auth/auth.service'
@@ -31,8 +33,8 @@ describe('Test AuthService', () => {
         {
           provide: getModelToken(UserModel.name),
           useValue: {
-            findById: jest.fn().mockReturnValue({
-              select: jest.fn().mockResolvedValue({
+            findById: vi.fn().mockReturnValue({
+              select: vi.fn().mockResolvedValue({
                 ...mockUser,
               }),
             }),

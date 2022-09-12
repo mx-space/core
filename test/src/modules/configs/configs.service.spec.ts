@@ -1,5 +1,6 @@
 import { dbHelper } from 'test/helper/db-mock.helper'
 import { MockCacheService, redisHelper } from 'test/helper/redis-mock.helper'
+import { vi } from 'vitest'
 
 import { BadRequestException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
@@ -24,8 +25,9 @@ describe('Test ConfigsService', () => {
     await dbHelper.close()
     await (await redisHelper).close()
   })
+
   const optionModel = getModelForClass(OptionModel)
-  const mockEmitFn = jest.fn()
+  const mockEmitFn = vi.fn()
   beforeAll(async () => {
     const { CacheService: redisService$ } = await redisHelper
 

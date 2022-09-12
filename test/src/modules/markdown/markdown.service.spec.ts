@@ -1,3 +1,5 @@
+import { vi } from 'vitest'
+
 import { Test } from '@nestjs/testing'
 
 import { CategoryModel } from '~/modules/category/category.model'
@@ -19,33 +21,33 @@ describe('test Markdown Service', () => {
         MarkdownService,
         {
           provide: getModelToken(CategoryModel.name),
-          useValue: jest.fn(),
+          useValue: vi.fn(),
         },
         {
           provide: getModelToken(PostModel.name),
-          useValue: jest.fn(),
+          useValue: vi.fn(),
         },
         {
           provide: getModelToken(NoteModel.name),
-          useValue: jest.fn(),
+          useValue: vi.fn(),
         },
         {
           provide: getModelToken(PageModel.name),
-          useValue: jest.fn(),
+          useValue: vi.fn(),
         },
         {
           provide: AssetService,
-          useValue: jest.fn(),
+          useValue: vi.fn(),
         },
         {
           provide: DatabaseService,
-          useValue: jest.fn(),
+          useValue: vi.fn(),
         },
 
         {
           provide: TextMacroService,
           useValue: {
-            replaceTextMacro: jest.fn(),
+            replaceTextMacro: vi.fn(),
           },
         },
       ],

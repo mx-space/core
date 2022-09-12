@@ -38,7 +38,9 @@ describe('test serverless function service', () => {
 
         {
           provide: getModelToken('SnippetModel'),
-          useValue: getModelForClass(SnippetModel),
+          useValue: getModelForClass(SnippetModel, {
+            existingConnection: connection.connection,
+          }),
         },
       ],
     })
