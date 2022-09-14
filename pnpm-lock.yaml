@@ -35,7 +35,7 @@ specifiers:
   '@socket.io/redis-adapter': 7.2.0
   '@socket.io/redis-emitter': 5.0.0
   '@swc/core': 1.3.0
-  '@typegoose/auto-increment': 1.6.0
+  '@typegoose/auto-increment': 1.7.0
   '@typegoose/typegoose': 9.11.2
   '@types/babel__core': 7.1.19
   '@types/bcrypt': 5.0.0
@@ -151,7 +151,7 @@ dependencies:
   '@nestjs/websockets': 9.0.11_lta74l7a56f7avmhvq6ggypouy
   '@socket.io/redis-adapter': 7.2.0
   '@socket.io/redis-emitter': 5.0.0
-  '@typegoose/auto-increment': 1.6.0_mongoose@6.5.0
+  '@typegoose/auto-increment': 1.7.0_mongoose@6.5.0
   '@typegoose/typegoose': 9.11.2_mongoose@6.5.0
   '@types/jsonwebtoken': 8.5.9
   algoliasearch: 4.14.2
@@ -1576,11 +1576,11 @@ packages:
     resolution: {integrity: sha512-eZxlbI8GZscaGS7kkc/trHTT5xgrjH3/1n2JDwusC9iahPKWMRvRjJSAN5mCXviuTGQ/lHnhvv8Q1YTpnfz9gA==}
     dev: true
 
-  /@typegoose/auto-increment/1.6.0_mongoose@6.5.0:
-    resolution: {integrity: sha512-EDw+6N+ZS3V6I4IFj4mDxAkhZH0W6/3Zk3E7MPt3ybGcuJGAQEPBceOjMkoxVTaP8LxmYzrmeoKs8TIUCf+y/A==}
+  /@typegoose/auto-increment/1.7.0_mongoose@6.5.0:
+    resolution: {integrity: sha512-m7TgvYzdA++fnu9mxCfhDuvrF5nuAkbMsT6sgm0LDNedkLBR+ePt1r+jm0jwlDNDRX6nou8n73iAhPlwiBPvzA==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
-      mongoose: ~6.5.0
+      mongoose: ~6.6.0
     dependencies:
       loglevel: 1.8.0
       mongoose: 6.5.0
