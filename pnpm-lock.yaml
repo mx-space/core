@@ -93,7 +93,7 @@ specifiers:
   marked: 4.1.0
   mime-types: '*'
   mkdirp: '*'
-  mongodb-memory-server: 8.9.1
+  mongodb-memory-server: 8.9.2
   mongoose: 6.5.0
   mongoose-aggregate-paginate-v2: 1.0.6
   mongoose-lean-getters: 0.3.5
@@ -207,7 +207,7 @@ dependencies:
   zx-cjs: 7.0.7-0
 
 optionalDependencies:
-  mongodb-memory-server: 8.9.1
+  mongodb-memory-server: 8.9.2
   redis-memory-server: 0.6.0
 
 devDependencies:
@@ -5217,8 +5217,8 @@ packages:
       '@types/whatwg-url': 8.2.2
       whatwg-url: 11.0.0
 
-  /mongodb-memory-server-core/8.9.1:
-    resolution: {integrity: sha512-aAP+XPTCTTI5T/3lg3b/xFWPU8j/LGJXtfnecvTUjAxTfsGga39/N416lG4SUSSZK+ObrWb382v+w4GTNWDvEQ==}
+  /mongodb-memory-server-core/8.9.2:
+    resolution: {integrity: sha512-LG8u8QxPGrozy5UBg9YCh8jvvs5Di93zXrusgwgpj+vKxn+Efa6l1pFnCHNy6SYFydFCpMezilsDIXF0tzbJ6A==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@types/tmp': 0.2.3
@@ -5229,7 +5229,7 @@ packages:
       get-port: 5.1.1
       https-proxy-agent: 5.0.1
       md5-file: 5.0.0
-      mongodb: 4.9.0
+      mongodb: 4.9.1
       new-find-package-json: 2.0.0
       semver: 7.3.7
       tar-stream: 2.2.0
@@ -5242,12 +5242,12 @@ packages:
     dev: false
     optional: true
 
-  /mongodb-memory-server/8.9.1:
-    resolution: {integrity: sha512-mpAEluTwWrB4k1beL5VOX7EJzn52wmRr8ZNXRhPLlNFat4VsJzTzqBNwjoSwXuj9QxQqWDrTx18Sb36xZYawzA==}
+  /mongodb-memory-server/8.9.2:
+    resolution: {integrity: sha512-h+u+60C/yYZStKqL13O8EerRyt2gdFg9PLyRSBJr5eJfCr+tVMoMrdCw6Dd6PKlCp5hwq27VpjvtSWAT44bHiA==}
     engines: {node: '>=12.22.0'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 8.9.1
+      mongodb-memory-server-core: 8.9.2
       tslib: 2.4.0
     transitivePeerDependencies:
       - supports-color
@@ -5266,19 +5266,6 @@ packages:
       saslprep: 1.0.3
     dev: false
 
-  /mongodb/4.9.0:
-    resolution: {integrity: sha512-tJJEFJz7OQTQPZeVHZJIeSOjMRqc5eSyXTt86vSQENEErpkiG7279tM/GT5AVZ7TgXNh9HQxoa2ZkbrANz5GQw==}
-    engines: {node: '>=12.9.0'}
-    dependencies:
-      bson: 4.7.0
-      denque: 2.1.0
-      mongodb-connection-string-url: 2.5.3
-      socks: 2.7.0
-    optionalDependencies:
-      saslprep: 1.0.3
-    dev: false
-    optional: true
-
   /mongodb/4.9.1:
     resolution: {integrity: sha512-ZhgI/qBf84fD7sI4waZBoLBNJYPQN5IOC++SBCiPiyhzpNKOxN/fi0tBHvH2dEC42HXtNEbFB0zmNz4+oVtorQ==}
     engines: {node: '>=12.9.0'}
@@ -5289,7 +5276,6 @@ packages:
       socks: 2.7.0
     optionalDependencies:
       saslprep: 1.0.3
-    dev: true
 
   /mongoose-aggregate-paginate-v2/1.0.6:
     resolution: {integrity: sha512-UuALu+mjhQa1K9lMQvjLL3vm3iALvNw8PQNIh2gp1b+tO5hUa0NC0Wf6/8QrT9PSJVTihXaD8hQVy3J4e0jO0Q==}
