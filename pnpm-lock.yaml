@@ -86,7 +86,7 @@ specifiers:
   json5: 2.2.1
   jsonwebtoken: 8.5.1
   jszip: 3.10.1
-  linkedom: 0.14.12
+  linkedom: 0.14.14
   lint-staged: 13.0.3
   lodash: '*'
   lru-cache: 7.14.0
@@ -177,7 +177,7 @@ dependencies:
   json5: 2.2.1
   jsonwebtoken: 8.5.1
   jszip: 3.10.1
-  linkedom: 0.14.12
+  linkedom: 0.14.14
   lodash: 4.17.21
   lru-cache: 7.14.0
   marked: 4.1.0
@@ -4824,8 +4824,8 @@ packages:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
     dev: true
 
-  /linkedom/0.14.12:
-    resolution: {integrity: sha512-8uw8LZifCwyWeVWr80T79sQTMmNXt4Da7oN5yH5gTXRqQM+TuZWJyBqRMcIp32zx/f8anHNHyil9Avw9y76ziQ==}
+  /linkedom/0.14.14:
+    resolution: {integrity: sha512-PG6nGUMvlbh1H7yg47+JGwQiBiGAaO2iMe9qs9FFNceO9woRpu8bLCM4sJ/8C8/k1Y0/rIbvK5K4R0L3quXNJw==}
     dependencies:
       css-select: 5.1.0
       cssom: 0.5.0
