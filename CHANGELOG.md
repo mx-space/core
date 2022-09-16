@@ -6,6 +6,58 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Do not emit unhandledreject event
+- Update dependency @fastify/multipart to v7.1.2
+- Update dependency @nestjs/swagger to v6.1.2
+- Update dependency isbot to v3.5.3
+- Update babel monorepo to v7.19.0 ([#730](https://github.com/orhun/git-cliff/issues/730))
+- Update dependency mongoose to v6.5.5
+- Update dependency mongoose-paginate-v2 to v1.7.1
+- Watch test
+- Update dependency @typegoose/auto-increment to v1.7.0 ([#745](https://github.com/orhun/git-cliff/issues/745))
+- Update babel monorepo to v7.19.1
+- Update dependency linkedom to v0.14.14
+- Update dependency mongoose to v6.6.1 ([#738](https://github.com/orhun/git-cliff/issues/738))
+- Use cravatar
+- Update dependency @typegoose/typegoose to v9.12.0 ([#746](https://github.com/orhun/git-cliff/issues/746))
+
+### Features
+
+- Replace master avatar in comments if exist
+
+### Miscellaneous Tasks
+
+- Update dependency jest to v29.0.2
+- Update dependency @types/node to v16.11.57
+- Update nest monorepo
+- Update dependency @types/marked to v4.0.7
+- Update dependency @types/node to v16.11.58
+- Update dependency typescript to v4.7.4
+- Update dependency jest to v29.0.3
+- Update emitter
+- Update dependency @types/lodash to v4.14.185
+- Update dependency @types/jest to v29.0.1
+- Update dependency @nestjs/cli to v9.1.3
+- Update dependency @types/nodemailer to v6.4.6
+- Update dependency @types/node to v16.11.59
+- Update dependency @swc/core to v1.3.1
+- Update dependency mongodb-memory-server to v8.9.2
+- Update dependency vite to v3.1.1
+- Update dependency typescript to v4.8.3 ([#706](https://github.com/orhun/git-cliff/issues/706))
+
+### Refactor
+
+- Use create require instead use global require
+- Move to vitest
+
+### Ci
+
+- Remove e2e script
+
+## [3.36.4] - 2022-09-03
+
+### Bug Fixes
+
 - Update dependency snakecase-keys to v5.4.4
 - Update dependency mongoose to v6.5.4
 - Update dependency marked to v4.1.0 ([#718](https://github.com/orhun/git-cliff/issues/718))
@@ -20,6 +72,10 @@ All notable changes to this project will be documented in this file.
 - Update dependency redis-memory-server to v0.6.0 ([#720](https://github.com/orhun/git-cliff/issues/720))
 - Update dependency mongodb-memory-server to v8.9.1
 - Update dependency @types/cache-manager to v4.0.2
+
+### Release
+
+- V3.36.4
 
 ## [3.36.3] - 2022-08-29
 
