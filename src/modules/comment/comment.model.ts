@@ -134,7 +134,12 @@ export class CommentModel extends BaseModel {
   @prop({ default: false })
   isWhispers?: boolean
 
+  _avatar?: string
   public get avatar() {
-    return getAvatar(this.mail)
+    return this._avatar ?? getAvatar(this.mail)
+  }
+
+  set avatar(value: string) {
+    this._avatar = value
   }
 }

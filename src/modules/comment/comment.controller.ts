@@ -77,6 +77,7 @@ export class CommentController {
         _id: id,
       })
       .populate('parent')
+      .lean()
 
     if (!data) {
       throw new CannotFindException()
@@ -84,6 +85,7 @@ export class CommentController {
     if (data.isWhispers && !isMaster) {
       throw new CannotFindException()
     }
+    await this.commentService.replaceMasterAvatarUrl([data])
     return data
   }
 
@@ -153,6 +155,8 @@ export class CommentController {
         sort: { pin: -1, created: -1 },
       },
     )
+
+    await this.commentService.replaceMasterAvatarUrl(comments.docs)
     return comments
   }
 

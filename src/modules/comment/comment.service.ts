@@ -220,6 +220,8 @@ export class CommentService {
       },
     )
 
+    await this.replaceMasterAvatarUrl(queryList.docs)
+
     return queryList
   }
 
@@ -309,5 +311,25 @@ export class CommentService {
       .catch(() => undefined)
 
     return newModel
+  }
+
+  async replaceMasterAvatarUrl(comments: CommentModel[]) {
+    const master = await this.userService.getMaster()
+
+    comments.forEach(function process(comment) {
+      if (typeof comment == 'string') {
+        return
+      }
+      if (comment.author === master.name) {
+        comment.avatar = master.avatar || comment.avatar
+      }
+      if (comment.children?.length) {
+        comment.children.forEach((child) => {
+          process(child as CommentModel)
+        })
+      }
+
+      return comment
+    })
   }
 }
