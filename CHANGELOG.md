@@ -44,6 +44,10 @@ All notable changes to this project will be documented in this file.
 - Update dependency mongodb-memory-server to v8.9.2
 - Update dependency vite to v3.1.1
 - Update dependency typescript to v4.8.3 ([#706](https://github.com/orhun/git-cliff/issues/706))
+- Update dependency vite to v3.1.2
+- Remove e2e test in ci
+- [**breaking**] Drop compatibility
+- Update dependency vitest to v0.23.4
 
 ### Refactor
 
@@ -53,6 +57,10 @@ All notable changes to this project will be documented in this file.
 ### Ci
 
 - Remove e2e script
+
+### Release
+
+- V3.36.5
 
 ## [3.36.4] - 2022-09-03
 
