@@ -1,8 +1,5 @@
-import { uniq } from 'lodash'
-
 import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
 
-import { apiRoutePrefix } from '~/common/decorator/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
@@ -14,8 +11,7 @@ import { AggregateService } from '../aggregate/aggregate.service'
 export class SitemapController {
   constructor(private readonly aggregateService: AggregateService) {}
 
-  // TODO drop 兼容老版本
-  @Get(uniq(['/sitemap', `${apiRoutePrefix}/sitemap`]))
+  @Get('/sitemap')
   @CacheTTL(3600)
   @CacheKey(CacheKeys.SiteMapXmlCatch)
   @HTTPDecorators.Bypass
