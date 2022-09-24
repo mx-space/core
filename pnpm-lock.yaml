@@ -14,7 +14,7 @@ specifiers:
   '@babel/plugin-transform-modules-commonjs': 7.18.6
   '@babel/plugin-transform-typescript': 7.19.1
   '@babel/types': '*'
-  '@fastify/cookie': 8.1.0
+  '@fastify/cookie': 8.2.0
   '@fastify/multipart': 7.2.0
   '@fastify/static': 6.5.0
   '@innei/eslint-config-ts': latest
@@ -136,7 +136,7 @@ dependencies:
   '@babel/plugin-transform-modules-commonjs': 7.18.6_@babel+core@7.19.1
   '@babel/plugin-transform-typescript': 7.19.1_@babel+core@7.19.1
   '@babel/types': 7.19.0
-  '@fastify/cookie': 8.1.0
+  '@fastify/cookie': 8.2.0
   '@fastify/multipart': 7.2.0
   '@fastify/static': 6.5.0
   '@nestjs/common': 9.0.11_mgy7w2bm3yhmntrbe3boyroj6m
@@ -845,8 +845,8 @@ packages:
       text-decoding: 1.0.0
     dev: false
 
-  /@fastify/cookie/8.1.0:
-    resolution: {integrity: sha512-+BxpyK4KLAjDpXdWxOjl8yaKtAoqYZR+CE9+cNtdMDoACb8hcpGx9npkrdINl62EpCu06oIPluq8A4NUsi78ZA==}
+  /@fastify/cookie/8.2.0:
+    resolution: {integrity: sha512-8rW9Ic9I+vWugh6/Xp3SGn3KiMiMU3v87lJ3fO3o1/zsw9HgGYWMS73IY1XvZ34pqhudsUqruo/d5wwMxKrvFQ==}
     dependencies:
       cookie: 0.5.0
       fastify-plugin: 4.2.1
