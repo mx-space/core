@@ -6,6 +6,27 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Update dependency @fastify/multipart to v7.2.0 ([#753](https://github.com/orhun/git-cliff/issues/753))
+- Update dependency linkedom to v0.14.15
+- Update dependency isbot to v3.5.4
+- Update dependency linkedom to v0.14.16
+- Update nest monorepo to v9.1.2 (minor) ([#758](https://github.com/orhun/git-cliff/issues/758))
+- Update dependency @typegoose/auto-increment to v1.8.0 ([#764](https://github.com/orhun/git-cliff/issues/764))
+- Update dependency @fastify/cookie to v8.2.0 ([#759](https://github.com/orhun/git-cliff/issues/759))
+
+### Miscellaneous Tasks
+
+- Update dependency @swc/core to v1.3.2 ([#756](https://github.com/orhun/git-cliff/issues/756))
+- Update dependency vite to v3.1.3
+- Update dependency @swc/core to v1.3.3
+- Update dependency @types/node to v16.11.60
+- Update dependency vite-tsconfig-paths to v3.5.1
+- Update dependency @types/validator to v13.7.7
+
+## [3.37.0] - 2022-09-18
+
+### Bug Fixes
+
 - Do not emit unhandledreject event
 - Update dependency @fastify/multipart to v7.1.2
 - Update dependency @nestjs/swagger to v6.1.2
@@ -61,6 +82,7 @@ All notable changes to this project will be documented in this file.
 ### Release
 
 - V3.36.5
+- V3.37.0
 
 ## [3.36.4] - 2022-09-03
 
