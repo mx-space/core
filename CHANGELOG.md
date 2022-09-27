@@ -13,6 +13,13 @@ All notable changes to this project will be documented in this file.
 - Update nest monorepo to v9.1.2 (minor) ([#758](https://github.com/orhun/git-cliff/issues/758))
 - Update dependency @typegoose/auto-increment to v1.8.0 ([#764](https://github.com/orhun/git-cliff/issues/764))
 - Update dependency @fastify/cookie to v8.2.0 ([#759](https://github.com/orhun/git-cliff/issues/759))
+- Update dependency rxjs to v7.5.7
+- Update dependency @typegoose/typegoose to v9.12.1
+- Update dependency mongoose to v6.6.2
+
+### Features
+
+- Add disable comment for site
 
 ### Miscellaneous Tasks
 
@@ -22,8 +29,28 @@ All notable changes to this project will be documented in this file.
 - Update dependency @types/node to v16.11.60
 - Update dependency vite-tsconfig-paths to v3.5.1
 - Update dependency @types/validator to v13.7.7
+- Update dependency mongodb-memory-server to v8.9.3
+- Update dependency @types/node to v16.11.61
+- Update dependency @types/node to v16.11.62
+
+### Release
+
+- V3.37.1
 
 ## [3.37.0] - 2022-09-18
+
+### Miscellaneous Tasks
+
+- Update dependency vite to v3.1.2
+- Remove e2e test in ci
+- [**breaking**] Drop compatibility
+- Update dependency vitest to v0.23.4
+
+### Release
+
+- V3.37.0
+
+## [3.36.5] - 2022-09-16
 
 ### Bug Fixes
 
@@ -65,10 +92,6 @@ All notable changes to this project will be documented in this file.
 - Update dependency mongodb-memory-server to v8.9.2
 - Update dependency vite to v3.1.1
 - Update dependency typescript to v4.8.3 ([#706](https://github.com/orhun/git-cliff/issues/706))
-- Update dependency vite to v3.1.2
-- Remove e2e test in ci
-- [**breaking**] Drop compatibility
-- Update dependency vitest to v0.23.4
 
 ### Refactor
 
@@ -82,7 +105,6 @@ All notable changes to this project will be documented in this file.
 ### Release
 
 - V3.36.5
-- V3.37.0
 
 ## [3.36.4] - 2022-09-03
 
