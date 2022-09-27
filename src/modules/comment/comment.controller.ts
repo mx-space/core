@@ -23,9 +23,11 @@ import { HTTPDecorators } from '~/common/decorator/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { ReplyMailType } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -173,9 +175,14 @@ export class CommentController {
     @IpLocation() ipLocation: IpRecord,
     @Query() query: CommentRefTypesDto,
   ) {
+    const { disableComment } = await this.configsService.get('commentOptions')
+    if (disableComment) {
+      throw new BizException(ErrorCodeEnum.CommentDisabled)
+    }
     if (!isMaster) {
       await this.commentService.validAuthorName(body.author)
     }
+
     const { ref } = query
 
     const id = params.id
@@ -247,6 +254,11 @@ export class CommentController {
     @IsMaster() isMaster: boolean,
     @IpLocation() ipLocation: IpRecord,
   ) {
+    const { disableComment } = await this.configsService.get('commentOptions')
+    if (disableComment) {
+      throw new BizException(ErrorCodeEnum.CommentDisabled)
+    }
+
     if (!isMaster) {
       await this.commentService.validAuthorName(author)
     }

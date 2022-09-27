@@ -116,6 +116,11 @@ export class CommentOptionsDto {
   @JSONSchemaToggleField('反垃圾评论')
   antiSpam: boolean
 
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('全站禁止评论', { description: '敏感时期专用' })
+  disableComment: boolean
+
   @IsString({ each: true })
   @IsOptional()
   @ArrayUnique()
