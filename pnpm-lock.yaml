@@ -46,7 +46,7 @@ specifiers:
   '@types/get-image-colors': 4.0.1
   '@types/js-yaml': 4.0.5
   '@types/jsonwebtoken': 8.5.9
-  '@types/lodash': 4.14.185
+  '@types/lodash': 4.14.186
   '@types/marked': 4.0.7
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
@@ -225,7 +225,7 @@ devDependencies:
   '@types/fs-extra': 9.0.13
   '@types/get-image-colors': 4.0.1
   '@types/js-yaml': 4.0.5
-  '@types/lodash': 4.14.185
+  '@types/lodash': 4.14.186
   '@types/marked': 4.0.7
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
@@ -1739,8 +1739,8 @@ packages:
       '@types/node': 18.7.16
     dev: false
 
-  /@types/lodash/4.14.185:
-    resolution: {integrity: sha512-evMDG1bC4rgQg4ku9tKpuMh5iBNEwNa3tf9zRHdP1qlv+1WUg44xat4IxCE14gIpZRGUUWAx2VhItCZc25NfMA==}
+  /@types/lodash/4.14.186:
+    resolution: {integrity: sha512-eHcVlLXP0c2FlMPm56ITode2AgLMSa6aJ05JTTbYbI+7EMkCEE5qk2E41d5g2lCVTqRe0GnnRFurmlCsDODrPw==}
     dev: true
 
   /@types/luxon/2.3.2:
