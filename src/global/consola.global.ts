@@ -14,10 +14,10 @@ import { isDev, isTest } from './env.global'
 
 class Reporter extends FancyReporter {
   isInVirtualTerminal = typeof process.stdout.columns === 'undefined' // HACK: if got `undefined` that means in PM2 pty
-  private latestLogTime: number = performance.now()
+  private latestLogTime: number = Date.now()
   protected formatDate(date: Date): string {
     if (isDev) {
-      const now = performance.now()
+      const now = Date.now()
       const delta = now - this.latestLogTime
       this.latestLogTime = now
       return `+${delta | 0}ms ${super.formatDate(date)}`

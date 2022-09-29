@@ -5,7 +5,6 @@
  * @author Surmon <https://github.com/surmon-china>
  * @author Innei <https://github.com/Innei>
  */
-import { performance } from 'perf_hooks'
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
 
@@ -35,16 +34,14 @@ export class LoggingInterceptor implements NestInterceptor {
     const request = this.getRequest(context)
     const content = `${request.method} -> ${request.url}`
     this.logger.debug(`+++ 收到请求：${content}`)
-    const now = performance.now() | 0
+    const now = Date.now()
 
     SetMetadata(HTTP_REQUEST_TIME, now)(this.getRequest(context) as any)
 
     return call$.pipe(
       tap(() =>
         this.logger.debug(
-          `--- 响应请求：${content}${chalk.yellow(
-            ` +${(performance.now() | 0) - now}ms`,
-          )}`,
+          `--- 响应请求：${content}${chalk.yellow(` +${Date.now() - now}ms`)}`,
         ),
       ),
     )

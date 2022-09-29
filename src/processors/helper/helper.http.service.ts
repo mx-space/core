@@ -1,6 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 import retryAxios from 'axios-retry'
-import { performance } from 'perf_hooks'
 import { inspect } from 'util'
 
 import { Injectable, Logger } from '@nestjs/common'
@@ -99,7 +98,7 @@ export class HttpService {
       if (!req.__debugLogger) {
         return req
       }
-      req.__requestStartedAt = performance.now()
+      req.__requestStartedAt = Date.now()
 
       this.logger.log(
         `HTTP Request: [${req.method?.toUpperCase()}] ${req.baseURL || ''}${
@@ -116,7 +115,7 @@ data: ${this.prettyStringify(req.data)}`,
         if (!res.config.__debugLogger) {
           return res
         }
-        const endAt = performance.now()
+        const endAt = Date.now()
         res.config.__requestEndedAt = endAt
         res.config.__requestDuration =
           res.config?.__requestStartedAt ??

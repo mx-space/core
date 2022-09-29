@@ -1,6 +1,5 @@
 /* eslint-disable prefer-rest-params */
 import cluster from 'cluster'
-import { performance } from 'perf_hooks'
 
 import { ConsoleLogger, ConsoleLoggerOptions } from '@nestjs/common'
 
@@ -23,10 +22,10 @@ export class MyLogger extends ConsoleLogger {
     }
   }
 
-  private lastTimestampAt: number = performance.now() | 0
+  private lastTimestampAt: number = Date.now()
   private _updateAndGetTimestampDiff() {
     const includeTimestamp = this.lastTimestampAt && this.options.timestamp
-    const now = performance.now() | 0
+    const now = Date.now()
     const result = includeTimestamp
       ? chalk.yellow(` +${now - this.lastTimestampAt}ms`)
       : ''

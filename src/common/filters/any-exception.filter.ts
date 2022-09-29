@@ -1,7 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { WriteStream } from 'fs'
 import { resolve } from 'path'
-import { performance } from 'perf_hooks'
 
 import {
   ArgumentsHost,
@@ -139,7 +138,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const content = `${request.method} -> ${request.url}`
       Logger.debug(
         `--- 响应异常请求：${content}${chalk.yellow(
-          ` +${(performance.now() | 0) - prevRequestTs}ms`,
+          ` +${Date.now() - prevRequestTs}ms`,
         )}`,
         LoggingInterceptor.name,
       )
