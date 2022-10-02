@@ -103,7 +103,7 @@ specifiers:
   nanoid: 3.3.4
   node-machine-id: 1.1.12
   node-pty: 0.10.1
-  nodemailer: 6.7.8
+  nodemailer: 6.8.0
   pluralize: '*'
   prettier: 2.7.1
   qs: 6.11.0
@@ -192,7 +192,7 @@ dependencies:
   nanoid: 3.3.4
   node-machine-id: 1.1.12
   node-pty: 0.10.1
-  nodemailer: 6.7.8
+  nodemailer: 6.8.0
   pluralize: 8.0.0
   qs: 6.11.0
   reflect-metadata: 0.1.13
@@ -5457,8 +5457,8 @@ packages:
   /node-releases/2.0.6:
     resolution: {integrity: sha512-PiVXnNuFm5+iYkLBNeq5211hvO38y63T0i2KKh2KnUs3RpzJ+JtODFjkD8yjLwnDkTYF1eKXheUwdssR+NRZdg==}
 
-  /nodemailer/6.7.8:
-    resolution: {integrity: sha512-2zaTFGqZixVmTxpJRCFC+Vk5eGRd/fYtvIR+dl5u9QXLTQWGIf48x/JXvo58g9sa0bU6To04XUv554Paykum3g==}
+  /nodemailer/6.8.0:
+    resolution: {integrity: sha512-EjYvSmHzekz6VNkNd12aUqAco+bOkRe3Of5jVhltqKhEsjw/y0PYPJfp83+s9Wzh1dspYAkUW/YNQ350NATbSQ==}
     engines: {node: '>=6.0.0'}
     dev: false
 
