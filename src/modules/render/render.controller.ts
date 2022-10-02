@@ -61,13 +61,12 @@ export class RenderEjsController {
       this.configs.getMaster(),
     ])
 
-    if (!isMaster) {
-      if (
-        ('hide' in document && document.hide) ||
-        ('password' in document && !isNil(document.password))
-      ) {
-        throw new ForbiddenException('该文章已隐藏或加密')
-      }
+    const isPrivateOrEncrypt =
+      ('hide' in document && document.hide) ||
+      ('password' in document && !isNil(document.password))
+
+    if (!isMaster && isPrivateOrEncrypt) {
+      throw new ForbiddenException('该文章已隐藏或加密')
     }
 
     const relativePath = (() => {
@@ -93,17 +92,20 @@ export class RenderEjsController {
 
     const html = render(await this.service.getMarkdownEjsRenderTemplate(), {
       ...structure,
+      info: isPrivateOrEncrypt ? '正在查看的文章还未公开' : undefined,
 
       title: document.title,
-      footer: `<p>本文渲染于 ${getShortDateTime(
+      footer: `<div>本文渲染于 ${getShortDateTime(
         new Date(),
       )}，由 marked.js 解析生成，用时 ${(performance.now() - now).toFixed(
         2,
-      )}ms</p>
-      <p>作者：${username}，撰写于${dayjs(document.created).format('llll')}</p>
-        <p>原文地址：<a href="${url}">${decodeURIComponent(
+      )}ms</div>
+      <div>作者：${username}，撰写于${dayjs(document.created).format(
+        'llll',
+      )}</div>
+        <div>原文地址：<a href="${url}">${decodeURIComponent(
         url.toString(),
-      )}</a></p>
+      )}</a></div>
         `,
     })
 
