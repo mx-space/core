@@ -51,13 +51,13 @@
   "bump": {
     "before": [
       "git pull --rebase",
-      "git-cliff > CHANGELOG.md",
       "pnpm i",
       "node scripts/get-latest-admin-version.js"
     ],
     "after": [
       "sh ./scripts/assets-push.sh"
-    ]
+    ],
+    "changelog": true
   },
   "dependencies": {
     "@algolia/client-search": "*",
@@ -194,3 +194,4 @@
     "get-pixels@^3>request": "./external/request"
   }
 }
+
