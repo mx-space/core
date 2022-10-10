@@ -81,7 +81,7 @@ specifiers:
   image-size: 1.0.2
   inquirer: '*'
   ioredis: 5.2.3
-  isbot: 3.6.0
+  isbot: 3.6.1
   js-yaml: '*'
   json5: 2.2.1
   jsonwebtoken: 8.5.1
@@ -172,7 +172,7 @@ dependencies:
   get-image-colors: 4.0.1
   image-size: 1.0.2
   inquirer: 8.2.4
-  isbot: 3.6.0
+  isbot: 3.6.1
   js-yaml: 4.1.0
   json5: 2.2.1
   jsonwebtoken: 8.5.1
@@ -4651,8 +4651,8 @@ packages:
     resolution: {integrity: sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==}
     dev: false
 
-  /isbot/3.6.0:
-    resolution: {integrity: sha512-9t4w/V6Hyzv7CmLXi6fSNuCS8NMMSSx+MHeIWZaMIPeJlcfRgsATouGt0ypkQC+ONjVd0u9Rz1j8HaKVgTqW6w==}
+  /isbot/3.6.1:
+    resolution: {integrity: sha512-e1RmjWns87x60QyiHberWWMJGutL3+Ad0nZ8cz735iDEDDS6ApPfKSFo4EMj0PmMZ0m0ntpWIM0ADdqDFvUJPQ==}
     engines: {node: '>=12'}
     dev: false
 
