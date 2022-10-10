@@ -50,7 +50,7 @@ specifiers:
   '@types/marked': 4.0.7
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
-  '@types/node': 16.11.64
+  '@types/node': 16.11.65
   '@types/nodemailer': 6.4.6
   '@types/qs': 6.9.7
   '@types/semver': 7.3.12
@@ -229,7 +229,7 @@ devDependencies:
   '@types/marked': 4.0.7
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
-  '@types/node': 16.11.64
+  '@types/node': 16.11.65
   '@types/nodemailer': 6.4.6
   '@types/qs': 6.9.7
   '@types/semver': 7.3.12
@@ -248,7 +248,7 @@ devDependencies:
   rollup: 2.79.1
   rollup-plugin-swc: 0.2.1_xxe6b3ouzxvqfbhorygxu3sjf4
   socket.io: 4.5.2
-  ts-node: 10.9.1_z4c2viuynydvcjchvfecmmkfd4
+  ts-node: 10.9.1_xl25la6miqlak2rbjfamyb44tm
   tsconfig-paths: 4.1.0
   typescript: 4.8.4
   vite: 3.1.7
@@ -1765,8 +1765,8 @@ packages:
       - supports-color
     dev: true
 
-  /@types/node/16.11.64:
-    resolution: {integrity: sha512-z5hPTlVFzNwtJ2LNozTpJcD1Cu44c4LNuzaq1mwxmiHWQh2ULdR6Vjwo1UGldzRpzL0yUEdZddnfqGW2G70z6Q==}
+  /@types/node/16.11.65:
+    resolution: {integrity: sha512-Vfz7wGMOr4jbQGiQHVJm8VjeQwM9Ya7mHe9LtQ264/Epf5n1KiZShOFqk++nBzw6a/ubgYdB9Od7P+MH/LjoWw==}
     dev: true
 
   /@types/node/18.7.16:
@@ -2477,7 +2477,7 @@ packages:
     resolution: {integrity: sha512-7O+FbCihrB5WGbFYesctwmTKae6rOiIzmz1icreWJ+0aA7LJfuqhEso2T9ncpcFtzMQtzXf2QGGueWJGTYsqrA==}
     dependencies:
       function-bind: 1.1.1
-      get-intrinsic: 1.1.2
+      get-intrinsic: 1.1.3
 
   /callsites/3.1.0:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
@@ -4097,13 +4097,6 @@ packages:
       get-svg-colors: 2.0.0
       pify: 5.0.0
     dev: false
-
-  /get-intrinsic/1.1.2:
-    resolution: {integrity: sha512-Jfm3OyCxHh9DJyc28qGk+JmfkpO41A4XkneDSujN9MDXrm4oDKdHvndhZ2dN94+ERNfkYJWDclW6k2L/ZGHjXA==}
-    dependencies:
-      function-bind: 1.1.1
-      has: 1.0.3
-      has-symbols: 1.0.3
 
   /get-intrinsic/1.1.3:
     resolution: {integrity: sha512-QJVz1Tj7MS099PevUG5jvnt9tSkXN8K14dxQlikJuPt4uD9hHAHjLyLBiLR5zELelBdD9QNRAXZzsJx0WaDL9A==}
@@ -6679,7 +6672,7 @@ packages:
     hasBin: true
     dev: true
 
-  /ts-node/10.9.1_z4c2viuynydvcjchvfecmmkfd4:
+  /ts-node/10.9.1_xl25la6miqlak2rbjfamyb44tm:
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -6699,7 +6692,7 @@ packages:
       '@tsconfig/node12': 1.0.9
       '@tsconfig/node14': 1.0.1
       '@tsconfig/node16': 1.0.2
-      '@types/node': 16.11.64
+      '@types/node': 16.11.65
       acorn: 8.7.1
       acorn-walk: 8.2.0
       arg: 4.1.3
