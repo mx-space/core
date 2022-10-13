@@ -12,7 +12,7 @@ import { getNestExecutionContextRequest } from '~/transformers/get-req.transform
 
 /** 此拦截器用于转换 req.query.query -> js object，用于直接数据库查询，需要鉴权  */
 @Injectable()
-export class QueryInterceptor implements NestInterceptor {
+export class DbQueryInterceptor implements NestInterceptor {
   intercept(
     context: ExecutionContext,
     next: CallHandler<any>,

@@ -26,6 +26,7 @@ import { LinkModel, LinkState } from './link.model'
 import { LinkService } from './link.service'
 
 const paths = ['links', 'friends']
+
 @ApiController(paths)
 @ApiName
 export class LinkControllerCrud extends BaseCrudFactory({
@@ -49,14 +50,22 @@ export class LinkControllerCrud extends BaseCrudFactory({
   }
 
   @Get('/all')
-  async getAll(this: BaseCrudModuleType<LinkModel>) {
+  async getAll(
+    this: BaseCrudModuleType<LinkModel>,
+    @IsMaster() isMaster: boolean,
+  ) {
     // 过滤未通过审核的
     const condition: mongoose.FilterQuery<LinkModel> = {
       state: LinkState.Pass,
     }
-    return await this._model.find(condition).sort({ created: -1 }).lean()
+    return await this._model
+      .find(condition)
+      .sort({ created: -1 })
+      .select(isMaster ? '' : '-email')
+      .lean()
   }
 }
+
 @ApiController(paths)
 @ApiName
 export class LinkController {
