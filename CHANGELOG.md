@@ -1,3 +1,17 @@
+## [3.37.4](https://github.com/mx-space/core/compare/v3.37.3...v3.37.4) (2022-10-13)
+
+
+### Bug Fixes
+
+* **deps:** update dependency isbot to v3.6.1 ([c7f96da](https://github.com/mx-space/core/commit/c7f96dac051229d390f9d464d629dfd23b98ec3b))
+* **deps:** update dependency linkedom to v0.14.17 ([cb21e79](https://github.com/mx-space/core/commit/cb21e793b4888f4243eeb258525596c0dd05e79a))
+* **deps:** update dependency mongoose to v6.6.4 ([69a363a](https://github.com/mx-space/core/commit/69a363adbc5cec0b4b1842b7a7260dcbb879ddf7))
+* **deps:** update dependency mongoose to v6.6.5 ([6754bb4](https://github.com/mx-space/core/commit/6754bb4909cde331b611ccf1863302d620c8c666))
+* **deps:** update nest monorepo to v9.1.4 ([445cc13](https://github.com/mx-space/core/commit/445cc136c87a1ac5832281d66dbcc4d4e0051654))
+* **link:** hide email if not master ([cd3faff](https://github.com/mx-space/core/commit/cd3faffa76f404c684e72d21e9d2b7995f9d8fe5))
+
+
+
 ## [3.37.3](https://github.com/mx-space/core/compare/v3.37.2...v3.37.3) (2022-10-02)
 
 
