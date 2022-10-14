@@ -127,7 +127,7 @@ specifiers:
   vm2: 3.9.11
   wildcard-match: 5.1.2
   xss: 1.0.14
-  zx: 7.0.8
+  zx: 7.1.1
   zx-cjs: 7.0.7-0
 
 dependencies:
@@ -254,7 +254,7 @@ devDependencies:
   vite: 3.1.8
   vite-tsconfig-paths: 3.5.1_vite@3.1.8
   vitest: 0.24.3
-  zx: 7.0.8
+  zx: 7.1.1
 
 packages:
 
@@ -1772,6 +1772,9 @@ packages:
   /@types/node/18.7.16:
     resolution: {integrity: sha512-EQHhixfu+mkqHMZl1R2Ovuvn47PUw18azMJOTwSZr9/fhzHNGXAJ0ma0dayRVchprpCj0Kc1K1xKoWaATWF1qg==}
 
+  /@types/node/18.8.5:
+    resolution: {integrity: sha512-Bq7G3AErwe5A/Zki5fdD3O6+0zDChhg671NfPjtIcbtzDNZTv4NPKMRFr7gtYPG7y+B8uTiNK4Ngd9T0FTar6Q==}
+
   /@types/nodemailer/6.4.6:
     resolution: {integrity: sha512-pD6fL5GQtUKvD2WnPmg5bC2e8kWCAPDwMPmHe/ohQbW+Dy0EcHgZ2oCSuPlWNqk74LS5BVMig1SymQbFMPPK3w==}
     dependencies:
@@ -1817,7 +1820,7 @@ packages:
   /@types/whatwg-url/8.2.2:
     resolution: {integrity: sha512-FtQu10RWgn3D9U4aazdwIE2yzphmTJREDqNdODHrbrZmmMqI0vMheC/6NE/J1Yveaj8H+ela+YwWTjq5PGmuhA==}
     dependencies:
-      '@types/node': 18.7.16
+      '@types/node': 18.8.5
       '@types/webidl-conversions': 6.1.1
 
   /@types/which/2.0.1:
@@ -1828,7 +1831,7 @@ packages:
     resolution: {integrity: sha512-Cn6WYCm0tXv8p6k+A8PvbDG763EDpBoTzHdA+Q/MF6H3sapGjCm9NzoaJncJS9tUKSuCoDs9XHxYYsQDgxR6kw==}
     requiresBuild: true
     dependencies:
-      '@types/node': 18.7.16
+      '@types/node': 18.8.5
     dev: false
     optional: true
 
@@ -2853,7 +2856,7 @@ packages:
     dev: false
 
   /data-uri-to-buffer/0.0.3:
-    resolution: {integrity: sha1-GK6XmmoMqZSwYlhTkW0mYruuCxo=}
+    resolution: {integrity: sha512-Cp+jOa8QJef5nXS5hU7M1DWzXPEIoVR3kbV0dQuVGwROZg8bGf1DcCnkmajBTnvghTtSNMUdRrPjgaT6ZQucbw==}
     dev: false
 
   /data-uri-to-buffer/4.0.0:
@@ -4675,7 +4678,7 @@ packages:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 18.7.16
+      '@types/node': 18.8.5
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: true
@@ -5423,8 +5426,8 @@ packages:
     dependencies:
       whatwg-url: 5.0.0
 
-  /node-fetch/3.2.8:
-    resolution: {integrity: sha512-KtpD1YhGszhntMpBDyp5lyagk8KIMopC1LEb7cQUAh7zcosaX5uK8HnbNb2i3NTQK3sIawCItS0uFC3QzcLHdg==}
+  /node-fetch/3.2.10:
+    resolution: {integrity: sha512-MhuzNwdURnZ1Cp4XTazr69K0BTizsBroX7Zx3UgDSVcZYKF/6p0CBe4EUb/hLqmzVhl0UpYfgRljQ4yxE+iCxA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dependencies:
       data-uri-to-buffer: 4.0.0
@@ -7155,21 +7158,21 @@ packages:
     engines: {node: '>= 16.0.0'}
     dev: false
 
-  /zx/7.0.8:
-    resolution: {integrity: sha512-sNjfDHzskqrSkWNj0TVhaowVK5AbpvuyuO1RBU4+LrFcgYI5u9CtyWWgUBRtRZl3bgGEF31zByszoBmwS47d1w==}
+  /zx/7.1.1:
+    resolution: {integrity: sha512-5YlTO2AJ+Ku2YuZKSSSqnUKuagcM/f/j4LmHs15O84Ch80Z9gzR09ZK3gR7GV+rc8IFpz2H/XNFtFVmj31yrZA==}
     engines: {node: '>= 16.0.0'}
     hasBin: true
     dependencies:
       '@types/fs-extra': 9.0.13
       '@types/minimist': 1.2.2
-      '@types/node': 18.7.16
+      '@types/node': 18.8.5
       '@types/ps-tree': 1.1.2
       '@types/which': 2.0.1
       chalk: 5.0.1
       fs-extra: 10.1.0
       globby: 13.1.2
       minimist: 1.2.6
-      node-fetch: 3.2.8
+      node-fetch: 3.2.10
       ps-tree: 1.2.0
       which: 2.0.2
       yaml: 2.1.1
