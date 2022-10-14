@@ -85,7 +85,7 @@
     "algoliasearch": "4.14.2",
     "axios": "*",
     "axios-retry": "3.3.1",
-    "bcrypt": "5.0.1",
+    "bcrypt": "5.1.0",
     "cache-manager": "4.1.0",
     "cache-manager-ioredis": "2.1.0",
     "camelcase-keys": "7.0.2",
