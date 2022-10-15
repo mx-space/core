@@ -30,7 +30,7 @@ specifiers:
   '@nestjs/schematics': 9.0.3
   '@nestjs/swagger': 6.1.2
   '@nestjs/testing': 9.1.4
-  '@nestjs/throttler': 3.0.0
+  '@nestjs/throttler': 3.1.0
   '@nestjs/websockets': 9.1.4
   '@socket.io/redis-adapter': 7.2.0
   '@socket.io/redis-emitter': 5.0.0
@@ -147,7 +147,7 @@ dependencies:
   '@nestjs/platform-socket.io': 9.1.4_z36hexpl4koifmc7rtebxffrrm
   '@nestjs/schedule': 2.1.0_6evwnopmg7pp6j7oqhprlukxha
   '@nestjs/swagger': 6.1.2_qrhzd4f6drx7qydlfp6znoaa5e
-  '@nestjs/throttler': 3.0.0_6evwnopmg7pp6j7oqhprlukxha
+  '@nestjs/throttler': 3.1.0_6evwnopmg7pp6j7oqhprlukxha
   '@nestjs/websockets': 9.1.4_xze2knvk2isfcsdl4zylli6wxy
   '@socket.io/redis-adapter': 7.2.0
   '@socket.io/redis-emitter': 5.0.0
@@ -1312,8 +1312,8 @@ packages:
       tslib: 2.4.0
     dev: true
 
-  /@nestjs/throttler/3.0.0_6evwnopmg7pp6j7oqhprlukxha:
-    resolution: {integrity: sha512-E5aLstJ1a3yZE6AgcN+BgHLiRd8lonR5E4E4I3wzVHRGfgglHQS1sa2zEUuD/pdzLPlbI8pvVDJom8Z2D1oDug==}
+  /@nestjs/throttler/3.1.0_6evwnopmg7pp6j7oqhprlukxha:
+    resolution: {integrity: sha512-u9a5+rci6ybYtJ2is6gZWxE2dMZEpnK0qJ0C1OnchuNCvM21Bg6qym1TB6Uihhci+JfTv6E15WuASLXcIclsbA==}
     peerDependencies:
       '@nestjs/common': ^7.0.0 || ^8.0.0 || ^9.0.0
       '@nestjs/core': ^7.0.0 || ^8.0.0 || ^9.0.0

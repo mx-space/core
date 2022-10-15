@@ -75,7 +75,7 @@
     "@nestjs/platform-socket.io": "9.1.4",
     "@nestjs/schedule": "2.1.0",
     "@nestjs/swagger": "6.1.2",
-    "@nestjs/throttler": "3.0.0",
+    "@nestjs/throttler": "3.1.0",
     "@nestjs/websockets": "9.1.4",
     "@socket.io/redis-adapter": "7.2.0",
     "@socket.io/redis-emitter": "5.0.0",
