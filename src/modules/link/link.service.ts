@@ -16,7 +16,7 @@ import { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { ConfigsService } from '../configs/configs.service'
-import { LinkModel, LinkState, LinkType } from './link.model'
+import { LinkModel, LinkState, LinkStateMap, LinkType } from './link.model'
 
 @Injectable()
 export class LinkService {
@@ -69,28 +69,33 @@ export class LinkService {
   }
 
   async getCount() {
-    const [audit, friends, collection, outdate, banned] = await Promise.all([
-      this.model.countDocuments({ state: LinkState.Audit }),
-      this.model.countDocuments({
-        type: LinkType.Friend,
-        state: LinkState.Pass,
-      }),
-      this.model.countDocuments({
-        type: LinkType.Collection,
-      }),
-      this.model.countDocuments({
-        state: LinkState.Outdate,
-      }),
-      this.model.countDocuments({
-        state: LinkState.Banned,
-      }),
-    ])
+    const [audit, friends, collection, outdate, banned, reject] =
+      await Promise.all([
+        this.model.countDocuments({ state: LinkState.Audit }),
+        this.model.countDocuments({
+          type: LinkType.Friend,
+          state: LinkState.Pass,
+        }),
+        this.model.countDocuments({
+          type: LinkType.Collection,
+        }),
+        this.model.countDocuments({
+          state: LinkState.Outdate,
+        }),
+        this.model.countDocuments({
+          state: LinkState.Banned,
+        }),
+        this.model.countDocuments({
+          state: LinkState.Reject,
+        }),
+      ])
     return {
       audit,
       friends,
       collection,
       outdate,
       banned,
+      reject,
     }
   }
 
@@ -213,5 +218,31 @@ export class LinkService {
     const configs = await this.configs.get('friendLinkOptions')
     const can = configs.allowApply
     return can
+  }
+
+  async sendAuditResultByEmail(id: string, reason: string, state: LinkState) {
+    const doc = await this.model.findById(id)
+    if (!doc) {
+      throw new NotFoundException()
+    }
+
+    doc.state = state
+    await doc.save()
+
+    const { seo, mailOptions } = await this.configsService.waitForConfigReady()
+    const { enable } = mailOptions
+    if (!enable || isDev) {
+      console.log(`友链结果通知: ${reason}, 状态: ${state}`)
+      return
+    }
+
+    const { user } = mailOptions
+    const from = `"${seo.title || 'Mx Space'}" <${user}>`
+    await this.emailService.getInstance().sendMail({
+      from,
+      to: doc.email,
+      subject: `嘿!~, 主人已处理你的友链申请!~`,
+      text: `申请结果: ${LinkStateMap[state]}\n原因: ${reason}`,
+    })
   }
 }

@@ -4,6 +4,7 @@ import {
   Body,
   ForbiddenException,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -15,13 +16,14 @@ import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorator/http.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { IsMaster } from '~/common/decorator/role.decorator'
+import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import {
   BaseCrudFactory,
   BaseCrudModuleType,
 } from '~/transformers/crud-factor.transformer'
 
-import { LinkDto } from './link.dto'
+import { AduitReasonDto, LinkDto } from './link.dto'
 import { LinkModel, LinkState } from './link.model'
 import { LinkService } from './link.service'
 
@@ -113,6 +115,18 @@ export class LinkController {
       }
     })
     return
+  }
+
+  @Post('/audit/reason/:id')
+  @Auth()
+  @HttpCode(201)
+  async sendReasonByEmail(
+    @Param() params: MongoIdDto,
+    @Body() body: AduitReasonDto,
+  ) {
+    const { id } = params
+    const { reason, state } = body
+    await this.linkService.sendAuditResultByEmail(id, reason, state)
   }
 
   @Auth()
