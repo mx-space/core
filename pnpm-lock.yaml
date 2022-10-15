@@ -50,7 +50,7 @@ specifiers:
   '@types/marked': 4.0.7
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
-  '@types/node': 16.11.65
+  '@types/node': 16.11.66
   '@types/nodemailer': 6.4.6
   '@types/qs': 6.9.7
   '@types/semver': 7.3.12
@@ -229,7 +229,7 @@ devDependencies:
   '@types/marked': 4.0.7
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
-  '@types/node': 16.11.65
+  '@types/node': 16.11.66
   '@types/nodemailer': 6.4.6
   '@types/qs': 6.9.7
   '@types/semver': 7.3.12
@@ -248,7 +248,7 @@ devDependencies:
   rollup: 2.79.1
   rollup-plugin-swc: 0.2.1_xxe6b3ouzxvqfbhorygxu3sjf4
   socket.io: 4.5.2
-  ts-node: 10.9.1_xl25la6miqlak2rbjfamyb44tm
+  ts-node: 10.9.1_w5pdprj22vlanamugo6edsjvji
   tsconfig-paths: 4.1.0
   typescript: 4.8.4
   vite: 3.1.8
@@ -1646,7 +1646,7 @@ packages:
   /@types/bcrypt/5.0.0:
     resolution: {integrity: sha512-agtcFKaruL8TmcvqbndlqHPSJgsolhf/qPWchFlgnW1gECTN/nKbFcoFnvKAQRFfKbh+BO6A3SWdJu9t+xF3Lw==}
     dependencies:
-      '@types/node': 18.7.16
+      '@types/node': 18.8.5
     dev: true
 
   /@types/cache-manager/4.0.2:
@@ -1681,7 +1681,7 @@ packages:
     resolution: {integrity: sha512-xZM08fqvwIXgghtPVkSPKNgC+JoMQ2OHazEvyTKnNf7aWu1aB6/4lBbQFrb03Td2cUGG7ITzMv3mFYnMu6xRaQ==}
     dependencies:
       '@types/luxon': 2.3.2
-      '@types/node': 18.7.16
+      '@types/node': 18.8.5
     dev: true
 
   /@types/ejs/3.1.1:
@@ -1709,14 +1709,14 @@ packages:
   /@types/fs-extra/9.0.13:
     resolution: {integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==}
     dependencies:
-      '@types/node': 18.7.16
+      '@types/node': 18.8.5
     dev: true
 
   /@types/get-image-colors/4.0.1:
     resolution: {integrity: sha512-SJw1xtewG0w9btZqeG8evQpvSvo7Hp12cPRUi5XouM7sfe/CcvkSk8x8u2XDLwc2UIW2D7qrf/iffv9dJmSVsQ==}
     dependencies:
       '@types/chroma-js': 2.1.3
-      '@types/node': 18.7.16
+      '@types/node': 18.8.5
     dev: true
 
   /@types/js-yaml/4.0.5:
@@ -1734,7 +1734,7 @@ packages:
   /@types/jsonwebtoken/8.5.9:
     resolution: {integrity: sha512-272FMnFGzAVMGtu9tkr29hRL6bZj4Zs1KZNeHLnKqAvp06tAIcarTMwOh8/8bz4FmKRcMxZhZNeUAQsNLoiPhg==}
     dependencies:
-      '@types/node': 18.7.16
+      '@types/node': 18.8.5
     dev: false
 
   /@types/lodash/4.14.186:
@@ -1765,12 +1765,9 @@ packages:
       - supports-color
     dev: true
 
-  /@types/node/16.11.65:
-    resolution: {integrity: sha512-Vfz7wGMOr4jbQGiQHVJm8VjeQwM9Ya7mHe9LtQ264/Epf5n1KiZShOFqk++nBzw6a/ubgYdB9Od7P+MH/LjoWw==}
+  /@types/node/16.11.66:
+    resolution: {integrity: sha512-+xvMrGl3eAygKcf5jm+4zA4tbfEgmKM9o6/glTmN0RFVdu2VuFXMYYtRmuv3zTGCgAYMnEZLde3B7BTp+Yxcig==}
     dev: true
-
-  /@types/node/18.7.16:
-    resolution: {integrity: sha512-EQHhixfu+mkqHMZl1R2Ovuvn47PUw18azMJOTwSZr9/fhzHNGXAJ0ma0dayRVchprpCj0Kc1K1xKoWaATWF1qg==}
 
   /@types/node/18.8.5:
     resolution: {integrity: sha512-Bq7G3AErwe5A/Zki5fdD3O6+0zDChhg671NfPjtIcbtzDNZTv4NPKMRFr7gtYPG7y+B8uTiNK4Ngd9T0FTar6Q==}
@@ -1778,7 +1775,7 @@ packages:
   /@types/nodemailer/6.4.6:
     resolution: {integrity: sha512-pD6fL5GQtUKvD2WnPmg5bC2e8kWCAPDwMPmHe/ohQbW+Dy0EcHgZ2oCSuPlWNqk74LS5BVMig1SymQbFMPPK3w==}
     dependencies:
-      '@types/node': 18.7.16
+      '@types/node': 18.8.5
     dev: true
 
   /@types/parse-author/2.0.1:
@@ -3109,7 +3106,7 @@ packages:
     dependencies:
       '@types/cookie': 0.4.1
       '@types/cors': 2.8.12
-      '@types/node': 18.7.16
+      '@types/node': 18.8.5
       accepts: 1.3.8
       base64id: 2.0.0
       cookie: 0.4.2
@@ -6653,7 +6650,7 @@ packages:
     hasBin: true
     dev: true
 
-  /ts-node/10.9.1_xl25la6miqlak2rbjfamyb44tm:
+  /ts-node/10.9.1_w5pdprj22vlanamugo6edsjvji:
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -6673,7 +6670,7 @@ packages:
       '@tsconfig/node12': 1.0.9
       '@tsconfig/node14': 1.0.1
       '@tsconfig/node16': 1.0.2
-      '@types/node': 16.11.65
+      '@types/node': 16.11.66
       acorn: 8.7.1
       acorn-walk: 8.2.0
       arg: 4.1.3
@@ -6904,7 +6901,7 @@ packages:
     dependencies:
       '@types/chai': 4.3.3
       '@types/chai-subset': 1.3.3
-      '@types/node': 18.7.16
+      '@types/node': 18.8.5
       chai: 4.3.6
       debug: 4.3.4
       local-pkg: 0.4.2
