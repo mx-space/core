@@ -30,11 +30,17 @@ export const CROSS_DOMAIN = {
 }
 
 export const MONGO_DB = {
-  dbName: argv.collection_name || (DEMO_MODE ? 'mx-space_demo' : 'mx-space'),
+  dbName: argv.collection_name || (DEMO_MODE ? 'mx-space_demo' : 'mx'),
   host: argv.db_host || '127.0.0.1',
   port: argv.db_port || 27017,
+  user: argv.db_user || '',
+  password: argv.db_password || '',
+  userAndpassword:
+   argv.db_user && argv.db_password
+    ? `${argv.db_user}:${argv.db_password}@`
+    : '',
   get uri() {
-    return `mongodb://${this.host}:${this.port}/${
+    return `mongodb://${this.userAndpassword}${this.host}:${this.port}/${
       isTest ? 'mx-space_unitest' : this.dbName
     }`
   },
