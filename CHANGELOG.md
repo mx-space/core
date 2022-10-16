@@ -1,3 +1,22 @@
+# CHANGELOG
+
+# [3.38.0](https://github.com/mx-space/core/compare/v3.37.4...v3.38.0) (2022-10-16)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @nestjs/throttler to v3.1.0 ([#802](https://github.com/mx-space/core/issues/802)) ([d110eff](https://github.com/mx-space/core/commit/d110effa53f52316144efdb1602a65256cbba8dc))
+* **deps:** update dependency bcrypt to v5.1.0 ([#796](https://github.com/mx-space/core/issues/796)) ([3094b80](https://github.com/mx-space/core/commit/3094b80e3c6af040e25521eeacd0c063803eb766))
+* **deps:** update dependency ua-parser-js to v1.0.32 ([#805](https://github.com/mx-space/core/issues/805)) ([c74c3e7](https://github.com/mx-space/core/commit/c74c3e72b580322a0f86e7a0d4093306886590c6))
+
+
+### Features
+
+* **link:** support send link audit result email ([e5e3428](https://github.com/mx-space/core/commit/e5e3428b44e03916f5b43a7076b8387d3892ee82))
+* support mongo connection with user and password ([#806](https://github.com/mx-space/core/issues/806)) ([5a20c55](https://github.com/mx-space/core/commit/5a20c55dc021087ebbb2a5d1b116d69297774995))
+
+
+
 ## [3.37.4](https://github.com/mx-space/core/compare/v3.37.3...v3.37.4) (2022-10-13)
 
 
@@ -28,7 +47,23 @@
 
 
 
-## [3.37.2](https://github.com/mx-space/core/compare/v3.37.0...v3.37.2) (2022-09-27)
+## [3.37.2](https://github.com/mx-space/core/compare/v3.37.1...v3.37.2) (2022-09-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @typegoose/typegoose to v9.12.1 ([9eed663](https://github.com/mx-space/core/commit/9eed6634f899f782e6d48cbc7110ee004def5921))
+* **deps:** update dependency mongoose to v6.6.2 ([6e2c5a1](https://github.com/mx-space/core/commit/6e2c5a12a0b4c02e0c85b4f4a46ced2f705dacf7))
+* **deps:** update dependency rxjs to v7.5.7 ([8a95d5a](https://github.com/mx-space/core/commit/8a95d5a09857ecfd2f44d0f30288f9faeff57b2f))
+
+
+### Features
+
+* add disable comment for site ([9b97a15](https://github.com/mx-space/core/commit/9b97a15e6623113defc3760f37c651847360f555))
+
+
+
+## [3.37.1](https://github.com/mx-space/core/compare/v3.37.0...v3.37.1) (2022-09-25)
 
 
 ### Bug Fixes
@@ -36,18 +71,10 @@
 * **deps:** update dependency @fastify/cookie to v8.2.0 ([#759](https://github.com/mx-space/core/issues/759)) ([8476962](https://github.com/mx-space/core/commit/8476962a31063e972f0a19c7161b0080884e971c))
 * **deps:** update dependency @fastify/multipart to v7.2.0 ([#753](https://github.com/mx-space/core/issues/753)) ([2cdceb9](https://github.com/mx-space/core/commit/2cdceb9a33ed17181abd9417f1a9dccf5ee226f5))
 * **deps:** update dependency @typegoose/auto-increment to v1.8.0 ([#764](https://github.com/mx-space/core/issues/764)) ([361ca29](https://github.com/mx-space/core/commit/361ca29315f857169621a57b982f772728f7b255))
-* **deps:** update dependency @typegoose/typegoose to v9.12.1 ([9eed663](https://github.com/mx-space/core/commit/9eed6634f899f782e6d48cbc7110ee004def5921))
 * **deps:** update dependency isbot to v3.5.4 ([7b1d8b7](https://github.com/mx-space/core/commit/7b1d8b7aa63d44afb45f4df802217ddc67acf74b))
 * **deps:** update dependency linkedom to v0.14.15 ([a891549](https://github.com/mx-space/core/commit/a89154937c0a848701d91ac405bb7d55634868d3))
 * **deps:** update dependency linkedom to v0.14.16 ([e6ff510](https://github.com/mx-space/core/commit/e6ff5107520928c6ebd99d1ba0147bfd54652319))
-* **deps:** update dependency mongoose to v6.6.2 ([6e2c5a1](https://github.com/mx-space/core/commit/6e2c5a12a0b4c02e0c85b4f4a46ced2f705dacf7))
-* **deps:** update dependency rxjs to v7.5.7 ([8a95d5a](https://github.com/mx-space/core/commit/8a95d5a09857ecfd2f44d0f30288f9faeff57b2f))
 * **deps:** update nest monorepo to v9.1.2 (minor) ([#758](https://github.com/mx-space/core/issues/758)) ([2ec94c8](https://github.com/mx-space/core/commit/2ec94c81df4b7a91c13789218d785a48b22aa655))
-
-
-### Features
-
-* add disable comment for site ([9b97a15](https://github.com/mx-space/core/commit/9b97a15e6623113defc3760f37c651847360f555))
 
 
 
