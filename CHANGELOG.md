@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [3.38.1](https://github.com/mx-space/core/compare/v3.38.0...v3.38.1) (2022-10-19)
+
+
+### Bug Fixes
+
+* downgard emitter ([9296468](https://github.com/mx-space/core/commit/92964685ca59f156c3e1382562e4335dc40fab53))
+
+
+
 # [3.38.0](https://github.com/mx-space/core/compare/v3.37.4...v3.38.0) (2022-10-16)
 
 
