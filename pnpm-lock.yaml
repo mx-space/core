@@ -50,7 +50,7 @@ specifiers:
   '@types/marked': 4.0.7
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
-  '@types/node': 16.11.66
+  '@types/node': 16.11.68
   '@types/nodemailer': 6.4.6
   '@types/qs': 6.9.7
   '@types/semver': 7.3.12
@@ -229,7 +229,7 @@ devDependencies:
   '@types/marked': 4.0.7
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
-  '@types/node': 16.11.66
+  '@types/node': 16.11.68
   '@types/nodemailer': 6.4.6
   '@types/qs': 6.9.7
   '@types/semver': 7.3.12
@@ -248,7 +248,7 @@ devDependencies:
   rollup: 2.79.1
   rollup-plugin-swc: 0.2.1_xxe6b3ouzxvqfbhorygxu3sjf4
   socket.io: 4.5.2
-  ts-node: 10.9.1_w5pdprj22vlanamugo6edsjvji
+  ts-node: 10.9.1_vi23nas2ygunxediktpzmbq23e
   tsconfig-paths: 4.1.0
   typescript: 4.8.4
   vite: 3.1.8
@@ -1765,8 +1765,8 @@ packages:
       - supports-color
     dev: true
 
-  /@types/node/16.11.66:
-    resolution: {integrity: sha512-+xvMrGl3eAygKcf5jm+4zA4tbfEgmKM9o6/glTmN0RFVdu2VuFXMYYtRmuv3zTGCgAYMnEZLde3B7BTp+Yxcig==}
+  /@types/node/16.11.68:
+    resolution: {integrity: sha512-JkRpuVz3xCNCWaeQ5EHLR/6woMbHZz/jZ7Kmc63AkU+1HxnoUugzSWMck7dsR4DvNYX8jp9wTi9K7WvnxOIQZQ==}
     dev: true
 
   /@types/node/18.8.5:
@@ -6650,7 +6650,7 @@ packages:
     hasBin: true
     dev: true
 
-  /ts-node/10.9.1_w5pdprj22vlanamugo6edsjvji:
+  /ts-node/10.9.1_vi23nas2ygunxediktpzmbq23e:
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -6670,7 +6670,7 @@ packages:
       '@tsconfig/node12': 1.0.9
       '@tsconfig/node14': 1.0.1
       '@tsconfig/node16': 1.0.2
-      '@types/node': 16.11.66
+      '@types/node': 16.11.68
       acorn: 8.7.1
       acorn-walk: 8.2.0
       arg: 4.1.3
