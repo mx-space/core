@@ -9,17 +9,10 @@
   ],
   "packageRules": [
     {
-      "updateTypes": [
-        "major"
-      ],
-      "labels": [
-        "UPDATE-MAJOR"
-      ]
+      "updateTypes": ["major"],
+      "labels": ["UPDATE-MAJOR"]
     }
   ],
-  "ignoreDeps": [
-    "nanoid",
-    "camelcase-keys"
-  ],
+  "ignoreDeps": ["nanoid", "camelcase-keys", "@socket.io/redis-emitter"],
   "enabled": true
 }

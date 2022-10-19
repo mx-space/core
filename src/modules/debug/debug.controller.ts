@@ -33,6 +33,11 @@ export class DebugController {
     @Query('event') event: BusinessEvents,
     @Body() payload: any,
   ) {
+    Date.prototype.toJSON = function () {
+      return this.toISOString()
+    }
+    payload.date = new Date()
+
     switch (type) {
       case 'web':
         this.eventManager.broadcast(event, payload, {
