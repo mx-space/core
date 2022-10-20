@@ -95,7 +95,7 @@ specifiers:
   mime-types: '*'
   mkdirp: '*'
   mongodb-memory-server: 8.9.3
-  mongoose: 6.6.5
+  mongoose: 6.6.6
   mongoose-aggregate-paginate-v2: 1.0.6
   mongoose-lean-getters: 0.3.5
   mongoose-lean-id: 0.3.0
@@ -152,8 +152,8 @@ dependencies:
   '@nestjs/websockets': 9.1.4_xze2knvk2isfcsdl4zylli6wxy
   '@socket.io/redis-adapter': 7.2.0
   '@socket.io/redis-emitter': 4.1.1
-  '@typegoose/auto-increment': 1.8.0_mongoose@6.6.5
-  '@typegoose/typegoose': 9.12.1_mongoose@6.6.5
+  '@typegoose/auto-increment': 1.8.0_mongoose@6.6.6
+  '@typegoose/typegoose': 9.12.1_mongoose@6.6.6
   '@types/jsonwebtoken': 8.5.9
   algoliasearch: 4.14.2
   axios: 0.27.2
@@ -185,11 +185,11 @@ dependencies:
   marked: 4.1.1
   mime-types: 2.1.35
   mkdirp: 1.0.4
-  mongoose: 6.6.5
+  mongoose: 6.6.6
   mongoose-aggregate-paginate-v2: 1.0.6
-  mongoose-lean-getters: 0.3.5_mongoose@6.6.5
-  mongoose-lean-id: 0.3.0_mongoose@6.6.5
-  mongoose-lean-virtuals: 0.9.1_mongoose@6.6.5
+  mongoose-lean-getters: 0.3.5_mongoose@6.6.6
+  mongoose-lean-id: 0.3.0_mongoose@6.6.6
+  mongoose-lean-virtuals: 0.9.1_mongoose@6.6.6
   mongoose-paginate-v2: 1.7.1
   nanoid: 3.3.4
   node-machine-id: 1.1.12
@@ -578,8 +578,8 @@ packages:
       '@babel/helper-split-export-declaration': 7.18.6
       '@babel/helper-validator-identifier': 7.19.1
       '@babel/template': 7.18.10
-      '@babel/traverse': 7.19.3
-      '@babel/types': 7.19.3
+      '@babel/traverse': 7.19.6
+      '@babel/types': 7.19.4
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -633,7 +633,7 @@ packages:
     resolution: {integrity: sha512-iNpIgTgyAvDQpDj76POqg+YEt8fPxx3yaNBg3S30dxNKm2SWfYhD0TGrK/Eu9wHpUW63VQU894TsTg+GLbUa1g==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/types': 7.19.3
+      '@babel/types': 7.19.4
     dev: false
 
   /@babel/helper-simple-access/7.19.4:
@@ -750,24 +750,6 @@ packages:
       '@babel/code-frame': 7.18.6
       '@babel/parser': 7.19.6
       '@babel/types': 7.19.4
-
-  /@babel/traverse/7.19.3:
-    resolution: {integrity: sha512-qh5yf6149zhq2sgIXmwjnsvmnNQC2iw70UFjp4olxucKrWd/dvlUsBI88VSLUsnMNF7/vnOiA+nk1+yLoCqROQ==}
-    engines: {node: '>=6.9.0'}
-    dependencies:
-      '@babel/code-frame': 7.18.6
-      '@babel/generator': 7.19.6
-      '@babel/helper-environment-visitor': 7.18.9
-      '@babel/helper-function-name': 7.19.0
-      '@babel/helper-hoist-variables': 7.18.6
-      '@babel/helper-split-export-declaration': 7.18.6
-      '@babel/parser': 7.19.6
-      '@babel/types': 7.19.4
-      debug: 4.3.4
-      globals: 11.12.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
 
   /@babel/traverse/7.19.6:
     resolution: {integrity: sha512-6l5HrUCzFM04mfbG09AagtYyR2P0B71B1wN7PfSPiksDPz2k5H9CBC1tcZpz2M8OxbKTPccByoOJ22rUKbpmQQ==}
@@ -1628,18 +1610,18 @@ packages:
     resolution: {integrity: sha512-eZxlbI8GZscaGS7kkc/trHTT5xgrjH3/1n2JDwusC9iahPKWMRvRjJSAN5mCXviuTGQ/lHnhvv8Q1YTpnfz9gA==}
     dev: true
 
-  /@typegoose/auto-increment/1.8.0_mongoose@6.6.5:
+  /@typegoose/auto-increment/1.8.0_mongoose@6.6.6:
     resolution: {integrity: sha512-Yb3KhguKQFR3hy1oxH532Dqc7DzzQWhCQlCm/4MZIujrupK4k197ybFQOUcVUW1Yh6kJRJ8TFTK0Sw9Jm+2wRg==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       mongoose: ~6.6.0
     dependencies:
       loglevel: 1.8.0
-      mongoose: 6.6.5
+      mongoose: 6.6.6
       tslib: 2.4.0
     dev: false
 
-  /@typegoose/typegoose/9.12.1_mongoose@6.6.5:
+  /@typegoose/typegoose/9.12.1_mongoose@6.6.6:
     resolution: {integrity: sha512-whS0vIMf+xRzw6G2YgBni9LCSGnrHVY/q+KivFeg/1Oqtz0ViOLx4jCRoSwYhqJIu0UGHxOliFhJrVSrc8rrqw==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
@@ -1647,7 +1629,7 @@ packages:
     dependencies:
       lodash: 4.17.21
       loglevel: 1.8.0
-      mongoose: 6.6.5
+      mongoose: 6.6.6
       reflect-metadata: 0.1.13
       semver: 7.3.8
       tslib: 2.4.0
@@ -1799,7 +1781,7 @@ packages:
   /@types/mongoose-aggregate-paginate-v2/1.0.5:
     resolution: {integrity: sha512-c3KXTwzW6+BZw2g2TgNgGUyMbotTcI2Ip+NSZWoJjG2UO+8BRjmy+kJUNu64rfdIqWJ1+8h5NLm9w+aVis93Hw==}
     dependencies:
-      mongoose: 6.6.5
+      mongoose: 6.6.6
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -5276,31 +5258,31 @@ packages:
     engines: {node: '>=4.0.0'}
     dev: false
 
-  /mongoose-lean-getters/0.3.5_mongoose@6.6.5:
+  /mongoose-lean-getters/0.3.5_mongoose@6.6.6:
     resolution: {integrity: sha512-gmQ+RFMVCOSyvBcdc0+0fZOsWFO/bUqfLPUcttkoN5Gvwh8fe3ZmPjPNHNhy34vEeR0aljAsmBQ/naKfNOqWsQ==}
     engines: {node: '>= 8'}
     peerDependencies:
       mongoose: '>= 5.11.0 || 6.x'
     dependencies:
-      mongoose: 6.6.5
+      mongoose: 6.6.6
       mpath: 0.8.4
     dev: false
 
-  /mongoose-lean-id/0.3.0_mongoose@6.6.5:
+  /mongoose-lean-id/0.3.0_mongoose@6.6.6:
     resolution: {integrity: sha512-/eONPzg+tA7/VR4uv0uKxKwH4OCseZShqwbMW572QvlSU0g48zDFTiDuCjZmNykfZgK3ZOwjfLVbXBAAAbXI4Q==}
     peerDependencies:
       mongoose: 4.x || 5.x || 6.x
     dependencies:
-      mongoose: 6.6.5
+      mongoose: 6.6.6
     dev: false
 
-  /mongoose-lean-virtuals/0.9.1_mongoose@6.6.5:
+  /mongoose-lean-virtuals/0.9.1_mongoose@6.6.6:
     resolution: {integrity: sha512-jx4rhXuaQPam/lwef3z/FfYHlKdbFkDr9Qb7JEMeoa7y4pOuyJ83RkcNL25HRaoi4Bt71zKmV1cuJdv243t9aA==}
     peerDependencies:
       mongoose: '>=5.11.10'
     dependencies:
       array.prototype.flat: 1.2.3
-      mongoose: 6.6.5
+      mongoose: 6.6.6
       mpath: 0.8.4
     dev: false
 
@@ -5309,8 +5291,8 @@ packages:
     engines: {node: '>=4.0.0'}
     dev: false
 
-  /mongoose/6.6.5:
-    resolution: {integrity: sha512-iA/oDpWOc+K2QYzA4Eq7Z1oUBQOz9FGDmUwPLgw872Bfs/qizA5Db+gJorAn+TnnGu3VoCK8iP4Y+TECUelwjA==}
+  /mongoose/6.6.6:
+    resolution: {integrity: sha512-BziwYX15NVdA3DdlBaeiY1jCQtCxzpeDAJEL0BXADEvNQLWg4DiWH0FlQBdcJ58r36gWLglMP0ifvHgeyMpfhQ==}
     engines: {node: '>=12.0.0'}
     dependencies:
       bson: 4.7.0
