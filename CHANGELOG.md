@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [3.38.3](https://github.com/mx-space/core/compare/v3.38.1...v3.38.3) (2022-10-20)
+
+
+### Bug Fixes
+
+* update admin version ([6f8aaa2](https://github.com/mx-space/core/commit/6f8aaa2b251339a6bc9a0fd75d2beaad6c26aa58))
+
+
+### Features
+
+* support load yaml config ([380a88a](https://github.com/mx-space/core/commit/380a88a1bf2594a9e69b990fa849c4bca39e7aa8))
+
+
+
 ## [3.38.1](https://github.com/mx-space/core/compare/v3.38.0...v3.38.1) (2022-10-19)
 
 
