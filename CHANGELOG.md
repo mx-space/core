@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [3.38.4](https://github.com/mx-space/core/compare/v3.38.3...v3.38.4) (2022-10-20)
+
+
+### Bug Fixes
+
+* pm2 argv ([bb35026](https://github.com/mx-space/core/commit/bb35026fc545165bf7ac372b67a00f425cf67620))
+
+
+
 ## [3.38.3](https://github.com/mx-space/core/compare/v3.38.1...v3.38.3) (2022-10-20)
 
 
