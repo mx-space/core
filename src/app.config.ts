@@ -41,6 +41,9 @@ const commander = program
   // debug
   .option('--http_request_verbose', 'enable http request verbose')
 
+  // other
+
+  .option('--color', 'force enable shell color')
 commander.parse()
 
 const argv = commander.opts()
