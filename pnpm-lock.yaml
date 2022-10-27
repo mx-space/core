@@ -19,7 +19,7 @@ specifiers:
   '@fastify/static': 6.5.0
   '@innei/eslint-config-ts': latest
   '@innei/prettier': latest
-  '@nestjs/cli': 9.1.4
+  '@nestjs/cli': 9.1.5
   '@nestjs/common': 9.1.6
   '@nestjs/core': 9.1.6
   '@nestjs/event-emitter': 1.3.1
@@ -215,7 +215,7 @@ optionalDependencies:
 devDependencies:
   '@innei/eslint-config-ts': 0.9.5_typescript@4.8.4
   '@innei/prettier': 0.9.5
-  '@nestjs/cli': 9.1.4_@swc+core@1.3.4
+  '@nestjs/cli': 9.1.5_@swc+core@1.3.4
   '@nestjs/schematics': 9.0.3_typescript@4.8.4
   '@nestjs/testing': 9.1.6_6whalgrsvisgjemghedgkfq7dm
   '@swc/core': 1.3.4
@@ -1078,8 +1078,8 @@ packages:
       - supports-color
     dev: false
 
-  /@nestjs/cli/9.1.4_@swc+core@1.3.4:
-    resolution: {integrity: sha512-cvN4DcLzaqFzKRmpU3tOeLmw7+1p4XXsFLyWgteId0Szf6cAk5KJpD5jl2Kw7f39vNw9Pss8yiJ1q1CD/fcbwQ==}
+  /@nestjs/cli/9.1.5_@swc+core@1.3.4:
+    resolution: {integrity: sha512-rSp26+Nv7PFtYrRSP18Gv5ZK8rRSc2SCCF5wh4SdZaVGgkxShpNq9YEfI+ik/uziN3KC5o74ppYRXGj+aHGVsA==}
     engines: {node: '>= 12.9.0'}
     hasBin: true
     dependencies:
