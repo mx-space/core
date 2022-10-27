@@ -53,7 +53,7 @@ specifiers:
   '@types/node': 18.11.7
   '@types/nodemailer': 6.4.6
   '@types/qs': 6.9.7
-  '@types/semver': 7.3.12
+  '@types/semver': 7.3.13
   '@types/ua-parser-js': 0.7.36
   '@types/validator': 13.7.9
   '@vercel/ncc': 0.34.0
@@ -234,7 +234,7 @@ devDependencies:
   '@types/node': 18.11.7
   '@types/nodemailer': 6.4.6
   '@types/qs': 6.9.7
-  '@types/semver': 7.3.12
+  '@types/semver': 7.3.13
   '@types/ua-parser-js': 0.7.36
   '@types/validator': 13.7.9
   '@vercel/ncc': 0.34.0
@@ -1830,8 +1830,8 @@ packages:
     resolution: {integrity: sha512-FGa1F62FT09qcrueBA6qYTrJPVDzah9a+493+o2PCXsesWHIn27G98TsSMs3WPNbZIEj4+VJf6saSFpvD+3Zsw==}
     dev: true
 
-  /@types/semver/7.3.12:
-    resolution: {integrity: sha512-WwA1MW0++RfXmCr12xeYOOC5baSC9mSb0ZqCquFzKhcoF4TvHu5MKOuXsncgZcpVFhB1pXd5hZmM0ryAoCp12A==}
+  /@types/semver/7.3.13:
+    resolution: {integrity: sha512-21cFJr9z3g5dW8B0CVI9g2O9beqaThGQ6ZFBqHfwhzLDKUxaqTIy3vnfah/UPkfOiF2pLq+tGz+W8RyCskuslw==}
     dev: true
 
   /@types/tmp/0.2.3:
