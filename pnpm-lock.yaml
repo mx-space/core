@@ -15,7 +15,7 @@ specifiers:
   '@babel/plugin-transform-typescript': 7.19.3
   '@babel/types': '*'
   '@fastify/cookie': 8.3.0
-  '@fastify/multipart': 7.2.0
+  '@fastify/multipart': 7.3.0
   '@fastify/static': 6.5.0
   '@innei/eslint-config-ts': latest
   '@innei/prettier': latest
@@ -138,7 +138,7 @@ dependencies:
   '@babel/plugin-transform-typescript': 7.19.3_@babel+core@7.19.6
   '@babel/types': 7.19.3
   '@fastify/cookie': 8.3.0
-  '@fastify/multipart': 7.2.0
+  '@fastify/multipart': 7.3.0
   '@fastify/static': 6.5.0
   '@nestjs/common': 9.1.6_mpbqhbv3qeq77ujihdpg6d4hsy
   '@nestjs/core': 9.1.6_5ibe2xdes2uq4zkorbichrtsoa
@@ -900,8 +900,8 @@ packages:
       reusify: 1.0.4
     dev: false
 
-  /@fastify/multipart/7.2.0:
-    resolution: {integrity: sha512-LwfwbCLy30Be1pa5q7F8xCTygxJdEWkfkQhD4OWZ13+vMH4tP/6Bu3OkSTlFatxLAmbEl2UpHLf7CU7w7csRIw==}
+  /@fastify/multipart/7.3.0:
+    resolution: {integrity: sha512-tbzQiRFxoADCn0G10CqiQ/nDWWcfegtwg826Pfz2h7+XvuqJhGnko0TbafrWIY7hnGD+sNCGMdiTVsxxs6zigA==}
     dependencies:
       '@fastify/busboy': 1.1.0
       '@fastify/deepmerge': 1.1.0
