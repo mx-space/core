@@ -101,7 +101,7 @@
     "get-image-colors": "4.0.1",
     "image-size": "1.0.2",
     "inquirer": "*",
-    "isbot": "3.6.1",
+    "isbot": "3.6.2",
     "js-yaml": "*",
     "json5": "2.2.1",
     "jsonwebtoken": "8.5.1",
