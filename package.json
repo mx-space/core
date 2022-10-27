@@ -157,7 +157,7 @@
     "@types/node": "18.11.7",
     "@types/nodemailer": "6.4.6",
     "@types/qs": "6.9.7",
-    "@types/semver": "7.3.12",
+    "@types/semver": "7.3.13",
     "@types/ua-parser-js": "0.7.36",
     "@types/validator": "13.7.9",
     "@vercel/ncc": "0.34.0",
