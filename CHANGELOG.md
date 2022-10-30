@@ -1,4 +1,24 @@
-# CHANGELOG
+## [3.38.5](https://github.com/mx-space/core/compare/v3.38.4...v3.38.5) (2022-10-30)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @babel/core to v7.19.6 ([10788e9](https://github.com/mx-space/core/commit/10788e98be21a368338b0c2e4d15df313aeb1301))
+* **deps:** update dependency @babel/plugin-transform-modules-commonjs to v7.19.6 ([#814](https://github.com/mx-space/core/issues/814)) ([13ff05a](https://github.com/mx-space/core/commit/13ff05a6dc2702e46c9beb69d4399ccfd86f963d))
+* **deps:** update dependency @babel/plugin-transform-typescript to v7.20.0 ([#835](https://github.com/mx-space/core/issues/835)) ([a3c23da](https://github.com/mx-space/core/commit/a3c23da603f688305d6e90cbe6b8503cd94e46cf))
+* **deps:** update dependency @fastify/multipart to v7.3.0 ([#830](https://github.com/mx-space/core/issues/830)) ([a0d32b6](https://github.com/mx-space/core/commit/a0d32b61e517dc617804409186279f9c1b9be343))
+* **deps:** update dependency @nestjs/swagger to v6.1.3 ([500b494](https://github.com/mx-space/core/commit/500b494c8423c3b3a948b6df90ce8fa467f5c13f))
+* **deps:** update dependency dayjs to v1.11.6 ([288c64f](https://github.com/mx-space/core/commit/288c64fa256315c34d4a311efaa011b14d5e109c))
+* **deps:** update dependency isbot to v3.6.2 ([418040b](https://github.com/mx-space/core/commit/418040bf381659a41130044fc7f7b2a0832bb56e))
+* **deps:** update dependency linkedom to v0.14.18 ([c79c5e0](https://github.com/mx-space/core/commit/c79c5e012d046715f2b327a63abc79c51978ce4f))
+* **deps:** update dependency linkedom to v0.14.19 ([8dad005](https://github.com/mx-space/core/commit/8dad005ced00abd13a725ab169a175369d6b9ec1))
+* **deps:** update dependency mongoose to v6.6.6 ([48104cf](https://github.com/mx-space/core/commit/48104cfb3a02fea0ea5e11a2f903f9f75e9d27c7))
+* **deps:** update dependency mongoose to v6.6.7 ([985ed34](https://github.com/mx-space/core/commit/985ed340ba622f30d73416bd46e24adfb38ba57c))
+* **deps:** update dependency mongoose to v6.7.0 ([#825](https://github.com/mx-space/core/issues/825)) ([880fddd](https://github.com/mx-space/core/commit/880fdddfa7efbceb11caf3352039074fd2b43092))
+* **deps:** update nest monorepo to v9.1.5 ([df05b2a](https://github.com/mx-space/core/commit/df05b2a48ba983009e9ab0309a60ecad2d16e8e9))
+* **deps:** update nest monorepo to v9.1.6 ([c955653](https://github.com/mx-space/core/commit/c955653f3f83a1bfc7c6d902a3ee51ab9a1acdcf))
+
+
 
 ## [3.38.4](https://github.com/mx-space/core/compare/v3.38.3...v3.38.4) (2022-10-20)
 
