@@ -12,7 +12,7 @@ specifiers:
   '@algolia/client-search': '*'
   '@babel/core': 7.19.6
   '@babel/plugin-transform-modules-commonjs': 7.19.6
-  '@babel/plugin-transform-typescript': 7.19.3
+  '@babel/plugin-transform-typescript': 7.20.0
   '@babel/types': '*'
   '@fastify/cookie': 8.3.0
   '@fastify/multipart': 7.3.0
@@ -135,7 +135,7 @@ dependencies:
   '@algolia/client-search': 4.14.2
   '@babel/core': 7.19.6
   '@babel/plugin-transform-modules-commonjs': 7.19.6_@babel+core@7.19.6
-  '@babel/plugin-transform-typescript': 7.19.3_@babel+core@7.19.6
+  '@babel/plugin-transform-typescript': 7.20.0_@babel+core@7.19.6
   '@babel/types': 7.19.3
   '@fastify/cookie': 8.3.0
   '@fastify/multipart': 7.3.0
@@ -1360,8 +1360,8 @@ packages:
     dependencies:
       '@babel/types': 7.19.4
 
-  /@babel/plugin-syntax-typescript/7.18.6_@babel+core@7.19.6:
-    resolution: {integrity: sha512-mAWAuq4rvOepWCBid55JuRNvpTNf2UGVgoz4JV0fXEKolsVZDzsa4NqCef758WZJj/GDu0gVGItjKFiClTAmZA==}
+  /@babel/plugin-syntax-typescript/7.20.0_@babel+core@7.19.6:
+    resolution: {integrity: sha512-rd9TkG+u1CExzS4SM1BlMEhMXwFLKVjOAFFCDx9PbX5ycJWDoWMcwdJH9RhkPu1dOgn5TrxLot/Gx6lWFuAUNQ==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -1384,8 +1384,8 @@ packages:
       - supports-color
     dev: false
 
-  /@babel/plugin-transform-typescript/7.19.3_@babel+core@7.19.6:
-    resolution: {integrity: sha512-z6fnuK9ve9u/0X0rRvI9MY0xg+DOUaABDYOe+/SQTxtlptaBB/V9JIUxJn6xp3lMBeb9qe8xSFmHU35oZDXD+w==}
+  /@babel/plugin-transform-typescript/7.20.0_@babel+core@7.19.6:
+    resolution: {integrity: sha512-xOAsAFaun3t9hCwZ13Qe7gq423UgMZ6zAgmLxeGGapFqlT/X3L5qT2btjiVLlFn7gWtMaVyceS5VxGAuKbgizw==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -1393,7 +1393,7 @@ packages:
       '@babel/core': 7.19.6
       '@babel/helper-create-class-features-plugin': 7.19.0_@babel+core@7.19.6
       '@babel/helper-plugin-utils': 7.19.0
-      '@babel/plugin-syntax-typescript': 7.18.6_@babel+core@7.19.6
+      '@babel/plugin-syntax-typescript': 7.20.0_@babel+core@7.19.6
     transitivePeerDependencies:
       - supports-color
     dev: false
