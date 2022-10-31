@@ -94,7 +94,7 @@ specifiers:
   marked: 4.1.1
   mime-types: '*'
   mkdirp: '*'
-  mongodb-memory-server: 8.9.4
+  mongodb-memory-server: 8.9.5
   mongoose: 6.7.0
   mongoose-aggregate-paginate-v2: 1.0.6
   mongoose-lean-getters: 0.3.5
@@ -209,7 +209,7 @@ dependencies:
   zx-cjs: 7.0.7-0
 
 optionalDependencies:
-  mongodb-memory-server: 8.9.4
+  mongodb-memory-server: 8.9.5
   redis-memory-server: 0.6.0
 
 devDependencies:
@@ -5888,8 +5888,8 @@ packages:
       '@types/whatwg-url': 8.2.2
       whatwg-url: 11.0.0
 
-  /mongodb-memory-server-core/8.9.4:
-    resolution: {integrity: sha512-qsJITBeu7KFFp31RejbK/Xm1KlwEi8I7VQQU+zzpo23fxxaJJN2j0idG016TIOpHOhngdTqLISp70bhsIRCHkg==}
+  /mongodb-memory-server-core/8.9.5:
+    resolution: {integrity: sha512-AOI7Ut8Z5vZqvI0KlRW9j5qoR7pbR/RCojDiN8oLmfshfq5twi/4l8kXjG9nChGqloNNgfMYVF2Rvbr8hoHjxA==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@types/tmp': 0.2.3
@@ -5913,12 +5913,12 @@ packages:
     dev: false
     optional: true
 
-  /mongodb-memory-server/8.9.4:
-    resolution: {integrity: sha512-EWrctvLuXQAKEyBQl8c8uVbIXn6GpcapY0c7sdM0ABcsgqftBmU0v0MpI65csuivalWzCsKjAuiugj88+xxUJQ==}
+  /mongodb-memory-server/8.9.5:
+    resolution: {integrity: sha512-NdkUDiTaqwcIa23PX1GQCvXjCE9bQRYZIFhrwc40R99/dvTku1jaZzbzEbfNytqJVUekBwfKdtbLS8SsA48D9g==}
     engines: {node: '>=12.22.0'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 8.9.4
+      mongodb-memory-server-core: 8.9.5
       tslib: 2.4.0
     transitivePeerDependencies:
       - supports-color
