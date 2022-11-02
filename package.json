@@ -109,7 +109,7 @@
     "linkedom": "0.14.19",
     "lodash": "*",
     "lru-cache": "7.14.0",
-    "marked": "4.2.0",
+    "marked": "4.2.1",
     "mime-types": "*",
     "mkdirp": "*",
     "mongoose": "6.7.0",
