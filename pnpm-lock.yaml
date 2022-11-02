@@ -2,7 +2,7 @@ lockfileVersion: 5.4
 
 overrides:
   typescript: 4.8.4
-  ioredis: 5.2.3
+  ioredis: 5.2.4
   webpack: 5.74.0
   semver: 7.3.8
   pino: ./external/pino
@@ -81,7 +81,7 @@ specifiers:
   husky: 8.0.1
   image-size: 1.0.2
   inquirer: '*'
-  ioredis: 5.2.3
+  ioredis: 5.2.4
   isbot: 3.6.3
   js-yaml: '*'
   json5: 2.2.1
@@ -243,7 +243,7 @@ devDependencies:
   eslint: 8.24.0
   eslint-plugin-unused-imports: 2.0.0_eslint@8.24.0
   husky: 8.0.1
-  ioredis: 5.2.3
+  ioredis: 5.2.4
   lint-staged: 13.0.3
   prettier: 2.7.1
   rimraf: 3.0.2
@@ -3159,7 +3159,7 @@ packages:
     resolution: {integrity: sha512-TCxbp9ceuFveTKWuNaCX8QjoC41rAlHen4s63u9Yd+iXlw3efYmimc/u935PKPxSdhkXpnMes4mxtK3/yb0L4g==}
     engines: {node: '>=6.0.0'}
     dependencies:
-      ioredis: 5.2.3
+      ioredis: 5.2.4
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -5148,8 +5148,8 @@ packages:
     engines: {node: '>= 0.10'}
     dev: true
 
-  /ioredis/5.2.3:
-    resolution: {integrity: sha512-gQNcMF23/NpvjCaa1b5YycUyQJ9rBNH2xP94LWinNpodMWVUPP5Ai/xXANn/SM7gfIvI62B5CCvZxhg5pOgyMw==}
+  /ioredis/5.2.4:
+    resolution: {integrity: sha512-qIpuAEt32lZJQ0XyrloCRdlEdUUNGG9i0UOk6zgzK6igyudNWqEBxfH6OlbnOOoBBvr1WB02mm8fR55CnikRng==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@ioredis/commands': 1.1.1
