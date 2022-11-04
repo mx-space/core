@@ -12,7 +12,7 @@ specifiers:
   '@algolia/client-search': '*'
   '@babel/core': 7.19.6
   '@babel/plugin-transform-modules-commonjs': 7.19.6
-  '@babel/plugin-transform-typescript': 7.20.0
+  '@babel/plugin-transform-typescript': 7.20.2
   '@babel/types': '*'
   '@fastify/cookie': 8.3.0
   '@fastify/multipart': 7.3.0
@@ -135,7 +135,7 @@ dependencies:
   '@algolia/client-search': 4.14.2
   '@babel/core': 7.19.6
   '@babel/plugin-transform-modules-commonjs': 7.19.6_@babel+core@7.19.6
-  '@babel/plugin-transform-typescript': 7.20.0_@babel+core@7.19.6
+  '@babel/plugin-transform-typescript': 7.20.2_@babel+core@7.19.6
   '@babel/types': 7.19.3
   '@fastify/cookie': 8.3.0
   '@fastify/multipart': 7.3.0
@@ -1211,8 +1211,8 @@ packages:
       browserslist: 4.21.3
       semver: 7.3.8
 
-  /@babel/helper-create-class-features-plugin/7.19.0_@babel+core@7.19.6:
-    resolution: {integrity: sha512-NRz8DwF4jT3UfrmUoZjd0Uph9HQnP30t7Ash+weACcyNkiYTywpIjDBgReJMKgr+n86sn2nPVVmJ28Dm053Kqw==}
+  /@babel/helper-create-class-features-plugin/7.20.2_@babel+core@7.19.6:
+    resolution: {integrity: sha512-k22GoYRAHPYr9I+Gvy2ZQlAe5mGy8BqWst2wRt8cwIufWTxrsVshhIBvYNqC80N0GSFWTsqRVexOtfzlgOEDvA==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0
@@ -1223,7 +1223,7 @@ packages:
       '@babel/helper-function-name': 7.19.0
       '@babel/helper-member-expression-to-functions': 7.18.9
       '@babel/helper-optimise-call-expression': 7.18.6
-      '@babel/helper-replace-supers': 7.18.9
+      '@babel/helper-replace-supers': 7.19.1
       '@babel/helper-split-export-declaration': 7.18.6
     transitivePeerDependencies:
       - supports-color
@@ -1286,8 +1286,13 @@ packages:
     engines: {node: '>=6.9.0'}
     dev: false
 
-  /@babel/helper-replace-supers/7.18.9:
-    resolution: {integrity: sha512-dNsWibVI4lNT6HiuOIBr1oyxo40HvIVmbwPUm3XZ7wMh4k2WxrxTqZwSqw/eEmXDS9np0ey5M2bz9tBmO9c+YQ==}
+  /@babel/helper-plugin-utils/7.20.2:
+    resolution: {integrity: sha512-8RvlJG2mj4huQ4pZ+rU9lqKi9ZKiRmuvGuM2HlWmkmgOhbs6zEAw6IEiJ5cQqGbDzGZOhwuOQNtZMi/ENLjZoQ==}
+    engines: {node: '>=6.9.0'}
+    dev: false
+
+  /@babel/helper-replace-supers/7.19.1:
+    resolution: {integrity: sha512-T7ahH7wV0Hfs46SFh5Jz3s0B6+o8g3c+7TMxu7xKfmHikg7EAZ3I2Qk9LFhjxXq8sL7UkP5JflezNwoZa8WvWw==}
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/helper-environment-visitor': 7.18.9
@@ -1367,7 +1372,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.19.6
-      '@babel/helper-plugin-utils': 7.19.0
+      '@babel/helper-plugin-utils': 7.20.2
     dev: false
 
   /@babel/plugin-transform-modules-commonjs/7.19.6_@babel+core@7.19.6:
@@ -1384,15 +1389,15 @@ packages:
       - supports-color
     dev: false
 
-  /@babel/plugin-transform-typescript/7.20.0_@babel+core@7.19.6:
-    resolution: {integrity: sha512-xOAsAFaun3t9hCwZ13Qe7gq423UgMZ6zAgmLxeGGapFqlT/X3L5qT2btjiVLlFn7gWtMaVyceS5VxGAuKbgizw==}
+  /@babel/plugin-transform-typescript/7.20.2_@babel+core@7.19.6:
+    resolution: {integrity: sha512-jvS+ngBfrnTUBfOQq8NfGnSbF9BrqlR6hjJ2yVxMkmO5nL/cdifNbI30EfjRlN4g5wYWNnMPyj5Sa6R1pbLeag==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.19.6
-      '@babel/helper-create-class-features-plugin': 7.19.0_@babel+core@7.19.6
-      '@babel/helper-plugin-utils': 7.19.0
+      '@babel/helper-create-class-features-plugin': 7.20.2_@babel+core@7.19.6
+      '@babel/helper-plugin-utils': 7.20.2
       '@babel/plugin-syntax-typescript': 7.20.0_@babel+core@7.19.6
     transitivePeerDependencies:
       - supports-color
