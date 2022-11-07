@@ -122,7 +122,7 @@ specifiers:
   tsconfig-paths: 4.1.0
   typescript: 4.8.4
   ua-parser-js: 1.0.32
-  vite: 3.2.2
+  vite: 3.2.3
   vite-tsconfig-paths: 3.5.2
   vitest: 0.24.5
   vm2: 3.9.11
@@ -253,8 +253,8 @@ devDependencies:
   ts-node: 10.9.1_ehyunwk7wqur67twnvl5ccglre
   tsconfig-paths: 4.1.0
   typescript: 4.8.4
-  vite: 3.2.2
-  vite-tsconfig-paths: 3.5.2_vite@3.2.2
+  vite: 3.2.3_@types+node@18.11.9
+  vite-tsconfig-paths: 3.5.2_vite@3.2.3
   vitest: 0.24.5
   zx: 7.1.1
 
@@ -7540,7 +7540,7 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
-  /vite-tsconfig-paths/3.5.2_vite@3.2.2:
+  /vite-tsconfig-paths/3.5.2_vite@3.2.3:
     resolution: {integrity: sha512-xJMgHA2oJ28QCG2f+hXrcqzo7IttrSRK4A//Tp94CfuX5eetOx33qiwXHUdi3FwkHP2ocpxHuvE45Ix67gwEmQ==}
     peerDependencies:
       vite: '>2.0.0-0'
@@ -7549,22 +7549,25 @@ packages:
       globrex: 0.1.2
       recrawl-sync: 2.2.2
       tsconfig-paths: 4.1.0
-      vite: 3.2.2
+      vite: 3.2.3_@types+node@18.11.9
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /vite/3.2.2:
-    resolution: {integrity: sha512-pLrhatFFOWO9kS19bQ658CnRYzv0WLbsPih6R+iFeEEhDOuYgYCX2rztUViMz/uy/V8cLCJvLFeiOK7RJEzHcw==}
+  /vite/3.2.3_@types+node@18.11.9:
+    resolution: {integrity: sha512-h8jl1TZ76eGs3o2dIBSsvXDLb1m/Ec1iej8ZMdz+PsaFUsftZeWe2CZOI3qogEsMNaywc17gu0q6cQDzh/weCQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
+      '@types/node': '>= 14'
       less: '*'
       sass: '*'
       stylus: '*'
       sugarss: '*'
       terser: ^5.4.0
     peerDependenciesMeta:
+      '@types/node':
+        optional: true
       less:
         optional: true
       sass:
@@ -7576,6 +7579,7 @@ packages:
       terser:
         optional: true
     dependencies:
+      '@types/node': 18.11.9
       esbuild: 0.15.10
       postcss: 8.4.18
       resolve: 1.22.1
@@ -7616,7 +7620,7 @@ packages:
       tinybench: 2.3.1
       tinypool: 0.3.0
       tinyspy: 1.0.2
-      vite: 3.2.2
+      vite: 3.2.3_@types+node@18.11.9
     transitivePeerDependencies:
       - less
       - sass
