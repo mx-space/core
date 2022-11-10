@@ -188,7 +188,7 @@
   "resolutions": {
     "typescript": "4.8.4",
     "ioredis": "5.2.4",
-    "webpack": "5.74.0",
+    "webpack": "5.75.0",
     "semver": "7.3.8",
     "pino": "./external/pino",
     "get-pixels@^3>request": "./external/request"
