@@ -60,7 +60,7 @@
   },
   "dependencies": {
     "@algolia/client-search": "*",
-    "@babel/core": "7.19.6",
+    "@babel/core": "7.20.2",
     "@babel/plugin-transform-modules-commonjs": "7.19.6",
     "@babel/plugin-transform-typescript": "7.20.2",
     "@babel/types": "*",
