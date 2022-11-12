@@ -1,3 +1,24 @@
+# CHANGELOG
+
+## [3.38.6](https://github.com/mx-space/core/compare/v3.38.5...v3.38.6) (2022-11-12)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @babel/core to v7.20.2 ([#854](https://github.com/mx-space/core/issues/854)) ([01331b7](https://github.com/mx-space/core/commit/01331b7877d0106bbfc0a05b8f772c8486c6c0e8))
+* **deps:** update dependency @babel/plugin-transform-typescript to v7.20.2 ([d1cbf63](https://github.com/mx-space/core/commit/d1cbf63dbc9e946fa8734f14fa634655efbf7c53))
+* **deps:** update dependency isbot to v3.6.3 ([538ec70](https://github.com/mx-space/core/commit/538ec7097641b4dca5bea7c93aeaefe3b74d54f7))
+* **deps:** update dependency isbot to v3.6.5 ([5fb5647](https://github.com/mx-space/core/commit/5fb56478cfb7c93ada32dd9cf21ca527e52921e6))
+* **deps:** update dependency lru-cache to v7.14.1 ([f443b69](https://github.com/mx-space/core/commit/f443b6953d20dbbf4ef656f5effaf37bbcdc1e7a))
+* **deps:** update dependency marked to v4.2.0 ([#843](https://github.com/mx-space/core/issues/843)) ([920dbb3](https://github.com/mx-space/core/commit/920dbb3a7f25ca58a9617583195d7745823c91fb))
+* **deps:** update dependency marked to v4.2.1 ([195eb78](https://github.com/mx-space/core/commit/195eb78cfb651adccb07e9dce98a4e63b32170b4))
+* **deps:** update dependency marked to v4.2.2 ([ef4ce06](https://github.com/mx-space/core/commit/ef4ce068801a026cc4f8df36057847619af884a6))
+* **deps:** update dependency mongoose to v6.7.1 ([fb224bb](https://github.com/mx-space/core/commit/fb224bb9784ab641fdda21c74ea2b54bc66d2949))
+* **deps:** update dependency mongoose to v6.7.2 ([7cfc060](https://github.com/mx-space/core/commit/7cfc0603d2fad50b4e1171909797238919c47765))
+* **deps:** update nest monorepo to v9.2.0 (minor) ([#857](https://github.com/mx-space/core/issues/857)) ([e7f9e96](https://github.com/mx-space/core/commit/e7f9e964c743889f118a50b9067f2f2e3973a1b0))
+
+
+
 ## [3.38.5](https://github.com/mx-space/core/compare/v3.38.4...v3.38.5) (2022-10-30)
 
 
