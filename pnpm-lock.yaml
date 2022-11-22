@@ -117,7 +117,7 @@ specifiers:
   semver: 7.3.8
   slugify: 1.6.5
   snakecase-keys: 5.4.4
-  socket.io: 4.5.3
+  socket.io: 4.5.4
   ts-node: 10.9.1
   tsconfig-paths: 4.1.0
   typescript: 4.8.4
@@ -249,7 +249,7 @@ devDependencies:
   rimraf: 3.0.2
   rollup: 2.79.1
   rollup-plugin-swc: 0.2.1_xxe6b3ouzxvqfbhorygxu3sjf4
-  socket.io: 4.5.3
+  socket.io: 4.5.4
   ts-node: 10.9.1_ehyunwk7wqur67twnvl5ccglre
   tsconfig-paths: 4.1.0
   typescript: 4.8.4
@@ -3854,6 +3854,26 @@ packages:
       - supports-color
       - utf-8-validate
 
+  /engine.io/6.2.1:
+    resolution: {integrity: sha512-ECceEFcAaNRybd3lsGQKas3ZlMVjN3cyWwMP25D2i0zWfyiytVbTpRPa34qrr+FHddtpBVOmq4H/DCv1O0lZRA==}
+    engines: {node: '>=10.0.0'}
+    dependencies:
+      '@types/cookie': 0.4.1
+      '@types/cors': 2.8.12
+      '@types/node': 18.11.9
+      accepts: 1.3.8
+      base64id: 2.0.0
+      cookie: 0.4.2
+      cors: 2.8.5
+      debug: 4.3.4
+      engine.io-parser: 5.0.4
+      ws: 8.2.3
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+    dev: true
+
   /enhanced-resolve/5.10.0:
     resolution: {integrity: sha512-T0yTFjdpldGY8PmuXXR0PyQ1ufZpEGiHVrp7zHKB7jdR4qlmZHhONVM5AQOAWXuF/w3dnHbEQVrNptJgt7F+cQ==}
     engines: {node: '>=10.13.0'}
@@ -7036,6 +7056,22 @@ packages:
       - bufferutil
       - supports-color
       - utf-8-validate
+
+  /socket.io/4.5.4:
+    resolution: {integrity: sha512-m3GC94iK9MfIEeIBfbhJs5BqFibMtkRk8ZpKwG2QwxV0m/eEhPIV4ara6XCF1LWNAus7z58RodiZlAH71U3EhQ==}
+    engines: {node: '>=10.0.0'}
+    dependencies:
+      accepts: 1.3.8
+      base64id: 2.0.0
+      debug: 4.3.4
+      engine.io: 6.2.1
+      socket.io-adapter: 2.4.0
+      socket.io-parser: 4.2.1
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+    dev: true
 
   /socks/2.7.1:
     resolution: {integrity: sha512-7maUZy1N7uo6+WVEX6psASxtNlKaNVMlGQKkG/63nEDdLOWNbiUMoLK7X4uYoLhQstau72mLgfEWcXcwsaHbYQ==}
