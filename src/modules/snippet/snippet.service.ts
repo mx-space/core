@@ -1,6 +1,7 @@
 import { load } from 'js-yaml'
 import JSON5 from 'json5'
 import { AggregatePaginateModel, Document } from 'mongoose'
+import qs from 'qs'
 
 import {
   BadRequestException,
@@ -52,9 +53,9 @@ export class SnippetService {
     return await this.model.create({ ...model, created: new Date() })
   }
 
-  async update(id: string, model: SnippetModel) {
-    await this.validateTypeAndCleanup(model)
-    delete model.created
+  async update(id: string, newModel: SnippetModel) {
+    await this.validateTypeAndCleanup(newModel)
+    delete newModel.created
     const old = await this.model.findById(id).lean()
 
     if (!old) {
@@ -63,19 +64,48 @@ export class SnippetService {
 
     if (
       old.type === SnippetType.Function &&
-      model.type !== SnippetType.Function
+      newModel.type !== SnippetType.Function
     ) {
       throw new BadRequestException(
         '`type` is not allowed to change if this snippet set to Function type.',
       )
     }
 
+    // merge secret
+    if (old.secret && newModel.secret) {
+      const oldSecret = qs.parse(old.secret)
+      const newSecret = qs.parse(newModel.secret)
+
+      // first delete key if newer secret not provide
+      for (const key in oldSecret) {
+        if (!(key in newSecret)) {
+          delete oldSecret[key]
+        }
+      }
+
+      for (const key in newSecret) {
+        // if newSecret has same key, but value is empty, remove it
+
+        if (newSecret[key] === '' && oldSecret[key] !== '') {
+          delete newSecret[key]
+        }
+      }
+
+      newModel.secret = qs.stringify({ ...oldSecret, ...newSecret })
+    }
+
     await this.deleteCachedSnippet(old.reference, old.name)
-    return await this.model.findByIdAndUpdate(
+    const newerDoc = await this.model.findByIdAndUpdate(
       id,
-      { ...model, modified: new Date() },
+      { ...newModel, modified: new Date() },
       { new: true },
     )
+    if (newerDoc) {
+      const nextSnippet = this.transformLeanSnippetModel(newerDoc.toObject())
+
+      return nextSnippet
+    }
+    return newerDoc
   }
 
   async delete(id: string) {
@@ -134,7 +164,7 @@ export class SnippetService {
     // TODO refactor
     // cleanup
     if (model.type !== SnippetType.Function) {
-      const deleteKeys: (keyof SnippetModel)[] = ['enable', 'method']
+      const deleteKeys: (keyof SnippetModel)[] = ['enable', 'method', 'secret']
       deleteKeys.forEach((key) => {
         Reflect.deleteProperty(model, key)
       })
@@ -146,7 +176,29 @@ export class SnippetService {
     if (!doc) {
       throw new NotFoundException()
     }
-    return doc
+
+    // transform sth.
+    const nextSnippet = this.transformLeanSnippetModel(doc)
+
+    return nextSnippet
+  }
+
+  private transformLeanSnippetModel(snippet: SnippetModel) {
+    const nextSnippet = { ...snippet }
+    // transform sth.
+    if (snippet.type === SnippetType.Function) {
+      if (snippet.secret) {
+        const secretObj = qs.parse(snippet.secret)
+
+        for (const key in secretObj) {
+          // remove secret value, only keep key
+          secretObj[key] = ''
+        }
+        nextSnippet.secret = secretObj as any
+      }
+    }
+
+    return nextSnippet
   }
 
   /**

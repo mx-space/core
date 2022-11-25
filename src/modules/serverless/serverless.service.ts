@@ -1,10 +1,12 @@
 import { isURL } from 'class-validator'
 import fs, { mkdir, stat } from 'fs/promises'
+import { isPlainObject } from 'lodash'
 import LRUCache from 'lru-cache'
 import { createRequire } from 'module'
 import { mongo } from 'mongoose'
 import path, { resolve } from 'path'
 import { nextTick } from 'process'
+import qs from 'qs'
 
 import { TransformOptions, parseAsync, transformAsync } from '@babel/core'
 import BabelPluginTransformCommonJS from '@babel/plugin-transform-modules-commonjs'
@@ -235,6 +237,14 @@ export class ServerlessService {
     const { raw: functionString } = model
     const logger = new Logger(`fx:${model.reference}/${model.name}`)
     const document = await this.model.findById(model.id)
+    const secretObj = model.secret ? qs.parse(model.secret) : {}
+
+    if (!isPlainObject(secretObj)) {
+      throw new InternalServerErrorException(
+        `secret parsing error, must be object, got ${typeof secretObj}`,
+      )
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this
     const globalContext = {
@@ -256,6 +266,8 @@ export class ServerlessService {
             return [this.databaseService.db, mongo]
           },
         },
+
+        secret: secretObj,
 
         model,
         document,
