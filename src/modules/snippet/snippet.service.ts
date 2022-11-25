@@ -1,6 +1,7 @@
 import { load } from 'js-yaml'
 import JSON5 from 'json5'
 import { AggregatePaginateModel, Document } from 'mongoose'
+import qs from 'qs'
 
 import {
   BadRequestException,
@@ -71,11 +72,13 @@ export class SnippetService {
     }
 
     await this.deleteCachedSnippet(old.reference, old.name)
-    return await this.model.findByIdAndUpdate(
+    const newerDoc = await this.model.findByIdAndUpdate(
       id,
       { ...model, modified: new Date() },
       { new: true },
     )
+    const nextSnippet = this.transformLeanSnippetModel(newerDoc)
+    return nextSnippet
   }
 
   async delete(id: string) {
@@ -134,7 +137,7 @@ export class SnippetService {
     // TODO refactor
     // cleanup
     if (model.type !== SnippetType.Function) {
-      const deleteKeys: (keyof SnippetModel)[] = ['enable', 'method']
+      const deleteKeys: (keyof SnippetModel)[] = ['enable', 'method', 'secret']
       deleteKeys.forEach((key) => {
         Reflect.deleteProperty(model, key)
       })
@@ -146,7 +149,28 @@ export class SnippetService {
     if (!doc) {
       throw new NotFoundException()
     }
-    return doc
+
+    // transform sth.
+    const nextSnippet = this.transformLeanSnippetModel(doc)
+    return nextSnippet
+  }
+
+  private transformLeanSnippetModel(snippet: SnippetModel) {
+    const nextSnippet = { ...snippet }
+    // transform sth.
+    if (snippet.type === SnippetType.Function) {
+      if (snippet.secret) {
+        const secretObj = qs.parse(snippet.secret)
+
+        for (const key in secretObj) {
+          // remove secret value, only keep key
+          Reflect.deleteProperty(secretObj, key)
+        }
+        nextSnippet.secret = secretObj as any
+      }
+    }
+
+    return nextSnippet
   }
 
   /**

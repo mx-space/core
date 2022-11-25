@@ -8,7 +8,9 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator'
+import { isNil } from 'lodash'
 import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
+import { stringify } from 'qs'
 
 import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
 
@@ -84,11 +86,19 @@ export class SnippetModel extends BaseModel {
   @IsOptional()
   schema?: string
 
-  // for function
+  // for function start
   @prop()
   @IsEnum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
   @IsOptional()
   method?: string
+
+  @prop()
+  @IsString()
+  @IsOptional()
+  @Transform(({ value }) => (isNil(value) ? value : stringify(value)))
+  // username=123&password=123
+  secret?: string
+  // for function end
 
   @prop()
   @IsBoolean()
