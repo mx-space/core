@@ -6,7 +6,7 @@
   "license": "AGPLv3",
   "dashboard": {
     "repo": "mx-space/mx-admin",
-    "version": "3.24.1"
+    "version": "3.25.0"
   },
   "husky": {
     "hooks": {
