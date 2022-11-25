@@ -1,5 +1,23 @@
 # CHANGELOG
 
+# [3.39.0](https://github.com/mx-space/core/compare/v3.38.6...v3.39.0) (2022-11-25)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @fastify/static to v6.5.1 ([dd88cac](https://github.com/mx-space/core/commit/dd88cac2b72dfaf984e0b85a820bed577fc44bd4))
+* **deps:** update dependency linkedom to v0.14.20 ([eada716](https://github.com/mx-space/core/commit/eada716edba4c2d2d558c178c376bd52a3028714))
+* **deps:** update dependency linkedom to v0.14.21 ([0839361](https://github.com/mx-space/core/commit/0839361e1e25eec6f734da9ab48939f86799f300))
+* **deps:** update dependency marked to v4.2.3 ([1441b79](https://github.com/mx-space/core/commit/1441b79a2e2c8ec0e8b6710fc01460282f4b1bad))
+* **deps:** update dependency mongoose to v6.7.3 ([830836b](https://github.com/mx-space/core/commit/830836b9204f7aac545ff7bc7b7478d0499ffc2a))
+
+
+### Features
+
+* add secret for function ([#881](https://github.com/mx-space/core/issues/881)) ([432e747](https://github.com/mx-space/core/commit/432e7471aabbe6b73fdd26b6fcb6e07f2d038083))
+
+
+
 ## [3.38.6](https://github.com/mx-space/core/compare/v3.38.5...v3.38.6) (2022-11-12)
 
 
