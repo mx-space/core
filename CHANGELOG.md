@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [3.39.1](https://github.com/mx-space/core/compare/v3.39.0...v3.39.1) (2022-11-25)
+
+
+### Bug Fixes
+
+* update admin version ([990457d](https://github.com/mx-space/core/commit/990457ddee8bc09849e632949bc0ef400b81a668))
+
+
+
 # [3.39.0](https://github.com/mx-space/core/compare/v3.38.6...v3.39.0) (2022-11-25)
 
 
