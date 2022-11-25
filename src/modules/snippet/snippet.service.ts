@@ -75,14 +75,18 @@ export class SnippetService {
     if (old.secret && newModel.secret) {
       const oldSecret = qs.parse(old.secret)
       const newSecret = qs.parse(newModel.secret)
-      for (const key in newSecret) {
-        // if newSecret remove key, delete oldSecret key
-        if (oldSecret[key] && !newSecret[key]) {
-          Reflect.deleteProperty(oldSecret, key)
-        }
 
+      // first delete key if newer secret not provide
+      for (const key in oldSecret) {
+        if (!(key in newSecret)) {
+          delete oldSecret[key]
+        }
+      }
+
+      for (const key in newSecret) {
         // if newSecret has same key, but value is empty, remove it
-        if (newSecret[key] === '') {
+
+        if (newSecret[key] === '' && oldSecret[key] !== '') {
           delete newSecret[key]
         }
       }
@@ -98,6 +102,7 @@ export class SnippetService {
     )
     if (newerDoc) {
       const nextSnippet = this.transformLeanSnippetModel(newerDoc.toObject())
+
       return nextSnippet
     }
     return newerDoc
@@ -174,6 +179,7 @@ export class SnippetService {
 
     // transform sth.
     const nextSnippet = this.transformLeanSnippetModel(doc)
+
     return nextSnippet
   }
 
@@ -186,7 +192,7 @@ export class SnippetService {
 
         for (const key in secretObj) {
           // remove secret value, only keep key
-          Reflect.deleteProperty(secretObj, key)
+          secretObj[key] = ''
         }
         nextSnippet.secret = secretObj as any
       }
