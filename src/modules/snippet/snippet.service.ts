@@ -53,9 +53,9 @@ export class SnippetService {
     return await this.model.create({ ...model, created: new Date() })
   }
 
-  async update(id: string, model: SnippetModel) {
-    await this.validateTypeAndCleanup(model)
-    delete model.created
+  async update(id: string, newModel: SnippetModel) {
+    await this.validateTypeAndCleanup(newModel)
+    delete newModel.created
     const old = await this.model.findById(id).lean()
 
     if (!old) {
@@ -64,21 +64,43 @@ export class SnippetService {
 
     if (
       old.type === SnippetType.Function &&
-      model.type !== SnippetType.Function
+      newModel.type !== SnippetType.Function
     ) {
       throw new BadRequestException(
         '`type` is not allowed to change if this snippet set to Function type.',
       )
     }
 
+    // merge secret
+    if (old.secret && newModel.secret) {
+      const oldSecret = qs.parse(old.secret)
+      const newSecret = qs.parse(newModel.secret)
+      for (const key in newSecret) {
+        // if newSecret remove key, delete oldSecret key
+        if (oldSecret[key] && !newSecret[key]) {
+          Reflect.deleteProperty(oldSecret, key)
+        }
+
+        // if newSecret has same key, but value is empty, remove it
+        if (newSecret[key] === '') {
+          delete newSecret[key]
+        }
+      }
+
+      newModel.secret = qs.stringify({ ...oldSecret, ...newSecret })
+    }
+
     await this.deleteCachedSnippet(old.reference, old.name)
     const newerDoc = await this.model.findByIdAndUpdate(
       id,
-      { ...model, modified: new Date() },
+      { ...newModel, modified: new Date() },
       { new: true },
     )
-    const nextSnippet = this.transformLeanSnippetModel(newerDoc)
-    return nextSnippet
+    if (newerDoc) {
+      const nextSnippet = this.transformLeanSnippetModel(newerDoc.toObject())
+      return nextSnippet
+    }
+    return newerDoc
   }
 
   async delete(id: string) {
