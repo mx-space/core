@@ -92,7 +92,7 @@ export class SnippetModel extends BaseModel {
   @IsOptional()
   method?: string
 
-  @prop()
+  @prop({ select: false })
   @IsString()
   @IsOptional()
   @Transform(({ value }) => (isNil(value) ? value : stringify(value)))

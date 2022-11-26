@@ -56,7 +56,7 @@ export class SnippetService {
   async update(id: string, newModel: SnippetModel) {
     await this.validateTypeAndCleanup(newModel)
     delete newModel.created
-    const old = await this.model.findById(id).lean()
+    const old = await this.model.findById(id).select('+secret').lean()
 
     if (!old) {
       throw new NotFoundException()
@@ -172,7 +172,7 @@ export class SnippetService {
   }
 
   async getSnippetById(id: string) {
-    const doc = await this.model.findById(id).lean()
+    const doc = await this.model.findById(id).select('+secret').lean()
     if (!doc) {
       throw new NotFoundException()
     }

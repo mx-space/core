@@ -77,6 +77,7 @@ export class ServerlessController {
         type: SnippetType.Function,
         method: requestMethod,
       })
+      .select('+secret')
       .lean()
 
     const notExistMessage = 'serverless function is not exist or not enabled'
