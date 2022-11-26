@@ -420,7 +420,7 @@ export class ServerlessService {
   @Interval(5 * 60 * 1000)
   private cleanRequireCache() {
     Array.from(this.requireModuleIdSet.values()).forEach((id) => {
-      delete require.cache[id]
+      delete this.require.cache[id]
     })
 
     this.requireModuleIdSet.clear()
