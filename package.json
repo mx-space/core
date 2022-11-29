@@ -130,7 +130,7 @@
     "slugify": "1.6.5",
     "snakecase-keys": "5.4.4",
     "ua-parser-js": "1.0.32",
-    "vm2": "3.9.11",
+    "vm2": "3.9.12",
     "wildcard-match": "5.1.2",
     "xss": "1.0.14",
     "zx-cjs": "7.0.7-0"
