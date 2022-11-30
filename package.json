@@ -174,7 +174,7 @@
     "rollup-plugin-swc": "0.2.1",
     "socket.io": "4.5.4",
     "ts-node": "10.9.1",
-    "tsconfig-paths": "4.1.0",
+    "tsconfig-paths": "4.1.1",
     "typescript": "4.8.4",
     "vite": "3.2.4",
     "vite-tsconfig-paths": "3.5.2",
