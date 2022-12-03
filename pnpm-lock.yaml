@@ -123,7 +123,7 @@ specifiers:
   typescript: 4.9.3
   ua-parser-js: 1.0.32
   vite: 3.2.4
-  vite-tsconfig-paths: 3.5.2
+  vite-tsconfig-paths: 3.6.0
   vitest: 0.25.3
   vm2: 3.9.12
   wildcard-match: 5.1.2
@@ -254,7 +254,7 @@ devDependencies:
   tsconfig-paths: 4.1.1
   typescript: 4.9.3
   vite: 3.2.4_@types+node@18.11.10
-  vite-tsconfig-paths: 3.5.2_vite@3.2.4
+  vite-tsconfig-paths: 3.6.0_vite@3.2.4
   vitest: 0.25.3
   zx: 7.1.1
 
@@ -7611,8 +7611,8 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
-  /vite-tsconfig-paths/3.5.2_vite@3.2.4:
-    resolution: {integrity: sha512-xJMgHA2oJ28QCG2f+hXrcqzo7IttrSRK4A//Tp94CfuX5eetOx33qiwXHUdi3FwkHP2ocpxHuvE45Ix67gwEmQ==}
+  /vite-tsconfig-paths/3.6.0_vite@3.2.4:
+    resolution: {integrity: sha512-UfsPYonxLqPD633X8cWcPFVuYzx/CMNHAjZTasYwX69sXpa4gNmQkR0XCjj82h7zhLGdTWagMjC1qfb9S+zv0A==}
     peerDependencies:
       vite: '>2.0.0-0'
     dependencies:
