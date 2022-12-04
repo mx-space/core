@@ -94,7 +94,7 @@ specifiers:
   marked: 4.2.3
   mime-types: '*'
   mkdirp: '*'
-  mongodb-memory-server: 8.9.5
+  mongodb-memory-server: 8.10.1
   mongoose: 6.7.5
   mongoose-aggregate-paginate-v2: 1.0.6
   mongoose-lean-getters: 0.3.5
@@ -209,7 +209,7 @@ dependencies:
   zx-cjs: 7.0.7-0
 
 optionalDependencies:
-  mongodb-memory-server: 8.9.5
+  mongodb-memory-server: 8.10.1
   redis-memory-server: 0.6.0
 
 devDependencies:
@@ -5936,8 +5936,8 @@ packages:
       '@types/whatwg-url': 8.2.2
       whatwg-url: 11.0.0
 
-  /mongodb-memory-server-core/8.9.5:
-    resolution: {integrity: sha512-AOI7Ut8Z5vZqvI0KlRW9j5qoR7pbR/RCojDiN8oLmfshfq5twi/4l8kXjG9nChGqloNNgfMYVF2Rvbr8hoHjxA==}
+  /mongodb-memory-server-core/8.10.1:
+    resolution: {integrity: sha512-Xva73v08VDojH1+423fJA6PWsoSWnkexk8/zSCdQTfKXACAgEaQ5fay89gzYn/bn/4So89hPVdLwEOt2VYMK7Q==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@types/tmp': 0.2.3
@@ -5948,7 +5948,7 @@ packages:
       get-port: 5.1.1
       https-proxy-agent: 5.0.1
       md5-file: 5.0.0
-      mongodb: 4.9.1
+      mongodb: 4.11.0
       new-find-package-json: 2.0.0
       semver: 7.3.8
       tar-stream: 2.2.0
@@ -5957,18 +5957,20 @@ packages:
       uuid: 8.3.2
       yauzl: 2.10.0
     transitivePeerDependencies:
+      - aws-crt
       - supports-color
     dev: false
     optional: true
 
-  /mongodb-memory-server/8.9.5:
-    resolution: {integrity: sha512-NdkUDiTaqwcIa23PX1GQCvXjCE9bQRYZIFhrwc40R99/dvTku1jaZzbzEbfNytqJVUekBwfKdtbLS8SsA48D9g==}
+  /mongodb-memory-server/8.10.1:
+    resolution: {integrity: sha512-xBo45TuU4SFjDWixOXJyTBDukYqGeCuh7RBcDm4Nqngd/2Pjja/XYYFFJk/I44mTrZ77W1HDmCA4d69XgNJUJQ==}
     engines: {node: '>=12.22.0'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 8.9.5
-      tslib: 2.4.0
+      mongodb-memory-server-core: 8.10.1
+      tslib: 2.4.1
     transitivePeerDependencies:
+      - aws-crt
       - supports-color
     dev: false
     optional: true
@@ -5986,19 +5988,6 @@ packages:
       saslprep: 1.0.3
     transitivePeerDependencies:
       - aws-crt
-
-  /mongodb/4.9.1:
-    resolution: {integrity: sha512-ZhgI/qBf84fD7sI4waZBoLBNJYPQN5IOC++SBCiPiyhzpNKOxN/fi0tBHvH2dEC42HXtNEbFB0zmNz4+oVtorQ==}
-    engines: {node: '>=12.9.0'}
-    dependencies:
-      bson: 4.7.0
-      denque: 2.1.0
-      mongodb-connection-string-url: 2.5.4
-      socks: 2.7.1
-    optionalDependencies:
-      saslprep: 1.0.3
-    dev: false
-    optional: true
 
   /mongoose-aggregate-paginate-v2/1.0.6:
     resolution: {integrity: sha512-UuALu+mjhQa1K9lMQvjLL3vm3iALvNw8PQNIh2gp1b+tO5hUa0NC0Wf6/8QrT9PSJVTihXaD8hQVy3J4e0jO0Q==}
