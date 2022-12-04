@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [3.39.2](https://github.com/mx-space/core/compare/v3.39.1...v3.39.2) (2022-12-04)
+
+
+### Bug Fixes
+
+* clear scope require cache only ([f1fe50e](https://github.com/mx-space/core/commit/f1fe50e161b75c78ec8eac5244fc602959146b08))
+* **deps:** update dependency @babel/core to v7.20.5 ([e00745b](https://github.com/mx-space/core/commit/e00745be47d0c0547f70f95407331cceec8fa77d))
+* **deps:** update dependency @typegoose/typegoose to v9.13.2 ([#874](https://github.com/mx-space/core/issues/874)) ([54ab234](https://github.com/mx-space/core/commit/54ab2346c48e223cd3e3596bb893ab3697a1afe1))
+* **deps:** update dependency mongoose to v6.7.4 ([d9404ff](https://github.com/mx-space/core/commit/d9404ffaf0c01e0639871e2cd5843b130c106857))
+* **deps:** update dependency mongoose to v6.7.5 ([3529335](https://github.com/mx-space/core/commit/35293356efec7904dc1aac1928da3df15909b331))
+* **deps:** update dependency rxjs to v7.6.0 ([#890](https://github.com/mx-space/core/issues/890)) ([f368016](https://github.com/mx-space/core/commit/f368016417c2fab6369d16d60ea219f73ae608fd))
+* **deps:** update dependency vm2 to v3.9.12 ([fda8c44](https://github.com/mx-space/core/commit/fda8c44d8e98a8780b99f2078ff9774417cae900))
+* **deps:** update nest monorepo to v9.2.1 ([b044457](https://github.com/mx-space/core/commit/b04445745383a4a92abb50db9b95479e9aad654a))
+* set select false for `secret` ([7beeab3](https://github.com/mx-space/core/commit/7beeab3e1508ca68ff666294f467bd3ab911e5b0))
+
+
+
 ## [3.39.1](https://github.com/mx-space/core/compare/v3.39.0...v3.39.1) (2022-11-25)
 
 
