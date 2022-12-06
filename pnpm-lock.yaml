@@ -71,7 +71,7 @@ specifiers:
   consola: '*'
   cron: '*'
   cross-env: 7.0.3
-  dayjs: 1.11.6
+  dayjs: 1.11.7
   ejs: 3.1.8
   eslint: '*'
   eslint-plugin-unused-imports: 2.0.0
@@ -167,7 +167,7 @@ dependencies:
   class-validator-jsonschema: /@innei/class-validator-jsonschema/3.1.2_e6kgdsnyya5caxg3ysdyxrqm7a
   commander: 9.4.1
   consola: 2.15.3
-  dayjs: 1.11.6
+  dayjs: 1.11.7
   ejs: 3.1.8
   form-data: 4.0.0
   fs-extra: 10.1.0
@@ -3646,8 +3646,8 @@ packages:
     engines: {node: '>= 12'}
     dev: true
 
-  /dayjs/1.11.6:
-    resolution: {integrity: sha512-zZbY5giJAinCG+7AGaw0wIhNZ6J8AhWuSXKvuc1KAyMiRsvGQWqh4L+MomvhdAYjN+lqvVCMq1I41e3YHvXkyQ==}
+  /dayjs/1.11.7:
+    resolution: {integrity: sha512-+Yw9U6YO5TQohxLcIkrXBeY73WP3ejHWVvx8XCk3gxvQDCTEmS48ZrSZCKciI7Bhl/uCMyxYtE9UqRILmFphkQ==}
     dev: false
 
   /debug/2.6.9:
