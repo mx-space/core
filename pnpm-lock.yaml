@@ -106,7 +106,7 @@ specifiers:
   node-pty: 0.10.1
   nodemailer: 6.8.0
   pluralize: '*'
-  prettier: 2.8.0
+  prettier: 2.8.1
   qs: 6.11.0
   redis-memory-server: 0.6.0
   reflect-metadata: 0.1.13
@@ -245,7 +245,7 @@ devDependencies:
   husky: 8.0.2
   ioredis: 5.2.4
   lint-staged: 13.0.4
-  prettier: 2.8.0
+  prettier: 2.8.1
   rimraf: 3.0.2
   rollup: 2.79.1
   rollup-plugin-swc: 0.2.1_xxe6b3ouzxvqfbhorygxu3sjf4
@@ -1682,7 +1682,7 @@ packages:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
 
-  /@ianvs/prettier-plugin-sort-imports/3.7.1_prettier@2.8.0:
+  /@ianvs/prettier-plugin-sort-imports/3.7.1_prettier@2.8.1:
     resolution: {integrity: sha512-XDnBUUruJY9KgNd7T2ZHnVPWo5B9NzVDCLEMm7HjXTA3rTtMg5Q46gYRjLvampDXSmN8+icu54aRE3IIT8U+1w==}
     peerDependencies:
       '@vue/compiler-sfc': '>=3.0.0'
@@ -1699,7 +1699,7 @@ packages:
       javascript-natural-sort: 0.7.1
       lodash.clone: 4.5.0
       lodash.isequal: 4.5.0
-      prettier: 2.8.0
+      prettier: 2.8.1
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -1740,8 +1740,8 @@ packages:
   /@innei/prettier/0.9.6:
     resolution: {integrity: sha512-hI6/2Gnk5OUkCXWRQLN5RMO9sg2EcfqI6eJ4OIfV2E1iJJ60AO2yjaH0NSJGLakct48c0qXJ7b8gW+vkP7H8hA==}
     dependencies:
-      '@trivago/prettier-plugin-sort-imports': /@ianvs/prettier-plugin-sort-imports/3.7.1_prettier@2.8.0
-      prettier: 2.8.0
+      '@trivago/prettier-plugin-sort-imports': /@ianvs/prettier-plugin-sort-imports/3.7.1_prettier@2.8.1
+      prettier: 2.8.1
       prettier-package-json: 2.7.0
     transitivePeerDependencies:
       - '@vue/compiler-sfc'
@@ -6663,8 +6663,8 @@ packages:
       sort-order: 1.0.1
     dev: true
 
-  /prettier/2.8.0:
-    resolution: {integrity: sha512-9Lmg8hTFZKG0Asr/kW9Bp8tJjRVluO8EJQVfY2T7FMw9T5jy4I/Uvx0Rca/XWf50QQ1/SS48+6IJWnrb+2yemA==}
+  /prettier/2.8.1:
+    resolution: {integrity: sha512-lqGoSJBQNJidqCHE80vqZJHWHRFoNYsSpP9AjFhlhi9ODCJA541svILes/+/1GM3VaL/abZi7cpFzOpdR9UPKg==}
     engines: {node: '>=10.13.0'}
     hasBin: true
     dev: true
