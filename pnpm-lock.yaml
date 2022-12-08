@@ -125,7 +125,7 @@ specifiers:
   vite: 3.2.5
   vite-tsconfig-paths: 3.6.0
   vitest: 0.25.3
-  vm2: 3.9.12
+  vm2: 3.9.13
   wildcard-match: 5.1.2
   xss: 1.0.14
   zx: 7.1.1
@@ -203,7 +203,7 @@ dependencies:
   slugify: 1.6.5
   snakecase-keys: 5.4.4
   ua-parser-js: 1.0.32
-  vm2: 3.9.12
+  vm2: 3.9.13
   wildcard-match: 5.1.2
   xss: 1.0.14
   zx-cjs: 7.0.7-0
@@ -7811,8 +7811,8 @@ packages:
       - terser
     dev: true
 
-  /vm2/3.9.12:
-    resolution: {integrity: sha512-OMmRsKh1gmdosFzuqmj6O43hqIStqXA24YbwjtUTO0TkOBP8yLNHLplbr4odnAzEcMnm9lt2r3R8kTivn8urMg==}
+  /vm2/3.9.13:
+    resolution: {integrity: sha512-0rvxpB8P8Shm4wX2EKOiMp7H2zq+HUE/UwodY0pCZXs9IffIKZq6vUti5OgkVCTakKo9e/fgO4X1fkwfjWxE3Q==}
     engines: {node: '>=6.0'}
     hasBin: true
     dependencies:
