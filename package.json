@@ -175,7 +175,7 @@
     "socket.io": "4.5.4",
     "ts-node": "10.9.1",
     "tsconfig-paths": "4.1.1",
-    "typescript": "4.9.3",
+    "typescript": "4.9.4",
     "vite": "3.2.5",
     "vite-tsconfig-paths": "3.6.0",
     "vitest": "0.25.3",
@@ -186,7 +186,7 @@
     "redis-memory-server": "0.6.0"
   },
   "resolutions": {
-    "typescript": "4.9.3",
+    "typescript": "4.9.4",
     "ioredis": "5.2.4",
     "webpack": "5.75.0",
     "semver": "7.3.8",
