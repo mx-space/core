@@ -47,7 +47,7 @@ specifiers:
   '@types/js-yaml': 4.0.5
   '@types/jsonwebtoken': 8.5.9
   '@types/lodash': 4.14.191
-  '@types/marked': 4.0.7
+  '@types/marked': 4.0.8
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
   '@types/node': 18.11.12
@@ -228,7 +228,7 @@ devDependencies:
   '@types/get-image-colors': 4.0.1
   '@types/js-yaml': 4.0.5
   '@types/lodash': 4.14.191
-  '@types/marked': 4.0.7
+  '@types/marked': 4.0.8
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
   '@types/node': 18.11.12
@@ -2527,8 +2527,8 @@ packages:
     resolution: {integrity: sha512-WOehptuhKIXukSUUkRgGbj2c997Uv/iUgYgII8U7XLJqq9W2oF0kQ6frEznRQbdurioz+L/cdaIm4GutTQfgmA==}
     dev: true
 
-  /@types/marked/4.0.7:
-    resolution: {integrity: sha512-eEAhnz21CwvKVW+YvRvcTuFKNU9CV1qH+opcgVK3pIMI6YZzDm6gc8o2vHjldFk6MGKt5pueSB7IOpvpx5Qekw==}
+  /@types/marked/4.0.8:
+    resolution: {integrity: sha512-HVNzMT5QlWCOdeuBsgXP8EZzKUf0+AXzN+sLmjvaB3ZlLqO+e4u0uXrdw9ub69wBKFs+c6/pA4r9sy6cCDvImw==}
     dev: true
 
   /@types/mime-types/2.1.1:
