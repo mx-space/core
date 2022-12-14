@@ -154,7 +154,7 @@
     "@types/marked": "4.0.8",
     "@types/mime-types": "2.1.1",
     "@types/mongoose-aggregate-paginate-v2": "1.0.5",
-    "@types/node": "18.11.13",
+    "@types/node": "18.11.15",
     "@types/nodemailer": "6.4.6",
     "@types/qs": "6.9.7",
     "@types/semver": "7.3.13",
