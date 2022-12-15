@@ -1,5 +1,6 @@
 import axios from 'axios'
-import { appendFile, rm, writeFile } from 'fs/promises'
+import { ReadStream } from 'fs'
+import { rm, writeFile } from 'fs/promises'
 import { throttle } from 'lodash'
 import { spawn } from 'node-pty'
 import { Observable, Subscriber, catchError } from 'rxjs'
@@ -8,7 +9,7 @@ import { inspect } from 'util'
 import { Injectable } from '@nestjs/common'
 
 import { dashboard } from '~/../package.json'
-import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
+import { LOCAL_ADMIN_ASSET_PATH, TEMP_DIR } from '~/constants/path.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
 
 const { repo } = dashboard
@@ -50,39 +51,43 @@ export class UpdateService {
           return
         }
 
-        subscriber.next(
-          `Downloading admin asset v${version}\nFrom: ${downloadUrl}\n`,
-        )
-        const buffer = await axios
-          .get(downloadUrl, {
-            responseType: 'arraybuffer',
-            onDownloadProgress: throttle((ev) => {
-              const total = parseFloat(
-                ev.currentTarget.responseHeaders['Content-Length'],
-              )
-              const current = ev.currentTarget.response.length
+        const { data, headers } = await axios.get<ReadStream>(downloadUrl, {
+          responseType: 'stream',
+        })
 
-              const percentCompleted = Math.floor((current / total) * 100)
-              subscriber.next(`Downloaded ${percentCompleted}}%\n`)
-            }, 1500),
-          })
-          .then((res) => res.data as ArrayBuffer)
-          .catch((err) => {
-            subscriber.next(chalk.red(`Downloading error: ${err.message}`))
-            subscriber.complete()
-            return null
-          })
+        const totalLength = headers['content-length']
 
-        if (!buffer) {
+        if (!data) {
+          subscriber.next(chalk.red('Downloading error.\n'))
+          subscriber.complete()
           return
         }
 
-        await rm('admin-release.zip', { force: true })
-
-        await appendFile(
-          path.resolve(process.cwd(), 'admin-release.zip'),
-          Buffer.from(buffer),
+        subscriber.next(
+          `Downloading admin asset v${version}\nFrom: ${downloadUrl}\n`,
         )
+
+        const throttleOutput = throttle((output) => {
+          subscriber.next(output)
+        }, 500)
+
+        let currentChunk = 0
+        data.on('data', (chunk) => {
+          currentChunk += chunk.length
+
+          totalLength &&
+            throttleOutput(
+              `Downloaded ${Math.floor(
+                (currentChunk / +totalLength) * 100,
+              )}%\n`,
+            )
+        })
+
+        const adminAssetZipPath = path.resolve(TEMP_DIR, 'admin-release.zip')
+
+        await rm(adminAssetZipPath, { force: true })
+
+        await writeFile(adminAssetZipPath, data)
 
         const folder = LOCAL_ADMIN_ASSET_PATH.replace(/\/admin$/, '')
         await rm(LOCAL_ADMIN_ASSET_PATH, { force: true, recursive: true })
@@ -90,9 +95,9 @@ export class UpdateService {
         try {
           // @ts-ignore
           const cmds: readonly [string, string[]][] = [
-            `unzip -o admin-release.zip -d ${folder}`,
+            `unzip -o ${adminAssetZipPath} -d ${folder}`,
             `mv ${folder}/dist ${LOCAL_ADMIN_ASSET_PATH}`,
-            `rm -f admin-release.zip`,
+            `rm -f ${adminAssetZipPath}`,
             // @ts-ignore
           ].reduce((acc, fullCmd) => {
             const [cmd, ...args] = fullCmd.split(' ')
@@ -118,8 +123,6 @@ export class UpdateService {
         } finally {
           subscriber.complete()
         }
-
-        await rm('admin-release.zip', { force: true })
       })()
     })
 

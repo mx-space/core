@@ -16,16 +16,9 @@ export const uploadFileToCOS = async (
     region: string
     secretId: string
     secretKey: string
-    onProgress?: (progressFloat: number) => void
   },
 ) => {
-  const {
-    secretId,
-    secretKey,
-    bucket,
-    region,
-    onProgress = () => void 0,
-  } = options
+  const { secretId, secretKey, bucket, region } = options
   const endpoint = `https://${bucket}.cos.${region}.myqcloud.com`
 
   const now = +new Date()
@@ -80,11 +73,6 @@ export const uploadFileToCOS = async (
         ...formData.getHeaders(),
         // NOTE: important do this, if post file is over than 300K
         'Content-Length': formData.getLengthSync(),
-      },
-      onDownloadProgress: (progress) => {
-        if (onProgress) {
-          onProgress(progress.loaded / progress.total)
-        }
       },
     })
     .catch((err) => {

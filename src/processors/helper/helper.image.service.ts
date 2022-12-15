@@ -95,7 +95,7 @@ export class ImageService {
       },
     })
 
-    const imageType = headers['content-type']
+    const imageType = headers['content-type']!
 
     const buffer = Buffer.from(data)
     const size = imageSize(buffer)

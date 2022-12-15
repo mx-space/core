@@ -6,6 +6,9 @@ import mongoose from 'mongoose'
 import { MONGO_DB } from '~/app.config'
 
 let databaseConnection: mongoose.Connection | null = null
+
+mongoose.set('strictQuery', true)
+
 export const getDatabaseConnection = async () => {
   if (databaseConnection) {
     return databaseConnection
