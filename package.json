@@ -103,7 +103,7 @@
     "inquirer": "*",
     "isbot": "3.6.5",
     "js-yaml": "*",
-    "json5": "2.2.1",
+    "json5": "2.2.2",
     "jsonwebtoken": "8.5.1",
     "jszip": "3.10.1",
     "linkedom": "0.14.21",

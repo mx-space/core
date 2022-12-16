@@ -84,7 +84,7 @@ specifiers:
   ioredis: 5.2.4
   isbot: 3.6.5
   js-yaml: '*'
-  json5: 2.2.1
+  json5: 2.2.2
   jsonwebtoken: 8.5.1
   jszip: 3.10.1
   linkedom: 0.14.21
@@ -176,7 +176,7 @@ dependencies:
   inquirer: 8.2.4
   isbot: 3.6.5
   js-yaml: 4.1.0
-  json5: 2.2.1
+  json5: 2.2.2
   jsonwebtoken: 8.5.1
   jszip: 3.10.1
   linkedom: 0.14.21
@@ -1181,7 +1181,7 @@ packages:
       convert-source-map: 1.8.0
       debug: 4.3.4
       gensync: 1.0.0-beta.2
-      json5: 2.2.1
+      json5: 2.2.2
       semver: 7.3.8
     transitivePeerDependencies:
       - supports-color
@@ -5553,8 +5553,8 @@ packages:
       minimist: 1.2.6
     dev: true
 
-  /json5/2.2.1:
-    resolution: {integrity: sha512-1hqLFMSrGHRHxav9q9gNjJ5EXznIxGVO09xQRrwplcS8qs28pZ8s8hupZAmqDwZUmVZ2Qb2jnyPOWcDH8m8dlA==}
+  /json5/2.2.2:
+    resolution: {integrity: sha512-46Tk9JiOL2z7ytNQWFLpj99RZkVgeHf87yGQKsIkaPz1qSH9UczKH1rO7K3wgRselo0tYMUNfecYpm/p1vC7tQ==}
     engines: {node: '>=6'}
     hasBin: true
 
@@ -7586,7 +7586,7 @@ packages:
     resolution: {integrity: sha512-AHx4Euop/dXFC+Vx589alFba8QItjF+8hf8LtmuiCwHyI4rHXQtOOENaM8kvYf5fR0dRChy3wzWIZ9WbB7FWow==}
     engines: {node: '>=6'}
     dependencies:
-      json5: 2.2.1
+      json5: 2.2.2
       minimist: 1.2.6
       strip-bom: 3.0.0
     dev: true
@@ -7595,7 +7595,7 @@ packages:
     resolution: {integrity: sha512-VgPrtLKpRgEAJsMj5Q/I/mXouC6A/7eJ/X4Nuk6o0cRPwBtznYxTCU4FodbexbzH9somBPEXYi0ZkUViUpJ21Q==}
     engines: {node: '>=6'}
     dependencies:
-      json5: 2.2.1
+      json5: 2.2.2
       minimist: 1.2.6
       strip-bom: 3.0.0
     dev: true
