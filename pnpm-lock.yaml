@@ -51,7 +51,7 @@ specifiers:
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
   '@types/node': 18.11.16
-  '@types/nodemailer': 6.4.6
+  '@types/nodemailer': 6.4.7
   '@types/qs': 6.9.7
   '@types/semver': 7.3.13
   '@types/ua-parser-js': 0.7.36
@@ -232,7 +232,7 @@ devDependencies:
   '@types/mime-types': 2.1.1
   '@types/mongoose-aggregate-paginate-v2': 1.0.5
   '@types/node': 18.11.16
-  '@types/nodemailer': 6.4.6
+  '@types/nodemailer': 6.4.7
   '@types/qs': 6.9.7
   '@types/semver': 7.3.13
   '@types/ua-parser-js': 0.7.36
@@ -2534,8 +2534,8 @@ packages:
   /@types/node/18.11.16:
     resolution: {integrity: sha512-6T7P5bDkRhqRxrQtwj7vru+bWTpelgtcETAZEUSdq0YISKz8WKdoBukQLYQQ6DFHvU9JRsbFq0JH5C51X2ZdnA==}
 
-  /@types/nodemailer/6.4.6:
-    resolution: {integrity: sha512-pD6fL5GQtUKvD2WnPmg5bC2e8kWCAPDwMPmHe/ohQbW+Dy0EcHgZ2oCSuPlWNqk74LS5BVMig1SymQbFMPPK3w==}
+  /@types/nodemailer/6.4.7:
+    resolution: {integrity: sha512-f5qCBGAn/f0qtRcd4SEn88c8Fp3Swct1731X4ryPKqS61/A3LmmzN8zaEz7hneJvpjFbUUgY7lru/B/7ODTazg==}
     dependencies:
       '@types/node': 18.11.16
     dev: true
