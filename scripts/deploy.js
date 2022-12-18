@@ -34,25 +34,37 @@ async function main() {
     throw new Error('no download url found')
   }
 
-  const buffer = await fetch(`https://cc.shizuri.net/${downloadUrl}`).then(
-    (res) => res.buffer(),
+  const buffer = await fetch(`https://ghproxy.com/${downloadUrl}`).then((res) =>
+    res.buffer(),
   )
   const tmpName = (Math.random() * 10).toString(16)
   fs.writeFileSync(`/tmp/${tmpName}.zip`, buffer, { flag: 'w' })
-  await $`rm -rf ./run`
+
+  await $`mv ./run ./run.bak`
+
   await $`unzip /tmp/${tmpName}.zip -d ./run`
   await $`rm /tmp/${tmpName}.zip`
   cd('./run')
   process.env.NODE_ENV = 'production'
   await $`export NODE_ENV=production`
   await nothrow($`pm2 reload ecosystem.config.js -- ${argv}`)
-  console.log('等待 15 秒')
-  await sleep(15000)
+  console.log('等待 8 秒')
+  await sleep(8000)
   try {
     await $`lsof -i:2333 -P -n | grep LISTEN`
+    await $`pm2 save`
+    cd(path.resolve(homedir(), 'mx'))
+    await $`rm -rf ./run.bak`
   } catch {
     await $`pm2 stop ecosystem.config.js`
-    throw new Error('server is not running')
+    // throw new Error('server is not running')
+    console.error('server start error, now rollback...')
+    cd(path.resolve(homedir(), 'mx'))
+    await $`rm -rf ./run`
+    await $`mv ./run.bak ./run`
+    cd('./run')
+    await $`pm2 delete ecosystem.config.js`
+    await $`pm2 start ecosystem.config.js`
   }
 }
 
