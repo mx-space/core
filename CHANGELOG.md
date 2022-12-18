@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [3.39.3](https://github.com/mx-space/core/compare/v3.39.2...v3.39.3) (2022-12-18)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @fastify/static to v6.6.0 ([#892](https://github.com/mx-space/core/issues/892)) ([79ca6cb](https://github.com/mx-space/core/commit/79ca6cb6baff9ac47092cf862e5dff77bf834071))
+* **deps:** update dependency @nestjs/swagger to v6.1.4 ([f69b4d2](https://github.com/mx-space/core/commit/f69b4d2bf253dbdc4159db854475f6f25bb5d797))
+* **deps:** update dependency @typegoose/auto-increment to v1.9.0 ([#908](https://github.com/mx-space/core/issues/908)) ([7b52ae6](https://github.com/mx-space/core/commit/7b52ae6d4159684e541659d5b9b14bfdbc4e656f))
+* **deps:** update dependency class-validator to v0.14.0 ([#909](https://github.com/mx-space/core/issues/909)) ([51f0967](https://github.com/mx-space/core/commit/51f09678bb0f82f49fa3026cacf5359e28dc0363))
+* **deps:** update dependency dayjs to v1.11.7 ([b0fe725](https://github.com/mx-space/core/commit/b0fe725657dff279f689856bb973be3e8f02f037))
+* **deps:** update dependency json5 to v2.2.2 ([48df514](https://github.com/mx-space/core/commit/48df51415db5a1f50506d55982e93564e24d3b09))
+* **deps:** update dependency marked to v4.2.4 ([c88016d](https://github.com/mx-space/core/commit/c88016d5b0115eb5857f990c57eba4b5ae4aeb61))
+* **deps:** update dependency mongoose to v6.8.0 ([#895](https://github.com/mx-space/core/issues/895)) ([49ca2e8](https://github.com/mx-space/core/commit/49ca2e85ab4557947ec4e7b3c4eb0545dc162b07))
+* **deps:** update dependency vm2 to v3.9.13 ([a5ea6ef](https://github.com/mx-space/core/commit/a5ea6ef4bdac71240efec66ae06a60cee88e2611))
+* download progress of update admin ([da6336b](https://github.com/mx-space/core/commit/da6336b6f5ae5f1ad41a4ea9a7831392c2a5725e))
+
+
+
 ## [3.39.2](https://github.com/mx-space/core/compare/v3.39.1...v3.39.2) (2022-12-04)
 
 
