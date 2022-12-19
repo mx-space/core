@@ -131,7 +131,7 @@ export class PostController {
 
   @Get('/latest')
   @VisitDocument('Post')
-  async getLatest() {
+  async getLatest(@IpLocation() ip: IpRecord) {
     const last = await this.postService.model
       .findOne({})
       .sort({ created: -1 })
@@ -139,16 +139,22 @@ export class PostController {
     if (!last) {
       throw new CannotFindException()
     }
-    return this.getByCateAndSlug({
-      category: (last.category as CategoryModel).slug,
-      slug: last.slug,
-    })
+    return this.getByCateAndSlug(
+      {
+        category: (last.category as CategoryModel).slug,
+        slug: last.slug,
+      },
+      ip,
+    )
   }
 
   @Get('/:category/:slug')
   @ApiOperation({ summary: '根据分类名和自定义别名获取' })
   @VisitDocument('Post')
-  async getByCateAndSlug(@Param() params: CategoryAndSlugDto) {
+  async getByCateAndSlug(
+    @Param() params: CategoryAndSlugDto,
+    @IpLocation() { ip }: IpRecord,
+  ) {
     const { category, slug } = params
 
     const categoryDocument = await this.postService.getCategoryBySlug(category)
@@ -167,7 +173,12 @@ export class PostController {
     if (!postDocument) {
       throw new CannotFindException()
     }
-    return postDocument.toJSON()
+    const liked = await this.countingService.getThisRecordIsLiked(
+      postDocument._id,
+      ip,
+    )
+
+    return { ...postDocument.toObject(), liked }
   }
 
   @Post('/')
@@ -214,7 +225,7 @@ export class PostController {
     try {
       const res = await this.countingService.updateLikeCount('Post', id, ip)
       if (!res) {
-        throw new BadRequestException('你已经支持过啦!')
+        throw new BadRequestException('你已经支持过啦！')
       }
     } catch (e: any) {
       throw new BadRequestException(e)

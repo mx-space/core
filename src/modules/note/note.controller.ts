@@ -114,7 +114,7 @@ export class NoteController {
     const select = 'nid _id title created'
     const condition = isMaster ? {} : { hide: false }
 
-    // 当前文档直接找, 不用加条件, 反正里面的东西是看不到的
+    // 当前文档直接找，不用加条件，反正里面的东西是看不到的
     const currentDocument = await this.noteService.model
       .findById(id)
       .select(select)
@@ -200,7 +200,7 @@ export class NoteController {
         location.ip,
       )
       if (!res) {
-        throw new BadRequestException('你已经喜欢过啦!')
+        throw new BadRequestException('你已经喜欢过啦！')
       }
       return
     } catch (e: any) {
@@ -214,13 +214,14 @@ export class NoteController {
     await this.noteService.deleteById(params.id)
   }
 
-  @ApiOperation({ summary: '根据 nid 查找' })
+  // C 端入口
   @Get('/nid/:nid')
   @VisitDocument('Note')
   async getNoteByNid(
     @Param() params: NidType,
     @IsMaster() isMaster: boolean,
     @Query() query: NotePasswordQueryDto,
+    @IpLocation() { ip }: IpRecord,
   ) {
     const { nid } = params
     const { password, single: isSingle } = query
@@ -246,8 +247,18 @@ export class NoteController {
     ) {
       throw new ForbiddenException('不要偷看人家的小心思啦~')
     }
+
+    const liked = await this.countingService
+      .getThisRecordIsLiked(current.id!, ip)
+      .catch(() => false)
+
+    const currentData = {
+      ...current,
+      liked,
+    }
+
     if (isSingle) {
-      return current
+      return currentData
     }
 
     const select = '_id title nid id created modified'
@@ -273,7 +284,7 @@ export class NoteController {
       .select(select)
       .lean()
     delete current.password
-    return { data: current, next, prev }
+    return { data: currentData, next, prev }
   }
 
   @Get('/topics/:id')
