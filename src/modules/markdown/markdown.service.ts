@@ -221,7 +221,7 @@ ${text.trim()}
   async renderArticle(id: string) {
     const doc = await this.databaseService.findGlobalById(id)
 
-    if (!doc.document) {
+    if (!doc.document || !('text' in doc.document)) {
       throw new BadRequestException('文档不存在')
     }
 

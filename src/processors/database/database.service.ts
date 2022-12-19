@@ -5,6 +5,7 @@ import { DB_CONNECTION_TOKEN } from '~/constants/system.constant'
 import { NoteModel } from '~/modules/note/note.model'
 import { PageModel } from '~/modules/page/page.model'
 import { PostModel } from '~/modules/post/post.model'
+import { RecentlyModel } from '~/modules/recently/recently.model'
 import { InjectModel } from '~/transformers/model.transformer'
 
 @Injectable()
@@ -16,6 +17,8 @@ export class DatabaseService {
     private readonly noteModel: ReturnModelType<typeof NoteModel>,
     @InjectModel(PageModel)
     private readonly pageModel: ReturnModelType<typeof PageModel>,
+    @InjectModel(RecentlyModel)
+    private readonly recentlyModel: ReturnModelType<typeof RecentlyModel>,
     @Inject(DB_CONNECTION_TOKEN) private connection: mongoose.Connection,
   ) {}
 
@@ -26,6 +29,12 @@ export class DatabaseService {
   public getModelByRefType(type: 'note'): ReturnModelType<typeof NoteModel>
   public getModelByRefType(type: 'Page'): ReturnModelType<typeof PageModel>
   public getModelByRefType(type: 'page'): ReturnModelType<typeof PageModel>
+  public getModelByRefType(
+    type: 'recently',
+  ): ReturnModelType<typeof RecentlyModel>
+  public getModelByRefType(
+    type: 'Recently',
+  ): ReturnModelType<typeof RecentlyModel>
   public getModelByRefType(type: any) {
     type = type.toLowerCase() as any
     // FIXME: lowercase key
@@ -33,9 +42,13 @@ export class DatabaseService {
       ['post', this.postModel],
       ['note', this.noteModel],
       ['page', this.pageModel],
+      ['recently', this.recentlyModel],
     ] as any)
     return map.get(type) as any as ReturnModelType<
-      typeof NoteModel | typeof PostModel | typeof PageModel
+      | typeof NoteModel
+      | typeof PostModel
+      | typeof PageModel
+      | typeof RecentlyModel
     >
   }
 
@@ -44,6 +57,7 @@ export class DatabaseService {
       this.postModel.findById(id).populate('category').lean(),
       this.noteModel.findById(id).lean().select('+password'),
       this.pageModel.findById(id).lean(),
+      this.recentlyModel.findById(id).lean(),
     ])
     const index = doc.findIndex(Boolean)
     if (index == -1) {
@@ -55,7 +69,7 @@ export class DatabaseService {
     const document = doc[index]
     return {
       document,
-      type: (['Post', 'Note', 'Page'] as const)[index],
+      type: (['Post', 'Note', 'Page', 'Recently'] as const)[index],
     }
   }
 

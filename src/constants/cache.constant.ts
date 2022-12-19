@@ -20,6 +20,8 @@ export enum RedisKeys {
   ServerlessStorage = 'serverless_storage',
 
   JWTStore = 'jwt_store',
+  /** 最近速记的点赞，点踩记录 */
+  RecentlyAttitude = 'recently_attitude',
 }
 
 export enum CacheKeys {

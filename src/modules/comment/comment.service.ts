@@ -59,6 +59,8 @@ export class CommentService {
         return this.databaseService.getModelByRefType('Page') as any
       case CommentRefTypes.Post:
         return this.databaseService.getModelByRefType('Post') as any
+      case CommentRefTypes.Recently:
+        return this.databaseService.getModelByRefType('Recently') as any
     }
   }
 
@@ -102,8 +104,8 @@ export class CommentService {
     })()
     if (res) {
       this.logger.warn(
-        '--> 检测到一条垃圾评论: ' +
-          `作者: ${doc.author}, IP: ${doc.ip}, 内容为: ${doc.text}`,
+        '--> 检测到一条垃圾评论：' +
+          `作者：${doc.author}, IP: ${doc.ip}, 内容为：${doc.text}`,
       )
     }
     return res
@@ -155,7 +157,7 @@ export class CommentService {
     })
     if (isExist) {
       throw new BadRequestException(
-        '用户名与主人重名啦, 但是你好像并不是我的主人唉',
+        '用户名与主人重名啦，但是你好像并不是我的主人唉',
       )
     }
   }
@@ -282,6 +284,9 @@ export class CommentService {
       }
       case CommentRefTypes.Post: {
         return new URL(`/${model.category.slug}/${model.slug}`, base).toString()
+      }
+      case CommentRefTypes.Recently: {
+        return new URL(`/recently/${model._id}`, base).toString()
       }
     }
   }

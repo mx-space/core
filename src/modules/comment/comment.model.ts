@@ -16,6 +16,7 @@ import { getAvatar } from '~/utils'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
+import { RecentlyModel } from '../recently/recently.model'
 
 function autoPopulateSubs(
   this: Query<
@@ -34,6 +35,7 @@ export enum CommentRefTypes {
   Post = 'Post',
   Note = 'Note',
   Page = 'Page',
+  Recently = 'Recently',
 }
 
 export enum CommentState {
@@ -51,7 +53,7 @@ export enum CommentState {
 })
 export class CommentModel extends BaseModel {
   @prop({ refPath: 'refType' })
-  ref: Ref<PostModel | NoteModel | PageModel>
+  ref: Ref<PostModel | NoteModel | PageModel | RecentlyModel>
 
   @prop({ required: true, default: 'Post', enum: CommentRefTypes })
   refType: CommentRefTypes
@@ -125,6 +127,14 @@ export class CommentModel extends BaseModel {
     justOne: true,
   })
   public page: Ref<PageModel>
+
+  @prop({
+    ref: () => RecentlyModel,
+    foreignField: '_id',
+    localField: 'ref',
+    justOne: true,
+  })
+  public recently: Ref<RecentlyModel>
 
   // IP 归属记录值
   @prop()
