@@ -2,7 +2,7 @@ import { IsMongoId, IsOptional, IsString } from 'class-validator'
 
 import { modelOptions, prop } from '@typegoose/typegoose'
 
-import { BaseModel } from '~/shared/model/base.model'
+import { BaseCommentIndexModel } from '~/shared/model/base-comment.model'
 
 import { CommentRefTypes } from '../comment/comment.model'
 
@@ -16,25 +16,10 @@ export type RefType = {
     customName: 'Recently',
   },
 })
-export class RecentlyModel extends BaseModel {
+export class RecentlyModel extends BaseCommentIndexModel {
   @prop({ required: true })
   @IsString()
   content: string
-
-  /**
-   * @deprecated
-   */
-  @prop()
-  @IsOptional()
-  @IsString()
-  project?: string
-  /**
-   * @deprecated
-   */
-  @prop()
-  @IsString()
-  @IsOptional()
-  language?: string
 
   @prop({ refPath: 'refType' })
   @IsOptional()
@@ -43,6 +28,22 @@ export class RecentlyModel extends BaseModel {
 
   @prop({ enum: CommentRefTypes })
   refType: string
+
+  /**
+   * 顶
+   */
+  @prop({
+    default: 0,
+  })
+  up: number
+
+  /**
+   * 踩
+   */
+  @prop({
+    default: 0,
+  })
+  down: number
 
   get refId() {
     return (this.ref as any)?._id ?? this.ref

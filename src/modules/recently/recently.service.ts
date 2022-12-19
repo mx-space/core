@@ -1,10 +1,19 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  UnprocessableEntityException,
+} from '@nestjs/common'
 
+import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { RedisKeys } from '~/constants/cache.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { getRedisKey } from '~/utils'
 
+import { RecentlyAttitudeEnum } from './recently.dto'
 import { RecentlyModel } from './recently.model'
 
 @Injectable()
@@ -14,6 +23,7 @@ export class RecentlyService {
     private readonly recentlyModel: MongooseModel<RecentlyModel>,
     private readonly eventManager: EventManagerService,
     private readonly databaseService: DatabaseService,
+    private readonly cacheService: CacheService,
   ) {}
 
   public get model() {
@@ -90,8 +100,6 @@ export class RecentlyService {
 
     const res = await this.model.create({
       content: model.content,
-      language: model.language,
-      project: model.project,
       ref: model.refId,
       refType: model.refType,
     })
@@ -130,5 +138,52 @@ export class RecentlyService {
       }
     })
     return isDeleted
+  }
+
+  async updateAttitude({
+    id,
+    attitude,
+    ip,
+  }: {
+    id: string
+    attitude: RecentlyAttitudeEnum
+    ip: string
+  }) {
+    if (!ip) {
+      throw new UnprocessableEntityException('can not got your ip')
+    }
+    const model = await this.model.findById(id)
+
+    if (!model) {
+      throw new CannotFindException()
+    }
+
+    const attitudePath = {
+      [RecentlyAttitudeEnum.Up]: 'up',
+      [RecentlyAttitudeEnum.Down]: 'down',
+    }
+
+    const redis = this.cacheService.getClient()
+    const key = `${id}:${ip}`
+    const currentAttitude = await redis.hget(
+      getRedisKey(RedisKeys.RecentlyAttitude),
+      key,
+    )
+
+    if (currentAttitude) {
+      const { attitude } = JSON.parse(currentAttitude)
+      model.$inc(attitudePath[attitude], -1)
+      await model.save()
+      await redis.hdel(getRedisKey(RedisKeys.RecentlyAttitude), key)
+      return
+    }
+
+    model.$inc(attitudePath[attitude], 1)
+    await redis.hset(
+      getRedisKey(RedisKeys.RecentlyAttitude),
+      key,
+      JSON.stringify({ attitude, date: new Date().toISOString() }),
+    )
+    await model.save()
   }
 }

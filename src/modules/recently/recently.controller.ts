@@ -11,10 +11,12 @@ import {
 import { ApiController } from '~/common/decorator/api-controller.decorator'
 import { Auth } from '~/common/decorator/auth.decorator'
 import { HTTPDecorators } from '~/common/decorator/http.decorator'
+import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
 import { ApiName } from '~/common/decorator/openapi.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { OffsetDto } from '~/shared/dto/pager.dto'
 
+import { RecentlyAttitudeDto } from './recently.dto'
 import { RecentlyModel } from './recently.model'
 import { RecentlyService } from './recently.service'
 
@@ -58,9 +60,25 @@ export class RecentlyController {
   async del(@Param() { id }: MongoIdDto) {
     const res = await this.recentlyService.delete(id)
     if (!res) {
-      throw new BadRequestException('删除失败, 条目不存在')
+      throw new BadRequestException('删除失败，条目不存在')
     }
 
     return
+  }
+
+  /**
+   * 表态：点赞，点踩
+   */
+  @Get('/attitude/:id')
+  async attitude(
+    @Param() { id }: MongoIdDto,
+    @Query() { attitude }: RecentlyAttitudeDto,
+    @IpLocation() { ip }: IpRecord,
+  ) {
+    await this.recentlyService.updateAttitude({
+      attitude,
+      id,
+      ip,
+    })
   }
 }
