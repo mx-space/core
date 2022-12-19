@@ -50,10 +50,14 @@ export class UpdateService {
           subscriber.complete()
           return
         }
+        const cdnProxyDownloadUrl = `https://ghproxy.com/${downloadUrl}`
 
-        const { data, headers } = await axios.get<ReadStream>(downloadUrl, {
-          responseType: 'stream',
-        })
+        const { data, headers } = await axios.get<ReadStream>(
+          cdnProxyDownloadUrl,
+          {
+            responseType: 'stream',
+          },
+        )
 
         const totalLength = headers['content-length']
 
