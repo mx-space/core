@@ -8,6 +8,7 @@ on:
     paths:
       - 'package.json'
       - 'packages/api-client/**'
+      - '.github/workflows/api-client.yml'
   pull_request:
     branches: [master, main]
 
@@ -17,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x, 16.x]
+        node-version: [16.x, 18.x]
 
     steps:
       - uses: actions/checkout@v3
@@ -39,7 +40,11 @@ jobs:
         with:
           version: 7.x.x
           run_install: true
-      - run: pnpm run test
-      - run: pnpm run package
+
+      - name: Test and Build
+        working-directory: ./packages/api-client
+        run: |
+          pnpm run test
+          pnpm run package
         env:
           CI: true
