@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "outDir": "./esm",
+    "baseUrl": ".",
+    "jsx": "react",
+    "target": "ES2020",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
+    "paths": {
+      "~/*": ["*"]
+    }
+  },
+  "exclude": ["esm/*", "build/*", "node_modules/*", "lib/*"]
+}

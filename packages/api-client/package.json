@@ -1,0 +1,98 @@
+{
+  "name": "@mx-space/api-client",
+  "version": "1.0.0-beta.1",
+  "type": "module",
+  "description": "A api client for mx-space server@next",
+  "author": "Innei",
+  "license": "MIT",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "types/index.d.ts",
+  "unpkg": "dist/index.umd.min.js",
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./types/index.d.ts"
+      ],
+      "./adaptors/*": [
+        "./types/adaptors/*.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json",
+    "./adaptors/*": {
+      "types": "./types/adaptors/*.d.ts",
+      "import": {
+        "type": "./types/adaptors/*.d.ts",
+        "default": "./dist/adaptors/*.js"
+      },
+      "require": {
+        "type": "./types/adaptors/*.d.ts",
+        "default": "./dist/adaptors/*.cjs"
+      }
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "bump": {
+    "before": [
+      "git pull --rebase",
+      "pnpm i",
+      "npm run package"
+    ],
+    "after": [
+      "npm publish --access=public"
+    ]
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --ignore-path ./.prettierignore --write ",
+      "eslint --cache"
+    ]
+  },
+  "engines": {
+    "pnpm": ">=6"
+  },
+  "scripts": {
+    "prebuild": "rm -rf lib && rm -rf esm",
+    "build": "tsc --build tsconfig.build.json && tsc --build tsconfig.cjs.json",
+    "postbuild": "tsc-alias -p tsconfig.build.json && tsc-alias -p tsconfig.cjs.json && npm run types",
+    "types": "rm -rf types && tsc --build tsconfig.types.json && tsc-alias -p tsconfig.types.json",
+    "package": "NODE_ENV=production npm run build && rollup -c",
+    "prepackage": "rm -rf dist",
+    "test": "vitest",
+    "dev": "vite"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "22.0.2",
+    "@rollup/plugin-node-resolve": "14.0.1",
+    "@rollup/plugin-typescript": "8.5.0",
+    "@types/cors": "2.8.12",
+    "@types/express": "4.17.15",
+    "@types/lodash": "4.14.186",
+    "abort-controller": "3.0.0",
+    "axios": "*",
+    "camelcase-keys": "*",
+    "cors": "2.8.5",
+    "dts-bundle-generator": "7.0.0",
+    "express": "4.18.2",
+    "isomorphic-unfetch": "3.1.0",
+    "ky": "0.31.3",
+    "lodash": "4.17.21",
+    "node-fetch": "3.2.10",
+    "rollup": "2.79.1",
+    "rollup-plugin-peer-deps-external": "2.2.4",
+    "rollup-plugin-terser": "7.0.2",
+    "tsc-alias": "1.7.0",
+    "umi-request": "1.4.0"
+  }
+}

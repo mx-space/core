@@ -1,0 +1,3 @@
+import 'vitest/globals'
+
+export {}

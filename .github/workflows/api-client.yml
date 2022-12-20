@@ -1,0 +1,45 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Build @mx-space/api-client
+
+on:
+  push:
+    paths:
+      - 'package.json'
+      - 'packages/api-client/**'
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Cache pnpm modules
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/package.json') }}
+
+      - uses: pnpm/action-setup@v2.2.4
+        with:
+          version: 7.x.x
+          run_install: true
+      - run: pnpm run test
+      - run: pnpm run package
+        env:
+          CI: true
