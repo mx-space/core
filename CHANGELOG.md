@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [3.39.6](https://github.com/mx-space/core/compare/v3.39.5...v3.39.6) (2022-12-21)
+
+
+### Bug Fixes
+
+* downgrade class-validator to 0.13.2 ([38b6c21](https://github.com/mx-space/core/commit/38b6c217cf15d911e85b2a79553b313983ac2a6d))
+
+
+
 ## [3.39.5](https://github.com/mx-space/core/compare/v3.39.4...v3.39.5) (2022-12-21)
 
 
