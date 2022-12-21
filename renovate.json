@@ -13,6 +13,12 @@
       "labels": ["UPDATE-MAJOR"]
     }
   ],
-  "ignoreDeps": ["nanoid", "camelcase-keys", "@socket.io/redis-emitter"],
+  "ignoreDeps": [
+    "nanoid",
+    "camelcase-keys",
+    "@socket.io/redis-emitter",
+    "class-validator",
+    "class-transformer"
+  ],
   "enabled": true
 }
