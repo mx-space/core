@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## [3.39.4](https://github.com/mx-space/core/compare/v3.39.3...v3.39.4) (2022-12-21)
+
+
+### Bug Fixes
+
+* build ci ([3160ced](https://github.com/mx-space/core/commit/3160cedfd11fa93bc1c13519bf833c362e8b830e))
+* **deps:** update dependency algoliasearch to v4.14.3 ([7a71762](https://github.com/mx-space/core/commit/7a71762f48f484e2c75a978ca05aae042500e9b1))
+* **deps:** update dependency mongoose to v6.8.1 ([06ab476](https://github.com/mx-space/core/commit/06ab476c8af5dd6b017e8738e52927d392adffbf))
+* revert update service ([659d2bc](https://github.com/mx-space/core/commit/659d2bc9b488a0436b27731c5a7968275e225f0b))
+
+
+### Features
+
+* add `liked` on article response ([190596f](https://github.com/mx-space/core/commit/190596f318f49ef09aa3e37b566420c81c43c436))
+* move api-client as core's monorepo ([a281f45](https://github.com/mx-space/core/commit/a281f45ab49d2d83ba5a054438e061f2e23ddd35))
+* use ghproxy to speed up update admin ([00d34c9](https://github.com/mx-space/core/commit/00d34c90af64458695fc8fb4691bc2208961295e))
+
+
+
 ## [3.39.3](https://github.com/mx-space/core/compare/v3.39.2...v3.39.3) (2022-12-18)
 
 
