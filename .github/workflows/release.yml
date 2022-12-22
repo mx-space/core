@@ -111,7 +111,7 @@ jobs:
     name: Build Other Platform
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     needs: [build]
     steps:
