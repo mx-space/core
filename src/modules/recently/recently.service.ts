@@ -1,7 +1,11 @@
+import pluralize from 'pluralize'
+
 import {
   BadRequestException,
+  Inject,
   Injectable,
   UnprocessableEntityException,
+  forwardRef,
 } from '@nestjs/common'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -13,6 +17,8 @@ import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils'
 
+import { CommentRefTypes } from '../comment/comment.model'
+import { CommentService } from '../comment/comment.service'
 import { RecentlyAttitudeEnum } from './recently.dto'
 import { RecentlyModel } from './recently.model'
 
@@ -24,6 +30,8 @@ export class RecentlyService {
     private readonly eventManager: EventManagerService,
     private readonly databaseService: DatabaseService,
     private readonly cacheService: CacheService,
+    @Inject(forwardRef(() => CommentService))
+    private readonly commentService: CommentService,
   ) {}
 
   public get model() {
@@ -31,15 +39,88 @@ export class RecentlyService {
   }
 
   async getAll() {
-    return this.model
-      .find()
-      .sort({ created: -1 })
+    // TODO lookup `ref`
+    const result = (await this.model.aggregate([
+      {
+        $lookup: {
+          from: 'comments',
+          as: 'comment',
+          foreignField: 'ref',
+          localField: '_id',
+        },
+      },
 
-      .populate({
-        path: 'ref',
-        select: '-text',
-      })
-      .lean()
+      {
+        $addFields: {
+          comments: {
+            $size: '$comment',
+          },
+        },
+      },
+      {
+        $project: {
+          comment: 0,
+        },
+      },
+      {
+        $sort: {
+          created: -1,
+        },
+      },
+    ])) as RecentlyModel[]
+
+    await this.populateRef(result)
+
+    return result
+  }
+
+  async populateRef(result: RecentlyModel[], omit = ['text']) {
+    const refMap: Record<Exclude<CommentRefTypes, 'Recently'>, string[]> = {
+      Note: [],
+      Page: [],
+      Post: [],
+    }
+    for (const doc of result) {
+      if (!doc.refType) {
+        continue
+      }
+      refMap[doc.refType]?.push(doc.ref)
+    }
+
+    const foreignIdMap = {} as any
+
+    for (const refType in refMap) {
+      const refIds = refMap[refType as CommentRefTypes]
+      if (!refIds.length) {
+        continue
+      }
+
+      await this.databaseService.db
+        .collection(pluralize(refType).toLowerCase())
+        .find({
+          _id: {
+            $in: refIds,
+          },
+        })
+        .forEach((doc) => {
+          foreignIdMap[doc._id.toHexString()] = Object.assign({}, doc)
+        })
+    }
+
+    for (const doc of result) {
+      if (!doc.refType) {
+        continue
+      }
+
+      const hasRef = foreignIdMap[(doc.ref as any)?.toHexString()]
+      if (hasRef) {
+        for (const field of omit) {
+          Reflect.deleteProperty(hasRef, field)
+        }
+        doc.ref = hasRef
+      }
+    }
+    return result
   }
 
   async getOffset({
@@ -53,9 +134,9 @@ export class RecentlyService {
   }) {
     size = size ?? 10
 
-    return await this.model
-      .find(
-        after
+    const result = await this.recentlyModel.aggregate([
+      {
+        $match: after
           ? {
               _id: {
                 $gt: after,
@@ -64,19 +145,41 @@ export class RecentlyService {
           : before
           ? { _id: { $lt: before } }
           : {},
-      )
-      .limit(size)
-      .sort({ _id: -1 })
-      .populate([
-        {
-          path: 'ref',
-          select: '-text',
+      },
+
+      {
+        $lookup: {
+          from: 'comments',
+          as: 'comment',
+          foreignField: 'ref',
+          localField: '_id',
         },
-      ])
-      .lean()
+      },
+
+      {
+        $addFields: {
+          comments: {
+            $size: '$comment',
+          },
+        },
+      },
+      {
+        $project: {
+          comment: 0,
+        },
+      },
+      {
+        $sort: {
+          _id: -1,
+        },
+      },
+      { $limit: size },
+    ])
+    await this.populateRef(result)
+    return result
   }
   async getLatestOne() {
-    return await this.model
+    const latest = await this.model
       .findOne()
       .sort({ created: -1 })
       .populate([
@@ -86,6 +189,20 @@ export class RecentlyService {
         },
       ])
       .lean()
+
+    if (!latest) {
+      return null
+    }
+
+    const commentCount = await this.commentService.model.countDocuments({
+      refType: CommentRefTypes.Recently,
+      ref: latest._id,
+    })
+
+    return {
+      ...latest,
+      comments: commentCount,
+    }
   }
 
   async create(model: RecentlyModel) {
@@ -171,11 +288,25 @@ export class RecentlyService {
     )
 
     if (currentAttitude) {
-      const { attitude } = JSON.parse(currentAttitude)
-      model.$inc(attitudePath[attitude], -1)
+      const { attitude: prevAttitude } = JSON.parse(currentAttitude)
+      // 之前是点了赞，现在还是点赞，取消之前的点赞
+      if (prevAttitude === attitude) {
+        model.$inc(attitudePath[prevAttitude], -1)
+        await redis.hdel(getRedisKey(RedisKeys.RecentlyAttitude), key)
+        // 之前点了赞，现在点了踩，取消之前的点赞，并且踩 +1
+      } else {
+        model.$inc(attitudePath[prevAttitude], -1)
+        model.$inc(attitudePath[attitude], 1)
+        await redis.hset(
+          getRedisKey(RedisKeys.RecentlyAttitude),
+          key,
+          JSON.stringify({ attitude, date: new Date().toISOString() }),
+        )
+      }
+
       await model.save()
-      await redis.hdel(getRedisKey(RedisKeys.RecentlyAttitude), key)
-      return
+
+      return prevAttitude === attitude ? -1 : 1
     }
 
     model.$inc(attitudePath[attitude], 1)
@@ -185,5 +316,6 @@ export class RecentlyService {
       JSON.stringify({ attitude, date: new Date().toISOString() }),
     )
     await model.save()
+    return 1
   }
 }
