@@ -1,4 +1,4 @@
-import { BaseModel } from './base'
+import { BaseCommentIndexModel } from './base'
 
 export enum RecentlyRefTypes {
   Post = 'Post',
@@ -10,18 +10,13 @@ export type RecentlyRefType = {
   title: string
   url: string
 }
-export interface RecentlyModel extends BaseModel {
+export interface RecentlyModel extends BaseCommentIndexModel {
   content: string
 
   ref?: RecentlyRefType & { [key: string]: any }
   refId?: string
   refType?: RecentlyRefTypes
-  /**
-   * @deprecated
-   */
-  project?: string
-  /**
-   * @deprecated
-   */
-  language?: string
+
+  up: number
+  down: number
 }

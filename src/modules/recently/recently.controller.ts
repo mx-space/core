@@ -75,10 +75,13 @@ export class RecentlyController {
     @Query() { attitude }: RecentlyAttitudeDto,
     @IpLocation() { ip }: IpRecord,
   ) {
-    await this.recentlyService.updateAttitude({
+    const result = await this.recentlyService.updateAttitude({
       attitude,
       id,
       ip,
     })
+    return {
+      code: result,
+    }
   }
 }
