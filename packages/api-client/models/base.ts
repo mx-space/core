@@ -43,3 +43,7 @@ export interface TextBaseModel extends BaseCommentIndexModel {
 
   meta?: Record<string, any>
 }
+
+export type ModelWithLiked<T> = T & {
+  liked: boolean
+}

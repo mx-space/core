@@ -1,4 +1,4 @@
-import { TextBaseModel } from './base'
+import { ModelWithLiked, TextBaseModel } from './base'
 import { TopicModel } from './topic'
 
 export interface NoteModel extends TextBaseModel {
@@ -35,6 +35,12 @@ export interface Coordinate {
 
 export interface NoteWrappedPayload {
   data: NoteModel
+  next?: Partial<NoteModel>
+  prev?: Partial<NoteModel>
+}
+
+export interface NoteWrappedWithLikedPayload {
+  data: ModelWithLiked<NoteModel>
   next?: Partial<NoteModel>
   prev?: Partial<NoteModel>
 }

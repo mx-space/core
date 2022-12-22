@@ -2,7 +2,7 @@ import { IRequestAdapter } from '~/interfaces/adapter'
 import { IController } from '~/interfaces/controller'
 import { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
 import { SelectFields } from '~/interfaces/types'
-import { PaginateResult } from '~/models/base'
+import { ModelWithLiked, PaginateResult } from '~/models/base'
 import { PostModel } from '~/models/post'
 import { autoBind } from '~/utils/auto-bind'
 
@@ -65,7 +65,7 @@ export class PostController<ResponseWrapper> implements IController {
   getPost(
     categoryName: string,
     slug: string,
-  ): RequestProxyResult<PostModel, ResponseWrapper>
+  ): RequestProxyResult<ModelWithLiked<PostModel>, ResponseWrapper>
   /**
    * 根据 ID 查找文章
    * @param id
@@ -83,7 +83,7 @@ export class PostController<ResponseWrapper> implements IController {
    * 获取最新的文章
    */
   getLatest() {
-    return this.proxy.latest.get<PostModel>()
+    return this.proxy.latest.get<ModelWithLiked<PostModel>>()
   }
 
   /**

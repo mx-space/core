@@ -3,7 +3,11 @@ import { IController } from '~/interfaces/controller'
 import { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
 import { SelectFields } from '~/interfaces/types'
 import { PaginateResult } from '~/models/base'
-import { NoteModel, NoteWrappedPayload } from '~/models/note'
+import {
+  NoteModel,
+  NoteWrappedPayload,
+  NoteWrappedWithLikedPayload,
+} from '~/models/note'
 import { autoBind } from '~/utils/auto-bind'
 
 import { HTTPClient } from '../core/client'
@@ -40,11 +44,11 @@ export class NoteController<ResponseWrapper> implements IController {
    * 最新日记
    */
   getLatest() {
-    return this.proxy.latest.get<NoteWrappedPayload>()
+    return this.proxy.latest.get<NoteWrappedWithLikedPayload>()
   }
 
   /**
-   * 获取一篇日记, 根据 Id 查询需要鉴权
+   * 获取一篇日记，根据 Id 查询需要鉴权
    * @param id id | nid
    * @param password 访问密码
    */
@@ -68,7 +72,7 @@ export class NoteController<ResponseWrapper> implements IController {
     const [id, password = undefined, singleResult = false] = rest
 
     if (typeof id === 'number') {
-      return this.proxy.nid(id.toString()).get<NoteWrappedPayload>({
+      return this.proxy.nid(id.toString()).get<NoteWrappedWithLikedPayload>({
         params: { password, single: singleResult ? '1' : undefined },
       })
     } else {

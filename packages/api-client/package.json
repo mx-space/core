@@ -51,7 +51,9 @@
     ],
     "after": [
       "npm publish --access=public"
-    ]
+    ],
+    "tag": false,
+    "commit_message": "chore(release): bump @mx-space/api-client to v${NEW_VERSION}"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
