@@ -10,7 +10,7 @@ jobs:
     name: Upload Release Asset
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-20.04]
     runs-on: ${{ matrix.os }}
     outputs:
       release_url: ${{ steps.create_release.outputs.upload_url }}
