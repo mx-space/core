@@ -1,3 +1,4 @@
+import { mongo } from 'mongoose'
 import pluralize from 'pluralize'
 
 import {
@@ -22,6 +23,8 @@ import { CommentService } from '../comment/comment.service'
 import { RecentlyAttitudeEnum } from './recently.dto'
 import { RecentlyModel } from './recently.model'
 
+const { ObjectId } = mongo
+
 @Injectable()
 export class RecentlyService {
   constructor(
@@ -39,7 +42,6 @@ export class RecentlyService {
   }
 
   async getAll() {
-    // TODO lookup `ref`
     const result = (await this.model.aggregate([
       {
         $lookup: {
@@ -139,11 +141,11 @@ export class RecentlyService {
         $match: after
           ? {
               _id: {
-                $gt: after,
+                $gt: new ObjectId(after),
               },
             }
           : before
-          ? { _id: { $lt: before } }
+          ? { _id: { $lt: new ObjectId(before) } }
           : {},
       },
 
