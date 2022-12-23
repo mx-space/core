@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/api-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "A api client for mx-space server@next",
   "author": "Innei",
@@ -24,6 +24,19 @@
       "types": "./types/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./dist/*": {
+      "types": "./types/*.d.ts",
+      "import": "./dist/*.js",
+      "require": "./dist/*.cjs"
+    },
+    "./dist/adaptors/*": {
+      "types": "./types/adaptors/*.d.ts",
+      "import": "./dist/adaptors/*.js",
+      "require": "./dist/adaptors/*.cjs"
+    },
+    "./types/*": {
+      "types": "./types/*.d.ts"
     },
     "./package.json": "./package.json",
     "./adaptors/*": {
