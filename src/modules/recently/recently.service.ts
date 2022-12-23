@@ -245,9 +245,16 @@ export class RecentlyService {
   }
 
   async delete(id: string) {
-    const { deletedCount } = await this.model.deleteOne({
-      _id: id,
-    })
+    const [{ deletedCount }] = await Promise.all([
+      this.model.deleteOne({
+        _id: id,
+      }),
+      // delete comment ref
+      this.commentService.model.deleteMany({
+        ref: id,
+        refType: CommentRefTypes.Recently,
+      }),
+    ])
     const isDeleted = deletedCount === 1
     process.nextTick(async () => {
       if (isDeleted) {
@@ -256,6 +263,7 @@ export class RecentlyService {
         })
       }
     })
+
     return isDeleted
   }
 
