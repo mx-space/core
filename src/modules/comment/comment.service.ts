@@ -215,7 +215,9 @@ export class CommentService {
           { path: 'parent', select: '-children' },
           {
             path: 'ref',
-            select: 'title _id slug nid categoryId',
+            // categoryId for post
+            // content for recently
+            select: 'title _id slug nid categoryId content',
           },
         ],
         sort: { created: -1 },

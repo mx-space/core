@@ -68,7 +68,7 @@ export class CommentController {
   }
 
   @Get('/:id')
-  @ApiOperation({ summary: '根据 comment id 获取评论, 包括子评论' })
+  @ApiOperation({ summary: '根据 comment id 获取评论，包括子评论' })
   async getComments(
     @Param() params: MongoIdDto,
     @IsMaster() isMaster: boolean,
@@ -93,7 +93,7 @@ export class CommentController {
 
   // 面向 C 端的评论查询接口
   @Get('/ref/:id')
-  @ApiOperation({ summary: '根据评论的 refId 获取评论, 如 Post Id' })
+  @ApiOperation({ summary: '根据评论的 refId 获取评论，如 Post Id' })
   @HTTPDecorators.Paginator
   async getCommentsByRefId(
     @Param() params: MongoIdDto,
