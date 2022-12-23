@@ -30,6 +30,16 @@
       "import": "./dist/*.js",
       "require": "./dist/*.cjs"
     },
+    "./lib/*": {
+      "types": "./lib/*.d.ts",
+      "import": "./lib/*.js",
+      "require": "./lib/*.js"
+    },
+    "./esm/*": {
+      "types": "./esm/*.d.ts",
+      "import": "./esm/*.js",
+      "require": "./esm/*.js"
+    },
     "./dist/adaptors/*": {
       "types": "./types/adaptors/*.d.ts",
       "import": "./dist/adaptors/*.js",

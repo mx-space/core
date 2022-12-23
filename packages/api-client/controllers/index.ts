@@ -6,7 +6,11 @@ import { NoteController } from './note'
 import { PageController } from './page'
 import { PostController } from './post'
 import { ProjectController } from './project'
-import { RecentlyController } from './recently'
+import {
+  RecentlyAttitudeEnum,
+  RecentlyAttitudeResultEnum,
+  RecentlyController,
+} from './recently'
 import { SayController } from './say'
 import { SearchController } from './search'
 import { ServerlessController } from './severless'
@@ -71,4 +75,8 @@ export {
   ServerlessController,
   UserController,
   TopicController,
+
+  // Enum
+  RecentlyAttitudeEnum,
+  RecentlyAttitudeResultEnum,
 }
