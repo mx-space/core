@@ -1,5 +1,25 @@
 # CHANGELOG
 
+# [3.40.0](https://github.com/mx-space/core/compare/v3.39.7...v3.40.0) (2022-12-23)
+
+
+### Bug Fixes
+
+* comment ref should select `content` ([d90efeb](https://github.com/mx-space/core/commit/d90efebb8c0223bc5e73e5298f249f87069b1df3))
+* missing api-client types ([4c603dc](https://github.com/mx-space/core/commit/4c603dcba11239d450fff8bd0d94b0e1f3610cee))
+* mongo query use objectId ([205b98e](https://github.com/mx-space/core/commit/205b98e27e3b5740b54ea057f309685dffe7270b))
+* **recently:** delete with ref comments ([7fe8bf6](https://github.com/mx-space/core/commit/7fe8bf6290a265327c0646999fb895392a366728))
+
+
+### Features
+
+* add `liked` for post and note model ([1073c67](https://github.com/mx-space/core/commit/1073c6764612a6a3c46e13d32807d3d72a1662d5))
+* **api-client:** add `attitude` method ([b44bb41](https://github.com/mx-space/core/commit/b44bb411f0ccf1a9499e4300deaf2570df9e4bf6))
+* recently response add `comments` ([d25ba45](https://github.com/mx-space/core/commit/d25ba45853877af051ffa0a27e06665f04d9a666))
+* **recently:** add attitude ([963b07a](https://github.com/mx-space/core/commit/963b07a510412f5afc5359351f23fabeb7c94d62))
+
+
+
 ## [3.39.7](https://github.com/mx-space/core/compare/v3.39.6...v3.39.7) (2022-12-22)
 
 
