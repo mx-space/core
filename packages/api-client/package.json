@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/api-client",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "description": "A api client for mx-space server@next",
   "author": "Innei",
@@ -79,13 +79,13 @@
   },
   "scripts": {
     "prebuild": "rm -rf lib && rm -rf esm",
-    "build": "tsc --build tsconfig.build.json && tsc --build tsconfig.cjs.json",
-    "postbuild": "tsc-alias -p tsconfig.build.json && tsc-alias -p tsconfig.cjs.json && npm run types",
+    "build": "concurrently \"tsc --build tsconfig.build.json\" \"tsc --build tsconfig.cjs.json\"",
+    "postbuild": "concurrently \"tsc-alias -p tsconfig.build.json\" \"tsc-alias -p tsconfig.cjs.json\"  \"npm run types\"",
     "types": "rm -rf types && tsc --build tsconfig.types.json && tsc-alias -p tsconfig.types.json",
-    "package": "NODE_ENV=production npm run build && rollup -c",
+    "package": "NODE_ENV=production concurrently \"npm run build\" \"rollup -c\"",
     "prepackage": "rm -rf dist",
     "test": "vitest",
-    "dev": "vite"
+    "dev": "vitest"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "22.0.2",
@@ -97,6 +97,7 @@
     "abort-controller": "3.0.0",
     "axios": "*",
     "camelcase-keys": "*",
+    "concurrently": "7.6.0",
     "cors": "2.8.5",
     "dts-bundle-generator": "7.0.0",
     "express": "4.18.2",

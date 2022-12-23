@@ -43,6 +43,15 @@ describe('test recently client, /recently', () => {
     expect(data).toEqual(mocked)
   })
 
+  test('GET /attitude', async () => {
+    const id = `1212121`
+    const mocked = mockResponse(`/recently/attitude/${id}?attitude=1`, {
+      code: 1,
+    })
+    const data = await client.recently.attitude(id, 1)
+    expect(data).toEqual(mocked)
+  })
+
   it('should `recently` == `shorthand`', () => {
     expect(client.recently).toEqual(client.shorthand)
   })
