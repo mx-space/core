@@ -49,7 +49,7 @@ export class UserService {
       .select(`${getLoginIp ? ' +lastLoginIp' : ''}`)
       .lean({ virtuals: true })
     if (!user) {
-      throw new BadRequestException('没有完成初始化!')
+      throw new BadRequestException('没有完成初始化！')
     }
     const avatar = user.avatar ?? getAvatar(user.mail)
     return { ...user, avatar }
@@ -85,7 +85,7 @@ export class UserService {
    * 修改密码
    *
    * @async
-   * @param {DocumentType} user - 用户查询结果, 已经挂载在 req.user
+   * @param {DocumentType} user - 用户查询结果，已经挂载在 req.user
    * @param {Partial} data - 部分修改数据
    */
   async patchUserData(user: UserDocument, data: Partial<UserModel>) {
@@ -118,7 +118,7 @@ export class UserService {
   }
 
   /**
-   * 记录登陆的足迹(ip, 时间)
+   * 记录登陆的足迹 (ip, 时间)
    *
    * @async
    * @param {string} ip - string
@@ -138,7 +138,7 @@ export class UserService {
       lastLoginIp: ip,
     })
 
-    this.Logger.warn(`主人已登录, IP: ${ip}`)
+    this.Logger.warn(`主人已登录，IP: ${ip}`)
     return PrevFootstep as any
   }
 }

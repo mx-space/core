@@ -100,7 +100,7 @@ export class BackupService {
       this.logger.log('--> 备份成功')
     } catch (e) {
       this.logger.error(
-        `--> 备份失败, 请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致, ${e.message}` ||
+        `--> 备份失败，请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致，${e.message}` ||
           e.stderr,
       )
       throw e
@@ -169,7 +169,7 @@ export class BackupService {
     try {
       // 验证
       if (!existsSync(join(dirPath, 'mx-space'))) {
-        throw new InternalServerErrorException('备份文件错误, 目录不存在')
+        throw new InternalServerErrorException('备份文件错误，目录不存在')
       }
 
       cd(dirPath)

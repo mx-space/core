@@ -74,7 +74,7 @@ export class SnippetModel extends BaseModel {
   @IsOptional()
   comment?: string
 
-  // 元数据类型 （预留二级类型，暂时不用）
+  // 元数据类型（预留二级类型，暂时不用）
   @prop({ maxlength: 20 })
   @MaxLength(20)
   @IsString()

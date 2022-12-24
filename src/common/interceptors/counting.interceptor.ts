@@ -1,5 +1,5 @@
 /**
- * 处理 Article 类型响应, 增加计数
+ * 处理 Article 类型响应，增加计数
  * @author Innei
  */
 import { map } from 'rxjs'

@@ -178,7 +178,7 @@ export class CategoryController {
       category._id,
     )
     if (postsInCategory.length > 0) {
-      throw new BadRequestException('该分类中有其他文章, 无法被删除')
+      throw new BadRequestException('该分类中有其他文章，无法被删除')
     }
     const res = await this.categoryService.model.deleteOne({
       _id: category._id,

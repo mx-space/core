@@ -28,17 +28,17 @@ import { registerJSONGlobal } from './json.global'
 function mkdirs() {
   if (!CLUSTER.enable || cluster.isPrimary) {
     mkdirSync(DATA_DIR, { recursive: true })
-    Logger.log(chalk.blue(`数据目录已经建好: ${DATA_DIR}`))
+    Logger.log(chalk.blue(`数据目录已经建好：${DATA_DIR}`))
     mkdirSync(TEMP_DIR, { recursive: true })
-    Logger.log(chalk.blue(`临时目录已经建好: ${TEMP_DIR}`))
+    Logger.log(chalk.blue(`临时目录已经建好：${TEMP_DIR}`))
     mkdirSync(LOG_DIR, { recursive: true })
-    Logger.log(chalk.blue(`日志目录已经建好: ${LOG_DIR}`))
+    Logger.log(chalk.blue(`日志目录已经建好：${LOG_DIR}`))
     mkdirSync(USER_ASSET_DIR, { recursive: true })
-    Logger.log(chalk.blue(`资源目录已经建好: ${USER_ASSET_DIR}`))
+    Logger.log(chalk.blue(`资源目录已经建好：${USER_ASSET_DIR}`))
     mkdirSync(STATIC_FILE_DIR, { recursive: true })
-    Logger.log(chalk.blue(`文件存放目录已经建好: ${STATIC_FILE_DIR}`))
+    Logger.log(chalk.blue(`文件存放目录已经建好：${STATIC_FILE_DIR}`))
     mkdirSync(THEME_DIR, { recursive: true })
-    // Logger.log(chalk.blue(`主题目录已经建好: ${THEME_DIR}`))
+    // Logger.log(chalk.blue(`主题目录已经建好：${THEME_DIR}`))
   }
 }
 

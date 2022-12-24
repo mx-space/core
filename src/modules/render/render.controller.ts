@@ -113,7 +113,7 @@ export class RenderEjsController {
   }
 
   /**
-   * 后台预览 Markdown 可用接口, 传入 `title` 和 `md`
+   * 后台预览 Markdown 可用接口，传入 `title` 和 `md`
    */
   @Post('/markdown')
   @HttpCache.disable

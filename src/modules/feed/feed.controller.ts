@@ -58,7 +58,7 @@ export class FeedController {
             <published>${item.created}</published>
             <updated>${item.modified}</updated>
             <content type='html'><![CDATA[
-              ${`<blockquote>该渲染由 marked 生成，可能存在排版问题，最佳体验请前往: <a href='${xss(
+              ${`<blockquote>该渲染由 marked 生成，可能存在排版问题，最佳体验请前往：<a href='${xss(
                 item.link,
               )}'>${xss(item.link)}</a></blockquote>
               ${await this.markdownService

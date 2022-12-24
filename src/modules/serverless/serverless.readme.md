@@ -31,7 +31,7 @@ const len = 10
 
 `require` 进行了重新处理，是一个异步函数。
 
-使用方法:
+使用方法：
 
 ```js
 // require built-in module
@@ -52,13 +52,13 @@ const remoteModule =
   await require('https://gist.githubusercontent.com/Innei/865b40849d61c2200f1c6ec99c48f716/raw/b4ceb3af6b5a52040a1f31594e5ee53154b8b6d5/case-1.js') // ok
 ```
 
-目前受信任的三方库前缀: `@mx-space` `@innei` `mx-function-`
+目前受信任的三方库前缀：`@mx-space` `@innei` `mx-function-`
 
 受信任的三方库，可在 `snippet.service.ts` 中找到。
 
 **注意**：这是一个完全隔离（可能存在逃逸，请及时指出）的执行上下文，你不能编写某些在 NodeJS 运行时正常执行的代码。
 
-比如: `process` 中只有只读的 env 可以获取，其他方法都被移除； `setTimeout` 等 API 被移除。但是你可以在独立模块中使用这些 API，需要注意，内存泄漏和安全性。
+比如：`process` 中只有只读的 env 可以获取，其他方法都被移除； `setTimeout` 等 API 被移除。但是你可以在独立模块中使用这些 API，需要注意，内存泄漏和安全性。
 
 `require(id, useCache)` require 支持第二个参数，默认为 true，这是 NodeJS 的默认行为，可以设定为 `false` 以禁用 `require` 的缓存，但是会增加性能开销。
 
@@ -110,7 +110,7 @@ import * as ejs from 'ejs'
 
 `context.reference` same as model.reference
 
-`context.writeAsset(path: string, data: any, options)` 该方法用于写入配置文件。考虑安全性，会对 path 进行简单转化，删除所有返回上级的符号, e.g. `./../a` => `./a`
+`context.writeAsset(path: string, data: any, options)` 该方法用于写入配置文件。考虑安全性，会对 path 进行简单转化，删除所有返回上级的符号，e.g. `./../a` => `./a`
 
 `context.readAsset(path: string, data: any, options)` 该方法用于读取配置文件。
 

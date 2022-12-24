@@ -38,7 +38,7 @@ export class MultiCategoriesQueryDto {
   @IsOptional()
   @IsMongoId({
     each: true,
-    message: '多分类查询使用逗号分隔, 应为 mongoID',
+    message: '多分类查询使用逗号分隔，应为 mongoID',
   })
   @Transform(({ value: v }) => uniq(v.split(',')))
   ids?: Array<string>

@@ -21,6 +21,6 @@ export class DanmakuDto {
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(50, { message: '长度不能超过50个字符' })
+  @MaxLength(50, { message: '长度不能超过 50 个字符' })
   text: string
 }

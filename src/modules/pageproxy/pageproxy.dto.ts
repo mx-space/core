@@ -32,7 +32,7 @@ export class PageProxyDebugDto {
   __version?: string
 
   /**
-   * 无缓存访问, redis no
+   * 无缓存访问，redis no
    */
   @IsBoolean()
   @Transform(({ value }) => (value === 'true' ? true : false))

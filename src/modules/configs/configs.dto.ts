@@ -151,7 +151,7 @@ export class CommentOptionsDto {
   @IsOptional()
   @IsInt()
   @JSONSchemaNumberField('超时时间', {
-    description: '获取 IP 归属地的超时时间。单位: 毫秒。如获取超时则不记录',
+    description: '获取 IP 归属地的超时时间。单位：毫秒。如获取超时则不记录',
   })
   fetchLocationTimeout?: number
 }
@@ -161,7 +161,7 @@ export class BackupOptionsDto {
   @IsBoolean()
   @IsOptional()
   @JSONSchemaToggleField('开启自动备份', {
-    description: '填写以下 COS 信息, 将同时上传备份到 COS',
+    description: '填写以下 COS 信息，将同时上传备份到 COS',
   })
   enable: boolean
 
@@ -314,7 +314,7 @@ export class BarkOptionsDto {
   @IsUrl()
   @IsOptional()
   @JSONSchemaPlainField('服务器 URL', {
-    description: '如果不填写, 则使用默认的服务器, https://day.app/',
+    description: '如果不填写，则使用默认的服务器，https://day.app/',
   })
   serverUrl: string
 

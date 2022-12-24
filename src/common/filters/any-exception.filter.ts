@@ -128,7 +128,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     } else {
       const ip = getIp(request)
       this.logger.warn(
-        `IP: ${ip} 错误信息: (${status}) ${message} Path: ${decodeURI(url)}`,
+        `IP: ${ip} 错误信息：(${status}) ${message} Path: ${decodeURI(url)}`,
       )
     }
     // @ts-ignore

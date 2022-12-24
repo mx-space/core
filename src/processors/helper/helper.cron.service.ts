@@ -212,10 +212,10 @@ export class CronService {
             },
           },
         )
-        this.logger.log(`百度站长提交结果: ${JSON.stringify(res.data)}`)
+        this.logger.log(`百度站长提交结果：${JSON.stringify(res.data)}`)
         return res.data
       } catch (e) {
-        this.logger.error(`百度推送错误: ${e.message}`)
+        this.logger.error(`百度推送错误：${e.message}`)
         throw e
       }
     }
@@ -309,7 +309,7 @@ export class CronService {
 
       this.logger.log('--> 推送到 algoliasearch 成功')
     } catch (err) {
-      Logger.error('algolia推送错误', 'AlgoliaSearch')
+      Logger.error('algolia 推送错误', 'AlgoliaSearch')
       throw err
     }
   }

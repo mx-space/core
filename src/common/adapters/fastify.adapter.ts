@@ -60,7 +60,7 @@ app.getInstance().addHook('onRequest', (request, reply, done) => {
 })
 
 app.register(fastifyCookie, {
-  secret: 'cookie-secret', // 这个 secret 不太重要, 不存鉴权相关, 无关紧要
+  secret: 'cookie-secret', // 这个 secret 不太重要，不存鉴权相关，无关紧要
 })
 
 const logWarn = (desc: string, req: FastifyRequest, context: string) => {

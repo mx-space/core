@@ -20,7 +20,7 @@ export class EmailOptionController {
     return {
       template,
       props: {
-        author: '评论人Kemmer',
+        author: '评论人 Kemmer',
         link: 'https://example.com',
         mail: 'example@example.com',
         text: '这是一段回复评论',

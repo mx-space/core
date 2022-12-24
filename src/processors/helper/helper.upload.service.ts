@@ -11,7 +11,7 @@ export class UploadService {
     const data = await req.file()
 
     if (!data) {
-      throw new BadRequestException('仅供上传文件!')
+      throw new BadRequestException('仅供上传文件！')
     }
     if (data.fieldname != 'file') {
       throw new BadRequestException('字段必须为 file')

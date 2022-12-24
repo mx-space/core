@@ -101,7 +101,7 @@ export class PageProxyController {
             await this.service.getAdminLastestVersionFromGHRelease()
         } catch (e) {
           reply.type('application/json').status(500).send({
-            message: '从获取 GitHub 获取数据失败, 连接超时',
+            message: '从获取 GitHub 获取数据失败，连接超时',
           })
           throw e
         }
@@ -124,7 +124,7 @@ export class PageProxyController {
       }
 
       return await Promise.any(tasks).catch((e) => {
-        const err = '网络连接异常, 所有请求均失败, 无法获取后台入口文件'
+        const err = '网络连接异常，所有请求均失败，无法获取后台入口文件'
         reply.type('application/json').status(500).send({ message: err })
         throw new InternalServerErrorException(err)
       })

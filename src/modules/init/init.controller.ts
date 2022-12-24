@@ -47,7 +47,7 @@ export class InitController {
   ) {
     const { isInit } = await this.isInit()
     if (isInit) {
-      throw new BadRequestException('已经完成初始化, 请登录后进行设置')
+      throw new BadRequestException('已经完成初始化，请登录后进行设置')
     }
     if (typeof body !== 'object') {
       throw new UnprocessableEntityException('body must be object')

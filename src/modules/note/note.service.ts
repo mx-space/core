@@ -60,7 +60,7 @@ export class NoteService {
     )
 
     // 是否存在上一条记录 (旧记录)
-    // 统一: next 为较老的记录  prev 为较新的记录
+    // 统一：next 为较老的记录  prev 为较新的记录
     // FIXME may cause bug
     const next = await this.noteModel
       .findOne({

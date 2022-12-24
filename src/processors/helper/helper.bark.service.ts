@@ -46,7 +46,7 @@ export class BarkPushService {
 
     await this.push({
       title: '收到一条新评论',
-      body: `${comment.author} 评论了你的文章: ${comment.text}`,
+      body: `${comment.author} 评论了你的文章：${comment.text}`,
       icon: comment.avatar,
       url: `${adminUrl}#/comments`,
     })

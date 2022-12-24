@@ -62,7 +62,7 @@ export class ToolService {
         return res
       }
     } catch (e) {
-      throw new BizException(`IP API 调用失败, ${e.message}`)
+      throw new BizException(`IP API 调用失败，${e.message}`)
     }
   }
 

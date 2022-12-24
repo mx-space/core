@@ -204,7 +204,7 @@ export class SnippetService {
   /**
    *
    * @param name
-   * @param reference 引用类型, 可以理解为 type, 或者一级分类
+   * @param reference 引用类型，可以理解为 type, 或者一级分类
    * @returns
    */
   async getSnippetByName(name: string, reference: string) {

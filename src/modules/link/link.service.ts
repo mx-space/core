@@ -108,9 +108,9 @@ export class LinkService {
       console.log(`
       To: ${model.email}
       你的友链已通过
-        站点标题: ${model.name}
-        站点网站: ${model.url}
-        站点描述: ${model.description}`)
+        站点标题：${model.name}
+        站点网站：${model.url}
+        站点描述：${model.description}`)
       return
     }
 
@@ -123,10 +123,10 @@ export class LinkService {
   async sendToMaster(authorName: string, model: LinkModel) {
     const enable = (await this.configs.get('mailOptions')).enable
     if (!enable || isDev) {
-      console.log(`来自 ${authorName} 的友链请求:
-        站点标题: ${model.name}
-        站点网站: ${model.url}
-        站点描述: ${model.description}`)
+      console.log(`来自 ${authorName} 的友链请求：
+        站点标题：${model.name}
+        站点网站：${model.url}
+        站点描述：${model.description}`)
       return
     }
     process.nextTick(async () => {
@@ -164,12 +164,12 @@ export class LinkService {
           : `嘿!~, 主人已通过你的友链申请!~`,
       text:
         template === LinkApplyEmailType.ToMaster
-          ? `来自 ${model.name} 的友链请求: 
-          站点标题: ${model.name}
-          站点网站: ${model.url}
-          站点描述: ${model.description}
+          ? `来自 ${model.name} 的友链请求：
+          站点标题：${model.name}
+          站点网站：${model.url}
+          站点描述：${model.description}
         `
-          : `你的友链申请: ${model.name}, ${model.url} 已通过`,
+          : `你的友链申请：${model.name}, ${model.url} 已通过`,
     })
   }
 
@@ -179,7 +179,7 @@ export class LinkService {
     const health = await Promise.all(
       links.map(({ id, url }) => {
         Logger.debug(
-          `检查友链 ${id} 的健康状态: GET -> ${url}`,
+          `检查友链 ${id} 的健康状态：GET -> ${url}`,
           LinkService.name,
         )
         return this.http.axiosRef
@@ -232,7 +232,7 @@ export class LinkService {
     const { seo, mailOptions } = await this.configsService.waitForConfigReady()
     const { enable } = mailOptions
     if (!enable || isDev) {
-      console.log(`友链结果通知: ${reason}, 状态: ${state}`)
+      console.log(`友链结果通知：${reason}, 状态：${state}`)
       return
     }
 
@@ -242,7 +242,7 @@ export class LinkService {
       from,
       to: doc.email,
       subject: `嘿!~, 主人已处理你的友链申请!~`,
-      text: `申请结果: ${LinkStateMap[state]}\n原因: ${reason}`,
+      text: `申请结果：${LinkStateMap[state]}\n原因：${reason}`,
     })
   }
 }
