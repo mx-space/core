@@ -122,6 +122,8 @@ export class ConfigsService {
         .catch(reject)
     })
   }
+
+  // Config 在此收口
   public async getConfig(): Promise<Readonly<IConfig>> {
     const redis = this.redis.getClient()
     const configCache = await redis.get(getRedisKey(RedisKeys.ConfigCache))

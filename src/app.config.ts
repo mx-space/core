@@ -4,6 +4,7 @@ import cluster from 'cluster'
 import { program } from 'commander'
 import { readFileSync } from 'fs'
 import { load as yamlLoad } from 'js-yaml'
+import { machineIdSync } from 'node-machine-id'
 import path from 'path'
 
 import { cwd, isDev, isMainCluster, isTest } from './global/env.global'
@@ -41,9 +42,12 @@ const commander = program
   // debug
   .option('--http_request_verbose', 'enable http request verbose')
 
-  // other
+  // security
+  .option('--encrypt_key', 'custom encrypt key, default is machine-id')
 
+  // other
   .option('--color', 'force enable shell color')
+
 commander.parse()
 
 const argv = commander.opts()
@@ -124,6 +128,10 @@ export const CLUSTER = {
 export const DEBUG_MODE = {
   httpRequestVerbose:
     argv.httpRequestVerbose ?? argv.http_request_verbose ?? true,
+}
+
+export const ENCRYPT = {
+  key: argv.encrypt_key ?? machineIdSync(),
 }
 
 if (!CLUSTER.enable || cluster.isPrimary || isMainCluster) {
