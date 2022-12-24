@@ -1,4 +1,3 @@
-import dayjs from 'dayjs'
 import { pick } from 'lodash'
 import { FilterQuery } from 'mongoose'
 import { URL } from 'url'
@@ -281,10 +280,31 @@ export class AggregateService {
       this.noteService.model
         .find({
           hide: false,
-          $or: [
-            { password: undefined },
-            { password: { $exists: false } },
-            { password: null },
+          $and: [
+            {
+              $or: [
+                { password: undefined },
+                { password: { $exists: false } },
+                { password: null },
+              ],
+            },
+            {
+              $or: [
+                {
+                  secret: {
+                    $lte: new Date(),
+                  },
+                },
+                {
+                  secret: {
+                    $exists: false,
+                  },
+                },
+                {
+                  secret: null,
+                },
+              ],
+            },
           ],
         })
         .limit(10)
@@ -302,18 +322,16 @@ export class AggregateService {
       }
     })
     const notesRss: RSSProps['data'] = notes.map((note) => {
-      const isSecret = note.secret
-        ? dayjs(note.secret).isAfter(new Date())
-        : false
       return {
         id: note._id,
         title: note.title,
-        text: isSecret ? '这篇文章暂时没有公开呢' : note.text,
+        text: note.text,
         created: note.created!,
         modified: note.modified,
         link: baseURL + this.urlService.build(note),
       }
     })
+
     return postsRss
       .concat(notesRss)
       .sort((a, b) => b.created!.getTime() - a.created!.getTime())
