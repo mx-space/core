@@ -1,11 +1,3 @@
-export function addHidePasswordAndHideCondition(canSee: boolean) {
-  return canSee
-    ? {
-        $or: [{ hide: false }, { hide: true }],
-      }
-    : { hide: false, password: undefined }
-}
-
 export const addYearCondition = (year?: number) => {
   if (!year) {
     return {}

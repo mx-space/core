@@ -26,10 +26,7 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { IntIdOrMongoIdDto, MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import {
-  addHidePasswordAndHideCondition,
-  addYearCondition,
-} from '~/transformers/db-query.transformer'
+import { addYearCondition } from '~/transformers/db-query.transformer'
 
 import {
   ListQueryDto,
@@ -50,29 +47,19 @@ export class NoteController {
     private readonly macrosService: TextMacroService,
   ) {}
 
-  @Get('/latest')
-  @ApiOperation({ summary: '获取最新发布一篇记录' })
-  @VisitDocument('Note')
-  async getLatestOne(@IsMaster() isMaster: boolean) {
-    const { latest, next } = await this.noteService.getLatestOne(
-      {
-        ...addHidePasswordAndHideCondition(isMaster),
-      },
-      isMaster ? '+location +coordinates' : '-location -coordinates',
-    )
-
-    return { data: latest, next }
-  }
-
   @Get('/')
   @Paginator
   @ApiOperation({ summary: '获取记录带分页器' })
   async getNotes(@IsMaster() isMaster: boolean, @Query() query: NoteQueryDto) {
     const { size, select, page, sortBy, sortOrder, year, db_query } = query
     const condition = {
-      ...addHidePasswordAndHideCondition(isMaster),
       ...addYearCondition(year),
     }
+
+    if (!isMaster) {
+      Object.assign(condition, this.noteService.publicNoteQueryCondition)
+    }
+
     return await this.noteService.model.paginate(db_query ?? condition, {
       limit: size,
       page,
@@ -214,6 +201,20 @@ export class NoteController {
     await this.noteService.deleteById(params.id)
   }
 
+  @Get('/latest')
+  @ApiOperation({ summary: '获取最新发布一篇记录' })
+  @VisitDocument('Note')
+  async getLatestOne(@IsMaster() isMaster: boolean) {
+    const { latest, next } = await this.noteService.getLatestOne(
+      isMaster ? {} : this.noteService.publicNoteQueryCondition,
+      isMaster ? '+location +coordinates' : '-location -coordinates',
+    )
+
+    latest.text = this.noteService.checkNoteIsSecret(latest) ? '' : latest.text
+
+    return { data: latest, next }
+  }
+
   // C 端入口
   @Get('/nid/:nid')
   @VisitDocument('Note')
@@ -237,10 +238,10 @@ export class NoteController {
       throw new CannotFindException()
     }
 
-    current.text = await this.macrosService.replaceTextMacro(
-      current.text,
-      current,
-    )
+    current.text = this.noteService.checkNoteIsSecret(current)
+      ? ''
+      : await this.macrosService.replaceTextMacro(current.text, current)
+
     if (
       !this.noteService.checkPasswordToAccess(current, password) &&
       !isMaster

@@ -1,4 +1,5 @@
 import { isDefined, isMongoId } from 'class-validator'
+import dayjs from 'dayjs'
 import { omit } from 'lodash'
 import { FilterQuery, PaginateOptions } from 'mongoose'
 
@@ -38,11 +39,24 @@ export class NoteService {
     return this.noteModel
   }
 
+  public readonly publicNoteQueryCondition = {
+    hide: false,
+    password: undefined,
+  }
+
+  public checkNoteIsSecret(note: NoteModel) {
+    if (!note.secret) {
+      return false
+    }
+    const isSecret = dayjs(note.secret).isAfter(new Date())
+
+    return isSecret
+  }
+
   async getLatestOne(
     condition: FilterQuery<DocumentType<NoteModel>> = {},
     projection: any = undefined,
   ) {
-    // TODO master
     const latest = await this.noteModel
       .findOne(condition, projection)
       .sort({
@@ -197,11 +211,14 @@ export class NoteService {
             if (!doc) {
               return
             }
-            delete doc.password
+
             this.eventManager.broadcast(BusinessEvents.NOTE_UPDATE, doc, {
               scope: EventScope.TO_SYSTEM,
             })
 
+            if (doc.password || doc.hide || doc.secret) {
+              return
+            }
             this.eventManager.broadcast(
               BusinessEvents.NOTE_UPDATE,
               {
