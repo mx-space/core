@@ -78,7 +78,9 @@ export class ServerlessController {
         method: requestMethod,
       })
       .select('+secret')
-      .lean()
+      .lean({
+        getters: true,
+      })
 
     const notExistMessage = 'serverless function is not exist or not enabled'
 

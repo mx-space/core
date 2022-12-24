@@ -32,6 +32,7 @@ import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { UniqueArray } from '~/types/unique'
 import { deepCloneWithFunction, getRedisKey, safePathJoin } from '~/utils'
+import { EncryptUtil } from '~/utils/encrypt.util'
 import { safeEval } from '~/utils/safe-eval.util'
 import { isBuiltinModule } from '~/utils/system.util'
 
@@ -237,7 +238,9 @@ export class ServerlessService {
     const { raw: functionString } = model
     const logger = new Logger(`fx:${model.reference}/${model.name}`)
     const document = await this.model.findById(model.id)
-    const secretObj = model.secret ? qs.parse(model.secret) : {}
+    const secretObj = model.secret
+      ? qs.parse(EncryptUtil.decrypt(model.secret))
+      : {}
 
     if (!isPlainObject(secretObj)) {
       throw new InternalServerErrorException(

@@ -4,7 +4,7 @@ services:
   app:
     container_name: mx-server
     image: innei/mx-server:latest
-    command: node index.js --redis_host=redis --db_host=mongo --allowed_origins=${ALLOWED_ORIGINS} --jwt_secret=${JWT_SECRET} --color
+    command: node index.js --redis_host=redis --db_host=mongo --allowed_origins=${ALLOWED_ORIGINS} --jwt_secret=${JWT_SECRET} --color --encrypt_key={ENCRYPT_KEY}
     environment:
       - TZ=Asia/Shanghai
       - NODE_ENV=production
