@@ -20,21 +20,18 @@ import { OptionController } from '../option.decorator'
 
 @OptionController()
 export class BaseOptionController {
-  constructor(
-    private readonly configsService: ConfigsService,
-    private readonly configs: ConfigsService,
-  ) {}
+  constructor(private readonly configsService: ConfigsService) {}
 
   @Get('/')
   getOption() {
-    return instanceToPlain(this.configs.getConfig())
+    return instanceToPlain(this.configsService.getConfig())
   }
 
   @HTTPDecorators.Bypass
   @Get('/jsonschema')
   getJsonSchema() {
     return Object.assign(classToJsonSchema(IConfig), {
-      default: this.configs.defaultConfig,
+      default: this.configsService.defaultConfig,
     })
   }
 
@@ -45,7 +42,7 @@ export class BaseOptionController {
         `key must be IConfigKeys, got ${key}`,
       )
     }
-    const value = await this.configs.get(key)
+    const value = await this.configsService.get(key)
     if (!value) {
       throw new BadRequestException('key is not exists.')
     }

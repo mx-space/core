@@ -34,7 +34,7 @@ export async function migrateDatabase() {
 
   await fs.unlink(migrateFilePath)
 
-  await fs.writeFile(
+  fs.writeFile(
     migrateFilePath,
     [...migratedSet].filter(Boolean).join('\n').trim(),
     {
