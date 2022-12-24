@@ -4,11 +4,11 @@ describe('encrypt.util', () => {
   test('encrypt', () => {
     const data = '````````'
     const encrypt = EncryptUtil.encrypt(data)
-    expect(encrypt).toMatchInlineSnapshot('"$${mx}$$gzQ0SeKxxufRtkzgtnCloQ=="')
+    expect(encrypt).toMatchInlineSnapshot('"$${mx}$$jansTW9ZaY6IVtiaDF6Bog=="')
   })
 
   test('decrypt', () => {
-    const data = '$${mx}$$gzQ0SeKxxufRtkzgtnCloQ=='
+    const data = '$${mx}$$jansTW9ZaY6IVtiaDF6Bog=='
     const encrypt = EncryptUtil.decrypt(data)
     expect(encrypt).toMatchInlineSnapshot('"````````"')
   })

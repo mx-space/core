@@ -131,7 +131,9 @@ export const DEBUG_MODE = {
 }
 
 export const ENCRYPT = {
-  key: argv.encrypt_key ?? machineIdSync(),
+  key: isTest
+    ? '593f62860255feb0a914534a43814b9809cc7534da7f5485cd2e3d3c8609acab'
+    : argv.encrypt_key ?? machineIdSync(),
 }
 
 if (!CLUSTER.enable || cluster.isPrimary || isMainCluster) {
