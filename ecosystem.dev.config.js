@@ -13,10 +13,12 @@ module.exports = {
       watch: false,
       instances: 2,
       max_memory_restart: '200M',
-      args: '--color',
+      args: '--color --encrypt_enable',
       env: {
         NODE_ENV: 'development',
         NODE_PATH: nodePath,
+        MX_ENCRYPT_KEY: process.env.MX_ENCRYPT_KEY,
+        PORT: process.env.PORT,
       },
     },
   ],

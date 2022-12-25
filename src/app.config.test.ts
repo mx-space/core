@@ -1,13 +1,9 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 import type { AxiosRequestConfig } from 'axios'
-import cluster from 'cluster'
 import { program } from 'commander'
 import { readFileSync } from 'fs'
 import { load as yamlLoad } from 'js-yaml'
-import { machineIdSync } from 'node-machine-id'
 import path from 'path'
-
-import { cwd, isDev, isMainCluster } from './global/env.global'
 
 const commander = program
   .option('-p, --port <number>', 'server port')
@@ -63,12 +59,10 @@ if (argv.config) {
   Object.assign(argv, config)
 }
 
-const { PORT: ENV_PORT, ENABLE_CACHE_DEBUG, MX_ENCRYPT_KEY } = process.env
-
-export const PORT = argv.port || ENV_PORT || 2333
+export const PORT = process.env.PORT || 2333
 export const API_VERSION = 2
 
-export const DEMO_MODE = argv.demo || false
+export const DEMO_MODE = false
 
 export const CROSS_DOMAIN = {
   allowedOrigins: argv.allowed_origins
@@ -90,26 +84,28 @@ export const CROSS_DOMAIN = {
 }
 
 export const MONGO_DB = {
-  dbName: argv.collection_name || (DEMO_MODE ? 'mx-space_demo' : 'mx-space'),
-  host: argv.db_host || '127.0.0.1',
-  port: argv.db_port || 27017,
-  user: argv.db_user || '',
+  dbName: 'mx-space',
+  host: '127.0.0.1',
+  port: 27017,
+  user: '',
   password: argv.db_password || '',
   get uri() {
     const userPassword =
       this.user && this.password ? `${this.user}:${this.password}@` : ''
-    return `mongodb://${userPassword}${this.host}:${this.port}/${this.dbName}`
+    return `mongodb://${userPassword}${this.host}:${
+      this.port
+    }/${'mx-space_unitest'}`
   },
 }
 
 export const REDIS = {
-  host: argv.redis_host || 'localhost',
-  port: argv.redis_port || 6379,
-  password: argv.redis_password || null,
+  host: 'localhost',
+  port: 6379,
+  password: null,
   ttl: null,
   httpCacheTTL: 5,
   max: 5,
-  disableApiCache: (isDev || argv.disable_cache) && !ENABLE_CACHE_DEBUG,
+  disableApiCache: true,
 }
 
 export const AXIOS_CONFIG: AxiosRequestConfig = {
@@ -120,7 +116,7 @@ export const SECURITY = {
   jwtSecret: argv.jwt_secret || argv.jwtSecret,
   jwtExpire: +argv.jwt_expire || 14,
   // 跳过登陆鉴权
-  skipAuth: false,
+  skipAuth: true,
 }
 
 export const CLUSTER = {
@@ -129,17 +125,10 @@ export const CLUSTER = {
 }
 
 export const DEBUG_MODE = {
-  httpRequestVerbose:
-    argv.httpRequestVerbose ?? argv.http_request_verbose ?? true,
+  httpRequestVerbose: false,
 }
 
 export const ENCRYPT = {
-  key: argv.encrypt_key || MX_ENCRYPT_KEY || machineIdSync(),
-  enable: argv.encrypt_enable ?? false,
-}
-console.log(ENCRYPT)
-
-if (!CLUSTER.enable || cluster.isPrimary || isMainCluster) {
-  console.log(argv)
-  console.log('cwd: ', cwd)
+  key: '593f62860255feb0a914534a43814b9809cc7534da7f5485cd2e3d3c8609acab',
+  enable: true,
 }

@@ -7,6 +7,9 @@ export class EncryptUtil {
   private static key = Buffer.from(ENCRYPT.key, 'hex')
 
   public static encrypt(data: string): string {
+    if (!ENCRYPT.enable) {
+      return data
+    }
     if (EncryptUtil.isEncryptedString(data)) {
       return data
     }
@@ -27,6 +30,10 @@ export class EncryptUtil {
   }
 
   public static decrypt(data: string): string {
+    if (!ENCRYPT.enable) {
+      return data
+    }
+
     if (!data) {
       return ''
     }

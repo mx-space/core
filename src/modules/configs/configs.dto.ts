@@ -316,6 +316,8 @@ export class BarkOptionsDto {
   @IsString()
   @IsOptional()
   @JSONSchemaPlainField('设备 Key')
+  @Exclude({ toPlainOnly: true })
+  @Encrypt
   key: string
 
   @IsUrl()

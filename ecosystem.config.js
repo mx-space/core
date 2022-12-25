@@ -15,10 +15,12 @@ module.exports = {
       watch: false,
       instances: cpuLen,
       max_memory_restart: '200M',
-      args: '--color',
+      args: '--color --encrypt_enable',
       env: {
         NODE_ENV: 'production',
         NODE_PATH: nodePath,
+        MX_ENCRYPT_KEY: process.env.MX_ENCRYPT_KEY,
+        PORT: process.env.PORT,
       },
     },
   ],
