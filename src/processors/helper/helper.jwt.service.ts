@@ -38,10 +38,10 @@ export class JWTService {
       'asjhczxiucipoiopiqm2376'
 
     if (isDev && cluster.isPrimary) {
-      console.log(secret)
+      consola.debug(secret)
     }
     if (!CLUSTER.enable || cluster.isPrimary) {
-      console.log(
+      consola.debug(
         'JWT Secret start with :',
         secret.slice(0, 5) + '*'.repeat(secret.length - 5),
       )

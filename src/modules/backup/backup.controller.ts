@@ -3,6 +3,7 @@ import { Readable } from 'stream'
 
 import {
   BadRequestException,
+  Body,
   Delete,
   Get,
   Header,
@@ -92,14 +93,18 @@ export class BackupController {
   }
 
   @Delete('/')
-  async deleteBackups(@Query('files') files: string) {
-    if (!files) {
-      return
+  async deleteBackups(
+    @Query('files') files: string,
+    @Body('files') filesBody: string,
+  ) {
+    const nextFiles = files || filesBody
+    if (!nextFiles) {
+      throw new UnprocessableEntityException('参数有误')
     }
-    const _files = files.split(',')
-    for await (const f of _files) {
-      await this.backupService.deleteBackup(f)
-    }
+
+    const filesList = nextFiles.split(',')
+
+    await Promise.all(filesList.map((f) => this.backupService.deleteBackup(f)))
     return
   }
 
