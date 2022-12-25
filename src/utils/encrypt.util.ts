@@ -5,6 +5,7 @@ import { ENCRYPT } from '~/app.config'
 export class EncryptUtil {
   private static encryptStringPadding = '$${mx}$$'
   private static key = Buffer.from(ENCRYPT.key, 'hex')
+  private static algorithm = ENCRYPT.algorithm || 'aes-256-ecb'
 
   public static encrypt(data: string): string {
     if (!ENCRYPT.enable) {
@@ -18,7 +19,11 @@ export class EncryptUtil {
     const cipherEncoding = 'base64'
     const cipherChunks: string[] = []
 
-    const cipher = crypto.createCipheriv('aes-256-ecb', EncryptUtil.key, '')
+    const cipher = crypto.createCipheriv(
+      EncryptUtil.algorithm,
+      EncryptUtil.key,
+      '',
+    )
     cipher.setAutoPadding(true)
     cipherChunks.push(cipher.update(data, clearEncoding, cipherEncoding))
     cipherChunks.push(cipher.final(cipherEncoding))
@@ -45,7 +50,11 @@ export class EncryptUtil {
     const clearEncoding = 'utf8'
     const cipherEncoding = 'base64'
     const cipherChunks: string[] = []
-    const decipher = crypto.createDecipheriv('aes-256-ecb', EncryptUtil.key, '')
+    const decipher = crypto.createDecipheriv(
+      EncryptUtil.algorithm,
+      EncryptUtil.key,
+      '',
+    )
     decipher.setAutoPadding(true)
     cipherChunks.push(
       decipher.update(

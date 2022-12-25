@@ -47,6 +47,10 @@ const commander = program
     '--encrypt_enable',
     'enable encrypt security field, please remember encrypt key.',
   )
+  .option(
+    '--encrypt_algorithm <string>',
+    'custom encrypt algorithm, default is aes-256-ecb',
+  )
 
   // other
   .option('--color', 'force enable shell color')
@@ -135,4 +139,5 @@ export const DEBUG_MODE = {
 export const ENCRYPT = {
   key: argv.encrypt_key || MX_ENCRYPT_KEY || machineIdSync(),
   enable: argv.encrypt_enable ?? false,
+  algorithm: argv.encrypt_algorithm || 'aes-256-ecb',
 }
