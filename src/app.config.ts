@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 import type { AxiosRequestConfig } from 'axios'
-import cluster from 'cluster'
 import { program } from 'commander'
 import { readFileSync } from 'fs'
 import { load as yamlLoad } from 'js-yaml'
 import { machineIdSync } from 'node-machine-id'
 import path from 'path'
 
-import { cwd, isDev, isMainCluster } from './global/env.global'
+import { isDev } from './global/env.global'
 
 const commander = program
   .option('-p, --port <number>', 'server port')
@@ -43,7 +42,7 @@ const commander = program
   .option('--http_request_verbose', 'enable http request verbose')
 
   // security
-  .option('--encrypt_key', 'custom encrypt key, default is machine-id')
+  .option('--encrypt_key <string>', 'custom encrypt key, default is machine-id')
   .option(
     '--encrypt_enable',
     'enable encrypt security field, please remember encrypt key.',
@@ -136,10 +135,4 @@ export const DEBUG_MODE = {
 export const ENCRYPT = {
   key: argv.encrypt_key || MX_ENCRYPT_KEY || machineIdSync(),
   enable: argv.encrypt_enable ?? false,
-}
-console.log(ENCRYPT)
-
-if (!CLUSTER.enable || cluster.isPrimary || isMainCluster) {
-  console.log(argv)
-  console.log('cwd: ', cwd)
 }
