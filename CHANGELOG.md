@@ -1,5 +1,24 @@
 # CHANGELOG
 
+# [3.41.0](https://github.com/mx-space/core/compare/v3.40.0...v3.41.0) (2022-12-25)
+
+
+### Bug Fixes
+
+* **api-client:** add enum to exports ([9e82b8f](https://github.com/mx-space/core/commit/9e82b8fc280dc06379f860b4df60053639a4b4b3))
+* argv of `encrypt_key` ([36ffaa4](https://github.com/mx-space/core/commit/36ffaa4fae2105485e73469fe4e1c632dd2cc077))
+* delete backup use body params ([19f7556](https://github.com/mx-space/core/commit/19f755658953e021cce1a797bdeebc697283db49))
+* **feed:** hide note secret in rss ([bad4661](https://github.com/mx-space/core/commit/bad4661b268fd1daf418a3d3b083e1578d112443))
+* hide note secret text ([82451b8](https://github.com/mx-space/core/commit/82451b8cb7a5a273afc2b1f4d6e167f736f911be))
+
+
+### Features
+
+* add custom encrypt algorithm ([3636172](https://github.com/mx-space/core/commit/3636172b0566eca6298a17914ee0269edac37315))
+* support encrypt secret and configs ([#931](https://github.com/mx-space/core/issues/931)) ([9ed8b32](https://github.com/mx-space/core/commit/9ed8b32f9e3aeda306349d5a8199a02b7430c41a))
+
+
+
 # [3.40.0](https://github.com/mx-space/core/compare/v3.39.7...v3.40.0) (2022-12-23)
 
 
