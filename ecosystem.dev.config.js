@@ -12,7 +12,7 @@ module.exports = {
       exec_mode: 'cluster',
       watch: false,
       instances: 2,
-      max_memory_restart: '200M',
+      max_memory_restart: '220M',
       args: '--color --encrypt_enable',
       env: {
         NODE_ENV: 'development',
