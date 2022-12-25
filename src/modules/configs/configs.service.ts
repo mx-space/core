@@ -28,7 +28,7 @@ import * as optionDtos from '../configs/configs.dto'
 import { UserModel } from '../user/user.model'
 import { UserService } from '../user/user.service'
 import { generateDefaultConfig } from './configs.default'
-import { AlgoliaSearchOptionsDto, MailOptionsDto } from './configs.dto'
+import { decryptObject, encryptObject } from './configs.encrypt.util'
 import { IConfig, IConfigKeys } from './configs.interface'
 import { OptionModel } from './configs.model'
 
@@ -46,6 +46,12 @@ const map: Record<string, any> = Object.entries(optionDtos).reduce(
   {},
 )
 
+/*
+ * NOTE:
+ * 1. 读配置在 Redis 中，getConfig 为收口，获取配置都从 Redis 拿，初始化之后入到 Redis，
+ * 2. 对于加密的字段，在 Redis 的缓存中应该也是加密的。
+ * 3. 何时解密，在 Node 中消费时，即 getConfig 时统一解密。
+ */
 @Injectable()
 export class ConfigsService {
   private logger: Logger
@@ -61,6 +67,7 @@ export class ConfigsService {
     this.configInit().then(() => {
       this.logger.log('Config 已经加载完毕！')
     })
+
     this.logger = new Logger(ConfigsService.name)
   }
   private configInitd = false
@@ -122,31 +129,32 @@ export class ConfigsService {
         .catch(reject)
     })
   }
+
+  // Config 在此收口
   public async getConfig(): Promise<Readonly<IConfig>> {
     const redis = this.redis.getClient()
     const configCache = await redis.get(getRedisKey(RedisKeys.ConfigCache))
 
     if (configCache) {
       try {
-        try {
-          return plainToInstance<IConfig, any>(
-            IConfig as any,
-            JSON.parse(configCache) as any,
-          ) as any as IConfig
-        } catch {
-          return JSON.parse(configCache) as any
-        }
+        const instanceConfigsValue = plainToInstance<IConfig, any>(
+          IConfig as any,
+          JSON.parse(configCache) as any,
+        ) as any as IConfig
+
+        return decryptObject(instanceConfigsValue)
       } catch {
         await this.configInit()
         return await this.getConfig()
       }
     } else {
       await this.configInit()
+
       return await this.getConfig()
     }
   }
 
-  public async patch<T extends keyof IConfig>(
+  private async patch<T extends keyof IConfig>(
     key: T,
     data: Partial<IConfig[T]>,
   ): Promise<IConfig[T]> {
@@ -195,12 +203,17 @@ export class ConfigsService {
   ) {
     value = camelcaseKeys(value, { deep: true }) as any
 
+    const dto = map[key]
+    if (!dto) {
+      throw new BadRequestException('设置不存在')
+    }
+    const instanceValue = this.validWithDto(dto, value)
+
+    encryptObject(instanceValue)
+
     switch (key) {
       case 'mailOptions': {
-        const option = await this.patch(
-          'mailOptions',
-          this.validWithDto(MailOptionsDto, value),
-        )
+        const option = await this.patch(key as 'mailOptions', instanceValue)
         if (option.enable) {
           if (cluster.isPrimary) {
             this.eventManager.emit(EventBusEvents.EmailInit, null, {
@@ -216,8 +229,8 @@ export class ConfigsService {
 
       case 'algoliaSearchOptions': {
         const option = await this.patch(
-          'algoliaSearchOptions',
-          this.validWithDto(AlgoliaSearchOptionsDto, value),
+          key as 'algoliaSearchOptions',
+          instanceValue,
         )
         if (option.enable) {
           this.eventManager.emit(EventBusEvents.PushSearch, null, {
@@ -227,11 +240,7 @@ export class ConfigsService {
         return option
       }
       default: {
-        const dto = map[key]
-        if (!dto) {
-          throw new BadRequestException('设置不存在')
-        }
-        return this.patch(key, this.validWithDto(dto, value))
+        return this.patch(key, instanceValue)
       }
     }
   }

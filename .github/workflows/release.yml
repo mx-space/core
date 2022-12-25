@@ -92,12 +92,13 @@ jobs:
         uses: appleboy/ssh-action@master
         env:
           JWTSECRET: ${{ secrets.JWTSECRET }}
+          MX_ENCRYPT_KEY: ${{ secrets.MX_ENCRYPT_KEY }}
         with:
-          command_timeout: 10m
+          command_timeout: 5m
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASSWORD }}
-          envs: JWTSECRET
+          envs: JWTSECRET,MX_ENCRYPT_KEY
           script_stop: true
           script: |
             whoami
@@ -105,7 +106,7 @@ jobs:
             source ~/.zshrc
             cd mx
             ls -a
-            node server-deploy.js --jwtSecret=$JWTSECRET
+            node server-deploy.js --jwtSecret=$JWTSECRET --encrypt_key=$MX_ENCRYPT_KEY
 
   build_other_platform:
     name: Build Other Platform

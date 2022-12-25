@@ -1,10 +1,9 @@
 import cluster from 'cluster'
 import { sign, verify } from 'jsonwebtoken'
-import { machineIdSync } from 'node-machine-id'
 
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 
-import { CLUSTER, SECURITY } from '~/app.config'
+import { CLUSTER, ENCRYPT, SECURITY } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey, md5 } from '~/utils'
 
@@ -13,10 +12,9 @@ import { CacheService } from '../redis/cache.service'
 @Injectable()
 export class JWTService {
   private secret = ''
-  private readonly logger: Logger
+
   constructor(private readonly cacheService: CacheService) {
     this.init()
-    this.logger = new Logger(JWTService.name)
   }
 
   init() {
@@ -24,17 +22,11 @@ export class JWTService {
       return
     }
 
-    const getMachineId = () => {
-      const id = machineIdSync()
+    const ENCRYPT_KEY = ENCRYPT.key
 
-      if (isDev && cluster.isPrimary) {
-        console.log(id)
-      }
-      return id
-    }
     const secret =
       SECURITY.jwtSecret ||
-      Buffer.from(getMachineId()).toString('base64').slice(0, 15) ||
+      Buffer.from(ENCRYPT_KEY).toString('base64').slice(0, 15) ||
       'asjhczxiucipoiopiqm2376'
 
     if (isDev && cluster.isPrimary) {

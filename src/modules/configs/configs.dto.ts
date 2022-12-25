@@ -17,6 +17,7 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { IsAllowedUrl } from '~/utils/validator/isAllowedUrl'
 
+import { Encrypt } from './configs.encrypt.util'
 import {
   JSONSchemaArrayField,
   JSONSchemaHalfGirdPlainField,
@@ -100,6 +101,7 @@ export class MailOptionsDto {
   @IsOptional()
   @Exclude({ toPlainOnly: true })
   @JSONSchemaPasswordField('发件邮箱密码', halfFieldOption)
+  @Encrypt
   pass: string
 
   @ValidateNested()
@@ -174,6 +176,7 @@ export class BackupOptionsDto {
   @IsString()
   @Exclude({ toPlainOnly: true })
   @JSONSchemaPasswordField('SecretKey', halfFieldOption)
+  @Encrypt
   secretKey?: string
 
   @IsOptional()
@@ -199,6 +202,7 @@ export class BaiduSearchOptionsDto {
   @IsNotEmpty()
   @Exclude({ toPlainOnly: true })
   @JSONSchemaPasswordField('Token')
+  @Encrypt
   token?: string
 }
 
@@ -213,6 +217,7 @@ export class AlgoliaSearchOptionsDto {
   @IsOptional()
   @Exclude({ toPlainOnly: true })
   @JSONSchemaPasswordField('ApiKey')
+  @Encrypt
   apiKey?: string
 
   @IsString()
@@ -251,6 +256,7 @@ export class AdminExtraDto {
   @IsString()
   @IsOptional()
   @Exclude({ toPlainOnly: true })
+  @Encrypt
   @JSONSchemaPasswordField('高德查询 API Key', { description: '日记地点定位' })
   gaodemapKey?: string
 }
@@ -271,6 +277,7 @@ export class TerminalOptionsDto {
   @JSONSchemaPasswordField('设定密码', {
     description: '密码为空则不启用密码验证',
   })
+  @Encrypt
   password?: string
 
   @IsOptional()
@@ -309,6 +316,8 @@ export class BarkOptionsDto {
   @IsString()
   @IsOptional()
   @JSONSchemaPlainField('设备 Key')
+  @Exclude({ toPlainOnly: true })
+  @Encrypt
   key: string
 
   @IsUrl()

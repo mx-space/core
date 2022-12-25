@@ -15,6 +15,7 @@ import { stringify } from 'qs'
 import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
+import { EncryptUtil } from '~/utils/encrypt.util'
 
 export enum SnippetType {
   JSON = 'json',
@@ -92,7 +93,15 @@ export class SnippetModel extends BaseModel {
   @IsOptional()
   method?: string
 
-  @prop({ select: false })
+  @prop({
+    select: false,
+    get(val) {
+      return EncryptUtil.decrypt(val)
+    },
+    set(val) {
+      return EncryptUtil.encrypt(val)
+    },
+  })
   @IsString()
   @IsOptional()
   @Transform(({ value }) => (isNil(value) ? value : stringify(value)))
