@@ -139,7 +139,7 @@
     "@innei/eslint-config-ts": "latest",
     "@innei/prettier": "latest",
     "@nestjs/cli": "9.1.5",
-    "@nestjs/schematics": "9.0.3",
+    "@nestjs/schematics": "9.0.4",
     "@nestjs/testing": "9.2.1",
     "@swc/core": "1.3.4",
     "@types/babel__core": "7.1.20",
