@@ -40,6 +40,9 @@ export default defineConfig({
     environment: 'node',
     includeSource: [resolve(__dirname, './test')],
   },
+  optimizeDeps: {
+    needsInterop: ['lodash'],
+  },
   resolve: {
     alias: {
       'zx-cjs': 'zx',

@@ -12,6 +12,9 @@ on:
       - '.github/workflows/api-client.yml'
   pull_request:
     branches: [master, main]
+    paths:
+      - 'packages/api-client/**'
+      - '.github/workflows/api-client.yml'
 
 jobs:
   build:

@@ -1,6 +1,7 @@
 // @ts-check
 import { execSync } from 'child_process'
-import globby from 'globby'
+import { readFileSync } from 'fs'
+import { globbySync } from 'globby'
 import path, { resolve } from 'path'
 import peerDepsExternal from 'rollup-plugin-peer-deps-external'
 import { terser } from 'rollup-plugin-terser'
@@ -9,7 +10,8 @@ import commonjs from '@rollup/plugin-commonjs'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import typescript from '@rollup/plugin-typescript'
 
-const packageJson = require('./package.json')
+const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'))
+const __dirname = new URL(import.meta.url).pathname.replace(/\/[^/]*$/, '')
 
 const umdName = packageJson.name
 
@@ -41,7 +43,7 @@ const baseRollupConfig = {
  * @returns {import('rollup').RollupOptions[]}
  */
 const buildAdaptorConfig = () => {
-  const paths = globby.sync('./adaptors/*.ts')
+  const paths = globbySync('./adaptors/*.ts')
   const filename = (path_) => path.parse(path_.split('/').pop()).name
 
   return paths.map((path) => {
