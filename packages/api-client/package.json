@@ -101,7 +101,7 @@
     "@rollup/plugin-commonjs": "22.0.2",
     "@rollup/plugin-node-resolve": "14.0.1",
     "@rollup/plugin-typescript": "8.5.0",
-    "@types/cors": "2.8.12",
+    "@types/cors": "2.8.13",
     "@types/express": "4.17.15",
     "@types/lodash": "4.14.186",
     "abort-controller": "3.0.0",
