@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [3.41.1](https://github.com/mx-space/core/compare/v3.41.0...v3.41.1) (2023-01-17)
+
+
+### Bug Fixes
+
+* apply link ignore outdate ([b014abc](https://github.com/mx-space/core/commit/b014abc66dc69d2baa43e9bc1f89d1cbab9c58c3))
+* **ci:** remove invalid variable ([#934](https://github.com/mx-space/core/issues/934)) ([40faa35](https://github.com/mx-space/core/commit/40faa3502cc703f753c2c07eef32f8d67a5a9499))
+* **deps:** update dependency @typegoose/auto-increment to v2 ([#919](https://github.com/mx-space/core/issues/919)) ([82c9d20](https://github.com/mx-space/core/commit/82c9d206d14a96482a3e2b61163bc23d62c0fefd))
+
+
+
 # [3.41.0](https://github.com/mx-space/core/compare/v3.40.0...v3.41.0) (2022-12-25)
 
 
