@@ -14,13 +14,7 @@ import { getModelToken } from '~/transformers/model.transformer'
 describe('AppController (e2e)', () => {
   let app: NestFastifyApplication
 
-  afterAll(async () => {
-    await dbHelper.close()
-    await (await redisHelper).close()
-  })
-
   beforeAll(async () => {
-    await dbHelper.connect()
     const { CacheService, token } = await redisHelper
     const moduleRef = await Test.createTestingModule({
       controllers: [UserController],

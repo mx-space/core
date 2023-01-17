@@ -24,7 +24,6 @@ describe('AppController (e2e)', () => {
     })
       .overrideProvider(CacheService)
       .useValue({})
-
       .compile()
 
     app = moduleRef.createNestApplication<NestFastifyApplication>(fastifyApp)

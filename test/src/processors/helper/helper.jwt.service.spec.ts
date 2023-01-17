@@ -8,10 +8,6 @@ import { CacheService } from '~/processors/redis/cache.service'
 describe('test jwt service', () => {
   let service: JWTService
 
-  afterAll(async () => {
-    await (await redisHelper).close()
-  })
-
   beforeAll(async () => {
     const { CacheService: MCacheService } = await redisHelper
     const moduleRef = Test.createTestingModule({

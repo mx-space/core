@@ -1,49 +1,39 @@
 import { ModuleMetadata } from '@nestjs/common'
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
-import { Test } from '@nestjs/testing'
 
-import { fastifyApp } from '~/common/adapters/fastify.adapter'
 import { getModelToken } from '~/transformers/model.transformer'
 
 import { dbHelper } from './db-mock.helper'
 import { redisHelper } from './redis-mock.helper'
+import { setupE2EApp } from './setup-e2e'
 
 type ClassType = new (...args: any[]) => any
 export const createE2EApp = (
-  module: ModuleMetadata,
-  injectModels?: ClassType[],
+  module: ModuleMetadata & { models?: ClassType[] },
 ) => {
-  let app: NestFastifyApplication
-
-  afterAll(async () => {
-    await dbHelper.close()
-    await (await redisHelper).close()
-  })
+  const proxy: {
+    app: NestFastifyApplication
+  } = {} as any
 
   beforeAll(async () => {
-    await dbHelper.connect()
     const { CacheService, token } = await redisHelper
+    const { models, ...nestModule } = module
+    nestModule.providers ||= []
+    nestModule.providers.push({ provide: token, useValue: CacheService })
 
-    module.providers ||= []
-    module.providers.push({ provide: token, useValue: CacheService })
-
-    if (injectModels) {
-      injectModels.forEach((model) => {
-        module.providers.push({
+    if (models) {
+      models.forEach((model) => {
+        nestModule.providers.push({
           provide: getModelToken(model.name),
           useValue: dbHelper.getModel(model),
         })
       })
     }
 
-    const moduleRef = await Test.createTestingModule(module).compile()
+    const app = await setupE2EApp(nestModule)
 
-    app = moduleRef.createNestApplication<NestFastifyApplication>(fastifyApp)
-    await app.init()
-    await app.getHttpAdapter().getInstance().ready()
+    proxy.app = app
   })
 
-  return {
-    app,
-  }
+  return proxy
 }

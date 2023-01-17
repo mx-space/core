@@ -1,27 +1,15 @@
+import { createE2EApp } from 'test/helper/e2e-create-app'
 import { configProvider } from 'test/mock/modules/config.mock'
 
-import { NestFastifyApplication } from '@nestjs/platform-fastify'
-import { Test } from '@nestjs/testing'
-
-import { fastifyApp } from '~/common/adapters/fastify.adapter'
 import { BaseOptionController } from '~/modules/option/controllers/base.option.controller'
 
 describe('OptionController (e2e)', () => {
-  let app: NestFastifyApplication
-
-  beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      controllers: [BaseOptionController],
-      providers: [configProvider],
-    }).compile()
-
-    app = moduleRef.createNestApplication<NestFastifyApplication>(fastifyApp)
-    await app.init()
-    await app.getHttpAdapter().getInstance().ready()
+  const proxy = createE2EApp({
+    controllers: [BaseOptionController],
+    providers: [configProvider],
   })
-
   test('GET /config/jsonschema', () => {
-    return app
+    return proxy.app
       .inject({
         method: 'GET',
         url: '/config/jsonschema',
