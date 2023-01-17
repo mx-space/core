@@ -166,7 +166,7 @@
     "eslint": "^8.32.0",
     "eslint-plugin-unused-imports": "2.0.0",
     "husky": "8.0.3",
-    "ioredis": "5.2.4",
+    "ioredis": "5.2.5",
     "lint-staged": "13.1.0",
     "prettier": "2.8.3",
     "rimraf": "3.0.2",
@@ -187,7 +187,7 @@
   },
   "resolutions": {
     "typescript": "4.9.4",
-    "ioredis": "5.2.4",
+    "ioredis": "5.2.5",
     "webpack": "5.75.0",
     "semver": "7.3.8",
     "pino": "./external/pino",
