@@ -55,6 +55,10 @@ export const dbHelper = {
     cl: U,
     options?: IModelOptions,
   ): ReturnModelType<U, QueryHelpers> {
-    return getModelForClass(cl, options)
+    return getModelForClass(cl, {
+      existingMongoose: mongoose,
+      existingConnection: mongoose.connection,
+      ...options,
+    })
   },
 }
