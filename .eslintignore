@@ -13,3 +13,5 @@ packages/*/test
 packages/*/tests
 packages/*/esm
 packages/*/types
+
+test/**/*.db.ts

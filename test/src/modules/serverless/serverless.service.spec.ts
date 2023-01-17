@@ -1,4 +1,4 @@
-import { dbHelper } from 'test/helper/db-mock.helper'
+import mongoose from 'mongoose'
 import { redisHelper } from 'test/helper/redis-mock.helper'
 
 import { Test } from '@nestjs/testing'
@@ -17,9 +17,6 @@ describe('test serverless function service', () => {
   let service: ServerlessService
 
   beforeAll(async () => {
-    const connection = await dbHelper.connect()
-
-    await (await redisHelper).connect()
     const moduleRef = Test.createTestingModule({
       providers: [
         ServerlessService,
@@ -32,15 +29,13 @@ describe('test serverless function service', () => {
         {
           provide: DatabaseService,
           useValue: {
-            db: connection.connection.db,
+            db: mongoose.connection.db,
           },
         },
 
         {
           provide: getModelToken('SnippetModel'),
-          useValue: getModelForClass(SnippetModel, {
-            existingConnection: connection.connection,
-          }),
+          useValue: getModelForClass(SnippetModel),
         },
       ],
     })
@@ -48,12 +43,6 @@ describe('test serverless function service', () => {
     const app = await moduleRef.compile()
     await app.init()
     service = app.get(ServerlessService)
-  })
-
-  afterAll(async () => {
-    await dbHelper.clear()
-    await dbHelper.close()
-    ;(await redisHelper).close()
   })
 
   describe('run serverless function', () => {

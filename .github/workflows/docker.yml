@@ -6,6 +6,8 @@ on:
       - '**'
     tags:
       - 'v*'
+    paths-ignore:
+      - test/**
   pull_request:
     branches: [master]
 

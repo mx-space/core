@@ -1,4 +1,3 @@
-import { dbHelper } from 'test/helper/db-mock.helper'
 import { MockCacheService, redisHelper } from 'test/helper/redis-mock.helper'
 import { vi } from 'vitest'
 
@@ -20,11 +19,6 @@ describe('Test ConfigsService', () => {
   let service: ConfigsService
 
   let redisService: MockCacheService
-  afterAll(async () => {
-    await dbHelper.clear()
-    await dbHelper.close()
-    await (await redisHelper).close()
-  })
 
   const optionModel = getModelForClass(OptionModel)
   const mockEmitFn = vi.fn()
@@ -32,7 +26,6 @@ describe('Test ConfigsService', () => {
     const { CacheService: redisService$ } = await redisHelper
 
     redisService = redisService$
-    await dbHelper.connect()
 
     const moduleRef = await Test.createTestingModule({
       imports: [],

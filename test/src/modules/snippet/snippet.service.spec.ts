@@ -1,4 +1,3 @@
-import { dbHelper } from 'test/helper/db-mock.helper'
 import { redisHelper } from 'test/helper/redis-mock.helper'
 
 import { BadRequestException, NotFoundException } from '@nestjs/common'
@@ -14,12 +13,8 @@ import { getModelToken } from '~/transformers/model.transformer'
 
 describe('test Snippet Service', () => {
   let service: SnippetService
-  afterAll(async () => {
-    await (await redisHelper).close()
-  })
-  beforeAll(async () => {
-    await dbHelper.connect()
 
+  beforeAll(async () => {
     const redis = await redisHelper
     const moduleRef = Test.createTestingModule({
       providers: [
@@ -38,10 +33,6 @@ describe('test Snippet Service', () => {
     const app = await moduleRef.compile()
     await app.init()
     service = app.get(SnippetService)
-  })
-
-  afterAll(async () => {
-    await dbHelper.close()
   })
 
   const snippet = {

@@ -66,7 +66,7 @@ export default defineConfig({
       name: 'a-vitest-plugin-that-changes-config',
       config: () => ({
         test: {
-          setupFiles: ['./setupFiles/add-something-to-global.ts'],
+          setupFiles: ['./setupFiles/lifecycle.ts'],
         },
       }),
     },

@@ -1,31 +1,32 @@
-import { dbHelper } from 'test/helper/db-mock.helper'
-import { MockCacheService, redisHelper } from 'test/helper/redis-mock.helper'
-import { setupE2EApp } from 'test/helper/register-app.helper'
+import { createE2EApp } from 'test/helper/create-e2e-app'
 
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
-import { Test } from '@nestjs/testing'
-import { getModelForClass } from '@typegoose/typegoose'
 
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
 import { DatabaseService } from '~/processors/database/database.service'
-import { CacheService } from '~/processors/redis/cache.service'
-import { getModelToken } from '~/transformers/model.transformer'
 
 describe('test /snippets', () => {
   let app: NestFastifyApplication
+  const proxy = createE2EApp({
+    controllers: [SnippetController],
+    providers: [
+      SnippetService,
+      { provide: DatabaseService, useValue: {} },
 
-  beforeAll(async () => {
-    await dbHelper.connect()
+      {
+        provide: ServerlessService,
+        useValue: {
+          isValidServerlessFunction() {
+            return true
+          },
+        },
+      },
+    ],
+    models: [SnippetModel],
   })
-
-  afterAll(async () => {
-    await dbHelper.clear()
-    await dbHelper.close()
-  })
-  const model = getModelForClass(SnippetModel)
 
   const mockPayload1: Partial<SnippetModel> = Object.freeze({
     name: 'Snippet_1',
@@ -33,38 +34,9 @@ describe('test /snippets', () => {
     raw: JSON.stringify({ foo: 'bar' }),
     type: SnippetType.JSON,
   })
-  let redisService: MockCacheService
 
-  afterAll(async () => {
-    await (await redisHelper).close()
-  })
-  beforeAll(async () => {
-    const { CacheService: redisService$ } = await redisHelper
-
-    redisService = redisService$
-
-    const ref = await Test.createTestingModule({
-      controllers: [SnippetController],
-      providers: [
-        SnippetService,
-        { provide: DatabaseService, useValue: {} },
-        { provide: CacheService, useValue: redisService },
-        {
-          provide: ServerlessService,
-          useValue: {
-            isValidServerlessFunction() {
-              return true
-            },
-          },
-        },
-        {
-          provide: getModelToken(SnippetModel.name),
-          useValue: model,
-        },
-      ],
-    }).compile()
-
-    app = await setupE2EApp(ref)
+  beforeEach(() => {
+    app = proxy.app
   })
 
   test('POST /snippets, should 422 with wrong name', async () => {
