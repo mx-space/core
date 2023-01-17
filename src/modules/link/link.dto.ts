@@ -8,7 +8,7 @@ export class LinkDto extends LinkModel {
   author: string
 }
 
-export class AduitReasonDto {
+export class AuditReasonDto {
   @IsString({ message: '请输入审核理由' })
   reason: string
 

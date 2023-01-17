@@ -34,21 +34,48 @@ export class LinkService {
     return this.linkModel
   }
   async applyForLink(model: LinkModel) {
-    try {
-      const doc = await this.model.create({
+    const existedDoc = await this.model
+      .findOne({
+        url: model.url,
+      })
+      .lean()
+
+    let nextModel: LinkModel
+    if (existedDoc) {
+      switch (existedDoc.state) {
+        case LinkState.Pass:
+        case LinkState.Audit:
+          throw new BadRequestException('请不要重复申请友链哦')
+
+        case LinkState.Banned:
+          throw new BadRequestException('您的友链已被禁用，请联系管理员')
+        case LinkState.Reject:
+        case LinkState.Outdate:
+          nextModel = await this.model
+            .findOneAndUpdate(
+              { _id: existedDoc._id },
+              {
+                $set: {
+                  state: LinkState.Audit,
+                },
+              },
+              { new: true },
+            )
+            .lean()
+      }
+    } else {
+      nextModel = await this.model.create({
         ...model,
         type: LinkType.Friend,
         state: LinkState.Audit,
       })
-
-      process.nextTick(() => {
-        this.eventManager.broadcast(BusinessEvents.LINK_APPLY, doc, {
-          scope: EventScope.TO_SYSTEM_ADMIN,
-        })
-      })
-    } catch (err) {
-      throw new BadRequestException('请不要重复申请友链哦')
     }
+
+    process.nextTick(() => {
+      this.eventManager.broadcast(BusinessEvents.LINK_APPLY, nextModel, {
+        scope: EventScope.TO_SYSTEM_ADMIN,
+      })
+    })
   }
 
   async approveLink(id: string) {

@@ -23,7 +23,7 @@ import {
   BaseCrudModuleType,
 } from '~/transformers/crud-factor.transformer'
 
-import { AduitReasonDto, LinkDto } from './link.dto'
+import { AuditReasonDto, LinkDto } from './link.dto'
 import { LinkModel, LinkState } from './link.model'
 import { LinkService } from './link.service'
 
@@ -122,7 +122,7 @@ export class LinkController {
   @HttpCode(201)
   async sendReasonByEmail(
     @Param() params: MongoIdDto,
-    @Body() body: AduitReasonDto,
+    @Body() body: AuditReasonDto,
   ) {
     const { id } = params
     const { reason, state } = body
