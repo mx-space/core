@@ -7,12 +7,16 @@ import consola from 'consola'
 import { dbHelper } from 'test/helper/db-mock.helper'
 import { redisHelper } from 'test/helper/redis-mock.helper'
 
+import { registerJSONGlobal } from '~/global/json.global'
+
 beforeAll(async () => {
   await import('zx/globals')
 
   global.isDev = true
   global.cwd = process.cwd()
   global.consola = consola
+
+  registerJSONGlobal()
 })
 
 afterAll(async () => {

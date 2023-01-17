@@ -1,10 +1,11 @@
-import { createE2EApp } from 'test/helper/e2e-create-app'
+import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authProvider } from 'test/mock/modules/auth.mock'
 import { configProvider } from 'test/mock/modules/config.mock'
 import { gatewayProviders } from 'test/mock/modules/gateway.mock'
 import { countingServiceProvider } from 'test/mock/processors/counting.mock'
 
 import { EventEmitter2 } from '@nestjs/event-emitter'
+import { ReturnModelType } from '@typegoose/typegoose'
 
 import { CommentService } from '~/modules/comment/comment.service'
 import { OptionModel } from '~/modules/configs/configs.model'
@@ -19,6 +20,8 @@ import { HttpService } from '~/processors/helper/helper.http.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
+
+import MockDbData from './note.e2e-mock.db'
 
 describe('NoteController (e2e)', () => {
   const proxy = createE2EApp({
@@ -52,6 +55,17 @@ describe('NoteController (e2e)', () => {
     ],
     imports: [],
     models: [NoteModel, OptionModel, UserModel],
+    async pourData(modelMap) {
+      // @ts-ignore
+      const { model } = modelMap.get(NoteModel) as {
+        model: ReturnModelType<typeof NoteModel>
+      }
+      const documents = await model.insertMany(MockDbData)
+
+      return async () => {
+        return documents.map((doc) => doc.remove())
+      }
+    },
   })
 
   test('GET /notes', async () => {
@@ -60,6 +74,13 @@ describe('NoteController (e2e)', () => {
       method: 'GET',
       url: '/notes',
     })
+    const data = res.json()
     expect(res.statusCode).toBe(200)
+
+    data.data.forEach((d) => {
+      delete d.id
+      delete d._id
+    })
+    expect(data).toMatchSnapshot()
   })
 })

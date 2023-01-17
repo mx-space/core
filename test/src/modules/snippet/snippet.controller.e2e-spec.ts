@@ -1,4 +1,4 @@
-import { createE2EApp } from 'test/helper/e2e-create-app'
+import { createE2EApp } from 'test/helper/create-e2e-app'
 
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 

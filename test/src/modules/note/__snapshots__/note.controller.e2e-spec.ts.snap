@@ -1,0 +1,34 @@
+// Vitest Snapshot v1
+
+exports[`NoteController (e2e) > GET /notes 1`] = `
+{
+  "data": [
+    {
+      "allow_comment": true,
+      "comments_index": 0,
+      "count": {
+        "like": 0,
+        "read": 0,
+      },
+      "created": "2021-03-01T00:00:00.000Z",
+      "hide": false,
+      "images": [],
+      "meta": null,
+      "modified": "2021-03-01T00:00:00.000Z",
+      "music": [],
+      "nid": 1,
+      "text": "Content 1",
+      "title": "Note 1",
+      "topic": null,
+    },
+  ],
+  "pagination": {
+    "current_page": 1,
+    "has_next_page": false,
+    "has_prev_page": false,
+    "size": 10,
+    "total": 1,
+    "total_page": 1,
+  },
+}
+`;

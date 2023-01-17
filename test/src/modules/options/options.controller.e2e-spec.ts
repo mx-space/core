@@ -1,4 +1,4 @@
-import { createE2EApp } from 'test/helper/e2e-create-app'
+import { createE2EApp } from 'test/helper/create-e2e-app'
 import { configProvider } from 'test/mock/modules/config.mock'
 
 import { BaseOptionController } from '~/modules/option/controllers/base.option.controller'
