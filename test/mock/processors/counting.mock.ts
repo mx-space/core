@@ -10,9 +10,9 @@ export const countingServiceProvider = defineProvider({
     async getThisRecordIsLiked() {
       return true
     },
-    async updateReadCount() {
+    updateReadCount: vi.fn().mockImplementation(async () => {
       return
-    },
+    }),
   },
   provide: CountingService,
 })

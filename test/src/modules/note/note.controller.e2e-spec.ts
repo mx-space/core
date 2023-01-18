@@ -1,11 +1,13 @@
 import { createE2EApp } from 'test/helper/create-e2e-app'
+import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
 import { authProvider } from 'test/mock/modules/auth.mock'
 import { commentProvider } from 'test/mock/modules/comment.mock'
 import { configProvider } from 'test/mock/modules/config.mock'
 import { gatewayProviders } from 'test/mock/modules/gateway.mock'
 import { countingServiceProvider } from 'test/mock/processors/counting.mock'
+import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 
-import { EventEmitter2 } from '@nestjs/event-emitter'
+import { APP_INTERCEPTOR } from '@nestjs/core'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { OptionModel } from '~/modules/configs/configs.model'
@@ -14,12 +16,9 @@ import { NoteModel } from '~/modules/note/note.model'
 import { NoteService } from '~/modules/note/note.service'
 import { UserModel } from '~/modules/user/user.model'
 import { UserService } from '~/modules/user/user.service'
-import { CountingService } from '~/processors/helper/helper.counting.service'
-import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
-import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 
 import MockDbData from './note.e2e-mock.db'
 
@@ -30,7 +29,12 @@ describe('NoteController (e2e)', () => {
     providers: [
       NoteService,
       ImageService,
-      EventManagerService,
+
+      {
+        provide: APP_INTERCEPTOR,
+        useClass: MockingCountingInterceptor,
+      },
+
       commentProvider,
 
       {
@@ -43,12 +47,12 @@ describe('NoteController (e2e)', () => {
       },
       HttpService,
       configProvider,
-      EventEmitter2,
+
       UserService,
-      SubPubBridgeService,
+      ...eventEmitterProvider,
       ...gatewayProviders,
       authProvider,
-      CountingService,
+
       countingServiceProvider,
     ],
     imports: [],
@@ -154,6 +158,29 @@ describe('NoteController (e2e)', () => {
     })
 
     expect(data).toMatchSnapshot()
+  })
+
+  test('GET /notes/nid/:nid', async () => {
+    const { app } = proxy
+    const res = await app.inject({
+      method: 'GET',
+      url: `/notes/nid/${createdNoteData.nid}`,
+    })
+
+    expect(res.statusCode).toBe(200)
+    const data = res.json()
+    delete data.id
+    delete data.data.id
+    if (data.prev) {
+      delete data.prev.id
+    }
+    if (data.next) {
+      delete data.next.id
+    }
+
+    expect(data).toMatchSnapshot()
+
+    expect(countingServiceProvider.useValue.updateReadCount).toBeCalled()
   })
 
   test('DEL /notes/:id', async () => {

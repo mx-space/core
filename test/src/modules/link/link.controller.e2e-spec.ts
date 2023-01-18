@@ -1,8 +1,9 @@
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { gatewayProviders } from 'test/mock/modules/gateway.mock'
 import { userProvider } from 'test/mock/modules/user.mock'
+import { emailProvider } from 'test/mock/processors/email.mock'
+import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 
-import { EventEmitter2 } from '@nestjs/event-emitter'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { OptionModel } from '~/modules/configs/configs.model'
@@ -13,11 +14,7 @@ import {
 } from '~/modules/link/link.controller'
 import { LinkModel, LinkState } from '~/modules/link/link.model'
 import { LinkService } from '~/modules/link/link.service'
-import { AssetService } from '~/processors/helper/helper.asset.service'
-import { EmailService } from '~/processors/helper/helper.email.service'
-import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
-import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 
 describe('Test LinkController(E2E)', () => {
   const proxy = createE2EApp({
@@ -26,14 +23,14 @@ describe('Test LinkController(E2E)', () => {
     providers: [
       ...gatewayProviders,
       LinkService,
-      ConfigsService,
-      EmailService,
+
+      emailProvider,
       HttpService,
-      EventManagerService,
+
       userProvider,
-      SubPubBridgeService,
-      AssetService,
-      EventEmitter2,
+
+      ConfigsService,
+      ...eventEmitterProvider,
     ],
     async pourData(modelMap) {
       const linkModel = modelMap.get(LinkModel)

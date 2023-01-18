@@ -259,6 +259,39 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
 }
 `;
 
+exports[`NoteController (e2e) > GET /notes/nid/:nid 1`] = `
+{
+  "data": {
+    "allow_comment": true,
+    "comments_index": 0,
+    "count": {
+      "like": 0,
+      "read": 0,
+    },
+    "created": "2023-01-17T11:01:57.851Z",
+    "hide": false,
+    "images": [],
+    "liked": true,
+    "modified": null,
+    "mood": "happy",
+    "music": [],
+    "nid": 21,
+    "text": "Content 2 (updated)",
+    "title": "Note 2 (updated)",
+    "topic": null,
+    "weather": "sunny",
+  },
+  "next": {
+    "created": "2021-03-20T00:00:00.000Z",
+    "modified": null,
+    "nid": 20,
+    "title": "Note 20",
+    "topic": null,
+  },
+  "prev": null,
+}
+`;
+
 exports[`NoteController (e2e) > Get patched note 1`] = `
 {
   "allow_comment": true,
