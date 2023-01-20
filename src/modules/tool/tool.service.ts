@@ -1,4 +1,3 @@
-import camelcaseKeys from 'camelcase-keys'
 import { isIPv4, isIPv6 } from 'net'
 import { URLSearchParams } from 'url'
 
@@ -6,7 +5,6 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
-  Logger,
   UnprocessableEntityException,
 } from '@nestjs/common'
 
@@ -15,15 +13,16 @@ import { HttpService } from '~/processors/helper/helper.http.service'
 
 import { ConfigsService } from '../configs/configs.service'
 import { IP } from './tool.interface'
+import { IPResponseData } from './tool.response'
 
 @Injectable()
 export class ToolService {
-  private readonly logger: Logger
+  // private readonly logger: Logger
   constructor(
     private readonly httpService: HttpService,
     private readonly configs: ConfigsService,
   ) {
-    this.logger = new Logger(ToolService.name)
+    // this.logger = new Logger(ToolService.name)
   }
 
   async getIp(ip: string, timeout = 3000): Promise<IP> {
@@ -33,34 +32,53 @@ export class ToolService {
       throw new UnprocessableEntityException('Invalid IP')
     }
     try {
-      if (isV4) {
-        const { data } = await this.httpService.axiosRef.get(
-          `https://api.i-meto.com/ip/v1/qqwry/${ip}`,
-          {
-            timeout,
-          },
-        )
+      const getIpQueryEndpoint = (ip, type: 'v4' | 'v6') =>
+        `https://ip${type}.ip.mir6.com/api_json.php?ip=${ip}&token=mir6.com`
 
-        return camelcaseKeys(data, { deep: true }) as IP
-      } else {
-        const { data } = (await this.httpService.axiosRef.get(
-          `http://ip-api.com/json/${ip}`,
-          {
-            timeout,
-          },
-        )) as any
+      const url = getIpQueryEndpoint(ip, isV4 ? 'v4' : 'v6')
+      const data = await this.httpService.axiosRef.get<IPResponseData>(url, {
+        timeout,
+      })
 
-        const res = {
-          cityName: data.city,
-          countryName: data.country,
-          ip: data.query,
-          ispDomain: data.as,
-          ownerDomain: data.org,
-          regionName: data.region_name,
-        } as const
-
-        return res
+      const {
+        data: { city, country, districts, isp, province, net },
+      } = data.data
+      return {
+        cityName: districts,
+        countryName: country + province,
+        regionName: city,
+        ip,
+        ispDomain: isp,
+        ownerDomain: isp || net,
       }
+      // if (isV4) {
+      //   const { data } = await this.httpService.axiosRef.get(
+      //     `https://api.i-meto.com/ip/v1/qqwry/${ip}`,
+      //     {
+      //       timeout,
+      //     },
+      //   )
+
+      //   return camelcaseKeys(data, { deep: true }) as IP
+      // } else {
+      //   const { data } = (await this.httpService.axiosRef.get(
+      //     `http://ip-api.com/json/${ip}`,
+      //     {
+      //       timeout,
+      //     },
+      //   )) as any
+
+      //   const res = {
+      //     cityName: data.city,
+      //     countryName: data.country,
+      //     ip: data.query,
+      //     ispDomain: data.as,
+      //     ownerDomain: data.org,
+      //     regionName: data.region_name,
+      //   } as const
+
+      //   return res
+      // }
     } catch (e) {
       throw new BizException(`IP API 调用失败，${e.message}`)
     }
@@ -103,14 +121,20 @@ export class ToolService {
       ['keywords', keywords],
     ])
 
+    let errorMessage = ''
+
     const data = await fetch(
       `https://restapi.amap.com/v3/place/text?${params.toString()}`,
     )
       .then((response) => response.json())
       // eslint-disable-next-line @typescript-eslint/no-empty-function
-      .catch((error) => {})
+      .catch((error) => {
+        errorMessage = error.message
+      })
     if (!data) {
-      throw new InternalServerErrorException('高德地图 API 调用失败')
+      throw new InternalServerErrorException(
+        `高德地图 API 调用失败，${errorMessage}`,
+      )
     }
     return data
   }
