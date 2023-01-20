@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [3.41.2](https://github.com/mx-space/core/compare/v3.41.1...v3.41.2) (2023-01-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency mongoose to v6.8.4 ([1f024c2](https://github.com/mx-space/core/commit/1f024c266a27ee3352605994b4e7623f4dc4b5b7))
+* replace ip endpoint ([5af255f](https://github.com/mx-space/core/commit/5af255ffa231f155cd7d4f10452d31657328b08e))
+
+
+
 ## [3.41.1](https://github.com/mx-space/core/compare/v3.41.0...v3.41.1) (2023-01-17)
 
 
