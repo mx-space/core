@@ -261,7 +261,7 @@ importers:
   packages/api-client:
     specifiers:
       '@rollup/plugin-commonjs': 22.0.2
-      '@rollup/plugin-node-resolve': 14.0.1
+      '@rollup/plugin-node-resolve': 14.1.0
       '@rollup/plugin-typescript': 8.5.0
       '@types/cors': 2.8.13
       '@types/express': 4.17.15
@@ -285,7 +285,7 @@ importers:
       umi-request: 1.4.0
     devDependencies:
       '@rollup/plugin-commonjs': 22.0.2_rollup@3.10.0
-      '@rollup/plugin-node-resolve': 14.0.1_rollup@3.10.0
+      '@rollup/plugin-node-resolve': 14.1.0_rollup@3.10.0
       '@rollup/plugin-typescript': 8.5.0_rollup@3.10.0
       '@types/cors': 2.8.13
       '@types/express': 4.17.15
@@ -2193,8 +2193,8 @@ packages:
       rollup: 3.10.0
     dev: true
 
-  /@rollup/plugin-node-resolve/14.0.1_rollup@3.10.0:
-    resolution: {integrity: sha512-YvSs0ev00QWTQS8u+yaCJkIUPBgpmBsnzRJFvg8c2chbky85ZKoZtoNuRH0k9rjZT4xpgEPOiVTyeJTj1/iMdQ==}
+  /@rollup/plugin-node-resolve/14.1.0_rollup@3.10.0:
+    resolution: {integrity: sha512-5G2niJroNCz/1zqwXtk0t9+twOSDlG00k1Wfd7bkbbXmwg8H8dvgHdIWAun53Ps/rckfvOC7scDBjuGFg5OaWw==}
     engines: {node: '>= 10.0.0'}
     peerDependencies:
       rollup: ^2.78.0
