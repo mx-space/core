@@ -192,11 +192,12 @@ export class ConfigsService {
     return newData
   }
 
-  validOptions: ValidatorOptions = {
+  private validateOptions: ValidatorOptions = {
     whitelist: true,
     forbidNonWhitelisted: true,
   }
-  validate = new ValidationPipe(this.validOptions)
+  private validate = new ValidationPipe(this.validateOptions)
+
   async patchAndValid<T extends keyof IConfig>(
     key: T,
     value: Partial<IConfig[T]>,
@@ -247,7 +248,12 @@ export class ConfigsService {
 
   private validWithDto<T extends object>(dto: ClassConstructor<T>, value: any) {
     const validModel = plainToInstance(dto, value)
-    const errors = validateSync(validModel, this.validOptions)
+    const errors = Array.isArray(validModel)
+      ? (validModel as Array<any>).reduce(
+          (acc, item) => acc.concat(validateSync(item, this.validateOptions)),
+          [],
+        )
+      : validateSync(validModel, this.validateOptions)
     if (errors.length > 0) {
       const error = this.validate.createExceptionFactory()(errors as any[])
       throw error
