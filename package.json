@@ -159,7 +159,7 @@
     "@types/qs": "6.9.7",
     "@types/semver": "7.3.13",
     "@types/ua-parser-js": "0.7.36",
-    "@types/validator": "13.7.10",
+    "@types/validator": "13.7.11",
     "@vercel/ncc": "0.36.0",
     "cron": "*",
     "cross-env": "7.0.3",
