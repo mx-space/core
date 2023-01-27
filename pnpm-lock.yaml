@@ -59,7 +59,7 @@ importers:
       '@types/semver': 7.3.13
       '@types/ua-parser-js': 0.7.36
       '@types/validator': 13.7.11
-      '@vercel/ncc': 0.36.0
+      '@vercel/ncc': 0.36.1
       algoliasearch: 4.14.3
       axios: ^1.2.2
       axios-retry: 3.3.1
@@ -237,7 +237,7 @@ importers:
       '@types/semver': 7.3.13
       '@types/ua-parser-js': 0.7.36
       '@types/validator': 13.7.11
-      '@vercel/ncc': 0.36.0
+      '@vercel/ncc': 0.36.1
       cron: 2.1.0
       cross-env: 7.0.3
       eslint: 8.32.0
@@ -2834,8 +2834,8 @@ packages:
       eslint-visitor-keys: 3.3.0
     dev: true
 
-  /@vercel/ncc/0.36.0:
-    resolution: {integrity: sha512-/ZTUJ/ZkRt694k7KJNimgmHjtQcRuVwsST2Z6XfYveQIuBbHR+EqkTc1jfgPkQmMyk/vtpxo3nVxe8CNuau86A==}
+  /@vercel/ncc/0.36.1:
+    resolution: {integrity: sha512-S4cL7Taa9yb5qbv+6wLgiKVZ03Qfkc4jGRuiUQMQ8HGBD5pcNRnHeYM33zBvJE4/zJGjJJ8GScB+WmTsn9mORw==}
     hasBin: true
     dev: true
 
