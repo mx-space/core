@@ -97,7 +97,7 @@ importers:
       marked: 4.2.12
       mime-types: '*'
       mkdirp: '*'
-      mongodb-memory-server: 8.11.2
+      mongodb-memory-server: 8.11.4
       mongoose: 6.8.4
       mongoose-aggregate-paginate-v2: 1.0.6
       mongoose-lean-getters: 0.3.6
@@ -210,7 +210,7 @@ importers:
       xss: 1.0.14
       zx-cjs: 7.0.7-0
     optionalDependencies:
-      mongodb-memory-server: 8.11.2
+      mongodb-memory-server: 8.11.4
       redis-memory-server: 0.6.0
     devDependencies:
       '@innei/eslint-config-ts': 0.9.7_typescript@4.9.4
@@ -6464,8 +6464,8 @@ packages:
       '@types/whatwg-url': 8.2.2
       whatwg-url: 11.0.0
 
-  /mongodb-memory-server-core/8.11.2:
-    resolution: {integrity: sha512-6ZdyaDNZFE9tktocBGWgzbPeS9X10SWOKdlMRRyVGWosLeIe6e9NQrK/wf7LryBoOWE7JuZC5f0dcM5K4RCwMQ==}
+  /mongodb-memory-server-core/8.11.4:
+    resolution: {integrity: sha512-VWUstcegjwaGTZzaaSLmKuEtxhbNPRM87lq1oFHzYC07pzyxAfjIELcYRKef2O+XlhKlVQ9x2VqpuvTF97h7SA==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@types/tmp': 0.2.3
@@ -6490,12 +6490,12 @@ packages:
     dev: false
     optional: true
 
-  /mongodb-memory-server/8.11.2:
-    resolution: {integrity: sha512-fjNdN/kwgWnnUnPUT90311vC83sRKQ3C0mpbF5kcKS2CKYxRkWEZLOd0MuGKtQmFHryvnXOPDqAGKKx9G1cIrw==}
+  /mongodb-memory-server/8.11.4:
+    resolution: {integrity: sha512-DI6iXKsZBpMFAPxj/+35jl2s1LxVTpBc+VUpMzEe9Mvm73XIzIzPdU5Aa3asO7RfRSeR5l5wn0qpVAkvP1BScg==}
     engines: {node: '>=12.22.0'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 8.11.2
+      mongodb-memory-server-core: 8.11.4
       tslib: 2.4.1
     transitivePeerDependencies:
       - aws-crt
