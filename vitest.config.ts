@@ -21,7 +21,9 @@ const swcPlugin = (() => {
 
   const originalTransform = plugin.transform!
 
+  // @ts-ignore
   const transform = function (...args: Parameters<typeof originalTransform>) {
+    // @ts-ignore
     if (!args[1].endsWith('html')) return originalTransform.apply(this, args)
   }
 
@@ -54,6 +56,7 @@ export default defineConfig({
   esbuild: false,
 
   plugins: [
+    // @ts-ignore
     swcPlugin,
     tsconfigPath({
       projects: [
@@ -63,7 +66,7 @@ export default defineConfig({
     }),
 
     {
-      name: 'a-vitest-plugin-that-changes-config',
+      name: 'vitest-plugin',
       config: () => ({
         test: {
           setupFiles: ['./setupFiles/lifecycle.ts'],

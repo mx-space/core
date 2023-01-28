@@ -9,8 +9,8 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 
-import { BanInDemo } from '~/common/decorator/demo.decorator'
-import { HTTPDecorators } from '~/common/decorator/http.decorator'
+import { BanInDemo } from '~/common/decorators/demo.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IConfig } from '~/modules/configs/configs.interface'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { classToJsonSchema } from '~/utils/jsonschema.util'

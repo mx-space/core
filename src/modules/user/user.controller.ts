@@ -10,17 +10,17 @@ import {
 } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 
-import { ApiController } from '~/common/decorator/api-controller.decorator'
-import { Auth } from '~/common/decorator/auth.decorator'
-import { HttpCache } from '~/common/decorator/cache.decorator'
+import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { Auth } from '~/common/decorators/auth.decorator'
+import { HttpCache } from '~/common/decorators/cache.decorator'
 import {
   CurrentUser,
   CurrentUserToken,
-} from '~/common/decorator/current-user.decorator'
-import { BanInDemo } from '~/common/decorator/demo.decorator'
-import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
-import { ApiName } from '~/common/decorator/openapi.decorator'
-import { IsMaster } from '~/common/decorator/role.decorator'
+} from '~/common/decorators/current-user.decorator'
+import { BanInDemo } from '~/common/decorators/demo.decorator'
+import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { ApiName } from '~/common/decorators/openapi.decorator'
+import { IsMaster } from '~/common/decorators/role.decorator'
 import { getAvatar } from '~/utils'
 
 import { AuthService } from '../auth/auth.service'

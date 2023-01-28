@@ -1,8 +1,8 @@
 import { Body, Get, Post, Query, Request, Response } from '@nestjs/common'
 
-import { ApiController } from '~/common/decorator/api-controller.decorator'
-import { HTTPDecorators } from '~/common/decorator/http.decorator'
-import { ApiName } from '~/common/decorator/openapi.decorator'
+import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { ApiName } from '~/common/decorators/openapi.decorator'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 

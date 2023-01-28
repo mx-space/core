@@ -8,8 +8,8 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 
-import { ApiController } from '~/common/decorator/api-controller.decorator'
-import { ApiName } from '~/common/decorator/openapi.decorator'
+import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { ApiName } from '~/common/decorators/openapi.decorator'
 
 import { ConfigsService } from '../configs/configs.service'
 import { ConfigKeyDto } from '../option/dtos/config.dto'

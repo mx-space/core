@@ -8,11 +8,11 @@ import {
   Query,
 } from '@nestjs/common'
 
-import { ApiController } from '~/common/decorator/api-controller.decorator'
-import { Auth } from '~/common/decorator/auth.decorator'
-import { HTTPDecorators } from '~/common/decorator/http.decorator'
-import { IpLocation, IpRecord } from '~/common/decorator/ip.decorator'
-import { ApiName } from '~/common/decorator/openapi.decorator'
+import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { Auth } from '~/common/decorators/auth.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { ApiName } from '~/common/decorators/openapi.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { OffsetDto } from '~/shared/dto/pager.dto'
 

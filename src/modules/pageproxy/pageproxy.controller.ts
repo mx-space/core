@@ -15,9 +15,9 @@ import {
   Res,
 } from '@nestjs/common'
 
-import { Cookies } from '~/common/decorator/cookie.decorator'
-import { HTTPDecorators } from '~/common/decorator/http.decorator'
-import { ApiName } from '~/common/decorator/openapi.decorator'
+import { Cookies } from '~/common/decorators/cookie.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { ApiName } from '~/common/decorators/openapi.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import { CacheService } from '~/processors/redis/cache.service'

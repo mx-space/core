@@ -16,11 +16,11 @@ import {
 } from '@nestjs/common'
 import { ApiProperty, ApiResponseProperty } from '@nestjs/swagger'
 
-import { ApiController } from '~/common/decorator/api-controller.decorator'
-import { Auth } from '~/common/decorator/auth.decorator'
-import { BanInDemo } from '~/common/decorator/demo.decorator'
-import { HTTPDecorators } from '~/common/decorator/http.decorator'
-import { ApiName } from '~/common/decorator/openapi.decorator'
+import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { Auth } from '~/common/decorators/auth.decorator'
+import { BanInDemo } from '~/common/decorators/demo.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { ApiName } from '~/common/decorators/openapi.decorator'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { getMediumDateTime } from '~/utils'
 

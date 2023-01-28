@@ -1,9 +1,9 @@
 import { CacheTTL, Get, Param, Query } from '@nestjs/common'
 
-import { ApiController } from '~/common/decorator/api-controller.decorator'
-import { Auth } from '~/common/decorator/auth.decorator'
-import { HttpCache } from '~/common/decorator/cache.decorator'
-import { ApiName } from '~/common/decorator/openapi.decorator'
+import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { Auth } from '~/common/decorators/auth.decorator'
+import { HttpCache } from '~/common/decorators/cache.decorator'
+import { ApiName } from '~/common/decorators/openapi.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getRedisKey } from '~/utils/redis.util'

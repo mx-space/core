@@ -3,7 +3,7 @@ import { resolve } from 'path'
 import { Module } from '@nestjs/common'
 import { CronExpression } from '@nestjs/schedule'
 
-import { CronOnce } from '~/common/decorator/cron-once.decorator'
+import { CronOnce } from '~/common/decorators/cron-once.decorator'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 
 import { BackupModule } from '../backup/backup.module'

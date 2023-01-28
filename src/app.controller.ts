@@ -7,14 +7,14 @@ import {
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 
-import { ApiController } from '~/common/decorator/api-controller.decorator'
+import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import PKG from '../package.json'
 import { DEMO_MODE } from './app.config'
-import { Auth } from './common/decorator/auth.decorator'
-import { HttpCache } from './common/decorator/cache.decorator'
-import { IpLocation, IpRecord } from './common/decorator/ip.decorator'
+import { Auth } from './common/decorators/auth.decorator'
+import { HttpCache } from './common/decorators/cache.decorator'
+import { IpLocation, IpRecord } from './common/decorators/ip.decorator'
 import { AllowAllCorsInterceptor } from './common/interceptors/allow-all-cors.interceptor'
 import { RedisKeys } from './constants/cache.constant'
 import { OptionModel } from './modules/configs/configs.model'

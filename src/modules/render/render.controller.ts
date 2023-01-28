@@ -15,11 +15,11 @@ import {
   Query,
 } from '@nestjs/common'
 
-import { Auth } from '~/common/decorator/auth.decorator'
-import { HttpCache } from '~/common/decorator/cache.decorator'
-import { HTTPDecorators } from '~/common/decorator/http.decorator'
-import { ApiName } from '~/common/decorator/openapi.decorator'
-import { IsMaster } from '~/common/decorator/role.decorator'
+import { Auth } from '~/common/decorators/auth.decorator'
+import { HttpCache } from '~/common/decorators/cache.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { ApiName } from '~/common/decorators/openapi.decorator'
+import { IsMaster } from '~/common/decorators/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils'
 

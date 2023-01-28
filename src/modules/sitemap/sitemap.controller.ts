@@ -1,7 +1,7 @@
 import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
 
-import { HTTPDecorators } from '~/common/decorator/http.decorator'
-import { ApiName } from '~/common/decorator/openapi.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { ApiName } from '~/common/decorators/openapi.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 
 import { AggregateService } from '../aggregate/aggregate.service'
