@@ -15,7 +15,7 @@ importers:
       '@algolia/client-search': ^4.14.3
       '@babel/core': 7.20.12
       '@babel/plugin-transform-modules-commonjs': 7.20.11
-      '@babel/plugin-transform-typescript': 7.20.7
+      '@babel/plugin-transform-typescript': 7.20.13
       '@babel/types': ^7.20.7
       '@fastify/cookie': 8.3.0
       '@fastify/multipart': 7.4.0
@@ -137,7 +137,7 @@ importers:
       '@algolia/client-search': 4.14.3
       '@babel/core': 7.20.12
       '@babel/plugin-transform-modules-commonjs': 7.20.11_@babel+core@7.20.12
-      '@babel/plugin-transform-typescript': 7.20.7_@babel+core@7.20.12
+      '@babel/plugin-transform-typescript': 7.20.13_@babel+core@7.20.12
       '@babel/types': 7.20.7
       '@fastify/cookie': 8.3.0
       '@fastify/multipart': 7.4.0
@@ -1455,8 +1455,8 @@ packages:
       - supports-color
     dev: false
 
-  /@babel/plugin-transform-typescript/7.20.7_@babel+core@7.20.12:
-    resolution: {integrity: sha512-m3wVKEvf6SoszD8pu4NZz3PvfKRCMgk6D6d0Qi9hNnlM5M6CFS92EgF4EiHVLKbU0r/r7ty1hg7NPZwE7WRbYw==}
+  /@babel/plugin-transform-typescript/7.20.13_@babel+core@7.20.12:
+    resolution: {integrity: sha512-O7I/THxarGcDZxkgWKMUrk7NK1/WbHAg3Xx86gqS6x9MTrNL6AwIluuZ96ms4xeDe6AVx6rjHbWHP7x26EPQBA==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
