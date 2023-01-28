@@ -142,7 +142,7 @@
     "@nestjs/schematics": "9.0.4",
     "@nestjs/testing": "9.2.1",
     "@swc/core": "1.3.4",
-    "@types/babel__core": "7.1.20",
+    "@types/babel__core": "7.20.0",
     "@types/bcrypt": "5.0.0",
     "@types/cache-manager": "4.0.2",
     "@types/cron": "2.0.0",

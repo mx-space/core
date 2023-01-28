@@ -40,7 +40,7 @@ importers:
       '@swc/core': 1.3.4
       '@typegoose/auto-increment': 2.0.0
       '@typegoose/typegoose': 9.13.2
-      '@types/babel__core': 7.1.20
+      '@types/babel__core': 7.20.0
       '@types/bcrypt': 5.0.0
       '@types/cache-manager': 4.0.2
       '@types/cron': 2.0.0
@@ -220,7 +220,7 @@ importers:
       '@nestjs/schematics': 9.0.4_typescript@4.9.4
       '@nestjs/testing': 9.2.1_hjcqpoaebdr7gdo5hgc22hthbe
       '@swc/core': 1.3.4
-      '@types/babel__core': 7.1.20
+      '@types/babel__core': 7.20.0
       '@types/bcrypt': 5.0.0
       '@types/cache-manager': 4.0.2
       '@types/cron': 2.0.0
@@ -1418,14 +1418,6 @@ packages:
       chalk: 2.4.2
       js-tokens: 4.0.0
 
-  /@babel/parser/7.19.6:
-    resolution: {integrity: sha512-h1IUp81s2JYJ3mRkdxJgs4UvmSsRvDrx5ICSJbPvtWYv5i1nTBGcBpnog+89rAFMwvvru6E5NUHdBe01UeSzYA==}
-    engines: {node: '>=6.0.0'}
-    hasBin: true
-    dependencies:
-      '@babel/types': 7.20.7
-    dev: true
-
   /@babel/parser/7.20.7:
     resolution: {integrity: sha512-T3Z9oHybU+0vZlY9CiDSJQTD5ZapcW18ZctFMi0MOAl/4BjFF4ul7NVSARLdbGO5vDqy9eQiGTV0LtKfvCYvcg==}
     engines: {node: '>=6.0.0'}
@@ -2399,10 +2391,10 @@ packages:
       tslib: 2.4.1
     dev: false
 
-  /@types/babel__core/7.1.20:
-    resolution: {integrity: sha512-PVb6Bg2QuscZ30FvOU7z4guG6c926D9YRvOxEaelzndpMsvP+YM74Q/dAFASpg2l6+XLalxSGxcq/lrgYWZtyQ==}
+  /@types/babel__core/7.20.0:
+    resolution: {integrity: sha512-+n8dL/9GWblDO0iU6eZAwEIJVr5DWigtle+Q6HLOrh/pdbXOhOtqzq8VPPE2zvNJzSKY4vH/z3iT3tn0A3ypiQ==}
     dependencies:
-      '@babel/parser': 7.19.6
+      '@babel/parser': 7.20.7
       '@babel/types': 7.20.7
       '@types/babel__generator': 7.6.4
       '@types/babel__template': 7.4.1
@@ -2418,7 +2410,7 @@ packages:
   /@types/babel__template/7.4.1:
     resolution: {integrity: sha512-azBFKemX6kMg5Io+/rdGT0dkGreboUVR0Cdm3fz9QJWpaQGJRQXl7C+6hOTCZcMll7KFyEQpgbYI2lHdsS4U7g==}
     dependencies:
-      '@babel/parser': 7.19.6
+      '@babel/parser': 7.20.7
       '@babel/types': 7.20.7
     dev: true
 
