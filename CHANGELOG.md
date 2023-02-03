@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [3.41.3](https://github.com/mx-space/core/compare/v3.41.2...v3.41.3) (2023-02-03)
+
+
+### Bug Fixes
+
+* add pure fetch adaptor ([7d96c26](https://github.com/mx-space/core/commit/7d96c2671b147be9c6c295d559fa364f44c0ac58))
+* **deps:** update dependency @babel/plugin-transform-typescript to v7.20.13 ([0fc6a92](https://github.com/mx-space/core/commit/0fc6a9287ad3660cf6532fa123d0657ac4ca3032))
+* **deps:** update dependency nodemailer to v6.9.1 ([982cae3](https://github.com/mx-space/core/commit/982cae341cac9a603caceda86c40a5c73a9d7041))
+* **deps:** update dependency ua-parser-js to v1.0.33 ([940c22a](https://github.com/mx-space/core/commit/940c22af8bd2f1fe00ffe317f4905fd200e6e537))
+* resolutions ([3c7ce43](https://github.com/mx-space/core/commit/3c7ce4347fdbdea9c230fc96d9c9d36a55207a43))
+
+
+### Features
+
+* upgrade mongoose ([42e8037](https://github.com/mx-space/core/commit/42e803775363d0bcff2d5c4436e7171aca41c1df))
+
+
+
 ## [3.41.2](https://github.com/mx-space/core/compare/v3.41.1...v3.41.2) (2023-01-20)
 
 
