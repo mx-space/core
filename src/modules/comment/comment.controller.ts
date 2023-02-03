@@ -74,7 +74,7 @@ export class CommentController {
     @IsMaster() isMaster: boolean,
   ) {
     const { id } = params
-    const data = await this.commentService.model
+    const data: CommentModel = await this.commentService.model
       .findOne({
         _id: id,
       })
@@ -87,6 +87,7 @@ export class CommentController {
     if (data.isWhispers && !isMaster) {
       throw new CannotFindException()
     }
+
     await this.commentService.replaceMasterAvatarUrl([data])
     return data
   }

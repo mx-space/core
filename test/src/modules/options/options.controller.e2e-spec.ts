@@ -1,4 +1,5 @@
 import { createE2EApp } from 'test/helper/create-e2e-app'
+import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { configProvider } from 'test/mock/modules/config.mock'
 
 import { BaseOptionController } from '~/modules/option/controllers/base.option.controller'
@@ -13,6 +14,9 @@ describe('OptionController (e2e)', () => {
       .inject({
         method: 'GET',
         url: '/config/jsonschema',
+        headers: {
+          ...authPassHeader,
+        },
       })
       .then((res) => {
         expect(res.statusCode).toBe(200)

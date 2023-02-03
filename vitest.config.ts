@@ -49,6 +49,10 @@ export default defineConfig({
     alias: {
       'zx-cjs': 'zx',
       '~/app.config': resolve(__dirname, './src/app.config.test.ts'),
+      '~/common/decorators/auth.decorator': resolve(
+        __dirname,
+        './test/mock/decorators/auth.decorator.ts',
+      ),
     },
   },
 

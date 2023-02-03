@@ -7,8 +7,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 
-import { isTest } from '~/global/env.global'
-import { mockUser1 } from '~/mock/user.mock'
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
@@ -26,11 +24,6 @@ export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<any> {
     const request = this.getRequest(context)
 
-    /// for e2e-test mock user
-    if (isTest) {
-      request.user = { ...mockUser1 }
-      return true
-    }
     const query = request.query as any
     const headers = request.headers
     const Authorization: string =

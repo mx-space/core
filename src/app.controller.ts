@@ -8,11 +8,11 @@ import {
 import { ApiTags } from '@nestjs/swagger'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { Auth } from '~/common/decorators/auth.decorator'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import PKG from '../package.json'
 import { DEMO_MODE } from './app.config'
-import { Auth } from './common/decorators/auth.decorator'
 import { HttpCache } from './common/decorators/cache.decorator'
 import { IpLocation, IpRecord } from './common/decorators/ip.decorator'
 import { AllowAllCorsInterceptor } from './common/interceptors/allow-all-cors.interceptor'

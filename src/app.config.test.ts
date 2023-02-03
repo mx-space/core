@@ -115,8 +115,6 @@ export const AXIOS_CONFIG: AxiosRequestConfig = {
 export const SECURITY = {
   jwtSecret: argv.jwt_secret || argv.jwtSecret,
   jwtExpire: +argv.jwt_expire || 14,
-  // 跳过登陆鉴权
-  skipAuth: true,
 }
 
 export const CLUSTER = {

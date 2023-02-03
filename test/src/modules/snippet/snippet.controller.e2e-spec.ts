@@ -1,4 +1,5 @@
 import { createE2EApp } from 'test/helper/create-e2e-app'
+import { authPassHeader } from 'test/mock/guard/auth.guard'
 
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
 
@@ -44,6 +45,9 @@ describe('test /snippets', () => {
       .inject({
         method: 'POST',
         url: '/snippets',
+        headers: {
+          ...authPassHeader,
+        },
         payload: {
           name: 'Snippet*1',
           private: false,
@@ -62,6 +66,9 @@ describe('test /snippets', () => {
       method: 'POST',
       url: '/snippets',
       payload: mockPayload1,
+      headers: {
+        ...authPassHeader,
+      },
     })
     expect(res.statusCode).toBe(201)
     const data = await res.json()
@@ -75,6 +82,9 @@ describe('test /snippets', () => {
       .inject({
         method: 'POST',
         url: '/snippets',
+        headers: {
+          ...authPassHeader,
+        },
         payload: {
           name: 'Snippet_1',
           private: false,
@@ -92,6 +102,9 @@ describe('test /snippets', () => {
       .inject({
         method: 'GET',
         url: `/snippets/${id}`,
+        headers: {
+          ...authPassHeader,
+        },
       })
       .then((res) => {
         const json = res.json()
@@ -130,6 +143,9 @@ describe('test /snippets', () => {
       .inject({
         method: 'POST',
         url: '/snippets',
+        headers: {
+          ...authPassHeader,
+        },
         payload: {
           ...snippetFuncType,
         },

@@ -227,7 +227,7 @@ export class NoteController {
     const { nid } = params
     const { password, single: isSingle } = query
     const condition = isMaster ? {} : { hide: false }
-    const current = await this.noteService.model
+    const current: NoteModel = await this.noteService.model
       .findOne({
         nid,
         ...condition,

@@ -1,4 +1,5 @@
 import { createE2EApp } from 'test/helper/create-e2e-app'
+import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
 import { authProvider } from 'test/mock/modules/auth.mock'
 import { commentProvider } from 'test/mock/modules/comment.mock'
@@ -8,7 +9,6 @@ import { countingServiceProvider } from 'test/mock/processors/counting.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 
 import { APP_INTERCEPTOR } from '@nestjs/core'
-import { ReturnModelType } from '@typegoose/typegoose'
 
 import { OptionModel } from '~/modules/configs/configs.model'
 import { NoteController } from '~/modules/note/note.controller'
@@ -23,7 +23,7 @@ import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import MockDbData from './note.e2e-mock.db'
 
 describe('NoteController (e2e)', () => {
-  let model: ReturnModelType<typeof NoteModel>
+  let model: MongooseModel<NoteModel>
   const proxy = createE2EApp({
     controllers: [NoteController],
     providers: [
@@ -60,7 +60,7 @@ describe('NoteController (e2e)', () => {
     async pourData(modelMap) {
       // @ts-ignore
       const { model: _model } = modelMap.get(NoteModel) as {
-        model: ReturnModelType<typeof NoteModel>
+        model: MongooseModel<NoteModel>
       }
       model = _model
       for await (const data of MockDbData) {
@@ -104,6 +104,9 @@ describe('NoteController (e2e)', () => {
       method: 'POST',
       url: '/notes',
       payload: createdNoteData,
+      headers: {
+        ...authPassHeader,
+      },
     })
 
     const data = res.json()
@@ -125,6 +128,9 @@ describe('NoteController (e2e)', () => {
         mood: 'happy',
         weather: 'sunny',
       },
+      headers: {
+        ...authPassHeader,
+      },
     })
 
     expect(res.statusCode).toBe(204)
@@ -135,6 +141,9 @@ describe('NoteController (e2e)', () => {
     const res = await app.inject({
       method: 'GET',
       url: `/notes/${createdNoteData.id}`,
+      headers: {
+        ...authPassHeader,
+      },
     })
 
     expect(res.statusCode).toBe(200)
@@ -188,6 +197,9 @@ describe('NoteController (e2e)', () => {
     const res = await app.inject({
       method: 'DELETE',
       url: `/notes/${createdNoteData.id}`,
+      headers: {
+        ...authPassHeader,
+      },
     })
 
     expect(res.statusCode).toBe(204)
@@ -199,6 +211,9 @@ describe('NoteController (e2e)', () => {
       const res = await app.inject({
         method: 'GET',
         url: `/notes/${createdNoteData.id}`,
+        headers: {
+          ...authPassHeader,
+        },
       })
 
       expect(res.statusCode).toBe(404)
@@ -207,6 +222,9 @@ describe('NoteController (e2e)', () => {
       const res = await app.inject({
         method: 'GET',
         url: `/notes/nid/${createdNoteData.nid}`,
+        headers: {
+          ...authPassHeader,
+        },
       })
 
       expect(res.statusCode).toBe(404)
@@ -225,5 +243,119 @@ describe('NoteController (e2e)', () => {
     delete data.data.id
     delete data.next.id
     expect(data).toMatchSnapshot()
+  })
+
+  let mockDataWithLocationNid = 0
+
+  const createMockDataWithLocation = async () => {
+    const note = await model.create({
+      title: 'Note 3',
+      text: 'Content 3',
+      allowComment: true,
+      coordinates: {
+        latitude: 20,
+        longitude: 20,
+      },
+      location: 'location',
+    })
+    mockDataWithLocationNid = note.nid
+    return () => model.deleteOne({ _id: note._id })
+  }
+
+  test('GET /, should hide field when not login', async () => {
+    const app = proxy.app
+
+    await createMockDataWithLocation()
+    const res = await app.inject({
+      method: 'GET',
+      url: '/notes',
+    })
+
+    const json = res.json()
+    expect(json.data[0].coordinates).toBeUndefined()
+    expect(json.data[0].location).toBeUndefined()
+  })
+
+  test('GET /, should show field when login', async () => {
+    const app = proxy.app
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/notes',
+      query: {
+        select: '+coordinates',
+      },
+      headers: {
+        ...authPassHeader,
+      },
+    })
+
+    const json = res.json()
+    expect(json.data[0].coordinates).toBeDefined()
+  })
+
+  test('GET /nid/:nid, should hide field when not login', async () => {
+    const app = proxy.app
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/notes/nid/${mockDataWithLocationNid}`,
+    })
+
+    const json = res.json()
+    expect(json.data.coordinates).toBeUndefined()
+    expect(json.data.location).toBeUndefined()
+  })
+
+  let mockDataWithPassoword = 0
+
+  const createMockDataWithPassword = async () => {
+    const note = await model.create({
+      title: 'Note 4',
+      text: 'Content 3',
+      allowComment: true,
+      password: 'password',
+    })
+    mockDataWithPassoword = note.nid
+    return () => model.deleteOne({ _id: note._id })
+  }
+  test('GET /nid/:nid, should ban if has password', async () => {
+    const app = proxy.app
+
+    await createMockDataWithPassword()
+    const res = await app.inject({
+      method: 'GET',
+      url: `/notes/nid/${mockDataWithPassoword}`,
+    })
+
+    expect(res.statusCode).toBe(403)
+  })
+
+  test('GET /nid/:nid, should show if has password and pass', async () => {
+    const app = proxy.app
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/notes/nid/${mockDataWithPassoword}`,
+      query: {
+        password: 'password',
+      },
+    })
+
+    expect(res.statusCode).toBe(200)
+  })
+
+  test('GET /nid/:nid, should show if has login', async () => {
+    const app = proxy.app
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/notes/nid/${mockDataWithPassoword}`,
+      headers: {
+        ...authPassHeader,
+      },
+    })
+
+    expect(res.statusCode).toBe(200)
   })
 })
