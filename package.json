@@ -187,7 +187,7 @@
     "redis-memory-server": "0.6.0"
   },
   "resolutions": {
-    "typescript": "4.9.4",
+    "typescript": "4.9.5",
     "ioredis": "5.2.6",
     "webpack": "5.75.0",
     "semver": "7.3.8",
