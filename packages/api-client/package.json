@@ -76,7 +76,7 @@
     "isomorphic-unfetch": "3.1.0",
     "ky": "0.33.2",
     "lodash": "4.17.21",
-    "node-fetch": "3.2.10",
+    "node-fetch": "3.3.0",
     "tsc-alias": "1.8.2",
     "tsup": "6.5.0",
     "umi-request": "1.4.0"
