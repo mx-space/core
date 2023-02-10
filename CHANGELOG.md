@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [3.41.4](https://github.com/mx-space/core/compare/v3.41.3...v3.41.4) (2023-02-10)
+
+
+### Bug Fixes
+
+* asset push script ([7a1ccdf](https://github.com/mx-space/core/commit/7a1ccdf9d95770661ef6f68554fb0403217f565b))
+* docker compose ([#961](https://github.com/mx-space/core/issues/961)) ([9b6e1ff](https://github.com/mx-space/core/commit/9b6e1ffebc021a041c655beee19edf7174228c8f))
+* **tool:** ipv6 query, closes [#962](https://github.com/mx-space/core/issues/962) ([aabed05](https://github.com/mx-space/core/commit/aabed05b607f4e016d062246c55c587d3c319c42))
+
+
+
 ## [3.41.3](https://github.com/mx-space/core/compare/v3.41.2...v3.41.3) (2023-02-03)
 
 
