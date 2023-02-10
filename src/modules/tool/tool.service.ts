@@ -32,53 +32,47 @@ export class ToolService {
       throw new UnprocessableEntityException('Invalid IP')
     }
     try {
-      const getIpQueryEndpoint = (ip, type: 'v4' | 'v6') =>
-        `https://ip${type}.ip.mir6.com/api_json.php?ip=${ip}&token=mir6.com`
+      // const getIpQueryEndpoint = (ip, type: 'v4' | 'v6') =>
+      //   `https://ip${type}.ip.mir6.com/api_json.php?ip=${ip}&token=mir6.com`
 
-      const url = getIpQueryEndpoint(ip, isV4 ? 'v4' : 'v6')
-      const data = await this.httpService.axiosRef.get<IPResponseData>(url, {
-        timeout,
-      })
+      if (isV4) {
+        const data = await this.httpService.axiosRef.get<IPResponseData>(
+          `https://ipv4.ip.mir6.com/api_json.php?ip=${ip}&token=mir6.com`,
+          {
+            timeout,
+          },
+        )
 
-      const {
-        data: { city, country, districts, isp, province, net },
-      } = data.data
-      return {
-        cityName: districts,
-        countryName: country + province,
-        regionName: city,
-        ip,
-        ispDomain: isp,
-        ownerDomain: isp || net,
+        const {
+          data: { city, country, districts, isp, province, net },
+        } = data.data
+        return {
+          cityName: districts,
+          countryName: country + province,
+          regionName: city,
+          ip,
+          ispDomain: isp,
+          ownerDomain: isp || net,
+        }
+      } else {
+        const { data } = (await this.httpService.axiosRef.get(
+          `http://ip-api.com/json/${ip}`,
+          {
+            timeout,
+          },
+        )) as any
+
+        const res = {
+          cityName: data.city,
+          countryName: data.country,
+          ip: data.query,
+          ispDomain: data.as,
+          ownerDomain: data.org,
+          regionName: data.region_name,
+        } as const
+
+        return res
       }
-      // if (isV4) {
-      //   const { data } = await this.httpService.axiosRef.get(
-      //     `https://api.i-meto.com/ip/v1/qqwry/${ip}`,
-      //     {
-      //       timeout,
-      //     },
-      //   )
-
-      //   return camelcaseKeys(data, { deep: true }) as IP
-      // } else {
-      //   const { data } = (await this.httpService.axiosRef.get(
-      //     `http://ip-api.com/json/${ip}`,
-      //     {
-      //       timeout,
-      //     },
-      //   )) as any
-
-      //   const res = {
-      //     cityName: data.city,
-      //     countryName: data.country,
-      //     ip: data.query,
-      //     ispDomain: data.as,
-      //     ownerDomain: data.org,
-      //     regionName: data.region_name,
-      //   } as const
-
-      //   return res
-      // }
     } catch (e) {
       throw new BizException(`IP API 调用失败，${e.message}`)
     }
