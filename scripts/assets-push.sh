@@ -1,4 +1,4 @@
-
+set -e
 cd assets
 git init
 git add .
