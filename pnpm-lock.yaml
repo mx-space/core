@@ -271,7 +271,7 @@ importers:
       isomorphic-unfetch: 3.1.0
       ky: 0.33.2
       lodash: 4.17.21
-      node-fetch: 3.2.10
+      node-fetch: 3.3.0
       tsc-alias: 1.8.2
       tsup: 6.5.0
       umi-request: 1.4.0
@@ -287,7 +287,7 @@ importers:
       isomorphic-unfetch: 3.1.0
       ky: 0.33.2
       lodash: 4.17.21
-      node-fetch: 3.2.10
+      node-fetch: 3.3.0
       tsc-alias: 1.8.2
       tsup: 6.5.0
       umi-request: 1.4.0
@@ -1859,7 +1859,7 @@ packages:
       detect-libc: 2.0.1
       https-proxy-agent: 5.0.1
       make-dir: 3.1.0
-      node-fetch: 2.6.7
+      node-fetch: 2.6.9
       nopt: 5.0.0
       npmlog: 5.0.1
       rimraf: 3.0.2
@@ -5909,7 +5909,7 @@ packages:
   /isomorphic-unfetch/3.1.0:
     resolution: {integrity: sha512-geDJjpoZ8N0kWexiwkX8F9NkTsXhetLPVbZFQ+JTW239QNOwvB0gniuR1Wc6f0AMTn7/mFGyXvHTifrCp/GH8Q==}
     dependencies:
-      node-fetch: 2.6.7
+      node-fetch: 2.6.9
       unfetch: 4.2.0
     transitivePeerDependencies:
       - encoding
@@ -6736,17 +6736,6 @@ packages:
       is-stream: 1.1.0
     dev: true
 
-  /node-fetch/2.6.7:
-    resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
-    engines: {node: 4.x || >=6.0.0}
-    peerDependencies:
-      encoding: ^0.1.0
-    peerDependenciesMeta:
-      encoding:
-        optional: true
-    dependencies:
-      whatwg-url: 5.0.0
-
   /node-fetch/2.6.9:
     resolution: {integrity: sha512-DJm/CJkZkRjKKj4Zi4BsKVZh3ValV5IR5s7LVZnW+6YMh0W1BfNA8XSs6DLMGYlId5F3KnA70uu2qepcR08Qqg==}
     engines: {node: 4.x || >=6.0.0}
@@ -6760,6 +6749,15 @@ packages:
 
   /node-fetch/3.2.10:
     resolution: {integrity: sha512-MhuzNwdURnZ1Cp4XTazr69K0BTizsBroX7Zx3UgDSVcZYKF/6p0CBe4EUb/hLqmzVhl0UpYfgRljQ4yxE+iCxA==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dependencies:
+      data-uri-to-buffer: 4.0.0
+      fetch-blob: 3.2.0
+      formdata-polyfill: 4.0.10
+    dev: true
+
+  /node-fetch/3.3.0:
+    resolution: {integrity: sha512-BKwRP/O0UvoMKp7GNdwPlObhYGB5DQqwhEDQlNKuoqwVYSxkSZCSbHjnFFmUEtwSKRPU4kNK8PbDYYitwaE3QA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dependencies:
       data-uri-to-buffer: 4.0.0
