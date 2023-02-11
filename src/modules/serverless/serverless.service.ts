@@ -37,6 +37,7 @@ import { safeEval } from '~/utils/safe-eval.util'
 import { isBuiltinModule } from '~/utils/system.util'
 
 import PKG from '../../../package.json'
+import { ConfigsService } from '../configs/configs.service'
 import { SnippetModel } from '../snippet/snippet.model'
 import {
   FunctionContextRequest,
@@ -54,6 +55,7 @@ export class ServerlessService {
     private readonly databaseService: DatabaseService,
 
     private readonly cacheService: CacheService,
+    private readonly configService: ConfigsService,
   ) {
     nextTick(() => {
       mkdir(NODE_REQUIRE_PATH, { recursive: true }).then(async () => {
@@ -98,7 +100,7 @@ export class ServerlessService {
     } as const
   }
 
-  async mockGetMaster() {
+  private async mockGetMaster() {
     const collection = this.databaseService.db.collection('users')
     const cur = collection.aggregate([
       {
@@ -124,7 +126,7 @@ export class ServerlessService {
     })
   }
 
-  mockDb(namespace: string) {
+  private mockDb(namespace: string) {
     const db = this.databaseService.db
     const collection = db.collection(ServerlessStorageCollectionName)
 
@@ -231,6 +233,29 @@ export class ServerlessService {
     } as const
   }
 
+  private async getService(serviceName: 'http' | 'config') {
+    switch (serviceName) {
+      case 'http': {
+        return {
+          axios: this.httpService.axiosRef,
+          requestWithCache: this.httpService.getAndCacheRequest.bind(
+            this.httpService,
+          ),
+        }
+      }
+      case 'config': {
+        return {
+          get: (key: string) => this.configService.get(key as any),
+        }
+      }
+    }
+
+    throw new BizException(
+      ErrorCodeEnum.ServerlessError,
+      `${serviceName} service not provide`,
+    )
+  }
+
   async injectContextIntoServerlessFunctionAndCall(
     model: SnippetModel,
     context: { req: FunctionContextRequest; res: FunctionContextResponse },
@@ -277,6 +302,7 @@ export class ServerlessService {
         name: model.name,
         reference: model.reference,
         getMaster: this.mockGetMaster.bind(this),
+        getService: this.getService.bind(this),
 
         writeAsset: async (
           path: string,
@@ -312,13 +338,13 @@ export class ServerlessService {
       logger,
 
       require: this.inNewContextRequire(),
-      get import() {
-        return self.require
+      import(module: string) {
+        return Promise.resolve(self.require(module))
       },
 
       process: {
         env: Object.freeze({ ...process.env }),
-        nextTick: process.nextTick,
+        nextTick: process.nextTick.bind(null),
       },
     }
 

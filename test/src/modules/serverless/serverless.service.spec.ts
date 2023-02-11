@@ -4,6 +4,7 @@ import { redisHelper } from 'test/helper/redis-mock.helper'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
 
+import { ConfigsService } from '~/modules/configs/configs.service'
 import { createMockedContextResponse } from '~/modules/serverless/mock-response.util'
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
@@ -36,6 +37,10 @@ describe('test serverless function service', () => {
         {
           provide: getModelToken('SnippetModel'),
           useValue: getModelForClass(SnippetModel),
+        },
+        {
+          provide: ConfigsService,
+          useValue: {},
         },
       ],
     })
