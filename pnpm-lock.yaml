@@ -27,7 +27,7 @@ importers:
       '@nestjs/mapped-types': '*'
       '@nestjs/platform-fastify': 9.3.2
       '@nestjs/platform-socket.io': 9.3.2
-      '@nestjs/schedule': 2.1.0
+      '@nestjs/schedule': 2.2.0
       '@nestjs/schematics': 9.0.4
       '@nestjs/swagger': 6.1.4
       '@nestjs/testing': 9.3.2
@@ -147,7 +147,7 @@ importers:
       '@nestjs/mapped-types': 1.2.0_uagrrydayiyvmtujsvm5blaw64
       '@nestjs/platform-fastify': 9.3.2_2whg2gzwtohnmtcrprwmsyqkb4
       '@nestjs/platform-socket.io': 9.3.2_6yxaotv53qodimh47w7iciekym
-      '@nestjs/schedule': 2.1.0_dvs6bzzwlxted5pypaoawo6uwu
+      '@nestjs/schedule': 2.2.0_dvs6bzzwlxted5pypaoawo6uwu
       '@nestjs/swagger': 6.1.4_jbr7c6wxgjcwvbcppkdujcoeke
       '@nestjs/throttler': 4.0.0_dvs6bzzwlxted5pypaoawo6uwu
       '@nestjs/websockets': 9.3.2_uksvslg6wb43nriizvqi6mckpu
@@ -2038,8 +2038,8 @@ packages:
       - supports-color
       - utf-8-validate
 
-  /@nestjs/schedule/2.1.0_dvs6bzzwlxted5pypaoawo6uwu:
-    resolution: {integrity: sha512-4Xaw56WiW3VsxEPPnj/iDtfjcO+sUZyYAeRxD0gnF5havncxjAnv52Iw7UH3DuzzUA784xPGgGje3Fq0Gu925g==}
+  /@nestjs/schedule/2.2.0_dvs6bzzwlxted5pypaoawo6uwu:
+    resolution: {integrity: sha512-wrDnUONTxBkD6lTWh9ecYk/kvJTbA3PylotjBoRsECmcS1SNvgInFXuL38UnHiFnXM3CHSFnzRLB259Bc1mOdQ==}
     peerDependencies:
       '@nestjs/common': ^7.0.0 || ^8.0.0 || ^9.0.0
       '@nestjs/core': ^7.0.0 || ^8.0.0 || ^9.0.0
@@ -2047,9 +2047,9 @@ packages:
     dependencies:
       '@nestjs/common': 9.3.2_wfccvjmrxsdt24lpjkvzmt5igm
       '@nestjs/core': 9.3.2_gbxbw37j2g4pb6cu3eyhp23y5a
-      cron: 2.0.0
+      cron: 2.2.0
       reflect-metadata: 0.1.13
-      uuid: 8.3.2
+      uuid: 9.0.0
     dev: false
 
   /@nestjs/schematics/9.0.4_n7i3t5jmyrdrkypb5pvfihcmg4:
@@ -3812,17 +3812,17 @@ packages:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
     dev: true
 
-  /cron/2.0.0:
-    resolution: {integrity: sha512-RPeRunBCFr/WEo7WLp8Jnm45F/ziGJiHVvVQEBSDTSGu6uHW49b2FOP2O14DcXlGJRLhwE7TIoDzHHK4KmlL6g==}
-    dependencies:
-      luxon: 1.28.0
-    dev: false
-
   /cron/2.1.0:
     resolution: {integrity: sha512-Hq7u3P8y7UWYvsZbSKHHJDVG0VO9O7tp2qljxzTScelcTODBfCme8AIhnZsFwmQ9NchZ3hr2uNr+s3DSms7q6w==}
     dependencies:
       luxon: 1.28.0
     dev: true
+
+  /cron/2.2.0:
+    resolution: {integrity: sha512-GPiI3OgMv83XRtEUc2gUdaLvJhO3XbLN288layOBkDTupg0RK5IECNGpkykIMHg+muVR2bxt29b0xvCAcBrjYQ==}
+    dependencies:
+      luxon: 3.2.1
+    dev: false
 
   /cross-env/7.0.3:
     resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
@@ -6309,6 +6309,12 @@ packages:
 
   /luxon/1.28.0:
     resolution: {integrity: sha512-TfTiyvZhwBYM/7QdAVDh+7dBTBA29v4ik0Ce9zda3Mnf8on1S5KJI8P2jKFZ8+5C0jhmr0KwJEO/Wdpm0VeWJQ==}
+    dev: true
+
+  /luxon/3.2.1:
+    resolution: {integrity: sha512-QrwPArQCNLAKGO/C+ZIilgIuDnEnKx5QYODdDtbFaxzsbZcc/a7WFq7MhsVYgRlwawLtvOUESTlfJ+hc/USqPg==}
+    engines: {node: '>=12'}
+    dev: false
 
   /macos-release/2.5.0:
     resolution: {integrity: sha512-EIgv+QZ9r+814gjJj0Bt5vSLJLzswGmSUbUpbi9AIr/fsN2IWFBl2NucV9PAiek+U1STK468tEkxmVYUtuAN3g==}
@@ -8401,6 +8407,7 @@ packages:
   /uuid/8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
+    optional: true
 
   /uuid/9.0.0:
     resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
