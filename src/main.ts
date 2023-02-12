@@ -5,6 +5,10 @@ import cluster from 'cluster'
 import { isMainCluster } from './global/env.global'
 import { register } from './global/index.global'
 
+process.title = `Mix Space (${cluster.isPrimary ? 'master' : 'worker'}) - ${
+  process.env.NODE_ENV
+}`
+
 async function main() {
   register()
   const [{ bootstrap }, { CLUSTER, ENCRYPT }, { Cluster }] = await Promise.all([

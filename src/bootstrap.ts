@@ -25,7 +25,6 @@ const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
 declare const module: any
 
 export async function bootstrap() {
-  process.title = `Mix Space (${cluster.isPrimary ? 'master' : 'worker'})`
   await migrateDatabase()
   const isInit = await checkInit()
 
