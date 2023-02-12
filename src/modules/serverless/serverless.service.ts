@@ -1,22 +1,18 @@
 import { isURL } from 'class-validator'
 import fs, { mkdir, stat } from 'fs/promises'
 import { isPlainObject } from 'lodash'
-import LRUCache from 'lru-cache'
 import { createRequire } from 'module'
 import { mongo } from 'mongoose'
 import path, { resolve } from 'path'
-import { nextTick } from 'process'
 import qs from 'qs'
 
-import { TransformOptions, parseAsync, transformAsync } from '@babel/core'
-import BabelPluginTransformCommonJS from '@babel/plugin-transform-modules-commonjs'
-import BabelPluginTransformTS from '@babel/plugin-transform-typescript'
+import { parseAsync, transformAsync } from '@babel/core'
 import * as t from '@babel/types'
-import { VariableDeclaration } from '@babel/types'
 import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  OnModuleInit,
 } from '@nestjs/common'
 import { Interval } from '@nestjs/schedule'
 
@@ -37,15 +33,20 @@ import { safeEval } from '~/utils/safe-eval.util'
 import { isBuiltinModule } from '~/utils/system.util'
 
 import PKG from '../../../package.json'
-import { SnippetModel } from '../snippet/snippet.model'
+import { ConfigsService } from '../configs/configs.service'
+import { SnippetModel, SnippetType } from '../snippet/snippet.model'
 import {
+  BuiltInFunctionObject,
   FunctionContextRequest,
   FunctionContextResponse,
 } from './function.types'
+import { builtInSnippets } from './pack/built-in'
 import { ServerlessStorageCollectionName } from './serverless.model'
+import { complieTypeScriptBabelOptions, hashStable } from './serverless.util'
 
 @Injectable()
-export class ServerlessService {
+export class ServerlessService implements OnModuleInit {
+  private readonly logger: Logger
   constructor(
     @InjectModel(SnippetModel)
     private readonly snippetModel: MongooseModel<SnippetModel>,
@@ -54,23 +55,28 @@ export class ServerlessService {
     private readonly databaseService: DatabaseService,
 
     private readonly cacheService: CacheService,
+    private readonly configService: ConfigsService,
   ) {
-    nextTick(() => {
-      mkdir(NODE_REQUIRE_PATH, { recursive: true }).then(async () => {
-        const pkgPath = path.join(DATA_DIR, 'package.json')
+    this.logger = new Logger(ServerlessService.name)
+  }
 
-        const isPackageFileExist = await stat(pkgPath)
-          .then(() => true)
-          .catch(() => false)
+  async onModuleInit() {
+    mkdir(NODE_REQUIRE_PATH, { recursive: true }).then(async () => {
+      const pkgPath = path.join(DATA_DIR, 'package.json')
 
-        if (!isPackageFileExist) {
-          await fs.writeFile(
-            pkgPath,
-            JSON.stringify({ name: 'modules' }, null, 2),
-          )
-        }
-      })
+      const isPackageFileExist = await stat(pkgPath)
+        .then(() => true)
+        .catch(() => false)
+
+      if (!isPackageFileExist) {
+        await fs.writeFile(
+          pkgPath,
+          JSON.stringify({ name: 'modules' }, null, 2),
+        )
+      }
     })
+
+    await this.pourBuiltInFunctions()
   }
 
   public get model() {
@@ -98,7 +104,7 @@ export class ServerlessService {
     } as const
   }
 
-  async mockGetMaster() {
+  private async mockGetMaster() {
     const collection = this.databaseService.db.collection('users')
     const cur = collection.aggregate([
       {
@@ -124,7 +130,7 @@ export class ServerlessService {
     })
   }
 
-  mockDb(namespace: string) {
+  private mockDb(namespace: string) {
     const db = this.databaseService.db
     const collection = db.collection(ServerlessStorageCollectionName)
 
@@ -231,6 +237,29 @@ export class ServerlessService {
     } as const
   }
 
+  private async getService(serviceName: 'http' | 'config') {
+    switch (serviceName) {
+      case 'http': {
+        return {
+          axios: this.httpService.axiosRef,
+          requestWithCache: this.httpService.getAndCacheRequest.bind(
+            this.httpService,
+          ),
+        }
+      }
+      case 'config': {
+        return {
+          get: (key: string) => this.configService.get(key as any),
+        }
+      }
+    }
+
+    throw new BizException(
+      ErrorCodeEnum.ServerlessError,
+      `${serviceName} service not provide`,
+    )
+  }
+
   async injectContextIntoServerlessFunctionAndCall(
     model: SnippetModel,
     context: { req: FunctionContextRequest; res: FunctionContextResponse },
@@ -277,6 +306,7 @@ export class ServerlessService {
         name: model.name,
         reference: model.reference,
         getMaster: this.mockGetMaster.bind(this),
+        getService: this.getService.bind(this),
 
         writeAsset: async (
           path: string,
@@ -312,19 +342,40 @@ export class ServerlessService {
       logger,
 
       require: this.inNewContextRequire(),
-      get import() {
-        return self.require
+      import(module: string) {
+        return Promise.resolve(self.require(module))
       },
 
       process: {
         env: Object.freeze({ ...process.env }),
-        nextTick: process.nextTick,
+        nextTick: process.nextTick.bind(null),
       },
+    }
+
+    const cacheKey = model.updated
+      ? getRedisKey(
+          RedisKeys.FunctionComplieCache,
+          hashStable(`${model.id}_${model.updated}`),
+        )
+      : ''
+
+    let cached: string | undefined
+    if (cacheKey) {
+      cached = await this.cacheService.get(cacheKey)
+    }
+
+    const compliedCode =
+      cached ?? (await this.complieTypescriptCode(functionString))
+
+    if (!cached && cacheKey) {
+      await this.cacheService.set(cacheKey, compliedCode, {
+        ttl: 60 * 10,
+      })
     }
 
     return await safeEval(
       `async function func() {
-        ${await this.convertTypescriptCode(functionString)};
+        ${compliedCode};
       return handler(context, require)
       }
       return func()
@@ -349,71 +400,14 @@ export class ServerlessService {
     })
   }
 
-  private getBabelOptions(): TransformOptions {
-    return {
-      comments: false,
-      plugins: [
-        BabelPluginTransformTS,
-        [
-          BabelPluginTransformCommonJS,
-          { allowTopLevelThis: false, importInterop: 'node' },
-        ],
-        function transformImport() {
-          return {
-            visitor: {
-              VariableDeclaration(path: babel.NodePath) {
-                const node = path.node as VariableDeclaration
-                if (
-                  node.kind === 'var' &&
-                  node.declarations[0].init?.type === 'CallExpression' &&
-                  (
-                    (node.declarations[0].init as t.CallExpression)
-                      .callee as t.Identifier
-                  )?.name === 'require'
-                ) {
-                  const callee = node.declarations[0].init
-
-                  const _await: t.AwaitExpression = {
-                    argument: node.declarations[0].init,
-                    type: 'AwaitExpression',
-                    start: callee.start,
-                    end: callee.end,
-                    innerComments: [],
-                    loc: callee.loc,
-                    leadingComments: [],
-                    trailingComments: [],
-                  }
-                  node.declarations[0].init = _await
-                }
-              },
-            },
-          }
-        },
-      ],
-    }
-  }
-  private lruCache = new LRUCache({
-    max: 100,
-    ttl: 10 * 1000,
-    maxSize: 50000,
-    sizeCalculation: (value: string, key: string) => {
-      return value.length + key.length
-    },
-  })
-  private async convertTypescriptCode(
+  private async complieTypescriptCode(
     code: string,
   ): Promise<string | null | undefined> {
-    if (this.lruCache.has(code)) {
-      return this.lruCache.get(code)
-    }
-
-    const res = await transformAsync(code, this.getBabelOptions())
+    const res = await transformAsync(code, complieTypeScriptBabelOptions)
     if (!res) {
       throw new InternalServerErrorException('convert code error')
     }
     !isTest && console.debug(res.code)
-
-    res.code && this.lruCache.set(code, res.code)
 
     return res.code
   }
@@ -586,7 +580,10 @@ export class ServerlessService {
   async isValidServerlessFunction(raw: string) {
     try {
       // 验证 handler 是否存在并且是函数
-      const ast = (await parseAsync(raw, this.getBabelOptions())) as t.File
+      const ast = (await parseAsync(
+        raw,
+        complieTypeScriptBabelOptions,
+      )) as t.File
 
       const { body } = ast.program as t.Program
 
@@ -616,5 +613,73 @@ export class ServerlessService {
       // @ts-expect-error
       return t.isFunction(node) && node?.id?.name === 'handler'
     }
+  }
+
+  private async pourBuiltInFunctions() {
+    const paths = [] as string[]
+    const pathCodeMap = new Map<string, BuiltInFunctionObject>()
+    for (const s of builtInSnippets) {
+      paths.push(s.path)
+      pathCodeMap.set(s.path, s)
+    }
+
+    // 0. get built-in functions is exist in db
+    const result = await this.model
+      .find({
+        name: {
+          $in: paths,
+        },
+        reference: 'built-in',
+        type: SnippetType.Function,
+      })
+      .lean()
+
+    // 1. filter is exist
+    for (const doc of result) {
+      const path = doc.name
+      pathCodeMap.delete(path)
+    }
+
+    // 2. pour
+
+    for (const [path, { code, method, name }] of pathCodeMap) {
+      this.logger.log(`pour built-in function: ${name}`)
+      await this.model.create({
+        type: SnippetType.Function,
+        name: path,
+        reference: 'built-in',
+        raw: code,
+        method: method || 'get',
+        enable: true,
+        private: false,
+      })
+    }
+  }
+
+  async isBuiltInFunction(id: string) {
+    const document = await this.model
+      .findOne({
+        _id: id,
+      })
+      .lean()
+    if (!document) return false
+    const isBuiltin =
+      document.type == SnippetType.Function && document.reference == 'built-in'
+    return isBuiltin ? document.name : false
+  }
+
+  async resetBuiltInFunction(name: string) {
+    const builtIn = builtInSnippets.find((s) => s.path == name)
+    if (!builtIn) {
+      throw new InternalServerErrorException('built-in function not found')
+    }
+    console.log('reset built-in function: ', name, builtIn.code)
+
+    await this.model.updateOne(
+      {
+        name,
+      },
+      { raw: builtIn.code },
+    )
   }
 }

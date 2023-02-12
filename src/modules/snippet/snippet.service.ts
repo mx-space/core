@@ -34,10 +34,18 @@ export class SnippetService {
     return this.snippetModel
   }
 
+  private readonly reservedReferenceKeys = ['system', 'built-in']
+
   async create(model: SnippetModel) {
     if (model.type === SnippetType.Function) {
       model.method ??= 'GET'
       model.enable ??= true
+
+      if (this.reservedReferenceKeys.indexOf(model.reference) !== -1) {
+        throw new BadRequestException(
+          `"${model.reference}" as reference is reserved`,
+        )
+      }
     }
     const isExist = await this.model.countDocuments({
       name: model.name,
@@ -113,6 +121,13 @@ export class SnippetService {
     if (!doc) {
       throw new NotFoundException()
     }
+
+    if (doc.type === SnippetType.Function && doc.reference === 'built-in') {
+      throw new BadRequestException(
+        'built-in function snippet is not allowed to delete',
+      )
+    }
+
     await this.deleteCachedSnippet(doc.reference, doc.name)
   }
 

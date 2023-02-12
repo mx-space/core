@@ -3,9 +3,11 @@ import { URL } from 'url'
 
 import {
   BadRequestException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
 import { BeAnObject, ReturnModelType } from '@typegoose/typegoose/lib/types'
@@ -24,7 +26,9 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { hasChinese } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
-import { ToolService } from '../tool/tool.service'
+import { createMockedContextResponse } from '../serverless/mock-response.util'
+import { ServerlessService } from '../serverless/serverless.service'
+import { SnippetModel, SnippetType } from '../snippet/snippet.model'
 import { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json'
 import { CommentModel, CommentRefTypes, CommentState } from './comment.model'
@@ -41,8 +45,9 @@ export class CommentService {
     private readonly userService: UserService,
     private readonly mailService: EmailService,
 
-    private readonly toolService: ToolService,
     private readonly configsService: ConfigsService,
+    @Inject(forwardRef(() => ServerlessService))
+    private readonly serverlessService: ServerlessService,
   ) {}
 
   public get model() {
@@ -293,31 +298,56 @@ export class CommentService {
     }
   }
 
-  async attachIpLocation(model: Partial<CommentModel>, ip: string) {
+  async appendIpLocation(id: string, ip: string) {
     if (!ip) {
-      return model
+      return
     }
-    const { recordIpLocation, fetchLocationTimeout = 3000 } =
-      await this.configsService.get('commentOptions')
+    const { recordIpLocation } = await this.configsService.get('commentOptions')
 
     if (!recordIpLocation) {
+      return
+    }
+
+    const model = this.commentModel.findById(id).lean()
+    if (!model) {
+      return
+    }
+
+    const fnModel = (await this.serverlessService.model
+      .findOne({
+        name: 'ip',
+        reference: 'built-in',
+        type: SnippetType.Function,
+      })
+      .select('+secret')
+      .lean({
+        getters: true,
+      })) as SnippetModel
+
+    if (!fnModel) {
+      this.logger.error('[Serverless Fn] ip query function is missing.')
       return model
     }
-    const newModel = { ...model }
 
-    newModel.location = await this.toolService
-      .getIp(ip, fetchLocationTimeout)
-      .then(
-        (res) =>
-          `${
-            res.regionName && res.regionName !== res.cityName
-              ? `${res.regionName}`
-              : ''
-          }${res.cityName ? `${res.cityName}` : ''}` || undefined,
+    const result =
+      await this.serverlessService.injectContextIntoServerlessFunctionAndCall(
+        fnModel,
+        {
+          req: {
+            query: { ip },
+          },
+          res: createMockedContextResponse({} as any),
+        } as any,
       )
-      .catch(() => undefined)
 
-    return newModel
+    const location =
+      `${result.countryName || ''}${
+        result.regionName && result.regionName !== result.cityName
+          ? `${result.regionName}`
+          : ''
+      }${result.cityName ? `${result.cityName}` : ''}` || undefined
+
+    if (location) await this.commentModel.updateOne({ _id: id }, { location })
   }
 
   async replaceMasterAvatarUrl(comments: CommentModel[]) {

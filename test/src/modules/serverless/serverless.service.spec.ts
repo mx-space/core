@@ -4,6 +4,7 @@ import { redisHelper } from 'test/helper/redis-mock.helper'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
 
+import { ConfigsService } from '~/modules/configs/configs.service'
 import { createMockedContextResponse } from '~/modules/serverless/mock-response.util'
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
@@ -36,6 +37,10 @@ describe('test serverless function service', () => {
         {
           provide: getModelToken('SnippetModel'),
           useValue: getModelForClass(SnippetModel),
+        },
+        {
+          provide: ConfigsService,
+          useValue: {},
         },
       ],
     })
@@ -153,6 +158,7 @@ describe('test serverless function service', () => {
       model,
       { req: {} as any, res: {} as any },
     )
+
     expect(typeof data.get).toBe('function')
   })
 
@@ -167,5 +173,34 @@ describe('test serverless function service', () => {
       { req: {} as any, res: {} as any },
     )
     expect(typeof data).toBe('function')
+  })
+
+  test('case-8: reset built-in function', async () => {
+    const model = service.model
+    await model.updateOne(
+      {
+        name: 'ip',
+      },
+      { raw: '`' },
+    )
+    expect(
+      (
+        await model
+          .findOne({
+            name: 'ip',
+          })
+          .lean()
+      ).raw,
+    ).toEqual('`')
+    await service.resetBuiltInFunction('ip')
+    expect(
+      (
+        await model
+          .findOne({
+            name: 'ip',
+          })
+          .lean()
+      ).raw,
+    ).not.toEqual('`')
   })
 })

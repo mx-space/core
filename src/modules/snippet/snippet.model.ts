@@ -113,4 +113,6 @@ export class SnippetModel extends BaseModel {
   @IsBoolean()
   @IsOptional()
   enable?: boolean
+
+  updated?: string
 }

@@ -149,13 +149,6 @@ export class CommentOptionsDto {
   @IsOptional()
   @JSONSchemaToggleField('评论公开归属地')
   recordIpLocation?: boolean
-
-  @IsOptional()
-  @IsInt()
-  @JSONSchemaNumberField('超时时间', {
-    description: '获取 IP 归属地的超时时间。单位：毫秒。如获取超时则不记录',
-  })
-  fetchLocationTimeout?: number
 }
 
 @JSONSchema({ title: '备份' })
