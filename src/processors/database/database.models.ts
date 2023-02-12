@@ -11,6 +11,7 @@ import { RecentlyModel } from '~/modules/recently/recently.model'
 import { SayModel } from '~/modules/say/say.model'
 import { ServerlessStorageModel } from '~/modules/serverless/serverless.model'
 import { SnippetModel } from '~/modules/snippet/snippet.model'
+import { SubscribeModel } from '~/modules/subscribe/subscribe.model'
 import { TopicModel } from '~/modules/topic/topic.model'
 import { UserModel } from '~/modules/user/user.model'
 import { getProviderByTypegooseClass } from '~/transformers/model.transformer'
@@ -30,5 +31,6 @@ export const databaseModels = [
   SayModel,
   ServerlessStorageModel,
   SnippetModel,
+  SubscribeModel,
   UserModel,
 ].map((model) => getProviderByTypegooseClass(model))

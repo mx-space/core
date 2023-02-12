@@ -121,6 +121,7 @@ export class EventManagerService {
     }
   }
 
+  // TODO 补充类型
   on(
     event: BusinessEvents,
     handler: (data: any) => void,

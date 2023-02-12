@@ -44,6 +44,7 @@ import { SearchModule } from './modules/search/search.module'
 import { ServerlessModule } from './modules/serverless/serverless.module'
 import { SitemapModule } from './modules/sitemap/sitemap.module'
 import { SnippetModule } from './modules/snippet/snippet.module'
+import { SubscribeModule } from './modules/subscribe/subscribe.module'
 import { TopicModule } from './modules/topic/topic.module'
 import { UpdateModule } from './modules/update/update.module'
 import { UserModule } from './modules/user/user.module'
@@ -85,6 +86,7 @@ import { RedisModule } from './processors/redis/redis.module'
     TopicModule,
     SayModule,
     SearchModule,
+    SubscribeModule,
     ServerlessModule,
     SitemapModule,
     SnippetModule,
