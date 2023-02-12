@@ -82,7 +82,7 @@ importers:
       husky: 8.0.3
       image-size: 1.0.2
       inquirer: '*'
-      ioredis: 5.2.6
+      ioredis: 5.3.1
       isbot: 3.6.5
       js-yaml: '*'
       json5: 2.2.3
@@ -242,7 +242,7 @@ importers:
       eslint: 8.33.0
       eslint-plugin-unused-imports: 2.0.0_eslint@8.33.0
       husky: 8.0.3
-      ioredis: 5.2.6
+      ioredis: 5.3.1
       lint-staged: 13.1.0
       prettier: 2.8.3
       rimraf: 3.0.2
@@ -3468,7 +3468,7 @@ packages:
     resolution: {integrity: sha512-TCxbp9ceuFveTKWuNaCX8QjoC41rAlHen4s63u9Yd+iXlw3efYmimc/u935PKPxSdhkXpnMes4mxtK3/yb0L4g==}
     engines: {node: '>=6.0.0'}
     dependencies:
-      ioredis: 5.2.6
+      ioredis: 5.3.1
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -5686,8 +5686,8 @@ packages:
     engines: {node: '>= 0.10'}
     dev: true
 
-  /ioredis/5.2.6:
-    resolution: {integrity: sha512-F1xO+kYIz+TCOccvhThs2pem6sc9uTl9JsZybWpqe4FeCFDmf04XwbLQUGIqi2UWaDUuR61w2dhxx6NJEFehOA==}
+  /ioredis/5.3.1:
+    resolution: {integrity: sha512-C+IBcMysM6v52pTLItYMeV4Hz7uriGtoJdz7SSBDX6u+zwSYGirLdQh3L7t/OItWITcw3gTFMjJReYUwS4zihg==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@ioredis/commands': 1.1.1
