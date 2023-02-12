@@ -1,8 +1,8 @@
 import { Body, Delete, Get, Put, Query } from '@nestjs/common'
 
 import {
+  CommentEmailTemplateRenderProps,
   EmailService,
-  EmailTemplateRenderProps,
   ReplyMailType,
 } from '~/processors/helper/helper.email.service'
 
@@ -28,7 +28,7 @@ export class EmailOptionController {
         time: '2020/01/01',
         master: '你的名字',
         ip: '0.0.0.0',
-      } as EmailTemplateRenderProps,
+      } as CommentEmailTemplateRenderProps,
     }
   }
 

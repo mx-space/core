@@ -4,7 +4,7 @@ import { render } from 'ejs'
 import { createTransport } from 'nodemailer'
 import Mail from 'nodemailer/lib/mailer'
 
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
 import { BizException } from '~/common/exceptions/biz.exception'
@@ -19,31 +19,37 @@ export enum ReplyMailType {
   Guest = 'guest',
 }
 
+export enum NewsletterMailType {
+  Newsletter = 'newsletter',
+}
+
 export enum LinkApplyEmailType {
   ToMaster,
   ToCandidate,
 }
 
 @Injectable()
-export class EmailService {
+export class EmailService implements OnModuleInit {
   private instance: ReturnType<typeof createTransport>
   private logger: Logger
   constructor(
     private readonly configsService: ConfigsService,
     private readonly assetService: AssetService,
-    readonly subpub: SubPubBridgeService,
+    private readonly subpub: SubPubBridgeService,
   ) {
-    this.init()
     this.logger = new Logger(EmailService.name)
+  }
 
+  async onModuleInit() {
+    this.init()
     if (cluster.isWorker) {
-      subpub.subscribe(EventBusEvents.EmailInit, () => {
+      this.subpub.subscribe(EventBusEvents.EmailInit, () => {
         this.init()
       })
     }
   }
 
-  async readTemplate(type: ReplyMailType) {
+  async readTemplate(type: ReplyMailType | NewsletterMailType) {
     switch (type) {
       case ReplyMailType.Guest:
         return this.assetService.getAsset(
@@ -55,10 +61,18 @@ export class EmailService {
           '/email-template/owner.template.ejs',
           { encoding: 'utf-8' },
         )
+      case NewsletterMailType.Newsletter:
+        return this.assetService.getAsset(
+          '/email-template/newsletter.template.ejs',
+          { encoding: 'utf-8' },
+        )
     }
   }
 
-  async writeTemplate(type: ReplyMailType, source: string) {
+  async writeTemplate(
+    type: ReplyMailType | NewsletterMailType,
+    source: string,
+  ) {
     switch (type) {
       case ReplyMailType.Guest:
         return this.assetService.writeUserCustomAsset(
@@ -72,10 +86,16 @@ export class EmailService {
           source,
           { encoding: 'utf-8' },
         )
+      case NewsletterMailType.Newsletter:
+        return this.assetService.writeUserCustomAsset(
+          '/email-template/newsletter.template.ejs',
+          source,
+          { encoding: 'utf-8' },
+        )
     }
   }
 
-  async deleteTemplate(type: ReplyMailType) {
+  async deleteTemplate(type: ReplyMailType | NewsletterMailType) {
     switch (type) {
       case ReplyMailType.Guest:
         await this.assetService.removeUserCustomAsset(
@@ -85,6 +105,11 @@ export class EmailService {
       case ReplyMailType.Owner:
         await this.assetService.removeUserCustomAsset(
           '/email-template/owner.template.ejs',
+        )
+        break
+      case NewsletterMailType.Newsletter:
+        await this.assetService.removeUserCustomAsset(
+          '/email-template/newsletter.template.ejs',
         )
         break
     }
@@ -157,19 +182,21 @@ export class EmailService {
     type,
   }: {
     to: string
-    source: EmailTemplateRenderProps
+    source: CommentEmailTemplateRenderProps
     type: ReplyMailType
   }) {
     const { seo, mailOptions } = await this.configsService.waitForConfigReady()
     const { user } = mailOptions
     const from = `"${seo.title || 'Mx Space'}" <${user}>`
+
+    source.ip ??= ''
     if (type === ReplyMailType.Guest) {
       const options = {
         from,
         ...{
           subject: `[${seo.title || 'Mx Space'}] 主人给你了新的回复呐`,
           to,
-          html: this.render((await this.readTemplate(type)) as string, source),
+          html: render((await this.readTemplate(type)) as string, source),
         },
       }
       if (isDev) {
@@ -186,7 +213,7 @@ export class EmailService {
         ...{
           subject: `[${seo.title || 'Mx Space'}] 有新回复了耶~`,
           to,
-          html: this.render((await this.readTemplate(type)) as string, source),
+          html: render((await this.readTemplate(type)) as string, source),
         },
       }
       if (isDev) {
@@ -198,19 +225,6 @@ export class EmailService {
       }
       await this.send(options)
     }
-  }
-
-  render(template: string, source: EmailTemplateRenderProps) {
-    return render(template, {
-      text: source.text,
-      time: source.time,
-      author: source.author,
-      link: source.link,
-      ip: source.ip || '',
-      title: source.title,
-      master: source.master,
-      mail: source.mail,
-    } as EmailTemplateRenderProps)
   }
 
   async sendTestEmail() {
@@ -238,7 +252,7 @@ export class EmailService {
   }
 }
 
-export interface EmailTemplateRenderProps {
+export interface CommentEmailTemplateRenderProps {
   author: string
   ip?: string
   text: string
@@ -247,4 +261,13 @@ export interface EmailTemplateRenderProps {
   mail: string
   title: string
   master?: string
+}
+
+export interface NewsletterTemplateRenderProps {
+  author: string
+  title: string
+  text: string
+  detail_link: string
+  unsubscribe_link: string
+  master: string
 }

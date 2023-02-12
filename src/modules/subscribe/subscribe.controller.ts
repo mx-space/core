@@ -37,9 +37,14 @@ export class SubscribeController {
   }
 
   @Get('/unsubscribe')
+  @HTTPDecorators.Bypass
   async unsubscribe(@Query() query: CancelSubscribeDto) {
     const { email, cancelToken } = query
 
-    await this.service.unsubscribe(email, cancelToken)
+    const result = await this.service.unsubscribe(email, cancelToken)
+    if (result) {
+      return '已取消订阅'
+    }
+    return '出现错误'
   }
 }
