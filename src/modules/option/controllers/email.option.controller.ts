@@ -52,7 +52,7 @@ export class EmailOptionController {
           text: '这是一段回复评论',
           title: '文章的标题',
           time: '2020/01/01',
-          master: '你的名字',
+          master: '站点主人',
           ip: '0.0.0.0',
         } as CommentEmailTemplateRenderProps)
         break
@@ -62,6 +62,8 @@ export class EmailOptionController {
           unsubscribe_link: '#unsubscribe_link',
           detail_link: '#detail_link',
           text: '正文',
+          author: '作者',
+          master: '站点主人',
         } as NewsletterTemplateRenderProps)
         break
     }
