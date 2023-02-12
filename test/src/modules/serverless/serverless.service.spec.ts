@@ -158,6 +158,7 @@ describe('test serverless function service', () => {
       model,
       { req: {} as any, res: {} as any },
     )
+
     expect(typeof data.get).toBe('function')
   })
 
@@ -172,5 +173,34 @@ describe('test serverless function service', () => {
       { req: {} as any, res: {} as any },
     )
     expect(typeof data).toBe('function')
+  })
+
+  test('case-8: reset built-in function', async () => {
+    const model = service.model
+    await model.updateOne(
+      {
+        name: 'ip',
+      },
+      { raw: '`' },
+    )
+    expect(
+      (
+        await model
+          .findOne({
+            name: 'ip',
+          })
+          .lean()
+      ).raw,
+    ).toEqual('`')
+    await service.resetBuiltInFunction('ip')
+    expect(
+      (
+        await model
+          .findOne({
+            name: 'ip',
+          })
+          .lean()
+      ).raw,
+    ).not.toEqual('`')
   })
 })

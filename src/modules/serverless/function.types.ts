@@ -9,3 +9,10 @@ export interface FunctionContextResponse {
   status(code: number, statusMessage?: string): FunctionContextResponse
   send(data: any): any
 }
+
+export interface BuiltInFunctionObject {
+  name: string
+  path: string
+  method: string
+  code: string
+}

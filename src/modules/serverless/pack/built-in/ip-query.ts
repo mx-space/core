@@ -1,3 +1,5 @@
+import { BuiltInFunctionObject } from '../../function.types'
+
 const interfaceCode = `
 interface IPResponseData {
   code: number
@@ -25,8 +27,7 @@ interface Data {
 }
 `
 
-const ipQueryFnCode =
-  `
+const ipQueryFnCode = `${`
 import { isIPv4, isIPv6 } from 'net'
 import { URLSearchParams } from 'url'
 
@@ -97,10 +98,12 @@ async function getIp(ctx: Context, ip: string) {
     ctx.throws(500, \`IP API 调用失败，$\{e.message}\`)
   }
 };
-` + `\n${interfaceCode}`
+`.trim()}\n${interfaceCode}`
 
 // eslint-disable-next-line import/no-default-export
 export default {
   code: ipQueryFnCode,
   path: 'ip',
-}
+  name: 'ip-query',
+  method: 'GET',
+} as BuiltInFunctionObject

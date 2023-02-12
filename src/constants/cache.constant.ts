@@ -22,6 +22,8 @@ export enum RedisKeys {
   JWTStore = 'jwt_store',
   /** 最近速记的点赞，点踩记录 */
   RecentlyAttitude = 'recently_attitude',
+  /** 函数编译缓存 */
+  FunctionComplieCache = 'function_complie_cache',
 }
 
 export enum CacheKeys {

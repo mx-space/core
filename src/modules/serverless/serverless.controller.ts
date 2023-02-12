@@ -2,7 +2,9 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 
 import {
   All,
+  BadRequestException,
   CacheTTL,
+  Delete,
   ForbiddenException,
   Get,
   InternalServerErrorException,
@@ -105,5 +107,19 @@ export class ServerlessController {
     if (!reply.sent) {
       return reply.send(result)
     }
+  }
+
+  /**
+   * 重置内建函数
+   */
+  @Delete('/reset/:id')
+  @Auth()
+  async resetBuiltInFunction(@Param('id') id: string) {
+    const isBuiltin = await this.serverlessService.isBuiltInFunction(id)
+    if (!isBuiltin) {
+      throw new BadRequestException('can not reset a non-builtin function')
+    }
+    await this.serverlessService.resetBuiltInFunction(isBuiltin)
+    return
   }
 }

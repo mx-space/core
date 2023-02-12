@@ -2,6 +2,7 @@ import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
 
 import { NestFastifyApplication } from '@nestjs/platform-fastify'
+import { ReturnModelType } from '@typegoose/typegoose'
 
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
@@ -11,6 +12,7 @@ import { DatabaseService } from '~/processors/database/database.service'
 
 describe('test /snippets', () => {
   let app: NestFastifyApplication
+  let model: ReturnModelType<typeof SnippetModel>
   const proxy = createE2EApp({
     controllers: [SnippetController],
     providers: [
@@ -27,6 +29,11 @@ describe('test /snippets', () => {
       },
     ],
     models: [SnippetModel],
+    async pourData(modelMap) {
+      model = modelMap.get(SnippetModel).model as ReturnModelType<
+        typeof SnippetModel
+      >
+    },
   })
 
   const mockPayload1: Partial<SnippetModel> = Object.freeze({
@@ -164,5 +171,57 @@ describe('test /snippets', () => {
       .then((res) => {
         expect(res.statusCode).toBe(404)
       })
+  })
+
+  test('POST /snippets, can not create function with reserved reference', async () => {
+    const result = await app.inject({
+      method: 'POST',
+      url: '/snippets',
+      payload: {
+        ...snippetFuncType,
+        reference: 'built-in',
+      },
+      headers: {
+        ...authPassHeader,
+      },
+    })
+    expect(result.statusCode).toBe(400)
+  })
+
+  test('DEL /snippets/:id, should throw if delete built-in', async () => {
+    const doc = await model.create({
+      ...snippetFuncType,
+      reference: 'built-in',
+    })
+    const result = await app.inject({
+      method: 'DELETE',
+      url: `/snippets/${doc.id}`,
+      headers: {
+        ...authPassHeader,
+      },
+    })
+    expect(result.statusCode).toBe(400)
+  })
+
+  test('PUT /snippets/:id, modify built-in function', async () => {
+    const doc = await model.create({
+      ...snippetFuncType,
+      reference: 'built-in',
+      name: 'test',
+    })
+    const result = await app.inject({
+      method: 'PUT',
+      url: `/snippets/${doc.id}`,
+      payload: {
+        // @ts-ignore
+        ...doc.toObject(),
+        raw: `export default async function handler(context, require) { return null }`,
+      },
+      headers: {
+        ...authPassHeader,
+      },
+    })
+
+    expect(result.statusCode).toBe(200)
   })
 })
