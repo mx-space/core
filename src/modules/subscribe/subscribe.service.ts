@@ -52,7 +52,7 @@ export class SubscribeService implements OnModuleInit {
     // init from db
 
     const models = await this.model.find().lean()
-    const user = await this.configService.getMaster()
+
     for (const model of models) {
       this.subscribeMap.set(model.email, model.subscribe)
     }
@@ -68,6 +68,7 @@ export class SubscribeService implements OnModuleInit {
     }
 
     const noteAndPostHandler = async (noteOrPost: NoteModel | PostModel) => {
+      const user = await this.configService.getMaster()
       for (const [email, subscribe] of this.subscribeMap.entries()) {
         const unsubscribeLink = await getUnsubscribeLink(email)
 
