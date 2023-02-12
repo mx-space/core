@@ -31,9 +31,9 @@ const ipQueryFnCode = `${`
 import { isIPv4, isIPv6 } from 'net'
 import { URLSearchParams } from 'url'
 
-const timeout = 5000
+const TIMEOUT = 5000
 
-export default async function handler(ctx: Context) {
+export default async function handler(ctx: Context, timeout = TIMEOUT) {
   const { ip } = ctx.query
   if (!ip) { ctx.throws(422, 'ip is empty') }
   const cache = ctx.storage.cache

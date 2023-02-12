@@ -1,11 +1,13 @@
 import { BuiltInFunctionObject } from '../../function.types'
 
 export const code = `
+import { URLSearchParams } from 'url'
 export default async function handler(ctx: Context) {
   let { keywords } = ctx.query
   keywords = keywords.replace(/\\s/g, '|')
 
   const { axios } = await ctx.getService('http')
+  const config = await ctx.getService('config')
 
   const adminExtra = await config.get('adminExtra')
   const gaodemapKey = adminExtra?.gaodemapKey || secret.gaodemapKey

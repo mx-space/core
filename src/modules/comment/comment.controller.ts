@@ -191,13 +191,16 @@ export class CommentController {
       throw new ForbiddenException('主人禁止了评论')
     }
 
-    const model: Partial<CommentModel> =
-      await this.commentService.attachIpLocation(
-        { ...body, ...ipLocation },
-        isMaster ? '' : ipLocation.ip,
-      )
+    const model: Partial<CommentModel> = { ...body, ...ipLocation }
 
     const comment = await this.commentService.createComment(id, model, ref)
+    const commentId = comment._id.toString()
+    process.nextTick(async () => {
+      if (isMaster) {
+        return
+      }
+      await this.commentService.appendIpLocation(commentId, ipLocation.ip)
+    })
 
     process.nextTick(async () => {
       const configs = await this.configsService.get('commentOptions')
@@ -273,20 +276,23 @@ export class CommentController {
     const commentIndex = parent.commentsIndex
     const key = `${parent.key}#${commentIndex}`
 
-    const model: Partial<CommentModel> =
-      await this.commentService.attachIpLocation(
-        {
-          parent,
-          ref: (parent.ref as DocumentType<any>)._id,
-          refType: parent.refType,
-          ...body,
-          ...ipLocation,
-          key,
-        },
-        isMaster ? '' : ipLocation.ip,
-      )
+    const model: Partial<CommentModel> = {
+      parent,
+      ref: (parent.ref as DocumentType<any>)._id,
+      refType: parent.refType,
+      ...body,
+      ...ipLocation,
+      key,
+    }
 
     const comment = await this.commentService.model.create(model)
+    const commentId = comment._id.toString()
+    process.nextTick(async () => {
+      if (isMaster) {
+        return
+      }
+      await this.commentService.appendIpLocation(commentId, ipLocation.ip)
+    })
 
     await parent.updateOne({
       $push: {

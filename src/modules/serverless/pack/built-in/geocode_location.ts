@@ -8,7 +8,6 @@ export default async function handler(ctx: Context) {
   const adminExtra = await config.get('adminExtra')
   const gaodemapKey = adminExtra?.gaodemapKey || secret.gaodemapKey
 
-
   if (!gaodemapKey) {
     ctx.throws(400, '高德地图 API Key 未配置')
   }

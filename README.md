@@ -36,7 +36,7 @@ docker-compose up -d
 
 ## 宿主部署
 
-需要以下环境:
+需要以下环境：
 
 - Node.js 16.10+
 - MongoDB
@@ -146,7 +146,6 @@ ResponseInterceptor -> ResponseFilterInterceptor -> JSONTransformInterceptor -> 
   1. [Say] 说说
   1. [Search] 搜索
   1. [Sitemap] 站点地图
-  1. [Tool] 工具接口
   1. [User] 用户
 
 - [核心辅助模块 processors](https://github.com/mx-space/mx-server/tree/master/src/processors)

@@ -29,7 +29,6 @@ export const generateDefaultConfig: () => IConfig = () => ({
     disableComment: false,
     blockIps: [],
     disableNoChinese: false,
-    fetchLocationTimeout: 3000,
     recordIpLocation: true,
     spamKeywords: [],
     commentShouldAudit: false,
