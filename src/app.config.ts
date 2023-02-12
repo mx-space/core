@@ -6,8 +6,6 @@ import { load as yamlLoad } from 'js-yaml'
 import { machineIdSync } from 'node-machine-id'
 import path from 'path'
 
-import { isDev } from './global/env.global'
-
 const commander = program
   .option('-p, --port <number>', 'server port')
   .option('--demo', 'enable demo mode')
@@ -112,7 +110,7 @@ export const REDIS = {
   ttl: null,
   httpCacheTTL: 5,
   max: 5,
-  disableApiCache: (isDev || argv.disable_cache) && !ENABLE_CACHE_DEBUG,
+  disableApiCache: false,
 }
 
 export const AXIOS_CONFIG: AxiosRequestConfig = {

@@ -13,6 +13,7 @@ import {
   Request,
   Response,
 } from '@nestjs/common'
+import { Throttle } from '@nestjs/throttler'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -49,7 +50,8 @@ export class ServerlessController {
       throw new InternalServerErrorException('code defined file not found')
     }
   }
-  @Get('/:reference/:name/*')
+  @All('/:reference/:name/*')
+  @Throttle(100, 5)
   @HTTPDecorators.Bypass
   async runServerlessFunctionWildcard(
     @Param() param: ServerlessReferenceDto,
@@ -62,6 +64,7 @@ export class ServerlessController {
   }
 
   @All('/:reference/:name')
+  @Throttle(100, 5)
   @HTTPDecorators.Bypass
   async runServerlessFunction(
     @Param() param: ServerlessReferenceDto,

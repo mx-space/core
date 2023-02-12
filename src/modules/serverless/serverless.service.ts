@@ -1,6 +1,7 @@
 import { isURL } from 'class-validator'
 import fs, { mkdir, stat } from 'fs/promises'
 import { isPlainObject } from 'lodash'
+import LRUCache from 'lru-cache'
 import { createRequire } from 'module'
 import { mongo } from 'mongoose'
 import path, { resolve } from 'path'
@@ -44,9 +45,21 @@ import { builtInSnippets } from './pack/built-in'
 import { ServerlessStorageCollectionName } from './serverless.model'
 import { complieTypeScriptBabelOptions, hashStable } from './serverless.util'
 
+class CleanableScope {
+  public requireModuleIdSet = new Set<string>()
+  public scopeContextLRU = new LRUCache<string, any>({
+    max: 100,
+    ttl: 1000 * 60 * 5,
+  })
+  public scopeModuleLRU = new LRUCache<string, any>({
+    max: 20,
+    ttl: 1000 * 60 * 5,
+  })
+}
 @Injectable()
 export class ServerlessService implements OnModuleInit {
   private readonly logger: Logger
+  private readonly cleanableScope: CleanableScope
   constructor(
     @InjectModel(SnippetModel)
     private readonly snippetModel: MongooseModel<SnippetModel>,
@@ -58,6 +71,7 @@ export class ServerlessService implements OnModuleInit {
     private readonly configService: ConfigsService,
   ) {
     this.logger = new Logger(ServerlessService.name)
+    this.cleanableScope = new CleanableScope()
   }
 
   async onModuleInit() {
@@ -265,92 +279,15 @@ export class ServerlessService implements OnModuleInit {
     context: { req: FunctionContextRequest; res: FunctionContextResponse },
   ) {
     const { raw: functionString } = model
-    const logger = new Logger(`fx:${model.reference}/${model.name}`)
-    const document = await this.model.findById(model.id)
-    const secretObj = model.secret
-      ? qs.parse(EncryptUtil.decrypt(model.secret))
-      : {}
+    const scope = `${model.reference}/${model.name}`
 
-    if (!isPlainObject(secretObj)) {
-      throw new InternalServerErrorException(
-        `secret parsing error, must be object, got ${typeof secretObj}`,
-      )
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const self = this
-    const globalContext = {
-      context: {
-        // inject app req, res
-        ...context,
-        ...context.res,
-        query: context.req.query,
-        headers: context.req.headers,
-        // TODO wildcard params
-        params: Object.assign({}, context.req.params),
-
-        storage: {
-          cache: this.mockStorageCache(),
-          db: this.mockDb(
-            `${model.reference || '#########debug######'}@${model.name}`,
-          ),
-          dangerousAccessDbInstance: () => {
-            return [this.databaseService.db, mongo]
-          },
-        },
-
-        secret: secretObj,
-
-        model,
-        document,
-        name: model.name,
-        reference: model.reference,
-        getMaster: this.mockGetMaster.bind(this),
-        getService: this.getService.bind(this),
-
-        writeAsset: async (
-          path: string,
-          data: any,
-          options: Parameters<typeof fs.writeFile>[2],
-        ) => {
-          return await this.assetService.writeUserCustomAsset(
-            safePathJoin(path),
-            data,
-            options,
-          )
-        },
-        readAsset: async (
-          path: string,
-          options: Parameters<typeof fs.readFile>[1],
-        ) => {
-          return await this.assetService.getAsset(safePathJoin(path), options)
-        },
-      },
-
-      // inject global
-      __dirname: DATA_DIR,
-      __filename: '',
-
-      // inject some zx utils
-      fetch,
-
-      // inject Global API
-      Buffer,
-
-      // inject logger
-      console: logger,
+    const logger = new Logger(`fx:${scope}`)
+    const globalContext = await this.createScopeContext(
+      scope,
+      context,
+      model,
       logger,
-
-      require: this.inNewContextRequire(),
-      import(module: string) {
-        return Promise.resolve(self.require(module))
-      },
-
-      process: {
-        env: Object.freeze({ ...process.env }),
-        nextTick: process.nextTick.bind(null),
-      },
-    }
+    )
 
     const cacheKey = model.updated
       ? getRedisKey(
@@ -412,15 +349,17 @@ export class ServerlessService implements OnModuleInit {
     return res.code
   }
 
-  private requireModuleIdSet = new Set<string>()
-
   @Interval(5 * 60 * 1000)
-  private cleanRequireCache() {
-    Array.from(this.requireModuleIdSet.values()).forEach((id) => {
+  private cleanup() {
+    const { requireModuleIdSet, scopeContextLRU, scopeModuleLRU } =
+      this.cleanableScope
+    Array.from(requireModuleIdSet.values()).forEach((id) => {
       delete this.require.cache[id]
     })
 
-    this.requireModuleIdSet.clear()
+    requireModuleIdSet.clear()
+    scopeContextLRU.clear()
+    scopeModuleLRU.clear()
   }
 
   private resolvePath(id: string) {
@@ -446,8 +385,13 @@ export class ServerlessService implements OnModuleInit {
     ? createRequire(resolve(process.cwd(), './node_modules'))
     : createRequire(NODE_REQUIRE_PATH)
 
-  private inNewContextRequire() {
+  private createNewContextRequire(scope: string) {
     const __require = (id: string) => {
+      const cacheKey = `${scope}_${id}`
+      if (this.cleanableScope.scopeModuleLRU.has(cacheKey)) {
+        return this.cleanableScope.scopeModuleLRU.get(cacheKey)
+      }
+
       const isBuiltin = isBuiltinModule(id)
 
       const resolvePath = this.resolvePath(id)
@@ -456,9 +400,11 @@ export class ServerlessService implements OnModuleInit {
       // eslint-disable-next-line no-empty
       if (Object.keys(PKG.dependencies).includes(id) || isBuiltin) {
       } else {
-        this.requireModuleIdSet.add(resolvePath)
+        this.cleanableScope.requireModuleIdSet.add(resolvePath)
       }
       const clonedModule = deepCloneWithFunction(module)
+      this.cleanableScope.scopeModuleLRU.set(cacheKey, clonedModule)
+
       return clonedModule
     }
 
@@ -577,6 +523,107 @@ export class ServerlessService implements OnModuleInit {
     return $require.bind(this)
   }
 
+  private async createScopeContext(
+    scope: string,
+    context: any,
+    model: SnippetModel,
+    logger: Logger,
+  ) {
+    if (this.cleanableScope.scopeContextLRU.has(scope)) {
+      return this.cleanableScope.scopeContextLRU.get(scope)
+    }
+
+    const document = await this.model.findById(model.id)
+    const secretObj = model.secret
+      ? qs.parse(EncryptUtil.decrypt(model.secret))
+      : {}
+
+    if (!isPlainObject(secretObj)) {
+      throw new InternalServerErrorException(
+        `secret parsing error, must be object, got ${typeof secretObj}`,
+      )
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this
+    const createdContext = {
+      context: {
+        // inject app req, res
+        ...context,
+        ...context.res,
+        query: context.req.query,
+        headers: context.req.headers,
+        // TODO wildcard params
+        params: Object.assign({}, context.req.params),
+
+        storage: {
+          cache: this.mockStorageCache(),
+          db: this.mockDb(
+            `${model.reference || '#########debug######'}@${model.name}`,
+          ),
+          dangerousAccessDbInstance: () => {
+            return [this.databaseService.db, mongo]
+          },
+        },
+
+        secret: secretObj,
+
+        model,
+        document,
+        name: model.name,
+        reference: model.reference,
+        getMaster: this.mockGetMaster.bind(this),
+        getService: this.getService.bind(this),
+
+        writeAsset: async (
+          path: string,
+          data: any,
+          options: Parameters<typeof fs.writeFile>[2],
+        ) => {
+          return await this.assetService.writeUserCustomAsset(
+            safePathJoin(path),
+            data,
+            options,
+          )
+        },
+        readAsset: async (
+          path: string,
+          options: Parameters<typeof fs.readFile>[1],
+        ) => {
+          return await this.assetService.getAsset(safePathJoin(path), options)
+        },
+      },
+
+      // inject global
+      __dirname: DATA_DIR,
+      __filename: '',
+
+      // inject some zx utils
+      fetch,
+
+      // inject Global API
+      Buffer,
+
+      // inject logger
+      console: logger,
+      logger,
+
+      require: this.createNewContextRequire(scope),
+      import(module: string) {
+        return Promise.resolve(self.require(module))
+      },
+
+      process: {
+        env: Object.freeze({ ...process.env }),
+        nextTick: process.nextTick.bind(null),
+      },
+    }
+
+    this.cleanableScope.scopeContextLRU.set(scope, createdContext)
+
+    return createdContext
+  }
+
   async isValidServerlessFunction(raw: string) {
     try {
       // 验证 handler 是否存在并且是函数
@@ -673,7 +720,6 @@ export class ServerlessService implements OnModuleInit {
     if (!builtIn) {
       throw new InternalServerErrorException('built-in function not found')
     }
-    console.log('reset built-in function: ', name, builtIn.code)
 
     await this.model.updateOne(
       {

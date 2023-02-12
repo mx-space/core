@@ -130,7 +130,7 @@ export class LinkService {
     if (!model.email) {
       return
     }
-    const enable = (await this.configs.get('mailOptions')).enable
+    const { enable } = await this.configs.get('mailOptions')
     if (!enable || isDev) {
       console.log(`
       To: ${model.email}

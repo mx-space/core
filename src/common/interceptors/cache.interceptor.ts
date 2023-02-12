@@ -58,11 +58,11 @@ export class HttpCacheInterceptor implements NestInterceptor {
 
     const handler = context.getHandler()
     const isDisableCache = this.reflector.get(META.HTTP_CACHE_DISABLE, handler)
-    const key = this.trackBy(context) || `mx-api-cache:${request.url}`
 
     if (isDisableCache) {
       return call$
     }
+    const key = this.trackBy(context) || `mx-api-cache:${request.url}`
 
     const metaTTL = this.reflector.get(META.HTTP_CACHE_TTL_METADATA, handler)
     const ttl = metaTTL || REDIS.httpCacheTTL

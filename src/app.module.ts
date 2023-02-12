@@ -1,5 +1,6 @@
 import { DynamicModule, Module, NestModule, Type } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
+import { ThrottlerGuard } from '@nestjs/throttler'
 
 import { DEMO_MODE } from './app.config'
 import { AppController } from './app.controller'
@@ -140,6 +141,10 @@ import { RedisModule } from './processors/redis/redis.module'
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })
