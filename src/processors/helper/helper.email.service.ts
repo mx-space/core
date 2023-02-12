@@ -49,23 +49,25 @@ export class EmailService implements OnModuleInit {
     }
   }
 
-  async readTemplate(type: ReplyMailType | NewsletterMailType) {
+  async readTemplate(
+    type: ReplyMailType | NewsletterMailType,
+  ): Promise<string> {
     switch (type) {
       case ReplyMailType.Guest:
         return this.assetService.getAsset(
           '/email-template/guest.template.ejs',
           { encoding: 'utf-8' },
-        )
+        ) as Promise<string>
       case ReplyMailType.Owner:
         return this.assetService.getAsset(
           '/email-template/owner.template.ejs',
           { encoding: 'utf-8' },
-        )
+        ) as Promise<string>
       case NewsletterMailType.Newsletter:
         return this.assetService.getAsset(
           '/email-template/newsletter.template.ejs',
           { encoding: 'utf-8' },
-        )
+        ) as Promise<string>
     }
   }
 

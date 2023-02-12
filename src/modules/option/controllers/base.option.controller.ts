@@ -15,7 +15,7 @@ import { IConfig } from '~/modules/configs/configs.interface'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { classToJsonSchema } from '~/utils/jsonschema.util'
 
-import { ConfigKeyDto } from '../dtos/config.dto'
+import { ConfigKeyDto } from '../dtoes/config.dto'
 import { OptionController } from '../option.decorator'
 
 @OptionController()
