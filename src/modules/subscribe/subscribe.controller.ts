@@ -16,12 +16,17 @@ export class SubscribeController {
   @HTTPDecorators.Paginator
   @Auth()
   async list(@Query() query: PagerDto) {
-    const { page, size } = query
+    const { page, size, sortBy, sortOrder } = query
     return this.service.model.paginate(
       {},
       {
         page,
         limit: size,
+        sort: sortBy
+          ? {
+              [sortBy]: sortOrder,
+            }
+          : undefined,
       },
     )
   }
