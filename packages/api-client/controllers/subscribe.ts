@@ -27,6 +27,17 @@ export class SubscribeController<ResponseWrapper> implements IController {
     return this.client.proxy(this.base)
   }
 
+  /**
+   * 检查开启状态
+   */
+  check() {
+    return this.proxy.status.get<{
+      enable: boolean
+      bitMap: Record<SubscribeType, number>
+      allowTypes: number[]
+    }>()
+  }
+
   subscribe(email: string, types: SubscribeType[]) {
     return this.proxy.post<never>({
       params: {

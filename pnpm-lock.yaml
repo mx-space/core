@@ -19,6 +19,7 @@ importers:
       '@fastify/multipart': 7.4.0
       '@fastify/static': 6.8.0
       '@innei/eslint-config-ts': 0.9.7
+      '@innei/next-async': 0.2.3
       '@innei/prettier': 0.9.7
       '@nestjs/cli': 9.2.0
       '@nestjs/common': 9.3.2
@@ -141,6 +142,7 @@ importers:
       '@fastify/cookie': 8.3.0
       '@fastify/multipart': 7.4.0
       '@fastify/static': 6.8.0
+      '@innei/next-async': 0.2.3
       '@nestjs/common': 9.3.2_wfccvjmrxsdt24lpjkvzmt5igm
       '@nestjs/core': 9.3.2_gbxbw37j2g4pb6cu3eyhp23y5a
       '@nestjs/event-emitter': 1.4.1_dvs6bzzwlxted5pypaoawo6uwu
@@ -1782,6 +1784,11 @@ packages:
       - eslint-import-resolver-webpack
       - supports-color
     dev: true
+
+  /@innei/next-async/0.2.3:
+    resolution: {integrity: sha512-9Xn38sPORx8knSpjjOEPot0S2BszKRK6V8sqShmBIeOspKhQIypa7BCwy+2+rZnPLk1XrodVUl5mCqBmHwBDTg==}
+    engines: {pnpm: '>=7'}
+    dev: false
 
   /@innei/prettier/0.9.7:
     resolution: {integrity: sha512-CxUbNMsm23h3llui28siIPAyuv8WvSwRVrghZo1JYb+UV/+YcqLGlZNyhtsk0KiPKOIRhMcJI4T3CgMX2MSHPQ==}

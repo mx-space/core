@@ -9,6 +9,7 @@ import {
   BaiduSearchOptionsDto,
   BarkOptionsDto,
   CommentOptionsDto,
+  FeatureListDto,
   FriendLinkOptionsDto,
   MailOptionsDto,
   SeoDto,
@@ -67,6 +68,10 @@ export abstract class IConfig {
   @Type(() => TerminalOptionsDto)
   @ValidateNested()
   terminalOptions: Required<TerminalOptionsDto>
+
+  @Type(() => FeatureListDto)
+  @ValidateNested()
+  featureList: Required<FeatureListDto>
 }
 
 export type IConfigKeys = keyof IConfig

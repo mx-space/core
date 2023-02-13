@@ -323,5 +323,16 @@ export class BarkOptionsDto {
   @IsOptional()
   @IsBoolean()
   @JSONSchemaToggleField('开启评论通知')
-  enableComment?: boolean
+  enableComment: boolean
+}
+
+/**
+ * 特征开关
+ */
+@JSONSchema({ title: '特征开关设定' })
+export class FeatureListDto {
+  @JSONSchemaToggleField('开启邮件推送订阅')
+  @IsBoolean()
+  @IsOptional()
+  emailSubscribe: boolean
 }

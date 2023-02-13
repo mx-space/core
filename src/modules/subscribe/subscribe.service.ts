@@ -2,6 +2,8 @@ import cluster from 'cluster'
 import { render } from 'ejs'
 import { nanoid } from 'nanoid'
 
+import { Co } from '@innei/next-async'
+import { CoAction } from '@innei/next-async/types/interface'
 import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -67,20 +69,25 @@ export class SubscribeService implements OnModuleInit {
       return `${serverUrl}/subscribe/unsubscribe?email=${email}&cancelToken=${document.cancelToken}`
     }
 
-    const noteAndPostHandler = async (noteOrPost: NoteModel | PostModel) => {
-      const user = await this.configService.getMaster()
-      for (const [email, subscribe] of this.subscribeMap.entries()) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this
+
+    const noteAndPostHandler: CoAction<never> = async function (
+      noteOrPost: NoteModel | PostModel,
+    ) {
+      const user = await self.configService.getMaster()
+      for (const [email, subscribe] of self.subscribeMap.entries()) {
         const unsubscribeLink = await getUnsubscribeLink(email)
 
         if (!unsubscribeLink) continue
-        const isNote = this.urlBuilderService.isNoteModel(noteOrPost)
+        const isNote = self.urlBuilderService.isNoteModel(noteOrPost)
 
         if (
           subscribe & (isNote ? SubscribeNoteCreateBit : SubscribePostCreateBit)
         )
-          this.sendEmail(email, {
+          self.sendEmail(email, {
             author: user.name,
-            detail_link: await this.urlBuilderService.buildWithBaseUrl(
+            detail_link: await self.urlBuilderService.buildWithBaseUrl(
               noteOrPost,
             ),
             text: `${noteOrPost.text.slice(0, 150)}...`,
@@ -90,15 +97,27 @@ export class SubscribeService implements OnModuleInit {
           })
       }
     }
+
+    const precheck: CoAction<any> = async function () {
+      const enable = await self.checkEnable()
+
+      if (enable) {
+        await this.next()
+        return
+      }
+      this.abort()
+    }
+
+    // TODO 抽离逻辑
     this.eventManager.on(
       BusinessEvents.NOTE_CREATE,
-      noteAndPostHandler,
+      (e) => new Co().use(precheck, noteAndPostHandler).start(e),
       scopeCfg,
     )
 
     this.eventManager.on(
       BusinessEvents.POST_CREATE,
-      noteAndPostHandler,
+      (e) => new Co().use(precheck, noteAndPostHandler).start(e),
       scopeCfg,
     )
 
@@ -208,5 +227,11 @@ export class SubscribeService implements OnModuleInit {
     // console.debug(`send: `, options, `to: ${email}`)
 
     await this.emailService.send(options)
+  }
+
+  async checkEnable() {
+    const { emailSubscribe } = await this.configService.get('featureList')
+
+    return emailSubscribe
   }
 }

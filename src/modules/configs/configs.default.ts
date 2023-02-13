@@ -63,4 +63,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
   textOptions: {
     macros: true,
   },
+  featureList: {
+    emailSubscribe: false,
+  },
 })

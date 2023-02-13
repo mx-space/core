@@ -60,6 +60,7 @@
   },
   "scripts": {
     "package": "rm -rf dist && tsup && node mod-dts.mjs",
+    "build": "npm run package",
     "prepackage": "rm -rf dist",
     "test": "vitest",
     "dev": "vitest"
