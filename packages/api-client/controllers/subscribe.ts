@@ -34,7 +34,8 @@ export class SubscribeController<ResponseWrapper> implements IController {
     return this.proxy.status.get<{
       enable: boolean
       bitMap: Record<SubscribeType, number>
-      allowTypes: number[]
+      allowBits: number[]
+      allowTypes: SubscribeType[]
     }>()
   }
 

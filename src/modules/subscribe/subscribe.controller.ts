@@ -5,11 +5,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { PagerDto } from '~/shared/dto/pager.dto'
 
-import {
-  SubscribeNoteCreateBit,
-  SubscribePostCreateBit,
-  SubscribeTypeToBitMap,
-} from './subscribe.constant'
+import { SubscribeTypeToBitMap } from './subscribe.constant'
 import { CancelSubscribeDto, SubscribeDto } from './subscribe.dto'
 import { SubscribeService } from './subscribe.service'
 
@@ -21,11 +17,13 @@ export class SubscribeController {
   // 检查特征是否开启
   @HTTPDecorators.Bypass
   async checkStatus() {
+    const allow_types = ['note_c', 'post_c']
     return {
       enable: await this.service.checkEnable(),
       bit_map: SubscribeTypeToBitMap,
       // TODO move to service
-      allow_types: [SubscribeNoteCreateBit, SubscribePostCreateBit],
+      allow_bits: allow_types.map((t) => SubscribeTypeToBitMap[t]),
+      allow_types,
     }
   }
 

@@ -18,4 +18,15 @@ describe('test topic client', () => {
     const data = await client.subscribe.unsubscribe('foo@example.com', 'token')
     expect(data).toEqual(mocked)
   })
+
+  test('GET /subscribe/status', async () => {
+    const mocked = mockResponse('/subscribe/status', {
+      enable: true,
+      bit_map: { post_c: 1, note_c: 2, say_c: 4, recently_c: 8, all: 15 },
+      allow_bits: [2, 1],
+      allow_types: ['note_c', 'post_c'],
+    })
+    const data = await client.subscribe.check()
+    expect(data).toEqual(camelcaseKeys(mocked, { deep: true }))
+  })
 })
