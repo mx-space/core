@@ -1,0 +1,26 @@
+.spoiler {
+  background-color: currentColor;
+  transition: all 0.5s;
+  text-decoration: none;
+}
+
+.spoiler:hover {
+  background-color: transparent;
+}
+
+body {
+  max-width: 800px;
+  margin: auto !important;
+}
+
+.mermaid {
+  text-align: center;
+}
+
+.mermaid > svg {
+  margin: auto;
+}
+
+img {
+  max-width: 100%;
+}

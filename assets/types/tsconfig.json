@@ -1,0 +1,8 @@
+{
+  "include": [
+    "./type.declare.ts"
+  ],
+  "compilerOptions": {
+    "types": []
+  }
+}

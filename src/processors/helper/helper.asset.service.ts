@@ -9,11 +9,13 @@ import path, { join } from 'path'
 
 import { Injectable, Logger } from '@nestjs/common'
 
+// 先从 ASSET_DIR 找用户自定义的资源，没有就从默认的 ASSET_DIR 找，没有就从网上拉取，存到默认的 ASSET_DIR
+import PKG from '~/../package.json'
 import { USER_ASSET_DIR } from '~/constants/path.constant'
 
 import { HttpService } from './helper.http.service'
 
-// 先从 ASSET_DIR 找用户自定义的资源，没有就从默认的 ASSET_DIR 找，没有就从网上拉取，存到默认的 ASSET_DIR
+const REPO_NAME = PKG.repository.directory
 @Injectable()
 export class AssetService {
   private logger: Logger
@@ -26,8 +28,7 @@ export class AssetService {
    */
   public embedAssetPath = path.resolve(cwd, 'assets')
   // 在线资源的地址 `/` 结尾
-  private onlineAssetPath =
-    'https://cdn.jsdelivr.net/gh/mx-space/assets@master/'
+  private onlineAssetPath = `https://cdn.jsdelivr.net/gh/${REPO_NAME}@master/assets/`
 
   private checkRoot() {
     if (!existsSync(this.embedAssetPath)) {

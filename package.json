@@ -53,9 +53,6 @@
       "pnpm i",
       "node scripts/get-latest-admin-version.js"
     ],
-    "after": [
-      "sh ./scripts/assets-push.sh"
-    ],
     "changelog": true
   },
   "dependencies": {
