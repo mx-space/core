@@ -1,5 +1,6 @@
 set -e
 cd assets
+rm -rf .git
 git init
 git add .
 git commit -m 'update assets'
