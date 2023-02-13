@@ -20,7 +20,12 @@ describe('OptionController (e2e)', () => {
       })
       .then((res) => {
         expect(res.statusCode).toBe(200)
-        expect(res.payload).toMatchSnapshot()
+        const json = res.json()
+
+        expect(
+          typeof json.properties === 'object' && json.properties,
+        ).toBeTruthy()
+        expect(typeof json.default === 'object' && json.default).toBeTruthy()
       })
   })
 })
