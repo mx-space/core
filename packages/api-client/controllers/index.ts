@@ -15,6 +15,7 @@ import { SayController } from './say'
 import { SearchController } from './search'
 import { ServerlessController } from './severless'
 import { SnippetController } from './snippet'
+import { SubscribeController } from './subscribe'
 import { TopicController } from './topic'
 import { UserController } from './user'
 
@@ -33,6 +34,7 @@ export const allControllers = [
   SearchController,
   SnippetController,
   ServerlessController,
+  SubscribeController,
   UserController,
 ]
 
@@ -51,6 +53,7 @@ export const allContollerNames = [
   'search',
   'snippet',
   'serverless',
+  'subscribe',
   'user',
 
   // alias,
@@ -73,6 +76,7 @@ export {
   SearchController,
   SnippetController,
   ServerlessController,
+  SubscribeController,
   UserController,
   TopicController,
 

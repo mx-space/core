@@ -12,7 +12,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { ApiName } from '~/common/decorators/openapi.decorator'
 
 import { ConfigsService } from '../configs/configs.service'
-import { ConfigKeyDto } from '../option/dtos/config.dto'
+import { ConfigKeyDto } from '../option/dtoes/config.dto'
 import { InitService } from './init.service'
 
 @ApiController('/init')
