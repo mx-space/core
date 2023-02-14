@@ -45,7 +45,7 @@ export default async function handler(ctx: Context, timeout = TIMEOUT) {
   return result
 }
 
-async function getIp(ctx: Context, ip: string) {
+async function getIp(ctx: Context, ip: string, timeout = TIMEOUT) {
   const isV4 = isIPv4(ip)
   const isV6 = isIPv6(ip)
   const { axios } = await (ctx.getService('http'))
