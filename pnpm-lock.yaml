@@ -99,7 +99,7 @@ importers:
       mongodb-memory-server: 8.11.4
       mongoose: 6.9.1
       mongoose-aggregate-paginate-v2: 1.0.6
-      mongoose-lean-getters: 0.3.6
+      mongoose-lean-getters: 0.4.0
       mongoose-lean-id: 0.3.0
       mongoose-lean-virtuals: 0.9.1
       mongoose-paginate-v2: 1.7.1
@@ -190,7 +190,7 @@ importers:
       mkdirp: 1.0.4
       mongoose: 6.9.1
       mongoose-aggregate-paginate-v2: 1.0.6
-      mongoose-lean-getters: 0.3.6_mongoose@6.9.1
+      mongoose-lean-getters: 0.4.0_mongoose@6.9.1
       mongoose-lean-id: 0.3.0_mongoose@6.9.1
       mongoose-lean-virtuals: 0.9.1_mongoose@6.9.1
       mongoose-paginate-v2: 1.7.1
@@ -6815,8 +6815,8 @@ packages:
     engines: {node: '>=4.0.0'}
     dev: false
 
-  /mongoose-lean-getters/0.3.6_mongoose@6.9.1:
-    resolution: {integrity: sha512-Z+uKP8M2czjFaWtNtp+k/zF5WwyIwffv/FjMHyyA4KkoGViqsE2ePQE/gW0NW3JIXv7NJCdd44DKsGMgwvJumw==}
+  /mongoose-lean-getters/0.4.0_mongoose@6.9.1:
+    resolution: {integrity: sha512-4YgzBZYFpXZm4Roz2MKXm3X2yDGR6OkpZx0jka4qTM3S3Gul/KV7SqPlZLauJG1RjU9hyuOvnDXYcji7iZXwcA==}
     engines: {node: '>= 8'}
     peerDependencies:
       mongoose: '>= 5.11.0 || 6.x'
