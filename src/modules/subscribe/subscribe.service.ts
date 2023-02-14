@@ -230,8 +230,11 @@ export class SubscribeService implements OnModuleInit {
   }
 
   async checkEnable() {
-    const { emailSubscribe } = await this.configService.get('featureList')
+    const {
+      featureList: { emailSubscribe },
+      mailOptions: { enable },
+    } = await this.configService.waitForConfigReady()
 
-    return emailSubscribe
+    return emailSubscribe && enable
   }
 }
