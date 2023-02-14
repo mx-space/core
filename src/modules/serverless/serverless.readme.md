@@ -106,6 +106,10 @@ import * as ejs from 'ejs'
 
 `context.getMaster()` Promise<UserModel>，可以获取到主人的信息
 
+`context.getService(name: string)` Promise<unknown>，当前支持 `axios`, `config`
+
+`context.secret` Secret 对象
+
 `context.name` same as model.name
 
 `context.reference` same as model.reference
