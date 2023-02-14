@@ -22,15 +22,7 @@
       "import": "./dist/adaptors/*.js",
       "require": "./dist/adaptors/*.cjs"
     },
-    "./package.json": "./package.json",
-    "./adaptors/*": {
-      "import": {
-        "default": "./dist/adaptors/*.js"
-      },
-      "require": {
-        "default": "./dist/adaptors/*.cjs"
-      }
-    }
+    "./package.json": "./package.json"
   },
   "husky": {
     "hooks": {
