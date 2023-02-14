@@ -56,6 +56,10 @@ export class SubscribeController {
     for (const type of types) {
       bit |= this.service.subscribeTypeToBit(type as any)
     }
+
+    if (bit === 0) {
+      throw new BadRequestException('订阅类型不为空')
+    }
     await this.service.subscribe(email, bit)
   }
 
