@@ -1,5 +1,27 @@
 # CHANGELOG
 
+# [3.42.0](https://github.com/mx-space/core/compare/v3.41.4...v3.42.0) (2023-02-14)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @nestjs/schedule to v2.2.0 ([#959](https://github.com/mx-space/core/issues/959)) ([623e8b0](https://github.com/mx-space/core/commit/623e8b0e6c6227f96efd29e9c1dce2fe6ee314de))
+* **deps:** update dependency commander to v9.5.0 ([#960](https://github.com/mx-space/core/issues/960)) ([aeed31e](https://github.com/mx-space/core/commit/aeed31ef83b2861a36641284a78fc771c9dca024))
+* **deps:** update dependency mongoose to v6.9.1 ([#971](https://github.com/mx-space/core/issues/971)) ([41b401d](https://github.com/mx-space/core/commit/41b401d9ef11411b20a325f6d748c257c33d8799))
+* **deps:** update dependency rxjs to v7.8.0 ([#920](https://github.com/mx-space/core/issues/920)) ([f910789](https://github.com/mx-space/core/commit/f910789527d260cf60dd5bd723897dba7b493dc0))
+* email enable then can subscribe ([2aa46d0](https://github.com/mx-space/core/commit/2aa46d07e94dca64530aa18588d9f264829ec876))
+* init project script ([bfc2e25](https://github.com/mx-space/core/commit/bfc2e25fabaf863d89aa25c10865bf602ccc0811))
+* **subscribe:** provide toC `allow_type` ([35e1864](https://github.com/mx-space/core/commit/35e18646e5bfb4a367dff39cc56aa5d04b59c57a))
+
+
+### Features
+
+* **fn:** support built-in fnnctions ([#967](https://github.com/mx-space/core/issues/967)) ([80526ba](https://github.com/mx-space/core/commit/80526baaf146ccafa43ff7ff0500c2dcd0c31b1e))
+* newsletter subscribe ([#968](https://github.com/mx-space/core/issues/968)) ([c8667ec](https://github.com/mx-space/core/commit/c8667ec5e296bf8fe4054010515145661f617c1d))
+* **subscribe:** add feature list toggle ([1b80adb](https://github.com/mx-space/core/commit/1b80adb02c4c93a7d754f9b0065a8e0bed496e5a))
+
+
+
 ## [3.41.4](https://github.com/mx-space/core/compare/v3.41.3...v3.41.4) (2023-02-10)
 
 
