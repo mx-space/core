@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [3.42.1](https://github.com/mx-space/core/compare/v3.42.0...v3.42.1) (2023-02-14)
+
+
+### Bug Fixes
+
+* **api-client:** remove export adaptor source file ([d7c5c80](https://github.com/mx-space/core/commit/d7c5c80e47d8c4a90052c206714fbe4e77a77d99))
+* zip asset script ([7f97a77](https://github.com/mx-space/core/commit/7f97a775c52a73de24bceff4d9224f057ea71139))
+
+
+
 # [3.42.0](https://github.com/mx-space/core/compare/v3.41.4...v3.42.0) (2023-02-14)
 
 
