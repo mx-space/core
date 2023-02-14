@@ -529,11 +529,6 @@ export class ServerlessService implements OnModuleInit {
     model: SnippetModel,
     logger: Logger,
   ) {
-    if (this.cleanableScope.scopeContextLRU.has(scope)) {
-      return this.cleanableScope.scopeContextLRU.get(scope)
-    }
-
-    const document = await this.model.findById(model.id)
     const secretObj = model.secret
       ? qs.parse(EncryptUtil.decrypt(model.secret))
       : {}
@@ -544,17 +539,35 @@ export class ServerlessService implements OnModuleInit {
       )
     }
 
+    const requestContext = {
+      ...context,
+      ...context.res,
+      query: context.req.query,
+      headers: context.req.headers,
+      // TODO wildcard params
+      params: Object.assign({}, context.req.params),
+
+      secret: secretObj,
+
+      model,
+      document: model,
+      name: model.name,
+      reference: model.reference,
+    }
+
+    if (this.cleanableScope.scopeContextLRU.has(scope)) {
+      const context = this.cleanableScope.scopeContextLRU.get(scope)
+
+      return Object.assign({}, context, {
+        context: { ...context.context, ...requestContext },
+      })
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this
     const createdContext = {
       context: {
-        // inject app req, res
-        ...context,
-        ...context.res,
-        query: context.req.query,
-        headers: context.req.headers,
-        // TODO wildcard params
-        params: Object.assign({}, context.req.params),
+        ...requestContext,
 
         storage: {
           cache: this.mockStorageCache(),
@@ -566,12 +579,6 @@ export class ServerlessService implements OnModuleInit {
           },
         },
 
-        secret: secretObj,
-
-        model,
-        document,
-        name: model.name,
-        reference: model.reference,
         getMaster: this.mockGetMaster.bind(this),
         getService: this.getService.bind(this),
 

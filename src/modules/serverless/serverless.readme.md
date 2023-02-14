@@ -102,8 +102,6 @@ import * as ejs from 'ejs'
 
 `context.model` 当前 Snippet 的 Model
 
-`context.document` MongooseDocument<SnippetModel>，可以进行对该记录的数据库操作。（不建议）
-
 `context.getMaster()` Promise<UserModel>，可以获取到主人的信息
 
 `context.getService(name: string)` Promise<unknown>，当前支持 `axios`, `config`
