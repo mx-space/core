@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [3.42.3](https://github.com/mx-space/core/compare/v3.42.2...v3.42.3) (2023-02-14)
+
+
+### Bug Fixes
+
+* **fn:** cached context ([145355f](https://github.com/mx-space/core/commit/145355fd4fe1266b8ac3dd333e12bdc62c79bd3b))
+
+
+
 ## [3.42.2](https://github.com/mx-space/core/compare/v3.42.1...v3.42.2) (2023-02-14)
 
 
