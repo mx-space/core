@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [3.42.2](https://github.com/mx-space/core/compare/v3.42.1...v3.42.2) (2023-02-14)
+
+
+### Bug Fixes
+
+* **api-client:** subscribe post body instend of params ([8f028a9](https://github.com/mx-space/core/commit/8f028a9ac26d80f96a06c929dadaa452f59a1bbb))
+* **deps:** update dependency mongoose-lean-getters to v0.4.0 ([#974](https://github.com/mx-space/core/issues/974)) ([a62fe1c](https://github.com/mx-space/core/commit/a62fe1cbef880188c31aeb6b4e381fb68704bca4))
+* **fn:** ip default function ([4b6f303](https://github.com/mx-space/core/commit/4b6f303829d9e6f2bb1220254f0425f9ff3a80bb))
+* **subscribe:** add guard for subscribe ([2ab6861](https://github.com/mx-space/core/commit/2ab6861d37a8d6d34b22a798485357d1ce57f1d8))
+
+
+
 ## [3.42.1](https://github.com/mx-space/core/compare/v3.42.0...v3.42.1) (2023-02-14)
 
 
