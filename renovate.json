@@ -16,9 +16,14 @@
   "ignoreDeps": [
     "nanoid",
     "camelcase-keys",
-    "@socket.io/redis-emitter",
     "class-validator",
-    "class-transformer"
+    "class-transformer",
+    "@swc/core",
+    "vite",
+    "vitest",
+
+    "@socket.io/redis-emitter",
+    "@socket.io/redis-adapter"
   ],
   "enabled": true
 }
