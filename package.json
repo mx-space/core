@@ -173,7 +173,7 @@
     "rimraf": "3.0.2",
     "rollup": "*",
     "rollup-plugin-swc": "0.2.1",
-    "socket.io": "4.5.4",
+    "socket.io": "4.6.0",
     "source-map-support": "*",
     "ts-node": "10.9.1",
     "tsconfig-paths": "4.1.2",
