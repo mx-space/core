@@ -270,7 +270,7 @@ importers:
       camelcase-keys: '*'
       cors: 2.8.5
       express: 4.18.2
-      isomorphic-unfetch: 3.1.0
+      isomorphic-unfetch: 4.0.2
       ky: 0.33.2
       lodash: 4.17.21
       node-fetch: 3.3.0
@@ -286,7 +286,7 @@ importers:
       camelcase-keys: 8.0.2
       cors: 2.8.5
       express: 4.18.2
-      isomorphic-unfetch: 3.1.0
+      isomorphic-unfetch: 4.0.2
       ky: 0.33.2
       lodash: 4.17.21
       node-fetch: 3.3.0
@@ -6163,13 +6163,11 @@ packages:
       whatwg-fetch: 3.6.2
     dev: true
 
-  /isomorphic-unfetch/3.1.0:
-    resolution: {integrity: sha512-geDJjpoZ8N0kWexiwkX8F9NkTsXhetLPVbZFQ+JTW239QNOwvB0gniuR1Wc6f0AMTn7/mFGyXvHTifrCp/GH8Q==}
+  /isomorphic-unfetch/4.0.2:
+    resolution: {integrity: sha512-1Yd+CF/7al18/N2BDbsLBcp6RO3tucSW+jcLq24dqdX5MNbCNTw1z4BsGsp4zNmjr/Izm2cs/cEqZPp4kvWSCA==}
     dependencies:
-      node-fetch: 2.6.9
-      unfetch: 4.2.0
-    transitivePeerDependencies:
-      - encoding
+      node-fetch: 3.3.0
+      unfetch: 5.0.0
     dev: true
 
   /iterare/1.2.1:
@@ -8612,8 +8610,8 @@ packages:
       has-symbols: 1.0.3
       which-boxed-primitive: 1.0.2
 
-  /unfetch/4.2.0:
-    resolution: {integrity: sha512-F9p7yYCn6cIW9El1zi0HI6vqpeIvBsr3dSuRO6Xuppb1u5rXpCPmMvLSyECLhybr9isec8Ohl0hPekMVrEinDA==}
+  /unfetch/5.0.0:
+    resolution: {integrity: sha512-3xM2c89siXg0nHvlmYsQ2zkLASvVMBisZm5lF3gFDqfF2xonNStDJyMpvaOBe0a1Edxmqrf2E0HBdmy9QyZaeg==}
     dev: true
 
   /uniq/1.0.1:
