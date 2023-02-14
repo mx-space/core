@@ -8,7 +8,10 @@ describe('test topic client', () => {
   const client = mockRequestInstance(SubscribeController)
 
   test('GET /subscribe', async () => {
-    const mocked = mockResponse('/subscribe', {}, 'post')
+    const mocked = mockResponse('/subscribe', {}, 'post', {
+      email: 'foo@example.com',
+      types: ['post_c'],
+    })
     const data = await client.subscribe.subscribe('foo@example.com', ['post_c'])
     expect(data).toEqual(camelcaseKeys(mocked))
   })

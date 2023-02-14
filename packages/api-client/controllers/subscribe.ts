@@ -41,7 +41,7 @@ export class SubscribeController<ResponseWrapper> implements IController {
 
   subscribe(email: string, types: SubscribeType[]) {
     return this.proxy.post<never>({
-      params: {
+      data: {
         email,
         types,
       },
