@@ -34,7 +34,7 @@ importers:
       '@nestjs/testing': 9.3.8
       '@nestjs/throttler': 4.0.0
       '@nestjs/websockets': 9.3.8
-      '@socket.io/redis-adapter': 7.2.0
+      '@socket.io/redis-adapter': 8.1.0
       '@socket.io/redis-emitter': 4.1.1
       '@swc/core': 1.3.4
       '@typegoose/auto-increment': 2.1.0
@@ -153,7 +153,7 @@ importers:
       '@nestjs/swagger': 6.2.1_kp33idplbhuvztgorramxrhnt4
       '@nestjs/throttler': 4.0.0_566t3mhi5ibwmzfcn7izxal7e4
       '@nestjs/websockets': 9.3.8_63hcnad7c2cx45h3ehx7j2mdfe
-      '@socket.io/redis-adapter': 7.2.0
+      '@socket.io/redis-adapter': 8.1.0
       '@socket.io/redis-emitter': 4.1.1
       '@typegoose/auto-increment': 2.1.0_mongoose@6.9.1
       '@typegoose/typegoose': 10.1.1_mongoose@6.9.1
@@ -2430,14 +2430,15 @@ packages:
   /@socket.io/component-emitter/3.1.0:
     resolution: {integrity: sha512-+9jVqKhRSpsc591z5vX+X5Yyw+he/HCB4iQ/RYxw35CEPaY1gnsNE43nf9n9AaYjAQrTiI/mOwKUKdUs9vf7Xg==}
 
-  /@socket.io/redis-adapter/7.2.0:
-    resolution: {integrity: sha512-/r6oF6Myz0K9uatB/pfCi0BhKg/KRMh1OokrqcjlNz6aq40WiXdFLRbHJQuwGHq/KvB+D6141K+IynbVxZGvhw==}
+  /@socket.io/redis-adapter/8.1.0:
+    resolution: {integrity: sha512-8nGMKcQ+DWpgefxA/Pi25aLajVilRPKwu29mZXu5cT+WGVYItcCkfMr4RsMmyYXUyJf00mN+7WinVLihmJwpXA==}
     engines: {node: '>=10.0.0'}
+    peerDependencies:
+      socket.io-adapter: ^2.4.0
     dependencies:
       debug: 4.3.4
-      notepack.io: 2.2.0
-      socket.io-adapter: 2.4.0
-      uid2: 0.0.3
+      notepack.io: 3.0.1
+      uid2: 1.0.0
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -7062,8 +7063,8 @@ packages:
     resolution: {integrity: sha512-AgSt+cP5XMooho1Ppn8NB3FFaVWefV+qZoZncYTUSch2GAEwlYLcIIbT5YVkMlFeNHnfwOvc4HDlbvrB5BRxXA==}
     dev: false
 
-  /notepack.io/2.2.0:
-    resolution: {integrity: sha512-9b5w3t5VSH6ZPosoYnyDONnUTF8o0UkBw7JLA6eBlYJWyGT1Q3vQa8Hmuj1/X6RYvHjjygBDgw6fJhe0JEojfw==}
+  /notepack.io/3.0.1:
+    resolution: {integrity: sha512-TKC/8zH5pXIAMVQio2TvVDTtPRX+DJPHDqjRbxogtFiByHyzKmy96RA0JtCQJ+WouyyL4A10xomQzgbUT+1jCg==}
     dev: false
 
   /npm-run-path/4.0.1:
@@ -7949,10 +7950,6 @@ packages:
       type-fest: 2.19.0
     dev: false
 
-  /socket.io-adapter/2.4.0:
-    resolution: {integrity: sha512-W4N+o69rkMEGVuk2D/cvca3uYsvGlMwsySWV447y99gUPghxq42BxqLNMndb+a1mm/5/7NeXVQS7RLa2XyXvYg==}
-    dev: false
-
   /socket.io-adapter/2.5.2:
     resolution: {integrity: sha512-87C3LO/NOMc+eMcpcxUBebGjkpMDkNBS9tf7KJqcDsmL936EChtVva71Dw2q4tQcuVC+hAUy4an2NO/sYXmwRA==}
     dependencies:
@@ -8593,8 +8590,9 @@ packages:
     dependencies:
       '@lukeed/csprng': 1.0.1
 
-  /uid2/0.0.3:
-    resolution: {integrity: sha1-SDEm4Rd03y9xuLY53NeZw3YWK4I=}
+  /uid2/1.0.0:
+    resolution: {integrity: sha512-+I6aJUv63YAcY9n4mQreLUt0d4lvwkkopDNmpomkAUz0fAkEMV9pRWxN0EjhW1YfRhcuyHg2v3mwddCDW1+LFQ==}
+    engines: {node: '>= 4.0.0'}
     dev: false
 
   /umi-request/1.4.0:
