@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [3.42.4](https://github.com/mx-space/core/compare/v3.42.3...v3.42.4) (2023-02-21)
+
+
+### Bug Fixes
+
+* **deps:** update nest monorepo to v9.3.9 ([#979](https://github.com/mx-space/core/issues/979)) ([792f2d5](https://github.com/mx-space/core/commit/792f2d55eb3a13478b152b16c934b0f6fdd85afd))
+
+
+
 ## [3.42.3](https://github.com/mx-space/core/compare/v3.42.2...v3.42.3) (2023-02-14)
 
 
