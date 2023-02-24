@@ -92,7 +92,7 @@ importers:
       linkedom: 0.14.22
       lint-staged: 13.1.2
       lodash: '*'
-      lru-cache: 7.16.1
+      lru-cache: 7.17.0
       marked: 4.2.12
       mime-types: '*'
       mkdirp: '*'
@@ -184,7 +184,7 @@ importers:
       jszip: 3.10.1
       linkedom: 0.14.22
       lodash: 4.17.21
-      lru-cache: 7.16.1
+      lru-cache: 7.17.0
       marked: 4.2.12
       mime-types: 2.1.35
       mkdirp: 1.0.4
@@ -3715,7 +3715,7 @@ packages:
     dependencies:
       async: 3.2.3
       lodash.clonedeep: 4.5.0
-      lru-cache: 7.16.1
+      lru-cache: 7.17.0
 
   /call-bind/1.0.2:
     resolution: {integrity: sha512-7O+FbCihrB5WGbFYesctwmTKae6rOiIzmz1icreWJ+0aA7LJfuqhEso2T9ncpcFtzMQtzXf2QGGueWJGTYsqrA==}
@@ -6553,8 +6553,8 @@ packages:
     dependencies:
       yallist: 4.0.0
 
-  /lru-cache/7.16.1:
-    resolution: {integrity: sha512-9kkuMZHnLH/8qXARvYSjNvq8S1GYFFzynQTAfKeaJ0sIrR3PUPuu37Z+EiIANiZBvpfTf2B5y8ecDLSMWlLv+w==}
+  /lru-cache/7.17.0:
+    resolution: {integrity: sha512-zSxlVVwOabhVyTi6E8gYv2cr6bXK+8ifYz5/uyJb9feXX6NACVDwY4p5Ut3WC3Ivo/QhpARHU3iujx2xGAYHbQ==}
     engines: {node: '>=12'}
 
   /luxon/1.28.0:
