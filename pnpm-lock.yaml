@@ -274,7 +274,7 @@ importers:
       lodash: 4.17.21
       node-fetch: 3.3.0
       tsc-alias: 1.8.2
-      tsup: 6.6.2
+      tsup: 6.6.3
       umi-request: 1.4.0
     devDependencies:
       '@types/cors': 2.8.13
@@ -289,7 +289,7 @@ importers:
       lodash: 4.17.21
       node-fetch: 3.3.0
       tsc-alias: 1.8.2
-      tsup: 6.6.2
+      tsup: 6.6.3
       umi-request: 1.4.0
 
 packages:
@@ -7476,10 +7476,6 @@ packages:
       end-of-stream: 1.4.4
       once: 1.4.0
 
-  /punycode/2.2.0:
-    resolution: {integrity: sha512-LN6QV1IJ9ZhxWTNdktaPClrNfp8xdSAYS0Zk2ddX7XsXZAxckMHPCBcHRo0cTcEIgYPRiGEkmji3Idkh2yFtYw==}
-    engines: {node: '>=6'}
-
   /punycode/2.3.0:
     resolution: {integrity: sha512-rRV+zQD8tVFys26lAGR9WUuS4iUAngJScM+ZRSKtvl5tKeZ2t5bvdNFdNHBW9FWR4guGHlgmsZ1G7BSm2wTbuA==}
     engines: {node: '>=6'}
@@ -8362,7 +8358,7 @@ packages:
   /tr46/1.0.1:
     resolution: {integrity: sha512-dTpowEjclQ7Kgx5SdBkqRzVhERQXov8/l9Ft9dVM9fmg0W0KQSVaXX9T4i6twCPNtYiZM53lpSSUAwJbFPOHxA==}
     dependencies:
-      punycode: 2.2.0
+      punycode: 2.3.0
     dev: true
 
   /tr46/3.0.0:
@@ -8475,9 +8471,9 @@ packages:
   /tslib/2.5.0:
     resolution: {integrity: sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==}
 
-  /tsup/6.6.2:
-    resolution: {integrity: sha512-+yQ6SI4rVtp1+YpcYOePumJLEVQ896CDNRt9dJ2L/DeMnLf1+FTOCVw5eioLBH0xLdHgogO9NQ6vPNF5MfkSJw==}
-    engines: {node: '>=14'}
+  /tsup/6.6.3:
+    resolution: {integrity: sha512-OLx/jFllYlVeZQ7sCHBuRVEQBBa1tFbouoc/gbYakyipjVQdWy/iQOvmExUA/ewap9iQ7tbJf9pW0PgcEFfJcQ==}
+    engines: {node: '>=14.18'}
     hasBin: true
     peerDependencies:
       '@swc/core': ^1
@@ -8631,7 +8627,7 @@ packages:
   /uri-js/4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
     dependencies:
-      punycode: 2.2.0
+      punycode: 2.3.0
 
   /util-deprecate/1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
