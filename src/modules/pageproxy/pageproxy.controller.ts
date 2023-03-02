@@ -155,6 +155,7 @@ export class PageProxyController {
 
   private fetchObserver$: Observable<string> | null
   private fetchLogCurrent: string | null
+  private fetchErrorMsg: string | null
 
   @Get('/proxy/qaqdmin')
   @HTTPDecorators.Bypass
@@ -166,6 +167,16 @@ export class PageProxyController {
     }
     if (this.fetchObserver$ && query.log) {
       reply.code(200).type('text/html').send(`${this.fetchLogCurrent}`)
+      return
+    }
+
+    if (query.log) {
+      if (this.fetchErrorMsg) {
+        reply.code(403).type('text/html').send(this.fetchErrorMsg)
+        this.fetchErrorMsg = null
+      } else {
+        reply.code(200).type('text/html').send('...')
+      }
       return
     }
 
@@ -182,22 +193,26 @@ export class PageProxyController {
         var ansi_up = new AnsiUp();
         var cdiv = document.getElementById("block");
         var timer = setInterval(function() {
-          fetch('?log').then(res => res.text()).then(text => {
+          fetch('?log=1')
+          .catch(() => {
+            clearInterval(timer)
+          }).then(res => res.text()).then(text => {
             if(!text) window.location.reload()
             if(lastLine === text) return
             txt += text + '\\n'
             lastLine = text
             var html = ansi_up.ansi_to_html(txt);
             cdiv.innerHTML = html;
-          }).catch(() => {
-            clearInterval(timer)
-            window.location.reload()
           })
-        }, 100)
+        }, 1000)
         </script>`)
 
       this.fetchObserver$ = this.updateService.downloadAdminAsset(
-        await this.updateService.getLatestAdminVersion(),
+        await this.updateService.getLatestAdminVersion().catch((err) => {
+          this.fetchErrorMsg = err.message
+
+          throw err
+        }),
       )
       const cleanup = () => {
         this.fetchObserver$ = null
