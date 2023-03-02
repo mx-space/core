@@ -5,6 +5,7 @@ import { isNull } from 'lodash'
 import { lookup } from 'mime-types'
 import PKG from 'package.json'
 import { extname, join } from 'path'
+import { Observable } from 'rxjs'
 
 import {
   Controller,
@@ -24,6 +25,7 @@ import { CacheService } from '~/processors/redis/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { dashboard } from '../../../package.json'
+import { UpdateService } from '../update/update.service'
 import { PageProxyDebugDto } from './pageproxy.dto'
 import { PageProxyService } from './pageproxy.service'
 
@@ -33,6 +35,7 @@ export class PageProxyController {
   constructor(
     private readonly cacheService: CacheService,
     private readonly service: PageProxyService,
+    private readonly updateService: UpdateService,
   ) {}
 
   @Get('/qaqdmin')
@@ -150,21 +153,65 @@ export class PageProxyController {
     return reply.type('text/html').send(entry)
   }
 
+  private fetchObserver$: Observable<string> | null
+  private fetchLogCurrent: string | null
+
   @Get('/proxy/qaqdmin')
   @HTTPDecorators.Bypass
-  async getLocalBundledAdmin(@Res() reply: FastifyReply) {
+  async getLocalBundledAdmin(@Query() query: any, @Res() reply: FastifyReply) {
     if ((await this.service.checkCanAccessAdminProxy()) === false) {
       return reply.type('application/json').status(403).send({
         message: 'admin proxy not enabled',
       })
     }
+    if (this.fetchObserver$ && query.log) {
+      reply.code(200).type('text/html').send(`${this.fetchLogCurrent}`)
+      return
+    }
+
     const entryPath = path.join(LOCAL_ADMIN_ASSET_PATH, 'index.html')
     const isAssetPathIsExist = existsSync(entryPath)
     if (!isAssetPathIsExist) {
       reply.code(404).type('text/html')
-        .send(`<p>Local Admin Assets is not found. Navigator to page proxy in 3 second. </p><script>setTimeout(() => {
-        location.href = '/qaqdmin'
-      }, 3000);</script>`)
+        .send(`<script src="https://cdn.jsdelivr.net/npm/ansi_up@4.0.3/ansi_up.js"></script>
+        <p>Local Admin Assets is not found. Downloading start... </p>
+        <pre id="block"></pre>
+        <script>
+        var txt = '';
+        var lastLine = ''
+        var ansi_up = new AnsiUp();
+        var cdiv = document.getElementById("block");
+        var timer = setInterval(function() {
+          fetch('?log').then(res => res.text()).then(text => {
+            if(!text) window.location.reload()
+            if(lastLine === text) return
+            txt += text + '\\n'
+            lastLine = text
+            var html = ansi_up.ansi_to_html(txt);
+            cdiv.innerHTML = html;
+          }).catch(() => {
+            clearInterval(timer)
+            window.location.reload()
+          })
+        }, 100)
+        </script>`)
+
+      this.fetchObserver$ = this.updateService.downloadAdminAsset(
+        await this.updateService.getLatestAdminVersion(),
+      )
+      const cleanup = () => {
+        this.fetchObserver$ = null
+        this.fetchLogCurrent = null
+      }
+
+      this.fetchObserver$.subscribe({
+        next(value) {
+          this.fetchLogCurrent = value
+        },
+        error: cleanup,
+        complete: cleanup,
+      })
+
       return
     }
     try {

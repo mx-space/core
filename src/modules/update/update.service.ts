@@ -130,7 +130,7 @@ export class UpdateService {
     return res.data.tag_name.replace(/^v/, '')
   }
 
-  runShellCommandPipeOutput(
+  private runShellCommandPipeOutput(
     command: string,
     args: any[],
     subscriber: Subscriber<string>,
