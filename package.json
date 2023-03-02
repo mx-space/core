@@ -80,7 +80,7 @@
     "@nestjs/websockets": "9.3.9",
     "@socket.io/redis-adapter": "7.2.0",
     "@socket.io/redis-emitter": "4.1.1",
-    "@typegoose/auto-increment": "2.1.0",
+    "@typegoose/auto-increment": "2.2.0",
     "@typegoose/typegoose": "10.1.1",
     "@types/jsonwebtoken": "9.0.1",
     "algoliasearch": "4.14.3",
