@@ -124,7 +124,7 @@ importers:
       ts-node: 10.9.1
       tsconfig-paths: 4.1.2
       typescript: 4.9.5
-      ua-parser-js: 1.0.33
+      ua-parser-js: 1.0.34
       vite: 3.2.5
       vite-tsconfig-paths: 4.0.5
       vitest: 0.25.3
@@ -205,7 +205,7 @@ importers:
       semver: 7.3.8
       slugify: 1.6.5
       snakecase-keys: 5.4.5
-      ua-parser-js: 1.0.33
+      ua-parser-js: 1.0.34
       vm2: 3.9.14
       wildcard-match: 5.1.2
       xss: 1.0.14
@@ -1962,9 +1962,9 @@ packages:
     dependencies:
       '@babel/core': 7.21.0
       '@babel/generator': 7.21.1
-      '@babel/parser': 7.21.1
-      '@babel/traverse': 7.21.0
-      '@babel/types': 7.21.0
+      '@babel/parser': 7.21.2
+      '@babel/traverse': 7.21.2
+      '@babel/types': 7.21.2
       javascript-natural-sort: 0.7.1
       lodash.clone: 4.5.0
       lodash.isequal: 4.5.0
@@ -8618,8 +8618,8 @@ packages:
     hasBin: true
     dev: true
 
-  /ua-parser-js/1.0.33:
-    resolution: {integrity: sha512-RqshF7TPTE0XLYAqmjlu5cLLuGdKrNu9O1KLA/qp39QtbZwuzwv1dT46DZSopoUMsYgXpB3Cv8a03FI8b74oFQ==}
+  /ua-parser-js/1.0.34:
+    resolution: {integrity: sha512-K9mwJm/DaB6mRLZfw6q8IMXipcrmuT6yfhYmwhAkuh+81sChuYstYA+znlgaflUPaYUa3odxKPKGw6Vw/lANew==}
     dev: false
 
   /uhyphen/0.1.0:
