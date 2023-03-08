@@ -154,7 +154,7 @@ export class PageProxyController {
   }
 
   private fetchObserver$: Observable<string> | null
-  private fetchLogCurrent: string | null
+  private fetchLogs: string[] | null
   private fetchErrorMsg: string | null
 
   @Get('/proxy/qaqdmin')
@@ -166,7 +166,12 @@ export class PageProxyController {
       })
     }
     if (this.fetchObserver$ && query.log) {
-      reply.code(200).type('text/html').send(`${this.fetchLogCurrent}`)
+      if (this.fetchLogs === null) {
+        return reply.code(204)
+      }
+      const log = this.fetchLogs.pop() || '...'
+
+      reply.code(200).type('text/html').send(`${log}`)
       return
     }
 
@@ -183,9 +188,11 @@ export class PageProxyController {
     const entryPath = path.join(LOCAL_ADMIN_ASSET_PATH, 'index.html')
     const isAssetPathIsExist = existsSync(entryPath)
     if (!isAssetPathIsExist) {
+      this.fetchLogs = []
       reply.code(404).type('text/html')
         .send(`<script src="https://cdn.jsdelivr.net/npm/ansi_up@4.0.3/ansi_up.js"></script>
         <p>Local Admin Assets is not found. Downloading start... </p>
+        <p>If finished download but page not reload or logs are not output for a period of time, please reload page manually. </p>
         <pre id="block"></pre>
         <script>
         var txt = '';
@@ -196,7 +203,16 @@ export class PageProxyController {
           fetch('?log=1')
           .catch(() => {
             clearInterval(timer)
-          }).then(res => res.text()).then(text => {
+          })
+          .then(res => {
+            if(res.status === 204) {
+              clearInterval(timer)
+              window.location.reload()
+              return
+            }
+            return res
+          })
+          .then(res => res.text()).then(text => {
             if(!text) window.location.reload()
             if(lastLine === text) return
             txt += text + '\\n'
@@ -214,14 +230,15 @@ export class PageProxyController {
           throw err
         }),
       )
+
       const cleanup = () => {
         this.fetchObserver$ = null
-        this.fetchLogCurrent = null
+        this.fetchLogs = null
       }
 
       this.fetchObserver$.subscribe({
-        next(value) {
-          this.fetchLogCurrent = value
+        next: (value) => {
+          this.fetchLogs?.push(value)
         },
         error: cleanup,
         complete: cleanup,

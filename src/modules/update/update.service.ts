@@ -31,6 +31,8 @@ export class UpdateService {
           })
 
         if (!json) {
+          subscriber.next(chalk.red('Fetching error, json is empty. \n'))
+          subscriber.complete()
           return
         }
 
