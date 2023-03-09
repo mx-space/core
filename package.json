@@ -109,7 +109,7 @@
     "jszip": "3.10.1",
     "linkedom": "0.14.22",
     "lodash": "*",
-    "lru-cache": "7.17.2",
+    "lru-cache": "7.18.3",
     "marked": "4.2.12",
     "mime-types": "*",
     "mkdirp": "*",
