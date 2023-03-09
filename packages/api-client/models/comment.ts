@@ -25,6 +25,7 @@ export interface CommentModel extends BaseModel {
   children: CommentModel[]
 
   isWhispers?: boolean
+  location?: string
 }
 export interface CommentRef {
   id: string
