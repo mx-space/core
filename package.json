@@ -181,7 +181,7 @@
     "vite": "3.2.5",
     "vite-tsconfig-paths": "4.0.5",
     "vitest": "0.25.3",
-    "zx": "7.1.1"
+    "zx": "7.2.0"
   },
   "optionalDependencies": {
     "mongodb-memory-server": "8.11.5",
