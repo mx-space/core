@@ -138,7 +138,7 @@
   },
   "devDependencies": {
     "@innei/eslint-config-ts": "0.9.7",
-    "@innei/prettier": "0.9.7",
+    "@innei/prettier": "0.9.8",
     "@nestjs/cli": "9.2.0",
     "@nestjs/schematics": "9.0.4",
     "@nestjs/testing": "9.3.9",

@@ -20,7 +20,7 @@ importers:
       '@fastify/static': 6.9.0
       '@innei/eslint-config-ts': 0.9.7
       '@innei/next-async': 0.3.0
-      '@innei/prettier': 0.9.7
+      '@innei/prettier': 0.9.8
       '@nestjs/cli': 9.2.0
       '@nestjs/common': 9.3.9
       '@nestjs/core': 9.3.9
@@ -215,7 +215,7 @@ importers:
       redis-memory-server: 0.6.0
     devDependencies:
       '@innei/eslint-config-ts': 0.9.7_typescript@4.9.5
-      '@innei/prettier': 0.9.7
+      '@innei/prettier': 0.9.8
       '@nestjs/cli': 9.2.0_@swc+core@1.3.4
       '@nestjs/schematics': 9.0.4_typescript@4.9.5
       '@nestjs/testing': 9.3.9_77foi4w27ghy47yutmnzv7krjy
@@ -2046,12 +2046,12 @@ packages:
     engines: {pnpm: '>=7'}
     dev: false
 
-  /@innei/prettier/0.9.7:
-    resolution: {integrity: sha512-CxUbNMsm23h3llui28siIPAyuv8WvSwRVrghZo1JYb+UV/+YcqLGlZNyhtsk0KiPKOIRhMcJI4T3CgMX2MSHPQ==}
+  /@innei/prettier/0.9.8:
+    resolution: {integrity: sha512-48oXKtRhiV51Cmej60pBck2DPAYhCReMZBEvNtvrK2UZ7v9dnxrjd/+q3shvF4eDQhbiuF1UT8I+6mBpQpch5Q==}
     dependencies:
       '@trivago/prettier-plugin-sort-imports': /@ianvs/prettier-plugin-sort-imports/3.7.1_prettier@2.8.4
       prettier: 2.8.4
-      prettier-package-json: 2.7.0
+      prettier-package-json: 2.8.0
     transitivePeerDependencies:
       - '@vue/compiler-sfc'
       - supports-color
@@ -7483,8 +7483,8 @@ packages:
     engines: {node: '>= 0.8.0'}
     dev: true
 
-  /prettier-package-json/2.7.0:
-    resolution: {integrity: sha512-51I3/fYpBTLDXQDQK7+dfNlJzh5wdKhK8QteSZTZMppQd6aGpr1wqpwlKKZF1KdWA+91rwfpHUBrKwd2PXdXag==}
+  /prettier-package-json/2.8.0:
+    resolution: {integrity: sha512-WxtodH/wWavfw3MR7yK/GrS4pASEQ+iSTkdtSxPJWvqzG55ir5nvbLt9rw5AOiEcqqPCRM92WCtR1rk3TG3JSQ==}
     hasBin: true
     dependencies:
       '@types/parse-author': 2.0.1
