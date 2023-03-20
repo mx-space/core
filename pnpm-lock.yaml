@@ -126,7 +126,7 @@ importers:
       typescript: 4.9.5
       ua-parser-js: 1.0.34
       vite: 3.2.5
-      vite-tsconfig-paths: 4.0.5
+      vite-tsconfig-paths: 4.0.7
       vitest: 0.25.3
       vm2: 3.9.14
       wildcard-match: 5.1.2
@@ -256,7 +256,7 @@ importers:
       tsconfig-paths: 4.1.2
       typescript: 4.9.5
       vite: 3.2.5_@types+node@18.14.6
-      vite-tsconfig-paths: 4.0.5_typescript@4.9.5
+      vite-tsconfig-paths: 4.0.7_mmfldfnusamjexuwtlvii3fpxu
       vitest: 0.25.3
       zx: 7.2.0
 
@@ -8769,12 +8769,18 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
-  /vite-tsconfig-paths/4.0.5_typescript@4.9.5:
-    resolution: {integrity: sha512-/L/eHwySFYjwxoYt1WRJniuK/jPv+WGwgRGBYx3leciR5wBeqntQpUE6Js6+TJemChc+ter7fDBKieyEWDx4yQ==}
+  /vite-tsconfig-paths/4.0.7_mmfldfnusamjexuwtlvii3fpxu:
+    resolution: {integrity: sha512-MwIYaby6kcbQGZqMH+gAK6h0UYQGOkjsuAgw4q6bP/5vWkn8VKvnmLuCQHA2+IzHAJHnE8OFTO4lnJLFMf9+7Q==}
+    peerDependencies:
+      vite: '*'
+    peerDependenciesMeta:
+      vite:
+        optional: true
     dependencies:
       debug: 4.3.4
       globrex: 0.1.2
       tsconfck: 2.0.1_typescript@4.9.5
+      vite: 3.2.5_@types+node@18.14.6
     transitivePeerDependencies:
       - supports-color
       - typescript
