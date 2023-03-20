@@ -137,7 +137,7 @@
     "zx-cjs": "7.0.7-0"
   },
   "devDependencies": {
-    "@innei/eslint-config-ts": "0.9.7",
+    "@innei/eslint-config-ts": "0.9.8",
     "@innei/prettier": "0.9.8",
     "@nestjs/cli": "9.2.0",
     "@nestjs/schematics": "9.0.4",
