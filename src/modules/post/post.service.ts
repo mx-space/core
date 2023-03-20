@@ -147,7 +147,7 @@ export class PostService {
 
     // 有关联文章
     const related = await this.checkRelated(data)
-    data.related = related.filter((item) => item !== oldDocument._id) as any
+    data.related = related.filter((item) => item !== oldDocument.id) as any
 
     Object.assign(
       oldDocument,

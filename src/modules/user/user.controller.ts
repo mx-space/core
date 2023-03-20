@@ -57,7 +57,7 @@ export class UserController {
     await this.authService.jwtServicePublic.revokeToken(token)
     await this.userService.recordFootstep(ipLocation.ip)
     return {
-      token: this.authService.jwtServicePublic.sign(user._id, {
+      token: this.authService.jwtServicePublic.sign(user.id, {
         ip: ipLocation.ip,
         ua: ipLocation.agent,
       }),
@@ -74,7 +74,7 @@ export class UserController {
     const avatar = user.avatar ?? getAvatar(mail)
 
     return {
-      token: this.authService.jwtServicePublic.sign(user._id, {
+      token: this.authService.jwtServicePublic.sign(user.id, {
         ip: ipLocation.ip,
         ua: ipLocation.agent,
       }),

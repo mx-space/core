@@ -174,7 +174,7 @@ export class PostController {
       throw new CannotFindException()
     }
     const liked = await this.countingService.getThisRecordIsLiked(
-      postDocument._id,
+      postDocument.id,
       ip,
     )
 

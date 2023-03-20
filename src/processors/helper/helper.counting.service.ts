@@ -57,7 +57,7 @@ export class CountingService {
       return
     }
     await Promise.all([
-      redis.sadd(getRedisKey(RedisKeys.Read, doc._id), ip),
+      redis.sadd(getRedisKey(RedisKeys.Read, doc.id), ip),
       doc.updateOne({ $inc: { 'count.read': 1 } }),
     ])
     this.logger.debug(`增加阅读计数，(${doc.title}`)
@@ -83,7 +83,7 @@ export class CountingService {
       return false
     }
     await Promise.all([
-      redis.sadd(getRedisKey(RedisKeys.Like, doc._id), ip),
+      redis.sadd(getRedisKey(RedisKeys.Like, doc.id), ip),
       doc.updateOne({ $inc: { 'count.like': 1 } }),
     ])
     this.logger.debug(`增加喜欢计数，(${doc.title}`)

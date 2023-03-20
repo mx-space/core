@@ -313,7 +313,7 @@ export class AggregateService {
 
     const postsRss: RSSProps['data'] = posts.map((post) => {
       return {
-        id: post._id,
+        id: post.id,
         title: post.title,
         text: post.text,
         created: post.created!,
@@ -323,7 +323,7 @@ export class AggregateService {
     })
     const notesRss: RSSProps['data'] = notes.map((note) => {
       return {
-        id: note._id,
+        id: note.id,
         title: note.title,
         text: note.text,
         created: note.created!,

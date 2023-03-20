@@ -127,7 +127,7 @@ export class CategoryController {
     }
 
     const children =
-      (await this.categoryService.findCategoryPost(res._id, {
+      (await this.categoryService.findCategoryPost(res.id, {
         $and: [tag ? { tags: tag } : {}],
       })) || []
     return { data: { ...res, children } }
@@ -175,7 +175,7 @@ export class CategoryController {
       throw new NoContentCanBeModifiedException()
     }
     const postsInCategory = await this.categoryService.findPostsInCategory(
-      category._id,
+      category.id,
     )
     if (postsInCategory.length > 0) {
       throw new BadRequestException('该分类中有其他文章，无法被删除')

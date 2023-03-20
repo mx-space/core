@@ -175,7 +175,7 @@ export class NoteController {
   ) {
     const id =
       typeof param.id === 'number'
-        ? (await this.noteService.model.findOne({ nid: param.id }).lean())?._id
+        ? (await this.noteService.model.findOne({ nid: param.id }).lean())?.id
         : param.id
     if (!id) {
       throw new CannotFindException()

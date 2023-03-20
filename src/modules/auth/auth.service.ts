@@ -68,6 +68,7 @@ export class AuthService {
     token: string,
   ): Promise<[true, UserModel] | [false, null]> {
     const user = await this.userModel.findOne({}).lean().select('+apiToken')
+
     if (!user) {
       return [false, null]
     }

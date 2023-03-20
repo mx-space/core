@@ -307,7 +307,7 @@ describe('NoteController (e2e)', () => {
     expect(json.data.location).toBeUndefined()
   })
 
-  let mockDataWithPassoword = 0
+  let mockDataWithPasswordNid = 0
 
   const createMockDataWithPassword = async () => {
     const note = await model.create({
@@ -316,7 +316,7 @@ describe('NoteController (e2e)', () => {
       allowComment: true,
       password: 'password',
     })
-    mockDataWithPassoword = note.nid
+    mockDataWithPasswordNid = note.nid
     return () => model.deleteOne({ _id: note._id })
   }
   test('GET /nid/:nid, should ban if has password', async () => {
@@ -325,7 +325,7 @@ describe('NoteController (e2e)', () => {
     await createMockDataWithPassword()
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/nid/${mockDataWithPassoword}`,
+      url: `/notes/nid/${mockDataWithPasswordNid}`,
     })
 
     expect(res.statusCode).toBe(403)
@@ -336,7 +336,7 @@ describe('NoteController (e2e)', () => {
 
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/nid/${mockDataWithPassoword}`,
+      url: `/notes/nid/${mockDataWithPasswordNid}`,
       query: {
         password: 'password',
       },
@@ -350,12 +350,36 @@ describe('NoteController (e2e)', () => {
 
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/nid/${mockDataWithPassoword}`,
+      url: `/notes/nid/${mockDataWithPasswordNid}`,
       headers: {
         ...authPassHeader,
       },
     })
 
     expect(res.statusCode).toBe(200)
+  })
+
+  test('GET /like/:id', async () => {
+    const app = proxy.app
+
+    const res1 = await app.inject({
+      method: 'GET',
+      url: `/notes/like/${mockDataWithPasswordNid}`,
+      headers: {
+        ...authPassHeader,
+      },
+    })
+
+    expect(res1.statusCode).toBe(204)
+
+    const res2 = await app.inject({
+      method: 'GET',
+      url: `/notes/like/${mockDataWithPasswordNid}`,
+      headers: {
+        ...authPassHeader,
+      },
+    })
+
+    expect(res2.statusCode).toBe(400)
   })
 })

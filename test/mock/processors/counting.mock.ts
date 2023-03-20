@@ -2,9 +2,16 @@ import { defineProvider } from 'test/helper/defineProvider'
 
 import { CountingService } from '~/processors/helper/helper.counting.service'
 
+const isLikeBeforeMap = {} as Record<string, boolean>
+
 export const countingServiceProvider = defineProvider({
   useValue: {
-    async updateLikeCount() {
+    async updateLikeCount(_, id) {
+      const isLiked = isLikeBeforeMap[id]
+      if (isLiked) {
+        return false
+      }
+      isLikeBeforeMap[id] = true
       return true
     },
     async getThisRecordIsLiked() {
