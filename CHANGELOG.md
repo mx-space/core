@@ -1,5 +1,34 @@
 # CHANGELOG
 
+## [3.42.5](https://github.com/mx-space/core/compare/v3.42.4...v3.42.5) (2023-03-26)
+
+
+### Bug Fixes
+
+* **api-client:** add missing property `location` ([e6fd545](https://github.com/mx-space/core/commit/e6fd545c3b51a0f594608b38740f08d842385d40))
+* change getter of mongoose `_id` ([8dc1197](https://github.com/mx-space/core/commit/8dc1197a56979437938aa9338e50f4d17b9e6e8a))
+* **deps:** update babel monorepo to v7.21.3 ([#1015](https://github.com/mx-space/core/issues/1015)) ([ef16942](https://github.com/mx-space/core/commit/ef1694258fa97c7920b2c8a07d872b2ee005be2e))
+* **deps:** update dependency @babel/plugin-transform-modules-commonjs to v7.21.2 ([#992](https://github.com/mx-space/core/issues/992)) ([050030d](https://github.com/mx-space/core/commit/050030dfdbc5e90c279f86cc3fdf0f1439772df7))
+* **deps:** update dependency @fastify/multipart to v7.4.2 ([#1000](https://github.com/mx-space/core/issues/1000)) ([55b329d](https://github.com/mx-space/core/commit/55b329da11dc4780ce0fbe636cb75826460a8232))
+* **deps:** update dependency @typegoose/auto-increment to v2.2.0 ([#993](https://github.com/mx-space/core/issues/993)) ([bdec391](https://github.com/mx-space/core/commit/bdec391f27c27536aa08d4aa80c88496ed243942))
+* **deps:** update dependency algoliasearch to v4.15.0 ([#1004](https://github.com/mx-space/core/issues/1004)) ([093fe6f](https://github.com/mx-space/core/commit/093fe6f68b330ba07e71aba53de8ae39c4e55de3))
+* **deps:** update dependency ejs to v3.1.9 ([#1016](https://github.com/mx-space/core/issues/1016)) ([ea2cb8f](https://github.com/mx-space/core/commit/ea2cb8f5145ea0b6ff563e6f4d872318c10161f7))
+* **deps:** update dependency linkedom to v0.14.24 ([#1002](https://github.com/mx-space/core/issues/1002)) ([b7c0dc8](https://github.com/mx-space/core/commit/b7c0dc8b9eeb160e001d34acce97c0971283d389))
+* **deps:** update dependency lru-cache to v7.17.0 ([#985](https://github.com/mx-space/core/issues/985)) ([311bbaa](https://github.com/mx-space/core/commit/311bbaa29f510234eb2885595163a99d9a8fa911))
+* **deps:** update dependency lru-cache to v7.17.2 ([#996](https://github.com/mx-space/core/issues/996)) ([c11d68e](https://github.com/mx-space/core/commit/c11d68e68c8fb6345cf102f94cfaf117739178a4))
+* **deps:** update dependency lru-cache to v7.18.3 ([#1006](https://github.com/mx-space/core/issues/1006)) ([7fb2087](https://github.com/mx-space/core/commit/7fb20873e2289aef24e2c697ccdede2d2c11d23c))
+* **deps:** update dependency mongoose to v6.10.3 ([#1007](https://github.com/mx-space/core/issues/1007)) ([9d8eb9d](https://github.com/mx-space/core/commit/9d8eb9d64fae81adf36d737c509e8d7b63944366))
+* **deps:** update dependency mongoose to v6.9.3 ([#986](https://github.com/mx-space/core/issues/986)) ([2e8bc4a](https://github.com/mx-space/core/commit/2e8bc4a25b3346d31ac1c964a19c4608c373b9fc))
+* **deps:** update dependency qs to v6.11.1 ([#1001](https://github.com/mx-space/core/issues/1001)) ([e96a9b9](https://github.com/mx-space/core/commit/e96a9b953aa56ad2886aa5bf4ce9015ad6f6afdf))
+* **deps:** update dependency ua-parser-js to v1.0.34 ([#999](https://github.com/mx-space/core/issues/999)) ([a678403](https://github.com/mx-space/core/commit/a6784036a58b76e6cf1495f8d83b3f58997582d0))
+
+
+### Features
+
+* auto download admin ([#1005](https://github.com/mx-space/core/issues/1005) ([f57b23e](https://github.com/mx-space/core/commit/f57b23e5153dbd03cafd3b0281ee187dac0b3ed2))
+
+
+
 ## [3.42.4](https://github.com/mx-space/core/compare/v3.42.3...v3.42.4) (2023-02-21)
 
 
