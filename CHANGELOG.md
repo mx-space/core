@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [3.42.6](https://github.com/mx-space/core/compare/v3.42.5...v3.42.6) (2023-03-28)
+
+
+### Bug Fixes
+
+* comment `pin` default ([4f63b48](https://github.com/mx-space/core/commit/4f63b48de670a99ef3df448326c2a5b26db0462c))
+
+
+
 ## [3.42.5](https://github.com/mx-space/core/compare/v3.42.4...v3.42.5) (2023-03-26)
 
 
