@@ -101,7 +101,7 @@ export class CommentModel extends BaseModel {
   @prop({ select: false })
   agent?: string
 
-  @prop()
+  @prop({ default: false })
   pin?: boolean
 
   @prop({
