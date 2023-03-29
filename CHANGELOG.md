@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [3.42.7](https://github.com/mx-space/core/compare/v3.42.6...v3.42.7) (2023-03-29)
+
+
+
 ## [3.42.6](https://github.com/mx-space/core/compare/v3.42.5...v3.42.6) (2023-03-28)
 
 
