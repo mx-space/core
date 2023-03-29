@@ -40,7 +40,7 @@ export class LinkService {
       })
       .lean()
 
-    let nextModel: LinkModel
+    let nextModel: LinkModel | null
     if (existedDoc) {
       switch (existedDoc.state) {
         case LinkState.Pass:

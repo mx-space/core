@@ -1,4 +1,4 @@
-import { LeanDocument, Types } from 'mongoose'
+import { Types } from 'mongoose'
 import { URL } from 'url'
 
 import {
@@ -10,7 +10,7 @@ import {
   forwardRef,
 } from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
-import { BeAnObject, ReturnModelType } from '@typegoose/typegoose/lib/types'
+import { ReturnModelType } from '@typegoose/typegoose/lib/types'
 
 import { BusinessException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -121,7 +121,7 @@ export class CommentService {
     doc: Partial<CommentModel>,
     type?: CommentRefTypes,
   ) {
-    let ref: LeanDocument<DocumentType<WriteBaseModel, BeAnObject>>
+    let ref: (WriteBaseModel & { _id: any }) | null = null
     if (type) {
       const model = this.getModelByRefType(type)
 

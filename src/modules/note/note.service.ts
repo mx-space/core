@@ -57,7 +57,7 @@ export class NoteService {
     condition: FilterQuery<DocumentType<NoteModel>> = {},
     projection: any = undefined,
   ) {
-    const latest: NoteModel = await this.noteModel
+    const latest: NoteModel | null = await this.noteModel
       .findOne(condition, projection)
       .sort({
         created: -1,

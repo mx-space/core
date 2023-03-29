@@ -74,7 +74,7 @@ export class CommentController {
     @IsMaster() isMaster: boolean,
   ) {
     const { id } = params
-    const data: CommentModel = await this.commentService.model
+    const data: CommentModel | null = await this.commentService.model
       .findOne({
         _id: id,
       })

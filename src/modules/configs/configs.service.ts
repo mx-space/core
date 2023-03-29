@@ -3,7 +3,6 @@ import { ClassConstructor, plainToInstance } from 'class-transformer'
 import { ValidatorOptions, validateSync } from 'class-validator'
 import cluster from 'cluster'
 import { cloneDeep, mergeWith } from 'lodash'
-import { LeanDocument } from 'mongoose'
 
 import {
   BadRequestException,
@@ -11,8 +10,7 @@ import {
   Logger,
   ValidationPipe,
 } from '@nestjs/common'
-import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
-import { BeAnObject } from '@typegoose/typegoose/lib/types'
+import { ReturnModelType } from '@typegoose/typegoose'
 
 import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
@@ -263,8 +261,8 @@ export class ConfigsService {
 
   get getMaster() {
     // HINT: 需要注入 this 的指向
-    return this.userService.getMaster.bind(this.userService) as () => Promise<
-      LeanDocument<DocumentType<UserModel, BeAnObject>>
-    >
+    return this.userService.getMaster.bind(
+      this.userService,
+    ) as () => Promise<UserModel>
   }
 }
