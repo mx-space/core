@@ -2,7 +2,7 @@ import cluster from 'cluster'
 import os from 'os'
 
 export class Cluster {
-  static register(workers: Number, callback: Function): void {
+  static register(workers: number, callback: Function): void {
     if (cluster.isPrimary) {
       const cpus = os.cpus().length
 
