@@ -1,4 +1,4 @@
-import { safePathJoin } from '~/utils'
+import { camelcaseKeys, safePathJoin } from '~/utils'
 
 describe('test tools', () => {
   describe('safePathJoin', () => {
@@ -16,6 +16,36 @@ describe('test tools', () => {
 
     it('case-4', () => {
       expect(safePathJoin('...', '~', '..', 'c')).toBe('c')
+    })
+  })
+
+  describe('camelCaseKeys', () => {
+    // 编写测试用例
+    it('case-1', () => {
+      expect(camelcaseKeys({ a_b: 1 })).toStrictEqual({ aB: 1 })
+    })
+    it('case-2', () => {
+      expect(camelcaseKeys({ a_b: { c_d: 1 } })).toStrictEqual({
+        aB: { cD: 1 },
+      })
+    })
+    it('case-3', () => {
+      expect(camelcaseKeys({ a_b: [{ c_d: 1 }] })).toStrictEqual({
+        aB: [{ cD: 1 }],
+      })
+    })
+
+    it('case-4', () => {
+      expect(camelcaseKeys({ a_b: [{ c_d: 1 }], e_f: 2 })).toStrictEqual({
+        aB: [{ cD: 1 }],
+        eF: 2,
+      })
+    })
+    it('case-5', () => {
+      expect(camelcaseKeys(null)).toBe(null)
+    })
+    it('case-5', () => {
+      expect(camelcaseKeys(1)).toBe(1)
     })
   })
 })

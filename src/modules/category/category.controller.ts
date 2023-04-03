@@ -127,7 +127,7 @@ export class CategoryController {
     }
 
     const children =
-      (await this.categoryService.findCategoryPost(res.id, {
+      (await this.categoryService.findCategoryPost(res._id.toHexString(), {
         $and: [tag ? { tags: tag } : {}],
       })) || []
     return { data: { ...res, children } }

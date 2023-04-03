@@ -1,4 +1,3 @@
-import camelcaseKeys from 'camelcase-keys'
 import { ClassConstructor, plainToInstance } from 'class-transformer'
 import { ValidatorOptions, validateSync } from 'class-validator'
 import cluster from 'cluster'
@@ -19,7 +18,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { sleep } from '~/utils'
+import { camelcaseKeys, sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 
 import * as optionDtos from '../configs/configs.dto'
@@ -200,7 +199,7 @@ export class ConfigsService {
     key: T,
     value: Partial<IConfig[T]>,
   ) {
-    value = camelcaseKeys(value, { deep: true }) as any
+    value = camelcaseKeys(value) as any
 
     const dto = map[key]
     if (!dto) {
