@@ -1,5 +1,15 @@
 # CHANGELOG
 
+# [3.43.0](https://github.com/mx-space/core/compare/v3.42.7...v3.43.0) (2023-04-05)
+
+
+### Bug Fixes
+
+* built-in snippets reference missing ([9ca58db](https://github.com/mx-space/core/commit/9ca58db10ea1b1f184b5430175f14b355c35c7fb))
+* make ts happy ([3f852a7](https://github.com/mx-space/core/commit/3f852a73b8e3a8748afd022181026fbeb6e26f4c))
+
+
+
 ## [3.42.7](https://github.com/mx-space/core/compare/v3.42.6...v3.42.7) (2023-03-29)
 
 
