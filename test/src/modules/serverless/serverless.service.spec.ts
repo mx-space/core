@@ -192,7 +192,10 @@ describe('test serverless function service', () => {
           .lean()
       ).raw,
     ).toEqual('`')
-    await service.resetBuiltInFunction('ip')
+    await service.resetBuiltInFunction({
+      name: 'ip',
+      reference: 'built-in',
+    })
     expect(
       (
         await model
