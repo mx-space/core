@@ -24,6 +24,12 @@
 - PTY 支持。
 - [云函数](./src/modules/serverless/serverless.readme.md)
 
+三方服务集成：
+
+- Bark 推送
+- 邮件订阅
+- 同步到 [xLog](https://xlog.app)
+
 ## Docker 部署（建议）
 
 ```bash
