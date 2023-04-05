@@ -15,4 +15,8 @@ export interface BuiltInFunctionObject {
   path: string
   method: string
   code: string
+  reference: string
 }
+
+export const defineBuiltInSnippetConfig = (config: BuiltInFunctionObject) =>
+  config

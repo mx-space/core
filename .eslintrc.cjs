@@ -26,7 +26,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['src/migration/**/*.ts'],
+      files: ['src/migration/**/*.ts', 'src/modules/serverless/pack/**/*.ts'],
       rules: {
         'import/no-default-export': 'off',
       },

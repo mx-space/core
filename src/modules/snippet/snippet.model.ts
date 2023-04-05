@@ -115,4 +115,9 @@ export class SnippetModel extends BaseModel {
   enable?: boolean
 
   updated?: string
+
+  @prop({
+    default: false,
+  })
+  builtIn?: boolean
 }

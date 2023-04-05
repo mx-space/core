@@ -4,7 +4,12 @@ import { render } from 'ejs'
 import { createTransport } from 'nodemailer'
 import Mail from 'nodemailer/lib/mailer'
 
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
 import { BizException } from '~/common/exceptions/biz.exception'
@@ -29,7 +34,7 @@ export enum LinkApplyEmailType {
 }
 
 @Injectable()
-export class EmailService implements OnModuleInit {
+export class EmailService implements OnModuleInit, OnModuleDestroy {
   private instance: ReturnType<typeof createTransport>
   private logger: Logger
   constructor(
@@ -47,6 +52,10 @@ export class EmailService implements OnModuleInit {
         this.init()
       })
     }
+  }
+
+  onModuleDestroy() {
+    this.teardown()
   }
 
   async readTemplate(
@@ -116,10 +125,16 @@ export class EmailService implements OnModuleInit {
         break
     }
   }
+
+  teardown() {
+    this.instance?.close?.()
+  }
+
   @OnEvent(EventBusEvents.EmailInit)
   init() {
     this.getConfigFromConfigService()
       .then((config) => {
+        this.teardown()
         this.instance = createTransport({
           ...config,
           secure: true,

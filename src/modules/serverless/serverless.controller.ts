@@ -118,11 +118,12 @@ export class ServerlessController {
   @Delete('/reset/:id')
   @Auth()
   async resetBuiltInFunction(@Param('id') id: string) {
-    const isBuiltin = await this.serverlessService.isBuiltInFunction(id)
-    if (!isBuiltin) {
+    const builtIn = await this.serverlessService.isBuiltInFunction(id)
+    if (!builtIn) {
       throw new BadRequestException('can not reset a non-builtin function')
     }
-    await this.serverlessService.resetBuiltInFunction(isBuiltin)
+    await this.serverlessService.resetBuiltInFunction(builtIn)
+
     return
   }
 }

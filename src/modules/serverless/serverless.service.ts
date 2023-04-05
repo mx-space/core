@@ -41,7 +41,7 @@ import {
   FunctionContextRequest,
   FunctionContextResponse,
 } from './function.types'
-import { builtInSnippets } from './pack/built-in'
+import { allBuiltInSnippetPack as builtInSnippets } from './pack'
 import { ServerlessStorageCollectionName } from './serverless.model'
 import { complieTypeScriptBabelOptions, hashStable } from './serverless.util'
 
@@ -671,41 +671,54 @@ export class ServerlessService implements OnModuleInit {
 
   private async pourBuiltInFunctions() {
     const paths = [] as string[]
+    const references = new Set<string>()
     const pathCodeMap = new Map<string, BuiltInFunctionObject>()
     for (const s of builtInSnippets) {
       paths.push(s.path)
       pathCodeMap.set(s.path, s)
+      if (s.reference) {
+        references.add(s.reference)
+      }
     }
 
     // 0. get built-in functions is exist in db
-    const result = await this.model
-      .find({
-        name: {
-          $in: paths,
-        },
-        reference: 'built-in',
-        type: SnippetType.Function,
-      })
-      .lean()
+    const result = await this.model.find({
+      name: {
+        $in: paths,
+      },
+      // FIXME reference not only `built-in` now
+      reference: {
+        $in: ['built-in'].concat(Array.from(references.values())),
+      },
+      type: SnippetType.Function,
+    })
 
     // 1. filter is exist
+    const migrationTasks = [] as Promise<any>[]
     for (const doc of result) {
       const path = doc.name
       pathCodeMap.delete(path)
+
+      // migration, add builtIn set to `true`
+      if (!doc.builtIn) {
+        migrationTasks.push(doc.updateOne({ builtIn: true }))
+      }
     }
+    await Promise.all(migrationTasks)
 
     // 2. pour
 
-    for (const [path, { code, method, name }] of pathCodeMap) {
+    for (const [path, { code, method, name, reference }] of pathCodeMap) {
       this.logger.log(`pour built-in function: ${name}`)
       await this.model.create({
         type: SnippetType.Function,
         name: path,
-        reference: 'built-in',
+        reference: reference || 'built-in',
         raw: code,
         method: method || 'get',
         enable: true,
         private: false,
+        builtIn: true,
       })
     }
   }
@@ -717,14 +730,21 @@ export class ServerlessService implements OnModuleInit {
       })
       .lean()
     if (!document) return false
-    const isBuiltin =
-      document.type == SnippetType.Function && document.reference == 'built-in'
-    return isBuiltin ? document.name : false
+    const isBuiltin = document.type == SnippetType.Function && document.builtIn
+    return isBuiltin
+      ? {
+          name: document.name,
+          reference: document.reference || 'built-in',
+        }
+      : false
   }
 
-  async resetBuiltInFunction(name: string) {
-    const builtIn = builtInSnippets.find((s) => s.path == name)
-    if (!builtIn) {
+  async resetBuiltInFunction(model: { name: string; reference: string }) {
+    const { name, reference } = model
+    const builtInSnippet = builtInSnippets.find(
+      (s) => s.path === name && s.reference === reference,
+    )
+    if (!builtInSnippet) {
       throw new InternalServerErrorException('built-in function not found')
     }
 
@@ -732,7 +752,7 @@ export class ServerlessService implements OnModuleInit {
       {
         name,
       },
-      { raw: builtIn.code },
+      { raw: builtInSnippet.code },
     )
   }
 }

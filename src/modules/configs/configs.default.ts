@@ -66,4 +66,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
   featureList: {
     emailSubscribe: false,
   },
+  thirdPartyServiceIntegration: {
+    xLogSiteId: '',
+  },
 })

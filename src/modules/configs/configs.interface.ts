@@ -15,6 +15,7 @@ import {
   SeoDto,
   TerminalOptionsDto,
   TextOptionsDto,
+  ThirdPartyServiceIntegrationDto,
   UrlDto,
 } from './configs.dto'
 
@@ -72,6 +73,10 @@ export abstract class IConfig {
   @Type(() => FeatureListDto)
   @ValidateNested()
   featureList: Required<FeatureListDto>
+
+  @Type(() => ThirdPartyServiceIntegrationDto)
+  @ValidateNested()
+  thirdPartyServiceIntegration: Required<ThirdPartyServiceIntegrationDto>
 }
 
 export type IConfigKeys = keyof IConfig

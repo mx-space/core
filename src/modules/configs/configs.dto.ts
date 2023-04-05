@@ -336,3 +336,16 @@ export class FeatureListDto {
   @IsOptional()
   emailSubscribe: boolean
 }
+
+/**
+ * 第三方服务集成
+ */
+@JSONSchema({ title: '第三方服务集成' })
+export class ThirdPartyServiceIntegrationDto {
+  @JSONSchemaPlainField('xLog SiteId', {
+    description: '文章发布同步到 [xLog](https://xlog.app)',
+  })
+  @IsOptional()
+  @IsString()
+  xLogSiteId?: string
+}
