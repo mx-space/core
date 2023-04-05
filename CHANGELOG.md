@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [3.43.1](https://github.com/mx-space/core/compare/v3.43.0...v3.43.1) (2023-04-05)
+
+
+### Bug Fixes
+
+* **posts:** get post paginate should parse `meta` as json ([f7b1d0d](https://github.com/mx-space/core/commit/f7b1d0d280dd8371c94a137be75dba3a5bd93957))
+
+
+### Features
+
+* add snippet for xlog summary ([710c083](https://github.com/mx-space/core/commit/710c083c4f5352dfb3c7829cb992533cd205658d))
+
+
+
 # [3.43.0](https://github.com/mx-space/core/compare/v3.42.7...v3.43.0) (2023-04-05)
 
 
