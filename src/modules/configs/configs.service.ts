@@ -128,7 +128,7 @@ export class ConfigsService {
   }
 
   // Config 在此收口
-  public async getConfig(): Promise<Readonly<IConfig>> {
+  public async getConfig(errorRetryCount = 3): Promise<Readonly<IConfig>> {
     const redis = this.redis.getClient()
     const configCache = await redis.get(getRedisKey(RedisKeys.ConfigCache))
 
@@ -140,9 +140,13 @@ export class ConfigsService {
         ) as any as IConfig
 
         return decryptObject(instanceConfigsValue)
-      } catch {
+      } catch (err) {
         await this.configInit()
-        return await this.getConfig()
+        if (errorRetryCount > 0) {
+          return await this.getConfig(--errorRetryCount)
+        }
+        consola.error('获取配置失败')
+        throw err
       }
     } else {
       await this.configInit()
