@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [3.43.2](https://github.com/mx-space/core/compare/v3.43.1...v3.43.2) (2023-04-08)
+
+
+### Bug Fixes
+
+* getconfig max retry count and encrypt key ([fd56106](https://github.com/mx-space/core/commit/fd5610650f13e140e5e57579df8a7f47cb5b3d33))
+
+
+### Features
+
+* add api for get full url by id ([974cd17](https://github.com/mx-space/core/commit/974cd1751cffcf9a8cf9c9b328434e85e51946ae))
+
+
+
 ## [3.43.1](https://github.com/mx-space/core/compare/v3.43.0...v3.43.1) (2023-04-05)
 
 
