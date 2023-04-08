@@ -52,6 +52,33 @@ export class DatabaseService {
     >
   }
 
+  /**
+   * find document by id in `post`, `note`, `page`, `recently` collections
+   * @param id
+   * @returns
+   */
+  // @ts-ignore
+  public async findGlobalById(id: string): Promise<
+    | {
+        document: PostModel
+        type: 'Post'
+      }
+    | {
+        document: NoteModel
+        type: 'Note'
+      }
+    | {
+        document: PageModel
+        type: 'Page'
+      }
+    | {
+        document: RecentlyModel
+        type: 'Recently'
+      }
+    | null
+  >
+
+  public async findGlobalById(id: string): Promise<null>
   public async findGlobalById(id: string) {
     const doc = await Promise.all([
       this.postModel.findById(id).populate('category').lean(),
@@ -67,6 +94,7 @@ export class DatabaseService {
       }
     }
     const document = doc[index]
+    if (!document) return null
     return {
       document,
       type: (['Post', 'Note', 'Page', 'Recently'] as const)[index],

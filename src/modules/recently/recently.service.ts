@@ -210,7 +210,7 @@ export class RecentlyService {
   async create(model: RecentlyModel) {
     if (model.refId) {
       const existModel = await this.databaseService.findGlobalById(model.refId)
-      if (!existModel.type) {
+      if (!existModel || !existModel.type) {
         throw new BadRequestException('ref model not found')
       }
 

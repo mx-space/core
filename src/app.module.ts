@@ -27,6 +27,7 @@ import { DependencyModule } from './modules/dependency/dependency.module'
 import { FeedModule } from './modules/feed/feed.module'
 import { FileModule } from './modules/file/file.module'
 import { HealthModule } from './modules/health/health.module'
+import { HelperModule as BizHelperModule } from './modules/helper/helper.module'
 import { InitModule } from './modules/init/init.module'
 import { LinkModule } from './modules/link/link.module'
 import { MarkdownModule } from './modules/markdown/markdown.module'
@@ -60,10 +61,12 @@ import { RedisModule } from './processors/redis/redis.module'
     DatabaseModule,
     RedisModule,
 
+    // biz module
     AggregateModule,
     AnalyzeModule,
     AuthModule,
     BackupModule,
+    BizHelperModule,
     CategoryModule,
     CommentModule,
     ConfigsModule,
@@ -72,7 +75,6 @@ import { RedisModule } from './processors/redis/redis.module'
     FeedModule,
     FileModule,
     HealthModule,
-
     LinkModule,
     MarkdownModule,
     NoteModule,
@@ -82,18 +84,19 @@ import { RedisModule } from './processors/redis/redis.module'
     ProjectModule,
     PTYModule,
     RecentlyModule,
-    UpdateModule,
-    TopicModule,
     SayModule,
     SearchModule,
-    SubscribeModule,
     ServerlessModule,
     SitemapModule,
     SnippetModule,
+    SubscribeModule,
+    TopicModule,
+    UpdateModule,
     UserModule,
 
     PageProxyModule,
     RenderEjsModule,
+    // end biz
 
     GatewayModule,
     HelperModule,

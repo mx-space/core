@@ -127,10 +127,12 @@ export class CommentService {
 
       ref = await model.findById(id).lean()
     } else {
-      const { type: type_, document } =
-        await this.databaseService.findGlobalById(id)
-      ref = document as any
-      type = type_ as any
+      const result = await this.databaseService.findGlobalById(id)
+      if (result) {
+        const { type: type_, document } = result
+        ref = document as any
+        type = type_ as any
+      }
     }
     if (!ref) {
       throw new NotFoundException('评论文章不存在')
@@ -201,11 +203,11 @@ export class CommentService {
       }
       return doc.allowComment ?? true
     } else {
-      const { document: doc } = await this.databaseService.findGlobalById(id)
-      if (!doc) {
+      const result = await this.databaseService.findGlobalById(id)
+      if (!result) {
         throw new CannotFindException()
       }
-      return doc.allowComment ?? true
+      return 'allowComment' in result ? result.allowComment : true
     }
   }
 

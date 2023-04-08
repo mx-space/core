@@ -219,21 +219,20 @@ ${text.trim()}
    * @returns
    */
   async renderArticle(id: string) {
-    const doc = await this.databaseService.findGlobalById(id)
+    const result = await this.databaseService.findGlobalById(id)
 
-    if (!doc.document || !('text' in doc.document)) {
+    if (!result || result.type === 'Recently')
       throw new BadRequestException('文档不存在')
-    }
 
     return {
       html: this.renderMarkdownContent(
         await this.macroService.replaceTextMacro(
-          doc.document.text,
-          doc.document,
+          result.document.text,
+          result.document,
         ),
       ),
-      ...doc,
-      document: doc.document,
+      ...result,
+      document: result.document,
     }
   }
 
