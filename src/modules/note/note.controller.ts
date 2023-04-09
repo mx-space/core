@@ -238,9 +238,10 @@ export class NoteController {
       throw new CannotFindException()
     }
 
-    current.text = this.noteService.checkNoteIsSecret(current)
-      ? ''
-      : await this.macrosService.replaceTextMacro(current.text, current)
+    current.text =
+      !isMaster && this.noteService.checkNoteIsSecret(current)
+        ? ''
+        : await this.macrosService.replaceTextMacro(current.text, current)
 
     if (
       !this.noteService.checkPasswordToAccess(current, password) &&
