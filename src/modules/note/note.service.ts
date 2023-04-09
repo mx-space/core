@@ -112,32 +112,32 @@ export class NoteService {
   public async create(document: NoteModel) {
     document.created = getLessThanNow(document.created)
 
-    const doc = await this.noteModel.create(document)
+    const note = await this.noteModel.create(document)
     process.nextTick(async () => {
       await Promise.all([
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
-        this.eventManager.emit(BusinessEvents.NOTE_CREATE, doc.toJSON(), {
+        this.eventManager.emit(BusinessEvents.NOTE_CREATE, note.toJSON(), {
           scope: EventScope.TO_SYSTEM,
         }),
         this.imageService.saveImageDimensionsFromMarkdownText(
-          doc.text,
-          doc.images,
+          note.text,
+          note.images,
           (images) => {
-            doc.images = images
-            return doc.save()
+            note.images = images
+            return note.save()
           },
         ),
-        doc.hide || doc.password
+        note.hide || note.password || this.checkNoteIsSecret(note)
           ? null
           : this.eventManager.broadcast(
               BusinessEvents.NOTE_CREATE,
               {
-                ...doc.toJSON(),
+                ...note.toJSON(),
                 text: await this.textMacrosService.replaceTextMacro(
-                  doc.text,
-                  doc,
+                  note.text,
+                  note,
                 ),
               },
               {
@@ -147,7 +147,7 @@ export class NoteService {
       ])
     })
 
-    return doc
+    return note
   }
 
   public async updateById(id: string, data: Partial<NoteModel>) {
