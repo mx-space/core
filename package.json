@@ -176,7 +176,7 @@
     "source-map-support": "*",
     "ts-node": "10.9.1",
     "tsconfig-paths": "4.2.0",
-    "typescript": "5.0.3",
+    "typescript": "5.0.4",
     "vite": "3.2.5",
     "vite-tsconfig-paths": "4.0.9",
     "vitest": "0.25.3",
@@ -191,6 +191,6 @@
     "cache-manager-ioredis>ioredis": "^5",
     "pino": "./external/pino",
     "get-pixels@^3>request": "./external/request",
-    "typescript": "^5"
+    "typescript": "5.0.4"
   }
 }
