@@ -129,7 +129,7 @@
     "semver": "7.3.8",
     "slugify": "1.6.6",
     "snakecase-keys": "5.4.5",
-    "ua-parser-js": "1.0.34",
+    "ua-parser-js": "1.0.35",
     "vm2": "3.9.14",
     "wildcard-match": "5.1.2",
     "xss": "1.0.14",
