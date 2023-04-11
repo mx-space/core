@@ -389,8 +389,8 @@ importers:
         specifier: 4.17.17
         version: 4.17.17
       '@types/lodash':
-        specifier: 4.14.191
-        version: 4.14.191
+        specifier: 4.14.192
+        version: 4.14.192
       abort-controller:
         specifier: 3.0.0
         version: 3.0.0
@@ -2805,7 +2805,7 @@ packages:
   /@types/babel__template@7.4.1:
     resolution: {integrity: sha512-azBFKemX6kMg5Io+/rdGT0dkGreboUVR0Cdm3fz9QJWpaQGJRQXl7C+6hOTCZcMll7KFyEQpgbYI2lHdsS4U7g==}
     dependencies:
-      '@babel/parser': 7.20.7
+      '@babel/parser': 7.21.4
       '@babel/types': 7.21.4
     dev: true
 
@@ -2947,10 +2947,6 @@ packages:
     dependencies:
       '@types/node': 18.15.11
     dev: false
-
-  /@types/lodash@4.14.191:
-    resolution: {integrity: sha512-BdZ5BCCvho3EIXw6wUCXHe7rS53AIDPLE+JzwgT+OsJk53oBfbSmZZ7CX4VaRoN78N+TJpFi9QPlfIVNmJYWxQ==}
-    dev: true
 
   /@types/lodash@4.14.192:
     resolution: {integrity: sha512-km+Vyn3BYm5ytMO13k9KTp27O75rbQ0NFw+U//g+PX7VZyjCioXaRFisqSIJRECljcTv73G3i6BpglNGHgUQ5A==}
