@@ -238,8 +238,8 @@ importers:
         version: 7.0.7-0
     optionalDependencies:
       mongodb-memory-server:
-        specifier: 8.12.1
-        version: 8.12.1
+        specifier: 8.12.2
+        version: 8.12.2
       redis-memory-server:
         specifier: 0.6.0
         version: 0.6.0
@@ -5886,7 +5886,7 @@ packages:
       domutils: 1.7.0
       entities: 1.1.2
       inherits: 2.0.4
-      readable-stream: 3.6.0
+      readable-stream: 3.6.2
     dev: false
 
   /htmlparser2@8.0.2:
@@ -6865,8 +6865,8 @@ packages:
       '@types/whatwg-url': 8.2.2
       whatwg-url: 11.0.0
 
-  /mongodb-memory-server-core@8.12.1:
-    resolution: {integrity: sha512-uHpwQCg/NWQOrleYmxOmBnuxYytFpw/t7t9zOoypo2ea0AmflTNfZB4aA7E3SPxjnmXKWmbBJbq8PHonGVwmYA==}
+  /mongodb-memory-server-core@8.12.2:
+    resolution: {integrity: sha512-bls+lroejnhbZTOm5KHtxtf9PK6xASEAsCvZCPoXrNk1f10p0jDw7Xb4GUqVi0ZuVmuLZBNgmzYeHmb3WUgvLg==}
     engines: {node: '>=12.22.0'}
     dependencies:
       async-mutex: 0.3.2
@@ -6889,12 +6889,12 @@ packages:
     dev: false
     optional: true
 
-  /mongodb-memory-server@8.12.1:
-    resolution: {integrity: sha512-XjIaSsC45d6B106hbubEAFcik1iqKOpImCdIWokMJXFMN48MTbFEv36dRG95TbTXmyMVs1gKhCVE77dLozXdCQ==}
+  /mongodb-memory-server@8.12.2:
+    resolution: {integrity: sha512-WM3uJnKWqhJxu3LlHfvRXRrhc+kiEGdGDHMrAG0N1E2fWbRlvSnUKau7Jdcf7cIA5HlRC/K8uVe0DCym45KfAA==}
     engines: {node: '>=12.22.0'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 8.12.1
+      mongodb-memory-server-core: 8.12.2
       tslib: 2.5.0
     transitivePeerDependencies:
       - aws-crt
