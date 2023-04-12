@@ -371,8 +371,8 @@ importers:
         specifier: 3.2.5
         version: 3.2.5(@types/node@18.15.11)
       vite-tsconfig-paths:
-        specifier: 4.0.9
-        version: 4.0.9(typescript@5.0.4)(vite@3.2.5)
+        specifier: 4.2.0
+        version: 4.2.0(typescript@5.0.4)(vite@3.2.5)
       vitest:
         specifier: 0.25.3
         version: 0.25.3
@@ -8794,8 +8794,8 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
-  /vite-tsconfig-paths@4.0.9(typescript@5.0.4)(vite@3.2.5):
-    resolution: {integrity: sha512-qtjwLELs7AEtvZGWbv5aXNda0vyaU8MDjvohMS05sePdUNqBZbBk670Rpfoe0GguF4R1G/DT7yBTPSHdF4h9kA==}
+  /vite-tsconfig-paths@4.2.0(typescript@5.0.4)(vite@3.2.5):
+    resolution: {integrity: sha512-jGpus0eUy5qbbMVGiTxCL1iB9ZGN6Bd37VGLJU39kTDD6ZfULTTb1bcc5IeTWqWJKiWV5YihCaibeASPiGi8kw==}
     peerDependencies:
       vite: '*'
     peerDependenciesMeta:
