@@ -314,8 +314,8 @@ importers:
         specifier: 0.7.36
         version: 0.7.36
       '@types/validator':
-        specifier: 13.7.14
-        version: 13.7.14
+        specifier: 13.7.15
+        version: 13.7.15
       '@vercel/ncc':
         specifier: 0.36.1
         version: 0.36.1
@@ -3031,8 +3031,8 @@ packages:
     resolution: {integrity: sha512-N1rW+njavs70y2cApeIw1vLMYXRwfBy+7trgavGuuTfOd7j1Yh7QTRc/yqsPl6ncokt72ZXuxEU0PiCp9bSwNQ==}
     dev: true
 
-  /@types/validator@13.7.14:
-    resolution: {integrity: sha512-J6OAed6rhN6zyqL9Of6ZMamhlsOEU/poBVvbHr/dKOYKTeuYYMlDkMv+b6UUV0o2i0tw73cgyv/97WTWaUl0/g==}
+  /@types/validator@13.7.15:
+    resolution: {integrity: sha512-yeinDVQunb03AEP8luErFcyf/7Lf7AzKCD0NXfgVoGCCQDNpZET8Jgq74oBgqKld3hafLbfzt/3inUdQvaFeXQ==}
     dev: true
 
   /@types/webidl-conversions@7.0.0:
