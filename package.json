@@ -74,7 +74,7 @@
     "@nestjs/mapped-types": "^1.2.2",
     "@nestjs/platform-fastify": "9.4.0",
     "@nestjs/platform-socket.io": "9.4.0",
-    "@nestjs/schedule": "2.2.0",
+    "@nestjs/schedule": "2.2.1",
     "@nestjs/swagger": "6.3.0",
     "@nestjs/throttler": "4.0.0",
     "@nestjs/websockets": "9.4.0",
