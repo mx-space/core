@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [3.43.3](https://github.com/mx-space/core/compare/v3.43.2...v3.43.3) (2023-04-19)
+
+
+### Bug Fixes
+
+* check note is not public ([df2c541](https://github.com/mx-space/core/commit/df2c5414d19535362b222a584535e9d74f432516))
+* **deps:** update dependency @fastify/multipart to v7.6.0 ([#1043](https://github.com/mx-space/core/issues/1043)) ([057d83d](https://github.com/mx-space/core/commit/057d83d587385e6b0b6077138b84200595bedc86))
+* **deps:** update dependency @fastify/static to v6.10.1 ([#1032](https://github.com/mx-space/core/issues/1032)) ([a5eb45f](https://github.com/mx-space/core/commit/a5eb45f0a355cf428f3e4327ef6e4d6a6600b8b3))
+* **deps:** update dependency @nestjs/schedule to v2.2.1 ([#1038](https://github.com/mx-space/core/issues/1038)) ([5d66f02](https://github.com/mx-space/core/commit/5d66f02ca3a78c452b0eba11e5f2ae91075335d8))
+* **deps:** update dependency algoliasearch to v4.17.0 ([#1033](https://github.com/mx-space/core/issues/1033)) ([9bf7fda](https://github.com/mx-space/core/commit/9bf7fdab3f66b6e70cb66f33949ccc9404c168eb))
+* **deps:** update dependency lru-cache to v8.0.5 ([#1039](https://github.com/mx-space/core/issues/1039)) ([cb791f1](https://github.com/mx-space/core/commit/cb791f1f2c8314792a057f163f69cbb6b1972df0))
+* **deps:** update dependency ua-parser-js to v1.0.35 ([#1031](https://github.com/mx-space/core/issues/1031)) ([9e8695d](https://github.com/mx-space/core/commit/9e8695d23ebcb90fdf7a6081c6ebe46277cab4a9))
+* **deps:** update dependency vm2 to v3.9.16 ([#1040](https://github.com/mx-space/core/issues/1040)) ([da6f397](https://github.com/mx-space/core/commit/da6f39793230cf9e30db8ab0c49f91698f28c2ed))
+* **deps:** update nest monorepo to v9.4.0 (minor) ([#1044](https://github.com/mx-space/core/issues/1044)) ([ab80510](https://github.com/mx-space/core/commit/ab805109fbfa7aa78a0c31a9f05f7fbde492643d))
+* secret note should shown when logged ([c72d921](https://github.com/mx-space/core/commit/c72d9216d45d601542e0243f2e540f3f1d8c89eb))
+
+
+
 ## [3.43.2](https://github.com/mx-space/core/compare/v3.43.1...v3.43.2) (2023-04-08)
 
 
