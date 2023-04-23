@@ -92,7 +92,7 @@
     "class-transformer": "0.5.1",
     "class-validator": "0.13.2",
     "class-validator-jsonschema": "npm:@innei/class-validator-jsonschema@3.1.2",
-    "commander": "9.5.0",
+    "commander": "10.0.1",
     "consola": "*",
     "dayjs": "1.11.7",
     "ejs": "3.1.9",
