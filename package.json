@@ -126,7 +126,7 @@
     "qs": "6.11.1",
     "reflect-metadata": "0.1.13",
     "rxjs": "7.8.0",
-    "semver": "7.3.8",
+    "semver": "7.5.0",
     "slugify": "1.6.6",
     "snakecase-keys": "5.4.5",
     "ua-parser-js": "1.0.35",
@@ -187,7 +187,7 @@
     "redis-memory-server": "0.6.0"
   },
   "resolutions": {
-    "semver": "7.3.8",
+    "semver": "7.5.0",
     "cache-manager-ioredis>ioredis": "^5",
     "pino": "./external/pino",
     "get-pixels@^3>request": "./external/request",
