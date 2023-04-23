@@ -166,7 +166,7 @@
     "eslint": "^8.37.0",
     "eslint-plugin-unused-imports": "2.0.0",
     "husky": "8.0.3",
-    "ioredis": "5.3.1",
+    "ioredis": "5.3.2",
     "lint-staged": "13.2.1",
     "prettier": "2.8.7",
     "rimraf": "3.0.2",
