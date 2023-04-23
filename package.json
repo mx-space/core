@@ -168,7 +168,7 @@
     "husky": "8.0.3",
     "ioredis": "5.3.2",
     "lint-staged": "13.2.1",
-    "prettier": "2.8.7",
+    "prettier": "2.8.8",
     "rimraf": "5.0.0",
     "rollup": "^3.20.2",
     "rollup-plugin-swc": "0.2.1",
