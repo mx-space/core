@@ -17,6 +17,7 @@ exports[`NoteController (e2e) > GET /latest 1`] = `
     "nid": 20,
     "text": "Content 20",
     "title": "Note 20",
+    "topic": null,
   },
   "next": {
     "nid": 19,
