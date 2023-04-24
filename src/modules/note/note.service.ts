@@ -14,7 +14,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { getLessThanNow } from '~/utils'
+import { getLessThanNow, scheduleManager } from '~/utils'
 
 import { CommentRefTypes } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
@@ -62,7 +62,10 @@ export class NoteService {
       .sort({
         created: -1,
       })
-      .lean()
+      .lean({
+        getters: true,
+        autopopulate: true,
+      })
 
     if (!latest) {
       throw new CannotFindException()
@@ -113,7 +116,7 @@ export class NoteService {
     document.created = getLessThanNow(document.created)
 
     const note = await this.noteModel.create(document)
-    process.nextTick(async () => {
+    scheduleManager.schedule(async () => {
       await Promise.all([
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
@@ -175,13 +178,14 @@ export class NoteService {
       )
       .lean({
         getters: true,
+        autopopulate: true,
       })
 
     if (!updated) {
       throw new NoContentCanBeModifiedException()
     }
 
-    process.nextTick(async () => {
+    scheduleManager.batch(async () => {
       this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
         scope: EventScope.TO_SYSTEM,
       })
@@ -204,35 +208,32 @@ export class NoteService {
               .exec()
           },
         ),
-        this.model
-          .findById(id)
-          .lean()
-          .then(async (doc) => {
-            if (!doc) {
-              return
-            }
+        async () => {
+          if (!updated) {
+            return
+          }
 
-            this.eventManager.broadcast(BusinessEvents.NOTE_UPDATE, doc, {
-              scope: EventScope.TO_SYSTEM,
-            })
+          this.eventManager.broadcast(BusinessEvents.NOTE_UPDATE, updated, {
+            scope: EventScope.TO_SYSTEM,
+          })
 
-            if (doc.password || doc.hide || doc.secret) {
-              return
-            }
-            this.eventManager.broadcast(
-              BusinessEvents.NOTE_UPDATE,
-              {
-                ...doc,
-                text: await this.textMacrosService.replaceTextMacro(
-                  doc.text,
-                  doc,
-                ),
-              },
-              {
-                scope: EventScope.TO_VISITOR,
-              },
-            )
-          }),
+          if (updated.password || updated.hide || updated.secret) {
+            return
+          }
+          this.eventManager.broadcast(
+            BusinessEvents.NOTE_UPDATE,
+            {
+              ...updated,
+              text: await this.textMacrosService.replaceTextMacro(
+                updated.text,
+                updated,
+              ),
+            },
+            {
+              scope: EventScope.TO_VISITOR,
+            },
+          )
+        },
       ])
     })
     return updated
@@ -253,7 +254,7 @@ export class NoteService {
         refType: CommentRefTypes.Note,
       }),
     ])
-    process.nextTick(async () => {
+    scheduleManager.schedule(async () => {
       await Promise.all([
         this.eventManager.broadcast(BusinessEvents.NOTE_DELETE, id, {
           scope: EventScope.TO_SYSTEM_VISITOR,

@@ -17,11 +17,9 @@ exports[`NoteController (e2e) > GET /latest 1`] = `
     "nid": 20,
     "text": "Content 20",
     "title": "Note 20",
-    "topic": null,
   },
   "next": {
     "nid": 19,
-    "topic": null,
   },
 }
 `;
@@ -33,31 +31,26 @@ exports[`NoteController (e2e) > GET /list/:id 1`] = `
       "created": "2023-01-17T11:01:57.851Z",
       "nid": 21,
       "title": "Note 2 (updated)",
-      "topic": null,
     },
     {
       "created": "2021-03-20T00:00:00.000Z",
       "nid": 20,
       "title": "Note 20",
-      "topic": null,
     },
     {
       "created": "2021-03-19T00:00:00.000Z",
       "nid": 19,
       "title": "Note 19",
-      "topic": null,
     },
     {
       "created": "2021-03-18T00:00:00.000Z",
       "nid": 18,
       "title": "Note 18",
-      "topic": null,
     },
     {
       "created": "2021-03-17T00:00:00.000Z",
       "nid": 17,
       "title": "Note 17",
-      "topic": null,
     },
   ],
   "size": 5,
@@ -286,7 +279,6 @@ exports[`NoteController (e2e) > GET /notes/nid/:nid 1`] = `
     "modified": null,
     "nid": 20,
     "title": "Note 20",
-    "topic": null,
   },
   "prev": null,
 }
@@ -309,7 +301,6 @@ exports[`NoteController (e2e) > Get patched note 1`] = `
   "nid": 21,
   "text": "Content 2 (updated)",
   "title": "Note 2 (updated)",
-  "topic": null,
   "weather": "sunny",
 }
 `;
@@ -331,5 +322,6 @@ exports[`NoteController (e2e) > POST /notes 1`] = `
   "nid": 21,
   "text": "Content 2",
   "title": "Note 2",
+  "topic": null,
 }
 `;

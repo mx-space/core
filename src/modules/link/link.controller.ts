@@ -22,6 +22,7 @@ import {
   BaseCrudFactory,
   BaseCrudModuleType,
 } from '~/transformers/crud-factor.transformer'
+import { scheduleManager } from '~/utils'
 
 import { AuditReasonDto, LinkDto } from './link.dto'
 import { LinkModel, LinkState } from './link.model'
@@ -97,7 +98,7 @@ export class LinkController {
       throw new ForbiddenException('主人目前不允许申请友链了！')
     }
     await this.linkService.applyForLink(body)
-    process.nextTick(async () => {
+    scheduleManager.schedule(async () => {
       await this.linkService.sendToMaster(body.author, body)
     })
 
@@ -109,7 +110,7 @@ export class LinkController {
   async approveLink(@Param('id') id: string) {
     const doc = await this.linkService.approveLink(id)
 
-    process.nextTick(async () => {
+    scheduleManager.schedule(async () => {
       if (doc.email) {
         await this.linkService.sendToCandidate(doc)
       }

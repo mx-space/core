@@ -16,7 +16,7 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { getRedisKey } from '~/utils'
+import { getRedisKey, scheduleManager } from '~/utils'
 
 import { CommentRefTypes } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
@@ -232,7 +232,7 @@ export class RecentlyService {
         },
       ])
       .lean()
-    process.nextTick(async () => {
+    scheduleManager.schedule(async () => {
       await this.eventManager.broadcast(
         BusinessEvents.RECENTLY_CREATE,
         withRef,
@@ -256,7 +256,7 @@ export class RecentlyService {
       }),
     ])
     const isDeleted = deletedCount === 1
-    process.nextTick(async () => {
+    scheduleManager.schedule(async () => {
       if (isDeleted) {
         await this.eventManager.broadcast(BusinessEvents.RECENTLY_DElETE, id, {
           scope: EventScope.TO_SYSTEM_VISITOR,

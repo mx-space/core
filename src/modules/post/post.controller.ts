@@ -145,7 +145,7 @@ export class PostController {
     const last = await this.postService.model
       .findOne({})
       .sort({ created: -1 })
-      .lean({ getters: true })
+      .lean({ getters: true, autopopulate: true })
     if (!last) {
       throw new CannotFindException()
     }

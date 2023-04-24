@@ -5,6 +5,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import { scheduleManager } from '~/utils'
 
 import { AdminEventsGateway } from '../gateway/admin/events.gateway'
 import { BoardcastBaseGateway } from '../gateway/base.gateway'
@@ -115,7 +116,7 @@ export class EventManagerService {
     )
 
     if (nextTick) {
-      process.nextTick(async () => await tasks)
+      scheduleManager.schedule(async () => await tasks)
     } else {
       await tasks
     }

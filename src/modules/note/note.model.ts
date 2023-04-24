@@ -8,20 +8,11 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator'
-import { Query } from 'mongoose'
 import mongooseAutoPopulate from 'mongoose-autopopulate'
 
 import { PartialType } from '@nestjs/mapped-types'
 import { AutoIncrementID } from '@typegoose/auto-increment'
-import {
-  DocumentType,
-  Ref,
-  index,
-  modelOptions,
-  plugin,
-  prop,
-} from '@typegoose/typegoose'
-import { BeAnObject } from '@typegoose/typegoose/lib/types'
+import { Ref, index, modelOptions, plugin, prop } from '@typegoose/typegoose'
 
 import { CountModel } from '~/shared/model/count.model'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
@@ -127,16 +118,3 @@ export class NoteModel extends WriteBaseModel {
 }
 
 export class PartialNoteModel extends PartialType(NoteModel) {}
-
-function autoPopulateTopic(
-  this: Query<
-    any,
-    DocumentType<NoteModel, BeAnObject>,
-    {},
-    DocumentType<NoteModel, BeAnObject>
-  >,
-  next: () => void,
-) {
-  this.populate({ path: 'topic' })
-  next()
-}

@@ -23,6 +23,7 @@ import { OptionModel } from '~/modules/configs/configs.model'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { InjectModel } from '~/transformers/model.transformer'
+import { scheduleManager } from '~/utils'
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
 
@@ -80,7 +81,7 @@ export class AnalyzeInterceptor implements NestInterceptor {
       return call$
     }
 
-    process.nextTick(async () => {
+    scheduleManager.schedule(async () => {
       try {
         request.headers['user-agent'] &&
           this.parser.setUA(request.headers['user-agent'])

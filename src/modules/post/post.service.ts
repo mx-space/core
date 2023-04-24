@@ -18,7 +18,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { getLessThanNow } from '~/utils'
+import { getLessThanNow, scheduleManager } from '~/utils'
 
 import { CategoryService } from '../category/category.service'
 import { CommentModel, CommentRefTypes } from '../comment/comment.model'
@@ -74,7 +74,7 @@ export class PostService {
 
     const doc = res.toJSON()
 
-    process.nextTick(async () => {
+    scheduleManager.schedule(async () => {
       await Promise.all([
         this.imageService.saveImageDimensionsFromMarkdownText(
           doc.text,
@@ -160,8 +160,10 @@ export class PostService {
     )
 
     await oldDocument.save()
-    process.nextTick(async () => {
-      const doc = await this.postModel.findById(id).lean({ getters: true })
+    scheduleManager.batch(async () => {
+      const doc = await this.postModel
+        .findById(id)
+        .lean({ getters: true, autopopulate: true })
       // 更新图片信息缓存
       await Promise.all([
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {

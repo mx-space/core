@@ -10,6 +10,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { scheduleManager } from '~/utils'
 
 import { PageModel } from './page.model'
 
@@ -66,7 +67,7 @@ export class PageService {
       throw new NoContentCanBeModifiedException()
     }
 
-    process.nextTick(async () => {
+    scheduleManager.schedule(async () => {
       await Promise.all([
         this.imageService.saveImageDimensionsFromMarkdownText(
           newDoc.text,

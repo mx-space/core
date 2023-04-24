@@ -33,6 +33,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
+import { scheduleManager } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
 import { UserModel } from '../user/user.model'
@@ -196,14 +197,14 @@ export class CommentController {
 
     const comment = await this.commentService.createComment(id, model, ref)
     const commentId = comment._id.toString()
-    process.nextTick(async () => {
+    scheduleManager.batch(async () => {
       if (isMaster) {
         return
       }
       await this.commentService.appendIpLocation(commentId, ipLocation.ip)
     })
 
-    process.nextTick(async () => {
+    scheduleManager.batch(async () => {
       const configs = await this.configsService.get('commentOptions')
       const { commentShouldAudit } = configs
       if (await this.commentService.checkSpam(comment)) {
@@ -293,7 +294,7 @@ export class CommentController {
 
     const comment = await this.commentService.model.create(model)
     const commentId = comment._id.toString()
-    process.nextTick(async () => {
+    scheduleManager.schedule(async () => {
       if (isMaster) {
         return
       }

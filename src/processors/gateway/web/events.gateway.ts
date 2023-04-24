@@ -17,6 +17,7 @@ import {
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/redis/cache.service'
+import { scheduleManager } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
 
@@ -67,7 +68,7 @@ export class WebEventsGateway
   async handleConnection(socket: SocketIO.Socket) {
     this.broadcast(BusinessEvents.VISITOR_ONLINE, await this.sendOnlineNumber())
 
-    process.nextTick(async () => {
+    scheduleManager.schedule(async () => {
       const redisClient = this.cacheService.getClient()
       const dateFormat = getShortDate(new Date())
 

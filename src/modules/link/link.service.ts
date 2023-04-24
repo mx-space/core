@@ -14,6 +14,7 @@ import {
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { scheduleManager } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
 import { LinkModel, LinkState, LinkStateMap, LinkType } from './link.model'
@@ -71,7 +72,7 @@ export class LinkService {
       })
     }
 
-    process.nextTick(() => {
+    scheduleManager.schedule(() => {
       this.eventManager.broadcast(BusinessEvents.LINK_APPLY, nextModel, {
         scope: EventScope.TO_SYSTEM_ADMIN,
       })
@@ -156,7 +157,7 @@ export class LinkService {
         站点描述：${model.description}`)
       return
     }
-    process.nextTick(async () => {
+    scheduleManager.schedule(async () => {
       const master = await this.configs.getMaster()
 
       await this.sendLinkApplyEmail({

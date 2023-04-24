@@ -22,6 +22,7 @@ import { PageService } from '~/modules/page/page.service'
 import { PostService } from '~/modules/post/post.service'
 import { SearchService } from '~/modules/search/search.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { scheduleManager } from '~/utils'
 import { uploadFileToCOS } from '~/utils/cos.util'
 import { getRedisKey } from '~/utils/redis.util'
 
@@ -70,7 +71,7 @@ export class CronService {
       return
     }
     //  开始上传 COS
-    process.nextTick(async () => {
+    scheduleManager.schedule(async () => {
       const { backupOptions } = await this.configs.waitForConfigReady()
 
       if (

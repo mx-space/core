@@ -233,7 +233,7 @@ export class NoteController {
         ...condition,
       })
       .select(`+password ${isMaster ? '+location +coordinates' : ''}`)
-      .lean({ getters: true })
+      .lean({ getters: true, autopopulate: true })
     if (!current) {
       throw new CannotFindException()
     }
