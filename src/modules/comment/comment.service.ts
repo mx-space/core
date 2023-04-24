@@ -228,6 +228,7 @@ export class CommentService {
           },
         ],
         sort: { created: -1 },
+        autopopulate: false,
       },
     )
 

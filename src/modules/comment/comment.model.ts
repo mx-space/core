@@ -1,14 +1,8 @@
-import { Query, Types } from 'mongoose'
+import { Types } from 'mongoose'
+import autopopulate from 'mongoose-autopopulate'
 import { URL } from 'url'
 
-import {
-  DocumentType,
-  Ref,
-  modelOptions,
-  pre,
-  prop,
-} from '@typegoose/typegoose'
-import { BeAnObject } from '@typegoose/typegoose/lib/types'
+import { Ref, modelOptions, plugin, prop } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
 import { getAvatar } from '~/utils'
@@ -17,19 +11,6 @@ import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
 import { RecentlyModel } from '../recently/recently.model'
-
-function autoPopulateSubs(
-  this: Query<
-    any,
-    DocumentType<CommentModel, BeAnObject>,
-    {},
-    DocumentType<CommentModel, BeAnObject>
-  >,
-  next: () => void,
-) {
-  this.populate({ options: { sort: { created: -1 } }, path: 'children' })
-  next()
-}
 
 export enum CommentRefTypes {
   Post = 'Post',
@@ -44,13 +25,12 @@ export enum CommentState {
   Junk,
 }
 
-@pre<CommentModel>('findOne', autoPopulateSubs)
-@pre<CommentModel>('find', autoPopulateSubs)
 @modelOptions({
   options: {
     customName: 'Comment',
   },
 })
+@plugin(autopopulate)
 export class CommentModel extends BaseModel {
   @prop({ refPath: 'refType' })
   ref: Ref<PostModel | NoteModel | PageModel | RecentlyModel>

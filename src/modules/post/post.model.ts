@@ -11,23 +11,21 @@ import {
   Min,
   isDateString,
 } from 'class-validator'
-import { Query, Types } from 'mongoose'
+import { Types } from 'mongoose'
 import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
+import mongooseAutoPopulate from 'mongoose-autopopulate'
 
 import { UnprocessableEntityException } from '@nestjs/common'
 import { PartialType } from '@nestjs/mapped-types'
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
 import {
-  DocumentType,
   Ref,
   Severity,
   index,
   modelOptions,
   plugin,
-  pre,
   prop,
 } from '@typegoose/typegoose'
-import { BeAnObject } from '@typegoose/typegoose/lib/types'
 
 import { Paginator } from '~/shared/interface/paginator.interface'
 import { CountModel as Count } from '~/shared/model/count.model'
@@ -36,9 +34,7 @@ import { WriteBaseModel } from '~/shared/model/write-base.model'
 import { CategoryModel as Category } from '../category/category.model'
 
 @plugin(aggregatePaginate)
-@pre<PostModel>('findOne', autoPopulateRelated)
-@pre<PostModel>('findOne', autoPopulateCategory)
-@pre<PostModel>('find', autoPopulateCategory)
+@plugin(mongooseAutoPopulate)
 @index({ slug: 1 })
 @index({ modified: -1 })
 @index({ text: 'text' })
@@ -65,6 +61,7 @@ export class PostModel extends WriteBaseModel {
     foreignField: '_id',
     localField: 'categoryId',
     justOne: true,
+    autopopulate: true,
   })
   @ApiHideProperty()
   public category: Ref<Category>
@@ -127,6 +124,7 @@ export class PostModel extends WriteBaseModel {
   @prop({
     type: Types.ObjectId,
     ref: () => PostModel,
+    autopopulate: true,
   })
   related?: Partial<PostModel>[]
 
@@ -140,42 +138,4 @@ export class PartialPostModel extends PartialType(PostModel) {}
 export class PostPaginatorModel {
   data: PostModel[]
   pagination: Paginator
-}
-
-function autoPopulateCategory(
-  this: Query<
-    any,
-    DocumentType<PostModel, BeAnObject>,
-    {},
-    DocumentType<PostModel, BeAnObject>
-  >,
-  next: () => void,
-) {
-  this.populate({ path: 'category' })
-  next()
-}
-
-function autoPopulateRelated(
-  this: Query<
-    any,
-    DocumentType<PostModel, BeAnObject>,
-    {},
-    DocumentType<PostModel, BeAnObject>
-  >,
-  next: () => void,
-) {
-  this.populate({
-    path: 'related',
-    select: [
-      'slug',
-      'title',
-      'summary',
-      'created',
-      'categoryId',
-      'modified',
-      '_id',
-      'id',
-    ],
-  })
-  next()
 }

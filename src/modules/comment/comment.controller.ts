@@ -156,6 +156,7 @@ export class CommentController {
         limit: size,
         page,
         sort: { pin: -1, created: -1 },
+        populate: 'children',
       },
     )
 

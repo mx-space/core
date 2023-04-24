@@ -9,6 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator'
 import { Query } from 'mongoose'
+import mongooseAutoPopulate from 'mongoose-autopopulate'
 
 import { PartialType } from '@nestjs/mapped-types'
 import { AutoIncrementID } from '@typegoose/auto-increment'
@@ -18,7 +19,6 @@ import {
   index,
   modelOptions,
   plugin,
-  pre,
   prop,
 } from '@typegoose/typegoose'
 import { BeAnObject } from '@typegoose/typegoose/lib/types'
@@ -42,8 +42,7 @@ import { NoteMusic } from './models/music.model'
 @index({ text: 'text' })
 @index({ modified: -1 })
 @index({ nid: -1 })
-@pre('findOne', autoPopulateTopic)
-@pre('find', autoPopulateTopic)
+@plugin(mongooseAutoPopulate)
 export class NoteModel extends WriteBaseModel {
   @prop()
   @IsString()
@@ -118,6 +117,7 @@ export class NoteModel extends WriteBaseModel {
     foreignField: '_id',
     localField: 'topicId',
     ref: () => TopicModel,
+    autopopulate: true,
   })
   topic?: TopicModel
 

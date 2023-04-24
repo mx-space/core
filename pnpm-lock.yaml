@@ -176,6 +176,9 @@ importers:
       mongoose-aggregate-paginate-v2:
         specifier: 1.0.6
         version: 1.0.6
+      mongoose-autopopulate:
+        specifier: 1.0.0
+        version: 1.0.0(mongoose@7.0.4)
       mongoose-lean-getters:
         specifier: 0.4.0
         version: 0.4.0(mongoose@7.0.4)
@@ -6969,6 +6972,14 @@ packages:
   /mongoose-aggregate-paginate-v2@1.0.6:
     resolution: {integrity: sha512-UuALu+mjhQa1K9lMQvjLL3vm3iALvNw8PQNIh2gp1b+tO5hUa0NC0Wf6/8QrT9PSJVTihXaD8hQVy3J4e0jO0Q==}
     engines: {node: '>=4.0.0'}
+    dev: false
+
+  /mongoose-autopopulate@1.0.0(mongoose@7.0.4):
+    resolution: {integrity: sha512-VWsGb4VqSFqWgS6a7zFTOuUr2+XArrThtX7fjUlzIMPowVxvuS1Zeiif7D0DgXIETLNc+B/0r84kV5A2B7w2UQ==}
+    peerDependencies:
+      mongoose: 6.x || 7.x
+    dependencies:
+      mongoose: 7.0.4
     dev: false
 
   /mongoose-lean-getters@0.4.0(mongoose@7.0.4):
