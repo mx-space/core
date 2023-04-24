@@ -232,9 +232,36 @@ export class CommentService {
       },
     )
 
+    // 过滤脏数据
+    this.cleanDirtyData(queryList.docs)
+
     await this.replaceMasterAvatarUrl(queryList.docs)
 
     return queryList
+  }
+
+  cleanDirtyData(docs: CommentModel[]) {
+    for (const doc of docs) {
+      if (!doc.children || doc.children.length === 0) {
+        continue
+      }
+
+      const nextChildren = [] as any[]
+
+      for (const child of doc.children) {
+        if (typeof child === 'string') {
+          this.logger.warn(`--> 检测到一条脏数据：${doc.id}.child: ${child}`)
+          continue
+        }
+        nextChildren.push(child)
+
+        if ((child as CommentModel).children) {
+          this.cleanDirtyData((child as CommentModel).children as any[])
+        }
+      }
+
+      doc.children = nextChildren
+    }
   }
 
   async sendEmail(model: DocumentType<CommentModel>, type: ReplyMailType) {

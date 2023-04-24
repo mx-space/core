@@ -68,7 +68,7 @@ export class CommentModel extends BaseModel {
   @prop({ ref: () => CommentModel })
   parent?: Ref<CommentModel>
 
-  @prop({ ref: () => CommentModel, type: Types.ObjectId })
+  @prop({ ref: () => CommentModel, type: Types.ObjectId, autopopulate: true })
   children?: Ref<CommentModel>[]
 
   @prop({ default: 1 })

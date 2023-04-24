@@ -156,11 +156,11 @@ export class CommentController {
         limit: size,
         page,
         sort: { pin: -1, created: -1 },
-        populate: 'children',
       },
     )
 
     await this.commentService.replaceMasterAvatarUrl(comments.docs)
+    this.commentService.cleanDirtyData(comments.docs)
     return comments
   }
 
@@ -275,6 +275,11 @@ export class CommentController {
       throw new CannotFindException()
     }
     const commentIndex = parent.commentsIndex
+
+    if (parent.key && parent.key.split('#').length >= 10) {
+      throw new BizException(ErrorCodeEnum.CommentTooDeep)
+    }
+
     const key = `${parent.key}#${commentIndex}`
 
     const model: Partial<CommentModel> = {
