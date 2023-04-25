@@ -197,14 +197,14 @@ export class CommentController {
 
     const comment = await this.commentService.createComment(id, model, ref)
     const commentId = comment._id.toString()
-    scheduleManager.batch(async () => {
+    scheduleManager.schedule(async () => {
       if (isMaster) {
         return
       }
       await this.commentService.appendIpLocation(commentId, ipLocation.ip)
     })
 
-    scheduleManager.batch(async () => {
+    scheduleManager.schedule(async () => {
       const configs = await this.configsService.get('commentOptions')
       const { commentShouldAudit } = configs
       if (await this.commentService.checkSpam(comment)) {

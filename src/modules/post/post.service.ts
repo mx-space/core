@@ -160,7 +160,7 @@ export class PostService {
     )
 
     await oldDocument.save()
-    scheduleManager.batch(async () => {
+    scheduleManager.schedule(async () => {
       const doc = await this.postModel
         .findById(id)
         .lean({ getters: true, autopopulate: true })

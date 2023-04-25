@@ -185,7 +185,7 @@ export class NoteService {
       throw new NoContentCanBeModifiedException()
     }
 
-    scheduleManager.batch(async () => {
+    scheduleManager.schedule(async () => {
       this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
         scope: EventScope.TO_SYSTEM,
       })
