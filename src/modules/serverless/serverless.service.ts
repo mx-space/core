@@ -1,7 +1,7 @@
 import { isURL } from 'class-validator'
 import fs, { mkdir, stat } from 'fs/promises'
 import { isPlainObject } from 'lodash'
-import LRUCache from 'lru-cache'
+import { LRUCache } from 'lru-cache'
 import { createRequire } from 'module'
 import { mongo } from 'mongoose'
 import path, { resolve } from 'path'
