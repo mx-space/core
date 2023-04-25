@@ -112,7 +112,7 @@
     "marked": "4.3.0",
     "mime-types": "*",
     "mkdirp": "*",
-    "mongoose": "7.0.4",
+    "mongoose": "7.0.5",
     "mongoose-aggregate-paginate-v2": "1.0.6",
     "mongoose-autopopulate": "1.0.0",
     "mongoose-lean-getters": "0.4.0",
