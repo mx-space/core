@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [3.43.4](https://github.com/mx-space/core/compare/v3.43.3...v3.43.4) (2023-04-25)
+
+
+### Bug Fixes
+
+* autopopulate ([dd0ca23](https://github.com/mx-space/core/commit/dd0ca238854219bef6714d7c5cf5c3436214ef12))
+* autopopulate note ([040856e](https://github.com/mx-space/core/commit/040856e57b5464778edc46ac75c42ae00134abc1))
+* batch to schedule ([ccd570d](https://github.com/mx-space/core/commit/ccd570dac3a35625a2b54b4b7b8d8b83c944d179))
+* **deps:** update dependency @typegoose/typegoose to v11.0.2 ([#1048](https://github.com/mx-space/core/issues/1048)) ([b16260b](https://github.com/mx-space/core/commit/b16260bd9d952f1a7185cdd9fe49ecc14535d009))
+* **deps:** update dependency commander to v10 ([#984](https://github.com/mx-space/core/issues/984)) ([4aee684](https://github.com/mx-space/core/commit/4aee6846fb3e40d0c3f8fd69481efaffb9aea984))
+* **deps:** update dependency isbot to v3.6.10 ([#1055](https://github.com/mx-space/core/issues/1055)) ([5580aae](https://github.com/mx-space/core/commit/5580aae3ca5722e7228b615a5b29b74f0440ea3e))
+* **deps:** update dependency mongoose to v7.0.4 ([#1053](https://github.com/mx-space/core/issues/1053)) ([d366d78](https://github.com/mx-space/core/commit/d366d7890d871c9d95d8a754b6871346d3676260))
+* lean of autopopulate ([cb72911](https://github.com/mx-space/core/commit/cb72911b181550e018dbe6679d385277a101c9e2))
+* limit comment max deep of 10 ([9fa805a](https://github.com/mx-space/core/commit/9fa805a5d69c4d8df6a81c0b4384888c8d5a4149))
+
+
+
 ## [3.43.3](https://github.com/mx-space/core/compare/v3.43.2...v3.43.3) (2023-04-19)
 
 
