@@ -81,8 +81,8 @@ importers:
         specifier: 11.0.2
         version: 11.0.2(mongoose@7.0.4)
       '@types/jsonwebtoken':
-        specifier: 9.0.1
-        version: 9.0.1
+        specifier: 9.0.2
+        version: 9.0.2
       algoliasearch:
         specifier: 4.17.0
         version: 4.17.0
@@ -2943,8 +2943,8 @@ packages:
       '@types/node': 18.15.13
     dev: true
 
-  /@types/jsonwebtoken@9.0.1:
-    resolution: {integrity: sha512-c5ltxazpWabia/4UzhIoaDcIza4KViOQhdbjRlfcIGVnsE3c3brkz9Z+F/EeJIECOQP7W7US2hNE930cWWkPiw==}
+  /@types/jsonwebtoken@9.0.2:
+    resolution: {integrity: sha512-drE6uz7QBKq1fYqqoFKTDRdFCPHd5TCub75BM+D+cMx7NU9hUz7SESLfC2fSCXVFMO5Yj8sOWHuGqPgjc+fz0Q==}
     dependencies:
       '@types/node': 18.15.13
     dev: false
