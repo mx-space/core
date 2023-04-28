@@ -180,8 +180,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(mongoose@7.1.0)
       mongoose-lean-getters:
-        specifier: 0.4.0
-        version: 0.4.0(mongoose@7.1.0)
+        specifier: 1.0.0
+        version: 1.0.0(mongoose@7.1.0)
       mongoose-lean-id:
         specifier: 0.5.0
         version: 0.5.0(mongoose@7.1.0)
@@ -6984,14 +6984,14 @@ packages:
       mongoose: 7.1.0
     dev: false
 
-  /mongoose-lean-getters@0.4.0(mongoose@7.1.0):
-    resolution: {integrity: sha512-4YgzBZYFpXZm4Roz2MKXm3X2yDGR6OkpZx0jka4qTM3S3Gul/KV7SqPlZLauJG1RjU9hyuOvnDXYcji7iZXwcA==}
-    engines: {node: '>= 8'}
+  /mongoose-lean-getters@1.0.0(mongoose@7.1.0):
+    resolution: {integrity: sha512-jzo2UjhURfyMtBZNhLXUC2yct/56DnVi8JxoGZKZ6sCY7QOiRLEiuzH6ZVN5HX/FHZrtTd07GVEBz+sH9wQhYg==}
+    engines: {node: '>= 14'}
     peerDependencies:
-      mongoose: '>= 5.11.0 || 6.x'
+      mongoose: '>= 7.1.0'
     dependencies:
       mongoose: 7.1.0
-      mpath: 0.8.4
+      mpath: 0.9.0
     dev: false
 
   /mongoose-lean-id@0.5.0(mongoose@7.1.0):
