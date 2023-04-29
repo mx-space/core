@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [3.43.5](https://github.com/mx-space/core/compare/v3.43.4...v3.43.5) (2023-04-29)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @types/jsonwebtoken to v9.0.2 ([#1064](https://github.com/mx-space/core/issues/1064)) ([c89f4cf](https://github.com/mx-space/core/commit/c89f4cf22e08e897d000af91b8ef1752c2af9d66))
+* **deps:** update dependency mongoose to v7.1.0 ([#1065](https://github.com/mx-space/core/issues/1065)) ([291a2f4](https://github.com/mx-space/core/commit/291a2f4312e293aa530807ef109921251df8aee8))
+* **deps:** update dependency mongoose-lean-getters to v1 ([#1066](https://github.com/mx-space/core/issues/1066)) ([617d929](https://github.com/mx-space/core/commit/617d929773af9a78e290aa3a18dcd57e3b81be57))
+* **deps:** update dependency rxjs to v7.8.1 ([#1062](https://github.com/mx-space/core/issues/1062)) ([910b037](https://github.com/mx-space/core/commit/910b0373ec698a4aabc395a30ebf64f7d2739ec7))
+* remove require cache after install deps ([bda1322](https://github.com/mx-space/core/commit/bda13226d71ab65bbdbfab6553a10eb3da41f97c))
+
+
+### Features
+
+* select `meta` and `images` for top ([cd4c898](https://github.com/mx-space/core/commit/cd4c89857a0a2843b1caed2b60fc53eb6c2e6d21))
+
+
+
 ## [3.43.4](https://github.com/mx-space/core/compare/v3.43.3...v3.43.4) (2023-04-25)
 
 
