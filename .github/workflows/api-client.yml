@@ -6,7 +6,8 @@ name: Build @mx-space/api-client
 on:
   push:
     branches:
-      - '**'
+      - master
+      - main
     paths:
       - 'packages/api-client/**'
       - '.github/workflows/api-client.yml'

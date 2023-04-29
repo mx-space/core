@@ -2,12 +2,13 @@ name: Docker Build
 
 on:
   push:
-    branches:
-      - '**'
     tags:
       - 'v*'
     paths-ignore:
       - test/**
+    branches:
+      - master
+      - main
   pull_request:
     branches: [master]
 
