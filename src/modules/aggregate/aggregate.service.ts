@@ -89,7 +89,7 @@ export class AggregateService {
       .find(condition)
       .sort({ created: -1 })
       .limit(size)
-      .select('_id title name slug avatar nid created')
+      .select('_id title name slug avatar nid created meta images')
   }
 
   async topActivity(size = 6, isMaster = false) {
@@ -103,7 +103,7 @@ export class AggregateService {
             }
           : {},
         size,
-      ).lean(),
+      ).lean({ getters: true }),
 
       this.findTop(
         this.postService.model,
@@ -111,7 +111,7 @@ export class AggregateService {
         size,
       )
         .populate('categoryId')
-        .lean()
+        .lean({ getters: true })
         .then((res) => {
           return res.map((post) => {
             post.category = pick(post.categoryId, ['name', 'slug'])
