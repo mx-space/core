@@ -355,7 +355,7 @@ export class ServerlessService implements OnModuleInit {
   }
 
   @Interval(5 * 60 * 1000)
-  private cleanup() {
+  public cleanRequireCache() {
     const { requireModuleIdSet, scopeContextLRU, scopeModuleLRU } =
       this.cleanableScope
     Array.from(requireModuleIdSet.values()).forEach((id) => {
@@ -455,9 +455,7 @@ export class ServerlessService implements OnModuleInit {
 
       // 2. if application third part lib
 
-      const allowedThirdPartLibs: UniqueArray<
-        (keyof typeof PKG.dependencies)[]
-      > = [
+      const allowedThirdPartLibs: string[] = [
         '@babel/core',
         '@babel/types',
         '@babel/plugin-transform-typescript',
@@ -482,7 +480,8 @@ export class ServerlessService implements OnModuleInit {
         'snakecase-keys',
         'ua-parser-js',
         'xss',
-      ]
+      ] as UniqueArray<(keyof typeof PKG.dependencies)[]>
+      // .concat([''] as any[])
 
       const trustPackagePrefixes = ['@innei/', '@mx-space/', 'mx-function-']
 
