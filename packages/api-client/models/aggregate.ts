@@ -20,9 +20,20 @@ export interface Url {
   webUrl: string
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface AggregateTopNote
+  extends Pick<NoteModel, 'id' | 'title' | 'created' | 'nid' | 'images'> {}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface AggregateTopPost
+  extends Pick<
+    PostModel,
+    'id' | 'slug' | 'created' | 'title' | 'category' | 'images'
+  > {}
+
 export interface AggregateTop {
-  notes: Pick<NoteModel, 'id' | 'title' | 'created' | 'nid'>[]
-  posts: Pick<PostModel, 'id' | 'slug' | 'created' | 'title' | 'category'>[]
+  notes: AggregateTopNote[]
+  posts: AggregateTopPost[]
   says: SayModel[]
 }
 
