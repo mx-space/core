@@ -147,7 +147,10 @@ export class SearchService {
       return model
         .findById(objectID)
         .select('_id title created modified categoryId slug nid')
-        .lean()
+        .lean({
+          getters: true,
+          autopopulate: true,
+        })
         .then((doc) => {
           if (doc) {
             Reflect.set(doc, 'type', type)
