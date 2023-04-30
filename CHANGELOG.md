@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [3.43.6](https://github.com/mx-space/core/compare/v3.43.5...v3.43.6) (2023-04-30)
+
+
+### Bug Fixes
+
+* search posts with category ([71f20e3](https://github.com/mx-space/core/commit/71f20e3c7aef8c289fbdbcd10ac84bb54e6cca85))
+
+
+
 ## [3.43.5](https://github.com/mx-space/core/compare/v3.43.4...v3.43.5) (2023-04-29)
 
 
