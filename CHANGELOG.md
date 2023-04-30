@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [3.43.7](https://github.com/mx-space/core/compare/v3.43.6...v3.43.7) (2023-04-30)
+
+
+### Bug Fixes
+
+* image record filter ([fa2f72a](https://github.com/mx-space/core/commit/fa2f72a229a1baf9494350a060691b9f91942566))
+* images uniq ([9f62272](https://github.com/mx-space/core/commit/9f6227273df305f10f840e472b31ffd235a8251f))
+
+
+### Features
+
+* support page reorder ([e577109](https://github.com/mx-space/core/commit/e577109b862154b784ef295d58f4dc39d59b098c))
+
+
+
 ## [3.43.6](https://github.com/mx-space/core/compare/v3.43.5...v3.43.6) (2023-04-30)
 
 
