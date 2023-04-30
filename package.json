@@ -106,7 +106,7 @@
     "json5": "2.2.3",
     "jsonwebtoken": "9.0.0",
     "jszip": "3.10.1",
-    "linkedom": "0.14.25",
+    "linkedom": "0.14.26",
     "lodash": "*",
     "lru-cache": "9.1.1",
     "marked": "4.3.0",
