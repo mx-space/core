@@ -78,8 +78,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0(mongoose@7.1.0)
       '@typegoose/typegoose':
-        specifier: 11.0.2
-        version: 11.0.2(mongoose@7.1.0)
+        specifier: 11.0.3
+        version: 11.0.3(mongoose@7.1.0)
       '@types/jsonwebtoken':
         specifier: 9.0.2
         version: 9.0.2
@@ -2773,8 +2773,8 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@typegoose/typegoose@11.0.2(mongoose@7.1.0):
-    resolution: {integrity: sha512-3xr1MvafgOvWKX1bzo1UDPvf/57zDvJ4Af3In6xD9vYKUJeYImA8cqSYOwF77xRebI+Rsr3FrtkY6HMmQZ6UHg==}
+  /@typegoose/typegoose@11.0.3(mongoose@7.1.0):
+    resolution: {integrity: sha512-U3hhJzc2sVqdoTozqMiE8/aqBRXLgywLclacWyw0rXmjZQr2MUuVEtFIWTTCb9JAgmdjE8E53uPOXB3fjRNcKw==}
     engines: {node: '>=14.17.0'}
     peerDependencies:
       mongoose: ~7.0.3
