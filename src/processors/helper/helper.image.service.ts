@@ -23,7 +23,8 @@ export class ImageService {
     originImages: ImageModel[] | undefined,
     onUpdate: (images: ImageModel[]) => Promise<any>,
   ) {
-    const newImages = pickImagesFromMarkdown(text)
+    const newImageSrcSet = new Set(pickImagesFromMarkdown(text))
+    const newImages = [...newImageSrcSet]
 
     const result = [] as ImageModel[]
 
@@ -81,7 +82,6 @@ export class ImageService {
 
     // 老图片不要过滤，记录到列头
 
-    const newImageSrcSet = new Set(newImages)
     if (originImages) {
       for (const oldImageRecord of originImages) {
         const src = oldImageRecord.src
