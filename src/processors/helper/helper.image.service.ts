@@ -21,7 +21,7 @@ export class ImageService {
   async saveImageDimensionsFromMarkdownText(
     text: string,
     originImages: ImageModel[] | undefined,
-    updateFn: (images: ImageModel[]) => Promise<any>,
+    onUpdate: (images: ImageModel[]) => Promise<any>,
   ) {
     const newImages = pickImagesFromMarkdown(text)
 
@@ -79,7 +79,19 @@ export class ImageService {
     const images = await Promise.all(task)
     result.push(...images)
 
-    await updateFn(result.filter(({ src }) => newImages.includes(src!)))
+    // 老图片不要过滤，记录到列头
+
+    const newImageSrcSet = new Set(newImages)
+    if (originImages) {
+      for (const oldImageRecord of originImages) {
+        const src = oldImageRecord.src
+        if (src && !newImageSrcSet.has(src)) {
+          result.unshift(oldImageRecord)
+        }
+      }
+    }
+
+    await onUpdate(result)
   }
 
   getOnlineImageSizeAndMeta = async (image: string) => {
