@@ -4,8 +4,10 @@ import slugify from 'slugify'
 
 import { Injectable } from '@nestjs/common'
 
+import { BizException } from '~/common/exceptions/biz.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
@@ -29,6 +31,14 @@ export class PageService {
   }
 
   public async create(doc: PageModel) {
+    const count = await this.model.countDocuments({})
+    if (count >= 10) {
+      throw new BizException(ErrorCodeEnum.MaxCountLimit)
+    }
+    // `0` or `undefined` or `null`
+    if (!doc.order) {
+      doc.order = count + 1
+    }
     const res = await this.model.create({
       ...doc,
       slug: slugify(doc.slug),

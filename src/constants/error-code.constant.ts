@@ -2,6 +2,7 @@ export enum ErrorCodeEnum {
   NoContentCanBeModified = 1000,
 
   SlugNotAvailable = 10000,
+  MaxCountLimit = 10001,
   CommentDisabled = 30000,
   CommentTooDeep = 30001,
   ServerlessError = 80000,
@@ -13,6 +14,7 @@ export enum ErrorCodeEnum {
 export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
   {
     [ErrorCodeEnum.SlugNotAvailable]: ['slug 不可用', 400],
+    [ErrorCodeEnum.MaxCountLimit]: ['已达到最大数量限制', 400],
     [ErrorCodeEnum.BanInDemo]: ['Demo 模式下此操作不可用', 400],
     [ErrorCodeEnum.MasterLost]: ['站点主人信息已丢失', 500],
     [ErrorCodeEnum.CommentDisabled]: ['全站评论已关闭', 403],

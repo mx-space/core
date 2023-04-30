@@ -19,6 +19,7 @@ import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 
+import { PageReorderDto } from './page.dto'
 import { PageModel, PartialPageModel } from './page.model'
 import { PageService } from './page.service'
 
@@ -41,9 +42,7 @@ export class PageController {
         limit: size,
         page,
         select,
-        sort: sortBy
-          ? { [sortBy]: sortOrder || -1 }
-          : { order: -1, modified: -1 },
+        sort: sortBy ? { [sortBy]: sortOrder || -1 } : { order: -1 },
       },
     )
   }
@@ -103,6 +102,28 @@ export class PageController {
     await this.pageService.updateById(id, body)
 
     return
+  }
+
+  @Patch('/reorder')
+  @Auth()
+  async reorder(@Body() body: PageReorderDto) {
+    const { seq } = body
+    const orders = seq.map(($) => $.order)
+    const uniq = new Set(orders)
+    if (uniq.size !== orders.length) {
+      throw new UnprocessableEntityException('order must be unique')
+    }
+    const tasks = seq.map(({ id, order }) => {
+      return this.pageService.model.updateOne(
+        {
+          _id: id,
+        },
+        {
+          order,
+        },
+      )
+    })
+    await Promise.all(tasks)
   }
 
   @Delete('/:id')
