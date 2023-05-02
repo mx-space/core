@@ -44,7 +44,7 @@ docker-compose up -d
 
 需要以下环境：
 
-- Node.js 16.10+
+- Node.js 18+
 - MongoDB
 - Redis
 
