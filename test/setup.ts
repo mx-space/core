@@ -1,4 +1,4 @@
-import { mkdirSync } from 'fs-extra'
+import { mkdirSync } from 'node:fs'
 import { chalk } from 'zx'
 
 import { Logger } from '@nestjs/common'

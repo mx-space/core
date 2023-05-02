@@ -1,4 +1,4 @@
-import { existsSync } from 'fs-extra'
+import { existsSync } from 'node:fs'
 
 import { isMainProcess } from '~/global/env.global'
 import { getDatabaseConnection } from '~/utils/database.util'
