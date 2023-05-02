@@ -2,7 +2,6 @@
 
 /* eslint-disable */
 import AbortController from 'abort-controller'
-import fetch, { Headers, Request, Response } from 'node-fetch'
 
 const TEN_MEGABYTES = 1000 * 1000 * 10
 
