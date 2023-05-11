@@ -8,10 +8,13 @@ export default defineBuiltInSnippetConfig({
 export default async function handler(ctx: Context) {
   const { req } = ctx
   const { query } = req
-  const { slug, handle } = query
+  const { slug, characterId } = query
   return axios.get('https://xlog.app/api/slug2id', {
     params: {
-      slug, handle
+      slug, characterId
+    },
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:14.2) Gecko/20100101 Firefox/14.2.1"
     }
   }).then(data => data.data).catch(err => ({ err }))
 }`,
