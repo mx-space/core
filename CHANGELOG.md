@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.0.1](https://github.com/mx-space/core/compare/v4.0.0...v4.0.1) (2023-05-11)
+
+
+### Bug Fixes
+
+* update xlog get_page_id ([3c3a4f7](https://github.com/mx-space/core/commit/3c3a4f7bb47cb68755549bbd32db3374d1cb1502))
+
+
+
 # [4.0.0](https://github.com/mx-space/core/compare/v3.43.7...v4.0.0) (2023-05-02)
 
 
