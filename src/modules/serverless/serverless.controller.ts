@@ -113,14 +113,22 @@ export class ServerlessController {
   }
 
   /**
-   * 重置内建函数
+   * 重置内建函数，过期的内建函数会被删除
    */
   @Delete('/reset/:id')
   @Auth()
   async resetBuiltInFunction(@Param('id') id: string) {
     const builtIn = await this.serverlessService.isBuiltInFunction(id)
     if (!builtIn) {
-      throw new BadRequestException('can not reset a non-builtin function')
+      // throw new BadRequestException('can not reset a non-builtin function')
+      const snippet = await this.serverlessService.model.findById(id)
+      if (!snippet) {
+        throw new BadRequestException('function not found')
+      }
+      await this.serverlessService.model.deleteOne({
+        _id: id,
+      })
+      return
     }
     await this.serverlessService.resetBuiltInFunction(builtIn)
 

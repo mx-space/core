@@ -728,11 +728,7 @@ export class ServerlessService implements OnModuleInit {
   }
 
   async isBuiltInFunction(id: string) {
-    const document = await this.model
-      .findOne({
-        _id: id,
-      })
-      .lean()
+    const document = await this.model.findById(id).lean()
     if (!document) return false
     const isBuiltin = document.type == SnippetType.Function && document.builtIn
     return isBuiltin
