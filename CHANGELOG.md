@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [4.0.2](https://github.com/mx-space/core/compare/v4.0.1...v4.0.2) (2023-05-25)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies (patch) ([#1072](https://github.com/mx-space/core/issues/1072)) ([316ad0b](https://github.com/mx-space/core/commit/316ad0b25cef55a4da2206a659d4e34c9b4ba4fd))
+* **deps:** update all non-major dependencies (patch) ([#1076](https://github.com/mx-space/core/issues/1076)) ([96604b6](https://github.com/mx-space/core/commit/96604b6e705ea1756339c7d4281e5a016c19aac2))
+* **serverless:** delete stale built-in function ([83d8eed](https://github.com/mx-space/core/commit/83d8eed681c9d9bfa7223751d5c1e133da3ce6a6))
+
+
+
 ## [4.0.1](https://github.com/mx-space/core/compare/v4.0.0...v4.0.1) (2023-05-11)
 
 
