@@ -2,7 +2,6 @@ import LeanId from 'mongoose-lean-id'
 import { default as mongooseLeanVirtuals } from 'mongoose-lean-virtuals'
 import Paginate from 'mongoose-paginate-v2'
 
-import { ApiHideProperty } from '@nestjs/swagger'
 import { index, modelOptions, plugin } from '@typegoose/typegoose'
 
 const mongooseLeanGetters = require('mongoose-lean-getters')
@@ -24,10 +23,8 @@ const mongooseLeanGetters = require('mongoose-lean-getters')
 @index({ created: -1 })
 @index({ created: 1 })
 export class BaseModel {
-  @ApiHideProperty()
   created?: Date
 
-  @ApiHideProperty()
   id?: string
 
   static get protectedKeys() {

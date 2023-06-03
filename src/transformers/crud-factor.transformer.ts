@@ -12,7 +12,7 @@ import {
   Query,
   Type,
 } from '@nestjs/common'
-import { ApiTags, PartialType } from '@nestjs/swagger'
+import { PartialType } from '@nestjs/mapped-types'
 import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -35,8 +35,6 @@ export function BaseCrudFactory<
 >({ model, classUpper }: { model: T; classUpper?: ClassType<any> }): Type<any> {
   const prefix = model.name.toLowerCase().replace(/model$/, '')
   const pluralizeName = pluralize(prefix) as string
-  const tagPrefix =
-    pluralizeName.charAt(0).toUpperCase() + pluralizeName.slice(1)
 
   const eventNamePrefix = `${prefix.toUpperCase()}_`
 
@@ -46,7 +44,6 @@ export function BaseCrudFactory<
 
   const Upper = classUpper || class {}
 
-  @ApiTags(`${tagPrefix} Routes`)
   @ApiController(pluralizeName)
   class BaseCrud extends Upper {
     constructor(

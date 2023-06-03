@@ -3,8 +3,8 @@ import {
   ArrayUnique,
   IsBoolean,
   IsEmail,
-  IsIP,
   IsInt,
+  IsIP,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -13,19 +13,17 @@ import {
 } from 'class-validator'
 import { JSONSchema } from 'class-validator-jsonschema'
 
-import { ApiProperty } from '@nestjs/swagger'
-
 import { IsAllowedUrl } from '~/utils/validator/isAllowedUrl'
 
 import { Encrypt } from './configs.encrypt.util'
 import {
+  halfFieldOption,
   JSONSchemaArrayField,
   JSONSchemaHalfGirdPlainField,
   JSONSchemaNumberField,
   JSONSchemaPasswordField,
   JSONSchemaPlainField,
   JSONSchemaToggleField,
-  halfFieldOption,
 } from './configs.jsonschema.decorator'
 
 @JSONSchema({ title: 'SEO 优化' })
@@ -52,25 +50,21 @@ export class SeoDto {
 export class UrlDto {
   @IsAllowedUrl()
   @IsOptional()
-  @ApiProperty({ example: 'http://127.0.0.1:2323' })
   @JSONSchemaHalfGirdPlainField('前端地址')
   webUrl: string
 
   @IsAllowedUrl()
   @IsOptional()
-  @ApiProperty({ example: 'http://127.0.0.1:9528' })
   @JSONSchemaHalfGirdPlainField('管理后台地址')
   adminUrl: string
 
   @IsAllowedUrl()
   @IsOptional()
-  @ApiProperty({ example: 'http://127.0.0.1:2333' })
   @JSONSchemaHalfGirdPlainField('API 地址')
   serverUrl: string
 
   @IsAllowedUrl()
   @IsOptional()
-  @ApiProperty({ example: 'http://127.0.0.1:8080' })
   @JSONSchemaHalfGirdPlainField('Gateway 地址')
   wsUrl: string
 }

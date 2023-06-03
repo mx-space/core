@@ -3,10 +3,10 @@ import pluralize from 'pluralize'
 
 import {
   BadRequestException,
+  forwardRef,
   Inject,
   Injectable,
   UnprocessableEntityException,
-  forwardRef,
 } from '@nestjs/common'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'

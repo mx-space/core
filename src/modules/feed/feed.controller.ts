@@ -3,7 +3,6 @@ import xss from 'xss'
 import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
 
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 
 import { AggregateService } from '../aggregate/aggregate.service'
@@ -11,7 +10,6 @@ import { ConfigsService } from '../configs/configs.service'
 import { MarkdownService } from '../markdown/markdown.service'
 
 @Controller()
-@ApiName
 export class FeedController {
   constructor(
     private readonly aggregateService: AggregateService,

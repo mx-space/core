@@ -1,4 +1,4 @@
-import { ValidationOptions, isURL } from 'class-validator'
+import { isURL, ValidationOptions } from 'class-validator'
 
 import { validatorFactory } from './simpleValidatorFactory'
 

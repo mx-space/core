@@ -1,11 +1,9 @@
 import { omit } from 'lodash'
 
 import { CacheKey, CacheTTL, Get, Query } from '@nestjs/common'
-import { ApiProperty } from '@nestjs/swagger'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { IsMaster } from '~/common/decorators/role.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 
@@ -15,7 +13,6 @@ import { TimelineQueryDto, TopQueryDto } from './aggregate.dto'
 import { AggregateService } from './aggregate.service'
 
 @ApiController('aggregate')
-@ApiName
 export class AggregateController {
   constructor(
     private readonly aggregateService: AggregateService,
@@ -51,7 +48,6 @@ export class AggregateController {
   }
 
   @Get('/top')
-  @ApiProperty({ description: '获取最新发布的内容' })
   async top(@Query() query: TopQueryDto, @IsMaster() isMaster: boolean) {
     const { size } = query
     return await this.aggregateService.topActivity(size, isMaster)

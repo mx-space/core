@@ -1,6 +1,6 @@
-import { FastifyReply, FastifyRequest } from 'fastify'
 import { WriteStream } from 'fs'
 import { resolve } from 'path'
+import { FastifyReply, FastifyRequest } from 'fastify'
 
 import {
   ArgumentsHost,

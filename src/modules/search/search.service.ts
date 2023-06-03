@@ -3,9 +3,9 @@ import algoliasearch from 'algoliasearch'
 import { SearchResponse } from '@algolia/client-search'
 import {
   BadRequestException,
+  forwardRef,
   Inject,
   Injectable,
-  forwardRef,
 } from '@nestjs/common'
 
 import { SearchDto } from '~/modules/search/search.dto'

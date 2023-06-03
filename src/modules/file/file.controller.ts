@@ -9,7 +9,6 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { alphabet } from '~/constants/other.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
@@ -18,7 +17,6 @@ import { PagerDto } from '~/shared/dto/pager.dto'
 import { FileQueryDto, FileUploadDto } from './file.dto'
 import { FileService } from './file.service'
 
-@ApiName
 @ApiController(['objects', 'files'])
 export class FileController {
   constructor(
@@ -64,7 +62,6 @@ export class FileController {
     }
   }
 
-  @HTTPDecorators.FileUpload({ description: 'upload file' })
   @Post('/upload')
   @Auth()
   @BanInDemo

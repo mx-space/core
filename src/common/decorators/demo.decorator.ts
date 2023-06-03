@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs'
 
-import { CanActivate, UseGuards, applyDecorators } from '@nestjs/common'
+import { applyDecorators, CanActivate, UseGuards } from '@nestjs/common'
 
 import { banInDemo } from '~/utils'
 

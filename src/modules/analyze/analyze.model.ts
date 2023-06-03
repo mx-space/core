@@ -1,8 +1,7 @@
 import { SchemaTypes } from 'mongoose'
 import { UAParser } from 'ua-parser-js'
 
-import { ApiHideProperty } from '@nestjs/swagger'
-import { Severity, index, modelOptions, prop } from '@typegoose/typegoose'
+import { index, modelOptions, prop, Severity } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
 
@@ -28,6 +27,6 @@ export class AnalyzeModel extends BaseModel {
 
   @prop()
   path?: string
-  @ApiHideProperty()
+
   timestamp: Date
 }

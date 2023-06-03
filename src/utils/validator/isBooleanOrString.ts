@@ -1,4 +1,4 @@
-import { ValidationOptions, isString } from 'class-validator'
+import { isString, ValidationOptions } from 'class-validator'
 import { isBoolean, merge } from 'lodash'
 
 import { validatorFactory } from './simpleValidatorFactory'

@@ -5,7 +5,6 @@ import { Delete, Get, HttpCode, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { Paginator } from '~/common/decorators/http.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/redis/cache.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
@@ -16,7 +15,6 @@ import { AnalyzeDto } from './analyze.dto'
 import { AnalyzeService } from './analyze.service'
 
 @ApiController({ path: 'analyze' })
-@ApiName
 @Auth()
 export class AnalyzeController {
   constructor(

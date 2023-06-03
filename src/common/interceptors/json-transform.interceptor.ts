@@ -3,7 +3,7 @@
  * @author Innei
  */
 import { isArrayLike, isObjectLike } from 'lodash'
-import { Observable, map } from 'rxjs'
+import { map, Observable } from 'rxjs'
 import snakecaseKeys from 'snakecase-keys'
 
 import {

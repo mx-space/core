@@ -16,14 +16,12 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { CRON_DESCRIPTION } from '~/constants/meta.constant'
 import { CronService } from '~/processors/helper/helper.cron.service'
 import { TaskQueueService } from '~/processors/helper/helper.tq.service'
 
 @ApiController('health/cron')
 @Auth()
-@ApiName
 export class HealthCronController {
   constructor(
     private schedulerRegistry: SchedulerRegistry,

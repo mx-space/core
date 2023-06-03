@@ -1,5 +1,5 @@
-import { isDefined } from 'class-validator'
 import { URL } from 'url'
+import { isDefined } from 'class-validator'
 
 import { Injectable } from '@nestjs/common'
 

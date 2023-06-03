@@ -4,10 +4,10 @@
  * @module interceptor/analyze
  * @author Innei <https://github.com/Innei>
  */
+import { URL } from 'url'
 import isbot from 'isbot'
 import { Observable } from 'rxjs'
 import UAParser from 'ua-parser-js'
-import { URL } from 'url'
 
 import {
   CallHandler,

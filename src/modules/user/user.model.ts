@@ -3,9 +3,9 @@ import { Schema } from 'mongoose'
 
 import {
   DocumentType,
-  Severity,
   modelOptions,
   prop,
+  Severity,
 } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'

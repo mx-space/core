@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
-import type { AxiosRequestConfig } from 'axios'
-import { program } from 'commander'
 import { readFileSync } from 'fs'
-import { load as yamlLoad } from 'js-yaml'
 import path from 'path'
+import { program } from 'commander'
+import { load as yamlLoad } from 'js-yaml'
+import type { AxiosRequestConfig } from 'axios'
 
 const commander = program
   .option('-p, --port <number>', 'server port')

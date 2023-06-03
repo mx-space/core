@@ -8,7 +8,6 @@ import {
   Post,
   Put,
 } from '@nestjs/common'
-import { ApiOperation } from '@nestjs/swagger'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -19,7 +18,6 @@ import {
 } from '~/common/decorators/current-user.decorator'
 import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { IsMaster } from '~/common/decorators/role.decorator'
 import { getAvatar } from '~/utils'
 
@@ -28,7 +26,6 @@ import { LoginDto, UserDto, UserPatchDto } from './user.dto'
 import { UserDocument, UserModel } from './user.model'
 import { UserService } from './user.service'
 
-@ApiName
 @ApiController(['master', 'user'])
 export class UserController {
   constructor(
@@ -90,7 +87,6 @@ export class UserController {
   }
 
   @Get('check_logged')
-  @ApiOperation({ summary: '判断当前 Token 是否有效 ' })
   @HttpCache.disable
   checkLogged(@IsMaster() isMaster: boolean) {
     return { ok: +isMaster, isGuest: !isMaster }

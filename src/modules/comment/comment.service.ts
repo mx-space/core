@@ -1,13 +1,13 @@
-import { Types } from 'mongoose'
 import { URL } from 'url'
+import { Types } from 'mongoose'
 
 import {
   BadRequestException,
+  forwardRef,
   Inject,
   Injectable,
   Logger,
   NotFoundException,
-  forwardRef,
 } from '@nestjs/common'
 import { DocumentType } from '@typegoose/typegoose'
 import { ReturnModelType } from '@typegoose/typegoose/lib/types'

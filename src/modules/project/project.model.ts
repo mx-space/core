@@ -1,7 +1,6 @@
 import { Transform } from 'class-transformer'
 import { IsOptional, IsString, IsUrl, isURL } from 'class-validator'
 
-import { PartialType } from '@nestjs/swagger'
 import { modelOptions, prop } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
@@ -88,5 +87,3 @@ export class ProjectModel extends BaseModel {
   @IsString()
   text: string
 }
-
-export class PartialProjectModel extends PartialType(ProjectModel) {}

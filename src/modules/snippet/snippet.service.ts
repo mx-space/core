@@ -5,10 +5,10 @@ import qs from 'qs'
 
 import {
   BadRequestException,
+  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
-  forwardRef,
 } from '@nestjs/common'
 
 import { RedisKeys } from '~/constants/cache.constant'

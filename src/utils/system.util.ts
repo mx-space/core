@@ -1,7 +1,7 @@
 import { exec } from 'child_process'
 import { builtinModules } from 'module'
-import { spawn } from 'node-pty'
 import { promisify } from 'util'
+import { spawn } from 'node-pty'
 
 export async function getFolderSize(folderPath: string) {
   try {

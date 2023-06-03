@@ -8,8 +8,7 @@ import {
   ValidateNested,
 } from 'class-validator'
 
-import { ApiHideProperty } from '@nestjs/swagger'
-import { PropType, prop } from '@typegoose/typegoose'
+import { prop, PropType } from '@typegoose/typegoose'
 
 import { BaseCommentIndexModel } from './base-comment.model'
 import { ImageModel } from './image.model'
@@ -25,17 +24,14 @@ export class WriteBaseModel extends BaseCommentIndexModel {
   text: string
 
   @prop({ type: ImageModel })
-  @ApiHideProperty()
   @IsOptional()
   @ValidateNested()
   @Type(() => ImageModel)
   images?: ImageModel[]
 
   @prop({ default: null, type: Date })
-  @ApiHideProperty()
   modified: Date | null
 
-  @ApiHideProperty()
   @IsOptional()
   @IsDate()
   @Transform(({ value }) => (value ? new Date(value) : void 0))

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { ReturnModelType, mongoose } from '@typegoose/typegoose'
+import { mongoose, ReturnModelType } from '@typegoose/typegoose'
 
 import { DB_CONNECTION_TOKEN } from '~/constants/system.constant'
 import { NoteModel } from '~/modules/note/note.model'

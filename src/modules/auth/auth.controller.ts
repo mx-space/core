@@ -1,10 +1,10 @@
 import { Transform } from 'class-transformer'
 import {
   IsDate,
+  isMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
-  isMongoId,
 } from 'class-validator'
 
 import {
@@ -19,7 +19,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 
@@ -38,7 +37,6 @@ export class TokenDto {
 @ApiController({
   path: 'auth',
 })
-@ApiName
 export class AuthController {
   constructor(
     private readonly authService: AuthService,

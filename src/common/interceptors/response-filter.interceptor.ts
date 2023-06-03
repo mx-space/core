@@ -3,7 +3,7 @@
  * @author Innei
  */
 import { isFunction } from 'lodash'
-import { Observable, map } from 'rxjs'
+import { map, Observable } from 'rxjs'
 
 import {
   CallHandler,

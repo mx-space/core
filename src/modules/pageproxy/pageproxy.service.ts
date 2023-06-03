@@ -1,5 +1,5 @@
-import { parseHTML } from 'linkedom'
 import { URL } from 'url'
+import { parseHTML } from 'linkedom'
 
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
 

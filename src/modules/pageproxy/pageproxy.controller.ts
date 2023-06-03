@@ -1,10 +1,10 @@
-import { FastifyReply, FastifyRequest } from 'fastify'
 import { createReadStream, existsSync, statSync } from 'fs'
 import fs from 'fs/promises'
+import { extname, join } from 'path'
+import { FastifyReply, FastifyRequest } from 'fastify'
 import { isNull } from 'lodash'
 import { lookup } from 'mime-types'
 import PKG from 'package.json'
-import { extname, join } from 'path'
 import { Observable } from 'rxjs'
 
 import {
@@ -18,7 +18,6 @@ import {
 
 import { Cookies } from '~/common/decorators/cookie.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import { CacheService } from '~/processors/redis/cache.service'
@@ -30,7 +29,6 @@ import { PageProxyDebugDto } from './pageproxy.dto'
 import { PageProxyService } from './pageproxy.service'
 
 @Controller('/')
-@ApiName
 export class PageProxyController {
   constructor(
     private readonly cacheService: CacheService,

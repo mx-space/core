@@ -1,7 +1,7 @@
-import axios from 'axios'
 import crypto from 'crypto'
-import FormData from 'form-data'
 import fs from 'node:fs/promises'
+import axios from 'axios'
+import FormData from 'form-data'
 
 const sha1 = (str: string) =>
   crypto.createHash('sha1').update(str).digest('hex').toLowerCase()

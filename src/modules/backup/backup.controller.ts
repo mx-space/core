@@ -1,5 +1,5 @@
-import { FastifyRequest } from 'fastify'
 import { Readable } from 'stream'
+import { FastifyRequest } from 'fastify'
 
 import {
   BadRequestException,
@@ -14,20 +14,17 @@ import {
   Req,
   UnprocessableEntityException,
 } from '@nestjs/common'
-import { ApiProperty, ApiResponseProperty } from '@nestjs/swagger'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { getMediumDateTime } from '~/utils'
 
 import { BackupService } from './backup.service'
 
 @ApiController({ path: 'backups' })
-@ApiName
 @Auth()
 @BanInDemo
 export class BackupController {
@@ -37,7 +34,6 @@ export class BackupController {
   ) {}
 
   @Get('/new')
-  @ApiResponseProperty({ type: 'string', format: 'binary' })
   @Header(
     'Content-Disposition',
     `attachment; filename="backup-${getMediumDateTime(new Date())}.zip"`,
@@ -69,8 +65,6 @@ export class BackupController {
   }
 
   @Post(['/rollback/', '/'])
-  @ApiProperty({ description: '上传备份恢复' })
-  @HTTPDecorators.FileUpload({ description: 'Upload backup and restore' })
   async uploadAndRestore(@Req() req: FastifyRequest) {
     const data = await this.uploadService.getAndValidMultipartField(req)
     const { mimetype } = data

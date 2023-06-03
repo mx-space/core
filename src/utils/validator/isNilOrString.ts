@@ -1,10 +1,10 @@
 import {
+  isString,
+  registerDecorator,
   ValidationArguments,
   ValidationOptions,
   ValidatorConstraint,
   ValidatorConstraintInterface,
-  isString,
-  registerDecorator,
 } from 'class-validator'
 import { isNil } from 'lodash'
 

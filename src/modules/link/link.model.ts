@@ -1,3 +1,4 @@
+import { URL } from 'url'
 import { Transform } from 'class-transformer'
 import {
   IsEmail,
@@ -7,10 +8,7 @@ import {
   IsUrl,
   MaxLength,
 } from 'class-validator'
-import { range } from 'lodash'
-import { URL } from 'url'
 
-import { ApiProperty } from '@nestjs/swagger'
 import { modelOptions, prop } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
@@ -82,7 +80,6 @@ export class LinkModel extends BaseModel {
 
   @IsOptional()
   @IsEnum(LinkType)
-  @ApiProperty({ enum: range(0, 1) })
   @prop({ default: LinkType.Friend })
   type?: LinkType
 

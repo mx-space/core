@@ -1,6 +1,6 @@
-import { ClassConstructor, plainToInstance } from 'class-transformer'
-import { ValidatorOptions, validateSync } from 'class-validator'
 import cluster from 'cluster'
+import { ClassConstructor, plainToInstance } from 'class-transformer'
+import { validateSync, ValidatorOptions } from 'class-validator'
 import { cloneDeep, mergeWith } from 'lodash'
 
 import {

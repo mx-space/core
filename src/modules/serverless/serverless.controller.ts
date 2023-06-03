@@ -18,7 +18,6 @@ import { Throttle } from '@nestjs/throttler'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { IsMaster } from '~/common/decorators/role.decorator'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 
@@ -27,7 +26,6 @@ import { createMockedContextResponse } from './mock-response.util'
 import { ServerlessReferenceDto } from './serverless.dto'
 import { ServerlessService } from './serverless.service'
 
-@ApiName
 @ApiController(['serverless', 'fn'])
 export class ServerlessController {
   constructor(

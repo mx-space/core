@@ -5,9 +5,9 @@ import slugify from 'slugify'
 
 import {
   BadRequestException,
+  forwardRef,
   Inject,
   Injectable,
-  forwardRef,
 } from '@nestjs/common'
 
 import { BusinessException } from '~/common/exceptions/biz.exception'

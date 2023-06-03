@@ -1,8 +1,8 @@
+import { URL } from 'url'
 import { pick } from 'lodash'
 import { FilterQuery } from 'mongoose'
-import { URL } from 'url'
 
-import { Inject, Injectable, forwardRef } from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { AnyParamConstructor } from '@typegoose/typegoose/lib/types'

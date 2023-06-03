@@ -4,6 +4,7 @@ import {
   BadRequestException,
   Body,
   Delete,
+  forwardRef,
   Get,
   HttpCode,
   Inject,
@@ -12,14 +13,11 @@ import {
   Post,
   Put,
   Query,
-  forwardRef,
 } from '@nestjs/common'
-import { ApiQuery } from '@nestjs/swagger'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -38,7 +36,6 @@ import {
 import { CategoryService } from './category.service'
 
 @ApiController({ path: 'categories' })
-@ApiName
 export class CategoryController {
   constructor(
     private readonly categoryService: CategoryService,
@@ -91,12 +88,6 @@ export class CategoryController {
   }
 
   @Get('/:query')
-  @ApiQuery({
-    description: '混合查询 分类 和 标签云',
-    name: 'tag',
-    enum: ['true', 'false'],
-    required: false,
-  })
   async getCategoryById(
     @Param() { query }: SlugOrIdDto,
     @Query() { tag }: MultiQueryTagAndCategoryDto,

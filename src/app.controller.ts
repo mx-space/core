@@ -1,11 +1,13 @@
+import dayjs from 'dayjs'
+
 import {
   BadRequestException,
   Get,
   HttpCode,
+  OnModuleInit,
   Post,
   UseInterceptors,
 } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -14,6 +16,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import PKG from '../package.json'
 import { DEMO_MODE } from './app.config'
 import { HttpCache } from './common/decorators/cache.decorator'
+import { HTTPDecorators } from './common/decorators/http.decorator'
 import { IpLocation, IpRecord } from './common/decorators/ip.decorator'
 import { AllowAllCorsInterceptor } from './common/interceptors/allow-all-cors.interceptor'
 import { RedisKeys } from './constants/cache.constant'
@@ -22,13 +25,28 @@ import { CacheService } from './processors/redis/cache.service'
 import { getRedisKey } from './utils/redis.util'
 
 @ApiController()
-@ApiTags('Root')
-export class AppController {
+export class AppController implements OnModuleInit {
   constructor(
     private readonly cacheService: CacheService,
     @InjectModel(OptionModel)
     private readonly optionModel: MongooseModel<OptionModel>,
   ) {}
+
+  private upStartAt: number
+  onModuleInit() {
+    this.upStartAt = Date.now()
+  }
+
+  @Get('/uptime')
+  @HttpCache.disable
+  @HTTPDecorators.Bypass
+  async getUptime() {
+    const ts = Date.now() - this.upStartAt
+    return {
+      timestamp: ts,
+      humanize: dayjs.duration(ts).locale('en').humanize(),
+    }
+  }
 
   @UseInterceptors(AllowAllCorsInterceptor)
   @Get(['/', '/info'])
@@ -70,7 +88,6 @@ export class AppController {
       },
       {
         $inc: {
-          // @ts-ignore
           value: 1,
         },
       },

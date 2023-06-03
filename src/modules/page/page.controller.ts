@@ -13,7 +13,6 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -24,7 +23,6 @@ import { PageModel, PartialPageModel } from './page.model'
 import { PageService } from './page.service'
 
 @ApiController('pages')
-@ApiName
 export class PageController {
   constructor(
     private readonly pageService: PageService,

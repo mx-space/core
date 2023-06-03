@@ -9,7 +9,6 @@ import {
 import { uniq } from 'lodash'
 
 import { UnprocessableEntityException } from '@nestjs/common'
-import { ApiProperty } from '@nestjs/swagger'
 
 import { IsBooleanOrString } from '~/utils/validator/isBooleanOrString'
 
@@ -18,7 +17,6 @@ import { CategoryType } from './category.model'
 export class SlugOrIdDto {
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
   query?: string
 }
 
@@ -46,7 +44,6 @@ export class MultiCategoriesQueryDto {
   @IsOptional()
   @IsBoolean()
   @Transform((b) => Boolean(b))
-  @ApiProperty({ enum: [1, 0] })
   joint?: boolean
 
   @IsOptional()

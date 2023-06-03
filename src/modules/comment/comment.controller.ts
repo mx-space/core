@@ -13,7 +13,6 @@ import {
   Req,
   UseInterceptors,
 } from '@nestjs/common'
-import { ApiOperation, ApiParam } from '@nestjs/swagger'
 import { DocumentType } from '@typegoose/typegoose'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -21,7 +20,6 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { CurrentUser } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { IsMaster } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -51,7 +49,6 @@ const idempotenceMessage = '哦吼，这句话你已经说过啦'
 
 @ApiController({ path: 'comments' })
 @UseInterceptors(CommentFilterEmailInterceptor)
-@ApiName
 export class CommentController {
   constructor(
     private readonly commentService: CommentService,
@@ -69,7 +66,6 @@ export class CommentController {
   }
 
   @Get('/:id')
-  @ApiOperation({ summary: '根据 comment id 获取评论，包括子评论' })
   async getComments(
     @Param() params: MongoIdDto,
     @IsMaster() isMaster: boolean,
@@ -95,7 +91,6 @@ export class CommentController {
 
   // 面向 C 端的评论查询接口
   @Get('/ref/:id')
-  @ApiOperation({ summary: '根据评论的 refId 获取评论，如 Post Id' })
   @HTTPDecorators.Paginator
   async getCommentsByRefId(
     @Param() params: MongoIdDto,
@@ -166,7 +161,6 @@ export class CommentController {
   }
 
   @Post('/:id')
-  @ApiOperation({ summary: '根据文章的 _id 评论' })
   @HTTPDecorators.Idempotence({
     expired: 20,
     errorMessage: idempotenceMessage,
@@ -244,11 +238,6 @@ export class CommentController {
   }
 
   @Post('/reply/:id')
-  @ApiParam({
-    name: 'id',
-    description: 'cid',
-    example: '5e7370bec56432cbac578e2d',
-  })
   @HTTPDecorators.Idempotence({
     expired: 20,
     errorMessage: idempotenceMessage,
@@ -339,7 +328,6 @@ export class CommentController {
   }
 
   @Post('/master/comment/:id')
-  @ApiOperation({ summary: '主人专用评论接口 需要登录' })
   @Auth()
   @HTTPDecorators.Idempotence({
     expired: 20,
@@ -364,8 +352,6 @@ export class CommentController {
   }
 
   @Post('/master/reply/:id')
-  @ApiOperation({ summary: '主人专用评论回复 需要登录' })
-  @ApiParam({ name: 'id', description: 'cid' })
   @Auth()
   @HTTPDecorators.Idempotence({
     expired: 20,
@@ -390,7 +376,6 @@ export class CommentController {
   }
 
   @Patch('/:id')
-  @ApiOperation({ summary: '修改评论的状态' })
   @Auth()
   async modifyCommentState(
     @Param() params: MongoIdDto,

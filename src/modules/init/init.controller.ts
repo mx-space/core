@@ -9,14 +9,12 @@ import {
 } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 
 import { ConfigsService } from '../configs/configs.service'
 import { ConfigKeyDto } from '../option/dtoes/config.dto'
 import { InitService } from './init.service'
 
 @ApiController('/init')
-@ApiName
 export class InitController {
   constructor(
     private readonly configs: ConfigsService,

@@ -15,7 +15,6 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { IsMaster } from '~/common/decorators/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
@@ -25,7 +24,6 @@ import { SnippetMoreDto } from './snippet.dto'
 import { SnippetModel, SnippetType } from './snippet.model'
 import { SnippetService } from './snippet.service'
 
-@ApiName
 @ApiController('snippets')
 export class SnippetController {
   constructor(private readonly snippetService: SnippetService) {}

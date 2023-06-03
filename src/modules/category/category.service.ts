@@ -1,7 +1,7 @@
 import { omit } from 'lodash'
 import { FilterQuery } from 'mongoose'
 
-import { Inject, Injectable, forwardRef } from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'

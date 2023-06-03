@@ -12,13 +12,11 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
-import { ApiOperation } from '@nestjs/swagger'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { IsMaster } from '~/common/decorators/role.decorator'
 import { VisitDocument } from '~/common/decorators/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -37,7 +35,6 @@ import {
 import { NoteModel, PartialNoteModel } from './note.model'
 import { NoteService } from './note.service'
 
-@ApiName
 @ApiController({ path: 'notes' })
 export class NoteController {
   constructor(
@@ -49,7 +46,6 @@ export class NoteController {
 
   @Get('/')
   @Paginator
-  @ApiOperation({ summary: '获取记录带分页器' })
   async getNotes(@IsMaster() isMaster: boolean, @Query() query: NoteQueryDto) {
     const { size, select, page, sortBy, sortOrder, year, db_query } = query
     const condition = {
@@ -89,7 +85,6 @@ export class NoteController {
   }
 
   @Get('/list/:id')
-  @ApiOperation({ summary: '以一篇记录为基准的中间 10 篇记录' })
   async getNoteList(
     @Query() query: ListQueryDto,
     @Param() params: MongoIdDto,
@@ -202,7 +197,6 @@ export class NoteController {
   }
 
   @Get('/latest')
-  @ApiOperation({ summary: '获取最新发布一篇记录' })
   @VisitDocument('Note')
   async getLatestOne(@IsMaster() isMaster: boolean) {
     const { latest, next } = await this.noteService.getLatestOne(

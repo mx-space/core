@@ -1,15 +1,13 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import JSZip from 'jszip'
 import { join } from 'path'
 import { Readable } from 'stream'
+import JSZip from 'jszip'
 
 import { Body, CacheTTL, Get, Header, Param, Post, Query } from '@nestjs/common'
-import { ApiProperty } from '@nestjs/swagger'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 
@@ -19,13 +17,11 @@ import { MarkdownYAMLProperty } from './markdown.interface'
 import { MarkdownService } from './markdown.service'
 
 @ApiController('markdown')
-@ApiName
 export class MarkdownController {
   constructor(private readonly service: MarkdownService) {}
 
   @Post('/import')
   @Auth()
-  @ApiProperty({ description: '导入 Markdown YAML 数据' })
   async importArticle(@Body() body: DataListDto) {
     const type = body.type
 
@@ -41,7 +37,6 @@ export class MarkdownController {
 
   @Get('/export')
   @Auth()
-  @ApiProperty({ description: '导出 Markdown YAML 数据' })
   @HTTPDecorators.Bypass
   @Header('Content-Type', 'application/zip')
   async exportArticleToMarkdown(@Query() query: ExportMarkdownQueryDto) {

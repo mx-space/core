@@ -12,7 +12,6 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { OffsetDto } from '~/shared/dto/pager.dto'
 
@@ -21,7 +20,6 @@ import { RecentlyModel } from './recently.model'
 import { RecentlyService } from './recently.service'
 
 @ApiController(['recently', 'shorthand'])
-@ApiName
 export class RecentlyController {
   constructor(private readonly recentlyService: RecentlyService) {}
 

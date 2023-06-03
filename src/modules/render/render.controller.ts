@@ -18,7 +18,6 @@ import {
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { IsMaster } from '~/common/decorators/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils'
@@ -30,7 +29,6 @@ import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
 
-@ApiName
 @Controller('/render')
 @HTTPDecorators.Bypass
 export class RenderEjsController {

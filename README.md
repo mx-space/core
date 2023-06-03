@@ -16,8 +16,6 @@
 - [Kami](https://github.com/mx-space/kami) (老二次元的风格)
 - [Yun](https://github.com/mx-space/mx-web-yun) (简洁的风格)
 
-接口文档通过开发环境 Swagger 查阅。
-
 现有的比较有意思的一些小玩意的实现：
 
 - 实时日志输出。通过 Socket.IO + 劫持 `process.stdout` 实现。

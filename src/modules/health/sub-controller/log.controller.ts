@@ -13,7 +13,6 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { LOG_DIR } from '~/constants/path.constant'
 import { AdapterResponse } from '~/types/request'
 import { formatByteSize } from '~/utils'
@@ -23,7 +22,6 @@ import { LogQueryDto, LogTypeDto } from '../health.dto'
 
 @ApiController('health/log')
 @Auth()
-@ApiName
 export class HealthLogController {
   @Get('/list/:type')
   async getPM2List(@Param() params: LogTypeDto) {

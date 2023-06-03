@@ -1,7 +1,7 @@
 /* eslint-disable prefer-rest-params */
+import { createWriteStream } from 'fs'
 import consola_, { FancyReporter, LogLevel } from 'consola'
 import { CronJob } from 'cron'
-import { createWriteStream } from 'fs'
 import { argv } from 'zx-cjs'
 
 import { CronExpression } from '@nestjs/schedule'

@@ -12,13 +12,11 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
-import { ApiOperation } from '@nestjs/swagger'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
-import { ApiName } from '~/common/decorators/openapi.decorator'
 import { VisitDocument } from '~/common/decorators/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
@@ -32,7 +30,6 @@ import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'
 
 @ApiController('posts')
-@ApiName
 export class PostController {
   constructor(
     private readonly postService: PostService,
@@ -159,7 +156,6 @@ export class PostController {
   }
 
   @Get('/:category/:slug')
-  @ApiOperation({ summary: '根据分类名和自定义别名获取' })
   @VisitDocument('Post')
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,

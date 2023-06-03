@@ -1,8 +1,8 @@
+import { URL } from 'url'
 import { Types } from 'mongoose'
 import autopopulate from 'mongoose-autopopulate'
-import { URL } from 'url'
 
-import { Ref, modelOptions, plugin, prop } from '@typegoose/typegoose'
+import { modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
 import { getAvatar } from '~/utils'

@@ -3,13 +3,13 @@ import {
   ArrayUnique,
   IsBoolean,
   IsDate,
+  isDateString,
   IsInt,
   IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
   Min,
-  isDateString,
 } from 'class-validator'
 import { Types } from 'mongoose'
 import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
@@ -17,14 +17,13 @@ import mongooseAutoPopulate from 'mongoose-autopopulate'
 
 import { UnprocessableEntityException } from '@nestjs/common'
 import { PartialType } from '@nestjs/mapped-types'
-import { ApiHideProperty, ApiProperty } from '@nestjs/swagger'
 import {
-  Ref,
-  Severity,
   index,
   modelOptions,
   plugin,
   prop,
+  Ref,
+  Severity,
 } from '@typegoose/typegoose'
 
 import { Paginator } from '~/shared/interface/paginator.interface'
@@ -53,7 +52,6 @@ export class PostModel extends WriteBaseModel {
 
   @prop({ ref: () => Category, required: true })
   @IsMongoId()
-  @ApiProperty({ example: '5eb2c62a613a5ab0642f1f7a' })
   categoryId: Ref<Category>
 
   @prop({
@@ -63,7 +61,6 @@ export class PostModel extends WriteBaseModel {
     justOne: true,
     autopopulate: true,
   })
-  @ApiHideProperty()
   public category: Ref<Category>
 
   @prop({ default: true })
@@ -80,7 +77,6 @@ export class PostModel extends WriteBaseModel {
   @IsOptional()
   tags?: string[]
   @prop({ type: Count, default: { read: 0, like: 0 }, _id: false })
-  @ApiHideProperty()
   count?: Count
 
   @prop()

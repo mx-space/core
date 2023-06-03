@@ -1,1 +1,4 @@
-module.exports = require('@innei/prettier')
+module.exports = {
+  ...require('@innei/prettier'),
+  importOrderParserPlugins: ['typescript', 'jsx', 'decorators-legacy'],
+}

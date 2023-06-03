@@ -12,7 +12,7 @@ import mongooseAutoPopulate from 'mongoose-autopopulate'
 
 import { PartialType } from '@nestjs/mapped-types'
 import { AutoIncrementID } from '@typegoose/auto-increment'
-import { Ref, index, modelOptions, plugin, prop } from '@typegoose/typegoose'
+import { index, modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
 
 import { CountModel } from '~/shared/model/count.model'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
