@@ -6,6 +6,7 @@ RUN npm i -g pnpm
 RUN pnpm install
 RUN pnpm bundle
 RUN node scripts/download-latest-admin-assets.js
+RUN mv apps/core/out ./out
 
 FROM node:16-alpine
 

@@ -1,6 +1,7 @@
 import { omit } from 'lodash'
 
-import { CacheKey, CacheTTL, Get, Query } from '@nestjs/common'
+import { CacheKey, CacheTTL } from '@nestjs/cache-manager'
+import { Get, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'

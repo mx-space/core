@@ -4,7 +4,8 @@
  * @module processor/cache/module
  * @author Surmon <https://github.com/surmon-china>
  */
-import { Global, Module, CacheModule as NestCacheModule } from '@nestjs/common'
+import { CacheModule as NestCacheModule } from '@nestjs/cache-manager'
+import { Global, Module } from '@nestjs/common'
 
 import { CacheService } from './cache.service'
 import { RedisConfigService } from './redis.config.service'

@@ -1,6 +1,7 @@
 import xss from 'xss'
 
-import { CacheKey, CacheTTL, Controller, Get, Header } from '@nestjs/common'
+import { CacheKey, CacheTTL } from '@nestjs/cache-manager'
+import { Controller, Get, Header } from '@nestjs/common'
 
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CacheKeys } from '~/constants/cache.constant'

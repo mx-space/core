@@ -4,7 +4,8 @@
  * @module decorator/cache
  * @author Surmon <https://github.com/surmon-china>
  */
-import { CacheKey, CacheTTL, SetMetadata } from '@nestjs/common'
+import { CacheKey, CacheTTL } from '@nestjs/cache-manager'
+import { SetMetadata } from '@nestjs/common'
 
 import * as META from '~/constants/meta.constant'
 
