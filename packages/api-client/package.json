@@ -24,11 +24,6 @@
     },
     "./package.json": "./package.json"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "bump": {
     "before": [
       "git pull --rebase",
@@ -40,15 +35,6 @@
     ],
     "tag": false,
     "commit_message": "chore(release): bump @mx-space/api-client to v${NEW_VERSION}"
-  },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "prettier --ignore-path ./.prettierignore --write ",
-      "eslint --cache"
-    ]
-  },
-  "engines": {
-    "pnpm": ">=6"
   },
   "scripts": {
     "package": "rm -rf dist && tsup && node mod-dts.mjs",
@@ -69,6 +55,8 @@
     "ky": "0.33.3",
     "lodash": "4.17.21",
     "tsup": "6.7.0",
-    "umi-request": "1.4.0"
+    "umi-request": "1.4.0",
+    "vitest": "^0.31.4",
+    "vite": "^4.3.9"
   }
 }

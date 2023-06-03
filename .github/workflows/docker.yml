@@ -1,4 +1,4 @@
-name: Docker Build
+name: Docker Build (core)
 
 on:
   push:
@@ -11,6 +11,10 @@ on:
       - main
   pull_request:
     branches: [master]
+
+defaults:
+  run:
+    working-directory: ./apps/core
 
 jobs:
   docker:

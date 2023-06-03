@@ -45,12 +45,14 @@ jobs:
           version: 8.x
           run_install: true
       - name: Test
+        working-directory: ./apps/core
         timeout-minutes: 10
         run: |
           npm run lint
           npm run test
 
       - name: Build project
+        working-directory: ./apps/core
         run: |
           pnpm run bundle
       - name: Test Bundle Server
@@ -58,7 +60,7 @@ jobs:
           bash scripts/workflow/test-server.sh
       - name: Zip Assets
         run: |
-          sh scripts/zip-asset.sh
+          sh apps/core/zip-asset.sh
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
