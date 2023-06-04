@@ -1,14 +1,18 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: Node.js Test CI
+name: Build (core)
 
 on:
-  workflow_call:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches: [master, main]
 
 jobs:
-  test:
-    timeout-minutes: 10
+  build:
     runs-on: ubuntu-latest
 
     strategy:
@@ -31,21 +35,26 @@ jobs:
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-
       - uses: pnpm/action-setup@v2.2.4
         with:
           version: 8.x
           run_install: false
       - name: Install Dependencies
         run: |
-          pnpm i
-      - name: Run Lint
+          pnpm i --no-optional
+      - name: Build project
         run: |
-          npm run lint
-
-      - name: Run Tests
+          npm run bundle
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@v1.9.0
+        with:
+          mongodb-version: 4.4
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.5.0
+        with:
+          redis-version: 6
+      - name: Test Bundle Server
         run: |
-          npm run test
-
-        env:
-          CI: true
+          bash scripts/workflow/test-server.sh
+  test:
+    uses: ./.github/workflows/test.yml

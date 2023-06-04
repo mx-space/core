@@ -66,8 +66,8 @@ node index.js
 ## 开发环境
 
 ```
-git clone https://github.com/mx-space/mx-server
-cd mx-server
+git clone https://github.com/mx-space/core mx-core
+cd mx-core
 pnpm i
 pnpm dev
 ```
