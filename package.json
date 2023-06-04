@@ -31,7 +31,7 @@
     "before": [
       "git pull --rebase",
       "pnpm i",
-      "node scripts/get-latest-admin-version.js"
+      "node ./apps/core/scripts/get-latest-admin-version.js"
     ],
     "after": [
       "sh ./scripts/assets-push.sh"
