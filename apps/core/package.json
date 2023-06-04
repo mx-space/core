@@ -159,5 +159,5 @@
   "optionalDependencies": {
     "mongodb-memory-server": "*",
     "redis-memory-server": "*"
-  },
+  }
 }
