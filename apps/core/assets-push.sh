@@ -1,5 +1,5 @@
 set -e
-cd assets
+cd ../../assets
 rm -rf .git
 git init
 git add .
