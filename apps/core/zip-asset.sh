@@ -7,7 +7,7 @@ cp -r ./apps/core/out ./out
 cp -R assets out
 # Copy core ecosystem.config.js to $root/out
 cp ./apps/core/ecosystem.config.js out
-node scripts/download-latest-admin-assets.js
+node ./apps/core/download-latest-admin-assets.js
 cd out
 zip -r ../release.zip ./*
 

@@ -139,7 +139,7 @@ jobs:
           pnpm run bundle
       - name: Zip Assets
         run: |
-          sh scripts/zip-asset.sh
+          sh apps/core/zip-asset.sh
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1

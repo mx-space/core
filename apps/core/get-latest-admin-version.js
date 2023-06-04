@@ -3,7 +3,7 @@ const axios = require('axios')
 const { fs } = require('zx-cjs')
 const {
   dashboard: { repo },
-} = require('../../package.json')
+} = require('./package.json')
 const Package = require('../../package.json')
 const endpoint = `https://api.github.com/repos/${repo}/releases/latest`
 
@@ -17,7 +17,7 @@ async function main() {
   Package.dashboard.version = version
 
   await fs.writeFile(
-    resolve(__dirname, '../package.json'),
+    resolve(__dirname, './package.json'),
     JSON.stringify(Package, null, 2),
   )
 

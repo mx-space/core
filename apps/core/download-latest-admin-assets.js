@@ -4,7 +4,7 @@ const { join } = require('path')
 const { fetch, $ } = require('zx-cjs')
 const {
   dashboard: { repo, version },
-} = require('../package.json')
+} = require('./package.json')
 
 const endpoint = `https://api.github.com/repos/${repo}/releases/tags/v${version}`
 !(async () => {

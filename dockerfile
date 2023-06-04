@@ -5,8 +5,8 @@ RUN apk add git make g++ alpine-sdk python3 py3-pip unzip
 RUN npm i -g pnpm
 RUN pnpm install
 RUN pnpm bundle
-RUN node scripts/download-latest-admin-assets.js
 RUN mv apps/core/out ./out
+RUN node apps/core/download-latest-admin-assets.js
 
 FROM node:16-alpine
 
