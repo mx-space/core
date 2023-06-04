@@ -1,9 +1,20 @@
-import { resolve } from 'path'
+import { cpSync, existsSync } from 'fs'
+import path, { resolve } from 'path'
 import swc from 'rollup-plugin-swc'
 import tsconfigPath from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
 
-console.log(process.cwd(), 'cwd')
+if (
+  existsSync(
+    path.resolve(__dirname, '../../node_modules/.cache/redis-memory-server'),
+  )
+) {
+  cpSync(
+    path.resolve(__dirname, '../../node_modules/.cache/redis-memory-server'),
+    path.resolve(__dirname, './node_modules/.cache/redis-memory-server'),
+    { recursive: true },
+  )
+}
 
 const swcPlugin = (() => {
   const plugin = swc({
