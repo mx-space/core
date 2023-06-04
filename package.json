@@ -25,18 +25,8 @@
     "dev": "pnpm -C \"apps/core\" run start",
     "bundle": "pnpm -C \"apps/core\" run bundle",
     "test": "pnpm -C \"apps/core\" run test",
-    "lint": "eslint --cache --ext .ts,.tsx --ignore-path .gitignore . --fix"
-  },
-  "bump": {
-    "before": [
-      "git pull --rebase",
-      "pnpm i",
-      "node ./apps/core/scripts/get-latest-admin-version.js"
-    ],
-    "after": [
-      "sh ./scripts/assets-push.sh"
-    ],
-    "changelog": true
+    "lint": "eslint --cache --ext .ts,.tsx --ignore-path .gitignore . --fix",
+    "publish:core": "cd apps/core && npm run publish"
   },
   "dependencies": {
     "zx-cjs": "7.0.7-0"

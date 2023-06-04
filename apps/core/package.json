@@ -33,16 +33,17 @@
     "prod:debug": "cross-env NODE_ENV=production nest start --debug --watch",
     "test": "NODE_ENV=development vitest",
     "test:watch": "NODE_ENV=development vitest -w",
-    "docs": "npx @compodoc/compodoc -p tsconfig.json -s -d docs"
+    "docs": "npx @compodoc/compodoc -p tsconfig.json -s -d docs",
+    "publish": "bump"
   },
   "bump": {
     "before": [
       "git pull --rebase",
       "pnpm i",
-      "node scripts/get-latest-admin-version.js"
+      "node get-latest-admin-version.js"
     ],
     "after": [
-      "sh ./scripts/assets-push.sh"
+      "sh assets-push.sh"
     ],
     "changelog": true
   },

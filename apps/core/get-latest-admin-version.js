@@ -4,7 +4,7 @@ const { fs } = require('zx-cjs')
 const {
   dashboard: { repo },
 } = require('./package.json')
-const Package = require('../../package.json')
+const Package = require('./package.json')
 const endpoint = `https://api.github.com/repos/${repo}/releases/latest`
 
 const latestVersion = async () => {
