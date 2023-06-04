@@ -39,6 +39,7 @@ jobs:
       - name: Install Dependencies
         run: |
           pnpm i --no-optional
+          pnpm rebuild
       - name: Run Test
         run: |
           npm run lint
