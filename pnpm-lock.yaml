@@ -18,6 +18,13 @@ importers:
       zx-cjs:
         specifier: 7.0.7-0
         version: 7.0.7-0
+    optionalDependencies:
+      mongodb-memory-server:
+        specifier: 8.12.2
+        version: 8.12.2
+      redis-memory-server:
+        specifier: 0.6.0
+        version: 0.6.0
     devDependencies:
       '@innei/eslint-config-ts':
         specifier: 0.10.1
@@ -289,13 +296,6 @@ importers:
       zx-cjs:
         specifier: 7.0.7-0
         version: 7.0.7-0
-    optionalDependencies:
-      mongodb-memory-server:
-        specifier: 8.12.2
-        version: 8.12.2
-      redis-memory-server:
-        specifier: 0.6.0
-        version: 0.6.0
     devDependencies:
       '@nestjs/cli':
         specifier: 9.5.0
