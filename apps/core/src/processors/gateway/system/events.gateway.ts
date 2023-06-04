@@ -1,9 +1,10 @@
-import {
+import type {
   GatewayMetadata,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  WebSocketGateway,
 } from '@nestjs/websockets'
+
+import { WebSocketGateway } from '@nestjs/websockets'
 
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { CacheService } from '~/processors/redis/cache.service'

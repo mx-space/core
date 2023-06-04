@@ -1,12 +1,11 @@
 import { map } from 'rxjs'
-
-import {
+import type {
   CallHandler,
   ExecutionContext,
-  Inject,
-  Injectable,
   NestInterceptor,
 } from '@nestjs/common'
+
+import { Inject, Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
 import { HTTP_RES_UPDATE_DOC_COUNT_TYPE } from '~/constants/meta.constant'

@@ -1,10 +1,11 @@
 import cluster from 'cluster'
 import { performance } from 'perf_hooks'
 import wcmatch from 'wildcard-match'
+import type { LogLevel } from '@nestjs/common'
+import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 
-import { Logger, LogLevel, ValidationPipe } from '@nestjs/common'
+import { Logger, ValidationPipe } from '@nestjs/common'
 import { ContextIdFactory, NestFactory } from '@nestjs/core'
-import { NestFastifyApplication } from '@nestjs/platform-fastify'
 
 import { CROSS_DOMAIN, PORT } from './app.config'
 import { AppModule } from './app.module'

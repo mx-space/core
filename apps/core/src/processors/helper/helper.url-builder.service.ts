@@ -1,13 +1,13 @@
 import { URL } from 'url'
 import { isDefined } from 'class-validator'
+import type { CategoryModel } from '~/modules/category/category.model'
+import type { NoteModel } from '~/modules/note/note.model'
+import type { PageModel } from '~/modules/page/page.model'
+import type { PostModel } from '~/modules/post/post.model'
 
 import { Injectable } from '@nestjs/common'
 
-import { CategoryModel } from '~/modules/category/category.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { NoteModel } from '~/modules/note/note.model'
-import { PageModel } from '~/modules/page/page.model'
-import { PostModel } from '~/modules/post/post.model'
 
 @Injectable()
 export class UrlBuilderService {

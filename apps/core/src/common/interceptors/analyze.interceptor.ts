@@ -6,15 +6,15 @@
  */
 import { URL } from 'url'
 import isbot from 'isbot'
-import { Observable } from 'rxjs'
 import UAParser from 'ua-parser-js'
-
-import {
+import type {
   CallHandler,
   ExecutionContext,
-  Injectable,
   NestInterceptor,
 } from '@nestjs/common'
+import type { Observable } from 'rxjs'
+
+import { Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { RedisKeys } from '~/constants/cache.constant'

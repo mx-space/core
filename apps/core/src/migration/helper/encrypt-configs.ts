@@ -2,12 +2,14 @@ import { plainToInstance } from 'class-transformer'
 
 import 'reflect-metadata'
 
+import type { IConfigKeys } from '~/modules/configs/configs.interface'
+
 import { ENCRYPT } from '~/app.config'
 import { register } from '~/global/index.global'
 import { generateDefaultConfig } from '~/modules/configs/configs.default'
 import * as optionDtos from '~/modules/configs/configs.dto'
 import { encryptObject } from '~/modules/configs/configs.encrypt.util'
-import { IConfig, IConfigKeys } from '~/modules/configs/configs.interface'
+import { IConfig } from '~/modules/configs/configs.interface'
 import { getDatabaseConnection } from '~/utils/database.util'
 
 console.log(ENCRYPT)

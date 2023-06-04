@@ -1,6 +1,8 @@
 import algoliasearch from 'algoliasearch'
+import type { SearchResponse } from '@algolia/client-search'
+import type { SearchDto } from '~/modules/search/search.dto'
+import type { Pagination } from '~/shared/interface/paginator.interface'
 
-import { SearchResponse } from '@algolia/client-search'
 import {
   BadRequestException,
   forwardRef,
@@ -8,9 +10,7 @@ import {
   Injectable,
 } from '@nestjs/common'
 
-import { SearchDto } from '~/modules/search/search.dto'
 import { DatabaseService } from '~/processors/database/database.service'
-import { Pagination } from '~/shared/interface/paginator.interface'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
 import { ConfigsService } from '../configs/configs.service'

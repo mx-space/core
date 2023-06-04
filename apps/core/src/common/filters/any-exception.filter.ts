@@ -1,11 +1,10 @@
-import { WriteStream } from 'fs'
 import { resolve } from 'path'
-import { FastifyReply, FastifyRequest } from 'fastify'
+import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+import type { WriteStream } from 'fs'
 
 import {
-  ArgumentsHost,
   Catch,
-  ExceptionFilter,
   HttpException,
   HttpStatus,
   Inject,

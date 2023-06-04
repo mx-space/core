@@ -1,16 +1,16 @@
 import { isNil, pick } from 'lodash'
 import { nanoid } from 'nanoid'
-import { IPty, spawn } from 'node-pty'
+import { spawn } from 'node-pty'
 import { Socket } from 'socket.io'
 import { quiet } from 'zx-cjs'
-
-import {
+import type {
   GatewayMetadata,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  SubscribeMessage,
-  WebSocketGateway,
 } from '@nestjs/websockets'
+import type { IPty } from 'node-pty'
+
+import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
 
 import { DEMO_MODE } from '~/app.config'
 import { BusinessEvents } from '~/constants/business-event.constant'

@@ -1,9 +1,10 @@
 import { IsDefined, IsNumber } from 'class-validator'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
+import type { ReturnModelType } from '@typegoose/typegoose'
 
 import { createE2EApp } from '@/helper/create-e2e-app'
 import { authPassHeader } from '@/mock/guard/auth.guard'
-import { modelOptions, prop, ReturnModelType } from '@typegoose/typegoose'
+import { modelOptions, prop } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
 import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'

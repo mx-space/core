@@ -1,5 +1,6 @@
 import { createWriteStream } from 'fs'
-import { Readable } from 'stream'
+import type { Readable } from 'stream'
+import type { FileType } from './file.type'
 
 import {
   BadRequestException,
@@ -10,7 +11,6 @@ import {
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 
 import { ConfigsService } from '../configs/configs.service'
-import { FileType } from './file.type'
 
 @Injectable()
 export class FileService {

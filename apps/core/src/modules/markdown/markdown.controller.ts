@@ -2,6 +2,8 @@
 import { join } from 'path'
 import { Readable } from 'stream'
 import JSZip from 'jszip'
+import type { CategoryModel } from '../category/category.model'
+import type { MarkdownYAMLProperty } from './markdown.interface'
 
 import { Body, CacheTTL, Get, Header, Param, Post, Query } from '@nestjs/common'
 
@@ -11,9 +13,7 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 
-import { CategoryModel } from '../category/category.model'
 import { DataListDto, ExportMarkdownQueryDto } from './markdown.dto'
-import { MarkdownYAMLProperty } from './markdown.interface'
 import { MarkdownService } from './markdown.service'
 
 @ApiController('markdown')

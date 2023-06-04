@@ -2,13 +2,15 @@
 import { plainToClass } from 'class-transformer'
 import { validate } from 'class-validator'
 import SocketIO from 'socket.io'
+import type {
+  GatewayMetadata,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets'
 
 import {
   ConnectedSocket,
-  GatewayMetadata,
   MessageBody,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,

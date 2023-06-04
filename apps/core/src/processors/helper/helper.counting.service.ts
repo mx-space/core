@@ -1,6 +1,7 @@
+import type { ArticleType } from '~/constants/article.constant'
+
 import { Injectable, Logger } from '@nestjs/common'
 
-import { ArticleType } from '~/constants/article.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils/redis.util'
 

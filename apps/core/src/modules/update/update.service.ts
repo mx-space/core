@@ -2,7 +2,8 @@ import { appendFile, rm, writeFile } from 'fs/promises'
 import { inspect } from 'util'
 import axios from 'axios'
 import { spawn } from 'node-pty'
-import { catchError, Observable, Subscriber } from 'rxjs'
+import { catchError, Observable } from 'rxjs'
+import type { Subscriber } from 'rxjs'
 
 import { Injectable } from '@nestjs/common'
 

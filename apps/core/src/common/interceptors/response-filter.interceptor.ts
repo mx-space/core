@@ -3,14 +3,15 @@
  * @author Innei
  */
 import { isFunction } from 'lodash'
-import { map, Observable } from 'rxjs'
-
-import {
+import { map } from 'rxjs'
+import type {
   CallHandler,
   ExecutionContext,
-  Injectable,
   NestInterceptor,
 } from '@nestjs/common'
+import type { Observable } from 'rxjs'
+
+import { Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
 import { HTTP_RESPONSE_FILTER } from '~/constants/meta.constant'

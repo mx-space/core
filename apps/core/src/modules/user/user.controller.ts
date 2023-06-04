@@ -1,3 +1,5 @@
+import type { UserModel } from './user.model'
+
 import {
   Body,
   Delete,
@@ -23,7 +25,7 @@ import { getAvatar } from '~/utils'
 
 import { AuthService } from '../auth/auth.service'
 import { LoginDto, UserDto, UserPatchDto } from './user.dto'
-import { UserDocument, UserModel } from './user.model'
+import { UserDocument } from './user.model'
 import { UserService } from './user.service'
 
 @ApiController(['master', 'user'])

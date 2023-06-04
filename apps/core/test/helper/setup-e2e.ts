@@ -1,5 +1,7 @@
-import { ModuleMetadata, ValidationPipe } from '@nestjs/common'
-import { NestFastifyApplication } from '@nestjs/platform-fastify'
+import type { ModuleMetadata } from '@nestjs/common'
+import type { NestFastifyApplication } from '@nestjs/platform-fastify'
+
+import { ValidationPipe } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
 
 import { fastifyApp } from '~/common/adapters/fastify.adapter'

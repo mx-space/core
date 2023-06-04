@@ -1,13 +1,13 @@
 import { resolve } from 'path'
-import SocketIO, { Socket } from 'socket.io'
-
-import {
+import { Socket } from 'socket.io'
+import type {
   GatewayMetadata,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  SubscribeMessage,
-  WebSocketGateway,
 } from '@nestjs/websockets'
+import type SocketIO from 'socket.io'
+
+import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
 
 import { LOG_DIR } from '~/constants/path.constant'
 import { JWTService } from '~/processors/helper/helper.jwt.service'

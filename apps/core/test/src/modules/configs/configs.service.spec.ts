@@ -1,5 +1,6 @@
-import { MockCacheService, redisHelper } from 'test/helper/redis-mock.helper'
+import { redisHelper } from 'test/helper/redis-mock.helper'
 import { vi } from 'vitest'
+import type { MockCacheService } from 'test/helper/redis-mock.helper'
 
 import { BadRequestException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'

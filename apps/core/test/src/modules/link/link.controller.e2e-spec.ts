@@ -3,8 +3,7 @@ import { gatewayProviders } from 'test/mock/modules/gateway.mock'
 import { userProvider } from 'test/mock/modules/user.mock'
 import { emailProvider } from 'test/mock/processors/email.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
-
-import { ReturnModelType } from '@typegoose/typegoose'
+import type { ReturnModelType } from '@typegoose/typegoose'
 
 import { OptionModel } from '~/modules/configs/configs.model'
 import { ConfigsService } from '~/modules/configs/configs.service'

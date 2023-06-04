@@ -5,7 +5,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { isNull } from 'lodash'
 import { lookup } from 'mime-types'
 import PKG from 'package.json'
-import { Observable } from 'rxjs'
+import type { Observable } from 'rxjs'
 
 import {
   Controller,

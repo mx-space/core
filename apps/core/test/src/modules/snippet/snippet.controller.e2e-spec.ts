@@ -1,8 +1,7 @@
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
-
-import { NestFastifyApplication } from '@nestjs/platform-fastify'
-import { ReturnModelType } from '@typegoose/typegoose'
+import type { NestFastifyApplication } from '@nestjs/platform-fastify'
+import type { ReturnModelType } from '@typegoose/typegoose'
 
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetController } from '~/modules/snippet/snippet.controller'

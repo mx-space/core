@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 import { merge } from 'lodash'
-import { PipelineStage } from 'mongoose'
+import type { PipelineStage } from 'mongoose'
 
 import { Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'

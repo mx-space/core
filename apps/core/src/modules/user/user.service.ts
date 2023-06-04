@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { compareSync } from 'bcrypt'
+import type { UserDocument } from './user.model'
 
 import {
   BadRequestException,
@@ -16,7 +17,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar, sleep } from '~/utils'
 
 import { AuthService } from '../auth/auth.service'
-import { UserDocument, UserModel } from './user.model'
+import { UserModel } from './user.model'
 
 @Injectable()
 export class UserService {

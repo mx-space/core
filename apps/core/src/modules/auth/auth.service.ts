@@ -1,20 +1,16 @@
 import dayjs from 'dayjs'
 import { isDate, omit } from 'lodash'
 import { customAlphabet } from 'nanoid/async'
+import type { TokenModel, UserModel } from '~/modules/user/user.model'
+import type { TokenDto } from './auth.controller'
 
 import { Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { alphabet } from '~/constants/other.constant'
-import {
-  TokenModel,
-  UserModel as User,
-  UserModel,
-} from '~/modules/user/user.model'
+import { UserModel as User } from '~/modules/user/user.model'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { InjectModel } from '~/transformers/model.transformer'
-
-import { TokenDto } from './auth.controller'
 
 @Injectable()
 export class AuthService {

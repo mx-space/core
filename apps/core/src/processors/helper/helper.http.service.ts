@@ -1,6 +1,7 @@
 import { inspect } from 'util'
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
+import axios from 'axios'
 import retryAxios from 'axios-retry'
+import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 import { Injectable, Logger } from '@nestjs/common'
 

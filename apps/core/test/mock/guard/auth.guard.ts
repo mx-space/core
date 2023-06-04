@@ -1,6 +1,7 @@
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common'
+import type { ExecutionContext } from '@nestjs/common'
+import type { UserModel } from '~/modules/user/user.model'
 
-import { UserModel } from '~/modules/user/user.model'
+import { UnauthorizedException } from '@nestjs/common'
 
 import { authJWTToken } from '../constants/token'
 

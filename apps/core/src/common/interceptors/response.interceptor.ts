@@ -3,15 +3,15 @@
  * @author Innei
  */
 import { isArrayLike } from 'lodash'
-import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
-
-import {
+import type {
   CallHandler,
   ExecutionContext,
-  Injectable,
   NestInterceptor,
 } from '@nestjs/common'
+import type { Observable } from 'rxjs'
+
+import { Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
 import { HTTP_RES_TRANSFORM_PAGINATE } from '~/constants/meta.constant'

@@ -1,7 +1,8 @@
 /* eslint-disable prefer-rest-params */
 import cluster from 'cluster'
+import type { ConsoleLoggerOptions } from '@nestjs/common'
 
-import { ConsoleLogger, ConsoleLoggerOptions } from '@nestjs/common'
+import { ConsoleLogger } from '@nestjs/common'
 
 export class MyLogger extends ConsoleLogger {
   constructor(context: string, options: ConsoleLoggerOptions) {

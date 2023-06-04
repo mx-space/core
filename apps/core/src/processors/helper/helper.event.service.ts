@@ -1,10 +1,11 @@
 import { merge } from 'lodash'
+import type { BusinessEvents } from '~/constants/business-event.constant'
+import type { EventBusEvents } from '~/constants/event-bus.constant'
 
 import { Injectable, Logger } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 
-import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { EventBusEvents } from '~/constants/event-bus.constant'
+import { EventScope } from '~/constants/business-event.constant'
 import { scheduleManager } from '~/utils'
 
 import { AdminEventsGateway } from '../gateway/admin/events.gateway'

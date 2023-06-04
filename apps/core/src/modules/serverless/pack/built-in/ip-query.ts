@@ -1,4 +1,4 @@
-import { BuiltInFunctionObject } from '../../function.types'
+import type { BuiltInFunctionObject } from '../../function.types'
 
 const interfaceCode = `
 interface IPResponseData {

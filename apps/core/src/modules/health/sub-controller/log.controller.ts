@@ -1,4 +1,4 @@
-import { Readable } from 'form-data'
+import type { Readable } from 'form-data'
 
 import {
   BadRequestException,

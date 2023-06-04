@@ -1,4 +1,6 @@
-import { Controller, ControllerOptions } from '@nestjs/common'
+import type { ControllerOptions } from '@nestjs/common'
+
+import { Controller } from '@nestjs/common'
 
 import { API_VERSION } from '~/app.config'
 import { isDev } from '~/global/env.global'

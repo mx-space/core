@@ -1,4 +1,4 @@
-import { NoteModel } from '~/modules/note/note.model'
+import type { NoteModel } from '~/modules/note/note.model'
 
 export default Array.from({ length: 20 }).map((_, _i) => {
   const i = _i + 1
