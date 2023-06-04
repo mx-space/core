@@ -1,6 +1,9 @@
 module.exports = {
   extends: ['@innei/eslint-config-ts'],
   root: true,
+  parserOptions: {
+    emitDecoratorMetadata: true,
+  },
   plugins: ['unused-imports', '@typescript-eslint'],
   rules: {
     'no-empty': 'warn',
@@ -8,12 +11,7 @@ module.exports = {
     'no-unused-vars': 'off', // or "@typescript-eslint/no-unused-vars": "off",
     '@typescript-eslint/no-unused-vars': 'off',
     'unused-imports/no-unused-imports': 'error',
-    '@typescript-eslint/consistent-type-imports': [
-      'warn',
-      {
-        prefer: 'no-type-imports',
-      },
-    ],
+
     'unused-imports/no-unused-vars': [
       'warn',
       {

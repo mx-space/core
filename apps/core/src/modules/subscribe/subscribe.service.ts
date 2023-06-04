@@ -1,31 +1,33 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import cluster from 'cluster'
 import { render } from 'ejs'
 import { nanoid } from 'nanoid'
+import type { CoAction } from '@innei/next-async/types/interface'
+import type { OnModuleInit } from '@nestjs/common'
+import type { NoteModel } from '../note/note.model'
+import type { PostModel } from '../post/post.model'
+import type { SubscribeTemplateRenderProps } from './subscribe.email.default'
 
 import { Co } from '@innei/next-async'
-import { CoAction } from '@innei/next-async/types/interface'
-import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { isMainProcess } from '~/global/env.global'
-import {
-  EmailService,
-  NewsletterMailType,
-  NewsletterTemplateRenderProps,
-} from '~/processors/helper/helper.email.service'
+import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { hashString, md5 } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
-import { NoteModel } from '../note/note.model'
-import { PostModel } from '../post/post.model'
+import { UserModel } from '../user/user.model'
+import { SubscribleMailType } from './subscribe-mail.enum'
 import {
   SubscribeNoteCreateBit,
   SubscribePostCreateBit,
   SubscribeTypeToBitMap,
 } from './subscribe.constant'
+import { defaultSubscribeForRenderProps } from './subscribe.email.default'
 import { SubscribeModel } from './subscribe.model'
 
 declare type Email = string
@@ -50,13 +52,32 @@ export class SubscribeService implements OnModuleInit {
   }
 
   async onModuleInit() {
+    await Promise.all([this.observeEvents(), this.registerEmailTemplate()])
+  }
+
+  private async registerEmailTemplate() {
+    const owner = UserModel.serialize(await this.configService.getMaster())
+    const renderProps: SubscribeTemplateRenderProps = {
+      ...defaultSubscribeForRenderProps,
+      aggregate: {
+        ...defaultSubscribeForRenderProps.aggregate,
+        owner,
+      },
+    }
+    this.emailService.registerEmailType(
+      SubscribleMailType.Newsletter,
+      renderProps,
+    )
+  }
+
+  private async observeEvents() {
     if (!isMainProcess && cluster.isWorker && cluster.worker?.id !== 1) return
     // init from db
 
-    const models = await this.model.find().lean()
+    const docs = await this.model.find().lean()
 
-    for (const model of models) {
-      this.subscribeMap.set(model.email, model.subscribe)
+    for (const doc of docs) {
+      this.subscribeMap.set(doc.email, doc.subscribe)
     }
 
     const scopeCfg = { scope: EventScope.TO_VISITOR }
@@ -75,7 +96,7 @@ export class SubscribeService implements OnModuleInit {
     const noteAndPostHandler: CoAction<never> = async function (
       noteOrPost: NoteModel | PostModel,
     ) {
-      const user = await self.configService.getMaster()
+      const owner = await self.configService.getMaster()
       for (const [email, subscribe] of self.subscribeMap.entries()) {
         const unsubscribeLink = await getUnsubscribeLink(email)
 
@@ -86,14 +107,28 @@ export class SubscribeService implements OnModuleInit {
           subscribe & (isNote ? SubscribeNoteCreateBit : SubscribePostCreateBit)
         )
           self.sendEmail(email, {
-            author: user.name,
+            author: owner.name,
             detail_link: await self.urlBuilderService.buildWithBaseUrl(
               noteOrPost,
             ),
             text: `${noteOrPost.text.slice(0, 150)}...`,
             title: noteOrPost.title,
             unsubscribe_link: unsubscribeLink,
-            master: user.name,
+            master: owner.name,
+
+            aggregate: {
+              owner,
+              subscriber: {
+                subscribe,
+                email,
+              },
+              post: {
+                text: noteOrPost.text,
+                created: new Date(noteOrPost.created!).toISOString(),
+                id: noteOrPost.id!,
+                title: noteOrPost.title,
+              },
+            },
           })
       }
     }
@@ -205,7 +240,7 @@ export class SubscribeService implements OnModuleInit {
     return SubscribeTypeToBitMap[type]
   }
 
-  async sendEmail(email: string, source: NewsletterTemplateRenderProps) {
+  async sendEmail(email: string, source: SubscribeTemplateRenderProps) {
     const { seo, mailOptions } = await this.configService.waitForConfigReady()
     const { user } = mailOptions
     const from = `"${seo.title || 'Mx Space'}" <${user}>`
@@ -217,7 +252,7 @@ export class SubscribeService implements OnModuleInit {
         to: email,
         html: render(
           (await this.emailService.readTemplate(
-            NewsletterMailType.Newsletter,
+            SubscribleMailType.Newsletter,
           )) as string,
           source,
         ),

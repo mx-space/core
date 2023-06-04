@@ -1,16 +1,11 @@
 import { IsString } from 'class-validator'
 
-import {
-  NewsletterMailType,
-  ReplyMailType,
-} from '~/processors/helper/helper.email.service'
-
 export class EmailTemplateTypeDto {
   @IsString()
-  type: ReplyMailType | NewsletterMailType
+  type: string
 }
 
-export class ReplyEmailBodyDto {
+export class EmailTemplateBodyDto {
   @IsString()
   source: string
 }

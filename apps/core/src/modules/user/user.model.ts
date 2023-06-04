@@ -1,12 +1,9 @@
 import { hashSync } from 'bcrypt'
+import { omit } from 'lodash'
 import { Schema } from 'mongoose'
+import type { DocumentType } from '@typegoose/typegoose'
 
-import {
-  DocumentType,
-  modelOptions,
-  prop,
-  Severity,
-} from '@typegoose/typegoose'
+import { modelOptions, prop, Severity } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
 
@@ -34,6 +31,13 @@ export class TokenModel {
   name: string
 }
 
+const securityKeys = [
+  'oauth2',
+  'apiToken',
+  'lastLoginTime',
+  'lastLoginIp',
+  'password',
+] as const
 @modelOptions({ options: { customName: 'User', allowMixed: Severity.ALLOW } })
 export class UserModel extends BaseModel {
   @prop({ required: true, unique: true, trim: true })
@@ -80,4 +84,14 @@ export class UserModel extends BaseModel {
 
   @prop({ type: OAuthModel, select: false })
   oauth2?: OAuthModel[]
+
+  static securityKeys = securityKeys
+
+  static serialize(doc: UserModel) {
+    return omit(doc, this.securityKeys)
+  }
 }
+
+type ReadonlyArrayToUnion<T extends readonly any[]> = T[number]
+
+export type UserModelSecurityKeys = ReadonlyArrayToUnion<typeof securityKeys>

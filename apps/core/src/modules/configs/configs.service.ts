@@ -1,7 +1,11 @@
 import cluster from 'cluster'
-import { ClassConstructor, plainToInstance } from 'class-transformer'
-import { validateSync, ValidatorOptions } from 'class-validator'
+import { plainToInstance } from 'class-transformer'
+import { validateSync } from 'class-validator'
 import { cloneDeep, mergeWith } from 'lodash'
+import type { ClassConstructor } from 'class-transformer'
+import type { ValidatorOptions } from 'class-validator'
+import type { UserModel } from '../user/user.model'
+import type { IConfigKeys } from './configs.interface'
 
 import {
   BadRequestException,
@@ -22,11 +26,10 @@ import { camelcaseKeys, sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 
 import * as optionDtos from '../configs/configs.dto'
-import { UserModel } from '../user/user.model'
 import { UserService } from '../user/user.service'
 import { generateDefaultConfig } from './configs.default'
 import { decryptObject, encryptObject } from './configs.encrypt.util'
-import { IConfig, IConfigKeys } from './configs.interface'
+import { IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
 
 const allOptionKeys: Set<IConfigKeys> = new Set()

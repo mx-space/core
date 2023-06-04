@@ -1,37 +1,18 @@
-// TODO  extract logic
 import cluster from 'cluster'
-import { render } from 'ejs'
 import { createTransport } from 'nodemailer'
-import Mail from 'nodemailer/lib/mailer'
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import type Mail from 'nodemailer/lib/mailer'
 
-import {
-  Injectable,
-  Logger,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
 import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
 import { SubPubBridgeService } from '../redis/subpub.service'
 import { AssetService } from './helper.asset.service'
-
-export enum ReplyMailType {
-  Owner = 'owner',
-  Guest = 'guest',
-}
-
-export enum NewsletterMailType {
-  Newsletter = 'newsletter',
-}
-
-export enum LinkApplyEmailType {
-  ToMaster,
-  ToCandidate,
-}
 
 @Injectable()
 export class EmailService implements OnModuleInit, OnModuleDestroy {
@@ -58,72 +39,47 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     this.teardown()
   }
 
-  async readTemplate(
-    type: ReplyMailType | NewsletterMailType,
-  ): Promise<string> {
-    switch (type) {
-      case ReplyMailType.Guest:
-        return this.assetService.getAsset(
-          '/email-template/guest.template.ejs',
-          { encoding: 'utf-8' },
-        ) as Promise<string>
-      case ReplyMailType.Owner:
-        return this.assetService.getAsset(
-          '/email-template/owner.template.ejs',
-          { encoding: 'utf-8' },
-        ) as Promise<string>
-      case NewsletterMailType.Newsletter:
-        return this.assetService.getAsset(
-          '/email-template/newsletter.template.ejs',
-          { encoding: 'utf-8' },
-        ) as Promise<string>
-    }
-  }
+  private emailTypeMap = {}
+  private emailTypeSet = new Set()
 
-  async writeTemplate(
-    type: ReplyMailType | NewsletterMailType,
-    source: string,
+  public registerEmailType(
+    type: string,
+    exampleRenderProps: Record<string, any>,
   ) {
-    switch (type) {
-      case ReplyMailType.Guest:
-        return this.assetService.writeUserCustomAsset(
-          '/email-template/guest.template.ejs',
-          source,
-          { encoding: 'utf-8' },
-        )
-      case ReplyMailType.Owner:
-        return this.assetService.writeUserCustomAsset(
-          '/email-template/owner.template.ejs',
-          source,
-          { encoding: 'utf-8' },
-        )
-      case NewsletterMailType.Newsletter:
-        return this.assetService.writeUserCustomAsset(
-          '/email-template/newsletter.template.ejs',
-          source,
-          { encoding: 'utf-8' },
-        )
+    if (this.emailTypeSet.has(type)) {
+      consola.warn(`重复注册邮件类型 ${type}`)
+      return
     }
+    this.emailTypeMap[type] = exampleRenderProps || {}
+    this.emailTypeSet.add(type)
   }
 
-  async deleteTemplate(type: ReplyMailType | NewsletterMailType) {
-    switch (type) {
-      case ReplyMailType.Guest:
-        await this.assetService.removeUserCustomAsset(
-          '/email-template/guest.template.ejs',
-        )
-        break
-      case ReplyMailType.Owner:
-        await this.assetService.removeUserCustomAsset(
-          '/email-template/owner.template.ejs',
-        )
-        break
-      case NewsletterMailType.Newsletter:
-        await this.assetService.removeUserCustomAsset(
-          '/email-template/newsletter.template.ejs',
-        )
-        break
-    }
+  public getExampleRenderProps(type: string) {
+    const props = this.emailTypeMap[type]
+    if (!props) throw new BizException(ErrorCodeEnum.EmailTemplateNotFound)
+    return props
+  }
+
+  async readTemplate(type: string): Promise<string> {
+    return this.assetService.getAsset(`/email-template/${type}.template.ejs`, {
+      encoding: 'utf-8',
+    }) as Promise<string>
+  }
+
+  async writeTemplate(type: string, source: string) {
+    return this.assetService.writeUserCustomAsset(
+      `/email-template/${type}.template.ejs`,
+      source,
+      {
+        encoding: 'utf-8',
+      },
+    )
+  }
+
+  async deleteTemplate(type: string) {
+    await this.assetService.removeUserCustomAsset(
+      `/email-template/${type}.template.ejs`,
+    )
   }
 
   teardown() {
@@ -193,57 +149,6 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     })
   }
 
-  async sendCommentNotificationMail({
-    to,
-    source,
-    type,
-  }: {
-    to: string
-    source: CommentEmailTemplateRenderProps
-    type: ReplyMailType
-  }) {
-    const { seo, mailOptions } = await this.configsService.waitForConfigReady()
-    const { user } = mailOptions
-    const from = `"${seo.title || 'Mx Space'}" <${user}>`
-
-    source.ip ??= ''
-    if (type === ReplyMailType.Guest) {
-      const options = {
-        from,
-        ...{
-          subject: `[${seo.title || 'Mx Space'}] 主人给你了新的回复呐`,
-          to,
-          html: render((await this.readTemplate(type)) as string, source),
-        },
-      }
-      if (isDev) {
-        // @ts-ignore
-        delete options.html
-        Object.assign(options, { source })
-        this.logger.log(options)
-        return
-      }
-      await this.send(options)
-    } else {
-      const options = {
-        from,
-        ...{
-          subject: `[${seo.title || 'Mx Space'}] 有新回复了耶~`,
-          to,
-          html: render((await this.readTemplate(type)) as string, source),
-        },
-      }
-      if (isDev) {
-        // @ts-ignore
-        delete options.html
-        Object.assign(options, { source })
-        this.logger.log(options)
-        return
-      }
-      await this.send(options)
-    }
-  }
-
   async sendTestEmail() {
     const master = await this.configsService.getMaster()
     const mailOptons = await this.configsService.get('mailOptions')
@@ -267,24 +172,4 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       throw new BizException('邮件发送失败')
     }
   }
-}
-
-export interface CommentEmailTemplateRenderProps {
-  author: string
-  ip?: string
-  text: string
-  link: string
-  time: string
-  mail: string
-  title: string
-  master?: string
-}
-
-export interface NewsletterTemplateRenderProps {
-  author: string
-  title: string
-  text: string
-  detail_link: string
-  unsubscribe_link: string
-  master: string
 }

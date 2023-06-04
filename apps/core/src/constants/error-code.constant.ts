@@ -1,12 +1,16 @@
 export enum ErrorCodeEnum {
+  // app
   NoContentCanBeModified = 1000,
 
+  // biz
   SlugNotAvailable = 10000,
   MaxCountLimit = 10001,
   CommentDisabled = 30000,
   CommentTooDeep = 30001,
   ServerlessError = 80000,
+  EmailTemplateNotFound = 90000,
 
+  // system
   MasterLost = 99998,
   BanInDemo = 999999,
 }
@@ -24,5 +28,7 @@ export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
       '内容不存在，没有内容可被修改',
       400,
     ],
+
+    [ErrorCodeEnum.EmailTemplateNotFound]: ['邮件模板不存在', 400],
   },
 )

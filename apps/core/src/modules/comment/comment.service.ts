@@ -1,5 +1,16 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { URL } from 'url'
+import { render } from 'ejs'
+import { omit, pick } from 'lodash'
 import { Types } from 'mongoose'
+import type { OnModuleInit } from '@nestjs/common'
+import type { ReturnModelType } from '@typegoose/typegoose/lib/types'
+import type { WriteBaseModel } from '~/shared/model/write-base.model'
+import type { SnippetModel } from '../snippet/snippet.model'
+import type {
+  CommentEmailTemplateRenderProps,
+  CommentModelRenderProps,
+} from './comment.email.default'
 
 import {
   BadRequestException,
@@ -9,32 +20,32 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common'
-import { DocumentType } from '@typegoose/typegoose'
-import { ReturnModelType } from '@typegoose/typegoose/lib/types'
 
 import { BusinessException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
-import {
-  EmailService,
-  ReplyMailType,
-} from '~/processors/helper/helper.email.service'
-import { WriteBaseModel } from '~/shared/model/write-base.model'
+import { EmailService } from '~/processors/helper/helper.email.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { hasChinese } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
-import { SnippetModel, SnippetType } from '../snippet/snippet.model'
+import { SnippetType } from '../snippet/snippet.model'
+import { UserModel } from '../user/user.model'
 import { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json'
+import {
+  baseRenderProps,
+  defaultCommentModelKeys,
+} from './comment.email.default'
+import { CommentReplyMailType } from './comment.enum'
 import { CommentModel, CommentRefTypes, CommentState } from './comment.model'
 
 @Injectable()
-export class CommentService {
+export class CommentService implements OnModuleInit {
   private readonly logger: Logger = new Logger(CommentService.name)
   constructor(
     @InjectModel(CommentModel)
@@ -50,6 +61,35 @@ export class CommentService {
     private readonly serverlessService: ServerlessService,
   ) {}
 
+  private async getMailOwnerProps() {
+    const masterInfo = await this.userService.getMasterInfo()
+    return UserModel.serialize(masterInfo)
+  }
+  async onModuleInit() {
+    const masterInfo = await this.getMailOwnerProps()
+    const renderProps = {
+      ...baseRenderProps,
+
+      master: masterInfo.name,
+
+      aggregate: {
+        ...baseRenderProps.aggregate,
+        owner: omit(masterInfo, [
+          'password',
+          'apiToken',
+          'lastLoginIp',
+          'lastLoginTime',
+          'oauth2',
+        ] as (keyof UserModel)[]),
+      },
+    }
+    this.mailService.registerEmailType(CommentReplyMailType.Guest, {
+      ...renderProps,
+    })
+    this.mailService.registerEmailType(CommentReplyMailType.Owner, {
+      ...renderProps,
+    })
+  }
   public get model() {
     return this.commentModel
   }
@@ -264,47 +304,63 @@ export class CommentService {
     }
   }
 
-  async sendEmail(model: DocumentType<CommentModel>, type: ReplyMailType) {
-    const enable = (await this.configs.get('mailOptions')).enable
+  async sendEmail(model: CommentModel, type: CommentReplyMailType) {
+    const enable = await this.configs
+      .get('mailOptions')
+      .then((config) => config.enable)
     if (!enable) {
       return
     }
 
-    this.userService.model.findOne().then(async (master) => {
-      if (!master) {
-        throw new BusinessException(ErrorCodeEnum.MasterLost)
-      }
+    const masterInfo = await this.userService.getMasterInfo()
+    if (!masterInfo) {
+      throw new BusinessException(ErrorCodeEnum.MasterLost)
+    }
+    const refType = model.refType
+    const refModel = this.getModelByRefType(refType)
+    const refDoc = await refModel.findById(model.ref).lean()
+    const time = new Date(model.created!)
+    const parent = await this.commentModel.findOne({ _id: model.parent }).lean()
 
-      const refType = model.refType
-      const refModel = this.getModelByRefType(refType)
-      const refDoc = await refModel.findById(model.ref).lean()
-      const time = new Date(model.created!)
-      const parent = await this.commentModel
-        .findOne({ _id: model.parent })
-        .lean()
+    const parsedTime = `${time.getDate()}/${
+      time.getMonth() + 1
+    }/${time.getFullYear()}`
 
-      const parsedTime = `${time.getDate()}/${
-        time.getMonth() + 1
-      }/${time.getFullYear()}`
+    if (!refDoc || !masterInfo.mail) {
+      return
+    }
 
-      if (!refDoc || !master.mail) {
-        return
-      }
+    this.sendCommentNotificationMail({
+      to: type === CommentReplyMailType.Owner ? masterInfo.mail : parent!.mail,
+      type,
+      source: {
+        title: refDoc.title,
+        text: model.text,
+        author:
+          type === CommentReplyMailType.Guest ? parent!.author : model.author,
+        master: masterInfo.name,
+        link: await this.resolveUrlByType(refType, refDoc),
+        time: parsedTime,
+        mail:
+          CommentReplyMailType.Owner === type ? model.mail : masterInfo.mail,
+        ip: model.ip || '',
 
-      this.mailService.sendCommentNotificationMail({
-        to: type === ReplyMailType.Owner ? master.mail : parent!.mail,
-        type,
-        source: {
-          title: refDoc.title,
-          text: model.text,
-          author: type === ReplyMailType.Guest ? parent!.author : model.author,
-          master: master.name,
-          link: await this.resolveUrlByType(refType, refDoc),
-          time: parsedTime,
-          mail: ReplyMailType.Owner === type ? model.mail : master.mail,
-          ip: model.ip || '',
+        aggregate: {
+          owner: masterInfo,
+          commentor: {
+            ...pick(model, defaultCommentModelKeys),
+            created: new Date(model.created!).toISOString(),
+            isWhispers: model.isWhispers || false,
+          } as CommentModelRenderProps,
+          post: {
+            title: refDoc.title,
+            created: new Date(refDoc.created!).toISOString(),
+            id: refDoc.id!,
+            modified: new Date(refDoc.modified!).toISOString(),
+            text: refDoc.text,
+          },
         },
-      })
+      },
     })
   }
 
@@ -398,5 +454,65 @@ export class CommentService {
 
       return comment
     })
+  }
+
+  async sendCommentNotificationMail({
+    to,
+    source,
+    type,
+  }: {
+    to: string
+    source: Pick<
+      CommentEmailTemplateRenderProps,
+      keyof CommentEmailTemplateRenderProps
+    >
+    type: CommentReplyMailType
+  }) {
+    const { seo, mailOptions } = await this.configsService.waitForConfigReady()
+    const { user } = mailOptions
+    const from = `"${seo.title || 'Mx Space'}" <${user}>`
+
+    source.ip ??= ''
+    if (type === CommentReplyMailType.Guest) {
+      const options = {
+        from,
+        ...{
+          subject: `[${seo.title || 'Mx Space'}] 主人给你了新的回复呐`,
+          to,
+          html: render(
+            (await this.mailService.readTemplate(type)) as string,
+            source,
+          ),
+        },
+      }
+      if (isDev) {
+        // @ts-ignore
+        delete options.html
+        Object.assign(options, { source })
+        this.logger.log(options)
+        return
+      }
+      await this.mailService.send(options)
+    } else {
+      const options = {
+        from,
+        ...{
+          subject: `[${seo.title || 'Mx Space'}] 有新回复了耶~`,
+          to,
+          html: render(
+            (await this.mailService.readTemplate(type)) as string,
+            source,
+          ),
+        },
+      }
+      if (isDev) {
+        // @ts-ignore
+        delete options.html
+        Object.assign(options, { source })
+        this.logger.log(options)
+        return
+      }
+      await this.mailService.send(options)
+    }
   }
 }

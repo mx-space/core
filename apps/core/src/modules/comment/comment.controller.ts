@@ -1,5 +1,7 @@
 import { isUndefined } from 'lodash'
-import { Document, FilterQuery } from 'mongoose'
+import type { DocumentType } from '@typegoose/typegoose'
+import type { Document, FilterQuery } from 'mongoose'
+import type { CommentModel } from './comment.model'
 
 import {
   Body,
@@ -13,7 +15,6 @@ import {
   Req,
   UseInterceptors,
 } from '@nestjs/common'
-import { DocumentType } from '@typegoose/typegoose'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -26,7 +27,6 @@ import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { ReplyMailType } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
@@ -41,8 +41,9 @@ import {
   CommentStatePatchDto,
   TextOnlyDto,
 } from './comment.dto'
+import { CommentReplyMailType } from './comment.enum'
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
-import { CommentModel, CommentState } from './comment.model'
+import { CommentState } from './comment.model'
 import { CommentService } from './comment.service'
 
 const idempotenceMessage = '哦吼，这句话你已经说过啦'
@@ -206,7 +207,7 @@ export class CommentController {
         await comment.save()
         return
       } else if (!isMaster) {
-        this.commentService.sendEmail(comment, ReplyMailType.Owner)
+        this.commentService.sendEmail(comment, CommentReplyMailType.Owner)
       }
 
       if (commentShouldAudit) {
@@ -304,7 +305,7 @@ export class CommentController {
           : parent.state,
     })
     if (isMaster) {
-      this.commentService.sendEmail(comment, ReplyMailType.Guest)
+      this.commentService.sendEmail(comment, CommentReplyMailType.Guest)
       this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
         scope: EventScope.TO_SYSTEM_VISITOR,
       })
@@ -319,7 +320,7 @@ export class CommentController {
         return
       }
 
-      this.commentService.sendEmail(comment, ReplyMailType.Owner)
+      this.commentService.sendEmail(comment, CommentReplyMailType.Owner)
       this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
         scope: EventScope.ALL,
       })
