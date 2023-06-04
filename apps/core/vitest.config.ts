@@ -3,6 +3,8 @@ import swc from 'rollup-plugin-swc'
 import tsconfigPath from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
 
+console.log(process.cwd(), 'cwd')
+
 const swcPlugin = (() => {
   const plugin = swc({
     test: 'ts',
