@@ -38,8 +38,8 @@ jobs:
           run_install: false
       - name: Install Dependencies
         run: |
-          pnpm i --no-optional
-          pnpm i -D @swc/core-linux-x64-gnu -w
+          pnpm i
+          # pnpm i -D @swc/core-linux-x64-gnu -w
           pnpm rebuild
       - name: Run Test
         run: |
