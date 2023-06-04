@@ -44,7 +44,7 @@ jobs:
         with:
           version: 8.x
           run_install: true
-          recursive: true
+
       - name: Test
         working-directory: ./apps/core
         timeout-minutes: 10

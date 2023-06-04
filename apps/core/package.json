@@ -155,9 +155,5 @@
     "vite-tsconfig-paths": "4.2.0",
     "vitest": "0.25.3",
     "zx": "7.2.2"
-  },
-  "optionalDependencies": {
-    "mongodb-memory-server": "8.12.2",
-    "redis-memory-server": "0.6.0"
   }
 }

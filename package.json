@@ -57,6 +57,10 @@
     "typescript": "5.0.4",
     "vite-tsconfig-paths": "4.2.0"
   },
+  "optionalDependencies": {
+    "mongodb-memory-server": "8.12.2",
+    "redis-memory-server": "0.6.0"
+  },
   "resolutions": {
     "semver": "7.5.1",
     "cache-manager-ioredis>ioredis": "^5",

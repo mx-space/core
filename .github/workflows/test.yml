@@ -42,10 +42,7 @@ jobs:
       - name: Run Lint
         run: |
           npm run lint
-      - name: Install Optional Dependencies
-        run: |
-          cd apps/core
-          pnpm i
+
       - name: Run Tests
         run: |
           npm run test
