@@ -6,5 +6,5 @@ webpack-dist
 
 ./admin
 dist
-test
+
 tmp
