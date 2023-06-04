@@ -1,32 +1,34 @@
-import type { ErrorCodeEnum } from '~/constants/error-code.constant'
-
 import { HttpException } from '@nestjs/common'
 
-import { ErrorCode } from '~/constants/error-code.constant'
+import { ErrorCode, ErrorCodeEnum } from '~/constants/error-code.constant'
 
 export class BusinessException extends HttpException {
+  public bizCode: ErrorCodeEnum
   constructor(code: ErrorCodeEnum, extraMessage?: string)
   constructor(message: string)
   constructor(...args: any[]) {
     let status = 500
-    const [code, extraMessage] = args as any
-    const bizError = ErrorCode[code] || []
+    const [bizCode, extraMessage] = args as any
+    const bizError = ErrorCode[bizCode] || []
     const [message] = bizError
     status = bizError[1] ?? status
 
-    const isOnlyMessage = typeof code == 'string' && args.length === 1
+    const isOnlyMessage = typeof bizCode == 'string' && args.length === 1
 
     const jointMessage = isOnlyMessage
-      ? code // this code is message
+      ? bizCode // this code is message
       : message + (extraMessage ? `: ${extraMessage}` : '')
+
     super(
       HttpException.createBody(
-        { code, message: jointMessage },
+        { code: bizCode, message: jointMessage },
         jointMessage,
         status,
       ),
       status,
     )
+
+    this.bizCode = typeof bizCode === 'number' ? bizCode : ErrorCodeEnum.Default
   }
 }
 

@@ -20,7 +20,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { hashString, md5 } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
-import { UserModel } from '../user/user.model'
+import { UserService } from '../user/user.service'
 import { SubscribleMailType } from './subscribe-mail.enum'
 import {
   SubscribeNoteCreateBit,
@@ -31,7 +31,7 @@ import { defaultSubscribeForRenderProps } from './subscribe.email.default'
 import { SubscribeModel } from './subscribe.model'
 
 declare type Email = string
-declare type Subscribe = number
+declare type SubscribeBit = number
 
 @Injectable()
 export class SubscribeService implements OnModuleInit {
@@ -44,9 +44,10 @@ export class SubscribeService implements OnModuleInit {
     private readonly configService: ConfigsService,
     private readonly urlBuilderService: UrlBuilderService,
     private readonly emailService: EmailService,
+    private readonly userService: UserService,
   ) {}
 
-  private subscribeMap = new Map<Email, Subscribe>()
+  private subscribeMap = new Map<Email, SubscribeBit>()
   get model() {
     return this.subscribeModel
   }
@@ -56,7 +57,7 @@ export class SubscribeService implements OnModuleInit {
   }
 
   private async registerEmailTemplate() {
-    const owner = UserModel.serialize(await this.configService.getMaster())
+    const owner = await this.userService.getSiteMasterOrMocked()
     const renderProps: SubscribeTemplateRenderProps = {
       ...defaultSubscribeForRenderProps,
       aggregate: {

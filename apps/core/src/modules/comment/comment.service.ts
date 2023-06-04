@@ -21,10 +21,8 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 
-import { BusinessException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -62,7 +60,7 @@ export class CommentService implements OnModuleInit {
   ) {}
 
   private async getMailOwnerProps() {
-    const masterInfo = await this.userService.getMasterInfo()
+    const masterInfo = await this.userService.getSiteMasterOrMocked()
     return UserModel.serialize(masterInfo)
   }
   async onModuleInit() {
@@ -313,9 +311,7 @@ export class CommentService implements OnModuleInit {
     }
 
     const masterInfo = await this.userService.getMasterInfo()
-    if (!masterInfo) {
-      throw new BusinessException(ErrorCodeEnum.MasterLost)
-    }
+
     const refType = model.refType
     const refModel = this.getModelByRefType(refType)
     const refDoc = await refModel.findById(model.ref).lean()

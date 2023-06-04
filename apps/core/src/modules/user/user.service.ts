@@ -11,7 +11,10 @@ import {
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
-import { BusinessException } from '~/common/exceptions/biz.exception'
+import {
+  BizException,
+  BusinessException,
+} from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar, sleep } from '~/utils'
@@ -50,7 +53,7 @@ export class UserService {
       .select(`${getLoginIp ? ' +lastLoginIp' : ''}`)
       .lean({ virtuals: true })
     if (!user) {
-      throw new BadRequestException('没有完成初始化！')
+      throw new BizException(ErrorCodeEnum.MasterLost)
     }
     const avatar = user.avatar ?? getAvatar(user.mail)
     return { ...user, avatar }
@@ -141,5 +144,24 @@ export class UserService {
 
     this.Logger.warn(`主人已登录，IP: ${ip}`)
     return PrevFootstep as any
+  }
+
+  async getSiteMasterOrMocked() {
+    return await this.getMasterInfo().catch((err) => {
+      if (
+        err instanceof BusinessException &&
+        err.bizCode === ErrorCodeEnum.MasterLost
+      ) {
+        return {
+          id: '1',
+          name: '站长大人',
+          mail: 'example@owner.com',
+
+          username: 'johndoe',
+          created: new Date('2021/1/1 10:00:11'),
+        } as UserModel
+      }
+      throw err
+    })
   }
 }

@@ -1,5 +1,6 @@
 export enum ErrorCodeEnum {
   // app
+  Default = 1,
   NoContentCanBeModified = 1000,
 
   // biz
@@ -17,6 +18,7 @@ export enum ErrorCodeEnum {
 
 export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
   {
+    [ErrorCodeEnum.Default]: ['未知错误', 500],
     [ErrorCodeEnum.SlugNotAvailable]: ['slug 不可用', 400],
     [ErrorCodeEnum.MaxCountLimit]: ['已达到最大数量限制', 400],
     [ErrorCodeEnum.BanInDemo]: ['Demo 模式下此操作不可用', 400],
