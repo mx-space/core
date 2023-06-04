@@ -4,7 +4,7 @@ app.config.js
 
 webpack-dist
 
-admin/
+./admin
 dist
 test
 tmp
