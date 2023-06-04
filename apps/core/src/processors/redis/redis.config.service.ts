@@ -5,13 +5,10 @@
  * @author Surmon <https://github.com/surmon-china>
  */
 import redisStore from 'cache-manager-ioredis'
-import { RedisOptions } from 'ioredis'
+import type { CacheModuleOptions, CacheOptionsFactory } from '@nestjs/common'
+import type { RedisOptions } from 'ioredis'
 
-import {
-  CacheModuleOptions,
-  CacheOptionsFactory,
-  Injectable,
-} from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 
 import { REDIS } from '~/app.config'
 

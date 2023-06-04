@@ -1,4 +1,4 @@
-import { sample } from 'lodash'
+import { sample } from 'lodash-es'
 
 import { NotFoundException } from '@nestjs/common'
 

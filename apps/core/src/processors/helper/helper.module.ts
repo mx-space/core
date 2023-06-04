@@ -1,4 +1,6 @@
-import { forwardRef, Global, Module, Provider } from '@nestjs/common'
+import type { Provider } from '@nestjs/common'
+
+import { forwardRef, Global, Module } from '@nestjs/common'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
 import { ThrottlerModule } from '@nestjs/throttler'

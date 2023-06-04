@@ -1,4 +1,4 @@
-import { omit } from 'lodash'
+import { omit } from 'lodash-es'
 
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager'
 import { Get, Query } from '@nestjs/common'

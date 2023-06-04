@@ -1,7 +1,7 @@
 import { load } from 'js-yaml'
 import JSON5 from 'json5'
-import { AggregatePaginateModel, Document } from 'mongoose'
 import qs from 'qs'
+import type { AggregatePaginateModel, Document } from 'mongoose'
 
 import {
   BadRequestException,

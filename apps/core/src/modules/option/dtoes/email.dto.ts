@@ -1,6 +1,5 @@
 import { IsString } from 'class-validator'
-
-import {
+import type {
   NewsletterMailType,
   ReplyMailType,
 } from '~/processors/helper/helper.email.service'

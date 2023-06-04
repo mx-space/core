@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 import { readFileSync } from 'fs'
-import path from 'path'
+import path from 'node:path'
 import { program } from 'commander'
 import { load as yamlLoad } from 'js-yaml'
 import type { AxiosRequestConfig } from 'axios'

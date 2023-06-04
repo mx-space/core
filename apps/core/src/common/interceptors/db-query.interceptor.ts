@@ -1,12 +1,12 @@
 import qs from 'qs'
-import { Observable } from 'rxjs'
-
-import {
+import type {
   CallHandler,
   ExecutionContext,
-  Injectable,
   NestInterceptor,
 } from '@nestjs/common'
+import type { Observable } from 'rxjs'
+
+import { Injectable } from '@nestjs/common'
 
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 

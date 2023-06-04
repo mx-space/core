@@ -2,16 +2,17 @@
  * 对响应体进行 JSON 标准的转换
  * @author Innei
  */
-import { isArrayLike, isObjectLike } from 'lodash'
-import { map, Observable } from 'rxjs'
+import { isArrayLike, isObjectLike } from 'lodash-es'
+import { map } from 'rxjs'
 import snakecaseKeys from 'snakecase-keys'
-
-import {
+import type {
   CallHandler,
   ExecutionContext,
-  Injectable,
   NestInterceptor,
 } from '@nestjs/common'
+import type { Observable } from 'rxjs'
+
+import { Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
 import { RESPONSE_PASSTHROUGH_METADATA } from '~/constants/system.constant'

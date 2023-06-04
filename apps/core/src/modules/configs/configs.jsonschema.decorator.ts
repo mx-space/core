@@ -1,5 +1,5 @@
 import { JSONSchema } from 'class-validator-jsonschema'
-import { DecoratorSchema } from 'class-validator-jsonschema/build/decorators'
+import type { DecoratorSchema } from 'class-validator-jsonschema/build/decorators'
 
 export const halfFieldOption = {
   'ui:options': { halfGrid: true },

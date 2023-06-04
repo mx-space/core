@@ -1,5 +1,9 @@
 import { URL } from 'url'
 import { Types } from 'mongoose'
+import type { DocumentType } from '@typegoose/typegoose'
+import type { ReturnModelType } from '@typegoose/typegoose/lib/types'
+import type { WriteBaseModel } from '~/shared/model/write-base.model'
+import type { SnippetModel } from '../snippet/snippet.model'
 
 import {
   BadRequestException,
@@ -9,8 +13,6 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common'
-import { DocumentType } from '@typegoose/typegoose'
-import { ReturnModelType } from '@typegoose/typegoose/lib/types'
 
 import { BusinessException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -21,14 +23,13 @@ import {
   EmailService,
   ReplyMailType,
 } from '~/processors/helper/helper.email.service'
-import { WriteBaseModel } from '~/shared/model/write-base.model'
 import { InjectModel } from '~/transformers/model.transformer'
 import { hasChinese } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
-import { SnippetModel, SnippetType } from '../snippet/snippet.model'
+import { SnippetType } from '../snippet/snippet.model'
 import { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json'
 import { CommentModel, CommentRefTypes, CommentState } from './comment.model'

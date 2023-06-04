@@ -1,9 +1,11 @@
 import { dump } from 'js-yaml'
 import JSZip from 'jszip'
-import { omit } from 'lodash'
+import { omit } from 'lodash-es'
 import { marked } from 'marked'
 import { Types } from 'mongoose'
 import xss from 'xss'
+import type { DatatypeDto } from './markdown.dto'
+import type { MarkdownYAMLProperty } from './markdown.interface'
 
 import {
   BadRequestException,
@@ -22,8 +24,6 @@ import { CategoryModel } from '../category/category.model'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
-import { DatatypeDto } from './markdown.dto'
-import { MarkdownYAMLProperty } from './markdown.interface'
 
 @Injectable()
 export class MarkdownService {

@@ -1,17 +1,20 @@
 import cluster from 'cluster'
 import { render } from 'ejs'
 import { nanoid } from 'nanoid'
+import type { CoAction } from '@innei/next-async/types/interface'
+import type { OnModuleInit } from '@nestjs/common'
+import type { NewsletterTemplateRenderProps } from '~/processors/helper/helper.email.service'
+import type { NoteModel } from '../note/note.model'
+import type { PostModel } from '../post/post.model'
 
 import { Co } from '@innei/next-async'
-import { CoAction } from '@innei/next-async/types/interface'
-import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { isMainProcess } from '~/global/env.global'
 import {
   EmailService,
   NewsletterMailType,
-  NewsletterTemplateRenderProps,
 } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
@@ -19,8 +22,6 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { hashString, md5 } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
-import { NoteModel } from '../note/note.model'
-import { PostModel } from '../post/post.model'
 import {
   SubscribeNoteCreateBit,
   SubscribePostCreateBit,

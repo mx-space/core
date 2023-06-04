@@ -1,14 +1,16 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { plainToClass } from 'class-transformer'
 import { validate } from 'class-validator'
-import SocketIO from 'socket.io'
+import { Namespace, Socket } from 'socket.io'
+import type {
+  GatewayMetadata,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets'
 
 import {
   ConnectedSocket,
-  GatewayMetadata,
   MessageBody,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -37,7 +39,7 @@ export class WebEventsGateway
   }
 
   @WebSocketServer()
-  private namespace: SocketIO.Namespace
+  private namespace: Namespace
 
   async sendOnlineNumber() {
     return {
@@ -48,7 +50,7 @@ export class WebEventsGateway
   @SubscribeMessage(BusinessEvents.DANMAKU_CREATE)
   createNewDanmaku(
     @MessageBody() data: DanmakuDto,
-    @ConnectedSocket() client: SocketIO.Socket,
+    @ConnectedSocket() client: Socket,
   ) {
     const validator = plainToClass(DanmakuDto, data)
     validate(validator).then((errors) => {
@@ -65,7 +67,7 @@ export class WebEventsGateway
     const sockets = await server.of(`/${namespace}`).adapter.sockets(new Set())
     return sockets.size
   }
-  async handleConnection(socket: SocketIO.Socket) {
+  async handleConnection(socket: Socket) {
     this.broadcast(BusinessEvents.VISITOR_ONLINE, await this.sendOnlineNumber())
 
     scheduleManager.schedule(async () => {
@@ -91,7 +93,7 @@ export class WebEventsGateway
 
     super.handleConnect(socket)
   }
-  async handleDisconnect(client: SocketIO.Socket) {
+  async handleDisconnect(client: Socket) {
     super.handleDisconnect(client)
     this.broadcast(
       BusinessEvents.VISITOR_OFFLINE,

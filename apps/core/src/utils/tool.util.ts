@@ -1,5 +1,5 @@
 import { join } from 'path'
-import { cloneDeep } from 'lodash'
+import { cloneDeep } from 'lodash-es'
 
 export const md5 = (text: string) =>
   require('crypto').createHash('md5').update(text).digest('hex') as string

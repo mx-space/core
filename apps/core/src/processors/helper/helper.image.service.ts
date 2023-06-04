@@ -1,9 +1,9 @@
 import imageSize from 'image-size'
+import type { ImageModel } from '~/shared/model/image.model'
 
 import { Injectable, Logger } from '@nestjs/common'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { ImageModel } from '~/shared/model/image.model'
 import { getAverageRGB, pickImagesFromMarkdown } from '~/utils/pic.util'
 
 import { HttpService } from './helper.http.service'

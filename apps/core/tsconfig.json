@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
     "declaration": true,
     "removeComments": true,
     "strictNullChecks": true,
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
     "target": "ES2019",
     "sourceMap": true,
     "outDir": "./dist",
@@ -15,7 +16,6 @@
     "baseUrl": ".",
     "noImplicitAny": false,
     "incremental": true,
-    "resolveJsonModule": true,
     "lib": [
       "ES2021",
       "ES2020",

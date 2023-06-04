@@ -1,4 +1,5 @@
-import { PipelineStage } from 'mongoose'
+import type { PipelineStage } from 'mongoose'
+import type { CategoryModel } from '../category/category.model'
 
 import {
   BadRequestException,
@@ -24,7 +25,6 @@ import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 
-import { CategoryModel } from '../category/category.model'
 import { CategoryAndSlugDto } from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'

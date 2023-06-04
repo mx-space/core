@@ -1,4 +1,4 @@
-import { FilterQuery } from 'mongoose'
+import type { FilterQuery } from 'mongoose'
 
 import {
   BadRequestException,

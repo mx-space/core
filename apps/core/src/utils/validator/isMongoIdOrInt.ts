@@ -1,5 +1,6 @@
-import { isInt, isMongoId, ValidationOptions } from 'class-validator'
-import { merge } from 'lodash'
+import { isInt, isMongoId } from 'class-validator'
+import { merge } from 'lodash-es'
+import type { ValidationOptions } from 'class-validator'
 
 import { validatorFactory } from './simpleValidatorFactory'
 

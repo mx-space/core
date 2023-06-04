@@ -1,3 +1,8 @@
+import type {
+  CommentEmailTemplateRenderProps,
+  NewsletterTemplateRenderProps,
+} from '~/processors/helper/helper.email.service'
+
 import {
   BadRequestException,
   Body,
@@ -8,10 +13,8 @@ import {
 } from '@nestjs/common'
 
 import {
-  CommentEmailTemplateRenderProps,
   EmailService,
   NewsletterMailType,
-  NewsletterTemplateRenderProps,
   ReplyMailType,
 } from '~/processors/helper/helper.email.service'
 

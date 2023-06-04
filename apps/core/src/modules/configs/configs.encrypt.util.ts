@@ -1,4 +1,4 @@
-import { isArrayLike, isObject } from 'lodash'
+import { isArrayLike, isObject } from 'lodash-es'
 import { LRUCache } from 'lru-cache'
 
 import { EncryptUtil } from '~/utils/encrypt.util'

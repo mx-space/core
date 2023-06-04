@@ -1,5 +1,7 @@
-import { isUndefined } from 'lodash'
-import { Document, FilterQuery } from 'mongoose'
+import { isUndefined } from 'lodash-es'
+import type { DocumentType } from '@typegoose/typegoose'
+import type { Document, FilterQuery } from 'mongoose'
+import type { CommentModel } from './comment.model'
 
 import {
   Body,
@@ -13,7 +15,6 @@ import {
   Req,
   UseInterceptors,
 } from '@nestjs/common'
-import { DocumentType } from '@typegoose/typegoose'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -42,7 +43,7 @@ import {
   TextOnlyDto,
 } from './comment.dto'
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
-import { CommentModel, CommentState } from './comment.model'
+import { CommentState } from './comment.model'
 import { CommentService } from './comment.service'
 
 const idempotenceMessage = '哦吼，这句话你已经说过啦'

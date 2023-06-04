@@ -2,14 +2,10 @@
 import cluster from 'cluster'
 import { render } from 'ejs'
 import { createTransport } from 'nodemailer'
-import Mail from 'nodemailer/lib/mailer'
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import type Mail from 'nodemailer/lib/mailer'
 
-import {
-  Injectable,
-  Logger,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
 import { BizException } from '~/common/exceptions/biz.exception'

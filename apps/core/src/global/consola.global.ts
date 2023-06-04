@@ -1,6 +1,7 @@
 /* eslint-disable prefer-rest-params */
 import { createWriteStream } from 'fs'
-import consola_, { FancyReporter, LogLevel } from 'consola'
+import consola_ from 'consola'
+import * as Consola from 'consola'
 import { CronJob } from 'cron'
 import { argv } from 'zx-cjs'
 
@@ -12,6 +13,8 @@ import { redisSubPub } from '../utils/redis-subpub.util'
 import { getShortTime } from '../utils/time.util'
 import { isDev, isTest } from './env.global'
 
+const { FancyReporter, LogLevel } = (Consola as any)
+  .default as any as typeof Consola
 class Reporter extends FancyReporter {
   isInVirtualTerminal = typeof process.stdout.columns === 'undefined' // HACK: if got `undefined` that means in PM2 pty
   private latestLogTime: number = Date.now()

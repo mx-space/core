@@ -1,7 +1,7 @@
 import { isDefined } from 'class-validator'
-import { omit } from 'lodash'
-import { AggregatePaginateModel, Document } from 'mongoose'
+import { omit } from 'lodash-es'
 import slugify from 'slugify'
+import type { AggregatePaginateModel, Document } from 'mongoose'
 
 import {
   BadRequestException,

@@ -14,6 +14,7 @@ import {
 import { Types } from 'mongoose'
 import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
 import mongooseAutoPopulate from 'mongoose-autopopulate'
+import type { Paginator } from '~/shared/interface/paginator.interface'
 
 import { UnprocessableEntityException } from '@nestjs/common'
 import { PartialType } from '@nestjs/mapped-types'
@@ -26,7 +27,6 @@ import {
   Severity,
 } from '@typegoose/typegoose'
 
-import { Paginator } from '~/shared/interface/paginator.interface'
 import { CountModel as Count } from '~/shared/model/count.model'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
 

@@ -1,11 +1,7 @@
 import { isJWT } from 'class-validator'
+import type { CanActivate, ExecutionContext } from '@nestjs/common'
 
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common'
+import { Injectable, UnauthorizedException } from '@nestjs/common'
 
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'

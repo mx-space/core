@@ -1,6 +1,5 @@
-import { FastifyReply, FastifyRequest } from 'fastify'
-
-import { UserModel } from '~/modules/user/user.model'
+import type { UserModel } from '~/modules/user/user.model'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export type AdapterRequest = FastifyRequest &
   (

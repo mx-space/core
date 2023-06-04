@@ -3,14 +3,10 @@
  * @description 禁止爬虫的守卫
  * @author Innei <https://innei.ren>
  */
-import { Observable } from 'rxjs'
+import type { CanActivate, ExecutionContext } from '@nestjs/common'
+import type { Observable } from 'rxjs'
 
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common'
+import { ForbiddenException, Injectable } from '@nestjs/common'
 
 import { isDev } from '~/global/env.global'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'

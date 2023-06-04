@@ -1,10 +1,10 @@
 import { isDefined, isMongoId } from 'class-validator'
 import dayjs from 'dayjs'
-import { omit } from 'lodash'
-import { FilterQuery, PaginateOptions } from 'mongoose'
+import { omit } from 'lodash-es'
+import type { DocumentType } from '@typegoose/typegoose'
+import type { FilterQuery, PaginateOptions } from 'mongoose'
 
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
-import { DocumentType } from '@typegoose/typegoose'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'

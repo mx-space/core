@@ -1,10 +1,10 @@
 import dayjs from 'dayjs'
+import type { OnModuleInit } from '@nestjs/common'
 
 import {
   BadRequestException,
   Get,
   HttpCode,
-  OnModuleInit,
   Post,
   UseInterceptors,
 } from '@nestjs/common'

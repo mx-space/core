@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+import type mongoose from 'mongoose'
 
 import {
   Body,

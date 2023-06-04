@@ -2,10 +2,10 @@ import { createReadStream, existsSync, statSync } from 'fs'
 import fs from 'fs/promises'
 import { extname, join } from 'path'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { isNull } from 'lodash'
+import { isNull } from 'lodash-es'
 import { lookup } from 'mime-types'
 import PKG from 'package.json'
-import { Observable } from 'rxjs'
+import type { Observable } from 'rxjs'
 
 import {
   Controller,

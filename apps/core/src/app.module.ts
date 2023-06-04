@@ -1,4 +1,6 @@
-import { DynamicModule, Module, NestModule, Type } from '@nestjs/common'
+import type { DynamicModule, NestModule, Type } from '@nestjs/common'
+
+import { Module } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { ThrottlerGuard } from '@nestjs/throttler'
 

@@ -3,8 +3,10 @@ import { readFileSync } from 'fs'
 import path from 'path'
 import { program } from 'commander'
 import { load as yamlLoad } from 'js-yaml'
-import { machineIdSync } from 'node-machine-id'
+import { default as nodeMachineId } from 'node-machine-id'
 import type { AxiosRequestConfig } from 'axios'
+
+const { machineIdSync } = nodeMachineId
 
 const commander = program
   .option('-p, --port <number>', 'server port')

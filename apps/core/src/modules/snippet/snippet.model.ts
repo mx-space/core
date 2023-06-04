@@ -8,7 +8,7 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator'
-import { isNil } from 'lodash'
+import { isNil } from 'lodash-es'
 import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
 import { stringify } from 'qs'
 

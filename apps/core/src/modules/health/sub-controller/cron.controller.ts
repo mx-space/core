@@ -1,5 +1,5 @@
 import { isString } from 'class-validator'
-import { isFunction } from 'lodash'
+import { isFunction } from 'lodash-es'
 
 import {
   BadRequestException,

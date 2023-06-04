@@ -6,7 +6,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator'
-import { uniq } from 'lodash'
+import { uniq } from 'lodash-es'
 
 import { UnprocessableEntityException } from '@nestjs/common'
 

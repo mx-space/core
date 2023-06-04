@@ -1,11 +1,11 @@
-import { FastifyRequest } from 'fastify'
-
-import {
+import type {
   ContextId,
-  ContextIdFactory,
   ContextIdStrategy,
   HostComponentInfo,
 } from '@nestjs/core'
+import type { FastifyRequest } from 'fastify'
+
+import { ContextIdFactory } from '@nestjs/core'
 
 const tenants = new Map<string, ContextId>()
 
