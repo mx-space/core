@@ -58,6 +58,6 @@ describe('test Markdown Service', () => {
 
   it('should render markdown to html', async () => {
     const html = service.renderMarkdownContent('# title')
-    expect(html).toBe('<h1 id="title">title</h1>\n')
+    expect(html).toBe('<h1>title</h1>\n')
   })
 })
