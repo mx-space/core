@@ -38,8 +38,8 @@ jobs:
           run_install: true
       - name: Run Test
         run: |
-          yarn lint
-          yarn test
+          npm run lint
+          npm run test
 
         env:
           CI: true

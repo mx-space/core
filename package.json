@@ -21,10 +21,10 @@
   "issues": "https://github.com/mx-space/core/issues",
   "scripts": {
     "prepare": "husky install && node scripts/init-project.mjs",
-    "build": "cd apps/core && nest build",
-    "dev": "cd apps/core && npm run start",
-    "bundle": "cd apps/core && npm run bundle",
-    "test": "cd apps/core && npm run test",
+    "build": "pnpm -C \"apps/core\" run build",
+    "dev": "pnpm -C \"apps/core\" run start",
+    "bundle": "pnpm -C \"apps/core\" run bundle",
+    "test": "pnpm -C \"apps/core\" run test",
     "lint": "eslint --cache --ext .ts,.tsx --ignore-path .gitignore . --fix"
   },
   "bump": {
