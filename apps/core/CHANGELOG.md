@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [4.1.0-beta.0](https://github.com/mx-space/core/compare/v4.1.0-alpha.0...v4.1.0-beta.0) (2023-06-06)
+
+
+### Bug Fixes
+
+* bypass if not init system ([99b7a03](https://github.com/mx-space/core/commit/99b7a036b07542274bcc4fdbecf2e3cf6a66bf35))
+* update test case ([771d6c5](https://github.com/mx-space/core/commit/771d6c5cd59933c9d95a6e25fc4ad1d0fcd722b0))
+
+
+### Features
+
+* update email template ([a874c66](https://github.com/mx-space/core/commit/a874c66b729c87b2bb63c91f2bb1b43f6d26d853))
+
+
+
 # [4.1.0-alpha.0](https://github.com/mx-space/core/compare/v4.0.2...v4.1.0-alpha.0) (2023-06-04)
 
 
