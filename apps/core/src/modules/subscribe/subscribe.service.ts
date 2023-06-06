@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import cluster from 'cluster'
 import { render } from 'ejs'
+import { LRUCache } from 'lru-cache'
 import { nanoid } from 'nanoid'
 import type { CoAction } from '@innei/next-async/types/interface'
 import type { OnModuleInit } from '@nestjs/common'
@@ -241,26 +242,37 @@ export class SubscribeService implements OnModuleInit {
     return SubscribeTypeToBitMap[type]
   }
 
+  private lruCache = new LRUCache<string, any>({
+    ttl: 20000,
+    max: 2,
+  })
+
   async sendEmail(email: string, source: SubscribeTemplateRenderProps) {
     const { seo, mailOptions } = await this.configService.waitForConfigReady()
     const { user } = mailOptions
     const from = `"${seo.title || 'Mx Space'}" <${user}>`
+    let finalTemplate = ''
+
+    const cacheKey = 'template'
+
+    const cachedEmailTemplate = this.lruCache.get(cacheKey)
+
+    if (cachedEmailTemplate) finalTemplate = cachedEmailTemplate
+    else {
+      finalTemplate = await this.emailService.readTemplate(
+        SubscribleMailType.Newsletter,
+      )
+      this.lruCache.set(cacheKey, finalTemplate)
+    }
 
     const options = {
       from,
       ...{
         subject: `[${seo.title || 'Mx Space'}] 发布了新内容~`,
         to: email,
-        html: render(
-          (await this.emailService.readTemplate(
-            SubscribleMailType.Newsletter,
-          )) as string,
-          source,
-        ),
+        html: render(finalTemplate, source),
       },
     }
-
-    // console.debug(`send: `, options, `to: ${email}`)
 
     await this.emailService.send(options)
   }
