@@ -26,4 +26,6 @@ async function main() {
   }
 }
 
+execSync('ln -s $PWD/assets $PWD/apps/core/assets ')
+
 main()

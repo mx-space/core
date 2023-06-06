@@ -42,7 +42,7 @@ const defaultPostModelForRenderProps = {
 
 export const baseRenderProps = Object.freeze({
   author: defaultCommentModelForRenderProps.author,
-  link: defaultCommentModelForRenderProps.url,
+  link: 'https://innei.ren/note/122#comments-37ccbeec9c15bb0ddc51ca7d' as string,
   mail: defaultCommentModelForRenderProps.mail,
   text: defaultCommentModelForRenderProps.text,
   title: '文章的标题' as string,

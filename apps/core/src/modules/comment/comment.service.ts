@@ -335,7 +335,9 @@ export class CommentService implements OnModuleInit {
         author:
           type === CommentReplyMailType.Guest ? parent!.author : model.author,
         master: masterInfo.name,
-        link: await this.resolveUrlByType(refType, refDoc),
+        link: await this.resolveUrlByType(refType, refDoc).then(
+          (url) => `${url}#comments-${model.id}`,
+        ),
         time: parsedTime,
         mail:
           CommentReplyMailType.Owner === type ? model.mail : masterInfo.mail,
