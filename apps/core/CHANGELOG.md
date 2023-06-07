@@ -1,5 +1,26 @@
 # CHANGELOG
 
+# [4.1.0-beta.1](https://github.com/mx-space/core/compare/v4.1.0-beta.0...v4.1.0-beta.1) (2023-06-07)
+
+
+### Bug Fixes
+
+* add config encrypt args to dockerfile ([2f455dc](https://github.com/mx-space/core/commit/2f455dc9b9bdf0f9fa8398c4c7ab66a801c57f48))
+* init proj script ([bec063f](https://github.com/mx-space/core/commit/bec063f8b13e47ae943d525c6899ebb2298fcbaf))
+* remove marked warning ([f3f47ef](https://github.com/mx-space/core/commit/f3f47efa46dd55ebd157c1a963060cb87df0803b))
+
+
+### Features
+
+* add some info on comment render ([a120498](https://github.com/mx-space/core/commit/a120498252f354432df3067ddef40db7652940ec))
+
+
+### Performance Improvements
+
+* cache get subscribe email template ([1b602ea](https://github.com/mx-space/core/commit/1b602eac4b4f3e838adc04a47529e63b05673046))
+
+
+
 # [4.1.0-beta.0](https://github.com/mx-space/core/compare/v4.1.0-alpha.0...v4.1.0-beta.0) (2023-06-06)
 
 
