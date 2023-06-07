@@ -23,9 +23,8 @@ async function main() {
       force: true,
       recursive: true,
     })
+    execSync('ln -s $PWD/assets $PWD/apps/core/assets ')
   }
 }
-
-execSync('ln -s $PWD/assets $PWD/apps/core/assets ')
 
 main()
