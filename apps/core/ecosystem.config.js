@@ -14,7 +14,7 @@ module.exports = {
       exec_mode: 'cluster',
       watch: false,
       instances: cpuLen,
-      max_memory_restart: '220M',
+      max_memory_restart: '520M',
       args: '--color --encrypt_enable',
       env: {
         NODE_ENV: 'production',
