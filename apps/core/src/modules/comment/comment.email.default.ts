@@ -1,5 +1,6 @@
 import dayjs from 'dayjs'
 import type { UserModel, UserModelSecurityKeys } from '../user/user.model'
+import type { CommentModel } from './comment.model'
 
 export interface CommentModelRenderProps {
   author: string
@@ -18,7 +19,7 @@ const defaultCommentModelForRenderProps: CommentModelRenderProps = {
   avatar:
     'https://cloudflare-ipfs.com/ipfs/Qmd3W5DuhgHirLHGVixi6V76LhCkZUz6pnFt5AJBiyvHye/avatar/976.jpg' as string,
   mail: 'commtor@example.com' as string,
-  text: '太酷啦' as string,
+  text: '世界！' as string,
   ip: '0.0.0.0' as string | undefined,
   agent:
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' as string,
@@ -42,18 +43,19 @@ const defaultPostModelForRenderProps = {
 
 export const baseRenderProps = Object.freeze({
   author: defaultCommentModelForRenderProps.author,
-  link: 'https://innei.ren/note/122#comments-37ccbeec9c15bb0ddc51ca7d' as string,
   mail: defaultCommentModelForRenderProps.mail,
   text: defaultCommentModelForRenderProps.text,
-  title: '文章的标题' as string,
-  time: dayjs().format('YYYY/MM/DD'),
-  master: '' as string,
-
   ip: defaultCommentModelForRenderProps.ip,
+  link: 'https://innei.ren/note/122#comments-37ccbeec9c15bb0ddc51ca7d' as string,
+
+  time: dayjs().format('YYYY/MM/DD'),
+  title: defaultPostModelForRenderProps.title,
+  master: 'innei' as string,
 
   aggregate: {
     post: defaultPostModelForRenderProps,
     commentor: defaultCommentModelForRenderProps,
+    parent: null as CommentModel | null,
     owner: {} as Omit<UserModel, UserModelSecurityKeys>,
   },
 })

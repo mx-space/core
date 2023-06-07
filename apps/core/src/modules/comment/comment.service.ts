@@ -302,7 +302,7 @@ export class CommentService implements OnModuleInit {
     }
   }
 
-  async sendEmail(model: CommentModel, type: CommentReplyMailType) {
+  async sendEmail(comment: CommentModel, type: CommentReplyMailType) {
     const enable = await this.configs
       .get('mailOptions')
       .then((config) => config.enable)
@@ -312,11 +312,13 @@ export class CommentService implements OnModuleInit {
 
     const masterInfo = await this.userService.getMasterInfo()
 
-    const refType = model.refType
+    const refType = comment.refType
     const refModel = this.getModelByRefType(refType)
-    const refDoc = await refModel.findById(model.ref).lean()
-    const time = new Date(model.created!)
-    const parent = await this.commentModel.findOne({ _id: model.parent }).lean()
+    const refDoc = await refModel.findById(comment.ref).lean()
+    const time = new Date(comment.created!)
+    const parent: CommentModel | null = await this.commentModel
+      .findOne({ _id: comment.parent })
+      .lean()
 
     const parsedTime = `${time.getDate()}/${
       time.getMonth() + 1
@@ -331,25 +333,26 @@ export class CommentService implements OnModuleInit {
       type,
       source: {
         title: refDoc.title,
-        text: model.text,
+        text: comment.text,
         author:
-          type === CommentReplyMailType.Guest ? parent!.author : model.author,
+          type === CommentReplyMailType.Guest ? parent!.author : comment.author,
         master: masterInfo.name,
         link: await this.resolveUrlByType(refType, refDoc).then(
-          (url) => `${url}#comments-${model.id}`,
+          (url) => `${url}#comments-${comment.id}`,
         ),
         time: parsedTime,
         mail:
-          CommentReplyMailType.Owner === type ? model.mail : masterInfo.mail,
-        ip: model.ip || '',
+          CommentReplyMailType.Owner === type ? comment.mail : masterInfo.mail,
+        ip: comment.ip || '',
 
         aggregate: {
           owner: masterInfo,
           commentor: {
-            ...pick(model, defaultCommentModelKeys),
-            created: new Date(model.created!).toISOString(),
-            isWhispers: model.isWhispers || false,
+            ...pick(comment, defaultCommentModelKeys),
+            created: new Date(comment.created!).toISOString(),
+            isWhispers: comment.isWhispers || false,
           } as CommentModelRenderProps,
+          parent,
           post: {
             title: refDoc.title,
             created: new Date(refDoc.created!).toISOString(),
