@@ -27,4 +27,9 @@ export class SubscribeModel extends BaseModel {
     required: true,
   })
   subscribe: number
+
+  @prop({
+    default: false,
+  })
+  verified: boolean
 }

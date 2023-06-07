@@ -109,7 +109,7 @@ jobs:
             source ~/.zshrc
             cd mx
             ls -a
-            node server-deploy.js --jwtSecret=$JWTSECRET --encrypt_key=$MX_ENCRYPT_KEY
+            node server-deploy.js --jwtSecret=$JWTSECRET --encrypt_key=$MX_ENCRYPT_KEY --encrypt_enable
 
   build_other_platform:
     name: Build Other Platform

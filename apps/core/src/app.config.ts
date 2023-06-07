@@ -6,6 +6,8 @@ import { load as yamlLoad } from 'js-yaml'
 import { machineIdSync } from 'node-machine-id'
 import type { AxiosRequestConfig } from 'axios'
 
+import { parseBooleanishValue } from './utils'
+
 const commander = program
   .option('-p, --port <number>', 'server port')
   .option('--demo', 'enable demo mode')
@@ -44,6 +46,7 @@ const commander = program
   .option(
     '--encrypt_enable',
     'enable encrypt security field, please remember encrypt key.',
+    false,
   )
   .option(
     '--encrypt_algorithm <string>',
@@ -133,8 +136,9 @@ export const DEBUG_MODE = {
     argv.httpRequestVerbose ?? argv.http_request_verbose ?? true,
 }
 
+const ENCRYPT_KEY = argv.encrypt_key || MX_ENCRYPT_KEY
 export const ENCRYPT = {
-  key: argv.encrypt_key || MX_ENCRYPT_KEY || machineIdSync(),
-  enable: argv.encrypt_enable ?? false,
+  key: ENCRYPT_KEY || machineIdSync(),
+  enable: parseBooleanishValue(argv.encrypt_enable) ? !!ENCRYPT_KEY : false,
   algorithm: argv.encrypt_algorithm || 'aes-256-ecb',
 }
