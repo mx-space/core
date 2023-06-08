@@ -4,10 +4,14 @@ services:
   app:
     container_name: mx-server
     image: innei/mx-server:latest
-    command: node index.js --redis_host=redis --db_host=mongo --allowed_origins=${ALLOWED_ORIGINS} --jwt_secret=${JWT_SECRET} --color --encrypt_key=${ENCRYPT_KEY} --encrypt_enable=${ENCRYPT_ENABLE}
+    command: ./docker-run.sh
     environment:
       - TZ=Asia/Shanghai
       - NODE_ENV=production
+      - ALLOWED_ORIGINS
+      - JWT_SECRET
+      - ENCRYPT_KEY
+      - ENCRYPT_ENABLE
     volumes:
       - ./data/mx-space:/root/.mx-space
     ports:
