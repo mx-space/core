@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [4.1.0](https://github.com/mx-space/core/compare/v4.1.0-beta.1...v4.1.0) (2023-06-08)
+
+
+### Bug Fixes
+
+* escapeXml for feed ([5821c04](https://github.com/mx-space/core/commit/5821c04640a813a243ca42d8248d930cf5645941))
+
+
+
 # [4.1.0-beta.1](https://github.com/mx-space/core/compare/v4.1.0-beta.0...v4.1.0-beta.1) (2023-06-07)
 
 
