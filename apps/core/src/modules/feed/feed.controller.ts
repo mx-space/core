@@ -5,6 +5,7 @@ import { Controller, Get, Header } from '@nestjs/common'
 
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
+import { escapeXml } from '~/utils'
 
 import { AggregateService } from '../aggregate/aggregate.service'
 import { ConfigsService } from '../configs/configs.service'
@@ -40,7 +41,7 @@ export class FeedController {
       <author>
         <name>${author}</name>
       </author>
-      <generator>${'Mix Space CMS'}</generator>
+      <generator>Mix Space CMS</generator>
       <lastBuildDate>${now.toISOString()}</lastBuildDate>
       <language>zh-CN</language>
       <image>
@@ -51,7 +52,7 @@ export class FeedController {
         ${await Promise.all(
           data.map(async (item) => {
             return `<entry>
-            <title>${item.title}</title>
+            <title>${escapeXml(item.title)}</title>
             <link href='${xss(item.link)}'/>
             <id>${xss(item.link)}</id>
             <published>${item.created}</published>
