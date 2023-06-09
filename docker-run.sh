@@ -10,7 +10,7 @@ if [ -n "$ENCRYPT_KEY" ]; then
 fi
 
 if [ "$ENCRYPT_ENABLE" = "true" ]; then
-  command+=" --encrypt_enable=${ENCRYPT_ENABLE}"
+  command+=" --encrypt_enable "
 fi
 
 exec $command
