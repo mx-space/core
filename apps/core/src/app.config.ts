@@ -46,7 +46,6 @@ const commander = program
   .option(
     '--encrypt_enable',
     'enable encrypt security field, please remember encrypt key.',
-    false,
   )
   .option(
     '--encrypt_algorithm <string>',
