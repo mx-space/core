@@ -14,6 +14,7 @@ RUN apk add zip unzip mongodb-tools bash fish rsync jq curl --no-cache
 WORKDIR /app
 COPY --from=builder /app/out .
 COPY --from=builder /app/assets ./assets
+COPY ./docker-run.sh .
 ENV TZ=Asia/Shanghai
 
 EXPOSE 2333
