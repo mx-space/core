@@ -18,8 +18,6 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-curl https://cdn.jsdelivr.net/gh/mx-space/mx-server@master/docker-compose.yml >docker-compose.yml
-
 (docker-compose up &)
 
 if [[ $? -ne 0 ]]; then
