@@ -1,5 +1,5 @@
-import { IRequestAdapter } from '~/interfaces/adapter'
-import { RequestOptions } from '~/interfaces/instance'
+import type { IRequestAdapter } from '~/interfaces/adapter'
+import type { RequestOptions } from '~/interfaces/instance'
 
 const jsonDataAttachResponse = async (response: Response) => {
   const cloned = response.clone()

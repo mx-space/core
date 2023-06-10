@@ -1,4 +1,4 @@
-import { TextBaseModel } from './base'
+import type { TextBaseModel } from './base'
 
 export enum EnumPageType {
   'md' = 'md',

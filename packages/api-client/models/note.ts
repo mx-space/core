@@ -1,5 +1,5 @@
-import { ModelWithLiked, TextBaseModel } from './base'
-import { TopicModel } from './topic'
+import type { ModelWithLiked, TextBaseModel } from './base'
+import type { TopicModel } from './topic'
 
 export interface NoteModel extends TextBaseModel {
   hide: boolean

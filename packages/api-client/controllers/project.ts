@@ -1,8 +1,9 @@
-import { IRequestAdapter } from '~/interfaces/adapter'
-import { ProjectModel } from '~/models/project'
+import type { IRequestAdapter } from '~/interfaces/adapter'
+import type { ProjectModel } from '~/models/project'
+import type { HTTPClient } from '../core'
+
 import { autoBind } from '~/utils/auto-bind'
 
-import { HTTPClient } from '../core'
 import { BaseCrudController } from './base'
 
 declare module '../core/client' {

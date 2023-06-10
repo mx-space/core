@@ -1,7 +1,7 @@
-import ky, { Options, ResponsePromise } from 'ky'
-import { KyInstance } from 'ky/distribution/types/ky'
-
-import { IRequestAdapter } from '~/interfaces/adapter'
+import ky from 'ky'
+import type { IRequestAdapter } from '~/interfaces/adapter'
+import type { Options, ResponsePromise } from 'ky'
+import type { KyInstance } from 'ky/distribution/types/ky'
 
 // eslint-disable-next-line spaced-comment
 const $http: KyInstance = /*#__PURE__*/ ky.create({})

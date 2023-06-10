@@ -1,17 +1,17 @@
-import { IRequestAdapter } from '~/interfaces/adapter'
-import { IController } from '~/interfaces/controller'
-import { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
-import { SelectFields } from '~/interfaces/types'
-import { PaginateResult } from '~/models/base'
-import {
+import type { IRequestAdapter } from '~/interfaces/adapter'
+import type { IController } from '~/interfaces/controller'
+import type { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
+import type { SelectFields } from '~/interfaces/types'
+import type { PaginateResult } from '~/models/base'
+import type {
   NoteModel,
   NoteWrappedPayload,
   NoteWrappedWithLikedPayload,
 } from '~/models/note'
-import { autoBind } from '~/utils/auto-bind'
+import type { HTTPClient } from '../core/client'
+import type { SortOptions } from './base'
 
-import { HTTPClient } from '../core/client'
-import { SortOptions } from './base'
+import { autoBind } from '~/utils/auto-bind'
 
 declare module '../core/client' {
   interface HTTPClient<

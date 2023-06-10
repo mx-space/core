@@ -1,5 +1,5 @@
-import { IController } from './controller'
-import { Class } from './types'
+import type { IController } from './controller'
+import type { Class } from './types'
 
 interface IClientOptions {
   controllers: Class<IController>[]

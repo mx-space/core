@@ -1,4 +1,4 @@
-import { HTTPClient } from '.'
+import type { HTTPClient } from '.'
 
 export function attachRequestMethod<T extends HTTPClient<any, any>>(target: T) {
   Object.defineProperty(target, '$$get', {

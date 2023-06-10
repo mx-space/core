@@ -1,23 +1,24 @@
-import { IRequestAdapter } from '~/interfaces/adapter'
-import { IController } from '~/interfaces/controller'
-import {
+import type { IRequestAdapter } from '~/interfaces/adapter'
+import type { IController } from '~/interfaces/controller'
+import type {
   IRequestHandler,
   RequestProxyResult,
   ResponseProxyExtraRaw,
 } from '~/interfaces/request'
-import { attachRawFromOneToAnthor, destructureData } from '~/utils'
-import { autoBind } from '~/utils/auto-bind'
-
-import { HTTPClient } from '../core/client'
-import { RequestError } from '../core/error'
-import {
+import type { HTTPClient } from '../core/client'
+import type {
   CategoryEntries,
   CategoryModel,
-  CategoryType,
   CategoryWithChildrenModel,
   TagModel,
 } from '../models/category'
-import { PostModel } from '../models/post'
+import type { PostModel } from '../models/post'
+
+import { attachRawFromOneToAnthor, destructureData } from '~/utils'
+import { autoBind } from '~/utils/auto-bind'
+
+import { RequestError } from '../core/error'
+import { CategoryType } from '../models/category'
 
 declare module '../core/client' {
   interface HTTPClient<

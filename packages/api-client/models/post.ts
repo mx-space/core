@@ -1,5 +1,5 @@
-import { Count, Image, TextBaseModel } from './base'
-import { CategoryModel } from './category'
+import type { Count, Image, TextBaseModel } from './base'
+import type { CategoryModel } from './category'
 
 export interface PostModel extends TextBaseModel {
   summary?: string

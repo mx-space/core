@@ -1,6 +1,6 @@
 import cors from 'cors'
 import express from 'express'
-import { AddressInfo } from 'net'
+import type { AddressInfo } from 'net'
 
 type Express = ReturnType<typeof express>
 export const createMockServer = (options: { port?: number } = {}) => {

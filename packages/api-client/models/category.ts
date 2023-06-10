@@ -1,5 +1,5 @@
-import { BaseModel } from './base'
-import { PostModel } from './post'
+import type { BaseModel } from './base'
+import type { PostModel } from './post'
 
 export enum CategoryType {
   Category,

@@ -1,17 +1,18 @@
-import { AxiosError, AxiosResponse } from 'axios'
+import { AxiosError } from 'axios'
 import { vi } from 'vitest'
+import type { IRequestAdapter } from '~/interfaces/adapter'
+import type { ClientOptions } from '~/interfaces/client'
+import type { AxiosResponse } from 'axios'
 
 import { axiosAdaptor } from '~/adaptors/axios'
 import { umiAdaptor } from '~/adaptors/umi-request'
 import {
-  NoteController,
-  PostController,
   allContollerNames,
   allControllers,
+  NoteController,
+  PostController,
 } from '~/controllers'
-import { RequestError, createClient } from '~/core'
-import { IRequestAdapter } from '~/interfaces/adapter'
-import { ClientOptions } from '~/interfaces/client'
+import { createClient, RequestError } from '~/core'
 
 const { spyOn } = vi
 

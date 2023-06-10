@@ -1,5 +1,5 @@
-import { BaseModel } from './base'
-import { CategoryModel } from './category'
+import type { BaseModel } from './base'
+import type { CategoryModel } from './category'
 
 export enum RefType {
   Page = 'Page',

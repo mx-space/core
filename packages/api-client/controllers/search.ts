@@ -1,13 +1,13 @@
-import { IRequestAdapter } from '~/interfaces/adapter'
-import { IController } from '~/interfaces/controller'
-import { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
-import { PaginateResult } from '~/models/base'
-import { NoteModel } from '~/models/note'
-import { PostModel } from '~/models/post'
-import { autoBind } from '~/utils/auto-bind'
+import type { IRequestAdapter } from '~/interfaces/adapter'
+import type { IController } from '~/interfaces/controller'
+import type { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
+import type { PaginateResult } from '~/models/base'
+import type { NoteModel } from '~/models/note'
+import type { PostModel } from '~/models/post'
+import type { PageModel } from '..'
+import type { HTTPClient } from '../core'
 
-import { PageModel } from '..'
-import { HTTPClient } from '../core'
+import { autoBind } from '~/utils/auto-bind'
 
 declare module '../core/client' {
   interface HTTPClient<

@@ -1,6 +1,6 @@
 import isEqual from 'lodash/isEqual'
-import { URLSearchParams } from 'url'
 import { vi } from 'vitest'
+import type { URLSearchParams } from 'url'
 
 import { axiosAdaptor } from '~/adaptors/axios'
 

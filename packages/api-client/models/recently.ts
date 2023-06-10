@@ -1,4 +1,4 @@
-import { BaseCommentIndexModel } from './base'
+import type { BaseCommentIndexModel } from './base'
 
 export enum RecentlyRefTypes {
   Post = 'Post',

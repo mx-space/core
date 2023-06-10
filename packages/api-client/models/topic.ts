@@ -1,4 +1,4 @@
-import { BaseModel } from './base'
+import type { BaseModel } from './base'
 
 export interface TopicModel extends BaseModel {
   description?: string

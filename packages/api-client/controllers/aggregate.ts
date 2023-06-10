@@ -1,18 +1,18 @@
-import { IRequestAdapter } from '~/interfaces/adapter'
-import { IController } from '~/interfaces/controller'
-import { SortOrder } from '~/interfaces/options'
-import { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
-import {
+import type { IRequestAdapter } from '~/interfaces/adapter'
+import type { IController } from '~/interfaces/controller'
+import type { SortOrder } from '~/interfaces/options'
+import type { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
+import type {
   AggregateRoot,
   AggregateStat,
   AggregateTop,
   TimelineData,
   TimelineType,
 } from '~/models/aggregate'
+import type { HTTPClient } from '../core'
+
 import { sortOrderToNumber } from '~/utils'
 import { autoBind } from '~/utils/auto-bind'
-
-import { HTTPClient } from '../core'
 
 declare module '../core/client' {
   interface HTTPClient<

@@ -1,10 +1,10 @@
-import { CategoryModel } from './category'
-import { NoteModel } from './note'
-import { PageModel } from './page'
-import { PostModel } from './post'
-import { SayModel } from './say'
-import { SeoOptionModel } from './setting'
-import { UserModel } from './user'
+import type { CategoryModel } from './category'
+import type { NoteModel } from './note'
+import type { PageModel } from './page'
+import type { PostModel } from './post'
+import type { SayModel } from './say'
+import type { SeoOptionModel } from './setting'
+import type { UserModel } from './user'
 
 export interface AggregateRoot {
   user: UserModel
