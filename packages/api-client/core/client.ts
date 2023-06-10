@@ -1,12 +1,13 @@
-import {
+import type {
   IAdaptorRequestResponseType,
   IRequestAdapter,
 } from '~/interfaces/adapter'
-import { ClientOptions } from '~/interfaces/client'
-import { IController } from '~/interfaces/controller'
-import { RequestOptions } from '~/interfaces/instance'
-import { IRequestHandler, Method } from '~/interfaces/request'
-import { Class } from '~/interfaces/types'
+import type { ClientOptions } from '~/interfaces/client'
+import type { IController } from '~/interfaces/controller'
+import type { RequestOptions } from '~/interfaces/instance'
+import type { IRequestHandler, Method } from '~/interfaces/request'
+import type { Class } from '~/interfaces/types'
+
 import { isPlainObject } from '~/utils'
 import { camelcaseKeys } from '~/utils/camelcase-keys'
 import { resolveFullPath } from '~/utils/path'
@@ -180,14 +181,17 @@ class HTTPClient<
                 return null
               }
 
-              const transform =
+              const cameledObject =
                 (Array.isArray(data) || isPlainObject(data)) &&
                 that.options.transformResponse
                   ? that.options.transformResponse(data)
                   : data
 
-              if (transform && typeof transform === 'object') {
-                Object.defineProperty(transform, '$raw', {
+              let nextObject: any = cameledObject
+
+              if (cameledObject && typeof cameledObject === 'object') {
+                nextObject = { ...cameledObject }
+                Object.defineProperty(nextObject, '$raw', {
                   get() {
                     return res
                   },
@@ -196,8 +200,7 @@ class HTTPClient<
                 })
 
                 // attach request config onto response
-
-                Object.defineProperty(transform, '$request', {
+                Object.defineProperty(nextObject, '$request', {
                   get() {
                     return {
                       url,
@@ -207,9 +210,15 @@ class HTTPClient<
                   },
                   enumerable: false,
                 })
+
+                Object.defineProperty(nextObject, '$serialized', {
+                  get() {
+                    return cameledObject
+                  },
+                })
               }
 
-              return transform
+              return nextObject
             }
           }
           route.push(name)

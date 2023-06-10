@@ -1,6 +1,8 @@
+import type { HTTPClient } from '~/core'
+import type { IRequestAdapter } from '~/interfaces/adapter'
+
 import { allControllers } from '~/controllers'
-import { HTTPClient, RequestError, createClient } from '~/core'
-import { IRequestAdapter } from '~/interfaces/adapter'
+import { createClient, RequestError } from '~/core'
 
 import { createMockServer } from './e2e-mock-server'
 
@@ -95,6 +97,12 @@ export const testAdaptor = (adaptor: IRequestAdapter) => {
     expect(res).toStrictEqual({ data: 1, fooBar: 'foo' })
     expect(res.$raw.data).toStrictEqual({ data: 1, foo_bar: 'foo' })
     expect(res.$request).toBeDefined()
+    expect(res.$serialized).toBeDefined()
+    expect(res.$serialized.data).toStrictEqual(res.data)
+    expect(res.$serialized.data).toStrictEqual(res.data)
+    expect(res.$serialized.fooBar).toStrictEqual(res.fooBar)
+    // @ts-expect-error
+    expect(res.$serialized.$request).toBeUndefined()
   })
 
   it('should get string payload', async () => {

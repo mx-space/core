@@ -1,4 +1,4 @@
-import { SortOrder } from '~/interfaces/options'
+import type { SortOrder } from '~/interfaces/options'
 
 export const isPlainObject = (obj: any) =>
   isObject(obj) &&
@@ -40,14 +40,13 @@ export const attachRawFromOneToAnthor = (from: any, to: any) => {
   if (!from || !isObject(to)) {
     return
   }
-  from.$raw &&
-    Object.defineProperty(to, '$raw', {
-      value: { ...from.$raw },
-      enumerable: false,
-    })
-  from.$request &&
-    Object.defineProperty(to, '$request', {
-      value: { ...from.$request },
-      enumerable: false,
-    })
+  ;['$raw', '$request', '$serialized'].forEach((key) => {
+    from[key] &&
+      Object.defineProperty(to, key, {
+        get() {
+          return from[key]
+        },
+        enumerable: false,
+      })
+  })
 }

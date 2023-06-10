@@ -1,4 +1,4 @@
-import { RequestOptions } from './instance'
+import type { RequestOptions } from './instance'
 
 type NoStringIndex<T> = { [K in keyof T as string extends K ? never : K]: T[K] }
 
@@ -70,6 +70,8 @@ type ResponseWrapperType<Response, RawData, T> = {
     method: string
     [k: string]: string
   }
+
+  $serialized: T
 }
 
 export type ResponseProxyExtraRaw<
