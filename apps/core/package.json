@@ -60,7 +60,7 @@
     "@nestjs/cache-manager": "1.0.0",
     "@nestjs/common": "9.4.2",
     "@nestjs/core": "9.4.2",
-    "@nestjs/event-emitter": "1.4.1",
+    "@nestjs/event-emitter": "2.0.0",
     "@nestjs/mapped-types": "^1.2.2",
     "@nestjs/platform-fastify": "9.4.2",
     "@nestjs/platform-socket.io": "9.4.2",
