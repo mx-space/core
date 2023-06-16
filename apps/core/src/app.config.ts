@@ -66,7 +66,7 @@ if (argv.config) {
   Object.assign(argv, config)
 }
 
-const { PORT: ENV_PORT, ENABLE_CACHE_DEBUG, MX_ENCRYPT_KEY } = process.env
+const { PORT: ENV_PORT, MX_ENCRYPT_KEY } = process.env
 
 export const PORT = argv.port || ENV_PORT || 2333
 export const API_VERSION = 2
@@ -111,8 +111,8 @@ export const REDIS = {
   port: argv.redis_port || 6379,
   password: argv.redis_password || null,
   ttl: null,
-  httpCacheTTL: 5,
-  max: 5,
+  httpCacheTTL: 15,
+  max: 120,
   disableApiCache: false,
 }
 
