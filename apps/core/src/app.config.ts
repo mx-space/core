@@ -6,6 +6,7 @@ import { load as yamlLoad } from 'js-yaml'
 import { machineIdSync } from 'node-machine-id'
 import type { AxiosRequestConfig } from 'axios'
 
+import { isDebugMode } from './global/env.global'
 import { parseBooleanishValue } from './utils'
 
 const commander = program
@@ -131,6 +132,7 @@ export const CLUSTER = {
 }
 
 export const DEBUG_MODE = {
+  logging: isDebugMode,
   httpRequestVerbose:
     argv.httpRequestVerbose ?? argv.http_request_verbose ?? true,
 }

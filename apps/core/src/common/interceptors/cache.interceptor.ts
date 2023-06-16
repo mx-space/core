@@ -13,7 +13,7 @@ import type {
 } from '@nestjs/common'
 import type { Observable } from 'rxjs'
 
-import { Inject, Injectable, RequestMethod } from '@nestjs/common'
+import { Inject, Injectable, Logger, RequestMethod } from '@nestjs/common'
 import { HttpAdapterHost, Reflector } from '@nestjs/core'
 
 import { REDIS } from '~/app.config'
@@ -28,12 +28,15 @@ import { getNestExecutionContextRequest } from '~/transformers/get-req.transform
  */
 @Injectable()
 export class HttpCacheInterceptor implements NestInterceptor {
+  private readonly logger: Logger
   constructor(
     private readonly cacheManager: CacheService,
     @Inject(SYSTEM.REFLECTOR) private readonly reflector: Reflector,
 
     private readonly httpAdapterHost: HttpAdapterHost,
-  ) {}
+  ) {
+    this.logger = new Logger(HttpCacheInterceptor.name)
+  }
 
   // 自定义装饰器，修饰 ttl 参数
   async intercept(
@@ -68,6 +71,9 @@ export class HttpCacheInterceptor implements NestInterceptor {
     try {
       const value = await this.cacheManager.get(key)
 
+      if (value) {
+        this.logger.debug(`hit cache:${key}`)
+      }
       return value
         ? of(value)
         : call$.pipe(

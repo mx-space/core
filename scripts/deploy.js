@@ -44,9 +44,12 @@ async function main() {
 
   await $`unzip /tmp/${tmpName}.zip -d ./run`
   await $`rm /tmp/${tmpName}.zip`
+
+  await $`rm ./run/ecosystem.config.js`
+  await $`cp ./run.bak/ecosystem.config.js ./run/ecosystem.config.js`
+
   cd('./run')
-  process.env.NODE_ENV = 'production'
-  await $`export NODE_ENV=production`
+
   await nothrow($`pm2 reload ecosystem.config.js -- ${argv}`)
   console.log('等待 8 秒')
   await sleep(8000)

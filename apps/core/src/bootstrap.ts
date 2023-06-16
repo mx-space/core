@@ -7,7 +7,7 @@ import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Logger, ValidationPipe } from '@nestjs/common'
 import { ContextIdFactory, NestFactory } from '@nestjs/core'
 
-import { CROSS_DOMAIN, PORT } from './app.config'
+import { CROSS_DOMAIN, DEBUG_MODE, PORT } from './app.config'
 import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'
 import { RedisIoAdapter } from './common/adapters/socket.adapter'
@@ -34,7 +34,9 @@ export async function bootstrap() {
     fastifyApp,
     {
       logger: ['error'].concat(
-        isDev ? (['debug'] as any as LogLevel[]) : ([] as LogLevel[]),
+        isDev || DEBUG_MODE.logging
+          ? (['debug'] as any as LogLevel[])
+          : ([] as LogLevel[]),
       ) as LogLevel[],
     },
   )
@@ -61,7 +63,7 @@ export async function bootstrap() {
       : undefined,
   )
 
-  if (isDev) {
+  if (isDev || DEBUG_MODE.logging) {
     app.useGlobalInterceptors(new LoggingInterceptor())
   }
 

@@ -2,7 +2,6 @@
 import { createWriteStream } from 'fs'
 import consola_, { FancyReporter, LogLevel } from 'consola'
 import { CronJob } from 'cron'
-import { argv } from 'zx-cjs'
 
 import { CronExpression } from '@nestjs/schedule'
 
@@ -10,7 +9,7 @@ import { getTodayLogFilePath } from '~/utils/path.util'
 
 import { redisSubPub } from '../utils/redis-subpub.util'
 import { getShortTime } from '../utils/time.util'
-import { isDev, isTest } from './env.global'
+import { isDebugMode, isDev, isTest } from './env.global'
 
 class Reporter extends FancyReporter {
   isInVirtualTerminal = typeof process.stdout.columns === 'undefined' // HACK: if got `undefined` that means in PM2 pty
@@ -36,7 +35,7 @@ class Reporter extends FancyReporter {
 }
 export const consola = consola_.create({
   reporters: [new Reporter()],
-  level: isDev || argv.verbose ? LogLevel.Trace : LogLevel.Info,
+  level: isDev || isDebugMode ? LogLevel.Trace : LogLevel.Info,
 })
 export function registerStdLogger() {
   let logStream = createWriteStream(getTodayLogFilePath(), {
