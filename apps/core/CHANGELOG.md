@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.2.1](https://github.com/mx-space/core/compare/v4.2.0...v4.2.1) (2023-06-16)
+
+
+### Features
+
+* add debug logging ([b5a2b7f](https://github.com/mx-space/core/commit/b5a2b7fdd6d642bb44c692a692ef575fc2be17d1))
+
+
+
 # [4.2.0](https://github.com/mx-space/core/compare/v4.1.0...v4.2.0) (2023-06-16)
 
 
