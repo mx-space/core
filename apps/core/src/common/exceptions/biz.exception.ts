@@ -20,11 +20,10 @@ export class BusinessException extends HttpException {
       : message + (extraMessage ? `: ${extraMessage}` : '')
 
     super(
-      HttpException.createBody(
-        { code: bizCode, message: jointMessage },
-        jointMessage,
-        status,
-      ),
+      HttpException.createBody({
+        code: bizCode,
+        message: jointMessage,
+      }),
       status,
     )
 

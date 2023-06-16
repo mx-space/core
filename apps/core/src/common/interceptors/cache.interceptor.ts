@@ -13,13 +13,8 @@ import type {
 } from '@nestjs/common'
 import type { Observable } from 'rxjs'
 
-import {
-  HttpAdapterHost,
-  Inject,
-  Injectable,
-  RequestMethod,
-} from '@nestjs/common'
-import { Reflector } from '@nestjs/core'
+import { Inject, Injectable, RequestMethod } from '@nestjs/common'
+import { HttpAdapterHost, Reflector } from '@nestjs/core'
 
 import { REDIS } from '~/app.config'
 import * as META from '~/constants/meta.constant'
@@ -36,7 +31,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
   constructor(
     private readonly cacheManager: CacheService,
     @Inject(SYSTEM.REFLECTOR) private readonly reflector: Reflector,
-    @Inject(SYSTEM.HTTP_ADAPTER_HOST)
+
     private readonly httpAdapterHost: HttpAdapterHost,
   ) {}
 
@@ -95,7 +90,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
   trackBy(context: ExecutionContext): string | undefined {
     const request = this.getRequest(context)
     const httpServer = this.httpAdapterHost.httpAdapter
-    const isHttpApp = Boolean(httpServer?.getRequestMethod)
+    const isHttpApp = request
     const isGetRequest =
       isHttpApp &&
       httpServer.getRequestMethod(request) === RequestMethod[RequestMethod.GET]

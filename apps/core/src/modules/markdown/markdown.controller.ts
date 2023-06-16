@@ -5,7 +5,8 @@ import JSZip from 'jszip'
 import type { CategoryModel } from '../category/category.model'
 import type { MarkdownYAMLProperty } from './markdown.interface'
 
-import { Body, CacheTTL, Get, Header, Param, Post, Query } from '@nestjs/common'
+import { CacheTTL } from '@nestjs/cache-manager'
+import { Body, Get, Header, Param, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'

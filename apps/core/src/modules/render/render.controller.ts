@@ -6,9 +6,9 @@ import type { NoteModel } from '../note/note.model'
 import type { PageModel } from '../page/page.model'
 import type { PostModel } from '../post/post.model'
 
+import { CacheTTL } from '@nestjs/cache-manager'
 import {
   Body,
-  CacheTTL,
   Controller,
   ForbiddenException,
   Get,

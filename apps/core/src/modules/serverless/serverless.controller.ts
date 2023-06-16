@@ -1,9 +1,9 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 
+import { CacheTTL } from '@nestjs/cache-manager'
 import {
   All,
   BadRequestException,
-  CacheTTL,
   Delete,
   ForbiddenException,
   Get,
