@@ -1,5 +1,16 @@
 # CHANGELOG
 
+# [4.2.0](https://github.com/mx-space/core/compare/v4.1.0...v4.2.0) (2023-06-16)
+
+
+### Bug Fixes
+
+* **client:** add `$serialized` for response object ([3a9e257](https://github.com/mx-space/core/commit/3a9e25763ef67c54918f2ee34cccac816eb7bf3c))
+* cp .env in docker ci ([3e48439](https://github.com/mx-space/core/commit/3e484394c41aab0e817ee28a0e19f184a2e54c14))
+* docker build ([944c571](https://github.com/mx-space/core/commit/944c5712103db7535db6ab3f8b1633af1b489848))
+
+
+
 # [4.1.0](https://github.com/mx-space/core/compare/v4.1.0-beta.1...v4.1.0) (2023-06-08)
 
 
