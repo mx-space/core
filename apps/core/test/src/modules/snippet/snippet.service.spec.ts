@@ -8,9 +8,11 @@ import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
 import { DatabaseService } from '~/processors/database/database.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getModelToken } from '~/transformers/model.transformer'
 
+const mockedEventManageService = { async emit() {} }
 describe('test Snippet Service', () => {
   let service: SnippetService
 
@@ -22,6 +24,7 @@ describe('test Snippet Service', () => {
         { provide: DatabaseService, useValue: {} },
         { provide: CacheService, useValue: redis.CacheService },
         { provide: ServerlessService, useValue: {} },
+        { provide: EventManagerService, useValue: mockedEventManageService },
 
         {
           provide: getModelToken(SnippetModel.name),

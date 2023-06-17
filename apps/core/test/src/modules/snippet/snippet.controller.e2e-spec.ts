@@ -8,6 +8,7 @@ import { SnippetController } from '~/modules/snippet/snippet.controller'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
 import { DatabaseService } from '~/processors/database/database.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 
 describe('test /snippets', () => {
   let app: NestFastifyApplication
@@ -17,6 +18,12 @@ describe('test /snippets', () => {
     providers: [
       SnippetService,
       { provide: DatabaseService, useValue: {} },
+      {
+        provide: EventManagerService,
+        useValue: {
+          async emit() {},
+        },
+      },
 
       {
         provide: ServerlessService,

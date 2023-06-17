@@ -3,7 +3,7 @@ import type { IController } from '~/interfaces/controller'
 import type { SortOrder } from '~/interfaces/options'
 import type { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
 import type {
-  AggregateRoot,
+  AggregateRootWithTheme,
   AggregateStat,
   AggregateTop,
   TimelineData,
@@ -36,8 +36,14 @@ export class AggregateController<ResponseWrapper> implements IController {
   /**
    * 获取聚合数据
    */
-  getAggregateData(): RequestProxyResult<AggregateRoot, ResponseWrapper> {
-    return this.proxy.get<AggregateRoot>()
+  getAggregateData<Theme>(
+    theme?: string,
+  ): RequestProxyResult<AggregateRootWithTheme<Theme>, ResponseWrapper> {
+    return this.proxy.get<AggregateRootWithTheme<Theme>>({
+      params: {
+        theme,
+      },
+    })
   }
 
   /**

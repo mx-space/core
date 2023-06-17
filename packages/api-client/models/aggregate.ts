@@ -12,6 +12,14 @@ export interface AggregateRoot {
   url: Url
   categories: CategoryModel[]
   pageMeta: Pick<PageModel, 'title' | 'id' | 'slug' | 'order'>[] | null
+  /**
+   * @available 4.2.2
+   */
+  latestNoteId: { id: string; nid: number }
+}
+
+export interface AggregateRootWithTheme<Theme = unknown> extends AggregateRoot {
+  theme?: Theme
 }
 
 export interface Url {
