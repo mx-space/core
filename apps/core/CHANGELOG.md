@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.2.2](https://github.com/mx-space/core/compare/v4.2.1...v4.2.2) (2023-06-17)
+
+
+### Bug Fixes
+
+* test case ([fbcf2cc](https://github.com/mx-space/core/commit/fbcf2cc53f98d4cf4bef2d8e7b48341100d381fb))
+
+
+
 ## [4.2.1](https://github.com/mx-space/core/compare/v4.2.0...v4.2.1) (2023-06-16)
 
 
