@@ -10,7 +10,13 @@ import { CacheKeys } from '~/constants/cache.constant'
 
 import { AnalyzeService } from '../analyze/analyze.service'
 import { ConfigsService } from '../configs/configs.service'
-import { TimelineQueryDto, TopQueryDto } from './aggregate.dto'
+import { NoteService } from '../note/note.service'
+import { SnippetService } from '../snippet/snippet.service'
+import {
+  AggregateQueryDto,
+  TimelineQueryDto,
+  TopQueryDto,
+} from './aggregate.dto'
 import { AggregateService } from './aggregate.service'
 
 @ApiController('aggregate')
@@ -19,32 +25,49 @@ export class AggregateController {
     private readonly aggregateService: AggregateService,
     private readonly configsService: ConfigsService,
     private readonly analyzeService: AnalyzeService,
+    private readonly noteService: NoteService,
+    private readonly snippetService: SnippetService,
   ) {}
 
   @Get('/')
-  @CacheKey(CacheKeys.AggregateCatch)
-  @CacheTTL(300)
-  async aggregate() {
+  @CacheTTL(10 * 60)
+  async aggregate(@Query() query: AggregateQueryDto) {
+    const { theme } = query
+
     const tasks = await Promise.allSettled([
       this.configsService.getMaster(),
       this.aggregateService.getAllCategory(),
       this.aggregateService.getAllPages(),
       this.configsService.get('url'),
       this.configsService.get('seo'),
+      this.noteService.getLatestNoteId(),
+      !theme
+        ? Promise.resolve()
+        : this.snippetService
+            .getCachedSnippet('theme', theme, 'public')
+            .then((cached) => {
+              if (cached) {
+                return JSON.safeParse(cached) || cached
+              }
+              return this.snippetService.getPublicSnippetByName(theme, 'theme')
+            }),
     ])
-    const [user, categories, pageMeta, url, seo] = tasks.map((t) => {
-      if (t.status === 'fulfilled') {
-        return t.value
-      } else {
-        return null
-      }
-    })
+    const [user, categories, pageMeta, url, seo, latestNodeId, themeConfig] =
+      tasks.map((t) => {
+        if (t.status === 'fulfilled') {
+          return t.value
+        } else {
+          return null
+        }
+      })
     return {
       user,
       seo,
       url: omit(url, ['adminUrl']),
       categories,
       pageMeta,
+      latestNodeId,
+      theme: themeConfig,
     }
   }
 

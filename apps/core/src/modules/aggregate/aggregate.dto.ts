@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer'
-import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator'
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator'
 
 export class TopQueryDto {
   @Transform(({ value: val }) => parseInt(val))
@@ -28,4 +28,10 @@ export class TimelineQueryDto {
   @IsOptional()
   @Transform(({ value: v }) => v | 0)
   type?: TimelineType
+}
+
+export class AggregateQueryDto {
+  @IsString()
+  @IsOptional()
+  theme?: string
 }

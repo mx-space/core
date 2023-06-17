@@ -10,7 +10,11 @@ import type { RSSProps } from './aggregate.interface'
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
-import { CacheKeys, RedisKeys } from '~/constants/cache.constant'
+import {
+  API_CACHE_PREFIX,
+  CacheKeys,
+  RedisKeys,
+} from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
@@ -412,7 +416,7 @@ export class AggregateService {
     return Promise.all([
       this.cacheService.getClient().del(CacheKeys.RSS),
       this.cacheService.getClient().del(CacheKeys.RSSXmlCatch),
-      this.cacheService.getClient().del(CacheKeys.AggregateCatch),
+      this.cacheService.getClient().del(`${API_CACHE_PREFIX}/aggregate*`),
       this.cacheService.getClient().del(CacheKeys.SiteMapCatch),
       this.cacheService.getClient().del(CacheKeys.SiteMapXmlCatch),
     ])

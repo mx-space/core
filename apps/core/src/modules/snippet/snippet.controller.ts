@@ -3,7 +3,6 @@ import {
   Delete,
   ForbiddenException,
   Get,
-  NotFoundException,
   Param,
   Post,
   Put,
@@ -21,7 +20,7 @@ import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
 import { SnippetMoreDto } from './snippet.dto'
-import { SnippetModel, SnippetType } from './snippet.model'
+import { SnippetModel } from './snippet.model'
 import { SnippetService } from './snippet.service'
 
 @ApiController('snippets')
@@ -160,23 +159,10 @@ export class SnippetController {
     if (cached) {
       const json = JSON.safeParse(cached)
 
-      return json ? json : cached
+      return json || cached
     }
 
-    const snippet = await this.snippetService.getSnippetByName(name, reference)
-
-    if (snippet.type === SnippetType.Function) {
-      throw new NotFoundException()
-    }
-
-    if (snippet.private && !isMaster) {
-      throw new ForbiddenException('snippet is private')
-    }
-
-    return this.snippetService.attachSnippet(snippet).then((res) => {
-      this.snippetService.cacheSnippet(res, res.data)
-      return res.data
-    })
+    return await this.snippetService.getPublicSnippetByName(name, reference)
   }
 
   @Put('/:id')

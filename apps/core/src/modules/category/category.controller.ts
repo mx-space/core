@@ -19,7 +19,6 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 
 import { PostService } from '../post/post.service'
@@ -129,7 +128,7 @@ export class CategoryController {
   @HTTPDecorators.Idempotence()
   async create(@Body() body: CategoryModel) {
     const { name, slug } = body
-    return this.categoryService.model.create({ name, slug: slug ?? name })
+    return this.categoryService.create(name, slug)
   }
 
   @Put('/:id')
@@ -137,14 +136,11 @@ export class CategoryController {
   async modify(@Param() params: MongoIdDto, @Body() body: CategoryModel) {
     const { type, slug, name } = body
     const { id } = params
-    await this.categoryService.model.updateOne(
-      { _id: id },
-      {
-        slug,
-        type,
-        name,
-      },
-    )
+    await this.categoryService.update(id, {
+      slug,
+      type,
+      name,
+    })
     return await this.categoryService.model.findById(id)
   }
 
@@ -153,7 +149,7 @@ export class CategoryController {
   @Auth()
   async patch(@Param() params: MongoIdDto, @Body() body: PartialCategoryModel) {
     const { id } = params
-    await this.categoryService.model.updateOne({ _id: id }, body)
+    await this.categoryService.update(id, body)
     return
   }
 
@@ -161,22 +157,7 @@ export class CategoryController {
   @Auth()
   async deleteCategory(@Param() params: MongoIdDto) {
     const { id } = params
-    const category = await this.categoryService.model.findById(id)
-    if (!category) {
-      throw new NoContentCanBeModifiedException()
-    }
-    const postsInCategory = await this.categoryService.findPostsInCategory(
-      category.id,
-    )
-    if (postsInCategory.length > 0) {
-      throw new BadRequestException('该分类中有其他文章，无法被删除')
-    }
-    const res = await this.categoryService.model.deleteOne({
-      _id: category._id,
-    })
-    if ((await this.categoryService.model.countDocuments({})) === 0) {
-      await this.categoryService.createDefaultCategory()
-    }
-    return res
+
+    return await this.categoryService.deleteById(id)
   }
 }

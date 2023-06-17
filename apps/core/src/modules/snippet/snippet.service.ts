@@ -5,13 +5,17 @@ import type { AggregatePaginateModel, Document } from 'mongoose'
 
 import {
   BadRequestException,
+  ForbiddenException,
   forwardRef,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
 
+import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils'
@@ -28,6 +32,7 @@ export class SnippetService {
     @Inject(forwardRef(() => ServerlessService))
     private readonly serverlessService: ServerlessService,
     private readonly cacheService: CacheService,
+    private readonly eventManager: EventManagerService,
   ) {}
 
   get model() {
@@ -103,6 +108,11 @@ export class SnippetService {
     }
 
     await this.deleteCachedSnippet(old.reference, old.name)
+
+    await this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+      scope: EventScope.TO_SYSTEM,
+    })
+
     const newerDoc = await this.model.findByIdAndUpdate(
       id,
       { ...newModel, modified: new Date() },
@@ -234,6 +244,22 @@ export class SnippetService {
     return doc
   }
 
+  async getPublicSnippetByName(name: string, reference: string) {
+    const snippet = await this.getSnippetByName(name, reference)
+    if (snippet.type === SnippetType.Function) {
+      throw new NotFoundException()
+    }
+
+    if (snippet.private) {
+      throw new ForbiddenException('snippet is private')
+    }
+
+    return this.attachSnippet(snippet).then((res) => {
+      this.cacheSnippet(res, res.data)
+      return res.data
+    })
+  }
+
   async attachSnippet(model: SnippetModel) {
     if (!model) {
       throw new NotFoundException()
@@ -282,6 +308,7 @@ export class SnippetService {
     const value = await client.hget(getRedisKey(RedisKeys.SnippetCache), key)
     return value
   }
+
   async deleteCachedSnippet(reference: string, name: string) {
     const keyBase = `${reference}:${name}`
     const key1 = `${keyBase}:`

@@ -53,6 +53,21 @@ export class NoteService {
     return isSecret
   }
 
+  async getLatestNoteId() {
+    const note = await this.noteModel
+      .findOne()
+      .sort({
+        created: -1,
+      })
+      .lean()
+    if (!note) {
+      throw new CannotFindException()
+    }
+    return {
+      nid: note.nid,
+      id: note.id,
+    }
+  }
   async getLatestOne(
     condition: FilterQuery<DocumentType<NoteModel>> = {},
     projection: any = undefined,
@@ -256,6 +271,9 @@ export class NoteService {
     ])
     scheduleManager.schedule(async () => {
       await Promise.all([
+        this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+          scope: EventScope.TO_SYSTEM,
+        }),
         this.eventManager.broadcast(BusinessEvents.NOTE_DELETE, id, {
           scope: EventScope.TO_SYSTEM_VISITOR,
         }),

@@ -6,6 +6,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common'
 import { Emitter } from '@socket.io/redis-emitter'
 
 import { RedisIoAdapterKey } from '~/common/adapters/socket.adapter'
+import { API_CACHE_PREFIX } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils/redis.util'
 
 // Cache 客户端管理器
@@ -68,7 +69,7 @@ export class CacheService {
 
   public async cleanCatch() {
     const redis = this.getClient()
-    const keys: string[] = await redis.keys('mx-api-cache:*')
+    const keys: string[] = await redis.keys(`${API_CACHE_PREFIX}*`)
     await Promise.all(keys.map((key) => redis.del(key)))
 
     return

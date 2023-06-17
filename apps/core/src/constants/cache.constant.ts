@@ -25,11 +25,10 @@ export enum RedisKeys {
   /** 函数编译缓存 */
   FunctionComplieCache = 'function_complie_cache',
 }
-
+export const API_CACHE_PREFIX = 'mx-api-cache:'
 export enum CacheKeys {
-  AggregateCatch = 'mx-api-cache:aggregate_catch',
-  SiteMapCatch = 'mx-api-cache:aggregate_sitemap_catch',
-  SiteMapXmlCatch = 'mx-api-cache:aggregate_sitemap_xml_catch',
-  RSS = 'mx-api-cache:rss',
-  RSSXmlCatch = 'mx-api-cache:rss_xml_catch',
+  SiteMapCatch = `${API_CACHE_PREFIX}aggregate_sitemap_catch`,
+  SiteMapXmlCatch = `${API_CACHE_PREFIX}aggregate_sitemap_xml_catch`,
+  RSS = `${API_CACHE_PREFIX}rss`,
+  RSSXmlCatch = `${API_CACHE_PREFIX}rss_xml_catch`,
 }

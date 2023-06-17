@@ -3,11 +3,21 @@ import type { DocumentType } from '@typegoose/typegoose'
 import type { FilterQuery } from 'mongoose'
 import type { PostModel } from '../post/post.model'
 
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
+import { EventScope } from '~/constants/business-event.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { scheduleManager } from '~/utils'
 
 import { PostService } from '../post/post.service'
 import { CategoryModel, CategoryType } from './category.model'
@@ -19,6 +29,7 @@ export class CategoryService {
     private readonly categoryModel: ReturnModelType<typeof CategoryModel>,
     @Inject(forwardRef(() => PostService))
     private readonly postService: PostService,
+    private readonly eventManager: EventManagerService,
   ) {
     this.createDefaultCategory()
   }
@@ -112,6 +123,54 @@ export class CategoryService {
     return await this.postService.model.find({
       categoryId: id,
     })
+  }
+
+  async create(name: string, slug?: string) {
+    const doc = await this.model.create({ name, slug: slug ?? name })
+    this.clearCache()
+    return doc
+  }
+
+  async update(id: string, partialDoc: Partial<CategoryModel>) {
+    const newDoc = await this.model.updateOne(
+      { _id: id },
+      {
+        ...partialDoc,
+      },
+      {
+        new: true,
+      },
+    )
+    this.clearCache()
+    return newDoc
+  }
+  async deleteById(id: string) {
+    const category = await this.model.findById(id)
+    if (!category) {
+      throw new NoContentCanBeModifiedException()
+    }
+    const postsInCategory = await this.findPostsInCategory(category.id)
+    if (postsInCategory.length > 0) {
+      throw new BadRequestException('该分类中有其他文章，无法被删除')
+    }
+    const res = await this.model.deleteOne({
+      _id: category._id,
+    })
+    if ((await this.model.countDocuments({})) === 0) {
+      await this.createDefaultCategory()
+    }
+    this.clearCache()
+    return res
+  }
+
+  private clearCache() {
+    scheduleManager.schedule(() =>
+      Promise.all([
+        this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+          scope: EventScope.TO_SYSTEM,
+        }),
+      ]),
+    )
   }
 
   async createDefaultCategory() {

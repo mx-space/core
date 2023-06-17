@@ -17,6 +17,7 @@ import { Inject, Injectable, Logger, RequestMethod } from '@nestjs/common'
 import { HttpAdapterHost, Reflector } from '@nestjs/core'
 
 import { REDIS } from '~/app.config'
+import { API_CACHE_PREFIX } from '~/constants/cache.constant'
 import * as META from '~/constants/meta.constant'
 import * as SYSTEM from '~/constants/system.constant'
 import { CacheService } from '~/processors/redis/cache.service'
@@ -63,7 +64,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
     if (isDisableCache) {
       return call$
     }
-    const key = this.trackBy(context) || `mx-api-cache:${request.url}`
+    const key = this.trackBy(context) || `${API_CACHE_PREFIX}${request.url}`
 
     const metaTTL = this.reflector.get(META.HTTP_CACHE_TTL_METADATA, handler)
     const ttl = metaTTL || REDIS.httpCacheTTL
@@ -89,10 +90,6 @@ export class HttpCacheInterceptor implements NestInterceptor {
     }
   }
 
-  /**
-   * @function trackBy
-   * @description 目前的命中规则是：必须手动设置了 CacheKey 才会启用缓存机制，默认 ttl 为 APP_CONFIG.REDIS.defaultCacheTTL
-   */
   trackBy(context: ExecutionContext): string | undefined {
     const request = this.getRequest(context)
     const httpServer = this.httpAdapterHost.httpAdapter
