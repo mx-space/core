@@ -279,7 +279,9 @@ export class NoteController {
       .sort({ created: -1 })
       .select(select)
       .lean()
-    delete current.password
+    if (currentData.password) {
+      currentData.password = '*'
+    }
     return { data: currentData, next, prev }
   }
 
