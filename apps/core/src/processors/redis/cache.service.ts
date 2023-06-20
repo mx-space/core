@@ -42,12 +42,12 @@ export class CacheService {
     return this.cache.get(key)
   }
 
-  public set<T>(
+  public set(
     key: TCacheKey,
     value: any,
     options?: { ttl: number },
-  ): TCacheResult<T> {
-    return this.cache.set(key, value, options)
+  ): Promise<void> {
+    return this.cache.set(key, value, options?.ttl)
   }
 
   public getClient() {
