@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [4.2.3](https://github.com/mx-space/core/compare/v4.2.2...v4.2.3) (2023-06-20)
+
+
+### Bug Fixes
+
+* **note:** remove password field ([b49711c](https://github.com/mx-space/core/commit/b49711c24c9d69cfb8d055d3c69963079862b58e))
+* release script ([f190634](https://github.com/mx-space/core/commit/f1906349463e92572393d73fbcf0f3fb4d290a8e))
+* type error ([45eba0e](https://github.com/mx-space/core/commit/45eba0e327f9f760c92d0e544c174d2a2a7bb365))
+
+
+
 ## [4.2.2](https://github.com/mx-space/core/compare/v4.2.1...v4.2.2) (2023-06-17)
 
 
