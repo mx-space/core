@@ -89,6 +89,8 @@ export const CROSS_DOMAIN = {
         '22333322.xyz',
         '*.dev',
         '*.vercel.app',
+        'innei.in',
+        '*.innei.in',
       ],
 
   // allowedReferer: 'innei.ren',
