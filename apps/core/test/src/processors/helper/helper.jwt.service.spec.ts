@@ -23,7 +23,7 @@ describe('test jwt service', () => {
   let token1 = ''
 
   it('should sign token', async () => {
-    const _token = service.sign('1')
+    const _token = await service.sign('1')
     expect(_token).toBeDefined()
 
     token1 = _token
@@ -47,11 +47,11 @@ describe('test jwt service', () => {
   })
 
   it('should revoke all token', async () => {
-    const token1 = service.sign('1')
+    const token1 = await service.sign('1')
     expect(token1).toBeDefined()
-    const token2 = service.sign('2')
+    const token2 = await service.sign('2')
     expect(token2).toBeDefined()
-    const token3 = service.sign('2')
+    const token3 = await service.sign('2')
     expect(token3).toBeDefined()
 
     await service.revokeAll()
