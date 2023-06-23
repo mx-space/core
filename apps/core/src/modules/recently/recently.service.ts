@@ -258,7 +258,7 @@ export class RecentlyService {
     const isDeleted = deletedCount === 1
     scheduleManager.schedule(async () => {
       if (isDeleted) {
-        await this.eventManager.broadcast(BusinessEvents.RECENTLY_DElETE, id, {
+        await this.eventManager.broadcast(BusinessEvents.RECENTLY_DELETE, id, {
           scope: EventScope.TO_SYSTEM_VISITOR,
         })
       }
