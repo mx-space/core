@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.2.4](https://github.com/mx-space/core/compare/v4.2.3...v4.2.4) (2023-06-23)
+
+
+### Bug Fixes
+
+* re-sign jwt delay ([7536dd1](https://github.com/mx-space/core/commit/7536dd17cf226ac9f5bd7382d065e276018fc43b))
+
+
+
 ## [4.2.3](https://github.com/mx-space/core/compare/v4.2.2...v4.2.3) (2023-06-20)
 
 
