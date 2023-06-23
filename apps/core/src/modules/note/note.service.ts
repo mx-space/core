@@ -201,10 +201,10 @@ export class NoteService {
     }
 
     scheduleManager.schedule(async () => {
-      this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
-        scope: EventScope.TO_SYSTEM,
-      })
       await Promise.all([
+        this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+          scope: EventScope.TO_SYSTEM,
+        }),
         this.imageService.saveImageDimensionsFromMarkdownText(
           updated.text,
           updated.images,
@@ -223,35 +223,38 @@ export class NoteService {
               .exec()
           },
         ),
-        async () => {
-          if (!updated) {
-            return
-          }
-
-          this.eventManager.broadcast(BusinessEvents.NOTE_UPDATE, updated, {
-            scope: EventScope.TO_SYSTEM,
-          })
-
-          if (updated.password || updated.hide || updated.secret) {
-            return
-          }
-          this.eventManager.broadcast(
-            BusinessEvents.NOTE_UPDATE,
-            {
-              ...updated,
-              text: await this.textMacrosService.replaceTextMacro(
-                updated.text,
-                updated,
-              ),
-            },
-            {
-              scope: EventScope.TO_VISITOR,
-            },
-          )
-        },
       ])
     })
+
+    await this.boardcaseNoteUpdateEvent(updated)
+
     return updated
+  }
+
+  private async boardcaseNoteUpdateEvent(updated: NoteModel) {
+    if (!updated) {
+      return
+    }
+    this.eventManager.broadcast(BusinessEvents.NOTE_UPDATE, updated, {
+      scope: EventScope.TO_SYSTEM,
+    })
+
+    if (updated.password || updated.hide || updated.secret) {
+      return
+    }
+    this.eventManager.broadcast(
+      BusinessEvents.NOTE_UPDATE,
+      {
+        ...updated,
+        text: await this.textMacrosService.replaceTextMacro(
+          updated.text,
+          updated,
+        ),
+      },
+      {
+        scope: EventScope.TO_VISITOR,
+      },
+    )
   }
 
   async deleteById(id: string) {

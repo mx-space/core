@@ -54,13 +54,14 @@ export class UserController {
     @CurrentUserToken() token: string,
   ) {
     await this.userService.recordFootstep(ipLocation.ip)
+    const singedToken = await this.authService.jwtServicePublic.sign(user.id, {
+      ip: ipLocation.ip,
+      ua: ipLocation.agent,
+    })
+
+    this.authService.jwtServicePublic.revokeToken(token, 6000)
     return {
-      token: await this.authService.jwtServicePublic
-        .sign(user.id, {
-          ip: ipLocation.ip,
-          ua: ipLocation.agent,
-        })
-        .then(() => this.authService.jwtServicePublic.revokeToken(token, 6000)),
+      token: singedToken,
     }
   }
 
