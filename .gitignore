@@ -46,3 +46,5 @@ assets
 
 scripts/workflow/docker-compose.yml
 scripts/workflow/data
+
+bin/process-reporter
