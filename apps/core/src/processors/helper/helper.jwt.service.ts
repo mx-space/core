@@ -72,13 +72,23 @@ export class JWTService {
     })
   }
 
-  async revokeToken(token: string) {
+  async revokeToken(token: string, delay?: number) {
     const redis = this.cacheService.getClient()
     const key = getRedisKey(RedisKeys.JWTStore)
-    await redis.hdel(
-      key,
-      token.startsWith(`jwt-`) ? token.replace(`jwt-`, '') : md5(token),
-    )
+    if (delay) {
+      // FIXME
+      setTimeout(() => {
+        redis.hdel(
+          key,
+          token.startsWith(`jwt-`) ? token.replace(`jwt-`, '') : md5(token),
+        )
+      }, delay)
+    } else {
+      await redis.hdel(
+        key,
+        token.startsWith(`jwt-`) ? token.replace(`jwt-`, '') : md5(token),
+      )
+    }
   }
 
   async revokeAll() {
@@ -101,11 +111,11 @@ export class JWTService {
 
   public static readonly expiresDay = SECURITY.jwtExpire
 
-  sign(id: string, info?: { ip: string; ua: string }) {
+  async sign(id: string, info?: { ip: string; ua: string }) {
     const token = sign({ id }, this.secret, {
       expiresIn: `${JWTService.expiresDay}d`,
     })
-    this.storeTokenInRedis(token, info || {})
+    await this.storeTokenInRedis(token, info || {})
     return token
   }
 }

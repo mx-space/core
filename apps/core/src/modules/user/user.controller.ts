@@ -53,13 +53,14 @@ export class UserController {
     @CurrentUser() user: UserDocument,
     @CurrentUserToken() token: string,
   ) {
-    await this.authService.jwtServicePublic.revokeToken(token)
     await this.userService.recordFootstep(ipLocation.ip)
     return {
-      token: this.authService.jwtServicePublic.sign(user.id, {
-        ip: ipLocation.ip,
-        ua: ipLocation.agent,
-      }),
+      token: await this.authService.jwtServicePublic
+        .sign(user.id, {
+          ip: ipLocation.ip,
+          ua: ipLocation.agent,
+        })
+        .then(() => this.authService.jwtServicePublic.revokeToken(token, 6000)),
     }
   }
 
@@ -73,7 +74,7 @@ export class UserController {
     const avatar = user.avatar ?? getAvatar(mail)
 
     return {
-      token: this.authService.jwtServicePublic.sign(user.id, {
+      token: await this.authService.jwtServicePublic.sign(user.id, {
         ip: ipLocation.ip,
         ua: ipLocation.agent,
       }),

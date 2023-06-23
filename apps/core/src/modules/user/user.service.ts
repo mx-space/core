@@ -81,7 +81,7 @@ export class UserService {
     }
 
     const res = await this.userModel.create({ ...model })
-    const token = this.authService.jwtServicePublic.sign(res.id)
+    const token = await this.authService.jwtServicePublic.sign(res.id)
     return { token, username: res.username }
   }
 
