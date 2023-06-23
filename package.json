@@ -52,7 +52,7 @@
     "redis-memory-server": "0.6.0"
   },
   "resolutions": {
-    "semver": "7.5.1",
+    "semver": "7.5.3",
     "cache-manager-ioredis>ioredis": "^5",
     "pino": "./external/pino",
     "get-pixels@^3>request": "./external/request",
