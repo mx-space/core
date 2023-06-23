@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [4.2.5](https://github.com/mx-space/core/compare/v4.2.4...v4.2.5) (2023-06-23)
+
+
+### Bug Fixes
+
+* cache manger ttl ([adbb000](https://github.com/mx-space/core/commit/adbb000bb4ee4d92cf378de8e1f8bcecc1e66423))
+* test ([38f4d3b](https://github.com/mx-space/core/commit/38f4d3b235e96a96c18f446990144f9d4c3be96a))
+
+
+### Features
+
+* add process reporter ([6744f03](https://github.com/mx-space/core/commit/6744f032cf48dbb6ddaf0ec3931c0e45a043df93))
+
+
+
 ## [4.2.4](https://github.com/mx-space/core/compare/v4.2.3...v4.2.4) (2023-06-23)
 
 
