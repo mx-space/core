@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [4.2.6](https://github.com/mx-space/core/compare/v4.2.5...v4.2.6) (2023-06-23)
+
+
+### Bug Fixes
+
+* enum uppercase ([33539aa](https://github.com/mx-space/core/commit/33539aa69674d75d002e09532c4080ef01801930))
+* re-sign token ([719a49c](https://github.com/mx-space/core/commit/719a49ca7782fdd44a1ea689f24f4633d1f8bde1))
+
+
+
 ## [4.2.5](https://github.com/mx-space/core/compare/v4.2.4...v4.2.5) (2023-06-23)
 
 
