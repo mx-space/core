@@ -131,9 +131,11 @@ export class PageProxyController {
       })
     })()
 
-    await this.cacheService.set(getRedisKey(RedisKeys.AdminPage), source.text, {
-      ttl: 10 * 60,
-    })
+    await this.cacheService.set(
+      getRedisKey(RedisKeys.AdminPage),
+      source.text,
+      10 * 60 * 1000,
+    )
 
     const sessionInjectableData =
       debug === false

@@ -12,5 +12,3 @@ export const CRON_DESCRIPTION = '__cron:description__'
 
 export const HTTP_IDEMPOTENCE_OPTIONS = '__idempotence_options__'
 export const HTTP_IDEMPOTENCE_KEY = '__idempotence_key__'
-
-export const HTTP_RESPONSE_FILTER = '__response_filter__'

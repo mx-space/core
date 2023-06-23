@@ -310,9 +310,7 @@ export class ServerlessService implements OnModuleInit {
       cached ?? (await this.complieTypescriptCode(functionString))
 
     if (!cached && cacheKey) {
-      await this.cacheService.set(cacheKey, compliedCode, {
-        ttl: 60 * 10,
-      })
+      await this.cacheService.set(cacheKey, compliedCode, 60 * 10 * 1000)
     }
 
     return await safeEval(

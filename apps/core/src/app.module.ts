@@ -14,7 +14,6 @@ import { CountingInterceptor } from './common/interceptors/counting.interceptor'
 import { DbQueryInterceptor } from './common/interceptors/db-query.interceptor'
 import { IdempotenceInterceptor } from './common/interceptors/idempotence.interceptor'
 import { JSONTransformInterceptor } from './common/interceptors/json-transform.interceptor'
-import { ResponseFilterInterceptor } from './common/interceptors/response-filter.interceptor'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
@@ -111,15 +110,15 @@ import { RedisModule } from './processors/redis/redis.module'
       provide: APP_INTERCEPTOR,
       useClass: DbQueryInterceptor,
     },
-
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: HttpCacheInterceptor, // 5
-    },
     {
       provide: APP_INTERCEPTOR,
       useClass: AnalyzeInterceptor,
     },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpCacheInterceptor, // 5
+    },
+
     {
       provide: APP_INTERCEPTOR,
       useClass: CountingInterceptor, // 4
@@ -128,10 +127,7 @@ import { RedisModule } from './processors/redis/redis.module'
       provide: APP_INTERCEPTOR,
       useClass: JSONTransformInterceptor, // 3
     },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: ResponseFilterInterceptor, // 2
-    },
+
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor, // 1

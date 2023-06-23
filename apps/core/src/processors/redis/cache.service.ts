@@ -26,8 +26,10 @@ export class CacheService {
   private cache!: Cache
   private logger = new Logger(CacheService.name)
 
+  private ioRedis!: Redis
   constructor(@Inject(CACHE_MANAGER) cache: Cache) {
     this.cache = cache
+
     this.redisClient.on('ready', () => {
       this.logger.log('Redis 已准备好！')
     })
@@ -35,19 +37,15 @@ export class CacheService {
 
   private get redisClient(): Redis {
     // @ts-expect-error
-    return this.cache.store.getClient()
+    return this.cache.store.client
   }
 
   public get<T>(key: TCacheKey): TCacheResult<T> {
     return this.cache.get(key)
   }
 
-  public set(
-    key: TCacheKey,
-    value: any,
-    options?: { ttl: number },
-  ): Promise<void> {
-    return this.cache.set(key, value, options?.ttl)
+  public set(key: TCacheKey, value: any, milliseconds: number) {
+    return this.cache.set(key, value, milliseconds)
   }
 
   public getClient() {

@@ -1,10 +1,11 @@
 /**
  * Cache config service.
  * @file Cache 配置器
- * @module processor/cache/config.service
+ * @module processor/redis/redis.config.service
  * @author Surmon <https://github.com/surmon-china>
+ * @author Innei <https://github.com/innei>
  */
-import redisStore from 'cache-manager-ioredis'
+import { redisStore } from 'cache-manager-ioredis-yet'
 import type {
   CacheModuleOptions,
   CacheOptionsFactory,

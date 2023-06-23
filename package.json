@@ -53,7 +53,6 @@
   },
   "resolutions": {
     "semver": "7.5.1",
-    "cache-manager-ioredis>ioredis": "^5",
     "pino": "./external/pino",
     "get-pixels@^3>request": "./external/request",
     "typescript": "5.1.3"

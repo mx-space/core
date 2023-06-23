@@ -64,7 +64,8 @@ export class HttpCacheInterceptor implements NestInterceptor {
     if (isDisableCache) {
       return call$
     }
-    const key = this.trackBy(context) || `${API_CACHE_PREFIX}${request.url}`
+    let key = this.trackBy(context) || `${API_CACHE_PREFIX}${request.url}`
+    if (request.user?.id) key = `${key}:logged-${request.user?.id}`
 
     const metaTTL = this.reflector.get(META.HTTP_CACHE_TTL_METADATA, handler)
     const ttl = metaTTL || REDIS.httpCacheTTL
@@ -80,7 +81,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
         : call$.pipe(
             tap(
               (response) =>
-                response && this.cacheManager.set(key, response, { ttl }),
+                response && this.cacheManager.set(key, response, ttl * 1000),
             ),
           )
     } catch (error) {
