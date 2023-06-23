@@ -10,7 +10,6 @@ import { APP_INTERCEPTOR } from '@nestjs/core'
 import { HttpCacheInterceptor } from '~/common/interceptors/cache.interceptor'
 import { DbQueryInterceptor } from '~/common/interceptors/db-query.interceptor'
 import { JSONTransformInterceptor } from '~/common/interceptors/json-transform.interceptor'
-import { ResponseFilterInterceptor } from '~/common/interceptors/response-filter.interceptor'
 import { ResponseInterceptor } from '~/common/interceptors/response.interceptor'
 import { getModelToken } from '~/transformers/model.transformer'
 
@@ -60,10 +59,7 @@ export const createE2EApp = (module: ModuleMetadata & E2EAppMetaData) => {
         provide: APP_INTERCEPTOR,
         useClass: JSONTransformInterceptor, // 3
       },
-      {
-        provide: APP_INTERCEPTOR,
-        useClass: ResponseFilterInterceptor, // 2
-      },
+
       {
         provide: APP_INTERCEPTOR,
         useClass: ResponseInterceptor, // 1
