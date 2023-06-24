@@ -24,7 +24,10 @@ import {
 import { Interval } from '@nestjs/schedule'
 
 import { BizException } from '~/common/exceptions/biz.exception'
-import { RedisKeys } from '~/constants/cache.constant'
+import {
+  RedisKeys,
+  SERVERLESS_COMPLIE_CACHE_TTL,
+} from '~/constants/cache.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { isTest } from '~/global/env.global'
@@ -106,19 +109,22 @@ export class ServerlessService implements OnModuleInit {
     return {
       get: async (key: string) => {
         const client = this.cacheService.getClient()
-        return await client.hget(getRedisKey(RedisKeys.ServerlessStorage), key)
+        return client
+          .get(getRedisKey(RedisKeys.ServerlessStorage, key))
+          .then((string) => {
+            if (!string) return null
+            return JSON.safeParse(string)
+          })
       },
-      set: async (key: string, value: object | string) => {
+      set: async (key: string, value: object | string, ttl?: string) => {
         const client = this.cacheService.getClient()
-        return await client.hset(
-          getRedisKey(RedisKeys.ServerlessStorage),
-          key,
-          typeof value === 'string' ? value : JSON.stringify(value),
-        )
+        const cacheKey = getRedisKey(RedisKeys.ServerlessStorage, key)
+        await client.set(cacheKey, JSON.stringify(value))
+        await client.expire(cacheKey, ttl || 60 * 60 * 24 * 7)
       },
       del: async (key: string) => {
         const client = this.cacheService.getClient()
-        return await client.hdel(getRedisKey(RedisKeys.ServerlessStorage), key)
+        return client.hdel(getRedisKey(RedisKeys.ServerlessStorage), key)
       },
     } as const
   }
@@ -301,17 +307,24 @@ export class ServerlessService implements OnModuleInit {
         )
       : ''
 
-    let cached: string | undefined
+    const redis = this.cacheService.getClient()
+    let cached: string | null = null
     if (cacheKey) {
-      cached = await this.cacheService.get(cacheKey)
+      cached = await redis.get(cacheKey)
     }
 
     const compliedCode =
       cached ?? (await this.complieTypescriptCode(functionString))
 
-    if (!cached && cacheKey) {
-      await this.cacheService.set(cacheKey, compliedCode, 60 * 10 * 1000)
+    if (!compliedCode) {
+      throw new InternalServerErrorException(
+        'Complie serverless function code failed',
+      )
     }
+    if (!cached && cacheKey) {
+      await redis.set(cacheKey, compliedCode)
+    }
+    await redis.expire(cacheKey, SERVERLESS_COMPLIE_CACHE_TTL)
 
     return await safeEval(
       `async function func() {
@@ -347,7 +360,7 @@ export class ServerlessService implements OnModuleInit {
     if (!res) {
       throw new InternalServerErrorException('convert code error')
     }
-    !isTest && console.debug(res.code)
+    // !isTest && console.debug(res.code)
 
     return res.code
   }
@@ -547,7 +560,7 @@ export class ServerlessService implements OnModuleInit {
       query: context.req.query,
       headers: context.req.headers,
       // TODO wildcard params
-      params: Object.assign({}, context.req.params),
+      params: { ...context.req.params },
 
       secret: secretObj,
 

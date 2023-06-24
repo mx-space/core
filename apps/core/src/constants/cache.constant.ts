@@ -32,3 +32,5 @@ export enum CacheKeys {
   RSS = `${API_CACHE_PREFIX}rss`,
   RSSXmlCatch = `${API_CACHE_PREFIX}rss_xml_catch`,
 }
+
+export const SERVERLESS_COMPLIE_CACHE_TTL = 60 * 10 // 10 分钟
