@@ -100,7 +100,8 @@ jobs:
           command_timeout: 5m
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
-          password: ${{ secrets.PASSWORD }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # password: ${{ secrets.PASSWORD }}
           envs: JWTSECRET,MX_ENCRYPT_KEY
           script_stop: true
           script: |
