@@ -66,7 +66,7 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
@@ -75,12 +75,12 @@ jobs:
       - run: npx changelogithub
         continue-on-error: true
         env:
-          ACCESS_TOKEN: ${{secrets.ACCESS_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.ACCESS_TOKEN }}
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./release.zip
@@ -144,7 +144,7 @@ jobs:
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         with:
           upload_url: ${{ needs.build.outputs.release_url }}
           asset_path: ./release.zip
