@@ -5,7 +5,6 @@ import autopopulate from 'mongoose-autopopulate'
 import { modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
-import { getAvatar } from '~/utils'
 
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
@@ -124,12 +123,9 @@ export class CommentModel extends BaseModel {
   @prop({ default: false })
   isWhispers?: boolean
 
-  _avatar?: string
-  public get avatar() {
-    return this._avatar ?? getAvatar(this.mail)
-  }
+  @prop()
+  source?: string
 
-  set avatar(value: string) {
-    this._avatar = value
-  }
+  @prop()
+  avatar?: string
 }

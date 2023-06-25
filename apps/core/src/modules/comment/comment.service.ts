@@ -26,7 +26,7 @@ import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-
 import { DatabaseService } from '~/processors/database/database.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { hasChinese } from '~/utils'
+import { getAvatar, hasChinese } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
 import { createMockedContextResponse } from '../serverless/mock-response.util'
@@ -273,7 +273,7 @@ export class CommentService implements OnModuleInit {
     // 过滤脏数据
     this.cleanDirtyData(queryList.docs)
 
-    await this.replaceMasterAvatarUrl(queryList.docs)
+    await this.fillAndReplaceAvatarUrl(queryList.docs)
 
     return queryList
   }
@@ -437,16 +437,23 @@ export class CommentService implements OnModuleInit {
     if (location) await this.commentModel.updateOne({ _id: id }, { location })
   }
 
-  async replaceMasterAvatarUrl(comments: CommentModel[]) {
+  async fillAndReplaceAvatarUrl(comments: CommentModel[]) {
     const master = await this.userService.getMaster()
 
     comments.forEach(function process(comment) {
       if (typeof comment == 'string') {
         return
       }
+      // 如果是 author 是站长，就用站长自己设定的头像替换
       if (comment.author === master.name) {
         comment.avatar = master.avatar || comment.avatar
       }
+
+      // 如果不存在头像就
+      if (!comment.avatar) {
+        comment.avatar = getAvatar(comment.mail)
+      }
+
       if (comment.children?.length) {
         comment.children.forEach((child) => {
           process(child as CommentModel)

@@ -86,7 +86,7 @@ export class CommentController {
       throw new CannotFindException()
     }
 
-    await this.commentService.replaceMasterAvatarUrl([data])
+    await this.commentService.fillAndReplaceAvatarUrl([data])
     return data
   }
 
@@ -153,10 +153,11 @@ export class CommentController {
         limit: size,
         page,
         sort: { pin: -1, created: -1 },
+        lean: true,
       },
     )
 
-    await this.commentService.replaceMasterAvatarUrl(comments.docs)
+    await this.commentService.fillAndReplaceAvatarUrl(comments.docs)
     this.commentService.cleanDirtyData(comments.docs)
     return comments
   }
