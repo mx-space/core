@@ -105,12 +105,8 @@ jobs:
           envs: JWTSECRET,MX_ENCRYPT_KEY
           script_stop: true
           script: |
-            whoami
-            cd
-            source ~/.zshrc
-            cd mx
-            ls -a
-            node server-deploy.js --jwtSecret=$JWTSECRET --encrypt_key=$MX_ENCRYPT_KEY --encrypt_enable
+            wget https://fastly.jsdelivr.net/gh/FlareZone/core@main/docker-compose.yml
+            sudo docker compose up -d
 
   build_other_platform:
     name: Build Other Platform
