@@ -38,6 +38,19 @@ export class CommentDto {
   @IsOptional()
   @IsBoolean()
   isWhispers?: boolean
+
+  @IsOptional()
+  @IsIn(['google', 'github'])
+  source?: string
+
+  @IsOptional()
+  @IsUrl(
+    { require_protocol: true, protocols: ['https'] },
+    {
+      message: '头像必须是合法的 HTTPS URL 哦',
+    },
+  )
+  avatar?: string
 }
 
 export class TextOnlyDto {
