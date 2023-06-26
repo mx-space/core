@@ -38,7 +38,7 @@ const defaultPostModelForRenderProps = {
   id: 'd7e0ed429da8ae90988c37da',
   text: '燕子去了，有再来的时候；杨柳枯了，有再青的时候；桃花谢了，有再开的时候。但是，聪明的，你告诉我，我们的日子为什么一去不复返呢？——是有人偷了他们罢：那是谁？又藏在何处呢？是他们自己逃走了罢：如今（现在 [2] ）又到了哪里呢？',
   created: new Date().toISOString(),
-  modified: new Date().toISOString(),
+  modified: null as string | null,
 }
 
 export const baseRenderProps = Object.freeze({
