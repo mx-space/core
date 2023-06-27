@@ -357,7 +357,9 @@ export class CommentService implements OnModuleInit {
             title: refDoc.title,
             created: new Date(refDoc.created!).toISOString(),
             id: refDoc.id!,
-            modified: new Date(refDoc.modified!).toISOString(),
+            modified: refDoc.modified
+              ? new Date(refDoc.modified!).toISOString()
+              : null,
             text: refDoc.text,
           },
         },
