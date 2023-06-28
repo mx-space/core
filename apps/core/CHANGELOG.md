@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [4.2.7](https://github.com/mx-space/core/compare/v4.2.6...v4.2.7) (2023-06-27)
+
+
+### Bug Fixes
+
+* comment mail props ([26f23cb](https://github.com/mx-space/core/commit/26f23cbfe82d722a29b88e93a498643b82bb0c15))
+
+
+### Features
+
+* comment modal add `avatar` and `source` ([cf98260](https://github.com/mx-space/core/commit/cf982603aafdfe36bd124f20049ecfb949353fc5))
+* serverless cache ttl ([0c4849c](https://github.com/mx-space/core/commit/0c4849c945f949be1bd359b2731fb929fbb70a35))
+
+
+
 ## [4.2.6](https://github.com/mx-space/core/compare/v4.2.5...v4.2.6) (2023-06-23)
 
 
