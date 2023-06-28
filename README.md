@@ -98,7 +98,7 @@ pnpm dev
 │   ├── helper                      # 辅助类
 │   └── logger                      # 自定义 Logger
 ├── shared                          # 通用模型
-│   ├── dto                         # 数据验证模型
+│   ├── dto                         # 数据验证模型 
 │   ├── interface                   # 接口
 │   └── model                       # 基本数据模型
 ├── utils                           # 工具类
@@ -174,7 +174,7 @@ ResponseInterceptor -> ResponseFilterInterceptor -> JSONTransformInterceptor -> 
   1. [AssetService] 获取本地资源服务
   1. [TextMacroService] 文本宏替换服务
   1. [JWTService] JWT 服务
-  1. [BarkPushService] Bark Push 服务 
+  1. [BarkPushService] Bark Push 服务
 
 ## 开发
 
