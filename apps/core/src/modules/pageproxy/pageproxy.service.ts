@@ -122,7 +122,8 @@ export class PageProxyService {
     const url = config.url
 
     return {
-      BASE_API: url.serverUrl || (isDev ? '/' : '/api/v2'),
+      // OPTIMIZE use `url` module
+      BASE_API: url.serverUrl || (isDev ? '/' : '/api/v1'),
       GATEWAY: url.wsUrl || '/',
     }
   }

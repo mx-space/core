@@ -26,6 +26,7 @@ async function main() {
     `https://api.github.com/repos/${repository.directory}/releases/latest`,
   )
   const data = await res.json()
+  // @ts-ignore
   const downloadUrl = data.assets.find((asset) =>
     [getOsBuildAssetName(), 'release.zip'].includes(asset.name),
   )?.browser_download_url
