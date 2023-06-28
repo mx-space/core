@@ -31,7 +31,7 @@ export type BaseCrudModuleType<T> = {
 
 export type ClassType<T> = new (...args: any[]) => T
 export function BaseCrudFactory<
-  T extends AnyParamConstructor<BaseModel & { id?: string }>,
+  T extends AnyParamConstructor<BaseModel & { id: string }>,
 >({ model, classUpper }: { model: T; classUpper?: ClassType<any> }): Type<any> {
   const prefix = model.name.toLowerCase().replace(/model$/, '')
   const pluralizeName = pluralize(prefix) as string
@@ -124,6 +124,7 @@ export function BaseCrudFactory<
     @Auth()
     @HttpCode(204)
     async patch(@Body() body: PDto, @Param() param: MongoIdDto) {
+      // @ts-expect-error
       await this.update(body, param)
       return
     }
