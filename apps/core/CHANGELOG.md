@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [4.2.8](https://github.com/mx-space/core/compare/v4.2.7...v4.2.8) (2023-06-28)
+
+
+### Bug Fixes
+
+* add types in comment ([34d8d3f](https://github.com/mx-space/core/commit/34d8d3f41bacd2c152e7e6f08e1f5b347df777a5))
+* nest comment children nested and limit max depth ([ccc5b54](https://github.com/mx-space/core/commit/ccc5b54f241da7ce7493a3ec0018d6a7a463ddb6))
+* omit data if patch post data ([904c31b](https://github.com/mx-space/core/commit/904c31b98ec926ad0bad8589c91beaf85e3e7861))
+* populate comment avatar ([591ae33](https://github.com/mx-space/core/commit/591ae33bce83bc7c194c458edf1496c627d7a352))
+* test port cmd ([f78ede7](https://github.com/mx-space/core/commit/f78ede78e7c6e126d5a5b91a9b4999ef2c10fb51))
+
+
+### Features
+
+* post related each other ([c822398](https://github.com/mx-space/core/commit/c82239807b36f6a94848f5704f1a69a649f515df))
+
+
+
 ## [4.2.7](https://github.com/mx-space/core/compare/v4.2.6...v4.2.7) (2023-06-27)
 
 
