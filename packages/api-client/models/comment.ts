@@ -21,11 +21,14 @@ export interface CommentModel extends BaseModel {
   pin?: boolean
 
   avatar: string
+
   parent?: CommentModel | string
   children: CommentModel[]
 
   isWhispers?: boolean
   location?: string
+
+  source?: string
 }
 export interface CommentRef {
   id: string
