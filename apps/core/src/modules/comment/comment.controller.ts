@@ -236,7 +236,9 @@ export class CommentController {
       )
     })
 
-    return comment
+    return this.commentService
+      .fillAndReplaceAvatarUrl([comment])
+      .then((docs) => docs[0])
   }
 
   @Post('/reply/:id')
@@ -326,7 +328,9 @@ export class CommentController {
         scope: EventScope.ALL,
       })
     }
-    return comment
+    return this.commentService
+      .fillAndReplaceAvatarUrl([comment])
+      .then((docs) => docs[0])
   }
 
   @Post('/master/comment/:id')
