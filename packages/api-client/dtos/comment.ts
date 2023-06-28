@@ -1,9 +1,12 @@
-export class CommentDto {
-  author!: string
+export interface CommentDto {
+  author: string
 
-  text!: string
+  text: string
 
-  mail!: string
+  mail: string
 
   url?: string
+
+  source?: 'github' | 'google'
+  avatar?: string
 }

@@ -55,7 +55,7 @@ async function main() {
   console.log('等待 8 秒')
   await sleep(8000)
   try {
-    await $`lsof -i:2333 -P -n | grep LISTEN`
+    await $`curl -f -m 3 localhost:2333/api/v2 -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36'`
     await $`pm2 save`
     cd(path.resolve(homedir(), 'mx'))
     await $`rm -rf ./run.bak`
