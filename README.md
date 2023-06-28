@@ -34,7 +34,7 @@
 cd
 mkdir -p mx/server
 cd mx/server
-wget https://fastly.jsdelivr.net/gh/mx-space/mx-server@master/docker-compose.yml
+wget https://fastly.jsdelivr.net/gh/FlareZone/core@main/docker-compose.yml
 docker-compose up -d
 ```
 
@@ -98,7 +98,7 @@ pnpm dev
 │   ├── helper                      # 辅助类
 │   └── logger                      # 自定义 Logger
 ├── shared                          # 通用模型
-│   ├── dto                         # 数据验证模型 
+│   ├── dto                         # 数据验证模型
 │   ├── interface                   # 接口
 │   └── model                       # 基本数据模型
 ├── utils                           # 工具类
