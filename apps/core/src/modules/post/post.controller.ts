@@ -209,7 +209,8 @@ export class PostController {
   @Patch('/:id')
   @Auth()
   async patch(@Param() params: MongoIdDto, @Body() body: PartialPostModel) {
-    return await this.postService.updateById(params.id, body)
+    await this.postService.updateById(params.id, body)
+    return
   }
 
   @Delete('/:id')
