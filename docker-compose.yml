@@ -2,8 +2,8 @@ version: '3.8'
 
 services:
   app:
-    container_name: mx-server
-    image: innei/mx-server:latest
+    container_name: flare-server
+    image: jokereven/flare-server:latest
     command: sh ./docker-run.sh
     environment:
       - TZ=Asia/Shanghai

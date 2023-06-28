@@ -34,7 +34,7 @@
 cd
 mkdir -p mx/server
 cd mx/server
-wget https://fastly.jsdelivr.net/gh/mx-space/mx-server@master/docker-compose.yml
+wget https://fastly.jsdelivr.net/gh/FlareZone/core@main/docker-compose.yml
 docker-compose up -d
 ```
 
@@ -174,7 +174,7 @@ ResponseInterceptor -> ResponseFilterInterceptor -> JSONTransformInterceptor -> 
   1. [AssetService] 获取本地资源服务
   1. [TextMacroService] 文本宏替换服务
   1. [JWTService] JWT 服务
-  1. [BarkPushService] Bark Push 服务 
+  1. [BarkPushService] Bark Push 服务
 
 ## 开发
 
@@ -189,7 +189,7 @@ pnpm start
 
 ---
 
-Since 2021-08-31
+Since 2023-06-26
 
 Thanks
 

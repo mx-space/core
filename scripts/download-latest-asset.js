@@ -35,6 +35,7 @@ async function main() {
     (res) => res.arrayBuffer(),
   )
   appendFileSync(`release-downloaded.zip`, Buffer.from(buffer))
+  // @ts-ignore
   await $`unzip release-downloaded.zip -d mx-server`
 }
 

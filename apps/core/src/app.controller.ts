@@ -66,6 +66,13 @@ export class AppController implements OnModuleInit {
     return 'pong'
   }
 
+  // TODO RESTful api https://github.com/aisuhua/restful-api-design-references
+  @Get('/jokereven')
+  @UseInterceptors(AllowAllCorsInterceptor)
+  jokereven(): 'pong' {
+    return 'pong'
+  }
+
   @Post('/like_this')
   @HttpCache.disable
   @HttpCode(204)
