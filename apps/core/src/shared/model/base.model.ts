@@ -25,7 +25,7 @@ const mongooseLeanGetters = require('mongoose-lean-getters')
 export class BaseModel {
   created?: Date
 
-  id?: string
+  id: string
 
   static get protectedKeys() {
     return ['created', 'id', '_id']

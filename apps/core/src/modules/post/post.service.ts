@@ -61,8 +61,10 @@ export class PostService {
 
     // 有关联文章
 
-    const related = await this.checkRelated(post)
-    post.related = related as any
+    const relatedIds = await this.checkRelated(post)
+    post.related = relatedIds as any
+    // 双向关联
+    await this.relatedEachOther(post, relatedIds)
 
     const res = await this.postModel.create({
       ...post,
@@ -147,7 +149,12 @@ export class PostService {
 
     // 有关联文章
     const related = await this.checkRelated(data)
-    data.related = related.filter((item) => item !== oldDocument.id) as any
+    if (related.length) {
+      data.related = related.filter((id) => id !== oldDocument.id) as any
+
+      // 双向关联
+      await this.relatedEachOther(oldDocument, related)
+    }
 
     Object.assign(
       oldDocument,
@@ -199,9 +206,11 @@ export class PostService {
   }
 
   async deletePost(id: string) {
+    const deletedPost = await this.postModel.findById(id).lean()
     await Promise.all([
       this.model.deleteOne({ _id: id }),
       this.commentModel.deleteMany({ ref: id, refType: CommentRefTypes.Post }),
+      this.removeRelatedEachOther(deletedPost),
     ])
     await this.eventManager.broadcast(BusinessEvents.POST_DELETE, id, {
       scope: EventScope.TO_SYSTEM_VISITOR,
@@ -233,5 +242,39 @@ export class PostService {
       }
     }
     return []
+  }
+
+  async relatedEachOther(post: PostModel, relatedIds: string[]) {
+    if (!relatedIds.length) return
+    const relatedPosts = await this.postModel.find({
+      _id: { $in: relatedIds },
+    })
+    const postId = post.id
+    await Promise.all(
+      relatedPosts.map((i) => {
+        i.related ||= []
+        if ((i.related as string[]).includes(postId)) return
+        ;(i.related as string[]).push(postId)
+        return i.save()
+      }),
+    )
+  }
+
+  async removeRelatedEachOther(post: PostModel | null) {
+    if (!post) return
+    const postRelatedIds = (post.related as string[]) || []
+    if (!postRelatedIds.length) {
+      return
+    }
+    const relatedPosts = await this.postModel.find({
+      _id: { $in: postRelatedIds },
+    })
+    const postId = post.id
+    await Promise.all(
+      relatedPosts.map((i) => {
+        i.related = (i.related as string[]).filter((id) => id !== postId) as any
+        return i.save()
+      }),
+    )
   }
 }
