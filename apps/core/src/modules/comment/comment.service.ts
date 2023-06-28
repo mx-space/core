@@ -2,7 +2,7 @@
 import { URL } from 'url'
 import { render } from 'ejs'
 import { omit, pick } from 'lodash'
-import { Types } from 'mongoose'
+import { isObjectIdOrHexString, Types } from 'mongoose'
 import type { OnModuleInit } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose/lib/types'
 import type { WriteBaseModel } from '~/shared/model/write-base.model'
@@ -287,7 +287,7 @@ export class CommentService implements OnModuleInit {
       const nextChildren = [] as any[]
 
       for (const child of doc.children) {
-        if (typeof child === 'string') {
+        if (isObjectIdOrHexString(child)) {
           this.logger.warn(`--> 检测到一条脏数据：${doc.id}.child: ${child}`)
           continue
         }
@@ -464,6 +464,8 @@ export class CommentService implements OnModuleInit {
 
       return comment
     })
+
+    return comments
   }
 
   async sendCommentNotificationMail({

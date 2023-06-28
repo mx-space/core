@@ -47,7 +47,7 @@ import { CommentState } from './comment.model'
 import { CommentService } from './comment.service'
 
 const idempotenceMessage = '哦吼，这句话你已经说过啦'
-
+const NESTED_REPLY_MAX = 10
 @ApiController({ path: 'comments' })
 @UseInterceptors(CommentFilterEmailInterceptor)
 export class CommentController {
@@ -153,7 +153,10 @@ export class CommentController {
         limit: size,
         page,
         sort: { pin: -1, created: -1 },
-        lean: true,
+        populate: {
+          path: 'children',
+          maxDepth: NESTED_REPLY_MAX,
+        },
       },
     )
 
@@ -270,7 +273,7 @@ export class CommentController {
     }
     const commentIndex = parent.commentsIndex
 
-    if (parent.key && parent.key.split('#').length >= 10) {
+    if (parent.key && parent.key.split('#').length >= NESTED_REPLY_MAX) {
       throw new BizException(ErrorCodeEnum.CommentTooDeep)
     }
 
