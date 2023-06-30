@@ -116,25 +116,25 @@ import { RedisModule } from './processors/redis/redis.module'
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: HttpCacheInterceptor, // 5
+      useClass: CountingInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpCacheInterceptor,
     },
 
     {
       provide: APP_INTERCEPTOR,
-      useClass: CountingInterceptor, // 4
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: JSONTransformInterceptor, // 3
+      useClass: JSONTransformInterceptor,
     },
 
     {
       provide: APP_INTERCEPTOR,
-      useClass: ResponseInterceptor, // 1
+      useClass: ResponseInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: IdempotenceInterceptor, // 0
+      useClass: IdempotenceInterceptor,
     },
 
     {
