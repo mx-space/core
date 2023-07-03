@@ -141,7 +141,7 @@ export class AggregateService {
         .find({ ...addYearCondition(year) })
         .sort({ created: sortBy })
         .populate('category')
-        .lean()
+
         .then((list) =>
           list.map((item) => ({
             ...pick(item, ['_id', 'title', 'slug', 'created', 'modified']),
