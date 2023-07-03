@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [4.2.9](https://github.com/mx-space/core/compare/v4.2.8...v4.2.9) (2023-07-03)
+
+
+### Bug Fixes
+
+* adjust module seq ([d24dc6e](https://github.com/mx-space/core/commit/d24dc6e89f58787fd54c7a8c76d169acbb9edf20))
+* timeline lean query ([313b8d0](https://github.com/mx-space/core/commit/313b8d075783d5ad13a1f554ce4f32f082931f4a))
+
+
+
 ## [4.2.8](https://github.com/mx-space/core/compare/v4.2.7...v4.2.8) (2023-06-28)
 
 
