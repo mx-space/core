@@ -24,6 +24,7 @@ import {
 import { Interval } from '@nestjs/schedule'
 
 import { BizException } from '~/common/exceptions/biz.exception'
+import { EventScope } from '~/constants/business-event.constant'
 import {
   RedisKeys,
   SERVERLESS_COMPLIE_CACHE_TTL,
@@ -33,6 +34,7 @@ import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { isTest } from '~/global/env.global'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -77,6 +79,8 @@ export class ServerlessService implements OnModuleInit {
 
     private readonly cacheService: CacheService,
     private readonly configService: ConfigsService,
+
+    private readonly eventService: EventManagerService,
   ) {
     this.logger = new Logger(ServerlessService.name)
     this.cleanableScope = new CleanableScope()
@@ -596,6 +600,12 @@ export class ServerlessService implements OnModuleInit {
 
         getMaster: this.mockGetMaster.bind(this),
         getService: this.getService.bind(this),
+
+        broadcast: (type: string, data: any) =>
+          // @ts-ignore
+          this.eventService.broadcast(`fn#${type}`, data, {
+            scope: EventScope.TO_VISITOR_ADMIN,
+          }),
 
         writeAsset: async (
           path: string,

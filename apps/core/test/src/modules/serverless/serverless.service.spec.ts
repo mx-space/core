@@ -10,6 +10,7 @@ import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getModelToken } from '~/transformers/model.transformer'
@@ -41,6 +42,12 @@ describe('test serverless function service', () => {
         {
           provide: ConfigsService,
           useValue: {},
+        },
+        {
+          provide: EventManagerService,
+          useValue: {
+            broadcast: () => void 0,
+          },
         },
       ],
     })
