@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.2.10](https://github.com/mx-space/core/compare/v4.2.9...v4.2.10) (2023-07-04)
+
+
+### Features
+
+* fn support broardcast ([dadd3c8](https://github.com/mx-space/core/commit/dadd3c8d9a285edf3b3824b60b73cc2e32f1b016))
+
+
+
 ## [4.2.9](https://github.com/mx-space/core/compare/v4.2.8...v4.2.9) (2023-07-03)
 
 
