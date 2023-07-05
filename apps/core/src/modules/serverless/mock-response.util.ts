@@ -8,10 +8,7 @@ export const createMockedContextResponse = (
 ): FunctionContextResponse => {
   const response: FunctionContextResponse = {
     throws(code, message) {
-      throw new HttpException(
-        HttpException.createBody(message, message, code),
-        code,
-      )
+      throw new HttpException(message, code)
     },
     type(type: string) {
       reply.type(type)
