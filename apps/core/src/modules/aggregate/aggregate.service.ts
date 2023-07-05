@@ -93,11 +93,13 @@ export class AggregateService {
       .find(condition)
       .sort({ created: -1 })
       .limit(size)
-      .select('_id title name slug avatar nid created meta images')
+      .select(
+        '_id title name slug avatar nid created meta images tags modified',
+      )
   }
 
   async topActivity(size = 6, isMaster = false) {
-    const [notes, posts, says] = await Promise.all([
+    const [notes, posts, says, recently] = await Promise.all([
       this.findTop(
         this.noteService.model,
         !isMaster
@@ -125,9 +127,10 @@ export class AggregateService {
         }),
 
       this.sayService.model.find({}).sort({ create: -1 }).limit(size),
+      this.recentlyService.model.find({}).sort({ create: -1 }).limit(size),
     ])
 
-    return { notes, posts, says }
+    return { notes, posts, says, recently }
   }
 
   async getTimeline(
