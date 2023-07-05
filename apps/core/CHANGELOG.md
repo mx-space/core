@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [4.2.11](https://github.com/mx-space/core/compare/v4.2.10...v4.2.11) (2023-07-05)
+
+
+### Bug Fixes
+
+* throw ([950dc8c](https://github.com/mx-space/core/commit/950dc8c9eac3232c6d2f054f1ef1615ccf46b1ea))
+
+
+### Features
+
+* add extra field for `/top` ([a7b4513](https://github.com/mx-space/core/commit/a7b45132996061aef23f96facab18b4b396aef25))
+
+
+
 ## [4.2.10](https://github.com/mx-space/core/compare/v4.2.9...v4.2.10) (2023-07-04)
 
 
