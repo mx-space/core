@@ -120,10 +120,6 @@ export class PostModel extends WriteBaseModel {
   @prop({
     type: Types.ObjectId,
     ref: () => PostModel,
-    autopopulate: {
-      maxDepth: 2,
-      select: 'title slug id _id categoryId category',
-    },
   })
   related?: Partial<PostModel>[]
 

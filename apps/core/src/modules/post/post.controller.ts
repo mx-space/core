@@ -128,7 +128,13 @@ export class PostController {
   @Auth()
   async getById(@Param() params: MongoIdDto) {
     const { id } = params
-    const doc = await this.postService.model.findById(id).populate('category')
+    const doc = await this.postService.model
+      .findById(id)
+      .populate('category')
+      .populate({
+        path: 'related',
+        select: 'title slug id _id categoryId category',
+      })
     if (!doc) {
       throw new CannotFindException()
     }
@@ -175,6 +181,10 @@ export class PostController {
         // ...condition,
       })
       .populate('category')
+      .populate({
+        path: 'related',
+        select: 'title slug id _id categoryId category',
+      })
 
     if (!postDocument) {
       throw new CannotFindException()

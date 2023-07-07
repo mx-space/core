@@ -1,7 +1,7 @@
 import { isDefined } from 'class-validator'
 import { omit } from 'lodash'
 import slugify from 'slugify'
-import type { AggregatePaginateModel, Document } from 'mongoose'
+import type { AggregatePaginateModel, Document, Types } from 'mongoose'
 
 import {
   BadRequestException,
@@ -154,6 +154,9 @@ export class PostService {
 
       // 双向关联
       await this.relatedEachOther(oldDocument, related)
+    } else {
+      await this.removeRelatedEachOther(oldDocument)
+      oldDocument.related = []
     }
 
     Object.assign(
@@ -170,6 +173,7 @@ export class PostService {
     scheduleManager.schedule(async () => {
       const doc = await this.postModel
         .findById(id)
+        .populate('related', 'title slug category categoryId id _id')
         .lean({ getters: true, autopopulate: true })
       // 更新图片信息缓存
       await Promise.all([
@@ -249,12 +253,16 @@ export class PostService {
     const relatedPosts = await this.postModel.find({
       _id: { $in: relatedIds },
     })
+
     const postId = post.id
     await Promise.all(
       relatedPosts.map((i) => {
         i.related ||= []
-        if ((i.related as string[]).includes(postId)) return
-        ;(i.related as string[]).push(postId)
+
+        const set = new Set(i.related.map((i) => i.toString()) as string[])
+        set.add(postId.toString())
+        ;(i.related as string[]) = Array.from(set)
+
         return i.save()
       }),
     )
@@ -272,7 +280,9 @@ export class PostService {
     const postId = post.id
     await Promise.all(
       relatedPosts.map((i) => {
-        i.related = (i.related as string[]).filter((id) => id !== postId) as any
+        i.related = (i.related as any as Types.ObjectId[]).filter(
+          (id) => id && id.toHexString() !== postId,
+        ) as any
         return i.save()
       }),
     )
