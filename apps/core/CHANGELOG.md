@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.2.12](https://github.com/mx-space/core/compare/v4.2.11...v4.2.12) (2023-07-07)
+
+
+### Bug Fixes
+
+* related ([9c16544](https://github.com/mx-space/core/commit/9c165441853fc00c07f56ca83e2167e65a1fcac9))
+
+
+
 ## [4.2.11](https://github.com/mx-space/core/compare/v4.2.10...v4.2.11) (2023-07-05)
 
 
