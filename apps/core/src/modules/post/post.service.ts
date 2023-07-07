@@ -231,9 +231,10 @@ export class PostService {
   }
 
   async checkRelated<
-    T extends Partial<Pick<PostModel, 'related' | 'relatedId'>>,
+    T extends Partial<Pick<PostModel, 'id' | 'related' | 'relatedId'>>,
   >(data: T): Promise<string[]> {
     const cloned = { ...data }
+
     // 有关联文章
     if (cloned.relatedId && cloned.relatedId.length) {
       const relatedPosts = await this.postModel.find({
@@ -242,7 +243,12 @@ export class PostService {
       if (relatedPosts.length !== cloned.relatedId.length) {
         throw new BadRequestException('关联文章不存在')
       } else {
-        return relatedPosts.map((i) => i.id)
+        return relatedPosts.map((i) => {
+          if (i.related && (i.related as string[]).includes(data.id!)) {
+            throw new BadRequestException('文章不能关联自己')
+          }
+          return i.id
+        })
       }
     }
     return []
