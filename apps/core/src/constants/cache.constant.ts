@@ -27,10 +27,10 @@ export enum RedisKeys {
 }
 export const API_CACHE_PREFIX = 'mx-api-cache:'
 export enum CacheKeys {
-  SiteMapCatch = `${API_CACHE_PREFIX}aggregate_sitemap_catch`,
-  SiteMapXmlCatch = `${API_CACHE_PREFIX}aggregate_sitemap_xml_catch`,
+  SiteMap = `${API_CACHE_PREFIX}aggregate_sitemap`,
+  SiteMapXml = `${API_CACHE_PREFIX}aggregate_sitemap_xml`,
   RSS = `${API_CACHE_PREFIX}rss`,
-  RSSXmlCatch = `${API_CACHE_PREFIX}rss_xml_catch`,
+  RSSXml = `${API_CACHE_PREFIX}rss_xml`,
 }
 
 export const SERVERLESS_COMPLIE_CACHE_TTL = 60 * 10 // 10 分钟

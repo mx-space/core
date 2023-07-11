@@ -418,10 +418,10 @@ export class AggregateService {
   public clearAggregateCache() {
     return Promise.all([
       this.cacheService.getClient().del(CacheKeys.RSS),
-      this.cacheService.getClient().del(CacheKeys.RSSXmlCatch),
+      this.cacheService.getClient().del(CacheKeys.RSSXml),
       this.cacheService.getClient().del(`${API_CACHE_PREFIX}/aggregate*`),
-      this.cacheService.getClient().del(CacheKeys.SiteMapCatch),
-      this.cacheService.getClient().del(CacheKeys.SiteMapXmlCatch),
+      this.cacheService.getClient().del(CacheKeys.SiteMap),
+      this.cacheService.getClient().del(CacheKeys.SiteMapXml),
     ])
   }
 }

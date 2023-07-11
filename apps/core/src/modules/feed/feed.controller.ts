@@ -20,7 +20,7 @@ export class FeedController {
   ) {}
 
   @Get(['/feed', '/atom.xml'])
-  @CacheKey(CacheKeys.RSSXmlCatch)
+  @CacheKey(CacheKeys.RSSXml)
   @CacheTTL(3600)
   @HTTPDecorators.Bypass
   @Header('content-type', 'application/xml')

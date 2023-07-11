@@ -84,7 +84,7 @@ export class AggregateController {
   }
 
   @Get('/sitemap')
-  @CacheKey(CacheKeys.SiteMapCatch)
+  @CacheKey(CacheKeys.SiteMap)
   @CacheTTL(3600)
   async getSiteMapContent() {
     return { data: await this.aggregateService.getSiteMapContent() }

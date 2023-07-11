@@ -12,7 +12,7 @@ export class SitemapController {
 
   @Get('/sitemap')
   @CacheTTL(3600)
-  @CacheKey(CacheKeys.SiteMapXmlCatch)
+  @CacheKey(CacheKeys.SiteMapXml)
   @HTTPDecorators.Bypass
   @Header('content-type', 'application/xml')
   async getSitemap() {
