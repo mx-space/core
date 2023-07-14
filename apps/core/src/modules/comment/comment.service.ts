@@ -488,14 +488,12 @@ export class CommentService implements OnModuleInit {
     if (type === CommentReplyMailType.Guest) {
       const options = {
         from,
-        ...{
-          subject: `[${seo.title || 'Mx Space'}] 主人给你了新的回复呐`,
-          to,
-          html: render(
-            (await this.mailService.readTemplate(type)) as string,
-            source,
-          ),
-        },
+        subject: `[${seo.title || 'Mx Space'}] 主人给你了新的回复呐`,
+        to,
+        html: render(
+          (await this.mailService.readTemplate(type)) as string,
+          source,
+        ),
       }
       if (isDev) {
         // @ts-ignore
@@ -508,14 +506,12 @@ export class CommentService implements OnModuleInit {
     } else {
       const options = {
         from,
-        ...{
-          subject: `[${seo.title || 'Mx Space'}] 有新回复了耶~`,
-          to,
-          html: render(
-            (await this.mailService.readTemplate(type)) as string,
-            source,
-          ),
-        },
+        subject: `[${seo.title || 'Mx Space'}] 有新回复了耶~`,
+        to,
+        html: render(
+          (await this.mailService.readTemplate(type)) as string,
+          source,
+        ),
       }
       if (isDev) {
         // @ts-ignore
