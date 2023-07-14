@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { CommentModel } from '~/modules/comment/comment.model'
+import { CommentModel, CommentRefTypes } from '~/modules/comment/comment.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
 import { HttpService } from './helper.http.service'
@@ -46,7 +46,9 @@ export class BarkPushService {
 
     await this.push({
       title: '收到一条新评论',
-      body: `${comment.author} 评论了你的文章：${comment.text}`,
+      body: `${comment.author} 评论了你的${
+        comment.refType === CommentRefTypes.Recently ? '速记' : '文章'
+      }：${comment.text}`,
       icon: comment.avatar,
       url: `${adminUrl}#/comments`,
     })

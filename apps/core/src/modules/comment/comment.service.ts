@@ -332,7 +332,7 @@ export class CommentService implements OnModuleInit {
       to: type === CommentReplyMailType.Owner ? masterInfo.mail : parent!.mail,
       type,
       source: {
-        title: refDoc.title,
+        title: refType === CommentRefTypes.Recently ? '速记' : refDoc.title,
         text: comment.text,
         author:
           type === CommentReplyMailType.Guest ? parent!.author : comment.author,
