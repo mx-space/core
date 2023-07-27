@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [4.2.13](https://github.com/mx-space/core/compare/v4.2.12...v4.2.13) (2023-07-27)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies (minor) ([#1097](https://github.com/mx-space/core/issues/1097)) ([33b14d8](https://github.com/mx-space/core/commit/33b14d89111a91a76384aa9efeff644135236a1a))
+* **deps:** update all non-major dependencies (patch) ([#1081](https://github.com/mx-space/core/issues/1081)) ([80218f0](https://github.com/mx-space/core/commit/80218f0b0d6451abf288f17a8e1c91e084de69cb))
+* distinguish between the types of comments ([e4ce8cd](https://github.com/mx-space/core/commit/e4ce8cd71997bdd942595b716527fe10c1c81690))
+* leanid ([b30565d](https://github.com/mx-space/core/commit/b30565dc1c847c200bd2912f91fbd3cc416936e5))
+* typo ([7054c79](https://github.com/mx-space/core/commit/7054c799bc70897d03589587e75e6e90bedfe317))
+
+
+
 ## [4.2.12](https://github.com/mx-space/core/compare/v4.2.11...v4.2.12) (2023-07-07)
 
 
