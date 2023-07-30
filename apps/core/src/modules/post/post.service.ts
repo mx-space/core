@@ -63,10 +63,8 @@ export class PostService {
 
     const relatedIds = await this.checkRelated(post)
     post.related = relatedIds as any
-    // 双向关联
-    await this.relatedEachOther(post, relatedIds)
 
-    const res = await this.postModel.create({
+    const newPost = await this.postModel.create({
       ...post,
       slug,
       categoryId: category.id,
@@ -74,7 +72,10 @@ export class PostService {
       modified: null,
     })
 
-    const doc = res.toJSON()
+    const doc = newPost.toJSON()
+
+    // 双向关联
+    await this.relatedEachOther(doc, relatedIds)
 
     scheduleManager.schedule(async () => {
       await Promise.all([
@@ -82,8 +83,8 @@ export class PostService {
           doc.text,
           doc.images,
           (images) => {
-            res.images = images
-            return res.save()
+            newPost.images = images
+            return newPost.save()
           },
         ),
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
