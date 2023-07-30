@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [4.2.14](https://github.com/mx-space/core/compare/v4.2.13...v4.2.14) (2023-07-30)
+
+
+### Bug Fixes
+
+* create post error when related post ([72f78a2](https://github.com/mx-space/core/commit/72f78a2004eb6a664ceedbcc561d672c284b7b45))
+* deps version ([c14e8bf](https://github.com/mx-space/core/commit/c14e8bfdc6146c4c587c13ccaa676759f5784adc))
+
+
+
 ## [4.2.13](https://github.com/mx-space/core/compare/v4.2.12...v4.2.13) (2023-07-27)
 
 
