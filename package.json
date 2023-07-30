@@ -2,6 +2,7 @@
   "author": "Innei <https://innei.ren>",
   "private": true,
   "license": "AGPLv3",
+  "packageManager": "pnpm@8.6.0",
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
@@ -20,7 +21,7 @@
   "homepage": "https://github.com/mx-space/core#readme",
   "issues": "https://github.com/mx-space/core/issues",
   "scripts": {
-    "prepare": "husky install && node scripts/init-project.mjs",
+    "prepare": "husky install && node scripts/init-project.mjs && corepack enable",
     "build": "pnpm -C \"apps/core\" run build",
     "dev": "pnpm -C \"apps/core\" run start",
     "bundle": "pnpm -C \"apps/core\" run bundle",
