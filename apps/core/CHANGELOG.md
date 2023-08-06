@@ -1,5 +1,21 @@
 # CHANGELOG
 
+# [4.3.0](https://github.com/mx-space/core/compare/v4.2.14...v4.3.0) (2023-08-06)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#1100](https://github.com/mx-space/core/issues/1100)) ([6d781ac](https://github.com/mx-space/core/commit/6d781ac67e7e48b840981d74b8955166336d1358))
+* like list query ([03ca5c6](https://github.com/mx-space/core/commit/03ca5c65921bc42d7e04de0ebb8af09cdaed157b))
+
+
+### Features
+
+* activity controller ([61b4fb3](https://github.com/mx-space/core/commit/61b4fb3db6998676a066b05b7938fe63e2f20f21))
+* add api client for activity controller ([44ab9dc](https://github.com/mx-space/core/commit/44ab9dc2730189ad7c90d0a2e9daa583912e2c1a))
+
+
+
 ## [4.2.14](https://github.com/mx-space/core/compare/v4.2.13...v4.2.14) (2023-07-30)
 
 
