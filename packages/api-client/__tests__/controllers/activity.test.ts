@@ -6,7 +6,10 @@ describe('test activity client', () => {
   const client = mockRequestInstance(ActivityController)
 
   test('POST /like', async () => {
-    mockResponse('/activity/like', {}, 'post')
+    mockResponse('/activity/like', {}, 'post', {
+      type: 'Note',
+      id: '11111111',
+    })
 
     await expect(
       client.activity.likeIt('Note', '11111111'),
