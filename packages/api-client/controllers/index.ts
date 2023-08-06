@@ -1,3 +1,4 @@
+import { ActivityController } from './activity'
 import { AggregateController } from './aggregate'
 import { CategoryController } from './category'
 import { CommentController } from './comment'
@@ -20,6 +21,7 @@ import { TopicController } from './topic'
 import { UserController } from './user'
 
 export const allControllers = [
+  ActivityController,
   AggregateController,
   CategoryController,
   CommentController,
@@ -39,6 +41,7 @@ export const allControllers = [
 ]
 
 export const allContollerNames = [
+  'activity',
   'aggregate',
   'category',
   'comment',
@@ -63,6 +66,7 @@ export const allContollerNames = [
 ] as const
 
 export {
+  ActivityController,
   AggregateController,
   CategoryController,
   CommentController,

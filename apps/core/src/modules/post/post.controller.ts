@@ -232,6 +232,9 @@ export class PostController {
     return
   }
 
+  /**
+   * @deprecated
+   */
   @Get('/_thumbs-up')
   async thumbsUpArticle(
     @Query() query: MongoIdDto,

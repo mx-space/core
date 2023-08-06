@@ -9,10 +9,11 @@ import type {
   TimelineData,
   TimelineType,
 } from '~/models/aggregate'
-import type { HTTPClient } from '../core'
 
 import { sortOrderToNumber } from '~/utils'
 import { autoBind } from '~/utils/auto-bind'
+
+import { HTTPClient } from '../core'
 
 declare module '../core/client' {
   interface HTTPClient<

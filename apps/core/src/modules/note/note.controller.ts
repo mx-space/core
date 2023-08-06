@@ -164,6 +164,9 @@ export class NoteController {
   }
 
   @Get('like/:id')
+  /**
+   * @deprecated
+   */
   async likeNote(
     @Param() param: IntIdOrMongoIdDto,
     @IpLocation() location: IpRecord,
