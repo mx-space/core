@@ -31,9 +31,7 @@ export class NoteService {
     private readonly commentService: CommentService,
 
     private readonly textMacrosService: TextMacroService,
-  ) {
-    this.needCreateDefult()
-  }
+  ) {}
 
   public get model() {
     return this.noteModel
@@ -83,7 +81,7 @@ export class NoteService {
       })
 
     if (!latest) {
-      throw new CannotFindException()
+      return null
     }
 
     latest.text = await this.textMacrosService.replaceTextMacro(
@@ -329,16 +327,5 @@ export class NoteService {
         ...rest,
       },
     )
-  }
-
-  async needCreateDefult() {
-    await this.noteModel.countDocuments({}).then((count) => {
-      if (!count) {
-        this.noteModel.countDocuments({
-          title: '第一篇日记',
-          text: 'Hello World',
-        })
-      }
-    })
   }
 }

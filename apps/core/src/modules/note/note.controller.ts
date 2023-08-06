@@ -202,11 +202,13 @@ export class NoteController {
   @Get('/latest')
   @VisitDocument('Note')
   async getLatestOne(@IsMaster() isMaster: boolean) {
-    const { latest, next } = await this.noteService.getLatestOne(
+    const result = await this.noteService.getLatestOne(
       isMaster ? {} : this.noteService.publicNoteQueryCondition,
       isMaster ? '+location +coordinates' : '-location -coordinates',
     )
 
+    if (!result) return null
+    const { latest, next } = result
     latest.text = this.noteService.checkNoteIsSecret(latest) ? '' : latest.text
 
     return { data: latest, next }
