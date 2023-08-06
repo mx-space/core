@@ -15,6 +15,7 @@ import { DbQueryInterceptor } from './common/interceptors/db-query.interceptor'
 import { IdempotenceInterceptor } from './common/interceptors/idempotence.interceptor'
 import { JSONTransformInterceptor } from './common/interceptors/json-transform.interceptor'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
+import { ActivityModule } from './modules/activity/activity.module'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
@@ -63,6 +64,7 @@ import { RedisModule } from './processors/redis/redis.module'
     RedisModule,
 
     // biz module
+    ActivityModule,
     AggregateModule,
     AnalyzeModule,
     AuthModule,

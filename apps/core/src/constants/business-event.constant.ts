@@ -44,6 +44,9 @@ export enum BusinessEvents {
 
   PTY = 'pty',
   PTY_MESSAGE = 'pty_message',
+
+  // activity
+  ACTIVITY_LIKE = 'activity_like',
 }
 
 export enum EventScope {

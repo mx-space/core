@@ -6,6 +6,7 @@ import { index, modelOptions, plugin } from '@typegoose/typegoose'
 import { mongooseLeanId } from './plugins/lean-id'
 
 const mongooseLeanGetters = require('mongoose-lean-getters')
+
 @plugin(mongooseLeanVirtuals)
 @plugin(Paginate)
 @plugin(mongooseLeanGetters)

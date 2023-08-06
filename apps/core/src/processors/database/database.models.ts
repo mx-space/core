@@ -1,3 +1,4 @@
+import { ActivityModel } from '~/modules/activity/activity.model'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { CategoryModel } from '~/modules/category/category.model'
 import { CommentModel } from '~/modules/comment/comment.model'
@@ -17,6 +18,7 @@ import { UserModel } from '~/modules/user/user.model'
 import { getProviderByTypegooseClass } from '~/transformers/model.transformer'
 
 export const databaseModels = [
+  ActivityModel,
   AnalyzeModel,
   CategoryModel,
   CommentModel,
