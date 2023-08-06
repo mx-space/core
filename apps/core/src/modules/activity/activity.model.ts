@@ -11,6 +11,7 @@ import { Activity } from './activity.constant'
   schemaOptions: {
     timestamps: {
       updatedAt: false,
+      createdAt: 'created',
     },
   },
 })

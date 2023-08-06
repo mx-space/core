@@ -1,3 +1,4 @@
+import { pick } from 'lodash'
 import { Types } from 'mongoose'
 import type { Collection } from 'mongodb'
 import type {
@@ -124,11 +125,24 @@ export class ActivityService {
       throw new BadRequestException(e)
     }
 
+    const refModel = await this.databaseService
+      .findGlobalById(id)
+      .then((res) => res?.document)
     this.eventSerivce.emit(
       BusinessEvents.ACTIVITY_LIKE,
       {
         id,
         type,
+        ref: pick(refModel, [
+          'id',
+          '_id',
+          'title',
+          'nid',
+          'slug',
+          'category',
+          'categoryId',
+          'created',
+        ]),
       },
       {
         scope: EventScope.TO_SYSTEM_ADMIN,
@@ -137,6 +151,7 @@ export class ActivityService {
 
     await this.activityModel.create({
       type: Activity.Like,
+      created: new Date(),
       payload: {
         ip,
         type,
