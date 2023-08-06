@@ -1,10 +1,8 @@
 import { URL } from 'url'
 import { pick } from 'lodash'
-import type { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+import type { ReturnModelType } from '@typegoose/typegoose'
 import type { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
-import type { FilterQuery } from 'mongoose'
 import type { CategoryModel } from '../category/category.model'
-import type { NoteModel } from '../note/note.model'
 import type { RSSProps } from './aggregate.interface'
 
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
@@ -79,10 +77,6 @@ export class AggregateService {
         modified: -1,
       })
       .lean()
-  }
-
-  async getLatestNote(cond: FilterQuery<DocumentType<NoteModel>> = {}) {
-    return (await this.noteService.getLatestOne(cond)).latest
   }
 
   private findTop<
