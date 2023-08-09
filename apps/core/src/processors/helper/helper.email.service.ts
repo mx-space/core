@@ -97,7 +97,6 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
         this.teardown()
         this.instance = createTransport({
           ...config,
-          secure: true,
           tls: {
             rejectUnauthorized: false,
           },
@@ -117,6 +116,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       host: string
       port: number
       auth: { user: string; pass: string }
+      secure: boolean
     }>((r, j) => {
       this.configsService.waitForConfigReady().then(({ mailOptions }) => {
         const { options, user, pass } = mailOptions
