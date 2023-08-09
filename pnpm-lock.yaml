@@ -218,8 +218,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       marked:
-        specifier: 6.0.0
-        version: 6.0.0
+        specifier: 7.0.1
+        version: 7.0.1
       mime-types:
         specifier: ^2.1.35
         version: 2.1.35
@@ -7257,8 +7257,8 @@ packages:
     resolution: {integrity: sha512-CkYQrPYZfWnu/DAmVCpTSX/xHpKZ80eKh2lAkyA6AJTef6bW+6JpbQZN5rofum7da+SyN1bi5ctTm+lTfcCW3g==}
     dev: true
 
-  /marked@6.0.0:
-    resolution: {integrity: sha512-7E3m/xIlymrFL5gWswIT4CheIE3fDeh51NV09M4x8iOc7NDYlyERcQMLAIHcSlrvwliwbPQ4OGD+MpPSYiQcqw==}
+  /marked@7.0.1:
+    resolution: {integrity: sha512-m8Aze620Ts62yaciz2DghZGUkUfdgvSNRicS2/XtQkStMNoce3NWjOD2b/jWF32+XXK6udM6pRhv2dKNlneAFA==}
     engines: {node: '>= 16'}
     hasBin: true
     dev: false
