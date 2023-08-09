@@ -79,6 +79,10 @@ class MailOption {
   @IsOptional()
   @JSONSchemaHalfGirdPlainField('发件邮箱 host')
   host: string
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('使用 SSL/TLS')
+  secure: boolean
 }
 @JSONSchema({ title: '邮件通知设置' })
 export class MailOptionsDto {

@@ -22,6 +22,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     options: {
       host: '',
       port: 465,
+      secure: true,
     },
   },
   commentOptions: {
