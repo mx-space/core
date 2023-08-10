@@ -39,7 +39,6 @@ import { PageModule } from './modules/page/page.module'
 import { PageProxyModule } from './modules/pageproxy/pageproxy.module'
 import { PostModule } from './modules/post/post.module'
 import { ProjectModule } from './modules/project/project.module'
-import { PTYModule } from './modules/pty/pty.module'
 import { RecentlyModule } from './modules/recently/recently.module'
 import { RenderEjsModule } from './modules/render/render.module'
 import { SayModule } from './modules/say/say.module'
@@ -85,7 +84,6 @@ import { RedisModule } from './processors/redis/redis.module'
     PageModule,
     PostModule,
     ProjectModule,
-    PTYModule,
     RecentlyModule,
     SayModule,
     SearchModule,

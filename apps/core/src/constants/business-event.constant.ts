@@ -42,9 +42,6 @@ export enum BusinessEvents {
 
   STDOUT = 'STDOUT',
 
-  PTY = 'pty',
-  PTY_MESSAGE = 'pty_message',
-
   // activity
   ACTIVITY_LIKE = 'activity_like',
 }

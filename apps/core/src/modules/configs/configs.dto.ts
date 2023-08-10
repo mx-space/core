@@ -252,35 +252,6 @@ export class AdminExtraDto {
   gaodemapKey?: string
 }
 
-@JSONSchema({ title: '终端设定' })
-export class TerminalOptionsDto {
-  @IsOptional()
-  @IsBoolean()
-  @JSONSchemaToggleField('开启 WebShell')
-  enable: boolean
-
-  @IsOptional()
-  @IsString()
-  @Transform(({ value }) =>
-    typeof value == 'string' && value.length == 0 ? null : value,
-  )
-  @Exclude({ toPlainOnly: true })
-  @JSONSchemaPasswordField('设定密码', {
-    description: '密码为空则不启用密码验证',
-  })
-  @Encrypt
-  password?: string
-
-  @IsOptional()
-  @IsString()
-  @JSONSchemaPlainField('前置脚本', {
-    'ui:options': {
-      type: 'textarea',
-    },
-  })
-  script?: string
-}
-
 @JSONSchema({ title: '友链设定' })
 export class FriendLinkOptionsDto {
   @IsBoolean()

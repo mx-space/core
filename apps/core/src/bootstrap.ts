@@ -93,9 +93,6 @@ export async function bootstrap() {
       return
     }
 
-    if (isDev) {
-      consola.debug(`[${prefix + pid}] OpenApi: ${url}/api-docs`)
-    }
     consola.success(`[${prefix + pid}] Server listen on: ${url}`)
     consola.success(`[${prefix + pid}] Admin Dashboard: ${url}/qaqdmin`)
     consola.success(

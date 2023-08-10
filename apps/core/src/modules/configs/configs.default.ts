@@ -56,11 +56,6 @@ export const generateDefaultConfig: () => IConfig = () => ({
     background: '',
     gaodemapKey: null!,
   },
-  terminalOptions: {
-    enable: false,
-    password: null!,
-    script: null!,
-  },
   textOptions: {
     macros: true,
   },

@@ -13,7 +13,6 @@ import {
   FriendLinkOptionsDto,
   MailOptionsDto,
   SeoDto,
-  TerminalOptionsDto,
   TextOptionsDto,
   ThirdPartyServiceIntegrationDto,
   UrlDto,
@@ -65,10 +64,6 @@ export abstract class IConfig {
   @ValidateNested()
   @Type(() => AlgoliaSearchOptionsDto)
   algoliaSearchOptions: Required<AlgoliaSearchOptionsDto>
-
-  @Type(() => TerminalOptionsDto)
-  @ValidateNested()
-  terminalOptions: Required<TerminalOptionsDto>
 
   @Type(() => FeatureListDto)
   @ValidateNested()
