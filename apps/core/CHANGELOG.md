@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [4.3.1](https://github.com/mx-space/core/compare/v4.3.0...v4.3.1) (2023-08-10)
+
+
+### Bug Fixes
+
+* **deps:** update dependency marked to v7 ([#1107](https://github.com/mx-space/core/issues/1107)) ([a6d186a](https://github.com/mx-space/core/commit/a6d186a8c66a3c19560cdf58d8c285c70108bd78))
+* post data wrapped ([4132bab](https://github.com/mx-space/core/commit/4132babb4f731ba9418ae6759152107e7e8c5c00))
+* remove default noe ([e3e49c0](https://github.com/mx-space/core/commit/e3e49c04061bab33ff8a476b43a5bdb91515f272))
+
+
+### Features
+
+* allow disabling SSL/TLS for SMTP ([#1108](https://github.com/mx-space/core/issues/1108)) ([42f2f83](https://github.com/mx-space/core/commit/42f2f83805224ad7b4c62d781d9f8ac962abba0a))
+
+
+
 # [4.3.0](https://github.com/mx-space/core/compare/v4.2.14...v4.3.0) (2023-08-06)
 
 
