@@ -23,7 +23,7 @@ export class ActivityService {
   constructor(
     private readonly countingService: CountingService,
 
-    private readonly eventSerivce: EventManagerService,
+    private readonly eventService: EventManagerService,
 
     @InjectModel(ActivityModel)
     private readonly activityModel: MongooseModel<ActivityModel>,
@@ -80,7 +80,7 @@ export class ActivityService {
       Post: this.databaseService.db.collection('posts'),
     }
 
-    const refModelDatas = new Map<string, any>()
+    const refModelData = new Map<string, any>()
     for (const [type, ids] of Object.entries(typedIdsMap)) {
       const collection = type2Collection[type as ActivityLikeSupportType]
       const docs = await collection
@@ -99,13 +99,13 @@ export class ActivityService {
         .toArray()
 
       for (const doc of docs) {
-        refModelDatas.set(doc._id.toHexString(), doc)
+        refModelData.set(doc._id.toHexString(), doc)
       }
     }
 
     const docsWithRefModel = activities.docs.map((ac) => {
       const nextAc = ac.toJSON()
-      Reflect.set(nextAc, 'ref', refModelDatas.get(ac.payload.id))
+      Reflect.set(nextAc, 'ref', refModelData.get(ac.payload.id))
 
       return nextAc
     })
@@ -128,7 +128,7 @@ export class ActivityService {
     const refModel = await this.databaseService
       .findGlobalById(id)
       .then((res) => res?.document)
-    this.eventSerivce.emit(
+    this.eventService.emit(
       BusinessEvents.ACTIVITY_LIKE,
       {
         id,

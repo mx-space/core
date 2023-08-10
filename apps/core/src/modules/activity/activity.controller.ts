@@ -32,4 +32,13 @@ export class ActivityController {
 
     return this.service.getLikeActivities(page, size)
   }
+
+  @Get('/')
+  @Auth()
+  async activities(@Query() pager: PagerDto) {
+    const { page, size } = pager
+
+    // TODO currently only support like activities, so hard code here
+    return this.service.getLikeActivities(page, size)
+  }
 }
