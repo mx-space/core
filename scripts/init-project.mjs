@@ -34,7 +34,9 @@ async function main() {
       recursive: true,
     })
     const symlinkPath = path.resolve(cwd, 'apps/core/assets')
-    fs.rmSync(path.resolve(cwd, symlinkPath))
+    fs.rmSync(path.resolve(cwd, symlinkPath), {
+      force: true,
+    })
 
     fs.symlinkSync(path.resolve(cwd, 'assets'), path.resolve(cwd, symlinkPath))
   }
