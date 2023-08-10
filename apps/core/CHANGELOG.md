@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.3.2](https://github.com/mx-space/core/compare/v4.3.1...v4.3.2) (2023-08-10)
+
+
+### Bug Fixes
+
+* typo ([9c3f48a](https://github.com/mx-space/core/commit/9c3f48a819e9d056ad54f7f6b5ee8aaa9a2ae545))
+
+
+
 ## [4.3.1](https://github.com/mx-space/core/compare/v4.3.0...v4.3.1) (2023-08-10)
 
 
