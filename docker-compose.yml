@@ -38,7 +38,7 @@ services:
     volumes:
       - ./data/db:/data/db
     ports:
-      - '3344:27017'
+      - '127.0.0.1:3344:27017'
     networks:
       - app-network
     restart: always
@@ -47,7 +47,7 @@ services:
     container_name: redis
 
     ports:
-      - '3333:6379'
+      - '127.0.0.1:3333:6379'
     networks:
       - app-network
     restart: always

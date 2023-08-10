@@ -33,7 +33,10 @@ async function main() {
       force: true,
       recursive: true,
     })
-    execSync('ln -s $PWD/assets $PWD/apps/core/assets ')
+    const symlinkPath = path.resolve(cwd, 'apps/core/assets')
+    fs.rmSync(path.resolve(cwd, symlinkPath))
+
+    fs.symlinkSync(path.resolve(cwd, 'assets'), path.resolve(cwd, symlinkPath))
   }
 }
 
