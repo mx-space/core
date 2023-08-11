@@ -19,7 +19,6 @@
 现有的比较有意思的一些小玩意的实现：
 
 - 实时日志输出。通过 Socket.IO + 劫持 `process.stdout` 实现。
-- PTY 支持。
 - [云函数](./src/modules/serverless/serverless.readme.md)
 
 三方服务集成：
