@@ -2,7 +2,7 @@
   "author": "Innei <https://innei.ren>",
   "private": true,
   "license": "AGPLv3",
-  "packageManager": "pnpm@8.6.11",
+  "packageManager": "pnpm@8.6.12",
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
@@ -35,7 +35,7 @@
   "devDependencies": {
     "@innei/eslint-config-ts": "0.11.1",
     "@innei/prettier": "0.11.1",
-    "@types/node": "20.4.9",
+    "@types/node": "20.4.10",
     "cross-env": "7.0.3",
     "eslint": "^8.46.0",
     "eslint-plugin-unused-imports": "3.0.0",

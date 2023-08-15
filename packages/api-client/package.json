@@ -46,7 +46,7 @@
   "devDependencies": {
     "@types/cors": "2.8.13",
     "@types/express": "4.17.17",
-    "@types/lodash": "4.14.196",
+    "@types/lodash": "4.14.197",
     "abort-controller": "3.0.0",
     "axios": "^1.4.0",
     "camelcase-keys": "^7.0.2",
