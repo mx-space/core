@@ -1,5 +1,5 @@
 import IORedis from 'ioredis'
-import type { Redis } from 'ioredis'
+import type { Redis, RedisOptions } from 'ioredis'
 
 import { Logger } from '@nestjs/common'
 
@@ -19,7 +19,16 @@ class RedisSubPub {
   }
 
   public init() {
-    const pubClient = new IORedis({ host: REDIS.host, port: REDIS.port })
+    const redisOptions: RedisOptions = {
+      host: REDIS.host,
+      port: REDIS.port,
+    }
+
+    if (REDIS.password) {
+      redisOptions.password = REDIS.password
+    }
+
+    const pubClient = new IORedis(redisOptions)
     const subClient = pubClient.duplicate()
     this.pubClient = pubClient
     this.subClient = subClient
