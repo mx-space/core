@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [4.3.4](https://github.com/mx-space/core/compare/v4.3.3...v4.3.4) (2023-08-22)
+
+
+### Bug Fixes
+
+* docker-compose command ([#1111](https://github.com/mx-space/core/issues/1111)) ([4495304](https://github.com/mx-space/core/commit/4495304ee02deec6ab16508dc6aae195d72fa17d))
+* redis password auth ([0c1655e](https://github.com/mx-space/core/commit/0c1655e2bb4f18c0e97374119e5076b5e23f531f))
+
+
+
 ## [4.3.3](https://github.com/mx-space/core/compare/v4.3.2...v4.3.3) (2023-08-10)
 
 
