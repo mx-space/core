@@ -40,7 +40,7 @@
     "eslint": "^8.46.0",
     "eslint-plugin-unused-imports": "3.0.0",
     "husky": "8.0.3",
-    "lint-staged": "13.2.3",
+    "lint-staged": "14.0.1",
     "prettier": "3.0.1",
     "rimraf": "5.0.1",
     "ts-node": "10.9.1",
