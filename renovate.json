@@ -5,8 +5,7 @@
     ":automergeTypes",
     ":automergeTesters",
     ":automergeLinters",
-    ":rebaseStalePrs",
-    "group:allNonMajor"
+    ":rebaseStalePrs"
   ],
   "packageRules": [
     {

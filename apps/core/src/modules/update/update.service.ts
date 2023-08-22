@@ -21,7 +21,7 @@ export class UpdateService {
       ;(async () => {
         const endpoint = `https://api.github.com/repos/${repo}/releases/tags/v${version}`
 
-        subscriber.next(`Geting release info from ${endpoint}.\n`)
+        subscriber.next(`Getting release info from ${endpoint}.\n`)
 
         const json = await fetch(endpoint)
           .then((res) => res.json())
