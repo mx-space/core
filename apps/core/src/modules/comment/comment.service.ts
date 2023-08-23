@@ -314,7 +314,7 @@ export class CommentService implements OnModuleInit {
 
     const refType = comment.refType
     const refModel = this.getModelByRefType(refType)
-    const refDoc = await refModel.findById(comment.ref).lean()
+    const refDoc = await refModel.findById(comment.ref)
     const time = new Date(comment.created!)
     const parent: CommentModel | null = await this.commentModel
       .findOne({ _id: comment.parent })
