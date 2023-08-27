@@ -1,24 +1,39 @@
-import vm2 from 'vm2'
+import ivm from 'isolated-vm'
+import { merge } from 'lodash'
 
-export function safeEval(code: string, context = {}, options?: vm2.VMOptions) {
-  const sandbox = {
-    global: {},
-  }
+export async function safeEval(
+  code: string,
+  context = {},
+  options?: ivm.IsolateOptions & {
+    timeout?: number
+  },
+) {
+  const { timeout, ...insolateOptions } = options || {}
+  const vm = new ivm.Isolate(
+    merge(
+      {
+        memoryLimit: 10,
+      },
+      insolateOptions,
+    ),
+  )
+  const vmContext = vm.createContextSync()
 
-  code = `((() => { ${code} })())`
+  const sandbox = Object.create(null)
   if (context) {
     Object.keys(context).forEach((key) => {
       sandbox[key] = context[key]
     })
   }
 
-  const VM = new vm2.VM({
-    timeout: 60_0000,
-    sandbox,
-
-    eval: false,
-    ...options,
+  Object.keys(sandbox).forEach((key) => {
+    vmContext.global.set(key, sandbox[key])
   })
 
-  return VM.run(code)
+  code = `((() => { ${code} })())`
+
+  const script = await vm.compileScript(code)
+
+  const result = await script.run(vmContext, {})
+  return result
 }

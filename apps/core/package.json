@@ -90,6 +90,7 @@
     "image-size": "1.0.2",
     "inquirer": "^8.2.5",
     "isbot": "3.6.13",
+    "isolated-vm": "4.6.0",
     "js-yaml": "^4.1.0",
     "json5": "2.2.3",
     "jsonwebtoken": "9.0.1",
