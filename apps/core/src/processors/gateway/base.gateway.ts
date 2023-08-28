@@ -33,6 +33,6 @@ export abstract class BaseGateway {
   }
 }
 
-export abstract class BoardcastBaseGateway extends BaseGateway {
+export abstract class BroadcastBaseGateway extends BaseGateway {
   broadcast(event: BusinessEvents, data: any) {}
 }

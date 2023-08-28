@@ -3,18 +3,18 @@ import type {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
-import type { AuthService } from '~/modules/auth/auth.service'
-import type { JWTService } from '~/processors/helper/helper.jwt.service'
-import type { CacheService } from '~/processors/redis/cache.service'
 import type { Socket } from 'socket.io'
 
 import { OnEvent } from '@nestjs/event-emitter'
 import { WebSocketServer } from '@nestjs/websockets'
 
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import { AuthService } from '~/modules/auth/auth.service'
+import { JWTService } from '~/processors/helper/helper.jwt.service'
+import { CacheService } from '~/processors/redis/cache.service'
 
 import { BusinessEvents } from '../../../constants/business-event.constant'
-import { BoardcastBaseGateway } from '../base.gateway'
+import { BroadcastBaseGateway } from '../base.gateway'
 
 export type AuthGatewayOptions = {
   namespace: string
@@ -25,13 +25,13 @@ export type AuthGatewayOptions = {
 export interface IAuthGateway
   extends OnGatewayConnection,
     OnGatewayDisconnect,
-    BoardcastBaseGateway {}
+    BroadcastBaseGateway {}
 
 export const createAuthGateway = (
   options: AuthGatewayOptions,
 ): new (...args: any[]) => IAuthGateway => {
   const { namespace, authway = 'all' } = options
-  class AuthGateway extends BoardcastBaseGateway implements IAuthGateway {
+  class AuthGateway extends BroadcastBaseGateway implements IAuthGateway {
     constructor(
       protected readonly jwtService: JWTService,
       protected readonly authService: AuthService,
@@ -55,9 +55,8 @@ export const createAuthGateway = (
         return false
       }
       const validCustomToken = async () => {
-        const [verifyCustomToken] = await this.authService.verifyCustomToken(
-          token,
-        )
+        const [verifyCustomToken] =
+          await this.authService.verifyCustomToken(token)
         if (verifyCustomToken) {
           return true
         }

@@ -9,7 +9,7 @@ import { EventScope } from '~/constants/business-event.constant'
 import { scheduleManager } from '~/utils'
 
 import { AdminEventsGateway } from '../gateway/admin/events.gateway'
-import { BoardcastBaseGateway } from '../gateway/base.gateway'
+import { BroadcastBaseGateway } from '../gateway/base.gateway'
 import { SystemEventsGateway } from '../gateway/system/events.gateway'
 import { WebEventsGateway } from '../gateway/web/events.gateway'
 
@@ -110,7 +110,7 @@ export class EventManagerService {
             event,
             payload,
           })
-        } else if (instance instanceof BoardcastBaseGateway) {
+        } else if (instance instanceof BroadcastBaseGateway) {
           return instance.broadcast(event as any, data)
         }
       }),

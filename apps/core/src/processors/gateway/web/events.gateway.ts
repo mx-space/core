@@ -23,7 +23,7 @@ import { scheduleManager } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
 
-import { BoardcastBaseGateway } from '../base.gateway'
+import { BroadcastBaseGateway } from '../base.gateway'
 import { DanmakuDto } from './dtos/danmaku.dto'
 
 const namespace = 'web'
@@ -31,7 +31,7 @@ const namespace = 'web'
   namespace,
 })
 export class WebEventsGateway
-  extends BoardcastBaseGateway
+  extends BroadcastBaseGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(private readonly cacheService: CacheService) {
