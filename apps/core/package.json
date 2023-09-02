@@ -139,7 +139,7 @@
     "@types/marked": "5.0.1",
     "@types/mime-types": "2.1.1",
     "@types/mongoose-aggregate-paginate-v2": "1.0.9",
-    "@types/node": "20.5.2",
+    "@types/node": "20.5.9",
     "@types/nodemailer": "6.4.9",
     "@types/qs": "6.9.7",
     "@types/semver": "7.5.0",
