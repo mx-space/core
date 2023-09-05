@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [4.3.6](https://github.com/mx-space/core/compare/v4.3.5...v4.3.6) (2023-09-05)
+
+
+### Bug Fixes
+
+* **deps:** update babel monorepo to v7.22.11 (patch) ([#1120](https://github.com/mx-space/core/issues/1120)) ([637c02c](https://github.com/mx-space/core/commit/637c02cb98d10083670901312df3367fbf44bbcc))
+* feed xml content ([a9913cb](https://github.com/mx-space/core/commit/a9913cb74a8109699ceec7ff85183d090e3b2137))
+* typo ([8e1fe79](https://github.com/mx-space/core/commit/8e1fe79b572c8d292ca746b5991363109502924d))
+
+
+### Features
+
+* upgrade throttle ([a981f14](https://github.com/mx-space/core/commit/a981f14053bcbb78cb29867e9e1037205b9453c3))
+
+
+
 ## [4.3.5](https://github.com/mx-space/core/compare/v4.3.4...v4.3.5) (2023-08-23)
 
 
