@@ -6,7 +6,7 @@ import { load as yamlLoad } from 'js-yaml'
 import { machineIdSync } from 'node-machine-id'
 import type { AxiosRequestConfig } from 'axios'
 
-import { isDebugMode } from './global/env.global'
+import { isDebugMode, isDev } from './global/env.global'
 import { parseBooleanishValue } from './utils'
 
 const commander = program
@@ -116,7 +116,7 @@ export const REDIS = {
   ttl: null,
   httpCacheTTL: 15,
   max: 120,
-  disableApiCache: false,
+  disableApiCache: isDev,
 }
 
 export const AXIOS_CONFIG: AxiosRequestConfig = {

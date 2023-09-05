@@ -49,18 +49,3 @@ export function getLessThanNow(date: Date | undefined) {
   const created = date ? (dayjs(date).diff(now) > 0 ? now : date) : now
   return created
 }
-
-export const toISO8601DateTime = (date: Date) => {
-  const options = {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    timeZone: 'GMT',
-  } as Intl.DateTimeFormatOptions
-  const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date)
-  return formattedDate
-}
