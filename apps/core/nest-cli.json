@@ -2,6 +2,7 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
+    "builder": "swc",
     "plugins": []
   }
 }
