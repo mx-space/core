@@ -8,7 +8,7 @@
     "experimentalDecorators": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2019",
+    "target": "es2020",
     "sourceMap": true,
     "outDir": "./dist",
     "allowJs": true,

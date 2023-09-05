@@ -1,6 +1,6 @@
 import { cpSync, existsSync } from 'fs'
 import path, { resolve } from 'path'
-import swc from 'rollup-plugin-swc'
+import swc from 'unplugin-swc'
 import tsconfigPath from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
 
@@ -15,33 +15,6 @@ if (
     { recursive: true },
   )
 }
-
-const swcPlugin = (() => {
-  const plugin = swc({
-    test: 'ts',
-    jsc: {
-      parser: {
-        syntax: 'typescript',
-        dynamicImport: true,
-        decorators: true,
-      },
-      target: 'es2021',
-      transform: {
-        decoratorMetadata: true,
-      },
-    },
-  })
-
-  const originalTransform = plugin.transform!
-
-  // @ts-ignore
-  const transform = function (...args: Parameters<typeof originalTransform>) {
-    // @ts-ignore
-    if (!args[1].endsWith('html')) return originalTransform.apply(this, args)
-  }
-
-  return { ...plugin, transform }
-})()
 
 export default defineConfig({
   root: './test',
@@ -73,8 +46,7 @@ export default defineConfig({
   esbuild: false,
 
   plugins: [
-    // @ts-ignore
-    swcPlugin,
+    swc.vite(),
     tsconfigPath({
       projects: [
         resolve(__dirname, './test/tsconfig.json'),

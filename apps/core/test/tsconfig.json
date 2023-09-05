@@ -8,7 +8,7 @@
     "esModuleInterop": true,
     "strictNullChecks": false,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2019",
+    "target": "es2022",
     "sourceMap": true,
     "outDir": "./dist",
     "noEmit": true,
