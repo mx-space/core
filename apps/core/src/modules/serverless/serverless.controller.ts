@@ -49,7 +49,12 @@ export class ServerlessController {
     }
   }
   @All('/:reference/:name/*')
-  @Throttle(100, 5)
+  @Throttle({
+    default: {
+      limit: 1000,
+      ttl: 5000,
+    },
+  })
   @HTTPDecorators.Bypass
   async runServerlessFunctionWildcard(
     @Param() param: ServerlessReferenceDto,
@@ -62,7 +67,12 @@ export class ServerlessController {
   }
 
   @All('/:reference/:name')
-  @Throttle(100, 5)
+  @Throttle({
+    default: {
+      limit: 100,
+      ttl: 5000,
+    },
+  })
   @HTTPDecorators.Bypass
   async runServerlessFunction(
     @Param() param: ServerlessReferenceDto,

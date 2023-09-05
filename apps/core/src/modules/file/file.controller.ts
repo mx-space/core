@@ -38,7 +38,12 @@ export class FileController {
   }
 
   @Get('/:type/:name')
-  @Throttle(60, 60)
+  @Throttle({
+    default: {
+      limit: 60,
+      ttl: 60_000,
+    },
+  })
   @HTTPDecorators.Bypass
   async get(@Param() params: FileQueryDto, @Res() reply: FastifyReply) {
     const { type, name } = params
