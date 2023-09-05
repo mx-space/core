@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.3.8](https://github.com/mx-space/core/compare/v4.3.7...v4.3.8) (2023-09-05)
+
+
+### Bug Fixes
+
+* rss description ([d3c65b2](https://github.com/mx-space/core/commit/d3c65b275dab529421219f3753d93d96decc21cd))
+
+
+
 ## [4.3.7](https://github.com/mx-space/core/compare/v4.3.6...v4.3.7) (2023-09-05)
 
 
