@@ -254,11 +254,12 @@ export class AggregateService {
 
   async buildRssStructure(): Promise<RSSProps> {
     const data = await this.getRSSFeedContent()
-    const title = (await this.configs.get('seo')).title
+    const seo = await this.configs.get('seo')
     const author = (await this.configs.getMaster()).name
     const url = (await this.configs.get('url')).webUrl
     return {
-      title,
+      title: seo.title,
+      description: seo.description,
       author,
       url,
       data,
