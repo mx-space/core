@@ -1,3 +1,4 @@
+import RemoveMarkdown from 'remove-markdown'
 import xss from 'xss'
 import type { CategoryModel } from '../category/category.model'
 
@@ -31,58 +32,12 @@ export class FeedController {
     const { title } = await this.configs.get('seo')
     const { avatar } = await this.configs.getMaster()
     const now = new Date()
-    // const xml = `<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
-    // <feed xmlns="http://www.w3.org/2005/Atom">
-    //   <title>${title}</title>
-    //   <link href="/atom.xml" rel="self"/>
-    //   <link href="/feed" rel="self"/>
-    //   <link href="${xss(url)}"/>
-    //   <updated>${now.toISOString()}</updated>
-    //   <id>${xss(url)}</id>
-    //   <author>
-    //     <name>${author}</name>
-    //   </author>
-    //   <generator>Mix Space CMS</generator>
-    //   <lastBuildDate>${now.toISOString()}</lastBuildDate>
-    //   <language>zh-CN</language>
-    //   <image>
-    //       <url>${xss(avatar || '')}</url>
-    //       <title>${title}</title>
-    //       <link>${xss(url)}</link>
-    //   </image>
-    //     ${await Promise.all(
-    //       data.map(async (item) => {
-    //         return `<entry>
-    //         <title>${escapeXml(item.title)}</title>
-    //         <link href='${xss(item.link)}'/>
-    //         <id>${xss(item.link)}</id>
-    //         <published>${item.created}</published>
-    //         <updated>${item.modified}</updated>
-    //         <content type='html'><![CDATA[
-    //           ${`<blockquote>该渲染由 marked 生成，可能存在排版问题，最佳体验请前往：<a href='${xss(
-    //             item.link,
-    //           )}'>${xss(item.link)}</a></blockquote>
-    //           ${await this.markdownService
-    //             .renderArticle(item.id)
-    //             .then((res) => res.html)}
-    //           <p style='text-align: right'>
-    //           <a href='${`${xss(item.link)}#comments`}'>看完了？说点什么呢</a>
-    //           </p>`}
-    //         ]]>
-    //         </content>
-    //         </entry>
-    //       `
-    //       }),
-    //     ).then((res) => res.join(''))}
-    // </feed>`
-    //
-    //
     const xml = `<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
 <channel>
 <atom:link href="${xss(url)}/feed" rel="self" type="application/rss+xml"/>
 <title>${title}</title>
 <link>${xss(url)}</link>
-<description>${description}</description>
+<description>${escapeXml(description)}</description>
 <language>zh-CN</language>
 <copyright>© ${author} </copyright>
 <pubDate>${now.toUTCString()}</pubDate>
@@ -101,7 +56,7 @@ ${await Promise.all(
     <link>${xss(item.link)}</link>
     <pubDate>${item.created!.toUTCString()}</pubDate>
     <description>${escapeXml(
-      xss(renderResult.document.text.slice(0, 50)),
+      xss(RemoveMarkdown(renderResult.document.text).slice(0, 50)),
     )}</description>
     <content:encoded><![CDATA[
       ${`<blockquote>该渲染由 marked 生成，可能存在排版问题，最佳体验请前往：<a href='${xss(

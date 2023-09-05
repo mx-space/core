@@ -265,6 +265,9 @@ importers:
       reflect-metadata:
         specifier: 0.1.13
         version: 0.1.13
+      remove-markdown:
+        specifier: 0.5.0
+        version: 0.5.0
       rxjs:
         specifier: 7.8.1
         version: 7.8.1
@@ -354,6 +357,9 @@ importers:
       '@types/qs':
         specifier: 6.9.8
         version: 6.9.8
+      '@types/remove-markdown':
+        specifier: 0.3.1
+        version: 0.3.1
       '@types/semver':
         specifier: 7.5.1
         version: 7.5.1
@@ -3254,6 +3260,10 @@ packages:
 
   /@types/range-parser@1.2.4:
     resolution: {integrity: sha512-EEhsLsD6UsDM1yFhAvy0Cjr6VwmpMWqFBCb9w07wVugF7w9nfajxLuVmngTIpgS6svCnm6Vaw+MZhoDCKnOfsw==}
+    dev: true
+
+  /@types/remove-markdown@0.3.1:
+    resolution: {integrity: sha512-JpJNEJEsmmltyL2LdE8KRjJ0L2ad5vgLibqNj85clohT9AyTrfN6jvHxStPshDkmtcL/ShFu0p2tbY7DBS1mqQ==}
     dev: true
 
   /@types/semver@7.5.1:
@@ -8122,6 +8132,10 @@ packages:
       call-bind: 1.0.2
       define-properties: 1.2.0
       functions-have-names: 1.2.3
+
+  /remove-markdown@0.5.0:
+    resolution: {integrity: sha512-x917M80K97K5IN1L8lUvFehsfhR8cYjGQ/yAMRI9E7JIKivtl5Emo5iD13DhMr+VojzMCiYk8V2byNPwT/oapg==}
+    dev: false
 
   /repeat-string@1.6.1:
     resolution: {integrity: sha512-PV0dzCYDNfRi1jCDbJzpW7jNNDRuCOG/jI5ctQcGKt/clZD+YcPS3yIlWuTJMmESC8aevCFmWJy5wjAFgNqN6w==}
