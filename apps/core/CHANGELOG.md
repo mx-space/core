@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [4.3.7](https://github.com/mx-space/core/compare/v4.3.6...v4.3.7) (2023-09-05)
+
+
+### Bug Fixes
+
+* only use swc in dev ([2bd87e9](https://github.com/mx-space/core/commit/2bd87e9a52fc0d37f0e9cc6caa104a2f5b148e15))
+* rss 2.0 field ([8a39eaf](https://github.com/mx-space/core/commit/8a39eafbc709837c9dc00bea664dbb86cf5bbea6))
+
+
+### Features
+
+* add swc to complie ([d23f71a](https://github.com/mx-space/core/commit/d23f71ade0a798fe64cae828b2eaeeffb05910d6))
+
+
+
 ## [4.3.6](https://github.com/mx-space/core/compare/v4.3.5...v4.3.6) (2023-09-05)
 
 
