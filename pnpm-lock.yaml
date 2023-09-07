@@ -218,8 +218,8 @@ importers:
         specifier: 10.0.1
         version: 10.0.1
       marked:
-        specifier: 7.0.4
-        version: 7.0.4
+        specifier: 7.0.5
+        version: 7.0.5
       mime-types:
         specifier: ^2.1.35
         version: 2.1.35
@@ -437,7 +437,7 @@ importers:
         version: 4.17.21
       tsup:
         specifier: 7.2.0
-        version: 7.2.0
+        version: 7.2.0(ts-node@10.9.1)(typescript@5.2.2)
       umi-request:
         specifier: 1.4.0
         version: 1.4.0
@@ -1920,7 +1920,7 @@ packages:
   /@innei/eslint-config-ts@0.11.1(typescript@5.2.2):
     resolution: {integrity: sha512-Voyd2baVSr98NIavjVackSGI9q+64hMfKMXuROak7jcuUvFsc0Zxl50s+eJ6rPgoEiq1s0b/rCRSD7ZNpTax3Q==}
     peerDependencies:
-      typescript: '>=4'
+      typescript: 5.2.2
     dependencies:
       '@typescript-eslint/eslint-plugin': 6.0.0(@typescript-eslint/parser@6.2.0)(eslint@8.48.0)(typescript@5.2.2)
       '@typescript-eslint/parser': 6.2.0(eslint@8.48.0)(typescript@5.2.2)
@@ -2252,7 +2252,7 @@ packages:
   /@nestjs/schematics@10.0.2(chokidar@3.5.3)(typescript@5.2.2):
     resolution: {integrity: sha512-DaZZjymYoIfRqC5W62lnYXIIods1PDY6CGc8+IpRwyinzffjKxZ3DF3exu+mdyvllzkXo9DTXkoX4zOPSJHCkw==}
     peerDependencies:
-      typescript: '>=4.8.2'
+      typescript: 5.2.2
     dependencies:
       '@angular-devkit/core': 16.1.8(chokidar@3.5.3)
       '@angular-devkit/schematics': 16.1.8(chokidar@3.5.3)
@@ -5597,7 +5597,7 @@ packages:
     resolution: {integrity: sha512-mX3qW3idpueT2klaQXBzrIM/pHw+T0B/V9KHEvNrqijTq9NFnMZU6oreVxDYcf33P8a5cW+67PjodNHthGnNVg==}
     engines: {node: '>=12.13.0', yarn: '>=1.0.0'}
     peerDependencies:
-      typescript: '>3.6.0'
+      typescript: 5.2.2
       webpack: ^5.11.0
     dependencies:
       '@babel/code-frame': 7.22.13
@@ -6922,8 +6922,8 @@ packages:
     resolution: {integrity: sha512-CkYQrPYZfWnu/DAmVCpTSX/xHpKZ80eKh2lAkyA6AJTef6bW+6JpbQZN5rofum7da+SyN1bi5ctTm+lTfcCW3g==}
     dev: true
 
-  /marked@7.0.4:
-    resolution: {integrity: sha512-t8eP0dXRJMtMvBojtkcsA7n48BkauktUKzfkPSCq85ZMTJ0v76Rke4DYz01omYpPTUh4p/f7HePgRo3ebG8+QQ==}
+  /marked@7.0.5:
+    resolution: {integrity: sha512-lwNAFTfXgqpt/XvK17a/8wY9/q6fcSPZT1aP6QW0u74VwaJF/Z9KbRcX23sWE4tODM+AolJNcUtErTkgOeFP/Q==}
     engines: {node: '>= 16'}
     hasBin: true
     dev: false
@@ -7822,7 +7822,7 @@ packages:
     engines: {node: '>=4.0.0'}
     dev: false
 
-  /postcss-load-config@4.0.1:
+  /postcss-load-config@4.0.1(ts-node@10.9.1):
     resolution: {integrity: sha512-vEJIc8RdiBRu3oRAI0ymerOn+7rPuMvRXslTvZUKZonDHFIczxztIyJ1urxM1x9JXEikvpWWTUUqal5j/8QgvA==}
     engines: {node: '>= 14'}
     peerDependencies:
@@ -7835,6 +7835,7 @@ packages:
         optional: true
     dependencies:
       lilconfig: 2.1.0
+      ts-node: 10.9.1(@types/node@20.5.9)(typescript@5.2.2)
       yaml: 2.3.1
     dev: true
 
@@ -8867,7 +8868,7 @@ packages:
     resolution: {integrity: sha512-lC/RGlPmwdrIBFTX59wwNzqh7aR2otPNPR/5brHZm/XKFYKsfqxihXUe9pU3JI+3vGkl+vyCoNNnPhJn3aLK1A==}
     engines: {node: '>=16.13.0'}
     peerDependencies:
-      typescript: '>=4.2.0'
+      typescript: 5.2.2
     dependencies:
       typescript: 5.2.2
     dev: true
@@ -8883,7 +8884,7 @@ packages:
       '@swc/core': '>=1.2.50'
       '@swc/wasm': '>=1.2.50'
       '@types/node': '*'
-      typescript: '>=2.7'
+      typescript: 5.2.2
     peerDependenciesMeta:
       '@swc/core':
         optional: true
@@ -8912,7 +8913,7 @@ packages:
     engines: {node: ^14.13.1 || ^16 || >=18}
     hasBin: true
     peerDependencies:
-      typescript: ^4.3.5 || ^5.0.0
+      typescript: 5.2.2
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -8959,14 +8960,14 @@ packages:
   /tslib@2.6.2:
     resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
 
-  /tsup@7.2.0:
+  /tsup@7.2.0(ts-node@10.9.1)(typescript@5.2.2):
     resolution: {integrity: sha512-vDHlczXbgUvY3rWvqFEbSqmC1L7woozbzngMqTtL2PGBODTtWlRwGDDawhvWzr5c1QjKe4OAKqJGfE1xeXUvtQ==}
     engines: {node: '>=16.14'}
     hasBin: true
     peerDependencies:
       '@swc/core': ^1
       postcss: ^8.4.12
-      typescript: '>=4.1.0'
+      typescript: 5.2.2
     peerDependenciesMeta:
       '@swc/core':
         optional: true
@@ -8983,12 +8984,13 @@ packages:
       execa: 5.1.1
       globby: 11.1.0
       joycon: 3.1.1
-      postcss-load-config: 4.0.1
+      postcss-load-config: 4.0.1(ts-node@10.9.1)
       resolve-from: 5.0.0
       rollup: 3.28.1
       source-map: 0.8.0-beta.0
       sucrase: 3.34.0
       tree-kill: 1.2.2
+      typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
       - ts-node
