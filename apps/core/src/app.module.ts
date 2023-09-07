@@ -43,6 +43,7 @@ import { RecentlyModule } from './modules/recently/recently.module'
 import { RenderEjsModule } from './modules/render/render.module'
 import { SayModule } from './modules/say/say.module'
 import { SearchModule } from './modules/search/search.module'
+import { ServerTimeModule } from './modules/server-time/server-time.module'
 import { ServerlessModule } from './modules/serverless/serverless.module'
 import { SitemapModule } from './modules/sitemap/sitemap.module'
 import { SnippetModule } from './modules/snippet/snippet.module'
@@ -88,6 +89,7 @@ import { RedisModule } from './processors/redis/redis.module'
     SayModule,
     SearchModule,
     ServerlessModule,
+    ServerTimeModule,
     SitemapModule,
     SnippetModule,
     SubscribeModule,
