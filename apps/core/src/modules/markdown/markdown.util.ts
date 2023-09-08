@@ -161,5 +161,5 @@ marked.use({
 })
 
 export const markdownToHtml = (markdown: string) => {
-  return marked(markdown, { mangle: false, headerIds: false, gfm: true })
+  return marked(markdown, { gfm: true })
 }
