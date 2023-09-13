@@ -25,6 +25,7 @@ export class SitemapController {
       (item) => `<url>
   <loc>${item.url}</loc>
   <lastmod>${item.published_at?.toISOString() || 'N/A'}</lastmod>
+  <changefreq>daily</changefreq>
   </url>`,
     )
 

@@ -4,6 +4,7 @@ import { createAdapter } from '@socket.io/redis-adapter'
 import { redisSubPub } from '~/utils/redis-subpub.util'
 
 export const RedisIoAdapterKey = 'mx-core-socket'
+
 export class RedisIoAdapter extends IoAdapter {
   createIOServer(port: number, options?: any) {
     const server = super.createIOServer(port, options)
