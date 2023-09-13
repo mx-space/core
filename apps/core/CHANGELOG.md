@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [4.3.10](https://github.com/mx-space/core/compare/v4.3.9...v4.3.10) (2023-09-13)
+
+
+### Bug Fixes
+
+* **deps:** update babel monorepo to v7.22.17 (patch) ([#1131](https://github.com/mx-space/core/issues/1131)) ([2f12db6](https://github.com/mx-space/core/commit/2f12db6762baef6b525b1fc87065fd1a41aa60ee))
+* server time middleware apply ([a4e1bc4](https://github.com/mx-space/core/commit/a4e1bc468ef67a53769b7763f62030c47826be44))
+
+
+
 ## [4.3.9](https://github.com/mx-space/core/compare/v4.3.8...v4.3.9) (2023-09-07)
 
 
