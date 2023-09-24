@@ -82,7 +82,7 @@
     "class-validator": "0.13.2",
     "class-validator-jsonschema": "npm:@innei/class-validator-jsonschema@3.1.2",
     "commander": "10.0.1",
-    "consola": "^2.15.3",
+    "consola": "^3.0.0",
     "dayjs": "1.11.9",
     "ejs": "3.1.9",
     "form-data": "4.0.0",
