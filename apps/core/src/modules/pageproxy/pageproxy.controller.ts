@@ -15,6 +15,7 @@ import {
   Req,
   Res,
 } from '@nestjs/common'
+import { SkipThrottle } from '@nestjs/throttler'
 
 import { Cookies } from '~/common/decorators/cookie.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
@@ -29,6 +30,7 @@ import { PageProxyDebugDto } from './pageproxy.dto'
 import { PageProxyService } from './pageproxy.service'
 
 @Controller('/')
+@SkipThrottle()
 export class PageProxyController {
   constructor(
     private readonly cacheService: CacheService,
