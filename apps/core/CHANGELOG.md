@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.3.11](https://github.com/mx-space/core/compare/v4.3.10...v4.3.11) (2023-09-24)
+
+
+### Bug Fixes
+
+* skip throttler for proxy controller ([62cd807](https://github.com/mx-space/core/commit/62cd80743be73a5bc47ab618062c167bf8a8fd58))
+
+
+
 ## [4.3.10](https://github.com/mx-space/core/compare/v4.3.9...v4.3.10) (2023-09-13)
 
 
