@@ -63,6 +63,7 @@ export class CommentService implements OnModuleInit {
     const masterInfo = await this.userService.getSiteMasterOrMocked()
     return UserModel.serialize(masterInfo)
   }
+
   async onModuleInit() {
     const masterInfo = await this.getMailOwnerProps()
     const renderProps = {

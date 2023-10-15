@@ -155,9 +155,9 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
 
   async sendTestEmail() {
     const master = await this.configsService.getMaster()
-    const mailOptons = await this.configsService.get('mailOptions')
+    const mailOptions = await this.configsService.get('mailOptions')
     return this.instance.sendMail({
-      from: `"Mx Space" <${mailOptons.user}>`,
+      from: `"Mx Space" <${mailOptions.user}>`,
       to: master.mail,
       subject: '测试邮件',
       text: '这是一封测试邮件',
