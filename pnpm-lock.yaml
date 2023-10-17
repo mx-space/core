@@ -224,8 +224,8 @@ importers:
         specifier: ^2.1.35
         version: 2.1.35
       mkdirp:
-        specifier: ^1.0.4
-        version: 1.0.4
+        specifier: ^3.0.0
+        version: 3.0.1
       mongoose:
         specifier: 7.5.0
         version: 7.5.0
@@ -7166,6 +7166,7 @@ packages:
     resolution: {integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==}
     engines: {node: '>=10'}
     hasBin: true
+    requiresBuild: true
     dev: false
 
   /mkdirp@3.0.1:
@@ -7174,7 +7175,6 @@ packages:
     hasBin: true
     requiresBuild: true
     dev: false
-    optional: true
 
   /mlly@1.4.2:
     resolution: {integrity: sha512-i/Ykufi2t1EZ6NaPLdfnZk2AX8cs0d+mTzVKuPfqPKPatxLApaBoxJQ9x1/uckXtrS/U5oisPMDkNs0yQTaBRg==}

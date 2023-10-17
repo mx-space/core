@@ -99,7 +99,7 @@
     "lru-cache": "10.0.1",
     "marked": "8.0.1",
     "mime-types": "^2.1.35",
-    "mkdirp": "^1.0.4",
+    "mkdirp": "^3.0.0",
     "mongoose": "7.5.0",
     "mongoose-aggregate-paginate-v2": "1.0.6",
     "mongoose-autopopulate": "1.0.1",
