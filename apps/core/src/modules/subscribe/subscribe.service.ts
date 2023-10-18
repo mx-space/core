@@ -259,7 +259,7 @@ export class SubscribeService implements OnModuleInit {
     if (cachedEmailTemplate) finalTemplate = cachedEmailTemplate
     else {
       finalTemplate = await this.emailService.readTemplate(
-        SubscribleMailType.Newsletter,
+        SubscribeMailType.Newsletter,
       )
       this.lruCache.set(cacheKey, finalTemplate)
     }
