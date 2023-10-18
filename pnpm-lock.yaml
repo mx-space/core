@@ -328,8 +328,8 @@ importers:
         specifier: 2.4.0
         version: 2.4.0
       '@types/ejs':
-        specifier: 3.1.2
-        version: 3.1.2
+        specifier: 3.1.4
+        version: 3.1.4
       '@types/get-image-colors':
         specifier: 4.0.2
         version: 4.0.2
@@ -3179,8 +3179,8 @@ packages:
       cron: 2.4.3
     dev: true
 
-  /@types/ejs@3.1.2:
-    resolution: {integrity: sha512-ZmiaE3wglXVWBM9fyVC17aGPkLo/UgaOjEiI2FXQfyczrCefORPxIe+2dVmnmk3zkVIbizjrlQzmPGhSYGXG5g==}
+  /@types/ejs@3.1.4:
+    resolution: {integrity: sha512-fnM/NjByiWdSRJRrmGxgqOSAnmOnsvX1QcNYk5TVyIIj+7ZqOKMb9gQa4OIl/lil2w/8TiTWV+nz3q8yqxez/w==}
     dev: true
 
   /@types/eslint-scope@3.7.4:
