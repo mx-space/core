@@ -2,7 +2,9 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/mx-space/mx-server.svg?style=flat)](https://github.com/mx-space/mx-server/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues-raw/mx-space/mx-server.svg?style=flat)](https://github.com/mx-space/mx-server/issues)
-[![Node.js Build CI](https://github.com/mx-space/core/actions/workflows/build.yml/badge.svg)](https://github.com/mx-space/core/actions/workflows/build.yml)
+[![Build (core)](https://github.com/mx-space/core/actions/workflows/build-core.yml/badge.svg)](https://github.com/mx-space/core/actions/workflows/build-core.yml)
+[![Docker Build](https://github.com/mx-space/core/actions/workflows/docker.yml/badge.svg)](https://github.com/mx-space/core/actions/workflows/docker.yml)
+[![Release](https://github.com/mx-space/core/actions/workflows/release.yml/badge.svg)](https://github.com/mx-space/core/actions/workflows/release.yml)
 [![GitHub license](https://img.shields.io/github/license/mx-space/mx-server.svg?style=flat)](https://github.com/mx-space/mx-server/blob/main/LICENSE)
 [![wakatime](https://wakatime.com/badge/user/9213dc96-df0d-4e66-b0bb-50f9e04e988c/project/8afd37d1-7501-426f-824b-50aeeb96bb6f.svg)](https://wakatime.com/badge/user/9213dc96-df0d-4e66-b0bb-50f9e04e988c/project/8afd37d1-7501-426f-824b-50aeeb96bb6f)
 [![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/innei/mx-server)](https://hub.docker.com/repository/docker/innei/mx-server)
@@ -173,7 +175,7 @@ ResponseInterceptor -> ResponseFilterInterceptor -> JSONTransformInterceptor -> 
   1. [AssetService] 获取本地资源服务
   1. [TextMacroService] 文本宏替换服务
   1. [JWTService] JWT 服务
-  1. [BarkPushService] Bark Push 服务 
+  1. [BarkPushService] Bark Push 服务
 
 ## 开发
 
