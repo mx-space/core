@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [4.3.12](https://github.com/mx-space/core/compare/v4.3.11...v4.3.12) (2023-10-18)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ua-parser-js to v1.0.36 ([#1132](https://github.com/mx-space/core/issues/1132)) ([badd8e8](https://github.com/mx-space/core/commit/badd8e87a9af1d24b923be75af3a73db18786cc2))
+* disable api cache if query with ts ([b6796b4](https://github.com/mx-space/core/commit/b6796b4c99368c76c299a3642c9f79ccba27f755))
+* judge  is master ([25870cd](https://github.com/mx-space/core/commit/25870cdfadde847e79087de8ab25a6c03ab55779))
+* lint ([a2e351c](https://github.com/mx-space/core/commit/a2e351cc252dd9372d4831b3a30e121d3ffa23c7))
+* typo ([bbc1821](https://github.com/mx-space/core/commit/bbc18216b28dd8dfa2aa20652727865dfcd7eae6))
+
+
+
 ## [4.3.11](https://github.com/mx-space/core/compare/v4.3.10...v4.3.11) (2023-09-24)
 
 
