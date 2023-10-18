@@ -1,7 +1,7 @@
 import { readdir, rm } from 'fs/promises'
 import { join } from 'path'
 import dayjs from 'dayjs'
-import mkdirp from 'mkdirp'
+import { mkdirp } from 'mkdirp'
 import type { StoreJWTPayload } from './helper.jwt.service'
 
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'

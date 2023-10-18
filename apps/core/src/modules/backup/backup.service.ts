@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'fs'
 import { readdir, readFile, rm, writeFile } from 'fs/promises'
 import { join, resolve } from 'path'
-import mkdirp from 'mkdirp'
+import { mkdirp } from 'mkdirp'
 import { quiet } from 'zx-cjs'
 
 import {
