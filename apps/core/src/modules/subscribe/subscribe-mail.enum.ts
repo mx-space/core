@@ -1,3 +1,3 @@
-export enum SubscribleMailType {
+export enum SubscribeMailType {
   Newsletter = 'newsletter',
 }

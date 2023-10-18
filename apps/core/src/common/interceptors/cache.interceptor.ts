@@ -58,6 +58,14 @@ export class HttpCacheInterceptor implements NestInterceptor {
       return call$
     }
 
+    const query = request.query || ({} as Record<string, any>)
+    const queryWithTs = query.ts || query.timestamp || query._t || query.t
+
+    // 如果请求中带有时间戳参数，则不缓存
+    if (queryWithTs) {
+      return call$
+    }
+
     const handler = context.getHandler()
     const isDisableCache = this.reflector.get(META.HTTP_CACHE_DISABLE, handler)
 

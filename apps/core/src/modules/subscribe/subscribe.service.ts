@@ -22,7 +22,7 @@ import { hashString, md5 } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
 import { UserService } from '../user/user.service'
-import { SubscribleMailType } from './subscribe-mail.enum'
+import { SubscribeMailType } from './subscribe-mail.enum'
 import {
   SubscribeNoteCreateBit,
   SubscribePostCreateBit,
@@ -67,7 +67,7 @@ export class SubscribeService implements OnModuleInit {
       },
     }
     this.emailService.registerEmailType(
-      SubscribleMailType.Newsletter,
+      SubscribeMailType.Newsletter,
       renderProps,
     )
   }
@@ -110,9 +110,8 @@ export class SubscribeService implements OnModuleInit {
         )
           self.sendEmail(email, {
             author: owner.name,
-            detail_link: await self.urlBuilderService.buildWithBaseUrl(
-              noteOrPost,
-            ),
+            detail_link:
+              await self.urlBuilderService.buildWithBaseUrl(noteOrPost),
             text: `${noteOrPost.text.slice(0, 150)}...`,
             title: noteOrPost.title,
             unsubscribe_link: unsubscribeLink,
