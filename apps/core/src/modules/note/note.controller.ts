@@ -1,7 +1,6 @@
 import type { FilterQuery } from 'mongoose'
 
 import {
-  BadRequestException,
   Body,
   Delete,
   ForbiddenException,
@@ -21,7 +20,7 @@ import { IsMaster } from '~/common/decorators/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
-import { IntIdOrMongoIdDto, MongoIdDto } from '~/shared/dto/id.dto'
+import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 
@@ -160,36 +159,6 @@ export class NoteController {
   async patch(@Body() body: PartialNoteModel, @Param() params: MongoIdDto) {
     await this.noteService.updateById(params.id, body)
     return
-  }
-
-  @Get('like/:id')
-  /**
-   * @deprecated
-   */
-  async likeNote(
-    @Param() param: IntIdOrMongoIdDto,
-    @IpLocation() location: IpRecord,
-  ) {
-    const id =
-      typeof param.id === 'number'
-        ? (await this.noteService.model.findOne({ nid: param.id }).lean())?.id
-        : param.id
-    if (!id) {
-      throw new CannotFindException()
-    }
-    try {
-      const res = await this.countingService.updateLikeCountWithIp(
-        'Note',
-        id,
-        location.ip,
-      )
-      if (!res) {
-        throw new BadRequestException('你已经喜欢过啦！')
-      }
-      return
-    } catch (e: any) {
-      throw new BadRequestException(e)
-    }
   }
 
   @Delete(':id')

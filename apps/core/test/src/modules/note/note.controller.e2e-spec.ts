@@ -356,28 +356,4 @@ describe('NoteController (e2e)', () => {
 
     expect(res.statusCode).toBe(200)
   })
-
-  test('GET /like/:id', async () => {
-    const app = proxy.app
-
-    const res1 = await app.inject({
-      method: 'GET',
-      url: `/notes/like/${mockDataWithPasswordNid}`,
-      headers: {
-        ...authPassHeader,
-      },
-    })
-
-    expect(res1.statusCode).toBe(204)
-
-    const res2 = await app.inject({
-      method: 'GET',
-      url: `/notes/like/${mockDataWithPasswordNid}`,
-      headers: {
-        ...authPassHeader,
-      },
-    })
-
-    expect(res2.statusCode).toBe(400)
-  })
 })

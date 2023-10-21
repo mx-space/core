@@ -2,7 +2,6 @@ import type { PipelineStage } from 'mongoose'
 import type { CategoryModel } from '../category/category.model'
 
 import {
-  BadRequestException,
   Body,
   Delete,
   Get,
@@ -225,32 +224,6 @@ export class PostController {
   async deletePost(@Param() params: MongoIdDto) {
     const { id } = params
     await this.postService.deletePost(id)
-
-    return
-  }
-
-  /**
-   * @deprecated
-   */
-  @Get('/_thumbs-up')
-  async thumbsUpArticle(
-    @Query() query: MongoIdDto,
-    @IpLocation() location: IpRecord,
-  ) {
-    const { ip } = location
-    const { id } = query
-    try {
-      const res = await this.countingService.updateLikeCountWithIp(
-        'Post',
-        id,
-        ip,
-      )
-      if (!res) {
-        throw new BadRequestException('你已经支持过啦！')
-      }
-    } catch (e: any) {
-      throw new BadRequestException(e)
-    }
 
     return
   }
