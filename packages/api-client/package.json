@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/api-client",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "type": "module",
   "description": "A api client for mx-space server@next",
   "author": "Innei",
