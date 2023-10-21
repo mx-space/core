@@ -117,7 +117,7 @@ export class ActivityService {
 
   async likeAndEmit(type: ActivityLikeSupportType, id: string, ip: string) {
     try {
-      const res = await this.countingService.updateLikeCount(type, id, ip)
+      const res = await this.countingService.updateLikeCountWithIp(type, id, ip)
       if (!res) {
         throw new BadRequestException('你已经支持过啦！')
       }

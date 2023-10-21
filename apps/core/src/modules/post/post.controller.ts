@@ -18,7 +18,6 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
-import { VisitDocument } from '~/common/decorators/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -143,7 +142,6 @@ export class PostController {
   }
 
   @Get('/latest')
-  @VisitDocument('Post')
   async getLatest(@IpLocation() ip: IpRecord) {
     const last = await this.postService.model
       .findOne({})
@@ -162,7 +160,6 @@ export class PostController {
   }
 
   @Get('/:category/:slug')
-  @VisitDocument('Post')
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,
     @IpLocation() { ip }: IpRecord,
@@ -243,7 +240,11 @@ export class PostController {
     const { ip } = location
     const { id } = query
     try {
-      const res = await this.countingService.updateLikeCount('Post', id, ip)
+      const res = await this.countingService.updateLikeCountWithIp(
+        'Post',
+        id,
+        ip,
+      )
       if (!res) {
         throw new BadRequestException('你已经支持过啦！')
       }

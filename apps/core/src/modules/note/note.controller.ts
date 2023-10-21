@@ -18,7 +18,6 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
 import { IsMaster } from '~/common/decorators/role.decorator'
-import { VisitDocument } from '~/common/decorators/update-count.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
@@ -179,7 +178,7 @@ export class NoteController {
       throw new CannotFindException()
     }
     try {
-      const res = await this.countingService.updateLikeCount(
+      const res = await this.countingService.updateLikeCountWithIp(
         'Note',
         id,
         location.ip,
@@ -200,7 +199,6 @@ export class NoteController {
   }
 
   @Get('/latest')
-  @VisitDocument('Note')
   async getLatestOne(@IsMaster() isMaster: boolean) {
     const result = await this.noteService.getLatestOne(
       isMaster ? {} : this.noteService.publicNoteQueryCondition,
@@ -216,7 +214,6 @@ export class NoteController {
 
   // C 端入口
   @Get('/nid/:nid')
-  @VisitDocument('Note')
   async getNoteByNid(
     @Param() params: NidType,
     @IsMaster() isMaster: boolean,

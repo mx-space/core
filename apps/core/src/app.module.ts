@@ -10,11 +10,11 @@ import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { RolesGuard } from './common/guards/roles.guard'
 import { AnalyzeInterceptor } from './common/interceptors/analyze.interceptor'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
-import { CountingInterceptor } from './common/interceptors/counting.interceptor'
 import { DbQueryInterceptor } from './common/interceptors/db-query.interceptor'
 import { IdempotenceInterceptor } from './common/interceptors/idempotence.interceptor'
 import { JSONTransformInterceptor } from './common/interceptors/json-transform.interceptor'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
+import { AckModule } from './modules/ack/ack.module'
 import { ActivityModule } from './modules/activity/activity.module'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
@@ -64,6 +64,7 @@ import { RedisModule } from './processors/redis/redis.module'
     RedisModule,
 
     // biz module
+    AckModule,
     ActivityModule,
     AggregateModule,
     AnalyzeModule,
@@ -116,10 +117,7 @@ import { RedisModule } from './processors/redis/redis.module'
       provide: APP_INTERCEPTOR,
       useClass: AnalyzeInterceptor,
     },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: CountingInterceptor,
-    },
+
     {
       provide: APP_INTERCEPTOR,
       useClass: HttpCacheInterceptor,

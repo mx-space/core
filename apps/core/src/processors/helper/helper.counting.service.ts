@@ -30,41 +30,32 @@ export class CountingService {
     return true
   }
 
-  public async updateReadCount(
-    type: keyof typeof ArticleType,
-    id: string,
-    ip: string,
-  ) {
-    if (!this.checkIdAndIp(id, ip)) {
-      return
-    }
+  // public async updateReadCountWithIp(
+  //   type: keyof typeof ArticleType,
+  //   id: string,
+  //   ip: string,
+  // ) {
+  //   if (!this.checkIdAndIp(id, ip)) {
+  //     return
+  //   }
+  //   const redis = this.redis.getClient()
 
-    const model = this.databaseService.getModelByRefType(type as any)
-    const doc = await model.findById(id)
+  //   const isReadBefore = await redis.sismember(
+  //     getRedisKey(RedisKeys.Read, id),
+  //     ip,
+  //   )
+  //   if (isReadBefore) {
+  //     this.logger.debug(`已经增加过计数了，${id}`)
+  //     return
+  //   }
 
-    if (!doc) {
-      this.logger.debug('无法更新阅读计数，文档不存在')
-      return
-    }
+  //   const doc = await this.updateReadCount(type, id)
 
-    const redis = this.redis.getClient()
+  //   await redis.sadd(getRedisKey(RedisKeys.Read, doc.id), ip)
+  //   this.logger.debug(`增加阅读计数，(${doc.title}`)
+  // }
 
-    const isReadBefore = await redis.sismember(
-      getRedisKey(RedisKeys.Read, id),
-      ip,
-    )
-    if (isReadBefore) {
-      this.logger.debug(`已经增加过计数了，${id}`)
-      return
-    }
-    await Promise.all([
-      redis.sadd(getRedisKey(RedisKeys.Read, doc.id), ip),
-      doc.updateOne({ $inc: { 'count.read': 1 } }),
-    ])
-    this.logger.debug(`增加阅读计数，(${doc.title}`)
-  }
-
-  public async updateLikeCount(
+  public async updateLikeCountWithIp(
     type: keyof typeof ArticleType,
     id: string,
     ip: string,
@@ -89,6 +80,15 @@ export class CountingService {
     ])
     this.logger.debug(`增加喜欢计数，(${doc.title}`)
     return true
+  }
+  public async updateReadCount(type: keyof typeof ArticleType, id: string) {
+    const model = this.databaseService.getModelByRefType(type as any)
+    const doc = await model.findById(id)
+
+    if (!doc) throw ''
+    await doc.updateOne({ $inc: { 'count.read': 1 } })
+    this.logger.debug(`增加阅读计数，(${doc.title}`)
+    return doc
   }
 
   async getThisRecordIsLiked(id: string, ip: string) {

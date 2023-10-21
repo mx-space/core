@@ -31,8 +31,8 @@ export class AppController implements OnModuleInit {
     @InjectModel(OptionModel)
     private readonly optionModel: MongooseModel<OptionModel>,
   ) {}
-
   private upStartAt: number
+
   onModuleInit() {
     this.upStartAt = Date.now()
   }
