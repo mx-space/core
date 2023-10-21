@@ -144,7 +144,7 @@
     "@types/nodemailer": "6.4.11",
     "@types/qs": "6.9.8",
     "@types/remove-markdown": "0.3.2",
-    "@types/semver": "7.5.3",
+    "@types/semver": "7.5.4",
     "@types/ua-parser-js": "0.7.37",
     "@types/validator": "13.11.3",
     "@vercel/ncc": "0.38.0",
