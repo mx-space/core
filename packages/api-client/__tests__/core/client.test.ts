@@ -7,7 +7,7 @@ import type { AxiosResponse } from 'axios'
 import { axiosAdaptor } from '~/adaptors/axios'
 import { umiAdaptor } from '~/adaptors/umi-request'
 import {
-  allContollerNames,
+  allControllerNames,
   allControllers,
   NoteController,
   PostController,
@@ -83,7 +83,7 @@ describe('test client', () => {
 
   it('should throw error if not inject other client', () => {
     const client = generateClient()
-    allContollerNames.forEach((name) => {
+    allControllerNames.forEach((name) => {
       expect(() => (client as any)[name].name).toThrow(
         `${
           name.charAt(0).toUpperCase() + name.slice(1)
@@ -96,7 +96,7 @@ describe('test client', () => {
     const client = generateClient()
 
     client.injectControllers(allControllers)
-    allContollerNames.forEach((name) => {
+    allControllerNames.forEach((name) => {
       expect(() => (client as any)[name].name).toBeDefined()
     })
   })

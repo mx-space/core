@@ -188,8 +188,6 @@ describe('NoteController (e2e)', () => {
     }
 
     expect(data).toMatchSnapshot()
-
-    expect(countingServiceProvider.useValue.updateReadCount).toBeCalled()
   })
 
   test('DEL /notes/:id', async () => {

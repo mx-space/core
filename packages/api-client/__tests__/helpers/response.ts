@@ -1,3 +1,4 @@
+import { inspect } from 'util'
 import isEqual from 'lodash/isEqual'
 import { vi } from 'vitest'
 import type { URLSearchParams } from 'url'
@@ -29,9 +30,9 @@ export const mockResponse = <T>(
         const { data } = options || {}
         if (!isEqual(requestBody, data)) {
           throw new Error(
-            `body not equal, got: ${JSON.stringify(
-              data,
-            )} except: ${JSON.stringify(requestBody)}`,
+            `body not equal, got: ${inspect(data)} except: ${inspect(
+              requestBody,
+            )}`,
           )
         }
       }

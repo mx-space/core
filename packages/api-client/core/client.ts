@@ -12,7 +12,7 @@ import { isPlainObject } from '~/utils'
 import { camelcaseKeys } from '~/utils/camelcase-keys'
 import { resolveFullPath } from '~/utils/path'
 
-import { allContollerNames } from '../controllers'
+import { allControllerNames } from '../controllers'
 import { attachRequestMethod } from './attach-request'
 import { RequestError } from './error'
 
@@ -42,7 +42,7 @@ class HTTPClient<
   }
 
   private initGetClient() {
-    for (const name of allContollerNames) {
+    for (const name of allControllerNames) {
       Object.defineProperty(this, name, {
         get() {
           const client = Reflect.get(this, `${methodPrefix}${name}`)
