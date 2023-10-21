@@ -346,8 +346,8 @@ importers:
         specifier: 2.1.2
         version: 2.1.2
       '@types/mongoose-aggregate-paginate-v2':
-        specifier: 1.0.10
-        version: 1.0.10
+        specifier: 1.0.11
+        version: 1.0.11
       '@types/node':
         specifier: 20.8.6
         version: 20.8.6
@@ -2245,9 +2245,10 @@ packages:
     resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
     dev: true
 
-  /@types/mongoose-aggregate-paginate-v2@1.0.10:
-    resolution: {integrity: sha512-QBdTwRzAoqTnbz08HW8RfKiwrnXtJD2UNhQTjHSrpgVYpi7D/mmMFsIqHrevpwkaNMflMe/b+Q8uTpfxiZ5ucA==}
+  /@types/mongoose-aggregate-paginate-v2@1.0.11:
+    resolution: {integrity: sha512-QeDb11JXvfcOpIX8egfg7sVyrHxlCqozYwVY9SrPmo0D2WMYlNEPnWI9Xf/LaAxyWZ5eyJzK0N0ROMkHUu6JLw==}
     dependencies:
+      '@types/node': 20.8.6
       mongoose: 7.6.3
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
