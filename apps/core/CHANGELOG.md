@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [4.4.0](https://github.com/mx-space/core/compare/v4.3.12...v4.4.0) (2023-10-21)
+
+
+### Features
+
+* **api-client:** add ack controller ([08dc741](https://github.com/mx-space/core/commit/08dc741c6ccc6b32dbb172557634a67a5dd54944))
+
+
+
 ## [4.3.12](https://github.com/mx-space/core/compare/v4.3.11...v4.3.12) (2023-10-18)
 
 
