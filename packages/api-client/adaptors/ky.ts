@@ -34,13 +34,15 @@ export const createKyAdaptor = (ky: KyInstance) => {
       get(url, options) {
         return getDataFromKyResponse(ky.get(url, options))
       },
-      post(url, options) {
+      async post(url, options) {
         const data = options.data
         delete options.data
         const kyOptions: Options = {
           ...options,
+
           json: data,
         }
+        // FIXME https://github.com/sindresorhus/ky/issues/535
 
         return getDataFromKyResponse(ky.post(url, kyOptions))
       },

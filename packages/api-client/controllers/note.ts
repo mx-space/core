@@ -8,10 +8,11 @@ import type {
   NoteWrappedPayload,
   NoteWrappedWithLikedPayload,
 } from '~/models/note'
-import type { HTTPClient } from '../core/client'
 import type { SortOptions } from './base'
 
 import { autoBind } from '~/utils/auto-bind'
+
+import { HTTPClient } from '../core/client'
 
 declare module '../core/client' {
   interface HTTPClient<
@@ -108,13 +109,6 @@ export class NoteController<ResponseWrapper> implements IController {
     }>({
       params: { size },
     })
-  }
-
-  /**
-   * 喜欢这篇日记
-   */
-  likeIt(id: string | number) {
-    return this.proxy.like(id).get<never>()
   }
 
   /**

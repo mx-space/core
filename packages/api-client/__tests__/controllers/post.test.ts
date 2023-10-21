@@ -66,12 +66,4 @@ describe('test post client', () => {
     expect(data).toStrictEqual({ title: '1' })
     expect(data.$raw).toBeDefined()
   })
-
-  it('should thumbs-up post', async () => {
-    mockResponse('/posts/_thumbs-up?id=1', null)
-
-    const data = await client.post.thumbsUp('1')
-
-    expect(data).toBeNull()
-  })
 })

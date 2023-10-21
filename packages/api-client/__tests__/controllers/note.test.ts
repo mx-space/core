@@ -87,14 +87,6 @@ describe('test note client', () => {
     expect(data.title).toBe('1')
   })
 
-  it('should like note', async () => {
-    mockResponse('/notes/like/1', null)
-
-    const data = await client.note.likeIt('1')
-
-    expect(data).toBeNull()
-  })
-
   it('should forbidden if no password provide', async () => {
     spyOn(axiosAdaptor, 'get').mockRejectedValue({
       response: {
