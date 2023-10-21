@@ -141,7 +141,7 @@
     "@types/mime-types": "2.1.2",
     "@types/mongoose-aggregate-paginate-v2": "1.0.10",
     "@types/node": "20.8.6",
-    "@types/nodemailer": "6.4.11",
+    "@types/nodemailer": "6.4.13",
     "@types/qs": "6.9.8",
     "@types/remove-markdown": "0.3.2",
     "@types/semver": "7.5.3",
