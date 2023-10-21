@@ -337,8 +337,8 @@ importers:
         specifier: 4.0.8
         version: 4.0.8
       '@types/lodash':
-        specifier: 4.14.199
-        version: 4.14.199
+        specifier: 4.14.200
+        version: 4.14.200
       '@types/marked':
         specifier: 6.0.0
         version: 6.0.0
@@ -409,8 +409,8 @@ importers:
         specifier: 4.17.20
         version: 4.17.20
       '@types/lodash':
-        specifier: 4.14.199
-        version: 4.14.199
+        specifier: 4.14.200
+        version: 4.14.200
       abort-controller:
         specifier: 3.0.0
         version: 3.0.0
@@ -2215,8 +2215,8 @@ packages:
       '@types/node': 20.8.6
     dev: false
 
-  /@types/lodash@4.14.199:
-    resolution: {integrity: sha512-Vrjz5N5Ia4SEzWWgIVwnHNEnb1UE1XMkvY5DGXrAeOGE9imk0hgTHh5GyDjLDJi9OTCn9oo9dXH1uToK1VRfrg==}
+  /@types/lodash@4.14.200:
+    resolution: {integrity: sha512-YI/M/4HRImtNf3pJgbF+W6FrXovqj+T+/HpENLTooK9PnkacBsDpeP3IpHab40CClUfhNmdM2WTNP2sa2dni5Q==}
     dev: true
 
   /@types/luxon@3.3.2:
