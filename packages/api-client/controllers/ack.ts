@@ -31,7 +31,7 @@ export class AckController<ResponseWrapper> implements IController {
   }
 
   read(type: 'post' | 'note', id: string) {
-    return this.proxy.ack.post<never>({
+    return this.proxy.post<never>({
       data: {
         type: 'read',
         payload: {
