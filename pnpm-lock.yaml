@@ -233,8 +233,8 @@ importers:
         specifier: 1.0.6
         version: 1.0.6
       mongoose-autopopulate:
-        specifier: 1.0.1
-        version: 1.0.1(mongoose@7.6.3)
+        specifier: 1.1.0
+        version: 1.1.0(mongoose@7.6.3)
       mongoose-lean-getters:
         specifier: 1.1.0
         version: 1.1.0(mongoose@7.6.3)
@@ -6148,10 +6148,10 @@ packages:
     engines: {node: '>=4.0.0'}
     dev: false
 
-  /mongoose-autopopulate@1.0.1(mongoose@7.6.3):
-    resolution: {integrity: sha512-39rN0QQinA1iz/8JNVKM3MNq/zZrjStiWi8jA15diUC2nnJsvEgRXEir4L4D1azYxY+gBTuqEzLqd7Y+MC6pHQ==}
+  /mongoose-autopopulate@1.1.0(mongoose@7.6.3):
+    resolution: {integrity: sha512-nTlTMlu1fLQ1bmJT7ILKbZmPGt2fHErLO4UJwzMDsHSigjtUYz0l3nvFhg511QkOkZcKBRzOnPn3DmmLIUENzg==}
     peerDependencies:
-      mongoose: 6.x || 7.x
+      mongoose: 6.x || 7.x || 8.0.0-rc0 || 8.x
     dependencies:
       mongoose: 7.6.3
     dev: false

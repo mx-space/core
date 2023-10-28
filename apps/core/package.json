@@ -102,7 +102,7 @@
     "mkdirp": "^3.0.1",
     "mongoose": "7.6.3",
     "mongoose-aggregate-paginate-v2": "1.0.6",
-    "mongoose-autopopulate": "1.0.1",
+    "mongoose-autopopulate": "1.1.0",
     "mongoose-lean-getters": "1.1.0",
     "mongoose-lean-virtuals": "0.9.1",
     "mongoose-paginate-v2": "1.7.31",
