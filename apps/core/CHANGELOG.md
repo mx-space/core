@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## [4.4.1](https://github.com/mx-space/core/compare/v4.4.0...v4.4.1) (2023-10-29)
+
+
+### Bug Fixes
+
+* ack path ([05eda82](https://github.com/mx-space/core/commit/05eda82e3b5d5ad6dc105085ef6120c0da360e55))
+* **deps:** update dependency @nestjs/throttler to v5.0.1 ([126c075](https://github.com/mx-space/core/commit/126c075d26d7c562f60b0fb92548b57b97e740ca))
+* **deps:** update dependency axios-retry to v3.8.1 ([d74db15](https://github.com/mx-space/core/commit/d74db15fee1bbaaccbaa63fefcda0de808085f12))
+* **deps:** update dependency linkedom to v0.16.1 ([#1161](https://github.com/mx-space/core/issues/1161)) ([dbd7f1d](https://github.com/mx-space/core/commit/dbd7f1dabc80a7e5c5a341d921d312d701d478a5))
+* **deps:** update dependency marked to v9.1.3 ([dc0799c](https://github.com/mx-space/core/commit/dc0799c74aab81837e825b52f35fbb4d689aa800))
+* **deps:** update dependency nodemailer to v6.9.7 ([#1160](https://github.com/mx-space/core/issues/1160)) ([e6ae312](https://github.com/mx-space/core/commit/e6ae312e5cb7b0408837728a1a58a60ed7ce2f40))
+* **deps:** update dependency ua-parser-js to v1.0.37 ([77f384f](https://github.com/mx-space/core/commit/77f384f1d76d52ad58cebe433bbff9b2b21c8f9c))
+
+
+### Features
+
+* upgrade deps ([a126bbd](https://github.com/mx-space/core/commit/a126bbdf68926ac473cd3c67992469b016c96358))
+
+
+
 # [4.4.0](https://github.com/mx-space/core/compare/v4.3.12...v4.4.0) (2023-10-21)
 
 
