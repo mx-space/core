@@ -2,7 +2,7 @@
  * 对响应体进行 JSON 标准的转换
  * @author Innei
  */
-import { isArrayLike, isObjectLike } from 'lodash'
+import { isObjectLike } from 'lodash'
 import { map } from 'rxjs'
 import snakecaseKeys from 'snakecase-keys'
 import type {
@@ -50,7 +50,7 @@ export class JSONTransformInterceptor implements NestInterceptor {
       return obj
     }
 
-    if (isArrayLike(obj)) {
+    if (Array.isArray(obj)) {
       obj = Array.from(obj).map((i) => {
         return this.serialize(i)
       })

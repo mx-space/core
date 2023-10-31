@@ -2,6 +2,7 @@ import { URL } from 'url'
 import { pick } from 'lodash'
 import type { ReturnModelType } from '@typegoose/typegoose'
 import type { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
+import type { PipelineStage } from 'mongoose'
 import type { CategoryModel } from '../category/category.model'
 import type { RSSProps } from './aggregate.interface'
 
@@ -32,7 +33,7 @@ import { PageService } from '../page/page.service'
 import { PostService } from '../post/post.service'
 import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
-import { TimelineType } from './aggregate.dto'
+import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.dto'
 
 @Injectable()
 export class AggregateService {
@@ -418,5 +419,91 @@ export class AggregateService {
       this.cacheService.getClient().del(CacheKeys.SiteMap),
       this.cacheService.getClient().del(CacheKeys.SiteMapXml),
     ])
+  }
+
+  async getAllReadAndLikeCount(type: ReadAndLikeCountDocumentType) {
+    const pipeline = [
+      {
+        $match: {
+          count: { $exists: true }, // 筛选存在 count 字段的文档
+        },
+      },
+      {
+        $group: {
+          _id: null, // 不根据特定字段分组
+          totalLikes: { $sum: '$count.like' }, // 计算所有文档的 like 总和
+          totalReads: { $sum: '$count.read' }, // 计算所有文档的 read 总和
+        },
+      },
+      {
+        $project: {
+          _id: 0, // 不显示 _id 字段
+        },
+      },
+    ]
+
+    let counts = {
+      totalLikes: 0,
+      totalReads: 0,
+    }
+
+    switch (type) {
+      case ReadAndLikeCountDocumentType.Post: {
+        const result = await this.postService.model.aggregate(pipeline)
+        if (result[0]) counts = result[0]
+
+        break
+      }
+      case ReadAndLikeCountDocumentType.Note: {
+        const result = await this.postService.model.aggregate(pipeline)
+        if (result[0]) counts = result[0]
+        break
+      }
+      case ReadAndLikeCountDocumentType.All: {
+        const results = await Promise.all([
+          this.getAllReadAndLikeCount(ReadAndLikeCountDocumentType.Post),
+          this.getAllReadAndLikeCount(ReadAndLikeCountDocumentType.Note),
+        ])
+
+        for (const result of results) {
+          counts.totalLikes += result.totalLikes
+          counts.totalReads += result.totalReads
+        }
+      }
+    }
+
+    return counts
+  }
+
+  async getAllSiteWordsCount() {
+    const pipeline: PipelineStage[] = [
+      {
+        $match: {
+          text: { $exists: true, $type: 'string' }, // 筛选存在且类型为字符串的 text 字段
+        },
+      },
+      {
+        $group: {
+          _id: null, // 不根据特定字段分组
+          totalCharacters: { $sum: { $strLenCP: '$text' } }, // 计算所有文档的 text 字符长度总和
+        },
+      },
+      {
+        $project: {
+          _id: 0, // 不显示 _id 字段
+        },
+      },
+    ]
+    const results = await Promise.all([
+      this.postService.model.aggregate(pipeline),
+      this.noteService.model.aggregate(pipeline),
+      this.pageService.model.aggregate(pipeline),
+    ])
+
+    return results.reduce((prev, curr) => {
+      const [result] = curr
+      if (!result) return prev
+      return prev + result.totalCharacters
+    }, 0)
   }
 }

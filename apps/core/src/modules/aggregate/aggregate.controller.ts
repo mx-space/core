@@ -14,6 +14,8 @@ import { NoteService } from '../note/note.service'
 import { SnippetService } from '../snippet/snippet.service'
 import {
   AggregateQueryDto,
+  ReadAndLikeCountDocumentType,
+  ReadAndLikeCountTypeDto,
   TimelineQueryDto,
   TopQueryDto,
 } from './aggregate.dto'
@@ -109,6 +111,19 @@ export class AggregateController {
       ...count,
       ...callTime,
       todayIpAccessCount: todayIpAccess.length,
+    }
+  }
+
+  @Get('/count_read_and_like')
+  async getAllReadAndLikeCount(@Query() query: ReadAndLikeCountTypeDto) {
+    const { type = ReadAndLikeCountDocumentType.All } = query
+    return await this.aggregateService.getAllReadAndLikeCount(type)
+  }
+
+  @Get('/count_site_words')
+  async getSiteWords() {
+    return {
+      length: await this.aggregateService.getAllSiteWordsCount(),
     }
   }
 }

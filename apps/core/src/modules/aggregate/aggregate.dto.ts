@@ -35,3 +35,16 @@ export class AggregateQueryDto {
   @IsOptional()
   theme?: string
 }
+
+export enum ReadAndLikeCountDocumentType {
+  Post,
+  Note,
+  All,
+}
+
+export class ReadAndLikeCountTypeDto {
+  @IsEnum(ReadAndLikeCountDocumentType)
+  @IsOptional()
+  @Transform(({ value: v }) => v | 0)
+  type?: ReadAndLikeCountDocumentType
+}
