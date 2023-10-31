@@ -92,8 +92,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0
       '@fastify/static':
-        specifier: 6.11.2
-        version: 6.11.2
+        specifier: 6.12.0
+        version: 6.12.0
       '@innei/next-async':
         specifier: 0.3.0
         version: 0.3.0
@@ -114,7 +114,7 @@ importers:
         version: 2.0.2(@nestjs/common@10.2.7)(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.1.13)
       '@nestjs/platform-fastify':
         specifier: 10.2.7
-        version: 10.2.7(@fastify/static@6.11.2)(@nestjs/common@10.2.7)(@nestjs/core@10.2.7)
+        version: 10.2.7(@fastify/static@6.12.0)(@nestjs/common@10.2.7)(@nestjs/core@10.2.7)
       '@nestjs/platform-socket.io':
         specifier: 10.2.7
         version: 10.2.7(@nestjs/common@10.2.7)(@nestjs/websockets@10.2.7)(rxjs@7.8.1)
@@ -367,8 +367,8 @@ importers:
         specifier: 0.38.1
         version: 0.38.1
       cron:
-        specifier: ^3.1.5
-        version: 3.1.5
+        specifier: ^3.1.6
+        version: 3.1.6
       husky:
         specifier: 8.0.3
         version: 8.0.3
@@ -424,8 +424,8 @@ importers:
         specifier: 4.0.0
         version: 4.0.0
       ky:
-        specifier: 1.1.1
-        version: 1.1.1
+        specifier: 1.1.2
+        version: 1.1.2
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -1257,8 +1257,8 @@ packages:
       mime: 3.0.0
     dev: false
 
-  /@fastify/static@6.11.2:
-    resolution: {integrity: sha512-EH7mh7q4MfNdT7N07ZVlwsX/ObngMvQ7KBP0FXAuPov99Fjn80KSJMdxQhhYKAKWW1jXiFdrk8X7d6uGWdZFxg==}
+  /@fastify/static@6.12.0:
+    resolution: {integrity: sha512-KK1B84E6QD/FcQWxDI2aiUCwHxMJBI1KeCUzm1BwYpPY1b742+jeKruGHP2uOluuM6OkBPI8CIANrXcCRtC2oQ==}
     dependencies:
       '@fastify/accept-negotiator': 1.1.0
       '@fastify/send': 2.1.0
@@ -1271,7 +1271,7 @@ packages:
   /@fastify/swagger-ui@1.10.1:
     resolution: {integrity: sha512-u3EJqNKvVr3X+6jY5i6pbs6/tXCrSlqc2Y+PVjnHBTOGh/d36uHMz+z4jPFy9gie2my6iHUrAdM8itlVmoUjog==}
     dependencies:
-      '@fastify/static': 6.11.2
+      '@fastify/static': 6.12.0
       fastify-plugin: 4.5.1
       openapi-types: 12.1.3
       rfdc: 1.3.0
@@ -1488,8 +1488,8 @@ packages:
       - supports-color
     dev: false
 
-  /@mongodb-js/saslprep@1.1.0:
-    resolution: {integrity: sha512-Xfijy7HvfzzqiOAhAepF4SGN5e9leLkMvg/OPOF97XemjfVCYN/oWa75wnkc6mltMSTwY+XlbhWgUOJmkFspSw==}
+  /@mongodb-js/saslprep@1.1.1:
+    resolution: {integrity: sha512-t7c5K033joZZMspnHg/gWPE4kandgc2OxE74aYOtGKfgB9VPuVJPix0H6fhmm2erj5PBJ21mqcx34lpIGtUCsQ==}
     requiresBuild: true
     dependencies:
       sparse-bitfield: 3.0.3
@@ -1638,7 +1638,7 @@ packages:
       reflect-metadata: 0.1.13
     dev: false
 
-  /@nestjs/platform-fastify@10.2.7(@fastify/static@6.11.2)(@nestjs/common@10.2.7)(@nestjs/core@10.2.7):
+  /@nestjs/platform-fastify@10.2.7(@fastify/static@6.12.0)(@nestjs/common@10.2.7)(@nestjs/core@10.2.7):
     resolution: {integrity: sha512-m/OADHxB7yY6TyADLmXJ3BCadG110g/O0nLj2LQDNRiNLiYrgpV3D/cGOcMqlQOG30GZ7BKl8Cq8CsKVtMhzZA==}
     peerDependencies:
       '@fastify/static': ^6.0.0
@@ -1654,7 +1654,7 @@ packages:
       '@fastify/cors': 8.4.0
       '@fastify/formbody': 7.4.0
       '@fastify/middie': 8.3.0
-      '@fastify/static': 6.11.2
+      '@fastify/static': 6.12.0
       '@nestjs/common': 10.2.7(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.1.13)(rxjs@7.8.1)
       '@nestjs/core': 10.2.7(@nestjs/common@10.2.7)(@nestjs/websockets@10.2.7)(reflect-metadata@0.1.13)(rxjs@7.8.1)
       fastify: 4.23.2
@@ -2096,18 +2096,22 @@ packages:
     resolution: {integrity: sha512-zfM4ipmxVKWdxtDaJ3MP3pBurDXOCoyjvlpE3u6Qzrmw4BPbfm4/ambIeTk/r/J0iq/+2/xp0Fmt+gFvXJY2PQ==}
     dependencies:
       '@types/eslint': 8.44.6
-      '@types/estree': 1.0.3
+      '@types/estree': 1.0.4
     dev: true
 
   /@types/eslint@8.44.6:
     resolution: {integrity: sha512-P6bY56TVmX8y9J87jHNgQh43h6VVU+6H7oN7hgvivV81K2XY8qJZ5vqPy/HdUoVIelii2kChYVzQanlswPWVFw==}
     dependencies:
-      '@types/estree': 1.0.3
+      '@types/estree': 1.0.4
       '@types/json-schema': 7.0.14
     dev: true
 
   /@types/estree@1.0.3:
     resolution: {integrity: sha512-CS2rOaoQ/eAgAfcTfq6amKG7bsN+EMcgGY4FAFQdvSj2y1ixvOZTUA9mOtCai7E1SYu283XNw7urKK30nP3wkQ==}
+    dev: true
+
+  /@types/estree@1.0.4:
+    resolution: {integrity: sha512-2JwWnHK9H+wUZNorf2Zr6ves96WHoWDJIftkcxPKsS7Djta6Zu519LarhRNljPXkpsZR2ZMwNCPeW7omW07BJw==}
     dev: true
 
   /@types/express-serve-static-core@4.17.38:
@@ -2207,8 +2211,8 @@ packages:
       - supports-color
     dev: true
 
-  /@types/node@18.18.7:
-    resolution: {integrity: sha512-bw+lEsxis6eqJYW8Ql6+yTqkE6RuFtsQPSe5JxXbqYRFQEER5aJA9a5UH9igqDWm3X4iLHIKOHlnAXLM4mi7uQ==}
+  /@types/node@18.18.8:
+    resolution: {integrity: sha512-OLGBaaK5V3VRBS1bAkMVP2/W9B+H8meUfl866OrMNQqt7wDgdpWPp5o6gmIc9pB+lIQHSq4ZL8ypeH1vPxcPaQ==}
     dependencies:
       undici-types: 5.26.5
     dev: true
@@ -3458,8 +3462,8 @@ packages:
       luxon: 3.4.3
     dev: false
 
-  /cron@3.1.5:
-    resolution: {integrity: sha512-e/ivHUhSZVvF5PUqgj7dzQ96KqAhK1/peMDr5Mmfm/vEho01/O+ySJnhTBJ2JPvFEWXpjLESIJBke0ZpZ7r7FA==}
+  /cron@3.1.6:
+    resolution: {integrity: sha512-cvFiQCeVzsA+QPM6fhjBtlKGij7tLLISnTSvFxVdnFGLdz+ZdXN37kNe0i2gefmdD17XuZA6n2uPVwzl4FxW/w==}
     dependencies:
       '@types/luxon': 3.3.3
       luxon: 3.4.3
@@ -5541,8 +5545,8 @@ packages:
       json-buffer: 3.0.1
     dev: true
 
-  /ky@1.1.1:
-    resolution: {integrity: sha512-fEzUY9u7/Mlh5TRF1whK46OpwzTBA1VLm0L3waLD0oZepijQqZ51oqIcA3D9AiuxR+MZXt5g5g07n0y0MF5QRA==}
+  /ky@1.1.2:
+    resolution: {integrity: sha512-voehdKw8MleNTfcAVlZ9nObJQiWXvb5b3sYpVP6s8VYEdrmnbs7aYdNfAE0nC8wch8TXjH1ksnwTOvYcxrf1Gw==}
     engines: {node: '>=18'}
     dev: true
 
@@ -6111,7 +6115,7 @@ packages:
       mongodb-connection-string-url: 2.6.0
       socks: 2.7.1
     optionalDependencies:
-      '@mongodb-js/saslprep': 1.1.0
+      '@mongodb-js/saslprep': 1.1.1
 
   /mongoose-aggregate-paginate-v2@1.0.6:
     resolution: {integrity: sha512-UuALu+mjhQa1K9lMQvjLL3vm3iALvNw8PQNIh2gp1b+tO5hUa0NC0Wf6/8QrT9PSJVTihXaD8hQVy3J4e0jO0Q==}
@@ -7671,12 +7675,12 @@ packages:
       jest-worker: 27.5.1
       schema-utils: 3.3.0
       serialize-javascript: 6.0.1
-      terser: 5.22.0
+      terser: 5.24.0
       webpack: 5.89.0(@swc/core@1.3.95)
     dev: true
 
-  /terser@5.22.0:
-    resolution: {integrity: sha512-hHZVLgRA2z4NWcN6aS5rQDc+7Dcy58HOf2zbYwmFcQ+ua3h6eEFf5lIDKTzbWwlazPyOZsFQO8V80/IjVNExEw==}
+  /terser@5.24.0:
+    resolution: {integrity: sha512-ZpGR4Hy3+wBEzVEnHvstMvqpD/nABNelQn/z2r0fjVWGQsN3bpOLzQlqDxmb4CDZnXq5lpjnQ+mHQLAOpfM5iw==}
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
@@ -8286,7 +8290,7 @@ packages:
         optional: true
     dependencies:
       '@types/eslint-scope': 3.7.6
-      '@types/estree': 1.0.3
+      '@types/estree': 1.0.4
       '@webassemblyjs/ast': 1.11.6
       '@webassemblyjs/wasm-edit': 1.11.6
       '@webassemblyjs/wasm-parser': 1.11.6
@@ -8515,7 +8519,7 @@ packages:
     dependencies:
       '@types/fs-extra': 11.0.1
       '@types/minimist': 1.2.2
-      '@types/node': 18.18.7
+      '@types/node': 18.18.8
       '@types/ps-tree': 1.1.2
       '@types/which': 3.0.0
       chalk: 5.2.0
