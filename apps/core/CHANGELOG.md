@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [4.5.0](https://github.com/mx-space/core/compare/v4.4.1...v4.5.0) (2023-10-31)
+
+
+### Bug Fixes
+
+* **deps:** update dependency marked to v9.1.4 ([3eabdb2](https://github.com/mx-space/core/commit/3eabdb29cb1824fef63f9d94512fa95623d4eeba))
+* **deps:** update dependency mongoose to v7.6.4 ([148f281](https://github.com/mx-space/core/commit/148f281a157fad4d324a1b4d3ddaaea440544803))
+
+
+### Features
+
+* add count apis ([f90772d](https://github.com/mx-space/core/commit/f90772d06cc0aca8fd3e9f9547451e34d7e656bd))
+
+
+
 ## [4.4.1](https://github.com/mx-space/core/compare/v4.4.0...v4.4.1) (2023-10-29)
 
 
