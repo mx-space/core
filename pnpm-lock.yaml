@@ -92,8 +92,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0
       '@fastify/static':
-        specifier: 6.11.2
-        version: 6.11.2
+        specifier: 6.12.0
+        version: 6.12.0
       '@innei/next-async':
         specifier: 0.3.0
         version: 0.3.0
@@ -114,7 +114,7 @@ importers:
         version: 2.0.2(@nestjs/common@10.2.7)(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.1.13)
       '@nestjs/platform-fastify':
         specifier: 10.2.7
-        version: 10.2.7(@fastify/static@6.11.2)(@nestjs/common@10.2.7)(@nestjs/core@10.2.7)
+        version: 10.2.7(@fastify/static@6.12.0)(@nestjs/common@10.2.7)(@nestjs/core@10.2.7)
       '@nestjs/platform-socket.io':
         specifier: 10.2.7
         version: 10.2.7(@nestjs/common@10.2.7)(@nestjs/websockets@10.2.7)(rxjs@7.8.1)
@@ -1257,8 +1257,8 @@ packages:
       mime: 3.0.0
     dev: false
 
-  /@fastify/static@6.11.2:
-    resolution: {integrity: sha512-EH7mh7q4MfNdT7N07ZVlwsX/ObngMvQ7KBP0FXAuPov99Fjn80KSJMdxQhhYKAKWW1jXiFdrk8X7d6uGWdZFxg==}
+  /@fastify/static@6.12.0:
+    resolution: {integrity: sha512-KK1B84E6QD/FcQWxDI2aiUCwHxMJBI1KeCUzm1BwYpPY1b742+jeKruGHP2uOluuM6OkBPI8CIANrXcCRtC2oQ==}
     dependencies:
       '@fastify/accept-negotiator': 1.1.0
       '@fastify/send': 2.1.0
@@ -1271,7 +1271,7 @@ packages:
   /@fastify/swagger-ui@1.10.1:
     resolution: {integrity: sha512-u3EJqNKvVr3X+6jY5i6pbs6/tXCrSlqc2Y+PVjnHBTOGh/d36uHMz+z4jPFy9gie2my6iHUrAdM8itlVmoUjog==}
     dependencies:
-      '@fastify/static': 6.11.2
+      '@fastify/static': 6.12.0
       fastify-plugin: 4.5.1
       openapi-types: 12.1.3
       rfdc: 1.3.0
@@ -1638,7 +1638,7 @@ packages:
       reflect-metadata: 0.1.13
     dev: false
 
-  /@nestjs/platform-fastify@10.2.7(@fastify/static@6.11.2)(@nestjs/common@10.2.7)(@nestjs/core@10.2.7):
+  /@nestjs/platform-fastify@10.2.7(@fastify/static@6.12.0)(@nestjs/common@10.2.7)(@nestjs/core@10.2.7):
     resolution: {integrity: sha512-m/OADHxB7yY6TyADLmXJ3BCadG110g/O0nLj2LQDNRiNLiYrgpV3D/cGOcMqlQOG30GZ7BKl8Cq8CsKVtMhzZA==}
     peerDependencies:
       '@fastify/static': ^6.0.0
@@ -1654,7 +1654,7 @@ packages:
       '@fastify/cors': 8.4.0
       '@fastify/formbody': 7.4.0
       '@fastify/middie': 8.3.0
-      '@fastify/static': 6.11.2
+      '@fastify/static': 6.12.0
       '@nestjs/common': 10.2.7(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.1.13)(rxjs@7.8.1)
       '@nestjs/core': 10.2.7(@nestjs/common@10.2.7)(@nestjs/websockets@10.2.7)(reflect-metadata@0.1.13)(rxjs@7.8.1)
       fastify: 4.23.2
