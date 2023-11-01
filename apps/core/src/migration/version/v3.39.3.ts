@@ -3,7 +3,9 @@ import type { Db } from 'mongodb'
 
 export default (async function v3390(db: Db) {
   await db.collection('recentlies').updateMany(
-    {},
+    {
+      up: { $exists: false },
+    },
     {
       $set: {
         up: 0,

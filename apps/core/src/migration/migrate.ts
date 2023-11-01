@@ -1,9 +1,6 @@
-import { existsSync } from 'node:fs'
-
 import { isMainProcess } from '~/global/env.global'
 import { getDatabaseConnection } from '~/utils/database.util'
 
-import { DATA_DIR } from '../constants/path.constant'
 import VersionList from './history'
 
 export async function migrateDatabase() {
@@ -11,34 +8,26 @@ export async function migrateDatabase() {
     return
   }
 
-  const migrateFilePath = path.join(DATA_DIR, 'migrate')
-  existsSync(migrateFilePath) || (await fs.writeFile(migrateFilePath, ''))
-
-  const migrateRecord = await fs.readFile(migrateFilePath, 'utf-8')
-
-  const migratedSet = new Set(migrateRecord.split('\n'))
-
   const connection = await getDatabaseConnection()
   const db = connection.db
 
+  const migrateCollectionName = 'migrations'
+
+  const migrateArr = await db.collection(migrateCollectionName).find().toArray()
+  const migrateMap = new Map(migrateArr.map((m) => [m.name, m]))
+
   for (const migrate of VersionList) {
-    if (migratedSet.has(migrate.name)) {
+    if (migrateMap.has(migrate.name)) {
       continue
     }
 
     consola.log(`[Database] migrate ${migrate.name}`)
 
     await migrate(db)
-    migratedSet.add(migrate.name)
+
+    await db.collection(migrateCollectionName).insertOne({
+      name: migrate.name,
+      time: Date.now(),
+    })
   }
-
-  await fs.unlink(migrateFilePath)
-
-  fs.writeFile(
-    migrateFilePath,
-    [...migratedSet].filter(Boolean).join('\n').trim(),
-    {
-      flag: 'w+',
-    },
-  )
 }
