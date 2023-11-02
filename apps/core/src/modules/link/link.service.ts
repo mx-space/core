@@ -35,7 +35,7 @@ export class LinkService {
   async applyForLink(model: LinkModel) {
     const existedDoc = await this.model
       .findOne({
-        url: model.url,
+        $or: [{ url: model.url }, { name: model.name }],
       })
       .lean()
 
