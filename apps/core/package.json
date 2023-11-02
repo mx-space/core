@@ -57,7 +57,7 @@
     "@fastify/multipart": "8.0.0",
     "@fastify/static": "6.12.0",
     "@innei/next-async": "0.3.0",
-    "@nestjs/cache-manager": "2.1.0",
+    "@nestjs/cache-manager": "2.1.1",
     "@nestjs/common": "10.2.7",
     "@nestjs/core": "10.2.7",
     "@nestjs/event-emitter": "2.0.2",
