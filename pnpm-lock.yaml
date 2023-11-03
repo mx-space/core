@@ -137,8 +137,8 @@ importers:
         specifier: 3.6.1
         version: 3.6.1(mongoose@7.6.4)
       '@typegoose/typegoose':
-        specifier: 11.6.0
-        version: 11.6.0(mongoose@7.6.4)
+        specifier: 11.7.0
+        version: 11.7.0(mongoose@7.6.4)
       '@types/jsonwebtoken':
         specifier: 9.0.4
         version: 9.0.4
@@ -1996,11 +1996,11 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /@typegoose/typegoose@11.6.0(mongoose@7.6.4):
-    resolution: {integrity: sha512-c6m5aTrv9tzqLmtR/txlg4sFKXfupBXMJlO4yRfg757rK5h2YfIoshMG3yi+0IEe8gkF5utCV/uh9vf8a+re4Q==}
+  /@typegoose/typegoose@11.7.0(mongoose@7.6.4):
+    resolution: {integrity: sha512-858iDW4qJGmc+6XaJyFiCvJtP1w5Y515QK2+6mCLmO/WNBuPslIySAqo7mEqJXQAJLlmo2/hDlnbhFOJVtROSw==}
     engines: {node: '>=14.17.0'}
     peerDependencies:
-      mongoose: ~7.6.1
+      mongoose: ~7.6.3
     dependencies:
       lodash: 4.17.21
       loglevel: 1.8.1
