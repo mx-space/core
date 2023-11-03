@@ -158,6 +158,6 @@
   },
   "optionalDependencies": {
     "mongodb-memory-server": "^9.0.1",
-    "redis-memory-server": "^0.8.0"
+    "redis-memory-server": "^0.9.0"
   }
 }
