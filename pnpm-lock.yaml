@@ -328,8 +328,8 @@ importers:
         specifier: 3.1.4
         version: 3.1.4
       '@types/get-image-colors':
-        specifier: 4.0.4
-        version: 4.0.4
+        specifier: 4.0.5
+        version: 4.0.5
       '@types/js-yaml':
         specifier: 4.0.8
         version: 4.0.8
@@ -2141,8 +2141,8 @@ packages:
       '@types/node': 20.8.10
     dev: true
 
-  /@types/get-image-colors@4.0.4:
-    resolution: {integrity: sha512-hm7+Lbq1kBzxXVt1jU7I4Ru+gJsynrccXEQf5cxZz6bZzvPuAy7jlyeTaPBvwZeItAQ5BIbY3LFDxW6s8r18kw==}
+  /@types/get-image-colors@4.0.5:
+    resolution: {integrity: sha512-4d3eLaB8Hz+KpGwkqZx/AO2Omvp5lFbAV5z6MqLV3bUQR1tHLsIbbLgESOS+/APrtad8oDg7BzQbE/hAzrOUHA==}
     dependencies:
       '@types/chroma-js': 2.4.2
       '@types/node': 20.8.10

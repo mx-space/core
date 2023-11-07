@@ -133,7 +133,7 @@
     "@types/bcrypt": "5.0.2",
     "@types/cache-manager": "4.0.5",
     "@types/ejs": "3.1.4",
-    "@types/get-image-colors": "4.0.4",
+    "@types/get-image-colors": "4.0.5",
     "@types/js-yaml": "4.0.8",
     "@types/lodash": "4.14.200",
     "@types/mime-types": "2.1.3",
