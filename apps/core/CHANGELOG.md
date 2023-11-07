@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.5.3](https://github.com/mx-space/core/compare/v4.5.2...v4.5.3) (2023-11-07)
+
+
+### Bug Fixes
+
+* release pipe install ([9070e96](https://github.com/mx-space/core/commit/9070e96213a672ca85b2f0d3723a37c42a5b1f70))
+
+
+
 ## [4.5.2](https://github.com/mx-space/core/compare/v4.5.1...v4.5.2) (2023-11-07)
 
 
