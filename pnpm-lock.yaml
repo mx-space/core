@@ -340,8 +340,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3
       '@types/mongoose-aggregate-paginate-v2':
-        specifier: 1.0.11
-        version: 1.0.11
+        specifier: 1.0.12
+        version: 1.0.12
       '@types/node':
         specifier: 20.8.10
         version: 20.8.10
@@ -2199,8 +2199,8 @@ packages:
     resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
     dev: true
 
-  /@types/mongoose-aggregate-paginate-v2@1.0.11:
-    resolution: {integrity: sha512-QeDb11JXvfcOpIX8egfg7sVyrHxlCqozYwVY9SrPmo0D2WMYlNEPnWI9Xf/LaAxyWZ5eyJzK0N0ROMkHUu6JLw==}
+  /@types/mongoose-aggregate-paginate-v2@1.0.12:
+    resolution: {integrity: sha512-wL8pgJQxqJagv5f5mR7aI8WgUu22nS6rVLoJm71W2Uu+iKfS8jgph2rRLfXrjo+dFt1s7ik5Zl+uGZ4f5GM6Vw==}
     dependencies:
       '@types/node': 20.8.10
       mongoose: 8.0.0
