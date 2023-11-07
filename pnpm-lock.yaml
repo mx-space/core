@@ -140,8 +140,8 @@ importers:
         specifier: 11.7.0
         version: 11.7.0(mongoose@8.0.0)
       '@types/jsonwebtoken':
-        specifier: 9.0.4
-        version: 9.0.4
+        specifier: 9.0.5
+        version: 9.0.5
       algoliasearch:
         specifier: 4.20.0
         version: 4.20.0
@@ -2170,8 +2170,8 @@ packages:
       '@types/node': 20.8.10
     dev: true
 
-  /@types/jsonwebtoken@9.0.4:
-    resolution: {integrity: sha512-8UYapdmR0QlxgvJmyE8lP7guxD0UGVMfknsdtCFZh4ovShdBl3iOI4zdvqBHrB/IS+xUj3PSx73Qkey1fhWz+g==}
+  /@types/jsonwebtoken@9.0.5:
+    resolution: {integrity: sha512-VRLSGzik+Unrup6BsouBeHsf4d1hOEgYWTm/7Nmw1sXoN1+tRly/Gy/po3yeahnP4jfnQWWAhQAqcNfH7ngOkA==}
     dependencies:
       '@types/node': 20.8.10
     dev: false
