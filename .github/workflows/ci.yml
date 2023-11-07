@@ -1,18 +1,61 @@
-# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
-
-name: Build (core)
-
 on:
   push:
+    tags-ignore:
+      - 'v*'
+    paths-ignore:
+      - test/**
     branches:
       - master
       - main
   pull_request:
-    branches: [master, main]
+    branches: [master]
+name: CI
 
 jobs:
-  build:
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            innei/mx-server
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Copy .env
+        run: |
+          cp .env.example .env
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: ${{ steps.meta.outputs.tags }},innei/mx-server:latest
+          labels: ${{ steps.meta.outputs.labels }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Test
+        run: |
+          bash ./scripts/workflow/test-docker.sh
+          sudo rm -rf ./data
+
+  core:
+    name: Build (Core)
     runs-on: ubuntu-latest
 
     strategy:
@@ -56,5 +99,5 @@ jobs:
       - name: Test Bundle Server
         run: |
           bash scripts/workflow/test-server.sh
-  test:
+  Test:
     uses: ./.github/workflows/test.yml
