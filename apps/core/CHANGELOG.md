@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [4.5.1](https://github.com/mx-space/core/compare/v4.5.0...v4.5.1) (2023-11-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @nestjs/cache-manager to v2.1.1 ([0b7352d](https://github.com/mx-space/core/commit/0b7352d471882231ea0af6c50a19d60e12632efd))
+* **deps:** update dependency inquirer to v9 ([#1102](https://github.com/mx-space/core/issues/1102)) ([d7d5f49](https://github.com/mx-space/core/commit/d7d5f49ed46003cfec54acc3bddf4b2529d165f2))
+* **deps:** update dependency marked to v9.1.5 ([274ca23](https://github.com/mx-space/core/commit/274ca237593ca10100ca23e47cb1801740bee606))
+* **deps:** update dependency mongoose to v8 ([#1179](https://github.com/mx-space/core/issues/1179)) ([e5ca485](https://github.com/mx-space/core/commit/e5ca4855c66b69a7fe3f363543da8f50091c5078))
+* **deps:** update nest monorepo to v10.2.8 ([0f3b48c](https://github.com/mx-space/core/commit/0f3b48ca69def2cbd0f3a63df0fb2c33dfe11d0a))
+* link exists check ([b58dc2f](https://github.com/mx-space/core/commit/b58dc2fe044c52dd7f1e71029ddd6c68c692f09f))
+
+
+
 # [4.5.0](https://github.com/mx-space/core/compare/v4.4.1...v4.5.0) (2023-10-31)
 
 
