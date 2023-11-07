@@ -2,18 +2,23 @@ on:
   push:
     tags:
       - 'v*'
+
 name: Release
 
 jobs:
-  standalone:
-    name: Standalone Build
+  build:
+    name: Upload Release Asset
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-22.04, ubuntu-20.04]
+        os: [ubuntu-20.04]
     runs-on: ${{ matrix.os }}
+    outputs:
+      release_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v3
         with:
           node-version: 18.x
@@ -32,13 +37,13 @@ jobs:
           cache-name: cache-pnpm-modules
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
       - uses: pnpm/action-setup@v2.4.0
         with:
           version: 8.x
-          run_install: true
+          run_install: false
       - name: Install Dependencies
         run: |
           pnpm i --no-optional
@@ -50,6 +55,7 @@ jobs:
           npm run test
 
       - name: Build project
+        working-directory: ./apps/core
         run: |
           pnpm run bundle
       - name: Test Bundle Server
@@ -58,9 +64,22 @@ jobs:
       - name: Zip Assets
         run: |
           sh apps/core/zip-asset.sh
-      - name: Main release
-        id: release-main
-        if: ${{ matrix.os == 'ubuntu-20.04'}}
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - run: npx changelogithub
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Upload Release Asset
+        id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -69,75 +88,10 @@ jobs:
           asset_path: ./release.zip
           asset_name: release-linux.zip
           asset_content_type: application/zip
-      - name: Release other platform
-        if: ${{ matrix.os != 'ubuntu-20.04'}}
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release.zip
-          asset_name: release-${{ matrix.os }}.zip
-          asset_content_type: application/zip
-  docker:
-    name: Docker Release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-            # list of Docker images to use as base name for tags
-          images: |
-              innei/mx-server
-          # generate Docker tags based on the following events/attributes
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to DockerHub
-        id: dockerhub_login
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Copy .env
-        run: |
-          cp .env.example .env
-      - name: Build and export to Docker
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          load: true
-          tags: ${{ steps.meta.outputs.tags }},innei/mx-server:latest
-          labels: ${{ steps.meta.outputs.labels }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Test
-        run: |
-          bash ./scripts/workflow/test-docker.sh
-          sudo rm -rf ./data
-      - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }},innei/mx-server:latest
-          labels: ${{ steps.meta.outputs.labels }}
   deploy:
     name: Deploy To Remote Server
     runs-on: ubuntu-latest
-    needs: [standalone]
+    needs: [build]
     steps:
       - name: Exec deploy script with SSH
         uses: appleboy/ssh-action@master
@@ -158,3 +112,43 @@ jobs:
             cd mx
             ls -a
             node server-deploy.js --jwtSecret=$JWTSECRET --encrypt_key=$MX_ENCRYPT_KEY --encrypt_enable
+
+  build_other_platform:
+    name: Build Other Platform
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    needs: [build]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Cache pnpm modules
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-
+      - uses: pnpm/action-setup@v2.4.0
+        with:
+          version: 8.x
+          run_install: true
+      - name: Build project
+        run: |
+          pnpm run bundle
+      - name: Zip Assets
+        run: |
+          sh apps/core/zip-asset.sh
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.build.outputs.release_url }}
+          asset_path: ./release.zip
+          asset_name: release-${{ matrix.os }}.zip
+          asset_content_type: application/zip
