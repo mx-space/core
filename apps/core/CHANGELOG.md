@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.5.2](https://github.com/mx-space/core/compare/v4.5.1...v4.5.2) (2023-11-07)
+
+
+### Reverts
+
+* "chore: Refine CI" ([#1196](https://github.com/mx-space/core/issues/1196)) ([affedbb](https://github.com/mx-space/core/commit/affedbb6ff96a3829a31794cbca1bcad45bb9f05))
+
+
+
 ## [4.5.1](https://github.com/mx-space/core/compare/v4.5.0...v4.5.1) (2023-11-07)
 
 
