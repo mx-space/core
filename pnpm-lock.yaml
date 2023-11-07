@@ -319,8 +319,8 @@ importers:
         specifier: 7.20.4
         version: 7.20.4
       '@types/bcrypt':
-        specifier: 5.0.1
-        version: 5.0.1
+        specifier: 5.0.2
+        version: 5.0.2
       '@types/cache-manager':
         specifier: 4.0.4
         version: 4.0.4
@@ -2041,8 +2041,8 @@ packages:
       '@babel/types': 7.23.0
     dev: true
 
-  /@types/bcrypt@5.0.1:
-    resolution: {integrity: sha512-dIIrEsLV1/v0AUNI8oHMaRRTSeVjoy5ID8oclJavtPj8CwPJoD1eFoNXEypuu6k091brEzBeOo3LlxeAH9zRZg==}
+  /@types/bcrypt@5.0.2:
+    resolution: {integrity: sha512-6atioO8Y75fNcbmj0G7UjI9lXN2pQ/IGJ2FWT4a/btd0Lk9lQalHLKhkgKVZ3r+spnmWUKfbMi1GEe9wyHQfNQ==}
     dependencies:
       '@types/node': 20.8.10
     dev: true
