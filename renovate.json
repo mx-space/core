@@ -9,8 +9,12 @@
   ],
   "packageRules": [
     {
-      "updateTypes": ["major"],
-      "labels": ["UPDATE-MAJOR"]
+      "updateTypes": [
+        "major"
+      ],
+      "labels": [
+        "UPDATE-MAJOR"
+      ]
     }
   ],
   "ignoreDeps": [
@@ -18,10 +22,6 @@
     "camelcase-keys",
     "class-validator",
     "class-transformer",
-    "@swc/core",
-    "vite",
-    "vitest",
-
     "@socket.io/redis-emitter",
     "@socket.io/redis-adapter"
   ],
