@@ -1,10 +1,27 @@
 #!/usr/bin/env zx
 // @ts-check
-const { cd, $, os, fs, path, fetch, nothrow, sleep } = require('zx-cjs')
+const {
+  cd,
+  $,
+  os,
+  fs,
+  path,
+  fetch,
+  nothrow,
+  sleep,
+  argv: Ar,
+} = require('zx-cjs')
 const { homedir } = os
 const { repository } = require('../package.json')
 
+const owner = 'mx-space'
+const repo = 'core'
+
 const argv = process.argv.slice(2)
+
+const tag = Ar.tag || `4.5.3`
+const ghMirror = `github.hscsec.cn`
+const tagDownloadUrl = `https://${ghMirror}/${owner}/${repo}/releases/download/v${tag}/release-ubuntu-latest.zip`
 
 function getOsBuildAssetName() {
   const platform = process.platform
@@ -18,6 +35,16 @@ function getOsBuildAssetName() {
     throw new Error('No current platform build. Please build manually')
   }
   return `release-${os}-latest.zip`
+}
+
+const getProxyDownloadUrl = (downloadUrl) => {
+  const url = new URL(downloadUrl)
+
+  // url.host = ghMirror
+
+  // return url.toString()
+
+  return `https://ghproxy.com/${downloadUrl}`
 }
 
 async function main() {
@@ -34,7 +61,7 @@ async function main() {
     throw new Error('no download url found')
   }
 
-  const buffer = await fetch(`https://ghproxy.com/${downloadUrl}`).then((res) =>
+  const buffer = await fetch(getProxyDownloadUrl(downloadUrl)).then((res) =>
     res.buffer(),
   )
   const tmpName = (Math.random() * 10).toString(16)
