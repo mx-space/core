@@ -358,8 +358,8 @@ importers:
         specifier: 7.5.5
         version: 7.5.5
       '@types/ua-parser-js':
-        specifier: 0.7.38
-        version: 0.7.38
+        specifier: 0.7.39
+        version: 0.7.39
       '@types/validator':
         specifier: 13.11.5
         version: 13.11.5
@@ -2275,8 +2275,8 @@ packages:
       '@types/node': 20.8.10
     dev: true
 
-  /@types/ua-parser-js@0.7.38:
-    resolution: {integrity: sha512-59CA5oavBEWSNLtS/BChj9xntiWMsIf9IytjxmBo9OuZEYuRzRf3K1ARzFPlXTOz5Zm2wXI38AP9RlLqDYMToQ==}
+  /@types/ua-parser-js@0.7.39:
+    resolution: {integrity: sha512-P/oDfpofrdtF5xw433SPALpdSchtJmY7nsJItf8h3KXqOslkbySh8zq4dSWXH2oTjRvJ5PczVEoCZPow6GicLg==}
     dev: true
 
   /@types/validator@13.11.5:
