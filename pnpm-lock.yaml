@@ -349,8 +349,8 @@ importers:
         specifier: 6.4.14
         version: 6.4.14
       '@types/qs':
-        specifier: 6.9.9
-        version: 6.9.9
+        specifier: 6.9.10
+        version: 6.9.10
       '@types/remove-markdown':
         specifier: 0.3.3
         version: 0.3.3
@@ -2120,7 +2120,7 @@ packages:
     resolution: {integrity: sha512-OaJ7XLaelTgrvlZD8/aa0vvvxZdUmlCn6MtWeB7TkiKW70BQLc9XEPpDLPdbo52ZhXUCrznlWdCHWxJWtdyajA==}
     dependencies:
       '@types/node': 20.8.10
-      '@types/qs': 6.9.9
+      '@types/qs': 6.9.10
       '@types/range-parser': 1.2.6
       '@types/send': 0.17.3
     dev: true
@@ -2130,7 +2130,7 @@ packages:
     dependencies:
       '@types/body-parser': 1.19.5
       '@types/express-serve-static-core': 4.17.41
-      '@types/qs': 6.9.9
+      '@types/qs': 6.9.10
       '@types/serve-static': 1.15.4
     dev: true
 
@@ -2244,8 +2244,8 @@ packages:
     resolution: {integrity: sha512-ZREFYlpUmPQJ0esjxoG1fMvB2HNaD3z+mjqdSosZvd3RalncI9NEur73P8ZJz4YQdL64CmV1w0RuqoRUlhQRBw==}
     dev: true
 
-  /@types/qs@6.9.9:
-    resolution: {integrity: sha512-wYLxw35euwqGvTDx6zfY1vokBFnsK0HNrzc6xNHchxfO2hpuRg74GbkEW7e3sSmPvj0TjCDT1VCa6OtHXnubsg==}
+  /@types/qs@6.9.10:
+    resolution: {integrity: sha512-3Gnx08Ns1sEoCrWssEgTSJs/rsT2vhGP+Ja9cnnk9k4ALxinORlQneLXFeFKOTJMOeZUFD1s7w+w2AphTpvzZw==}
     dev: true
 
   /@types/range-parser@1.2.6:
