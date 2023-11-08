@@ -139,7 +139,7 @@ export function BaseCrudFactory<
         `${eventNamePrefix}DELETE` as any,
         param.id,
         {
-          scope: EventScope.TO_SYSTEM_VISITOR,
+          scope: EventScope.ALL,
         },
       )
 

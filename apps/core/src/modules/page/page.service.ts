@@ -50,9 +50,17 @@ export class PageService {
       res.images,
       (images) => {
         res.images = images
-        return res.save()
+        return res.save().then(() => {
+          this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, res, {
+            scope: EventScope.TO_SYSTEM,
+          })
+        })
       },
     )
+
+    this.eventManager.broadcast(BusinessEvents.PAGE_CREATE, res, {
+      scope: EventScope.TO_SYSTEM,
+    })
 
     return res
   }
@@ -88,11 +96,11 @@ export class PageService {
               .exec()
           },
         ),
-        this.eventManager.broadcast(BusinessEvents.PAGE_UPDATED, newDoc, {
+        this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, newDoc, {
           scope: EventScope.TO_SYSTEM,
         }),
         this.eventManager.broadcast(
-          BusinessEvents.PAGE_UPDATED,
+          BusinessEvents.PAGE_UPDATE,
           {
             ...newDoc,
             text: await this.macroService.replaceTextMacro(newDoc.text, newDoc),
@@ -102,6 +110,15 @@ export class PageService {
           },
         ),
       ])
+    })
+  }
+
+  async deleteById(id: string) {
+    await this.model.deleteOne({
+      _id: id,
+    })
+    this.eventManager.broadcast(BusinessEvents.PAGE_DELETE, id, {
+      scope: EventScope.ALL,
     })
   }
 }

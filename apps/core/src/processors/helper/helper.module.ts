@@ -60,7 +60,7 @@ const providers: Provider<any>[] = [
       // set this to `true` if you want to emit the removeListener event
       removeListener: false,
       // the maximum amount of listeners that can be assigned to an event
-      maxListeners: 10,
+      maxListeners: 20,
       // show event name in memory leak message when more than maximum amount of listeners is assigned
       verboseMemoryLeak: isDev,
       // disable throwing uncaughtException if an error event is emitted and it has no listeners

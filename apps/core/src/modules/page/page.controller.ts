@@ -127,9 +127,7 @@ export class PageController {
   @Delete('/:id')
   @Auth()
   async deletePage(@Param() params: MongoIdDto) {
-    await this.pageService.model.deleteOne({
-      _id: params.id,
-    })
+    await this.pageService.deleteById(params.id)
     return
   }
 }
