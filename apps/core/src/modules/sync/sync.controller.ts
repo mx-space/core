@@ -30,7 +30,7 @@ export class SyncController {
     this.service.buildSyncableData().pipe(res.raw)
   }
 
-  @Get('sync')
+  @Get('delta')
   @HTTPDecorators.Bypass
   @CacheTTL(2)
   async syncLastSyncedAt(

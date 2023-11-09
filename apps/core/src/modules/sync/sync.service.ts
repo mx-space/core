@@ -88,54 +88,47 @@ export class SyncService {
         return null
     }
   }
-
   private async findByIds(type: SyncableCollectionName, ids: string[]) {
-    switch (type) {
-      case 'post':
-        return this.postService.model
-          .find({
-            _id: {
-              $in: ids,
-            },
-          })
-          .lean()
-
-      case 'page':
-        return this.pageService.model
-          .find({
-            _id: {
-              $in: ids,
-            },
-          })
-          .lean()
-      case 'note':
-        return this.noteService.model
-          .find({
-            _id: {
-              $in: ids,
-            },
-            ...this.noteService.publicNoteQueryCondition,
-          })
-          .lean()
-      case 'category':
-        return this.categoryService.model
-          .find({
-            _id: {
-              $in: ids,
-            },
-          })
-          .lean()
-      case 'topic':
-        return this.topicService.model
-          .find({
-            _id: {
-              $in: ids,
-            },
-          })
-          .lean()
-      default:
-        return []
+    // Create a base query condition that can be reused
+    const baseQueryCondition = {
+      _id: {
+        $in: ids,
+      },
     }
+
+    // A helper function to return the model based on the type
+    const getModelByType = (type: SyncableCollectionName) => {
+      switch (type) {
+        case 'post':
+          return this.postService.model
+        case 'page':
+          return this.pageService.model
+        case 'note':
+          return this.noteService.model
+        case 'category':
+          return this.categoryService.model
+        case 'topic':
+          return this.topicService.model
+        default:
+          return null
+      }
+    }
+
+    // Get the model for the given type
+    const model = getModelByType(type)
+    if (!model) return []
+
+    // If the type is 'note', merge the publicNoteQueryCondition
+    const queryCondition =
+      type === 'note'
+        ? {
+            ...baseQueryCondition,
+            ...this.noteService.publicNoteQueryCondition,
+          }
+        : baseQueryCondition
+
+    // Execute the query using the condition and return the result
+    return (model as any).find(queryCondition).lean()
   }
 
   findPublicByIdWithCheckSum({
@@ -263,6 +256,9 @@ export class SyncService {
 
     return readable
   }
+
+  // TODO
+  updateCheckSum() {}
 }
 
 ///  NOTE
