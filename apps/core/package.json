@@ -97,7 +97,7 @@
     "linkedom": "0.16.1",
     "lodash": "^4.17.21",
     "lru-cache": "10.0.1",
-    "marked": "9.1.5",
+    "marked": "9.1.6",
     "mime-types": "^2.1.35",
     "mkdirp": "^3.0.1",
     "mongoose": "8.0.0",
