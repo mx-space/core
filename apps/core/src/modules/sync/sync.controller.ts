@@ -27,7 +27,7 @@ export class SyncController {
   @HTTPDecorators.Bypass
   async fetchAllData(@Res() res: FastifyReply) {
     res.raw.setHeader('Content-Type', 'application/json')
-    this.service.buildSyncableData().pipe(res.raw)
+    res.send(this.service.buildSyncableData())
   }
 
   @Get('delta')
@@ -42,6 +42,7 @@ export class SyncController {
     res.raw.setHeader('Content-Type', 'application/json')
     const readable =
       await this.service.getSyncLastSyncedAtCollection(lastSyncedAt)
-    readable.pipe(res.raw)
+
+    res.send(readable)
   }
 }
