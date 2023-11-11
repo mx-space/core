@@ -43,6 +43,32 @@ export class SyncController {
     res.send(readable)
   }
 
+  @Get('item')
+  @CacheTTL(2)
+  async getItem(@Query() query: SyncDataChecksumDto) {
+    const { id, type } = query
+
+    return await this.service
+      .findByIds(type, [id])
+      .then((docs) => {
+        if (docs.length === 0) {
+          return null
+        }
+
+        return docs[0]
+      })
+      .then((res) => {
+        if (!res) {
+          return null
+        }
+        return this.service.stringifySyncableData(
+          type,
+          res.checksum,
+          res.entity,
+        )
+      })
+  }
+
   @Get('checksum')
   @HTTPDecorators.Bypass
   @CacheTTL(2)
@@ -53,6 +79,11 @@ export class SyncController {
     if (dbChecksum === null) {
       return 'DELETED'
     }
+
+    if (!checksum) {
+      return dbChecksum
+    }
+
     if (dbChecksum === checksum) {
       return 'OK'
     }

@@ -113,28 +113,7 @@ export class SyncService {
     return readable
   }
 
-  private async findById(type: SyncableCollectionName, id: string) {
-    switch (type) {
-      case 'post':
-        return this.postService.model.findById(id).lean()
-      case 'page':
-        return this.pageService.model.findById(id).lean()
-      case 'note':
-        return this.noteService.model
-          .findOne({
-            _id: id,
-            ...this.noteService.publicNoteQueryCondition,
-          })
-          .lean()
-      case 'category':
-        return this.categoryService.model.findById(id).lean()
-      case 'topic':
-        return this.topicService.model.findById(id).lean()
-      default:
-        return null
-    }
-  }
-  private async findByIds(
+  async findByIds(
     type: SyncableCollectionName,
     ids: string[],
   ): Promise<{ entity: any; checksum: string }[]> {
@@ -209,7 +188,7 @@ export class SyncService {
     return checksum
   }
 
-  private stringifySyncableData(
+  stringifySyncableData(
     type: 'post' | 'page' | 'note' | 'category' | 'topic',
     data: any,
     checksum: string,

@@ -1,4 +1,10 @@
-import { IsDateString, IsEnum, IsMongoId, IsString } from 'class-validator'
+import {
+  IsDateString,
+  IsEnum,
+  IsMongoId,
+  IsOptional,
+  IsString,
+} from 'class-validator'
 
 import {
   SyncableCollectionName,
@@ -11,8 +17,9 @@ export class SyncByLastSyncedAtDto {
 }
 
 export class SyncDataChecksumDto {
+  @IsOptional()
   @IsString()
-  checksum: string
+  checksum?: string
 
   @IsEnum(SyncableCollectionNames)
   type: SyncableCollectionName
