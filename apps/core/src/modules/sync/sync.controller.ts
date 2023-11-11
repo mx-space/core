@@ -7,7 +7,7 @@ import { Throttle } from '@nestjs/throttler'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 
-import { SyncByLastSyncedAtDto } from './sync.dto'
+import { SyncByLastSyncedAtDto, SyncDataChecksumDto } from './sync.dto'
 import { SyncService } from './sync.service'
 
 // Sync api always public
@@ -22,7 +22,6 @@ export class SyncController {
   @Inject()
   private readonly service: SyncService
 
-  @CacheTTL(2)
   @Get('collection')
   @HTTPDecorators.Bypass
   async fetchAllData(@Res() res: FastifyReply) {
@@ -32,7 +31,6 @@ export class SyncController {
 
   @Get('delta')
   @HTTPDecorators.Bypass
-  @CacheTTL(2)
   async syncLastSyncedAt(
     @Query() query: SyncByLastSyncedAtDto,
     @Res() res: FastifyReply,
@@ -40,9 +38,25 @@ export class SyncController {
     const { lastSyncedAt } = query
 
     res.raw.setHeader('Content-Type', 'application/json')
-    const readable =
-      await this.service.getSyncLastSyncedAtCollection(lastSyncedAt)
+    const readable = await this.service.getSyncLastSyncedAt(lastSyncedAt)
 
     res.send(readable)
+  }
+
+  @Get('checksum')
+  @HTTPDecorators.Bypass
+  @CacheTTL(2)
+  async getChecksum(@Query() query: SyncDataChecksumDto) {
+    const { checksum, id, type } = query
+    const dbChecksum = await this.service.getAndRefreshChecksum(type, id)
+
+    if (dbChecksum === null) {
+      return 'DELETED'
+    }
+    if (dbChecksum === checksum) {
+      return 'OK'
+    }
+
+    return 'UPDATE'
   }
 }

@@ -3,11 +3,22 @@ import type { SyncableCollectionName } from '../sync/sync.constant'
 import type { SyncableDataInteraction } from './sync-update.type'
 
 import { Injectable } from '@nestjs/common'
+import { Cron, CronExpression } from '@nestjs/schedule'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
+import {
+  CATEGORY_COLLECTION_NAME,
+  CHECKSUM_COLLECTION_NAME,
+  NOTE_COLLECTION_NAME,
+  PAGE_COLLECTION_NAME,
+  POST_COLLECTION_NAME,
+  TOPIC_COLLECTION_NAME,
+} from '~/constants/db.constant'
+import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { md5 } from '~/utils'
 
 import { SyncableCollectionNames } from '../sync/sync.constant'
 import { SyncUpdateModel } from './sync-update.model'
@@ -19,6 +30,7 @@ export class SyncUpdateService implements OnModuleInit, OnModuleDestroy {
     private readonly syncUpdateModel: ReturnModelType<typeof SyncUpdateModel>,
 
     private readonly eventManager: EventManagerService,
+    private readonly databaseService: DatabaseService,
   ) {}
 
   private eventDispose: () => void
@@ -27,40 +39,59 @@ export class SyncUpdateService implements OnModuleInit, OnModuleDestroy {
   }
 
   registerEvents() {
-    const disposers = SyncableCollectionNames.map(
-      (eventType: SyncableCollectionName) => {
-        const upperEventType = eventType.toUpperCase()
-        return [
-          this.eventManager.on(
-            BusinessEvents[`${upperEventType}_CREATE`],
-            (doc) => {
-              this.recordUpdate(doc._id, eventType, 'create')
-            },
-          ),
-          this.eventManager.on(
-            BusinessEvents[`${upperEventType}_UPDATE`],
-            (doc) => {
-              this.recordUpdate(doc._id, eventType, 'update')
-            },
-          ),
-          this.eventManager.on(
-            BusinessEvents[`${upperEventType}_DELETE`],
-            (id) => {
-              this.recordUpdate(id, eventType, 'delete')
-            },
-          ),
-        ]
-      },
-    )
+    const eventTypes = ['CREATE', 'UPDATE', 'DELETE']
 
-    return () => {
-      disposers.forEach((disposer) => disposer.forEach((d) => d()))
-    }
+    const disposers = SyncableCollectionNames.flatMap((collectionName) => {
+      return eventTypes.map((type) => {
+        const eventName =
+          BusinessEvents[`${collectionName.toUpperCase()}_${type}`]
+        const handler = (docOrId: any) => {
+          const isDelete = type === 'DELETE'
+          const id = isDelete ? docOrId : docOrId._id
+          this.recordUpdate(
+            id,
+            collectionName as SyncableCollectionName,
+            type.toLowerCase() as SyncableDataInteraction,
+          )
+
+          if (isDelete) {
+            this.deleteCheckSum(id)
+          } else {
+            this.updateCheckSum(id, docOrId)
+          }
+        }
+        return this.eventManager.on(eventName, handler)
+      })
+    })
+
+    return () => disposers.forEach((disposer) => disposer())
   }
   onModuleDestroy() {
     this.eventDispose?.()
   }
 
+  updateCheckSum(refId: string, data: any) {
+    return this.databaseService.db
+      .collection(CHECKSUM_COLLECTION_NAME)
+      .updateOne(
+        {
+          refId,
+        },
+        {
+          $set: {
+            checksum: md5(JSON.stringify(data)),
+          },
+        },
+        {
+          upsert: true,
+        },
+      )
+  }
+  deleteCheckSum(refId: string) {
+    return this.databaseService.db
+      .collection(CHECKSUM_COLLECTION_NAME)
+      .deleteOne({ refId })
+  }
   recordUpdate(
     updateId: string,
     type: SyncableCollectionName,
@@ -72,5 +103,34 @@ export class SyncUpdateService implements OnModuleInit, OnModuleDestroy {
       updateAt: new Date(),
       interection,
     })
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async syncAllChecksum() {
+    const db = this.databaseService.db
+    const insertedChecksumRecords = [] as { refId: string; checksum: string }[]
+    await Promise.all(
+      [
+        CATEGORY_COLLECTION_NAME,
+        NOTE_COLLECTION_NAME,
+        PAGE_COLLECTION_NAME,
+        POST_COLLECTION_NAME,
+        TOPIC_COLLECTION_NAME,
+      ].map(async (collectionName) => {
+        for await (const cur of db.collection(collectionName).find()) {
+          insertedChecksumRecords.push({
+            refId: cur._id.toHexString(),
+            checksum: md5(JSON.stringify(cur)),
+          })
+        }
+      }),
+    )
+
+    if (insertedChecksumRecords.length === 0) {
+      return
+    }
+    await db
+      .collection(CHECKSUM_COLLECTION_NAME)
+      .insertMany(insertedChecksumRecords)
   }
 }

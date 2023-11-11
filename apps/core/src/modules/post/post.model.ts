@@ -27,6 +27,7 @@ import {
   Severity,
 } from '@typegoose/typegoose'
 
+import { POST_COLLECTION_NAME } from '~/constants/db.constant'
 import { CountModel as Count } from '~/shared/model/count.model'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
 
@@ -37,7 +38,9 @@ import { CategoryModel as Category } from '../category/category.model'
 @index({ slug: 1 })
 @index({ modified: -1 })
 @index({ text: 'text' })
-@modelOptions({ options: { customName: 'Post', allowMixed: Severity.ALLOW } })
+@modelOptions({
+  options: { customName: POST_COLLECTION_NAME, allowMixed: Severity.ALLOW },
+})
 export class PostModel extends WriteBaseModel {
   @prop({ trim: true, unique: true, required: true })
   @IsString()

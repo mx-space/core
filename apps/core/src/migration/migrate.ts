@@ -1,3 +1,4 @@
+import { MIGRATE_COLLECTION_NAME } from '~/constants/db.constant'
 import { isMainProcess } from '~/global/env.global'
 import { getDatabaseConnection } from '~/utils/database.util'
 
@@ -11,9 +12,10 @@ export async function migrateDatabase() {
   const connection = await getDatabaseConnection()
   const db = connection.db
 
-  const migrateCollectionName = 'migrations'
-
-  const migrateArr = await db.collection(migrateCollectionName).find().toArray()
+  const migrateArr = await db
+    .collection(MIGRATE_COLLECTION_NAME)
+    .find()
+    .toArray()
   const migrateMap = new Map(migrateArr.map((m) => [m.name, m]))
 
   for (const migrate of VersionList) {
@@ -25,7 +27,7 @@ export async function migrateDatabase() {
 
     await migrate(db)
 
-    await db.collection(migrateCollectionName).insertOne({
+    await db.collection(MIGRATE_COLLECTION_NAME).insertOne({
       name: migrate.name,
       time: Date.now(),
     })

@@ -1,10 +1,21 @@
 import { Readable } from 'stream'
+import { Types } from 'mongoose'
+import type { Collection, Document } from 'mongodb'
 import type { SyncableDataInteraction } from '../sync-update/sync-update.type'
 import type { SyncableCollectionName } from './sync.constant'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
+import {
+  CATEGORY_COLLECTION_NAME,
+  CHECKSUM_COLLECTION_NAME,
+  NOTE_COLLECTION_NAME,
+  PAGE_COLLECTION_NAME,
+  POST_COLLECTION_NAME,
+  TOPIC_COLLECTION_NAME,
+} from '~/constants/db.constant'
+import { DatabaseService } from '~/processors/database/database.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { md5 } from '~/utils'
 
@@ -14,6 +25,7 @@ import { PageService } from '../page/page.service'
 import { PostService } from '../post/post.service'
 import { SyncUpdateModel } from '../sync-update/sync-update.model'
 import { TopicService } from '../topic/topic.service'
+import { SyncableCollectionNames } from './sync.constant'
 
 @Injectable()
 export class SyncService {
@@ -33,32 +45,66 @@ export class SyncService {
   @InjectModel(SyncUpdateModel)
   private readonly syncUpdateModel: ReturnModelType<typeof SyncUpdateModel>
 
+  @Inject()
+  private readonly databaseService: DatabaseService
+
+  private getCollections(): Record<
+    SyncableCollectionName,
+    Collection<Document>
+  > {
+    const db = this.databaseService.db
+    return {
+      post: db.collection(POST_COLLECTION_NAME),
+      page: db.collection(PAGE_COLLECTION_NAME),
+      note: db.collection(NOTE_COLLECTION_NAME),
+      category: db.collection(CATEGORY_COLLECTION_NAME),
+      topic: db.collection(TOPIC_COLLECTION_NAME),
+    }
+  }
+
   buildSyncableData() {
     const readable = new Readable({
       read() {},
     })
 
+    const collections = this.getCollections()
+    const db = this.databaseService.db
     setImmediate(async () => {
-      // 创建一个通用的函数来处理查询和数据处理逻辑
-      const processModel = async (
-        service: any,
-        type: SyncableCollectionName,
-      ) => {
+      const tasks = SyncableCollectionNames.map(async (type) => {
         const queryCondition =
-          type === 'note' ? service.publicNoteQueryCondition : {}
-        const docs = await service.model.find(queryCondition).lean()
-        docs.forEach((doc) => {
-          readable.push(this.stringifySyncableData(type, doc))
-        })
-      }
+          type === 'note'
+            ? (this.noteService as NoteService).publicNoteQueryCondition
+            : {}
+        const docs = await collections[type as SyncableCollectionName]
+          .find(queryCondition)
+          .toArray()
 
-      const tasks = [
-        processModel(this.noteService, 'note'),
-        processModel(this.postService, 'post'),
-        processModel(this.categoryService, 'category'),
-        processModel(this.topicService, 'topic'),
-        processModel(this.pageService, 'page'),
-      ]
+        const allRefIds = docs.map((entity) => entity._id.toHexString())
+        const checksumCollection = db.collection(CHECKSUM_COLLECTION_NAME)
+        const refIdChecksums = (await checksumCollection
+          .find({
+            refId: {
+              $in: allRefIds,
+            },
+          })
+          .toArray()) as any as { refId: string; checksum: string }[]
+
+        const refId2Checksum = refIdChecksums.reduce((acc, cur) => {
+          acc[cur.refId] = cur.checksum
+          return acc
+        }, {})
+
+        docs.forEach((doc) => {
+          readable.push(
+            this.stringifySyncableData(
+              type as SyncableCollectionName,
+              doc,
+
+              refId2Checksum[doc._id.toHexString()] || md5(JSON.stringify(doc)),
+            ),
+          )
+        })
+      })
 
       await Promise.all(tasks)
 
@@ -88,35 +134,19 @@ export class SyncService {
         return null
     }
   }
-  private async findByIds(type: SyncableCollectionName, ids: string[]) {
-    // Create a base query condition that can be reused
+  private async findByIds(
+    type: SyncableCollectionName,
+    ids: string[],
+  ): Promise<{ entity: any; checksum: string }[]> {
     const baseQueryCondition = {
       _id: {
-        $in: ids,
+        $in: ids.map((id) => new Types.ObjectId(id)),
       },
     }
+    const db = this.databaseService.db
 
-    // A helper function to return the model based on the type
-    const getModelByType = (type: SyncableCollectionName) => {
-      switch (type) {
-        case 'post':
-          return this.postService.model
-        case 'page':
-          return this.pageService.model
-        case 'note':
-          return this.noteService.model
-        case 'category':
-          return this.categoryService.model
-        case 'topic':
-          return this.topicService.model
-        default:
-          return null
-      }
-    }
-
-    // Get the model for the given type
-    const model = getModelByType(type)
-    if (!model) return []
+    const collection = this.getCollections()[type]
+    if (!collection) return []
 
     // If the type is 'note', merge the publicNoteQueryCondition
     const queryCondition =
@@ -127,46 +157,69 @@ export class SyncService {
           }
         : baseQueryCondition
 
-    // Execute the query using the condition and return the result
-    return (model as any).find(queryCondition).lean()
+    const entities = await collection.find(queryCondition).toArray()
+
+    const allRefIds = entities.map((entity) => entity._id.toHexString())
+    const checksumCollection = db.collection(CHECKSUM_COLLECTION_NAME)
+    const refIdChecksum = (await checksumCollection
+      .find({
+        refId: {
+          $in: allRefIds,
+        },
+      })
+      .toArray()) as any as { refId: string; checksum: string }[]
+
+    return entities.map((entity) => {
+      const checksum =
+        refIdChecksum.find((item) => item.refId === entity._id.toHexString())
+          ?.checksum || md5(JSON.stringify(entity))
+      return {
+        entity,
+        checksum,
+      }
+    })
   }
 
-  findPublicByIdWithCheckSum({
-    type,
-    id,
-    transformer,
-    transformerFinalJSON,
-  }: {
-    type: SyncableCollectionName
-    id: string
-    transformer?: (doc: any) => any
-    transformerFinalJSON?: (doc: {
-      data: any
-      type: SyncableCollectionName
-      checksum: string
-    }) => any
-  }) {
-    return this.findById(type, id).then((doc) => {
-      if (!doc) {
-        return null
-      }
+  async getAndRefreshChecksum(type: SyncableCollectionName, refId: string) {
+    const collection = this.getCollections()[type]
 
-      const nextDoc = transformer?.(doc) || doc
-
-      return this.stringifySyncableData(type, nextDoc, transformerFinalJSON)
+    const document = await collection.findOne({
+      _id: new Types.ObjectId(refId),
     })
+
+    if (!document) return null
+
+    const checksum = md5(JSON.stringify(document))
+
+    const db = this.databaseService.db
+    await db.collection(CHECKSUM_COLLECTION_NAME).updateOne(
+      {
+        refId,
+      },
+      {
+        $set: {
+          checksum,
+        },
+      },
+      {
+        upsert: true,
+      },
+    )
+
+    return checksum
   }
 
   private stringifySyncableData(
     type: 'post' | 'page' | 'note' | 'category' | 'topic',
     data: any,
+    checksum: string,
     transformer?: (doc: any) => any,
   ) {
     const obj = {
       data,
       type,
-      // TODO checksum computed move to when update or create document
-      checksum: md5(JSON.stringify(data)),
+
+      checksum,
     }
 
     if (transformer) {
@@ -175,7 +228,7 @@ export class SyncService {
     return `${JSON.stringify(obj)}\n`
   }
 
-  async getSyncLastSyncedAtCollection(lastSyncedAt: string) {
+  async getSyncLastSyncedAt(lastSyncedAt: string) {
     const lastSyncedAtDate = new Date(lastSyncedAt)
     const syncUpdates = await this.syncUpdateModel
       .find({
@@ -220,15 +273,20 @@ export class SyncService {
         type: SyncableCollectionName,
         ids: string[],
       ) => {
-        const docs = await this.findByIds(type, ids)
-        for (const doc of docs) {
+        const results = await this.findByIds(type, ids)
+        for (const result of results) {
           readable.push(
-            this.stringifySyncableData(type, doc, (doc: any) => {
-              Object.assign(doc, {
-                interection: ids[doc._id?.toHexString() || doc._id || doc.id],
-              })
-              return doc
-            }),
+            this.stringifySyncableData(
+              type,
+              result.entity,
+              result.checksum,
+              (doc: any) => {
+                Object.assign(doc, {
+                  interection: ids[doc._id?.toHexString() || doc._id || doc.id],
+                })
+                return doc
+              },
+            ),
           )
         }
       }
@@ -256,14 +314,4 @@ export class SyncService {
 
     return readable
   }
-
-  // TODO
-  updateCheckSum() {}
 }
-
-///  NOTE
-///  现在 mongoose 查询方式不能保证结果的类型是同一个，在 Note RESTFul 查到的也可能和 Syncable data 不一致
-///  导致现在不能直接通过 checksum 来判断数据变动
-///  而且现在实时计算 checksum 也不是一个好的选择。
-///  后续在考虑是否需要在创建和更新的时候计算 checksum，然后在查询的时候直接返回 checksum
-///  checksum 可以根据一些关键的数据字段综合得出

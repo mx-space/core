@@ -4,6 +4,7 @@ import type { DocumentType } from '@typegoose/typegoose'
 import { PartialType } from '@nestjs/mapped-types'
 import { index, modelOptions, prop } from '@typegoose/typegoose'
 
+import { CATEGORY_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 
 export type CategoryDocument = DocumentType<CategoryModel>
@@ -14,7 +15,7 @@ export enum CategoryType {
 }
 
 @index({ slug: -1 })
-@modelOptions({ options: { customName: 'Category' } })
+@modelOptions({ options: { customName: CATEGORY_COLLECTION_NAME } })
 export class CategoryModel extends BaseModel {
   @prop({ unique: true, trim: true, required: true })
   @IsString()

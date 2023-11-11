@@ -14,6 +14,7 @@ import { PartialType } from '@nestjs/mapped-types'
 import { AutoIncrementID } from '@typegoose/auto-increment'
 import { index, modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
 
+import { NOTE_COLLECTION_NAME } from '~/constants/db.constant'
 import { CountModel } from '~/shared/model/count.model'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
 
@@ -23,7 +24,7 @@ import { NoteMusic } from './models/music.model'
 
 @modelOptions({
   options: {
-    customName: 'Note',
+    customName: NOTE_COLLECTION_NAME,
   },
 })
 @plugin(AutoIncrementID, {
