@@ -12,17 +12,31 @@ import {
 import { md5 } from '~/utils'
 
 export default (async function v4_6_0(db: Db) {
-  // 1. delete page `type` field
-  await db.collection(PAGE_COLLECTION_NAME).updateMany(
-    {
-      type: { $exists: true },
-    },
-    {
-      $unset: {
-        type: 1,
+  await Promise.all([
+    // 0. rename Note collection identifycounts
+    db.collection('identitycounters').updateOne(
+      {
+        modelName: 'Note',
       },
-    },
-  )
+      {
+        $set: {
+          modelName: NOTE_COLLECTION_NAME,
+        },
+      },
+    ),
+
+    // 1. delete page `type` field
+    db.collection(PAGE_COLLECTION_NAME).updateMany(
+      {
+        type: { $exists: true },
+      },
+      {
+        $unset: {
+          type: 1,
+        },
+      },
+    ),
+  ])
 
   // 2. checksum
 

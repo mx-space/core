@@ -30,6 +30,8 @@ import { NoteMusic } from './models/music.model'
 @plugin(AutoIncrementID, {
   field: 'nid',
   startAt: 1,
+  overwriteModelName: NOTE_COLLECTION_NAME,
+  trackerModelName: 'identitycounters',
 })
 @index({ text: 'text' })
 @index({ modified: -1 })

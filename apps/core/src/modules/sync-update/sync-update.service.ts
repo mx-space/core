@@ -45,9 +45,10 @@ export class SyncUpdateService implements OnModuleInit, OnModuleDestroy {
       return eventTypes.map((type) => {
         const eventName =
           BusinessEvents[`${collectionName.toUpperCase()}_${type}`]
-        const handler = (docOrId: any) => {
+        const handler = (data: any) => {
           const isDelete = type === 'DELETE'
-          const id = isDelete ? docOrId : docOrId._id
+          const id = isDelete ? data.data : data._id
+
           this.recordUpdate(
             id,
             collectionName as SyncableCollectionName,
@@ -57,7 +58,7 @@ export class SyncUpdateService implements OnModuleInit, OnModuleDestroy {
           if (isDelete) {
             this.deleteCheckSum(id)
           } else {
-            this.updateCheckSum(id, docOrId)
+            this.updateCheckSum(id, data)
           }
         }
         return this.eventManager.on(eventName, handler)
