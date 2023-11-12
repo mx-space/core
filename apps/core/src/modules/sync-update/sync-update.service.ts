@@ -129,8 +129,20 @@ export class SyncUpdateService implements OnModuleInit, OnModuleDestroy {
     if (insertedChecksumRecords.length === 0) {
       return
     }
-    await db
-      .collection(CHECKSUM_COLLECTION_NAME)
-      .insertMany(insertedChecksumRecords)
+
+    const session = await this.databaseService.client.startSession()
+    session.startTransaction()
+
+    try {
+      await db.collection(CHECKSUM_COLLECTION_NAME).deleteMany({}, { session })
+      await db
+        .collection(CHECKSUM_COLLECTION_NAME)
+        .insertMany(insertedChecksumRecords, { session })
+      await session.commitTransaction()
+    } catch {
+      await session.abortTransaction()
+    } finally {
+      await session.endSession()
+    }
   }
 }

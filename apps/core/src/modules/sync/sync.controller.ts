@@ -1,7 +1,7 @@
 import { FastifyReply } from 'fastify'
 
 import { CacheTTL } from '@nestjs/cache-manager'
-import { Get, Inject, Query, Res } from '@nestjs/common'
+import { Get, Header, Inject, Query, Res } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -45,6 +45,8 @@ export class SyncController {
 
   @Get('item')
   @CacheTTL(2)
+  @HTTPDecorators.Bypass
+  @Header('content-type', 'text/plain')
   async getItem(@Query() query: SyncDataChecksumDto) {
     const { id, type } = query
 
@@ -63,8 +65,8 @@ export class SyncController {
         }
         return this.service.stringifySyncableData(
           type,
-          res.checksum,
           res.entity,
+          res.checksum,
         )
       })
   }
