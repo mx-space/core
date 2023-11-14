@@ -13,7 +13,7 @@ import { ReturnModelType } from '@typegoose/typegoose'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
-import { EventScope } from '~/constants/business-event.constant'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -128,6 +128,9 @@ export class CategoryService {
   async create(name: string, slug?: string) {
     const doc = await this.model.create({ name, slug: slug ?? name })
     this.clearCache()
+    this.eventManager.broadcast(BusinessEvents.CATEGORY_CREATE, doc, {
+      scope: EventScope.TO_SYSTEM_VISITOR,
+    })
     return doc
   }
 
@@ -142,6 +145,10 @@ export class CategoryService {
       },
     )
     this.clearCache()
+
+    this.eventManager.broadcast(BusinessEvents.CATEGORY_CREATE, newDoc, {
+      scope: EventScope.TO_SYSTEM_VISITOR,
+    })
     return newDoc
   }
   async deleteById(id: string) {
@@ -160,11 +167,15 @@ export class CategoryService {
       await this.createDefaultCategory()
     }
     this.clearCache()
+
+    this.eventManager.broadcast(BusinessEvents.CATEGORY_DELETE, id, {
+      scope: EventScope.ALL,
+    })
     return res
   }
 
   private clearCache() {
-    scheduleManager.schedule(() =>
+    return scheduleManager.batch(() =>
       Promise.all([
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,

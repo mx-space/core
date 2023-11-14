@@ -9,11 +9,12 @@ import slugify from 'slugify'
 
 import { index, modelOptions, prop } from '@typegoose/typegoose'
 
+import { TOPIC_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 
 @modelOptions({
   options: {
-    customName: 'Topic',
+    customName: TOPIC_COLLECTION_NAME,
   },
 })
 @index({ name: 1 })

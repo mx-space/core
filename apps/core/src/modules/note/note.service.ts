@@ -39,7 +39,30 @@ export class NoteService {
 
   public readonly publicNoteQueryCondition = {
     hide: false,
-    password: undefined,
+    $and: [
+      {
+        $or: [
+          {
+            password: '',
+          },
+          {
+            password: undefined,
+          },
+        ],
+      },
+      {
+        $or: [
+          {
+            secret: undefined,
+          },
+          {
+            secret: {
+              $lt: new Date(),
+            },
+          },
+        ],
+      },
+    ],
   }
 
   public checkNoteIsSecret(note: NoteModel) {

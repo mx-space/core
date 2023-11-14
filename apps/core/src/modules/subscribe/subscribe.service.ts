@@ -4,7 +4,8 @@ import { render } from 'ejs'
 import { LRUCache } from 'lru-cache'
 import { nanoid } from 'nanoid'
 import type { CoAction } from '@innei/next-async/types/interface'
-import type { OnModuleInit } from '@nestjs/common'
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import type { NoteModel } from '../note/note.model'
 import type { PostModel } from '../post/post.model'
 import type { SubscribeTemplateRenderProps } from './subscribe.email.default'
@@ -35,7 +36,7 @@ declare type Email = string
 declare type SubscribeBit = number
 
 @Injectable()
-export class SubscribeService implements OnModuleInit {
+export class SubscribeService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @InjectModel(SubscribeModel)
     private readonly subscribeModel: MongooseModel<SubscribeModel>,
@@ -53,8 +54,18 @@ export class SubscribeService implements OnModuleInit {
     return this.subscribeModel
   }
 
+  private eventDispose: IEventManagerHandlerDisposer[] = []
   async onModuleInit() {
-    await Promise.all([this.observeEvents(), this.registerEmailTemplate()])
+    const [disposer] = await Promise.all([
+      this.observeEvents(),
+      this.registerEmailTemplate(),
+    ])
+    disposer && this.eventDispose.push(...disposer)
+  }
+  async onModuleDestroy() {
+    for (const dispose of this.eventDispose) {
+      dispose()
+    }
   }
 
   private async registerEmailTemplate() {
@@ -144,41 +155,20 @@ export class SubscribeService implements OnModuleInit {
       this.abort()
     }
 
-    // TODO 抽离逻辑
-    this.eventManager.on(
-      BusinessEvents.NOTE_CREATE,
-      (e) => new Co().use(precheck, noteAndPostHandler).start(e),
-      scopeCfg,
-    )
+    return [
+      // TODO 抽离逻辑
+      this.eventManager.on(
+        BusinessEvents.NOTE_CREATE,
+        (e) => new Co().use(precheck, noteAndPostHandler).start(e),
+        scopeCfg,
+      ),
 
-    this.eventManager.on(
-      BusinessEvents.POST_CREATE,
-      (e) => new Co().use(precheck, noteAndPostHandler).start(e),
-      scopeCfg,
-    )
-
-    // this.eventManager.on(
-    //   BusinessEvents.SAY_CREATE,
-    //   async (say: SayModel) => {
-    //     for (const [email, subscribe] of this.subscribeMap.entries()) {
-    //       const unsubscribeLink = await getUnsubscribeLink(email)
-
-    //       if (!unsubscribeLink) continue
-
-    //       if (subscribe & SubscribeNoteCreateBit) this.sendEmail(email, {
-    //         author: user.name,
-    //         detail_link: this.urlBuilderService.buildWithBaseUrl
-    //       })
-    //     }
-    //   },
-    //   scopeCfg,
-    // )
-
-    // this.eventManager.on(
-    //   BusinessEvents.RECENTLY_CREATE,
-    //   async () => {},
-    //   scopeCfg,
-    // )
+      this.eventManager.on(
+        BusinessEvents.POST_CREATE,
+        (e) => new Co().use(precheck, noteAndPostHandler).start(e),
+        scopeCfg,
+      ),
+    ]
   }
 
   async subscribe(email: string, subscribe: number) {

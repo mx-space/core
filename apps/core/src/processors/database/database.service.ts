@@ -107,4 +107,8 @@ export class DatabaseService {
   public get db() {
     return this.connection.db
   }
+
+  public get client() {
+    return this.connection
+  }
 }
