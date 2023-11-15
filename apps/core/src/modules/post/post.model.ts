@@ -80,7 +80,7 @@ export class PostModel extends WriteBaseModel {
   @IsOptional()
   tags?: string[]
   @prop({ type: Count, default: { read: 0, like: 0 }, _id: false })
-  count?: Count
+  count: Count
 
   @prop()
   @IsDate()
@@ -124,7 +124,7 @@ export class PostModel extends WriteBaseModel {
     type: Types.ObjectId,
     ref: () => PostModel,
   })
-  related?: Partial<PostModel>[]
+  related: Partial<PostModel>[]
 
   static get protectedKeys() {
     return ['count'].concat(super.protectedKeys)

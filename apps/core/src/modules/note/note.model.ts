@@ -53,18 +53,19 @@ export class NoteModel extends WriteBaseModel {
 
   @prop({
     select: false,
+    type: String,
   })
   @IsString()
   @IsOptional()
   @IsNotEmpty()
   @Transform(({ value: val }) => (String(val).length === 0 ? null : val))
-  password?: string
+  password: string | null
 
-  @prop()
+  @prop({ type: Date })
   @IsOptional()
   @IsDate()
   @Transform(({ value }) => (value ? new Date(value) : null))
-  secret?: Date
+  secret: Date | null
 
   @prop()
   @IsString()
@@ -93,13 +94,13 @@ export class NoteModel extends WriteBaseModel {
   location?: string
 
   @prop({ type: CountModel, default: { read: 0, like: 0 }, _id: false })
-  count?: CountModel
+  count: CountModel
 
   @prop({ type: [NoteMusic] })
   @ValidateNested({ each: true })
   @IsOptional()
   @Type(() => NoteMusic)
-  music?: NoteMusic[]
+  music: NoteMusic[]
 
   @prop({ ref: () => TopicModel })
   @IsMongoId()

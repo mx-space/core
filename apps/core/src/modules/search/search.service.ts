@@ -43,11 +43,11 @@ export class SearchService {
         {
           $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }],
           $and: [
-            { password: { $in: [undefined, null] } },
+            { password: { $not: null } },
             { hide: { $in: showHidden ? [false, true] : [false] } },
             {
               $or: [
-                { secret: { $in: [undefined, null] } },
+                { secret: { $not: null } },
                 { secret: { $lte: new Date() } },
               ],
             },
