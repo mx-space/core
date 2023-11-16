@@ -1,5 +1,25 @@
 # CHANGELOG
 
+# [4.6.0](https://github.com/mx-space/core/compare/v4.5.3...v4.6.0) (2023-11-16)
+
+
+### Bug Fixes
+
+* **deps:** update babel monorepo to v7.23.3 ([b8adf44](https://github.com/mx-space/core/commit/b8adf44f9c4863065a6108de11196089acc72b66))
+* **deps:** update dependency @nestjs/event-emitter to v2.0.3 ([9f2c47d](https://github.com/mx-space/core/commit/9f2c47d730c311b4321c467bcc2bf1e616ee276b))
+* **deps:** update dependency linkedom to v0.16.4 ([8aa1696](https://github.com/mx-space/core/commit/8aa1696bf5062fad8596884e1534a6fe9da8110b))
+* **deps:** update dependency lru-cache to v10.0.2 ([538c3ae](https://github.com/mx-space/core/commit/538c3ae7c442b409805162a13535c1232ecfd95e))
+* **deps:** update dependency marked to v10 ([#1214](https://github.com/mx-space/core/issues/1214)) ([428bece](https://github.com/mx-space/core/commit/428bece4e76e5ee254238b5a1c9e1069914845dc))
+* **deps:** update dependency marked to v9.1.6 ([d8a0d8a](https://github.com/mx-space/core/commit/d8a0d8ae8412517f84a41b2729343e6845222353))
+* migrate db ([aee6f63](https://github.com/mx-space/core/commit/aee6f6327b73abae89f0e7f9e2bf1d2d3d3ba4c0))
+
+
+### Features
+
+* Sync system ([#1208](https://github.com/mx-space/core/issues/1208)) ([255e05c](https://github.com/mx-space/core/commit/255e05c0d101d487fac97525e8b7bde10a2790e0))
+
+
+
 ## [4.5.3](https://github.com/mx-space/core/compare/v4.5.2...v4.5.3) (2023-11-07)
 
 
