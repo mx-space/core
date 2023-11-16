@@ -149,8 +149,8 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1
       axios-retry:
-        specifier: 3.9.0
-        version: 3.9.0
+        specifier: 3.9.1
+        version: 3.9.1
       bcrypt:
         specifier: 5.1.1
         version: 5.1.1
@@ -2971,8 +2971,8 @@ packages:
       - supports-color
     dev: false
 
-  /axios-retry@3.9.0:
-    resolution: {integrity: sha512-uK9K/GnlExfShu9dB4GuK0j+iGkIR+LRus3ILhE0zSVXY2q6Dxpemr50NPMs5kP7eOKv9Pz4VvUO40ps1F67dA==}
+  /axios-retry@3.9.1:
+    resolution: {integrity: sha512-8PJDLJv7qTTMMwdnbMvrLYuvB47M81wRtxQmEdV5w4rgbTXTt+vtPkXwajOfOdSyv/wZICJOC+/UhXH4aQ/R+w==}
     dependencies:
       '@babel/runtime': 7.23.2
       is-retry-allowed: 2.2.0
