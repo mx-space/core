@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [4.6.1](https://github.com/mx-space/core/compare/v4.6.0...v4.6.1) (2023-11-19)
+
+
+### Bug Fixes
+
+* comment populate `ref_type`, closes [#1232](https://github.com/mx-space/core/issues/1232) ([c9758a4](https://github.com/mx-space/core/commit/c9758a4d51bcb15541207a1359e72775875c904e))
+* **deps:** update dependency @typegoose/typegoose to v11.7.1 ([57e565b](https://github.com/mx-space/core/commit/57e565be995d4ee203d67701b7f744a0382edb1e))
+* **deps:** update dependency axios-retry to v3.9.1 ([70fd41b](https://github.com/mx-space/core/commit/70fd41beb438796e55675a6563f725e2e86b0809))
+* **deps:** update dependency mongoose to v8.0.1 ([#1221](https://github.com/mx-space/core/issues/1221)) ([2c3a218](https://github.com/mx-space/core/commit/2c3a2188c384d762c67b54bb34de99ab271eab45))
+* **deps:** update nest monorepo to v10.2.9 ([0f26ffb](https://github.com/mx-space/core/commit/0f26ffb114403021cf07df8b4d344f92ab975817))
+* remove cdn download url ([795ab13](https://github.com/mx-space/core/commit/795ab13f13d944dfa8c856562b368cc7752075c3))
+
+
+
 # [4.6.0](https://github.com/mx-space/core/compare/v4.5.3...v4.6.0) (2023-11-16)
 
 
