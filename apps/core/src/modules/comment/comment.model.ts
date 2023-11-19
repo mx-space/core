@@ -4,6 +4,7 @@ import autopopulate from 'mongoose-autopopulate'
 
 import { modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
 
+import { COMMENT_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 
 import { NoteModel } from '../note/note.model'
@@ -26,7 +27,7 @@ export enum CommentState {
 
 @modelOptions({
   options: {
-    customName: 'Comment',
+    customName: COMMENT_COLLECTION_NAME,
   },
 })
 @plugin(autopopulate)

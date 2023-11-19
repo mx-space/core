@@ -52,8 +52,8 @@ export class UpdateService {
           return
         }
 
-        // const cdnDownloadUrl = `https://ghproxy.com/${downloadUrl}`
-        const cdnDownloadUrl = downloadUrl
+        const cdnDownloadUrl = `https://mirror.ghproxy.com/${downloadUrl}`
+        // const cdnDownloadUrl = downloadUrl
 
         subscriber.next(
           `Downloading admin asset v${version}\nFrom: ${cdnDownloadUrl}\n`,

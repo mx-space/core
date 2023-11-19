@@ -24,8 +24,11 @@ export async function migrateDatabase() {
     }
 
     consola.log(`[Database] migrate ${migrate.name}`)
-
-    await migrate(db)
+    if (typeof migrate === 'function') {
+      await migrate(db)
+    } else {
+      await migrate.run(db, connection)
+    }
 
     await db.collection(MIGRATE_COLLECTION_NAME).insertOne({
       name: migrate.name,
