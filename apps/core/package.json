@@ -53,7 +53,7 @@
     "@babel/plugin-transform-modules-commonjs": "7.23.3",
     "@babel/plugin-transform-typescript": "7.23.3",
     "@babel/types": "^7.23.3",
-    "@fastify/cookie": "9.1.0",
+    "@fastify/cookie": "9.2.0",
     "@fastify/multipart": "8.0.0",
     "@fastify/static": "6.12.0",
     "@innei/next-async": "0.3.0",
@@ -61,7 +61,7 @@
     "@nestjs/common": "10.2.9",
     "@nestjs/core": "10.2.9",
     "@nestjs/event-emitter": "2.0.3",
-    "@nestjs/mapped-types": "^2.0.3",
+    "@nestjs/mapped-types": "^2.0.4",
     "@nestjs/platform-fastify": "10.2.9",
     "@nestjs/platform-socket.io": "10.2.9",
     "@nestjs/schedule": "4.0.0",
@@ -73,10 +73,10 @@
     "@typegoose/typegoose": "11.7.1",
     "@types/jsonwebtoken": "9.0.5",
     "algoliasearch": "4.20.0",
-    "axios": "^1.6.1",
+    "axios": "^1.6.2",
     "axios-retry": "3.9.1",
     "bcrypt": "5.1.1",
-    "cache-manager": "5.2.4",
+    "cache-manager": "5.3.1",
     "cache-manager-ioredis-yet": "1.2.2",
     "class-transformer": "0.5.1",
     "class-validator": "0.13.2",
@@ -151,13 +151,13 @@
     "ioredis": "5.3.2",
     "socket.io": "^4.7.2",
     "unplugin-swc": "1.4.3",
-    "vite": "4.5.0",
+    "vite": "5.0.0",
     "vite-tsconfig-paths": "4.2.1",
     "vitest": "0.34.6",
     "zx": "7.2.3"
   },
   "optionalDependencies": {
-    "mongodb-memory-server": "^9.0.1",
+    "mongodb-memory-server": "^9.1.1",
     "redis-memory-server": "^0.9.0"
   }
 }

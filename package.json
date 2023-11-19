@@ -37,7 +37,7 @@
     "@innei/prettier": "0.11.1",
     "@types/node": "20.9.2",
     "cross-env": "7.0.3",
-    "eslint": "^8.53.0",
+    "eslint": "^8.54.0",
     "eslint-plugin-unused-imports": "3.0.0",
     "husky": "8.0.3",
     "lint-staged": "15.1.0",
@@ -49,7 +49,7 @@
     "vite-tsconfig-paths": "4.2.1"
   },
   "optionalDependencies": {
-    "mongodb-memory-server": "9.0.1",
+    "mongodb-memory-server": "9.1.1",
     "redis-memory-server": "0.9.0"
   },
   "resolutions": {
