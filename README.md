@@ -2,8 +2,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/mx-space/mx-server.svg?style=flat)](https://github.com/mx-space/mx-server/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues-raw/mx-space/mx-server.svg?style=flat)](https://github.com/mx-space/mx-server/issues)
-[![Build (core)](https://github.com/mx-space/core/actions/workflows/build-core.yml/badge.svg)](https://github.com/mx-space/core/actions/workflows/build-core.yml)
-[![Docker Build](https://github.com/mx-space/core/actions/workflows/docker.yml/badge.svg)](https://github.com/mx-space/core/actions/workflows/docker.yml)
+[![Build Core](https://github.com/mx-space/core/actions/workflows/ci.yml/badge.svg)](https://github.com/mx-space/core/actions/workflows/ci.yml)
 [![Release](https://github.com/mx-space/core/actions/workflows/release.yml/badge.svg)](https://github.com/mx-space/core/actions/workflows/release.yml)
 [![GitHub license](https://img.shields.io/github/license/mx-space/mx-server.svg?style=flat)](https://github.com/mx-space/mx-server/blob/main/LICENSE)
 [![wakatime](https://wakatime.com/badge/user/9213dc96-df0d-4e66-b0bb-50f9e04e988c/project/8afd37d1-7501-426f-824b-50aeeb96bb6f.svg)](https://wakatime.com/badge/user/9213dc96-df0d-4e66-b0bb-50f9e04e988c/project/8afd37d1-7501-426f-824b-50aeeb96bb6f)
