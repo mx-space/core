@@ -80,8 +80,8 @@ importers:
         specifier: 7.23.3
         version: 7.23.3(@babel/core@7.23.3)
       '@babel/plugin-transform-typescript':
-        specifier: 7.23.3
-        version: 7.23.3(@babel/core@7.23.3)
+        specifier: 7.23.4
+        version: 7.23.4(@babel/core@7.23.3)
       '@babel/types':
         specifier: ^7.23.3
         version: 7.23.3
@@ -845,8 +845,8 @@ packages:
       '@babel/helper-simple-access': 7.22.5
     dev: false
 
-  /@babel/plugin-transform-typescript@7.23.3(@babel/core@7.23.3):
-    resolution: {integrity: sha512-ogV0yWnq38CFwH20l2Afz0dfKuZBx9o/Y2Rmh5vuSS0YD1hswgEgTfyTzuSrT2q9btmHRSqYoSfwFUVaC1M1Jw==}
+  /@babel/plugin-transform-typescript@7.23.4(@babel/core@7.23.3):
+    resolution: {integrity: sha512-39hCCOl+YUAyMOu6B9SmUTiHUU0t/CxJNUmY3qRdJujbqi+lrQcL11ysYUsAvFWPBdhihrv1z0oRG84Yr3dODQ==}
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
