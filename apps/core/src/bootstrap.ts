@@ -26,7 +26,10 @@ const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
 declare const module: any
 
 export async function bootstrap() {
-  await migrateDatabase()
+  if (isMainProcess) {
+    await migrateDatabase()
+  }
+
   const isInit = await checkInit()
 
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -46,21 +49,21 @@ export async function bootstrap() {
     isDev
       ? undefined
       : Origin
-      ? {
-          origin: (origin, callback) => {
-            let currentHost: string
-            try {
-              currentHost = new URL(origin).host
-            } catch {
-              currentHost = origin
-            }
-            const allow = Origin.some((host) => wcmatch(host)(currentHost))
+        ? {
+            origin: (origin, callback) => {
+              let currentHost: string
+              try {
+                currentHost = new URL(origin).host
+              } catch {
+                currentHost = origin
+              }
+              const allow = Origin.some((host) => wcmatch(host)(currentHost))
 
-            callback(null, allow)
-          },
-          credentials: true,
-        }
-      : undefined,
+              callback(null, allow)
+            },
+            credentials: true,
+          }
+        : undefined,
   )
 
   if (isDev || DEBUG_MODE.logging) {

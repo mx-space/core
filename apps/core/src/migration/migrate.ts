@@ -1,14 +1,9 @@
 import { MIGRATE_COLLECTION_NAME } from '~/constants/db.constant'
-import { isMainProcess } from '~/global/env.global'
 import { getDatabaseConnection } from '~/utils/database.util'
 
 import VersionList from './history'
 
 export async function migrateDatabase() {
-  if (!isMainProcess) {
-    return
-  }
-
   const connection = await getDatabaseConnection()
   const db = connection.db
 

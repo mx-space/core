@@ -14,6 +14,7 @@ import {
 import { MONGO_DB } from '~/app.config'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
+import { migrateDatabase } from '~/migration/migrate'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getMediumDateTime } from '~/utils'
@@ -176,6 +177,8 @@ export class BackupService {
       await $`mongorestore -h ${MONGO_DB.host || '127.0.0.1'} --port ${
         MONGO_DB.port || 27017
       } -d ${MONGO_DB.dbName} ./mx-space --drop  >/dev/null 2>&1`
+
+      await migrateDatabase()
     } catch (e) {
       this.logger.error(e)
       throw e
