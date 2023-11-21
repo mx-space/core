@@ -41,7 +41,7 @@ export class CommentModel extends BaseModel {
   @prop({ refPath: 'refType' })
   ref: Ref<PostModel | NoteModel | PageModel | RecentlyModel>
 
-  @prop({ required: true, enum: CommentRefTypes })
+  @prop({ required: true, type: String })
   refType: CommentRefTypes
 
   @prop({ trim: true, required: true })
