@@ -134,8 +134,6 @@ describe('BaseCrudFactory', () => {
       .lean()
       .then((doc) => doc?.id)
 
-    console.log(docId, 'docis 1')
-
     const res = await app.inject({
       method: 'delete',
       url: `/tests/${docId}`,
@@ -146,10 +144,8 @@ describe('BaseCrudFactory', () => {
 
     expect(res.statusCode).toBe(204)
 
-    const doc = await testingModel.countDocuments({
-      id: docId,
-    })
-    console.log(await testingModel.find(), 'dinf')
-    expect(doc).toBe(0)
+    const docs = await testingModel.find()
+
+    expect(docs.find((d) => d.id === docId)).toBe(undefined)
   })
 })
