@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [4.6.2](https://github.com/mx-space/core/compare/v4.6.1...v4.6.2) (2023-11-21)
+
+
+### Bug Fixes
+
+* ci ([557c3ce](https://github.com/mx-space/core/commit/557c3ce58430b5bb1dd2c502bed5e7c86aef7232))
+* comment model `refType` type ([1ad151a](https://github.com/mx-space/core/commit/1ad151af09d1fd4b3d1ebe8277a83eb67824861b))
+* comment ref not found statud code ([3a0f67a](https://github.com/mx-space/core/commit/3a0f67ad40bbb2f21240952fc307362ac3e7cdf4))
+* comment refType ([c8039ed](https://github.com/mx-space/core/commit/c8039ed32ec5f426416a532c24f9e1221e6c3c62))
+* **deps:** update babel monorepo to v7.23.4 ([1e8859f](https://github.com/mx-space/core/commit/1e8859ff78cc62f76650f17d5795aa140654bb65))
+* **deps:** update dependency lru-cache to v10.0.3 ([083c427](https://github.com/mx-space/core/commit/083c4276de673280a8c5a6993777d16dcd303e60))
+* **deps:** update nest monorepo to v10.2.10 ([07600f3](https://github.com/mx-space/core/commit/07600f3a848cb4146c67d9be253f8a6b1e5e80ce))
+* guard init module ([6236de7](https://github.com/mx-space/core/commit/6236de73b20786d0f3ae997c18ada3c8505ce609))
+
+
+
 ## [4.6.1](https://github.com/mx-space/core/compare/v4.6.0...v4.6.1) (2023-11-19)
 
 
