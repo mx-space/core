@@ -3,11 +3,12 @@ import {
   NOTE_COLLECTION_NAME,
   PAGE_COLLECTION_NAME,
   POST_COLLECTION_NAME,
+  RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
 
 import { defineMigration } from '../helper'
 
-export default defineMigration('v4.6.2', async (db, connection) => {
+export default defineMigration('v4.6.2__0', async (db, connection) => {
   const session = await connection.startSession()
   session.startTransaction()
   try {
@@ -28,6 +29,29 @@ export default defineMigration('v4.6.2', async (db, connection) => {
 
       db
         .collection(COMMENT_COLLECTION_NAME)
+        .updateMany(
+          { refType: 'Page' },
+          { $set: { refType: PAGE_COLLECTION_NAME } },
+        ),
+
+      // recently
+
+      db
+        .collection(RECENTLY_COLLECTION_NAME)
+        .updateMany(
+          { refType: 'Post' },
+          { $set: { refType: POST_COLLECTION_NAME } },
+        ),
+
+      db
+        .collection(RECENTLY_COLLECTION_NAME)
+        .updateMany(
+          { refType: 'Note' },
+          { $set: { refType: NOTE_COLLECTION_NAME } },
+        ),
+
+      db
+        .collection(RECENTLY_COLLECTION_NAME)
         .updateMany(
           { refType: 'Page' },
           { $set: { refType: PAGE_COLLECTION_NAME } },

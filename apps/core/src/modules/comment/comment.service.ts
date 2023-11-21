@@ -23,10 +23,12 @@ import {
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar, hasChinese } from '~/utils'
+import { normalizeRefType } from '~/utils/database.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import { createMockedContextResponse } from '../serverless/mock-response.util'
@@ -40,8 +42,7 @@ import {
   defaultCommentModelKeys,
 } from './comment.email.default'
 import { CommentReplyMailType } from './comment.enum'
-import { CommentModel, CommentRefTypes, CommentState } from './comment.model'
-import { normalizeRefType } from './comment.utils'
+import { CommentModel, CommentState } from './comment.model'
 
 @Injectable()
 export class CommentService implements OnModuleInit {
@@ -95,16 +96,16 @@ export class CommentService implements OnModuleInit {
   }
 
   private getModelByRefType(
-    type: CommentRefTypes,
+    type: CollectionRefTypes,
   ): ReturnModelType<typeof WriteBaseModel> {
     switch (type) {
-      case CommentRefTypes.Note:
+      case CollectionRefTypes.Note:
         return this.databaseService.getModelByRefType('Note') as any
-      case CommentRefTypes.Page:
+      case CollectionRefTypes.Page:
         return this.databaseService.getModelByRefType('Page') as any
-      case CommentRefTypes.Post:
+      case CollectionRefTypes.Post:
         return this.databaseService.getModelByRefType('Post') as any
-      case CommentRefTypes.Recently:
+      case CollectionRefTypes.Recently:
         return this.databaseService.getModelByRefType('Recently') as any
     }
   }
@@ -159,9 +160,10 @@ export class CommentService implements OnModuleInit {
   async createComment(
     id: string,
     doc: Partial<CommentModel>,
-    type?: CommentRefTypes,
+    type?: CollectionRefTypes,
   ) {
     let ref: (WriteBaseModel & { _id: any }) | null = null
+    let refType = type
     if (type) {
       const model = this.getModelByRefType(type)
 
@@ -169,9 +171,9 @@ export class CommentService implements OnModuleInit {
     } else {
       const result = await this.databaseService.findGlobalById(id)
       if (result) {
-        const { type: type_, document } = result
+        const { type, document } = result
         ref = document as any
-        type = type_ as any
+        refType = normalizeRefType(type)
       }
     }
     if (!ref) {
@@ -180,16 +182,14 @@ export class CommentService implements OnModuleInit {
     const commentIndex = ref.commentsIndex || 0
     doc.key = `#${commentIndex + 1}`
 
-    const articleType2RefType = normalizeRefType(type)
-
     const comment = await this.commentModel.create({
       ...doc,
       state: CommentState.Unread,
       ref: new Types.ObjectId(id),
-      refType: articleType2RefType,
+      refType,
     })
 
-    await this.databaseService.getModelByRefType(type as any).updateOne(
+    await this.databaseService.getModelByRefType(refType!).updateOne(
       { _id: ref._id },
       {
         $inc: {
@@ -237,7 +237,7 @@ export class CommentService implements OnModuleInit {
     }
   }
 
-  async allowComment(id: string, type?: CommentRefTypes) {
+  async allowComment(id: string, type?: CollectionRefTypes) {
     if (type) {
       const model = this.getModelByRefType(type)
       const doc = await model.findById(id)
@@ -337,7 +337,7 @@ export class CommentService implements OnModuleInit {
       to: type === CommentReplyMailType.Owner ? masterInfo.mail : parent!.mail,
       type,
       source: {
-        title: refType === CommentRefTypes.Recently ? '速记' : refDoc.title,
+        title: refType === CollectionRefTypes.Recently ? '速记' : refDoc.title,
         text: comment.text,
         author:
           type === CommentReplyMailType.Guest ? parent!.author : comment.author,
@@ -372,21 +372,21 @@ export class CommentService implements OnModuleInit {
     })
   }
 
-  async resolveUrlByType(type: CommentRefTypes, model: any) {
+  async resolveUrlByType(type: CollectionRefTypes, model: any) {
     const {
       url: { webUrl: base },
     } = await this.configs.waitForConfigReady()
     switch (type) {
-      case CommentRefTypes.Note: {
+      case CollectionRefTypes.Note: {
         return new URL(`/notes/${model.nid}`, base).toString()
       }
-      case CommentRefTypes.Page: {
+      case CollectionRefTypes.Page: {
         return new URL(`/${model.slug}`, base).toString()
       }
-      case CommentRefTypes.Post: {
+      case CollectionRefTypes.Post: {
         return new URL(`/${model.category.slug}/${model.slug}`, base).toString()
       }
-      case CommentRefTypes.Recently: {
+      case CollectionRefTypes.Recently: {
         return new URL(`/recently/${model._id}`, base).toString()
       }
     }

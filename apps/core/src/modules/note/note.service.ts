@@ -9,6 +9,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
@@ -16,7 +17,6 @@ import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getLessThanNow, scheduleManager } from '~/utils'
 
-import { CommentRefTypes } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
 import { NoteModel } from './note.model'
 
@@ -290,7 +290,7 @@ export class NoteService {
       }),
       this.commentService.model.deleteMany({
         ref: id,
-        refType: CommentRefTypes.Note,
+        refType: CollectionRefTypes.Note,
       }),
     ])
     scheduleManager.schedule(async () => {

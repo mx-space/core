@@ -2,8 +2,15 @@
  * @see https://github.com/surmon-china/nodepress/blob/main/src/processors/database/database.provider.ts
  */
 import mongoose from 'mongoose'
+import type { CollectionRefTypes } from '~/constants/db.constant'
 
 import { MONGO_DB } from '~/app.config'
+import {
+  NOTE_COLLECTION_NAME,
+  PAGE_COLLECTION_NAME,
+  POST_COLLECTION_NAME,
+  RECENTLY_COLLECTION_NAME,
+} from '~/constants/db.constant'
 
 let databaseConnection: mongoose.Connection | null = null
 
@@ -55,4 +62,15 @@ export const getDatabaseConnection = async () => {
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return databaseConnection!
+}
+
+export const normalizeRefType = (type: keyof typeof CollectionRefTypes) => {
+  return (
+    ({
+      Post: POST_COLLECTION_NAME,
+      Note: NOTE_COLLECTION_NAME,
+      Page: PAGE_COLLECTION_NAME,
+      Recently: RECENTLY_COLLECTION_NAME,
+    }[type] as CollectionRefTypes) || (type as CollectionRefTypes)
+  )
 }

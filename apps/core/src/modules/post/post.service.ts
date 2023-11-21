@@ -12,6 +12,7 @@ import {
 
 import { BusinessException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -21,7 +22,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { getLessThanNow, scheduleManager } from '~/utils'
 
 import { CategoryService } from '../category/category.service'
-import { CommentModel, CommentRefTypes } from '../comment/comment.model'
+import { CommentModel } from '../comment/comment.model'
 import { PostModel } from './post.model'
 
 @Injectable()
@@ -214,7 +215,10 @@ export class PostService {
     const deletedPost = await this.postModel.findById(id).lean()
     await Promise.all([
       this.model.deleteOne({ _id: id }),
-      this.commentModel.deleteMany({ ref: id, refType: CommentRefTypes.Post }),
+      this.commentModel.deleteMany({
+        ref: id,
+        refType: CollectionRefTypes.Post,
+      }),
       this.removeRelatedEachOther(deletedPost),
     ])
     await this.eventManager.broadcast(BusinessEvents.POST_DELETE, id, {

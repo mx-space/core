@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { mongoose, ReturnModelType } from '@typegoose/typegoose'
 
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { DB_CONNECTION_TOKEN } from '~/constants/system.constant'
 import { NoteModel } from '~/modules/note/note.model'
 import { PageModel } from '~/modules/page/page.model'
@@ -23,17 +24,36 @@ export class DatabaseService {
   ) {}
 
   // @ts-ignore
+  public getModelByRefType(
+    type: CollectionRefTypes,
+  ):
+    | ReturnModelType<typeof PostModel>
+    | ReturnModelType<typeof NoteModel>
+    | ReturnModelType<typeof PageModel>
+    | ReturnModelType<typeof RecentlyModel>
   public getModelByRefType(type: 'Post'): ReturnModelType<typeof PostModel>
   public getModelByRefType(type: 'post'): ReturnModelType<typeof PostModel>
+  public getModelByRefType(
+    type: CollectionRefTypes.Post,
+  ): ReturnModelType<typeof PostModel>
   public getModelByRefType(type: 'Note'): ReturnModelType<typeof NoteModel>
   public getModelByRefType(type: 'note'): ReturnModelType<typeof NoteModel>
+  public getModelByRefType(
+    type: CollectionRefTypes.Note,
+  ): ReturnModelType<typeof NoteModel>
   public getModelByRefType(type: 'Page'): ReturnModelType<typeof PageModel>
   public getModelByRefType(type: 'page'): ReturnModelType<typeof PageModel>
+  public getModelByRefType(
+    type: CollectionRefTypes.Page,
+  ): ReturnModelType<typeof PageModel>
   public getModelByRefType(
     type: 'recently',
   ): ReturnModelType<typeof RecentlyModel>
   public getModelByRefType(
     type: 'Recently',
+  ): ReturnModelType<typeof RecentlyModel>
+  public getModelByRefType(
+    type: CollectionRefTypes.Recently,
   ): ReturnModelType<typeof RecentlyModel>
   public getModelByRefType(type: any) {
     type = type.toLowerCase() as any
@@ -43,6 +63,10 @@ export class DatabaseService {
       ['note', this.noteModel],
       ['page', this.pageModel],
       ['recently', this.recentlyModel],
+
+      [CollectionRefTypes.Post, this.postModel],
+      [CollectionRefTypes.Note, this.noteModel],
+      [CollectionRefTypes.Page, this.pageModel],
     ] as any)
     return map.get(type) as any as ReturnModelType<
       | typeof NoteModel

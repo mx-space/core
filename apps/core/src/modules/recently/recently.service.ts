@@ -12,13 +12,14 @@ import {
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey, scheduleManager } from '~/utils'
+import { normalizeRefType } from '~/utils/database.util'
 
-import { CommentRefTypes } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
 import { RecentlyAttitudeEnum } from './recently.dto'
 import { RecentlyModel } from './recently.model'
@@ -77,10 +78,13 @@ export class RecentlyService {
   }
 
   async populateRef(result: RecentlyModel[], omit = ['text']) {
-    const refMap: Record<Exclude<CommentRefTypes, 'Recently'>, string[]> = {
-      Note: [],
-      Page: [],
-      Post: [],
+    const refMap: Record<
+      Exclude<CollectionRefTypes, CollectionRefTypes.Recently>,
+      string[]
+    > = {
+      [CollectionRefTypes.Post]: [],
+      [CollectionRefTypes.Page]: [],
+      [CollectionRefTypes.Note]: [],
     }
     for (const doc of result) {
       if (!doc.refType) {
@@ -92,21 +96,21 @@ export class RecentlyService {
     const foreignIdMap = {} as any
 
     for (const refType in refMap) {
-      const refIds = refMap[refType as CommentRefTypes]
+      const refIds = refMap[refType as CollectionRefTypes]
       if (!refIds.length) {
         continue
       }
-
-      await this.databaseService.db
+      const cursor = await this.databaseService.db
         .collection(pluralize(refType).toLowerCase())
         .find({
           _id: {
             $in: refIds,
           },
         })
-        .forEach((doc) => {
-          foreignIdMap[doc._id.toHexString()] = Object.assign({}, doc)
-        })
+
+      for await (const doc of cursor) {
+        foreignIdMap[doc._id.toHexString()] = Object.assign({}, doc)
+      }
     }
 
     for (const doc of result) {
@@ -197,7 +201,7 @@ export class RecentlyService {
     }
 
     const commentCount = await this.commentService.model.countDocuments({
-      refType: CommentRefTypes.Recently,
+      refType: CollectionRefTypes.Recently,
       ref: latest._id,
     })
 
@@ -214,7 +218,7 @@ export class RecentlyService {
         throw new BadRequestException('ref model not found')
       }
 
-      model.refType = existModel.type
+      model.refType = normalizeRefType(existModel.type)
     }
 
     const res = await this.model.create({
@@ -252,7 +256,7 @@ export class RecentlyService {
       // delete comment ref
       this.commentService.model.deleteMany({
         ref: id,
-        refType: CommentRefTypes.Recently,
+        refType: CollectionRefTypes.Recently,
       }),
     ])
     const isDeleted = deletedCount === 1

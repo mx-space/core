@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { CommentModel, CommentRefTypes } from '~/modules/comment/comment.model'
+import { CollectionRefTypes } from '~/constants/db.constant'
+import { CommentModel } from '~/modules/comment/comment.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
 import { HttpService } from './helper.http.service'
@@ -47,7 +48,7 @@ export class BarkPushService {
     await this.push({
       title: '收到一条新评论',
       body: `${comment.author} 评论了你的${
-        comment.refType === CommentRefTypes.Recently ? '速记' : '文章'
+        comment.refType === CollectionRefTypes.Recently ? '速记' : '文章'
       }：${comment.text}`,
       icon: comment.avatar,
       url: `${adminUrl}#/comments`,
@@ -55,9 +56,8 @@ export class BarkPushService {
   }
 
   async push(options: BarkPushOptions) {
-    const { key, serverUrl = 'https://day.app' } = await this.config.get(
-      'barkOptions',
-    )
+    const { key, serverUrl = 'https://day.app' } =
+      await this.config.get('barkOptions')
     const { title: siteTitle } = await this.config.get('seo')
     if (!key) {
       throw new Error('Bark key is not configured')

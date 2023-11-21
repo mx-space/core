@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer'
 import {
   IsBoolean,
   IsEmail,
@@ -11,7 +12,8 @@ import {
   MaxLength,
 } from 'class-validator'
 
-import { CommentRefTypes } from './comment.model'
+import { CollectionRefTypes } from '~/constants/db.constant'
+import { normalizeRefType } from '~/utils/database.util'
 
 export class CommentDto {
   @IsString()
@@ -61,8 +63,12 @@ export class TextOnlyDto {
 
 export class CommentRefTypesDto {
   @IsOptional()
-  @IsEnum(CommentRefTypes)
-  ref?: CommentRefTypes
+  @IsEnum(CollectionRefTypes)
+  @Transform(({ value }) => {
+    if (!value) return
+    return normalizeRefType(value as any)
+  })
+  ref?: CollectionRefTypes
 }
 
 export class CommentStatePatchDto {

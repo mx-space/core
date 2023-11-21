@@ -2,9 +2,8 @@ import { IsMongoId, IsOptional, IsString } from 'class-validator'
 
 import { modelOptions, prop } from '@typegoose/typegoose'
 
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { BaseCommentIndexModel } from '~/shared/model/base-comment.model'
-
-import { CommentRefTypes } from '../comment/comment.model'
 
 export type RefType = {
   title: string
@@ -26,8 +25,8 @@ export class RecentlyModel extends BaseCommentIndexModel {
   @IsMongoId()
   ref: RefType
 
-  @prop({ enum: CommentRefTypes })
-  refType: string
+  @prop({ type: String })
+  refType: CollectionRefTypes
 
   /**
    * 顶
