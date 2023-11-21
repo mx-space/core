@@ -7,7 +7,7 @@ import {
 
 import { defineMigration } from '../helper'
 
-export default defineMigration('v4.6.1', async (db, connection) => {
+export default defineMigration('v4.6.2', async (db, connection) => {
   const session = await connection.startSession()
   session.startTransaction()
   try {
@@ -48,7 +48,7 @@ export default defineMigration('v4.6.1', async (db, connection) => {
   } catch {
     await session.abortTransaction()
 
-    console.error('v4.6.1 migration failed')
+    console.error('v4.6.2 migration failed')
   } finally {
     session.endSession()
   }

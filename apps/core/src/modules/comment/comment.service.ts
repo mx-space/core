@@ -41,6 +41,7 @@ import {
 } from './comment.email.default'
 import { CommentReplyMailType } from './comment.enum'
 import { CommentModel, CommentRefTypes, CommentState } from './comment.model'
+import { normalizeRefType } from './comment.utils'
 
 @Injectable()
 export class CommentService implements OnModuleInit {
@@ -178,11 +179,14 @@ export class CommentService implements OnModuleInit {
     }
     const commentIndex = ref.commentsIndex || 0
     doc.key = `#${commentIndex + 1}`
+
+    const articleType2RefType = normalizeRefType(type)
+
     const comment = await this.commentModel.create({
       ...doc,
       state: CommentState.Unread,
       ref: new Types.ObjectId(id),
-      refType: type,
+      refType: articleType2RefType,
     })
 
     await this.databaseService.getModelByRefType(type as any).updateOne(

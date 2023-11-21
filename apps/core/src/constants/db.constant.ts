@@ -10,3 +10,4 @@ export const TOPIC_COLLECTION_NAME = 'topics'
 export const CATEGORY_COLLECTION_NAME = 'categories'
 
 export const COMMENT_COLLECTION_NAME = 'comments'
+export const RECENTLY_COLLECTION_NAME = 'recentlies'

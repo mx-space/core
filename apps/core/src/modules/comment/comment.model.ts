@@ -4,7 +4,13 @@ import autopopulate from 'mongoose-autopopulate'
 
 import { modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
 
-import { COMMENT_COLLECTION_NAME } from '~/constants/db.constant'
+import {
+  COMMENT_COLLECTION_NAME,
+  NOTE_COLLECTION_NAME,
+  PAGE_COLLECTION_NAME,
+  POST_COLLECTION_NAME,
+  RECENTLY_COLLECTION_NAME,
+} from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 
 import { NoteModel } from '../note/note.model'
@@ -13,10 +19,10 @@ import { PostModel } from '../post/post.model'
 import { RecentlyModel } from '../recently/recently.model'
 
 export enum CommentRefTypes {
-  Post = 'Post',
-  Note = 'Note',
-  Page = 'Page',
-  Recently = 'Recently',
+  Post = POST_COLLECTION_NAME,
+  Note = NOTE_COLLECTION_NAME,
+  Page = PAGE_COLLECTION_NAME,
+  Recently = RECENTLY_COLLECTION_NAME,
 }
 
 export enum CommentState {
@@ -35,7 +41,7 @@ export class CommentModel extends BaseModel {
   @prop({ refPath: 'refType' })
   ref: Ref<PostModel | NoteModel | PageModel | RecentlyModel>
 
-  @prop({ required: true, default: 'Post', enum: CommentRefTypes })
+  @prop({ required: true, enum: CommentRefTypes })
   refType: CommentRefTypes
 
   @prop({ trim: true, required: true })
