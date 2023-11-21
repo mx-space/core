@@ -18,7 +18,6 @@ import {
   Inject,
   Injectable,
   Logger,
-  NotFoundException,
 } from '@nestjs/common'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -177,7 +176,7 @@ export class CommentService implements OnModuleInit {
       }
     }
     if (!ref) {
-      throw new NotFoundException('评论文章不存在')
+      throw new BadRequestException('评论文章不存在')
     }
     const commentIndex = ref.commentsIndex || 0
     doc.key = `#${commentIndex + 1}`
