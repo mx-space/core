@@ -8,7 +8,7 @@ name: Release
 jobs:
   build:
     name: Main Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       release_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
@@ -34,9 +34,9 @@ jobs:
           cache-name: cache-pnpm-modules
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-ubuntu-20.04-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-ubuntu-20.04-${{ hashFiles('**/pnpm-lock.yaml') }}
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
       - uses: pnpm/action-setup@v2.4.0
         with:
           version: 8.x
@@ -83,7 +83,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./release.zip
-          asset_name: release-linux.zip
+          asset_name: release-${{ runner.os }}.zip
           asset_content_type: application/zip
   deploy:
     name: Deploy To Remote Server
@@ -114,7 +114,7 @@ jobs:
     name: Build Other Platform
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-22.04]
+        os: [macos-latest, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
     needs: [build]
     steps:

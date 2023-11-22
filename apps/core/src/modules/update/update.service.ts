@@ -86,6 +86,7 @@ export class UpdateService {
         try {
           // @ts-ignore
           const cmds: readonly [string, string[]][] = [
+            `unzip -t admin-release.zip`,
             `unzip -o admin-release.zip -d ${folder}`,
             `mv ${folder}/dist ${LOCAL_ADMIN_ASSET_PATH}`,
             `rm -f admin-release.zip`,
@@ -139,15 +140,19 @@ export class UpdateService {
     args: any[],
     subscriber: Subscriber<string>,
   ) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       subscriber.next(`${chalk.yellow(`$`)} ${command} ${args.join(' ')}\n`)
 
       const pty = spawn(command, args, {})
       pty.onData((data) => {
         subscriber.next(data.toString())
       })
-      pty.onExit(() => {
-        resolve(null)
+      pty.onExit((e) => {
+        if (e.exitCode !== 0) {
+          reject(e)
+        } else {
+          resolve(null)
+        }
       })
     })
   }
