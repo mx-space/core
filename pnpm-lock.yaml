@@ -397,8 +397,8 @@ importers:
   packages/api-client:
     devDependencies:
       '@types/cors':
-        specifier: 2.8.16
-        version: 2.8.16
+        specifier: 2.8.17
+        version: 2.8.17
       '@types/express':
         specifier: 4.17.21
         version: 4.17.21
@@ -2125,8 +2125,8 @@ packages:
   /@types/cookie@0.4.1:
     resolution: {integrity: sha512-XW/Aa8APYr6jSVVA1y/DEIZX0/GMKLEVekNG727R8cs56ahETkRAy/3DR7+fJyh7oUgGwNQaRfXCun0+KbWY7Q==}
 
-  /@types/cors@2.8.16:
-    resolution: {integrity: sha512-Trx5or1Nyg1Fq138PCuWqoApzvoSLWzZ25ORBiHMbbUT42g578lH1GT4TwYDbiUOLFuDsCkfLneT2105fsFWGg==}
+  /@types/cors@2.8.17:
+    resolution: {integrity: sha512-8CGDvrBj1zgo2qE+oS3pOCyYNqCPryMWY2bGfwA0dcfopWGgxs+78df0Rs3rc9THP4JkOhLsAa+15VdpAqkcUA==}
     dependencies:
       '@types/node': 20.9.5
 
@@ -3875,7 +3875,7 @@ packages:
     engines: {node: '>=10.2.0'}
     dependencies:
       '@types/cookie': 0.4.1
-      '@types/cors': 2.8.16
+      '@types/cors': 2.8.17
       '@types/node': 20.9.5
       accepts: 1.3.8
       base64id: 2.0.0
