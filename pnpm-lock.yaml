@@ -245,8 +245,8 @@ importers:
         specifier: 3.3.4
         version: 3.3.4
       nestjs-pretty-logger:
-        specifier: 0.1.0-5
-        version: 0.1.0-5(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+        specifier: 0.1.1
+        version: 0.1.1(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.1.13)(rxjs@7.8.1)
       node-machine-id:
         specifier: 1.1.12
         version: 1.1.12
@@ -6457,8 +6457,8 @@ packages:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
     dev: true
 
-  /nestjs-pretty-logger@0.1.0-5(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.1.13)(rxjs@7.8.1):
-    resolution: {integrity: sha512-LhQNI2I6cBp6ksGDgin7ofkN9pMvBrN0s5IAOqX/wPNH6XZkW4VBaGcOlup26qzcbMK7bch1O+Pgf9SjxrbuJQ==}
+  /nestjs-pretty-logger@0.1.1(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.1.13)(rxjs@7.8.1):
+    resolution: {integrity: sha512-NhaMB6/Xg6COTl5PPg239oovVpskGgr0J/qOJbXvdscXTItopw8ao8x2yfJr2MnO7JmAXRkxazUNA4kjFgxFqg==}
     dependencies:
       cron: 3.1.6
       defu: 6.1.3
