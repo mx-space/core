@@ -15,7 +15,7 @@ import {
   USER_ASSET_DIR,
 } from '~/constants/path.constant'
 
-import { consola } from './consola.global'
+import { consola, logger } from './consola.global'
 
 import './dayjs.global'
 
@@ -51,7 +51,7 @@ function registerGlobal() {
   })
   console.debug = (...rest) => {
     if (isDev) {
-      consola.log.call(console, ...rest)
+      logger.log.call(console, ...rest)
     }
   }
 }

@@ -3,7 +3,6 @@ import { beforeAll } from 'vitest'
 
 import 'zx/globals'
 
-import { createConsola } from 'nestjs-pretty-logger'
 import { dbHelper } from 'test/helper/db-mock.helper'
 import { redisHelper } from 'test/helper/redis-mock.helper'
 
@@ -14,7 +13,7 @@ beforeAll(async () => {
 
   global.isDev = true
   global.cwd = process.cwd()
-  global.consola = createConsola()
+  global.consola = console
 
   registerJSONGlobal()
 })

@@ -6,16 +6,24 @@ import { createLogger } from 'nestjs-pretty-logger'
 import { LOG_DIR } from '~/constants/path.constant'
 
 import { redisSubPub } from '../utils/redis-subpub.util'
+import { isTest } from './env.global'
 
 const logger = createLogger({
   writeToFile: {
     loggerDir: LOG_DIR,
   },
 })
-logger.wrapAll()
-logger.onData((data) => {
-  redisSubPub.publish('log', data)
-})
+
+if (!isTest) {
+  try {
+    logger.wrapAll()
+  } catch (error) {
+    logger.warn('wrap console failed')
+  }
+  logger.onData((data) => {
+    redisSubPub.publish('log', data)
+  })
+}
 
 // HACK: forhidden pm2 to override this method
 Object.defineProperty(process.stdout, 'write', {
@@ -29,4 +37,4 @@ Object.defineProperty(process.stderr, 'write', {
   configurable: false,
 })
 
-export { logger as consola }
+export { logger as consola, logger }

@@ -14,6 +14,7 @@ import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { SpiderGuard } from './common/guards/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { AggregateByTenantContextIdStrategy } from './common/strategies/context.strategy'
+import { logger } from './global/consola.global'
 import { isMainProcess, isTest } from './global/env.global'
 import { migrateDatabase } from './migration/migrate'
 import { MyLogger } from './processors/logger/logger.service'
@@ -87,7 +88,7 @@ export async function bootstrap() {
 
   await app.listen(+PORT, '0.0.0.0', async () => {
     app.useLogger(app.get(MyLogger))
-    consola.info('ENV:', process.env.NODE_ENV)
+    logger.info('ENV:', process.env.NODE_ENV)
     const url = await app.getUrl()
     const pid = process.pid
     const env = cluster.isPrimary
@@ -96,9 +97,9 @@ export async function bootstrap() {
       return
     }
 
-    consola.success(`[${prefix + pid}] Server listen on: ${url}`)
-    consola.success(`[${prefix + pid}] Admin Dashboard: ${url}/qaqdmin`)
-    consola.success(
+    logger.success(`[${prefix + pid}] Server listen on: ${url}`)
+    logger.success(`[${prefix + pid}] Admin Dashboard: ${url}/qaqdmin`)
+    logger.success(
       `[${prefix + pid}] Admin Local Dashboard: ${url}/proxy/qaqdmin`,
     )
     Logger.log(`Server is up. ${chalk.yellow(`+${performance.now() | 0}ms`)}`)

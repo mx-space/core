@@ -148,7 +148,7 @@ export class ConfigsService {
         if (errorRetryCount > 0) {
           return await this.getConfig(--errorRetryCount)
         }
-        consola.error('获取配置失败')
+        this.logger.error('获取配置失败')
         throw err
       }
     } else {

@@ -1,4 +1,5 @@
 import { MIGRATE_COLLECTION_NAME } from '~/constants/db.constant'
+import { logger } from '~/global/consola.global'
 import { getDatabaseConnection } from '~/utils/database.util'
 
 import VersionList from './history'
@@ -18,7 +19,7 @@ export async function migrateDatabase() {
       continue
     }
 
-    consola.log(`[Database] migrate ${migrate.name}`)
+    logger.log(`[Database] migrate ${migrate.name}`)
     if (typeof migrate === 'function') {
       await migrate(db)
     } else {

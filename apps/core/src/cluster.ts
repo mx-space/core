@@ -1,16 +1,18 @@
 import cluster from 'cluster'
 import os from 'os'
 
+import { logger } from './global/consola.global'
+
 export class Cluster {
   static register(workers: number, callback: Function): void {
     if (cluster.isPrimary) {
       const cpus = os.cpus().length
 
-      consola.info(`Primary server started on ${process.pid}`)
-      consola.info(`CPU:${cpus}`)
+      logger.info(`Primary server started on ${process.pid}`)
+      logger.info(`CPU:${cpus}`)
       // ensure workers exit cleanly
       process.on('SIGINT', () => {
-        consola.info('Cluster shutting down...')
+        logger.info('Cluster shutting down...')
         for (const id in cluster.workers) {
           cluster.workers[id]?.kill()
         }
@@ -34,11 +36,11 @@ export class Cluster {
       })
 
       cluster.on('online', (worker) => {
-        consola.info('Worker %s is online', worker.process.pid)
+        logger.info('Worker %s is online', worker.process.pid)
       })
       cluster.on('exit', (worker, code, signal) => {
         if (code !== 0) {
-          consola.info(`Worker ${worker.process.pid} died. Restarting`)
+          logger.info(`Worker ${worker.process.pid} died. Restarting`)
           cluster.fork()
         }
       })

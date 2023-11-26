@@ -11,6 +11,7 @@ import {
   POST_COLLECTION_NAME,
   RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
+import { logger } from '~/global/consola.global'
 
 let databaseConnection: mongoose.Connection | null = null
 
@@ -32,11 +33,11 @@ export const getDatabaseConnection = async () => {
     return str.map((s) => chalk.green(s)).join('')
   }
   mongoose.connection.on('connecting', () => {
-    consola.info(Badge, color`connecting...`)
+    logger.info(Badge, color`connecting...`)
   })
 
   mongoose.connection.on('open', () => {
-    consola.info(Badge, color`readied!`)
+    logger.info(Badge, color`readied!`)
     if (reconnectionTask) {
       clearTimeout(reconnectionTask)
       reconnectionTask = null
@@ -44,7 +45,7 @@ export const getDatabaseConnection = async () => {
   })
 
   mongoose.connection.on('disconnected', () => {
-    consola.error(
+    logger.error(
       Badge,
       chalk.red(`disconnected! retry when after ${RECONNECT_INTERVAL / 1000}s`),
     )
@@ -52,7 +53,7 @@ export const getDatabaseConnection = async () => {
   })
 
   mongoose.connection.on('error', (error) => {
-    consola.error(Badge, 'error!', error)
+    logger.error(Badge, 'error!', error)
     mongoose.disconnect()
   })
 

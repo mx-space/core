@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common'
 
 import { CLUSTER, ENCRYPT, SECURITY } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
+import { logger } from '~/global/consola.global'
 import { getRedisKey, md5 } from '~/utils'
 
 import { CacheService } from '../redis/cache.service'
@@ -30,10 +31,10 @@ export class JWTService {
       'asjhczxiucipoiopiqm2376'
 
     if (isDev && cluster.isPrimary) {
-      consola.debug(secret)
+      logger.debug(secret)
     }
     if (!CLUSTER.enable || cluster.isPrimary) {
-      consola.debug(
+      logger.debug(
         'JWT Secret start with :',
         secret.slice(0, 5) + '*'.repeat(secret.length - 5),
       )

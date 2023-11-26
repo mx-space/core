@@ -47,7 +47,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     exampleRenderProps: Record<string, any>,
   ) {
     if (this.emailTypeSet.has(type)) {
-      consola.warn(`重复注册邮件类型 ${type}`)
+      this.logger.warn(`重复注册邮件类型 ${type}`)
       return
     }
     this.emailTypeMap[type] = exampleRenderProps || {}
