@@ -3,6 +3,8 @@ import cluster from 'cluster'
 
 import { ConsoleLogger, ConsoleLoggerOptions } from '@nestjs/common'
 
+import { logger } from '~/global/consola.global'
+
 export class MyLogger extends ConsoleLogger {
   constructor(context: string, options: ConsoleLoggerOptions) {
     super(context, options)
@@ -66,7 +68,7 @@ export class MyLogger extends ConsoleLogger {
   }
 
   private print(level: string, message: any, context?: string, ...argv: any[]) {
-    const print = consola[level]
+    const print = logger[level]
     const formatMessage = this.formatMessage(message, level)
     const diff = this._updateAndGetTimestampDiff()
 

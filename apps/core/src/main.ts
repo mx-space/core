@@ -2,6 +2,7 @@
 // register global
 import cluster from 'cluster'
 
+import { logger } from './global/consola.global'
 import { isMainCluster } from './global/env.global'
 import { register } from './global/index.global'
 
@@ -18,20 +19,20 @@ async function main() {
   ])
 
   if (!CLUSTER.enable || cluster.isPrimary || isMainCluster) {
-    consola.debug(argv)
-    consola.log('cwd: ', cwd)
+    logger.debug(argv)
+    logger.log('cwd: ', cwd)
   }
 
   if (ENCRYPT.enable && ENCRYPT.key) {
     const isValidKey = ENCRYPT.key.length === 64
 
     if (!isValidKey) {
-      consola.error('encrypt key must be 64 length')
+      logger.error('encrypt key must be 64 length')
       process.exit(1)
     }
 
-    consola.debug('encrypt key: ', ENCRYPT.key)
-    consola.warn(
+    logger.debug('encrypt key: ', ENCRYPT.key)
+    logger.warn(
       `Encrypt is enabled, please remember encrypt key. Your key is starts with ${ENCRYPT.key.slice(
         0,
         3,
