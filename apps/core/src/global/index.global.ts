@@ -15,7 +15,7 @@ import {
   USER_ASSET_DIR,
 } from '~/constants/path.constant'
 
-import { consola, registerStdLogger } from './consola.global'
+import { consola } from './consola.global'
 
 import './dayjs.global'
 
@@ -58,7 +58,7 @@ function registerGlobal() {
 
 export function register() {
   registerGlobal()
-  registerStdLogger()
+
   registerJSONGlobal()
 
   mkdirs()

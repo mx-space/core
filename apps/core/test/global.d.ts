@@ -1,5 +1,5 @@
-import type { Consola } from 'consola'
 import type { Document, PaginateModel } from 'mongoose'
+import type { WrappedConsola } from 'nestjs-pretty-logger/lib/consola'
 
 import 'vitest/globals'
 import 'zx-cjs/globals'
@@ -14,7 +14,7 @@ declare global {
 
   export const isDev: boolean
 
-  export const consola: Consola
+  export const consola: WrappedConsola
   export const cwd: string
 
   interface JSON {

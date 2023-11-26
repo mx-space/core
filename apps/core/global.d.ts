@@ -1,9 +1,9 @@
-import type { Consola } from 'consola'
 import type { Document, PaginateModel } from 'mongoose'
 
 import 'zx-cjs/globals'
 
 import type { ModelType } from '@typegoose/typegoose/lib/types'
+import type { WrappedConsola } from 'nestjs-pretty-logger/lib/consola'
 
 declare global {
   export type KV<T = any> = Record<string, T>
@@ -13,7 +13,7 @@ declare global {
 
   export const isDev: boolean
 
-  export const consola: Consola
+  export const consola: WrappedConsola
 
   export const cwd: string
 }
