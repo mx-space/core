@@ -172,9 +172,6 @@ importers:
       commander:
         specifier: 11.1.0
         version: 11.1.0
-      consola:
-        specifier: ^2.15.3
-        version: 2.15.3
       dayjs:
         specifier: 1.11.10
         version: 1.11.10
