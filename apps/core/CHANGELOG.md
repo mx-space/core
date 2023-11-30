@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [4.6.3](https://github.com/mx-space/core/compare/v4.6.2...v4.6.3) (2023-11-30)
+
+
+### Bug Fixes
+
+* **deps:** update babel monorepo to v7.23.5 ([64f6bb5](https://github.com/mx-space/core/commit/64f6bb5267034d8bc14229f1d2e364efeb2899ba))
+* **deps:** update dependency @typegoose/auto-increment to v4 ([#1255](https://github.com/mx-space/core/issues/1255)) ([4dff159](https://github.com/mx-space/core/commit/4dff1597934fadfb8ca016bcac19668dd74c8d47))
+* **deps:** update dependency @typegoose/typegoose to v12 ([#1254](https://github.com/mx-space/core/issues/1254)) ([033395a](https://github.com/mx-space/core/commit/033395a43092d4d68479c74287cfe6fa6b0315f9))
+* **deps:** update dependency axios-retry to v4 ([#1253](https://github.com/mx-space/core/issues/1253)) ([8d63c76](https://github.com/mx-space/core/commit/8d63c763279396153ff4ba03b94d9100839c1fc7))
+* **deps:** update dependency lru-cache to v10.1.0 ([#1247](https://github.com/mx-space/core/issues/1247)) ([c0b193e](https://github.com/mx-space/core/commit/c0b193e29c5dda0f3a3fa9185c1dbc9612df5c21))
+* **deps:** update dependency nestjs-pretty-logger to v0.1.1 ([90ac17e](https://github.com/mx-space/core/commit/90ac17ebe541dd41cc7e4e793d5465c76c0996c0))
+* **deps:** update dependency nestjs-pretty-logger to v0.2.0 ([#1257](https://github.com/mx-space/core/issues/1257)) ([4dee3b2](https://github.com/mx-space/core/commit/4dee3b2792e7f03da1ec6788e5a5ab1ad65411eb))
+* in test ([69b1c5f](https://github.com/mx-space/core/commit/69b1c5fab9bbe084d52f373a33993184decd1276))
+* typings ([221bf5f](https://github.com/mx-space/core/commit/221bf5f5b5a766a9e5a243fbd56baf3399986334))
+* update error throw ([2a97fbe](https://github.com/mx-space/core/commit/2a97fbe24adce37643d3baa112e3f38c18d2d692))
+
+
+
 ## [4.6.2](https://github.com/mx-space/core/compare/v4.6.1...v4.6.2) (2023-11-21)
 
 
