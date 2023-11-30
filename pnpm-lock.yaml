@@ -22,8 +22,8 @@ importers:
         specifier: 9.1.1
         version: 9.1.1
       redis-memory-server:
-        specifier: 0.9.0
-        version: 0.9.0
+        specifier: 0.10.0
+        version: 0.10.0
     devDependencies:
       '@innei/eslint-config-ts':
         specifier: 0.12.0
@@ -300,8 +300,8 @@ importers:
         specifier: ^9.1.1
         version: 9.1.1
       redis-memory-server:
-        specifier: ^0.9.0
-        version: 0.9.0
+        specifier: ^0.10.0
+        version: 0.10.0
     devDependencies:
       '@nestjs/cli':
         specifier: 10.2.1
@@ -7290,8 +7290,8 @@ packages:
     resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
     engines: {node: '>=4'}
 
-  /redis-memory-server@0.9.0:
-    resolution: {integrity: sha512-MGfAQfy+D51bC/zb5tXYwXnsdgf4aaJEuj1y1RTPdW2ffJS6kKIIwjl6dLWZhlaLYJbzxfJLuB18PYMo6lqRFQ==}
+  /redis-memory-server@0.10.0:
+    resolution: {integrity: sha512-D0CFfUzAOQv/64iYzRqxUs4MEV2LlaW227qDvuuiq2FR4FXLrxyfENFf7dj6v4IwGTcNSLxhDlNKQthYVncg3Q==}
     engines: {node: '>=16'}
     hasBin: true
     requiresBuild: true
