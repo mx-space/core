@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.7.1](https://github.com/mx-space/core/compare/v4.7.0...v4.7.1) (2023-12-02)
+
+
+### Bug Fixes
+
+* change clerk auth verify ([1c10b47](https://github.com/mx-space/core/commit/1c10b47e6c956aa1f6e069326de09e4a05c372d6))
+
+
+
 # [4.7.0](https://github.com/mx-space/core/compare/v4.6.3...v4.7.0) (2023-12-02)
 
 
