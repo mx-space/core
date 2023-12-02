@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [4.7.0](https://github.com/mx-space/core/compare/v4.6.3...v4.7.0) (2023-12-02)
+
+
+### Bug Fixes
+
+* pass test case ([0e5eb09](https://github.com/mx-space/core/commit/0e5eb09f483d71f81604147b4bc63c81ac243509))
+* release ci ([d82f913](https://github.com/mx-space/core/commit/d82f9132e05ab7ec13eafa224719a7b27cbf6845))
+
+
+### Features
+
+* support clerk auth ([18b9cbb](https://github.com/mx-space/core/commit/18b9cbb90fb5f6c6e0813cabff7a49ba9df07f43))
+
+
+
 ## [4.6.3](https://github.com/mx-space/core/compare/v4.6.2...v4.6.3) (2023-11-30)
 
 
