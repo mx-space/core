@@ -122,7 +122,7 @@ export class AuthService {
 
   async verifyClerkJWT(jwtToken: string) {
     const clerkOptions = await this.configs.get('clerkOptions')
-    const { enable, pemKey, secretKey } = clerkOptions
+    const { enable, pemKey, secretKey, adminUserId } = clerkOptions
     if (!enable) return false
 
     if (jwtToken === undefined) {
@@ -135,14 +135,12 @@ export class AuthService {
           sub: string
         }
 
+        // 1. promise user is exist
         const user = await Clerk({
           secretKey,
         }).users.getUser(userId)
 
-        if (!user.publicMetadata) {
-          return false
-        }
-        return user.publicMetadata.role === 'admin'
+        return user.id === adminUserId
       }
     } catch (error) {
       this.logger.error(error)
