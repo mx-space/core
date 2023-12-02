@@ -25,7 +25,6 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { camelcaseKeys, sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 
-import { UserModel } from '../user/user.model'
 import { generateDefaultConfig } from './configs.default'
 import { decryptObject, encryptObject } from './configs.encrypt.util'
 import { configDtoMapping, IConfig } from './configs.interface'
@@ -45,9 +44,6 @@ export class ConfigsService {
   constructor(
     @InjectModel(OptionModel)
     private readonly optionModel: ReturnModelType<typeof OptionModel>,
-
-    @InjectModel(UserModel)
-    private readonly userModel: ReturnModelType<typeof UserModel>,
 
     private readonly redis: CacheService,
     private readonly subpub: SubPubBridgeService,

@@ -1,5 +1,6 @@
 import { vi } from 'vitest'
 
+import { configProvider } from '@/mock/modules/config.mock'
 import { Test } from '@nestjs/testing'
 
 import { AuthService } from '~/modules/auth/auth.service'
@@ -29,6 +30,7 @@ describe('Test AuthService', () => {
             },
           },
         },
+        configProvider,
         AuthService,
         {
           provide: getModelToken(UserModel.name),
