@@ -7,6 +7,7 @@ import type {
 } from '@nestjs/websockets'
 import type SocketIO from 'socket.io'
 
+import { forwardRef, Inject } from '@nestjs/common'
 import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
 
 import { LOG_DIR } from '~/constants/path.constant'
@@ -27,9 +28,10 @@ export class AdminEventsGateway
 {
   constructor(
     protected readonly jwtService: JWTService,
-    protected readonly authService: AuthService,
     private readonly cacheService: CacheService,
     private readonly subpub: SubPubBridgeService,
+    @Inject(forwardRef(() => AuthService))
+    protected readonly authService: AuthService,
   ) {
     super(jwtService, authService, cacheService)
   }

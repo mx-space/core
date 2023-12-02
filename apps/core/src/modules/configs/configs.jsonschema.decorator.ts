@@ -22,6 +22,16 @@ export const JSONSchemaPlainField = (title: string, schema?: DecoratorSchema) =>
     ...schema,
   })
 
+export const JSONSchemaTextAreaField = (
+  title: string,
+  schema?: DecoratorSchema,
+) =>
+  JSONSchema({
+    title,
+    ...schema,
+    'ui:options': { type: 'textarea', ...schema?.['ui:options'] },
+  })
+
 export const JSONSchemaHalfGirdPlainField: typeof JSONSchemaPlainField = (
   ...rest
 ) => JSONSchemaPlainField.call(null, ...rest, halfFieldOption)

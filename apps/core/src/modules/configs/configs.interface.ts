@@ -1,6 +1,11 @@
 import { Type } from 'class-transformer'
 import { ValidateNested } from 'class-validator'
 import { JSONSchema } from 'class-validator-jsonschema'
+import type {
+  ClassConstructor,
+  TypeHelpOptions,
+  TypeOptions,
+} from 'class-transformer'
 
 import {
   AdminExtraDto,
@@ -8,6 +13,7 @@ import {
   BackupOptionsDto,
   BaiduSearchOptionsDto,
   BarkOptionsDto,
+  ClerkOptionsDto,
   CommentOptionsDto,
   FeatureListDto,
   FriendLinkOptionsDto,
@@ -18,58 +24,69 @@ import {
   UrlDto,
 } from './configs.dto'
 
+export const configDtoMapping = {} as Record<string, ClassConstructor<any>>
+const ConfigField =
+  (typeFunction: (type?: TypeHelpOptions) => Function, options?: TypeOptions) =>
+  (target: any, propertyName: string): void => {
+    configDtoMapping[propertyName] = typeFunction() as ClassConstructor<any>
+    Type(typeFunction, options)(target, propertyName)
+  }
 @JSONSchema({
   title: '设置',
   ps: ['* 敏感字段不显示，后端默认不返回敏感字段，显示为空'],
 })
 export abstract class IConfig {
-  @Type(() => UrlDto)
+  @ConfigField(() => UrlDto)
   @ValidateNested()
   url: Required<UrlDto>
 
-  @Type(() => SeoDto)
+  @ConfigField(() => SeoDto)
   @ValidateNested()
   seo: Required<SeoDto>
 
   @ValidateNested()
-  @Type(() => AdminExtraDto)
+  @ConfigField(() => AdminExtraDto)
   adminExtra: Required<AdminExtraDto>
 
-  @Type(() => TextOptionsDto)
+  @ConfigField(() => TextOptionsDto)
   @ValidateNested()
   textOptions: Required<TextOptionsDto>
 
-  @Type(() => MailOptionsDto)
+  @ConfigField(() => MailOptionsDto)
   @ValidateNested()
   mailOptions: Required<MailOptionsDto>
 
-  @Type(() => CommentOptionsDto)
+  @ConfigField(() => CommentOptionsDto)
   @ValidateNested()
   commentOptions: Required<CommentOptionsDto>
 
-  @Type(() => BarkOptionsDto)
+  @ConfigField(() => BarkOptionsDto)
   @ValidateNested()
   barkOptions: Required<BarkOptionsDto>
 
-  @Type(() => FriendLinkOptionsDto)
+  @ConfigField(() => FriendLinkOptionsDto)
   @ValidateNested()
   friendLinkOptions: Required<FriendLinkOptionsDto>
 
-  @Type(() => BackupOptionsDto)
+  @ConfigField(() => BackupOptionsDto)
   @ValidateNested()
   backupOptions: Required<BackupOptionsDto>
-  @Type(() => BaiduSearchOptionsDto)
+  @ConfigField(() => BaiduSearchOptionsDto)
   @ValidateNested()
   baiduSearchOptions: Required<BaiduSearchOptionsDto>
   @ValidateNested()
-  @Type(() => AlgoliaSearchOptionsDto)
+  @ConfigField(() => AlgoliaSearchOptionsDto)
   algoliaSearchOptions: Required<AlgoliaSearchOptionsDto>
 
-  @Type(() => FeatureListDto)
+  @ValidateNested()
+  @ConfigField(() => ClerkOptionsDto)
+  clerkOptions: ClerkOptionsDto
+
+  @ConfigField(() => FeatureListDto)
   @ValidateNested()
   featureList: Required<FeatureListDto>
 
-  @Type(() => ThirdPartyServiceIntegrationDto)
+  @ConfigField(() => ThirdPartyServiceIntegrationDto)
   @ValidateNested()
   thirdPartyServiceIntegration: Required<ThirdPartyServiceIntegrationDto>
 }

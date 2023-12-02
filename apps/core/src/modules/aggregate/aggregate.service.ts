@@ -33,6 +33,7 @@ import { PageService } from '../page/page.service'
 import { PostService } from '../post/post.service'
 import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
+import { UserService } from '../user/user.service'
 import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.dto'
 
 @Injectable()
@@ -59,6 +60,8 @@ export class AggregateService {
     @Inject(forwardRef(() => RecentlyService))
     private readonly recentlyService: RecentlyService,
 
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
     private readonly urlService: UrlBuilderService,
 
     private readonly configs: ConfigsService,
@@ -256,7 +259,7 @@ export class AggregateService {
   async buildRssStructure(): Promise<RSSProps> {
     const data = await this.getRSSFeedContent()
     const seo = await this.configs.get('seo')
-    const author = (await this.configs.getMaster()).name
+    const author = (await this.userService.getMaster()).name
     const url = (await this.configs.get('url')).webUrl
     return {
       title: seo.title,

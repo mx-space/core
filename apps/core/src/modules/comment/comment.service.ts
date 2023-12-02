@@ -216,34 +216,26 @@ export class CommentService implements OnModuleInit {
     if (!comment) {
       throw new NoContentCanBeModifiedException()
     }
-    const session = await this.commentModel.startSession()
-    session.startTransaction()
-    try {
-      const { children, parent } = comment
-      if (children && children.length > 0) {
-        await Promise.all(
-          children.map(async (id) => {
-            await this.deleteComments(id as any as string)
-          }),
-        )
-      }
-      if (parent) {
-        const parent = await this.commentModel.findById(comment.parent)
-        if (parent) {
-          await parent.updateOne({
-            $pull: {
-              children: comment._id,
-            },
-          })
-        }
-      }
-      await this.commentModel.deleteOne({ _id: id })
-      await session.commitTransaction()
-    } catch {
-      await session.abortTransaction()
-    } finally {
-      session.endSession()
+
+    const { children, parent } = comment
+    if (children && children.length > 0) {
+      await Promise.all(
+        children.map(async (id) => {
+          await this.deleteComments(id as any as string)
+        }),
+      )
     }
+    if (parent) {
+      const parent = await this.commentModel.findById(comment.parent)
+      if (parent) {
+        await parent.updateOne({
+          $pull: {
+            children: comment._id,
+          },
+        })
+      }
+    }
+    await this.commentModel.deleteOne({ _id: id })
   }
 
   async allowComment(id: string, type?: CollectionRefTypes) {

@@ -28,6 +28,7 @@ import { getShortDateTime } from '~/utils'
 import { ConfigsService } from '../configs/configs.service'
 import { MarkdownPreviewDto } from '../markdown/markdown.dto'
 import { MarkdownService } from '../markdown/markdown.service'
+import { UserService } from '../user/user.service'
 
 @Controller('/render')
 @HTTPDecorators.Bypass
@@ -35,6 +36,7 @@ export class RenderEjsController {
   constructor(
     private readonly service: MarkdownService,
     private readonly configs: ConfigsService,
+    private readonly userService: UserService,
   ) {}
 
   @Get('/markdown/:id')
@@ -56,7 +58,7 @@ export class RenderEjsController {
     ] = await Promise.all([
       this.service.renderArticle(id),
       this.configs.waitForConfigReady(),
-      this.configs.getMaster(),
+      this.userService.getMaster(),
     ])
 
     const isPrivateOrEncrypt =
@@ -102,8 +104,8 @@ export class RenderEjsController {
         'llll',
       )}</div>
         <div>原文地址：<a href="${url}">${decodeURIComponent(
-        url.toString(),
-      )}</a></div>
+          url.toString(),
+        )}</a></div>
         `,
     })
 

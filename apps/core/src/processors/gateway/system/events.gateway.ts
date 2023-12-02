@@ -4,6 +4,7 @@ import type {
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
 
+import { forwardRef, Inject } from '@nestjs/common'
 import { WebSocketGateway } from '@nestjs/websockets'
 
 import { JWTService } from '~/processors/helper/helper.jwt.service'
@@ -24,6 +25,7 @@ export class SystemEventsGateway
 {
   constructor(
     protected readonly jwtService: JWTService,
+    @Inject(forwardRef(() => AuthService))
     protected readonly authService: AuthService,
     private readonly cacheService: CacheService,
   ) {

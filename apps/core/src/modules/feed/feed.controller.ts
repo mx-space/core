@@ -12,12 +12,14 @@ import { escapeXml } from '~/utils'
 import { AggregateService } from '../aggregate/aggregate.service'
 import { ConfigsService } from '../configs/configs.service'
 import { MarkdownService } from '../markdown/markdown.service'
+import { UserService } from '../user/user.service'
 
 @Controller()
 export class FeedController {
   constructor(
     private readonly aggregateService: AggregateService,
     private readonly configs: ConfigsService,
+    private readonly userService: UserService,
     private readonly markdownService: MarkdownService,
   ) {}
 
@@ -30,7 +32,7 @@ export class FeedController {
     const { author, data, url, description } =
       await this.aggregateService.buildRssStructure()
     const { title } = await this.configs.get('seo')
-    const { avatar } = await this.configs.getMaster()
+    const { avatar } = await this.userService.getMaster()
     const now = new Date()
     const xml = `<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
 <channel>

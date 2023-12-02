@@ -5,6 +5,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common'
 
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { UserService } from '~/modules/user/user.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 /**
@@ -16,6 +17,8 @@ export class AuthGuard implements CanActivate {
   constructor(
     protected readonly authService: AuthService,
     protected readonly configs: ConfigsService,
+
+    protected readonly userService: UserService,
   ) {}
   async canActivate(context: ExecutionContext): Promise<any> {
     const request = this.getRequest(context)
@@ -30,9 +33,8 @@ export class AuthGuard implements CanActivate {
     }
 
     if (this.authService.isCustomToken(Authorization)) {
-      const [isValid, userModel] = await this.authService.verifyCustomToken(
-        Authorization,
-      )
+      const [isValid, userModel] =
+        await this.authService.verifyCustomToken(Authorization)
       if (!isValid) {
         throw new UnauthorizedException('令牌无效')
       }
@@ -46,12 +48,16 @@ export class AuthGuard implements CanActivate {
     if (!isJWT(jwt)) {
       throw new UnauthorizedException('令牌无效')
     }
-    const ok = await this.authService.jwtServicePublic.verify(jwt)
-    if (!ok) {
-      throw new UnauthorizedException('身份过期')
+    const ownVerifyPass = await this.authService.jwtServicePublic.verify(jwt)
+
+    if (!ownVerifyPass) {
+      const cleckVerifyPass = await this.authService.verifyClerkJWT(jwt)
+      if (!cleckVerifyPass) {
+        throw new UnauthorizedException('身份过期')
+      }
     }
 
-    request.user = await this.configs.getMaster()
+    request.user = await this.userService.getMaster()
     request.token = jwt
     return true
   }

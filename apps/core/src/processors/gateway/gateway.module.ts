@@ -8,7 +8,8 @@
  */
 import { Global, Module } from '@nestjs/common'
 
-import { AuthModule } from '../../modules/auth/auth.module'
+import { AuthService } from '~/modules/auth/auth.service'
+
 import { AdminEventsGateway } from './admin/events.gateway'
 import { SharedGateway } from './shared/events.gateway'
 import { SystemEventsGateway } from './system/events.gateway'
@@ -16,12 +17,13 @@ import { WebEventsGateway } from './web/events.gateway'
 
 @Global()
 @Module({
-  imports: [AuthModule],
+  imports: [],
   providers: [
     AdminEventsGateway,
     WebEventsGateway,
     SharedGateway,
     SystemEventsGateway,
+    AuthService,
   ],
   exports: [
     AdminEventsGateway,

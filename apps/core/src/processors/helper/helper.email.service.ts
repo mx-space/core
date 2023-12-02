@@ -10,6 +10,7 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { UserService } from '~/modules/user/user.service'
 
 import { SubPubBridgeService } from '../redis/subpub.service'
 import { AssetService } from './helper.asset.service'
@@ -22,6 +23,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     private readonly configsService: ConfigsService,
     private readonly assetService: AssetService,
     private readonly subpub: SubPubBridgeService,
+    private readonly userService: UserService,
   ) {
     this.logger = new Logger(EmailService.name)
   }
@@ -154,7 +156,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   }
 
   async sendTestEmail() {
-    const master = await this.configsService.getMaster()
+    const master = await this.userService.getMaster()
     const mailOptions = await this.configsService.get('mailOptions')
     return this.instance.sendMail({
       from: `"Mx Space" <${mailOptions.user}>`,

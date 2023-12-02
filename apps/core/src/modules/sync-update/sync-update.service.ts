@@ -131,7 +131,7 @@ export class SyncUpdateService implements OnModuleInit, OnModuleDestroy {
       return
     }
 
-    const session = await this.databaseService.client.startSession()
+    const session = this.databaseService.client.startSession()
     session.startTransaction()
 
     try {

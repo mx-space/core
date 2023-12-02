@@ -8,3 +8,5 @@ webpack-dist
 dist
 
 tmp
+
+temp.ts

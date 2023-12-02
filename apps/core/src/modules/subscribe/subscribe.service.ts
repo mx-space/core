@@ -109,7 +109,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     const noteAndPostHandler: CoAction<never> = async function (
       noteOrPost: NoteModel | PostModel,
     ) {
-      const owner = await self.configService.getMaster()
+      const owner = await self.userService.getMaster()
       for (const [email, subscribe] of self.subscribeMap.entries()) {
         const unsubscribeLink = await getUnsubscribeLink(email)
 

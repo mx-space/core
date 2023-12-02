@@ -132,7 +132,11 @@ export class DatabaseService {
     return this.connection.db
   }
 
-  public get client() {
+  public get mongooseConnection() {
     return this.connection
+  }
+
+  public get client() {
+    return this.connection.getClient()
   }
 }

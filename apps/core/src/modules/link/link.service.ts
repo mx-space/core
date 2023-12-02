@@ -14,6 +14,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
+import { UserService } from '../user/user.service'
 import { LinkApplyEmailType } from './link-mail.enum'
 import { LinkModel, LinkState, LinkStateMap, LinkType } from './link.model'
 
@@ -24,6 +25,8 @@ export class LinkService {
     private readonly linkModel: MongooseModel<LinkModel>,
     private readonly emailService: EmailService,
     private readonly configs: ConfigsService,
+
+    private readonly userService: UserService,
     private readonly eventManager: EventManagerService,
     private readonly http: HttpService,
     private readonly configsService: ConfigsService,
@@ -156,7 +159,7 @@ export class LinkService {
       return
     }
     scheduleManager.schedule(async () => {
-      const master = await this.configs.getMaster()
+      const master = await this.userService.getMaster()
 
       await this.sendLinkApplyEmail({
         authorName,

@@ -1,10 +1,12 @@
 import dayjs from 'dayjs'
+import jwt from 'jsonwebtoken'
 import { isDate, omit } from 'lodash'
 import { customAlphabet } from 'nanoid/async'
 import type { TokenModel, UserModel } from '~/modules/user/user.model'
 import type { TokenDto } from './auth.controller'
 
-import { Injectable } from '@nestjs/common'
+import { Clerk } from '@clerk/clerk-sdk-node'
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { alphabet } from '~/constants/other.constant'
@@ -12,11 +14,17 @@ import { UserModel as User } from '~/modules/user/user.model'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
+import { ConfigsService } from '../configs/configs.service'
+
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name)
   constructor(
     @InjectModel(User) private readonly userModel: ReturnModelType<typeof User>,
     private readonly jwtService: JWTService,
+
+    @Inject(forwardRef(() => ConfigsService))
+    private readonly configs: ConfigsService,
   ) {}
 
   get jwtServicePublic() {
@@ -110,5 +118,35 @@ export class AuthService {
         },
       },
     )
+  }
+
+  async verifyClerkJWT(jwtToken: string) {
+    const clerkOptions = await this.configs.get('clerkOptions')
+    const { enable, pemKey, secretKey } = clerkOptions
+    if (!enable) return false
+
+    if (jwtToken === undefined) {
+      return false
+    }
+
+    try {
+      if (jwtToken) {
+        const { sub: userId } = jwt.verify(jwtToken, pemKey) as {
+          sub: string
+        }
+
+        const user = await Clerk({
+          secretKey,
+        }).users.getUser(userId)
+
+        if (!user.publicMetadata) {
+          return false
+        }
+        return user.publicMetadata.role === 'admin'
+      }
+    } catch (error) {
+      this.logger.error(error)
+      return false
+    }
   }
 }

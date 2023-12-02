@@ -23,6 +23,7 @@ import {
   JSONSchemaNumberField,
   JSONSchemaPasswordField,
   JSONSchemaPlainField,
+  JSONSchemaTextAreaField,
   JSONSchemaToggleField,
 } from './configs.jsonschema.decorator'
 
@@ -304,6 +305,40 @@ export class FeatureListDto {
   @IsBoolean()
   @IsOptional()
   emailSubscribe: boolean
+}
+
+@JSONSchema({ title: 'Clerk 鉴权绑定' })
+export class ClerkOptionsDto {
+  @JSONSchemaToggleField('开启 Clerk 鉴权')
+  @IsBoolean()
+  @IsOptional()
+  enable: boolean
+
+  @JSONSchemaPlainField('Clerk User Id', {
+    description: '设置此 Id 后，可以通过 Clerk 鉴权登录',
+  })
+  @IsString()
+  @IsOptional()
+  adminUserId: string
+
+  @JSONSchemaTextAreaField('Clerk JWT PEM Key', {
+    description:
+      '阅读文档获取：[verify-the-token-signature](https://clerk.com/docs/backend-requests/handling/manual-jwt#verify-the-token-signature)',
+  })
+  @IsString()
+  @IsOptional()
+  @Exclude({ toPlainOnly: true })
+  @Encrypt
+  pemKey: string
+
+  @JSONSchemaPasswordField('Clerk Secret Key', {
+    description: '同上获取方式',
+  })
+  @IsString()
+  @IsOptional()
+  @Exclude({ toPlainOnly: true })
+  @Encrypt
+  secretKey: string
 }
 
 /**

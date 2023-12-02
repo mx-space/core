@@ -5,6 +5,7 @@ import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { CommentModel } from '~/modules/comment/comment.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { UserService } from '~/modules/user/user.service'
 
 import { HttpService } from './helper.http.service'
 
@@ -30,6 +31,8 @@ export class BarkPushService {
   constructor(
     private readonly httpService: HttpService,
     private readonly config: ConfigsService,
+
+    private readonly userService: UserService,
   ) {}
 
   // push comment
@@ -39,7 +42,7 @@ export class BarkPushService {
     if (!enable) {
       return
     }
-    const master = await this.config.getMaster()
+    const master = await this.userService.getMaster()
     if (comment.author == master.name && comment.author == master.username) {
       return
     }

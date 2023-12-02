@@ -25,7 +25,7 @@ export const getDatabaseConnection = async () => {
   const RECONNECT_INTERVAL = 6000
 
   const connection = () => {
-    return mongoose.connect(MONGO_DB.uri, {})
+    return mongoose.createConnection(MONGO_DB.uri, {}).asPromise()
   }
   const Badge = `[${chalk.yellow('MongoDB')}]`
 
@@ -57,9 +57,7 @@ export const getDatabaseConnection = async () => {
     mongoose.disconnect()
   })
 
-  databaseConnection = await connection().then(
-    (mongoose) => mongoose.connection,
-  )
+  databaseConnection = await connection()
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return databaseConnection!

@@ -4,13 +4,13 @@ import { validateSync } from 'class-validator'
 import { cloneDeep, mergeWith } from 'lodash'
 import type { ClassConstructor } from 'class-transformer'
 import type { ValidatorOptions } from 'class-validator'
-import type { UserModel } from '../user/user.model'
-import type { IConfigKeys } from './configs.interface'
 
+import { Clerk } from '@clerk/clerk-sdk-node'
 import {
   BadRequestException,
   Injectable,
   Logger,
+  UnprocessableEntityException,
   ValidationPipe,
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
@@ -25,26 +25,13 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { camelcaseKeys, sleep } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
 
-import * as optionDtos from '../configs/configs.dto'
-import { UserService } from '../user/user.service'
+import { UserModel } from '../user/user.model'
 import { generateDefaultConfig } from './configs.default'
 import { decryptObject, encryptObject } from './configs.encrypt.util'
-import { IConfig } from './configs.interface'
+import { configDtoMapping, IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
 
-const allOptionKeys: Set<IConfigKeys> = new Set()
-const map: Record<string, any> = Object.entries(optionDtos).reduce(
-  (obj, [key, value]) => {
-    const optionKey = (key.charAt(0).toLowerCase() +
-      key.slice(1).replace(/Dto$/, '')) as IConfigKeys
-    allOptionKeys.add(optionKey)
-    return {
-      ...obj,
-      [`${optionKey}`]: value,
-    }
-  },
-  {},
-)
+const configsKeySet = new Set(Object.keys(configDtoMapping))
 
 /*
  * NOTE:
@@ -58,7 +45,10 @@ export class ConfigsService {
   constructor(
     @InjectModel(OptionModel)
     private readonly optionModel: ReturnModelType<typeof OptionModel>,
-    private readonly userService: UserService,
+
+    @InjectModel(UserModel)
+    private readonly userModel: ReturnModelType<typeof UserModel>,
+
     private readonly redis: CacheService,
     private readonly subpub: SubPubBridgeService,
 
@@ -105,7 +95,7 @@ export class ConfigsService {
     configs.forEach((field) => {
       const name = field.name as keyof IConfig
 
-      if (!allOptionKeys.has(name)) {
+      if (!configsKeySet.has(name)) {
         return
       }
       // skip url patch in dev mode
@@ -208,7 +198,7 @@ export class ConfigsService {
   ) {
     value = camelcaseKeys(value) as any
 
-    const dto = map[key]
+    const dto = configDtoMapping[key]
     if (!dto) {
       throw new BadRequestException('设置不存在')
     }
@@ -244,6 +234,38 @@ export class ConfigsService {
         }
         return option
       }
+
+      case 'clerkOptions': {
+        const originalUserId = (await this.get('clerkOptions')).adminUserId
+
+        const option = await this.patch(key as 'clerkOptions', instanceValue)
+        if (option.enable) {
+          if (!option.adminUserId || !option.pemKey || !option.secretKey) {
+            throw new UnprocessableEntityException('请填写完整 Clerk 鉴权信息')
+          }
+
+          const clerk = Clerk({
+            secretKey: option.secretKey,
+          })
+
+          if (originalUserId !== option.adminUserId) {
+            // 1. revoke clerk api to update user role
+            await clerk.users.updateUser(option.adminUserId, {
+              publicMetadata: {
+                role: 'guest',
+              },
+            })
+            // 2. update user role
+            await clerk.users.updateUser(option.adminUserId, {
+              publicMetadata: {
+                role: 'admin',
+              },
+            })
+          }
+        }
+
+        return option
+      }
       default: {
         return this.patch(key, instanceValue)
       }
@@ -263,12 +285,5 @@ export class ConfigsService {
       throw error
     }
     return validModel
-  }
-
-  get getMaster() {
-    // HINT: 需要注入 this 的指向
-    return this.userService.getMaster.bind(
-      this.userService,
-    ) as () => Promise<UserModel>
   }
 }

@@ -65,4 +65,10 @@ export const generateDefaultConfig: () => IConfig = () => ({
   thirdPartyServiceIntegration: {
     xLogSiteId: '',
   },
+  clerkOptions: {
+    enable: false,
+    adminUserId: '',
+    pemKey: '',
+    secretKey: '',
+  },
 })

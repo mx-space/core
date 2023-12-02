@@ -42,7 +42,6 @@ export class CommentDto {
   isWhispers?: boolean
 
   @IsOptional()
-  @IsIn(['google', 'github'])
   source?: string
 
   @IsOptional()
