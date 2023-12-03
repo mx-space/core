@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [4.7.2](https://github.com/mx-space/core/compare/v4.7.1...v4.7.2) (2023-12-03)
+
+
+### Bug Fixes
+
+* lockfile ([a7e3cd7](https://github.com/mx-space/core/commit/a7e3cd72832a67851da8b4b6160a41d1ce44561e))
+* windows zip minetype detection ([1e9105a](https://github.com/mx-space/core/commit/1e9105a481ba670683d041695ab82bdaa246b44d))
+
+
+
 ## [4.7.1](https://github.com/mx-space/core/compare/v4.7.0...v4.7.1) (2023-12-02)
 
 
