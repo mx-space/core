@@ -19,8 +19,11 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { getMediumDateTime } from '~/utils'
+import { isZipMinetype } from '~/utils/mine.util'
 
 import { BackupService } from './backup.service'
 
@@ -68,8 +71,9 @@ export class BackupController {
   async uploadAndRestore(@Req() req: FastifyRequest) {
     const data = await this.uploadService.getAndValidMultipartField(req)
     const { mimetype } = data
-    if (mimetype !== 'application/zip') {
-      throw new UnprocessableEntityException('备份格式必须为 application/zip')
+
+    if (!isZipMinetype(mimetype)) {
+      throw new BizException(ErrorCodeEnum.MineZip, `got: ${mimetype}`)
     }
 
     await this.backupService.saveTempBackupByUpload(await data.toBuffer())

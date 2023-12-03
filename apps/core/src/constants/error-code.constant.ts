@@ -11,6 +11,9 @@ export enum ErrorCodeEnum {
   ServerlessError = 80000,
   EmailTemplateNotFound = 90000,
 
+  // 422
+  MineZip = 100001,
+
   // system
   MasterLost = 99998,
   BanInDemo = 999999,
@@ -30,6 +33,8 @@ export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
       '内容不存在，没有内容可被修改',
       400,
     ],
+
+    [ErrorCodeEnum.MineZip]: ['文件格式必须是 zip 类型', 422],
 
     [ErrorCodeEnum.EmailTemplateNotFound]: ['邮件模板不存在', 400],
   },

@@ -14,7 +14,10 @@ import {
 } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
+import { isZipMinetype } from '~/utils/mine.util'
 
 import { BackupService } from '../backup/backup.service'
 import { ConfigsService } from '../configs/configs.service'
@@ -69,8 +72,8 @@ export class InitController {
   async uploadAndRestore(@Req() req: FastifyRequest) {
     const data = await this.uploadService.getAndValidMultipartField(req)
     const { mimetype } = data
-    if (mimetype !== 'application/zip') {
-      throw new UnprocessableEntityException('备份格式必须为 application/zip')
+    if (!isZipMinetype(mimetype)) {
+      throw new BizException(ErrorCodeEnum.MineZip, `got: ${mimetype}`)
     }
 
     await this.backupService.saveTempBackupByUpload(await data.toBuffer())
