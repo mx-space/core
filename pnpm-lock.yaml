@@ -86,8 +86,8 @@ importers:
         specifier: ^7.23.5
         version: 7.23.5
       '@clerk/clerk-sdk-node':
-        specifier: 4.12.22
-        version: 4.12.22(react@18.2.0)
+        specifier: 4.12.23
+        version: 4.12.23(react@18.2.0)
       '@fastify/cookie':
         specifier: 9.2.0
         version: 9.2.0
@@ -916,8 +916,8 @@ packages:
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
 
-  /@clerk/backend@0.34.2(react@18.2.0):
-    resolution: {integrity: sha512-ouulkcT6kfbAPw3w0vbkl758KzQ2y9UUnuhRJ5dY3SPGNjJnpes1BNETLnA1O3llZVV5yYexluhee4XmFcwV3A==}
+  /@clerk/backend@0.34.3(react@18.2.0):
+    resolution: {integrity: sha512-0QZuWl02PR+g9jx87uEib0ZcEYfZOcn3/dob5zV0T7N/ELfC+R7Ir0EXUWyzlnz3R8lqDGKP4vYsbrFAGIdguw==}
     engines: {node: '>=14'}
     dependencies:
       '@clerk/shared': 1.1.1(react@18.2.0)
@@ -933,11 +933,11 @@ packages:
       - react
     dev: false
 
-  /@clerk/clerk-sdk-node@4.12.22(react@18.2.0):
-    resolution: {integrity: sha512-O1PWDzmECO8VoGEZG8m2QYkJzDDMiUqTGsn73u3ki1V2bX24BeFokSKlsLgklgpVXUhSeKp8A8wBrDOOY2Qpew==}
+  /@clerk/clerk-sdk-node@4.12.23(react@18.2.0):
+    resolution: {integrity: sha512-i+BC+cWOASHxlemZp8yPpEEA0pp9iDaM4ejnn2tOyuMgFNAPRhXpE2f7mF6EuyTQ/ST3ZoxUsq7zAL1B4XE5Nw==}
     engines: {node: '>=14'}
     dependencies:
-      '@clerk/backend': 0.34.2(react@18.2.0)
+      '@clerk/backend': 0.34.3(react@18.2.0)
       '@clerk/shared': 1.1.1(react@18.2.0)
       '@clerk/types': 3.58.0
       '@types/cookies': 0.7.7
