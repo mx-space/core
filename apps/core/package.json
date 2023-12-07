@@ -153,7 +153,7 @@
     "socket.io": "^4.7.2",
     "unplugin-swc": "1.4.4",
     "vite": "5.0.6",
-    "vite-tsconfig-paths": "4.2.1",
+    "vite-tsconfig-paths": "4.2.2",
     "vitest": "0.34.6",
     "zx": "7.2.3"
   },
