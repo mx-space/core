@@ -239,7 +239,7 @@ export class AuthService {
 
   async verifyRegistrationResponse(
     user: UserDocument,
-    response: RegistrationResponseJSON,
+    response: RegistrationResponseJSON & { name: string },
   ) {
     const expectedChallenge = await this.getCurrentChallenge()
 
@@ -283,6 +283,10 @@ export class AuthService {
       credentialDeviceType,
       credentialBackedUp,
     }
+
+    Object.assign(authenticator, {
+      name: response.name,
+    })
 
     await this.authnModel.create(authenticator)
 
