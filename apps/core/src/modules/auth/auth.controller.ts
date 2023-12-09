@@ -19,9 +19,12 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { CurrentUser } from '~/common/decorators/current-user.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 
+import { UserDocument } from '../user/user.model'
 import { AuthService } from './auth.service'
 
 export class TokenDto {
@@ -73,6 +76,7 @@ export class AuthController {
     await this.authService.saveToken(model)
     return model
   }
+
   @Delete('token')
   @Auth()
   async deleteToken(@Query() query: MongoIdDto) {
@@ -95,5 +99,34 @@ export class AuthController {
 
     this.eventEmitter.emit(EventBusEvents.TokenExpired, token)
     return 'OK'
+  }
+
+  @Post('/authn/register')
+  @HTTPDecorators.Bypass
+  @Auth()
+  async newAuthn(@CurrentUser() user: UserDocument) {
+    const r = await this.authService.generateRegistrationOptions(user)
+    return r.registrationOptions
+  }
+
+  @Post('/authn/register/verify')
+  @HTTPDecorators.Bypass
+  @Auth()
+  async responseAuthn(@CurrentUser() user: UserDocument, @Body() body: any) {
+    return this.authService.verifyRegistrationResponse(user, body)
+  }
+
+  @Post('/authn/authentication')
+  @Auth()
+  @HTTPDecorators.Bypass
+  async newAuthentication(@CurrentUser() user: UserDocument) {
+    return await this.authService.generateAuthenticationOptions(user)
+  }
+
+  @Post('/authn/authentication/verify')
+  @HTTPDecorators.Bypass
+  @Auth()
+  async verifyauthenticationAuthn(@Body() body: any) {
+    return this.authService.verifyAuthenticationResponse(body)
   }
 }
