@@ -27,6 +27,11 @@ const uint8ArrayGetterSetter = {
   options: {
     customName: 'authn',
   },
+  schemaOptions: {
+    timestamps: {
+      createdAt: 'created',
+    },
+  },
 })
 @plugin(mongooseLeanGetters)
 export class AuthnModel {

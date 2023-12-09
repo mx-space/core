@@ -1,6 +1,6 @@
 import { ActivityModel } from '~/modules/activity/activity.model'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
-import { AuthnModel } from '~/modules/auth/authn.model'
+import { AuthnModel } from '~/modules/authn/authn.model'
 import { CategoryModel } from '~/modules/category/category.model'
 import { CommentModel } from '~/modules/comment/comment.model'
 import { OptionModel } from '~/modules/configs/configs.model'
