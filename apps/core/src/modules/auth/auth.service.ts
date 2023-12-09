@@ -207,7 +207,7 @@ export class AuthService {
 
       authenticatorSelection: {
         // Defaults
-        residentKey: 'discouraged',
+        residentKey: 'preferred',
         userVerification: 'preferred',
         // Optional
         authenticatorAttachment: 'platform',
@@ -305,7 +305,7 @@ export class AuthService {
         id: authenticator.credentialID,
         type: 'public-key',
       })),
-      userVerification: 'discouraged',
+      userVerification: 'preferred',
     })
 
     // (Pseudocode) Remember this challenge for this user
@@ -354,6 +354,12 @@ export class AuthService {
     }
 
     return verification
+  }
+
+  getAllAuthnItems() {
+    return this.authnModel.find().lean({
+      getters: true,
+    })
   }
 }
 

@@ -21,6 +21,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { CurrentUser } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 
@@ -125,8 +126,27 @@ export class AuthController {
 
   @Post('/authn/authentication/verify')
   @HTTPDecorators.Bypass
+  async verifyauthenticationAuthn(
+    @CurrentUser() user: UserDocument,
+    @IpLocation() ipLocation: IpRecord,
+    @Body() body: any,
+  ) {
+    const result = await this.authService.verifyAuthenticationResponse(body)
+    if (result.verified) {
+      Object.assign(result, {
+        token: await this.authService.jwtServicePublic.sign(user.id, {
+          ip: ipLocation.ip,
+          ua: ipLocation.agent,
+        }),
+      })
+    }
+
+    return result
+  }
+
+  @Get()
   @Auth()
-  async verifyauthenticationAuthn(@Body() body: any) {
-    return this.authService.verifyAuthenticationResponse(body)
+  async getAllAuthnItems() {
+    return await this.authService.getAllAuthnItems()
   }
 }
