@@ -37,15 +37,14 @@ export class AuthnService {
   ) {}
 
   private async getConfig() {
-    // if (isDev) {
-    //   return {
-    //     rpID: 'localhost',
-    //     expectedOrigin: ['http://localhost:9528'],
-    //     expectedRPID: 'localhost',
-    //   }
-    // }
-    // const { adminUrl } = await this.configService.get('url')
-    const adminUrl = 'https://innei.ren/proxy/qaqdmin'
+    if (isDev) {
+      return {
+        rpID: 'localhost',
+        expectedOrigin: ['http://localhost:9528'],
+        expectedRPID: 'localhost',
+      }
+    }
+    const { adminUrl } = await this.configService.get('url')
 
     const parsedUrl = new URL(adminUrl)
     return {
