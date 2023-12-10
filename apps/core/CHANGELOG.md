@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.8.1](https://github.com/mx-space/core/compare/v4.8.0...v4.8.1) (2023-12-10)
+
+
+### Bug Fixes
+
+* remove hard code ([956d2d6](https://github.com/mx-space/core/commit/956d2d66e667b6a23a1171756be856f5338e9daa))
+
+
+
 # [4.8.0](https://github.com/mx-space/core/compare/v4.8.0-alpha.2...v4.8.0) (2023-12-10)
 
 
