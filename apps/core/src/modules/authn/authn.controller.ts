@@ -9,6 +9,7 @@ import { MongoIdDto } from '~/shared/dto/id.dto'
 
 import { AuthService } from '../auth/auth.service'
 import { UserDocument } from '../user/user.model'
+import { UserService } from '../user/user.service'
 import { AuthnService } from './authn.service'
 
 @ApiController('/passkey')
@@ -16,6 +17,7 @@ export class AuthnController {
   constructor(
     private readonly authnService: AuthnService,
     private readonly authService: AuthService,
+    private readonly userService: UserService,
   ) {}
 
   @Post('/register')
@@ -34,7 +36,6 @@ export class AuthnController {
   }
 
   @Post('/authentication')
-  @Auth()
   @HTTPDecorators.Bypass
   async newAuthentication(@CurrentUser() user: UserDocument) {
     return await this.authnService.generateAuthenticationOptions(user)
@@ -43,12 +44,12 @@ export class AuthnController {
   @Post('/authentication/verify')
   @HTTPDecorators.Bypass
   async verifyauthenticationAuthn(
-    @CurrentUser() user: UserDocument,
     @IpLocation() ipLocation: IpRecord,
     @Body() body: any,
   ) {
     const result = await this.authnService.verifyAuthenticationResponse(body)
-    if (result.verified) {
+    if (result.verified && !body.test) {
+      const user = await this.userService.getMaster()
       Object.assign(result, {
         token: await this.authService.jwtServicePublic.sign(user.id, {
           ip: ipLocation.ip,

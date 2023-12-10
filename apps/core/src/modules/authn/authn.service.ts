@@ -23,12 +23,8 @@ import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils'
 
+import { ConfigsService } from '../configs/configs.service'
 import { AuthnModel } from './authn.model'
-
-// TODO
-const rpID = 'localhost'
-const expectedOrigin = ['http://localhost:9528']
-const expectedRPID = 'localhost'
 
 @Injectable()
 export class AuthnService {
@@ -37,11 +33,31 @@ export class AuthnService {
     private readonly authnModel: ReturnModelType<typeof AuthnModel>,
 
     private readonly cacheService: CacheService,
+    private readonly configService: ConfigsService,
   ) {}
+
+  private async getConfig() {
+    if (isDev) {
+      return {
+        rpID: 'localhost',
+        expectedOrigin: ['http://localhost:9528'],
+        expectedRPID: 'localhost',
+      }
+    }
+    const { adminUrl } = await this.configService.get('url')
+
+    const parsedUrl = new URL(adminUrl)
+    return {
+      rpID: parsedUrl.hostname,
+      expectedOrigin: [parsedUrl.origin],
+      expectedRPID: parsedUrl.hostname,
+    }
+  }
 
   async generateRegistrationOptions(user: UserDocument) {
     const { username, id: userId } = user
 
+    const { rpID } = await this.getConfig()
     const userAuthenticators = await this.authnModel.find().lean()
     const registrationOptions = await generateRegistrationOptions({
       rpName: 'MixSpace',
@@ -102,6 +118,7 @@ export class AuthnService {
 
     let verification: VerifiedRegistrationResponse
 
+    const { expectedOrigin, expectedRPID } = await this.getConfig()
     try {
       verification = await verifyRegistrationResponse({
         response,
@@ -151,6 +168,8 @@ export class AuthnService {
       .find()
       .lean({ getters: true })
 
+    const { rpID } = await this.getConfig()
+
     const options = await generateAuthenticationOptions({
       rpID,
       // Require users to use a previously-registered authenticator
@@ -191,6 +210,7 @@ export class AuthnService {
       }))!
 
     let verification: VerifiedAuthenticationResponse
+    const { expectedOrigin, expectedRPID } = await this.getConfig()
     try {
       verification = await verifyAuthenticationResponse({
         response,

@@ -35,7 +35,7 @@ const uint8ArrayGetterSetter = {
 })
 @plugin(mongooseLeanGetters)
 export class AuthnModel {
-  @prop()
+  @prop({ unique: true })
   name: string
 
   @prop({

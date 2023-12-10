@@ -353,3 +353,14 @@ export class ThirdPartyServiceIntegrationDto {
   @IsString()
   xLogSiteId?: string
 }
+
+@JSONSchema({ title: '认证安全设置', 'ui:options': { type: 'hidden' } })
+export class AuthSecurityDto {
+  @JSONSchemaToggleField('禁用密码登录', {
+    description:
+      '禁用密码登录，只能通过 PassKey or Clerk 登录，如果没有配置这些请不要开启',
+  })
+  @IsBoolean()
+  @IsOptional()
+  disablePasswordLogin: boolean
+}

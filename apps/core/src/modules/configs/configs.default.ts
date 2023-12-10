@@ -71,4 +71,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     pemKey: '',
     secretKey: '',
   },
+  authSecurity: {
+    disablePasswordLogin: false,
+  },
 })

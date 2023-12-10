@@ -1,6 +1,7 @@
 import type { UserModel } from './user.model'
 
 import {
+  BadRequestException,
   Body,
   Delete,
   Get,
@@ -24,6 +25,7 @@ import { IsMaster } from '~/common/decorators/role.decorator'
 import { getAvatar } from '~/utils'
 
 import { AuthService } from '../auth/auth.service'
+import { ConfigsService } from '../configs/configs.service'
 import { LoginDto, UserDto, UserPatchDto } from './user.dto'
 import { UserDocument } from './user.model'
 import { UserService } from './user.service'
@@ -33,6 +35,7 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly authService: AuthService,
+    private readonly configService: ConfigsService,
   ) {}
 
   @Get()
@@ -65,10 +68,31 @@ export class UserController {
     }
   }
 
+  @Get('/allow-login')
+  @HttpCache({ disable: true })
+  async allowLogin() {
+    const allowPasswordLogin =
+      (await this.configService.get('authSecurity')).disablePasswordLogin ===
+      false
+
+    return {
+      password: allowPasswordLogin,
+
+      // TODO
+      passkey: true,
+    }
+  }
+
   @Post('/login')
   @HttpCache({ disable: true })
   @HttpCode(200)
   async login(@Body() dto: LoginDto, @IpLocation() ipLocation: IpRecord) {
+    const allowPasswordLogin =
+      (await this.configService.get('authSecurity')).disablePasswordLogin ===
+      false
+
+    if (!allowPasswordLogin) throw new BadRequestException('密码登录已禁用')
+
     const user = await this.userService.login(dto.username, dto.password)
     const footstep = await this.userService.recordFootstep(ipLocation.ip)
     const { name, username, created, url, mail, id } = user
