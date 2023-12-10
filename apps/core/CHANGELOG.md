@@ -1,5 +1,22 @@
 # CHANGELOG
 
+# [4.8.0-alpha.0](https://github.com/mx-space/core/compare/v4.7.2...v4.8.0-alpha.0) (2023-12-10)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.12.23 ([6d213ee](https://github.com/mx-space/core/commit/6d213ee29b65749afbc81efdf49509281fb8ed0b))
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.0 ([#1278](https://github.com/mx-space/core/issues/1278)) ([20142ea](https://github.com/mx-space/core/commit/20142eace0beb6a33dce8794f486c1432a24a17c))
+* **deps:** update dependency mongoose to v8.0.3 ([74e5c83](https://github.com/mx-space/core/commit/74e5c83efe1fffde7f6b537cef256d8785c8a0f1))
+* **deps:** update dependency reflect-metadata to v0.1.14 ([b7d5811](https://github.com/mx-space/core/commit/b7d58111b0e48d47e34a1c132de0db57a7689a1b))
+
+
+### Features
+
+* support user login by passkey ([#1285](https://github.com/mx-space/core/issues/1285)) ([03cc449](https://github.com/mx-space/core/commit/03cc449bd6761371357d6b86f2e8d592d15c9a5b))
+
+
+
 ## [4.7.2](https://github.com/mx-space/core/compare/v4.7.1...v4.7.2) (2023-12-03)
 
 
