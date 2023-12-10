@@ -47,7 +47,7 @@ export class JWTService {
       verify(token, this.secret)
       return await this.isTokenInRedis(token)
     } catch (er) {
-      console.debug(er, token)
+      console.debug('verify JWT error: ', er.message, token)
 
       return false
     }

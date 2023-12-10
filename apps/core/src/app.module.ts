@@ -19,6 +19,7 @@ import { ActivityModule } from './modules/activity/activity.module'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
+import { AuthnModule } from './modules/authn/auth.module'
 import { BackupModule } from './modules/backup/backup.module'
 import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
@@ -71,6 +72,7 @@ import { RedisModule } from './processors/redis/redis.module'
     AggregateModule,
     AnalyzeModule,
     AuthModule,
+    AuthnModule,
     BackupModule,
     BizHelperModule,
     CategoryModule,

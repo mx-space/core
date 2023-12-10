@@ -24,6 +24,8 @@ export enum RedisKeys {
   RecentlyAttitude = 'recently_attitude',
   /** 函数编译缓存 */
   FunctionComplieCache = 'function_complie_cache',
+
+  Authn = 'authn',
 }
 export const API_CACHE_PREFIX = 'mx-api-cache:'
 export enum CacheKeys {

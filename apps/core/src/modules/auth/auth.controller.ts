@@ -73,6 +73,7 @@ export class AuthController {
     await this.authService.saveToken(model)
     return model
   }
+
   @Delete('token')
   @Auth()
   async deleteToken(@Query() query: MongoIdDto) {
