@@ -1,3 +1,4 @@
+import { configProvider } from '@/mock/modules/config.mock'
 import { Test } from '@nestjs/testing'
 
 import { AuthService } from '~/modules/auth/auth.service'
@@ -15,6 +16,7 @@ describe('test UserModule controller', () => {
         UserService,
         AuthService,
         { provide: CacheService, useValue: {} },
+        configProvider,
       ],
     })
       .overrideProvider(UserService)
