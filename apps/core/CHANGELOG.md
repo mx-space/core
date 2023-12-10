@@ -1,5 +1,9 @@
 # CHANGELOG
 
+# [4.8.0](https://github.com/mx-space/core/compare/v4.8.0-alpha.2...v4.8.0) (2023-12-10)
+
+
+
 # [4.8.0-alpha.2](https://github.com/mx-space/core/compare/v4.8.0-alpha.1...v4.8.0-alpha.2) (2023-12-10)
 
 
