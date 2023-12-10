@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [4.8.2](https://github.com/mx-space/core/compare/v4.8.1...v4.8.2) (2023-12-10)
+
+
+### Bug Fixes
+
+* disable pre requirement validation for auth security ([2444e39](https://github.com/mx-space/core/commit/2444e393b37027be0c3915fc7bd755be618cfef8))
+* guard if not passkey ([1cc940d](https://github.com/mx-space/core/commit/1cc940deeddf8200d78e103be350b8f6062907b9))
+* update dockerfile ([593c9bc](https://github.com/mx-space/core/commit/593c9bc55e6f20a579622370cfbb91f5404819d7))
+
+
+
 ## [4.8.1](https://github.com/mx-space/core/compare/v4.8.0...v4.8.1) (2023-12-10)
 
 
