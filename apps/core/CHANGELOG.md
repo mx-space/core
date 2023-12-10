@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [4.8.0-alpha.2](https://github.com/mx-space/core/compare/v4.8.0-alpha.1...v4.8.0-alpha.2) (2023-12-10)
+
+
+### Bug Fixes
+
+* add env ([6a7cfbd](https://github.com/mx-space/core/commit/6a7cfbd2497c868378e5a6220ab0073bccb33294))
+
+
+
 # [4.8.0-alpha.1](https://github.com/mx-space/core/compare/v4.8.0-alpha.0...v4.8.0-alpha.1) (2023-12-10)
 
 
