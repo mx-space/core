@@ -262,22 +262,23 @@ export class ConfigsService {
 
         return option
       }
-      case 'authSecurity': {
-        const typedInstanceValue = instanceValue as IConfig['authSecurity']
-        if (typedInstanceValue && typedInstanceValue.disablePasswordLogin) {
-          // check pre requirement
 
-          const clerkAuthEnabled = (await this.get('clerkOptions')).enable
-          // TODO check passkey is exists
-          if (!clerkAuthEnabled) {
-            throw new BadRequestException(
-              '禁用密码登录需要至少开启 Clerk 或者 PassKey 登录的一项',
-            )
-          }
-        }
+      // case 'authSecurity': {
+      // const typedInstanceValue = instanceValue as IConfig['authSecurity']
+      // if (typedInstanceValue && typedInstanceValue.disablePasswordLogin) {
+      //   // check pre requirement
 
-        return this.patch(key, instanceValue)
-      }
+      //   const clerkAuthEnabled = (await this.get('clerkOptions')).enable
+      //   // TODO check passkey is exists
+      //   if (!clerkAuthEnabled) {
+      //     throw new BadRequestException(
+      //       '禁用密码登录需要至少开启 Clerk 或者 PassKey 登录的一项',
+      //     )
+      //   }
+      // }
+
+      //   return this.patch(key, instanceValue)
+      // }
 
       default: {
         return this.patch(key, instanceValue)
