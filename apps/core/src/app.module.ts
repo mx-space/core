@@ -1,3 +1,4 @@
+import { LoggerModule } from 'nestjs-pretty-logger'
 import type { DynamicModule, NestModule, Type } from '@nestjs/common'
 
 import { Module } from '@nestjs/common'
@@ -57,7 +58,6 @@ import { UserModule } from './modules/user/user.module'
 import { DatabaseModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
-import { LoggerModule } from './processors/logger/logger.module'
 import { RedisModule } from './processors/redis/redis.module'
 
 @Module({

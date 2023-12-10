@@ -1,10 +1,11 @@
 import cluster from 'cluster'
 import { performance } from 'perf_hooks'
+import { Logger } from 'nestjs-pretty-logger'
 import wcmatch from 'wildcard-match'
 import type { LogLevel } from '@nestjs/common'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 
-import { Logger, ValidationPipe } from '@nestjs/common'
+import { ValidationPipe } from '@nestjs/common'
 import { ContextIdFactory, NestFactory } from '@nestjs/core'
 
 import { CROSS_DOMAIN, DEBUG_MODE, PORT } from './app.config'
@@ -17,7 +18,6 @@ import { AggregateByTenantContextIdStrategy } from './common/strategies/context.
 import { logger } from './global/consola.global'
 import { isMainProcess, isTest } from './global/env.global'
 import { migrateDatabase } from './migration/migrate'
-import { MyLogger } from './processors/logger/logger.service'
 import { checkInit } from './utils/check-init.util'
 
 const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
@@ -87,7 +87,7 @@ export async function bootstrap() {
   ContextIdFactory.apply(new AggregateByTenantContextIdStrategy())
 
   await app.listen(+PORT, '0.0.0.0', async () => {
-    app.useLogger(app.get(MyLogger))
+    app.useLogger(app.get(Logger))
     logger.info('ENV:', process.env.NODE_ENV)
     const url = await app.getUrl()
     const pid = process.pid
@@ -102,7 +102,7 @@ export async function bootstrap() {
     logger.success(
       `[${prefix + pid}] Admin Local Dashboard: ${url}/proxy/qaqdmin`,
     )
-    Logger.log(`Server is up. ${chalk.yellow(`+${performance.now() | 0}ms`)}`)
+    logger.info(`Server is up. ${chalk.yellow(`+${performance.now() | 0}ms`)}`)
   })
 
   if (module.hot) {
