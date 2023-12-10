@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [4.8.0-alpha.1](https://github.com/mx-space/core/compare/v4.8.0-alpha.0...v4.8.0-alpha.1) (2023-12-10)
+
+
+### Bug Fixes
+
+* logger module ([b49faaf](https://github.com/mx-space/core/commit/b49faaff0b58e5484380dc7b725a8c25267df752))
+
+
+
 # [4.8.0-alpha.0](https://github.com/mx-space/core/compare/v4.7.2...v4.8.0-alpha.0) (2023-12-10)
 
 
