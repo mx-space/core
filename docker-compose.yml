@@ -12,6 +12,7 @@ services:
       - JWT_SECRET
       - ENCRYPT_KEY
       - ENCRYPT_ENABLE
+      - CBOR_NATIVE_ACCELERATION_DISABLED
     volumes:
       - ./data/mx-space:/root/.mx-space
     ports:
@@ -26,13 +27,7 @@ services:
       - app-network
     restart: always
     healthcheck:
-      test:
-        [
-          'CMD',
-          'curl',
-          '-f',
-          'http://127.0.0.1:2333/api/v2/ping'
-        ]
+      test: ['CMD', 'curl', '-f', 'http://127.0.0.1:2333/api/v2/ping']
       interval: 1m30s
       timeout: 30s
       retries: 5
