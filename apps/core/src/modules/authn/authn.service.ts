@@ -242,6 +242,10 @@ export class AuthnService {
       _id: id,
     })
   }
+
+  async hasAuthnItem() {
+    return (await this.authnModel.countDocuments()) > 0
+  }
 }
 
 type Authenticator = {

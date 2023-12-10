@@ -4,8 +4,10 @@ import {
   BadRequestException,
   Body,
   Delete,
+  forwardRef,
   Get,
   HttpCode,
+  Inject,
   Param,
   Patch,
   Post,
@@ -25,6 +27,7 @@ import { IsMaster } from '~/common/decorators/role.decorator'
 import { getAvatar } from '~/utils'
 
 import { AuthService } from '../auth/auth.service'
+import { AuthnService } from '../authn/authn.service'
 import { ConfigsService } from '../configs/configs.service'
 import { LoginDto, UserDto, UserPatchDto } from './user.dto'
 import { UserDocument } from './user.model'
@@ -36,6 +39,9 @@ export class UserController {
     private readonly userService: UserService,
     private readonly authService: AuthService,
     private readonly configService: ConfigsService,
+
+    @Inject(forwardRef(() => AuthnService))
+    private readonly authnService: AuthnService,
   ) {}
 
   @Get()
@@ -71,15 +77,16 @@ export class UserController {
   @Get('/allow-login')
   @HttpCache({ disable: true })
   async allowLogin() {
-    const allowPasswordLogin =
-      (await this.configService.get('authSecurity')).disablePasswordLogin ===
-      false
+    const [allowPasswordLogin, canAuthByPasskey] = await Promise.all([
+      this.configService
+        .get('authSecurity')
+        .then((config) => config.disablePasswordLogin === false),
+      this.authnService.hasAuthnItem(),
+    ])
 
     return {
       password: allowPasswordLogin,
-
-      // TODO
-      passkey: true,
+      passkey: canAuthByPasskey,
     }
   }
 
