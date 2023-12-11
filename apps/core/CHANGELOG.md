@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.8.3](https://github.com/mx-space/core/compare/v4.8.2...v4.8.3) (2023-12-11)
+
+
+### Bug Fixes
+
+* test case ([ec37bd1](https://github.com/mx-space/core/commit/ec37bd111b17177cff611f188ef921df79c9226c))
+
+
+
 ## [4.8.2](https://github.com/mx-space/core/compare/v4.8.1...v4.8.2) (2023-12-10)
 
 
