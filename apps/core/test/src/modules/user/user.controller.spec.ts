@@ -1,7 +1,9 @@
+import { createMockGlobalModule } from '@/helper/create-mock-global-module'
 import { configProvider } from '@/mock/modules/config.mock'
 import { Test } from '@nestjs/testing'
 
 import { AuthService } from '~/modules/auth/auth.service'
+import { AuthnService } from '~/modules/authn/authn.service'
 import { UserController } from '~/modules/user/user.controller'
 import { UserService } from '~/modules/user/user.service'
 import { CacheService } from '~/processors/redis/cache.service'
@@ -12,6 +14,14 @@ describe('test UserModule controller', () => {
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       controllers: [UserController],
+      imports: [
+        createMockGlobalModule([
+          {
+            provide: AuthnService,
+            useValue: {},
+          },
+        ]),
+      ],
       providers: [
         UserService,
         AuthService,

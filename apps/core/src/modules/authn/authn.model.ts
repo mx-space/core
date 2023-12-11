@@ -1,7 +1,8 @@
 import { mongooseLeanGetters } from 'mongoose-lean-getters'
 
-import { CredentialDeviceType } from '@simplewebauthn/server/script/deps'
 import { modelOptions, plugin, prop } from '@typegoose/typegoose'
+
+type CredentialDeviceType = 'singleDevice' | 'multiDevice'
 
 const uint8ArrayGetterSetter = {
   get(uint8string: string) {
