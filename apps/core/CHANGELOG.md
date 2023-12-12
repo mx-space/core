@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [4.8.4](https://github.com/mx-space/core/compare/v4.8.3...v4.8.4) (2023-12-12)
+
+
+### Bug Fixes
+
+* **deps:** update algoliasearch-client-javascript monorepo to v4.21.0 (minor) ([#1288](https://github.com/mx-space/core/issues/1288)) ([46c2d1f](https://github.com/mx-space/core/commit/46c2d1fe18733d7dc42844bd1774d3044f9dd32a))
+* **deps:** update babel monorepo to v7.23.6 (patch) ([#1287](https://github.com/mx-space/core/issues/1287)) ([237adc5](https://github.com/mx-space/core/commit/237adc51a4ddc5cc22f28b40f260284f0b7d688d))
+* remove swift ([ab204b8](https://github.com/mx-space/core/commit/ab204b87dea061ffbe4bba184ffb0841c1ab2812))
+* test case ([09db9c9](https://github.com/mx-space/core/commit/09db9c9133cac095fbac53e5942f1ea86ad16640))
+
+
+
 ## [4.8.3](https://github.com/mx-space/core/compare/v4.8.2...v4.8.3) (2023-12-11)
 
 
