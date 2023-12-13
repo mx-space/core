@@ -1,7 +1,6 @@
 // THIS MODULE IS DISABLED
 // @ts-nocheck
 import { isNil, pick } from 'lodash'
-import { nanoid } from 'nanoid'
 import { spawn } from 'node-pty'
 import { Socket } from 'socket.io'
 import { quiet } from 'zx-cjs'
@@ -12,6 +11,7 @@ import type {
 } from '@nestjs/websockets'
 import type { IPty } from 'node-pty'
 
+import { nanoid as N } from '@mx-space/external'
 import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
 
 import { DEMO_MODE } from '~/app.config'
@@ -24,6 +24,8 @@ import { createAuthGateway } from '~/processors/gateway/shared/auth.gateway'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getIp, getRedisKey } from '~/utils'
+
+const { nanoid } = N
 
 const AuthGateway = createAuthGateway({ namespace: 'pty', authway: 'jwt' })
 @WebSocketGateway<GatewayMetadata>({ namespace: 'pty' })
@@ -99,10 +101,10 @@ export class PTYGateway
       os.platform() === 'win32'
         ? 'powershell.exe'
         : zsh.exitCode == 0
-        ? 'zsh'
-        : fish.exitCode == 0
-        ? 'fish'
-        : 'bash',
+          ? 'zsh'
+          : fish.exitCode == 0
+            ? 'fish'
+            : 'bash',
       [],
       {
         cwd: DATA_DIR,

@@ -23,7 +23,7 @@
   "scripts": {
     "prepare": "husky install && node scripts/init-project.mjs && corepack enable",
     "build": "pnpm -C \"apps/core\" run build",
-    "dev": "pnpm -C \"apps/core\" run start",
+    "dev": "pnpm -C \"packages/external\" run build && pnpm -C \"apps/core\" run start",
     "bundle": "pnpm -C \"apps/core\" run bundle",
     "test": "pnpm -C \"apps/core\" run test",
     "lint": "eslint --cache --ext .ts,.tsx --ignore-path .gitignore . --fix",
@@ -45,6 +45,7 @@
     "rimraf": "5.0.5",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
+    "tsup": "8.0.1",
     "typescript": "5.3.3",
     "vite-tsconfig-paths": "4.2.2"
   },

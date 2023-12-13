@@ -1,11 +1,11 @@
 import dayjs from 'dayjs'
 import jwt from 'jsonwebtoken'
 import { isDate, omit } from 'lodash'
-import { customAlphabet } from 'nanoid/async'
 import type { TokenModel, UserModel } from '~/modules/user/user.model'
 import type { TokenDto } from './auth.controller'
 
 import { Clerk } from '@clerk/clerk-sdk-node'
+import { nanoid } from '@mx-space/external'
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
@@ -15,6 +15,8 @@ import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { ConfigsService } from '../configs/configs.service'
+
+const { customAlphabet } = nanoid
 
 @Injectable()
 export class AuthService {

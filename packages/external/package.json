@@ -1,0 +1,11 @@
+{
+  "name": "@mx-space/external",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "scripts": {
+    "build": "tsup"
+  },
+  "devDependencies": {
+    "nanoid": "5.0.4"
+  }
+}

@@ -489,7 +489,6 @@ export class ServerlessService implements OnModuleInit {
         'jszip',
         'lodash',
         'marked',
-        'nanoid',
         'qs',
         'rxjs',
         'snakecase-keys',

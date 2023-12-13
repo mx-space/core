@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
-import { customAlphabet } from 'nanoid/async'
 
+import { nanoid } from '@mx-space/external'
 import { Delete, Get, Param, Post, Query, Req, Res } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
 
@@ -16,6 +16,8 @@ import { PagerDto } from '~/shared/dto/pager.dto'
 
 import { FileQueryDto, FileUploadDto } from './file.dto'
 import { FileService } from './file.service'
+
+const { customAlphabet } = nanoid
 
 @ApiController(['objects', 'files'])
 export class FileController {

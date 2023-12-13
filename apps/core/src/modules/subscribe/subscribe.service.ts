@@ -2,7 +2,6 @@
 import cluster from 'cluster'
 import { render } from 'ejs'
 import { LRUCache } from 'lru-cache'
-import { nanoid } from 'nanoid'
 import type { CoAction } from '@innei/next-async/types/interface'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
@@ -11,6 +10,7 @@ import type { PostModel } from '../post/post.model'
 import type { SubscribeTemplateRenderProps } from './subscribe.email.default'
 
 import { Co } from '@innei/next-async'
+import { nanoid as N } from '@mx-space/external'
 import { BadRequestException, Injectable } from '@nestjs/common'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -31,6 +31,8 @@ import {
 } from './subscribe.constant'
 import { defaultSubscribeForRenderProps } from './subscribe.email.default'
 import { SubscribeModel } from './subscribe.model'
+
+const { nanoid } = N
 
 declare type Email = string
 declare type SubscribeBit = number
