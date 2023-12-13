@@ -89,8 +89,8 @@ importers:
         specifier: ^7.23.6
         version: 7.23.6
       '@clerk/clerk-sdk-node':
-        specifier: 4.13.1
-        version: 4.13.1(react@18.2.0)
+        specifier: 4.13.2
+        version: 4.13.2(react@18.2.0)
       '@fastify/cookie':
         specifier: 9.2.0
         version: 9.2.0
@@ -979,12 +979,12 @@ packages:
     dev: false
     optional: true
 
-  /@clerk/backend@0.35.1(react@18.2.0):
-    resolution: {integrity: sha512-QCIrUC4l950zDCaQSWI9FIcYvOCyp5/mp4E6T9GiyTooGeMWL7upD654oboWM6WYe6OF+IIa+5QCwOhSN1/Epw==}
+  /@clerk/backend@0.36.0(react@18.2.0):
+    resolution: {integrity: sha512-iJTASBSitQqdgIUANzifwsRURmS+zaXJ2vtD/j3r/Ir/nmJWm1PwY9eGKWyE6rlk8iAnh+OoUmBJB1tz1SpXkw==}
     engines: {node: '>=14'}
     dependencies:
       '@clerk/shared': 1.1.1(react@18.2.0)
-      '@clerk/types': 3.59.0
+      '@clerk/types': 3.60.0
       '@peculiar/webcrypto': 1.4.1
       '@types/node': 16.18.6
       cookie: 0.5.0
@@ -996,13 +996,13 @@ packages:
       - react
     dev: false
 
-  /@clerk/clerk-sdk-node@4.13.1(react@18.2.0):
-    resolution: {integrity: sha512-IO2tRvHObhU+j6IC6F5XnMfvKnTmw4zku4dRy9+jZxIwaMsPHGU/aO3G9YP2247JmxWrRC/TDXMimQGt64dPuw==}
+  /@clerk/clerk-sdk-node@4.13.2(react@18.2.0):
+    resolution: {integrity: sha512-lnPxZFNxTZmRQYl3GUdvBxE/nNMertULTN9JZycNeeCeH97hdtbhF4GVcSoTB2M1HVwTgP21tkQigX8yu2Gqqw==}
     engines: {node: '>=14'}
     dependencies:
-      '@clerk/backend': 0.35.1(react@18.2.0)
+      '@clerk/backend': 0.36.0(react@18.2.0)
       '@clerk/shared': 1.1.1(react@18.2.0)
-      '@clerk/types': 3.59.0
+      '@clerk/types': 3.60.0
       '@types/cookies': 0.7.7
       '@types/express': 4.17.14
       '@types/node-fetch': 2.6.2
@@ -1027,8 +1027,8 @@ packages:
       swr: 2.2.0(react@18.2.0)
     dev: false
 
-  /@clerk/types@3.59.0:
-    resolution: {integrity: sha512-OchGdY3mf+hXql7CPQsuCv1HicPvvz6NdMeo6r0M5FY11INcXGaF4pexido9IThrd31rIum+giWVLaFTwlhzfg==}
+  /@clerk/types@3.60.0:
+    resolution: {integrity: sha512-f1A16wFh5MtikxEo7o6vAVX7FxpqC1YmzA6c4ugwq5MH8J2mvIM/LwNVIHgNpZkn/s/G+BUhBcJJmUXqajDK2Q==}
     engines: {node: '>=14'}
     dependencies:
       csstype: 3.1.1
@@ -2493,7 +2493,7 @@ packages:
     resolution: {integrity: sha512-h7BcvPUogWbKCzBR2lY4oqaZbO3jXZksexYJVFvkrFeLgbZjQkU4x8pRq6eg2MHXQhY0McQdqmmsxRWlVAHooA==}
     dependencies:
       '@types/connect': 3.4.38
-      '@types/express': 4.17.14
+      '@types/express': 4.17.21
       '@types/keygrip': 1.0.6
       '@types/node': 20.10.4
     dev: false
@@ -2549,7 +2549,6 @@ packages:
       '@types/express-serve-static-core': 4.17.41
       '@types/qs': 6.9.10
       '@types/serve-static': 1.15.4
-    dev: true
 
   /@types/fs-extra@11.0.1:
     resolution: {integrity: sha512-MxObHvNl4A69ofaTRU8DFqvgzzv8s9yRtaPPm5gud9HDNvpB3GPQFvNuTWAI59B9huVGV5jXYJwbCsmBsOGYWA==}
@@ -2616,7 +2615,6 @@ packages:
 
   /@types/mime@3.0.3:
     resolution: {integrity: sha512-i8MBln35l856k5iOhKk2XJ4SeAWg75mLIpZB4v6imOagKL6twsukBZGDMNhdOVk7yRFTMPpfILocMos59Q1otQ==}
-    dev: true
 
   /@types/mime@3.0.4:
     resolution: {integrity: sha512-iJt33IQnVRkqeqC7PzBHPTC6fDlRNRW8vjrgqtScAhrmMwe8c4Eo7+fUGTa+XdWrpEgpyKWMYmi2dIwMAYRzPw==}
@@ -2708,7 +2706,6 @@ packages:
       '@types/http-errors': 2.0.4
       '@types/mime': 3.0.3
       '@types/node': 20.10.4
-    dev: true
 
   /@types/serve-static@1.15.5:
     resolution: {integrity: sha512-PDRk21MnK70hja/YF8AHfC7yIsiQHn1rcXx7ijCFBX/k+XQJhQT/gw3xekXKJvx+5SXaMMS8oqQy09Mzvz2TuQ==}
