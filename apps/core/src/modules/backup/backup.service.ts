@@ -1,6 +1,7 @@
 import { existsSync, statSync } from 'fs'
 import { readdir, readFile, rm, writeFile } from 'fs/promises'
 import { join, resolve } from 'path'
+import { flatten } from 'lodash'
 import { mkdirp } from 'mkdirp'
 
 import {
@@ -15,6 +16,10 @@ import { DEMO_MODE, MONGO_DB } from '~/app.config'
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import {
+  Analyze_COLLECTION_NAME,
+  WEBHOOK_EVENT_COLLECTION_NAME,
+} from '~/constants/db.constant'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { migrateDatabase } from '~/migration/migrate'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -25,6 +30,10 @@ import { getFolderSize, installPKG } from '~/utils/system.util'
 
 import { ConfigsService } from '../configs/configs.service'
 
+const excludeCollections = [
+  Analyze_COLLECTION_NAME,
+  WEBHOOK_EVENT_COLLECTION_NAME,
+]
 @Injectable()
 export class BackupService {
   private logger: Logger
@@ -79,7 +88,14 @@ export class BackupService {
     const backupDirPath = join(BACKUP_DIR, dateDir)
     mkdirp.sync(backupDirPath)
     try {
-      await $`mongodump -h ${MONGO_DB.host} --port ${MONGO_DB.port} -d ${MONGO_DB.dbName} --excludeCollection analyzes -o ${backupDirPath} >/dev/null 2>&1`
+      await $`mongodump -h ${MONGO_DB.host} --port ${MONGO_DB.port} -d ${
+        MONGO_DB.dbName
+      }  ${flatten(
+        excludeCollections.map((collection) => [
+          '--excludeCollection',
+          `${collection}`,
+        ]),
+      )} -o ${backupDirPath} >/dev/null 2>&1`
       // 打包 DB
       cd(backupDirPath)
       await $`mv ${MONGO_DB.dbName} mx-space`.quiet().nothrow()

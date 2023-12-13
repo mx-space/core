@@ -3,6 +3,7 @@ import { UAParser } from 'ua-parser-js'
 
 import { index, modelOptions, prop, Severity } from '@typegoose/typegoose'
 
+import { Analyze_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 
 @modelOptions({
@@ -13,7 +14,7 @@ import { BaseModel } from '~/shared/model/base.model'
     },
   },
   options: {
-    customName: 'Analyze',
+    customName: Analyze_COLLECTION_NAME,
     allowMixed: Severity.ALLOW,
   },
 })

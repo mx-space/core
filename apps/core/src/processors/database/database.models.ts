@@ -17,6 +17,8 @@ import { SubscribeModel } from '~/modules/subscribe/subscribe.model'
 import { SyncUpdateModel } from '~/modules/sync-update/sync-update.model'
 import { TopicModel } from '~/modules/topic/topic.model'
 import { UserModel } from '~/modules/user/user.model'
+import { WebhookEventModel } from '~/modules/webhook/webhook-event.model'
+import { WebhookModel } from '~/modules/webhook/webhook.model'
 import { getProviderByTypegooseClass } from '~/transformers/model.transformer'
 
 export const databaseModels = [
@@ -39,4 +41,7 @@ export const databaseModels = [
   SubscribeModel,
   UserModel,
   SyncUpdateModel,
+
+  WebhookModel,
+  WebhookEventModel,
 ].map((model) => getProviderByTypegooseClass(model))
