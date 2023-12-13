@@ -1,3 +1,4 @@
-import * as nanoid from 'nanoid'
+export * as nanoid from 'nanoid'
 
-export { nanoid }
+export * as zx from 'zx'
+export * from 'zx'

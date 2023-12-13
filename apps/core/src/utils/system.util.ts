@@ -70,7 +70,7 @@ export const installPKG = async (name: string, cwd: string) => {
 
   if (!manager) {
     for (const managerName of Object.values(LOCKS)) {
-      const res = await nothrow($`${managerName} --version`)
+      const res = await $`${managerName} --version`.nothrow()
       if (res.exitCode === 0) {
         manager = managerName
         break
@@ -79,7 +79,7 @@ export const installPKG = async (name: string, cwd: string) => {
   }
   if (!manager) {
     // fallback to npm
-    const npmVersion = await nothrow($`npm -v`)
+    const npmVersion = await $`npm -v`.nothrow()
     if (npmVersion.exitCode === 0) {
       manager = 'npm'
     } else {

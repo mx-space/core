@@ -6,6 +6,11 @@
     "build": "tsup"
   },
   "devDependencies": {
-    "nanoid": "5.0.4"
+    "nanoid": "5.0.4",
+    "zx": "7.2.3"
+  },
+  "exports": {
+    ".": "./dist/index.cjs",
+    "./zx-global": "./zx-global.cjs"
   }
 }

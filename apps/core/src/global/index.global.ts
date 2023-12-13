@@ -2,8 +2,6 @@
 import cluster from 'cluster'
 import { mkdirSync } from 'fs'
 
-import 'zx-cjs/globals'
-
 import { Logger } from '@nestjs/common'
 
 import {
@@ -18,6 +16,7 @@ import {
 import { consola, logger } from './consola.global'
 
 import './dayjs.global'
+import '@mx-space/external/zx-global'
 
 import { CLUSTER } from '~/app.config'
 

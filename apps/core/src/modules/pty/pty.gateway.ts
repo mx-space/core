@@ -3,7 +3,6 @@
 import { isNil, pick } from 'lodash'
 import { spawn } from 'node-pty'
 import { Socket } from 'socket.io'
-import { quiet } from 'zx-cjs'
 import type {
   GatewayMetadata,
   OnGatewayConnection,
@@ -94,8 +93,8 @@ export class PTYGateway
 
       return
     }
-    const zsh = await quiet(nothrow($`zsh --version`))
-    const fish = await quiet(nothrow($`fish --version`))
+    const zsh = await $`zsh --version`.quiet().nothrow()
+    const fish = await $`fish --version`.quiet().nothrow()
 
     const pty = spawn(
       os.platform() === 'win32'

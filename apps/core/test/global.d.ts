@@ -2,7 +2,7 @@ import type { Document, PaginateModel } from 'mongoose'
 import type { WrappedConsola } from 'nestjs-pretty-logger/lib/consola'
 
 import 'vitest/globals'
-import 'zx-cjs/globals'
+import 'zx/globals'
 
 import type { ModelType } from '@typegoose/typegoose/lib/types'
 

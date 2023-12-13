@@ -2,7 +2,6 @@ import { existsSync, statSync } from 'fs'
 import { readdir, readFile, rm, writeFile } from 'fs/promises'
 import { join, resolve } from 'path'
 import { mkdirp } from 'mkdirp'
-import { quiet } from 'zx-cjs'
 
 import {
   BadRequestException,
@@ -79,8 +78,8 @@ export class BackupService {
       await $`mongodump -h ${MONGO_DB.host} --port ${MONGO_DB.port} -d ${MONGO_DB.dbName} --excludeCollection analyzes -o ${backupDirPath} >/dev/null 2>&1`
       // 打包 DB
       cd(backupDirPath)
-      await nothrow(quiet($`mv ${MONGO_DB.dbName} mx-space`))
-      await quiet($`zip -r backup-${dateDir} mx-space/* && rm -rf mx-space`)
+      await $`mv ${MONGO_DB.dbName} mx-space`.quiet().nothrow()
+      await $`zip -r backup-${dateDir} mx-space/* && rm -rf mx-space`.quiet()
 
       // 打包数据目录
 
