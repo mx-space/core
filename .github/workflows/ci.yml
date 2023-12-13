@@ -138,6 +138,7 @@ jobs:
 
       - name: Run Tests
         run: |
+          npm run build
           npm run test
 
         env:
