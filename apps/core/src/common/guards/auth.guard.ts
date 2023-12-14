@@ -1,5 +1,7 @@
 import { isJWT } from 'class-validator'
 import type { CanActivate, ExecutionContext } from '@nestjs/common'
+import type { UserModel } from '~/modules/user/user.model'
+import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 
@@ -38,8 +40,8 @@ export class AuthGuard implements CanActivate {
       if (!isValid) {
         throw new UnauthorizedException('令牌无效')
       }
-      request.user = userModel
-      request.token = Authorization
+
+      this.attachUserAndToken(request, userModel, Authorization)
       return true
     }
 
@@ -57,12 +59,29 @@ export class AuthGuard implements CanActivate {
       }
     }
 
-    request.user = await this.userService.getMaster()
-    request.token = jwt
+    this.attachUserAndToken(
+      request,
+      await this.userService.getMaster(),
+      Authorization,
+    )
     return true
   }
 
   getRequest(context: ExecutionContext) {
     return getNestExecutionContextRequest(context)
+  }
+
+  attachUserAndToken(
+    request: FastifyBizRequest,
+    user: UserModel,
+    token: string,
+  ) {
+    request.user = user
+    request.token = token
+
+    Object.assign(request.raw, {
+      user,
+      token,
+    })
   }
 }

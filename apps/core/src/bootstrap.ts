@@ -6,7 +6,7 @@ import type { LogLevel } from '@nestjs/common'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 
 import { ValidationPipe } from '@nestjs/common'
-import { ContextIdFactory, NestFactory } from '@nestjs/core'
+import { NestFactory } from '@nestjs/core'
 
 import { CROSS_DOMAIN, DEBUG_MODE, PORT } from './app.config'
 import { AppModule } from './app.module'
@@ -14,7 +14,6 @@ import { fastifyApp } from './common/adapters/fastify.adapter'
 import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { SpiderGuard } from './common/guards/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
-import { AggregateByTenantContextIdStrategy } from './common/strategies/context.strategy'
 import { logger } from './global/consola.global'
 import { isMainProcess, isTest } from './global/env.global'
 import { migrateDatabase } from './migration/migrate'
@@ -83,8 +82,6 @@ export async function bootstrap() {
   )
   app.useGlobalGuards(new SpiderGuard())
   !isTest && app.useWebSocketAdapter(new RedisIoAdapter(app))
-
-  ContextIdFactory.apply(new AggregateByTenantContextIdStrategy())
 
   await app.listen(+PORT, '0.0.0.0', async () => {
     app.useLogger(app.get(Logger))

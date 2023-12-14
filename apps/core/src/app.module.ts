@@ -1,5 +1,10 @@
 import { LoggerModule } from 'nestjs-pretty-logger'
-import type { DynamicModule, NestModule, Type } from '@nestjs/common'
+import type {
+  DynamicModule,
+  MiddlewareConsumer,
+  NestModule,
+  Type,
+} from '@nestjs/common'
 
 import { Module } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
@@ -15,6 +20,7 @@ import { DbQueryInterceptor } from './common/interceptors/db-query.interceptor'
 import { IdempotenceInterceptor } from './common/interceptors/idempotence.interceptor'
 import { JSONTransformInterceptor } from './common/interceptors/json-transform.interceptor'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
+import { RequestContextMiddleware } from './common/middlewares/request-context.middleware'
 import { AckModule } from './modules/ack/ack.module'
 import { ActivityModule } from './modules/activity/activity.module'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
@@ -157,11 +163,14 @@ import { RedisModule } from './processors/redis/redis.module'
     },
   ],
 })
-export class AppModule {
+export class AppModule implements NestModule {
   static register(isInit: boolean): DynamicModule {
     return {
       module: AppModule,
       imports: [!isInit && InitModule].filter(Boolean) as Type<NestModule>[],
     }
+  }
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestContextMiddleware).forRoutes('(.*)')
   }
 }

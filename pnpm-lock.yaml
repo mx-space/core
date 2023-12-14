@@ -181,6 +181,9 @@ importers:
       class-validator-jsonschema:
         specifier: npm:@innei/class-validator-jsonschema@3.1.2
         version: /@innei/class-validator-jsonschema@3.1.2(class-transformer@0.5.1)(class-validator@0.13.2)
+      cls-hooked:
+        specifier: ^4.2.2
+        version: 4.2.2
       commander:
         specifier: 11.1.0
         version: 11.1.0
@@ -333,6 +336,9 @@ importers:
       '@types/cache-manager':
         specifier: 4.0.6
         version: 4.0.6
+      '@types/cls-hooked':
+        specifier: ^4.3.8
+        version: 4.3.8
       '@types/ejs':
         specifier: 3.1.5
         version: 3.1.5
@@ -2477,6 +2483,12 @@ packages:
     resolution: {integrity: sha512-gbiHvCuBS9aXkE3OEDfS69bscNLTYtbbx2TQf6WyOu+4eCH1AH1gPSiDGF2UzwkRFAbqKNsC5F0mY0xcaEHCbg==}
     dev: true
 
+  /@types/cls-hooked@4.3.8:
+    resolution: {integrity: sha512-tf/7H883gFA6MPlWI15EQtfNZ+oPL0gLKkOlx9UHFrun1fC/FkuyNBpTKq1B5E3T4fbvjId6WifHUdSGsMMuPg==}
+    dependencies:
+      '@types/node': 20.10.4
+    dev: true
+
   /@types/component-emitter@1.2.11:
     resolution: {integrity: sha512-SRXjM+tfsSlA9VuG8hGO2nft2p8zjXCK1VcC6N4NXbBbYbSia9kzCChYQajIjzIqOOOuh5Ock6MmV2oux4jDZQ==}
     dev: false
@@ -3422,6 +3434,13 @@ packages:
     resolution: {integrity: sha512-jgsaNduz+ndvGyFt3uSuWqvy4lCnIJiovtouQN5JZHOKCS2QuhEdbcQHFhVksz2N2U9hXJo8odG7ETyWlEeuDw==}
     dev: true
 
+  /async-hook-jl@1.7.6:
+    resolution: {integrity: sha512-gFaHkFfSxTjvoxDMYqDuGHlcRyUuamF8s+ZTtJdDzqjws4mCt7v0vuV79/E2Wr2/riMQgtG4/yUtXWs1gZ7JMg==}
+    engines: {node: ^4.7 || >=6.9 || >=7.3}
+    dependencies:
+      stack-chain: 1.3.7
+    dev: false
+
   /async-mutex@0.4.0:
     resolution: {integrity: sha512-eJFZ1YhRR8UN8eBLoNzcDPcy/jqjsg6I1AP+KvWQX80BqOSW1oJPJXDylPUEeMr2ZQvHgnQ//Lp6f3RQ1zI7HA==}
     requiresBuild: true
@@ -3877,6 +3896,15 @@ packages:
   /clone@1.0.4:
     resolution: {integrity: sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg==}
     engines: {node: '>=0.8'}
+
+  /cls-hooked@4.2.2:
+    resolution: {integrity: sha512-J4Xj5f5wq/4jAvcdgoGsL3G103BtWpZrMo8NEinRltN+xpTZdI+M38pyQqhuFU/P792xkMFvnKSf+Lm81U1bxw==}
+    engines: {node: ^4.7 || >=6.9 || >=7.3 || >=8.2.1}
+    dependencies:
+      async-hook-jl: 1.7.6
+      emitter-listener: 1.1.2
+      semver: 7.5.4
+    dev: false
 
   /cluster-key-slot@1.1.0:
     resolution: {integrity: sha512-2Nii8p3RwAPiFwsnZvukotvow2rIHM+yQ6ZcBXGHdniadkYGZYiGmkHJIbZPIV9nfv7m/U1IPMVVcAhoWFeklw==}
@@ -4377,6 +4405,12 @@ packages:
 
   /electron-to-chromium@1.4.610:
     resolution: {integrity: sha512-mqi2oL1mfeHYtOdCxbPQYV/PL7YrQlxbvFEZ0Ee8GbDdShimqt2/S6z2RWqysuvlwdOrQdqvE0KZrBTipAeJzg==}
+
+  /emitter-listener@1.1.2:
+    resolution: {integrity: sha512-Bt1sBAGFHY9DKY+4/2cV6izcKJUf5T7/gkdmkxzX/qv9CcGH8xSwVRW5mtX03SWJtRTWSOpzCuWN9rBFYZepZQ==}
+    dependencies:
+      shimmer: 1.2.1
+    dev: false
 
   /emoji-regex@10.3.0:
     resolution: {integrity: sha512-QpLs9D9v9kArv4lfDEgg1X/gN5XLnf/A6l9cs8SPZLRZR3ZkY9+kwIQTxm+fsSej5UMYGE8fdoaZVIBlqG0XTw==}
@@ -8250,6 +8284,10 @@ packages:
       rechoir: 0.6.2
     dev: true
 
+  /shimmer@1.2.1:
+    resolution: {integrity: sha512-sQTKC1Re/rM6XyFM6fIAGHRPVGvyXfgzIDvzoq608vM+jeyVD0Tu1E6Np0Kc2zAIFWIj963V2800iF/9LPieQw==}
+    dev: false
+
   /side-channel@1.0.4:
     resolution: {integrity: sha512-q5XPytqFEIKHkGdiMIrY10mvLRvnQh42/+GoBlFW3b2LXLE2xxJpZFdm94we0BaoV3RwJyGqg5wS7epxTv0Zvw==}
     dependencies:
@@ -8445,6 +8483,10 @@ packages:
     dependencies:
       through: 2.3.8
     dev: true
+
+  /stack-chain@1.3.7:
+    resolution: {integrity: sha512-D8cWtWVdIe/jBA7v5p5Hwl5yOSOrmZPWDPe2KxQ5UAGD+nxbxU0lKXA4h85Ta6+qgdKVL3vUxsbIZjc1kBG7ug==}
+    dev: false
 
   /stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}

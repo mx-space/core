@@ -2,6 +2,7 @@ import dayjs from 'dayjs'
 
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 
+import { RequestContext } from '~/common/contexts/request.context'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { deepCloneWithFunction } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
@@ -74,9 +75,9 @@ export class TextMacroService {
       // time utils
       dayjs: deepCloneWithFunction(dayjs),
       fromNow: (time: Date | string) => dayjs(time).fromNow(),
-      // onlyMe: (text: string) => {
-      //   return this.request.isMaster ? text : ''
-      // },
+      onlyMe: (text: string) => {
+        return RequestContext.currentIsMaster() ? text : ''
+      },
 
       // typography
       center: (text: string) => {

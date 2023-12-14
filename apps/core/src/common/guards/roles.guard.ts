@@ -35,6 +35,11 @@ export class RolesGuard extends AuthGuard implements CanActivate {
     request.isGuest = !isMaster
     request.isMaster = isMaster
 
+    Object.assign(request.raw, {
+      isGuest: !isMaster,
+      isMaster,
+    })
+
     return true
   }
 
