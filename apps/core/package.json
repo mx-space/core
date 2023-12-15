@@ -155,7 +155,7 @@
     "ioredis": "5.3.2",
     "socket.io": "^4.7.2",
     "unplugin-swc": "1.4.4",
-    "vite": "5.0.9",
+    "vite": "5.0.10",
     "vite-tsconfig-paths": "4.2.2",
     "vitest": "0.34.6",
     "zx": "7.2.3"
