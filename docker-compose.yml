@@ -12,7 +12,7 @@ services:
       - JWT_SECRET
       - ENCRYPT_KEY
       - ENCRYPT_ENABLE
-      - CBOR_NATIVE_ACCELERATION_DISABLED
+
     volumes:
       - ./data/mx-space:/root/.mx-space
     ports:

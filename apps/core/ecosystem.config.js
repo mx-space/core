@@ -21,11 +21,6 @@ module.exports = {
         NODE_PATH: nodePath,
         MX_ENCRYPT_KEY: process.env.MX_ENCRYPT_KEY,
         PORT: process.env.PORT,
-
-        // https://github.com/kriszyp/cbor-x/blob/master/node-index.js#L16 https://github.com/kriszyp/cbor-x/blob/master/node-index.js#L10
-        // ncc not support runtime require so disable ACCELERATION
-
-        CBOR_NATIVE_ACCELERATION_DISABLED: true,
       },
     },
   ],
