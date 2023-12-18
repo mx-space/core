@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [4.8.5](https://github.com/mx-space/core/compare/v4.8.4...v4.8.5) (2023-12-18)
+## [4.8.6](https://github.com/mx-space/core/compare/v4.8.4...v4.8.6) (2023-12-18)
 
 
 ### Bug Fixes
@@ -14,6 +14,7 @@
 * **deps:** update dependency linkedom to v0.16.5 ([97a9435](https://github.com/mx-space/core/commit/97a9435a1d014a0092bdc36f9602483649835738))
 * **deps:** update dependency reflect-metadata to v0.2.1 ([#1300](https://github.com/mx-space/core/issues/1300)) ([cc20933](https://github.com/mx-space/core/commit/cc2093300de4ce23d3409d68b1b34785bbbe8153))
 * **deps:** update nest monorepo to v10.3.0 (minor) ([#1307](https://github.com/mx-space/core/issues/1307)) ([3cbb081](https://github.com/mx-space/core/commit/3cbb081e000708602334d21369a20bf827232123))
+* run prebuild before test ([1ce1824](https://github.com/mx-space/core/commit/1ce1824ef0ee69b8016e89ec0c6b41e200978c7b))
 * some `env` move to runtime inject ([a3510d2](https://github.com/mx-space/core/commit/a3510d252626048c0c3cd271ca366e5b689833e5))
 * test ci ([25bb57e](https://github.com/mx-space/core/commit/25bb57e9d740bd9a72b61a3a6e221a5011177e7e))
 
