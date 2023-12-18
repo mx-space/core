@@ -1,5 +1,29 @@
 # CHANGELOG
 
+## [4.8.5](https://github.com/mx-space/core/compare/v4.8.4...v4.8.5) (2023-12-18)
+
+
+### Bug Fixes
+
+* bundle build ci ([99f4f4c](https://github.com/mx-space/core/commit/99f4f4caa6bb13d6643881775fc29dd1ce72195d))
+* **deps:** update algoliasearch-client-javascript monorepo to v4.22.0 ([#1294](https://github.com/mx-space/core/issues/1294)) ([e4fbeae](https://github.com/mx-space/core/commit/e4fbeae2bfad0174402c517274ede13ee33aaf18))
+* **deps:** update babel monorepo to v7.23.6 ([68e603b](https://github.com/mx-space/core/commit/68e603b4e90d0725aa5aee1b033cae473297ac1f))
+* **deps:** update dependency @algolia/client-search to v4.22.0 ([#1304](https://github.com/mx-space/core/issues/1304)) ([58c7f02](https://github.com/mx-space/core/commit/58c7f02cafa4bf513b2d075bfb619f1926a50930))
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.2 ([62b7fef](https://github.com/mx-space/core/commit/62b7fef9f26d01c9cdaecffab87fe555413daafd))
+* **deps:** update dependency algoliasearch to v4.21.1 ([3b7b98b](https://github.com/mx-space/core/commit/3b7b98bf19188fe8ae3ac6b42a524889bf5590e8))
+* **deps:** update dependency linkedom to v0.16.5 ([97a9435](https://github.com/mx-space/core/commit/97a9435a1d014a0092bdc36f9602483649835738))
+* **deps:** update dependency reflect-metadata to v0.2.1 ([#1300](https://github.com/mx-space/core/issues/1300)) ([cc20933](https://github.com/mx-space/core/commit/cc2093300de4ce23d3409d68b1b34785bbbe8153))
+* **deps:** update nest monorepo to v10.3.0 (minor) ([#1307](https://github.com/mx-space/core/issues/1307)) ([3cbb081](https://github.com/mx-space/core/commit/3cbb081e000708602334d21369a20bf827232123))
+* some `env` move to runtime inject ([a3510d2](https://github.com/mx-space/core/commit/a3510d252626048c0c3cd271ca366e5b689833e5))
+* test ci ([25bb57e](https://github.com/mx-space/core/commit/25bb57e9d740bd9a72b61a3a6e221a5011177e7e))
+
+
+### Features
+
+* request context ([c643094](https://github.com/mx-space/core/commit/c64309446e83df911e65da796cecca22f8d2c6c8))
+
+
+
 ## [4.8.4](https://github.com/mx-space/core/compare/v4.8.3...v4.8.4) (2023-12-12)
 
 
