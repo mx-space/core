@@ -163,7 +163,6 @@ class TaskQueuePool<T> {
   private async batchInsert() {
     if (this.pool.length === 0) return
 
-    console.log('batch all', this.pool)
     await this.collection.insertMany(this.pool)
     await this.onBatch(this.pool.length)
     // 清空任务池，准备下一次批量插入

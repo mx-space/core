@@ -10,7 +10,7 @@ export abstract class BaseGateway {
   ) {
     return {
       type,
-      data: message,
+      data: JSON.parse(JSON.stringify(message)),
       code,
     }
   }
