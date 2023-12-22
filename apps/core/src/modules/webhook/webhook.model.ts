@@ -1,4 +1,4 @@
-import { IsEnum, IsString, IsUrl } from 'class-validator'
+import { IsBoolean, IsEnum, IsString, IsUrl } from 'class-validator'
 
 import { PartialType } from '@nestjs/mapped-types'
 import { modelOptions, prop } from '@typegoose/typegoose'
@@ -27,6 +27,7 @@ export class WebhookModel {
   events: string[]
 
   @prop({ required: true })
+  @IsBoolean()
   enabled: boolean
 
   id: string

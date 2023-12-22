@@ -8,7 +8,7 @@ import { MongoIdDto } from '~/shared/dto/id.dto'
 import { WebhookDtoPartial, WebhookModel } from './webhook.model'
 import { WebhookService } from './webhook.service'
 
-@ApiController('/webhook')
+@ApiController('/webhooks')
 @Auth()
 export class WebhookController {
   constructor(private readonly service: WebhookService) {}
