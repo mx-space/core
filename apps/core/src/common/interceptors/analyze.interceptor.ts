@@ -30,6 +30,7 @@ import { getRedisKey } from '~/utils/redis.util'
 @Injectable()
 export class AnalyzeInterceptor implements NestInterceptor {
   private parser: UAParser
+  private queue: TaskQueuePool<any>
 
   constructor(
     @InjectModel(AnalyzeModel)
@@ -39,6 +40,17 @@ export class AnalyzeInterceptor implements NestInterceptor {
     private readonly cacheService: CacheService,
   ) {
     this.init()
+    this.queue = new TaskQueuePool(1000, this.model, async (count) => {
+      await this.options.updateOne(
+        { name: 'apiCallTime' },
+        {
+          $inc: {
+            value: count,
+          },
+        },
+        { upsert: true },
+      )
+    })
   }
 
   async init() {
@@ -88,29 +100,12 @@ export class AnalyzeInterceptor implements NestInterceptor {
 
         const ua = this.parser.getResult()
 
-        await this.model.create({
+        this.queue.push({
           ip,
           ua,
           path: new URL(`http://a.com${url}`).pathname,
         })
-        const apiCallTimeRecord = await this.options.findOne({
-          name: 'apiCallTime',
-        })
-        if (!apiCallTimeRecord) {
-          await this.options.create({
-            name: 'apiCallTime',
-            value: 1,
-          })
-        } else {
-          await this.options.updateOne(
-            { name: 'apiCallTime' },
-            {
-              $inc: {
-                value: 1,
-              },
-            },
-          )
-        }
+
         // ip access in redis
         const client = this.cacheService.getClient()
 
@@ -138,5 +133,40 @@ export class AnalyzeInterceptor implements NestInterceptor {
     })
 
     return call$
+  }
+}
+
+class TaskQueuePool<T> {
+  private pool: T[] = []
+  private interval: number
+  private timer: NodeJS.Timer | null = null
+
+  constructor(
+    interval: number = 1000,
+    private readonly collection: any,
+    private onBatch: (count: number) => any,
+  ) {
+    this.interval = interval
+  }
+
+  push(model: T) {
+    this.pool.push(model)
+
+    if (!this.timer) {
+      this.timer = setTimeout(() => {
+        this.batchInsert()
+        this.timer = null
+      }, this.interval)
+    }
+  }
+
+  private async batchInsert() {
+    if (this.pool.length === 0) return
+
+    console.log('batch all', this.pool)
+    await this.collection.insertMany(this.pool)
+    await this.onBatch(this.pool.length)
+    // 清空任务池，准备下一次批量插入
+    this.pool = []
   }
 }

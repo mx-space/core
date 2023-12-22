@@ -8,23 +8,34 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  Logger,
 } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
+import { CronExpression } from '@nestjs/schedule'
 
+import { CronDescription } from '~/common/decorators/cron-description.decorator'
+import { CronOnce } from '~/common/decorators/cron-once.decorator'
+import { EventBusEvents } from '~/constants/event-bus.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
 import { ConfigsService } from '../configs/configs.service'
 import { NoteService } from '../note/note.service'
+import { PageService } from '../page/page.service'
 import { PostService } from '../post/post.service'
 
 @Injectable()
 export class SearchService {
+  private readonly logger = new Logger(SearchService.name)
   constructor(
     @Inject(forwardRef(() => NoteService))
     private readonly noteService: NoteService,
 
     @Inject(forwardRef(() => PostService))
     private readonly postService: PostService,
+
+    @Inject(forwardRef(() => PageService))
+    private readonly pageService: PageService,
 
     private readonly configs: ConfigsService,
     private readonly databaseService: DatabaseService,
@@ -170,6 +181,98 @@ export class SearchService {
         size: search.hitsPerPage,
         totalPage: search.nbPages,
       },
+    }
+  }
+
+  /**
+   * @description 每天凌晨推送一遍 Algolia Search
+   */
+  @CronOnce(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
+    name: 'pushToAlgoliaSearch',
+  })
+  @CronDescription('推送到 Algolia Search')
+  @OnEvent(EventBusEvents.PushSearch)
+  async pushToAlgoliaSearch() {
+    const configs = await this.configs.waitForConfigReady()
+    if (!configs.algoliaSearchOptions.enable || isDev) {
+      return
+    }
+    const index = await this.getAlgoliaSearchIndex()
+
+    this.logger.log('--> 开始推送到 Algolia')
+    const documents: Record<'title' | 'text' | 'type' | 'id', string>[] = []
+    const combineDocuments = await Promise.all([
+      this.postService.model
+        .find({ hide: false }, 'title text')
+        .lean()
+        .then((list) => {
+          return list.map((data) => {
+            Reflect.set(data, 'objectID', data._id)
+            Reflect.deleteProperty(data, '_id')
+            return {
+              ...data,
+              type: 'post',
+            }
+          })
+        }),
+      this.pageService.model
+        .find({}, 'title text')
+        .lean()
+        .then((list) => {
+          return list.map((data) => {
+            Reflect.set(data, 'objectID', data._id)
+            Reflect.deleteProperty(data, '_id')
+            return {
+              ...data,
+              type: 'page',
+            }
+          })
+        }),
+      this.noteService.model
+        .find(
+          {
+            hide: false,
+            $or: [
+              { password: undefined },
+              { password: null },
+              { password: { $exists: false } },
+            ],
+          },
+          'title text nid',
+        )
+        .lean()
+        .then((list) => {
+          return list.map((data) => {
+            const id = data.nid.toString()
+            Reflect.set(data, 'objectID', data._id)
+            Reflect.deleteProperty(data, '_id')
+            Reflect.deleteProperty(data, 'nid')
+            return {
+              ...data,
+              type: 'note',
+              id,
+            }
+          })
+        }),
+    ])
+    combineDocuments.forEach((documents_: any) => {
+      documents.push(...documents_)
+    })
+    try {
+      await Promise.all([
+        index.clearObjects(),
+        index.saveObjects(documents, {
+          autoGenerateObjectIDIfNotExist: false,
+        }),
+        index.setSettings({
+          attributesToHighlight: ['text', 'title'],
+        }),
+      ])
+
+      this.logger.log('--> 推送到 algoliasearch 成功')
+    } catch (err) {
+      Logger.error('algolia 推送错误', 'AlgoliaSearch')
+      throw err
     }
   }
 }

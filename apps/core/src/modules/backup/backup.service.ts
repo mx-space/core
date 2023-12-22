@@ -9,14 +9,18 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common'
+import { CronExpression } from '@nestjs/schedule'
 
-import { MONGO_DB } from '~/app.config'
+import { DEMO_MODE, MONGO_DB } from '~/app.config'
+import { CronDescription } from '~/common/decorators/cron-description.decorator'
+import { CronOnce } from '~/common/decorators/cron-once.decorator'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { migrateDatabase } from '~/migration/migrate'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
-import { getMediumDateTime } from '~/utils'
+import { getMediumDateTime, scheduleManager } from '~/utils'
+import { uploadFileToCOS } from '~/utils/cos.util'
 import { getFolderSize, installPKG } from '~/utils/system.util'
 
 import { ConfigsService } from '../configs/configs.service'
@@ -247,5 +251,51 @@ export class BackupService {
 
     await rm(path, { recursive: true })
     return true
+  }
+
+  @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'backupDB' })
+  @CronDescription('备份 DB 并上传 COS')
+  async backupDB() {
+    if (DEMO_MODE) {
+      return
+    }
+    const backup = await this.backup()
+    if (!backup) {
+      this.logger.log('没有开启备份')
+      return
+    }
+    //  开始上传 COS
+    scheduleManager.schedule(async () => {
+      const { backupOptions } = await this.configs.waitForConfigReady()
+
+      if (
+        !backupOptions.bucket ||
+        !backupOptions.region ||
+        !backupOptions.secretId ||
+        !backupOptions.secretKey
+      ) {
+        return
+      }
+
+      this.logger.log('--> 开始上传到 COS')
+
+      await uploadFileToCOS(
+        backup.buffer,
+        backup.path.slice(backup.path.lastIndexOf('/') + 1),
+        {
+          bucket: backupOptions.bucket,
+          region: backupOptions.region,
+          secretId: backupOptions.secretId,
+          secretKey: backupOptions.secretKey,
+        },
+      )
+        .then(() => {
+          this.logger.log('--> 上传成功')
+        })
+        .catch((err) => {
+          this.logger.error('--> 上传失败了')
+          throw err
+        })
+    })
   }
 }

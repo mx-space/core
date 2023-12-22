@@ -6,11 +6,9 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { ThrottlerModule } from '@nestjs/throttler'
 
 import { AggregateModule } from '~/modules/aggregate/aggregate.module'
-import { BackupModule } from '~/modules/backup/backup.module'
 import { NoteModule } from '~/modules/note/note.module'
 import { PageModule } from '~/modules/page/page.module'
 import { PostModule } from '~/modules/post/post.module'
-import { SearchModule } from '~/modules/search/search.module'
 
 import { AssetService } from './helper.asset.service'
 import { BarkPushService } from './helper.bark.service'
@@ -71,8 +69,6 @@ const providers: Provider<any>[] = [
     forwardRef(() => PostModule),
     forwardRef(() => NoteModule),
     forwardRef(() => PageModule),
-    forwardRef(() => SearchModule),
-    forwardRef(() => BackupModule),
   ],
   providers,
   exports: providers,

@@ -1,5 +1,5 @@
 import { isAsyncFunction } from 'util/types'
-import { Redis } from 'ioredis'
+import type { Redis } from 'ioredis'
 
 import { Injectable } from '@nestjs/common'
 
