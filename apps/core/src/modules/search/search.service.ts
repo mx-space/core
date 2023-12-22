@@ -203,8 +203,11 @@ export class SearchService {
     const documents: Record<'title' | 'text' | 'type' | 'id', string>[] = []
     const combineDocuments = await Promise.all([
       this.postService.model
-        .find({ hide: false }, 'title text')
+        .find({ hide: false })
+        .select('title text categoryId category')
+        .populate('category', 'name slug')
         .lean()
+
         .then((list) => {
           return list.map((data) => {
             Reflect.set(data, 'objectID', data._id)
@@ -259,8 +262,8 @@ export class SearchService {
       documents.push(...documents_)
     })
     try {
+      await index.clearObjects()
       await Promise.all([
-        index.clearObjects(),
         index.saveObjects(documents, {
           autoGenerateObjectIDIfNotExist: false,
         }),
