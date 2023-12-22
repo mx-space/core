@@ -12,6 +12,7 @@ import { getRedisKey } from '~/utils'
 import { version } from '../../../package.json'
 import { CacheService } from '../redis/cache.service'
 
+const DEFAULT_UA = `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 MX-Space/${version}`
 declare module 'axios' {
   interface AxiosRequestConfig {
     __requestStartedAt?: number
@@ -33,7 +34,7 @@ export class HttpService {
       axios.create({
         ...AXIOS_CONFIG,
         headers: {
-          'user-agent': `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 MX-Space/${version}`,
+          'user-agent': DEFAULT_UA,
         },
       }),
     )
@@ -49,7 +50,7 @@ export class HttpService {
   private axiosDefaultConfig: AxiosRequestConfig<any> = {
     ...AXIOS_CONFIG,
     headers: {
-      'user-agent': `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 MX-Space/${version}`,
+      'user-agent': DEFAULT_UA,
     },
     'axios-retry': {
       retries: 3,

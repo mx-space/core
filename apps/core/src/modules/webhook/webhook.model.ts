@@ -1,4 +1,9 @@
+import { IsEnum, IsString, IsUrl } from 'class-validator'
+
+import { PartialType } from '@nestjs/mapped-types'
 import { modelOptions, prop } from '@typegoose/typegoose'
+
+import { BusinessEvents } from '~/constants/business-event.constant'
 
 @modelOptions({
   schemaOptions: {
@@ -12,9 +17,13 @@ import { modelOptions, prop } from '@typegoose/typegoose'
 })
 export class WebhookModel {
   @prop({ required: true })
+  @IsUrl({
+    require_protocol: true,
+  })
   payloadUrl: string
 
-  @prop({ required: true })
+  @prop({ required: true, type: String })
+  @IsEnum(BusinessEvents, { each: true })
   events: string[]
 
   @prop({ required: true })
@@ -23,5 +32,8 @@ export class WebhookModel {
   id: string
 
   @prop({ required: true, select: false })
+  @IsString()
   secret: string
 }
+
+export class WebhookDtoPartial extends PartialType(WebhookModel) {}

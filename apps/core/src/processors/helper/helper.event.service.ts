@@ -40,8 +40,6 @@ export class EventManagerService {
     this.logger = new Logger(EventManagerService.name)
 
     this.listenSystemEvents()
-
-    this.logger.debug('EventManagerService is ready')
   }
 
   private mapScopeToInstance: Record<
@@ -59,10 +57,14 @@ export class EventManagerService {
       this.emitter2,
       this.systemGateway,
     ],
-    [EventScope.TO_VISITOR]: [this.webGateway],
-    [EventScope.TO_ADMIN]: [this.adminGateway],
-    [EventScope.TO_SYSTEM]: [this.emitter2, this.systemGateway],
-    [EventScope.TO_VISITOR_ADMIN]: [this.webGateway, this.adminGateway],
+    [EventScope.TO_VISITOR]: [this.webGateway, this.emitter2],
+    [EventScope.TO_ADMIN]: [this.adminGateway, this.emitter2],
+    [EventScope.TO_SYSTEM]: [this.emitter2, this.systemGateway, this.emitter2],
+    [EventScope.TO_VISITOR_ADMIN]: [
+      this.webGateway,
+      this.adminGateway,
+      this.emitter2,
+    ],
     [EventScope.TO_SYSTEM_VISITOR]: [
       this.emitter2,
       this.webGateway,

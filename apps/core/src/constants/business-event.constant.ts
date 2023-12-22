@@ -53,7 +53,7 @@ export enum BusinessEvents {
   STDOUT = 'STDOUT',
 
   // activity
-  ACTIVITY_LIKE = 'activity_like',
+  ACTIVITY_LIKE = 'ACTIVITY_LIKE',
 }
 
 export enum EventScope {
