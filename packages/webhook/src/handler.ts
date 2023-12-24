@@ -38,7 +38,7 @@ export const createHandler = (options: CreateHandlerOptions): Handler => {
     if (isValid) {
       handler.emitter.emit(event as BusinessEvents, obj)
       handler.emitter.emit('*', {
-        event,
+        type: event,
         payload: obj,
       })
       res.statusCode = 200
