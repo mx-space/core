@@ -19,6 +19,12 @@ export type EventManagerOptions = {
   nextTick?: boolean
 }
 
+type EventHandler = {
+  event: string
+  payload: any
+  scope: EventScope
+}
+
 export type IEventManagerHandlerDisposer = () => void
 
 @Injectable()
@@ -59,12 +65,13 @@ export class EventManagerService {
     ],
     [EventScope.TO_VISITOR]: [this.webGateway, this.emitter2],
     [EventScope.TO_ADMIN]: [this.adminGateway, this.emitter2],
-    [EventScope.TO_SYSTEM]: [this.emitter2, this.systemGateway, this.emitter2],
+    [EventScope.TO_SYSTEM]: [this.emitter2, this.systemGateway],
     [EventScope.TO_VISITOR_ADMIN]: [
       this.webGateway,
       this.adminGateway,
       this.emitter2,
     ],
+
     [EventScope.TO_SYSTEM_VISITOR]: [
       this.emitter2,
       this.webGateway,
@@ -111,6 +118,7 @@ export class EventManagerService {
           return instance.emit(this.#key, {
             event,
             payload,
+            scope,
           })
         } else if (instance instanceof BroadcastBaseGateway) {
           return instance.broadcast(event as any, data)
@@ -153,13 +161,13 @@ export class EventManagerService {
     }
   }
 
-  #handlers: ((type: string, data: any) => void)[] = []
+  #handlers: ((type: string, data: any, scope: EventScope) => void)[] = []
 
   registerHandler(
-    handler: (type: EventBusEvents, data: any) => void,
+    handler: (type: EventBusEvents, data: any, scope: EventScope) => void,
   ): IEventManagerHandlerDisposer
   registerHandler(
-    handler: (type: BusinessEvents, data: any) => void,
+    handler: (type: BusinessEvents, data: any, scope: EventScope) => void,
   ): IEventManagerHandlerDisposer
   registerHandler(handler: Function) {
     this.#handlers.push(handler as any)
@@ -171,11 +179,13 @@ export class EventManagerService {
 
   private listenSystemEvents() {
     this.emitter2.on(this.#key, (data) => {
-      const { event, payload } = data
-      console.debug(`Received event: [${event}]`, payload)
+      const { event, payload, scope } = data
+      console.debug(`[${scope}]: Received event: [${event}]`, payload)
+
       // emit current event directly
       this.emitter2.emit(event, payload)
-      this.#handlers.forEach((handler) => handler(event, payload))
+
+      this.#handlers.forEach((handler) => handler(event, payload, scope))
     })
   }
 

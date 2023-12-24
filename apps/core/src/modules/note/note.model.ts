@@ -40,9 +40,8 @@ import { NoteMusic } from './models/music.model'
 export class NoteModel extends WriteBaseModel {
   @prop()
   @IsString()
-  @IsOptional()
   @Transform(({ value: title }) => (title.length === 0 ? '无题' : title))
-  title: string
+  declare title: string
   @prop({ required: false, unique: true })
   public nid: number
 

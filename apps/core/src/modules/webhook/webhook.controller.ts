@@ -1,9 +1,11 @@
-import { Body, Delete, Get, Param, Patch, Post } from '@nestjs/common'
+import { Body, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
+import { PagerDto } from '~/shared/dto/pager.dto'
 
 import { WebhookDtoPartial, WebhookModel } from './webhook.model'
 import { WebhookService } from './webhook.service'
@@ -15,6 +17,8 @@ export class WebhookController {
 
   @Post('/')
   create(@Body() body: WebhookModel) {
+    body.events = this.service.transformEvents(body.events)
+
     return this.service.createWebhook(body)
   }
 
@@ -28,6 +32,8 @@ export class WebhookController {
 
   @Patch('/:id')
   async update(@Body() body: WebhookDtoPartial, @Param() { id }: MongoIdDto) {
+    if (body.events) body.events = this.service.transformEvents(body.events)
+
     return this.service.updateWebhook(id, body)
   }
 
@@ -36,8 +42,23 @@ export class WebhookController {
     return this.service.deleteWebhook(id)
   }
 
+  @Get('/:id')
+  @HTTPDecorators.Paginator
+  async getEventsByHookId(
+    @Param() { id }: MongoIdDto,
+
+    @Query() query: PagerDto,
+  ) {
+    return this.service.getEventsByHookId(id, query)
+  }
+
   @Get('/events')
   async getEventsEnum() {
     return Object.values(BusinessEvents)
+  }
+
+  @Post('/redispatch/:id')
+  async redispatch(@Param() { id }: MongoIdDto) {
+    return this.service.redispatch(id)
   }
 }

@@ -1,9 +1,10 @@
 import { IsBoolean, IsEnum, IsString, IsUrl } from 'class-validator'
 
 import { PartialType } from '@nestjs/mapped-types'
-import { modelOptions, prop } from '@typegoose/typegoose'
+import { modelOptions, plugin, prop } from '@typegoose/typegoose'
 
-import { BusinessEvents } from '~/constants/business-event.constant'
+import { EventScope } from '~/constants/business-event.constant'
+import { mongooseLeanId } from '~/shared/model/plugins/lean-id'
 
 @modelOptions({
   schemaOptions: {
@@ -15,6 +16,7 @@ import { BusinessEvents } from '~/constants/business-event.constant'
     customName: 'webhooks',
   },
 })
+@plugin(mongooseLeanId)
 export class WebhookModel {
   @prop({ required: true })
   @IsUrl({
@@ -23,7 +25,7 @@ export class WebhookModel {
   payloadUrl: string
 
   @prop({ required: true, type: String })
-  @IsEnum(BusinessEvents, { each: true })
+  @IsString({ each: true })
   events: string[]
 
   @prop({ required: true })
@@ -35,6 +37,10 @@ export class WebhookModel {
   @prop({ required: true, select: false })
   @IsString()
   secret: string
+
+  @prop({ enum: EventScope })
+  @IsEnum(EventScope)
+  scope: EventScope
 }
 
 export class WebhookDtoPartial extends PartialType(WebhookModel) {}

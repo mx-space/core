@@ -1,11 +1,12 @@
 import { createHmac } from 'crypto'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
+import type { PagerDto } from '~/shared/dto/pager.dto'
 
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
-import { BusinessEvents } from '~/constants/business-event.constant'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -21,9 +22,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     @InjectModel(WebhookModel)
     private readonly webhookModel: ReturnModelType<typeof WebhookModel>,
     @InjectModel(WebhookEventModel)
-    private readonly webhookEventModel: ReturnModelType<
-      typeof WebhookEventModel
-    >,
+    private readonly webhookEventModel: MongooseModel<WebhookEventModel>,
     private readonly httpService: HttpService,
     private readonly eventService: EventManagerService,
   ) {}
@@ -35,17 +34,31 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     this.eventListenerDisposer = this.eventService.registerHandler(
-      (type: BusinessEvents, data) => {
+      (type: BusinessEvents, data, scope) => {
         if (!ACCEPT_EVENTS.has(type)) {
           return
         }
-        this.sendWebhook(type, data)
+        this.sendWebhook(type, data, scope)
       },
     )
   }
 
   createWebhook(model: WebhookModel) {
     return this.webhookModel.create(model)
+  }
+
+  transformEvents(events: string[]) {
+    let nextEvents = [] as string[]
+    for (const event of events) {
+      if (event === 'all') {
+        nextEvents = ['all']
+        break
+      }
+      if (ACCEPT_EVENTS.has(event as any)) {
+        nextEvents.push(event)
+      }
+    }
+    return nextEvents
   }
 
   async deleteWebhook(id: string) {
@@ -70,20 +83,25 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     return this.webhookModel.find().lean()
   }
 
-  async sendWebhook(event: string, payload: any) {
+  async sendWebhook(event: string, payload: any, scope: EventScope) {
     const stringifyPayload = JSON.stringify(payload)
     const clonedPayload = JSON.parse(stringifyPayload)
     const enabledWebHooks = await this.webhookModel
       .find({
         events: {
-          $in: [event],
+          $in: [event, 'all'],
         },
         enabled: true,
       })
+      .select('+secret')
       .lean()
 
+    const scopedWebhooks = enabledWebHooks.filter((webhook) => {
+      return (webhook.scope || EventScope.ALL & scope) === scope
+    })
+
     await Promise.all(
-      enabledWebHooks.map(async (webhook) => {
+      scopedWebhooks.map(async (webhook) => {
         const headers = {
           'X-Webhook-Signature': generateSha1Signature(
             webhook.secret,
@@ -133,6 +151,38 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
             webhookEvent.save()
           })
       }),
+    )
+  }
+
+  async redispatch(id: string) {
+    const record = await this.webhookEventModel.findById(id)
+    if (!record) {
+      throw new BadRequestException('Webhook event not found')
+    }
+    const hook = await this.webhookModel.findById(record.hookId)
+    if (!hook) {
+      throw new BadRequestException('Webhook not found')
+    }
+    const scope = hook.scope
+
+    await this.sendWebhook(record.event, JSON.parse(record.payload), scope)
+  }
+
+  async getEventsByHookId(hookId: string, query: PagerDto) {
+    const { page, size } = query
+    const skip = (page - 1) * size
+
+    return await this.webhookEventModel.paginate(
+      {
+        hookId,
+      },
+      {
+        limit: size,
+        skip,
+        sort: {
+          timestamp: -1,
+        },
+      },
     )
   }
 }

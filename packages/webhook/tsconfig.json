@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "baseUrl": ".",
+    "target": "ES2020",
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
+    "paths": {
+      "~/*": [
+        "../../apps/core/src/*"
+      ],
+      "@core/*": [
+        "../../apps/core/src/*"
+      ],
+    }
+  },
+}
