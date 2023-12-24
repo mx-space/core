@@ -11,11 +11,7 @@ interface CreateHandlerOptions {
 }
 
 type Handler = {
-  (
-    req: IncomingMessage,
-    res: ServerResponse,
-    callback: (err: Error) => void,
-  ): void
+  (req: IncomingMessage, res: ServerResponse): void
 } & {
   emitter: ExtendedEventEmitter
 }
@@ -41,6 +37,10 @@ export const createHandler = (options: CreateHandlerOptions): Handler => {
 
     if (isValid) {
       handler.emitter.emit(event as BusinessEvents, obj)
+      handler.emitter.emit('*', {
+        event,
+        payload: obj,
+      })
       res.statusCode = 200
       res.end()
     } else {

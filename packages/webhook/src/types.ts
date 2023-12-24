@@ -43,7 +43,10 @@ export interface EventPayloadMapping {
   [BusinessEvents.COMMENT_CREATE]: Omit<CommentModel, 'ref'> & {
     ref: Id | PostModel | PageModel | NoteModel | RecentlyModel
   }
+
+  '*': GenericEvent
 }
+
 export interface IActivityLike {
   id: string
   type: 'Note' | 'Post'
@@ -53,3 +56,24 @@ export interface IActivityLike {
     title: string
   }
 }
+
+export type GenericEvent =
+  | { type: BusinessEvents.POST_CREATE; payload: NormalizedPost }
+  | { type: BusinessEvents.POST_UPDATE; payload: NormalizedPost }
+  | { type: BusinessEvents.POST_DELETE; payload: PayloadOnlyId }
+  | { type: BusinessEvents.NOTE_CREATE; payload: NormalizedNote }
+  | { type: BusinessEvents.NOTE_UPDATE; payload: NormalizedNote }
+  | { type: BusinessEvents.NOTE_DELETE; payload: PayloadOnlyId }
+  | { type: BusinessEvents.PAGE_CREATE; payload: PageModel }
+  | { type: BusinessEvents.PAGE_UPDATE; payload: PageModel }
+  | { type: BusinessEvents.PAGE_DELETE; payload: PayloadOnlyId }
+  | { type: BusinessEvents.SAY_CREATE; payload: SayModel }
+  | { type: BusinessEvents.RECENTLY_CREATE; payload: RecentlyModel }
+  | { type: BusinessEvents.ACTIVITY_LIKE; payload: IActivityLike }
+  | { type: BusinessEvents.LINK_APPLY; payload: LinkModel }
+  | {
+      type: BusinessEvents.COMMENT_CREATE
+      payload: Omit<CommentModel, 'ref'> & {
+        ref: Id | PostModel | PageModel | NoteModel | RecentlyModel
+      }
+    }
