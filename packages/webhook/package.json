@@ -14,7 +14,7 @@
     "before": [
       "git pull --rebase",
       "pnpm i",
-      "npm run package"
+      "npm run build"
     ],
     "after": [
       "npm publish --access=public"
