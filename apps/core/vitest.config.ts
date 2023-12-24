@@ -39,6 +39,10 @@ export default defineConfig({
         __dirname,
         './test/mock/decorators/auth.decorator.ts',
       ),
+      '@mx-space/external': resolve(
+        __dirname,
+        '../../packages/external/index.ts',
+      ),
     },
   },
 

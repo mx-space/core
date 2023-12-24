@@ -4,7 +4,7 @@
     "outDir": "./esm",
     "baseUrl": ".",
     "jsx": "react",
-    "target": "ES2020",
+    "target": "es2020",
     "lib": [
       "ESNext",
       "DOM",

@@ -3,7 +3,7 @@ on:
     tags:
       - 'v*'
 
-name: Release
+name: Release (core)
 
 jobs:
   build:
@@ -52,7 +52,6 @@ jobs:
           npm run test
 
       - name: Build project
-        working-directory: ./apps/core
         run: |
           pnpm run bundle
       - name: Test Bundle Server
