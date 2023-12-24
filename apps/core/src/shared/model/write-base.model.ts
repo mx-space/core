@@ -36,7 +36,7 @@ export class WriteBaseModel extends BaseCommentIndexModel {
   @IsDate()
   @Transform(({ value }) => (value ? new Date(value) : void 0))
   @prop()
-  created?: Date
+  declare created?: Date
 
   @prop(
     {

@@ -466,6 +466,12 @@ importers:
         specifier: 7.2.3
         version: 7.2.3
 
+  packages/webhook:
+    devDependencies:
+      express:
+        specifier: 4.18.2
+        version: 4.18.2
+
 packages:
 
   /@aashutoshrathi/word-wrap@1.2.6:

@@ -53,15 +53,15 @@ export enum BusinessEvents {
   STDOUT = 'STDOUT',
 
   // activity
-  ACTIVITY_LIKE = 'activity_like',
+  ACTIVITY_LIKE = 'ACTIVITY_LIKE',
 }
 
 export enum EventScope {
-  ALL,
-  TO_VISITOR,
-  TO_ADMIN,
-  TO_SYSTEM,
-  TO_VISITOR_ADMIN,
-  TO_SYSTEM_VISITOR,
-  TO_SYSTEM_ADMIN,
+  TO_VISITOR = 1 << 0,
+  TO_ADMIN = 1 << 1,
+  TO_SYSTEM = 1 << 2,
+  TO_VISITOR_ADMIN = (1 << 0) | (1 << 1),
+  TO_SYSTEM_VISITOR = (1 << 0) | (1 << 2),
+  TO_SYSTEM_ADMIN = (1 << 1) | (1 << 2),
+  ALL = (1 << 0) | (1 << 1) | (1 << 2),
 }

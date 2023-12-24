@@ -61,6 +61,7 @@ import { SyncModule } from './modules/sync/sync.module'
 import { TopicModule } from './modules/topic/topic.module'
 import { UpdateModule } from './modules/update/update.module'
 import { UserModule } from './modules/user/user.module'
+import { WebhookModule } from './modules/webhook/webhook.module'
 import { DatabaseModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
@@ -109,6 +110,7 @@ import { RedisModule } from './processors/redis/redis.module'
     TopicModule,
     UpdateModule,
     UserModule,
+    WebhookModule,
 
     PageProxyModule,
     RenderEjsModule,
