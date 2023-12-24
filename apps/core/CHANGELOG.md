@@ -1,5 +1,29 @@
 # CHANGELOG
 
+# [4.9.0](https://github.com/mx-space/core/compare/v4.8.6...v4.9.0) (2023-12-24)
+
+
+### Bug Fixes
+
+* add field for algolia search ([c613bf7](https://github.com/mx-space/core/commit/c613bf77f52521ae2820d7aa7c46aa37a1216e53))
+* ci ([d947eee](https://github.com/mx-space/core/commit/d947eeeb3d87ae71c9e4be24d71e0513ea20baca))
+* **deps:** update dependency @algolia/client-search to v4.22.0 ([#1308](https://github.com/mx-space/core/issues/1308)) ([4bf5f79](https://github.com/mx-space/core/commit/4bf5f795f89c81129536776f44808c47e5d19ac0))
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.3 ([84645c1](https://github.com/mx-space/core/commit/84645c1a984e763ece068b84b9e5fe55873cb9f6))
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.4 ([309184c](https://github.com/mx-space/core/commit/309184c5c6a4a19e82b072a5321a730fc93e1994))
+* **deps:** update dependency @nestjs/throttler to v5.1.1 ([76e5422](https://github.com/mx-space/core/commit/76e542270fe0b486a1759b5c3205b424893ca7e9))
+* **deps:** update dependency cache-manager to v5.3.2 ([6efb1ef](https://github.com/mx-space/core/commit/6efb1ef17eae0caa001cbf6e5d22215652e7f948))
+* emitter type ([08b58e5](https://github.com/mx-space/core/commit/08b58e549fc84eeec0f12f21d02bb279cefa5e13))
+* variant rename to `type` ([d255493](https://github.com/mx-space/core/commit/d255493f6985d2aec120c89de24d7c0ac18b9bc7))
+* webhook lib build script ([ee370bc](https://github.com/mx-space/core/commit/ee370bc3851870d8268bdc586c4780a37f718e13))
+
+
+### Features
+
+* support webhook ([#1298](https://github.com/mx-space/core/issues/1298)) ([c6d037d](https://github.com/mx-space/core/commit/c6d037db1d0aabb445672c518b6a82e6beb58956))
+* **webhook:** generic type for event emitter ([cfc3513](https://github.com/mx-space/core/commit/cfc3513b92bddef87b738d852ff0a76097ca9525))
+
+
+
 ## [4.8.6](https://github.com/mx-space/core/compare/v4.8.4...v4.8.6) (2023-12-18)
 
 
