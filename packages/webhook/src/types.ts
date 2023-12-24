@@ -17,6 +17,8 @@ export interface ExtendedEventEmitter extends EventEmitter {
       data: EventPayloadMapping[Extract<T, keyof EventPayloadMapping>],
     ) => void,
   ): this
+
+  on(event: '*', listener: (event: GenericEvent) => void): this
 }
 export type Id = string
 export type PayloadOnlyId = { data: Id }
@@ -43,8 +45,6 @@ export interface EventPayloadMapping {
   [BusinessEvents.COMMENT_CREATE]: Omit<CommentModel, 'ref'> & {
     ref: Id | PostModel | PageModel | NoteModel | RecentlyModel
   }
-
-  '*': GenericEvent
 }
 
 export interface IActivityLike {
