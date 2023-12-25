@@ -1,5 +1,5 @@
 const express = require('express')
-const { createHandler, BusinessEvents } = require('./dist/index')
+const { createHandler, BusinessEvents } = require('./dist/index.cjs')
 const app = express()
 
 app.use(express.json())

@@ -97,7 +97,10 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
       .lean()
 
     const scopedWebhooks = enabledWebHooks.filter((webhook) => {
-      return (webhook.scope || EventScope.ALL & scope) === scope
+      if (typeof webhook.scope === 'undefined') {
+        return true
+      }
+      return (EventScope.ALL & scope) === scope
     })
 
     await Promise.all(
