@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [4.9.1](https://github.com/mx-space/core/compare/v4.9.0...v4.9.1) (2023-12-25)
+
+
+### Bug Fixes
+
+* webhok scope filter ([6176065](https://github.com/mx-space/core/commit/6176065c60e20ac6b754e2a1c9098b09e8dbfeb5))
+* **webhook:** add health check ([2621304](https://github.com/mx-space/core/commit/2621304f433368ba279985109d7e5fd378969307))
+
+
+### Features
+
+* add health_check ([889b0b0](https://github.com/mx-space/core/commit/889b0b0b7db13483dfe35af87ecd4a1fde04e9a9))
+
+
+
 # [4.9.0](https://github.com/mx-space/core/compare/v4.8.6...v4.9.0) (2023-12-24)
 
 
