@@ -43,8 +43,9 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     )
   }
 
-  createWebhook(model: WebhookModel) {
-    return this.webhookModel.create(model)
+  async createWebhook(model: WebhookModel) {
+    const document = await this.webhookModel.create(model)
+    return await this.sendWebhookEvent('health_check', {}, document)
   }
 
   transformEvents(events: string[]) {
@@ -77,6 +78,12 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
       },
       model,
     )
+    const document = await this.webhookModel
+      .findById(id)
+      .lean()
+      .select('+secret')
+    if (document)
+      return await this.sendWebhookEvent('health_check', {}, document)
   }
 
   async getAllWebhooks() {
@@ -84,8 +91,6 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
   }
 
   async sendWebhook(event: string, payload: any, scope: EventScope) {
-    const stringifyPayload = JSON.stringify(payload)
-    const clonedPayload = JSON.parse(stringifyPayload)
     const enabledWebHooks = await this.webhookModel
       .find({
         events: {
@@ -104,57 +109,68 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     })
 
     await Promise.all(
-      scopedWebhooks.map(async (webhook) => {
-        const headers = {
-          'X-Webhook-Signature': generateSha1Signature(
-            webhook.secret,
-            stringifyPayload,
-          ),
-          'X-Webhook-Event': event,
-          'X-Webhook-Id': webhook.id,
-          'X-Webhook-Timestamp': Date.now().toString(),
-          'X-Webhook-Signature256': generateSha256Signature(
-            webhook.secret,
-            stringifyPayload,
-          ),
-        }
-        const webhookEvent = await this.webhookEventModel.create({
-          event,
-          headers,
-          success: false,
-          payload: stringifyPayload,
-          hookId: webhook.id,
-          response: null,
-        })
-        this.httpService.axiosRef
-          .post(webhook.payloadUrl, clonedPayload, {
-            headers,
-          })
-          .then(async (response) => {
-            webhookEvent.response = JSON.stringify({
-              headers: response.headers,
-              data: response.data,
-              timestamp: Date.now(),
-            })
-            webhookEvent.status = response.status
-            webhookEvent.success = true
-            await webhookEvent.save()
-          })
-          .catch((err) => {
-            if (!err.response) {
-              return
-            }
-            webhookEvent.response = JSON.stringify({
-              headers: err.response.headers,
-              data: err.response.data,
-              timestamp: Date.now(),
-            })
-            webhookEvent.status = err.response.status
-            webhookEvent.success = false
-            webhookEvent.save()
-          })
+      scopedWebhooks.map((webhook) => {
+        return this.sendWebhookEvent(event, payload, webhook)
       }),
     )
+  }
+
+  private async sendWebhookEvent(
+    event: string,
+    payload: object,
+    webhook: WebhookModel,
+  ) {
+    const stringifyPayload = JSON.stringify(payload)
+    const clonedPayload = JSON.parse(stringifyPayload)
+
+    const headers = {
+      'X-Webhook-Signature': generateSha1Signature(
+        webhook.secret,
+        stringifyPayload,
+      ),
+      'X-Webhook-Event': event,
+      'X-Webhook-Id': webhook.id,
+      'X-Webhook-Timestamp': Date.now().toString(),
+      'X-Webhook-Signature256': generateSha256Signature(
+        webhook.secret,
+        stringifyPayload,
+      ),
+    }
+    const webhookEvent = await this.webhookEventModel.create({
+      event,
+      headers,
+      success: false,
+      payload: stringifyPayload,
+      hookId: webhook.id,
+      response: null,
+    })
+    return this.httpService.axiosRef
+      .post(webhook.payloadUrl, clonedPayload, {
+        headers,
+      })
+      .then(async (response) => {
+        webhookEvent.response = JSON.stringify({
+          headers: response.headers,
+          data: response.data,
+          timestamp: Date.now(),
+        })
+        webhookEvent.status = response.status
+        webhookEvent.success = true
+        await webhookEvent.save()
+      })
+      .catch((err) => {
+        if (!err.response) {
+          return
+        }
+        webhookEvent.response = JSON.stringify({
+          headers: err.response.headers,
+          data: err.response.data,
+          timestamp: Date.now(),
+        })
+        webhookEvent.status = err.response.status
+        webhookEvent.success = false
+        webhookEvent.save()
+      })
   }
 
   async redispatch(id: string) {
