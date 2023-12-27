@@ -1,13 +1,9 @@
+import type { CollectionRefTypes } from '@core/constants/db.constant'
 import type { BaseModel } from './base'
 import type { CategoryModel } from './category'
 
-export enum RefType {
-  Page = 'Page',
-  Post = 'Post',
-  Note = 'Note',
-}
 export interface CommentModel extends BaseModel {
-  refType: RefType
+  refType: CollectionRefTypes
   ref: string
   state: number
   commentsIndex: number
