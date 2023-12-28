@@ -204,6 +204,12 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
       },
     )
   }
+
+  async clearDispatchEvents(hookId: string) {
+    return this.webhookEventModel.deleteMany({
+      hookId,
+    })
+  }
 }
 
 function generateSha1Signature(secret: string, payload: string): string {

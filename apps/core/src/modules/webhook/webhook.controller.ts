@@ -58,7 +58,13 @@ export class WebhookController {
   }
 
   @Post('/redispatch/:id')
+  @HTTPDecorators.Idempotence()
   async redispatch(@Param() { id }: MongoIdDto) {
     return this.service.redispatch(id)
+  }
+
+  @Delete('/clear/:id')
+  async clear(@Param() { id }: MongoIdDto) {
+    return this.service.clearDispatchEvents(id)
   }
 }
