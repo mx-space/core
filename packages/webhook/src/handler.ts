@@ -1,10 +1,9 @@
 import assert from 'assert'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { EventEmitter } from 'events'
-import type { GenericEvent } from 'dist'
 import type { IncomingMessage, ServerResponse } from 'http'
 import type { BusinessEvents } from './event.enum'
-import type { ExtendedEventEmitter } from './types'
+import type { ExtendedEventEmitter, GenericEvent } from './types'
 
 import { InvalidSignatureError } from './error'
 
