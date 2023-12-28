@@ -84,7 +84,7 @@ export const readDataFromRequest = async ({
 
   if (isValid) {
     return {
-      event,
+      event: event as BusinessEvents | 'health_check',
       payload: obj,
     }
   } else {
