@@ -21,16 +21,31 @@ function generateGenericEventType(fileName) {
         if (ts.isPropertySignature(member) && member.type) {
           const key = member.name
           let eventType = ''
+          let isLiteralType = false
           if (
             ts.isComputedPropertyName(key) &&
             ts.isPropertyAccessExpression(key.expression)
           ) {
             eventType = key.expression.name.text
+          } else if (ts.isStringLiteral(key)) {
+            // Handle string literal types like 'health-check'
+            eventType = key.text
+            isLiteralType = true
           }
 
-          if (eventType && eventType !== '*') {
+          // if (eventType && eventType !== '*') {
+          //   const payloadType = member.type.getText(sourceFile)
+          //   genericEventType += `  | { type: BusinessEvents.${eventType}; payload: ${payloadType} }\n`
+          // }
+          if (eventType) {
             const payloadType = member.type.getText(sourceFile)
-            genericEventType += `  | { type: BusinessEvents.${eventType}; payload: ${payloadType} }\n`
+            if (isLiteralType) {
+              // For string literals, use the literal value directly
+              genericEventType += `  | { type: '${eventType}'; payload: ${payloadType} }\n`
+            } else {
+              // For regular event types
+              genericEventType += `  | { type: BusinessEvents.${eventType}; payload: ${payloadType} }\n`
+            }
           }
         }
       })

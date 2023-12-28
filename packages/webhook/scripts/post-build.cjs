@@ -20,7 +20,7 @@ function replaceContent(filePath, searchValue, replaceValue) {
 }
 
 // File paths
-const files = ['dist/index.d.ts', 'dist/index.d.mts']
+const files = ['dist/index.d.ts', 'dist/index.d.cts']
 
 // The string to be replaced and its replacement
 const searchValue = "import { Ref } from '@typegoose/typegoose';"

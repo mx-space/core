@@ -1,6 +1,7 @@
 import assert from 'assert'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { EventEmitter } from 'events'
+import type { GenericEvent } from 'dist'
 import type { IncomingMessage, ServerResponse } from 'http'
 import type { BusinessEvents } from './event.enum'
 import type { ExtendedEventEmitter } from './types'
@@ -9,7 +10,7 @@ import { InvalidSignatureError } from './error'
 
 interface CreateHandlerOptions {
   secret: string
-  events?: 'all' | BusinessEvents[]
+  // events?: 'all' | BusinessEvents[]
 }
 export type RequestWithJSONBody = IncomingMessage & Request & { body: object }
 type Handler = {
@@ -25,14 +26,7 @@ export const createHandler = (options: CreateHandlerOptions): Handler => {
     try {
       const data = await readDataFromRequest({ req, secret })
 
-      const { event, payload } = data
-
-      if (event === 'health_check') {
-        res.statusCode = 200
-        res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify({ ok: 1 }))
-        return
-      }
+      const { type: event, payload } = data
 
       handler.emitter.emit(event as BusinessEvents, payload)
       handler.emitter.emit('*', {
@@ -84,9 +78,9 @@ export const readDataFromRequest = async ({
 
   if (isValid) {
     return {
-      event: event as BusinessEvents | 'health_check',
-      payload: obj,
-    }
+      type: event as BusinessEvents,
+      payload: obj as any,
+    } as GenericEvent
   } else {
     console.error('revice a invalidate webhook payload', req.headers)
     throw new InvalidSignatureError()

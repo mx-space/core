@@ -45,6 +45,7 @@ export interface EventPayloadMapping {
   [BusinessEvents.COMMENT_CREATE]: Omit<CommentModel, 'ref'> & {
     ref: Id | PostModel | PageModel | NoteModel | RecentlyModel
   }
+  'health-check': {}
 }
 
 export interface IActivityLike {
@@ -77,3 +78,4 @@ export type GenericEvent =
         ref: Id | PostModel | PageModel | NoteModel | RecentlyModel
       }
     }
+  | { type: 'health-check'; payload: {} }
