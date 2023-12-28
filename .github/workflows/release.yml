@@ -101,7 +101,7 @@ jobs:
           tag: ${{ env.TAG_NAME }}
           fileName: 'release-linux.zip'
       - name: copy file via ssh password
-        uses: appleboy/scp-action@v0.1.4
+        uses: appleboy/scp-action@v0.1.6
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
