@@ -42,6 +42,7 @@ export class CommentDto {
   isWhispers?: boolean
 
   @IsOptional()
+  @IsString()
   source?: string
 
   @IsOptional()
@@ -58,6 +59,10 @@ export class TextOnlyDto {
   @IsString()
   @IsNotEmpty()
   text: string
+
+  @IsOptional()
+  @IsString()
+  source?: string
 }
 
 export class CommentRefTypesDto {
