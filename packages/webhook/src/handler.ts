@@ -28,7 +28,7 @@ export const createHandler = (options: CreateHandlerOptions): Handler => {
 
       const { type: event, payload } = data
 
-      handler.emitter.emit(event as BusinessEvents, payload)
+      handler.emitter.emit(event as any, payload)
       handler.emitter.emit('*', {
         type: event,
         payload,
