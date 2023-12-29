@@ -104,7 +104,7 @@
     "mime-types": "^2.1.35",
     "mkdirp": "^3.0.1",
     "mongoose": "8.0.3",
-    "mongoose-aggregate-paginate-v2": "1.0.6",
+    "mongoose-aggregate-paginate-v2": "1.0.7",
     "mongoose-autopopulate": "1.1.0",
     "mongoose-lean-getters": "1.1.0",
     "mongoose-lean-virtuals": "0.9.1",

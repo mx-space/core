@@ -242,8 +242,8 @@ importers:
         specifier: 8.0.3
         version: 8.0.3
       mongoose-aggregate-paginate-v2:
-        specifier: 1.0.6
-        version: 1.0.6
+        specifier: 1.0.7
+        version: 1.0.7
       mongoose-autopopulate:
         specifier: 1.1.0
         version: 1.1.0(mongoose@8.0.3)
@@ -7226,8 +7226,8 @@ packages:
       bson: 6.2.0
       mongodb-connection-string-url: 2.6.0
 
-  /mongoose-aggregate-paginate-v2@1.0.6:
-    resolution: {integrity: sha512-UuALu+mjhQa1K9lMQvjLL3vm3iALvNw8PQNIh2gp1b+tO5hUa0NC0Wf6/8QrT9PSJVTihXaD8hQVy3J4e0jO0Q==}
+  /mongoose-aggregate-paginate-v2@1.0.7:
+    resolution: {integrity: sha512-Xij2wux3xs9yfXhV9d7M1P92WJsz39fyNJWyVAcSDhVO4HZnoM2zz03b2ZLCT13ha5TJL9uPM+jw1Sj2IqjHAQ==}
     engines: {node: '>=4.0.0'}
     dev: false
 
