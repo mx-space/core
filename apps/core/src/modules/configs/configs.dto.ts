@@ -286,7 +286,7 @@ export class BarkOptionsDto {
   @IsUrl()
   @IsOptional()
   @JSONSchemaPlainField('服务器 URL', {
-    description: '如果不填写，则使用默认的服务器，https://day.app/',
+    description: '如果不填写，则使用默认的服务器，https://day.app',
   })
   serverUrl: string
 
