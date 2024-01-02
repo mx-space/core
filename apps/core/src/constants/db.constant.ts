@@ -12,7 +12,7 @@ export const CATEGORY_COLLECTION_NAME = 'categories'
 export const COMMENT_COLLECTION_NAME = 'comments'
 export const RECENTLY_COLLECTION_NAME = 'recentlies'
 
-export const Analyze_COLLECTION_NAME = 'analyzes'
+export const ANALYZE_COLLECTION_NAME = 'analyzes'
 export const WEBHOOK_EVENT_COLLECTION_NAME = 'webhook_events'
 
 export enum CollectionRefTypes {

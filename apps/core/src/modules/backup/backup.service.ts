@@ -17,7 +17,8 @@ import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import {
-  Analyze_COLLECTION_NAME,
+  ANALYZE_COLLECTION_NAME,
+  MIGRATE_COLLECTION_NAME,
   WEBHOOK_EVENT_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
@@ -31,8 +32,9 @@ import { getFolderSize, installPKG } from '~/utils/system.util'
 import { ConfigsService } from '../configs/configs.service'
 
 const excludeCollections = [
-  Analyze_COLLECTION_NAME,
+  ANALYZE_COLLECTION_NAME,
   WEBHOOK_EVENT_COLLECTION_NAME,
+  MIGRATE_COLLECTION_NAME,
 ]
 @Injectable()
 export class BackupService {

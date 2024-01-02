@@ -9,8 +9,6 @@ import {
 import { defineMigration } from '../helper'
 
 export default defineMigration('v4.6.2__0', async (db, connection) => {
-  const session = await connection.startSession()
-  session.startTransaction()
   try {
     await Promise.all([
       db
@@ -68,12 +66,8 @@ export default defineMigration('v4.6.2__0', async (db, connection) => {
         },
       },
     ])
-    await session.commitTransaction()
-  } catch {
-    await session.abortTransaction()
-
+  } catch (err) {
     console.error('v4.6.2 migration failed')
-  } finally {
-    session.endSession()
+    throw err
   }
 })
