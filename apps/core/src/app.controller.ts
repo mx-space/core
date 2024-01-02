@@ -51,8 +51,6 @@ export class AppController {
       version: isDev ? 'dev' : `${DEMO_MODE ? 'demo/' : ''}${PKG.version}`,
       homepage: PKG.homepage,
       issues: PKG.issues,
-
-      uptime: await this.getUptime(),
     }
   }
 
