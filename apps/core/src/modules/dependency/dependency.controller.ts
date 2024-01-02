@@ -45,7 +45,7 @@ export class DependencyController {
         if (exitCode != 0) {
           subscriber.next(chalk.red(`Error: Exit code: ${exitCode}\n`))
         }
-        this.servierlessService.cleanRequireCache()
+
         subscriber.next(chalk.green('任务完成，可关闭此窗口。'))
         subscriber.complete()
       })

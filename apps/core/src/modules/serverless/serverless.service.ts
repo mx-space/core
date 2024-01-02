@@ -7,7 +7,6 @@ import { LRUCache } from 'lru-cache'
 import { mongo } from 'mongoose'
 import qs from 'qs'
 import type { OnModuleInit } from '@nestjs/common'
-import type { UniqueArray } from '~/types/unique'
 import type {
   BuiltInFunctionObject,
   FunctionContextRequest,
@@ -21,7 +20,6 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common'
-import { Interval } from '@nestjs/schedule'
 
 import { BizException } from '~/common/exceptions/biz.exception'
 import { EventScope } from '~/constants/business-event.constant'
@@ -38,17 +36,10 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import {
-  deepCloneWithFunction,
-  getRedisKey,
-  safePathJoin,
-  scheduleManager,
-} from '~/utils'
+import { getRedisKey, safePathJoin, scheduleManager } from '~/utils'
 import { EncryptUtil } from '~/utils/encrypt.util'
 import { safeEval } from '~/utils/safe-eval.util'
-import { isBuiltinModule } from '~/utils/system.util'
 
-import PKG from '../../../package.json'
 import { ConfigsService } from '../configs/configs.service'
 import { SnippetModel, SnippetType } from '../snippet/snippet.model'
 import { allBuiltInSnippetPack as builtInSnippets } from './pack'
@@ -56,13 +47,8 @@ import { ServerlessStorageCollectionName } from './serverless.model'
 import { complieTypeScriptBabelOptions, hashStable } from './serverless.util'
 
 class CleanableScope {
-  public requireModuleIdSet = new Set<string>()
   public scopeContextLRU = new LRUCache<string, any>({
     max: 100,
-    ttl: 1000 * 60 * 5,
-  })
-  public scopeModuleLRU = new LRUCache<string, any>({
-    max: 20,
     ttl: 1000 * 60 * 5,
   })
 }
@@ -364,76 +350,14 @@ export class ServerlessService implements OnModuleInit {
     if (!res) {
       throw new InternalServerErrorException('convert code error')
     }
-    // !isTest && console.debug(res.code)
 
     return res.code
   }
 
-  @Interval(5 * 60 * 1000)
-  public cleanRequireCache() {
-    const { requireModuleIdSet, scopeContextLRU, scopeModuleLRU } =
-      this.cleanableScope
-    Array.from(requireModuleIdSet.values()).forEach((id) => {
-      delete this.require.cache[id]
-    })
-
-    requireModuleIdSet.clear()
-    scopeContextLRU.clear()
-    scopeModuleLRU.clear()
-  }
-
-  private resolvePath(id: string) {
-    try {
-      return this.require.resolve(id)
-    } catch {
-      try {
-        const modulePath = path.resolve(NODE_REQUIRE_PATH, id)
-        const resolvePath = this.require.resolve(modulePath)
-
-        return resolvePath
-      } catch (err) {
-        delete this.require.cache[id]
-
-        isDev && console.error(err)
-
-        throw new InternalServerErrorException(`module "${id}" not found.`)
-      }
-    }
-  }
-
-  private require = isTest
-    ? createRequire(resolve(process.cwd(), './node_modules'))
-    : createRequire(NODE_REQUIRE_PATH)
-
-  private createNewContextRequire(scope: string) {
-    const __require = (id: string) => {
-      const cacheKey = `${scope}_${id}`
-      if (this.cleanableScope.scopeModuleLRU.has(cacheKey)) {
-        return this.cleanableScope.scopeModuleLRU.get(cacheKey)
-      }
-
-      const isBuiltin = isBuiltinModule(id)
-
-      const resolvePath = this.resolvePath(id)
-      const module = this.require(resolvePath)
-      // TODO remove cache in-used package dependencies, because it will not exist in prod
-      // eslint-disable-next-line no-empty
-      if (Object.keys(PKG.dependencies).includes(id) || isBuiltin) {
-      } else {
-        this.cleanableScope.requireModuleIdSet.add(resolvePath)
-      }
-      const clonedModule = deepCloneWithFunction(module)
-      this.cleanableScope.scopeModuleLRU.set(cacheKey, clonedModule)
-
-      return clonedModule
-    }
-
-    const __requireNoCache = (id: string) => {
-      delete this.require.cache[this.resolvePath(id)]
-      const clonedModule = __require(id)
-
-      return clonedModule
-    }
+  private createNewContextRequire() {
+    const __require = isTest
+      ? createRequire(resolve(process.cwd(), './node_modules'))
+      : createRequire(NODE_REQUIRE_PATH)
 
     async function $require(
       this: ServerlessService,
@@ -470,41 +394,11 @@ export class ServerlessService implements OnModuleInit {
 
       // 2. if application third part lib
 
-      const allowedThirdPartLibs: string[] = [
-        '@babel/core',
-        '@babel/types',
-        '@babel/plugin-transform-typescript',
-        'class-validator-jsonschema',
-        '@nestjs/event-emitter',
-        'algoliasearch',
-        'axios-retry',
-        'axios',
-        'class-transformer',
-        'class-validator',
-        'dayjs',
-        'ejs',
-        'image-size',
-        'isbot',
-        'js-yaml',
-        'jszip',
-        'lodash',
-        'marked',
-        'qs',
-        'rxjs',
-        'snakecase-keys',
-        'ua-parser-js',
-        'xss',
-      ] as UniqueArray<(keyof typeof PKG.dependencies)[]>
-      // .concat([''] as any[])
+      // const trustPackagePrefixes = ['@innei/', '@mx-space/', 'mx-function-']
 
-      const trustPackagePrefixes = ['@innei/', '@mx-space/', 'mx-function-']
-
-      if (
-        allowedThirdPartLibs.includes(id as any) ||
-        trustPackagePrefixes.some((prefix) => id.startsWith(prefix))
-      ) {
-        return useCache ? __require(id) : __requireNoCache(id)
-      }
+      // if (trustPackagePrefixes.some((prefix) => id.startsWith(prefix))) {
+      //   return __require(id)
+      // }
 
       // 3. mock built-in module
 
@@ -520,7 +414,24 @@ export class ServerlessService implements OnModuleInit {
       // }
 
       // fin. is built-in module
-      const module = isBuiltinModule(id, [
+      // const module = isBuiltinModule(id, [
+      //   'child_process',
+      //   'cluster',
+      //   'fs',
+      //   'fs/promises',
+      //   'os',
+      //   'process',
+      //   'sys',
+      //   'v8',
+      //   'vm',
+      // ])
+      // if (!module) {
+      //   throw new Error(`cannot require ${id}`)
+      // } else {
+      //   return __require(id)
+      // }
+
+      const bannedLibs = [
         'child_process',
         'cluster',
         'fs',
@@ -530,15 +441,16 @@ export class ServerlessService implements OnModuleInit {
         'sys',
         'v8',
         'vm',
-      ])
-      if (!module) {
+      ]
+
+      if (bannedLibs.includes(id)) {
         throw new Error(`cannot require ${id}`)
-      } else {
-        return __require(id)
       }
+
+      return __require(id)
     }
 
-    return $require.bind(this)
+    return $require.bind(this) as NodeRequire
   }
 
   private async createScopeContext(
@@ -582,7 +494,9 @@ export class ServerlessService implements OnModuleInit {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const self = this
+
+    const require = this.createNewContextRequire()
+
     const createdContext = {
       context: {
         ...requestContext,
@@ -639,9 +553,9 @@ export class ServerlessService implements OnModuleInit {
       console: logger,
       logger,
 
-      require: this.createNewContextRequire(scope),
+      require,
       import(module: string) {
-        return Promise.resolve(self.require(module))
+        return Promise.resolve(require(module))
       },
 
       process: {
