@@ -1,5 +1,4 @@
 import dayjs from 'dayjs'
-import type { OnModuleInit } from '@nestjs/common'
 
 import {
   BadRequestException,
@@ -25,23 +24,18 @@ import { CacheService } from './processors/redis/cache.service'
 import { getRedisKey } from './utils/redis.util'
 
 @ApiController()
-export class AppController implements OnModuleInit {
+export class AppController {
   constructor(
     private readonly cacheService: CacheService,
     @InjectModel(OptionModel)
     private readonly optionModel: MongooseModel<OptionModel>,
   ) {}
-  private upStartAt: number
-
-  onModuleInit() {
-    this.upStartAt = Date.now()
-  }
 
   @Get('/uptime')
   @HttpCache.disable
   @HTTPDecorators.Bypass
   async getUptime() {
-    const ts = Date.now() - this.upStartAt
+    const ts = (process.uptime() * 1000) | 0
     return {
       timestamp: ts,
       humanize: dayjs.duration(ts).locale('en').humanize(),
@@ -57,6 +51,8 @@ export class AppController implements OnModuleInit {
       version: isDev ? 'dev' : `${DEMO_MODE ? 'demo/' : ''}${PKG.version}`,
       homepage: PKG.homepage,
       issues: PKG.issues,
+
+      uptime: await this.getUptime(),
     }
   }
 
@@ -93,8 +89,6 @@ export class AppController implements OnModuleInit {
       },
       { upsert: true },
     )
-
-    return
   }
 
   @Get('/like_this')
@@ -109,7 +103,6 @@ export class AppController implements OnModuleInit {
   @Auth()
   async cleanCatch() {
     await this.cacheService.cleanCatch()
-    return
   }
 
   @Get('/clean_redis')
@@ -117,6 +110,5 @@ export class AppController implements OnModuleInit {
   @Auth()
   async cleanAllRedisKey() {
     await this.cacheService.cleanAllRedisKey()
-    return
   }
 }
