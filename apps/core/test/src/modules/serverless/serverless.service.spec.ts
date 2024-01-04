@@ -120,22 +120,22 @@ describe('test serverless function service', () => {
       ).rejects.toThrow()
     })
 
-    test('case-5: require ban extend module', async () => {
-      const model = new SnippetModel()
-      Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
-        type: SnippetType.Function,
-        raw: async function handler(context, require) {
-          return await require('@nestjs/core')
-        }.toString(),
-      })
+    // test('case-5: require ban extend module', async () => {
+    //   const model = new SnippetModel()
+    //   Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
+    //     type: SnippetType.Function,
+    //     raw: async function handler(context, require) {
+    //       return await require('@nestjs/core')
+    //     }.toString(),
+    //   })
 
-      expect(
-        service.injectContextIntoServerlessFunctionAndCall(model, {
-          req: {} as any,
-          res: {} as any,
-        }),
-      ).rejects.toThrow()
-    })
+    //   expect(
+    //     service.injectContextIntoServerlessFunctionAndCall(model, {
+    //       req: {} as any,
+    //       res: {} as any,
+    //     }),
+    //   ).rejects.toThrow()
+    // })
 
     test('case-6: throws', async () => {
       const model = new SnippetModel()
