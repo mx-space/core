@@ -57,7 +57,7 @@ export class AggregateController {
               return this.snippetService.getPublicSnippetByName(theme, 'theme')
             }),
     ])
-    const [user, categories, pageMeta, url, seo, latestNodeId, themeConfig] =
+    const [user, categories, pageMeta, url, seo, latestNoteId, themeConfig] =
       tasks.map((t) => {
         if (t.status === 'fulfilled') {
           return t.value
@@ -71,7 +71,7 @@ export class AggregateController {
       url: omit(url, ['adminUrl']),
       categories,
       pageMeta,
-      latestNodeId,
+      latestNoteId,
       theme: themeConfig,
     }
   }
