@@ -5,7 +5,7 @@
  * @author Innei <https://github.com/Innei>
  */
 import { URL } from 'url'
-import isbot from 'isbot'
+import { isbot } from 'isbot'
 import UAParser from 'ua-parser-js'
 import type {
   CallHandler,
