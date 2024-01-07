@@ -254,8 +254,8 @@ importers:
         specifier: 0.9.1
         version: 0.9.1(mongoose@8.0.3)
       mongoose-paginate-v2:
-        specifier: 1.7.31
-        version: 1.7.31
+        specifier: 1.8.0
+        version: 1.8.0
       nestjs-pretty-logger:
         specifier: 0.2.0
         version: 0.2.0(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.1)(rxjs@7.8.1)
@@ -7172,8 +7172,8 @@ packages:
       mpath: 0.8.4
     dev: false
 
-  /mongoose-paginate-v2@1.7.31:
-    resolution: {integrity: sha512-Zz7i/1k7/MJqipzttn9SUenbcW1hC63qBOB7HHBNMfIfg0AOPFT2CdAWpeAJ7BBGEQ4qC1Gu02fIaSeMmXOT0A==}
+  /mongoose-paginate-v2@1.8.0:
+    resolution: {integrity: sha512-JiGbGxc/ytIA8UL4GaJdCLuxv5i99+XmTdP4v9YXwiJ85tdOxdrc2NQJL+0O+NRbIl+aAhaOnDbL9bJt7o3zIA==}
     engines: {node: '>=4.0.0'}
     dev: false
 
