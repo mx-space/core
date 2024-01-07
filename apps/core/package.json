@@ -1,12 +1,12 @@
 {
   "name": "@mx-space/core",
-  "version": "4.9.1",
+  "version": "4.10.0",
   "author": "Innei <https://innei.ren>",
   "private": true,
   "license": "AGPLv3",
   "dashboard": {
     "repo": "mx-space/mx-admin",
-    "version": "3.36.0"
+    "version": "3.36.1"
   },
   "repository": {
     "directory": "mx-space/core",

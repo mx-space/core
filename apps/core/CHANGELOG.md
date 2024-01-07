@@ -1,5 +1,41 @@
 # CHANGELOG
 
+# [4.10.0](https://github.com/mx-space/core/compare/v4.9.1...v4.10.0) (2024-01-07)
+
+
+### Bug Fixes
+
+* always create new require instance ([97526ce](https://github.com/mx-space/core/commit/97526ce6301836cd2e2bf153f1042dbb5fef0e63))
+* bark url desc ([92651b1](https://github.com/mx-space/core/commit/92651b1e7b89720140964f14d2ea4501a8edc46b))
+* ci scp ([#1319](https://github.com/mx-space/core/issues/1319)) ([be5e4a1](https://github.com/mx-space/core/commit/be5e4a1860016e3b6f03a85c4d62919998a875fb))
+* **comment:** add type guard on `source` ([e31b98a](https://github.com/mx-space/core/commit/e31b98a37f5d4123186d7a57b2b16e877b87f294))
+* **deps:** update dependency @babel/core to v7.23.7 ([03368c5](https://github.com/mx-space/core/commit/03368c5292cdd119641b80252c872a5ff3d9ef77))
+* **deps:** update dependency @simplewebauthn/server to v8.3.6 ([97d1ab7](https://github.com/mx-space/core/commit/97d1ab79bbdee90f98bd91483189a4c69a96f18f))
+* **deps:** update dependency image-size to v1.1.0 ([#1321](https://github.com/mx-space/core/issues/1321)) ([2fb8cec](https://github.com/mx-space/core/commit/2fb8cecac096b4fd45bbe10d87271df7d38ce446))
+* **deps:** update dependency image-size to v1.1.1 ([5e52b80](https://github.com/mx-space/core/commit/5e52b80cc06861dfb1d8d87d516b1fa2f1fe09df))
+* **deps:** update dependency linkedom to v0.16.6 ([668a9af](https://github.com/mx-space/core/commit/668a9af136345808562c3535da1d90cb9fed1c92))
+* **deps:** update dependency marked to v11.1.1 ([c0788f1](https://github.com/mx-space/core/commit/c0788f1f9fc98658b32bddae140e2d545560df2d))
+* **deps:** update dependency mongoose-aggregate-paginate-v2 to v1.0.7 ([#1326](https://github.com/mx-space/core/issues/1326)) ([9f51058](https://github.com/mx-space/core/commit/9f510585040c04522880230b5f6b90e86e350f58))
+* **deps:** update dependency nodemailer to v6.9.8 ([03c0eab](https://github.com/mx-space/core/commit/03c0eab13851e746b0227266e186b3735010eac7))
+* event type handling and update file paths ([c29be51](https://github.com/mx-space/core/commit/c29be5177e21224b17f9204adde4ed919d156a7a))
+* event variable in `readDataFromRequest` function ([bbd1a67](https://github.com/mx-space/core/commit/bbd1a67f1ca83cf64a71cf233aad0d1ea175c8da))
+* ingore migration collection backup ([813aa35](https://github.com/mx-space/core/commit/813aa351b1fc98e30cb2f21e908851f6655c6320))
+* lock file ([696b5aa](https://github.com/mx-space/core/commit/696b5aab56705e3853479e71aef4c5696972ce80))
+* remove uptime in info ([f3e46e7](https://github.com/mx-space/core/commit/f3e46e7f56105d21db7e57349016b22e2fcc4aeb))
+* remove xlog api proxy ([91aa771](https://github.com/mx-space/core/commit/91aa77181a17cb99e4380ef02b3adbc57717bc3f))
+* **sdk:** ref type ([e2accf4](https://github.com/mx-space/core/commit/e2accf4865e9358d42598ea7a3e733bbfcbb3223))
+* should export a enum value ([5ec2c29](https://github.com/mx-space/core/commit/5ec2c29842fa62b2c6dd0a08feea7de6c5af518f))
+* ts ds happy ([9297b36](https://github.com/mx-space/core/commit/9297b36158032505c1f6c9a461c2e1e71aa94b00))
+* typo ([19bb8cc](https://github.com/mx-space/core/commit/19bb8cce8ffea21736ddcfbc80409a2d919a0553))
+* update import statement in handler.ts ([1dd8099](https://github.com/mx-space/core/commit/1dd8099d0b72c5ca6d3fa81126ddb280ec835006))
+
+
+### Features
+
+* add clearDispatchEvents method to WebhookController and WebhookService ([bf2e753](https://github.com/mx-space/core/commit/bf2e7530114734195387fa3af063e2157aab793a))
+
+
+
 ## [4.9.1](https://github.com/mx-space/core/compare/v4.9.0...v4.9.1) (2023-12-25)
 
 
