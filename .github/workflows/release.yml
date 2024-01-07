@@ -108,7 +108,7 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           # port: ${{ secrets.PORT }}
           source: 'release-linux.zip'
-          target: '/tmp/server.zip'
+          target: '/tmp/mx-core'
 
       - name: Exec deploy script with SSH
         uses: appleboy/ssh-action@master
@@ -128,7 +128,7 @@ jobs:
             source ~/.zshrc
             cd mx
             ls -a
-            node server-deploy.js --jwtSecret=$JWTSECRET --encrypt_key=$MX_ENCRYPT_KEY --encrypt_enable --scp_path=/tmp/server.zip
+            node server-deploy.js --jwtSecret=$JWTSECRET --encrypt_key=$MX_ENCRYPT_KEY --encrypt_enable --scp_path=/tmp/mx-core/release-linux.zip'
 
   build_other_platform:
     name: Build Other Platform
@@ -148,7 +148,7 @@ jobs:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.os }}-
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
       - uses: pnpm/action-setup@v2.4.0
         with:
           version: 8.x
