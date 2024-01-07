@@ -206,8 +206,8 @@ importers:
         specifier: ^9.2.12
         version: 9.2.12
       isbot:
-        specifier: 3.7.1
-        version: 3.7.1
+        specifier: 3.8.0
+        version: 3.8.0
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -6364,8 +6364,8 @@ packages:
     resolution: {integrity: sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==}
     dev: true
 
-  /isbot@3.7.1:
-    resolution: {integrity: sha512-JfqOaY3O1lcWt2nc+D6Mq231CNpwZrBboLa59Go0J8hjGH+gY/Sy0CA/YLUSIScINmAVwTdJZIsOTk4PfBtRuw==}
+  /isbot@3.8.0:
+    resolution: {integrity: sha512-vne1mzQUTR+qsMLeCBL9+/tgnDXRyc2pygLGl/WsgA+EZKIiB5Ehu0CiVTHIIk30zhJ24uGz4M5Ppse37aR0Hg==}
     engines: {node: '>=12'}
     dev: false
 
