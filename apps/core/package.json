@@ -108,7 +108,7 @@
     "mongoose-autopopulate": "1.1.0",
     "mongoose-lean-getters": "1.1.0",
     "mongoose-lean-virtuals": "0.9.1",
-    "mongoose-paginate-v2": "1.7.31",
+    "mongoose-paginate-v2": "1.8.0",
     "nestjs-pretty-logger": "0.2.0",
     "node-machine-id": "1.1.12",
     "node-pty": "1.0.0",
