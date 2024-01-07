@@ -1,4 +1,6 @@
-import { Get, Param } from '@nestjs/common'
+import { FastifyReply } from 'fastify'
+
+import { BadRequestException, Get, Param, Query, Res } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -17,12 +19,31 @@ export class HelperController {
   ) {}
 
   @Get('/url-builder/:id')
-  async builderById(@Param() params: MongoIdDto) {
+  async builderById(
+    @Param() params: MongoIdDto,
+    @Query('redirect') redirect: boolean,
+
+    @Res() res: FastifyReply,
+  ) {
     const doc = await this.databaseService.findGlobalById(params.id)
-    if (!doc) return null
+    if (!doc || doc.type === 'Recently') {
+      if (redirect) {
+        throw new BadRequestException(
+          'not found or this type can not redirect to',
+        )
+      }
 
-    if (doc.type === 'Recently') return null
+      res.send(null)
+      return
+    }
 
-    return this.urlBulderService.buildWithBaseUrl(doc.document)
+    const url = await this.urlBulderService.buildWithBaseUrl(doc.document)
+
+    console.log('redirect to', url, redirect)
+    if (redirect) {
+      res.redirect(url)
+    } else {
+      res.send({ data: url })
+    }
   }
 }
