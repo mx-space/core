@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [4.10.1](https://github.com/mx-space/core/compare/v4.10.0...v4.10.1) (2024-01-07)
+
+
+### Bug Fixes
+
+* ci ([c988594](https://github.com/mx-space/core/commit/c988594f8c36ab008acb0089e62959270f83dd71))
+* **deps:** update dependency @fastify/multipart to v8.1.0 ([#1343](https://github.com/mx-space/core/issues/1343)) ([17d3286](https://github.com/mx-space/core/commit/17d32862d32a9311f1891032bdc768ed0c8a1c1a))
+* **deps:** update dependency isbot to v3.8.0 ([#1338](https://github.com/mx-space/core/issues/1338)) ([2e5d13d](https://github.com/mx-space/core/commit/2e5d13da7558919056b9de491cf85a4ba803a8ed))
+* **deps:** update dependency mongoose-paginate-v2 to v1.8.0 ([#1341](https://github.com/mx-space/core/issues/1341)) ([3e1d065](https://github.com/mx-space/core/commit/3e1d065629bf5716e27163402f22ad581d99662a))
+
+
+
 # [4.10.0](https://github.com/mx-space/core/compare/v4.9.1...v4.10.0) (2024-01-07)
 
 
