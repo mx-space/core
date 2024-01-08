@@ -39,7 +39,6 @@ export class HelperController {
 
     const url = await this.urlBulderService.buildWithBaseUrl(doc.document)
 
-    console.log('redirect to', url, redirect)
     if (redirect) {
       res.redirect(url)
     } else {
