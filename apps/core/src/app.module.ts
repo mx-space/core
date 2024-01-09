@@ -45,6 +45,7 @@ import { NoteModule } from './modules/note/note.module'
 import { OptionModule } from './modules/option/option.module'
 import { PageModule } from './modules/page/page.module'
 import { PageProxyModule } from './modules/pageproxy/pageproxy.module'
+import { PluginModule } from './modules/plguin/plugin.module'
 import { PostModule } from './modules/post/post.module'
 import { ProjectModule } from './modules/project/project.module'
 import { RecentlyModule } from './modules/recently/recently.module'
@@ -111,6 +112,8 @@ import { RedisModule } from './processors/redis/redis.module'
     UpdateModule,
     UserModule,
     WebhookModule,
+
+    PluginModule,
 
     PageProxyModule,
     RenderEjsModule,
