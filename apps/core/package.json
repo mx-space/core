@@ -148,7 +148,7 @@
     "@types/remove-markdown": "0.3.4",
     "@types/semver": "7.5.6",
     "@types/ua-parser-js": "0.7.39",
-    "@types/validator": "13.11.7",
+    "@types/validator": "13.11.8",
     "@vercel/ncc": "0.38.1",
     "cron": "^3.1.6",
     "husky": "8.0.3",
