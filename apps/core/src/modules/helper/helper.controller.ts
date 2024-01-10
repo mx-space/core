@@ -40,7 +40,7 @@ export class HelperController {
     const url = await this.urlBulderService.buildWithBaseUrl(doc.document)
 
     if (redirect) {
-      res.redirect(url)
+      res.status(301).redirect(url)
     } else {
       res.send({ data: url })
     }
