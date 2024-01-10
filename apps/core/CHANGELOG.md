@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [4.10.2](https://github.com/mx-space/core/compare/v4.10.1...v4.10.2) (2024-01-10)
+
+
+### Bug Fixes
+
+* ci pipeline ([85750b9](https://github.com/mx-space/core/commit/85750b9825ad839bfe24dfc553dd8f3edbfb3b50))
+* **deps:** update algoliasearch-client-javascript monorepo to v4.22.1 ([b5040da](https://github.com/mx-space/core/commit/b5040daa38de7ee1325e9f2ebd1274d6473ae363))
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.5 ([ef6e04b](https://github.com/mx-space/core/commit/ef6e04b7169479a623c5418360418ffa4dd5461a))
+* **deps:** update dependency mongoose to v8.0.4 ([#1355](https://github.com/mx-space/core/issues/1355)) ([d03f413](https://github.com/mx-space/core/commit/d03f413f5b7283dba884ad0da48e2c08e84d082c))
+
+
+### Features
+
+* add `redirect` on url builder ([bdd6de5](https://github.com/mx-space/core/commit/bdd6de5913eae1cefc439c56f17b9714ff96324a))
+
+
+
 ## [4.10.1](https://github.com/mx-space/core/compare/v4.10.0...v4.10.1) (2024-01-07)
 
 
@@ -48,22 +65,7 @@
 
 
 
-## [4.9.1](https://github.com/mx-space/core/compare/v4.9.0...v4.9.1) (2023-12-25)
-
-
-### Bug Fixes
-
-* webhok scope filter ([6176065](https://github.com/mx-space/core/commit/6176065c60e20ac6b754e2a1c9098b09e8dbfeb5))
-* **webhook:** add health check ([2621304](https://github.com/mx-space/core/commit/2621304f433368ba279985109d7e5fd378969307))
-
-
-### Features
-
-* add health_check ([889b0b0](https://github.com/mx-space/core/commit/889b0b0b7db13483dfe35af87ecd4a1fde04e9a9))
-
-
-
-# [4.9.0](https://github.com/mx-space/core/compare/v4.8.6...v4.9.0) (2023-12-24)
+## [4.9.1](https://github.com/mx-space/core/compare/v4.8.6...v4.9.1) (2023-12-25)
 
 
 ### Bug Fixes
@@ -77,11 +79,14 @@
 * **deps:** update dependency cache-manager to v5.3.2 ([6efb1ef](https://github.com/mx-space/core/commit/6efb1ef17eae0caa001cbf6e5d22215652e7f948))
 * emitter type ([08b58e5](https://github.com/mx-space/core/commit/08b58e549fc84eeec0f12f21d02bb279cefa5e13))
 * variant rename to `type` ([d255493](https://github.com/mx-space/core/commit/d255493f6985d2aec120c89de24d7c0ac18b9bc7))
+* webhok scope filter ([6176065](https://github.com/mx-space/core/commit/6176065c60e20ac6b754e2a1c9098b09e8dbfeb5))
 * webhook lib build script ([ee370bc](https://github.com/mx-space/core/commit/ee370bc3851870d8268bdc586c4780a37f718e13))
+* **webhook:** add health check ([2621304](https://github.com/mx-space/core/commit/2621304f433368ba279985109d7e5fd378969307))
 
 
 ### Features
 
+* add health_check ([889b0b0](https://github.com/mx-space/core/commit/889b0b0b7db13483dfe35af87ecd4a1fde04e9a9))
 * support webhook ([#1298](https://github.com/mx-space/core/issues/1298)) ([c6d037d](https://github.com/mx-space/core/commit/c6d037db1d0aabb445672c518b6a82e6beb58956))
 * **webhook:** generic type for event emitter ([cfc3513](https://github.com/mx-space/core/commit/cfc3513b92bddef87b738d852ff0a76097ca9525))
 
