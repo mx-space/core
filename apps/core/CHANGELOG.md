@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.10.3](https://github.com/mx-space/core/compare/v4.10.2...v4.10.3) (2024-01-10)
+
+
+### Bug Fixes
+
+* add 301 status when redirect ([775835f](https://github.com/mx-space/core/commit/775835f20bbad491245a5e63b9eedfc168e4c11b))
+
+
+
 ## [4.10.2](https://github.com/mx-space/core/compare/v4.10.1...v4.10.2) (2024-01-10)
 
 
@@ -65,7 +74,22 @@
 
 
 
-## [4.9.1](https://github.com/mx-space/core/compare/v4.8.6...v4.9.1) (2023-12-25)
+## [4.9.1](https://github.com/mx-space/core/compare/v4.9.0...v4.9.1) (2023-12-25)
+
+
+### Bug Fixes
+
+* webhok scope filter ([6176065](https://github.com/mx-space/core/commit/6176065c60e20ac6b754e2a1c9098b09e8dbfeb5))
+* **webhook:** add health check ([2621304](https://github.com/mx-space/core/commit/2621304f433368ba279985109d7e5fd378969307))
+
+
+### Features
+
+* add health_check ([889b0b0](https://github.com/mx-space/core/commit/889b0b0b7db13483dfe35af87ecd4a1fde04e9a9))
+
+
+
+# [4.9.0](https://github.com/mx-space/core/compare/v4.8.6...v4.9.0) (2023-12-24)
 
 
 ### Bug Fixes
@@ -79,14 +103,11 @@
 * **deps:** update dependency cache-manager to v5.3.2 ([6efb1ef](https://github.com/mx-space/core/commit/6efb1ef17eae0caa001cbf6e5d22215652e7f948))
 * emitter type ([08b58e5](https://github.com/mx-space/core/commit/08b58e549fc84eeec0f12f21d02bb279cefa5e13))
 * variant rename to `type` ([d255493](https://github.com/mx-space/core/commit/d255493f6985d2aec120c89de24d7c0ac18b9bc7))
-* webhok scope filter ([6176065](https://github.com/mx-space/core/commit/6176065c60e20ac6b754e2a1c9098b09e8dbfeb5))
 * webhook lib build script ([ee370bc](https://github.com/mx-space/core/commit/ee370bc3851870d8268bdc586c4780a37f718e13))
-* **webhook:** add health check ([2621304](https://github.com/mx-space/core/commit/2621304f433368ba279985109d7e5fd378969307))
 
 
 ### Features
 
-* add health_check ([889b0b0](https://github.com/mx-space/core/commit/889b0b0b7db13483dfe35af87ecd4a1fde04e9a9))
 * support webhook ([#1298](https://github.com/mx-space/core/issues/1298)) ([c6d037d](https://github.com/mx-space/core/commit/c6d037db1d0aabb445672c518b6a82e6beb58956))
 * **webhook:** generic type for event emitter ([cfc3513](https://github.com/mx-space/core/commit/cfc3513b92bddef87b738d852ff0a76097ca9525))
 
