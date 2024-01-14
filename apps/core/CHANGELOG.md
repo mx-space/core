@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [4.10.4](https://github.com/mx-space/core/compare/v4.10.3...v4.10.4) (2024-01-14)
+
+
+### Bug Fixes
+
+* axios http ([0c18317](https://github.com/mx-space/core/commit/0c18317fc1ed6bc9ae2623081d8b68ee4e314f52))
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.6 ([cd61cdb](https://github.com/mx-space/core/commit/cd61cdbbf6afa81efe3538cd4631edfc4aaeda36))
+* **deps:** update dependency @nestjs/cache-manager to v2.2.0 ([#1351](https://github.com/mx-space/core/issues/1351)) ([b91263a](https://github.com/mx-space/core/commit/b91263a1fb1f6bd245cb4f2297579cc3539775b6))
+
+
+
 ## [4.10.3](https://github.com/mx-space/core/compare/v4.10.2...v4.10.3) (2024-01-10)
 
 
