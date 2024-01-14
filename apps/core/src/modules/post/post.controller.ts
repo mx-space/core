@@ -199,7 +199,6 @@ export class PostController {
   async create(@Body() body: PostModel) {
     return await this.postService.create({
       ...body,
-      created: new Date(),
       modified: null,
       slug: body.slug,
       related: body.relatedId as any,
