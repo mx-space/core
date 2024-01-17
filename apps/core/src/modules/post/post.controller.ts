@@ -26,6 +26,7 @@ import { addYearCondition } from '~/transformers/db-query.transformer'
 import { CategoryAndSlugDto } from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'
+import {getLessThanNow} from "~/utils";
 
 @ApiController('posts')
 export class PostController {
@@ -199,6 +200,7 @@ export class PostController {
   async create(@Body() body: PostModel) {
     return await this.postService.create({
       ...body,
+      created: getLessThanNow(body.created),
       modified: null,
       slug: body.slug,
       related: body.relatedId as any,
