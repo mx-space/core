@@ -5,6 +5,7 @@ import { LRUCache } from 'lru-cache'
 import type { CoAction } from '@innei/next-async/types/interface'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
+import type Mail from 'nodemailer/lib/mailer'
 import type { NoteModel } from '../note/note.model'
 import type { PostModel } from '../post/post.model'
 import type { SubscribeTemplateRenderProps } from './subscribe.email.default'
@@ -121,29 +122,33 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
         if (
           subscribe & (isNote ? SubscribeNoteCreateBit : SubscribePostCreateBit)
         )
-          self.sendEmail(email, {
-            author: owner.name,
-            detail_link:
-              await self.urlBuilderService.buildWithBaseUrl(noteOrPost),
-            text: `${noteOrPost.text.slice(0, 150)}...`,
-            title: noteOrPost.title,
-            unsubscribe_link: unsubscribeLink,
-            master: owner.name,
+          self.sendEmail(
+            email,
+            {
+              author: owner.name,
+              detail_link:
+                await self.urlBuilderService.buildWithBaseUrl(noteOrPost),
+              text: `${noteOrPost.text.slice(0, 150)}...`,
+              title: noteOrPost.title,
+              unsubscribe_link: unsubscribeLink,
+              master: owner.name,
 
-            aggregate: {
-              owner,
-              subscriber: {
-                subscribe,
-                email,
-              },
-              post: {
-                text: noteOrPost.text,
-                created: new Date(noteOrPost.created!).toISOString(),
-                id: noteOrPost.id!,
-                title: noteOrPost.title,
+              aggregate: {
+                owner,
+                subscriber: {
+                  subscribe,
+                  email,
+                },
+                post: {
+                  text: noteOrPost.text,
+                  created: new Date(noteOrPost.created!).toISOString(),
+                  id: noteOrPost.id!,
+                  title: noteOrPost.title,
+                },
               },
             },
-          })
+            unsubscribeLink,
+          )
       }
     }
 
@@ -238,7 +243,11 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     max: 2,
   })
 
-  async sendEmail(email: string, source: SubscribeTemplateRenderProps) {
+  async sendEmail(
+    email: string,
+    source: SubscribeTemplateRenderProps,
+    unsubscribeLink: string,
+  ) {
     const { seo, mailOptions } = await this.configService.waitForConfigReady()
     const { user } = mailOptions
     const from = `"${seo.title || 'Mx Space'}" <${user}>`
@@ -256,12 +265,18 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       this.lruCache.set(cacheKey, finalTemplate)
     }
 
-    const options = {
+    const options: Mail.Options = {
       from,
       ...{
         subject: `[${seo.title || 'Mx Space'}] 发布了新内容~`,
         to: email,
         html: render(finalTemplate, source),
+      },
+
+      headers: {
+        // https://mailtrap.io/blog/list-unsubscribe-header/
+
+        'List-Unsubscribe': `<${unsubscribeLink}>`,
       },
     }
 
