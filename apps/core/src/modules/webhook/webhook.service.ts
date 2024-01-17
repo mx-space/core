@@ -147,6 +147,9 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     return this.httpService.axiosRef
       .post(webhook.payloadUrl, clonedPayload, {
         headers,
+        'axios-retry': {
+          retries: 10,
+        },
       })
       .then(async (response) => {
         webhookEvent.response = JSON.stringify({

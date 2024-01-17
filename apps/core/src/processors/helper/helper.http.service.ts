@@ -1,6 +1,6 @@
 import { inspect } from 'util'
 import axios from 'axios'
-import retryAxios from 'axios-retry'
+import axiosRetry, { exponentialDelay } from 'axios-retry'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 import { Injectable, Logger } from '@nestjs/common'
@@ -25,8 +25,8 @@ declare module 'axios' {
 
 @Injectable()
 export class HttpService {
-  private http: AxiosInstance
-  private logger: Logger
+  private readonly http: AxiosInstance
+  private readonly logger: Logger
   constructor(private readonly cacheService: CacheService) {
     this.logger = new Logger(HttpService.name)
 
@@ -38,12 +38,23 @@ export class HttpService {
         },
       }),
     )
-    retryAxios(this.http, {
-      retries: 3,
-      retryDelay: (count) => {
-        return 1000 * count
+
+    axiosRetry(this.http, {
+      // retries: 3,
+      // retryDelay: (count) => {
+      //   return 1000 * count
+      // },
+      // shouldResetTimeout: true,
+      retryDelay: exponentialDelay,
+      retries: 5,
+      onRetry: (retryCount, error, requestConfig) => {
+        this.logger.warn(
+          `HTTP Request Retry ${retryCount} times: [${requestConfig.method?.toUpperCase()}] ${
+            requestConfig.baseURL || ''
+          }${requestConfig.url}`,
+        )
+        this.logger.warn(`HTTP Request Retry Error: ${error.message}`)
       },
-      shouldResetTimeout: true,
     })
   }
 
