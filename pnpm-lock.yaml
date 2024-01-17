@@ -92,8 +92,8 @@ importers:
         specifier: 4.13.6
         version: 4.13.6(react@18.2.0)
       '@fastify/cookie':
-        specifier: 9.2.0
-        version: 9.2.0
+        specifier: 9.3.0
+        version: 9.3.0
       '@fastify/multipart':
         specifier: 8.1.0
         version: 8.1.0
@@ -1477,8 +1477,8 @@ packages:
       text-decoding: 1.0.0
     dev: false
 
-  /@fastify/cookie@9.2.0:
-    resolution: {integrity: sha512-fkg1yjjQRHPFAxSHeLC8CqYuNzvR6Lwlj/KjrzQcGjNBK+K82nW+UfCjfN71g1GkoVoc1GTOgIWkFJpcMfMkHQ==}
+  /@fastify/cookie@9.3.0:
+    resolution: {integrity: sha512-kDEo3hOaWGcbwgK2TLXAK034a4YmNIcencBeHFO3kiFs9YbGdNEluC62rzqKxSW+NyomezxDrpyts30hK0xQ6g==}
     dependencies:
       cookie-signature: 1.2.1
       fastify-plugin: 4.5.1
