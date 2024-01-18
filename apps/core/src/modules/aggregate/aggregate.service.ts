@@ -210,14 +210,22 @@ export class AggregateService {
       this.noteService.model
         .find({
           hide: false,
+
           $or: [
-            { password: undefined },
-            { password: { $exists: false } },
-            { password: null },
+            {
+              secret: {
+                $lte: new Date(),
+              },
+            },
+            {
+              secret: {
+                $exists: false,
+              },
+            },
+            {
+              secret: null,
+            },
           ],
-          secret: {
-            $lte: new Date(),
-          },
         })
         .lean()
         .then((list) =>
