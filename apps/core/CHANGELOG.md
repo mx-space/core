@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [4.10.6](https://github.com/mx-space/core/compare/v4.10.5...v4.10.6) (2024-01-18)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @fastify/cookie to v9.3.0 ([#1363](https://github.com/mx-space/core/issues/1363)) ([2b100cd](https://github.com/mx-space/core/commit/2b100cd0379a74ce97a93fdb67ae4ab49a3c70b1))
+* sitemap data ([c10f089](https://github.com/mx-space/core/commit/c10f0899f96ddf61e4614ae3bfa97e600961191c))
+
+
+### Features
+
+* unsubscribe header for mail ([b28de23](https://github.com/mx-space/core/commit/b28de239739369c1d4475ba7df8235e900bbf31a))
+
+
+
 ## [4.10.5](https://github.com/mx-space/core/compare/v4.10.4...v4.10.5) (2024-01-14)
 
 
