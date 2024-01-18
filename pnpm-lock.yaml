@@ -146,8 +146,8 @@ importers:
         specifier: 5.1.0
         version: 5.1.0
       '@typegoose/auto-increment':
-        specifier: 4.0.0
-        version: 4.0.0(mongoose@8.0.4)
+        specifier: 4.1.0
+        version: 4.1.0(mongoose@8.0.4)
       '@typegoose/typegoose':
         specifier: 12.0.0
         version: 12.0.0(mongoose@8.0.4)
@@ -2552,11 +2552,11 @@ packages:
     resolution: {integrity: sha512-eZxlbI8GZscaGS7kkc/trHTT5xgrjH3/1n2JDwusC9iahPKWMRvRjJSAN5mCXviuTGQ/lHnhvv8Q1YTpnfz9gA==}
     dev: true
 
-  /@typegoose/auto-increment@4.0.0(mongoose@8.0.4):
-    resolution: {integrity: sha512-ybDcLqFMOLJlUweXj2Uhw0gNWwi8/+SSQ/bizlhrsD5X9PaVp1fz7ZMhKtKvG5G2+UlGyaKxqOfhLO5d4MtTmA==}
+  /@typegoose/auto-increment@4.1.0(mongoose@8.0.4):
+    resolution: {integrity: sha512-mhLjd4pnZ6eUO2FFbcC77rPjiVolA2YtSOfdrTi5k495xvI/dekN4wXRCfJnRElPQE4vlh8RVIINFt/8nNT5HA==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
-      mongoose: ~8.0.1
+      mongoose: ~8.1.0
     dependencies:
       loglevel: 1.8.1
       mongoose: 8.0.4
