@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer'
 import { IsBoolean, IsIn, IsOptional, IsSemVer } from 'class-validator'
 
-import { IsAllowedUrl } from '~/utils/validator/isAllowedUrl'
+import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
 
 export class PageProxyDebugDto {
   @IsIn([false])

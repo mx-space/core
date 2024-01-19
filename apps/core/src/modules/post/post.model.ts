@@ -28,6 +28,7 @@ import {
 } from '@typegoose/typegoose'
 
 import { POST_COLLECTION_NAME } from '~/constants/db.constant'
+import { TransformEmptyNull } from '~/decorators/dto/transformEmptyNull'
 import { CountModel as Count } from '~/shared/model/count.model'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
 
@@ -47,11 +48,12 @@ export class PostModel extends WriteBaseModel {
   @IsNotEmpty()
   slug!: string
 
-  @prop()
-  @IsOptional()
-  @IsNotEmpty()
+  @prop({
+    type: String,
+  })
   @IsString()
-  summary?: string
+  @TransformEmptyNull()
+  summary: string | null
 
   @prop({ ref: () => Category, required: true })
   @IsMongoId()

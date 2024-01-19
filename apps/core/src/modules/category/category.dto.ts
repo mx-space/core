@@ -10,7 +10,7 @@ import { uniq } from 'lodash'
 
 import { UnprocessableEntityException } from '@nestjs/common'
 
-import { IsBooleanOrString } from '~/utils/validator/isBooleanOrString'
+import { IsBooleanOrString } from '~/decorators/dto/isBooleanOrString'
 
 import { CategoryType } from './category.model'
 

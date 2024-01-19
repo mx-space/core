@@ -15,6 +15,7 @@ import { AutoIncrementID } from '@typegoose/auto-increment'
 import { index, modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
 
 import { NOTE_COLLECTION_NAME } from '~/constants/db.constant'
+import { TransformEmptyNull } from '~/decorators/dto/transformEmptyNull'
 import { CountModel } from '~/shared/model/count.model'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
 
@@ -55,9 +56,8 @@ export class NoteModel extends WriteBaseModel {
     type: String,
   })
   @IsString()
-  @IsOptional()
   @IsNotEmpty()
-  @Transform(({ value: val }) => (String(val).length === 0 ? null : val))
+  @TransformEmptyNull()
   password: string | null
 
   @prop({ type: Date })

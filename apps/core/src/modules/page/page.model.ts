@@ -5,8 +5,8 @@ import { PartialType } from '@nestjs/mapped-types'
 import { modelOptions, prop } from '@typegoose/typegoose'
 
 import { PAGE_COLLECTION_NAME } from '~/constants/db.constant'
+import { IsNilOrString } from '~/decorators/dto/isNilOrString'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
-import { IsNilOrString } from '~/utils/validator/isNilOrString'
 
 @modelOptions({
   options: {

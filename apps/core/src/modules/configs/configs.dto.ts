@@ -13,7 +13,7 @@ import {
 } from 'class-validator'
 import { JSONSchema } from 'class-validator-jsonschema'
 
-import { IsAllowedUrl } from '~/utils/validator/isAllowedUrl'
+import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
 
 import { Encrypt } from './configs.encrypt.util'
 import {

@@ -7,7 +7,7 @@ import {
   IsUrl,
 } from 'class-validator'
 
-import { IsAllowedUrl } from '~/utils/validator/isAllowedUrl'
+import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
 
 class UserOptionDto {
   @IsOptional()
