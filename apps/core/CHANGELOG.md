@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [4.10.7](https://github.com/mx-space/core/compare/v4.10.6...v4.10.7) (2024-01-19)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.7 ([8a544b9](https://github.com/mx-space/core/commit/8a544b9bdb7e53baee4f3d49653f89d46fc0ca64))
+* **deps:** update dependency @fastify/cookie to v9.3.1 ([550d4ec](https://github.com/mx-space/core/commit/550d4ec3da5071cbb13d31afffebababaea2ebd7))
+* **deps:** update dependency @typegoose/auto-increment to v4.1.0 ([#1373](https://github.com/mx-space/core/issues/1373)) ([b5c5520](https://github.com/mx-space/core/commit/b5c552086a96a599e08a305d656e1feb334a7443))
+* **deps:** update dependency snakecase-keys to v6 ([#1377](https://github.com/mx-space/core/issues/1377)) ([9af88a3](https://github.com/mx-space/core/commit/9af88a38b141f3e2e32befc55304448ed6e0d8c3))
+
+
+
 ## [4.10.6](https://github.com/mx-space/core/compare/v4.10.5...v4.10.6) (2024-01-18)
 
 
