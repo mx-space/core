@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [4.10.8](https://github.com/mx-space/core/compare/v4.10.7...v4.10.8) (2024-01-21)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @simplewebauthn/server to v8.3.7 ([63f7978](https://github.com/mx-space/core/commit/63f797877fced35872fc188b44e2996102379f45))
+* **deps:** update dependency cache-manager to v5.4.0 ([#1382](https://github.com/mx-space/core/issues/1382)) ([5eb49de](https://github.com/mx-space/core/commit/5eb49de19a888d3dadabd9e788561e2184a65b59))
+* ip function error "[object Object]" ([#1385](https://github.com/mx-space/core/issues/1385)) ([28d3239](https://github.com/mx-space/core/commit/28d3239bf2570e8f81420e44bff25b3c567af1a1))
+
+
+
 ## [4.10.7](https://github.com/mx-space/core/compare/v4.10.6...v4.10.7) (2024-01-19)
 
 
