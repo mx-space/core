@@ -135,7 +135,7 @@ export class CategoryService {
   }
 
   async update(id: string, partialDoc: Partial<CategoryModel>) {
-    const newDoc = await this.model.updateOne(
+    const newDoc = await this.model.findOneAndUpdate(
       { _id: id },
       {
         ...partialDoc,
