@@ -221,8 +221,8 @@ importers:
         specifier: 3.10.1
         version: 3.10.1
       linkedom:
-        specifier: 0.16.6
-        version: 0.16.6
+        specifier: 0.16.8
+        version: 0.16.8
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -6520,8 +6520,8 @@ packages:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
     dev: true
 
-  /linkedom@0.16.6:
-    resolution: {integrity: sha512-vJ8oadtJe3DM4FNW15Fj5NLIJlJk+AOypoRxzq9prLx+gAKvHYcTfV98pzOoRkwx4ZvvYzqT1bcDKluHH72apg==}
+  /linkedom@0.16.8:
+    resolution: {integrity: sha512-+HtHVHBb3yZKlP9pgcJdi1AIG9tsAuo+Qtlz+79cCTsxgQwDzajsZjYvpp+DEckCK/zoGVhzkADniYZQ57KcFQ==}
     dependencies:
       css-select: 5.1.0
       cssom: 0.5.0
