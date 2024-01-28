@@ -93,7 +93,7 @@ jobs:
         id: extract_tag
         run: echo "TAG_NAME=$(echo ${GITHUB_REF#refs/tags/})" >> $GITHUB_ENV
 
-      - uses: robinraju/release-downloader@v1.8
+      - uses: robinraju/release-downloader@v1.9
         name: Download release
         with:
           # The github tag. e.g: v1.0.1
