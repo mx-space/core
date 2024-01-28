@@ -8,4 +8,6 @@
 
 # 许可
 
-This project is licensed under AGPLv3 licensed. 2021 Innei
+This project is licensed under AGPLv3 licensed. 
+
+2021 - Present Innei
