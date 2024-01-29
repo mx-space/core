@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [4.10.9](https://github.com/mx-space/core/compare/v4.10.8...v4.10.9) (2024-01-29)
+
+
+### Bug Fixes
+
+* **deps:** update babel monorepo to v7.23.9 ([e61459f](https://github.com/mx-space/core/commit/e61459f7655153facc2a29965e27131dfef3ea05))
+* **deps:** update dependency @simplewebauthn/server to v9 ([#1387](https://github.com/mx-space/core/issues/1387)) ([54fbfe1](https://github.com/mx-space/core/commit/54fbfe15018b0f4914c2891353f96dc942c4e3dc))
+* **deps:** update dependency linkedom to v0.16.8 ([130d110](https://github.com/mx-space/core/commit/130d110aa221247e46c01720967dd5c6aef3ecbb))
+* **deps:** update dependency lru-cache to v10.2.0 ([#1397](https://github.com/mx-space/core/issues/1397)) ([6ae866d](https://github.com/mx-space/core/commit/6ae866dcf648b70d9ae3f5993e1647e74e076be4))
+* **deps:** update dependency marked to v11.2.0 ([#1399](https://github.com/mx-space/core/issues/1399)) ([ea6e60e](https://github.com/mx-space/core/commit/ea6e60e8bf2e41ef1a382bc8a326211f06ba5a14))
+* **deps:** update dependency mongoose to v8.1.1 ([73cf344](https://github.com/mx-space/core/commit/73cf344c8dae6bb98b0a8c2046bd4fce18baada6))
+* **deps:** update nest monorepo to v10.3.1 ([c33941e](https://github.com/mx-space/core/commit/c33941e7fceace1c10a748053ba78656a72e56d8))
+* set `CBOR_NATIVE_ACCELERATION_DISABLED` to `true` ([e1163cd](https://github.com/mx-space/core/commit/e1163cdac0e2a56e7b9b9886c60e3a7b069d1c2e))
+
+
+
 ## [4.10.8](https://github.com/mx-space/core/compare/v4.10.7...v4.10.8) (2024-01-21)
 
 
