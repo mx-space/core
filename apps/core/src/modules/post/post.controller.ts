@@ -22,7 +22,6 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
-import { getLessThanNow } from '~/utils'
 
 import { CategoryAndSlugDto } from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
@@ -198,9 +197,7 @@ export class PostController {
   @Auth()
   @HTTPDecorators.Idempotence()
   async create(@Body() body: PostModel) {
-    body.created = getLessThanNow(body.created)
     return await this.postService.create({
-      created: new Date(),
       ...body,
       modified: null,
       slug: body.slug,
