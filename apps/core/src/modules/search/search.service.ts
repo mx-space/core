@@ -262,9 +262,8 @@ export class SearchService {
       documents.push(...documents_)
     })
     try {
-      await index.clearObjects()
       await Promise.all([
-        index.saveObjects(documents, {
+        index.replaceAllObjects(documents, {
           autoGenerateObjectIDIfNotExist: false,
         }),
         index.setSettings({
