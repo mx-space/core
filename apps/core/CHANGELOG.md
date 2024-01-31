@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [4.11.1](https://github.com/mx-space/core/compare/v4.11.0...v4.11.1) (2024-01-31)
+
+
+### Bug Fixes
+
+* add Logger instance to the global scope ([c4a27cc](https://github.com/mx-space/core/commit/c4a27cc25a9126cfc74b11a49e539cae9b469880))
+* search service to use replaceAllObjects method ([00964c3](https://github.com/mx-space/core/commit/00964c3822daef29de5a97f0ed0a43e639735dc8))
+
+
+
 # [4.11.0](https://github.com/mx-space/core/compare/v4.10.9...v4.11.0) (2024-01-31)
 
 
