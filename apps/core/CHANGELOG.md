@@ -1,5 +1,15 @@
 # CHANGELOG
 
+# [4.11.0](https://github.com/mx-space/core/compare/v4.10.9...v4.11.0) (2024-01-31)
+
+
+### Bug Fixes
+
+* Remove unused code and update create method in PostController ([5f9e69f](https://github.com/mx-space/core/commit/5f9e69fabbdf5fb20a2027f9e9fbb38ff55f1ef2))
+* session revoke ([2bfc745](https://github.com/mx-space/core/commit/2bfc745bf5f2e07f74d59b58f0ca136ec7ea49a1))
+
+
+
 ## [4.10.9](https://github.com/mx-space/core/compare/v4.10.8...v4.10.9) (2024-01-29)
 
 
