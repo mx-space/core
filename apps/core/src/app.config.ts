@@ -146,3 +146,10 @@ export const ENCRYPT = {
   enable: parseBooleanishValue(argv.encrypt_enable) ? !!ENCRYPT_KEY : false,
   algorithm: argv.encrypt_algorithm || 'aes-256-ecb',
 }
+
+if (ENCRYPT.enable) {
+  if (!ENCRYPT.key || ENCRYPT.key.length !== 64)
+    throw new Error(
+      `你开启了 Key 加密（MX_ENCRYPT_KEY or --encrypt_key），但是 Key 的长度不为 64，当前：${ENCRYPT.key.length}`,
+    )
+}
