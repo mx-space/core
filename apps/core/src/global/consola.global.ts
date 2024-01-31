@@ -1,7 +1,7 @@
 /* eslint-disable prefer-rest-params */
 
 /* eslint-disable prefer-rest-params */
-import { createLogger } from 'nestjs-pretty-logger'
+import { createLogger, Logger } from 'nestjs-pretty-logger'
 
 import { LOG_DIR } from '~/constants/path.constant'
 
@@ -13,7 +13,7 @@ const logger = createLogger({
     loggerDir: LOG_DIR,
   },
 })
-
+Logger.setLoggerInstance(logger)
 if (!isTest) {
   try {
     logger.wrapAll()
