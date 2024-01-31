@@ -12,6 +12,8 @@ export const CurrentUser = createParamDecorator(
 
 export const CurrentUserToken = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
-    return getNestExecutionContextRequest(ctx).token
+    const token = getNestExecutionContextRequest(ctx).token
+
+    return token ? token.replace(/[Bb]earer /, '') : ''
   },
 )

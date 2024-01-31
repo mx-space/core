@@ -158,7 +158,7 @@ export class UserController {
 
   @Delete('/session/all')
   @Auth()
-  async deleteAllSession() {
-    return this.authService.jwtServicePublic.revokeAll()
+  async deleteAllSession(@CurrentUserToken() currentToken: string) {
+    return this.authService.jwtServicePublic.revokeAll([currentToken])
   }
 }

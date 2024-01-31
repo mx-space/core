@@ -92,10 +92,23 @@ export class JWTService {
     }
   }
 
-  async revokeAll() {
-    const redis = this.cacheService.getClient()
-    const key = getRedisKey(RedisKeys.JWTStore)
-    await redis.del(key)
+  async revokeAll(excludeTokens?: string[]) {
+    if (Array.isArray(excludeTokens) && excludeTokens.length > 0) {
+      const redis = this.cacheService.getClient()
+      const key = getRedisKey(RedisKeys.JWTStore)
+      const allMd5Tokens = await redis.hkeys(key)
+
+      const excludedMd5Tokens = excludeTokens.map((t) => md5(t))
+      for (const md5Token of allMd5Tokens) {
+        if (!excludedMd5Tokens.includes(md5Token)) {
+          await redis.hdel(key, md5Token)
+        }
+      }
+    } else {
+      const redis = this.cacheService.getClient()
+      const key = getRedisKey(RedisKeys.JWTStore)
+      await redis.del(key)
+    }
   }
 
   async storeTokenInRedis(token: string, info?: any) {
