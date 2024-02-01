@@ -373,7 +373,7 @@ export class AggregateService {
       this.gateway.getcurrentClientCount(),
       this.postService.model.countDocuments(),
       this.noteService.model.countDocuments(),
-      this.categoryService.model.countDocuments(),
+      this.pageService.model.countDocuments(),
       this.sayService.model.countDocuments(),
       this.commentService.model.countDocuments({
         parent: null,
