@@ -285,6 +285,7 @@ export class SearchService {
   }
 
   @OnEvent(BusinessEvents.POST_CREATE)
+  @OnEvent(BusinessEvents.POST_UPDATE)
   async onPostCreate(post: PostModel) {
     const data = await this.postService.model.findById(post.id).lean()
 
@@ -292,7 +293,7 @@ export class SearchService {
 
     this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
       this.logger.log(
-        'detect post create, save to algolia, data: ',
+        'detect post created or update, save to algolia, data: ',
         inspect(data),
       )
       await index.saveObject(
@@ -307,10 +308,12 @@ export class SearchService {
           autoGenerateObjectIDIfNotExist: false,
         },
       )
+      this.logger.log(`save to algolia success, id: ${data.id}`)
     })
   }
 
   @OnEvent(BusinessEvents.NOTE_CREATE)
+  @OnEvent(BusinessEvents.NOTE_UPDATE)
   async onNoteCreate(note: NoteModel) {
     const data = await this.noteService.model.findById(note.id).lean()
 
@@ -318,7 +321,7 @@ export class SearchService {
 
     this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
       this.logger.log(
-        'detect note create, save to algolia, data: ',
+        'detect note create or update, save to algolia, data: ',
         inspect(data),
       )
       await index.saveObject(
@@ -334,6 +337,7 @@ export class SearchService {
           autoGenerateObjectIDIfNotExist: false,
         },
       )
+      this.logger.log(`save to algolia success, id: ${data.id}`)
     })
   }
 
