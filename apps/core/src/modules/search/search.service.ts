@@ -1,4 +1,6 @@
+import { inspect } from 'util'
 import algoliasearch from 'algoliasearch'
+import { omit } from 'lodash'
 import type { SearchResponse } from '@algolia/client-search'
 import type { SearchDto } from '~/modules/search/search.dto'
 import type { Pagination } from '~/shared/interface/paginator.interface'
@@ -15,13 +17,16 @@ import { CronExpression } from '@nestjs/schedule'
 
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
+import { BusinessEvents } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
 import { ConfigsService } from '../configs/configs.service'
+import { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
+import { PostModel } from '../post/post.model'
 import { PostService } from '../post/post.service'
 
 @Injectable()
@@ -192,7 +197,7 @@ export class SearchService {
   })
   @CronDescription('推送到 Algolia Search')
   @OnEvent(EventBusEvents.PushSearch)
-  async pushToAlgoliaSearch() {
+  async pushAllToAlgoliaSearch() {
     const configs = await this.configs.waitForConfigReady()
     if (!configs.algoliaSearchOptions.enable || isDev) {
       return
@@ -276,5 +281,78 @@ export class SearchService {
       Logger.error('algolia 推送错误', 'AlgoliaSearch')
       throw err
     }
+  }
+
+  @OnEvent(BusinessEvents.POST_CREATE)
+  async onPostCreate(post: PostModel) {
+    const configs = await this.configs.waitForConfigReady()
+    if (!configs.algoliaSearchOptions.enable || isDev) {
+      return
+    }
+    const index = await this.getAlgoliaSearchIndex()
+
+    const data = await this.postService.model.findById(post.id).lean()
+
+    if (!data) return
+    this.logger.log(
+      'detect post create, save to algolia, data: ',
+      inspect(data),
+    )
+    await index.saveObject(
+      {
+        ...omit(data, '_id'),
+        objectID: data.id,
+        id: data.id,
+
+        type: 'post',
+      },
+      {
+        autoGenerateObjectIDIfNotExist: false,
+      },
+    )
+  }
+
+  @OnEvent(BusinessEvents.NOTE_CREATE)
+  async onNoteCreate(note: NoteModel) {
+    const configs = await this.configs.waitForConfigReady()
+    if (!configs.algoliaSearchOptions.enable || isDev) {
+      return
+    }
+    const index = await this.getAlgoliaSearchIndex()
+
+    const data = await this.noteService.model.findById(note.id).lean()
+
+    if (!data) return
+
+    this.logger.log(
+      'detect note create, save to algolia, data: ',
+      inspect(data),
+    )
+    await index.saveObject(
+      {
+        ...omit(data, '_id'),
+        objectID: data.id,
+
+        id: data.id,
+
+        type: 'note',
+      },
+      {
+        autoGenerateObjectIDIfNotExist: false,
+      },
+    )
+  }
+
+  @OnEvent(BusinessEvents.POST_DELETE)
+  @OnEvent(BusinessEvents.NOTE_DELETE)
+  async onPostDelete(id: string) {
+    const configs = await this.configs.waitForConfigReady()
+    if (!configs.algoliaSearchOptions.enable || isDev) {
+      return
+    }
+
+    this.logger.log('detect data delete, save to algolia, data: ', id)
+    const index = await this.getAlgoliaSearchIndex()
+    await index.deleteObject(id)
   }
 }
