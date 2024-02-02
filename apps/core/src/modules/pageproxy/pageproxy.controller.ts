@@ -21,6 +21,7 @@ import { Cookies } from '~/common/decorators/cookie.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
+import { AssetService } from '~/processors/helper/helper.asset.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getRedisKey } from '~/utils/redis.util'
 
@@ -36,6 +37,7 @@ export class PageProxyController {
     private readonly cacheService: CacheService,
     private readonly service: PageProxyService,
     private readonly updateService: UpdateService,
+    private readonly assetService: AssetService,
   ) {}
 
   @Get('/qaqdmin')
@@ -191,39 +193,12 @@ export class PageProxyController {
     const isAssetPathIsExist = existsSync(entryPath)
     if (!isAssetPathIsExist) {
       this.fetchLogs = []
-      reply.code(404).type('text/html')
-        .send(`<script src="https://cdn.jsdelivr.net/npm/ansi_up@4.0.3/ansi_up.js"></script>
-        <p>Local Admin Assets is not found. Downloading start... </p>
-        <p>If finished download but page not reload or logs are not output for a period of time, please reload page manually. </p>
-        <pre id="block"></pre>
-        <script>
-        var txt = '';
-        var lastLine = ''
-        var ansi_up = new AnsiUp();
-        var cdiv = document.getElementById("block");
-        var timer = setInterval(function() {
-          fetch('?log=1')
-          .catch(() => {
-            clearInterval(timer)
-          })
-          .then(res => {
-            if(res.status === 204) {
-              clearInterval(timer)
-              window.location.reload()
-              return
-            }
-            return res
-          })
-          .then(res => res.text()).then(text => {
-            if(!text) window.location.reload()
-            if(lastLine === text) return
-            txt += text + '\\n'
-            lastLine = text
-            var html = ansi_up.ansi_to_html(txt);
-            cdiv.innerHTML = html;
-          })
-        }, 1000)
-        </script>`)
+
+      const html = await this.assetService.getAsset(
+        '/render/init-dashboard.html',
+        { encoding: 'utf-8' },
+      )
+      reply.type('text/html').send(html)
 
       this.fetchObserver$ = this.updateService.downloadAdminAsset(
         await this.updateService.getLatestAdminVersion().catch((err) => {
@@ -264,6 +239,16 @@ export class PageProxyController {
         message: e.message,
       })
     }
+  }
+
+  @Get('/proxy/qaqdmin/dev-proxy')
+  @HTTPDecorators.Bypass
+  async proxyLocalDev(@Res() reply: FastifyReply) {
+    const html = await this.assetService.getAsset('/render/local-dev.html', {
+      encoding: 'utf-8',
+    })
+
+    reply.type('text/html').send(html)
   }
 
   @Get('/proxy/*')

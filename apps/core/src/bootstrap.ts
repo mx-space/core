@@ -99,6 +99,9 @@ export async function bootstrap() {
     logger.success(
       `[${prefix + pid}] Admin Local Dashboard: ${url}/proxy/qaqdmin`,
     )
+    logger.info(
+      `[${prefix + pid}] If you want to debug local dev dashboard on production environment with https domain, you can go to: https://<your-prod-domain>/proxy/qaqdmin/dev-proxy`,
+    )
     logger.info(`Server is up. ${chalk.yellow(`+${performance.now() | 0}ms`)}`)
   })
 
