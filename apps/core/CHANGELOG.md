@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [4.11.3](https://github.com/mx-space/core/compare/v4.11.2...v4.11.3) (2024-02-02)
+
+
+
 ## [4.11.2](https://github.com/mx-space/core/compare/v4.11.1...v4.11.2) (2024-02-02)
 
 
