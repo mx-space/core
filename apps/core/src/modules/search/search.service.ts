@@ -4,6 +4,7 @@ import { omit } from 'lodash'
 import type { SearchResponse } from '@algolia/client-search'
 import type { SearchDto } from '~/modules/search/search.dto'
 import type { Pagination } from '~/shared/interface/paginator.interface'
+import type { SearchIndex } from 'algoliasearch'
 
 import {
   BadRequestException,
@@ -285,74 +286,75 @@ export class SearchService {
 
   @OnEvent(BusinessEvents.POST_CREATE)
   async onPostCreate(post: PostModel) {
-    const configs = await this.configs.waitForConfigReady()
-    if (!configs.algoliaSearchOptions.enable || isDev) {
-      return
-    }
-    const index = await this.getAlgoliaSearchIndex()
-
     const data = await this.postService.model.findById(post.id).lean()
 
     if (!data) return
-    this.logger.log(
-      'detect post create, save to algolia, data: ',
-      inspect(data),
-    )
-    await index.saveObject(
-      {
-        ...omit(data, '_id'),
-        objectID: data.id,
-        id: data.id,
 
-        type: 'post',
-      },
-      {
-        autoGenerateObjectIDIfNotExist: false,
-      },
-    )
+    this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
+      this.logger.log(
+        'detect post create, save to algolia, data: ',
+        inspect(data),
+      )
+      await index.saveObject(
+        {
+          ...omit(data, '_id'),
+          objectID: data.id,
+          id: data.id,
+
+          type: 'post',
+        },
+        {
+          autoGenerateObjectIDIfNotExist: false,
+        },
+      )
+    })
   }
 
   @OnEvent(BusinessEvents.NOTE_CREATE)
   async onNoteCreate(note: NoteModel) {
-    const configs = await this.configs.waitForConfigReady()
-    if (!configs.algoliaSearchOptions.enable || isDev) {
-      return
-    }
-    const index = await this.getAlgoliaSearchIndex()
-
     const data = await this.noteService.model.findById(note.id).lean()
 
     if (!data) return
 
-    this.logger.log(
-      'detect note create, save to algolia, data: ',
-      inspect(data),
-    )
-    await index.saveObject(
-      {
-        ...omit(data, '_id'),
-        objectID: data.id,
+    this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
+      this.logger.log(
+        'detect note create, save to algolia, data: ',
+        inspect(data),
+      )
+      await index.saveObject(
+        {
+          ...omit(data, '_id'),
+          objectID: data.id,
 
-        id: data.id,
+          id: data.id,
 
-        type: 'note',
-      },
-      {
-        autoGenerateObjectIDIfNotExist: false,
-      },
-    )
+          type: 'note',
+        },
+        {
+          autoGenerateObjectIDIfNotExist: false,
+        },
+      )
+    })
   }
 
   @OnEvent(BusinessEvents.POST_DELETE)
   @OnEvent(BusinessEvents.NOTE_DELETE)
-  async onPostDelete(id: string) {
+  async onPostDelete({ data: id }: { data: string }) {
+    await this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
+      this.logger.log('detect data delete, save to algolia, data: ', id)
+
+      await index.deleteObject(id)
+    })
+  }
+
+  private async executeAlgoliaSearchOperationIfEnabled(
+    caller: (index: SearchIndex) => Promise<any>,
+  ) {
     const configs = await this.configs.waitForConfigReady()
     if (!configs.algoliaSearchOptions.enable || isDev) {
       return
     }
-
-    this.logger.log('detect data delete, save to algolia, data: ', id)
     const index = await this.getAlgoliaSearchIndex()
-    await index.deleteObject(id)
+    return caller(index)
   }
 }
