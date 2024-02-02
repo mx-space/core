@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [4.11.2](https://github.com/mx-space/core/compare/v4.11.1...v4.11.2) (2024-02-02)
+
+
+### Bug Fixes
+
+* add validation for encrypt key length ([ed40949](https://github.com/mx-space/core/commit/ed40949e3c3e45002967672c7e067ce30f4ea163))
+* **deps:** update dependency nodemailer to v6.9.9 ([0eb09ef](https://github.com/mx-space/core/commit/0eb09efa2d1d6897fb7b726daaa1c04e341a6569))
+
+
+### Features
+
+* add Algolia search functionality and event listeners ([31b1ba8](https://github.com/mx-space/core/commit/31b1ba8a678e5015a934efcfff2c4bcbc91918ae))
+* add local dev dashboard debug option ([64cddf1](https://github.com/mx-space/core/commit/64cddf127a0180ce31977c7fadc2967adb499344))
+
+
+
 ## [4.11.1](https://github.com/mx-space/core/compare/v4.11.0...v4.11.1) (2024-01-31)
 
 
