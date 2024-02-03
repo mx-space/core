@@ -206,6 +206,26 @@ export class SearchService {
     const index = await this.getAlgoliaSearchIndex()
 
     this.logger.log('--> 开始推送到 Algolia')
+
+    const documents = await this.buildAlgoliaIndexData()
+    try {
+      await Promise.all([
+        index.replaceAllObjects(documents, {
+          autoGenerateObjectIDIfNotExist: false,
+        }),
+        index.setSettings({
+          attributesToHighlight: ['text', 'title'],
+        }),
+      ])
+
+      this.logger.log('--> 推送到 algoliasearch 成功')
+    } catch (err) {
+      Logger.error('algolia 推送错误', 'AlgoliaSearch')
+      throw err
+    }
+  }
+
+  async buildAlgoliaIndexData() {
     const documents: Record<'title' | 'text' | 'type' | 'id', string>[] = []
     const combineDocuments = await Promise.all([
       this.postService.model
@@ -267,21 +287,8 @@ export class SearchService {
     combineDocuments.forEach((documents_: any) => {
       documents.push(...documents_)
     })
-    try {
-      await Promise.all([
-        index.replaceAllObjects(documents, {
-          autoGenerateObjectIDIfNotExist: false,
-        }),
-        index.setSettings({
-          attributesToHighlight: ['text', 'title'],
-        }),
-      ])
 
-      this.logger.log('--> 推送到 algoliasearch 成功')
-    } catch (err) {
-      Logger.error('algolia 推送错误', 'AlgoliaSearch')
-      throw err
-    }
+    return documents
   }
 
   @OnEvent(BusinessEvents.POST_CREATE)

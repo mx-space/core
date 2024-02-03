@@ -1,6 +1,16 @@
-import { BadRequestException, Get, Param, Post, Query } from '@nestjs/common'
+import { FastifyReply } from 'fastify'
+
+import {
+  BadRequestException,
+  Get,
+  Param,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IsMaster } from '~/common/decorators/role.decorator'
@@ -39,7 +49,17 @@ export class SearchController {
   }
 
   @Post('/algolia/push')
+  @Auth()
   async pushAlgoliaAllManually() {
     return this.searchService.pushAllToAlgoliaSearch()
+  }
+
+  @Get('/algolia/import-json')
+  @Auth()
+  async getAlgoliaIndexJsonFile(@Res() res: FastifyReply) {
+    const documents = await this.searchService.buildAlgoliaIndexData()
+    res.header('Content-Type', 'application/json')
+    res.header('Content-Disposition', 'attachment; filename=algolia-index.json')
+    res.send(JSON.stringify(documents))
   }
 }
