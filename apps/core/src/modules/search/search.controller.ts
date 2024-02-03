@@ -1,4 +1,4 @@
-import { BadRequestException, Get, Param, Query } from '@nestjs/common'
+import { BadRequestException, Get, Param, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
@@ -36,5 +36,10 @@ export class SearchController {
   @Get('/algolia')
   async search(@Query() query: SearchDto) {
     return this.searchService.searchAlgolia(query)
+  }
+
+  @Post('/algolia/push')
+  async pushAlgoliaAllManually() {
+    return this.searchService.pushAllToAlgoliaSearch()
   }
 }
