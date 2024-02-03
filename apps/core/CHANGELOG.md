@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.11.4](https://github.com/mx-space/core/compare/v4.11.3...v4.11.4) (2024-02-03)
+
+
+### Features
+
+* manually trigger algolia search index update ([d094272](https://github.com/mx-space/core/commit/d0942725bdab9fd8d5ddbdc29ddaa19501d25518))
+
+
+
 ## [4.11.3](https://github.com/mx-space/core/compare/v4.11.2...v4.11.3) (2024-02-02)
 
 
