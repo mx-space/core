@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [4.11.5](https://github.com/mx-space/core/compare/v4.11.4...v4.11.5) (2024-02-04)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @fastify/static to v7 ([#1422](https://github.com/mx-space/core/issues/1422)) ([b0a65ca](https://github.com/mx-space/core/commit/b0a65cac22c303782569f95bddd9ff59c4dbf79f))
+* **deps:** update dependency marked to v12 ([#1424](https://github.com/mx-space/core/issues/1424)) ([97c1e6e](https://github.com/mx-space/core/commit/97c1e6eae2734a3e01d4085c02c288c4e6fd52c1))
+
+
+### Features
+
+* Add SlugTrackerModule to support if the post slug changes, redirect to original data to keep their permalink ([#1425](https://github.com/mx-space/core/issues/1425)) ([00e7508](https://github.com/mx-space/core/commit/00e7508fe51e171d15001075f815f0807c93ab12))
+
+
+
 ## [4.11.4](https://github.com/mx-space/core/compare/v4.11.3...v4.11.4) (2024-02-03)
 
 
