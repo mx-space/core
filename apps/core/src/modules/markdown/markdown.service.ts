@@ -102,7 +102,7 @@ export class MarkdownService {
           slug: item.meta.slug || item.meta.title,
           text: item.text,
           ...genDate(item),
-          categoryId: category?._id || defaultCategory._id,
+          categoryId: category?._id.toHexString() || defaultCategory._id,
         } as PostModel)
       }
     }
@@ -148,8 +148,8 @@ export class MarkdownService {
       modified: updated
         ? new Date(updated)
         : date
-        ? new Date(date)
-        : new Date(),
+          ? new Date(date)
+          : new Date(),
     }
   }
 

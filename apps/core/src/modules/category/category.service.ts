@@ -13,6 +13,7 @@ import { ReturnModelType } from '@typegoose/typegoose'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
+import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -20,6 +21,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils'
 
 import { PostService } from '../post/post.service'
+import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { CategoryModel, CategoryType } from './category.model'
 
 @Injectable()
@@ -30,6 +32,8 @@ export class CategoryService {
     @Inject(forwardRef(() => PostService))
     private readonly postService: PostService,
     private readonly eventManager: EventManagerService,
+
+    private readonly slugTrackerService: SlugTrackerService,
   ) {
     this.createDefaultCategory()
   }
@@ -134,7 +138,33 @@ export class CategoryService {
     return doc
   }
 
+  private async trackerSlugChanges(documentId: string, newSlug: string) {
+    const category = await this.model.findById(documentId).select('slug')
+    if (!category) return
+    if (category.slug === newSlug) return
+
+    const originalSlug = `/${category.slug}`
+
+    const allPostReferenceThisCategory = await this.postService.model.find({
+      categoryId: documentId,
+    })
+
+    const needTrackerMetaList = [] as [string, string][]
+    for (const post of allPostReferenceThisCategory) {
+      needTrackerMetaList.push([post.slug, post.id])
+    }
+
+    for (const postSlugMeta of needTrackerMetaList) {
+      const [postSlug, postId] = postSlugMeta
+      await this.slugTrackerService.createTracker(
+        `${originalSlug}/${postSlug}`,
+        ArticleTypeEnum.Post,
+        postId,
+      )
+    }
+  }
   async update(id: string, partialDoc: Partial<CategoryModel>) {
+    if (partialDoc?.slug) await this.trackerSlugChanges(id, partialDoc.slug)
     const newDoc = await this.model.findOneAndUpdate(
       { _id: id },
       {
@@ -144,6 +174,7 @@ export class CategoryService {
         new: true,
       },
     )
+
     this.clearCache()
 
     this.eventManager.broadcast(BusinessEvents.CATEGORY_CREATE, newDoc, {

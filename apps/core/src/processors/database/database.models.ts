@@ -12,6 +12,7 @@ import { ProjectModel } from '~/modules/project/project.model'
 import { RecentlyModel } from '~/modules/recently/recently.model'
 import { SayModel } from '~/modules/say/say.model'
 import { ServerlessStorageModel } from '~/modules/serverless/serverless.model'
+import { SlugTrackerModel } from '~/modules/slug-tracker/slug-tracker.model'
 import { SnippetModel } from '~/modules/snippet/snippet.model'
 import { SubscribeModel } from '~/modules/subscribe/subscribe.model'
 import { SyncUpdateModel } from '~/modules/sync-update/sync-update.model'
@@ -23,8 +24,8 @@ import { getProviderByTypegooseClass } from '~/transformers/model.transformer'
 
 export const databaseModels = [
   ActivityModel,
-  AuthnModel,
   AnalyzeModel,
+  AuthnModel,
   CategoryModel,
   CommentModel,
   LinkModel,
@@ -34,14 +35,14 @@ export const databaseModels = [
   PostModel,
   ProjectModel,
   RecentlyModel,
-  TopicModel,
   SayModel,
   ServerlessStorageModel,
+  SlugTrackerModel,
   SnippetModel,
   SubscribeModel,
-  UserModel,
   SyncUpdateModel,
-
-  WebhookModel,
+  TopicModel,
+  UserModel,
   WebhookEventModel,
+  WebhookModel,
 ].map((model) => getProviderByTypegooseClass(model))
