@@ -303,13 +303,13 @@ export class SearchService {
         inspect(data),
       )
       await index.saveObject(
-        {
+        adjustObjectSizeEfficiently({
           ...omit(data, '_id'),
           objectID: data.id,
           id: data.id,
 
           type: 'post',
-        },
+        }),
         {
           autoGenerateObjectIDIfNotExist: false,
         },
@@ -331,14 +331,14 @@ export class SearchService {
         inspect(data),
       )
       await index.saveObject(
-        {
+        adjustObjectSizeEfficiently({
           ...omit(data, '_id'),
           objectID: data.id,
 
           id: data.id,
 
           type: 'note',
-        },
+        }),
         {
           autoGenerateObjectIDIfNotExist: false,
         },
@@ -370,8 +370,8 @@ export class SearchService {
 }
 
 const MAX_SIZE_IN_BYTES = 100000
-function adjustObjectSizeEfficiently(
-  originalObject: any,
+function adjustObjectSizeEfficiently<T extends { text: string }>(
+  originalObject: T,
   maxSizeInBytes: number = MAX_SIZE_IN_BYTES,
 ): any {
   // 克隆原始对象以避免修改引用
@@ -413,5 +413,5 @@ function adjustObjectSizeEfficiently(
   }
 
   // 返回调整后的对象
-  return objectToAdjust
+  return objectToAdjust as T
 }
