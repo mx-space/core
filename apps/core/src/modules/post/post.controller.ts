@@ -5,7 +5,6 @@ import {
   Body,
   Delete,
   Get,
-  NotFoundException,
   Param,
   Patch,
   Post,
@@ -164,24 +163,7 @@ export class PostController {
     @IpLocation() { ip }: IpRecord,
   ) {
     const { category, slug } = params
-
-    const categoryDocument = await this.postService.getCategoryBySlug(category)
-    if (!categoryDocument) {
-      throw new NotFoundException('该分类未找到 (｡•́︿•̀｡)')
-    }
-
-    const postDocument = await this.postService.model
-      .findOne({
-        slug,
-        categoryId: categoryDocument._id,
-        // ...condition,
-      })
-      .populate('category')
-      .populate({
-        path: 'related',
-        select: 'title slug id _id categoryId category',
-      })
-
+    const postDocument = await this.postService.getPostBySlug(category, slug)
     if (!postDocument) {
       throw new CannotFindException()
     }

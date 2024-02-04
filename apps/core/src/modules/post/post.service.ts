@@ -8,9 +8,11 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common'
 
 import { BusinessException } from '~/common/exceptions/biz.exception'
+import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
@@ -23,6 +25,7 @@ import { getLessThanNow, scheduleManager } from '~/utils'
 
 import { CategoryService } from '../category/category.service'
 import { CommentModel } from '../comment/comment.model'
+import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { PostModel } from './post.model'
 
 @Injectable()
@@ -39,6 +42,8 @@ export class PostService {
     private readonly imageService: ImageService,
     private readonly eventManager: EventManagerService,
     private readonly textMacroService: TextMacroService,
+
+    private readonly slugTrackerService: SlugTrackerService,
   ) {}
 
   get model() {
@@ -118,6 +123,89 @@ export class PostService {
     return doc
   }
 
+  private async trackSlugChanges(
+    oldDocument: PostModel,
+    newDocument: Partial<PostModel>,
+  ) {
+    const createTracker = this.slugTrackerService.createTracker.bind(
+      this.slugTrackerService,
+    )
+
+    const oldDocumentRefCategory = await this.categoryService.findCategoryById(
+      oldDocument.categoryId.toString(),
+    )
+    if (!oldDocumentRefCategory) {
+      throw new BadRequestException('分类丢失了 ಠ_ಠ')
+    }
+    const oldSlugMeta = {
+      slug: oldDocument.slug,
+      categorySlug: oldDocumentRefCategory.slug,
+    }
+
+    if (newDocument.slug && oldSlugMeta.slug !== newDocument.slug) {
+      return trackSlugChanges()
+    }
+    if (
+      newDocument.categoryId &&
+      oldDocument.categoryId !== newDocument.categoryId
+    ) {
+      return trackSlugChanges()
+    }
+
+    function trackSlugChanges() {
+      return createTracker(
+        `/${oldSlugMeta.categorySlug}/${oldSlugMeta.slug}`,
+        ArticleTypeEnum.Post,
+        oldDocument.id,
+      )
+    }
+  }
+
+  async getPostBySlug(categorySlug: string, slug: string) {
+    const slugTrackerService = this.slugTrackerService
+    const postModel = this.postModel
+
+    const categoryDocument = await this.getCategoryBySlug(categorySlug)
+    if (!categoryDocument) {
+      const trackedPost = await findTrackedPost()
+      if (!trackedPost) {
+        throw new NotFoundException('该分类未找到 (｡•́︿•̀｡)')
+      }
+      return trackedPost
+    }
+
+    const postDocument = await this.model
+      .findOne({
+        slug,
+        categoryId: categoryDocument._id,
+      })
+      .populate('category')
+      .populate({
+        path: 'related',
+        select: 'title slug id _id categoryId category',
+      })
+
+    if (postDocument) return postDocument
+
+    return findTrackedPost()
+    async function findTrackedPost() {
+      const tracked = await slugTrackerService.findTrackerBySlug(
+        `/${categorySlug}/${slug}`,
+        ArticleTypeEnum.Post,
+      )
+
+      if (tracked) {
+        return postModel
+          .findById(tracked.targetId)
+          .populate('category')
+          .populate({
+            path: 'related',
+            select: 'title slug id _id categoryId category',
+          })
+      }
+    }
+  }
+
   async updateById(id: string, data: Partial<PostModel>) {
     const oldDocument = await this.postModel.findById(id)
     if (!oldDocument) {
@@ -148,6 +236,8 @@ export class PostService {
         throw new BusinessException(ErrorCodeEnum.SlugNotAvailable)
       }
     }
+
+    await this.trackSlugChanges(oldDocument, data)
 
     // 有关联文章
     const related = await this.checkRelated(data)
@@ -220,6 +310,7 @@ export class PostService {
         refType: CollectionRefTypes.Post,
       }),
       this.removeRelatedEachOther(deletedPost),
+      this.slugTrackerService.deleteAllTracker(id),
     ])
     await this.eventManager.broadcast(BusinessEvents.POST_DELETE, id, {
       scope: EventScope.TO_SYSTEM_VISITOR,

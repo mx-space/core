@@ -54,6 +54,7 @@ import { SearchModule } from './modules/search/search.module'
 import { ServerTimeModule } from './modules/server-time/server-time.module'
 import { ServerlessModule } from './modules/serverless/serverless.module'
 import { SitemapModule } from './modules/sitemap/sitemap.module'
+import { SlugTrackerModule } from './modules/slug-tracker/slug-tracker.module'
 import { SnippetModule } from './modules/snippet/snippet.module'
 import { SubscribeModule } from './modules/subscribe/subscribe.module'
 import { TopicModule } from './modules/topic/topic.module'
@@ -101,6 +102,7 @@ import { RedisModule } from './processors/redis/redis.module'
     ServerlessModule,
     ServerTimeModule,
     SitemapModule,
+    SlugTrackerModule,
     SnippetModule,
     SubscribeModule,
     TopicModule,
