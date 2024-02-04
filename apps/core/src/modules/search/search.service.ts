@@ -284,11 +284,10 @@ export class SearchService {
           })
         }),
     ])
-    combineDocuments.forEach((documents_: any) => {
-      documents.push(...documents_)
-    })
 
-    return documents
+    return combineDocuments
+      .flat()
+      .map((item) => adjustObjectSizeEfficiently(item))
   }
 
   @OnEvent(BusinessEvents.POST_CREATE)
@@ -368,4 +367,51 @@ export class SearchService {
     const index = await this.getAlgoliaSearchIndex()
     return caller(index)
   }
+}
+
+const MAX_SIZE_IN_BYTES = 100000
+function adjustObjectSizeEfficiently(
+  originalObject: any,
+  maxSizeInBytes: number = MAX_SIZE_IN_BYTES,
+): any {
+  // 克隆原始对象以避免修改引用
+  const objectToAdjust = JSON.parse(JSON.stringify(originalObject))
+  const text = objectToAdjust.text
+
+  let low = 0
+  let high = text.length
+  let mid = 0
+
+  while (low <= high) {
+    mid = Math.floor((low + high) / 2)
+    objectToAdjust.text = text.slice(0, mid)
+    const currentSize = new TextEncoder().encode(
+      JSON.stringify(objectToAdjust),
+    ).length
+
+    if (currentSize > maxSizeInBytes) {
+      // 如果当前大小超过限制，减少 text 长度
+      high = mid - 1
+    } else if (currentSize < maxSizeInBytes) {
+      // 如果当前大小未达限制，尝试增加text长度
+      low = mid + 1
+    } else {
+      // 精确匹配，退出循环
+      break
+    }
+  }
+
+  // 微调，确保不超过最大大小
+  while (
+    new TextEncoder().encode(JSON.stringify(objectToAdjust)).length >
+    maxSizeInBytes
+  ) {
+    objectToAdjust.text = objectToAdjust.text.slice(
+      0,
+      objectToAdjust.text.length - 1,
+    )
+  }
+
+  // 返回调整后的对象
+  return objectToAdjust
 }
