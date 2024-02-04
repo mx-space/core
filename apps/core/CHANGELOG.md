@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [4.11.6](https://github.com/mx-space/core/compare/v4.11.5...v4.11.6) (2024-02-04)
+
+
+### Bug Fixes
+
+* compress search index data size keep less than 100K ([6718f8e](https://github.com/mx-space/core/commit/6718f8edd0d3e0f99f7225cb1972b2586e93d11b))
+* update ([f055fea](https://github.com/mx-space/core/commit/f055fea95704f1127447ace832f9aab31d532202))
+
+
+### Features
+
+* adjustObjectSizeEfficiently function to accept a generic type ([8491ebd](https://github.com/mx-space/core/commit/8491ebdab1f019fd6364c4d4136c27c259f13cca))
+* use EJS rendering for local-dev page ([bbb0e22](https://github.com/mx-space/core/commit/bbb0e22ca89180e7268dd9f5631c480fae1557f0))
+
+
+
 ## [4.11.5](https://github.com/mx-space/core/compare/v4.11.4...v4.11.5) (2024-02-04)
 
 
