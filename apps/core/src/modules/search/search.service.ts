@@ -1,6 +1,7 @@
 import { inspect } from 'util'
 import algoliasearch from 'algoliasearch'
 import { omit } from 'lodash'
+import removeMdCodeblock from 'remove-md-codeblock'
 import type { SearchResponse } from '@algolia/client-search'
 import type { SearchDto } from '~/modules/search/search.dto'
 import type { Pagination } from '~/shared/interface/paginator.interface'
@@ -226,7 +227,6 @@ export class SearchService {
   }
 
   async buildAlgoliaIndexData() {
-    const documents: Record<'title' | 'text' | 'type' | 'id', string>[] = []
     const combineDocuments = await Promise.all([
       this.postService.model
         .find({ hide: false })
@@ -240,6 +240,7 @@ export class SearchService {
             Reflect.deleteProperty(data, '_id')
             return {
               ...data,
+              text: removeMdCodeblock(data.text),
               type: 'post',
             }
           })
@@ -369,7 +370,7 @@ export class SearchService {
   }
 }
 
-const MAX_SIZE_IN_BYTES = 100000
+const MAX_SIZE_IN_BYTES = 100_000
 function adjustObjectSizeEfficiently<T extends { text: string }>(
   originalObject: T,
   maxSizeInBytes: number = MAX_SIZE_IN_BYTES,

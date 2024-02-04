@@ -280,6 +280,9 @@ importers:
       remove-markdown:
         specifier: 0.5.0
         version: 0.5.0
+      remove-md-codeblock:
+        specifier: 0.0.4
+        version: 0.0.4
       rxjs:
         specifier: 7.8.1
         version: 7.8.1
@@ -8079,6 +8082,11 @@ packages:
 
   /remove-markdown@0.5.0:
     resolution: {integrity: sha512-x917M80K97K5IN1L8lUvFehsfhR8cYjGQ/yAMRI9E7JIKivtl5Emo5iD13DhMr+VojzMCiYk8V2byNPwT/oapg==}
+    dev: false
+
+  /remove-md-codeblock@0.0.4:
+    resolution: {integrity: sha512-DE77wmQz99pE0Ma3SjOt1+ihHkzGgLHtSR58XzGWHvcCkQFfdV/YRAbRruHpBRrcppCLEMW+iJoSy/VpIaq7UA==}
+    engines: {pnpm: '>=6'}
     dev: false
 
   /repeat-string@1.6.1:
