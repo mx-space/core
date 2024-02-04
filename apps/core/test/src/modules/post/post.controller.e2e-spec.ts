@@ -16,6 +16,8 @@ import { OptionModel } from '~/modules/configs/configs.model'
 import { PostController } from '~/modules/post/post.controller'
 import { PostModel } from '~/modules/post/post.model'
 import { PostService } from '~/modules/post/post.service'
+import { SlugTrackerModel } from '~/modules/slug-tracker/slug-tracker.model'
+import { SlugTrackerService } from '~/modules/slug-tracker/slug-tracker.service'
 import { UserModel } from '~/modules/user/user.model'
 import { UserService } from '~/modules/user/user.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
@@ -32,7 +34,7 @@ describe('PostController (e2e)', () => {
       PostService,
       ImageService,
       CategoryService,
-
+      SlugTrackerService,
       {
         provide: APP_INTERCEPTOR,
         useClass: MockingCountingInterceptor,
@@ -59,7 +61,14 @@ describe('PostController (e2e)', () => {
       countingServiceProvider,
     ],
     imports: [],
-    models: [PostModel, OptionModel, UserModel, CategoryModel, CommentModel],
+    models: [
+      PostModel,
+      OptionModel,
+      UserModel,
+      CategoryModel,
+      CommentModel,
+      SlugTrackerModel,
+    ],
     async pourData(modelMap) {
       // @ts-ignore
       const { model: _model } = modelMap.get(PostModel) as {
@@ -91,28 +100,4 @@ describe('PostController (e2e)', () => {
       pagination: expect.any(Object),
     })
   })
-
-  // test.only('POST / with related', async () => {
-  //   const firstPost = await model.findOne()
-  //   const data = await proxy.app.inject({
-  //     method: 'POST',
-  //     url: '/posts',
-  //     headers: { ...authPassHeader, 'content-type': 'application/json' },
-  //     body: JSON.stringify({
-  //       title: 'Post 186',
-  //       text: 'Content 1',
-  //       slug: 'post-10086',
-  //       allowComment: true,
-  //       relatedId: [firstPost.id],
-  //       categoryId: categoryModels[0]._id,
-  //     }),
-  //   })
-
-  //   expect(data.statusCode).toBe(201)
-
-  //   await sleep(20)
-  //   const { related } = await model.findById(firstPost.id)
-  //   consola.log(await model.findById(firstPost.id))
-  //   expect(related).toHaveLength(1)
-  // })
 })
