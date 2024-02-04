@@ -126,6 +126,10 @@ export class PageProxyService {
       GATEWAY: url.wsUrl || '/',
     }
   }
+
+  async getUrls() {
+    return this.configs.get('url')
+  }
 }
 
 export interface IInjectableData {

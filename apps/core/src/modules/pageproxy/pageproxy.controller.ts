@@ -1,6 +1,7 @@
 import { createReadStream, existsSync, statSync } from 'fs'
 import fs from 'fs/promises'
 import { extname, join } from 'path'
+import { render } from 'ejs'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { isNull } from 'lodash'
 import { lookup } from 'mime-types'
@@ -244,11 +245,21 @@ export class PageProxyController {
   @Get('/proxy/qaqdmin/dev-proxy')
   @HTTPDecorators.Bypass
   async proxyLocalDev(@Res() reply: FastifyReply) {
-    const html = await this.assetService.getAsset('/render/local-dev.html', {
-      encoding: 'utf-8',
-    })
+    const template = (await this.assetService.getAsset(
+      '/render/local-dev.ejs',
+      {
+        encoding: 'utf-8',
+      },
+    )) as string
 
-    reply.type('text/html').send(html)
+    const urls = await this.service.getUrls()
+    reply.type('text/html').send(
+      render(template, {
+        web_url: urls.webUrl,
+        gateway_url: urls.wsUrl,
+        base_api: urls.serverUrl,
+      }),
+    )
   }
 
   @Get('/proxy/*')
