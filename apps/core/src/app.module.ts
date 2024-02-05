@@ -8,12 +8,12 @@ import type {
 
 import { Module } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
-import { ThrottlerGuard } from '@nestjs/throttler'
 
 import { DEMO_MODE } from './app.config'
 import { AppController } from './app.controller'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { RolesGuard } from './common/guards/roles.guard'
+import { ExtendThrottlerGuard } from './common/guards/throttler.guard'
 import { AnalyzeInterceptor } from './common/interceptors/analyze.interceptor'
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor'
 import { DbQueryInterceptor } from './common/interceptors/db-query.interceptor'
@@ -159,7 +159,7 @@ import { RedisModule } from './processors/redis/redis.module'
     },
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: ExtendThrottlerGuard,
     },
   ],
 })
