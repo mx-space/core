@@ -559,7 +559,7 @@ export class ServerlessService implements OnModuleInit {
       },
 
       process: {
-        env: Object.freeze({ ...process.env }),
+        env: {},
         nextTick: scheduleManager.schedule.bind(null),
       },
     }
