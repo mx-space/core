@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [4.11.7](https://github.com/mx-space/core/compare/v4.11.6...v4.11.7) (2024-02-06)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.8 ([#1428](https://github.com/mx-space/core/issues/1428)) ([9d3fe47](https://github.com/mx-space/core/commit/9d3fe47da5fcba1f2eb2af7076f33d9fb0c9e846))
+* secret getter ([351cbfd](https://github.com/mx-space/core/commit/351cbfdb098a667f8ddce73ba5a34eb3de8af422))
+* skip throttler guard if authed ([0dbe9c2](https://github.com/mx-space/core/commit/0dbe9c25d6449361084d8107fb7b227c25fe72f3))
+
+
+
 ## [4.11.6](https://github.com/mx-space/core/compare/v4.11.5...v4.11.6) (2024-02-04)
 
 
