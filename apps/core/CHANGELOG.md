@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.11.8](https://github.com/mx-space/core/compare/v4.11.7...v4.11.8) (2024-02-06)
+
+
+### Bug Fixes
+
+* remove `env` expose ([a36d488](https://github.com/mx-space/core/commit/a36d4885c60b9b2a03a09fe1769b59bda4f32177))
+
+
+
 ## [4.11.7](https://github.com/mx-space/core/compare/v4.11.6...v4.11.7) (2024-02-06)
 
 
