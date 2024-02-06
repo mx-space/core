@@ -1,5 +1,7 @@
+import { stringify } from 'qs'
 import { redisHelper } from 'test/helper/redis-mock.helper'
 
+import { nanoid } from '@mx-space/external'
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
@@ -23,7 +25,14 @@ describe('test Snippet Service', () => {
         SnippetService,
         { provide: DatabaseService, useValue: {} },
         { provide: CacheService, useValue: redis.CacheService },
-        { provide: ServerlessService, useValue: {} },
+        {
+          provide: ServerlessService,
+          useValue: {
+            isValidServerlessFunction() {
+              return true
+            },
+          },
+        },
         { provide: EventManagerService, useValue: mockedEventManageService },
 
         {
@@ -44,7 +53,7 @@ describe('test Snippet Service', () => {
     type: SnippetType.JSON,
     private: false,
     reference: 'root',
-  }
+  } as SnippetModel
 
   let id = ''
   it('should create one', async () => {
@@ -79,7 +88,7 @@ describe('test Snippet Service', () => {
     const newSnippet = {
       ...snippet,
       raw: '{"foo": "b"}',
-    }
+    } as SnippetModel
     const res = await service.update(id, newSnippet)
     expect(res.raw).toBe(newSnippet.raw)
   })
@@ -92,5 +101,40 @@ describe('test Snippet Service', () => {
   test('delete', async () => {
     await service.delete(id)
     await expect(service.getSnippetById(id)).rejects.toThrow(NotFoundException)
+  })
+
+  describe('update function snippet with secret', () => {
+    const createTestingModel = () =>
+      ({
+        name: `test-fn-${nanoid.nanoid()}`,
+        raw: 'export default async function handler() {}',
+        type: SnippetType.Function,
+        private: false,
+        reference: 'root',
+        id: nanoid.nanoid(),
+        secret: 'username=123&password=123',
+      }) as SnippetModel
+
+    test('patch secret', async () => {
+      const newSnippet = createTestingModel()
+      const doc = await service.create(newSnippet)
+
+      await service.update(doc.id, {
+        ...newSnippet,
+        secret: stringify({ username: '', password: '' }),
+      })
+      const afterUpdate = await service.getSnippetById(doc.id)
+
+      expect(afterUpdate.secret).toStrictEqual({
+        username: '',
+        password: '',
+      })
+
+      const raw = await service.model.findById(doc.id).select('+secret').lean({
+        getters: true,
+      })
+
+      expect(raw.secret).toBe(newSnippet.secret)
+    })
   })
 })

@@ -69,7 +69,9 @@ export class SnippetService {
   async update(id: string, newModel: SnippetModel) {
     await this.validateTypeAndCleanup(newModel)
     delete newModel.created
-    const old = await this.model.findById(id).select('+secret').lean()
+    const old = await this.model.findById(id).select('+secret').lean({
+      getters: true,
+    })
 
     if (!old) {
       throw new NotFoundException()
@@ -87,6 +89,8 @@ export class SnippetService {
     // merge secret
     if (old.secret && newModel.secret) {
       const oldSecret = qs.parse(old.secret)
+
+      // newSecret will be e.g. `{ foo: '' }`
       const newSecret = qs.parse(newModel.secret)
 
       // first delete key if newer secret not provide
