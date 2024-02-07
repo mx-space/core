@@ -98,8 +98,8 @@ importers:
         specifier: 8.1.0
         version: 8.1.0
       '@fastify/static':
-        specifier: 7.0.0
-        version: 7.0.0
+        specifier: 7.0.1
+        version: 7.0.1
       '@innei/next-async':
         specifier: 0.3.0
         version: 0.3.0
@@ -123,7 +123,7 @@ importers:
         version: 2.0.4(@nestjs/common@10.3.1)(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.1)
       '@nestjs/platform-fastify':
         specifier: 10.3.1
-        version: 10.3.1(@fastify/static@7.0.0)(@nestjs/common@10.3.1)(@nestjs/core@10.3.1)
+        version: 10.3.1(@fastify/static@7.0.1)(@nestjs/common@10.3.1)(@nestjs/core@10.3.1)
       '@nestjs/platform-socket.io':
         specifier: 10.3.1
         version: 10.3.1(@nestjs/common@10.3.1)(@nestjs/websockets@10.3.1)(rxjs@7.8.1)
@@ -1584,15 +1584,15 @@ packages:
       mime: 3.0.0
     dev: false
 
-  /@fastify/static@7.0.0:
-    resolution: {integrity: sha512-JCuzYMgbIY1Ws5e3dmPFWAZ0MwkKNn4Pmd/gk3RlCOCLDtA6eUq7WZyBz/TpnCi6ae8FOY1s33POo4rioYgWTg==}
+  /@fastify/static@7.0.1:
+    resolution: {integrity: sha512-i1p/nELMknAisNfnjo7yhfoUOdKzA+n92QaMirv2NkZrJ1Wl12v2nyTYlDwPN8XoStMBAnRK/Kx6zKmfrXUPXw==}
     dependencies:
       '@fastify/accept-negotiator': 1.1.0
       '@fastify/send': 2.1.0
       content-disposition: 0.5.4
       fastify-plugin: 4.5.1
+      fastq: 1.17.1
       glob: 10.3.10
-      p-limit: 3.1.0
     dev: false
 
   /@hexagon/base64@1.1.28:
@@ -1927,7 +1927,7 @@ packages:
       reflect-metadata: 0.2.1
     dev: false
 
-  /@nestjs/platform-fastify@10.3.1(@fastify/static@7.0.0)(@nestjs/common@10.3.1)(@nestjs/core@10.3.1):
+  /@nestjs/platform-fastify@10.3.1(@fastify/static@7.0.1)(@nestjs/common@10.3.1)(@nestjs/core@10.3.1):
     resolution: {integrity: sha512-JOoabswdTCa2/RcVGxANJfRTbuTBk6ukoe2Z0patCA33XVrM6bIGcRHNcUrN6hgu79cGicreH6xaJfQlHLCtvg==}
     peerDependencies:
       '@fastify/static': ^6.0.0
@@ -1943,7 +1943,7 @@ packages:
       '@fastify/cors': 8.5.0
       '@fastify/formbody': 7.4.0
       '@fastify/middie': 8.3.0
-      '@fastify/static': 7.0.0
+      '@fastify/static': 7.0.1
       '@nestjs/common': 10.3.1(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.1)(rxjs@7.8.1)
       '@nestjs/core': 10.3.1(@nestjs/common@10.3.1)(@nestjs/websockets@10.3.1)(reflect-metadata@0.2.1)(rxjs@7.8.1)
       fastify: 4.25.2
@@ -5244,6 +5244,12 @@ packages:
     dependencies:
       reusify: 1.0.4
 
+  /fastq@1.17.1:
+    resolution: {integrity: sha512-sRVD3lWVIXWg6By68ZN7vho9a1pQcN/WBFaAAsDDFzlJjvoGx0P8z7V1t72grFJfJhu3YPZBuu25f7Kaw2jN1w==}
+    dependencies:
+      reusify: 1.0.4
+    dev: false
+
   /fd-slicer@1.1.0:
     resolution: {integrity: sha512-cE1qsB/VwyQozZ+q1dGxR8LBYNZeofhEdUNGSMbQD3Gw2lAzX9Zb3uIU6Ebc/Fmyjo9AWWfnn0AUCHqtevs/8g==}
     requiresBuild: true
@@ -7424,6 +7430,7 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       yocto-queue: 0.1.0
+    dev: true
 
   /p-limit@4.0.0:
     resolution: {integrity: sha512-5b0R4txpzjPWVw/cXXUResoD4hb6U/x9BH08L7nw+GN1sezDzPdxeRvpc9c433fZhBan/wusjbCsqwqm4EIBIQ==}
@@ -9725,6 +9732,7 @@ packages:
   /yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+    dev: true
 
   /yocto-queue@1.0.0:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}
