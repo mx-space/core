@@ -116,8 +116,8 @@ importers:
         specifier: 10.3.1
         version: 10.3.1(@nestjs/common@10.3.1)(@nestjs/websockets@10.3.1)(reflect-metadata@0.2.1)(rxjs@7.8.1)
       '@nestjs/event-emitter':
-        specifier: 2.0.3
-        version: 2.0.3(@nestjs/common@10.3.1)(@nestjs/core@10.3.1)(reflect-metadata@0.2.1)
+        specifier: 2.0.4
+        version: 2.0.4(@nestjs/common@10.3.1)(@nestjs/core@10.3.1)
       '@nestjs/mapped-types':
         specifier: ^2.0.4
         version: 2.0.4(@nestjs/common@10.3.1)(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.1)
@@ -1897,17 +1897,15 @@ packages:
     transitivePeerDependencies:
       - encoding
 
-  /@nestjs/event-emitter@2.0.3(@nestjs/common@10.3.1)(@nestjs/core@10.3.1)(reflect-metadata@0.2.1):
-    resolution: {integrity: sha512-Pt7KAERrgK0OjvarSI3wfVhwZ8X1iLq1lXuodyRe+Zx3aLLP7fraFUHirASbFkB6KIQ1Zj+gZ1g8a9eu4GfFhw==}
+  /@nestjs/event-emitter@2.0.4(@nestjs/common@10.3.1)(@nestjs/core@10.3.1):
+    resolution: {integrity: sha512-quMiw8yOwoSul0pp3mOonGz8EyXWHSBTqBy8B0TbYYgpnG1Ix2wGUnuTksLWaaBiiOTDhciaZ41Y5fJZsSJE1Q==}
     peerDependencies:
       '@nestjs/common': ^8.0.0 || ^9.0.0 || ^10.0.0
       '@nestjs/core': ^8.0.0 || ^9.0.0 || ^10.0.0
-      reflect-metadata: ^0.1.12
     dependencies:
       '@nestjs/common': 10.3.1(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.1)(rxjs@7.8.1)
       '@nestjs/core': 10.3.1(@nestjs/common@10.3.1)(@nestjs/websockets@10.3.1)(reflect-metadata@0.2.1)(rxjs@7.8.1)
       eventemitter2: 6.4.9
-      reflect-metadata: 0.2.1
     dev: false
 
   /@nestjs/mapped-types@2.0.4(@nestjs/common@10.3.1)(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.1):
