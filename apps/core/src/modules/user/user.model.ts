@@ -1,4 +1,4 @@
-import { hashSync } from 'bcrypt'
+import { hashSync } from 'bcryptjs'
 import { omit } from 'lodash'
 import { Schema } from 'mongoose'
 import type { DocumentType } from '@typegoose/typegoose'

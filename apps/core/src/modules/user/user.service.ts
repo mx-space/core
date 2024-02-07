@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { compareSync } from 'bcrypt'
+import { compareSync } from 'bcryptjs'
 import type { UserDocument } from './user.model'
 
 import {
