@@ -463,8 +463,8 @@ importers:
   packages/external:
     devDependencies:
       nanoid:
-        specifier: 5.0.4
-        version: 5.0.4
+        specifier: 5.0.5
+        version: 5.0.5
       zx:
         specifier: 7.2.3
         version: 7.2.3
@@ -7105,8 +7105,8 @@ packages:
     hasBin: true
     dev: true
 
-  /nanoid@5.0.4:
-    resolution: {integrity: sha512-vAjmBf13gsmhXSgBrtIclinISzFFy22WwCYoyilZlsrRXNIHSwgFQ1bEdjRwMT3aoadeIF6HMuDRlOxzfXV8ig==}
+  /nanoid@5.0.5:
+    resolution: {integrity: sha512-/Veqm+QKsyMY3kqi4faWplnY1u+VuKO3dD2binyPIybP31DRO29bPF+1mszgLnrR2KqSLceFLBNw0zmvDzN1QQ==}
     engines: {node: ^18 || >=20}
     hasBin: true
     dev: true
