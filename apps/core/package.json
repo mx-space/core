@@ -56,7 +56,7 @@
     "@clerk/clerk-sdk-node": "4.13.8",
     "@fastify/cookie": "9.3.1",
     "@fastify/multipart": "8.1.0",
-    "@fastify/static": "7.0.0",
+    "@fastify/static": "7.0.1",
     "@innei/next-async": "0.3.0",
     "@mx-space/external": "workspace:*",
     "@nestjs/cache-manager": "2.2.1",
