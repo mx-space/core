@@ -19,7 +19,6 @@
 
 现有的比较有意思的一些小玩意的实现：
 
-- 实时日志输出。通过 Socket.IO + 劫持 `process.stdout` 实现。
 - [云函数](./src/modules/serverless/serverless.readme.md)
 
 三方服务集成：
@@ -63,6 +62,9 @@ node index.js
 
 所有的依赖都打包进了产物，无需黑洞一般的 node_modules
 
+> [!NOTE]
+> 编译之后的产物错误堆栈是被压缩过的，如果你遇到任何问题，请使用 `node index.debug.js` 启动，复现问题并提供完整堆栈，然后提交 issue。
+
 ## 开发环境
 
 ```
@@ -94,7 +96,7 @@ pnpm dev
 ├── processors                      # 核心辅助模块
 │   ├── cache                       # Redis 缓存相关
 │   ├── database                    # Mongo 数据库相关
-│   ├── gateway                     # Socket.IO 相关
+│   ├── gateway                     # WebSocket 相关
 │   ├── helper                      # 辅助类
 │   └── logger                      # 自定义 Logger
 ├── shared                          # 通用模型
@@ -192,7 +194,6 @@ pnpm start
 Since 2021-08-31
 
 Thanks
-
 
 # 许可
 

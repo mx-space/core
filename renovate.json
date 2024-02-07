@@ -18,12 +18,8 @@
     }
   ],
   "ignoreDeps": [
-    "nanoid",
-    "camelcase-keys",
     "class-validator",
-    "class-transformer",
-    "@socket.io/redis-emitter",
-    "@socket.io/redis-adapter"
+    "class-transformer"
   ],
   "enabled": true
 }

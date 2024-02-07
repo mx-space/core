@@ -1,7 +1,6 @@
-import { exec } from 'child_process'
+import cdp, { exec } from 'child_process'
 import { builtinModules } from 'module'
 import { promisify } from 'util'
-import { spawn } from 'node-pty'
 
 export async function getFolderSize(folderPath: string) {
   try {
@@ -89,11 +88,83 @@ export const installPKG = async (name: string, cwd: string) => {
   cd(cwd)
   // await $`${manager} ${INSTALL_COMMANDS[manager]} ${name}`
   const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash'
-  const pty = spawn(
+  const pty = spawnShell(
     shell,
     ['-c', `${manager} ${INSTALL_COMMANDS[manager]} ${name}`],
     {},
   )
 
   return pty
+}
+const noop = () => {}
+
+export const safeProcessEnv = () => {
+  const safeKeys = [
+    '_',
+    'PATH',
+    'HOME',
+    'SHELL',
+    'TMPDIR',
+    'PWD',
+    'EDITOR',
+    'VISUAL',
+    'LANG',
+    'LESS',
+    'N_PREFIX',
+    'N_PRESERVE_NPM',
+    'STARSHIP_SHELL',
+    'PNPM_HOME',
+    'COLORTERM',
+    'TZ',
+  ]
+  const env: Record<string, string> = {}
+  for (const key of safeKeys) {
+    const value = process.env[key]
+    if (value) {
+      env[key] = value
+    }
+  }
+  return env
+}
+export const spawnShell = (
+  cmd: string,
+  args?: string[],
+  options?: cdp.SpawnOptionsWithoutStdio,
+) => {
+  type DataHandler = (string: string, code: 0 | 1) => any
+  type ExitHandler = (e: { exitCode: number }) => any
+
+  let onDataHandler: DataHandler = noop
+  let onExitHandler: ExitHandler = noop
+  const returnObject = {
+    onData(callback: DataHandler) {
+      onDataHandler = callback
+    },
+    onExit(callback: ExitHandler) {
+      onExitHandler = callback
+    },
+  }
+
+  const child = cdp.spawn(cmd, args, {
+    env: {
+      ...safeProcessEnv(),
+      FORCE_COLOR: '1',
+      ...options?.env,
+    },
+    ...options,
+  })
+
+  child.stdout.on('data', (data) => {
+    onDataHandler(data.toString(), 0)
+  })
+
+  child.stderr.on('data', (data) => {
+    onDataHandler(data.toString(), 1)
+  })
+
+  child.on('close', (code) => {
+    onExitHandler({ exitCode: code || 0 })
+  })
+
+  return returnObject
 }

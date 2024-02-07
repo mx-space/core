@@ -95,7 +95,6 @@ export async function bootstrap() {
     }
 
     logger.success(`[${prefix + pid}] Server listen on: ${url}`)
-    logger.success(`[${prefix + pid}] Admin Dashboard: ${url}/qaqdmin`)
     logger.success(
       `[${prefix + pid}] Admin Local Dashboard: ${url}/proxy/qaqdmin`,
     )
