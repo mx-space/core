@@ -36,7 +36,12 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { getRedisKey, safePathJoin, scheduleManager } from '~/utils'
+import {
+  getRedisKey,
+  safePathJoin,
+  safeProcessEnv,
+  scheduleManager,
+} from '~/utils'
 import { EncryptUtil } from '~/utils/encrypt.util'
 import { safeEval } from '~/utils/safe-eval.util'
 
@@ -559,7 +564,7 @@ export class ServerlessService implements OnModuleInit {
       },
 
       process: {
-        env: {},
+        env: safeProcessEnv(),
         nextTick: scheduleManager.schedule.bind(null),
       },
     }
