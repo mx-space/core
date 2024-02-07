@@ -3,32 +3,18 @@ import fs from 'fs/promises'
 import { extname, join } from 'path'
 import { render } from 'ejs'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { isNull } from 'lodash'
 import { lookup } from 'mime-types'
-import PKG from 'package.json'
 import type { Observable } from 'rxjs'
 
-import {
-  Controller,
-  Get,
-  InternalServerErrorException,
-  Query,
-  Req,
-  Res,
-} from '@nestjs/common'
+import { Controller, Get, Query, Req, Res } from '@nestjs/common'
 import { SkipThrottle } from '@nestjs/throttler'
 
-import { Cookies } from '~/common/decorators/cookie.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { RedisKeys } from '~/constants/cache.constant'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { CacheService } from '~/processors/redis/cache.service'
-import { getRedisKey } from '~/utils/redis.util'
 
-import { dashboard } from '../../../package.json'
 import { UpdateService } from '../update/update.service'
-import { PageProxyDebugDto } from './pageproxy.dto'
 import { PageProxyService } from './pageproxy.service'
 
 @Controller('/')
@@ -40,123 +26,6 @@ export class PageProxyController {
     private readonly updateService: UpdateService,
     private readonly assetService: AssetService,
   ) {}
-
-  @Get('/qaqdmin')
-  @HTTPDecorators.Bypass
-  async proxyAdmin(
-    @Cookies() cookies: KV<string>,
-    @Query() query: PageProxyDebugDto,
-    @Res() reply: FastifyReply,
-  ) {
-    // if want to access local, skip this route logic
-
-    if (query.__local) {
-      reply.redirect('/proxy/qaqdmin')
-      return
-    }
-
-    if ((await this.service.checkCanAccessAdminProxy()) === false) {
-      return reply.type('application/json').status(403).send({
-        message: 'admin proxy not enabled',
-      })
-    }
-    const {
-      __apiUrl: apiUrl,
-      __gatewayUrl: gatewayUrl,
-      __onlyGithub: onlyGithub,
-      __debug: debug,
-      __version: adminVersion = dashboard.version,
-      __purge,
-    } = query
-
-    if (__purge) {
-      await this.cacheService.getClient().del(getRedisKey(RedisKeys.AdminPage))
-    }
-    if (apiUrl) {
-      reply.setCookie('__apiUrl', apiUrl, { maxAge: 1000 * 60 * 10 })
-    }
-
-    if (gatewayUrl) {
-      reply.setCookie('__gatewayUrl', gatewayUrl, { maxAge: 1000 * 60 * 10 })
-    }
-
-    if (debug === false) {
-      reply.clearCookie('__apiUrl')
-      reply.clearCookie('__gatewayUrl')
-    }
-
-    const source: { text: string; from: string } = await (async () => {
-      // adminVersion 如果传入 latest 会被转换 null, 这里要判断 undefined
-      if (!onlyGithub && typeof adminVersion == 'undefined') {
-        const fromRedis = await this.cacheService.get<string>(
-          getRedisKey(RedisKeys.AdminPage),
-        )
-
-        if (fromRedis) {
-          return {
-            text: fromRedis,
-            from: 'redis',
-          }
-        }
-      }
-      let latestVersion = ''
-
-      if (isNull(adminVersion)) {
-        try {
-          latestVersion =
-            await this.service.getAdminLastestVersionFromGHRelease()
-        } catch (e) {
-          reply.type('application/json').status(500).send({
-            message: '从获取 GitHub 获取数据失败，连接超时',
-          })
-          throw e
-        }
-      }
-      const v = adminVersion || latestVersion
-      const indexEntryUrl = `https://raw.githubusercontent.com/${PKG.dashboard.repo}/page_v${v}/index.html`
-      const indexEntryCdnUrl = `https://fastly.jsdelivr.net/gh/${PKG.dashboard.repo}@page_v${v}/index.html`
-      const tasks = [
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        fetch(indexEntryUrl)
-          .then((res) => res.text())
-          .then((text) => ({ text, from: 'github' })),
-      ]
-      if (!onlyGithub) {
-        tasks.push(
-          fetch(indexEntryCdnUrl)
-            .then((res) => res.text())
-            .then((text) => ({ text, from: 'jsdelivr' })),
-        )
-      }
-
-      return await Promise.any(tasks).catch((e) => {
-        const err = '网络连接异常，所有请求均失败，无法获取后台入口文件'
-        reply.type('application/json').status(500).send({ message: err })
-        throw new InternalServerErrorException(err)
-      })
-    })()
-
-    await this.cacheService.set(
-      getRedisKey(RedisKeys.AdminPage),
-      source.text,
-      10 * 60 * 1000,
-    )
-
-    const sessionInjectableData =
-      debug === false
-        ? {}
-        : {
-            BASE_API: apiUrl ?? cookies['__apiUrl'],
-            GATEWAY: gatewayUrl ?? cookies['__gatewayUrl'],
-          }
-    const entry = await this.service.injectAdminEnv(source.text, {
-      BASE_API: sessionInjectableData.BASE_API,
-      GATEWAY: sessionInjectableData.GATEWAY,
-      from: source.from,
-    })
-
-    return reply.type('text/html').send(entry)
-  }
 
   private fetchObserver$: Observable<string> | null
   private fetchLogs: string[] | null
