@@ -1,5 +1,19 @@
 # CHANGELOG
 
+# [5.0.0-alpha.0](https://github.com/mx-space/core/compare/v4.11.8...v5.0.0-alpha.0) (2024-02-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency nestjs-pretty-logger to v0.2.1 ([9addf45](https://github.com/mx-space/core/commit/9addf450c4d91a7e3236580bbe5956992a4a6984))
+
+
+### Performance Improvements
+
+* reduce memory usage ([#1436](https://github.com/mx-space/core/issues/1436)) ([ed11374](https://github.com/mx-space/core/commit/ed11374a975d26bb680eb9a8069cd97c1f6325a1))
+
+
+
 ## [4.11.8](https://github.com/mx-space/core/compare/v4.11.7...v4.11.8) (2024-02-06)
 
 
