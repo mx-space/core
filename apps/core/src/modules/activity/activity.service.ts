@@ -1,9 +1,11 @@
 import { pick } from 'lodash'
 import { Types } from 'mongoose'
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import type { Collection } from 'mongodb'
 import type {
   ActivityLikePayload,
   ActivityLikeSupportType,
+  ActivityPresence,
 } from './activity.interface'
 import type { UpdatePresenceDto } from './dtos/presence.dto'
 
@@ -20,9 +22,16 @@ import { getSocketMetadata, setSocketMetadata } from '~/utils/socket.util'
 
 import { Activity } from './activity.constant'
 import { ActivityModel } from './activity.model'
+import { isValidRoomName } from './activity.util'
+
+declare module '~/utils/socket.util' {
+  interface SocketMetadata {
+    presence?: ActivityPresence
+  }
+}
 
 @Injectable()
-export class ActivityService {
+export class ActivityService implements OnModuleInit, OnModuleDestroy {
   private readonly logger: Logger
   constructor(
     private readonly countingService: CountingService,
@@ -36,6 +45,28 @@ export class ActivityService {
     private readonly webGateway: WebEventsGateway,
   ) {
     this.logger = new Logger(ActivityService.name)
+  }
+
+  private cleanupFn: () => any | null
+
+  onModuleDestroy() {
+    this.cleanupFn?.()
+  }
+
+  onModuleInit() {
+    this.cleanupFn = this.webGateway.registerHook(
+      'onDisconnected',
+      (socket) => {
+        const presence = getSocketMetadata(socket)?.presence
+
+        if (presence) {
+          this.activityModel.create({
+            type: Activity.ReadDuration,
+            payload: presence,
+          })
+        }
+      },
+    )
   }
 
   get model() {
@@ -169,19 +200,24 @@ export class ActivityService {
   }
 
   async updatePresence(data: UpdatePresenceDto) {
-    const roomSockets = await this.webGateway.getSocketsOfRoom(data.roomName)
+    const roomName = data.roomName
+
+    if (!isValidRoomName(roomName)) {
+      throw new BadRequestException('invalid room_name')
+    }
+    const roomSockets = await this.webGateway.getSocketsOfRoom(roomName)
     // TODO 或许应该找到所有的同一个用户的 socket 最早的一个连接时间
     const socket = roomSockets.find(
       (socket) => getSocketMetadata(socket)?.sessionId === data.identity,
     )
     if (!socket) {
       this.logger.debug(
-        `socket not found, room_name: ${data.roomName} identity: ${data.identity}`,
+        `socket not found, room_name: ${roomName} identity: ${data.identity}`,
       )
       return
     }
 
-    const presenceData = {
+    const presenceData: ActivityPresence = {
       ...data,
 
       operationTime: data.ts,
@@ -193,7 +229,7 @@ export class ActivityService {
       BusinessEvents.ACTIVITY_UPDATE_PRESENCE,
       presenceData,
       {
-        rooms: [data.roomName],
+        rooms: [roomName],
       },
     )
 

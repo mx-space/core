@@ -125,4 +125,7 @@ export class CommentModel extends BaseModel {
 
   @prop()
   avatar?: string
+
+  @prop()
+  meta?: string
 }

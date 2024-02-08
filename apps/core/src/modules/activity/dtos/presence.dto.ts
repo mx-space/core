@@ -1,4 +1,4 @@
-import { IsNumber, IsString, Min } from 'class-validator'
+import { IsNumber, IsOptional, IsString, Min } from 'class-validator'
 
 export class UpdatePresenceDto {
   @IsString()
@@ -13,6 +13,10 @@ export class UpdatePresenceDto {
   @IsNumber()
   @Min(0)
   position: number
+
+  @IsOptional()
+  @IsString()
+  displayName?: string
 }
 
 export class GetPresenceQueryDto {

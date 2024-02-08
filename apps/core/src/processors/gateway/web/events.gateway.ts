@@ -8,6 +8,7 @@ import type {
 } from '@nestjs/websockets'
 import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
 import type { DefaultEventsMap } from 'socket.io/dist/typed-events'
+import type { EventGatewayHooks, HookFunction } from './hook.interface'
 
 import {
   ConnectedSocket,
@@ -19,7 +20,6 @@ import {
 
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
-import { logger } from '~/global/consola.global'
 import { CacheService } from '~/processors/redis/cache.service'
 import { scheduleManager } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
@@ -29,9 +29,9 @@ import { getShortDate } from '~/utils/time.util'
 import { BroadcastBaseGateway } from '../base.gateway'
 import { MessageEventDto, SupportedMessageEvent } from './dtos/message'
 
-declare module 'socket.io' {
-  export interface Client {
-    meta: any
+declare module '~/utils/socket.util' {
+  interface SocketMetadata {
+    sessionId: string
   }
 }
 
@@ -78,7 +78,7 @@ export class WebEventsGateway
   ) {
     const { payload, type } = data
 
-    logger.debug('Received message', { type, payload })
+    // logger.debug('Received message', { type, payload })
 
     switch (type) {
       case SupportedMessageEvent.Join: {
@@ -99,20 +99,24 @@ export class WebEventsGateway
         }
       }
     }
+
+    this.hooks.onMessage.forEach((fn) => fn(socket, data))
   }
 
   async handleConnection(socket: SocketIO.Socket) {
     const webSessionId =
       socket.handshake.headers['x-socket-session-id'] ||
-      socket.handshake.query['socket_session_id']
+      socket.handshake.query['socket_session_id'] ||
+      // fallback sid
+      socket.id
 
-    logger.debug('webSessionId', webSessionId)
-    if (webSessionId) {
-      setSocketMetadata(socket, { sessionId: webSessionId })
-    }
+    // logger.debug('webSessionId', webSessionId)
+
+    setSocketMetadata(socket, { sessionId: webSessionId })
 
     this.whenUserOnline()
     super.handleConnect(socket)
+    this.hooks.onConnected.forEach((fn) => fn(socket))
   }
 
   async whenUserOnline() {
@@ -140,12 +144,27 @@ export class WebEventsGateway
     })
   }
 
-  async handleDisconnect(client: SocketIO.Socket) {
-    super.handleDisconnect(client)
-    this.broadcast(
-      BusinessEvents.VISITOR_OFFLINE,
-      await this.sendOnlineNumber(),
-    )
+  private hooks: EventGatewayHooks = {
+    onConnected: [],
+    onDisconnected: [],
+    onMessage: [],
+  }
+
+  public registerHook(type: keyof EventGatewayHooks, callback: HookFunction) {
+    this.hooks[type].push(callback)
+    return () => {
+      // @ts-expect-error
+      this.hooks[type] = this.hooks[type].filter((fn) => fn !== callback)
+    }
+  }
+
+  async handleDisconnect(socket: SocketIO.Socket) {
+    super.handleDisconnect(socket)
+    this.broadcast(BusinessEvents.VISITOR_OFFLINE, {
+      ...(await this.sendOnlineNumber()),
+      sessionId: getSocketMetadata(socket)?.sessionId,
+    })
+    this.hooks.onDisconnected.forEach((fn) => fn(socket))
   }
 
   override broadcast(
