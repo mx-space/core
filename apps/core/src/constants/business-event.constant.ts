@@ -36,8 +36,6 @@ export enum BusinessEvents {
 
   LINK_APPLY = 'LINK_APPLY',
 
-  DANMAKU_CREATE = 'DANMAKU_CREATE',
-
   RECENTLY_CREATE = 'RECENTLY_CREATE',
   RECENTLY_DELETE = 'RECENTLY_DELETE',
 
@@ -54,6 +52,7 @@ export enum BusinessEvents {
 
   // activity
   ACTIVITY_LIKE = 'ACTIVITY_LIKE',
+  ACTIVITY_UPDATE_PRESENCE = 'ACTIVITY_UPDATE_PRESENCE',
 }
 
 export enum EventScope {
