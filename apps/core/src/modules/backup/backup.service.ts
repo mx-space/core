@@ -36,6 +36,15 @@ const excludeCollections = [
   WEBHOOK_EVENT_COLLECTION_NAME,
   MIGRATE_COLLECTION_NAME,
 ]
+const excludeFolders = [
+  'backup',
+  'log',
+  'node_modules',
+  'admin',
+  'temp',
+  'trash',
+]
+
 @Injectable()
 export class BackupService {
   private logger: Logger
@@ -105,7 +114,6 @@ export class BackupService {
 
       // 打包数据目录
 
-      const excludeFolders = ['backup', 'log', 'node_modules', 'admin']
       const flags = excludeFolders.map((item) => ['--exclude', item]).flat(1)
       cd(DATA_DIR)
       await rm(join(DATA_DIR, 'backup_data'), { recursive: true, force: true })

@@ -1,20 +1,25 @@
 import { createWriteStream } from 'fs'
+import { resolve } from 'path'
 import type { Readable } from 'stream'
 import type { FileType } from './file.type'
 
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common'
 
-import { STATIC_FILE_DIR } from '~/constants/path.constant'
+import { DATA_DIR, STATIC_FILE_DIR } from '~/constants/path.constant'
 
 import { ConfigsService } from '../configs/configs.service'
 
 @Injectable()
 export class FileService {
-  constructor(private readonly configService: ConfigsService) {}
+  private readonly logger: Logger
+  constructor(private readonly configService: ConfigsService) {
+    this.logger = new Logger(FileService.name)
+  }
 
   private resolveFilePath(type: FileType, name: string) {
     return path.resolve(STATIC_FILE_DIR, type, name)
@@ -69,8 +74,11 @@ export class FileService {
 
   async deleteFile(type: FileType, name: string) {
     try {
-      return await fs.unlink(this.resolveFilePath(type, name))
-    } catch {
+      const path = this.resolveFilePath(type, name)
+
+      await fs.rename(path, resolve(DATA_DIR, 'trash', name))
+    } catch (e) {
+      this.logger.error('删除文件失败', e)
       return null
     }
   }
@@ -84,5 +92,16 @@ export class FileService {
   async resolveFileUrl(type: FileType, name: string) {
     const { serverUrl } = await this.configService.get('url')
     return `${serverUrl.replace(/\/+$/, '')}/objects/${type}/${name}`
+  }
+
+  async renameFile(type: FileType, name: string, newName: string) {
+    const oldPath = this.resolveFilePath(type, name)
+    const newPath = this.resolveFilePath(type, newName)
+    try {
+      await fs.rename(oldPath, newPath)
+    } catch (e) {
+      this.logger.error('重命名文件失败', e.message)
+      throw new BadRequestException('重命名文件失败')
+    }
   }
 }

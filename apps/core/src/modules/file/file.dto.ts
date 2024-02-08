@@ -14,3 +14,8 @@ export class FileUploadDto {
   @IsOptional()
   type?: FileType
 }
+
+export class RenameFileQueryDto {
+  @IsString()
+  new_name: string
+}

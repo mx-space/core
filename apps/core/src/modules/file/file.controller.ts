@@ -1,8 +1,18 @@
+import fs from 'fs/promises'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
 
 import { nanoid } from '@mx-space/external'
-import { Delete, Get, Param, Post, Query, Req, Res } from '@nestjs/common'
+import {
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -11,10 +21,11 @@ import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { alphabet } from '~/constants/other.constant'
+import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
 
-import { FileQueryDto, FileUploadDto } from './file.dto'
+import { FileQueryDto, FileUploadDto, RenameFileQueryDto } from './file.dto'
 import { FileService } from './file.service'
 
 const { customAlphabet } = nanoid
@@ -34,9 +45,18 @@ export class FileController {
     const dir = await this.service.getDir(type)
     return Promise.all(
       dir.map(async (name) => {
-        return { name, url: await this.service.resolveFileUrl(type, name) }
+        const { birthtime } = await fs.stat(
+          path.resolve(STATIC_FILE_DIR, type, name),
+        )
+        return {
+          name,
+          url: await this.service.resolveFileUrl(type, name),
+          created: +birthtime,
+        }
       }),
-    )
+    ).then((data) => {
+      return data.sort((a, b) => b.created - a.created)
+    })
   }
 
   @Get('/:type/:name')
@@ -77,7 +97,7 @@ export class FileController {
     const { type = 'file' } = query
 
     const ext = path.extname(file.filename)
-    const filename = (await customAlphabet(alphabet)(18)) + ext.toLowerCase()
+    const filename = customAlphabet(alphabet)(18) + ext.toLowerCase()
 
     await this.service.writeFile(type, filename, file.file)
 
@@ -93,5 +113,17 @@ export class FileController {
   async delete(@Param() params: FileQueryDto) {
     const { type, name } = params
     await this.service.deleteFile(type, name)
+  }
+
+  @Auth()
+  @BanInDemo
+  @Patch('/:type/:name/rename')
+  async rename(
+    @Param() params: FileQueryDto,
+    @Query() query: RenameFileQueryDto,
+  ) {
+    const { type, name } = params
+    const { new_name } = query
+    await this.service.renameFile(type, name, new_name)
   }
 }

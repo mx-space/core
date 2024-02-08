@@ -17,6 +17,7 @@ export const USER_ASSET_DIR = join(DATA_DIR, 'assets')
 export const LOG_DIR = join(DATA_DIR, 'log')
 
 export const STATIC_FILE_DIR = join(DATA_DIR, 'static')
+export const STATIC_FILE_TRASH_DIR = join(TEMP_DIR, 'trash')
 
 export const BACKUP_DIR = !isDev
   ? join(DATA_DIR, 'backup')
