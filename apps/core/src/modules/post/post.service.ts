@@ -1,6 +1,7 @@
 import { isDefined } from 'class-validator'
-import { omit } from 'lodash'
+import { debounce, omit } from 'lodash'
 import slugify from 'slugify'
+import type { DocumentType } from '@typegoose/typegoose'
 import type { AggregatePaginateModel, Document, Types } from 'mongoose'
 
 import {
@@ -262,7 +263,17 @@ export class PostService {
     )
 
     await oldDocument.save()
-    scheduleManager.schedule(async () => {
+    scheduleManager.schedule(() => this.afterUpdatePost(id, data, oldDocument))
+
+    return oldDocument.toObject()
+  }
+
+  afterUpdatePost = debounce(
+    async (
+      id: string,
+      updatedData: Partial<PostModel>,
+      oldDocument: DocumentType<PostModel>,
+    ) => {
       const doc = await this.postModel
         .findById(id)
         .populate('related', 'title slug category categoryId id _id')
@@ -272,9 +283,9 @@ export class PostService {
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
-        data.text &&
+        updatedData.text &&
           this.imageService.saveImageDimensionsFromMarkdownText(
-            data.text,
+            updatedData.text,
             doc?.images,
             (images) => {
               oldDocument.images = images
@@ -296,10 +307,12 @@ export class PostService {
           scope: EventScope.TO_SYSTEM,
         }),
       ])
-    })
-
-    return oldDocument.toObject()
-  }
+    },
+    1000,
+    {
+      leading: false,
+    },
+  )
 
   async deletePost(id: string) {
     const deletedPost = await this.postModel.findById(id).lean()
