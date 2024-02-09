@@ -3,12 +3,9 @@ on:
     tags-ignore:
       - 'v*'
     paths-ignore:
-      - test/**
-    branches:
-      - master
-      - main
+      - 'CHANGELOG.MD'
+    branches: master
   pull_request:
-    branches: [master]
 name: CI
 
 jobs:
@@ -22,10 +19,8 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          # list of Docker images to use as base name for tags
           images: |
             innei/mx-server
-          # generate Docker tags based on the following events/attributes
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
@@ -45,7 +40,7 @@ jobs:
         with:
           context: .
           load: true
-          tags: ${{ steps.meta.outputs.tags }},innei/mx-server:latest
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -69,19 +64,26 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2.4.0
+        with:
+          version: 8.x
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
       - name: Cache pnpm modules
         uses: actions/cache@v4
         env:
           cache-name: cache-pnpm-modules
         with:
-          path: ~/.pnpm-store
+          path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-      - uses: pnpm/action-setup@v2.4.0
-        with:
-          version: 8.x
-          run_install: false
       - name: Install Dependencies
         run: |
           pnpm i
@@ -100,7 +102,7 @@ jobs:
         run: |
           bash scripts/workflow/test-server.sh
   test:
-    name: Node.js Test CI
+    name: Test
     timeout-minutes: 10
     runs-on: ubuntu-latest
 
@@ -115,20 +117,26 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2.4.0
+        with:
+          version: 8.x
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
       - name: Cache pnpm modules
         uses: actions/cache@v4
         env:
           cache-name: cache-pnpm-modules
         with:
-          path: ~/.pnpm-store
+          path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-
-      - uses: pnpm/action-setup@v2.4.0
-        with:
-          version: 8.x
-          run_install: false
       - name: Install Dependencies
         run: |
           pnpm i

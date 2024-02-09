@@ -28,19 +28,26 @@ jobs:
         uses: supercharge/redis-github-action@1.8.0
         with:
           redis-version: 6
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2.4.0
+        with:
+          version: 8.x
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
       - name: Cache pnpm modules
         uses: actions/cache@v4
         env:
           cache-name: cache-pnpm-modules
         with:
-          path: ~/.pnpm-store
+          path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-      - uses: pnpm/action-setup@v2.4.0
-        with:
-          version: 8.x
-          run_install: false
       - name: Install Dependencies
         run: |
           pnpm i
@@ -66,10 +73,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ github.ref_name }}
+          release_name: ${{ github.ref_name }}
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(fromJSON('["alpha", "beta"]'), github.ref_name) }}
       - run: npx changelogithub
         continue-on-error: true
         env:
@@ -89,16 +96,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
-      - name: Extract tag name
-        id: extract_tag
-        run: echo "TAG_NAME=$(echo ${GITHUB_REF#refs/tags/})" >> $GITHUB_ENV
-
       - uses: robinraju/release-downloader@v1.9
         name: Download release
         with:
-          # The github tag. e.g: v1.0.1
-          # Download assets from a specific tag/version
-          tag: ${{ env.TAG_NAME }}
+          tag: ${{ github.ref_name }}
           fileName: 'release-linux.zip'
       - name: copy file via ssh password
         uses: appleboy/scp-action@v0.1.7
@@ -179,10 +180,8 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          # list of Docker images to use as base name for tags
           images: |
             innei/mx-server
-          # generate Docker tags based on the following events/attributes
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
@@ -207,7 +206,7 @@ jobs:
         with:
           context: .
           load: true
-          tags: ${{ steps.meta.outputs.tags }},innei/mx-server:latest
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -220,6 +219,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: ${{ startsWith(github.ref, 'refs/tags/v') }}
-          tags: ${{ steps.meta.outputs.tags }},innei/mx-server:latest
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
