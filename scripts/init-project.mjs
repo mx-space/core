@@ -15,7 +15,7 @@ async function main() {
   const existAsset = fs.existsSync(path.resolve(cwd, 'assets'))
 
   if (!existAsset) {
-    const cmd = `npx degit https://github.com/mx-space/assets.git ${path.resolve(
+    const cmd = `git clone https://github.com/mx-space/assets.git ${path.resolve(
       cwd,
       'assets',
     )}`
