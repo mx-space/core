@@ -29,10 +29,10 @@ async function main() {
       process.exit(1)
     }
 
-    fs.rmSync(path.resolve(cwd, 'assets', '.git'), {
-      force: true,
-      recursive: true,
-    })
+    // fs.rmSync(path.resolve(cwd, 'assets', '.git'), {
+    //   force: true,
+    //   recursive: true,
+    // })
     const symlinkPath = path.resolve(cwd, 'apps/core/assets')
     fs.rmSync(path.resolve(cwd, symlinkPath), {
       force: true,
