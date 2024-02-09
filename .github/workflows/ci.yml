@@ -4,6 +4,7 @@ on:
       - 'v*'
     paths-ignore:
       - 'CHANGELOG.MD'
+    branches: master
   pull_request:
 name: CI
 
