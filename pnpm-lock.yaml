@@ -137,8 +137,8 @@ importers:
         specifier: 10.3.2
         version: 10.3.2(@nestjs/common@10.3.2)(@nestjs/core@10.3.2)(@nestjs/platform-socket.io@10.3.2)(reflect-metadata@0.2.1)(rxjs@7.8.1)
       '@simplewebauthn/server':
-        specifier: 9.0.1
-        version: 9.0.1
+        specifier: 9.0.2
+        version: 9.0.2
       '@socket.io/redis-adapter':
         specifier: 8.2.1
         version: 8.2.1(socket.io-adapter@2.5.2)
@@ -2341,8 +2341,8 @@ packages:
     dev: true
     optional: true
 
-  /@simplewebauthn/server@9.0.1:
-    resolution: {integrity: sha512-XnilMoBygy2BOZjIHPxby+7ENx5ChN2wXfhd14mOgO/XitYMqdphTo/kwgxEI4/Je3lELK1h/eLDJqM2fIKS1w==}
+  /@simplewebauthn/server@9.0.2:
+    resolution: {integrity: sha512-aaWA+qVOU4byk5IDb/l+M1+7dmrAJhTb4ISJHucpsgRQcMMEes76tbGIqO2JQuA7N50tc/OBrnGKBjoKYG1kSw==}
     engines: {node: '>=16.0.0'}
     dependencies:
       '@hexagon/base64': 1.1.28
