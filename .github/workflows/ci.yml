@@ -69,12 +69,18 @@ jobs:
         with:
           version: 8.x
           run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
       - name: Cache pnpm modules
         uses: actions/cache@v4
         env:
           cache-name: cache-pnpm-modules
         with:
-          path: ~/.pnpm-store
+          path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -117,12 +123,17 @@ jobs:
           version: 8.x
           run_install: false
 
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
       - name: Cache pnpm modules
         uses: actions/cache@v4
         env:
           cache-name: cache-pnpm-modules
         with:
-          path: ~/.pnpm-store
+          path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
