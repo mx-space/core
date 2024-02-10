@@ -7,7 +7,10 @@ import type {
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
 import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
-import type { DefaultEventsMap } from 'socket.io/dist/typed-events'
+import type {
+  DecorateAcknowledgementsWithMultipleResponses,
+  DefaultEventsMap,
+} from 'socket.io/dist/typed-events'
 import type { EventGatewayHooks, HookFunction } from './hook.interface'
 
 import {
@@ -23,10 +26,10 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/redis/cache.service'
 import { scheduleManager } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
-import { getSocketMetadata, setSocketMetadata } from '~/utils/socket.util'
 import { getShortDate } from '~/utils/time.util'
 
 import { BroadcastBaseGateway } from '../base.gateway'
+import { GatewayService } from '../gateway.service'
 import { MessageEventDto, SupportedMessageEvent } from './dtos/message'
 
 declare module '~/utils/socket.util' {
@@ -43,7 +46,11 @@ export class WebEventsGateway
   extends BroadcastBaseGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(private readonly cacheService: CacheService) {
+  constructor(
+    private readonly cacheService: CacheService,
+
+    private readonly gatewayService: GatewayService,
+  ) {
     super()
   }
 
@@ -52,27 +59,35 @@ export class WebEventsGateway
 
   async sendOnlineNumber() {
     return {
-      online: await this.getcurrentClientCount(),
+      online: await this.getCurrentClientCount(),
       timestamp: new Date().toISOString(),
     }
   }
 
-  async getcurrentClientCount() {
+  async getCurrentClientCount() {
     const server = this.namespace.server
 
-    const sockets: SocketIO.Socket[] = await server
-      .of(`/${namespace}`)
-      .adapter.fetchSockets({
-        rooms: new Set(),
-      })
-    // 这里用 web socket id 作为同一用户，一般 web 用 userId 或者 local storage sessionId 作为 socket session id
-    return uniqBy(sockets, (x) => {
-      return getSocketMetadata(x)?.sessionId || true
-    }).length
+    const socketsMeta = await Promise.all(
+      await server
+        .of(`/${namespace}`)
+        .fetchSockets()
+        .then((sockets) => {
+          return sockets.map((socket) =>
+            this.gatewayService.getSocketMetadata(socket),
+          )
+        }),
+    )
+    // // 这里用 web socket id 作为同一用户，一般 web 用 userId 或者 local storage sessionId 作为 socket session id
+    // return uniqBy(socketsMeta, async (x) => {
+    //   const meta = await this.gatewayService.getSocketMetadata(x)
+    //   console.log(meta, 'meta', x.id, 'x.id')
+    //   return meta?.sessionId || true
+    // }).length
+    return uniqBy(socketsMeta, (x) => x?.sessionId).length
   }
 
   @SubscribeMessage('message')
-  handleMessageEvent(
+  async handleMessageEvent(
     @MessageBody() data: MessageEventDto,
     @ConnectedSocket() socket: SocketIO.Socket,
   ) {
@@ -94,7 +109,7 @@ export class WebEventsGateway
       case SupportedMessageEvent.UpdateSid: {
         const { sessionId } = payload as { sessionId: string }
         if (sessionId) {
-          setSocketMetadata(socket, { sessionId })
+          await this.gatewayService.setSocketMetadata(socket, { sessionId })
           this.whenUserOnline()
         }
       }
@@ -112,7 +127,9 @@ export class WebEventsGateway
 
     // logger.debug('webSessionId', webSessionId)
 
-    setSocketMetadata(socket, { sessionId: webSessionId })
+    await this.gatewayService.setSocketMetadata(socket, {
+      sessionId: webSessionId,
+    })
 
     this.whenUserOnline()
     super.handleConnect(socket)
@@ -135,7 +152,7 @@ export class WebEventsGateway
       await redisClient.hset(
         getRedisKey(RedisKeys.MaxOnlineCount),
         dateFormat,
-        Math.max(maxOnlineCount, await this.getcurrentClientCount()),
+        Math.max(maxOnlineCount, await this.getCurrentClientCount()),
       )
       const key = getRedisKey(RedisKeys.MaxOnlineCount, 'total')
 
@@ -162,9 +179,11 @@ export class WebEventsGateway
     super.handleDisconnect(socket)
     this.broadcast(BusinessEvents.VISITOR_OFFLINE, {
       ...(await this.sendOnlineNumber()),
-      sessionId: getSocketMetadata(socket)?.sessionId,
+      sessionId: (await this.gatewayService.getSocketMetadata(socket))
+        ?.sessionId,
     })
     this.hooks.onDisconnected.forEach((fn) => fn(socket))
+    this.gatewayService.clearSocketMetadata(socket)
   }
 
   override broadcast(
@@ -189,12 +208,15 @@ export class WebEventsGateway
     socket.emit('message', this.gatewayMessageFormat(event, data))
   }
 
-  public async getSocketsOfRoom(roomName: string): Promise<SocketIO.Socket[]> {
-    const roomNameSet = this.namespace.adapter.rooms.get(roomName)
-    if (roomNameSet)
-      return this.namespace.adapter.fetchSockets({
-        rooms: roomNameSet,
-      })
-    return []
+  public async getSocketsOfRoom(
+    roomName: string,
+  ): Promise<
+    | SocketIO.Socket[]
+    | SocketIO.RemoteSocket<
+        DecorateAcknowledgementsWithMultipleResponses<DefaultEventsMap>,
+        any
+      >[]
+  > {
+    return this.namespace.in(roomName).fetchSockets()
   }
 }

@@ -26,6 +26,8 @@ export enum RedisKeys {
   FunctionComplieCache = 'function_complie_cache',
 
   Authn = 'authn',
+
+  Socket = 'socket',
 }
 export const API_CACHE_PREFIX = 'mx-api-cache:'
 export enum CacheKeys {

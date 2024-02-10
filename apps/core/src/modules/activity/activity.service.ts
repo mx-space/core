@@ -1,4 +1,4 @@
-import { pick } from 'lodash'
+import { pick, uniqBy } from 'lodash'
 import { Types } from 'mongoose'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import type { Collection } from 'mongodb'
@@ -13,12 +13,12 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { DatabaseService } from '~/processors/database/database.service'
+import { GatewayService } from '~/processors/gateway/gateway.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
-import { getSocketMetadata, setSocketMetadata } from '~/utils/socket.util'
 
 import { Activity } from './activity.constant'
 import { ActivityModel } from './activity.model'
@@ -43,6 +43,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     private readonly databaseService: DatabaseService,
 
     private readonly webGateway: WebEventsGateway,
+    private readonly gatewayService: GatewayService,
   ) {
     this.logger = new Logger(ActivityService.name)
   }
@@ -56,8 +57,9 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   onModuleInit() {
     this.cleanupFn = this.webGateway.registerHook(
       'onDisconnected',
-      (socket) => {
-        const presence = getSocketMetadata(socket)?.presence
+      async (socket) => {
+        const presence = (await this.gatewayService.getSocketMetadata(socket))
+          ?.presence
 
         if (presence) {
           this.activityModel.create({
@@ -206,9 +208,12 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException('invalid room_name')
     }
     const roomSockets = await this.webGateway.getSocketsOfRoom(roomName)
+
     // TODO 或许应该找到所有的同一个用户的 socket 最早的一个连接时间
-    const socket = roomSockets.find(
-      (socket) => getSocketMetadata(socket)?.sessionId === data.identity,
+    const socket = await roomSockets.find(
+      async (socket) =>
+        (await this.gatewayService.getSocketMetadata(socket))?.sessionId ===
+        data.identity,
     )
     if (!socket) {
       this.logger.debug(
@@ -233,19 +238,32 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       },
     )
 
-    roomSockets.forEach((socket) => {
-      setSocketMetadata(socket, {
-        presence: presenceData,
-      })
-    })
+    await Promise.all(
+      roomSockets.map((socket) => {
+        return this.gatewayService.setSocketMetadata(socket, {
+          presence: presenceData,
+        })
+      }),
+    )
 
     return presenceData
   }
 
   async getRoomPresence(roomName: string) {
     const roomSocket = await this.webGateway.getSocketsOfRoom(roomName)
-    const socketMeta = roomSocket.map((socket) => getSocketMetadata(socket))
+    const socketMeta = await Promise.all(
+      roomSocket.map((socket) => this.gatewayService.getSocketMetadata(socket)),
+    )
 
-    return socketMeta.filter((x) => x?.presence).map((x) => x.presence)
+    return uniqBy(
+      socketMeta
+        .filter((x) => x?.presence)
+        .map((x) => x.presence)
+        .sort((a, b) => {
+          if (a && b) return a.updatedAt - b.updatedAt
+          return 1
+        }),
+      (x) => x?.identity,
+    )
   }
 }
