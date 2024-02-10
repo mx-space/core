@@ -17,6 +17,9 @@ export class UpdatePresenceDto {
   @IsOptional()
   @IsString()
   displayName?: string
+
+  @IsString()
+  sid: string
 }
 
 export class GetPresenceQueryDto {

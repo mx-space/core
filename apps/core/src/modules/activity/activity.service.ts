@@ -235,6 +235,8 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       presenceData,
       {
         rooms: [roomName],
+        // Not work
+        exclude: [socket.id],
       },
     )
 
@@ -249,7 +251,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     return presenceData
   }
 
-  async getRoomPresence(roomName: string) {
+  async getRoomPresence(roomName: string): Promise<ActivityPresence[]> {
     const roomSocket = await this.webGateway.getSocketsOfRoom(roomName)
     const socketMeta = await Promise.all(
       roomSocket.map((socket) => this.gatewayService.getSocketMetadata(socket)),
@@ -264,6 +266,6 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
           return 1
         }),
       (x) => x?.identity,
-    )
+    ) as ActivityPresence[]
   }
 }

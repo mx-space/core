@@ -1,15 +1,14 @@
 import { Module } from '@nestjs/common'
 
-import { GatewayService } from '~/processors/gateway/gateway.service'
-import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
+import { GatewayModule } from '~/processors/gateway/gateway.module'
 
 import { ActivityController } from './activity.controller'
 import { ActivityService } from './activity.service'
 
 @Module({
-  providers: [ActivityService, GatewayService],
+  providers: [ActivityService],
   controllers: [ActivityController],
   exports: [ActivityService],
-  imports: [WebEventsGateway],
+  imports: [GatewayModule],
 })
 export class ActivityModule {}

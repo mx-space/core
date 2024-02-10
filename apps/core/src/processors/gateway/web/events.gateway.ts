@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { uniqBy } from 'lodash'
+import { debounce, uniqBy } from 'lodash'
 import SocketIO from 'socket.io'
 import type {
   GatewayMetadata,
@@ -136,30 +136,39 @@ export class WebEventsGateway
     this.hooks.onConnected.forEach((fn) => fn(socket))
   }
 
-  async whenUserOnline() {
-    this.broadcast(BusinessEvents.VISITOR_ONLINE, await this.sendOnlineNumber())
+  whenUserOnline = debounce(
+    async () => {
+      this.broadcast(
+        BusinessEvents.VISITOR_ONLINE,
+        await this.sendOnlineNumber(),
+      )
 
-    scheduleManager.schedule(async () => {
-      const redisClient = this.cacheService.getClient()
-      const dateFormat = getShortDate(new Date())
+      scheduleManager.schedule(async () => {
+        const redisClient = this.cacheService.getClient()
+        const dateFormat = getShortDate(new Date())
 
-      // get and store max_online_count
-      const maxOnlineCount =
-        +(await redisClient.hget(
+        // get and store max_online_count
+        const maxOnlineCount =
+          +(await redisClient.hget(
+            getRedisKey(RedisKeys.MaxOnlineCount),
+            dateFormat,
+          ))! || 0
+        await redisClient.hset(
           getRedisKey(RedisKeys.MaxOnlineCount),
           dateFormat,
-        ))! || 0
-      await redisClient.hset(
-        getRedisKey(RedisKeys.MaxOnlineCount),
-        dateFormat,
-        Math.max(maxOnlineCount, await this.getCurrentClientCount()),
-      )
-      const key = getRedisKey(RedisKeys.MaxOnlineCount, 'total')
+          Math.max(maxOnlineCount, await this.getCurrentClientCount()),
+        )
+        const key = getRedisKey(RedisKeys.MaxOnlineCount, 'total')
 
-      const totalCount = +(await redisClient.hget(key, dateFormat))! || 0
-      await redisClient.hset(key, dateFormat, totalCount + 1)
-    })
-  }
+        const totalCount = +(await redisClient.hget(key, dateFormat))! || 0
+        await redisClient.hset(key, dateFormat, totalCount + 1)
+      })
+    },
+    1000,
+    {
+      leading: false,
+    },
+  )
 
   private hooks: EventGatewayHooks = {
     onConnected: [],
@@ -192,7 +201,7 @@ export class WebEventsGateway
 
     options?: {
       rooms?: string[]
-      local?: boolean
+      exclude?: string[]
     },
   ) {
     const emitter = this.cacheService.emitter
@@ -201,9 +210,13 @@ export class WebEventsGateway
       | Emitter<DefaultEventsMap>
       | BroadcastOperator<DefaultEventsMap>
     const rooms = options?.rooms
+    const exclude = options?.exclude
 
     if (rooms && rooms.length > 0) {
       socket = socket.in(rooms)
+    }
+    if (exclude && exclude.length > 0) {
+      socket = socket.except(exclude)
     }
     socket.emit('message', this.gatewayMessageFormat(event, data))
   }

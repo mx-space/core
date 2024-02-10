@@ -1,3 +1,5 @@
+import { keyBy } from 'lodash'
+
 import { Body, Get, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -50,6 +52,8 @@ export class ActivityController {
 
   @Get('/presence')
   async getPresence(@Query() query: GetPresenceQueryDto) {
-    return this.service.getRoomPresence(query.room_name)
+    return this.service.getRoomPresence(query.room_name).then((list) => {
+      return keyBy(list, 'identity')
+    })
   }
 }
