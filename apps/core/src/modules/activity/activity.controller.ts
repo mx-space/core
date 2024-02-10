@@ -47,15 +47,25 @@ export class ActivityController {
   }
 
   @Post('/presence/update')
-  async updatePresence(@Body() body: UpdatePresenceDto) {
-    return this.service.updatePresence(body)
+  async updatePresence(
+    @Body() body: UpdatePresenceDto,
+    @IpLocation() location: IpRecord,
+  ) {
+    return this.service.updatePresence(body, location.ip)
   }
 
   @Get('/presence')
   @HTTPDecorators.SkipLogging
   async getPresence(@Query() query: GetPresenceQueryDto) {
-    return this.service.getRoomPresence(query.room_name).then((list) => {
-      return keyBy(list, 'identity')
-    })
+    return this.service
+      .getRoomPresence(query.room_name)
+      .then((list) => {
+        return list.map(({ ip, ...item }) => {
+          return item
+        })
+      })
+      .then((list) => {
+        return keyBy(list, 'identity')
+      })
   }
 }

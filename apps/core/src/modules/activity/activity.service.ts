@@ -1,4 +1,4 @@
-import { pick, uniqBy } from 'lodash'
+import { omit, pick, uniqBy } from 'lodash'
 import { Types } from 'mongoose'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import type { Collection } from 'mongodb'
@@ -61,9 +61,26 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
           ?.presence
 
         if (presence) {
+          const {
+            connectedAt,
+            operationTime,
+            updatedAt,
+            position,
+            roomName,
+            displayName,
+            ip,
+          } = presence
           this.activityModel.create({
             type: Activity.ReadDuration,
-            payload: presence,
+            payload: {
+              connectedAt,
+              operationTime,
+              updatedAt,
+              position,
+              roomName,
+              displayName,
+              ip,
+            },
           })
         }
       }),
@@ -215,7 +232,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     })
   }
 
-  async updatePresence(data: UpdatePresenceDto) {
+  async updatePresence(data: UpdatePresenceDto, ip: string) {
     const roomName = data.roomName
 
     if (!isValidRoomName(roomName)) {
@@ -243,11 +260,14 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       operationTime: data.ts,
       updatedAt: Date.now(),
       connectedAt: +new Date(socket.handshake.time),
+
+      ip,
     }
     Reflect.deleteProperty(presenceData, 'ts')
+    const serializedPresenceData = omit(presenceData, 'ip')
     this.webGateway.broadcast(
       BusinessEvents.ACTIVITY_UPDATE_PRESENCE,
-      presenceData,
+      serializedPresenceData,
       {
         rooms: [roomName],
       },
@@ -257,7 +277,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       presence: presenceData,
     })
 
-    return presenceData
+    return serializedPresenceData
   }
 
   async getRoomPresence(roomName: string): Promise<ActivityPresence[]> {

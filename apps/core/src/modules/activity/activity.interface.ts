@@ -13,4 +13,8 @@ export interface ActivityPresence {
   identity: string
   roomName: string
   position: number
+  sid: string
+  displayName?: string
+
+  ip?: string
 }

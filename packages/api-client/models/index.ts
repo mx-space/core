@@ -1,3 +1,4 @@
+export * from './activity'
 export * from './aggregate'
 export * from './base'
 export * from './category'
