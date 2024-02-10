@@ -39,6 +39,10 @@ export class ActivityController<ResponseWrapper> implements IController {
     })
   }
 
+  /**
+   *
+   * @support core >= 5.0.0
+   */
   getPresence(roomName: string) {
     return this.proxy.presence.get<Record<string, ActivityPresence>>({
       params: {
@@ -46,6 +50,11 @@ export class ActivityController<ResponseWrapper> implements IController {
       },
     })
   }
+
+  /**
+   *
+   * @support core >= 5.0.0
+   */
   updatePresence({
     identity,
     position,
