@@ -4,6 +4,7 @@ import { Body, Get, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
 import { PagerDto } from '~/shared/dto/pager.dto'
 
@@ -51,6 +52,7 @@ export class ActivityController {
   }
 
   @Get('/presence')
+  @HTTPDecorators.SkipLogging
   async getPresence(@Query() query: GetPresenceQueryDto) {
     return this.service.getRoomPresence(query.room_name).then((list) => {
       return keyBy(list, 'identity')

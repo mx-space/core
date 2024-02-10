@@ -42,7 +42,7 @@ export class GatewayService {
   async getSocketMetadata(socket: SocketType): Promise<SocketMetadata> {
     const client = this.cacheService.getClient()
     const data = await client.hget(getRedisKey(RedisKeys.Socket), socket.id)
-    return safeJSONParse(data)
+    return safeJSONParse(data) || {}
   }
 
   async clearSocketMetadata(socket: SocketType) {

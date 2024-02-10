@@ -35,8 +35,11 @@ export const Idempotence: (options?: IdempotenceOption) => MethodDecorator =
   (options) => (target, key, descriptor: PropertyDescriptor) => {
     SetMetadata(HTTP_IDEMPOTENCE_OPTIONS, options || {})(descriptor.value)
   }
+
+export const SkipLogging = SetMetadata(SYSTEM.SKIP_LOGGING_METADATA, true)
 export const HTTPDecorators = {
   Paginator,
   Bypass,
   Idempotence,
+  SkipLogging,
 }

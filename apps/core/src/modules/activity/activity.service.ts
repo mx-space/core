@@ -48,16 +48,15 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     this.logger = new Logger(ActivityService.name)
   }
 
-  private cleanupFn: () => any | null
+  private cleanupFnList: Array<() => any | null> = []
 
   onModuleDestroy() {
-    this.cleanupFn?.()
+    this.cleanupFnList.forEach((fn) => fn())
   }
 
   onModuleInit() {
-    this.cleanupFn = this.webGateway.registerHook(
-      'onDisconnected',
-      async (socket) => {
+    const q = [
+      this.webGateway.registerHook('onDisconnected', async (socket) => {
         const presence = (await this.gatewayService.getSocketMetadata(socket))
           ?.presence
 
@@ -67,8 +66,23 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
             payload: presence,
           })
         }
-      },
-    )
+      }),
+      this.webGateway.registerHook('onLeaveRoom', async (socket, roomName) => {
+        const socketMeta = await this.gatewayService.getSocketMetadata(socket)
+        if (socketMeta.presence)
+          this.webGateway.broadcast(
+            BusinessEvents.ACTIVITY_LEAVE_PRESENCE,
+            {
+              identity: socketMeta.presence.identity,
+              roomName,
+            },
+            {
+              rooms: [roomName],
+            },
+          )
+      }),
+    ]
+    this.cleanupFnList = q
   }
 
   get model() {
@@ -235,8 +249,6 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       presenceData,
       {
         rooms: [roomName],
-        // Not work
-        exclude: [socket.id],
       },
     )
 

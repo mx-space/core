@@ -53,6 +53,7 @@ export enum BusinessEvents {
   // activity
   ACTIVITY_LIKE = 'ACTIVITY_LIKE',
   ACTIVITY_UPDATE_PRESENCE = 'ACTIVITY_UPDATE_PRESENCE',
+  ACTIVITY_LEAVE_PRESENCE = 'ACTIVITY_LEAVE_PRESENCE',
 }
 
 export enum EventScope {

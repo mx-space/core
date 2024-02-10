@@ -11,7 +11,7 @@ import type {
   DecorateAcknowledgementsWithMultipleResponses,
   DefaultEventsMap,
 } from 'socket.io/dist/typed-events'
-import type { EventGatewayHooks, HookFunction } from './hook.interface'
+import type { EventGatewayHooks } from './hook.interface'
 
 import {
   ConnectedSocket,
@@ -52,6 +52,27 @@ export class WebEventsGateway
     private readonly gatewayService: GatewayService,
   ) {
     super()
+  }
+
+  private hooks: EventGatewayHooks = {
+    onConnected: [],
+    onDisconnected: [],
+    onMessage: [],
+
+    onJoinRoom: [],
+    onLeaveRoom: [],
+  }
+
+  public registerHook<T extends keyof EventGatewayHooks>(
+    type: T,
+    callback: EventGatewayHooks[T][number],
+  ) {
+    // @ts-expect-error
+    this.hooks[type].push(callback)
+    return () => {
+      // @ts-expect-error
+      this.hooks[type] = this.hooks[type].filter((fn) => fn !== callback)
+    }
   }
 
   @WebSocketServer()
@@ -98,12 +119,18 @@ export class WebEventsGateway
     switch (type) {
       case SupportedMessageEvent.Join: {
         const { roomName } = payload as { roomName: string }
-        if (roomName) socket.join(roomName)
+        if (roomName) {
+          socket.join(roomName)
+          this.hooks.onJoinRoom.forEach((fn) => fn(socket, roomName))
+        }
         break
       }
       case SupportedMessageEvent.Leave: {
         const { roomName } = payload as { roomName: string }
-        if (roomName) socket.leave(roomName)
+        if (roomName) {
+          socket.leave(roomName)
+          this.hooks.onLeaveRoom.forEach((fn) => fn(socket, roomName))
+        }
         break
       }
       case SupportedMessageEvent.UpdateSid: {
@@ -170,20 +197,6 @@ export class WebEventsGateway
     },
   )
 
-  private hooks: EventGatewayHooks = {
-    onConnected: [],
-    onDisconnected: [],
-    onMessage: [],
-  }
-
-  public registerHook(type: keyof EventGatewayHooks, callback: HookFunction) {
-    this.hooks[type].push(callback)
-    return () => {
-      // @ts-expect-error
-      this.hooks[type] = this.hooks[type].filter((fn) => fn !== callback)
-    }
-  }
-
   async handleDisconnect(socket: SocketIO.Socket) {
     super.handleDisconnect(socket)
     this.broadcast(BusinessEvents.VISITOR_OFFLINE, {
@@ -193,6 +206,10 @@ export class WebEventsGateway
     })
     this.hooks.onDisconnected.forEach((fn) => fn(socket))
     this.gatewayService.clearSocketMetadata(socket)
+
+    socket.rooms.forEach((roomName) => {
+      this.hooks.onLeaveRoom.forEach((fn) => fn(socket, roomName))
+    })
   }
 
   override broadcast(
