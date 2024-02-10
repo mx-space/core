@@ -224,10 +224,11 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const roomSockets = await this.webGateway.getSocketsOfRoom(roomName)
 
     // TODO 或许应该找到所有的同一个用户的 socket 最早的一个连接时间
-    const socket = await roomSockets.find(
-      async (socket) =>
-        (await this.gatewayService.getSocketMetadata(socket))?.sessionId ===
-        data.identity,
+    const socket = roomSockets.find(
+      (socket) =>
+        // (await this.gatewayService.getSocketMetadata(socket))?.sessionId ===
+        // data.identity,
+        socket.id === data.sid,
     )
     if (!socket) {
       this.logger.debug(
@@ -252,13 +253,9 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       },
     )
 
-    await Promise.all(
-      roomSockets.map((socket) => {
-        return this.gatewayService.setSocketMetadata(socket, {
-          presence: presenceData,
-        })
-      }),
-    )
+    await this.gatewayService.setSocketMetadata(socket, {
+      presence: presenceData,
+    })
 
     return presenceData
   }
@@ -269,6 +266,8 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       roomSocket.map((socket) => this.gatewayService.getSocketMetadata(socket)),
     )
 
+    console.log(socketMeta)
+
     return uniqBy(
       socketMeta
         .filter((x) => x?.presence)
@@ -276,8 +275,8 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         .sort((a, b) => {
           if (a && b) return a.updatedAt - b.updatedAt
           return 1
-        }),
-      (x) => x?.identity,
-    ) as ActivityPresence[]
+        }) as ActivityPresence[],
+      (x) => x.identity,
+    )
   }
 }
