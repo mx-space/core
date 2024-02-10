@@ -1,10 +1,12 @@
-import { IsNumber, IsOptional, IsString, Min } from 'class-validator'
+import { IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator'
 
 export class UpdatePresenceDto {
   @IsString()
+  @MaxLength(200)
   identity: string
 
   @IsString()
+  @MaxLength(50)
   roomName: string
 
   @IsNumber()
@@ -16,13 +18,16 @@ export class UpdatePresenceDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(50)
   displayName?: string
 
   @IsString()
+  @MaxLength(30)
   sid: string
 }
 
 export class GetPresenceQueryDto {
   @IsString()
+  @MaxLength(50)
   room_name: string
 }

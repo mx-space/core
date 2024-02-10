@@ -1,10 +1,10 @@
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
+import type { ActivityPresence } from '~/models/activity'
+import type { HTTPClient } from '../core'
 
 import { autoBind } from '~/utils/auto-bind'
-
-import { HTTPClient } from '../core'
 
 declare module '../core/client' {
   interface HTTPClient<
@@ -35,6 +35,35 @@ export class ActivityController<ResponseWrapper> implements IController {
       data: {
         type,
         id,
+      },
+    })
+  }
+
+  getPresence(roomName: string) {
+    return this.proxy.presence.get<Record<string, ActivityPresence>>({
+      params: {
+        room_name: roomName,
+      },
+    })
+  }
+  updatePresence({
+    identity,
+    position,
+    roomName,
+    sid,
+  }: {
+    roomName: string
+    position: number
+    identity: string
+    sid: string
+  }) {
+    return this.proxy.presence.update.post({
+      data: {
+        identity,
+        position,
+        ts: Date.now(),
+        roomName,
+        sid,
       },
     })
   }

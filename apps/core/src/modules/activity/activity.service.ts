@@ -266,8 +266,6 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       roomSocket.map((socket) => this.gatewayService.getSocketMetadata(socket)),
     )
 
-    console.log(socketMeta)
-
     return uniqBy(
       socketMeta
         .filter((x) => x?.presence)
