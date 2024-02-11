@@ -14,10 +14,13 @@ import type {
 } from '@nestjs/common'
 import type { Observable } from 'rxjs'
 
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { RedisKeys } from '~/constants/cache.constant'
+import * as SYSTEM from '~/constants/system.constant'
+import { REFLECTOR } from '~/constants/system.constant'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { CacheService } from '~/processors/redis/cache.service'
@@ -38,6 +41,7 @@ export class AnalyzeInterceptor implements NestInterceptor {
     @InjectModel(OptionModel)
     private readonly options: ReturnModelType<typeof OptionModel>,
     private readonly cacheService: CacheService,
+    @Inject(REFLECTOR) private readonly reflector: Reflector,
   ) {
     this.init()
     this.queue = new TaskQueuePool(1000, this.model, async (count) => {
@@ -71,6 +75,14 @@ export class AnalyzeInterceptor implements NestInterceptor {
     if (method !== 'GET') {
       return call$
     }
+
+    const shouldSkipLogging = this.reflector.get(
+      SYSTEM.SKIP_LOGGING_METADATA,
+      context.getHandler(),
+    )
+
+    if (shouldSkipLogging) return call$
+
     const ip = getIp(request)
 
     // if req from SSR server, like 127.0.0.1, skip

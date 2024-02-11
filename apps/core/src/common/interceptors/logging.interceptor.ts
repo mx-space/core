@@ -29,7 +29,9 @@ export class LoggingInterceptor implements NestInterceptor {
     next: CallHandler<any>,
   ): Observable<any> {
     const call$ = next.handle()
+
     const request = this.getRequest(context)
+
     const content = `${request.method} -> ${request.url}`
     this.logger.debug(`+++ 收到请求：${content}`)
     const now = Date.now()

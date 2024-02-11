@@ -195,49 +195,8 @@ export class CommentController {
     const model: Partial<CommentModel> = { ...body, ...ipLocation }
 
     const comment = await this.commentService.createComment(id, model, ref)
-    const commentId = comment._id.toString()
-    scheduleManager.schedule(async () => {
-      if (isMaster) {
-        return
-      }
-      await this.commentService.appendIpLocation(commentId, ipLocation.ip)
-    })
 
-    scheduleManager.schedule(async () => {
-      const configs = await this.configsService.get('commentOptions')
-      const { commentShouldAudit } = configs
-      if (await this.commentService.checkSpam(comment)) {
-        comment.state = CommentState.Junk
-        await comment.save()
-        return
-      } else if (!isMaster) {
-        this.commentService.sendEmail(comment, CommentReplyMailType.Owner)
-      }
-
-      if (commentShouldAudit) {
-        await this.eventManager.broadcast(
-          BusinessEvents.COMMENT_CREATE,
-          comment,
-          {
-            scope: EventScope.TO_SYSTEM_ADMIN,
-          },
-        )
-
-        return
-      }
-
-      await this.eventManager.broadcast(
-        BusinessEvents.COMMENT_CREATE,
-        comment,
-        {
-          scope: isMaster
-            ? EventScope.TO_SYSTEM_VISITOR
-            : comment.isWhispers
-            ? EventScope.TO_SYSTEM_ADMIN
-            : EventScope.ALL,
-        },
-      )
-    })
+    this.commentService.afterCreateComment(comment.id, ipLocation, isMaster)
 
     return this.commentService
       .fillAndReplaceAvatarUrl([comment])

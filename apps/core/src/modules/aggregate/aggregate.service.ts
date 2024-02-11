@@ -370,7 +370,7 @@ export class AggregateService {
       categories,
       recently,
     ] = await Promise.all([
-      this.gateway.getcurrentClientCount(),
+      this.gateway.getCurrentClientCount(),
       this.postService.model.countDocuments(),
       this.noteService.model.countDocuments(),
       this.pageService.model.countDocuments(),

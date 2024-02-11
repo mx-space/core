@@ -1,12 +1,17 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { plainToClass } from 'class-transformer'
-import { validate } from 'class-validator'
+import { debounce, uniqBy } from 'lodash'
 import SocketIO from 'socket.io'
 import type {
   GatewayMetadata,
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
+import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
+import type {
+  DecorateAcknowledgementsWithMultipleResponses,
+  DefaultEventsMap,
+} from 'socket.io/dist/typed-events'
+import type { EventGatewayHooks } from './hook.interface'
 
 import {
   ConnectedSocket,
@@ -24,7 +29,14 @@ import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
 
 import { BroadcastBaseGateway } from '../base.gateway'
-import { DanmakuDto } from './dtos/danmaku.dto'
+import { GatewayService } from '../gateway.service'
+import { MessageEventDto, SupportedMessageEvent } from './dtos/message'
+
+declare module '~/utils/socket.util' {
+  interface SocketMetadata {
+    sessionId: string
+  }
+}
 
 const namespace = 'web'
 @WebSocketGateway<GatewayMetadata>({
@@ -34,8 +46,33 @@ export class WebEventsGateway
   extends BroadcastBaseGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(private readonly cacheService: CacheService) {
+  constructor(
+    private readonly cacheService: CacheService,
+
+    private readonly gatewayService: GatewayService,
+  ) {
     super()
+  }
+
+  private hooks: EventGatewayHooks = {
+    onConnected: [],
+    onDisconnected: [],
+    onMessage: [],
+
+    onJoinRoom: [],
+    onLeaveRoom: [],
+  }
+
+  public registerHook<T extends keyof EventGatewayHooks>(
+    type: T,
+    callback: EventGatewayHooks[T][number],
+  ) {
+    // @ts-expect-error
+    this.hooks[type].push(callback)
+    return () => {
+      // @ts-expect-error
+      this.hooks[type] = this.hooks[type].filter((fn) => fn !== callback)
+    }
   }
 
   @WebSocketServer()
@@ -43,69 +80,173 @@ export class WebEventsGateway
 
   async sendOnlineNumber() {
     return {
-      online: await this.getcurrentClientCount(),
+      online: await this.getCurrentClientCount(),
       timestamp: new Date().toISOString(),
     }
   }
-  @SubscribeMessage(BusinessEvents.DANMAKU_CREATE)
-  createNewDanmaku(
-    @MessageBody() data: DanmakuDto,
-    @ConnectedSocket() client: SocketIO.Socket,
-  ) {
-    const validator = plainToClass(DanmakuDto, data)
-    validate(validator).then((errors) => {
-      if (errors.length > 0) {
-        return client.send(errors)
-      }
-      this.broadcast(BusinessEvents.DANMAKU_CREATE, data)
-      client.send([])
-    })
-  }
 
-  async getcurrentClientCount() {
+  async getCurrentClientCount() {
     const server = this.namespace.server
-    const sockets = await server.of(`/${namespace}`).adapter.sockets(new Set())
-    return sockets.size
+
+    const socketsMeta = await Promise.all(
+      await server
+        .of(`/${namespace}`)
+        .fetchSockets()
+        .then((sockets) => {
+          return sockets.map((socket) =>
+            this.gatewayService.getSocketMetadata(socket),
+          )
+        }),
+    )
+    // // 这里用 web socket id 作为同一用户，一般 web 用 userId 或者 local storage sessionId 作为 socket session id
+    // return uniqBy(socketsMeta, async (x) => {
+    //   const meta = await this.gatewayService.getSocketMetadata(x)
+    //   console.log(meta, 'meta', x.id, 'x.id')
+    //   return meta?.sessionId || true
+    // }).length
+    return uniqBy(socketsMeta, (x) => x?.sessionId).length
   }
+
+  @SubscribeMessage('message')
+  async handleMessageEvent(
+    @MessageBody() data: MessageEventDto,
+    @ConnectedSocket() socket: SocketIO.Socket,
+  ) {
+    const { payload, type } = data
+
+    // logger.debug('Received message', { type, payload })
+
+    switch (type) {
+      case SupportedMessageEvent.Join: {
+        const { roomName } = payload as { roomName: string }
+        if (roomName) {
+          socket.join(roomName)
+          this.hooks.onJoinRoom.forEach((fn) => fn(socket, roomName))
+        }
+        break
+      }
+      case SupportedMessageEvent.Leave: {
+        const { roomName } = payload as { roomName: string }
+        if (roomName) {
+          socket.leave(roomName)
+          this.hooks.onLeaveRoom.forEach((fn) => fn(socket, roomName))
+        }
+        break
+      }
+      case SupportedMessageEvent.UpdateSid: {
+        const { sessionId } = payload as { sessionId: string }
+        if (sessionId) {
+          await this.gatewayService.setSocketMetadata(socket, { sessionId })
+          this.whenUserOnline()
+        }
+      }
+    }
+
+    this.hooks.onMessage.forEach((fn) => fn(socket, data))
+  }
+
   async handleConnection(socket: SocketIO.Socket) {
-    this.broadcast(BusinessEvents.VISITOR_ONLINE, await this.sendOnlineNumber())
+    const webSessionId =
+      socket.handshake.headers['x-socket-session-id'] ||
+      socket.handshake.query['socket_session_id'] ||
+      // fallback sid
+      socket.id
 
-    scheduleManager.schedule(async () => {
-      const redisClient = this.cacheService.getClient()
-      const dateFormat = getShortDate(new Date())
+    // logger.debug('webSessionId', webSessionId)
 
-      // get and store max_online_count
-      const maxOnlineCount =
-        +(await redisClient.hget(
+    await this.gatewayService.setSocketMetadata(socket, {
+      sessionId: webSessionId,
+    })
+
+    this.whenUserOnline()
+    super.handleConnect(socket)
+    this.hooks.onConnected.forEach((fn) => fn(socket))
+  }
+
+  whenUserOnline = debounce(
+    async () => {
+      this.broadcast(
+        BusinessEvents.VISITOR_ONLINE,
+        await this.sendOnlineNumber(),
+      )
+
+      scheduleManager.schedule(async () => {
+        const redisClient = this.cacheService.getClient()
+        const dateFormat = getShortDate(new Date())
+
+        // get and store max_online_count
+        const maxOnlineCount =
+          +(await redisClient.hget(
+            getRedisKey(RedisKeys.MaxOnlineCount),
+            dateFormat,
+          ))! || 0
+        await redisClient.hset(
           getRedisKey(RedisKeys.MaxOnlineCount),
           dateFormat,
-        ))! || 0
-      await redisClient.hset(
-        getRedisKey(RedisKeys.MaxOnlineCount),
-        dateFormat,
-        Math.max(maxOnlineCount, await this.getcurrentClientCount()),
-      )
-      const key = getRedisKey(RedisKeys.MaxOnlineCount, 'total')
+          Math.max(maxOnlineCount, await this.getCurrentClientCount()),
+        )
+        const key = getRedisKey(RedisKeys.MaxOnlineCount, 'total')
 
-      const totalCount = +(await redisClient.hget(key, dateFormat))! || 0
-      await redisClient.hset(key, dateFormat, totalCount + 1)
+        const totalCount = +(await redisClient.hget(key, dateFormat))! || 0
+        await redisClient.hset(key, dateFormat, totalCount + 1)
+      })
+    },
+    1000,
+    {
+      leading: false,
+    },
+  )
+
+  async handleDisconnect(socket: SocketIO.Socket) {
+    super.handleDisconnect(socket)
+    this.broadcast(BusinessEvents.VISITOR_OFFLINE, {
+      ...(await this.sendOnlineNumber()),
+      sessionId: (await this.gatewayService.getSocketMetadata(socket))
+        ?.sessionId,
     })
+    this.hooks.onDisconnected.forEach((fn) => fn(socket))
+    this.gatewayService.clearSocketMetadata(socket)
 
-    super.handleConnect(socket)
-  }
-  async handleDisconnect(client: SocketIO.Socket) {
-    super.handleDisconnect(client)
-    this.broadcast(
-      BusinessEvents.VISITOR_OFFLINE,
-      await this.sendOnlineNumber(),
-    )
+    socket.rooms.forEach((roomName) => {
+      this.hooks.onLeaveRoom.forEach((fn) => fn(socket, roomName))
+    })
   }
 
-  override broadcast(event: BusinessEvents, data: any) {
+  override broadcast(
+    event: BusinessEvents,
+    data: any,
+
+    options?: {
+      rooms?: string[]
+      exclude?: string[]
+    },
+  ) {
     const emitter = this.cacheService.emitter
 
-    emitter
-      .of(`/${namespace}`)
-      .emit('message', this.gatewayMessageFormat(event, data))
+    let socket = emitter.of(`/${namespace}`) as
+      | Emitter<DefaultEventsMap>
+      | BroadcastOperator<DefaultEventsMap>
+    const rooms = options?.rooms
+    const exclude = options?.exclude
+
+    if (rooms && rooms.length > 0) {
+      socket = socket.in(rooms)
+    }
+    if (exclude && exclude.length > 0) {
+      socket = socket.except(exclude)
+    }
+    socket.emit('message', this.gatewayMessageFormat(event, data))
+  }
+
+  public async getSocketsOfRoom(
+    roomName: string,
+  ): Promise<
+    | SocketIO.Socket[]
+    | SocketIO.RemoteSocket<
+        DecorateAcknowledgementsWithMultipleResponses<DefaultEventsMap>,
+        any
+      >[]
+  > {
+    return this.namespace.in(roomName).fetchSockets()
   }
 }
