@@ -172,7 +172,12 @@ jobs:
           asset_content_type: application/zip
   docker:
     name: Docker Release
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        arch: ["x64", "arm64"]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
