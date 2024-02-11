@@ -1,6 +1,7 @@
 import { isDefined } from 'class-validator'
-import { omit } from 'lodash'
+import { debounce, omit } from 'lodash'
 import slugify from 'slugify'
+import type { DocumentType } from '@typegoose/typegoose'
 import type { AggregatePaginateModel, Document, Types } from 'mongoose'
 
 import {
@@ -23,6 +24,7 @@ import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getLessThanNow, scheduleManager } from '~/utils'
 
+import { getArticleIdFromRoomName } from '../activity/activity.util'
 import { CategoryService } from '../category/category.service'
 import { CommentModel } from '../comment/comment.model'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
@@ -262,7 +264,17 @@ export class PostService {
     )
 
     await oldDocument.save()
-    scheduleManager.schedule(async () => {
+    scheduleManager.schedule(() => this.afterUpdatePost(id, data, oldDocument))
+
+    return oldDocument.toObject()
+  }
+
+  afterUpdatePost = debounce(
+    async (
+      id: string,
+      updatedData: Partial<PostModel>,
+      oldDocument: DocumentType<PostModel>,
+    ) => {
       const doc = await this.postModel
         .findById(id)
         .populate('related', 'title slug category categoryId id _id')
@@ -272,9 +284,9 @@ export class PostService {
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
-        data.text &&
+        updatedData.text &&
           this.imageService.saveImageDimensionsFromMarkdownText(
-            data.text,
+            updatedData.text,
             doc?.images,
             (images) => {
               oldDocument.images = images
@@ -290,16 +302,22 @@ export class PostService {
             },
             {
               scope: EventScope.TO_VISITOR,
+              gateway: {
+                rooms: [getArticleIdFromRoomName(doc.id)],
+              },
             },
           ),
-        this.eventManager.broadcast(BusinessEvents.POST_UPDATE, doc, {
-          scope: EventScope.TO_SYSTEM,
-        }),
+        doc &&
+          this.eventManager.broadcast(BusinessEvents.POST_UPDATE, doc, {
+            scope: EventScope.TO_SYSTEM,
+          }),
       ])
-    })
-
-    return oldDocument.toObject()
-  }
+    },
+    1000,
+    {
+      leading: false,
+    },
+  )
 
   async deletePost(id: string) {
     const deletedPost = await this.postModel.findById(id).lean()
@@ -315,6 +333,9 @@ export class PostService {
     await this.eventManager.broadcast(BusinessEvents.POST_DELETE, id, {
       scope: EventScope.TO_SYSTEM_VISITOR,
       nextTick: true,
+      gateway: {
+        rooms: [getArticleIdFromRoomName(id)],
+      },
     })
   }
 

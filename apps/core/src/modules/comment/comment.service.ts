@@ -22,11 +22,13 @@ import {
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { getAvatar, hasChinese } from '~/utils'
+import { getAvatar, hasChinese, scheduleManager } from '~/utils'
 import { normalizeRefType } from '~/utils/database.util'
 
 import { ConfigsService } from '../configs/configs.service'
@@ -58,6 +60,7 @@ export class CommentService implements OnModuleInit {
     private readonly configsService: ConfigsService,
     @Inject(forwardRef(() => ServerlessService))
     private readonly serverlessService: ServerlessService,
+    private readonly eventManager: EventManagerService,
   ) {}
 
   private async getMailOwnerProps() {
@@ -198,6 +201,62 @@ export class CommentService implements OnModuleInit {
     )
 
     return comment
+  }
+
+  async afterCreateComment(
+    commentId: string,
+    ipLocation: { ip: string },
+    isMaster: boolean,
+  ) {
+    const comment = await this.commentModel.findById(commentId).lean()
+
+    if (!comment) return
+    scheduleManager.schedule(async () => {
+      if (isMaster) {
+        return
+      }
+      await this.appendIpLocation(commentId, ipLocation.ip)
+    })
+
+    scheduleManager.batch(async () => {
+      const configs = await this.configsService.get('commentOptions')
+      const { commentShouldAudit } = configs
+      if (await this.checkSpam(comment)) {
+        await this.commentModel.updateOne(
+          { _id: commentId },
+          {
+            state: CommentState.Junk,
+          },
+        )
+        return
+      } else if (!isMaster) {
+        this.sendEmail(comment, CommentReplyMailType.Owner)
+      }
+
+      if (commentShouldAudit) {
+        await this.eventManager.broadcast(
+          BusinessEvents.COMMENT_CREATE,
+          comment,
+          {
+            scope: EventScope.TO_SYSTEM_ADMIN,
+          },
+        )
+
+        return
+      }
+
+      await this.eventManager.broadcast(
+        BusinessEvents.COMMENT_CREATE,
+        comment,
+        {
+          scope: isMaster
+            ? EventScope.TO_SYSTEM_VISITOR
+            : comment.isWhispers
+              ? EventScope.TO_SYSTEM_ADMIN
+              : EventScope.ALL,
+        },
+      )
+    })
   }
 
   async validAuthorName(author: string): Promise<void> {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/consistent-type-imports */
 import { Namespace } from 'socket.io'
 import type {
   OnGatewayConnection,

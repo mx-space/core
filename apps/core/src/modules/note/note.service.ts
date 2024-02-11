@@ -1,6 +1,6 @@
 import { isDefined, isMongoId } from 'class-validator'
 import dayjs from 'dayjs'
-import { omit } from 'lodash'
+import { debounce, omit } from 'lodash'
 import type { DocumentType } from '@typegoose/typegoose'
 import type { FilterQuery, PaginateOptions } from 'mongoose'
 
@@ -17,6 +17,7 @@ import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getLessThanNow, scheduleManager } from '~/utils'
 
+import { getArticleIdFromRoomName } from '../activity/activity.util'
 import { CommentService } from '../comment/comment.service'
 import { NoteModel } from './note.model'
 
@@ -181,6 +182,9 @@ export class NoteService {
               },
               {
                 scope: EventScope.TO_VISITOR,
+                gateway: {
+                  rooms: [getArticleIdFromRoomName(note.id)],
+                },
               },
             ),
       ])
@@ -252,31 +256,38 @@ export class NoteService {
     return updated
   }
 
-  private async boardcaseNoteUpdateEvent(updated: NoteModel) {
-    if (!updated) {
-      return
-    }
-    this.eventManager.broadcast(BusinessEvents.NOTE_UPDATE, updated, {
-      scope: EventScope.TO_SYSTEM,
-    })
+  private boardcaseNoteUpdateEvent = debounce(
+    async (updated: NoteModel) => {
+      if (!updated) {
+        return
+      }
+      this.eventManager.broadcast(BusinessEvents.NOTE_UPDATE, updated, {
+        scope: EventScope.TO_SYSTEM,
+      })
 
-    if (updated.password || updated.hide || updated.secret) {
-      return
-    }
-    this.eventManager.broadcast(
-      BusinessEvents.NOTE_UPDATE,
-      {
-        ...updated,
-        text: await this.textMacrosService.replaceTextMacro(
-          updated.text,
-          updated,
-        ),
-      },
-      {
-        scope: EventScope.TO_VISITOR,
-      },
-    )
-  }
+      if (updated.password || updated.hide || updated.secret) {
+        return
+      }
+      this.eventManager.broadcast(
+        BusinessEvents.NOTE_UPDATE,
+        {
+          ...updated,
+          text: await this.textMacrosService.replaceTextMacro(
+            updated.text,
+            updated,
+          ),
+        },
+        {
+          scope: EventScope.TO_VISITOR,
+          gateway: {
+            rooms: [getArticleIdFromRoomName(updated.id)],
+          },
+        },
+      )
+    },
+    1000,
+    { leading: false },
+  )
 
   async deleteById(id: string) {
     const doc = await this.noteModel.findById(id)

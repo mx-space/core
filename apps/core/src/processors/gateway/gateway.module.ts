@@ -11,8 +11,8 @@ import { Global, Module } from '@nestjs/common'
 import { AuthService } from '~/modules/auth/auth.service'
 
 import { AdminEventsGateway } from './admin/events.gateway'
+import { GatewayService } from './gateway.service'
 import { SharedGateway } from './shared/events.gateway'
-import { SystemEventsGateway } from './system/events.gateway'
 import { WebEventsGateway } from './web/events.gateway'
 
 @Global()
@@ -22,14 +22,17 @@ import { WebEventsGateway } from './web/events.gateway'
     AdminEventsGateway,
     WebEventsGateway,
     SharedGateway,
-    SystemEventsGateway,
+
     AuthService,
+
+    GatewayService,
   ],
   exports: [
     AdminEventsGateway,
     WebEventsGateway,
     SharedGateway,
-    SystemEventsGateway,
+
+    GatewayService,
   ],
 })
 export class GatewayModule {}

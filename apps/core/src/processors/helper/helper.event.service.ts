@@ -10,19 +10,17 @@ import { scheduleManager } from '~/utils'
 
 import { AdminEventsGateway } from '../gateway/admin/events.gateway'
 import { BroadcastBaseGateway } from '../gateway/base.gateway'
-import { SystemEventsGateway } from '../gateway/system/events.gateway'
 import { WebEventsGateway } from '../gateway/web/events.gateway'
 
+interface GatewayOption {
+  rooms?: string[]
+}
 export type EventManagerOptions = {
   scope?: EventScope
 
   nextTick?: boolean
-}
 
-type EventHandler = {
-  event: string
-  payload: any
-  scope: EventScope
+  gateway?: GatewayOption
 }
 
 export type IEventManagerHandlerDisposer = () => void
@@ -33,13 +31,13 @@ export class EventManagerService {
   private readonly defaultOptions: Required<EventManagerOptions> = {
     scope: EventScope.TO_SYSTEM,
     nextTick: false,
+    gateway: {},
   }
 
   constructor(
     private readonly webGateway: WebEventsGateway,
 
     private readonly adminGateway: AdminEventsGateway,
-    private readonly systemGateway: SystemEventsGateway,
 
     private readonly emitter2: EventEmitter2,
   ) {
@@ -50,38 +48,16 @@ export class EventManagerService {
 
   private mapScopeToInstance: Record<
     EventScope,
-    (
-      | WebEventsGateway
-      | AdminEventsGateway
-      | EventEmitter2
-      | SystemEventsGateway
-    )[]
+    (WebEventsGateway | AdminEventsGateway | EventEmitter2)[]
   > = {
-    [EventScope.ALL]: [
-      this.webGateway,
-      this.adminGateway,
-      this.emitter2,
-      this.systemGateway,
-    ],
-    [EventScope.TO_VISITOR]: [this.webGateway, this.emitter2],
-    [EventScope.TO_ADMIN]: [this.adminGateway, this.emitter2],
-    [EventScope.TO_SYSTEM]: [this.emitter2, this.systemGateway],
-    [EventScope.TO_VISITOR_ADMIN]: [
-      this.webGateway,
-      this.adminGateway,
-      this.emitter2,
-    ],
+    [EventScope.ALL]: [this.webGateway, this.adminGateway, this.emitter2],
+    [EventScope.TO_VISITOR]: [this.webGateway],
+    [EventScope.TO_ADMIN]: [this.adminGateway],
+    [EventScope.TO_SYSTEM]: [this.emitter2],
+    [EventScope.TO_VISITOR_ADMIN]: [this.webGateway, this.adminGateway],
 
-    [EventScope.TO_SYSTEM_VISITOR]: [
-      this.emitter2,
-      this.webGateway,
-      this.systemGateway,
-    ],
-    [EventScope.TO_SYSTEM_ADMIN]: [
-      this.emitter2,
-      this.adminGateway,
-      this.systemGateway,
-    ],
+    [EventScope.TO_SYSTEM_VISITOR]: [this.emitter2, this.webGateway],
+    [EventScope.TO_SYSTEM_ADMIN]: [this.emitter2, this.adminGateway],
   }
 
   #key = 'event-manager'
@@ -121,7 +97,9 @@ export class EventManagerService {
             scope,
           })
         } else if (instance instanceof BroadcastBaseGateway) {
-          return instance.broadcast(event as any, data)
+          return instance.broadcast(event as any, data, {
+            rooms: options.gateway?.rooms,
+          })
         }
       }),
     )
