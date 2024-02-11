@@ -24,6 +24,7 @@ import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getLessThanNow, scheduleManager } from '~/utils'
 
+import { getArticleIdFromRoomName } from '../activity/activity.util'
 import { CategoryService } from '../category/category.service'
 import { CommentModel } from '../comment/comment.model'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
@@ -301,11 +302,15 @@ export class PostService {
             },
             {
               scope: EventScope.TO_VISITOR,
+              gateway: {
+                rooms: [getArticleIdFromRoomName(doc.id)],
+              },
             },
           ),
-        this.eventManager.broadcast(BusinessEvents.POST_UPDATE, doc, {
-          scope: EventScope.TO_SYSTEM,
-        }),
+        doc &&
+          this.eventManager.broadcast(BusinessEvents.POST_UPDATE, doc, {
+            scope: EventScope.TO_SYSTEM,
+          }),
       ])
     },
     1000,
@@ -328,6 +333,9 @@ export class PostService {
     await this.eventManager.broadcast(BusinessEvents.POST_DELETE, id, {
       scope: EventScope.TO_SYSTEM_VISITOR,
       nextTick: true,
+      gateway: {
+        rooms: [getArticleIdFromRoomName(id)],
+      },
     })
   }
 

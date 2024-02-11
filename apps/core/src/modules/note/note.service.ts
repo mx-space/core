@@ -17,6 +17,7 @@ import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getLessThanNow, scheduleManager } from '~/utils'
 
+import { getArticleIdFromRoomName } from '../activity/activity.util'
 import { CommentService } from '../comment/comment.service'
 import { NoteModel } from './note.model'
 
@@ -181,6 +182,9 @@ export class NoteService {
               },
               {
                 scope: EventScope.TO_VISITOR,
+                gateway: {
+                  rooms: [getArticleIdFromRoomName(note.id)],
+                },
               },
             ),
       ])
@@ -275,6 +279,9 @@ export class NoteService {
         },
         {
           scope: EventScope.TO_VISITOR,
+          gateway: {
+            rooms: [getArticleIdFromRoomName(updated.id)],
+          },
         },
       )
     },
