@@ -2,7 +2,7 @@ import type { Count, Image, TextBaseModel } from './base'
 import type { CategoryModel } from './category'
 
 export interface PostModel extends TextBaseModel {
-  summary?: string
+  summary?: string | null
   copyright: boolean
   tags: string[]
   count: Count
