@@ -1,6 +1,6 @@
 import { keyBy } from 'lodash'
 
-import { Body, Get, Post, Query } from '@nestjs/common'
+import { Body, Delete, Get, Param, Post, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -8,7 +8,13 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
 import { PagerDto } from '~/shared/dto/pager.dto'
 
+import { Activity } from './activity.constant'
 import { ActivityService } from './activity.service'
+import {
+  ActivityDeleteDto,
+  ActivityQueryDto,
+  ActivityTypeParamsDto,
+} from './dtos/activity.dto'
 import { LikeBodyDto } from './dtos/like.dto'
 import { GetPresenceQueryDto, UpdatePresenceDto } from './dtos/presence.dto'
 
@@ -39,11 +45,16 @@ export class ActivityController {
 
   @Get('/')
   @Auth()
-  async activities(@Query() pager: PagerDto) {
-    const { page, size } = pager
+  async activities(@Query() pager: ActivityQueryDto) {
+    const { page, size, type } = pager
 
-    // TODO currently only support like activities, so hard code here
-    return this.service.getLikeActivities(page, size)
+    switch (type) {
+      case Activity.Like:
+        return this.service.getLikeActivities(page, size)
+
+      case Activity.ReadDuration:
+        return this.service.getReadDurationActivities(page, size)
+    }
   }
 
   @Post('/presence/update')
@@ -67,5 +78,23 @@ export class ActivityController {
       .then((list) => {
         return keyBy(list, 'identity')
       })
+  }
+
+  @Delete('/:type')
+  @Auth()
+  async deletePresence(
+    @Param() params: ActivityTypeParamsDto,
+    @Body() Body: ActivityDeleteDto,
+  ) {
+    return this.service.deleteActivityByType(
+      params.type,
+      Body.before ? new Date(Body.before) : new Date(),
+    )
+  }
+
+  @Auth()
+  @Delete('/all')
+  async deleteAllPresence() {
+    return this.service.deleteAll()
   }
 }

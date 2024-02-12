@@ -128,6 +128,48 @@ export class DatabaseService {
     }
   }
 
+  public async findGlobalByIds(ids: string[]): Promise<{
+    posts: PostModel[]
+    notes: NoteModel[]
+    pages: PageModel[]
+    recentlies: RecentlyModel[]
+  }>
+  public async findGlobalByIds(ids: string[]) {
+    const doc = await Promise.all([
+      this.postModel
+        .find({
+          _id: { $in: ids },
+        })
+        .populate('category')
+        .lean(),
+      this.noteModel
+        .find({
+          _id: { $in: ids },
+        })
+        .lean({ autopopulate: true })
+        .select('+password'),
+      this.pageModel
+        .find({
+          _id: { $in: ids },
+        })
+        .lean(),
+      this.recentlyModel
+        .find({
+          _id: { $in: ids },
+        })
+        .lean(),
+    ])
+
+    const result = doc.reduce((acc, list, index) => {
+      return {
+        ...acc,
+        [(['posts', 'notes', 'pages', 'recentlies'] as const)[index]]: list,
+      }
+    }, {})
+
+    return result as any
+  }
+
   public get db() {
     return this.connection.db
   }
