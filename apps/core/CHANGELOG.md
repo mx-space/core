@@ -1,5 +1,31 @@
 # CHANGELOG
 
+# [5.0.0-alpha.1](https://github.com/mx-space/core/compare/v5.0.0-alpha.0...v5.0.0-alpha.1) (2024-02-12)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.9 ([10865eb](https://github.com/mx-space/core/commit/10865ebc0d1b5fe0b587e0d3f31e0c9e209afa46))
+* **deps:** update dependency @fastify/static to v7.0.1 ([6c4d182](https://github.com/mx-space/core/commit/6c4d182b580ca31f123ce322ee8166de3d2fd86a))
+* **deps:** update dependency @nestjs/cache-manager to v2.2.1 ([d84282a](https://github.com/mx-space/core/commit/d84282adfe7dcff846ccecce455df2f9b9eec7fb))
+* **deps:** update dependency @nestjs/event-emitter to v2.0.4 ([5af713b](https://github.com/mx-space/core/commit/5af713b8fd6cadd4d56a9021e8dab2af9c30db46))
+* **deps:** update dependency @nestjs/schedule to v4.0.1 ([f7d5ed6](https://github.com/mx-space/core/commit/f7d5ed617537ff059ffe8dca8e488afae0b5a3c7))
+* **deps:** update dependency @nestjs/throttler to v5.1.2 ([6812c20](https://github.com/mx-space/core/commit/6812c205a84c47126cac5ebc544daf777daa2dbc))
+* **deps:** update dependency @simplewebauthn/server to v9.0.2 ([dc169f1](https://github.com/mx-space/core/commit/dc169f15b1bd4dac0ded887bc8b6f1c8c52a8639))
+* **deps:** update nest monorepo ([6f32af9](https://github.com/mx-space/core/commit/6f32af9ba4a69e41c2cd7a445ed0a66f5ef144d0))
+* docker build workflow ([#1451](https://github.com/mx-space/core/issues/1451)) ([d32ede3](https://github.com/mx-space/core/commit/d32ede3fd519f41bc79781f078bc2395566b7894))
+* init project script ([83441f1](https://github.com/mx-space/core/commit/83441f1d3ea330235814f08376b15fd1446d1980))
+* script clone ([c334f45](https://github.com/mx-space/core/commit/c334f453b24c26da04e3480763a33958d695b754))
+
+
+### Features
+
+* add activity type ([0cd84e7](https://github.com/mx-space/core/commit/0cd84e7f9c5d314bedcaa64d3c7bb391f7734828))
+* file trash ([ed6eeb2](https://github.com/mx-space/core/commit/ed6eeb2b3762a59872b6a1f128a55d9d4137a5a3))
+* support socket room and add activity presence ([#1445](https://github.com/mx-space/core/issues/1445)) ([267632b](https://github.com/mx-space/core/commit/267632be94df24a07c0b64dbcd85a53569866225))
+
+
+
 # [5.0.0-alpha.0](https://github.com/mx-space/core/compare/v4.11.8...v5.0.0-alpha.0) (2024-02-07)
 
 
