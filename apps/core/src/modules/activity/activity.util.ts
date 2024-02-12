@@ -5,3 +5,7 @@ export const isValidRoomName = (roomName: string) => {
 
 export const getArticleIdFromRoomName = (roomName: string) =>
   roomName.slice(prefix.length)
+
+export const extractArticleIdFromRoomName = (roomName: string) => {
+  return roomName.slice(prefix.length)
+}

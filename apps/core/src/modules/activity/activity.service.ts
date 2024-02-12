@@ -22,7 +22,7 @@ import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
 import { Activity } from './activity.constant'
 import { ActivityModel } from './activity.model'
-import { isValidRoomName } from './activity.util'
+import { extractArticleIdFromRoomName, isValidRoomName } from './activity.util'
 
 declare module '~/utils/socket.util' {
   interface SocketMetadata {
@@ -187,6 +187,39 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     return transformedPager
   }
 
+  async getReadDurationActivities(page = 1, size = 10) {
+    const activities = await this.model.paginate(
+      {
+        type: Activity.ReadDuration,
+      },
+      {
+        page,
+        limit: size,
+        sort: {
+          created: -1,
+        },
+      },
+    )
+    const data = transformDataToPaginate(activities)
+
+    const articleIds = [] as string[]
+    for (let i = 0; i < data.data.length; i++) {
+      const item = data.data[i]
+      const roomName = item.payload.roomName
+      if (!roomName) continue
+      const refId = extractArticleIdFromRoomName(roomName)
+      articleIds.push(refId)
+      data.data[i] = data.data[i].toObject()
+      ;(data.data[i] as any).refId = refId
+    }
+
+    const documentMap = await this.databaseService.findGlobalByIds(articleIds)
+    return {
+      ...data,
+      objects: documentMap,
+    }
+  }
+
   async likeAndEmit(type: ActivityLikeSupportType, id: string, ip: string) {
     try {
       const res = await this.countingService.updateLikeCountWithIp(type, id, ip)
@@ -296,5 +329,18 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         }) as ActivityPresence[],
       (x) => x.identity,
     )
+  }
+
+  async deleteActivityByType(type: Activity, beforeDate: Date) {
+    return this.model.deleteMany({
+      type,
+      created: {
+        $lt: beforeDate,
+      },
+    })
+  }
+
+  async deleteAll() {
+    return this.model.deleteMany({})
   }
 }
