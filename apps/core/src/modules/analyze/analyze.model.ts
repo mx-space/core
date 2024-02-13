@@ -27,6 +27,9 @@ export class AnalyzeModel extends BaseModel {
   ua: UAParser
 
   @prop()
+  country?: string
+
+  @prop()
   path?: string
 
   timestamp: Date

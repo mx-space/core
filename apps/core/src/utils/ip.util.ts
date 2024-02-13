@@ -9,11 +9,19 @@ import type { IncomingMessage } from 'http'
 export const getIp = (request: FastifyRequest | IncomingMessage) => {
   const req = request as any
 
+  const headers = request.headers
+
   let ip: string =
-    request.headers['x-forwarded-for'] ||
-    request.headers['X-Forwarded-For'] ||
-    request.headers['X-Real-IP'] ||
-    request.headers['x-real-ip'] ||
+    headers['True-Client-IP'] ||
+    headers['true-client-ip'] ||
+    headers['CF-Connecting-IP'] ||
+    headers['cf-connecting-ip'] ||
+    headers['cf-connecting-ip-v6'] ||
+    headers['CF-Connecting-IPv6'] ||
+    headers['x-forwarded-for'] ||
+    headers['X-Forwarded-For'] ||
+    headers['X-Real-IP'] ||
+    headers['x-real-ip'] ||
     req?.ip ||
     req?.raw?.connection?.remoteAddress ||
     req?.raw?.socket?.remoteAddress ||
