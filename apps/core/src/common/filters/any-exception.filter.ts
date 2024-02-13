@@ -18,6 +18,7 @@ import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 import { LOG_DIR } from '~/constants/path.constant'
 import { REFLECTOR } from '~/constants/system.constant'
 import { isDev } from '~/global/env.global'
+import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 
 import { getIp } from '../../utils/ip.util'
@@ -39,6 +40,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   constructor(
     @Inject(REFLECTOR) private reflector: Reflector,
     private readonly eventManager: EventManagerService,
+    private readonly barkService: BarkPushService,
   ) {
     this.registerCatchAllExceptionsHook()
   }
@@ -49,14 +51,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
     process.on('unhandledRejection', (reason: any) => {
       console.error('unhandledRejection: ', reason)
-
-      // this.eventManager.broadcast(
-      //   EventBusEvents.SystemException,
-      //   { message: reason?.message ?? reason, stack: reason?.stack || '' },
-      //   {
-      //     scope: EventScope.TO_SYSTEM,
-      //   },
-      // )
     })
 
     process.on('uncaughtException', (err) => {
@@ -72,10 +66,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
     once = true
   }
 
-  catch(exception: unknown, host: ArgumentsHost) {
+  async catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp()
     const response = ctx.getResponse<FastifyReply>()
     const request = ctx.getRequest<FastifyRequest>()
+
+    const ip = getIp(request)
 
     const status =
       exception instanceof HttpException
@@ -88,6 +84,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
       (exception as any)?.response?.message ||
       (exception as myError)?.message ||
       ''
+
+    if (status === HttpStatus.TOO_MANY_REQUESTS) {
+      this.barkService.throttlePush({
+        title: '疑似遭到攻击',
+        body: `IP: ${ip}`,
+      })
+      await sleep(10_000)
+
+      return response.status(444).send({
+        message: '请求过于频繁，请稍后再试',
+      })
+    }
 
     const url = request.raw.url!
 
@@ -125,7 +133,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
         )
       }
     } else {
-      const ip = getIp(request)
       this.logger.warn(
         `IP: ${ip} 错误信息：(${status}) ${message} Path: ${decodeURI(url)}`,
       )

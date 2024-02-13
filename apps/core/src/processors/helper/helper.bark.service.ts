@@ -1,3 +1,5 @@
+import { throttle } from 'lodash'
+
 import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
@@ -66,6 +68,7 @@ export class BarkPushService {
       throw new Error('Bark key is not configured')
     }
     const { title, ...rest } = options
+
     const response = await this.httpService.axiosRef.post(`${serverUrl}/push`, {
       device_key: key,
       title: `[${siteTitle}] ${title}`,
@@ -75,4 +78,9 @@ export class BarkPushService {
     })
     return response.data
   }
+
+  throttlePush = throttle(
+    async (options: BarkPushOptions) => this.push(options),
+    1000 * 10,
+  )
 }
