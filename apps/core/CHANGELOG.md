@@ -1,5 +1,21 @@
 # CHANGELOG
 
+# [5.0.0-alpha.2](https://github.com/mx-space/core/compare/v5.0.0-alpha.1...v5.0.0-alpha.2) (2024-02-13)
+
+
+### Bug Fixes
+
+* **deps:** update dependency mongoose to v8.1.2 ([6844bd7](https://github.com/mx-space/core/commit/6844bd78276e3cf1c29c3cf77d79d8f1ca5b77bc))
+* **deps:** update nest monorepo to v10.3.3 ([a913599](https://github.com/mx-space/core/commit/a9135993e1634d06ace5f99212ba64d54bf0d224))
+* post model type ([db87454](https://github.com/mx-space/core/commit/db8745485fa09598e2389f194dbf55fb49562218))
+
+
+### Features
+
+* add bark push for cc ([76002c3](https://github.com/mx-space/core/commit/76002c3f24a396faa035128e92fcee122d62f261))
+
+
+
 # [5.0.0-alpha.1](https://github.com/mx-space/core/compare/v5.0.0-alpha.0...v5.0.0-alpha.1) (2024-02-12)
 
 
