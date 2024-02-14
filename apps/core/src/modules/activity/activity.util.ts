@@ -9,3 +9,14 @@ export const getArticleIdFromRoomName = (roomName: string) =>
 export const extractArticleIdFromRoomName = (roomName: string) => {
   return roomName.slice(prefix.length)
 }
+
+export const parseRoomName = (roomName: string) => {
+  const prefix = roomName.split('-')[0]
+  switch (prefix) {
+    case 'article':
+      return {
+        type: 'article',
+        refId: extractArticleIdFromRoomName(roomName),
+      }
+  }
+}

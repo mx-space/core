@@ -249,4 +249,23 @@ export class WebEventsGateway
   > {
     return this.namespace.in(roomName).fetchSockets()
   }
+
+  // private isValidBizRoomName(roomName: string) {
+  //   return roomName.split('-').length === 2
+  // }
+  public async getAllRooms() {
+    const sockets = await this.namespace.fetchSockets()
+    const roomToSocketsMap = {} as Record<string, (typeof sockets)[number][]>
+    for (const socket of sockets) {
+      socket.rooms.forEach((roomName) => {
+        if (roomName === socket.id) return
+
+        if (!roomToSocketsMap[roomName]) {
+          roomToSocketsMap[roomName] = []
+        }
+        roomToSocketsMap[roomName].push(socket)
+      })
+    }
+    return roomToSocketsMap
+  }
 }

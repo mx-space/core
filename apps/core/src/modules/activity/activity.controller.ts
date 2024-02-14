@@ -1,4 +1,4 @@
-import { keyBy } from 'lodash'
+import { keyBy, pick } from 'lodash'
 
 import { Body, Delete, Get, Param, Post, Query } from '@nestjs/common'
 
@@ -96,5 +96,35 @@ export class ActivityController {
   @Delete('/all')
   async deleteAllPresence() {
     return this.service.deleteAll()
+  }
+
+  @Get('/rooms')
+  async getRoomsInfo() {
+    const roomInfo = await this.service.getAllRoomNames()
+    const { objects } = await this.service.getRefsFromRoomNames(roomInfo.rooms)
+
+    for (const type in objects) {
+      objects[type] = objects[type].map(pickUsageField)
+    }
+
+    function pickUsageField(item) {
+      // skip if model is recently
+      if (!item.title) return item
+
+      return pick(item, [
+        'title',
+        'slug',
+        'cover',
+        'created',
+        'category',
+        'categoryId',
+        'id',
+      ])
+    }
+
+    return {
+      ...roomInfo,
+      objects,
+    }
   }
 }

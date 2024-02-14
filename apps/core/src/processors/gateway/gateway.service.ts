@@ -29,13 +29,15 @@ export class GatewayService {
     const existValue = await this.getSocketMetadata(socket)
 
     const client = this.cacheService.getClient()
+    const data = {
+      ...existValue,
+      ...value,
+    }
+    // socket.data = data
     await client.hset(
       getRedisKey(RedisKeys.Socket),
       socket.id,
-      JSON.stringify({
-        ...existValue,
-        ...value,
-      }),
+      JSON.stringify(data),
     )
   }
 

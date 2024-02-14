@@ -22,7 +22,11 @@ import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
 import { Activity } from './activity.constant'
 import { ActivityModel } from './activity.model'
-import { extractArticleIdFromRoomName, isValidRoomName } from './activity.util'
+import {
+  extractArticleIdFromRoomName,
+  isValidRoomName,
+  parseRoomName,
+} from './activity.util'
 
 declare module '~/utils/socket.util' {
   interface SocketMetadata {
@@ -342,5 +346,39 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
   async deleteAll() {
     return this.model.deleteMany({})
+  }
+
+  async getAllRoomNames() {
+    const roomMap = await this.webGateway.getAllRooms()
+    const rooms = Object.keys(roomMap)
+    return {
+      rooms,
+      roomCount: rooms.reduce((acc, roomName) => {
+        return {
+          ...acc,
+          [roomName]: roomMap[roomName].length,
+        }
+      }, {}) as any as Record<string, number>,
+    }
+  }
+
+  async getRefsFromRoomNames(roomNames: string[]) {
+    const articleIds = [] as string[]
+    for (const roomName of roomNames) {
+      const parsed = parseRoomName(roomName)
+      if (!parsed) continue
+      switch (parsed.type) {
+        case 'article': {
+          const { refId } = parsed
+
+          articleIds.push(refId)
+          break
+        }
+      }
+    }
+
+    const objects = await this.databaseService.findGlobalByIds(articleIds)
+
+    return { objects }
   }
 }
