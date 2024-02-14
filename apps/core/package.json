@@ -152,7 +152,7 @@
     "@types/validator": "13.11.9",
     "@vercel/ncc": "0.38.1",
     "cron": "^3.1.6",
-    "husky": "9.0.10",
+    "husky": "9.0.11",
     "ioredis": "5.3.2",
     "socket.io": "^4.7.4",
     "unplugin-swc": "1.4.4",
