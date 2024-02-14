@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [5.0.0-alpha.4](https://github.com/mx-space/core/compare/v5.0.0-alpha.3...v5.0.0-alpha.4) (2024-02-14)
+
+
+### Bug Fixes
+
+* api model ([c639c57](https://github.com/mx-space/core/commit/c639c57f488e924a93a1d2b5228e3b5f86dcaac4))
+
+
+### Features
+
+* add api sdk for this ([4683b69](https://github.com/mx-space/core/commit/4683b697ce41c287736b007d653f1b13dd783e7f))
+* add get rooms ([cf71fc4](https://github.com/mx-space/core/commit/cf71fc4f43d75557109c7672d801e4eb0602e5b6))
+
+
+
 # [5.0.0-alpha.3](https://github.com/mx-space/core/compare/v5.0.0-alpha.2...v5.0.0-alpha.3) (2024-02-13)
 
 
