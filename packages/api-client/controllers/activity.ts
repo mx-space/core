@@ -82,4 +82,8 @@ export class ActivityController<ResponseWrapper> implements IController {
       },
     })
   }
+
+  async getRoomsInfo() {
+    return this.proxy.rooms.get<{}>()
+  }
 }

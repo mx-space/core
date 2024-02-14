@@ -119,6 +119,7 @@ export class ActivityController {
         'category',
         'categoryId',
         'id',
+        'nid',
       ])
     }
 
