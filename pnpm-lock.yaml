@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  semver: 7.5.4
+  semver: 7.6.0
   pino: ./external/pino
   get-pixels@^3>request: ./external/request
   typescript: 5.3.3
@@ -284,8 +284,8 @@ importers:
         specifier: 7.8.1
         version: 7.8.1
       semver:
-        specifier: 7.5.4
-        version: 7.5.4
+        specifier: 7.6.0
+        version: 7.6.0
       slugify:
         specifier: 1.6.6
         version: 1.6.6
@@ -654,7 +654,7 @@ packages:
       debug: 4.3.4
       gensync: 1.0.0-beta.2
       json5: 2.2.3
-      semver: 7.5.4
+      semver: 7.6.0
     transitivePeerDependencies:
       - supports-color
 
@@ -682,7 +682,7 @@ packages:
       '@babel/helper-validator-option': 7.23.5
       browserslist: 4.22.2
       lru-cache: 5.1.1
-      semver: 7.5.4
+      semver: 7.6.0
 
   /@babel/helper-create-class-features-plugin@7.23.6(@babel/core@7.23.9):
     resolution: {integrity: sha512-cBXU1vZni/CpGF29iTu4YRbOZt3Wat6zCoMDxRF1MayiEc4URxOj31tT65HUM0CRpMowA3HCJaAOVOUnMf96cw==}
@@ -699,7 +699,7 @@ packages:
       '@babel/helper-replace-supers': 7.22.20(@babel/core@7.23.9)
       '@babel/helper-skip-transparent-expression-wrappers': 7.22.5
       '@babel/helper-split-export-declaration': 7.22.6
-      semver: 7.5.4
+      semver: 7.6.0
     dev: false
 
   /@babel/helper-environment-visitor@7.22.20:
@@ -1405,7 +1405,7 @@ packages:
       '@babel/traverse': 7.23.9
       '@babel/types': 7.23.9
       prettier: 3.2.5
-      semver: 7.5.4
+      semver: 7.6.0
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -2250,7 +2250,7 @@ packages:
       loglevel: 1.8.1
       mongoose: 8.1.2
       reflect-metadata: 0.2.1
-      semver: 7.5.4
+      semver: 7.6.0
       tslib: 2.6.2
     dev: false
 
@@ -2607,7 +2607,7 @@ packages:
       graphemer: 1.4.0
       ignore: 5.3.0
       natural-compare: 1.4.0
-      semver: 7.5.4
+      semver: 7.6.0
       ts-api-utils: 1.0.3(typescript@5.3.3)
       typescript: 5.3.3
     transitivePeerDependencies:
@@ -2683,7 +2683,7 @@ packages:
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
-      semver: 7.5.4
+      semver: 7.6.0
       ts-api-utils: 1.0.3(typescript@5.3.3)
       typescript: 5.3.3
     transitivePeerDependencies:
@@ -2703,7 +2703,7 @@ packages:
       '@typescript-eslint/types': 6.20.0
       '@typescript-eslint/typescript-estree': 6.20.0(typescript@5.3.3)
       eslint: 8.56.0
-      semver: 7.5.4
+      semver: 7.6.0
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -3718,7 +3718,7 @@ packages:
     dependencies:
       async-hook-jl: 1.7.6
       emitter-listener: 1.1.2
-      semver: 7.5.4
+      semver: 7.6.0
     dev: false
 
   /cluster-key-slot@1.1.0:
@@ -4491,7 +4491,7 @@ packages:
       object.fromentries: 2.0.7
       object.groupby: 1.0.1
       object.values: 1.1.7
-      semver: 7.5.4
+      semver: 7.6.0
       tsconfig-paths: 3.15.0
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
@@ -4866,7 +4866,7 @@ packages:
       proxy-addr: 2.0.7
       rfdc: 1.3.0
       secure-json-parse: 2.7.0
-      semver: 7.5.4
+      semver: 7.6.0
       toad-cache: 3.3.0
     transitivePeerDependencies:
       - supports-color
@@ -5040,7 +5040,7 @@ packages:
       minimatch: 3.1.2
       node-abort-controller: 3.1.1
       schema-utils: 3.3.0
-      semver: 7.5.4
+      semver: 7.6.0
       tapable: 2.2.1
       typescript: 5.3.3
       webpack: 5.90.1(@swc/core@1.4.1)(esbuild@0.19.11)
@@ -5977,7 +5977,7 @@ packages:
       lodash.isstring: 4.0.1
       lodash.once: 4.1.1
       ms: 2.1.3
-      semver: 7.5.4
+      semver: 7.6.0
     dev: false
 
   /jszip@3.10.1:
@@ -6325,7 +6325,7 @@ packages:
     engines: {node: '>=8'}
     requiresBuild: true
     dependencies:
-      semver: 7.5.4
+      semver: 7.6.0
     dev: false
     optional: true
 
@@ -6541,7 +6541,7 @@ packages:
       https-proxy-agent: 7.0.2
       mongodb: 5.9.2
       new-find-package-json: 2.0.0
-      semver: 7.5.4
+      semver: 7.6.0
       tar-stream: 3.1.6
       tslib: 2.6.2
       yauzl: 2.10.0
@@ -7587,7 +7587,7 @@ packages:
       lodash.defaultsdeep: 4.6.1
       mkdirp: 3.0.1
       rimraf: 5.0.5
-      semver: 7.5.4
+      semver: 7.6.0
       tar: 6.2.0
       tmp: 0.2.1
       uuid: 8.3.2
@@ -7800,8 +7800,8 @@ packages:
     resolution: {integrity: sha512-6aU+Rwsezw7VR8/nyvKTx8QpWH9FrcYiXXlqC4z5d5XQBDRqtbfsRjnwGyqbi3gddNtWHuEk9OANUotL26qKUw==}
     dev: false
 
-  /semver@7.5.4:
-    resolution: {integrity: sha512-1bCSESV6Pv+i21Hvpxp3Dx+pSD8lIPt8uVjRrxAUt/nbswYc+tK6Y2btiULjd4+fnq15PX+nqQDC7Oft7WkwcA==}
+  /semver@7.6.0:
+    resolution: {integrity: sha512-EnwXhrlwXMk9gKu5/flx5sv/an57AkRplG3hTK68W7FRDN+k+OWBj65M7719OkA82XLBxrcX0KSHj+X5COhOVg==}
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
