@@ -1,5 +1,15 @@
 # CHANGELOG
 
+# [5.0.0-beta.0](https://github.com/mx-space/core/compare/v5.0.0-alpha.4...v5.0.0-beta.0) (2024-02-15)
+
+
+### Bug Fixes
+
+* ipv6 ([3dff3df](https://github.com/mx-space/core/commit/3dff3df74b8c3e15b6766b5fab3ba929cefff786))
+* migration ([6d4254d](https://github.com/mx-space/core/commit/6d4254dd5bdfa56c350a39eda580711e106fa5c0))
+
+
+
 # [5.0.0-alpha.4](https://github.com/mx-space/core/compare/v5.0.0-alpha.3...v5.0.0-alpha.4) (2024-02-14)
 
 
