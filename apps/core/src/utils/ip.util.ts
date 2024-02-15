@@ -16,7 +16,7 @@ export const getIp = (request: FastifyRequest | IncomingMessage) => {
     headers['true-client-ip'] ||
     headers['CF-Connecting-IP'] ||
     headers['cf-connecting-ip'] ||
-    headers['cf-connecting-ip-v6'] ||
+    headers['cf-connecting-ipv6'] ||
     headers['CF-Connecting-IPv6'] ||
     headers['x-forwarded-for'] ||
     headers['X-Forwarded-For'] ||
