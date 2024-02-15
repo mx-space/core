@@ -15,11 +15,23 @@ export default defineMigration('v5.0.0-1', async (db, connection) => {
         {
           hasMemory: { $exists: true },
         },
-        { $rename: { secret: 'bookmark' } },
+        { $rename: { hasMemory: 'bookmark' } },
       ),
     ])
+
+    await db.collection(NOTE_COLLECTION_NAME).updateMany(
+      {
+        bookmark: { $exists: false },
+      },
+      {
+        $set: {
+          bookmark: false,
+        },
+      },
+    )
   } catch (err) {
     console.error('v5.0.0-1 migration failed')
+
     throw err
   }
 })
