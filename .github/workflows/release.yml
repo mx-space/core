@@ -131,45 +131,6 @@ jobs:
             ls -a
             node server-deploy.js --jwtSecret=$JWTSECRET --encrypt_key=$MX_ENCRYPT_KEY --encrypt_enable --scp_path=/tmp/mx-core/release-linux.zip
 
-  build_other_platform:
-    name: Build Other Platform
-    strategy:
-      matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
-    runs-on: ${{ matrix.os }}
-    needs: [build]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Cache pnpm modules
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-pnpm-modules
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-      - uses: pnpm/action-setup@v2.4.0
-        with:
-          version: 8.x
-          run_install: true
-      - name: Build project
-        run: |
-          pnpm run bundle
-      - name: Zip Assets
-        run: |
-          sh apps/core/zip-asset.sh
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.build.outputs.release_url }}
-          asset_path: ./release.zip
-          asset_name: release-${{ matrix.os }}.zip
-          asset_content_type: application/zip
   docker:
     name: Docker Release
     runs-on: ${{ matrix.os }}
