@@ -60,7 +60,7 @@ export interface TimelineData {
     | 'mood'
     | 'created'
     | 'modified'
-    | 'hasMemory'
+    | 'bookmark'
   >[]
 
   posts?: (Pick<

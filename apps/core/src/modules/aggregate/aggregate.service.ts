@@ -165,7 +165,7 @@ export class AggregateService {
             hide: false,
             ...addYearCondition(year),
           },
-          '_id nid title weather mood created modified hasMemory',
+          '_id nid title weather mood created modified bookmark',
         )
         .sort({ created: sortBy })
         .lean()
@@ -213,17 +213,17 @@ export class AggregateService {
 
           $or: [
             {
-              secret: {
+              publicAt: {
                 $lte: new Date(),
               },
             },
             {
-              secret: {
+              publicAt: {
                 $exists: false,
               },
             },
             {
-              secret: null,
+              publicAt: null,
             },
           ],
         })
@@ -305,17 +305,17 @@ export class AggregateService {
             {
               $or: [
                 {
-                  secret: {
+                  publicAt: {
                     $lte: new Date(),
                   },
                 },
                 {
-                  secret: {
+                  publicAt: {
                     $exists: false,
                   },
                 },
                 {
-                  secret: null,
+                  publicAt: null,
                 },
               ],
             },

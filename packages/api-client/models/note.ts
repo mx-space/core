@@ -10,9 +10,9 @@ export interface NoteModel extends TextBaseModel {
 
   mood?: string
   weather?: string
-  hasMemory?: boolean
+  bookmark?: boolean
 
-  secret?: Date
+  publicAt?: Date
   password?: string | null
   nid: number
   music?: NoteMusicRecord[]

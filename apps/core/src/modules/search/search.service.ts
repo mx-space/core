@@ -65,8 +65,8 @@ export class SearchService {
             { hide: { $in: showHidden ? [false, true] : [false] } },
             {
               $or: [
-                { secret: { $not: null } },
-                { secret: { $lte: new Date() } },
+                { publicAt: { $not: null } },
+                { publicAt: { $lte: new Date() } },
               ],
             },
           ],

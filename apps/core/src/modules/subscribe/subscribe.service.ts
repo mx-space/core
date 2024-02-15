@@ -152,7 +152,17 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    const precheck: CoAction<any> = async function () {
+    const precheck: CoAction<any> = async function (
+      noteOrPost: NoteModel | PostModel,
+    ) {
+      if ('hide' in noteOrPost && noteOrPost.hide) return this.abort()
+      if ('password' in noteOrPost && !!noteOrPost.password) return this.abort()
+      if (
+        'publicAt' in noteOrPost &&
+        noteOrPost.publicAt &&
+        new Date(noteOrPost.publicAt) > new Date()
+      )
+        return this.abort()
       const enable = await self.checkEnable()
 
       if (enable) {

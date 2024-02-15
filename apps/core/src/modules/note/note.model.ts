@@ -64,7 +64,7 @@ export class NoteModel extends WriteBaseModel {
   @IsOptional()
   @IsDate()
   @Transform(({ value }) => (value ? new Date(value) : null))
-  secret: Date | null
+  publicAt: Date | null
 
   @prop()
   @IsString()
@@ -76,10 +76,10 @@ export class NoteModel extends WriteBaseModel {
   @IsString()
   weather?: string
 
-  @prop()
+  @prop({ default: false })
   @IsBoolean()
   @IsOptional()
-  hasMemory?: boolean
+  bookmark: boolean
 
   @prop({ select: false, type: Coordinate })
   @ValidateNested()

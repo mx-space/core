@@ -67,10 +67,10 @@ export class NoteService {
   }
 
   public checkNoteIsSecret(note: NoteModel) {
-    if (!note.secret) {
+    if (!note.publicAt) {
       return false
     }
-    const isSecret = dayjs(note.secret).isAfter(new Date())
+    const isSecret = dayjs(note.publicAt).isAfter(new Date())
 
     return isSecret
   }
@@ -265,7 +265,7 @@ export class NoteService {
         scope: EventScope.TO_SYSTEM,
       })
 
-      if (updated.password || updated.hide || updated.secret) {
+      if (updated.password || updated.hide || updated.publicAt) {
         return
       }
       this.eventManager.broadcast(
