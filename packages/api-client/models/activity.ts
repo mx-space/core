@@ -2,11 +2,12 @@ import type { CategoryModel } from './category'
 
 export interface ActivityPresence {
   operationTime: number
-  updatedAt: number
-  connectedAt: number
   identity: string
   roomName: string
   position: number
+  joinedAt: number
+  connectedAt: number
+  updatedAt: number
 
   displayName?: string
 }
