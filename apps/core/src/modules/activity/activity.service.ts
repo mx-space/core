@@ -313,8 +313,15 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
       ip,
     }
+
     Reflect.deleteProperty(presenceData, 'ts')
     const serializedPresenceData = omit(presenceData, 'ip')
+
+    const roomJoinedAtMap =
+      await this.webGateway.getSocketRoomJoinedAtMap(socket)
+
+    Reflect.set(serializedPresenceData, 'joinedAt', roomJoinedAtMap[roomName])
+
     this.webGateway.broadcast(
       BusinessEvents.ACTIVITY_UPDATE_PRESENCE,
       serializedPresenceData,

@@ -11,6 +11,7 @@ import type {
   DecorateAcknowledgementsWithMultipleResponses,
   DefaultEventsMap,
 } from 'socket.io/dist/typed-events'
+import type { SocketType } from '../gateway.service'
 import type { EventGatewayHooks } from './hook.interface'
 
 import {
@@ -125,9 +126,7 @@ export class WebEventsGateway
           socket.join(roomName)
           this.hooks.onJoinRoom.forEach((fn) => fn(socket, roomName))
 
-          const roomJoinedAtMap =
-            (await this.gatewayService.getSocketMetadata(socket))
-              ?.roomJoinedAtMap || {}
+          const roomJoinedAtMap = await this.getSocketRoomJoinedAtMap(socket)
 
           roomJoinedAtMap[roomName] = Date.now()
 
@@ -143,9 +142,7 @@ export class WebEventsGateway
           socket.leave(roomName)
           this.hooks.onLeaveRoom.forEach((fn) => fn(socket, roomName))
 
-          const roomJoinedAtMap =
-            (await this.gatewayService.getSocketMetadata(socket))
-              ?.roomJoinedAtMap || {}
+          const roomJoinedAtMap = await this.getSocketRoomJoinedAtMap(socket)
           delete roomJoinedAtMap[roomName]
           await this.gatewayService.setSocketMetadata(socket, {
             roomJoinedAtMap,
@@ -287,5 +284,13 @@ export class WebEventsGateway
       })
     }
     return roomToSocketsMap
+  }
+
+  public async getSocketRoomJoinedAtMap(socket: SocketType) {
+    const roomJoinedAtMap =
+      (await this.gatewayService.getSocketMetadata(socket))?.roomJoinedAtMap ||
+      {}
+
+    return roomJoinedAtMap
   }
 }

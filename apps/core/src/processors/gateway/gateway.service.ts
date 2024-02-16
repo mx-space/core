@@ -12,7 +12,7 @@ import { getRedisKey, safeJSONParse } from '~/utils'
 
 import { CacheService } from '../redis/cache.service'
 
-type SocketType =
+export type SocketType =
   | Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>
   | RemoteSocket<
       DecorateAcknowledgementsWithMultipleResponses<DefaultEventsMap>,
