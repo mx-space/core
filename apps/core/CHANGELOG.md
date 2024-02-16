@@ -1,5 +1,16 @@
 # CHANGELOG
 
+# [5.0.0-beta.2](https://github.com/mx-space/core/compare/v5.0.0-beta.1...v5.0.0-beta.2) (2024-02-16)
+
+
+### Bug Fixes
+
+* activity duration calculation ([ced3852](https://github.com/mx-space/core/commit/ced3852d3e0a25df6d78b0454f4c1ad542c34c87))
+* broadcast event add `joinedAt` ([d1704d8](https://github.com/mx-space/core/commit/d1704d8450462ef9645c6f4f19a4f69d9e5d5cd0))
+* update model ([8bfa464](https://github.com/mx-space/core/commit/8bfa46461519516b0310aa8aa4f1a9cf0f89cc03))
+
+
+
 # [5.0.0-beta.1](https://github.com/mx-space/core/compare/v5.0.0-beta.0...v5.0.0-beta.1) (2024-02-15)
 
 
