@@ -62,7 +62,7 @@ export class ActivityController {
     @Body() body: UpdatePresenceDto,
     @IpLocation() location: IpRecord,
   ) {
-    return this.service.updatePresence(body, location.ip)
+    await this.service.updatePresence(body, location.ip)
   }
 
   @Get('/presence')

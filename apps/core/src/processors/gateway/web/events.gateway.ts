@@ -35,6 +35,8 @@ import { MessageEventDto, SupportedMessageEvent } from './dtos/message'
 declare module '~/utils/socket.util' {
   interface SocketMetadata {
     sessionId: string
+
+    roomJoinedAtMap: Record<string, number>
   }
 }
 
@@ -122,6 +124,16 @@ export class WebEventsGateway
         if (roomName) {
           socket.join(roomName)
           this.hooks.onJoinRoom.forEach((fn) => fn(socket, roomName))
+
+          const roomJoinedAtMap =
+            (await this.gatewayService.getSocketMetadata(socket))
+              ?.roomJoinedAtMap || {}
+
+          roomJoinedAtMap[roomName] = Date.now()
+
+          await this.gatewayService.setSocketMetadata(socket, {
+            roomJoinedAtMap,
+          })
         }
         break
       }
@@ -130,6 +142,14 @@ export class WebEventsGateway
         if (roomName) {
           socket.leave(roomName)
           this.hooks.onLeaveRoom.forEach((fn) => fn(socket, roomName))
+
+          const roomJoinedAtMap =
+            (await this.gatewayService.getSocketMetadata(socket))
+              ?.roomJoinedAtMap || {}
+          delete roomJoinedAtMap[roomName]
+          await this.gatewayService.setSocketMetadata(socket, {
+            roomJoinedAtMap,
+          })
         }
         break
       }

@@ -2,6 +2,7 @@ import { omit, pick, uniqBy } from 'lodash'
 import { Types } from 'mongoose'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import type { Collection } from 'mongodb'
+import type { Socket } from 'socket.io'
 import type {
   ActivityLikePayload,
   ActivityLikeSupportType,
@@ -59,38 +60,48 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleInit() {
-    const q = [
-      this.webGateway.registerHook('onDisconnected', async (socket) => {
-        const presence = (await this.gatewayService.getSocketMetadata(socket))
-          ?.presence
+    const handlePresencePersistToDb = async (socket: Socket) => {
+      const meta = await this.gatewayService.getSocketMetadata(socket)
 
-        if (presence) {
-          const {
+      const { presence, roomJoinedAtMap } = meta
+
+      if (presence) {
+        const {
+          connectedAt,
+          operationTime,
+          updatedAt,
+          position,
+          roomName,
+          displayName,
+          ip,
+        } = presence
+        const joinedAt = roomJoinedAtMap[roomName]
+        if (!joinedAt) return
+        const duration = operationTime - joinedAt
+
+        if (duration < 10_000 || (position === 0 && duration < 60_000)) {
+          return
+        }
+        this.activityModel.create({
+          type: Activity.ReadDuration,
+          payload: {
             connectedAt,
             operationTime,
             updatedAt,
             position,
             roomName,
             displayName,
+            joinedAt,
             ip,
-          } = presence
-          this.activityModel.create({
-            type: Activity.ReadDuration,
-            payload: {
-              connectedAt,
-              operationTime,
-              updatedAt,
-              position,
-              roomName,
-              displayName,
-              ip,
-            },
-          })
-        }
-      }),
+          },
+        })
+      }
+    }
+    const q = [
+      this.webGateway.registerHook('onDisconnected', handlePresencePersistToDb),
       this.webGateway.registerHook('onLeaveRoom', async (socket, roomName) => {
         const socketMeta = await this.gatewayService.getSocketMetadata(socket)
-        if (socketMeta.presence)
+        if (socketMeta.presence) {
           this.webGateway.broadcast(
             BusinessEvents.ACTIVITY_LEAVE_PRESENCE,
             {
@@ -101,6 +112,8 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
               rooms: [roomName],
             },
           )
+          handlePresencePersistToDb(socket)
+        }
       }),
     ]
     this.cleanupFnList = q
