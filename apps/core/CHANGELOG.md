@@ -1,5 +1,9 @@
 # CHANGELOG
 
+# [5.0.0](https://github.com/mx-space/core/compare/v5.0.0-beta.2...v5.0.0) (2024-02-16)
+
+
+
 # [5.0.0-beta.2](https://github.com/mx-space/core/compare/v5.0.0-beta.1...v5.0.0-beta.2) (2024-02-16)
 
 
