@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [5.0.1](https://github.com/mx-space/core/compare/v5.0.0...v5.0.1) (2024-02-17)
+
+
+### Bug Fixes
+
+* comment model with ip fixes [#1473](https://github.com/mx-space/core/issues/1473) ([f11ccb9](https://github.com/mx-space/core/commit/f11ccb9a3694fcbb511f88d7061da46f06de87e5))
+* **deps:** update dependency @simplewebauthn/server to v9.0.3 ([84f9b2b](https://github.com/mx-space/core/commit/84f9b2b477ccea7124f1305b1fcda0a90197782d))
+
+
+
 # [5.0.0](https://github.com/mx-space/core/compare/v5.0.0-beta.2...v5.0.0) (2024-02-16)
 
 
