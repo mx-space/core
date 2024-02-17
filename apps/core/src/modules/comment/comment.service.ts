@@ -208,7 +208,12 @@ export class CommentService implements OnModuleInit {
     ipLocation: { ip: string },
     isMaster: boolean,
   ) {
-    const comment = await this.commentModel.findById(commentId).lean()
+    const comment = await this.commentModel
+      .findById(commentId)
+      .lean({
+        getters: true,
+      })
+      .select('+ip +agent')
 
     if (!comment) return
     scheduleManager.schedule(async () => {
@@ -228,34 +233,31 @@ export class CommentService implements OnModuleInit {
             state: CommentState.Junk,
           },
         )
+
         return
       } else if (!isMaster) {
         this.sendEmail(comment, CommentReplyMailType.Owner)
-      }
-
-      if (commentShouldAudit) {
-        await this.eventManager.broadcast(
-          BusinessEvents.COMMENT_CREATE,
-          comment,
-          {
-            scope: EventScope.TO_SYSTEM_ADMIN,
-          },
-        )
-
-        return
       }
 
       await this.eventManager.broadcast(
         BusinessEvents.COMMENT_CREATE,
         comment,
         {
-          scope: isMaster
-            ? EventScope.TO_SYSTEM_VISITOR
-            : comment.isWhispers
-              ? EventScope.TO_SYSTEM_ADMIN
-              : EventScope.ALL,
+          scope: EventScope.TO_SYSTEM_ADMIN,
         },
       )
+
+      if (commentShouldAudit || comment.isWhispers) {
+        /* empty */
+      } else {
+        await this.eventManager.broadcast(
+          BusinessEvents.COMMENT_CREATE,
+          omit(comment, ['ip', 'agent']),
+          {
+            scope: EventScope.TO_VISITOR,
+          },
+        )
+      }
     })
   }
 
