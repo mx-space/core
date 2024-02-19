@@ -132,7 +132,7 @@
     "@nestjs/cli": "10.3.2",
     "@nestjs/schematics": "10.1.1",
     "@nestjs/testing": "10.3.3",
-    "@swc/core": "1.4.1",
+    "@swc/core": "1.4.2",
     "@types/babel__core": "7.20.5",
     "@types/bcryptjs": "^2.4.6",
     "@types/cache-manager": "4.0.6",
