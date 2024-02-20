@@ -6,7 +6,7 @@
     "build": "tsup"
   },
   "devDependencies": {
-    "nanoid": "5.0.5",
+    "nanoid": "5.0.6",
     "zx": "7.2.3"
   },
   "exports": {
