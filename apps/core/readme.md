@@ -14,6 +14,7 @@
 
 此项目不带主站，可以使用以下项目（选一）进行部署。
 
+- [Shiro](https://github.com/innei/shiro) (纯净)
 - [Kami](https://github.com/mx-space/kami) (老二次元的风格)
 - [Yun](https://github.com/mx-space/mx-web-yun) (简洁的风格)
 
@@ -25,7 +26,6 @@
 
 - Bark 推送
 - 邮件订阅
-- 同步到 [xLog](https://xlog.app)
 
 ## Docker 部署（建议）
 
