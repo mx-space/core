@@ -19,12 +19,14 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
+import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -61,6 +63,7 @@ export class CommentService implements OnModuleInit {
     @Inject(forwardRef(() => ServerlessService))
     private readonly serverlessService: ServerlessService,
     private readonly eventManager: EventManagerService,
+    private readonly barkService: BarkPushService,
   ) {}
 
   private async getMailOwnerProps() {
@@ -580,5 +583,28 @@ export class CommentService implements OnModuleInit {
       }
       await this.mailService.send(options)
     }
+  }
+
+  // push comment
+  @OnEvent(BusinessEvents.COMMENT_CREATE)
+  async pushCommentEvent(comment: CommentModel) {
+    const { enable } = await this.configsService.get('barkOptions')
+    if (!enable) {
+      return
+    }
+    const master = await this.userService.getMaster()
+    if (comment.author == master.name && comment.author == master.username) {
+      return
+    }
+    const { adminUrl } = await this.configsService.get('url')
+
+    await this.barkService.push({
+      title: '收到一条新评论',
+      body: `${comment.author} 评论了你的${
+        comment.refType === CollectionRefTypes.Recently ? '速记' : '文章'
+      }：${comment.text}`,
+      icon: comment.avatar,
+      url: `${adminUrl}#/comments`,
+    })
   }
 }

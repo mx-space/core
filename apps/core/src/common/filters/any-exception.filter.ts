@@ -90,7 +90,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
         title: '疑似遭到攻击',
         body: `IP: ${ip}`,
       })
-      await sleep(10_000)
 
       return response.status(444).send({
         message: '请求过于频繁，请稍后再试',

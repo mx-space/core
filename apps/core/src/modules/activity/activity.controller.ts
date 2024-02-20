@@ -14,6 +14,7 @@ import {
   ActivityDeleteDto,
   ActivityQueryDto,
   ActivityTypeParamsDto,
+  ReadingRangeDto,
 } from './dtos/activity.dto'
 import { LikeBodyDto } from './dtos/like.dto'
 import { GetPresenceQueryDto, UpdatePresenceDto } from './dtos/presence.dto'
@@ -130,10 +131,13 @@ export class ActivityController {
   }
 
   @Auth()
-  @Get('/reading/range')
-  async getReadingRangeRank() {
+  @Get('/reading/rank')
+  async getReadingRangeRank(@Query() query: ReadingRangeDto) {
+    const startAt = query.start ? new Date(query.start) : undefined
+    const endAt = query.end ? new Date(query.end) : undefined
+
     return this.service
-      .getDateRangeOfReadings()
+      .getDateRangeOfReadings(startAt, endAt)
       .then((arr) => {
         return arr.sort((a, b) => {
           return b.count - a.count

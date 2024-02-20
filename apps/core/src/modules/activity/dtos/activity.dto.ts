@@ -1,5 +1,5 @@
-import { Transform } from 'class-transformer'
-import { IsEnum, IsNumber, IsOptional } from 'class-validator'
+import { Transform, Type } from 'class-transformer'
+import { IsEnum, IsInt, IsNumber, IsOptional } from 'class-validator'
 
 import { PagerDto } from '~/shared/dto/pager.dto'
 
@@ -25,4 +25,16 @@ export class ActivityQueryDto extends PagerDto {
   @IsOptional()
   @TransformEnum()
   type: Activity
+}
+
+export class ReadingRangeDto {
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  start: number
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  end: number
 }
