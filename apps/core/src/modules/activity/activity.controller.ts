@@ -128,4 +128,35 @@ export class ActivityController {
       objects,
     }
   }
+
+  @Auth()
+  @Get('/reading/range')
+  async getReadingRangeRank() {
+    return this.service
+      .getDateRangeOfReadings()
+      .then((arr) => {
+        return arr.sort((a, b) => {
+          return b.count - a.count
+        })
+      })
+      .then((arr) => {
+        // omit ref fields
+
+        return arr.map((item) => {
+          return {
+            ...item,
+            ref: pick(item.ref, [
+              'title',
+              'slug',
+              'cover',
+              'created',
+              'category',
+              'categoryId',
+              'id',
+              'nid',
+            ]),
+          }
+        })
+      })
+  }
 }

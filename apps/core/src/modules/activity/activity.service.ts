@@ -3,6 +3,10 @@ import { Types } from 'mongoose'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import type { Collection } from 'mongodb'
 import type { Socket } from 'socket.io'
+import type { NoteModel } from '../note/note.model'
+import type { PageModel } from '../page/page.model'
+import type { PostModel } from '../post/post.model'
+import type { RecentlyModel } from '../recently/recently.model'
 import type {
   ActivityLikePayload,
   ActivityLikeSupportType,
@@ -413,5 +417,65 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const objects = await this.databaseService.findGlobalByIds(articleIds)
 
     return { objects }
+  }
+
+  async getDateRangeOfReadings(startAt?: Date, endAt?: Date) {
+    startAt = startAt ?? new Date('2020-01-01')
+    endAt = endAt ?? new Date()
+
+    const activities = await this.activityModel
+      .find({
+        created: {
+          $gte: startAt,
+          $lte: endAt,
+        },
+        type: Activity.ReadDuration,
+      })
+      .lean({
+        getters: true,
+      })
+
+    const refIds = new Set<string>()
+    for (const item of activities) {
+      const parsed = item.payload
+      const refId = extractArticleIdFromRoomName(parsed.roomName)
+      if (!refId) continue
+      refIds.add(refId)
+    }
+
+    const activityCountingMap = activities.reduce(
+      (acc, item) => {
+        const refId = extractArticleIdFromRoomName(item.payload.roomName)
+        if (!refId) return acc
+        if (!acc[refId]) {
+          acc[refId] = 0
+        }
+        acc[refId]++
+
+        return acc
+      },
+      {} as Record<string, number>,
+    )
+
+    const result = [] as {
+      refId: string
+      count: number
+      ref: PostModel | NoteModel | PageModel | RecentlyModel
+    }[]
+
+    const idsCollections = await this.databaseService.findGlobalByIds(
+      Array.from(refIds),
+    )
+
+    const mapping = this.databaseService.flatCollectionToMap(idsCollections)
+    for (const refId of refIds) {
+      result.push({
+        refId,
+        count: activityCountingMap[refId] ?? 0,
+        ref: mapping[refId],
+      })
+    }
+
+    return result
   }
 }

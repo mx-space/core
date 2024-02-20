@@ -134,14 +134,9 @@ export class DatabaseService {
     }
   }
 
-  public async findGlobalByIds(ids: string[]): Promise<{
-    posts: PostModel[]
-    notes: NoteModel[]
-    pages: PageModel[]
-    recentlies: RecentlyModel[]
-  }>
+  public async findGlobalByIds(ids: string[]): Promise<IdsCollection>
   public async findGlobalByIds(ids: string[]) {
-    const doc = await Promise.all([
+    const combinedCollection = await Promise.all([
       this.postModel
         .find({
           _id: { $in: ids },
@@ -166,14 +161,28 @@ export class DatabaseService {
         .lean(),
     ])
 
-    const result = doc.reduce((acc, list, index) => {
+    const result = combinedCollection.reduce((acc, list, index) => {
       return {
         ...acc,
         [(['posts', 'notes', 'pages', 'recentlies'] as const)[index]]: list,
       }
-    }, {})
+    }, {} as IdsCollection)
 
     return result as any
+  }
+
+  flatCollectionToMap(combinedCollection: IdsCollection) {
+    const all = {} as Record<
+      string,
+      PostModel | NoteModel | PageModel | RecentlyModel
+    >
+    for (const key in combinedCollection) {
+      const collection = combinedCollection[key]
+      for (const item of collection) {
+        all[item.id] = item
+      }
+    }
+    return all
   }
 
   public get db() {
@@ -187,4 +196,11 @@ export class DatabaseService {
   public get client() {
     return this.connection.getClient()
   }
+}
+
+type IdsCollection = {
+  posts: PostModel[]
+  notes: NoteModel[]
+  pages: PageModel[]
+  recentlies: RecentlyModel[]
 }
