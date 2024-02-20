@@ -7,8 +7,16 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 export class UploadService {
   public async getAndValidMultipartField(
     req: FastifyRequest,
+
+    options?: {
+      maxFileSize?: number
+    },
   ): Promise<MultipartFile> {
-    const data = await req.file()
+    const data = await req.file({
+      limits: {
+        fileSize: options?.maxFileSize,
+      },
+    })
 
     if (!data) {
       throw new BadRequestException('仅供上传文件！')

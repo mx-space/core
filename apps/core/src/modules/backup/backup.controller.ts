@@ -69,7 +69,9 @@ export class BackupController {
 
   @Post(['/rollback/', '/'])
   async uploadAndRestore(@Req() req: FastifyRequest) {
-    const data = await this.uploadService.getAndValidMultipartField(req)
+    const data = await this.uploadService.getAndValidMultipartField(req, {
+      maxFileSize: 1024 * 1024 * 100,
+    })
     const { mimetype } = data
 
     if (!isZipMinetype(mimetype)) {

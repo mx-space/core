@@ -15,9 +15,10 @@ export { app as fastifyApp }
 
 app.register(FastifyMultipart, {
   limits: {
-    fields: 10, // Max number of non-file fields
-    fileSize: 1024 * 1024 * 6, // limit size 6M
-    files: 5, // Max number of file fields
+    fieldNameSize: 100, // Max field name size
+    files: 1,
+
+    fileSize: 1024 * 1024 * 6, // 限制的最大文件大小，后续在 service 层再次限制
   },
 })
 
