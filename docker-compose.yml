@@ -3,7 +3,7 @@ version: '3.8'
 services:
   app:
     container_name: mx-server
-    image: innei/mx-server:latest
+    image: innei/mx-server:5
     command: bash ./docker-run.sh
     environment:
       - TZ=Asia/Shanghai
