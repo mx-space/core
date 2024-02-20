@@ -12,7 +12,12 @@ import type { UpdatePresenceDto } from './dtos/presence.dto'
 
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 
+import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import {
+  NOTE_COLLECTION_NAME,
+  POST_COLLECTION_NAME,
+} from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { GatewayService } from '~/processors/gateway/gateway.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
@@ -143,12 +148,12 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         const { type, id } = item.payload as ActivityLikePayload
 
         switch (type) {
-          case 'Note': {
-            acc.Note.push(id)
+          case 'note': {
+            acc.note.push(id)
             break
           }
-          case 'Post': {
-            acc.Post.push(id)
+          case 'post': {
+            acc.post.push(id)
 
             break
           }
@@ -156,8 +161,8 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         return acc
       },
       {
-        Post: [],
-        Note: [],
+        post: [],
+        note: [],
       } as Record<ActivityLikeSupportType, string[]>,
     )
 
@@ -165,8 +170,8 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       ActivityLikeSupportType,
       Collection<Document>
     > = {
-      Note: this.databaseService.db.collection('notes'),
-      Post: this.databaseService.db.collection('posts'),
+      note: this.databaseService.db.collection(NOTE_COLLECTION_NAME),
+      post: this.databaseService.db.collection(POST_COLLECTION_NAME),
     }
 
     const refModelData = new Map<string, any>()
@@ -237,9 +242,17 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async likeAndEmit(type: ActivityLikeSupportType, id: string, ip: string) {
+  async likeAndEmit(type: 'post' | 'note', id: string, ip: string) {
     try {
-      const res = await this.countingService.updateLikeCountWithIp(type, id, ip)
+      const mapping = {
+        post: ArticleTypeEnum.Post,
+        note: ArticleTypeEnum.Note,
+      }
+      const res = await this.countingService.updateLikeCountWithIp(
+        mapping[type],
+        id,
+        ip,
+      )
       if (!res) {
         throw new BadRequestException('你已经支持过啦！')
       }

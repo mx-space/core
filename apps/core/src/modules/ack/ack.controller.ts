@@ -1,16 +1,15 @@
 import { plainToInstance } from 'class-transformer'
 import { validateSync } from 'class-validator'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import type { ValidatorOptions } from 'class-validator'
 
-import { Body, HttpCode, Post, Req, Res, ValidationPipe } from '@nestjs/common'
+import { Body, HttpCode, Inject, Post, Req, Res } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Cookies } from '~/common/decorators/cookie.decorator'
-import { RedisKeys } from '~/constants/cache.constant'
+import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
+import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { CacheService } from '~/processors/redis/cache.service'
-import { getRedisKey } from '~/utils'
 
 import { AckDto, AckEventType, AckReadPayloadDto } from './ack.dto'
 
@@ -19,14 +18,9 @@ export class AckController {
   constructor(
     private readonly cacheService: CacheService,
     private readonly countingService: CountingService,
+    @Inject(VALIDATION_PIPE_INJECTION)
+    private readonly validatePipe: ExtendedValidationPipe,
   ) {}
-
-  private validateOptions: ValidatorOptions = {
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    stopAtFirstError: true,
-  }
-  private validate = new ValidationPipe(this.validateOptions)
 
   @Post('/')
   @HttpCode(200)
@@ -42,37 +36,55 @@ export class AckController {
     switch (type) {
       case AckEventType.READ: {
         const validPayload = plainToInstance(AckReadPayloadDto, payload)
-        const errors = validateSync(validPayload, this.validateOptions)
+        const errors = validateSync(
+          validPayload,
+          ExtendedValidationPipe.options,
+        )
         if (errors.length) {
-          const error = this.validate.createExceptionFactory()(errors as any[])
+          const error = this.validatePipe.createExceptionFactory()(
+            errors as any[],
+          )
           throw error
         }
+
         const { id, type } = validPayload
-
-        if (uuidReq) {
-          const cacheKey = getRedisKey(RedisKeys.Read, `ack-${uuidReq}-${id}`)
-          const cacheValue = await this.cacheService.get(cacheKey)
-          if (cacheValue) {
-            return res.send()
-          }
-          await this.cacheService.set(cacheKey, '1', 12 * 60 * 60 * 1000)
-          // @ts-expect-error
-          await this.countingService.updateReadCount(type, id)
-          return res.send()
-        }
-
-        const cookieKey = `ack-read-${id}`
-        // @ts-expect-error
         await this.countingService.updateReadCount(type, id)
-        if (cookies[cookieKey]) {
-          return res.send()
-        }
 
-        res.cookie(cookieKey, '1', {
-          maxAge:
-            // 12 hour
-            12 * 60 * 60 * 1000,
-        })
+        return res.send()
+
+        // disable ack read limit
+        // const validPayload = plainToInstance(AckReadPayloadDto, payload)
+        // const errors = validateSync(validPayload, this.validateOptions)
+        // if (errors.length) {
+        //   const error = this.validate.createExceptionFactory()(errors as any[])
+        //   throw error
+        // }
+        // const { id, type } = validPayload
+
+        // if (uuidReq) {
+        //   const cacheKey = getRedisKey(RedisKeys.Read, `ack-${uuidReq}-${id}`)
+        //   const cacheValue = await this.cacheService.get(cacheKey)
+        //   if (cacheValue) {
+        //     return res.send()
+        //   }
+        //   await this.cacheService.set(cacheKey, '1', 12 * 60 * 60 * 1000)
+        //   // @ts-expect-error
+        //   await this.countingService.updateReadCount(type, id)
+        //   return res.send()
+        // }
+
+        // const cookieKey = `ack-read-${id}`
+        // // @ts-expect-error
+        // await this.countingService.updateReadCount(type, id)
+        // if (cookies[cookieKey]) {
+        //   return res.send()
+        // }
+
+        // res.cookie(cookieKey, '1', {
+        //   maxAge:
+        //     // 12 hour
+        //     12 * 60 * 60 * 1000,
+        // })
       }
     }
   }

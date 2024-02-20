@@ -158,7 +158,7 @@ export class SearchService {
     const tasks = search.hits.map((hit) => {
       const { type, objectID } = hit
 
-      const model = this.databaseService.getModelByRefType(type as any)
+      const model = this.databaseService.getModelByRefType(type as 'post')
       if (!model) {
         return
       }

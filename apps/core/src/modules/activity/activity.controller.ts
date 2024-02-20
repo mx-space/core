@@ -30,7 +30,7 @@ export class ActivityController {
     const { ip } = location
     const { id, type } = body
 
-    await this.service.likeAndEmit(type, id, ip)
+    await this.service.likeAndEmit(type.toLowerCase() as any, id, ip)
 
     return
   }

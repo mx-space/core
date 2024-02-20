@@ -100,16 +100,7 @@ export class CommentService implements OnModuleInit {
   private getModelByRefType(
     type: CollectionRefTypes,
   ): ReturnModelType<typeof WriteBaseModel> {
-    switch (type) {
-      case CollectionRefTypes.Note:
-        return this.databaseService.getModelByRefType('Note') as any
-      case CollectionRefTypes.Page:
-        return this.databaseService.getModelByRefType('Page') as any
-      case CollectionRefTypes.Post:
-        return this.databaseService.getModelByRefType('Post') as any
-      case CollectionRefTypes.Recently:
-        return this.databaseService.getModelByRefType('Recently') as any
-    }
+    return this.databaseService.getModelByRefType(type) as any
   }
 
   async checkSpam(doc: CommentModel) {

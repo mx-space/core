@@ -3,21 +3,22 @@ import { plainToInstance } from 'class-transformer'
 import { validateSync } from 'class-validator'
 import { cloneDeep, mergeWith } from 'lodash'
 import type { ClassConstructor } from 'class-transformer'
-import type { ValidatorOptions } from 'class-validator'
 
 import { Clerk } from '@clerk/clerk-sdk-node'
 import {
   BadRequestException,
+  Inject,
   Injectable,
   Logger,
   UnprocessableEntityException,
-  ValidationPipe,
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
+import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
 import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
@@ -49,6 +50,9 @@ export class ConfigsService {
     private readonly subpub: SubPubBridgeService,
 
     private readonly eventManager: EventManagerService,
+
+    @Inject(VALIDATION_PIPE_INJECTION)
+    private readonly validate: ExtendedValidationPipe,
   ) {
     this.configInit().then(() => {
       this.logger.log('Config 已经加载完毕！')
@@ -182,12 +186,6 @@ export class ConfigsService {
     return newData
   }
 
-  private validateOptions: ValidatorOptions = {
-    whitelist: true,
-    forbidNonWhitelisted: true,
-  }
-  private validate = new ValidationPipe(this.validateOptions)
-
   async patchAndValid<T extends keyof IConfig>(
     key: T,
     value: Partial<IConfig[T]>,
@@ -290,10 +288,11 @@ export class ConfigsService {
     const validModel = plainToInstance(dto, value)
     const errors = Array.isArray(validModel)
       ? (validModel as Array<any>).reduce(
-          (acc, item) => acc.concat(validateSync(item, this.validateOptions)),
+          (acc, item) =>
+            acc.concat(validateSync(item, ExtendedValidationPipe.options)),
           [],
         )
-      : validateSync(validModel, this.validateOptions)
+      : validateSync(validModel, ExtendedValidationPipe.options)
     if (errors.length > 0) {
       const error = this.validate.createExceptionFactory()(errors as any[])
       throw error

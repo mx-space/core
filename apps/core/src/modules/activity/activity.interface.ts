@@ -1,10 +1,10 @@
 export interface ActivityLikePayload {
   id: string
   ip: string
-  type: 'Note' | 'Post'
+  type: ActivityLikeSupportType
 }
 
-export type ActivityLikeSupportType = 'Post' | 'Note'
+export type ActivityLikeSupportType = 'post' | 'note'
 
 export interface ActivityPresence {
   operationTime: number

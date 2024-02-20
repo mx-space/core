@@ -1,4 +1,4 @@
-import type { ArticleType } from '~/constants/article.constant'
+import type { ArticleTypeEnum } from '~/constants/article.constant'
 
 import { Injectable, Logger } from '@nestjs/common'
 
@@ -30,40 +30,15 @@ export class CountingService {
     return true
   }
 
-  // public async updateReadCountWithIp(
-  //   type: keyof typeof ArticleType,
-  //   id: string,
-  //   ip: string,
-  // ) {
-  //   if (!this.checkIdAndIp(id, ip)) {
-  //     return
-  //   }
-  //   const redis = this.redis.getClient()
-
-  //   const isReadBefore = await redis.sismember(
-  //     getRedisKey(RedisKeys.Read, id),
-  //     ip,
-  //   )
-  //   if (isReadBefore) {
-  //     this.logger.debug(`已经增加过计数了，${id}`)
-  //     return
-  //   }
-
-  //   const doc = await this.updateReadCount(type, id)
-
-  //   await redis.sadd(getRedisKey(RedisKeys.Read, doc.id), ip)
-  //   this.logger.debug(`增加阅读计数，(${doc.title}`)
-  // }
-
   public async updateLikeCountWithIp(
-    type: keyof typeof ArticleType,
+    type: ArticleTypeEnum,
     id: string,
     ip: string,
   ): Promise<boolean> {
     const redis = this.redis.getClient()
     const isLikeBefore = await this.getThisRecordIsLiked(id, ip)
 
-    const model = this.databaseService.getModelByRefType(type as any)
+    const model = this.databaseService.getModelByRefType(type)
     const doc = await model.findById(id)
 
     if (!doc) {
@@ -81,8 +56,9 @@ export class CountingService {
     this.logger.debug(`增加喜欢计数，(${doc.title}`)
     return true
   }
-  public async updateReadCount(type: keyof typeof ArticleType, id: string) {
-    const model = this.databaseService.getModelByRefType(type as any)
+
+  public async updateReadCount(type: ArticleTypeEnum, id: string) {
+    const model = this.databaseService.getModelByRefType(type)
     const doc = await model.findById(id)
 
     if (!doc) throw ''

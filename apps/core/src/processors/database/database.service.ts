@@ -1,3 +1,6 @@
+import type { ArticleTypeEnum } from '~/constants/article.constant'
+import type { WriteBaseModel } from '~/shared/model/write-base.model'
+
 import { Inject, Injectable } from '@nestjs/common'
 import { mongoose, ReturnModelType } from '@typegoose/typegoose'
 
@@ -31,17 +34,20 @@ export class DatabaseService {
     | ReturnModelType<typeof NoteModel>
     | ReturnModelType<typeof PageModel>
     | ReturnModelType<typeof RecentlyModel>
-  public getModelByRefType(type: 'Post'): ReturnModelType<typeof PostModel>
+  // @ts-ignore
+  public getModelByRefType(
+    type: ArticleTypeEnum,
+  ): ReturnModelType<typeof WriteBaseModel>
   public getModelByRefType(type: 'post'): ReturnModelType<typeof PostModel>
   public getModelByRefType(
     type: CollectionRefTypes.Post,
   ): ReturnModelType<typeof PostModel>
-  public getModelByRefType(type: 'Note'): ReturnModelType<typeof NoteModel>
+
   public getModelByRefType(type: 'note'): ReturnModelType<typeof NoteModel>
   public getModelByRefType(
     type: CollectionRefTypes.Note,
   ): ReturnModelType<typeof NoteModel>
-  public getModelByRefType(type: 'Page'): ReturnModelType<typeof PageModel>
+
   public getModelByRefType(type: 'page'): ReturnModelType<typeof PageModel>
   public getModelByRefType(
     type: CollectionRefTypes.Page,

@@ -33,7 +33,7 @@ export class ActivityController<ResponseWrapper> implements IController {
   likeIt(type: 'Post' | 'Note', id: string) {
     return this.proxy.like.post<never>({
       data: {
-        type,
+        type: type.toLowerCase(),
         id,
       },
     })

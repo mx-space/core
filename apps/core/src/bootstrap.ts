@@ -5,7 +5,6 @@ import wcmatch from 'wildcard-match'
 import type { LogLevel } from '@nestjs/common'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 
-import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 
 import { CROSS_DOMAIN, DEBUG_MODE, PORT } from './app.config'
@@ -14,6 +13,7 @@ import { fastifyApp } from './common/adapters/fastify.adapter'
 import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { SpiderGuard } from './common/guards/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
+import { ExtendedValidationPipe } from './common/pipes/validation.pipe'
 import { logger } from './global/consola.global'
 import { isMainProcess, isTest } from './global/env.global'
 import { migrateDatabase } from './migration/migrate'
@@ -70,16 +70,7 @@ export async function bootstrap() {
     app.useGlobalInterceptors(new LoggingInterceptor())
   }
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      errorHttpStatusCode: 422,
-      forbidUnknownValues: true,
-      enableDebugMessages: isDev,
-      stopAtFirstError: true,
-    }),
-  )
+  app.useGlobalPipes(ExtendedValidationPipe.shared)
   app.useGlobalGuards(new SpiderGuard())
   !isTest && app.useWebSocketAdapter(new RedisIoAdapter(app))
 
