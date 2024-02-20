@@ -80,8 +80,7 @@ export const CROSS_DOMAIN = {
     : [
         'innei.ren',
         '*.innei.ren',
-        'shizuri.net',
-        '*.shizuri.net',
+
         'localhost:*',
         '127.0.0.1',
         'mbp.cc',

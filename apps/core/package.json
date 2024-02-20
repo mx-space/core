@@ -12,7 +12,7 @@
     "directory": "mx-space/core",
     "url": "https://github.com/mx-space/core"
   },
-  "homepage": "https://github.com/mx-space/core#readme",
+  "homepage": "https://github.com/mx-space/core/tree/master/apps/core#readme",
   "issues": "https://github.com/mx-space/core/issues",
   "scripts": {
     "prebuild": "rimraf dist",
