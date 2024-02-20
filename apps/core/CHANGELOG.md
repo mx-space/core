@@ -1,5 +1,23 @@
 # CHANGELOG
 
+# [5.1.0](https://github.com/mx-space/core/compare/v5.0.1...v5.1.0) (2024-02-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency mongoose to v8.1.3 ([e84be0c](https://github.com/mx-space/core/commit/e84be0c6f764246ba041b3a9a470e1abe084102f))
+* remove wating if 427 and add query parameters to getReadingRangeRank ([2ce68aa](https://github.com/mx-space/core/commit/2ce68aa99d995814efec1b7eadf4bbddcd5cae37))
+* test ([4b3c858](https://github.com/mx-space/core/commit/4b3c858739e80d51fb01eb05737fbd68bccfda97))
+* test case ([6ed5e40](https://github.com/mx-space/core/commit/6ed5e40fa197c74dc4c8295cd5afb08cf32fb1c8))
+* un-limit upload size for backup service ([601a3dd](https://github.com/mx-space/core/commit/601a3dd69151336f715ab05e5948d4fe5dfc6b3f))
+
+
+### Features
+
+* reading rank ([029b47c](https://github.com/mx-space/core/commit/029b47c988e77941937d336a751ec8be4ee8520b))
+
+
+
 ## [5.0.1](https://github.com/mx-space/core/compare/v5.0.0...v5.0.1) (2024-02-17)
 
 
