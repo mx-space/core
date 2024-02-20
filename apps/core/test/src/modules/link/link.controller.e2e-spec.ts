@@ -5,6 +5,8 @@ import { emailProvider } from 'test/mock/processors/email.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 import type { ReturnModelType } from '@typegoose/typegoose'
 
+import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
+import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import {
@@ -30,6 +32,10 @@ describe('Test LinkController(E2E)', () => {
 
       ConfigsService,
       ...eventEmitterProvider,
+      {
+        provide: VALIDATION_PIPE_INJECTION,
+        useValue: ExtendedValidationPipe.shared,
+      },
     ],
     async pourData(modelMap) {
       const linkModel = modelMap.get(LinkModel)

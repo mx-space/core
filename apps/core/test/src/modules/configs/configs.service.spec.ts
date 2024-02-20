@@ -2,11 +2,13 @@ import { redisHelper } from 'test/helper/redis-mock.helper'
 import { vi } from 'vitest'
 import type { MockCacheService } from 'test/helper/redis-mock.helper'
 
-import { BadRequestException } from '@nestjs/common'
+import { UnprocessableEntityException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
 
+import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
 import { RedisKeys } from '~/constants/cache.constant'
+import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UserService } from '~/modules/user/user.service'
@@ -45,6 +47,10 @@ describe('Test ConfigsService', () => {
         {
           provide: SubPubBridgeService,
           useValue: {},
+        },
+        {
+          provide: VALIDATION_PIPE_INJECTION,
+          useValue: ExtendedValidationPipe.shared,
         },
       ],
     }).compile()
@@ -96,7 +102,7 @@ describe('Test ConfigsService', () => {
   it('should throw error if set a wrong type of config value', async () => {
     await expect(
       service.patchAndValid('seo', { title: true } as any),
-    ).rejects.toThrow(BadRequestException)
+    ).rejects.toThrow(UnprocessableEntityException)
   })
 
   it('should emit event if enable email option and update search', async () => {
