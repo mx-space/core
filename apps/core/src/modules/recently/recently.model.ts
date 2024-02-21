@@ -2,7 +2,10 @@ import { IsMongoId, IsOptional, IsString } from 'class-validator'
 
 import { modelOptions, prop } from '@typegoose/typegoose'
 
-import { CollectionRefTypes } from '~/constants/db.constant'
+import {
+  CollectionRefTypes,
+  RECENTLY_COLLECTION_NAME,
+} from '~/constants/db.constant'
 import { BaseCommentIndexModel } from '~/shared/model/base-comment.model'
 
 export type RefType = {
@@ -12,7 +15,7 @@ export type RefType = {
 
 @modelOptions({
   options: {
-    customName: 'Recently',
+    customName: RECENTLY_COLLECTION_NAME,
   },
 })
 export class RecentlyModel extends BaseCommentIndexModel {

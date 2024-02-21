@@ -20,10 +20,15 @@ export async function migrateDatabase() {
     }
 
     logger.log(`[Database] migrate ${migrate.name}`)
-    if (typeof migrate === 'function') {
-      await migrate(db)
-    } else {
-      await migrate.run(db, connection)
+    try {
+      if (typeof migrate === 'function') {
+        await migrate(db)
+      } else {
+        await migrate.run(db, connection)
+      }
+    } catch (err) {
+      logger.error(`[Database] migrate ${migrate.name} failed`, err)
+      throw err
     }
 
     await db.collection(MIGRATE_COLLECTION_NAME).insertOne({

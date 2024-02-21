@@ -73,6 +73,7 @@ export class DatabaseService {
       [CollectionRefTypes.Post, this.postModel],
       [CollectionRefTypes.Note, this.noteModel],
       [CollectionRefTypes.Page, this.pageModel],
+      [CollectionRefTypes.Recently, this.recentlyModel],
     ] as any)
     return map.get(type) as any as ReturnModelType<
       | typeof NoteModel
