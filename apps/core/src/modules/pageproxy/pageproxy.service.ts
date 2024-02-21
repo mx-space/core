@@ -118,15 +118,14 @@ export class PageProxyService {
   }
 
   async getUrlFromConfig() {
-    // const config = await this.configs.waitForConfigReady()
-    // const url = config.url
+    const config = await this.configs.waitForConfigReady()
+    const url = config.url
 
     return {
       BASE_API: isDev ? undefined : `/api/v${API_VERSION}`,
 
-      GATEWAY: '/',
       // BASE_API: url.serverUrl || (isDev ? '/' : '/api/v2'),
-      // GATEWAY: url.wsUrl || '/',
+      GATEWAY: url.wsUrl,
     }
   }
 

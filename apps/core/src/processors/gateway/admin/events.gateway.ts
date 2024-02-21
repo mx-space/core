@@ -7,10 +7,9 @@ import type {
 } from '@nestjs/websockets'
 import type SocketIO from 'socket.io'
 
-import { forwardRef, Inject, UseGuards } from '@nestjs/common'
+import { forwardRef, Inject } from '@nestjs/common'
 import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
 
-import { WsExtendThrottlerGuard } from '~/common/guards/throttler.guard'
 import { LOG_DIR } from '~/constants/path.constant'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { CacheService } from '~/processors/redis/cache.service'
@@ -23,7 +22,6 @@ import { createAuthGateway } from '../shared/auth.gateway'
 
 const AuthGateway = createAuthGateway({ namespace: 'admin', authway: 'jwt' })
 @WebSocketGateway<GatewayMetadata>({ namespace: 'admin' })
-@UseGuards(WsExtendThrottlerGuard)
 export class AdminEventsGateway
   extends AuthGateway
   implements OnGatewayConnection, OnGatewayDisconnect

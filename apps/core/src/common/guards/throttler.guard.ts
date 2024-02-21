@@ -24,6 +24,7 @@ export class ExtendThrottlerGuard extends ThrottlerGuard {
   }
 }
 
+@Injectable()
 export class WsExtendThrottlerGuard extends ExtendThrottlerGuard {
   async handleRequest(
     context: ExecutionContext,
@@ -36,7 +37,6 @@ export class WsExtendThrottlerGuard extends ExtendThrottlerGuard {
     const key = this.generateKey(context, ip, throttler.name || 'ws-default')
     const { totalHits } = await this.storageService.increment(key, ttl)
 
-    console.log('totalHits', totalHits)
     if (totalHits > limit) {
       throw new ThrottlerException()
     }
