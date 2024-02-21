@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [5.1.1](https://github.com/mx-space/core/compare/v5.1.0...v5.1.1) (2024-02-21)
+
+
+### Bug Fixes
+
+* refType of recentlies fixes [#1478](https://github.com/mx-space/core/issues/1478) ([b487b3a](https://github.com/mx-space/core/commit/b487b3af87dc5ed06ba2958a94d52be728671a93))
+
+
+
 # [5.1.0](https://github.com/mx-space/core/compare/v5.0.1...v5.1.0) (2024-02-20)
 
 
