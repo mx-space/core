@@ -12,7 +12,6 @@ import { SkipThrottle } from '@nestjs/throttler'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import { AssetService } from '~/processors/helper/helper.asset.service'
-import { CacheService } from '~/processors/redis/cache.service'
 
 import { UpdateService } from '../update/update.service'
 import { PageProxyService } from './pageproxy.service'
@@ -21,7 +20,6 @@ import { PageProxyService } from './pageproxy.service'
 @SkipThrottle()
 export class PageProxyController {
   constructor(
-    private readonly cacheService: CacheService,
     private readonly service: PageProxyService,
     private readonly updateService: UpdateService,
     private readonly assetService: AssetService,
