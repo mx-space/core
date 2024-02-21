@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [5.1.2](https://github.com/mx-space/core/compare/v5.1.1...v5.1.2) (2024-02-21)
+
+
+### Bug Fixes
+
+* api injection ([9d095fb](https://github.com/mx-space/core/commit/9d095fbbd1b6f16faf8fa54c7832a1daa6fe1bbe))
+* throttle ip tracker ([c82cb8f](https://github.com/mx-space/core/commit/c82cb8ff54dc7b98bc411e03de81ede932aa612b))
+
+
+
 ## [5.1.1](https://github.com/mx-space/core/compare/v5.1.0...v5.1.1) (2024-02-21)
 
 
