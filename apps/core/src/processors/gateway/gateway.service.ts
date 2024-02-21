@@ -1,4 +1,4 @@
-import type { SocketMetadata } from '~/utils/socket.util'
+import type { SocketMetadata } from '~/types/socket-meta'
 import type { RemoteSocket, Socket } from 'socket.io'
 import type {
   DecorateAcknowledgementsWithMultipleResponses,

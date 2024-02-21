@@ -14,6 +14,7 @@ import type {
 import type { SocketType } from '../gateway.service'
 import type { EventGatewayHooks } from './hook.interface'
 
+import { UseGuards } from '@nestjs/common'
 import {
   ConnectedSocket,
   MessageBody,
@@ -22,6 +23,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets'
 
+import { WsExtendThrottlerGuard } from '~/common/guards/throttler.guard'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/redis/cache.service'
@@ -33,7 +35,7 @@ import { BroadcastBaseGateway } from '../base.gateway'
 import { GatewayService } from '../gateway.service'
 import { MessageEventDto, SupportedMessageEvent } from './dtos/message'
 
-declare module '~/utils/socket.util' {
+declare module '~/types/socket-meta' {
   interface SocketMetadata {
     sessionId: string
 
@@ -42,6 +44,8 @@ declare module '~/utils/socket.util' {
 }
 
 const namespace = 'web'
+
+@UseGuards(WsExtendThrottlerGuard)
 @WebSocketGateway<GatewayMetadata>({
   namespace,
 })

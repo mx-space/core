@@ -38,7 +38,7 @@ import {
   parseRoomName,
 } from './activity.util'
 
-declare module '~/utils/socket.util' {
+declare module '~/types/socket-meta' {
   interface SocketMetadata {
     presence?: ActivityPresence
   }

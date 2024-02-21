@@ -23,6 +23,7 @@ export const getIp = (request: FastifyRequest | IncomingMessage) => {
     headers['X-Real-IP'] ||
     headers['x-real-ip'] ||
     req?.ip ||
+    req?.ips?.[0] ||
     req?.raw?.connection?.remoteAddress ||
     req?.raw?.socket?.remoteAddress ||
     undefined

@@ -91,7 +91,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         body: `IP: ${ip}`,
       })
 
-      return response.status(444).send({
+      return response.status(429).send({
         message: '请求过于频繁，请稍后再试',
       })
     }
