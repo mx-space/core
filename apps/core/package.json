@@ -111,7 +111,7 @@
     "mongoose-paginate-v2": "1.8.0",
     "nestjs-pretty-logger": "0.2.1",
     "node-machine-id": "1.1.12",
-    "nodemailer": "6.9.9",
+    "nodemailer": "6.9.10",
     "pluralize": "^8.0.0",
     "qs": "6.11.2",
     "reflect-metadata": "0.2.1",
