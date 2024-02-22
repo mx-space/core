@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [5.1.4](https://github.com/mx-space/core/compare/v5.1.3...v5.1.4) (2024-02-22)
+
+
+### Bug Fixes
+
+* remove ws guard ([147441c](https://github.com/mx-space/core/commit/147441c2c99b163106c5fd02f0433510d1cea1b9))
+
+
+
 ## [5.1.3](https://github.com/mx-space/core/compare/v5.1.2...v5.1.3) (2024-02-22)
 
 
