@@ -14,7 +14,6 @@ import type {
 import type { SocketType } from '../gateway.service'
 import type { EventGatewayHooks } from './hook.interface'
 
-import { UseGuards } from '@nestjs/common'
 import {
   ConnectedSocket,
   MessageBody,
@@ -23,7 +22,6 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets'
 
-import { WsExtendThrottlerGuard } from '~/common/guards/throttler.guard'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/redis/cache.service'
@@ -45,7 +43,7 @@ declare module '~/types/socket-meta' {
 
 const namespace = 'web'
 
-@UseGuards(WsExtendThrottlerGuard)
+// @UseGuards(WsExtendThrottlerGuard)
 @WebSocketGateway<GatewayMetadata>({
   namespace,
 })
