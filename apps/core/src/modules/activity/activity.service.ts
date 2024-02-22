@@ -151,7 +151,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       (acc, item) => {
         const { type, id } = item.payload as ActivityLikePayload
 
-        switch (type) {
+        switch (type.toLowerCase()) {
           case 'note': {
             acc.note.push(id)
             break

@@ -122,7 +122,7 @@ export class PageProxyService {
     const url = config.url
 
     return {
-      BASE_API: isDev ? undefined : `/api/v${API_VERSION}`,
+      BASE_API: isDev ? '/' : `/api/v${API_VERSION}`,
 
       // BASE_API: url.serverUrl || (isDev ? '/' : '/api/v2'),
       GATEWAY: url.wsUrl,
