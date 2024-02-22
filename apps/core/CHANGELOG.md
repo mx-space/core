@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [5.1.3](https://github.com/mx-space/core/compare/v5.1.2...v5.1.3) (2024-02-22)
+
+
+### Bug Fixes
+
+* activity ref type transform to lower case ([6342257](https://github.com/mx-space/core/commit/634225775bcdb8ae7281be2ca6005f2a2e6efa63))
+
+
+
 ## [5.1.2](https://github.com/mx-space/core/compare/v5.1.1...v5.1.2) (2024-02-21)
 
 
