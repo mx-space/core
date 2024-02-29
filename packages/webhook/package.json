@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/webhook",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "devDependencies": {
     "express": "4.18.2"
   },

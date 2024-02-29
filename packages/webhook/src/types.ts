@@ -69,8 +69,6 @@ export type GenericEvent =
   | { type: BusinessEvents.PAGE_UPDATE; payload: PageModel }
   | { type: BusinessEvents.PAGE_DELETE; payload: PayloadOnlyId }
   | { type: BusinessEvents.SAY_CREATE; payload: SayModel }
-  | { type: BusinessEvents.SAY_UPDATE; payload: SayModel }
-  | { type: BusinessEvents.SAY_DELETE; payload: PayloadOnlyId }
   | { type: BusinessEvents.RECENTLY_CREATE; payload: RecentlyModel }
   | { type: BusinessEvents.ACTIVITY_LIKE; payload: IActivityLike }
   | { type: BusinessEvents.LINK_APPLY; payload: LinkModel }
@@ -80,4 +78,3 @@ export type GenericEvent =
         ref: Id | PostModel | PageModel | NoteModel | RecentlyModel
       }
     }
-  | { type: 'health_check'; payload: {} }
