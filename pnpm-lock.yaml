@@ -442,8 +442,8 @@ importers:
         specifier: 4.0.0
         version: 4.0.0
       ky:
-        specifier: 1.2.0
-        version: 1.2.0
+        specifier: 1.2.1
+        version: 1.2.1
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -6342,8 +6342,8 @@ packages:
       json-buffer: 3.0.1
     dev: true
 
-  /ky@1.2.0:
-    resolution: {integrity: sha512-dnPW+T78MuJ9tLAiF/apJV7bP7RRRCARXQxsCmsWiKLXqGtMBOgDVOFRYzCAfNe/OrRyFyor5ESgvvC+QWEqOA==}
+  /ky@1.2.1:
+    resolution: {integrity: sha512-7L6uTdeFQdmCmHCQ3I/K/bbU1OphhHkHgJcD8AJFiG70FOppdrnAnbZDcL1pxtW5mgieX/nQISEoDKxnJ5Ib2w==}
     engines: {node: '>=18'}
     dev: true
 
