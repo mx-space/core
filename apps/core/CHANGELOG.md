@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [5.1.5](https://github.com/mx-space/core/compare/v5.1.4...v5.1.5) (2024-02-29)
+
+
+### Bug Fixes
+
+* deps ([1c54ddd](https://github.com/mx-space/core/commit/1c54ddd7b86601a52f84f7847030640920834f00))
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.10 ([e55797c](https://github.com/mx-space/core/commit/e55797c9819dc678dee4d8f7c1834e4e360808f5))
+* **deps:** update dependency @types/jsonwebtoken to v9.0.6 ([3481b50](https://github.com/mx-space/core/commit/3481b5008ee9e0bcd1da179c908f23e3ba3dd92a))
+* **deps:** update dependency isbot to v5.1.1 ([db3ab52](https://github.com/mx-space/core/commit/db3ab5204c6a78eaeac0c078aea8f2375cb695f8))
+* **deps:** update dependency mongoose to v8.2.0 ([#1483](https://github.com/mx-space/core/issues/1483)) ([62c6855](https://github.com/mx-space/core/commit/62c6855a2a180a0731819fde90357f2c3216fd7e))
+* **deps:** update dependency nodemailer to v6.9.10 ([b9b5119](https://github.com/mx-space/core/commit/b9b511919ba17350e05ce2cd770c0a84603ee61a))
+* **deps:** update dependency wildcard-match to v5.1.3 ([1218d7a](https://github.com/mx-space/core/commit/1218d7ab131aee1f0e638bbeee884ac11f0cfaee))
+* log ([a142e8b](https://github.com/mx-space/core/commit/a142e8b2011c1e097cefd76f92f11d1a3242d183))
+* script ([c9deddd](https://github.com/mx-space/core/commit/c9deddda87db23d9b6fb96d9e8825b2868b68737))
+* type ([6389731](https://github.com/mx-space/core/commit/638973197781a0303bc25a6ed56b6d908e8d56d3))
+
+
+
 ## [5.1.4](https://github.com/mx-space/core/compare/v5.1.3...v5.1.4) (2024-02-22)
 
 
