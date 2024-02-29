@@ -10,7 +10,7 @@ function generateGenericEventType(fileName) {
   const program = ts.createProgram([fileName], {})
   const sourceFile = program.getSourceFile(fileName)
 
-  let genericEventType = 'export type GenericEvent =\n'
+  let genericEventType = '// Auto Generaged type.\nexport type GenericEvent =\n'
 
   ts.forEachChild(sourceFile, (node) => {
     if (
@@ -22,11 +22,16 @@ function generateGenericEventType(fileName) {
           const key = member.name
           let eventType = ''
           let isLiteralType = false
+
           if (
             ts.isComputedPropertyName(key) &&
             ts.isPropertyAccessExpression(key.expression)
           ) {
             eventType = key.expression.name.text
+          } else if (ts.isIdentifier(key) && key.escapedText) {
+            // Handle string key like 'health_check'
+            eventType = key.escapedText
+            isLiteralType = true
           } else if (ts.isStringLiteral(key)) {
             // Handle string literal types like 'health-check'
             eventType = key.text
