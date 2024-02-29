@@ -7,7 +7,7 @@ describe('test activity client', () => {
 
   test('POST /like', async () => {
     mockResponse('/activity/like', {}, 'post', {
-      type: 'Note',
+      type: 'note',
       id: '11111111',
     })
 
