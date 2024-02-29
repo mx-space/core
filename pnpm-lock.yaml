@@ -257,8 +257,8 @@ importers:
         specifier: 1.8.0
         version: 1.8.0
       nestjs-pretty-logger:
-        specifier: 0.2.1
-        version: 0.2.1(@nestjs/common@10.3.3)
+        specifier: 0.2.2
+        version: 0.2.2(@nestjs/common@10.3.3)
       node-machine-id:
         specifier: 1.1.12
         version: 1.1.12
@@ -7097,8 +7097,8 @@ packages:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
     dev: true
 
-  /nestjs-pretty-logger@0.2.1(@nestjs/common@10.3.3):
-    resolution: {integrity: sha512-ivQzoS571vb9dLGyJllPAQOfBlE7Zw3XWzQCJCAC9Iq+mMsvu35QQ8OIQUZwwxQdS1Z2FtZx8NwYQj5Ka1/9QA==}
+  /nestjs-pretty-logger@0.2.2(@nestjs/common@10.3.3):
+    resolution: {integrity: sha512-CgSeMEBlQRhKhivRKzzE2NGbuvBtR9W6M38jJZn86IVcGpyFEsb8HZHS/smlkbeG9rNZ/JMM0wf/xPM6Ub1o7g==}
     peerDependencies:
       '@nestjs/common': '>=10'
     dependencies:

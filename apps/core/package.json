@@ -109,7 +109,7 @@
     "mongoose-lean-getters": "1.1.0",
     "mongoose-lean-virtuals": "0.9.1",
     "mongoose-paginate-v2": "1.8.0",
-    "nestjs-pretty-logger": "0.2.1",
+    "nestjs-pretty-logger": "0.2.2",
     "node-machine-id": "1.1.12",
     "nodemailer": "6.9.10",
     "pluralize": "^8.0.0",

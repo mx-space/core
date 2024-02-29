@@ -11,6 +11,7 @@ import { isTest } from './env.global'
 const logger = createLogger({
   writeToFile: {
     loggerDir: LOG_DIR,
+    errWriteToStdout: true,
   },
 })
 Logger.setLoggerInstance(logger)
