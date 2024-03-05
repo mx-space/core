@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [5.1.6](https://github.com/mx-space/core/compare/v5.1.5...v5.1.6) (2024-03-05)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.11 ([dcdfb59](https://github.com/mx-space/core/commit/dcdfb595d86b8f84ce1506bbc8fab696d3149897))
+* **deps:** update dependency @typegoose/auto-increment to v4.2.0 ([#1484](https://github.com/mx-space/core/issues/1484)) ([40b2100](https://github.com/mx-space/core/commit/40b2100befbd9a87dc29472dd28964b03f39a139))
+* **deps:** update dependency @typegoose/typegoose to v12.2.0 ([#1485](https://github.com/mx-space/core/issues/1485)) ([e3334ef](https://github.com/mx-space/core/commit/e3334ef674eb10067a5acd2332cbea964b135eab))
+* **deps:** update dependency cache-manager-ioredis-yet to v2 ([#1504](https://github.com/mx-space/core/issues/1504)) ([f64dff0](https://github.com/mx-space/core/commit/f64dff013a98f1b48db063bce0ce161a04583c60))
+* **deps:** update dependency mongoose to v8.2.1 ([ca344a8](https://github.com/mx-space/core/commit/ca344a8f5288807525e1c605cc413555a71eb033))
+* **deps:** update dependency nodemailer to v6.9.11 ([dae4ef7](https://github.com/mx-space/core/commit/dae4ef7cc1423dc9d5aa76aca8e865355661fd14))
+* **deps:** update dependency xss to v1.0.15 ([959c4aa](https://github.com/mx-space/core/commit/959c4aa75c0805786c6133d21a2d7899aa7753f4))
+
+
+
 ## [5.1.5](https://github.com/mx-space/core/compare/v5.1.4...v5.1.5) (2024-02-29)
 
 
