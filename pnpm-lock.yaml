@@ -146,8 +146,8 @@ importers:
         specifier: 5.1.0
         version: 5.1.0
       '@typegoose/auto-increment':
-        specifier: 4.1.0
-        version: 4.1.0(mongoose@8.2.1)
+        specifier: 4.2.0
+        version: 4.2.0(mongoose@8.2.1)
       '@typegoose/typegoose':
         specifier: 12.1.0
         version: 12.1.0(mongoose@8.2.1)
@@ -2493,13 +2493,13 @@ packages:
     resolution: {integrity: sha512-eZxlbI8GZscaGS7kkc/trHTT5xgrjH3/1n2JDwusC9iahPKWMRvRjJSAN5mCXviuTGQ/lHnhvv8Q1YTpnfz9gA==}
     dev: true
 
-  /@typegoose/auto-increment@4.1.0(mongoose@8.2.1):
-    resolution: {integrity: sha512-mhLjd4pnZ6eUO2FFbcC77rPjiVolA2YtSOfdrTi5k495xvI/dekN4wXRCfJnRElPQE4vlh8RVIINFt/8nNT5HA==}
+  /@typegoose/auto-increment@4.2.0(mongoose@8.2.1):
+    resolution: {integrity: sha512-LB0kAGnPDkNoptPr0vZHWayfL9keuYj+KPjdrdFVPjIUQvb4B2aR1woWrrHlZxSb4tUs/OzprwUh8kCdqTRhPw==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
-      mongoose: ~8.1.0
+      mongoose: ~8.2.0
     dependencies:
-      loglevel: 1.8.1
+      loglevel: 1.9.1
       mongoose: 8.2.1
       tslib: 2.6.2
     dev: false
@@ -6552,6 +6552,11 @@ packages:
 
   /loglevel@1.8.1:
     resolution: {integrity: sha512-tCRIJM51SHjAayKwC+QAg8hT8vg6z7GSgLJKGvzuPb1Wc+hLzqtuVLxp6/HzSPOozuK+8ErAhy7U/sVzw8Dgfg==}
+    engines: {node: '>= 0.6.0'}
+    dev: false
+
+  /loglevel@1.9.1:
+    resolution: {integrity: sha512-hP3I3kCrDIMuRwAwHltphhDM1r8i55H33GgqjXbrisuJhF4kRhW1dNuxsRklp4bXl8DSdLaNLuiL4A/LWRfxvg==}
     engines: {node: '>= 0.6.0'}
     dev: false
 
