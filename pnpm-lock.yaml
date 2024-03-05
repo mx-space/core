@@ -170,8 +170,8 @@ importers:
         specifier: 5.4.0
         version: 5.4.0
       cache-manager-ioredis-yet:
-        specifier: 1.2.2
-        version: 1.2.2
+        specifier: 2.0.0
+        version: 2.0.0
       class-transformer:
         specifier: 0.5.1
         version: 0.5.1
@@ -3716,12 +3716,13 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /cache-manager-ioredis-yet@1.2.2:
-    resolution: {integrity: sha512-o03N/tQxfFONZ1XLGgIxOFHuQQpjpRdnSAL1THG1YWZIVp1JMUfjU3ElSAjFN1LjbJXa55IpC8waG+VEoLUCUw==}
-    engines: {node: '>= 16.17.0'}
+  /cache-manager-ioredis-yet@2.0.0:
+    resolution: {integrity: sha512-ugSDz+riuYikDoqfwIk8mxeXL7YenzkG04Jl2kb0Eotl3iAZOd3DflOKfnjdMi0X1IXGK1BLtGz2CF4LZ2wTrw==}
+    engines: {node: '>= 18.0.0'}
     dependencies:
       cache-manager: 5.4.0
       ioredis: 5.3.2
+      telejson: 7.2.0
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -6622,6 +6623,10 @@ packages:
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dev: true
 
+  /map-or-similar@1.5.0:
+    resolution: {integrity: sha512-0aF7ZmVon1igznGI4VS30yugpduQW3y3GkcgGJOp7d8x8QrizhigUxjI/m2UojsXXto+jLAH3KSz+xOJTiORjg==}
+    dev: false
+
   /map-stream@0.1.0:
     resolution: {integrity: sha512-CkYQrPYZfWnu/DAmVCpTSX/xHpKZ80eKh2lAkyA6AJTef6bW+6JpbQZN5rofum7da+SyN1bi5ctTm+lTfcCW3g==}
     dev: true
@@ -6643,6 +6648,12 @@ packages:
     dependencies:
       fs-monkey: 1.0.5
     dev: true
+
+  /memoizerific@1.11.3:
+    resolution: {integrity: sha512-/EuHYwAPdLtXwAwSZkh/Gutery6pD2KYd44oQLhAvQp/50mpyduZh8Q7PYHXTCJ+wuXxt7oij2LXyIJOOYFPog==}
+    dependencies:
+      map-or-similar: 1.5.0
+    dev: false
 
   /memory-pager@1.5.0:
     resolution: {integrity: sha512-ZS4Bp4r/Zoeq6+NLJpP+0Zzm0pR8whtGPf1XExKLJBAczGMnSi3It14OiNCStjQjM6NU1okjQGSxgEZN8eBYKg==}
@@ -8612,6 +8623,12 @@ packages:
       yallist: 4.0.0
     dev: false
     optional: true
+
+  /telejson@7.2.0:
+    resolution: {integrity: sha512-1QTEcJkJEhc8OnStBx/ILRu5J2p0GjvWsBx56bmZRqnrkdBMUe+nX92jxV+p3dB4CP6PZCdJMQJwCggkNBMzkQ==}
+    dependencies:
+      memoizerific: 1.11.3
+    dev: false
 
   /terser-webpack-plugin@5.3.10(@swc/core@1.4.2)(esbuild@0.19.11)(webpack@5.90.1):
     resolution: {integrity: sha512-BKFPWlPDndPs+NGGCr1U59t0XScL5317Y0UReNrHaw9/FwhPENlq6bfgs+4yPfyP51vqC1bQ4rp1EfXW5ZSH9w==}
