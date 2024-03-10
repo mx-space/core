@@ -127,6 +127,7 @@ export const parseBooleanishValue = (value: string | boolean | undefined) => {
     if (value === 'true') return true
     if (value === 'false') return false
   }
+  if (typeof value === 'undefined') return undefined
   return false
 }
 

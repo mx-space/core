@@ -12,6 +12,8 @@ services:
       - JWT_SECRET
       - ENCRYPT_KEY
       - ENCRYPT_ENABLE
+      - FORCE_CACHE_HEADER
+      - CDN_CACHE_HEADER
 
     volumes:
       - ./data/mx-space:/root/.mx-space

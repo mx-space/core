@@ -42,6 +42,17 @@ const commander = program
   // debug
   .option('--http_request_verbose', 'enable http request verbose')
 
+  // cache
+  .option('--http_cache_ttl <number>', 'http cache ttl')
+  .option(
+    '--http_cache_enable_cdn_header',
+    'enable http cache cdn header, s-maxage',
+  )
+  .option(
+    '--http_cache_enable_force_cache_header',
+    'enable http cache force cache header, max-age',
+  )
+
   // security
   .option('--encrypt_key <string>', 'custom encrypt key, default is machine-id')
   .option(
@@ -114,9 +125,17 @@ export const REDIS = {
   port: argv.redis_port || 6379,
   password: argv.redis_password || null,
   ttl: null,
-  httpCacheTTL: 15,
   max: 120,
   disableApiCache: isDev,
+  // disableApiCache: false,
+}
+
+export const HTTP_CACHE = {
+  ttl: 15, // s
+  enableCDNHeader:
+    parseBooleanishValue(argv.http_cache_enable_cdn_header) ?? true, // s-maxage
+  enableForceCacheHeader:
+    parseBooleanishValue(argv.http_cache_enable_force_cache_header) ?? false, // cache-control: max-age
 }
 
 export const AXIOS_CONFIG: AxiosRequestConfig = {

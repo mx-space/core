@@ -11,12 +11,13 @@ import type {
   ExecutionContext,
   NestInterceptor,
 } from '@nestjs/common'
+import type { FastifyReply } from 'fastify'
 import type { Observable } from 'rxjs'
 
 import { Inject, Injectable, Logger, RequestMethod } from '@nestjs/common'
 import { HttpAdapterHost, Reflector } from '@nestjs/core'
 
-import { REDIS } from '~/app.config'
+import { HTTP_CACHE, REDIS } from '~/app.config'
 import { API_CACHE_PREFIX } from '~/constants/cache.constant'
 import * as META from '~/constants/meta.constant'
 import * as SYSTEM from '~/constants/system.constant'
@@ -67,6 +68,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
     }
 
     const handler = context.getHandler()
+
     const isDisableCache = this.reflector.get(META.HTTP_CACHE_DISABLE, handler)
 
     if (isDisableCache) {
@@ -76,7 +78,29 @@ export class HttpCacheInterceptor implements NestInterceptor {
     if (request.user?.id) key = `${key}:logged-${request.user?.id}`
 
     const metaTTL = this.reflector.get(META.HTTP_CACHE_TTL_METADATA, handler)
-    const ttl = metaTTL || REDIS.httpCacheTTL
+    const ttl = metaTTL || HTTP_CACHE.ttl
+
+    const res = context.switchToHttp().getResponse<FastifyReply>()
+
+    // 如果有则不覆盖
+    if (!res.getHeader('cache-control')) {
+      let cacheHeaderValue = ''
+
+      if (HTTP_CACHE.enableForceCacheHeader) {
+        cacheHeaderValue += `max-age=${ttl}`
+      }
+
+      if (HTTP_CACHE.enableCDNHeader) {
+        if (cacheHeaderValue) cacheHeaderValue += ', '
+        cacheHeaderValue += `s-maxage=${ttl}, stale-while-revalidate=60`
+        res.header(
+          'cdn-cache-control',
+          `max-age=${ttl}, stale-while-revalidate=60`,
+        )
+      }
+
+      if (cacheHeaderValue) res.header('cache-control', cacheHeaderValue)
+    }
 
     try {
       const value = await this.cacheManager.get(key)
@@ -84,6 +108,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
       if (value) {
         this.logger.debug(`hit cache:${key}`)
       }
+
       return value
         ? of(value)
         : call$.pipe(
