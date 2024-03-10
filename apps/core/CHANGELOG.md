@@ -1,5 +1,19 @@
 # CHANGELOG
 
+# [5.2.0](https://github.com/mx-space/core/compare/v5.1.6...v5.2.0) (2024-03-10)
+
+
+### Bug Fixes
+
+* add cache header ([f0640cd](https://github.com/mx-space/core/commit/f0640cd97157004f17e35fa4c341596be314739d))
+* **deps:** update dependency cache-manager-ioredis-yet to v2.0.1 ([747a12a](https://github.com/mx-space/core/commit/747a12a8796964ee815cb6750ae5caf2f74793d6))
+* **deps:** update dependency marked to v12.0.1 ([12bd435](https://github.com/mx-space/core/commit/12bd4355c17b06366cf48694d1b8815f83396ffb))
+* **deps:** update dependency mongoose-lean-getters to v2 ([#1517](https://github.com/mx-space/core/issues/1517)) ([34db0a6](https://github.com/mx-space/core/commit/34db0a6abba6e425bf3e83d62639843ff3756a3a))
+* **deps:** update dependency nodemailer to v6.9.12 ([4d4df4c](https://github.com/mx-space/core/commit/4d4df4ccceb7652567b368e0c7637622ca568771))
+* **deps:** update dependency qs to v6.12.0 ([#1514](https://github.com/mx-space/core/issues/1514)) ([401f650](https://github.com/mx-space/core/commit/401f650288e1a22b8b021121d4cb2135e86827e4))
+
+
+
 ## [5.1.6](https://github.com/mx-space/core/compare/v5.1.5...v5.1.6) (2024-03-05)
 
 
