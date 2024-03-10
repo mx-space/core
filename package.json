@@ -47,7 +47,7 @@
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
     "tsup": "8.0.2",
-    "typescript": "5.3.3",
+    "typescript": "5.4.2",
     "vite-tsconfig-paths": "4.3.1"
   },
   "optionalDependencies": {
@@ -58,6 +58,6 @@
     "semver": "7.6.0",
     "pino": "./external/pino",
     "get-pixels@^3>request": "./external/request",
-    "typescript": "5.3.3"
+    "typescript": "5.4.2"
   }
 }
