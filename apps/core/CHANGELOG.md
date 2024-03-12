@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [5.2.1](https://github.com/mx-space/core/compare/v5.2.0...v5.2.1) (2024-03-12)
+
+
+### Bug Fixes
+
+* docker run script ([e08ddd3](https://github.com/mx-space/core/commit/e08ddd35d55ef5998e3120949a56ff784d369470))
+
+
+
 # [5.2.0](https://github.com/mx-space/core/compare/v5.1.6...v5.2.0) (2024-03-10)
 
 
