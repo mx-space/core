@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [5.2.2](https://github.com/mx-space/core/compare/v5.2.1...v5.2.2) (2024-03-14)
+
+
+### Bug Fixes
+
+* **deps:** update dependency cache-manager-ioredis-yet to v2.0.2 ([52066c1](https://github.com/mx-space/core/commit/52066c1c6d518dd6e69560995088da2a497e8183))
+* **deps:** update dependency linkedom to v0.16.9 ([11b74be](https://github.com/mx-space/core/commit/11b74be56a847c4fa55105a28bcaf6dc5a7444d5))
+
+
+
 ## [5.2.1](https://github.com/mx-space/core/compare/v5.2.0...v5.2.1) (2024-03-12)
 
 
