@@ -82,46 +82,60 @@ export class HttpCacheInterceptor implements NestInterceptor {
 
     const res = context.switchToHttp().getResponse<FastifyReply>()
 
-    // 如果有则不覆盖
-    if (!res.getHeader('cache-control')) {
-      let cacheHeaderValue = ''
-
-      if (HTTP_CACHE.enableForceCacheHeader) {
-        cacheHeaderValue += `max-age=${ttl}`
-      }
-
-      if (HTTP_CACHE.enableCDNHeader) {
-        if (cacheHeaderValue) cacheHeaderValue += ', '
-        cacheHeaderValue += `s-maxage=${ttl}, stale-while-revalidate=60`
-        res.header(
-          'cdn-cache-control',
-          `max-age=${ttl}, stale-while-revalidate=60`,
-        )
-      }
-
-      if (cacheHeaderValue) res.header('cache-control', cacheHeaderValue)
-    }
-
     try {
       const value = await this.cacheManager.get(key)
 
       if (value) {
         this.logger.debug(`hit cache:${key}`)
+        this.setCacheHeader(res, ttl)
       }
 
       return value
         ? of(value)
         : call$.pipe(
-            tap(
-              (response) =>
-                response && this.cacheManager.set(key, response, ttl * 1000),
-            ),
+            tap((response) => {
+              response && this.cacheManager.set(key, response, ttl * 1000)
+
+              this.setCacheHeader(res, ttl)
+            }),
           )
     } catch (error) {
       console.error(error)
 
       return call$
     }
+  }
+
+  setCacheHeader(res: FastifyReply, ttl: number) {
+    if (res.raw.statusCode !== 200) return
+    if (HTTP_CACHE.enableCDNHeader) {
+      res.header(
+        'cdn-cache-control',
+        `max-age=${ttl}, stale-while-revalidate=60`,
+      )
+
+      res.header(
+        'Cloudflare-CDN-Cache-Control',
+        `max-age=${ttl}, stale-while-revalidate=60`,
+      )
+    }
+    // 如果有则不覆盖
+    if (res.getHeader('cache-control')) {
+      return
+    }
+
+    let cacheHeaderValue = ''
+
+    if (HTTP_CACHE.enableForceCacheHeader) {
+      cacheHeaderValue += `max-age=${ttl}`
+    }
+
+    if (HTTP_CACHE.enableCDNHeader) {
+      if (cacheHeaderValue) cacheHeaderValue += ', '
+      cacheHeaderValue += `s-maxage=${ttl}, stale-while-revalidate=60`
+    }
+
+    if (cacheHeaderValue) res.header('cache-control', cacheHeaderValue)
   }
 
   trackBy(context: ExecutionContext): string | undefined {
