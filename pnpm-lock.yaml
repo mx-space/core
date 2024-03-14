@@ -141,7 +141,7 @@ importers:
         version: 9.0.3
       '@socket.io/redis-adapter':
         specifier: 8.2.1
-        version: 8.2.1(socket.io-adapter@2.5.2)
+        version: 8.2.1(socket.io-adapter@2.5.4)
       '@socket.io/redis-emitter':
         specifier: 5.1.0
         version: 5.1.0
@@ -395,7 +395,7 @@ importers:
         version: 5.3.2
       socket.io:
         specifier: ^4.7.4
-        version: 4.7.4
+        version: 4.7.5
       unplugin-swc:
         specifier: 1.4.4
         version: 1.4.4(@swc/core@1.4.8)
@@ -1751,6 +1751,14 @@ packages:
     dependencies:
       sparse-bitfield: 3.0.3
 
+  /@mongodb-js/saslprep@1.1.5:
+    resolution: {integrity: sha512-XLNOMH66KhJzUJNwT/qlMnS4WsNDWD5ASdyaSH3EtK+F4r/CFGa3jT4GNi4mfOitGvWXtdLgQJkQjxSVrio+jA==}
+    requiresBuild: true
+    dependencies:
+      sparse-bitfield: 3.0.3
+    dev: false
+    optional: true
+
   /@nestjs/cache-manager@2.2.1(@nestjs/common@10.3.3)(@nestjs/core@10.3.3)(cache-manager@5.4.0)(rxjs@7.8.1):
     resolution: {integrity: sha512-mXj0zenuyMPJICokwVud4Kjh0+pzBNBAgfpx3I48LozNkd8Qfv/MAhZsb15GihGpbFRxafUo3p6XvtAqRm8GRw==}
     peerDependencies:
@@ -2361,7 +2369,7 @@ packages:
   /@socket.io/component-emitter@3.1.0:
     resolution: {integrity: sha512-+9jVqKhRSpsc591z5vX+X5Yyw+he/HCB4iQ/RYxw35CEPaY1gnsNE43nf9n9AaYjAQrTiI/mOwKUKdUs9vf7Xg==}
 
-  /@socket.io/redis-adapter@8.2.1(socket.io-adapter@2.5.2):
+  /@socket.io/redis-adapter@8.2.1(socket.io-adapter@2.5.4):
     resolution: {integrity: sha512-6Dt7EZgGSBP0qvXeOKGx7NnSr2tPMbVDfDyL97zerZo+v69hMfL99skMCL3RKZlWVqLyRme2T0wcy3udHhtOsg==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
@@ -2369,7 +2377,7 @@ packages:
     dependencies:
       debug: 4.3.4
       notepack.io: 3.0.1
-      socket.io-adapter: 2.5.2
+      socket.io-adapter: 2.5.4
       uid2: 1.0.0
     transitivePeerDependencies:
       - supports-color
@@ -3969,7 +3977,7 @@ packages:
     engines: {node: '>=18'}
     dependencies:
       slice-ansi: 5.0.0
-      string-width: 7.0.0
+      string-width: 7.1.0
     dev: true
 
   /cli-width@3.0.0:
@@ -4495,8 +4503,8 @@ packages:
     dev: false
     optional: true
 
-  /engine.io-parser@5.2.1:
-    resolution: {integrity: sha512-9JktcM3u18nU9N2Lz3bWeBgxVgOKpw7yhRaoxQA3FUDZzzw+9WlA6p4G4u0RixNkg14fH7EfEc/RhpurtiROTQ==}
+  /engine.io-parser@5.2.2:
+    resolution: {integrity: sha512-RcyUFKA93/CXH20l4SoVvzZfrSDMOTUS3bWVpTt2FuFP+XYrL8i8oonHP7WInRyVHXh0n/ORtoeiE1os+8qkSw==}
     engines: {node: '>=10.0.0'}
 
   /engine.io@6.5.4:
@@ -4511,7 +4519,7 @@ packages:
       cookie: 0.4.2
       cors: 2.8.5
       debug: 4.3.4
-      engine.io-parser: 5.2.1
+      engine.io-parser: 5.2.2
       ws: 8.11.0
     transitivePeerDependencies:
       - bufferutil
@@ -6966,7 +6974,7 @@ packages:
       mongodb-connection-string-url: 2.6.0
       socks: 2.7.1
     optionalDependencies:
-      '@mongodb-js/saslprep': 1.1.4
+      '@mongodb-js/saslprep': 1.1.5
     dev: false
     optional: true
 
@@ -8382,12 +8390,14 @@ packages:
       type-fest: 3.13.1
     dev: false
 
-  /socket.io-adapter@2.5.2:
-    resolution: {integrity: sha512-87C3LO/NOMc+eMcpcxUBebGjkpMDkNBS9tf7KJqcDsmL936EChtVva71Dw2q4tQcuVC+hAUy4an2NO/sYXmwRA==}
+  /socket.io-adapter@2.5.4:
+    resolution: {integrity: sha512-wDNHGXGewWAjQPt3pyeYBtpWSq9cLE5UW1ZUPL/2eGK9jtse/FpXib7epSTsz0Q0m+6sg6Y4KtcFTlah1bdOVg==}
     dependencies:
+      debug: 4.3.4
       ws: 8.11.0
     transitivePeerDependencies:
       - bufferutil
+      - supports-color
       - utf-8-validate
 
   /socket.io-parser@4.2.4:
@@ -8408,12 +8418,29 @@ packages:
       cors: 2.8.5
       debug: 4.3.4
       engine.io: 6.5.4
-      socket.io-adapter: 2.5.2
+      socket.io-adapter: 2.5.4
       socket.io-parser: 4.2.4
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
+
+  /socket.io@4.7.5:
+    resolution: {integrity: sha512-DmeAkF6cwM9jSfmp6Dr/5/mfMwb5Z5qRrSXLpo3Fq5SqyU8CMF15jIN4ZhfSwu35ksM1qmHZDQ/DK5XTccSTvA==}
+    engines: {node: '>=10.2.0'}
+    dependencies:
+      accepts: 1.3.8
+      base64id: 2.0.0
+      cors: 2.8.5
+      debug: 4.3.4
+      engine.io: 6.5.4
+      socket.io-adapter: 2.5.4
+      socket.io-parser: 4.2.4
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+    dev: true
 
   /socks@2.7.1:
     resolution: {integrity: sha512-7maUZy1N7uo6+WVEX6psASxtNlKaNVMlGQKkG/63nEDdLOWNbiUMoLK7X4uYoLhQstau72mLgfEWcXcwsaHbYQ==}
@@ -8532,8 +8559,8 @@ packages:
       emoji-regex: 9.2.2
       strip-ansi: 7.1.0
 
-  /string-width@7.0.0:
-    resolution: {integrity: sha512-GPQHj7row82Hjo9hKZieKcHIhaAIKOJvFSIZXuCU9OASVZrMNUaZuz++SPVrBjnLsnk4k+z9f2EIypgxf2vNFw==}
+  /string-width@7.1.0:
+    resolution: {integrity: sha512-SEIJCWiX7Kg4c129n48aDRwLbFb2LJmXXFrWBG4NGaRtMQ3myKPKbwrD1BKqQn74oCoNMBVrfDEr5M9YxCsrkw==}
     engines: {node: '>=18'}
     dependencies:
       emoji-regex: 10.3.0
@@ -9703,7 +9730,7 @@ packages:
     engines: {node: '>=18'}
     dependencies:
       ansi-styles: 6.2.1
-      string-width: 7.0.0
+      string-width: 7.1.0
       strip-ansi: 7.1.0
     dev: true
 
