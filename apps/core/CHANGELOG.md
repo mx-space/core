@@ -1,5 +1,21 @@
 # CHANGELOG
 
+# [5.3.0](https://github.com/mx-space/core/compare/v5.2.2...v5.3.0) (2024-03-18)
+
+
+### Bug Fixes
+
+* **deps:** update dependency inquirer to v9.2.16 ([fe4fbd7](https://github.com/mx-space/core/commit/fe4fbd7022bab8c77d5a578647205956c2194d78))
+* **deps:** update dependency linkedom to v0.16.10 ([50a9ca1](https://github.com/mx-space/core/commit/50a9ca1f0a902d4a88273a81d8be3f58afe56292))
+* **deps:** update dependency mongoose to v8.2.2 ([6795295](https://github.com/mx-space/core/commit/6795295fec14522589dcc2154d6be6fd2bae4fa1))
+
+
+### Features
+
+* ws type read cunt ([310480f](https://github.com/mx-space/core/commit/310480f7b48d6460728a12a847575edd350c10c5))
+
+
+
 ## [5.2.2](https://github.com/mx-space/core/compare/v5.2.1...v5.2.2) (2024-03-14)
 
 
