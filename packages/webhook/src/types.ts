@@ -48,6 +48,11 @@ export interface EventPayloadMapping {
   [BusinessEvents.COMMENT_CREATE]: Omit<CommentModel, 'ref'> & {
     ref: Id | PostModel | PageModel | NoteModel | RecentlyModel
   }
+  [BusinessEvents.ARTICLE_READ_COUNT_UPDATE]: {
+    count: number
+    type: 'post' | 'note'
+    id: string
+  }
   health_check: {}
 }
 

@@ -62,7 +62,7 @@ export class CountingService {
     const doc = await model.findById(id)
 
     if (!doc) throw ''
-    await doc.updateOne({ $inc: { 'count.read': 1 } })
+    await doc.updateOne({ $inc: { 'count.read': 1 } }).lean()
     this.logger.debug(`增加阅读计数，(${doc.title}`)
     return doc
   }

@@ -84,7 +84,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
           displayName,
           ip,
         } = presence
-        const joinedAt = roomJoinedAtMap[roomName]
+        const joinedAt = roomJoinedAtMap?.[roomName]
         if (!joinedAt) return
         const duration = operationTime - joinedAt
 

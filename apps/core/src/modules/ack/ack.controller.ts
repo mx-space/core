@@ -1,13 +1,16 @@
 import { plainToInstance } from 'class-transformer'
 import { validateSync } from 'class-validator'
 import { FastifyReply, FastifyRequest } from 'fastify'
+import type { CountModel } from '~/shared/model/count.model'
 
 import { Body, HttpCode, Inject, Post, Req, Res } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Cookies } from '~/common/decorators/cookie.decorator'
 import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
+import { BusinessEvents } from '~/constants/business-event.constant'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
+import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { CacheService } from '~/processors/redis/cache.service'
 
@@ -20,6 +23,8 @@ export class AckController {
     private readonly countingService: CountingService,
     @Inject(VALIDATION_PIPE_INJECTION)
     private readonly validatePipe: ExtendedValidationPipe,
+
+    private readonly webGateway: WebEventsGateway,
   ) {}
 
   @Post('/')
@@ -48,7 +53,18 @@ export class AckController {
         }
 
         const { id, type } = validPayload
-        await this.countingService.updateReadCount(type, id)
+        const doc = await this.countingService.updateReadCount(type, id)
+
+        if ('count' in doc)
+          this.webGateway.broadcast(BusinessEvents.ARTICLE_READ_COUNT_UPDATE, {
+            count: -~(
+              doc as {
+                count: CountModel
+              }
+            ).count.read!,
+            id,
+            type,
+          })
 
         return res.send()
 
