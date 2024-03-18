@@ -19,7 +19,9 @@
   ],
   "ignoreDeps": [
     "class-validator",
-    "class-transformer"
+    "class-transformer",
+    "vitest",
+    "vite"
   ],
   "enabled": true
 }

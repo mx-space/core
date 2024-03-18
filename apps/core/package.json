@@ -158,7 +158,7 @@
     "unplugin-swc": "1.4.4",
     "vite": "5.1.6",
     "vite-tsconfig-paths": "4.3.2",
-    "vitest": "0.34.6",
+    "vitest": "0.34.3",
     "zx": "7.2.3"
   },
   "optionalDependencies": {
