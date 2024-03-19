@@ -302,9 +302,9 @@ export class PostService {
             },
             {
               scope: EventScope.TO_VISITOR,
-              gateway: {
-                rooms: [getArticleIdFromRoomName(doc.id)],
-              },
+              // gateway: {
+              //   rooms: [getArticleIdFromRoomName(doc.id)],
+              // },
             },
           ),
         doc &&

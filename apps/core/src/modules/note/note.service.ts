@@ -279,9 +279,9 @@ export class NoteService {
         },
         {
           scope: EventScope.TO_VISITOR,
-          gateway: {
-            rooms: [getArticleIdFromRoomName(updated.id)],
-          },
+          // gateway: {
+          //   rooms: [getArticleIdFromRoomName(updated.id)],
+          // },
         },
       )
     },
