@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [5.3.2](https://github.com/mx-space/core/compare/v5.3.1...v5.3.2) (2024-03-19)
+
+
+### Bug Fixes
+
+* **deps:** update dependency isbot to v5.1.2 ([10aed09](https://github.com/mx-space/core/commit/10aed095bae17bea0f8e45762a911a29c151fbd9))
+* **deps:** update nest monorepo to v10.3.4 (patch) ([#1544](https://github.com/mx-space/core/issues/1544)) ([c37ca86](https://github.com/mx-space/core/commit/c37ca86e9ae477d712843bb7fb2713860d6c3ab7))
+* remove only boardcast gateway room in post and note ([2e0c919](https://github.com/mx-space/core/commit/2e0c919de4e8fd6d8de664ed951c27d7680fe133))
+
+
+
 ## [5.3.1](https://github.com/mx-space/core/compare/v5.3.0...v5.3.1) (2024-03-18)
 
 
