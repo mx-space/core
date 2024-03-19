@@ -89,4 +89,12 @@ export type GenericEvent =
         ref: Id | PostModel | PageModel | NoteModel | RecentlyModel
       }
     }
+  | {
+      type: BusinessEvents.ARTICLE_READ_COUNT_UPDATE
+      payload: {
+        count: number
+        type: 'post' | 'note'
+        id: string
+      }
+    }
   | { type: 'health_check'; payload: {} }
