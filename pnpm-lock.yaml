@@ -140,8 +140,8 @@ importers:
         specifier: 9.0.3
         version: 9.0.3
       '@socket.io/redis-adapter':
-        specifier: 8.2.1
-        version: 8.2.1(socket.io-adapter@2.5.4)
+        specifier: 8.3.0
+        version: 8.3.0(socket.io-adapter@2.5.4)
       '@socket.io/redis-emitter':
         specifier: 5.1.0
         version: 5.1.0
@@ -2530,11 +2530,11 @@ packages:
   /@socket.io/component-emitter@3.1.0:
     resolution: {integrity: sha512-+9jVqKhRSpsc591z5vX+X5Yyw+he/HCB4iQ/RYxw35CEPaY1gnsNE43nf9n9AaYjAQrTiI/mOwKUKdUs9vf7Xg==}
 
-  /@socket.io/redis-adapter@8.2.1(socket.io-adapter@2.5.4):
-    resolution: {integrity: sha512-6Dt7EZgGSBP0qvXeOKGx7NnSr2tPMbVDfDyL97zerZo+v69hMfL99skMCL3RKZlWVqLyRme2T0wcy3udHhtOsg==}
+  /@socket.io/redis-adapter@8.3.0(socket.io-adapter@2.5.4):
+    resolution: {integrity: sha512-ly0cra+48hDmChxmIpnESKrc94LjRL80TEmZVscuQ/WWkRP81nNj8W8cCGMqbI4L6NCuAaPRSzZF1a9GlAxxnA==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
-      socket.io-adapter: ^2.4.0
+      socket.io-adapter: ^2.5.4
     dependencies:
       debug: 4.3.4
       notepack.io: 3.0.1
