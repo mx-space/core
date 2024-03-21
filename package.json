@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@innei/eslint-config-ts": "0.12.4",
-    "@innei/prettier": "0.12.4",
+    "@innei/prettier": "0.12.6",
     "@types/node": "20.11.30",
     "cross-env": "7.0.3",
     "eslint": "^8.56.0",
