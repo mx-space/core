@@ -161,8 +161,8 @@ importers:
         specifier: ^1.6.7
         version: 1.6.8
       axios-retry:
-        specifier: 4.0.0
-        version: 4.0.0(axios@1.6.8)
+        specifier: 4.1.0
+        version: 4.1.0(axios@1.6.8)
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -3833,8 +3833,8 @@ packages:
       - supports-color
     dev: false
 
-  /axios-retry@4.0.0(axios@1.6.8):
-    resolution: {integrity: sha512-F6P4HVGITD/v4z9Lw2mIA24IabTajvpDZmKa6zq/gGwn57wN5j1P3uWrAV0+diqnW6kTM2fTqmWNfgYWGmMuiA==}
+  /axios-retry@4.1.0(axios@1.6.8):
+    resolution: {integrity: sha512-svdth4H00yhlsjBbjfLQ/sMLkXqeLxhiFC1nE1JtkN/CIssGxqk0UwTEdrVjwA2gr3yJkAulwvDSIm4z4HyPvg==}
     peerDependencies:
       axios: 0.x || 1.x
     dependencies:
