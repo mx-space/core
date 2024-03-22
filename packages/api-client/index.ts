@@ -10,3 +10,4 @@ export { camelcaseKeys as simpleCamelcaseKeys } from './utils/camelcase-keys'
 
 // eslint-disable-next-line import/no-default-export
 export default createClient
+export type { IRequestAdapter } from './interfaces/adapter'
