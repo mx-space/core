@@ -11,5 +11,10 @@ interface IClientOptions {
   }
   customThrowResponseError: <T extends Error = Error>(err: any) => T
   transformResponse: <T = any>(data: any) => T
+  /**
+   *
+   * @default (res) => res.data
+   */
+  getDataFromResponse: <T = any>(response: unknown) => T
 }
 export type ClientOptions = Partial<IClientOptions>

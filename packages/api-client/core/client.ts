@@ -33,8 +33,8 @@ class HTTPClient<
       .replace(/\/*$/, '')
       .replace('localhost', '127.0.0.1')
     this._proxy = this.buildRoute(this)()
-    options.transformResponse =
-      options.transformResponse || ((data) => camelcaseKeys(data))
+    options.transformResponse ||= (data) => camelcaseKeys(data)
+    options.getDataFromResponse ||= (res: any) => res.data
 
     this.initGetClient()
 
@@ -45,7 +45,7 @@ class HTTPClient<
     for (const name of allControllerNames) {
       Object.defineProperty(this, name, {
         get() {
-          const client = Reflect.get(this, `${methodPrefix}${name}`)
+          const client: any = Reflect.get(this, `${methodPrefix}${name}`)
           if (!client) {
             throw new ReferenceError(
               `${
@@ -176,7 +176,7 @@ class HTTPClient<
                   : new RequestError(message, code, url, e)
               }
 
-              const data = res.data
+              const data = that.options.getDataFromResponse!(res)
               if (!data) {
                 return null
               }
