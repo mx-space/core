@@ -230,7 +230,7 @@ export class SearchService {
     const combineDocuments = await Promise.all([
       this.postService.model
         .find({ hide: false })
-        .select('title text categoryId category')
+        .select('title text categoryId category slug')
         .populate('category', 'name slug')
         .lean()
 
@@ -246,7 +246,7 @@ export class SearchService {
           })
         }),
       this.pageService.model
-        .find({}, 'title text')
+        .find({}, 'title text slug subtitle')
         .lean()
         .then((list) => {
           return list.map((data) => {
