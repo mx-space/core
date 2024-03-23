@@ -89,7 +89,7 @@ export class SnippetModel extends BaseModel {
 
   // for function start
   @prop()
-  @IsEnum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
+  @IsEnum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'ALL'])
   @IsOptional()
   method?: string
 

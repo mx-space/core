@@ -88,7 +88,14 @@ export class ServerlessController {
         name,
         reference,
         type: SnippetType.Function,
-        method: requestMethod,
+        $or: [
+          {
+            method: 'ALL',
+          },
+          {
+            method: requestMethod,
+          },
+        ],
       })
       .select('+secret')
       .lean({
@@ -101,7 +108,7 @@ export class ServerlessController {
       throw new NotFoundException(notExistMessage)
     }
 
-    if (snippet.method !== requestMethod || !snippet.enable) {
+    if (!snippet.enable) {
       throw new NotFoundException(notExistMessage)
     }
 

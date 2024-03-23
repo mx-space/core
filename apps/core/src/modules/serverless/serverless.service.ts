@@ -100,30 +100,27 @@ export class ServerlessService implements OnModuleInit {
     return this.snippetModel
   }
 
-  private mockStorageCache() {
-    return {
-      get: async (key: string) => {
-        const client = this.cacheService.getClient()
-        return client
-          .get(getRedisKey(RedisKeys.ServerlessStorage, key))
-          .then((string) => {
-            if (!string) return null
-            return JSON.safeParse(string)
-          })
-      },
-      set: async (key: string, value: object | string, ttl?: string) => {
-        const client = this.cacheService.getClient()
-        const cacheKey = getRedisKey(RedisKeys.ServerlessStorage, key)
-        await client.set(cacheKey, JSON.stringify(value))
-        await client.expire(cacheKey, ttl || 60 * 60 * 24 * 7)
-      },
-      del: async (key: string) => {
-        const client = this.cacheService.getClient()
-        return client.hdel(getRedisKey(RedisKeys.ServerlessStorage), key)
-      },
-    } as const
-  }
-
+  private mockStorageCache = Object.freeze({
+    get: async (key: string) => {
+      const client = this.cacheService.getClient()
+      return client
+        .get(getRedisKey(RedisKeys.ServerlessStorage, key))
+        .then((string) => {
+          if (!string) return null
+          return JSON.safeParse(string)
+        })
+    },
+    set: async (key: string, value: object | string, ttl?: string) => {
+      const client = this.cacheService.getClient()
+      const cacheKey = getRedisKey(RedisKeys.ServerlessStorage, key)
+      await client.set(cacheKey, JSON.stringify(value))
+      await client.expire(cacheKey, ttl || 60 * 60 * 24 * 7)
+    },
+    del: async (key: string) => {
+      const client = this.cacheService.getClient()
+      return client.hdel(getRedisKey(RedisKeys.ServerlessStorage), key)
+    },
+  })
   private async mockGetMaster() {
     const collection = this.databaseService.db.collection('users')
     const cur = collection.aggregate([
@@ -460,7 +457,10 @@ export class ServerlessService implements OnModuleInit {
 
   private async createScopeContext(
     scope: string,
-    context: any,
+    context: {
+      req: FunctionContextRequest
+      res: FunctionContextResponse
+    },
     model: SnippetModel,
     logger: Logger,
   ) {
@@ -480,7 +480,8 @@ export class ServerlessService implements OnModuleInit {
       query: context.req.query,
       headers: context.req.headers,
       // TODO wildcard params
-      params: { ...context.req.params },
+      params: context.req.params || {},
+      method: context.req.method,
 
       secret: secretObj,
 
@@ -507,7 +508,7 @@ export class ServerlessService implements OnModuleInit {
         ...requestContext,
 
         storage: {
-          cache: this.mockStorageCache(),
+          cache: this.mockStorageCache,
           db: this.mockDb(
             `${model.reference || '#########debug######'}@${model.name}`,
           ),

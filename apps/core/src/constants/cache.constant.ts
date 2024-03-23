@@ -37,4 +37,5 @@ export enum CacheKeys {
   RSSXml = `${API_CACHE_PREFIX}rss_xml`,
 }
 
-export const SERVERLESS_COMPLIE_CACHE_TTL = 60 * 10 // 10 分钟
+// 30 days
+export const SERVERLESS_COMPLIE_CACHE_TTL = 60 * 60 * 24 * 30
