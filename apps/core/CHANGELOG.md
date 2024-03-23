@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## [5.3.3](https://github.com/mx-space/core/compare/v5.3.2...v5.3.3) (2024-03-23)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @babel/core to v7.24.3 ([05c5736](https://github.com/mx-space/core/commit/05c5736345a2825c5f7257eaa91efbe95596f0a1))
+* **deps:** update dependency @fastify/multipart to v8.2.0 ([#1556](https://github.com/mx-space/core/issues/1556)) ([cae212f](https://github.com/mx-space/core/commit/cae212f24a9f271792df5ac02a0aa681bf75eac6))
+* **deps:** update dependency axios-retry to v4.1.0 ([#1550](https://github.com/mx-space/core/issues/1550)) ([a25e02a](https://github.com/mx-space/core/commit/a25e02ac6ae5aa933750c94a343ce7d66bfa7b70))
+* **deps:** update dependency mongoose to v8.2.3 ([9537402](https://github.com/mx-space/core/commit/953740202a8cb339e75a6d056ae353271f2d98cc))
+* **deps:** update dependency nodemailer to v6.9.13 ([fddb6e8](https://github.com/mx-space/core/commit/fddb6e89a542dd7830b6cd8c111cab0a8d7decaa))
+* **deps:** update nest monorepo to v10.3.5 ([3f0a330](https://github.com/mx-space/core/commit/3f0a3301124362af4c829626a14bb340caf93820))
+* serverless update ([4776de6](https://github.com/mx-space/core/commit/4776de6bbea13debfa87f5ba16b25550fddd333f))
+
+
+### Features
+
+* add other filed for search service ([8cc2d8f](https://github.com/mx-space/core/commit/8cc2d8fdf50251dee15a3a4c7a04edb18bca54db))
+* custom get response data ([1d1e3c5](https://github.com/mx-space/core/commit/1d1e3c580ffc6a5d99c72148a40756a1d405fa75))
+
+
+
 ## [5.3.2](https://github.com/mx-space/core/compare/v5.3.1...v5.3.2) (2024-03-19)
 
 
