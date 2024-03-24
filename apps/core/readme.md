@@ -194,7 +194,3 @@ pnpm start
 Since 2021-08-31
 
 Thanks
-
-# 许可
-
-This project is licensed under AGPLv3 licensed. 2021 Innei

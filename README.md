@@ -8,6 +8,8 @@
 
 # 许可
 
-This project is licensed under AGPLv3 licensed. 
+此项目在 `apps/` 目录下的所有文件均使用 GNU Affero General Public License v3.0 (AGPLv3) with Additional Terms (ADDITIONAL_TERMS) 许可。
 
-2021 - Present Innei
+其他部分使用 MIT License 许可。
+
+详情请查看 [LICENSE](./LICENSE) 和 [ADDITIONAL_TERMS](./ADDITIONAL_TERMS.md)。
