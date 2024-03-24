@@ -54,7 +54,7 @@ export class RequestContext {
     return null
   }
 
-  static currentIsMaster() {
+  static currentIsAuthenticated() {
     const requestContext = RequestContext.currentRequestContext()
 
     if (requestContext) {

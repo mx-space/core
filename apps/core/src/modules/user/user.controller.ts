@@ -23,7 +23,7 @@ import {
 } from '~/common/decorators/current-user.decorator'
 import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
-import { IsMaster } from '~/common/decorators/role.decorator'
+import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { getAvatar } from '~/utils'
 
 import { AuthService } from '../auth/auth.service'
@@ -45,8 +45,8 @@ export class UserController {
   ) {}
 
   @Get()
-  async getMasterInfo(@IsMaster() isMaster: boolean) {
-    return await this.userService.getMasterInfo(isMaster)
+  async getMasterInfo(@IsAuthenticated() isAuthenticated: boolean) {
+    return await this.userService.getMasterInfo(isAuthenticated)
   }
 
   @Post('/register')
@@ -123,8 +123,8 @@ export class UserController {
 
   @Get('check_logged')
   @HttpCache.disable
-  checkLogged(@IsMaster() isMaster: boolean) {
-    return { ok: +isMaster, isGuest: !isMaster }
+  checkLogged(@IsAuthenticated() isAuthenticated: boolean) {
+    return { ok: +isAuthenticated, isGuest: !isAuthenticated }
   }
 
   @Patch()

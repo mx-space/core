@@ -12,7 +12,7 @@ export const IsGuest = createParamDecorator(
   },
 )
 
-export const IsMaster = createParamDecorator(
+export const IsAuthenticated = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const request = getNestExecutionContextRequest(ctx)
     // FIXME Why can't access `isMaster` in vitest test? request instance is not the same?

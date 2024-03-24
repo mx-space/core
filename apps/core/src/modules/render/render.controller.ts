@@ -21,7 +21,7 @@ import {
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IsMaster } from '~/common/decorators/role.decorator'
+import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils'
 
@@ -45,7 +45,7 @@ export class RenderEjsController {
   async renderArticle(
     @Param() params: MongoIdDto,
     @Query('theme') theme: string,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
   ) {
     const { id } = params
     const now = performance.now()
@@ -65,7 +65,7 @@ export class RenderEjsController {
       ('hide' in document && document.hide) ||
       ('password' in document && !isNil(document.password))
 
-    if (!isMaster && isPrivateOrEncrypt) {
+    if (!isAuthenticated && isPrivateOrEncrypt) {
       throw new ForbiddenException('该文章已隐藏或加密')
     }
 

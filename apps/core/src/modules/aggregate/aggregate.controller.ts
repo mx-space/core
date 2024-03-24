@@ -5,7 +5,7 @@ import { Get, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { IsMaster } from '~/common/decorators/role.decorator'
+import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 
 import { AnalyzeService } from '../analyze/analyze.service'
@@ -77,9 +77,12 @@ export class AggregateController {
   }
 
   @Get('/top')
-  async top(@Query() query: TopQueryDto, @IsMaster() isMaster: boolean) {
+  async top(
+    @Query() query: TopQueryDto,
+    @IsAuthenticated() isAuthenticated: boolean,
+  ) {
     const { size } = query
-    return await this.aggregateService.topActivity(size, isMaster)
+    return await this.aggregateService.topActivity(size, isAuthenticated)
   }
 
   @Get('/timeline')

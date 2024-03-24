@@ -200,7 +200,7 @@ export class CommentService implements OnModuleInit {
   async afterCreateComment(
     commentId: string,
     ipLocation: { ip: string },
-    isMaster: boolean,
+    isAuthenticated: boolean,
   ) {
     const comment = await this.commentModel
       .findById(commentId)
@@ -211,7 +211,7 @@ export class CommentService implements OnModuleInit {
 
     if (!comment) return
     scheduleManager.schedule(async () => {
-      if (isMaster) {
+      if (isAuthenticated) {
         return
       }
       await this.appendIpLocation(commentId, ipLocation.ip)
@@ -229,7 +229,7 @@ export class CommentService implements OnModuleInit {
         )
 
         return
-      } else if (!isMaster) {
+      } else if (!isAuthenticated) {
         this.sendEmail(comment, CommentReplyMailType.Owner)
       }
 

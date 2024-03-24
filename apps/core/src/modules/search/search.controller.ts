@@ -13,7 +13,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IsMaster } from '~/common/decorators/role.decorator'
+import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { SearchDto } from '~/modules/search/search.dto'
 
 import { SearchService } from './search.service'
@@ -27,7 +27,7 @@ export class SearchController {
   @HTTPDecorators.Paginator
   searchByType(
     @Query() query: SearchDto,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
     @Param('type') type: string,
   ) {
     type = type.toLowerCase()
@@ -36,7 +36,7 @@ export class SearchController {
         return this.searchService.searchPost(query)
       }
       case 'note':
-        return this.searchService.searchNote(query, isMaster)
+        return this.searchService.searchNote(query, isAuthenticated)
 
       default:
         throw new BadRequestException(`Invalid search type: ${type}`)

@@ -76,7 +76,7 @@ export class TextMacroService {
       dayjs: deepCloneWithFunction(dayjs),
       fromNow: (time: Date | string) => dayjs(time).fromNow(),
       onlyMe: (text: string) => {
-        return RequestContext.currentIsMaster() ? text : ''
+        return RequestContext.currentIsAuthenticated() ? text : ''
       },
 
       // typography

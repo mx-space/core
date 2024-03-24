@@ -16,7 +16,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
-import { IsMaster } from '~/common/decorators/role.decorator'
+import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
@@ -44,20 +44,23 @@ export class NoteController {
 
   @Get('/')
   @Paginator
-  async getNotes(@IsMaster() isMaster: boolean, @Query() query: NoteQueryDto) {
+  async getNotes(
+    @IsAuthenticated() isAuthenticated: boolean,
+    @Query() query: NoteQueryDto,
+  ) {
     const { size, select, page, sortBy, sortOrder, year, db_query } = query
     const condition = {
       ...addYearCondition(year),
     }
 
-    if (!isMaster) {
+    if (!isAuthenticated) {
       Object.assign(condition, this.noteService.publicNoteQueryCondition)
     }
 
     return await this.noteService.model.paginate(db_query ?? condition, {
       limit: size,
       page,
-      select: isMaster
+      select: isAuthenticated
         ? select
         : select?.replace(/[+-]?(coordinates|location|password)/g, ''),
       sort: sortBy ? { [sortBy]: sortOrder || -1 } : { created: -1 },
@@ -86,13 +89,13 @@ export class NoteController {
   async getNoteList(
     @Query() query: ListQueryDto,
     @Param() params: MongoIdDto,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
   ) {
     const { size = 10 } = query
     const half = size >> 1
     const { id } = params
     const select = 'nid _id title created'
-    const condition = isMaster ? {} : { hide: false }
+    const condition = isAuthenticated ? {} : { hide: false }
 
     // 当前文档直接找，不用加条件，反正里面的东西是看不到的
     const currentDocument = await this.noteService.model
@@ -168,10 +171,10 @@ export class NoteController {
   }
 
   @Get('/latest')
-  async getLatestOne(@IsMaster() isMaster: boolean) {
+  async getLatestOne(@IsAuthenticated() isAuthenticated: boolean) {
     const result = await this.noteService.getLatestOne(
-      isMaster ? {} : this.noteService.publicNoteQueryCondition,
-      isMaster ? '+location +coordinates' : '-location -coordinates',
+      isAuthenticated ? {} : this.noteService.publicNoteQueryCondition,
+      isAuthenticated ? '+location +coordinates' : '-location -coordinates',
     )
 
     if (!result) return null
@@ -185,32 +188,32 @@ export class NoteController {
   @Get('/nid/:nid')
   async getNoteByNid(
     @Param() params: NidType,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
     @Query() query: NotePasswordQueryDto,
     @IpLocation() { ip }: IpRecord,
   ) {
     const { nid } = params
     const { password, single: isSingle } = query
-    const condition = isMaster ? {} : { hide: false }
+    const condition = isAuthenticated ? {} : { hide: false }
     const current: NoteModel | null = await this.noteService.model
       .findOne({
         nid,
         ...condition,
       })
-      .select(`+password ${isMaster ? '+location +coordinates' : ''}`)
+      .select(`+password ${isAuthenticated ? '+location +coordinates' : ''}`)
       .lean({ getters: true, autopopulate: true })
     if (!current) {
       throw new CannotFindException()
     }
 
     current.text =
-      !isMaster && this.noteService.checkNoteIsSecret(current)
+      !isAuthenticated && this.noteService.checkNoteIsSecret(current)
         ? ''
         : await this.macrosService.replaceTextMacro(current.text, current)
 
     if (
       !this.noteService.checkPasswordToAccess(current, password) &&
-      !isMaster
+      !isAuthenticated
     ) {
       throw new ForbiddenException('不要偷看人家的小心思啦~')
     }
@@ -261,7 +264,7 @@ export class NoteController {
   async getNotesByTopic(
     @Param() params: MongoIdDto,
     @Query() query: PagerDto,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
   ) {
     const { id } = params
     const {
@@ -271,7 +274,7 @@ export class NoteController {
       sortBy,
       sortOrder,
     } = query
-    const condition: FilterQuery<NoteModel> = isMaster
+    const condition: FilterQuery<NoteModel> = isAuthenticated
       ? { $or: [{ hide: false }, { hide: true }] }
       : { hide: false }
 

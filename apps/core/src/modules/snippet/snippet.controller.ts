@@ -14,7 +14,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IsMaster } from '~/common/decorators/role.decorator'
+import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
@@ -129,7 +129,7 @@ export class SnippetController {
   async getSnippetByName(
     @Param('name') name: string,
     @Param('reference') reference: string,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
   ) {
     if (typeof name !== 'string') {
       throw new ForbiddenException('name should be string')
@@ -139,7 +139,7 @@ export class SnippetController {
       throw new ForbiddenException('reference should be string')
     }
     let cached: string | null = null
-    if (isMaster) {
+    if (isAuthenticated) {
       cached =
         (
           await Promise.all(

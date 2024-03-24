@@ -96,11 +96,11 @@ export class AggregateService {
       )
   }
 
-  async topActivity(size = 6, isMaster = false) {
+  async topActivity(size = 6, isAuthenticated = false) {
     const [notes, posts, says, recently] = await Promise.all([
       this.findTop(
         this.noteService.model,
-        !isMaster
+        !isAuthenticated
           ? {
               hide: false,
               password: undefined,
@@ -111,7 +111,7 @@ export class AggregateService {
 
       this.findTop(
         this.postService.model,
-        !isMaster ? { hide: false } : {},
+        !isAuthenticated ? { hide: false } : {},
         size,
       )
         .populate('categoryId')

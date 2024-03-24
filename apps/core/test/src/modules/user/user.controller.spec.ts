@@ -31,12 +31,12 @@ describe('test UserModule controller', () => {
     })
       .overrideProvider(UserService)
       .useValue({
-        getMasterInfo(isMaster) {
+        getMasterInfo(isAuthenticated) {
           const base = {
             id: 1,
             name: 'master',
           } as any
-          if (isMaster) {
+          if (isAuthenticated) {
             base.lastLoginIp = '1.1.1.1'
           }
           return base as any

@@ -21,7 +21,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { CurrentUser } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
-import { IsMaster } from '~/common/decorators/role.decorator'
+import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
@@ -69,7 +69,7 @@ export class CommentController {
   @Get('/:id')
   async getComments(
     @Param() params: MongoIdDto,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
   ) {
     const { id } = params
     const data: CommentModel | null = await this.commentService.model
@@ -82,7 +82,7 @@ export class CommentController {
     if (!data) {
       throw new CannotFindException()
     }
-    if (data.isWhispers && !isMaster) {
+    if (data.isWhispers && !isAuthenticated) {
       throw new CannotFindException()
     }
 
@@ -96,7 +96,7 @@ export class CommentController {
   async getCommentsByRefId(
     @Param() params: MongoIdDto,
     @Query() query: PagerDto,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
   ) {
     const { id } = params
     const { page = 1, size = 10 } = query
@@ -125,7 +125,7 @@ export class CommentController {
       },
     ]
 
-    if (isMaster) {
+    if (isAuthenticated) {
       $and.push({
         $or: [
           { isWhispers: true },
@@ -173,7 +173,7 @@ export class CommentController {
   async comment(
     @Param() params: MongoIdDto,
     @Body() body: CommentDto,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
     @IpLocation() ipLocation: IpRecord,
     @Query() query: CommentRefTypesDto,
   ) {
@@ -181,14 +181,17 @@ export class CommentController {
     if (disableComment) {
       throw new BizException(ErrorCodeEnum.CommentDisabled)
     }
-    if (!isMaster) {
+    if (!isAuthenticated) {
       await this.commentService.validAuthorName(body.author)
     }
 
     const { ref } = query
 
     const id = params.id
-    if (!(await this.commentService.allowComment(id, ref)) && !isMaster) {
+    if (
+      !(await this.commentService.allowComment(id, ref)) &&
+      !isAuthenticated
+    ) {
       throw new ForbiddenException('主人禁止了评论')
     }
 
@@ -196,7 +199,11 @@ export class CommentController {
 
     const comment = await this.commentService.createComment(id, model, ref)
 
-    this.commentService.afterCreateComment(comment.id, ipLocation, isMaster)
+    this.commentService.afterCreateComment(
+      comment.id,
+      ipLocation,
+      isAuthenticated,
+    )
 
     return this.commentService
       .fillAndReplaceAvatarUrl([comment])
@@ -212,7 +219,7 @@ export class CommentController {
     @Param() params: MongoIdDto,
     @Body() body: CommentDto,
     @Body('author') author: string,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
     @IpLocation() ipLocation: IpRecord,
   ) {
     const { disableComment } = await this.configsService.get('commentOptions')
@@ -220,7 +227,7 @@ export class CommentController {
       throw new BizException(ErrorCodeEnum.CommentDisabled)
     }
 
-    if (!isMaster) {
+    if (!isAuthenticated) {
       await this.commentService.validAuthorName(author)
     }
 
@@ -250,7 +257,7 @@ export class CommentController {
     const comment = await this.commentService.model.create(model)
     const commentId = comment._id.toString()
     scheduleManager.schedule(async () => {
-      if (isMaster) {
+      if (isAuthenticated) {
         return
       }
       await this.commentService.appendIpLocation(commentId, ipLocation.ip)
@@ -269,7 +276,7 @@ export class CommentController {
           ? CommentState.Read
           : parent.state,
     })
-    if (isMaster) {
+    if (isAuthenticated) {
       this.commentService.sendEmail(comment, CommentReplyMailType.Guest)
       this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
         scope: EventScope.TO_SYSTEM_VISITOR,

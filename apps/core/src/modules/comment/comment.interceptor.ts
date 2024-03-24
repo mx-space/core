@@ -17,8 +17,8 @@ export class CommentFilterEmailInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler) {
     const request = this.getRequest(context)
     // 如果已经登陆
-    const isMaster = request.user
-    if (isMaster) {
+    const isAuthenticated = request.user
+    if (isAuthenticated) {
       return next.handle()
     }
     return next.handle().pipe(

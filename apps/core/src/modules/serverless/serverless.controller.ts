@@ -18,7 +18,7 @@ import { Throttle } from '@nestjs/throttler'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IsMaster } from '~/common/decorators/role.decorator'
+import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 
 import { SnippetType } from '../snippet/snippet.model'
@@ -58,12 +58,12 @@ export class ServerlessController {
   @HTTPDecorators.Bypass
   async runServerlessFunctionWildcard(
     @Param() param: ServerlessReferenceDto,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
 
     @Request() req: FastifyRequest,
     @Response() reply: FastifyReply,
   ) {
-    return this.runServerlessFunction(param, isMaster, req, reply)
+    return this.runServerlessFunction(param, isAuthenticated, req, reply)
   }
 
   @All('/:reference/:name')
@@ -76,7 +76,7 @@ export class ServerlessController {
   @HTTPDecorators.Bypass
   async runServerlessFunction(
     @Param() param: ServerlessReferenceDto,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
 
     @Request() req: FastifyRequest,
     @Response() reply: FastifyReply,
@@ -112,7 +112,7 @@ export class ServerlessController {
       throw new NotFoundException(notExistMessage)
     }
 
-    if (snippet.private && !isMaster) {
+    if (snippet.private && !isAuthenticated) {
       throw new ForbiddenException('no permission to run this function')
     }
 

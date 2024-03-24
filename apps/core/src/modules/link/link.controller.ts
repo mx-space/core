@@ -14,7 +14,7 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
-import { IsMaster } from '~/common/decorators/role.decorator'
+import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import {
@@ -38,7 +38,7 @@ export class LinkControllerCrud extends BaseCrudFactory({
   async gets(
     this: BaseCrudModuleType<LinkModel>,
     @Query() pager: PagerDto,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
   ) {
     const { size, page, state } = pager
 
@@ -46,14 +46,14 @@ export class LinkControllerCrud extends BaseCrudFactory({
       limit: size,
       page,
       sort: { created: -1 },
-      select: isMaster ? '' : '-email',
+      select: isAuthenticated ? '' : '-email',
     })
   }
 
   @Get('/all')
   async getAll(
     this: BaseCrudModuleType<LinkModel>,
-    @IsMaster() isMaster: boolean,
+    @IsAuthenticated() isAuthenticated: boolean,
   ) {
     // 过滤未通过审核的
     const condition: mongoose.FilterQuery<LinkModel> = {
@@ -62,7 +62,7 @@ export class LinkControllerCrud extends BaseCrudFactory({
     return await this._model
       .find(condition)
       .sort({ created: -1 })
-      .select(isMaster ? '' : '-email')
+      .select(isAuthenticated ? '' : '-email')
       .lean()
   }
 }
