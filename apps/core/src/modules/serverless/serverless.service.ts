@@ -51,6 +51,11 @@ import { allBuiltInSnippetPack as builtInSnippets } from './pack'
 import { ServerlessStorageCollectionName } from './serverless.model'
 import { complieTypeScriptBabelOptions, hashStable } from './serverless.util'
 
+type ScopeContext = {
+  req: FunctionContextRequest
+  res: FunctionContextResponse
+  isAuthenticated: boolean
+}
 class CleanableScope {
   public scopeContextLRU = new LRUCache<string, any>({
     max: 100,
@@ -279,7 +284,7 @@ export class ServerlessService implements OnModuleInit {
 
   async injectContextIntoServerlessFunctionAndCall(
     model: SnippetModel,
-    context: { req: FunctionContextRequest; res: FunctionContextResponse },
+    context: ScopeContext,
   ) {
     const { raw: functionString } = model
     const scope = `${model.reference}/${model.name}`
@@ -457,10 +462,7 @@ export class ServerlessService implements OnModuleInit {
 
   private async createScopeContext(
     scope: string,
-    context: {
-      req: FunctionContextRequest
-      res: FunctionContextResponse
-    },
+    context: ScopeContext,
     model: SnippetModel,
     logger: Logger,
   ) {

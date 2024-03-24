@@ -70,7 +70,7 @@ export class DebugController {
     const result =
       await this.serverlessService.injectContextIntoServerlessFunctionAndCall(
         model,
-        { req, res: createMockedContextResponse(res) },
+        { req, res: createMockedContextResponse(res), isAuthenticated: true },
       )
 
     if (!res.sent) {

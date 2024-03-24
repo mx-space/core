@@ -119,7 +119,7 @@ export class ServerlessController {
     const result =
       await this.serverlessService.injectContextIntoServerlessFunctionAndCall(
         snippet,
-        { req, res: createMockedContextResponse(reply) },
+        { req, res: createMockedContextResponse(reply), isAuthenticated },
       )
 
     if (!reply.sent) {
