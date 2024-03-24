@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [5.4.0](https://github.com/mx-space/core/compare/v5.3.4...v5.4.0) (2024-03-24)
+
+
+### Features
+
+* pass `isAuthenticated` to function call ([74ddc15](https://github.com/mx-space/core/commit/74ddc1504e99c107eb167dce259ba843d0a061cf))
+
+
+
 ## [5.3.4](https://github.com/mx-space/core/compare/v5.3.3...v5.3.4) (2024-03-24)
 
 
