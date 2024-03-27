@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [5.4.1](https://github.com/mx-space/core/compare/v5.4.0...v5.4.1) (2024-03-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @nestjs/cache-manager to v2.2.2 ([ba0c673](https://github.com/mx-space/core/commit/ba0c673aa23bcf04be3f00b1d0aa699631bb78b8))
+* **deps:** update dependency linkedom to v0.16.11 ([30a425e](https://github.com/mx-space/core/commit/30a425e135ba37718b958ec5ce17b641fca00024))
+* join room at ([4917076](https://github.com/mx-space/core/commit/49170766ad4969bae33d6ead3a01fbb4f20172a8))
+
+
+
 # [5.4.0](https://github.com/mx-space/core/compare/v5.3.4...v5.4.0) (2024-03-24)
 
 
