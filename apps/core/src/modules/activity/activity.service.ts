@@ -363,7 +363,14 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     return uniqBy(
       socketMeta
         .filter((x) => x?.presence)
-        .map((x) => x.presence)
+        .map((x) => {
+          if (!x.presence) return
+
+          return {
+            ...x.presence,
+            joinedAt: x.roomJoinedAtMap?.[roomName],
+          }
+        })
         .sort((a, b) => {
           if (a && b) return a.updatedAt - b.updatedAt
           return 1
