@@ -29,8 +29,8 @@ importers:
         specifier: 0.12.6
         version: 0.12.6(typescript@5.4.3)
       '@innei/prettier':
-        specifier: 0.12.6
-        version: 0.12.6
+        specifier: 0.13.0
+        version: 0.13.0
       '@types/node':
         specifier: 20.11.30
         version: 20.11.30
@@ -1817,8 +1817,8 @@ packages:
     engines: {pnpm: '>=7'}
     dev: false
 
-  /@innei/prettier@0.12.6:
-    resolution: {integrity: sha512-p169tzofOESdMNrxieYm1n9OgESDS7pDWbWZnHhWyn4OqbcBYpYl188hZvzJNF44VRNeB0UR3SchHqHLo6iwvA==}
+  /@innei/prettier@0.13.0:
+    resolution: {integrity: sha512-G2l4uaODrUyp7mab/6z9No7J+1XAfU4GStjFsn7C8yuRxADGBwzsqOWzIzzyH5i2xAaDSbUMRVuiDrFGemkbTA==}
     dependencies:
       '@ianvs/prettier-plugin-sort-imports': 4.2.1(prettier@3.2.5)
       prettier: 3.2.5
