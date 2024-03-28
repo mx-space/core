@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [5.4.2](https://github.com/mx-space/core/compare/v5.4.1...v5.4.2) (2024-03-28)
+
+
+### Bug Fixes
+
+* bypass presence data morph ([04264c1](https://github.com/mx-space/core/commit/04264c13f25f11eeb31a6de6431b2e0ae896a838))
+* **deps:** update algoliasearch-client-javascript monorepo to v4.23.2 ([#1568](https://github.com/mx-space/core/issues/1568)) ([0b06eb6](https://github.com/mx-space/core/commit/0b06eb6ad576afc0046b7cf05f3d8946a46ec225))
+* **deps:** update nest monorepo to v10.3.6 (patch) ([#1569](https://github.com/mx-space/core/issues/1569)) ([9d602ce](https://github.com/mx-space/core/commit/9d602ce13023e731eeb905bd3343312e85b11ba0))
+* **deps:** update nest monorepo to v10.3.7 (patch) ([#1570](https://github.com/mx-space/core/issues/1570)) ([91693d1](https://github.com/mx-space/core/commit/91693d15c56f79f45d06e277fe08d54e450a1709))
+
+
+
 ## [5.4.1](https://github.com/mx-space/core/compare/v5.4.0...v5.4.1) (2024-03-27)
 
 
