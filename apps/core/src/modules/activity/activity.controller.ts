@@ -1,4 +1,5 @@
 import { keyBy, pick } from 'lodash'
+import snakecaseKeys from 'snakecase-keys'
 
 import { Body, Delete, Get, Param, Post, Query } from '@nestjs/common'
 
@@ -68,12 +69,13 @@ export class ActivityController {
 
   @Get('/presence')
   @HTTPDecorators.SkipLogging
+  @HTTPDecorators.Bypass
   async getPresence(@Query() query: GetPresenceQueryDto) {
     return this.service
       .getRoomPresence(query.room_name)
       .then((list) => {
         return list.map(({ ip, ...item }) => {
-          return item
+          return snakecaseKeys(item)
         })
       })
       .then((list) => {
