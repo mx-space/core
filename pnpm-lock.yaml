@@ -19,8 +19,8 @@ importers:
         version: 7.0.7-0
     optionalDependencies:
       mongodb-memory-server:
-        specifier: 9.1.7
-        version: 9.1.7
+        specifier: 9.1.8
+        version: 9.1.8
       redis-memory-server:
         specifier: 0.10.0
         version: 0.10.0
@@ -313,7 +313,7 @@ importers:
     optionalDependencies:
       mongodb-memory-server:
         specifier: ^9.1.5
-        version: 9.1.7
+        version: 9.1.8
       redis-memory-server:
         specifier: ^0.10.0
         version: 0.10.0
@@ -7159,8 +7159,8 @@ packages:
       '@types/whatwg-url': 11.0.4
       whatwg-url: 13.0.0
 
-  /mongodb-memory-server-core@9.1.7:
-    resolution: {integrity: sha512-q8geqCmt5hGuxaDhRo03ZUB0ITr6lnJ3jffdNiC4nDq13WbHUfY2A1RQq3OHDbdrY6aRYvZphx2bcXYBFRis3A==}
+  /mongodb-memory-server-core@9.1.8:
+    resolution: {integrity: sha512-iCWwaP7De4lm1lRCUKB2ffUYr6GB0I/cj6fK0NV9dgwc9fA3xapHTTT/cPYRNx29M5gmAOSaOpUgjP7i2GZ/LQ==}
     engines: {node: '>=14.20.1'}
     requiresBuild: true
     dependencies:
@@ -7186,12 +7186,12 @@ packages:
     dev: false
     optional: true
 
-  /mongodb-memory-server@9.1.7:
-    resolution: {integrity: sha512-Yxw1cUMoCKTK6jxk4cKG07P+Z/qOmuCVyt3ScIDaoHeOCbOlg2sEtXYO9vEK/tzpj/1KHdDStU2oYrsJ8Fvm0A==}
+  /mongodb-memory-server@9.1.8:
+    resolution: {integrity: sha512-QumPTOlWWWzgW6dtV4bf+ZFdTxenHSSGS4ZT85Vbb+FzPVoOtfcFwYlSfC9IM4e2nw7xvnQZvWtILYseO6HE9Q==}
     engines: {node: '>=14.20.1'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 9.1.7
+      mongodb-memory-server-core: 9.1.8
       tslib: 2.6.2
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
