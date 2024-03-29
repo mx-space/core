@@ -60,7 +60,7 @@ export class ActivityController<ResponseWrapper> implements IController {
     position,
     roomName,
     sid,
-
+    ts,
     displayName,
   }: {
     roomName: string
@@ -69,12 +69,13 @@ export class ActivityController<ResponseWrapper> implements IController {
     sid: string
 
     displayName?: string
+    ts?: number
   }) {
     return this.proxy.presence.update.post({
       data: {
         identity,
         position,
-        ts: Date.now(),
+        ts: ts || Date.now(),
         roomName,
         sid,
 
