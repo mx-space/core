@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [5.4.4](https://github.com/mx-space/core/compare/v5.4.3...v5.4.4) (2024-03-29)
+
+
+### Bug Fixes
+
+* **api-client:** bypass ts property ([d0f7c2d](https://github.com/mx-space/core/commit/d0f7c2d5afe0ae6f1f9a63e8991ee1c121d11f4a))
+* server time cors ([fd121cc](https://github.com/mx-space/core/commit/fd121cccc6743275f4aa541c05f85824cca95263))
+
+
+
 ## [5.4.3](https://github.com/mx-space/core/compare/v5.4.2...v5.4.3) (2024-03-29)
 
 
