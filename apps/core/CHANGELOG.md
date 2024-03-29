@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [5.4.3](https://github.com/mx-space/core/compare/v5.4.2...v5.4.3) (2024-03-29)
+
+
+### Bug Fixes
+
+* **deps:** update dependency mongoose to v8.2.4 ([ef58bcf](https://github.com/mx-space/core/commit/ef58bcfd93ea7b6d1369bc588e622d0dbbdbfd8a))
+* **deps:** update dependency reflect-metadata to v0.2.2 ([6c174f5](https://github.com/mx-space/core/commit/6c174f5da6fd4ae9c6a1905db62eed1e1e4afe33))
+
+
+
 ## [5.4.2](https://github.com/mx-space/core/compare/v5.4.1...v5.4.2) (2024-03-28)
 
 
