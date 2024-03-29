@@ -5,10 +5,19 @@ export async function trackResponseTimeMiddleware(
   res: ServerResponse,
   next: Function,
 ) {
-  const now = req.headers['x-request-time'] || new Date().getTime()
+  const requestTimeFromHeader = Number(req.headers['x-request-time'])
+  const now = !isNaN(requestTimeFromHeader)
+    ? requestTimeFromHeader
+    : new Date().getTime()
 
   await next()
   res.setHeader('Content-Type', 'application/json')
+  // cors
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Max-Age', '86400')
+
   res.write(
     JSON.stringify({
       t2: now,
