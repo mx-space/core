@@ -44,6 +44,11 @@ export class RecentlyController {
     return await this.recentlyService.getOffset({ before, after, size })
   }
 
+  @Get('/:id')
+  async getOne(@Param() { id }: MongoIdDto) {
+    return await this.recentlyService.getOne(id)
+  }
+
   @Post('/')
   @HTTPDecorators.Idempotence()
   @Auth()

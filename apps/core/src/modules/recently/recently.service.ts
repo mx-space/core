@@ -77,6 +77,45 @@ export class RecentlyService {
     return result
   }
 
+  async getOne(id: string) {
+    const result = (await this.model.aggregate([
+      {
+        $lookup: {
+          from: 'comments',
+          as: 'comment',
+          foreignField: 'ref',
+          localField: '_id',
+        },
+      },
+
+      {
+        $addFields: {
+          comments: {
+            $size: '$comment',
+          },
+        },
+      },
+      {
+        $project: {
+          comment: 0,
+        },
+      },
+      {
+        $sort: {
+          created: -1,
+        },
+      },
+      {
+        $match: {
+          _id: new ObjectId(id),
+        },
+      },
+    ])) as RecentlyModel[]
+
+    await this.populateRef(result)
+
+    return result[0] || null
+  }
   async populateRef(result: RecentlyModel[], omit = ['text']) {
     const refMap: Record<
       Exclude<CollectionRefTypes, CollectionRefTypes.Recently>,
@@ -149,8 +188,8 @@ export class RecentlyService {
               },
             }
           : before
-          ? { _id: { $lt: new ObjectId(before) } }
-          : {},
+            ? { _id: { $lt: new ObjectId(before) } }
+            : {},
       },
 
       {

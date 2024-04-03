@@ -15,7 +15,19 @@ describe('test recently client, /recently', () => {
         },
       ],
     })
-    const data = await client.recently.getList('616182162657089e483aac5c')
+    const data = await client.recently.getList({
+      before: '616182162657089e483aac5c',
+    })
+    expect(data).toEqual(mocked)
+  })
+
+  test('GET /6608f877e345af4659011d28', async () => {
+    const mocked = mockResponse('/recently/6608f877e345af4659011d28', {
+      id: '6608f877e345af4659011d28',
+      content: 'x',
+      created: '2021-10-05T13:53:15.891Z',
+    })
+    const data = await client.recently.getById('6608f877e345af4659011d28')
     expect(data).toEqual(mocked)
   })
 

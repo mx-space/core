@@ -50,11 +50,15 @@ export class RecentlyController<ResponseWrapper> implements IController {
     }>()
   }
 
-  getList(
-    before?: string | undefined,
-    after?: string | undefined,
-    size?: number | number,
-  ) {
+  getList({
+    before,
+    after,
+    size,
+  }: {
+    before?: string | undefined
+    after?: string | undefined
+    size?: number | number
+  } = {}) {
     return this.proxy.get<{ data: RecentlyModel[] & { comments: number } }>({
       params: {
         before,
@@ -62,6 +66,10 @@ export class RecentlyController<ResponseWrapper> implements IController {
         size,
       },
     })
+  }
+
+  getById(id: string) {
+    return this.proxy(id).get<RecentlyModel & { comments: number }>()
   }
 
   /**  表态：点赞，点踩 */
