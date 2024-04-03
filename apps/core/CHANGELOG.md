@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [5.4.5](https://github.com/mx-space/core/compare/v5.4.4...v5.4.5) (2024-04-03)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.12 ([f2e9a5b](https://github.com/mx-space/core/commit/f2e9a5b9f8a404b93c4f5b401f63ce34811db552))
+* **deps:** update dependency @fastify/static to v7.0.2 ([0ad5a14](https://github.com/mx-space/core/commit/0ad5a1437699a66686e96ffa9fbbf06b91da79e1))
+* **deps:** update dependency inquirer to v9.2.17 ([3fb381a](https://github.com/mx-space/core/commit/3fb381a141b2b2027d3d8447803a2db2eefcf302))
+* **deps:** update dependency isbot to v5.1.3 ([d9f92b8](https://github.com/mx-space/core/commit/d9f92b85dea7044b81aad6118a27e8f6902bcf6a))
+* **deps:** update dependency isbot to v5.1.4 ([ec8c62a](https://github.com/mx-space/core/commit/ec8c62ad35863451408ddcd46714bcdda14ff4f6))
+
+
+### Features
+
+* add get one recently api ([97f10b4](https://github.com/mx-space/core/commit/97f10b4a1d1e4cd5072cd4529afbec56f8fdba27))
+
+
+
 ## [5.4.4](https://github.com/mx-space/core/compare/v5.4.3...v5.4.4) (2024-03-29)
 
 
