@@ -170,8 +170,8 @@ importers:
         specifier: 5.5.1
         version: 5.5.1
       cache-manager-ioredis-yet:
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.3
+        version: 2.0.3
       class-transformer:
         specifier: 0.5.1
         version: 0.5.1
@@ -3998,8 +3998,8 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /cache-manager-ioredis-yet@2.0.2:
-    resolution: {integrity: sha512-n66jTH+6DotBLmbeIvXo4VoPnkuTzqnKEcmUtTvGMjwBhGJG/fndvPFyFxUoibiIRdQpSUMSvMZ2/Ip/DM/WSQ==}
+  /cache-manager-ioredis-yet@2.0.3:
+    resolution: {integrity: sha512-KzNMpQ4uH2zMhN695upVZS7dymQA5WIrYvzcWiU3HbQwfbDo+bzLTUyd5Zou0bO6zgbMLbbzBq0/nUfogIblpQ==}
     engines: {node: '>= 18.0.0'}
     dependencies:
       cache-manager: 5.5.1
