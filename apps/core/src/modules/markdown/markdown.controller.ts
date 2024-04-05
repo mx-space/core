@@ -2,6 +2,7 @@
 import { join } from 'path'
 import { Readable } from 'stream'
 import JSZip from 'jszip'
+import { omit } from 'lodash'
 import type { CategoryModel } from '../category/category.model'
 import type { MarkdownYAMLProperty } from './markdown.interface'
 
@@ -41,7 +42,7 @@ export class MarkdownController {
   @HTTPDecorators.Bypass
   @Header('Content-Type', 'application/zip')
   async exportArticleToMarkdown(@Query() query: ExportMarkdownQueryDto) {
-    const { show_title: showTitle, slug, yaml } = query
+    const { show_title: showTitle, slug, yaml, with_meta_json } = query
     const allArticles = await this.service.extractAllArticle()
     const { notes, pages, posts } = allArticles
 
@@ -51,6 +52,7 @@ export class MarkdownController {
         created?: Date
         modified?: Date | null
         title: string
+        id: string
         slug?: string
       },
     >(
@@ -62,6 +64,7 @@ export class MarkdownController {
         modified: item.modified,
         title: item.title,
         slug: item.slug || item.title,
+        oid: item.id,
         ...extraMetaData,
       }
       return {
@@ -78,7 +81,7 @@ export class MarkdownController {
       convertor(post!, {
         categories: (post.category as CategoryModel).name,
         type: 'post',
-        permalink: `posts/${post.slug}`,
+        permalink: `/posts/${(post.category as CategoryModel).name}/${post.slug}`,
       }),
     )
     const convertNote = notes.map((note) =>
@@ -86,16 +89,16 @@ export class MarkdownController {
         mood: note.mood,
         weather: note.weather,
         id: note.nid,
-        permalink: `notes/${note.nid}`,
+        permalink: `/notes/${note.nid}`,
         type: 'note',
-        slug: note.nid.toString(),
+        slug: note.nid,
       }),
     )
     const convertPage = pages.map((page) =>
       convertor(page!, {
         subtitle: page.subtitle,
         type: 'page',
-        permalink: page.slug,
+        permalink: `/${page.slug}`,
       }),
     )
 
@@ -104,6 +107,12 @@ export class MarkdownController {
       posts: convertPost,
       pages: convertPage,
       notes: convertNote,
+    }
+
+    const id2DataMap = {} as Record<string, any>
+
+    for (const item of [...posts, ...notes, ...pages]) {
+      id2DataMap[item.id] = item
     }
 
     const rtzip = new JSZip()
@@ -120,6 +129,21 @@ export class MarkdownController {
         zip.forEach(async (relativePath, file) => {
           rtzip.file(join(key, relativePath), file.nodeStream())
         })
+
+        if (with_meta_json) {
+          rtzip.file(
+            `${key}/_meta.json`,
+            JSON.stringify(
+              // cur is converted data
+              arr.reduce((acc, cur: any) => {
+                return {
+                  ...acc,
+                  [cur.meta.oid]: omit(id2DataMap[cur.meta.oid], 'text', '__v'),
+                }
+              }, {}),
+            ),
+          )
+        }
       }),
     )
 

@@ -155,7 +155,7 @@ export class MarkdownService {
 
   async extractAllArticle() {
     return {
-      posts: await this.postModel.find().populate('category'),
+      posts: await this.postModel.find().populate('category').lean(),
       notes: await this.noteModel.find().lean(),
       pages: await this.pageModel.find().lean(),
     }

@@ -10,6 +10,9 @@ import {
 
 import { ArticleTypeEnum } from '~/constants/article.constant'
 
+const TransformBoolean = () =>
+  Transform(({ value }) => value === '1' || value === 'true')
+
 export class MetaDto {
   @IsString()
   title: string
@@ -59,18 +62,23 @@ export class DataListDto {
 export class ExportMarkdownQueryDto {
   @IsBoolean()
   @IsOptional()
-  @Transform(({ value }) => value === '1' || value === 'true')
+  @TransformBoolean()
   yaml: boolean
 
   @IsBoolean()
   @IsOptional()
-  @Transform(({ value }) => value === '1' || value === 'true')
+  @TransformBoolean()
   slug: boolean
 
   @IsBoolean()
   @IsOptional()
-  @Transform(({ value }) => value === '1' || value === 'true')
+  @TransformBoolean()
   show_title: boolean
+
+  @IsBoolean()
+  @IsOptional()
+  @TransformBoolean()
+  with_meta_json: boolean
 }
 
 export class MarkdownPreviewDto {
