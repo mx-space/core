@@ -26,8 +26,8 @@ importers:
         version: 0.10.0
     devDependencies:
       '@innei/eslint-config-ts':
-        specifier: 0.12.6
-        version: 0.12.6(typescript@5.4.4)
+        specifier: 0.13.0
+        version: 0.13.0(typescript@5.4.4)
       '@innei/prettier':
         specifier: 0.13.0
         version: 0.13.0
@@ -1808,8 +1808,8 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /@innei/eslint-config-ts@0.12.6(typescript@5.4.4):
-    resolution: {integrity: sha512-u7cehvDkeuRbkd820t2e4FTrjJEW/R4PjioVAkWNuUtKXtKJfb+LvuHSaUl4bLpmzB+mc7Jz5ppkxhT0g1o1mw==}
+  /@innei/eslint-config-ts@0.13.0(typescript@5.4.4):
+    resolution: {integrity: sha512-btoLZ0O/ySPxK4fIwlflTQqvWW/q9syvWs92wfK0ur/c7pFKHwMK34+NWBLQGExGA2cO40+o8iAH9tW0/dkJHw==}
     peerDependencies:
       typescript: 5.4.4
     dependencies:
