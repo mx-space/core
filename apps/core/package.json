@@ -53,7 +53,7 @@
     "@babel/plugin-transform-modules-commonjs": "7.24.1",
     "@babel/plugin-transform-typescript": "7.24.4",
     "@babel/types": "^7.24.0",
-    "@clerk/clerk-sdk-node": "4.13.13",
+    "@clerk/clerk-sdk-node": "4.13.14",
     "@fastify/cookie": "9.3.1",
     "@fastify/multipart": "8.2.0",
     "@fastify/static": "7.0.3",
