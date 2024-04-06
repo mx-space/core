@@ -15,17 +15,12 @@ export interface NoteModel extends TextBaseModel {
   publicAt?: Date
   password?: string | null
   nid: number
-  music?: NoteMusicRecord[]
+
   location?: string
 
   coordinates?: Coordinate
   topic?: TopicModel
   topicId?: string
-}
-
-export interface NoteMusicRecord {
-  type: string
-  id: string
 }
 
 export interface Coordinate {

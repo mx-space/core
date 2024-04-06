@@ -21,7 +21,6 @@ import { WriteBaseModel } from '~/shared/model/write-base.model'
 
 import { TopicModel } from '../topic/topic.model'
 import { Coordinate } from './models/coordinate.model'
-import { NoteMusic } from './models/music.model'
 
 @modelOptions({
   options: {
@@ -94,12 +93,6 @@ export class NoteModel extends WriteBaseModel {
 
   @prop({ type: CountModel, default: { read: 0, like: 0 }, _id: false })
   count: CountModel
-
-  @prop({ type: [NoteMusic] })
-  @ValidateNested({ each: true })
-  @IsOptional()
-  @Type(() => NoteMusic)
-  music: NoteMusic[]
 
   @prop({ ref: () => TopicModel })
   @IsMongoId()
