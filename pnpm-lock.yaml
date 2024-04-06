@@ -290,8 +290,8 @@ importers:
         specifier: 1.6.6
         version: 1.6.6
       snakecase-keys:
-        specifier: 7.0.0
-        version: 7.0.0
+        specifier: 6.0.0
+        version: 6.0.0
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
@@ -8629,8 +8629,8 @@ packages:
       type-fest: 2.19.0
     dev: false
 
-  /snakecase-keys@7.0.0:
-    resolution: {integrity: sha512-yFnXqBIFFpXlIWiGPvYhfelzQqRVchuM1XIQXVwIFrZuNWBPE6vBkuJitzbl6yMIjjpA40IYxqi88BE9RX2Yxw==}
+  /snakecase-keys@6.0.0:
+    resolution: {integrity: sha512-E5a0C3rcj+Cvq+dt41mw6tV6Wx78/JpQyR71GDiyGSXdp3jEvKxv8pIP0tOHmEMiqKVZSwflXtlWwqNn5oTbbQ==}
     engines: {node: '>=18'}
     dependencies:
       map-obj: 4.3.0
