@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## [5.4.6](https://github.com/mx-space/core/compare/v5.4.5...v5.4.6) (2024-04-06)
+
+
+### Bug Fixes
+
+* **deps:** update babel monorepo to v7.24.4 ([6a9e78b](https://github.com/mx-space/core/commit/6a9e78b6e63e90cb6bf5d5ad074833541dc5333b))
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.13 ([0288c79](https://github.com/mx-space/core/commit/0288c79d2afac1ada8646abfa6c979e6f379a1ed))
+* **deps:** update dependency @fastify/static to v7.0.3 ([12da98f](https://github.com/mx-space/core/commit/12da98f55ed3dbc53ec6e4b87926154a548e2710))
+* **deps:** update dependency cache-manager to v5.5.0 ([#1594](https://github.com/mx-space/core/issues/1594)) ([e1e6cdb](https://github.com/mx-space/core/commit/e1e6cdb38b929daaa91fceeb6a4b83128dd8fa08))
+* **deps:** update dependency cache-manager to v5.5.1 ([9bdce4b](https://github.com/mx-space/core/commit/9bdce4b7721665cad56f7649fc5fb1808693fa05))
+* **deps:** update dependency cache-manager-ioredis-yet to v2.0.3 ([0e41674](https://github.com/mx-space/core/commit/0e416743fa6535fdf7c2316477df1c53a494bb35))
+* **deps:** update dependency mongoose to v8.3.0 ([#1588](https://github.com/mx-space/core/issues/1588)) ([2207510](https://github.com/mx-space/core/commit/2207510590b34a3156d4f92222579e8f9e3b54fb))
+* **deps:** update dependency snakecase-keys to v7 ([#1566](https://github.com/mx-space/core/issues/1566)) ([69cd144](https://github.com/mx-space/core/commit/69cd144b1d09c7abd8c574d007df2623954a814f))
+* update test snap ([45ae1f8](https://github.com/mx-space/core/commit/45ae1f88e86a547619cd8b2743ac1b6e9a5248f7))
+
+
+### Features
+
+* **markdown:** export with meta json ([ef4d639](https://github.com/mx-space/core/commit/ef4d639d2fcd62fc050ce0c021f18bb4bc50cfca))
+
+
+
 ## [5.4.5](https://github.com/mx-space/core/compare/v5.4.4...v5.4.5) (2024-04-03)
 
 
