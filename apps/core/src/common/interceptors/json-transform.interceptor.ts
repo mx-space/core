@@ -86,6 +86,7 @@ export class JSONTransformInterceptor implements NestInterceptor {
         }
         obj[key] = this.serialize(obj[key])
       }
+
       obj = snakecaseKeys(obj)
     }
     return obj

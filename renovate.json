@@ -21,7 +21,8 @@
     "class-validator",
     "class-transformer",
     "vitest",
-    "vite"
+    "vite",
+    "snakecase-keys"
   ],
   "enabled": true
 }

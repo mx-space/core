@@ -85,7 +85,7 @@ export class UserController {
     ])
 
     return {
-      password: allowPasswordLogin,
+      password: isDev ? true : allowPasswordLogin,
       passkey: canAuthByPasskey,
     }
   }
@@ -98,7 +98,8 @@ export class UserController {
       (await this.configService.get('authSecurity')).disablePasswordLogin ===
       false
 
-    if (!allowPasswordLogin) throw new BadRequestException('密码登录已禁用')
+    if (!allowPasswordLogin && !isDev)
+      throw new BadRequestException('密码登录已禁用')
 
     const user = await this.userService.login(dto.username, dto.password)
     const footstep = await this.userService.recordFootstep(ipLocation.ip)
