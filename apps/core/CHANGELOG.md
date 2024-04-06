@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [5.4.7](https://github.com/mx-space/core/compare/v5.4.6...v5.4.7) (2024-04-06)
+
+
+### Bug Fixes
+
+* downgrade snakecase ([64e2dbf](https://github.com/mx-space/core/commit/64e2dbfb7836b3c577b1c07a751a25f342a3e3df))
+* downgrade snakecase ([f3a0d06](https://github.com/mx-space/core/commit/f3a0d063ad4ed44e5fb443aa8d5f52a6450652d2))
+
+
+
 ## [5.4.6](https://github.com/mx-space/core/compare/v5.4.5...v5.4.6) (2024-04-06)
 
 
