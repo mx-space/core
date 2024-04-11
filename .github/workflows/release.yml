@@ -96,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
-      - uses: robinraju/release-downloader@v1.9
+      - uses: robinraju/release-downloader@v1.10
         name: Download release
         with:
           tag: ${{ github.ref_name }}
