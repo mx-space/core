@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [5.4.10](https://github.com/mx-space/core/compare/v5.4.9...v5.4.10) (2024-04-11)
+
+
+### Bug Fixes
+
+* add `hide` for note list api ([5a2b2de](https://github.com/mx-space/core/commit/5a2b2debc433051ad7b9d646b368450bdee59560))
+
+
+
 ## [5.4.9](https://github.com/mx-space/core/compare/v5.4.8...v5.4.9) (2024-04-11)
 
 
