@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [5.4.9](https://github.com/mx-space/core/compare/v5.4.8...v5.4.9) (2024-04-11)
+
+
+### Bug Fixes
+
+* **deps:** update algoliasearch-client-javascript monorepo to v4.23.3 ([39bb8ce](https://github.com/mx-space/core/commit/39bb8ce5b90bb44b43fa07a5fb390b1c2d5c691c))
+* **deps:** update dependency @typegoose/typegoose to v12.3.0 ([#1601](https://github.com/mx-space/core/issues/1601)) ([a77bb04](https://github.com/mx-space/core/commit/a77bb045c665c264202395f6d8c0871f68fc7aa8))
+* skip cache if request is authenticated ([70d9b69](https://github.com/mx-space/core/commit/70d9b6916b53f613a1f639e6b40b819594c4dc41))
+
+
+
 ## [5.4.8](https://github.com/mx-space/core/compare/v5.4.7...v5.4.8) (2024-04-11)
 
 
