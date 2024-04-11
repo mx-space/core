@@ -94,7 +94,9 @@ export class NoteController {
     const { size = 10 } = query
     const half = size >> 1
     const { id } = params
-    const select = 'nid _id title created'
+    const select = isAuthenticated
+      ? 'nid _id title created hide'
+      : 'nid _id title created'
     const condition = isAuthenticated ? {} : { hide: false }
 
     // 当前文档直接找，不用加条件，反正里面的东西是看不到的
