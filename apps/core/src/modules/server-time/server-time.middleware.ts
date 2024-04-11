@@ -10,13 +10,13 @@ export async function trackResponseTimeMiddleware(
     ? requestTimeFromHeader
     : new Date().getTime()
 
-  await next()
   res.setHeader('Content-Type', 'application/json')
   // cors
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   res.setHeader('Access-Control-Max-Age', '86400')
+  await next()
 
   res.write(
     JSON.stringify({
