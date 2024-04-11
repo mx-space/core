@@ -75,7 +75,7 @@
     "@typegoose/auto-increment": "4.2.0",
     "@typegoose/typegoose": "12.2.0",
     "@types/jsonwebtoken": "9.0.6",
-    "algoliasearch": "4.23.2",
+    "algoliasearch": "4.23.3",
     "axios": "^1.6.7",
     "axios-retry": "4.1.0",
     "bcryptjs": "^2.4.3",
