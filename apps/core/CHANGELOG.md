@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [5.4.8](https://github.com/mx-space/core/compare/v5.4.7...v5.4.8) (2024-04-11)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.14 ([70b76c7](https://github.com/mx-space/core/commit/70b76c7c6f7f61a2adceb4501f3daca41cb15854))
+* **deps:** update dependency mongoose to v8.3.1 ([a433fc5](https://github.com/mx-space/core/commit/a433fc5ec8d1c5cc1bb3c285935ef5a769f793a2))
+* server time response ([ac918dc](https://github.com/mx-space/core/commit/ac918dc8e71b677c02aa804d49cb75e634556004))
+
+
+
 ## [5.4.7](https://github.com/mx-space/core/compare/v5.4.6...v5.4.7) (2024-04-06)
 
 
