@@ -24,7 +24,7 @@ export class AuthTestingGuard {
         ...mockUser1,
       }
       req.token = authJWTToken
-      req.isMaster = true
+      req.isAuthenticated = true
 
       return true
     }

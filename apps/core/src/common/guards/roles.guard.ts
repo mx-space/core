@@ -25,21 +25,20 @@ export class RolesGuard extends AuthGuard implements CanActivate {
   }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = this.getRequest(context)
-    let isMaster = false
+    let isAuthenticated = false
     try {
       await super.canActivate(context)
-      isMaster = true
+      isAuthenticated = true
       // eslint-disable-next-line no-empty
     } catch {}
 
-    request.isGuest = !isMaster
-    request.isMaster = isMaster
-    request.isAuthenticated = isMaster
+    request.isGuest = !isAuthenticated
+    request.isAuthenticated = isAuthenticated
 
     Object.assign(request.raw, {
-      isGuest: !isMaster,
-      isMaster,
-      isAuthenticated: isMaster,
+      isGuest: !isAuthenticated,
+
+      isAuthenticated,
     })
 
     return true

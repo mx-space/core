@@ -54,12 +54,17 @@ export class HttpCacheInterceptor implements NestInterceptor {
 
     const request = this.getRequest(context)
 
+    // 如果请求通过认证，跳过缓存因为，认证后的请求可能会有敏感数据
+    if (request.isAuthenticated) {
+      return call$
+    }
+
     // 只有 GET 请求才会缓存
     if (request.method.toLowerCase() !== 'get') {
       return call$
     }
 
-    const query = request.query || ({} as Record<string, any>)
+    const query: any = request.query || ({} as Record<string, any>)
     const queryWithTs = query.ts || query.timestamp || query._t || query.t
 
     // 如果请求中带有时间戳参数，则不缓存
@@ -154,6 +159,8 @@ export class HttpCacheInterceptor implements NestInterceptor {
   }
 
   get getRequest() {
-    return getNestExecutionContextRequest.bind(this)
+    return getNestExecutionContextRequest.bind(
+      this,
+    ) as typeof getNestExecutionContextRequest
   }
 }

@@ -5,13 +5,13 @@ export type AdapterRequest = FastifyRequest &
   (
     | {
         isGuest: true
-        isMaster: false
+        isAuthenticated: false
       }
     | {
         user: UserModel
         token: string
         isGuest: false
-        isMaster: true
+        isAuthenticated: true
       }
   ) &
   Record<string, any>

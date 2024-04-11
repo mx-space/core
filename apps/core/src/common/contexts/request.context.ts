@@ -58,11 +58,11 @@ export class RequestContext {
     const requestContext = RequestContext.currentRequestContext()
 
     if (requestContext) {
-      const isMaster = requestContext.request['isMaster']
+      const isAuthenticated =
+        requestContext.request['isAuthenticated'] ||
+        requestContext.request['isAuthenticated']
 
-      if (isMaster) {
-        return isMaster
-      }
+      return !!isAuthenticated
     }
 
     return false

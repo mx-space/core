@@ -15,7 +15,10 @@ export const IsGuest = createParamDecorator(
 export const IsAuthenticated = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const request = getNestExecutionContextRequest(ctx)
-    // FIXME Why can't access `isMaster` in vitest test? request instance is not the same?
-    return request.isMaster || (isTest ? request.headers['test-token'] : false)
+    // FIXME Why can't access `isAuthenticated` in vitest test? request instance is not the same?
+    return (
+      request.isAuthenticated ||
+      (isTest ? request.headers['test-token'] : false)
+    )
   },
 )
