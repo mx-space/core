@@ -29,8 +29,8 @@ importers:
         specifier: 0.13.1
         version: 0.13.1(typescript@5.4.5)
       '@innei/prettier':
-        specifier: 0.13.0
-        version: 0.13.0
+        specifier: 0.13.1
+        version: 0.13.1
       '@types/node':
         specifier: 20.12.7
         version: 20.12.7
@@ -1783,8 +1783,8 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.24.4
-      '@babel/generator': 7.24.1
-      '@babel/parser': 7.24.1
+      '@babel/generator': 7.24.4
+      '@babel/parser': 7.24.4
       '@babel/traverse': 7.24.1
       '@babel/types': 7.24.0
       prettier: 3.2.5
@@ -1831,8 +1831,8 @@ packages:
     engines: {pnpm: '>=7'}
     dev: false
 
-  /@innei/prettier@0.13.0:
-    resolution: {integrity: sha512-G2l4uaODrUyp7mab/6z9No7J+1XAfU4GStjFsn7C8yuRxADGBwzsqOWzIzzyH5i2xAaDSbUMRVuiDrFGemkbTA==}
+  /@innei/prettier@0.13.1:
+    resolution: {integrity: sha512-N2VDVvrtJmaXztL69nAphQJR4JGZQlWzcNIswRQGML7pSfG9LHYPoEFiH/nf1o5nFft6GNKc/1EiCfgtIR1Vsw==}
     dependencies:
       '@ianvs/prettier-plugin-sort-imports': 4.2.1(prettier@3.2.5)
       prettier: 3.2.5
