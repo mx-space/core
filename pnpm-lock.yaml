@@ -204,7 +204,7 @@ importers:
         version: 1.1.1
       inquirer:
         specifier: ^9.2.15
-        version: 9.2.17
+        version: 9.2.18
       isbot:
         specifier: 5.1.4
         version: 5.1.4
@@ -1861,6 +1861,11 @@ packages:
 
   /@innei/string-width@7.0.0-fork.1:
     resolution: {integrity: sha512-A9KZC0dExzZnxV/eWkqosFeYPwfR+tN9aZ7oSNQBxg9cJtopGXTqRwZON26TrDjbfDFJurxmG24GE6mpPGjEig==}
+    engines: {node: '>=18'}
+    dev: false
+
+  /@inquirer/figures@1.0.0:
+    resolution: {integrity: sha512-3fw+7+77/duTnMJTeSS44wneszghI4tkr0m0xdIJabbYRe36ElzmsqyboMZ1nFRon6sT+ckVvYDVjwapKv+2sw==}
     engines: {node: '>=18'}
     dev: false
 
@@ -5487,6 +5492,7 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       escape-string-regexp: 1.0.5
+    dev: true
 
   /figures@5.0.0:
     resolution: {integrity: sha512-ej8ksPF4x6e5wvK9yevct0UCXh8TTFlWGVLlgjZuoBH1HwjIfKE/IdL5mq89sFA7zELi1VhKpmtDnrs7zWyeyg==}
@@ -6167,17 +6173,17 @@ packages:
       wrap-ansi: 6.2.0
     dev: true
 
-  /inquirer@9.2.17:
-    resolution: {integrity: sha512-Vr3Ia2ud5sGnioURkE69endl4SkeJcMzTF6SosKcX5GALJfId7C+JvO5ZZb6y1LOXnEofCPbwzoQ1q0e8Gaduw==}
+  /inquirer@9.2.18:
+    resolution: {integrity: sha512-Qzm+UP7L9beFyycZ9Nxzqj7WBgeJIaT4Ue0+2bmQp9yZXiUW2azrmBnp3vlInMw1wXkUmaM0hiMcht7CjJzASw==}
     engines: {node: '>=18'}
     dependencies:
+      '@inquirer/figures': 1.0.0
       '@ljharb/through': 2.3.13
       ansi-escapes: 4.3.2
       chalk: 5.3.0
       cli-cursor: 3.1.0
       cli-width: 4.1.0
       external-editor: 3.1.0
-      figures: 3.2.0
       lodash: 4.17.21
       mute-stream: 1.0.0
       ora: 5.4.1
