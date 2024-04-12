@@ -1,7 +1,11 @@
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
-import type { ActivityPresence, RoomsData } from '~/models/activity'
+import type {
+  ActivityPresence,
+  RecentActivities,
+  RoomsData,
+} from '~/models/activity'
 import type { HTTPClient } from '../core'
 
 import { autoBind } from '~/utils/auto-bind'
@@ -86,5 +90,9 @@ export class ActivityController<ResponseWrapper> implements IController {
 
   async getRoomsInfo() {
     return this.proxy.rooms.get<RoomsData>()
+  }
+
+  async getRecentActivities() {
+    return this.proxy.recent.get<RecentActivities>()
   }
 }

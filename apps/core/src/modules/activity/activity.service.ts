@@ -19,8 +19,10 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import {
+  CollectionRefTypes,
   NOTE_COLLECTION_NAME,
   POST_COLLECTION_NAME,
+  RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { GatewayService } from '~/processors/gateway/gateway.service'
@@ -30,6 +32,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
+import { CommentService } from '../comment/comment.service'
 import { Activity } from './activity.constant'
 import { ActivityModel } from './activity.model'
 import {
@@ -54,6 +57,8 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     @InjectModel(ActivityModel)
     private readonly activityModel: MongooseModel<ActivityModel>,
+
+    private readonly commentService: CommentService,
     private readonly databaseService: DatabaseService,
 
     private readonly webGateway: WebEventsGateway,
@@ -206,11 +211,15 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       Reflect.set(nextAc, 'ref', refModelData.get(ac.payload.id))
 
       return nextAc
-    })
+    }) as any as (ActivityModel & {
+      payload: any
+      ref: PostModel | NoteModel
+    })[]
 
-    // @ts-ignore
-    transformedPager.data = docsWithRefModel
-    return transformedPager
+    return {
+      ...transformedPager,
+      data: docsWithRefModel,
+    }
   }
 
   async getReadDurationActivities(page = 1, size = 10) {
@@ -484,5 +493,121 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     }
 
     return result
+  }
+
+  async getRecentComment() {
+    const docs = await this.commentService.model
+      .find({
+        isWhispers: false,
+      })
+
+      .populate('ref', 'title nid slug category')
+      .lean()
+      .sort({
+        created: -1,
+      })
+      .limit(3)
+    return docs.map((doc) => {
+      return Object.assign(
+        {},
+        pick(doc, 'created', 'author', 'text'),
+        doc.ref,
+
+        {
+          type:
+            'nid' in doc.ref
+              ? CollectionRefTypes.Note
+              : CollectionRefTypes.Post,
+        },
+      )
+    })
+  }
+
+  async getRecentPublish() {
+    const [recent, post, note] = await Promise.all([
+      this.databaseService.db
+        .collection(RECENTLY_COLLECTION_NAME)
+        .find()
+        .project({
+          content: 1,
+          created: 1,
+          up: 1,
+          down: 1,
+        })
+        .sort({
+          created: -1,
+        })
+        .limit(3)
+
+        .toArray(),
+      this.databaseService.db
+        .collection(POST_COLLECTION_NAME)
+        .find()
+        .project({
+          title: 1,
+          slug: 1,
+          created: 1,
+          modified: 1,
+          category: 1,
+          categoryId: 1,
+        })
+        .sort({
+          created: -1,
+        })
+        .limit(3)
+        .toArray(),
+      // .aggregate([
+      //   {
+      //     $lookup: {
+      //       from: CATEGORY_COLLECTION_NAME,
+      //       localField: 'categoryId',
+      //       foreignField: '_id',
+      //       as: 'category',
+      //     },
+      //   },
+      //   {
+      //     $project: {
+      //       title: 1,
+      //       slug: 1,
+      //       created: 1,
+      //       category: {
+      //         $arrayElemAt: ['$category', 0],
+      //       },
+      //       categoryId: 1,
+      //       id: '$_id',
+      //     },
+      //   },
+      //   {
+      //     $sort: {
+      //       created: -1,
+      //     },
+      //   },
+      //   {
+      //     $limit: 3,
+      //   },
+      // ])
+      // .toArray(),
+      this.databaseService.db
+        .collection(NOTE_COLLECTION_NAME)
+        .find()
+        .sort({
+          created: -1,
+        })
+        .project({
+          title: 1,
+          nid: 1,
+          id: 1,
+          created: 1,
+          modified: 1,
+        })
+        .limit(3)
+        .toArray(),
+    ])
+
+    return {
+      recent,
+      post,
+      note,
+    }
   }
 }

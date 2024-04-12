@@ -1,3 +1,4 @@
+import type { CollectionRefTypes } from '@core/constants/db.constant'
 import type { CategoryModel } from './category'
 
 export interface ActivityPresence {
@@ -44,4 +45,55 @@ export interface RoomsData {
     notes: RoomOmittedNote[]
     pages: RoomOmittedPage[]
   }
+}
+
+export interface RecentActivities {
+  like: RecentLike[]
+  comment: RecentComment[]
+  recent: RecentRecent[]
+  post: RecentPost[]
+  note: RecentNote[]
+}
+
+export interface RecentComment {
+  created: string
+  author: string
+  text: string
+  id: string
+  title: string
+  slug: string
+  type: string
+}
+
+export interface RecentLike {
+  created: string
+  id: string
+  type: CollectionRefTypes.Post | CollectionRefTypes.Note
+  nid?: number
+  slug?: string
+}
+
+export interface RecentNote {
+  id: string
+  created: string
+  title: string
+  modified: string
+  nid: number
+}
+
+export interface RecentPost {
+  id: string
+  created: string
+  title: string
+  modified: string
+  slug: string
+}
+
+export interface RecentRecent {
+  id: string
+
+  content: string
+  up: number
+  down: number
+  created: string
 }

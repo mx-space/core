@@ -7,6 +7,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { PagerDto } from '~/shared/dto/pager.dto'
 
 import { Activity } from './activity.constant'
@@ -14,8 +15,8 @@ import { ActivityService } from './activity.service'
 import {
   ActivityDeleteDto,
   ActivityQueryDto,
+  ActivityRangeDto,
   ActivityTypeParamsDto,
-  ReadingRangeDto,
 } from './dtos/activity.dto'
 import { LikeBodyDto } from './dtos/like.dto'
 import { GetPresenceQueryDto, UpdatePresenceDto } from './dtos/presence.dto'
@@ -134,7 +135,7 @@ export class ActivityController {
 
   @Auth()
   @Get('/reading/rank')
-  async getReadingRangeRank(@Query() query: ReadingRangeDto) {
+  async getReadingRangeRank(@Query() query: ActivityRangeDto) {
     const startAt = query.start ? new Date(query.start) : undefined
     const endAt = query.end ? new Date(query.end) : undefined
 
@@ -164,5 +165,34 @@ export class ActivityController {
           }
         })
       })
+  }
+
+  @Get('/recent')
+  async getRecentActivities() {
+    const [like, comment, recent] = await Promise.all([
+      this.service.getLikeActivities(1, 5),
+      this.service.getRecentComment(),
+      this.service.getRecentPublish(),
+    ])
+
+    const transformedLike = [] as any[]
+
+    for (const item of like.data) {
+      const likeData = pick(item, 'created', 'id') as any
+      if ('nid' in item.ref) {
+        likeData.type = CollectionRefTypes.Note
+        likeData.nid = item.ref.nid
+      } else {
+        likeData.type = CollectionRefTypes.Post
+        likeData.slug = item.ref.slug
+      }
+      transformedLike.push(likeData)
+    }
+
+    return {
+      like: transformedLike,
+      comment,
+      ...recent,
+    }
   }
 }

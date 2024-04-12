@@ -121,6 +121,21 @@ export class PostController {
       })
   }
 
+  @Get('/get-url/:slug')
+  async getBySlug(@Param('slug') slug: string) {
+    if (typeof slug !== 'string') {
+      throw new CannotFindException()
+    }
+    const doc = await this.postService.model.findOne({ slug })
+    if (!doc) {
+      throw new CannotFindException()
+    }
+
+    return {
+      path: `/${(doc.category as CategoryModel).slug}/${doc.slug}`,
+    }
+  }
+
   @Get('/:id')
   @Auth()
   async getById(@Param() params: MongoIdDto) {

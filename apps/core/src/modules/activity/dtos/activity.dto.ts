@@ -27,7 +27,7 @@ export class ActivityQueryDto extends PagerDto {
   type: Activity
 }
 
-export class ReadingRangeDto {
+export class ActivityRangeDto {
   @IsInt()
   @IsOptional()
   @Type(() => Number)

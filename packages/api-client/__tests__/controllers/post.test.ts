@@ -66,4 +66,17 @@ describe('test post client', () => {
     expect(data).toStrictEqual({ title: '1' })
     expect(data.$raw).toBeDefined()
   })
+
+  it('GET /posts/get-url/:slug', async () => {
+    mockResponse('/posts/get-url/host-an-entire-Mix-Space-using-Docker', {
+      path: '/website/host-an-entire-Mix-Space-using-Docker',
+    })
+
+    const data = await client.post.getFullUrl(
+      'host-an-entire-Mix-Space-using-Docker',
+    )
+    expect(data).toStrictEqual({
+      path: '/website/host-an-entire-Mix-Space-using-Docker',
+    })
+  })
 })
