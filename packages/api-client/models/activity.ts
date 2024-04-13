@@ -61,8 +61,10 @@ export interface RecentComment {
   text: string
   id: string
   title: string
-  slug: string
+  slug?: string
   type: string
+  avatar: string
+  nid?: string
 }
 
 export interface RecentLike {
@@ -71,6 +73,7 @@ export interface RecentLike {
   type: CollectionRefTypes.Post | CollectionRefTypes.Note
   nid?: number
   slug?: string
+  title: string
 }
 
 export interface RecentNote {

@@ -31,6 +31,7 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
+import { getAvatar } from '~/utils'
 
 import { CommentService } from '../comment/comment.service'
 import { Activity } from './activity.constant'
@@ -502,7 +503,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       })
 
       .populate('ref', 'title nid slug category')
-      .lean()
+      .lean({ getters: true })
       .sort({
         created: -1,
       })
@@ -510,9 +511,9 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     return docs.map((doc) => {
       return Object.assign(
         {},
-        pick(doc, 'created', 'author', 'text'),
+        pick(doc, 'created', 'author', 'text', 'avatar'),
         doc.ref,
-
+        !doc.avatar ? { avatar: getAvatar(doc.mail) } : {},
         {
           type:
             'nid' in doc.ref

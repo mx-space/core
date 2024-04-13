@@ -186,6 +186,8 @@ export class ActivityController {
         likeData.type = CollectionRefTypes.Post
         likeData.slug = item.ref.slug
       }
+
+      likeData.title = item.ref.title
       transformedLike.push(likeData)
     }
 
