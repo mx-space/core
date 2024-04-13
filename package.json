@@ -2,7 +2,7 @@
   "author": "Innei <https://innei.ren>",
   "private": true,
   "license": "AGPLv3",
-  "packageManager": "pnpm@8.15.6",
+  "packageManager": "pnpm@8.15.7",
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
