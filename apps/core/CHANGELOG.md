@@ -1,5 +1,22 @@
 # CHANGELOG
 
+# [5.5.0](https://github.com/mx-space/core/compare/v5.4.10...v5.5.0) (2024-04-13)
+
+
+### Bug Fixes
+
+* add some field ([903aa30](https://github.com/mx-space/core/commit/903aa3012231b9445692688ac259e9d4ec5f02c6))
+* **deps:** update dependency ejs to v3.1.10 ([0963d50](https://github.com/mx-space/core/commit/0963d50b9ec5fdf814866913cd3ad8874fc55b37))
+* **deps:** update dependency inquirer to v9.2.18 ([064ec68](https://github.com/mx-space/core/commit/064ec68b3a8d4762d42a862b0b67056fe76a923d))
+* **deps:** update dependency qs to v6.12.1 ([8d170ed](https://github.com/mx-space/core/commit/8d170ed13e393766c10ec22fdf66bb22b6a6c6bb))
+
+
+### Features
+
+* add recent activity api ([b4726ad](https://github.com/mx-space/core/commit/b4726adfd80a9b229d48d027bc0a1ba3b69c80ee))
+
+
+
 ## [5.4.10](https://github.com/mx-space/core/compare/v5.4.9...v5.4.10) (2024-04-11)
 
 
