@@ -22,7 +22,8 @@
     "class-transformer",
     "vitest",
     "vite",
-    "snakecase-keys"
+    "snakecase-keys",
+    "eslint"
   ],
   "enabled": true
 }
