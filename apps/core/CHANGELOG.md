@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [5.5.1](https://github.com/mx-space/core/compare/v5.5.0...v5.5.1) (2024-04-14)
+
+
+### Features
+
+* add recent notification api ([1111b96](https://github.com/mx-space/core/commit/1111b96013124d637d3e5c9524f2dc2b19032675))
+
+
+
 # [5.5.0](https://github.com/mx-space/core/compare/v5.4.10...v5.5.0) (2024-04-13)
 
 
