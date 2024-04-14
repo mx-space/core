@@ -7,7 +7,7 @@
   },
   "devDependencies": {
     "nanoid": "5.0.7",
-    "zx": "7.2.3"
+    "zx": "8.0.1"
   },
   "exports": {
     ".": "./dist/index.cjs",
