@@ -38,3 +38,9 @@ export class ActivityRangeDto {
   @Type(() => Number)
   end: number
 }
+
+export class ActivityNotificationDto {
+  @IsInt()
+  @Type(() => Number)
+  from: number
+}

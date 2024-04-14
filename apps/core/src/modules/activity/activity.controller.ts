@@ -14,6 +14,7 @@ import { Activity } from './activity.constant'
 import { ActivityService } from './activity.service'
 import {
   ActivityDeleteDto,
+  ActivityNotificationDto,
   ActivityQueryDto,
   ActivityRangeDto,
   ActivityTypeParamsDto,
@@ -196,5 +197,48 @@ export class ActivityController {
       comment,
       ...recent,
     }
+  }
+
+  @HTTPDecorators.SkipLogging
+  @Get('/recent/notification')
+  async getNotification(@Query() query: ActivityNotificationDto) {
+    const activity = await this.getRecentActivities()
+
+    const { from } = query
+
+    const fromDate = new Date(from)
+    const now = new Date()
+
+    if (fromDate > now) {
+      return []
+    }
+
+    const { post, note } = activity
+
+    const postList = post
+      .filter((item) => {
+        return new Date(item.created) > fromDate
+      })
+      .map((item) => {
+        return {
+          title: item.title,
+          type: CollectionRefTypes.Post,
+          id: item.id,
+          slug: item.slug,
+        }
+      })
+    const noteList = note
+      .filter((item) => {
+        return new Date(item.created) > fromDate
+      })
+      .map((item) => {
+        return {
+          title: item.title,
+          type: CollectionRefTypes.Note,
+          id: item.nid,
+        }
+      })
+
+    return [...postList, ...noteList]
   }
 }
