@@ -590,7 +590,9 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       // .toArray(),
       this.databaseService.db
         .collection(NOTE_COLLECTION_NAME)
-        .find()
+        .find({
+          hide: false,
+        })
         .sort({
           created: -1,
         })
