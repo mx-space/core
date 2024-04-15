@@ -61,6 +61,7 @@ import { TopicModule } from './modules/topic/topic.module'
 import { UpdateModule } from './modules/update/update.module'
 import { UserModule } from './modules/user/user.module'
 import { WebhookModule } from './modules/webhook/webhook.module'
+import { WebPushModule } from './modules/webpush/webpush.module'
 import { DatabaseModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
@@ -109,6 +110,7 @@ import { RedisModule } from './processors/redis/redis.module'
     UpdateModule,
     UserModule,
     WebhookModule,
+    WebPushModule,
 
     PageProxyModule,
     RenderEjsModule,
