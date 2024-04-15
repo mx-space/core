@@ -5,6 +5,7 @@ import type { DocumentType } from '@typegoose/typegoose'
 
 import { modelOptions, prop, Severity } from '@typegoose/typegoose'
 
+import { USER_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 
 export type UserDocument = DocumentType<UserModel>
@@ -38,7 +39,9 @@ const securityKeys = [
   'lastLoginIp',
   'password',
 ] as const
-@modelOptions({ options: { customName: 'User', allowMixed: Severity.ALLOW } })
+@modelOptions({
+  options: { customName: USER_COLLECTION_NAME, allowMixed: Severity.ALLOW },
+})
 export class UserModel extends BaseModel {
   @prop({ required: true, unique: true, trim: true })
   username!: string

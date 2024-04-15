@@ -15,6 +15,7 @@ export const RECENTLY_COLLECTION_NAME = 'recentlies'
 export const ANALYZE_COLLECTION_NAME = 'analyzes'
 export const WEBHOOK_EVENT_COLLECTION_NAME = 'webhook_events'
 
+export const USER_COLLECTION_NAME = 'users'
 export enum CollectionRefTypes {
   Post = POST_COLLECTION_NAME,
   Note = NOTE_COLLECTION_NAME,
