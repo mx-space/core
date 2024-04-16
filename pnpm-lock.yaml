@@ -147,10 +147,10 @@ importers:
         version: 5.1.0
       '@typegoose/auto-increment':
         specifier: 4.2.0
-        version: 4.2.0(mongoose@8.3.1)
+        version: 4.2.0(mongoose@8.3.2)
       '@typegoose/typegoose':
         specifier: 12.3.1
-        version: 12.3.1(mongoose@8.3.1)
+        version: 12.3.1(mongoose@8.3.2)
       '@types/jsonwebtoken':
         specifier: 9.0.6
         version: 9.0.6
@@ -239,20 +239,20 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       mongoose:
-        specifier: 8.3.1
-        version: 8.3.1
+        specifier: 8.3.2
+        version: 8.3.2
       mongoose-aggregate-paginate-v2:
         specifier: 1.0.7
         version: 1.0.7
       mongoose-autopopulate:
         specifier: 1.1.0
-        version: 1.1.0(mongoose@8.3.1)
+        version: 1.1.0(mongoose@8.3.2)
       mongoose-lean-getters:
         specifier: 2.0.1
-        version: 2.0.1(mongoose@8.3.1)
+        version: 2.0.1(mongoose@8.3.2)
       mongoose-lean-virtuals:
         specifier: 0.9.1
-        version: 0.9.1(mongoose@8.3.1)
+        version: 0.9.1(mongoose@8.3.2)
       mongoose-paginate-v2:
         specifier: 1.8.0
         version: 1.8.0
@@ -2736,18 +2736,18 @@ packages:
     resolution: {integrity: sha512-eZxlbI8GZscaGS7kkc/trHTT5xgrjH3/1n2JDwusC9iahPKWMRvRjJSAN5mCXviuTGQ/lHnhvv8Q1YTpnfz9gA==}
     dev: true
 
-  /@typegoose/auto-increment@4.2.0(mongoose@8.3.1):
+  /@typegoose/auto-increment@4.2.0(mongoose@8.3.2):
     resolution: {integrity: sha512-LB0kAGnPDkNoptPr0vZHWayfL9keuYj+KPjdrdFVPjIUQvb4B2aR1woWrrHlZxSb4tUs/OzprwUh8kCdqTRhPw==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
       mongoose: ~8.2.0
     dependencies:
       loglevel: 1.9.1
-      mongoose: 8.3.1
+      mongoose: 8.3.2
       tslib: 2.6.2
     dev: false
 
-  /@typegoose/typegoose@12.3.1(mongoose@8.3.1):
+  /@typegoose/typegoose@12.3.1(mongoose@8.3.2):
     resolution: {integrity: sha512-x2FZFIUL5pm/MJHPNvkUZWi881l59+omspfHklmXFbPeBhShOrkTadLG7duBEHFAJlHysTmsLG2uCNbH+UOz/Q==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
@@ -2755,7 +2755,7 @@ packages:
     dependencies:
       lodash: 4.17.21
       loglevel: 1.9.1
-      mongoose: 8.3.1
+      mongoose: 8.3.2
       reflect-metadata: 0.2.2
       semver: 7.6.0
       tslib: 2.6.2
@@ -2967,7 +2967,7 @@ packages:
     resolution: {integrity: sha512-wL8pgJQxqJagv5f5mR7aI8WgUu22nS6rVLoJm71W2Uu+iKfS8jgph2rRLfXrjo+dFt1s7ik5Zl+uGZ4f5GM6Vw==}
     dependencies:
       '@types/node': 20.12.7
-      mongoose: 8.3.1
+      mongoose: 8.3.2
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@mongodb-js/zstd'
@@ -7260,31 +7260,31 @@ packages:
     engines: {node: '>=4.0.0'}
     dev: false
 
-  /mongoose-autopopulate@1.1.0(mongoose@8.3.1):
+  /mongoose-autopopulate@1.1.0(mongoose@8.3.2):
     resolution: {integrity: sha512-nTlTMlu1fLQ1bmJT7ILKbZmPGt2fHErLO4UJwzMDsHSigjtUYz0l3nvFhg511QkOkZcKBRzOnPn3DmmLIUENzg==}
     peerDependencies:
       mongoose: 6.x || 7.x || 8.0.0-rc0 || 8.x
     dependencies:
-      mongoose: 8.3.1
+      mongoose: 8.3.2
     dev: false
 
-  /mongoose-lean-getters@2.0.1(mongoose@8.3.1):
+  /mongoose-lean-getters@2.0.1(mongoose@8.3.2):
     resolution: {integrity: sha512-H7SsRFkVDODBaKiSXzT7N5xiDr+m0sx3bEF/veSBgCPXMEqBHYhc39iJPlL12ZnHOIZbeFenFM3SaN9i2HrQZQ==}
     engines: {node: '>= 14'}
     peerDependencies:
       mongoose: '>= 7.5.0'
     dependencies:
-      mongoose: 8.3.1
+      mongoose: 8.3.2
       mpath: 0.9.0
     dev: false
 
-  /mongoose-lean-virtuals@0.9.1(mongoose@8.3.1):
+  /mongoose-lean-virtuals@0.9.1(mongoose@8.3.2):
     resolution: {integrity: sha512-jx4rhXuaQPam/lwef3z/FfYHlKdbFkDr9Qb7JEMeoa7y4pOuyJ83RkcNL25HRaoi4Bt71zKmV1cuJdv243t9aA==}
     peerDependencies:
       mongoose: '>=5.11.10'
     dependencies:
       array.prototype.flat: 1.2.3
-      mongoose: 8.3.1
+      mongoose: 8.3.2
       mpath: 0.8.4
     dev: false
 
@@ -7293,8 +7293,8 @@ packages:
     engines: {node: '>=4.0.0'}
     dev: false
 
-  /mongoose@8.3.1:
-    resolution: {integrity: sha512-D78C+s7QI4+pJQhs3XbOxzrHFEti4x+BDhaH94QrdV1/cmMA7fHc50LgLSXjzA/5q89TBK8DAXyf3VwDZbQJlA==}
+  /mongoose@8.3.2:
+    resolution: {integrity: sha512-3JcpDjFI25cF/3xpu+4+9nM0lURQTNLcP86X83+LvuICdn453QQLmhSrUr2IPM/ffLiDE9KPl9slNb2s0hZPpg==}
     engines: {node: '>=16.20.1'}
     dependencies:
       bson: 6.6.0
