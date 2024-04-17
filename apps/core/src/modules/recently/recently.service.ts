@@ -20,7 +20,9 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey, scheduleManager } from '~/utils'
 import { normalizeRefType } from '~/utils/database.util'
 
+import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
+import { ConfigsService } from '../configs/configs.service'
 import { RecentlyAttitudeEnum } from './recently.dto'
 import { RecentlyModel } from './recently.model'
 
@@ -36,6 +38,7 @@ export class RecentlyService {
     private readonly cacheService: CacheService,
     @Inject(forwardRef(() => CommentService))
     private readonly commentService: CommentService,
+    private readonly configsService: ConfigsService,
   ) {}
 
   public get model() {
@@ -179,6 +182,9 @@ export class RecentlyService {
   }) {
     size = size ?? 10
 
+    const configs = await this.configsService.get('commentOptions')
+    const { commentShouldAudit } = configs
+
     const result = await this.recentlyModel.aggregate([
       {
         $match: after
@@ -198,6 +204,24 @@ export class RecentlyService {
           as: 'comment',
           foreignField: 'ref',
           localField: '_id',
+          pipeline: [
+            {
+              $match: commentShouldAudit
+                ? {
+                    state: CommentState.Read,
+                  }
+                : {
+                    $or: [
+                      {
+                        state: CommentState.Read,
+                      },
+                      {
+                        state: CommentState.Unread,
+                      },
+                    ],
+                  },
+            },
+          ],
         },
       },
 

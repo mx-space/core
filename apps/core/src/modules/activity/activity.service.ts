@@ -35,6 +35,7 @@ import { getAvatar } from '~/utils'
 
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
+import { ConfigsService } from '../configs/configs.service'
 import { Activity } from './activity.constant'
 import { ActivityModel } from './activity.model'
 import {
@@ -65,6 +66,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     private readonly webGateway: WebEventsGateway,
     private readonly gatewayService: GatewayService,
+    private readonly configsService: ConfigsService,
   ) {
     this.logger = new Logger(ActivityService.name)
   }
@@ -498,10 +500,17 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getRecentComment() {
+    const configs = await this.configsService.get('commentOptions')
+    const { commentShouldAudit } = configs
+
     const docs = await this.commentService.model
       .find({
         isWhispers: false,
-        state: CommentState.Read,
+        state: commentShouldAudit
+          ? CommentState.Read
+          : {
+              $in: [CommentState.Read, CommentState.Unread],
+            },
       })
 
       .populate('ref', 'title nid slug category')
