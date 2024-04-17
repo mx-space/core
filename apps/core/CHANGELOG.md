@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [5.5.3](https://github.com/mx-space/core/compare/v5.5.2...v5.5.3) (2024-04-17)
+
+
+### Bug Fixes
+
+* **activity:** filter comment state ([73abe9c](https://github.com/mx-space/core/commit/73abe9c1afec625605a227c614e55cff5cdee6d3))
+* check activity ref type ([9c89987](https://github.com/mx-space/core/commit/9c899870fd81aa2041019d91e52eaf6bf210e25a))
+* comment filter ([ec58221](https://github.com/mx-space/core/commit/ec58221ee66d8b2595c5dd9b1c65fbc8cd75782d))
+
+
+
 ## [5.5.2](https://github.com/mx-space/core/compare/v5.5.1...v5.5.2) (2024-04-17)
 
 
