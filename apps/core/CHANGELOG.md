@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [5.5.2](https://github.com/mx-space/core/compare/v5.5.1...v5.5.2) (2024-04-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @nestjs/schedule to v4.0.2 ([debacce](https://github.com/mx-space/core/commit/debacce20abf941341ac6b1b680b1d97da31236b))
+* **deps:** update dependency @typegoose/typegoose to v12.3.1 ([fb39902](https://github.com/mx-space/core/commit/fb39902096d509484e72e96578ad7de65d799b39))
+* **deps:** update dependency inquirer to v9.2.19 ([7cff84f](https://github.com/mx-space/core/commit/7cff84f38648e6e5e5de78b33a5655c3109c4093))
+* **deps:** update dependency mongoose to v8.3.2 ([17e796f](https://github.com/mx-space/core/commit/17e796f7bafb41008735458c820df035d900f4c7))
+* filter hide note ([29e3ba5](https://github.com/mx-space/core/commit/29e3ba595256b9676e7fe3ade8be406e6dacd203))
+* user collection name ([85ca2f6](https://github.com/mx-space/core/commit/85ca2f64b4deccc7f2ac86e6e69c6a6d49b864fc))
+
+
+
 ## [5.5.1](https://github.com/mx-space/core/compare/v5.5.0...v5.5.1) (2024-04-14)
 
 
