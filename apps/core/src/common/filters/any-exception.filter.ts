@@ -84,19 +84,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
       (exception as any)?.response?.message ||
       (exception as myError)?.message ||
       ''
-
+    const url = request.raw?.url || request.url || 'Unknown URL'
     if (status === HttpStatus.TOO_MANY_REQUESTS) {
       this.barkService.throttlePush({
         title: '疑似遭到攻击',
-        body: `IP: ${ip}`,
+        body: `IP: ${ip} Path: ${decodeURI(url)}`,
       })
 
       return response.status(429).send({
         message: '请求过于频繁，请稍后再试',
       })
     }
-
-    const url = request.raw.url!
 
     if (
       status === HttpStatus.INTERNAL_SERVER_ERROR &&
