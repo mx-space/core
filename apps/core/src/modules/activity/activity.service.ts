@@ -19,7 +19,6 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import {
-  CollectionRefTypes,
   NOTE_COLLECTION_NAME,
   POST_COLLECTION_NAME,
   RECENTLY_COLLECTION_NAME,
@@ -31,7 +30,7 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
-import { getAvatar } from '~/utils'
+import { checkRefModelCollectionType, getAvatar } from '~/utils'
 
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
@@ -513,7 +512,8 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
             },
       })
 
-      .populate('ref', 'title nid slug category')
+      .populate('ref', 'title nid slug subtitle content categoryId')
+
       .lean({ getters: true })
       .sort({
         created: -1,
@@ -523,13 +523,10 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       return Object.assign(
         {},
         pick(doc, 'created', 'author', 'text', 'avatar'),
-        doc.ref,
+        pick(doc.ref, 'title', 'nid', 'slug', 'id'),
         !doc.avatar ? { avatar: getAvatar(doc.mail) } : {},
         {
-          type:
-            'nid' in doc.ref
-              ? CollectionRefTypes.Note
-              : CollectionRefTypes.Post,
+          type: checkRefModelCollectionType(doc.ref),
         },
       )
     })
