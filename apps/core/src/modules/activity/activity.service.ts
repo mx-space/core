@@ -33,6 +33,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { getAvatar } from '~/utils'
 
+import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
 import { Activity } from './activity.constant'
 import { ActivityModel } from './activity.model'
@@ -500,6 +501,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const docs = await this.commentService.model
       .find({
         isWhispers: false,
+        state: CommentState.Read,
       })
 
       .populate('ref', 'title nid slug category')
