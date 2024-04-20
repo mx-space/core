@@ -161,6 +161,11 @@ export class BackupOptionsDto {
 
   @IsString()
   @IsOptional()
+  @JSONSchemaPlainField('S3 服务端点')
+  endpoint?: string
+
+  @IsString()
+  @IsOptional()
   @JSONSchemaHalfGirdPlainField('SecretId')
   secretId?: string
 

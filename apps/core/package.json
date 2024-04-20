@@ -49,6 +49,7 @@
   },
   "dependencies": {
     "@algolia/client-search": "^4.22.1",
+    "@aws-sdk/client-s3": "3.556.0",
     "@babel/core": "7.24.4",
     "@babel/plugin-transform-modules-commonjs": "7.24.1",
     "@babel/plugin-transform-typescript": "7.24.4",

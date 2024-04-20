@@ -4,6 +4,7 @@ import { join, resolve } from 'path'
 import { flatten } from 'lodash'
 import { mkdirp } from 'mkdirp'
 
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import {
   BadRequestException,
   Injectable,
@@ -26,7 +27,6 @@ import { migrateDatabase } from '~/migration/migrate'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getMediumDateTime, scheduleManager } from '~/utils'
-import { uploadFileToCOS } from '~/utils/cos.util'
 import { getFolderSize, installPKG } from '~/utils/system.util'
 
 import { ConfigsService } from '../configs/configs.service'
@@ -290,38 +290,39 @@ export class BackupService {
       this.logger.log('没有开启备份')
       return
     }
-    //  开始上传 COS
+
     scheduleManager.schedule(async () => {
       const { backupOptions } = await this.configs.waitForConfigReady()
 
-      if (
-        !backupOptions.bucket ||
-        !backupOptions.region ||
-        !backupOptions.secretId ||
-        !backupOptions.secretKey
-      ) {
+      const { endpoint, bucket, region, secretId, secretKey } =
+        backupOptions || {}
+      if (!endpoint || !bucket || !region || !secretId || !secretKey) {
         return
       }
 
-      this.logger.log('--> 开始上传到 COS')
-
-      await uploadFileToCOS(
-        backup.buffer,
-        backup.path.slice(backup.path.lastIndexOf('/') + 1),
-        {
-          bucket: backupOptions.bucket,
-          region: backupOptions.region,
-          secretId: backupOptions.secretId,
-          secretKey: backupOptions.secretKey,
+      const s3 = new S3Client({
+        region: 'auto',
+        endpoint,
+        credentials: {
+          accessKeyId: secretId,
+          secretAccessKey: secretKey,
         },
-      )
-        .then(() => {
-          this.logger.log('--> 上传成功')
-        })
-        .catch((err) => {
-          this.logger.error('--> 上传失败了')
-          throw err
-        })
+      })
+
+      const remoteFileKey = backup.path.slice(backup.path.lastIndexOf('/') + 1)
+      const command = new PutObjectCommand({
+        Bucket: bucket,
+        Key: remoteFileKey,
+        Body: backup.buffer,
+        ContentType: 'application/zip',
+      })
+
+      this.logger.log('--> 开始上传到 S3')
+      await s3.send(command).catch((err) => {
+        this.logger.error('--> 上传失败了')
+        throw err
+      })
+      this.logger.log('--> 上传成功')
     })
   }
 }

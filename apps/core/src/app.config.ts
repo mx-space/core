@@ -161,7 +161,7 @@ export const DEBUG_MODE = {
 const ENCRYPT_KEY = argv.encrypt_key || MX_ENCRYPT_KEY
 export const ENCRYPT = {
   key: ENCRYPT_KEY || machineIdSync(),
-  enable: parseBooleanishValue(argv.encrypt_enable) ? !!ENCRYPT_KEY : false,
+  enable: parseBooleanishValue(argv.encrypt_enable) ?? !!ENCRYPT_KEY,
   algorithm: argv.encrypt_algorithm || 'aes-256-ecb',
 }
 

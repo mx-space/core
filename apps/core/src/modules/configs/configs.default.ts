@@ -43,6 +43,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
   friendLinkOptions: { allowApply: true },
   backupOptions: {
     enable: DEMO_MODE ? false : true,
+    endpoint: null!,
     region: null!,
     bucket: null!,
     secretId: null!,
