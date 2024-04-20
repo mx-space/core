@@ -63,6 +63,9 @@ export class ServerlessController {
     @Request() req: FastifyRequest,
     @Response() reply: FastifyReply,
   ) {
+    if (req.method === 'OPTIONS') {
+      return reply.send()
+    }
     return this.runServerlessFunction(param, isAuthenticated, req, reply)
   }
 
