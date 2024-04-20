@@ -301,7 +301,7 @@ export class BackupService {
       }
 
       const s3 = new S3Client({
-        region: 'auto',
+        region,
         endpoint,
         credentials: {
           accessKeyId: secretId,
