@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [5.5.4](https://github.com/mx-space/core/compare/v5.5.3...v5.5.4) (2024-04-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @clerk/clerk-sdk-node to v4.13.15 ([c9971a9](https://github.com/mx-space/core/commit/c9971a990a1ec9c9460f9458011b588e27422c92))
+* **deps:** update dependency marked to v12.0.2 ([abe48df](https://github.com/mx-space/core/commit/abe48dfb6c4dc76dd0c85e5895f5d65970650686))
+* **deps:** update nest monorepo to v10.3.8 ([8e56dcd](https://github.com/mx-space/core/commit/8e56dcd8e96af30b325db64be2ad710adaf16fd3))
+* setup route jump [#1619](https://github.com/mx-space/core/issues/1619) ([e24b70d](https://github.com/mx-space/core/commit/e24b70dd04b8f85d9492526d53c293a35a0258e1))
+
+
+
 ## [5.5.3](https://github.com/mx-space/core/compare/v5.5.2...v5.5.3) (2024-04-17)
 
 
