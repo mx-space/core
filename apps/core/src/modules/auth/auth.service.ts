@@ -146,7 +146,7 @@ export class AuthService {
         return user.id === adminUserId
       }
     } catch (error) {
-      this.logger.error(`clerk jwt valid error: ${error.message}`)
+      this.logger.debug(`clerk jwt valid error: ${error.message}`)
       return false
     }
   }

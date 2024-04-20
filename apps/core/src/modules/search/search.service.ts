@@ -1,4 +1,3 @@
-import { inspect } from 'util'
 import algoliasearch from 'algoliasearch'
 import { omit } from 'lodash'
 import removeMdCodeblock from 'remove-md-codeblock'
@@ -300,8 +299,7 @@ export class SearchService {
 
     this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
       this.logger.log(
-        'detect post created or update, save to algolia, data: ',
-        inspect(data),
+        `detect post created or update, save to algolia, data id:${data.id}`,
       )
       await index.saveObject(
         adjustObjectSizeEfficiently({
@@ -328,8 +326,7 @@ export class SearchService {
 
     this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
       this.logger.log(
-        'detect note create or update, save to algolia, data: ',
-        inspect(data),
+        `detect post created or update, save to algolia, data id:${data.id}`,
       )
       await index.saveObject(
         adjustObjectSizeEfficiently({
@@ -352,7 +349,7 @@ export class SearchService {
   @OnEvent(BusinessEvents.NOTE_DELETE)
   async onPostDelete({ data: id }: { data: string }) {
     await this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
-      this.logger.log('detect data delete, save to algolia, data: ', id)
+      this.logger.log(`detect data delete, save to algolia, data id: ${id}`)
 
       await index.deleteObject(id)
     })
