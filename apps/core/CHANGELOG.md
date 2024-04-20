@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [5.5.5](https://github.com/mx-space/core/compare/v5.5.4...v5.5.5) (2024-04-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @typegoose/auto-increment to v4.3.0 ([#1614](https://github.com/mx-space/core/issues/1614)) ([ab4cf31](https://github.com/mx-space/core/commit/ab4cf3123981d6f1c7709710131e644042adde67))
+* logger ([e66e49a](https://github.com/mx-space/core/commit/e66e49a72fe02b4344d7dc107ec82c57e526e184))
+* s3 region ([e18ce0d](https://github.com/mx-space/core/commit/e18ce0d5a597bc835b5716bf499f087ff8e86c52))
+
+
+### Features
+
+* backup support s3 ([9dc3fbd](https://github.com/mx-space/core/commit/9dc3fbd15a338a0ff7166b81c702cf33cfa72dcc))
+
+
+
 ## [5.5.4](https://github.com/mx-space/core/compare/v5.5.3...v5.5.4) (2024-04-20)
 
 
