@@ -7,10 +7,14 @@ import PKG from '~/../package.json'
 import { API_VERSION } from '~/app.config'
 
 import { ConfigsService } from '../configs/configs.service'
+import { UserService } from '../user/user.service'
 
 @Injectable()
 export class PageProxyService {
-  constructor(private readonly configs: ConfigsService) {}
+  constructor(
+    private readonly configs: ConfigsService,
+    private readonly userService: UserService,
+  ) {}
 
   async checkCanAccessAdminProxy() {
     const { adminExtra } = await this.configs.waitForConfigReady()
@@ -49,28 +53,33 @@ export class PageProxyService {
     } = config
     const { from, BASE_API, GATEWAY } = env
 
+    // Define the base injectData object
+    const injectData: any = {
+      LOGIN_BG: adminExtra.background,
+      TITLE: adminExtra.title,
+      WEB_URL: webUrl,
+    }
+
+    // Determine the base API URL
+    const baseApiUrl =
+      BASE_API || `location.origin + '${!isDev ? `/api/v${API_VERSION}` : ''}'`
+
+    // Determine the gateway URL
+    const gatewayUrl = GATEWAY || 'location.origin'
+
+    // Construct the script content
+    const scriptContent = `
+        window.pageSource = '${from ?? 'server'}';
+        window.injectData = ${JSON.stringify(injectData)};
+        window.injectData.BASE_API = '${baseApiUrl}';
+        window.injectData.GATEWAY = '${gatewayUrl}';
+        window.injectData.INIT = ${await this.userService.hasMaster()}
+    `
+
+    // Replace placeholder in the HTML entry
     return htmlEntry.replace(
       `<!-- injectable script -->`,
-      `<script>${`window.pageSource='${
-        from ?? 'server'
-      }';\nwindow.injectData = ${JSON.stringify({
-        LOGIN_BG: adminExtra.background,
-        TITLE: adminExtra.title,
-        WEB_URL: webUrl,
-      } as IInjectableData)}`}
-     ${
-       BASE_API
-         ? `window.injectData.BASE_API = '${BASE_API}'`
-         : `window.injectData.BASE_API = location.origin + '${
-             !isDev ? `/api/v${API_VERSION}` : ''
-           }';`
-     }
-      ${
-        GATEWAY
-          ? `window.injectData.GATEWAY = '${GATEWAY}';`
-          : `window.injectData.GATEWAY = location.origin;`
-      }
-      </script>`,
+      `<script>${scriptContent}</script>`,
     )
   }
 
