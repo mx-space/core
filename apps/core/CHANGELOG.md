@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [5.5.6](https://github.com/mx-space/core/compare/v5.5.5...v5.5.6) (2024-04-22)
+
+
+### Bug Fixes
+
+* bypass options preflight ([845b307](https://github.com/mx-space/core/commit/845b3074437a042f6b1d0c0d2bcddf20e759d71d))
+* comment email link url ([0fd8fbf](https://github.com/mx-space/core/commit/0fd8fbf4f5d2a0f0200a0b22e4dd9d83f1f04121))
+
+
+
 ## [5.5.5](https://github.com/mx-space/core/compare/v5.5.4...v5.5.5) (2024-04-20)
 
 
