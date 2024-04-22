@@ -440,7 +440,10 @@ export class CommentService implements OnModuleInit {
         return new URL(`/${model.slug}`, base).toString()
       }
       case CollectionRefTypes.Post: {
-        return new URL(`/${model.category.slug}/${model.slug}`, base).toString()
+        return new URL(
+          `/posts/${model.category.slug}/${model.slug}`,
+          base,
+        ).toString()
       }
       case CollectionRefTypes.Recently: {
         return new URL(`/recently/${model._id}`, base).toString()
