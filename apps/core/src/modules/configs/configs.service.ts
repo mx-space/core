@@ -4,7 +4,7 @@ import { validateSync } from 'class-validator'
 import { cloneDeep, mergeWith } from 'lodash'
 import type { ClassConstructor } from 'class-transformer'
 
-import { Clerk } from '@clerk/clerk-sdk-node'
+import { createClerkClient } from '@clerk/clerk-sdk-node'
 import {
   BadRequestException,
   Inject,
@@ -238,7 +238,7 @@ export class ConfigsService {
             throw new UnprocessableEntityException('请填写完整 Clerk 鉴权信息')
           }
 
-          const clerk = Clerk({
+          const clerk = createClerkClient({
             secretKey: option.secretKey,
           })
 

@@ -1,10 +1,12 @@
 import dayjs from 'dayjs'
 import jwt from 'jsonwebtoken'
 import { isDate, omit } from 'lodash'
+import { LRUCache } from 'lru-cache'
+import type { ClerkClient } from '@clerk/clerk-sdk-node'
 import type { TokenModel, UserModel } from '~/modules/user/user.model'
 import type { TokenDto } from './auth.controller'
 
-import { Clerk } from '@clerk/clerk-sdk-node'
+import { createClerkClient } from '@clerk/clerk-sdk-node'
 import { nanoid } from '@mx-space/external'
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
@@ -123,6 +125,11 @@ export class AuthService {
     )
   }
 
+  private clerkClientLRU = new LRUCache<string, ClerkClient>({
+    max: 2,
+    ttl: 1000 * 60 * 5,
+  })
+
   async verifyClerkJWT(jwtToken: string) {
     const clerkOptions = await this.configs.get('clerkOptions')
     const { enable, pemKey, secretKey, adminUserId } = clerkOptions
@@ -138,10 +145,19 @@ export class AuthService {
           sub: string
         }
 
+        let clerkClient: ClerkClient
+        if (this.clerkClientLRU.has(secretKey)) {
+          clerkClient = this.clerkClientLRU.get(secretKey)!
+        } else {
+          clerkClient = createClerkClient({
+            secretKey,
+          })
+
+          this.clerkClientLRU.set(secretKey, clerkClient, { size: 1 })
+        }
+
         // 1. promise user is exist
-        const user = await Clerk({
-          secretKey,
-        }).users.getUser(userId)
+        const user = await clerkClient.users.getUser(userId)
 
         return user.id === adminUserId
       }
