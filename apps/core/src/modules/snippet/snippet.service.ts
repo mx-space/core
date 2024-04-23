@@ -63,6 +63,13 @@ export class SnippetService {
     }
     // 验证正确类型
     await this.validateTypeAndCleanup(model)
+
+    if (model.reference === 'theme') {
+      await this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+        scope: EventScope.TO_SYSTEM,
+      })
+    }
+
     return await this.model.create({ ...model, created: new Date() })
   }
 
@@ -113,20 +120,24 @@ export class SnippetService {
 
     await this.deleteCachedSnippet(old.reference, old.name)
 
-    await this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
-      scope: EventScope.TO_SYSTEM,
-    })
-
     const newerDoc = await this.model.findByIdAndUpdate(
       id,
       { ...newModel, modified: new Date() },
       { new: true },
     )
+
+    if (old.reference === 'theme' || newModel.reference === 'theme') {
+      await this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+        scope: EventScope.TO_SYSTEM,
+      })
+    }
+
     if (newerDoc) {
       const nextSnippet = this.transformLeanSnippetModel(newerDoc.toObject())
 
       return nextSnippet
     }
+
     return newerDoc
   }
 

@@ -36,6 +36,7 @@ export class AggregateController {
 
   @Get('/')
   @CacheTTL(10 * 60)
+  @CacheKey(CacheKeys.Aggregate)
   async aggregate(@Query() query: AggregateQueryDto) {
     const { theme } = query
 

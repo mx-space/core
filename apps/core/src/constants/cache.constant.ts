@@ -35,6 +35,7 @@ export enum CacheKeys {
   SiteMapXml = `${API_CACHE_PREFIX}aggregate_sitemap_xml`,
   RSS = `${API_CACHE_PREFIX}rss`,
   RSSXml = `${API_CACHE_PREFIX}rss_xml`,
+  Aggregate = `${API_CACHE_PREFIX}aggregate`,
 }
 
 // 30 days

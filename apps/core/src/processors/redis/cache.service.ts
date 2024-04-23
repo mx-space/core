@@ -73,6 +73,13 @@ export class CacheService {
     return
   }
 
+  public async cleanKey(key: string) {
+    const redis = this.getClient()
+    await redis.del(key)
+
+    return
+  }
+
   public async cleanAllRedisKey() {
     const redis = this.getClient()
     const keys: string[] = await redis.keys(getRedisKey('*'))

@@ -423,12 +423,16 @@ export class AggregateService {
 
   @OnEvent(EventBusEvents.CleanAggregateCache, { async: true })
   public clearAggregateCache() {
+    const redis = this.cacheService.getClient()
     return Promise.all([
-      this.cacheService.getClient().del(CacheKeys.RSS),
-      this.cacheService.getClient().del(CacheKeys.RSSXml),
-      this.cacheService.getClient().del(`${API_CACHE_PREFIX}/aggregate*`),
-      this.cacheService.getClient().del(CacheKeys.SiteMap),
-      this.cacheService.getClient().del(CacheKeys.SiteMapXml),
+      redis.del(CacheKeys.RSS),
+      redis.del(CacheKeys.RSSXml),
+      redis.del(CacheKeys.SiteMap),
+      redis.del(CacheKeys.SiteMapXml),
+      redis.del(CacheKeys.Aggregate),
+      redis.keys(`${API_CACHE_PREFIX}/aggregate*`).then((keys) => {
+        return keys.map((key) => redis.del(key))
+      }),
     ])
   }
 
