@@ -19,10 +19,9 @@ import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 
-import { CategoryAndSlugDto } from './post.dto'
+import { CategoryAndSlugDto, PostPagerDto } from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'
 
@@ -35,8 +34,8 @@ export class PostController {
 
   @Get('/')
   @Paginator
-  async getPaginate(@Query() query: PagerDto) {
-    const { size, select, page, year, sortBy, sortOrder } = query
+  async getPaginate(@Query() query: PostPagerDto) {
+    const { size, select, page, year, sortBy, sortOrder, truncate } = query
 
     return this.postService.model
       .aggregatePaginate(
@@ -112,6 +111,7 @@ export class PostController {
       )
       .then((res) => {
         res.docs = res.docs.map((doc: PostModel) => {
+          doc.text = truncate ? doc.text.slice(0, truncate) : doc.text
           if (doc.meta && typeof doc.meta === 'string') {
             doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
           }

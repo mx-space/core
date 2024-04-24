@@ -22,6 +22,7 @@ export type PostListOptions = {
   year?: number
   sortBy?: 'categoryId' | 'title' | 'created' | 'modified'
   sortOrder?: 1 | -1
+  truncate?: number
 }
 
 export class PostController<ResponseWrapper> implements IController {

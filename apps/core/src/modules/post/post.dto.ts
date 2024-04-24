@@ -1,5 +1,7 @@
-import { Transform } from 'class-transformer'
-import { IsString } from 'class-validator'
+import { Transform, Type } from 'class-transformer'
+import { IsInt, IsOptional, IsString } from 'class-validator'
+
+import { PagerDto } from '~/shared/dto/pager.dto'
 
 export class CategoryAndSlugDto {
   @IsString()
@@ -8,4 +10,11 @@ export class CategoryAndSlugDto {
   @IsString()
   @Transform(({ value: v }) => decodeURI(v))
   readonly slug: string
+}
+
+export class PostPagerDto extends PagerDto {
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  truncate?: number
 }

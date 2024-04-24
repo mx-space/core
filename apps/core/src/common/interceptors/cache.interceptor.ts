@@ -53,9 +53,11 @@ export class HttpCacheInterceptor implements NestInterceptor {
     }
 
     const request = this.getRequest(context)
+    const res = context.switchToHttp().getResponse<FastifyReply>()
 
     // 如果请求通过认证，跳过缓存因为，认证后的请求可能会有敏感数据
     if (request.isAuthenticated) {
+      this.setPrivateCacheHeader(res)
       return call$
     }
 
@@ -85,8 +87,6 @@ export class HttpCacheInterceptor implements NestInterceptor {
     const metaTTL = this.reflector.get(META.HTTP_CACHE_TTL_METADATA, handler)
     const ttl = metaTTL || HTTP_CACHE.ttl
 
-    const res = context.switchToHttp().getResponse<FastifyReply>()
-
     try {
       const value = await this.cacheManager.get(key)
 
@@ -109,6 +109,14 @@ export class HttpCacheInterceptor implements NestInterceptor {
 
       return call$
     }
+  }
+
+  setPrivateCacheHeader(res: FastifyReply) {
+    if (res.raw.statusCode !== 200) return
+    const cacheValue = 'private, max-age=0, no-cache, no-store, must-revalidate'
+    res.header('cdn-cache-control', cacheValue)
+    res.header('cache-control', cacheValue)
+    res.header('cloudflare-cdn-cache-control', cacheValue)
   }
 
   setCacheHeader(res: FastifyReply, ttl: number) {
