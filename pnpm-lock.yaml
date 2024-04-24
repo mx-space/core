@@ -20,7 +20,7 @@ importers:
     optionalDependencies:
       mongodb-memory-server:
         specifier: 9.1.8
-        version: 9.2.0
+        version: 9.1.8
       redis-memory-server:
         specifier: 0.10.0
         version: 0.10.0
@@ -92,8 +92,8 @@ importers:
         specifier: ^7.24.0
         version: 7.24.0
       '@clerk/clerk-sdk-node':
-        specifier: 5.0.0
-        version: 5.0.0(react@18.2.0)
+        specifier: 5.0.1
+        version: 5.0.1(react@18.2.0)
       '@fastify/cookie':
         specifier: 9.3.1
         version: 9.3.1
@@ -316,7 +316,7 @@ importers:
     optionalDependencies:
       mongodb-memory-server:
         specifier: ^9.1.5
-        version: 9.2.0
+        version: 9.1.8
       redis-memory-server:
         specifier: ^0.10.0
         version: 0.10.0
@@ -1564,8 +1564,8 @@ packages:
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
 
-  /@clerk/backend@1.0.0(react@18.2.0):
-    resolution: {integrity: sha512-3HRpSszaRPkIsZtO+es+8qCBLg/aI6JdivhKoDtK0MctxCFXL8pQ7+CdtKgFN2ooDB5gJDzqETGg03Fb7G+QZg==}
+  /@clerk/backend@1.0.1(react@18.2.0):
+    resolution: {integrity: sha512-cfeMmgyvdAVraEun+3ZOgWsv+0cKoloF3lNThjvbshUPh4UIx0WePY28t0qFuuQIXtuyEq9iq8ia8xLwPcbHeA==}
     engines: {node: '>=18.17.0'}
     dependencies:
       '@clerk/shared': 2.0.0(react@18.2.0)
@@ -1577,11 +1577,11 @@ packages:
       - react-dom
     dev: false
 
-  /@clerk/clerk-sdk-node@5.0.0(react@18.2.0):
-    resolution: {integrity: sha512-K8i4tY9KdJWfs+HUDPFfo8zuu8j/7MWkNiUh3q8mtMtge/cfiOeQVbYIjD42Oxn5Wbkp51o4DpWE3KEkkxpeVA==}
+  /@clerk/clerk-sdk-node@5.0.1(react@18.2.0):
+    resolution: {integrity: sha512-DMC2qOHwkf0X/Fp8AraQjnfwShqmttb2/xZxT1Mn4yKlaRgQsBaBBultk8NcrWJnenVHla7qdqPUl7SrV3TlNA==}
     engines: {node: '>=18.17.0'}
     dependencies:
-      '@clerk/backend': 1.0.0(react@18.2.0)
+      '@clerk/backend': 1.0.1(react@18.2.0)
       '@clerk/shared': 2.0.0(react@18.2.0)
       tslib: 2.4.1
     transitivePeerDependencies:
@@ -4553,17 +4553,6 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  /agent-base@7.1.0:
-    resolution: {integrity: sha512-o/zjMZRhJxny7OyEF+Op8X+efiELC7k7yOjMzgfzVqOzXqkBkWI79YoTdOtsuWd5BWhAGAuOY/Xa6xpiaWXiNg==}
-    engines: {node: '>= 14'}
-    requiresBuild: true
-    dependencies:
-      debug: 4.3.4
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-    optional: true
-
   /agent-base@7.1.1:
     resolution: {integrity: sha512-H0TSyFNDMomMNJQBn8wFV5YC/2eJ+VXECwOadZJT554xP6cODZHPX3H9QMQECxvrgiSOP1pHjy1sMWQVYJOUOA==}
     engines: {node: '>= 14'}
@@ -7061,7 +7050,7 @@ packages:
     engines: {node: '>= 14'}
     requiresBuild: true
     dependencies:
-      agent-base: 7.1.0
+      agent-base: 7.1.1
       debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
@@ -8172,8 +8161,8 @@ packages:
       '@types/whatwg-url': 11.0.4
       whatwg-url: 13.0.0
 
-  /mongodb-memory-server-core@9.2.0:
-    resolution: {integrity: sha512-9SWZEy+dGj5Fvm5RY/mtqHZKS64o4heDwReD4SsfR7+uNgtYo+JN41kPCcJeIH3aJf04j25i5Dia2s52KmsMPA==}
+  /mongodb-memory-server-core@9.1.8:
+    resolution: {integrity: sha512-iCWwaP7De4lm1lRCUKB2ffUYr6GB0I/cj6fK0NV9dgwc9fA3xapHTTT/cPYRNx29M5gmAOSaOpUgjP7i2GZ/LQ==}
     engines: {node: '>=14.20.1'}
     requiresBuild: true
     dependencies:
@@ -8188,7 +8177,7 @@ packages:
       semver: 7.6.0
       tar-stream: 3.1.7
       tslib: 2.6.2
-      yauzl: 3.1.3
+      yauzl: 2.10.0
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@mongodb-js/zstd'
@@ -8199,12 +8188,12 @@ packages:
     dev: false
     optional: true
 
-  /mongodb-memory-server@9.2.0:
-    resolution: {integrity: sha512-w/usKdYtby5EALERxmA0+et+D0brP0InH3a26shNDgGefXA61hgl6U0P3IfwqZlEGRZdkbZig3n57AHZgDiwvg==}
+  /mongodb-memory-server@9.1.8:
+    resolution: {integrity: sha512-QumPTOlWWWzgW6dtV4bf+ZFdTxenHSSGS4ZT85Vbb+FzPVoOtfcFwYlSfC9IM4e2nw7xvnQZvWtILYseO6HE9Q==}
     engines: {node: '>=14.20.1'}
     requiresBuild: true
     dependencies:
-      mongodb-memory-server-core: 9.2.0
+      mongodb-memory-server-core: 9.1.8
       tslib: 2.6.2
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -10993,16 +10982,6 @@ packages:
     dependencies:
       buffer-crc32: 0.2.13
       fd-slicer: 1.1.0
-    dev: false
-    optional: true
-
-  /yauzl@3.1.3:
-    resolution: {integrity: sha512-JCCdmlJJWv7L0q/KylOekyRaUrdEoUxWkWVcgorosTROCFWiS9p2NNPE9Yb91ak7b1N5SxAZEliWpspbZccivw==}
-    engines: {node: '>=12'}
-    requiresBuild: true
-    dependencies:
-      buffer-crc32: 0.2.13
-      pend: 1.2.0
     dev: false
     optional: true
 
