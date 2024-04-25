@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## [5.5.7](https://github.com/mx-space/core/compare/v5.5.6...v5.5.7) (2024-04-25)
+
+
+### Bug Fixes
+
+* custom mongo connection string ([62243e8](https://github.com/mx-space/core/commit/62243e8482f8327e511c1a86cdd60f3e3cd2d771))
+* delete regexp cache key ([f25f618](https://github.com/mx-space/core/commit/f25f6185caeadb50616c42437fe7f05cb21ecf95))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.1 ([03c5bab](https://github.com/mx-space/core/commit/03c5bab11d763447723b422688ce6da405d5ca34))
+* extends parent `isWhispers` ([d11382b](https://github.com/mx-space/core/commit/d11382b5533f03d01d9e57bfb05598f7d45bd694))
+* file trash ([9c3394c](https://github.com/mx-space/core/commit/9c3394c6c8b31538fbb780966f65173574c146a2))
+* filter markdown video href ([52c344d](https://github.com/mx-space/core/commit/52c344d132a81c725378cb46cf86bf29f2a3abd7))
+* update docker-run.sh ([#1643](https://github.com/mx-space/core/issues/1643)) ([21e84b1](https://github.com/mx-space/core/commit/21e84b1b2e3c5e4ef8bc1a78aca01834ec5a115b))
+
+
+### Features
+
+* add `truncate` for post list ([45e7cf8](https://github.com/mx-space/core/commit/45e7cf83a8084ba34f62370a7c176cb761616eee))
+
+
+
 ## [5.5.6](https://github.com/mx-space/core/compare/v5.5.5...v5.5.6) (2024-04-22)
 
 
