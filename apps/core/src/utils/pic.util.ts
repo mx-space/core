@@ -1,11 +1,15 @@
 import getColors from 'get-image-colors'
 import { marked } from 'marked'
 
+const isVideoExts = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.flv', '.mkv']
 export const pickImagesFromMarkdown = (text: string) => {
   const ast = marked.lexer(text)
   const images = [] as string[]
   function pickImage(node: any) {
     if (node.type === 'image') {
+      if (isVideoExts.some((ext) => node.href.endsWith(ext))) {
+        return
+      }
       images.push(node.href)
       return
     }
