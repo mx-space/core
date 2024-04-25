@@ -45,7 +45,7 @@ export class PostController<ResponseWrapper> implements IController {
    * @returns
    */
   getList(page = 1, perPage = 10, options: PostListOptions = {}) {
-    const { select, sortBy, sortOrder, year } = options
+    const { select, sortBy, sortOrder, year, truncate } = options
     return this.proxy.get<PaginateResult<PostModel>>({
       params: {
         page,
@@ -54,6 +54,7 @@ export class PostController<ResponseWrapper> implements IController {
         sortBy,
         sortOrder,
         year,
+        truncate,
       },
     })
   }
