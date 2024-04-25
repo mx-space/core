@@ -10,7 +10,10 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 
-import { DATA_DIR, STATIC_FILE_DIR } from '~/constants/path.constant'
+import {
+  STATIC_FILE_DIR,
+  STATIC_FILE_TRASH_DIR,
+} from '~/constants/path.constant'
 
 import { ConfigsService } from '../configs/configs.service'
 
@@ -76,7 +79,7 @@ export class FileService {
     try {
       const path = this.resolveFilePath(type, name)
 
-      await fs.rename(path, resolve(DATA_DIR, 'trash', name))
+      await fs.rename(path, resolve(STATIC_FILE_TRASH_DIR, name))
     } catch (e) {
       this.logger.error('删除文件失败', e)
       return null
