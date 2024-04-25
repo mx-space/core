@@ -252,6 +252,7 @@ export class CommentController {
       ...body,
       ...ipLocation,
       key,
+      isWhispers: parent.isWhispers,
     }
 
     const comment = await this.commentService.model.create(model)
