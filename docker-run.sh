@@ -1,17 +1,15 @@
 #!/bin/bash
 
 command="node index.js \
-  --redis_host=${redis_host} \
-  --redis_port=${redis_port} \
-  --redis_password=${redis_password} \
-  --db_host=${db_host} \
-  --db_password=${db_password} \
-  --db_user=${db_user} \
-  --db_port=${db_port} \
+  --redis_host=redis --db_host=mongo \
   --allowed_origins=${ALLOWED_ORIGINS} \
   --jwt_secret=${JWT_SECRET} \
   --color \
   "
+
+if [ -n "$MONGO_CONNECTION" ]; then
+  command+=" --db_connection_string=${MONGO_CONNECTION}"
+fi
 
 if [ -n "$CDN_CACHE_HEADER" ]; then
   command+=" --http_cache_enable_cdn_header"

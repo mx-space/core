@@ -25,7 +25,9 @@ export const getDatabaseConnection = async () => {
   const RECONNECT_INTERVAL = 6000
 
   const connection = () => {
-    return mongoose.createConnection(MONGO_DB.uri, {}).asPromise()
+    return mongoose
+      .createConnection(MONGO_DB.customConnectionString || MONGO_DB.uri, {})
+      .asPromise()
   }
   const Badge = `[${chalk.yellow('MongoDB')}]`
 

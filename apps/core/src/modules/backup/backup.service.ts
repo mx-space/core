@@ -99,7 +99,7 @@ export class BackupService {
     const backupDirPath = join(BACKUP_DIR, dateDir)
     mkdirp.sync(backupDirPath)
     try {
-      await $`mongodump -h ${MONGO_DB.host} --port ${MONGO_DB.port} -d ${
+      await $`mongodump --uri ${MONGO_DB.customConnectionString || MONGO_DB.uri} -d ${
         MONGO_DB.dbName
       }  ${flatten(
         excludeCollections.map((collection) => [
@@ -203,9 +203,7 @@ export class BackupService {
       }
 
       cd(dirPath)
-      await $`mongorestore -h ${MONGO_DB.host || '127.0.0.1'} --port ${
-        MONGO_DB.port || 27017
-      } -d ${MONGO_DB.dbName} ./mx-space --drop  >/dev/null 2>&1`
+      await $`mongorestore --uri ${MONGO_DB.customConnectionString || MONGO_DB.uri} -d ${MONGO_DB.dbName} ./mx-space --drop  >/dev/null 2>&1`
 
       await migrateDatabase()
     } catch (e) {
