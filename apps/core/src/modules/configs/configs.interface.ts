@@ -9,6 +9,7 @@ import type {
 
 import {
   AdminExtraDto,
+  AIDto,
   AlgoliaSearchOptionsDto,
   AuthSecurityDto,
   BackupOptionsDto,
@@ -80,6 +81,9 @@ export abstract class IConfig {
 
   @ConfigField(() => AuthSecurityDto)
   authSecurity: AuthSecurityDto
+
+  @ConfigField(() => AIDto)
+  ai: AIDto
 }
 
 export type IConfigKeys = keyof IConfig

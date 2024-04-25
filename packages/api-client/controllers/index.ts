@@ -1,6 +1,7 @@
 import { AckController } from './ack'
 import { ActivityController } from './activity'
 import { AggregateController } from './aggregate'
+import { AIController } from './ai'
 import { CategoryController } from './category'
 import { CommentController } from './comment'
 import { LinkController } from './link'
@@ -22,6 +23,7 @@ import { TopicController } from './topic'
 import { UserController } from './user'
 
 export const allControllers = [
+  AIController,
   AckController,
   ActivityController,
   AggregateController,
@@ -43,6 +45,7 @@ export const allControllers = [
 ]
 
 export const allControllerNames = [
+  'ai',
   'ack',
   'activity',
   'aggregate',
@@ -69,6 +72,7 @@ export const allControllerNames = [
 ] as const
 
 export {
+  AIController,
   AckController,
   ActivityController,
   AggregateController,

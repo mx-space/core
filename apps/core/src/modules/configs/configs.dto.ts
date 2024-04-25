@@ -369,3 +369,31 @@ export class AuthSecurityDto {
   @IsOptional()
   disablePasswordLogin: boolean
 }
+@JSONSchema({ title: 'AI 设定' })
+export class AIDto {
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('可调用 AI 摘要', {
+    description: '是否开启调用 AI 去生成摘要',
+  })
+  enableSummary: boolean
+
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('开启 AI 摘要自动生成', {
+    description:
+      '此选项开启后，将会在文章发布后自动生成摘要，需要开启上面的选项，否则无效',
+  })
+  enableAutoGenerateSummary: boolean
+
+  @IsOptional()
+  @JSONSchemaPlainField('OpenAI Key')
+  @IsString()
+  @Encrypt
+  openAiKey: string
+
+  @IsOptional()
+  @IsString()
+  @JSONSchemaPlainField('OpenAI Endpoint')
+  openAiEndpoint: string
+}
