@@ -51,6 +51,7 @@ export default defineConfig({
 
   plugins: [
     swc.vite(),
+
     tsconfigPath({
       projects: [
         resolve(__dirname, './test/tsconfig.json'),
