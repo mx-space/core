@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [5.6.0](https://github.com/mx-space/core/compare/v5.5.7...v5.6.0) (2024-04-26)
+
+
+### Bug Fixes
+
+* pass `truncate` ([924e7e4](https://github.com/mx-space/core/commit/924e7e4b5bff22b4bb129eeda642d114de419aba))
+* throw error when ai disabled ([786a399](https://github.com/mx-space/core/commit/786a3994cd98f3840bcfbca46ebe9723b0e564f8))
+
+
+### Features
+
+* ai module ([#1649](https://github.com/mx-space/core/issues/1649)) ([c989a2a](https://github.com/mx-space/core/commit/c989a2a7b0977d3ebbdc72771f4965e7927ffb96))
+
+
+
 ## [5.5.7](https://github.com/mx-space/core/compare/v5.5.6...v5.5.7) (2024-04-25)
 
 
