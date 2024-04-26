@@ -77,6 +77,7 @@ export class AiController {
       params.id,
       finalLang,
     )
+
     const aiConfig = await this.configService.get('ai')
     if (!dbStored && !query.onlyDb) {
       const shouldGenerate =
@@ -87,7 +88,7 @@ export class AiController {
     }
 
     if (!dbStored) {
-      if (!aiConfig.enableSummary) {
+      if (!aiConfig.enableSummary || !aiConfig.enableAutoGenerateSummary) {
         throw new BizException(ErrorCodeEnum.AINotEnabled)
       }
     }
