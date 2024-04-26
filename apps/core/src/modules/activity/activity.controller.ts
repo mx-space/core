@@ -241,4 +241,9 @@ export class ActivityController {
 
     return [...postList, ...noteList]
   }
+
+  @Get('/last-year/publication')
+  getLastYearPublication() {
+    return this.service.getLastYearPublication()
+  }
 }

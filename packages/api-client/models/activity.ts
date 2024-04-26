@@ -100,3 +100,33 @@ export interface RecentRecent {
   down: number
   created: string
 }
+
+export interface LastYearPublication {
+  posts: PostsItem[]
+  notes: NotesItem[]
+}
+
+interface PostsItem {
+  id: string
+  created: string
+  title: string
+  slug: string
+  categoryId: string
+  category: Category
+}
+interface Category {
+  id: string
+  type: number
+  name: string
+  slug: string
+  created: string
+}
+interface NotesItem {
+  id: string
+  created: string
+  title: string
+  mood: string
+  weather: string
+  nid: number
+  bookmark: boolean
+}

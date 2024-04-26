@@ -3,6 +3,7 @@ import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
 import type {
   ActivityPresence,
+  LastYearPublication,
   RecentActivities,
   RoomsData,
 } from '~/models/activity'
@@ -94,5 +95,9 @@ export class ActivityController<ResponseWrapper> implements IController {
 
   async getRecentActivities() {
     return this.proxy.recent.get<RecentActivities>()
+  }
+
+  async getLastYearPublication(): Promise<LastYearPublication> {
+    return this.proxy(`last-year`).publication.get<LastYearPublication>()
   }
 }

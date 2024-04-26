@@ -1,8 +1,10 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 
 import { GatewayModule } from '~/processors/gateway/gateway.module'
 
 import { CommentModule } from '../comment/comment.module'
+import { NoteModule } from '../note/note.module'
+import { PostModule } from '../post/post.module'
 import { ActivityController } from './activity.controller'
 import { ActivityService } from './activity.service'
 
@@ -10,6 +12,12 @@ import { ActivityService } from './activity.service'
   providers: [ActivityService],
   controllers: [ActivityController],
   exports: [ActivityService],
-  imports: [GatewayModule, CommentModule],
+  imports: [
+    GatewayModule,
+    CommentModule,
+
+    forwardRef(() => PostModule),
+    forwardRef(() => NoteModule),
+  ],
 })
 export class ActivityModule {}

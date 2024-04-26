@@ -14,7 +14,13 @@ import type {
 } from './activity.interface'
 import type { UpdatePresenceDto } from './dtos/presence.dto'
 
-import { BadRequestException, Injectable, Logger } from '@nestjs/common'
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common'
 
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -35,6 +41,8 @@ import { checkRefModelCollectionType, getAvatar } from '~/utils'
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
+import { NoteService } from '../note/note.service'
+import { PostService } from '../post/post.service'
 import { Activity } from './activity.constant'
 import { ActivityModel } from './activity.model'
 import {
@@ -66,6 +74,11 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     private readonly webGateway: WebEventsGateway,
     private readonly gatewayService: GatewayService,
     private readonly configsService: ConfigsService,
+
+    @Inject(forwardRef(() => PostService))
+    private readonly postService: PostService,
+    @Inject(forwardRef(() => NoteService))
+    private readonly noteService: NoteService,
   ) {
     this.logger = new Logger(ActivityService.name)
   }
@@ -619,6 +632,52 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       recent,
       post,
       note,
+    }
+  }
+
+  /**
+   * 获取过去一年的文章发布
+   */
+  async getLastYearPublication() {
+    const $gte = new Date(new Date().getTime() - 365 * 24 * 60 * 60 * 1000)
+    const [posts, notes] = await Promise.all([
+      this.postService.model
+        .find({
+          created: {
+            $gte,
+          },
+        })
+        .select('title created slug categoryId category')
+        .sort({ created: -1 }),
+      this.noteService.model
+        .find(
+          {
+            created: {
+              $gte,
+            },
+          },
+          {
+            title: 1,
+            created: 1,
+            nid: 1,
+            weather: 1,
+            mood: 1,
+            bookmark: 1,
+            password: 1,
+            hide: 1,
+          },
+        )
+        .lean(),
+    ])
+    return {
+      posts,
+      notes: notes.map((note) => {
+        if (note.password || note.hide) {
+          note.title = '未公开的日记'
+        }
+
+        return omit(note, 'password', 'hide')
+      }),
     }
   }
 }

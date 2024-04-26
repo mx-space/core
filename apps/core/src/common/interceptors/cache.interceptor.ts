@@ -121,6 +121,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
 
   setCacheHeader(res: FastifyReply, ttl: number) {
     if (res.raw.statusCode !== 200) return
+    res.header('x-mx-cache', 'hit')
     if (HTTP_CACHE.enableCDNHeader) {
       res.header(
         'cdn-cache-control',
