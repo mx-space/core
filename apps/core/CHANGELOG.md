@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [5.6.1](https://github.com/mx-space/core/compare/v5.6.0...v5.6.1) (2024-04-26)
+
+
+
 # [5.6.0](https://github.com/mx-space/core/compare/v5.5.7...v5.6.0) (2024-04-26)
 
 
