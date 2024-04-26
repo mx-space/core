@@ -11,6 +11,8 @@ import {
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth, AuthButProd } from '~/common/decorators/auth.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { FastifyBizRequest } from '~/transformers/get-req.transformer'
@@ -75,15 +77,18 @@ export class AiController {
       params.id,
       finalLang,
     )
-
+    const aiConfig = await this.configService.get('ai')
     if (!dbStored && !query.onlyDb) {
-      const shouldGenerate = await this.configService
-        .get('ai')
-        .then((config) => {
-          return config.enableAutoGenerateSummary && config.enableSummary
-        })
+      const shouldGenerate =
+        aiConfig?.enableAutoGenerateSummary && aiConfig.enableSummary
       if (shouldGenerate) {
         return this.service.generateSummaryByOpenAI(params.id, finalLang)
+      }
+    }
+
+    if (!dbStored) {
+      if (!aiConfig.enableSummary) {
+        throw new BizException(ErrorCodeEnum.AINotEnabled)
       }
     }
 
