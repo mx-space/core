@@ -68,7 +68,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v3.0.0
         with:
-          version: 8.x
+          version: 9.x
           run_install: false
 
       - name: Get pnpm store directory
@@ -121,7 +121,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 8.x
+          version: 9.x
           run_install: |
             - recursive: false
       - name: Run Lint
