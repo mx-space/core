@@ -1,6 +1,6 @@
 import camelcaseKeysLib from 'camelcase-keys'
 
-import { camelcaseKeys } from '~/utils/camelcase-keys'
+import { camelcase, camelcaseKeys } from '~/utils/camelcase-keys'
 
 describe('test camelcase keys', () => {
   it('case 1 normal', () => {
@@ -80,7 +80,33 @@ describe('test camelcase keys', () => {
     ]
 
     expect(camelcaseKeys(arr)).toStrictEqual(
-      camelcaseKeysLib(arr, { deep: true }),
+      camelcaseKeysLib(arr as any, { deep: true }),
     )
+  })
+
+  it('case 6: filter out mongo id', () => {
+    const obj = {
+      _id: '123',
+      a_b: 1,
+      collections: {
+        posts: {
+          '661bb93307d35005ba96731b': {},
+        },
+      },
+    }
+
+    expect(camelcaseKeys(obj)).toStrictEqual({
+      id: '123',
+      aB: 1,
+      collections: {
+        posts: {
+          '661bb93307d35005ba96731b': {},
+        },
+      },
+    })
+  })
+
+  it('case 7: start with underscore should not camelcase', () => {
+    expect(camelcase('_id')).toBe('id')
   })
 })

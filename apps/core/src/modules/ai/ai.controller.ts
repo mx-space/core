@@ -1,12 +1,26 @@
-import { Body, Get, Param, Post, Query, Req } from '@nestjs/common'
+import {
+  Body,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
-import { AuthButProd } from '~/common/decorators/auth.decorator'
+import { Auth, AuthButProd } from '~/common/decorators/auth.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
+import { PagerDto } from '~/shared/dto/pager.dto'
 import { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
 import { ConfigsService } from '../configs/configs.service'
-import { GenerateAiSummaryDto, LangQueryDto } from './ai.dto'
+import {
+  GenerateAiSummaryDto,
+  GetSummaryQueryDto,
+  UpdateSummaryDto,
+} from './ai.dto'
 import { AiService } from './ai.service'
 
 @ApiController('ai')
@@ -22,10 +36,37 @@ export class AiController {
     return this.service.generateSummaryByOpenAI(body.refId, body.lang)
   }
 
-  @Get('/summary/:id')
+  @Get('/summaries/ref/:id')
+  @AuthButProd()
+  async getSummaryByRefId(@Param() params: MongoIdDto) {
+    return this.service.getSummariesByRefId(params.id)
+  }
+
+  @Get('/summaries')
+  @AuthButProd()
+  async getSummaries(@Query() query: PagerDto) {
+    return this.service.getAllSummaries(query)
+  }
+
+  @Patch('/summaries/:id')
+  @Auth()
+  async updateSummary(
+    @Param() params: MongoIdDto,
+    @Body() body: UpdateSummaryDto,
+  ) {
+    return this.service.updateSummaryInDb(params.id, body.summary)
+  }
+
+  @Delete('/summaries/:id')
+  @Auth()
+  async deleteSummary(@Param() params: MongoIdDto) {
+    return this.service.deleteSummaryInDb(params.id)
+  }
+
+  @Get('/summaries/article/:id')
   async getArticleSummary(
     @Param() params: MongoIdDto,
-    @Query() query: LangQueryDto,
+    @Query() query: GetSummaryQueryDto,
     @Req() req: FastifyBizRequest,
   ) {
     const acceptLang = req.headers['accept-language']
@@ -35,7 +76,7 @@ export class AiController {
       finalLang,
     )
 
-    if (!dbStored) {
+    if (!dbStored && !query.onlyDb) {
       const shouldGenerate = await this.configService
         .get('ai')
         .then((config) => {

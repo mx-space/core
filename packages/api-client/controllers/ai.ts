@@ -30,16 +30,28 @@ export class AIController<ResponseWrapper> implements IController {
     return this.client.proxy(this.base)
   }
 
-  async getSummary(articleId: string, lang = 'zh-CN') {
-    return this.proxy.summary(articleId).get<AISummaryModel>({
+  async getSummary({
+    articleId,
+    lang = 'zh-CN',
+    onlyDb,
+  }: {
+    articleId: string
+    lang?: string
+    onlyDb?: boolean
+  }) {
+    return this.proxy.summaries.article(articleId).get<AISummaryModel>({
       params: {
         lang,
+        onlyDb,
       },
     })
   }
 
-  async generateSummary(articleId: string, lang = 'zh-CN') {
+  async generateSummary(articleId: string, lang = 'zh-CN', token = '') {
     return this.proxy('generate-summary').post<AISummaryModel>({
+      params: {
+        token,
+      },
       data: {
         lang,
         refId: articleId,

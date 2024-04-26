@@ -1,9 +1,9 @@
 import OpenAI from 'openai'
 import removeMdCodeblock from 'remove-md-codeblock'
+import type { PagerDto } from '~/shared/dto/pager.dto'
 
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
-import { ReturnModelType } from '@typegoose/typegoose'
 
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents } from '~/constants/business-event.constant'
@@ -12,6 +12,7 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { md5 } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
@@ -22,7 +23,7 @@ export class AiService {
   private readonly logger: Logger
   constructor(
     @InjectModel(AISummaryModel)
-    private readonly aiSummaryModel: ReturnModelType<typeof AISummaryModel>,
+    private readonly aiSummaryModel: MongooseModel<AISummaryModel>,
     private readonly databaseService: DatabaseService,
     private readonly configService: ConfigsService,
 
@@ -127,6 +128,82 @@ CONCISE SUMMARY:`,
     }
   }
 
+  async getSummariesByRefId(refId: string) {
+    const article = await this.databaseService.findGlobalById(refId)
+
+    if (!article) {
+      throw new BizException(ErrorCodeEnum.ContentNotFound)
+    }
+    const summaries = await this.aiSummaryModel.find({
+      refId,
+    })
+
+    return {
+      summaries,
+      article,
+    }
+  }
+
+  async getAllSummaries(pager: PagerDto) {
+    const { page, size } = pager
+    const summaries = await this.aiSummaryModel.paginate(
+      {
+        page,
+        limit: size,
+        sort: {
+          created: -1,
+        },
+      },
+      {
+        lean: true,
+        leanWithId: true,
+      },
+    )
+    const data = transformDataToPaginate(summaries)
+
+    return {
+      ...data,
+      articles: await this.getRefArticles(summaries.docs),
+    }
+  }
+
+  private getRefArticles(docs: AISummaryModel[]) {
+    return this.databaseService
+      .findGlobalByIds(docs.map((d) => d.refId))
+      .then((articles) => {
+        const articleMap = {} as Record<
+          string,
+          { title: string; id: string; type: CollectionRefTypes }
+        >
+        for (const a of articles.notes) {
+          articleMap[a.id] = {
+            title: a.title,
+            id: a.id,
+            type: CollectionRefTypes.Note,
+          }
+        }
+
+        for (const a of articles.posts) {
+          articleMap[a.id] = {
+            title: a.title,
+            id: a.id,
+            type: CollectionRefTypes.Post,
+          }
+        }
+        return articleMap
+      })
+  }
+
+  async updateSummaryInDb(id: string, summary: string) {
+    const doc = await this.aiSummaryModel.findById(id)
+    if (!doc) {
+      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    }
+
+    doc.summary = summary
+    await doc.save()
+    return doc
+  }
   async getSummaryByArticleId(articleId: string, lang = 'zh-CN') {
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article) {
@@ -150,6 +227,12 @@ CONCISE SUMMARY:`,
   async deleteSummaryByArticleId(articleId: string) {
     await this.aiSummaryModel.deleteMany({
       refId: articleId,
+    })
+  }
+
+  async deleteSummaryInDb(id: string) {
+    await this.aiSummaryModel.deleteOne({
+      _id: id,
     })
   }
 
