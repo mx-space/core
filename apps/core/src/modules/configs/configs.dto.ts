@@ -27,6 +27,11 @@ import {
   JSONSchemaToggleField,
 } from './configs.jsonschema.decorator'
 
+const SecretField = (target: Object, propertyKey: string | symbol) => {
+  Encrypt(target, propertyKey)
+  Exclude({ toPlainOnly: true })(target, propertyKey)
+}
+
 @JSONSchema({ title: 'SEO 优化' })
 export class SeoDto {
   @IsString({ message: '标题必须是字符串' })
@@ -98,9 +103,8 @@ export class MailOptionsDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  @Exclude({ toPlainOnly: true })
   @JSONSchemaPasswordField('发件邮箱密码', halfFieldOption)
-  @Encrypt
+  @SecretField
   pass: string
 
   @ValidateNested()
@@ -171,9 +175,8 @@ export class BackupOptionsDto {
 
   @IsOptional()
   @IsString()
-  @Exclude({ toPlainOnly: true })
   @JSONSchemaPasswordField('SecretKey', halfFieldOption)
-  @Encrypt
+  @SecretField
   secretKey?: string
 
   @IsOptional()
@@ -197,9 +200,8 @@ export class BaiduSearchOptionsDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
-  @Exclude({ toPlainOnly: true })
   @JSONSchemaPasswordField('Token')
-  @Encrypt
+  @SecretField
   token?: string
 }
 
@@ -212,9 +214,8 @@ export class AlgoliaSearchOptionsDto {
 
   @IsString()
   @IsOptional()
-  @Exclude({ toPlainOnly: true })
   @JSONSchemaPasswordField('ApiKey')
-  @Encrypt
+  @SecretField
   apiKey?: string
 
   @IsString()
@@ -252,8 +253,7 @@ export class AdminExtraDto {
 
   @IsString()
   @IsOptional()
-  @Exclude({ toPlainOnly: true })
-  @Encrypt
+  @SecretField
   @JSONSchemaPasswordField('高德查询 API Key', { description: '日记地点定位' })
   gaodemapKey?: string
 }
@@ -284,8 +284,7 @@ export class BarkOptionsDto {
   @IsString()
   @IsOptional()
   @JSONSchemaPlainField('设备 Key')
-  @Exclude({ toPlainOnly: true })
-  @Encrypt
+  @SecretField
   key: string
 
   @IsUrl()
@@ -332,8 +331,7 @@ export class ClerkOptionsDto {
   })
   @IsString()
   @IsOptional()
-  @Exclude({ toPlainOnly: true })
-  @Encrypt
+  @SecretField
   pemKey: string
 
   @JSONSchemaPasswordField('Clerk Secret Key', {
@@ -341,8 +339,7 @@ export class ClerkOptionsDto {
   })
   @IsString()
   @IsOptional()
-  @Exclude({ toPlainOnly: true })
-  @Encrypt
+  @SecretField
   secretKey: string
 }
 
@@ -387,9 +384,9 @@ export class AIDto {
   enableAutoGenerateSummary: boolean
 
   @IsOptional()
-  @JSONSchemaPlainField('OpenAI Key')
+  @JSONSchemaPasswordField('OpenAI Key')
   @IsString()
-  @Encrypt
+  @SecretField
   openAiKey: string
 
   @IsOptional()
