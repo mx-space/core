@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [5.6.2](https://github.com/mx-space/core/compare/v5.6.1...v5.6.2) (2024-04-26)
+
+
+### Bug Fixes
+
+* ai throw ([afdb6b7](https://github.com/mx-space/core/commit/afdb6b71d094326ff9be72a2a6efbf11274ae750))
+
+
+
 ## [5.6.1](https://github.com/mx-space/core/compare/v5.6.0...v5.6.1) (2024-04-26)
 
 
