@@ -3,6 +3,7 @@ import { FastifyReply } from 'fastify'
 import { BadRequestException, Get, Param, Query, Res } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -26,7 +27,7 @@ export class HelperController {
     @Res() res: FastifyReply,
   ) {
     const doc = await this.databaseService.findGlobalById(params.id)
-    if (!doc || doc.type === 'Recently') {
+    if (!doc || doc.type === CollectionRefTypes.Recently) {
       if (redirect) {
         throw new BadRequestException(
           'not found or this type can not redirect to',

@@ -18,7 +18,6 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey, scheduleManager } from '~/utils'
-import { normalizeRefType } from '~/utils/database.util'
 
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
@@ -281,7 +280,7 @@ export class RecentlyService {
         throw new BadRequestException('ref model not found')
       }
 
-      model.refType = normalizeRefType(existModel.type)
+      model.refType = existModel.type
     }
 
     const res = await this.model.create({

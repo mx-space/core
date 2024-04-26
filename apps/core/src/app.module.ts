@@ -24,6 +24,7 @@ import { RequestContextMiddleware } from './common/middlewares/request-context.m
 import { AckModule } from './modules/ack/ack.module'
 import { ActivityModule } from './modules/activity/activity.module'
 import { AggregateModule } from './modules/aggregate/aggregate.module'
+import { AiModule } from './modules/ai/ai.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { AuthnModule } from './modules/authn/auth.module'
@@ -73,6 +74,7 @@ import { RedisModule } from './processors/redis/redis.module'
     RedisModule,
 
     // biz module
+    AiModule,
     AckModule,
     ActivityModule,
     AggregateModule,

@@ -92,19 +92,19 @@ export class DatabaseService {
   public async findGlobalById(id: string): Promise<
     | {
         document: PostModel
-        type: 'Post'
+        type: CollectionRefTypes.Post
       }
     | {
         document: NoteModel
-        type: 'Note'
+        type: CollectionRefTypes.Note
       }
     | {
         document: PageModel
-        type: 'Page'
+        type: CollectionRefTypes.Page
       }
     | {
         document: RecentlyModel
-        type: 'Recently'
+        type: CollectionRefTypes.Recently
       }
     | null
   >
@@ -131,7 +131,13 @@ export class DatabaseService {
     if (!document) return null
     return {
       document,
-      type: (['Post', 'Note', 'Page', 'Recently'] as const)[index],
+
+      type: [
+        CollectionRefTypes.Post,
+        CollectionRefTypes.Note,
+        CollectionRefTypes.Page,
+        CollectionRefTypes.Recently,
+      ][index],
     }
   }
 

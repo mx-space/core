@@ -75,4 +75,10 @@ export const generateDefaultConfig: () => IConfig = () => ({
   authSecurity: {
     disablePasswordLogin: false,
   },
+  ai: {
+    enableAutoGenerateSummary: false,
+    enableSummary: false,
+    openAiEndpoint: '',
+    openAiKey: '',
+  },
 })

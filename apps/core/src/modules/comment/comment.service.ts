@@ -31,7 +31,6 @@ import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar, hasChinese, scheduleManager } from '~/utils'
-import { normalizeRefType } from '~/utils/database.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import { createMockedContextResponse } from '../serverless/mock-response.util'
@@ -169,7 +168,7 @@ export class CommentService implements OnModuleInit {
       if (result) {
         const { type, document } = result
         ref = document as any
-        refType = normalizeRefType(type)
+        refType = type
       }
     }
     if (!ref) {

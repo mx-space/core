@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
@@ -220,7 +221,7 @@ ${text.trim()}
   async renderArticle(id: string) {
     const result = await this.databaseService.findGlobalById(id)
 
-    if (!result || result.type === 'Recently')
+    if (!result || result.type === CollectionRefTypes.Recently)
       throw new BadRequestException('文档不存在')
 
     return {

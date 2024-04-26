@@ -11,7 +11,8 @@ export const camelcaseKeys = <T = any>(obj: any): T => {
 
   if (isPlainObject(obj)) {
     return Object.keys(obj).reduce((result: any, key) => {
-      result[camelcase(key)] = camelcaseKeys(obj[key])
+      const nextKey = isMongoId(key) ? key : camelcase(key)
+      result[nextKey] = camelcaseKeys(obj[key])
       return result
     }, {}) as any
   }
@@ -20,7 +21,9 @@ export const camelcaseKeys = <T = any>(obj: any): T => {
 }
 
 export function camelcase(str: string) {
-  return str.replace(/([-_][a-z])/gi, ($1) => {
+  return str.replace(/^_+/, '').replace(/([-_][a-z])/gi, ($1) => {
     return $1.toUpperCase().replace('-', '').replace('_', '')
   })
 }
+const isMongoId = (id: string) =>
+  id.length === 24 && /^[0-9a-fA-F]{24}$/.test(id)

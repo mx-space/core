@@ -9,3 +9,8 @@ export function Auth() {
 
   return applyDecorators(...decorators)
 }
+
+export const AuthButProd = () => {
+  if (isDev) return () => {}
+  return Auth()
+}

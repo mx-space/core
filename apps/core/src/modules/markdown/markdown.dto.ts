@@ -8,10 +8,8 @@ import {
   ValidateNested,
 } from 'class-validator'
 
+import { TransformBoolean } from '~/common/decorators/transform-boolean.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
-
-const TransformBoolean = () =>
-  Transform(({ value }) => value === '1' || value === 'true')
 
 export class MetaDto {
   @IsString()
