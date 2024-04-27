@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [5.6.3](https://github.com/mx-space/core/compare/v5.6.2...v5.6.3) (2024-04-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.2 ([608e470](https://github.com/mx-space/core/commit/608e470a3c6cf799a06e845a9ed5cb676ee6deb9))
+* **deps:** update dependency inquirer to v9.2.20 ([3fd3070](https://github.com/mx-space/core/commit/3fd3070a23984686baa7d385711dab54db484eae))
+* **deps:** update dependency isbot to v5.1.5 ([0e741f6](https://github.com/mx-space/core/commit/0e741f670cd5e2be3b90e901218b68ffe4588bcf))
+* **deps:** update dependency lru-cache to v10.2.1 ([53fef99](https://github.com/mx-space/core/commit/53fef99df78b35798012e5dfd580498823e799d1))
+
+
+### Features
+
+* add `getLastYearPublication` api ([5a028c8](https://github.com/mx-space/core/commit/5a028c82e37f910320e1c33a63e52045986d580f))
+
+
+
 ## [5.6.2](https://github.com/mx-space/core/compare/v5.6.1...v5.6.2) (2024-04-26)
 
 
