@@ -30,8 +30,9 @@ export abstract class BaseGateway {
       ),
     )
   }
+
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  broadcast(event: BusinessEvents, data: any) {}
 }
 
-export abstract class BroadcastBaseGateway extends BaseGateway {
-  broadcast() {}
-}
+export abstract class BroadcastBaseGateway extends BaseGateway {}

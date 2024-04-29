@@ -147,7 +147,8 @@ export class MarkdownController {
     )
 
     const readable = new Readable()
-    readable.push(await rtzip.generateAsync({ type: 'nodebuffer' }), null)
+    readable.push(await rtzip.generateAsync({ type: 'nodebuffer' }))
+    readable.push(null)
 
     return readable
   }

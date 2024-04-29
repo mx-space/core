@@ -1,3 +1,4 @@
+/* eslint-disable dot-notation */
 // @reference https://github.com/ever-co/ever-gauzy/blob/d36b4f40b1446f3c33d02e0ba00b53a83109d950/packages/core/src/core/context/request-context.ts
 import * as cls from 'cls-hooked'
 import { UnauthorizedException } from '@nestjs/common'
@@ -39,7 +40,7 @@ export class RequestContext {
     const requestContext = RequestContext.currentRequestContext()
 
     if (requestContext) {
-      const user: UserDocument = requestContext.request.user
+      const user: UserDocument = requestContext.request['user']
 
       if (user) {
         return user
@@ -58,8 +59,8 @@ export class RequestContext {
 
     if (requestContext) {
       const isAuthenticated =
-        requestContext.request.isAuthenticated ||
-        requestContext.request.isAuthenticated
+        requestContext.request['isAuthenticated'] ||
+        requestContext.request['isAuthenticated']
 
       return !!isAuthenticated
     }

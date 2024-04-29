@@ -288,8 +288,9 @@ export class SyncService {
             type: item.type,
           })),
         }),
-        null,
       )
+
+      readable.push(null)
     })
 
     return readable

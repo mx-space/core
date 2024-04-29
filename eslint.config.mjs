@@ -57,6 +57,8 @@ export default sxzz(
         'no-duplicate-imports': 'off',
         'unicorn/explicit-length-check': 0,
         'unicorn/prefer-top-level-await': 0,
+        // readable push syntax
+        'unicorn/no-array-push-push': 0,
       },
     },
     {
