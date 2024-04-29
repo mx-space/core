@@ -23,7 +23,6 @@ export default async function handler(ctx: Context) {
 }
 `.trim()
 
-// eslint-disable-next-line import/no-default-export
 export default {
   name: 'geocode_location',
   path: 'geocode_location',

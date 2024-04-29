@@ -8,29 +8,29 @@ export type IRequestAdapter<T = any, Response = undefined> = Readonly<
   (Response extends undefined ? {} : { responseWrapper: Response }) & {
     default: T
 
-    get<P = unknown>(
+    get: <P = unknown>(
       url: string,
       options?: Omit<RequestOptions, 'data'>,
-    ): IAdaptorRequestResponseType<P>
+    ) => IAdaptorRequestResponseType<P>
 
-    post<P = unknown>(
+    post: <P = unknown>(
       url: string,
       options: Partial<RequestOptions>,
-    ): IAdaptorRequestResponseType<P>
+    ) => IAdaptorRequestResponseType<P>
 
-    patch<P = unknown>(
+    patch: <P = unknown>(
       url: string,
       options: Partial<RequestOptions>,
-    ): IAdaptorRequestResponseType<P>
+    ) => IAdaptorRequestResponseType<P>
 
-    delete<P = unknown>(
+    delete: <P = unknown>(
       url: string,
       options?: Omit<RequestOptions, 'data'>,
-    ): IAdaptorRequestResponseType<P>
+    ) => IAdaptorRequestResponseType<P>
 
-    put<P = unknown>(
+    put: <P = unknown>(
       url: string,
       options: Partial<RequestOptions>,
-    ): IAdaptorRequestResponseType<P>
+    ) => IAdaptorRequestResponseType<P>
   }
 >

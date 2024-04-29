@@ -1,10 +1,9 @@
+import { autoBind } from '~/utils/auto-bind'
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
 import type { TLogin, UserModel } from '~/models/user'
 import type { HTTPClient } from '../core'
-
-import { autoBind } from '~/utils/auto-bind'
 
 declare module '../core/client' {
   interface HTTPClient<
@@ -46,7 +45,7 @@ export class UserController<ResponseWrapper> implements IController {
     return this.proxy.login.put<{ token: string }>({
       params: token
         ? {
-            token: `bearer ${token.replace(/^Bearer\s/i, '')}`,
+            token: `bearer ${token.replace(/^bearer\s/i, '')}`,
           }
         : undefined,
     })
@@ -55,7 +54,7 @@ export class UserController<ResponseWrapper> implements IController {
   checkTokenValid(token: string) {
     return this.proxy.check_logged.get<{ ok: number; isGuest: boolean }>({
       params: {
-        token: `bearer ${token.replace(/^Bearer\s/i, '')}`,
+        token: `bearer ${token.replace(/^bearer\s/i, '')}`,
       },
     })
   }

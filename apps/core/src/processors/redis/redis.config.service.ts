@@ -6,15 +6,13 @@
  * @author Innei <https://github.com/innei>
  */
 import { redisStore } from 'cache-manager-ioredis-yet'
+import { Injectable } from '@nestjs/common'
+import { REDIS } from '~/app.config'
 import type {
   CacheModuleOptions,
   CacheOptionsFactory,
 } from '@nestjs/cache-manager'
 import type { RedisOptions } from 'ioredis'
-
-import { Injectable } from '@nestjs/common'
-
-import { REDIS } from '~/app.config'
 
 @Injectable()
 export class RedisConfigService implements CacheOptionsFactory {

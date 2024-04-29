@@ -87,10 +87,11 @@ export class AiController {
       }
     }
 
-    if (!dbStored) {
-      if (!aiConfig.enableSummary || !aiConfig.enableAutoGenerateSummary) {
-        throw new BizException(ErrorCodeEnum.AINotEnabled)
-      }
+    if (
+      !dbStored &&
+      (!aiConfig.enableSummary || !aiConfig.enableAutoGenerateSummary)
+    ) {
+      throw new BizException(ErrorCodeEnum.AINotEnabled)
     }
 
     return dbStored

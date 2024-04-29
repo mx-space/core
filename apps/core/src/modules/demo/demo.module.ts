@@ -1,4 +1,4 @@
-import { resolve } from 'path'
+import { resolve } from 'node:path'
 
 import { Module } from '@nestjs/common'
 import { CronExpression } from '@nestjs/schedule'

@@ -1,7 +1,5 @@
-import { createWriteStream } from 'fs'
-import { resolve } from 'path'
-import type { Readable } from 'stream'
-import type { FileType } from './file.type'
+import { createWriteStream } from 'node:fs'
+import { resolve } from 'node:path'
 
 import {
   BadRequestException,
@@ -16,6 +14,8 @@ import {
 } from '~/constants/path.constant'
 
 import { ConfigsService } from '../configs/configs.service'
+import type { FileType } from './file.type'
+import type { Readable } from 'node:stream'
 
 @Injectable()
 export class FileService {
@@ -80,8 +80,8 @@ export class FileService {
       const path = this.resolveFilePath(type, name)
 
       await fs.rename(path, resolve(STATIC_FILE_TRASH_DIR, name))
-    } catch (e) {
-      this.logger.error('删除文件失败', e)
+    } catch (error) {
+      this.logger.error('删除文件失败', error)
       return null
     }
   }
@@ -102,8 +102,8 @@ export class FileService {
     const newPath = this.resolveFilePath(type, newName)
     try {
       await fs.rename(oldPath, newPath)
-    } catch (e) {
-      this.logger.error('重命名文件失败', e.message)
+    } catch (error) {
+      this.logger.error('重命名文件失败', error.message)
       throw new BadRequestException('重命名文件失败')
     }
   }

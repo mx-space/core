@@ -1,7 +1,6 @@
+import { BadRequestException, Injectable } from '@nestjs/common'
 import type { MultipartFile } from '@fastify/multipart'
 import type { FastifyRequest } from 'fastify'
-
-import { BadRequestException, Injectable } from '@nestjs/common'
 
 @Injectable()
 export class UploadService {

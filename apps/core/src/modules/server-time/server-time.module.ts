@@ -1,9 +1,8 @@
-import type { MiddlewareConsumer, NestModule } from '@nestjs/common'
-
 import { Module, RequestMethod } from '@nestjs/common'
 
 import { ServerTimeController } from './server-time.controller'
 import { trackResponseTimeMiddleware } from './server-time.middleware'
+import type { MiddlewareConsumer, NestModule } from '@nestjs/common'
 
 @Module({
   controllers: [ServerTimeController],

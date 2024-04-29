@@ -1,6 +1,4 @@
-import type { Provider } from '@nestjs/common'
-
-import { forwardRef, Global, Module } from '@nestjs/common'
+import { Global, Module, forwardRef } from '@nestjs/common'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
 import { ThrottlerModule } from '@nestjs/throttler'
@@ -23,6 +21,7 @@ import { TextMacroService } from './helper.macro.service'
 import { TaskQueueService } from './helper.tq.service'
 import { UploadService } from './helper.upload.service'
 import { UrlBuilderService } from './helper.url-builder.service'
+import type { Provider } from '@nestjs/common'
 
 const providers: Provider<any>[] = [
   AssetService,

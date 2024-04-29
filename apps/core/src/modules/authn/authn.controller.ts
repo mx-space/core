@@ -37,8 +37,8 @@ export class AuthnController {
 
   @Post('/authentication')
   @HTTPDecorators.Bypass
-  async newAuthentication(@CurrentUser() user: UserDocument) {
-    return await this.authnService.generateAuthenticationOptions(user)
+  async newAuthentication() {
+    return await this.authnService.generateAuthenticationOptions()
   }
 
   @Post('/authentication/verify')

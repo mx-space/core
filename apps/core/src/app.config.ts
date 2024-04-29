@@ -1,13 +1,12 @@
-/* eslint-disable @typescript-eslint/consistent-type-imports */
-import { readFileSync } from 'fs'
-import path from 'path'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { program } from 'commander'
 import { load as yamlLoad } from 'js-yaml'
 import { machineIdSync } from 'node-machine-id'
-import type { AxiosRequestConfig } from 'axios'
 
 import { isDebugMode, isDev } from './global/env.global'
 import { parseBooleanishValue } from './utils'
+import type { AxiosRequestConfig } from 'axios'
 
 const commander = program
   .option('-p, --port <number>', 'server port')
@@ -166,9 +165,7 @@ export const ENCRYPT = {
   algorithm: argv.encrypt_algorithm || 'aes-256-ecb',
 }
 
-if (ENCRYPT.enable) {
-  if (!ENCRYPT.key || ENCRYPT.key.length !== 64)
-    throw new Error(
-      `你开启了 Key 加密（MX_ENCRYPT_KEY or --encrypt_key），但是 Key 的长度不为 64，当前：${ENCRYPT.key.length}`,
-    )
-}
+if (ENCRYPT.enable && (!ENCRYPT.key || ENCRYPT.key.length !== 64))
+  throw new Error(
+    `你开启了 Key 加密（MX_ENCRYPT_KEY or --encrypt_key），但是 Key 的长度不为 64，当前：${ENCRYPT.key.length}`,
+  )

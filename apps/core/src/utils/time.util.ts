@@ -13,7 +13,7 @@ export const getShortDate = (date: Date) => {
     dateStyle: 'short',
   })
     .format(date)
-    .replace(/\//g, '-')
+    .replaceAll('/', '-')
 }
 /** 2-12-22, 21:31:42 */
 export const getShortDateTime = (date: Date) => {
@@ -23,7 +23,7 @@ export const getShortDateTime = (date: Date) => {
     hour12: false,
   })
     .format(date)
-    .replace(/\//g, '-')
+    .replaceAll('/', '-')
 }
 /** YYYY-MM-DD_HH:mm:ss  */
 export const getMediumDateTime = (date: Date) => {

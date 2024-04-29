@@ -1,11 +1,11 @@
-import { isAsyncFunction } from 'util/types'
-import type { Redis } from 'ioredis'
+import { isAsyncFunction } from 'node:util/types'
 
 import { Injectable } from '@nestjs/common'
 
 import { safeJSONParse } from '~/utils'
 
 import { CacheService } from '../redis/cache.service'
+import type { Redis } from 'ioredis'
 
 type ITask = RedisMap<
   string,
@@ -31,26 +31,26 @@ export class TaskQueueService {
         .then(() => {
           this.tasks.set(name, { status: 'fulfill', updatedAt: new Date() })
         })
-        .catch((err) => {
-          console.debug(err)
+        .catch((error) => {
+          console.debug(error)
 
           this.tasks.set(name, {
             status: 'reject',
             updatedAt: new Date(),
-            message: err.message,
+            message: error.message,
           })
         })
     } else {
       try {
         task()
         this.tasks.set(name, { status: 'fulfill', updatedAt: new Date() })
-      } catch (err) {
-        console.debug(err)
+      } catch (error) {
+        console.debug(error)
 
         this.tasks.set(name, {
           status: 'reject',
           updatedAt: new Date(),
-          message: err.message,
+          message: error.message,
         })
       }
     }

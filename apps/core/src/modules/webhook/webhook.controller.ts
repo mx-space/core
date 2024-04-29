@@ -23,7 +23,7 @@ export class WebhookController {
   }
 
   @Get('/')
-  async getAll() {
+  getAll() {
     return this.service.getAllWebhooks().then((data) => {
       Reflect.deleteProperty(data, 'secret')
       return data
@@ -31,20 +31,20 @@ export class WebhookController {
   }
 
   @Patch('/:id')
-  async update(@Body() body: WebhookDtoPartial, @Param() { id }: MongoIdDto) {
+  update(@Body() body: WebhookDtoPartial, @Param() { id }: MongoIdDto) {
     if (body.events) body.events = this.service.transformEvents(body.events)
 
     return this.service.updateWebhook(id, body)
   }
 
   @Delete('/:id')
-  async delete(@Param() { id }: MongoIdDto) {
+  delete(@Param() { id }: MongoIdDto) {
     return this.service.deleteWebhook(id)
   }
 
   @Get('/:id')
   @HTTPDecorators.Paginator
-  async getEventsByHookId(
+  getEventsByHookId(
     @Param() { id }: MongoIdDto,
 
     @Query() query: PagerDto,
@@ -53,18 +53,18 @@ export class WebhookController {
   }
 
   @Get('/events')
-  async getEventsEnum() {
+  getEventsEnum() {
     return Object.values(BusinessEvents)
   }
 
   @Post('/redispatch/:id')
   @HTTPDecorators.Idempotence()
-  async redispatch(@Param() { id }: MongoIdDto) {
+  redispatch(@Param() { id }: MongoIdDto) {
     return this.service.redispatch(id)
   }
 
   @Delete('/clear/:id')
-  async clear(@Param() { id }: MongoIdDto) {
+  clear(@Param() { id }: MongoIdDto) {
     return this.service.clearDispatchEvents(id)
   }
 }

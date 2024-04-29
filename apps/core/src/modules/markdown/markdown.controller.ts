@@ -1,10 +1,7 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { join } from 'path'
-import { Readable } from 'stream'
+import { join } from 'node:path'
+import { Readable } from 'node:stream'
 import JSZip from 'jszip'
 import { omit } from 'lodash'
-import type { CategoryModel } from '../category/category.model'
-import type { MarkdownYAMLProperty } from './markdown.interface'
 
 import { CacheTTL } from '@nestjs/cache-manager'
 import { Body, Get, Header, Param, Post, Query } from '@nestjs/common'
@@ -17,6 +14,8 @@ import { MongoIdDto } from '~/shared/dto/id.dto'
 
 import { DataListDto, ExportMarkdownQueryDto } from './markdown.dto'
 import { MarkdownService } from './markdown.service'
+import type { MarkdownYAMLProperty } from './markdown.interface'
+import type { CategoryModel } from '../category/category.model'
 
 @ApiController('markdown')
 export class MarkdownController {
@@ -148,8 +147,7 @@ export class MarkdownController {
     )
 
     const readable = new Readable()
-    readable.push(await rtzip.generateAsync({ type: 'nodebuffer' }))
-    readable.push(null)
+    readable.push(await rtzip.generateAsync({ type: 'nodebuffer' }), null)
 
     return readable
   }

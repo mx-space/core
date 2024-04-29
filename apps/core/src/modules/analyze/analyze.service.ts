@@ -1,6 +1,5 @@
 import dayjs from 'dayjs'
 import { merge } from 'lodash'
-import type { PipelineStage } from 'mongoose'
 
 import { Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
@@ -12,6 +11,7 @@ import { getRedisKey } from '~/utils/redis.util'
 
 import { OptionModel } from '../configs/configs.model'
 import { AnalyzeModel } from './analyze.model'
+import type { PipelineStage } from 'mongoose'
 
 @Injectable()
 export class AnalyzeService {
@@ -248,7 +248,7 @@ export class AnalyzeService {
   }
 
   async getRangeOfTopPathVisitor(from?: Date, to?: Date): Promise<any[]> {
-    from = from ?? new Date(new Date().getTime() - 1000 * 24 * 3600 * 7)
+    from = from ?? new Date(Date.now() - 1000 * 24 * 3600 * 7)
     to = to ?? new Date()
 
     const pipeline: PipelineStage[] = [

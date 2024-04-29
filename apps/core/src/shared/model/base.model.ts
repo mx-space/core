@@ -1,11 +1,10 @@
-import { default as mongooseLeanVirtuals } from 'mongoose-lean-virtuals'
+import mongooseLeanVirtuals from 'mongoose-lean-virtuals'
 import Paginate from 'mongoose-paginate-v2'
 
 import { index, modelOptions, plugin } from '@typegoose/typegoose'
 
+import mongooseLeanGetters from 'mongoose-lean-getters'
 import { mongooseLeanId } from './plugins/lean-id'
-
-const mongooseLeanGetters = require('mongoose-lean-getters')
 
 @plugin(mongooseLeanVirtuals)
 @plugin(Paginate)

@@ -1,11 +1,10 @@
-import type { ArticleTypeEnum } from '~/constants/article.constant'
-
 import { Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { SlugTrackerModel } from './slug-tracker.model'
+import type { ArticleTypeEnum } from '~/constants/article.constant'
 
 @Injectable()
 export class SlugTrackerService {

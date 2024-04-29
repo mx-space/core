@@ -1,11 +1,11 @@
 import IORedis from 'ioredis'
-import type { Redis, RedisOptions } from 'ioredis'
 
 import { Logger } from '@nestjs/common'
 
 import { REDIS } from '~/app.config'
 
 import { isTest } from '../global/env.global'
+import type { Redis, RedisOptions } from 'ioredis'
 
 class RedisSubPub {
   public pubClient: Redis
@@ -44,7 +44,7 @@ class RedisSubPub {
 
   private ctc = new WeakMap<Function, Callback>()
 
-  public async subscribe(event: string, callback: (data: any) => void) {
+  public subscribe(event: string, callback: (data: any) => void) {
     const myChannel = this.channelPrefix + event
     this.subClient.subscribe(myChannel)
 
@@ -61,7 +61,7 @@ class RedisSubPub {
     this.subClient.on('message', cb)
   }
 
-  public async unsubscribe(event: string, callback: (data: any) => void) {
+  public unsubscribe(event: string, callback: (data: any) => void) {
     const channel = this.channelPrefix + event
     this.subClient.unsubscribe(channel)
     const cb = this.ctc.get(callback)

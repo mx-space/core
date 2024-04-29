@@ -1,18 +1,19 @@
+/* eslint-disable unicorn/custom-error-definition */
 import { AxiosError } from 'axios'
 import { vi } from 'vitest'
-import type { IRequestAdapter } from '~/interfaces/adapter'
-import type { ClientOptions } from '~/interfaces/client'
-import type { AxiosResponse } from 'axios'
 
 import { axiosAdaptor } from '~/adaptors/axios'
 import { umiAdaptor } from '~/adaptors/umi-request'
 import {
-  allControllerNames,
-  allControllers,
   NoteController,
   PostController,
+  allControllerNames,
+  allControllers,
 } from '~/controllers'
-import { createClient, RequestError } from '~/core'
+import { RequestError, createClient } from '~/core'
+import type { AxiosResponse } from 'axios'
+import type { ClientOptions } from '~/interfaces/client'
+import type { IRequestAdapter } from '~/interfaces/adapter'
 
 const { spyOn } = vi
 
@@ -229,9 +230,9 @@ describe('test client', () => {
 
     try {
       await client.proxy.a.get()
-    } catch (er: any) {
-      expect(er).toBeInstanceOf(RequestError)
-      expect(er.status).toBe(404)
+    } catch (error: any) {
+      expect(error).toBeInstanceOf(RequestError)
+      expect(error.status).toBe(404)
     }
   })
 
@@ -285,10 +286,10 @@ describe('test client', () => {
 
     try {
       await client.proxy.a.get()
-    } catch (er: any) {
-      expect(er).toBeInstanceOf(MyRequestError)
-      expect(er.toResponse).toBeDefined()
-      expect(er.status).toBe(404)
+    } catch (error: any) {
+      expect(error).toBeInstanceOf(MyRequestError)
+      expect(error.toResponse).toBeDefined()
+      expect(error.status).toBe(404)
     }
   })
 })

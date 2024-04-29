@@ -1,5 +1,3 @@
-import type mongoose from 'mongoose'
-
 import {
   Body,
   ForbiddenException,
@@ -26,6 +24,7 @@ import { scheduleManager } from '~/utils'
 import { AuditReasonDto, LinkDto } from './link.dto'
 import { LinkModel, LinkState } from './link.model'
 import { LinkService } from './link.service'
+import type mongoose from 'mongoose'
 
 const paths = ['links', 'friends']
 

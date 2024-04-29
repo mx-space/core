@@ -1,5 +1,4 @@
 import { Cache } from 'cache-manager'
-import type { Redis } from 'ioredis'
 
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { Inject, Injectable, Logger } from '@nestjs/common'
@@ -8,6 +7,7 @@ import { Emitter } from '@socket.io/redis-emitter'
 import { RedisIoAdapterKey } from '~/common/adapters/socket.adapter'
 import { API_CACHE_PREFIX } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils/redis.util'
+import type { Redis } from 'ioredis'
 
 // Cache 客户端管理器
 

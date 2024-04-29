@@ -1,10 +1,7 @@
-import type { UserModel } from './user.model'
-
 import {
   BadRequestException,
   Body,
   Delete,
-  forwardRef,
   Get,
   HttpCode,
   Inject,
@@ -12,6 +9,7 @@ import {
   Patch,
   Post,
   Put,
+  forwardRef,
 } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -32,6 +30,7 @@ import { ConfigsService } from '../configs/configs.service'
 import { LoginDto, UserDto, UserPatchDto } from './user.dto'
 import { UserDocument } from './user.model'
 import { UserService } from './user.service'
+import type { UserModel } from './user.model'
 
 @ApiController(['master', 'user'])
 export class UserController {
@@ -141,25 +140,25 @@ export class UserController {
 
   @Post('/logout')
   @Auth()
-  async singout(@CurrentUserToken() token: string) {
+  singout(@CurrentUserToken() token: string) {
     return this.userService.signout(token)
   }
 
   @Get('/session')
   @Auth()
-  async getAllSession(@CurrentUserToken() token: string) {
+  getAllSession(@CurrentUserToken() token: string) {
     return this.authService.jwtServicePublic.getAllSignSession(token)
   }
 
   @Delete('/session/:tokenId')
   @Auth()
-  async deleteSession(@Param('tokenId') tokenId: string) {
+  deleteSession(@Param('tokenId') tokenId: string) {
     return this.authService.jwtServicePublic.revokeToken(tokenId)
   }
 
   @Delete('/session/all')
   @Auth()
-  async deleteAllSession(@CurrentUserToken() currentToken: string) {
+  deleteAllSession(@CurrentUserToken() currentToken: string) {
     return this.authService.jwtServicePublic.revokeAll([currentToken])
   }
 }

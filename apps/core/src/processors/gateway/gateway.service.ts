@@ -1,16 +1,15 @@
-import type { SocketMetadata } from '~/types/socket-meta'
-import type { RemoteSocket, Socket } from 'socket.io'
-import type {
-  DecorateAcknowledgementsWithMultipleResponses,
-  DefaultEventsMap,
-} from 'socket.io/dist/typed-events'
-
 import { Injectable } from '@nestjs/common'
 
 import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey, safeJSONParse } from '~/utils'
 
 import { CacheService } from '../redis/cache.service'
+import type {
+  DecorateAcknowledgementsWithMultipleResponses,
+  DefaultEventsMap,
+} from 'socket.io/dist/typed-events'
+import type { RemoteSocket, Socket } from 'socket.io'
+import type { SocketMetadata } from '~/types/socket-meta'
 
 export type SocketType =
   | Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>

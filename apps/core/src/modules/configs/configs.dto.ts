@@ -3,8 +3,8 @@ import {
   ArrayUnique,
   IsBoolean,
   IsEmail,
-  IsInt,
   IsIP,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -17,7 +17,6 @@ import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
 
 import { Encrypt } from './configs.encrypt.util'
 import {
-  halfFieldOption,
   JSONSchemaArrayField,
   JSONSchemaHalfGirdPlainField,
   JSONSchemaNumberField,
@@ -25,6 +24,7 @@ import {
   JSONSchemaPlainField,
   JSONSchemaTextAreaField,
   JSONSchemaToggleField,
+  halfFieldOption,
 } from './configs.jsonschema.decorator'
 
 const SecretField = (target: Object, propertyKey: string | symbol) => {
@@ -77,7 +77,7 @@ export class UrlDto {
 
 class MailOption {
   @IsInt()
-  @Transform(({ value: val }) => parseInt(val))
+  @Transform(({ value: val }) => Number.parseInt(val))
   @IsOptional()
   @JSONSchemaNumberField('发件邮箱端口', halfFieldOption)
   port: number

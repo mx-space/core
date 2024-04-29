@@ -1,5 +1,3 @@
-import type { Readable } from 'form-data'
-
 import {
   BadRequestException,
   Delete,
@@ -19,6 +17,7 @@ import { formatByteSize } from '~/utils'
 import { getTodayLogFilePath } from '~/utils/path.util'
 
 import { LogQueryDto, LogTypeDto } from '../health.dto'
+import type { Readable } from 'form-data'
 
 @ApiController('health/log')
 @Auth()
@@ -72,7 +71,7 @@ export class HealthLogController {
       switch (type) {
         case 'pm2':
           _type = file.split('-')[2].split('.')[0]
-          index = parseInt(file.split('-')[3], 10) || 0
+          index = Number.parseInt(file.split('-')[3], 10) || 0
           break
         case 'native':
           _type = 'log'

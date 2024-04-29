@@ -1,9 +1,8 @@
-import type { Db } from 'mongodb'
-
 import {
   NOTE_COLLECTION_NAME,
   POST_COLLECTION_NAME,
 } from '~/constants/db.constant'
+import type { Db } from 'mongodb'
 
 export default (async function v4_6_0__4(db: Db) {
   const countDefault = {

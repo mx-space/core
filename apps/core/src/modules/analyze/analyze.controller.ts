@@ -1,5 +1,4 @@
 import dayjs from 'dayjs'
-import type { PagerDto } from '~/shared/dto/pager.dto'
 
 import { Delete, Get, HttpCode, Query } from '@nestjs/common'
 
@@ -13,6 +12,7 @@ import { getTodayEarly, getWeekStart } from '~/utils/time.util'
 
 import { AnalyzeDto } from './analyze.dto'
 import { AnalyzeService } from './analyze.service'
+import type { PagerDto } from '~/shared/dto/pager.dto'
 
 @ApiController({ path: 'analyze' })
 @Auth()
@@ -28,7 +28,7 @@ export class AnalyzeController {
     const { from, to = new Date(), page = 1, size = 50 } = query
 
     const data = await this.service.getRangeAnalyzeData(from, to, {
-      limit: size | 0,
+      limit: Math.trunc(size),
       page,
     })
 
@@ -42,7 +42,7 @@ export class AnalyzeController {
     const today = new Date()
     const todayEarly = getTodayEarly(today)
     return await this.service.getRangeAnalyzeData(todayEarly, today, {
-      limit: ~~size,
+      limit: Math.trunc(size),
       page,
     })
   }
@@ -64,7 +64,7 @@ export class AnalyzeController {
     const getIpAndPvAggregate = async () => {
       const day = await this.service.getIpAndPvAggregate('day', true)
 
-      const dayData = Array(24)
+      const dayData = Array.from({ length: 24 })
         .fill(undefined)
         .map((v, i) => {
           return [

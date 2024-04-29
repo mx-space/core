@@ -1,6 +1,6 @@
 /* eslint-disable import/order */
-import cluster from 'cluster'
-import { mkdirSync } from 'fs'
+import cluster from 'node:cluster'
+import { mkdirSync } from 'node:fs'
 
 import { Logger } from '@nestjs/common'
 
@@ -60,7 +60,7 @@ function registerGlobal() {
 function nodeEnvInjection() {
   // # https://github.com/kriszyp/cbor-x/blob/master/node-index.js#L16 https://github.com/kriszyp/cbor-x/blob/master/node-index.js#L10
   // # ncc not support runtime require so disable ACCELERATION
-  process.env['CBOR_NATIVE_ACCELERATION_DISABLED'] = 'true'
+  process.env.CBOR_NATIVE_ACCELERATION_DISABLED = 'true'
 }
 
 export function register() {

@@ -1,10 +1,9 @@
-import { readdir, rm } from 'fs/promises'
-import { join } from 'path'
+import { readdir, rm } from 'node:fs/promises'
+import { join } from 'node:path'
 import dayjs from 'dayjs'
 import { mkdirp } from 'mkdirp'
-import type { StoreJWTPayload } from './helper.jwt.service'
 
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
+import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common'
 import { CronExpression } from '@nestjs/schedule'
 
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
@@ -20,6 +19,7 @@ import { getRedisKey } from '~/utils/redis.util'
 import { CacheService } from '../redis/cache.service'
 import { HttpService } from './helper.http.service'
 import { JWTService } from './helper.jwt.service'
+import type { StoreJWTPayload } from './helper.jwt.service'
 
 @Injectable()
 export class CronService {
@@ -77,7 +77,7 @@ export class CronService {
       [
         redis.keys(getRedisKey(RedisKeys.Like, '*')),
         redis.keys(getRedisKey(RedisKeys.Read, '*')),
-      ].map(async (keys) => {
+      ].map((keys) => {
         return keys.then((keys) => keys.map((key) => redis.del(key)))
       }),
     )
@@ -147,9 +147,9 @@ export class CronService {
         )
         this.logger.log(`百度站长提交结果：${JSON.stringify(res.data)}`)
         return res.data
-      } catch (e) {
-        this.logger.error(`百度推送错误：${e.message}`)
-        throw e
+      } catch (error) {
+        this.logger.error(`百度推送错误：${error.message}`)
+        throw error
       }
     }
     return null

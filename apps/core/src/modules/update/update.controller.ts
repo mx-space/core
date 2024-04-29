@@ -1,10 +1,9 @@
 import { isSemVer } from 'class-validator'
-import { catchError, lastValueFrom, Observable } from 'rxjs'
+import { Observable, catchError, lastValueFrom } from 'rxjs'
 import { lt, major, minor } from 'semver'
 
 import { Query, Sse } from '@nestjs/common'
 
-import { dashboard } from '~/../package.json'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
@@ -12,6 +11,7 @@ import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 
 import { UpdateAdminDto } from './update.dto'
 import { UpdateService } from './update.service'
+import { dashboard } from '~/../package.json'
 
 @ApiController('update')
 @Auth()
@@ -61,10 +61,10 @@ export class UpdateController {
         // 3. fetch latest admin version
         const latestVersion = await this.service
           .getLatestAdminVersion()
-          .catch((err) => {
+          .catch((error) => {
             observer.next(
               chalk.red(
-                `Fetching latest admin version error: ${err.message}\n`,
+                `Fetching latest admin version error: ${error.message}\n`,
               ),
             )
             observer.complete()

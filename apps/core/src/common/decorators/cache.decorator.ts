@@ -34,7 +34,7 @@ export function HttpCache(option: ICacheOption): MethodDecorator {
     if (key) {
       CacheKey(key)(descriptor.value)
     }
-    if (typeof ttl === 'number' && !isNaN(ttl)) {
+    if (typeof ttl === 'number' && !Number.isNaN(ttl)) {
       CacheTTL(ttl)(descriptor.value)
     }
     return descriptor

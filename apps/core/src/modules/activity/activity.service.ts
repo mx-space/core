@@ -1,25 +1,12 @@
 import { omit, pick, uniqBy } from 'lodash'
 import { Types } from 'mongoose'
-import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import type { Collection } from 'mongodb'
-import type { Socket } from 'socket.io'
-import type { NoteModel } from '../note/note.model'
-import type { PageModel } from '../page/page.model'
-import type { PostModel } from '../post/post.model'
-import type { RecentlyModel } from '../recently/recently.model'
-import type {
-  ActivityLikePayload,
-  ActivityLikeSupportType,
-  ActivityPresence,
-} from './activity.interface'
-import type { UpdatePresenceDto } from './dtos/presence.dto'
 
 import {
   BadRequestException,
-  forwardRef,
   Inject,
   Injectable,
   Logger,
+  forwardRef,
 } from '@nestjs/common'
 
 import { ArticleTypeEnum } from '~/constants/article.constant'
@@ -50,6 +37,19 @@ import {
   isValidRoomName,
   parseRoomName,
 } from './activity.util'
+import type { UpdatePresenceDto } from './dtos/presence.dto'
+import type {
+  ActivityLikePayload,
+  ActivityLikeSupportType,
+  ActivityPresence,
+} from './activity.interface'
+import type { RecentlyModel } from '../recently/recently.model'
+import type { PostModel } from '../post/post.model'
+import type { PageModel } from '../page/page.model'
+import type { NoteModel } from '../note/note.model'
+import type { Socket } from 'socket.io'
+import type { Collection } from 'mongodb'
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 
 declare module '~/types/socket-meta' {
   interface SocketMetadata {
@@ -285,8 +285,8 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       if (!res) {
         throw new BadRequestException('你已经支持过啦！')
       }
-    } catch (e: any) {
-      throw new BadRequestException(e)
+    } catch (error: any) {
+      throw new BadRequestException(error)
     }
 
     const refModel = await this.databaseService
@@ -389,6 +389,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       socketMeta
         .filter((x) => x?.presence)
         .map((x) => {
+          // eslint-disable-next-line array-callback-return
           if (!x.presence) return
 
           return {
@@ -639,7 +640,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
    * 获取过去一年的文章发布
    */
   async getLastYearPublication() {
-    const $gte = new Date(new Date().getTime() - 365 * 24 * 60 * 60 * 1000)
+    const $gte = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
     const [posts, notes] = await Promise.all([
       this.postService.model
         .find({

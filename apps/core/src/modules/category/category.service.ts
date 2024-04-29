@@ -1,13 +1,10 @@
 import { omit } from 'lodash'
-import type { DocumentType } from '@typegoose/typegoose'
-import type { FilterQuery } from 'mongoose'
-import type { PostModel } from '../post/post.model'
 
 import {
   BadRequestException,
-  forwardRef,
   Inject,
   Injectable,
+  forwardRef,
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
@@ -23,6 +20,9 @@ import { scheduleManager } from '~/utils'
 import { PostService } from '../post/post.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { CategoryModel, CategoryType } from './category.model'
+import type { PostModel } from '../post/post.model'
+import type { FilterQuery } from 'mongoose'
+import type { DocumentType } from '@typegoose/typegoose'
 
 @Injectable()
 export class CategoryService {
@@ -58,8 +58,8 @@ export class CategoryService {
       }),
     )
 
-    for (let i = 0; i < data.length; i++) {
-      Reflect.set(data[i], 'count', counts[i])
+    for (const [i, datum] of data.entries()) {
+      Reflect.set(datum, 'count', counts[i])
     }
 
     return data
@@ -101,7 +101,7 @@ export class CategoryService {
         { lean: true },
       )
       .populate('category')
-    if (!posts.length) {
+    if (posts.length === 0) {
       throw new CannotFindException()
     }
     return posts.map(({ _id, title, slug, category, created }) => ({
@@ -207,11 +207,9 @@ export class CategoryService {
 
   private clearCache() {
     return scheduleManager.batch(() =>
-      Promise.all([
-        this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
-          scope: EventScope.TO_SYSTEM,
-        }),
-      ]),
+      this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+        scope: EventScope.TO_SYSTEM,
+      }),
     )
   }
 

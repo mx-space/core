@@ -1,4 +1,4 @@
-import { readFile } from 'fs/promises'
+import { readFile } from 'node:fs/promises'
 import { Observable } from 'rxjs'
 
 import { BadRequestException, Get, Query, Sse } from '@nestjs/common'

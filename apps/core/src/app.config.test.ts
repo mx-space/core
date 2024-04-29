@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-imports */
-
 import type { AxiosRequestConfig } from 'axios'
 
 export const PORT = process.env.PORT || 2333

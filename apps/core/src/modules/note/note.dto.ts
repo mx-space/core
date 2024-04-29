@@ -23,7 +23,7 @@ export class NoteQueryDto extends PagerDto {
   @IsOptional()
   @IsIn([1, -1])
   @ValidateIf((o) => o.sortBy)
-  @Transform(({ value: v }) => v | 0)
+  @Transform(({ value: v }) => Math.trunc(v))
   sortOrder?: 1 | -1
 }
 
@@ -45,7 +45,7 @@ export class ListQueryDto {
   @IsNumber()
   @Max(20)
   @Min(1)
-  @Transform(({ value: v }) => parseInt(v))
+  @Transform(({ value: v }) => Number.parseInt(v))
   @IsOptional()
   size: number
 }
@@ -54,6 +54,6 @@ export class NidType {
   @IsInt()
   @Min(1)
   @IsDefined()
-  @Transform(({ value: val }) => parseInt(val))
+  @Transform(({ value: val }) => Number.parseInt(val))
   nid: number
 }

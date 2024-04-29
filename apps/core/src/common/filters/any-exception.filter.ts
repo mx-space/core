@@ -1,7 +1,4 @@
-import { resolve } from 'path'
-import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
-import type { FastifyReply, FastifyRequest } from 'fastify'
-import type { WriteStream } from 'fs'
+import { resolve } from 'node:path'
 
 import {
   Catch,
@@ -24,6 +21,9 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getIp } from '../../utils/ip.util'
 import { BizException } from '../exceptions/biz.exception'
 import { LoggingInterceptor } from '../interceptors/logging.interceptor'
+import type { WriteStream } from 'node:fs'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 
 type myError = {
   readonly status: number
@@ -50,11 +50,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return
     }
     process.on('unhandledRejection', (reason: any) => {
-      console.error('unhandledRejection: ', reason)
+      console.error('unhandledRejection:', reason)
     })
 
     process.on('uncaughtException', (err) => {
-      console.error('uncaughtException: ', err)
+      console.error('uncaughtException:', err)
       this.eventManager.broadcast(
         EventBusEvents.SystemException,
         { message: err?.message ?? err, stack: err?.stack || '' },

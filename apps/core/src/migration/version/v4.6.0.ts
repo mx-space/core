@@ -1,5 +1,4 @@
 // patch for version lower than v4.6.0
-import type { Db } from 'mongodb'
 
 import {
   CATEGORY_COLLECTION_NAME,
@@ -10,6 +9,7 @@ import {
   TOPIC_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { md5 } from '~/utils'
+import type { Db } from 'mongodb'
 
 export default (async function v4_6_0(db: Db) {
   await Promise.all([

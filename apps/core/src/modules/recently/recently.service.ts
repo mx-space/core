@@ -3,10 +3,10 @@ import pluralize from 'pluralize'
 
 import {
   BadRequestException,
-  forwardRef,
   Inject,
   Injectable,
   UnprocessableEntityException,
+  forwardRef,
 } from '@nestjs/common'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -138,7 +138,7 @@ export class RecentlyService {
 
     for (const refType in refMap) {
       const refIds = refMap[refType as CollectionRefTypes]
-      if (!refIds.length) {
+      if (refIds.length === 0) {
         continue
       }
       const cursor = await this.databaseService.db

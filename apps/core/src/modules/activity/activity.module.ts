@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common'
+import { Module, forwardRef } from '@nestjs/common'
 
 import { GatewayModule } from '~/processors/gateway/gateway.module'
 

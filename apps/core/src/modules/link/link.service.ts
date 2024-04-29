@@ -225,11 +225,11 @@ export class LinkService {
               id,
             }
           })
-          .catch((err) => {
+          .catch((error) => {
             return {
               id,
-              status: err.response?.status || 'ERROR',
-              message: err.message,
+              status: error.response?.status || 'ERROR',
+              message: error.message,
             }
           })
       }),

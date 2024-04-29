@@ -8,7 +8,7 @@ import {
   ValidateNested,
 } from 'class-validator'
 
-import { prop, PropType } from '@typegoose/typegoose'
+import { PropType, prop } from '@typegoose/typegoose'
 
 import { BaseCommentIndexModel } from './base-comment.model'
 import { ImageModel } from './image.model'
@@ -34,7 +34,7 @@ export class WriteBaseModel extends BaseCommentIndexModel {
 
   @IsOptional()
   @IsDate()
-  @Transform(({ value }) => (value ? new Date(value) : void 0))
+  @Transform(({ value }) => (value ? new Date(value) : undefined))
   @prop()
   declare created?: Date
 

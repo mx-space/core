@@ -1,7 +1,6 @@
-import { inspect } from 'util'
+import { inspect } from 'node:util'
 import axios from 'axios'
 import axiosRetry, { exponentialDelay } from 'axios-retry'
-import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 import { Injectable, Logger } from '@nestjs/common'
 
@@ -11,6 +10,7 @@ import { getRedisKey } from '~/utils'
 
 import { version } from '../../../package.json'
 import { CacheService } from '../redis/cache.service'
+import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 const DEFAULT_UA = `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 MX-Space/${version}`
 declare module 'axios' {
@@ -132,7 +132,6 @@ data: ${this.prettyStringify(req.data)}`,
         res.config.__requestEndedAt = endAt
         res.config.__requestDuration =
           res.config?.__requestStartedAt ??
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           endAt - res.config!.__requestStartedAt!
         this.logger.log(
           `HTTP Response ${`${res.config.baseURL || ''}${

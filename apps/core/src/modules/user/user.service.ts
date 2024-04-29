@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { compareSync } from 'bcryptjs'
-import type { UserDocument } from './user.model'
 
 import {
   BadRequestException,
@@ -21,6 +19,7 @@ import { getAvatar, sleep } from '~/utils'
 
 import { AuthService } from '../auth/auth.service'
 import { UserModel } from './user.model'
+import type { UserDocument } from './user.model'
 
 @Injectable()
 export class UserService {
@@ -147,10 +146,10 @@ export class UserService {
   }
 
   async getSiteMasterOrMocked() {
-    return await this.getMasterInfo().catch((err) => {
+    return await this.getMasterInfo().catch((error) => {
       if (
-        err instanceof BusinessException &&
-        err.bizCode === ErrorCodeEnum.MasterLost
+        error instanceof BusinessException &&
+        error.bizCode === ErrorCodeEnum.MasterLost
       ) {
         return {
           id: '1',
@@ -161,7 +160,7 @@ export class UserService {
           created: new Date('2021/1/1 10:00:11'),
         } as UserModel
       }
-      throw err
+      throw error
     })
   }
 }

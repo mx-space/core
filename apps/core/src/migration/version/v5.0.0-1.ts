@@ -2,7 +2,7 @@ import { NOTE_COLLECTION_NAME } from '~/constants/db.constant'
 
 import { defineMigration } from '../helper'
 
-export default defineMigration('v5.0.0-1', async (db, connection) => {
+export default defineMigration('v5.0.0-1', async (db) => {
   try {
     await Promise.all([
       db.collection(NOTE_COLLECTION_NAME).updateMany(
@@ -29,9 +29,9 @@ export default defineMigration('v5.0.0-1', async (db, connection) => {
         },
       },
     )
-  } catch (err) {
+  } catch (error) {
     console.error('v5.0.0-1 migration failed')
 
-    throw err
+    throw error
   }
 })

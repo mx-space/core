@@ -1,6 +1,5 @@
 import OpenAI from 'openai'
 import removeMdCodeblock from 'remove-md-codeblock'
-import type { PagerDto } from '~/shared/dto/pager.dto'
 
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
@@ -17,6 +16,7 @@ import { md5 } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
 import { AISummaryModel } from './ai-summary.model'
+import type { PagerDto } from '~/shared/dto/pager.dto'
 
 @Injectable()
 export class AiService {
@@ -83,7 +83,7 @@ export class AiService {
 
       this.cachedTaskId2AiPromise.set(taskId, taskPromise)
       return await taskPromise
-      // eslint-disable-next-line no-inner-declarations
+
       async function handle(this: AiService, id: string, text: string) {
         // 等待 30s
         await redis.set(taskId, 'processing', 'EX', 30)
@@ -119,10 +119,12 @@ CONCISE SUMMARY:`,
 
         return doc
       }
-    } catch (er) {
-      this.logger.error(`OpenAI 在处理文章 ${articleId} 时出错：${er.message}`)
+    } catch (error) {
+      this.logger.error(
+        `OpenAI 在处理文章 ${articleId} 时出错：${error.message}`,
+      )
 
-      throw new BizException(ErrorCodeEnum.AIException, er.message)
+      throw new BizException(ErrorCodeEnum.AIException, error.message)
     } finally {
       this.cachedTaskId2AiPromise.delete(taskId)
     }

@@ -12,7 +12,7 @@ export const registerJSONGlobal = () => {
   JSON.safeParse = (...rest) => {
     try {
       return JSON5.parse(...rest)
-    } catch (error) {
+    } catch {
       return null
     }
   }

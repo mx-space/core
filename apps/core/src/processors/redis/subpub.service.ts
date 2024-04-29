@@ -4,15 +4,15 @@ import { redisSubPub } from '~/utils/redis-subpub.util'
 
 @Injectable()
 export class SubPubBridgeService {
-  public async publish(event: string, data: any) {
+  public publish(event: string, data: any) {
     return redisSubPub.publish(event, data)
   }
 
-  public async subscribe(event: string, callback: (data: any) => void) {
+  public subscribe(event: string, callback: (data: any) => void) {
     return redisSubPub.subscribe(event, callback)
   }
 
-  public async unsubscribe(event: string, callback: (data: any) => void) {
+  public unsubscribe(event: string, callback: (data: any) => void) {
     return redisSubPub.unsubscribe(event, callback)
   }
 }

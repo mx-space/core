@@ -1,7 +1,7 @@
 import {
+  ValidatorConstraint,
   isString,
   registerDecorator,
-  ValidatorConstraint,
 } from 'class-validator'
 import { isNil } from 'lodash'
 import type {

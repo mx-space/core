@@ -49,7 +49,7 @@ export class BarkPushService {
     return response.data
   }
 
-  throttlePush = throttle(async (options: BarkPushOptions) => {
+  throttlePush = throttle((options: BarkPushOptions) => {
     this.push(options)
   }, 1000 * 600)
 }

@@ -4,7 +4,6 @@ import {
   BadRequestException,
   Body,
   Delete,
-  forwardRef,
   Get,
   HttpCode,
   Inject,
@@ -13,6 +12,7 @@ import {
   Post,
   Put,
   Query,
+  forwardRef,
 } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'

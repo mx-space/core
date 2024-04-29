@@ -1,3 +1,4 @@
+import { autoBind } from '~/utils/auto-bind'
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { PaginationParams } from '~/interfaces/params'
@@ -6,8 +7,6 @@ import type { PaginateResult } from '~/models/base'
 import type { CommentModel } from '~/models/comment'
 import type { HTTPClient } from '../core'
 import type { CommentDto } from '../dtos/comment'
-
-import { autoBind } from '~/utils/auto-bind'
 
 declare module '../core/client' {
   interface HTTPClient<

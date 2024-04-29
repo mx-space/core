@@ -1,4 +1,4 @@
-import cluster from 'cluster'
+import cluster from 'node:cluster'
 
 import { Cron } from '@nestjs/schedule'
 

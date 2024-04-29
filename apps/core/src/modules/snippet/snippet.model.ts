@@ -40,7 +40,7 @@ export enum SnippetType {
 @index({ name: 1, reference: 1 })
 @index({ type: 1 })
 export class SnippetModel extends BaseModel {
-  @prop({ default: SnippetType['JSON'] })
+  @prop({ default: SnippetType.JSON })
   @IsEnum(SnippetType)
   type: SnippetType
 
@@ -57,7 +57,7 @@ export class SnippetModel extends BaseModel {
 
   @prop({ require: true, trim: true })
   @IsNotEmpty()
-  @Matches(/^[a-zA-Z0-9_-]{1,30}$/, {
+  @Matches(/^[\w-]{1,30}$/, {
     message: 'name 只能使用英文字母和数字下划线且不超过 30 个字符',
   })
   name: string

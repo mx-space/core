@@ -1,6 +1,6 @@
-import { existsSync, statSync } from 'fs'
-import { readdir, readFile, rm, writeFile } from 'fs/promises'
-import { join, resolve } from 'path'
+import { existsSync, statSync } from 'node:fs'
+import { readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { join, resolve } from 'node:path'
 import { flatten } from 'lodash'
 import { mkdirp } from 'mkdirp'
 
@@ -114,26 +114,26 @@ export class BackupService {
 
       // 打包数据目录
 
-      const flags = excludeFolders.map((item) => ['--exclude', item]).flat(1)
+      const flags = excludeFolders.flatMap((item) => ['--exclude', item])
       cd(DATA_DIR)
       await rm(join(DATA_DIR, 'backup_data'), { recursive: true, force: true })
       await rm(join(DATA_DIR, 'temp_copy_need'), {
         recursive: true,
         force: true,
       })
-      // eslint-disable-next-line no-empty
+
       await $`rsync -a . ./temp_copy_need --exclude temp_copy_need ${flags} && mv temp_copy_need backup_data && zip -r ${join(
         backupDirPath,
         `backup-${dateDir}`,
       )} ./backup_data && rm -rf backup_data`
 
       this.logger.log('--> 备份成功')
-    } catch (e) {
+    } catch (error) {
       this.logger.error(
-        `--> 备份失败，请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致，${e.message}` ||
-          e.stderr,
+        `--> 备份失败，请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致，${error.message}` ||
+          error.stderr,
       )
-      throw e
+      throw error
     }
     const path = join(backupDirPath, `backup-${dateDir}.zip`)
 
@@ -206,9 +206,9 @@ export class BackupService {
       await $`mongorestore --uri ${MONGO_DB.customConnectionString || MONGO_DB.uri} -d ${MONGO_DB.dbName} ./mx-space --drop  >/dev/null 2>&1`
 
       await migrateDatabase()
-    } catch (e) {
-      this.logger.error(e)
-      throw e
+    } catch (error) {
+      this.logger.error(error)
+      throw error
     } finally {
       await rm(join(dirPath, 'mx-space'), { recursive: true, force: true })
     }
@@ -238,13 +238,13 @@ export class BackupService {
         await Promise.all(
           Object.entries(pkg.dependencies).map(([name, version]) => {
             this.logger.log(`--> 安装依赖 ${name}@${version}`)
-            return installPKG(`${name}@${version}`, DATA_DIR).catch((er) => {
-              this.logger.error(`--> 依赖安装失败：${er.message}`)
+            return installPKG(`${name}@${version}`, DATA_DIR).catch((error) => {
+              this.logger.error(`--> 依赖安装失败：${error.message}`)
             })
           }),
         )
       }
-    } catch (er) {}
+    } catch {}
 
     await Promise.all([
       this.cacheService.cleanAllRedisKey(),
@@ -316,9 +316,9 @@ export class BackupService {
       })
 
       this.logger.log('--> 开始上传到 S3')
-      await s3.send(command).catch((err) => {
+      await s3.send(command).catch((error) => {
         this.logger.error('--> 上传失败了')
-        throw err
+        throw error
       })
       this.logger.log('--> 上传成功')
     })

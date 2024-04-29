@@ -1,6 +1,6 @@
 #!env node
 // register global
-import cluster from 'cluster'
+import cluster from 'node:cluster'
 
 import { logger } from './global/consola.global'
 import { isMainCluster } from './global/env.global'
@@ -41,7 +41,10 @@ async function main() {
   }
 
   if (CLUSTER.enable) {
-    Cluster.register(parseInt(CLUSTER.workers) || os.cpus().length, bootstrap)
+    Cluster.register(
+      Number.parseInt(CLUSTER.workers) || os.cpus().length,
+      bootstrap,
+    )
   } else {
     bootstrap()
   }

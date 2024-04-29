@@ -1,10 +1,10 @@
-import cluster from 'cluster'
-import os from 'os'
+import cluster from 'node:cluster'
+import os from 'node:os'
 
 import { logger } from './global/consola.global'
 
-export class Cluster {
-  static register(workers: number, callback: Function): void {
+export const Cluster = {
+  register(workers: number, callback: Function): void {
     if (cluster.isPrimary) {
       const cpus = os.cpus().length
 
@@ -38,7 +38,7 @@ export class Cluster {
       cluster.on('online', (worker) => {
         logger.info('Worker %s is online', worker.process.pid)
       })
-      cluster.on('exit', (worker, code, signal) => {
+      cluster.on('exit', (worker, code, _signal) => {
         if (code !== 0) {
           logger.info(`Worker ${worker.process.pid} died. Restarting`)
           cluster.fork()
@@ -47,5 +47,5 @@ export class Cluster {
     } else {
       callback()
     }
-  }
+  },
 }

@@ -29,7 +29,7 @@ export class PageModel extends WriteBaseModel {
   @IsInt()
   @Min(0)
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }) => Number.parseInt(value))
   order!: number
 }
 

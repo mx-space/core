@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common'
+import { Module, forwardRef } from '@nestjs/common'
 
 import { NoteModule } from '../note/note.module'
 import { PageModule } from '../page/page.module'

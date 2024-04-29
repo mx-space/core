@@ -1,6 +1,6 @@
 // @ts-ignore
 import { defaultMetadataStorage } from 'class-transformer/cjs/storage.js'
-import { getMetadataStorage, ValidationTypes } from 'class-validator'
+import { ValidationTypes, getMetadataStorage } from 'class-validator'
 import { targetConstructorToSchema } from 'class-validator-jsonschema'
 import type { ISchemaConverters } from 'class-validator-jsonschema/build/defaultConverters'
 import type { IOptions } from 'class-validator-jsonschema/build/options'

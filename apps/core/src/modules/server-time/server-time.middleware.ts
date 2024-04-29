@@ -1,4 +1,4 @@
-import type { IncomingMessage, ServerResponse } from 'http'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 
 export async function trackResponseTimeMiddleware(
   req: IncomingMessage,
@@ -6,9 +6,9 @@ export async function trackResponseTimeMiddleware(
   next: Function,
 ) {
   const requestTimeFromHeader = Number(req.headers['x-request-time'])
-  const now = !isNaN(requestTimeFromHeader)
+  const now = !Number.isNaN(requestTimeFromHeader)
     ? requestTimeFromHeader
-    : new Date().getTime()
+    : Date.now()
 
   res.setHeader('Content-Type', 'application/json')
   // cors
@@ -21,7 +21,7 @@ export async function trackResponseTimeMiddleware(
   res.write(
     JSON.stringify({
       t2: now,
-      t3: new Date().getTime(),
+      t3: Date.now(),
     }),
   )
 

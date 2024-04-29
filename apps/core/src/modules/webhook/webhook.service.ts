@@ -1,7 +1,4 @@
-import { createHmac } from 'crypto'
-import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
-import type { PagerDto } from '~/shared/dto/pager.dto'
+import { createHmac } from 'node:crypto'
 
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
@@ -13,6 +10,9 @@ import { InjectModel } from '~/transformers/model.transformer'
 
 import { WebhookEventModel } from './webhook-event.model'
 import { WebhookModel } from './webhook.model'
+import type { PagerDto } from '~/shared/dto/pager.dto'
+import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 
 const ACCEPT_EVENTS = new Set(Object.values(BusinessEvents))
 
@@ -86,7 +86,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
       return await this.sendWebhookEvent('health_check', {}, document)
   }
 
-  async getAllWebhooks() {
+  getAllWebhooks() {
     return this.webhookModel.find().lean()
   }
 
@@ -161,16 +161,16 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
         webhookEvent.success = true
         await webhookEvent.save()
       })
-      .catch((err) => {
-        if (!err.response) {
+      .catch((error) => {
+        if (!error.response) {
           return
         }
         webhookEvent.response = JSON.stringify({
-          headers: err.response.headers,
-          data: err.response.data,
+          headers: error.response.headers,
+          data: error.response.data,
           timestamp: Date.now(),
         })
-        webhookEvent.status = err.response.status
+        webhookEvent.status = error.response.status
         webhookEvent.success = false
         webhookEvent.save()
       })
@@ -208,7 +208,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     )
   }
 
-  async clearDispatchEvents(hookId: string) {
+  clearDispatchEvents(hookId: string) {
     return this.webhookEventModel.deleteMany({
       hookId,
     })

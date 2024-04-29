@@ -1,6 +1,6 @@
 import Paginate from 'mongoose-paginate-v2'
 
-import { modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
+import { Ref, modelOptions, plugin, prop } from '@typegoose/typegoose'
 
 import { WEBHOOK_EVENT_COLLECTION_NAME } from '~/constants/db.constant'
 import { mongooseLeanId } from '~/shared/model/plugins/lean-id'

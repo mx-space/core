@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/prefer-literal-enum-member */
 export enum BusinessEvents {
   GATEWAY_CONNECT = 'GATEWAY_CONNECT',
   GATEWAY_DISCONNECT = 'GATEWAY_DISCONNECT',
@@ -57,7 +58,6 @@ export enum BusinessEvents {
 
   ARTICLE_READ_COUNT_UPDATE = 'ARTICLE_READ_COUNT_UPDATE',
 }
-
 export enum EventScope {
   TO_VISITOR = 1 << 0,
   TO_ADMIN = 1 << 1,

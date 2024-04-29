@@ -1,11 +1,10 @@
-import type { ExecutionContext } from '@nestjs/common'
-import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
-
 import { Injectable } from '@nestjs/common'
 import { ThrottlerGuard } from '@nestjs/throttler'
 
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { getIp } from '~/utils'
+import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
+import type { ExecutionContext } from '@nestjs/common'
 
 @Injectable()
 export class ExtendThrottlerGuard extends ThrottlerGuard {

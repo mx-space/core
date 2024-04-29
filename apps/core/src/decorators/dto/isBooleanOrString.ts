@@ -1,8 +1,7 @@
 import { isString } from 'class-validator'
 import { isBoolean, merge } from 'lodash'
-import type { ValidationOptions } from 'class-validator'
-
 import { validatorFactory } from '../simpleValidatorFactory'
+import type { ValidationOptions } from 'class-validator'
 
 export function IsBooleanOrString(validationOptions?: ValidationOptions) {
   return validatorFactory((value) => isBoolean(value) || isString(value))(

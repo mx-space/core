@@ -3,12 +3,6 @@
 import { isNil, pick } from 'lodash'
 import { spawn } from 'node-pty'
 import { Socket } from 'socket.io'
-import type {
-  GatewayMetadata,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-} from '@nestjs/websockets'
-import type { IPty } from 'node-pty'
 
 import { nanoid as N } from '@mx-space/external'
 import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
@@ -23,6 +17,12 @@ import { createAuthGateway } from '~/processors/gateway/shared/auth.gateway'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getIp, getRedisKey } from '~/utils'
+import type { IPty } from 'node-pty'
+import type {
+  GatewayMetadata,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets'
 
 const { nanoid } = N
 

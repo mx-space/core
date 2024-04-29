@@ -15,7 +15,7 @@ export class IntIdOrMongoIdDto {
       return value
     }
     const nid = +value
-    if (!isNaN(nid)) {
+    if (!Number.isNaN(nid)) {
       return nid
     }
     throw new UnprocessableEntityException('Invalid id')

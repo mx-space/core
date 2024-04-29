@@ -1,11 +1,10 @@
-import assert from 'assert'
-import { createHmac, timingSafeEqual } from 'crypto'
-import { EventEmitter } from 'events'
-import type { IncomingMessage, ServerResponse } from 'http'
+import assert from 'node:assert'
+import { createHmac, timingSafeEqual } from 'node:crypto'
+import { EventEmitter } from 'node:events'
+import { InvalidSignatureError } from './error'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { BusinessEvents } from './event.enum'
 import type { ExtendedEventEmitter, GenericEvent } from './types'
-
-import { InvalidSignatureError } from './error'
 
 interface CreateHandlerOptions {
   secret: string
@@ -35,8 +34,8 @@ export const createHandler = (options: CreateHandlerOptions): Handler => {
       res.statusCode = 200
       res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify({ ok: 1 }))
-    } catch (err) {
-      if (err instanceof InvalidSignatureError) {
+    } catch (error) {
+      if (error instanceof InvalidSignatureError) {
         handler.emitter.emit('error', new Error('invalidate signature'))
 
         res.statusCode = 400
@@ -45,7 +44,7 @@ export const createHandler = (options: CreateHandlerOptions): Handler => {
         return
       }
       res.statusCode = 500
-      res.end(JSON.stringify({ ok: 0, message: err.message }))
+      res.end(JSON.stringify({ ok: 0, message: error.message }))
     }
   }
 

@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import crypto from 'node:crypto'
 
 import { ENCRYPT } from '~/app.config'
 
@@ -52,8 +52,11 @@ export class EncryptUtil {
       '',
     )
     cipher.setAutoPadding(true)
-    cipherChunks.push(cipher.update(data, clearEncoding, cipherEncoding))
-    cipherChunks.push(cipher.final(cipherEncoding))
+    cipherChunks.push(
+      cipher.update(data, clearEncoding, cipherEncoding),
+      cipher.final(cipherEncoding),
+    )
+
     return EncryptUtil.encryptStringPadding + cipherChunks.join('')
   }
 
@@ -89,8 +92,9 @@ export class EncryptUtil {
         cipherEncoding,
         clearEncoding,
       ),
+      decipher.final(clearEncoding),
     )
-    cipherChunks.push(decipher.final(clearEncoding))
+
     return cipherChunks.join('')
   }
 }

@@ -1,6 +1,5 @@
-import type { IConfig } from './configs.interface'
-
 import { DEMO_MODE } from '~/app.config'
+import type { IConfig } from './configs.interface'
 
 export const generateDefaultConfig: () => IConfig = () => ({
   seo: {

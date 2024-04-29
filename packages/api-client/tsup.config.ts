@@ -1,5 +1,5 @@
-import { readdirSync } from 'fs'
-import path from 'path'
+import { readdirSync } from 'node:fs'
+import path from 'node:path'
 import { defineConfig } from 'tsup'
 
 const __dirname = new URL(import.meta.url).pathname.replace(/\/[^/]*$/, '')

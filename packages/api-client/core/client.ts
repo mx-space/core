@@ -1,3 +1,9 @@
+import { isPlainObject } from '~/utils'
+import { camelcaseKeys } from '~/utils/camelcase-keys'
+import { resolveFullPath } from '~/utils/path'
+import { allControllerNames } from '../controllers'
+import { attachRequestMethod } from './attach-request'
+import { RequestError } from './error'
 import type {
   IAdaptorRequestResponseType,
   IRequestAdapter,
@@ -7,14 +13,6 @@ import type { IController } from '~/interfaces/controller'
 import type { RequestOptions } from '~/interfaces/instance'
 import type { IRequestHandler, Method } from '~/interfaces/request'
 import type { Class } from '~/interfaces/types'
-
-import { isPlainObject } from '~/utils'
-import { camelcaseKeys } from '~/utils/camelcase-keys'
-import { resolveFullPath } from '~/utils/path'
-
-import { allControllerNames } from '../controllers'
-import { attachRequestMethod } from './attach-request'
-import { RequestError } from './error'
 
 const methodPrefix = '_$'
 export type { HTTPClient }
@@ -113,7 +111,6 @@ class HTTPClient<
   }
 
   private buildRoute(manager: this): () => IRequestHandler<ResponseWrapper> {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     const noop = () => {}
     const methods = ['get', 'post', 'delete', 'patch', 'put']
     const reflectors = [
@@ -154,26 +151,27 @@ class HTTPClient<
                   ...options,
                   url,
                 })
-              } catch (e: any) {
-                let message = e.message
+              } catch (error: any) {
+                let message = error.message
                 let code =
-                  e.code ||
-                  e.status ||
-                  e.statusCode ||
-                  e.response?.status ||
-                  e.response?.statusCode ||
-                  e.response?.code ||
+                  error.code ||
+                  error.status ||
+                  error.statusCode ||
+                  error.response?.status ||
+                  error.response?.statusCode ||
+                  error.response?.code ||
                   500
 
                 if (that.options.getCodeMessageFromException) {
-                  const errorInfo = that.options.getCodeMessageFromException(e)
+                  const errorInfo =
+                    that.options.getCodeMessageFromException(error)
                   message = errorInfo.message || message
                   code = errorInfo.code || code
                 }
 
                 throw that.options.customThrowResponseError
-                  ? that.options.customThrowResponseError(e)
-                  : new RequestError(message, code, url, e)
+                  ? that.options.customThrowResponseError(error)
+                  : new RequestError(message, code, url, error)
               }
 
               const data = that.options.getDataFromResponse!(res)

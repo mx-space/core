@@ -2,7 +2,7 @@ import { Transform } from 'class-transformer'
 import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator'
 
 export class TopQueryDto {
-  @Transform(({ value: val }) => parseInt(val))
+  @Transform(({ value: val }) => Number.parseInt(val))
   @Min(1)
   @Max(10)
   @IsOptional()
@@ -26,7 +26,7 @@ export class TimelineQueryDto {
 
   @IsEnum(TimelineType)
   @IsOptional()
-  @Transform(({ value: v }) => v | 0)
+  @Transform(({ value: v }) => Math.trunc(v))
   type?: TimelineType
 }
 
@@ -45,6 +45,6 @@ export enum ReadAndLikeCountDocumentType {
 export class ReadAndLikeCountTypeDto {
   @IsEnum(ReadAndLikeCountDocumentType)
   @IsOptional()
-  @Transform(({ value: v }) => v | 0)
+  @Transform(({ value: v }) => Math.trunc(v))
   type?: ReadAndLikeCountDocumentType
 }

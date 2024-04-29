@@ -1,18 +1,5 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { debounce, uniqBy } from 'lodash'
 import SocketIO from 'socket.io'
-import type {
-  GatewayMetadata,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-} from '@nestjs/websockets'
-import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
-import type {
-  DecorateAcknowledgementsWithMultipleResponses,
-  DefaultEventsMap,
-} from 'socket.io/dist/typed-events'
-import type { SocketType } from '../gateway.service'
-import type { EventGatewayHooks } from './hook.interface'
 
 import {
   ConnectedSocket,
@@ -32,6 +19,18 @@ import { getShortDate } from '~/utils/time.util'
 import { BroadcastBaseGateway } from '../base.gateway'
 import { GatewayService } from '../gateway.service'
 import { MessageEventDto, SupportedMessageEvent } from './dtos/message'
+import type { EventGatewayHooks } from './hook.interface'
+import type { SocketType } from '../gateway.service'
+import type {
+  DecorateAcknowledgementsWithMultipleResponses,
+  DefaultEventsMap,
+} from 'socket.io/dist/typed-events'
+import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
+import type {
+  GatewayMetadata,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets'
 
 declare module '~/types/socket-meta' {
   interface SocketMetadata {
@@ -167,7 +166,7 @@ export class WebEventsGateway
   async handleConnection(socket: SocketIO.Socket) {
     const webSessionId =
       socket.handshake.headers['x-socket-session-id'] ||
-      socket.handshake.query['socket_session_id'] ||
+      socket.handshake.query.socket_session_id ||
       // fallback sid
       socket.id
 
@@ -257,7 +256,7 @@ export class WebEventsGateway
     socket.emit('message', this.gatewayMessageFormat(event, data))
   }
 
-  public async getSocketsOfRoom(
+  public getSocketsOfRoom(
     roomName: string,
   ): Promise<
     | SocketIO.Socket[]

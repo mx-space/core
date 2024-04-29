@@ -23,10 +23,10 @@ export class HealthController {
   @Get('/email/test')
   @Auth()
   async testEmail() {
-    return this.emailService.sendTestEmail().catch((err) => {
+    return this.emailService.sendTestEmail().catch((error) => {
       return {
-        message: err.message,
-        trace: err.stack,
+        message: error.message,
+        trace: error.stack,
       }
     })
   }

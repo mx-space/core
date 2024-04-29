@@ -1,15 +1,14 @@
 import { load } from 'js-yaml'
 import JSON5 from 'json5'
 import qs from 'qs'
-import type { AggregatePaginateModel, Document } from 'mongoose'
 
 import {
   BadRequestException,
   ForbiddenException,
-  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common'
 
 import { EventScope } from '~/constants/business-event.constant'
@@ -22,6 +21,7 @@ import { getRedisKey } from '~/utils'
 
 import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetModel, SnippetType } from './snippet.model'
+import type { AggregatePaginateModel, Document } from 'mongoose'
 
 @Injectable()
 export class SnippetService {
@@ -46,7 +46,7 @@ export class SnippetService {
       model.method ??= 'GET'
       model.enable ??= true
 
-      if (this.reservedReferenceKeys.indexOf(model.reference) !== -1) {
+      if (this.reservedReferenceKeys.includes(model.reference)) {
         throw new BadRequestException(
           `"${model.reference}" as reference is reserved`,
         )
@@ -228,16 +228,14 @@ export class SnippetService {
   private transformLeanSnippetModel(snippet: SnippetModel) {
     const nextSnippet = { ...snippet }
     // transform sth.
-    if (snippet.type === SnippetType.Function) {
-      if (snippet.secret) {
-        const secretObj = qs.parse(snippet.secret)
+    if (snippet.type === SnippetType.Function && snippet.secret) {
+      const secretObj = qs.parse(snippet.secret)
 
-        for (const key in secretObj) {
-          // remove secret value, only keep key
-          secretObj[key] = ''
-        }
-        nextSnippet.secret = secretObj as any
+      for (const key in secretObj) {
+        // remove secret value, only keep key
+        secretObj[key] = ''
       }
+      nextSnippet.secret = secretObj as any
     }
 
     return nextSnippet

@@ -60,7 +60,7 @@ describe('test camelcase keys', () => {
     value = undefined
     expect(camelcaseKeys(value)).toBe(value)
 
-    value = NaN
+    value = Number.NaN
     expect(camelcaseKeys(value)).toBe(value)
   })
 
@@ -73,7 +73,7 @@ describe('test camelcase keys', () => {
       undefined,
       +0,
       -0,
-      Infinity,
+      Number.POSITIVE_INFINITY,
       {
         a_b: 1,
       },

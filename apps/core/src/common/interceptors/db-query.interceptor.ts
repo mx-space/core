@@ -1,14 +1,12 @@
 import qs from 'qs'
+import { Injectable } from '@nestjs/common'
+import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import type {
   CallHandler,
   ExecutionContext,
   NestInterceptor,
 } from '@nestjs/common'
 import type { Observable } from 'rxjs'
-
-import { Injectable } from '@nestjs/common'
-
-import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 /** 此拦截器用于转换 req.query.query -> js object，用于直接数据库查询，需要鉴权  */
 @Injectable()

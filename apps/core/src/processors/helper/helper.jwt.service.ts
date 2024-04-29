@@ -1,4 +1,4 @@
-import cluster from 'cluster'
+import cluster from 'node:cluster'
 import { sign, verify } from 'jsonwebtoken'
 
 import { Injectable } from '@nestjs/common'
@@ -46,8 +46,8 @@ export class JWTService {
     try {
       verify(token, this.secret)
       return await this.isTokenInRedis(token)
-    } catch (er) {
-      console.debug('verify JWT error: ', er.message, token)
+    } catch (error) {
+      console.debug('verify JWT error:', error.message, token)
 
       return false
     }

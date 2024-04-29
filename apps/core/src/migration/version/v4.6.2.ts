@@ -8,7 +8,7 @@ import {
 
 import { defineMigration } from '../helper'
 
-export default defineMigration('v4.6.2__0', async (db, connection) => {
+export default defineMigration('v4.6.2__0', async (db, _connection) => {
   try {
     await Promise.all([
       db
@@ -66,8 +66,8 @@ export default defineMigration('v4.6.2__0', async (db, connection) => {
         },
       },
     ])
-  } catch (err) {
+  } catch (error) {
     console.error('v4.6.2 migration failed')
-    throw err
+    throw error
   }
 })

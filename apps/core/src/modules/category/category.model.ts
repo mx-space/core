@@ -1,11 +1,11 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator'
-import type { DocumentType } from '@typegoose/typegoose'
 
 import { PartialType } from '@nestjs/mapped-types'
 import { index, modelOptions, prop } from '@typegoose/typegoose'
 
 import { CATEGORY_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
+import type { DocumentType } from '@typegoose/typegoose'
 
 export type CategoryDocument = DocumentType<CategoryModel>
 

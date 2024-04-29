@@ -37,7 +37,7 @@ export class ProjectModel extends BaseModel {
   @IsUrl({ require_protocol: true }, { message: '请更正为正确的网址' })
   @IsOptional()
   @Transform(({ value }) =>
-    typeof value === 'string' && value.length ? value : null,
+    typeof value === 'string' && value.length > 0 ? value : null,
   )
   previewUrl?: string
 
@@ -47,7 +47,7 @@ export class ProjectModel extends BaseModel {
   @IsOptional()
   @IsUrl({ require_protocol: true }, { message: '请更正为正确的网址' })
   @Transform(({ value }) =>
-    typeof value === 'string' && value.length ? value : null,
+    typeof value === 'string' && value.length > 0 ? value : null,
   )
   docUrl?: string
 
@@ -57,7 +57,7 @@ export class ProjectModel extends BaseModel {
   @IsOptional()
   @IsUrl({ require_protocol: true }, { message: '请更正为正确的网址' })
   @Transform(({ value }) =>
-    typeof value === 'string' && value.length ? value : null,
+    typeof value === 'string' && value.length > 0 ? value : null,
   )
   projectUrl?: string
 
@@ -78,7 +78,7 @@ export class ProjectModel extends BaseModel {
   })
   @IsUrl({ require_protocol: true }, { message: '请更正为正确的网址' })
   @Transform(({ value }) =>
-    typeof value === 'string' && value.length ? value : null,
+    typeof value === 'string' && value.length > 0 ? value : null,
   )
   @IsOptional()
   avatar?: string

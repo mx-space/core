@@ -1,15 +1,13 @@
 import { isDefined } from 'class-validator'
 import { debounce, omit } from 'lodash'
 import slugify from 'slugify'
-import type { DocumentType } from '@typegoose/typegoose'
-import type { AggregatePaginateModel, Document, Types } from 'mongoose'
 
 import {
   BadRequestException,
-  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common'
 
 import { BusinessException } from '~/common/exceptions/biz.exception'
@@ -29,6 +27,8 @@ import { CategoryService } from '../category/category.service'
 import { CommentModel } from '../comment/comment.model'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { PostModel } from './post.model'
+import type { AggregatePaginateModel, Document, Types } from 'mongoose'
+import type { DocumentType } from '@typegoose/typegoose'
 
 @Injectable()
 export class PostService {
@@ -243,7 +243,7 @@ export class PostService {
 
     // 有关联文章
     const related = await this.checkRelated(data)
-    if (related.length) {
+    if (related.length > 0) {
       data.related = related.filter((id) => id !== oldDocument.id) as any
 
       // 双向关联
@@ -353,7 +353,7 @@ export class PostService {
     const cloned = { ...data }
 
     // 有关联文章
-    if (cloned.relatedId && cloned.relatedId.length) {
+    if (cloned.relatedId && cloned.relatedId.length > 0) {
       const relatedPosts = await this.postModel.find({
         _id: { $in: cloned.relatedId },
       })
@@ -372,7 +372,7 @@ export class PostService {
   }
 
   async relatedEachOther(post: PostModel, relatedIds: string[]) {
-    if (!relatedIds.length) return
+    if (relatedIds.length === 0) return
     const relatedPosts = await this.postModel.find({
       _id: { $in: relatedIds },
     })
@@ -394,7 +394,7 @@ export class PostService {
   async removeRelatedEachOther(post: PostModel | null) {
     if (!post) return
     const postRelatedIds = (post.related as string[]) || []
-    if (!postRelatedIds.length) {
+    if (postRelatedIds.length === 0) {
       return
     }
     const relatedPosts = await this.postModel.find({

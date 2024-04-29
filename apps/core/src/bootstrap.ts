@@ -1,9 +1,7 @@
-import cluster from 'cluster'
-import { performance } from 'perf_hooks'
+import cluster from 'node:cluster'
+import { performance } from 'node:perf_hooks'
 import { Logger } from 'nestjs-pretty-logger'
 import wcmatch from 'wildcard-match'
-import type { LogLevel } from '@nestjs/common'
-import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 
 import { NestFactory } from '@nestjs/core'
 
@@ -18,6 +16,8 @@ import { logger } from './global/consola.global'
 import { isMainProcess, isTest } from './global/env.global'
 import { migrateDatabase } from './migration/migrate'
 import { checkInit } from './utils/check-init.util'
+import type { NestFastifyApplication } from '@nestjs/platform-fastify'
+import type { LogLevel } from '@nestjs/common'
 
 const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
   ? [...CROSS_DOMAIN.allowedOrigins, '*.shizuri.net', '22333322.xyz']

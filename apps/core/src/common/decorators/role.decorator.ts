@@ -1,9 +1,8 @@
-import type { ExecutionContext } from '@nestjs/common'
-
 import { createParamDecorator } from '@nestjs/common'
 
 import { isTest } from '~/global/env.global'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+import type { ExecutionContext } from '@nestjs/common'
 
 export const IsGuest = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {

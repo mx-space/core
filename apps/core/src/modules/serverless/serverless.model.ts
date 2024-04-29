@@ -1,9 +1,9 @@
 import {
+  Severity,
   index,
   modelOptions,
   mongoose,
   prop,
-  Severity,
 } from '@typegoose/typegoose'
 
 export const ServerlessStorageCollectionName = `serverlessstorages`

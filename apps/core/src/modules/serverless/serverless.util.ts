@@ -1,9 +1,9 @@
+/* eslint-disable import/no-duplicates */
+import BabelPluginTransformCommonJS from '@babel/plugin-transform-modules-commonjs'
+import BabelPluginTransformTS from '@babel/plugin-transform-typescript'
 import type { TransformOptions } from '@babel/core'
 import type * as t from '@babel/types'
 import type { VariableDeclaration } from '@babel/types'
-
-import BabelPluginTransformCommonJS from '@babel/plugin-transform-modules-commonjs'
-import BabelPluginTransformTS from '@babel/plugin-transform-typescript'
 
 export const hashStable = (str: string): string => {
   let hash = 5381

@@ -1,10 +1,9 @@
-import { createReadStream, existsSync, statSync } from 'fs'
-import fs from 'fs/promises'
-import { extname, join } from 'path'
+import { createReadStream, existsSync, statSync } from 'node:fs'
+import fs from 'node:fs/promises'
+import { extname, join } from 'node:path'
 import { render } from 'ejs'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
-import type { Observable } from 'rxjs'
 
 import { Controller, Get, Query, Req, Res } from '@nestjs/common'
 import { SkipThrottle } from '@nestjs/throttler'
@@ -15,6 +14,7 @@ import { AssetService } from '~/processors/helper/helper.asset.service'
 
 import { UpdateService } from '../update/update.service'
 import { PageProxyService } from './pageproxy.service'
+import type { Observable } from 'rxjs'
 
 @Controller('/')
 @SkipThrottle()
@@ -69,10 +69,10 @@ export class PageProxyController {
       reply.type('text/html').send(html)
 
       this.fetchObserver$ = this.updateService.downloadAdminAsset(
-        await this.updateService.getLatestAdminVersion().catch((err) => {
-          this.fetchErrorMsg = err.message
+        await this.updateService.getLatestAdminVersion().catch((error) => {
+          this.fetchErrorMsg = error.message
 
-          throw err
+          throw error
         }),
       )
 
@@ -101,10 +101,10 @@ export class PageProxyController {
       return reply
         .type('text/html')
         .send(this.service.rewriteAdminEntryAssetPath(injectEnv))
-    } catch (e) {
-      isDev && console.error(e)
+    } catch (error) {
+      isDev && console.error(error)
       return reply.code(500).send({
-        message: e.message,
+        message: error.message,
       })
     }
   }

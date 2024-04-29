@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
 import axios from 'axios'
 import FormData from 'form-data'
@@ -21,7 +21,7 @@ export const uploadFileToCOS = async (
   const { secretId, secretKey, bucket, region } = options
   const endpoint = `https://${bucket}.cos.${region}.myqcloud.com`
 
-  const now = +new Date()
+  const now = Date.now()
   const startTime = now / 1000,
     expireTime = now / 1000 + 900
   const keytime = `${startTime};${expireTime}`
@@ -60,8 +60,8 @@ export const uploadFileToCOS = async (
     typeof localFilePathOrBuffer == 'string'
       ? await fs.readFile(localFilePathOrBuffer)
       : Buffer.isBuffer(localFilePathOrBuffer)
-      ? localFilePathOrBuffer
-      : Buffer.from(localFilePathOrBuffer),
+        ? localFilePathOrBuffer
+        : Buffer.from(localFilePathOrBuffer),
     {
       filename: remoteFileKey,
     },
@@ -75,11 +75,11 @@ export const uploadFileToCOS = async (
         'Content-Length': formData.getLengthSync(),
       },
     })
-    .catch((err) => {
+    .catch((error) => {
       if (isDev) {
-        console.dir(err)
+        console.dir(error)
       }
-      console.log(err.response.data)
-      throw err
+      console.log(error.response.data)
+      throw error
     })
 }

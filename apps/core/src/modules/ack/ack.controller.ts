@@ -1,9 +1,8 @@
 import { plainToInstance } from 'class-transformer'
 import { validateSync } from 'class-validator'
-import { FastifyReply, FastifyRequest } from 'fastify'
-import type { CountModel } from '~/shared/model/count.model'
+import { FastifyReply } from 'fastify'
 
-import { Body, HttpCode, Inject, Post, Req, Res } from '@nestjs/common'
+import { Body, HttpCode, Inject, Post, Res } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Cookies } from '~/common/decorators/cookie.decorator'
@@ -15,6 +14,7 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { CacheService } from '~/processors/redis/cache.service'
 
 import { AckDto, AckEventType, AckReadPayloadDto } from './ack.dto'
+import type { CountModel } from '~/shared/model/count.model'
 
 @ApiController('ack')
 export class AckController {
@@ -33,11 +33,9 @@ export class AckController {
     @Body() body: AckDto,
     @Cookies() cookies: Record<string, string>,
     @Res() res: FastifyReply,
-    @Req() req: FastifyRequest,
   ) {
     const { type, payload } = body
 
-    const uuidReq = req.headers['x-session-uuid']
     switch (type) {
       case AckEventType.READ: {
         const validPayload = plainToInstance(AckReadPayloadDto, payload)
@@ -45,7 +43,7 @@ export class AckController {
           validPayload,
           ExtendedValidationPipe.options,
         )
-        if (errors.length) {
+        if (errors.length > 0) {
           const error = this.validatePipe.createExceptionFactory()(
             errors as any[],
           )

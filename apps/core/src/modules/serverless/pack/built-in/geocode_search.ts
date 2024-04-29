@@ -38,7 +38,6 @@ export default async function handler(ctx: Context) {
 
 }`.trim()
 
-// eslint-disable-next-line import/no-default-export
 export default {
   code,
   name: 'geocode_search',

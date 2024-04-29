@@ -6,7 +6,7 @@
  * @FilePath: /mx-server/src/common/decorators/simpleValidatorFactory.ts
  * @Coding with Love
  */
-import { registerDecorator, ValidatorConstraint } from 'class-validator'
+import { ValidatorConstraint, registerDecorator } from 'class-validator'
 import type {
   ValidationArguments,
   ValidationOptions,

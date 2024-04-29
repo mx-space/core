@@ -12,7 +12,8 @@ export const banInDemo = () => {
 }
 
 export const checkRefModelCollectionType = (ref: any) => {
-  if (!ref && typeof ref !== 'object') throw new TypeError()
+  if (!ref && typeof ref !== 'object')
+    throw new TypeError('ref must be an object')
 
   if ('nid' in ref) {
     return CollectionRefTypes.Note
@@ -27,5 +28,5 @@ export const checkRefModelCollectionType = (ref: any) => {
   if ('content' in ref) {
     return CollectionRefTypes.Recently
   }
-  throw new ReferenceError()
+  throw new ReferenceError('ref is not a valid model collection type')
 }

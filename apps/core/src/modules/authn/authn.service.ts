@@ -1,14 +1,3 @@
-import type {
-  VerifiedAuthenticationResponse,
-  VerifiedRegistrationResponse,
-} from '@simplewebauthn/server'
-import type {
-  AuthenticationResponseJSON,
-  CredentialDeviceType,
-  RegistrationResponseJSON,
-} from '@simplewebauthn/server/script/deps'
-import type { UserDocument } from '../user/user.model'
-
 import { BadRequestException, Injectable } from '@nestjs/common'
 import {
   generateAuthenticationOptions,
@@ -25,6 +14,16 @@ import { getRedisKey } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
 import { AuthnModel } from './authn.model'
+import type { UserDocument } from '../user/user.model'
+import type {
+  AuthenticationResponseJSON,
+  CredentialDeviceType,
+  RegistrationResponseJSON,
+} from '@simplewebauthn/server/script/deps'
+import type {
+  VerifiedAuthenticationResponse,
+  VerifiedRegistrationResponse,
+} from '@simplewebauthn/server'
 
 @Injectable()
 export class AuthnService {
@@ -163,7 +162,7 @@ export class AuthnService {
     return verification
   }
 
-  async generateAuthenticationOptions(user: UserDocument) {
+  async generateAuthenticationOptions() {
     const userAuthenticators: Authenticator[] = await this.authnModel
       .find()
       .lean({ getters: true })

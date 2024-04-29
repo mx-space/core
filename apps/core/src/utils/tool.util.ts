@@ -1,8 +1,8 @@
-import { join } from 'path'
+import { join } from 'node:path'
+import { createHash } from 'node:crypto'
 import { cloneDeep } from 'lodash'
-
 export const md5 = (text: string) =>
-  require('crypto').createHash('md5').update(text).digest('hex') as string
+  createHash('md5').update(text).digest('hex') as string
 
 export function getAvatar(mail: string | undefined) {
   if (!mail) {
@@ -16,7 +16,7 @@ export function sleep(ms: number) {
 }
 
 export function hasChinese(str: string) {
-  return escape(str).indexOf('%u') < 0 ? false : true
+  return !escape(str).includes('%u') ? false : true
 }
 
 export const safeJSONParse = (p: any) => {
@@ -99,20 +99,20 @@ export async function* asyncPool<T = any>(
       yield await consume()
     }
   }
-  while (executing.size) {
+  while (executing.size > 0) {
     yield await consume()
   }
 }
 
 export const camelcaseKey = (key: string) =>
-  key.replace(/_(\w)/g, (_, c) => (c ? c.toUpperCase() : ''))
+  key.replaceAll(/_(\w)/g, (_, c) => (c ? c.toUpperCase() : ''))
 
 export const camelcaseKeys = (obj: any) => {
   if (typeof obj !== 'object' || obj === null) {
     return obj
   }
   if (Array.isArray(obj)) {
-    return obj.map(camelcaseKeys)
+    return obj.map((element) => camelcaseKeys(element))
   }
   const n: any = {}
   Object.keys(obj).forEach((k) => {
@@ -132,7 +132,7 @@ export const parseBooleanishValue = (value: string | boolean | undefined) => {
 }
 
 export function escapeXml(unsafe: string) {
-  return unsafe.replace(/[<>&'"]/g, (c) => {
+  return unsafe.replaceAll(/["&'<>]/g, (c) => {
     switch (c) {
       case '<':
         return '&lt;'

@@ -7,18 +7,17 @@ import type { PostModel } from '@core/modules/post/post.model'
 import type { NormalizedPost } from '@core/modules/post/post.type'
 import type { RecentlyModel } from '@core/modules/recently/recently.model'
 import type { SayModel } from '@core/modules/say/say.model'
-import type { EventEmitter } from 'events'
+import type { EventEmitter } from 'node:events'
 import type { BusinessEvents } from './event.enum'
 
 export interface ExtendedEventEmitter extends EventEmitter {
-  on<T extends BusinessEvents>(
+  on: (<T extends BusinessEvents>(
     event: T,
     listener: (
       data: EventPayloadMapping[Extract<T, keyof EventPayloadMapping>],
     ) => void,
-  ): this
-
-  on(event: '*', listener: (event: GenericEvent) => void): this
+  ) => this) &
+    ((event: '*', listener: (event: GenericEvent) => void) => this)
 }
 export type Id = string
 export type PayloadOnlyId = { data: Id }

@@ -44,7 +44,7 @@ export class ServerlessController {
       })
 
       return text
-    } catch (e) {
+    } catch {
       throw new InternalServerErrorException('code defined file not found')
     }
   }

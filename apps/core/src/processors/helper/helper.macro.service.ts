@@ -25,18 +25,17 @@ export class TextMacroService {
   private ifConditionGrammar<T extends object>(text: string, model: T) {
     const conditionSplitter = text.split('|')
     conditionSplitter.forEach((item: string, index: string | number) => {
-      conditionSplitter[index] = item.replace(/"/g, '')
-      conditionSplitter[index] = conditionSplitter[index].replace(/\s/g, '')
-      conditionSplitter[0] = conditionSplitter[0].replace(/\?/g, '')
-      conditionSplitter[conditionSplitter.length - 1] = conditionSplitter[
-        conditionSplitter.length - 1
-      ].replace(/\?/g, '')
+      conditionSplitter[index] = item.replaceAll('"', '')
+      conditionSplitter[index] = conditionSplitter[index].replaceAll(/\s/g, '')
+      conditionSplitter[0] = conditionSplitter[0].replaceAll('?', '')
+      const lastValue = conditionSplitter?.at(-1)?.replaceAll('?', '')
+      if (lastValue) conditionSplitter[conditionSplitter.length - 1] = lastValue
     })
 
     let output: any
     const condition = conditionSplitter[0].replace('$', '')
-    // eslint-disable-next-line no-useless-escape
-    const operator = condition.match(/>|==|<|\!=/g)
+
+    const operator = condition.match(/>|==|<|!=/g)
     if (!operator) {
       throw new BadRequestException('Invalid condition')
     }
@@ -115,7 +114,7 @@ export class TextMacroService {
       return text
     }
     try {
-      const matchedReg = /\[\[\s(.*?)\s\]\]/g
+      const matchedReg = /\[\[\s(.*?)\s]]/g
 
       const matched = text.search(matchedReg) != -1
 
@@ -126,7 +125,7 @@ export class TextMacroService {
 
       const cacheMap = {} as Record<string, any>
 
-      text = text.replace(matchedReg, (match, condition) => {
+      text = text.replaceAll(matchedReg, (match, condition) => {
         // FIXME: shallow find, if same text both in code block and paragraph, the macro in paragraph also will not replace
         // const isInCodeBlock = ast.some((i) => {
         //   if (i.type === 'code' || i.type === 'codespan') {
@@ -142,15 +141,14 @@ export class TextMacroService {
         if (condition.search(RegMap['?']) != -1) {
           return this.ifConditionGrammar(condition, model)
         }
-        if (condition.search(RegMap['$']) != -1) {
+        if (condition.search(RegMap.$) != -1) {
           const variable = condition
-            .replace(RegMap['$'], '$1')
-            .replace(/\s/g, '')
+            .replace(RegMap.$, '$1')
+            .replaceAll(/\s/g, '')
           return model[variable] ?? extraContext[variable]
         }
-        // eslint-disable-next-line no-useless-escape
+
         if (condition.search(RegMap['#']) != -1) {
-          // eslint-disable-next-line no-useless-escape
           const functions = condition.replace(RegMap['#'], '$1')
 
           if (typeof cacheMap[functions] != 'undefined') {
@@ -178,8 +176,8 @@ export class TextMacroService {
       })
 
       return text
-    } catch (err) {
-      this.logger.log(err.message)
+    } catch (error) {
+      this.logger.log(error.message)
       return text
     }
   }

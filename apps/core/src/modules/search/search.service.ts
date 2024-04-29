@@ -1,17 +1,13 @@
 import algoliasearch from 'algoliasearch'
 import { omit } from 'lodash'
 import removeMdCodeblock from 'remove-md-codeblock'
-import type { SearchResponse } from '@algolia/client-search'
-import type { SearchDto } from '~/modules/search/search.dto'
-import type { Pagination } from '~/shared/interface/paginator.interface'
-import type { SearchIndex } from 'algoliasearch'
 
 import {
   BadRequestException,
-  forwardRef,
   Inject,
   Injectable,
   Logger,
+  forwardRef,
 } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { CronExpression } from '@nestjs/schedule'
@@ -29,6 +25,10 @@ import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
 import { PostModel } from '../post/post.model'
 import { PostService } from '../post/post.service'
+import type { SearchIndex } from 'algoliasearch'
+import type { Pagination } from '~/shared/interface/paginator.interface'
+import type { SearchDto } from '~/modules/search/search.dto'
+import type { SearchResponse } from '@algolia/client-search'
 
 @Injectable()
 export class SearchService {
@@ -159,7 +159,7 @@ export class SearchService {
 
       const model = this.databaseService.getModelByRefType(type as 'post')
       if (!model) {
-        return
+        return Promise.resolve()
       }
       return model
         .findById(objectID)
@@ -219,9 +219,9 @@ export class SearchService {
       ])
 
       this.logger.log('--> 推送到 algoliasearch 成功')
-    } catch (err) {
+    } catch (error) {
       Logger.error('algolia 推送错误', 'AlgoliaSearch')
-      throw err
+      throw error
     }
   }
 
@@ -404,10 +404,7 @@ function adjustObjectSizeEfficiently<T extends { text: string }>(
     new TextEncoder().encode(JSON.stringify(objectToAdjust)).length >
     maxSizeInBytes
   ) {
-    objectToAdjust.text = objectToAdjust.text.slice(
-      0,
-      objectToAdjust.text.length - 1,
-    )
+    objectToAdjust.text = objectToAdjust.text.slice(0, -1)
   }
 
   // 返回调整后的对象

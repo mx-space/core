@@ -14,10 +14,14 @@ export const pickImagesFromMarkdown = (text: string) => {
       return
     }
     if (node.tokens && Array.isArray(node.tokens)) {
-      return node.tokens.forEach(pickImage)
+      return node.tokens.forEach((element) => {
+        pickImage(element)
+      })
     }
   }
-  ast.forEach(pickImage)
+  ast.forEach((element) => {
+    pickImage(element)
+  })
   return images
 }
 
@@ -34,8 +38,8 @@ export async function getAverageRGB(
     const colors = await getColors(buffer, type)
 
     return colors[0].hex()
-  } catch (err) {
-    console.error(err.message)
+  } catch (error) {
+    console.error(error.message)
     return undefined
   }
 }

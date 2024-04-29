@@ -1,6 +1,6 @@
-import cdp, { exec } from 'child_process'
-import { builtinModules } from 'module'
-import { promisify } from 'util'
+import cdp, { exec } from 'node:child_process'
+import { builtinModules } from 'node:module'
+import { promisify } from 'node:util'
 
 export async function getFolderSize(folderPath: string) {
   try {
@@ -33,6 +33,7 @@ export const formatByteSize = (byteSize: number) => {
 export const isBuiltinModule = (module: string, ignoreList: string[] = []) => {
   return (
     // @ts-ignore
+    // eslint-disable-next-line node/no-deprecated-api
     (builtinModules || (Object.keys(process.binding('natives')) as string[]))
       .filter(
         (x) =>

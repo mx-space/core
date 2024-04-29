@@ -20,12 +20,12 @@ export class PagerDto extends DbQueryDto {
   @Max(50)
   @IsInt()
   @Expose()
-  @Transform(({ value: val }) => (val ? parseInt(val) : 10), {
+  @Transform(({ value: val }) => (val ? Number.parseInt(val) : 10), {
     toClassOnly: true,
   })
   size: number
 
-  @Transform(({ value: val }) => (val ? parseInt(val) : 1), {
+  @Transform(({ value: val }) => (val ? Number.parseInt(val) : 1), {
     toClassOnly: true,
   })
   @Min(1)
@@ -46,10 +46,10 @@ export class PagerDto extends DbQueryDto {
   @IsEnum([1, -1])
   @Transform(({ value: val }) => {
     // @ts-ignore
-    const isStringNumber = typeof val === 'string' && !isNaN(val)
+    const isStringNumber = typeof val === 'string' && !Number.isNaN(val)
 
     if (isStringNumber) {
-      return parseInt(val)
+      return Number.parseInt(val)
     } else {
       return {
         asc: 1,
@@ -60,13 +60,13 @@ export class PagerDto extends DbQueryDto {
   sortOrder?: 1 | -1
 
   @IsOptional()
-  @Transform(({ value: val }) => parseInt(val))
+  @Transform(({ value: val }) => Number.parseInt(val))
   @Min(1)
   @IsInt()
   year?: number
 
   @IsOptional()
-  @Transform(({ value: val }) => parseInt(val))
+  @Transform(({ value: val }) => Number.parseInt(val))
   @IsInt()
   state?: number
 }

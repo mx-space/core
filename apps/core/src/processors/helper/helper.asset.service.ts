@@ -3,9 +3,9 @@
  * @author Innei
  * @description 用于获取静态资源的服务
  */
-import { existsSync } from 'fs'
-import fs from 'fs/promises'
-import path, { join } from 'path'
+import { existsSync } from 'node:fs'
+import fs from 'node:fs/promises'
+import path, { join } from 'node:path'
 
 import { Injectable, Logger } from '@nestjs/common'
 
@@ -81,15 +81,15 @@ export class AssetService {
         await fs.mkdir(
           (() => {
             const p = join(this.embedAssetPath, path).split('/')
-            return p.slice(0, p.length - 1).join('/')
+            return p.slice(0, -1).join('/')
           })(),
           { recursive: true },
         )
         await fs.writeFile(join(this.embedAssetPath, path), data, options)
         return data
-      } catch (e) {
+      } catch (error) {
         this.logger.error('本地资源不存在，线上资源无法拉取')
-        throw e
+        throw error
       }
     }
     return fs.readFile(join(this.embedAssetPath, path), options)
@@ -103,14 +103,14 @@ export class AssetService {
     await fs.mkdir(
       (() => {
         const p = join(USER_ASSET_DIR, path).split('/')
-        return p.slice(0, p.length - 1).join('/')
+        return p.slice(0, -1).join('/')
       })(),
       { recursive: true },
     )
     return fs.writeFile(join(USER_ASSET_DIR, path), data, options)
   }
 
-  public async removeUserCustomAsset(path: string) {
+  public removeUserCustomAsset(path: string) {
     return fs.unlink(join(USER_ASSET_DIR, path))
   }
 }

@@ -1,15 +1,9 @@
 import { Type } from 'class-transformer'
 import { ValidateNested } from 'class-validator'
 import { JSONSchema } from 'class-validator-jsonschema'
-import type {
-  ClassConstructor,
-  TypeHelpOptions,
-  TypeOptions,
-} from 'class-transformer'
-
 import {
-  AdminExtraDto,
   AIDto,
+  AdminExtraDto,
   AlgoliaSearchOptionsDto,
   AuthSecurityDto,
   BackupOptionsDto,
@@ -25,6 +19,11 @@ import {
   ThirdPartyServiceIntegrationDto,
   UrlDto,
 } from './configs.dto'
+import type {
+  ClassConstructor,
+  TypeHelpOptions,
+  TypeOptions,
+} from 'class-transformer'
 
 export const configDtoMapping = {} as Record<string, ClassConstructor<any>>
 const ConfigField =

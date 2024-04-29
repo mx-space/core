@@ -1,5 +1,3 @@
-import type { CanActivate, ExecutionContext } from '@nestjs/common'
-
 import { Injectable } from '@nestjs/common'
 
 import { AuthService } from '~/modules/auth/auth.service'
@@ -8,6 +6,7 @@ import { UserService } from '~/modules/user/user.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
 import { AuthGuard } from './auth.guard'
+import type { CanActivate, ExecutionContext } from '@nestjs/common'
 
 /**
  * 区分游客和主人的守卫
@@ -29,7 +28,6 @@ export class RolesGuard extends AuthGuard implements CanActivate {
     try {
       await super.canActivate(context)
       isAuthenticated = true
-      // eslint-disable-next-line no-empty
     } catch {}
 
     request.isGuest = !isAuthenticated

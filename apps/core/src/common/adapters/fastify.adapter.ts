@@ -1,11 +1,10 @@
-import type { FastifyRequest } from 'fastify'
-
 import fastifyCookie from '@fastify/cookie'
 import FastifyMultipart from '@fastify/multipart'
 import { Logger } from '@nestjs/common'
 import { FastifyAdapter } from '@nestjs/platform-fastify'
 
 import { getIp } from '~/utils'
+import type { FastifyRequest } from 'fastify'
 
 const app: FastifyAdapter = new FastifyAdapter({
   trustProxy: true,
@@ -39,7 +38,7 @@ app.getInstance().addHook('onRequest', (request, reply, done) => {
     logWarn('PHP 是世界上最好的语言！！！！！', request, 'GodPHP')
 
     return reply.code(418).send()
-  } else if (url.match(/\/(adminer|admin|wp-login|phpMyAdmin|\.env)$/gi)) {
+  } else if (/\/(adminer|admin|wp-login|phpmyadmin|\.env)$/gi.test(url)) {
     const isMxSpaceClient = ua?.match('mx-space')
     reply.raw.statusMessage = 'Hey, What the fuck are you doing!'
     reply.raw.statusCode = isMxSpaceClient ? 666 : 200
@@ -53,7 +52,7 @@ app.getInstance().addHook('onRequest', (request, reply, done) => {
   }
 
   // skip favicon request
-  if (url.match(/favicon\.ico$/) || url.match(/manifest\.json$/)) {
+  if (/favicon\.ico$/.test(url) || /manifest\.json$/.test(url)) {
     return reply.code(204).send()
   }
 
@@ -64,7 +63,7 @@ app.register(fastifyCookie, {
   secret: 'cookie-secret', // 这个 secret 不太重要，不存鉴权相关，无关紧要
 })
 
-const logWarn = (desc: string, req: FastifyRequest, context: string) => {
+const logWarn = (desc: string, req: FastifyRequest, _context: string) => {
   const ua = req.raw.headers['user-agent']
   Logger.warn(
     // prettier-ignore

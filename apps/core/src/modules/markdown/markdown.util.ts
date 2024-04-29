@@ -15,8 +15,8 @@ marked.use({
           token.text,
         )}\n</span>`
       },
-      tokenizer(src, tokens) {
-        const rule = /^\|\|([\s\S]+?)\|\|(?!\|)/
+      tokenizer(src) {
+        const rule = /^\|\|([\S\s]+?)\|\|(?!\|)/
         const match = rule.exec(src)
         if (match) {
           return {
@@ -39,7 +39,7 @@ marked.use({
         return `<span class="katex-render">${token.text}</span>`
       },
       tokenizer(src) {
-        const rule = /^\$([\s\S]+?)\$(?!\$)/
+        const rule = /^\$([\S\s]+?)\$(?!\$)/
         const match = rule.exec(src)
         if (match) {
           return {
@@ -71,7 +71,7 @@ marked.use({
       },
       tokenizer(src) {
         const rule =
-          /^\{((?<prefix>(GH)|(TW)|(TG))@(?<name>\w+\b))\}\s?(?!\[.*?\])/
+          /^{((?<prefix>(GH)|(TW)|(TG))@(?<name>\w+\b))}\s?(?!\[.*?])/
         const match = rule.exec(src)
         if (match) {
           const { groups } = match
@@ -122,7 +122,6 @@ marked.use({
             raw: match[0],
             groups,
 
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             images: this.lexer.inlineTokens(groups!.content),
             // @ts-expect-error
             paragraph: this.lexer.blockTokens(groups.content),
@@ -139,7 +138,7 @@ marked.use({
         return ''
       }
 
-      const alt = _alt?.match(/^[!¡]/) ? _alt.replace(/^[¡!]/, '') : ''
+      const alt = _alt?.match(/^[!¡]/) ? _alt.replace(/^[!¡]/, '') : ''
       if (!alt) {
         return `<img src="${xss(src)}"/>`
       }

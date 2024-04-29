@@ -2,9 +2,6 @@ import dayjs from 'dayjs'
 import { render } from 'ejs'
 import { isNil } from 'lodash'
 import xss from 'xss'
-import type { NoteModel } from '../note/note.model'
-import type { PageModel } from '../page/page.model'
-import type { PostModel } from '../post/post.model'
 
 import { CacheTTL } from '@nestjs/cache-manager'
 import {
@@ -29,6 +26,9 @@ import { ConfigsService } from '../configs/configs.service'
 import { MarkdownPreviewDto } from '../markdown/markdown.dto'
 import { MarkdownService } from '../markdown/markdown.service'
 import { UserService } from '../user/user.service'
+import type { PostModel } from '../post/post.model'
+import type { PageModel } from '../page/page.model'
+import type { NoteModel } from '../note/note.model'
 
 @Controller('/render')
 @HTTPDecorators.Bypass

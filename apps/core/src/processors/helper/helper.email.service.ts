@@ -1,7 +1,5 @@
-import cluster from 'cluster'
+import cluster from 'node:cluster'
 import { createTransport } from 'nodemailer'
-import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import type Mail from 'nodemailer/lib/mailer'
 
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
@@ -14,6 +12,8 @@ import { UserService } from '~/modules/user/user.service'
 
 import { SubPubBridgeService } from '../redis/subpub.service'
 import { AssetService } from './helper.asset.service'
+import type Mail from 'nodemailer/lib/mailer'
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 
 @Injectable()
 export class EmailService implements OnModuleInit, OnModuleDestroy {
@@ -28,7 +28,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     this.logger = new Logger(EmailService.name)
   }
 
-  async onModuleInit() {
+  onModuleInit() {
     this.init()
     if (cluster.isWorker) {
       this.subpub.subscribe(EventBusEvents.EmailInit, () => {
@@ -62,13 +62,13 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     return props
   }
 
-  async readTemplate(type: string): Promise<string> {
+  readTemplate(type: string): Promise<string> {
     return this.assetService.getAsset(`/email-template/${type}.template.ejs`, {
       encoding: 'utf-8',
     }) as Promise<string>
   }
 
-  async writeTemplate(type: string, source: string) {
+  writeTemplate(type: string, source: string) {
     return this.assetService.writeUserCustomAsset(
       `/email-template/${type}.template.ejs`,
       source,
@@ -81,10 +81,10 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   async deleteTemplate(type: string) {
     await this.assetService
       .removeUserCustomAsset(`/email-template/${type}.template.ejs`)
-      .catch((err) => {
-        if ((err?.message as string).includes('no such file or directory'))
+      .catch((error) => {
+        if ((error?.message as string).includes('no such file or directory'))
           return
-        throw err
+        throw error
       })
   }
 
@@ -109,7 +109,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
           }
         })
       })
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
+
       .catch(() => {})
   }
 
@@ -130,7 +130,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
         // @ts-ignore
         r({
           host: options?.host,
-          port: parseInt((options?.port as any) || '465'),
+          port: Number.parseInt((options?.port as any) || '465'),
           auth: { user, pass },
         } as const)
       })
@@ -173,8 +173,8 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   async send(options: Mail.Options) {
     try {
       return await this.instance.sendMail(options)
-    } catch (err) {
-      this.logger.warn(err.message)
+    } catch (error) {
+      this.logger.warn(error.message)
       throw new BizException('邮件发送失败')
     }
   }

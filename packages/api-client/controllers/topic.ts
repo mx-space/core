@@ -1,12 +1,10 @@
+import { autoBind } from '~/utils/auto-bind'
+import { BaseCrudController } from './base'
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
 import type { TopicModel } from '~/models/topic'
 import type { HTTPClient } from '../core'
-
-import { autoBind } from '~/utils/auto-bind'
-
-import { BaseCrudController } from './base'
 
 declare module '../core/client' {
   interface HTTPClient<

@@ -1,8 +1,5 @@
-import type { ArticleTypeEnum } from '~/constants/article.constant'
-import type { WriteBaseModel } from '~/shared/model/write-base.model'
-
 import { Inject, Injectable } from '@nestjs/common'
-import { mongoose, ReturnModelType } from '@typegoose/typegoose'
+import { ReturnModelType, mongoose } from '@typegoose/typegoose'
 
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { DB_CONNECTION_TOKEN } from '~/constants/system.constant'
@@ -11,6 +8,8 @@ import { PageModel } from '~/modules/page/page.model'
 import { PostModel } from '~/modules/post/post.model'
 import { RecentlyModel } from '~/modules/recently/recently.model'
 import { InjectModel } from '~/transformers/model.transformer'
+import type { WriteBaseModel } from '~/shared/model/write-base.model'
+import type { ArticleTypeEnum } from '~/constants/article.constant'
 
 @Injectable()
 export class DatabaseService {

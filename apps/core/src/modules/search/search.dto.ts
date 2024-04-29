@@ -13,7 +13,7 @@ export class SearchDto extends PagerDto {
   @IsOptional()
   orderBy: string
 
-  @Transform(({ value: val }) => parseInt(val))
+  @Transform(({ value: val }) => Number.parseInt(val))
   @IsEnum([1, -1])
   @IsOptional()
   order: number

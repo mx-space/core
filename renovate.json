@@ -23,7 +23,6 @@
     "vitest",
     "vite",
     "snakecase-keys",
-    "eslint",
     "zx"
   ],
   "enabled": true

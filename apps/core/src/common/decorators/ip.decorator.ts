@@ -6,12 +6,10 @@
  * @FilePath: /mx-server/src/core/decorators/ip.decorator.ts
  * @Coding with Love
  */
+import { createParamDecorator } from '@nestjs/common'
+import { getIp } from '~/utils/ip.util'
 import type { ExecutionContext } from '@nestjs/common'
 import type { FastifyRequest } from 'fastify'
-
-import { createParamDecorator } from '@nestjs/common'
-
-import { getIp } from '~/utils/ip.util'
 
 export type IpRecord = {
   ip: string

@@ -1,4 +1,4 @@
-export const SubscribePostCreateBit = 1 << 0
+export const SubscribePostCreateBit = Math.trunc(1)
 export const SubscribeNoteCreateBit = 1 << 1
 export const SubscribeSayCreateBit = 1 << 2
 export const SubscribeRecentCreateBit = 1 << 3

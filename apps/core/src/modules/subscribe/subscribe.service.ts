@@ -1,14 +1,6 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-import cluster from 'cluster'
+import cluster from 'node:cluster'
 import { render } from 'ejs'
 import { LRUCache } from 'lru-cache'
-import type { CoAction } from '@innei/next-async/types/interface'
-import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
-import type Mail from 'nodemailer/lib/mailer'
-import type { NoteModel } from '../note/note.model'
-import type { PostModel } from '../post/post.model'
-import type { SubscribeTemplateRenderProps } from './subscribe.email.default'
 
 import { Co } from '@innei/next-async'
 import { nanoid as N } from '@mx-space/external'
@@ -32,6 +24,13 @@ import {
 } from './subscribe.constant'
 import { defaultSubscribeForRenderProps } from './subscribe.email.default'
 import { SubscribeModel } from './subscribe.model'
+import type { SubscribeTemplateRenderProps } from './subscribe.email.default'
+import type { PostModel } from '../post/post.model'
+import type { NoteModel } from '../note/note.model'
+import type Mail from 'nodemailer/lib/mailer'
+import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import type { CoAction } from '@innei/next-async/types/interface'
 
 const { nanoid } = N
 

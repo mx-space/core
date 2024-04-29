@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common'
+import { Module, forwardRef } from '@nestjs/common'
 
 import { CommentModule } from '../comment/comment.module'
 import { RecentlyController } from './recently.controller'

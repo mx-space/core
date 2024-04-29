@@ -12,7 +12,7 @@ import mongooseAutoPopulate from 'mongoose-autopopulate'
 
 import { PartialType } from '@nestjs/mapped-types'
 import { AutoIncrementID } from '@typegoose/auto-increment'
-import { index, modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
+import { Ref, index, modelOptions, plugin, prop } from '@typegoose/typegoose'
 
 import { NOTE_COLLECTION_NAME } from '~/constants/db.constant'
 import { TransformEmptyNull } from '~/decorators/dto/transformEmptyNull'

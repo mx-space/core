@@ -2,8 +2,6 @@ import { dump } from 'js-yaml'
 import JSZip from 'jszip'
 import { omit } from 'lodash'
 import { Types } from 'mongoose'
-import type { DatatypeDto } from './markdown.dto'
-import type { MarkdownYAMLProperty } from './markdown.interface'
 
 import {
   BadRequestException,
@@ -24,6 +22,8 @@ import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
 import { markdownToHtml } from './markdown.util'
+import type { MarkdownYAMLProperty } from './markdown.interface'
+import type { DatatypeDto } from './markdown.dto'
 
 @Injectable()
 export class MarkdownService {
@@ -89,7 +89,7 @@ export class MarkdownService {
       if (!item.meta) {
         models.push({
           title: `未命名-${count++}`,
-          slug: new Date().getTime(),
+          slug: Date.now(),
           text: item.text,
           ...genDate(item),
           categoryId: new Types.ObjectId(defaultCategory._id),
@@ -109,7 +109,7 @@ export class MarkdownService {
     }
     return await this.postModel
       .insertMany(models, { ordered: false })
-      .catch((err) => {
+      .catch(() => {
         Logger.log('一篇文章导入失败', MarkdownService.name)
       })
   }
@@ -175,7 +175,7 @@ export class MarkdownService {
       zip.file(
         (options.slug ? document.meta.slug : document.meta.title)
           .concat('.md')
-          .replace(/\//g, '-'),
+          .replaceAll('/', '-'),
         document.text,
       )
     }

@@ -1,4 +1,4 @@
-import { applyDecorators, UseGuards } from '@nestjs/common'
+import { UseGuards, applyDecorators } from '@nestjs/common'
 
 import { AuthGuard } from '../guards/auth.guard'
 

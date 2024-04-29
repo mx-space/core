@@ -1,6 +1,6 @@
 import { Schema } from 'mongoose'
 
-import { modelOptions, prop, Severity } from '@typegoose/typegoose'
+import { Severity, modelOptions, prop } from '@typegoose/typegoose'
 
 @modelOptions({
   options: { allowMixed: Severity.ALLOW, customName: 'Option' },

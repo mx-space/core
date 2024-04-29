@@ -1,7 +1,4 @@
-/* eslint-disable prefer-rest-params */
-
-/* eslint-disable prefer-rest-params */
-import { createLogger, Logger } from 'nestjs-pretty-logger'
+import { Logger, createLogger } from 'nestjs-pretty-logger'
 
 import { LOG_DIR } from '~/constants/path.constant'
 
@@ -18,7 +15,7 @@ Logger.setLoggerInstance(logger)
 if (!isTest) {
   try {
     logger.wrapAll()
-  } catch (error) {
+  } catch {
     logger.warn('wrap console failed')
   }
   logger.onData((data) => {

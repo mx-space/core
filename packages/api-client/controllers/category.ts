@@ -1,3 +1,7 @@
+import { attachRawFromOneToAnthor, destructureData } from '~/utils'
+import { autoBind } from '~/utils/auto-bind'
+import { RequestError } from '../core/error'
+import { CategoryType } from '../models/category'
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type {
@@ -13,12 +17,6 @@ import type {
   TagModel,
 } from '../models/category'
 import type { PostModel } from '../models/post'
-
-import { attachRawFromOneToAnthor, destructureData } from '~/utils'
-import { autoBind } from '~/utils/auto-bind'
-
-import { RequestError } from '../core/error'
-import { CategoryType } from '../models/category'
 
 declare module '../core/client' {
   interface HTTPClient<

@@ -6,8 +6,6 @@
  * @link https://github.com/kpfromer/nestjs-typegoose/blob/master/src/typegoose.providers.ts
  * @author Surmon <https://github.com/surmon-china>
  */
-import type { Provider } from '@nestjs/common'
-import type { Connection } from 'mongoose'
 
 import { Inject } from '@nestjs/common'
 import { getModelForClass } from '@typegoose/typegoose'
@@ -16,6 +14,8 @@ import {
   DB_CONNECTION_TOKEN,
   DB_MODEL_TOKEN_SUFFIX,
 } from '~/constants/system.constant'
+import type { Connection } from 'mongoose'
+import type { Provider } from '@nestjs/common'
 
 export interface TypegooseClass {
   new (...args: any[])

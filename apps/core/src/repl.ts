@@ -7,4 +7,5 @@ async function bootstrap() {
   const { AppModule } = await import('./app.module')
   await repl(AppModule)
 }
+
 bootstrap()

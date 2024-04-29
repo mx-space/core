@@ -1,15 +1,15 @@
-import { appendFile, rm, writeFile } from 'fs/promises'
-import { inspect } from 'util'
+import { appendFile, rm, writeFile } from 'node:fs/promises'
+import { inspect } from 'node:util'
 import axios from 'axios'
-import { catchError, Observable } from 'rxjs'
-import type { Subscriber } from 'rxjs'
+import { Observable, catchError } from 'rxjs'
 
 import { Injectable } from '@nestjs/common'
 
-import { dashboard } from '~/../package.json'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { spawnShell } from '~/utils'
+import type { Subscriber } from 'rxjs'
+import { dashboard } from '~/../package.json'
 
 const { repo } = dashboard
 
@@ -25,8 +25,8 @@ export class UpdateService {
 
         const json = await fetch(endpoint)
           .then((res) => res.json())
-          .catch((err) => {
-            subscriber.next(chalk.red(`Fetching error: ${err.message}`))
+          .catch((error) => {
+            subscriber.next(chalk.red(`Fetching error: ${error.message}`))
             subscriber.complete()
             return null
           })
@@ -63,8 +63,8 @@ export class UpdateService {
             responseType: 'arraybuffer',
           })
           .then((res) => res.data as ArrayBuffer)
-          .catch((err) => {
-            subscriber.next(chalk.red(`Downloading error: ${err.message}`))
+          .catch((error) => {
+            subscriber.next(chalk.red(`Downloading error: ${error.message}`))
             subscriber.complete()
             return null
           })
@@ -110,8 +110,8 @@ export class UpdateService {
           )
 
           subscriber.next(chalk.green(`Downloading finished.\n`))
-        } catch (err) {
-          subscriber.next(chalk.red(`Updating error: ${err.message}\n`))
+        } catch (error) {
+          subscriber.next(chalk.red(`Updating error: ${error.message}\n`))
         } finally {
           subscriber.complete()
         }

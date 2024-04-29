@@ -1,13 +1,11 @@
-/* eslint-disable @typescript-eslint/consistent-type-imports */
-import { Namespace } from 'socket.io'
-import type {
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-} from '@nestjs/websockets'
-import type { Socket } from 'socket.io'
+import { Namespace, Socket } from 'socket.io'
 
 import { OnEvent } from '@nestjs/event-emitter'
-import { WebSocketServer } from '@nestjs/websockets'
+import {
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  WebSocketServer,
+} from '@nestjs/websockets'
 
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthService } from '~/modules/auth/auth.service'
@@ -16,7 +14,6 @@ import { CacheService } from '~/processors/redis/cache.service'
 
 import { BusinessEvents } from '../../../constants/business-event.constant'
 import { BroadcastBaseGateway } from '../base.gateway'
-
 export type AuthGatewayOptions = {
   namespace: string
   authway?: 'jwt' | 'custom-token' | 'all'
@@ -44,7 +41,7 @@ export const createAuthGateway = (
     @WebSocketServer()
     protected namespace: Namespace
 
-    async authFailed(client: Socket) {
+    authFailed(client: Socket) {
       client.send(
         this.gatewayMessageFormat(BusinessEvents.AUTH_FAILED, '认证失败'),
       )
@@ -95,8 +92,8 @@ export const createAuthGateway = (
     async handleConnection(client: Socket) {
       const token =
         client.handshake.query.token ||
-        client.handshake.headers['authorization'] ||
-        client.handshake.headers['Authorization']
+        client.handshake.headers.authorization ||
+        client.handshake.headers.Authorization
       if (!token) {
         return this.authFailed(client)
       }

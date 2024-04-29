@@ -60,7 +60,7 @@ export function createNotifyManager() {
   const flush = (): void => {
     const originalQueue = queue
     queue = []
-    if (originalQueue.length) {
+    if (originalQueue.length > 0) {
       scheduleMicrotask(() => {
         batchNotifyFn(() => {
           originalQueue.forEach((callback) => {

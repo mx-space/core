@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/prefer-literal-enum-member */
 export const MIGRATE_COLLECTION_NAME = 'migrations'
 export const CHECKSUM_COLLECTION_NAME = 'checksum'
 

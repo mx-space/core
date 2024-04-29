@@ -1,7 +1,4 @@
 import pluralize from 'pluralize'
-import type { Type } from '@nestjs/common'
-import type { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
-import type { BaseModel } from '~/shared/model/base.model'
 
 import {
   Body,
@@ -24,6 +21,9 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { InjectModel } from '~/transformers/model.transformer'
+import type { BaseModel } from '~/shared/model/base.model'
+import type { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
+import type { Type } from '@nestjs/common'
 
 export type BaseCrudModuleType<T> = {
   _model: MongooseModel<T>

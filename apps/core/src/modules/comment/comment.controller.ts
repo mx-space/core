@@ -1,7 +1,4 @@
 import { isUndefined } from 'lodash'
-import type { DocumentType } from '@typegoose/typegoose'
-import type { Document, FilterQuery } from 'mongoose'
-import type { CommentModel } from './comment.model'
 
 import {
   Body,
@@ -45,6 +42,9 @@ import { CommentReplyMailType } from './comment.enum'
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
 import { CommentState } from './comment.model'
 import { CommentService } from './comment.service'
+import type { CommentModel } from './comment.model'
+import type { Document, FilterQuery } from 'mongoose'
+import type { DocumentType } from '@typegoose/typegoose'
 
 const idempotenceMessage = '哦吼，这句话你已经说过啦'
 const NESTED_REPLY_MAX = 10
