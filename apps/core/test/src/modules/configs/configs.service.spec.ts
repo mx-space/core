@@ -1,6 +1,5 @@
 import { redisHelper } from 'test/helper/redis-mock.helper'
 import { vi } from 'vitest'
-import type { MockCacheService } from 'test/helper/redis-mock.helper'
 
 import { UnprocessableEntityException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
@@ -17,6 +16,7 @@ import { CacheService } from '~/processors/redis/cache.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { getModelToken } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
+import type { MockCacheService } from 'test/helper/redis-mock.helper'
 
 describe('Test ConfigsService', () => {
   let service: ConfigsService

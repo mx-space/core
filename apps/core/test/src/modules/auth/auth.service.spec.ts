@@ -1,7 +1,7 @@
 import { vi } from 'vitest'
 
-import { configProvider } from '@/mock/modules/config.mock'
 import { Test } from '@nestjs/testing'
+import { configProvider } from '@/mock/modules/config.mock'
 
 import { AuthService } from '~/modules/auth/auth.service'
 import { UserModel } from '~/modules/user/user.model'

@@ -27,7 +27,7 @@
     "dev": "pnpm run build:external && pnpm -C \"apps/core\" run start",
     "bundle": "pnpm run build:external && pnpm -C \"apps/core\" run bundle",
     "test": "pnpm run build:external && pnpm -C \"apps/core\" run test",
-    "lint": "eslint --cache --ext .ts,.tsx --ignore-path .gitignore . --fix",
+    "lint": "pnpm -C \"apps/core\" run lint",
     "publish:core": "cd apps/core && npm run publish"
   },
   "dependencies": {

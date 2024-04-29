@@ -20,6 +20,8 @@ export default sxzz(
         'packages/*/esm',
         'packages/*/types',
         'test/**/*.db.ts',
+
+        'apps/core/test/**/*',
       ],
       languageOptions: {
         parserOptions: {
