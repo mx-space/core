@@ -1,3 +1,10 @@
+import type { ModuleMetadata } from '@nestjs/common'
+import type { NestFastifyApplication } from '@nestjs/platform-fastify'
+import type {
+  BeAnObject,
+  ReturnModelType,
+} from '@typegoose/typegoose/lib/types'
+
 import { APP_INTERCEPTOR } from '@nestjs/core'
 
 import { HttpCacheInterceptor } from '~/common/interceptors/cache.interceptor'
@@ -9,12 +16,6 @@ import { getModelToken } from '~/transformers/model.transformer'
 import { dbHelper } from './db-mock.helper'
 import { redisHelper } from './redis-mock.helper'
 import { setupE2EApp } from './setup-e2e'
-import type {
-  BeAnObject,
-  ReturnModelType,
-} from '@typegoose/typegoose/lib/types'
-import type { NestFastifyApplication } from '@nestjs/platform-fastify'
-import type { ModuleMetadata } from '@nestjs/common'
 
 type ClassType = new (...args: any[]) => any
 
@@ -63,8 +64,9 @@ export const createE2EApp = (module: ModuleMetadata & E2EAppMetaData) => {
         provide: APP_INTERCEPTOR,
         useClass: ResponseInterceptor, // 1
       },
-      { provide: token, useValue: CacheService },
     )
+
+    nestModule.providers.push({ provide: token, useValue: CacheService })
     const modelMap = new Map() as ModelMap
     if (models) {
       models.forEach((model) => {

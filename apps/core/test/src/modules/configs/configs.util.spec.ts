@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 
 import {
-  Encrypt,
   decryptObject,
+  Encrypt,
   encryptObject,
   encryptProperty,
   isEncryptProperty,

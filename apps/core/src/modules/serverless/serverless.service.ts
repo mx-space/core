@@ -450,6 +450,10 @@ export class ServerlessService implements OnModuleInit {
         'vm',
       ]
 
+      for (const lib of [...bannedLibs]) {
+        bannedLibs.push(`node:${lib}`)
+      }
+
       if (bannedLibs.includes(id)) {
         throw new Error(`cannot require ${id}`)
       }

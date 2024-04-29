@@ -78,7 +78,7 @@ describe('test serverless function service', () => {
       Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
         type: SnippetType.Function,
         raw: async function handler(context, require) {
-          return (await require('node:path')).join('1', '1')
+          return (await require('path')).join('1', '1')
         }.toString(),
       })
       const data = await service.injectContextIntoServerlessFunctionAndCall(
@@ -108,7 +108,7 @@ describe('test serverless function service', () => {
       Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
         type: SnippetType.Function,
         raw: async function handler(context, require) {
-          return await require('node:os')
+          return await require('os')
         }.toString(),
       })
 

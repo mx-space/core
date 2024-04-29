@@ -1,7 +1,9 @@
-import { UnauthorizedException } from '@nestjs/common'
-import { authJWTToken } from '../constants/token'
 import type { ExecutionContext } from '@nestjs/common'
 import type { UserModel } from '~/modules/user/user.model'
+
+import { UnauthorizedException } from '@nestjs/common'
+
+import { authJWTToken } from '../constants/token'
 
 export const mockUser1: UserModel = {
   id: '1',
