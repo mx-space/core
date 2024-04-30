@@ -19,8 +19,8 @@ importers:
         version: 7.0.7-0
     optionalDependencies:
       mongodb-memory-server:
-        specifier: 9.1.8
-        version: 9.1.8
+        specifier: 9.2.0
+        version: 9.2.0
       redis-memory-server:
         specifier: 0.10.0
         version: 0.10.0
@@ -4486,16 +4486,8 @@ packages:
   mongodb-connection-string-url@3.0.0:
     resolution: {integrity: sha512-t1Vf+m1I5hC2M5RJx/7AtxgABy1cZmIPQRMXw+gEIPn/cZNF3Oiy+l0UIypUwVB5trcWHq3crg2g3uAR9aAwsQ==}
 
-  mongodb-memory-server-core@9.1.8:
-    resolution: {integrity: sha512-iCWwaP7De4lm1lRCUKB2ffUYr6GB0I/cj6fK0NV9dgwc9fA3xapHTTT/cPYRNx29M5gmAOSaOpUgjP7i2GZ/LQ==}
-    engines: {node: '>=14.20.1'}
-
   mongodb-memory-server-core@9.2.0:
     resolution: {integrity: sha512-9SWZEy+dGj5Fvm5RY/mtqHZKS64o4heDwReD4SsfR7+uNgtYo+JN41kPCcJeIH3aJf04j25i5Dia2s52KmsMPA==}
-    engines: {node: '>=14.20.1'}
-
-  mongodb-memory-server@9.1.8:
-    resolution: {integrity: sha512-QumPTOlWWWzgW6dtV4bf+ZFdTxenHSSGS4ZT85Vbb+FzPVoOtfcFwYlSfC9IM4e2nw7xvnQZvWtILYseO6HE9Q==}
     engines: {node: '>=14.20.1'}
 
   mongodb-memory-server@9.2.0:
@@ -11103,29 +11095,6 @@ snapshots:
       '@types/whatwg-url': 11.0.4
       whatwg-url: 13.0.0
 
-  mongodb-memory-server-core@9.1.8:
-    dependencies:
-      async-mutex: 0.4.1
-      camelcase: 6.3.0
-      debug: 4.3.4
-      find-cache-dir: 3.3.2
-      follow-redirects: 1.15.6(debug@4.3.4)
-      https-proxy-agent: 7.0.4
-      mongodb: 5.9.2
-      new-find-package-json: 2.0.0
-      semver: 7.6.0
-      tar-stream: 3.1.7
-      tslib: 2.6.2
-      yauzl: 2.10.0
-    transitivePeerDependencies:
-      - '@aws-sdk/credential-providers'
-      - '@mongodb-js/zstd'
-      - kerberos
-      - mongodb-client-encryption
-      - snappy
-      - supports-color
-    optional: true
-
   mongodb-memory-server-core@9.2.0:
     dependencies:
       async-mutex: 0.4.1
@@ -11140,19 +11109,6 @@ snapshots:
       tar-stream: 3.1.7
       tslib: 2.6.2
       yauzl: 3.1.3
-    transitivePeerDependencies:
-      - '@aws-sdk/credential-providers'
-      - '@mongodb-js/zstd'
-      - kerberos
-      - mongodb-client-encryption
-      - snappy
-      - supports-color
-    optional: true
-
-  mongodb-memory-server@9.1.8:
-    dependencies:
-      mongodb-memory-server-core: 9.1.8
-      tslib: 2.6.2
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@mongodb-js/zstd'
