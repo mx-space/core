@@ -44,7 +44,7 @@ const providers: Provider<any>[] = [
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {
-        ttl: 60_000,
+        ttl: 10_000,
         limit: 50,
       },
     ]),
