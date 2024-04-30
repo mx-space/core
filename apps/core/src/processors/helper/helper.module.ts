@@ -8,6 +8,7 @@ import { NoteModule } from '~/modules/note/note.module'
 import { PageModule } from '~/modules/page/page.module'
 import { PostModule } from '~/modules/post/post.module'
 
+import { THROTTLE_OPTIONS } from '~/app.config'
 import { AssetService } from './helper.asset.service'
 import { BarkPushService } from './helper.bark.service'
 import { CountingService } from './helper.counting.service'
@@ -42,12 +43,7 @@ const providers: Provider<any>[] = [
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 10_000,
-        limit: 50,
-      },
-    ]),
+    ThrottlerModule.forRoot([THROTTLE_OPTIONS]),
     EventEmitterModule.forRoot({
       wildcard: false,
       // the delimiter used to segment namespaces

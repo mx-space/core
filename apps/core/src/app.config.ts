@@ -4,6 +4,7 @@ import { program } from 'commander'
 import { load as yamlLoad } from 'js-yaml'
 import { machineIdSync } from 'node-machine-id'
 
+import { seconds } from '@nestjs/throttler'
 import { isDebugMode, isDev } from './global/env.global'
 import { parseBooleanishValue } from './utils'
 import type { AxiosRequestConfig } from 'axios'
@@ -62,6 +63,9 @@ const commander = program
     '--encrypt_algorithm <string>',
     'custom encrypt algorithm, default is aes-256-ecb',
   )
+  // throttle
+  .option('--throttle_ttl <number>', 'throttle ttl')
+  .option('--throttle_limit <number>', 'throttle limit')
 
   // other
   .option('--color', 'force enable shell color')
@@ -156,6 +160,10 @@ export const DEBUG_MODE = {
   logging: isDebugMode,
   httpRequestVerbose:
     argv.httpRequestVerbose ?? argv.http_request_verbose ?? true,
+}
+export const THROTTLE_OPTIONS = {
+  ttl: seconds(argv.throttle_ttl ?? 10),
+  limit: argv.throttle_limit ?? 10,
 }
 
 const ENCRYPT_KEY = argv.encrypt_key || MX_ENCRYPT_KEY

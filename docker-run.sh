@@ -27,4 +27,12 @@ if [ "$ENCRYPT_ENABLE" = "true" ]; then
   command+=" --encrypt_enable "
 fi
 
+if [ -n "$THROTTLE_TTL" ]; then
+  command+=" --throttle_ttl=${THROTTLE_TTL}"
+fi
+
+if [ -n "$THROTTLE_LIMIT" ]; then
+  command+=" --throttle_limit=${THROTTLE_LIMIT}"
+fi
+
 exec $command

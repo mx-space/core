@@ -68,3 +68,8 @@ export const ENCRYPT = {
   key: '593f62860255feb0a914534a43814b9809cc7534da7f5485cd2e3d3c8609acab',
   enable: true,
 }
+
+export const THROTTLE_OPTIONS = {
+  ttl: 10_000,
+  limit: 50,
+}
