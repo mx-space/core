@@ -173,8 +173,8 @@ importers:
         specifier: 5.5.1
         version: 5.5.1
       cache-manager-ioredis-yet:
-        specifier: 2.0.3
-        version: 2.0.3
+        specifier: 2.0.4
+        version: 2.0.4
       class-transformer:
         specifier: 0.5.1
         version: 0.5.1
@@ -2640,8 +2640,8 @@ packages:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
     engines: {node: '>=8'}
 
-  cache-manager-ioredis-yet@2.0.3:
-    resolution: {integrity: sha512-KzNMpQ4uH2zMhN695upVZS7dymQA5WIrYvzcWiU3HbQwfbDo+bzLTUyd5Zou0bO6zgbMLbbzBq0/nUfogIblpQ==}
+  cache-manager-ioredis-yet@2.0.4:
+    resolution: {integrity: sha512-IYg0/QjaQ7G9NObopYCmJ9mytkUOw995/lyxraY9UlqLL5zR+7SdbJdUDF3cFip2H/aPM6UEtJ+j180sMF5OAw==}
     engines: {node: '>= 18.0.0'}
 
   cache-manager@5.5.1:
@@ -8949,7 +8949,7 @@ snapshots:
 
   cac@6.7.14: {}
 
-  cache-manager-ioredis-yet@2.0.3:
+  cache-manager-ioredis-yet@2.0.4:
     dependencies:
       cache-manager: 5.5.1
       ioredis: 5.4.1
