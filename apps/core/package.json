@@ -113,7 +113,7 @@
     "nestjs-pretty-logger": "0.2.2",
     "node-machine-id": "1.1.12",
     "nodemailer": "6.9.13",
-    "openai": "4.39.0",
+    "openai": "4.39.1",
     "pluralize": "^8.0.0",
     "qs": "6.12.1",
     "reflect-metadata": "0.2.2",
