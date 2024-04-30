@@ -62,13 +62,13 @@ describe('test serverless function service', () => {
       const model = new SnippetModel()
       Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
         type: SnippetType.Function,
-        raw: async function handler(context, require) {
+        raw: async function handler() {
           return 1 + 1
         }.toString(),
       })
       const data = await service.injectContextIntoServerlessFunctionAndCall(
         model,
-        { req: {} as any, res: {} as any },
+        { req: {} as any, res: {} as any, isAuthenticated: false },
       )
       expect(data).toBe(2)
     })
@@ -78,12 +78,12 @@ describe('test serverless function service', () => {
       Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
         type: SnippetType.Function,
         raw: async function handler(context, require) {
-          return (await require('path')).join('1', '1')
+          return (await require('node:path')).join('1', '1')
         }.toString(),
       })
       const data = await service.injectContextIntoServerlessFunctionAndCall(
         model,
-        { req: {} as any, res: {} as any },
+        { req: {} as any, res: {} as any, isAuthenticated: false },
       )
       expect(data).toBe('1/1')
     })
@@ -98,7 +98,7 @@ describe('test serverless function service', () => {
       })
       const data = await service.injectContextIntoServerlessFunctionAndCall(
         model,
-        { req: {} as any, res: {} as any },
+        { req: {} as any, res: {} as any, isAuthenticated: false },
       )
       expect(data).toBeDefined()
     })
@@ -108,7 +108,7 @@ describe('test serverless function service', () => {
       Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
         type: SnippetType.Function,
         raw: async function handler(context, require) {
-          return await require('os')
+          return await require('node:os')
         }.toString(),
       })
 
@@ -116,6 +116,7 @@ describe('test serverless function service', () => {
         service.injectContextIntoServerlessFunctionAndCall(model, {
           req: {} as any,
           res: {} as any,
+          isAuthenticated: false,
         }),
       ).rejects.toThrow()
     })
@@ -141,7 +142,7 @@ describe('test serverless function service', () => {
       const model = new SnippetModel()
       Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
         type: SnippetType.Function,
-        raw: async function handler(context, require) {
+        raw: async function handler(context) {
           return context.throws(404, 'not found')
         }.toString(),
       })
@@ -150,6 +151,7 @@ describe('test serverless function service', () => {
         service.injectContextIntoServerlessFunctionAndCall(model, {
           req: {} as any,
           res: createMockedContextResponse({} as any),
+          isAuthenticated: false,
         }),
       ).rejects.toThrow()
     })
@@ -163,7 +165,7 @@ describe('test serverless function service', () => {
     })
     const data = await service.injectContextIntoServerlessFunctionAndCall(
       model,
-      { req: {} as any, res: {} as any },
+      { req: {} as any, res: {} as any, isAuthenticated: false },
     )
 
     expect(typeof data.get).toBe('function')
@@ -177,7 +179,7 @@ describe('test serverless function service', () => {
     })
     const data = await service.injectContextIntoServerlessFunctionAndCall(
       model,
-      { req: {} as any, res: {} as any },
+      { req: {} as any, res: {} as any, isAuthenticated: false },
     )
     expect(typeof data).toBe('function')
   })
