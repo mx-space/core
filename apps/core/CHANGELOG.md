@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## [5.6.4](https://github.com/mx-space/core/compare/v5.6.3...v5.6.4) (2024-04-30)
+
+
+### Bug Fixes
+
+* **deps:** update babel monorepo to v7.24.5 ([#1661](https://github.com/mx-space/core/issues/1661)) ([6a4a2dc](https://github.com/mx-space/core/commit/6a4a2dc0e80d767b210f4e217ea60a6c4debce53))
+* **deps:** update dependency cache-manager-ioredis-yet to v2.0.4 ([#1660](https://github.com/mx-space/core/issues/1660)) ([cb4d2f0](https://github.com/mx-space/core/commit/cb4d2f057a9d075148ec28b9925e36126a2f1b59))
+* **deps:** update dependency dayjs to v1.11.11 ([bd6cec5](https://github.com/mx-space/core/commit/bd6cec573c71c9b83318e9afb731f8ed89f3e014))
+* **deps:** update dependency isbot to v5.1.6 ([#1662](https://github.com/mx-space/core/issues/1662)) ([2b5a901](https://github.com/mx-space/core/commit/2b5a901755b7f7000ae9a6f56092edcb7ebaedc2))
+* **deps:** update dependency lru-cache to v10.2.2 ([0adbd37](https://github.com/mx-space/core/commit/0adbd37b661eb455a5cb62270c0556f6c52faf23))
+* **deps:** update dependency mongoose to v8.3.3 ([#1663](https://github.com/mx-space/core/issues/1663)) ([dcff2bd](https://github.com/mx-space/core/commit/dcff2bd483629dfb9ae8ba40dd4fd8cc23f4614c))
+* **deps:** update dependency openai to v4.39.0 ([#1664](https://github.com/mx-space/core/issues/1664)) ([13c26c1](https://github.com/mx-space/core/commit/13c26c194a8ba4cd3486b518f07ca41b6b247a35))
+* download asset script ([ee92d48](https://github.com/mx-space/core/commit/ee92d486cad2ee4b65008c31c8495ec5f9f52eeb))
+* increase throttler ([eb95be1](https://github.com/mx-space/core/commit/eb95be1c69c30af30388180f6da1811d8f12616c))
+* lint ([1ff8015](https://github.com/mx-space/core/commit/1ff80156f0cf66eb9997a49875bfc31ce2c2cb13))
+* lint ([358a5e6](https://github.com/mx-space/core/commit/358a5e613546d004b8c0cde1ad954a38ea5a62d0))
+* lint error ([c6980f9](https://github.com/mx-space/core/commit/c6980f98c2f32f6b9ab8d9ab60d07f1e07b8ced6))
+* testing ([f74ef93](https://github.com/mx-space/core/commit/f74ef93dc3f58bc7490cc33bd2b6a7a4cda21a89))
+
+
+
 ## [5.6.3](https://github.com/mx-space/core/compare/v5.6.2...v5.6.3) (2024-04-27)
 
 
