@@ -111,7 +111,7 @@ importers:
         version: link:../../packages/external
       '@nestjs/cache-manager':
         specifier: 2.2.2
-        version: 2.2.2(@nestjs/common@10.3.8(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.3.8(@nestjs/common@10.3.8(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/websockets@10.3.8)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1))(cache-manager@5.5.1)(rxjs@7.8.1)
+        version: 2.2.2(@nestjs/common@10.3.8(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.3.8(@nestjs/common@10.3.8(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/websockets@10.3.8)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1))(cache-manager@5.5.2)(rxjs@7.8.1)
       '@nestjs/common':
         specifier: 10.3.8
         version: 10.3.8(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1)
@@ -170,8 +170,8 @@ importers:
         specifier: ^2.4.3
         version: 2.4.3
       cache-manager:
-        specifier: 5.5.1
-        version: 5.5.1
+        specifier: 5.5.2
+        version: 5.5.2
       cache-manager-ioredis-yet:
         specifier: 2.0.4
         version: 2.0.4
@@ -2644,8 +2644,8 @@ packages:
     resolution: {integrity: sha512-IYg0/QjaQ7G9NObopYCmJ9mytkUOw995/lyxraY9UlqLL5zR+7SdbJdUDF3cFip2H/aPM6UEtJ+j180sMF5OAw==}
     engines: {node: '>= 18.0.0'}
 
-  cache-manager@5.5.1:
-    resolution: {integrity: sha512-QYZFOjZTTennYdN3NNCKh+yq452+wQ4ChyL40jkEyghIgg5Ugwb4YO8ARIIF1fvTBkgDLlLTYFaxZVaPGmQ92A==}
+  cache-manager@5.5.2:
+    resolution: {integrity: sha512-HozSRPCBB26O1ZVIzX8GjauYMoZOpWcArqRIFlPKr+Mm3o+p/6VcHxRt8ia0F/tMwZdKxpHG0M+Am5Qh9FmfKw==}
 
   call-bind@1.0.7:
     resolution: {integrity: sha512-GHTSNSYICQ7scH7sZ+M2rFopRoLh8t2bLSW6BbgrtLsahOIB5iyAVJf9GjWK3cYTDaMj4XdBpM1cA6pIS0Kv2w==}
@@ -7429,11 +7429,11 @@ snapshots:
     dependencies:
       sparse-bitfield: 3.0.3
 
-  '@nestjs/cache-manager@2.2.2(@nestjs/common@10.3.8(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.3.8(@nestjs/common@10.3.8(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/websockets@10.3.8)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1))(cache-manager@5.5.1)(rxjs@7.8.1)':
+  '@nestjs/cache-manager@2.2.2(@nestjs/common@10.3.8(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.3.8(@nestjs/common@10.3.8(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/websockets@10.3.8)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1))(cache-manager@5.5.2)(rxjs@7.8.1)':
     dependencies:
       '@nestjs/common': 10.3.8(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1)
       '@nestjs/core': 10.3.8(@nestjs/common@10.3.8(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/websockets@10.3.8)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1)
-      cache-manager: 5.5.1
+      cache-manager: 5.5.2
       rxjs: 7.8.1
 
   '@nestjs/cli@10.3.2(@swc/core@1.5.2)(esbuild@0.19.11)':
@@ -8943,13 +8943,13 @@ snapshots:
 
   cache-manager-ioredis-yet@2.0.4:
     dependencies:
-      cache-manager: 5.5.1
+      cache-manager: 5.5.2
       ioredis: 5.4.1
       telejson: 7.2.0
     transitivePeerDependencies:
       - supports-color
 
-  cache-manager@5.5.1:
+  cache-manager@5.5.2:
     dependencies:
       eventemitter3: 5.0.1
       lodash.clonedeep: 4.5.0
