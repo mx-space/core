@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [5.6.5](https://github.com/mx-space/core/compare/v5.6.4...v5.6.5) (2024-05-01)
+
+
+### Bug Fixes
+
+* **deps:** update dependency cache-manager to v5.5.2 ([#1659](https://github.com/mx-space/core/issues/1659)) ([88a80b0](https://github.com/mx-space/core/commit/88a80b024e41c7a36e64d31c37cd83d6cb0891c9))
+* **deps:** update dependency mongoose-lean-getters to v2.1.0 ([#1656](https://github.com/mx-space/core/issues/1656)) ([f1190e2](https://github.com/mx-space/core/commit/f1190e2ae4d7357723e8c720607acebea0c0d236))
+* **deps:** update dependency openai to v4.39.1 ([7bc272e](https://github.com/mx-space/core/commit/7bc272ead03c3f9c3d184b0fd7413204930c6f6c))
+* make throttle config ([4543459](https://github.com/mx-space/core/commit/4543459336dff68510637d624c7b8bfece56eb28))
+* summary language detect logic ([90e5a6b](https://github.com/mx-space/core/commit/90e5a6b594cc8101f6417b735c35a7008b0d34ea))
+
+
+
 ## [5.6.4](https://github.com/mx-space/core/compare/v5.6.3...v5.6.4) (2024-04-30)
 
 
