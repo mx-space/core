@@ -92,8 +92,8 @@ importers:
         specifier: ^7.24.0
         version: 7.24.5
       '@clerk/clerk-sdk-node':
-        specifier: 5.0.2
-        version: 5.0.2(react@18.2.0)
+        specifier: 5.0.3
+        version: 5.0.3(react@18.2.0)
       '@fastify/cookie':
         specifier: 9.3.1
         version: 9.3.1
@@ -898,16 +898,16 @@ packages:
     resolution: {integrity: sha512-6mQNsaLeXTw0nxYUYu+NSa4Hx4BlF1x1x8/PMFbiR+GBSr+2DkECc69b8hgy2frEodNcvPffeH8YfWd3LI6jhQ==}
     engines: {node: '>=6.9.0'}
 
-  '@clerk/backend@1.1.0':
-    resolution: {integrity: sha512-1qd0tKl0B0jJlmmg+o37pXSfzQHRMTk/HGPTvFGWhYCscMXjlKcXrSgDIjN3TATmOIDtA2vCT3AMxBWyVTcKmQ==}
+  '@clerk/backend@1.1.1':
+    resolution: {integrity: sha512-6r2SPtO5TB53OiGwexLP19LvVoUO+Nz7KlE4US1uposaT2X1+enRtA0LD9DwJnv1YJKxnPXVkwiuqYYlGysusw==}
     engines: {node: '>=18.17.0'}
 
-  '@clerk/clerk-sdk-node@5.0.2':
-    resolution: {integrity: sha512-qeW3W3mQoaEvMPZ/d+IPyEly1OnVVBjewUPJQzmVNHKJKdXxrJRnYI5UieEjigveCIkrh1hR5ydN9GdazYvP7A==}
+  '@clerk/clerk-sdk-node@5.0.3':
+    resolution: {integrity: sha512-QBfzWCtU5Qslj6oFQKVsvzhYieSR3QdZkVi8kOF0RTpE73MrNHVx5aSKMB0gYkALsgHTW+6pzH/iInzGqKnnug==}
     engines: {node: '>=18.17.0'}
 
-  '@clerk/shared@2.0.0':
-    resolution: {integrity: sha512-HRbBGhAetOE6gSFd2jlLJTo+BFjuEr9lD1xigtBXdJUnmVngunciikQU2dZ4i/20X7B4VTrofhNpYi9MsCm7dw==}
+  '@clerk/shared@2.0.1':
+    resolution: {integrity: sha512-iRjvWCGVzcN5vi9O3+/bEbA22TegxlnHJJE1a6989OFeeXqSKFqmYwDrvM48umJrbvX5cMbKEgctSVXT2IOgCw==}
     engines: {node: '>=18.17.0'}
     peerDependencies:
       react: '>=18'
@@ -7017,9 +7017,9 @@ snapshots:
       '@babel/helper-validator-identifier': 7.24.5
       to-fast-properties: 2.0.0
 
-  '@clerk/backend@1.1.0(react@18.2.0)':
+  '@clerk/backend@1.1.1(react@18.2.0)':
     dependencies:
-      '@clerk/shared': 2.0.0(react@18.2.0)
+      '@clerk/shared': 2.0.1(react@18.2.0)
       cookie: 0.5.0
       snakecase-keys: 5.4.4
       tslib: 2.4.1
@@ -7027,16 +7027,16 @@ snapshots:
       - react
       - react-dom
 
-  '@clerk/clerk-sdk-node@5.0.2(react@18.2.0)':
+  '@clerk/clerk-sdk-node@5.0.3(react@18.2.0)':
     dependencies:
-      '@clerk/backend': 1.1.0(react@18.2.0)
-      '@clerk/shared': 2.0.0(react@18.2.0)
+      '@clerk/backend': 1.1.1(react@18.2.0)
+      '@clerk/shared': 2.0.1(react@18.2.0)
       tslib: 2.4.1
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@clerk/shared@2.0.0(react@18.2.0)':
+  '@clerk/shared@2.0.1(react@18.2.0)':
     dependencies:
       glob-to-regexp: 0.4.1
       js-cookie: 3.0.1
