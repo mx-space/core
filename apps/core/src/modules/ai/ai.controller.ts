@@ -33,19 +33,19 @@ export class AiController {
   ) {}
 
   @Post('/generate-summary')
-  @AuthButProd()
+  @Auth()
   generateSummary(@Body() body: GenerateAiSummaryDto) {
     return this.service.generateSummaryByOpenAI(body.refId, body.lang)
   }
 
   @Get('/summaries/ref/:id')
-  @AuthButProd()
+  @Auth()
   async getSummaryByRefId(@Param() params: MongoIdDto) {
     return this.service.getSummariesByRefId(params.id)
   }
 
   @Get('/summaries')
-  @AuthButProd()
+  @Auth()
   async getSummaries(@Query() query: PagerDto) {
     return this.service.getAllSummaries(query)
   }
@@ -72,7 +72,9 @@ export class AiController {
     @Req() req: FastifyBizRequest,
   ) {
     const acceptLang = req.headers['accept-language']
-    const finalLang = query.lang || acceptLang || 'zh-CN'
+    const nextLang = query.lang || acceptLang || 'zh-CN'
+    const finalLang = nextLang.split('-').shift() || 'zh'
+
     const dbStored = await this.service.getSummaryByArticleId(
       params.id,
       finalLang,

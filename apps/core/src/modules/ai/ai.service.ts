@@ -149,14 +149,13 @@ CONCISE SUMMARY:`,
   async getAllSummaries(pager: PagerDto) {
     const { page, size } = pager
     const summaries = await this.aiSummaryModel.paginate(
+      {},
       {
         page,
         limit: size,
         sort: {
           created: -1,
         },
-      },
-      {
         lean: true,
         leanWithId: true,
       },
