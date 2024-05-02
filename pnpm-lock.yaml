@@ -370,8 +370,8 @@ importers:
         specifier: 20.12.8
         version: 20.12.8
       '@types/nodemailer':
-        specifier: 6.4.14
-        version: 6.4.14
+        specifier: 6.4.15
+        version: 6.4.15
       '@types/qs':
         specifier: 6.9.15
         version: 6.9.15
@@ -2109,8 +2109,8 @@ packages:
   '@types/node@20.12.8':
     resolution: {integrity: sha512-NU0rJLJnshZWdE/097cdCBbyW1h4hEg0xpovcoAQYHl8dnEyp/NAOiE45pvc+Bd1Dt+2r94v2eGFpQJ4R7g+2w==}
 
-  '@types/nodemailer@6.4.14':
-    resolution: {integrity: sha512-fUWthHO9k9DSdPCSPRqcu6TWhYyxTBg382vlNIttSe9M7XfsT06y0f24KHXtbnijPGGRIcVvdKHTNikOI6qiHA==}
+  '@types/nodemailer@6.4.15':
+    resolution: {integrity: sha512-0EBJxawVNjPkng1zm2vopRctuWVCxk34JcIlRuXSf54habUWdz1FB7wHDqOqvDa8Mtpt0Q3LTXQkAs2LNyK5jQ==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -8322,7 +8322,7 @@ snapshots:
     dependencies:
       undici-types: 5.26.5
 
-  '@types/nodemailer@6.4.14':
+  '@types/nodemailer@6.4.15':
     dependencies:
       '@types/node': 20.12.8
 
