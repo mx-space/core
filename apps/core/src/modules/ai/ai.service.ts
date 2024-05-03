@@ -83,12 +83,18 @@ export class AiService {
       const taskPromise = handle.bind(this)(
         articleId,
         this.serializeText(article.document.text),
+        article.document.title,
       ) as Promise<any>
 
       this.cachedTaskId2AiPromise.set(taskId, taskPromise)
       return await taskPromise
 
-      async function handle(this: AiService, id: string, text: string) {
+      async function handle(
+        this: AiService,
+        id: string,
+        text: string,
+        title: string,
+      ) {
         // 等待 30s
         await redis.set(taskId, 'processing', 'EX', 30)
 
@@ -110,7 +116,7 @@ CONCISE SUMMARY:`,
         const summary = completion.choices[0].message.content
 
         this.logger.log(
-          `OpenAI 生成文章 ${articleId} 的摘要花费了 ${completion.usage?.total_tokens}token`,
+          `OpenAI 生成文章 ${id} 「${title}」的摘要花费了 ${completion.usage?.total_tokens}token`,
         )
         const contentMd5 = md5(text)
 
