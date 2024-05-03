@@ -16,6 +16,7 @@ import { md5 } from '~/utils'
 
 import { ConfigsService } from '../configs/configs.service'
 import { AISummaryModel } from './ai-summary.model'
+import { DEFAULT_SUMMARY_LANG, LANGUAGE_CODE_TO_NAME } from './ai.constants'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 
 @Injectable()
@@ -37,7 +38,10 @@ export class AiService {
   private serializeText(text: string) {
     return removeMdCodeblock(text)
   }
-  async generateSummaryByOpenAI(articleId: string, lang = 'zh-CN') {
+  async generateSummaryByOpenAI(
+    articleId: string,
+    lang = DEFAULT_SUMMARY_LANG,
+  ) {
     const {
       ai: { enableSummary, openAiEndpoint, openAiKey },
     } = await this.configService.waitForConfigReady()
@@ -92,7 +96,7 @@ export class AiService {
           messages: [
             {
               role: 'user',
-              content: `Summarize this article in "${lang}" language about 150 characters:
+              content: `Summarize this article in ${LANGUAGE_CODE_TO_NAME[lang] || 'Chinese'} to 150 words:
 "${text}"
 
 CONCISE SUMMARY:`,
@@ -205,7 +209,7 @@ CONCISE SUMMARY:`,
     await doc.save()
     return doc
   }
-  async getSummaryByArticleId(articleId: string, lang = 'zh-CN') {
+  async getSummaryByArticleId(articleId: string, lang = DEFAULT_SUMMARY_LANG) {
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article) {
       throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)

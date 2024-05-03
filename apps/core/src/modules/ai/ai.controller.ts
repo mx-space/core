@@ -24,6 +24,7 @@ import {
   UpdateSummaryDto,
 } from './ai.dto'
 import { AiService } from './ai.service'
+import { DEFAULT_SUMMARY_LANG } from './ai.constants'
 
 @ApiController('ai')
 export class AiController {
@@ -72,8 +73,8 @@ export class AiController {
     @Req() req: FastifyBizRequest,
   ) {
     const acceptLang = req.headers['accept-language']
-    const nextLang = query.lang || acceptLang || 'zh-CN'
-    const finalLang = nextLang.split('-').shift() || 'zh'
+    const nextLang = query.lang || acceptLang
+    const finalLang = nextLang?.split('-').shift() || DEFAULT_SUMMARY_LANG
 
     const dbStored = await this.service.getSummaryByArticleId(
       params.id,
