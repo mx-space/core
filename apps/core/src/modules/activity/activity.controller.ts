@@ -180,15 +180,20 @@ export class ActivityController {
 
     for (const item of like.data) {
       const likeData = pick(item, 'created', 'id') as any
-      if ('nid' in item.ref) {
-        likeData.type = CollectionRefTypes.Note
-        likeData.nid = item.ref.nid
+
+      if (!item.ref) {
+        likeData.title = '已删除的内容'
       } else {
-        likeData.type = CollectionRefTypes.Post
-        likeData.slug = item.ref.slug
+        if ('nid' in item.ref) {
+          likeData.type = CollectionRefTypes.Note
+          likeData.nid = item.ref.nid
+        } else {
+          likeData.type = CollectionRefTypes.Post
+          likeData.slug = item.ref.slug
+        }
+        likeData.title = item.ref.title
       }
 
-      likeData.title = item.ref.title
       transformedLike.push(likeData)
     }
 

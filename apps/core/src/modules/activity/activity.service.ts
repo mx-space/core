@@ -224,7 +224,9 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     const docsWithRefModel = activities.docs.map((ac) => {
       const nextAc = ac.toJSON()
-      Reflect.set(nextAc, 'ref', refModelData.get(ac.payload.id))
+      const refModel = refModelData.get(ac.payload.id)
+
+      refModel && Reflect.set(nextAc, 'ref', refModel)
 
       return nextAc
     }) as any as (ActivityModel & {
