@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [5.6.6](https://github.com/mx-space/core/compare/v5.6.5...v5.6.6) (2024-05-03)
+
+
+### Bug Fixes
+
+* add logger info ([bed1997](https://github.com/mx-space/core/commit/bed19977ed433b5661d2123615c2a1b51c471654))
+* ai summarize ([1707c01](https://github.com/mx-space/core/commit/1707c019de028078905d93737fa13c89fb7e51b3))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.3 ([0b63c0b](https://github.com/mx-space/core/commit/0b63c0bb1babe7b545f8609927f07c1cdbac488b))
+
+
+
 ## [5.6.5](https://github.com/mx-space/core/compare/v5.6.4...v5.6.5) (2024-05-01)
 
 
