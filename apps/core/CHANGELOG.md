@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [5.6.7](https://github.com/mx-space/core/compare/v5.6.6...v5.6.7) (2024-05-03)
+
+
+### Bug Fixes
+
+* handle deleted content in get like data ([911640b](https://github.com/mx-space/core/commit/911640b32b26711670b68fd0b87bd0884c53df2a))
+
+
+
 ## [5.6.6](https://github.com/mx-space/core/compare/v5.6.5...v5.6.6) (2024-05-03)
 
 
