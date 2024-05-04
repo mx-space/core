@@ -269,8 +269,8 @@ importers:
         specifier: 6.9.13
         version: 6.9.13
       openai:
-        specifier: 4.39.1
-        version: 4.39.1(encoding@0.1.13)
+        specifier: 4.40.2
+        version: 4.40.2(encoding@0.1.13)
       pluralize:
         specifier: ^8.0.0
         version: 8.0.0
@@ -4748,8 +4748,8 @@ packages:
     resolution: {integrity: sha512-1FlR+gjXK7X+AsAHso35MnyN5KqGwJRi/31ft6x0M194ht7S+rWAvd7PHss9xSKMzE0asv1pyIHaJYq+BbacAQ==}
     engines: {node: '>=12'}
 
-  openai@4.39.1:
-    resolution: {integrity: sha512-Qe3HXHrCMjwAHXWPywUwzI4PHf9r14uyiRRuMmiJjsfv1tREYMHtgIHXNlb54ZxtYJaIj19RHYMq6UQ2hgrIJQ==}
+  openai@4.40.2:
+    resolution: {integrity: sha512-r9AIaYQNHw8HGJpnny6Rcu/0moGUVqvpv0wTJfP0hKlk8ja5DVUMUCdPWEVfg7lxQMC+wIh+Qjp3onDIhVBemA==}
     hasBin: true
 
   openapi3-ts@2.0.2:
@@ -11364,7 +11364,7 @@ snapshots:
     dependencies:
       mimic-fn: 4.0.0
 
-  openai@4.39.1(encoding@0.1.13):
+  openai@4.40.2(encoding@0.1.13):
     dependencies:
       '@types/node': 18.19.6
       '@types/node-fetch': 2.6.11
