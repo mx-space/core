@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [5.7.1](https://github.com/mx-space/core/compare/v5.7.0...v5.7.1) (2024-05-04)
+
+
+### Bug Fixes
+
+* need auth to generate ai content ([ef85afe](https://github.com/mx-space/core/commit/ef85afed522589bf8b3d9b9ae1792ec1dd4483f5))
+
+
+
 # [5.7.0](https://github.com/mx-space/core/compare/v5.6.7...v5.7.0) (2024-05-04)
 
 
