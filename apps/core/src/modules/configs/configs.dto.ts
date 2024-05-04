@@ -13,7 +13,6 @@ import {
 } from 'class-validator'
 import { JSONSchema } from 'class-validator-jsonschema'
 
-import { ChatModel } from 'openai/resources'
 import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
 
 import { OpenAiSupportedModels } from '../ai/ai.constants'
@@ -28,6 +27,7 @@ import {
   JSONSchemaToggleField,
   halfFieldOption,
 } from './configs.jsonschema.decorator'
+import type { ChatModel } from 'openai/resources'
 
 const SecretField = (target: Object, propertyKey: string | symbol) => {
   Encrypt(target, propertyKey)
