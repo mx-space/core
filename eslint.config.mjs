@@ -37,6 +37,8 @@ export default sxzz(
         'unicorn/filename-case': 0,
         'unicorn/prefer-math-trunc': 0,
 
+        'unused-imports/no-unused-imports': 'error',
+
         'unused-imports/no-unused-vars': [
           'error',
           {

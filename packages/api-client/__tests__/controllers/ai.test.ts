@@ -6,7 +6,7 @@ describe('test ai client', () => {
   const client = mockRequestInstance(AIController)
 
   test('POST /generate-summary', async () => {
-    mockResponse('/ai/generate-summary', {}, 'post', {
+    mockResponse('/ai/summaries/generate', {}, 'post', {
       lang: 'zh-CN',
       refId: '11',
     })

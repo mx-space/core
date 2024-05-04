@@ -13,8 +13,10 @@ import {
 } from 'class-validator'
 import { JSONSchema } from 'class-validator-jsonschema'
 
+import { ChatModel } from 'openai/resources'
 import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
 
+import { OpenAiSupportedModels } from '../ai/ai.constants'
 import { Encrypt } from './configs.encrypt.util'
 import {
   JSONSchemaArrayField,
@@ -248,11 +250,6 @@ export class AdminExtraDto {
 
   @IsString()
   @IsOptional()
-  @JSONSchemaPlainField('中后台标题')
-  title?: string
-
-  @IsString()
-  @IsOptional()
   @SecretField
   @JSONSchemaPasswordField('高德查询 API Key', { description: '日记地点定位' })
   gaodemapKey?: string
@@ -368,6 +365,27 @@ export class AuthSecurityDto {
 }
 @JSONSchema({ title: 'AI 设定' })
 export class AIDto {
+  @IsOptional()
+  @JSONSchemaPasswordField('OpenAI Key')
+  @IsString()
+  @SecretField
+  openAiKey: string
+
+  @IsOptional()
+  @IsString()
+  @JSONSchemaPlainField('OpenAI Endpoint')
+  openAiEndpoint: string
+
+  @IsOptional()
+  @IsString()
+  @JSONSchemaPlainField('OpenAI 默认模型', {
+    'ui:options': {
+      type: 'select',
+      values: OpenAiSupportedModels,
+    },
+  })
+  openAiPreferredModel: ChatModel
+
   @IsBoolean()
   @IsOptional()
   @JSONSchemaToggleField('可调用 AI 摘要', {
@@ -382,15 +400,4 @@ export class AIDto {
       '此选项开启后，将会在文章发布后自动生成摘要，需要开启上面的选项，否则无效',
   })
   enableAutoGenerateSummary: boolean
-
-  @IsOptional()
-  @JSONSchemaPasswordField('OpenAI Key')
-  @IsString()
-  @SecretField
-  openAiKey: string
-
-  @IsOptional()
-  @IsString()
-  @JSONSchemaPlainField('OpenAI Endpoint')
-  openAiEndpoint: string
 }

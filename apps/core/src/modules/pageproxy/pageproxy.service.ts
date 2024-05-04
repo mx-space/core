@@ -56,7 +56,6 @@ export class PageProxyService {
     // Define the base injectData object
     const injectData: any = {
       LOGIN_BG: adminExtra.background,
-      TITLE: adminExtra.title,
       WEB_URL: webUrl,
     }
 

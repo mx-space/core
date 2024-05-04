@@ -1,5 +1,5 @@
 import { ActivityModel } from '~/modules/activity/activity.model'
-import { AISummaryModel } from '~/modules/ai/ai-summary.model'
+import { AISummaryModel } from '~/modules/ai/ai-summary/ai-summary.model'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { AuthnModel } from '~/modules/authn/authn.model'
 import { CategoryModel } from '~/modules/category/category.model'

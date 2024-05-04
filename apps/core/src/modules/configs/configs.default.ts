@@ -52,7 +52,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
   algoliaSearchOptions: { enable: false, apiKey: '', appId: '', indexName: '' },
   adminExtra: {
     enableAdminProxy: true,
-    title: 'おかえり~',
+
     background: '',
     gaodemapKey: null!,
   },
@@ -78,6 +78,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     enableAutoGenerateSummary: false,
     enableSummary: false,
     openAiEndpoint: '',
+    openAiPreferredModel: 'gpt-3.5-turbo',
     openAiKey: '',
   },
 })

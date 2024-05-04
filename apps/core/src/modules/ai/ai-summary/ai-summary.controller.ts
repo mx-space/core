@@ -10,48 +10,48 @@ import {
 } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
-import { Auth, AuthButProd } from '~/common/decorators/auth.decorator'
+import { Auth } from '~/common/decorators/auth.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
-import { ConfigsService } from '../configs/configs.service'
+import { ConfigsService } from '../../configs/configs.service'
+import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
 import {
   GenerateAiSummaryDto,
   GetSummaryQueryDto,
   UpdateSummaryDto,
-} from './ai.dto'
-import { AiService } from './ai.service'
-import { DEFAULT_SUMMARY_LANG } from './ai.constants'
+} from './ai-summary.dto'
+import { AiSummaryService } from './ai-summary.service'
 
-@ApiController('ai')
-export class AiController {
+@ApiController('ai/summaries')
+export class AiSummaryController {
   constructor(
-    private readonly service: AiService,
+    private readonly service: AiSummaryService,
     private readonly configService: ConfigsService,
   ) {}
 
-  @Post('/generate-summary')
+  @Post('/generate')
   @Auth()
   generateSummary(@Body() body: GenerateAiSummaryDto) {
     return this.service.generateSummaryByOpenAI(body.refId, body.lang)
   }
 
-  @Get('/summaries/ref/:id')
+  @Get('/ref/:id')
   @Auth()
   async getSummaryByRefId(@Param() params: MongoIdDto) {
     return this.service.getSummariesByRefId(params.id)
   }
 
-  @Get('/summaries')
+  @Get('/')
   @Auth()
   async getSummaries(@Query() query: PagerDto) {
     return this.service.getAllSummaries(query)
   }
 
-  @Patch('/summaries/:id')
+  @Patch('/:id')
   @Auth()
   async updateSummary(
     @Param() params: MongoIdDto,
@@ -60,13 +60,13 @@ export class AiController {
     return this.service.updateSummaryInDb(params.id, body.summary)
   }
 
-  @Delete('/summaries/:id')
+  @Delete('/:id')
   @Auth()
   async deleteSummary(@Param() params: MongoIdDto) {
     return this.service.deleteSummaryInDb(params.id)
   }
 
-  @Get('/summaries/article/:id')
+  @Get('/article/:id')
   async getArticleSummary(
     @Param() params: MongoIdDto,
     @Query() query: GetSummaryQueryDto,
