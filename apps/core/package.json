@@ -142,7 +142,7 @@
     "@types/ejs": "3.1.5",
     "@types/get-image-colors": "4.0.5",
     "@types/js-yaml": "4.0.9",
-    "@types/lodash": "4.17.0",
+    "@types/lodash": "4.17.1",
     "@types/mime-types": "2.1.4",
     "@types/mongoose-aggregate-paginate-v2": "1.0.12",
     "@types/node": "20.12.8",
