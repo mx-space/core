@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [5.7.0](https://github.com/mx-space/core/compare/v5.6.7...v5.7.0) (2024-05-04)
+
+
+### Features
+
+* ai writer helper module ([f8909bd](https://github.com/mx-space/core/commit/f8909bd8c95eb90d995f848210c784be18ce9053))
+
+
+
 ## [5.6.7](https://github.com/mx-space/core/compare/v5.6.6...v5.6.7) (2024-05-03)
 
 
