@@ -161,7 +161,7 @@ export class BackupOptionsDto {
   @IsBoolean()
   @IsOptional()
   @JSONSchemaToggleField('开启自动备份', {
-    description: '填写以下 COS 信息，将同时上传备份到 COS',
+    description: '填写以下 S3 信息，将同时上传备份到 S3',
   })
   enable: boolean
 
