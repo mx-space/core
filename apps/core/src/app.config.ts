@@ -70,6 +70,12 @@ const commander = program
   // other
   .option('--color', 'force enable shell color')
 
+  // debug
+  .option(
+    '--debug_memory_dump',
+    'enable memory dump for debug, send SIGUSR2 to dump memory',
+  )
+
 commander.parse()
 
 const argv = commander.opts()
@@ -160,6 +166,8 @@ export const DEBUG_MODE = {
   logging: isDebugMode,
   httpRequestVerbose:
     argv.httpRequestVerbose ?? argv.http_request_verbose ?? true,
+  memoryDump:
+    (argv.debug_memory_dump || process.env.MX_DEBUG_MEMORY_DUMP) ?? false,
 }
 export const THROTTLE_OPTIONS = {
   ttl: seconds(argv.throttle_ttl ?? 10),
