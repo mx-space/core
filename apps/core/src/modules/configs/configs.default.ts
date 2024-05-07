@@ -38,6 +38,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     key: '',
     serverUrl: 'https://api.day.app',
     enableComment: true,
+    enableThrottleGuard: false,
   },
   friendLinkOptions: { allowApply: true },
   backupOptions: {

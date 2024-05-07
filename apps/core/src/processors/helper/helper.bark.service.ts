@@ -31,8 +31,12 @@ export class BarkPushService {
   ) {}
 
   async push(options: BarkPushOptions) {
-    const { key, serverUrl = 'https://day.app' } =
-      await this.config.get('barkOptions')
+    const {
+      key,
+      serverUrl = 'https://day.app',
+      enableThrottleGuard,
+    } = await this.config.get('barkOptions')
+    if (!enableThrottleGuard) return
     const { title: siteTitle } = await this.config.get('seo')
     if (!key) {
       throw new Error('Bark key is not configured')

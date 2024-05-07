@@ -295,6 +295,13 @@ export class BarkOptionsDto {
   @IsBoolean()
   @JSONSchemaToggleField('开启评论通知')
   enableComment: boolean
+
+  @IsOptional()
+  @IsBoolean()
+  @JSONSchemaToggleField('开启请求被限流时通知', {
+    description: '当请求被限流会通知，或许可以一定程度上预警被攻击',
+  })
+  enableThrottleGuard: boolean
 }
 
 /**
