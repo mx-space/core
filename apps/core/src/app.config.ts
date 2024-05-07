@@ -163,7 +163,7 @@ export const DEBUG_MODE = {
 }
 export const THROTTLE_OPTIONS = {
   ttl: seconds(argv.throttle_ttl ?? 10),
-  limit: argv.throttle_limit ?? 10,
+  limit: argv.throttle_limit ?? 100,
 }
 
 const ENCRYPT_KEY = argv.encrypt_key || MX_ENCRYPT_KEY
