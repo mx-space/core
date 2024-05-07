@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [5.7.2](https://github.com/mx-space/core/compare/v5.7.1...v5.7.2) (2024-05-07)
+
+
+### Bug Fixes
+
+* bypass `OPTIONS` ([1a85d54](https://github.com/mx-space/core/commit/1a85d5400aca266f3d542f12fc735f6a23b9ccf5))
+* **deps:** update dependency @aws-sdk/client-s3 to v3.569.0 ([#1651](https://github.com/mx-space/core/issues/1651)) ([7c56488](https://github.com/mx-space/core/commit/7c564886aa77b384057beb688a61ce60e7215f5f))
+* **deps:** update dependency openai to v4.40.2 ([#1667](https://github.com/mx-space/core/issues/1667)) ([ed153a8](https://github.com/mx-space/core/commit/ed153a80ce7886ae8161f26f8502edc81939bb04))
+
+
+
 ## [5.7.1](https://github.com/mx-space/core/compare/v5.7.0...v5.7.1) (2024-05-04)
 
 
