@@ -71,6 +71,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<FastifyReply>()
     const request = ctx.getRequest<FastifyRequest>()
 
+    if (request.method === 'OPTIONS') return response.status(204).send()
     const ip = getIp(request)
 
     const status =
@@ -86,6 +87,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       ''
     const url = request.raw?.url || request.url || 'Unknown URL'
     if (status === HttpStatus.TOO_MANY_REQUESTS) {
+      this.logger.warn(`IP: ${ip} 疑似遭到攻击 Path: ${decodeURI(url)}`)
       this.barkService.throttlePush({
         title: '疑似遭到攻击',
         body: `IP: ${ip} Path: ${decodeURI(url)}`,

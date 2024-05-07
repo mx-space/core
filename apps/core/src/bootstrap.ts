@@ -62,6 +62,8 @@ export async function bootstrap() {
               callback(null, allow)
             },
             credentials: true,
+            preflightContinue: false,
+            optionsSuccessStatus: 204,
           }
         : undefined,
   )
