@@ -55,7 +55,7 @@
     "redis-memory-server": "0.10.0"
   },
   "resolutions": {
-    "semver": "7.6.1",
+    "semver": "7.6.2",
     "pino": "./external/pino",
     "get-pixels@^3>request": "./external/request",
     "typescript": "5.4.5"
