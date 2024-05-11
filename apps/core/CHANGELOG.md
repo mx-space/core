@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [5.7.4](https://github.com/mx-space/core/compare/v5.7.3...v5.7.4) (2024-05-11)
+
+
+### Bug Fixes
+
+* jud is array or object ([5fd79a8](https://github.com/mx-space/core/commit/5fd79a892ba49da3119f2fec94d7002e2d0f43b2))
+* passkey origin ([b2fc18d](https://github.com/mx-space/core/commit/b2fc18d91b7fd6873694a34ce3ae6d94562a067e))
+
+
+
 ## [5.7.3](https://github.com/mx-space/core/compare/v5.7.2...v5.7.3) (2024-05-11)
 
 
