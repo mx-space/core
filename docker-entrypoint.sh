@@ -110,7 +110,7 @@ get_mongodb_configuration() {
     if [ "$(is_in_cmd_with_value "--db_user=" $CMD)" = "true" ]; then
       CONNECTION_STRING+="$(get_cmd_value "--db_user=" $CMD):************@"
     fi
-    CONNECTION_STRING+="$(get_cmd_value "--db_host=" $CMD):$(get_cmd_value "--db_port=" $CMD)/$(get_cmd_value "--db_collection_name=" $CMD)"
+    CONNECTION_STRING+="$(get_cmd_value "--db_host=" $CMD):$(get_cmd_value "--db_port=" $CMD)/$(get_cmd_value "--collection_name=" $CMD)"
     if [ "$(is_in_cmd_with_value "--db_options=" $CMD)" = "true" ]; then
       CONNECTION_STRING+="?$(get_cmd_value "--db_options=" $CMD)"
     fi
@@ -130,7 +130,7 @@ declare -A valueMap=(
   [CONFIG_PATH]="value,--config_path=,@@NULL@@"
 
   # DB
-  [DB_COLLECTION_NAME]="value,--db_collection_name=,mx-space"
+  [DB_COLLECTION_NAME]="value,--collection_name=,mx-space"
   [DB_HOST]="value,--db_host=,127.0.0.1"
   [DB_PORT]="value,--db_port=,27017"
   [DB_USER]="value,--db_user=,@@NULL@@"
