@@ -126,13 +126,14 @@ export class AuthService {
   }
 
   private clerkClientLRU = new LRUCache<string, ClerkClient>({
-    max: 2,
+    maxSize: 2,
     ttl: 1000 * 60 * 5,
   })
 
   async verifyClerkJWT(jwtToken: string) {
     const clerkOptions = await this.configs.get('clerkOptions')
     const { enable, pemKey, secretKey, adminUserId } = clerkOptions
+
     if (!enable) return false
 
     if (jwtToken === undefined) {
