@@ -12,6 +12,7 @@ import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils'
 
+import { RequestContext } from '~/common/contexts/request.context'
 import { ConfigsService } from '../configs/configs.service'
 import { AuthnModel } from './authn.model'
 import type { UserDocument } from '../user/user.model'
@@ -36,20 +37,29 @@ export class AuthnService {
   ) {}
 
   private async getConfig() {
+    const headers = RequestContext.currentRequest()?.headers
+    const origin = headers?.origin
+    const host = (() => {
+      try {
+        return new URL(origin ?? '').hostname
+      } catch {
+        return null
+      }
+    })()
     if (isDev) {
       return {
-        rpID: 'localhost',
-        expectedOrigin: ['http://localhost:9528'],
-        expectedRPID: 'localhost',
+        rpID: host ?? 'localhost',
+        expectedOrigin: origin ?? ['http://localhost:9528'],
+        expectedRPID: host ?? 'localhost',
       }
     }
     const { adminUrl } = await this.configService.get('url')
 
     const parsedUrl = new URL(adminUrl)
     return {
-      rpID: parsedUrl.hostname,
-      expectedOrigin: [parsedUrl.origin],
-      expectedRPID: parsedUrl.hostname,
+      rpID: host ?? parsedUrl.hostname,
+      expectedOrigin: origin ?? [parsedUrl.origin],
+      expectedRPID: host ?? parsedUrl.hostname,
     }
   }
 
