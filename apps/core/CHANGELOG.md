@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## [5.7.3](https://github.com/mx-space/core/compare/v5.7.2...v5.7.3) (2024-05-11)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.4 ([0e69856](https://github.com/mx-space/core/commit/0e698569b3ad4225f048a4967cf0b3ac877a21ea))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.5 ([30a8548](https://github.com/mx-space/core/commit/30a8548705514c3981ad29f7c9091abd6b28c237))
+* **deps:** update dependency @fastify/static to v7.0.4 ([30e72f1](https://github.com/mx-space/core/commit/30e72f1043c7c7dad18a2377d01eb510125b364d))
+* **deps:** update dependency mongoose to v8.3.4 ([b50e7ef](https://github.com/mx-space/core/commit/b50e7efa217b6537c3109d4bc31c6a85e2242287))
+* lru cache set ([6125030](https://github.com/mx-space/core/commit/61250304c7348a453e745dc2bdef770ddd1f2157))
+
+
+### Features
+
+* add bark push settings ([784c6cd](https://github.com/mx-space/core/commit/784c6cd780f366bc60182c5c3eca0069f80d7b7a))
+* add prod to dump memory ([5fc7fcd](https://github.com/mx-space/core/commit/5fc7fcdf648dd51a211314e63f88880d1eebc8be))
+
+
+
 ## [5.7.2](https://github.com/mx-space/core/compare/v5.7.1...v5.7.2) (2024-05-07)
 
 
