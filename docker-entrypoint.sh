@@ -1,11 +1,6 @@
 #!/bin/bash
 
-command="node index.js"
-
-# ======= Script Variables =======
-SV_FINAL_REDIS_URL=""
-SV_FINAL_MONGO_URL=""
-SV_FINAL_ENCRYPT_ENABLE=""
+command_args=""
 
 # ======= Helper Functions =======
 
@@ -37,19 +32,19 @@ set_value() {
 
   # if command line argument is preset, use it
   if [ "$(is_in_cmd_with_value "$CMD_ARG" ${@:3})" = "true" ]; then
-    command+=" $CMD_ARG$(get_cmd_value "$CMD_ARG" ${@:3})"
+    command_args+=" $CMD_ARG$(get_cmd_value "$CMD_ARG" ${@:3})"
     return
   fi
   
   # if environment variable is preset, use it
   if [ -n "${!VAR_NAME}" ]; then
-    command+=" $CMD_ARG${!VAR_NAME}"
+    command_args+=" $CMD_ARG${!VAR_NAME}"
     return
   fi
 
   # if default value is not '@@NULL@@', use it
   if [ "$DEFAULT_VALUE" != "@@NULL@@" ]; then
-    command+=" $CMD_ARG$DEFAULT_VALUE"
+    command_args+=" $CMD_ARG$DEFAULT_VALUE"
   fi
 }
 
@@ -73,14 +68,14 @@ set_switch() {
 
     # if command line argument is preset, use it
     if [ "$(is_in_cmd "$CMD_ARG" ${@:3})" = "true" ]; then
-        command+=" $CMD_ARG"
+        command_args+=" $CMD_ARG"
         return
     fi
   
     # if environment variable is preset, use it
     if [ -n "${!VAR_NAME}" ]; then
       if [ "${!VAR_NAME}" = "true" ]; then
-        command+=" $CMD_ARG"
+        command_args+=" $CMD_ARG"
       fi
 
       return
@@ -88,7 +83,7 @@ set_switch() {
 
     # use default value
     if [ "$DEFAULT_VALUE" = "true" ]; then
-      command+=" $CMD_ARG"
+      command_args+=" $CMD_ARG"
     fi
 }
 
@@ -105,6 +100,25 @@ get_cmd_value() {
   echo ""
 }
 
+get_mongodb_configuration() {
+  CMD=$@
+  CONNECTION_STRING="mongodb://"
+
+  if [ "$(is_in_cmd_with_value "--db_connection_string=" $CMD)" = "true" ]; then
+    CONNECTION_STRING=$(get_cmd_value "--db_connection_string=" $CMD)
+  else
+    if [ "$(is_in_cmd_with_value "--db_user=" $CMD)" = "true" ]; then
+      CONNECTION_STRING+="$(get_cmd_value "--db_user=" $CMD):************@"
+    fi
+    CONNECTION_STRING+="$(get_cmd_value "--db_host=" $CMD):$(get_cmd_value "--db_port=" $CMD)/$(get_cmd_value "--db_collection_name=" $CMD)"
+    if [ "$(is_in_cmd_with_value "--db_options=" $CMD)" = "true" ]; then
+      CONNECTION_STRING+="?$(get_cmd_value "--db_options=" $CMD)"
+    fi
+  fi
+
+  echo $CONNECTION_STRING
+}
+
 # ================================
 
 # ======= Environment Variables =======
@@ -112,21 +126,21 @@ get_cmd_value() {
 declare -A valueMap=(
   [PORT]="value,--port=,2333"
   [DEMO]="switch,--demo,false"
-  [ALLOWED_ORIGINS]="value,--allowed_origins=,@@NULL@@"
+  [ALLOWED_ORIGINS]="value,--allowed_origins=,localhost"
   [CONFIG_PATH]="value,--config_path=,@@NULL@@"
 
   # DB
-  [DB_COLLECTION_NAME]="value,--db_collection_name=,@@NULL@@"
-  [DB_HOST]="value,--db_host=,@@NULL@@"
-  [DB_PORT]="value,--db_port=,@@NULL@@"
+  [DB_COLLECTION_NAME]="value,--db_collection_name=,mx-space"
+  [DB_HOST]="value,--db_host=,127.0.0.1"
+  [DB_PORT]="value,--db_port=,27017"
   [DB_USER]="value,--db_user=,@@NULL@@"
   [DB_PASSWORD]="value,--db_password=,@@NULL@@"
   [DB_OPTIONS]="value,--db_options=,@@NULL@@"
   [DB_CONNECTION_STRING]="value,--db_connection_string=,@@NULL@@"
 
   # Redis
-  [REDIS_HOST]="value,--redis_host=,@@NULL@@"
-  [REDIS_PORT]="value,--redis_port=,@@NULL@@"
+  [REDIS_HOST]="value,--redis_host=,127.0.0.1"
+  [REDIS_PORT]="value,--redis_port=,6379"
   [REDIS_PASSWORD]="value,--redis_password=,@@NULL@@"
   [DISABLE_CACHE]="switch,--disable_cache,false"
  
@@ -177,5 +191,18 @@ done
 # ====================================
 
 echo "Starting Mix Space"
+
+
+echo "============== Configurations =============="
+echo "Listen Port: $(get_cmd_value "--port=" $command_args)"
+echo "MongoDB: $(get_mongodb_configuration $command_args)"
+echo "Redis: $(get_cmd_value "--redis_host=" $command_args):$(get_cmd_value "--redis_port=" $command_args)"
+echo "Allowed Origins: $(get_cmd_value "--allowed_origins=" $command_args)"
+echo "Config Path: $(if [ -z "$(get_cmd_value "--config_path=" $command_args)" ]; then echo "NULL"; else echo "$(get_cmd_value "--config_path=" $command_args)"; fi)"
+echo "Encryption: $(get_boolean_str $(is_in_cmd "--encrypt_enable" $command_args))"
+echo "Cluster: $(get_boolean_str $(is_in_cmd "--cluster" $command_args))"
+echo "============================================"
+
+command="node index.js $command_args"
 
 exec $command
