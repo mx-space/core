@@ -24,6 +24,7 @@ const commander = program
   .option('--db_port <number>', 'mongodb database port')
   .option('--db_user <string>', 'mongodb database user')
   .option('--db_password <string>', 'mongodb database password')
+  .option('--db_options <string>', 'mongodb database options')
   .option('--db_connection_string <string>', 'mongodb connection string')
   // redis
   .option('--redis_host <string>', 'redis host')
@@ -122,10 +123,12 @@ export const MONGO_DB = {
   port: argv.db_port || 27017,
   user: argv.db_user || '',
   password: argv.db_password || '',
+  options: argv.db_options || '',
   get uri() {
     const userPassword =
       this.user && this.password ? `${this.user}:${this.password}@` : ''
-    return `mongodb://${userPassword}${this.host}:${this.port}/${this.dbName}`
+    const dbOptions = this.options ? `?${this.options}` : ''
+    return `mongodb://${userPassword}${this.host}:${this.port}/${this.dbName}${dbOptions}`
   },
   customConnectionString: argv.db_connection_string,
 }
