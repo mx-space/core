@@ -188,7 +188,9 @@ class HTTPClient<
               let nextObject: any = cameledObject
 
               if (cameledObject && typeof cameledObject === 'object') {
-                nextObject = { ...cameledObject }
+                nextObject = Array.isArray(cameledObject)
+                  ? [...cameledObject]
+                  : { ...cameledObject }
                 Object.defineProperty(nextObject, '$raw', {
                   get() {
                     return res
