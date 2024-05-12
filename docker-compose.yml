@@ -1,22 +1,14 @@
-version: '3.8'
-
 services:
   app:
     container_name: mx-server
     image: innei/mx-server:5
-    command: bash ./docker-run.sh
     environment:
       - TZ=Asia/Shanghai
       - NODE_ENV=production
-      - ALLOWED_ORIGINS
-      - JWT_SECRET
-      - ENCRYPT_KEY
-      - ENCRYPT_ENABLE
-      - FORCE_CACHE_HEADER
-      - CDN_CACHE_HEADER
-      - THROTTLE_TTL
-      - THROTTLE_LIMIT
-
+      - DB_HOST=mongo
+      - REDIS_HOST=redis
+      - ALLOWED_ORIGINS=localhost
+      - JWT_SECRET=YOUR_SUPER_SECURED_JWT_SECRET_STRING
     volumes:
       - ./data/mx-space:/root/.mx-space
     ports:
@@ -24,12 +16,9 @@ services:
     depends_on:
       - mongo
       - redis
-    links:
-      - mongo
-      - redis
     networks:
-      - app-network
-    restart: always
+      - mx-space
+    restart: unless-stopped
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://127.0.0.1:2333/api/v2/ping']
       interval: 1m30s
@@ -43,16 +32,24 @@ services:
     volumes:
       - ./data/db:/data/db
     networks:
-      - app-network
-    restart: always
-  redis:
-    image: redis
-    container_name: redis
+      - mx-space
+    restart: unless-stopped
 
+  redis:
+    image: redis:alpine
+    container_name: redis
+    volumes:
+      - ./data/redis:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli ping | grep PONG']
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 3s
     networks:
-      - app-network
-    restart: always
+      - mx-space
+    restart: unless-stopped
 
 networks:
-  app-network:
+  mx-space:
     driver: bridge
