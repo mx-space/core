@@ -1,7 +1,7 @@
 services:
   app:
     container_name: mx-server
-    image: innei/mx-server:5
+    image: innei/mx-server:latest
     environment:
       - TZ=Asia/Shanghai
       - NODE_ENV=production
