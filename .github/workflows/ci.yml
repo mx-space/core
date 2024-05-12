@@ -6,6 +6,7 @@ on:
       - 'CHANGELOG.MD'
     branches: master
   pull_request:
+  workflow_dispatch:
 name: CI
 
 jobs:
