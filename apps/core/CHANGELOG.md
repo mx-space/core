@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [5.7.5](https://github.com/mx-space/core/compare/v5.7.4...v5.7.5) (2024-05-13)
+
+
+### Bug Fixes
+
+* docker test in CI failed ([#1695](https://github.com/mx-space/core/issues/1695)) ([33e86c8](https://github.com/mx-space/core/commit/33e86c8669b5cb51cec3b86dc16d690170f6f770))
+
+
+
 ## [5.7.4](https://github.com/mx-space/core/compare/v5.7.3...v5.7.4) (2024-05-11)
 
 
