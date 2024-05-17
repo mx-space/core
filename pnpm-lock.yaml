@@ -257,8 +257,8 @@ importers:
         specifier: 0.9.1
         version: 0.9.1(mongoose@8.3.5(socks@2.8.3))
       mongoose-paginate-v2:
-        specifier: 1.8.0
-        version: 1.8.0
+        specifier: 1.8.1
+        version: 1.8.1
       nestjs-pretty-logger:
         specifier: 0.2.2
         version: 0.2.2(@nestjs/common@10.3.8(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))
@@ -4566,8 +4566,8 @@ packages:
     peerDependencies:
       mongoose: '>=5.11.10'
 
-  mongoose-paginate-v2@1.8.0:
-    resolution: {integrity: sha512-JiGbGxc/ytIA8UL4GaJdCLuxv5i99+XmTdP4v9YXwiJ85tdOxdrc2NQJL+0O+NRbIl+aAhaOnDbL9bJt7o3zIA==}
+  mongoose-paginate-v2@1.8.1:
+    resolution: {integrity: sha512-6CbkBnqnpnAPH/HSOsTL/70hg0N1/zWXB4DXlSA0Wz+wLd/tjDvI7vfqbaQqLt2yfqgv2Eb1Lf7cY33Ws2HqBw==}
     engines: {node: '>=4.0.0'}
 
   mongoose@8.3.5:
@@ -11184,7 +11184,7 @@ snapshots:
       mongoose: 8.3.5(socks@2.8.3)
       mpath: 0.8.4
 
-  mongoose-paginate-v2@1.8.0: {}
+  mongoose-paginate-v2@1.8.1: {}
 
   mongoose@8.3.5(socks@2.8.3):
     dependencies:
