@@ -65,4 +65,6 @@ export const OpenAiSupportedModels = [
   { label: 'gpt-3.5-turbo-1106', value: 'gpt-3.5-turbo-1106' },
   { label: 'gpt-3.5-turbo-0125', value: 'gpt-3.5-turbo-0125' },
   { label: 'gpt-3.5-turbo-16k-0613', value: 'gpt-3.5-turbo-16k-0613' },
+  { label: 'gpt-4o', value: 'gpt-4o' },
+  { label: 'gpt-4o-2024-05-13', value: 'gpt-4o-2024-05-13' },
 ]
