@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [5.7.6](https://github.com/mx-space/core/compare/v5.7.5...v5.7.6) (2024-05-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.6 ([289e3cd](https://github.com/mx-space/core/commit/289e3cd673c973da018dfcba802d79f0810cb93d))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.7 ([06c0050](https://github.com/mx-space/core/commit/06c00502d3e4642daee86bdade84d007bd3fabd3))
+* **deps:** update dependency axios-retry to v4.2.0 ([#1705](https://github.com/mx-space/core/issues/1705)) ([9f20ba2](https://github.com/mx-space/core/commit/9f20ba2ff10629ee28a3c44726416b644da8473f))
+* **deps:** update dependency inquirer to v9.2.21 ([57ece57](https://github.com/mx-space/core/commit/57ece57c1395529792d76479f2a9148e8f4d1387))
+* **deps:** update dependency mongoose to v8.3.5 ([eea7608](https://github.com/mx-space/core/commit/eea7608102df46131a507de9409d3da1076cb489))
+* **deps:** update dependency mongoose-paginate-v2 to v1.8.1 ([#1708](https://github.com/mx-space/core/issues/1708)) ([0aef6e0](https://github.com/mx-space/core/commit/0aef6e025a886a1ab1cd8a9f84f35fcfee5a8191))
+* **deps:** update dependency openai to v4.47.1 ([#1676](https://github.com/mx-space/core/issues/1676)) ([8892442](https://github.com/mx-space/core/commit/88924422a85945c33a6b68f2af51b28cf5611e8a))
+
+
+
 ## [5.7.5](https://github.com/mx-space/core/compare/v5.7.4...v5.7.5) (2024-05-13)
 
 
