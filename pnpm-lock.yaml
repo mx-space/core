@@ -164,8 +164,8 @@ importers:
         specifier: ^1.6.7
         version: 1.6.8
       axios-retry:
-        specifier: 4.1.0
-        version: 4.1.0(axios@1.6.8)
+        specifier: 4.2.0
+        version: 4.2.0(axios@1.6.8)
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -2546,8 +2546,8 @@ packages:
   avvio@8.3.0:
     resolution: {integrity: sha512-VBVH0jubFr9LdFASy/vNtm5giTrnbVquWBhT0fyizuNK2rQ7e7ONU2plZQWUNqtE1EmxFEb+kbSkFRkstiaS9Q==}
 
-  axios-retry@4.1.0:
-    resolution: {integrity: sha512-svdth4H00yhlsjBbjfLQ/sMLkXqeLxhiFC1nE1JtkN/CIssGxqk0UwTEdrVjwA2gr3yJkAulwvDSIm4z4HyPvg==}
+  axios-retry@4.2.0:
+    resolution: {integrity: sha512-zcVGX7NrRe+nadNFsSlf+KUT8ZFWRd8lf5f2QDqZCvWX6n3KTfPWErpTRxD7Nd7pPzQlnpvoEUq1ZrkhCwj/cA==}
     peerDependencies:
       axios: 0.x || 1.x
 
@@ -8859,7 +8859,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  axios-retry@4.1.0(axios@1.6.8):
+  axios-retry@4.2.0(axios@1.6.8):
     dependencies:
       axios: 1.6.8
       is-retry-allowed: 2.2.0
