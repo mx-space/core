@@ -224,8 +224,8 @@ importers:
         specifier: 3.10.1
         version: 3.10.1
       linkedom:
-        specifier: 0.16.11
-        version: 0.16.11
+        specifier: 0.18.0
+        version: 0.18.0
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -4173,8 +4173,8 @@ packages:
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
-  linkedom@0.16.11:
-    resolution: {integrity: sha512-WgaTVbj7itjyXTsCvgerpneERXShcnNJF5VIV+/4SLtyRLN+HppPre/WDHRofAr2IpEuujSNgJbCBd5lMl6lRw==}
+  linkedom@0.18.0:
+    resolution: {integrity: sha512-Xtu+w437ENHrgggnSHssua47vYXX/a/MzNdo+AR3UuWoOAxGZNwDSvjRPnPbVRFoygT990HS+7BDVBE1MK6FLQ==}
 
   lint-staged@15.2.2:
     resolution: {integrity: sha512-TiTt93OPh1OZOsb5B7k96A/ATl2AjIZo+vnzFZ6oHK5FuTk63ByDtxGQpHm+kFETjEWqgkF95M8FRXKR/LEBcw==}
@@ -10820,7 +10820,7 @@ snapshots:
 
   lines-and-columns@1.2.4: {}
 
-  linkedom@0.16.11:
+  linkedom@0.18.0:
     dependencies:
       css-select: 5.1.0
       cssom: 0.5.0
