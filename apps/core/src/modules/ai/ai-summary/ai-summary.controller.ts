@@ -99,4 +99,9 @@ export class AiSummaryController {
 
     return dbStored
   }
+
+  @Post('/chain')
+  async summaryChainTesting(@Body() body: GenerateAiSummaryDto) {
+    return this.service.summaryChain(body.refId, body.lang)
+  }
 }

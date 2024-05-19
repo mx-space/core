@@ -3,6 +3,8 @@ import removeMdCodeblock from 'remove-md-codeblock'
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
+import { AnalyzeDocumentChain, loadSummarizationChain } from 'langchain/chains'
+import { PromptTemplate } from '@langchain/core/prompts'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
@@ -18,7 +20,6 @@ import { DEFAULT_SUMMARY_LANG, LANGUAGE_CODE_TO_NAME } from '../ai.constants'
 import { AiService } from '../ai.service'
 import { AISummaryModel } from './ai-summary.model'
 import type { PagerDto } from '~/shared/dto/pager.dto'
-
 @Injectable()
 export class AiSummaryService {
   private readonly logger: Logger
@@ -38,6 +39,52 @@ export class AiSummaryService {
 
   private serializeText(text: string) {
     return removeMdCodeblock(text)
+  }
+
+  async summaryChain(articleId: string, lang = DEFAULT_SUMMARY_LANG) {
+    const {
+      ai: { enableSummary },
+    } = await this.configService.waitForConfigReady()
+
+    if (!enableSummary) {
+      throw new BizException(ErrorCodeEnum.AINotEnabled)
+    }
+
+    const openai = await this.aiService.getOpenAiChain()
+
+    const article = await this.databaseService.findGlobalById(articleId)
+    if (!article || article.type === CollectionRefTypes.Recently) {
+      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    }
+
+    const summaryTemplate = new PromptTemplate({
+      template: `
+You are an expert in summarizing markdown article.
+Your goal is to create a summary of a post.
+--------
+{text}
+--------
+
+SUMMARY 150 words or less in ${LANGUAGE_CODE_TO_NAME[lang] || 'Chinese'}:
+`,
+      inputVariables: ['text'],
+    })
+
+    const summarizationChain = loadSummarizationChain(openai, {
+      type: 'map_reduce',
+      combineMapPrompt: summaryTemplate,
+      combinePrompt: summaryTemplate,
+    })
+
+    const chain = new AnalyzeDocumentChain({
+      combineDocumentsChain: summarizationChain,
+    })
+
+    const summary = await chain.run({
+      input_document: this.serializeText(article.document.text),
+    })
+
+    return summary
   }
   async generateSummaryByOpenAI(
     articleId: string,
