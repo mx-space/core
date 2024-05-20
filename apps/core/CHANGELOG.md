@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [5.7.8](https://github.com/mx-space/core/compare/v5.7.7...v5.7.8) (2024-05-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @typegoose/auto-increment to v4.4.0 ([#1714](https://github.com/mx-space/core/issues/1714)) ([a10dd5b](https://github.com/mx-space/core/commit/a10dd5b7e85f756b7691355f964ff709118831cf))
+* downgrade snakecase deps ([66a07e6](https://github.com/mx-space/core/commit/66a07e625210fdd30f6f217b9bb530861660454c))
+
+
+
 ## [5.7.7](https://github.com/mx-space/core/compare/v5.7.6...v5.7.7) (2024-05-20)
 
 
