@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [5.7.7](https://github.com/mx-space/core/compare/v5.7.6...v5.7.7) (2024-05-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @aws-sdk/client-s3 to v3.577.0 ([#1688](https://github.com/mx-space/core/issues/1688)) ([4d883ee](https://github.com/mx-space/core/commit/4d883ee3e439bdde131ebab09139046be8e4105e))
+* **deps:** update dependency commander to v12.1.0 ([#1713](https://github.com/mx-space/core/issues/1713)) ([3c30c1f](https://github.com/mx-space/core/commit/3c30c1f82be2f764c43f8257a0600b214026d22c))
+* **deps:** update dependency inquirer to v9.2.22 ([43e6331](https://github.com/mx-space/core/commit/43e6331d6eff538f641c2c4275290bf85f75aa27))
+* **deps:** update dependency linkedom to v0.18.0 ([#1696](https://github.com/mx-space/core/issues/1696)) ([1d4ced1](https://github.com/mx-space/core/commit/1d4ced10429d4c739fd84e2b7589dab1182dab91))
+* **deps:** update dependency mongoose to v8.4.0 ([#1709](https://github.com/mx-space/core/issues/1709)) ([abb912b](https://github.com/mx-space/core/commit/abb912b22ed8c42b4c26ae119236cfb86906e0fc))
+* throw error when delete file exception ([5da084d](https://github.com/mx-space/core/commit/5da084d6a0ead1ef4ecddf6a24c06cd10e923a07))
+
+
+
 ## [5.7.6](https://github.com/mx-space/core/compare/v5.7.5...v5.7.6) (2024-05-17)
 
 
