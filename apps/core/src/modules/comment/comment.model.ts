@@ -44,7 +44,7 @@ export class CommentModel extends BaseModel {
     trim: true,
     set(val) {
       try {
-        return new URL(val).origin
+        return new URL(val).toString()
       } catch {
         return '#'
       }
