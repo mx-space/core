@@ -56,7 +56,7 @@ describe('test link client, /links', () => {
     const mocked = mockResponse('/links/5eaabe10cd5bca719652179d', {
       id: '5eaabe10cd5bca719652179d',
       name: '静かな森',
-      url: 'https://innei.ren',
+      url: 'https://innei.in',
       avatar: 'https://cdn.innei.ren/avatar.png',
       created: '2020-04-30T12:01:20.738Z',
       type: 0,

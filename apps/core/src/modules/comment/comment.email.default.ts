@@ -46,7 +46,7 @@ export const baseRenderProps = Object.freeze({
   mail: defaultCommentModelForRenderProps.mail,
   text: defaultCommentModelForRenderProps.text,
   ip: defaultCommentModelForRenderProps.ip,
-  link: 'https://innei.ren/note/122#comments-37ccbeec9c15bb0ddc51ca7d' as string,
+  link: 'https://innei.in/note/122#comments-37ccbeec9c15bb0ddc51ca7d' as string,
 
   time: dayjs().format('YYYY/MM/DD'),
   title: defaultPostModelForRenderProps.title,
