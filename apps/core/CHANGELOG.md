@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [5.7.9](https://github.com/mx-space/core/compare/v5.7.8...v5.7.9) (2024-05-21)
+
+
+### Bug Fixes
+
+* comment model url setter ([16b919c](https://github.com/mx-space/core/commit/16b919cf900f708280e1fe9c806aa054d5a11268))
+
+
+
 ## [5.7.8](https://github.com/mx-space/core/compare/v5.7.7...v5.7.8) (2024-05-20)
 
 
