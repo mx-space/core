@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [5.7.10](https://github.com/mx-space/core/compare/v5.7.9...v5.7.10) (2024-05-22)
+
+
+### Bug Fixes
+
+* asset push script ([f433ae7](https://github.com/mx-space/core/commit/f433ae7a455d517e7317e2545d51118198740ce3))
+* **deps:** update dependency axios-retry to v4.3.0 ([#1718](https://github.com/mx-space/core/issues/1718)) ([df4fc28](https://github.com/mx-space/core/commit/df4fc280a98e6b1cf64eaecdc7a5acf5d79fcd04))
+
+
+
 ## [5.7.9](https://github.com/mx-space/core/compare/v5.7.8...v5.7.9) (2024-05-21)
 
 
