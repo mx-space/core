@@ -433,6 +433,9 @@ export class AggregateService {
       redis.keys(`${API_CACHE_PREFIX}/aggregate*`).then((keys) => {
         return keys.map((key) => redis.del(key))
       }),
+      redis.keys(`${CacheKeys.Aggregate}*`).then((keys) => {
+        return keys.map((key) => redis.del(key))
+      }),
     ])
   }
 
