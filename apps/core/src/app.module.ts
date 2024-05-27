@@ -1,4 +1,4 @@
-import { LoggerModule } from 'nestjs-pretty-logger'
+import { LoggerModule } from '@innei/pretty-logger-nestjs'
 
 import { Module } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'

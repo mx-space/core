@@ -63,6 +63,7 @@ export class LinkControllerCrud extends BaseCrudFactory({
         },
       ],
     }
+
     return await this._model
       .find(condition)
       .sort({ created: -1 })
