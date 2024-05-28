@@ -308,8 +308,8 @@ importers:
         specifier: ^0.5.21
         version: 0.5.21
       ua-parser-js:
-        specifier: 1.0.37
-        version: 1.0.37
+        specifier: 1.0.38
+        version: 1.0.38
       vm2:
         specifier: 3.9.19
         version: 3.9.19
@@ -6352,8 +6352,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  ua-parser-js@1.0.37:
-    resolution: {integrity: sha512-bhTyI94tZofjo+Dn8SN6Zv8nBDvyXTymAdM3LDI/0IboIUwTu1rEhW7v2TfiVsoYWgkQ4kOVqnI8APUFbIQIFQ==}
+  ua-parser-js@1.0.38:
+    resolution: {integrity: sha512-Aq5ppTOfvrCMgAPneW1HfWj66Xi7XL+/mIy996R1/CLS/rcyJQm6QZdsKrUeivDFQ+Oc9Wyuwor8Ze8peEoUoQ==}
 
   ufo@1.5.1:
     resolution: {integrity: sha512-HGyF79+/qZ4soRvM+nHERR2pJ3VXDZ/8sL1uLahdgEDf580NkgiWOxLk33FetExqOWp352JZRsgXbG/4MaGOSg==}
@@ -13404,7 +13404,7 @@ snapshots:
 
   typescript@5.4.5: {}
 
-  ua-parser-js@1.0.37: {}
+  ua-parser-js@1.0.38: {}
 
   ufo@1.5.1: {}
 
