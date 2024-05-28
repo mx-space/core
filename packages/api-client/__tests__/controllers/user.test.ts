@@ -12,7 +12,7 @@ describe('test user client', () => {
       id: '5ea4fe632507ba128f4c938c',
       introduce: '这是我的小世界呀',
       mail: 'i@innei.ren',
-      url: 'https://innei.ren',
+      url: 'https://innei.in',
       name: 'Innei',
       social_ids: {
         bili_id: 26578164,

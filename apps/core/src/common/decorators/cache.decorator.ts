@@ -14,6 +14,11 @@ interface ICacheOption {
   ttl?: number
   key?: string
   disable?: boolean
+
+  /**
+   * 是否使用查询参数作为缓存键的一部分
+   */
+  withQuery?: boolean
 }
 
 /**
@@ -25,7 +30,7 @@ interface ICacheOption {
  */
 
 export function HttpCache(option: ICacheOption): MethodDecorator {
-  const { disable, key, ttl = 60 } = option
+  const { disable, key, ttl = 60, ...options } = option
   return (_, __, descriptor: PropertyDescriptor) => {
     if (disable) {
       SetMetadata(META.HTTP_CACHE_DISABLE, true)(descriptor.value)
@@ -37,6 +42,11 @@ export function HttpCache(option: ICacheOption): MethodDecorator {
     if (typeof ttl === 'number' && !Number.isNaN(ttl)) {
       CacheTTL(ttl)(descriptor.value)
     }
+
+    if (Object.keys(options).length > 0) {
+      SetMetadata(META.HTTP_CACHE_META_OPTIONS, options)(descriptor.value)
+    }
+
     return descriptor
   }
 }

@@ -3,7 +3,6 @@ import { gatewayProviders } from 'test/mock/modules/gateway.mock'
 import { userProvider } from 'test/mock/modules/user.mock'
 import { emailProvider } from 'test/mock/processors/email.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
-import type { ReturnModelType } from '@typegoose/typegoose'
 
 import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
@@ -16,6 +15,7 @@ import {
 import { LinkModel, LinkState } from '~/modules/link/link.model'
 import { LinkService } from '~/modules/link/link.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
+import type { ReturnModelType } from '@typegoose/typegoose'
 
 describe('Test LinkController(E2E)', () => {
   const proxy = createE2EApp({
@@ -41,9 +41,9 @@ describe('Test LinkController(E2E)', () => {
       const linkModel = modelMap.get(LinkModel)
 
       ;(linkModel.model as ReturnModelType<typeof LinkModel>).create({
-        url: 'https://innei.ren',
+        url: 'https://innei.in',
         name: 'innei',
-        avatar: 'https://innei.ren/avatar.png',
+        avatar: 'https://innei.in/avatar.png',
         description: 'innei',
         state: LinkState.Outdate,
       })
@@ -56,10 +56,10 @@ describe('Test LinkController(E2E)', () => {
       method: 'post',
       url: '/links/audit',
       payload: {
-        url: 'https://innei.ren',
+        url: 'https://innei.in',
         name: 'innnnn',
         author: 'innei',
-        avatar: 'https://innei.ren/avatar.png',
+        avatar: 'https://innei.in/avatar.png',
         description: 'innei',
       },
     })
@@ -72,10 +72,10 @@ describe('Test LinkController(E2E)', () => {
       method: 'post',
       url: '/links/audit',
       payload: {
-        url: 'https://innei.ren',
+        url: 'https://innei.in',
         name: 'innnnn',
         author: 'innei',
-        avatar: 'https://innei.ren/avatar.png',
+        avatar: 'https://innei.in/avatar.png',
         description: 'innei',
       },
     })

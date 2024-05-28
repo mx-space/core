@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   NotFoundException,
 } from '@nestjs/common'
@@ -82,7 +83,8 @@ export class FileService {
       await fs.rename(path, resolve(STATIC_FILE_TRASH_DIR, name))
     } catch (error) {
       this.logger.error('删除文件失败', error)
-      return null
+
+      throw new InternalServerErrorException(`删除文件失败，${error.message}`)
     }
   }
 

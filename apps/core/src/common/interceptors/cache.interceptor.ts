@@ -3,7 +3,7 @@
  * @file 缓存拦截器
  * @module interceptor/cache
  * @author Surmon <https://github.com/surmon-china>
- * @author Innei <https://innei.ren>
+ * @author Innei <https://innei.in>
  */
 import { of, tap } from 'rxjs'
 
@@ -16,6 +16,7 @@ import * as META from '~/constants/meta.constant'
 import * as SYSTEM from '~/constants/system.constant'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+import { hashString } from '~/utils'
 import type { Observable } from 'rxjs'
 import type { FastifyReply } from 'fastify'
 import type {
@@ -81,8 +82,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
     if (isDisableCache) {
       return call$
     }
-    let key = this.trackBy(context) || `${API_CACHE_PREFIX}${request.url}`
-    if (request.user?.id) key = `${key}:logged-${request.user?.id}`
+    const key = this.trackBy(context)
 
     const metaTTL = this.reflector.get(META.HTTP_CACHE_TTL_METADATA, handler)
     const ttl = metaTTL || HTTP_CACHE.ttl
@@ -152,7 +152,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
     if (cacheHeaderValue) res.header('cache-control', cacheHeaderValue)
   }
 
-  trackBy(context: ExecutionContext): string | undefined {
+  trackBy(context: ExecutionContext): string {
     const request = this.getRequest(context)
     const httpServer = this.httpAdapterHost.httpAdapter
     const isHttpApp = request
@@ -164,7 +164,31 @@ export class HttpCacheInterceptor implements NestInterceptor {
       context.getHandler(),
     )
     const isMatchedCache = isHttpApp && isGetRequest && cacheKey
-    return isMatchedCache ? cacheKey : undefined
+    const originalKey = isMatchedCache ? cacheKey : this.fallbackKey(context)
+    return this.transformCacheKey(originalKey, context)
+  }
+
+  transformCacheKey(key: string, context: ExecutionContext) {
+    const cacheOptions = this.reflector.get(
+      META.HTTP_CACHE_META_OPTIONS,
+      context.getHandler(),
+    )
+    if (!cacheOptions?.withQuery) {
+      return key
+    }
+    const request = this.getRequest(context)
+    const queryString = request.url.split('?')[1]
+
+    if (!queryString) {
+      return key
+    }
+
+    return `${key}?${hashString(queryString)}`
+  }
+
+  fallbackKey(context: ExecutionContext) {
+    const request = this.getRequest(context)
+    return `${API_CACHE_PREFIX}${request.url}`
   }
 
   get getRequest() {
