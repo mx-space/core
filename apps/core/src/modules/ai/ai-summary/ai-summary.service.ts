@@ -3,8 +3,7 @@ import removeMdCodeblock from 'remove-md-codeblock'
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
-import { AnalyzeDocumentChain, loadSummarizationChain } from 'langchain/chains'
-import { PromptTemplate } from '@langchain/core/prompts'
+import { JsonOutputFunctionsParser } from 'langchain/output_parsers'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
@@ -16,7 +15,7 @@ import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { md5 } from '~/utils'
 
 import { ConfigsService } from '../../configs/configs.service'
-import { DEFAULT_SUMMARY_LANG, LANGUAGE_CODE_TO_NAME } from '../ai.constants'
+import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
 import { AiService } from '../ai.service'
 import { AISummaryModel } from './ai-summary.model'
 import type { PagerDto } from '~/shared/dto/pager.dto'
@@ -57,34 +56,33 @@ export class AiSummaryService {
       throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
     }
 
-    const summaryTemplate = new PromptTemplate({
-      template: `
-You are an expert in summarizing markdown article.
-Your goal is to create a summary of a post.
---------
-{text}
---------
+    const parser = new JsonOutputFunctionsParser()
 
-SUMMARY 150 words or less in ${LANGUAGE_CODE_TO_NAME[lang] || 'Chinese'}:
-`,
-      inputVariables: ['text'],
-    })
+    const runnable = openai
+      .bind({
+        functions: [
+          {
+            name: 'extractor',
+            parameters: {
+              type: 'object',
+              properties: {
+                summary: {
+                  type: 'string',
+                  description: `The summary of the input text in the natural language ${lang}, and the length of the summary is less than 150 words.`,
+                },
+              },
+              required: ['summary'],
+            },
+          },
+        ],
+        function_call: { name: 'extractor' },
+      })
+      .pipe(parser)
+    const result = await runnable.invoke([
+      this.serializeText(article.document.text),
+    ])
 
-    const summarizationChain = loadSummarizationChain(openai, {
-      type: 'map_reduce',
-      combineMapPrompt: summaryTemplate,
-      combinePrompt: summaryTemplate,
-    })
-
-    const chain = new AnalyzeDocumentChain({
-      combineDocumentsChain: summarizationChain,
-    })
-
-    const summary = await chain.invoke({
-      input_document: this.serializeText(article.document.text),
-    })
-
-    return summary.text as string
+    return (result as any).summary
   }
   async generateSummaryByOpenAI(
     articleId: string,
