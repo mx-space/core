@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [5.7.12](https://github.com/mx-space/core/compare/v5.7.11...v5.7.12) (2024-05-28)
+
+
+### Bug Fixes
+
+* cache aggregate query with querykey ([32230bc](https://github.com/mx-space/core/commit/32230bc7da296ccf539c34e4a66d083ca2cf6a3b))
+* **deps:** update babel monorepo to v7.24.6 ([6881179](https://github.com/mx-space/core/commit/68811793186dc13e99229ae50dec3bb8576cc38f))
+* **deps:** update dependency @aws-sdk/client-s3 to v3.583.0 ([#1727](https://github.com/mx-space/core/issues/1727)) ([2874eca](https://github.com/mx-space/core/commit/2874eca3ef4091597fe1e5877c95a588ca4b17e5))
+
+
+
 ## [5.7.11](https://github.com/mx-space/core/compare/v5.7.10...v5.7.11) (2024-05-24)
 
 
