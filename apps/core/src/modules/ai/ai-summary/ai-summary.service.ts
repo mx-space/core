@@ -41,7 +41,7 @@ export class AiSummaryService {
     return removeMdCodeblock(text)
   }
 
-  async summaryChain(articleId: string, lang = DEFAULT_SUMMARY_LANG) {
+  private async summaryChain(articleId: string, lang = DEFAULT_SUMMARY_LANG) {
     const {
       ai: { enableSummary },
     } = await this.configService.waitForConfigReady()
@@ -80,25 +80,23 @@ SUMMARY 150 words or less in ${LANGUAGE_CODE_TO_NAME[lang] || 'Chinese'}:
       combineDocumentsChain: summarizationChain,
     })
 
-    const summary = await chain.run({
+    const summary = await chain.invoke({
       input_document: this.serializeText(article.document.text),
     })
 
-    return summary
+    return summary.text as string
   }
   async generateSummaryByOpenAI(
     articleId: string,
     lang = DEFAULT_SUMMARY_LANG,
   ) {
     const {
-      ai: { enableSummary, openAiPreferredModel },
+      ai: { enableSummary },
     } = await this.configService.waitForConfigReady()
 
     if (!enableSummary) {
       throw new BizException(ErrorCodeEnum.AINotEnabled)
     }
-
-    const openai = await this.aiService.getOpenAiClient()
 
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article) {
@@ -131,35 +129,14 @@ SUMMARY 150 words or less in ${LANGUAGE_CODE_TO_NAME[lang] || 'Chinese'}:
       this.cachedTaskId2AiPromise.set(taskId, taskPromise)
       return await taskPromise
 
-      async function handle(
-        this: AiSummaryService,
-        id: string,
-        text: string,
-        title: string,
-      ) {
+      async function handle(this: AiSummaryService, id: string, text: string) {
         // 等待 30s
         await redis.set(taskId, 'processing', 'EX', 30)
 
-        const completion = await openai.chat.completions.create({
-          messages: [
-            {
-              role: 'user',
-              content: `Summarize this article in ${LANGUAGE_CODE_TO_NAME[lang] || 'Chinese'} to 150 words:
-"${text}"
-
-CONCISE SUMMARY:`,
-            },
-          ],
-          model: openAiPreferredModel,
-        })
+        const summary = await this.summaryChain(id, lang)
 
         await redis.del(taskId)
 
-        const summary = completion.choices[0].message.content
-
-        this.logger.log(
-          `OpenAI 生成文章 ${id} 「${title}」的摘要花费了 ${completion.usage?.total_tokens}token`,
-        )
         const contentMd5 = md5(text)
 
         const doc = await this.aiSummaryModel.create({
