@@ -3,6 +3,7 @@ import removeMdCodeblock from 'remove-md-codeblock'
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
+import { JsonOutputFunctionsParser } from 'langchain/output_parsers'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
@@ -14,11 +15,10 @@ import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { md5 } from '~/utils'
 
 import { ConfigsService } from '../../configs/configs.service'
-import { DEFAULT_SUMMARY_LANG, LANGUAGE_CODE_TO_NAME } from '../ai.constants'
+import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
 import { AiService } from '../ai.service'
 import { AISummaryModel } from './ai-summary.model'
 import type { PagerDto } from '~/shared/dto/pager.dto'
-
 @Injectable()
 export class AiSummaryService {
   private readonly logger: Logger
@@ -39,19 +39,62 @@ export class AiSummaryService {
   private serializeText(text: string) {
     return removeMdCodeblock(text)
   }
-  async generateSummaryByOpenAI(
-    articleId: string,
-    lang = DEFAULT_SUMMARY_LANG,
-  ) {
+
+  private async summaryChain(articleId: string, lang = DEFAULT_SUMMARY_LANG) {
     const {
-      ai: { enableSummary, openAiPreferredModel },
+      ai: { enableSummary },
     } = await this.configService.waitForConfigReady()
 
     if (!enableSummary) {
       throw new BizException(ErrorCodeEnum.AINotEnabled)
     }
 
-    const openai = await this.aiService.getOpenAiClient()
+    const openai = await this.aiService.getOpenAiChain()
+
+    const article = await this.databaseService.findGlobalById(articleId)
+    if (!article || article.type === CollectionRefTypes.Recently) {
+      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    }
+
+    const parser = new JsonOutputFunctionsParser()
+
+    const runnable = openai
+      .bind({
+        functions: [
+          {
+            name: 'extractor',
+            parameters: {
+              type: 'object',
+              properties: {
+                summary: {
+                  type: 'string',
+                  description: `The summary of the input text in the natural language ${lang}, and the length of the summary is less than 150 words.`,
+                },
+              },
+              required: ['summary'],
+            },
+          },
+        ],
+        function_call: { name: 'extractor' },
+      })
+      .pipe(parser)
+    const result = await runnable.invoke([
+      this.serializeText(article.document.text),
+    ])
+
+    return (result as any).summary
+  }
+  async generateSummaryByOpenAI(
+    articleId: string,
+    lang = DEFAULT_SUMMARY_LANG,
+  ) {
+    const {
+      ai: { enableSummary },
+    } = await this.configService.waitForConfigReady()
+
+    if (!enableSummary) {
+      throw new BizException(ErrorCodeEnum.AINotEnabled)
+    }
 
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article) {
@@ -84,35 +127,14 @@ export class AiSummaryService {
       this.cachedTaskId2AiPromise.set(taskId, taskPromise)
       return await taskPromise
 
-      async function handle(
-        this: AiSummaryService,
-        id: string,
-        text: string,
-        title: string,
-      ) {
+      async function handle(this: AiSummaryService, id: string, text: string) {
         // 等待 30s
         await redis.set(taskId, 'processing', 'EX', 30)
 
-        const completion = await openai.chat.completions.create({
-          messages: [
-            {
-              role: 'user',
-              content: `Summarize this article in ${LANGUAGE_CODE_TO_NAME[lang] || 'Chinese'} to 150 words:
-"${text}"
-
-CONCISE SUMMARY:`,
-            },
-          ],
-          model: openAiPreferredModel,
-        })
+        const summary = await this.summaryChain(id, lang)
 
         await redis.del(taskId)
 
-        const summary = completion.choices[0].message.content
-
-        this.logger.log(
-          `OpenAI 生成文章 ${id} 「${title}」的摘要花费了 ${completion.usage?.total_tokens}token`,
-        )
         const contentMd5 = md5(text)
 
         const doc = await this.aiSummaryModel.create({

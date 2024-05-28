@@ -1,55 +1,72 @@
 import { Injectable, Logger } from '@nestjs/common'
 
-import { ConfigsService } from '~/modules/configs/configs.service'
-import { safeJSONParse } from '~/utils'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { JsonOutputFunctionsParser } from 'langchain/output_parsers'
 import { AiService } from '../ai.service'
+import type { FunctionDefinition } from '@langchain/core/language_models/base'
 
 @Injectable()
 export class AiWriterService {
   private readonly logger: Logger
-  constructor(
-    private readonly configService: ConfigsService,
-
-    private readonly aiService: AiService,
-  ) {
+  constructor(private readonly aiService: AiService) {
     this.logger = new Logger(AiWriterService.name)
   }
 
-  async queryOpenAI(prompt: string): Promise<any> {
-    const openai = await this.aiService.getOpenAiClient()
-    const { openAiPreferredModel } = await this.configService.get('ai')
-    const result = await openai.chat.completions.create({
-      model: openAiPreferredModel,
-      messages: [{ role: 'user', content: prompt }],
-    })
-
-    const content = result.choices[0].message.content || ''
-    this.logger.log(
-      `查询 OpenAI 返回结果：${content} 花费了 ${result.usage?.total_tokens} 个 token`,
-    )
-
-    const json = safeJSONParse(content)
-    if (!json) {
-      throw new BizException(ErrorCodeEnum.AIResultParsingError)
+  async queryByFunctionSchema(
+    text: string,
+    parameters: FunctionDefinition['parameters'],
+  ) {
+    const functionSchema: FunctionDefinition = {
+      name: 'extractor',
+      description: 'Extracts fields from the input.',
+      parameters,
     }
-    return json
+    const model = await this.aiService.getOpenAiChain()
+    const parser = new JsonOutputFunctionsParser()
+
+    const runnable = model
+      .bind({
+        functions: [functionSchema],
+        function_call: { name: 'extractor' },
+      })
+      .pipe(parser)
+    const result = await runnable.invoke([text])
+
+    return result
   }
-
   async generateTitleAndSlugByOpenAI(text: string) {
-    return this
-      .queryOpenAI(`Please give the following text a title in the same language as the text and a slug in English, the output format is JSON. {title:string, slug:string}:
-"${text}"
-
-RESULT:`)
+    return this.queryByFunctionSchema(text, {
+      type: 'object',
+      properties: {
+        title: {
+          type: 'string',
+          description:
+            'The title of the article generated from the input text, the natural language of the title should be the same as the natural language of the input text',
+        },
+        slug: {
+          type: 'string',
+          description:
+            'The slug is named after the text entered, and is in English and conforms to url specifications',
+        },
+        lang: {
+          type: 'string',
+          description: 'The natural language of the input text',
+        },
+      },
+      required: ['title', 'slug', 'lang'],
+    })
   }
 
   async generateSlugByTitleViaOpenAI(title: string) {
-    return this
-      .queryOpenAI(`Please give the following title a slug in English, the output format is JSON. {slug:string}:
-      "${title}"
-
-RESULT:`)
+    return this.queryByFunctionSchema(title, {
+      type: 'object',
+      properties: {
+        slug: {
+          type: 'string',
+          description:
+            'The slug is named after the text entered, and is in English and conforms to url specifications',
+        },
+      },
+      required: ['slug'],
+    })
   }
 }

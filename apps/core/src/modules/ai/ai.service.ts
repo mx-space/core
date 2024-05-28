@@ -1,5 +1,5 @@
+import { ChatOpenAI } from '@langchain/openai'
 import { Injectable } from '@nestjs/common'
-import OpenAI from 'openai'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { ConfigsService } from '../configs/configs.service'
@@ -7,17 +7,21 @@ import { ConfigsService } from '../configs/configs.service'
 @Injectable()
 export class AiService {
   constructor(private readonly configService: ConfigsService) {}
-  public async getOpenAiClient() {
+
+  public async getOpenAiChain() {
     const {
-      ai: { openAiEndpoint, openAiKey },
+      ai: { openAiKey, openAiEndpoint, openAiPreferredModel },
     } = await this.configService.waitForConfigReady()
     if (!openAiKey) {
       throw new BizException(ErrorCodeEnum.AINotEnabled, 'Key not found')
     }
-    return new OpenAI({
+
+    return new ChatOpenAI({
+      model: openAiPreferredModel,
       apiKey: openAiKey,
-      baseURL: openAiEndpoint || void 0,
-      fetch: isDev ? fetch : void 0,
+      configuration: {
+        baseURL: openAiEndpoint || void 0,
+      },
     })
   }
 }
