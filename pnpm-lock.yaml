@@ -230,8 +230,8 @@ importers:
         specifier: 3.10.1
         version: 3.10.1
       langchain:
-        specifier: 0.2.2
-        version: 0.2.2(@aws-sdk/client-s3@3.583.0)(@aws-sdk/credential-provider-node@3.583.0(@aws-sdk/client-sso-oidc@3.583.0(@aws-sdk/client-sts@3.583.0))(@aws-sdk/client-sts@3.583.0))(axios@1.7.2)(encoding@0.1.13)(fast-xml-parser@4.2.5)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.6.2(socks@2.8.3))(openai@4.47.2(encoding@0.1.13))
+        specifier: 0.2.3
+        version: 0.2.3(@aws-sdk/client-s3@3.583.0)(@aws-sdk/credential-provider-node@3.583.0(@aws-sdk/client-sso-oidc@3.583.0(@aws-sdk/client-sts@3.583.0))(@aws-sdk/client-sts@3.583.0))(axios@1.7.2)(encoding@0.1.13)(fast-xml-parser@4.2.5)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.6.2(socks@2.8.3))(openai@4.47.2(encoding@0.1.13))
       linkedom:
         specifier: 0.18.0
         version: 0.18.0
@@ -4457,8 +4457,8 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
-  langchain@0.2.2:
-    resolution: {integrity: sha512-4tt2QuwW8AXdIL8CRkQeGOCoYYH3QbLHfQ09yD0iWLV1rwUYJ8mIYFAz/+u6CB8YNEyR/HI105s4xrxFQbWa9g==}
+  langchain@0.2.3:
+    resolution: {integrity: sha512-T9xR7zd+Nj0oXy6WoYKmZLy0DlQiDLFPGYWdOXDxy+AvqlujoPdVQgDSpdqiOHvAjezrByAoKxoHCz5XMwTP/Q==}
     engines: {node: '>=18'}
     peerDependencies:
       '@aws-sdk/client-s3': ^3.310.0
@@ -4470,7 +4470,6 @@ packages:
       '@gomomento/sdk': ^1.51.1
       '@gomomento/sdk-core': ^1.51.1
       '@gomomento/sdk-web': ^1.51.1
-      '@google-ai/generativelanguage': ^2.5.0
       '@mendable/firecrawl-js': ^0.0.13
       '@notionhq/client': ^2.2.10
       '@pinecone-database/pinecone': '*'
@@ -4530,8 +4529,6 @@ packages:
       '@gomomento/sdk-core':
         optional: true
       '@gomomento/sdk-web':
-        optional: true
-      '@google-ai/generativelanguage':
         optional: true
       '@mendable/firecrawl-js':
         optional: true
@@ -11621,7 +11618,7 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  langchain@0.2.2(@aws-sdk/client-s3@3.583.0)(@aws-sdk/credential-provider-node@3.583.0(@aws-sdk/client-sso-oidc@3.583.0(@aws-sdk/client-sts@3.583.0))(@aws-sdk/client-sts@3.583.0))(axios@1.7.2)(encoding@0.1.13)(fast-xml-parser@4.2.5)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.6.2(socks@2.8.3))(openai@4.47.2(encoding@0.1.13)):
+  langchain@0.2.3(@aws-sdk/client-s3@3.583.0)(@aws-sdk/credential-provider-node@3.583.0(@aws-sdk/client-sso-oidc@3.583.0(@aws-sdk/client-sts@3.583.0))(@aws-sdk/client-sts@3.583.0))(axios@1.7.2)(encoding@0.1.13)(fast-xml-parser@4.2.5)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.6.2(socks@2.8.3))(openai@4.47.2(encoding@0.1.13)):
     dependencies:
       '@langchain/core': 0.2.2(openai@4.47.2(encoding@0.1.13))
       '@langchain/openai': 0.0.34(encoding@0.1.13)
