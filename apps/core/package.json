@@ -111,7 +111,7 @@
     "mongoose-autopopulate": "1.1.0",
     "mongoose-lean-getters": "2.1.0",
     "mongoose-lean-virtuals": "0.9.1",
-    "mongoose-paginate-v2": "1.8.1",
+    "mongoose-paginate-v2": "1.8.2",
     "@innei/pretty-logger-nestjs": "0.3.2",
     "node-machine-id": "1.1.12",
     "nodemailer": "6.9.13",
