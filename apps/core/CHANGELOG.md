@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [5.8.0](https://github.com/mx-space/core/compare/v5.7.12...v5.8.0) (2024-05-30)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @langchain/openai to v0.0.34 ([#1734](https://github.com/mx-space/core/issues/1734)) ([98ac7c0](https://github.com/mx-space/core/commit/98ac7c04130d15464dd394bb025db4e8430818be))
+* **deps:** update dependency isbot to v5.1.8 ([d83ad94](https://github.com/mx-space/core/commit/d83ad9473c3fabac3664c55ff14a8e3ce41af871))
+* **deps:** update dependency langchain to v0.2.2 ([f9e1f57](https://github.com/mx-space/core/commit/f9e1f57041ae0d06f73c574c99acc2d32c896f25))
+* **deps:** update dependency langchain to v0.2.3 ([a574cb0](https://github.com/mx-space/core/commit/a574cb00af73ae688bb261aeeb811e71f332bc49))
+* **deps:** update dependency mongoose-paginate-v2 to v1.8.2 ([e2f1e49](https://github.com/mx-space/core/commit/e2f1e4957f125c797591b18e29368f53210fdf93))
+* **deps:** update dependency openai to v4.47.2 ([b4f7857](https://github.com/mx-space/core/commit/b4f785722b74e7fff50e12b2f0190afc9f9d0022))
+* **deps:** update dependency ua-parser-js to v1.0.38 ([254ee4c](https://github.com/mx-space/core/commit/254ee4cb4791964ee4d3a65bb8f0ebc7fcbf48fb))
+
+
+
 ## [5.7.12](https://github.com/mx-space/core/compare/v5.7.11...v5.7.12) (2024-05-28)
 
 
