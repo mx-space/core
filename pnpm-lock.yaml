@@ -233,8 +233,8 @@ importers:
         specifier: 0.2.4
         version: 0.2.4(@aws-sdk/client-s3@3.583.0)(@aws-sdk/credential-provider-node@3.583.0(@aws-sdk/client-sso-oidc@3.583.0)(@aws-sdk/client-sts@3.583.0(@aws-sdk/client-sso-oidc@3.583.0)))(axios@1.7.2)(encoding@0.1.13)(fast-xml-parser@4.2.5)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.6.2(socks@2.8.3))(openai@4.47.2(encoding@0.1.13))
       linkedom:
-        specifier: 0.18.0
-        version: 0.18.0
+        specifier: 0.18.2
+        version: 0.18.2
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -4658,8 +4658,8 @@ packages:
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
-  linkedom@0.18.0:
-    resolution: {integrity: sha512-Xtu+w437ENHrgggnSHssua47vYXX/a/MzNdo+AR3UuWoOAxGZNwDSvjRPnPbVRFoygT990HS+7BDVBE1MK6FLQ==}
+  linkedom@0.18.2:
+    resolution: {integrity: sha512-b9n4I6IIqlHieVp5QjpjcXaHmO2zqSHmOoR/0BKwj32wXZuG0Ro3rtachXLxXcuL4CAP5hSjMa1LRDywfh/rdw==}
 
   lint-staged@15.2.5:
     resolution: {integrity: sha512-j+DfX7W9YUvdzEZl3Rk47FhDF6xwDBV5wwsCPw6BwWZVPYJemusQmvb9bRsW23Sqsaa+vRloAWogbK4BUuU2zA==}
@@ -11709,7 +11709,7 @@ snapshots:
 
   lines-and-columns@1.2.4: {}
 
-  linkedom@0.18.0:
+  linkedom@0.18.2:
     dependencies:
       css-select: 5.1.0
       cssom: 0.5.0
