@@ -100,7 +100,7 @@
     "jsonwebtoken": "9.0.2",
     "jszip": "3.10.1",
     "langchain": "0.2.4",
-    "linkedom": "0.18.0",
+    "linkedom": "0.18.2",
     "lodash": "^4.17.21",
     "lru-cache": "10.2.2",
     "marked": "12.0.2",
