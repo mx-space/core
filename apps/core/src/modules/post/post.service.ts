@@ -344,7 +344,9 @@ export class PostService {
   }
 
   async isAvailableSlug(slug: string) {
-    return (await this.postModel.countDocuments({ slug })) === 0
+    return (
+      slug.length > 0 && (await this.postModel.countDocuments({ slug })) === 0
+    )
   }
 
   async checkRelated<
