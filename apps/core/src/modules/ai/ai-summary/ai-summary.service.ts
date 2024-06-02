@@ -15,7 +15,7 @@ import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { md5 } from '~/utils'
 
 import { ConfigsService } from '../../configs/configs.service'
-import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
+import { DEFAULT_SUMMARY_LANG, LANGUAGE_CODE_TO_NAME } from '../ai.constants'
 import { AiService } from '../ai.service'
 import { AISummaryModel } from './ai-summary.model'
 import type { PagerDto } from '~/shared/dto/pager.dto'
@@ -68,7 +68,7 @@ export class AiSummaryService {
               properties: {
                 summary: {
                   type: 'string',
-                  description: `The summary of the input text in the natural language ${lang}, and the length of the summary is less than 150 words.`,
+                  description: `The summary of the input text in the ${LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]}, and the length of the summary is less than 150 words.`,
                 },
               },
               required: ['summary'],
