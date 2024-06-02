@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [5.8.1](https://github.com/mx-space/core/compare/v5.8.0...v5.8.1) (2024-06-02)
+
+
+### Bug Fixes
+
+* ai summary language detect ([8764815](https://github.com/mx-space/core/commit/876481529b2badf0adeb192c6c69b5a3216ea072))
+* check slug length ([6a58262](https://github.com/mx-space/core/commit/6a5826248caff1458e7cb09b933d28d5f798fc55))
+* **deps:** update dependency inquirer to v9.2.23 ([eae2f50](https://github.com/mx-space/core/commit/eae2f5000705a0cf16ad50b70b7bc88ef9173f7e))
+* **deps:** update dependency langchain to v0.2.4 ([08f30b5](https://github.com/mx-space/core/commit/08f30b53ac4e7807c43c3ba2f2ef668dd8119ae9))
+* **deps:** update dependency linkedom to v0.18.2 ([d24818a](https://github.com/mx-space/core/commit/d24818a62c8c96c15181639be446011c7a9205d6))
+* **deps:** update dependency mongoose to v8.4.1 ([e37c986](https://github.com/mx-space/core/commit/e37c9869ee91ccecbee4b406bd837a8ec5ab5736))
+* **deps:** update dependency openai to v4.47.3 ([7996928](https://github.com/mx-space/core/commit/79969280277f91b493f86d6eab365b95bd1a987f))
+
+
+
 # [5.8.0](https://github.com/mx-space/core/compare/v5.7.12...v5.8.0) (2024-05-30)
 
 
