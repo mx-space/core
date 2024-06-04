@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [5.8.2](https://github.com/mx-space/core/compare/v5.8.1...v5.8.2) (2024-06-04)
+
+
+### Bug Fixes
+
+* delete file with EXDEV issue ([#1770](https://github.com/mx-space/core/issues/1770)) ([b3dfbdf](https://github.com/mx-space/core/commit/b3dfbdf99628ae685855ecf20cf1782ddc8d9b25))
+* **deps:** update nest monorepo to v10.3.9 ([#1768](https://github.com/mx-space/core/issues/1768)) ([d627d38](https://github.com/mx-space/core/commit/d627d38b69cb4d88d3497c05c50602c4b8f9dfa2))
+
+
+
 ## [5.8.1](https://github.com/mx-space/core/compare/v5.8.0...v5.8.1) (2024-06-02)
 
 
