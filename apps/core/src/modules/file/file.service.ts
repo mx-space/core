@@ -79,8 +79,8 @@ export class FileService {
   async deleteFile(type: FileType, name: string) {
     try {
       const path = this.resolveFilePath(type, name)
-
-      await fs.rename(path, resolve(STATIC_FILE_TRASH_DIR, name))
+      await fs.copyFile(path, resolve(STATIC_FILE_TRASH_DIR, name));
+      await fs.unlink(path);
     } catch (error) {
       this.logger.error('删除文件失败', error)
 
