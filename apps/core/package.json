@@ -50,9 +50,9 @@
   "dependencies": {
     "@algolia/client-search": "^4.22.1",
     "@aws-sdk/client-s3": "3.583.0",
-    "@babel/core": "7.24.6",
-    "@babel/plugin-transform-modules-commonjs": "7.24.6",
-    "@babel/plugin-transform-typescript": "7.24.6",
+    "@babel/core": "7.24.7",
+    "@babel/plugin-transform-modules-commonjs": "7.24.7",
+    "@babel/plugin-transform-typescript": "7.24.7",
     "@babel/types": "^7.24.0",
     "@clerk/clerk-sdk-node": "5.0.9",
     "@fastify/cookie": "9.3.1",
