@@ -56,7 +56,7 @@
     "@babel/types": "^7.24.0",
     "@clerk/clerk-sdk-node": "5.0.10",
     "@fastify/cookie": "9.3.1",
-    "@fastify/multipart": "8.2.0",
+    "@fastify/multipart": "8.3.0",
     "@fastify/static": "7.0.4",
     "@innei/next-async": "0.3.0",
     "@langchain/openai": "0.0.34",
