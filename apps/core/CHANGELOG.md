@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## [5.8.3](https://github.com/mx-space/core/compare/v5.8.2...v5.8.3) (2024-06-12)
+
+
+### Bug Fixes
+
+* **deps:** update babel monorepo to v7.24.7 ([37e1a83](https://github.com/mx-space/core/commit/37e1a83d98c50f0dbe7d66f415097e2458a8f857))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.10 ([f2eb9c9](https://github.com/mx-space/core/commit/f2eb9c93f453dddb7f0c4371e80edfccf27b88f4))
+* **deps:** update dependency @fastify/multipart to v8.3.0 ([#1786](https://github.com/mx-space/core/issues/1786)) ([0c40479](https://github.com/mx-space/core/commit/0c40479502e89085ad67dbf720aef2c5f016452a))
+* **deps:** update dependency @langchain/openai to v0.1.2 ([#1754](https://github.com/mx-space/core/issues/1754)) ([e0a6fcf](https://github.com/mx-space/core/commit/e0a6fcf309b6183f3a1c72e718ad805e53641569))
+* **deps:** update dependency @langchain/openai to v0.1.3 ([ca985b9](https://github.com/mx-space/core/commit/ca985b9cf2bb1886885f68957bb3ec91a1cf96b6))
+* **deps:** update dependency axios-retry to v4.4.0 ([#1772](https://github.com/mx-space/core/issues/1772)) ([66bbe14](https://github.com/mx-space/core/commit/66bbe14da48eee6dd7ac8b6a0f7e21618639a85f))
+* **deps:** update dependency cache-manager to v5.6.1 ([#1784](https://github.com/mx-space/core/issues/1784)) ([c90dafa](https://github.com/mx-space/core/commit/c90dafae12d1cc452947cabdf538c789326cd9b2))
+* **deps:** update dependency cache-manager-ioredis-yet to v2.1.1 ([#1785](https://github.com/mx-space/core/issues/1785)) ([462a6a8](https://github.com/mx-space/core/commit/462a6a87fcbd63e44cb0d5b57bac7723be59a266))
+* **deps:** update dependency isbot to v5.1.9 ([514bb52](https://github.com/mx-space/core/commit/514bb52f352d32b4b133cee98679b59f691bee1a))
+* **deps:** update dependency langchain to v0.2.5 ([2930d0c](https://github.com/mx-space/core/commit/2930d0c812a4df67d05c6df9655b376c85d33398))
+* **deps:** update dependency linkedom to v0.18.3 ([098d726](https://github.com/mx-space/core/commit/098d72640e52dc7a79187294581a5e0bc95d8a8d))
+* **deps:** update dependency openai to v4.49.0 ([#1774](https://github.com/mx-space/core/issues/1774)) ([89b034b](https://github.com/mx-space/core/commit/89b034b8d2091fd49e89896ddaf091d2ff1f2c5e))
+* **deps:** update dependency openai to v4.49.1 ([e8f66d2](https://github.com/mx-space/core/commit/e8f66d28f2a618d0ffa6e483300e17942a620c62))
+* master avatar in recent activity comments cannot be displayed ([#1794](https://github.com/mx-space/core/issues/1794)) ([1750340](https://github.com/mx-space/core/commit/175034031f00591631ffae0edcabedddeddfea2d))
+
+
+
 ## [5.8.2](https://github.com/mx-space/core/compare/v5.8.1...v5.8.2) (2024-06-04)
 
 
