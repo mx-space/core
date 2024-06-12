@@ -23,7 +23,7 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
-import { checkRefModelCollectionType, getAvatar } from '~/utils'
+import { checkRefModelCollectionType } from '~/utils'
 
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
@@ -535,12 +535,13 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         created: -1,
       })
       .limit(3)
+
+    await this.commentService.fillAndReplaceAvatarUrl(docs)
     return docs.map((doc) => {
       return Object.assign(
         {},
         pick(doc, 'created', 'author', 'text', 'avatar'),
         pick(doc.ref, 'title', 'nid', 'slug', 'id'),
-        !doc.avatar ? { avatar: getAvatar(doc.mail) } : {},
         {
           type: checkRefModelCollectionType(doc.ref),
         },
