@@ -65,6 +65,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
   },
   thirdPartyServiceIntegration: {
     xLogSiteId: '',
+    githubToken: '',
   },
   clerkOptions: {
     enable: false,

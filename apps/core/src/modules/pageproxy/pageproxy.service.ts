@@ -29,9 +29,17 @@ export class PageProxyService {
    * @throws {Error}
    */
   async getAdminLastestVersionFromGHRelease(): Promise<string> {
+    const { githubToken } = await this.configs.get(
+      'thirdPartyServiceIntegration',
+    )
     // tag_name: v3.6.x
     const { tag_name } = await fetch(
       `https://api.github.com/repos/${PKG.dashboard.repo}/releases/latest`,
+      {
+        headers: {
+          Authorization: githubToken || `Bearer ${githubToken}`,
+        },
+      },
     ).then((data) => data.json())
 
     return tag_name.replace(/^v/, '')

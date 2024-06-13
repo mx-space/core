@@ -350,7 +350,7 @@ export class ClerkOptionsDto {
 /**
  * 第三方服务集成
  */
-@JSONSchema({ title: '第三方服务集成' })
+@JSONSchema({ title: '第三方服务信息' })
 export class ThirdPartyServiceIntegrationDto {
   @JSONSchemaPlainField('xLog SiteId', {
     description: '文章发布同步到 [xLog](https://xlog.app)',
@@ -358,6 +358,15 @@ export class ThirdPartyServiceIntegrationDto {
   @IsOptional()
   @IsString()
   xLogSiteId?: string
+
+  @JSONSchemaPasswordField('GitHub Token', {
+    description:
+      '用于调用 GitHub API，获取仓库信息等；可选参数，如果没有遇到限流问题，可以不填写',
+  })
+  @IsOptional()
+  @IsString()
+  @SecretField
+  githubToken?: string
 }
 
 @JSONSchema({ title: '认证安全设置', 'ui:options': { type: 'hidden' } })

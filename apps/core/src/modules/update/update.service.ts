@@ -8,6 +8,7 @@ import { Injectable } from '@nestjs/common'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { spawnShell } from '~/utils'
+import { ConfigsService } from '../configs/configs.service'
 import type { Subscriber } from 'rxjs'
 import { dashboard } from '~/../package.json'
 
@@ -15,22 +16,33 @@ const { repo } = dashboard
 
 @Injectable()
 export class UpdateService {
-  constructor(protected readonly httpService: HttpService) {}
+  constructor(
+    protected readonly httpService: HttpService,
+    protected readonly configService: ConfigsService,
+  ) {}
   downloadAdminAsset(version: string) {
     const observable$ = new Observable<string>((subscriber) => {
       ;(async () => {
+        const { githubToken } = await this.configService.get(
+          'thirdPartyServiceIntegration',
+        )
         const endpoint = `https://api.github.com/repos/${repo}/releases/tags/v${version}`
 
         subscriber.next(`Getting release info from ${endpoint}.\n`)
 
-        const json = await fetch(endpoint)
-          .then((res) => res.json())
+        const result = await this.httpService.axiosRef
+          .get(endpoint, {
+            headers: {
+              Authorization: githubToken || `Bearer ${githubToken}`,
+            },
+          })
+
           .catch((error) => {
             subscriber.next(chalk.red(`Fetching error: ${error.message}`))
             subscriber.complete()
             return null
           })
-
+        const json = result?.data
         if (!json) {
           subscriber.next(chalk.red('Fetching error, json is empty. \n'))
           subscriber.complete()
@@ -131,7 +143,14 @@ export class UpdateService {
   async getLatestAdminVersion() {
     const endpoint = `https://api.github.com/repos/${repo}/releases/latest`
 
-    const res = await this.httpService.axiosRef.get(endpoint)
+    const { githubToken } = await this.configService.get(
+      'thirdPartyServiceIntegration',
+    )
+    const res = await this.httpService.axiosRef.get(endpoint, {
+      headers: {
+        Authorization: githubToken || `Bearer ${githubToken}`,
+      },
+    })
     return res.data.tag_name.replace(/^v/, '')
   }
 
