@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [5.8.4](https://github.com/mx-space/core/compare/v5.8.3...v5.8.4) (2024-06-14)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.11 ([b88b7bf](https://github.com/mx-space/core/commit/b88b7bf8a1df9081e3a1db0e042a424c7e917753))
+* **deps:** update dependency openai to v4.51.0 ([#1791](https://github.com/mx-space/core/issues/1791)) ([78c03e3](https://github.com/mx-space/core/commit/78c03e3a76c0419c79c4da0bd81be84cfc052f2e))
+
+
+### Features
+
+* support `gh_token` closes 1758 ([39e10ef](https://github.com/mx-space/core/commit/39e10efcd1113e475b03cb055321a1b58f9306b3))
+
+
+
 ## [5.8.3](https://github.com/mx-space/core/compare/v5.8.2...v5.8.3) (2024-06-12)
 
 
