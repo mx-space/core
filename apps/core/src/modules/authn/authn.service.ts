@@ -27,9 +27,11 @@ import type {
   VerifiedRegistrationResponse,
 } from '@simplewebauthn/server'
 
-// TODO support below the node v20
-
-globalThis.crypto = require('node:crypto')
+// TODO Compatible with versions below node v20
+if (!globalThis.crypto) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  globalThis.crypto = require('node:crypto').webcrypto
+}
 @Injectable()
 export class AuthnService {
   constructor(
