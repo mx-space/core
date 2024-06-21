@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "@algolia/client-search": "^4.22.1",
-    "@aws-sdk/client-s3": "3.583.0",
+    "@aws-sdk/client-s3": "3.600.0",
     "@babel/core": "7.24.7",
     "@babel/plugin-transform-modules-commonjs": "7.24.7",
     "@babel/plugin-transform-typescript": "7.24.7",
@@ -59,6 +59,7 @@
     "@fastify/multipart": "8.3.0",
     "@fastify/static": "7.0.4",
     "@innei/next-async": "0.3.0",
+    "@innei/pretty-logger-nestjs": "0.3.2",
     "@langchain/openai": "0.1.3",
     "@mx-space/external": "workspace:*",
     "@nestjs/cache-manager": "2.2.2",
@@ -71,7 +72,7 @@
     "@nestjs/schedule": "4.0.2",
     "@nestjs/throttler": "5.2.0",
     "@nestjs/websockets": "10.3.9",
-    "@simplewebauthn/server": "9.0.3",
+    "@simplewebauthn/server": "10.0.0",
     "@socket.io/redis-adapter": "8.3.0",
     "@socket.io/redis-emitter": "5.1.0",
     "@typegoose/auto-increment": "4.4.0",
@@ -84,7 +85,7 @@
     "cache-manager": "5.6.1",
     "cache-manager-ioredis-yet": "2.1.1",
     "class-transformer": "0.5.1",
-    "class-validator": "0.13.2",
+    "class-validator": "0.14.1",
     "class-validator-jsonschema": "npm:@innei/class-validator-jsonschema@3.1.2",
     "cls-hooked": "^4.2.2",
     "commander": "12.1.0",
@@ -103,7 +104,7 @@
     "linkedom": "0.18.3",
     "lodash": "^4.17.21",
     "lru-cache": "10.2.2",
-    "marked": "12.0.2",
+    "marked": "13.0.0",
     "mime-types": "^2.1.35",
     "mkdirp": "^3.0.1",
     "mongoose": "8.4.3",
@@ -112,10 +113,9 @@
     "mongoose-lean-getters": "2.1.0",
     "mongoose-lean-virtuals": "0.9.1",
     "mongoose-paginate-v2": "1.8.2",
-    "@innei/pretty-logger-nestjs": "0.3.2",
     "node-machine-id": "1.1.12",
     "nodemailer": "6.9.14",
-    "openai": "4.51.0",
+    "openai": "4.52.0",
     "pluralize": "^8.0.0",
     "qs": "6.12.1",
     "reflect-metadata": "0.2.2",
@@ -167,7 +167,7 @@
     "zx": "7.2.3"
   },
   "optionalDependencies": {
-    "mongodb-memory-server": "^9.1.5",
+    "mongodb-memory-server": "^9.3.0",
     "redis-memory-server": "^0.10.0"
   }
 }

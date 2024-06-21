@@ -133,6 +133,7 @@ marked.use({
   ],
 
   renderer: {
+    // @ts-ignore
     image(src, title, _alt) {
       if (typeof src !== 'string') {
         return ''
@@ -148,7 +149,7 @@ marked.use({
             title || alt,
           )}</figcaption></figure>`
     },
-
+    // @ts-ignore
     code(code, lang) {
       if (lang == 'mermaid') {
         return `<pre class="mermaid">${code}</pre>`
