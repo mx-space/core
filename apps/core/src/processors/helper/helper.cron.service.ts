@@ -9,7 +9,7 @@ import { CronExpression } from '@nestjs/schedule'
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
-import { LOG_DIR, TEMP_DIR } from '~/constants/path.constant'
+import { LOG_DIR, TEMP_DIR, STATIC_FILE_TRASH_DIR } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
@@ -89,7 +89,7 @@ export class CronService {
   @CronDescription('清理临时文件')
   async cleanTempDirectory() {
     await rm(TEMP_DIR, { recursive: true })
-    mkdirp.sync(TEMP_DIR)
+    mkdirp.sync(STATIC_FILE_TRASH_DIR)
     this.logger.log('--> 清理临时文件成功')
   }
   // “At 00:05.”
