@@ -79,7 +79,7 @@
     "@types/jsonwebtoken": "9.0.6",
     "algoliasearch": "4.23.3",
     "axios": "^1.7.0",
-    "axios-retry": "4.4.0",
+    "axios-retry": "4.4.1",
     "bcryptjs": "^2.4.3",
     "cache-manager": "5.6.1",
     "cache-manager-ioredis-yet": "2.1.1",
