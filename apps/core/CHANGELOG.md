@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [6.0.0](https://github.com/mx-space/core/compare/v5.8.4...v6.0.0) (2024-06-22)
+
+
+### Bug Fixes
+
+* cleanTempDirectory not remake trash directory ([#1824](https://github.com/mx-space/core/issues/1824)) ([4877459](https://github.com/mx-space/core/commit/4877459edbdeba975ddd57874856f8a869001d28))
+* crypto compatible ([503f079](https://github.com/mx-space/core/commit/503f0798e6a6ba44b11d0826b2886565c7944c19))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.12 ([772f6f7](https://github.com/mx-space/core/commit/772f6f79653272ba19608cc765c48c27c8b4209b))
+* **deps:** update dependency @nestjs/throttler to v5.2.0 ([#1806](https://github.com/mx-space/core/issues/1806)) ([bfa25c0](https://github.com/mx-space/core/commit/bfa25c0d06e084a413990d4400e1b8e6121ded32))
+* **deps:** update dependency axios-retry to v4.4.1 ([#1825](https://github.com/mx-space/core/issues/1825)) ([0585033](https://github.com/mx-space/core/commit/05850331effd5d5e0341db8c507bed3c269cf7f8))
+* **deps:** update dependency mongoose to v8.4.3 ([79c7585](https://github.com/mx-space/core/commit/79c7585ba7b5c156af0ba94024572f68e18d7a6e))
+* **deps:** update dependency nodemailer to v6.9.14 ([416f933](https://github.com/mx-space/core/commit/416f9331621ac92169acd11459f35cb975306225))
+
+
+
 ## [5.8.4](https://github.com/mx-space/core/compare/v5.8.3...v5.8.4) (2024-06-14)
 
 
