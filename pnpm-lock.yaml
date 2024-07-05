@@ -367,8 +367,8 @@ importers:
         specifier: 4.0.9
         version: 4.0.9
       '@types/lodash':
-        specifier: 4.17.5
-        version: 4.17.5
+        specifier: 4.17.6
+        version: 4.17.6
       '@types/mime-types':
         specifier: 2.1.4
         version: 2.1.4
@@ -436,8 +436,8 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
       '@types/lodash':
-        specifier: 4.17.5
-        version: 4.17.5
+        specifier: 4.17.6
+        version: 4.17.6
       abort-controller:
         specifier: 3.0.0
         version: 3.0.0
@@ -2024,8 +2024,8 @@ packages:
   '@types/jsonwebtoken@9.0.6':
     resolution: {integrity: sha512-/5hndP5dCjloafCXns6SZyESp3Ldq7YjH3zwzwczYnjxIT0Fqzk5ROSYVGfFyczIue7IUEj8hkvLbPoLQ18vQw==}
 
-  '@types/lodash@4.17.5':
-    resolution: {integrity: sha512-MBIOHVZqVqgfro1euRDWX7OO0fBVUUMrN6Pwm8LQsz8cWhEpihlvR70ENj3f40j58TNxZaWv2ndSkInykNBBJw==}
+  '@types/lodash@4.17.6':
+    resolution: {integrity: sha512-OpXEVoCKSS3lQqjx9GGGOapBeuW5eUboYHRlHP9urXPX25IKZ6AnP5ZRxtVf63iieUbsHxLn8NQ5Nlftc6yzAA==}
 
   '@types/luxon@3.3.8':
     resolution: {integrity: sha512-jYvz8UMLDgy3a5SkGJne8H7VA7zPV2Lwohjx0V8V31+SqAjNmurWMkk9cQhfvlcnXWudBpK9xPM1n4rljOcHYQ==}
@@ -8414,7 +8414,7 @@ snapshots:
     dependencies:
       '@types/node': 20.14.7
 
-  '@types/lodash@4.17.5': {}
+  '@types/lodash@4.17.6': {}
 
   '@types/luxon@3.3.8': {}
 
