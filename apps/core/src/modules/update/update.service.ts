@@ -33,7 +33,7 @@ export class UpdateService {
         const result = await this.httpService.axiosRef
           .get(endpoint, {
             headers: {
-              Authorization: githubToken || `Bearer ${githubToken}`,
+              ...(githubToken && { Authorization: `Bearer ${githubToken}` }),
             },
           })
 
@@ -148,7 +148,7 @@ export class UpdateService {
     )
     const res = await this.httpService.axiosRef.get(endpoint, {
       headers: {
-        Authorization: githubToken || `Bearer ${githubToken}`,
+        ...(githubToken && { Authorization: `Bearer ${githubToken}` }),
       },
     })
     return res.data.tag_name.replace(/^v/, '')
