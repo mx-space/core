@@ -160,7 +160,7 @@
     "husky": "9.0.11",
     "ioredis": "5.4.1",
     "socket.io": "^4.7.4",
-    "unplugin-swc": "1.4.5",
+    "unplugin-swc": "1.5.1",
     "vite": "5.1.7",
     "vite-tsconfig-paths": "4.3.2",
     "vitest": "1.5.2",
