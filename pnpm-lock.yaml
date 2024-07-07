@@ -281,8 +281,8 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
       qs:
-        specifier: 6.12.1
-        version: 6.12.1
+        specifier: 6.12.2
+        version: 6.12.2
       reflect-metadata:
         specifier: 0.2.2
         version: 0.2.2
@@ -5181,8 +5181,8 @@ packages:
     resolution: {integrity: sha512-MvjoMCJwEarSbUYk5O+nmoSzSutSsTwF85zcHPQ9OrlFoZOYIjaqBAJIqIXjptyD5vThxGq52Xu/MaJzRkIk4Q==}
     engines: {node: '>=0.6'}
 
-  qs@6.12.1:
-    resolution: {integrity: sha512-zWmv4RSuB9r2mYQw3zxQuHWeU+42aKi1wWig/j4ele4ygELZ7PEO6MM7rim9oAQH2A5MWfsAVf/jPvTPgCbvUQ==}
+  qs@6.12.2:
+    resolution: {integrity: sha512-x+NLUpx9SYrcwXtX7ob1gnkSems4i/mGZX5SlYxwIau6RrUSODO89TR/XDGGpn5RPWSYIB+aSfuSlV5+CmbTBg==}
     engines: {node: '>=0.6'}
 
   quantize@1.0.2:
@@ -11750,7 +11750,7 @@ snapshots:
     dependencies:
       side-channel: 1.0.6
 
-  qs@6.12.1:
+  qs@6.12.2:
     dependencies:
       side-channel: 1.0.6
 
@@ -12588,7 +12588,7 @@ snapshots:
   umi-request@1.4.0:
     dependencies:
       isomorphic-fetch: 2.2.1
-      qs: 6.12.1
+      qs: 6.12.2
 
   unbox-primitive@1.0.2:
     dependencies:
