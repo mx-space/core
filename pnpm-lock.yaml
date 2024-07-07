@@ -22,8 +22,8 @@ importers:
         specifier: 9.3.0
         version: 9.3.0
       redis-memory-server:
-        specifier: 0.10.0
-        version: 0.10.0
+        specifier: 0.11.0
+        version: 0.11.0
     devDependencies:
       '@innei/prettier':
         specifier: 0.13.2
@@ -327,8 +327,8 @@ importers:
         specifier: ^9.3.0
         version: 9.3.0
       redis-memory-server:
-        specifier: ^0.10.0
-        version: 0.10.0
+        specifier: ^0.11.0
+        version: 0.11.0
     devDependencies:
       '@langchain/core':
         specifier: 0.2.14
@@ -5271,8 +5271,8 @@ packages:
     resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
     engines: {node: '>=4'}
 
-  redis-memory-server@0.10.0:
-    resolution: {integrity: sha512-D0CFfUzAOQv/64iYzRqxUs4MEV2LlaW227qDvuuiq2FR4FXLrxyfENFf7dj6v4IwGTcNSLxhDlNKQthYVncg3Q==}
+  redis-memory-server@0.11.0:
+    resolution: {integrity: sha512-yDE4/cGPUE/xpgZkv+krBMS5jQ0vpPc+P5BOSDlJfevxNEBx7+8aQw+bNvIlVXzDcg7M+Z+eh2wR2ZYL/cebdQ==}
     engines: {node: '>=16'}
     hasBin: true
 
@@ -5354,11 +5354,6 @@ packages:
   rimraf@4.4.1:
     resolution: {integrity: sha512-Gk8NlF062+T9CqNGn6h4tls3k6T1+/nXdOcSZVikNVtlRdYpA7wRJJMoXmuvOnLW844rPjdQ7JgXCYM6PPC/og==}
     engines: {node: '>=14'}
-    hasBin: true
-
-  rimraf@5.0.7:
-    resolution: {integrity: sha512-nV6YcJo5wbLW77m+8KjH8aB/7/rxQy9SZ0HY5shnwULfS+9nmTtVXAJET5NdZmCzA4fPI/Hm1wo/Po/4mopOdg==}
-    engines: {node: '>=14.18'}
     hasBin: true
 
   rimraf@5.0.8:
@@ -11875,7 +11870,7 @@ snapshots:
 
   redis-errors@1.2.0: {}
 
-  redis-memory-server@0.10.0:
+  redis-memory-server@0.11.0:
     dependencies:
       camelcase: 6.3.0
       cross-spawn: 7.0.3
@@ -11887,8 +11882,7 @@ snapshots:
       https-proxy-agent: 7.0.4
       lockfile: 1.0.4
       lodash.defaultsdeep: 4.6.1
-      mkdirp: 3.0.1
-      rimraf: 5.0.7
+      rimraf: 5.0.8
       semver: 7.6.2
       tar: 6.2.1
       tmp: 0.2.3
@@ -11959,11 +11953,6 @@ snapshots:
   rimraf@4.4.1:
     dependencies:
       glob: 9.3.5
-
-  rimraf@5.0.7:
-    dependencies:
-      glob: 10.4.2
-    optional: true
 
   rimraf@5.0.8:
     dependencies:
