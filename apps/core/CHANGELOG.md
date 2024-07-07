@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## [6.0.1](https://github.com/mx-space/core/compare/v6.0.0...v6.0.1) (2024-07-07)
+
+
+### Bug Fixes
+
+* **deps:** update algoliasearch-client-javascript monorepo to v4.24.0 ([#1853](https://github.com/mx-space/core/issues/1853)) ([7478e9d](https://github.com/mx-space/core/commit/7478e9d0fa8cb245468cb3a1e074de069927f2a8))
+* **deps:** update dependency @aws-sdk/client-s3 to v3.609.0 ([#1854](https://github.com/mx-space/core/issues/1854)) ([204f855](https://github.com/mx-space/core/commit/204f855c06a5986897595565c55fefb068caf79b))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.14 ([a383dc2](https://github.com/mx-space/core/commit/a383dc21c23f06f2b27501430f17bc6bce0b8ae9))
+* **deps:** update dependency isbot to v5.1.11 ([0fca0d3](https://github.com/mx-space/core/commit/0fca0d33bc506d7da45297c01f467a25652fe5d3))
+* **deps:** update dependency langchain to v0.2.8 ([cc155ab](https://github.com/mx-space/core/commit/cc155ab78582111b0ae2fbaa9ea551fb4739b35d))
+* **deps:** update dependency linkedom to v0.18.4 ([d7bf117](https://github.com/mx-space/core/commit/d7bf117a8b4ac6108a9dd32cedfce114dcbbaa00))
+* **deps:** update dependency marked to v13.0.2 ([#1832](https://github.com/mx-space/core/issues/1832)) ([efd3cc5](https://github.com/mx-space/core/commit/efd3cc505498d9f9d5ca2c50856a7be1ab5a4f28))
+* **deps:** update dependency mongoose to v8.4.5 ([61e1f06](https://github.com/mx-space/core/commit/61e1f06b9e12f1dff8996aa56090da135d4243b3))
+* **deps:** update dependency mongoose-aggregate-paginate-v2 to v1.0.42 ([6a4e502](https://github.com/mx-space/core/commit/6a4e5027c4ad6af26628702cc191645913f26628))
+* **deps:** update dependency openai to v4.52.3 ([1febace](https://github.com/mx-space/core/commit/1febace72501f917c648731766e683506fb1458c))
+* **deps:** update dependency qs to v6.12.2 ([4f737a9](https://github.com/mx-space/core/commit/4f737a983490dca874d0b3f546b05f8c8da25313))
+* **deps:** update nest monorepo ([c30b6c1](https://github.com/mx-space/core/commit/c30b6c1486a8734e26054372ab5a3d29c154227d))
+* **update:** bad credentials when requesting with empty github token ([#1847](https://github.com/mx-space/core/issues/1847)) ([63f4551](https://github.com/mx-space/core/commit/63f4551da9c5a2b25c2db102a70e988ff3808a1e))
+
+
+
 # [6.0.0](https://github.com/mx-space/core/compare/v5.8.4...v6.0.0) (2024-06-22)
 
 
