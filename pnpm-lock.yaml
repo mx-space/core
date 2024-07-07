@@ -20,7 +20,7 @@ importers:
     optionalDependencies:
       mongodb-memory-server:
         specifier: 9.3.0
-        version: 9.3.0
+        version: 9.4.0
       redis-memory-server:
         specifier: 0.10.0
         version: 0.10.0
@@ -325,7 +325,7 @@ importers:
     optionalDependencies:
       mongodb-memory-server:
         specifier: ^9.3.0
-        version: 9.3.0
+        version: 9.4.0
       redis-memory-server:
         specifier: ^0.10.0
         version: 0.10.0
@@ -3718,6 +3718,10 @@ packages:
     resolution: {integrity: sha512-wlwpilI7YdjSkWaQ/7omYBMTliDcmCN8OLihO6I9B86g06lMyAoqgoDpV0XqoaPOKj+0DIdAvnsWfyAAhmimcg==}
     engines: {node: '>= 14'}
 
+  https-proxy-agent@7.0.5:
+    resolution: {integrity: sha512-1e4Wqeblerz+tMKPIq2EMGiiWW1dIjZOksyHWSUm1rmuvw/how9hBHZ38lAGj5ID4Ik6EdkOw7NmWPy6LAwalw==}
+    engines: {node: '>= 14'}
+
   human-signals@2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
     engines: {node: '>=10.17.0'}
@@ -4606,12 +4610,12 @@ packages:
   mongodb-connection-string-url@3.0.1:
     resolution: {integrity: sha512-XqMGwRX0Lgn05TDB4PyG2h2kKO/FfWJyCzYQbIhXUxz7ETt0I/FqHjUeqj37irJ+Dl1ZtU82uYyj14u2XsZKfg==}
 
-  mongodb-memory-server-core@9.3.0:
-    resolution: {integrity: sha512-8okAtOGWqSG37K7/TrvTfn43ORMh9LssIvd30XjHxvjWK7utmSTXr69XAhYvsDrHDwv7L23Ii6NJ4zMPpiFKuw==}
+  mongodb-memory-server-core@9.4.0:
+    resolution: {integrity: sha512-irqdj/RPHJ2M9lgtxrvhXUbqFv/DfmUG+wvcAqtgtBJ8qVq1VGBD5rkKkLP5b3g8OoadP3OzsXTGCi1P2dDBQQ==}
     engines: {node: '>=14.20.1'}
 
-  mongodb-memory-server@9.3.0:
-    resolution: {integrity: sha512-ag1vbjsm1A2C/1arRlfCLRapY7L2JKsQgASvaFyTXFyfqf6wjVSfO3PhJ/KfkyntmwlMXe3sUjMkZKeD89qu8Q==}
+  mongodb-memory-server@9.4.0:
+    resolution: {integrity: sha512-O6n7TxWvcLSSDP3IrXsLsdG0iouljlqdZ7sH3ZaqEyymzZglMroV3CwMj1lvMNks7fRVj8HMrza0gnwF3MyFGA==}
     engines: {node: '>=14.20.1'}
 
   mongodb@5.9.2:
@@ -5616,8 +5620,8 @@ packages:
     resolution: {integrity: sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA==}
     engines: {node: '>=12'}
 
-  string-width@7.1.0:
-    resolution: {integrity: sha512-SEIJCWiX7Kg4c129n48aDRwLbFb2LJmXXFrWBG4NGaRtMQ3myKPKbwrD1BKqQn74oCoNMBVrfDEr5M9YxCsrkw==}
+  string-width@7.2.0:
+    resolution: {integrity: sha512-tsaTIkKW9b4N+AEj+SVA+WhJzV7/zMhcSu78mLKWSk7cXMOSHsBKFWUs0fWwq8QyK3MgJBQRX6Gbi4kYbdvGkQ==}
     engines: {node: '>=18'}
 
   string.prototype.trim@1.2.9:
@@ -9232,7 +9236,7 @@ snapshots:
   cli-truncate@4.0.0:
     dependencies:
       slice-ansi: 5.0.0
-      string-width: 7.1.0
+      string-width: 7.2.0
 
   cli-width@3.0.0: {}
 
@@ -10506,6 +10510,14 @@ snapshots:
       - supports-color
     optional: true
 
+  https-proxy-agent@7.0.5:
+    dependencies:
+      agent-base: 7.1.1
+      debug: 4.3.5
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
+
   human-signals@2.1.0: {}
 
   human-signals@5.0.0: {}
@@ -11267,14 +11279,14 @@ snapshots:
       '@types/whatwg-url': 11.0.5
       whatwg-url: 13.0.0
 
-  mongodb-memory-server-core@9.3.0:
+  mongodb-memory-server-core@9.4.0:
     dependencies:
       async-mutex: 0.4.1
       camelcase: 6.3.0
       debug: 4.3.5
       find-cache-dir: 3.3.2
       follow-redirects: 1.15.6(debug@4.3.5)
-      https-proxy-agent: 7.0.4
+      https-proxy-agent: 7.0.5
       mongodb: 5.9.2
       new-find-package-json: 2.0.0
       semver: 7.6.2
@@ -11290,9 +11302,9 @@ snapshots:
       - supports-color
     optional: true
 
-  mongodb-memory-server@9.3.0:
+  mongodb-memory-server@9.4.0:
     dependencies:
-      mongodb-memory-server-core: 9.3.0
+      mongodb-memory-server-core: 9.4.0
       tslib: 2.6.3
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -12277,7 +12289,7 @@ snapshots:
       emoji-regex: 9.2.2
       strip-ansi: 7.1.0
 
-  string-width@7.1.0:
+  string-width@7.2.0:
     dependencies:
       emoji-regex: 10.3.0
       get-east-asian-width: 1.2.0
@@ -12940,7 +12952,7 @@ snapshots:
   wrap-ansi@9.0.0:
     dependencies:
       ansi-styles: 6.2.1
-      string-width: 7.1.0
+      string-width: 7.2.0
       strip-ansi: 7.1.0
 
   wrappy@1.0.2: {}
