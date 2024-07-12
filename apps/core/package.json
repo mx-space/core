@@ -94,7 +94,7 @@
     "form-data": "4.0.0",
     "get-image-colors": "4.0.1",
     "image-size": "1.1.1",
-    "inquirer": "^9.2.15",
+    "inquirer": "^10.0.0",
     "isbot": "5.1.11",
     "js-yaml": "^4.1.0",
     "json5": "2.2.3",
