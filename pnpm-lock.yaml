@@ -213,7 +213,7 @@ importers:
         version: 1.1.1
       inquirer:
         specifier: ^10.0.0
-        version: 10.0.0
+        version: 10.0.1
       isbot:
         specifier: 5.1.11
         version: 5.1.11
@@ -3854,8 +3854,8 @@ packages:
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
 
-  inquirer@10.0.0:
-    resolution: {integrity: sha512-flE/e5bOgsRRd+UrfGe6SfA9gZnGvY69dVUb2TPJn/I1LlbvWTuk0hZXbf7l7KiJwFkDtD9tH37HczSK1+gvww==}
+  inquirer@10.0.1:
+    resolution: {integrity: sha512-XgthhRIn0Ci9JdGJpUo2EtpPfaczbooZbGTN+FTzSCyUb7YHJcPPnuSXfeG5903bJMy3OyEoVTQMnvO4Ly5tFg==}
     engines: {node: '>=18'}
 
   inquirer@8.2.6:
@@ -10780,7 +10780,7 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  inquirer@10.0.0:
+  inquirer@10.0.1:
     dependencies:
       '@inquirer/prompts': 5.1.2
       '@inquirer/type': 1.4.0
