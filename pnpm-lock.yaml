@@ -41,8 +41,8 @@ importers:
         specifier: ^9
         version: 9.7.0
       eslint-plugin-unused-imports:
-        specifier: 4.0.0
-        version: 4.0.0(eslint@9.7.0)
+        specifier: 4.0.1
+        version: 4.0.1(eslint@9.7.0)
       husky:
         specifier: 9.1.1
         version: 9.1.1
@@ -3431,16 +3431,6 @@ packages:
     engines: {node: '>=18.18'}
     peerDependencies:
       eslint: '>=8.56.0'
-
-  eslint-plugin-unused-imports@4.0.0:
-    resolution: {integrity: sha512-mzM+y2B7XYpQryVa1usT+Y/BdNAtAZiXzwpSyDCboFoJN/LZRN67TNvQxKtuTK/Aplya3sLNQforiubzPPaIcQ==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      '@typescript-eslint/eslint-plugin': '8'
-      eslint: '9'
-    peerDependenciesMeta:
-      '@typescript-eslint/eslint-plugin':
-        optional: true
 
   eslint-plugin-unused-imports@4.0.1:
     resolution: {integrity: sha512-rax76s05z64uQgG9YXsWFmXrgjkaK79AvfeAWiSxhPP6RVGxeRaj4+2u+wxxu/mDy2pmJoOy1QTOEALMia2xGQ==}
@@ -10374,11 +10364,6 @@ snapshots:
       strip-indent: 3.0.0
     transitivePeerDependencies:
       - supports-color
-
-  eslint-plugin-unused-imports@4.0.0(eslint@9.7.0):
-    dependencies:
-      eslint: 9.7.0
-      eslint-rule-composer: 0.3.0
 
   eslint-plugin-unused-imports@4.0.1(eslint@9.7.0):
     dependencies:
