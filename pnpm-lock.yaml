@@ -266,8 +266,8 @@ importers:
         specifier: 0.9.1
         version: 0.9.1(mongoose@8.5.1(socks@2.8.3))
       mongoose-paginate-v2:
-        specifier: 1.8.2
-        version: 1.8.2
+        specifier: 1.8.3
+        version: 1.8.3
       node-machine-id:
         specifier: 1.1.12
         version: 1.1.12
@@ -4941,8 +4941,8 @@ packages:
     peerDependencies:
       mongoose: '>=5.11.10'
 
-  mongoose-paginate-v2@1.8.2:
-    resolution: {integrity: sha512-T/Z3qKyKnPUa6UkH1IjHxdYnYApCAKk9zb2C0GF5hg3QETcI62AUAUQGCBE2tIw7fF4feUaDARMajj/bersyvg==}
+  mongoose-paginate-v2@1.8.3:
+    resolution: {integrity: sha512-Fkg9amsmtRkqUQ19kwOvw6XodkqXoySr82MkV5XPeD+1u/m68tWnDcz3xRwDPzlIsAr1ctx/4Rz/bnfD3PIJqQ==}
     engines: {node: '>=4.0.0'}
 
   mongoose@8.5.1:
@@ -11911,7 +11911,7 @@ snapshots:
       mongoose: 8.5.1(socks@2.8.3)
       mpath: 0.8.4
 
-  mongoose-paginate-v2@1.8.2: {}
+  mongoose-paginate-v2@1.8.3: {}
 
   mongoose@8.5.1(socks@2.8.3):
     dependencies:
