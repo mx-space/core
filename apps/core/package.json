@@ -134,7 +134,7 @@
   },
   "devDependencies": {
     "@langchain/core": "0.2.18",
-    "@nestjs/cli": "10.3.2",
+    "@nestjs/cli": "10.4.2",
     "@nestjs/schematics": "10.1.2",
     "@nestjs/testing": "10.3.10",
     "@swc/core": "1.7.0",
