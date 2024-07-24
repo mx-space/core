@@ -146,8 +146,8 @@ importers:
         specifier: 10.3.10
         version: 10.3.10(@nestjs/common@10.3.10(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.3.10)(@nestjs/platform-socket.io@10.3.10)(reflect-metadata@0.2.2)(rxjs@7.8.1)
       '@simplewebauthn/server':
-        specifier: 10.0.0
-        version: 10.0.0(encoding@0.1.13)
+        specifier: 10.0.1
+        version: 10.0.1(encoding@0.1.13)
       '@socket.io/redis-adapter':
         specifier: 8.3.0
         version: 8.3.0(socket.io-adapter@2.5.5)
@@ -1784,8 +1784,8 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
-  '@simplewebauthn/server@10.0.0':
-    resolution: {integrity: sha512-w5eIoiF7ltg1sgggjY5Tx654j+DBuyEx2B3869jjmPp0xl2Z4BUP4kJ3yJ6DnZIv+ZYYntT3E6nZXNjPOQbrtw==}
+  '@simplewebauthn/server@10.0.1':
+    resolution: {integrity: sha512-djNWcRn+H+6zvihBFJSpG3fzb0NQS9c/Mw5dYOtZ9H+oDw8qn9Htqxt4cpqRvSOAfwqP7rOvE9rwqVaoGGc3hg==}
     engines: {node: '>=20.0.0'}
 
   '@simplewebauthn/types@10.0.0':
@@ -8252,7 +8252,7 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
-  '@simplewebauthn/server@10.0.0(encoding@0.1.13)':
+  '@simplewebauthn/server@10.0.1(encoding@0.1.13)':
     dependencies:
       '@hexagon/base64': 1.1.28
       '@levischuck/tiny-cbor': 0.2.2
