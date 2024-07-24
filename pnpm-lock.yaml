@@ -254,8 +254,8 @@ importers:
         specifier: 8.5.1
         version: 8.5.1(socks@2.8.3)
       mongoose-aggregate-paginate-v2:
-        specifier: 1.1.1
-        version: 1.1.1
+        specifier: 1.1.2
+        version: 1.1.2
       mongoose-autopopulate:
         specifier: 1.1.0
         version: 1.1.0(mongoose@8.5.1(socks@2.8.3))
@@ -4921,8 +4921,8 @@ packages:
       socks:
         optional: true
 
-  mongoose-aggregate-paginate-v2@1.1.1:
-    resolution: {integrity: sha512-6RfDrdDWXx83z3IrlMGna78KpcBge6hKBM+IhUwTNbExjjkY3xKXwH6EcSAVc7LH5MrkKcDASQmZ0AmcD30D8g==}
+  mongoose-aggregate-paginate-v2@1.1.2:
+    resolution: {integrity: sha512-Ai478tHedZy3U2ITBEp2H4rQEviRan3TK4p/umlFqIzgPF1R0hNKvzzQGIb1l2h+Z32QLU3NqaoWKu4vOOUElQ==}
     engines: {node: '>=4.0.0'}
 
   mongoose-autopopulate@1.1.0:
@@ -11894,7 +11894,7 @@ snapshots:
     optionalDependencies:
       socks: 2.8.3
 
-  mongoose-aggregate-paginate-v2@1.1.1: {}
+  mongoose-aggregate-paginate-v2@1.1.2: {}
 
   mongoose-autopopulate@1.1.0(mongoose@8.5.1(socks@2.8.3)):
     dependencies:
