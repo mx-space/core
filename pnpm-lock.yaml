@@ -111,7 +111,7 @@ importers:
         version: 0.3.2(@nestjs/common@10.3.10(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))
       '@langchain/openai':
         specifier: 0.2.5
-        version: 0.2.5(encoding@0.1.13)(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))
+        version: 0.2.5(encoding@0.1.13)(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))
       '@mx-space/external':
         specifier: workspace:*
         version: link:../../packages/external
@@ -230,8 +230,8 @@ importers:
         specifier: 3.10.1
         version: 3.10.1
       langchain:
-        specifier: 0.2.10
-        version: 0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1)
+        specifier: 0.2.11
+        version: 0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1)
       linkedom:
         specifier: 0.18.4
         version: 0.18.4
@@ -332,7 +332,7 @@ importers:
     devDependencies:
       '@langchain/core':
         specifier: 0.2.18
-        version: 0.2.18(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
+        version: 0.2.18(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
       '@nestjs/cli':
         specifier: 10.4.2
         version: 10.4.2(@swc/core@1.7.1)(esbuild@0.23.0)
@@ -4296,8 +4296,8 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
-  langchain@0.2.10:
-    resolution: {integrity: sha512-i0fC+RlX/6w6HKPWL3N5zrhrkijvpe2Xu4t/qbWzq4uFf8WBfPwmNFom3RtO2RatuPnHLm8mViU6nw8YBDiVwA==}
+  langchain@0.2.11:
+    resolution: {integrity: sha512-6FQWKNAXuTmwuhHHMOmurLo8pydSRu5C/FwCYvYbR4ulCLqcsj+jre/kfXvA5BdHOZHNo6oQn0/5kxDNnhxMUA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@aws-sdk/client-s3': ^3.310.0
@@ -4309,6 +4309,16 @@ packages:
       '@gomomento/sdk': ^1.51.1
       '@gomomento/sdk-core': ^1.51.1
       '@gomomento/sdk-web': ^1.51.1
+      '@langchain/anthropic': '*'
+      '@langchain/aws': '*'
+      '@langchain/cohere': '*'
+      '@langchain/community': '*'
+      '@langchain/google-genai': '*'
+      '@langchain/google-vertexai': '*'
+      '@langchain/google-vertexai-web': '*'
+      '@langchain/groq': '*'
+      '@langchain/mistralai': '*'
+      '@langchain/ollama': '*'
       '@mendable/firecrawl-js': ^0.0.13
       '@notionhq/client': ^2.2.10
       '@pinecone-database/pinecone': '*'
@@ -4316,7 +4326,7 @@ packages:
       '@vercel/kv': ^0.2.3
       '@xata.io/client': ^0.28.0
       apify-client: ^2.7.1
-      assemblyai: ^4.0.0
+      assemblyai: ^4.6.0
       axios: '*'
       cheerio: ^1.0.0-rc.12
       chromadb: '*'
@@ -4368,6 +4378,26 @@ packages:
       '@gomomento/sdk-core':
         optional: true
       '@gomomento/sdk-web':
+        optional: true
+      '@langchain/anthropic':
+        optional: true
+      '@langchain/aws':
+        optional: true
+      '@langchain/cohere':
+        optional: true
+      '@langchain/community':
+        optional: true
+      '@langchain/google-genai':
+        optional: true
+      '@langchain/google-vertexai':
+        optional: true
+      '@langchain/google-vertexai-web':
+        optional: true
+      '@langchain/groq':
+        optional: true
+      '@langchain/mistralai':
+        optional: true
+      '@langchain/ollama':
         optional: true
       '@mendable/firecrawl-js':
         optional: true
@@ -4454,20 +4484,6 @@ packages:
 
   langchainhub@0.0.11:
     resolution: {integrity: sha512-WnKI4g9kU2bHQP136orXr2bcRdgz9iiTBpTN0jWt9IlScUKnJBoD0aa2HOzHURQKeQDnt2JwqVmQ6Depf5uDLQ==}
-
-  langsmith@0.1.32:
-    resolution: {integrity: sha512-EUWHIH6fiOCGRYdzgwGoXwJxCMyUrL+bmUcxoVmkXoXoAGDOVinz8bqJLKbxotsQWqM64NKKsW85OTIutgNaMQ==}
-    peerDependencies:
-      '@langchain/core': '*'
-      langchain: '*'
-      openai: '*'
-    peerDependenciesMeta:
-      '@langchain/core':
-        optional: true
-      langchain:
-        optional: true
-      openai:
-        optional: true
 
   langsmith@0.1.39:
     resolution: {integrity: sha512-K2/qbc96JhrZbSL74RbZ0DBOpTB9Mxicu8RQrZ88Xsp1bH2O3+y5EdcvC0g/1YzQWQhcQ4peknCA24c3VTNiNA==}
@@ -7881,13 +7897,13 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
 
-  '@langchain/core@0.2.18(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))':
+  '@langchain/core@0.2.18(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))':
     dependencies:
       ansi-styles: 5.2.0
       camelcase: 6.3.0
       decamelize: 1.2.0
       js-tiktoken: 1.0.12
-      langsmith: 0.1.39(@langchain/core@0.2.18(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13)))(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
+      langsmith: 0.1.39(@langchain/core@0.2.18(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13)))(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
       ml-distance: 4.0.1
       mustache: 4.2.0
       p-queue: 6.6.2
@@ -7899,9 +7915,9 @@ snapshots:
       - langchain
       - openai
 
-  '@langchain/openai@0.2.5(encoding@0.1.13)(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))':
+  '@langchain/openai@0.2.5(encoding@0.1.13)(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))':
     dependencies:
-      '@langchain/core': 0.2.18(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
+      '@langchain/core': 0.2.18(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
       js-tiktoken: 1.0.12
       openai: 4.52.7(encoding@0.1.13)
       zod: 3.23.8
@@ -7910,9 +7926,9 @@ snapshots:
       - encoding
       - langchain
 
-  '@langchain/textsplitters@0.0.3(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))':
+  '@langchain/textsplitters@0.0.3(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))':
     dependencies:
-      '@langchain/core': 0.2.18(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
+      '@langchain/core': 0.2.18(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
       js-tiktoken: 1.0.12
     transitivePeerDependencies:
       - langchain
@@ -11309,17 +11325,17 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1):
+  langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1):
     dependencies:
-      '@langchain/core': 0.2.18(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
-      '@langchain/openai': 0.2.5(encoding@0.1.13)(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))
-      '@langchain/textsplitters': 0.0.3(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
+      '@langchain/core': 0.2.18(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
+      '@langchain/openai': 0.2.5(encoding@0.1.13)(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))
+      '@langchain/textsplitters': 0.0.3(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
       binary-extensions: 2.3.0
       js-tiktoken: 1.0.12
       js-yaml: 4.1.0
       jsonpointer: 5.0.1
       langchainhub: 0.0.11
-      langsmith: 0.1.32(@langchain/core@0.2.18(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13)))(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
+      langsmith: 0.1.39(@langchain/core@0.2.18(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13)))(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
       ml-distance: 4.0.1
       openapi-types: 12.1.3
       p-retry: 4.6.2
@@ -11343,7 +11359,7 @@ snapshots:
 
   langchainhub@0.0.11: {}
 
-  langsmith@0.1.32(@langchain/core@0.2.18(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13)))(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13)):
+  langsmith@0.1.39(@langchain/core@0.2.18(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13)))(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13)):
     dependencies:
       '@types/uuid': 9.0.8
       commander: 10.0.1
@@ -11351,20 +11367,8 @@ snapshots:
       p-retry: 4.6.2
       uuid: 9.0.1
     optionalDependencies:
-      '@langchain/core': 0.2.18(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
-      langchain: 0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1)
-      openai: 4.52.7(encoding@0.1.13)
-
-  langsmith@0.1.39(@langchain/core@0.2.18(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13)))(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13)):
-    dependencies:
-      '@types/uuid': 9.0.8
-      commander: 10.0.1
-      p-queue: 6.6.2
-      p-retry: 4.6.2
-      uuid: 9.0.1
-    optionalDependencies:
-      '@langchain/core': 0.2.18(langchain@0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
-      langchain: 0.2.10(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1)
+      '@langchain/core': 0.2.18(langchain@0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1))(openai@4.52.7(encoding@0.1.13))
+      langchain: 0.2.11(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(cheerio@1.0.0-rc.12)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.52.7(encoding@0.1.13))(ws@8.17.1)
       openai: 4.52.7(encoding@0.1.13)
 
   levn@0.4.1:
