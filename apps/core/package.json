@@ -167,7 +167,7 @@
     "zx": "7.2.3"
   },
   "optionalDependencies": {
-    "mongodb-memory-server": "^9.3.0",
+    "mongodb-memory-server": "^10.0.0",
     "redis-memory-server": "^0.11.0"
   }
 }
