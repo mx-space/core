@@ -92,8 +92,8 @@ importers:
         specifier: ^7.24.9
         version: 7.24.9
       '@clerk/clerk-sdk-node':
-        specifier: 5.0.18
-        version: 5.0.18(react@18.3.1)
+        specifier: 5.0.20
+        version: 5.0.20(react@18.3.1)
       '@fastify/cookie':
         specifier: 9.3.1
         version: 9.3.1
@@ -877,16 +877,16 @@ packages:
     resolution: {integrity: sha512-xm8XrMKz0IlUdocVbYJe0Z9xEgidU7msskG8BbhnTPK/HZ2z/7FP7ykqPgrUH+C+r414mNfNWam1f2vqOjqjYQ==}
     engines: {node: '>=6.9.0'}
 
-  '@clerk/backend@1.4.1':
-    resolution: {integrity: sha512-cERP/71pIGZvA7WtJaMCrTf33pu4H6NI89LJXXBcUnMTj8YJy7XAGURKi8jzFTUAeMiQXjV7NESzkEzRWtgCGw==}
+  '@clerk/backend@1.4.3':
+    resolution: {integrity: sha512-wj4qsZO6iNiY9vF7vLH5v1f3oLh1yCLgFa0PedLzJAIJgepZl23C1/ubrRm7vyewjQEMHZwod4816mZlHDfoqA==}
     engines: {node: '>=18.17.0'}
 
-  '@clerk/clerk-sdk-node@5.0.18':
-    resolution: {integrity: sha512-T/wFoWqRhhF+0AaFwztgPAZrb+cZ/b0+RZY/EODNz6WjNnENXEEKm8qLfcZZn2PuFsXrc54X+QRk+nh7DLqWRw==}
+  '@clerk/clerk-sdk-node@5.0.20':
+    resolution: {integrity: sha512-W8r9zpre2JowLcSk9fz74SQuGFCut/YrGZzE7GeAAafpnVAhfzBgpQ+Dg5onYc8dJUR/5/jLUJ/VrApBC+65kg==}
     engines: {node: '>=18.17.0'}
 
-  '@clerk/shared@2.4.0':
-    resolution: {integrity: sha512-2UI0OeRB8IIliiALydLTQjYYj3qhPNb/LU9/3tfBbz/PNbCEZkd18AuYKB9N3zIm2MIHbOSMLt7SoZJKsRB8+A==}
+  '@clerk/shared@2.4.1':
+    resolution: {integrity: sha512-sApuz6hDRIai4Jwo/fBcihX74+DdrKLt08LkEVrooh/7zc0ipDOSGlqmAy15yNuKPaxpemp/9nW4T8gq6uIr9Q==}
     engines: {node: '>=18.17.0'}
     peerDependencies:
       react: '>=18 || >=19.0.0-beta'
@@ -897,8 +897,8 @@ packages:
       react-dom:
         optional: true
 
-  '@clerk/types@4.9.0':
-    resolution: {integrity: sha512-t+PDtVItnwit8u+YefMBVfJVdENdRAndMiIwGGJgnZ7+DyPjOwqomVy3VmcyycUdkdHcnx16UKm3a0rh2JQG/w==}
+  '@clerk/types@4.9.1':
+    resolution: {integrity: sha512-fCmqzPBFh0rH9TlUVPpvPW225DtGJDuCv5GecwuuzD8hcgwGetTfRSDRNl5Dub5aJuqYWGQQCCnKfnfCrhZvrA==}
     engines: {node: '>=18.17.0'}
 
   '@colors/colors@1.5.0':
@@ -7342,10 +7342,10 @@ snapshots:
       '@babel/helper-validator-identifier': 7.24.7
       to-fast-properties: 2.0.0
 
-  '@clerk/backend@1.4.1(react@18.3.1)':
+  '@clerk/backend@1.4.3(react@18.3.1)':
     dependencies:
-      '@clerk/shared': 2.4.0(react@18.3.1)
-      '@clerk/types': 4.9.0
+      '@clerk/shared': 2.4.1(react@18.3.1)
+      '@clerk/types': 4.9.1
       cookie: 0.5.0
       snakecase-keys: 5.4.4
       tslib: 2.4.1
@@ -7353,19 +7353,19 @@ snapshots:
       - react
       - react-dom
 
-  '@clerk/clerk-sdk-node@5.0.18(react@18.3.1)':
+  '@clerk/clerk-sdk-node@5.0.20(react@18.3.1)':
     dependencies:
-      '@clerk/backend': 1.4.1(react@18.3.1)
-      '@clerk/shared': 2.4.0(react@18.3.1)
-      '@clerk/types': 4.9.0
+      '@clerk/backend': 1.4.3(react@18.3.1)
+      '@clerk/shared': 2.4.1(react@18.3.1)
+      '@clerk/types': 4.9.1
       tslib: 2.4.1
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@clerk/shared@2.4.0(react@18.3.1)':
+  '@clerk/shared@2.4.1(react@18.3.1)':
     dependencies:
-      '@clerk/types': 4.9.0
+      '@clerk/types': 4.9.1
       glob-to-regexp: 0.4.1
       js-cookie: 3.0.5
       std-env: 3.7.0
@@ -7373,7 +7373,7 @@ snapshots:
     optionalDependencies:
       react: 18.3.1
 
-  '@clerk/types@4.9.0':
+  '@clerk/types@4.9.1':
     dependencies:
       csstype: 3.1.1
 
