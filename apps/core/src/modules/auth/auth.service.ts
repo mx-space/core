@@ -136,32 +136,30 @@ export class AuthService {
 
     if (!enable) return false
 
-    if (jwtToken === undefined) {
+    if (jwtToken === undefined || !jwtToken) {
       return false
     }
 
     try {
-      if (jwtToken) {
-        const { sub: userId } = jwt.verify(jwtToken, pemKey) as {
-          sub: string
-        }
-
-        let clerkClient: ClerkClient
-        if (this.clerkClientLRU.has(secretKey)) {
-          clerkClient = this.clerkClientLRU.get(secretKey)!
-        } else {
-          clerkClient = createClerkClient({
-            secretKey,
-          })
-
-          this.clerkClientLRU.set(secretKey, clerkClient, { size: 1 })
-        }
-
-        // 1. promise user is exist
-        const user = await clerkClient.users.getUser(userId)
-
-        return user.id === adminUserId
+      const { sub: userId } = jwt.verify(jwtToken, pemKey) as {
+        sub: string
       }
+
+      let clerkClient: ClerkClient
+      if (this.clerkClientLRU.has(secretKey)) {
+        clerkClient = this.clerkClientLRU.get(secretKey)!
+      } else {
+        clerkClient = createClerkClient({
+          secretKey,
+        })
+
+        this.clerkClientLRU.set(secretKey, clerkClient, { size: 1 })
+      }
+
+      // 1. promise user is exist
+      const user = await clerkClient.users.getUser(userId)
+
+      return user.id === adminUserId
     } catch (error) {
       this.logger.debug(`clerk jwt valid error: ${error.message}`)
       return false
