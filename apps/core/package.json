@@ -82,7 +82,7 @@
     "axios": "^1.7.0",
     "axios-retry": "4.4.2",
     "bcryptjs": "^2.4.3",
-    "cache-manager": "5.7.3",
+    "cache-manager": "5.7.4",
     "cache-manager-ioredis-yet": "2.1.1",
     "class-transformer": "0.5.1",
     "class-validator": "0.13.2",
