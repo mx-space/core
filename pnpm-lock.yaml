@@ -11493,7 +11493,7 @@ snapshots:
 
   map-stream@0.1.0: {}
 
-  marked@13.0.2: {}
+  marked@13.0.3: {}
 
   mdast-util-from-markdown@0.8.5:
     dependencies:
