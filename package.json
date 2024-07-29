@@ -34,7 +34,7 @@
     "zx-cjs": "7.0.7-0"
   },
   "devDependencies": {
-    "@innei/prettier": "0.14.0",
+    "@innei/prettier": "0.14.2",
     "@sxzz/eslint-config": "3.15.1",
     "@types/node": "20.14.13",
     "cross-env": "7.0.3",

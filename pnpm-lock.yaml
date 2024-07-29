@@ -26,8 +26,8 @@ importers:
         version: 0.11.0
     devDependencies:
       '@innei/prettier':
-        specifier: 0.14.0
-        version: 0.14.0
+        specifier: 0.14.2
+        version: 0.14.2
       '@sxzz/eslint-config':
         specifier: 3.15.1
         version: 3.15.1(@types/eslint@8.56.10)(eslint@9.8.0)(typescript@5.5.4)
@@ -1299,8 +1299,8 @@ packages:
     resolution: {integrity: sha512-f3+o2yMWw2aiPmd2E/Lm1tSw41hHJw7eaQ4xSdmcTfT9QMfYTXO5Rv2MWIll/vXvm9OmgY7yJswtJk0nyULtWw==}
     engines: {pnpm: '>=7'}
 
-  '@innei/prettier@0.14.0':
-    resolution: {integrity: sha512-zPV5lOgTt6CGakuzeJ5ZqvOBYM/YrAa3QI7Pbk1b1hXuOh7UvbpsAZ0h/XW5eP8AZHOGdwQtQIbkXFZQg08iRQ==}
+  '@innei/prettier@0.14.2':
+    resolution: {integrity: sha512-jIVwn+1VJBV1hmuVN9ztY9YRDZC42uaoCbgeHtWMuaVmtyXexmQ28hbosLNO0Qf5OgeKGouQx248Ary09oqVew==}
 
   '@innei/pretty-logger-core@0.3.2':
     resolution: {integrity: sha512-B0eSmOiKYNCFCFPCIyV4unG6NChtCHgRKiF8z0VbFmjU4T8cQAXGbPd0kjjcl6hToQFBXSQNJ27j2NJpO+pS+g==}
@@ -7673,7 +7673,7 @@ snapshots:
 
   '@innei/next-async@0.3.0': {}
 
-  '@innei/prettier@0.14.0':
+  '@innei/prettier@0.14.2':
     dependencies:
       '@ianvs/prettier-plugin-sort-imports': 4.3.1(prettier@3.3.3)
       prettier: 3.3.3
