@@ -1,20 +1,23 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
+import { seconds } from '@nestjs/throttler'
 import { program } from 'commander'
 import { load as yamlLoad } from 'js-yaml'
-import { machineIdSync } from 'node-machine-id'
 
-import { seconds } from '@nestjs/throttler'
+import { machineIdSync } from 'node-machine-id'
 import { isDebugMode, isDev } from './global/env.global'
 import { parseBooleanishValue } from './utils'
 import type { AxiosRequestConfig } from 'axios'
 
+const { PORT: ENV_PORT, ALLOWED_ORIGINS, MX_ENCRYPT_KEY } = process.env
+
 const commander = program
-  .option('-p, --port <number>', 'server port')
+  .option('-p, --port <number>', 'server port', ENV_PORT)
   .option('--demo', 'enable demo mode')
   .option(
     '--allowed_origins <string>',
     'allowed origins, e.g. innei.ren,*.innei.ren',
+    ALLOWED_ORIGINS,
   )
   .option('-c, --config <path>', 'load yaml config from file')
 
@@ -55,7 +58,11 @@ const commander = program
   )
 
   // security
-  .option('--encrypt_key <string>', 'custom encrypt key, default is machine-id')
+  .option(
+    '--encrypt_key <string>',
+    'custom encrypt key, default is machine-id',
+    MX_ENCRYPT_KEY,
+  )
   .option(
     '--encrypt_enable',
     'enable encrypt security field, please remember encrypt key.',
@@ -88,9 +95,7 @@ if (argv.config) {
   Object.assign(argv, config)
 }
 
-const { PORT: ENV_PORT, MX_ENCRYPT_KEY } = process.env
-
-export const PORT = argv.port || ENV_PORT || 2333
+export const PORT = argv.port || 2333
 export const API_VERSION = 2
 
 export const DEMO_MODE = argv.demo || false
@@ -177,7 +182,7 @@ export const THROTTLE_OPTIONS = {
   limit: argv.throttle_limit ?? 100,
 }
 
-const ENCRYPT_KEY = argv.encrypt_key || MX_ENCRYPT_KEY
+const ENCRYPT_KEY = argv.encrypt_key
 export const ENCRYPT = {
   key: ENCRYPT_KEY || machineIdSync(),
   enable: parseBooleanishValue(argv.encrypt_enable) ?? !!ENCRYPT_KEY,
