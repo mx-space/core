@@ -59,7 +59,7 @@
     "@fastify/multipart": "8.3.0",
     "@fastify/static": "7.0.4",
     "@innei/next-async": "0.3.0",
-    "@innei/pretty-logger-nestjs": "0.3.2",
+    "@innei/pretty-logger-nestjs": "0.3.3",
     "@langchain/openai": "0.2.5",
     "@mx-space/external": "workspace:*",
     "@nestjs/cache-manager": "2.2.2",
