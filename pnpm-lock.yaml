@@ -107,8 +107,8 @@ importers:
         specifier: 0.3.0
         version: 0.3.0
       '@innei/pretty-logger-nestjs':
-        specifier: 0.3.2
-        version: 0.3.2(@nestjs/common@10.3.10(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))
+        specifier: 0.3.3
+        version: 0.3.3(@nestjs/common@10.3.10(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))
       '@langchain/openai':
         specifier: 0.2.5
         version: 0.2.5(encoding@0.1.13)(langchain@0.2.12(@aws-sdk/client-s3@3.617.0)(@aws-sdk/credential-provider-node@3.616.0(@aws-sdk/client-sso-oidc@3.616.0(@aws-sdk/client-sts@3.616.0))(@aws-sdk/client-sts@3.616.0))(axios@1.7.2)(encoding@0.1.13)(fast-xml-parser@4.4.0)(ignore@5.3.1)(ioredis@5.4.1)(mongodb@6.7.0(socks@2.8.3))(openai@4.53.2(encoding@0.1.13))(ws@8.17.1))
@@ -1302,11 +1302,11 @@ packages:
   '@innei/prettier@0.14.2':
     resolution: {integrity: sha512-jIVwn+1VJBV1hmuVN9ztY9YRDZC42uaoCbgeHtWMuaVmtyXexmQ28hbosLNO0Qf5OgeKGouQx248Ary09oqVew==}
 
-  '@innei/pretty-logger-core@0.3.2':
-    resolution: {integrity: sha512-B0eSmOiKYNCFCFPCIyV4unG6NChtCHgRKiF8z0VbFmjU4T8cQAXGbPd0kjjcl6hToQFBXSQNJ27j2NJpO+pS+g==}
+  '@innei/pretty-logger-core@0.3.3':
+    resolution: {integrity: sha512-BPJjPOcTnnNtKEXPTvkdlJSEg9HDV9QBr/IRwdUqD0/PzgHlUWZRizp17A/DbFU9wYwy1Ne1pmgInGEgxnzBKg==}
 
-  '@innei/pretty-logger-nestjs@0.3.2':
-    resolution: {integrity: sha512-J6IiH+Em7CeFolrj63DKD8MVEFIioWkiQemeQgqsOS3e1AF6hxg34GJWIy6GLeMo3SGF1KN3OYilHFO/CgdGFQ==}
+  '@innei/pretty-logger-nestjs@0.3.3':
+    resolution: {integrity: sha512-0lU8GY1Ix2uwKIeu43P9pss4dKC2qYL9dLl1UaQZU1/ZBUafi9BwzVzAQbELfhN2fWun77bhUjnlw6KAm0l0PA==}
     peerDependencies:
       '@nestjs/common': '>=10'
 
@@ -7702,17 +7702,16 @@ snapshots:
       - prettier-plugin-svelte
       - supports-color
 
-  '@innei/pretty-logger-core@0.3.2':
+  '@innei/pretty-logger-core@0.3.3':
     dependencies:
       cron: 3.1.6
       defu: 6.1.4
       picocolors: 1.0.1
       std-env: 3.7.0
-      string-width: '@innei/string-width@7.1.1-fork.0'
 
-  '@innei/pretty-logger-nestjs@0.3.2(@nestjs/common@10.3.10(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))':
+  '@innei/pretty-logger-nestjs@0.3.3(@nestjs/common@10.3.10(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))':
     dependencies:
-      '@innei/pretty-logger-core': 0.3.2
+      '@innei/pretty-logger-core': 0.3.3
       '@nestjs/common': 10.3.10(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1)
       cron: 3.1.6
       defu: 6.1.4
