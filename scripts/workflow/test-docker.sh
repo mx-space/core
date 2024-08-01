@@ -11,8 +11,6 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-docker-compose -v
-
 if [[ $? -ne 0 ]]; then
   echo "failed to run docker-compose"
   exit 1
@@ -20,7 +18,7 @@ fi
 
 docker images
 
-(docker-compose up &)
+(docker compose up &)
 
 if [[ $? -ne 0 ]]; then
   echo "failed to run docker-compose instance"
