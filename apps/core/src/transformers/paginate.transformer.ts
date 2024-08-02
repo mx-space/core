@@ -1,5 +1,5 @@
-import type { mongoose } from '@typegoose/typegoose'
 import type { Pagination } from '~/shared/interface/paginator.interface'
+import type { mongoose } from '@typegoose/typegoose'
 
 export function transformDataToPaginate<T = any>(
   data: mongoose.PaginateResult<T>,

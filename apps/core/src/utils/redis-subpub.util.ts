@@ -1,6 +1,6 @@
-import IORedis from 'ioredis'
-
 import { Logger } from '@nestjs/common'
+
+import IORedis from 'ioredis'
 
 import { REDIS } from '~/app.config'
 

@@ -5,11 +5,11 @@ import mongoose from 'mongoose'
 
 import { MONGO_DB } from '~/app.config'
 import {
-  type CollectionRefTypes,
   NOTE_COLLECTION_NAME,
   PAGE_COLLECTION_NAME,
   POST_COLLECTION_NAME,
   RECENTLY_COLLECTION_NAME,
+  type CollectionRefTypes,
 } from '~/constants/db.constant'
 import { logger } from '~/global/consola.global'
 

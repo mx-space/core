@@ -1,4 +1,4 @@
-import { Logger, createLogger } from '@innei/pretty-logger-nestjs'
+import { createLogger, Logger } from '@innei/pretty-logger-nestjs'
 
 import { LOG_DIR } from '~/constants/path.constant'
 

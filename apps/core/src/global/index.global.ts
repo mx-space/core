@@ -1,8 +1,9 @@
-/* eslint-disable import/order */
 import cluster from 'node:cluster'
 import { mkdirSync } from 'node:fs'
 
 import { Logger } from '@nestjs/common'
+
+import { CLUSTER } from '~/app.config'
 
 import {
   DATA_DIR,
@@ -14,14 +15,12 @@ import {
 } from '~/constants/path.constant'
 
 import { consola, logger } from './consola.global'
+import { cwd, isDev } from './env.global'
+
+import { registerJSONGlobal } from './json.global'
 
 import './dayjs.global'
 import '@mx-space/external/zx-global'
-
-import { CLUSTER } from '~/app.config'
-
-import { cwd, isDev } from './env.global'
-import { registerJSONGlobal } from './json.global'
 
 // 建立目录
 function mkdirs() {

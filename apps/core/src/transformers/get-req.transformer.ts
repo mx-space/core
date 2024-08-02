@@ -1,5 +1,5 @@
-import type { ExecutionContext } from '@nestjs/common'
 import type { UserModel } from '~/modules/user/user.model'
+import type { ExecutionContext } from '@nestjs/common'
 import type { FastifyRequest } from 'fastify'
 
 export type FastifyBizRequest = FastifyRequest & {
