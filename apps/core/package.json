@@ -117,7 +117,7 @@
     "nodemailer": "6.9.14",
     "openai": "4.53.2",
     "pluralize": "^8.0.0",
-    "qs": "6.12.3",
+    "qs": "6.13.0",
     "reflect-metadata": "0.2.2",
     "remove-markdown": "0.5.2",
     "remove-md-codeblock": "0.0.4",
