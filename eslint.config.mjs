@@ -52,6 +52,7 @@ export default sxzz(
 
         // for node server runtime
         'require-await': 0,
+        '@typescript-eslint/no-unsafe-function-type': 0,
         'unicorn/no-array-callback-reference': 0,
 
         'node/prefer-global/process': 0,
