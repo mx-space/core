@@ -110,7 +110,7 @@
     "mongoose": "8.5.2",
     "mongoose-aggregate-paginate-v2": "1.1.2",
     "mongoose-autopopulate": "1.1.0",
-    "mongoose-lean-getters": "2.1.0",
+    "mongoose-lean-getters": "2.1.1",
     "mongoose-lean-virtuals": "0.9.1",
     "mongoose-paginate-v2": "1.8.3",
     "node-machine-id": "1.1.12",
