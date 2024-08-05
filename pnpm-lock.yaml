@@ -260,8 +260,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0(mongoose@8.5.2(socks@2.8.3))
       mongoose-lean-getters:
-        specifier: 2.1.0
-        version: 2.1.0(mongoose@8.5.2(socks@2.8.3))
+        specifier: 2.1.1
+        version: 2.1.1(mongoose@8.5.2(socks@2.8.3))
       mongoose-lean-virtuals:
         specifier: 0.9.1
         version: 0.9.1(mongoose@8.5.2(socks@2.8.3))
@@ -5039,8 +5039,8 @@ packages:
     peerDependencies:
       mongoose: 6.x || 7.x || 8.0.0-rc0 || 8.x
 
-  mongoose-lean-getters@2.1.0:
-    resolution: {integrity: sha512-sGqRZIJD3fI7cqvLQs2vu2rrensFf3+geWF7s5SvfTGPY+i6XrXbnpKGhGMTrnirqxMzq7+leEzms3+5IhKrZw==}
+  mongoose-lean-getters@2.1.1:
+    resolution: {integrity: sha512-oqIiA0ZMbkYOvXTmL0le/JKCL8KDwMSKTY4WemU+jjxV6848anYWpVh484qQ8nmhDbSHD8pT045yefO/Fb8cbQ==}
     engines: {node: '>= 14'}
     peerDependencies:
       mongoose: '>= 7.5.0'
@@ -12069,7 +12069,7 @@ snapshots:
     dependencies:
       mongoose: 8.5.2(socks@2.8.3)
 
-  mongoose-lean-getters@2.1.0(mongoose@8.5.2(socks@2.8.3)):
+  mongoose-lean-getters@2.1.1(mongoose@8.5.2(socks@2.8.3)):
     dependencies:
       mongoose: 8.5.2(socks@2.8.3)
       mpath: 0.9.0
