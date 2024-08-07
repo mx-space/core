@@ -60,7 +60,7 @@
     "@fastify/static": "7.0.4",
     "@innei/next-async": "0.3.0",
     "@innei/pretty-logger-nestjs": "0.3.3",
-    "@langchain/openai": "0.2.5",
+    "@langchain/openai": "0.2.6",
     "@mx-space/external": "workspace:*",
     "@nestjs/cache-manager": "2.2.2",
     "@nestjs/common": "10.3.10",
