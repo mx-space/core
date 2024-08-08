@@ -1,5 +1,6 @@
-import { URL } from 'node:url'
+import { modelOptions, prop } from '@typegoose/typegoose'
 import { Transform } from 'class-transformer'
+
 import {
   IsEmail,
   IsEnum,
@@ -8,8 +9,6 @@ import {
   IsUrl,
   MaxLength,
 } from 'class-validator'
-
-import { modelOptions, prop } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
 
@@ -51,9 +50,6 @@ export class LinkModel extends BaseModel {
     required: true,
     trim: true,
     unique: true,
-    set(val) {
-      return new URL(val).origin
-    },
   })
   @IsUrl(
     { require_protocol: true, protocols: ['https'] },

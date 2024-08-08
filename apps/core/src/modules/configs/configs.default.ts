@@ -40,7 +40,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     enableComment: true,
     enableThrottleGuard: false,
   },
-  friendLinkOptions: { allowApply: true },
+  friendLinkOptions: { allowApply: true, allowSubPath: false },
   backupOptions: {
     enable: DEMO_MODE ? false : true,
     endpoint: null!,

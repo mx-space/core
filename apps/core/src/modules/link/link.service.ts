@@ -1,18 +1,20 @@
+import { URL } from 'node:url'
+
 import {
   BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common'
-
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { isDev } from '~/global/env.global'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { scheduleManager } from '~/utils'
 
+import { scheduleManager } from '~/utils'
 import { ConfigsService } from '../configs/configs.service'
 import { UserService } from '../user/user.service'
 import { LinkApplyEmailType } from './link-mail.enum'
@@ -36,6 +38,8 @@ export class LinkService {
     return this.linkModel
   }
   async applyForLink(model: LinkModel) {
+    const { allowSubPath } = await this.configsService.get('friendLinkOptions')
+
     const existedDoc = await this.model
       .findOne({
         $or: [{ url: model.url }, { name: model.name }],
@@ -66,8 +70,16 @@ export class LinkService {
             .lean()
       }
     } else {
+      const url = new URL(model.url)
+      const pathname = url.pathname
+
+      if (pathname !== '/' && !allowSubPath) {
+        throw new UnprocessableEntityException('管理员当前禁用了子路径友链申请')
+      }
+
       nextModel = await this.model.create({
         ...model,
+        url: allowSubPath ? `${url.origin}${url.pathname}` : url.origin,
         type: LinkType.Friend,
         state: LinkState.Audit,
       })
@@ -134,7 +146,7 @@ export class LinkService {
     }
     const { enable } = await this.configs.get('mailOptions')
     if (!enable || isDev) {
-      console.log(`
+      console.info(`
       To: ${model.email}
       你的友链已通过
         站点标题：${model.name}
@@ -152,7 +164,7 @@ export class LinkService {
   async sendToMaster(authorName: string, model: LinkModel) {
     const enable = (await this.configs.get('mailOptions')).enable
     if (!enable || isDev) {
-      console.log(`来自 ${authorName} 的友链请求：
+      console.info(`来自 ${authorName} 的友链请求：
         站点标题：${model.name}
         站点网站：${model.url}
         站点描述：${model.description}`)

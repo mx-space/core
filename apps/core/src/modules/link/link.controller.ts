@@ -99,6 +99,7 @@ export class LinkController {
     if (!(await this.linkService.canApplyLink())) {
       throw new ForbiddenException('主人目前不允许申请友链了！')
     }
+
     await this.linkService.applyForLink(body)
     scheduleManager.schedule(async () => {
       await this.linkService.sendToMaster(body.author, body)
