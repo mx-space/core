@@ -1,5 +1,37 @@
 # CHANGELOG
 
+## [6.0.3](https://github.com/mx-space/core/compare/v6.0.2...v6.0.3) (2024-08-08)
+
+
+### Bug Fixes
+
+* **deps:** update babel monorepo to v7.25.2 (minor) ([#1928](https://github.com/mx-space/core/issues/1928)) ([075365b](https://github.com/mx-space/core/commit/075365bc4c469e01906b55ecfc3b51d86c7306c9))
+* **deps:** update dependency @aws-sdk/client-s3 to v3.624.0 ([#1921](https://github.com/mx-space/core/issues/1921)) ([b8bc581](https://github.com/mx-space/core/commit/b8bc581b6d10fd85276ef073608291a35f8e4189))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.23 ([0523626](https://github.com/mx-space/core/commit/0523626b5910e3ab4c68d72181d9c4820a933ab7))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.24 ([b6e7a54](https://github.com/mx-space/core/commit/b6e7a54bde27a69849e74185871db8f39004f3c3))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.25 ([d61b5be](https://github.com/mx-space/core/commit/d61b5be060dd240c97137396feb69697645c18ae))
+* **deps:** update dependency @langchain/openai to v0.2.6 ([9afa15d](https://github.com/mx-space/core/commit/9afa15dd74e58ed173aabf107976ba6064e44cc5))
+* **deps:** update dependency axios-retry to v4.5.0 ([#1954](https://github.com/mx-space/core/issues/1954)) ([7fc6768](https://github.com/mx-space/core/commit/7fc6768d3cae5432ef9b76d7e212e8fa5b4aeac6))
+* **deps:** update dependency cache-manager to v5.7.5 ([ccbf2ea](https://github.com/mx-space/core/commit/ccbf2ea9c86950e43f1009212659b7814323fb75))
+* **deps:** update dependency cache-manager to v5.7.6 ([45bd1cc](https://github.com/mx-space/core/commit/45bd1cc055598773163340e8fe23cdb81b66f3b8))
+* **deps:** update dependency inquirer to v10.1.7 ([cb62db5](https://github.com/mx-space/core/commit/cb62db54d588fcfdedecef4fd61137b4e6ba0af7))
+* **deps:** update dependency inquirer to v10.1.8 ([1a13a7b](https://github.com/mx-space/core/commit/1a13a7bd419cf5521c7e78490b4a5399b6432a18))
+* **deps:** update dependency isbot to v5.1.14 ([313fe80](https://github.com/mx-space/core/commit/313fe8015e0d498f44530ebb435e9a9d3250479b))
+* **deps:** update dependency langchain to v0.2.13 ([32a65cf](https://github.com/mx-space/core/commit/32a65cfb4871710212e143a6709f05622e96af67))
+* **deps:** update dependency mongoose-lean-getters to v2.1.1 ([492381d](https://github.com/mx-space/core/commit/492381d3f682e8adcd2eeec8c1c295860a46e06b))
+* **deps:** update dependency openai to v4.54.0 ([#1949](https://github.com/mx-space/core/issues/1949)) ([4647155](https://github.com/mx-space/core/commit/46471552d8022ede6987f0f9a0626e5858592ffb))
+* **deps:** update dependency qs to v6.13.0 ([#1946](https://github.com/mx-space/core/issues/1946)) ([967d2e2](https://github.com/mx-space/core/commit/967d2e27e15b3dd330a122e7c3ce71906916f54f))
+* **deps:** update dependency remove-markdown to v0.5.2 ([#1948](https://github.com/mx-space/core/issues/1948)) ([8ff229f](https://github.com/mx-space/core/commit/8ff229fbee7d19307ad24f3d97263a061fb66171))
+* lint ([ccdf213](https://github.com/mx-space/core/commit/ccdf213748f2a9f49cdb7e2663c1defc1a359395))
+* lint ([c46ce87](https://github.com/mx-space/core/commit/c46ce87c8f7507889e2c0e843f6291360b5273b2))
+
+
+### Features
+
+* link allow subpath option ([327d30d](https://github.com/mx-space/core/commit/327d30d6756d6e172e4682428a1ca5b254852022))
+
+
+
 ## [6.0.2](https://github.com/mx-space/core/compare/v6.0.1...v6.0.2) (2024-08-01)
 
 
