@@ -23,7 +23,9 @@
     "vitest",
     "vite",
     "snakecase-keys",
-    "zx"
+    "zx",
+    "algoliasearch",
+    "@algolia/client-search"
   ],
   "enabled": true
 }

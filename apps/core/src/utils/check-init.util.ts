@@ -4,7 +4,7 @@ import { getDatabaseConnection } from './database.util'
 
 export const checkInit = async () => {
   const connection = await getDatabaseConnection()
-  const db = connection.db
+  const db = connection.db!
   const isUserExist =
     (await db.collection(USER_COLLECTION_NAME).countDocuments()) > 0
 

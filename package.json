@@ -58,6 +58,7 @@
     "semver": "7.6.3",
     "pino": "./external/pino",
     "get-pixels@^3>request": "./external/request",
-    "typescript": "5.5.4"
+    "typescript": "5.5.4",
+    "whatwg-url": "13.0.0"
   }
 }

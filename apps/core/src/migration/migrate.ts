@@ -6,7 +6,7 @@ import VersionList from './history'
 
 export async function migrateDatabase() {
   const connection = await getDatabaseConnection()
-  const db = connection.db
+  const db = connection.db!
 
   const migrateArr = await db
     .collection(MIGRATE_COLLECTION_NAME)

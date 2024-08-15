@@ -5,31 +5,30 @@ import {
   verifyAuthenticationResponse,
   verifyRegistrationResponse,
 } from '@simplewebauthn/server'
-import { ReturnModelType } from '@typegoose/typegoose'
 import { isoBase64URL, isoUint8Array } from '@simplewebauthn/server/helpers'
+import { ReturnModelType } from '@typegoose/typegoose'
 
+import { RequestContext } from '~/common/contexts/request.context'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { getRedisKey } from '~/utils'
 
-import { RequestContext } from '~/common/contexts/request.context'
+import { getRedisKey } from '~/utils'
 import { ConfigsService } from '../configs/configs.service'
-import { AuthnModel } from './authn.model'
 import type { UserDocument } from '../user/user.model'
+import { AuthnModel } from './authn.model'
+import type {
+  VerifiedAuthenticationResponse,
+  VerifiedRegistrationResponse,
+} from '@simplewebauthn/server'
 import type {
   AuthenticationResponseJSON,
   CredentialDeviceType,
   RegistrationResponseJSON,
 } from '@simplewebauthn/server/script/deps'
-import type {
-  VerifiedAuthenticationResponse,
-  VerifiedRegistrationResponse,
-} from '@simplewebauthn/server'
 
 // TODO Compatible with versions below node v20
 if (!globalThis.crypto) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   globalThis.crypto = require('node:crypto').webcrypto
 }
 @Injectable()

@@ -1,16 +1,16 @@
-import algoliasearch from 'algoliasearch'
-import { omit } from 'lodash'
-import removeMdCodeblock from 'remove-md-codeblock'
-
 import {
   BadRequestException,
+  forwardRef,
   Inject,
   Injectable,
   Logger,
-  forwardRef,
 } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { CronExpression } from '@nestjs/schedule'
+
+import algoliasearch from 'algoliasearch'
+import { omit } from 'lodash'
+import removeMdCodeblock from 'remove-md-codeblock'
 
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
@@ -19,16 +19,16 @@ import { EventBusEvents } from '~/constants/event-bus.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
+import type { SearchDto } from '~/modules/search/search.dto'
+import type { Pagination } from '~/shared/interface/paginator.interface'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
 import { PostModel } from '../post/post.model'
 import { PostService } from '../post/post.service'
-import type { SearchIndex } from 'algoliasearch'
-import type { Pagination } from '~/shared/interface/paginator.interface'
-import type { SearchDto } from '~/modules/search/search.dto'
 import type { SearchResponse } from '@algolia/client-search'
+import type { SearchIndex } from 'algoliasearch'
 
 @Injectable()
 export class SearchService {
@@ -53,7 +53,7 @@ export class SearchService {
 
     const keywordArr = keyword
       .split(/\s+/)
-      .map((item) => new RegExp(String(item), 'ig'))
+      .map((item) => new RegExp(String(item), 'gi'))
 
     return transformDataToPaginate(
       await this.noteService.model.paginate(
@@ -84,7 +84,7 @@ export class SearchService {
     const select = '_id title created modified categoryId slug'
     const keywordArr = keyword
       .split(/\s+/)
-      .map((item) => new RegExp(String(item), 'ig'))
+      .map((item) => new RegExp(String(item), 'gi'))
     return await this.postService.model.paginate(
       {
         $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }],

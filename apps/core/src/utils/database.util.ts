@@ -61,7 +61,7 @@ export const getDatabaseConnection = async () => {
 
   databaseConnection = await connection()
 
-  return databaseConnection!
+  return databaseConnection
 }
 
 export const normalizeRefType = (type: keyof typeof CollectionRefTypes) => {
