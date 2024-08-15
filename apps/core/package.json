@@ -48,7 +48,7 @@
     "changelog": true
   },
   "dependencies": {
-    "@algolia/client-search": "^4.22.1",
+    "@algolia/client-search": "^5.0.0",
     "@aws-sdk/client-s3": "3.624.0",
     "@babel/core": "7.25.2",
     "@babel/plugin-transform-modules-commonjs": "7.24.8",
@@ -78,7 +78,7 @@
     "@typegoose/auto-increment": "4.5.0",
     "@typegoose/typegoose": "12.6.0",
     "@types/jsonwebtoken": "9.0.6",
-    "algoliasearch": "4.24.0",
+    "algoliasearch": "5.0.0",
     "axios": "^1.7.0",
     "axios-retry": "4.5.0",
     "bcryptjs": "^2.4.3",
