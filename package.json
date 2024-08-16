@@ -59,6 +59,6 @@
     "pino": "./external/pino",
     "get-pixels@^3>request": "./external/request",
     "typescript": "5.5.4",
-    "whatwg-url": "13.0.0"
+    "whatwg-url": "14.0.0"
   }
 }
