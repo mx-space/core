@@ -1,6 +1,6 @@
 import { encode } from 'blurhash'
-import sharpTypes from 'sharp'
 import type { ImageModel } from '~/shared/model/image.model'
+import type { Sharp } from 'sharp'
 
 import { Injectable, Logger } from '@nestjs/common'
 
@@ -119,8 +119,8 @@ export class ImageService {
     const imageType = headers['content-type']!
 
     const buffer = Buffer.from(data)
-    const sharp = (await requireDepsWithInstall('sharp')) as typeof sharpTypes
-    const sharped = sharp(buffer)
+    const sharp = await requireDepsWithInstall('sharp')
+    const sharped = sharp(buffer) as Sharp
     const metadata = await sharped.metadata()
     const size = {
       height: metadata.height,
@@ -139,7 +139,7 @@ export class ImageService {
   }
 }
 
-const encodeImageToBlurhash = (sharped: sharpTypes.Sharp) =>
+const encodeImageToBlurhash = (sharped: Sharp) =>
   new Promise<string>((resolve, reject) => {
     sharped
       .raw()

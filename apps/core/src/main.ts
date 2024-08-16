@@ -40,7 +40,7 @@ async function main() {
     }
 
     logger.debug('encrypt key: ', ENCRYPT.key)
-    logger.warn(
+    logger.log(
       `Encrypt is enabled, please remember encrypt key. Your key is starts with ${ENCRYPT.key.slice(
         0,
         3,

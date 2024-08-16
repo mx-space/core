@@ -66,7 +66,7 @@ app.register(fastifyCookie, {
 
 const logWarn = (desc: string, req: FastifyRequest, _context: string) => {
   const ua = req.raw.headers['user-agent']
-  Logger.warn(
+  Logger.log(
     // prettier-ignore
     `${desc}\n` +
       `Path: ${req.url}\n` +
