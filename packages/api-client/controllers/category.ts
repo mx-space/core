@@ -14,7 +14,7 @@ import type {
 } from '../models/category'
 import type { PostModel } from '../models/post'
 
-import { attachRawFromOneToAnthor, destructureData } from '~/utils'
+import { attachRawFromOneToAnthor } from '~/utils'
 import { autoBind } from '~/utils/auto-bind'
 
 import { RequestError } from '../core/error'

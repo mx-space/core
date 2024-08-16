@@ -4,12 +4,12 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 
 import { RequestContext } from '~/common/contexts/request.context'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { deepCloneWithFunction } from '~/utils'
 import { safeEval } from '~/utils/safe-eval.util'
+import { deepCloneWithFunction } from '~/utils/tool.util'
 
 const RegMap = {
-  '#': /^#(.*?)$/g,
-  $: /^\$(.*?)$/g,
+  '#': /^#(.*)$/g,
+  $: /^\$(.*)$/g,
   '?': /^\?\??(.*?)\??\?$/g,
 } as const
 
@@ -114,7 +114,7 @@ export class TextMacroService {
       return text
     }
     try {
-      const matchedReg = /\[\[\s(.*?)\s]]/g
+      const matchedReg = /\[\[\s(.*?)\s\]\]/g
 
       const matched = text.search(matchedReg) != -1
 

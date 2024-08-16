@@ -21,7 +21,7 @@ import {
   BaseCrudFactory,
   BaseCrudModuleType,
 } from '~/transformers/crud-factor.transformer'
-import { scheduleManager } from '~/utils'
+import { scheduleManager } from '~/utils/schedule.util'
 
 import { AuditReasonDto, LinkDto } from './link.dto'
 import { LinkModel, LinkState } from './link.model'

@@ -18,7 +18,7 @@ import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { getRedisKey } from '~/utils'
+import { getRedisKey } from '~/utils/redis.util'
 
 import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetModel, SnippetType } from './snippet.model'

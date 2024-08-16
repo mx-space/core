@@ -17,7 +17,7 @@ import {
 } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { md5 } from '~/utils'
+import { md5 } from '~/utils/tool.util'
 
 import { CategoryService } from '../category/category.service'
 import { NoteService } from '../note/note.service'

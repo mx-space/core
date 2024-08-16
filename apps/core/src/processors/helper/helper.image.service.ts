@@ -5,8 +5,8 @@ import type { ImageModel } from '~/shared/model/image.model'
 import { Injectable, Logger } from '@nestjs/common'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { requireDepsWithInstall } from '~/utils'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
+import { requireDepsWithInstall } from '~/utils/tool.util'
 
 import { HttpService } from './helper.http.service'
 
@@ -18,6 +18,10 @@ export class ImageService {
     private readonly configsService: ConfigsService,
   ) {
     this.logger = new Logger(ImageService.name)
+
+    if (!isDev) {
+      requireDepsWithInstall('sharp')
+    }
   }
 
   async saveImageDimensionsFromMarkdownText(
@@ -42,7 +46,7 @@ export class ImageService {
       if (
         originImage &&
         originImage.src === src &&
-        ['height', 'width', 'type', 'accent'].every(
+        ['height', 'width', 'type', 'accent', 'blurHash'].every(
           (key) => keys.has(key) && originImage[key],
         )
       ) {

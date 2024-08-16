@@ -23,7 +23,7 @@ import { RequestContext } from '~/common/contexts/request.context'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { getRedisKey } from '~/utils'
+import { getRedisKey } from '~/utils/redis.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import { AuthnModel } from './authn.model'

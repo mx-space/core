@@ -5,7 +5,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import { scheduleManager } from '~/utils'
+import { scheduleManager } from '~/utils/schedule.util'
 
 import { AdminEventsGateway } from '../gateway/admin/events.gateway'
 import { BroadcastBaseGateway } from '../gateway/base.gateway'

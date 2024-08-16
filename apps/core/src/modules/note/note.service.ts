@@ -15,7 +15,8 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { getLessThanNow, scheduleManager } from '~/utils'
+import { scheduleManager } from '~/utils/schedule.util'
+import { getLessThanNow } from '~/utils/time.util'
 
 import { getArticleIdFromRoomName } from '../activity/activity.util'
 import { CommentService } from '../comment/comment.service'
@@ -32,7 +33,20 @@ export class NoteService {
     private readonly commentService: CommentService,
 
     private readonly textMacrosService: TextMacroService,
-  ) {}
+  ) {
+    this.noteModel.find().then((notes) => {
+      notes.forEach((note) => {
+        this.imageService.saveImageDimensionsFromMarkdownText(
+          note.text,
+          note.images,
+          (images) => {
+            note.images = images
+            return note.save()
+          },
+        )
+      })
+    })
+  }
 
   public get model() {
     return this.noteModel

@@ -23,7 +23,7 @@ import * as META from '~/constants/meta.constant'
 import * as SYSTEM from '~/constants/system.constant'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-import { hashString } from '~/utils'
+import { hashString } from '~/utils/tool.util'
 
 /**
  * @class HttpCacheInterceptor

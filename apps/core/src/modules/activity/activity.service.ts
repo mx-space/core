@@ -36,7 +36,7 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
-import { checkRefModelCollectionType } from '~/utils'
+import { checkRefModelCollectionType } from '~/utils/biz.util'
 
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'

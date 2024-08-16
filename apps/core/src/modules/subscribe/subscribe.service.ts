@@ -19,7 +19,7 @@ import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { hashString, md5 } from '~/utils'
+import { hashString, md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import { UserService } from '../user/user.service'

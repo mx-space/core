@@ -5,7 +5,7 @@ import FastifyMultipart from '@fastify/multipart'
 import { Logger } from '@nestjs/common'
 import { FastifyAdapter } from '@nestjs/platform-fastify'
 
-import { getIp } from '~/utils'
+import { getIp } from '~/utils/ip.util'
 
 const app: FastifyAdapter = new FastifyAdapter({
   trustProxy: true,

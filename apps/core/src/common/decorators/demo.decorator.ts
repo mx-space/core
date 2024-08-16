@@ -3,7 +3,7 @@ import type { Observable } from 'rxjs'
 
 import { applyDecorators, UseGuards } from '@nestjs/common'
 
-import { banInDemo } from '~/utils'
+import { banInDemo } from '~/utils/biz.util'
 
 class DemoGuard implements CanActivate {
   canActivate(): boolean | Promise<boolean> | Observable<boolean> {

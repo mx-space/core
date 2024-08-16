@@ -22,8 +22,8 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
-import { getMediumDateTime } from '~/utils'
 import { isZipMinetype } from '~/utils/mine.util'
+import { getMediumDateTime } from '~/utils/time.util'
 
 import { BackupService } from './backup.service'
 

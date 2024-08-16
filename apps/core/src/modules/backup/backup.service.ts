@@ -26,8 +26,9 @@ import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { migrateDatabase } from '~/migration/migrate'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
-import { getMediumDateTime, scheduleManager } from '~/utils'
+import { scheduleManager } from '~/utils/schedule.util'
 import { getFolderSize, installPKG } from '~/utils/system.util'
+import { getMediumDateTime } from '~/utils/time.util'
 
 import { ConfigsService } from '../configs/configs.service'
 
