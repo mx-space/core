@@ -33,20 +33,7 @@ export class NoteService {
     private readonly commentService: CommentService,
 
     private readonly textMacrosService: TextMacroService,
-  ) {
-    this.noteModel.find().then((notes) => {
-      notes.forEach((note) => {
-        this.imageService.saveImageDimensionsFromMarkdownText(
-          note.text,
-          note.images,
-          (images) => {
-            note.images = images
-            return note.save()
-          },
-        )
-      })
-    })
-  }
+  ) {}
 
   public get model() {
     return this.noteModel
