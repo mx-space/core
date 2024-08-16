@@ -48,12 +48,11 @@ export class PageService {
     this.imageService.saveImageDimensionsFromMarkdownText(
       doc.text,
       res.images,
-      (images) => {
+      async (images) => {
         res.images = images
-        return res.save().then(() => {
-          this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, res, {
-            scope: EventScope.TO_SYSTEM,
-          })
+        await res.save()
+        this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, res, {
+          scope: EventScope.TO_SYSTEM,
         })
       },
     )

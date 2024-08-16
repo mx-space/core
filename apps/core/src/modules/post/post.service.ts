@@ -82,11 +82,13 @@ export class PostService {
     })
 
     const doc = newPost.toJSON()
+    const cloned = { ...doc }
 
     // 双向关联
     await this.relatedEachOther(doc, relatedIds)
 
     scheduleManager.schedule(async () => {
+      const doc = cloned
       await Promise.all([
         this.imageService.saveImageDimensionsFromMarkdownText(
           doc.text,

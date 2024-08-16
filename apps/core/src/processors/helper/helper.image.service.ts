@@ -38,8 +38,9 @@ export class ImageService implements OnModuleInit {
     const result = [] as ImageModel[]
 
     const oldImagesMap = new Map(
-      (originImages ?? []).map((image) => [image.src, image]),
+      (originImages ?? []).map((image) => [image.src, { ...image }]),
     )
+
     const task = [] as Promise<ImageModel>[]
     for (const src of newImages) {
       const originImage = oldImagesMap.get(src)
