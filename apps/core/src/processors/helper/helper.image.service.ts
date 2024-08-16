@@ -20,7 +20,9 @@ export class ImageService {
     this.logger = new Logger(ImageService.name)
 
     if (!isDev) {
-      requireDepsWithInstall('sharp')
+      requireDepsWithInstall('sharp').catch((error: any) => {
+        this.logger.error(`sharp install failed: ${error.message}`)
+      })
     }
   }
 

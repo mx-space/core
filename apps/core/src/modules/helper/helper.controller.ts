@@ -17,6 +17,7 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
+import { AsyncQueue } from '~/utils/queue.util'
 
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
