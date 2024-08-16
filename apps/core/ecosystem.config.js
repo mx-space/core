@@ -1,5 +1,5 @@
-const { cpus } = require('os')
-const { execSync } = require('child_process')
+const { cpus } = require('node:os')
+const { execSync } = require('node:child_process')
 const nodePath = execSync(`npm root --quiet -g`, { encoding: 'utf-8' }).split(
   '\n',
 )[0]
@@ -21,6 +21,9 @@ module.exports = {
         NODE_PATH: nodePath,
         MX_ENCRYPT_KEY: process.env.MX_ENCRYPT_KEY,
         PORT: process.env.PORT,
+        // NOTE: if OOM happens, try to use jemalloc
+        // https://blog.csdn.net/qq_21567385/article/details/135322697
+        // LD_PRELOAD: '/usr/lib/x86_64-linux-gnu/libjemalloc.so',
       },
     },
   ],
