@@ -1,4 +1,4 @@
-import { camelcaseKeys, safePathJoin } from '~/utils'
+import { camelcaseKeys, safePathJoin } from '~/utils/tool.util'
 
 describe('test tools', () => {
   describe('safePathJoin', () => {

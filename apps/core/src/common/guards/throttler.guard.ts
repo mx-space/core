@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common'
 import { ThrottlerGuard } from '@nestjs/throttler'
 
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-import { getIp } from '~/utils'
+import { getIp } from '~/utils/ip.util'
 
 @Injectable()
 export class ExtendThrottlerGuard extends ThrottlerGuard {

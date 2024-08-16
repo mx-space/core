@@ -13,7 +13,7 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
-import { md5 } from '~/utils'
+import { md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { DEFAULT_SUMMARY_LANG, LANGUAGE_CODE_TO_NAME } from '../ai.constants'

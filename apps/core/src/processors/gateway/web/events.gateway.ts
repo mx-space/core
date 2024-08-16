@@ -24,8 +24,8 @@ import {
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/redis/cache.service'
-import { scheduleManager } from '~/utils'
 import { getRedisKey } from '~/utils/redis.util'
+import { scheduleManager } from '~/utils/schedule.util'
 import { getShortDate } from '~/utils/time.util'
 
 import { BroadcastBaseGateway } from '../base.gateway'

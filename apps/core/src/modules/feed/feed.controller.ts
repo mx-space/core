@@ -7,7 +7,7 @@ import { Controller, Get, Header } from '@nestjs/common'
 
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
-import { escapeXml } from '~/utils'
+import { escapeXml } from '~/utils/tool.util'
 
 import { AggregateService } from '../aggregate/aggregate.service'
 import { ConfigsService } from '../configs/configs.service'

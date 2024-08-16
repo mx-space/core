@@ -2,7 +2,6 @@ import { createLogger, Logger } from '@innei/pretty-logger-nestjs'
 
 import { LOG_DIR } from '~/constants/path.constant'
 
-import { redisSubPub } from '../utils/redis-subpub.util'
 import { isTest } from './env.global'
 
 const logger = createLogger({
@@ -19,6 +18,7 @@ if (!isTest) {
     logger.warn('wrap console failed')
   }
   logger.onData((data) => {
+    const { redisSubPub } = require('../utils/redis-subpub.util')
     redisSubPub.publish('log', data)
   })
 }

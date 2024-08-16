@@ -24,7 +24,7 @@ import {
 import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
-import { getAvatar } from '~/utils'
+import { getAvatar } from '~/utils/tool.util'
 
 import { AuthService } from '../auth/auth.service'
 import { AuthnService } from '../authn/authn.service'

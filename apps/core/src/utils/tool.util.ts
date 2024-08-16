@@ -2,6 +2,10 @@ import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 import { cloneDeep } from 'lodash'
 
+import { installPackage } from '@antfu/install-pkg'
+
+import { logger } from '~/global/consola.global'
+
 export const md5 = (text: string) =>
   createHash('md5').update(text).digest('hex') as string
 
@@ -148,4 +152,15 @@ export function escapeXml(unsafe: string) {
     }
     return c
   })
+}
+
+export const requireDepsWithInstall = async (deps: string) => {
+  try {
+    return require(require.resolve(deps))
+  } catch {
+    logger.info(`Installing ${deps}...`)
+    await installPackage(deps, { silent: false })
+
+    return require(deps)
+  }
 }

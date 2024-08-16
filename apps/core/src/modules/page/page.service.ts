@@ -12,7 +12,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { scheduleManager } from '~/utils'
+import { scheduleManager } from '~/utils/schedule.util'
 
 import { PageModel } from './page.model'
 

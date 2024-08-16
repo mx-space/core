@@ -36,4 +36,9 @@ export abstract class ImageModel {
   @IsOptional()
   @IsUrl()
   src?: string
+
+  @prop()
+  @IsOptional()
+  @IsString()
+  blurHash?: string
 }

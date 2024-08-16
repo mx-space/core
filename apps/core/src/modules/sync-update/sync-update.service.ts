@@ -18,7 +18,7 @@ import {
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { md5 } from '~/utils'
+import { md5 } from '~/utils/tool.util'
 
 import { SyncableCollectionNames } from '../sync/sync.constant'
 import { SyncUpdateModel } from './sync-update.model'

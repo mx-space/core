@@ -10,7 +10,7 @@ import type {
 import { Injectable } from '@nestjs/common'
 
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-import { getAvatar } from '~/utils'
+import { getAvatar } from '~/utils/tool.util'
 
 @Injectable()
 export class CommentFilterEmailInterceptor implements NestInterceptor {

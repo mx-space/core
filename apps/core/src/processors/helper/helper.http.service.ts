@@ -7,7 +7,7 @@ import { Injectable, Logger } from '@nestjs/common'
 
 import { AXIOS_CONFIG, DEBUG_MODE } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
-import { getRedisKey } from '~/utils'
+import { getRedisKey } from '~/utils/redis.util'
 
 import { version } from '../../../package.json'
 import { CacheService } from '../redis/cache.service'

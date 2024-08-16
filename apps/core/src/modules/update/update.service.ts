@@ -9,7 +9,7 @@ import { Injectable } from '@nestjs/common'
 import { dashboard } from '~/../package.json'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
-import { spawnShell } from '~/utils'
+import { spawnShell } from '~/utils/system.util'
 
 import { ConfigsService } from '../configs/configs.service'
 
