@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [6.1.1](https://github.com/mx-space/core/compare/v6.1.0...v6.1.1) (2024-08-16)
+
+
+### Bug Fixes
+
+* import type of sharp ([32954a7](https://github.com/mx-space/core/commit/32954a709d838cc82e4a3a845f1b9c6cbc7cd2de))
+
+
+
 # [6.1.0](https://github.com/mx-space/core/compare/v6.0.3...v6.1.0) (2024-08-16)
 
 
