@@ -93,8 +93,6 @@
     "dayjs": "1.11.12",
     "ejs": "3.1.10",
     "form-data": "4.0.0",
-    "get-image-colors": "4.0.1",
-    "image-size": "1.1.1",
     "inquirer": "^10.1.0",
     "isbot": "5.1.16",
     "js-yaml": "^4.1.0",
