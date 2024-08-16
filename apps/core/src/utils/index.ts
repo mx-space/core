@@ -1,7 +1,6 @@
 export * from './ip.util'
 export * from './jsonschema.util'
 export * from './pic.util'
-export * from './redis-subpub.util'
 export * from './redis.util'
 export * from './system.util'
 export * from './time.util'
