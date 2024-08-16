@@ -1,9 +1,9 @@
 import cluster from 'node:cluster'
 import { performance } from 'node:perf_hooks'
 import { Logger } from '@innei/pretty-logger-nestjs'
-import wcmatch from 'wildcard-match'
-
 import { NestFactory } from '@nestjs/core'
+
+import wcmatch from 'wildcard-match'
 
 import { CROSS_DOMAIN, DEBUG_MODE, PORT } from './app.config'
 import { AppModule } from './app.module'
@@ -14,10 +14,9 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { ExtendedValidationPipe } from './common/pipes/validation.pipe'
 import { logger } from './global/consola.global'
 import { isMainProcess, isTest } from './global/env.global'
-import { migrateDatabase } from './migration/migrate'
 import { checkInit } from './utils/check-init.util'
-import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import type { LogLevel } from '@nestjs/common'
+import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 
 const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
   ? [...CROSS_DOMAIN.allowedOrigins, '*.shizuri.net', '22333322.xyz']
@@ -26,10 +25,6 @@ const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
 declare const module: any
 
 export async function bootstrap() {
-  if (isMainProcess) {
-    await migrateDatabase()
-  }
-
   const isInit = await checkInit()
 
   const app = await NestFactory.create<NestFastifyApplication>(

@@ -2,11 +2,12 @@
 // register global
 import cluster from 'node:cluster'
 
-import { logger } from './global/consola.global'
-import { isMainCluster } from './global/env.global'
-import { register } from './global/index.global'
-import { registerForMemoryDump } from './dump'
 import { DEBUG_MODE } from './app.config'
+import { registerForMemoryDump } from './dump'
+import { logger } from './global/consola.global'
+import { isMainCluster, isMainProcess } from './global/env.global'
+import { register } from './global/index.global'
+import { migrateDatabase } from './migration/migrate'
 
 process.title = `Mix Space (${cluster.isPrimary ? 'master' : 'worker'}) - ${
   process.env.NODE_ENV
@@ -14,6 +15,11 @@ process.title = `Mix Space (${cluster.isPrimary ? 'master' : 'worker'}) - ${
 
 async function main() {
   register()
+
+  if (isMainProcess) {
+    await migrateDatabase()
+  }
+
   const [{ bootstrap }, { CLUSTER, ENCRYPT }, { Cluster }] = await Promise.all([
     import('./bootstrap'),
     import('./app.config'),
