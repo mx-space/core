@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [6.1.2](https://github.com/mx-space/core/compare/v6.1.1...v6.1.2) (2024-08-16)
+
+
+### Bug Fixes
+
+* create module json first ([d466036](https://github.com/mx-space/core/commit/d4660361d8c92716ffe451467e739b59201f7a01))
+
+
+
 ## [6.1.1](https://github.com/mx-space/core/compare/v6.1.0...v6.1.1) (2024-08-16)
 
 
