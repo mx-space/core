@@ -1,8 +1,9 @@
+import { JsonOutputFunctionsParser } from 'langchain/output_parsers'
+import type { FunctionDefinition } from '@langchain/core/language_models/base'
+
 import { Injectable, Logger } from '@nestjs/common'
 
-import { JsonOutputFunctionsParser } from 'langchain/output_parsers'
 import { AiService } from '../ai.service'
-import type { FunctionDefinition } from '@langchain/core/language_models/base'
 
 @Injectable()
 export class AiWriterService {

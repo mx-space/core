@@ -1,4 +1,7 @@
 import { resolve } from 'node:path'
+import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+import type { WriteStream } from 'node:fs'
 
 import {
   Catch,
@@ -21,9 +24,6 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getIp } from '../../utils/ip.util'
 import { BizException } from '../exceptions/biz.exception'
 import { LoggingInterceptor } from '../interceptors/logging.interceptor'
-import type { WriteStream } from 'node:fs'
-import type { FastifyReply, FastifyRequest } from 'fastify'
-import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 
 type myError = {
   readonly status: number

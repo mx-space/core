@@ -1,5 +1,6 @@
 import dayjs from 'dayjs'
 import { merge } from 'lodash'
+import type { PipelineStage } from 'mongoose'
 
 import { Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
@@ -11,7 +12,6 @@ import { getRedisKey } from '~/utils/redis.util'
 
 import { OptionModel } from '../configs/configs.model'
 import { AnalyzeModel } from './analyze.model'
-import type { PipelineStage } from 'mongoose'
 
 @Injectable()
 export class AnalyzeService {

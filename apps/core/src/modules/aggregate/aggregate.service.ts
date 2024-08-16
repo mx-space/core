@@ -1,7 +1,12 @@
 import { URL } from 'node:url'
 import { pick } from 'lodash'
+import type { ReturnModelType } from '@typegoose/typegoose'
+import type { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
+import type { PipelineStage } from 'mongoose'
+import type { CategoryModel } from '../category/category.model'
+import type { RSSProps } from './aggregate.interface'
 
-import { Inject, Injectable, forwardRef } from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
 import {
@@ -30,11 +35,6 @@ import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
 import { UserService } from '../user/user.service'
 import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.dto'
-import type { RSSProps } from './aggregate.interface'
-import type { CategoryModel } from '../category/category.model'
-import type { PipelineStage } from 'mongoose'
-import type { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
-import type { ReturnModelType } from '@typegoose/typegoose'
 
 @Injectable()
 export class AggregateService {

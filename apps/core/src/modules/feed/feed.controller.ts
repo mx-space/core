@@ -1,5 +1,6 @@
 import RemoveMarkdown from 'remove-markdown'
 import xss from 'xss'
+import type { CategoryModel } from '../category/category.model'
 
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager'
 import { Controller, Get, Header } from '@nestjs/common'
@@ -12,7 +13,6 @@ import { AggregateService } from '../aggregate/aggregate.service'
 import { ConfigsService } from '../configs/configs.service'
 import { MarkdownService } from '../markdown/markdown.service'
 import { UserService } from '../user/user.service'
-import type { CategoryModel } from '../category/category.model'
 
 @Controller()
 export class FeedController {

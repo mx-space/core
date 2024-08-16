@@ -1,4 +1,5 @@
 import dayjs from 'dayjs'
+import type { PagerDto } from '~/shared/dto/pager.dto'
 
 import { Delete, Get, HttpCode, Query } from '@nestjs/common'
 
@@ -12,7 +13,6 @@ import { getTodayEarly, getWeekStart } from '~/utils/time.util'
 
 import { AnalyzeDto } from './analyze.dto'
 import { AnalyzeService } from './analyze.service'
-import type { PagerDto } from '~/shared/dto/pager.dto'
 
 @ApiController({ path: 'analyze' })
 @Auth()

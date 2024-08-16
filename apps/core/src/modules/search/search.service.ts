@@ -1,3 +1,11 @@
+import algoliasearch from 'algoliasearch'
+import { omit } from 'lodash'
+import removeMdCodeblock from 'remove-md-codeblock'
+import type { SearchResponse } from '@algolia/client-search'
+import type { SearchDto } from '~/modules/search/search.dto'
+import type { Pagination } from '~/shared/interface/paginator.interface'
+import type { SearchIndex } from 'algoliasearch'
+
 import {
   BadRequestException,
   forwardRef,
@@ -8,10 +16,6 @@ import {
 import { OnEvent } from '@nestjs/event-emitter'
 import { CronExpression } from '@nestjs/schedule'
 
-import algoliasearch from 'algoliasearch'
-import { omit } from 'lodash'
-import removeMdCodeblock from 'remove-md-codeblock'
-
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
 import { BusinessEvents } from '~/constants/business-event.constant'
@@ -19,16 +23,12 @@ import { EventBusEvents } from '~/constants/event-bus.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
-import type { SearchDto } from '~/modules/search/search.dto'
-import type { Pagination } from '~/shared/interface/paginator.interface'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
 import { PostModel } from '../post/post.model'
 import { PostService } from '../post/post.service'
-import type { SearchResponse } from '@algolia/client-search'
-import type { SearchIndex } from 'algoliasearch'
 
 @Injectable()
 export class SearchService {

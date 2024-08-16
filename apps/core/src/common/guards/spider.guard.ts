@@ -4,12 +4,13 @@
  * @author Innei <https://innei.in>
  */
 
+import type { CanActivate, ExecutionContext } from '@nestjs/common'
+import type { Observable } from 'rxjs'
+
 import { ForbiddenException, Injectable } from '@nestjs/common'
 
 import { isDev } from '~/global/env.global'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-import type { Observable } from 'rxjs'
-import type { CanActivate, ExecutionContext } from '@nestjs/common'
 
 @Injectable()
 export class SpiderGuard implements CanActivate {
@@ -24,8 +25,8 @@ export class SpiderGuard implements CanActivate {
     const headers = request.headers
     const ua: string = headers['user-agent'] || ''
     const isSpiderUA =
-      !!/(scrapy|httpclient|axios|python|requests)/i.test(ua) &&
-      !/(mx-space|rss|google|baidu|bing)/gi.test(ua)
+      !!/scrapy|httpclient|axios|python|requests/i.test(ua) &&
+      !/mx-space|rss|google|baidu|bing/i.test(ua)
     if (ua && !isSpiderUA) {
       return true
     }

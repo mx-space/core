@@ -1,7 +1,7 @@
 import {
-  ValidatorConstraint,
   isString,
   registerDecorator,
+  ValidatorConstraint,
 } from 'class-validator'
 import { isNil } from 'lodash'
 import type {
@@ -18,7 +18,7 @@ class IsNilOrStringConstraint implements ValidatorConstraintInterface {
 }
 
 export function IsNilOrString(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName,

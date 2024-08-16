@@ -1,7 +1,8 @@
-import { axiosAdaptor } from '~/adaptors/axios'
-import { createClient } from '~/core'
 import type { HTTPClient } from '~/core'
 import type { IController } from '~/interfaces/controller'
+
+import { axiosAdaptor } from '~/adaptors/axios'
+import { createClient } from '~/core'
 
 export const mockRequestInstance = (
   injectController: new (client: HTTPClient) => IController,

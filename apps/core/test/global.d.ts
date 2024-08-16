@@ -1,5 +1,5 @@
-import type { Document, PaginateModel } from 'mongoose'
 import type { WrappedConsola } from '@innei/pretty-logger-nestjs/lib/consola'
+import type { Document, PaginateModel } from 'mongoose'
 
 import 'vitest/globals'
 import 'zx/globals'

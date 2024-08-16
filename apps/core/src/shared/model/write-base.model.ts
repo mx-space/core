@@ -8,7 +8,7 @@ import {
   ValidateNested,
 } from 'class-validator'
 
-import { PropType, prop } from '@typegoose/typegoose'
+import { prop, PropType } from '@typegoose/typegoose'
 
 import { BaseCommentIndexModel } from './base-comment.model'
 import { ImageModel } from './image.model'

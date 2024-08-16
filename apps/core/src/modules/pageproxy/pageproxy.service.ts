@@ -3,11 +3,11 @@ import { parseHTML } from 'linkedom'
 
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
 
+import PKG from '~/../package.json'
 import { API_VERSION } from '~/app.config'
 
 import { ConfigsService } from '../configs/configs.service'
 import { UserService } from '../user/user.service'
-import PKG from '~/../package.json'
 
 @Injectable()
 export class PageProxyService {

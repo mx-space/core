@@ -21,6 +21,7 @@
   "homepage": "https://github.com/mx-space/core#readme",
   "issues": "https://github.com/mx-space/core/issues",
   "scripts": {
+    "format": "prettier --write \"apps/**/*.ts\" \"test/**/*.ts\" \"packages/**/*.ts\"",
     "prepare": "husky install && node scripts/init-project.mjs && corepack enable",
     "build:external": "pnpm -C \"packages/external\" run build",
     "build": "pnpm run build:external && pnpm -C \"apps/core\" run build",

@@ -1,9 +1,11 @@
 import cluster from 'node:cluster'
 import { performance } from 'node:perf_hooks'
+import wcmatch from 'wildcard-match'
+import type { LogLevel } from '@nestjs/common'
+import type { NestFastifyApplication } from '@nestjs/platform-fastify'
+
 import { Logger } from '@innei/pretty-logger-nestjs'
 import { NestFactory } from '@nestjs/core'
-
-import wcmatch from 'wildcard-match'
 
 import { CROSS_DOMAIN, DEBUG_MODE, PORT } from './app.config'
 import { AppModule } from './app.module'
@@ -15,8 +17,6 @@ import { ExtendedValidationPipe } from './common/pipes/validation.pipe'
 import { logger } from './global/consola.global'
 import { isMainProcess, isTest } from './global/env.global'
 import { checkInit } from './utils/check-init.util'
-import type { LogLevel } from '@nestjs/common'
-import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 
 const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
   ? [...CROSS_DOMAIN.allowedOrigins, '*.shizuri.net', '22333322.xyz']

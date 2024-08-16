@@ -1,14 +1,16 @@
-import { Global, Module, forwardRef } from '@nestjs/common'
+import type { Provider } from '@nestjs/common'
+
+import { forwardRef, Global, Module } from '@nestjs/common'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
 import { ThrottlerModule } from '@nestjs/throttler'
 
+import { THROTTLE_OPTIONS } from '~/app.config'
 import { AggregateModule } from '~/modules/aggregate/aggregate.module'
 import { NoteModule } from '~/modules/note/note.module'
 import { PageModule } from '~/modules/page/page.module'
 import { PostModule } from '~/modules/post/post.module'
 
-import { THROTTLE_OPTIONS } from '~/app.config'
 import { AssetService } from './helper.asset.service'
 import { BarkPushService } from './helper.bark.service'
 import { CountingService } from './helper.counting.service'
@@ -22,7 +24,6 @@ import { TextMacroService } from './helper.macro.service'
 import { TaskQueueService } from './helper.tq.service'
 import { UploadService } from './helper.upload.service'
 import { UrlBuilderService } from './helper.url-builder.service'
-import type { Provider } from '@nestjs/common'
 
 const providers: Provider<any>[] = [
   AssetService,

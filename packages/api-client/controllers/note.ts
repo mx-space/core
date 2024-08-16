@@ -1,4 +1,3 @@
-import { autoBind } from '~/utils/auto-bind'
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
@@ -11,6 +10,8 @@ import type {
 } from '~/models/note'
 import type { HTTPClient } from '../core/client'
 import type { SortOptions } from './base'
+
+import { autoBind } from '~/utils/auto-bind'
 
 declare module '../core/client' {
   interface HTTPClient<

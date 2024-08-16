@@ -7,14 +7,15 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common'
+
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { isDev } from '~/global/env.global'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
-
 import { scheduleManager } from '~/utils'
+
 import { ConfigsService } from '../configs/configs.service'
 import { UserService } from '../user/user.service'
 import { LinkApplyEmailType } from './link-mail.enum'

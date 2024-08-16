@@ -1,7 +1,9 @@
 import { ChatOpenAI } from '@langchain/openai'
 import { Injectable } from '@nestjs/common'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
+
 import { ConfigsService } from '../configs/configs.service'
 
 @Injectable()

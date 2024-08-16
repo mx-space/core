@@ -1,5 +1,7 @@
 import { createWriteStream } from 'node:fs'
 import { resolve } from 'node:path'
+import type { Readable } from 'node:stream'
+import type { FileType } from './file.type'
 
 import {
   BadRequestException,
@@ -15,8 +17,6 @@ import {
 } from '~/constants/path.constant'
 
 import { ConfigsService } from '../configs/configs.service'
-import type { FileType } from './file.type'
-import type { Readable } from 'node:stream'
 
 @Injectable()
 export class FileService {
@@ -79,8 +79,8 @@ export class FileService {
   async deleteFile(type: FileType, name: string) {
     try {
       const path = this.resolveFilePath(type, name)
-      await fs.copyFile(path, resolve(STATIC_FILE_TRASH_DIR, name));
-      await fs.unlink(path);
+      await fs.copyFile(path, resolve(STATIC_FILE_TRASH_DIR, name))
+      await fs.unlink(path)
     } catch (error) {
       this.logger.error('删除文件失败', error)
 

@@ -2,10 +2,13 @@ import dayjs from 'dayjs'
 import jwt from 'jsonwebtoken'
 import { isDate, omit } from 'lodash'
 import { LRUCache } from 'lru-cache'
+import type { ClerkClient } from '@clerk/clerk-sdk-node'
+import type { TokenModel, UserModel } from '~/modules/user/user.model'
+import type { TokenDto } from './auth.controller'
 
 import { createClerkClient } from '@clerk/clerk-sdk-node'
 import { nanoid } from '@mx-space/external'
-import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common'
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { alphabet } from '~/constants/other.constant'
@@ -14,9 +17,6 @@ import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { ConfigsService } from '../configs/configs.service'
-import type { TokenDto } from './auth.controller'
-import type { TokenModel, UserModel } from '~/modules/user/user.model'
-import type { ClerkClient } from '@clerk/clerk-sdk-node'
 
 const { customAlphabet } = nanoid
 

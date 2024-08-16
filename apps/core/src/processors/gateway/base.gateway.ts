@@ -1,5 +1,6 @@
-import { BusinessEvents } from '~/constants/business-event.constant'
 import type { Socket } from 'socket.io'
+
+import { BusinessEvents } from '~/constants/business-event.constant'
 
 export abstract class BaseGateway {
   public gatewayMessageFormat(

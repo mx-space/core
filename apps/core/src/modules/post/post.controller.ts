@@ -1,3 +1,6 @@
+import type { PipelineStage } from 'mongoose'
+import type { CategoryModel } from '../category/category.model'
+
 import {
   Body,
   Delete,
@@ -21,8 +24,6 @@ import { addYearCondition } from '~/transformers/db-query.transformer'
 import { CategoryAndSlugDto, PostPagerDto } from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'
-import type { CategoryModel } from '../category/category.model'
-import type { PipelineStage } from 'mongoose'
 
 @ApiController('posts')
 export class PostController {

@@ -2,6 +2,7 @@
  * @see https://github.com/surmon-china/nodepress/blob/main/src/processors/database/database.provider.ts
  */
 import mongoose from 'mongoose'
+import type { CollectionRefTypes } from '~/constants/db.constant'
 
 import { MONGO_DB } from '~/app.config'
 import {
@@ -9,7 +10,6 @@ import {
   PAGE_COLLECTION_NAME,
   POST_COLLECTION_NAME,
   RECENTLY_COLLECTION_NAME,
-  type CollectionRefTypes,
 } from '~/constants/db.constant'
 import { logger } from '~/global/consola.global'
 

@@ -1,14 +1,15 @@
 import { load } from 'js-yaml'
 import JSON5 from 'json5'
 import qs from 'qs'
+import type { AggregatePaginateModel, Document } from 'mongoose'
 
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
-  forwardRef,
 } from '@nestjs/common'
 
 import { EventScope } from '~/constants/business-event.constant'
@@ -21,7 +22,6 @@ import { getRedisKey } from '~/utils'
 
 import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetModel, SnippetType } from './snippet.model'
-import type { AggregatePaginateModel, Document } from 'mongoose'
 
 @Injectable()
 export class SnippetService {

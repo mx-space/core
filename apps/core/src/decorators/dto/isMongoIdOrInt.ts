@@ -1,7 +1,8 @@
 import { isInt, isMongoId } from 'class-validator'
 import { merge } from 'lodash'
-import { validatorFactory } from '../simpleValidatorFactory'
 import type { ValidationOptions } from 'class-validator'
+
+import { validatorFactory } from '../simpleValidatorFactory'
 
 export function IsBooleanOrString(validationOptions?: ValidationOptions) {
   return validatorFactory((value) => isInt(value) || isMongoId(value))(

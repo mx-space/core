@@ -5,10 +5,10 @@ import { Get, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { HttpCache } from '~/common/decorators/cache.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 
-import { HttpCache } from '~/common/decorators/cache.decorator'
 import { AnalyzeService } from '../analyze/analyze.service'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteService } from '../note/note.service'

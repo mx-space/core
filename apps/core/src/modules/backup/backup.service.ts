@@ -1,5 +1,5 @@
 import { existsSync, statSync } from 'node:fs'
-import { readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { flatten } from 'lodash'
 import { mkdirp } from 'mkdirp'

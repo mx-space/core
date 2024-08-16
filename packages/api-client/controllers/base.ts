@@ -1,7 +1,8 @@
-import { autoBind } from '~/utils/auto-bind'
 import type { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
 import type { PaginateResult } from '~/models/base'
 import type { HTTPClient } from '../core'
+
+import { autoBind } from '~/utils/auto-bind'
 
 export type SortOptions = {
   sortBy?: string

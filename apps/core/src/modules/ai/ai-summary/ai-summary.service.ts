@@ -1,9 +1,10 @@
+import { JsonOutputFunctionsParser } from 'langchain/output_parsers'
 import removeMdCodeblock from 'remove-md-codeblock'
+import type { PagerDto } from '~/shared/dto/pager.dto'
 
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
-import { JsonOutputFunctionsParser } from 'langchain/output_parsers'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
@@ -18,7 +19,7 @@ import { ConfigsService } from '../../configs/configs.service'
 import { DEFAULT_SUMMARY_LANG, LANGUAGE_CODE_TO_NAME } from '../ai.constants'
 import { AiService } from '../ai.service'
 import { AISummaryModel } from './ai-summary.model'
-import type { PagerDto } from '~/shared/dto/pager.dto'
+
 @Injectable()
 export class AiSummaryService {
   private readonly logger: Logger

@@ -1,10 +1,11 @@
+import type { FastifyRequest } from 'fastify'
+
 import fastifyCookie from '@fastify/cookie'
 import FastifyMultipart from '@fastify/multipart'
 import { Logger } from '@nestjs/common'
 import { FastifyAdapter } from '@nestjs/platform-fastify'
 
 import { getIp } from '~/utils'
-import type { FastifyRequest } from 'fastify'
 
 const app: FastifyAdapter = new FastifyAdapter({
   trustProxy: true,
@@ -38,7 +39,7 @@ app.getInstance().addHook('onRequest', (request, reply, done) => {
     logWarn('PHP 是世界上最好的语言！！！！！', request, 'GodPHP')
 
     return reply.code(418).send()
-  } else if (/\/(adminer|admin|wp-login|phpmyadmin|\.env)$/gi.test(url)) {
+  } else if (/\/(?:adminer|admin|wp-login|phpmyadmin|\.env)$/i.test(url)) {
     const isMxSpaceClient = ua?.match('mx-space')
     reply.raw.statusMessage = 'Hey, What the fuck are you doing!'
     reply.raw.statusCode = isMxSpaceClient ? 666 : 200

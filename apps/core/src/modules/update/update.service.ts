@@ -1,16 +1,17 @@
 import { appendFile, rm, writeFile } from 'node:fs/promises'
 import { inspect } from 'node:util'
 import axios from 'axios'
-import { Observable, catchError } from 'rxjs'
+import { catchError, Observable } from 'rxjs'
+import type { Subscriber } from 'rxjs'
 
 import { Injectable } from '@nestjs/common'
 
+import { dashboard } from '~/../package.json'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { spawnShell } from '~/utils'
+
 import { ConfigsService } from '../configs/configs.service'
-import type { Subscriber } from 'rxjs'
-import { dashboard } from '~/../package.json'
 
 const { repo } = dashboard
 

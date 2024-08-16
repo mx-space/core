@@ -1,6 +1,7 @@
 import { plainToInstance } from 'class-transformer'
 import { validateSync } from 'class-validator'
 import { FastifyReply } from 'fastify'
+import type { CountModel } from '~/shared/model/count.model'
 
 import { Body, HttpCode, Inject, Post, Res } from '@nestjs/common'
 
@@ -14,7 +15,6 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { CacheService } from '~/processors/redis/cache.service'
 
 import { AckDto, AckEventType, AckReadPayloadDto } from './ack.dto'
-import type { CountModel } from '~/shared/model/count.model'
 
 @ApiController('ack')
 export class AckController {

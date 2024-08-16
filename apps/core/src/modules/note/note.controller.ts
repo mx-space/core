@@ -1,3 +1,5 @@
+import type { FilterQuery } from 'mongoose'
+
 import {
   Body,
   Delete,
@@ -30,7 +32,6 @@ import {
 } from './note.dto'
 import { NoteModel, PartialNoteModel } from './note.model'
 import { NoteService } from './note.service'
-import type { FilterQuery } from 'mongoose'
 
 @ApiController({ path: 'notes' })
 export class NoteController {

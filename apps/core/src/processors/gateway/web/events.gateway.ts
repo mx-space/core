@@ -1,5 +1,17 @@
 import { debounce, uniqBy } from 'lodash'
 import SocketIO from 'socket.io'
+import type {
+  GatewayMetadata,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets'
+import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
+import type {
+  DecorateAcknowledgementsWithMultipleResponses,
+  DefaultEventsMap,
+} from 'socket.io/dist/typed-events'
+import type { SocketType } from '../gateway.service'
+import type { EventGatewayHooks } from './hook.interface'
 
 import {
   ConnectedSocket,
@@ -19,18 +31,6 @@ import { getShortDate } from '~/utils/time.util'
 import { BroadcastBaseGateway } from '../base.gateway'
 import { GatewayService } from '../gateway.service'
 import { MessageEventDto, SupportedMessageEvent } from './dtos/message'
-import type { EventGatewayHooks } from './hook.interface'
-import type { SocketType } from '../gateway.service'
-import type {
-  DecorateAcknowledgementsWithMultipleResponses,
-  DefaultEventsMap,
-} from 'socket.io/dist/typed-events'
-import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
-import type {
-  GatewayMetadata,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-} from '@nestjs/websockets'
 
 declare module '~/types/socket-meta' {
   interface SocketMetadata {

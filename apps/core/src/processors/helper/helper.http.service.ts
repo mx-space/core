@@ -1,6 +1,7 @@
 import { inspect } from 'node:util'
 import axios from 'axios'
 import axiosRetry, { exponentialDelay } from 'axios-retry'
+import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 import { Injectable, Logger } from '@nestjs/common'
 
@@ -10,7 +11,6 @@ import { getRedisKey } from '~/utils'
 
 import { version } from '../../../package.json'
 import { CacheService } from '../redis/cache.service'
-import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 const DEFAULT_UA = `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 MX-Space/${version}`
 declare module 'axios' {

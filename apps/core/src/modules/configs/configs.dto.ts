@@ -12,6 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator'
 import { JSONSchema } from 'class-validator-jsonschema'
+import type { ChatModel } from 'openai/resources'
 
 import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
 
@@ -27,7 +28,6 @@ import {
   JSONSchemaTextAreaField,
   JSONSchemaToggleField,
 } from './configs.jsonschema.decorator'
-import type { ChatModel } from 'openai/resources'
 
 const SecretField = (target: object, propertyKey: string | symbol) => {
   Encrypt(target, propertyKey)

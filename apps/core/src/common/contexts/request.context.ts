@@ -1,9 +1,10 @@
 /* eslint-disable dot-notation */
 // @reference https://github.com/ever-co/ever-gauzy/blob/d36b4f40b1446f3c33d02e0ba00b53a83109d950/packages/core/src/core/context/request-context.ts
 import * as cls from 'cls-hooked'
-import { UnauthorizedException } from '@nestjs/common'
 import type { UserDocument } from '~/modules/user/user.model'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+
+import { UnauthorizedException } from '@nestjs/common'
 
 type Nullable<T> = T | null
 export class RequestContext {

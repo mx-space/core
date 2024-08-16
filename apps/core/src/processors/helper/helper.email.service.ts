@@ -1,5 +1,7 @@
 import cluster from 'node:cluster'
 import { createTransport } from 'nodemailer'
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import type Mail from 'nodemailer/lib/mailer'
 
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
@@ -12,8 +14,6 @@ import { UserService } from '~/modules/user/user.service'
 
 import { SubPubBridgeService } from '../redis/subpub.service'
 import { AssetService } from './helper.asset.service'
-import type Mail from 'nodemailer/lib/mailer'
-import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 
 @Injectable()
 export class EmailService implements OnModuleInit, OnModuleDestroy {

@@ -2,11 +2,11 @@ import { URL } from 'node:url'
 import { Types } from 'mongoose'
 import autopopulate from 'mongoose-autopopulate'
 
-import { Ref, modelOptions, plugin, prop } from '@typegoose/typegoose'
+import { modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
 
 import {
-  COMMENT_COLLECTION_NAME,
   CollectionRefTypes,
+  COMMENT_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 

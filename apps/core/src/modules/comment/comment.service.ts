@@ -1,14 +1,22 @@
 import { URL } from 'node:url'
 import { render } from 'ejs'
 import { omit, pick } from 'lodash'
-import { Types, isObjectIdOrHexString } from 'mongoose'
+import { isObjectIdOrHexString, Types } from 'mongoose'
+import type { OnModuleInit } from '@nestjs/common'
+import type { ReturnModelType } from '@typegoose/typegoose/lib/types'
+import type { WriteBaseModel } from '~/shared/model/write-base.model'
+import type { SnippetModel } from '../snippet/snippet.model'
+import type {
+  CommentEmailTemplateRenderProps,
+  CommentModelRenderProps,
+} from './comment.email.default'
 
 import {
   BadRequestException,
+  forwardRef,
   Inject,
   Injectable,
   Logger,
-  forwardRef,
 } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
@@ -36,14 +44,6 @@ import {
 } from './comment.email.default'
 import { CommentReplyMailType } from './comment.enum'
 import { CommentModel, CommentState } from './comment.model'
-import type {
-  CommentEmailTemplateRenderProps,
-  CommentModelRenderProps,
-} from './comment.email.default'
-import type { SnippetModel } from '../snippet/snippet.model'
-import type { WriteBaseModel } from '~/shared/model/write-base.model'
-import type { OnModuleInit } from '@nestjs/common'
-import type { ReturnModelType } from '@typegoose/typegoose/lib/types'
 
 @Injectable()
 export class CommentService implements OnModuleInit {
@@ -120,7 +120,7 @@ export class CommentService implements OnModuleInit {
         }
         const isBlock = commentOptions.blockIps.some((ip) =>
           // @ts-ignore
-          new RegExp(ip, 'ig').test(doc.ip),
+          new RegExp(ip, 'gi').test(doc.ip),
         )
         if (isBlock) {
           return true
@@ -129,7 +129,7 @@ export class CommentService implements OnModuleInit {
 
       const customKeywords = commentOptions.spamKeywords || []
       const isBlock = [...customKeywords, ...BlockedKeywords].some((keyword) =>
-        new RegExp(keyword, 'ig').test(doc.text),
+        new RegExp(keyword, 'gi').test(doc.text),
       )
 
       if (isBlock) {

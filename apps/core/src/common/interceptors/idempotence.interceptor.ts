@@ -1,4 +1,10 @@
 import { catchError, tap } from 'rxjs'
+import type {
+  CallHandler,
+  ExecutionContext,
+  NestInterceptor,
+} from '@nestjs/common'
+import type { FastifyRequest } from 'fastify'
 
 import {
   ConflictException,
@@ -15,12 +21,6 @@ import {
 import { REFLECTOR } from '~/constants/system.constant'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getIp, getRedisKey, hashString } from '~/utils'
-import type { FastifyRequest } from 'fastify'
-import type {
-  CallHandler,
-  ExecutionContext,
-  NestInterceptor,
-} from '@nestjs/common'
 
 const IdempotenceHeaderKey = 'x-idempotence'
 

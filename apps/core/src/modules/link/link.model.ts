@@ -1,6 +1,4 @@
-import { modelOptions, prop } from '@typegoose/typegoose'
 import { Transform } from 'class-transformer'
-
 import {
   IsEmail,
   IsEnum,
@@ -9,6 +7,8 @@ import {
   IsUrl,
   MaxLength,
 } from 'class-validator'
+
+import { modelOptions, prop } from '@typegoose/typegoose'
 
 import { BaseModel } from '~/shared/model/base.model'
 

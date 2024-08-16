@@ -1,14 +1,14 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { seconds } from '@nestjs/throttler'
 import { program } from 'commander'
 import { load as yamlLoad } from 'js-yaml'
-
 import { machineIdSync } from 'node-machine-id'
-import { isDebugMode, isDev } from './global/env.global'
-
-import { parseBooleanishValue } from './utils/tool.util'
 import type { AxiosRequestConfig } from 'axios'
+
+import { seconds } from '@nestjs/throttler'
+
+import { isDebugMode, isDev } from './global/env.global'
+import { parseBooleanishValue } from './utils/tool.util'
 
 const { PORT: ENV_PORT, ALLOWED_ORIGINS, MX_ENCRYPT_KEY } = process.env
 

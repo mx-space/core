@@ -21,7 +21,6 @@
     "dev": "npm run start",
     "repl": "npm run start -- --entryFile repl",
     "bundle": "rimraf out && npm run build && cd dist/src && npx ncc build main.js -o ../../out --minify -s && cd ../.. && chmod +x out/index.js && node scripts/after-bundle.js",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"packages/**/*.ts\"",
     "start": "cross-env NODE_ENV=development nest start -w --path tsconfig.json -- ",
     "start:debug": "cross-env NODE_ENV=development nest start --debug --watch",
     "start:cluster": "cross-env NODE_ENV=development nest start --watch -- --cluster --cluster_workers 2",

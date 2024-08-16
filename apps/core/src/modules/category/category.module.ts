@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 
 import { PostModule } from '../post/post.module'
 import { SlugTrackerModule } from '../slug-tracker/slug-tracker.module'
