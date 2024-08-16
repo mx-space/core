@@ -1,10 +1,12 @@
-import imageSize from 'image-size'
+import { encode } from 'blurhash'
+import sharpTypes from 'sharp'
 import type { ImageModel } from '~/shared/model/image.model'
 
 import { Injectable, Logger } from '@nestjs/common'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { getAverageRGB, pickImagesFromMarkdown } from '~/utils/pic.util'
+import { requireDepsWithInstall } from '~/utils'
+import { pickImagesFromMarkdown } from '~/utils/pic.util'
 
 import { HttpService } from './helper.http.service'
 
@@ -50,13 +52,13 @@ export class ImageService {
       const promise = new Promise<ImageModel>((resolve) => {
         this.logger.log(`Get --> ${src}`)
         this.getOnlineImageSizeAndMeta(src)
-          .then(({ size, accent }) => {
+          .then(({ size, accent, blurHash }) => {
             const filename = src.split('/').pop()
             this.logger.debug(
               `[${filename}]: height: ${size.height}, width: ${size.width}, accent: ${accent}`,
             )
 
-            resolve({ ...size, accent, src })
+            resolve({ ...size, accent, src, blurHash })
           })
           .catch((error) => {
             this.logger.error(`GET --> ${src} ${error.message}`)
@@ -71,6 +73,7 @@ export class ImageService {
                 type: undefined,
                 accent: undefined,
                 src: undefined,
+                blurHash: undefined,
               })
           })
       })
@@ -110,11 +113,35 @@ export class ImageService {
     const imageType = headers['content-type']!
 
     const buffer = Buffer.from(data)
-    const size = imageSize(buffer)
+    const sharp = (await requireDepsWithInstall('sharp')) as typeof sharpTypes
+    const sharped = sharp(buffer)
+    const metadata = await sharped.metadata()
+    const size = {
+      height: metadata.height,
+      width: metadata.width,
+      type: imageType,
+    }
+    const { dominant } = await sharped.stats()
 
     // get accent color
-    const accent = await getAverageRGB(buffer, imageType)
+    // r g b number to hex
+    const accent = `#${dominant.r.toString(16).padStart(2, '0')}${dominant.g.toString(16).padStart(2, '0')}${dominant.b.toString(16).padStart(2, '0')}`
 
-    return { size, accent }
+    const blurHash = await encodeImageToBlurhash(sharped)
+
+    return { size, accent, blurHash }
   }
 }
+
+const encodeImageToBlurhash = (sharped: sharpTypes.Sharp) =>
+  new Promise<string>((resolve, reject) => {
+    sharped
+      .raw()
+      .ensureAlpha()
+      .resize(32, 32, { fit: 'inside' })
+      .toBuffer((err, buffer, { width, height }) => {
+        if (err) return reject(err)
+
+        resolve(encode(new Uint8ClampedArray(buffer), width, height, 4, 4))
+      })
+  })

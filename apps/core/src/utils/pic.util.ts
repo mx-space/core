@@ -1,4 +1,3 @@
-import getColors from 'get-image-colors'
 import { marked } from 'marked'
 
 const isVideoExts = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.flv', '.mkv']
@@ -23,25 +22,6 @@ export const pickImagesFromMarkdown = (text: string) => {
     pickImage(element)
   })
   return images
-}
-
-export async function getAverageRGB(
-  buffer: Buffer,
-  type: string,
-): Promise<string | undefined> {
-  if (!buffer) {
-    return undefined
-  }
-
-  try {
-    // NOTE: can not pass image url here, because request package is removed manually.
-    const colors = await getColors(buffer, type)
-
-    return colors[0].hex()
-  } catch (error) {
-    console.error(error.message)
-    return undefined
-  }
 }
 
 function componentToHex(c: number) {
