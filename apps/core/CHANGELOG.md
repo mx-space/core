@@ -1,5 +1,31 @@
 # CHANGELOG
 
+# [6.1.0](https://github.com/mx-space/core/compare/v6.0.3...v6.1.0) (2024-08-16)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @aws-sdk/client-s3 to v3.632.0 ([#1977](https://github.com/mx-space/core/issues/1977)) ([81c6af6](https://github.com/mx-space/core/commit/81c6af6a9ca2982cb06b56de15c41c300e69beb3))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.26 ([2d78a04](https://github.com/mx-space/core/commit/2d78a042ac295153c931cd6428c1e5b1f5b309cd))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.27 ([4392ad3](https://github.com/mx-space/core/commit/4392ad39f02450358006b4d7e39c7ebcb48fbc94))
+* **deps:** update dependency isbot to v5.1.15 ([08e8f2f](https://github.com/mx-space/core/commit/08e8f2f6a59fd8aea6b1d6826946fbca8a2583fa))
+* **deps:** update dependency isbot to v5.1.16 ([423a2ab](https://github.com/mx-space/core/commit/423a2ab009be43e5af51309f0d67613de5648d13))
+* **deps:** update dependency langchain to v0.2.14 ([b1f6a3d](https://github.com/mx-space/core/commit/b1f6a3df67516f58ac55b0075cfab9f7c8e854d3))
+* **deps:** update dependency langchain to v0.2.15 ([819727c](https://github.com/mx-space/core/commit/819727c1cc813e52cefe1f1b2320361d8f2ec202))
+* **deps:** update dependency langchain to v0.2.16 ([41d6974](https://github.com/mx-space/core/commit/41d697417efb604da3c36dd4c7b777d6fc51ae90))
+* **deps:** update dependency openai to v4.55.7 ([#1968](https://github.com/mx-space/core/issues/1968)) ([831d87c](https://github.com/mx-space/core/commit/831d87c9650bb44eede74c7739f5529c464f3f54))
+* **deps:** update dependency openai to v4.55.9 ([5d335fc](https://github.com/mx-space/core/commit/5d335fcf3f1f727e5436c8dd334e715f4bae898c))
+* **deps:** update nest monorepo to v10.4.1 (minor) ([#1994](https://github.com/mx-space/core/issues/1994)) ([3ee55a7](https://github.com/mx-space/core/commit/3ee55a778e1fcee59f2881f696268501b5e82785))
+* import circular ([a8a21d9](https://github.com/mx-space/core/commit/a8a21d99d3272c634167bec65757d1d3fbdefe44))
+* migrate db first ([b923c7f](https://github.com/mx-space/core/commit/b923c7f438a28ca19e30fb44788a9a4f09c2aaa2))
+
+
+### Features
+
+* image blur hash ([#2010](https://github.com/mx-space/core/issues/2010)) ([c27ee8c](https://github.com/mx-space/core/commit/c27ee8c28d19a65f7cedcd5874eae10b9417dcdb))
+
+
+
 ## [6.0.3](https://github.com/mx-space/core/compare/v6.0.2...v6.0.3) (2024-08-08)
 
 
