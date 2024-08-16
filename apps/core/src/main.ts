@@ -6,7 +6,7 @@ import { DEBUG_MODE } from './app.config'
 import { registerForMemoryDump } from './dump'
 import { logger } from './global/consola.global'
 import { isMainCluster, isMainProcess } from './global/env.global'
-import { register } from './global/index.global'
+import { initializeApp } from './global/index.global'
 import { migrateDatabase } from './migration/migrate'
 
 process.title = `Mix Space (${cluster.isPrimary ? 'master' : 'worker'}) - ${
@@ -14,7 +14,7 @@ process.title = `Mix Space (${cluster.isPrimary ? 'master' : 'worker'}) - ${
 }`
 
 async function main() {
-  register()
+  initializeApp()
 
   if (isMainProcess) {
     await migrateDatabase()

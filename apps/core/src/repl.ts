@@ -1,9 +1,9 @@
 import { repl } from '@nestjs/core'
 
-import { register } from './global/index.global'
+import { initializeApp } from './global/index.global'
 
 async function bootstrap() {
-  register()
+  initializeApp()
   const { AppModule } = await import('./app.module')
   await repl(AppModule)
 }

@@ -2,7 +2,7 @@ import { encode } from 'blurhash'
 import type { ImageModel } from '~/shared/model/image.model'
 import type { Sharp } from 'sharp'
 
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
@@ -11,19 +11,20 @@ import { requireDepsWithInstall } from '~/utils/tool.util'
 import { HttpService } from './helper.http.service'
 
 @Injectable()
-export class ImageService {
+export class ImageService implements OnModuleInit {
   private logger: Logger
   constructor(
     private readonly httpService: HttpService,
     private readonly configsService: ConfigsService,
   ) {
     this.logger = new Logger(ImageService.name)
+  }
 
-    if (!isDev) {
-      requireDepsWithInstall('sharp').catch((error: any) => {
-        this.logger.error(`sharp install failed: ${error.message}`)
-      })
-    }
+  onModuleInit() {
+    requireDepsWithInstall('sharp').catch((error: any) => {
+      this.logger.error(`sharp install failed: ${error.message}`)
+      console.error(error)
+    })
   }
 
   async saveImageDimensionsFromMarkdownText(
