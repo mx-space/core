@@ -31,7 +31,6 @@ export default sxzz(
         eqeqeq: 'off',
 
         'no-void': 0,
-        '@typescript-eslint/consistent-type-imports': 'warn',
         '@typescript-eslint/consistent-type-assertions': 0,
         'no-restricted-syntax': 0,
         'unicorn/filename-case': 0,

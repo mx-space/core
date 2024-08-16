@@ -1,4 +1,4 @@
-const { resolve } = require('path')
+const { resolve } = require('node:path')
 const axios = require('axios')
 const { fs } = require('zx-cjs')
 const {
@@ -8,7 +8,10 @@ const Package = require('./package.json')
 const endpoint = `https://api.github.com/repos/${repo}/releases/latest`
 
 const latestVersion = async () => {
-  const res = await axios.get(endpoint)
+  const res = await axios.get(endpoint).catch((error) => {
+    console.error(error.message)
+    process.exit(1)
+  })
   return res.data.tag_name.replace(/^v/, '')
 }
 async function main() {
