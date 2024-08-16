@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [6.1.3](https://github.com/mx-space/core/compare/v6.1.2...v6.1.3) (2024-08-16)
+
+
+### Bug Fixes
+
+* cloned object ([9a585a1](https://github.com/mx-space/core/commit/9a585a1fa0cb565958eec1b469646bcc8885f337))
+
+
+
 ## [6.1.2](https://github.com/mx-space/core/compare/v6.1.1...v6.1.2) (2024-08-16)
 
 
