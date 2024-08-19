@@ -33,8 +33,8 @@ importers:
         specifier: 3.17.3
         version: 3.17.3(@typescript-eslint/eslint-plugin@8.1.0(@typescript-eslint/parser@8.1.0(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4)
       '@types/node':
-        specifier: 20.16.0
-        version: 20.16.0
+        specifier: 20.16.1
+        version: 20.16.1
       cross-env:
         specifier: 7.0.3
         version: 7.0.3
@@ -58,7 +58,7 @@ importers:
         version: 6.0.1
       ts-node:
         specifier: 10.9.2
-        version: 10.9.2(@swc/core@1.7.14)(@types/node@20.16.0)(typescript@5.5.4)
+        version: 10.9.2(@swc/core@1.7.14)(@types/node@20.16.1)(typescript@5.5.4)
       tsconfig-paths:
         specifier: 4.2.0
         version: 4.2.0
@@ -70,7 +70,7 @@ importers:
         version: 5.5.4
       vite-tsconfig-paths:
         specifier: 4.3.2
-        version: 4.3.2(typescript@5.5.4)(vite@5.1.7(@types/node@20.16.0)(terser@5.31.1))
+        version: 4.3.2(typescript@5.5.4)(vite@5.1.7(@types/node@20.16.1)(terser@5.31.1))
 
   apps/core:
     dependencies:
@@ -2488,8 +2488,8 @@ packages:
   '@types/node@18.19.38':
     resolution: {integrity: sha512-SApYXUF7si4JJ+lO2o6X60OPOnA6wPpbiB09GMCkQ+JAwpa9hxUVG8p7GzA08TKQn5OhzK57rj1wFj+185YsGg==}
 
-  '@types/node@20.16.0':
-    resolution: {integrity: sha512-vDxceJcoZhIVh67S568bm1UGZO0DX0hpplJZxzeXMKwIPLn190ec5RRxQ69BKhX44SUGIxxgMdDY557lGLKprQ==}
+  '@types/node@20.16.1':
+    resolution: {integrity: sha512-zJDo7wEadFtSyNz5QITDfRcrhqDvQI1xQNQ0VoizPjM/dVAODqqIUWbJPkvsxmTI0MYRGRikcdjMPhOssnPejQ==}
 
   '@types/node@22.4.0':
     resolution: {integrity: sha512-49AbMDwYUz7EXxKU/r7mXOsxwFr4BYbvB7tWYxVuLdb2ibd30ijjXINSMAHiEEZk5PCRBmW1gUeisn2VMKt3cQ==}
@@ -9259,7 +9259,7 @@ snapshots:
     dependencies:
       undici-types: 5.26.5
 
-  '@types/node@20.16.0':
+  '@types/node@20.16.1':
     dependencies:
       undici-types: 6.19.6
 
@@ -13277,14 +13277,14 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-node@10.9.2(@swc/core@1.7.14)(@types/node@20.16.0)(typescript@5.5.4):
+  ts-node@10.9.2(@swc/core@1.7.14)(@types/node@20.16.1)(typescript@5.5.4):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 20.16.0
+      '@types/node': 20.16.1
       acorn: 8.12.0
       acorn-walk: 8.3.3
       arg: 4.1.3
@@ -13535,13 +13535,13 @@ snapshots:
       - supports-color
       - terser
 
-  vite-tsconfig-paths@4.3.2(typescript@5.5.4)(vite@5.1.7(@types/node@20.16.0)(terser@5.31.1)):
+  vite-tsconfig-paths@4.3.2(typescript@5.5.4)(vite@5.1.7(@types/node@20.16.1)(terser@5.31.1)):
     dependencies:
       debug: 4.3.5
       globrex: 0.1.2
       tsconfck: 3.1.0(typescript@5.5.4)
     optionalDependencies:
-      vite: 5.1.7(@types/node@20.16.0)(terser@5.31.1)
+      vite: 5.1.7(@types/node@20.16.1)(terser@5.31.1)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -13557,13 +13557,13 @@ snapshots:
       - supports-color
       - typescript
 
-  vite@5.1.7(@types/node@20.16.0)(terser@5.31.1):
+  vite@5.1.7(@types/node@20.16.1)(terser@5.31.1):
     dependencies:
       esbuild: 0.19.12
       postcss: 8.4.38
       rollup: 4.18.0
     optionalDependencies:
-      '@types/node': 20.16.0
+      '@types/node': 20.16.1
       fsevents: 2.3.3
       terser: 5.31.1
     optional: true
