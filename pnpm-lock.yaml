@@ -30,8 +30,8 @@ importers:
         specifier: 0.15.0
         version: 0.15.0
       '@sxzz/eslint-config':
-        specifier: 3.17.2
-        version: 3.17.2(@typescript-eslint/eslint-plugin@8.1.0(@typescript-eslint/parser@8.1.0(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4)
+        specifier: 3.17.3
+        version: 3.17.3(@typescript-eslint/eslint-plugin@8.1.0(@typescript-eslint/parser@8.1.0(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4)
       '@types/node':
         specifier: 20.16.0
         version: 20.16.0
@@ -2347,8 +2347,8 @@ packages:
   '@swc/types@0.1.12':
     resolution: {integrity: sha512-wBJA+SdtkbFhHjTMYH+dEH1y4VpfGdAc2Kw/LK09i9bXd/K6j6PkDcFCEzb6iVfZMkPRrl/q0e3toqTAJdkIVA==}
 
-  '@sxzz/eslint-config@3.17.2':
-    resolution: {integrity: sha512-9EablDHDFRJ6YaSAbP0ICCXBo1+Uv5FpJ1F4Hc35rC/N3WTWOrSY/Pg6HYKJQVZoGCYCBaWdulvF9qhI1arYJw==}
+  '@sxzz/eslint-config@3.17.3':
+    resolution: {integrity: sha512-/NDcR8HViFg0m2d/axz5lWSwMXSAtIio62oSbVkrxl9I/HVxyLxeIvW0w7Xj7JjpqaQIgZjwTO3m07MOpurmnA==}
     engines: {node: ^18.18.0 || >=20.0.0}
     peerDependencies:
       eslint: ^8.56.0 || ^9.0.0
@@ -9052,7 +9052,7 @@ snapshots:
     dependencies:
       '@swc/counter': 0.1.3
 
-  '@sxzz/eslint-config@3.17.2(@typescript-eslint/eslint-plugin@8.1.0(@typescript-eslint/parser@8.1.0(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4)':
+  '@sxzz/eslint-config@3.17.3(@typescript-eslint/eslint-plugin@8.1.0(@typescript-eslint/parser@8.1.0(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4)':
     dependencies:
       '@eslint/js': 9.9.0
       '@types/eslint': 9.6.0
@@ -9163,7 +9163,7 @@ snapshots:
 
   '@types/eslint-scope@3.7.7':
     dependencies:
-      '@types/eslint': 8.56.10
+      '@types/eslint': 9.6.0
       '@types/estree': 1.0.5
 
   '@types/eslint@8.56.10':
