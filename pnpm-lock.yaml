@@ -96,8 +96,8 @@ importers:
         specifier: ^7.24.9
         version: 7.25.4
       '@clerk/clerk-sdk-node':
-        specifier: 5.0.28
-        version: 5.0.28(react@18.3.1)
+        specifier: 5.0.29
+        version: 5.0.29(react@18.3.1)
       '@fastify/cookie':
         specifier: 9.3.1
         version: 9.3.1
@@ -894,12 +894,12 @@ packages:
     resolution: {integrity: sha512-zQ1ijeeCXVEh+aNL0RlmkPkG8HUiDcU2pzQQFjtbntgAczRASFzj4H+6+bV+dy1ntKR14I/DypeuRG1uma98iQ==}
     engines: {node: '>=6.9.0'}
 
-  '@clerk/backend@1.7.0':
-    resolution: {integrity: sha512-ynU1XBdlezegTlwNtRxf8AjOQtTeBQligNKZtHOWZEfTM9CzJs8XEwAOpKYQ6/LRt0hlch8YeP5qHjD5W8sYvw==}
+  '@clerk/backend@1.8.0':
+    resolution: {integrity: sha512-csIF8eHM84JPP6ZuOdE37saDRIY7Dp5B8Yt26FZSehCveUTeI16iCCbVb8Co4hutlKZa08Mcb2GEcXavRnkvfA==}
     engines: {node: '>=18.17.0'}
 
-  '@clerk/clerk-sdk-node@5.0.28':
-    resolution: {integrity: sha512-fXygLYLYu37tlq2sUFnPG4eJONoOOLJGzhKtyMVjj2og4NXcGqJ7YzMrWzp7sK6NAgjYldm2RQj5Vta4H05hpQ==}
+  '@clerk/clerk-sdk-node@5.0.29':
+    resolution: {integrity: sha512-e6WPzafy8kzGzLzfAiQUVC733w1i9R8Tu32E/d7TJwHCm7bUbnbS3DMvzwAmOA3ZoAeasRtXee0ZcLRjmvMvgw==}
     engines: {node: '>=18.17.0'}
 
   '@clerk/shared@2.5.2':
@@ -7618,7 +7618,7 @@ snapshots:
       '@babel/helper-validator-identifier': 7.24.7
       to-fast-properties: 2.0.0
 
-  '@clerk/backend@1.7.0(react@18.3.1)':
+  '@clerk/backend@1.8.0(react@18.3.1)':
     dependencies:
       '@clerk/shared': 2.5.2(react@18.3.1)
       '@clerk/types': 4.14.0
@@ -7629,9 +7629,9 @@ snapshots:
       - react
       - react-dom
 
-  '@clerk/clerk-sdk-node@5.0.28(react@18.3.1)':
+  '@clerk/clerk-sdk-node@5.0.29(react@18.3.1)':
     dependencies:
-      '@clerk/backend': 1.7.0(react@18.3.1)
+      '@clerk/backend': 1.8.0(react@18.3.1)
       '@clerk/shared': 2.5.2(react@18.3.1)
       '@clerk/types': 4.14.0
       tslib: 2.4.1
