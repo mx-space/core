@@ -161,10 +161,10 @@ importers:
         version: 5.1.0
       '@typegoose/auto-increment':
         specifier: 4.5.0
-        version: 4.5.0(mongoose@8.5.3(socks@2.8.3))
+        version: 4.5.0(mongoose@8.5.4(socks@2.8.3))
       '@typegoose/typegoose':
         specifier: 12.6.0
-        version: 12.6.0(mongoose@8.5.3(socks@2.8.3))
+        version: 12.6.0(mongoose@8.5.4(socks@2.8.3))
       '@types/jsonwebtoken':
         specifier: 9.0.6
         version: 9.0.6
@@ -253,20 +253,20 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       mongoose:
-        specifier: 8.5.3
-        version: 8.5.3(socks@2.8.3)
+        specifier: 8.5.4
+        version: 8.5.4(socks@2.8.3)
       mongoose-aggregate-paginate-v2:
         specifier: 1.1.2
         version: 1.1.2
       mongoose-autopopulate:
         specifier: 1.1.0
-        version: 1.1.0(mongoose@8.5.3(socks@2.8.3))
+        version: 1.1.0(mongoose@8.5.4(socks@2.8.3))
       mongoose-lean-getters:
         specifier: 2.1.1
-        version: 2.1.1(mongoose@8.5.3(socks@2.8.3))
+        version: 2.1.1(mongoose@8.5.4(socks@2.8.3))
       mongoose-lean-virtuals:
         specifier: 0.9.1
-        version: 0.9.1(mongoose@8.5.3(socks@2.8.3))
+        version: 0.9.1(mongoose@8.5.4(socks@2.8.3))
       mongoose-paginate-v2:
         specifier: 1.8.3
         version: 1.8.3
@@ -3272,10 +3272,6 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
 
-  bson@6.7.0:
-    resolution: {integrity: sha512-w2IquM5mYzYZv6rs3uN2DZTOBe2a0zXLj53TGDqwF4l6Sz/XsISrisXOJihArF9+BZ6Cq/GjVht7Sjfmri7ytQ==}
-    engines: {node: '>=16.20.1'}
-
   bson@6.8.0:
     resolution: {integrity: sha512-iOJg8pr7wq2tg/zSlCCHMi3hMm5JTOxLTagf3zxhcenHsFp+c6uOs6K7W5UE7A4QIJGtqh/ZovFNMP4mOPJynQ==}
     engines: {node: '>=16.20.1'}
@@ -5401,8 +5397,8 @@ packages:
     resolution: {integrity: sha512-Fkg9amsmtRkqUQ19kwOvw6XodkqXoySr82MkV5XPeD+1u/m68tWnDcz3xRwDPzlIsAr1ctx/4Rz/bnfD3PIJqQ==}
     engines: {node: '>=4.0.0'}
 
-  mongoose@8.5.3:
-    resolution: {integrity: sha512-OubSDbsAclDFGHjV82MsKyIGQWFc42Ot1l+0dhRS6U9xODM7rm/ES/WpOQd8Ds9j0Mx8QzxZtrSCnBh6o9wUqw==}
+  mongoose@8.5.4:
+    resolution: {integrity: sha512-nG3eehhWf9l1q80WuHvp5DV+4xDNFpDWLE5ZgcFD5tslUV2USJ56ogun8gaZ62MKAocJnoStjAdno08b8U57hg==}
     engines: {node: '>=16.20.1'}
 
   mpath@0.8.4:
@@ -9569,17 +9565,17 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
-  '@typegoose/auto-increment@4.5.0(mongoose@8.5.3(socks@2.8.3))':
+  '@typegoose/auto-increment@4.5.0(mongoose@8.5.4(socks@2.8.3))':
     dependencies:
       loglevel: 1.9.1
-      mongoose: 8.5.3(socks@2.8.3)
+      mongoose: 8.5.4(socks@2.8.3)
       tslib: 2.6.3
 
-  '@typegoose/typegoose@12.6.0(mongoose@8.5.3(socks@2.8.3))':
+  '@typegoose/typegoose@12.6.0(mongoose@8.5.4(socks@2.8.3))':
     dependencies:
       lodash: 4.17.21
       loglevel: 1.9.1
-      mongoose: 8.5.3(socks@2.8.3)
+      mongoose: 8.5.4(socks@2.8.3)
       reflect-metadata: 0.2.2
       semver: 7.6.3
       tslib: 2.6.3
@@ -9706,7 +9702,7 @@ snapshots:
   '@types/mongoose-aggregate-paginate-v2@1.0.12(socks@2.8.3)':
     dependencies:
       '@types/node': 22.5.0
-      mongoose: 8.5.3(socks@2.8.3)
+      mongoose: 8.5.4(socks@2.8.3)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@mongodb-js/zstd'
@@ -10415,8 +10411,6 @@ snapshots:
       electron-to-chromium: 1.4.808
       node-releases: 2.0.14
       update-browserslist-db: 1.0.16(browserslist@4.23.1)
-
-  bson@6.7.0: {}
 
   bson@6.8.0: {}
 
@@ -12669,26 +12663,26 @@ snapshots:
 
   mongoose-aggregate-paginate-v2@1.1.2: {}
 
-  mongoose-autopopulate@1.1.0(mongoose@8.5.3(socks@2.8.3)):
+  mongoose-autopopulate@1.1.0(mongoose@8.5.4(socks@2.8.3)):
     dependencies:
-      mongoose: 8.5.3(socks@2.8.3)
+      mongoose: 8.5.4(socks@2.8.3)
 
-  mongoose-lean-getters@2.1.1(mongoose@8.5.3(socks@2.8.3)):
+  mongoose-lean-getters@2.1.1(mongoose@8.5.4(socks@2.8.3)):
     dependencies:
-      mongoose: 8.5.3(socks@2.8.3)
+      mongoose: 8.5.4(socks@2.8.3)
       mpath: 0.9.0
 
-  mongoose-lean-virtuals@0.9.1(mongoose@8.5.3(socks@2.8.3)):
+  mongoose-lean-virtuals@0.9.1(mongoose@8.5.4(socks@2.8.3)):
     dependencies:
       array.prototype.flat: 1.2.3
-      mongoose: 8.5.3(socks@2.8.3)
+      mongoose: 8.5.4(socks@2.8.3)
       mpath: 0.8.4
 
   mongoose-paginate-v2@1.8.3: {}
 
-  mongoose@8.5.3(socks@2.8.3):
+  mongoose@8.5.4(socks@2.8.3):
     dependencies:
-      bson: 6.7.0
+      bson: 6.8.0
       kareem: 2.6.3
       mongodb: 6.8.0(socks@2.8.3)
       mpath: 0.9.0
