@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [6.1.4](https://github.com/mx-space/core/compare/v6.1.3...v6.1.4) (2024-08-23)
+
+
+### Bug Fixes
+
+* deps pin ([443e085](https://github.com/mx-space/core/commit/443e085dbda827f934b68e4bf32798a541a59fdd))
+* **deps:** update dependency @babel/types to v7.25.4 ([f2787fb](https://github.com/mx-space/core/commit/f2787fb23bf9c17b34b8f5e12defca9ccf18c11f))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.28 ([6bfe818](https://github.com/mx-space/core/commit/6bfe8181981c5510b3a9861b4af2cd3705f1a58b))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.29 ([845fea5](https://github.com/mx-space/core/commit/845fea599e6672fe6eb6508cc81e49840ef3a42f))
+* **deps:** update dependency @langchain/openai to v0.2.7 ([34383a9](https://github.com/mx-space/core/commit/34383a99cdc5444f4c8283e6e58a12f633c1137a))
+* **deps:** update dependency dayjs to v1.11.13 ([5c6fef3](https://github.com/mx-space/core/commit/5c6fef3d0bd70e82bbc7efbb417cd68a0e84c9b7))
+* **deps:** update dependency isbot to v5.1.17 ([4d86f4c](https://github.com/mx-space/core/commit/4d86f4c52ed14ff6240bd2c0046ba4e2e4fc7a40))
+* **deps:** update dependency langchain to v0.2.17 ([cddd3d9](https://github.com/mx-space/core/commit/cddd3d91c847ecaeccfb7c71470a738b0fdbe862))
+* **deps:** update dependency openai to v4.56.0 ([#2013](https://github.com/mx-space/core/issues/2013)) ([4cc5d07](https://github.com/mx-space/core/commit/4cc5d07a41ad9f5099d4ad319def791c1b3b3f6d))
+
+
+
 ## [6.1.3](https://github.com/mx-space/core/compare/v6.1.2...v6.1.3) (2024-08-16)
 
 
