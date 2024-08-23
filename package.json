@@ -1,25 +1,13 @@
 {
-  "author": "Innei <https://innei.in>",
   "private": true,
-  "license": "AGPLv3",
   "packageManager": "pnpm@9.7.1",
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint --cache --fix",
-      "prettier --ignore-path ./.prettierignore --write "
-    ]
-  },
+  "license": "AGPLv3",
+  "homepage": "https://github.com/mx-space/core#readme",
   "repository": {
     "directory": "mx-space/core",
     "url": "https://github.com/mx-space/core"
   },
-  "homepage": "https://github.com/mx-space/core#readme",
-  "issues": "https://github.com/mx-space/core/issues",
+  "author": "Innei <https://innei.in>",
   "scripts": {
     "format": "prettier --write \"apps/**/*.ts\" \"test/**/*.ts\" \"packages/**/*.ts\"",
     "prepare": "husky install && node scripts/init-project.mjs && corepack enable",
@@ -30,6 +18,10 @@
     "test": "pnpm run build:external && pnpm -C \"apps/core\" run test",
     "lint": "pnpm -C \"apps/core\" run lint",
     "publish:core": "cd apps/core && npm run publish"
+  },
+  "optionalDependencies": {
+    "mongodb-memory-server": "10.0.0",
+    "redis-memory-server": "0.11.0"
   },
   "dependencies": {
     "zx-cjs": "7.0.7-0"
@@ -51,14 +43,23 @@
     "typescript": "5.5.4",
     "vite-tsconfig-paths": "4.3.2"
   },
-  "optionalDependencies": {
-    "mongodb-memory-server": "10.0.0",
-    "redis-memory-server": "0.11.0"
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --cache --fix",
+      "prettier --ignore-path ./.prettierignore --write "
+    ]
+  },
+  "issues": "https://github.com/mx-space/core/issues",
   "resolutions": {
-    "semver": "7.6.3",
-    "pino": "./external/pino",
     "get-pixels@^3>request": "./external/request",
+    "mongodb": "6.8.0",
+    "pino": "./external/pino",
+    "semver": "7.6.3",
     "typescript": "5.5.4",
     "whatwg-url": "14.0.0"
   }
