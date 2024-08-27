@@ -5,10 +5,12 @@ import { LOG_DIR } from '~/constants/path.constant'
 import { isTest } from './env.global'
 
 const logger = createLogger({
-  writeToFile: {
-    loggerDir: LOG_DIR,
-    errWriteToStdout: true,
-  },
+  writeToFile: !isTest
+    ? {
+        loggerDir: LOG_DIR,
+        errWriteToStdout: true,
+      }
+    : undefined,
 })
 Logger.setLoggerInstance(logger)
 if (!isTest) {

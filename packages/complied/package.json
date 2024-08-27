@@ -5,12 +5,16 @@
   "main": "dist/index.cjs",
   "exports": {
     ".": "./dist/index.cjs",
-    "./zx-global": "./zx-global.cjs"
+    "./zx-global": "./zx-global.cjs",
+    "./auth": "./dist/auth.cjs"
   },
   "scripts": {
     "build": "tsup"
   },
+  "dependencies": {},
   "devDependencies": {
+    "@auth/core": "0.34.2",
+    "@auth/mongodb-adapter": "3.4.2",
     "nanoid": "5.0.7",
     "zx": "7.2.3"
   }

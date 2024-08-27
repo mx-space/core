@@ -79,7 +79,7 @@ import { RedisModule } from './processors/redis/redis.module'
     ActivityModule,
     AggregateModule,
     AnalyzeModule,
-    AuthModule,
+    AuthModule.forRoot(),
     AuthnModule,
     BackupModule,
     BizHelperModule,
