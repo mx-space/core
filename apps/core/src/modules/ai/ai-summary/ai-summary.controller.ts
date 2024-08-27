@@ -74,11 +74,18 @@ export class AiSummaryController {
   ) {
     const acceptLang = req.headers['accept-language']
     const nextLang = query.lang || acceptLang
-    const finalLang = nextLang?.split('-').shift() || DEFAULT_SUMMARY_LANG
+    const autoDetectedLanguage =
+      nextLang?.split('-').shift() || DEFAULT_SUMMARY_LANG
+    const targetLanguage = await this.configService
+      .get('ai')
+      .then((c) => c.aiSummaryTargetLanguage)
+      .then((targetLanguage) =>
+        targetLanguage === 'auto' ? autoDetectedLanguage : targetLanguage,
+      )
 
     const dbStored = await this.service.getSummaryByArticleId(
       params.id,
-      finalLang,
+      targetLanguage,
     )
 
     const aiConfig = await this.configService.get('ai')
@@ -86,7 +93,7 @@ export class AiSummaryController {
       const shouldGenerate =
         aiConfig?.enableAutoGenerateSummary && aiConfig.enableSummary
       if (shouldGenerate) {
-        return this.service.generateSummaryByOpenAI(params.id, finalLang)
+        return this.service.generateSummaryByOpenAI(params.id, targetLanguage)
       }
     }
 

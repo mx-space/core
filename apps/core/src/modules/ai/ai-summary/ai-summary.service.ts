@@ -85,10 +85,7 @@ export class AiSummaryService {
 
     return (result as any).summary
   }
-  async generateSummaryByOpenAI(
-    articleId: string,
-    lang = DEFAULT_SUMMARY_LANG,
-  ) {
+  async generateSummaryByOpenAI(articleId: string, lang: string) {
     const {
       ai: { enableSummary },
     } = await this.configService.waitForConfigReady()
@@ -196,31 +193,29 @@ export class AiSummaryService {
     }
   }
 
-  private getRefArticles(docs: AISummaryModel[]) {
-    return this.databaseService
-      .findGlobalByIds(docs.map((d) => d.refId))
-      .then((articles) => {
-        const articleMap = {} as Record<
-          string,
-          { title: string; id: string; type: CollectionRefTypes }
-        >
-        for (const a of articles.notes) {
-          articleMap[a.id] = {
-            title: a.title,
-            id: a.id,
-            type: CollectionRefTypes.Note,
-          }
-        }
-
-        for (const a of articles.posts) {
-          articleMap[a.id] = {
-            title: a.title,
-            id: a.id,
-            type: CollectionRefTypes.Post,
-          }
-        }
-        return articleMap
-      })
+  private async getRefArticles(docs: AISummaryModel[]) {
+    const articles = await this.databaseService.findGlobalByIds(
+      docs.map((d) => d.refId),
+    )
+    const articleMap = {} as Record<
+      string,
+      { title: string; id: string; type: CollectionRefTypes }
+    >
+    for (const a of articles.notes) {
+      articleMap[a.id] = {
+        title: a.title,
+        id: a.id,
+        type: CollectionRefTypes.Note,
+      }
+    }
+    for (const a_1 of articles.posts) {
+      articleMap[a_1.id] = {
+        title: a_1.title,
+        id: a_1.id,
+        type: CollectionRefTypes.Post,
+      }
+    }
+    return articleMap
   }
 
   async updateSummaryInDb(id: string, summary: string) {
@@ -280,6 +275,13 @@ export class AiSummaryService {
     if (!enableAutoGenerate) {
       return
     }
-    await this.generateSummaryByOpenAI(event.id)
+    const targetLanguage = await this.configService
+      .get('ai')
+      .then((c) => c.aiSummaryTargetLanguage)
+
+    await this.generateSummaryByOpenAI(
+      event.id,
+      targetLanguage === 'auto' ? DEFAULT_SUMMARY_LANG : targetLanguage,
+    )
   }
 }

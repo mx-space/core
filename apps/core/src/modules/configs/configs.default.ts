@@ -83,5 +83,6 @@ export const generateDefaultConfig: () => IConfig = () => ({
     openAiEndpoint: '',
     openAiPreferredModel: 'gpt-3.5-turbo',
     openAiKey: '',
+    aiSummaryTargetLanguage: 'auto',
   },
 })
