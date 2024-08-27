@@ -1,4 +1,4 @@
-import { sleep } from '@mx-space/external'
+import { sleep } from '@mx-space/complied'
 
 export function scheduleMicrotask(callback: () => void) {
   sleep(0).then(callback)

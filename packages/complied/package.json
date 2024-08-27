@@ -1,16 +1,17 @@
 {
-  "name": "@mx-space/external",
+  "name": "@mx-space/complied",
+  "private": true,
   "type": "module",
   "main": "dist/index.cjs",
+  "exports": {
+    ".": "./dist/index.cjs",
+    "./zx-global": "./zx-global.cjs"
+  },
   "scripts": {
     "build": "tsup"
   },
   "devDependencies": {
     "nanoid": "5.0.7",
     "zx": "7.2.3"
-  },
-  "exports": {
-    ".": "./dist/index.cjs",
-    "./zx-global": "./zx-global.cjs"
   }
 }

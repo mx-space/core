@@ -397,45 +397,6 @@ export class ServerlessService implements OnModuleInit {
         )
       }
 
-      // 2. if application third part lib
-
-      // const trustPackagePrefixes = ['@innei/', '@mx-space/', 'mx-function-']
-
-      // if (trustPackagePrefixes.some((prefix) => id.startsWith(prefix))) {
-      //   return __require(id)
-      // }
-
-      // 3. mock built-in module
-
-      // const mockModules = {
-      //   fs: {
-      //     writeFile: globalContext.context.writeAsset,
-      //     readFile: globalContext.context.readAsset,
-      //   },
-      // }
-
-      // if (Object.keys(mockModules).includes(id)) {
-      //   return mockModules[id]
-      // }
-
-      // fin. is built-in module
-      // const module = isBuiltinModule(id, [
-      //   'child_process',
-      //   'cluster',
-      //   'fs',
-      //   'fs/promises',
-      //   'os',
-      //   'process',
-      //   'sys',
-      //   'v8',
-      //   'vm',
-      // ])
-      // if (!module) {
-      //   throw new Error(`cannot require ${id}`)
-      // } else {
-      //   return __require(id)
-      // }
-
       const bannedLibs = [
         'child_process',
         'cluster',
@@ -495,15 +456,14 @@ export class ServerlessService implements OnModuleInit {
       reference: model.reference,
     }
 
+    const require = this.createNewContextRequire()
     if (this.cleanableScope.scopeContextLRU.has(scope)) {
       const context = this.cleanableScope.scopeContextLRU.get(scope)
 
       return Object.assign({}, context, {
-        context: { ...context.context, ...requestContext },
+        context: { ...context.context, ...requestContext, require },
       })
     }
-
-    const require = this.createNewContextRequire()
 
     const createdContext = {
       context: {

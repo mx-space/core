@@ -7,7 +7,7 @@ import type { TokenModel, UserModel } from '~/modules/user/user.model'
 import type { TokenDto } from './auth.controller'
 
 import { createClerkClient } from '@clerk/clerk-sdk-node'
-import { nanoid } from '@mx-space/external'
+import { nanoid } from '@mx-space/complied'
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
