@@ -1,3 +1,5 @@
+import type { ImageModel } from '~/shared/model/image.model'
+
 export interface RSSProps {
   title: string
   url: string
@@ -10,5 +12,6 @@ export interface RSSProps {
     title: string
     text: string
     id: string
+    images: ImageModel[]
   }[]
 }

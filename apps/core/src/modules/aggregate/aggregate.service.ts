@@ -333,6 +333,7 @@ export class AggregateService {
         created: post.created!,
         modified: post.modified,
         link: baseURL + this.urlService.build(post),
+        images: post.images || [],
       }
     })
     const notesRss: RSSProps['data'] = notes.map((note) => {
@@ -343,6 +344,7 @@ export class AggregateService {
         created: note.created!,
         modified: note.modified,
         link: baseURL + this.urlService.build(note),
+        images: note.images || [],
       }
     })
 
