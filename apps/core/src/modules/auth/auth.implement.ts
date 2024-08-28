@@ -39,7 +39,12 @@ async function toServerResponse(
   res: ServerResponse,
 ) {
   response.headers.forEach((value, key) => {
-    if (value) {
+    if (!value) {
+      return
+    }
+    if (res.hasHeader(key)) {
+      res.appendHeader(key, value)
+    } else {
       res.setHeader(key, value)
     }
   })
