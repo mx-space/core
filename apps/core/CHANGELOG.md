@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## [6.1.5](https://github.com/mx-space/core/compare/v6.1.4...v6.1.5) (2024-08-28)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @antfu/install-pkg to v0.4.1 ([fc9eef9](https://github.com/mx-space/core/commit/fc9eef989e26d6f7574fafbbfc5054beb024a0eb))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.30 ([79b9c84](https://github.com/mx-space/core/commit/79b9c84797f23635e9fca26f46f3b96fea00a99b))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.31 ([0f8ae33](https://github.com/mx-space/core/commit/0f8ae3341baf39d319a92acfcec79278aa3426f7))
+* **deps:** update dependency @langchain/openai to v0.2.8 ([f2d247b](https://github.com/mx-space/core/commit/f2d247ba8c8d7118b1d23b52697963dcb41c0269))
+* **deps:** update dependency mongoose to v8.5.4 ([3b19040](https://github.com/mx-space/core/commit/3b190405652741d35c4b741a1df21eac08ef3cf0))
+* **deps:** update dependency openai to v4.56.1 ([b935ee5](https://github.com/mx-space/core/commit/b935ee5fe5211d36eb48db0d5e5008818acfb0cc))
+
+
+### Features
+
+* add ai target language ([638deb3](https://github.com/mx-space/core/commit/638deb30100c79ecb023a5e586f2960ed620e51c))
+
+
+
 ## [6.1.4](https://github.com/mx-space/core/compare/v6.1.3...v6.1.4) (2024-08-23)
 
 
