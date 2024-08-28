@@ -20,5 +20,10 @@ export const authConfig: ServerAuthConfig = {
   experimental: {
     enableWebAuthn: true,
   },
-  adapter: MongoDBAdapter(getDatabaseConnection().then((c) => c.getClient())),
+  adapter: MongoDBAdapter(
+    getDatabaseConnection().then((c) => c.getClient()),
+    {
+      collections: { Users: 'readers' },
+    },
+  ),
 }

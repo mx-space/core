@@ -478,14 +478,13 @@ importers:
         version: 1.5.2(@types/node@22.5.1)(terser@5.31.6)
 
   packages/complied:
-    dependencies:
+    devDependencies:
       '@auth/core':
         specifier: 0.34.2
         version: 0.34.2(nodemailer@6.9.14)
       '@auth/mongodb-adapter':
         specifier: 3.4.2
         version: 3.4.2(mongodb@6.8.0(socks@2.8.3))(nodemailer@6.9.14)
-    devDependencies:
       nanoid:
         specifier: 5.0.7
         version: 5.0.7

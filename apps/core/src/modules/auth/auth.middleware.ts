@@ -25,12 +25,10 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
     @Inject(AuthConfigInjectKey) private readonly config: ServerAuthConfig,
     private readonly redisSub: SubPubBridgeService,
     private readonly configService: ConfigsService,
-  ) {
-    if (this.config.providers.length) this.authHandler = CreateAuth(this.config)
-  }
+  ) {}
 
-  onModuleInit() {
-    this.redisSub.subscribe(EventBusEvents.OauthChanged, async () => {
+  async onModuleInit() {
+    const handler = async () => {
       const oauth = await this.configService.get('oauth')
 
       const providers = [] as AuthConfig['providers']
@@ -56,7 +54,9 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
 
       this.config.providers = providers
       this.authHandler = CreateAuth(this.config)
-    })
+    }
+    this.redisSub.subscribe(EventBusEvents.OauthChanged, handler)
+    await handler()
   }
 
   async use(req: IncomingMessage, res: ServerResponse, next: () => void) {
