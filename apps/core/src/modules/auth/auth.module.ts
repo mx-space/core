@@ -20,19 +20,17 @@ export class AuthModule implements NestModule {
   ) {}
   static forRoot(config?: ServerAuthConfig): DynamicModule {
     const finalConfig = merge(authConfig, config)
+    const provider = {
+      provide: AuthConfigInjectKey,
+      useValue: finalConfig,
+    }
     return {
       controllers: [AuthController],
-      exports: [AuthService],
+      exports: [AuthService, provider],
       module: AuthModule,
       global: true,
 
-      providers: [
-        AuthService,
-        {
-          provide: AuthConfigInjectKey,
-          useValue: finalConfig,
-        },
-      ],
+      providers: [provider, AuthService],
     }
   }
 

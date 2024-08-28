@@ -1,18 +1,18 @@
 {
   "name": "@mx-space/core",
-  "version": "6.1.5",
-  "author": "Innei <https://innei.in>",
+  "version": "6.1.4",
   "private": true,
   "license": "AGPLv3",
-  "dashboard": {
-    "repo": "mx-space/mx-admin",
-    "version": "4.6.2"
-  },
+  "homepage": "https://github.com/mx-space/core/tree/master/apps/core#readme",
   "repository": {
     "directory": "mx-space/core",
     "url": "https://github.com/mx-space/core"
   },
-  "homepage": "https://github.com/mx-space/core/tree/master/apps/core#readme",
+  "author": "Innei <https://innei.in>",
+  "dashboard": {
+    "repo": "mx-space/mx-admin",
+    "version": "4.6.1"
+  },
   "issues": "https://github.com/mx-space/core/issues",
   "scripts": {
     "prebuild": "rimraf dist",
@@ -46,6 +46,10 @@
     ],
     "changelog": true
   },
+  "optionalDependencies": {
+    "mongodb-memory-server": "^10.0.0",
+    "redis-memory-server": "^0.11.0"
+  },
   "dependencies": {
     "@algolia/client-search": "^4.22.1",
     "@antfu/install-pkg": "0.4.1",
@@ -54,7 +58,6 @@
     "@babel/plugin-transform-modules-commonjs": "7.24.8",
     "@babel/plugin-transform-typescript": "7.25.2",
     "@babel/types": "^7.25.4",
-    "@clerk/clerk-sdk-node": "5.0.32",
     "@fastify/cookie": "9.4.0",
     "@fastify/multipart": "8.3.0",
     "@fastify/static": "7.0.4",
@@ -165,9 +168,5 @@
     "vite-tsconfig-paths": "4.3.2",
     "vitest": "1.5.2",
     "zx": "7.2.3"
-  },
-  "optionalDependencies": {
-    "mongodb-memory-server": "^10.0.0",
-    "redis-memory-server": "^0.11.0"
   }
 }

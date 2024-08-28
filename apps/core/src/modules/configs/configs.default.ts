@@ -68,12 +68,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     xLogSiteId: '',
     githubToken: '',
   },
-  clerkOptions: {
-    enable: false,
-    adminUserId: '',
-    pemKey: '',
-    secretKey: '',
-  },
+
   authSecurity: {
     disablePasswordLogin: false,
   },

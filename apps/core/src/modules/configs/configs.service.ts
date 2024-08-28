@@ -4,14 +4,7 @@ import { validateSync } from 'class-validator'
 import { cloneDeep, merge, mergeWith } from 'lodash'
 import type { ClassConstructor } from 'class-transformer'
 
-import { createClerkClient } from '@clerk/clerk-sdk-node'
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  Logger,
-  UnprocessableEntityException,
-} from '@nestjs/common'
+import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
@@ -230,37 +223,6 @@ export class ConfigsService {
         return option
       }
 
-      case 'clerkOptions': {
-        const originalUserId = (await this.get('clerkOptions')).adminUserId
-
-        const option = await this.patch(key as 'clerkOptions', instanceValue)
-        if (option.enable) {
-          if (!option.adminUserId || !option.pemKey || !option.secretKey) {
-            throw new UnprocessableEntityException('请填写完整 Clerk 鉴权信息')
-          }
-
-          const clerk = createClerkClient({
-            secretKey: option.secretKey,
-          })
-
-          if (originalUserId !== option.adminUserId) {
-            // 1. revoke clerk api to update user role
-            await clerk.users.updateUser(option.adminUserId, {
-              publicMetadata: {
-                role: 'guest',
-              },
-            })
-            // 2. update user role
-            await clerk.users.updateUser(option.adminUserId, {
-              publicMetadata: {
-                role: 'admin',
-              },
-            })
-          }
-        }
-
-        return option
-      }
       case 'oauth': {
         const value = instanceValue as OAuthDto
         const current = await this.get('oauth')

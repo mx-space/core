@@ -8,6 +8,8 @@ import { SECURITY } from '~/app.config.test'
 import { isDev } from '~/global/env.global'
 import { getDatabaseConnection } from '~/utils/database.util'
 
+import { AUTH_JS_USER_COLLECTION } from './auth.constant'
+
 export const authConfig: ServerAuthConfig = {
   basePath: isDev ? '/auth' : `/api/v${API_VERSION}/auth`,
   secret: SECURITY.jwtSecret || machineIdSync(),
@@ -23,7 +25,7 @@ export const authConfig: ServerAuthConfig = {
   adapter: MongoDBAdapter(
     getDatabaseConnection().then((c) => c.getClient()),
     {
-      collections: { Users: 'readers' },
+      collections: { Users: AUTH_JS_USER_COLLECTION },
     },
   ),
 }

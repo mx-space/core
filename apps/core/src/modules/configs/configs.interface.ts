@@ -15,7 +15,6 @@ import {
   BackupOptionsDto,
   BaiduSearchOptionsDto,
   BarkOptionsDto,
-  ClerkOptionsDto,
   CommentOptionsDto,
   FeatureListDto,
   FriendLinkOptionsDto,
@@ -70,9 +69,6 @@ export abstract class IConfig {
   baiduSearchOptions: Required<BaiduSearchOptionsDto>
   @ConfigField(() => AlgoliaSearchOptionsDto)
   algoliaSearchOptions: Required<AlgoliaSearchOptionsDto>
-
-  @ConfigField(() => ClerkOptionsDto)
-  clerkOptions: ClerkOptionsDto
 
   @ConfigField(() => FeatureListDto)
   featureList: Required<FeatureListDto>
