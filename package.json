@@ -29,7 +29,7 @@
   "devDependencies": {
     "@innei/prettier": "0.15.0",
     "@sxzz/eslint-config": "3.17.4",
-    "@types/node": "20.16.1",
+    "@types/node": "20.16.2",
     "cross-env": "7.0.3",
     "eslint": "^9",
     "eslint-plugin-unused-imports": "4.1.3",
