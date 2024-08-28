@@ -1,7 +1,7 @@
 import cluster from 'node:cluster'
 import { plainToInstance } from 'class-transformer'
 import { validateSync } from 'class-validator'
-import { cloneDeep, mergeWith } from 'lodash'
+import { cloneDeep, merge, mergeWith } from 'lodash'
 import type { ClassConstructor } from 'class-transformer'
 
 import { createClerkClient } from '@clerk/clerk-sdk-node'
@@ -27,6 +27,7 @@ import { getRedisKey } from '~/utils/redis.util'
 import { camelcaseKeys } from '~/utils/tool.util'
 
 import { generateDefaultConfig } from './configs.default'
+import { OAuthDto } from './configs.dto'
 import { decryptObject, encryptObject } from './configs.encrypt.util'
 import { configDtoMapping, IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
@@ -260,23 +261,28 @@ export class ConfigsService {
 
         return option
       }
+      case 'oauth': {
+        const value = instanceValue as OAuthDto
+        const current = await this.get('oauth')
 
-      // case 'authSecurity': {
-      // const typedInstanceValue = instanceValue as IConfig['authSecurity']
-      // if (typedInstanceValue && typedInstanceValue.disablePasswordLogin) {
-      //   // check pre requirement
+        let nextAuthSecrets = value.secrets
+        if (value.secrets) {
+          nextAuthSecrets = merge(current.secrets, nextAuthSecrets)
+        }
 
-      //   const clerkAuthEnabled = (await this.get('clerkOptions')).enable
-      //   // TODO check passkey is exists
-      //   if (!clerkAuthEnabled) {
-      //     throw new BadRequestException(
-      //       '禁用密码登录需要至少开启 Clerk 或者 PassKey 登录的一项',
-      //     )
-      //   }
-      // }
+        let nextAuthPublic = value.public
+        if (value.public) {
+          nextAuthPublic = merge(current.public, nextAuthPublic)
+        }
+        const option = await this.patch(key as 'oauth', {
+          providers: value.providers,
+          secrets: nextAuthSecrets,
+          public: nextAuthPublic,
+        })
 
-      //   return this.patch(key, instanceValue)
-      // }
+        this.subpub.publish(EventBusEvents.OauthChanged, option)
+        return option
+      }
 
       default: {
         return this.patch(key, instanceValue)

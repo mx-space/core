@@ -85,4 +85,9 @@ export const generateDefaultConfig: () => IConfig = () => ({
     openAiKey: '',
     aiSummaryTargetLanguage: 'auto',
   },
+  oauth: {
+    providers: [],
+    secrets: {},
+    public: {},
+  },
 })

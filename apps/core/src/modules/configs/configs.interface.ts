@@ -20,6 +20,7 @@ import {
   FeatureListDto,
   FriendLinkOptionsDto,
   MailOptionsDto,
+  OAuthDto,
   SeoDto,
   TextOptionsDto,
   ThirdPartyServiceIntegrationDto,
@@ -84,6 +85,9 @@ export abstract class IConfig {
 
   @ConfigField(() => AIDto)
   ai: AIDto
+
+  @ConfigField(() => OAuthDto)
+  oauth: OAuthDto
 }
 
 export type IConfigKeys = keyof IConfig

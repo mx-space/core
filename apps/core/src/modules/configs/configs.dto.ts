@@ -6,6 +6,7 @@ import {
   IsInt,
   IsIP,
   IsNotEmpty,
+  IsObject,
   IsOptional,
   IsString,
   IsUrl,
@@ -429,4 +430,29 @@ export class AIDto {
       '生成的摘要目标语言，默认为 `auto`，根据用户的语言自动选择；如果需要固定语言，请填写 [ISO 639-1 语言代码](https://www.w3schools.com/tags/ref_language_codes.asp)',
   })
   aiSummaryTargetLanguage: string
+}
+
+export class OAuthDto {
+  @IsObject({ each: true })
+  @Type(() => OAuthProviderDto)
+  @IsOptional()
+  providers: OAuthProviderDto[]
+
+  @IsObject()
+  @IsOptional()
+  @SecretField
+  secrets: Record<string, Record<string, string>>
+
+  @IsObject()
+  @IsOptional()
+  public: Record<string, Record<string, string>>
+}
+
+class OAuthProviderDto {
+  @IsString()
+  @IsNotEmpty()
+  type: string
+
+  @IsBoolean()
+  enabled: boolean
 }

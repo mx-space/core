@@ -5,4 +5,5 @@ export enum EventBusEvents {
   CleanAggregateCache = 'cache.aggregate',
   SystemException = 'system.exception',
   ConfigChanged = 'config.changed',
+  OauthChanged = 'oauth.changed',
 }
