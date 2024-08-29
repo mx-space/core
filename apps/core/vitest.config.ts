@@ -21,7 +21,6 @@ export default defineConfig({
   test: {
     include: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
 
-    threads: false,
     globals: true,
     globalSetup: [resolve(__dirname, './test/setup.ts')],
     setupFiles: [resolve(__dirname, './test/setup-global.ts')],
@@ -42,6 +41,10 @@ export default defineConfig({
       '@mx-space/complied': resolve(
         __dirname,
         '../../packages/complied/index.ts',
+      ),
+      '@mx-space/complied/auth': resolve(
+        __dirname,
+        '../../packages/complied/auth.ts',
       ),
     },
   },
