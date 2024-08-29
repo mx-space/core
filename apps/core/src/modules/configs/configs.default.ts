@@ -68,12 +68,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     xLogSiteId: '',
     githubToken: '',
   },
-  clerkOptions: {
-    enable: false,
-    adminUserId: '',
-    pemKey: '',
-    secretKey: '',
-  },
+
   authSecurity: {
     disablePasswordLogin: false,
   },
@@ -84,5 +79,10 @@ export const generateDefaultConfig: () => IConfig = () => ({
     openAiPreferredModel: 'gpt-3.5-turbo',
     openAiKey: '',
     aiSummaryTargetLanguage: 'auto',
+  },
+  oauth: {
+    providers: [],
+    secrets: {},
+    public: {},
   },
 })

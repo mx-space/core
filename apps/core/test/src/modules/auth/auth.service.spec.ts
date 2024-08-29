@@ -3,8 +3,10 @@ import { vi } from 'vitest'
 import { configProvider } from '@/mock/modules/config.mock'
 import { Test } from '@nestjs/testing'
 
+import { AuthConfigInjectKey } from '~/modules/auth/auth.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { UserModel } from '~/modules/user/user.model'
+import { DatabaseService } from '~/processors/database/database.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getModelToken } from '~/transformers/model.transformer'
@@ -32,6 +34,16 @@ describe('Test AuthService', () => {
         },
         configProvider,
         AuthService,
+        {
+          provide: AuthConfigInjectKey,
+          useValue: {},
+        },
+        {
+          provide: DatabaseService,
+          useValue: {
+            db: {},
+          },
+        },
         {
           provide: getModelToken(UserModel.name),
           useValue: {

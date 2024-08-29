@@ -22,6 +22,7 @@ import {
   CurrentUserToken,
 } from '~/common/decorators/current-user.decorator'
 import { BanInDemo } from '~/common/decorators/demo.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { getAvatar } from '~/utils/tool.util'
@@ -76,17 +77,27 @@ export class UserController {
 
   @Get('/allow-login')
   @HttpCache({ disable: true })
+  @HTTPDecorators.Bypass
   async allowLogin() {
-    const [allowPasswordLogin, canAuthByPasskey] = await Promise.all([
-      this.configService
-        .get('authSecurity')
-        .then((config) => config.disablePasswordLogin === false),
-      this.authnService.hasAuthnItem(),
-    ])
+    const [allowPasswordLogin, canAuthByPasskey, oauthProviders] =
+      await Promise.all([
+        this.configService
+          .get('authSecurity')
+          .then((config) => config.disablePasswordLogin === false),
+        this.authnService.hasAuthnItem(),
+        this.authService.getOauthProviders(),
+      ])
 
     return {
       password: isDev ? true : allowPasswordLogin,
       passkey: canAuthByPasskey,
+      ...oauthProviders.reduce(
+        (acc, cur) => {
+          acc[cur.toLowerCase()] = true
+          return acc
+        },
+        {} as Record<string, boolean>,
+      ),
     }
   }
 

@@ -15,11 +15,11 @@ import {
   BackupOptionsDto,
   BaiduSearchOptionsDto,
   BarkOptionsDto,
-  ClerkOptionsDto,
   CommentOptionsDto,
   FeatureListDto,
   FriendLinkOptionsDto,
   MailOptionsDto,
+  OAuthDto,
   SeoDto,
   TextOptionsDto,
   ThirdPartyServiceIntegrationDto,
@@ -70,9 +70,6 @@ export abstract class IConfig {
   @ConfigField(() => AlgoliaSearchOptionsDto)
   algoliaSearchOptions: Required<AlgoliaSearchOptionsDto>
 
-  @ConfigField(() => ClerkOptionsDto)
-  clerkOptions: ClerkOptionsDto
-
   @ConfigField(() => FeatureListDto)
   featureList: Required<FeatureListDto>
 
@@ -84,6 +81,9 @@ export abstract class IConfig {
 
   @ConfigField(() => AIDto)
   ai: AIDto
+
+  @ConfigField(() => OAuthDto)
+  oauth: OAuthDto
 }
 
 export type IConfigKeys = keyof IConfig

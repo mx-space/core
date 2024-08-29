@@ -1,17 +1,10 @@
 import cluster from 'node:cluster'
 import { plainToInstance } from 'class-transformer'
 import { validateSync } from 'class-validator'
-import { cloneDeep, mergeWith } from 'lodash'
+import { cloneDeep, merge, mergeWith } from 'lodash'
 import type { ClassConstructor } from 'class-transformer'
 
-import { createClerkClient } from '@clerk/clerk-sdk-node'
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  Logger,
-  UnprocessableEntityException,
-} from '@nestjs/common'
+import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
@@ -27,6 +20,7 @@ import { getRedisKey } from '~/utils/redis.util'
 import { camelcaseKeys } from '~/utils/tool.util'
 
 import { generateDefaultConfig } from './configs.default'
+import { OAuthDto } from './configs.dto'
 import { decryptObject, encryptObject } from './configs.encrypt.util'
 import { configDtoMapping, IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
@@ -229,54 +223,28 @@ export class ConfigsService {
         return option
       }
 
-      case 'clerkOptions': {
-        const originalUserId = (await this.get('clerkOptions')).adminUserId
+      case 'oauth': {
+        const value = instanceValue as OAuthDto
+        const current = await this.get('oauth')
 
-        const option = await this.patch(key as 'clerkOptions', instanceValue)
-        if (option.enable) {
-          if (!option.adminUserId || !option.pemKey || !option.secretKey) {
-            throw new UnprocessableEntityException('请填写完整 Clerk 鉴权信息')
-          }
-
-          const clerk = createClerkClient({
-            secretKey: option.secretKey,
-          })
-
-          if (originalUserId !== option.adminUserId) {
-            // 1. revoke clerk api to update user role
-            await clerk.users.updateUser(option.adminUserId, {
-              publicMetadata: {
-                role: 'guest',
-              },
-            })
-            // 2. update user role
-            await clerk.users.updateUser(option.adminUserId, {
-              publicMetadata: {
-                role: 'admin',
-              },
-            })
-          }
+        let nextAuthSecrets = value.secrets
+        if (value.secrets) {
+          nextAuthSecrets = merge(current.secrets, nextAuthSecrets)
         }
 
+        let nextAuthPublic = value.public
+        if (value.public) {
+          nextAuthPublic = merge(current.public, nextAuthPublic)
+        }
+        const option = await this.patch(key as 'oauth', {
+          providers: value.providers,
+          secrets: nextAuthSecrets,
+          public: nextAuthPublic,
+        })
+
+        this.subpub.publish(EventBusEvents.OauthChanged, option)
         return option
       }
-
-      // case 'authSecurity': {
-      // const typedInstanceValue = instanceValue as IConfig['authSecurity']
-      // if (typedInstanceValue && typedInstanceValue.disablePasswordLogin) {
-      //   // check pre requirement
-
-      //   const clerkAuthEnabled = (await this.get('clerkOptions')).enable
-      //   // TODO check passkey is exists
-      //   if (!clerkAuthEnabled) {
-      //     throw new BadRequestException(
-      //       '禁用密码登录需要至少开启 Clerk 或者 PassKey 登录的一项',
-      //     )
-      //   }
-      // }
-
-      //   return this.patch(key, instanceValue)
-      // }
 
       default: {
         return this.patch(key, instanceValue)

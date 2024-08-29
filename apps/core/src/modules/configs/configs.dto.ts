@@ -6,6 +6,7 @@ import {
   IsInt,
   IsIP,
   IsNotEmpty,
+  IsObject,
   IsOptional,
   IsString,
   IsUrl,
@@ -25,7 +26,6 @@ import {
   JSONSchemaNumberField,
   JSONSchemaPasswordField,
   JSONSchemaPlainField,
-  JSONSchemaTextAreaField,
   JSONSchemaToggleField,
 } from './configs.jsonschema.decorator'
 
@@ -320,38 +320,6 @@ export class FeatureListDto {
   emailSubscribe: boolean
 }
 
-@JSONSchema({ title: 'Clerk 鉴权绑定' })
-export class ClerkOptionsDto {
-  @JSONSchemaToggleField('开启 Clerk 鉴权')
-  @IsBoolean()
-  @IsOptional()
-  enable: boolean
-
-  @JSONSchemaPlainField('Clerk User Id', {
-    description: '设置此 Id 后，可以通过 Clerk 鉴权登录',
-  })
-  @IsString()
-  @IsOptional()
-  adminUserId: string
-
-  @JSONSchemaTextAreaField('Clerk JWT PEM Key', {
-    description:
-      '阅读文档获取：[verify-the-token-signature](https://clerk.com/docs/backend-requests/handling/manual-jwt#verify-the-token-signature)',
-  })
-  @IsString()
-  @IsOptional()
-  @SecretField
-  pemKey: string
-
-  @JSONSchemaPasswordField('Clerk Secret Key', {
-    description: '同上获取方式',
-  })
-  @IsString()
-  @IsOptional()
-  @SecretField
-  secretKey: string
-}
-
 /**
  * 第三方服务集成
  */
@@ -378,7 +346,7 @@ export class ThirdPartyServiceIntegrationDto {
 export class AuthSecurityDto {
   @JSONSchemaToggleField('禁用密码登录', {
     description:
-      '禁用密码登录，只能通过 PassKey or Clerk 登录，如果没有配置这些请不要开启',
+      '禁用密码登录，只能通过 PassKey or Oauth 登录，如果没有配置这些请不要开启',
   })
   @IsBoolean()
   @IsOptional()
@@ -429,4 +397,29 @@ export class AIDto {
       '生成的摘要目标语言，默认为 `auto`，根据用户的语言自动选择；如果需要固定语言，请填写 [ISO 639-1 语言代码](https://www.w3schools.com/tags/ref_language_codes.asp)',
   })
   aiSummaryTargetLanguage: string
+}
+
+export class OAuthDto {
+  @IsObject({ each: true })
+  @Type(() => OAuthProviderDto)
+  @IsOptional()
+  providers: OAuthProviderDto[]
+
+  @IsObject()
+  @IsOptional()
+  @SecretField
+  secrets: Record<string, Record<string, string>>
+
+  @IsObject()
+  @IsOptional()
+  public: Record<string, Record<string, string>>
+}
+
+class OAuthProviderDto {
+  @IsString()
+  @IsNotEmpty()
+  type: string
+
+  @IsBoolean()
+  enabled: boolean
 }

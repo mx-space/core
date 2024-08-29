@@ -48,6 +48,7 @@ import { PageModule } from './modules/page/page.module'
 import { PageProxyModule } from './modules/pageproxy/pageproxy.module'
 import { PostModule } from './modules/post/post.module'
 import { ProjectModule } from './modules/project/project.module'
+import { ReaderModule } from './modules/reader/reader.module'
 import { RecentlyModule } from './modules/recently/recently.module'
 import { RenderEjsModule } from './modules/render/render.module'
 import { SayModule } from './modules/say/say.module'
@@ -79,7 +80,7 @@ import { RedisModule } from './processors/redis/redis.module'
     ActivityModule,
     AggregateModule,
     AnalyzeModule,
-    AuthModule,
+    AuthModule.forRoot(),
     AuthnModule,
     BackupModule,
     BizHelperModule,
@@ -99,6 +100,7 @@ import { RedisModule } from './processors/redis/redis.module'
     PostModule,
     ProjectModule,
     RecentlyModule,
+    ReaderModule,
     SayModule,
     SearchModule,
     ServerlessModule,

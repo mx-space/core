@@ -62,3 +62,8 @@ export const JSONSchemaNumberField = (
     // 'ui:options': {},
     ...schema,
   })
+
+export const JSONSchemaHideSection = () =>
+  JSONSchema({
+    'ui:options': { hide: true },
+  })

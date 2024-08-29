@@ -12,6 +12,7 @@ import {
   Delete,
   Get,
   NotFoundException,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common'
@@ -96,5 +97,11 @@ export class AuthController {
 
     this.eventEmitter.emit(EventBusEvents.TokenExpired, token)
     return 'OK'
+  }
+
+  @Patch('as-owner')
+  @Auth()
+  async oauthAsOwner() {
+    return this.authService.setCurrentOauthAsOwner()
   }
 }

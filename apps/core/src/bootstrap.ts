@@ -2,6 +2,7 @@ import cluster from 'node:cluster'
 import { performance } from 'node:perf_hooks'
 import wcmatch from 'wildcard-match'
 import type { LogLevel } from '@nestjs/common'
+import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 
 import { Logger } from '@innei/pretty-logger-nestjs'
@@ -39,10 +40,14 @@ export async function bootstrap() {
     },
   )
 
+  const allowAllCors: CorsOptions = {
+    credentials: true,
+    origin: (origin, callback) => callback(null, origin),
+  }
   // Origin 如果不是数组就全部允许跨域
   app.enableCors(
     isDev
-      ? undefined
+      ? allowAllCors
       : Origin
         ? {
             origin: (origin, callback) => {
@@ -54,13 +59,17 @@ export async function bootstrap() {
               }
               const allow = Origin.some((host) => wcmatch(host)(currentHost))
 
-              callback(null, allow)
+              if (allow) {
+                callback(null, origin)
+              } else {
+                callback(null, false)
+              }
             },
             credentials: true,
             preflightContinue: false,
             optionsSuccessStatus: 204,
           }
-        : undefined,
+        : allowAllCors,
   )
 
   if (isDev || DEBUG_MODE.logging) {
@@ -88,6 +97,9 @@ export async function bootstrap() {
     )
     logger.info(
       `[${prefix + pid}] If you want to debug local dev dashboard on production environment with https domain, you can go to: https://<your-prod-domain>/proxy/qaqdmin/dev-proxy`,
+    )
+    logger.info(
+      `[${prefix + pid}] If you want to debug local dev dashboard on dev environment with same site domain, you can go to: http://localhost:2333/proxy/qaqdmin/dev-proxy`,
     )
     logger.info(`Server is up. ${chalk.yellow(`+${performance.now() | 0}ms`)}`)
   })

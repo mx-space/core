@@ -1,4 +1,5 @@
 import { mkdirSync } from 'node:fs'
+import { MongoMemoryServer } from 'mongodb-memory-server'
 import { chalk } from 'zx'
 
 import { Logger } from '@nestjs/common'
@@ -24,6 +25,7 @@ export async function setup() {
   mkdirSync(STATIC_FILE_DIR, { recursive: true })
   Logger.log(chalk.blue(`文件存放目录已经建好：${STATIC_FILE_DIR}`))
   mkdirSync(THEME_DIR, { recursive: true })
+  const db = await MongoMemoryServer.create()
+  await db.stop()
 }
-
 export async function teardown() {}

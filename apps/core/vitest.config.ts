@@ -21,7 +21,6 @@ export default defineConfig({
   test: {
     include: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
 
-    threads: false,
     globals: true,
     globalSetup: [resolve(__dirname, './test/setup.ts')],
     setupFiles: [resolve(__dirname, './test/setup-global.ts')],
@@ -38,6 +37,10 @@ export default defineConfig({
       '~/common/decorators/auth.decorator': resolve(
         __dirname,
         './test/mock/decorators/auth.decorator.ts',
+      ),
+      '@mx-space/complied/auth': resolve(
+        __dirname,
+        '../../packages/complied/auth.ts',
       ),
       '@mx-space/complied': resolve(
         __dirname,

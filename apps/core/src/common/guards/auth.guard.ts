@@ -27,8 +27,23 @@ export class AuthGuard implements CanActivate {
 
     const query = request.query as any
     const headers = request.headers
+
+    const session = await this.authService.getSessionUser(request.raw)
+
     const Authorization: string =
       headers.authorization || headers.Authorization || query.token
+
+    if (session) {
+      const isOwner = !!session.user.isOwner
+      if (isOwner) {
+        this.attachUserAndToken(
+          request,
+          await this.userService.getMaster(),
+          Authorization,
+        )
+        return true
+      }
+    }
 
     if (!Authorization) {
       throw new UnauthorizedException('未登录')
@@ -50,14 +65,7 @@ export class AuthGuard implements CanActivate {
     if (!isJWT(jwt)) {
       throw new UnauthorizedException('令牌无效')
     }
-    const ownVerifyPass = await this.authService.jwtServicePublic.verify(jwt)
-
-    if (!ownVerifyPass) {
-      const cleckVerifyPass = await this.authService.verifyClerkJWT(jwt)
-      if (!cleckVerifyPass) {
-        throw new UnauthorizedException('身份过期')
-      }
-    }
+    await this.authService.jwtServicePublic.verify(jwt)
 
     this.attachUserAndToken(
       request,
