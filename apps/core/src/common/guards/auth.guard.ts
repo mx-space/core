@@ -30,16 +30,20 @@ export class AuthGuard implements CanActivate {
 
     const session = await this.authService.getSessionUser(request.raw)
 
+    const Authorization: string =
+      headers.authorization || headers.Authorization || query.token
+
     if (session) {
       const isOwner = !!session.user.isOwner
       if (isOwner) {
-        this.attachUserAndToken(request, await this.userService.getMaster(), '')
+        this.attachUserAndToken(
+          request,
+          await this.userService.getMaster(),
+          Authorization,
+        )
         return true
       }
     }
-
-    const Authorization: string =
-      headers.authorization || headers.Authorization || query.token
 
     if (!Authorization) {
       throw new UnauthorizedException('未登录')
