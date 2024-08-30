@@ -333,8 +333,8 @@ importers:
         specifier: 0.2.31
         version: 0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.5)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
       '@nestjs/cli':
-        specifier: 10.4.4
-        version: 10.4.4(@swc/core@1.7.21)(esbuild@0.23.0)
+        specifier: 10.4.5
+        version: 10.4.5(@swc/core@1.7.21)(esbuild@0.23.0)
       '@nestjs/schematics':
         specifier: 10.1.4
         version: 10.1.4(chokidar@3.6.0)(typescript@5.5.4)
@@ -1852,8 +1852,8 @@ packages:
       cache-manager: <=5
       rxjs: ^7.0.0
 
-  '@nestjs/cli@10.4.4':
-    resolution: {integrity: sha512-WKERbSZJGof0+9XeeMmWnb/9FpNxogcB5eTJTHjc9no0ymdTw3jTzT+KZL9iC/hGqBpuomDLaNFCYbAOt29nBw==}
+  '@nestjs/cli@10.4.5':
+    resolution: {integrity: sha512-FP7Rh13u8aJbHe+zZ7hM0CC4785g9Pw4lz4r2TTgRtf0zTxSWMkJaPEwyjX8SK9oWK2GsYxl+fKpwVZNbmnj9A==}
     engines: {node: '>= 16.14'}
     hasBin: true
     peerDependencies:
@@ -2640,9 +2640,6 @@ packages:
 
   '@types/ejs@3.1.5':
     resolution: {integrity: sha512-nv+GSx77ZtXiJzwKdsASqi+YQ5Z7vwHsTP0JY2SiQgjGckkBRKZnk8nIM+7oUZ1VCtuTz0+By4qVR7fqzp/Dfg==}
-
-  '@types/eslint-scope@3.7.7':
-    resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
 
   '@types/eslint@8.56.10':
     resolution: {integrity: sha512-Shavhk87gCtY2fhXDctcfS3e6FdxWkCx1iUZ9eEUbh7rTqlZT0/IzOkCOVt0fCjcFuZ9FPYfuezTBImfHCDBGQ==}
@@ -3728,6 +3725,10 @@ packages:
 
   enhanced-resolve@5.17.0:
     resolution: {integrity: sha512-dwDPwZL0dmye8Txp2gzFmA6sxALaSvdRDjPH0viLcKrtlOL3tw62nWWweVD1SdILDTJrbrL6tdWVN58Wo6U3eA==}
+    engines: {node: '>=10.13.0'}
+
+  enhanced-resolve@5.17.1:
+    resolution: {integrity: sha512-LMHl3dXhTcfv8gM4kEzIUeTQ+7fpdA0l2tUf34BddXPkz2A5xJ5L/Pchd5BL6rdccM9QGvu0sWZzK1Z1t4wwyg==}
     engines: {node: '>=10.13.0'}
 
   entities@4.5.0:
@@ -6403,11 +6404,6 @@ packages:
       uglify-js:
         optional: true
 
-  terser@5.31.1:
-    resolution: {integrity: sha512-37upzU1+viGvuFtBo9NPufCb9dwM0+l9hMxYyWfBA+fbwrPqNJAhbZ6W47bBFnZHKHTUBnMvi87434qq+qnxOg==}
-    engines: {node: '>=10'}
-    hasBin: true
-
   terser@5.31.6:
     resolution: {integrity: sha512-PQ4DAriWzKj+qgehQ7LK5bQqCFNMmlhjR2PFFLuqGCpuCAauxemVBWwWOxo3UIwWQx8+Pr61Df++r76wDmkQBg==}
     engines: {node: '>=10'}
@@ -6842,8 +6838,8 @@ packages:
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
-  webpack@5.93.0:
-    resolution: {integrity: sha512-Y0m5oEY1LRuwly578VqluorkXbvXKh7U3rLoQCEO04M97ScRr44afGVkI0FQFsXzysk5OgFAxjZAb9rsGQVihA==}
+  webpack@5.94.0:
+    resolution: {integrity: sha512-KcsGn50VT+06JH/iunZJedYGUJS5FGjow8wb9c0v5n1Om8O1g4L6LjtfxwlXIATopoQu+vOXXa7gYisWxCoPyg==}
     engines: {node: '>=10.13.0'}
     hasBin: true
     peerDependencies:
@@ -8649,7 +8645,7 @@ snapshots:
       cache-manager: 5.7.6
       rxjs: 7.8.1
 
-  '@nestjs/cli@10.4.4(@swc/core@1.7.21)(esbuild@0.23.0)':
+  '@nestjs/cli@10.4.5(@swc/core@1.7.21)(esbuild@0.23.0)':
     dependencies:
       '@angular-devkit/core': 17.3.8(chokidar@3.6.0)
       '@angular-devkit/schematics': 17.3.8(chokidar@3.6.0)
@@ -8659,7 +8655,7 @@ snapshots:
       chokidar: 3.6.0
       cli-table3: 0.6.5
       commander: 4.1.1
-      fork-ts-checker-webpack-plugin: 9.0.2(typescript@5.5.4)(webpack@5.93.0(@swc/core@1.7.21)(esbuild@0.23.0))
+      fork-ts-checker-webpack-plugin: 9.0.2(typescript@5.5.4)(webpack@5.94.0(@swc/core@1.7.21)(esbuild@0.23.0))
       glob: 10.4.2
       inquirer: 8.2.6
       node-emoji: 1.11.0
@@ -8668,7 +8664,7 @@ snapshots:
       tsconfig-paths: 4.2.0
       tsconfig-paths-webpack-plugin: 4.1.0
       typescript: 5.5.4
-      webpack: 5.93.0(@swc/core@1.7.21)(esbuild@0.23.0)
+      webpack: 5.94.0(@swc/core@1.7.21)(esbuild@0.23.0)
       webpack-node-externals: 3.0.0
     optionalDependencies:
       '@swc/core': 1.7.21
@@ -9529,11 +9525,6 @@ snapshots:
       '@types/node': 22.5.1
 
   '@types/ejs@3.1.5': {}
-
-  '@types/eslint-scope@3.7.7':
-    dependencies:
-      '@types/eslint': 9.6.0
-      '@types/estree': 1.0.5
 
   '@types/eslint@8.56.10':
     dependencies:
@@ -10720,6 +10711,11 @@ snapshots:
       graceful-fs: 4.2.11
       tapable: 2.2.1
 
+  enhanced-resolve@5.17.1:
+    dependencies:
+      graceful-fs: 4.2.11
+      tapable: 2.2.1
+
   entities@4.5.0: {}
 
   environment@1.1.0: {}
@@ -11461,7 +11457,7 @@ snapshots:
       cross-spawn: 7.0.3
       signal-exit: 4.1.0
 
-  fork-ts-checker-webpack-plugin@9.0.2(typescript@5.5.4)(webpack@5.93.0(@swc/core@1.7.21)(esbuild@0.23.0)):
+  fork-ts-checker-webpack-plugin@9.0.2(typescript@5.5.4)(webpack@5.94.0(@swc/core@1.7.21)(esbuild@0.23.0)):
     dependencies:
       '@babel/code-frame': 7.24.7
       chalk: 4.1.2
@@ -11476,7 +11472,7 @@ snapshots:
       semver: 7.6.3
       tapable: 2.2.1
       typescript: 5.5.4
-      webpack: 5.93.0(@swc/core@1.7.21)(esbuild@0.23.0)
+      webpack: 5.94.0(@swc/core@1.7.21)(esbuild@0.23.0)
 
   form-data-encoder@1.7.2: {}
 
@@ -13625,24 +13621,17 @@ snapshots:
     dependencies:
       memoizerific: 1.11.3
 
-  terser-webpack-plugin@5.3.10(@swc/core@1.7.21)(esbuild@0.23.0)(webpack@5.93.0(@swc/core@1.7.21)(esbuild@0.23.0)):
+  terser-webpack-plugin@5.3.10(@swc/core@1.7.21)(esbuild@0.23.0)(webpack@5.94.0(@swc/core@1.7.21)(esbuild@0.23.0)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       jest-worker: 27.5.1
       schema-utils: 3.3.0
       serialize-javascript: 6.0.2
-      terser: 5.31.1
-      webpack: 5.93.0(@swc/core@1.7.21)(esbuild@0.23.0)
+      terser: 5.31.6
+      webpack: 5.94.0(@swc/core@1.7.21)(esbuild@0.23.0)
     optionalDependencies:
       '@swc/core': 1.7.21
       esbuild: 0.23.0
-
-  terser@5.31.1:
-    dependencies:
-      '@jridgewell/source-map': 0.3.6
-      acorn: 8.12.1
-      commander: 2.20.3
-      source-map-support: 0.5.21
 
   terser@5.31.6:
     dependencies:
@@ -13650,7 +13639,6 @@ snapshots:
       acorn: 8.12.1
       commander: 2.20.3
       source-map-support: 0.5.21
-    optional: true
 
   text-decoder@1.1.1:
     dependencies:
@@ -14071,9 +14059,8 @@ snapshots:
 
   webpack-virtual-modules@0.6.2: {}
 
-  webpack@5.93.0(@swc/core@1.7.21)(esbuild@0.23.0):
+  webpack@5.94.0(@swc/core@1.7.21)(esbuild@0.23.0):
     dependencies:
-      '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.5
       '@webassemblyjs/ast': 1.12.1
       '@webassemblyjs/wasm-edit': 1.12.1
@@ -14082,7 +14069,7 @@ snapshots:
       acorn-import-attributes: 1.9.5(acorn@8.12.1)
       browserslist: 4.23.1
       chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.17.0
+      enhanced-resolve: 5.17.1
       es-module-lexer: 1.5.3
       eslint-scope: 5.1.1
       events: 3.3.0
@@ -14094,7 +14081,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 3.3.0
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.10(@swc/core@1.7.21)(esbuild@0.23.0)(webpack@5.93.0(@swc/core@1.7.21)(esbuild@0.23.0))
+      terser-webpack-plugin: 5.3.10(@swc/core@1.7.21)(esbuild@0.23.0)(webpack@5.94.0(@swc/core@1.7.21)(esbuild@0.23.0))
       watchpack: 2.4.1
       webpack-sources: 3.2.3
     transitivePeerDependencies:
