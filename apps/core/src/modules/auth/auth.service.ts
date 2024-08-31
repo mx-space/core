@@ -22,7 +22,11 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
-import { AUTH_JS_USER_COLLECTION, AuthConfigInjectKey } from './auth.constant'
+import {
+  AUTH_JS_ACCOUNT_COLLECTION,
+  AUTH_JS_USER_COLLECTION,
+  AuthConfigInjectKey,
+} from './auth.constant'
 import { ServerAuthConfig } from './auth.implement'
 import { SessionUser } from './auth.interface'
 
@@ -205,6 +209,22 @@ export class AuthService {
     return 'OK'
   }
 
+  getOauthUserAccount(userId: string) {
+    return this.databaseService.db
+      .collection(AUTH_JS_ACCOUNT_COLLECTION)
+      .findOne(
+        {
+          userId: new Types.ObjectId(userId),
+        },
+        {
+          projection: {
+            _id: 0,
+            userId: 0,
+            access_token: 0,
+          },
+        },
+      )
+  }
   getOauthProviders() {
     return this.authConfig.providers.map((p) => p.name)
   }

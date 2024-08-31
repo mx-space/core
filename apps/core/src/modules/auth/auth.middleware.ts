@@ -65,7 +65,9 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
       return
     }
 
-    if (req.originalUrl.includes('/auth/token')) {
+    const bypassPath = ['/token', '/session']
+
+    if (bypassPath.some((path) => req.originalUrl.includes(path))) {
       next()
       return
     }
