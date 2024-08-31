@@ -113,7 +113,7 @@ importers:
         version: 0.3.3(@nestjs/common@10.4.1(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))
       '@langchain/openai':
         specifier: 0.2.8
-        version: 0.2.8(encoding@0.1.13)(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))
+        version: 0.2.8(encoding@0.1.13)(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))
       '@mx-space/complied':
         specifier: workspace:*
         version: link:../../packages/complied
@@ -170,10 +170,10 @@ importers:
         version: 4.24.0
       axios:
         specifier: ^1.7.0
-        version: 1.7.6
+        version: 1.7.7
       axios-retry:
         specifier: 4.5.0
-        version: 4.5.0(axios@1.7.6)
+        version: 4.5.0(axios@1.7.7)
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -230,7 +230,7 @@ importers:
         version: 3.10.1
       langchain:
         specifier: 0.2.17
-        version: 0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0)
+        version: 0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0)
       linkedom:
         specifier: 0.18.4
         version: 0.18.4
@@ -331,7 +331,7 @@ importers:
     devDependencies:
       '@langchain/core':
         specifier: 0.2.31
-        version: 0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
+        version: 0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
       '@nestjs/cli':
         specifier: 10.4.5
         version: 10.4.5(@swc/core@1.7.22)(esbuild@0.23.0)
@@ -415,7 +415,7 @@ importers:
         version: 4.7.5
       unplugin-swc:
         specifier: 1.5.1
-        version: 1.5.1(@swc/core@1.7.22)(rollup@4.21.1)
+        version: 1.5.1(@swc/core@1.7.22)(rollup@4.21.2)
       vite:
         specifier: 5.1.7
         version: 5.1.7(@types/node@22.5.1)(terser@5.31.6)
@@ -445,7 +445,7 @@ importers:
         version: 3.0.0
       axios:
         specifier: ^1.6.7
-        version: 1.7.6
+        version: 1.7.7
       camelcase-keys:
         specifier: ^9.1.3
         version: 9.1.3
@@ -2039,11 +2039,6 @@ packages:
     cpu: [arm]
     os: [android]
 
-  '@rollup/rollup-android-arm-eabi@4.21.1':
-    resolution: {integrity: sha512-2thheikVEuU7ZxFXubPDOtspKn1x0yqaYQwvALVtEcvFhMifPADBrgRPyHV0TF3b+9BgvgjgagVyvA/UqPZHmg==}
-    cpu: [arm]
-    os: [android]
-
   '@rollup/rollup-android-arm-eabi@4.21.2':
     resolution: {integrity: sha512-fSuPrt0ZO8uXeS+xP3b+yYTCBUd05MoSp2N/MFOgjhhUhMmchXlpTQrTpI8T+YAwAQuK7MafsCOxW7VrPMrJcg==}
     cpu: [arm]
@@ -2056,11 +2051,6 @@ packages:
 
   '@rollup/rollup-android-arm64@4.19.0':
     resolution: {integrity: sha512-RDxUSY8D1tWYfn00DDi5myxKgOk6RvWPxhmWexcICt/MEC6yEMr4HNCu1sXXYLw8iAsg0D44NuU+qNq7zVWCrw==}
-    cpu: [arm64]
-    os: [android]
-
-  '@rollup/rollup-android-arm64@4.21.1':
-    resolution: {integrity: sha512-t1lLYn4V9WgnIFHXy1d2Di/7gyzBWS8G5pQSXdZqfrdCGTwi1VasRMSS81DTYb+avDs/Zz4A6dzERki5oRYz1g==}
     cpu: [arm64]
     os: [android]
 
@@ -2079,11 +2069,6 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@rollup/rollup-darwin-arm64@4.21.1':
-    resolution: {integrity: sha512-AH/wNWSEEHvs6t4iJ3RANxW5ZCK3fUnmf0gyMxWCesY1AlUj8jY7GC+rQE4wd3gwmZ9XDOpL0kcFnCjtN7FXlA==}
-    cpu: [arm64]
-    os: [darwin]
-
   '@rollup/rollup-darwin-arm64@4.21.2':
     resolution: {integrity: sha512-99AhQ3/ZMxU7jw34Sq8brzXqWH/bMnf7ZVhvLk9QU2cOepbQSVTns6qoErJmSiAvU3InRqC2RRZ5ovh1KN0d0Q==}
     cpu: [arm64]
@@ -2096,11 +2081,6 @@ packages:
 
   '@rollup/rollup-darwin-x64@4.19.0':
     resolution: {integrity: sha512-fO28cWA1dC57qCd+D0rfLC4VPbh6EOJXrreBmFLWPGI9dpMlER2YwSPZzSGfq11XgcEpPukPTfEVFtw2q2nYJg==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@rollup/rollup-darwin-x64@4.21.1':
-    resolution: {integrity: sha512-dO0BIz/+5ZdkLZrVgQrDdW7m2RkrLwYTh2YMFG9IpBtlC1x1NPNSXkfczhZieOlOLEqgXOFH3wYHB7PmBtf+Bg==}
     cpu: [x64]
     os: [darwin]
 
@@ -2119,11 +2099,6 @@ packages:
     cpu: [arm]
     os: [linux]
 
-  '@rollup/rollup-linux-arm-gnueabihf@4.21.1':
-    resolution: {integrity: sha512-sWWgdQ1fq+XKrlda8PsMCfut8caFwZBmhYeoehJ05FdI0YZXk6ZyUjWLrIgbR/VgiGycrFKMMgp7eJ69HOF2pQ==}
-    cpu: [arm]
-    os: [linux]
-
   '@rollup/rollup-linux-arm-gnueabihf@4.21.2':
     resolution: {integrity: sha512-ztRJJMiE8nnU1YFcdbd9BcH6bGWG1z+jP+IPW2oDUAPxPjo9dverIOyXz76m6IPA6udEL12reYeLojzW2cYL7w==}
     cpu: [arm]
@@ -2136,11 +2111,6 @@ packages:
 
   '@rollup/rollup-linux-arm-musleabihf@4.19.0':
     resolution: {integrity: sha512-gJuzIVdq/X1ZA2bHeCGCISe0VWqCoNT8BvkQ+BfsixXwTOndhtLUpOg0A1Fcx/+eA6ei6rMBzlOz4JzmiDw7JQ==}
-    cpu: [arm]
-    os: [linux]
-
-  '@rollup/rollup-linux-arm-musleabihf@4.21.1':
-    resolution: {integrity: sha512-9OIiSuj5EsYQlmwhmFRA0LRO0dRRjdCVZA3hnmZe1rEwRk11Jy3ECGGq3a7RrVEZ0/pCsYWx8jG3IvcrJ6RCew==}
     cpu: [arm]
     os: [linux]
 
@@ -2159,11 +2129,6 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rollup/rollup-linux-arm64-gnu@4.21.1':
-    resolution: {integrity: sha512-0kuAkRK4MeIUbzQYu63NrJmfoUVicajoRAL1bpwdYIYRcs57iyIV9NLcuyDyDXE2GiZCL4uhKSYAnyWpjZkWow==}
-    cpu: [arm64]
-    os: [linux]
-
   '@rollup/rollup-linux-arm64-gnu@4.21.2':
     resolution: {integrity: sha512-69CF19Kp3TdMopyteO/LJbWufOzqqXzkrv4L2sP8kfMaAQ6iwky7NoXTp7bD6/irKgknDKM0P9E/1l5XxVQAhw==}
     cpu: [arm64]
@@ -2176,11 +2141,6 @@ packages:
 
   '@rollup/rollup-linux-arm64-musl@4.19.0':
     resolution: {integrity: sha512-GlIQRj9px52ISomIOEUq/IojLZqzkvRpdP3cLgIE1wUWaiU5Takwlzpz002q0Nxxr1y2ZgxC2obWxjr13lvxNQ==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@rollup/rollup-linux-arm64-musl@4.21.1':
-    resolution: {integrity: sha512-/6dYC9fZtfEY0vozpc5bx1RP4VrtEOhNQGb0HwvYNwXD1BBbwQ5cKIbUVVU7G2d5WRE90NfB922elN8ASXAJEA==}
     cpu: [arm64]
     os: [linux]
 
@@ -2199,11 +2159,6 @@ packages:
     cpu: [ppc64]
     os: [linux]
 
-  '@rollup/rollup-linux-powerpc64le-gnu@4.21.1':
-    resolution: {integrity: sha512-ltUWy+sHeAh3YZ91NUsV4Xg3uBXAlscQe8ZOXRCVAKLsivGuJsrkawYPUEyCV3DYa9urgJugMLn8Z3Z/6CeyRQ==}
-    cpu: [ppc64]
-    os: [linux]
-
   '@rollup/rollup-linux-powerpc64le-gnu@4.21.2':
     resolution: {integrity: sha512-cZdyuInj0ofc7mAQpKcPR2a2iu4YM4FQfuUzCVA2u4HI95lCwzjoPtdWjdpDKyHxI0UO82bLDoOaLfpZ/wviyQ==}
     cpu: [ppc64]
@@ -2216,11 +2171,6 @@ packages:
 
   '@rollup/rollup-linux-riscv64-gnu@4.19.0':
     resolution: {integrity: sha512-2DnD3mkS2uuam/alF+I7M84koGwvn3ZVD7uG+LEWpyzo/bq8+kKnus2EVCkcvh6PlNB8QPNFOz6fWd5N8o1CYg==}
-    cpu: [riscv64]
-    os: [linux]
-
-  '@rollup/rollup-linux-riscv64-gnu@4.21.1':
-    resolution: {integrity: sha512-BggMndzI7Tlv4/abrgLwa/dxNEMn2gC61DCLrTzw8LkpSKel4o+O+gtjbnkevZ18SKkeN3ihRGPuBxjaetWzWg==}
     cpu: [riscv64]
     os: [linux]
 
@@ -2239,11 +2189,6 @@ packages:
     cpu: [s390x]
     os: [linux]
 
-  '@rollup/rollup-linux-s390x-gnu@4.21.1':
-    resolution: {integrity: sha512-z/9rtlGd/OMv+gb1mNSjElasMf9yXusAxnRDrBaYB+eS1shFm6/4/xDH1SAISO5729fFKUkJ88TkGPRUh8WSAA==}
-    cpu: [s390x]
-    os: [linux]
-
   '@rollup/rollup-linux-s390x-gnu@4.21.2':
     resolution: {integrity: sha512-PMxkrWS9z38bCr3rWvDFVGD6sFeZJw4iQlhrup7ReGmfn7Oukrr/zweLhYX6v2/8J6Cep9IEA/SmjXjCmSbrMQ==}
     cpu: [s390x]
@@ -2256,11 +2201,6 @@ packages:
 
   '@rollup/rollup-linux-x64-gnu@4.19.0':
     resolution: {integrity: sha512-HBndjQLP8OsdJNSxpNIN0einbDmRFg9+UQeZV1eiYupIRuZsDEoeGU43NQsS34Pp166DtwQOnpcbV/zQxM+rWA==}
-    cpu: [x64]
-    os: [linux]
-
-  '@rollup/rollup-linux-x64-gnu@4.21.1':
-    resolution: {integrity: sha512-kXQVcWqDcDKw0S2E0TmhlTLlUgAmMVqPrJZR+KpH/1ZaZhLSl23GZpQVmawBQGVhyP5WXIsIQ/zqbDBBYmxm5w==}
     cpu: [x64]
     os: [linux]
 
@@ -2279,11 +2219,6 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rollup/rollup-linux-x64-musl@4.21.1':
-    resolution: {integrity: sha512-CbFv/WMQsSdl+bpX6rVbzR4kAjSSBuDgCqb1l4J68UYsQNalz5wOqLGYj4ZI0thGpyX5kc+LLZ9CL+kpqDovZA==}
-    cpu: [x64]
-    os: [linux]
-
   '@rollup/rollup-linux-x64-musl@4.21.2':
     resolution: {integrity: sha512-7twFizNXudESmC9oneLGIUmoHiiLppz/Xs5uJQ4ShvE6234K0VB1/aJYU3f/4g7PhssLGKBVCC37uRkkOi8wjg==}
     cpu: [x64]
@@ -2296,11 +2231,6 @@ packages:
 
   '@rollup/rollup-win32-arm64-msvc@4.19.0':
     resolution: {integrity: sha512-HxDMKIhmcguGTiP5TsLNolwBUK3nGGUEoV/BO9ldUBoMLBssvh4J0X8pf11i1fTV7WShWItB1bKAKjX4RQeYmg==}
-    cpu: [arm64]
-    os: [win32]
-
-  '@rollup/rollup-win32-arm64-msvc@4.21.1':
-    resolution: {integrity: sha512-3Q3brDgA86gHXWHklrwdREKIrIbxC0ZgU8lwpj0eEKGBQH+31uPqr0P2v11pn0tSIxHvcdOWxa4j+YvLNx1i6g==}
     cpu: [arm64]
     os: [win32]
 
@@ -2319,11 +2249,6 @@ packages:
     cpu: [ia32]
     os: [win32]
 
-  '@rollup/rollup-win32-ia32-msvc@4.21.1':
-    resolution: {integrity: sha512-tNg+jJcKR3Uwe4L0/wY3Ro0H+u3nrb04+tcq1GSYzBEmKLeOQF2emk1whxlzNqb6MMrQ2JOcQEpuuiPLyRcSIw==}
-    cpu: [ia32]
-    os: [win32]
-
   '@rollup/rollup-win32-ia32-msvc@4.21.2':
     resolution: {integrity: sha512-5rA4vjlqgrpbFVVHX3qkrCo/fZTj1q0Xxpg+Z7yIo3J2AilW7t2+n6Q8Jrx+4MrYpAnjttTYF8rr7bP46BPzRw==}
     cpu: [ia32]
@@ -2336,11 +2261,6 @@ packages:
 
   '@rollup/rollup-win32-x64-msvc@4.19.0':
     resolution: {integrity: sha512-xNo5fV5ycvCCKqiZcpB65VMR11NJB+StnxHz20jdqRAktfdfzhgjTiJ2doTDQE/7dqGaV5I7ZGqKpgph6lCIag==}
-    cpu: [x64]
-    os: [win32]
-
-  '@rollup/rollup-win32-x64-msvc@4.21.1':
-    resolution: {integrity: sha512-xGiIH95H1zU7naUyTKEyOA/I0aexNMUdO9qRv0bLKN3qu25bBdrxZHqA3PTJ24YNN/GdMzG4xkDcd/GvjuhfLg==}
     cpu: [x64]
     os: [win32]
 
@@ -3246,8 +3166,8 @@ packages:
     peerDependencies:
       axios: 0.x || 1.x
 
-  axios@1.7.6:
-    resolution: {integrity: sha512-Ekur6XDwhnJ5RgOCaxFnXyqlPALI3rVeukZMwOdfghW7/wGz784BYKiQq+QD8NPcr91KRo30KfHOchyijwWw7g==}
+  axios@1.7.7:
+    resolution: {integrity: sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==}
 
   b4a@1.6.6:
     resolution: {integrity: sha512-5Tk1HLk6b6ctmjIkAcU/Ujv/1WqiDl0F0JdRCR80VsOcUlHcu7pWeWRlOqQLHfDEsVx9YH/aif5AG4ehoCtTmg==}
@@ -6105,11 +6025,6 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  rollup@4.21.1:
-    resolution: {integrity: sha512-ZnYyKvscThhgd3M5+Qt3pmhO4jIRR5RGzaSovB6Q7rGNrK5cUncrtLmcTTJVSdcKXyZjW8X8MB0JMSuH9bcAJg==}
-    engines: {node: '>=18.0.0', npm: '>=8.0.0'}
-    hasBin: true
-
   rollup@4.21.2:
     resolution: {integrity: sha512-e3TapAgYf9xjdLvKQCkQTnbTKd4a6jwlpQSJJFokHGaX2IVjoEqkIIhiQfqsi0cdwlOD+tQGuOd5AJkc5RngBw==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
@@ -8673,13 +8588,13 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
 
-  '@langchain/core@0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))':
+  '@langchain/core@0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))':
     dependencies:
       ansi-styles: 5.2.0
       camelcase: 6.3.0
       decamelize: 1.2.0
       js-tiktoken: 1.0.14
-      langsmith: 0.1.45(@langchain/core@0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8)))(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
+      langsmith: 0.1.45(@langchain/core@0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8)))(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
       mustache: 4.2.0
       p-queue: 6.6.2
       p-retry: 4.6.2
@@ -8690,9 +8605,9 @@ snapshots:
       - langchain
       - openai
 
-  '@langchain/openai@0.2.8(encoding@0.1.13)(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))':
+  '@langchain/openai@0.2.8(encoding@0.1.13)(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))':
     dependencies:
-      '@langchain/core': 0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
+      '@langchain/core': 0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
       js-tiktoken: 1.0.14
       openai: 4.56.2(encoding@0.1.13)(zod@3.23.8)
       zod: 3.23.8
@@ -8701,9 +8616,9 @@ snapshots:
       - encoding
       - langchain
 
-  '@langchain/textsplitters@0.0.3(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))':
+  '@langchain/textsplitters@0.0.3(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))':
     dependencies:
-      '@langchain/core': 0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
+      '@langchain/core': 0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
       js-tiktoken: 1.0.14
     transitivePeerDependencies:
       - langchain
@@ -8928,21 +8843,18 @@ snapshots:
 
   '@pkgr/core@0.1.1': {}
 
-  '@rollup/pluginutils@5.1.0(rollup@4.21.1)':
+  '@rollup/pluginutils@5.1.0(rollup@4.21.2)':
     dependencies:
       '@types/estree': 1.0.5
       estree-walker: 2.0.2
       picomatch: 2.3.1
     optionalDependencies:
-      rollup: 4.21.1
+      rollup: 4.21.2
 
   '@rollup/rollup-android-arm-eabi@4.18.0':
     optional: true
 
   '@rollup/rollup-android-arm-eabi@4.19.0':
-    optional: true
-
-  '@rollup/rollup-android-arm-eabi@4.21.1':
     optional: true
 
   '@rollup/rollup-android-arm-eabi@4.21.2':
@@ -8954,9 +8866,6 @@ snapshots:
   '@rollup/rollup-android-arm64@4.19.0':
     optional: true
 
-  '@rollup/rollup-android-arm64@4.21.1':
-    optional: true
-
   '@rollup/rollup-android-arm64@4.21.2':
     optional: true
 
@@ -8964,9 +8873,6 @@ snapshots:
     optional: true
 
   '@rollup/rollup-darwin-arm64@4.19.0':
-    optional: true
-
-  '@rollup/rollup-darwin-arm64@4.21.1':
     optional: true
 
   '@rollup/rollup-darwin-arm64@4.21.2':
@@ -8978,9 +8884,6 @@ snapshots:
   '@rollup/rollup-darwin-x64@4.19.0':
     optional: true
 
-  '@rollup/rollup-darwin-x64@4.21.1':
-    optional: true
-
   '@rollup/rollup-darwin-x64@4.21.2':
     optional: true
 
@@ -8988,9 +8891,6 @@ snapshots:
     optional: true
 
   '@rollup/rollup-linux-arm-gnueabihf@4.19.0':
-    optional: true
-
-  '@rollup/rollup-linux-arm-gnueabihf@4.21.1':
     optional: true
 
   '@rollup/rollup-linux-arm-gnueabihf@4.21.2':
@@ -9002,9 +8902,6 @@ snapshots:
   '@rollup/rollup-linux-arm-musleabihf@4.19.0':
     optional: true
 
-  '@rollup/rollup-linux-arm-musleabihf@4.21.1':
-    optional: true
-
   '@rollup/rollup-linux-arm-musleabihf@4.21.2':
     optional: true
 
@@ -9012,9 +8909,6 @@ snapshots:
     optional: true
 
   '@rollup/rollup-linux-arm64-gnu@4.19.0':
-    optional: true
-
-  '@rollup/rollup-linux-arm64-gnu@4.21.1':
     optional: true
 
   '@rollup/rollup-linux-arm64-gnu@4.21.2':
@@ -9026,9 +8920,6 @@ snapshots:
   '@rollup/rollup-linux-arm64-musl@4.19.0':
     optional: true
 
-  '@rollup/rollup-linux-arm64-musl@4.21.1':
-    optional: true
-
   '@rollup/rollup-linux-arm64-musl@4.21.2':
     optional: true
 
@@ -9036,9 +8927,6 @@ snapshots:
     optional: true
 
   '@rollup/rollup-linux-powerpc64le-gnu@4.19.0':
-    optional: true
-
-  '@rollup/rollup-linux-powerpc64le-gnu@4.21.1':
     optional: true
 
   '@rollup/rollup-linux-powerpc64le-gnu@4.21.2':
@@ -9050,9 +8938,6 @@ snapshots:
   '@rollup/rollup-linux-riscv64-gnu@4.19.0':
     optional: true
 
-  '@rollup/rollup-linux-riscv64-gnu@4.21.1':
-    optional: true
-
   '@rollup/rollup-linux-riscv64-gnu@4.21.2':
     optional: true
 
@@ -9060,9 +8945,6 @@ snapshots:
     optional: true
 
   '@rollup/rollup-linux-s390x-gnu@4.19.0':
-    optional: true
-
-  '@rollup/rollup-linux-s390x-gnu@4.21.1':
     optional: true
 
   '@rollup/rollup-linux-s390x-gnu@4.21.2':
@@ -9074,9 +8956,6 @@ snapshots:
   '@rollup/rollup-linux-x64-gnu@4.19.0':
     optional: true
 
-  '@rollup/rollup-linux-x64-gnu@4.21.1':
-    optional: true
-
   '@rollup/rollup-linux-x64-gnu@4.21.2':
     optional: true
 
@@ -9084,9 +8963,6 @@ snapshots:
     optional: true
 
   '@rollup/rollup-linux-x64-musl@4.19.0':
-    optional: true
-
-  '@rollup/rollup-linux-x64-musl@4.21.1':
     optional: true
 
   '@rollup/rollup-linux-x64-musl@4.21.2':
@@ -9098,9 +8974,6 @@ snapshots:
   '@rollup/rollup-win32-arm64-msvc@4.19.0':
     optional: true
 
-  '@rollup/rollup-win32-arm64-msvc@4.21.1':
-    optional: true
-
   '@rollup/rollup-win32-arm64-msvc@4.21.2':
     optional: true
 
@@ -9110,9 +8983,6 @@ snapshots:
   '@rollup/rollup-win32-ia32-msvc@4.19.0':
     optional: true
 
-  '@rollup/rollup-win32-ia32-msvc@4.21.1':
-    optional: true
-
   '@rollup/rollup-win32-ia32-msvc@4.21.2':
     optional: true
 
@@ -9120,9 +8990,6 @@ snapshots:
     optional: true
 
   '@rollup/rollup-win32-x64-msvc@4.19.0':
-    optional: true
-
-  '@rollup/rollup-win32-x64-msvc@4.21.1':
     optional: true
 
   '@rollup/rollup-win32-x64-msvc@4.21.2':
@@ -10281,12 +10148,12 @@ snapshots:
       '@fastify/error': 3.4.1
       fastq: 1.17.1
 
-  axios-retry@4.5.0(axios@1.7.6):
+  axios-retry@4.5.0(axios@1.7.7):
     dependencies:
-      axios: 1.7.6
+      axios: 1.7.7
       is-retry-allowed: 2.2.0
 
-  axios@1.7.6:
+  axios@1.7.7:
     dependencies:
       follow-redirects: 1.15.6(debug@4.3.5)
       form-data: 4.0.0
@@ -12229,16 +12096,16 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0):
+  langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0):
     dependencies:
-      '@langchain/core': 0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
-      '@langchain/openai': 0.2.8(encoding@0.1.13)(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))
-      '@langchain/textsplitters': 0.0.3(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
+      '@langchain/core': 0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
+      '@langchain/openai': 0.2.8(encoding@0.1.13)(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))
+      '@langchain/textsplitters': 0.0.3(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
       binary-extensions: 2.3.0
       js-tiktoken: 1.0.14
       js-yaml: 4.1.0
       jsonpointer: 5.0.1
-      langsmith: 0.1.45(@langchain/core@0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8)))(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
+      langsmith: 0.1.45(@langchain/core@0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8)))(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
       openapi-types: 12.1.3
       p-retry: 4.6.2
       uuid: 10.0.0
@@ -12248,7 +12115,7 @@ snapshots:
     optionalDependencies:
       '@aws-sdk/client-s3': 3.637.0
       '@aws-sdk/credential-provider-node': 3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0)
-      axios: 1.7.6
+      axios: 1.7.7
       fast-xml-parser: 4.4.1
       ignore: 5.3.2
       ioredis: 5.4.1
@@ -12258,7 +12125,7 @@ snapshots:
       - encoding
       - openai
 
-  langsmith@0.1.45(@langchain/core@0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8)))(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8)):
+  langsmith@0.1.45(@langchain/core@0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8)))(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8)):
     dependencies:
       '@types/uuid': 9.0.8
       commander: 10.0.1
@@ -12267,8 +12134,8 @@ snapshots:
       semver: 7.6.3
       uuid: 9.0.1
     optionalDependencies:
-      '@langchain/core': 0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
-      langchain: 0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.6)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0)
+      '@langchain/core': 0.2.31(langchain@0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))
+      langchain: 0.2.17(@aws-sdk/client-s3@3.637.0)(@aws-sdk/credential-provider-node@3.637.0(@aws-sdk/client-sso-oidc@3.637.0(@aws-sdk/client-sts@3.637.0))(@aws-sdk/client-sts@3.637.0))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.8.0(socks@2.8.3))(openai@4.56.2(encoding@0.1.13)(zod@3.23.8))(ws@8.18.0)
       openai: 4.56.2(encoding@0.1.13)(zod@3.23.8)
 
   levn@0.4.1:
@@ -13295,29 +13162,6 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.19.0
       fsevents: 2.3.3
 
-  rollup@4.21.1:
-    dependencies:
-      '@types/estree': 1.0.5
-    optionalDependencies:
-      '@rollup/rollup-android-arm-eabi': 4.21.1
-      '@rollup/rollup-android-arm64': 4.21.1
-      '@rollup/rollup-darwin-arm64': 4.21.1
-      '@rollup/rollup-darwin-x64': 4.21.1
-      '@rollup/rollup-linux-arm-gnueabihf': 4.21.1
-      '@rollup/rollup-linux-arm-musleabihf': 4.21.1
-      '@rollup/rollup-linux-arm64-gnu': 4.21.1
-      '@rollup/rollup-linux-arm64-musl': 4.21.1
-      '@rollup/rollup-linux-powerpc64le-gnu': 4.21.1
-      '@rollup/rollup-linux-riscv64-gnu': 4.21.1
-      '@rollup/rollup-linux-s390x-gnu': 4.21.1
-      '@rollup/rollup-linux-x64-gnu': 4.21.1
-      '@rollup/rollup-linux-x64-musl': 4.21.1
-      '@rollup/rollup-win32-arm64-msvc': 4.21.1
-      '@rollup/rollup-win32-ia32-msvc': 4.21.1
-      '@rollup/rollup-win32-x64-msvc': 4.21.1
-      fsevents: 2.3.3
-    optional: true
-
   rollup@4.21.2:
     dependencies:
       '@types/estree': 1.0.5
@@ -14035,9 +13879,9 @@ snapshots:
 
   unpipe@1.0.0: {}
 
-  unplugin-swc@1.5.1(@swc/core@1.7.22)(rollup@4.21.1):
+  unplugin-swc@1.5.1(@swc/core@1.7.22)(rollup@4.21.2):
     dependencies:
-      '@rollup/pluginutils': 5.1.0(rollup@4.21.1)
+      '@rollup/pluginutils': 5.1.0(rollup@4.21.2)
       '@swc/core': 1.7.22
       load-tsconfig: 0.2.5
       unplugin: 1.11.0
