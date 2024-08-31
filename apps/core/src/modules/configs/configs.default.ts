@@ -9,10 +9,10 @@ export const generateDefaultConfig: () => IConfig = () => ({
     keywords: [],
   },
   url: {
-    wsUrl: 'http://127.0.0.1:2333', // todo
-    adminUrl: 'http://127.0.0.1:2333/proxy/qaqdmin',
-    serverUrl: 'http://127.0.0.1:2333',
-    webUrl: 'http://127.0.0.1:2323',
+    wsUrl: 'http://localhost:2333', // todo
+    adminUrl: 'http://localhost:2333/proxy/qaqdmin',
+    serverUrl: 'http://localhost:2333',
+    webUrl: 'http://localhost:2323',
   },
   mailOptions: {
     enable: false,
