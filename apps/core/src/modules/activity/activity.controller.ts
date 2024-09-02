@@ -104,7 +104,7 @@ export class ActivityController {
         'identity',
       ),
 
-      readers: keyBy(readers, '_id'),
+      readers: keyBy(readers, 'id'),
     }
   }
 

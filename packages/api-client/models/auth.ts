@@ -5,4 +5,5 @@ export interface AuthUser {
   image: string
   name: string
   provider: string
+  handle: string
 }

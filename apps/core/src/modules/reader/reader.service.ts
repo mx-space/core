@@ -33,6 +33,7 @@ export class ReaderService {
           isOwner: 1,
           image: 1,
           name: 1,
+          handle: 1,
           account: {
             _id: 1,
             type: 1,
