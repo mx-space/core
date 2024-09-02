@@ -157,8 +157,8 @@ importers:
         specifier: 5.1.0
         version: 5.1.0
       '@typegoose/auto-increment':
-        specifier: 4.5.0
-        version: 4.5.0(mongoose@8.5.5(socks@2.8.3))
+        specifier: 4.6.0
+        version: 4.6.0(mongoose@8.5.5(socks@2.8.3))
       '@typegoose/typegoose':
         specifier: 12.6.0
         version: 12.6.0(mongoose@8.5.5(socks@2.8.3))
@@ -2587,11 +2587,11 @@ packages:
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
 
-  '@typegoose/auto-increment@4.5.0':
-    resolution: {integrity: sha512-83wYnc4cMSSAjT3KO9heryIdDMrU/yqQgbUXXKGcyRngMP/6ylBjOep7gCdr3CMMcxi/c7sTJi/jeLTg0kyZXQ==}
+  '@typegoose/auto-increment@4.6.0':
+    resolution: {integrity: sha512-Hfddd9WAbHmzR/yrjKFonHStVYfPLyCJm2pu25a0ade0Kaiuol9VLJbZSQyrUjAfKPA+4fKwHOhJtXJ+WEnxBw==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
-      mongoose: ~8.5.0
+      mongoose: ~8.6.0
 
   '@typegoose/typegoose@12.6.0':
     resolution: {integrity: sha512-CUhJaQ6krTYH6y4ZzxShEYu2IltlK5o/gWLp56gTozQvk6BU7g7NNZlBWpBW625LSgSQgae/JqjnBwmgQrIQig==}
@@ -6519,6 +6519,9 @@ packages:
   tslib@2.6.3:
     resolution: {integrity: sha512-xNvxJEOUiWPGhUuUdQgAJPKOOJfGnIyKySOc09XkKsgdUV/3E2zvwZYdejjmRgPCgcym1juLH3226yA7sEFJKQ==}
 
+  tslib@2.7.0:
+    resolution: {integrity: sha512-gLXCKdN1/j47AiHiOkJN69hJmcbGTHI0ImLmbYLHykhgeN0jVGola9yVjFgzCUklsZQMW55o+dW7IXv3RCXDzA==}
+
   tsup@8.2.4:
     resolution: {integrity: sha512-akpCPePnBnC/CXgRrcy72ZSntgIEUa1jN0oJbbvpALWKNOz1B7aM+UVDWGRGIO/T/PZugAESWDJUAb5FD48o8Q==}
     engines: {node: '>=18'}
@@ -9465,11 +9468,11 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
-  '@typegoose/auto-increment@4.5.0(mongoose@8.5.5(socks@2.8.3))':
+  '@typegoose/auto-increment@4.6.0(mongoose@8.5.5(socks@2.8.3))':
     dependencies:
       loglevel: 1.9.1
       mongoose: 8.5.5(socks@2.8.3)
-      tslib: 2.6.3
+      tslib: 2.7.0
 
   '@typegoose/typegoose@12.6.0(mongoose@8.5.5(socks@2.8.3))':
     dependencies:
@@ -13742,6 +13745,8 @@ snapshots:
       strip-bom: 3.0.0
 
   tslib@2.6.3: {}
+
+  tslib@2.7.0: {}
 
   tsup@8.2.4(@swc/core@1.7.22)(jiti@1.21.6)(postcss@8.4.41)(tsx@4.17.0)(typescript@5.5.4)(yaml@2.5.0):
     dependencies:
