@@ -87,5 +87,6 @@ export class ReaderService {
           _id: { $in: ids.map((id) => new Types.ObjectId(id)) },
         }),
       )
+      .toArray()
   }
 }
