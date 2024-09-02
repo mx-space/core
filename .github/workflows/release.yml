@@ -102,6 +102,7 @@ jobs:
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASSWORD }}
           # port: ${{ secrets.PORT }}
+          key: ${{ secrets.KEY }}
           source: 'release-linux.zip'
           target: '/tmp/mx-core'
 
