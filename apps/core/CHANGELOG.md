@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [7.0.0-alpha.3](https://github.com/mx-space/core/compare/v7.0.0-alpha.2...v7.0.0-alpha.3) (2024-09-02)
+
+
+### Bug Fixes
+
+* server time cors ([34613e5](https://github.com/mx-space/core/commit/34613e5dff745e6f59674e72dfc308d2ad5a3a6b))
+
+
+
 # [7.0.0-alpha.2](https://github.com/mx-space/core/compare/v7.0.0-alpha.1...v7.0.0-alpha.2) (2024-09-02)
 
 
