@@ -85,7 +85,16 @@ export class ActivityController {
         readerIds.push(item.readerId)
       }
     }
-    const readers = await this.readerService.findReaderInIds(readerIds)
+    const readers = await this.readerService
+      .findReaderInIds(readerIds)
+      .then((arr) => {
+        return arr.map((item) => {
+          return snakecaseKeys({
+            ...item,
+            id: item._id.toHexString(),
+          })
+        })
+      })
 
     return {
       data: keyBy(

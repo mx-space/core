@@ -1,6 +1,7 @@
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
+import type { AuthUser } from '~/models'
 import type {
   ActivityPresence,
   LastYearPublication,
@@ -49,7 +50,10 @@ export class ActivityController<ResponseWrapper> implements IController {
    * @support core >= 5.0.0
    */
   getPresence(roomName: string) {
-    return this.proxy.presence.get<Record<string, ActivityPresence>>({
+    return this.proxy.presence.get<{
+      data: Record<string, ActivityPresence>
+      readers: Record<string, AuthUser>
+    }>({
       params: {
         room_name: roomName,
       },

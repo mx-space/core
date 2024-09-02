@@ -1,6 +1,7 @@
 export * from './activity'
 export * from './aggregate'
 export * from './ai'
+export * from './auth'
 export * from './base'
 export * from './category'
 export * from './comment'

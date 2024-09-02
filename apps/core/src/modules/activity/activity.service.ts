@@ -43,6 +43,7 @@ import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteService } from '../note/note.service'
 import { PostService } from '../post/post.service'
+import { ReaderService } from '../reader/reader.service'
 import { Activity } from './activity.constant'
 import { ActivityModel } from './activity.model'
 import {
@@ -79,6 +80,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     private readonly postService: PostService,
     @Inject(forwardRef(() => NoteService))
     private readonly noteService: NoteService,
+    private readonly readerService: ReaderService,
   ) {
     this.logger = new Logger(ActivityService.name)
   }
@@ -360,6 +362,12 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     Reflect.deleteProperty(presenceData, 'ts')
     const serializedPresenceData = omit(presenceData, 'ip')
+    if (data.readerId) {
+      const reader = await this.readerService.findReaderInIds([data.readerId])
+      if (reader.length) {
+        Object.assign(serializedPresenceData, { reader: reader[0] })
+      }
+    }
 
     const roomJoinedAtMap =
       await this.webGateway.getSocketRoomJoinedAtMap(socket)
