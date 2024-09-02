@@ -46,6 +46,18 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
             const provider = github({
               clientId: mergedConfig.clientId,
               clientSecret: mergedConfig.clientSecret,
+              // allowDangerousEmailAccountLinking: true,
+              profile(profile) {
+                return {
+                  id: profile.id.toString(),
+
+                  email: profile.email,
+                  name: profile.name || profile.login,
+                  handle: profile.login,
+                  image: profile.avatar_url,
+                  isOwner: false,
+                }
+              },
             })
             providers.push(provider)
           }

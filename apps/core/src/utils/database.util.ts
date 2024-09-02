@@ -13,13 +13,13 @@ import {
 } from '~/constants/db.constant'
 import { logger } from '~/global/consola.global'
 
-let databaseConnection: mongoose.Connection | null = null
+let databaseConnectionPromise: Promise<mongoose.Connection> | null = null
 
 mongoose.set('strictQuery', true)
 
-export const getDatabaseConnection = async () => {
-  if (databaseConnection) {
-    return databaseConnection
+export const getDatabaseConnection = () => {
+  if (databaseConnectionPromise) {
+    return databaseConnectionPromise
   }
   let reconnectionTask: NodeJS.Timeout | null = null
   const RECONNECT_INTERVAL = 6000
@@ -59,9 +59,9 @@ export const getDatabaseConnection = async () => {
     mongoose.disconnect()
   })
 
-  databaseConnection = await connection()
+  databaseConnectionPromise = connection()
 
-  return databaseConnection
+  return databaseConnectionPromise
 }
 
 export const normalizeRefType = (type: keyof typeof CollectionRefTypes) => {
