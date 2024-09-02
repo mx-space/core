@@ -21,6 +21,7 @@ export const authConfig: ServerAuthConfig = {
       return url
     },
   },
+  trustHost: true,
   providers: [],
 
   adapter: MongoDBAdapter(
