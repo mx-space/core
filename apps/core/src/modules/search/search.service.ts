@@ -228,7 +228,7 @@ export class SearchService {
   async buildAlgoliaIndexData() {
     const combineDocuments = await Promise.all([
       this.postService.model
-        .find({ hide: false })
+        .find()
         .select('title text categoryId category slug')
         .populate('category', 'name slug')
         .lean()

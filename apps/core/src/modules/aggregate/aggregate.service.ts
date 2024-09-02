@@ -240,9 +240,7 @@ export class AggregateService {
         ),
 
       this.postService.model
-        .find({
-          hide: false,
-        })
+        .find()
         .populate('category')
         .then((list) =>
           list.map((doc) => {
@@ -286,7 +284,7 @@ export class AggregateService {
 
     const [posts, notes] = await Promise.all([
       this.postService.model
-        .find({ hide: false })
+        .find()
         .limit(10)
         .sort({ created: -1 })
         .populate('category'),
