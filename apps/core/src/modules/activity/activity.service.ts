@@ -37,6 +37,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { checkRefModelCollectionType } from '~/utils/biz.util'
+import { camelcaseKeys } from '~/utils/tool.util'
 
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
@@ -365,7 +366,13 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     if (data.readerId) {
       const reader = await this.readerService.findReaderInIds([data.readerId])
       if (reader.length) {
-        Object.assign(serializedPresenceData, { reader: reader[0] })
+        Object.assign(serializedPresenceData, {
+          reader: camelcaseKeys({
+            ...reader[0],
+            _id: undefined,
+            id: reader[0]._id.toHexString(),
+          }),
+        })
       }
     }
 
