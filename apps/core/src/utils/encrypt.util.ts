@@ -34,10 +34,7 @@ export class EncryptUtil {
   private static key = Buffer.from(mapString(ENCRYPT.key), 'hex')
   private static algorithm = ENCRYPT.algorithm || 'aes-256-ecb'
 
-  public static encrypt(data: string): string {
-    if (!ENCRYPT.enable) {
-      return data
-    }
+  private static encryptString = (data: string) => {
     if (EncryptUtil.isEncryptedString(data)) {
       return data
     }
@@ -59,20 +56,70 @@ export class EncryptUtil {
 
     return EncryptUtil.encryptStringPadding + cipherChunks.join('')
   }
+  public static encrypt<T>(data: T): T {
+    if (!ENCRYPT.enable) {
+      return data
+    }
+
+    switch (typeof data) {
+      case 'string': {
+        return EncryptUtil.encryptString(data) as T
+      }
+      case 'object': {
+        if (!data) {
+          return data
+        }
+
+        if (Array.isArray(data)) {
+          return data.map((item) => EncryptUtil.encrypt(item)) as T
+        }
+
+        const result = {} as T
+
+        for (const key in data) {
+          result[key] = EncryptUtil.encrypt(data[key])
+        }
+        return result
+      }
+      default:
+        return data
+    }
+  }
 
   public static isEncryptedString(data: string) {
     return data.startsWith(EncryptUtil.encryptStringPadding)
   }
 
-  public static decrypt(data: string): string {
+  public static decrypt<T>(data: T): T {
     if (!ENCRYPT.enable) {
       return data
     }
 
     if (!data) {
-      return ''
+      return data
     }
 
+    switch (typeof data) {
+      case 'string': {
+        return EncryptUtil.decryptString(data) as T
+      }
+      case 'object': {
+        if (Array.isArray(data)) {
+          return data.map((item) => EncryptUtil.decrypt(item)) as T
+        }
+
+        const result = {} as T
+        for (const key in data) {
+          result[key] = EncryptUtil.decrypt(data[key])
+        }
+        return result
+      }
+      default:
+        return data
+    }
+  }
+
+  private static decryptString(data: string): string {
     if (!EncryptUtil.isEncryptedString(data)) {
       return data
     }

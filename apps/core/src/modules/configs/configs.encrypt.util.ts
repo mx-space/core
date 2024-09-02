@@ -55,10 +55,18 @@ export const encryptObject = (target: any) => {
   const keys = Object.keys(target)
   for (const key of keys) {
     const value = target[key]
-    if (isObject(value) && !isArrayLike(value)) {
+
+    // 前置判断 整个 Object 都是被加密的
+
+    if (
+      isObject(value) &&
+      !isArrayLike(value) &&
+      !isEncryptProperty(target, key)
+    ) {
       target[key] = encryptObject(value)
       continue
     }
+
     target[key] = encryptProperty(target, key, target[key])
   }
   return target

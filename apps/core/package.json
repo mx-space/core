@@ -19,6 +19,7 @@
     "build": "nest build",
     "build:webpack": "nest build --webpack --webpackPath ./configs/webpack.config.js -c ./configs/nest-cli.webpack.json",
     "dev": "npm run start",
+    "dev:encrypt": "npm run start -- --encrypt_enable --encrypt_key=33b9405ac49f63ef4ccbf6b338aeeff8152e844d942ef22278abbec2b1f93b5e",
     "repl": "npm run start -- --entryFile repl",
     "bundle": "rimraf out && npm run build && cd dist/src && npx ncc build main.js -o ../../out --minify -s && cd ../.. && chmod +x out/index.js && node scripts/after-bundle.js",
     "start": "cross-env NODE_ENV=development nest start -w --path tsconfig.json -- ",
