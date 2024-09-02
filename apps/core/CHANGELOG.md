@@ -1,5 +1,19 @@
 # CHANGELOG
 
+# [7.0.0](https://github.com/mx-space/core/compare/v7.0.0-alpha.3...v7.0.0) (2024-09-02)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @typegoose/auto-increment to v4.6.0 ([#2073](https://github.com/mx-space/core/issues/2073)) ([504f9eb](https://github.com/mx-space/core/commit/504f9ebfce9e890780e6e92046d3d7a1abcd2f27))
+* **deps:** update dependency @typegoose/typegoose to v12.7.0 ([#2074](https://github.com/mx-space/core/issues/2074)) ([d900c52](https://github.com/mx-space/core/commit/d900c52e54b0b794d1f0ee42c353f8b641ca0a5b))
+* **deps:** update dependency marked to v14.1.0 ([#2048](https://github.com/mx-space/core/issues/2048)) ([159ee56](https://github.com/mx-space/core/commit/159ee56b59a3f94626d9bbb81900023fa0f1cc73))
+* **deps:** update dependency mongoose to v8.6.0 ([#2064](https://github.com/mx-space/core/issues/2064)) ([778b706](https://github.com/mx-space/core/commit/778b70677490f9d92072f169344409f4319f8a8b))
+* **deps:** update dependency openai to v4.57.0 ([#2067](https://github.com/mx-space/core/issues/2067)) ([b4930db](https://github.com/mx-space/core/commit/b4930db778769ac742995710bbc2675d8bb76c9c))
+* **deps:** update dependency remove-markdown to v0.5.5 ([#2079](https://github.com/mx-space/core/issues/2079)) ([7726449](https://github.com/mx-space/core/commit/77264496e887375876619e0f8440229cb041f54e))
+
+
+
 # [7.0.0-alpha.3](https://github.com/mx-space/core/compare/v7.0.0-alpha.2...v7.0.0-alpha.3) (2024-09-02)
 
 
