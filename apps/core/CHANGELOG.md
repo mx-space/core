@@ -1,5 +1,32 @@
 # CHANGELOG
 
+# [7.0.0-alpha.0](https://github.com/mx-space/core/compare/v6.1.5...v7.0.0-alpha.0) (2024-09-02)
+
+
+### Bug Fixes
+
+* `localhost` for dev ([4b756f2](https://github.com/mx-space/core/commit/4b756f2b1ad27de102bf906699e1df6d2232ef86))
+* add handle for reader query ([02c213a](https://github.com/mx-space/core/commit/02c213a1761c48d309073774deb8e017b22aef70))
+* add missing field ([58917f6](https://github.com/mx-space/core/commit/58917f673e9feb2c8347e433483bc4c0e742feb6))
+* **auth:** add account for session ([29661e7](https://github.com/mx-space/core/commit/29661e75e64fa1e6ff6e1720e4991e780f08e2fa))
+* camcasekey ([5038c4d](https://github.com/mx-space/core/commit/5038c4d0423839b8a918dc61d1d2bbb01716eade))
+* **deps:** update dependency @babel/types to v7.25.6 ([519f573](https://github.com/mx-space/core/commit/519f573b1166c478fbcd36edda7abf7d3311696c))
+* **deps:** update dependency @clerk/clerk-sdk-node to v5.0.32 ([9dd3999](https://github.com/mx-space/core/commit/9dd3999ca9feead34601f60108819b4ea68a4675))
+* **deps:** update dependency mongoose to v8.5.5 ([46c04e8](https://github.com/mx-space/core/commit/46c04e841da7755c0c84c10e78ae6b8e75955bc6))
+* **deps:** update dependency openai to v4.56.2 ([c4df9c5](https://github.com/mx-space/core/commit/c4df9c59978e68371215566df7d94a8072d2b56b))
+* **deps:** update dependency remove-markdown to v0.5.3 ([e27e27b](https://github.com/mx-space/core/commit/e27e27b3b5a34209085895ea45cd500b0148c77d))
+* mongo agg query ([da283b4](https://github.com/mx-space/core/commit/da283b4730bf067b0ec2ede615e0197f844cca7a))
+* oauth profile for github ([19d1030](https://github.com/mx-space/core/commit/19d10300d11e6926e7d7279db0d8a29a2f1e4907))
+* transform case and export client type ([f7bce02](https://github.com/mx-space/core/commit/f7bce0279a01f5173f2c09c2624d883124db4b76))
+
+
+### Features
+
+* add reader id for presence ([33c48f7](https://github.com/mx-space/core/commit/33c48f743f8c0ddb2ddfa249d39c08eec3e3416c))
+* Auth.js integration ([#2054](https://github.com/mx-space/core/issues/2054)) ([6e50bee](https://github.com/mx-space/core/commit/6e50bee8dafbd7e56742b711d01a167c70f96f9a))
+
+
+
 ## [6.1.5](https://github.com/mx-space/core/compare/v6.1.4...v6.1.5) (2024-08-28)
 
 
