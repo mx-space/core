@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [7.0.0-alpha.2](https://github.com/mx-space/core/compare/v7.0.0-alpha.1...v7.0.0-alpha.2) (2024-09-02)
+
+
+### Bug Fixes
+
+* trust host for auth ([d4c4337](https://github.com/mx-space/core/commit/d4c43375d9a0d3676d1ff6a87b402f39c0695d5e))
+
+
+
 # [7.0.0-alpha.1](https://github.com/mx-space/core/compare/v7.0.0-alpha.0...v7.0.0-alpha.1) (2024-09-02)
 
 
