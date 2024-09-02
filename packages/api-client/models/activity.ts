@@ -9,6 +9,7 @@ export interface ActivityPresence {
   joinedAt: number
   connectedAt: number
   updatedAt: number
+  readerId?: string
 
   displayName?: string
 }
