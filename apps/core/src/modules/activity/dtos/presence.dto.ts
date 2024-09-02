@@ -1,4 +1,11 @@
-import { IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator'
+import {
+  IsMongoId,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator'
 
 export class UpdatePresenceDto {
   @IsString()
@@ -24,6 +31,10 @@ export class UpdatePresenceDto {
   @IsString()
   @MaxLength(30)
   sid: string
+
+  @IsMongoId()
+  @IsOptional()
+  readerId?: string
 }
 
 export class GetPresenceQueryDto {

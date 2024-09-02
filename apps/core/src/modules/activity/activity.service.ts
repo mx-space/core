@@ -354,7 +354,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       operationTime: data.ts,
       updatedAt: Date.now(),
       connectedAt: +new Date(socket.handshake.time),
-
+      readerId: data.readerId,
       ip,
     }
 

@@ -8,7 +8,7 @@ import { ReaderService } from './reader.service'
 
 @ApiController('readers')
 @Auth()
-export class ReaderController {
+export class ReaderAuthController {
   constructor(private readonly readerService: ReaderService) {}
   @Get('/')
   async find() {

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common'
 
-import { ReaderController } from './reader.controller'
+import { ReaderAuthController } from './reader.controller'
 import { ReaderService } from './reader.service'
 
 @Module({
-  controllers: [ReaderController],
+  controllers: [ReaderAuthController],
   providers: [ReaderService],
   exports: [ReaderService],
 })

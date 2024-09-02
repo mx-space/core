@@ -17,4 +17,5 @@ export interface ActivityPresence {
   displayName?: string
 
   ip?: string
+  readerId?: string
 }
