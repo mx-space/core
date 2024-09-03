@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [7.0.1](https://github.com/mx-space/core/compare/v7.0.0...v7.0.1) (2024-09-03)
+
+
+### Bug Fixes
+
+* merge oauth and google support ([23f6acb](https://github.com/mx-space/core/commit/23f6acb1f01122264f18b049faca86903615b444))
+* server time cors ([ca63592](https://github.com/mx-space/core/commit/ca63592bd81c65e9d775e861dabaf1ceb7b8ab06))
+
+
+
 # [7.0.0](https://github.com/mx-space/core/compare/v7.0.0-alpha.3...v7.0.0) (2024-09-02)
 
 
