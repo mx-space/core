@@ -102,14 +102,17 @@ export class ServerlessController {
         getters: true,
       })
 
-    const notExistMessage = 'serverless function is not exist or not enabled'
-
+    const errorPath = `Path: /${reference}/${name}`
     if (!snippet) {
-      throw new NotFoundException(notExistMessage)
+      throw new NotFoundException(
+        `serverless function is not exist, ${errorPath}`,
+      )
     }
 
     if (!snippet.enable) {
-      throw new NotFoundException(notExistMessage)
+      throw new BadRequestException(
+        `serverless function is not enabled, ${errorPath}`,
+      )
     }
 
     if (snippet.private && !isAuthenticated) {

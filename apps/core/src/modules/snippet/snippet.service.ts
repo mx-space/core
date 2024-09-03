@@ -12,6 +12,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 
+import { RequestContext } from '~/common/contexts/request.context'
 import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
@@ -263,7 +264,7 @@ export class SnippetService {
       throw new NotFoundException()
     }
 
-    if (snippet.private) {
+    if (snippet.private && !RequestContext.currentIsAuthenticated()) {
       throw new ForbiddenException('snippet is private')
     }
 
