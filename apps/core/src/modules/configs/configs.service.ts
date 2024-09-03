@@ -227,6 +227,22 @@ export class ConfigsService {
         const value = instanceValue as OAuthDto
         const current = await this.get('oauth')
 
+        const currentProvidersMap = current.providers.reduce(
+          (acc, item) => {
+            acc[item.type] = item
+            return acc
+          },
+          {} as Record<string, any>,
+        )
+
+        value.providers.forEach((p) => {
+          if (!currentProvidersMap[p.type]) {
+            current.providers.push(p)
+          } else {
+            currentProvidersMap[p.type] = p
+          }
+        })
+
         let nextAuthSecrets = value.secrets
         if (value.secrets) {
           nextAuthSecrets = merge(current.secrets, nextAuthSecrets)
@@ -237,7 +253,7 @@ export class ConfigsService {
           nextAuthPublic = merge(current.public, nextAuthPublic)
         }
         const option = await this.patch(key as 'oauth', {
-          providers: value.providers,
+          providers: current.providers,
           secrets: nextAuthSecrets,
           public: nextAuthPublic,
         })

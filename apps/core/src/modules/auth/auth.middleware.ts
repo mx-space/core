@@ -1,7 +1,11 @@
 import type { NestMiddleware, OnModuleInit } from '@nestjs/common'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
-import { AuthConfig, authjs } from '@mx-space/complied/auth'
+import {
+  AuthConfig,
+  authjs,
+  BuiltInProviderType,
+} from '@mx-space/complied/auth'
 import { Inject } from '@nestjs/common'
 
 import { EventBusEvents } from '~/constants/event-bus.constant'
@@ -34,7 +38,7 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
       const providers = [] as AuthConfig['providers']
       oauth.providers.forEach((provider) => {
         if (!provider.enabled) return
-        const type = provider.type
+        const type = provider.type as BuiltInProviderType
 
         const mergedConfig = {
           ...oauth.public[type],
@@ -60,6 +64,30 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
               },
             })
             providers.push(provider)
+            break
+          }
+
+          case 'google': {
+            if (!mergedConfig.clientId || !mergedConfig.clientSecret) return
+
+            const provider = authjs.providers.google({
+              clientId: mergedConfig.clientId,
+              clientSecret: mergedConfig.clientSecret,
+              profile(profile) {
+                return {
+                  id: profile.sub,
+                  email: profile.email,
+                  name: profile.name,
+                  handle: profile.email,
+                  image: profile.picture,
+                  isOwner: false,
+                }
+              },
+            })
+
+            providers.push(provider)
+
+            break
           }
         }
       })

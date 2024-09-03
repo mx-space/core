@@ -24,3 +24,4 @@ export * from '@auth/core'
 export type * from '@auth/core/adapters'
 
 export { MongoDBAdapter } from '@auth/mongodb-adapter'
+export type { BuiltInProviderType } from '@auth/core/providers/index'
