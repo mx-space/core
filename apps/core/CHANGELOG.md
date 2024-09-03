@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [7.0.2-alpha.0](https://github.com/mx-space/core/compare/v7.0.1...v7.0.2-alpha.0) (2024-09-03)
+
+
+### Bug Fixes
+
+* try debug fn error ([df9a164](https://github.com/mx-space/core/commit/df9a1646e6e02bedd4d9deb9dc1a7d8ea9c41602))
+
+
+
 ## [7.0.1](https://github.com/mx-space/core/compare/v7.0.0...v7.0.1) (2024-09-03)
 
 
