@@ -239,8 +239,10 @@ export class AuthService {
         },
         {
           projection: {
-            _id: 0,
-            access_token: 0,
+            providerAccountId: 1,
+            provider: 1,
+            type: 1,
+            userId: 1,
           },
         },
       )
@@ -254,7 +256,6 @@ export class AuthService {
           },
           {
             projection: {
-              _id: 0,
               email: 1,
               name: 1,
               image: 1,
@@ -263,10 +264,13 @@ export class AuthService {
           },
         )
 
-      Object.assign(account, user)
+      if (user) Object.assign(account, user)
     }
 
-    return account
+    return {
+      ...account,
+      id: account?.userId.toString(),
+    }
   }
   getOauthProviders() {
     return this.authConfig.providers.map((p) => p.name)
