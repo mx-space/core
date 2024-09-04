@@ -67,13 +67,13 @@ export class AuthGuard implements CanActivate {
     }
     const valid = await this.authService.jwtServicePublic.verify(jwt)
 
-    if (valid)
-      this.attachUserAndToken(
-        request,
-        await this.userService.getMaster(),
-        Authorization,
-      )
-    throw new UnauthorizedException('令牌无效')
+    if (!valid) throw new UnauthorizedException('身份过期')
+    this.attachUserAndToken(
+      request,
+      await this.userService.getMaster(),
+      Authorization,
+    )
+    return true
   }
 
   getRequest(context: ExecutionContext) {
