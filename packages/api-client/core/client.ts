@@ -29,9 +29,8 @@ class HTTPClient<
     private _adaptor: T,
     private options: Omit<ClientOptions, 'controllers'> = {},
   ) {
-    this._endpoint = _endpoint
-      .replace(/\/*$/, '')
-      .replace('localhost', '127.0.0.1')
+    this._endpoint = _endpoint.replace(/\/*$/, '')
+
     this._proxy = this.buildRoute(this)()
     options.transformResponse ||= (data) => camelcaseKeys(data)
     options.getDataFromResponse ||= (res: any) => res.data

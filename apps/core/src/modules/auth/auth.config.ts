@@ -16,13 +16,27 @@ import {
 export const authConfig: ServerAuthConfig = {
   basePath: isDev ? '/auth' : `/api/v${API_VERSION}/auth`,
   secret: SECURITY.jwtSecret || machineIdSync(),
+
   callbacks: {
     redirect({ url }) {
       return url
     },
+    async jwt({ token, account }) {
+      if (account) {
+        token = Object.assign({}, token, {
+          provider: account.provider,
+          providerAccountId: account.providerAccountId,
+        })
+      }
+      return token
+    },
   },
   trustHost: true,
   providers: [],
+
+  session: {
+    strategy: 'jwt',
+  },
 
   adapter: MongoDBAdapter(
     getDatabaseConnection().then((c) => c.getClient()),

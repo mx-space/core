@@ -168,14 +168,35 @@ export class AuthService {
         ...authConfig,
         callbacks: {
           ...authConfig.callbacks,
-          async session(...args) {
-            resolve(args[0].session as SessionUser)
+          session: async (params) => {
+            const token = params.token
+
+            let user = params.user ?? params.token
+            if (typeof token?.providerAccountId === 'string') {
+              const existUser = (await this.getOauthUserAccount(
+                token.providerAccountId,
+              )) as any
+
+              if (existUser) {
+                user = existUser
+              }
+            }
+
+            resolve({
+              ...params.session,
+              ...params.user,
+              user,
+              provider: token.provider,
+              providerAccountId: token.providerAccountId,
+            } as SessionUser)
 
             const session =
-              (await authConfig.callbacks?.session?.(...args)) ??
-              args[0].session
-            const user = args[0].user ?? args[0].token
-            return { user, ...session } satisfies Session
+              (await authConfig.callbacks?.session?.(params)) ?? params.session
+
+            return {
+              user,
+              ...session,
+            } satisfies Session
           },
         },
       }).then((session) => {
@@ -209,21 +230,43 @@ export class AuthService {
     return 'OK'
   }
 
-  getOauthUserAccount(userId: string) {
-    return this.databaseService.db
+  async getOauthUserAccount(providerAccountId: string) {
+    const account = await this.databaseService.db
       .collection(AUTH_JS_ACCOUNT_COLLECTION)
       .findOne(
         {
-          userId: new Types.ObjectId(userId),
+          providerAccountId,
         },
         {
           projection: {
             _id: 0,
-            userId: 0,
             access_token: 0,
           },
         },
       )
+
+    if (account?.userId) {
+      const user = await this.databaseService.db
+        .collection(AUTH_JS_USER_COLLECTION)
+        .findOne(
+          {
+            _id: account.userId,
+          },
+          {
+            projection: {
+              _id: 0,
+              email: 1,
+              name: 1,
+              image: 1,
+              isOwner: 1,
+            },
+          },
+        )
+
+      Object.assign(account, user)
+    }
+
+    return account
   }
   getOauthProviders() {
     return this.authConfig.providers.map((p) => p.name)

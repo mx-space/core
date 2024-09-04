@@ -115,7 +115,9 @@ export class AuthController {
       return null
     }
 
-    const account = await this.authService.getOauthUserAccount(session.userId)
+    const account = await this.authService.getOauthUserAccount(
+      session.providerAccountId,
+    )
 
     return {
       ...session.user,
