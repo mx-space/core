@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [7.0.2](https://github.com/mx-space/core/compare/v7.0.2-alpha.0...v7.0.2) (2024-09-04)
+
+
+### Bug Fixes
+
+* 0day auth ([3451d2f](https://github.com/mx-space/core/commit/3451d2f0652e24e0d58f1ff2742be35985fcbc7f))
+* **deps:** update dependency marked to v14.1.1 ([54307a0](https://github.com/mx-space/core/commit/54307a0897e0238d0dffd91a1fa27fe49094135f))
+* **deps:** update dependency mongoose to v8.6.1 ([cd391a4](https://github.com/mx-space/core/commit/cd391a4195b38173818a092a07d7c9a0bcab118a))
+* **deps:** update dependency nodemailer to v6.9.15 ([2a7fa37](https://github.com/mx-space/core/commit/2a7fa3726175eace801d58de85c730fac41dc2ad))
+* **deps:** update dependency openai to v4.57.1 ([74d2cd8](https://github.com/mx-space/core/commit/74d2cd8fb6b95517282b5689bd585dea871d25b7))
+
+
+
 ## [7.0.2-alpha.0](https://github.com/mx-space/core/compare/v7.0.1...v7.0.2-alpha.0) (2024-09-03)
 
 
