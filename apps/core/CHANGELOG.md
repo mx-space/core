@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [7.0.5](https://github.com/mx-space/core/compare/v7.0.4...v7.0.5) (2024-09-04)
+
+
+### Bug Fixes
+
+* **auth:** append user id for session ([b41a35f](https://github.com/mx-space/core/commit/b41a35f67542d700d384460f1e5ab23acca76296))
+
+
+
 ## [7.0.4](https://github.com/mx-space/core/compare/v7.0.3...v7.0.4) (2024-09-04)
 
 
