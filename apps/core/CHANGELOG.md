@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [7.0.4](https://github.com/mx-space/core/compare/v7.0.3...v7.0.4) (2024-09-04)
+
+
+### Bug Fixes
+
+* auth jwt ([bba36c2](https://github.com/mx-space/core/commit/bba36c2d1aa532a5f4ccc8401f565fb89f8691c6))
+
+
+
 ## [7.0.3](https://github.com/mx-space/core/compare/v7.0.2...v7.0.3) (2024-09-04)
 
 
