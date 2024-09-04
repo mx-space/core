@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [7.0.3](https://github.com/mx-space/core/compare/v7.0.2...v7.0.3) (2024-09-04)
+
+
+### Bug Fixes
+
+* auth ([311f2de](https://github.com/mx-space/core/commit/311f2de80cc56aa7a55963a86217fb65bf405528))
+
+
+
 ## [7.0.2](https://github.com/mx-space/core/compare/v7.0.2-alpha.0...v7.0.2) (2024-09-04)
 
 
