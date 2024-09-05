@@ -590,8 +590,12 @@ export class CommentService implements OnModuleInit {
   // push comment
   @OnEvent(BusinessEvents.COMMENT_CREATE)
   async pushCommentEvent(comment: CommentModel) {
-    const { enable } = await this.configsService.get('barkOptions')
+    const { enable, enableComment } =
+      await this.configsService.get('barkOptions')
     if (!enable) {
+      return
+    }
+    if (!enableComment) {
       return
     }
     const master = await this.userService.getMaster()

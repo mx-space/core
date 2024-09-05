@@ -18,6 +18,7 @@ import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 import { LOG_DIR } from '~/constants/path.constant'
 import { REFLECTOR } from '~/constants/system.constant'
 import { isDev } from '~/global/env.global'
+import { ConfigsService } from '~/modules/configs/configs.service'
 import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 
@@ -41,6 +42,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     @Inject(REFLECTOR) private reflector: Reflector,
     private readonly eventManager: EventManagerService,
     private readonly barkService: BarkPushService,
+    private readonly configService: ConfigsService,
   ) {
     this.registerCatchAllExceptionsHook()
   }
@@ -88,10 +90,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const url = request.raw?.url || request.url || 'Unknown URL'
     if (status === HttpStatus.TOO_MANY_REQUESTS) {
       this.logger.warn(`IP: ${ip} 疑似遭到攻击 Path: ${decodeURI(url)}`)
-      this.barkService.throttlePush({
-        title: '疑似遭到攻击',
-        body: `IP: ${ip} Path: ${decodeURI(url)}`,
-      })
+
+      const { enableThrottleGuard } =
+        await this.configService.get('barkOptions')
+      if (enableThrottleGuard)
+        this.barkService.throttlePush({
+          title: '疑似遭到攻击',
+          body: `IP: ${ip} Path: ${decodeURI(url)}`,
+        })
 
       return response.status(429).send({
         message: '请求过于频繁，请稍后再试',
