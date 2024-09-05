@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [7.0.6](https://github.com/mx-space/core/compare/v7.0.5...v7.0.6) (2024-09-05)
+
+
+### Bug Fixes
+
+* bark service push ([daa499e](https://github.com/mx-space/core/commit/daa499e6920d22ed008457f97e1ec36bc5896135))
+* **deps:** update dependency openai to v4.57.2 ([ebeed58](https://github.com/mx-space/core/commit/ebeed58cb55b3e78c81476740d71feecbf06b9df))
+* ip query function ([06a1963](https://github.com/mx-space/core/commit/06a196360f61aba89e02c6f2e93b62cf5bd2c9b4))
+
+
+
 ## [7.0.5](https://github.com/mx-space/core/compare/v7.0.4...v7.0.5) (2024-09-04)
 
 
