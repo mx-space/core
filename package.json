@@ -57,7 +57,7 @@
   "issues": "https://github.com/mx-space/core/issues",
   "resolutions": {
     "get-pixels@^3>request": "./external/request",
-    "mongodb": "6.8.0",
+    "mongodb": "6.8.1",
     "pino": "./external/pino",
     "semver": "7.6.3",
     "typescript": "5.5.4",
