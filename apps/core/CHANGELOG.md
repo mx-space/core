@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [7.0.7](https://github.com/mx-space/core/compare/v7.0.6...v7.0.7) (2024-09-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @aws-sdk/client-s3 to v3.645.0 ([#2091](https://github.com/mx-space/core/issues/2091)) ([aec8694](https://github.com/mx-space/core/commit/aec869457334b7fca271d5d112480c29c88755ca))
+* **deps:** update dependency @langchain/openai to v0.2.10 ([6f038e1](https://github.com/mx-space/core/commit/6f038e196221cfb3ab89abd491d5d54bcf52a52b))
+* **deps:** update dependency langchain to v0.2.18 ([fbd7436](https://github.com/mx-space/core/commit/fbd743648a99364fd41ee22b8e03305d7fbec182))
+* **deps:** update dependency lru-cache to v11.0.1 ([26d3fd3](https://github.com/mx-space/core/commit/26d3fd3039afa9ddeb788d4d529ae76e9224e530))
+* **deps:** update dependency mongoose-lean-virtuals to v1 ([#2085](https://github.com/mx-space/core/issues/2085)) ([26e2385](https://github.com/mx-space/core/commit/26e23852191f9fe270021accec63cf25abde12b1))
+* **deps:** update dependency openai to v4.57.3 ([7984436](https://github.com/mx-space/core/commit/7984436d4dcd90c8be36e789892923871fc1d873))
+* **oauth:** can not disable oauth ([8fc72f1](https://github.com/mx-space/core/commit/8fc72f1795390187d0437d6db1e9ba05eb862fe5))
+
+
+
 ## [7.0.6](https://github.com/mx-space/core/compare/v7.0.5...v7.0.6) (2024-09-05)
 
 
