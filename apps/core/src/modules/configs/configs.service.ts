@@ -239,7 +239,7 @@ export class ConfigsService {
           if (!currentProvidersMap[p.type]) {
             current.providers.push(p)
           } else {
-            currentProvidersMap[p.type] = p
+            Object.assign(currentProvidersMap[p.type], p)
           }
         })
 
