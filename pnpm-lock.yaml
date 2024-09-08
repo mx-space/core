@@ -241,8 +241,8 @@ importers:
         specifier: 11.0.1
         version: 11.0.1
       marked:
-        specifier: 14.1.1
-        version: 14.1.1
+        specifier: 14.1.2
+        version: 14.1.2
       mime-types:
         specifier: ^2.1.35
         version: 2.1.35
@@ -5021,8 +5021,8 @@ packages:
   map-stream@0.1.0:
     resolution: {integrity: sha512-CkYQrPYZfWnu/DAmVCpTSX/xHpKZ80eKh2lAkyA6AJTef6bW+6JpbQZN5rofum7da+SyN1bi5ctTm+lTfcCW3g==}
 
-  marked@14.1.1:
-    resolution: {integrity: sha512-eS59oxof5eBVDCKTs+mJbvB/6Vq137GbimF9wkTIlto2/B2ppY5nigUUQgKVmA3bI2mPTIshUyDj5j612ZxlQQ==}
+  marked@14.1.2:
+    resolution: {integrity: sha512-f3r0yqpz31VXiDB/wj9GaOB0a2PRLQl6vJmXiFrniNwjkKdvakqJRULhjFKJpxOchlCRiG5fcacoUZY5Xa6PEQ==}
     engines: {node: '>= 18'}
     hasBin: true
 
@@ -11928,7 +11928,7 @@ snapshots:
 
   map-stream@0.1.0: {}
 
-  marked@14.1.1: {}
+  marked@14.1.2: {}
 
   mdast-util-from-markdown@0.8.5:
     dependencies:
