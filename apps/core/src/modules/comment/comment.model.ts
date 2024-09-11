@@ -13,6 +13,7 @@ import { BaseModel } from '~/shared/model/base.model'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
+import { ReaderModel } from '../reader/reader.model'
 import { RecentlyModel } from '../recently/recently.model'
 
 export enum CommentState {
@@ -128,4 +129,12 @@ export class CommentModel extends BaseModel {
 
   @prop()
   meta?: string
+
+  @prop({
+    ref: () => ReaderModel,
+    justOne: true,
+    foreignField: '_id',
+    localField: 'readerId',
+  })
+  readerId?: string
 }

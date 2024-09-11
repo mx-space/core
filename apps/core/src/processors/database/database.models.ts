@@ -10,6 +10,7 @@ import { NoteModel } from '~/modules/note/note.model'
 import { PageModel } from '~/modules/page/page.model'
 import { PostModel } from '~/modules/post/post.model'
 import { ProjectModel } from '~/modules/project/project.model'
+import { ReaderModel } from '~/modules/reader/reader.model'
 import { RecentlyModel } from '~/modules/recently/recently.model'
 import { SayModel } from '~/modules/say/say.model'
 import { ServerlessStorageModel } from '~/modules/serverless/serverless.model'
@@ -24,8 +25,8 @@ import { WebhookModel } from '~/modules/webhook/webhook.model'
 import { getProviderByTypegooseClass } from '~/transformers/model.transformer'
 
 export const databaseModels = [
-  AISummaryModel,
   ActivityModel,
+  AISummaryModel,
   AnalyzeModel,
   AuthnModel,
   CategoryModel,
@@ -36,6 +37,7 @@ export const databaseModels = [
   PageModel,
   PostModel,
   ProjectModel,
+  ReaderModel,
   RecentlyModel,
   SayModel,
   ServerlessStorageModel,
