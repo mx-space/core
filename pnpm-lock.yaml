@@ -158,10 +158,10 @@ importers:
         version: 5.1.0
       '@typegoose/auto-increment':
         specifier: 4.6.0
-        version: 4.6.0(mongoose@8.6.1(socks@2.8.3))
+        version: 4.6.0(mongoose@8.6.2(socks@2.8.3))
       '@typegoose/typegoose':
         specifier: 12.7.0
-        version: 12.7.0(mongoose@8.6.1(socks@2.8.3))
+        version: 12.7.0(mongoose@8.6.2(socks@2.8.3))
       '@types/jsonwebtoken':
         specifier: 9.0.6
         version: 9.0.6
@@ -250,20 +250,20 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       mongoose:
-        specifier: 8.6.1
-        version: 8.6.1(socks@2.8.3)
+        specifier: 8.6.2
+        version: 8.6.2(socks@2.8.3)
       mongoose-aggregate-paginate-v2:
         specifier: 1.1.2
         version: 1.1.2
       mongoose-autopopulate:
         specifier: 1.1.0
-        version: 1.1.0(mongoose@8.6.1(socks@2.8.3))
+        version: 1.1.0(mongoose@8.6.2(socks@2.8.3))
       mongoose-lean-getters:
         specifier: 2.1.1
-        version: 2.1.1(mongoose@8.6.1(socks@2.8.3))
+        version: 2.1.1(mongoose@8.6.2(socks@2.8.3))
       mongoose-lean-virtuals:
         specifier: 1.0.0
-        version: 1.0.0(mongoose@8.6.1(socks@2.8.3))
+        version: 1.0.0(mongoose@8.6.2(socks@2.8.3))
       mongoose-paginate-v2:
         specifier: 1.8.3
         version: 1.8.3
@@ -5218,8 +5218,8 @@ packages:
     resolution: {integrity: sha512-Fkg9amsmtRkqUQ19kwOvw6XodkqXoySr82MkV5XPeD+1u/m68tWnDcz3xRwDPzlIsAr1ctx/4Rz/bnfD3PIJqQ==}
     engines: {node: '>=4.0.0'}
 
-  mongoose@8.6.1:
-    resolution: {integrity: sha512-dppGcYqvsdg+VcnqXR5b467V4a+iNhmvkfYNpEPi6AjaUxnz6ioEDmrMLOi+sOWjvoHapuwPOigV4f2l7HC6ag==}
+  mongoose@8.6.2:
+    resolution: {integrity: sha512-ErbDVvuUzUfyQpXvJ6sXznmZDICD8r6wIsa0VKjJtB6/LZncqwUn5Um040G1BaNo6L3Jz+xItLSwT0wZmSmUaQ==}
     engines: {node: '>=16.20.1'}
 
   mpath@0.8.4:
@@ -9292,17 +9292,17 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
-  '@typegoose/auto-increment@4.6.0(mongoose@8.6.1(socks@2.8.3))':
+  '@typegoose/auto-increment@4.6.0(mongoose@8.6.2(socks@2.8.3))':
     dependencies:
       loglevel: 1.9.1
-      mongoose: 8.6.1(socks@2.8.3)
+      mongoose: 8.6.2(socks@2.8.3)
       tslib: 2.7.0
 
-  '@typegoose/typegoose@12.7.0(mongoose@8.6.1(socks@2.8.3))':
+  '@typegoose/typegoose@12.7.0(mongoose@8.6.2(socks@2.8.3))':
     dependencies:
       lodash: 4.17.21
       loglevel: 1.9.1
-      mongoose: 8.6.1(socks@2.8.3)
+      mongoose: 8.6.2(socks@2.8.3)
       reflect-metadata: 0.2.2
       semver: 7.6.3
       tslib: 2.7.0
@@ -9426,7 +9426,7 @@ snapshots:
   '@types/mongoose-aggregate-paginate-v2@1.0.12(socks@2.8.3)':
     dependencies:
       '@types/node': 22.5.4
-      mongoose: 8.6.1(socks@2.8.3)
+      mongoose: 8.6.2(socks@2.8.3)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@mongodb-js/zstd'
@@ -11394,7 +11394,7 @@ snapshots:
   https-proxy-agent@7.0.5:
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.5
+      debug: 4.3.7
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -12102,23 +12102,23 @@ snapshots:
 
   mongoose-aggregate-paginate-v2@1.1.2: {}
 
-  mongoose-autopopulate@1.1.0(mongoose@8.6.1(socks@2.8.3)):
+  mongoose-autopopulate@1.1.0(mongoose@8.6.2(socks@2.8.3)):
     dependencies:
-      mongoose: 8.6.1(socks@2.8.3)
+      mongoose: 8.6.2(socks@2.8.3)
 
-  mongoose-lean-getters@2.1.1(mongoose@8.6.1(socks@2.8.3)):
+  mongoose-lean-getters@2.1.1(mongoose@8.6.2(socks@2.8.3)):
     dependencies:
-      mongoose: 8.6.1(socks@2.8.3)
+      mongoose: 8.6.2(socks@2.8.3)
       mpath: 0.9.0
 
-  mongoose-lean-virtuals@1.0.0(mongoose@8.6.1(socks@2.8.3)):
+  mongoose-lean-virtuals@1.0.0(mongoose@8.6.2(socks@2.8.3)):
     dependencies:
-      mongoose: 8.6.1(socks@2.8.3)
+      mongoose: 8.6.2(socks@2.8.3)
       mpath: 0.8.4
 
   mongoose-paginate-v2@1.8.3: {}
 
-  mongoose@8.6.1(socks@2.8.3):
+  mongoose@8.6.2(socks@2.8.3):
     dependencies:
       bson: 6.8.0
       kareem: 2.6.3
@@ -12143,7 +12143,7 @@ snapshots:
 
   mquery@5.0.0:
     dependencies:
-      debug: 4.3.6
+      debug: 4.3.7
     transitivePeerDependencies:
       - supports-color
 
@@ -12181,7 +12181,7 @@ snapshots:
 
   new-find-package-json@2.0.0:
     dependencies:
-      debug: 4.3.5
+      debug: 4.3.7
     transitivePeerDependencies:
       - supports-color
     optional: true
