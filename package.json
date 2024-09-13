@@ -40,7 +40,7 @@
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
     "tsup": "8.2.4",
-    "typescript": "5.5.4",
+    "typescript": "5.6.2",
     "vite-tsconfig-paths": "4.3.2"
   },
   "husky": {
@@ -60,7 +60,7 @@
     "mongodb": "6.8.2",
     "pino": "./external/pino",
     "semver": "7.6.3",
-    "typescript": "5.5.4",
+    "typescript": "5.6.2",
     "whatwg-url": "14.0.0"
   }
 }
