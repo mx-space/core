@@ -1,18 +1,19 @@
 /* eslint-disable dot-notation */
 // @reference https://github.com/ever-co/ever-gauzy/blob/d36b4f40b1446f3c33d02e0ba00b53a83109d950/packages/core/src/core/context/request-context.ts
 import * as cls from 'cls-hooked'
-import type { UserDocument } from '~/modules/user/user.model'
-import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { UserModel } from '~/modules/user/user.model'
+import type { BizIncomingMessage } from '~/transformers/get-req.transformer'
+import type { ServerResponse } from 'node:http'
 
 import { UnauthorizedException } from '@nestjs/common'
 
 type Nullable<T> = T | null
 export class RequestContext {
   readonly id: number
-  request: IncomingMessage
+  request: BizIncomingMessage
   response: ServerResponse
 
-  constructor(request: IncomingMessage, response: ServerResponse) {
+  constructor(request: BizIncomingMessage, response: ServerResponse) {
     this.id = Math.random()
     this.request = request
     this.response = response
@@ -27,7 +28,7 @@ export class RequestContext {
     return null
   }
 
-  static currentRequest(): Nullable<IncomingMessage> {
+  static currentRequest(): Nullable<BizIncomingMessage> {
     const requestContext = RequestContext.currentRequestContext()
 
     if (requestContext) {
@@ -37,11 +38,11 @@ export class RequestContext {
     return null
   }
 
-  static currentUser(throwError?: boolean): Nullable<UserDocument> {
+  static currentUser(throwError?: boolean): Nullable<UserModel> {
     const requestContext = RequestContext.currentRequestContext()
 
     if (requestContext) {
-      const user: UserDocument = requestContext.request['user']
+      const user = requestContext.request['user']
 
       if (user) {
         return user

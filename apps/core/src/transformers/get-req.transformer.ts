@@ -1,8 +1,9 @@
 import type { ExecutionContext } from '@nestjs/common'
 import type { UserModel } from '~/modules/user/user.model'
 import type { FastifyRequest } from 'fastify'
+import type { IncomingMessage } from 'node:http'
 
-export type FastifyBizRequest = FastifyRequest & {
+type BizRequest = {
   user?: UserModel
   isGuest: boolean
 
@@ -10,6 +11,10 @@ export type FastifyBizRequest = FastifyRequest & {
   token?: string
   readerId?: string
 }
+
+export type FastifyBizRequest = FastifyRequest & BizRequest
+
+export type BizIncomingMessage = IncomingMessage & BizRequest
 export function getNestExecutionContextRequest(
   context: ExecutionContext,
 ): FastifyBizRequest {

@@ -2,6 +2,7 @@ export interface ActivityLikePayload {
   id: string
   ip: string
   type: ActivityLikeSupportType
+  readerId?: string
 }
 
 export type ActivityLikeSupportType = 'post' | 'note'
