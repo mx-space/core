@@ -88,8 +88,10 @@ export class ReaderService {
       .updateOne({ _id: new Types.ObjectId(id) }, { $set: { isOwner: false } })
   }
   async findReaderInIds(ids: string[]) {
-    return this.readerModel.find({
-      _id: { $in: ids.map((id) => new Types.ObjectId(id)) },
-    })
+    return this.readerModel
+      .find({
+        _id: { $in: ids.map((id) => new Types.ObjectId(id)) },
+      })
+      .lean()
   }
 }

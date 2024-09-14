@@ -32,8 +32,9 @@ export class RolesGuard extends AuthGuard implements CanActivate {
     } catch {}
 
     const session = await this.authService.getSessionUser(request.raw)
+
     if (session) {
-      const readerId = session.userId
+      const readerId = session.user.id
       request.readerId = readerId
 
       Object.assign(request.raw, {

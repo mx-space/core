@@ -307,7 +307,9 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     let reader: ReaderModel | null = null
     if (readerId) {
-      reader = await this.readerService.findReaderInIds([readerId])[0]
+      reader = await this.readerService
+        .findReaderInIds([readerId])
+        .then((res) => res[0])
     }
 
     try {

@@ -66,6 +66,7 @@ export class CommentService implements OnModuleInit {
     private readonly serverlessService: ServerlessService,
     private readonly eventManager: EventManagerService,
     private readonly barkService: BarkPushService,
+    @Inject(forwardRef(() => ReaderService))
     private readonly readerService: ReaderService,
   ) {}
 
@@ -162,6 +163,7 @@ export class CommentService implements OnModuleInit {
     type?: CollectionRefTypes,
   ) {
     const readerId = RequestContext.currentRequest()?.readerId
+
     let reader: ReaderModel | null = null
     if (readerId) {
       reader = await this.readerService
