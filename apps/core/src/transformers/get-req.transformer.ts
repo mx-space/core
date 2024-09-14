@@ -8,6 +8,7 @@ export type FastifyBizRequest = FastifyRequest & {
 
   isAuthenticated: boolean
   token?: string
+  readerId?: string
 }
 export function getNestExecutionContextRequest(
   context: ExecutionContext,

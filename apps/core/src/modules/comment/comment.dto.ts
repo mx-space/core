@@ -5,7 +5,6 @@ import {
   IsEnum,
   IsIn,
   IsInt,
-  IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -19,7 +18,6 @@ import { normalizeRefType } from '~/utils/database.util'
 export class CommentDto {
   @IsString()
   @IsNotEmpty()
-  @IsOptional()
   @MaxLength(20, { message: '昵称不得大于 20 个字符' })
   author: string
 
@@ -31,7 +29,6 @@ export class CommentDto {
   @IsString()
   @IsEmail(undefined, { message: '请更正为正确的邮箱' })
   @MaxLength(50, { message: '邮箱地址不得大于 50 个字符' })
-  @IsOptional()
   mail: string
 
   @IsString()
@@ -56,10 +53,6 @@ export class CommentDto {
     },
   )
   avatar?: string
-
-  @IsOptional()
-  @IsMongoId()
-  readerId?: string
 }
 
 export class RequiredGuestReaderCommentDto extends CommentDto {
