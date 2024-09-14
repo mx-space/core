@@ -20,6 +20,7 @@ import {
 } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
+import { RequestContext } from '~/common/contexts/request.context'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -33,6 +34,8 @@ import { scheduleManager } from '~/utils/schedule.util'
 import { getAvatar, hasChinese } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
+import { ReaderModel } from '../reader/reader.model'
+import { ReaderService } from '../reader/reader.service'
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetType } from '../snippet/snippet.model'
@@ -63,6 +66,7 @@ export class CommentService implements OnModuleInit {
     private readonly serverlessService: ServerlessService,
     private readonly eventManager: EventManagerService,
     private readonly barkService: BarkPushService,
+    private readonly readerService: ReaderService,
   ) {}
 
   private async getMailOwnerProps() {
@@ -157,6 +161,19 @@ export class CommentService implements OnModuleInit {
     doc: Partial<CommentModel>,
     type?: CollectionRefTypes,
   ) {
+    const readerId = RequestContext.currentRequest()?.readerId
+    let reader: ReaderModel | null = null
+    if (readerId) {
+      reader = await this.readerService
+        .findReaderInIds([readerId])
+        .then((readers) => readers[0] ?? null)
+    }
+
+    if (reader) {
+      doc.author = reader.name
+      doc.mail = reader.email
+    }
+
     let ref: (WriteBaseModel & { _id: any }) | null = null
     let refType = type
     if (type) {
@@ -181,6 +198,7 @@ export class CommentService implements OnModuleInit {
       ...doc,
       state: CommentState.Unread,
       ref: new Types.ObjectId(id),
+      readerId: reader ? readerId : undefined,
       refType,
     })
 
@@ -208,6 +226,7 @@ export class CommentService implements OnModuleInit {
       })
       .select('+ip +agent')
 
+    const readerId = RequestContext.currentRequest()?.readerId
     if (!comment) return
     scheduleManager.schedule(async () => {
       if (isAuthenticated) {
@@ -219,7 +238,7 @@ export class CommentService implements OnModuleInit {
     scheduleManager.batch(async () => {
       const configs = await this.configsService.get('commentOptions')
       const { commentShouldAudit } = configs
-      if (await this.checkSpam(comment)) {
+      if ((await this.checkSpam(comment)) && !readerId) {
         await this.commentModel.updateOne(
           { _id: commentId },
           {
