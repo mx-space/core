@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [7.1.1](https://github.com/mx-space/core/compare/v7.1.0...v7.1.1) (2024-09-14)
+
+
+### Bug Fixes
+
+* add `handle` to query ([85d4a14](https://github.com/mx-space/core/commit/85d4a140220fe0163a2efd8267a87836a4fb6df5))
+
+
+
 # [7.1.0](https://github.com/mx-space/core/compare/v7.0.7...v7.1.0) (2024-09-14)
 
 
