@@ -1,5 +1,22 @@
 # CHANGELOG
 
+# [7.1.0](https://github.com/mx-space/core/compare/v7.0.7...v7.1.0) (2024-09-14)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @langchain/openai to v0.2.11 ([3e9e36a](https://github.com/mx-space/core/commit/3e9e36a248ca607979a56270602c8193fef6fedd))
+* **deps:** update dependency langchain to v0.2.19 ([0285b93](https://github.com/mx-space/core/commit/0285b935ff6a46a072b7deffade2427ab22c44c5))
+* **deps:** update dependency marked to v14.1.2 ([77af705](https://github.com/mx-space/core/commit/77af70590dd4a4c7cccf79995cebed7cc8f54013))
+* **deps:** update dependency mongoose to v8.6.2 ([25b16cf](https://github.com/mx-space/core/commit/25b16cf2ad0c4cd866eb9ea1bf596834ea35c649))
+
+
+### Features
+
+* reader for comment and like action ([#2122](https://github.com/mx-space/core/issues/2122)) ([26b2b4f](https://github.com/mx-space/core/commit/26b2b4f13451b22d3e242f5ef52b31e4fa95a60a))
+
+
+
 ## [7.0.7](https://github.com/mx-space/core/compare/v7.0.6...v7.0.7) (2024-09-07)
 
 
