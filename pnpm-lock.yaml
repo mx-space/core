@@ -375,8 +375,8 @@ importers:
         specifier: 1.0.12
         version: 1.0.12(socks@2.8.3)
       '@types/node':
-        specifier: 22.5.4
-        version: 22.5.4
+        specifier: 22.5.5
+        version: 22.5.5
       '@types/nodemailer':
         specifier: 6.4.15
         version: 6.4.15
@@ -418,13 +418,13 @@ importers:
         version: 1.5.1(@swc/core@1.7.26)(rollup@4.21.2)
       vite:
         specifier: 5.1.7
-        version: 5.1.7(@types/node@22.5.4)(terser@5.31.6)
+        version: 5.1.7(@types/node@22.5.5)(terser@5.31.6)
       vite-tsconfig-paths:
         specifier: 4.3.2
-        version: 4.3.2(typescript@5.6.2)(vite@5.1.7(@types/node@22.5.4)(terser@5.31.6))
+        version: 4.3.2(typescript@5.6.2)(vite@5.1.7(@types/node@22.5.5)(terser@5.31.6))
       vitest:
         specifier: 1.5.2
-        version: 1.5.2(@types/node@22.5.4)(terser@5.31.6)
+        version: 1.5.2(@types/node@22.5.5)(terser@5.31.6)
       zx:
         specifier: 7.2.3
         version: 7.2.3
@@ -469,10 +469,10 @@ importers:
         version: 1.4.0
       vite:
         specifier: ^5.1.7
-        version: 5.1.7(@types/node@22.5.4)(terser@5.31.6)
+        version: 5.1.7(@types/node@22.5.5)(terser@5.31.6)
       vitest:
         specifier: 1.5.2
-        version: 1.5.2(@types/node@22.5.4)(terser@5.31.6)
+        version: 1.5.2(@types/node@22.5.5)(terser@5.31.6)
 
   packages/complied:
     devDependencies:
@@ -2721,8 +2721,8 @@ packages:
   '@types/node@20.16.5':
     resolution: {integrity: sha512-VwYCweNo3ERajwy0IUlqqcyZ8/A7Zwa9ZP3MnENWcB11AejO+tLy3pu850goUW2FC/IJMdZUfKpX/yxL1gymCA==}
 
-  '@types/node@22.5.4':
-    resolution: {integrity: sha512-FDuKUJQm/ju9fT/SeX/6+gBzoPzlVCzfzmGkwKvRHQVxi4BntVbyIwf6a4Xn62mrvndLiml6z/UBXIdEVjQLXg==}
+  '@types/node@22.5.5':
+    resolution: {integrity: sha512-Xjs4y5UPO/CLdzpgR6GirZJx36yScjh73+2NlLlkFRSoQN8B0DpfXPdZGnvVmLRLOsqDpOfTNv7D9trgGhmOIA==}
 
   '@types/nodemailer@6.4.15':
     resolution: {integrity: sha512-0EBJxawVNjPkng1zm2vopRctuWVCxk34JcIlRuXSf54habUWdz1FB7wHDqOqvDa8Mtpt0Q3LTXQkAs2LNyK5jQ==}
@@ -8304,7 +8304,7 @@ snapshots:
       '@inquirer/figures': 1.0.5
       '@inquirer/type': 1.5.2
       '@types/mute-stream': 0.0.4
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
       '@types/wrap-ansi': 3.0.0
       ansi-escapes: 4.3.2
       cli-spinners: 2.9.2
@@ -9341,7 +9341,7 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
 
   '@types/cache-manager@4.0.6': {}
 
@@ -9349,11 +9349,11 @@ snapshots:
 
   '@types/cls-hooked@4.3.8':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
 
   '@types/cookie@0.4.1': {}
 
@@ -9361,7 +9361,7 @@ snapshots:
 
   '@types/cors@2.8.17':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
 
   '@types/ejs@3.1.5': {}
 
@@ -9379,7 +9379,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.5':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
       '@types/qs': 6.9.15
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -9394,12 +9394,12 @@ snapshots:
   '@types/fs-extra@11.0.4':
     dependencies:
       '@types/jsonfile': 6.1.4
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
 
   '@types/get-image-colors@4.0.5':
     dependencies:
       '@types/chroma-js': 2.4.4
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
 
   '@types/http-errors@2.0.4': {}
 
@@ -9409,11 +9409,11 @@ snapshots:
 
   '@types/jsonfile@6.1.4':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
 
   '@types/jsonwebtoken@9.0.6':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
 
   '@types/lodash@4.17.7': {}
 
@@ -9433,7 +9433,7 @@ snapshots:
 
   '@types/mongoose-aggregate-paginate-v2@1.0.12(socks@2.8.3)':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
       mongoose: 8.6.2(socks@2.8.3)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -9447,11 +9447,11 @@ snapshots:
 
   '@types/mute-stream@0.0.4':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
 
   '@types/node-fetch@2.6.11':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
       form-data: 4.0.0
 
   '@types/node@18.19.45':
@@ -9462,13 +9462,13 @@ snapshots:
     dependencies:
       undici-types: 6.19.8
 
-  '@types/node@22.5.4':
+  '@types/node@22.5.5':
     dependencies:
       undici-types: 6.19.8
 
   '@types/nodemailer@6.4.15':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
 
   '@types/normalize-package-data@2.4.4': {}
 
@@ -9491,12 +9491,12 @@ snapshots:
   '@types/send@0.17.4':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
 
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
       '@types/send': 0.17.4
 
   '@types/ua-parser-js@0.7.39': {}
@@ -9519,7 +9519,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.2.0(@typescript-eslint/parser@8.2.0(eslint@9.10.0(jiti@1.21.6))(typescript@5.6.2))(eslint@9.10.0(jiti@1.21.6))(typescript@5.6.2)':
@@ -10489,7 +10489,7 @@ snapshots:
     dependencies:
       '@types/cookie': 0.4.1
       '@types/cors': 2.8.17
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
       accepts: 1.3.8
       base64id: 2.0.0
       cookie: 0.4.2
@@ -11623,7 +11623,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -13496,13 +13496,13 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite-node@1.5.2(@types/node@22.5.4)(terser@5.31.6):
+  vite-node@1.5.2(@types/node@22.5.5)(terser@5.31.6):
     dependencies:
       cac: 6.7.14
       debug: 4.3.5
       pathe: 1.1.2
       picocolors: 1.0.1
-      vite: 5.1.7(@types/node@22.5.4)(terser@5.31.6)
+      vite: 5.1.7(@types/node@22.5.5)(terser@5.31.6)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -13513,13 +13513,13 @@ snapshots:
       - supports-color
       - terser
 
-  vite-tsconfig-paths@4.3.2(typescript@5.6.2)(vite@5.1.7(@types/node@22.5.4)(terser@5.31.6)):
+  vite-tsconfig-paths@4.3.2(typescript@5.6.2)(vite@5.1.7(@types/node@22.5.5)(terser@5.31.6)):
     dependencies:
       debug: 4.3.5
       globrex: 0.1.2
       tsconfck: 3.1.0(typescript@5.6.2)
     optionalDependencies:
-      vite: 5.1.7(@types/node@22.5.4)(terser@5.31.6)
+      vite: 5.1.7(@types/node@22.5.5)(terser@5.31.6)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -13535,13 +13535,13 @@ snapshots:
       - supports-color
       - typescript
 
-  vite@5.1.7(@types/node@22.5.4)(terser@5.31.6):
+  vite@5.1.7(@types/node@22.5.5)(terser@5.31.6):
     dependencies:
       esbuild: 0.19.12
       postcss: 8.4.38
       rollup: 4.18.0
     optionalDependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
       fsevents: 2.3.3
       terser: 5.31.6
 
@@ -13556,7 +13556,7 @@ snapshots:
       terser: 5.31.6
     optional: true
 
-  vitest@1.5.2(@types/node@22.5.4)(terser@5.31.6):
+  vitest@1.5.2(@types/node@22.5.5)(terser@5.31.6):
     dependencies:
       '@vitest/expect': 1.5.2
       '@vitest/runner': 1.5.2
@@ -13575,11 +13575,11 @@ snapshots:
       strip-literal: 2.1.0
       tinybench: 2.8.0
       tinypool: 0.8.4
-      vite: 5.1.7(@types/node@22.5.4)(terser@5.31.6)
-      vite-node: 1.5.2(@types/node@22.5.4)(terser@5.31.6)
+      vite: 5.1.7(@types/node@22.5.5)(terser@5.31.6)
+      vite-node: 1.5.2(@types/node@22.5.5)(terser@5.31.6)
       why-is-node-running: 2.2.2
     optionalDependencies:
-      '@types/node': 22.5.4
+      '@types/node': 22.5.5
     transitivePeerDependencies:
       - less
       - lightningcss
