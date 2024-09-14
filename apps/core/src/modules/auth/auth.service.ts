@@ -243,6 +243,7 @@ export class AuthService {
             provider: 1,
             type: 1,
             userId: 1,
+            handle: 1,
           },
         },
       )
