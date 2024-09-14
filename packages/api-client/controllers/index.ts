@@ -23,10 +23,10 @@ import { TopicController } from './topic'
 import { UserController } from './user'
 
 export const allControllers = [
-  AIController,
   AckController,
   ActivityController,
   AggregateController,
+  AIController,
   CategoryController,
   CommentController,
   LinkController,
@@ -35,12 +35,12 @@ export const allControllers = [
   PostController,
   ProjectController,
   RecentlyController,
-  TopicController,
   SayController,
   SearchController,
-  SnippetController,
   ServerlessController,
+  SnippetController,
   SubscribeController,
+  TopicController,
   UserController,
 ]
 
