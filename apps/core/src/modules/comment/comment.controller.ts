@@ -1,4 +1,4 @@
-import { isUndefined } from 'lodash'
+import { isUndefined, keyBy } from 'lodash'
 import type { DocumentType } from '@typegoose/typegoose'
 import type { Document, FilterQuery } from 'mongoose'
 import type { CommentModel } from './comment.model'
@@ -7,7 +7,9 @@ import {
   Body,
   Delete,
   ForbiddenException,
+  forwardRef,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -34,6 +36,8 @@ import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 
 import { ConfigsService } from '../configs/configs.service'
+import { ReaderModel } from '../reader/reader.model'
+import { ReaderService } from '../reader/reader.service'
 import { UserModel } from '../user/user.model'
 import {
   CommentDto,
@@ -55,15 +59,33 @@ export class CommentController {
     private readonly commentService: CommentService,
     private readonly eventManager: EventManagerService,
     private readonly configsService: ConfigsService,
+    @Inject(forwardRef(() => ReaderService))
+    private readonly readerService: ReaderService,
   ) {}
 
   @Get('/')
   @Auth()
   async getRecentlyComments(@Query() query: PagerDto) {
     const { size = 10, page = 1, state = 0 } = query
-    return transformDataToPaginate(
-      await this.commentService.getComments({ size, page, state }),
+
+    const comments = await this.commentService.getComments({
+      size,
+      page,
+      state,
+    })
+    const readers = await this.readerService.findReaderInIds(
+      comments.docs.map((doc) => doc.readerId).filter(Boolean) as string[],
     )
+    const readerMap = new Map<string, ReaderModel>()
+    for (const reader of readers) {
+      readerMap.set(reader._id.toHexString(), reader)
+    }
+
+    const res = transformDataToPaginate(comments)
+    Object.assign(res, {
+      readers: keyBy(readers, 'id'),
+    })
+    return res
   }
 
   @Get('/:id')
@@ -87,12 +109,18 @@ export class CommentController {
     }
 
     await this.commentService.fillAndReplaceAvatarUrl([data])
+    if (data.readerId) {
+      const reader = await this.readerService.findReaderInIds([data.readerId])
+      Object.assign(data, {
+        reader: reader[0],
+      })
+    }
+
     return data
   }
 
   // 面向 C 端的评论查询接口
   @Get('/ref/:id')
-  @HTTPDecorators.Paginator
   async getCommentsByRefId(
     @Param() params: MongoIdDto,
     @Query() query: PagerDto,
@@ -162,7 +190,17 @@ export class CommentController {
 
     await this.commentService.fillAndReplaceAvatarUrl(comments.docs)
     this.commentService.cleanDirtyData(comments.docs)
-    return comments
+    const result = transformDataToPaginate(comments)
+    const readerIds = comments.docs
+      .map((comment) => comment.readerId)
+      .filter((id) => !!id) as string[]
+    const readers = await this.readerService.findReaderInIds(readerIds)
+
+    Object.assign(result, {
+      readers: keyBy(readers, 'id'),
+    })
+
+    return result
   }
 
   @Post('/:id')

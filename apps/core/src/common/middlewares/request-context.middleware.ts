@@ -2,15 +2,17 @@
 
 import * as cls from 'cls-hooked'
 import type { NestMiddleware } from '@nestjs/common'
-import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { ServerResponse } from 'node:http'
 
 import { Injectable } from '@nestjs/common'
+
+import { BizIncomingMessage } from '~/transformers/get-req.transformer'
 
 import { RequestContext } from '../contexts/request.context'
 
 @Injectable()
 export class RequestContextMiddleware implements NestMiddleware {
-  use(req: IncomingMessage, res: ServerResponse, next: () => any) {
+  use(req: BizIncomingMessage, res: ServerResponse, next: () => any) {
     const requestContext = new RequestContext(req, res)
 
     const session =

@@ -128,4 +128,6 @@ export class CommentModel extends BaseModel {
 
   @prop()
   meta?: string
+  @prop({})
+  readerId?: string
 }

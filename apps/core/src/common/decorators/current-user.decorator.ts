@@ -17,3 +17,9 @@ export const CurrentUserToken = createParamDecorator(
     return token ? token.replace(/[Bb]earer /, '') : ''
   },
 )
+
+export const CurrentReaderId = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    return getNestExecutionContextRequest(ctx).readerId
+  },
+)

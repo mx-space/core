@@ -2,14 +2,21 @@ import { Document } from 'mongodb'
 import { Types } from 'mongoose'
 
 import { Injectable } from '@nestjs/common'
+import { ReturnModelType } from '@typegoose/typegoose'
 
 import { DatabaseService } from '~/processors/database/database.service'
+import { InjectModel } from '~/transformers/model.transformer'
 
 import { AUTH_JS_USER_COLLECTION } from '../auth/auth.constant'
+import { ReaderModel } from './reader.model'
 
 @Injectable()
 export class ReaderService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    @InjectModel(ReaderModel)
+    private readonly readerModel: ReturnModelType<typeof ReaderModel>,
+  ) {}
 
   private buildQueryPipeline(where?: Record<string, any>): Document[] {
     const basePipeline: Document[] = [
@@ -81,13 +88,10 @@ export class ReaderService {
       .updateOne({ _id: new Types.ObjectId(id) }, { $set: { isOwner: false } })
   }
   async findReaderInIds(ids: string[]) {
-    return this.databaseService.db
-      .collection(AUTH_JS_USER_COLLECTION)
-      .aggregate(
-        this.buildQueryPipeline({
-          _id: { $in: ids.map((id) => new Types.ObjectId(id)) },
-        }),
-      )
-      .toArray()
+    return this.readerModel
+      .find({
+        _id: { $in: ids.map((id) => new Types.ObjectId(id)) },
+      })
+      .lean()
   }
 }

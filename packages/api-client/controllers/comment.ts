@@ -2,6 +2,7 @@ import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { PaginationParams } from '~/interfaces/params'
 import type { IRequestHandler } from '~/interfaces/request'
+import type { ReaderModel } from '~/models'
 import type { PaginateResult } from '~/models/base'
 import type { CommentModel } from '~/models/comment'
 import type { HTTPClient } from '../core'
@@ -31,7 +32,7 @@ export class CommentController<ResponseWrapper> implements IController {
   }
 
   /**
-   * 根据 comment id 获取评论, 包括子评论
+   * 根据 comment id 获取评论，包括子评论
    */
   getById(id: string) {
     return this.proxy(id).get<CommentModel & { ref: string }>()
@@ -43,11 +44,13 @@ export class CommentController<ResponseWrapper> implements IController {
    */
   getByRefId(refId: string, pagination: PaginationParams = {}) {
     const { page, size } = pagination
-    return this.proxy
-      .ref(refId)
-      .get<PaginateResult<CommentModel & { ref: string }>>({
-        params: { page: page || 1, size: size || 10 },
-      })
+    return this.proxy.ref(refId).get<
+      PaginateResult<CommentModel & { ref: string }> & {
+        readers: Record<string, ReaderModel>
+      }
+    >({
+      params: { page: page || 1, size: size || 10 },
+    })
   }
   /**
    * 评论

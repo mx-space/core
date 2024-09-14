@@ -22,6 +22,7 @@ import {
   Logger,
 } from '@nestjs/common'
 
+import { RequestContext } from '~/common/contexts/request.context'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import {
@@ -44,6 +45,7 @@ import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteService } from '../note/note.service'
 import { PostService } from '../post/post.service'
+import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
 import { Activity } from './activity.constant'
 import { ActivityModel } from './activity.model'
@@ -194,6 +196,21 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       } as Record<ActivityLikeSupportType, string[]>,
     )
 
+    const readerIds = [] as string[]
+    for (const item of activities.docs) {
+      const readerId = item.payload.readerId
+      if (readerId) {
+        readerIds.push(readerId)
+      }
+    }
+
+    const readers = await this.readerService.findReaderInIds(readerIds)
+
+    const readerMap = new Map<string, ReaderModel>()
+    for (const reader of readers) {
+      readerMap.set(reader._id.toHexString(), reader)
+    }
+
     const type2Collection: Record<
       ActivityLikeSupportType,
       Collection<Document>
@@ -230,6 +247,15 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       const refModel = refModelData.get(ac.payload.id)
 
       refModel && Reflect.set(nextAc, 'ref', refModel)
+      const readerId = ac.payload.readerId
+      if (readerId) {
+        const reader = readerMap.get(readerId)
+        if (reader) {
+          Object.assign(nextAc, {
+            reader,
+          })
+        }
+      }
 
       return nextAc
     }) as any as (ActivityModel & {
@@ -277,11 +303,22 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   }
 
   async likeAndEmit(type: 'post' | 'note', id: string, ip: string) {
+    const readerId = RequestContext.currentRequest()?.readerId
+
+    let reader: ReaderModel | null = null
+    if (readerId) {
+      reader = await this.readerService
+        .findReaderInIds([readerId])
+        .then((res) => res[0])
+    }
+
     try {
       const mapping = {
         post: ArticleTypeEnum.Post,
         note: ArticleTypeEnum.Note,
       }
+
+      // TODO 改成 reader 维度
       const res = await this.countingService.updateLikeCountWithIp(
         mapping[type],
         id,
@@ -302,6 +339,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       {
         id,
         type,
+        reader,
         ref: pick(refModel, [
           'id',
           '_id',
@@ -325,6 +363,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         ip,
         type,
         id,
+        readerId: reader ? readerId : undefined,
       } as ActivityLikePayload,
     })
   }
