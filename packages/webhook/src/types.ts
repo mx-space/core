@@ -7,6 +7,7 @@ import type { PostModel } from '@core/modules/post/post.model'
 import type { NormalizedPost } from '@core/modules/post/post.type'
 import type { RecentlyModel } from '@core/modules/recently/recently.model'
 import type { SayModel } from '@core/modules/say/say.model'
+import type { ReaderModel } from '~/modules/reader/reader.model'
 import type { EventEmitter } from 'node:events'
 import type { BusinessEvents } from './event.enum'
 
@@ -62,7 +63,9 @@ export interface IActivityLike {
   ref: {
     id: string
     title: string
+    readerId?: string
   }
+  reader?: ReaderModel
 }
 
 // Auto Generaged type.
