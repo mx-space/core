@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [7.1.2](https://github.com/mx-space/core/compare/v7.1.1...v7.1.2) (2024-09-16)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ua-parser-js to v1.0.39 ([f54f721](https://github.com/mx-space/core/commit/f54f721c1f8f2caf11e8ce36a6251f7dc3e6edc3))
+* disable cache for auth session ([6a7a7c8](https://github.com/mx-space/core/commit/6a7a7c831c8b5ef5dbe533d2d52cf5b433c5d78f))
+
+
+
 ## [7.1.1](https://github.com/mx-space/core/compare/v7.1.0...v7.1.1) (2024-09-14)
 
 
