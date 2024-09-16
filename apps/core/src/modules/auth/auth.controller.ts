@@ -21,6 +21,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { HttpCache } from '~/common/decorators/cache.decorator'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { FastifyBizRequest } from '~/transformers/get-req.transformer'
@@ -108,6 +109,9 @@ export class AuthController {
   }
 
   @Get('session')
+  @HttpCache({
+    disable: true,
+  })
   async getSession(@Req() req: FastifyBizRequest) {
     const session = await this.authService.getSessionUser(req.raw)
 
