@@ -243,7 +243,6 @@ export class AuthService {
             provider: 1,
             type: 1,
             userId: 1,
-            handle: 1,
           },
         },
       )
@@ -261,6 +260,7 @@ export class AuthService {
               name: 1,
               image: 1,
               isOwner: 1,
+              handle: 1,
             },
           },
         )
