@@ -293,6 +293,8 @@ export class CommentController {
       isWhispers: parent.isWhispers,
     }
 
+    await this.commentService.assignReaderToComment(model)
+
     const comment = await this.commentService.model.create(model)
     const commentId = comment._id.toString()
     scheduleManager.schedule(async () => {

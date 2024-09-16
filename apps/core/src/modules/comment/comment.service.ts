@@ -157,11 +157,7 @@ export class CommentService implements OnModuleInit {
     return res
   }
 
-  async createComment(
-    id: string,
-    doc: Partial<CommentModel>,
-    type?: CollectionRefTypes,
-  ) {
+  async assignReaderToComment(doc: Partial<CommentModel>) {
     const readerId = RequestContext.currentRequest()?.readerId
 
     let reader: ReaderModel | null = null
@@ -174,7 +170,15 @@ export class CommentService implements OnModuleInit {
     if (reader) {
       doc.author = reader.name
       doc.mail = reader.email
+      doc.avatar = reader.image
     }
+  }
+  async createComment(
+    id: string,
+    doc: Partial<CommentModel>,
+    type?: CollectionRefTypes,
+  ) {
+    await this.assignReaderToComment(doc)
 
     let ref: (WriteBaseModel & { _id: any }) | null = null
     let refType = type
