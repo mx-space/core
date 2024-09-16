@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [7.1.3](https://github.com/mx-space/core/compare/v7.1.2...v7.1.3) (2024-09-16)
+
+
+### Bug Fixes
+
+* reader handle projection ([c8b2eab](https://github.com/mx-space/core/commit/c8b2eabe1f97f33cb7042d2394c6bbf659161710))
+
+
+
 ## [7.1.2](https://github.com/mx-space/core/compare/v7.1.1...v7.1.2) (2024-09-16)
 
 
