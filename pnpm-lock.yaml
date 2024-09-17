@@ -229,8 +229,8 @@ importers:
         specifier: 3.10.1
         version: 3.10.1
       langchain:
-        specifier: 0.2.19
-        version: 0.2.19(@aws-sdk/client-s3@3.651.1)(@aws-sdk/credential-provider-node@3.651.1(@aws-sdk/client-sso-oidc@3.651.1(@aws-sdk/client-sts@3.651.1))(@aws-sdk/client-sts@3.651.1))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.9.0(socks@2.8.3))(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))(ws@8.17.1)
+        specifier: 0.2.20
+        version: 0.2.20(@aws-sdk/client-s3@3.651.1)(@aws-sdk/credential-provider-node@3.651.1(@aws-sdk/client-sso-oidc@3.651.1(@aws-sdk/client-sts@3.651.1))(@aws-sdk/client-sts@3.651.1))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.9.0(socks@2.8.3))(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))(ws@8.17.1)
       linkedom:
         specifier: 0.18.4
         version: 0.18.4
@@ -4581,8 +4581,8 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
-  langchain@0.2.19:
-    resolution: {integrity: sha512-2NhxNz5hE6eRrklMEidihzHq9J0Lzbyo1HxxZe4CuUIJf5UVSiPj9sqiJ2Ovx7BfgD/SJOursnx/yw/jCjVE1A==}
+  langchain@0.2.20:
+    resolution: {integrity: sha512-tbels6Rr524iMM3VOQ4aTGnEOOjAA1BQuBR8u/8gJ2yT48lMtIQRAN32Y4KVjKK+hEWxHHlmLBrtgLpTphFjNA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@aws-sdk/client-s3': '*'
@@ -4597,7 +4597,6 @@ packages:
       '@langchain/anthropic': '*'
       '@langchain/aws': '*'
       '@langchain/cohere': '*'
-      '@langchain/community': '*'
       '@langchain/google-genai': '*'
       '@langchain/google-vertexai': '*'
       '@langchain/groq': '*'
@@ -4668,8 +4667,6 @@ packages:
       '@langchain/aws':
         optional: true
       '@langchain/cohere':
-        optional: true
-      '@langchain/community':
         optional: true
       '@langchain/google-genai':
         optional: true
@@ -4762,20 +4759,6 @@ packages:
       youtube-transcript:
         optional: true
       youtubei.js:
-        optional: true
-
-  langsmith@0.1.55:
-    resolution: {integrity: sha512-6NVtI04UUnIY59I/imOX02FG/QMGfqStu8tiJtyyreKMv2GAN0EE9Z5Ap1wzOe6v8ukEcV3NwEO2LYOPwup1PQ==}
-    peerDependencies:
-      '@langchain/core': '*'
-      langchain: '*'
-      openai: '*'
-    peerDependenciesMeta:
-      '@langchain/core':
-        optional: true
-      langchain:
-        optional: true
-      openai:
         optional: true
 
   langsmith@0.1.56:
@@ -11581,7 +11564,7 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  langchain@0.2.19(@aws-sdk/client-s3@3.651.1)(@aws-sdk/credential-provider-node@3.651.1(@aws-sdk/client-sso-oidc@3.651.1(@aws-sdk/client-sts@3.651.1))(@aws-sdk/client-sts@3.651.1))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.9.0(socks@2.8.3))(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))(ws@8.17.1):
+  langchain@0.2.20(@aws-sdk/client-s3@3.651.1)(@aws-sdk/credential-provider-node@3.651.1(@aws-sdk/client-sso-oidc@3.651.1(@aws-sdk/client-sts@3.651.1))(@aws-sdk/client-sts@3.651.1))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.9.0(socks@2.8.3))(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))(ws@8.17.1):
     dependencies:
       '@langchain/core': 0.2.33(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))
       '@langchain/openai': 0.2.11(encoding@0.1.13)
@@ -11590,7 +11573,7 @@ snapshots:
       js-tiktoken: 1.0.14
       js-yaml: 4.1.0
       jsonpointer: 5.0.1
-      langsmith: 0.1.55(@langchain/core@0.2.33(openai@4.61.1(encoding@0.1.13)(zod@3.23.8)))(langchain@0.2.19(@aws-sdk/client-s3@3.651.1)(@aws-sdk/credential-provider-node@3.651.1(@aws-sdk/client-sso-oidc@3.651.1(@aws-sdk/client-sts@3.651.1))(@aws-sdk/client-sts@3.651.1))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.9.0(socks@2.8.3))(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))(ws@8.17.1))(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))
+      langsmith: 0.1.56(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))
       openapi-types: 12.1.3
       p-retry: 4.6.2
       uuid: 10.0.0
@@ -11609,19 +11592,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - openai
-
-  langsmith@0.1.55(@langchain/core@0.2.33(openai@4.61.1(encoding@0.1.13)(zod@3.23.8)))(langchain@0.2.19(@aws-sdk/client-s3@3.651.1)(@aws-sdk/credential-provider-node@3.651.1(@aws-sdk/client-sso-oidc@3.651.1(@aws-sdk/client-sts@3.651.1))(@aws-sdk/client-sts@3.651.1))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.9.0(socks@2.8.3))(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))(ws@8.17.1))(openai@4.61.1(encoding@0.1.13)(zod@3.23.8)):
-    dependencies:
-      '@types/uuid': 10.0.0
-      commander: 10.0.1
-      p-queue: 6.6.2
-      p-retry: 4.6.2
-      semver: 7.6.3
-      uuid: 10.0.0
-    optionalDependencies:
-      '@langchain/core': 0.2.33(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))
-      langchain: 0.2.19(@aws-sdk/client-s3@3.651.1)(@aws-sdk/credential-provider-node@3.651.1(@aws-sdk/client-sso-oidc@3.651.1(@aws-sdk/client-sts@3.651.1))(@aws-sdk/client-sts@3.651.1))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.9.0(socks@2.8.3))(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))(ws@8.17.1)
-      openai: 4.61.1(encoding@0.1.13)(zod@3.23.8)
 
   langsmith@0.1.56(openai@4.61.1(encoding@0.1.13)(zod@3.23.8)):
     dependencies:
