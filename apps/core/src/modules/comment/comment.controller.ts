@@ -20,7 +20,10 @@ import {
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { CurrentUser } from '~/common/decorators/current-user.decorator'
+import {
+  CurrentReaderId,
+  CurrentUser,
+} from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
@@ -43,6 +46,7 @@ import {
   CommentDto,
   CommentRefTypesDto,
   CommentStatePatchDto,
+  EditCommentDto,
   TextOnlyDto,
 } from './comment.dto'
 import { CommentReplyMailType } from './comment.enum'
@@ -450,5 +454,24 @@ export class CommentController {
       nextTick: true,
     })
     return
+  }
+
+  @Patch('/edit/:id')
+  async editComment(
+    @Param() params: MongoIdDto,
+    @Body() body: EditCommentDto,
+    @IsAuthenticated() isAuthenticated: boolean,
+    @CurrentReaderId() readerId: string,
+  ) {
+    const { id } = params
+    const { text } = body
+    const comment = await this.commentService.model.findById(id).lean()
+    if (!comment) {
+      throw new CannotFindException()
+    }
+    if (comment.readerId !== readerId && !isAuthenticated) {
+      throw new ForbiddenException()
+    }
+    await this.commentService.editComment(id, text)
   }
 }

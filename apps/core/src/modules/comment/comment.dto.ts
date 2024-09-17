@@ -55,6 +55,12 @@ export class CommentDto {
   avatar?: string
 }
 
+export class EditCommentDto {
+  @IsString()
+  @IsNotEmpty()
+  text: string
+}
+
 export class RequiredGuestReaderCommentDto extends CommentDto {
   @IsString()
   @IsNotEmpty()

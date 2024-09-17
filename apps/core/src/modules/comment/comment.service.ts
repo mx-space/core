@@ -643,4 +643,19 @@ export class CommentService implements OnModuleInit {
       url: `${adminUrl}#/comments`,
     })
   }
+
+  async editComment(id: string, text: string) {
+    const comment = await this.commentModel.findById(id).lean()
+    if (!comment) {
+      throw new CannotFindException()
+    }
+    await this.commentModel.updateOne({ _id: id }, { text })
+    await this.eventManager.broadcast(
+      BusinessEvents.COMMENT_UPDATE,
+      { id, text },
+      {
+        scope: comment.isWhispers ? EventScope.TO_SYSTEM_ADMIN : EventScope.ALL,
+      },
+    )
+  }
 }
