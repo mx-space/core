@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [7.1.6](https://github.com/mx-space/core/compare/v7.1.5...v7.1.6) (2024-09-17)
+
+
+### Features
+
+* add comment `editedAt` ([2f1a973](https://github.com/mx-space/core/commit/2f1a973e5e374fbe456bfd62f38897448fe003af))
+
+
+
 ## [7.1.5](https://github.com/mx-space/core/compare/v7.1.4...v7.1.5) (2024-09-17)
 
 
