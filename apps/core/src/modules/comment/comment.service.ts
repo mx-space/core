@@ -649,7 +649,10 @@ export class CommentService implements OnModuleInit {
     if (!comment) {
       throw new CannotFindException()
     }
-    await this.commentModel.updateOne({ _id: id }, { text })
+    await this.commentModel.updateOne(
+      { _id: id },
+      { text, editedAt: new Date() },
+    )
     await this.eventManager.broadcast(
       BusinessEvents.COMMENT_UPDATE,
       { id, text },

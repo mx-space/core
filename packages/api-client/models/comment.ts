@@ -28,6 +28,7 @@ export interface CommentModel extends BaseModel {
 
   source?: string
   readerId?: string
+  editedAt?: string
 }
 export interface CommentRef {
   id: string

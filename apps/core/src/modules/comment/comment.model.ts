@@ -130,4 +130,6 @@ export class CommentModel extends BaseModel {
   meta?: string
   @prop({})
   readerId?: string
+  @prop()
+  editedAt?: Date
 }
