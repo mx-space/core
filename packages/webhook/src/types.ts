@@ -98,6 +98,13 @@ export type GenericEvent =
       }
     }
   | {
+      type: BusinessEvents.COMMENT_UPDATE
+      payload: {
+        id: string
+        text: string
+      }
+    }
+  | {
       type: BusinessEvents.ARTICLE_READ_COUNT_UPDATE
       payload: {
         count: number
