@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [7.1.5](https://github.com/mx-space/core/compare/v7.1.4...v7.1.5) (2024-09-17)
+
+
+### Bug Fixes
+
+* reader assgin ([a0e37aa](https://github.com/mx-space/core/commit/a0e37aa41729faf3edd9fd6c6923ba6c30ed54b9))
+
+
+### Features
+
+* edit comment ([ed7b33e](https://github.com/mx-space/core/commit/ed7b33e3a90c782bb7c3092140645fd4390f620a))
+
+
+
 ## [7.1.4](https://github.com/mx-space/core/compare/v7.1.3...v7.1.4) (2024-09-16)
 
 
