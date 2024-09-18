@@ -330,8 +330,8 @@ importers:
         version: 0.11.0
     devDependencies:
       '@langchain/core':
-        specifier: 0.2.33
-        version: 0.2.33(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))
+        specifier: 0.2.34
+        version: 0.2.34(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))
       '@nestjs/cli':
         specifier: 10.4.5
         version: 10.4.5(@swc/core@1.7.26)(esbuild@0.23.0)
@@ -1822,8 +1822,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@langchain/core@0.2.33':
-    resolution: {integrity: sha512-8WMied0Y5c4YDUjvoQqr/M63jAuZ3e+YqCAaszeGeBJbsHFoCdj8Ppr/yP6moAvsLImntxUXC6BxqAIDYkpGkg==}
+  '@langchain/core@0.2.34':
+    resolution: {integrity: sha512-Hkveq1UcOjUj1DVn5erbqElyRj1t04NORSuSIZAJCtPO7EDkIqomjAarJ5+I5NUpQeIONgbOdnY9TkJ6cKUSVA==}
     engines: {node: '>=18'}
 
   '@langchain/openai@0.2.11':
@@ -8317,7 +8317,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@langchain/core@0.2.33(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))':
+  '@langchain/core@0.2.34(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))':
     dependencies:
       ansi-styles: 5.2.0
       camelcase: 6.3.0
@@ -8335,7 +8335,7 @@ snapshots:
 
   '@langchain/openai@0.2.11(encoding@0.1.13)':
     dependencies:
-      '@langchain/core': 0.2.33(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))
+      '@langchain/core': 0.2.34(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))
       js-tiktoken: 1.0.14
       openai: 4.61.1(encoding@0.1.13)(zod@3.23.8)
       zod: 3.23.8
@@ -8345,7 +8345,7 @@ snapshots:
 
   '@langchain/textsplitters@0.0.3(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))':
     dependencies:
-      '@langchain/core': 0.2.33(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))
+      '@langchain/core': 0.2.34(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))
       js-tiktoken: 1.0.14
     transitivePeerDependencies:
       - openai
@@ -11566,7 +11566,7 @@ snapshots:
 
   langchain@0.2.20(@aws-sdk/client-s3@3.651.1)(@aws-sdk/credential-provider-node@3.651.1(@aws-sdk/client-sso-oidc@3.651.1(@aws-sdk/client-sts@3.651.1))(@aws-sdk/client-sts@3.651.1))(axios@1.7.7)(encoding@0.1.13)(fast-xml-parser@4.4.1)(ignore@5.3.2)(ioredis@5.4.1)(mongodb@6.9.0(socks@2.8.3))(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))(ws@8.17.1):
     dependencies:
-      '@langchain/core': 0.2.33(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))
+      '@langchain/core': 0.2.34(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))
       '@langchain/openai': 0.2.11(encoding@0.1.13)
       '@langchain/textsplitters': 0.0.3(openai@4.61.1(encoding@0.1.13)(zod@3.23.8))
       binary-extensions: 2.3.0
