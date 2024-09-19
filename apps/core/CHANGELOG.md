@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [7.1.7](https://github.com/mx-space/core/compare/v7.1.6...v7.1.7) (2024-09-19)
+
+
+### Bug Fixes
+
+* add `sharp` globally in docker image ([519ba0b](https://github.com/mx-space/core/commit/519ba0babe641a309501b621b1daef8e4efa970e))
+* **deps:** update dependency @aws-sdk/client-s3 to v3.654.0 ([#2109](https://github.com/mx-space/core/issues/2109)) ([f5dfe67](https://github.com/mx-space/core/commit/f5dfe6745c336e55507fdebfccf707fc0f7aabfa))
+* **deps:** update dependency @types/jsonwebtoken to v9.0.7 ([171491e](https://github.com/mx-space/core/commit/171491e47d7eae6a7ae88fb6737fe3a184553cc3))
+* **deps:** update dependency langchain to v0.2.20 ([b7aaa91](https://github.com/mx-space/core/commit/b7aaa91d983038d66a4db6e5d945bfb24903ede6))
+* **deps:** update dependency linkedom to v0.18.5 ([fa4138f](https://github.com/mx-space/core/commit/fa4138fbf669ab0811704249e721753b04ab2cd2))
+* **deps:** update dependency mongoose to v8.6.3 ([25f2905](https://github.com/mx-space/core/commit/25f290537513eb4813dca503539680423586198c))
+* **deps:** update nest monorepo to v10.4.3 ([3187b98](https://github.com/mx-space/core/commit/3187b98d3314878bb369dcf5b5fd538548118eca))
+
+
+
 ## [7.1.6](https://github.com/mx-space/core/compare/v7.1.5...v7.1.6) (2024-09-17)
 
 
