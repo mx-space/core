@@ -145,7 +145,10 @@ export class AuthService {
 
       new Headers(req.headers),
       process.env,
-      config.basePath,
+
+      {
+        basePath: config.basePath,
+      },
     )
 
     const response = await Auth(

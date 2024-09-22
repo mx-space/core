@@ -11,10 +11,9 @@
   "scripts": {
     "build": "tsup"
   },
-  "dependencies": {},
   "devDependencies": {
-    "@auth/core": "0.34.2",
-    "@auth/mongodb-adapter": "3.4.2",
+    "@auth/core": "0.35.0",
+    "@auth/mongodb-adapter": "3.5.0",
     "nanoid": "5.0.7",
     "zx": "7.2.3"
   }
