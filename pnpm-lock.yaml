@@ -480,8 +480,8 @@ importers:
         specifier: 0.34.2
         version: 0.34.2(nodemailer@6.9.15)
       '@auth/mongodb-adapter':
-        specifier: 3.4.2
-        version: 3.4.2(mongodb@6.9.0(socks@2.8.3))(nodemailer@6.9.15)
+        specifier: 3.5.0
+        version: 3.5.0(mongodb@6.9.0(socks@2.8.3))(nodemailer@6.9.15)
       nanoid:
         specifier: 5.0.7
         version: 5.0.7
@@ -584,8 +584,22 @@ packages:
       nodemailer:
         optional: true
 
-  '@auth/mongodb-adapter@3.4.2':
-    resolution: {integrity: sha512-Vg6c6FIoVeBjNV4PL6CD6owR5u80+wpNJINszUwLHxBnF2GljqYLHNFSgp9Xtjefp1CUtMEKfv9vXiVi2x9PMQ==}
+  '@auth/core@0.35.0':
+    resolution: {integrity: sha512-XvMALiYn5ZQd1hVeG1t+jCU89jRrc7ortl/05wkBrPHnRWZScxAK5jKuzBz+AOBQXewDjYcMpzeF5tTqg6rDhQ==}
+    peerDependencies:
+      '@simplewebauthn/browser': ^9.0.1
+      '@simplewebauthn/server': ^9.0.2
+      nodemailer: ^6.8.0
+    peerDependenciesMeta:
+      '@simplewebauthn/browser':
+        optional: true
+      '@simplewebauthn/server':
+        optional: true
+      nodemailer:
+        optional: true
+
+  '@auth/mongodb-adapter@3.5.0':
+    resolution: {integrity: sha512-w3AhqwtCihucrpXVnHP+RwIW3JpzGttE/ZIu5rG0V6ZlHj1kw6iN079/1g3oCYfM+tvBqmPqy1U15xCT2OG6Nw==}
     peerDependencies:
       mongodb: 6.9.0
 
@@ -6971,9 +6985,21 @@ snapshots:
     optionalDependencies:
       nodemailer: 6.9.15
 
-  '@auth/mongodb-adapter@3.4.2(mongodb@6.9.0(socks@2.8.3))(nodemailer@6.9.15)':
+  '@auth/core@0.35.0(nodemailer@6.9.15)':
     dependencies:
-      '@auth/core': 0.34.2(nodemailer@6.9.15)
+      '@panva/hkdf': 1.2.1
+      '@types/cookie': 0.6.0
+      cookie: 0.6.0
+      jose: 5.8.0
+      oauth4webapi: 2.12.0
+      preact: 10.11.3
+      preact-render-to-string: 5.2.3(preact@10.11.3)
+    optionalDependencies:
+      nodemailer: 6.9.15
+
+  '@auth/mongodb-adapter@3.5.0(mongodb@6.9.0(socks@2.8.3))(nodemailer@6.9.15)':
+    dependencies:
+      '@auth/core': 0.35.0(nodemailer@6.9.15)
       mongodb: 6.9.0(socks@2.8.3)
     transitivePeerDependencies:
       - '@simplewebauthn/browser'
