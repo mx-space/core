@@ -88,7 +88,7 @@
     "bcryptjs": "^2.4.3",
     "blurhash": "2.0.5",
     "cache-manager": "5.7.6",
-    "cache-manager-ioredis-yet": "2.1.1",
+    "cache-manager-ioredis-yet": "2.1.2",
     "class-transformer": "0.5.1",
     "class-validator": "0.13.2",
     "class-validator-jsonschema": "npm:@innei/class-validator-jsonschema@3.1.2",

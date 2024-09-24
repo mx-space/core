@@ -184,8 +184,8 @@ importers:
         specifier: 5.7.6
         version: 5.7.6
       cache-manager-ioredis-yet:
-        specifier: 2.1.1
-        version: 2.1.1
+        specifier: 2.1.2
+        version: 2.1.2
       class-transformer:
         specifier: 0.5.1
         version: 0.5.1
@@ -2843,8 +2843,8 @@ packages:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
     engines: {node: '>=8'}
 
-  cache-manager-ioredis-yet@2.1.1:
-    resolution: {integrity: sha512-i4taQCesUa66Op2v3DQiF2oXHIeGyGAbOrwyVklN1TECyvKFgxd3JDP1MwkxvdpeKkPZh8dH4USFL9/wbmQp/Q==}
+  cache-manager-ioredis-yet@2.1.2:
+    resolution: {integrity: sha512-p/5D+ADvJaZjAs12fR5l0ZJ+rK2EqbCryFdrzsMj3K+lGwNoCjB33N6V397otgreB+iwK+lssBshpkJDodiyMQ==}
     engines: {node: '>= 18'}
     deprecated: With cache-manager v6 we now are using Keyv
 
@@ -9427,7 +9427,7 @@ snapshots:
 
   cac@6.7.14: {}
 
-  cache-manager-ioredis-yet@2.1.1:
+  cache-manager-ioredis-yet@2.1.2:
     dependencies:
       cache-manager: 5.7.6
       ioredis: 5.4.1
