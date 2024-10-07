@@ -1,5 +1,30 @@
 # CHANGELOG
 
+## [7.1.8](https://github.com/mx-space/core/compare/v7.1.7...v7.1.8) (2024-10-07)
+
+
+### Bug Fixes
+
+* allow cors interceptor ([fa207ea](https://github.com/mx-space/core/commit/fa207ea4e3a92ff5c93d05ff1632965efbef9c83))
+* **deps:** update babel monorepo to v7.25.7 ([9249adb](https://github.com/mx-space/core/commit/9249adbf66fdfc419cece0d243d680635c4808e2))
+* **deps:** update dependency @aws-sdk/client-s3 to v3.657.0 ([#2154](https://github.com/mx-space/core/issues/2154)) ([e29b356](https://github.com/mx-space/core/commit/e29b356f87a60fa30ef35eece1a7dc32fc450fb3))
+* **deps:** update dependency @fastify/static to v8 ([#2142](https://github.com/mx-space/core/issues/2142)) ([e2c8bdc](https://github.com/mx-space/core/commit/e2c8bdcc42080da5b4c624c57b1fae6cf0817ef1))
+* **deps:** update dependency @langchain/openai to v0.3.1 ([57b8200](https://github.com/mx-space/core/commit/57b8200f228227f10450f42edc04b94f3220da69))
+* **deps:** update dependency @langchain/openai to v0.3.2 ([6bf8aa5](https://github.com/mx-space/core/commit/6bf8aa5a3b39ac5018f0091c21c47764cb88f18f))
+* **deps:** update dependency @langchain/openai to v0.3.4 ([5fd7f14](https://github.com/mx-space/core/commit/5fd7f14ac4f572dc8c3edac6fb65cc7f12822317))
+* **deps:** update dependency @langchain/openai to v0.3.5 ([#2181](https://github.com/mx-space/core/issues/2181)) ([5487e2c](https://github.com/mx-space/core/commit/5487e2c48d28c4d95730b23668af660229d5576d))
+* **deps:** update dependency @typegoose/auto-increment to v4.7.0 ([#2172](https://github.com/mx-space/core/issues/2172)) ([384e2e2](https://github.com/mx-space/core/commit/384e2e2f28b46c7dbbc5e6dd34958d7dd55eabf6))
+* **deps:** update dependency cache-manager-ioredis-yet to v2.1.2 ([8bb15c3](https://github.com/mx-space/core/commit/8bb15c378a8e6a8412987cd34428595ed0cbbc83))
+* **deps:** update dependency mongoose to v8.6.4 ([e70d70b](https://github.com/mx-space/core/commit/e70d70ba51b9d53a8e3cba7bc8b0133fb7a4bb32))
+* **deps:** update dependency mongoose to v8.7.0 ([#2171](https://github.com/mx-space/core/issues/2171)) ([c1bb5e6](https://github.com/mx-space/core/commit/c1bb5e6d53aa9b91b2f455d2fec30924db1a6042))
+* **deps:** update dependency mongoose-paginate-v2 to v1.8.4 ([a659ed2](https://github.com/mx-space/core/commit/a659ed2f793cdbe0370d96adaf137341e1acf186))
+* **deps:** update dependency mongoose-paginate-v2 to v1.8.5 ([1ac42ef](https://github.com/mx-space/core/commit/1ac42ef0fe39cdf00b23f945bb4c48bf238bf9f6))
+* **deps:** update dependency openai to v4.63.0 ([#2097](https://github.com/mx-space/core/issues/2097)) ([a1f84dc](https://github.com/mx-space/core/commit/a1f84dc40762f37753539c148d94e4342fbe2eff))
+* **deps:** update dependency openai to v4.65.0 ([#2163](https://github.com/mx-space/core/issues/2163)) ([e450946](https://github.com/mx-space/core/commit/e450946de58b70904ab42dceb821661b01b3bd2c))
+* **deps:** update nest monorepo to v10.4.4 ([bbdef0c](https://github.com/mx-space/core/commit/bbdef0c2745643436bdb21d68947c53863320a32))
+
+
+
 ## [7.1.7](https://github.com/mx-space/core/compare/v7.1.6...v7.1.7) (2024-09-19)
 
 
