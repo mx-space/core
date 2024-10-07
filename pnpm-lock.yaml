@@ -157,8 +157,8 @@ importers:
         specifier: 5.1.0
         version: 5.1.0
       '@typegoose/auto-increment':
-        specifier: 4.6.0
-        version: 4.6.0(mongoose@8.7.0(socks@2.8.3))
+        specifier: 4.7.0
+        version: 4.7.0(mongoose@8.7.0(socks@2.8.3))
       '@typegoose/typegoose':
         specifier: 12.7.0
         version: 12.7.0(mongoose@8.7.0(socks@2.8.3))
@@ -2185,11 +2185,11 @@ packages:
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
 
-  '@typegoose/auto-increment@4.6.0':
-    resolution: {integrity: sha512-Hfddd9WAbHmzR/yrjKFonHStVYfPLyCJm2pu25a0ade0Kaiuol9VLJbZSQyrUjAfKPA+4fKwHOhJtXJ+WEnxBw==}
+  '@typegoose/auto-increment@4.7.0':
+    resolution: {integrity: sha512-R2iGiRG1y4ElSdmzFhKT8C3Gh1YAIiHeTYuiIWZz/GEBQ477LGBKtwCfmPOH9xsNsfV7Hw0nRpUzDjbIOopa6w==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
-      mongoose: ~8.6.0
+      mongoose: ~8.7.0
 
   '@typegoose/typegoose@12.7.0':
     resolution: {integrity: sha512-UOjNlNzzJ4O/Y82I7EV9imBRhmIvZvAOVgmKUEpQbUVF63RrOU8ltHUVd7n/gADD4tZRUzM8siOBXaGY19rTXg==}
@@ -4451,6 +4451,10 @@ packages:
 
   loglevel@1.9.1:
     resolution: {integrity: sha512-hP3I3kCrDIMuRwAwHltphhDM1r8i55H33GgqjXbrisuJhF4kRhW1dNuxsRklp4bXl8DSdLaNLuiL4A/LWRfxvg==}
+    engines: {node: '>= 0.6.0'}
+
+  loglevel@1.9.2:
+    resolution: {integrity: sha512-HgMmCqIJSAKqo68l0rS2AanEWfkxaZ5wNiEFb5ggm08lDs9Xl2KxBlX3PTcaD2chBM1gXAYf491/M2Rv8Jwayg==}
     engines: {node: '>= 0.6.0'}
 
   longest-streak@3.1.0:
@@ -8665,9 +8669,9 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
-  '@typegoose/auto-increment@4.6.0(mongoose@8.7.0(socks@2.8.3))':
+  '@typegoose/auto-increment@4.7.0(mongoose@8.7.0(socks@2.8.3))':
     dependencies:
-      loglevel: 1.9.1
+      loglevel: 1.9.2
       mongoose: 8.7.0(socks@2.8.3)
       tslib: 2.7.0
 
@@ -11237,6 +11241,8 @@ snapshots:
       wrap-ansi: 9.0.0
 
   loglevel@1.9.1: {}
+
+  loglevel@1.9.2: {}
 
   longest-streak@3.1.0: {}
 
