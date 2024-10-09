@@ -2,7 +2,7 @@
   "name": "@mx-space/webhook",
   "version": "0.5.0",
   "devDependencies": {
-    "express": "4.21.0"
+    "express": "4.21.1"
   },
   "type": "module",
   "main": "dist/index.cjs",
