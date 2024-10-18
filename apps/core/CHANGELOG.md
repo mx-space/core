@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [7.1.9](https://github.com/mx-space/core/compare/v7.1.8...v7.1.9) (2024-10-18)
+
+
+### Bug Fixes
+
+* downgrade mongoose ([70301af](https://github.com/mx-space/core/commit/70301af599a0cd9591ba78e952b1224c7ea28844))
+* lockfile ([d7cbd80](https://github.com/mx-space/core/commit/d7cbd805d7a75395b9b450706c32f7d4e41ef330))
+
+
+
 ## [7.1.8](https://github.com/mx-space/core/compare/v7.1.7...v7.1.8) (2024-10-07)
 
 
