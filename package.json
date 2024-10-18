@@ -60,7 +60,7 @@
     "mongodb": "6.9.0",
     "pino": "./external/pino",
     "semver": "7.6.3",
-    "typescript": "5.6.2",
+    "typescript": "5.6.3",
     "whatwg-url": "14.0.0"
   }
 }
