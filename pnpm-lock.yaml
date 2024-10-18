@@ -480,8 +480,8 @@ importers:
         specifier: 0.37.0
         version: 0.37.0(nodemailer@6.9.15)
       '@auth/mongodb-adapter':
-        specifier: 3.7.0
-        version: 3.7.0(mongodb@6.9.0(socks@2.8.3))(nodemailer@6.9.15)
+        specifier: 3.7.1
+        version: 3.7.1(mongodb@6.9.0(socks@2.8.3))(nodemailer@6.9.15)
       nanoid:
         specifier: 5.0.7
         version: 5.0.7
@@ -597,8 +597,22 @@ packages:
       nodemailer:
         optional: true
 
-  '@auth/mongodb-adapter@3.7.0':
-    resolution: {integrity: sha512-VWqdUcU/4LEVpP00sEnRT30CYQCau116LCh/NCE0AKd9kmvMW4L8lMMsgffdwe8R0ccXNCfklAaGMYl4jjT+Hw==}
+  '@auth/core@0.37.1':
+    resolution: {integrity: sha512-85PosPEZXHKZhEaAH5DVCig2N1Cu5PC8CbWX03Dw9g1JISLHyrRT0RZRcaWlgmz+0Ua4N52sFRX+g9WARQaUlA==}
+    peerDependencies:
+      '@simplewebauthn/browser': ^9.0.1
+      '@simplewebauthn/server': ^9.0.2
+      nodemailer: ^6.8.0
+    peerDependenciesMeta:
+      '@simplewebauthn/browser':
+        optional: true
+      '@simplewebauthn/server':
+        optional: true
+      nodemailer:
+        optional: true
+
+  '@auth/mongodb-adapter@3.7.1':
+    resolution: {integrity: sha512-5+EjuSPGbeInTyvJCVtY2yKja9TA6OduEDg6C9UeFPAeub0YiFwejY2+lgTNGyH3yCiYa0/V6UrpU3uFwxOHkw==}
     peerDependencies:
       mongodb: 6.9.0
 
@@ -6544,9 +6558,21 @@ snapshots:
     optionalDependencies:
       nodemailer: 6.9.15
 
-  '@auth/mongodb-adapter@3.7.0(mongodb@6.9.0(socks@2.8.3))(nodemailer@6.9.15)':
+  '@auth/core@0.37.1(nodemailer@6.9.15)':
     dependencies:
-      '@auth/core': 0.37.0(nodemailer@6.9.15)
+      '@panva/hkdf': 1.2.1
+      '@types/cookie': 0.6.0
+      cookie: 0.7.1
+      jose: 5.9.4
+      oauth4webapi: 3.1.1
+      preact: 10.11.3
+      preact-render-to-string: 5.2.3(preact@10.11.3)
+    optionalDependencies:
+      nodemailer: 6.9.15
+
+  '@auth/mongodb-adapter@3.7.1(mongodb@6.9.0(socks@2.8.3))(nodemailer@6.9.15)':
+    dependencies:
+      '@auth/core': 0.37.1(nodemailer@6.9.15)
       mongodb: 6.9.0(socks@2.8.3)
     transitivePeerDependencies:
       - '@simplewebauthn/browser'
