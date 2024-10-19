@@ -477,8 +477,8 @@ importers:
   packages/complied:
     devDependencies:
       '@auth/core':
-        specifier: 0.37.0
-        version: 0.37.0(nodemailer@6.9.15)
+        specifier: 0.37.2
+        version: 0.37.2(nodemailer@6.9.15)
       '@auth/mongodb-adapter':
         specifier: 3.7.0
         version: 3.7.0(mongodb@6.9.0(socks@2.8.3))(nodemailer@6.9.15)
@@ -585,6 +585,20 @@ packages:
 
   '@auth/core@0.37.0':
     resolution: {integrity: sha512-LybAgfFC5dta3Mu3al0UbnzMGVBpZRqLMvvXupQOfETtPNlL7rXgTO13EVRTCdvPqMQrVYjODUDvgVfQM1M3Qg==}
+    peerDependencies:
+      '@simplewebauthn/browser': ^9.0.1
+      '@simplewebauthn/server': ^9.0.2
+      nodemailer: ^6.8.0
+    peerDependenciesMeta:
+      '@simplewebauthn/browser':
+        optional: true
+      '@simplewebauthn/server':
+        optional: true
+      nodemailer:
+        optional: true
+
+  '@auth/core@0.37.2':
+    resolution: {integrity: sha512-kUvzyvkcd6h1vpeMAojK2y7+PAV5H+0Cc9+ZlKYDFhDY31AlvsB+GW5vNO4qE3Y07KeQgvNO9U0QUx/fN62kBw==}
     peerDependencies:
       '@simplewebauthn/browser': ^9.0.1
       '@simplewebauthn/server': ^9.0.2
@@ -6537,6 +6551,18 @@ snapshots:
   '@antfu/utils@0.7.10': {}
 
   '@auth/core@0.37.0(nodemailer@6.9.15)':
+    dependencies:
+      '@panva/hkdf': 1.2.1
+      '@types/cookie': 0.6.0
+      cookie: 0.7.1
+      jose: 5.9.4
+      oauth4webapi: 3.1.1
+      preact: 10.11.3
+      preact-render-to-string: 5.2.3(preact@10.11.3)
+    optionalDependencies:
+      nodemailer: 6.9.15
+
+  '@auth/core@0.37.2(nodemailer@6.9.15)':
     dependencies:
       '@panva/hkdf': 1.2.1
       '@types/cookie': 0.6.0
