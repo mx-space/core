@@ -54,7 +54,7 @@
   "dependencies": {
     "@algolia/client-search": "^4.22.1",
     "@antfu/install-pkg": "0.4.1",
-    "@aws-sdk/client-s3": "3.674.0",
+    "@aws-sdk/client-s3": "3.685.0",
     "@babel/core": "7.25.8",
     "@babel/plugin-transform-modules-commonjs": "7.25.7",
     "@babel/plugin-transform-typescript": "7.25.7",
