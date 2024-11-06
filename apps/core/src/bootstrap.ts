@@ -80,29 +80,37 @@ export async function bootstrap() {
   app.useGlobalGuards(new SpiderGuard())
   !isTest && app.useWebSocketAdapter(new RedisIoAdapter(app))
 
-  await app.listen(+PORT, '0.0.0.0', async () => {
-    app.useLogger(app.get(Logger))
-    logger.info('ENV:', process.env.NODE_ENV)
-    const url = await app.getUrl()
-    const pid = process.pid
-    const env = cluster.isPrimary
-    const prefix = env ? 'P' : 'W'
-    if (!isMainProcess) {
-      return
-    }
+  await app.listen(
+    {
+      host: '0.0.0.0',
+      port: +PORT,
+    },
+    async () => {
+      app.useLogger(app.get(Logger))
+      logger.info('ENV:', process.env.NODE_ENV)
+      const url = await app.getUrl()
+      const pid = process.pid
+      const env = cluster.isPrimary
+      const prefix = env ? 'P' : 'W'
+      if (!isMainProcess) {
+        return
+      }
 
-    logger.success(`[${prefix + pid}] Server listen on: ${url}`)
-    logger.success(
-      `[${prefix + pid}] Admin Local Dashboard: ${url}/proxy/qaqdmin`,
-    )
-    logger.info(
-      `[${prefix + pid}] If you want to debug local dev dashboard on production environment with https domain, you can go to: https://<your-prod-domain>/proxy/qaqdmin/dev-proxy`,
-    )
-    logger.info(
-      `[${prefix + pid}] If you want to debug local dev dashboard on dev environment with same site domain, you can go to: http://localhost:2333/proxy/qaqdmin/dev-proxy`,
-    )
-    logger.info(`Server is up. ${chalk.yellow(`+${performance.now() | 0}ms`)}`)
-  })
+      logger.success(`[${prefix + pid}] Server listen on: ${url}`)
+      logger.success(
+        `[${prefix + pid}] Admin Local Dashboard: ${url}/proxy/qaqdmin`,
+      )
+      logger.info(
+        `[${prefix + pid}] If you want to debug local dev dashboard on production environment with https domain, you can go to: https://<your-prod-domain>/proxy/qaqdmin/dev-proxy`,
+      )
+      logger.info(
+        `[${prefix + pid}] If you want to debug local dev dashboard on dev environment with same site domain, you can go to: http://localhost:2333/proxy/qaqdmin/dev-proxy`,
+      )
+      logger.info(
+        `Server is up. ${chalk.yellow(`+${performance.now() | 0}ms`)}`,
+      )
+    },
+  )
 
   if (module.hot) {
     module.hot.accept()
