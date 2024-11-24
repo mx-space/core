@@ -160,7 +160,7 @@
     "@types/validator": "13.12.2",
     "@vercel/ncc": "0.38.3",
     "cron": "^3.1.9",
-    "husky": "9.1.6",
+    "husky": "9.1.7",
     "ioredis": "5.4.1",
     "sharp": "0.33.5",
     "socket.io": "^4.8.1",
