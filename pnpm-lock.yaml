@@ -6,7 +6,7 @@ settings:
 
 overrides:
   get-pixels@^3>request: ./external/request
-  mongodb: 6.9.0
+  mongodb: 6.11.0
   pino: ./external/pino
   semver: 7.6.3
   typescript: 5.6.3
@@ -481,7 +481,7 @@ importers:
         version: 0.37.0(nodemailer@6.9.16)
       '@auth/mongodb-adapter':
         specifier: 3.7.0
-        version: 3.7.0(mongodb@6.9.0)(nodemailer@6.9.16)
+        version: 3.7.0(mongodb@6.11.0)(nodemailer@6.9.16)
       nanoid:
         specifier: 5.0.8
         version: 5.0.8
@@ -587,7 +587,7 @@ packages:
   '@auth/mongodb-adapter@3.7.0':
     resolution: {integrity: sha512-VWqdUcU/4LEVpP00sEnRT30CYQCau116LCh/NCE0AKd9kmvMW4L8lMMsgffdwe8R0ccXNCfklAaGMYl4jjT+Hw==}
     peerDependencies:
-      mongodb: 6.9.0
+      mongodb: 6.11.0
 
   '@aws-crypto/crc32@5.2.0':
     resolution: {integrity: sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg==}
@@ -2878,6 +2878,10 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
 
+  bson@6.10.0:
+    resolution: {integrity: sha512-ROchNosXMJD2cbQGm84KoP7vOGPO6/bOAW0veMMbzhXLqoZptcaYRVLitwvuhwhjjpU1qP4YZRWLhgETdgqUQw==}
+    engines: {node: '>=16.20.1'}
+
   bson@6.9.0:
     resolution: {integrity: sha512-X9hJeyeM0//Fus+0pc5dSUMhhrrmWwQUtdavaQeF3Ta6m69matZkGWV/MrBcnwUeLC8W9kwwc2hfkZgUuCX3Ig==}
     engines: {node: '>=16.20.1'}
@@ -4736,8 +4740,8 @@ packages:
     resolution: {integrity: sha512-aDGEWuUVHTiBvaaq03LbpvvSk8IVtepbvp314p1cq7f2xdSpl7igMnYpPfYY5nkks1I5I6OL2ypHjaJj4kBp+g==}
     engines: {node: '>=16.20.1'}
 
-  mongodb@6.9.0:
-    resolution: {integrity: sha512-UMopBVx1LmEUbW/QE0Hw18u583PEDVQmUmVzzBRH0o/xtE9DBRA5ZYLOjpLIa03i8FXjzvQECJcqoMvCXftTUA==}
+  mongodb@6.11.0:
+    resolution: {integrity: sha512-yVbPw0qT268YKhG241vAMLaDQAPbRyTgo++odSgGc9kXnzOujQI60Iyj23B9sQQFPSvmNPvMZ3dsFz0aN55KgA==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
       '@aws-sdk/credential-providers': ^3.188.0
@@ -6480,10 +6484,10 @@ snapshots:
     optionalDependencies:
       nodemailer: 6.9.16
 
-  '@auth/mongodb-adapter@3.7.0(mongodb@6.9.0)(nodemailer@6.9.16)':
+  '@auth/mongodb-adapter@3.7.0(mongodb@6.11.0)(nodemailer@6.9.16)':
     dependencies:
       '@auth/core': 0.37.0(nodemailer@6.9.16)
-      mongodb: 6.9.0
+      mongodb: 6.11.0
     transitivePeerDependencies:
       - '@simplewebauthn/browser'
       - '@simplewebauthn/server'
@@ -9320,6 +9324,8 @@ snapshots:
       node-releases: 2.0.18
       update-browserslist-db: 1.1.1(browserslist@4.24.2)
 
+  bson@6.10.0: {}
+
   bson@6.9.0: {}
 
   buffer-crc32@0.2.13:
@@ -11527,7 +11533,7 @@ snapshots:
       find-cache-dir: 3.3.2
       follow-redirects: 1.15.9(debug@4.3.7)
       https-proxy-agent: 7.0.5
-      mongodb: 6.9.0
+      mongodb: 6.11.0
       new-find-package-json: 2.0.0
       semver: 7.6.3
       tar-stream: 3.1.7
@@ -11559,10 +11565,10 @@ snapshots:
       - supports-color
     optional: true
 
-  mongodb@6.9.0:
+  mongodb@6.11.0:
     dependencies:
       '@mongodb-js/saslprep': 1.1.9
-      bson: 6.9.0
+      bson: 6.10.0
       mongodb-connection-string-url: 3.0.1
 
   mongoose-aggregate-paginate-v2@1.1.2: {}
@@ -11587,7 +11593,7 @@ snapshots:
     dependencies:
       bson: 6.9.0
       kareem: 2.6.3
-      mongodb: 6.9.0
+      mongodb: 6.11.0
       mpath: 0.9.0
       mquery: 5.0.0
       ms: 2.1.3
