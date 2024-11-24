@@ -396,8 +396,8 @@ importers:
         specifier: 13.12.2
         version: 13.12.2
       '@vercel/ncc':
-        specifier: 0.38.2
-        version: 0.38.2
+        specifier: 0.38.3
+        version: 0.38.3
       cron:
         specifier: ^3.1.9
         version: 3.1.9
@@ -2563,8 +2563,8 @@ packages:
     resolution: {integrity: sha512-5Q1dI+oKpG1o9CLWukriOFXJZu11VOEpqdx8DbroRzNoJYY4Fq6st132e3L9PcxJtq8o1sX6YnhoVjUKvasRzQ==}
     engines: {node: '>=14'}
 
-  '@vercel/ncc@0.38.2':
-    resolution: {integrity: sha512-3yel3jaxUg9pHBv4+KeC9qlbdZPug+UMtUOlhvpDYCMSgcNSrS2Hv1LoqMsOV7hf2lYscx+BESfJOIla1WsmMQ==}
+  '@vercel/ncc@0.38.3':
+    resolution: {integrity: sha512-rnK6hJBS6mwc+Bkab+PGPs9OiS0i/3kdTO+CkI8V0/VrW3vmz7O2Pxjw/owOlmo6PKEIxRSeZKv/kuL9itnpYA==}
     hasBin: true
 
   '@vitest/expect@1.5.2':
@@ -8976,7 +8976,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@vercel/ncc@0.38.2': {}
+  '@vercel/ncc@0.38.3': {}
 
   '@vitest/expect@1.5.2':
     dependencies:
