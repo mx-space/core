@@ -61,7 +61,7 @@
     "@babel/types": "^7.26.0",
     "@fastify/cookie": "9.4.0",
     "@fastify/multipart": "8.3.0",
-    "@fastify/static": "8.0.2",
+    "@fastify/static": "8.0.3",
     "@innei/next-async": "0.3.0",
     "@innei/pretty-logger-nestjs": "0.3.3",
     "@langchain/openai": "0.3.12",
