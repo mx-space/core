@@ -34,7 +34,7 @@ export class AuthGuard implements CanActivate {
       headers.authorization || headers.Authorization || query.token
 
     if (session) {
-      const isOwner = !!session.user.isOwner
+      const isOwner = !!session.user?.isOwner
 
       if (isOwner) {
         this.attachUserAndToken(

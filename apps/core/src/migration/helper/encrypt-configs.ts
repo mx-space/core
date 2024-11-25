@@ -1,3 +1,5 @@
+import 'reflect-metadata'
+
 import { plainToInstance } from 'class-transformer'
 import type { IConfigKeys } from '~/modules/configs/configs.interface'
 
@@ -9,8 +11,6 @@ import { encryptObject } from '~/modules/configs/configs.encrypt.util'
 import { IConfig } from '~/modules/configs/configs.interface'
 import { getDatabaseConnection } from '~/utils/database.util'
 
-import 'reflect-metadata'
-
 console.log(ENCRYPT)
 
 const allOptionKeys: Set<IConfigKeys> = new Set()
@@ -20,7 +20,7 @@ Object.entries(optionDtos).reduce((obj, [key, value]) => {
   allOptionKeys.add(optionKey)
   return {
     ...obj,
-    [`${optionKey}`]: value,
+    [String(optionKey)]: value,
   }
 }, {})
 

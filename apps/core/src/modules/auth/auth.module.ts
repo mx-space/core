@@ -1,44 +1,46 @@
-import { merge } from 'lodash'
-
-import {
+import type {
   DynamicModule,
-  Inject,
   MiddlewareConsumer,
   NestModule,
 } from '@nestjs/common'
+import type { CreateAuth } from './auth.implement'
 
-import { authConfig } from './auth.config'
-import { AuthConfigInjectKey } from './auth.constant'
+import { API_VERSION } from '~/app.config'
+
+import { AuthInstanceInjectKey } from './auth.constant'
 import { AuthController } from './auth.controller'
-import { ServerAuthConfig } from './auth.implement'
 import { AuthMiddleware } from './auth.middleware'
 import { AuthService } from './auth.service'
 
 export class AuthModule implements NestModule {
-  constructor(
-    @Inject(AuthConfigInjectKey) private readonly config: ServerAuthConfig,
-  ) {}
-  static forRoot(config?: ServerAuthConfig): DynamicModule {
-    const finalConfig = merge(authConfig, config)
-    const provider = {
-      provide: AuthConfigInjectKey,
-      useValue: finalConfig,
-    }
+  static forRoot(): DynamicModule {
+    let auth: ReturnType<typeof CreateAuth>['auth']
     return {
       controllers: [AuthController],
-      exports: [AuthService, provider],
+      exports: [AuthService],
       module: AuthModule,
       global: true,
 
-      providers: [provider, AuthService],
+      providers: [
+        AuthService,
+        {
+          provide: AuthInstanceInjectKey,
+          useValue: {
+            get() {
+              return auth
+            },
+            set(value: ReturnType<typeof CreateAuth>['auth']) {
+              auth = value
+            },
+          },
+        },
+      ],
     }
   }
 
   configure(consumer: MiddlewareConsumer) {
-    const config = this.config
+    const basePath = isDev ? '/auth' : `/api/v${API_VERSION}/auth`
 
-    consumer
-      .apply(AuthMiddleware)
-      .forRoutes(`${config.basePath || '/auth'}/(.*)`)
+    consumer.apply(AuthMiddleware).forRoutes(`${basePath}/(.*)`)
   }
 }

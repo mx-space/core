@@ -6,12 +6,6 @@ import type { TokenModel, UserModel } from '~/modules/user/user.model'
 import type { TokenDto } from './auth.controller'
 
 import { nanoid } from '@mx-space/complied'
-import {
-  Auth,
-  createActionURL,
-  Session,
-  setEnvDefaults,
-} from '@mx-space/complied/auth'
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
@@ -25,20 +19,20 @@ import { InjectModel } from '~/transformers/model.transformer'
 import {
   AUTH_JS_ACCOUNT_COLLECTION,
   AUTH_JS_USER_COLLECTION,
-  AuthConfigInjectKey,
+  AuthInstanceInjectKey,
 } from './auth.constant'
-import { ServerAuthConfig } from './auth.implement'
-import { SessionUser } from './auth.interface'
+import { InjectAuthInstance } from './auth.interface'
 
 const { customAlphabet } = nanoid
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(AuthConfigInjectKey) private readonly authConfig: ServerAuthConfig,
     @InjectModel(User) private readonly userModel: ReturnModelType<typeof User>,
     private readonly databaseService: DatabaseService,
     private readonly jwtService: JWTService,
+    @Inject(AuthInstanceInjectKey)
+    private readonly authInstance: InjectAuthInstance,
   ) {}
 
   get jwtServicePublic() {
@@ -134,80 +128,104 @@ export class AuthService {
     )
   }
 
-  private async getSessionBase(req: IncomingMessage, config: ServerAuthConfig) {
-    setEnvDefaults(process.env, config)
+  // private async getSessionBase(req: IncomingMessage, config: ServerAuthConfig) {
+  //   setEnvDefaults(process.env, config)
 
-    const protocol = (req.headers['x-forwarded-proto'] || 'http') as string
-    const url = createActionURL(
-      'session',
-      protocol,
-      // @ts-expect-error
+  //   const protocol = (req.headers['x-forwarded-proto'] || 'http') as string
+  //   const url = createActionURL(
+  //     'session',
+  //     protocol,
+  //     // @ts-expect-error
 
-      new Headers(req.headers),
-      process.env,
+  //     new Headers(req.headers),
+  //     process.env,
 
-      {
-        basePath: config.basePath,
+  //     {
+  //       basePath: config.basePath,
+  //     },
+  //   )
+
+  //   const response = await Auth(
+  //     new Request(url, { headers: { cookie: req.headers.cookie ?? '' } }),
+  //     config,
+  //   )
+
+  //   const { status = 200 } = response
+
+  //   const data = await response.json()
+
+  //   if (!data || !Object.keys(data).length) return null
+  //   if (status === 200) return data
+  // }
+
+  async getSessionUser(req: IncomingMessage) {
+    // const { authConfig } = this
+    const auth = this.authInstance.get()
+    if (!auth) {
+      throw new BadRequestException('auth not found')
+    }
+    const session = await auth.api.getSession({
+      query: {
+        disableCookieCache: true,
       },
-    )
-
-    const response = await Auth(
-      new Request(url, { headers: { cookie: req.headers.cookie ?? '' } }),
-      config,
-    )
-
-    const { status = 200 } = response
-
-    const data = await response.json()
-
-    if (!data || !Object.keys(data).length) return null
-    if (status === 200) return data
-  }
-
-  getSessionUser(req: IncomingMessage) {
-    const { authConfig } = this
-    return new Promise<SessionUser | null>((resolve) => {
-      this.getSessionBase(req, {
-        ...authConfig,
-        callbacks: {
-          ...authConfig.callbacks,
-          session: async (params) => {
-            const token = params.token
-
-            let user = params.user ?? params.token
-            if (typeof token?.providerAccountId === 'string') {
-              const existUser = (await this.getOauthUserAccount(
-                token.providerAccountId,
-              )) as any
-
-              if (existUser) {
-                user = existUser
-              }
-            }
-
-            resolve({
-              ...params.session,
-              ...params.user,
-              user,
-              provider: token.provider,
-              providerAccountId: token.providerAccountId,
-            } as SessionUser)
-
-            const session =
-              (await authConfig.callbacks?.session?.(params)) ?? params.session
-
-            return {
-              user,
-              ...session,
-            } satisfies Session
-          },
-        },
-      }).then((session) => {
-        if (!session) {
-          resolve(null)
-        }
-      })
+      headers: new Headers(req.headers as Record<string, string>),
     })
+
+    const accounts = await auth.api.listUserAccounts({
+      headers: new Headers(req.headers as Record<string, string>),
+    })
+
+    const providerAccountId = accounts[0].id
+    const provider = accounts[0].provider
+
+    return {
+      ...session,
+      providerAccountId,
+      provider,
+      user: session?.user,
+    }
+    // return new Promise<SessionUser | null>((resolve) => {
+    //   this.getSessionBase(req, {
+    //     ...authConfig,
+    //     callbacks: {
+    //       ...authConfig.callbacks,
+    //       session: async (params) => {
+    //         const token = params.token
+
+    //         let user = params.user ?? params.token
+    //         if (typeof token?.providerAccountId === 'string') {
+    //           const existUser = (await this.getOauthUserAccount(
+    //             token.providerAccountId,
+    //           )) as any
+
+    //           if (existUser) {
+    //             user = existUser
+    //           }
+    //         }
+
+    //         resolve({
+    //           ...params.session,
+    //           ...params.user,
+    //           user,
+    //           provider: token.provider,
+    //           providerAccountId: token.providerAccountId,
+    //         } as SessionUser)
+
+    //         const session =
+    //           (await authConfig.callbacks?.session?.(params)) ?? params.session
+
+    //         return {
+    //           user,
+    //           ...session,
+    //         } satisfies Session
+    //       },
+    //     },
+    //   }).then((session) => {
+    //     if (!session) {
+    //       resolve(null)
+    //     }
+    //   })
+    // })
   }
 
   async setCurrentOauthAsOwner() {
@@ -219,7 +237,10 @@ export class AuthService {
     if (!session) {
       throw new BadRequestException('session not found')
     }
-    const userId = session.userId
+    const userId = session.user?.id
+    if (!userId) {
+      throw new BadRequestException('user id not found')
+    }
     await this.databaseService.db.collection(AUTH_JS_USER_COLLECTION).updateOne(
       {
         _id: new Types.ObjectId(userId),
@@ -277,6 +298,6 @@ export class AuthService {
     }
   }
   getOauthProviders() {
-    return this.authConfig.providers.map((p) => p.name)
+    return Object.keys(this.authInstance.get().options.socialProviders || {})
   }
 }

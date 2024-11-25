@@ -1,64 +1,117 @@
-import type { AuthConfig } from '@mx-space/complied/auth'
+import { betterAuth } from 'better-auth'
+import { mongodbAdapter } from 'better-auth/adapters/mongodb'
+import { toNodeHandler } from 'better-auth/node'
+import { bearer, jwt } from 'better-auth/plugins'
+import { MongoClient } from 'mongodb'
+import type { BetterAuthOptions } from 'better-auth'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
-import { Auth, setEnvDefaults } from '@mx-space/complied/auth'
+import { API_VERSION, CROSS_DOMAIN, MONGO_DB } from '~/app.config'
 
-import { getRequest } from './req.transformer'
+import {
+  AUTH_JS_ACCOUNT_COLLECTION,
+  AUTH_JS_USER_COLLECTION,
+} from './auth.constant'
 
-export type ServerAuthConfig = Omit<AuthConfig, 'basePath'> & {
-  basePath: string
-}
+const client = new MongoClient(MONGO_DB.customConnectionString || MONGO_DB.uri)
 
-export function CreateAuth(config: ServerAuthConfig) {
-  return async (req: IncomingMessage, res: ServerResponse) => {
+const db = client.db()
+
+export function CreateAuth(config: BetterAuthOptions['socialProviders']) {
+  const auth = betterAuth({
+    database: mongodbAdapter(db),
+    socialProviders: config,
+    basePath: isDev ? '/auth' : `/api/v${API_VERSION}/auth`,
+    trustedOrigins: CROSS_DOMAIN.allowedOrigins,
+    account: {
+      modelName: AUTH_JS_ACCOUNT_COLLECTION,
+    },
+    plugins: [
+      jwt({
+        jwt: {
+          definePayload: async (user) => {
+            const account = await db
+              .collection(AUTH_JS_ACCOUNT_COLLECTION)
+              .findOne({
+                userId: user.id,
+              })
+            return {
+              id: user.id,
+              email: user.email,
+              provider: account?.provider,
+              providerAccountId: account?.providerAccountId,
+            }
+          },
+        },
+      }),
+      bearer(),
+    ],
+    user: {
+      modelName: AUTH_JS_USER_COLLECTION,
+      additionalFields: {
+        isOwner: {
+          type: 'boolean',
+          defaultValue: false,
+          input: false,
+        },
+        handle: {
+          type: 'string',
+          defaultValue: '',
+        },
+      },
+    },
+  })
+
+  const handler = async (req: IncomingMessage, res: ServerResponse) => {
     try {
-      setEnvDefaults(process.env, config)
-
-      const auth = await Auth(await toWebRequest(req), config)
-
-      await toServerResponse(req, auth, res)
+      toNodeHandler(auth)(req, res)
     } catch (error) {
       console.error(error)
       // throw error
       res.end(error.message)
     }
   }
+
+  return {
+    handler,
+    auth,
+  }
 }
 
-async function toWebRequest(req: IncomingMessage) {
-  const host = req.headers.host || 'localhost'
-  const protocol = req.headers['x-forwarded-proto'] || 'http'
-  const base = `${protocol}://${host}`
+// async function toWebRequest(req: IncomingMessage) {
+//   const host = req.headers.host || 'localhost'
+//   const protocol = req.headers['x-forwarded-proto'] || 'http'
+//   const base = `${protocol}://${host}`
 
-  return getRequest(base, req)
-}
+//   return getRequest(base, req)
+// }
 
-async function toServerResponse(
-  req: IncomingMessage,
-  response: Response,
-  res: ServerResponse,
-) {
-  response.headers.forEach((value, key) => {
-    if (!value) {
-      return
-    }
-    if (res.hasHeader(key)) {
-      res.appendHeader(key, value)
-    } else {
-      res.setHeader(key, value)
-    }
-  })
+// async function toServerResponse(
+//   req: IncomingMessage,
+//   response: Response,
+//   res: ServerResponse,
+// ) {
+//   response.headers.forEach((value, key) => {
+//     if (!value) {
+//       return
+//     }
+//     if (res.hasHeader(key)) {
+//       res.appendHeader(key, value)
+//     } else {
+//       res.setHeader(key, value)
+//     }
+//   })
 
-  res.setHeader('Content-Type', response.headers.get('content-type') || '')
-  res.setHeader('access-control-allow-methods', 'GET, POST')
-  res.setHeader('access-control-allow-headers', 'content-type')
-  res.setHeader(
-    'Access-Control-Allow-Origin',
-    req.headers.origin || req.headers.referer || req.headers.host || '*',
-  )
-  res.setHeader('access-control-allow-credentials', 'true')
+//   res.setHeader('Content-Type', response.headers.get('content-type') || '')
+//   res.setHeader('access-control-allow-methods', 'GET, POST')
+//   res.setHeader('access-control-allow-headers', 'content-type')
+//   res.setHeader(
+//     'Access-Control-Allow-Origin',
+//     req.headers.origin || req.headers.referer || req.headers.host || '*',
+//   )
+//   res.setHeader('access-control-allow-credentials', 'true')
 
-  const text = await response.text()
-  res.writeHead(response.status, response.statusText)
-  res.end(text)
-}
+//   const text = await response.text()
+//   res.writeHead(response.status, response.statusText)
+//   res.end(text)
+// }
