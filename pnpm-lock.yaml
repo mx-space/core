@@ -229,8 +229,8 @@ importers:
         specifier: 3.10.1
         version: 3.10.1
       langchain:
-        specifier: 0.3.5
-        version: 0.3.5(@langchain/core@0.3.18(openai@4.71.1(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.7)(encoding@0.1.13)(openai@4.71.1(encoding@0.1.13)(zod@3.23.8))
+        specifier: 0.3.6
+        version: 0.3.6(@langchain/core@0.3.18(openai@4.71.1(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.7)(encoding@0.1.13)(openai@4.71.1(encoding@0.1.13)(zod@3.23.8))
       linkedom:
         specifier: 0.18.5
         version: 0.18.5
@@ -4279,8 +4279,8 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
-  langchain@0.3.5:
-    resolution: {integrity: sha512-Gq0xC45Sq6nszS8kQG9suCrmBsuXH0INMmiF7D2TwPb6mtG35Jiq4grCk9ykpwPsarTHdty3SzUbII/FqiYSSw==}
+  langchain@0.3.6:
+    resolution: {integrity: sha512-erZOIKXzwCOrQHqY9AyjkQmaX62zUap1Sigw1KrwMUOnVoLKkVNRmAyxFlNZDZ9jLs/58MaQcaT9ReJtbj3x6w==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/anthropic': '*'
@@ -10946,7 +10946,7 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  langchain@0.3.5(@langchain/core@0.3.18(openai@4.71.1(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.7)(encoding@0.1.13)(openai@4.71.1(encoding@0.1.13)(zod@3.23.8)):
+  langchain@0.3.6(@langchain/core@0.3.18(openai@4.71.1(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.7)(encoding@0.1.13)(openai@4.71.1(encoding@0.1.13)(zod@3.23.8)):
     dependencies:
       '@langchain/core': 0.3.18(openai@4.71.1(encoding@0.1.13)(zod@3.23.8))
       '@langchain/openai': 0.3.14(@langchain/core@0.3.18(openai@4.71.1(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13)
