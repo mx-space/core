@@ -178,8 +178,8 @@ importers:
         specifier: ^2.4.3
         version: 2.4.3
       better-auth:
-        specifier: 1.0.3
-        version: 1.0.3(encoding@0.1.13)
+        specifier: 1.0.5
+        version: 1.0.5(encoding@0.1.13)
       blurhash:
         specifier: 2.0.5
         version: 2.0.5
@@ -480,8 +480,8 @@ importers:
   packages/complied:
     devDependencies:
       better-auth:
-        specifier: 1.0.3
-        version: 1.0.3(encoding@0.1.13)
+        specifier: 1.0.5
+        version: 1.0.5(encoding@0.1.13)
       nanoid:
         specifier: 5.0.8
         version: 5.0.8
@@ -3037,11 +3037,11 @@ packages:
   bcryptjs@2.4.3:
     resolution: {integrity: sha512-V/Hy/X9Vt7f3BbPJEi8BdVFMByHi+jNXrYkW3huaybV/kQ0KJg0Y6PkEMbn+zeT+i+SiKZ/HMqJGIIt4LZDqNQ==}
 
-  better-auth@1.0.3:
-    resolution: {integrity: sha512-zlKFfm91068B+O4xGiwDDomM/0t9RBSSaal+/OgONMrg99KWZPQFFTk4gJ8vEdoAn9yidPlwYcnfDa19CshEBQ==}
+  better-auth@1.0.5:
+    resolution: {integrity: sha512-LjpPqpRNXdDp6+9USuk/kgd7db2Vs1oJuWfr0rhlcmpMK4rfz7yA1GxomBozVDpKwZHPA8fUpgm1r7NDjvLYUg==}
 
-  better-call@0.3.2:
-    resolution: {integrity: sha512-ZYUADh4S4JF3QOIgC0QAm4N9Ifb7v3rOEcwkIxr3UXxd+GCrGmEzv7VDe35o1ldX0Zcb9CX3QfT0jdJoMIKA9w==}
+  better-call@0.3.3-beta.2:
+    resolution: {integrity: sha512-pk+dXQGICPphvMKxl1VOWUUDXF4AYC4DQhLFLSBwS/pfgryhfnx1yJhGqApJzy8eJi5aN5+uLSWDGzKJaMuCGQ==}
 
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
@@ -9677,14 +9677,14 @@ snapshots:
 
   bcryptjs@2.4.3: {}
 
-  better-auth@1.0.3(encoding@0.1.13):
+  better-auth@1.0.5(encoding@0.1.13):
     dependencies:
       '@better-fetch/fetch': 1.1.12
       '@noble/ciphers': 0.6.0
       '@noble/hashes': 1.5.0
       '@simplewebauthn/browser': 10.0.0
       '@simplewebauthn/server': 10.0.1(encoding@0.1.13)
-      better-call: 0.3.2
+      better-call: 0.3.3-beta.2
       consola: 3.2.3
       defu: 6.1.4
       jose: 5.9.6
@@ -9697,7 +9697,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  better-call@0.3.2:
+  better-call@0.3.3-beta.2:
     dependencies:
       '@better-fetch/fetch': 1.1.12
       rou3: 0.5.1

@@ -86,7 +86,7 @@
     "axios": "^1.7.0",
     "axios-retry": "4.5.0",
     "bcryptjs": "^2.4.3",
-    "better-auth": "1.0.3",
+    "better-auth": "1.0.5",
     "blurhash": "2.0.5",
     "cache-manager": "5.7.6",
     "cache-manager-ioredis-yet": "2.1.2",
