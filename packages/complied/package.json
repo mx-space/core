@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@auth/core": "0.37.0",
-    "@auth/mongodb-adapter": "3.7.0",
+    "@auth/mongodb-adapter": "3.7.4",
     "nanoid": "5.0.8",
     "zx": "7.2.3"
   }
