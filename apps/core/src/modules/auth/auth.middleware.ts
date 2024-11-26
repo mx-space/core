@@ -1,13 +1,13 @@
 import type { NestMiddleware, OnModuleInit } from '@nestjs/common'
-import type { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import type { BetterAuthOptions } from 'better-auth'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { ConfigsService } from '../configs/configs.service'
 
 import { Inject } from '@nestjs/common'
 
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 
+import { ConfigsService } from '../configs/configs.service'
 import { AuthInstanceInjectKey } from './auth.constant'
 import { CreateAuth } from './auth.implement'
 import { InjectAuthInstance } from './auth.interface'
@@ -19,8 +19,8 @@ declare module 'http' {
 }
 
 export class AuthMiddleware implements NestMiddleware, OnModuleInit {
-  private authHandler: ReturnType<typeof CreateAuth>['handler']
-  private auth: ReturnType<typeof CreateAuth>['auth']
+  private authHandler: Awaited<ReturnType<typeof CreateAuth>>['handler']
+
   constructor(
     private readonly redisSub: SubPubBridgeService,
     private readonly configService: ConfigsService,
@@ -64,9 +64,9 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
           }
         }
       })
-      const { handler, auth } = CreateAuth(providers)
+      const { handler, auth } = await CreateAuth(providers)
       this.authHandler = handler
-      this.auth = auth
+
       this.authInstance.set(auth)
     }
     this.redisSub.subscribe(EventBusEvents.OauthChanged, handler)

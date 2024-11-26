@@ -12,8 +12,7 @@
     "build": "tsup"
   },
   "devDependencies": {
-    "@auth/core": "0.37.0",
-    "@auth/mongodb-adapter": "3.7.0",
+    "better-auth": "1.0.3",
     "nanoid": "5.0.7",
     "zx": "7.2.3"
   }

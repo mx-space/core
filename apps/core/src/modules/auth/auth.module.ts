@@ -2,8 +2,9 @@ import type {
   DynamicModule,
   MiddlewareConsumer,
   NestModule,
+  Provider,
 } from '@nestjs/common'
-import type { CreateAuth } from './auth.implement'
+import type { AuthInstance } from './auth.interface'
 
 import { API_VERSION } from '~/app.config'
 
@@ -14,27 +15,27 @@ import { AuthService } from './auth.service'
 
 export class AuthModule implements NestModule {
   static forRoot(): DynamicModule {
-    let auth: ReturnType<typeof CreateAuth>['auth']
+    let auth: AuthInstance
+
+    const authProvider: Provider = {
+      provide: AuthInstanceInjectKey,
+      useValue: {
+        get() {
+          return auth
+        },
+        set(value: AuthInstance) {
+          auth = value
+        },
+      },
+    }
+
     return {
       controllers: [AuthController],
-      exports: [AuthService],
+      exports: [AuthService, authProvider],
       module: AuthModule,
       global: true,
 
-      providers: [
-        AuthService,
-        {
-          provide: AuthInstanceInjectKey,
-          useValue: {
-            get() {
-              return auth
-            },
-            set(value: ReturnType<typeof CreateAuth>['auth']) {
-              auth = value
-            },
-          },
-        },
-      ],
+      providers: [AuthService, authProvider],
     }
   }
 

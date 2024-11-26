@@ -1,10 +1,14 @@
-import { betterAuth } from 'better-auth'
-import { mongodbAdapter } from 'better-auth/adapters/mongodb'
-import { toNodeHandler } from 'better-auth/node'
-import { bearer, jwt } from 'better-auth/plugins'
 import { MongoClient } from 'mongodb'
 import type { BetterAuthOptions } from 'better-auth'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+
+import {
+  bearer,
+  betterAuth,
+  jwt,
+  mongodbAdapter,
+  toNodeHandler,
+} from '@mx-space/complied/auth'
 
 import { API_VERSION, CROSS_DOMAIN, MONGO_DB } from '~/app.config'
 
@@ -17,7 +21,7 @@ const client = new MongoClient(MONGO_DB.customConnectionString || MONGO_DB.uri)
 
 const db = client.db()
 
-export function CreateAuth(config: BetterAuthOptions['socialProviders']) {
+export async function CreateAuth(config: BetterAuthOptions['socialProviders']) {
   const auth = betterAuth({
     database: mongodbAdapter(db),
     socialProviders: config,
@@ -74,7 +78,19 @@ export function CreateAuth(config: BetterAuthOptions['socialProviders']) {
 
   return {
     handler,
-    auth,
+    auth: {
+      options: auth.options,
+      api: {
+        getSession(params: Parameters<typeof auth.api.getSession>[0]) {
+          return auth.api.getSession(params)
+        },
+        listUserAccounts(
+          params: Parameters<typeof auth.api.listUserAccounts>[0],
+        ) {
+          return auth.api.listUserAccounts(params)
+        },
+      },
+    },
   }
 }
 
