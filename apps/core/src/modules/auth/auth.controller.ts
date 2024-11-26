@@ -6,11 +6,13 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator'
+import { omit } from 'lodash'
 
 import {
   Body,
   Delete,
   Get,
+  Inject,
   NotFoundException,
   Patch,
   Post,
@@ -26,6 +28,8 @@ import { EventBusEvents } from '~/constants/event-bus.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
+import { AuthInstanceInjectKey } from './auth.constant'
+import { InjectAuthInstance } from './auth.interface'
 import { AuthService } from './auth.service'
 
 export class TokenDto {
@@ -45,6 +49,8 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly eventEmitter: EventEmitter2,
+    @Inject(AuthInstanceInjectKey)
+    private readonly authInstance: InjectAuthInstance,
   ) {}
 
   @Get('token')
@@ -126,6 +132,15 @@ export class AuthController {
     return {
       ...session.user,
       ...account,
+      ...omit(session, ['session', 'user']),
     }
+  }
+
+  @Get('providers')
+  @HttpCache({
+    disable: true,
+  })
+  async getProviders() {
+    return this.authInstance.get().api.getProviders()
   }
 }

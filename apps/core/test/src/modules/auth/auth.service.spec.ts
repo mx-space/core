@@ -3,7 +3,7 @@ import { vi } from 'vitest'
 import { configProvider } from '@/mock/modules/config.mock'
 import { Test } from '@nestjs/testing'
 
-import { AuthConfigInjectKey } from '~/modules/auth/auth.constant'
+import { AuthInstanceInjectKey } from '~/modules/auth/auth.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { UserModel } from '~/modules/user/user.model'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -35,7 +35,7 @@ describe('Test AuthService', () => {
         configProvider,
         AuthService,
         {
-          provide: AuthConfigInjectKey,
+          provide: AuthInstanceInjectKey,
           useValue: {},
         },
         {

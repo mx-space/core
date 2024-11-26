@@ -1,19 +1,16 @@
 import type { NestMiddleware, OnModuleInit } from '@nestjs/common'
+import type { BetterAuthOptions } from 'better-auth'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
-import {
-  AuthConfig,
-  authjs,
-  BuiltInProviderType,
-} from '@mx-space/complied/auth'
 import { Inject } from '@nestjs/common'
 
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 
 import { ConfigsService } from '../configs/configs.service'
-import { AuthConfigInjectKey } from './auth.constant'
-import { CreateAuth, ServerAuthConfig } from './auth.implement'
+import { AuthInstanceInjectKey } from './auth.constant'
+import { CreateAuth } from './auth.implement'
+import { InjectAuthInstance } from './auth.interface'
 
 declare module 'http' {
   interface IncomingMessage {
@@ -21,24 +18,24 @@ declare module 'http' {
   }
 }
 
-const github = authjs.providers.github
-
 export class AuthMiddleware implements NestMiddleware, OnModuleInit {
-  private authHandler: ReturnType<typeof CreateAuth>
+  private authHandler: Awaited<ReturnType<typeof CreateAuth>>['handler']
+
   constructor(
-    @Inject(AuthConfigInjectKey) private readonly config: ServerAuthConfig,
     private readonly redisSub: SubPubBridgeService,
     private readonly configService: ConfigsService,
+    @Inject(AuthInstanceInjectKey)
+    private readonly authInstance: InjectAuthInstance,
   ) {}
 
   async onModuleInit() {
     const handler = async () => {
       const oauth = await this.configService.get('oauth')
 
-      const providers = [] as AuthConfig['providers']
+      const providers = {} as NonNullable<BetterAuthOptions['socialProviders']>
       oauth.providers.forEach((provider) => {
         if (!provider.enabled) return
-        const type = provider.type as BuiltInProviderType
+        const type = provider.type as string
 
         const mergedConfig = {
           ...oauth.public[type],
@@ -47,53 +44,30 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
         switch (type) {
           case 'github': {
             if (!mergedConfig.clientId || !mergedConfig.clientSecret) return
-            const provider = github({
+
+            providers.github = {
               clientId: mergedConfig.clientId,
               clientSecret: mergedConfig.clientSecret,
-              // allowDangerousEmailAccountLinking: true,
-              profile(profile) {
-                return {
-                  id: profile.id.toString(),
-
-                  email: profile.email,
-                  name: profile.name || profile.login,
-                  handle: profile.login,
-                  image: profile.avatar_url,
-                  isOwner: false,
-                }
-              },
-            })
-            providers.push(provider)
+            }
             break
           }
 
           case 'google': {
             if (!mergedConfig.clientId || !mergedConfig.clientSecret) return
 
-            const provider = authjs.providers.google({
+            providers.google = {
               clientId: mergedConfig.clientId,
               clientSecret: mergedConfig.clientSecret,
-              profile(profile) {
-                return {
-                  id: profile.sub,
-                  email: profile.email,
-                  name: profile.name,
-                  handle: profile.email,
-                  image: profile.picture,
-                  isOwner: false,
-                }
-              },
-            })
-
-            providers.push(provider)
+            }
 
             break
           }
         }
       })
+      const { handler, auth } = await CreateAuth(providers)
+      this.authHandler = handler
 
-      this.config.providers = providers
-      this.authHandler = CreateAuth(this.config)
+      this.authInstance.set(auth)
     }
     this.redisSub.subscribe(EventBusEvents.OauthChanged, handler)
     await handler()
@@ -105,7 +79,7 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
       return
     }
 
-    const bypassPath = ['/token', '/session']
+    const bypassPath = ['/token', '/session', '/providers']
 
     if (bypassPath.some((path) => req.originalUrl.includes(path))) {
       next()
