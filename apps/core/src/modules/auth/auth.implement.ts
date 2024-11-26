@@ -1,6 +1,6 @@
 import { IncomingMessage } from 'node:http'
 import { MongoClient } from 'mongodb'
-import type { BetterAuthOptions } from 'better-auth'
+import type { BetterAuthOptions, BetterAuthPlugin } from 'better-auth'
 import type { ServerResponse } from 'node:http'
 
 import {
@@ -47,6 +47,45 @@ export async function CreateAuth(config: BetterAuthOptions['socialProviders']) {
     appName: 'mx-core',
 
     plugins: [
+      // @see https://gist.github.com/Bekacru/44cca7b3cf7dcdf1cee431a11d917b87
+      {
+        id: 'add-account-to-session',
+        hooks: {
+          after: [
+            {
+              matcher(context) {
+                return context.path.startsWith('/callback')
+              },
+              async handler(ctx) {
+                const sessionCookie = ctx.responseHeader.get(
+                  ctx.context.authCookies.sessionToken.name,
+                )
+                if (!sessionCookie) {
+                  return
+                }
+                const provider = ctx.path.split('/callback')[1]
+                if (!provider) {
+                  return
+                }
+                const sessionId = sessionCookie.split('.')[0]
+                await ctx.context.internalAdapter.updateSession(sessionId, {
+                  accountId: provider,
+                })
+              },
+            },
+          ],
+        },
+        schema: {
+          session: {
+            fields: {
+              accountId: {
+                type: 'string',
+                required: false,
+              },
+            },
+          },
+        },
+      } satisfies BetterAuthPlugin,
       jwt({
         jwt: {
           definePayload: async (user) => {
