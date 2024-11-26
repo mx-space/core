@@ -133,6 +133,8 @@ export class AuthController {
       ...session.user,
       ...account,
       ...omit(session, ['session', 'user']),
+
+      id: session?.user?.id ?? session.providerAccountId,
     }
   }
 

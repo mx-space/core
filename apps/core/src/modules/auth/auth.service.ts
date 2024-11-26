@@ -209,12 +209,19 @@ export class AuthService {
         {
           projection: {
             providerAccountId: 1,
+            // authjs field
             provider: 1,
+            providerId: 1,
             type: 1,
             userId: 1,
           },
         },
       )
+
+    // transformer
+    if (account?.providerId && !account.provider) {
+      account.provider = account.providerId
+    }
 
     if (account?.userId) {
       const user = await this.databaseService.db
@@ -230,6 +237,7 @@ export class AuthService {
               image: 1,
               isOwner: 1,
               handle: 1,
+              _id: 1,
             },
           },
         )
