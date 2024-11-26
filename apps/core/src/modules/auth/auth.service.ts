@@ -6,7 +6,12 @@ import type { TokenModel, UserModel } from '~/modules/user/user.model'
 import type { TokenDto } from './auth.controller'
 
 import { nanoid } from '@mx-space/complied'
-import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 
 import { RequestContext } from '~/common/contexts/request.context'
@@ -131,12 +136,12 @@ export class AuthService {
   async getSessionUser(req: IncomingMessage) {
     const auth = this.authInstance.get()
     if (!auth) {
-      throw new BadRequestException('auth not found')
+      throw new InternalServerErrorException('auth not found')
     }
 
     const cookieHeader = new Headers()
     if (!req.headers.cookie) {
-      throw new BadRequestException('cookie not found')
+      return null
     }
     cookieHeader.set('cookie', req.headers.cookie)
     if (req.headers.origin) {

@@ -112,6 +112,9 @@ export async function CreateAuth(config: BetterAuthOptions['socialProviders']) {
         getSession(params: Parameters<typeof auth.api.getSession>[0]) {
           return auth.api.getSession(params)
         },
+        getProviders() {
+          return Object.keys(auth.options.socialProviders || {})
+        },
         async listUserAccounts(
           params: Parameters<typeof auth.api.listUserAccounts>[0],
         ) {
@@ -129,41 +132,3 @@ export async function CreateAuth(config: BetterAuthOptions['socialProviders']) {
     },
   }
 }
-
-// async function toWebRequest(req: IncomingMessage) {
-//   const host = req.headers.host || 'localhost'
-//   const protocol = req.headers['x-forwarded-proto'] || 'http'
-//   const base = `${protocol}://${host}`
-
-//   return getRequest(base, req)
-// }
-
-// async function toServerResponse(
-//   req: IncomingMessage,
-//   response: Response,
-//   res: ServerResponse,
-// ) {
-//   response.headers.forEach((value, key) => {
-//     if (!value) {
-//       return
-//     }
-//     if (res.hasHeader(key)) {
-//       res.appendHeader(key, value)
-//     } else {
-//       res.setHeader(key, value)
-//     }
-//   })
-
-//   res.setHeader('Content-Type', response.headers.get('content-type') || '')
-//   res.setHeader('access-control-allow-methods', 'GET, POST')
-//   res.setHeader('access-control-allow-headers', 'content-type')
-//   res.setHeader(
-//     'Access-Control-Allow-Origin',
-//     req.headers.origin || req.headers.referer || req.headers.host || '*',
-//   )
-//   res.setHeader('access-control-allow-credentials', 'true')
-
-//   const text = await response.text()
-//   res.writeHead(response.status, response.statusText)
-//   res.end(text)
-// }
