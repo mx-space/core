@@ -128,52 +128,34 @@ export class AuthService {
     )
   }
 
-  // private async getSessionBase(req: IncomingMessage, config: ServerAuthConfig) {
-  //   setEnvDefaults(process.env, config)
-
-  //   const protocol = (req.headers['x-forwarded-proto'] || 'http') as string
-  //   const url = createActionURL(
-  //     'session',
-  //     protocol,
-  //     // @ts-expect-error
-
-  //     new Headers(req.headers),
-  //     process.env,
-
-  //     {
-  //       basePath: config.basePath,
-  //     },
-  //   )
-
-  //   const response = await Auth(
-  //     new Request(url, { headers: { cookie: req.headers.cookie ?? '' } }),
-  //     config,
-  //   )
-
-  //   const { status = 200 } = response
-
-  //   const data = await response.json()
-
-  //   if (!data || !Object.keys(data).length) return null
-  //   if (status === 200) return data
-  // }
-
   async getSessionUser(req: IncomingMessage) {
-    // const { authConfig } = this
     const auth = this.authInstance.get()
     if (!auth) {
       throw new BadRequestException('auth not found')
+    }
+
+    const cookieHeader = new Headers()
+    if (!req.headers.cookie) {
+      throw new BadRequestException('cookie not found')
+    }
+    cookieHeader.set('cookie', req.headers.cookie)
+    if (req.headers.origin) {
+      cookieHeader.set('origin', req.headers.origin)
     }
     const session = await auth.api.getSession({
       query: {
         disableCookieCache: true,
       },
-      headers: new Headers(req.headers as Record<string, string>),
+      headers: cookieHeader,
     })
 
     const accounts = await auth.api.listUserAccounts({
-      headers: new Headers(req.headers as Record<string, string>),
+      headers: cookieHeader,
     })
+
+    if (!accounts) {
+      return null
+    }
 
     const providerAccountId = accounts[0].id
     const provider = accounts[0].provider
@@ -184,48 +166,6 @@ export class AuthService {
       provider,
       user: session?.user,
     }
-    // return new Promise<SessionUser | null>((resolve) => {
-    //   this.getSessionBase(req, {
-    //     ...authConfig,
-    //     callbacks: {
-    //       ...authConfig.callbacks,
-    //       session: async (params) => {
-    //         const token = params.token
-
-    //         let user = params.user ?? params.token
-    //         if (typeof token?.providerAccountId === 'string') {
-    //           const existUser = (await this.getOauthUserAccount(
-    //             token.providerAccountId,
-    //           )) as any
-
-    //           if (existUser) {
-    //             user = existUser
-    //           }
-    //         }
-
-    //         resolve({
-    //           ...params.session,
-    //           ...params.user,
-    //           user,
-    //           provider: token.provider,
-    //           providerAccountId: token.providerAccountId,
-    //         } as SessionUser)
-
-    //         const session =
-    //           (await authConfig.callbacks?.session?.(params)) ?? params.session
-
-    //         return {
-    //           user,
-    //           ...session,
-    //         } satisfies Session
-    //       },
-    //     },
-    //   }).then((session) => {
-    //     if (!session) {
-    //       resolve(null)
-    //     }
-    //   })
-    // })
   }
 
   async setCurrentOauthAsOwner() {

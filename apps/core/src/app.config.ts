@@ -117,6 +117,7 @@ export const CROSS_DOMAIN = {
         '*.vercel.app',
         'innei.in',
         '*.innei.in',
+        'localhost:9528',
       ],
 
   // allowedReferer: 'innei.ren',

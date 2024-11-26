@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator'
+import { omit } from 'lodash'
 
 import {
   Body,
@@ -126,6 +127,7 @@ export class AuthController {
     return {
       ...session.user,
       ...account,
+      ...omit(session, ['session', 'user']),
     }
   }
 }

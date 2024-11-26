@@ -1,8 +1,10 @@
+import { IncomingMessage } from 'node:http'
 import { MongoClient } from 'mongodb'
 import type { BetterAuthOptions } from 'better-auth'
-import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { ServerResponse } from 'node:http'
 
 import {
+  APIError,
   bearer,
   betterAuth,
   jwt,
@@ -26,10 +28,24 @@ export async function CreateAuth(config: BetterAuthOptions['socialProviders']) {
     database: mongodbAdapter(db),
     socialProviders: config,
     basePath: isDev ? '/auth' : `/api/v${API_VERSION}/auth`,
-    trustedOrigins: CROSS_DOMAIN.allowedOrigins,
+    trustedOrigins: CROSS_DOMAIN.allowedOrigins.reduce(
+      (acc: string[], origin: string) => {
+        if (origin.startsWith('http')) {
+          return [...acc, origin]
+        }
+        return [...acc, `https://${origin}`, `http://${origin}`]
+      },
+      [],
+    ),
     account: {
       modelName: AUTH_JS_ACCOUNT_COLLECTION,
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ['google', 'github'],
+      },
     },
+    appName: 'mx-core',
+
     plugins: [
       jwt({
         jwt: {
@@ -68,7 +84,19 @@ export async function CreateAuth(config: BetterAuthOptions['socialProviders']) {
 
   const handler = async (req: IncomingMessage, res: ServerResponse) => {
     try {
-      toNodeHandler(auth)(req, res)
+      res.setHeader('access-control-allow-methods', 'GET, POST')
+      res.setHeader('access-control-allow-headers', 'content-type')
+      res.setHeader(
+        'Access-Control-Allow-Origin',
+        req.headers.origin || req.headers.referer || req.headers.host || '*',
+      )
+      res.setHeader('access-control-allow-credentials', 'true')
+      return toNodeHandler(auth)(
+        Object.assign(new IncomingMessage(req.socket), req, {
+          url: req.originalUrl,
+        }),
+        res,
+      )
     } catch (error) {
       console.error(error)
       // throw error
@@ -84,10 +112,18 @@ export async function CreateAuth(config: BetterAuthOptions['socialProviders']) {
         getSession(params: Parameters<typeof auth.api.getSession>[0]) {
           return auth.api.getSession(params)
         },
-        listUserAccounts(
+        async listUserAccounts(
           params: Parameters<typeof auth.api.listUserAccounts>[0],
         ) {
-          return auth.api.listUserAccounts(params)
+          try {
+            const result = await auth.api.listUserAccounts(params)
+            return result
+          } catch (error) {
+            if (error instanceof APIError) {
+              return null
+            }
+            throw error
+          }
         },
       },
     },
