@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [7.2.1](https://github.com/mx-space/core/compare/v7.2.0...v7.2.1) (2024-11-26)
+
+
+### Bug Fixes
+
+* userId ([2143a8c](https://github.com/mx-space/core/commit/2143a8c6fc3b44fbcd94362fe34a15cb1612d6b0))
+
+
+
 # [7.2.0](https://github.com/mx-space/core/compare/v7.1.9...v7.2.0) (2024-11-26)
 
 
