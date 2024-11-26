@@ -1,5 +1,26 @@
 # CHANGELOG
 
+# [7.2.0](https://github.com/mx-space/core/compare/v7.1.9...v7.2.0) (2024-11-26)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @aws-sdk/client-s3 to v3.685.0 ([#2157](https://github.com/mx-space/core/issues/2157)) ([fad4464](https://github.com/mx-space/core/commit/fad44647417624a6dc71b0d62eba6981ae2c87f8))
+* **deps:** update dependency @fastify/static to v8.0.3 ([#2228](https://github.com/mx-space/core/issues/2228)) ([bb11879](https://github.com/mx-space/core/commit/bb118796debe6115fa595d2b5750b69012ebe29f))
+* **deps:** update dependency @langchain/openai to v0.3.11 ([835ba5a](https://github.com/mx-space/core/commit/835ba5a1892478763b0a548481feca6afcd586ba))
+* **deps:** update dependency @langchain/openai to v0.3.12 ([c7056d6](https://github.com/mx-space/core/commit/c7056d6559e03b7535b3b671557929cc32c2d2cd))
+* **deps:** update dependency @langchain/openai to v0.3.14 ([#2229](https://github.com/mx-space/core/issues/2229)) ([3692c40](https://github.com/mx-space/core/commit/3692c40366f9e4cbe56245ab4cf7c322ef5537dd))
+* **deps:** update dependency @nestjs/event-emitter to v2.1.1 ([#2203](https://github.com/mx-space/core/issues/2203)) ([abe3a95](https://github.com/mx-space/core/commit/abe3a95034a6d6488a845348b600052e890e28e1))
+* **deps:** update dependency @nestjs/mapped-types to v2.0.6 ([#2230](https://github.com/mx-space/core/issues/2230)) ([e0d8927](https://github.com/mx-space/core/commit/e0d89275eafff8add56fab8b92f0f16125e84c8c))
+* **deps:** update dependency langchain to v0.3.5 ([#2215](https://github.com/mx-space/core/issues/2215)) ([e6ef191](https://github.com/mx-space/core/commit/e6ef191523e6c2f3af157b79c648b0b6604dabf2))
+* **deps:** update dependency langchain to v0.3.6 ([#2231](https://github.com/mx-space/core/issues/2231)) ([17ce3e8](https://github.com/mx-space/core/commit/17ce3e8f864ad2074804f7142a65e7fbebcfa7bb))
+* **deps:** update dependency marked to v14.1.4 ([#2232](https://github.com/mx-space/core/issues/2232)) ([c3ab2ce](https://github.com/mx-space/core/commit/c3ab2ce3a5a5d02cb33dac157f1185b8a6d6d8af))
+* **deps:** update dependency openai to v4.68.1 ([7d96211](https://github.com/mx-space/core/commit/7d96211b06332263564571d0e4ebf8d555c4010e))
+* **deps:** update dependency qs to v6.13.1 ([#2234](https://github.com/mx-space/core/issues/2234)) ([69403ca](https://github.com/mx-space/core/commit/69403cac2e57839e02683ad52770ef950a74264a))
+* **deps:** update nest monorepo to v10.4.9 ([#2237](https://github.com/mx-space/core/issues/2237)) ([43a4488](https://github.com/mx-space/core/commit/43a44881a174e0034ce0f422f363a974cd7e0e60))
+
+
+
 ## [7.1.9](https://github.com/mx-space/core/compare/v7.1.8...v7.1.9) (2024-10-18)
 
 
