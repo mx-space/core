@@ -1,6 +1,6 @@
 {
   "private": true,
-  "packageManager": "pnpm@9.12.2",
+  "packageManager": "pnpm@9.12.3",
   "license": "AGPLv3",
   "homepage": "https://github.com/mx-space/core#readme",
   "repository": {
@@ -28,18 +28,18 @@
   },
   "devDependencies": {
     "@innei/prettier": "0.15.0",
-    "@sxzz/eslint-config": "4.4.0",
-    "@types/node": "22.7.7",
+    "@sxzz/eslint-config": "4.4.1",
+    "@types/node": "22.7.9",
     "cross-env": "7.0.3",
     "eslint": "^9.11.0",
     "eslint-plugin-unused-imports": "4.1.4",
-    "husky": "9.1.6",
+    "husky": "9.1.7",
     "lint-staged": "15.2.10",
     "prettier": "3.3.3",
     "rimraf": "6.0.1",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
-    "tsup": "8.3.0",
+    "tsup": "8.3.5",
     "typescript": "5.6.3",
     "vite-tsconfig-paths": "5.0.1"
   },
@@ -57,7 +57,7 @@
   "issues": "https://github.com/mx-space/core/issues",
   "resolutions": {
     "get-pixels@^3>request": "./external/request",
-    "mongodb": "6.9.0",
+    "mongodb": "6.11.0",
     "pino": "./external/pino",
     "semver": "7.6.3",
     "typescript": "5.6.3",
