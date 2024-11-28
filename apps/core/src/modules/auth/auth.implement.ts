@@ -5,17 +5,17 @@ import type { ServerResponse } from 'node:http'
 
 import {
   APIError,
-  bearer,
   betterAuth,
-  jwt,
   mongodbAdapter,
   toNodeHandler,
 } from '@mx-space/complied/auth'
 
 import { API_VERSION, CROSS_DOMAIN, MONGO_DB } from '~/app.config'
+import { SECURITY } from '~/app.config.test'
 
 import {
   AUTH_JS_ACCOUNT_COLLECTION,
+  AUTH_JS_SESSION_COLLECTION,
   AUTH_JS_USER_COLLECTION,
 } from './auth.constant'
 
@@ -44,8 +44,11 @@ export async function CreateAuth(config: BetterAuthOptions['socialProviders']) {
         trustedProviders: ['google', 'github'],
       },
     },
+    session: {
+      modelName: AUTH_JS_SESSION_COLLECTION,
+    },
     appName: 'mx-core',
-
+    secret: SECURITY.jwtSecret,
     plugins: [
       // @see https://gist.github.com/Bekacru/44cca7b3cf7dcdf1cee431a11d917b87
       {
@@ -57,20 +60,23 @@ export async function CreateAuth(config: BetterAuthOptions['socialProviders']) {
                 return context.path.startsWith('/callback')
               },
               async handler(ctx) {
-                const sessionCookie = ctx.responseHeader.get(
-                  ctx.context.authCookies.sessionToken.name,
+                const provider = ctx.params?.id
+
+                const sessionToken = ctx.responseHeader.get('set-cookie')
+                if (!sessionToken) {
+                  return
+                }
+                const sessionId = sessionToken
+                  .split(';')[0]
+                  .split('=')[1]
+                  .split('.')[0]
+
+                await db.collection(AUTH_JS_SESSION_COLLECTION).updateOne(
+                  {
+                    token: sessionId,
+                  },
+                  { $set: { provider } },
                 )
-                if (!sessionCookie) {
-                  return
-                }
-                const provider = ctx.path.split('/callback')[1]
-                if (!provider) {
-                  return
-                }
-                const sessionId = sessionCookie.split('.')[0]
-                await ctx.context.internalAdapter.updateSession(sessionId, {
-                  accountId: provider,
-                })
               },
             },
           ],
@@ -78,7 +84,7 @@ export async function CreateAuth(config: BetterAuthOptions['socialProviders']) {
         schema: {
           session: {
             fields: {
-              accountId: {
+              provider: {
                 type: 'string',
                 required: false,
               },
@@ -86,24 +92,6 @@ export async function CreateAuth(config: BetterAuthOptions['socialProviders']) {
           },
         },
       } satisfies BetterAuthPlugin,
-      jwt({
-        jwt: {
-          definePayload: async (user) => {
-            const account = await db
-              .collection(AUTH_JS_ACCOUNT_COLLECTION)
-              .findOne({
-                userId: user.id,
-              })
-            return {
-              id: user.id,
-              email: user.email,
-              provider: account?.provider,
-              providerAccountId: account?.providerAccountId,
-            }
-          },
-        },
-      }),
-      bearer(),
     ],
     user: {
       modelName: AUTH_JS_USER_COLLECTION,
