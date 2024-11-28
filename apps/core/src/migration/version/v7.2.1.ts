@@ -2,5 +2,7 @@
 import type { Db } from 'mongodb'
 
 export default (async function v0721(db: Db) {
-  await db.collection('session').drop()
+  try {
+    await db.collection('session').drop()
+  } catch {}
 })
