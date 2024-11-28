@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [7.2.2](https://github.com/mx-space/core/compare/v7.2.1...v7.2.2) (2024-11-28)
+
+
+### Bug Fixes
+
+* table migration ([84ddd7c](https://github.com/mx-space/core/commit/84ddd7c432c1bc027ddfcded9ac0debdf0cc3ddd))
+* update migration ([ec43ff2](https://github.com/mx-space/core/commit/ec43ff2965c0f800da4a1a7aaa52ac5b419a03be))
+
+
+### Features
+
+* add accountId to session ([1e674bd](https://github.com/mx-space/core/commit/1e674bdd2d2008e5804a142f3eab4d0e8dedc266))
+* add provider on session ([a031c32](https://github.com/mx-space/core/commit/a031c325327bd7eff3e7cda819eee1e6ee5ffc82))
+
+
+
 ## [7.2.1](https://github.com/mx-space/core/compare/v7.2.0...v7.2.1) (2024-11-26)
 
 
