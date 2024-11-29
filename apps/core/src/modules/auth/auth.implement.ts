@@ -60,20 +60,42 @@ export async function CreateAuth(config: BetterAuthOptions['socialProviders']) {
                 return context.path.startsWith('/callback')
               },
               async handler(ctx) {
-                const provider = ctx.params?.id
-
-                const sessionToken = ctx.responseHeader.get('set-cookie')
-                if (!sessionToken) {
+                const provider =
+                  ctx.params?.id || ctx.path.split('/callback')[1]
+                if (!provider) {
                   return
                 }
-                const sessionId = sessionToken
-                  .split(';')[0]
-                  .split('=')[1]
-                  .split('.')[0]
+
+                let finalSessionId = ''
+                const sessionCookie = ctx.responseHeader.get(
+                  ctx.context.authCookies.sessionToken.name,
+                )
+
+                if (sessionCookie) {
+                  const sessionId = sessionCookie.split('.')[0]
+                  if (sessionId) {
+                    finalSessionId = sessionId
+                  }
+                }
+
+                if (!finalSessionId) {
+                  const setSessionToken = ctx.responseHeader.get('set-cookie')
+
+                  if (setSessionToken) {
+                    const sessionId = setSessionToken
+                      .split(';')[0]
+                      .split('=')[1]
+                      .split('.')[0]
+
+                    if (sessionId) {
+                      finalSessionId = sessionId
+                    }
+                  }
+                }
 
                 await db.collection(AUTH_JS_SESSION_COLLECTION).updateOne(
                   {
-                    token: sessionId,
+                    token: finalSessionId,
                   },
                   { $set: { provider } },
                 )
