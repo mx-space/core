@@ -480,8 +480,8 @@ importers:
   packages/complied:
     devDependencies:
       better-auth:
-        specifier: 1.0.5
-        version: 1.0.5
+        specifier: 1.0.7
+        version: 1.0.7(encoding@0.1.13)
       nanoid:
         specifier: 5.0.9
         version: 5.0.9
@@ -3030,9 +3030,6 @@ packages:
 
   bcryptjs@2.4.3:
     resolution: {integrity: sha512-V/Hy/X9Vt7f3BbPJEi8BdVFMByHi+jNXrYkW3huaybV/kQ0KJg0Y6PkEMbn+zeT+i+SiKZ/HMqJGIIt4LZDqNQ==}
-
-  better-auth@1.0.5:
-    resolution: {integrity: sha512-LjpPqpRNXdDp6+9USuk/kgd7db2Vs1oJuWfr0rhlcmpMK4rfz7yA1GxomBozVDpKwZHPA8fUpgm1r7NDjvLYUg==}
 
   better-auth@1.0.7:
     resolution: {integrity: sha512-BTVgD4tBxlUlT47MRrzk8UE1wKDH4J4cebcNJ5lL7c3BxrNZNfhGjKGpUKTqvtZ1aXU5kKeoJwTFOVr0DXgg2Q==}
@@ -9695,26 +9692,6 @@ snapshots:
   base64id@2.0.0: {}
 
   bcryptjs@2.4.3: {}
-
-  better-auth@1.0.5:
-    dependencies:
-      '@better-fetch/fetch': 1.1.12
-      '@noble/ciphers': 0.6.0
-      '@noble/hashes': 1.6.1
-      '@simplewebauthn/browser': 10.0.0
-      '@simplewebauthn/server': 10.0.1(encoding@0.1.13)
-      better-call: 0.3.3-beta.2
-      consola: 3.2.3
-      defu: 6.1.4
-      jose: 5.9.6
-      kysely: 0.27.4
-      nanoid: 5.0.9
-      nanostores: 0.11.3
-      oslo: 1.2.1
-      uncrypto: 0.1.3
-      zod: 3.23.8
-    transitivePeerDependencies:
-      - encoding
 
   better-auth@1.0.7(encoding@0.1.13):
     dependencies:
