@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [7.2.3](https://github.com/mx-space/core/compare/v7.2.2...v7.2.3) (2024-11-29)
+
+
+### Bug Fixes
+
+* get sessionId ([ca18882](https://github.com/mx-space/core/commit/ca18882c87066ac05db76c27aae74e82079e2576))
+
+
+
 ## [7.2.2](https://github.com/mx-space/core/compare/v7.2.1...v7.2.2) (2024-11-28)
 
 
