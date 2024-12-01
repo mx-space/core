@@ -206,9 +206,11 @@ echo "============================================"
 
 command="node index.js $command_args"
 
-echo "Starting Cloudflared Tunnel"
-echo "============================================"
-nohup /usr/local/bin/cloudflared service install $CF_ZERO_TRUST_TOKEN
-echo "============================================"
-
+# 根据环境变量决定是否启动 cloudflared
+if [ "$ENABLE_CLOUDFLARED" = "true" ]; then
+  echo "Starting Cloudflared Tunnel"
+  echo "============================================"
+  nohup /usr/local/bin/cloudflared service install $CF_ZERO_TRUST_TOKEN &
+  echo "============================================"
+fi
 exec $command
