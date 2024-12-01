@@ -201,8 +201,16 @@ echo "Allowed Origins: $(get_cmd_value "--allowed_origins=" $command_args)"
 echo "Config Path: $(if [ -z "$(get_cmd_value "--config_path=" $command_args)" ]; then echo "NULL"; else echo "$(get_cmd_value "--config_path=" $command_args)"; fi)"
 echo "Encryption: $(get_boolean_str $(is_in_cmd "--encrypt_enable" $command_args))"
 echo "Cluster: $(get_boolean_str $(is_in_cmd "--cluster" $command_args))"
+echo "CF Zero Trust Token: $(get_cmd_value "--cf_zero_trust_token=" $command_args)"
 echo "============================================"
 
 command="node index.js $command_args"
 
+# 根据环境变量决定是否启动 cloudflared
+if [ "$ENABLE_CLOUDFLARED" = "true" ]; then
+  echo "Starting Cloudflared Tunnel"
+  echo "============================================"
+  nohup /usr/local/bin/cloudflared service install $CF_ZERO_TRUST_TOKEN &
+  echo "============================================"
+fi
 exec $command

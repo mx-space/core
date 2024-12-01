@@ -10,7 +10,10 @@ RUN node apps/core/download-latest-admin-assets.js
 
 FROM node:20-alpine
 
-RUN apk add zip unzip mongodb-tools bash fish rsync jq curl --no-cache
+RUN apk add zip unzip mongodb-tools bash fish rsync jq curl openrc --no-cache
+
+RUN curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared \
+    && chmod +x /usr/local/bin/cloudflared
 
 WORKDIR /app
 COPY --from=builder /app/out .
