@@ -27,13 +27,11 @@ const client = new MongoClient(MONGO_DB.customConnectionString || MONGO_DB.uri)
 const db = client.db()
 
 export async function CreateAuth(
-  baseURL: BetterAuthOptions['baseURL'],
   providers: BetterAuthOptions['socialProviders'],
 ) {
   const auth = betterAuth({
     database: mongodbAdapter(db),
     socialProviders: providers,
-    baseURL,
     basePath: isDev ? '/auth' : `/api/v${API_VERSION}/auth`,
     trustedOrigins: CROSS_DOMAIN.allowedOrigins.reduce(
       (acc: string[], origin: string) => {
@@ -147,12 +145,20 @@ export async function CreateAuth(
         req.headers.origin || req.headers.referer || req.headers.host || '*',
       )
       res.setHeader('access-control-allow-credentials', 'true')
-      return toNodeHandler(auth)(
-        Object.assign(new IncomingMessage(req.socket), req, {
+
+      const clonedRequest = new IncomingMessage(req.socket)
+      const handler = toNodeHandler(auth)(
+        Object.assign(clonedRequest, req, {
           url: req.originalUrl,
+          // https://github.com/Bekacru/better-call/blob/main/src/adapter/node.ts
+          connection: Object.assign(req.connection, {
+            encrypted: isDev ? false : true,
+          }),
         }),
         res,
       )
+
+      return handler
     } catch (error) {
       console.error(error)
       // throw error

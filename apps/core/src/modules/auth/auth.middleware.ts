@@ -64,8 +64,8 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
           }
         }
       })
-      const baseURL = (await this.configService.get('url')).serverUrl
-      const { handler, auth } = await CreateAuth(baseURL, providers)
+
+      const { handler, auth } = await CreateAuth(providers)
       this.authHandler = handler
 
       this.authInstance.set(auth)
