@@ -1,5 +1,5 @@
+import type { BetterAuthOptions } from '@mx-space/complied/auth'
 import type { NestMiddleware, OnModuleInit } from '@nestjs/common'
-import type { BetterAuthOptions } from 'better-auth'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import { Inject } from '@nestjs/common'
@@ -64,7 +64,8 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
           }
         }
       })
-      const { handler, auth } = await CreateAuth(providers)
+      const baseURL = (await this.configService.get('url')).serverUrl
+      const { handler, auth } = await CreateAuth(baseURL, providers)
       this.authHandler = handler
 
       this.authInstance.set(auth)

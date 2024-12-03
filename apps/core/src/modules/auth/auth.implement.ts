@@ -26,10 +26,14 @@ const client = new MongoClient(MONGO_DB.customConnectionString || MONGO_DB.uri)
 
 const db = client.db()
 
-export async function CreateAuth(config: BetterAuthOptions['socialProviders']) {
+export async function CreateAuth(
+  baseURL: BetterAuthOptions['baseURL'],
+  providers: BetterAuthOptions['socialProviders'],
+) {
   const auth = betterAuth({
     database: mongodbAdapter(db),
-    socialProviders: config,
+    socialProviders: providers,
+    baseURL,
     basePath: isDev ? '/auth' : `/api/v${API_VERSION}/auth`,
     trustedOrigins: CROSS_DOMAIN.allowedOrigins.reduce(
       (acc: string[], origin: string) => {
