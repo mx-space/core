@@ -1,6 +1,9 @@
 import { IncomingMessage } from 'node:http'
 import { MongoClient } from 'mongodb'
-import type { BetterAuthOptions, BetterAuthPlugin } from 'better-auth'
+import type {
+  BetterAuthOptions,
+  BetterAuthPlugin,
+} from '@mx-space/complied/auth'
 import type { ServerResponse } from 'node:http'
 
 import {
