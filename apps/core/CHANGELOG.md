@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [7.2.4](https://github.com/mx-space/core/compare/v7.2.3...v7.2.4) (2024-12-03)
+
+
+### Bug Fixes
+
+* add auth baseURL ([635e27d](https://github.com/mx-space/core/commit/635e27df8da51cae33e5f0abf35ad491998b3de6))
+* complied better auth typing export ([49cc5b6](https://github.com/mx-space/core/commit/49cc5b628fd6e4b8cd5c2adf35c40bf982621b28))
+* lockfile ([584af40](https://github.com/mx-space/core/commit/584af40c963b5b638c666dd1721cff01b81094ab))
+* remove baseURL ([b3e10d4](https://github.com/mx-space/core/commit/b3e10d417b7a125367efd8ff9a5e124d84e97895))
+* reset oauth instance when app url changed ([54d9021](https://github.com/mx-space/core/commit/54d90214ec18e754c0e6a78f32d9eedf23056b2d))
+
+
+### Features
+
+* Add cloudflared service to the docker image ([#2252](https://github.com/mx-space/core/issues/2252)) ([1bcb434](https://github.com/mx-space/core/commit/1bcb434a27d5b6e73759f833f01171be04d002e2))
+
+
+
 ## [7.2.3](https://github.com/mx-space/core/compare/v7.2.2...v7.2.3) (2024-11-29)
 
 
