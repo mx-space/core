@@ -177,9 +177,6 @@ importers:
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
-      better-auth:
-        specifier: 1.0.9
-        version: 1.0.9(encoding@0.1.13)
       blurhash:
         specifier: 2.0.5
         version: 2.0.5
@@ -481,7 +478,7 @@ importers:
     devDependencies:
       better-auth:
         specifier: 1.0.9
-        version: 1.0.9(encoding@0.1.13)
+        version: 1.0.9
       nanoid:
         specifier: 5.0.9
         version: 5.0.9
@@ -9814,7 +9811,7 @@ snapshots:
 
   bcryptjs@2.4.3: {}
 
-  better-auth@1.0.9(encoding@0.1.13):
+  better-auth@1.0.9:
     dependencies:
       '@better-fetch/fetch': 1.1.12
       '@noble/ciphers': 0.6.0
