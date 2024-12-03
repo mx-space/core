@@ -195,6 +195,11 @@ export class ConfigsService {
     encryptObject(instanceValue)
 
     switch (key) {
+      case 'url': {
+        const newValue = await this.patch(key, instanceValue)
+        this.subpub.publish(EventBusEvents.AppUrlChanged, newValue)
+        return newValue
+      }
       case 'mailOptions': {
         const option = await this.patch(key as 'mailOptions', instanceValue)
         if (option.enable) {

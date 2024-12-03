@@ -6,4 +6,5 @@ export enum EventBusEvents {
   SystemException = 'system.exception',
   ConfigChanged = 'config.changed',
   OauthChanged = 'oauth.changed',
+  AppUrlChanged = 'app.url.changed',
 }

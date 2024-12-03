@@ -71,6 +71,8 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
       this.authInstance.set(auth)
     }
     this.redisSub.subscribe(EventBusEvents.OauthChanged, handler)
+    this.redisSub.subscribe(EventBusEvents.AppUrlChanged, handler)
+
     await handler()
   }
 
