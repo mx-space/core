@@ -160,8 +160,8 @@ importers:
         specifier: 4.7.0
         version: 4.7.0(mongoose@8.7.0)
       '@typegoose/typegoose':
-        specifier: 12.8.0
-        version: 12.8.0(mongoose@8.7.0)
+        specifier: 12.9.1
+        version: 12.9.1(mongoose@8.7.0)
       '@types/jsonwebtoken':
         specifier: 9.0.7
         version: 9.0.7
@@ -2570,11 +2570,11 @@ packages:
     peerDependencies:
       mongoose: ~8.7.0
 
-  '@typegoose/typegoose@12.8.0':
-    resolution: {integrity: sha512-YCeYYH0joT4n48WRUfofPq3KBg6OQw1zR6wB4WKflkFYf9SC4P29hf0PlmsiA+hAbubd3Qn51KmkjiUJetJmFQ==}
+  '@typegoose/typegoose@12.9.1':
+    resolution: {integrity: sha512-3YMuGVWvl1V16gkWi1Q2PdEa7QWEPP3Coz0MkEeqgXAOR4N4/It3YIFoccNRfq/mFTx0dJAwgqLMK4qBCVC9MA==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
-      mongoose: ~8.7.0
+      mongoose: ~8.8.0
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -9168,7 +9168,7 @@ snapshots:
       mongoose: 8.7.0
       tslib: 2.8.1
 
-  '@typegoose/typegoose@12.8.0(mongoose@8.7.0)':
+  '@typegoose/typegoose@12.9.1(mongoose@8.7.0)':
     dependencies:
       lodash: 4.17.21
       loglevel: 1.9.2
