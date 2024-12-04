@@ -157,8 +157,8 @@ importers:
         specifier: 5.1.0
         version: 5.1.0
       '@typegoose/auto-increment':
-        specifier: 4.7.0
-        version: 4.7.0(mongoose@8.7.0)
+        specifier: 4.8.0
+        version: 4.8.0(mongoose@8.7.0)
       '@typegoose/typegoose':
         specifier: 12.8.0
         version: 12.8.0(mongoose@8.7.0)
@@ -2564,11 +2564,11 @@ packages:
   '@tybys/wasm-util@0.8.3':
     resolution: {integrity: sha512-Z96T/L6dUFFxgFJ+pQtkPpne9q7i6kIPYCFnQBHSgSPV9idTsKfIhCss0h5iM9irweZCatkrdeP8yi5uM1eX6Q==}
 
-  '@typegoose/auto-increment@4.7.0':
-    resolution: {integrity: sha512-R2iGiRG1y4ElSdmzFhKT8C3Gh1YAIiHeTYuiIWZz/GEBQ477LGBKtwCfmPOH9xsNsfV7Hw0nRpUzDjbIOopa6w==}
+  '@typegoose/auto-increment@4.8.0':
+    resolution: {integrity: sha512-VMPq89ryGiP4HDQZtnz1j6wHZRxe6p9AfNOx8xRV0QPX6H18cHeeFq0evEF8vz44/OKMuwYbSAeF4zdWOyfLzw==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
-      mongoose: ~8.7.0
+      mongoose: ~8.8.0
 
   '@typegoose/typegoose@12.8.0':
     resolution: {integrity: sha512-YCeYYH0joT4n48WRUfofPq3KBg6OQw1zR6wB4WKflkFYf9SC4P29hf0PlmsiA+hAbubd3Qn51KmkjiUJetJmFQ==}
@@ -9162,7 +9162,7 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@typegoose/auto-increment@4.7.0(mongoose@8.7.0)':
+  '@typegoose/auto-increment@4.8.0(mongoose@8.7.0)':
     dependencies:
       loglevel: 1.9.2
       mongoose: 8.7.0
