@@ -59,7 +59,7 @@
     "@babel/plugin-transform-modules-commonjs": "7.25.9",
     "@babel/plugin-transform-typescript": "7.25.9",
     "@babel/types": "^7.26.0",
-    "@fastify/cookie": "9.4.0",
+    "@fastify/cookie": "11.0.1",
     "@fastify/multipart": "8.3.0",
     "@fastify/static": "8.0.3",
     "@innei/next-async": "0.3.0",
