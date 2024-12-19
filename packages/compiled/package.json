@@ -1,5 +1,5 @@
 {
-  "name": "@mx-space/complied",
+  "name": "@mx-space/compiled",
   "private": true,
   "type": "module",
   "main": "dist/index.cjs",

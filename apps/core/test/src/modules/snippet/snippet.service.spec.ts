@@ -1,7 +1,7 @@
 import { stringify } from 'qs'
 import { redisHelper } from 'test/helper/redis-mock.helper'
 
-import { nanoid } from '@mx-space/complied'
+import { nanoid } from '@mx-space/compiled'
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'

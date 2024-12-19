@@ -1,4 +1,4 @@
-import type { BetterAuthOptions } from '@mx-space/complied/auth'
+import type { BetterAuthOptions } from '@mx-space/compiled/auth'
 import type { NestMiddleware, OnModuleInit } from '@nestjs/common'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 

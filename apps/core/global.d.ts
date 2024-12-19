@@ -1,6 +1,6 @@
 import type { Document, PaginateModel } from 'mongoose'
 
-import '@mx-space/complied/zx-global'
+import '@mx-space/compiled/zx-global'
 
 import type { ModelType } from '@typegoose/typegoose/lib/types'
 

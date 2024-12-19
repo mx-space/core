@@ -38,13 +38,13 @@ export default defineConfig({
         __dirname,
         './test/mock/decorators/auth.decorator.ts',
       ),
-      '@mx-space/complied/auth': resolve(
+      '@mx-space/compiled/auth': resolve(
         __dirname,
-        '../../packages/complied/auth.ts',
+        '../../packages/compiled/auth.ts',
       ),
-      '@mx-space/complied': resolve(
+      '@mx-space/compiled': resolve(
         __dirname,
-        '../../packages/complied/index.ts',
+        '../../packages/compiled/index.ts',
       ),
     },
   },

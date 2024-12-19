@@ -18,7 +18,7 @@ import { cwd, isDev } from './env.global'
 import { registerJSONGlobal } from './json.global'
 
 import './dayjs.global'
-import '@mx-space/complied/zx-global'
+import '@mx-space/compiled/zx-global'
 
 // 建立目录
 function createAppFolders() {

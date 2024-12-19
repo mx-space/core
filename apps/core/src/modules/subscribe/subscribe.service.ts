@@ -10,7 +10,7 @@ import type { PostModel } from '../post/post.model'
 import type { SubscribeTemplateRenderProps } from './subscribe.email.default'
 
 import { Co } from '@innei/next-async'
-import { nanoid as N } from '@mx-space/complied'
+import { nanoid as N } from '@mx-space/compiled'
 import { BadRequestException, Injectable } from '@nestjs/common'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'

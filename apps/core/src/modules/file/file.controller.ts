@@ -2,7 +2,7 @@ import fs from 'node:fs/promises'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
 
-import { nanoid } from '@mx-space/complied'
+import { nanoid } from '@mx-space/compiled'
 import {
   Delete,
   Get,

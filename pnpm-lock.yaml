@@ -114,9 +114,9 @@ importers:
       '@langchain/openai':
         specifier: 0.3.14
         version: 0.3.14(@langchain/core@0.3.20(openai@4.73.1(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13)
-      '@mx-space/complied':
+      '@mx-space/compiled':
         specifier: workspace:*
-        version: link:../../packages/complied
+        version: link:../../packages/compiled
       '@nestjs/cache-manager':
         specifier: 2.3.0
         version: 2.3.0(@nestjs/common@10.4.13(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.13)(cache-manager@5.7.6)(rxjs@7.8.1)
@@ -474,11 +474,11 @@ importers:
         specifier: 1.5.2
         version: 1.5.2(@types/node@22.10.1)(terser@5.36.0)
 
-  packages/complied:
+  packages/compiled:
     devDependencies:
       better-auth:
         specifier: 1.0.10
-        version: 1.0.10
+        version: 1.0.10(encoding@0.1.13)
       nanoid:
         specifier: 5.0.9
         version: 5.0.9
@@ -9839,7 +9839,7 @@ snapshots:
 
   bcryptjs@2.4.3: {}
 
-  better-auth@1.0.10:
+  better-auth@1.0.10(encoding@0.1.13):
     dependencies:
       '@better-fetch/fetch': 1.1.12
       '@noble/ciphers': 0.6.0

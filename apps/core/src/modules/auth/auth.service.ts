@@ -5,7 +5,7 @@ import { Types } from 'mongoose'
 import type { TokenModel, UserModel } from '~/modules/user/user.model'
 import type { TokenDto } from './auth.controller'
 
-import { nanoid } from '@mx-space/complied'
+import { nanoid } from '@mx-space/compiled'
 import {
   BadRequestException,
   Inject,

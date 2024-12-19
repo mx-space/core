@@ -3,7 +3,7 @@ import { MongoClient } from 'mongodb'
 import type {
   BetterAuthOptions,
   BetterAuthPlugin,
-} from '@mx-space/complied/auth'
+} from '@mx-space/compiled/auth'
 import type { ServerResponse } from 'node:http'
 
 import {
@@ -11,7 +11,7 @@ import {
   betterAuth,
   mongodbAdapter,
   toNodeHandler,
-} from '@mx-space/complied/auth'
+} from '@mx-space/compiled/auth'
 
 import { API_VERSION, CROSS_DOMAIN, MONGO_DB } from '~/app.config'
 import { SECURITY } from '~/app.config.test'
