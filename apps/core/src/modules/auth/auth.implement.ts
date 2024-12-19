@@ -150,8 +150,9 @@ export async function CreateAuth(
       const handler = toNodeHandler(auth)(
         Object.assign(clonedRequest, req, {
           url: req.originalUrl,
+
           // https://github.com/Bekacru/better-call/blob/main/src/adapter/node.ts
-          connection: Object.assign(req.connection, {
+          socket: Object.assign(req.socket, {
             encrypted: isDev ? false : true,
           }),
         }),

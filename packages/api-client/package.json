@@ -48,15 +48,15 @@
     "@types/express": "5.0.0",
     "@types/lodash": "4.17.13",
     "abort-controller": "3.0.0",
-    "axios": "^1.6.7",
+    "axios": "^1.7.9",
     "camelcase-keys": "^9.1.3",
     "cors": "2.8.5",
-    "express": "4.21.1",
+    "express": "4.21.2",
     "form-data": "4.0.1",
     "lodash": "4.17.21",
     "tsup": "8.3.5",
     "umi-request": "1.4.0",
-    "vite": "^5.4.7",
-    "vitest": "1.5.2"
+    "vite": "^6.0.3",
+    "vitest": "2.1.8"
   }
 }
