@@ -285,9 +285,13 @@ export class SearchService {
         }),
     ])
 
+    const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
+
     return combineDocuments
       .flat()
-      .map((item) => adjustObjectSizeEfficiently(item))
+      .map((item) =>
+        adjustObjectSizeEfficiently(item, algoliaSearchOptions.maxTruncateSize),
+      )
   }
 
   @OnEvent(BusinessEvents.POST_CREATE)
@@ -298,17 +302,22 @@ export class SearchService {
     if (!data) return
 
     this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
+      const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
+
       this.logger.log(
         `detect post created or update, save to algolia, data id:${data.id}`,
       )
       await index.saveObject(
-        adjustObjectSizeEfficiently({
-          ...omit(data, '_id'),
-          objectID: data.id,
-          id: data.id,
+        adjustObjectSizeEfficiently(
+          {
+            ...omit(data, '_id'),
+            objectID: data.id,
+            id: data.id,
 
-          type: 'post',
-        }),
+            type: 'post',
+          },
+          algoliaSearchOptions.maxTruncateSize,
+        ),
         {
           autoGenerateObjectIDIfNotExist: false,
         },
@@ -328,15 +337,18 @@ export class SearchService {
       this.logger.log(
         `detect post created or update, save to algolia, data id:${data.id}`,
       )
+      const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
+
       await index.saveObject(
-        adjustObjectSizeEfficiently({
-          ...omit(data, '_id'),
-          objectID: data.id,
-
-          id: data.id,
-
-          type: 'note',
-        }),
+        adjustObjectSizeEfficiently(
+          {
+            ...omit(data, '_id'),
+            objectID: data.id,
+            id: data.id,
+            type: 'note',
+          },
+          algoliaSearchOptions.maxTruncateSize,
+        ),
         {
           autoGenerateObjectIDIfNotExist: false,
         },
@@ -367,7 +379,7 @@ export class SearchService {
   }
 }
 
-const MAX_SIZE_IN_BYTES = 100_000
+const MAX_SIZE_IN_BYTES = 10_000
 function adjustObjectSizeEfficiently<T extends { text: string }>(
   originalObject: T,
   maxSizeInBytes: number = MAX_SIZE_IN_BYTES,
