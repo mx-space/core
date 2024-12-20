@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [7.2.5](https://github.com/mx-space/core/compare/v7.2.4...v7.2.5) (2024-12-20)
+
+
+### Bug Fixes
+
+* dockerfile ([838b5b3](https://github.com/mx-space/core/commit/838b5b33a05724c776d6d19adc4784dc75679daa))
+
+
+### Features
+
+* support algolia search custom truncate size, closed [#2271](https://github.com/mx-space/core/issues/2271) ([6da1c13](https://github.com/mx-space/core/commit/6da1c13799174e746708844d0b149b4607e8f276))
+
+
+
 ## [7.2.4](https://github.com/mx-space/core/compare/v7.2.3...v7.2.4) (2024-12-03)
 
 
