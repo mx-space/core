@@ -112,8 +112,8 @@ importers:
         specifier: 0.3.3
         version: 0.3.3(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))
       '@langchain/openai':
-        specifier: 0.3.14
-        version: 0.3.14(@langchain/core@0.3.26(openai@4.77.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13)
+        specifier: 0.3.16
+        version: 0.3.16(@langchain/core@0.3.26(openai@4.77.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13)
       '@mx-space/compiled':
         specifier: workspace:*
         version: link:../../packages/compiled
@@ -1663,8 +1663,8 @@ packages:
     resolution: {integrity: sha512-6RUQHEp8wv+JwtYIIEBYBzbLlcAQZFc7EDOgAM0ukExjh9HiXoJzoWpgMRRCrr/koIbtwXPJUqBprZK1I1CXHQ==}
     engines: {node: '>=18'}
 
-  '@langchain/openai@0.3.14':
-    resolution: {integrity: sha512-lNWjUo1tbvsss45IF7UQtMu1NJ6oUKvhgPYWXnX9f/d6OmuLu7D99HQ3Y88vLcUo9XjjOy417olYHignMduMjA==}
+  '@langchain/openai@0.3.16':
+    resolution: {integrity: sha512-Om9HRlTeI0Ou6D4pfxbWHop4WGfkCdV/7v1W/+Jr7NSf0BNoA9jk5GqGms8ZtOYSGgPvizDu3i0TrM3B4cN4NA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': '>=0.2.26 <0.4.0'
@@ -8291,7 +8291,7 @@ snapshots:
     transitivePeerDependencies:
       - openai
 
-  '@langchain/openai@0.3.14(@langchain/core@0.3.26(openai@4.77.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13)':
+  '@langchain/openai@0.3.16(@langchain/core@0.3.26(openai@4.77.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13)':
     dependencies:
       '@langchain/core': 0.3.26(openai@4.77.0(encoding@0.1.13)(zod@3.23.8))
       js-tiktoken: 1.0.15
@@ -11676,7 +11676,7 @@ snapshots:
   langchain@0.3.7(@langchain/core@0.3.26(openai@4.77.0(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(encoding@0.1.13)(openai@4.77.0(encoding@0.1.13)(zod@3.23.8)):
     dependencies:
       '@langchain/core': 0.3.26(openai@4.77.0(encoding@0.1.13)(zod@3.23.8))
-      '@langchain/openai': 0.3.14(@langchain/core@0.3.26(openai@4.77.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13)
+      '@langchain/openai': 0.3.16(@langchain/core@0.3.26(openai@4.77.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13)
       '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.26(openai@4.77.0(encoding@0.1.13)(zod@3.23.8)))
       js-tiktoken: 1.0.15
       js-yaml: 4.1.0
