@@ -136,7 +136,7 @@
     "zx-cjs": "7.0.7-0"
   },
   "devDependencies": {
-    "@langchain/core": "0.3.20",
+    "@langchain/core": "0.3.26",
     "@nestjs/cli": "10.4.9",
     "@nestjs/schematics": "10.2.3",
     "@nestjs/testing": "10.4.15",
