@@ -10,7 +10,7 @@
   "author": "Innei <https://innei.in>",
   "scripts": {
     "format": "prettier --write \"apps/**/*.ts\" \"test/**/*.ts\" \"packages/**/*.ts\"",
-    "prepare": "simple-git-hooks",
+    "prepare": "simple-git-hooks && node scripts/init-project.mjs && corepack enable",
     "build:external": "pnpm -C \"packages/compiled\" run build",
     "build": "pnpm run build:external && pnpm -C \"apps/core\" run build",
     "dev": "pnpm run build:external && pnpm -C \"apps/core\" run start",
