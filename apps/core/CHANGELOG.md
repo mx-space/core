@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [7.2.6](https://github.com/mx-space/core/compare/v7.2.5...v7.2.6) (2024-12-21)
+
+
+### Bug Fixes
+
+* init project ([58acb5a](https://github.com/mx-space/core/commit/58acb5a33df1daaabfd237c3ce1ce15ed5852731))
+
+
+
 ## [7.2.5](https://github.com/mx-space/core/compare/v7.2.4...v7.2.5) (2024-12-20)
 
 
