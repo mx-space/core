@@ -1,4 +1,4 @@
-FROM node:20-alpine as builder
+FROM node:22-alpine as builder
 WORKDIR /app
 COPY . .
 RUN apk add git make g++ alpine-sdk python3 py3-pip unzip
@@ -8,7 +8,7 @@ RUN pnpm bundle
 RUN mv apps/core/out ./out
 RUN node apps/core/download-latest-admin-assets.js
 
-FROM node:20-alpine
+FROM node:22-alpine
 
 RUN apk add zip unzip mongodb-tools bash fish rsync jq curl openrc --no-cache
 
