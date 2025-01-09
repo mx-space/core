@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [7.2.7](https://github.com/mx-space/core/compare/v7.2.6...v7.2.7) (2025-01-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @aws-sdk/client-s3 to v3.723.0 ([#2258](https://github.com/mx-space/core/issues/2258)) ([d0e7832](https://github.com/mx-space/core/commit/d0e7832be34780e7953499d402b90c739e5d6505))
+* **deps:** update dependency @langchain/openai to v0.3.16 ([#2269](https://github.com/mx-space/core/issues/2269)) ([5342665](https://github.com/mx-space/core/commit/5342665bad184c43545ef19275a10904e8371f3d))
+* **deps:** update dependency @typegoose/auto-increment to v4.9.0 ([#2250](https://github.com/mx-space/core/issues/2250)) ([a278685](https://github.com/mx-space/core/commit/a278685b402380f77f5a13179d7ad3fc7e3ddf3a))
+* **deps:** update dependency isbot to v5.1.19 ([#2286](https://github.com/mx-space/core/issues/2286)) ([c4e871d](https://github.com/mx-space/core/commit/c4e871d198fcc6e05c65925128f851dbed6b885f))
+* **deps:** update dependency langchain to v0.3.8 ([#2277](https://github.com/mx-space/core/issues/2277)) ([793dee2](https://github.com/mx-space/core/commit/793dee294230bc10af7c534cd5fdf6557c8e33fd))
+* **deps:** update dependency remove-markdown to v0.6.0 ([#2278](https://github.com/mx-space/core/issues/2278)) ([b3f2d50](https://github.com/mx-space/core/commit/b3f2d5042d68342656fe6ca1be0ebd46f73829d8))
+* **deps:** update dependency ua-parser-js to v1.0.40 ([#2274](https://github.com/mx-space/core/issues/2274)) ([85cccd2](https://github.com/mx-space/core/commit/85cccd261548dd9f791bb03ebe77a721c0380b9c))
+
+
+
 ## [7.2.6](https://github.com/mx-space/core/compare/v7.2.5...v7.2.6) (2024-12-21)
 
 
