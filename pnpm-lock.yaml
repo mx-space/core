@@ -214,8 +214,8 @@ importers:
         specifier: ^10.2.2
         version: 10.2.2
       isbot:
-        specifier: 5.1.19
-        version: 5.1.19
+        specifier: 5.1.21
+        version: 5.1.21
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -4324,8 +4324,8 @@ packages:
   isarray@1.0.0:
     resolution: {integrity: sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==}
 
-  isbot@5.1.19:
-    resolution: {integrity: sha512-8krWJBGKC3lVymkncvmBTpIEWMD5kKmjAvkM3/Xh6veE0bAydwgSNrI5h493DGrG2UNJCy0HuHpNPSKRy0dBJA==}
+  isbot@5.1.21:
+    resolution: {integrity: sha512-0q3naRVpENL0ReKHeNcwn/G7BDynp0DqZUckKyFtM9+hmpnPqgm8+8wbjiVZ0XNhq1wPQV28/Pb8Snh5adeUHA==}
     engines: {node: '>=18'}
 
   isexe@2.0.0:
@@ -11267,7 +11267,7 @@ snapshots:
 
   isarray@1.0.0: {}
 
-  isbot@5.1.19: {}
+  isbot@5.1.21: {}
 
   isexe@2.0.0: {}
 
