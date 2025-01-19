@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [7.2.8](https://github.com/mx-space/core/compare/v7.2.7...v7.2.8) (2025-01-19)
+
+
+### Bug Fixes
+
+* **deps:** update babel monorepo to v7.26.5 ([#2307](https://github.com/mx-space/core/issues/2307)) ([ac3f16b](https://github.com/mx-space/core/commit/ac3f16b9944b911bb1eaf6887b35f1cd5d4b62cc))
+* **deps:** update dependency @aws-sdk/client-s3 to v3.731.1 ([#2303](https://github.com/mx-space/core/issues/2303)) ([f5abb1a](https://github.com/mx-space/core/commit/f5abb1a428ce7d7cb1dcad01ab76285fde536a6f))
+* **deps:** update dependency isbot to v5.1.21 ([#2298](https://github.com/mx-space/core/issues/2298)) ([b1ea871](https://github.com/mx-space/core/commit/b1ea87194eec04e65431a69ed7066df4ee22981f))
+* **deps:** update dependency langchain to v0.3.10 ([#2299](https://github.com/mx-space/core/issues/2299)) ([7182cb2](https://github.com/mx-space/core/commit/7182cb21faa96ede55fe4b4741ce88ca048fc3ee))
+* **deps:** update dependency langchain to v0.3.11 ([#2310](https://github.com/mx-space/core/issues/2310)) ([a542807](https://github.com/mx-space/core/commit/a542807fa8fa539ce4f3b8a8890e8fd457031dbb))
+* **deps:** update dependency mongoose-paginate-v2 to v1.9.0 ([#2306](https://github.com/mx-space/core/issues/2306)) ([7834acb](https://github.com/mx-space/core/commit/7834acb0dac5925294592e9e7368a546aff467c7))
+* **deps:** update dependency openai to v4.77.4 ([#2300](https://github.com/mx-space/core/issues/2300)) ([eb3a568](https://github.com/mx-space/core/commit/eb3a5686bdf21e5cb681244759435fe300932b43))
+* **deps:** update dependency openai to v4.79.1 ([#2308](https://github.com/mx-space/core/issues/2308)) ([69481df](https://github.com/mx-space/core/commit/69481df6691ade4026034b3fec13102ed2ef9481))
+
+
+
 ## [7.2.7](https://github.com/mx-space/core/compare/v7.2.6...v7.2.7) (2025-01-09)
 
 
