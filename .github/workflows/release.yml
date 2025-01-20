@@ -2,6 +2,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 name: Release (core)
 
@@ -133,7 +134,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        arch: ['amd64']
+        arch: ['amd64', 'arm64', 's390x']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -161,10 +162,6 @@ jobs:
           load: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }},innei/mx-server:latest
-          platforms: |
-            linux/amd64
-            linux/arm64
-            linux/s390x
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Test
