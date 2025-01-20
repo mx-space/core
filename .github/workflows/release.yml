@@ -134,10 +134,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        arch: ['amd64', 'arm64', 's390x']
+        arch: ['amd64', 'arm64']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Docker Setup QEMU
+        uses: docker/setup-qemu-action@v3.3.0
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -184,6 +186,5 @@ jobs:
           platforms: |
             linux/amd64
             linux/arm64
-            linux/s390x
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
