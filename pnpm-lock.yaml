@@ -131,7 +131,7 @@ importers:
         version: 2.1.1(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.15)
       '@nestjs/mapped-types':
         specifier: ^2.0.6
-        version: 2.0.6(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)
+        version: 2.1.0(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)
       '@nestjs/platform-fastify':
         specifier: 10.4.15
         version: 10.4.15(@fastify/static@8.0.4)(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.15)
@@ -638,6 +638,7 @@ packages:
   '@aws-sdk/middleware-flexible-checksums@3.731.0':
     resolution: {integrity: sha512-LMs/rndovYjYSntSYyPE/PIl4iHNiquaU0lpDqpQc9iTgQcNbjdriSUWpibgu1jXlGBpBYCqttNkxmEThbbWxA==}
     engines: {node: '>=18.0.0'}
+    deprecated: Please upgrade to >=3.735.0, which contains fixes for checksum validation in S3 getObject calls. Details https://github.com/aws/aws-sdk-js-v3/issues/6827
 
   '@aws-sdk/middleware-host-header@3.731.0':
     resolution: {integrity: sha512-ndAJsm5uWPPJRZowLKpB1zuL17qWlWVtCJP4I/ynBkq1PU1DijDXBul2UZaG6Mpvsgms1NXo/h9noHuK7T3v8w==}
@@ -802,8 +803,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  '@babel/parser@7.26.5':
-    resolution: {integrity: sha512-SRJ4jYmXRqV1/Xc+TIVG84WjHBXKlxO9sHQnA2Pf12QQEAp1LOh6kDzNHXcUnbH1QI0FDoPPVOt+vyUDucxpaw==}
+  '@babel/parser@7.26.7':
+    resolution: {integrity: sha512-kEvgGGgEjRUutvdVvZhbn/BxVt+5VSpwXz1j3WYXQbXDo8KzFOPNG2GQbdAiNq8g6wn1yKk7C/qrke03a84V+w==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -835,6 +836,10 @@ packages:
 
   '@babel/types@7.26.5':
     resolution: {integrity: sha512-L6mZmwFDK6Cjh1nRCLXpa6no13ZIioJDz7mdkzHv399pThrTa/k0nUlNaenOeh2kWu/iaOQYElEpKPUswUa9Vg==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/types@7.26.7':
+    resolution: {integrity: sha512-t8kDRGrKXyp6+tjUh7hw2RLyclsW4TRoRvRHtSyAX9Bb5ldlFh+90YAYY6awRXrlB4G5G2izNeGySpATlFzmOg==}
     engines: {node: '>=6.9.0'}
 
   '@better-auth/utils@0.2.3':
@@ -1739,10 +1744,10 @@ packages:
       '@nestjs/common': ^8.0.0 || ^9.0.0 || ^10.0.0
       '@nestjs/core': ^8.0.0 || ^9.0.0 || ^10.0.0
 
-  '@nestjs/mapped-types@2.0.6':
-    resolution: {integrity: sha512-84ze+CPfp1OWdpRi1/lOu59hOhTz38eVzJvRKrg9ykRFwDz+XleKfMsG0gUqNZYFa6v53XYzeD+xItt8uDW7NQ==}
+  '@nestjs/mapped-types@2.1.0':
+    resolution: {integrity: sha512-W+n+rM69XsFdwORF11UqJahn4J3xi4g/ZEOlJNL6KoW5ygWSmBB2p0S2BZ4FQeS/NDH72e6xIcu35SfJnE8bXw==}
     peerDependencies:
-      '@nestjs/common': ^8.0.0 || ^9.0.0 || ^10.0.0
+      '@nestjs/common': ^10.0.0 || ^11.0.0
       class-transformer: ^0.4.0 || ^0.5.0
       class-validator: ^0.13.0 || ^0.14.0
       reflect-metadata: ^0.1.12 || ^0.2.0
@@ -7368,9 +7373,9 @@ snapshots:
     dependencies:
       '@babel/types': 7.26.5
 
-  '@babel/parser@7.26.5':
+  '@babel/parser@7.26.7':
     dependencies:
-      '@babel/types': 7.26.5
+      '@babel/types': 7.26.7
     optional: true
 
   '@babel/plugin-syntax-typescript@7.25.9(@babel/core@7.26.0)':
@@ -7419,6 +7424,12 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.25.9
       '@babel/helper-validator-identifier': 7.25.9
+
+  '@babel/types@7.26.7':
+    dependencies:
+      '@babel/helper-string-parser': 7.25.9
+      '@babel/helper-validator-identifier': 7.25.9
+    optional: true
 
   '@better-auth/utils@0.2.3':
     dependencies:
@@ -8222,7 +8233,7 @@ snapshots:
       '@nestjs/core': 10.4.15(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/websockets@10.4.15)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1)
       eventemitter2: 6.4.9
 
-  '@nestjs/mapped-types@2.0.6(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)':
+  '@nestjs/mapped-types@2.1.0(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1))(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)':
     dependencies:
       '@nestjs/common': 10.4.15(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.1)
       reflect-metadata: 0.2.2
@@ -9391,7 +9402,7 @@ snapshots:
 
   '@vue/compiler-core@3.5.12':
     dependencies:
-      '@babel/parser': 7.26.5
+      '@babel/parser': 7.26.7
       '@vue/shared': 3.5.12
       entities: 4.5.0
       estree-walker: 2.0.2
@@ -9406,7 +9417,7 @@ snapshots:
 
   '@vue/compiler-sfc@3.5.12':
     dependencies:
-      '@babel/parser': 7.26.5
+      '@babel/parser': 7.26.7
       '@vue/compiler-core': 3.5.12
       '@vue/compiler-dom': 3.5.12
       '@vue/compiler-ssr': 3.5.12
