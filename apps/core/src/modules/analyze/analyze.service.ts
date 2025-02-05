@@ -7,6 +7,7 @@ import { ReturnModelType } from '@typegoose/typegoose'
 
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 
@@ -20,7 +21,7 @@ export class AnalyzeService {
     private readonly options: ReturnModelType<typeof OptionModel>,
     @InjectModel(AnalyzeModel)
     private readonly analyzeModel: MongooseModel<AnalyzeModel>,
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
   ) {}
 
   public get model() {
@@ -289,7 +290,7 @@ export class AnalyzeService {
   }
 
   async getTodayAccessIp(): Promise<string[]> {
-    const redis = this.cacheService.getClient()
+    const redis = this.redisService.getClient()
     const fromRedisIps = await redis.smembers(getRedisKey(RedisKeys.AccessIp))
 
     return fromRedisIps

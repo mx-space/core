@@ -21,12 +21,13 @@ import { AllowAllCorsInterceptor } from './common/interceptors/allow-all-cors.in
 import { RedisKeys } from './constants/cache.constant'
 import { OptionModel } from './modules/configs/configs.model'
 import { CacheService } from './processors/redis/cache.service'
+import { RedisService } from './processors/redis/redis.service'
 import { getRedisKey } from './utils/redis.util'
 
 @ApiController()
 export class AppController {
   constructor(
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
     @InjectModel(OptionModel)
     private readonly optionModel: MongooseModel<OptionModel>,
   ) {}
@@ -64,7 +65,7 @@ export class AppController {
   @HttpCache.disable
   @HttpCode(204)
   async likeThis(@IpLocation() { ip }: IpRecord) {
-    const redis = this.cacheService.getClient()
+    const redis = this.redisService.getClient()
 
     const isLikedBefore = await redis.sismember(
       getRedisKey(RedisKeys.LikeSite),
@@ -100,13 +101,13 @@ export class AppController {
   @HttpCache.disable
   @Auth()
   async cleanCatch() {
-    await this.cacheService.cleanCatch()
+    await this.redisService.cleanCatch()
   }
 
   @Get('/clean_redis')
   @HttpCache.disable
   @Auth()
   async cleanAllRedisKey() {
-    await this.cacheService.cleanAllRedisKey()
+    await this.redisService.cleanAllRedisKey()
   }
 }

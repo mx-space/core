@@ -38,8 +38,10 @@ const createMockRedis = async () => {
   return {
     connect: () => null,
     CacheService: cacheService,
-    // token: 'CacheService' as const,
+    RedisService: cacheService,
+
     token: CacheService,
+
     async close() {
       await cacheService.getClient().flushall()
       await cacheService.getClient().quit()

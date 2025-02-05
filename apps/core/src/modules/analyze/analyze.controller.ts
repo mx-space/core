@@ -8,6 +8,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { Paginator } from '~/common/decorators/http.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { getTodayEarly, getWeekStart } from '~/utils/time.util'
 
@@ -19,7 +20,7 @@ import { AnalyzeService } from './analyze.service'
 export class AnalyzeController {
   constructor(
     private readonly service: AnalyzeService,
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
   ) {}
 
   @Get('/')
@@ -148,7 +149,7 @@ export class AnalyzeController {
 
   @Get('/like')
   async getTodayLikedArticle() {
-    const client = this.cacheService.getClient()
+    const client = this.redisService.getClient()
     const keys = await client.keys(getRedisKey(RedisKeys.Like, '*'))
 
     return Promise.all(

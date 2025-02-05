@@ -1,6 +1,7 @@
 import cluster from 'node:cluster'
 import { performance } from 'node:perf_hooks'
 import wcmatch from 'wildcard-match'
+import type { FastifyCorsOptions } from '@fastify/cors'
 import type { LogLevel } from '@nestjs/common'
 import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
@@ -40,11 +41,12 @@ export async function bootstrap() {
     },
   )
 
-  const allowAllCors: CorsOptions = {
+  const allowAllCors: FastifyCorsOptions = {
     credentials: true,
-    origin: (origin, callback) => callback(null, origin),
+    origin: (origin, callback) => callback(null, origin || ''),
   }
   // Origin 如果不是数组就全部允许跨域
+
   app.enableCors(
     isDev
       ? allowAllCors
@@ -53,14 +55,14 @@ export async function bootstrap() {
             origin: (origin, callback) => {
               let currentHost: string
               try {
-                currentHost = new URL(origin).host
+                currentHost = new URL(origin || '').host
               } catch {
-                currentHost = origin
+                currentHost = origin || ''
               }
               const allow = Origin.some((host) => wcmatch(host)(currentHost))
 
               if (allow) {
-                callback(null, origin)
+                callback(null, origin || '')
               } else {
                 callback(null, false)
               }

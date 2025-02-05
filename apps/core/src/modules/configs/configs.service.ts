@@ -14,6 +14,7 @@ import { EventBusEvents } from '~/constants/event-bus.constant'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
@@ -40,7 +41,7 @@ export class ConfigsService {
     @InjectModel(OptionModel)
     private readonly optionModel: ReturnModelType<typeof OptionModel>,
 
-    private readonly redis: CacheService,
+    private readonly redisService: RedisService,
     private readonly subpub: SubPubBridgeService,
 
     private readonly eventManager: EventManagerService,
@@ -57,7 +58,7 @@ export class ConfigsService {
   private configInitd = false
 
   private async setConfig(config: IConfig) {
-    const redis = this.redis.getClient()
+    const redis = this.redisService.getClient()
     await redis.set(getRedisKey(RedisKeys.ConfigCache), JSON.stringify(config))
   }
 
@@ -116,8 +117,9 @@ export class ConfigsService {
 
   // Config 在此收口
   public async getConfig(errorRetryCount = 3): Promise<Readonly<IConfig>> {
-    const redis = this.redis.getClient()
-    const configCache = await redis.get(getRedisKey(RedisKeys.ConfigCache))
+    const configCache = await this.redisService
+      .getClient()
+      .get(getRedisKey(RedisKeys.ConfigCache))
 
     if (configCache) {
       try {

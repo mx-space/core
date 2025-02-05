@@ -11,6 +11,7 @@ import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { md5 } from '~/utils/tool.util'
@@ -29,7 +30,7 @@ export class AiSummaryService {
     private readonly databaseService: DatabaseService,
     private readonly configService: ConfigsService,
 
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
     private readonly aiService: AiService,
   ) {
     this.logger = new Logger(AiSummaryService.name)
@@ -108,7 +109,7 @@ export class AiSummaryService {
       if (this.cachedTaskId2AiPromise.has(taskId)) {
         return this.cachedTaskId2AiPromise.get(taskId)
       }
-      const redis = this.cacheService.getClient()
+      const redis = this.redisService.getClient()
 
       const isProcessing = await redis.get(taskId)
 

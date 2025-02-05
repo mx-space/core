@@ -10,12 +10,13 @@ import { getRedisKey } from '~/utils/redis.util'
 import { md5 } from '~/utils/tool.util'
 
 import { CacheService } from '../redis/cache.service'
+import { RedisService } from '../redis/redis.service'
 
 @Injectable()
 export class JWTService {
   private secret = ''
 
-  constructor(private readonly cacheService: CacheService) {
+  constructor(private readonly redisService: RedisService) {
     this.init()
   }
 
@@ -55,14 +56,14 @@ export class JWTService {
   }
 
   async isTokenInRedis(token: string) {
-    const redis = this.cacheService.getClient()
+    const redis = this.redisService.getClient()
     const key = getRedisKey(RedisKeys.JWTStore)
     const has = await redis.hexists(key, md5(token))
     return !!has
   }
 
   async getAllSignSession(currentToken?: string) {
-    const redis = this.cacheService.getClient()
+    const redis = this.redisService.getClient()
     const res = await redis.hgetall(getRedisKey(RedisKeys.JWTStore))
     const hashedCurrent = currentToken && md5(currentToken)
     return Object.entries(res).map(([k, v]) => {
@@ -75,7 +76,7 @@ export class JWTService {
   }
 
   async revokeToken(token: string, delay?: number) {
-    const redis = this.cacheService.getClient()
+    const redis = this.redisService.getClient()
     const key = getRedisKey(RedisKeys.JWTStore)
     if (delay) {
       // FIXME
@@ -95,7 +96,7 @@ export class JWTService {
 
   async revokeAll(excludeTokens?: string[]) {
     if (Array.isArray(excludeTokens) && excludeTokens.length > 0) {
-      const redis = this.cacheService.getClient()
+      const redis = this.redisService.getClient()
       const key = getRedisKey(RedisKeys.JWTStore)
       const allMd5Tokens = await redis.hkeys(key)
 
@@ -106,14 +107,14 @@ export class JWTService {
         }
       }
     } else {
-      const redis = this.cacheService.getClient()
+      const redis = this.redisService.getClient()
       const key = getRedisKey(RedisKeys.JWTStore)
       await redis.del(key)
     }
   }
 
   async storeTokenInRedis(token: string, info?: any) {
-    const redis = this.cacheService.getClient()
+    const redis = this.redisService.getClient()
     await redis.hset(
       getRedisKey(RedisKeys.JWTStore),
       md5(token),

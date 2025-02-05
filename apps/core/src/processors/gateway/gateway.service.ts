@@ -12,6 +12,7 @@ import { getRedisKey } from '~/utils/redis.util'
 import { safeJSONParse } from '~/utils/tool.util'
 
 import { CacheService } from '../redis/cache.service'
+import { RedisService } from '../redis/redis.service'
 
 export type SocketType =
   | Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>
@@ -22,14 +23,14 @@ export type SocketType =
 
 @Injectable()
 export class GatewayService {
-  constructor(private readonly cacheService: CacheService) {
-    cacheService.getClient().del(getRedisKey(RedisKeys.Socket))
+  constructor(private readonly redisService: RedisService) {
+    redisService.getClient().del(getRedisKey(RedisKeys.Socket))
   }
 
   async setSocketMetadata(socket: SocketType, value: object) {
     const existValue = await this.getSocketMetadata(socket)
 
-    const client = this.cacheService.getClient()
+    const client = this.redisService.getClient()
     const data = {
       ...existValue,
       ...value,
@@ -43,13 +44,13 @@ export class GatewayService {
   }
 
   async getSocketMetadata(socket: SocketType): Promise<SocketMetadata> {
-    const client = this.cacheService.getClient()
+    const client = this.redisService.getClient()
     const data = await client.hget(getRedisKey(RedisKeys.Socket), socket.id)
     return safeJSONParse(data) || {}
   }
 
   async clearSocketMetadata(socket: SocketType) {
-    const client = this.cacheService.getClient()
+    const client = this.redisService.getClient()
     await client.hdel(getRedisKey(RedisKeys.Socket), socket.id)
   }
 }

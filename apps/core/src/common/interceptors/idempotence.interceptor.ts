@@ -20,6 +20,7 @@ import {
 } from '~/constants/meta.constant'
 import { REFLECTOR } from '~/constants/system.constant'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
 import { hashString } from '~/utils/tool.util'
@@ -56,7 +57,7 @@ export type IdempotenceOption = {
 @Injectable()
 export class IdempotenceInterceptor implements NestInterceptor {
   constructor(
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
     @Inject(REFLECTOR) private readonly reflector: Reflector,
   ) {}
 
@@ -85,7 +86,7 @@ export class IdempotenceInterceptor implements NestInterceptor {
       expired = 60,
       disableGenerateKey = false,
     } = options
-    const redis = this.cacheService.getClient()
+    const redis = this.redisService.getClient()
 
     const idempotence = request.headers[IdempotenceHeaderKey] as string
     const key = disableGenerateKey

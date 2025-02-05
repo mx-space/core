@@ -18,6 +18,7 @@ import { EventBusEvents } from '~/constants/event-bus.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
@@ -66,7 +67,7 @@ export class AggregateService {
 
     private readonly configs: ConfigsService,
     private readonly gateway: WebEventsGateway,
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
   ) {}
 
   getAllCategory() {
@@ -353,7 +354,7 @@ export class AggregateService {
   }
 
   async getCounts() {
-    const redisClient = this.cacheService.getClient()
+    const redisClient = this.redisService.getClient()
     const dateFormat = getShortDate(new Date())
 
     const [
@@ -423,7 +424,7 @@ export class AggregateService {
 
   @OnEvent(EventBusEvents.CleanAggregateCache, { async: true })
   public clearAggregateCache() {
-    const redis = this.cacheService.getClient()
+    const redis = this.redisService.getClient()
     return Promise.all([
       redis.del(CacheKeys.RSS),
       redis.del(CacheKeys.RSSXml),

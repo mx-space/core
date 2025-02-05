@@ -3,14 +3,17 @@ import { authPassHeader } from 'test/mock/guard/auth.guard'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import type { ReturnModelType } from '@typegoose/typegoose'
 
+import { redisHelper } from '@/helper/redis-mock.helper'
+
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { RedisService } from '~/processors/redis/redis.service'
 
-describe('test /snippets', () => {
+describe('test /snippets', async () => {
   let app: NestFastifyApplication
   let model: ReturnModelType<typeof SnippetModel>
   const proxy = createE2EApp({
@@ -18,6 +21,10 @@ describe('test /snippets', () => {
     providers: [
       SnippetService,
       { provide: DatabaseService, useValue: {} },
+      {
+        provide: RedisService,
+        useValue: (await redisHelper).RedisService,
+      },
       {
         provide: EventManagerService,
         useValue: {

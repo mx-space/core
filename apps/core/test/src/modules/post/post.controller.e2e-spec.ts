@@ -7,6 +7,7 @@ import { gatewayProviders } from 'test/mock/modules/gateway.mock'
 import { countingServiceProvider } from 'test/mock/processors/counting.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 
+import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 
 import { CategoryModel } from '~/modules/category/category.model'
@@ -26,7 +27,7 @@ import { TextMacroService } from '~/processors/helper/helper.macro.service'
 
 import MockDbData, { categoryModels } from './post.e2e-mock.db'
 
-describe('PostController (e2e)', () => {
+describe('PostController (e2e)', async () => {
   let model: MongooseModel<PostModel>
   const proxy = createE2EApp({
     controllers: [PostController],
@@ -39,6 +40,7 @@ describe('PostController (e2e)', () => {
         provide: APP_INTERCEPTOR,
         useClass: MockingCountingInterceptor,
       },
+      await createRedisProvider(),
 
       commentProvider,
 

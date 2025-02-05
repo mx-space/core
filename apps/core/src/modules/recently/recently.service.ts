@@ -16,6 +16,7 @@ import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
@@ -35,7 +36,7 @@ export class RecentlyService {
     private readonly recentlyModel: MongooseModel<RecentlyModel>,
     private readonly eventManager: EventManagerService,
     private readonly databaseService: DatabaseService,
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
     @Inject(forwardRef(() => CommentService))
     private readonly commentService: CommentService,
     private readonly configsService: ConfigsService,
@@ -357,7 +358,7 @@ export class RecentlyService {
       [RecentlyAttitudeEnum.Down]: 'down',
     }
 
-    const redis = this.cacheService.getClient()
+    const redis = this.redisService.getClient()
     const key = `${id}:${ip}`
     const currentAttitude = await redis.hget(
       getRedisKey(RedisKeys.RecentlyAttitude),

@@ -11,6 +11,7 @@ import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 
 import { BusinessEvents } from '../../../constants/business-event.constant'
 import { BroadcastBaseGateway } from '../base.gateway'
@@ -34,7 +35,7 @@ export const createAuthGateway = (
     constructor(
       protected readonly jwtService: JWTService,
       protected readonly authService: AuthService,
-      private readonly cacheService: CacheService,
+      private readonly redisService: RedisService,
     ) {
       super()
     }
@@ -132,7 +133,7 @@ export const createAuthGateway = (
     }
 
     override broadcast(event: BusinessEvents, data: any) {
-      this.cacheService.emitter
+      this.redisService.emitter
         .of(`/${namespace}`)
         .emit('message', this.gatewayMessageFormat(event, data))
     }
