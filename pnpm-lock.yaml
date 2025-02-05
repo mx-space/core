@@ -262,8 +262,8 @@ importers:
         specifier: 2.1.1
         version: 2.1.1(mongoose@8.7.0)
       mongoose-lean-virtuals:
-        specifier: 1.0.0
-        version: 1.0.0(mongoose@8.7.0)
+        specifier: 1.1.0
+        version: 1.1.0(mongoose@8.7.0)
       mongoose-paginate-v2:
         specifier: 1.9.0
         version: 1.9.0(mongoose@8.7.0)
@@ -475,7 +475,7 @@ importers:
     devDependencies:
       better-auth:
         specifier: 1.1.14
-        version: 1.1.14
+        version: 1.1.14(encoding@0.1.13)
       nanoid:
         specifier: 5.0.9
         version: 5.0.9
@@ -5173,12 +5173,6 @@ packages:
     peerDependencies:
       mongoose: '>= 7.5.0'
 
-  mongoose-lean-virtuals@1.0.0:
-    resolution: {integrity: sha512-ZwfhiDv8LGHvjubLGT9RzsbHFgBnpmrRHTQo0gXaLbRMxZy1HFZ/mBbmKNWTSu3q3GMGB4kIXXCZTDAb2nwf7g==}
-    engines: {node: '>=16.20.1'}
-    peerDependencies:
-      mongoose: '>=5.11.10'
-
   mongoose-lean-virtuals@1.1.0:
     resolution: {integrity: sha512-QCuAvPUTGzUMjbvWqhA+3hXX7hP0PPJOW+hm50KN3gTPM89Uan/wrFyCfvsqW9giAGemtIFsBrZwiogmu2gxmA==}
     engines: {node: '>=16.20.1'}
@@ -8851,7 +8845,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@simplewebauthn/server@13.0.0':
+  '@simplewebauthn/server@13.0.0(encoding@0.1.13)':
     dependencies:
       '@hexagon/base64': 1.1.28
       '@levischuck/tiny-cbor': 0.2.2
@@ -10074,14 +10068,14 @@ snapshots:
 
   bcryptjs@2.4.3: {}
 
-  better-auth@1.1.14:
+  better-auth@1.1.14(encoding@0.1.13):
     dependencies:
       '@better-auth/utils': 0.2.3
       '@better-fetch/fetch': 1.1.12
       '@noble/ciphers': 0.6.0
       '@noble/hashes': 1.6.1
       '@simplewebauthn/browser': 13.0.0
-      '@simplewebauthn/server': 13.0.0
+      '@simplewebauthn/server': 13.0.0(encoding@0.1.13)
       better-call: 0.3.3
       defu: 6.1.4
       jose: 5.9.6
@@ -12454,11 +12448,6 @@ snapshots:
     dependencies:
       mongoose: 8.7.0
       mpath: 0.9.0
-
-  mongoose-lean-virtuals@1.0.0(mongoose@8.7.0):
-    dependencies:
-      mongoose: 8.7.0
-      mpath: 0.8.4
 
   mongoose-lean-virtuals@1.1.0(mongoose@8.7.0):
     dependencies:
