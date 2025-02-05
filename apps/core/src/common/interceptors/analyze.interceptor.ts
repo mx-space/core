@@ -6,7 +6,7 @@
  */
 import { URL } from 'node:url'
 import { isbot } from 'isbot'
-import UAParser from 'ua-parser-js'
+import { UAParser } from 'ua-parser-js'
 import type {
   CallHandler,
   ExecutionContext,
