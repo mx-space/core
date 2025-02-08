@@ -4,7 +4,6 @@ COPY . .
 RUN apk add git make g++ alpine-sdk python3 py3-pip unzip
 RUN corepack enable
 RUN corepack prepare --activate
-RUN npm i -g pnpm
 RUN pnpm install
 RUN pnpm bundle
 RUN mv apps/core/out ./out
