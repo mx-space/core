@@ -1,5 +1,16 @@
 # CHANGELOG
 
+# [8.0.0](https://github.com/mx-space/core/compare/v7.2.8...v8.0.0) (2025-02-08)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @fastify/static to v8.0.4 ([#2318](https://github.com/mx-space/core/issues/2318)) ([02c98e1](https://github.com/mx-space/core/commit/02c98e1aae88807af39f8b3a85eec723316424ef))
+* **deps:** update dependency @langchain/openai to v0.3.17 ([#2319](https://github.com/mx-space/core/issues/2319)) ([d846a6c](https://github.com/mx-space/core/commit/d846a6ce39b55600e2d19d5d30c58dfcd7f17c87))
+* **deps:** update dependency langchain to v0.3.12 ([#2322](https://github.com/mx-space/core/issues/2322)) ([bba535c](https://github.com/mx-space/core/commit/bba535c7ce6361804c86237a379a120331298a7f))
+
+
+
 ## [7.2.8](https://github.com/mx-space/core/compare/v7.2.7...v7.2.8) (2025-01-19)
 
 
