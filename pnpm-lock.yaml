@@ -160,8 +160,8 @@ importers:
         specifier: 5.1.0
         version: 5.1.0
       '@typegoose/auto-increment':
-        specifier: 4.9.0
-        version: 4.9.0(mongoose@8.7.0)
+        specifier: 4.9.1
+        version: 4.9.1(mongoose@8.7.0)
       '@typegoose/typegoose':
         specifier: 12.8.0
         version: 12.8.0(mongoose@8.7.0)
@@ -2490,8 +2490,8 @@ packages:
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
 
-  '@typegoose/auto-increment@4.9.0':
-    resolution: {integrity: sha512-nUY1c9MSzAQL6l1C1MPVAEsrlMorYBNEOFKb8lOMq1k2WNVlew7lUCFSZueAX+JdlEncABwREkq+Ks1pX05Azg==}
+  '@typegoose/auto-increment@4.9.1':
+    resolution: {integrity: sha512-T4SUy4mUNXWBx/DiOGvSICbTylEM7gktAeDdlaPqxFgrb3v6H6MVOVvlyQtvjskpxY35yUrpLO8CEFvJcMghxQ==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
       mongoose: ~8.9.0
@@ -9222,7 +9222,7 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
-  '@typegoose/auto-increment@4.9.0(mongoose@8.7.0)':
+  '@typegoose/auto-increment@4.9.1(mongoose@8.7.0)':
     dependencies:
       loglevel: 1.9.2
       mongoose: 8.7.0
