@@ -438,8 +438,8 @@ importers:
         specifier: 5.0.0
         version: 5.0.0
       '@types/lodash':
-        specifier: 4.17.14
-        version: 4.17.14
+        specifier: 4.17.15
+        version: 4.17.15
       abort-controller:
         specifier: 3.0.0
         version: 3.0.0
@@ -2660,9 +2660,6 @@ packages:
 
   '@types/jsonwebtoken@9.0.8':
     resolution: {integrity: sha512-7fx54m60nLFUVYlxAB1xpe9CBWX2vSrk50Y6ogRJ1v5xxtba7qXTg5BgYDN5dq+yuQQ9HaVlHJyAAt1/mxryFg==}
-
-  '@types/lodash@4.17.14':
-    resolution: {integrity: sha512-jsxagdikDiDBeIRaPYtArcT8my4tN1og7MtMRquFT3XNA6axxyHDRUemqDz/taRDdOUn0GnGHRCuff4q48sW9A==}
 
   '@types/lodash@4.17.15':
     resolution: {integrity: sha512-w/P33JFeySuhN6JLkysYUK2gEmy9kHHFN7E8ro0tkfmlDOgxBDzWEZ/J8cWA+fHqFevpswDTFZnDx+R9lbL6xw==}
@@ -9466,8 +9463,6 @@ snapshots:
     dependencies:
       '@types/ms': 2.1.0
       '@types/node': 22.13.1
-
-  '@types/lodash@4.17.14': {}
 
   '@types/lodash@4.17.15': {}
 
