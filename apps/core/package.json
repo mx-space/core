@@ -105,7 +105,7 @@
     "jszip": "3.10.1",
     "keyv": "5.2.3",
     "langchain": "0.3.15",
-    "linkedom": "0.18.7",
+    "linkedom": "0.18.9",
     "lodash": "^4.17.21",
     "lru-cache": "11.0.2",
     "marked": "15.0.6",
