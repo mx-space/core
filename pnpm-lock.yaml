@@ -310,8 +310,8 @@ importers:
         specifier: ^0.5.21
         version: 0.5.21
       ua-parser-js:
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.2
+        version: 2.0.2(encoding@0.1.13)
       vm2:
         specifier: 3.9.19
         version: 3.9.19
@@ -6331,8 +6331,8 @@ packages:
   ua-is-frozen@0.1.2:
     resolution: {integrity: sha512-RwKDW2p3iyWn4UbaxpP2+VxwqXh0jpvdxsYpZ5j/MLLiQOfbsV5shpgQiw93+KMYQPcteeMQ289MaAFzs3G9pw==}
 
-  ua-parser-js@2.0.1:
-    resolution: {integrity: sha512-PgWLeyhIgff0Jomd3U2cYCdfp5iHbaCMlylG9NoV19tAlvXWUzM3bG2DIasLTI1PrbLtVutGr1CaezttVV2PeA==}
+  ua-parser-js@2.0.2:
+    resolution: {integrity: sha512-NoaPjzMmuUlo5bJ2jrdkzvHL8gpcgVrhUugAqsqsundDO3R8rw7R0OwxLoWhcKtsTb+6u3z9dES8m6+vxEcJog==}
     hasBin: true
 
   ufo@1.5.4:
@@ -13570,11 +13570,15 @@ snapshots:
 
   ua-is-frozen@0.1.2: {}
 
-  ua-parser-js@2.0.1:
+  ua-parser-js@2.0.2(encoding@0.1.13):
     dependencies:
+      '@types/node-fetch': 2.6.12
       detect-europe-js: 0.1.2
       is-standalone-pwa: 0.1.1
+      node-fetch: 2.7.0(encoding@0.1.13)
       ua-is-frozen: 0.1.2
+    transitivePeerDependencies:
+      - encoding
 
   ufo@1.5.4: {}
 
