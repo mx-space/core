@@ -477,8 +477,8 @@ importers:
   packages/compiled:
     devDependencies:
       better-auth:
-        specifier: 1.1.16
-        version: 1.1.16(encoding@0.1.13)
+        specifier: 1.1.17
+        version: 1.1.17(encoding@0.1.13)
       nanoid:
         specifier: 5.0.9
         version: 5.0.9
@@ -3119,8 +3119,8 @@ packages:
   bcryptjs@2.4.3:
     resolution: {integrity: sha512-V/Hy/X9Vt7f3BbPJEi8BdVFMByHi+jNXrYkW3huaybV/kQ0KJg0Y6PkEMbn+zeT+i+SiKZ/HMqJGIIt4LZDqNQ==}
 
-  better-auth@1.1.16:
-    resolution: {integrity: sha512-Xc5pxafKZw4QVU8WYfkV2z4Hd8KCXXbphrgOpe2gA/EfanysLBhE1G/F7cEi5e0bW2pGR+vw6gf0ARHA7VFihg==}
+  better-auth@1.1.17:
+    resolution: {integrity: sha512-BCBPnhUCRvdM/BF8xDyion6uDJxXSjRbZKS56/VcnU5X30NdbJ4tYiH11c51Z1yYFcQD1e+bfPoKYEekUH/zeQ==}
 
   better-call@0.3.3:
     resolution: {integrity: sha512-N4lDVm0NGmFfDJ0XMQ4O83Zm/3dPlvIQdxvwvgSLSkjFX5PM4GUYSVAuxNzXN27QZMHDkrJTWUqxBrm4tPC3eA==}
@@ -9989,7 +9989,7 @@ snapshots:
 
   bcryptjs@2.4.3: {}
 
-  better-auth@1.1.16(encoding@0.1.13):
+  better-auth@1.1.17(encoding@0.1.13):
     dependencies:
       '@better-auth/utils': 0.2.3
       '@better-fetch/fetch': 1.1.12
