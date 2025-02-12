@@ -244,8 +244,8 @@ importers:
         specifier: 11.0.2
         version: 11.0.2
       marked:
-        specifier: 15.0.6
-        version: 15.0.6
+        specifier: 15.0.7
+        version: 15.0.7
       mime-types:
         specifier: ^2.1.35
         version: 2.1.35
@@ -4823,8 +4823,8 @@ packages:
   markdown-table@3.0.4:
     resolution: {integrity: sha512-wiYz4+JrLyb/DqW2hkFJxP7Vd7JuTDm77fvbM8VfEQdmSMqcImWeeRbHwZjBjIFki/VaMK2BhFi7oUUZeM5bqw==}
 
-  marked@15.0.6:
-    resolution: {integrity: sha512-Y07CUOE+HQXbVDCGl3LXggqJDbXDP2pArc2C1N1RRMN0ONiShoSsIInMd5Gsxupe7fKLpgimTV+HOJ9r7bA+pg==}
+  marked@15.0.7:
+    resolution: {integrity: sha512-dgLIeKGLx5FwziAnsk4ONoGwHwGPJzselimvlVskE9XLN4Orv9u2VA3GWw/lYUqjfA0rUT/6fqKwfZJapP9BEg==}
     engines: {node: '>= 18'}
     hasBin: true
 
@@ -11885,7 +11885,7 @@ snapshots:
 
   markdown-table@3.0.4: {}
 
-  marked@15.0.6: {}
+  marked@15.0.7: {}
 
   math-intrinsics@1.1.0: {}
 
