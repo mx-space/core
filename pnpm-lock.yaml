@@ -10,7 +10,7 @@ overrides:
   pino: ./external/pino
   semver: 7.6.3
   typescript: 5.7.3
-  whatwg-url: 14.1.0
+  whatwg-url: 14.1.1
 
 importers:
 
@@ -6638,8 +6638,8 @@ packages:
   whatwg-fetch@3.6.20:
     resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
 
-  whatwg-url@14.1.0:
-    resolution: {integrity: sha512-jlf/foYIKywAt3x/XWKZ/3rz8OSJPiWktjmk891alJUEjiVxKX9LEO92qH3hv4aJ0mN3MWPvGMCy8jQi95xK4w==}
+  whatwg-url@14.1.1:
+    resolution: {integrity: sha512-mDGf9diDad/giZ/Sm9Xi2YcyzaFpbdLpJPr+E9fSkyQ7KpQD4SdFcugkRQYzhmfI4KeV4Qpnn2sKPdo+kmsgRQ==}
     engines: {node: '>=18'}
 
   which@2.0.2:
@@ -12274,7 +12274,7 @@ snapshots:
   mongodb-connection-string-url@3.0.1:
     dependencies:
       '@types/whatwg-url': 11.0.5
-      whatwg-url: 14.1.0
+      whatwg-url: 14.1.1
 
   mongodb-memory-server-core@10.1.3:
     dependencies:
@@ -12432,7 +12432,7 @@ snapshots:
 
   node-fetch@2.7.0(encoding@0.1.13):
     dependencies:
-      whatwg-url: 14.1.0
+      whatwg-url: 14.1.1
     optionalDependencies:
       encoding: 0.1.13
 
@@ -13215,7 +13215,7 @@ snapshots:
 
   source-map@0.8.0-beta.0:
     dependencies:
-      whatwg-url: 14.1.0
+      whatwg-url: 14.1.1
 
   sparse-bitfield@3.0.3:
     dependencies:
@@ -13918,7 +13918,7 @@ snapshots:
 
   whatwg-fetch@3.6.20: {}
 
-  whatwg-url@14.1.0:
+  whatwg-url@14.1.1:
     dependencies:
       tr46: 5.0.0
       webidl-conversions: 7.0.0
