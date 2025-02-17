@@ -2,6 +2,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 name: Release (core)
 
@@ -137,6 +138,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Docker Setup QEMU
+        uses: docker/setup-qemu-action@v3.3.0
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -161,10 +164,6 @@ jobs:
           load: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }},innei/mx-server:latest
-          platforms: |
-            linux/amd64
-            linux/arm64
-            linux/s390x
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Test
@@ -187,6 +186,5 @@ jobs:
           platforms: |
             linux/amd64
             linux/arm64
-            linux/s390x
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
