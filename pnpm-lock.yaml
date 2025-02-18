@@ -232,8 +232,8 @@ importers:
         specifier: 5.2.3
         version: 5.2.3
       langchain:
-        specifier: 0.3.15
-        version: 0.3.15(@langchain/core@0.3.40(openai@4.82.0(encoding@0.1.13)(zod@3.24.1)))(axios@1.7.9)(encoding@0.1.13)(openai@4.82.0(encoding@0.1.13)(zod@3.24.1))
+        specifier: 0.3.18
+        version: 0.3.18(@langchain/core@0.3.40(openai@4.82.0(encoding@0.1.13)(zod@3.24.1)))(axios@1.7.9)(encoding@0.1.13)(openai@4.82.0(encoding@0.1.13)(zod@3.24.1))
       linkedom:
         specifier: 0.18.9
         version: 0.18.9
@@ -4604,8 +4604,8 @@ packages:
     resolution: {integrity: sha512-dyNKv2KRvYOQPLCAOCjjQuCk4YFd33BvGdf/o5bC7FiW+BB6snA81Zt+2wT9QDFzKqxKa5rrOmvlK/anehCcgA==}
     engines: {node: '>=14.0.0'}
 
-  langchain@0.3.15:
-    resolution: {integrity: sha512-+DQ4I2iy4b5sErkxo6jAkgmumvhgqLwLB2fmiGl3yDt8+VVZdB1MUULZMzf+6ubarNc7Mwn/sxHUqK4GhEndhg==}
+  langchain@0.3.18:
+    resolution: {integrity: sha512-JUH5BVEwvfgLQGoChQM2S2Co1aoQdQlwcdenWLC/ZURC04kNQfO6Z1KAvs2ucxj1OwfFYu08fH6pM63NRQm4ww==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/anthropic': '*'
@@ -11715,7 +11715,7 @@ snapshots:
 
   kysely@0.27.4: {}
 
-  langchain@0.3.15(@langchain/core@0.3.40(openai@4.82.0(encoding@0.1.13)(zod@3.24.1)))(axios@1.7.9)(encoding@0.1.13)(openai@4.82.0(encoding@0.1.13)(zod@3.24.1)):
+  langchain@0.3.18(@langchain/core@0.3.40(openai@4.82.0(encoding@0.1.13)(zod@3.24.1)))(axios@1.7.9)(encoding@0.1.13)(openai@4.82.0(encoding@0.1.13)(zod@3.24.1)):
     dependencies:
       '@langchain/core': 0.3.40(openai@4.82.0(encoding@0.1.13)(zod@3.24.1))
       '@langchain/openai': 0.4.4(@langchain/core@0.3.40(openai@4.82.0(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)
