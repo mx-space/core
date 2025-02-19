@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## [8.0.1](https://github.com/mx-space/core/compare/v8.0.0...v8.0.1) (2025-02-19)
+
+
+### Bug Fixes
+
+* **deps:** update babel monorepo to v7.26.8 ([#2340](https://github.com/mx-space/core/issues/2340)) ([3b64af7](https://github.com/mx-space/core/commit/3b64af70d274aa62aba00c4c39a56d4cf5816917))
+* **deps:** update babel monorepo to v7.26.9 ([#2362](https://github.com/mx-space/core/issues/2362)) ([feacfaf](https://github.com/mx-space/core/commit/feacfaf12077311e878edb579d593b9ed08aa644))
+* **deps:** update dependency @fastify/static to v8.1.1 ([#2364](https://github.com/mx-space/core/issues/2364)) ([28cc927](https://github.com/mx-space/core/commit/28cc927d3316e6534768e5f4cc640f0f45583e41))
+* **deps:** update dependency @langchain/openai to v0.4.3 ([#2341](https://github.com/mx-space/core/issues/2341)) ([0d6eda2](https://github.com/mx-space/core/commit/0d6eda23e640aaad1cae54c3029c29d2b00af29f))
+* **deps:** update dependency @langchain/openai to v0.4.4 ([#2349](https://github.com/mx-space/core/issues/2349)) ([38d1a31](https://github.com/mx-space/core/commit/38d1a317e62e9d72a82739200af3fbdfb9b3c287))
+* **deps:** update dependency @typegoose/auto-increment to v4.9.1 ([#2342](https://github.com/mx-space/core/issues/2342)) ([71c3ef8](https://github.com/mx-space/core/commit/71c3ef8ed6941221d31df144b560aa8c20e1c988))
+* **deps:** update dependency form-data to v4.0.2 ([#2365](https://github.com/mx-space/core/issues/2365)) ([f4e9fad](https://github.com/mx-space/core/commit/f4e9fad753dfe55c133313932b538f5f373acb12))
+* **deps:** update dependency langchain to v0.3.18 ([#2366](https://github.com/mx-space/core/issues/2366)) ([72b1488](https://github.com/mx-space/core/commit/72b1488a390c42be061c9075f570324037e78e0f))
+* **deps:** update dependency linkedom to v0.18.9 ([#2343](https://github.com/mx-space/core/issues/2343)) ([46b6b8e](https://github.com/mx-space/core/commit/46b6b8e4388c565a319afd224e0de44d32e151d6))
+* **deps:** update dependency marked to v15.0.7 ([#2350](https://github.com/mx-space/core/issues/2350)) ([347ea08](https://github.com/mx-space/core/commit/347ea08ef097d493d13063df9273710b966700c9))
+* **deps:** update dependency mongoose-aggregate-paginate-v2 to v1.1.4 ([#2367](https://github.com/mx-space/core/issues/2367)) ([b2b4233](https://github.com/mx-space/core/commit/b2b423361fa78ca7b4e6589160a009d09a3b75cb))
+* **deps:** update dependency ua-parser-js to v2.0.2 ([#2346](https://github.com/mx-space/core/issues/2346)) ([3203b4a](https://github.com/mx-space/core/commit/3203b4a392c1f3027a788e0763b6a02fcfd42cf3))
+* **deps:** update nest monorepo to v11.0.9 ([#2344](https://github.com/mx-space/core/issues/2344)) ([58947c0](https://github.com/mx-space/core/commit/58947c0c832619363a4709c8bddc56b0ca17c89a))
+
+
+
 # [8.0.0](https://github.com/mx-space/core/compare/v7.2.8...v8.0.0) (2025-02-08)
 
 
