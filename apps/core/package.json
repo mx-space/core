@@ -161,7 +161,7 @@
     "@types/validator": "13.12.2",
     "@vercel/ncc": "0.38.3",
     "cron": "^3.5.0",
-    "ioredis": "5.4.2",
+    "ioredis": "5.5.0",
     "sharp": "0.33.5",
     "socket.io": "^4.8.1",
     "unplugin-swc": "1.5.1",
