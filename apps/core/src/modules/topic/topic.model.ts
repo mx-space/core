@@ -17,7 +17,6 @@ import { BaseModel } from '~/shared/model/base.model'
     customName: TOPIC_COLLECTION_NAME,
   },
 })
-@index({ name: 1 })
 export class TopicModel extends BaseModel {
   @prop({ default: '' })
   @MaxLength(400, { message: '描述信息最多 400 个字符' })
@@ -30,7 +29,7 @@ export class TopicModel extends BaseModel {
   @MaxLength(100, { message: '简介最多 100 个字符' })
   introduce: string
 
-  @prop({ unique: true })
+  @prop({ unique: true, index: true })
   @IsString()
   @IsNotEmpty({
     message: '话题名称不能为空',

@@ -29,11 +29,7 @@ export class DatabaseService {
   // @ts-ignore
   public getModelByRefType(
     type: CollectionRefTypes,
-  ):
-    | ReturnModelType<typeof PostModel>
-    | ReturnModelType<typeof NoteModel>
-    | ReturnModelType<typeof PageModel>
-    | ReturnModelType<typeof RecentlyModel>
+  ): ReturnModelType<typeof WriteBaseModel>
   // @ts-ignore
   public getModelByRefType(
     type: ArticleTypeEnum,

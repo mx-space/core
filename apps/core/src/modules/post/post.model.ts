@@ -36,14 +36,13 @@ import { CategoryModel as Category } from '../category/category.model'
 
 @plugin(aggregatePaginate)
 @plugin(mongooseAutoPopulate)
-@index({ slug: 1 })
 @index({ modified: -1 })
 @index({ text: 'text' })
 @modelOptions({
   options: { customName: POST_COLLECTION_NAME, allowMixed: Severity.ALLOW },
 })
 export class PostModel extends WriteBaseModel {
-  @prop({ trim: true, unique: true, required: true })
+  @prop({ trim: true, unique: true, index: true, required: true })
   @IsString()
   @IsNotEmpty()
   slug!: string
