@@ -24,8 +24,8 @@ importers:
         specifier: 10.1.3
         version: 10.1.3
       redis-memory-server:
-        specifier: 0.11.0
-        version: 0.11.0
+        specifier: 0.12.1
+        version: 0.12.1
     devDependencies:
       '@innei/prettier':
         specifier: 0.15.0
@@ -116,7 +116,7 @@ importers:
         version: 4.2.0
       '@langchain/openai':
         specifier: 0.4.4
-        version: 0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)
+        version: 0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
       '@mx-space/compiled':
         specifier: workspace:*
         version: link:../../packages/compiled
@@ -233,7 +233,7 @@ importers:
         version: 5.2.3
       langchain:
         specifier: 0.3.19
-        version: 0.3.19(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(axios@1.7.9)(encoding@0.1.13)(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+        version: 0.3.19(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(axios@1.7.9)(encoding@0.1.13)(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       linkedom:
         specifier: 0.18.9
         version: 0.18.9
@@ -278,7 +278,7 @@ importers:
         version: 6.10.0
       openai:
         specifier: 4.85.2
-        version: 4.85.2(encoding@0.1.13)(zod@3.24.1)
+        version: 4.85.2(encoding@0.1.13)(zod@3.24.2)
       pluralize:
         specifier: ^8.0.0
         version: 8.0.0
@@ -334,7 +334,7 @@ importers:
     devDependencies:
       '@langchain/core':
         specifier: 0.3.40
-        version: 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+        version: 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       '@nestjs/cli':
         specifier: 11.0.4
         version: 11.0.4(@swc/core@1.10.18)(@types/node@22.13.4)(esbuild@0.24.0)
@@ -2919,10 +2919,6 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  agent-base@7.1.1:
-    resolution: {integrity: sha512-H0TSyFNDMomMNJQBn8wFV5YC/2eJ+VXECwOadZJT554xP6cODZHPX3H9QMQECxvrgiSOP1pHjy1sMWQVYJOUOA==}
-    engines: {node: '>= 14'}
-
   agent-base@7.1.3:
     resolution: {integrity: sha512-jRR5wdylq8CkOe6hei19GGZnxM6rBGwFl3Bg0YItGDimvjGtAvdZk4Pu6Cl4u4Igsws4a1fd1Vq3ezrhn4KmFw==}
     engines: {node: '>= 14'}
@@ -4319,10 +4315,6 @@ packages:
     resolution: {integrity: sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ==}
     engines: {node: '>= 0.8'}
 
-  https-proxy-agent@7.0.5:
-    resolution: {integrity: sha512-1e4Wqeblerz+tMKPIq2EMGiiWW1dIjZOksyHWSUm1rmuvw/how9hBHZ38lAGj5ID4Ik6EdkOw7NmWPy6LAwalw==}
-    engines: {node: '>= 14'}
-
   https-proxy-agent@7.0.6:
     resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
     engines: {node: '>= 14'}
@@ -5701,11 +5693,6 @@ packages:
   redis-errors@1.2.0:
     resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
     engines: {node: '>=4'}
-
-  redis-memory-server@0.11.0:
-    resolution: {integrity: sha512-yDE4/cGPUE/xpgZkv+krBMS5jQ0vpPc+P5BOSDlJfevxNEBx7+8aQw+bNvIlVXzDcg7M+Z+eh2wR2ZYL/cebdQ==}
-    engines: {node: '>=16'}
-    hasBin: true
 
   redis-memory-server@0.12.1:
     resolution: {integrity: sha512-4FKR5ToyrAVTVbHd56WWqpM6JgCPEztyCQ76JW1338ENGKzfnixqU1dFvmwE2FMkeQbn9jt29cMENOZSvB551g==}
@@ -8437,14 +8424,14 @@ snapshots:
     dependencies:
       buffer: 6.0.3
 
-  '@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))':
+  '@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))':
     dependencies:
       '@cfworker/json-schema': 4.1.1
       ansi-styles: 5.2.0
       camelcase: 6.3.0
       decamelize: 1.2.0
       js-tiktoken: 1.0.18
-      langsmith: 0.3.4(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+      langsmith: 0.3.4(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       mustache: 4.2.0
       p-queue: 6.6.2
       p-retry: 4.6.2
@@ -8454,9 +8441,9 @@ snapshots:
     transitivePeerDependencies:
       - openai
 
-  '@langchain/openai@0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)':
+  '@langchain/openai@0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)':
     dependencies:
-      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       js-tiktoken: 1.0.18
       openai: 4.85.2(encoding@0.1.13)(zod@3.24.1)
       zod: 3.24.1
@@ -8465,9 +8452,9 @@ snapshots:
       - encoding
       - ws
 
-  '@langchain/textsplitters@0.1.0(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))':
+  '@langchain/textsplitters@0.1.0(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))':
     dependencies:
-      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       js-tiktoken: 1.0.19
 
   '@levischuck/tiny-cbor@0.2.2': {}
@@ -9825,13 +9812,6 @@ snapshots:
       acorn: 8.14.0
 
   acorn@8.14.0: {}
-
-  agent-base@7.1.1:
-    dependencies:
-      debug: 4.4.0
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
 
   agent-base@7.1.3:
     optional: true
@@ -11432,14 +11412,6 @@ snapshots:
       statuses: 2.0.1
       toidentifier: 1.0.1
 
-  https-proxy-agent@7.0.5:
-    dependencies:
-      agent-base: 7.1.1
-      debug: 4.4.0
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
-
   https-proxy-agent@7.0.6:
     dependencies:
       agent-base: 7.1.3
@@ -11719,15 +11691,15 @@ snapshots:
 
   kysely@0.27.4: {}
 
-  langchain@0.3.19(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(axios@1.7.9)(encoding@0.1.13)(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)):
+  langchain@0.3.19(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(axios@1.7.9)(encoding@0.1.13)(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
-      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
-      '@langchain/openai': 0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)
-      '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))
+      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
+      '@langchain/openai': 0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
+      '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))
       js-tiktoken: 1.0.19
       js-yaml: 4.1.0
       jsonpointer: 5.0.1
-      langsmith: 0.3.10(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+      langsmith: 0.3.10(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       openapi-types: 12.1.3
       p-retry: 4.6.2
       uuid: 10.0.0
@@ -11741,7 +11713,7 @@ snapshots:
       - openai
       - ws
 
-  langsmith@0.3.10(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)):
+  langsmith@0.3.10(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -11751,9 +11723,9 @@ snapshots:
       semver: 7.7.1
       uuid: 10.0.0
     optionalDependencies:
-      openai: 4.85.2(encoding@0.1.13)(zod@3.24.1)
+      openai: 4.85.2(encoding@0.1.13)(zod@3.24.2)
 
-  langsmith@0.3.4(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)):
+  langsmith@0.3.4(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -11763,7 +11735,7 @@ snapshots:
       semver: 7.7.1
       uuid: 10.0.0
     optionalDependencies:
-      openai: 4.85.2(encoding@0.1.13)(zod@3.24.1)
+      openai: 4.85.2(encoding@0.1.13)(zod@3.24.2)
 
   levn@0.4.1:
     dependencies:
@@ -12558,6 +12530,20 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
+  openai@4.85.2(encoding@0.1.13)(zod@3.24.2):
+    dependencies:
+      '@types/node': 18.19.76
+      '@types/node-fetch': 2.6.12
+      abort-controller: 3.0.0
+      agentkeepalive: 4.6.0
+      form-data-encoder: 1.7.2
+      formdata-node: 4.4.1
+      node-fetch: 2.7.0(encoding@0.1.13)
+    optionalDependencies:
+      zod: 3.24.2
+    transitivePeerDependencies:
+      - encoding
+
   openapi-types@12.1.3: {}
 
   openapi3-ts@2.0.2:
@@ -12879,27 +12865,6 @@ snapshots:
   readdirp@4.1.2: {}
 
   redis-errors@1.2.0: {}
-
-  redis-memory-server@0.11.0:
-    dependencies:
-      camelcase: 6.3.0
-      cross-spawn: 7.0.3
-      debug: 4.3.7
-      extract-zip: 2.0.1
-      find-cache-dir: 3.3.2
-      find-package-json: 1.2.0
-      get-port: 5.1.1
-      https-proxy-agent: 7.0.5
-      lockfile: 1.0.4
-      lodash.defaultsdeep: 4.6.1
-      rimraf: 5.0.10
-      semver: 7.7.1
-      tar: 6.2.1
-      tmp: 0.2.3
-      uuid: 8.3.2
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
 
   redis-memory-server@0.12.1:
     dependencies:
