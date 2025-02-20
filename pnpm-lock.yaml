@@ -6,7 +6,7 @@ settings:
 
 overrides:
   get-pixels@^3>request: ./external/request
-  mongodb: 6.12.0
+  mongodb: 6.13.1
   pino: ./external/pino
   semver: 7.7.1
   typescript: 5.7.3
@@ -116,7 +116,7 @@ importers:
         version: 4.2.0
       '@langchain/openai':
         specifier: 0.4.4
-        version: 0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)
+        version: 0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
       '@mx-space/compiled':
         specifier: workspace:*
         version: link:../../packages/compiled
@@ -233,7 +233,7 @@ importers:
         version: 5.2.3
       langchain:
         specifier: 0.3.19
-        version: 0.3.19(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(axios@1.7.9)(encoding@0.1.13)(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+        version: 0.3.19(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(axios@1.7.9)(encoding@0.1.13)(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       linkedom:
         specifier: 0.18.9
         version: 0.18.9
@@ -278,7 +278,7 @@ importers:
         version: 6.10.0
       openai:
         specifier: 4.85.2
-        version: 4.85.2(encoding@0.1.13)(zod@3.24.1)
+        version: 4.85.2(encoding@0.1.13)(zod@3.24.2)
       pluralize:
         specifier: ^8.0.0
         version: 8.0.0
@@ -334,7 +334,7 @@ importers:
     devDependencies:
       '@langchain/core':
         specifier: 0.3.40
-        version: 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+        version: 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       '@nestjs/cli':
         specifier: 11.0.4
         version: 11.0.4(@swc/core@1.10.18)(@types/node@22.13.4)(esbuild@0.24.0)
@@ -3163,6 +3163,11 @@ packages:
   bson@6.10.2:
     resolution: {integrity: sha512-5afhLTjqDSA3akH56E+/2J6kTDuSIlBxyXPdQslj9hcIgOUE378xdOfZvC/9q3LifJNI6KR/juZ+d0NRNYBwXg==}
     engines: {node: '>=16.20.1'}
+    deprecated: a critical bug affecting only useBigInt64=true deserialization usage is fixed in bson@6.10.3
+
+  bson@6.10.3:
+    resolution: {integrity: sha512-MTxGsqgYTwfshYWTRdmZRC+M7FnG1b4y7RO7p2k3X24Wq0yv1m77Wsj0BzlPzd/IowgESfsruQCUToa7vbOpPQ==}
+    engines: {node: '>=16.20.1'}
 
   buffer-crc32@0.2.13:
     resolution: {integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==}
@@ -5096,11 +5101,11 @@ packages:
     resolution: {integrity: sha512-QCUjsIIXSYv/EgkpDAjfhlqRKo6N+qR6DD43q4lyrCVn24xQmvlArdWHW/Um5RS4LkC9YWC3XveSncJqht2Hbg==}
     engines: {node: '>=16.20.1'}
 
-  mongodb@6.12.0:
-    resolution: {integrity: sha512-RM7AHlvYfS7jv7+BXund/kR64DryVI+cHbVAy9P61fnb1RcWZqOW1/Wj2YhqMCx+MuYhqTRGv7AwHBzmsCKBfA==}
+  mongodb@6.13.1:
+    resolution: {integrity: sha512-gdq40tX8StmhP6akMp1pPoEVv+9jTYFSrga/g23JxajPAQhH39ysZrHGzQCSd9PEOnuEQEdjIWqxO7ZSwC0w7Q==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
-      '@aws-sdk/credential-providers': ^3.188.0
+      '@aws-sdk/credential-providers': ^3.632.0
       '@mongodb-js/zstd': ^1.1.0 || ^2.0.0
       gcp-metadata: ^5.2.0
       kerberos: ^2.0.1
@@ -8437,14 +8442,14 @@ snapshots:
     dependencies:
       buffer: 6.0.3
 
-  '@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))':
+  '@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))':
     dependencies:
       '@cfworker/json-schema': 4.1.1
       ansi-styles: 5.2.0
       camelcase: 6.3.0
       decamelize: 1.2.0
       js-tiktoken: 1.0.18
-      langsmith: 0.3.4(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+      langsmith: 0.3.4(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       mustache: 4.2.0
       p-queue: 6.6.2
       p-retry: 4.6.2
@@ -8454,9 +8459,9 @@ snapshots:
     transitivePeerDependencies:
       - openai
 
-  '@langchain/openai@0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)':
+  '@langchain/openai@0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)':
     dependencies:
-      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       js-tiktoken: 1.0.18
       openai: 4.85.2(encoding@0.1.13)(zod@3.24.1)
       zod: 3.24.1
@@ -8465,9 +8470,9 @@ snapshots:
       - encoding
       - ws
 
-  '@langchain/textsplitters@0.1.0(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))':
+  '@langchain/textsplitters@0.1.0(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))':
     dependencies:
-      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       js-tiktoken: 1.0.19
 
   '@levischuck/tiny-cbor@0.2.2': {}
@@ -10086,6 +10091,8 @@ snapshots:
       update-browserslist-db: 1.1.2(browserslist@4.24.4)
 
   bson@6.10.2: {}
+
+  bson@6.10.3: {}
 
   buffer-crc32@0.2.13:
     optional: true
@@ -11719,15 +11726,15 @@ snapshots:
 
   kysely@0.27.4: {}
 
-  langchain@0.3.19(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(axios@1.7.9)(encoding@0.1.13)(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)):
+  langchain@0.3.19(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(axios@1.7.9)(encoding@0.1.13)(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
-      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
-      '@langchain/openai': 0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)
-      '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))
+      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
+      '@langchain/openai': 0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
+      '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))
       js-tiktoken: 1.0.19
       js-yaml: 4.1.0
       jsonpointer: 5.0.1
-      langsmith: 0.3.10(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+      langsmith: 0.3.10(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       openapi-types: 12.1.3
       p-retry: 4.6.2
       uuid: 10.0.0
@@ -11741,7 +11748,7 @@ snapshots:
       - openai
       - ws
 
-  langsmith@0.3.10(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)):
+  langsmith@0.3.10(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -11751,9 +11758,9 @@ snapshots:
       semver: 7.7.1
       uuid: 10.0.0
     optionalDependencies:
-      openai: 4.85.2(encoding@0.1.13)(zod@3.24.1)
+      openai: 4.85.2(encoding@0.1.13)(zod@3.24.2)
 
-  langsmith@0.3.4(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)):
+  langsmith@0.3.4(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -11763,7 +11770,7 @@ snapshots:
       semver: 7.7.1
       uuid: 10.0.0
     optionalDependencies:
-      openai: 4.85.2(encoding@0.1.13)(zod@3.24.1)
+      openai: 4.85.2(encoding@0.1.13)(zod@3.24.2)
 
   levn@0.4.1:
     dependencies:
@@ -12333,7 +12340,7 @@ snapshots:
       find-cache-dir: 3.3.2
       follow-redirects: 1.15.9(debug@4.4.0)
       https-proxy-agent: 7.0.6
-      mongodb: 6.12.0
+      mongodb: 6.13.1
       new-find-package-json: 2.0.0
       semver: 7.7.1
       tar-stream: 3.1.7
@@ -12365,10 +12372,10 @@ snapshots:
       - supports-color
     optional: true
 
-  mongodb@6.12.0:
+  mongodb@6.13.1:
     dependencies:
       '@mongodb-js/saslprep': 1.2.0
-      bson: 6.10.2
+      bson: 6.10.3
       mongodb-connection-string-url: 3.0.2
 
   mongoose-aggregate-paginate-v2@1.1.4: {}
@@ -12397,7 +12404,7 @@ snapshots:
     dependencies:
       bson: 6.10.2
       kareem: 2.6.3
-      mongodb: 6.12.0
+      mongodb: 6.13.1
       mpath: 0.9.0
       mquery: 5.0.0
       ms: 2.1.3
@@ -12555,6 +12562,20 @@ snapshots:
       node-fetch: 2.7.0(encoding@0.1.13)
     optionalDependencies:
       zod: 3.24.1
+    transitivePeerDependencies:
+      - encoding
+
+  openai@4.85.2(encoding@0.1.13)(zod@3.24.2):
+    dependencies:
+      '@types/node': 18.19.76
+      '@types/node-fetch': 2.6.12
+      abort-controller: 3.0.0
+      agentkeepalive: 4.6.0
+      form-data-encoder: 1.7.2
+      formdata-node: 4.4.1
+      node-fetch: 2.7.0(encoding@0.1.13)
+    optionalDependencies:
+      zod: 3.24.2
     transitivePeerDependencies:
       - encoding
 
