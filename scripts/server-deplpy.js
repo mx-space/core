@@ -16,7 +16,7 @@ const { homedir } = os
 const { repository } = require('../package.json')
 
 const argv = process.argv.slice(2)
-const scpPath = av['scp_path']
+const scpPath = av.scp_path
 function getOsBuildAssetName() {
   return `release-linux.zip`
 }
@@ -42,9 +42,9 @@ async function main() {
       throw new Error('no download url found')
     }
 
-    const buffer = await fetch(
-      `https://mirror.ghproxy.com/${downloadUrl}`,
-    ).then((res) => res.buffer())
+    const buffer = await fetch(`https://ghfast.top/${downloadUrl}`).then(
+      (res) => res.buffer(),
+    )
     const tmpName = (Math.random() * 10).toString(16)
     fs.writeFileSync(`/tmp/${tmpName}.zip`, buffer, { flag: 'w' })
 
