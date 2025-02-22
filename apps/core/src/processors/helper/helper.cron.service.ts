@@ -191,7 +191,11 @@ export class CronService {
             },
           },
         )
-        this.logger.log(`Bing站长提交结果：${JSON.stringify(res.data)}`)
+        if (res?.data?.d === null) {
+          this.logger.log('Bing站长提交成功')
+        } else {
+          this.logger.log(`Bing站长提交结果：${JSON.stringify(res.data)}`)
+        }
         return res.data
       } catch (error) {
         this.logger.error(`Bing推送错误：${error.message}`)
