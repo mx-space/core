@@ -159,6 +159,7 @@ export class CronService {
     return null
   }
 
+  @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'pushToBingSearch' })
   @CronDescription('推送到Bing')
   async pushToBingSearch() {
     const {
