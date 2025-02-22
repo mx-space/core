@@ -175,6 +175,6 @@ export class AppModule implements NestModule {
     }
   }
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestContextMiddleware).forRoutes('(.*)')
+    consumer.apply(RequestContextMiddleware).forRoutes('*app')
   }
 }

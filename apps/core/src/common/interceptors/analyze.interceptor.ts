@@ -6,7 +6,7 @@
  */
 import { URL } from 'node:url'
 import { isbot } from 'isbot'
-import UAParser from 'ua-parser-js'
+import { UAParser } from 'ua-parser-js'
 import type {
   CallHandler,
   ExecutionContext,
@@ -24,6 +24,7 @@ import { REFLECTOR } from '~/constants/system.constant'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getIp } from '~/utils/ip.util'
@@ -40,7 +41,7 @@ export class AnalyzeInterceptor implements NestInterceptor {
     private readonly model: ReturnModelType<typeof AnalyzeModel>,
     @InjectModel(OptionModel)
     private readonly options: ReturnModelType<typeof OptionModel>,
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
     @Inject(REFLECTOR) private readonly reflector: Reflector,
   ) {
     this.init()
@@ -121,7 +122,7 @@ export class AnalyzeInterceptor implements NestInterceptor {
         })
 
         // ip access in redis
-        const client = this.cacheService.getClient()
+        const client = this.redisService.getClient()
 
         const count = await client.sadd(getRedisKey(RedisKeys.AccessIp), ip)
         if (count) {

@@ -2,7 +2,8 @@ FROM node:22-alpine as builder
 WORKDIR /app
 COPY . .
 RUN apk add git make g++ alpine-sdk python3 py3-pip unzip
-RUN npm i -g pnpm
+RUN corepack enable
+RUN corepack prepare --activate
 RUN pnpm install
 RUN pnpm bundle
 RUN mv apps/core/out ./out

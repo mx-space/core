@@ -11,6 +11,7 @@ import { getRedisKey } from '~/utils/redis.util'
 
 import { version } from '../../../package.json'
 import { CacheService } from '../redis/cache.service'
+import { RedisService } from '../redis/redis.service'
 
 const DEFAULT_UA = `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 MX-Space/${version}`
 declare module 'axios' {
@@ -27,7 +28,7 @@ declare module 'axios' {
 export class HttpService {
   private readonly http: AxiosInstance
   private readonly logger: Logger
-  constructor(private readonly cacheService: CacheService) {
+  constructor(private readonly redisService: RedisService) {
     this.logger = new Logger(HttpService.name)
 
     this.http = this.bindInterceptors(
@@ -84,7 +85,7 @@ export class HttpService {
    */
   public async getAndCacheRequest(url: string) {
     this.logger.debug(`--> GET: ${url}`)
-    const client = this.cacheService.getClient()
+    const client = this.redisService.getClient()
     const has = await client.hget(getRedisKey(RedisKeys.HTTPCache), url)
     if (has) {
       this.logger.debug(`--> GET: ${url} from redis`)

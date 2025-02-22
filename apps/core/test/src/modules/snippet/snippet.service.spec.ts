@@ -1,6 +1,7 @@
 import { stringify } from 'qs'
 import { redisHelper } from 'test/helper/redis-mock.helper'
 
+import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { nanoid } from '@mx-space/compiled'
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
@@ -15,7 +16,7 @@ import { CacheService } from '~/processors/redis/cache.service'
 import { getModelToken } from '~/transformers/model.transformer'
 
 const mockedEventManageService = { async emit() {} }
-describe('test Snippet Service', () => {
+describe('test Snippet Service', async () => {
   let service: SnippetService
 
   beforeAll(async () => {
@@ -23,6 +24,7 @@ describe('test Snippet Service', () => {
     const moduleRef = Test.createTestingModule({
       providers: [
         SnippetService,
+        await createRedisProvider(),
         { provide: DatabaseService, useValue: {} },
         { provide: CacheService, useValue: redis.CacheService },
         {

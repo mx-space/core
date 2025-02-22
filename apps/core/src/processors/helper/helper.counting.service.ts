@@ -7,12 +7,13 @@ import { getRedisKey } from '~/utils/redis.util'
 
 import { DatabaseService } from '../database/database.service'
 import { CacheService } from '../redis/cache.service'
+import { RedisService } from '../redis/redis.service'
 
 @Injectable()
 export class CountingService {
   private logger: Logger
   constructor(
-    private readonly redis: CacheService,
+    private readonly redisService: RedisService,
     private readonly databaseService: DatabaseService,
   ) {
     this.logger = new Logger(CountingService.name)
@@ -35,7 +36,7 @@ export class CountingService {
     id: string,
     ip: string,
   ): Promise<boolean> {
-    const redis = this.redis.getClient()
+    const redis = this.redisService.getClient()
     const isLikeBefore = await this.getThisRecordIsLiked(id, ip)
 
     const model = this.databaseService.getModelByRefType(type)
@@ -72,7 +73,7 @@ export class CountingService {
       throw '无法获取到 IP'
     }
 
-    const redis = this.redis.getClient()
+    const redis = this.redisService.getClient()
     const isLikeBefore = await redis.sismember(
       getRedisKey(RedisKeys.Like, id),
       ip,

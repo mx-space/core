@@ -42,6 +42,6 @@ export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     const basePath = isDev ? '/auth' : `/api/v${API_VERSION}/auth`
 
-    consumer.apply(AuthMiddleware).forRoutes(`${basePath}/(.*)`)
+    consumer.apply(AuthMiddleware).forRoutes(`${basePath}/*auth`)
   }
 }

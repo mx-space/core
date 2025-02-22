@@ -8,6 +8,7 @@ import { gatewayProviders } from 'test/mock/modules/gateway.mock'
 import { countingServiceProvider } from 'test/mock/processors/counting.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 
+import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 
 import { OptionModel } from '~/modules/configs/configs.model'
@@ -22,7 +23,7 @@ import { TextMacroService } from '~/processors/helper/helper.macro.service'
 
 import MockDbData from './note.e2e-mock.db'
 
-describe('NoteController (e2e)', () => {
+describe('NoteController (e2e)', async () => {
   let model: MongooseModel<NoteModel>
   const proxy = createE2EApp({
     controllers: [NoteController],
@@ -47,6 +48,7 @@ describe('NoteController (e2e)', () => {
       },
       HttpService,
       configProvider,
+      await createRedisProvider(),
 
       UserService,
       ...eventEmitterProvider,

@@ -22,6 +22,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { CacheService } from '../redis/cache.service'
+import { RedisService } from '../redis/redis.service'
 import { HttpService } from './helper.http.service'
 import { JWTService } from './helper.jwt.service'
 
@@ -33,7 +34,7 @@ export class CronService {
     private readonly configs: ConfigsService,
     @InjectModel(AnalyzeModel)
     private readonly analyzeModel: MongooseModel<AnalyzeModel>,
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
 
     @Inject(forwardRef(() => AggregateService))
     private readonly aggregateService: AggregateService,
@@ -62,7 +63,7 @@ export class CronService {
   @CronOnce(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'resetIPAccess' })
   @CronDescription('清理 IP 访问记录')
   async resetIPAccess() {
-    await this.cacheService.getClient().del(getRedisKey(RedisKeys.AccessIp))
+    await this.redisService.getClient().del(getRedisKey(RedisKeys.AccessIp))
 
     this.logger.log('--> 清理 IP 访问记录成功')
   }
@@ -75,7 +76,7 @@ export class CronService {
   })
   @CronDescription('清理喜欢数')
   async resetLikedOrReadArticleRecord() {
-    const redis = this.cacheService.getClient()
+    const redis = this.redisService.getClient()
 
     await Promise.all(
       [
@@ -165,7 +166,7 @@ export class CronService {
   })
   async deleteExpiredJWT() {
     this.logger.log('--> 开始扫表，清除过期的 token')
-    const redis = this.cacheService.getClient()
+    const redis = this.redisService.getClient()
     const keys = await redis.hkeys(getRedisKey(RedisKeys.JWTStore))
     let deleteCount = 0
     await Promise.all(

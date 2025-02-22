@@ -6,6 +6,7 @@ import { Injectable } from '@nestjs/common'
 import { safeJSONParse } from '~/utils/tool.util'
 
 import { CacheService } from '../redis/cache.service'
+import { RedisService } from '../redis/redis.service'
 
 type ITask = RedisMap<
   string,
@@ -19,8 +20,8 @@ type ITask = RedisMap<
 @Injectable()
 export class TaskQueueService {
   tasks: ITask
-  constructor(private readonly redis: CacheService) {
-    this.tasks = new RedisMap(redis.getClient(), 'tq')
+  constructor(private readonly redisService: RedisService) {
+    this.tasks = new RedisMap(redisService.getClient(), 'tq')
   }
 
   add(name: string, task: () => Promise<any>) {

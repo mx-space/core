@@ -24,6 +24,7 @@ import {
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getShortDate } from '~/utils/time.util'
@@ -51,7 +52,7 @@ export class WebEventsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
 
     private readonly gatewayService: GatewayService,
   ) {
@@ -189,7 +190,7 @@ export class WebEventsGateway
       )
 
       scheduleManager.schedule(async () => {
-        const redisClient = this.cacheService.getClient()
+        const redisClient = this.redisService.getClient()
         const dateFormat = getShortDate(new Date())
 
         // get and store max_online_count
@@ -239,7 +240,7 @@ export class WebEventsGateway
       exclude?: string[]
     },
   ) {
-    const emitter = this.cacheService.emitter
+    const emitter = this.redisService.emitter
 
     let socket = emitter.of(`/${namespace}`) as
       | Emitter<DefaultEventsMap>

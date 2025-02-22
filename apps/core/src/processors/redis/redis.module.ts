@@ -2,13 +2,13 @@
  * Cache module.
  * @file Cache 全局模块
  * @module processor/cache/module
- * @author Surmon <https://github.com/surmon-china>
  */
 import { CacheModule as NestCacheModule } from '@nestjs/cache-manager'
 import { Global, Module } from '@nestjs/common'
 
 import { CacheService } from './cache.service'
 import { RedisConfigService } from './redis.config.service'
+import { RedisService } from './redis.service'
 import { SubPubBridgeService } from './subpub.service'
 
 @Global()
@@ -19,7 +19,12 @@ import { SubPubBridgeService } from './subpub.service'
       inject: [RedisConfigService],
     }),
   ],
-  providers: [RedisConfigService, CacheService, SubPubBridgeService],
-  exports: [CacheService, SubPubBridgeService],
+  providers: [
+    RedisConfigService,
+    CacheService,
+    SubPubBridgeService,
+    RedisService,
+  ],
+  exports: [CacheService, SubPubBridgeService, RedisService],
 })
 export class RedisModule {}

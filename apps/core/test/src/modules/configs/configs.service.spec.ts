@@ -14,6 +14,7 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import { UserService } from '~/modules/user/user.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { getModelToken } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
@@ -40,7 +41,7 @@ describe('Test ConfigsService', () => {
         },
         { provide: UserService, useValue: {} },
         {
-          provide: CacheService,
+          provide: RedisService,
           useValue: redisService$,
         },
         { provide: EventManagerService, useValue: { emit: mockEmitFn } },

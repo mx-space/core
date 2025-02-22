@@ -26,6 +26,7 @@ import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { migrateDatabase } from '~/migration/migrate'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getFolderSize, installPKG } from '~/utils/system.util'
 import { getMediumDateTime } from '~/utils/time.util'
@@ -54,7 +55,7 @@ export class BackupService {
     private readonly eventManager: EventManagerService,
 
     private readonly configs: ConfigsService,
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
   ) {
     this.logger = new Logger(BackupService.name)
   }
@@ -105,7 +106,8 @@ export class BackupService {
       }  ${flatten(
         excludeCollections.map((collection) => [
           '--excludeCollection',
-          `${collection}`,
+
+          collection,
         ]),
       )} -o ${backupDirPath} >/dev/null 2>&1`
       // 打包 DB
@@ -131,8 +133,9 @@ export class BackupService {
       this.logger.log('--> 备份成功')
     } catch (error) {
       this.logger.error(
-        `--> 备份失败，请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致，${error.message}` ||
-          error.stderr,
+        `--> 备份失败，请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致，${error.message}\n\n${
+          error.stderr
+        }`,
       )
       throw error
     }
@@ -248,8 +251,8 @@ export class BackupService {
     } catch {}
 
     await Promise.all([
-      this.cacheService.cleanAllRedisKey(),
-      this.cacheService.cleanCatch(),
+      this.redisService.cleanAllRedisKey(),
+      this.redisService.cleanCatch(),
     ])
     await rm(backupDataDir, { force: true, recursive: true })
   }

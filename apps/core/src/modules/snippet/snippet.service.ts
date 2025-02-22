@@ -18,6 +18,7 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 
@@ -32,7 +33,7 @@ export class SnippetService {
       AggregatePaginateModel<SnippetModel & Document>,
     @Inject(forwardRef(() => ServerlessService))
     private readonly serverlessService: ServerlessService,
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
     private readonly eventManager: EventManagerService,
   ) {}
 
@@ -303,7 +304,7 @@ export class SnippetService {
   async cacheSnippet(model: SnippetModel, value: any) {
     const { reference, name } = model
     const key = `${reference}:${name}:${model.private ? 'private' : ''}`
-    const client = this.cacheService.getClient()
+    const client = this.redisService.getClient()
     await client.hset(
       getRedisKey(RedisKeys.SnippetCache),
       key,
@@ -318,7 +319,7 @@ export class SnippetService {
     const key = `${reference}:${name}:${
       accessType === 'private' ? 'private' : ''
     }`
-    const client = this.cacheService.getClient()
+    const client = this.redisService.getClient()
     const value = await client.hget(getRedisKey(RedisKeys.SnippetCache), key)
     return value
   }
@@ -328,7 +329,7 @@ export class SnippetService {
     const key1 = `${keyBase}:`
     const key2 = `${keyBase}:private`
 
-    const client = this.cacheService.getClient()
+    const client = this.redisService.getClient()
     await Promise.all(
       [key1, key2].map((key) => {
         return client.hdel(getRedisKey(RedisKeys.SnippetCache), key)

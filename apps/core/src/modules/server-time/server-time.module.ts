@@ -12,6 +12,6 @@ export class ServerTimeModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(trackResponseTimeMiddleware)
-      .forRoutes({ path: '(.*?)server-time', method: RequestMethod.ALL })
+      .forRoutes({ path: '/server-time', method: RequestMethod.ALL })
   }
 }

@@ -1,7 +1,9 @@
 import { omit, pick, uniqBy } from 'lodash'
+import { ObjectId } from 'mongodb'
 import { Types } from 'mongoose'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import type { Collection } from 'mongodb'
+import type { Document } from 'mongoose'
 import type { Socket } from 'socket.io'
 import type { NoteModel } from '../note/note.model'
 import type { PageModel } from '../page/page.model'
@@ -211,12 +213,9 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       readerMap.set(reader._id.toHexString(), reader)
     }
 
-    const type2Collection: Record<
-      ActivityLikeSupportType,
-      Collection<Document>
-    > = {
-      note: this.databaseService.db.collection(NOTE_COLLECTION_NAME),
-      post: this.databaseService.db.collection(POST_COLLECTION_NAME),
+    const type2Collection = {
+      note: this.databaseService.db.collection<NoteModel>(NOTE_COLLECTION_NAME),
+      post: this.databaseService.db.collection<PostModel>(POST_COLLECTION_NAME),
     }
 
     const refModelData = new Map<string, any>()
@@ -226,7 +225,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         .find(
           {
             _id: {
-              $in: ids.map((id) => new Types.ObjectId(id)),
+              $in: ids.map((id) => new ObjectId(id)),
             },
           },
           {
@@ -291,7 +290,10 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       if (!roomName) continue
       const refId = extractArticleIdFromRoomName(roomName)
       articleIds.push(refId)
-      data.data[i] = data.data[i].toObject()
+
+      // Explicitly type the document conversion
+      const document = data.data[i] as Document & ActivityModel
+      data.data[i] = document.toObject()
       ;(data.data[i] as any).refId = refId
     }
 

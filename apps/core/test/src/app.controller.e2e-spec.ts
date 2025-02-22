@@ -1,5 +1,6 @@
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 
+import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { Test } from '@nestjs/testing'
 
 import { AppController } from '~/app.controller'
@@ -8,7 +9,7 @@ import { OptionModel } from '~/modules/configs/configs.model'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getModelToken } from '~/transformers/model.transformer'
 
-describe('AppController (e2e)', () => {
+describe('AppController (e2e)', async () => {
   let app: NestFastifyApplication
 
   beforeAll(async () => {
@@ -21,6 +22,7 @@ describe('AppController (e2e)', () => {
           provide: getModelToken(OptionModel.name),
           useValue: {},
         },
+        await createRedisProvider(),
       ],
     })
       .overrideProvider(CacheService)

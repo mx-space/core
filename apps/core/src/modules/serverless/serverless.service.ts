@@ -35,6 +35,7 @@ import { AssetService } from '~/processors/helper/helper.asset.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
@@ -71,7 +72,7 @@ export class ServerlessService implements OnModuleInit {
     private readonly httpService: HttpService,
     private readonly databaseService: DatabaseService,
 
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
     private readonly configService: ConfigsService,
 
     private readonly eventService: EventManagerService,
@@ -105,7 +106,7 @@ export class ServerlessService implements OnModuleInit {
 
   private mockStorageCache = Object.freeze({
     get: async (key: string) => {
-      const client = this.cacheService.getClient()
+      const client = this.redisService.getClient()
       return client
         .get(getRedisKey(RedisKeys.ServerlessStorage, key))
         .then((string) => {
@@ -114,13 +115,13 @@ export class ServerlessService implements OnModuleInit {
         })
     },
     set: async (key: string, value: object | string, ttl?: string) => {
-      const client = this.cacheService.getClient()
+      const client = this.redisService.getClient()
       const cacheKey = getRedisKey(RedisKeys.ServerlessStorage, key)
       await client.set(cacheKey, JSON.stringify(value))
       await client.expire(cacheKey, ttl || 60 * 60 * 24 * 7)
     },
     del: async (key: string) => {
-      const client = this.cacheService.getClient()
+      const client = this.redisService.getClient()
       return client.hdel(getRedisKey(RedisKeys.ServerlessStorage), key)
     },
   })
@@ -302,7 +303,7 @@ export class ServerlessService implements OnModuleInit {
         )
       : ''
 
-    const redis = this.cacheService.getClient()
+    const redis = this.redisService.getClient()
     let cached: string | null = null
     if (cacheKey) {
       cached = await redis.get(cacheKey)
@@ -561,18 +562,6 @@ export class ServerlessService implements OnModuleInit {
       }
       return error.message?.split('\n').at(0)
     }
-
-    function isHandlerFunction(
-      node:
-        | t.Declaration
-        | t.FunctionDeclaration
-        | t.ClassDeclaration
-        | t.TSDeclareFunction
-        | t.Expression,
-    ): boolean {
-      // @ts-expect-error
-      return t.isFunction(node) && node?.id?.name === 'handler'
-    }
   }
 
   private async pourBuiltInFunctions() {
@@ -657,4 +646,16 @@ export class ServerlessService implements OnModuleInit {
       { raw: builtInSnippet.code },
     )
   }
+}
+
+function isHandlerFunction(
+  node:
+    | t.Declaration
+    | t.FunctionDeclaration
+    | t.ClassDeclaration
+    | t.TSDeclareFunction
+    | t.Expression,
+): boolean {
+  // @ts-expect-error
+  return t.isFunction(node) && node?.id?.name === 'handler'
 }
