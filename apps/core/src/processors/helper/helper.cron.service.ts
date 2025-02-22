@@ -163,11 +163,11 @@ export class CronService {
   async pushToBingSearch() {
     const {
       url: { webUrl },
-      searchOptions: configs,
+      bingSearchOptions: configs,
     } = await this.configs.waitForConfigReady()
 
-    if (configs.enableBing) {
-      const apiKey = configs.bingApiKey
+    if (configs.enable) {
+      const apiKey = configs.token
       if (!apiKey) {
         this.logger.error('[BingSearchPushTask] API key 为空')
         return

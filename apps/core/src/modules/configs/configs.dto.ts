@@ -213,13 +213,13 @@ export class BingSearchOptionDto {
   @IsOptional()
   @IsBoolean()
   @JSONSchemaToggleField('开启推送')
-  enableBing?: boolean
+  enable?: boolean
 
   @IsOptional()
   @IsString()
   @SecretField
   @JSONSchemaPasswordField('Bing API密钥')
-  bingApiKey?: string
+  token?: string
 }
 
 @JSONSchema({ title: 'Algolia Search' })
