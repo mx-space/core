@@ -209,7 +209,7 @@ export class BaiduSearchOptionsDto {
 }
 
 @JSONSchema({ title: 'Bing推送设定' })
-export class BingSearchOptionDto {
+export class BingSearchOptionsDto {
   @IsOptional()
   @IsBoolean()
   @JSONSchemaToggleField('开启推送')

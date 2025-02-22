@@ -15,7 +15,7 @@ import {
   BackupOptionsDto,
   BaiduSearchOptionsDto,
   BarkOptionsDto,
-  BingSearchOptionDto,
+  BingSearchOptionsDto,
   CommentOptionsDto,
   FeatureListDto,
   FriendLinkOptionsDto,
@@ -68,8 +68,8 @@ export abstract class IConfig {
   backupOptions: Required<BackupOptionsDto>
   @ConfigField(() => BaiduSearchOptionsDto)
   baiduSearchOptions: Required<BaiduSearchOptionsDto>
-  @ConfigField(() => BingSearchOptionDto)
-  bingSearchOptions: Required<BingSearchOptionDto>
+  @ConfigField(() => BingSearchOptionsDto)
+  bingSearchOptions: Required<BingSearchOptionsDto>
   @ConfigField(() => AlgoliaSearchOptionsDto)
   algoliaSearchOptions: Required<AlgoliaSearchOptionsDto>
 
