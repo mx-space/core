@@ -65,7 +65,7 @@ export class UpdateService {
           return
         }
 
-        const cdnDownloadUrl = `https://mirror.ghproxy.com/${downloadUrl}`
+        const cdnDownloadUrl = `https://ghfast.top/${downloadUrl}`
         // const cdnDownloadUrl = downloadUrl
 
         subscriber.next(
