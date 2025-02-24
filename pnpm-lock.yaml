@@ -116,7 +116,7 @@ importers:
         version: 4.2.0
       '@langchain/openai':
         specifier: 0.4.4
-        version: 0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)
+        version: 0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
       '@mx-space/compiled':
         specifier: workspace:*
         version: link:../../packages/compiled
@@ -233,7 +233,7 @@ importers:
         version: 5.2.3
       langchain:
         specifier: 0.3.19
-        version: 0.3.19(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(axios@1.7.9)(encoding@0.1.13)(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+        version: 0.3.19(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(axios@1.7.9)(encoding@0.1.13)(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       linkedom:
         specifier: 0.18.9
         version: 0.18.9
@@ -278,7 +278,7 @@ importers:
         version: 6.10.0
       openai:
         specifier: 4.85.2
-        version: 4.85.2(encoding@0.1.13)(zod@3.24.1)
+        version: 4.85.2(encoding@0.1.13)(zod@3.24.2)
       pluralize:
         specifier: ^8.0.0
         version: 8.0.0
@@ -334,7 +334,7 @@ importers:
     devDependencies:
       '@langchain/core':
         specifier: 0.3.40
-        version: 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+        version: 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       '@nestjs/cli':
         specifier: 11.0.4
         version: 11.0.4(@swc/core@1.10.18)(@types/node@22.13.4)(esbuild@0.24.0)
@@ -477,8 +477,8 @@ importers:
   packages/compiled:
     devDependencies:
       better-auth:
-        specifier: 1.1.18
-        version: 1.1.18(encoding@0.1.13)
+        specifier: 1.1.21
+        version: 1.1.21(encoding@0.1.13)
       nanoid:
         specifier: 5.0.9
         version: 5.0.9
@@ -3119,8 +3119,8 @@ packages:
     resolution: {integrity: sha512-k38b3XOZKv60C4E2hVsXTolJWfkGRMbILBIe2IBITXciy5bOsTKot5kDrf3ZfufQtQOUN5mXceUEpU1rTl9Uog==}
     hasBin: true
 
-  better-auth@1.1.18:
-    resolution: {integrity: sha512-cU/u7/qlSiR/OO1O53gh/bHvxyB53DE+5ZOw9DtpDI8IyIQUBqDnQ06MOwNtj8JwjXHcMFNSNd5u/W8DED0bJw==}
+  better-auth@1.1.21:
+    resolution: {integrity: sha512-scyrQn8O9XL4oKmTt7nnA50P0v0RnI39yKevlMa0mI3646hXq/QOThjUrYy+cYCoq4tNLVsctQa9yUUMN9ZzhA==}
 
   better-call@0.3.3:
     resolution: {integrity: sha512-N4lDVm0NGmFfDJ0XMQ4O83Zm/3dPlvIQdxvwvgSLSkjFX5PM4GUYSVAuxNzXN27QZMHDkrJTWUqxBrm4tPC3eA==}
@@ -3163,6 +3163,7 @@ packages:
   bson@6.10.2:
     resolution: {integrity: sha512-5afhLTjqDSA3akH56E+/2J6kTDuSIlBxyXPdQslj9hcIgOUE378xdOfZvC/9q3LifJNI6KR/juZ+d0NRNYBwXg==}
     engines: {node: '>=16.20.1'}
+    deprecated: a critical bug affecting only useBigInt64=true deserialization usage is fixed in bson@6.10.3
 
   buffer-crc32@0.2.13:
     resolution: {integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==}
@@ -8437,14 +8438,14 @@ snapshots:
     dependencies:
       buffer: 6.0.3
 
-  '@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))':
+  '@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))':
     dependencies:
       '@cfworker/json-schema': 4.1.1
       ansi-styles: 5.2.0
       camelcase: 6.3.0
       decamelize: 1.2.0
       js-tiktoken: 1.0.18
-      langsmith: 0.3.4(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+      langsmith: 0.3.4(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       mustache: 4.2.0
       p-queue: 6.6.2
       p-retry: 4.6.2
@@ -8454,9 +8455,9 @@ snapshots:
     transitivePeerDependencies:
       - openai
 
-  '@langchain/openai@0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)':
+  '@langchain/openai@0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)':
     dependencies:
-      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       js-tiktoken: 1.0.18
       openai: 4.85.2(encoding@0.1.13)(zod@3.24.1)
       zod: 3.24.1
@@ -8465,9 +8466,9 @@ snapshots:
       - encoding
       - ws
 
-  '@langchain/textsplitters@0.1.0(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))':
+  '@langchain/textsplitters@0.1.0(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))':
     dependencies:
-      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       js-tiktoken: 1.0.19
 
   '@levischuck/tiny-cbor@0.2.2': {}
@@ -10010,7 +10011,7 @@ snapshots:
 
   bcryptjs@3.0.2: {}
 
-  better-auth@1.1.18(encoding@0.1.13):
+  better-auth@1.1.21(encoding@0.1.13):
     dependencies:
       '@better-auth/utils': 0.2.3
       '@better-fetch/fetch': 1.1.12
@@ -10023,7 +10024,7 @@ snapshots:
       jose: 5.9.6
       kysely: 0.27.4
       nanostores: 0.11.3
-      zod: 3.24.1
+      zod: 3.24.2
     transitivePeerDependencies:
       - encoding
 
@@ -10032,7 +10033,7 @@ snapshots:
       '@better-fetch/fetch': 1.1.12
       rou3: 0.5.1
       uncrypto: 0.1.3
-      zod: 3.24.1
+      zod: 3.24.2
 
   binary-extensions@2.3.0: {}
 
@@ -11719,15 +11720,15 @@ snapshots:
 
   kysely@0.27.4: {}
 
-  langchain@0.3.19(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(axios@1.7.9)(encoding@0.1.13)(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)):
+  langchain@0.3.19(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(axios@1.7.9)(encoding@0.1.13)(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
-      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
-      '@langchain/openai': 0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)
-      '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)))
+      '@langchain/core': 0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
+      '@langchain/openai': 0.4.4(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
+      '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.40(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)))
       js-tiktoken: 1.0.19
       js-yaml: 4.1.0
       jsonpointer: 5.0.1
-      langsmith: 0.3.10(openai@4.85.2(encoding@0.1.13)(zod@3.24.1))
+      langsmith: 0.3.10(openai@4.85.2(encoding@0.1.13)(zod@3.24.2))
       openapi-types: 12.1.3
       p-retry: 4.6.2
       uuid: 10.0.0
@@ -11741,7 +11742,7 @@ snapshots:
       - openai
       - ws
 
-  langsmith@0.3.10(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)):
+  langsmith@0.3.10(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -11751,9 +11752,9 @@ snapshots:
       semver: 7.7.1
       uuid: 10.0.0
     optionalDependencies:
-      openai: 4.85.2(encoding@0.1.13)(zod@3.24.1)
+      openai: 4.85.2(encoding@0.1.13)(zod@3.24.2)
 
-  langsmith@0.3.4(openai@4.85.2(encoding@0.1.13)(zod@3.24.1)):
+  langsmith@0.3.4(openai@4.85.2(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -11763,7 +11764,7 @@ snapshots:
       semver: 7.7.1
       uuid: 10.0.0
     optionalDependencies:
-      openai: 4.85.2(encoding@0.1.13)(zod@3.24.1)
+      openai: 4.85.2(encoding@0.1.13)(zod@3.24.2)
 
   levn@0.4.1:
     dependencies:
@@ -12555,6 +12556,20 @@ snapshots:
       node-fetch: 2.7.0(encoding@0.1.13)
     optionalDependencies:
       zod: 3.24.1
+    transitivePeerDependencies:
+      - encoding
+
+  openai@4.85.2(encoding@0.1.13)(zod@3.24.2):
+    dependencies:
+      '@types/node': 18.19.76
+      '@types/node-fetch': 2.6.12
+      abort-controller: 3.0.0
+      agentkeepalive: 4.6.0
+      form-data-encoder: 1.7.2
+      formdata-node: 4.4.1
+      node-fetch: 2.7.0(encoding@0.1.13)
+    optionalDependencies:
+      zod: 3.24.2
     transitivePeerDependencies:
       - encoding
 
