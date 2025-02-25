@@ -37,6 +37,11 @@ export declare class BaiduSearchOptionsModel {
   enable: boolean
   token?: string
 }
+export declare class BingSearchOptionsModel {
+  enable: boolean
+  token?: string
+}
+
 export declare class AlgoliaSearchOptionsModel {
   enable: boolean
   apiKey?: string
