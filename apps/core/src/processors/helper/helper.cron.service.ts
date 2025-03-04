@@ -167,7 +167,7 @@ export class CronService {
       bingSearchOptions: configs,
     } = await this.configs.waitForConfigReady()
 
-    if (configs.enable) {
+    if (!configs.enable) { return }
       const apiKey = configs.token
       if (!apiKey) {
         this.logger.error('[BingSearchPushTask] API key 为空')
