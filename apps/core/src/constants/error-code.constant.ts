@@ -25,6 +25,11 @@ export enum ErrorCodeEnum {
   // system
   MasterLost = 99998,
   BanInDemo = 999999,
+
+  //Bing
+  BingAPIFailed = 300002,
+  BingKeyInvalid = 300003,
+  BingDomainInvalid = 300004,
 }
 
 export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
@@ -53,5 +58,9 @@ export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
     [ErrorCodeEnum.AIResultParsingError]: ['AI 结果解析错误', 500],
 
     [ErrorCodeEnum.EmailTemplateNotFound]: ['邮件模板不存在', 400],
+
+    [ErrorCodeEnum.BingAPIFailed]: ['Bing API请求失败', 503],
+    [ErrorCodeEnum.BingKeyInvalid]: ['Bing API密钥无效', 401],
+    [ErrorCodeEnum.BingDomainInvalid]: ['Bing API域名无效', 400],
   },
 )
