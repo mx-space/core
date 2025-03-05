@@ -167,39 +167,40 @@ export class CronService {
       bingSearchOptions: configs,
     } = await this.configs.waitForConfigReady()
 
-    if (!configs.enable) { return }
-      const apiKey = configs.token
-      if (!apiKey) {
-        this.logger.error('[BingSearchPushTask] API key 为空')
-        return
-      }
+    if (!configs.enable) {
+      return
+    }
+    const apiKey = configs.token
+    if (!apiKey) {
+      this.logger.error('[BingSearchPushTask] API key 为空')
+      return
+    }
 
-      const pushUrls = await this.aggregateService.getSiteMapContent()
-      const urls = pushUrls.map((item) => item.url)
+    const pushUrls = await this.aggregateService.getSiteMapContent()
+    const urls = pushUrls.map((item) => item.url)
 
-      try {
-        const res = await this.http.axiosRef.post(
-          `https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch?apikey=${apiKey}`,
-          {
-            siteUrl: webUrl,
-            urlList: urls,
+    try {
+      const res = await this.http.axiosRef.post(
+        `https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch?apikey=${apiKey}`,
+        {
+          siteUrl: webUrl,
+          urlList: urls,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            charset: 'utf-8',
           },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              charset: 'utf-8',
-            },
-          },
-        )
-        if (res?.data?.d === null) {
-          this.logger.log('Bing站长提交成功')
-        } else {
-          this.logger.log(`Bing站长提交结果：${JSON.stringify(res.data)}`)
-        }
-        return res.data
-      } catch (error) {
-        this.logger.error(`Bing推送错误：${error.message}`)
+        },
+      )
+      if (res?.data?.d === null) {
+        this.logger.log('Bing站长提交成功')
+      } else {
+        this.logger.log(`Bing站长提交结果：${JSON.stringify(res.data)}`)
       }
+      return res.data
+    } catch (error) {
+      this.logger.error(`Bing推送错误：${error.message}`)
     }
     return null
   }
