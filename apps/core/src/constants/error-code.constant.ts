@@ -29,6 +29,7 @@ export enum ErrorCodeEnum {
   //Bing
   BingAPIFailed = 300002,
   BingKeyInvalid = 300003,
+  BingDomainInvalid = 300004,
 }
 
 export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
@@ -60,5 +61,6 @@ export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
 
     [ErrorCodeEnum.BingAPIFailed]: ['Bing API请求失败', 503],
     [ErrorCodeEnum.BingKeyInvalid]: ['Bing API密钥无效', 401],
+    [ErrorCodeEnum.BingDomainInvalid]: ['Bing API域名无效', 400],
   },
 )
