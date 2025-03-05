@@ -13,7 +13,17 @@ FROM node:22-alpine
 
 RUN apk add zip unzip mongodb-tools bash fish rsync jq curl openrc --no-cache
 
-RUN curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared && chmod +x /usr/local/bin/cloudflared
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "aarch64" ]; then \
+    CF_ARCH="arm64"; \
+    elif [ "$ARCH" = "x86_64" ]; then \
+    CF_ARCH="amd64"; \
+    else \
+    echo "Unsupported architecture: $ARCH"; exit 1; \
+    fi && \
+    curl -L "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${CF_ARCH}" \
+    -o /usr/local/bin/cloudflared && \
+    chmod +x /usr/local/bin/cloudflared
 
 WORKDIR /app
 COPY --from=builder /app/out .
