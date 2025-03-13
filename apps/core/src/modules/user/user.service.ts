@@ -49,7 +49,7 @@ export class UserService {
   async getMasterInfo(getLoginIp = false) {
     const user = await this.userModel
       .findOne()
-      .select(`${getLoginIp ? ' +lastLoginIp' : ''}`)
+      .select(String(getLoginIp ? ' +lastLoginIp' : ''))
       .lean({ virtuals: true })
     if (!user) {
       throw new BizException(ErrorCodeEnum.MasterLost)
@@ -70,7 +70,7 @@ export class UserService {
   }
 
   async createMaster(
-    model: Pick<UserModel, 'username' | 'name' | 'password'> &
+    model: Pick<UserModel, 'username' | 'name' | 'password' | 'mail'> &
       Partial<Pick<UserModel, 'introduce' | 'avatar' | 'url'>>,
   ) {
     const hasMaster = await this.hasMaster()
@@ -78,8 +78,8 @@ export class UserService {
     if (hasMaster) {
       throw new BadRequestException('我已经有一个主人了哦')
     }
-
-    const res = await this.userModel.create({ ...model })
+    const avatar = model.avatar ?? getAvatar(model.mail)
+    const res = await this.userModel.create({ ...model, avatar })
     const token = await this.authService.jwtServicePublic.sign(res.id)
     return { token, username: res.username }
   }
