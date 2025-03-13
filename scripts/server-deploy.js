@@ -16,7 +16,7 @@ const { homedir } = os
 const { repository } = require('../package.json')
 
 const argv = process.argv.slice(2)
-const scpPath = av['scp_path']
+const scpPath = av.scp_path
 function getOsBuildAssetName() {
   return `release-linux.zip`
 }
