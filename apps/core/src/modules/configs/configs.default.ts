@@ -51,6 +51,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     secretKey: null!,
   },
   baiduSearchOptions: { enable: false, token: null! },
+  bingSearchOptions: { enable: false, token: null! },
   algoliaSearchOptions: {
     enable: false,
     apiKey: '',

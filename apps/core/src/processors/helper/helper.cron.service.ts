@@ -21,7 +21,6 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 
-import { CacheService } from '../redis/cache.service'
 import { RedisService } from '../redis/redis.service'
 import { HttpService } from './helper.http.service'
 import { JWTService } from './helper.jwt.service'
@@ -156,6 +155,52 @@ export class CronService {
         this.logger.error(`百度推送错误：${error.message}`)
         throw error
       }
+    }
+    return null
+  }
+
+  @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'pushToBingSearch' })
+  @CronDescription('推送到Bing')
+  async pushToBingSearch() {
+    const {
+      url: { webUrl },
+      bingSearchOptions: configs,
+    } = await this.configs.waitForConfigReady()
+
+    if (!configs.enable) {
+      return
+    }
+    const apiKey = configs.token
+    if (!apiKey) {
+      this.logger.error('[BingSearchPushTask] API key 为空')
+      return
+    }
+
+    const pushUrls = await this.aggregateService.getSiteMapContent()
+    const urls = pushUrls.map((item) => item.url)
+
+    try {
+      const res = await this.http.axiosRef.post(
+        `https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch?apikey=${apiKey}`,
+        {
+          siteUrl: webUrl,
+          urlList: urls,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            charset: 'utf-8',
+          },
+        },
+      )
+      if (res?.data?.d === null) {
+        this.logger.log('Bing站长提交成功')
+      } else {
+        this.logger.log(`Bing站长提交结果：${JSON.stringify(res.data)}`)
+      }
+      return res.data
+    } catch (error) {
+      this.logger.error(`Bing推送错误：${error.message}`)
     }
     return null
   }

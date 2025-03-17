@@ -3,11 +3,9 @@ import {
   ArrayUnique,
   IsBoolean,
   IsEmail,
-  isInt,
   IsInt,
   IsIP,
   IsNotEmpty,
-  IsNumber,
   IsObject,
   IsOptional,
   IsString,
@@ -207,6 +205,20 @@ export class BaiduSearchOptionsDto {
   @IsNotEmpty()
   @JSONSchemaPasswordField('Token')
   @SecretField
+  token?: string
+}
+
+@JSONSchema({ title: 'Bing推送设定' })
+export class BingSearchOptionsDto {
+  @IsOptional()
+  @IsBoolean()
+  @JSONSchemaToggleField('开启推送')
+  enable?: boolean
+
+  @IsOptional()
+  @IsString()
+  @SecretField
+  @JSONSchemaPasswordField('Bing API密钥')
   token?: string
 }
 
