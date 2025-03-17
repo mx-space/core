@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [8.0.2](https://github.com/mx-space/core/compare/v8.0.1...v8.0.2) (2025-03-17)
+
+
+### Bug Fixes
+
+* cravatar frontend cannot be displayed ([#2385](https://github.com/mx-space/core/issues/2385)) ([490320e](https://github.com/mx-space/core/commit/490320ee4f0cdf958335c8c805796f641a7e41ae))
+
+
+### Features
+
+* 添加推送到Bing支持 ([#2379](https://github.com/mx-space/core/issues/2379)) ([400d217](https://github.com/mx-space/core/commit/400d217aac2872f75ee84bf83f4c2988801b9c7f))
+
+
+
 ## [8.0.1](https://github.com/mx-space/core/compare/v8.0.0...v8.0.1) (2025-02-19)
 
 
