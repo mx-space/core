@@ -173,10 +173,10 @@ importers:
         version: 4.24.0
       axios:
         specifier: ^1.8.3
-        version: 1.8.2
+        version: 1.8.3
       axios-retry:
         specifier: 4.5.0
-        version: 4.5.0(axios@1.8.2)
+        version: 4.5.0(axios@1.8.3)
       bcryptjs:
         specifier: ^3.0.2
         version: 3.0.2
@@ -233,7 +233,7 @@ importers:
         version: 5.3.2
       langchain:
         specifier: 0.3.19
-        version: 0.3.19(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(axios@1.8.2)(encoding@0.1.13)(openai@4.87.3(encoding@0.1.13)(zod@3.24.2))
+        version: 0.3.19(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(axios@1.8.3)(encoding@0.1.13)(openai@4.87.3(encoding@0.1.13)(zod@3.24.2))
       linkedom:
         specifier: 0.18.9
         version: 0.18.9
@@ -477,8 +477,8 @@ importers:
         specifier: 1.1.21
         version: 1.1.21(encoding@0.1.13)
       nanoid:
-        specifier: 5.0.9
-        version: 5.0.9
+        specifier: 5.1.4
+        version: 5.1.4
       zx:
         specifier: 7.2.3
         version: 7.2.3
@@ -3087,6 +3087,9 @@ packages:
   axios@1.8.2:
     resolution: {integrity: sha512-ls4GYBm5aig9vWx8AWDSGLpnpDQRtWAfrjU+EuytuODrFBkqesN2RkOQCBzrA1RQNHw1SmRMSDDDSwzNAYQ6Rg==}
 
+  axios@1.8.3:
+    resolution: {integrity: sha512-iP4DebzoNlP/YN2dpwCgb8zoCmhtkajzS48JvwmkSkXvPI3DHc7m+XYL5tGnSlJtR6nImXZmdCuN5aP8dh1d8A==}
+
   b4a@1.6.7:
     resolution: {integrity: sha512-OnAYlL5b7LEkALw87fUVafQw5rVR9RjwGd4KUwNQ6DrrNmaVaUCgLipfVlzrPQ4tWOR9P0IXGNOx50jYCCdSJg==}
 
@@ -5194,8 +5197,8 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@5.0.9:
-    resolution: {integrity: sha512-Aooyr6MXU6HpvvWXKoVoXwKMs/KyVakWwg7xQfv5/S/RIgJMy0Ifa45H9qqYy7pTCszrHzP21Uk4PZq2HpEM8Q==}
+  nanoid@5.1.4:
+    resolution: {integrity: sha512-GTFcMIDgR7tqji/LpSY8rtg464VnJl/j6ypoehYnuGb+Y8qZUdtKB8WVCXon0UEZgFDbuUxpIl//6FHLHgXSNA==}
     engines: {node: ^18 || >=20}
     hasBin: true
 
@@ -9971,12 +9974,20 @@ snapshots:
       '@fastify/error': 4.0.0
       fastq: 1.19.1
 
-  axios-retry@4.5.0(axios@1.8.2):
+  axios-retry@4.5.0(axios@1.8.3):
     dependencies:
-      axios: 1.8.2
+      axios: 1.8.3
       is-retry-allowed: 2.2.0
 
   axios@1.8.2:
+    dependencies:
+      follow-redirects: 1.15.9(debug@4.4.0)
+      form-data: 4.0.2
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+
+  axios@1.8.3:
     dependencies:
       follow-redirects: 1.15.9(debug@4.4.0)
       form-data: 4.0.2
@@ -11716,7 +11727,7 @@ snapshots:
 
   kysely@0.27.4: {}
 
-  langchain@0.3.19(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(axios@1.8.2)(encoding@0.1.13)(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)):
+  langchain@0.3.19(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(axios@1.8.3)(encoding@0.1.13)(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
       '@langchain/core': 0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2))
       '@langchain/openai': 0.4.4(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
@@ -11732,7 +11743,7 @@ snapshots:
       zod: 3.24.2
       zod-to-json-schema: 3.24.1(zod@3.24.2)
     optionalDependencies:
-      axios: 1.8.2
+      axios: 1.8.3
     transitivePeerDependencies:
       - encoding
       - openai
@@ -12488,7 +12499,7 @@ snapshots:
 
   nanoid@3.3.8: {}
 
-  nanoid@5.0.9: {}
+  nanoid@5.1.4: {}
 
   nanostores@0.11.3: {}
 
