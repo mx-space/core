@@ -30,7 +30,7 @@ jobs:
         with:
           redis-version: 6
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4.0.0
+        uses: pnpm/action-setup@v4.1.0
         with:
           version:
           run_install: false
