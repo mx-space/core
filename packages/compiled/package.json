@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "better-auth": "1.1.21",
-    "nanoid": "5.1.4",
+    "nanoid": "5.1.5",
     "zx": "7.2.3"
   }
 }
