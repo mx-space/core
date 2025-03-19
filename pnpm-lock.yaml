@@ -115,8 +115,8 @@ importers:
         specifier: 4.3.2
         version: 4.3.2
       '@langchain/openai':
-        specifier: 0.4.4
-        version: 0.4.4(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
+        specifier: 0.4.5
+        version: 0.4.5(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
       '@mx-space/compiled':
         specifier: workspace:*
         version: link:../../packages/compiled
@@ -1812,8 +1812,8 @@ packages:
     resolution: {integrity: sha512-pT/jC5lqWK3YGDq8dQwgKoa6anqAhMtG1x5JbnrOj9NdaLeBbCKBDQ+/Ykzk3nZ8o+0UMsaXNZo7IVL83VVjHg==}
     engines: {node: '>=18'}
 
-  '@langchain/openai@0.4.4':
-    resolution: {integrity: sha512-UZybJeMd8+UX7Kn47kuFYfqKdBCeBUWNqDtmAr6ZUIMMnlsNIb6MkrEEhGgAEjGCpdT4CU8U/DyyddTz+JayOQ==}
+  '@langchain/openai@0.4.5':
+    resolution: {integrity: sha512-S/sqC71GVsCDiFGU0A0VQDFGNrjcuz72FxlfuSxwOuo955qad/0Yp0hRhWJilPOjgDByGwaeZkOaxC/oE9ABdQ==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': '>=0.3.39 <0.4.0'
@@ -4499,9 +4499,6 @@ packages:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
 
-  js-tiktoken@1.0.18:
-    resolution: {integrity: sha512-hFYx4xYf6URgcttcGvGuOBJhTxPYZ2R5eIesqCaNRJmYH8sNmsfTeWg4yu//7u1VD/qIUkgKJTpGom9oHXmB4g==}
-
   js-tiktoken@1.0.19:
     resolution: {integrity: sha512-XC63YQeEcS47Y53gg950xiZ4IWmkfMe4p2V9OSaBt26q+p47WHn18izuXzSclCI73B7yGqtfRsT6jcZQI0y08g==}
 
@@ -6782,9 +6779,6 @@ packages:
     peerDependencies:
       zod: ^3.24.1
 
-  zod@3.24.1:
-    resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
-
   zod@3.24.2:
     resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
 
@@ -8432,13 +8426,13 @@ snapshots:
     transitivePeerDependencies:
       - openai
 
-  '@langchain/openai@0.4.4(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)':
+  '@langchain/openai@0.4.5(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)':
     dependencies:
       '@langchain/core': 0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2))
-      js-tiktoken: 1.0.18
-      openai: 4.87.3(encoding@0.1.13)(zod@3.24.1)
-      zod: 3.24.1
-      zod-to-json-schema: 3.24.1(zod@3.24.1)
+      js-tiktoken: 1.0.19
+      openai: 4.87.3(encoding@0.1.13)(zod@3.24.2)
+      zod: 3.24.2
+      zod-to-json-schema: 3.24.3(zod@3.24.2)
     transitivePeerDependencies:
       - encoding
       - ws
@@ -11601,10 +11595,6 @@ snapshots:
 
   joycon@3.1.1: {}
 
-  js-tiktoken@1.0.18:
-    dependencies:
-      base64-js: 1.5.1
-
   js-tiktoken@1.0.19:
     dependencies:
       base64-js: 1.5.1
@@ -11704,7 +11694,7 @@ snapshots:
   langchain@0.3.19(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(axios@1.8.3)(encoding@0.1.13)(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
       '@langchain/core': 0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2))
-      '@langchain/openai': 0.4.4(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
+      '@langchain/openai': 0.4.5(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
       '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))
       js-tiktoken: 1.0.19
       js-yaml: 4.1.0
@@ -12534,20 +12524,6 @@ snapshots:
   onetime@7.0.0:
     dependencies:
       mimic-function: 5.0.1
-
-  openai@4.87.3(encoding@0.1.13)(zod@3.24.1):
-    dependencies:
-      '@types/node': 18.19.80
-      '@types/node-fetch': 2.6.12
-      abort-controller: 3.0.0
-      agentkeepalive: 4.6.0
-      form-data-encoder: 1.7.2
-      formdata-node: 4.4.1
-      node-fetch: 2.7.0(encoding@0.1.13)
-    optionalDependencies:
-      zod: 3.24.1
-    transitivePeerDependencies:
-      - encoding
 
   openai@4.87.3(encoding@0.1.13)(zod@3.24.2):
     dependencies:
@@ -14055,10 +14031,6 @@ snapshots:
 
   yoctocolors-cjs@2.1.2: {}
 
-  zod-to-json-schema@3.24.1(zod@3.24.1):
-    dependencies:
-      zod: 3.24.1
-
   zod-to-json-schema@3.24.1(zod@3.24.2):
     dependencies:
       zod: 3.24.2
@@ -14066,8 +14038,6 @@ snapshots:
   zod-to-json-schema@3.24.3(zod@3.24.2):
     dependencies:
       zod: 3.24.2
-
-  zod@3.24.1: {}
 
   zod@3.24.2: {}
 
