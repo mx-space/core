@@ -20,7 +20,7 @@
     "publish:core": "cd apps/core && npm run publish"
   },
   "optionalDependencies": {
-    "mongodb-memory-server": "10.1.3",
+    "mongodb-memory-server": "10.1.4",
     "redis-memory-server": "0.11.0"
   },
   "dependencies": {
