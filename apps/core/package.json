@@ -119,7 +119,7 @@
     "mongoose-paginate-v2": "1.9.0",
     "node-machine-id": "1.1.12",
     "nodemailer": "6.10.0",
-    "openai": "4.87.3",
+    "openai": "4.87.4",
     "pluralize": "^8.0.0",
     "qs": "6.14.0",
     "reflect-metadata": "0.2.2",

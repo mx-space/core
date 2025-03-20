@@ -116,7 +116,7 @@ importers:
         version: 4.3.2
       '@langchain/openai':
         specifier: 0.4.5
-        version: 0.4.5(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
+        version: 0.4.5(@langchain/core@0.3.42(openai@4.87.4(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
       '@mx-space/compiled':
         specifier: workspace:*
         version: link:../../packages/compiled
@@ -233,7 +233,7 @@ importers:
         version: 5.3.2
       langchain:
         specifier: 0.3.19
-        version: 0.3.19(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(axios@1.8.4)(encoding@0.1.13)(openai@4.87.3(encoding@0.1.13)(zod@3.24.2))
+        version: 0.3.19(@langchain/core@0.3.42(openai@4.87.4(encoding@0.1.13)(zod@3.24.2)))(axios@1.8.4)(encoding@0.1.13)(openai@4.87.4(encoding@0.1.13)(zod@3.24.2))
       linkedom:
         specifier: 0.18.9
         version: 0.18.9
@@ -277,8 +277,8 @@ importers:
         specifier: 6.10.0
         version: 6.10.0
       openai:
-        specifier: 4.87.3
-        version: 4.87.3(encoding@0.1.13)(zod@3.24.2)
+        specifier: 4.87.4
+        version: 4.87.4(encoding@0.1.13)(zod@3.24.2)
       pluralize:
         specifier: ^8.0.0
         version: 8.0.0
@@ -334,7 +334,7 @@ importers:
     devDependencies:
       '@langchain/core':
         specifier: 0.3.42
-        version: 0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2))
+        version: 0.3.42(openai@4.87.4(encoding@0.1.13)(zod@3.24.2))
       '@nestjs/cli':
         specifier: 11.0.5
         version: 11.0.5(@swc/core@1.11.11)(@types/node@22.13.10)(esbuild@0.24.0)
@@ -5297,8 +5297,8 @@ packages:
     resolution: {integrity: sha512-VXJjc87FScF88uafS3JllDgvAm+c/Slfz06lorj2uAY34rlUu0Nt+v8wreiImcrgAjjIHp1rXpTDlLOGw29WwQ==}
     engines: {node: '>=18'}
 
-  openai@4.87.3:
-    resolution: {integrity: sha512-d2D54fzMuBYTxMW8wcNmhT1rYKcTfMJ8t+4KjH2KtvYenygITiGBgHoIrzHwnDQWW+C5oCA+ikIR2jgPCFqcKQ==}
+  openai@4.87.4:
+    resolution: {integrity: sha512-lsfM20jZY4A0lNexfoUAkfmrEXxaTXvv8OKYicpeAJUNHObpRgkvC7pxPgMnB6gc9ID8OCwzzhEhBpNy69UR7w==}
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
@@ -8409,14 +8409,14 @@ snapshots:
     dependencies:
       buffer: 6.0.3
 
-  '@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2))':
+  '@langchain/core@0.3.42(openai@4.87.4(encoding@0.1.13)(zod@3.24.2))':
     dependencies:
       '@cfworker/json-schema': 4.1.1
       ansi-styles: 5.2.0
       camelcase: 6.3.0
       decamelize: 1.2.0
       js-tiktoken: 1.0.19
-      langsmith: 0.3.12(openai@4.87.3(encoding@0.1.13)(zod@3.24.2))
+      langsmith: 0.3.12(openai@4.87.4(encoding@0.1.13)(zod@3.24.2))
       mustache: 4.2.0
       p-queue: 6.6.2
       p-retry: 4.6.2
@@ -8426,20 +8426,20 @@ snapshots:
     transitivePeerDependencies:
       - openai
 
-  '@langchain/openai@0.4.5(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)':
+  '@langchain/openai@0.4.5(@langchain/core@0.3.42(openai@4.87.4(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)':
     dependencies:
-      '@langchain/core': 0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2))
+      '@langchain/core': 0.3.42(openai@4.87.4(encoding@0.1.13)(zod@3.24.2))
       js-tiktoken: 1.0.19
-      openai: 4.87.3(encoding@0.1.13)(zod@3.24.2)
+      openai: 4.87.4(encoding@0.1.13)(zod@3.24.2)
       zod: 3.24.2
       zod-to-json-schema: 3.24.3(zod@3.24.2)
     transitivePeerDependencies:
       - encoding
       - ws
 
-  '@langchain/textsplitters@0.1.0(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))':
+  '@langchain/textsplitters@0.1.0(@langchain/core@0.3.42(openai@4.87.4(encoding@0.1.13)(zod@3.24.2)))':
     dependencies:
-      '@langchain/core': 0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2))
+      '@langchain/core': 0.3.42(openai@4.87.4(encoding@0.1.13)(zod@3.24.2))
       js-tiktoken: 1.0.19
 
   '@levischuck/tiny-cbor@0.2.2': {}
@@ -11690,15 +11690,15 @@ snapshots:
 
   kysely@0.27.4: {}
 
-  langchain@0.3.19(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(axios@1.8.4)(encoding@0.1.13)(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)):
+  langchain@0.3.19(@langchain/core@0.3.42(openai@4.87.4(encoding@0.1.13)(zod@3.24.2)))(axios@1.8.4)(encoding@0.1.13)(openai@4.87.4(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
-      '@langchain/core': 0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2))
-      '@langchain/openai': 0.4.5(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
-      '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.42(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)))
+      '@langchain/core': 0.3.42(openai@4.87.4(encoding@0.1.13)(zod@3.24.2))
+      '@langchain/openai': 0.4.5(@langchain/core@0.3.42(openai@4.87.4(encoding@0.1.13)(zod@3.24.2)))(encoding@0.1.13)
+      '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.42(openai@4.87.4(encoding@0.1.13)(zod@3.24.2)))
       js-tiktoken: 1.0.19
       js-yaml: 4.1.0
       jsonpointer: 5.0.1
-      langsmith: 0.3.10(openai@4.87.3(encoding@0.1.13)(zod@3.24.2))
+      langsmith: 0.3.10(openai@4.87.4(encoding@0.1.13)(zod@3.24.2))
       openapi-types: 12.1.3
       p-retry: 4.6.2
       uuid: 10.0.0
@@ -11712,7 +11712,7 @@ snapshots:
       - openai
       - ws
 
-  langsmith@0.3.10(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)):
+  langsmith@0.3.10(openai@4.87.4(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -11722,9 +11722,9 @@ snapshots:
       semver: 7.7.1
       uuid: 10.0.0
     optionalDependencies:
-      openai: 4.87.3(encoding@0.1.13)(zod@3.24.2)
+      openai: 4.87.4(encoding@0.1.13)(zod@3.24.2)
 
-  langsmith@0.3.12(openai@4.87.3(encoding@0.1.13)(zod@3.24.2)):
+  langsmith@0.3.12(openai@4.87.4(encoding@0.1.13)(zod@3.24.2)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -11734,7 +11734,7 @@ snapshots:
       semver: 7.7.1
       uuid: 10.0.0
     optionalDependencies:
-      openai: 4.87.3(encoding@0.1.13)(zod@3.24.2)
+      openai: 4.87.4(encoding@0.1.13)(zod@3.24.2)
 
   levn@0.4.1:
     dependencies:
@@ -12524,7 +12524,7 @@ snapshots:
     dependencies:
       mimic-function: 5.0.1
 
-  openai@4.87.3(encoding@0.1.13)(zod@3.24.2):
+  openai@4.87.4(encoding@0.1.13)(zod@3.24.2):
     dependencies:
       '@types/node': 18.19.80
       '@types/node-fetch': 2.6.12
