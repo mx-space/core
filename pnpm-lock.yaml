@@ -24,8 +24,8 @@ importers:
         specifier: 10.1.4
         version: 10.1.4
       redis-memory-server:
-        specifier: 0.11.0
-        version: 0.11.0
+        specifier: 0.12.1
+        version: 0.12.1
     devDependencies:
       '@innei/prettier':
         specifier: 0.15.0
@@ -2915,10 +2915,6 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  agent-base@7.1.1:
-    resolution: {integrity: sha512-H0TSyFNDMomMNJQBn8wFV5YC/2eJ+VXECwOadZJT554xP6cODZHPX3H9QMQECxvrgiSOP1pHjy1sMWQVYJOUOA==}
-    engines: {node: '>= 14'}
-
   agent-base@7.1.3:
     resolution: {integrity: sha512-jRR5wdylq8CkOe6hei19GGZnxM6rBGwFl3Bg0YItGDimvjGtAvdZk4Pu6Cl4u4Igsws4a1fd1Vq3ezrhn4KmFw==}
     engines: {node: '>= 14'}
@@ -4322,10 +4318,6 @@ packages:
     resolution: {integrity: sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ==}
     engines: {node: '>= 0.8'}
 
-  https-proxy-agent@7.0.5:
-    resolution: {integrity: sha512-1e4Wqeblerz+tMKPIq2EMGiiWW1dIjZOksyHWSUm1rmuvw/how9hBHZ38lAGj5ID4Ik6EdkOw7NmWPy6LAwalw==}
-    engines: {node: '>= 14'}
-
   https-proxy-agent@7.0.6:
     resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
     engines: {node: '>= 14'}
@@ -5696,11 +5688,6 @@ packages:
   redis-errors@1.2.0:
     resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
     engines: {node: '>=4'}
-
-  redis-memory-server@0.11.0:
-    resolution: {integrity: sha512-yDE4/cGPUE/xpgZkv+krBMS5jQ0vpPc+P5BOSDlJfevxNEBx7+8aQw+bNvIlVXzDcg7M+Z+eh2wR2ZYL/cebdQ==}
-    engines: {node: '>=16'}
-    hasBin: true
 
   redis-memory-server@0.12.1:
     resolution: {integrity: sha512-4FKR5ToyrAVTVbHd56WWqpM6JgCPEztyCQ76JW1338ENGKzfnixqU1dFvmwE2FMkeQbn9jt29cMENOZSvB551g==}
@@ -9812,13 +9799,6 @@ snapshots:
 
   acorn@8.14.1: {}
 
-  agent-base@7.1.1:
-    dependencies:
-      debug: 4.4.0
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
-
   agent-base@7.1.3:
     optional: true
 
@@ -11428,14 +11408,6 @@ snapshots:
       statuses: 2.0.1
       toidentifier: 1.0.1
 
-  https-proxy-agent@7.0.5:
-    dependencies:
-      agent-base: 7.1.1
-      debug: 4.4.0
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
-
   https-proxy-agent@7.0.6:
     dependencies:
       agent-base: 7.1.3
@@ -12877,27 +12849,6 @@ snapshots:
   readdirp@4.1.2: {}
 
   redis-errors@1.2.0: {}
-
-  redis-memory-server@0.11.0:
-    dependencies:
-      camelcase: 6.3.0
-      cross-spawn: 7.0.3
-      debug: 4.3.7
-      extract-zip: 2.0.1
-      find-cache-dir: 3.3.2
-      find-package-json: 1.2.0
-      get-port: 5.1.1
-      https-proxy-agent: 7.0.5
-      lockfile: 1.0.4
-      lodash.defaultsdeep: 4.6.1
-      rimraf: 5.0.10
-      semver: 7.7.1
-      tar: 6.2.1
-      tmp: 0.2.3
-      uuid: 8.3.2
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
 
   redis-memory-server@0.12.1:
     dependencies:
