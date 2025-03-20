@@ -17,6 +17,7 @@ export class AiWriterController {
       case AiQueryType.TitleSlug:
         return this.aiWriterService.generateTitleAndSlugByOpenAI(body.text)
       case AiQueryType.Title:
+      case AiQueryType.Slug:
         return this.aiWriterService.generateSlugByTitleViaOpenAI(body.title)
     }
   }

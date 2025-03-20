@@ -3,6 +3,7 @@ import { IsEnum, IsString, ValidateIf } from 'class-validator'
 export enum AiQueryType {
   TitleSlug = 'title-slug',
   Title = 'title',
+  Slug = 'slug',
 }
 
 export class GenerateAiDto {

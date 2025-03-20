@@ -41,19 +41,28 @@ export class AiWriterService {
         title: {
           type: 'string',
           description:
-            'The title of the article generated from the input text, the natural language of the title should be the same as the natural language of the input text',
+            'Generate a concise, engaging title from the input text. The title should be in the same language as the input text and capture the main topic effectively.',
         },
         slug: {
           type: 'string',
           description:
-            'The slug is named after the text entered, and is in English and conforms to url specifications',
+            'Create an SEO-friendly slug in English based on the title. The slug should be lowercase, use hyphens to separate words, contain only alphanumeric characters and hyphens, and include relevant keywords for better search engine ranking.',
         },
         lang: {
           type: 'string',
-          description: 'The natural language of the input text',
+          description:
+            'Identify the natural language of the input text (e.g., "en", "zh", "es", "fr", etc.).',
+        },
+        keywords: {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+          description:
+            'Extract 3-5 relevant keywords or key phrases from the input text that represent its main topics.',
         },
       },
-      required: ['title', 'slug', 'lang'],
+      required: ['title', 'slug', 'lang', 'keywords'],
     })
   }
 
@@ -64,7 +73,7 @@ export class AiWriterService {
         slug: {
           type: 'string',
           description:
-            'The slug is named after the text entered, and is in English and conforms to url specifications',
+            'An SEO-friendly slug in English based on the title. The slug should be lowercase, use hyphens to separate words, contain only alphanumeric characters and hyphens, and be concise while including relevant keywords from the title.',
         },
       },
       required: ['slug'],
