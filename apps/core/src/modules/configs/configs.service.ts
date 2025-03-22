@@ -13,7 +13,6 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { CacheService } from '~/processors/redis/cache.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -49,8 +48,8 @@ export class ConfigsService {
     @Inject(VALIDATION_PIPE_INJECTION)
     private readonly validate: ExtendedValidationPipe,
   ) {
-    this.configInit().then(() => {
-      this.logger.log('Config 已经加载完毕！')
+    this.configInit().catch((error) => {
+      this.logger.error('Config 初始化失败:', error)
     })
 
     this.logger = new Logger(ConfigsService.name)
@@ -67,17 +66,22 @@ export class ConfigsService {
       return await this.getConfig()
     }
 
-    const maxCount = 10
-    let curCount = 0
-    do {
+    const maxRetries = 10
+    const retryInterval = 5000 // 5秒
+
+    for (let i = 0; i < maxRetries; i++) {
       if (this.configInitd) {
         return await this.getConfig()
       }
-      await sleep(100)
-      curCount += 1
-    } while (curCount < maxCount)
 
-    throw `重试 ${curCount} 次获取配置失败, 请检查数据库连接`
+      this.logger.log(`等待配置就绪... (${i + 1}/${maxRetries})`)
+      await sleep(retryInterval)
+    }
+
+    // 如果重试失败，尝试重新初始化
+    this.logger.warn('配置加载超时，尝试重新初始化...')
+    await this.configInit()
+    return await this.getConfig()
   }
 
   public get defaultConfig() {
@@ -85,24 +89,45 @@ export class ConfigsService {
   }
 
   protected async configInit() {
-    const configs = await this.optionModel.find().lean()
-    const mergedConfig = generateDefaultConfig()
-    configs.forEach((field) => {
-      const name = field.name as keyof IConfig
+    try {
+      const configs = await this.optionModel.find().lean()
 
-      if (!configsKeySet.has(name)) {
+      // 如果数据库连接成功但是没有配置数据，则初始化默认配置
+      if (!configs || configs.length === 0) {
+        this.logger.warn('未找到配置数据，将创建默认配置')
+        const defaultConfig = generateDefaultConfig()
+        await this.optionModel.create(
+          Object.entries(defaultConfig).map(([name, value]) => ({
+            name,
+            value,
+          })),
+        )
+        await this.setConfig(defaultConfig)
+        this.configInitd = true
         return
       }
-      // skip url patch in dev mode
-      if (isDev && name === 'url') {
-        return
-      }
-      const value = field.value
-      mergedConfig[name] = { ...mergedConfig[name], ...value }
-    })
 
-    await this.setConfig(mergedConfig)
-    this.configInitd = true
+      const mergedConfig = generateDefaultConfig()
+      configs.forEach((field) => {
+        const name = field.name as keyof IConfig
+
+        if (!configsKeySet.has(name)) {
+          return
+        }
+        // skip url patch in dev mode
+        if (isDev && name === 'url') {
+          return
+        }
+        const value = field.value
+        mergedConfig[name] = { ...mergedConfig[name], ...value }
+      })
+
+      await this.setConfig(mergedConfig)
+      this.configInitd = true
+    } catch (error) {
+      this.logger.error('配置初始化失败:', error)
+      throw error
+    }
   }
 
   public get<T extends keyof IConfig>(key: T): Promise<Readonly<IConfig[T]>> {
