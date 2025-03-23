@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [8.0.3](https://github.com/mx-space/core/compare/v8.0.2...v8.0.3) (2025-03-23)
+
+
+### Bug Fixes
+
+* ai summary prompt ([5b9952c](https://github.com/mx-space/core/commit/5b9952c18ab45b949bc86067ed05406109dedab2))
+* **deps:** update dependency @langchain/openai to v0.4.5 ([#2395](https://github.com/mx-space/core/issues/2395)) ([fc028a4](https://github.com/mx-space/core/commit/fc028a4989620e9e15950c35d54dd43b2ad1d069))
+* **deps:** update dependency axios to v1.8.4 ([#2399](https://github.com/mx-space/core/issues/2399)) ([ad41ec4](https://github.com/mx-space/core/commit/ad41ec42bf740d54291b3e01d07b6f5f2d7322b6))
+* **deps:** update dependency openai to v4.87.4 ([#2396](https://github.com/mx-space/core/issues/2396)) ([f6d7f0b](https://github.com/mx-space/core/commit/f6d7f0b6d83340a7264ba85f10f72ff8886ed0f4))
+* **deps:** update nest monorepo to v11.0.12 ([#2397](https://github.com/mx-space/core/issues/2397)) ([511587a](https://github.com/mx-space/core/commit/511587a617aad507e3965619c8c60a310f042184))
+
+
+
 ## [8.0.2](https://github.com/mx-space/core/compare/v8.0.1...v8.0.2) (2025-03-17)
 
 
