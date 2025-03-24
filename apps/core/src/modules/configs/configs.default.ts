@@ -19,6 +19,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
 
     user: '',
     pass: '',
+    from: '',
     options: {
       host: '',
       port: 465,

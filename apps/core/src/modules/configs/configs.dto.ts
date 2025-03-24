@@ -82,11 +82,11 @@ class MailOption {
   @IsInt()
   @Transform(({ value: val }) => Number.parseInt(val))
   @IsOptional()
-  @JSONSchemaNumberField('发件邮箱端口', halfFieldOption)
+  @JSONSchemaNumberField('SMTP 端口', halfFieldOption)
   port: number
   @IsUrl({ require_protocol: false })
   @IsOptional()
-  @JSONSchemaHalfGirdPlainField('发件邮箱 host')
+  @JSONSchemaHalfGirdPlainField('SMTP 主机')
   host: string
   @IsBoolean()
   @IsOptional()
@@ -102,11 +102,15 @@ export class MailOptionsDto {
   @IsEmail()
   @IsOptional()
   @JSONSchemaHalfGirdPlainField('发件邮箱地址')
+  from: string
+  @IsString()
+  @IsOptional()
+  @JSONSchemaHalfGirdPlainField('SMTP 用户名')
   user: string
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  @JSONSchemaPasswordField('发件邮箱密码', halfFieldOption)
+  @JSONSchemaPasswordField('SMTP 密码', halfFieldOption)
   @SecretField
   pass: string
 

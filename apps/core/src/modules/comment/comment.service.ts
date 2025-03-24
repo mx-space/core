@@ -525,9 +525,9 @@ export class CommentService implements OnModuleInit {
     const location =
       `${result.countryName || ''}${
         result.regionName && result.regionName !== result.cityName
-          ? `${result.regionName}`
+          ? String(result.regionName)
           : ''
-      }${result.cityName ? `${result.cityName}` : ''}` || undefined
+      }${result.cityName ? String(result.cityName) : ''}` || undefined
 
     if (location) await this.commentModel.updateOne({ _id: id }, { location })
   }
@@ -574,13 +574,13 @@ export class CommentService implements OnModuleInit {
     type: CommentReplyMailType
   }) {
     const { seo, mailOptions } = await this.configsService.waitForConfigReady()
-    const { user } = mailOptions
-    const from = `"${seo.title || 'Mx Space'}" <${user}>`
+    const { from, user } = mailOptions
+    const sendfrom = `"${seo.title || 'Mx Space'}" <${from || user}>`
 
     source.ip ??= ''
     if (type === CommentReplyMailType.Guest) {
       const options = {
-        from,
+        from: sendfrom,
         subject: `[${seo.title || 'Mx Space'}] 主人给你了新的回复呐`,
         to,
         html: render(
@@ -598,7 +598,7 @@ export class CommentService implements OnModuleInit {
       await this.mailService.send(options)
     } else {
       const options = {
-        from,
+        from: sendfrom,
         subject: `[${seo.title || 'Mx Space'}] 有新回复了耶~`,
         to,
         html: render(
