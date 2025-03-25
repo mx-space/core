@@ -1,5 +1,6 @@
 import { URL } from 'node:url'
 import { render } from 'ejs'
+import { JsonOutputFunctionsParser } from 'langchain/output_parsers'
 import { omit, pick } from 'lodash'
 import { isObjectIdOrHexString, Types } from 'mongoose'
 import type { OnModuleInit } from '@nestjs/common'
@@ -33,6 +34,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getAvatar, hasChinese } from '~/utils/tool.util'
 
+import { AiService } from '../ai/ai.service'
 import { ConfigsService } from '../configs/configs.service'
 import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
@@ -62,6 +64,7 @@ export class CommentService implements OnModuleInit {
     private readonly mailService: EmailService,
 
     private readonly configsService: ConfigsService,
+    private readonly aiService: AiService,
     @Inject(forwardRef(() => ServerlessService))
     private readonly serverlessService: ServerlessService,
     private readonly eventManager: EventManagerService,
@@ -146,6 +149,44 @@ export class CommentService implements OnModuleInit {
         return true
       }
 
+      if (commentOptions.aiReview) {
+        const openai = await this.aiService.getOpenAiChain()
+        const { aiReviewType, aiReviewThreshold } = commentOptions
+        const parser = new JsonOutputFunctionsParser()
+        const runnable = openai
+          .bind({
+            functions: [
+              {
+                name: 'review',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    boolean: {
+                      type: 'boolean',
+                      description: `Check if the comment is spam or not`,
+                    },
+                    score: {
+                      type: 'number',
+                      description: `The spam score of the comment. The result is between 0 and 10, the higher the score, the more likely it is spam.`,
+                      minimum: 0,
+                    },
+                  },
+                  required: [aiReviewType === 'score' ? 'score' : 'boolean'],
+                },
+              },
+            ],
+            function_call: { name: 'review' },
+          })
+          .pipe(parser)
+        const result = await runnable.invoke([doc.text])
+        if (isDev) {
+          this.logger.debug(result)
+        }
+        if (aiReviewType === 'score') {
+          return (result as any).review > aiReviewThreshold
+        }
+        return (result as any).review
+      }
       return false
     })()
     if (res) {
@@ -525,9 +566,9 @@ export class CommentService implements OnModuleInit {
     const location =
       `${result.countryName || ''}${
         result.regionName && result.regionName !== result.cityName
-          ? `${result.regionName}`
+          ? String(result.regionName)
           : ''
-      }${result.cityName ? `${result.cityName}` : ''}` || undefined
+      }${result.cityName ? String(result.cityName) : ''}` || undefined
 
     if (location) await this.commentModel.updateOne({ _id: id }, { location })
   }
