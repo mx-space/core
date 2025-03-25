@@ -13,7 +13,6 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { CacheService } from '~/processors/redis/cache.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -192,6 +191,18 @@ export class ConfigsService {
     if (!dto) {
       throw new BadRequestException('设置不存在')
     }
+
+    // 如果是评论设置，并且尝试启用 AI 审核，就检查 AI 配置
+    if (key === 'commentOptions' && (value as any).aiReview === true) {
+      const aiConfig = await this.get('ai')
+      const { openAiEndpoint, openAiKey } = aiConfig
+      if (!openAiEndpoint || !openAiKey) {
+        throw new BadRequestException(
+          'OpenAI API Key/Endpoint 未设置，无法启用 AI 评论审核',
+        )
+      }
+    }
+
     const instanceValue = this.validWithDto(dto, value)
 
     encryptObject(instanceValue)

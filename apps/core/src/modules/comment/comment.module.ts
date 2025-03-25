@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common'
 
 import { GatewayModule } from '~/processors/gateway/gateway.module'
 
+import { AiModule } from '../ai/ai.module'
 import { ReaderModule } from '../reader/reader.module'
 import { ServerlessModule } from '../serverless/serverless.module'
 import { UserModule } from '../user/user.module'
@@ -17,6 +18,7 @@ import { CommentService } from './comment.service'
     GatewayModule,
     forwardRef(() => ServerlessModule),
     forwardRef(() => ReaderModule),
+    forwardRef(() => AiModule),
   ],
 })
 export class CommentModule {}

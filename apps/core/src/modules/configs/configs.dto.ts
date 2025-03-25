@@ -10,6 +10,7 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  Max,
   Min,
   ValidateNested,
 } from 'class-validator'
@@ -123,6 +124,41 @@ export class CommentOptionsDto {
   @IsOptional()
   @JSONSchemaToggleField('反垃圾评论')
   antiSpam: boolean
+
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('开启 AI 审核')
+  aiReview: boolean
+
+  @IsString()
+  @IsOptional()
+  @JSONSchemaPlainField('AI 审核方式', {
+    description: '默认为是非，可以选择评分',
+    'ui:options': {
+      type: 'select',
+      values: [
+        {
+          label: '是非',
+          value: 'binary',
+        },
+        {
+          label: '评分',
+          value: 'score',
+        },
+      ],
+    },
+  })
+  aiReviewType: string
+
+  @IsInt()
+  @Transform(({ value: val }) => Number.parseInt(val))
+  @Min(1)
+  @Max(10)
+  @IsOptional()
+  @JSONSchemaNumberField('AI 审核阈值', {
+    description: '分数大于多少时会被归类为垃圾评论, 范围为 1-10, 默认为 5',
+  })
+  aiReviewThreshold: number
 
   @IsBoolean()
   @IsOptional()
