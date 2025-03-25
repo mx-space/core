@@ -36,7 +36,7 @@
     "lint-staged": "15.3.0",
     "prettier": "3.5.3",
     "rimraf": "6.0.1",
-    "simple-git-hooks": "2.11.1",
+    "simple-git-hooks": "2.12.1",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
     "tsup": "8.3.6",
