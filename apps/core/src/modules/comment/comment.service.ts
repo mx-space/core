@@ -64,6 +64,7 @@ export class CommentService implements OnModuleInit {
     private readonly mailService: EmailService,
 
     private readonly configsService: ConfigsService,
+    @Inject(forwardRef(() => AiService))
     private readonly aiService: AiService,
     @Inject(forwardRef(() => ServerlessService))
     private readonly serverlessService: ServerlessService,
