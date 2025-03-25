@@ -119,8 +119,8 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           key: ${{ secrets.KEY }}
           envs: JWTSECRET,MX_ENCRYPT_KEY
-          script_stop: true
           script: |
+            set -e
             whoami
             cd
             source ~/.zshrc
