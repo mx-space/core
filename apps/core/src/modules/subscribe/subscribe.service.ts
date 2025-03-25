@@ -258,8 +258,8 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     unsubscribeLink: string,
   ) {
     const { seo, mailOptions } = await this.configService.waitForConfigReady()
-    const { user } = mailOptions
-    const from = `"${seo.title || 'Mx Space'}" <${user}>`
+    const { from, user } = mailOptions
+    const sendfrom = `"${seo.title || 'Mx Space'}" <${from || user}>`
     let finalTemplate = ''
 
     const cacheKey = 'template'
@@ -275,7 +275,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     }
 
     const options: Mail.Options = {
-      from,
+      from: sendfrom,
       ...{
         subject: `[${seo.title || 'Mx Space'}] 发布了新内容~`,
         to: email,
