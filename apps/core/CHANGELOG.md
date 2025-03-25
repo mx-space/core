@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [8.1.0](https://github.com/mx-space/core/compare/v8.0.3...v8.1.0) (2025-03-25)
+
+
+### Features
+
+* AI antispam ([#2406](https://github.com/mx-space/core/issues/2406)) ([4ec4814](https://github.com/mx-space/core/commit/4ec4814959ee9034381910e06b6cd84fd2899768))
+
+
+
 ## [8.0.3](https://github.com/mx-space/core/compare/v8.0.2...v8.0.3) (2025-03-23)
 
 
