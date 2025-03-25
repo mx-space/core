@@ -1,6 +1,5 @@
 import { URL } from 'node:url'
 import { render } from 'ejs'
-import { JsonOutputFunctionsParser } from 'langchain/output_parsers'
 import { omit, pick } from 'lodash'
 import { isObjectIdOrHexString, Types } from 'mongoose'
 import type { OnModuleInit } from '@nestjs/common'
@@ -153,40 +152,20 @@ export class CommentService implements OnModuleInit {
       if (commentOptions.aiReview) {
         const openai = await this.aiService.getOpenAiChain()
         const { aiReviewType, aiReviewThreshold } = commentOptions
-        const parser = new JsonOutputFunctionsParser()
         const runnable = openai
-          .bind({
-            functions: [
-              {
-                name: 'review',
-                parameters: {
-                  type: 'object',
-                  properties: {
-                    boolean: {
-                      type: 'boolean',
-                      description: `Check if the comment is spam or not`,
-                    },
-                    score: {
-                      type: 'number',
-                      description: `The spam score of the comment. The result is between 0 and 10, the higher the score, the more likely it is spam.`,
-                      minimum: 0,
-                    },
-                  },
-                  required: [aiReviewType === 'score' ? 'score' : 'boolean'],
-                },
-              },
-            ],
-            function_call: { name: 'review' },
-          })
-          .pipe(parser)
-        const result = await runnable.invoke([doc.text])
-        if (isDev) {
-          this.logger.debug(result)
-        }
+
+        const prompt =
+          aiReviewType === 'score'
+            ? 'Check the comment and return a risk score directly. Higher means more risky (1-10). Outputs should only be a number'
+            : 'Check if the comment is spam or not. Outputs should be true or false(Lowercase)'
+
+        const result = (await runnable.invoke([`${prompt}:${doc.text}`]))
+          .content
+
         if (aiReviewType === 'score') {
-          return (result as any).review > aiReviewThreshold
+          return (result as any) > aiReviewThreshold
         }
-        return (result as any).review
+        return result === 'true'
       }
       return false
     })()

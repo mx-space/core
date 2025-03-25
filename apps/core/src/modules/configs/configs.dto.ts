@@ -133,10 +133,19 @@ export class CommentOptionsDto {
   @IsString()
   @IsOptional()
   @JSONSchemaPlainField('AI 审核方式', {
-    description: '默认为 `binary`，可以选择 `score`',
+    description: '默认为是非，可以选择评分',
     'ui:options': {
       type: 'select',
-      values: ['binary', 'score'],
+      values: [
+        {
+          label: '是非',
+          value: 'binary',
+        },
+        {
+          label: '评分',
+          value: 'score',
+        },
+      ],
     },
   })
   aiReviewType: string
@@ -147,7 +156,7 @@ export class CommentOptionsDto {
   @Max(10)
   @IsOptional()
   @JSONSchemaNumberField('AI 审核阈值', {
-    description: '`score` 大于多少时会被归类为垃圾评论, 范围为 1-10, 默认为 5',
+    description: '分数大于多少时会被归类为垃圾评论, 范围为 1-10, 默认为 5',
   })
   aiReviewThreshold: number
 
