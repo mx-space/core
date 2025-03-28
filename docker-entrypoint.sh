@@ -102,21 +102,39 @@ get_cmd_value() {
 
 get_mongodb_configuration() {
   CMD=$@
-  CONNECTION_STRING="mongodb://"
+  CONNECTION_STRING=""
+  
+  mask_password() {
+    local raw_conn="$1"
+    echo "$raw_conn" | sed -E 's/(mongodb(\+srv)?:\/\/)([^:]+):([^@]+)@/\1\3:************@/'
+  }
 
   if [ "$(is_in_cmd_with_value "--db_connection_string=" $CMD)" = "true" ]; then
-    CONNECTION_STRING=$(get_cmd_value "--db_connection_string=" $CMD)
+    raw_conn=$(get_cmd_value "--db_connection_string=" $CMD)
+    CONN_MASKED=$(mask_password "$raw_conn")
+    echo "$CONN_MASKED"
+    CONNECTION_STRING="$raw_conn"
   else
-    if [ "$(is_in_cmd_with_value "--db_user=" $CMD)" = "true" ]; then
-      CONNECTION_STRING+="$(get_cmd_value "--db_user=" $CMD):************@"
-    fi
-    CONNECTION_STRING+="$(get_cmd_value "--db_host=" $CMD):$(get_cmd_value "--db_port=" $CMD)/$(get_cmd_value "--collection_name=" $CMD)"
-    if [ "$(is_in_cmd_with_value "--db_options=" $CMD)" = "true" ]; then
-      CONNECTION_STRING+="?$(get_cmd_value "--db_options=" $CMD)"
-    fi
+    local db_user=$(get_cmd_value "--db_user=" $CMD)
+    local db_pass=$(get_cmd_value "--db_password=" $CMD)
+    local db_host=$(get_cmd_value "--db_host=" $CMD)
+    local db_port=$(get_cmd_value "--db_port=" $CMD)
+    local db_name=$(get_cmd_value "--collection_name=" $CMD)
+    
+    local conn="mongodb://"
+    [ -n "$db_user" ] && conn+="$db_user:"
+    [ -n "$db_pass" ] && conn+="$db_pass@"
+    conn+="$db_host"
+    [ -n "$db_port" ] && conn+=":$db_port"
+    conn+="/$db_name"
+    
+    CONN_MASKED=$(echo "$conn" | sed -E 's/(mongodb:\/\/[^:]+:)[^@]+(@.*)/\1************\2/')
+    echo "$CONN_MASKED"
+    
+    CONNECTION_STRING="$conn"
   fi
 
-  echo $CONNECTION_STRING
+  echo "$CONNECTION_STRING"
 }
 
 # ================================
