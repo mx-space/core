@@ -120,13 +120,12 @@ jobs:
           key: ${{ secrets.KEY }}
           envs: JWTSECRET,MX_ENCRYPT_KEY
           script: |
-            set -e
             whoami
             cd
             source ~/.zshrc
             cd mx
             ls -a
-            node server-deploy.js --jwtSecret=$JWTSECRET --encrypt_key=$MX_ENCRYPT_KEY --encrypt_enable --scp_path=/tmp/mx-core/release-linux.zip
+            node server-deploy.js --jwtSecret=$JWTSECRET --encrypt_key=$MX_ENCRYPT_KEY --encrypt_enable --scp_path=/tmp/mx-core/release-linux.zip || { echo "Deploy failed"; exit 1; }
 
   docker:
     name: Docker Release
