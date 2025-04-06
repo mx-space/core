@@ -10,7 +10,7 @@ overrides:
   pino: ./external/pino
   semver: 7.7.1
   typescript: 5.7.3
-  whatwg-url: 14.1.1
+  whatwg-url: 14.2.0
 
 importers:
 
@@ -6572,8 +6572,8 @@ packages:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
     engines: {node: '>=0.6'}
 
-  tr46@5.0.0:
-    resolution: {integrity: sha512-tk2G5R2KRwBd+ZN0zaEXpmzdKyOYksXwywulIX95MBODjSzMIuQnQ3m8JxgbhnL1LeVo7lqQKsYa1O3Htl7K5g==}
+  tr46@5.1.0:
+    resolution: {integrity: sha512-IUWnUK7ADYR5Sl1fZlO1INDUhVhatWl7BtJWsIhwJ0UAK7ilzzIa8uIqOO/aYVWHZPJkKbEL+362wrzoeRF7bw==}
     engines: {node: '>=18'}
 
   tree-kill@1.2.2:
@@ -7013,8 +7013,8 @@ packages:
   whatwg-fetch@3.6.20:
     resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
 
-  whatwg-url@14.1.1:
-    resolution: {integrity: sha512-mDGf9diDad/giZ/Sm9Xi2YcyzaFpbdLpJPr+E9fSkyQ7KpQD4SdFcugkRQYzhmfI4KeV4Qpnn2sKPdo+kmsgRQ==}
+  whatwg-url@14.2.0:
+    resolution: {integrity: sha512-De72GdQZzNTUBBChsXueQUnPKDkg/5A5zp7pFDuQAj5UFoENpiACU0wlCvzpAGnTkj++ihpKwKyYewn/XNUbKw==}
     engines: {node: '>=18'}
 
   which@2.0.2:
@@ -12893,7 +12893,7 @@ snapshots:
   mongodb-connection-string-url@3.0.2:
     dependencies:
       '@types/whatwg-url': 11.0.5
-      whatwg-url: 14.1.1
+      whatwg-url: 14.2.0
 
   mongodb-memory-server-core@10.1.4:
     dependencies:
@@ -13060,7 +13060,7 @@ snapshots:
 
   node-fetch@2.7.0(encoding@0.1.13):
     dependencies:
-      whatwg-url: 14.1.1
+      whatwg-url: 14.2.0
     optionalDependencies:
       encoding: 0.1.13
 
@@ -13871,7 +13871,7 @@ snapshots:
 
   source-map@0.8.0-beta.0:
     dependencies:
-      whatwg-url: 14.1.1
+      whatwg-url: 14.2.0
 
   sparse-bitfield@3.0.3:
     dependencies:
@@ -14104,7 +14104,7 @@ snapshots:
 
   toidentifier@1.0.1: {}
 
-  tr46@5.0.0:
+  tr46@5.1.0:
     dependencies:
       punycode: 2.3.1
 
@@ -14583,9 +14583,9 @@ snapshots:
 
   whatwg-fetch@3.6.20: {}
 
-  whatwg-url@14.1.1:
+  whatwg-url@14.2.0:
     dependencies:
-      tr46: 5.0.0
+      tr46: 5.1.0
       webidl-conversions: 7.0.0
 
   which@2.0.2:
