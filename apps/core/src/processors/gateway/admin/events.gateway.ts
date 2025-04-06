@@ -12,7 +12,7 @@ import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
 
 import { LOG_DIR } from '~/constants/path.constant'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
-import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { getTodayLogFilePath } from '~/utils/path.util'
 
@@ -28,12 +28,12 @@ export class AdminEventsGateway
 {
   constructor(
     protected readonly jwtService: JWTService,
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
     private readonly subpub: SubPubBridgeService,
     @Inject(forwardRef(() => AuthService))
     protected readonly authService: AuthService,
   ) {
-    super(jwtService, authService, cacheService)
+    super(jwtService, authService, redisService)
   }
 
   subscribeSocketToHandlerMap = new WeakMap<Socket, Function>()
