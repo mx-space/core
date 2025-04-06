@@ -58,6 +58,6 @@
     "pino": "./external/pino",
     "semver": "7.7.1",
     "typescript": "5.7.3",
-    "whatwg-url": "14.1.1"
+    "whatwg-url": "14.2.0"
   }
 }
