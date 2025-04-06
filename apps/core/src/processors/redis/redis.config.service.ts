@@ -9,7 +9,6 @@ import type {
   CacheModuleOptions,
   CacheOptionsFactory,
 } from '@nestjs/cache-manager'
-import type { RedisOptions } from 'ioredis'
 
 import Keyv from '@keyv/redis'
 import { Injectable } from '@nestjs/common'

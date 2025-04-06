@@ -1,14 +1,7 @@
 import { Cache } from 'cache-manager'
-import type { Redis } from 'ioredis'
 
-import KeyvRedis from '@keyv/redis'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import { Inject, Injectable, Logger } from '@nestjs/common'
-import { Emitter } from '@socket.io/redis-emitter'
-
-import { RedisIoAdapterKey } from '~/common/adapters/socket.adapter'
-import { API_CACHE_PREFIX } from '~/constants/cache.constant'
-import { getRedisKey } from '~/utils/redis.util'
+import { Inject, Injectable } from '@nestjs/common'
 
 // Cache 客户端管理器
 
@@ -23,11 +16,11 @@ export type TCacheResult<T> = Promise<T | null>
  * @example CacheService.set(CacheKey).then()
  */
 @Injectable()
+/**
+ * @deprecated
+ */
 export class CacheService {
   private cache!: Cache
-  private logger = new Logger(CacheService.name)
-
-  private ioRedis!: Redis
   constructor(@Inject(CACHE_MANAGER) cache: Cache) {
     this.cache = cache
   }

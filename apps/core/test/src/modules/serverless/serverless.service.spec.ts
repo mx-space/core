@@ -12,7 +12,6 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
-import { CacheService } from '~/processors/redis/cache.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { getModelToken } from '~/transformers/model.transformer'
 

@@ -22,11 +22,11 @@
 ```ts
 import {
   AggregateController,
+  allControllers, // ...
   CategoryController,
+  createClient,
   NoteController,
   PostController,
-  allControllers, // ...
-  createClient,
 } from '@mx-space/api-client'
 import { axiosAdaptor } from '@mx-space/api-client/adaptors/axios'
 
@@ -44,7 +44,7 @@ $axios.interceptors.request.use(
   (config) => {
     const token = getToken()
     if (token) {
-      config.headers!['Authorization'] = 'bearer ' + getToken()
+      config.headers!.Authorization = `bearer ${  getToken()}`
     }
 
     return config

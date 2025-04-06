@@ -1,8 +1,6 @@
 import { omit, pick, uniqBy } from 'lodash'
 import { ObjectId } from 'mongodb'
-import { Types } from 'mongoose'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import type { Collection } from 'mongodb'
 import type { Document } from 'mongoose'
 import type { Socket } from 'socket.io'
 import type { NoteModel } from '../note/note.model'

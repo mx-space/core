@@ -1,23 +1,16 @@
 {
   "compilerOptions": {
-    "declaration": true,
-    "baseUrl": ".",
     "target": "es2020",
     "lib": [
       "ESNext",
       "DOM",
       "DOM.Iterable"
     ],
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "node",
-    "strict": false,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "sourceMap": true,
     "paths": {
       "~/*": [
         "../../apps/core/src/*"
@@ -25,6 +18,13 @@
       "@core/*": [
         "../../apps/core/src/*"
       ],
-    }
+    },
+    "resolveJsonModule": true,
+    "strict": false,
+    "declaration": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
   },
 }

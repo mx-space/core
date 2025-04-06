@@ -1,8 +1,8 @@
 // const fs = require('fs')
 // const path = require('path')
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import prettier from 'prettier'
 import ts from 'typescript'
 

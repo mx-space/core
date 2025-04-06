@@ -43,7 +43,7 @@ export class PageProxyController {
       }
       const log = this.fetchLogs.pop() || '...'
 
-      reply.code(200).type('text/html').send(`${log}`)
+      reply.code(200).type('text/html').send(String(log))
       return
     }
 

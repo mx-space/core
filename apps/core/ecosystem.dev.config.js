@@ -1,4 +1,4 @@
-const { execSync } = require('child_process')
+const { execSync } = require('node:child_process')
 const nodePath = execSync(`npm root --quiet -g`, { encoding: 'utf-8' }).split(
   '\n',
 )[0]

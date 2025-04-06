@@ -16,7 +16,7 @@ marked.use({
         )}\n</span>`
       },
       tokenizer(src) {
-        const rule = /^\|\|([\S\s]+?)\|\|(?!\|)/
+        const rule = /^\|\|([\s\S]+?)\|\|(?!\|)/
         const match = rule.exec(src)
         if (match) {
           return {
@@ -39,7 +39,7 @@ marked.use({
         return `<span class="katex-render">${token.text}</span>`
       },
       tokenizer(src) {
-        const rule = /^\$([\S\s]+?)\$(?!\$)/
+        const rule = /^\$([\s\S]+?)\$(?!\$)/
         const match = rule.exec(src)
         if (match) {
           return {
@@ -71,7 +71,7 @@ marked.use({
       },
       tokenizer(src) {
         const rule =
-          /^{((?<prefix>(GH)|(TW)|(TG))@(?<name>\w+\b))}\s?(?!\[.*?])/
+          /^\{((?<prefix>(GH)|(TW)|(TG))@(?<name>\w+\b))\}\s?(?!\[.*?\])/
         const match = rule.exec(src)
         if (match) {
           const { groups } = match

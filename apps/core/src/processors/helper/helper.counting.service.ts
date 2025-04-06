@@ -6,7 +6,6 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { DatabaseService } from '../database/database.service'
-import { CacheService } from '../redis/cache.service'
 import { RedisService } from '../redis/redis.service'
 
 @Injectable()

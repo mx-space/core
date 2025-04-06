@@ -1,6 +1,6 @@
 #!env node
-const { appendFileSync } = require('fs')
-const { join } = require('path')
+const { appendFileSync } = require('node:fs')
+const { join } = require('node:path')
 const { fetch, $ } = require('zx-cjs')
 const {
   dashboard: { repo, version },

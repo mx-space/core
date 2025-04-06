@@ -20,7 +20,7 @@ services:
       - mx-space
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://127.0.0.1:2333/api/v2/ping']
+      test: [CMD, curl, -f, 'http://127.0.0.1:2333/api/v2/ping']
       interval: 1m30s
       timeout: 30s
       retries: 5
@@ -41,7 +41,7 @@ services:
     volumes:
       - ./data/redis:/data
     healthcheck:
-      test: ['CMD-SHELL', 'redis-cli ping | grep PONG']
+      test: [CMD-SHELL, 'redis-cli ping | grep PONG']
       start_period: 20s
       interval: 30s
       retries: 5

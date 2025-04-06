@@ -1,6 +1,6 @@
 import IORedis from 'ioredis'
 
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { Emitter } from '@socket.io/redis-emitter'
 
 import { REDIS } from '~/app.config'
@@ -11,7 +11,6 @@ import { getRedisKey } from '~/utils/redis.util'
 @Injectable()
 export class RedisService {
   private redisClient: IORedis
-  private logger = new Logger(RedisService.name)
   constructor() {
     this.redisClient = new IORedis({
       host: REDIS.host,

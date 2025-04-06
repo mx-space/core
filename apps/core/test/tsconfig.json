@@ -1,27 +1,15 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "esModuleInterop": true,
-    "strictNullChecks": false,
-    "allowSyntheticDefaultImports": true,
-    "target": "es2022",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "noEmit": true,
-    "allowJs": true,
-    "baseUrl": "..",
-    "noImplicitAny": false,
     "incremental": true,
-    "resolveJsonModule": true,
+    "target": "es2022",
     "lib": [
       "ES2021",
       "es2020"
     ],
-    "skipLibCheck": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "baseUrl": "..",
+    "module": "CommonJS",
     "paths": {
       "~": [
         "./src"
@@ -35,7 +23,19 @@
       "@/*": [
         "./test/*"
       ]
-    }
+    },
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "strictNullChecks": false,
+    "declaration": true,
+    "removeComments": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "outDir": "./dist",
+    "sourceMap": true,
+    "noEmit": true,
+    "noImplicitAny": false,
+    "skipLibCheck": true
   },
   "include": [
     "./src/**/*.ts",

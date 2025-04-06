@@ -13,9 +13,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "material-icon-theme.activeIconPack": "nest",
-  "cSpell.words": [
-    "qaqdmin"
-  ],
+  "cSpell.words": ["qaqdmin"],
   "typescript.tsdk": "node_modules/typescript/lib",
   "yaml.schemas": {
     "https://json.schemastore.org/github-workflow.json": "file:///Users/xiaoxun/github/innei-repo/mx-space/mx-server/.github/workflows/build.yml"

@@ -10,7 +10,6 @@ import {
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
-import { CacheService } from '~/processors/redis/cache.service'
 import { RedisService } from '~/processors/redis/redis.service'
 
 import { BusinessEvents } from '../../../constants/business-event.constant'

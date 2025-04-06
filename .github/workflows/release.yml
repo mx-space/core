@@ -95,7 +95,7 @@ jobs:
         name: Download release
         with:
           tag: ${{ github.ref_name }}
-          fileName: 'release-linux.zip'
+          fileName: release-linux.zip
       - name: copy file via ssh password
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -104,8 +104,8 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           # port: ${{ secrets.PORT }}
           key: ${{ secrets.KEY }}
-          source: 'release-linux.zip'
-          target: '/tmp/mx-core'
+          source: release-linux.zip
+          target: /tmp/mx-core
 
       - name: Exec deploy script with SSH
         uses: appleboy/ssh-action@master
@@ -134,7 +134,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        arch: ['amd64']
+        arch: [amd64]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -12,7 +12,7 @@ function getOsBuildAssetName() {
   return `release-${os}.zip`
 }
 
-const { appendFileSync } = require('fs')
+const { appendFileSync } = require('node:fs')
 
 async function main() {
   const res = await fetch(

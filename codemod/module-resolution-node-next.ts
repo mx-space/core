@@ -1,5 +1,5 @@
-import fs, { statSync } from 'fs'
-import { resolve } from 'path'
+import fs, { statSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 const srcDir = resolve(process.cwd(), 'src')
 
@@ -20,10 +20,10 @@ function walkDir(dir: string) {
     } else if (stat.isFile() && filePath.endsWith('.ts')) {
       const content = fs.readFileSync(filePath, 'utf-8')
 
-      const newContent = content.replace(/from '(.*)'/g, (match, p1) => {
+      const newContent = content.replaceAll(/from '(.*)'/g, (match, p1) => {
         // if is startswith alphabet or @, this is a library path, return it
 
-        if (p1.startsWith('@') || /^[a-zA-Z]/.test(p1)) {
+        if (p1.startsWith('@') || /^[a-z]/i.test(p1)) {
           return match
         }
 

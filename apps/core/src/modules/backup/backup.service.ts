@@ -25,7 +25,6 @@ import {
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { migrateDatabase } from '~/migration/migrate'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { CacheService } from '~/processors/redis/cache.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getFolderSize, installPKG } from '~/utils/system.util'

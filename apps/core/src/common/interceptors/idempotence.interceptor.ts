@@ -19,7 +19,6 @@ import {
   HTTP_IDEMPOTENCE_OPTIONS,
 } from '~/constants/meta.constant'
 import { REFLECTOR } from '~/constants/system.constant'
-import { CacheService } from '~/processors/redis/cache.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'

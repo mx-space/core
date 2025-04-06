@@ -1,7 +1,7 @@
 // @ts-check
-import { execSync } from 'child_process'
-import fs from 'fs'
-import path from 'path'
+import { execSync } from 'node:child_process'
+import fs from 'node:fs'
+import path from 'node:path'
 import { chalk } from 'zx-cjs'
 
 async function main() {
@@ -22,8 +22,8 @@ async function main() {
     console.log(cmd)
     try {
       execSync(cmd)
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
+      console.log(error)
       console.log('git clone assets repo failed, please check your network')
 
       process.exit(1)

@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync } from 'fs'
-import path from 'path'
+import { readFileSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
 
 const __dirname = new URL(import.meta.url).pathname.replace(/\/[^/]*$/, '')
 const PKG = JSON.parse(readFileSync(path.resolve(__dirname, './package.json')))
@@ -11,7 +11,7 @@ const content = readFileSync(dts, 'utf-8')
 // with declare module '@mx-space/api-client'
 writeFileSync(
   dts,
-  content.replace(
+  content.replaceAll(
     /declare module '..\/core\/client'/g,
     'declare module ' + `'${PKG.name}'`,
   ),

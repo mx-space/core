@@ -20,7 +20,6 @@ import { IpLocation, IpRecord } from './common/decorators/ip.decorator'
 import { AllowAllCorsInterceptor } from './common/interceptors/allow-all-cors.interceptor'
 import { RedisKeys } from './constants/cache.constant'
 import { OptionModel } from './modules/configs/configs.model'
-import { CacheService } from './processors/redis/cache.service'
 import { RedisService } from './processors/redis/redis.service'
 import { getRedisKey } from './utils/redis.util'
 

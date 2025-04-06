@@ -17,7 +17,6 @@ import {
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
-import { CacheService } from '~/processors/redis/cache.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import { getRedisKey } from '~/utils/redis.util'

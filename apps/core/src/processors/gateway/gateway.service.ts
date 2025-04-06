@@ -11,7 +11,6 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils/redis.util'
 import { safeJSONParse } from '~/utils/tool.util'
 
-import { CacheService } from '../redis/cache.service'
 import { RedisService } from '../redis/redis.service'
 
 export type SocketType =

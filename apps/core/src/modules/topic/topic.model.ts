@@ -7,7 +7,7 @@ import {
 } from 'class-validator'
 import slugify from 'slugify'
 
-import { index, modelOptions, prop } from '@typegoose/typegoose'
+import { modelOptions, prop } from '@typegoose/typegoose'
 
 import { TOPIC_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'

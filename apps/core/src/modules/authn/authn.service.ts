@@ -21,7 +21,7 @@ import { ReturnModelType } from '@typegoose/typegoose'
 
 import { RequestContext } from '~/common/contexts/request.context'
 import { RedisKeys } from '~/constants/cache.constant'
-import { CacheService } from '~/processors/redis/cache.service'
+import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 
@@ -38,7 +38,7 @@ export class AuthnService {
     @InjectModel(AuthnModel)
     private readonly authnModel: ReturnModelType<typeof AuthnModel>,
 
-    private readonly cacheService: CacheService,
+    private readonly redisService: RedisService,
     private readonly configService: ConfigsService,
   ) {}
 
@@ -109,16 +109,14 @@ export class AuthnService {
   }
 
   private async setCurrentChallenge(challenge: string) {
-    await this.cacheService.set(
-      getRedisKey(RedisKeys.Authn),
-      challenge,
-      // 5 min
-      1000 * 60 * 5,
-    )
+    const redisClient = this.redisService.getClient()
+    await redisClient.set(getRedisKey(RedisKeys.Authn), challenge)
+    // 5 min
+    await redisClient.expire(getRedisKey(RedisKeys.Authn), 1000 * 60 * 5)
   }
 
   private async getCurrentChallenge() {
-    return await this.cacheService.get<string>(getRedisKey(RedisKeys.Authn))
+    return await this.redisService.getClient().get(getRedisKey(RedisKeys.Authn))
   }
 
   async verifyRegistrationResponse(

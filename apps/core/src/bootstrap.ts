@@ -3,7 +3,6 @@ import { performance } from 'node:perf_hooks'
 import wcmatch from 'wildcard-match'
 import type { FastifyCorsOptions } from '@fastify/cors'
 import type { LogLevel } from '@nestjs/common'
-import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 
 import { Logger } from '@innei/pretty-logger-nestjs'

@@ -1,4 +1,3 @@
-/* eslint-disable import/no-duplicates */
 import type { TransformOptions } from '@babel/core'
 import type * as t from '@babel/types'
 import type { VariableDeclaration } from '@babel/types'

@@ -1,4 +1,3 @@
-import { OpenAI } from 'openai'
 import type { ChatModel } from 'openai/resources'
 
 export const DEFAULT_SUMMARY_LANG = 'zh'

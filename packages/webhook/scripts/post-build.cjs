@@ -1,5 +1,5 @@
-const fs = require('fs')
-const path = require('path')
+const fs = require('node:fs')
+const path = require('node:path')
 
 // Function to replace content in a file
 function replaceContent(filePath, searchValue, replaceValue) {

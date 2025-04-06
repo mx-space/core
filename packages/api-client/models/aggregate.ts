@@ -28,11 +28,9 @@ export interface Url {
   webUrl: string
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface AggregateTopNote
   extends Pick<NoteModel, 'id' | 'title' | 'created' | 'nid' | 'images'> {}
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface AggregateTopPost
   extends Pick<
     PostModel,

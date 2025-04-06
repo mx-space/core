@@ -9,7 +9,6 @@ import { logger } from '~/global/consola.global'
 import { getRedisKey } from '~/utils/redis.util'
 import { md5 } from '~/utils/tool.util'
 
-import { CacheService } from '../redis/cache.service'
 import { RedisService } from '../redis/redis.service'
 
 @Injectable()

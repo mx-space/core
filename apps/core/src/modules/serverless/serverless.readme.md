@@ -14,8 +14,8 @@ async function handler() {
 
   const { BiliClient } = extra
   const bl = await context.getMaster().then((user) => user.socialIds.bilibili)
-  const client = new BiliClient(parseInt(bl || uid))
-  const bangumi = await client.getFavoriteBangumi(parseInt(len))
+  const client = new BiliClient(Number.parseInt(bl || uid))
+  const bangumi = await client.getFavoriteBangumi(Number.parseInt(len))
   return bangumi
 }
 
@@ -35,9 +35,9 @@ const len = 10
 
 ```js
 // require built-in module
-const path = await require('path') // ok
+const path = await require('node:path') // ok
 // `os` `sys` module is banned, because is dangerous
-const os = await require('os') // error
+const os = await require('node:os') // error
 
 // require third module, you can require some trusted third party modules.
 const axios = await require('axios') // ok, but you must install this module in data_dir/node_modules or other NODE_PATH
@@ -71,11 +71,8 @@ const remoteModule =
 用法如下：
 
 ```ts
-import axios from 'axios'
 // this is ok, will transformer to `var axios = await require('axios')`
-import { render } from 'ejs'
 // ok, transform to var _ejs = await require("ejs"); _ejs.render
-import * as ejs from 'ejs'
 
 // bad, don't recommend
 ```

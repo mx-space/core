@@ -1,6 +1,6 @@
 const webpack = require('webpack')
 
-const { resolve } = require('path')
+const { resolve } = require('node:path')
 module.exports = function (options) {
   options.plugins = (options.plugins || []).concat(
     new webpack.DefinePlugin({
