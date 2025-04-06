@@ -9,6 +9,9 @@ import type { ServerResponse } from 'node:http'
 import {
   APIError,
   betterAuth,
+  createAuthMiddleware,
+  getSessionCookie,
+  getSessionFromCtx,
   mongodbAdapter,
   toNodeHandler,
 } from '@mx-space/compiled/auth'
@@ -64,27 +67,26 @@ export async function CreateAuth(
               matcher(context) {
                 return context.path.startsWith('/callback')
               },
-              async handler(ctx) {
-                const provider =
-                  ctx.params?.id || ctx.path.split('/callback')[1]
-                if (!provider) {
-                  return
-                }
+              handler: createAuthMiddleware(async (ctx) => {
+                {
+                  let provider = ctx.params.id
 
-                let finalSessionId = ''
-                const sessionCookie = ctx.responseHeader.get(
-                  ctx.context.authCookies.sessionToken.name,
-                )
-
-                if (sessionCookie) {
-                  const sessionId = sessionCookie.split('.')[0]
-                  if (sessionId) {
-                    finalSessionId = sessionId
+                  if (!provider) {
+                    if (!ctx.request) {
+                      return
+                    }
+                    const pathname = new URL(ctx.request.url).pathname
+                    provider = ctx.params.id || pathname.split('/callback/')[1]
+                    if (!provider) {
+                      return
+                    }
                   }
-                }
 
-                if (!finalSessionId) {
-                  const setSessionToken = ctx.responseHeader.get('set-cookie')
+                  const responseHeader = (ctx.context.returned as any)
+                    .headers as Headers
+
+                  let finalSessionId = ''
+                  const setSessionToken = responseHeader.get('set-cookie')
 
                   if (setSessionToken) {
                     const sessionId = setSessionToken
@@ -96,15 +98,15 @@ export async function CreateAuth(
                       finalSessionId = sessionId
                     }
                   }
-                }
 
-                await db.collection(AUTH_JS_SESSION_COLLECTION).updateOne(
-                  {
-                    token: finalSessionId,
-                  },
-                  { $set: { provider } },
-                )
-              },
+                  await db.collection(AUTH_JS_SESSION_COLLECTION).updateOne(
+                    {
+                      token: finalSessionId,
+                    },
+                    { $set: { provider } },
+                  )
+                }
+              }),
             },
           ],
         },
