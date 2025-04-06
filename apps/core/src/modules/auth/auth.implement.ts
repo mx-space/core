@@ -10,8 +10,6 @@ import {
   APIError,
   betterAuth,
   createAuthMiddleware,
-  getSessionCookie,
-  getSessionFromCtx,
   mongodbAdapter,
   toNodeHandler,
 } from '@mx-space/compiled/auth'
