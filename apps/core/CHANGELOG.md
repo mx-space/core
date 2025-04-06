@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [8.1.1](https://github.com/mx-space/core/compare/v8.1.0...v8.1.1) (2025-04-06)
+
+
+### Bug Fixes
+
+* deploy script ([#2409](https://github.com/mx-space/core/issues/2409)) ([577d5c5](https://github.com/mx-space/core/commit/577d5c540143f9e8616e25af79a9a025cf76143f))
+* **gateway/auth:** broadcast failure ([#2413](https://github.com/mx-space/core/issues/2413)) ([128b92c](https://github.com/mx-space/core/commit/128b92cbee08e0d1d6797ad185057665cc814e4b))
+* lint and fix cache service ([9626378](https://github.com/mx-space/core/commit/96263782d0997f3e6f86f88f9d61854cebf5a1b7))
+* mask custom connection string passwords (CLI & env) ([#2410](https://github.com/mx-space/core/issues/2410)) ([e0f5116](https://github.com/mx-space/core/commit/e0f511668aa918a7cfd5b56c34f874a91e532558))
+
+
+
 # [8.1.0](https://github.com/mx-space/core/compare/v8.0.3...v8.1.0) (2025-03-25)
 
 
