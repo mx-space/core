@@ -2,25 +2,25 @@ import cluster from 'node:cluster'
 import { plainToInstance } from 'class-transformer'
 import { validateSync } from 'class-validator'
 import { cloneDeep, merge, mergeWith } from 'lodash'
-import type { ReturnModelType } from '@typegoose/typegoose'
-import type { EventManagerService } from '~/processors/helper/helper.event.service'
-import type { RedisService } from '~/processors/redis/redis.service'
-import type { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import type { ClassConstructor } from 'class-transformer'
-import type { OAuthDto } from './configs.dto'
 
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common'
+import { ReturnModelType } from '@typegoose/typegoose'
 
 import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
 import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { RedisService } from '~/processors/redis/redis.service'
+import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { camelcaseKeys } from '~/utils/tool.util'
 
 import { generateDefaultConfig } from './configs.default'
+import { OAuthDto } from './configs.dto'
 import { decryptObject, encryptObject } from './configs.encrypt.util'
 import { configDtoMapping, IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
@@ -190,6 +190,16 @@ export class ConfigsService {
     const dto = configDtoMapping[key]
     if (!dto) {
       throw new BadRequestException('设置不存在')
+    }
+    // 如果是评论设置，并且尝试启用 AI 审核，就检查 AI 配置
+    if (key === 'commentOptions' && (value as any).aiReview === true) {
+      const aiConfig = await this.get('ai')
+      const { openAiEndpoint, openAiKey } = aiConfig
+      if (!openAiEndpoint || !openAiKey) {
+        throw new BadRequestException(
+          'OpenAI API Key/Endpoint 未设置，无法启用 AI 评论审核',
+        )
+      }
     }
     const instanceValue = this.validWithDto(dto, value)
 
