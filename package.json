@@ -28,10 +28,10 @@
   },
   "devDependencies": {
     "@innei/prettier": "0.15.0",
-    "@sxzz/eslint-config": "6.1.1",
+    "@sxzz/eslint-config": "4.6.0",
     "@types/node": "22.14.0",
     "cross-env": "7.0.3",
-    "eslint": "^9.24.0",
+    "eslint": "^9.17.0",
     "lint-staged": "15.5.0",
     "prettier": "3.5.3",
     "rimraf": "6.0.1",
