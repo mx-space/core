@@ -28,10 +28,10 @@
   },
   "devDependencies": {
     "@innei/prettier": "0.15.0",
-    "@sxzz/eslint-config": "4.6.0",
+    "@sxzz/eslint-config": "6.2.0",
     "@types/node": "22.14.0",
     "cross-env": "7.0.3",
-    "eslint": "^9.17.0",
+    "eslint": "^9.25.1",
     "lint-staged": "15.5.0",
     "prettier": "3.5.3",
     "rimraf": "6.0.1",
@@ -39,7 +39,7 @@
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
     "tsup": "8.4.0",
-    "typescript": "5.8.3",
+    "typescript": "5.7.3",
     "vite-tsconfig-paths": "5.1.4"
   },
   "simple-git-hooks": {
