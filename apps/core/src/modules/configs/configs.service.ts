@@ -75,7 +75,7 @@ export class ConfigsService {
       if (retryCount % 10 === 0) {
         throw `重试 ${retryCount} 次获取配置失败, 即将进行下一轮尝试`
       }
-      await sleep(500)
+      await sleep(1500)
     }
   }
 
