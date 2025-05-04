@@ -1,6 +1,14 @@
 import { sxzz } from '@sxzz/eslint-config'
 
 export default sxzz(
+  {
+    markdown: false,
+    prettier: true,
+    pnpm: true,
+    vue: false,
+    unocss: false,
+    sortKeys: false,
+  },
   [
     {
       ignores: [
@@ -81,10 +89,4 @@ export default sxzz(
       },
     },
   ],
-  {
-    prettier: true,
-    markdown: true,
-    vue: false, // auto detection
-    unocss: false, // auto detection
-  },
 )
