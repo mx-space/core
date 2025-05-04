@@ -30,7 +30,6 @@ export class HealthCronController {
     private readonly taskQueue: TaskQueueService,
   ) {}
   @Get('/')
-  // 跳过 JSON 结构转换
   @HTTPDecorators.Bypass
   async getAllCron() {
     const cron = Object.getPrototypeOf(this.cronService)
@@ -49,7 +48,7 @@ export class HealthCronController {
         description,
         lastDate: job?.lastDate() || null,
         nextDate: job?.nextDate() || null,
-        status: job?.running ? 'running' : 'stopped',
+        status: job?.isActive ? 'running' : 'stopped',
       }
     }
 
