@@ -19,7 +19,6 @@ import type { ChatModel } from 'openai/resources'
 
 import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
 
-import { OpenAiSupportedModels } from '../ai/ai.constants'
 import { Encrypt } from './configs.encrypt.util'
 import {
   halfFieldOption,
@@ -431,13 +430,8 @@ export class AIDto {
 
   @IsOptional()
   @IsString()
-  @JSONSchemaPlainField('OpenAI 默认模型', {
-    'ui:options': {
-      type: 'select',
-      values: OpenAiSupportedModels,
-    },
-  })
-  openAiPreferredModel: ChatModel
+  @JSONSchemaPlainField('OpenAI 默认模型')
+  openAiPreferredModel: string
 
   @IsBoolean()
   @IsOptional()

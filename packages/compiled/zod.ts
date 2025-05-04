@@ -1,1 +1,1 @@
-export * from 'zod'
+export * from './node_modules/zod'

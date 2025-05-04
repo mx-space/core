@@ -1,14 +1,14 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 
+import { AiAgentModule } from './ai-agent/ai-agent.module'
 import { AiSummaryController } from './ai-summary/ai-summary.controller'
 import { AiSummaryService } from './ai-summary/ai-summary.service'
-import { AiToolModule } from './ai-tool/ai-tool.module'
 import { AiWriterController } from './ai-writer/ai-writer.controller'
 import { AiWriterService } from './ai-writer/ai-writer.service'
 import { AiService } from './ai.service'
 
 @Module({
-  imports: [AiToolModule],
+  imports: [forwardRef(() => AiAgentModule)],
   providers: [AiSummaryService, AiService, AiWriterService],
   controllers: [AiSummaryController, AiWriterController],
   exports: [AiService],

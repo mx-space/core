@@ -87,7 +87,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     enableAutoGenerateSummary: false,
     enableSummary: false,
     openAiEndpoint: '',
-    openAiPreferredModel: 'gpt-3.5-turbo',
+    openAiPreferredModel: 'gpt-4o-mini',
     openAiKey: '',
     aiSummaryTargetLanguage: 'auto',
   },
