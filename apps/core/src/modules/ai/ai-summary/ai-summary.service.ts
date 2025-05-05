@@ -2,6 +2,7 @@ import { JsonOutputFunctionsParser } from 'langchain/output_parsers'
 import removeMdCodeblock from 'remove-md-codeblock'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 
+import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools'
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
@@ -57,33 +58,42 @@ export class AiSummaryService {
       throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
     }
 
-    const parser = new JsonOutputFunctionsParser()
+    const parser = new JsonOutputToolsParser()
 
     const runnable = openai
       .bind({
-        functions: [
+        tools: [
           {
-            name: 'extractor',
-            parameters: {
-              type: 'object',
-              properties: {
-                summary: {
-                  type: 'string',
-                  description: `The summary of the input text in the ${LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]}, and the length of the summary is less than 150 words.`,
+            type: 'function',
+            function: {
+              name: 'extractor',
+              description: `Extract the summary of the input text in the ${LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]}, and the length of the summary is less than 150 words.`,
+              parameters: {
+                type: 'object',
+                properties: {
+                  summary: {
+                    type: 'string',
+                    description: `The summary of the input text in the ${LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]}, and the length of the summary is less than 150 words.`,
+                  },
                 },
+                required: ['summary'],
               },
-              required: ['summary'],
             },
           },
         ],
-        function_call: { name: 'extractor' },
+
+        tool_choice: { type: 'function', function: { name: 'extractor' } },
       })
       .pipe(parser)
-    const result = await runnable.invoke([
+    const result = (await runnable.invoke([
       this.serializeText(article.document.text),
-    ])
+    ])) as any[]
 
-    return (result as any).summary
+    if (result.length === 0) {
+      return {}
+    }
+
+    return result[0]?.args?.summary
   }
   async generateSummaryByOpenAI(articleId: string, lang: string) {
     const {
