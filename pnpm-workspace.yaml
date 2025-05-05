@@ -140,3 +140,12 @@ catalog:
   zod: 3.24.3
   zx: 7.2.3
   zx-cjs: 7.0.7-0
+ignoredBuiltDependencies:
+  - mongodb-memory-server
+  - redis-memory-server
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - '@swc/core'
+  - esbuild
+  - sharp
+  - simple-git-hooks
