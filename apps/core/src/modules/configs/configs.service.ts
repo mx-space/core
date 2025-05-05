@@ -66,17 +66,17 @@ export class ConfigsService {
       return await this.getConfig()
     }
 
-    const maxCount = 10
-    let curCount = 0
-    do {
+    let retryCount = 0
+    while (true) {
       if (this.configInitd) {
         return await this.getConfig()
       }
-      await sleep(100)
-      curCount += 1
-    } while (curCount < maxCount)
-
-    throw `重试 ${curCount} 次获取配置失败, 请检查数据库连接`
+      retryCount++
+      if (retryCount % 10 === 0) {
+        throw `重试 ${retryCount} 次获取配置失败, 即将进行下一轮尝试`
+      }
+      await sleep(1500)
+    }
   }
 
   public get defaultConfig() {
@@ -191,7 +191,6 @@ export class ConfigsService {
     if (!dto) {
       throw new BadRequestException('设置不存在')
     }
-
     // 如果是评论设置，并且尝试启用 AI 审核，就检查 AI 配置
     if (key === 'commentOptions' && (value as any).aiReview === true) {
       const aiConfig = await this.get('ai')
@@ -202,7 +201,6 @@ export class ConfigsService {
         )
       }
     }
-
     const instanceValue = this.validWithDto(dto, value)
 
     encryptObject(instanceValue)
