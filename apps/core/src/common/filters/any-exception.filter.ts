@@ -1,8 +1,10 @@
+import { createWriteStream } from 'node:fs'
 import { resolve } from 'node:path'
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import type { WriteStream } from 'node:fs'
 
+import { chalk } from '@mx-space/compiled'
 import {
   Catch,
   HttpException,
@@ -122,7 +124,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (!isDev) {
         this.errorLogPipe =
           this.errorLogPipe ??
-          fs.createWriteStream(resolve(LOG_DIR, 'error.log'), {
+          createWriteStream(resolve(LOG_DIR, 'error.log'), {
             flags: 'a+',
             encoding: 'utf-8',
           })

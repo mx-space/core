@@ -90,6 +90,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     openAiPreferredModel: 'gpt-4o-mini',
     openAiKey: '',
     aiSummaryTargetLanguage: 'auto',
+    enableDeepReading: false,
   },
   oauth: {
     providers: [],

@@ -16,7 +16,7 @@ import {
 } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { InjectModel } from '~/transformers/model.transformer'
-import { getAvatar } from '~/utils/tool.util'
+import { getAvatar, sleep } from '~/utils/tool.util'
 
 import { AuthService } from '../auth/auth.service'
 import { UserModel } from './user.model'

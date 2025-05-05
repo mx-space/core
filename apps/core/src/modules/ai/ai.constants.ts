@@ -1,4 +1,5 @@
 export const DEFAULT_SUMMARY_LANG = 'zh'
+
 export const LANGUAGE_CODE_TO_NAME = {
   ar: 'Arabic',
   bg: 'Bulgarian',

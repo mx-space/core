@@ -1,3 +1,4 @@
+import { statSync } from 'node:fs'
 import { readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import dayjs from 'dayjs'
@@ -106,7 +107,7 @@ export class CronService {
     const rmTaskArr = [] as Promise<any>[]
     for (const file of files) {
       const filePath = join(LOG_DIR, file)
-      const state = fs.statSync(filePath)
+      const state = statSync(filePath)
       const oldThanWeek = dayjs().diff(state.mtime, 'day') > 7
       if (oldThanWeek) {
         rmTaskArr.push(rm(filePath))

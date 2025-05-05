@@ -16,6 +16,7 @@ export const RECENTLY_COLLECTION_NAME = 'recentlies'
 export const ANALYZE_COLLECTION_NAME = 'analyzes'
 export const WEBHOOK_EVENT_COLLECTION_NAME = 'webhook_events'
 export const AI_SUMMARY_COLLECTION_NAME = 'ai_summaries'
+export const AI_DEEP_READING_COLLECTION_NAME = 'ai_deep_readings'
 
 export const USER_COLLECTION_NAME = 'users'
 export enum CollectionRefTypes {

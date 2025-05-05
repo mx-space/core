@@ -1,6 +1,10 @@
 import cdp, { exec } from 'node:child_process'
 import { builtinModules } from 'node:module'
+import os from 'node:os'
+import path from 'node:path'
 import { promisify } from 'node:util'
+
+import { $, cd, fs } from '@mx-space/compiled'
 
 export async function getFolderSize(folderPath: string) {
   try {

@@ -1,5 +1,7 @@
 import type { AxiosRequestConfig } from 'axios'
 
+import { argv } from '@mx-space/compiled'
+
 export const PORT = process.env.PORT || 2333
 export const API_VERSION = 2
 

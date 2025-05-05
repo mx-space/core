@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises'
+import path from 'node:path'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
 

@@ -1,8 +1,5 @@
-import type { Document, PaginateModel } from 'mongoose'
-
-import '@mx-space/compiled/zx-global'
-
 import type { ModelType } from '@typegoose/typegoose/lib/types'
+import type { Document, PaginateModel } from 'mongoose'
 
 declare global {
   export type KV<T = any> = Record<string, T>

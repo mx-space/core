@@ -1,4 +1,5 @@
 import { ActivityModel } from '~/modules/activity/activity.model'
+import { AIDeepReadingModel } from '~/modules/ai/ai-deep-reading/ai-deep-reading.model'
 import { AISummaryModel } from '~/modules/ai/ai-summary/ai-summary.model'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { AuthnModel } from '~/modules/authn/authn.model'
@@ -27,6 +28,7 @@ import { getProviderByTypegooseClass } from '~/transformers/model.transformer'
 export const databaseModels = [
   ActivityModel,
   AISummaryModel,
+  AIDeepReadingModel,
   AnalyzeModel,
   AuthnModel,
   CategoryModel,

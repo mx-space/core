@@ -448,6 +448,13 @@ export class AIDto {
   })
   enableAutoGenerateSummary: boolean
 
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('开启 AI 深度阅读', {
+    description: '是否开启调用 AI 去生成深度阅读',
+  })
+  enableDeepReading: boolean
+
   @IsString()
   @IsOptional()
   @JSONSchemaPlainField('AI 摘要目标语言', {

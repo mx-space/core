@@ -6,6 +6,7 @@ import type { LogLevel } from '@nestjs/common'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 
 import { Logger } from '@innei/pretty-logger-nestjs'
+import { chalk } from '@mx-space/compiled'
 import { NestFactory } from '@nestjs/core'
 
 import { CROSS_DOMAIN, DEBUG_MODE, PORT } from './app.config'

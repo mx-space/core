@@ -3,6 +3,7 @@ import axios from 'axios'
 import axiosRetry, { exponentialDelay } from 'axios-retry'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 
+import { chalk } from '@mx-space/compiled'
 import { Injectable, Logger } from '@nestjs/common'
 
 import { AXIOS_CONFIG, DEBUG_MODE } from '~/app.config'

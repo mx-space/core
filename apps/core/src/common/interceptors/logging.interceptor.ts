@@ -13,6 +13,7 @@ import type {
 } from '@nestjs/common'
 import type { Observable } from 'rxjs'
 
+import { chalk } from '@mx-space/compiled'
 import { Injectable, Logger, SetMetadata } from '@nestjs/common'
 
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'

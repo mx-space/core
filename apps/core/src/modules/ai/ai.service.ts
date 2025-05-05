@@ -10,7 +10,7 @@ import { ConfigsService } from '../configs/configs.service'
 export class AiService {
   constructor(private readonly configService: ConfigsService) {}
 
-  public async getOpenAiChain() {
+  public async getOpenAiChain(options?: { maxTokens?: number }) {
     const {
       ai: { openAiKey, openAiEndpoint, openAiPreferredModel },
     } = await this.configService.waitForConfigReady()
@@ -24,6 +24,7 @@ export class AiService {
       configuration: {
         baseURL: openAiEndpoint || void 0,
       },
+      maxTokens: options?.maxTokens,
     })
   }
 }

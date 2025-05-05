@@ -1,7 +1,9 @@
+import path from 'node:path'
 import { isSemVer } from 'class-validator'
 import { catchError, lastValueFrom, Observable } from 'rxjs'
 import { lt, major, minor } from 'semver'
 
+import { chalk, fs } from '@mx-space/compiled'
 import { Query, Sse } from '@nestjs/common'
 
 import { dashboard } from '~/../package.json'

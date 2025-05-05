@@ -1,3 +1,4 @@
+import { createReadStream } from 'node:fs'
 import { resolve } from 'node:path'
 import { Socket } from 'socket.io'
 import type {
@@ -51,11 +52,10 @@ export class AdminEventsGateway
 
     this.subscribeSocketToHandlerMap.set(client, handler)
     if (prevLog) {
-      const stream = fs
-        .createReadStream(resolve(LOG_DIR, getTodayLogFilePath()), {
-          encoding: 'utf-8',
-          highWaterMark: 32 * 1024,
-        })
+      const stream = createReadStream(resolve(LOG_DIR, getTodayLogFilePath()), {
+        encoding: 'utf-8',
+        highWaterMark: 32 * 1024,
+      })
         .on('data', handler)
         .on('end', () => {
           this.subpub.subscribe('log', handler)

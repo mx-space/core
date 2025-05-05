@@ -1,6 +1,9 @@
 #!env node
 // register global
 import cluster from 'node:cluster'
+import { cpus } from 'node:os'
+
+import { argv } from '@mx-space/compiled'
 
 import { DEBUG_MODE } from './app.config'
 import { registerForMemoryDump } from './dump'
@@ -51,7 +54,7 @@ async function main() {
   DEBUG_MODE.memoryDump && registerForMemoryDump()
   if (CLUSTER.enable) {
     Cluster.register(
-      Number.parseInt(CLUSTER.workers) || os.cpus().length,
+      Number.parseInt(CLUSTER.workers) || cpus().length,
       bootstrap,
     )
   } else {

@@ -1,9 +1,11 @@
 import { appendFile, rm, writeFile } from 'node:fs/promises'
+import path from 'node:path'
 import { inspect } from 'node:util'
 import axios from 'axios'
 import { catchError, Observable } from 'rxjs'
 import type { Subscriber } from 'rxjs'
 
+import { chalk } from '@mx-space/compiled'
 import { Injectable } from '@nestjs/common'
 
 import { dashboard } from '~/../package.json'

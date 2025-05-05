@@ -17,7 +17,7 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
-import { camelcaseKeys } from '~/utils/tool.util'
+import { camelcaseKeys, sleep } from '~/utils/tool.util'
 
 import { generateDefaultConfig } from './configs.default'
 import { OAuthDto } from './configs.dto'

@@ -4,6 +4,8 @@
 import mongoose from 'mongoose'
 import type { CollectionRefTypes } from '~/constants/db.constant'
 
+import { chalk } from '@mx-space/compiled'
+
 import { MONGO_DB } from '~/app.config'
 import {
   NOTE_COLLECTION_NAME,

@@ -1,10 +1,11 @@
-import { existsSync, statSync } from 'node:fs'
+import { createReadStream, existsSync, statSync } from 'node:fs'
 import { readdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import path, { join, resolve } from 'node:path'
 import { flatten } from 'lodash'
 import { mkdirp } from 'mkdirp'
 
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { $, cd } from '@mx-space/compiled'
 import {
   BadRequestException,
   Injectable,
@@ -148,7 +149,7 @@ export class BackupService {
 
   async getFileStream(dirname: string) {
     const path = this.checkBackupExist(dirname)
-    const stream = fs.createReadStream(path)
+    const stream = createReadStream(path)
 
     return stream
   }
@@ -179,7 +180,7 @@ export class BackupService {
 
   async restore(restoreFilePath: string) {
     await this.backup()
-    const isExist = fs.existsSync(restoreFilePath)
+    const isExist = existsSync(restoreFilePath)
     if (!isExist) {
       throw new InternalServerErrorException('备份文件不存在')
     }

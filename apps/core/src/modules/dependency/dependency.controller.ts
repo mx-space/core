@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises'
+import path from 'node:path'
 import { Observable } from 'rxjs'
 
+import { chalk } from '@mx-space/compiled'
 import { BadRequestException, Get, Query, Sse } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'

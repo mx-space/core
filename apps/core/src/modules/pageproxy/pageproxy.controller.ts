@@ -1,6 +1,6 @@
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import fs from 'node:fs/promises'
-import { extname, join } from 'node:path'
+import path, { extname, join } from 'node:path'
 import { render } from 'ejs'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'

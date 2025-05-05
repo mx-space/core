@@ -1,5 +1,5 @@
 import cluster from 'node:cluster'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 
 import { Logger } from '@nestjs/common'
 
@@ -18,7 +18,8 @@ import { cwd, isDev } from './env.global'
 import { registerJSONGlobal } from './json.global'
 
 import './dayjs.global'
-import '@mx-space/compiled/zx-global'
+
+import { $, chalk } from '@mx-space/compiled'
 
 // 建立目录
 function createAppFolders() {
@@ -37,7 +38,7 @@ function createAppFolders() {
     Logger.log(chalk.blue(`文件回收站目录已经建好：${STATIC_FILE_TRASH_DIR}`))
 
     const packageJSON = `${DATA_DIR}/package.json`
-    const hasPKG = fs.existsSync(packageJSON)
+    const hasPKG = existsSync(packageJSON)
     if (!hasPKG) {
       writeFileSync(packageJSON, '{"name":"modules"}', {
         flag: 'a',

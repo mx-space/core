@@ -1,8 +1,9 @@
 import { createWriteStream } from 'node:fs'
-import { resolve } from 'node:path'
+import path, { resolve } from 'node:path'
 import type { Readable } from 'node:stream'
 import type { FileType } from './file.type'
 
+import { fs } from '@mx-space/compiled'
 import {
   BadRequestException,
   Injectable,

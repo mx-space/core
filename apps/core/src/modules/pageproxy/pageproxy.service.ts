@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { URL } from 'node:url'
 import { parseHTML } from 'linkedom'
 
