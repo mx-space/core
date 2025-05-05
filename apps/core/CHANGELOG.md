@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [8.2.0](https://github.com/mx-space/core/compare/v8.1.2...v8.2.0) (2025-05-05)
+
+
+### Bug Fixes
+
+* **comment:** refine AI evaluation method and update comment options ([f855521](https://github.com/mx-space/core/commit/f8555216b6bc2260b913328821511e0688fbede3))
+
+
+### Features
+
+* implement AI-based comment evaluation in CommentService ([d2956f3](https://github.com/mx-space/core/commit/d2956f33981ca58659f153393c1b304548233b31))
+* update ai integration ([#2422](https://github.com/mx-space/core/issues/2422)) ([46704d2](https://github.com/mx-space/core/commit/46704d24986181009271c8fda5fb93e4b21ac01c))
+
+
+
 ## [8.1.2](https://github.com/mx-space/core/compare/v8.1.1...v8.1.2) (2025-05-05)
 
 
