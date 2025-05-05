@@ -20,3 +20,5 @@ runs:
       shell: bash
       run: |
         sudo apt-get install -y redis-server
+        sudo systemctl disable redis.service --now
+        sudo systemctl disable redis-server.service --now
