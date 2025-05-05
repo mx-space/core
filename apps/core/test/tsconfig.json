@@ -27,14 +27,14 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "strictNullChecks": false,
+    "noImplicitAny": false,
     "declaration": true,
+    "noEmit": true,
+    "outDir": "./dist",
     "removeComments": true,
+    "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "outDir": "./dist",
-    "sourceMap": true,
-    "noEmit": true,
-    "noImplicitAny": false,
     "skipLibCheck": true
   },
   "include": [

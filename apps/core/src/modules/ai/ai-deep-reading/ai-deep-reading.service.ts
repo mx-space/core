@@ -1,13 +1,9 @@
 import { AgentExecutor, createOpenAIToolsAgent } from 'langchain/agents'
-import { StructuredOutputParser } from 'langchain/output_parsers'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 
-import { ToolDefinition } from '@langchain/core/language_models/base'
-import { JsonOutputParser } from '@langchain/core/output_parsers'
 import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools'
 import {
   ChatPromptTemplate,
-  HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
 } from '@langchain/core/prompts'

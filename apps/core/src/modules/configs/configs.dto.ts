@@ -15,7 +15,6 @@ import {
   ValidateNested,
 } from 'class-validator'
 import { JSONSchema } from 'class-validator-jsonschema'
-import type { ChatModel } from 'openai/resources'
 
 import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
 

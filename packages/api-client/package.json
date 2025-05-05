@@ -44,19 +44,19 @@
     "dev": "vitest"
   },
   "devDependencies": {
-    "@types/cors": "2.8.17",
-    "@types/express": "5.0.1",
-    "@types/lodash": "4.17.16",
-    "abort-controller": "3.0.0",
-    "axios": "^1.7.9",
-    "camelcase-keys": "^9.1.3",
-    "cors": "2.8.5",
-    "express": "4.21.2",
-    "form-data": "4.0.2",
-    "lodash": "4.17.21",
-    "tsup": "8.4.0",
-    "umi-request": "1.4.0",
-    "vite": "^6.0.3",
-    "vitest": "2.1.8"
+    "@types/cors": "catalog:",
+    "@types/express": "catalog:",
+    "@types/lodash": "catalog:",
+    "abort-controller": "catalog:",
+    "axios": "catalog:",
+    "camelcase-keys": "catalog:",
+    "cors": "catalog:",
+    "express": "catalog:",
+    "form-data": "catalog:",
+    "lodash": "catalog:",
+    "tsup": "catalog:",
+    "umi-request": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   }
 }

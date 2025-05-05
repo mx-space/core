@@ -29,7 +29,7 @@
   "devDependencies": {
     "@innei/prettier": "catalog:",
     "@sxzz/eslint-config": "catalog:",
-    "@types/node": "catalog:conflicts_@types/node_22_14_0",
+    "@types/node": "catalog:",
     "cross-env": "catalog:",
     "eslint": "catalog:",
     "lint-staged": "catalog:",
