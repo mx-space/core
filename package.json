@@ -1,6 +1,6 @@
 {
   "private": true,
-  "packageManager": "pnpm@9.15.9",
+  "packageManager": "pnpm@10.10.0",
   "license": "AGPLv3",
   "homepage": "https://github.com/mx-space/core#readme",
   "repository": {

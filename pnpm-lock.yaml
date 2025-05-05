@@ -19,13 +19,6 @@ importers:
       zx-cjs:
         specifier: 7.0.7-0
         version: 7.0.7-0
-    optionalDependencies:
-      mongodb-memory-server:
-        specifier: 10.1.4
-        version: 10.1.4
-      redis-memory-server:
-        specifier: 0.12.1
-        version: 0.12.1
     devDependencies:
       '@innei/prettier':
         specifier: 0.15.0
@@ -69,6 +62,13 @@ importers:
       vite-tsconfig-paths:
         specifier: 5.1.4
         version: 5.1.4(typescript@5.7.3)(vite@6.0.3(@types/node@22.14.0)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.1))
+    optionalDependencies:
+      mongodb-memory-server:
+        specifier: 10.1.4
+        version: 10.1.4
+      redis-memory-server:
+        specifier: 0.12.1
+        version: 0.12.1
 
   apps/core:
     dependencies:
@@ -321,13 +321,6 @@ importers:
       zx-cjs:
         specifier: 7.0.7-0
         version: 7.0.7-0
-    optionalDependencies:
-      mongodb-memory-server:
-        specifier: ^10.1.4
-        version: 10.1.4
-      redis-memory-server:
-        specifier: ^0.12.1
-        version: 0.12.1
     devDependencies:
       '@langchain/core':
         specifier: 0.3.51
@@ -422,6 +415,13 @@ importers:
       zx:
         specifier: 7.2.3
         version: 7.2.3
+    optionalDependencies:
+      mongodb-memory-server:
+        specifier: ^10.1.4
+        version: 10.1.4
+      redis-memory-server:
+        specifier: ^0.12.1
+        version: 0.12.1
 
   packages/api-client:
     devDependencies:
