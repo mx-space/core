@@ -124,7 +124,7 @@ export class CommentService implements OnModuleInit {
    */
   private async evaluateCommentWithAI(
     text: string,
-    aiReviewType: 'score' | string,
+    aiReviewType: 'binary' | 'score',
     aiReviewThreshold: number,
   ): Promise<boolean> {
     const runnable = await this.aiService.getOpenAiChain()
@@ -190,41 +190,39 @@ export class CommentService implements OnModuleInit {
       }
 
       try {
-        const response = await runnable.invoke([spamPrompt], {
-          tools: [
-            {
-              type: 'function',
-              function: {
-                name: 'spam_check',
-                description: '检查评论是否为垃圾内容',
-                parameters: {
-                  type: 'object',
-                  properties: {
-                    isSpam: {
-                      type: 'boolean',
-                      description: '是否为垃圾内容',
+        const response = await runnable
+          .bind({
+            tools: [
+              {
+                type: 'function',
+                function: {
+                  name: 'spam_check',
+                  description: '检查评论是否为垃圾内容',
+                  parameters: {
+                    type: 'object',
+                    properties: {
+                      isSpam: {
+                        type: 'boolean',
+                        description: '是否为垃圾内容',
+                      },
+                      hasSensitiveContent: {
+                        type: 'boolean',
+                        description: '是否包含政治敏感、色情、暴力或恐吓内容',
+                      },
                     },
-                    hasSensitiveContent: {
-                      type: 'boolean',
-                      description: '是否包含政治敏感、色情、暴力或恐吓内容',
-                    },
+                    required: ['isSpam', 'hasSensitiveContent'],
                   },
-                  required: ['isSpam', 'hasSensitiveContent'],
                 },
               },
-            },
-          ],
-        })
+            ],
+          })
+          .pipe(new JsonOutputToolsParser())
+          .invoke([spamPrompt])
 
-        const content = response.content.toString()
-        // 提取JSON部分
-        const jsonMatch = content.match(/\{.*\}/s)
-        if (!jsonMatch) {
-          this.logger.warn('AI评审返回格式异常，无法解析JSON')
+        if (!response) {
           return false
         }
-
-        const responseData = JSON.parse(jsonMatch[0])
+        const responseData = (response[0] as any)?.args
 
         // 如果包含敏感内容直接拒绝
         if (responseData.hasSensitiveContent) {

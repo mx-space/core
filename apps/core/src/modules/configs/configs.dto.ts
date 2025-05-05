@@ -151,7 +151,7 @@ export class CommentOptionsDto {
       ],
     },
   })
-  aiReviewType: string
+  aiReviewType: 'binary' | 'score'
 
   @IsInt()
   @Transform(({ value: val }) => Number.parseInt(val))
