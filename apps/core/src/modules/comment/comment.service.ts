@@ -2,6 +2,7 @@ import { URL } from 'node:url'
 import { render } from 'ejs'
 import { omit, pick } from 'lodash'
 import { isObjectIdOrHexString, Types } from 'mongoose'
+import { pipe } from 'rxjs'
 import type { OnModuleInit } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose/lib/types'
 import type { WriteBaseModel } from '~/shared/model/write-base.model'
@@ -11,6 +12,7 @@ import type {
   CommentModelRenderProps,
 } from './comment.email.default'
 
+import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools'
 import {
   BadRequestException,
   forwardRef,
@@ -113,6 +115,130 @@ export class CommentService implements OnModuleInit {
     return this.databaseService.getModelByRefType(type) as any
   }
 
+  /**
+   * 使用AI评估评论内容
+   * @param text 评论文本
+   * @param aiReviewType 评审类型
+   * @param aiReviewThreshold 阈值
+   * @returns 是否应该被标记为垃圾评论
+   */
+  private async evaluateCommentWithAI(
+    text: string,
+    aiReviewType: 'score' | string,
+    aiReviewThreshold: number,
+  ): Promise<boolean> {
+    const runnable = await this.aiService.getOpenAiChain()
+
+    // 评分模式
+    if (aiReviewType === 'score') {
+      const scorePrompt = {
+        content: `分析以下评论是否包含不适当内容：${text}\n\n评估其是否包含垃圾信息、诈骗、广告、有毒内容及整体质量。`,
+        role: 'user',
+      }
+
+      try {
+        const response = await runnable
+          .bind({
+            tools: [
+              {
+                type: 'function',
+                function: {
+                  name: 'comment_review',
+                  description: '分析评论内容并给出风险评分',
+                  parameters: {
+                    type: 'object',
+                    properties: {
+                      score: {
+                        type: 'number',
+                        description: '风险评分，1-10，越高越危险',
+                      },
+                      hasSensitiveContent: {
+                        type: 'boolean',
+                        description: '是否包含政治敏感、色情、暴力或恐吓内容',
+                      },
+                    },
+                    required: ['score', 'hasSensitiveContent'],
+                  },
+                },
+              },
+            ],
+          })
+          .pipe(new JsonOutputToolsParser())
+          .invoke([scorePrompt])
+
+        if (!response) {
+          return false
+        }
+        const responseData = (response[0] as any)?.args
+
+        // 如果包含敏感内容直接拒绝
+        if (responseData.hasSensitiveContent) {
+          return true
+        }
+        // 否则根据评分判断
+        return responseData.score > aiReviewThreshold
+      } catch (error) {
+        this.logger.error('AI评审评分模式出错', error)
+        return false
+      }
+    }
+    // 垃圾检测模式
+    else {
+      const spamPrompt = {
+        content: `检查以下评论是否不适当：${text}\n\n分析其是否包含垃圾信息、广告、政治敏感内容、色情、暴力或低质量内容。`,
+        role: 'user',
+      }
+
+      try {
+        const response = await runnable.invoke([spamPrompt], {
+          tools: [
+            {
+              type: 'function',
+              function: {
+                name: 'spam_check',
+                description: '检查评论是否为垃圾内容',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    isSpam: {
+                      type: 'boolean',
+                      description: '是否为垃圾内容',
+                    },
+                    hasSensitiveContent: {
+                      type: 'boolean',
+                      description: '是否包含政治敏感、色情、暴力或恐吓内容',
+                    },
+                  },
+                  required: ['isSpam', 'hasSensitiveContent'],
+                },
+              },
+            },
+          ],
+        })
+
+        const content = response.content.toString()
+        // 提取JSON部分
+        const jsonMatch = content.match(/\{.*\}/s)
+        if (!jsonMatch) {
+          this.logger.warn('AI评审返回格式异常，无法解析JSON')
+          return false
+        }
+
+        const responseData = JSON.parse(jsonMatch[0])
+
+        // 如果包含敏感内容直接拒绝
+        if (responseData.hasSensitiveContent) {
+          return true
+        }
+        // 否则按照是否spam判断
+        return responseData.isSpam
+      } catch (error) {
+        this.logger.error('AI评审垃圾检测模式出错', error)
+        return false
+      }
+    }
+  }
+
   async checkSpam(doc: CommentModel) {
     const res = await (async () => {
       const commentOptions = await this.configs.get('commentOptions')
@@ -150,22 +276,11 @@ export class CommentService implements OnModuleInit {
       }
 
       if (commentOptions.aiReview) {
-        const openai = await this.aiService.getOpenAiChain()
-        const { aiReviewType, aiReviewThreshold } = commentOptions
-        const runnable = openai
-
-        const prompt =
-          aiReviewType === 'score'
-            ? 'Check the comment and return a risk score directly. Higher means more risky (1-10). Outputs should only be a number'
-            : 'Check if the comment is spam or not. Outputs should be true or false(Lowercase)'
-
-        const result = (await runnable.invoke([`${prompt}:${doc.text}`]))
-          .content
-
-        if (aiReviewType === 'score') {
-          return (result as any) > aiReviewThreshold
-        }
-        return result === 'true'
+        return this.evaluateCommentWithAI(
+          doc.text,
+          commentOptions.aiReviewType,
+          commentOptions.aiReviewThreshold,
+        )
       }
       return false
     })()
