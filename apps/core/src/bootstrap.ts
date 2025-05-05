@@ -42,6 +42,7 @@ export async function bootstrap() {
 
   const allowAllCors: FastifyCorsOptions = {
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     origin: (origin, callback) => callback(null, origin || ''),
   }
   // Origin 如果不是数组就全部允许跨域
@@ -69,6 +70,7 @@ export async function bootstrap() {
             credentials: true,
             preflightContinue: false,
             optionsSuccessStatus: 204,
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
           }
         : allowAllCors,
   )

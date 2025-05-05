@@ -138,12 +138,6 @@ export async function CreateAuth(
 
   const handler = async (req: IncomingMessage, res: ServerResponse) => {
     try {
-      res.setHeader('access-control-allow-methods', 'GET, POST')
-      res.setHeader('access-control-allow-headers', 'content-type')
-      res.setHeader(
-        'Access-Control-Allow-Origin',
-        req.headers.origin || req.headers.referer || req.headers.host || '*',
-      )
       res.setHeader('access-control-allow-credentials', 'true')
 
       const clonedRequest = new IncomingMessage(req.socket)
