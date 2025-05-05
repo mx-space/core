@@ -6,3 +6,12 @@ export interface AISummaryModel {
   refId: string
   lang: string
 }
+
+export interface AIDeepReadingModel {
+  id: string
+  hash: string
+  refId: string
+  keyPoints: string[]
+  criticalAnalysis: string
+  content: string
+}

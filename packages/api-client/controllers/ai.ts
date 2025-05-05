@@ -2,7 +2,7 @@ import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
 import type { HTTPClient } from '../core'
-import type { AISummaryModel } from '../models/ai'
+import type { AIDeepReadingModel, AISummaryModel } from '../models/ai'
 
 import { autoBind } from '~/utils/auto-bind'
 
@@ -57,5 +57,15 @@ export class AIController<ResponseWrapper> implements IController {
         refId: articleId,
       },
     })
+  }
+
+  /**
+   * Core >= 8.3.0
+   * @param articleId
+   */
+  async getDeepReading(articleId: string) {
+    return this.proxy('deep-readings')
+      .article(articleId)
+      .get<AIDeepReadingModel>()
   }
 }
