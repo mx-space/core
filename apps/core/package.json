@@ -47,10 +47,6 @@
     ],
     "changelog": true
   },
-  "optionalDependencies": {
-    "mongodb-memory-server": "^10.1.4",
-    "redis-memory-server": "^0.12.1"
-  },
   "dependencies": {
     "@algolia/client-search": "catalog:",
     "@antfu/install-pkg": "catalog:",
@@ -161,12 +157,13 @@
     "@vercel/ncc": "catalog:",
     "cron": "catalog:",
     "ioredis": "catalog:",
+    "mongodb-memory-server": "catalog:",
+    "redis-memory-server": "catalog:",
     "sharp": "catalog:",
     "socket.io": "catalog:",
     "unplugin-swc": "catalog:",
     "vite": "catalog:",
     "vite-tsconfig-paths": "catalog:",
-    "vitest": "catalog:",
-    "zx": "catalog:"
+    "vitest": "catalog:"
   }
 }

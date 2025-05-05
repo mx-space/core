@@ -64,14 +64,8 @@ jobs:
           node-version: '22.x'
       - name: Build project
         run: npm run bundle
-      - name: Start MongoDB
-        uses: supercharge/mongodb-github-action@1.12.0
-        with:
-          mongodb-version: 4.4
-      - name: Start Redis
-        uses: supercharge/redis-github-action@1.8.0
-        with:
-          redis-version: 6
+      - name: Setup MongoDB and Redis
+        uses: ./.github/actions/setup-databases
       - name: Test Bundle Server
         run: bash scripts/workflow/test-server.sh
 
@@ -86,6 +80,8 @@ jobs:
         uses: ./.github/actions/setup-node
         with:
           node-version: '22.x'
+      - name: Setup MongoDB and Redis
+        uses: ./.github/actions/setup-databases
       - name: Run Lint
         run: npm run lint
       - name: Run Tests
