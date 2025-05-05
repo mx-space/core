@@ -1,6 +1,9 @@
-import { JsonOutputFunctionsParser } from 'langchain/output_parsers'
-import type { FunctionDefinition } from '@langchain/core/language_models/base'
+import type {
+  FunctionDefinition,
+  ToolDefinition,
+} from '@langchain/core/language_models/base'
 
+import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools'
 import { Injectable, Logger } from '@nestjs/common'
 
 import { AiService } from '../ai.service'
@@ -16,23 +19,30 @@ export class AiWriterService {
     text: string,
     parameters: FunctionDefinition['parameters'],
   ) {
-    const functionSchema: FunctionDefinition = {
-      name: 'extractor',
-      description: 'Extracts fields from the input.',
-      parameters,
+    const toolDefinition: ToolDefinition = {
+      type: 'function',
+      function: {
+        name: 'extractor',
+        description: 'Extracts fields from the input.',
+        parameters,
+      },
     }
     const model = await this.aiService.getOpenAiChain()
-    const parser = new JsonOutputFunctionsParser()
+    const parser = new JsonOutputToolsParser()
 
     const runnable = model
       .bind({
-        functions: [functionSchema],
-        function_call: { name: 'extractor' },
+        tools: [toolDefinition],
+        tool_choice: { type: 'function', function: { name: 'extractor' } },
       })
       .pipe(parser)
-    const result = await runnable.invoke([text])
+    const result = (await runnable.invoke([text])) as any[]
 
-    return result
+    if (result.length === 0) {
+      return {}
+    }
+    // Extract just the args object from the first tool call response
+    return result[0]?.args || {}
   }
   async generateTitleAndSlugByOpenAI(text: string) {
     return this.queryByFunctionSchema(text, {

@@ -1,6 +1,6 @@
 {
   "private": true,
-  "packageManager": "pnpm@9.15.9",
+  "packageManager": "pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39",
   "license": "AGPLv3",
   "homepage": "https://github.com/mx-space/core#readme",
   "repository": {
@@ -24,23 +24,31 @@
     "redis-memory-server": "0.12.1"
   },
   "dependencies": {
-    "zx-cjs": "7.0.7-0"
+    "zx-cjs": "catalog:"
   },
   "devDependencies": {
-    "@innei/prettier": "0.15.0",
-    "@sxzz/eslint-config": "6.1.1",
-    "@types/node": "22.14.0",
-    "cross-env": "7.0.3",
-    "eslint": "^9.24.0",
-    "lint-staged": "15.5.0",
-    "prettier": "3.5.3",
-    "rimraf": "6.0.1",
-    "simple-git-hooks": "2.12.1",
-    "ts-node": "10.9.2",
-    "tsconfig-paths": "4.2.0",
-    "tsup": "8.4.0",
-    "typescript": "5.8.3",
-    "vite-tsconfig-paths": "5.1.4"
+    "@innei/prettier": "catalog:",
+    "@sxzz/eslint-config": "catalog:",
+    "@types/node": "catalog:conflicts_@types/node_22_14_0",
+    "cross-env": "catalog:",
+    "eslint": "catalog:",
+    "lint-staged": "catalog:",
+    "prettier": "catalog:",
+    "rimraf": "catalog:",
+    "simple-git-hooks": "catalog:",
+    "ts-node": "catalog:",
+    "tsconfig-paths": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vite-tsconfig-paths": "catalog:"
+  },
+  "resolutions": {
+    "get-pixels@^3>request": "./external/request",
+    "mongodb": "6.12.0",
+    "pino": "./external/pino",
+    "semver": "7.7.1",
+    "typescript": "5.7.3",
+    "whatwg-url": "14.1.1"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
@@ -51,13 +59,5 @@
       "prettier --ignore-path ./.prettierignore --write "
     ]
   },
-  "issues": "https://github.com/mx-space/core/issues",
-  "resolutions": {
-    "get-pixels@^3>request": "./external/request",
-    "mongodb": "6.12.0",
-    "pino": "./external/pino",
-    "semver": "7.7.1",
-    "typescript": "5.7.3",
-    "whatwg-url": "14.1.1"
-  }
+  "issues": "https://github.com/mx-space/core/issues"
 }

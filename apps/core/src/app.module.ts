@@ -42,6 +42,7 @@ import { HelperModule as BizHelperModule } from './modules/helper/helper.module'
 import { InitModule } from './modules/init/init.module'
 import { LinkModule } from './modules/link/link.module'
 import { MarkdownModule } from './modules/markdown/markdown.module'
+import { McpModule } from './modules/mcp/mcp.module'
 import { NoteModule } from './modules/note/note.module'
 import { OptionModule } from './modules/option/option.module'
 import { PageModule } from './modules/page/page.module'
@@ -94,6 +95,7 @@ import { RedisModule } from './processors/redis/redis.module'
     HealthModule,
     LinkModule,
     MarkdownModule,
+    McpModule,
     NoteModule,
     OptionModule,
     PageModule,

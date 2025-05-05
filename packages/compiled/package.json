@@ -6,14 +6,16 @@
   "exports": {
     ".": "./dist/index.cjs",
     "./zx-global": "./zx-global.cjs",
-    "./auth": "./dist/auth.cjs"
+    "./auth": "./dist/auth.cjs",
+    "./zod": "./dist/zod.cjs"
   },
   "scripts": {
     "build": "tsup"
   },
   "devDependencies": {
-    "better-auth": "1.2.5",
-    "nanoid": "5.1.5",
-    "zx": "7.2.3"
+    "better-auth": "catalog:",
+    "nanoid": "catalog:",
+    "zod": "catalog:",
+    "zx": "catalog:"
   }
 }
