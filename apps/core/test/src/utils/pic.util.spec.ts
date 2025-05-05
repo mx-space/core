@@ -1,4 +1,5 @@
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
+import { sleep } from '~/utils/tool.util'
 
 describe('src/utils/pic.util', () => {
   test('marked ast', async () => {

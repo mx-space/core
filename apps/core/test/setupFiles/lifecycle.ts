@@ -1,16 +1,11 @@
 // @ts-nocheck
-import { beforeAll } from 'vitest'
-
-import 'zx/globals'
-
 import { dbHelper } from 'test/helper/db-mock.helper'
 import { redisHelper } from 'test/helper/redis-mock.helper'
+import { beforeAll } from 'vitest'
 
 import { registerJSONGlobal } from '~/global/json.global'
 
 beforeAll(async () => {
-  await import('zx/globals')
-
   global.isDev = true
   global.cwd = process.cwd()
   global.consola = console
