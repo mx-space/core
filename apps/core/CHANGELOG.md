@@ -1,5 +1,17 @@
 # CHANGELOG
 
+# [8.3.0](https://github.com/mx-space/core/compare/v8.2.0...v8.3.0) (2025-05-06)
+
+
+### Features
+
+* **ai:** add deep reading model and controller method ([8a5048f](https://github.com/mx-space/core/commit/8a5048f06797e6aebfada3c9e8d592a86051aedd))
+* **ai:** introduce deep reading functionality and refactor AI module ([c385c58](https://github.com/mx-space/core/commit/c385c5894357bde8ee1083526ef74dacdb4eb811))
+* **ci:** add custom action for MongoDB and Redis setup ([c657e9a](https://github.com/mx-space/core/commit/c657e9a80aa8eb49b54482c82ff70a869385386a))
+* **ci:** add custom Node.js and pnpm setup action ([5077535](https://github.com/mx-space/core/commit/5077535eda3b832757e25c5c66e9b6dde09541c3))
+
+
+
 # [8.2.0](https://github.com/mx-space/core/compare/v8.1.2...v8.2.0) (2025-05-05)
 
 
