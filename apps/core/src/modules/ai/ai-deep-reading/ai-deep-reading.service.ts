@@ -1,6 +1,8 @@
 import { AgentExecutor, createOpenAIToolsAgent } from 'langchain/agents'
+import { Observable, Subject } from 'rxjs'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 
+import { Callbacks } from '@langchain/core/callbacks/manager'
 import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools'
 import {
   ChatPromptTemplate,
@@ -24,6 +26,22 @@ import { ConfigsService } from '../../configs/configs.service'
 import { AiService } from '../ai.service'
 import { AIDeepReadingModel } from './ai-deep-reading.model'
 
+export interface DeepReadingStreamEvent {
+  type:
+    | 'keyPoints'
+    | 'criticalAnalysis'
+    | 'content'
+    | 'complete'
+    | 'content_chunk'
+  data: string | string[]
+}
+
+export interface DeepReadingResult {
+  keyPoints: string[]
+  criticalAnalysis: string
+  content: string
+}
+
 @Injectable()
 export class AiDeepReadingService {
   private readonly logger: Logger
@@ -41,24 +59,13 @@ export class AiDeepReadingService {
 
   private cachedTaskId2AiPromise = new Map<string, Promise<any>>()
 
-  private async deepReadingAgentChain(articleId: string) {
-    const {
-      ai: { enableDeepReading },
-    } = await this.configService.waitForConfigReady()
-
-    if (!enableDeepReading) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
-    }
-
-    const article = await this.databaseService.findGlobalById(articleId)
-    if (!article || article.type === CollectionRefTypes.Recently) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
-    }
-
-    const llm = await this.aiService.getOpenAiChain({
-      maxTokens: 8192,
-    })
-
+  /**
+   * Creates agent tools with optional event emitter for streaming updates
+   */
+  private async createDeepReadingAgentTools(
+    article: any,
+    subject?: Subject<DeepReadingStreamEvent>,
+  ) {
     const dataModel = {
       keyPoints: [] as string[],
       criticalAnalysis: '',
@@ -76,7 +83,9 @@ export class AiDeepReadingService {
             maxTokens: 1024 * 10,
           })
 
-          const result = await llm
+          let contentBuffer = ''
+
+          llm
             .bind({
               tool_choice: {
                 type: 'function',
@@ -113,18 +122,104 @@ export class AiDeepReadingService {
             })
 
             .pipe(new JsonOutputToolsParser())
-            .invoke([
-              {
-                content: `分析以下文章：${article.document.text}\n\n创建一个全面的深度阅读Markdown文本，保持文章的原始结构但提供扩展的解释和见解。`,
-                role: 'system',
-              },
-            ])
-            .then((result: any[]) => {
-              const content = result[0]?.args?.content
-              dataModel.content = content
-              return content
-            })
-          return result
+
+          // 使用流式调用
+          if (subject) {
+            return llm
+              .bind({
+                tool_choice: {
+                  type: 'function',
+                  function: { name: 'deep_reading' },
+                },
+                tools: [
+                  {
+                    name: 'deep_reading',
+                    type: 'function',
+                    function: {
+                      name: 'deep_reading',
+                      parameters: {
+                        type: 'object',
+                        properties: {
+                          content: {
+                            type: 'string',
+                            description: '深度阅读内容',
+                          },
+                        },
+                        required: ['content'],
+                      },
+                      description: `创建一个全面的深度阅读Markdown文本，保持文章的原始结构但提供扩展的解释和见解。
+内容应该：
+1. 遵循原文的流程和主要论点
+2. 包含原文的所有关键技术细节
+3. 扩展未充分解释的复杂概念
+4. 在需要的地方提供额外背景和解释
+5. 保持文章的原始语调和语言风格
+6. 使用适当的Markdown格式，包括标题、代码块、列表等
+7. 输出的语言必须与原文的语言匹配`,
+                    },
+                  },
+                ],
+              })
+              .invoke(
+                [
+                  {
+                    content: `分析以下文章：${article.document.text}\n\n创建一个全面的深度阅读Markdown文本，保持文章的原始结构但提供扩展的解释和见解。`,
+                    role: 'system',
+                  },
+                ],
+                {
+                  callbacks: [
+                    {
+                      handleLLMNewToken(token: string) {
+                        // 注意这里处理的是原始token，需要累积和处理
+                        if (token.trim()) {
+                          contentBuffer += token
+                          // 为了避免过于频繁的更新，可以设置一个最小缓冲区大小
+                          if (contentBuffer.length >= 20) {
+                            // 可以根据需要调整大小
+                            subject.next({
+                              type: 'content_chunk',
+                              data: contentBuffer,
+                            })
+                            contentBuffer = ''
+                          }
+                        }
+                      },
+                    },
+                  ],
+                },
+              )
+              .then((result) => {
+                // 发送最后剩余的内容
+                if (contentBuffer) {
+                  subject.next({
+                    type: 'content_chunk',
+                    data: contentBuffer,
+                  })
+                }
+
+                const content = result[0]?.args?.content || ''
+                dataModel.content = content
+
+                // 发送完整内容
+                subject.next({ type: 'content', data: content })
+                return content
+              })
+          } else {
+            // 非流式调用
+            return llm
+              .invoke([
+                {
+                  content: `分析以下文章：${article.document.text}\n\n创建一个全面的深度阅读Markdown文本，保持文章的原始结构但提供扩展的解释和见解。`,
+                  role: 'system',
+                },
+              ])
+              .then((result) => {
+                const content = result[0]?.args?.content
+                dataModel.content = content
+                return content
+              })
+          }
         },
       }),
       new DynamicStructuredTool({
@@ -135,6 +230,10 @@ export class AiDeepReadingService {
         }),
         func: async (data: { keyPoints: string[] }) => {
           dataModel.keyPoints = data.keyPoints
+          // Stream the key points if subject exists
+          if (subject) {
+            subject.next({ type: 'keyPoints', data: data.keyPoints })
+          }
           return '关键点已保存'
         },
       }),
@@ -147,10 +246,36 @@ export class AiDeepReadingService {
         }),
         func: async (data: { criticalAnalysis: string }) => {
           dataModel.criticalAnalysis = data.criticalAnalysis
+          // Stream the critical analysis if subject exists
+          if (subject) {
+            subject.next({
+              type: 'criticalAnalysis',
+              data: data.criticalAnalysis,
+            })
+          }
           return '批判性分析已保存'
         },
       }),
     ]
+
+    return { tools, dataModel }
+  }
+
+  /**
+   * Creates and executes the deep reading agent
+   */
+  private async executeDeepReadingAgent(
+    article: any,
+    subject?: Subject<DeepReadingStreamEvent>,
+  ): Promise<DeepReadingResult> {
+    const llm = await this.aiService.getOpenAiChain({
+      maxTokens: 8192,
+    })
+
+    const { tools, dataModel } = await this.createDeepReadingAgentTools(
+      article,
+      subject,
+    )
 
     // 创建Agent提示模板
     const prompt = ChatPromptTemplate.fromMessages([
@@ -184,11 +309,31 @@ export class AiDeepReadingService {
 
     try {
       // 执行Agent
-      await executor.invoke({
-        article_title: article.document.title,
-        article_content: article.document.text,
-        chat_history: [],
-      })
+      const callbacks: Callbacks = subject
+        ? [
+            {
+              handleLLMNewToken(token: string) {
+                // 这里可以处理执行过程中的实时token
+                // 但这些token可能包含Agent思考过程，所以需要小心处理
+                if (token.length > 0 && token.trim()) {
+                  subject.next({
+                    type: 'content_chunk',
+                    data: token,
+                  })
+                }
+              },
+            },
+          ]
+        : []
+
+      await executor.invoke(
+        {
+          article_title: article.document.title,
+          article_content: article.document.text,
+          chat_history: [],
+        },
+        { callbacks },
+      )
 
       // 返回结果
       return {
@@ -206,7 +351,10 @@ export class AiDeepReadingService {
     }
   }
 
-  async generateDeepReadingByOpenAI(articleId: string) {
+  /**
+   * Validates if article can be processed
+   */
+  private async validateArticleForProcessing(articleId: string) {
     const {
       ai: { enableDeepReading },
     } = await this.configService.waitForConfigReady()
@@ -224,6 +372,19 @@ export class AiDeepReadingService {
       throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
     }
 
+    return article
+  }
+
+  async deepReadingAgentChain(articleId: string) {
+    const article = await this.validateArticleForProcessing(articleId)
+    return this.executeDeepReadingAgent(article)
+  }
+
+  async generateDeepReadingByOpenAI(
+    articleId: string,
+  ): Promise<AIDeepReadingModel> {
+    const article = await this.validateArticleForProcessing(articleId)
+
     const taskId = `ai:deepreading:${articleId}`
     const redis = this.redisService.getClient()
     try {
@@ -237,37 +398,10 @@ export class AiDeepReadingService {
         throw new BizException(ErrorCodeEnum.AIProcessing)
       }
 
-      const taskPromise = handle.bind(this)(
-        articleId,
-        article.document.text,
-        article.document.title,
-      ) as Promise<any>
+      const taskPromise = this.handleDeepReading(taskId, articleId, article)
 
       this.cachedTaskId2AiPromise.set(taskId, taskPromise)
       return await taskPromise
-
-      async function handle(
-        this: AiDeepReadingService,
-        id: string,
-        text: string,
-      ) {
-        // 处理时间增加到5分钟
-        await redis.set(taskId, 'processing', 'EX', 300)
-
-        const result = await this.deepReadingAgentChain(id)
-
-        const contentMd5 = md5(text)
-
-        const doc = await this.aiDeepReadingModel.create({
-          hash: contentMd5,
-          refId: id,
-          keyPoints: result.keyPoints,
-          criticalAnalysis: result.criticalAnalysis,
-          content: result.content,
-        })
-
-        return doc
-      }
     } catch (error) {
       console.error(error)
       this.logger.error(
@@ -283,6 +417,89 @@ export class AiDeepReadingService {
       this.cachedTaskId2AiPromise.delete(taskId)
       await redis.del(taskId)
     }
+  }
+
+  private async handleDeepReading(
+    taskId: string,
+    articleId: string,
+    article: any,
+  ): Promise<AIDeepReadingModel> {
+    const redis = this.redisService.getClient()
+    // 处理时间增加到5分钟
+    await redis.set(taskId, 'processing', 'EX', 300)
+
+    const result = await this.executeDeepReadingAgent(article)
+
+    const contentMd5 = md5(article.document.text)
+
+    const doc = await this.aiDeepReadingModel.create({
+      hash: contentMd5,
+      refId: articleId,
+      keyPoints: result.keyPoints,
+      criticalAnalysis: result.criticalAnalysis,
+      content: result.content,
+    })
+
+    return doc
+  }
+
+  generateDeepReadingStream(
+    articleId: string,
+  ): Observable<DeepReadingStreamEvent> {
+    const subject = new Subject<DeepReadingStreamEvent>()
+
+    ;(async () => {
+      const taskId = `ai:deepreading:stream:${articleId}`
+      const redis = this.redisService.getClient()
+
+      try {
+        const article = await this.validateArticleForProcessing(articleId)
+
+        const isProcessing = await redis.get(taskId)
+
+        if (isProcessing === 'processing' && !isDev) {
+          subject.error(new BizException(ErrorCodeEnum.AIProcessing))
+          subject.complete()
+          return
+        }
+
+        // 处理时间增加到5分钟
+        await redis.set(taskId, 'processing', 'EX', 300)
+
+        // Execute the agent with the subject for streaming events
+        const result = await this.executeDeepReadingAgent(article, subject)
+
+        const contentMd5 = md5(article.document.text)
+
+        // Save to database
+        await this.aiDeepReadingModel.create({
+          hash: contentMd5,
+          refId: articleId,
+          keyPoints: result.keyPoints,
+          criticalAnalysis: result.criticalAnalysis,
+          content: result.content,
+        })
+
+        // Send complete event
+        subject.next({ type: 'complete', data: 'complete' })
+        subject.complete()
+      } catch (error) {
+        this.logger.error(
+          `OpenAI encountered an error processing article ${articleId}: ${error.message}`,
+        )
+        subject.error(
+          new BizException(
+            ErrorCodeEnum.AIException,
+            error.message,
+            error.stack,
+          ),
+        )
+      } finally {
+        await redis.del(taskId)
+      }
+    })()
+
+    return subject.asObservable()
   }
 
   async getAllDeepReadings(pager: PagerDto) {
