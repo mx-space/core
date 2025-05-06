@@ -73,6 +73,11 @@ jobs:
     name: Test
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    env:
+      REDISMS_SYSTEM_BINARY: /usr/bin/redis-server
+      REDISMS_DISABLE_POSTINSTALL: 1
+      MONGOMS_SYSTEM_BINARY: /usr/bin/mongod
+      MONGOMS_DISABLE_POSTINSTALL: 1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -80,6 +85,8 @@ jobs:
         uses: ./.github/actions/setup-node
         with:
           node-version: '22.x'
+      - name: Setup MongoDB and Redis Binaries
+        uses: ./.github/actions/setup-databases-binary
       - name: Setup MongoDB and Redis
         uses: ./.github/actions/setup-databases
       - name: Run Lint
