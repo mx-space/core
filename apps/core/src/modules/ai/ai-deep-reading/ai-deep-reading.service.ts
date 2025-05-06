@@ -225,11 +225,11 @@ export class AiDeepReadingService {
     }
 
     const taskId = `ai:deepreading:${articleId}`
+    const redis = this.redisService.getClient()
     try {
       if (this.cachedTaskId2AiPromise.has(taskId)) {
         return this.cachedTaskId2AiPromise.get(taskId)
       }
-      const redis = this.redisService.getClient()
 
       const isProcessing = await redis.get(taskId)
 
@@ -256,8 +256,6 @@ export class AiDeepReadingService {
 
         const result = await this.deepReadingAgentChain(id)
 
-        await redis.del(taskId)
-
         const contentMd5 = md5(text)
 
         const doc = await this.aiDeepReadingModel.create({
@@ -283,6 +281,7 @@ export class AiDeepReadingService {
       )
     } finally {
       this.cachedTaskId2AiPromise.delete(taskId)
+      await redis.del(taskId)
     }
   }
 

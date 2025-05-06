@@ -113,11 +113,11 @@ export class AiSummaryService {
     }
 
     const taskId = `ai:summary:${articleId}:${lang}`
+    const redis = this.redisService.getClient()
     try {
       if (this.cachedTaskId2AiPromise.has(taskId)) {
         return this.cachedTaskId2AiPromise.get(taskId)
       }
-      const redis = this.redisService.getClient()
 
       const isProcessing = await redis.get(taskId)
 
@@ -140,8 +140,6 @@ export class AiSummaryService {
 
         const summary = await this.summaryChain(id, lang)
 
-        await redis.del(taskId)
-
         const contentMd5 = md5(text)
 
         const doc = await this.aiSummaryModel.create({
@@ -161,6 +159,7 @@ export class AiSummaryService {
       throw new BizException(ErrorCodeEnum.AIException, error.message)
     } finally {
       this.cachedTaskId2AiPromise.delete(taskId)
+      await redis.del(taskId)
     }
   }
 
