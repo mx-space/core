@@ -36,7 +36,7 @@ catalog:
   '@socket.io/redis-adapter': 8.3.0
   '@socket.io/redis-emitter': 5.1.0
   '@swc/core': 1.11.24
-  '@sxzz/eslint-config': 6.1.1
+  '@sxzz/eslint-config': 7.0.0
   '@typegoose/auto-increment': 4.13.0
   '@typegoose/typegoose': 12.15.0
   '@types/babel__core': 7.20.5

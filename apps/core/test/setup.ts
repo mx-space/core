@@ -1,7 +1,6 @@
 import { mkdirSync } from 'node:fs'
 import { MongoMemoryServer } from 'mongodb-memory-server'
-
-import { Logger } from '@nestjs/common'
+import { RedisMemoryServer } from 'redis-memory-server'
 
 import {
   DATA_DIR,
@@ -19,7 +18,14 @@ export async function setup() {
   mkdirSync(USER_ASSET_DIR, { recursive: true })
   mkdirSync(STATIC_FILE_DIR, { recursive: true })
   mkdirSync(THEME_DIR, { recursive: true })
-  const db = await MongoMemoryServer.create()
-  await db.stop()
+
+  // Initialize Redis and MongoDB mock server
+  await Promise.all([
+    RedisMemoryServer.create(),
+    MongoMemoryServer.create(),
+  ]).then(async ([redis, db]) => {
+    await redis.stop()
+    await db.stop()
+  })
 }
 export async function teardown() {}
