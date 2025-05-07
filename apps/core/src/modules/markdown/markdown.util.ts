@@ -70,8 +70,7 @@ marked.use({
         return `<a target="_blank" class="mention" rel="noreferrer nofollow" href="${urlPrefix}${username}">${username}</a>`
       },
       tokenizer(src) {
-        const rule =
-          /^\{((?<prefix>(GH)|(TW)|(TG))@(?<name>\w+\b))\}\s?(?!\[.*?\])/
+        const rule = /^(?<prefix>GH|TW|TG)@(?<name>\w+)\s?(?!\[.*?\])/
         const match = rule.exec(src)
         if (match) {
           const { groups } = match
@@ -149,12 +148,13 @@ marked.use({
             title || alt,
           )}</figcaption></figure>`
     },
-    // @ts-ignore
-    code(code, lang) {
+
+    code(code) {
+      const { lang, text } = code
       if (lang == 'mermaid') {
-        return `<pre class="mermaid">${code}</pre>`
+        return `<pre class="mermaid">${text}</pre>`
       } else {
-        return `<pre><code class="language-${lang}">${xss(code)}</code></pre>`
+        return `<pre><code class="language-${lang}">${xss(text)}</code></pre>`
       }
     },
   },
