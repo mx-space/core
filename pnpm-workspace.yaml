@@ -92,7 +92,7 @@ catalog:
   keyv: 5.3.3
   langchain: 0.3.24
   linkedom: 0.18.10
-  lint-staged: 15.5.0
+  lint-staged: 15.5.2
   lodash: ^4.17.21
   lru-cache: 11.1.0
   marked: 15.0.11
