@@ -155,10 +155,15 @@ export class MarkdownService {
   }
 
   async extractAllArticle() {
+    const [posts, notes, pages] = await Promise.all([
+      this.postModel.find().populate('category').lean(),
+      this.noteModel.find().lean(),
+      this.pageModel.find().lean(),
+    ])
     return {
-      posts: await this.postModel.find().populate('category').lean(),
-      notes: await this.noteModel.find().lean(),
-      pages: await this.pageModel.find().lean(),
+      posts,
+      notes,
+      pages,
     }
   }
 
