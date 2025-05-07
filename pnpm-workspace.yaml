@@ -75,7 +75,7 @@ catalog:
   cls-hooked: ^4.2.2
   commander: 13.1.0
   cors: 2.8.5
-  cron: ^3.5.0
+  cron: ^4.0.0
   cross-env: 7.0.3
   dayjs: 1.11.13
   ejs: 3.1.10
