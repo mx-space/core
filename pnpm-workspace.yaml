@@ -80,7 +80,7 @@ catalog:
   dayjs: 1.11.13
   ejs: 3.1.10
   eslint: ^9.24.0
-  express: 4.21.2
+  express: 5.1.0
   form-data: 4.0.2
   inquirer: ^10.2.2
   ioredis: 5.6.1
