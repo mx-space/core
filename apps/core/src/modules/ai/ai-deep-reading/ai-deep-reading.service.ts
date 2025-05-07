@@ -1,13 +1,9 @@
-import { AgentExecutor, createOpenAIToolsAgent } from 'langchain/agents'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 
 import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools'
-import {
-  ChatPromptTemplate,
-  MessagesPlaceholder,
-  SystemMessagePromptTemplate,
-} from '@langchain/core/prompts'
 import { DynamicStructuredTool } from '@langchain/core/tools'
+import { GraphRecursionError } from '@langchain/langgraph'
+import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { z } from '@mx-space/compiled/zod'
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
@@ -152,45 +148,39 @@ export class AiDeepReadingService {
       }),
     ]
 
-    // 创建Agent提示模板
-    const prompt = ChatPromptTemplate.fromMessages([
-      SystemMessagePromptTemplate.fromTemplate(
-        `你是一个专门进行文章深度阅读的AI助手，需要分析文章并提供详细的解读。
+    // 创建系统提示模板
+    const systemPrompt = `你是一个专门进行文章深度阅读的AI助手，需要分析文章并提供详细的解读。
 分析过程：
 1. 首先提取文章关键点，然后使用 save_key_points 保存到数据库
 2. 然后进行批判性分析，包括文章的优点、缺点和改进建议，然后使用 save_critical_analysis 保存到数据库
 3. 最后使用 deep_reading 生成完整的深度阅读内容
-4. 返回完整结果，包括关键点、批判性分析和深度阅读内容
-`,
-      ),
-      new MessagesPlaceholder('chat_history'),
-      ['human', '文章标题: {article_title}\n文章内容: {article_content}'],
-      new MessagesPlaceholder('agent_scratchpad'),
-    ])
-
-    // 创建Agent
-    const agent = await createOpenAIToolsAgent({
-      llm,
-      tools,
-      prompt,
-    })
-
-    // 创建Agent执行器
-    const executor = new AgentExecutor({
-      agent,
-      tools,
-      verbose: false,
-    })
+4. 返回完整结果，包括关键点、批判性分析和深度阅读内容`
 
     try {
-      // 执行Agent
-      await executor.invoke({
-        article_title: article.document.title,
-        article_content: article.document.text,
-        chat_history: [],
+      // 创建LangGraph React Agent
+      const agent = createReactAgent({
+        llm,
+        tools,
       })
 
-      // 返回结果
+      await agent.invoke(
+        {
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt,
+            },
+            {
+              role: 'user',
+              content: `文章标题: ${article.document.title}\n文章内容: ${article.document.text}`,
+            },
+          ],
+        },
+        {
+          recursionLimit: 10, // 相当于以前的maxIterations
+        },
+      )
+
       return {
         keyPoints: dataModel.keyPoints,
         criticalAnalysis: dataModel.criticalAnalysis,
@@ -270,6 +260,18 @@ export class AiDeepReadingService {
       }
     } catch (error) {
       console.error(error)
+
+      if (error instanceof GraphRecursionError) {
+        this.logger.error(
+          `LangGraph recursion limit reached for article ${articleId}: ${error.message}`,
+        )
+        throw new BizException(
+          ErrorCodeEnum.AIException,
+          'AI处理迭代次数超过限制',
+          error.stack,
+        )
+      }
+
       this.logger.error(
         `OpenAI encountered an error processing article ${articleId}: ${error.message}`,
       )

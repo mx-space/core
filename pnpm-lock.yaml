@@ -51,6 +51,9 @@ catalogs:
     '@langchain/core':
       specifier: 0.3.51
       version: 0.3.51
+    '@langchain/langgraph':
+      specifier: 0.2.68
+      version: 0.2.68
     '@langchain/openai':
       specifier: 0.5.10
       version: 0.5.10
@@ -424,6 +427,9 @@ importers:
 
   .:
     dependencies:
+      '@langchain/langgraph':
+        specifier: 'catalog:'
+        version: 0.2.68(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(zod-to-json-schema@3.24.5(zod@3.24.3))
       zx-cjs:
         specifier: 'catalog:'
         version: 7.0.7-0
@@ -2372,6 +2378,33 @@ packages:
   '@langchain/core@0.3.51':
     resolution: {integrity: sha512-2nE30uuomSQrIQKB3BLgQtECZLWj5gwPEzQ+I6Ot6s9DKd133nXp3eZeggkAJ/uuc4WVROYVNJnmxepeAWo02Q==}
     engines: {node: '>=18'}
+
+  '@langchain/langgraph-checkpoint@0.0.17':
+    resolution: {integrity: sha512-6b3CuVVYx+7x0uWLG+7YXz9j2iBa+tn2AXvkLxzEvaAsLE6Sij++8PPbS2BZzC+S/FPJdWsz6I5bsrqL0BYrCA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': '>=0.2.31 <0.4.0'
+
+  '@langchain/langgraph-sdk@0.0.74':
+    resolution: {integrity: sha512-IUN0m4BYkGWdviFd4EaWDcQgxNq8z+1LIwXajCSt9B+Cb/pz0ZNpIPdu5hAIsf6a0RWu5yRUhzL1L40t7vu3Zg==}
+    peerDependencies:
+      '@langchain/core': '>=0.2.31 <0.4.0'
+      react: ^18 || ^19
+    peerDependenciesMeta:
+      '@langchain/core':
+        optional: true
+      react:
+        optional: true
+
+  '@langchain/langgraph@0.2.68':
+    resolution: {integrity: sha512-wxdGmOeRUQutCWfdKwFb+92RMdZZ8jvXkG7PD3ZcVLiuOXhC9LSe5xcc1UbWHcV29fV542IDHMfvf2OVdv9dZQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': '>=0.2.36 <0.3.0 || >=0.3.40 < 0.4.0'
+      zod-to-json-schema: ^3.x
+    peerDependenciesMeta:
+      zod-to-json-schema:
+        optional: true
 
   '@langchain/openai@0.5.10':
     resolution: {integrity: sha512-hBQIWjcVxGS7tgVvgBBmrZ5jSaJ8nu9g6V64/Tx6KGjkW7VdGmUvqCO+koiQCOZVL7PBJkHWAvDsbghPYXiZEA==}
@@ -9008,6 +9041,32 @@ snapshots:
     transitivePeerDependencies:
       - openai
 
+  '@langchain/langgraph-checkpoint@0.0.17(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))':
+    dependencies:
+      '@langchain/core': 0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
+      uuid: 10.0.0
+
+  '@langchain/langgraph-sdk@0.0.74(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))':
+    dependencies:
+      '@types/json-schema': 7.0.15
+      p-queue: 6.6.2
+      p-retry: 4.6.2
+      uuid: 9.0.1
+    optionalDependencies:
+      '@langchain/core': 0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
+
+  '@langchain/langgraph@0.2.68(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(zod-to-json-schema@3.24.5(zod@3.24.3))':
+    dependencies:
+      '@langchain/core': 0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
+      '@langchain/langgraph-checkpoint': 0.0.17(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))
+      '@langchain/langgraph-sdk': 0.0.74(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))
+      uuid: 10.0.0
+      zod: 3.24.3
+    optionalDependencies:
+      zod-to-json-schema: 3.24.5(zod@3.24.3)
+    transitivePeerDependencies:
+      - react
+
   '@langchain/openai@0.5.10(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(encoding@0.1.13)':
     dependencies:
       '@langchain/core': 0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
@@ -10173,7 +10232,7 @@ snapshots:
 
   '@unocss/eslint-plugin@65.4.0(eslint@9.24.0(jiti@2.4.2))(typescript@5.7.3)':
     dependencies:
-      '@typescript-eslint/utils': 8.31.1(eslint@9.24.0(jiti@2.4.2))(typescript@5.7.3)
+      '@typescript-eslint/utils': 8.32.0(eslint@9.24.0(jiti@2.4.2))(typescript@5.7.3)
       '@unocss/config': 65.4.0
       '@unocss/core': 65.4.0
       magic-string: 0.30.17
