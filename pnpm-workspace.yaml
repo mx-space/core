@@ -65,7 +65,7 @@ catalog:
   axios: ^1.9.0
   axios-retry: 4.5.0
   bcryptjs: ^3.0.2
-  better-auth: 1.2.5
+  better-auth: 1.2.7
   blurhash: 2.0.5
   cache-manager: 6.4.2
   camelcase-keys: ^9.1.3
