@@ -16,7 +16,7 @@ catalog:
   '@innei/prettier': 0.15.0
   '@innei/pretty-logger-nestjs': 0.3.3
   '@keyv/redis': 4.4.0
-  '@langchain/core': 0.3.51
+  '@langchain/core': 0.3.55
   '@langchain/langgraph': 0.2.68
   '@langchain/openai': 0.5.10
   '@modelcontextprotocol/sdk': 1.11.0
