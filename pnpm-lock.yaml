@@ -319,8 +319,8 @@ catalogs:
       specifier: 1.1.12
       version: 1.1.12
     nodemailer:
-      specifier: 7.0.0
-      version: 7.0.0
+      specifier: 7.0.3
+      version: 7.0.3
     openai:
       specifier: 4.97.0
       version: 4.97.0
@@ -686,7 +686,7 @@ importers:
         version: 1.1.12
       nodemailer:
         specifier: 'catalog:'
-        version: 7.0.0
+        version: 7.0.3
       openai:
         specifier: 'catalog:'
         version: 4.97.0(encoding@0.1.13)(zod@3.24.3)
@@ -5850,8 +5850,8 @@ packages:
   node-releases@2.0.19:
     resolution: {integrity: sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw==}
 
-  nodemailer@7.0.0:
-    resolution: {integrity: sha512-9QyEp969UmUWVDB2gVQvxHm1bqkyuC5YZIyX/ySJUpIVyXpuEFyBAuoFFs+G5/C2ZaUp9F5A65DPfxedfVHXXQ==}
+  nodemailer@7.0.3:
+    resolution: {integrity: sha512-Ajq6Sz1x7cIK3pN6KesGTah+1gnwMnx5gKl3piQlQQE/PwyJ4Mbc8is2psWYxK3RJTVeqsDaCv8ZzXLCDHMTZw==}
     engines: {node: '>=6.0.0'}
 
   notepack.io@3.0.1:
@@ -13089,7 +13089,7 @@ snapshots:
 
   node-releases@2.0.19: {}
 
-  nodemailer@7.0.0: {}
+  nodemailer@7.0.3: {}
 
   notepack.io@3.0.1: {}
 
