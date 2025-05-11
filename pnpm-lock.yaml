@@ -49,8 +49,8 @@ catalogs:
       specifier: 4.4.0
       version: 4.4.0
     '@langchain/core':
-      specifier: 0.3.51
-      version: 0.3.51
+      specifier: 0.3.55
+      version: 0.3.55
     '@langchain/langgraph':
       specifier: 0.2.68
       version: 0.2.68
@@ -429,7 +429,7 @@ importers:
     dependencies:
       '@langchain/langgraph':
         specifier: 'catalog:'
-        version: 0.2.68(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(zod-to-json-schema@3.24.5(zod@3.24.3))
+        version: 0.2.68(@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(zod-to-json-schema@3.24.5(zod@3.24.3))
       zx-cjs:
         specifier: 'catalog:'
         version: 7.0.7-0
@@ -527,7 +527,7 @@ importers:
         version: 4.4.0(keyv@5.3.3)
       '@langchain/openai':
         specifier: 'catalog:'
-        version: 0.5.10(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(encoding@0.1.13)
+        version: 0.5.10(@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(encoding@0.1.13)
       '@mx-space/compiled':
         specifier: workspace:*
         version: link:../../packages/compiled
@@ -644,7 +644,7 @@ importers:
         version: 5.3.3
       langchain:
         specifier: 'catalog:'
-        version: 0.3.24(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(axios@1.9.0)(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
+        version: 0.3.24(@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(axios@1.9.0)(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
       linkedom:
         specifier: 'catalog:'
         version: 0.18.10
@@ -738,7 +738,7 @@ importers:
     devDependencies:
       '@langchain/core':
         specifier: 'catalog:'
-        version: 0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
+        version: 0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
       '@nestjs/cli':
         specifier: 'catalog:'
         version: 11.0.7(@swc/core@1.11.24)(@types/node@22.15.3)(esbuild@0.25.3)
@@ -2375,8 +2375,8 @@ packages:
   '@keyv/serialize@1.0.3':
     resolution: {integrity: sha512-qnEovoOp5Np2JDGonIDL6Ayihw0RhnRh6vxPuHo4RDn1UOzwEo4AeIfpL6UGIrsceWrCMiVPgwRjbHu4vYFc3g==}
 
-  '@langchain/core@0.3.51':
-    resolution: {integrity: sha512-2nE30uuomSQrIQKB3BLgQtECZLWj5gwPEzQ+I6Ot6s9DKd133nXp3eZeggkAJ/uuc4WVROYVNJnmxepeAWo02Q==}
+  '@langchain/core@0.3.55':
+    resolution: {integrity: sha512-SojY2ugpT6t9eYfFB9Ysvyhhyh+KJTGXs50hdHUE9tAEQWp3WAwoxe4djwJnOZ6fSpWYdpFt2UT2ksHVDy2vXA==}
     engines: {node: '>=18'}
 
   '@langchain/langgraph-checkpoint@0.0.17':
@@ -9024,7 +9024,7 @@ snapshots:
     dependencies:
       buffer: 6.0.3
 
-  '@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))':
+  '@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))':
     dependencies:
       '@cfworker/json-schema': 4.1.1
       ansi-styles: 5.2.0
@@ -9041,25 +9041,25 @@ snapshots:
     transitivePeerDependencies:
       - openai
 
-  '@langchain/langgraph-checkpoint@0.0.17(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))':
+  '@langchain/langgraph-checkpoint@0.0.17(@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))':
     dependencies:
-      '@langchain/core': 0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
+      '@langchain/core': 0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
       uuid: 10.0.0
 
-  '@langchain/langgraph-sdk@0.0.74(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))':
+  '@langchain/langgraph-sdk@0.0.74(@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))':
     dependencies:
       '@types/json-schema': 7.0.15
       p-queue: 6.6.2
       p-retry: 4.6.2
       uuid: 9.0.1
     optionalDependencies:
-      '@langchain/core': 0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
+      '@langchain/core': 0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
 
-  '@langchain/langgraph@0.2.68(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(zod-to-json-schema@3.24.5(zod@3.24.3))':
+  '@langchain/langgraph@0.2.68(@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(zod-to-json-schema@3.24.5(zod@3.24.3))':
     dependencies:
-      '@langchain/core': 0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
-      '@langchain/langgraph-checkpoint': 0.0.17(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))
-      '@langchain/langgraph-sdk': 0.0.74(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))
+      '@langchain/core': 0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
+      '@langchain/langgraph-checkpoint': 0.0.17(@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))
+      '@langchain/langgraph-sdk': 0.0.74(@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))
       uuid: 10.0.0
       zod: 3.24.3
     optionalDependencies:
@@ -9067,9 +9067,9 @@ snapshots:
     transitivePeerDependencies:
       - react
 
-  '@langchain/openai@0.5.10(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(encoding@0.1.13)':
+  '@langchain/openai@0.5.10(@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(encoding@0.1.13)':
     dependencies:
-      '@langchain/core': 0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
+      '@langchain/core': 0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
       js-tiktoken: 1.0.20
       openai: 4.97.0(encoding@0.1.13)(zod@3.24.3)
       zod: 3.24.3
@@ -9078,9 +9078,9 @@ snapshots:
       - encoding
       - ws
 
-  '@langchain/textsplitters@0.1.0(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))':
+  '@langchain/textsplitters@0.1.0(@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))':
     dependencies:
-      '@langchain/core': 0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
+      '@langchain/core': 0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
       js-tiktoken: 1.0.20
 
   '@levischuck/tiny-cbor@0.2.11': {}
@@ -12305,11 +12305,11 @@ snapshots:
 
   kysely@0.27.6: {}
 
-  langchain@0.3.24(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(axios@1.9.0)(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)):
+  langchain@0.3.24(@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(axios@1.9.0)(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)):
     dependencies:
-      '@langchain/core': 0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
-      '@langchain/openai': 0.5.10(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(encoding@0.1.13)
-      '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.51(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))
+      '@langchain/core': 0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3))
+      '@langchain/openai': 0.5.10(@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))(encoding@0.1.13)
+      '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.55(openai@4.97.0(encoding@0.1.13)(zod@3.24.3)))
       js-tiktoken: 1.0.20
       js-yaml: 4.1.0
       jsonpointer: 5.0.1
