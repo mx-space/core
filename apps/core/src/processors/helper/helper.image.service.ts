@@ -6,6 +6,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
+import { AsyncQueue } from '~/utils/queue.util'
 import { requireDepsWithInstall } from '~/utils/tool.util'
 
 import { HttpService } from './helper.http.service'
@@ -41,8 +42,8 @@ export class ImageService implements OnModuleInit {
       (originImages ?? []).map((image) => [image.src, { ...image }]),
     )
 
-    const task = [] as Promise<ImageModel>[]
-    for (const src of newImages) {
+    const queue = new AsyncQueue(2)
+    const imageProcessingTasks = newImages.map((src) => async () => {
       const originImage = oldImagesMap.get(src)
       const keys = new Set(Object.keys(originImage || {}))
 
@@ -55,44 +56,43 @@ export class ImageService implements OnModuleInit {
         )
       ) {
         result.push(originImage)
-        continue
+        return
       }
-      const promise = new Promise<ImageModel>((resolve) => {
+
+      try {
         this.logger.log(`Get --> ${src}`)
-        this.getOnlineImageSizeAndMeta(src)
-          .then(({ size, accent, blurHash }) => {
-            const filename = src.split('/').pop()
-            this.logger.debug(
-              `[${filename}]: height: ${size.height}, width: ${size.width}, accent: ${accent}`,
-            )
+        const { size, accent, blurHash } =
+          await this.getOnlineImageSizeAndMeta(src)
+        const filename = src.split('/').pop()
+        this.logger.debug(
+          `[${filename}]: height: ${size.height}, width: ${size.width}, accent: ${accent}`,
+        )
 
-            resolve({ ...size, accent, src, blurHash })
+        result.push({ ...size, accent, src, blurHash })
+      } catch (error) {
+        this.logger.error(`GET --> ${src} ${error.message}`)
+
+        const oldRecord = oldImagesMap.get(src)
+        if (oldRecord) {
+          result.push(oldRecord)
+        } else {
+          result.push({
+            width: undefined,
+            height: undefined,
+            type: undefined,
+            accent: undefined,
+            src: undefined,
+            blurHash: undefined,
           })
-          .catch((error) => {
-            this.logger.error(`GET --> ${src} ${error.message}`)
+        }
+      }
+    })
 
-            const oldRecord = oldImagesMap.get(src)
-            if (oldRecord) {
-              resolve(oldRecord)
-            } else
-              resolve({
-                width: undefined,
-                height: undefined,
-                type: undefined,
-                accent: undefined,
-                src: undefined,
-                blurHash: undefined,
-              })
-          })
-      })
-
-      task.push(promise)
-    }
-    const images = await Promise.all(task)
-    result.push(...images)
+    // Add all tasks to the queue and wait for completion
+    const wait = queue.addMultiple(imageProcessingTasks)
+    await wait()
 
     // 老图片不要过滤，记录到列头
-
     if (originImages) {
       for (const oldImageRecord of originImages) {
         const src = oldImageRecord.src

@@ -34,6 +34,7 @@ export class AsyncQueue {
 
   addMultiple(requests: (() => Promise<any>)[]) {
     this.queue.push(...requests)
-    this.runNext()
+    const wait = this.runNext()
+    return async () => await wait
   }
 }
