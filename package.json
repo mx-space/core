@@ -19,29 +19,25 @@
     "lint": "pnpm -C \"apps/core\" run lint",
     "publish:core": "cd apps/core && npm run publish"
   },
-  "optionalDependencies": {
-    "mongodb-memory-server": "10.1.4",
-    "redis-memory-server": "0.12.1"
-  },
   "dependencies": {
-    "@langchain/langgraph": "catalog:",
-    "zx-cjs": "catalog:"
+    "@langchain/langgraph": "0.2.68",
+    "zx-cjs": "7.0.7-0"
   },
   "devDependencies": {
-    "@innei/prettier": "catalog:",
-    "@sxzz/eslint-config": "catalog:",
-    "@types/node": "catalog:",
-    "cross-env": "catalog:",
-    "eslint": "catalog:",
-    "lint-staged": "catalog:",
-    "prettier": "catalog:",
-    "rimraf": "catalog:",
-    "simple-git-hooks": "catalog:",
-    "ts-node": "catalog:",
-    "tsconfig-paths": "catalog:",
-    "tsup": "catalog:",
-    "typescript": "catalog:",
-    "vite-tsconfig-paths": "catalog:"
+    "@innei/prettier": "0.15.0",
+    "@sxzz/eslint-config": "7.0.0",
+    "@types/node": "22.15.3",
+    "cross-env": "7.0.3",
+    "eslint": "^9.24.0",
+    "lint-staged": "15.5.0",
+    "prettier": "3.5.3",
+    "rimraf": "6.0.1",
+    "simple-git-hooks": "2.12.1",
+    "ts-node": "10.9.2",
+    "tsconfig-paths": "4.2.0",
+    "tsup": "8.4.0",
+    "typescript": "5.7.3",
+    "vite-tsconfig-paths": "5.1.4"
   },
   "resolutions": {
     "get-pixels@^3>request": "./external/request",

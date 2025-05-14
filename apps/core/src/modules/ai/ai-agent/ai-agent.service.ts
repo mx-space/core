@@ -1,10 +1,11 @@
 import { AgentExecutor, createOpenAIToolsAgent } from 'langchain/agents'
 
+import { ToolDefinition } from '@langchain/core/language_models/base'
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from '@langchain/core/prompts'
-import { DynamicStructuredTool, ToolInterface } from '@langchain/core/tools'
+import { DynamicStructuredTool } from '@langchain/core/tools'
 import { z } from '@mx-space/compiled/zod'
 import { Injectable } from '@nestjs/common'
 
@@ -19,7 +20,7 @@ export class AIAgentService {
   ) {}
 
   // 创建获取帖子的工具
-  private createGetPostTool(): ToolInterface {
+  private createGetPostTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_post_by_id',
       description: '根据ID获取博客文章',
@@ -38,7 +39,7 @@ export class AIAgentService {
   }
 
   // 创建获取帖子列表的工具
-  private createGetPostsTool(): ToolInterface {
+  private createGetPostsTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_posts',
       description: '获取博客文章列表',
@@ -58,7 +59,7 @@ export class AIAgentService {
   }
 
   // 创建获取笔记的工具
-  private createGetNoteTool(): ToolInterface {
+  private createGetNoteTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_note_by_id',
       description: '根据ID获取笔记',
@@ -77,7 +78,7 @@ export class AIAgentService {
   }
 
   // 创建获取笔记列表的工具
-  private createGetNotesTool(): ToolInterface {
+  private createGetNotesTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_notes',
       description: '获取笔记列表',
@@ -96,7 +97,7 @@ export class AIAgentService {
     })
   }
 
-  private createGetLatestPostTool(): ToolInterface {
+  private createGetLatestPostTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_latest_post',
       description: '获取最新的一篇博客文章',
@@ -108,7 +109,7 @@ export class AIAgentService {
     })
   }
 
-  private createGetLatestNotesTool(): ToolInterface {
+  private createGetLatestNotesTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_latest_notes',
       description: '获取最新的一篇笔记',
@@ -121,7 +122,7 @@ export class AIAgentService {
   }
 
   // 创建获取分类的工具
-  private createGetCategoryTool(): ToolInterface {
+  private createGetCategoryTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_category_by_id',
       description: '根据ID获取分类',
@@ -140,7 +141,7 @@ export class AIAgentService {
   }
 
   // 创建获取所有分类的工具
-  private createGetAllCategoriesTools(): ToolInterface {
+  private createGetAllCategoriesTools(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_all_categories',
       description: '获取所有分类及其文章数量',
@@ -157,7 +158,7 @@ export class AIAgentService {
   }
 
   // 创建获取分类下文章的工具
-  private createGetPostsByCategoryTool(): ToolInterface {
+  private createGetPostsByCategoryTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_posts_by_category',
       description: '获取指定分类下的所有文章',
@@ -176,7 +177,7 @@ export class AIAgentService {
   }
 
   // 创建获取标签统计的工具
-  private createGetTagsSummaryTool(): ToolInterface {
+  private createGetTagsSummaryTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_tags_summary',
       description: '获取所有标签及其文章数量统计',
@@ -193,7 +194,7 @@ export class AIAgentService {
   }
 
   // 创建获取标签下文章的工具
-  private createGetPostsByTagTool(): ToolInterface {
+  private createGetPostsByTagTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_posts_by_tag',
       description: '获取指定标签下的所有文章',
@@ -212,7 +213,7 @@ export class AIAgentService {
   }
 
   // 创建获取页面的工具
-  private createGetPageTool(): ToolInterface {
+  private createGetPageTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_page_by_id',
       description: '根据ID获取页面',
@@ -231,7 +232,7 @@ export class AIAgentService {
   }
 
   // 创建获取所有页面的工具
-  private createGetAllPagesTool(): ToolInterface {
+  private createGetAllPagesTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_all_pages',
       description: '获取所有页面',
@@ -248,7 +249,7 @@ export class AIAgentService {
   }
 
   // 创建获取所有说说的工具
-  private createGetAllSaysTool(): ToolInterface {
+  private createGetAllSaysTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_all_says',
       description: '获取所有说说/状态更新',
@@ -265,7 +266,7 @@ export class AIAgentService {
   }
 
   // 创建获取随机说说的工具
-  private createGetRandomSayTool(): ToolInterface {
+  private createGetRandomSayTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_random_say',
       description: '获取随机一条说说/状态更新',
@@ -282,7 +283,7 @@ export class AIAgentService {
   }
 
   // 创建获取所有动态的工具
-  private createGetAllRecentlyTool(): ToolInterface {
+  private createGetAllRecentlyTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_all_recently',
       description: '获取所有动态/活动',
@@ -299,7 +300,7 @@ export class AIAgentService {
   }
 
   // 创建获取特定动态的工具
-  private createGetRecentlyByIdTool(): ToolInterface {
+  private createGetRecentlyByIdTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_recently_by_id',
       description: '根据ID获取特定动态/活动',
@@ -318,7 +319,7 @@ export class AIAgentService {
   }
 
   // 创建获取最新动态的工具
-  private createGetLatestRecentlyTool(): ToolInterface {
+  private createGetLatestRecentlyTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_latest_recently',
       description: '获取最新的一条动态/活动',
@@ -335,7 +336,7 @@ export class AIAgentService {
   }
 
   // 创建获取分页动态的工具
-  private createGetRecentlyOffsetTool(): ToolInterface {
+  private createGetRecentlyOffsetTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_recently_offset',
       description: '获取指定范围的动态/活动',
@@ -360,7 +361,7 @@ export class AIAgentService {
   }
 
   // 创建获取评论列表的工具
-  private createGetCommentsTool(): ToolInterface {
+  private createGetCommentsTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_comments',
       description: '获取所有评论，可按状态筛选',
@@ -385,7 +386,7 @@ export class AIAgentService {
   }
 
   // 创建获取内容评论的工具
-  private createGetContentCommentsTool(): ToolInterface {
+  private createGetContentCommentsTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
       name: 'get_content_comments',
       description: '获取特定内容的评论',

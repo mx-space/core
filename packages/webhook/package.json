@@ -21,7 +21,7 @@
     "build": "node scripts/generate.js && tsup && node scripts/post-build.cjs"
   },
   "devDependencies": {
-    "express": "catalog:"
+    "express": "4.21.2"
   },
   "bump": {
     "before": [

@@ -13,9 +13,9 @@
     "build": "tsup"
   },
   "devDependencies": {
-    "better-auth": "catalog:",
-    "nanoid": "catalog:",
-    "zod": "catalog:",
-    "zx": "catalog:"
+    "better-auth": "1.2.5",
+    "nanoid": "5.1.5",
+    "zod": "3.24.3",
+    "zx": "7.2.3"
   }
 }

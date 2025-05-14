@@ -4,7 +4,7 @@ export default sxzz(
   {
     markdown: false,
     prettier: true,
-    pnpm: true,
+    pnpm: false,
     vue: false,
     unocss: false,
     sortKeys: false,
