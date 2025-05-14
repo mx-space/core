@@ -385,8 +385,8 @@ importers:
         specifier: 0.38.3
         version: 0.38.3
       cron:
-        specifier: ^3.5.0
-        version: 3.5.0
+        specifier: ^4.0.0
+        version: 4.3.0
       ioredis:
         specifier: 5.6.1
         version: 5.6.1
@@ -2459,9 +2459,6 @@ packages:
   '@types/luxon@3.3.8':
     resolution: {integrity: sha512-jYvz8UMLDgy3a5SkGJne8H7VA7zPV2Lwohjx0V8V31+SqAjNmurWMkk9cQhfvlcnXWudBpK9xPM1n4rljOcHYQ==}
 
-  '@types/luxon@3.4.2':
-    resolution: {integrity: sha512-TifLZlFudklWlMBfhubvgqTXRzLDI5pCbGa4P8a3wPyUQSW+1xQ5eDsreP9DWHX3tjq1ke96uYG/nwundroWcA==}
-
   '@types/luxon@3.6.2':
     resolution: {integrity: sha512-R/BdP7OxEMc44l2Ex5lSXHoIXTB2JLNa3y2QISIbr58U/YcsffyQrYW//hZSdrfxrjRZj3GcUoxMPGdO8gSYuw==}
 
@@ -3293,9 +3290,6 @@ packages:
 
   cron@3.1.6:
     resolution: {integrity: sha512-cvFiQCeVzsA+QPM6fhjBtlKGij7tLLISnTSvFxVdnFGLdz+ZdXN37kNe0i2gefmdD17XuZA6n2uPVwzl4FxW/w==}
-
-  cron@3.5.0:
-    resolution: {integrity: sha512-0eYZqCnapmxYcV06uktql93wNWdlTmmBFP2iYz+JPVcQqlyFYcn1lFuIk4R54pkOmE7mcldTAPZv6X5XA4Q46A==}
 
   cron@4.3.0:
     resolution: {integrity: sha512-ciiYNLfSlF9MrDqnbMdRWFiA6oizSF7kA1osPP9lRzNu0Uu+AWog1UKy7SkckiDY2irrNjeO6qLyKnXC8oxmrw==}
@@ -4656,10 +4650,6 @@ packages:
 
   luxon@3.4.4:
     resolution: {integrity: sha512-zobTr7akeGHnv7eBOXcRgMeCP6+uyYsczwmeRCauvpvaAltgNyTbLH/+VaEAPUeWBT+1GuNmz4wC/6jtQzbbVA==}
-    engines: {node: '>=12'}
-
-  luxon@3.5.0:
-    resolution: {integrity: sha512-rh+Zjr6DNfUYR3bPwJEnuwDdqMbxZW7LOQfUN4B54+Cl+0o5zaU9RJ6bcidfDtC1cWCZXQ+nvX8bf6bAji37QQ==}
     engines: {node: '>=12'}
 
   luxon@3.6.1:
@@ -9106,8 +9096,6 @@ snapshots:
 
   '@types/luxon@3.3.8': {}
 
-  '@types/luxon@3.4.2': {}
-
   '@types/luxon@3.6.2': {}
 
   '@types/mdast@4.0.4':
@@ -9970,11 +9958,6 @@ snapshots:
     dependencies:
       '@types/luxon': 3.3.8
       luxon: 3.4.4
-
-  cron@3.5.0:
-    dependencies:
-      '@types/luxon': 3.4.2
-      luxon: 3.5.0
 
   cron@4.3.0:
     dependencies:
@@ -11498,8 +11481,6 @@ snapshots:
       yallist: 3.1.1
 
   luxon@3.4.4: {}
-
-  luxon@3.5.0: {}
 
   luxon@3.6.1: {}
 
