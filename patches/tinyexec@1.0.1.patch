@@ -1,10 +1,92 @@
 diff --git a/dist/main.js b/dist/main.js
-index cba25835975aa12fb3e01ee463bc89d7cf51ab92..d13e398b929b329c4f4664b38db6b897b31a257f 100644
+index cba25835975aa12fb3e01ee463bc89d7cf51ab92..469896780a581f69e18868a0bdb2c22af1a0ff36 100644
 --- a/dist/main.js
 +++ b/dist/main.js
-@@ -1,4 +1,4 @@
+@@ -1,15 +1,8 @@
 -import { createRequire as __tinyexec_cr } from "node:module";const require = __tinyexec_cr(import.meta.url);
-+
  var St = Object.create;
  var $ = Object.defineProperty;
  var kt = Object.getOwnPropertyDescriptor;
+ var Tt = Object.getOwnPropertyNames;
+ var At = Object.getPrototypeOf, Rt = Object.prototype.hasOwnProperty;
+-var h = /* @__PURE__ */ ((t) => typeof require < "u" ? require : typeof Proxy < "u" ? new Proxy(t, {
+-  get: (e, n) => (typeof require < "u" ? require : e)[n]
+-}) : t)(function(t) {
+-  if (typeof require < "u") return require.apply(this, arguments);
+-  throw Error('Dynamic require of "' + t + '" is not supported');
+-});
+ var l = (t, e) => () => (e || t((e = { exports: {} }).exports, e), e.exports);
+ var $t = (t, e, n, r) => {
+   if (e && typeof e == "object" || typeof e == "function")
+@@ -31,7 +24,7 @@ var W = l((Se, H) => {
+   "use strict";
+   H.exports = z;
+   z.sync = Wt;
+-  var j = h("fs");
++  var j = require("fs");
+   function Ht(t, e) {
+     var n = e.pathExt !== void 0 ? e.pathExt : process.env.PATHEXT;
+     if (!n || (n = n.split(";"), n.indexOf("") !== -1))
+@@ -61,7 +54,7 @@ var X = l((ke, B) => {
+   "use strict";
+   B.exports = K;
+   K.sync = Dt;
+-  var D = h("fs");
++  var D = require("fs");
+   function K(t, e, n) {
+     D.stat(t, function(r, s) {
+       n(r, r ? !1 : M(s, e));
+@@ -82,7 +75,7 @@ var X = l((ke, B) => {
+ // node_modules/isexe/index.js
+ var U = l((Ae, G) => {
+   "use strict";
+-  var Te = h("fs"), v;
++  var Te = require("fs"), v;
+   process.platform === "win32" || global.TESTING_WINDOWS ? v = W() : v = X();
+   G.exports = y;
+   y.sync = Mt;
+@@ -114,7 +107,7 @@ var U = l((Ae, G) => {
+ // node_modules/which/which.js
+ var et = l((Re, tt) => {
+   "use strict";
+-  var g = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys", Y = h("path"), Bt = g ? ";" : ":", V = U(), J = (t) => Object.assign(new Error(`not found: ${t}`), { code: "ENOENT" }), Q = (t, e) => {
++  var g = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys", Y = require("path"), Bt = g ? ";" : ":", V = U(), J = (t) => Object.assign(new Error(`not found: ${t}`), { code: "ENOENT" }), Q = (t, e) => {
+     let n = e.colon || Bt, r = t.match(/\//) || g && t.match(/\\/) ? [""] : [
+       // windows always checks the cwd first
+       ...g ? [process.cwd()] : [],
+@@ -188,7 +181,7 @@ var rt = l(($e, _) => {
+ // node_modules/cross-spawn/lib/util/resolveCommand.js
+ var ct = l((Ne, it) => {
+   "use strict";
+-  var st = h("path"), Gt = et(), Ut = rt();
++  var st = require("path"), Gt = et(), Ut = rt();
+   function ot(t, e) {
+     let n = t.options.env || process.env, r = process.cwd(), s = t.options.cwd != null, o = s && process.chdir !== void 0 && !process.chdir.disabled;
+     if (o)
+@@ -250,7 +243,7 @@ var dt = l((Le, pt) => {
+ // node_modules/cross-spawn/lib/util/readShebang.js
+ var ht = l((je, ft) => {
+   "use strict";
+-  var O = h("fs"), Zt = dt();
++  var O = require("fs"), Zt = dt();
+   function te(t) {
+     let n = Buffer.alloc(150), r;
+     try {
+@@ -265,7 +258,7 @@ var ht = l((je, ft) => {
+ // node_modules/cross-spawn/lib/parse.js
+ var wt = l((Fe, Et) => {
+   "use strict";
+-  var ee = h("path"), mt = ct(), gt = ut(), ne = ht(), re = process.platform === "win32", se = /\.(?:com|exe)$/i, oe = /node_modules[\\/].bin[\\/][^\\/]+\.cmd$/i;
++  var ee = require("path"), mt = ct(), gt = ut(), ne = ht(), re = process.platform === "win32", se = /\.(?:com|exe)$/i, oe = /node_modules[\\/].bin[\\/][^\\/]+\.cmd$/i;
+   function ie(t) {
+     t.file = mt(t);
+     let e = t.file && ne(t.file);
+@@ -343,7 +336,7 @@ var bt = l((ze, vt) => {
+ // node_modules/cross-spawn/index.js
+ var Ct = l((He, E) => {
+   "use strict";
+-  var yt = h("child_process"), T = wt(), A = bt();
++  var yt = require("child_process"), T = wt(), A = bt();
+   function _t(t, e, n) {
+     let r = T(t, e, n), s = yt.spawn(r.command, r.args, r.options);
+     return A.hookChildProcess(s, r), s;
