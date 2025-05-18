@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { cloneDeep } from 'lodash'
 
-import { installPackage } from '@antfu/install-pkg'
+import { installPackage } from '@mx-space/compiled/install-pkg'
 
 import { NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { logger } from '~/global/consola.global'

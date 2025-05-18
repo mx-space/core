@@ -6,12 +6,14 @@
   "exports": {
     ".": "./dist/index.cjs",
     "./auth": "./dist/auth.cjs",
-    "./zod": "./dist/zod.cjs"
+    "./zod": "./dist/zod.cjs",
+    "./install-pkg": "./dist/install-pkg.cjs"
   },
   "scripts": {
     "build": "tsup"
   },
   "devDependencies": {
+    "@antfu/install-pkg": "1.1.0",
     "better-auth": "1.2.5",
     "nanoid": "5.1.5",
     "zod": "3.24.3",

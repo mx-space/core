@@ -1,0 +1,10 @@
+diff --git a/dist/main.js b/dist/main.js
+index cba25835975aa12fb3e01ee463bc89d7cf51ab92..d13e398b929b329c4f4664b38db6b897b31a257f 100644
+--- a/dist/main.js
++++ b/dist/main.js
+@@ -1,4 +1,4 @@
+-import { createRequire as __tinyexec_cr } from "node:module";const require = __tinyexec_cr(import.meta.url);
++
+ var St = Object.create;
+ var $ = Object.defineProperty;
+ var kt = Object.getOwnPropertyDescriptor;
