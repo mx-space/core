@@ -4,7 +4,6 @@ import path, { join, resolve } from 'node:path'
 import { flatten } from 'lodash'
 import { mkdirp } from 'mkdirp'
 
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { $, cd } from '@mx-space/compiled'
 import {
   BadRequestException,
@@ -27,6 +26,7 @@ import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { migrateDatabase } from '~/migration/migrate'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
+import { S3Uploader } from '~/utils/s3.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getFolderSize, installPKG } from '~/utils/system.util'
 import { getMediumDateTime } from '~/utils/time.util'
@@ -302,28 +302,21 @@ export class BackupService {
         return
       }
 
-      const s3 = new S3Client({
+      const s3 = new S3Uploader({
+        bucket,
         region,
+        accessKey: secretId,
+        secretKey,
         endpoint,
-        credentials: {
-          accessKeyId: secretId,
-          secretAccessKey: secretKey,
-        },
       })
 
       const remoteFileKey = backup.path.slice(backup.path.lastIndexOf('/') + 1)
-      const command = new PutObjectCommand({
-        Bucket: bucket,
-        Key: remoteFileKey,
-        Body: backup.buffer,
-        ContentType: 'application/zip',
-      })
-
       this.logger.log('--> 开始上传到 S3')
-      await s3.send(command).catch((error) => {
+      await s3.uploadFile(backup.buffer, remoteFileKey).catch((error) => {
         this.logger.error('--> 上传失败了')
         throw error
       })
+
       this.logger.log('--> 上传成功')
     })
   }
