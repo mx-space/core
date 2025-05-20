@@ -1,5 +1,29 @@
 # CHANGELOG
 
+## [8.3.1](https://github.com/mx-space/core/compare/v8.3.0...v8.3.1) (2025-05-20)
+
+
+### Bug Fixes
+
+* **ai:** ensure proper task cleanup in AiDeepReadingService ([f7cd8c7](https://github.com/mx-space/core/commit/f7cd8c7035b00ab0fc338c3f8f7947dccb1ff6bd))
+* bundle ([7e616ee](https://github.com/mx-space/core/commit/7e616eeb8873587a76235f254d6b9b998268bac9))
+* **deps:** complie `@antfu/install-pkg` ([89013ed](https://github.com/mx-space/core/commit/89013ed3482c7e8f0faabcfe61cccbf856b77bab))
+* **markdown:** refine tokenizer and code handling in markdown utility ([e80b776](https://github.com/mx-space/core/commit/e80b77662b3ecf7b7b5e75bbb7566612781920c7))
+* **tinyexec:** replace require statements to support cjs ([75e153c](https://github.com/mx-space/core/commit/75e153c3556e2815f241fa11b1eeba73e5cf7c4b))
+
+
+### Features
+
+* **ai:** enhance OpenAI configuration with additional headers ([9b46a60](https://github.com/mx-space/core/commit/9b46a6075048ec870edc814ee159c9847b1d1b11))
+* **s3:** implement S3Uploader for file uploads ([c527591](https://github.com/mx-space/core/commit/c52759181ba04d0286d4dbbc6d67f12953865ded))
+
+
+### Reverts
+
+* Revert "chore(deps): update TypeScript and related dependencies" ([3a8d1ed](https://github.com/mx-space/core/commit/3a8d1ede77d85e36fcd459efac461509c57f5c42))
+
+
+
 # [8.3.0](https://github.com/mx-space/core/compare/v8.2.0...v8.3.0) (2025-05-06)
 
 
