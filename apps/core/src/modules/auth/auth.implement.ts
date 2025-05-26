@@ -138,7 +138,15 @@ export async function CreateAuth(
 
   const handler = async (req: IncomingMessage, res: ServerResponse) => {
     try {
-      res.setHeader('access-control-allow-credentials', 'true')
+      // cors
+      res.setHeader(
+        'Access-Control-Allow-Origin',
+        req.headers.origin || req.headers.referer || req.headers.host || '*',
+      )
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+      res.setHeader('Access-Control-Allow-Credentials', 'true')
+      res.setHeader('Access-Control-Max-Age', '86400')
 
       const clonedRequest = new IncomingMessage(req.socket)
       const handler = toNodeHandler(auth)(
