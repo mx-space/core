@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [8.3.2](https://github.com/mx-space/core/compare/v8.3.1...v8.3.2) (2025-05-26)
+
+
+### Bug Fixes
+
+* **auth:** enhance CORS support in CreateAuth handler ([bf6021a](https://github.com/mx-space/core/commit/bf6021a0b4e9d55e85a44eedf2b2cb8c5e07eec6))
+
+
+
 ## [8.3.1](https://github.com/mx-space/core/compare/v8.3.0...v8.3.1) (2025-05-20)
 
 
