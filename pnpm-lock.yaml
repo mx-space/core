@@ -324,8 +324,8 @@ importers:
         specifier: 0.3.55
         version: 0.3.55(openai@5.1.1(zod@3.25.56))
       '@langchain/langgraph':
-        specifier: 0.2.72
-        version: 0.2.72(@langchain/core@0.3.55(openai@5.1.1(zod@3.25.56)))(zod-to-json-schema@3.24.5(zod@3.25.56))
+        specifier: 0.2.74
+        version: 0.2.74(@langchain/core@0.3.55(openai@5.1.1(zod@3.25.56)))(zod-to-json-schema@3.24.5(zod@3.25.56))
       '@nestjs/cli':
         specifier: 11.0.7
         version: 11.0.7(@swc/core@1.11.31)(@types/node@22.15.30)(esbuild@0.25.5)
@@ -1872,8 +1872,8 @@ packages:
       react:
         optional: true
 
-  '@langchain/langgraph@0.2.72':
-    resolution: {integrity: sha512-2Rs79mLSx0Yxr/omiWOXBlaS+eywZ9KACe06pI6XkA3hT2hwqjMlXYMvbeD7mxZlKrPtLsQaHWvL9IO2VAa+lQ==}
+  '@langchain/langgraph@0.2.74':
+    resolution: {integrity: sha512-oHpEi5sTZTPaeZX1UnzfM2OAJ21QGQrwReTV6+QnX7h8nDCBzhtipAw1cK616S+X8zpcVOjgOtJuaJhXa4mN8w==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': '>=0.2.36 <0.3.0 || >=0.3.40 < 0.4.0'
@@ -8332,7 +8332,7 @@ snapshots:
     optionalDependencies:
       '@langchain/core': 0.3.55(openai@5.1.1(zod@3.25.56))
 
-  '@langchain/langgraph@0.2.72(@langchain/core@0.3.55(openai@5.1.1(zod@3.25.56)))(zod-to-json-schema@3.24.5(zod@3.25.56))':
+  '@langchain/langgraph@0.2.74(@langchain/core@0.3.55(openai@5.1.1(zod@3.25.56)))(zod-to-json-schema@3.24.5(zod@3.25.56))':
     dependencies:
       '@langchain/core': 0.3.55(openai@5.1.1(zod@3.25.56))
       '@langchain/langgraph-checkpoint': 0.0.17(@langchain/core@0.3.55(openai@5.1.1(zod@3.25.56)))
