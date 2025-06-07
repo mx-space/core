@@ -44,7 +44,7 @@
     "dev": "vitest"
   },
   "devDependencies": {
-    "@types/cors": "2.8.17",
+    "@types/cors": "2.8.19",
     "@types/express": "5.0.1",
     "@types/lodash": "4.17.16",
     "abort-controller": "3.0.0",
