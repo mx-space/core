@@ -21,19 +21,19 @@
   },
   "devDependencies": {
     "@innei/prettier": "0.15.0",
-    "@sxzz/eslint-config": "7.0.0",
-    "@types/node": "22.15.3",
+    "@sxzz/eslint-config": "7.0.2",
+    "@types/node": "22.15.30",
     "cross-env": "7.0.3",
-    "eslint": "^9.24.0",
-    "lint-staged": "15.5.0",
+    "eslint": "^9.28.0",
+    "lint-staged": "16.1.0",
     "mongodb-memory-server": "10.1.4",
     "prettier": "3.5.3",
     "redis-memory-server": "0.12.1",
     "rimraf": "6.0.1",
-    "simple-git-hooks": "2.12.1",
+    "simple-git-hooks": "2.13.0",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
-    "tsup": "8.4.0",
+    "tsup": "8.5.0",
     "typescript": "5.8.3",
     "vite-tsconfig-paths": "5.1.4",
     "zx-cjs": "7.0.7-0"
@@ -44,7 +44,8 @@
     "pino": "./external/pino",
     "semver": "7.7.1",
     "typescript": "5.8.3",
-    "whatwg-url": "14.1.1"
+    "whatwg-url": "14.1.1",
+    "zod": "3.25.56"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
