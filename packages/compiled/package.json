@@ -14,9 +14,9 @@
   },
   "devDependencies": {
     "@antfu/install-pkg": "1.1.0",
-    "better-auth": "1.2.8",
+    "better-auth": "1.2.9",
     "nanoid": "5.1.5",
-    "zod": "3.25.56",
+    "zod": "3.25.63",
     "zx": "7.2.3"
   }
 }

@@ -16,9 +16,7 @@ const RegMap = {
 @Injectable({})
 export class TextMacroService {
   private readonly logger: Logger
-  constructor(
-    private readonly configService: ConfigsService, // @Inject(REQUEST) private readonly request: Request,
-  ) {
+  constructor(private readonly configService: ConfigsService) {
     this.logger = new Logger(TextMacroService.name)
   }
 

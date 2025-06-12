@@ -7,7 +7,7 @@ import { Inject, Injectable } from '@nestjs/common'
 
 // 获取器
 export type TCacheKey = string
-export type TCacheResult<T> = Promise<T | null>
+export type TCacheResult<T> = Promise<T | undefined>
 
 /**
  * @class CacheService

@@ -3,8 +3,9 @@
     "incremental": true,
     "target": "es2020",
     "lib": [
-      "ES2021",
+      "es2021",
       "es2020",
+      "es2022",
       "DOM",
       "DOM.Iterable"
     ],
