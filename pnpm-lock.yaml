@@ -8,7 +8,7 @@ overrides:
   get-pixels@^3>request: ./external/request
   mongodb: 6.12.0
   pino: ./external/pino
-  semver: 7.7.1
+  semver: 7.7.2
   typescript: 5.8.3
   whatwg-url: 14.1.1
   zod: 3.25.63
@@ -293,8 +293,8 @@ importers:
         specifier: 7.8.2
         version: 7.8.2
       semver:
-        specifier: 7.7.1
-        version: 7.7.1
+        specifier: 7.7.2
+        version: 7.7.2
       slugify:
         specifier: 1.6.6
         version: 1.6.6
@@ -6038,8 +6038,8 @@ packages:
   secure-json-parse@4.0.0:
     resolution: {integrity: sha512-dxtLJO6sc35jWidmLxo7ij+Eg48PM/kleBsxpC8QJE0qJICe+KawkDQmvCMZUr9u7WKVHgMW6vy3fQ7zMiFZMA==}
 
-  semver@7.7.1:
-    resolution: {integrity: sha512-hlq8tAfn0m/61p4BVRcPzIGr6LKiMwo4VM6dGi6pt4qcRkmNzTcWq6eCEjEh+qXjkMDvPlOFFSGwQjoEa6gyMA==}
+  semver@7.7.2:
+    resolution: {integrity: sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -7181,7 +7181,7 @@ snapshots:
       debug: 4.4.1
       gensync: 1.0.0-beta.2
       json5: 2.2.3
-      semver: 7.7.1
+      semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
 
@@ -7211,7 +7211,7 @@ snapshots:
       '@babel/helper-validator-option': 7.27.1
       browserslist: 4.25.0
       lru-cache: 5.1.1
-      semver: 7.7.1
+      semver: 7.7.2
 
   '@babel/helper-create-class-features-plugin@7.27.1(@babel/core@7.27.4)':
     dependencies:
@@ -7222,7 +7222,7 @@ snapshots:
       '@babel/helper-replace-supers': 7.27.1(@babel/core@7.27.4)
       '@babel/helper-skip-transparent-expression-wrappers': 7.27.1
       '@babel/traverse': 7.27.1
-      semver: 7.7.1
+      semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
 
@@ -7869,7 +7869,7 @@ snapshots:
       '@babel/traverse': 7.27.1
       '@babel/types': 7.27.6
       prettier: 3.5.3
-      semver: 7.7.1
+      semver: 7.7.2
     optionalDependencies:
       '@vue/compiler-sfc': 3.5.12
     transitivePeerDependencies:
@@ -8982,7 +8982,7 @@ snapshots:
       loglevel: 1.9.2
       mongoose: 8.15.1
       reflect-metadata: 0.2.2
-      semver: 7.7.1
+      semver: 7.7.2
       tslib: 2.8.1
 
   '@types/babel__core@7.20.5':
@@ -9256,7 +9256,7 @@ snapshots:
       fast-glob: 3.3.3
       is-glob: 4.0.3
       minimatch: 9.0.5
-      semver: 7.7.1
+      semver: 7.7.2
       ts-api-utils: 2.1.0(typescript@5.8.3)
       typescript: 5.8.3
     transitivePeerDependencies:
@@ -9957,7 +9957,7 @@ snapshots:
     dependencies:
       async-hook-jl: 1.7.6
       emitter-listener: 1.1.2
-      semver: 7.7.1
+      semver: 7.7.2
 
   cluster-key-slot@1.1.2: {}
 
@@ -10420,12 +10420,12 @@ snapshots:
   eslint-compat-utils@0.5.1(eslint@9.28.0(jiti@2.4.2)):
     dependencies:
       eslint: 9.28.0(jiti@2.4.2)
-      semver: 7.7.1
+      semver: 7.7.2
 
   eslint-compat-utils@0.6.5(eslint@9.28.0(jiti@2.4.2)):
     dependencies:
       eslint: 9.28.0(jiti@2.4.2)
-      semver: 7.7.1
+      semver: 7.7.2
 
   eslint-config-flat-gitignore@2.1.0(eslint@9.28.0(jiti@2.4.2)):
     dependencies:
@@ -10491,7 +10491,7 @@ snapshots:
       eslint-import-context: 0.1.8(unrs-resolver@1.7.11)
       is-glob: 4.0.3
       minimatch: 10.0.1
-      semver: 7.7.1
+      semver: 7.7.2
       stable-hash-x: 0.1.1
       unrs-resolver: 1.7.11
     optionalDependencies:
@@ -10511,7 +10511,7 @@ snapshots:
       espree: 10.3.0
       esquery: 1.6.0
       parse-imports-exports: 0.2.4
-      semver: 7.7.1
+      semver: 7.7.2
       spdx-expression-parse: 4.0.0
     transitivePeerDependencies:
       - supports-color
@@ -10541,7 +10541,7 @@ snapshots:
       globals: 15.15.0
       ignore: 5.3.2
       minimatch: 9.0.5
-      semver: 7.7.1
+      semver: 7.7.2
       ts-declaration-location: 1.0.7(typescript@5.8.3)
     transitivePeerDependencies:
       - supports-color
@@ -10610,7 +10610,7 @@ snapshots:
       pluralize: 8.0.0
       regexp-tree: 0.1.27
       regjsparser: 0.12.0
-      semver: 7.7.1
+      semver: 7.7.2
       strip-indent: 4.0.0
 
   eslint-plugin-unused-imports@4.1.4(@typescript-eslint/eslint-plugin@8.33.1(@typescript-eslint/parser@8.33.1(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.28.0(jiti@2.4.2)):
@@ -10626,7 +10626,7 @@ snapshots:
       natural-compare: 1.4.0
       nth-check: 2.1.1
       postcss-selector-parser: 6.1.2
-      semver: 7.7.1
+      semver: 7.7.2
       vue-eslint-parser: 10.1.3(eslint@9.28.0(jiti@2.4.2))
       xml-name-validator: 4.0.0
 
@@ -10875,7 +10875,7 @@ snapshots:
       process-warning: 5.0.0
       rfdc: 1.4.1
       secure-json-parse: 4.0.0
-      semver: 7.7.1
+      semver: 7.7.2
       toad-cache: 3.7.0
 
   fastq@1.19.1:
@@ -10998,7 +10998,7 @@ snapshots:
       minimatch: 3.1.2
       node-abort-controller: 3.1.1
       schema-utils: 3.3.0
-      semver: 7.7.1
+      semver: 7.7.2
       tapable: 2.2.2
       typescript: 5.8.3
       webpack: 5.99.6(@swc/core@1.12.0)(esbuild@0.25.5)
@@ -11410,7 +11410,7 @@ snapshots:
       acorn: 8.14.1
       eslint-visitor-keys: 3.4.3
       espree: 9.6.1
-      semver: 7.7.1
+      semver: 7.7.2
 
   jsonc-parser@3.3.1: {}
 
@@ -11433,7 +11433,7 @@ snapshots:
       lodash.isstring: 4.0.1
       lodash.once: 4.1.1
       ms: 2.1.3
-      semver: 7.7.1
+      semver: 7.7.2
 
   jszip@3.10.1:
     dependencies:
@@ -11494,7 +11494,7 @@ snapshots:
       console-table-printer: 2.12.1
       p-queue: 6.6.2
       p-retry: 4.6.2
-      semver: 7.7.1
+      semver: 7.7.2
       uuid: 10.0.0
     optionalDependencies:
       openai: 5.3.0(zod@3.25.63)
@@ -11654,7 +11654,7 @@ snapshots:
 
   make-dir@3.1.0:
     dependencies:
-      semver: 7.7.1
+      semver: 7.7.2
 
   make-error@1.3.6: {}
 
@@ -12083,7 +12083,7 @@ snapshots:
       https-proxy-agent: 7.0.6
       mongodb: 6.12.0
       new-find-package-json: 2.0.0
-      semver: 7.7.1
+      semver: 7.7.2
       tar-stream: 3.1.7
       tslib: 2.8.1
       yauzl: 3.2.0
@@ -12652,7 +12652,7 @@ snapshots:
       lockfile: 1.0.4
       lodash.defaultsdeep: 4.6.1
       rimraf: 5.0.10
-      semver: 7.7.1
+      semver: 7.7.2
       tar: 6.2.1
       tmp: 0.2.3
       uuid: 8.3.2
@@ -12855,7 +12855,7 @@ snapshots:
 
   secure-json-parse@4.0.0: {}
 
-  semver@7.7.1: {}
+  semver@7.7.2: {}
 
   send@0.19.0:
     dependencies:
@@ -12902,7 +12902,7 @@ snapshots:
     dependencies:
       color: 4.2.3
       detect-libc: 2.0.4
-      semver: 7.7.1
+      semver: 7.7.2
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.34.2
       '@img/sharp-darwin-x64': 0.34.2
@@ -13710,7 +13710,7 @@ snapshots:
       espree: 10.3.0
       esquery: 1.6.0
       lodash: 4.17.21
-      semver: 7.7.1
+      semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
 
