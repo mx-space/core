@@ -227,8 +227,8 @@ importers:
         specifier: 5.3.4
         version: 5.3.4
       langchain:
-        specifier: 0.3.25
-        version: 0.3.25(@langchain/core@0.3.55(openai@5.3.0(zod@3.25.63)))(axios@1.9.0)(encoding@0.1.13)(openai@5.3.0(zod@3.25.63))
+        specifier: 0.3.28
+        version: 0.3.28(@langchain/core@0.3.55(openai@5.3.0(zod@3.25.63)))(axios@1.9.0)(encoding@0.1.13)(openai@5.3.0(zod@3.25.63))
       linkedom:
         specifier: 0.18.11
         version: 0.18.11
@@ -4751,15 +4751,15 @@ packages:
     resolution: {integrity: sha512-4YAVLoF0Sf0UTqlhgQMFU9iQECdah7n+13ANkiuVfRvlK+uI0Etbgd7bVP36dKlG+NXWbhGua8vnGt+sdhvT7A==}
     engines: {node: '>=18.0.0'}
 
-  langchain@0.3.25:
-    resolution: {integrity: sha512-ADUE7zfW4C72YJ+jdDU2xtHly8oigPaRMzP40GBU24vRUtDY1tHxWjKuAVkzXvrciV3GNeMZVRYBYWPt5EoZ5Q==}
+  langchain@0.3.28:
+    resolution: {integrity: sha512-h4GGlBJNGU/Sj2PipW9kL+ewj7To3c+SnnNKH3HZaVHEqGPMHVB96T1lLjtCLcZCyUfabMr/zFIkLNI4War+Xg==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/anthropic': '*'
       '@langchain/aws': '*'
       '@langchain/cerebras': '*'
       '@langchain/cohere': '*'
-      '@langchain/core': '>=0.2.21 <0.4.0'
+      '@langchain/core': '>=0.3.58 <0.4.0'
       '@langchain/deepseek': '*'
       '@langchain/google-genai': '*'
       '@langchain/google-vertexai': '*'
@@ -11465,7 +11465,7 @@ snapshots:
 
   kysely@0.28.2: {}
 
-  langchain@0.3.25(@langchain/core@0.3.55(openai@5.3.0(zod@3.25.63)))(axios@1.9.0)(encoding@0.1.13)(openai@5.3.0(zod@3.25.63)):
+  langchain@0.3.28(@langchain/core@0.3.55(openai@5.3.0(zod@3.25.63)))(axios@1.9.0)(encoding@0.1.13)(openai@5.3.0(zod@3.25.63)):
     dependencies:
       '@langchain/core': 0.3.55(openai@5.3.0(zod@3.25.63))
       '@langchain/openai': 0.5.10(@langchain/core@0.3.55(openai@5.3.0(zod@3.25.63)))(encoding@0.1.13)
@@ -11479,7 +11479,6 @@ snapshots:
       uuid: 10.0.0
       yaml: 2.8.0
       zod: 3.25.63
-      zod-to-json-schema: 3.24.5(zod@3.25.63)
     optionalDependencies:
       axios: 1.9.0
     transitivePeerDependencies:
