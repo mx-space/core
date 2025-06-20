@@ -55,6 +55,9 @@ jobs:
   core:
     name: Build (Core)
     runs-on: ubuntu-latest
+    env:
+      REDISMS_DISABLE_POSTINSTALL: 1
+      MONGOMS_DISABLE_POSTINSTALL: 1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
