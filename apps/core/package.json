@@ -98,7 +98,7 @@
     "jsonwebtoken": "9.0.2",
     "jszip": "3.10.1",
     "keyv": "5.3.4",
-    "langchain": "0.3.25",
+    "langchain": "0.3.29",
     "linkedom": "0.18.11",
     "lodash": "^4.17.21",
     "lru-cache": "11.1.0",
