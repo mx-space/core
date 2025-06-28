@@ -62,6 +62,7 @@ export class SearchService {
           $and: [
             { password: { $not: null } },
             { hide: { $in: showHidden ? [false, true] : [false] } },
+            { isPublished: { $in: showHidden ? [false, true] : [true] } },
             {
               $or: [
                 { publicAt: { $not: null } },

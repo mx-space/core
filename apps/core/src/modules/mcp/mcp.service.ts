@@ -94,13 +94,16 @@ export class McpService {
    */
   async getNotes(page = 1, size = 10) {
     const query = this.noteService.model
-      .find({ hide: false })
+      .find({ hide: false, isPublished: true })
       .sort({ created: -1 })
       .skip((page - 1) * size)
       .limit(size)
 
     const notes = await query.exec()
-    const total = await this.noteService.model.countDocuments({ hide: false })
+    const total = await this.noteService.model.countDocuments({
+      hide: false,
+      isPublished: true,
+    })
 
     return {
       data: notes,

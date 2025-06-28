@@ -147,8 +147,10 @@ export class PostController {
   }
 
   @Get('/:id')
-  @Auth()
-  async getById(@Param() params: MongoIdDto) {
+  async getById(
+    @Param() params: MongoIdDto,
+    @IsAuthenticated() isAuthenticated: boolean,
+  ) {
     const { id } = params
     const doc = await this.postService.model
       .findById(id)
@@ -161,13 +163,28 @@ export class PostController {
       throw new CannotFindException()
     }
 
+    // 非认证用户只能查看已发布的文章
+    if (!isAuthenticated && !doc.isPublished) {
+      throw new CannotFindException()
+    }
+
     return doc
   }
 
   @Get('/latest')
-  async getLatest(@IpLocation() ip: IpRecord) {
+  async getLatest(
+    @IpLocation() ip: IpRecord,
+    @IsAuthenticated() isAuthenticated: boolean,
+  ) {
+    const query: any = {}
+
+    // 非认证用户只能看到已发布的文章
+    if (!isAuthenticated) {
+      query.isPublished = true
+    }
+
     const last = await this.postService.model
-      .findOne({})
+      .findOne(query)
       .sort({ created: -1 })
       .lean({ getters: true, autopopulate: true })
     if (!last) {
@@ -179,6 +196,7 @@ export class PostController {
         slug: last.slug,
       },
       ip,
+      isAuthenticated,
     )
   }
 
@@ -186,12 +204,23 @@ export class PostController {
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,
     @IpLocation() { ip }: IpRecord,
+    @IsAuthenticated() isAuthenticated?: boolean,
   ) {
     const { category, slug } = params
-    const postDocument = await this.postService.getPostBySlug(category, slug)
+    const postDocument = await this.postService.getPostBySlug(
+      category,
+      slug,
+      isAuthenticated,
+    )
     if (!postDocument) {
       throw new CannotFindException()
     }
+
+    // 非认证用户只能查看已发布的文章
+    if (!isAuthenticated && !postDocument.isPublished) {
+      throw new CannotFindException()
+    }
+
     const liked = await this.countingService.getThisRecordIsLiked(
       postDocument.id,
       ip,
