@@ -72,6 +72,11 @@ export class PostModel extends WriteBaseModel {
   @IsOptional()
   copyright?: boolean
 
+  @prop({ default: true })
+  @IsBoolean()
+  @IsOptional()
+  isPublished?: boolean
+
   @prop({
     type: String,
   })

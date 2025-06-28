@@ -57,3 +57,8 @@ export class NidType {
   @Transform(({ value: val }) => Number.parseInt(val))
   nid: number
 }
+
+export class SetNotePublishStatusDto {
+  @IsBoolean()
+  isPublished: boolean
+}

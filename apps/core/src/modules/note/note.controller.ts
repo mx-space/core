@@ -29,6 +29,7 @@ import {
   NidType,
   NotePasswordQueryDto,
   NoteQueryDto,
+  SetNotePublishStatusDto,
 } from './note.dto'
 import { NoteModel, PartialNoteModel } from './note.model'
 import { NoteService } from './note.service'
@@ -291,5 +292,17 @@ export class NoteController {
       },
       { ...condition },
     )
+  }
+
+  @Patch('/:id/publish')
+  @Auth()
+  async setPublishStatus(
+    @Param() params: MongoIdDto,
+    @Body() body: SetNotePublishStatusDto,
+  ) {
+    await this.noteService.updateById(params.id, {
+      isPublished: body.isPublished,
+    })
+    return { success: true }
   }
 }

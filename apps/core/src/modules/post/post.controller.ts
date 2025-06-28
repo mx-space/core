@@ -16,12 +16,17 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 
-import { CategoryAndSlugDto, PostPagerDto } from './post.dto'
+import {
+  CategoryAndSlugDto,
+  PostPagerDto,
+  SetPostPublishStatusDto,
+} from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'
 
@@ -34,7 +39,10 @@ export class PostController {
 
   @Get('/')
   @Paginator
-  async getPaginate(@Query() query: PostPagerDto) {
+  async getPaginate(
+    @Query() query: PostPagerDto,
+    @IsAuthenticated() isAuthenticated: boolean,
+  ) {
     const { size, select, page, year, sortBy, sortOrder, truncate } = query
 
     return this.postService.model
@@ -44,6 +52,8 @@ export class PostController {
             {
               $match: {
                 ...addYearCondition(year),
+                // 非认证用户只能看到已发布的文章
+                ...(isAuthenticated ? {} : { isPublished: true }),
               },
             },
             // @see https://stackoverflow.com/questions/54810712/mongodb-sort-by-field-a-if-field-b-null-otherwise-sort-by-field-c
@@ -222,5 +232,17 @@ export class PostController {
     await this.postService.deletePost(id)
 
     return
+  }
+
+  @Patch('/:id/publish')
+  @Auth()
+  async setPublishStatus(
+    @Param() params: MongoIdDto,
+    @Body() body: SetPostPublishStatusDto,
+  ) {
+    await this.postService.updateById(params.id, {
+      isPublished: body.isPublished,
+    })
+    return { success: true }
   }
 }
