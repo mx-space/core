@@ -10,6 +10,9 @@ jobs:
   build:
     name: Main Build
     runs-on: ubuntu-24.04
+    env:
+      REDISMS_DISABLE_POSTINSTALL: 1
+      MONGOMS_DISABLE_POSTINSTALL: 1
     outputs:
       release_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
