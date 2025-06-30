@@ -9,7 +9,7 @@ export default Array.from({ length: 20 }).map((_, _i) => {
     modified: null,
     allowComment: true,
 
-    hide: false,
+    isPublished: true,
     commentsIndex: 0,
   }
 }) as NoteModel[]

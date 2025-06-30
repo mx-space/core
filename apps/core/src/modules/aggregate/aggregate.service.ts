@@ -102,7 +102,7 @@ export class AggregateService {
         this.noteService.model,
         !isAuthenticated
           ? {
-              hide: false,
+              isPublished: true,
               password: undefined,
             }
           : {},
@@ -111,7 +111,7 @@ export class AggregateService {
 
       this.findTop(
         this.postService.model,
-        !isAuthenticated ? { hide: false } : {},
+        !isAuthenticated ? { isPublished: true } : {},
         size,
       )
         .populate('categoryId')
@@ -162,7 +162,7 @@ export class AggregateService {
       this.noteService.model
         .find(
           {
-            hide: false,
+            isPublished: true,
             ...addYearCondition(year),
           },
           '_id nid title weather mood created modified bookmark',
@@ -209,7 +209,7 @@ export class AggregateService {
 
       this.noteService.model
         .find({
-          hide: false,
+          isPublished: true,
 
           $or: [
             {
@@ -258,7 +258,7 @@ export class AggregateService {
     ])
 
     return combineTasks
-      .flat(1)
+      .flat()
       .sort((a, b) => -(a.published_at.getTime() - b.published_at.getTime()))
   }
 
@@ -291,7 +291,7 @@ export class AggregateService {
 
       this.noteService.model
         .find({
-          hide: false,
+          isPublished: true,
           $and: [
             {
               $or: [

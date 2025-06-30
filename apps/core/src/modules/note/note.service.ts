@@ -40,7 +40,6 @@ export class NoteService {
   }
 
   public readonly publicNoteQueryCondition = {
-    hide: false,
     isPublished: true,
     $and: [
       {
@@ -171,7 +170,9 @@ export class NoteService {
             return note.save()
           },
         ),
-        note.hide || note.password || this.checkNoteIsSecret(note)
+        note.isPublished === false ||
+        note.password ||
+        this.checkNoteIsSecret(note)
           ? null
           : this.eventManager.broadcast(
               BusinessEvents.NOTE_CREATE,
@@ -267,7 +268,11 @@ export class NoteService {
         scope: EventScope.TO_SYSTEM,
       })
 
-      if (updated.password || updated.hide || updated.publicAt) {
+      if (
+        updated.password ||
+        updated.isPublished === false ||
+        updated.publicAt
+      ) {
         return
       }
       this.eventManager.broadcast(

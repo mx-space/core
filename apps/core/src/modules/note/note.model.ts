@@ -45,11 +45,6 @@ export class NoteModel extends WriteBaseModel {
   @prop({ required: false, unique: true })
   public nid: number
 
-  @prop({ default: false })
-  @IsBoolean()
-  @IsOptional()
-  hide: boolean
-
   @prop({ default: true })
   @IsBoolean()
   @IsOptional()

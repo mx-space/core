@@ -103,9 +103,9 @@ export class NoteController {
     const half = size >> 1
     const { id } = params
     const select = isAuthenticated
-      ? 'nid _id title created hide'
+      ? 'nid _id title created isPublished'
       : 'nid _id title created'
-    const condition = isAuthenticated ? {} : { hide: false, isPublished: true }
+    const condition = isAuthenticated ? {} : { isPublished: true }
 
     // 当前文档直接找，不用加条件，反正里面的东西是看不到的
     const currentDocument = await this.noteService.model
@@ -205,7 +205,7 @@ export class NoteController {
   ) {
     const { nid } = params
     const { password, single: isSingle } = query
-    const condition = isAuthenticated ? {} : { hide: false, isPublished: true }
+    const condition = isAuthenticated ? {} : { isPublished: true }
     const current: NoteModel | null = await this.noteService.model
       .findOne({
         nid,
@@ -286,8 +286,8 @@ export class NoteController {
       sortOrder,
     } = query
     const condition: FilterQuery<NoteModel> = isAuthenticated
-      ? { $or: [{ hide: false }, { hide: true }] }
-      : { hide: false, isPublished: true }
+      ? { $or: [{ isPublished: false }, { isPublished: true }] }
+      : { isPublished: true }
 
     return await this.noteService.getNotePaginationByTopicId(
       id,
