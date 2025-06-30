@@ -1,0 +1,25 @@
+//patch for version 8.4.0 v1
+//移除Note中的isPublished字段，并将hide字段重命名为isPublished
+import type { Db } from 'mongodb'
+
+export default (async function v0840Fix1(db: Db) {
+  try {
+    const notesCollection = db.collection('notes')
+
+    // 移除 isPublished 字段
+    await notesCollection.updateMany(
+      {},
+      { $unset: { isPublished: '' } },
+      { upsert: false },
+    )
+
+    // 将 hide 字段重命名为 isPublished
+    await notesCollection.updateMany(
+      {},
+      { $rename: { hide: 'isPublished' } },
+      { upsert: false },
+    )
+  } catch (error) {
+    console.error('Migration to v8.4.0 fix1 failed:', error)
+  }
+})
