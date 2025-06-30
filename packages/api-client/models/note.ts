@@ -2,7 +2,7 @@ import type { ModelWithLiked, TextBaseModel } from './base'
 import type { TopicModel } from './topic'
 
 export interface NoteModel extends TextBaseModel {
-  hide: boolean
+  isPublished: boolean
   count: {
     read: number
     like: number
