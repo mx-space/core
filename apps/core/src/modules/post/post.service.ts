@@ -166,7 +166,11 @@ export class PostService {
     }
   }
 
-  async getPostBySlug(categorySlug: string, slug: string) {
+  async getPostBySlug(
+    categorySlug: string,
+    slug: string,
+    isAuthenticated?: boolean,
+  ) {
     const slugTrackerService = this.slugTrackerService
     const postModel = this.postModel
 
@@ -176,14 +180,27 @@ export class PostService {
       if (!trackedPost) {
         throw new NotFoundException('该分类未找到 (｡•́︿•̀｡)')
       }
+
+      // 检查发布状态
+      if (!isAuthenticated && !trackedPost.isPublished) {
+        throw new NotFoundException('该文章未找到')
+      }
+
       return trackedPost
     }
 
+    const queryConditions: any = {
+      slug,
+      categoryId: categoryDocument._id,
+    }
+
+    // 非认证用户只能查看已发布的文章
+    if (!isAuthenticated) {
+      queryConditions.isPublished = true
+    }
+
     const postDocument = await this.model
-      .findOne({
-        slug,
-        categoryId: categoryDocument._id,
-      })
+      .findOne(queryConditions)
       .populate('category')
       .populate({
         path: 'related',
@@ -192,7 +209,15 @@ export class PostService {
 
     if (postDocument) return postDocument
 
-    return findTrackedPost()
+    const trackedPost = await findTrackedPost()
+
+    // 检查追踪文章的发布状态
+    if (trackedPost && !isAuthenticated && !trackedPost.isPublished) {
+      throw new NotFoundException('该文章未找到')
+    }
+
+    return trackedPost
+
     async function findTrackedPost() {
       const tracked = await slugTrackerService.findTrackerBySlug(
         `/${categorySlug}/${slug}`,

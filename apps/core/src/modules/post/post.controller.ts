@@ -16,12 +16,17 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 
-import { CategoryAndSlugDto, PostPagerDto } from './post.dto'
+import {
+  CategoryAndSlugDto,
+  PostPagerDto,
+  SetPostPublishStatusDto,
+} from './post.dto'
 import { PartialPostModel, PostModel } from './post.model'
 import { PostService } from './post.service'
 
@@ -34,7 +39,10 @@ export class PostController {
 
   @Get('/')
   @Paginator
-  async getPaginate(@Query() query: PostPagerDto) {
+  async getPaginate(
+    @Query() query: PostPagerDto,
+    @IsAuthenticated() isAuthenticated: boolean,
+  ) {
     const { size, select, page, year, sortBy, sortOrder, truncate } = query
 
     return this.postService.model
@@ -44,6 +52,8 @@ export class PostController {
             {
               $match: {
                 ...addYearCondition(year),
+                // 非认证用户只能看到已发布的文章
+                ...(isAuthenticated ? {} : { isPublished: true }),
               },
             },
             // @see https://stackoverflow.com/questions/54810712/mongodb-sort-by-field-a-if-field-b-null-otherwise-sort-by-field-c
@@ -137,8 +147,10 @@ export class PostController {
   }
 
   @Get('/:id')
-  @Auth()
-  async getById(@Param() params: MongoIdDto) {
+  async getById(
+    @Param() params: MongoIdDto,
+    @IsAuthenticated() isAuthenticated: boolean,
+  ) {
     const { id } = params
     const doc = await this.postService.model
       .findById(id)
@@ -151,13 +163,28 @@ export class PostController {
       throw new CannotFindException()
     }
 
+    // 非认证用户只能查看已发布的文章
+    if (!isAuthenticated && !doc.isPublished) {
+      throw new CannotFindException()
+    }
+
     return doc
   }
 
   @Get('/latest')
-  async getLatest(@IpLocation() ip: IpRecord) {
+  async getLatest(
+    @IpLocation() ip: IpRecord,
+    @IsAuthenticated() isAuthenticated: boolean,
+  ) {
+    const query: any = {}
+
+    // 非认证用户只能看到已发布的文章
+    if (!isAuthenticated) {
+      query.isPublished = true
+    }
+
     const last = await this.postService.model
-      .findOne({})
+      .findOne(query)
       .sort({ created: -1 })
       .lean({ getters: true, autopopulate: true })
     if (!last) {
@@ -169,6 +196,7 @@ export class PostController {
         slug: last.slug,
       },
       ip,
+      isAuthenticated,
     )
   }
 
@@ -176,12 +204,23 @@ export class PostController {
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,
     @IpLocation() { ip }: IpRecord,
+    @IsAuthenticated() isAuthenticated?: boolean,
   ) {
     const { category, slug } = params
-    const postDocument = await this.postService.getPostBySlug(category, slug)
+    const postDocument = await this.postService.getPostBySlug(
+      category,
+      slug,
+      isAuthenticated,
+    )
     if (!postDocument) {
       throw new CannotFindException()
     }
+
+    // 非认证用户只能查看已发布的文章
+    if (!isAuthenticated && !postDocument.isPublished) {
+      throw new CannotFindException()
+    }
+
     const liked = await this.countingService.getThisRecordIsLiked(
       postDocument.id,
       ip,
@@ -222,5 +261,17 @@ export class PostController {
     await this.postService.deletePost(id)
 
     return
+  }
+
+  @Patch('/:id/publish')
+  @Auth()
+  async setPublishStatus(
+    @Param() params: MongoIdDto,
+    @Body() body: SetPostPublishStatusDto,
+  ) {
+    await this.postService.updateById(params.id, {
+      isPublished: body.isPublished,
+    })
+    return { success: true }
   }
 }

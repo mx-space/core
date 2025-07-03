@@ -13,11 +13,6 @@ overrides:
   whatwg-url: 14.1.1
   zod: 3.25.63
 
-patchedDependencies:
-  tinyexec@1.0.1:
-    hash: b5c07938d1255875a3a5bceac67c4c8d729351c52498ec9f39dcec351340929c
-    path: patches/tinyexec@1.0.1.patch
-
 importers:
 
   .:
@@ -7152,7 +7147,7 @@ snapshots:
   '@antfu/install-pkg@1.1.0':
     dependencies:
       package-manager-detector: 1.3.0
-      tinyexec: 1.0.1(patch_hash=b5c07938d1255875a3a5bceac67c4c8d729351c52498ec9f39dcec351340929c)
+      tinyexec: 1.0.1
 
   '@antfu/utils@8.1.1':
     optional: true
@@ -13238,7 +13233,7 @@ snapshots:
 
   tinyexec@0.3.2: {}
 
-  tinyexec@1.0.1(patch_hash=b5c07938d1255875a3a5bceac67c4c8d729351c52498ec9f39dcec351340929c): {}
+  tinyexec@1.0.1: {}
 
   tinyglobby@0.2.13:
     dependencies:

@@ -1,5 +1,5 @@
 import { Transform, Type } from 'class-transformer'
-import { IsInt, IsOptional, IsString } from 'class-validator'
+import { IsBoolean, IsInt, IsOptional, IsString } from 'class-validator'
 
 import { PagerDto } from '~/shared/dto/pager.dto'
 
@@ -17,4 +17,9 @@ export class PostPagerDto extends PagerDto {
   @IsInt()
   @Type(() => Number)
   truncate?: number
+}
+
+export class SetPostPublishStatusDto {
+  @IsBoolean()
+  isPublished: boolean
 }

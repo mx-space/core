@@ -46,7 +46,7 @@ export class CategoryController {
   async getCategories(@Query() query: MultiCategoriesQueryDto) {
     const { ids, joint, type = CategoryType.Category } = query // categories is category's mongo id
     if (ids) {
-      const ignoreKeys = '-text -summary -hide -images -commentsIndex'
+      const ignoreKeys = '-text -summary -isPublished -images -commentsIndex'
       if (joint) {
         const map = new Object()
 

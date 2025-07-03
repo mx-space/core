@@ -62,7 +62,7 @@ export class RenderEjsController {
     ])
 
     const isPrivateOrEncrypt =
-      ('hide' in document && document.hide) ||
+      ('isPublished' in document && !document.isPublished) ||
       ('password' in document && !isNil(document.password))
 
     if (!isAuthenticated && isPrivateOrEncrypt) {

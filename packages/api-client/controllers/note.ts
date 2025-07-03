@@ -103,7 +103,10 @@ export class NoteController<ResponseWrapper> implements IController {
    */
   getMiddleList(id: string, size = 5) {
     return this.proxy.list(id).get<{
-      data: Pick<NoteModel, 'id' | 'title' | 'nid' | 'created' | 'hide'>[]
+      data: Pick<
+        NoteModel,
+        'id' | 'title' | 'nid' | 'created' | 'isPublished'
+      >[]
       size: number
     }>({
       params: { size },

@@ -670,7 +670,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       this.databaseService.db
         .collection(NOTE_COLLECTION_NAME)
         .find({
-          hide: false,
+          isPublished: true,
         })
         .sort({
           created: -1,
@@ -722,7 +722,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
             mood: 1,
             bookmark: 1,
             password: 1,
-            hide: 1,
+            isPublished: 1,
           },
         )
         .lean(),
@@ -730,11 +730,11 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     return {
       posts,
       notes: notes.map((note) => {
-        if (note.password || note.hide) {
+        if (note.password || !note.isPublished) {
           note.title = '未公开的日记'
         }
 
-        return omit(note, 'password', 'hide')
+        return omit(note, 'password', 'isPublished')
       }),
     }
   }
