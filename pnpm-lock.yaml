@@ -222,8 +222,8 @@ importers:
         specifier: 5.3.4
         version: 5.3.4
       langchain:
-        specifier: 0.3.25
-        version: 0.3.25(@langchain/core@0.3.55(openai@5.3.0(zod@3.25.63)))(axios@1.9.0)(encoding@0.1.13)(openai@5.3.0(zod@3.25.63))
+        specifier: 0.3.29
+        version: 0.3.29(@langchain/core@0.3.55(openai@5.3.0(zod@3.25.63)))(axios@1.9.0)(encoding@0.1.13)(openai@5.3.0(zod@3.25.63))
       linkedom:
         specifier: 0.18.11
         version: 0.18.11
@@ -4746,15 +4746,15 @@ packages:
     resolution: {integrity: sha512-4YAVLoF0Sf0UTqlhgQMFU9iQECdah7n+13ANkiuVfRvlK+uI0Etbgd7bVP36dKlG+NXWbhGua8vnGt+sdhvT7A==}
     engines: {node: '>=18.0.0'}
 
-  langchain@0.3.25:
-    resolution: {integrity: sha512-ADUE7zfW4C72YJ+jdDU2xtHly8oigPaRMzP40GBU24vRUtDY1tHxWjKuAVkzXvrciV3GNeMZVRYBYWPt5EoZ5Q==}
+  langchain@0.3.29:
+    resolution: {integrity: sha512-L389pKlApVJPqu4hp58qY6NZAobI+MFPoBjSfjT1z3mcxtB68wLFGhaH4DVsTVg21NYO+0wTEoz24BWrxu9YGw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/anthropic': '*'
       '@langchain/aws': '*'
       '@langchain/cerebras': '*'
       '@langchain/cohere': '*'
-      '@langchain/core': '>=0.2.21 <0.4.0'
+      '@langchain/core': '>=0.3.58 <0.4.0'
       '@langchain/deepseek': '*'
       '@langchain/google-genai': '*'
       '@langchain/google-vertexai': '*'
@@ -4809,6 +4809,23 @@ packages:
     peerDependencies:
       openai: '*'
     peerDependenciesMeta:
+      openai:
+        optional: true
+
+  langsmith@0.3.37:
+    resolution: {integrity: sha512-aDFM+LbT01gP8hsJNs4QJjmbRNfoifqhpCSpk8j4k/V8wejEgvgATbgj9W9DQsfQFdtfwx+8G48sK5/0PqQisg==}
+    peerDependencies:
+      '@opentelemetry/api': '*'
+      '@opentelemetry/exporter-trace-otlp-proto': '*'
+      '@opentelemetry/sdk-trace-base': '*'
+      openai: '*'
+    peerDependenciesMeta:
+      '@opentelemetry/api':
+        optional: true
+      '@opentelemetry/exporter-trace-otlp-proto':
+        optional: true
+      '@opentelemetry/sdk-trace-base':
+        optional: true
       openai:
         optional: true
 
@@ -11460,7 +11477,7 @@ snapshots:
 
   kysely@0.28.2: {}
 
-  langchain@0.3.25(@langchain/core@0.3.55(openai@5.3.0(zod@3.25.63)))(axios@1.9.0)(encoding@0.1.13)(openai@5.3.0(zod@3.25.63)):
+  langchain@0.3.29(@langchain/core@0.3.55(openai@5.3.0(zod@3.25.63)))(axios@1.9.0)(encoding@0.1.13)(openai@5.3.0(zod@3.25.63)):
     dependencies:
       '@langchain/core': 0.3.55(openai@5.3.0(zod@3.25.63))
       '@langchain/openai': 0.5.10(@langchain/core@0.3.55(openai@5.3.0(zod@3.25.63)))(encoding@0.1.13)
@@ -11468,21 +11485,35 @@ snapshots:
       js-tiktoken: 1.0.20
       js-yaml: 4.1.0
       jsonpointer: 5.0.1
-      langsmith: 0.3.29(openai@5.3.0(zod@3.25.63))
+      langsmith: 0.3.37(openai@5.3.0(zod@3.25.63))
       openapi-types: 12.1.3
       p-retry: 4.6.2
       uuid: 10.0.0
       yaml: 2.8.0
       zod: 3.25.63
-      zod-to-json-schema: 3.24.5(zod@3.25.63)
     optionalDependencies:
       axios: 1.9.0
     transitivePeerDependencies:
+      - '@opentelemetry/api'
+      - '@opentelemetry/exporter-trace-otlp-proto'
+      - '@opentelemetry/sdk-trace-base'
       - encoding
       - openai
       - ws
 
   langsmith@0.3.29(openai@5.3.0(zod@3.25.63)):
+    dependencies:
+      '@types/uuid': 10.0.0
+      chalk: 4.1.2
+      console-table-printer: 2.12.1
+      p-queue: 6.6.2
+      p-retry: 4.6.2
+      semver: 7.7.1
+      uuid: 10.0.0
+    optionalDependencies:
+      openai: 5.3.0(zod@3.25.63)
+
+  langsmith@0.3.37(openai@5.3.0(zod@3.25.63)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
