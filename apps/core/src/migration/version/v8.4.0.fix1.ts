@@ -6,13 +6,6 @@ export default (async function v0840Fix1(db: Db) {
   try {
     const notesCollection = db.collection('notes')
 
-    // 移除 isPublished 字段
-    await notesCollection.updateMany(
-      {},
-      { $unset: { isPublished: '' } },
-      { upsert: false },
-    )
-
     // 将 hide 字段重命名为 isPublished, 同时将true与false互换
     await notesCollection.updateMany(
       {},
