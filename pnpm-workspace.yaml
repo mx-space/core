@@ -10,5 +10,3 @@ onlyBuiltDependencies:
   - sharp
   - simple-git-hooks
   - unrs-resolver
-patchedDependencies:
-  tinyexec@1.0.1: patches/tinyexec@1.0.1.patch
