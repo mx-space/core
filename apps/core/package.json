@@ -59,7 +59,7 @@
     "@innei/next-async": "0.3.0",
     "@innei/pretty-logger-nestjs": "0.3.4",
     "@keyv/redis": "4.4.0",
-    "@langchain/openai": "0.5.10",
+    "@langchain/openai": "0.5.18",
     "@mx-space/compiled": "workspace:*",
     "@nestjs/cache-manager": "3.0.1",
     "@nestjs/common": "11.1.3",
