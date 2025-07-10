@@ -1,5 +1,21 @@
 # CHANGELOG
 
+# [8.4.0](https://github.com/mx-space/core/compare/v8.3.2...v8.4.0) (2025-07-10)
+
+
+### Bug Fixes
+
+* remove patch ([14fe84c](https://github.com/mx-space/core/commit/14fe84c0bf20209d0a05f3d8f68903c67ca3b690))
+
+
+### Features
+
+* **ai:** integrate new AI SDK and refactor AI services ([3e12044](https://github.com/mx-space/core/commit/3e12044fcebdf8b13aa6a7d28f7b4ba3037d7353))
+* **core:** 实现文章的发布/取消发布功能 ([#2443](https://github.com/mx-space/core/issues/2443)) ([00b66be](https://github.com/mx-space/core/commit/00b66bef7ea49d7fa7097362dabfcc12cc2db6e9))
+* **server-time:** enhance middleware configuration and import context ([a463551](https://github.com/mx-space/core/commit/a4635519b8846bc32d42611835c40d6d9ddc4819))
+
+
+
 ## [8.3.2](https://github.com/mx-space/core/compare/v8.3.1...v8.3.2) (2025-05-26)
 
 
