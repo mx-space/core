@@ -6,7 +6,7 @@ settings:
 
 overrides:
   get-pixels@^3>request: ./external/request
-  mongodb: 6.12.0
+  mongodb: 6.17.0
   pino: ./external/pino
   semver: 7.7.2
   typescript: 5.8.3
@@ -5385,8 +5385,8 @@ packages:
     resolution: {integrity: sha512-+oKQ/kc3CX+816oPFRtaF0CN4vNcGKNjpOQe4bHo/21A3pMD+lC7Xz1EX5HP7siCX4iCpVchDMmCOFXVQSGkUg==}
     engines: {node: '>=16.20.1'}
 
-  mongodb@6.12.0:
-    resolution: {integrity: sha512-RM7AHlvYfS7jv7+BXund/kR64DryVI+cHbVAy9P61fnb1RcWZqOW1/Wj2YhqMCx+MuYhqTRGv7AwHBzmsCKBfA==}
+  mongodb@6.17.0:
+    resolution: {integrity: sha512-neerUzg/8U26cgruLysKEjJvoNSXhyID3RvzvdcpsIi2COYM3FS3o9nlH7fxFtefTb942dX3W9i37oPfCVj4wA==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
       '@aws-sdk/credential-providers': ^3.188.0
@@ -12306,7 +12306,7 @@ snapshots:
       find-cache-dir: 3.3.2
       follow-redirects: 1.15.9(debug@4.4.0)
       https-proxy-agent: 7.0.6
-      mongodb: 6.12.0
+      mongodb: 6.17.0
       new-find-package-json: 2.0.0
       semver: 7.7.2
       tar-stream: 3.1.7
@@ -12336,7 +12336,7 @@ snapshots:
       - socks
       - supports-color
 
-  mongodb@6.12.0:
+  mongodb@6.17.0:
     dependencies:
       '@mongodb-js/saslprep': 1.2.2
       bson: 6.10.4
@@ -12382,7 +12382,7 @@ snapshots:
     dependencies:
       bson: 6.10.4
       kareem: 2.6.3
-      mongodb: 6.12.0
+      mongodb: 6.17.0
       mpath: 0.9.0
       mquery: 5.0.0
       ms: 2.1.3
