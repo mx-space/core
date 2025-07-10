@@ -1,9 +1,6 @@
+import { generateText, tool } from 'ai'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 
-import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools'
-import { DynamicStructuredTool } from '@langchain/core/tools'
-import { GraphRecursionError } from '@langchain/langgraph'
-import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { z } from '@mx-space/compiled/zod'
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
@@ -17,6 +14,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../../configs/configs.service'
+import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { AIDeepReadingModel } from './ai-deep-reading.model'
 
@@ -51,9 +49,7 @@ export class AiDeepReadingService {
       throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
     }
 
-    const llm = await this.aiService.getOpenAiChain({
-      maxTokens: 8192,
-    })
+    const model = await this.aiService.getOpenAiModel()
 
     const dataModel = {
       keyPoints: [] as string[],
@@ -61,125 +57,59 @@ export class AiDeepReadingService {
       content: '',
     }
 
-    // 创建分析文章的工具
-    const tools = [
-      new DynamicStructuredTool({
-        name: 'deep_reading',
-        description: `获取深度阅读内容`,
-        schema: z.object({}),
-        func: async () => {
-          const llm = await this.aiService.getOpenAiChain({
-            maxTokens: 1024 * 10,
+    // 定义工具
+    const tools = {
+      deep_reading: tool({
+        description: '获取深度阅读内容',
+        parameters: z.object({}),
+        execute: async () => {
+          const { text } = await generateText({
+            model,
+            system: AI_PROMPTS.deepReading.deepReadingSystem,
+            prompt: AI_PROMPTS.deepReading.getDeepReadingPrompt(
+              article.document.text,
+            ),
+            maxTokens: 10240,
           })
 
-          const result = await llm
-            .bind({
-              tool_choice: {
-                type: 'function',
-                function: { name: 'deep_reading' },
-              },
-              tools: [
-                {
-                  name: 'deep_reading',
-                  type: 'function',
-                  function: {
-                    name: 'deep_reading',
-                    parameters: {
-                      type: 'object',
-                      properties: {
-                        content: {
-                          type: 'string',
-                          description: '深度阅读内容',
-                        },
-                      },
-                      required: ['content'],
-                    },
-                    description: `创建一个全面的深度阅读Markdown文本，保持文章的原始结构但提供扩展的解释和见解。
-内容应该：
-1. 遵循原文的流程和主要论点
-2. 包含原文的所有关键技术细节
-3. 扩展未充分解释的复杂概念
-4. 在需要的地方提供额外背景和解释
-5. 保持文章的原始语调和语言风格
-6. 使用适当的Markdown格式，包括标题、代码块、列表等
-7. 输出的语言必须与原文的语言匹配`,
-                  },
-                },
-              ],
-            })
-
-            .pipe(new JsonOutputToolsParser())
-            .invoke([
-              {
-                content: `分析以下文章：${article.document.text}\n\n创建一个全面的深度阅读Markdown文本，保持文章的原始结构但提供扩展的解释和见解。`,
-                role: 'system',
-              },
-            ])
-            .then((result: any[]) => {
-              const content = result[0]?.args?.content
-              dataModel.content = content
-              return content
-            })
-          return result
+          dataModel.content = text
+          return text
         },
       }),
-      new DynamicStructuredTool({
-        name: 'save_key_points',
+      save_key_points: tool({
         description: '保存关键点到数据库',
-        schema: z.object({
+        parameters: z.object({
           keyPoints: z.array(z.string()).describe('关键点数组'),
         }),
-        func: async (data: { keyPoints: string[] }) => {
-          dataModel.keyPoints = data.keyPoints
+        execute: async ({ keyPoints }) => {
+          dataModel.keyPoints = keyPoints
           return '关键点已保存'
         },
       }),
-
-      new DynamicStructuredTool({
-        name: 'save_critical_analysis',
+      save_critical_analysis: tool({
         description: '保存批判性分析到数据库',
-        schema: z.object({
+        parameters: z.object({
           criticalAnalysis: z.string().describe('批判性分析'),
         }),
-        func: async (data: { criticalAnalysis: string }) => {
-          dataModel.criticalAnalysis = data.criticalAnalysis
+        execute: async ({ criticalAnalysis }) => {
+          dataModel.criticalAnalysis = criticalAnalysis
           return '批判性分析已保存'
         },
       }),
-    ]
-
-    // 创建系统提示模板
-    const systemPrompt = `你是一个专门进行文章深度阅读的AI助手，需要分析文章并提供详细的解读。
-分析过程：
-1. 首先提取文章关键点，然后使用 save_key_points 保存到数据库
-2. 然后进行批判性分析，包括文章的优点、缺点和改进建议，然后使用 save_critical_analysis 保存到数据库
-3. 最后使用 deep_reading 生成完整的深度阅读内容
-4. 返回完整结果，包括关键点、批判性分析和深度阅读内容`
+    }
 
     try {
-      // 创建LangGraph React Agent
-      const agent = createReactAgent({
-        llm,
+      // 使用Vercel AI SDK执行多步骤工具调用
+      await generateText({
+        model,
         tools,
+        system: AI_PROMPTS.deepReading.systemPrompt,
+        prompt: AI_PROMPTS.deepReading.getUserPrompt(
+          article.document.title,
+          article.document.text,
+        ),
+        maxSteps: 10,
       })
-
-      await agent.invoke(
-        {
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt,
-            },
-            {
-              role: 'user',
-              content: `文章标题: ${article.document.title}\n文章内容: ${article.document.text}`,
-            },
-          ],
-        },
-        {
-          recursionLimit: 10, // 相当于以前的maxIterations
-        },
-      )
 
       return {
         keyPoints: dataModel.keyPoints,
@@ -261,9 +191,12 @@ export class AiDeepReadingService {
     } catch (error) {
       console.error(error)
 
-      if (error instanceof GraphRecursionError) {
+      if (
+        error.message?.includes('limit reached') ||
+        error.message?.includes('maximum')
+      ) {
         this.logger.error(
-          `LangGraph recursion limit reached for article ${articleId}: ${error.message}`,
+          `AI processing iteration limit reached for article ${articleId}: ${error.message}`,
         )
         throw new BizException(
           ErrorCodeEnum.AIException,

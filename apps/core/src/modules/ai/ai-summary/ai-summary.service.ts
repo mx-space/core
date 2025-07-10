@@ -1,7 +1,8 @@
+import { generateObject } from 'ai'
 import removeMdCodeblock from 'remove-md-codeblock'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 
-import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools'
+import { z } from '@mx-space/compiled/zod'
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
@@ -16,7 +17,8 @@ import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../../configs/configs.service'
-import { DEFAULT_SUMMARY_LANG, LANGUAGE_CODE_TO_NAME } from '../ai.constants'
+import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
+import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { AISummaryModel } from './ai-summary.model'
 
@@ -50,49 +52,29 @@ export class AiSummaryService {
       throw new BizException(ErrorCodeEnum.AINotEnabled)
     }
 
-    const openai = await this.aiService.getOpenAiChain()
+    const model = await this.aiService.getOpenAiModel()
 
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article || article.type === CollectionRefTypes.Recently) {
       throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
     }
 
-    const parser = new JsonOutputToolsParser()
+    const { object } = await generateObject({
+      model,
+      schema: z.object({
+        summary: z
+          .string()
+          .describe(AI_PROMPTS.summary.getSummaryDescription(lang)),
+      }),
+      prompt: AI_PROMPTS.summary.getSummaryPrompt(
+        lang,
+        this.serializeText(article.document.text),
+      ),
+      temperature: 0.5,
+      maxRetries: 2,
+    })
 
-    const runnable = openai
-      .bind({
-        tools: [
-          {
-            type: 'function',
-            function: {
-              name: 'extractor',
-              description: `Extract the summary of the input text in the ${LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]}, and the length of the summary is less than 150 words.`,
-              parameters: {
-                type: 'object',
-                properties: {
-                  summary: {
-                    type: 'string',
-                    description: `The summary of the input text in the ${LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]}, and the length of the summary is less than 150 words.`,
-                  },
-                },
-                required: ['summary'],
-              },
-            },
-          },
-        ],
-
-        tool_choice: { type: 'function', function: { name: 'extractor' } },
-      })
-      .pipe(parser)
-    const result = (await runnable.invoke([
-      this.serializeText(article.document.text),
-    ])) as any[]
-
-    if (result.length === 0) {
-      return {}
-    }
-
-    return result[0]?.args?.summary
+    return object.summary
   }
   async generateSummaryByOpenAI(articleId: string, lang: string) {
     const {

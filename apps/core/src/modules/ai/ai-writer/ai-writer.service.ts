@@ -1,11 +1,9 @@
-import type {
-  FunctionDefinition,
-  ToolDefinition,
-} from '@langchain/core/language_models/base'
+import { generateObject } from 'ai'
 
-import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools'
+import { z } from '@mx-space/compiled/zod'
 import { Injectable, Logger } from '@nestjs/common'
 
+import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 
 @Injectable()
@@ -15,78 +13,83 @@ export class AiWriterService {
     this.logger = new Logger(AiWriterService.name)
   }
 
-  async queryByFunctionSchema(
-    text: string,
-    parameters: FunctionDefinition['parameters'],
-  ) {
-    const toolDefinition: ToolDefinition = {
-      type: 'function',
-      function: {
-        name: 'extractor',
-        description: 'Extracts fields from the input.',
-        parameters,
-      },
-    }
-    const model = await this.aiService.getOpenAiChain()
-    const parser = new JsonOutputToolsParser()
-
-    const runnable = model
-      .bind({
-        tools: [toolDefinition],
-        tool_choice: { type: 'function', function: { name: 'extractor' } },
-      })
-      .pipe(parser)
-    const result = (await runnable.invoke([text])) as any[]
-
-    if (result.length === 0) {
-      return {}
-    }
-    // Extract just the args object from the first tool call response
-    return result[0]?.args || {}
-  }
   async generateTitleAndSlugByOpenAI(text: string) {
-    return this.queryByFunctionSchema(text, {
-      type: 'object',
-      properties: {
-        title: {
-          type: 'string',
-          description:
-            'Generate a concise, engaging title from the input text. The title should be in the same language as the input text and capture the main topic effectively.',
-        },
-        slug: {
-          type: 'string',
-          description:
-            'Create an SEO-friendly slug in English based on the title. The slug should be lowercase, use hyphens to separate words, contain only alphanumeric characters and hyphens, and include relevant keywords for better search engine ranking.',
-        },
-        lang: {
-          type: 'string',
-          description:
-            'Identify the natural language of the input text (e.g., "en", "zh", "es", "fr", etc.).',
-        },
-        keywords: {
-          type: 'array',
-          items: {
-            type: 'string',
-          },
-          description:
-            'Extract 3-5 relevant keywords or key phrases from the input text that represent its main topics.',
-        },
-      },
-      required: ['title', 'slug', 'lang', 'keywords'],
-    })
+    const model = await this.aiService.getOpenAiModel()
+
+    try {
+      const { object } = await generateObject({
+        model,
+        schema: z.object({
+          title: z
+            .string()
+            .describe(AI_PROMPTS.writer.titleAndSlug.schema.title),
+          slug: z.string().describe(AI_PROMPTS.writer.titleAndSlug.schema.slug),
+          lang: z.string().describe(AI_PROMPTS.writer.titleAndSlug.schema.lang),
+          keywords: z
+            .array(z.string())
+            .describe(AI_PROMPTS.writer.titleAndSlug.schema.keywords),
+        }),
+        prompt: AI_PROMPTS.writer.titleAndSlug.prompt(text),
+        temperature: 0.3, // Lower temperature for more consistent output
+        maxRetries: 2, // Allow retries on failure
+      })
+
+      return object
+    } catch (error) {
+      this.logger.error(
+        `Failed to generate title and slug: ${error.message}`,
+        error.stack,
+      )
+
+      // Fallback response if AI fails
+      const fallbackTitle =
+        text.slice(0, 50).trim() + (text.length > 50 ? '...' : '')
+      const fallbackSlug = fallbackTitle
+        .toLowerCase()
+        .replaceAll(/[^a-z0-9]+/g, '-')
+        .replaceAll(/^-+|-+$/g, '')
+        .slice(0, 50)
+
+      return {
+        title: fallbackTitle,
+        slug: fallbackSlug || 'untitled',
+        lang: 'en',
+        keywords: [],
+      }
+    }
   }
 
   async generateSlugByTitleViaOpenAI(title: string) {
-    return this.queryByFunctionSchema(title, {
-      type: 'object',
-      properties: {
-        slug: {
-          type: 'string',
-          description:
-            'An SEO-friendly slug in English based on the title. The slug should be lowercase, use hyphens to separate words, contain only alphanumeric characters and hyphens, and be concise while including relevant keywords from the title.',
-        },
-      },
-      required: ['slug'],
-    })
+    const model = await this.aiService.getOpenAiModel()
+
+    try {
+      const { object } = await generateObject({
+        model,
+        schema: z.object({
+          slug: z.string().describe(AI_PROMPTS.writer.slug.schema.slug),
+        }),
+        prompt: AI_PROMPTS.writer.slug.prompt(title),
+        temperature: 0.3, // Lower temperature for more consistent output
+        maxRetries: 2, // Allow retries on failure
+      })
+
+      return object
+    } catch (error) {
+      this.logger.error(
+        `Failed to generate slug from title: ${error.message}`,
+        error.stack,
+      )
+
+      // Fallback slug generation
+      const fallbackSlug = title
+        .toLowerCase()
+        .replaceAll(/[^a-z0-9]+/g, '-')
+        .replaceAll(/^-+|-+$/g, '')
+        .slice(0, 50)
+
+      return {
+        slug: fallbackSlug || 'untitled',
+      }
+    }
   }
 }
