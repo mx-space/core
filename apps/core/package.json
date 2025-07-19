@@ -144,7 +144,7 @@
     "@types/lodash": "4.17.20",
     "@types/mime-types": "3.0.1",
     "@types/mongoose-aggregate-paginate-v2": "1.1.2",
-    "@types/node": "24.0.12",
+    "@types/node": "24.0.15",
     "@types/nodemailer": "6.4.17",
     "@types/qs": "6.14.0",
     "@types/remove-markdown": "0.3.4",
