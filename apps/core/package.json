@@ -105,7 +105,7 @@
     "marked": "15.0.12",
     "mime-types": "^3.0.1",
     "mkdirp": "^3.0.1",
-    "mongoose": "8.16.2",
+    "mongoose": "8.16.5",
     "mongoose-aggregate-paginate-v2": "1.1.4",
     "mongoose-autopopulate": "1.1.0",
     "mongoose-lean-getters": "2.2.2",
