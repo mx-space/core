@@ -157,10 +157,10 @@ importers:
         version: 5.1.0
       '@typegoose/auto-increment':
         specifier: 4.13.0
-        version: 4.13.0(mongoose@8.16.2)
+        version: 4.13.0(mongoose@8.16.5)
       '@typegoose/typegoose':
         specifier: 12.17.0
-        version: 12.17.0(mongoose@8.16.2)
+        version: 12.17.0(mongoose@8.16.5)
       '@types/jsonwebtoken':
         specifier: 9.0.10
         version: 9.0.10
@@ -249,23 +249,23 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       mongoose:
-        specifier: 8.16.2
-        version: 8.16.2
+        specifier: 8.16.5
+        version: 8.16.5
       mongoose-aggregate-paginate-v2:
         specifier: 1.1.4
         version: 1.1.4
       mongoose-autopopulate:
         specifier: 1.1.0
-        version: 1.1.0(mongoose@8.16.2)
+        version: 1.1.0(mongoose@8.16.5)
       mongoose-lean-getters:
         specifier: 2.2.2
         version: 2.2.2
       mongoose-lean-virtuals:
         specifier: 2.0.0
-        version: 2.0.0(mongoose@8.16.2)
+        version: 2.0.0(mongoose@8.16.5)
       mongoose-paginate-v2:
         specifier: 1.9.1
-        version: 1.9.1(mongoose@8.16.2)
+        version: 1.9.1(mongoose@8.16.5)
       node-machine-id:
         specifier: 1.1.12
         version: 1.1.12
@@ -4802,8 +4802,8 @@ packages:
     resolution: {integrity: sha512-DgURdWkPCeY6cuzkONk0snkFFG/l6ABABDkV3PyW/M2XGvfK/yP4i6Y/PuXkqhfVxKHFLvZ/qBnQxkGzzvo43Q==}
     engines: {node: '>=4.0.0'}
 
-  mongoose@8.16.2:
-    resolution: {integrity: sha512-52T4XPhDgJL4cqooBsOORzYBH3ddMwABMEF/LV7TgvD2DEKZlnYTc2HF9ch1U2lcKjhE4pQ+WuInfLFJbguGcQ==}
+  mongoose@8.16.5:
+    resolution: {integrity: sha512-Ey84Jf1c426FEMj16+j/VqFKupFN2Ey5uAy6TTAN9HlFP4OcunL7j9O7vTuwAipzlZdjctxP0OK9MRJ4Aa/jNg==}
     engines: {node: '>=16.20.1'}
 
   mpath@0.8.4:
@@ -7986,17 +7986,17 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@typegoose/auto-increment@4.13.0(mongoose@8.16.2)':
+  '@typegoose/auto-increment@4.13.0(mongoose@8.16.5)':
     dependencies:
       loglevel: 1.9.2
-      mongoose: 8.16.2
+      mongoose: 8.16.5
       tslib: 2.8.1
 
-  '@typegoose/typegoose@12.17.0(mongoose@8.16.2)':
+  '@typegoose/typegoose@12.17.0(mongoose@8.16.5)':
     dependencies:
       lodash: 4.17.21
       loglevel: 1.9.2
-      mongoose: 8.16.2
+      mongoose: 8.16.5
       reflect-metadata: 0.2.2
       semver: 7.7.2
       tslib: 2.8.1
@@ -10920,13 +10920,13 @@ snapshots:
 
   mongoose-aggregate-paginate-v2@1.1.4: {}
 
-  mongoose-autopopulate@1.1.0(mongoose@8.16.2):
+  mongoose-autopopulate@1.1.0(mongoose@8.16.5):
     dependencies:
-      mongoose: 8.16.2
+      mongoose: 8.16.5
 
   mongoose-lean-getters@2.2.2:
     dependencies:
-      mongoose: 8.16.2
+      mongoose: 8.16.5
       mpath: 0.9.0
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -10938,23 +10938,23 @@ snapshots:
       - socks
       - supports-color
 
-  mongoose-lean-virtuals@1.1.1(mongoose@8.16.2):
+  mongoose-lean-virtuals@1.1.1(mongoose@8.16.5):
     dependencies:
-      mongoose: 8.16.2
+      mongoose: 8.16.5
       mpath: 0.8.4
 
-  mongoose-lean-virtuals@2.0.0(mongoose@8.16.2):
+  mongoose-lean-virtuals@2.0.0(mongoose@8.16.5):
     dependencies:
-      mongoose: 8.16.2
+      mongoose: 8.16.5
       mpath: 0.8.4
 
-  mongoose-paginate-v2@1.9.1(mongoose@8.16.2):
+  mongoose-paginate-v2@1.9.1(mongoose@8.16.5):
     dependencies:
-      mongoose-lean-virtuals: 1.1.1(mongoose@8.16.2)
+      mongoose-lean-virtuals: 1.1.1(mongoose@8.16.5)
     transitivePeerDependencies:
       - mongoose
 
-  mongoose@8.16.2:
+  mongoose@8.16.5:
     dependencies:
       bson: 6.10.4
       kareem: 2.6.3
