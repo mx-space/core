@@ -1,4 +1,3 @@
-import { DEMO_MODE } from '~/app.config'
 import type { IConfig } from './configs.interface'
 
 export const generateDefaultConfig: () => IConfig = () => ({
@@ -86,7 +85,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     enableAutoGenerateSummary: false,
     enableSummary: false,
     openAiEndpoint: '',
-    openAiPreferredModel: 'gpt-4o-mini',
+    openAiPreferredModel: 'gpt-5o-mini',
     openAiKey: '',
     aiSummaryTargetLanguage: 'auto',
     enableDeepReading: false,
