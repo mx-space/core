@@ -156,11 +156,20 @@ export class S3Uploader {
         ...headers,
         Authorization: authorization,
       },
-      body: fileData,
+
+      body: toArrayBuffer(fileData),
     })
 
     if (!response.ok) {
       throw new Error(`Upload failed with status code: ${response.status}`)
     }
   }
+}
+function toArrayBuffer(buffer) {
+  const arrayBuffer = new ArrayBuffer(buffer.length)
+  const view = new Uint8Array(arrayBuffer)
+  for (const [i, element] of buffer.entries()) {
+    view[i] = element
+  }
+  return arrayBuffer
 }
