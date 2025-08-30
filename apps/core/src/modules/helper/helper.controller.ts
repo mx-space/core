@@ -1,5 +1,3 @@
-import { FastifyReply } from 'fastify'
-
 import {
   BadRequestException,
   Get,
@@ -9,7 +7,6 @@ import {
   Res,
 } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { CollectionRefTypes } from '~/constants/db.constant'
@@ -18,7 +15,7 @@ import { ImageService } from '~/processors/helper/helper.image.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { AsyncQueue } from '~/utils/queue.util'
-
+import { FastifyReply } from 'fastify'
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
 import { PostService } from '../post/post.service'

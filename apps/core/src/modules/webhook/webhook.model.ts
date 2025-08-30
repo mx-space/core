@@ -1,10 +1,8 @@
-import { IsBoolean, IsEnum, IsString, IsUrl } from 'class-validator'
-
 import { PartialType } from '@nestjs/mapped-types'
 import { modelOptions, plugin, prop } from '@typegoose/typegoose'
-
 import { EventScope } from '~/constants/business-event.constant'
 import { mongooseLeanId } from '~/shared/model/plugins/lean-id'
+import { IsBoolean, IsEnum, IsString, IsUrl } from 'class-validator'
 
 @modelOptions({
   schemaOptions: {

@@ -2,9 +2,7 @@
 // register global
 import cluster from 'node:cluster'
 import { cpus } from 'node:os'
-
 import { argv } from '@mx-space/compiled'
-
 import { DEBUG_MODE } from './app.config'
 import { registerForMemoryDump } from './dump'
 import { logger } from './global/consola.global'

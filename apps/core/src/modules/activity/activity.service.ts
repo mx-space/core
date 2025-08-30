@@ -1,19 +1,4 @@
-import { omit, pick, uniqBy } from 'lodash'
-import { ObjectId } from 'mongodb'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import type { Document } from 'mongoose'
-import type { Socket } from 'socket.io'
-import type { NoteModel } from '../note/note.model'
-import type { PageModel } from '../page/page.model'
-import type { PostModel } from '../post/post.model'
-import type { RecentlyModel } from '../recently/recently.model'
-import type {
-  ActivityLikePayload,
-  ActivityLikeSupportType,
-  ActivityPresence,
-} from './activity.interface'
-import type { UpdatePresenceDto } from './dtos/presence.dto'
-
 import {
   BadRequestException,
   forwardRef,
@@ -21,7 +6,6 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common'
-
 import { RequestContext } from '~/common/contexts/request.context'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -39,21 +23,34 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { checkRefModelCollectionType } from '~/utils/biz.util'
 import { camelcaseKeys } from '~/utils/tool.util'
-
+import { omit, pick, uniqBy } from 'lodash'
+import { ObjectId } from 'mongodb'
+import type { Document } from 'mongoose'
+import type { Socket } from 'socket.io'
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
+import type { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
+import type { PageModel } from '../page/page.model'
+import type { PostModel } from '../post/post.model'
 import { PostService } from '../post/post.service'
 import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
+import type { RecentlyModel } from '../recently/recently.model'
 import { Activity } from './activity.constant'
+import type {
+  ActivityLikePayload,
+  ActivityLikeSupportType,
+  ActivityPresence,
+} from './activity.interface'
 import { ActivityModel } from './activity.model'
 import {
   extractArticleIdFromRoomName,
   isValidRoomName,
   parseRoomName,
 } from './activity.util'
+import type { UpdatePresenceDto } from './dtos/presence.dto'
 
 declare module '~/types/socket-meta' {
   interface SocketMetadata {

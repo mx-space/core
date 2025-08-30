@@ -9,16 +9,13 @@ import {
   Query,
   UnprocessableEntityException,
 } from '@nestjs/common'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
-
 import { SnippetMoreDto } from './snippet.dto'
 import { SnippetModel } from './snippet.model'
 import { SnippetService } from './snippet.service'
@@ -58,7 +55,6 @@ export class SnippetController {
 
   @Post('/')
   @Auth()
-  @BanInDemo
   @HTTPDecorators.Idempotence()
   async create(@Body() body: SnippetModel) {
     return await this.snippetService.create(body)
@@ -167,7 +163,6 @@ export class SnippetController {
 
   @Put('/:id')
   @Auth()
-  @BanInDemo
   async update(@Param() param: MongoIdDto, @Body() body: SnippetModel) {
     const { id } = param
 
@@ -176,7 +171,6 @@ export class SnippetController {
 
   @Delete('/:id')
   @Auth()
-  @BanInDemo
   async delete(@Param() param: MongoIdDto) {
     const { id } = param
     await this.snippetService.delete(id)

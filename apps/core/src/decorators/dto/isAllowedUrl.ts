@@ -1,6 +1,5 @@
 import { isURL } from 'class-validator'
 import type { ValidationOptions } from 'class-validator'
-
 import { validatorFactory } from '../simpleValidatorFactory'
 
 export const IsAllowedUrl = (validationOptions?: ValidationOptions) => {

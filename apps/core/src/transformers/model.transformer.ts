@@ -8,15 +8,13 @@
  */
 
 import type { Provider } from '@nestjs/common'
-import type { Connection } from 'mongoose'
-
 import { Inject } from '@nestjs/common'
 import { getModelForClass } from '@typegoose/typegoose'
-
 import {
   DB_CONNECTION_TOKEN,
   DB_MODEL_TOKEN_SUFFIX,
 } from '~/constants/system.constant'
+import type { Connection } from 'mongoose'
 
 export interface TypegooseClass {
   new (...args: any[])

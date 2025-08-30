@@ -1,8 +1,6 @@
 import { createWriteStream } from 'node:fs'
 import path, { resolve } from 'node:path'
 import type { Readable } from 'node:stream'
-import type { FileType } from './file.type'
-
 import { fs } from '@mx-space/compiled'
 import {
   BadRequestException,
@@ -11,13 +9,12 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common'
-
 import {
   STATIC_FILE_DIR,
   STATIC_FILE_TRASH_DIR,
 } from '~/constants/path.constant'
-
 import { ConfigsService } from '../configs/configs.service'
+import type { FileType } from './file.type'
 
 @Injectable()
 export class FileService {

@@ -1,7 +1,5 @@
-import { IsBoolean, IsOptional } from 'class-validator'
-
 import { prop } from '@typegoose/typegoose'
-
+import { IsBoolean, IsOptional } from 'class-validator'
 import { BaseModel } from './base.model'
 
 export abstract class BaseCommentIndexModel extends BaseModel {

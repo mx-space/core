@@ -1,11 +1,9 @@
 import { IncomingMessage } from 'node:http'
-import { MongoClient } from 'mongodb'
+import type { ServerResponse } from 'node:http'
 import type {
   BetterAuthOptions,
   BetterAuthPlugin,
 } from '@mx-space/compiled/auth'
-import type { ServerResponse } from 'node:http'
-
 import {
   APIError,
   betterAuth,
@@ -13,10 +11,9 @@ import {
   mongodbAdapter,
   toNodeHandler,
 } from '@mx-space/compiled/auth'
-
 import { API_VERSION, CROSS_DOMAIN, MONGO_DB } from '~/app.config'
 import { SECURITY } from '~/app.config.test'
-
+import { MongoClient } from 'mongodb'
 import {
   AUTH_JS_ACCOUNT_COLLECTION,
   AUTH_JS_SESSION_COLLECTION,

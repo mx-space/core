@@ -1,22 +1,19 @@
 import { createReadStream } from 'node:fs'
 import { resolve } from 'node:path'
-import { Socket } from 'socket.io'
+import { forwardRef, Inject } from '@nestjs/common'
 import type {
   GatewayMetadata,
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
-import type SocketIO from 'socket.io'
-
-import { forwardRef, Inject } from '@nestjs/common'
 import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
-
 import { LOG_DIR } from '~/constants/path.constant'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { getTodayLogFilePath } from '~/utils/path.util'
-
+import { Socket } from 'socket.io'
+import type SocketIO from 'socket.io'
 import { BusinessEvents } from '../../../constants/business-event.constant'
 import { AuthService } from '../../../modules/auth/auth.service'
 import { createAuthGateway } from '../shared/auth.gateway'

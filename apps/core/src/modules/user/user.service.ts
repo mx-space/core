@@ -1,6 +1,3 @@
-import { compareSync } from 'bcryptjs'
-import type { UserDocument } from './user.model'
-
 import {
   BadRequestException,
   ForbiddenException,
@@ -9,7 +6,6 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
-
 import {
   BizException,
   BusinessException,
@@ -17,8 +13,9 @@ import {
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar, sleep } from '~/utils/tool.util'
-
+import { compareSync } from 'bcryptjs'
 import { AuthService } from '../auth/auth.service'
+import type { UserDocument } from './user.model'
 import { UserModel } from './user.model'
 
 @Injectable()

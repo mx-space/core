@@ -1,9 +1,8 @@
 // @ts-nocheck
+import { registerJSONGlobal } from '~/global/json.global'
 import { dbHelper } from 'test/helper/db-mock.helper'
 import { redisHelper } from 'test/helper/redis-mock.helper'
 import { beforeAll } from 'vitest'
-
-import { registerJSONGlobal } from '~/global/json.global'
 
 beforeAll(async () => {
   global.isDev = true

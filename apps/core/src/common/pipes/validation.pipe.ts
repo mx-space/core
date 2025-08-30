@@ -1,7 +1,5 @@
 import type { ValidationPipeOptions } from '@nestjs/common'
-
 import { Injectable, ValidationPipe } from '@nestjs/common'
-
 import { isDev } from '~/global/env.global'
 
 @Injectable()

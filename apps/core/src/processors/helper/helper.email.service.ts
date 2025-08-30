@@ -1,17 +1,14 @@
 import cluster from 'node:cluster'
-import { createTransport } from 'nodemailer'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import type Mail from 'nodemailer/lib/mailer'
-
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
-
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UserService } from '~/modules/user/user.service'
-
+import { createTransport } from 'nodemailer'
+import type Mail from 'nodemailer/lib/mailer'
 import { SubPubBridgeService } from '../redis/subpub.service'
 import { AssetService } from './helper.asset.service'
 

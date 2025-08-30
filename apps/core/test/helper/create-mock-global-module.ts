@@ -1,5 +1,4 @@
 import type { Provider } from '@nestjs/common'
-
 import { Global, Module } from '@nestjs/common'
 
 export const createMockGlobalModule = (providers: Provider[]) => {

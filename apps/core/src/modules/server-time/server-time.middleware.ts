@@ -1,5 +1,4 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-
 import { RequestContext } from '~/common/contexts/request.context'
 
 export async function trackResponseTimeMiddleware(

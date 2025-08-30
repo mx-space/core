@@ -1,6 +1,3 @@
-import { isString } from 'class-validator'
-import { isFunction } from 'lodash'
-
 import {
   BadRequestException,
   Get,
@@ -11,14 +8,14 @@ import {
 import { Reflector } from '@nestjs/core'
 import { SchedulerRegistry } from '@nestjs/schedule'
 import { SCHEDULE_CRON_OPTIONS } from '@nestjs/schedule/dist/schedule.constants'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CRON_DESCRIPTION } from '~/constants/meta.constant'
 import { CronService } from '~/processors/helper/helper.cron.service'
 import { TaskQueueService } from '~/processors/helper/helper.tq.service'
+import { isString } from 'class-validator'
+import { isFunction } from 'lodash'
 
 @ApiController('health/cron')
 @Auth()
@@ -56,7 +53,6 @@ export class HealthCronController {
   }
 
   @Post('/run/:name')
-  @BanInDemo
   async runCron(@Param('name') name: string) {
     if (!isString(name)) {
       throw new UnprocessableEntityException('name must be string')

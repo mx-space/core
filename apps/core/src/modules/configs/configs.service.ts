@@ -1,12 +1,6 @@
 import cluster from 'node:cluster'
-import { plainToInstance } from 'class-transformer'
-import { validateSync } from 'class-validator'
-import { cloneDeep, merge, mergeWith } from 'lodash'
-import type { ClassConstructor } from 'class-transformer'
-
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
-
 import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
 import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
@@ -18,7 +12,10 @@ import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { camelcaseKeys, sleep } from '~/utils/tool.util'
-
+import { plainToInstance } from 'class-transformer'
+import type { ClassConstructor } from 'class-transformer'
+import { validateSync } from 'class-validator'
+import { cloneDeep, merge, mergeWith } from 'lodash'
 import { generateDefaultConfig } from './configs.default'
 import { OAuthDto } from './configs.dto'
 import { decryptObject, encryptObject } from './configs.encrypt.util'
@@ -73,7 +70,7 @@ export class ConfigsService {
       }
       retryCount++
       if (retryCount % 10 === 0) {
-        throw `重试 ${retryCount} 次获取配置失败, 即将进行下一轮尝试`
+        throw `重试 ${retryCount} 次获取配置失败，即将进行下一轮尝试`
       }
       await sleep(1500)
     }

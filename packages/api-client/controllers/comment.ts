@@ -5,10 +5,9 @@ import type { IRequestHandler } from '~/interfaces/request'
 import type { ReaderModel } from '~/models'
 import type { PaginateResult } from '~/models/base'
 import type { CommentModel } from '~/models/comment'
+import { autoBind } from '~/utils/auto-bind'
 import type { HTTPClient } from '../core'
 import type { CommentDto } from '../dtos/comment'
-
-import { autoBind } from '~/utils/auto-bind'
 
 declare module '../core/client' {
   interface HTTPClient<

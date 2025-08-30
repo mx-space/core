@@ -1,14 +1,8 @@
 import { URL } from 'node:url'
-import { pick } from 'lodash'
-import type { ReturnModelType } from '@typegoose/typegoose'
-import type { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
-import type { PipelineStage } from 'mongoose'
-import type { CategoryModel } from '../category/category.model'
-import type { RSSProps } from './aggregate.interface'
-
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
-
+import type { ReturnModelType } from '@typegoose/typegoose'
+import type { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
 import {
   API_CACHE_PREFIX,
   CacheKeys,
@@ -21,7 +15,9 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
-
+import { pick } from 'lodash'
+import type { PipelineStage } from 'mongoose'
+import type { CategoryModel } from '../category/category.model'
 import { CategoryService } from '../category/category.service'
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
@@ -35,6 +31,7 @@ import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
 import { UserService } from '../user/user.service'
 import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.dto'
+import type { RSSProps } from './aggregate.interface'
 
 @Injectable()
 export class AggregateService {

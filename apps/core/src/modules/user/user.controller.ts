@@ -1,5 +1,3 @@
-import type { UserModel } from './user.model'
-
 import {
   BadRequestException,
   Body,
@@ -13,7 +11,6 @@ import {
   Post,
   Put,
 } from '@nestjs/common'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
@@ -21,16 +18,15 @@ import {
   CurrentUser,
   CurrentUserToken,
 } from '~/common/decorators/current-user.decorator'
-import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { getAvatar } from '~/utils/tool.util'
-
 import { AuthService } from '../auth/auth.service'
 import { AuthnService } from '../authn/authn.service'
 import { ConfigsService } from '../configs/configs.service'
 import { LoginDto, UserDto, UserPatchDto } from './user.dto'
+import type { UserModel } from './user.model'
 import { UserDocument } from './user.model'
 import { UserService } from './user.service'
 
@@ -142,7 +138,6 @@ export class UserController {
   @Patch()
   @Auth()
   @HttpCache.disable
-  @BanInDemo
   async patchMasterData(
     @Body() body: UserPatchDto,
     @CurrentUser() user: UserDocument,

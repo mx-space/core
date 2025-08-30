@@ -1,3 +1,6 @@
+import { modelOptions, prop } from '@typegoose/typegoose'
+import { TOPIC_COLLECTION_NAME } from '~/constants/db.constant'
+import { BaseModel } from '~/shared/model/base.model'
 import {
   IsNotEmpty,
   IsOptional,
@@ -6,11 +9,6 @@ import {
   MaxLength,
 } from 'class-validator'
 import slugify from 'slugify'
-
-import { modelOptions, prop } from '@typegoose/typegoose'
-
-import { TOPIC_COLLECTION_NAME } from '~/constants/db.constant'
-import { BaseModel } from '~/shared/model/base.model'
 
 @modelOptions({
   options: {

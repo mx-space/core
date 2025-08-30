@@ -1,18 +1,8 @@
-import { debounce, uniqBy } from 'lodash'
-import SocketIO from 'socket.io'
 import type {
   GatewayMetadata,
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
-import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
-import type {
-  DecorateAcknowledgementsWithMultipleResponses,
-  DefaultEventsMap,
-} from 'socket.io/dist/typed-events'
-import type { SocketType } from '../gateway.service'
-import type { EventGatewayHooks } from './hook.interface'
-
 import {
   ConnectedSocket,
   MessageBody,
@@ -20,17 +10,24 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets'
-
+import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getShortDate } from '~/utils/time.util'
-
+import { debounce, uniqBy } from 'lodash'
+import SocketIO from 'socket.io'
+import type {
+  DecorateAcknowledgementsWithMultipleResponses,
+  DefaultEventsMap,
+} from 'socket.io/dist/typed-events'
 import { BroadcastBaseGateway } from '../base.gateway'
+import type { SocketType } from '../gateway.service'
 import { GatewayService } from '../gateway.service'
 import { MessageEventDto, SupportedMessageEvent } from './dtos/message'
+import type { EventGatewayHooks } from './hook.interface'
 
 declare module '~/types/socket-meta' {
   interface SocketMetadata {

@@ -1,16 +1,13 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { Observable } from 'rxjs'
-
 import { chalk } from '@mx-space/compiled'
 import { BadRequestException, Get, Query, Sse } from '@nestjs/common'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { DATA_DIR } from '~/constants/path.constant'
 import { installPKG } from '~/utils/system.util'
-
+import { Observable } from 'rxjs'
 import { ServerlessService } from '../serverless/serverless.service'
 
 @ApiController('dependencies')

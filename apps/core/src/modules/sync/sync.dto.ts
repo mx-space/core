@@ -5,7 +5,6 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator'
-
 import {
   SyncableCollectionName,
   SyncableCollectionNames,

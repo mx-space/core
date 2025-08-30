@@ -1,7 +1,5 @@
-import { IsEnum } from 'class-validator'
-
 import { MongoIdDto } from '~/shared/dto/id.dto'
-
+import { IsEnum } from 'class-validator'
 import { ActivityLikeSupportType } from '../activity.interface'
 
 export class LikeBodyDto extends MongoIdDto {

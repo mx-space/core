@@ -1,12 +1,8 @@
-import { stringify } from 'qs'
-import { redisHelper } from 'test/helper/redis-mock.helper'
-
 import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { nanoid } from '@mx-space/compiled'
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
-
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
@@ -14,6 +10,8 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getModelToken } from '~/transformers/model.transformer'
+import { stringify } from 'qs'
+import { redisHelper } from 'test/helper/redis-mock.helper'
 
 const mockedEventManageService = { async emit() {} }
 describe('test Snippet Service', async () => {

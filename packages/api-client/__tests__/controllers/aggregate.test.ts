@@ -1,9 +1,8 @@
-import camelcaseKeys from 'camelcase-keys'
-
 import { mockRequestInstance } from '~/__tests__/helpers/instance'
 import { mockResponse } from '~/__tests__/helpers/response'
 import { AggregateController } from '~/controllers'
 import { TimelineType } from '~/models/aggregate'
+import camelcaseKeys from 'camelcase-keys'
 
 describe('test aggregate client', () => {
   const client = mockRequestInstance(AggregateController)
@@ -261,7 +260,7 @@ describe('test aggregate client', () => {
             id: '5eb52aa7505ad56acfd25c97',
             source: '古城荆棘王',
             text: '没有期盼就不会出现奇迹。',
-            author: 'M崽',
+            author: 'M 崽',
             created: '2020-05-08T09:47:19.285Z',
           },
           {
@@ -308,7 +307,7 @@ describe('test aggregate client', () => {
         posts: [
           {
             id: '5eb2c62a613a5ab0642f1fb8',
-            title: '如何配置zsh',
+            title: '如何配置 zsh',
             slug: 'zshrc',
             created: '2018-09-04T10:34:00.000Z',
             modified: '2020-11-13T21:41:43.774Z',
@@ -356,7 +355,9 @@ describe('test aggregate client', () => {
       },
     })
 
-    const data = await client.aggregate.getTimeline({ type: TimelineType.Note })
+    const data = await client.aggregate.getTimeline({
+      type: TimelineType.Note,
+    })
     expect(data.$raw.data).toEqual(mocked)
     expect(data.data.notes?.[0]).toEqual(mocked.data.notes[0])
     expect(data.data.posts).toBeUndefined()

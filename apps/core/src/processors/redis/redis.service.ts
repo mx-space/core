@@ -1,12 +1,10 @@
-import IORedis from 'ioredis'
-
 import { Injectable } from '@nestjs/common'
 import { Emitter } from '@socket.io/redis-emitter'
-
 import { REDIS } from '~/app.config'
 import { RedisIoAdapterKey } from '~/common/adapters/socket.adapter'
 import { API_CACHE_PREFIX } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils/redis.util'
+import IORedis from 'ioredis'
 
 @Injectable()
 export class RedisService {

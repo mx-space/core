@@ -1,7 +1,4 @@
 import { mkdirSync } from 'node:fs'
-import { MongoMemoryServer } from 'mongodb-memory-server'
-import { RedisMemoryServer } from 'redis-memory-server'
-
 import {
   DATA_DIR,
   LOG_DIR,
@@ -10,6 +7,8 @@ import {
   THEME_DIR,
   USER_ASSET_DIR,
 } from '~/constants/path.constant'
+import { MongoMemoryServer } from 'mongodb-memory-server'
+import { RedisMemoryServer } from 'redis-memory-server'
 
 export async function setup() {
   mkdirSync(DATA_DIR, { recursive: true })

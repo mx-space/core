@@ -1,7 +1,6 @@
+import { PagerDto } from '~/shared/dto/pager.dto'
 import { Transform, Type } from 'class-transformer'
 import { IsBoolean, IsInt, IsOptional, IsString } from 'class-validator'
-
-import { PagerDto } from '~/shared/dto/pager.dto'
 
 export class CategoryAndSlugDto {
   @IsString()

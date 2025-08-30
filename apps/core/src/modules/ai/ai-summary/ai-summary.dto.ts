@@ -1,6 +1,5 @@
-import { IsBoolean, IsOptional, IsString } from 'class-validator'
-
 import { TransformBoolean } from '~/common/decorators/transform-boolean.decorator'
+import { IsBoolean, IsOptional, IsString } from 'class-validator'
 
 class BaseLangQueryDto {
   @IsString()

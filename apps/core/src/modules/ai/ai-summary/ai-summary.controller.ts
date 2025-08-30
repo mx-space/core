@@ -8,7 +8,6 @@ import {
   Query,
   Req,
 } from '@nestjs/common'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
@@ -16,7 +15,6 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { FastifyBizRequest } from '~/transformers/get-req.transformer'
-
 import { ConfigsService } from '../../configs/configs.service'
 import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
 import {

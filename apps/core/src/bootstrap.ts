@@ -1,14 +1,12 @@
 import cluster from 'node:cluster'
 import { performance } from 'node:perf_hooks'
-import wcmatch from 'wildcard-match'
 import type { FastifyCorsOptions } from '@fastify/cors'
-import type { LogLevel } from '@nestjs/common'
-import type { NestFastifyApplication } from '@nestjs/platform-fastify'
-
 import { Logger } from '@innei/pretty-logger-nestjs'
 import { chalk } from '@mx-space/compiled'
+import type { LogLevel } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
-
+import type { NestFastifyApplication } from '@nestjs/platform-fastify'
+import wcmatch from 'wildcard-match'
 import { CROSS_DOMAIN, DEBUG_MODE, PORT } from './app.config'
 import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'

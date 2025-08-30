@@ -1,5 +1,4 @@
 import { repl } from '@nestjs/core'
-
 import { initializeApp } from './global/index.global'
 
 async function bootstrap() {

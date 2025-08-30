@@ -1,3 +1,4 @@
+import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
 import {
   IsEmail,
   IsNotEmpty,
@@ -6,8 +7,6 @@ import {
   IsString,
   IsUrl,
 } from 'class-validator'
-
-import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
 
 class UserOptionDto {
   @IsOptional()

@@ -1,12 +1,9 @@
-import { merge } from 'lodash'
-import type { EventBusEvents } from '~/constants/event-bus.constant'
-
 import { Injectable, Logger } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
-
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import type { EventBusEvents } from '~/constants/event-bus.constant'
 import { scheduleManager } from '~/utils/schedule.util'
-
+import { merge } from 'lodash'
 import { AdminEventsGateway } from '../gateway/admin/events.gateway'
 import { BroadcastBaseGateway } from '../gateway/base.gateway'
 import { WebEventsGateway } from '../gateway/web/events.gateway'

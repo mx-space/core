@@ -1,12 +1,9 @@
 import path from 'node:path'
 import { URL } from 'node:url'
-import { parseHTML } from 'linkedom'
-
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
-
 import PKG from '~/../package.json'
 import { API_VERSION } from '~/app.config'
-
+import { parseHTML } from 'linkedom'
 import { ConfigsService } from '../configs/configs.service'
 import { UserService } from '../user/user.service'
 

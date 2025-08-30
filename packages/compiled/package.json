@@ -10,13 +10,14 @@
     "./install-pkg": "./dist/install-pkg.cjs"
   },
   "scripts": {
-    "build": "tsup"
+    "build": "tsdown"
   },
   "devDependencies": {
     "@antfu/install-pkg": "1.1.0",
     "better-auth": "1.2.12",
     "nanoid": "5.1.5",
     "zod": "3.25.63",
-    "zx": "7.2.3"
+    "zx": "7.2.3",
+    "tsdown": "0.14.2"
   }
 }

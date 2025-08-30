@@ -1,5 +1,4 @@
 import { forwardRef, Module } from '@nestjs/common'
-
 import { CategoryModule } from '../category/category.module'
 import { CommentModule } from '../comment/comment.module'
 import { NoteModule } from '../note/note.module'

@@ -1,3 +1,4 @@
+import type { EventEmitter } from 'node:events'
 import type { CommentModel } from '@core/modules/comment/comment.model'
 import type { LinkModel } from '@core/modules/link/link.model'
 import type { NoteModel } from '@core/modules/note/note.model'
@@ -8,7 +9,6 @@ import type { NormalizedPost } from '@core/modules/post/post.type'
 import type { RecentlyModel } from '@core/modules/recently/recently.model'
 import type { SayModel } from '@core/modules/say/say.model'
 import type { ReaderModel } from '~/modules/reader/reader.model'
-import type { EventEmitter } from 'node:events'
 import type { BusinessEvents } from './event.enum'
 
 export interface ExtendedEventEmitter extends EventEmitter {

@@ -1,5 +1,3 @@
-import { instanceToPlain } from 'class-transformer'
-
 import {
   BadRequestException,
   Body,
@@ -8,13 +6,11 @@ import {
   Patch,
   UnprocessableEntityException,
 } from '@nestjs/common'
-
-import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IConfig } from '~/modules/configs/configs.interface'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { classToJsonSchema } from '~/utils/jsonschema.util'
-
+import { instanceToPlain } from 'class-transformer'
 import { ConfigKeyDto } from '../dtoes/config.dto'
 import { OptionController } from '../option.decorator'
 
@@ -50,7 +46,6 @@ export class BaseOptionController {
   }
 
   @Patch('/:key')
-  @BanInDemo
   patch(@Param() params: ConfigKeyDto, @Body() body: Record<string, any>) {
     if (typeof body !== 'object') {
       throw new UnprocessableEntityException('body must be object')

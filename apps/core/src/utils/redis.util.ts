@@ -1,6 +1,5 @@
-import type { RedisKeys } from '~/constants/cache.constant'
-
 import { DEMO_MODE } from '~/app.config'
+import type { RedisKeys } from '~/constants/cache.constant'
 
 type Prefix = 'mx' | 'mx-demo'
 const prefix = DEMO_MODE ? 'mx-demo' : 'mx'

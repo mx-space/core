@@ -1,15 +1,8 @@
+import { BadRequestException, Injectable } from '@nestjs/common'
 import type {
   VerifiedAuthenticationResponse,
   VerifiedRegistrationResponse,
 } from '@simplewebauthn/server'
-import type {
-  AuthenticationResponseJSON,
-  CredentialDeviceType,
-  RegistrationResponseJSON,
-} from '@simplewebauthn/server/script/deps'
-import type { UserDocument } from '../user/user.model'
-
-import { BadRequestException, Injectable } from '@nestjs/common'
 import {
   generateAuthenticationOptions,
   generateRegistrationOptions,
@@ -17,15 +10,19 @@ import {
   verifyRegistrationResponse,
 } from '@simplewebauthn/server'
 import { isoBase64URL, isoUint8Array } from '@simplewebauthn/server/helpers'
+import type {
+  AuthenticationResponseJSON,
+  CredentialDeviceType,
+  RegistrationResponseJSON,
+} from '@simplewebauthn/server/script/deps'
 import { ReturnModelType } from '@typegoose/typegoose'
-
 import { RequestContext } from '~/common/contexts/request.context'
 import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
-
 import { ConfigsService } from '../configs/configs.service'
+import type { UserDocument } from '../user/user.model'
 import { AuthnModel } from './authn.model'
 
 // TODO Compatible with versions below node v20

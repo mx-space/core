@@ -1,13 +1,8 @@
 import { statSync } from 'node:fs'
 import { readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
-import dayjs from 'dayjs'
-import { mkdirp } from 'mkdirp'
-import type { StoreJWTPayload } from './helper.jwt.service'
-
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { CronExpression } from '@nestjs/schedule'
-
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
@@ -21,9 +16,11 @@ import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
-
+import dayjs from 'dayjs'
+import { mkdirp } from 'mkdirp'
 import { RedisService } from '../redis/redis.service'
 import { HttpService } from './helper.http.service'
+import type { StoreJWTPayload } from './helper.jwt.service'
 import { JWTService } from './helper.jwt.service'
 
 @Injectable()
@@ -161,7 +158,7 @@ export class CronService {
   }
 
   @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'pushToBingSearch' })
-  @CronDescription('推送到Bing')
+  @CronDescription('推送到 Bing')
   async pushToBingSearch() {
     const {
       url: { webUrl },
@@ -195,13 +192,13 @@ export class CronService {
         },
       )
       if (res?.data?.d === null) {
-        this.logger.log('Bing站长提交成功')
+        this.logger.log('Bing 站长提交成功')
       } else {
-        this.logger.log(`Bing站长提交结果：${JSON.stringify(res.data)}`)
+        this.logger.log(`Bing 站长提交结果：${JSON.stringify(res.data)}`)
       }
       return res.data
     } catch (error) {
-      this.logger.error(`Bing推送错误：${error.message}`)
+      this.logger.error(`Bing 推送错误：${error.message}`)
     }
     return null
   }

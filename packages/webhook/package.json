@@ -18,10 +18,11 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "node scripts/generate.js && tsup && node scripts/post-build.cjs"
+    "build": "node scripts/generate.js && tsdown && node scripts/post-build.cjs"
   },
   "devDependencies": {
-    "express": "4.21.2"
+    "express": "4.21.2",
+    "tsdown": "0.14.2"
   },
   "bump": {
     "before": [

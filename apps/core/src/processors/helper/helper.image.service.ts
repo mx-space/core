@@ -1,14 +1,11 @@
-import { encode } from 'blurhash'
-import type { ImageModel } from '~/shared/model/image.model'
-import type { Sharp } from 'sharp'
-
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
-
 import { ConfigsService } from '~/modules/configs/configs.service'
+import type { ImageModel } from '~/shared/model/image.model'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
 import { AsyncQueue } from '~/utils/queue.util'
 import { requireDepsWithInstall } from '~/utils/tool.util'
-
+import { encode } from 'blurhash'
+import type { Sharp } from 'sharp'
 import { HttpService } from './helper.http.service'
 
 @Injectable()

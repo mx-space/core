@@ -1,12 +1,10 @@
-import { IsMongoId, IsOptional, IsString } from 'class-validator'
-
 import { modelOptions, prop } from '@typegoose/typegoose'
-
 import {
   CollectionRefTypes,
   RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { BaseCommentIndexModel } from '~/shared/model/base-comment.model'
+import { IsMongoId, IsOptional, IsString } from 'class-validator'
 
 export type RefType = {
   title: string

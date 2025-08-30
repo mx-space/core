@@ -1,15 +1,12 @@
 import { inspect } from 'node:util'
-import axios from 'axios'
-import axiosRetry, { exponentialDelay } from 'axios-retry'
-import type { AxiosInstance, AxiosRequestConfig } from 'axios'
-
 import { chalk } from '@mx-space/compiled'
 import { Injectable, Logger } from '@nestjs/common'
-
 import { AXIOS_CONFIG, DEBUG_MODE } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils/redis.util'
-
+import axios from 'axios'
+import type { AxiosInstance, AxiosRequestConfig } from 'axios'
+import axiosRetry, { exponentialDelay } from 'axios-retry'
 import { version } from '../../../package.json'
 import { RedisService } from '../redis/redis.service'
 

@@ -1,9 +1,7 @@
-import mongoose from 'mongoose'
-
 import { modelOptions, prop } from '@typegoose/typegoose'
-
 import { AI_DEEP_READING_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
+import mongoose from 'mongoose'
 
 @modelOptions({
   options: {

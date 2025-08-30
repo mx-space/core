@@ -1,5 +1,3 @@
-import dayjs from 'dayjs'
-
 import {
   BadRequestException,
   Get,
@@ -7,11 +5,10 @@ import {
   Post,
   UseInterceptors,
 } from '@nestjs/common'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { InjectModel } from '~/transformers/model.transformer'
-
+import dayjs from 'dayjs'
 import PKG from '../package.json'
 import { DEMO_MODE } from './app.config'
 import { HttpCache } from './common/decorators/cache.decorator'
@@ -48,7 +45,7 @@ export class AppController {
     return {
       name: PKG.name,
       author: PKG.author,
-      version: isDev ? 'dev' : `${DEMO_MODE ? 'demo/' : ''}${PKG.version}`,
+      version: isDev ? 'dev' : String(PKG.version),
       homepage: PKG.homepage,
       issues: PKG.issues,
     }

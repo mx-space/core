@@ -1,5 +1,4 @@
 import { IsEmail, IsIn, IsString } from 'class-validator'
-
 import { SubscribeTypeToBitMap } from './subscribe.constant'
 
 export class SubscribeDto {

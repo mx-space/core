@@ -1,8 +1,6 @@
 import cluster from 'node:cluster'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
-
 import { Logger } from '@nestjs/common'
-
 import { CLUSTER } from '~/app.config'
 import {
   DATA_DIR,
@@ -12,13 +10,10 @@ import {
   TEMP_DIR,
   USER_ASSET_DIR,
 } from '~/constants/path.constant'
-
 import { consola, logger } from './consola.global'
 import { cwd, isDev } from './env.global'
 import { registerJSONGlobal } from './json.global'
-
 import './dayjs.global'
-
 import { $, chalk } from '@mx-space/compiled'
 
 // 建立目录

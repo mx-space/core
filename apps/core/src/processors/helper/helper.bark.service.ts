@@ -1,9 +1,6 @@
-import { throttle } from 'lodash'
-
 import { Injectable } from '@nestjs/common'
-
 import { ConfigsService } from '~/modules/configs/configs.service'
-
+import { throttle } from 'lodash'
 import { HttpService } from './helper.http.service'
 
 export type BarkPushOptions = {

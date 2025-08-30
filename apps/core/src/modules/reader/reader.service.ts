@@ -1,12 +1,9 @@
-import { Document } from 'mongodb'
-import { Types } from 'mongoose'
-
 import { Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
-
 import { DatabaseService } from '~/processors/database/database.service'
 import { InjectModel } from '~/transformers/model.transformer'
-
+import { Document } from 'mongodb'
+import { Types } from 'mongoose'
 import { AUTH_JS_USER_COLLECTION } from '../auth/auth.constant'
 import { ReaderModel } from './reader.model'
 

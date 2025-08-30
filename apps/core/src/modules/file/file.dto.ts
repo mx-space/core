@@ -1,5 +1,4 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator'
-
 import { FileType, FileTypeEnum } from './file.type'
 
 export class FileQueryDto {

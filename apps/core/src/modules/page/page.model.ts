@@ -1,12 +1,10 @@
-import { Transform } from 'class-transformer'
-import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator'
-
 import { PartialType } from '@nestjs/mapped-types'
 import { modelOptions, prop } from '@typegoose/typegoose'
-
 import { PAGE_COLLECTION_NAME } from '~/constants/db.constant'
 import { IsNilOrString } from '~/decorators/dto/isNilOrString'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
+import { Transform } from 'class-transformer'
+import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator'
 
 @modelOptions({
   options: {

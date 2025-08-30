@@ -1,13 +1,10 @@
 // https://github.dev/ever-co/ever-gauzy/packages/core/src/core/context/request-context.middleware.ts
 
-import * as cls from 'cls-hooked'
-import type { NestMiddleware } from '@nestjs/common'
 import type { ServerResponse } from 'node:http'
-
+import type { NestMiddleware } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
-
 import { BizIncomingMessage } from '~/transformers/get-req.transformer'
-
+import * as cls from 'cls-hooked'
 import { RequestContext } from '../contexts/request.context'
 
 @Injectable()

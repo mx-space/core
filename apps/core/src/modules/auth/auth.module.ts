@@ -4,12 +4,10 @@ import type {
   NestModule,
   Provider,
 } from '@nestjs/common'
-import type { AuthInstance } from './auth.interface'
-
 import { API_VERSION } from '~/app.config'
-
 import { AuthInstanceInjectKey } from './auth.constant'
 import { AuthController } from './auth.controller'
+import type { AuthInstance } from './auth.interface'
 import { AuthMiddleware } from './auth.middleware'
 import { AuthService } from './auth.service'
 

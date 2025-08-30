@@ -1,5 +1,4 @@
 import { Global, Module } from '@nestjs/common'
-
 import { AuthnController } from '../authn/authn.controller'
 import { AuthnService } from './authn.service'
 

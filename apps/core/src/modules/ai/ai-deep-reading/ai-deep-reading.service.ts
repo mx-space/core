@@ -1,18 +1,15 @@
-import { generateText, tool } from 'ai'
-import type { PagerDto } from '~/shared/dto/pager.dto'
-
 import { z } from '@mx-space/compiled/zod'
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
-
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { RedisService } from '~/processors/redis/redis.service'
+import type { PagerDto } from '~/shared/dto/pager.dto'
 import { InjectModel } from '~/transformers/model.transformer'
 import { md5 } from '~/utils/tool.util'
-
+import { generateText, tool } from 'ai'
 import { ConfigsService } from '../../configs/configs.service'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
@@ -99,7 +96,7 @@ export class AiDeepReadingService {
     }
 
     try {
-      // 使用Vercel AI SDK执行多步骤工具调用
+      // 使用 Vercel AI SDK 执行多步骤工具调用
       await generateText({
         model,
         tools,
@@ -171,7 +168,7 @@ export class AiDeepReadingService {
         id: string,
         text: string,
       ) {
-        // 处理时间增加到5分钟
+        // 处理时间增加到 5 分钟
         await redis.set(taskId, 'processing', 'EX', 300)
 
         const result = await this.deepReadingAgentChain(id)
@@ -200,7 +197,7 @@ export class AiDeepReadingService {
         )
         throw new BizException(
           ErrorCodeEnum.AIException,
-          'AI处理迭代次数超过限制',
+          'AI 处理迭代次数超过限制',
           error.stack,
         )
       }

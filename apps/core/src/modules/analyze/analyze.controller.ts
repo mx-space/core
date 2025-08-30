@@ -1,16 +1,13 @@
-import dayjs from 'dayjs'
-import type { PagerDto } from '~/shared/dto/pager.dto'
-
 import { Delete, Get, HttpCode, Query } from '@nestjs/common'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { Paginator } from '~/common/decorators/http.decorator'
 import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
+import type { PagerDto } from '~/shared/dto/pager.dto'
 import { getRedisKey } from '~/utils/redis.util'
 import { getTodayEarly, getWeekStart } from '~/utils/time.util'
-
+import dayjs from 'dayjs'
 import { AnalyzeDto } from './analyze.dto'
 import { AnalyzeService } from './analyze.service'
 

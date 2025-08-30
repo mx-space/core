@@ -5,7 +5,6 @@ import {
   POST_COLLECTION_NAME,
   RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
-
 import { defineMigration } from '../helper'
 
 export default defineMigration('v4.6.2__0', async (db, _connection) => {

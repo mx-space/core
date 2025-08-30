@@ -37,7 +37,7 @@
     "commit_message": "chore(release): bump @mx-space/api-client to v${NEW_VERSION}"
   },
   "scripts": {
-    "package": "rm -rf dist && tsup && node mod-dts.mjs",
+    "package": "rm -rf dist && tsdown && node mod-dts.mjs",
     "build": "npm run package",
     "prepackage": "rm -rf dist",
     "test": "vitest",
@@ -54,7 +54,7 @@
     "express": "4.21.2",
     "form-data": "4.0.4",
     "lodash": "^4.17.21",
-    "tsup": "8.5.0",
+    "tsdown": "0.14.2",
     "umi-request": "1.4.0",
     "vite": "^6.0.3",
     "vitest": "2.1.8"

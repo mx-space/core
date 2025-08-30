@@ -1,9 +1,5 @@
-import mongoose from 'mongoose'
-import { redisHelper } from 'test/helper/redis-mock.helper'
-
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
-
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { createMockedContextResponse } from '~/modules/serverless/mock-response.util'
 import { ServerlessService } from '~/modules/serverless/serverless.service'
@@ -14,6 +10,8 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { getModelToken } from '~/transformers/model.transformer'
+import mongoose from 'mongoose'
+import { redisHelper } from 'test/helper/redis-mock.helper'
 
 describe('test serverless function service', () => {
   let service: ServerlessService

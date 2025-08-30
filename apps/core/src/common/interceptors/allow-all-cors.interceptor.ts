@@ -3,10 +3,9 @@ import type {
   ExecutionContext,
   NestInterceptor,
 } from '@nestjs/common'
+import { RequestMethod } from '@nestjs/common'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import type { FastifyReply } from 'fastify'
-
-import { RequestMethod } from '@nestjs/common'
 
 export class AllowAllCorsInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler<any>) {

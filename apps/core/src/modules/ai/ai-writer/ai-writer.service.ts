@@ -1,8 +1,6 @@
-import { generateObject } from 'ai'
-
 import { z } from '@mx-space/compiled/zod'
 import { Injectable, Logger } from '@nestjs/common'
-
+import { generateObject } from 'ai'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 

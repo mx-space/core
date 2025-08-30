@@ -1,5 +1,5 @@
-import axios from 'axios'
 import type { IRequestAdapter } from '~/interfaces/adapter'
+import axios from 'axios'
 import type { AxiosInstance, AxiosResponse } from 'axios'
 
 const $http = /*#__PURE__*/ axios.create({})

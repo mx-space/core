@@ -3,12 +3,12 @@ import {
   registerDecorator,
   ValidatorConstraint,
 } from 'class-validator'
-import { isNil } from 'lodash'
 import type {
   ValidationArguments,
   ValidationOptions,
   ValidatorConstraintInterface,
 } from 'class-validator'
+import { isNil } from 'lodash'
 
 @ValidatorConstraint({ async: true })
 class IsNilOrStringConstraint implements ValidatorConstraintInterface {

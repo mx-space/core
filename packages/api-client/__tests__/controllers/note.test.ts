@@ -1,10 +1,9 @@
-import { vi } from 'vitest'
-
 import { mockRequestInstance } from '~/__tests__/helpers/instance'
 import { mockResponse } from '~/__tests__/helpers/response'
 import { axiosAdaptor } from '~/adaptors/axios'
 import { NoteController } from '~/controllers'
 import { RequestError } from '~/core'
+import { vi } from 'vitest'
 
 const { spyOn } = vi
 

@@ -5,14 +5,12 @@
  * @author Innei <https://github.com/innei>
  */
 
+import Keyv from '@keyv/redis'
 import type {
   CacheModuleOptions,
   CacheOptionsFactory,
 } from '@nestjs/cache-manager'
-
-import Keyv from '@keyv/redis'
 import { Injectable } from '@nestjs/common'
-
 import { REDIS } from '~/app.config'
 
 @Injectable()

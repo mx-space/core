@@ -1,9 +1,8 @@
+import type { URLSearchParams } from 'node:url'
 import { inspect } from 'node:util'
+import { axiosAdaptor } from '~/adaptors/axios'
 import isEqual from 'lodash/isEqual'
 import { vi } from 'vitest'
-import type { URLSearchParams } from 'node:url'
-
-import { axiosAdaptor } from '~/adaptors/axios'
 
 const { spyOn } = vi
 

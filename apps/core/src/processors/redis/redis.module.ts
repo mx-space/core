@@ -5,7 +5,6 @@
  */
 import { CacheModule as NestCacheModule } from '@nestjs/cache-manager'
 import { Global, Module } from '@nestjs/common'
-
 import { CacheService } from './cache.service'
 import { RedisConfigService } from './redis.config.service'
 import { RedisService } from './redis.service'

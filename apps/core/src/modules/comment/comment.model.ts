@@ -1,15 +1,12 @@
 import { URL } from 'node:url'
-import { Types } from 'mongoose'
-import autopopulate from 'mongoose-autopopulate'
-
 import { modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
-
 import {
   CollectionRefTypes,
   COMMENT_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
-
+import { Types } from 'mongoose'
+import autopopulate from 'mongoose-autopopulate'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'

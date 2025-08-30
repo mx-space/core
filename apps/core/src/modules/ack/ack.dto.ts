@@ -1,6 +1,5 @@
-import { IsEnum, IsMongoId, IsObject } from 'class-validator'
-
 import { ArticleTypeEnum } from '~/constants/article.constant'
+import { IsEnum, IsMongoId, IsObject } from 'class-validator'
 
 export enum AckEventType {
   READ = 'read',

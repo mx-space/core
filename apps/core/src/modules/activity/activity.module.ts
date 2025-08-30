@@ -1,7 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common'
-
 import { GatewayModule } from '~/processors/gateway/gateway.module'
-
 import { CommentModule } from '../comment/comment.module'
 import { NoteModule } from '../note/note.module'
 import { PostModule } from '../post/post.module'

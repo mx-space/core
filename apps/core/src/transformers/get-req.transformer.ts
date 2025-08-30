@@ -1,7 +1,7 @@
+import type { IncomingMessage } from 'node:http'
 import type { ExecutionContext } from '@nestjs/common'
 import type { UserModel } from '~/modules/user/user.model'
 import type { FastifyRequest } from 'fastify'
-import type { IncomingMessage } from 'node:http'
 
 type BizRequest = {
   user?: UserModel

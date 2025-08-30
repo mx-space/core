@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common'
-
 import { TopicBaseController } from './topic.controller'
 import { TopicService } from './topic.service'
 

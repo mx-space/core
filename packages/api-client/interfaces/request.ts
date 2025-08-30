@@ -1,6 +1,8 @@
 import type { RequestOptions } from './instance'
 
-type NoStringIndex<T> = { [K in keyof T as string extends K ? never : K]: T[K] }
+type NoStringIndex<T> = {
+  [K in keyof T as string extends K ? never : K]: T[K]
+}
 
 export type Method = 'get' | 'delete' | 'post' | 'put' | 'patch'
 

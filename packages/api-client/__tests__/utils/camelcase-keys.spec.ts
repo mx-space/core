@@ -1,6 +1,5 @@
-import camelcaseKeysLib from 'camelcase-keys'
-
 import { camelcase, camelcaseKeys } from '~/utils/camelcase-keys'
+import camelcaseKeysLib from 'camelcase-keys'
 
 describe('test camelcase keys', () => {
   it('case 1 normal', () => {

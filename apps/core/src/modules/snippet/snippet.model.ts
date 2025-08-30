@@ -1,3 +1,6 @@
+import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
+import { BaseModel } from '~/shared/model/base.model'
+import { EncryptUtil } from '~/utils/encrypt.util'
 import { Transform } from 'class-transformer'
 import {
   IsBoolean,
@@ -11,11 +14,6 @@ import {
 import { isNil } from 'lodash'
 import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
 import { stringify } from 'qs'
-
-import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
-
-import { BaseModel } from '~/shared/model/base.model'
-import { EncryptUtil } from '~/utils/encrypt.util'
 
 export enum SnippetType {
   JSON = 'json',

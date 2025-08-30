@@ -1,7 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common'
-
 import { GatewayModule } from '~/processors/gateway/gateway.module'
-
 import { AiModule } from '../ai/ai.module'
 import { ReaderModule } from '../reader/reader.module'
 import { ServerlessModule } from '../serverless/serverless.module'

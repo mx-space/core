@@ -1,4 +1,4 @@
-export { betterAuth, getCookieKey } from 'better-auth'
+export { betterAuth } from 'better-auth'
 export { getSessionCookie, setSessionCookie } from 'better-auth/cookies'
 
 export {

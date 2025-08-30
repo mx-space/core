@@ -1,10 +1,7 @@
+import { Logger } from '@nestjs/common'
+import { REDIS } from '~/app.config'
 import IORedis from 'ioredis'
 import type { Redis, RedisOptions } from 'ioredis'
-
-import { Logger } from '@nestjs/common'
-
-import { REDIS } from '~/app.config'
-
 import { isTest } from '../global/env.global'
 
 class RedisSubPub {

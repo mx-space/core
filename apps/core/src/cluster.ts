@@ -1,6 +1,5 @@
 import cluster from 'node:cluster'
 import os from 'node:os'
-
 import { logger } from './global/consola.global'
 
 export const Cluster = {

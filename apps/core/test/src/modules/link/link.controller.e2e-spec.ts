@@ -1,12 +1,5 @@
-import { createE2EApp } from 'test/helper/create-e2e-app'
-import { gatewayProviders } from 'test/mock/modules/gateway.mock'
-import { userProvider } from 'test/mock/modules/user.mock'
-import { emailProvider } from 'test/mock/processors/email.mock'
-import { eventEmitterProvider } from 'test/mock/processors/event.mock'
-import type { ReturnModelType } from '@typegoose/typegoose'
-
 import { createRedisProvider } from '@/mock/modules/redis.mock'
-
+import type { ReturnModelType } from '@typegoose/typegoose'
 import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { OptionModel } from '~/modules/configs/configs.model'
@@ -18,6 +11,11 @@ import {
 import { LinkModel, LinkState } from '~/modules/link/link.model'
 import { LinkService } from '~/modules/link/link.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
+import { createE2EApp } from 'test/helper/create-e2e-app'
+import { gatewayProviders } from 'test/mock/modules/gateway.mock'
+import { userProvider } from 'test/mock/modules/user.mock'
+import { emailProvider } from 'test/mock/processors/email.mock'
+import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 
 describe('Test LinkController(E2E)', async () => {
   const proxy = createE2EApp({

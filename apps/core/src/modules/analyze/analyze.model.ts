@@ -1,10 +1,8 @@
-import { SchemaTypes } from 'mongoose'
-import { UAParser } from 'ua-parser-js'
-
 import { index, modelOptions, prop, Severity } from '@typegoose/typegoose'
-
 import { ANALYZE_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
+import { SchemaTypes } from 'mongoose'
+import { UAParser } from 'ua-parser-js'
 
 @modelOptions({
   schemaOptions: {

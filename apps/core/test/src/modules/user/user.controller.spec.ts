@@ -1,7 +1,6 @@
 import { createMockGlobalModule } from '@/helper/create-mock-global-module'
 import { configProvider } from '@/mock/modules/config.mock'
 import { Test } from '@nestjs/testing'
-
 import { AuthService } from '~/modules/auth/auth.service'
 import { AuthnService } from '~/modules/authn/authn.service'
 import { UserController } from '~/modules/user/user.controller'

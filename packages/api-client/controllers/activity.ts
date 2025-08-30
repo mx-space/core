@@ -8,9 +8,8 @@ import type {
   RecentActivities,
   RoomsData,
 } from '~/models/activity'
-import type { HTTPClient } from '../core'
-
 import { autoBind } from '~/utils/auto-bind'
+import type { HTTPClient } from '../core'
 
 declare module '../core/client' {
   interface HTTPClient<

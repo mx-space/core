@@ -1,11 +1,8 @@
-import type { AxiosRequestConfig } from 'axios'
-
 import { argv } from '@mx-space/compiled'
+import type { AxiosRequestConfig } from 'axios'
 
 export const PORT = process.env.PORT || 2333
 export const API_VERSION = 2
-
-export const DEMO_MODE = false
 
 export const CROSS_DOMAIN = {
   allowedOrigins: argv.allowed_origins

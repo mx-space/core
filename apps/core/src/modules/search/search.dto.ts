@@ -1,6 +1,5 @@
 import { Transform } from 'class-transformer'
 import { IsEnum, IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator'
-
 import { PagerDto } from '../../shared/dto/pager.dto'
 
 export class SearchDto extends PagerDto {

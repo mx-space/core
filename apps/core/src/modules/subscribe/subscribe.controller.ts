@@ -1,10 +1,8 @@
 import { BadRequestException, Body, Get, Post, Query } from '@nestjs/common'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { PagerDto } from '~/shared/dto/pager.dto'
-
 import { SubscribeTypeToBitMap } from './subscribe.constant'
 import { CancelSubscribeDto, SubscribeDto } from './subscribe.dto'
 import { SubscribeService } from './subscribe.service'

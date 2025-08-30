@@ -1,7 +1,5 @@
 import { resolve } from 'node:path'
-
 import { LOG_DIR } from '~/constants/path.constant'
-
 import { getShortDate } from './time.util'
 
 export const getTodayLogFilePath = () =>

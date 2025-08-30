@@ -1,13 +1,10 @@
 import { Readable } from 'node:stream'
-import { FastifyReply } from 'fastify'
-
 import { Body, Get, Post, Res } from '@nestjs/common'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-
+import { FastifyReply } from 'fastify'
 import { ConfigsService } from '../../configs/configs.service'
 import { ChatRequestDto, ChatResponseDto } from './ai-agent.dto'
 import { AIAgentService } from './ai-agent.service'

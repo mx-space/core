@@ -59,8 +59,8 @@ export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
 
     [ErrorCodeEnum.EmailTemplateNotFound]: ['邮件模板不存在', 400],
 
-    [ErrorCodeEnum.BingAPIFailed]: ['Bing API请求失败', 503],
-    [ErrorCodeEnum.BingKeyInvalid]: ['Bing API密钥无效', 401],
-    [ErrorCodeEnum.BingDomainInvalid]: ['Bing API域名无效', 400],
+    [ErrorCodeEnum.BingAPIFailed]: ['Bing API 请求失败', 503],
+    [ErrorCodeEnum.BingKeyInvalid]: ['Bing API 密钥无效', 401],
+    [ErrorCodeEnum.BingDomainInvalid]: ['Bing API 域名无效', 400],
   },
 )

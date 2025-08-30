@@ -1,12 +1,9 @@
-import { FastifyReply } from 'fastify'
-
 import { CacheTTL } from '@nestjs/cache-manager'
 import { Get, Header, Inject, Query, Res } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-
+import { FastifyReply } from 'fastify'
 import { SyncByLastSyncedAtDto, SyncDataChecksumDto } from './sync.dto'
 import { SyncService } from './sync.service'
 

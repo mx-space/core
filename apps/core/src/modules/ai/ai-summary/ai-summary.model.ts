@@ -1,5 +1,4 @@
 import { modelOptions, prop } from '@typegoose/typegoose'
-
 import { AI_SUMMARY_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 

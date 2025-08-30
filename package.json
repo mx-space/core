@@ -9,7 +9,7 @@
   },
   "author": "Innei <https://innei.in>",
   "scripts": {
-    "format": "prettier --write \"apps/**/*.ts\" \"test/**/*.ts\" \"packages/**/*.ts\"",
+    "format": "prettier --write \"apps/**/*.ts\" \"packages/**/*.ts\"",
     "prepare": "simple-git-hooks && node scripts/init-project.mjs",
     "build:external": "pnpm -C \"packages/compiled\" run build",
     "build": "pnpm run build:external && pnpm -C \"apps/core\" run build",
@@ -20,7 +20,8 @@
     "publish:core": "cd apps/core && npm run publish"
   },
   "devDependencies": {
-    "@innei/prettier": "0.15.0",
+    "@ianvs/prettier-plugin-sort-imports": "4.7.0",
+    "@prettier/plugin-oxc": "0.0.4",
     "@sxzz/eslint-config": "7.0.5",
     "@types/node": "24.0.12",
     "cross-env": "7.0.3",
@@ -28,12 +29,13 @@
     "lint-staged": "16.1.2",
     "mongodb-memory-server": "10.1.4",
     "prettier": "3.6.2",
+    "prettier-package-json": "2.8.0",
+    "prettier-plugin-ember-template-tag": "2.1.0",
     "redis-memory-server": "0.12.1",
     "rimraf": "6.0.1",
     "simple-git-hooks": "2.13.0",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
-    "tsup": "8.5.0",
     "typescript": "5.8.3",
     "vite-tsconfig-paths": "5.1.4",
     "zx-cjs": "7.0.7-0"

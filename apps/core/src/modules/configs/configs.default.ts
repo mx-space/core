@@ -1,6 +1,5 @@
-import type { IConfig } from './configs.interface'
-
 import { DEMO_MODE } from '~/app.config'
+import type { IConfig } from './configs.interface'
 
 export const generateDefaultConfig: () => IConfig = () => ({
   seo: {
@@ -47,7 +46,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
   },
   friendLinkOptions: { allowApply: true, allowSubPath: false },
   backupOptions: {
-    enable: DEMO_MODE ? false : true,
+    enable: true,
     endpoint: null!,
     region: null!,
     bucket: null!,

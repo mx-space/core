@@ -1,9 +1,7 @@
-import { redisHelper } from 'test/helper/redis-mock.helper'
-
 import { Test } from '@nestjs/testing'
-
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { RedisService } from '~/processors/redis/redis.service'
+import { redisHelper } from 'test/helper/redis-mock.helper'
 
 describe('test jwt service', () => {
   let service: JWTService

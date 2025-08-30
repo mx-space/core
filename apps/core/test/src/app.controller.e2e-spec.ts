@@ -1,8 +1,6 @@
-import type { NestFastifyApplication } from '@nestjs/platform-fastify'
-
 import { createRedisProvider } from '@/mock/modules/redis.mock'
+import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
-
 import { AppController } from '~/app.controller'
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
 import { OptionModel } from '~/modules/configs/configs.model'

@@ -1,12 +1,9 @@
 /**
  * @see https://github.com/surmon-china/nodepress/blob/main/src/processors/database/database.provider.ts
  */
-import mongoose from 'mongoose'
-import type { CollectionRefTypes } from '~/constants/db.constant'
-
 import { chalk } from '@mx-space/compiled'
-
 import { MONGO_DB } from '~/app.config'
+import type { CollectionRefTypes } from '~/constants/db.constant'
 import {
   NOTE_COLLECTION_NAME,
   PAGE_COLLECTION_NAME,
@@ -14,6 +11,7 @@ import {
   RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { logger } from '~/global/consola.global'
+import mongoose from 'mongoose'
 
 let databaseConnectionPromise: Promise<mongoose.Connection> | null = null
 

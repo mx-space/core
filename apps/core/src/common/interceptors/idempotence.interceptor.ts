@@ -1,11 +1,8 @@
-import { catchError, tap } from 'rxjs'
 import type {
   CallHandler,
   ExecutionContext,
   NestInterceptor,
 } from '@nestjs/common'
-import type { FastifyRequest } from 'fastify'
-
 import {
   ConflictException,
   Inject,
@@ -13,7 +10,6 @@ import {
   SetMetadata,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-
 import {
   HTTP_IDEMPOTENCE_KEY,
   HTTP_IDEMPOTENCE_OPTIONS,
@@ -23,6 +19,8 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
 import { hashString } from '~/utils/tool.util'
+import type { FastifyRequest } from 'fastify'
+import { catchError, tap } from 'rxjs'
 
 const IdempotenceHeaderKey = 'x-idempotence'
 

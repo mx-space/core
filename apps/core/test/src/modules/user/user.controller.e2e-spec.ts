@@ -1,11 +1,7 @@
-import { dbHelper } from 'test/helper/db-mock.helper'
-import { redisHelper } from 'test/helper/redis-mock.helper'
-import type { NestFastifyApplication } from '@nestjs/platform-fastify'
-
 import { createMockGlobalModule } from '@/helper/create-mock-global-module'
 import { configProvider } from '@/mock/modules/config.mock'
+import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
-
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
 import { AuthService } from '~/modules/auth/auth.service'
 import { AuthnService } from '~/modules/authn/authn.service'
@@ -13,6 +9,8 @@ import { UserController } from '~/modules/user/user.controller'
 import { UserModel } from '~/modules/user/user.model'
 import { UserService } from '~/modules/user/user.service'
 import { getModelToken } from '~/transformers/model.transformer'
+import { dbHelper } from 'test/helper/db-mock.helper'
+import { redisHelper } from 'test/helper/redis-mock.helper'
 
 describe('AppController (e2e)', () => {
   let app: NestFastifyApplication

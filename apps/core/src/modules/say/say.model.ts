@@ -1,8 +1,6 @@
-import { IsOptional, IsString } from 'class-validator'
-
 import { modelOptions, prop } from '@typegoose/typegoose'
-
 import { BaseModel } from '~/shared/model/base.model'
+import { IsOptional, IsString } from 'class-validator'
 
 @modelOptions({
   options: { customName: 'Say' },

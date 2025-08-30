@@ -1,12 +1,10 @@
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
-import { cloneDeep } from 'lodash'
-
 import { installPackage } from '@mx-space/compiled/install-pkg'
-
 import { NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { logger } from '~/global/consola.global'
+import { cloneDeep } from 'lodash'
 
 export const md5 = (text: string) =>
   createHash('md5').update(text).digest('hex') as string

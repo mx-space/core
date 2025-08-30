@@ -1,9 +1,7 @@
-import type { HTTPClient } from '~/core'
-import type { IRequestAdapter } from '~/interfaces/adapter'
-
 import { allControllers } from '~/controllers'
+import type { HTTPClient } from '~/core'
 import { createClient, RequestError } from '~/core'
-
+import type { IRequestAdapter } from '~/interfaces/adapter'
 import { createMockServer } from './e2e-mock-server'
 
 export const testAdaptor = (adaptor: IRequestAdapter) => {

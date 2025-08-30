@@ -1,12 +1,10 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
+import { seconds } from '@nestjs/throttler'
+import type { AxiosRequestConfig } from 'axios'
 import { program } from 'commander'
 import { load as yamlLoad } from 'js-yaml'
 import { machineIdSync } from 'node-machine-id'
-import type { AxiosRequestConfig } from 'axios'
-
-import { seconds } from '@nestjs/throttler'
-
 import { isDebugMode, isDev } from './global/env.global'
 import { parseBooleanishValue } from './utils/tool.util'
 
@@ -14,7 +12,7 @@ const { PORT: ENV_PORT, ALLOWED_ORIGINS, MX_ENCRYPT_KEY } = process.env
 
 const commander = program
   .option('-p, --port <number>', 'server port', ENV_PORT)
-  .option('--demo', 'enable demo mode')
+
   .option(
     '--allowed_origins <string>',
     'allowed origins, e.g. innei.ren,*.innei.ren',
@@ -126,7 +124,7 @@ export const CROSS_DOMAIN = {
 }
 
 export const MONGO_DB = {
-  dbName: argv.collection_name || (DEMO_MODE ? 'mx-space_demo' : 'mx-space'),
+  dbName: argv.collection_name || 'mx-space',
   host: argv.db_host || '127.0.0.1',
   // host: argv.db_host || '10.0.0.33',
   port: argv.db_port || 27017,

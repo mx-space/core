@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common'
-
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-
 import { CategoryService } from '../category/category.service'
 import { CommentService } from '../comment/comment.service'
 import { NoteService } from '../note/note.service'

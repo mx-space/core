@@ -1,16 +1,14 @@
-import { map } from 'rxjs'
 import type {
   CallHandler,
   ExecutionContext,
   NestInterceptor,
 } from '@nestjs/common'
-import type { Reflector } from '@nestjs/core'
-
 import { Inject, Injectable } from '@nestjs/common'
-
+import type { Reflector } from '@nestjs/core'
 import { HTTP_RES_UPDATE_DOC_COUNT_TYPE } from '~/constants/meta.constant'
 import { REFLECTOR } from '~/constants/system.constant'
 import { CountingService } from '~/processors/helper/helper.counting.service'
+import { map } from 'rxjs'
 
 @Injectable()
 export class MockingCountingInterceptor<T> implements NestInterceptor<T> {

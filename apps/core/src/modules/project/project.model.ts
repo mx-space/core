@@ -1,9 +1,7 @@
+import { modelOptions, prop } from '@typegoose/typegoose'
+import { BaseModel } from '~/shared/model/base.model'
 import { Transform } from 'class-transformer'
 import { IsOptional, IsString, IsUrl, isURL } from 'class-validator'
-
-import { modelOptions, prop } from '@typegoose/typegoose'
-
-import { BaseModel } from '~/shared/model/base.model'
 
 const validateURL = {
   message: '请更正为正确的网址',

@@ -1,15 +1,13 @@
-import type { ArticleTypeEnum } from '~/constants/article.constant'
-import type { WriteBaseModel } from '~/shared/model/write-base.model'
-
 import { Inject, Injectable } from '@nestjs/common'
 import { mongoose, ReturnModelType } from '@typegoose/typegoose'
-
+import type { ArticleTypeEnum } from '~/constants/article.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { DB_CONNECTION_TOKEN } from '~/constants/system.constant'
 import { NoteModel } from '~/modules/note/note.model'
 import { PageModel } from '~/modules/page/page.model'
 import { PostModel } from '~/modules/post/post.model'
 import { RecentlyModel } from '~/modules/recently/recently.model'
+import type { WriteBaseModel } from '~/shared/model/write-base.model'
 import { InjectModel } from '~/transformers/model.transformer'
 
 @Injectable()

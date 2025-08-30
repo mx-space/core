@@ -1,7 +1,6 @@
+import { EncryptUtil } from '~/utils/encrypt.util'
 import { isArrayLike, isObject } from 'lodash'
 import { LRUCache } from 'lru-cache'
-
-import { EncryptUtil } from '~/utils/encrypt.util'
 
 const metaKey = 'configs:encrypt'
 export const Encrypt: PropertyDecorator = (target: any, key: string) => {

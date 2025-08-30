@@ -5,19 +5,14 @@
  * @author Innei <https://github.com/Innei>
  */
 import { URL } from 'node:url'
-import { isbot } from 'isbot'
-import { UAParser } from 'ua-parser-js'
 import type {
   CallHandler,
   ExecutionContext,
   NestInterceptor,
 } from '@nestjs/common'
-import type { Observable } from 'rxjs'
-
 import { Inject, Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { ReturnModelType } from '@typegoose/typegoose'
-
 import { RedisKeys } from '~/constants/cache.constant'
 import * as SYSTEM from '~/constants/system.constant'
 import { REFLECTOR } from '~/constants/system.constant'
@@ -29,6 +24,9 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
+import { isbot } from 'isbot'
+import type { Observable } from 'rxjs'
+import { UAParser } from 'ua-parser-js'
 
 @Injectable()
 export class AnalyzeInterceptor implements NestInterceptor {

@@ -2,9 +2,9 @@
  * @module utils/ip
  * @description IP utility functions
  */
+import type { IncomingMessage } from 'node:http'
 import { URL } from 'node:url'
 import type { FastifyRequest } from 'fastify'
-import type { IncomingMessage } from 'node:http'
 
 export const getIp = (request: FastifyRequest | IncomingMessage) => {
   const req = request as any

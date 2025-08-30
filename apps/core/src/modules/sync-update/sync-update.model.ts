@@ -1,5 +1,4 @@
 import { modelOptions, prop } from '@typegoose/typegoose'
-
 import {
   SyncableCollectionName,
   SyncableCollectionNames,

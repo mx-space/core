@@ -1,14 +1,12 @@
-import { isJWT } from 'class-validator'
 import type { CanActivate, ExecutionContext } from '@nestjs/common'
-import type { UserModel } from '~/modules/user/user.model'
-import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
-
 import { Injectable, UnauthorizedException } from '@nestjs/common'
-
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import type { UserModel } from '~/modules/user/user.model'
 import { UserService } from '~/modules/user/user.service'
+import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+import { isJWT } from 'class-validator'
 
 /**
  * JWT auth guard

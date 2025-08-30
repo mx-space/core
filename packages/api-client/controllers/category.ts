@@ -5,20 +5,18 @@ import type {
   RequestProxyResult,
   ResponseProxyExtraRaw,
 } from '~/interfaces/request'
+import { attachRawFromOneToAnthor, destructureData } from '~/utils'
+import { autoBind } from '~/utils/auto-bind'
 import type { HTTPClient } from '../core/client'
+import { RequestError } from '../core/error'
 import type {
   CategoryEntries,
   CategoryModel,
   CategoryWithChildrenModel,
   TagModel,
 } from '../models/category'
-import type { PostModel } from '../models/post'
-
-import { attachRawFromOneToAnthor, destructureData } from '~/utils'
-import { autoBind } from '~/utils/auto-bind'
-
-import { RequestError } from '../core/error'
 import { CategoryType } from '../models/category'
+import type { PostModel } from '../models/post'
 
 declare module '../core/client' {
   interface HTTPClient<

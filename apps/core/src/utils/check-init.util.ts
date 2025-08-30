@@ -1,5 +1,4 @@
 import { USER_COLLECTION_NAME } from '~/constants/db.constant'
-
 import { getDatabaseConnection } from './database.util'
 
 export const checkInit = async () => {

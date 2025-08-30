@@ -2,10 +2,9 @@ import assert from 'node:assert'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { InvalidSignatureError } from './error'
 import type { BusinessEvents } from './event.enum'
 import type { ExtendedEventEmitter, GenericEvent } from './types'
-
-import { InvalidSignatureError } from './error'
 
 interface CreateHandlerOptions {
   secret: string

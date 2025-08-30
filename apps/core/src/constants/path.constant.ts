@@ -1,6 +1,5 @@
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-
 import { cwd, isDev } from '~/global/env.global'
 
 export const HOME = homedir()

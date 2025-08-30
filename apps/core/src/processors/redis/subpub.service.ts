@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-
 import { redisSubPub } from '~/utils/redis-subpub.util'
 
 @Injectable()

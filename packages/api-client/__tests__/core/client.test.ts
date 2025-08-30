@@ -1,10 +1,4 @@
 /* eslint-disable unicorn/custom-error-definition */
-import { AxiosError } from 'axios'
-import { vi } from 'vitest'
-import type { IRequestAdapter } from '~/interfaces/adapter'
-import type { ClientOptions } from '~/interfaces/client'
-import type { AxiosResponse } from 'axios'
-
 import { axiosAdaptor } from '~/adaptors/axios'
 import { umiAdaptor } from '~/adaptors/umi-request'
 import {
@@ -14,6 +8,11 @@ import {
   PostController,
 } from '~/controllers'
 import { createClient, RequestError } from '~/core'
+import type { IRequestAdapter } from '~/interfaces/adapter'
+import type { ClientOptions } from '~/interfaces/client'
+import { AxiosError } from 'axios'
+import type { AxiosResponse } from 'axios'
+import { vi } from 'vitest'
 
 const { spyOn } = vi
 

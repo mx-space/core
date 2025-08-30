@@ -1,16 +1,11 @@
-import { omit } from 'lodash'
-import type { DocumentType } from '@typegoose/typegoose'
-import type { FilterQuery } from 'mongoose'
-import type { PostModel } from '../post/post.model'
-
 import {
   BadRequestException,
   forwardRef,
   Inject,
   Injectable,
 } from '@nestjs/common'
+import type { DocumentType } from '@typegoose/typegoose'
 import { ReturnModelType } from '@typegoose/typegoose'
-
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { ArticleTypeEnum } from '~/constants/article.constant'
@@ -19,7 +14,9 @@ import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
-
+import { omit } from 'lodash'
+import type { FilterQuery } from 'mongoose'
+import type { PostModel } from '../post/post.model'
 import { PostService } from '../post/post.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { CategoryModel, CategoryType } from './category.model'

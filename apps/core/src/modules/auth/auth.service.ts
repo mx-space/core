@@ -1,10 +1,4 @@
 import { IncomingMessage } from 'node:http'
-import dayjs from 'dayjs'
-import { isDate, omit } from 'lodash'
-import { Types } from 'mongoose'
-import type { TokenModel, UserModel } from '~/modules/user/user.model'
-import type { TokenDto } from './auth.controller'
-
 import { nanoid } from '@mx-space/compiled'
 import {
   BadRequestException,
@@ -13,19 +7,22 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
-
 import { RequestContext } from '~/common/contexts/request.context'
 import { alphabet } from '~/constants/other.constant'
+import type { TokenModel, UserModel } from '~/modules/user/user.model'
 import { UserModel as User } from '~/modules/user/user.model'
 import { DatabaseService } from '~/processors/database/database.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { InjectModel } from '~/transformers/model.transformer'
-
+import dayjs from 'dayjs'
+import { isDate, omit } from 'lodash'
+import { Types } from 'mongoose'
 import {
   AUTH_JS_ACCOUNT_COLLECTION,
   AUTH_JS_USER_COLLECTION,
   AuthInstanceInjectKey,
 } from './auth.constant'
+import type { TokenDto } from './auth.controller'
 import { InjectAuthInstance } from './auth.interface'
 
 const { customAlphabet } = nanoid

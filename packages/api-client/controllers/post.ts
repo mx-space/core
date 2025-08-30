@@ -4,9 +4,8 @@ import type { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
 import type { SelectFields } from '~/interfaces/types'
 import type { ModelWithLiked, PaginateResult } from '~/models/base'
 import type { PostModel } from '~/models/post'
-import type { HTTPClient } from '../core/client'
-
 import { autoBind } from '~/utils/auto-bind'
+import type { HTTPClient } from '../core/client'
 
 declare module '../core/client' {
   interface HTTPClient<

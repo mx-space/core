@@ -1,5 +1,4 @@
 import { forwardRef, Global, Module } from '@nestjs/common'
-
 import { AuthnModule } from '../authn/auth.module'
 import { UserController } from './user.controller'
 import { UserService } from './user.service'

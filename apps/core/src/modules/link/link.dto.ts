@@ -1,5 +1,4 @@
 import { IsEnum, IsString, MaxLength } from 'class-validator'
-
 import { LinkModel, LinkState } from './link.model'
 
 export class LinkDto extends LinkModel {

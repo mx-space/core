@@ -1,3 +1,5 @@
+import { TransformBoolean } from '~/common/decorators/transform-boolean.decorator'
+import { ArticleTypeEnum } from '~/constants/article.constant'
 import { Transform, Type } from 'class-transformer'
 import {
   IsBoolean,
@@ -7,9 +9,6 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator'
-
-import { TransformBoolean } from '~/common/decorators/transform-boolean.decorator'
-import { ArticleTypeEnum } from '~/constants/article.constant'
 
 export class MetaDto {
   @IsString()

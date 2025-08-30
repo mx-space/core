@@ -1,6 +1,4 @@
 import { Readable } from 'node:stream'
-import { FastifyRequest } from 'fastify'
-
 import {
   BadRequestException,
   Body,
@@ -14,22 +12,19 @@ import {
   Req,
   UnprocessableEntityException,
 } from '@nestjs/common'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { isZipMinetype } from '~/utils/mine.util'
 import { getMediumDateTime } from '~/utils/time.util'
-
+import { FastifyRequest } from 'fastify'
 import { BackupService } from './backup.service'
 
 @ApiController({ path: 'backups' })
 @Auth()
-@BanInDemo
 export class BackupController {
   constructor(
     private readonly backupService: BackupService,

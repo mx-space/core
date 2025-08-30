@@ -1,8 +1,7 @@
-import camelcaseKeys from 'camelcase-keys'
-
 import { mockRequestInstance } from '~/__tests__/helpers/instance'
 import { mockResponse } from '~/__tests__/helpers/response'
 import { TopicController } from '~/controllers/topic'
+import camelcaseKeys from 'camelcase-keys'
 
 describe('test topic client', () => {
   const client = mockRequestInstance(TopicController)

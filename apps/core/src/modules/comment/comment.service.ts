@@ -1,18 +1,6 @@
 import { URL } from 'node:url'
-import { generateObject } from 'ai'
-import { render } from 'ejs'
-import { omit, pick } from 'lodash'
-import { isObjectIdOrHexString, Types } from 'mongoose'
-import type { OnModuleInit } from '@nestjs/common'
-import type { ReturnModelType } from '@typegoose/typegoose/lib/types'
-import type { WriteBaseModel } from '~/shared/model/write-base.model'
-import type { SnippetModel } from '../snippet/snippet.model'
-import type {
-  CommentEmailTemplateRenderProps,
-  CommentModelRenderProps,
-} from './comment.email.default'
-
 import { z } from '@mx-space/compiled/zod'
+import type { OnModuleInit } from '@nestjs/common'
 import {
   BadRequestException,
   forwardRef,
@@ -21,7 +9,7 @@ import {
   Logger,
 } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
-
+import type { ReturnModelType } from '@typegoose/typegoose/lib/types'
 import { RequestContext } from '~/common/contexts/request.context'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
@@ -31,10 +19,14 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import type { WriteBaseModel } from '~/shared/model/write-base.model'
 import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getAvatar, hasChinese } from '~/utils/tool.util'
-
+import { generateObject } from 'ai'
+import { render } from 'ejs'
+import { omit, pick } from 'lodash'
+import { isObjectIdOrHexString, Types } from 'mongoose'
 import { AI_PROMPTS } from '../ai/ai.prompts'
 import { AiService } from '../ai/ai.service'
 import { ConfigsService } from '../configs/configs.service'
@@ -42,10 +34,15 @@ import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
+import type { SnippetModel } from '../snippet/snippet.model'
 import { SnippetType } from '../snippet/snippet.model'
 import { UserModel } from '../user/user.model'
 import { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json'
+import type {
+  CommentEmailTemplateRenderProps,
+  CommentModelRenderProps,
+} from './comment.email.default'
 import {
   baseRenderProps,
   defaultCommentModelKeys,
@@ -117,7 +114,7 @@ export class CommentService implements OnModuleInit {
   }
 
   /**
-   * 使用AI评估评论内容
+   * 使用 AI 评估评论内容
    * @param text 评论文本
    * @param aiReviewType 评审类型
    * @param aiReviewThreshold 阈值
@@ -151,7 +148,7 @@ export class CommentService implements OnModuleInit {
         // 否则根据评分判断
         return object.score > aiReviewThreshold
       } catch (error) {
-        this.logger.error('AI评审评分模式出错', error)
+        this.logger.error('AI 评审评分模式出错', error)
         return false
       }
     }
@@ -173,10 +170,10 @@ export class CommentService implements OnModuleInit {
         if (object.hasSensitiveContent) {
           return true
         }
-        // 否则按照是否spam判断
+        // 否则按照是否 spam 判断
         return object.isSpam
       } catch (error) {
-        this.logger.error('AI评审垃圾检测模式出错', error)
+        this.logger.error('AI 评审垃圾检测模式出错', error)
         return false
       }
     }

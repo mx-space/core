@@ -1,11 +1,7 @@
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import type { SyncableCollectionName } from '../sync/sync.constant'
-import type { SyncableDataInteraction } from './sync-update.type'
-
 import { Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { ReturnModelType } from '@typegoose/typegoose'
-
 import { BusinessEvents } from '~/constants/business-event.constant'
 import {
   CATEGORY_COLLECTION_NAME,
@@ -19,9 +15,10 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { md5 } from '~/utils/tool.util'
-
+import type { SyncableCollectionName } from '../sync/sync.constant'
 import { SyncableCollectionNames } from '../sync/sync.constant'
 import { SyncUpdateModel } from './sync-update.model'
+import type { SyncableDataInteraction } from './sync-update.type'
 
 @Injectable()
 export class SyncUpdateService implements OnModuleInit, OnModuleDestroy {

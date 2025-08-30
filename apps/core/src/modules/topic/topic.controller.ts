@@ -1,10 +1,7 @@
-import slugify from 'slugify'
-
 import { Get, Param } from '@nestjs/common'
-
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'
-
+import slugify from 'slugify'
 import { TopicModel } from './topic.model'
 
 class Upper {

@@ -1,15 +1,12 @@
+import { LoggerModule } from '@innei/pretty-logger-nestjs'
 import type {
   DynamicModule,
   MiddlewareConsumer,
   NestModule,
   Type,
 } from '@nestjs/common'
-
-import { LoggerModule } from '@innei/pretty-logger-nestjs'
 import { Module } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
-
-import { DEMO_MODE } from './app.config'
 import { AppController } from './app.controller'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { RolesGuard } from './common/guards/roles.guard'
@@ -33,7 +30,6 @@ import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
 import { DebugModule } from './modules/debug/debug.module'
-import { DemoModule } from './modules/demo/demo.module'
 import { DependencyModule } from './modules/dependency/dependency.module'
 import { FeedModule } from './modules/feed/feed.module'
 import { FileModule } from './modules/file/file.module'
@@ -88,7 +84,7 @@ import { RedisModule } from './processors/redis/redis.module'
     CategoryModule,
     CommentModule,
     ConfigsModule,
-    DEMO_MODE && DemoModule,
+
     DependencyModule,
     FeedModule,
     FileModule,

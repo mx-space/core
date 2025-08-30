@@ -1,8 +1,5 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { FastifyReply, FastifyRequest } from 'fastify'
-import { lookup } from 'mime-types'
-
 import { nanoid } from '@mx-space/compiled'
 import {
   Delete,
@@ -15,17 +12,16 @@ import {
   Res,
 } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { alphabet } from '~/constants/other.constant'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
-
+import { FastifyReply, FastifyRequest } from 'fastify'
+import { lookup } from 'mime-types'
 import { FileQueryDto, FileUploadDto, RenameFileQueryDto } from './file.dto'
 import { FileService } from './file.service'
 
@@ -92,7 +88,6 @@ export class FileController {
 
   @Post('/upload')
   @Auth()
-  @BanInDemo
   async upload(@Query() query: FileUploadDto, @Req() req: FastifyRequest) {
     const file = await this.uploadService.getAndValidMultipartField(req)
     const { type = 'file' } = query
@@ -110,14 +105,12 @@ export class FileController {
 
   @Delete('/:type/:name')
   @Auth()
-  @BanInDemo
   async delete(@Param() params: FileQueryDto) {
     const { type, name } = params
     await this.service.deleteFile(type, name)
   }
 
   @Auth()
-  @BanInDemo
   @Patch('/:type/:name/rename')
   async rename(
     @Param() params: FileQueryDto,

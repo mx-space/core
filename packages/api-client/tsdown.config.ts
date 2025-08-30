@@ -1,6 +1,6 @@
 import { readdirSync } from 'node:fs'
 import path from 'node:path'
-import { defineConfig } from 'tsup'
+import { defineConfig } from 'tsdown'
 
 const __dirname = new URL(import.meta.url).pathname.replace(/\/[^/]*$/, '')
 

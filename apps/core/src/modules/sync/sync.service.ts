@@ -1,12 +1,6 @@
 import { Readable } from 'node:stream'
-import { Types } from 'mongoose'
-import type { Collection, Document, OptionalId } from 'mongodb'
-import type { SyncableDataInteraction } from '../sync-update/sync-update.type'
-import type { SyncableCollectionName } from './sync.constant'
-
 import { Inject, Injectable } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
-
 import {
   CATEGORY_COLLECTION_NAME,
   CHECKSUM_COLLECTION_NAME,
@@ -18,13 +12,16 @@ import {
 import { DatabaseService } from '~/processors/database/database.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { md5 } from '~/utils/tool.util'
-
+import type { Collection, Document, OptionalId } from 'mongodb'
+import { Types } from 'mongoose'
 import { CategoryService } from '../category/category.service'
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
 import { PostService } from '../post/post.service'
 import { SyncUpdateModel } from '../sync-update/sync-update.model'
+import type { SyncableDataInteraction } from '../sync-update/sync-update.type'
 import { TopicService } from '../topic/topic.service'
+import type { SyncableCollectionName } from './sync.constant'
 import { SyncableCollectionNames } from './sync.constant'
 
 @Injectable()

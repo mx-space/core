@@ -1,9 +1,7 @@
 import type { ModuleMetadata } from '@nestjs/common'
-import type { NestFastifyApplication } from '@nestjs/platform-fastify'
-
 import { ValidationPipe } from '@nestjs/common'
+import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test, TestingModule } from '@nestjs/testing'
-
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
 
 export const setupE2EApp = async (module: TestingModule | ModuleMetadata) => {

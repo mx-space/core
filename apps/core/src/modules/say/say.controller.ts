@@ -1,9 +1,6 @@
-import { sample } from 'lodash'
-
 import { Get } from '@nestjs/common'
-
 import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'
-
+import { sample } from 'lodash'
 import { SayModel } from './say.model'
 
 export class SayController extends BaseCrudFactory({ model: SayModel }) {

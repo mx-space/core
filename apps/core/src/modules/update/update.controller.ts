@@ -1,17 +1,14 @@
 import path from 'node:path'
-import { isSemVer } from 'class-validator'
-import { catchError, lastValueFrom, Observable } from 'rxjs'
-import { lt, major, minor } from 'semver'
-
 import { chalk, fs } from '@mx-space/compiled'
 import { Query, Sse } from '@nestjs/common'
-
 import { dashboard } from '~/../package.json'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
-
+import { isSemVer } from 'class-validator'
+import { catchError, lastValueFrom, Observable } from 'rxjs'
+import { lt, major, minor } from 'semver'
 import { UpdateAdminDto } from './update.dto'
 import { UpdateService } from './update.service'
 

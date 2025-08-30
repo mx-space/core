@@ -1,16 +1,5 @@
-import { createE2EApp } from 'test/helper/create-e2e-app'
-import { authPassHeader } from 'test/mock/guard/auth.guard'
-import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
-import { authProvider } from 'test/mock/modules/auth.mock'
-import { commentProvider } from 'test/mock/modules/comment.mock'
-import { configProvider } from 'test/mock/modules/config.mock'
-import { gatewayProviders } from 'test/mock/modules/gateway.mock'
-import { countingServiceProvider } from 'test/mock/processors/counting.mock'
-import { eventEmitterProvider } from 'test/mock/processors/event.mock'
-
 import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { APP_INTERCEPTOR } from '@nestjs/core'
-
 import { OptionModel } from '~/modules/configs/configs.model'
 import { NoteController } from '~/modules/note/note.controller'
 import { NoteModel } from '~/modules/note/note.model'
@@ -20,7 +9,15 @@ import { UserService } from '~/modules/user/user.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
-
+import { createE2EApp } from 'test/helper/create-e2e-app'
+import { authPassHeader } from 'test/mock/guard/auth.guard'
+import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
+import { authProvider } from 'test/mock/modules/auth.mock'
+import { commentProvider } from 'test/mock/modules/comment.mock'
+import { configProvider } from 'test/mock/modules/config.mock'
+import { gatewayProviders } from 'test/mock/modules/gateway.mock'
+import { countingServiceProvider } from 'test/mock/processors/counting.mock'
+import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 import MockDbData from './note.e2e-mock.db'
 
 describe('NoteController (e2e)', async () => {

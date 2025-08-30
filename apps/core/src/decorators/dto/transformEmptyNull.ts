@@ -1,7 +1,6 @@
+import { applyDecorators } from '@nestjs/common'
 import { Transform } from 'class-transformer'
 import { IsOptional } from 'class-validator'
-
-import { applyDecorators } from '@nestjs/common'
 
 export const TransformEmptyNull = () => {
   return applyDecorators(

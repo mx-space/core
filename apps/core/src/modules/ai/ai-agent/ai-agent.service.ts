@@ -1,8 +1,6 @@
-import { generateText, streamText, tool } from 'ai'
-
 import { z } from '@mx-space/compiled/zod'
 import { Injectable } from '@nestjs/common'
-
+import { generateText, streamText, tool } from 'ai'
 import { McpService } from '../../mcp/mcp.service'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
@@ -14,17 +12,17 @@ export class AIAgentService {
     private readonly mcpService: McpService,
   ) {}
 
-  // 使用Vercel AI SDK的工具与MCP数据交互（流式响应）
+  // 使用 Vercel AI SDK 的工具与 MCP 数据交互（流式响应）
   async chatWithTools(userPrompt: string) {
-    // 获取OpenAI模型
+    // 获取 OpenAI 模型
     const model = await this.aiService.getOpenAiModel()
 
-    // 定义工具（与runWithTools相同）
+    // 定义工具（与 runWithTools 相同）
     const tools = {
       get_post_by_id: tool({
-        description: '根据ID获取博客文章',
+        description: '根据 ID 获取博客文章',
         parameters: z.object({
-          id: z.string().describe('帖子的ID'),
+          id: z.string().describe('帖子的 ID'),
         }),
         execute: async ({ id }) => {
           try {
@@ -38,12 +36,12 @@ export class AIAgentService {
       get_posts: tool({
         description: '获取博客文章列表',
         parameters: z.object({
-          page: z.number().optional().default(1).describe('页码，默认为1'),
+          page: z.number().optional().default(1).describe('页码，默认为 1'),
           size: z
             .number()
             .optional()
             .default(10)
-            .describe('每页数量，默认为10'),
+            .describe('每页数量，默认为 10'),
         }),
         execute: async ({ page, size }) => {
           try {
@@ -55,9 +53,9 @@ export class AIAgentService {
         },
       }),
       get_note_by_id: tool({
-        description: '根据ID获取笔记',
+        description: '根据 ID 获取笔记',
         parameters: z.object({
-          id: z.string().describe('笔记的ID或nid'),
+          id: z.string().describe('笔记的 ID 或 nid'),
         }),
         execute: async ({ id }) => {
           try {
@@ -71,12 +69,12 @@ export class AIAgentService {
       get_notes: tool({
         description: '获取笔记列表',
         parameters: z.object({
-          page: z.number().optional().default(1).describe('页码，默认为1'),
+          page: z.number().optional().default(1).describe('页码，默认为 1'),
           size: z
             .number()
             .optional()
             .default(10)
-            .describe('每页数量，默认为10'),
+            .describe('每页数量，默认为 10'),
         }),
         execute: async ({ page, size }) => {
           try {
@@ -112,9 +110,9 @@ export class AIAgentService {
         },
       }),
       get_category_by_id: tool({
-        description: '根据ID获取分类',
+        description: '根据 ID 获取分类',
         parameters: z.object({
-          id: z.string().describe('分类的ID'),
+          id: z.string().describe('分类的 ID'),
         }),
         execute: async ({ id }) => {
           try {
@@ -140,7 +138,7 @@ export class AIAgentService {
       get_posts_by_category: tool({
         description: '获取指定分类下的所有文章',
         parameters: z.object({
-          categoryId: z.string().describe('分类的ID'),
+          categoryId: z.string().describe('分类的 ID'),
         }),
         execute: async ({ categoryId }) => {
           try {
@@ -178,9 +176,9 @@ export class AIAgentService {
         },
       }),
       get_page_by_id: tool({
-        description: '根据ID获取页面',
+        description: '根据 ID 获取页面',
         parameters: z.object({
-          id: z.string().describe('页面的ID'),
+          id: z.string().describe('页面的 ID'),
         }),
         execute: async ({ id }) => {
           try {
@@ -240,9 +238,9 @@ export class AIAgentService {
         },
       }),
       get_recently_by_id: tool({
-        description: '根据ID获取特定动态/活动',
+        description: '根据 ID 获取特定动态/活动',
         parameters: z.object({
-          id: z.string().describe('动态的ID'),
+          id: z.string().describe('动态的 ID'),
         }),
         execute: async ({ id }) => {
           try {
@@ -268,9 +266,9 @@ export class AIAgentService {
       get_recently_offset: tool({
         description: '获取指定范围的动态/活动',
         parameters: z.object({
-          size: z.number().optional().default(10).describe('数量，默认为10'),
-          before: z.string().optional().describe('获取此ID之前的动态'),
-          after: z.string().optional().describe('获取此ID之后的动态'),
+          size: z.number().optional().default(10).describe('数量，默认为 10'),
+          before: z.string().optional().describe('获取此 ID 之前的动态'),
+          after: z.string().optional().describe('获取此 ID 之后的动态'),
         }),
         execute: async ({ size, before, after }) => {
           try {
@@ -288,17 +286,17 @@ export class AIAgentService {
       get_comments: tool({
         description: '获取所有评论，可按状态筛选',
         parameters: z.object({
-          page: z.number().optional().default(1).describe('页码，默认为1'),
+          page: z.number().optional().default(1).describe('页码，默认为 1'),
           size: z
             .number()
             .optional()
             .default(10)
-            .describe('每页数量，默认为10'),
+            .describe('每页数量，默认为 10'),
           state: z
             .number()
             .optional()
             .default(0)
-            .describe('评论状态筛选，0表示所有'),
+            .describe('评论状态筛选，0 表示所有'),
         }),
         execute: async ({ page, size, state }) => {
           try {
@@ -316,11 +314,11 @@ export class AIAgentService {
       get_content_comments: tool({
         description: '获取特定内容的评论',
         parameters: z.object({
-          id: z.string().describe('内容的ID'),
+          id: z.string().describe('内容的 ID'),
           type: z
             .string()
             .optional()
-            .describe('内容类型，如post, note, page等'),
+            .describe('内容类型，如 post, note, page 等'),
         }),
         execute: async ({ id, type }) => {
           try {
@@ -333,7 +331,7 @@ export class AIAgentService {
       }),
     }
 
-    // 使用streamText进行流式响应
+    // 使用 streamText 进行流式响应
     const result = await streamText({
       model,
       tools,
@@ -347,15 +345,15 @@ export class AIAgentService {
 
   // 保留原有的非流式方法以备后用
   async runWithTools(userPrompt: string) {
-    // 获取OpenAI模型
+    // 获取 OpenAI 模型
     const model = await this.aiService.getOpenAiModel()
 
     // 定义工具
     const tools = {
       get_post_by_id: tool({
-        description: '根据ID获取博客文章',
+        description: '根据 ID 获取博客文章',
         parameters: z.object({
-          id: z.string().describe('帖子的ID'),
+          id: z.string().describe('帖子的 ID'),
         }),
         execute: async ({ id }) => {
           try {
@@ -369,12 +367,12 @@ export class AIAgentService {
       get_posts: tool({
         description: '获取博客文章列表',
         parameters: z.object({
-          page: z.number().optional().default(1).describe('页码，默认为1'),
+          page: z.number().optional().default(1).describe('页码，默认为 1'),
           size: z
             .number()
             .optional()
             .default(10)
-            .describe('每页数量，默认为10'),
+            .describe('每页数量，默认为 10'),
         }),
         execute: async ({ page, size }) => {
           try {
@@ -386,9 +384,9 @@ export class AIAgentService {
         },
       }),
       get_note_by_id: tool({
-        description: '根据ID获取笔记',
+        description: '根据 ID 获取笔记',
         parameters: z.object({
-          id: z.string().describe('笔记的ID或nid'),
+          id: z.string().describe('笔记的 ID 或 nid'),
         }),
         execute: async ({ id }) => {
           try {
@@ -402,12 +400,12 @@ export class AIAgentService {
       get_notes: tool({
         description: '获取笔记列表',
         parameters: z.object({
-          page: z.number().optional().default(1).describe('页码，默认为1'),
+          page: z.number().optional().default(1).describe('页码，默认为 1'),
           size: z
             .number()
             .optional()
             .default(10)
-            .describe('每页数量，默认为10'),
+            .describe('每页数量，默认为 10'),
         }),
         execute: async ({ page, size }) => {
           try {
@@ -443,9 +441,9 @@ export class AIAgentService {
         },
       }),
       get_category_by_id: tool({
-        description: '根据ID获取分类',
+        description: '根据 ID 获取分类',
         parameters: z.object({
-          id: z.string().describe('分类的ID'),
+          id: z.string().describe('分类的 ID'),
         }),
         execute: async ({ id }) => {
           try {
@@ -471,7 +469,7 @@ export class AIAgentService {
       get_posts_by_category: tool({
         description: '获取指定分类下的所有文章',
         parameters: z.object({
-          categoryId: z.string().describe('分类的ID'),
+          categoryId: z.string().describe('分类的 ID'),
         }),
         execute: async ({ categoryId }) => {
           try {
@@ -509,9 +507,9 @@ export class AIAgentService {
         },
       }),
       get_page_by_id: tool({
-        description: '根据ID获取页面',
+        description: '根据 ID 获取页面',
         parameters: z.object({
-          id: z.string().describe('页面的ID'),
+          id: z.string().describe('页面的 ID'),
         }),
         execute: async ({ id }) => {
           try {
@@ -571,9 +569,9 @@ export class AIAgentService {
         },
       }),
       get_recently_by_id: tool({
-        description: '根据ID获取特定动态/活动',
+        description: '根据 ID 获取特定动态/活动',
         parameters: z.object({
-          id: z.string().describe('动态的ID'),
+          id: z.string().describe('动态的 ID'),
         }),
         execute: async ({ id }) => {
           try {
@@ -599,9 +597,9 @@ export class AIAgentService {
       get_recently_offset: tool({
         description: '获取指定范围的动态/活动',
         parameters: z.object({
-          size: z.number().optional().default(10).describe('数量，默认为10'),
-          before: z.string().optional().describe('获取此ID之前的动态'),
-          after: z.string().optional().describe('获取此ID之后的动态'),
+          size: z.number().optional().default(10).describe('数量，默认为 10'),
+          before: z.string().optional().describe('获取此 ID 之前的动态'),
+          after: z.string().optional().describe('获取此 ID 之后的动态'),
         }),
         execute: async ({ size, before, after }) => {
           try {
@@ -619,17 +617,17 @@ export class AIAgentService {
       get_comments: tool({
         description: '获取所有评论，可按状态筛选',
         parameters: z.object({
-          page: z.number().optional().default(1).describe('页码，默认为1'),
+          page: z.number().optional().default(1).describe('页码，默认为 1'),
           size: z
             .number()
             .optional()
             .default(10)
-            .describe('每页数量，默认为10'),
+            .describe('每页数量，默认为 10'),
           state: z
             .number()
             .optional()
             .default(0)
-            .describe('评论状态筛选，0表示所有'),
+            .describe('评论状态筛选，0 表示所有'),
         }),
         execute: async ({ page, size, state }) => {
           try {
@@ -647,11 +645,11 @@ export class AIAgentService {
       get_content_comments: tool({
         description: '获取特定内容的评论',
         parameters: z.object({
-          id: z.string().describe('内容的ID'),
+          id: z.string().describe('内容的 ID'),
           type: z
             .string()
             .optional()
-            .describe('内容类型，如post, note, page等'),
+            .describe('内容类型，如 post, note, page 等'),
         }),
         execute: async ({ id, type }) => {
           try {
@@ -664,7 +662,7 @@ export class AIAgentService {
       }),
     }
 
-    // 执行AI调用
+    // 执行 AI 调用
     const result = await generateText({
       model,
       tools,

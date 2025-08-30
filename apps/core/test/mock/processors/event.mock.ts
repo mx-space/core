@@ -1,9 +1,7 @@
-import { defineProviders } from 'test/helper/defineProvider'
-
 import { EventEmitter2 } from '@nestjs/event-emitter'
-
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
+import { defineProviders } from 'test/helper/defineProvider'
 
 export const eventEmitterProvider = defineProviders([
   {

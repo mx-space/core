@@ -1,12 +1,11 @@
 import { Type } from 'class-transformer'
-import { ValidateNested } from 'class-validator'
-import { JSONSchema } from 'class-validator-jsonschema'
 import type {
   ClassConstructor,
   TypeHelpOptions,
   TypeOptions,
 } from 'class-transformer'
-
+import { ValidateNested } from 'class-validator'
+import { JSONSchema } from 'class-validator-jsonschema'
 import {
   AdminExtraDto,
   AIDto,

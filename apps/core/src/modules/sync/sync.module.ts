@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common'
-
 import { CategoryModule } from '../category/category.module'
 import { NoteModule } from '../note/note.module'
 import { PageModule } from '../page/page.module'

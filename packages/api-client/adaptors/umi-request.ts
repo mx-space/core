@@ -1,5 +1,5 @@
-import { extend } from 'umi-request'
 import type { IRequestAdapter } from '~/interfaces/adapter'
+import { extend } from 'umi-request'
 import type { RequestMethod, RequestResponse } from 'umi-request'
 
 const $http = /*#__PURE__*/ extend({

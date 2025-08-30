@@ -2,20 +2,18 @@
  * 对响应体进行 JSON 标准的转换
  * @author Innei
  */
-import { isObjectLike } from 'lodash'
-import { map } from 'rxjs'
-import snakecaseKeys from 'snakecase-keys'
 import type {
   CallHandler,
   ExecutionContext,
   NestInterceptor,
 } from '@nestjs/common'
-import type { Observable } from 'rxjs'
-
 import { Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-
 import { RESPONSE_PASSTHROUGH_METADATA } from '~/constants/system.constant'
+import { isObjectLike } from 'lodash'
+import { map } from 'rxjs'
+import type { Observable } from 'rxjs'
+import snakecaseKeys from 'snakecase-keys'
 
 @Injectable()
 export class JSONTransformInterceptor implements NestInterceptor {

@@ -1,3 +1,4 @@
+import { PagerDto } from '~/shared/dto/pager.dto'
 import { Transform } from 'class-transformer'
 import {
   IsBoolean,
@@ -12,8 +13,6 @@ import {
   Min,
   ValidateIf,
 } from 'class-validator'
-
-import { PagerDto } from '~/shared/dto/pager.dto'
 
 export class NoteQueryDto extends PagerDto {
   @IsOptional()

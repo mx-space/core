@@ -1,3 +1,5 @@
+import { CollectionRefTypes } from '~/constants/db.constant'
+import { normalizeRefType } from '~/utils/database.util'
 import { Transform } from 'class-transformer'
 import {
   IsBoolean,
@@ -11,9 +13,6 @@ import {
   IsUrl,
   MaxLength,
 } from 'class-validator'
-
-import { CollectionRefTypes } from '~/constants/db.constant'
-import { normalizeRefType } from '~/utils/database.util'
 
 export class CommentDto {
   @IsString()

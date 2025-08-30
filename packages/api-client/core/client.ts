@@ -7,11 +7,9 @@ import type { IController } from '~/interfaces/controller'
 import type { RequestOptions } from '~/interfaces/instance'
 import type { IRequestHandler, Method } from '~/interfaces/request'
 import type { Class } from '~/interfaces/types'
-
 import { isPlainObject } from '~/utils'
 import { camelcaseKeys } from '~/utils/camelcase-keys'
 import { resolveFullPath } from '~/utils/path'
-
 import { allControllerNames } from '../controllers'
 import { attachRequestMethod } from './attach-request'
 import { RequestError } from './error'

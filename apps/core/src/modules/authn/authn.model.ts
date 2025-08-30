@@ -1,6 +1,5 @@
-import { mongooseLeanGetters } from 'mongoose-lean-getters'
-
 import { modelOptions, plugin, prop } from '@typegoose/typegoose'
+import { mongooseLeanGetters } from 'mongoose-lean-getters'
 
 type CredentialDeviceType = 'singleDevice' | 'multiDevice'
 

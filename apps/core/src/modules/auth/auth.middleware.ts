@@ -1,12 +1,9 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { BetterAuthOptions } from '@mx-space/compiled/auth'
 import type { NestMiddleware, OnModuleInit } from '@nestjs/common'
-import type { IncomingMessage, ServerResponse } from 'node:http'
-
 import { Inject } from '@nestjs/common'
-
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
-
 import { ConfigsService } from '../configs/configs.service'
 import { AuthInstanceInjectKey } from './auth.constant'
 import { CreateAuth } from './auth.implement'

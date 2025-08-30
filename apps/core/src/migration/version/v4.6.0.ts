@@ -1,11 +1,10 @@
 // patch for version lower than v4.6.0
 
-import type { Db } from 'mongodb'
-
 import {
   NOTE_COLLECTION_NAME,
   PAGE_COLLECTION_NAME,
 } from '~/constants/db.constant'
+import type { Db } from 'mongodb'
 
 export default (async function v4_6_0(db: Db) {
   await Promise.all([

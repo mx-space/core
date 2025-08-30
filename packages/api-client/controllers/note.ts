@@ -8,10 +8,9 @@ import type {
   NoteWrappedPayload,
   NoteWrappedWithLikedPayload,
 } from '~/models/note'
+import { autoBind } from '~/utils/auto-bind'
 import type { HTTPClient } from '../core/client'
 import type { SortOptions } from './base'
-
-import { autoBind } from '~/utils/auto-bind'
 
 declare module '../core/client' {
   interface HTTPClient<

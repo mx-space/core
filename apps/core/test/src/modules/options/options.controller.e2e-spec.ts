@@ -1,8 +1,7 @@
+import { BaseOptionController } from '~/modules/option/controllers/base.option.controller'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { configProvider } from 'test/mock/modules/config.mock'
-
-import { BaseOptionController } from '~/modules/option/controllers/base.option.controller'
 
 describe('OptionController (e2e)', () => {
   const proxy = createE2EApp({

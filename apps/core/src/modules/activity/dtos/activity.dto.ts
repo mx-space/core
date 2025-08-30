@@ -1,8 +1,6 @@
+import { PagerDto } from '~/shared/dto/pager.dto'
 import { Transform, Type } from 'class-transformer'
 import { IsEnum, IsInt, IsNumber, IsOptional } from 'class-validator'
-
-import { PagerDto } from '~/shared/dto/pager.dto'
-
 import { Activity } from '../activity.constant'
 
 const TransformEnum = () =>

@@ -1,9 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common'
-import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
-
 import { Injectable } from '@nestjs/common'
 import { ThrottlerGuard } from '@nestjs/throttler'
-
+import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { getIp } from '~/utils/ip.util'
 

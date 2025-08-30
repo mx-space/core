@@ -1,7 +1,5 @@
 import { modelOptions, prop } from '@typegoose/typegoose'
-
 import { BaseModel } from '~/shared/model/base.model'
-
 import { Activity } from './activity.constant'
 
 @modelOptions({

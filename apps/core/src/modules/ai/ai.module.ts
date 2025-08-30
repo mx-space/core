@@ -1,5 +1,4 @@
 import { forwardRef, Module } from '@nestjs/common'
-
 import { McpModule } from '../mcp/mcp.module'
 import { AIAgentController } from './ai-agent/ai-agent.controller'
 import { AIAgentService } from './ai-agent/ai-agent.service'

@@ -1,12 +1,10 @@
-import type { IdempotenceOption } from '../interceptors/idempotence.interceptor'
-
 import { SetMetadata } from '@nestjs/common'
-
 import {
   HTTP_IDEMPOTENCE_OPTIONS,
   HTTP_RES_TRANSFORM_PAGINATE,
 } from '~/constants/meta.constant'
 import * as SYSTEM from '~/constants/system.constant'
+import type { IdempotenceOption } from '../interceptors/idempotence.interceptor'
 
 /**
  * @description 分页转换

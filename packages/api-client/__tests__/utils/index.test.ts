@@ -23,7 +23,10 @@ describe('test utils', () => {
     const d7 = destructureData(
       (() => {
         const d = { data: { a: 1 } }
-        Object.defineProperty(d, '$raw', { value: { a: 1 }, enumerable: false })
+        Object.defineProperty(d, '$raw', {
+          value: { a: 1 },
+          enumerable: false,
+        })
         return d
       })(),
     )

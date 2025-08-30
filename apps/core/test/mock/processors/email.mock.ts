@@ -1,12 +1,11 @@
-import { defineProvider } from 'test/helper/defineProvider'
-
 import { EmailService } from '~/processors/helper/helper.email.service'
+import { defineProvider } from 'test/helper/defineProvider'
 
 export const emailProvider = defineProvider({
   provide: EmailService,
   useValue: {
-    async send(options) {},
-    render(template, source) {
+    async send() {},
+    render() {
       return ''
     },
     sendTestEmail() {

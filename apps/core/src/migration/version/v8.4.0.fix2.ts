@@ -1,5 +1,5 @@
 // patch for version 8.4.0 v2
-// 将Posts中的isPublished字段全部设置为true
+// 将 Posts 中的 isPublished 字段全部设置为 true
 import type { Db } from 'mongodb'
 
 export default (async function v0840Fix2(db: Db) {

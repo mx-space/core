@@ -1,3 +1,5 @@
+import { UnprocessableEntityException } from '@nestjs/common'
+import { IsBooleanOrString } from '~/decorators/dto/isBooleanOrString'
 import { Transform } from 'class-transformer'
 import {
   IsBoolean,
@@ -7,11 +9,6 @@ import {
   IsString,
 } from 'class-validator'
 import { uniq } from 'lodash'
-
-import { UnprocessableEntityException } from '@nestjs/common'
-
-import { IsBooleanOrString } from '~/decorators/dto/isBooleanOrString'
-
 import { CategoryType } from './category.model'
 
 export class SlugOrIdDto {

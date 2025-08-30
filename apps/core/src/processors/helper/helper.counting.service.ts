@@ -1,10 +1,7 @@
-import type { ArticleTypeEnum } from '~/constants/article.constant'
-
 import { Injectable, Logger } from '@nestjs/common'
-
+import type { ArticleTypeEnum } from '~/constants/article.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils/redis.util'
-
 import { DatabaseService } from '../database/database.service'
 import { RedisService } from '../redis/redis.service'
 

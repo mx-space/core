@@ -1,5 +1,4 @@
 import type { UserModel, UserModelSecurityKeys } from '../user/user.model'
-
 import { SubscribeAllBit } from './subscribe.constant'
 
 const defaultPostProps = {

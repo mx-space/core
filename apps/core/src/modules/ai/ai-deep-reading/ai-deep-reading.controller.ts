@@ -1,12 +1,10 @@
 import { Delete, Get, Param, Post, Query } from '@nestjs/common'
-
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-
 import { ConfigsService } from '../../configs/configs.service'
 import { GetDeepReadingQueryDto } from './ai-deep-reading.dto'
 import { AiDeepReadingService } from './ai-deep-reading.service'

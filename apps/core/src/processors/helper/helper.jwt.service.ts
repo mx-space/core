@@ -1,14 +1,11 @@
 import cluster from 'node:cluster'
-import { sign, verify } from 'jsonwebtoken'
-
 import { Injectable } from '@nestjs/common'
-
 import { CLUSTER, ENCRYPT, SECURITY } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 import { logger } from '~/global/consola.global'
 import { getRedisKey } from '~/utils/redis.util'
 import { md5 } from '~/utils/tool.util'
-
+import { sign, verify } from 'jsonwebtoken'
 import { RedisService } from '../redis/redis.service'
 
 @Injectable()

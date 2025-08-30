@@ -1,12 +1,9 @@
 import type { CanActivate, ExecutionContext } from '@nestjs/common'
-
 import { Injectable } from '@nestjs/common'
-
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UserService } from '~/modules/user/user.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-
 import { AuthGuard } from './auth.guard'
 
 /**

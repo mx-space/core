@@ -1,7 +1,6 @@
+import { CollectionRefTypes } from '@core/constants/db.constant'
 import type { BaseModel } from './base'
 import type { CategoryModel } from './category'
-
-import { CollectionRefTypes } from '@core/constants/db.constant'
 
 export { CollectionRefTypes }
 export interface CommentModel extends BaseModel {

@@ -2,10 +2,8 @@ import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
 import type { SayModel } from '~/models/say'
-import type { HTTPClient } from '../core'
-
 import { autoBind } from '~/utils/auto-bind'
-
+import type { HTTPClient } from '../core'
 import { BaseCrudController } from './base'
 
 declare module '../core/client' {

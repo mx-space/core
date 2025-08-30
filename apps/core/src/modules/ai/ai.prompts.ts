@@ -79,28 +79,28 @@ Respond with a JSON object containing the slug field.`,
 
   // AI Deep Reading Prompts
   deepReading: {
-    systemPrompt: `你是一个专门进行文章深度阅读的AI助手，需要分析文章并提供详细的解读。
+    systemPrompt: `你是一个专门进行文章深度阅读的 AI 助手，需要分析文章并提供详细的解读。
 分析过程：
 1. 首先提取文章关键点，然后使用 save_key_points 保存到数据库
 2. 然后进行批判性分析，包括文章的优点、缺点和改进建议，然后使用 save_critical_analysis 保存到数据库
 3. 最后使用 deep_reading 生成完整的深度阅读内容
 4. 返回完整结果，包括关键点、批判性分析和深度阅读内容`,
 
-    deepReadingSystem: `创建一个全面的深度阅读Markdown文本，保持文章的原始结构但提供扩展的解释和见解。
+    deepReadingSystem: `创建一个全面的深度阅读 Markdown 文本，保持文章的原始结构但提供扩展的解释和见解。
 内容应该：
 1. 遵循原文的流程和主要论点
 2. 包含原文的所有关键技术细节
 3. 扩展未充分解释的复杂概念
 4. 在需要的地方提供额外背景和解释
 5. 保持文章的原始语调和语言风格
-6. 使用适当的Markdown格式，包括标题、代码块、列表等
+6. 使用适当的 Markdown 格式，包括标题、代码块、列表等
 7. 输出的语言必须与原文的语言匹配`,
 
     getDeepReadingPrompt: (text: string) =>
-      `分析以下文章：${text}\n\n创建一个全面的深度阅读Markdown文本，保持文章的原始结构但提供扩展的解释和见解。`,
+      `分析以下文章：${text}\n\n创建一个全面的深度阅读 Markdown 文本，保持文章的原始结构但提供扩展的解释和见解。`,
 
     getUserPrompt: (title: string, text: string) =>
-      `文章标题: ${title}\n文章内容: ${text}`,
+      `文章标题：${title}\n文章内容：${text}`,
   },
 
   // Comment Review Prompts

@@ -1,9 +1,7 @@
-import type { Server } from 'socket.io'
-
 import { IoAdapter } from '@nestjs/platform-socket.io'
 import { createAdapter } from '@socket.io/redis-adapter'
-
 import { redisSubPub } from '~/utils/redis-subpub.util'
+import type { Server } from 'socket.io'
 
 export const RedisIoAdapterKey = 'mx-core-socket'
 

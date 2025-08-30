@@ -1,6 +1,5 @@
-import { defineProvider } from 'test/helper/defineProvider'
-
 import { CountingService } from '~/processors/helper/helper.counting.service'
+import { defineProvider } from 'test/helper/defineProvider'
 
 const isLikeBeforeMap = {} as Record<string, boolean>
 

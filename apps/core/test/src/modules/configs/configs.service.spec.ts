@@ -1,11 +1,6 @@
-import { redisHelper } from 'test/helper/redis-mock.helper'
-import { vi } from 'vitest'
-import type { MockCacheService } from 'test/helper/redis-mock.helper'
-
 import { UnprocessableEntityException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
-
 import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
 import { RedisKeys } from '~/constants/cache.constant'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
@@ -17,6 +12,9 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { getModelToken } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
+import { redisHelper } from 'test/helper/redis-mock.helper'
+import type { MockCacheService } from 'test/helper/redis-mock.helper'
+import { vi } from 'vitest'
 
 describe('Test ConfigsService', () => {
   let service: ConfigsService

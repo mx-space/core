@@ -5,18 +5,13 @@
  * @author Surmon <https://github.com/surmon-china>
  * @author Innei <https://innei.in>
  */
-import { of, tap } from 'rxjs'
 import type {
   CallHandler,
   ExecutionContext,
   NestInterceptor,
 } from '@nestjs/common'
-import type { FastifyReply } from 'fastify'
-import type { Observable } from 'rxjs'
-
 import { Inject, Injectable, Logger, RequestMethod } from '@nestjs/common'
 import { HttpAdapterHost, Reflector } from '@nestjs/core'
-
 import { HTTP_CACHE, REDIS } from '~/app.config'
 import { API_CACHE_PREFIX } from '~/constants/cache.constant'
 import * as META from '~/constants/meta.constant'
@@ -24,6 +19,9 @@ import * as SYSTEM from '~/constants/system.constant'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { hashString } from '~/utils/tool.util'
+import type { FastifyReply } from 'fastify'
+import { of, tap } from 'rxjs'
+import type { Observable } from 'rxjs'
 
 /**
  * @class HttpCacheInterceptor

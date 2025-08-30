@@ -1,3 +1,4 @@
+import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
 import { Exclude, Transform, Type } from 'class-transformer'
 import {
   ArrayUnique,
@@ -15,9 +16,6 @@ import {
   ValidateNested,
 } from 'class-validator'
 import { JSONSchema } from 'class-validator-jsonschema'
-
-import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
-
 import { Encrypt } from './configs.encrypt.util'
 import {
   halfFieldOption,
@@ -158,7 +156,7 @@ export class CommentOptionsDto {
   @Max(10)
   @IsOptional()
   @JSONSchemaNumberField('AI 审核阈值', {
-    description: '分数大于多少时会被归类为垃圾评论, 范围为 1-10, 默认为 5',
+    description: '分数大于多少时会被归类为垃圾评论，范围为 1-10, 默认为 5',
   })
   aiReviewThreshold: number
 
@@ -246,7 +244,7 @@ export class BaiduSearchOptionsDto {
   token?: string
 }
 
-@JSONSchema({ title: 'Bing推送设定' })
+@JSONSchema({ title: 'Bing 推送设定' })
 export class BingSearchOptionsDto {
   @IsOptional()
   @IsBoolean()
@@ -256,7 +254,7 @@ export class BingSearchOptionsDto {
   @IsOptional()
   @IsString()
   @SecretField
-  @JSONSchemaPasswordField('Bing API密钥')
+  @JSONSchemaPasswordField('Bing API 密钥')
   token?: string
 }
 

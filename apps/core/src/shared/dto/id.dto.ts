@@ -1,7 +1,6 @@
+import { UnprocessableEntityException } from '@nestjs/common'
 import { Transform } from 'class-transformer'
 import { IsDefined, IsMongoId, isMongoId } from 'class-validator'
-
-import { UnprocessableEntityException } from '@nestjs/common'
 
 export class MongoIdDto {
   @IsMongoId()

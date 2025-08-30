@@ -1,9 +1,6 @@
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import { readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path, { join, resolve } from 'node:path'
-import { flatten } from 'lodash'
-import { mkdirp } from 'mkdirp'
-
 import { $, cd } from '@mx-space/compiled'
 import {
   BadRequestException,
@@ -12,7 +9,6 @@ import {
   Logger,
 } from '@nestjs/common'
 import { CronExpression } from '@nestjs/schedule'
-
 import { DEMO_MODE, MONGO_DB } from '~/app.config'
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
@@ -30,7 +26,8 @@ import { S3Uploader } from '~/utils/s3.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getFolderSize, installPKG } from '~/utils/system.util'
 import { getMediumDateTime } from '~/utils/time.util'
-
+import { flatten } from 'lodash'
+import { mkdirp } from 'mkdirp'
 import { ConfigsService } from '../configs/configs.service'
 
 const excludeCollections = [
@@ -284,9 +281,6 @@ export class BackupService {
   @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'backupDB' })
   @CronDescription('备份 DB 并上传 COS')
   async backupDB() {
-    if (DEMO_MODE) {
-      return
-    }
     const backup = await this.backup()
     if (!backup) {
       this.logger.log('没有开启备份')
