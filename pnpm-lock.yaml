@@ -10,7 +10,7 @@ overrides:
   pino: ./external/pino
   semver: 7.7.2
   typescript: 5.9.2
-  whatwg-url: 14.1.1
+  whatwg-url: 14.2.0
   zod: 3.25.63
 
 importers:
@@ -3354,6 +3354,7 @@ packages:
 
   dayjs@1.11.17:
     resolution: {integrity: sha512-qgiVOerp5QCVMfE7hZ6z/gM+ug52I+xv70rCf6rWJXf0b4d8Kv6Yw9BmcLZlCvP3Xz8i3fjXbaU6Hwu7aGRXfA==}
+    deprecated: This version has a bug that adds semantic-release dependencies by mistake. Please upgrade to 1.11.18.
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -6819,8 +6820,8 @@ packages:
   whatwg-fetch@3.6.20:
     resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
 
-  whatwg-url@14.1.1:
-    resolution: {integrity: sha512-mDGf9diDad/giZ/Sm9Xi2YcyzaFpbdLpJPr+E9fSkyQ7KpQD4SdFcugkRQYzhmfI4KeV4Qpnn2sKPdo+kmsgRQ==}
+  whatwg-url@14.2.0:
+    resolution: {integrity: sha512-De72GdQZzNTUBBChsXueQUnPKDkg/5A5zp7pFDuQAj5UFoENpiACU0wlCvzpAGnTkj++ihpKwKyYewn/XNUbKw==}
     engines: {node: '>=18'}
 
   which@2.0.2:
@@ -11910,7 +11911,7 @@ snapshots:
   mongodb-connection-string-url@3.0.2:
     dependencies:
       '@types/whatwg-url': 11.0.5
-      whatwg-url: 14.1.1
+      whatwg-url: 14.2.0
 
   mongodb-memory-server-core@10.2.0:
     dependencies:
@@ -12086,7 +12087,7 @@ snapshots:
 
   node-fetch@2.7.0(encoding@0.1.13):
     dependencies:
-      whatwg-url: 14.1.1
+      whatwg-url: 14.2.0
     optionalDependencies:
       encoding: 0.1.13
 
@@ -13717,7 +13718,7 @@ snapshots:
 
   whatwg-fetch@3.6.20: {}
 
-  whatwg-url@14.1.1:
+  whatwg-url@14.2.0:
     dependencies:
       tr46: 5.1.1
       webidl-conversions: 7.0.0
