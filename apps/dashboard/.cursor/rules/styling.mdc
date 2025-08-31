@@ -1,0 +1,172 @@
+---
+description: TailwindCSS styling guidelines and best practices
+include: ["src/**/*.{ts,tsx}", "src/lib/cn.ts", "src/styles/**/*.css"]
+---
+
+# TailwindCSS Styling Guidelines
+
+This project uses TailwindCSS 4 with specific patterns and constraints.
+
+## Critical Rule: No Dynamic Classes
+
+**All Tailwind classes must be statically defined - no dynamic className values:**
+
+```typescript
+// ❌ Wrong - Dynamic class construction
+const size = 'large'
+const className = `text-${size}` // This won't work with Tailwind purging
+
+// ❌ Wrong - Template literals with variables
+const color = 'blue'
+const className = `bg-${color}-500`
+
+// ✅ Correct - Static classes with conditional logic
+const className = clsx({
+  'text-base': size === 'small',
+  'text-lg': size === 'medium',
+  'text-xl': size === 'large',
+})
+
+// ✅ Correct - Predefined class mappings
+const sizeClasses = {
+  small: 'text-base',
+  medium: 'text-lg',
+  large: 'text-xl',
+}
+const className = sizeClasses[size]
+```
+
+## Class Utility Function
+
+Use the `cn()` utility from `src/lib/cn.ts` for combining classes:
+
+```typescript
+import { cn } from '~/lib/cn'
+
+function Button({ className, variant = 'primary', ...props }) {
+  return (
+    <button
+      className={cn(
+        // Base styles
+        'px-4 py-2 rounded-md font-medium transition-colors',
+        // Variant styles
+        {
+          'bg-primary text-white hover:bg-primary/90': variant === 'primary',
+          'bg-secondary text-secondary-foreground hover:bg-secondary/80': variant === 'secondary',
+          'border border-border bg-background hover:bg-fill': variant === 'outline'
+        },
+        // External className override
+        className
+      )}
+      {...props}
+    />
+  )
+}
+```
+
+## Color System Integration
+
+**Always use Pastel colors** (see color.mdc rule):
+
+```typescript
+// ✅ Use Pastel semantic colors
+<div className="bg-background text-text border border-border">
+
+// ✅ Use Pastel application colors
+<button className="bg-primary text-white">
+
+// ✅ Use Pastel fill colors for interactive elements
+<input className="bg-fill border border-border">
+```
+
+## Responsive Design Patterns
+
+```typescript
+// Mobile-first responsive design
+<div className="w-full md:w-1/2 lg:w-1/3">
+
+// Responsive spacing
+<div className="p-4 md:p-6 lg:p-8">
+
+// Responsive typography
+<h1 className="text-2xl md:text-3xl lg:text-4xl">
+```
+
+## Dark Mode Support
+
+Use TailwindCSS v4 built-in dark mode with `dark:` prefix:
+
+```typescript
+<div className="bg-background dark:bg-background text-text dark:text-text">
+  Content that adapts to dark mode
+</div>
+```
+
+## Component Styling Patterns
+
+**Base Component Pattern**:
+
+```typescript
+interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'outline'
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
+}
+
+function Button({ variant = 'primary', size = 'md', className, ...props }: ButtonProps) {
+  return (
+    <button
+      className={cn(
+        // Base styles that always apply
+        'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+
+        // Size variants
+        {
+          'h-8 px-3 text-sm': size === 'sm',
+          'h-10 px-4': size === 'md',
+          'h-12 px-6 text-lg': size === 'lg'
+        },
+
+        // Color variants
+        {
+          'bg-primary text-white hover:bg-primary/90': variant === 'primary',
+          'bg-secondary text-secondary-foreground hover:bg-secondary/80': variant === 'secondary',
+          'border border-border bg-background hover:bg-fill': variant === 'outline'
+        },
+
+        className
+      )}
+      {...props}
+    />
+  )
+}
+```
+
+## Animation Integration
+
+Combine with Framer Motion using `m.` prefix:
+
+```typescript
+import { m } from 'framer-motion'
+import { cn } from '~/lib/cn'
+
+<m.button
+  className={cn(
+    'bg-primary text-white px-4 py-2 rounded-md',
+    'transition-colors duration-200'
+  )}
+  whileHover={{ scale: 1.02 }}
+  whileTap={{ scale: 0.98 }}
+>
+  Animated Button
+</m.button>
+```
+
+## Best Practices
+
+1. **Static Classes Only**: Never construct class names dynamically
+2. **Use cn() Utility**: Always use the `cn()` function for class composition
+3. **Pastel Colors**: Prefer Pastel color system over standard Tailwind colors
+4. **Mobile First**: Design mobile-first with responsive breakpoints
+5. **Component Variants**: Use object-based variant patterns for reusable components
+6. **Dark Mode**: Always consider dark mode when styling components

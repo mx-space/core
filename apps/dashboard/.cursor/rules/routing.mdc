@@ -1,0 +1,69 @@
+---
+description: File-based routing system guidelines
+include: ["src/pages/**/*.tsx", "src/router.tsx", "src/generated-routes.ts"]
+---
+# File-Based Routing System
+
+This project uses `vite-plugin-route-builder` for file-based routing. Follow these patterns:
+
+## Route Types
+
+**Sync Routes**: `.sync.tsx` files
+- Synchronous routes without code splitting
+- Used for critical pages that should load immediately
+- Example: `src/pages/(main)/index.sync.tsx` becomes root route
+
+**Async Routes**: `.tsx` files (without .sync)
+- Asynchronous routes with lazy loading and code splitting
+- Used for non-critical pages to optimize initial bundle size
+- Example: `src/pages/about.tsx` becomes `/about` route
+
+## Layout System
+
+**Layout Files**: `layout.tsx` files serve as layout containers
+- Use `<Outlet />` within layout components to render child routes
+- Layouts automatically wrap their corresponding route segments
+- Example: `src/pages/(main)/layout.tsx` wraps all routes in the `(main)` group
+
+## Route Structure Examples
+
+```typescript
+// Sync route - no code splitting
+// File: src/pages/(main)/index.sync.tsx
+export default function HomePage() {
+  return <div>Home Page</div>
+}
+
+// Async route - with code splitting
+// File: src/pages/dashboard.tsx
+export default function DashboardPage() {
+  return <div>Dashboard</div>
+}
+
+// Layout component
+// File: src/pages/(main)/layout.tsx
+import { Outlet } from 'react-router'
+
+export default function MainLayout() {
+  return (
+    <div className="min-h-screen">
+      <nav>Navigation</nav>
+      <main>
+        <Outlet />
+      </main>
+    </div>
+  )
+}
+```
+
+## Generated Routes
+
+- Routes are auto-generated in `src/generated-routes.ts`
+- **DO NOT EDIT** the generated routes file manually
+- The routing plugin handles all route generation automatically
+
+## Documentation Reference
+
+For detailed usage, advanced patterns, and configuration options, **always refer to the official documentation**: https://github.com/Innei/vite-plugin-route-builder
+
+**Important**: When encountering unclear routing patterns or advanced use cases, consult the official documentation before implementation.

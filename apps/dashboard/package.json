@@ -1,0 +1,90 @@
+{
+  "name": "@mx-space/dashboard",
+  "type": "module",
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.14.0",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "format": "prettier --write \"src/**/*.ts\" ",
+    "lint": "eslint --fix",
+    "prepare": "simple-git-hooks",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "@headlessui/react": "2.2.7",
+    "@pastel-palette/tailwindcss": "1.0.0-canary.0",
+    "@radix-ui/react-accordion": "1.2.11",
+    "@radix-ui/react-checkbox": "1.3.2",
+    "@radix-ui/react-context-menu": "2.2.15",
+    "@radix-ui/react-dialog": "1.1.14",
+    "@radix-ui/react-label": "2.1.7",
+    "@radix-ui/react-scroll-area": "1.2.9",
+    "@radix-ui/react-select": "2.2.5",
+    "@radix-ui/react-slider": "1.3.5",
+    "@radix-ui/react-slot": "1.2.3",
+    "@radix-ui/react-switch": "1.2.5",
+    "@radix-ui/react-tooltip": "1.2.7",
+    "@remixicon/react": "4.6.0",
+    "@tanstack/react-query": "5.85.0",
+    "clsx": "2.1.1",
+    "es-toolkit": "1.39.9",
+    "foxact": "0.2.49",
+    "immer": "10.1.1",
+    "jotai": "2.13.1",
+    "motion": "12.23.12",
+    "ofetch": "1.4.1",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "react-router": "7.8.0",
+    "react-scan": "0.4.3",
+    "socket.io-client": "^4.8.1",
+    "sonner": "2.0.7",
+    "tailwind-merge": "3.3.1",
+    "usehooks-ts": "3.1.1"
+  },
+  "devDependencies": {
+    "@egoist/tailwindcss-icons": "1.9.0",
+    "@iconify-json/lucide": "1.2.65",
+    "@iconify-json/mingcute": "1.2.5",
+    "@iconify-json/simple-icons": "1.2.49",
+    "@tailwindcss/container-queries": "0.1.1",
+    "@tailwindcss/postcss": "4.1.11",
+    "@tailwindcss/typography": "0.5.16",
+    "@tailwindcss/vite": "4.1.11",
+    "@types/node": "24.2.1",
+    "@types/react": "19.1.10",
+    "@types/react-dom": "19.1.7",
+    "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "10.4.21",
+    "code-inspector-plugin": "1.0.5",
+    "eslint": "9.33.0",
+    "eslint-config-hyoban": "4.0.9",
+    "lint-staged": "16.1.5",
+    "postcss": "8.5.6",
+    "postcss-import": "16.1.1",
+    "prettier": "3.6.2",
+    "simple-git-hooks": "2.13.1",
+    "tailwind-scrollbar": "4.0.2",
+    "tailwind-variants": "2.1.0",
+    "tailwindcss": "4.1.11",
+    "tailwindcss-animate": "1.0.7",
+    "tailwindcss-safe-area": "1.1.0",
+    "typescript": "5.9.2",
+    "vite": "7.1.2",
+    "vite-plugin-checker": "0.10.2",
+    "vite-plugin-route-builder": "0.3.0",
+    "vite-tsconfig-paths": "5.1.4"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm exec lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --ignore-path ./.gitignore --write "
+    ],
+    "*.{js,ts,cjs,mjs,jsx,tsx,json}": [
+      "eslint --fix"
+    ]
+  }
+}

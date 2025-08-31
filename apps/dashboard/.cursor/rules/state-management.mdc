@@ -1,0 +1,123 @@
+---
+description: Jotai state management patterns and guidelines
+include: ["src/atoms/**/*.ts", "src/store/**/*.ts", "src/lib/jotai.ts", "src/providers/**/*.tsx"]
+---
+# State Management with Jotai
+
+This project uses Jotai for state management with custom utilities and patterns.
+
+## Core Setup
+
+**Global Store**: Use `jotaiStore` from `src/lib/jotai.ts`
+```typescript
+import { jotaiStore } from '~/lib/jotai'
+```
+
+**Custom Hook Utility**: Use `createAtomHooks` for consistent atom patterns
+```typescript
+import { createAtomHooks } from '~/lib/jotai'
+
+const [useMyAtom, useSetMyAtom, useMyAtomValue, myAtom] = createAtomHooks(atom(null))
+```
+
+## Atom Organization
+
+**Atom Location**: Store atoms in `src/atoms/` directory
+```typescript
+// File: src/atoms/user.ts
+import { atom } from 'jotai'
+
+export const userAtom = atom(null)
+export const isLoggedInAtom = atom((get) => get(userAtom) !== null)
+```
+
+## Usage Patterns
+
+**Reading State**:
+```typescript
+import { useAtomValue } from 'jotai'
+import { userAtom } from '~/atoms/user'
+
+function UserProfile() {
+  const user = useAtomValue(userAtom)
+  return <div>{user?.name}</div>
+}
+```
+
+**Writing State**:
+```typescript
+import { useSetAtom } from 'jotai'
+import { userAtom } from '~/atoms/user'
+
+function LoginForm() {
+  const setUser = useSetAtom(userAtom)
+  
+  const handleLogin = (userData) => {
+    setUser(userData)
+  }
+}
+```
+
+**Reading and Writing**:
+```typescript
+import { useAtom } from 'jotai'
+import { userAtom } from '~/atoms/user'
+
+function UserSettings() {
+  const [user, setUser] = useAtom(userAtom)
+  
+  const updateUser = (updates) => {
+    setUser({ ...user, ...updates })
+  }
+}
+```
+
+## Advanced Patterns
+
+**Derived Atoms**:
+```typescript
+import { atom } from 'jotai'
+
+const countAtom = atom(0)
+const doubledAtom = atom((get) => get(countAtom) * 2)
+```
+
+**Async Atoms**:
+```typescript
+const userIdAtom = atom(1)
+const userAtom = atom(async (get) => {
+  const userId = get(userIdAtom)
+  return fetchUser(userId)
+})
+```
+
+**Write-Only Atoms**:
+```typescript
+const writeOnlyAtom = atom(
+  null, // no read function
+  (get, set, newValue) => {
+    // write logic
+    set(someOtherAtom, newValue)
+  }
+)
+```
+
+## Provider Setup
+
+The global Jotai provider is configured in `src/providers/root-providers.tsx`:
+```typescript
+import { Provider } from 'jotai'
+import { jotaiStore } from '~/lib/jotai'
+
+<Provider store={jotaiStore}>
+  {/* app content */}
+</Provider>
+```
+
+## Best Practices
+
+1. **Atom Naming**: Use descriptive names ending with `Atom`
+2. **File Organization**: Group related atoms in the same file
+3. **Custom Hooks**: Use `createAtomHooks` for consistent patterns
+4. **Global Store**: Always use the configured `jotaiStore` instance
+5. **Async Handling**: Use Suspense boundaries for async atoms

@@ -1,0 +1,82 @@
+---
+description: Component organization and architecture guidelines
+include: ["src/components/**/*.{ts,tsx}", "src/modules/**/*.{ts,tsx}"]
+---
+# Component Organization
+
+Follow this component architecture for consistent project structure:
+
+## Directory Structure
+
+**Base UI Components**: `src/components/ui/`
+- Reusable primitives (buttons, inputs, modals, etc.)
+- Generic components that can be used across any application
+- Based on Radix UI primitives with custom styling
+- Examples: `Button`, `Input`, `Select`, `Tooltip`, `Accordion`
+
+**Common Components**: `src/components/common/`
+- App-specific shared components
+- Components used across multiple features but specific to this app
+- Examples: `ErrorElement`, `Footer`, `LoadRemixAsyncComponent`, `NotFound`
+
+**Module Components**: `src/modules/`
+- Feature-specific components organized by domain
+- Business logic components that belong to specific features
+- Examples: `src/modules/feed/`, `src/modules/auth/`, `src/modules/user/`
+
+## Component Placement Rules
+
+**Universal Components** → `src/components/ui/`
+- If the component could be used in any React app
+- Pure UI components without business logic
+- Reusable across different domains
+
+**Feature Components** → `src/modules/{domain}/`
+- If the component is specific to a business domain/feature
+- Contains domain-specific logic or data handling
+- Examples: `FeedTimeline`, `UserProfile`, `AuthForm`
+
+**App-Specific Shared** → `src/components/common/`
+- If the component is used across features but specific to this app
+- Contains app-specific logic but used in multiple places
+
+## Path Aliases
+
+Use `~/` for `src/` imports (configured in tsconfig):
+
+```typescript
+// Good
+import { Button } from '~/components/ui/button'
+import { UserProfile } from '~/modules/user/UserProfile'
+
+// Avoid
+import { Button } from '../../../components/ui/button'
+```
+
+## Component Examples
+
+```typescript
+// Universal UI component - goes in src/components/ui/
+// File: src/components/ui/button/Button.tsx
+export function Button({ children, ...props }) {
+  return <button className="..." {...props}>{children}</button>
+}
+
+// Feature component - goes in src/modules/
+// File: src/modules/feed/FeedTimeline.tsx
+export function FeedTimeline() {
+  // Feed-specific logic and UI
+}
+
+// App-specific shared - goes in src/components/common/
+// File: src/components/common/AppHeader.tsx
+export function AppHeader() {
+  // App-specific header with navigation
+}
+```
+
+## Module Architecture Principle
+
+**If a component is specific to a business domain/feature, place it in the corresponding module directory.**
+
+This keeps the codebase organized and makes it easy to find domain-specific functionality.
