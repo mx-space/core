@@ -1,6 +1,6 @@
 {
   "private": true,
-  "packageManager": "pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39",
+  "packageManager": "pnpm@10.16.0+sha512.8066e7b034217b700a9a4dbb3a005061d641ba130a89915213a10b3ca4919c19c037bec8066afdc559b89635fdb806b16ea673f2468fbb28aabfa13c53e3f769",
   "license": "AGPLv3",
   "homepage": "https://github.com/mx-space/core#readme",
   "repository": {
