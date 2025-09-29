@@ -9,7 +9,7 @@ import {
   Logger,
 } from '@nestjs/common'
 import { CronExpression } from '@nestjs/schedule'
-import { DEMO_MODE, MONGO_DB } from '~/app.config'
+import { MONGO_DB } from '~/app.config'
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -232,7 +232,7 @@ export class BackupService {
 
     try {
       const packageJson = await readFile(join(backupDataDir, 'package.json'), {
-        encoding: 'utf-8',
+        encoding: 'utf8',
       })
       const pkg = JSON.parse(packageJson)
       if (pkg.dependencies) {
