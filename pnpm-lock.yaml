@@ -442,8 +442,8 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
       tsdown:
-        specifier: 0.15.5
-        version: 0.15.5(typescript@5.9.2)
+        specifier: 0.15.6
+        version: 0.15.6(typescript@5.9.2)
       umi-request:
         specifier: 1.4.0
         version: 1.4.0
@@ -466,8 +466,8 @@ importers:
         specifier: 5.1.6
         version: 5.1.6
       tsdown:
-        specifier: 0.15.5
-        version: 0.15.5(typescript@5.9.2)
+        specifier: 0.15.6
+        version: 0.15.6(typescript@5.9.2)
       zod:
         specifier: 3.25.63
         version: 3.25.63
@@ -481,8 +481,8 @@ importers:
         specifier: 4.21.2
         version: 4.21.2
       tsdown:
-        specifier: 0.15.5
-        version: 0.15.5(typescript@5.9.2)
+        specifier: 0.15.6
+        version: 0.15.6(typescript@5.9.2)
 
 packages:
 
@@ -6209,8 +6209,8 @@ packages:
     resolution: {integrity: sha512-NoZ4roiN7LnbKn9QqE1amc9DJfzvZXxF4xDavcOWt1BPkdx+m+0gJuPM+S0vCe7zTJMYUP0R8pO2XMr+Y8oLIg==}
     engines: {node: '>=6'}
 
-  tsdown@0.15.5:
-    resolution: {integrity: sha512-2UP5hDBVYGHnnQSIYtDxMDjePmut7EDpvW5E2kVnjpZ17JgiPvRJPHwk5Dm045bC75+q8yxAlw/CMIELymTWaw==}
+  tsdown@0.15.6:
+    resolution: {integrity: sha512-W6++O3JeV9gm3JY6P/vLiC7zzTcJbZhQxXb+p3AvRMpDOPBIg82yXULyZCcwjsihY/bFG+Qw37HkezZbP7fzUg==}
     engines: {node: '>=20.19.0'}
     hasBin: true
     peerDependencies:
@@ -13153,7 +13153,7 @@ snapshots:
       minimist: 1.2.8
       strip-bom: 3.0.0
 
-  tsdown@0.15.5(typescript@5.9.2):
+  tsdown@0.15.6(typescript@5.9.2):
     dependencies:
       ansis: 4.2.0
       cac: 6.7.14
