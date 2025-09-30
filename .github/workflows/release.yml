@@ -17,7 +17,7 @@ jobs:
       release_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
@@ -138,7 +138,7 @@ jobs:
         arch: [amd64]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Docker Setup QEMU
         uses: docker/setup-qemu-action@v3.6.0
       - name: Docker meta
