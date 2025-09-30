@@ -67,7 +67,7 @@ importers:
         version: 5.9.2
       vite-tsconfig-paths:
         specifier: 5.1.4
-        version: 5.1.4(typescript@5.9.2)(vite@6.3.5(@types/node@24.5.2)(jiti@2.6.0)(terser@5.43.1)(yaml@2.8.1))
+        version: 5.1.4(typescript@5.9.2)(vite@6.3.6(@types/node@24.5.2)(jiti@2.6.0)(terser@5.43.1)(yaml@2.8.1))
       zx-cjs:
         specifier: 7.0.7-0
         version: 7.0.7-0
@@ -169,10 +169,10 @@ importers:
         version: 4.24.0
       axios:
         specifier: ^1.10.0
-        version: 1.11.0
+        version: 1.12.0
       axios-retry:
         specifier: 4.5.0
-        version: 4.5.0(axios@1.11.0)
+        version: 4.5.0(axios@1.12.0)
       bcryptjs:
         specifier: ^3.0.2
         version: 3.0.2
@@ -425,7 +425,7 @@ importers:
         version: 3.0.0
       axios:
         specifier: ^1.10.0
-        version: 1.11.0
+        version: 1.12.0
       camelcase-keys:
         specifier: ^9.1.3
         version: 9.1.3
@@ -449,7 +449,7 @@ importers:
         version: 1.4.0
       vite:
         specifier: ^6.0.3
-        version: 6.3.5(@types/node@24.5.2)(jiti@2.6.0)(terser@5.43.1)(yaml@2.8.1)
+        version: 6.3.6(@types/node@24.5.2)(jiti@2.6.0)(terser@5.43.1)(yaml@2.8.1)
       vitest:
         specifier: 2.1.8
         version: 2.1.8(@types/node@24.5.2)(terser@5.43.1)
@@ -3221,8 +3221,8 @@ packages:
     peerDependencies:
       axios: 0.x || 1.x
 
-  axios@1.11.0:
-    resolution: {integrity: sha512-1Lx3WLFQWm3ooKDYZD1eXmoGO9fxYQjrycfHFC8P0sCfQVXyROp0p9PFWBehewBOdCwHc+f/b8I0fMto5eSfwA==}
+  axios@1.12.0:
+    resolution: {integrity: sha512-oXTDccv8PcfjZmPGlWsPSwtOJCZ/b6W5jAMCNcfwJbCzDckwG0jrYJFaWH1yvivfCXjVzV/SPDEhMB3Q+DSurg==}
 
   b4a@1.7.3:
     resolution: {integrity: sha512-5Q2mfq2WfGuFp3uS//0s6baOJLMoVduPYVeNmDYxu5OUA1/cBfvr2RIS7vi62LdNj/urk1hfmj867I3qt6uZ7Q==}
@@ -6433,8 +6433,39 @@ packages:
       terser:
         optional: true
 
-  vite@6.3.5:
-    resolution: {integrity: sha512-cZn6NDFE7wdTpINgs++ZJ4N49W2vRp8LCKrn3Ob1kYNtOo21vfDoaV5GzBfLU4MovSAB8uNRm4jgzVQZ+mBzPQ==}
+  vite@5.4.20:
+    resolution: {integrity: sha512-j3lYzGC3P+B5Yfy/pfKNgVEg4+UtcIJcVRt2cDjIOmhLourAqPqf8P7acgxeiSgUB7E3p2P8/3gNIgDLpwzs4g==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': ^18.0.0 || >=20.0.0
+      less: '*'
+      lightningcss: ^1.21.0
+      sass: '*'
+      sass-embedded: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      lightningcss:
+        optional: true
+      sass:
+        optional: true
+      sass-embedded:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+
+  vite@6.3.6:
+    resolution: {integrity: sha512-0msEVHJEScQbhkbVTb/4iHZdJ6SXp/AvxL2sjwYQFfBqleHtnCqv1J3sa9zbWz/6kW1m9Tfzn92vW+kZ1WV6QA==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
     peerDependencies:
@@ -9526,13 +9557,13 @@ snapshots:
       chai: 5.3.3
       tinyrainbow: 1.2.0
 
-  '@vitest/mocker@2.1.8(vite@5.4.10(@types/node@24.5.2)(terser@5.43.1))':
+  '@vitest/mocker@2.1.8(vite@5.4.20(@types/node@24.5.2)(terser@5.43.1))':
     dependencies:
       '@vitest/spy': 2.1.8
       estree-walker: 3.0.3
       magic-string: 0.30.18
     optionalDependencies:
-      vite: 5.4.10(@types/node@24.5.2)(terser@5.43.1)
+      vite: 5.4.20(@types/node@24.5.2)(terser@5.43.1)
 
   '@vitest/pretty-format@2.1.8':
     dependencies:
@@ -9822,12 +9853,12 @@ snapshots:
       '@fastify/error': 4.2.0
       fastq: 1.19.1
 
-  axios-retry@4.5.0(axios@1.11.0):
+  axios-retry@4.5.0(axios@1.12.0):
     dependencies:
-      axios: 1.11.0
+      axios: 1.12.0
       is-retry-allowed: 2.2.0
 
-  axios@1.11.0:
+  axios@1.12.0:
     dependencies:
       follow-redirects: 1.15.11(debug@4.4.3)
       form-data: 4.0.4
@@ -13372,7 +13403,7 @@ snapshots:
       debug: 4.4.1
       es-module-lexer: 1.7.0
       pathe: 1.1.2
-      vite: 5.4.10(@types/node@24.5.2)(terser@5.43.1)
+      vite: 5.4.20(@types/node@24.5.2)(terser@5.43.1)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -13395,13 +13426,13 @@ snapshots:
       - supports-color
       - typescript
 
-  vite-tsconfig-paths@5.1.4(typescript@5.9.2)(vite@6.3.5(@types/node@24.5.2)(jiti@2.6.0)(terser@5.43.1)(yaml@2.8.1)):
+  vite-tsconfig-paths@5.1.4(typescript@5.9.2)(vite@6.3.6(@types/node@24.5.2)(jiti@2.6.0)(terser@5.43.1)(yaml@2.8.1)):
     dependencies:
       debug: 4.4.1
       globrex: 0.1.2
       tsconfck: 3.1.6(typescript@5.9.2)
     optionalDependencies:
-      vite: 6.3.5(@types/node@24.5.2)(jiti@2.6.0)(terser@5.43.1)(yaml@2.8.1)
+      vite: 6.3.6(@types/node@24.5.2)(jiti@2.6.0)(terser@5.43.1)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -13416,7 +13447,17 @@ snapshots:
       fsevents: 2.3.3
       terser: 5.43.1
 
-  vite@6.3.5(@types/node@24.5.2)(jiti@2.6.0)(terser@5.43.1)(yaml@2.8.1):
+  vite@5.4.20(@types/node@24.5.2)(terser@5.43.1):
+    dependencies:
+      esbuild: 0.21.5
+      postcss: 8.5.6
+      rollup: 4.49.0
+    optionalDependencies:
+      '@types/node': 24.5.2
+      fsevents: 2.3.3
+      terser: 5.43.1
+
+  vite@6.3.6(@types/node@24.5.2)(jiti@2.6.0)(terser@5.43.1)(yaml@2.8.1):
     dependencies:
       esbuild: 0.25.9
       fdir: 6.5.0(picomatch@4.0.3)
@@ -13468,7 +13509,7 @@ snapshots:
   vitest@2.1.8(@types/node@24.5.2)(terser@5.43.1):
     dependencies:
       '@vitest/expect': 2.1.8
-      '@vitest/mocker': 2.1.8(vite@5.4.10(@types/node@24.5.2)(terser@5.43.1))
+      '@vitest/mocker': 2.1.8(vite@5.4.20(@types/node@24.5.2)(terser@5.43.1))
       '@vitest/pretty-format': 2.1.9
       '@vitest/runner': 2.1.8
       '@vitest/snapshot': 2.1.8
@@ -13484,7 +13525,7 @@ snapshots:
       tinyexec: 0.3.2
       tinypool: 1.1.1
       tinyrainbow: 1.2.0
-      vite: 5.4.10(@types/node@24.5.2)(terser@5.43.1)
+      vite: 5.4.20(@types/node@24.5.2)(terser@5.43.1)
       vite-node: 2.1.8(@types/node@24.5.2)(terser@5.43.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
