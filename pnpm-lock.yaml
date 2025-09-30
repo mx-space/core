@@ -75,8 +75,8 @@ importers:
   apps/core:
     dependencies:
       '@ai-sdk/openai':
-        specifier: 2.0.23
-        version: 2.0.23(zod@3.25.63)
+        specifier: 2.0.42
+        version: 2.0.42(zod@3.25.63)
       '@algolia/client-search':
         specifier: ^4.22.1
         version: 4.25.2
@@ -492,8 +492,14 @@ packages:
     peerDependencies:
       zod: 3.25.63
 
-  '@ai-sdk/openai@2.0.23':
-    resolution: {integrity: sha512-uOXk8HzmMUoCmD0JMX/Y1HC/ABOR/Jza2Z2rkCaJISDYz3fp5pnb6eNjcPRL48JSMzRAGp9UP5p0OpxS06IJZg==}
+  '@ai-sdk/openai@2.0.42':
+    resolution: {integrity: sha512-9mM6QS8k0ooH9qMC27nlrYLQmNDnO6Rk0JTmFo/yUxpABEWOcvQhMWNHbp9lFL6Ty5vkdINrujhsAQfWuEleOg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: 3.25.63
+
+  '@ai-sdk/provider-utils@3.0.10':
+    resolution: {integrity: sha512-T1gZ76gEIwffep6MWI0QNy9jgoybUHE7TRaHB5k54K8mF91ciGFlbtCGxDYhMH3nCRergKwYFIDeFF0hJSIQHQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 3.25.63
@@ -6707,10 +6713,17 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.7(zod@3.25.63)
       zod: 3.25.63
 
-  '@ai-sdk/openai@2.0.23(zod@3.25.63)':
+  '@ai-sdk/openai@2.0.42(zod@3.25.63)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.7(zod@3.25.63)
+      '@ai-sdk/provider-utils': 3.0.10(zod@3.25.63)
+      zod: 3.25.63
+
+  '@ai-sdk/provider-utils@3.0.10(zod@3.25.63)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@standard-schema/spec': 1.0.0
+      eventsource-parser: 3.0.6
       zod: 3.25.63
 
   '@ai-sdk/provider-utils@3.0.7(zod@3.25.63)':

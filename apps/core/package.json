@@ -48,7 +48,7 @@
     "changelog": true
   },
   "dependencies": {
-    "@ai-sdk/openai": "2.0.23",
+    "@ai-sdk/openai": "2.0.42",
     "@algolia/client-search": "^4.22.1",
     "@babel/core": "7.28.3",
     "@babel/plugin-transform-modules-commonjs": "7.27.1",
