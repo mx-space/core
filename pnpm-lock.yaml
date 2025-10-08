@@ -11,7 +11,7 @@ overrides:
   semver: 7.7.2
   typescript: 5.9.2
   whatwg-url: 14.1.1
-  zod: 3.25.63
+  zod: 3.25.76
 
 importers:
 
@@ -76,7 +76,7 @@ importers:
     dependencies:
       '@ai-sdk/openai':
         specifier: 2.0.42
-        version: 2.0.42(zod@3.25.63)
+        version: 2.0.42(zod@3.25.76)
       '@algolia/client-search':
         specifier: ^4.22.1
         version: 4.25.2
@@ -163,7 +163,7 @@ importers:
         version: 9.0.10
       ai:
         specifier: 5.0.28
-        version: 5.0.28(zod@3.25.63)
+        version: 5.0.28(zod@3.25.76)
       algoliasearch:
         specifier: 4.24.0
         version: 4.24.0
@@ -271,7 +271,7 @@ importers:
         version: 7.0.7
       openai:
         specifier: 5.23.1
-        version: 5.23.1(zod@3.25.63)
+        version: 5.23.1(zod@3.25.76)
       pluralize:
         specifier: ^8.0.0
         version: 8.0.0
@@ -461,7 +461,7 @@ importers:
         version: 1.1.0
       better-auth:
         specifier: 1.3.7
-        version: 1.3.7(zod@3.25.63)
+        version: 1.3.7(zod@3.25.76)
       nanoid:
         specifier: 5.1.6
         version: 5.1.6
@@ -469,8 +469,8 @@ importers:
         specifier: 0.15.5
         version: 0.15.5(typescript@5.9.2)
       zod:
-        specifier: 3.25.63
-        version: 3.25.63
+        specifier: 3.25.76
+        version: 3.25.76
       zx:
         specifier: 7.2.3
         version: 7.2.3
@@ -490,25 +490,25 @@ packages:
     resolution: {integrity: sha512-xySXoQ29+KbGuGfmDnABx+O6vc7Gj7qugmj1kGpn0rW0rQNn6UKUuvscKMzWyv1Uv05GyC1vqHq8ZhEOLfXscQ==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: 3.25.63
+      zod: 3.25.76
 
   '@ai-sdk/openai@2.0.42':
     resolution: {integrity: sha512-9mM6QS8k0ooH9qMC27nlrYLQmNDnO6Rk0JTmFo/yUxpABEWOcvQhMWNHbp9lFL6Ty5vkdINrujhsAQfWuEleOg==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: 3.25.63
+      zod: 3.25.76
 
   '@ai-sdk/provider-utils@3.0.10':
     resolution: {integrity: sha512-T1gZ76gEIwffep6MWI0QNy9jgoybUHE7TRaHB5k54K8mF91ciGFlbtCGxDYhMH3nCRergKwYFIDeFF0hJSIQHQ==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: 3.25.63
+      zod: 3.25.76
 
   '@ai-sdk/provider-utils@3.0.7':
     resolution: {integrity: sha512-o3BS5/t8KnBL3ubP8k3w77AByOypLm+pkIL/DCw0qKkhDbvhCy+L3hRTGPikpdb8WHcylAeKsjgwOxhj4cqTUA==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: 3.25.63
+      zod: 3.25.76
 
   '@ai-sdk/provider@2.0.0':
     resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==}
@@ -3084,7 +3084,7 @@ packages:
     resolution: {integrity: sha512-tnybAqoDFzuK6O1NOMHX1d/wH7Eug8y0H4l/Gl6swi8BYGtlTPDjniKnGYzgTpLTdpj7SI3qjZuomz7evph9+w==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: 3.25.63
+      zod: 3.25.76
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
@@ -3258,7 +3258,7 @@ packages:
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
-      zod: 3.25.63
+      zod: 3.25.76
     peerDependenciesMeta:
       react:
         optional: true
@@ -5377,7 +5377,7 @@ packages:
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
-      zod: 3.25.63
+      zod: 3.25.76
     peerDependenciesMeta:
       ws:
         optional: true
@@ -6690,8 +6690,8 @@ packages:
     resolution: {integrity: sha512-U/PBtDf35ff0D8X8D0jfdzHYEPFxAI7jJlxZXwCSez5M3190m+QobIfh+sWDWSHMCWWJN2AWamkegn6vr6YBTw==}
     engines: {node: '>=18'}
 
-  zod@3.25.63:
-    resolution: {integrity: sha512-3ttCkqhtpncYXfP0f6dsyabbYV/nEUW+Xlu89jiXbTBifUfjaSqXOG6JnQPLtqt87n7KAmnMqcjay6c0Wq0Vbw==}
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -6707,31 +6707,31 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/gateway@1.0.15(zod@3.25.63)':
+  '@ai-sdk/gateway@1.0.15(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.7(zod@3.25.63)
-      zod: 3.25.63
+      '@ai-sdk/provider-utils': 3.0.7(zod@3.25.76)
+      zod: 3.25.76
 
-  '@ai-sdk/openai@2.0.42(zod@3.25.63)':
+  '@ai-sdk/openai@2.0.42(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.10(zod@3.25.63)
-      zod: 3.25.63
+      '@ai-sdk/provider-utils': 3.0.10(zod@3.25.76)
+      zod: 3.25.76
 
-  '@ai-sdk/provider-utils@3.0.10(zod@3.25.63)':
+  '@ai-sdk/provider-utils@3.0.10(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.6
-      zod: 3.25.63
+      zod: 3.25.76
 
-  '@ai-sdk/provider-utils@3.0.7(zod@3.25.63)':
+  '@ai-sdk/provider-utils@3.0.7(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.6
-      zod: 3.25.63
+      zod: 3.25.76
 
   '@ai-sdk/provider@2.0.0':
     dependencies:
@@ -9693,13 +9693,13 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai@5.0.28(zod@3.25.63):
+  ai@5.0.28(zod@3.25.76):
     dependencies:
-      '@ai-sdk/gateway': 1.0.15(zod@3.25.63)
+      '@ai-sdk/gateway': 1.0.15(zod@3.25.76)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.7(zod@3.25.63)
+      '@ai-sdk/provider-utils': 3.0.7(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
-      zod: 3.25.63
+      zod: 3.25.76
 
   ajv-formats@2.1.1(ajv@8.17.1):
     optionalDependencies:
@@ -9849,7 +9849,7 @@ snapshots:
 
   bcryptjs@3.0.2: {}
 
-  better-auth@1.3.7(zod@3.25.63):
+  better-auth@1.3.7(zod@3.25.76):
     dependencies:
       '@better-auth/utils': 0.2.6
       '@better-fetch/fetch': 1.1.18
@@ -9862,7 +9862,7 @@ snapshots:
       jose: 5.10.0
       kysely: 0.28.7
       nanostores: 0.11.4
-      zod: 3.25.63
+      zod: 3.25.76
 
   better-call@1.0.19:
     dependencies:
@@ -12228,9 +12228,9 @@ snapshots:
     dependencies:
       mimic-function: 5.0.1
 
-  openai@5.23.1(zod@3.25.63):
+  openai@5.23.1(zod@3.25.76):
     optionalDependencies:
-      zod: 3.25.63
+      zod: 3.25.76
 
   openapi3-ts@2.0.2:
     dependencies:
@@ -13662,7 +13662,7 @@ snapshots:
 
   yoctocolors-cjs@2.1.3: {}
 
-  zod@3.25.63: {}
+  zod@3.25.76: {}
 
   zwitch@2.0.4: {}
 
