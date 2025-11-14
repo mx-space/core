@@ -30,37 +30,42 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
       const oauth = await this.configService.get('oauth')
 
       const providers = {} as NonNullable<BetterAuthOptions['socialProviders']>
-      oauth.providers.forEach((provider) => {
-        if (!provider.enabled) return
-        const type = provider.type as string
+      await Promise.all(
+        oauth.providers.map(async (provider) => {
+          if (!provider.enabled) return
+          const type = provider.type as string
 
-        const mergedConfig = {
-          ...oauth.public[type],
-          ...oauth.secrets[type],
-        }
-        switch (type) {
-          case 'github': {
-            if (!mergedConfig.clientId || !mergedConfig.clientSecret) return
-
-            providers.github = {
-              clientId: mergedConfig.clientId,
-              clientSecret: mergedConfig.clientSecret,
-            }
-            break
+          const mergedConfig = {
+            ...oauth.public[type],
+            ...oauth.secrets[type],
           }
+          const urls = await this.configService.get('url')
+          switch (type) {
+            case 'github': {
+              if (!mergedConfig.clientId || !mergedConfig.clientSecret) return
 
-          case 'google': {
-            if (!mergedConfig.clientId || !mergedConfig.clientSecret) return
-
-            providers.google = {
-              clientId: mergedConfig.clientId,
-              clientSecret: mergedConfig.clientSecret,
+              providers.github = {
+                clientId: mergedConfig.clientId,
+                clientSecret: mergedConfig.clientSecret,
+                redirectURI: `${urls.serverUrl}/auth/callback/github`,
+              }
+              break
             }
 
-            break
+            case 'google': {
+              if (!mergedConfig.clientId || !mergedConfig.clientSecret) return
+
+              providers.google = {
+                clientId: mergedConfig.clientId,
+                clientSecret: mergedConfig.clientSecret,
+                redirectURI: `${urls.serverUrl}/auth/callback/google`,
+              }
+
+              break
+            }
           }
-        }
-      })
+        }),
+      )
 
       const { handler, auth } = await CreateAuth(providers)
       this.authHandler = handler
