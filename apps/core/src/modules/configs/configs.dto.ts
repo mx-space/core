@@ -329,7 +329,7 @@ export class FriendLinkOptionsDto {
 
   @IsBoolean()
   @IsOptional()
-  @JSONSchemaToggleField('友联头像转内链', {
+  @JSONSchemaToggleField('友链头像转内链', {
     description:
       '通过审核后将会下载友链头像并改为内部链接，仅支持常见图片格式，其他格式将不会转换',
   })
