@@ -376,8 +376,8 @@ importers:
         specifier: 0.38.4
         version: 0.38.4
       ioredis:
-        specifier: 5.8.0
-        version: 5.8.0
+        specifier: 5.8.2
+        version: 5.8.2
       mongodb-memory-server:
         specifier: ^10.2.1
         version: 10.2.1
@@ -4560,8 +4560,8 @@ packages:
       '@types/node':
         optional: true
 
-  ioredis@5.8.0:
-    resolution: {integrity: sha512-AUXbKn9gvo9hHKvk6LbZJQSKn/qIfkWXrnsyL9Yrf+oeXmla9Nmf6XEumOddyhM8neynpK5oAV6r9r99KBuwzA==}
+  ioredis@5.8.2:
+    resolution: {integrity: sha512-C6uC+kleiIMmjViJINWk80sOQw5lEzse1ZmvD+S/s8p8CWapftSaC+kocGTx6xrbrJ4WmYQGC08ffHLr6ToR6Q==}
     engines: {node: '>=12.22.0'}
 
   ipaddr.js@1.9.1:
@@ -11322,7 +11322,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 24.10.1
 
-  ioredis@5.8.0:
+  ioredis@5.8.2:
     dependencies:
       '@ioredis/commands': 1.4.0
       cluster-key-slot: 1.1.2
@@ -13410,7 +13410,7 @@ snapshots:
   vite-node@1.5.2(@types/node@24.10.1)(terser@5.43.1):
     dependencies:
       cac: 6.7.14
-      debug: 4.4.1
+      debug: 4.4.3
       pathe: 1.1.2
       picocolors: 1.1.1
       vite: 5.4.10(@types/node@24.10.1)(terser@5.43.1)
@@ -13428,7 +13428,7 @@ snapshots:
   vite-node@2.1.8(@types/node@24.10.1)(terser@5.43.1):
     dependencies:
       cac: 6.7.14
-      debug: 4.4.1
+      debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 1.1.2
       vite: 5.4.10(@types/node@24.10.1)(terser@5.43.1)
