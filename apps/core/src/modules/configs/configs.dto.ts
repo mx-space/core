@@ -326,6 +326,14 @@ export class FriendLinkOptionsDto {
   @IsOptional()
   @JSONSchemaToggleField('允许子路径友链', { description: '例如 /blog 子路径' })
   allowSubPath: boolean
+
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('友联头像转内链', {
+    description:
+      '通过审核后将会下载友链头像并改为内部链接，仅支持常见图片格式，其他格式将不会转换',
+  })
+  enableAvatarInternalization: boolean
 }
 
 @JSONSchema({ title: '文本设定' })

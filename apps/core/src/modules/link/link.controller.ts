@@ -109,14 +109,17 @@ export class LinkController {
   @Patch('/audit/:id')
   @Auth()
   async approveLink(@Param('id') id: string) {
-    const doc = await this.linkService.approveLink(id)
+    const { link, convertedAvatar } = await this.linkService.approveLink(id)
 
     scheduleManager.schedule(async () => {
-      if (doc.email) {
-        await this.linkService.sendToCandidate(doc)
+      if (link.email) {
+        await this.linkService.sendToCandidate(link as any)
       }
     })
-    return
+    return {
+      link,
+      convertedAvatar,
+    }
   }
 
   @Post('/audit/reason/:id')
@@ -135,5 +138,12 @@ export class LinkController {
   @Get('/health')
   async checkHealth() {
     return this.linkService.checkLinkHealth()
+  }
+
+  /** 批量迁移已通过友链的外部头像为内部链接 */
+  @Post('/avatar/migrate')
+  @Auth()
+  async migrateExternalAvatars() {
+    return this.linkService.migrateExternalAvatarsForPassedLinks()
   }
 }
