@@ -101,10 +101,6 @@ export function validateImageBuffer({
       if (urlExt && allowedExtensions && !allowedExtensions.has(urlExt)) {
         return { ok: false, reason: '头像文件后缀不被支持' }
       }
-
-      if (urlExt && urlExt !== ext) {
-        return { ok: false, reason: '头像文件后缀与实际文件类型不一致' }
-      }
     } catch {
       return { ok: false, reason: '头像地址无法解析' }
     }
