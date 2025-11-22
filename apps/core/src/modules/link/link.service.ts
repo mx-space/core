@@ -15,6 +15,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import { ConfigsService } from '../configs/configs.service'
 import { UserService } from '../user/user.service'
+import { LinkAvatarService } from './link-avatar.service'
 import { LinkApplyEmailType } from './link-mail.enum'
 import { LinkModel, LinkState, LinkStateMap, LinkType } from './link.model'
 
@@ -30,6 +31,7 @@ export class LinkService {
     private readonly eventManager: EventManagerService,
     private readonly http: HttpService,
     private readonly configsService: ConfigsService,
+    private readonly linkAvatarService: LinkAvatarService,
   ) {}
 
   public get model() {
@@ -91,20 +93,24 @@ export class LinkService {
   }
 
   async approveLink(id: string) {
-    const doc = await this.model
-      .findOneAndUpdate(
-        { _id: id },
-        {
-          $set: { state: LinkState.Pass },
-        },
-      )
-      .lean()
+    const doc = await this.model.findOneAndUpdate(
+      { _id: id },
+      {
+        $set: { state: LinkState.Pass },
+      },
+      { new: true },
+    )
 
     if (!doc) {
       throw new NotFoundException()
     }
 
-    return doc
+    const convertedAvatar = await this.linkAvatarService.convertToInternal(doc)
+
+    return {
+      link: doc.toObject(),
+      convertedAvatar,
+    }
   }
 
   async getCount() {
@@ -283,5 +289,9 @@ export class LinkService {
       subject: `嘿!~, 主人已处理你的友链申请!~`,
       text: `申请结果：${LinkStateMap[state]}\n原因：${reason}`,
     })
+  }
+
+  async migrateExternalAvatarsForPassedLinks() {
+    return this.linkAvatarService.migratePassedLinks()
   }
 }

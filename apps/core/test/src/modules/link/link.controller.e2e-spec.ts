@@ -4,6 +4,8 @@ import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { FileService } from '~/modules/file/file.service'
+import { LinkAvatarService } from '~/modules/link/link-avatar.service'
 import {
   LinkController,
   LinkControllerCrud,
@@ -24,6 +26,8 @@ describe('Test LinkController(E2E)', async () => {
     providers: [
       ...gatewayProviders,
       LinkService,
+      LinkAvatarService,
+      FileService,
 
       emailProvider,
       HttpService,
@@ -40,7 +44,7 @@ describe('Test LinkController(E2E)', async () => {
     async pourData(modelMap) {
       const linkModel = modelMap.get(LinkModel)
 
-      ;(linkModel.model as ReturnModelType<typeof LinkModel>).create({
+      await (linkModel.model as ReturnModelType<typeof LinkModel>).create({
         url: 'https://innei.in',
         name: 'innei',
         avatar: 'https://innei.in/avatar.png',
