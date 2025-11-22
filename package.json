@@ -43,7 +43,7 @@
     "get-pixels@^3>request": "./external/request",
     "mongodb": "6.12.0",
     "pino": "./external/pino",
-    "semver": "7.7.2",
+    "semver": "7.7.3",
     "typescript": "5.9.2",
     "whatwg-url": "14.1.1",
     "zod": "3.25.63"
