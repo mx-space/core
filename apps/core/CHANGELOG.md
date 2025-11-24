@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## [8.4.1](https://github.com/mx-space/core/compare/v8.4.0...v8.4.1) (2025-11-24)
+
+
+### Bug Fixes
+
+* **deps:** downgrade semver from v7.7.3 to v7.7.2 in pnpm-lock.yaml ([ba0501e](https://github.com/mx-space/core/commit/ba0501e0f890f77339beb0e172a6126152104c76))
+* **deps:** update dependency @ai-sdk/openai to v2.0.42 ([#2464](https://github.com/mx-space/core/issues/2464)) ([9c0ac35](https://github.com/mx-space/core/commit/9c0ac355643bd6b654efb817aa168007bab947c8))
+* **deps:** update dependency ai to v5.0.52 [security] ([#2470](https://github.com/mx-space/core/issues/2470)) ([5cdc4f6](https://github.com/mx-space/core/commit/5cdc4f6b4954ead231dedb4cbf9ce008fc26bd8f))
+* **deps:** update dependency dayjs to v1.11.18 ([#2459](https://github.com/mx-space/core/issues/2459)) ([2afa730](https://github.com/mx-space/core/commit/2afa730d5845a86d10a8fb56fbdb0555ce6497a4))
+* **deps:** update dependency form-data to v4.0.4 [security] ([#2454](https://github.com/mx-space/core/issues/2454)) ([81b875d](https://github.com/mx-space/core/commit/81b875d9c99969162bd0b5105a84452286522552))
+* **deps:** update dependency nodemailer to v7.0.7 [security] ([#2467](https://github.com/mx-space/core/issues/2467)) ([2d10df6](https://github.com/mx-space/core/commit/2d10df66026a0aab637e27ef6f93662867984f2c))
+
+
+### Features
+
+* **link:** convert external friend avatar links to internal links ([#2480](https://github.com/mx-space/core/issues/2480)) ([ca1e328](https://github.com/mx-space/core/commit/ca1e3285db298e4a9eb4b9efd1c4ec316d9c7308))
+
+
+
 # [8.4.0](https://github.com/mx-space/core/compare/v8.3.2...v8.4.0) (2025-07-10)
 
 
