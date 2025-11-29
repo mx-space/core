@@ -18,6 +18,7 @@ import {
   CommentOptionsDto,
   FeatureListDto,
   FriendLinkOptionsDto,
+  ImageUploadOptionsDto,
   MailOptionsDto,
   OAuthDto,
   SeoDto,
@@ -83,6 +84,9 @@ export abstract class IConfig {
 
   @ConfigField(() => AIDto)
   ai: AIDto
+
+  @ConfigField(() => ImageUploadOptionsDto)
+  imageUploadOptions: ImageUploadOptionsDto
 
   @ConfigField(() => OAuthDto)
   oauth: OAuthDto

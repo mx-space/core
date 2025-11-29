@@ -65,8 +65,8 @@ export const deepCloneWithFunction = <T extends object>(object: T): T => {
  * hash string
  */
 export const hashString = function (str, seed = 0) {
-  let h1 = 0xdeadbeef ^ seed,
-    h2 = 0x41c6ce57 ^ seed
+  let h1 = 0xdeadbeef ^ seed
+  let h2 = 0x41c6ce57 ^ seed
   for (let i = 0, ch; i < str.length; i++) {
     ch = str.charCodeAt(i)
     h1 = Math.imul(h1 ^ ch, 2654435761)

@@ -94,6 +94,16 @@ export const generateDefaultConfig: () => IConfig = () => ({
     aiSummaryTargetLanguage: 'auto',
     enableDeepReading: false,
   },
+  imageUploadOptions: {
+    provider: 'none',
+    s3Endpoint: '',
+    s3SecretId: '',
+    s3SecretKey: '',
+    s3Bucket: '',
+    s3Region: '',
+    s3PathPrefix: 'images',
+    s3PublicUrlPrefix: '',
+  },
   oauth: {
     providers: [],
     secrets: {},

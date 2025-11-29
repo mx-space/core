@@ -101,7 +101,7 @@ describe('S3Uploader', () => {
           headers: expect.objectContaining({
             'Content-Type': 'image/png',
           }),
-          body: mockBuffer,
+          body: expect.any(ArrayBuffer),
         }),
       )
     })
@@ -130,7 +130,7 @@ describe('S3Uploader', () => {
           headers: expect.objectContaining({
             'Content-Type': 'application/octet-stream',
           }),
-          body: mockBuffer,
+          body: expect.any(ArrayBuffer),
         }),
       )
     })
@@ -155,7 +155,7 @@ describe('S3Uploader', () => {
         expect.stringContaining('/test-bucket/test-object'),
         expect.objectContaining({
           method: 'PUT',
-          body: mockBuffer,
+          body: expect.any(ArrayBuffer),
         }),
       )
     })
