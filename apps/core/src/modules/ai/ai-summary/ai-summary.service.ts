@@ -135,6 +135,8 @@ export class AiSummaryService {
         `OpenAI 在处理文章 ${articleId} 时出错：${error.message}`,
       )
 
+      console.error(error)
+
       throw new BizException(ErrorCodeEnum.AIException, error.message)
     } finally {
       this.cachedTaskId2AiPromise.delete(taskId)
