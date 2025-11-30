@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [8.4.2](https://github.com/mx-space/core/compare/v8.4.1...v8.4.2) (2025-11-30)
+
+
+### Bug Fixes
+
+* **ai-summary:** log error details in AI summary service ([049e6a5](https://github.com/mx-space/core/commit/049e6a5cb6d6187f7f703bd4d2b2f9e024cf57fb))
+
+
+
 ## [8.4.1](https://github.com/mx-space/core/compare/v8.4.0...v8.4.1) (2025-11-24)
 
 
