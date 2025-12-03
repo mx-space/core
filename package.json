@@ -45,7 +45,7 @@
     "pino": "./external/pino",
     "semver": "7.7.3",
     "typescript": "5.9.3",
-    "whatwg-url": "14.1.1",
+    "whatwg-url": "14.2.0",
     "zod": "3.25.76"
   },
   "simple-git-hooks": {
