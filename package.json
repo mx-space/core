@@ -29,7 +29,7 @@
     "mongodb-memory-server": "10.2.3",
     "prettier": "3.6.2",
     "prettier-package-json": "2.8.0",
-    "prettier-plugin-ember-template-tag": "2.1.0",
+    "prettier-plugin-ember-template-tag": "2.1.2",
     "redis-memory-server": "0.13.0",
     "rimraf": "6.0.1",
     "simple-git-hooks": "2.13.1",
