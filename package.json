@@ -35,7 +35,7 @@
     "simple-git-hooks": "2.13.1",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
-    "typescript": "5.9.2",
+    "typescript": "5.9.3",
     "vite-tsconfig-paths": "5.1.4",
     "zx-cjs": "7.0.7-0"
   },
@@ -44,7 +44,7 @@
     "mongodb": "6.12.0",
     "pino": "./external/pino",
     "semver": "7.7.3",
-    "typescript": "5.9.2",
+    "typescript": "5.9.3",
     "whatwg-url": "14.1.1",
     "zod": "3.25.76"
   },
