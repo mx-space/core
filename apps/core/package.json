@@ -154,7 +154,7 @@
     "mongodb-memory-server": "^10.2.1",
     "redis-memory-server": "^0.13.0",
     "rimraf": "6.0.1",
-    "sharp": "0.34.4",
+    "sharp": "0.34.5",
     "socket.io": "^4.8.1",
     "typescript": "5.9.3",
     "unplugin-swc": "1.5.9",
