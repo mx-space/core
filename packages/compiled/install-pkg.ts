@@ -1,1 +1,6 @@
-export * from './node_modules/@antfu/install-pkg'
+export { installPackage, uninstallPackage } from '@antfu/install-pkg'
+export type {
+  InstallPackageOptions,
+  PackageManager,
+  UninstallPackageOptions,
+} from '@antfu/install-pkg'
