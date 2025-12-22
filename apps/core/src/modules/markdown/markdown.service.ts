@@ -101,6 +101,7 @@ export class MarkdownService {
           text: item.text,
           ...genDate(item),
           categoryId: category?._id.toHexString() || defaultCategory._id,
+          tags: item.meta.tags || [],
         } as PostModel)
       }
     }
