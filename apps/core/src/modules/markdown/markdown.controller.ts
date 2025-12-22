@@ -76,6 +76,7 @@ export class MarkdownController {
     const convertPost = posts.map((post) =>
       convertor(post!, {
         categories: (post.category as CategoryModel).name,
+        tags: post.tags,
         type: 'post',
         permalink: `/posts/${(post.category as CategoryModel).name}/${post.slug}`,
       }),
