@@ -194,12 +194,36 @@ export class NoteService {
   }
 
   public async updateById(id: string, data: Partial<NoteModel>) {
+    const oldDoc = await this.noteModel.findById(id).lean()
+
+    if (!oldDoc) {
+      throw new NoContentCanBeModifiedException()
+    }
+
+    const hasFieldChanged = (
+      [
+        'title',
+        'text',
+        'mood',
+        'weather',
+        'meta',
+        'topicId',
+      ] as (keyof NoteModel)[]
+    ).some((key) => {
+      return isDefined(data[key]) && data[key] !== oldDoc[key]
+    })
+
     const updatedData = Object.assign(
       {},
       omit(data, NoteModel.protectedKeys),
       data.created
         ? {
             created: getLessThanNow(data.created),
+          }
+        : {},
+      hasFieldChanged
+        ? {
+            updated: new Date(),
           }
         : {},
     )
