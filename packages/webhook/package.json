@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "express": "4.21.2",
-    "tsdown": "0.15.5"
+    "tsdown": "0.18.3"
   },
   "bump": {
     "before": [

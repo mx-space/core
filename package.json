@@ -23,7 +23,7 @@
     "@ianvs/prettier-plugin-sort-imports": "4.7.0",
     "@sxzz/eslint-config": "7.1.4",
     "@types/node": "24.10.1",
-    "cross-env": "10.0.0",
+    "cross-env": "10.1.0",
     "eslint": "^9.36.0",
     "lint-staged": "16.2.7",
     "mongodb-memory-server": "10.2.3",
