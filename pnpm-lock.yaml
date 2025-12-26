@@ -79,8 +79,8 @@ importers:
   apps/core:
     dependencies:
       '@ai-sdk/openai':
-        specifier: 2.0.65
-        version: 2.0.65(zod@3.25.76)
+        specifier: 2.0.88
+        version: 2.0.88(zod@3.25.76)
       '@algolia/client-search':
         specifier: ^4.22.1
         version: 4.25.3
@@ -384,7 +384,7 @@ importers:
         version: 5.8.2
       mongodb-memory-server:
         specifier: ^10.2.1
-        version: 10.4.3
+        version: 10.2.3
       redis-memory-server:
         specifier: ^0.13.0
         version: 0.13.0
@@ -496,14 +496,20 @@ packages:
     peerDependencies:
       zod: 3.25.76
 
-  '@ai-sdk/openai@2.0.65':
-    resolution: {integrity: sha512-Wqo4iNCsxUYJFmEAzAHO0XDnnS76rqvPRX2AUhEAOX3cgL9UEfouFmiNQS2jM9AZhMdWj5GIG41hgr4YOr20tA==}
+  '@ai-sdk/openai@2.0.88':
+    resolution: {integrity: sha512-LlOf83haeZIiRUH1Zw1oEmqUfw5y54227CvndFoBpIkMJwQDGAB3VARUeOJ6iwAWDJjXSz06GdnEnhRU67Yatw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 3.25.76
 
   '@ai-sdk/provider-utils@3.0.17':
     resolution: {integrity: sha512-TR3Gs4I3Tym4Ll+EPdzRdvo/rc8Js6c4nVhFLuvGLX/Y4V9ZcQMa/HTiYsHEgmYrf1zVi6Q145UEZUfleOwOjw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: 3.25.76
+
+  '@ai-sdk/provider-utils@3.0.19':
+    resolution: {integrity: sha512-W41Wc9/jbUVXVwCN/7bWa4IKe8MtxO3EyA0Hfhx6grnmiYlCvpI8neSYWFE0zScXJkgA/YK3BRybzgyiXuu6JA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 3.25.76
@@ -5121,16 +5127,8 @@ packages:
     resolution: {integrity: sha512-a6OMGO2xJDvxCxNpRpxmy4roMGXQQRIB/2uZyoCWRdDQBIr4o6KMhRzWV5PTrKPk+BavQ+W46j4S1Dj4PpUGXQ==}
     engines: {node: '>=16.20.1'}
 
-  mongodb-memory-server-core@10.4.3:
-    resolution: {integrity: sha512-IPjlw73IoSYopnqBibQKxmAXMbOEPf5uGAOsBcaUiNH/TOI7V19WO+K7n5KYtnQ9FqzLGLpvwCGuPOTBSg4s5Q==}
-    engines: {node: '>=16.20.1'}
-
   mongodb-memory-server@10.2.3:
     resolution: {integrity: sha512-/ZNXX2IwmEXErt3HGgJCxYqmfS3thDG5W3cdoMBsC55U/PPzGoAFcdUruvP88uOETLZBBpLbNaWdk2LlinyRlg==}
-    engines: {node: '>=16.20.1'}
-
-  mongodb-memory-server@10.4.3:
-    resolution: {integrity: sha512-CDZvFisXvGIigsIw5gqH6r9NI/zxGa/uRdutgUL/isuJh+inj0YXb7Ykw6oFMFzqgTJWb7x0I5DpzrqCstBWpg==}
     engines: {node: '>=16.20.1'}
 
   mongodb@6.12.0:
@@ -6742,13 +6740,20 @@ snapshots:
       '@vercel/oidc': 3.0.3
       zod: 3.25.76
 
-  '@ai-sdk/openai@2.0.65(zod@3.25.76)':
+  '@ai-sdk/openai@2.0.88(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.17(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.19(zod@3.25.76)
       zod: 3.25.76
 
   '@ai-sdk/provider-utils@3.0.17(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@standard-schema/spec': 1.0.0
+      eventsource-parser: 3.0.6
+      zod: 3.25.76
+
+  '@ai-sdk/provider-utils@3.0.19(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
@@ -12041,51 +12046,9 @@ snapshots:
       - socks
       - supports-color
 
-  mongodb-memory-server-core@10.4.3:
-    dependencies:
-      async-mutex: 0.5.0
-      camelcase: 6.3.0
-      debug: 4.4.3
-      find-cache-dir: 3.3.2
-      follow-redirects: 1.15.11(debug@4.4.3)
-      https-proxy-agent: 7.0.6
-      mongodb: 6.12.0
-      new-find-package-json: 2.0.0
-      semver: 7.7.3
-      tar-stream: 3.1.7
-      tslib: 2.8.1
-      yauzl: 3.2.0
-    transitivePeerDependencies:
-      - '@aws-sdk/credential-providers'
-      - '@mongodb-js/zstd'
-      - bare-abort-controller
-      - gcp-metadata
-      - kerberos
-      - mongodb-client-encryption
-      - react-native-b4a
-      - snappy
-      - socks
-      - supports-color
-
   mongodb-memory-server@10.2.3:
     dependencies:
       mongodb-memory-server-core: 10.2.3
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@aws-sdk/credential-providers'
-      - '@mongodb-js/zstd'
-      - bare-abort-controller
-      - gcp-metadata
-      - kerberos
-      - mongodb-client-encryption
-      - react-native-b4a
-      - snappy
-      - socks
-      - supports-color
-
-  mongodb-memory-server@10.4.3:
-    dependencies:
-      mongodb-memory-server-core: 10.4.3
       tslib: 2.8.1
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
