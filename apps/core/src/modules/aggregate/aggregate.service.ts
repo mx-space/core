@@ -136,7 +136,7 @@ export class AggregateService {
     const data: any = {}
     const getPosts = () =>
       this.postService.model
-        .find({ ...addYearCondition(year) })
+        .find({ isPublished: true, ...addYearCondition(year) })
         .sort({ created: sortBy })
         .populate('category')
 
