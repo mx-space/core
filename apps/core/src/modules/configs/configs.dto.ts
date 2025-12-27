@@ -469,6 +469,104 @@ export class AIDto {
   aiSummaryTargetLanguage: string
 }
 
+@JSONSchema({ title: '编辑器图片上传' })
+export class ImageUploadOptionsDto {
+  @IsString()
+  @IsOptional()
+  @JSONSchemaHalfGirdPlainField('上传方式', {
+    'ui:options': {
+      type: 'select',
+      values: [
+        {
+          label: '不开启',
+          value: 'none',
+        },
+        {
+          label: '自托管 API（站内附件）',
+          value: 'self',
+        },
+        {
+          label: 'S3 兼容 API',
+          value: 's3',
+        },
+        {
+          label: '云函数自定义上传',
+          value: 'custom',
+        },
+      ],
+    },
+  })
+  provider: 'none' | 'self' | 's3' | 'custom'
+
+  @IsString()
+  @IsOptional()
+  @JSONSchemaPlainField('S3 Endpoint', {
+    'ui:options': {
+      dependsOn: { field: 'provider', value: 's3' },
+    },
+  })
+  s3Endpoint?: string
+
+  @IsString()
+  @IsOptional()
+  @JSONSchemaHalfGirdPlainField('S3 Access Key ID', {
+    'ui:options': {
+      dependsOn: { field: 'provider', value: 's3' },
+    },
+  })
+  @SecretField
+  s3SecretId?: string
+
+  @IsString()
+  @IsOptional()
+  @JSONSchemaPasswordField('S3 Secret Access Key', {
+    ...halfFieldOption,
+    'ui:options': {
+      dependsOn: { field: 'provider', value: 's3' },
+    },
+  })
+  @SecretField
+  s3SecretKey?: string
+
+  @IsString()
+  @IsOptional()
+  @JSONSchemaHalfGirdPlainField('S3 Bucket', {
+    'ui:options': {
+      dependsOn: { field: 'provider', value: 's3' },
+    },
+  })
+  s3Bucket?: string
+
+  @IsString()
+  @IsOptional()
+  @JSONSchemaHalfGirdPlainField('S3 Region', {
+    'ui:options': {
+      dependsOn: { field: 'provider', value: 's3' },
+    },
+  })
+  s3Region?: string
+
+  @IsString()
+  @IsOptional()
+  @JSONSchemaPlainField('S3 路径前缀', {
+    description: '上传到 S3 的路径前缀，默认为 images',
+    'ui:options': {
+      dependsOn: { field: 'provider', value: 's3' },
+    },
+  })
+  s3PathPrefix?: string
+
+  @IsString()
+  @IsOptional()
+  @JSONSchemaPlainField('S3 公共 URL 前缀', {
+    description: '对外访问的地址，请填写此项以生成正确的图片 URL',
+    'ui:options': {
+      dependsOn: { field: 'provider', value: 's3' },
+    },
+  })
+  s3PublicUrlPrefix?: string
+}
+
 export class OAuthDto {
   @IsObject({ each: true })
   @Type(() => OAuthProviderDto)
