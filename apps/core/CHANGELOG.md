@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [8.4.3](https://github.com/mx-space/core/compare/v8.4.2...v8.4.3) (2025-12-27)
+
+
+### Bug Fixes
+
+* **aggregate:** update post query to only retrieve published posts ([c65eead](https://github.com/mx-space/core/commit/c65eeadfb6b946c8ce19fd8ab1c2d9db775e6c50))
+* **deps:** update dependency @ai-sdk/openai to v2.0.88 ([#2498](https://github.com/mx-space/core/issues/2498)) ([378f68b](https://github.com/mx-space/core/commit/378f68b1ba417e35b294f2096661c18a3a56497d))
+* **deps:** update dependency @typegoose/auto-increment to v4.13.2 ([#2499](https://github.com/mx-space/core/issues/2499)) ([9e6872a](https://github.com/mx-space/core/commit/9e6872af0b86e84b790982875e68005965eb895a))
+* **deps:** update dependency nodemailer to v7.0.11 [security] ([#2487](https://github.com/mx-space/core/issues/2487)) ([9329cbd](https://github.com/mx-space/core/commit/9329cbd716d1a2ff81a4392c15f1e54771f774d2))
+
+
+### Features
+
+* **markdown:** 为Markdown 导入导出添加标签字段 ([5ca66b6](https://github.com/mx-space/core/commit/5ca66b6912c953a1ade1a1ccfeef2131359b9e42))
+* **note:** add validation for note updates to check for existing documents and track field changes ([70fb1b2](https://github.com/mx-space/core/commit/70fb1b2ad34a6a0a6001d93099703b47fc0f58b4))
+
+
+
 ## [8.4.2](https://github.com/mx-space/core/compare/v8.4.1...v8.4.2) (2025-11-30)
 
 
