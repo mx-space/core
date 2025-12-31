@@ -134,7 +134,7 @@
     "@nestjs/cli": "11.0.14",
     "@nestjs/schematics": "11.0.9",
     "@nestjs/testing": "11.1.10",
-    "@swc/core": "1.15.7",
+    "@swc/core": "1.15.8",
     "@types/babel__core": "7.20.5",
     "@types/cls-hooked": "^4.3.9",
     "@types/ejs": "3.1.5",
