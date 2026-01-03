@@ -103,6 +103,28 @@ export class FileController {
     }
   }
 
+  @Post('/upload/image')
+  @Auth()
+  async uploadImage(@Req() req: FastifyRequest) {
+    const file = await this.uploadService.getAndValidMultipartField(req)
+
+    // Convert stream to buffer
+    const chunks: Buffer[] = []
+    for await (const chunk of file.file) {
+      chunks.push(chunk)
+    }
+    const buffer = Buffer.concat(chunks)
+
+    const ext = path.extname(file.filename)
+    const url = await this.service.uploadImageWithConfig(
+      buffer,
+      ext,
+      file.filename,
+    )
+
+    return { url }
+  }
+
   @Delete('/:type/:name')
   @Auth()
   async delete(@Param() params: FileQueryDto) {
