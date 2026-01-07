@@ -32,7 +32,7 @@
     "prettier-plugin-ember-template-tag": "2.1.2",
     "redis-memory-server": "0.13.0",
     "rimraf": "6.0.1",
-    "rolldown": "1.0.0-beta.53",
+    "rolldown": "1.0.0-beta.59",
     "simple-git-hooks": "2.13.1",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
@@ -41,7 +41,7 @@
     "zx-cjs": "7.0.7-0"
   },
   "resolutions": {
-    "rolldown": "1.0.0-beta.53",
+    "rolldown": "1.0.0-beta.59",
     "get-pixels@^3>request": "./external/request",
     "mongodb": "6.12.0",
     "pino": "./external/pino",
