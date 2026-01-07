@@ -91,7 +91,7 @@
     "commander": "14.0.2",
     "dayjs": "1.11.19",
     "ejs": "3.1.10",
-    "form-data": "4.0.4",
+    "form-data": "4.0.5",
     "inquirer": "^12.9.6",
     "isbot": "5.1.32",
     "js-yaml": "^4.1.1",
