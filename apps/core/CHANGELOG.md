@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [8.4.4](https://github.com/mx-space/core/compare/v8.4.3...v8.4.4) (2026-01-08)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @ai-sdk/openai to v2.0.89 ([#2506](https://github.com/mx-space/core/issues/2506)) ([d71bd54](https://github.com/mx-space/core/commit/d71bd545a995d26ea12a78a6fc178c741db09974))
+* **deps:** update dependency @typegoose/typegoose to v12.20.1 ([#2500](https://github.com/mx-space/core/issues/2500)) ([d84a71f](https://github.com/mx-space/core/commit/d84a71fae68c035cfd2e633cc60492d4d67fccc5))
+* **deps:** update dependency ai to v5.0.117 ([#2501](https://github.com/mx-space/core/issues/2501)) ([b47a482](https://github.com/mx-space/core/commit/b47a482429f6ccce4c449049bbd05bba54790a28))
+* **deps:** update dependency mongoose to v8.19.4 ([#2507](https://github.com/mx-space/core/issues/2507)) ([7f56be4](https://github.com/mx-space/core/commit/7f56be4684a094bdd298a66e0b4011f07724ba86))
+* **deps:** update dependency openai to v5.23.2 ([#2508](https://github.com/mx-space/core/issues/2508)) ([d2ae37d](https://github.com/mx-space/core/commit/d2ae37d3a8e331b1050dcd5ddbdc413afc554e44))
+* **deps:** update dependency qs to v6.14.1 [security] ([#2504](https://github.com/mx-space/core/issues/2504)) ([6cb3d36](https://github.com/mx-space/core/commit/6cb3d3603611ec9fdbf49a25d64b3c6e432f49ca))
+* **markdown:** export markdown permalink ([3bc74e7](https://github.com/mx-space/core/commit/3bc74e76a2935ccfb30b3357052ddfafb29d26cc))
+
+
+
 ## [8.4.3](https://github.com/mx-space/core/compare/v8.4.2...v8.4.3) (2025-12-27)
 
 
