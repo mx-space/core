@@ -8,7 +8,12 @@ import { machineIdSync } from 'node-machine-id'
 import { isDebugMode, isDev } from './global/env.global'
 import { parseBooleanishValue } from './utils/tool.util'
 
-const { PORT: ENV_PORT, ALLOWED_ORIGINS, MX_ENCRYPT_KEY } = process.env
+const {
+  PORT: ENV_PORT,
+  ALLOWED_ORIGINS,
+  MX_ENCRYPT_KEY,
+  MONGO_CONNECTION,
+} = process.env
 
 const commander = program
   .option('-p, --port <number>', 'server port', ENV_PORT)
@@ -27,7 +32,11 @@ const commander = program
   .option('--db_user <string>', 'mongodb database user')
   .option('--db_password <string>', 'mongodb database password')
   .option('--db_options <string>', 'mongodb database options')
-  .option('--db_connection_string <string>', 'mongodb connection string')
+  .option(
+    '--db_connection_string <string>',
+    'mongodb connection string',
+    MONGO_CONNECTION,
+  )
   // redis
   .option('--redis_host <string>', 'redis host')
   .option('--redis_port <number>', 'redis port')
@@ -137,7 +146,7 @@ export const MONGO_DB = {
     const dbOptions = this.options ? `?${this.options}` : ''
     return `mongodb://${userPassword}${this.host}:${this.port}/${this.dbName}${dbOptions}`
   },
-  customConnectionString: argv.db_connection_string,
+  customConnectionString: argv.db_connection_string || MONGO_CONNECTION,
 }
 
 export const REDIS = {

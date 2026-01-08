@@ -1,5 +1,6 @@
 #!env node
 // register global
+import 'dotenv-expand/config'
 import cluster from 'node:cluster'
 import { cpus } from 'node:os'
 import { argv } from '@mx-space/compiled'

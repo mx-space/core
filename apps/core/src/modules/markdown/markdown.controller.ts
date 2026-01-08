@@ -78,7 +78,7 @@ export class MarkdownController {
         categories: (post.category as CategoryModel).name,
         tags: post.tags,
         type: 'post',
-        permalink: `/posts/${(post.category as CategoryModel).name}/${post.slug}`,
+        permalink: `/posts/${(post.category as CategoryModel).slug}/${post.slug}`,
       }),
     )
     const convertNote = notes.map((note) =>
@@ -145,8 +145,7 @@ export class MarkdownController {
     )
 
     const readable = new Readable()
-    readable.push(await rtzip.generateAsync({ type: 'nodebuffer' }))
-    readable.push(null)
+    readable.push(await rtzip.generateAsync({ type: 'nodebuffer' }), null)
 
     return readable
   }
