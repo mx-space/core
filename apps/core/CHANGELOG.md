@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [8.4.5](https://github.com/mx-space/core/compare/v8.4.4...v8.4.5) (2026-01-08)
+
+
+### Bug Fixes
+
+* ignore eslint rule ([bac4736](https://github.com/mx-space/core/commit/bac473693252a8cbc20807545205a27222b1fe91))
+
+
+
 ## [8.4.4](https://github.com/mx-space/core/compare/v8.4.3...v8.4.4) (2026-01-08)
 
 
