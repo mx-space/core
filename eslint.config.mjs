@@ -43,6 +43,7 @@ export default sxzz(
         'no-restricted-syntax': 0,
         'unicorn/filename-case': 0,
         'unicorn/prefer-math-trunc': 0,
+        'unicorn/prefer-single-call': 0,
 
         'unused-imports/no-unused-imports': 'error',
 
