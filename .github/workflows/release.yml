@@ -4,56 +4,39 @@ on:
       - 'v*'
   workflow_dispatch:
 
-name: Release (core)
+name: Release
+
+permissions: write-all
+
+env:
+  IMAGE: innei/mx-server
+  REDISMS_DISABLE_POSTINSTALL: 1
+  MONGOMS_DISABLE_POSTINSTALL: 1
 
 jobs:
   build:
-    name: Main Build
-    runs-on: ubuntu-24.04
-    env:
-      REDISMS_DISABLE_POSTINSTALL: 1
-      MONGOMS_DISABLE_POSTINSTALL: 1
-    outputs:
-      release_url: ${{ steps.create_release.outputs.upload_url }}
+    name: Core
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+      mongo:
+        image: mongo
+        ports:
+          - 27017:27017
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
+          fetch-tags: true
 
-      - name: Start MongoDB
-        uses: supercharge/mongodb-github-action@1.12.1
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node
         with:
-          mongodb-version: 4.4
-      - name: Start Redis
-        uses: supercharge/redis-github-action@1.8.0
-        with:
-          redis-version: 6
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4.1.0
-        with:
-          run_install: false
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Cache pnpm modules
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-pnpm-modules
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-      - name: Install Dependencies
-        run: |
-          pnpm i
+          node-version: '22.x'
 
       - name: Build project
         run: |
@@ -61,33 +44,145 @@ jobs:
       - name: Test Bundle Server
         run: |
           bash scripts/workflow/test-server.sh
+
       - name: Zip Assets
         run: |
           sh apps/core/zip-asset.sh
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          mv release.zip release-linux.zip
+      
+      - name: Release
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: ${{ github.ref_name }}
-          draft: false
+          name: ${{ github.ref_name }}
           prerelease: ${{ contains(fromJSON('["alpha", "beta"]'), github.ref_name) }}
-      - run: npx changelogithub
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
+          files: release-linux.zip
+
+      - name: Changelog
+        run: npx changelogithub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+  docker:
+    name: Docker (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+        - platform: linux/amd64
+          runner: ubuntu-latest
+        - platform: linux/arm64
+          runner: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Docker Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Metadata
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release.zip
-          asset_name: release-linux.zip
-          asset_content_type: application/zip
+          images: ${{ env.IMAGE }}
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Copy .env
+        run: |
+          cp .env.example .env
+
+      - name: Build and load
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Test
+        run: |
+          bash ./scripts/workflow/test-docker.sh
+          sudo rm -rf ./data
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          platforms: ${{ matrix.platform }}
+          context: .
+          tags: ${{ env.IMAGE }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+
+      - name: Prepare
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v6
+        with:
+          name: digests-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+      
+  merge:
+    name: Merge
+    runs-on: ubuntu-latest
+    needs: docker
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v7
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+            type=raw,value=latest
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.IMAGE }}@sha256:%s ' *)
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.IMAGE }}:${{ steps.meta.outputs.version }}
   deploy:
     name: Deploy To Remote Server
     runs-on: ubuntu-latest
@@ -128,64 +223,3 @@ jobs:
             cd mx
             ls -a
             node server-deploy.js --jwtSecret=$JWTSECRET --encrypt_key=$MX_ENCRYPT_KEY --encrypt_enable --scp_path=/tmp/mx-core/release-linux.zip || { echo "Deploy failed"; exit 1; }
-
-  docker:
-    name: Docker Release
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        arch: [amd64]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Docker Setup QEMU
-        uses: docker/setup-qemu-action@v3.6.0
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            innei/mx-server
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Copy .env
-        run: |
-          cp .env.example .env
-      - name: Build and export to Docker
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          load: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }},innei/mx-server:latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Test
-        run: |
-          bash ./scripts/workflow/test-docker.sh
-          sudo rm -rf ./data
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          platforms: |
-            linux/amd64
-            linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
