@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -58,17 +58,24 @@ jobs:
     env:
       REDISMS_DISABLE_POSTINSTALL: 1
       MONGOMS_DISABLE_POSTINSTALL: 1
+    services:
+      mongodb:
+        image: mongo
+        ports:
+          - 27017:27017
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node
         with:
           node-version: '22.x'
       - name: Build project
         run: npm run bundle
-      - name: Setup MongoDB and Redis
-        uses: ./.github/actions/setup-databases
       - name: Test Bundle Server
         run: bash scripts/workflow/test-server.sh
 
@@ -76,15 +83,22 @@ jobs:
     name: Test
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo
+        ports:
+          - 27017:27017
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node
         with:
           node-version: '22.x'
-      - name: Setup MongoDB and Redis
-        uses: ./.github/actions/setup-databases
       - name: Run Lint
         run: npm run lint
       - name: Run Tests
