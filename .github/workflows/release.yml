@@ -9,7 +9,7 @@ name: Release
 permissions: write-all
 
 env:
-  IMAGE: ghcr.io/mutsukic/mx-core
+  IMAGE: innei/mx-server
   REDISMS_DISABLE_POSTINSTALL: 1
   MONGOMS_DISABLE_POSTINSTALL: 1
 
@@ -49,21 +49,19 @@ jobs:
         run: |
           sh apps/core/zip-asset.sh
           mv release.zip release-linux.zip
-
-      - name: Changelog
-        run: npx changelogithub --dry >> REL_CHANGELOG.md
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
-          body_path: REL_CHANGELOG.md
           prerelease: ${{ contains(fromJSON('["alpha", "beta"]'), github.ref_name) }}
           files: release-linux.zip
+
+      - name: Changelog
+        run: npx changelogithub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
   docker:
     name: Docker (${{ matrix.platform }})
@@ -110,7 +108,6 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
