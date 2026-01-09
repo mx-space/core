@@ -45,7 +45,29 @@ export class S3Uploader {
   }
 
   setCustomDomain(domain: string): void {
-    this.customDomain = domain
+    this.customDomain = domain?.replace(/\/+$/, '') || ''
+  }
+
+  private normalizePath(value: string): string {
+    return value.replace(/\/+$/, '')
+  }
+
+  private buildPublicUrl(objectKey: string, fallbackPrefix?: string): string {
+    const normalizedObjectKey = objectKey.replace(/^\/+/, '')
+    const baseUrl = this.customDomain
+    if (baseUrl) {
+      const normalizedBase = baseUrl.replace(/\/+$/, '')
+      return `${normalizedBase}/${normalizedObjectKey}`
+    }
+
+    if (fallbackPrefix) {
+      const normalizedFallback = this.normalizePath(fallbackPrefix)
+      if (normalizedFallback.length > 0) {
+        return `${normalizedFallback}/${normalizedObjectKey}`
+      }
+    }
+
+    return normalizedObjectKey
   }
 
   // Helper function to calculate HMAC-SHA256
@@ -55,22 +77,24 @@ export class S3Uploader {
 
   async uploadImage(imageData: Buffer, path: string): Promise<string> {
     const md5Filename = crypto.createHash('md5').update(imageData).digest('hex')
-    const objectKey = `${path}/${md5Filename}.png`
+    const normalizedPath = this.normalizePath(path)
+    const objectKey = normalizedPath
+      ? `${normalizedPath}/${md5Filename}.png`
+      : `${md5Filename}.png`
 
     await this.uploadToS3(objectKey, imageData, 'image/png')
-
-    if (this.customDomain && this.customDomain.length > 0) {
-      return `${this.customDomain}/${objectKey}`
-    }
-    return `${path}/${objectKey}`
+    return this.buildPublicUrl(objectKey, normalizedPath)
   }
 
   async uploadFile(fileData: Buffer, path: string): Promise<string> {
     const md5Filename = crypto.createHash('md5').update(fileData).digest('hex')
-    const ext = extname(path)
-    const objectKey = `${path}/${md5Filename}${ext}`
+    const normalizedPath = this.normalizePath(path)
+    const ext = extname(normalizedPath)
+    const objectKey = normalizedPath
+      ? `${normalizedPath}/${md5Filename}${ext}`
+      : `${md5Filename}${ext}`
     await this.uploadToS3(objectKey, fileData, 'application/octet-stream')
-    return `${path}/${objectKey}`
+    return this.buildPublicUrl(objectKey, normalizedPath)
   }
 
   // Generic S3-compatible storage upload function

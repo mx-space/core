@@ -12,6 +12,7 @@ import {
 } from '~/modules/link/link.controller'
 import { LinkModel, LinkState } from '~/modules/link/link.model'
 import { LinkService } from '~/modules/link/link.service'
+import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { gatewayProviders } from 'test/mock/modules/gateway.mock'
@@ -20,6 +21,21 @@ import { emailProvider } from 'test/mock/processors/email.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 
 describe('Test LinkController(E2E)', async () => {
+  const serverlessServiceProvider = {
+    provide: ServerlessService,
+    useValue: {
+      model: {
+        findOne: () => ({
+          select() {
+            return {
+              lean: async () => null,
+            }
+          },
+        }),
+      },
+      injectContextIntoServerlessFunctionAndCall: async () => null,
+    },
+  }
   const proxy = createE2EApp({
     controllers: [LinkController, LinkControllerCrud],
     models: [LinkModel, OptionModel],
@@ -28,6 +44,7 @@ describe('Test LinkController(E2E)', async () => {
       LinkService,
       LinkAvatarService,
       FileService,
+      serverlessServiceProvider,
 
       emailProvider,
       HttpService,
