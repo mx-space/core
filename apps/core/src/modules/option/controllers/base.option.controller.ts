@@ -10,7 +10,6 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IConfig } from '~/modules/configs/configs.interface'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { classToJsonSchema } from '~/utils/jsonschema.util'
-import { instanceToPlain } from 'class-transformer'
 import { ConfigKeyDto } from '../dtoes/config.dto'
 import { OptionController } from '../option.decorator'
 
@@ -18,9 +17,11 @@ import { OptionController } from '../option.decorator'
 export class BaseOptionController {
   constructor(private readonly configsService: ConfigsService) {}
 
+  @HTTPDecorators.Bypass
   @Get('/')
-  getOption() {
-    return instanceToPlain(this.configsService.getConfig())
+  async getOption() {
+    const config = await this.configsService.getConfig()
+    return JSON.parse(JSON.stringify(config))
   }
 
   @HTTPDecorators.Bypass
@@ -31,6 +32,7 @@ export class BaseOptionController {
     })
   }
 
+  @HTTPDecorators.Bypass
   @Get('/:key')
   async getOptionKey(@Param('key') key: keyof IConfig) {
     if (typeof key !== 'string' && !key) {
@@ -42,14 +44,19 @@ export class BaseOptionController {
     if (!value) {
       throw new BadRequestException('key is not exists.')
     }
-    return { data: instanceToPlain(value) }
+    return { data: JSON.parse(JSON.stringify(value)) }
   }
 
+  @HTTPDecorators.Bypass
   @Patch('/:key')
-  patch(@Param() params: ConfigKeyDto, @Body() body: Record<string, any>) {
+  async patch(
+    @Param() params: ConfigKeyDto,
+    @Body() body: Record<string, any>,
+  ) {
     if (typeof body !== 'object') {
       throw new UnprocessableEntityException('body must be object')
     }
-    return this.configsService.patchAndValid(params.key, body)
+    const result = await this.configsService.patchAndValid(params.key, body)
+    return JSON.parse(JSON.stringify(result))
   }
 }

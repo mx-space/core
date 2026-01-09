@@ -127,6 +127,7 @@
     "snakecase-keys": "6.0.0",
     "source-map-support": "^0.5.21",
     "ua-parser-js": "2.0.6",
+    "uuid": "^13.0.0",
     "vm2": "3.9.19",
     "wildcard-match": "5.1.4",
     "xss": "1.0.15",

@@ -1,3 +1,4 @@
+import type { Readable } from 'node:stream'
 import type { MultipartFile } from '@fastify/multipart'
 import { BadRequestException, Injectable } from '@nestjs/common'
 import type { FastifyRequest } from 'fastify'
@@ -25,5 +26,20 @@ export class UploadService {
     }
 
     return data
+  }
+
+  public async getFileBuffer(stream: Readable): Promise<Buffer> {
+    const chunks: Buffer[] = []
+    return new Promise((resolve, reject) => {
+      stream.on('data', (chunk: Buffer) => {
+        chunks.push(chunk)
+      })
+      stream.on('end', () => {
+        resolve(Buffer.concat(chunks))
+      })
+      stream.on('error', (error) => {
+        reject(error)
+      })
+    })
   }
 }

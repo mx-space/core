@@ -161,7 +161,83 @@ export class S3Uploader {
     })
 
     if (!response.ok) {
-      throw new Error(`Upload failed with status code: ${response.status}`)
+      const errorText = await response.text()
+      throw new Error(
+        `Upload failed with status code: ${response.status}, message: ${errorText}`,
+      )
+    }
+  }
+
+  async deleteFromS3(objectKey: string): Promise<void> {
+    const service = 's3'
+    const date = new Date()
+    const xAmzDate = date.toISOString().replaceAll(/[:-]|\.\d{3}/g, '')
+    const dateStamp = xAmzDate.slice(0, 8) // YYYYMMDD
+
+    const hashedPayload = crypto.createHash('sha256').update('').digest('hex')
+
+    const url = new URL(this.endpoint)
+    const host = url.host
+
+    const headers: Record<string, string> = {
+      Host: host,
+      'x-amz-date': xAmzDate,
+      'x-amz-content-sha256': hashedPayload,
+    }
+
+    const sortedHeaders = Object.keys(headers).sort()
+    const canonicalHeaders = sortedHeaders
+      .map((key) => `${key.toLowerCase()}:${headers[key].trim()}`)
+      .join('\n')
+    const signedHeaders = sortedHeaders
+      .map((key) => key.toLowerCase())
+      .join(';')
+
+    const canonicalRequest = [
+      'DELETE',
+      `/${this.bucket}/${objectKey}`,
+      '',
+      String(canonicalHeaders),
+      '',
+      signedHeaders,
+      hashedPayload,
+    ].join('\n')
+
+    const algorithm = 'AWS4-HMAC-SHA256'
+    const credentialScope = `${dateStamp}/${this.region}/${service}/aws4_request`
+    const hashedCanonicalRequest = crypto
+      .createHash('sha256')
+      .update(canonicalRequest)
+      .digest('hex')
+    const stringToSign = [
+      algorithm,
+      xAmzDate,
+      credentialScope,
+      hashedCanonicalRequest,
+    ].join('\n')
+
+    const kSecret = Buffer.from(`AWS4${this.secretKey}`)
+    const kDate = this.hmacSha256(kSecret, dateStamp)
+    const kRegion = this.hmacSha256(kDate, this.region)
+    const kService = this.hmacSha256(kRegion, service)
+    const kSigning = this.hmacSha256(kService, 'aws4_request')
+    const signature = this.hmacSha256(kSigning, stringToSign).toString('hex')
+    const authorization = `${algorithm} Credential=${this.accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
+    const requestUrl = `${this.endpoint}/${this.bucket}/${objectKey}`
+
+    const response = await fetch(requestUrl, {
+      method: 'DELETE',
+      headers: {
+        ...headers,
+        Authorization: authorization,
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(
+        `Delete failed with status code: ${response.status}, message: ${errorText}`,
+      )
     }
   }
 }
