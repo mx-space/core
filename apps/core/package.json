@@ -152,7 +152,7 @@
     "@types/ua-parser-js": "0.7.39",
     "@types/validator": "13.15.10",
     "@vercel/ncc": "0.38.4",
-    "ioredis": "5.9.0",
+    "ioredis": "5.9.1",
     "mongodb-memory-server": "^11.0.1",
     "redis-memory-server": "^0.14.1",
     "rimraf": "6.1.2",
