@@ -166,8 +166,8 @@ importers:
         specifier: 9.0.10
         version: 9.0.10
       ai:
-        specifier: 5.0.117
-        version: 5.0.117(zod@3.25.76)
+        specifier: 5.0.118
+        version: 5.0.118(zod@3.25.76)
       algoliasearch:
         specifier: 4.24.0
         version: 4.24.0
@@ -3016,8 +3016,8 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  ai@5.0.117:
-    resolution: {integrity: sha512-uE6HNkdSwxbeHGKP/YbvapwD8fMOpj87wyfT9Z00pbzOh2fpnw5acak/4kzU00SX2vtI9K0uuy+9Tf9ytw5RwA==}
+  ai@5.0.118:
+    resolution: {integrity: sha512-sKJHfhJkvAyq5NC3yJJ4R8Z3tn4pSHF760/jInKAtmLwPLWTHfGo293DSO4un8QUAgJOagHd09VSXOXv+STMNQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 3.25.76
@@ -9659,7 +9659,7 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai@5.0.117(zod@3.25.76):
+  ai@5.0.118(zod@3.25.76):
     dependencies:
       '@ai-sdk/gateway': 2.0.24(zod@3.25.76)
       '@ai-sdk/provider': 2.0.1
