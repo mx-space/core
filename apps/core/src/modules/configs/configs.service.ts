@@ -140,25 +140,53 @@ export class ConfigsService {
     }
   }
 
+  private removeUndefinedValues<T>(obj: T): T {
+    if (obj === null || typeof obj !== 'object') {
+      return obj
+    }
+
+    if (Array.isArray(obj)) {
+      return obj as T
+    }
+
+    const result = {} as T
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        result[key as keyof T] =
+          typeof value === 'object' && value !== null
+            ? this.removeUndefinedValues(value)
+            : value
+      }
+    }
+    return result
+  }
+
   private async patch<T extends keyof IConfig>(
     key: T,
     data: Partial<IConfig[T]>,
   ): Promise<IConfig[T]> {
     const config = await this.getConfig()
+
+    const filteredData = this.removeUndefinedValues(data)
+
     const updatedConfigRow = await this.optionModel
       .findOneAndUpdate(
         { name: key as string },
         {
-          value: mergeWith(cloneDeep(config[key]), data, (old, newer) => {
-            // 数组不合并
-            if (Array.isArray(old)) {
-              return newer
-            }
-            // 对象合并
-            if (typeof old === 'object' && typeof newer === 'object') {
-              return { ...old, ...newer }
-            }
-          }),
+          value: mergeWith(
+            cloneDeep(config[key]),
+            filteredData,
+            (old, newer) => {
+              // 数组不合并
+              if (Array.isArray(old)) {
+                return newer
+              }
+              // 对象合并
+              if (typeof old === 'object' && typeof newer === 'object') {
+                return { ...old, ...newer }
+              }
+            },
+          ),
         },
         { upsert: true, new: true },
       )

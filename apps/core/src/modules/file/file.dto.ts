@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator'
+import { IsEnum, IsIn, IsOptional, IsString } from 'class-validator'
 import { FileType, FileTypeEnum } from './file.type'
 
 export class FileQueryDto {
@@ -6,6 +6,16 @@ export class FileQueryDto {
   type: FileType
   @IsString()
   name: string
+}
+
+export class FileDeleteQueryDto {
+  @IsOptional()
+  @IsIn(['local', 's3'])
+  storage?: 'local' | 's3'
+
+  @IsOptional()
+  @IsString()
+  url?: string
 }
 
 export class FileUploadDto {

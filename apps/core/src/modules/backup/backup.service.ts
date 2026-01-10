@@ -279,7 +279,7 @@ export class BackupService {
   }
 
   @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'backupDB' })
-  @CronDescription('备份 DB 并上传 COS')
+  @CronDescription('备份 DB 并上传 S3')
   async backupDB() {
     const backup = await this.backup()
     if (!backup) {
@@ -288,26 +288,44 @@ export class BackupService {
     }
 
     scheduleManager.schedule(async () => {
-      const { backupOptions } = await this.configs.waitForConfigReady()
+      const { backupOptions, s3Options } =
+        await this.configs.waitForConfigReady()
 
-      const { endpoint, bucket, region, secretId, secretKey } =
-        backupOptions || {}
-      if (!endpoint || !bucket || !region || !secretId || !secretKey) {
+      if (!backupOptions?.enable) {
+        this.logger.log('未启用 S3 备份')
+        return
+      }
+
+      const { endpoint, bucket, region, accessKeyId, secretAccessKey } =
+        s3Options || {}
+      if (!endpoint || !bucket || !region || !accessKeyId || !secretAccessKey) {
+        this.logger.warn('S3 配置不完整，无法上传备份')
         return
       }
 
       const s3 = new S3Uploader({
         bucket,
         region,
-        accessKey: secretId,
-        secretKey,
+        accessKey: accessKeyId,
+        secretKey: secretAccessKey,
         endpoint,
       })
 
-      const remoteFileKey = backup.path.slice(backup.path.lastIndexOf('/') + 1)
-      this.logger.log('--> 开始上传到 S3')
+      if (s3Options.customDomain) {
+        s3.setCustomDomain(s3Options.customDomain)
+      }
+
+      const { parsePlaceholder } = await import('~/utils/path-placeholder.util')
+      const localFilename = backup.path.slice(backup.path.lastIndexOf('/') + 1)
+      const remotePath = backupOptions.path || 'backups/{Y}/{m}/{filename}'
+      const remoteFileKey = parsePlaceholder(remotePath, {
+        filename: localFilename,
+      })
+
+      this.logger.log(`--> 开始上传到 S3: ${remoteFileKey}`)
       await s3.uploadFile(backup.buffer, remoteFileKey).catch((error) => {
-        this.logger.error('--> 上传失败了')
+        this.logger.error('--> 上传失败')
+        this.logger.error(error)
         throw error
       })
 

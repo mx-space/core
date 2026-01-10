@@ -76,9 +76,15 @@ export class UrlDto {
 }
 
 class MailOption {
-  @IsInt()
-  @Transform(({ value: val }) => Number.parseInt(val))
   @IsOptional()
+  @Transform(
+    ({ value }) => {
+      if (value === undefined || value === null) return undefined
+      return typeof value === 'number' ? value : Number.parseInt(value, 10)
+    },
+    { toClassOnly: true },
+  )
+  @IsInt()
   @JSONSchemaNumberField('SMTP 端口', halfFieldOption)
   port: number
   @IsUrl({ require_protocol: false })
@@ -150,11 +156,17 @@ export class CommentOptionsDto {
   })
   aiReviewType: 'binary' | 'score'
 
+  @IsOptional()
+  @Transform(
+    ({ value }) => {
+      if (value === undefined || value === null) return undefined
+      return typeof value === 'number' ? value : Number.parseInt(value, 10)
+    },
+    { toClassOnly: true },
+  )
   @IsInt()
-  @Transform(({ value: val }) => Number.parseInt(val))
   @Min(1)
   @Max(10)
-  @IsOptional()
   @JSONSchemaNumberField('AI 审核阈值', {
     description: '分数大于多少时会被归类为垃圾评论，范围为 1-10, 默认为 5',
   })
@@ -193,40 +205,112 @@ export class CommentOptionsDto {
   recordIpLocation?: boolean
 }
 
-@JSONSchema({ title: '备份' })
-export class BackupOptionsDto {
-  @IsBoolean()
-  @IsOptional()
-  @JSONSchemaToggleField('开启自动备份', {
-    description: '填写以下 S3 信息，将同时上传备份到 S3',
-  })
-  enable: boolean
-
+@JSONSchema({ title: 'S3 对象存储设置' })
+export class S3OptionsDto {
   @IsString()
   @IsOptional()
-  @JSONSchemaPlainField('S3 服务端点')
+  @JSONSchemaPlainField('S3 服务端点', {
+    description:
+      '例如：https://s3.amazonaws.com 或 https://oss-cn-hangzhou.aliyuncs.com',
+  })
   endpoint?: string
 
   @IsString()
   @IsOptional()
-  @JSONSchemaHalfGirdPlainField('SecretId')
-  secretId?: string
+  @JSONSchemaHalfGirdPlainField('Access Key ID / SecretId')
+  accessKeyId?: string
 
   @IsOptional()
   @IsString()
-  @JSONSchemaPasswordField('SecretKey', halfFieldOption)
+  @JSONSchemaPasswordField('Secret Access Key / SecretKey', halfFieldOption)
   @SecretField
-  secretKey?: string
+  secretAccessKey?: string
 
   @IsOptional()
   @IsString()
-  @JSONSchemaHalfGirdPlainField('Bucket')
+  @JSONSchemaHalfGirdPlainField('Bucket 名称')
   bucket?: string
 
   @IsString()
   @IsOptional()
   @JSONSchemaHalfGirdPlainField('地域 Region')
-  region: string
+  region?: string
+
+  @IsString()
+  @IsOptional()
+  @JSONSchemaPlainField('自定义域名', {
+    description:
+      '如果配置了 CDN 或自定义域名，填写此项；留空则使用默认的 S3 URL',
+  })
+  customDomain?: string
+
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('路径风格访问', {
+    description:
+      '启用路径风格访问（Path-style），适用于 MinIO 等兼容 S3 的服务',
+  })
+  pathStyleAccess?: boolean
+}
+
+@JSONSchema({ title: '备份设置' })
+export class BackupOptionsDto {
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('开启自动备份到 S3', {
+    description: '需要先配置 S3 对象存储设置',
+  })
+  enable: boolean
+
+  @IsString()
+  @IsOptional()
+  @JSONSchemaPlainField('备份文件路径', {
+    description:
+      '支持占位符：{Y}年4位 {y}年2位 {m}月 {d}日 {h}时 {i}分 {s}秒 {timestamp}时间戳 {uuid} {md5} 等',
+  })
+  path?: string
+}
+
+@JSONSchema({ title: '图床设置' })
+export class ImageBedOptionsDto {
+  @IsBoolean()
+  @IsOptional()
+  @JSONSchemaToggleField('启用 S3 图床', {
+    description:
+      '启用后，编辑器上传的图片将存储到 S3；需要先配置 S3 对象存储设置',
+  })
+  enable: boolean
+
+  @IsString()
+  @IsOptional()
+  @JSONSchemaPlainField('图片存储路径', {
+    description:
+      '支持占位符：{Y}年4位 {y}年2位 {m}月 {d}日 {h}时 {i}分 {s}秒 {timestamp}时间戳 {uuid} {md5} {md5-16} {str-N}随机字符串 {filename}原文件名',
+  })
+  path?: string
+
+  @IsString()
+  @IsOptional()
+  @JSONSchemaPlainField('允许的图片格式', {
+    description: '逗号分隔，例如：jpg,jpeg,png,gif,webp',
+  })
+  allowedFormats?: string
+
+  @IsOptional()
+  @Transform(
+    ({ value }) => {
+      if (value === undefined || value === null) return undefined
+      return typeof value === 'number' ? value : Number.parseInt(value, 10)
+    },
+    { toClassOnly: true },
+  )
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @JSONSchemaNumberField('最大文件大小（MB）', {
+    description: '单个图片文件的最大大小限制，单位：MB',
+  })
+  maxSizeMB?: number
 }
 
 @JSONSchema({ title: '百度推送设定' })
