@@ -37,7 +37,7 @@
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
     "typescript": "5.9.3",
-    "vite-tsconfig-paths": "6.0.3",
+    "vite-tsconfig-paths": "6.0.4",
     "zx-cjs": "7.0.7-0"
   },
   "resolutions": {
