@@ -125,13 +125,13 @@ export class CommentService implements OnModuleInit {
     aiReviewType: 'binary' | 'score',
     aiReviewThreshold: number,
   ): Promise<boolean> {
-    const model = await this.aiService.getOpenAiModel()
+    const model = await this.aiService.getCommentReviewModel()
 
     // 评分模式
     if (aiReviewType === 'score') {
       try {
         const { object } = await generateObject({
-          model,
+          model: model as Parameters<typeof generateObject>[0]['model'],
           schema: z.object({
             score: z.number().describe(AI_PROMPTS.comment.score.schema.score),
             hasSensitiveContent: z
@@ -156,7 +156,7 @@ export class CommentService implements OnModuleInit {
     else {
       try {
         const { object } = await generateObject({
-          model,
+          model: model as Parameters<typeof generateObject>[0]['model'],
           schema: z.object({
             isSpam: z.boolean().describe(AI_PROMPTS.comment.spam.schema.isSpam),
             hasSensitiveContent: z

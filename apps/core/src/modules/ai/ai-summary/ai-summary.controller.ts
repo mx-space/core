@@ -10,13 +10,9 @@ import {
 } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { FastifyBizRequest } from '~/transformers/get-req.transformer'
-import { ConfigsService } from '../../configs/configs.service'
-import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
 import {
   GenerateAiSummaryDto,
   GetSummaryQueryDto,
@@ -26,10 +22,7 @@ import { AiSummaryService } from './ai-summary.service'
 
 @ApiController('ai/summaries')
 export class AiSummaryController {
-  constructor(
-    private readonly service: AiSummaryService,
-    private readonly configService: ConfigsService,
-  ) {}
+  constructor(private readonly service: AiSummaryService) {}
 
   @Post('/generate')
   @Auth()
@@ -70,38 +63,12 @@ export class AiSummaryController {
     @Query() query: GetSummaryQueryDto,
     @Req() req: FastifyBizRequest,
   ) {
-    const acceptLang = req.headers['accept-language']
-    const nextLang = query.lang || acceptLang
-    const autoDetectedLanguage =
-      nextLang?.split('-').shift() || DEFAULT_SUMMARY_LANG
-    const targetLanguage = await this.configService
-      .get('ai')
-      .then((c) => c.aiSummaryTargetLanguage)
-      .then((targetLanguage) =>
-        targetLanguage === 'auto' ? autoDetectedLanguage : targetLanguage,
-      )
+    const acceptLanguage = req.headers['accept-language']
 
-    const dbStored = await this.service.getSummaryByArticleId(
-      params.id,
-      targetLanguage,
-    )
-
-    const aiConfig = await this.configService.get('ai')
-    if (!dbStored && !query.onlyDb) {
-      const shouldGenerate =
-        aiConfig?.enableAutoGenerateSummary && aiConfig.enableSummary
-      if (shouldGenerate) {
-        return this.service.generateSummaryByOpenAI(params.id, targetLanguage)
-      }
-    }
-
-    if (
-      !dbStored &&
-      (!aiConfig.enableSummary || !aiConfig.enableAutoGenerateSummary)
-    ) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
-    }
-
-    return dbStored
+    return this.service.getOrGenerateSummaryForArticle(params.id, {
+      preferredLang: query.lang,
+      acceptLanguage,
+      onlyDb: query.onlyDb,
+    })
   }
 }

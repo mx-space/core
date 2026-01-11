@@ -22,8 +22,8 @@ export const uploadFileToCOS = async (
   const endpoint = `https://${bucket}.cos.${region}.myqcloud.com`
 
   const now = Date.now()
-  const startTime = now / 1000,
-    expireTime = now / 1000 + 900
+  const startTime = now / 1000
+  const expireTime = now / 1000 + 900
   const keytime = `${startTime};${expireTime}`
   const tickets = [
     {

@@ -6,6 +6,7 @@ import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
+import type { AIProviderConfig } from '~/modules/ai/ai.types'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
@@ -184,6 +185,10 @@ export class ConfigsService {
   ) {
     value = camelcaseKeys(value) as any
 
+    if (key === 'ai') {
+      value = await this.hydrateAiProviderApiKeys(value as any)
+    }
+
     const dto = configDtoMapping[key]
     if (!dto) {
       throw new BadRequestException('设置不存在')
@@ -191,10 +196,10 @@ export class ConfigsService {
     // 如果是评论设置，并且尝试启用 AI 审核，就检查 AI 配置
     if (key === 'commentOptions' && (value as any).aiReview === true) {
       const aiConfig = await this.get('ai')
-      const { openAiEndpoint, openAiKey } = aiConfig
-      if (!openAiEndpoint || !openAiKey) {
+      const hasEnabledProvider = aiConfig.providers?.some((p) => p.enabled)
+      if (!hasEnabledProvider) {
         throw new BadRequestException(
-          'OpenAI API Key/Endpoint 未设置，无法启用 AI 评论审核',
+          '没有配置启用的 AI Provider，无法启用 AI 评论审核',
         )
       }
     }
@@ -295,5 +300,51 @@ export class ConfigsService {
       throw error
     }
     return validModel
+  }
+
+  public async getAiProviderById(
+    providerId?: string,
+  ): Promise<AIProviderConfig | null> {
+    if (!providerId) {
+      return null
+    }
+
+    const row = await this.optionModel.findOne({ name: 'ai' }).lean()
+    const providers = row?.value?.providers as AIProviderConfig[] | undefined
+    const storedProvider = providers?.find((p) => p.id === providerId)
+
+    if (storedProvider) {
+      return storedProvider
+    }
+
+    const cached = await this.get('ai')
+    const cachedProvider = cached.providers?.find((p) => p.id === providerId)
+
+    return cachedProvider || null
+  }
+
+  private async hydrateAiProviderApiKeys(value: any) {
+    if (!value || !Array.isArray(value.providers)) {
+      return value
+    }
+
+    const current = await this.get('ai')
+    if (!current?.providers?.length) {
+      return value
+    }
+
+    const providerMap = new Map(current.providers.map((p) => [p.id, p]))
+    const providers = value.providers.map((provider: any) => {
+      if (provider?.apiKey) {
+        return provider
+      }
+      const existing = providerMap.get(provider?.id)
+      if (existing?.apiKey) {
+        return { ...provider, apiKey: existing.apiKey }
+      }
+      return provider
+    })
+
+    return { ...value, providers }
   }
 }

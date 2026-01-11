@@ -86,13 +86,13 @@ export const generateDefaultConfig: () => IConfig = () => ({
     disablePasswordLogin: false,
   },
   ai: {
-    enableAutoGenerateSummary: false,
+    providers: [],
+    summaryModel: undefined,
+    writerModel: undefined,
+    commentReviewModel: undefined,
     enableSummary: false,
-    openAiEndpoint: '',
-    openAiPreferredModel: 'gpt-5o-mini',
-    openAiKey: '',
+    enableAutoGenerateSummary: false,
     aiSummaryTargetLanguage: 'auto',
-    enableDeepReading: false,
   },
   oauth: {
     providers: [],

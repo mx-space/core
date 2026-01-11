@@ -1,9 +1,12 @@
 import { IsAllowedUrl } from '~/decorators/dto/isAllowedUrl'
+import { AIProviderType } from '~/modules/ai/ai.types'
 import { Exclude, Transform, Type } from 'class-transformer'
 import {
   ArrayUnique,
+  IsArray,
   IsBoolean,
   IsEmail,
+  IsEnum,
   IsInt,
   IsIP,
   IsNotEmpty,
@@ -420,23 +423,96 @@ export class AuthSecurityDto {
   @IsOptional()
   disablePasswordLogin: boolean
 }
+@JSONSchema({ title: 'AI Provider 配置', 'ui:options': { type: 'hidden' } })
+class AIProviderConfigDto {
+  @IsString()
+  @IsNotEmpty()
+  @JSONSchemaPlainField('Provider ID', {
+    description: '唯一标识符，如 "openai-main", "deepseek"',
+  })
+  id: string
+
+  @IsString()
+  @IsNotEmpty()
+  @JSONSchemaPlainField('显示名称')
+  name: string
+
+  @IsEnum(AIProviderType)
+  @JSONSchemaPlainField('Provider 类型', {
+    description: 'openai | openai-compatible | anthropic | openrouter',
+  })
+  type: AIProviderType
+
+  @IsString()
+  @IsNotEmpty()
+  @JSONSchemaPasswordField('API Key')
+  @SecretField
+  apiKey: string
+
+  @IsOptional()
+  @IsString()
+  @JSONSchemaPlainField('自定义 Endpoint', {
+    description: 'OpenAI 兼容服务必填，如 https://api.deepseek.com',
+  })
+  endpoint?: string
+
+  @IsString()
+  @IsNotEmpty()
+  @JSONSchemaPlainField('默认模型', {
+    description: '如 gpt-4o, deepseek-chat, claude-sonnet-4-20250514',
+  })
+  defaultModel: string
+
+  @IsBoolean()
+  @JSONSchemaToggleField('启用')
+  enabled: boolean
+}
+
+@JSONSchema({ title: 'AI 模型分配', 'ui:options': { type: 'hidden' } })
+class AIModelAssignmentDto {
+  @IsOptional()
+  @IsString()
+  @JSONSchemaPlainField('Provider ID', {
+    description: '指向 providers 中某个 provider 的 id',
+  })
+  providerId?: string
+
+  @IsOptional()
+  @IsString()
+  @JSONSchemaPlainField('模型覆盖', {
+    description: '覆盖 provider 的默认模型，留空使用 provider 默认值',
+  })
+  model?: string
+}
+
 @JSONSchema({ title: 'AI 设定' })
 export class AIDto {
   @IsOptional()
-  @JSONSchemaPasswordField('OpenAI Key')
-  @IsString()
-  @SecretField
-  openAiKey: string
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AIProviderConfigDto)
+  @JSONSchemaArrayField('AI Providers', {
+    description: '配置多个 AI 服务提供商',
+  })
+  providers: AIProviderConfigDto[]
 
   @IsOptional()
-  @IsString()
-  @JSONSchemaPlainField('OpenAI Endpoint')
-  openAiEndpoint: string
+  @ValidateNested()
+  @Type(() => AIModelAssignmentDto)
+  @JSONSchemaPlainField('摘要功能模型')
+  summaryModel?: AIModelAssignmentDto
 
   @IsOptional()
-  @IsString()
-  @JSONSchemaPlainField('OpenAI 默认模型')
-  openAiPreferredModel: string
+  @ValidateNested()
+  @Type(() => AIModelAssignmentDto)
+  @JSONSchemaPlainField('写作助手模型')
+  writerModel?: AIModelAssignmentDto
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => AIModelAssignmentDto)
+  @JSONSchemaPlainField('评论审核模型')
+  commentReviewModel?: AIModelAssignmentDto
 
   @IsBoolean()
   @IsOptional()
@@ -452,13 +528,6 @@ export class AIDto {
       '此选项开启后，将会在文章发布后自动生成摘要，需要开启上面的选项，否则无效',
   })
   enableAutoGenerateSummary: boolean
-
-  @IsBoolean()
-  @IsOptional()
-  @JSONSchemaToggleField('开启 AI 深度阅读', {
-    description: '是否开启调用 AI 去生成深度阅读',
-  })
-  enableDeepReading: boolean
 
   @IsString()
   @IsOptional()

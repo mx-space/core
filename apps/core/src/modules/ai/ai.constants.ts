@@ -1,6 +1,15 @@
 export const DEFAULT_SUMMARY_LANG = 'zh'
 
-export const LANGUAGE_CODE_TO_NAME = {
+/** Redis lock TTL for AI processing tasks (in seconds) */
+export const AI_TASK_LOCK_TTL = 30
+
+/** Maximum word count for AI-generated summaries */
+export const AI_SUMMARY_MAX_WORDS = 150
+
+/** Maximum character length for fallback slug generation */
+export const AI_FALLBACK_SLUG_MAX_LENGTH = 50
+
+export const LANGUAGE_CODE_TO_NAME: Record<string, string> = {
   ar: 'Arabic',
   bg: 'Bulgarian',
   cs: 'Czech',

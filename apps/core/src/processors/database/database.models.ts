@@ -17,7 +17,6 @@ import { ServerlessStorageModel } from '~/modules/serverless/serverless.model'
 import { SlugTrackerModel } from '~/modules/slug-tracker/slug-tracker.model'
 import { SnippetModel } from '~/modules/snippet/snippet.model'
 import { SubscribeModel } from '~/modules/subscribe/subscribe.model'
-import { SyncUpdateModel } from '~/modules/sync-update/sync-update.model'
 import { TopicModel } from '~/modules/topic/topic.model'
 import { UserModel } from '~/modules/user/user.model'
 import { WebhookEventModel } from '~/modules/webhook/webhook-event.model'
@@ -44,7 +43,6 @@ export const databaseModels = [
   SlugTrackerModel,
   SnippetModel,
   SubscribeModel,
-  SyncUpdateModel,
   TopicModel,
   UserModel,
   WebhookEventModel,

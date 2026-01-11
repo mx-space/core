@@ -14,7 +14,7 @@ import { md5 } from '~/utils/tool.util'
 import { generateObject } from 'ai'
 import removeMdCodeblock from 'remove-md-codeblock'
 import { ConfigsService } from '../../configs/configs.service'
-import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
+import { AI_TASK_LOCK_TTL, DEFAULT_SUMMARY_LANG } from '../ai.constants'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { AISummaryModel } from './ai-summary.model'
@@ -34,30 +34,17 @@ export class AiSummaryService {
     this.logger = new Logger(AiSummaryService.name)
   }
 
-  private cachedTaskId2AiPromise = new Map<string, Promise<any>>()
+  private cachedTaskId2AiPromise = new Map<string, Promise<AISummaryModel>>()
 
   private serializeText(text: string) {
     return removeMdCodeblock(text)
   }
 
-  private async summaryChain(articleId: string, lang = DEFAULT_SUMMARY_LANG) {
-    const {
-      ai: { enableSummary },
-    } = await this.configService.waitForConfigReady()
-
-    if (!enableSummary) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
-    }
-
-    const model = await this.aiService.getOpenAiModel()
-
-    const article = await this.databaseService.findGlobalById(articleId)
-    if (!article || article.type === CollectionRefTypes.Recently) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
-    }
+  private async generateSummaryViaAI(text: string, lang: string) {
+    const model = await this.aiService.getSummaryModel()
 
     const { object } = await generateObject({
-      model,
+      model: model as Parameters<typeof generateObject>[0]['model'],
       schema: z.object({
         summary: z
           .string()
@@ -65,7 +52,7 @@ export class AiSummaryService {
       }),
       prompt: AI_PROMPTS.summary.getSummaryPrompt(
         lang,
-        this.serializeText(article.document.text),
+        this.serializeText(text),
       ),
       temperature: 0.5,
       maxRetries: 2,
@@ -107,17 +94,15 @@ export class AiSummaryService {
       const taskPromise = handle.bind(this)(
         articleId,
         this.serializeText(article.document.text),
-        article.document.title,
-      ) as Promise<any>
+      )
 
       this.cachedTaskId2AiPromise.set(taskId, taskPromise)
       return await taskPromise
 
       async function handle(this: AiSummaryService, id: string, text: string) {
-        // 等待 30s
-        await redis.set(taskId, 'processing', 'EX', 30)
+        await redis.set(taskId, 'processing', 'EX', AI_TASK_LOCK_TTL)
 
-        const summary = await this.summaryChain(id, lang)
+        const summary = await this.generateSummaryViaAI(text, lang)
 
         const contentMd5 = md5(text)
 
@@ -133,9 +118,8 @@ export class AiSummaryService {
     } catch (error) {
       this.logger.error(
         `OpenAI 在处理文章 ${articleId} 时出错：${error.message}`,
+        error.stack,
       )
-
-      console.error(error)
 
       throw new BizException(ErrorCodeEnum.AIException, error.message)
     } finally {
@@ -235,6 +219,54 @@ export class AiSummaryService {
     })
 
     return doc
+  }
+
+  async getOrGenerateSummaryForArticle(
+    articleId: string,
+    options: {
+      preferredLang?: string
+      acceptLanguage?: string
+      onlyDb?: boolean
+    },
+  ) {
+    const { preferredLang, acceptLanguage, onlyDb } = options
+
+    const nextLang = preferredLang || acceptLanguage
+    const autoDetectedLanguage =
+      nextLang?.split('-').shift() || DEFAULT_SUMMARY_LANG
+
+    const aiSummaryTargetLanguage = await this.configService
+      .get('ai')
+      .then((c) => c.aiSummaryTargetLanguage)
+
+    const targetLanguage =
+      aiSummaryTargetLanguage === 'auto'
+        ? autoDetectedLanguage
+        : aiSummaryTargetLanguage
+
+    const dbStored = await this.getSummaryByArticleId(articleId, targetLanguage)
+
+    if (dbStored) {
+      return dbStored
+    }
+
+    if (onlyDb) {
+      return null
+    }
+
+    const aiConfig = await this.configService.get('ai')
+    const shouldGenerate =
+      aiConfig?.enableAutoGenerateSummary && aiConfig.enableSummary
+
+    if (shouldGenerate) {
+      return this.generateSummaryByOpenAI(articleId, targetLanguage)
+    }
+
+    if (!aiConfig.enableSummary || !aiConfig.enableAutoGenerateSummary) {
+      throw new BizException(ErrorCodeEnum.AINotEnabled)
+    }
+
+    return null
   }
 
   async deleteSummaryByArticleId(articleId: string) {
