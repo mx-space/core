@@ -22,7 +22,12 @@ import { UploadService } from '~/processors/helper/helper.upload.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
-import { FileQueryDto, FileUploadDto, RenameFileQueryDto } from './file.dto'
+import {
+  FileDeleteQueryDto,
+  FileQueryDto,
+  FileUploadDto,
+  RenameFileQueryDto,
+} from './file.dto'
 import { FileService } from './file.service'
 
 const { customAlphabet } = nanoid
@@ -95,19 +100,50 @@ export class FileController {
     const ext = path.extname(file.filename)
     const filename = customAlphabet(alphabet)(18) + ext.toLowerCase()
 
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']
+    const isImage = imageExtensions.includes(ext.toLowerCase())
+
+    if (isImage && type === 'photo') {
+      const buffer = await this.uploadService.getFileBuffer(file.file)
+
+      await this.service.validateImageFile(filename, buffer)
+      const s3Url = await this.service.uploadImageToS3(filename, buffer)
+
+      if (s3Url) {
+        return {
+          url: s3Url,
+          name: filename,
+          storage: 's3',
+        }
+      }
+
+      await this.service.writeFileFromBuffer(type, filename, buffer)
+
+      return {
+        url: await this.service.resolveFileUrl(type, filename),
+        name: filename,
+        storage: 'local',
+      }
+    }
+
     await this.service.writeFile(type, filename, file.file)
 
     return {
       url: await this.service.resolveFileUrl(type, filename),
       name: filename,
+      storage: 'local',
     }
   }
 
   @Delete('/:type/:name')
   @Auth()
-  async delete(@Param() params: FileQueryDto) {
+  async delete(
+    @Param() params: FileQueryDto,
+    @Query() query: FileDeleteQueryDto,
+  ) {
     const { type, name } = params
-    await this.service.deleteFile(type, name)
+    const { storage, url } = query
+    await this.service.deleteFile(type, name, storage, url)
   }
 
   @Auth()

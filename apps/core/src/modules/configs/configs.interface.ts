@@ -18,8 +18,10 @@ import {
   CommentOptionsDto,
   FeatureListDto,
   FriendLinkOptionsDto,
+  ImageBedOptionsDto,
   MailOptionsDto,
   OAuthDto,
+  S3OptionsDto,
   SeoDto,
   TextOptionsDto,
   ThirdPartyServiceIntegrationDto,
@@ -63,8 +65,15 @@ export abstract class IConfig {
   @ConfigField(() => FriendLinkOptionsDto)
   friendLinkOptions: Required<FriendLinkOptionsDto>
 
+  @ConfigField(() => S3OptionsDto)
+  s3Options: Required<S3OptionsDto>
+
   @ConfigField(() => BackupOptionsDto)
   backupOptions: Required<BackupOptionsDto>
+
+  @ConfigField(() => ImageBedOptionsDto)
+  imageBedOptions: Required<ImageBedOptionsDto>
+
   @ConfigField(() => BaiduSearchOptionsDto)
   baiduSearchOptions: Required<BaiduSearchOptionsDto>
   @ConfigField(() => BingSearchOptionsDto)
