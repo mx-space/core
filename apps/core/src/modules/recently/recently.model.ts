@@ -29,6 +29,10 @@ export class RecentlyModel extends BaseCommentIndexModel {
   @prop({ type: String })
   refType: CollectionRefTypes
 
+  @prop()
+  @IsOptional()
+  modified?: Date
+
   /**
    * 顶
    */

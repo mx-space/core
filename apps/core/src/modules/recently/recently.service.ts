@@ -331,6 +331,40 @@ export class RecentlyService {
     return isDeleted
   }
 
+  async update(id: string, model: Partial<RecentlyModel>) {
+    const res = await this.model.findByIdAndUpdate(
+      id,
+      { content: model.content, modified: new Date() },
+      { new: true },
+    )
+
+    if (!res) {
+      return null
+    }
+
+    const withRef = await this.model
+      .findById(res._id)
+      .populate([
+        {
+          path: 'ref',
+          select: '-text',
+        },
+      ])
+      .lean()
+
+    scheduleManager.schedule(async () => {
+      await this.eventManager.broadcast(
+        BusinessEvents.RECENTLY_UPDATE,
+        withRef,
+        {
+          scope: EventScope.TO_SYSTEM_VISITOR,
+        },
+      )
+    })
+
+    return withRef
+  }
+
   async updateAttitude({
     id,
     attitude,
