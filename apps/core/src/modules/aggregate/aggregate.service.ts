@@ -31,8 +31,8 @@ import { PostService } from '../post/post.service'
 import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
 import { UserService } from '../user/user.service'
-import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.dto'
 import type { RSSProps } from './aggregate.interface'
+import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.schema'
 
 @Injectable()
 export class AggregateService {

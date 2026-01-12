@@ -17,7 +17,7 @@ import {
   ReadAndLikeCountTypeDto,
   TimelineQueryDto,
   TopQueryDto,
-} from './aggregate.dto'
+} from './aggregate.schema'
 import { AggregateService } from './aggregate.service'
 
 @ApiController('aggregate')

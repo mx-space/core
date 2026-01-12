@@ -114,6 +114,7 @@
     "mongoose-lean-getters": "2.2.2",
     "mongoose-lean-virtuals": "2.0.1",
     "mongoose-paginate-v2": "1.9.1",
+    "nestjs-zod": "^5.1.1",
     "node-machine-id": "1.1.12",
     "nodemailer": "7.0.12",
     "openai": "5.23.2",
@@ -131,6 +132,8 @@
     "vm2": "3.9.19",
     "wildcard-match": "5.1.4",
     "xss": "1.0.15",
+    "zod": "3.25.76",
+    "zod-to-json-schema": "^3.25.1",
     "zx-cjs": "7.0.7-0"
   },
   "devDependencies": {

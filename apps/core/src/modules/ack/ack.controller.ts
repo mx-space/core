@@ -1,25 +1,25 @@
-import { Body, HttpCode, Inject, Post, Res } from '@nestjs/common'
+import {
+  Body,
+  HttpCode,
+  Post,
+  Res,
+  UnprocessableEntityException,
+} from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Cookies } from '~/common/decorators/cookie.decorator'
-import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import type { CountModel } from '~/shared/model/count.model'
-import { plainToInstance } from 'class-transformer'
-import { validateSync } from 'class-validator'
 import { FastifyReply } from 'fastify'
-import { AckDto, AckEventType, AckReadPayloadDto } from './ack.dto'
+import { AckDto, AckEventType, AckReadPayloadSchema } from './ack.schema'
 
 @ApiController('ack')
 export class AckController {
   constructor(
     private readonly cacheService: CacheService,
     private readonly countingService: CountingService,
-    @Inject(VALIDATION_PIPE_INJECTION)
-    private readonly validatePipe: ExtendedValidationPipe,
 
     private readonly webGateway: WebEventsGateway,
   ) {}
@@ -35,19 +35,16 @@ export class AckController {
 
     switch (type) {
       case AckEventType.READ: {
-        const validPayload = plainToInstance(AckReadPayloadDto, payload)
-        const errors = validateSync(
-          validPayload,
-          ExtendedValidationPipe.options,
-        )
-        if (errors.length > 0) {
-          const error = this.validatePipe.createExceptionFactory()(
-            errors as any[],
-          )
-          throw error
+        const result = AckReadPayloadSchema.safeParse(payload)
+        if (!result.success) {
+          const errorMessages = result.error.errors.map((err) => {
+            const path = err.path.join('.')
+            return path ? `${path}: ${err.message}` : err.message
+          })
+          throw new UnprocessableEntityException(errorMessages.join('; '))
         }
 
-        const { id, type } = validPayload
+        const { id, type } = result.data
         const doc = await this.countingService.updateReadCount(type, id)
 
         if ('count' in doc)

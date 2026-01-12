@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "target": "es2020",
+    "target": "es2023",
     "lib": [
       "es2021",
       "es2020",
       "es2022",
+      "es2023",
       "DOM",
       "DOM.Iterable"
     ],

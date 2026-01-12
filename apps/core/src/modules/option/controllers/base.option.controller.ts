@@ -10,9 +10,8 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IConfig } from '~/modules/configs/configs.interface'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { classToJsonSchema } from '~/utils/jsonschema.util'
-import { instanceToPlain } from 'class-transformer'
-import { ConfigKeyDto } from '../dtoes/config.dto'
 import { OptionController } from '../option.decorator'
+import { ConfigKeyDto } from '../option.schema'
 
 @OptionController()
 export class BaseOptionController {
@@ -20,7 +19,7 @@ export class BaseOptionController {
 
   @Get('/')
   getOption() {
-    return instanceToPlain(this.configsService.getConfig())
+    return this.configsService.getConfig()
   }
 
   @HTTPDecorators.Bypass
@@ -175,7 +174,7 @@ export class BaseOptionController {
     if (!value) {
       throw new BadRequestException('key is not exists.')
     }
-    return { data: instanceToPlain(value) }
+    return { data: value }
   }
 
   @Patch('/:key')

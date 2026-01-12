@@ -6,7 +6,7 @@ import type {
 import { Injectable } from '@nestjs/common'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { getAvatar } from '~/utils/tool.util'
-import { isDefined } from 'class-validator'
+import { isDefined } from '~/utils/validator.util'
 import { cloneDeep, isArrayLike, isObjectLike } from 'lodash'
 import { map } from 'rxjs'
 

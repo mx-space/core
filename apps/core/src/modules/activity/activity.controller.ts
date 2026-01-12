@@ -9,16 +9,17 @@ import { keyBy, pick } from 'lodash'
 import snakecaseKeys from 'snakecase-keys'
 import { ReaderService } from '../reader/reader.service'
 import { Activity } from './activity.constant'
-import { ActivityService } from './activity.service'
 import {
   ActivityDeleteDto,
   ActivityNotificationDto,
   ActivityQueryDto,
   ActivityRangeDto,
   ActivityTypeParamsDto,
-} from './dtos/activity.dto'
-import { LikeBodyDto } from './dtos/like.dto'
-import { GetPresenceQueryDto, UpdatePresenceDto } from './dtos/presence.dto'
+  GetPresenceQueryDto,
+  LikeBodyDto,
+  UpdatePresenceDto,
+} from './activity.schema'
+import { ActivityService } from './activity.service'
 
 @ApiController('/activity')
 export class ActivityController {

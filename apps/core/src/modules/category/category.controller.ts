@@ -19,16 +19,14 @@ import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { isValidObjectId } from 'mongoose'
 import { PostService } from '../post/post.service'
+import { CategoryType } from './category.model'
 import {
+  CategoryDto,
   MultiCategoriesQueryDto,
   MultiQueryTagAndCategoryDto,
+  PartialCategoryDto,
   SlugOrIdDto,
-} from './category.dto'
-import {
-  CategoryModel,
-  CategoryType,
-  PartialCategoryModel,
-} from './category.model'
+} from './category.schema'
 import { CategoryService } from './category.service'
 
 @ApiController({ path: 'categories' })
@@ -123,14 +121,14 @@ export class CategoryController {
   @Post('/')
   @Auth()
   @HTTPDecorators.Idempotence()
-  async create(@Body() body: CategoryModel) {
+  async create(@Body() body: CategoryDto) {
     const { name, slug } = body
-    return this.categoryService.create(name, slug)
+    return this.categoryService.create(name, slug!)
   }
 
   @Put('/:id')
   @Auth()
-  async modify(@Param() params: MongoIdDto, @Body() body: CategoryModel) {
+  async modify(@Param() params: MongoIdDto, @Body() body: CategoryDto) {
     const { type, slug, name } = body
     const { id } = params
     await this.categoryService.update(id, {
@@ -144,7 +142,7 @@ export class CategoryController {
   @Patch('/:id')
   @HttpCode(204)
   @Auth()
-  async patch(@Param() params: MongoIdDto, @Body() body: PartialCategoryModel) {
+  async patch(@Param() params: MongoIdDto, @Body() body: PartialCategoryDto) {
     const { id } = params
     await this.categoryService.update(id, body)
     return

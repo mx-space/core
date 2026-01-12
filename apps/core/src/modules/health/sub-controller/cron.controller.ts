@@ -14,7 +14,7 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CRON_DESCRIPTION } from '~/constants/meta.constant'
 import { CronService } from '~/processors/helper/helper.cron.service'
 import { TaskQueueService } from '~/processors/helper/helper.tq.service'
-import { isString } from 'class-validator'
+import { isString } from '~/utils/validator.util'
 import { isFunction } from 'lodash'
 
 @ApiController('health/cron')
@@ -63,9 +63,7 @@ export class HealthCronController {
     if (!hasMethod) {
       throw new BadRequestException(`${name} is not a cron`)
     }
-    this.taskQueue.add(name, async () =>
-      this.cronService[name].call(this.cronService),
-    )
+    this.taskQueue.add(name, async () => this.cronService[name]())
   }
 
   @Get('/task/:name')

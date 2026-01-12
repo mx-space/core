@@ -1,5 +1,4 @@
 import { prop } from '@typegoose/typegoose'
-import { IsBoolean, IsOptional } from 'class-validator'
 import { BaseModel } from './base.model'
 
 export abstract class BaseCommentIndexModel extends BaseModel {
@@ -7,8 +6,6 @@ export abstract class BaseCommentIndexModel extends BaseModel {
   commentsIndex?: number
 
   @prop({ default: true })
-  @IsBoolean()
-  @IsOptional()
   allowComment: boolean
 
   static get protectedKeys() {

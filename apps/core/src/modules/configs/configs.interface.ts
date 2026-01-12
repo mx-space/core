@@ -1,91 +1,54 @@
-import { Type } from 'class-transformer'
-import type {
-  ClassConstructor,
-  TypeHelpOptions,
-  TypeOptions,
-} from 'class-transformer'
-import { ValidateNested } from 'class-validator'
-import { JSONSchema } from 'class-validator-jsonschema'
+import type { z } from 'zod'
 import {
-  AdminExtraDto,
-  AIDto,
-  AlgoliaSearchOptionsDto,
-  AuthSecurityDto,
-  BackupOptionsDto,
-  BaiduSearchOptionsDto,
-  BarkOptionsDto,
-  BingSearchOptionsDto,
-  CommentOptionsDto,
-  FeatureListDto,
-  FriendLinkOptionsDto,
-  MailOptionsDto,
-  OAuthDto,
-  SeoDto,
-  TextOptionsDto,
-  ThirdPartyServiceIntegrationDto,
-  UrlDto,
-} from './configs.dto'
+  configSchemaMapping,
+  type AdminExtraSchema,
+  type AISchema,
+  type AlgoliaSearchOptionsSchema,
+  type AuthSecuritySchema,
+  type BackupOptionsSchema,
+  type BaiduSearchOptionsSchema,
+  type BarkOptionsSchema,
+  type BingSearchOptionsSchema,
+  type CommentOptionsSchema,
+  type FeatureListSchema,
+  type FriendLinkOptionsSchema,
+  type MailOptionsSchema,
+  type OAuthSchema,
+  type SeoSchema,
+  type TextOptionsSchema,
+  type ThirdPartyServiceIntegrationSchema,
+  type UrlSchema,
+} from './configs.schema'
 
-export const configDtoMapping = {} as Record<string, ClassConstructor<any>>
-const ConfigField =
-  (typeFunction: (type?: TypeHelpOptions) => Function, options?: TypeOptions) =>
-  (target: any, propertyName: string): void => {
-    configDtoMapping[propertyName] = typeFunction() as ClassConstructor<any>
-    Type(typeFunction, options)(target, propertyName)
-    ValidateNested()(target, propertyName)
-  }
-@JSONSchema({
-  title: '设置',
-  ps: ['* 敏感字段不显示，后端默认不返回敏感字段，显示为空'],
-})
+/**
+ * Config schema mapping for validation and JSON schema generation
+ */
+export const configDtoMapping = configSchemaMapping
+
+/**
+ * Main configuration interface
+ * Each property corresponds to a config section with its Zod schema type
+ */
 export abstract class IConfig {
-  @ConfigField(() => UrlDto)
-  url: Required<UrlDto>
-
-  @ConfigField(() => SeoDto)
-  seo: Required<SeoDto>
-
-  @ConfigField(() => AdminExtraDto)
-  adminExtra: Required<AdminExtraDto>
-
-  @ConfigField(() => TextOptionsDto)
-  textOptions: Required<TextOptionsDto>
-
-  @ConfigField(() => MailOptionsDto)
-  mailOptions: Required<MailOptionsDto>
-
-  @ConfigField(() => CommentOptionsDto)
-  commentOptions: Required<CommentOptionsDto>
-
-  @ConfigField(() => BarkOptionsDto)
-  barkOptions: Required<BarkOptionsDto>
-
-  @ConfigField(() => FriendLinkOptionsDto)
-  friendLinkOptions: Required<FriendLinkOptionsDto>
-
-  @ConfigField(() => BackupOptionsDto)
-  backupOptions: Required<BackupOptionsDto>
-  @ConfigField(() => BaiduSearchOptionsDto)
-  baiduSearchOptions: Required<BaiduSearchOptionsDto>
-  @ConfigField(() => BingSearchOptionsDto)
-  bingSearchOptions: Required<BingSearchOptionsDto>
-  @ConfigField(() => AlgoliaSearchOptionsDto)
-  algoliaSearchOptions: Required<AlgoliaSearchOptionsDto>
-
-  @ConfigField(() => FeatureListDto)
-  featureList: Required<FeatureListDto>
-
-  @ConfigField(() => ThirdPartyServiceIntegrationDto)
-  thirdPartyServiceIntegration: Required<ThirdPartyServiceIntegrationDto>
-
-  @ConfigField(() => AuthSecurityDto)
-  authSecurity: AuthSecurityDto
-
-  @ConfigField(() => AIDto)
-  ai: AIDto
-
-  @ConfigField(() => OAuthDto)
-  oauth: OAuthDto
+  url: Required<z.infer<typeof UrlSchema>>
+  seo: Required<z.infer<typeof SeoSchema>>
+  adminExtra: Required<z.infer<typeof AdminExtraSchema>>
+  textOptions: Required<z.infer<typeof TextOptionsSchema>>
+  mailOptions: Required<z.infer<typeof MailOptionsSchema>>
+  commentOptions: Required<z.infer<typeof CommentOptionsSchema>>
+  barkOptions: Required<z.infer<typeof BarkOptionsSchema>>
+  friendLinkOptions: Required<z.infer<typeof FriendLinkOptionsSchema>>
+  backupOptions: Required<z.infer<typeof BackupOptionsSchema>>
+  baiduSearchOptions: Required<z.infer<typeof BaiduSearchOptionsSchema>>
+  bingSearchOptions: Required<z.infer<typeof BingSearchOptionsSchema>>
+  algoliaSearchOptions: Required<z.infer<typeof AlgoliaSearchOptionsSchema>>
+  featureList: Required<z.infer<typeof FeatureListSchema>>
+  thirdPartyServiceIntegration: Required<
+    z.infer<typeof ThirdPartyServiceIntegrationSchema>
+  >
+  authSecurity: z.infer<typeof AuthSecuritySchema>
+  ai: z.infer<typeof AISchema>
+  oauth: z.infer<typeof OAuthSchema>
 }
 
 export type IConfigKeys = keyof IConfig

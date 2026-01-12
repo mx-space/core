@@ -4,7 +4,7 @@ import {
   RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { BaseCommentIndexModel } from '~/shared/model/base-comment.model'
-import { IsMongoId, IsOptional, IsString } from 'class-validator'
+import { IsOptional } from 'class-validator'
 
 export type RefType = {
   title: string
@@ -18,12 +18,9 @@ export type RefType = {
 })
 export class RecentlyModel extends BaseCommentIndexModel {
   @prop({ required: true })
-  @IsString()
   content: string
 
   @prop({ refPath: 'refType' })
-  @IsOptional()
-  @IsMongoId()
   ref: RefType
 
   @prop({ type: String })

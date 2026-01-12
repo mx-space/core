@@ -20,7 +20,7 @@ import { AssetService } from '~/processors/helper/helper.asset.service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { SnippetType } from '../snippet/snippet.model'
 import { createMockedContextResponse } from './mock-response.util'
-import { ServerlessReferenceDto } from './serverless.dto'
+import { ServerlessReferenceDto } from './serverless.schema'
 import { ServerlessService } from './serverless.service'
 
 @ApiController(['serverless', 'fn'])

@@ -2,25 +2,16 @@ import 'reflect-metadata'
 import { ENCRYPT } from '~/app.config'
 import { initializeApp } from '~/global/index.global'
 import { generateDefaultConfig } from '~/modules/configs/configs.default'
-import * as optionDtos from '~/modules/configs/configs.dto'
 import { encryptObject } from '~/modules/configs/configs.encrypt.util'
-import type { IConfigKeys } from '~/modules/configs/configs.interface'
-import { IConfig } from '~/modules/configs/configs.interface'
+import type { IConfig, IConfigKeys } from '~/modules/configs/configs.interface'
+import { configSchemaMapping } from '~/modules/configs/configs.schema'
 import { getDatabaseConnection } from '~/utils/database.util'
-import { plainToInstance } from 'class-transformer'
 
 console.log(ENCRYPT)
 
-const allOptionKeys: Set<IConfigKeys> = new Set()
-Object.entries(optionDtos).reduce((obj, [key, value]) => {
-  const optionKey = (key.charAt(0).toLowerCase() +
-    key.slice(1).replace(/Dto$/, '')) as IConfigKeys
-  allOptionKeys.add(optionKey)
-  return {
-    ...obj,
-    [String(optionKey)]: value,
-  }
-}, {})
+const allOptionKeys: Set<IConfigKeys> = new Set(
+  Object.keys(configSchemaMapping) as IConfigKeys[],
+)
 
 async function main() {
   await initializeApp()
@@ -45,7 +36,7 @@ async function main() {
     mergedConfig[name] = { ...mergedConfig[name], ...value }
   })
 
-  const encrypted = encryptObject(plainToInstance(IConfig as any, mergedConfig))
+  const encrypted = encryptObject(mergedConfig as IConfig)
 
   for await (const [key, value] of Object.entries(encrypted)) {
     configs[key] = value

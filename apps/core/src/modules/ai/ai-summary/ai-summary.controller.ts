@@ -17,7 +17,7 @@ import {
   GenerateAiSummaryDto,
   GetSummaryQueryDto,
   UpdateSummaryDto,
-} from './ai-summary.dto'
+} from './ai-summary.schema'
 import { AiSummaryService } from './ai-summary.service'
 
 @ApiController('ai/summaries')
@@ -27,7 +27,7 @@ export class AiSummaryController {
   @Post('/generate')
   @Auth()
   generateSummary(@Body() body: GenerateAiSummaryDto) {
-    return this.service.generateSummaryByOpenAI(body.refId, body.lang)
+    return this.service.generateSummaryByOpenAI(body.refId, body.lang!)
   }
 
   @Get('/ref/:id')

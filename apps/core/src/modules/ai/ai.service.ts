@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import type { AIDto } from '../configs/configs.dto'
+import type { AIConfig } from '../configs/configs.schema'
 import { ConfigsService } from '../configs/configs.service'
 import { createLanguageModel } from './ai-provider.factory'
 import type { AIModelAssignment, AIProviderConfig } from './ai.types'
@@ -40,10 +40,10 @@ export class AiService {
   }
 
   private getAssignment(
-    config: AIDto,
+    config: AIConfig,
     feature: AIFeatureKey,
   ): AIModelAssignment | undefined {
-    const featureToConfigKey: Record<AIFeatureKey, keyof AIDto> = {
+    const featureToConfigKey: Record<AIFeatureKey, keyof AIConfig> = {
       [AIFeatureKey.Summary]: 'summaryModel',
       [AIFeatureKey.Writer]: 'writerModel',
       [AIFeatureKey.CommentReview]: 'commentReviewModel',
@@ -52,7 +52,7 @@ export class AiService {
   }
 
   private resolveProvider(
-    config: AIDto,
+    config: AIConfig,
     providerId?: string,
   ): AIProviderConfig | null {
     if (!config.providers?.length) {

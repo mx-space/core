@@ -1,95 +1,69 @@
-// @ts-ignore
-import { defaultMetadataStorage } from 'class-transformer/cjs/storage.js'
-import { getMetadataStorage, ValidationTypes } from 'class-validator'
-import { targetConstructorToSchema } from 'class-validator-jsonschema'
-import type { ISchemaConverters } from 'class-validator-jsonschema/build/defaultConverters'
-import type { IOptions } from 'class-validator-jsonschema/build/options'
-import type { ValidationMetadata } from 'class-validator/types/metadata/ValidationMetadata'
-
-export { JSONSchema as IsSchema } from 'class-validator-jsonschema'
+import {
+  configSchemaMapping,
+  FullConfigSchema,
+} from '~/modules/configs/configs.schema'
+import { zodToJsonSchemaWithMeta } from '~/modules/configs/configs.zod-schema.util'
 
 /**
- * Build json-schema from `class-validator` & `class-tranformer` metadata.
- *
- * @see https://github.com/epiphone/class-validator-jsonschema
+ * Map config key to Dto class name (matching original class-validator structure)
  */
-export function classToJsonSchema(clz: any) {
-  const options: Partial<Options> = { ...defaultOptions, definitions: {} }
-  const schema = targetConstructorToSchema(clz, options) as any
-
-  schema.definitions = options.definitions
-
-  return schema
+const configKeyToDtoName: Record<string, string> = {
+  url: 'UrlDto',
+  seo: 'SeoDto',
+  adminExtra: 'AdminExtraDto',
+  textOptions: 'TextOptionsDto',
+  mailOptions: 'MailOptionsDto',
+  commentOptions: 'CommentOptionsDto',
+  barkOptions: 'BarkOptionsDto',
+  friendLinkOptions: 'FriendLinkOptionsDto',
+  backupOptions: 'BackupOptionsDto',
+  baiduSearchOptions: 'BaiduSearchOptionsDto',
+  bingSearchOptions: 'BingSearchOptionsDto',
+  algoliaSearchOptions: 'AlgoliaSearchOptionsDto',
+  featureList: 'FeatureListDto',
+  thirdPartyServiceIntegration: 'ThirdPartyServiceIntegrationDto',
+  authSecurity: 'AuthSecurityDto',
+  ai: 'AIDto',
+  oauth: 'OAuthDto',
 }
 
-function nestedClassToJsonSchema(clz: any, options: Partial<Options>) {
-  return targetConstructorToSchema(clz, options) as any
-}
+/**
+ * Build json-schema from Zod schema with UI metadata for IConfig.
+ *
+ * This function generates JSON schema from Zod schemas defined in configs.schema.ts,
+ * including custom UI metadata for form rendering.
+ *
+ * The output structure uses $ref references to definitions, matching the original
+ * class-validator/class-transformer format:
+ * {
+ *   properties: { url: { "$ref": "#/definitions/UrlDto" } },
+ *   definitions: { UrlDto: { ... } }
+ * }
+ */
+export function classToJsonSchema(_clz: any) {
+  const definitions: Record<string, any> = {}
 
-const additionalConverters: ISchemaConverters = {
-  /**
-   * Explicitly inline nested schemas instead of using refs
-   *
-   * @see https://github.com/epiphone/class-validator-jsonschema/blob/766c02dd0de188ebeb697f3296982997249bffc9/src/defaultConverters.ts#L25
-   */
-  [ValidationTypes.NESTED_VALIDATION]: (
-    meta: ValidationMetadata,
-    options: Options,
-  ) => {
-    if (typeof meta.target === 'function') {
-      const typeMeta = options.classTransformerMetadataStorage
-        ? options.classTransformerMetadataStorage.findTypeMetadata(
-            meta.target,
-            meta.propertyName,
-          )
-        : null
+  // Generate schema for each config section with Dto-suffixed names
+  for (const [key, schema] of Object.entries(configSchemaMapping)) {
+    const dtoName = configKeyToDtoName[key] || `${key}Dto`
+    definitions[dtoName] = zodToJsonSchemaWithMeta(schema)
+  }
 
-      const childType = typeMeta
-        ? typeMeta.typeFunction()
-        : getPropType(meta.target.prototype, meta.propertyName)
+  // Generate the full schema first to get title/description
+  const fullSchema = zodToJsonSchemaWithMeta(FullConfigSchema)
 
-      const schema = targetToSchema(childType, options)
+  // Build properties using $ref references instead of inline schemas
+  const properties: Record<string, any> = {}
+  for (const key of Object.keys(configSchemaMapping)) {
+    const dtoName = configKeyToDtoName[key] || `${key}Dto`
+    properties[key] = { $ref: `#/definitions/${dtoName}` }
+  }
 
-      if (schema.$ref && !options.definitions[childType.name]) {
-        options.definitions[childType.name] = nestedClassToJsonSchema(
-          childType,
-          options,
-        )
-      }
-
-      return schema
-    }
-  },
-}
-
-type Options = IOptions & {
-  definitions: Record<string, any>
-}
-
-const defaultOptions: Partial<Options> = {
-  classTransformerMetadataStorage: defaultMetadataStorage,
-  classValidatorMetadataStorage: getMetadataStorage(),
-  additionalConverters,
-  doNotExcludeDecorator: true,
-}
-
-function getPropType(target: object, property: string) {
-  return Reflect.getMetadata('design:type', target, property)
-}
-
-function targetToSchema(type: any, options: IOptions): any | void {
-  if (typeof type === 'function') {
-    if (
-      type.prototype === String.prototype ||
-      type.prototype === Symbol.prototype
-    ) {
-      return { type: 'string' }
-    } else if (type.prototype === Number.prototype) {
-      return { type: 'number' }
-    } else if (type.prototype === Boolean.prototype) {
-      return { type: 'boolean' }
-    }
-
-    return { $ref: options.refPointerPrefix + type.name }
+  return {
+    type: 'object',
+    title: fullSchema.title,
+    description: fullSchema.description,
+    properties,
+    definitions,
   }
 }
