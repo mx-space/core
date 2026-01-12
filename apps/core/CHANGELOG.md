@@ -1,5 +1,19 @@
 # CHANGELOG
 
+# [8.5.0](https://github.com/mx-space/core/compare/v8.4.5...v8.5.0) (2026-01-12)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ai to v5.0.118 ([#2511](https://github.com/mx-space/core/issues/2511)) ([2b4f31e](https://github.com/mx-space/core/commit/2b4f31e1e533b9ecb9bd956d3e87534256d5b51b))
+
+
+### Features
+
+* **ai:** implement multi-provider support and migration for AI configuration ([b55916d](https://github.com/mx-space/core/commit/b55916d9d03ada0447f7671ca6058764b9c89728))
+
+
+
 ## [8.4.5](https://github.com/mx-space/core/compare/v8.4.4...v8.4.5) (2026-01-08)
 
 
