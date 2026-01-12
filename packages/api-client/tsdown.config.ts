@@ -14,5 +14,5 @@ export default defineConfig({
   entry: ['index.ts', ...adaptorNames.map((name) => `adaptors/${name}.ts`)],
   external: adaptorNames,
   dts: true,
-  format: ['cjs', 'esm', 'iife'],
+  format: ['cjs', 'esm'],
 })
