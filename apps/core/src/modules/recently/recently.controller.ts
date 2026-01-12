@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Query,
 } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -65,6 +66,17 @@ export class RecentlyController {
     }
 
     return
+  }
+
+  @Put('/:id')
+  @Auth()
+  async update(@Param() { id }: MongoIdDto, @Body() body: RecentlyModel) {
+    const res = await this.recentlyService.update(id, body)
+    if (!res) {
+      throw new BadRequestException('更新失败，条目不存在')
+    }
+
+    return res
   }
 
   /**

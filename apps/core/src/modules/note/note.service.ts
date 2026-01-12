@@ -213,6 +213,10 @@ export class NoteService {
       return isDefined(data[key]) && data[key] !== oldDoc[key]
     })
 
+    const hasContentChanged = ['title', 'text'].some((key) =>
+      isDefined(data[key as keyof NoteModel]),
+    )
+
     const updatedData = Object.assign(
       {},
       omit(data, NoteModel.protectedKeys),
@@ -226,11 +230,12 @@ export class NoteService {
             updated: new Date(),
           }
         : {},
+      hasContentChanged
+        ? {
+            modified: new Date(),
+          }
+        : {},
     )
-
-    if (['title', 'text'].some((key) => isDefined(data[key]))) {
-      data.modified = new Date()
-    }
 
     const updated = await this.noteModel
       .findOneAndUpdate(
