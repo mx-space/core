@@ -19,4 +19,6 @@ export interface RecentlyModel extends BaseCommentIndexModel {
 
   up: number
   down: number
+
+  modified?: string
 }
