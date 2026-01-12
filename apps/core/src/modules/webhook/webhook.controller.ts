@@ -5,7 +5,8 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { WebhookDtoPartial, WebhookModel } from './webhook.model'
+import { WebhookModel } from './webhook.model'
+import { WebhookDto, WebhookDtoPartial } from './webhook.schema'
 import { WebhookService } from './webhook.service'
 
 @ApiController('/webhooks')
@@ -14,10 +15,10 @@ export class WebhookController {
   constructor(private readonly service: WebhookService) {}
 
   @Post('/')
-  create(@Body() body: WebhookModel) {
+  create(@Body() body: WebhookDto) {
     body.events = this.service.transformEvents(body.events)
 
-    return this.service.createWebhook(body)
+    return this.service.createWebhook(body as unknown as WebhookModel)
   }
 
   @Get('/')

@@ -20,8 +20,8 @@ import pluralize from 'pluralize'
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
-import { RecentlyAttitudeEnum } from './recently.dto'
 import { RecentlyModel } from './recently.model'
+import { RecentlyAttitudeEnum } from './recently.schema'
 
 const { ObjectId } = mongo
 

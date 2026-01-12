@@ -31,13 +31,13 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
 
       const providers = {} as NonNullable<BetterAuthOptions['socialProviders']>
       await Promise.all(
-        oauth.providers.map(async (provider) => {
+        (oauth.providers || []).map(async (provider) => {
           if (!provider.enabled) return
           const type = provider.type as string
 
           const mergedConfig = {
-            ...oauth.public[type],
-            ...oauth.secrets[type],
+            ...(oauth.public?.[type] || {}),
+            ...(oauth.secrets?.[type] || {}),
           }
           const urls = await this.configService.get('url')
           switch (type) {

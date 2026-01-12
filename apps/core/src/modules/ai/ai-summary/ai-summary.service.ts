@@ -237,7 +237,7 @@ export class AiSummaryService {
 
     const aiSummaryTargetLanguage = await this.configService
       .get('ai')
-      .then((c) => c.aiSummaryTargetLanguage)
+      .then((c) => c.aiSummaryTargetLanguage || DEFAULT_SUMMARY_LANG)
 
     const targetLanguage =
       aiSummaryTargetLanguage === 'auto'
@@ -298,7 +298,7 @@ export class AiSummaryService {
     }
     const targetLanguage = await this.configService
       .get('ai')
-      .then((c) => c.aiSummaryTargetLanguage)
+      .then((c) => c.aiSummaryTargetLanguage || DEFAULT_SUMMARY_LANG)
 
     await this.generateSummaryByOpenAI(
       event.id,

@@ -8,7 +8,7 @@ import type { PagerDto } from '~/shared/dto/pager.dto'
 import { getRedisKey } from '~/utils/redis.util'
 import { getTodayEarly, getWeekStart } from '~/utils/time.util'
 import dayjs from 'dayjs'
-import { AnalyzeDto } from './analyze.dto'
+import { AnalyzeDto } from './analyze.schema'
 import { AnalyzeService } from './analyze.service'
 
 @ApiController({ path: 'analyze' })
@@ -100,7 +100,7 @@ export class AnalyzeController {
             },
           ]
         })
-        .reverse()
+        .toReversed()
 
       const monthData = all
         .slice(0, 30)
@@ -118,7 +118,7 @@ export class AnalyzeController {
             },
           ]
         })
-        .reverse()
+        .toReversed()
       return {
         dayData,
         weekData,
@@ -133,9 +133,9 @@ export class AnalyzeController {
         getIpAndPvAggregate(),
       ])
     return {
-      today: dayData.flat(1),
-      weeks: weekData.flat(1),
-      months: monthData.flat(1),
+      today: dayData.flat(),
+      weeks: weekData.flat(),
+      months: monthData.flat(),
       paths: paths.slice(50),
 
       total,

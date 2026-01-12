@@ -19,9 +19,7 @@ export type AuthGatewayOptions = {
 
 // @ts-ignore
 export interface IAuthGateway
-  extends OnGatewayConnection,
-    OnGatewayDisconnect,
-    BroadcastBaseGateway {}
+  extends OnGatewayConnection, OnGatewayDisconnect, BroadcastBaseGateway {}
 
 export const createAuthGateway = (
   options: AuthGatewayOptions,

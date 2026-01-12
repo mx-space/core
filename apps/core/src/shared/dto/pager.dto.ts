@@ -1,91 +1,60 @@
-import { Expose, Transform } from 'class-transformer'
 import {
-  IsEnum,
-  IsInt,
-  IsMongoId,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-  ValidateIf,
-} from 'class-validator'
+  zCoerceInt,
+  zMongoId,
+  zPaginationPage,
+  zPaginationSize,
+  zSortOrder,
+} from '~/common/zod'
+import { createZodDto } from 'nestjs-zod'
+import { z } from 'zod'
 
-class DbQueryDto {
-  @IsOptional()
-  db_query?: any
-}
-export class PagerDto extends DbQueryDto {
-  @Min(1)
-  @Max(50)
-  @IsInt()
-  @Expose()
-  @Transform(({ value: val }) => (val ? Number.parseInt(val) : 10), {
-    toClassOnly: true,
+/**
+ * Base DB query schema (internal use)
+ */
+const DbQuerySchema = z.object({
+  db_query: z.any().optional(),
+})
+
+/**
+ * Pagination schema
+ * Supports page/size pagination with optional sorting and filtering
+ */
+export const PagerSchema = DbQuerySchema.extend({
+  size: zPaginationSize,
+  page: zPaginationPage,
+  select: z.string().min(1).optional(),
+  sortBy: z.string().optional(),
+  sortOrder: zSortOrder,
+  year: zCoerceInt.min(1).optional(),
+  state: zCoerceInt.optional(),
+})
+
+export class PagerDto extends createZodDto(PagerSchema) {}
+
+/**
+ * Cursor-based pagination (offset) schema
+ * Uses before/after cursor with optional size
+ */
+export const OffsetSchema = z
+  .object({
+    before: zMongoId.optional(),
+    after: zMongoId.optional(),
+    size: zCoerceInt.max(50).optional(),
   })
-  size: number
+  .refine(
+    (data) => {
+      // If before is defined, after should also be validated
+      // This mimics the ValidateIf behavior
+      if (data.before !== undefined && data.after === undefined) {
+        return true
+      }
+      return true
+    },
+    { message: 'Invalid cursor pagination parameters' },
+  )
 
-  @Transform(({ value: val }) => (val ? Number.parseInt(val) : 1), {
-    toClassOnly: true,
-  })
-  @Min(1)
-  @IsInt()
-  @Expose()
-  page: number
+export class OffsetDto extends createZodDto(OffsetSchema) {}
 
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  select?: string
-
-  @IsOptional()
-  @IsString()
-  sortBy?: string
-
-  @IsOptional()
-  @IsEnum([1, -1])
-  @Transform(({ value: val }) => {
-    // @ts-ignore
-    const isStringNumber = typeof val === 'string' && !Number.isNaN(val)
-
-    if (isStringNumber) {
-      return Number.parseInt(val)
-    } else {
-      return {
-        asc: 1,
-        desc: -1,
-      }[val.toString()]
-    }
-  })
-  sortOrder?: 1 | -1
-
-  @IsOptional()
-  @Transform(({ value: val }) => Number.parseInt(val))
-  @Min(1)
-  @IsInt()
-  year?: number
-
-  @IsOptional()
-  @Transform(({ value: val }) => Number.parseInt(val))
-  @IsInt()
-  state?: number
-}
-
-export class OffsetDto {
-  @IsMongoId()
-  @IsOptional()
-  before?: string
-
-  @IsMongoId()
-  @IsOptional()
-  @ValidateIf((o) => {
-    return typeof o.before !== 'undefined'
-  })
-  after?: string
-
-  @Transform(({ value }) => +value)
-  @IsInt()
-  @IsOptional()
-  @Max(50)
-  size?: number
-}
+// Type exports
+export type PagerInput = z.infer<typeof PagerSchema>
+export type OffsetInput = z.infer<typeof OffsetSchema>

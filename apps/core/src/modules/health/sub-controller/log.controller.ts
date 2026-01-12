@@ -18,7 +18,7 @@ import { AdapterResponse } from '~/types/request'
 import { getTodayLogFilePath } from '~/utils/path.util'
 import { formatByteSize } from '~/utils/system.util'
 import type { Readable } from 'form-data'
-import { LogQueryDto, LogTypeDto } from '../health.dto'
+import { LogQueryDto, LogTypeDto } from '../health.schema'
 
 @ApiController('health/log')
 @Auth()
@@ -143,6 +143,10 @@ export class HealthLogController {
   async deleteLog(@Param() params: LogTypeDto, @Query() query: LogQueryDto) {
     const { type } = params
     const { filename } = query
+
+    if (!filename) {
+      throw new UnprocessableEntityException('filename must be string')
+    }
 
     switch (type) {
       case 'native': {

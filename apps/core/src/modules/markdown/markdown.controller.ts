@@ -10,8 +10,8 @@ import { MongoIdDto } from '~/shared/dto/id.dto'
 import JSZip from 'jszip'
 import { omit } from 'lodash'
 import type { CategoryModel } from '../category/category.model'
-import { DataListDto, ExportMarkdownQueryDto } from './markdown.dto'
 import type { MarkdownYAMLProperty } from './markdown.interface'
+import { DataListDto, ExportMarkdownQueryDto } from './markdown.schema'
 import { MarkdownService } from './markdown.service'
 
 @ApiController('markdown')

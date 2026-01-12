@@ -18,8 +18,8 @@ import { CategoryModel } from '../category/category.model'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
-import type { DatatypeDto } from './markdown.dto'
 import type { MarkdownYAMLProperty } from './markdown.interface'
+import type { DatatypeDto } from './markdown.schema'
 import { markdownToHtml } from './markdown.util'
 
 @Injectable()

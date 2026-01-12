@@ -111,7 +111,6 @@ pnpm dev
 ## 应用结构
 
 - 请求处理流程
-
   1. request：收到请求
   1. middleware：中间件过滤爬虫 PHP 肉鸡扫描路径，记录访问历史
   1. guard：守卫过滤（鉴权）和角色附加
@@ -129,7 +128,6 @@ ResponseInterceptor -> ResponseFilterInterceptor -> JSONTransformInterceptor -> 
 ```
 
 - [业务逻辑模块](https://github.com/mx-space/mx-server/tree/master/src/modules)
-
   1. [Aggregate] 聚合
   1. [Analyze] 数据统计
   1. [Auth] 认证

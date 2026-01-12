@@ -126,7 +126,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
         }
         // @ts-ignore
         r({
-          host: options?.host,
+          host: options?.host || '',
           port: Number.parseInt((options?.port as any) || '465'),
           auth: { user, pass },
         } as const)

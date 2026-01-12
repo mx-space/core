@@ -26,7 +26,7 @@ import type {
 import { BroadcastBaseGateway } from '../base.gateway'
 import type { SocketType } from '../gateway.service'
 import { GatewayService } from '../gateway.service'
-import { MessageEventDto, SupportedMessageEvent } from './dtos/message'
+import { MessageEventDto, SupportedMessageEvent } from './dtos/message.schema'
 import type { EventGatewayHooks } from './hook.interface'
 
 declare module '~/types/socket-meta' {

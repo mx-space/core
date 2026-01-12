@@ -8,7 +8,9 @@ export class ExtendedValidationPipe extends ValidationPipe {
     transform: true,
     whitelist: true,
     errorHttpStatusCode: 422,
-    forbidUnknownValues: true,
+    // Set to false to allow Zod DTOs (which don't have class-validator decorators)
+    // to pass through without errors. Zod validation pipe handles those DTOs.
+    forbidUnknownValues: false,
     enableDebugMessages: isDev,
     stopAtFirstError: true,
   }

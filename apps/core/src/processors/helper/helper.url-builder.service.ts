@@ -5,7 +5,7 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import type { NoteModel } from '~/modules/note/note.model'
 import type { PageModel } from '~/modules/page/page.model'
 import type { PostModel } from '~/modules/post/post.model'
-import { isDefined } from 'class-validator'
+import { isDefined } from '~/utils/validator.util'
 
 @Injectable()
 export class UrlBuilderService {

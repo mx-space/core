@@ -4,7 +4,6 @@ import type { ReturnModelType } from '@typegoose/typegoose'
 import { modelOptions, prop } from '@typegoose/typegoose'
 import { BaseModel } from '~/shared/model/base.model'
 import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'
-import { IsDefined, IsNumber } from 'class-validator'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 
 @modelOptions({
@@ -14,11 +13,9 @@ import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 })
 class TestModel extends BaseModel {
   @prop()
-  @IsNumber()
   number: number
 
   @prop()
-  @IsDefined()
   foo: string
 }
 export class TestController extends BaseCrudFactory({ model: TestModel }) {}

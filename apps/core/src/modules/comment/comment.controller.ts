@@ -38,17 +38,17 @@ import { ConfigsService } from '../configs/configs.service'
 import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
 import { UserModel } from '../user/user.model'
+import { CommentReplyMailType } from './comment.enum'
+import { CommentFilterEmailInterceptor } from './comment.interceptor'
+import type { CommentModel } from './comment.model'
+import { CommentState } from './comment.model'
 import {
   CommentDto,
   CommentRefTypesDto,
   CommentStatePatchDto,
   EditCommentDto,
   TextOnlyDto,
-} from './comment.dto'
-import { CommentReplyMailType } from './comment.enum'
-import { CommentFilterEmailInterceptor } from './comment.interceptor'
-import type { CommentModel } from './comment.model'
-import { CommentState } from './comment.model'
+} from './comment.schema'
 import { CommentService } from './comment.service'
 
 const idempotenceMessage = '哦吼，这句话你已经说过啦'

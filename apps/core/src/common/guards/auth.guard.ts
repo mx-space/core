@@ -6,7 +6,7 @@ import type { UserModel } from '~/modules/user/user.model'
 import { UserService } from '~/modules/user/user.service'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-import { isJWT } from 'class-validator'
+import { isJWT } from '~/utils/validator.util'
 
 /**
  * JWT auth guard
