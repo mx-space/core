@@ -304,12 +304,15 @@ export class BackupService {
         endpoint,
       })
 
-      const remoteFileKey = backup.path.slice(backup.path.lastIndexOf('/') + 1)
+      const pathParts = backup.path.split('/')
+      const remoteFileKey = `${pathParts.at(-2)}.zip`
       this.logger.log('--> 开始上传到 S3')
-      await s3.uploadFile(backup.buffer, remoteFileKey).catch((error) => {
-        this.logger.error('--> 上传失败了')
-        throw error
-      })
+      await s3
+        .uploadFile(backup.buffer, remoteFileKey, 'backup')
+        .catch((error) => {
+          this.logger.error('--> 上传失败了')
+          throw error
+        })
 
       this.logger.log('--> 上传成功')
     })

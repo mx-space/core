@@ -1,5 +1,4 @@
 import * as crypto from 'node:crypto'
-import { extname } from 'node:path'
 
 export interface S3UploaderOptions {
   bucket: string
@@ -65,12 +64,14 @@ export class S3Uploader {
     return `${path}/${objectKey}`
   }
 
-  async uploadFile(fileData: Buffer, path: string): Promise<string> {
-    const md5Filename = crypto.createHash('md5').update(fileData).digest('hex')
-    const ext = extname(path)
-    const objectKey = `${path}/${md5Filename}${ext}`
+  async uploadFile(
+    fileData: Buffer,
+    filename: string,
+    dir?: string,
+  ): Promise<string> {
+    const objectKey = dir ? `${dir}/${filename}` : filename
     await this.uploadToS3(objectKey, fileData, 'application/octet-stream')
-    return `${path}/${objectKey}`
+    return objectKey
   }
 
   // Generic S3-compatible storage upload function
@@ -95,6 +96,13 @@ export class S3Uploader {
     const host = url.host
     const contentLength = fileData.length.toString()
 
+    // URI encode each path segment for signing
+    const encodedObjectKey = objectKey
+      .split('/')
+      .map((seg) => encodeURIComponent(seg))
+      .join('/')
+    const canonicalUri = `/${this.bucket}/${encodedObjectKey}`
+
     const headers: Record<string, string> = {
       Host: host,
       'Content-Type': contentType,
@@ -114,7 +122,7 @@ export class S3Uploader {
 
     const canonicalRequest = [
       'PUT',
-      `/${this.bucket}/${objectKey}`,
+      canonicalUri,
       '', // No query parameters
       String(canonicalHeaders),
       '', // Extra newline
@@ -148,7 +156,7 @@ export class S3Uploader {
     const authorization = `${algorithm} Credential=${this.accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
 
     // Create and send PUT request
-    const requestUrl = `${this.endpoint}/${this.bucket}/${objectKey}`
+    const requestUrl = `${this.endpoint}${canonicalUri}`
 
     const response = await fetch(requestUrl, {
       method: 'PUT',
@@ -156,20 +164,11 @@ export class S3Uploader {
         ...headers,
         Authorization: authorization,
       },
-
-      body: toArrayBuffer(fileData),
+      body: new Uint8Array(fileData),
     })
 
     if (!response.ok) {
       throw new Error(`Upload failed with status code: ${response.status}`)
     }
   }
-}
-function toArrayBuffer(buffer) {
-  const arrayBuffer = new ArrayBuffer(buffer.length)
-  const view = new Uint8Array(arrayBuffer)
-  for (const [i, element] of buffer.entries()) {
-    view[i] = element
-  }
-  return arrayBuffer
 }
