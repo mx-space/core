@@ -10,17 +10,17 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/index.d.mts",
       "require": "./dist/index.cjs",
-      "import": "./dist/index.js"
+      "import": "./dist/index.mjs"
     },
     "./dist/*": {
       "require": "./dist/*.cjs",
-      "import": "./dist/*.js"
+      "import": "./dist/*.mjs"
     },
     "./dist/adaptors/*": {
       "require": "./dist/adaptors/*.cjs",
-      "import": "./dist/adaptors/*.js"
+      "import": "./dist/adaptors/*.mjs"
     },
     "./package.json": "./package.json"
   },
