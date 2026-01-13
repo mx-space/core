@@ -67,14 +67,14 @@ export class RenderEjsController {
     }
 
     const relativePath = (() => {
-      switch (type.toLowerCase()) {
-        case 'post':
+      switch (type) {
+        case 'posts':
           return `/posts/${((document as PostModel).category as any).slug}/${
             (document as PostModel).slug
           }`
-        case 'note':
+        case 'notes':
           return `/notes/${(document as NoteModel).nid}`
-        case 'page':
+        case 'pages':
           return `/${(document as PageModel).slug}`
       }
     })()
