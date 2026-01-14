@@ -148,6 +148,7 @@ describe('NoteController (e2e)', async () => {
     expect(res.statusCode).toBe(200)
     const data = res.json()
     delete data.id
+    delete data.modified
     expect(data).toMatchSnapshot()
   })
 
@@ -179,6 +180,7 @@ describe('NoteController (e2e)', async () => {
     const data = res.json()
     delete data.id
     delete data.data.id
+    delete data.data.modified
     if (data.prev) {
       delete data.prev.id
     }
