@@ -48,6 +48,11 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
                 clientId: mergedConfig.clientId,
                 clientSecret: mergedConfig.clientSecret,
                 redirectURI: `${urls.serverUrl}/auth/callback/github`,
+                mapProfileToUser: (profile) => {
+                  return {
+                    handle: profile.login,
+                  }
+                },
               }
               break
             }
