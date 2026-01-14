@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [8.5.1](https://github.com/mx-space/core/compare/v8.5.0...v8.5.1) (2026-01-14)
+
+
+### Bug Fixes
+
+* build mod script ([800c0cb](https://github.com/mx-space/core/commit/800c0cb5f3924b91ce02c0e29f2c3ec47f1addba))
+* **deps:** update dependency ua-parser-js to v2.0.7 ([#2509](https://github.com/mx-space/core/issues/2509)) ([d021823](https://github.com/mx-space/core/commit/d021823d0700f5a9e58b3d893bc28fc546ac0adf))
+
+
+### Features
+
+* **auth:** add profile mapping function to GitHub authentication ([f7d96c3](https://github.com/mx-space/core/commit/f7d96c3152074507f0d4da4704d38c5ceda7caf4))
+* **recently:** 新增速记编辑功能 ([#2521](https://github.com/mx-space/core/issues/2521)) ([99043bd](https://github.com/mx-space/core/commit/99043bd94c07a7a1c1b96dbad21b1f8f4e58a430))
+
+
+
 # [8.5.0](https://github.com/mx-space/core/compare/v8.4.5...v8.5.0) (2026-01-12)
 
 
