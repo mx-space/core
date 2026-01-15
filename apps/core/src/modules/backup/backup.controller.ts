@@ -111,4 +111,10 @@ export class BackupController {
     await this.backupService.deleteBackup(filename)
     return
   }
+
+  @Post('/upload-to-s3')
+  async backupAndUploadToS3() {
+    this.backupService.backupDB()
+    return
+  }
 }
