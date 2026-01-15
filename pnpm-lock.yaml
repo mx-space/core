@@ -80,7 +80,7 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: ^3.0.9
-        version: 3.0.13(zod@3.25.76)
+        version: 3.0.14(zod@3.25.76)
       '@ai-sdk/openai':
         specifier: 3.0.7
         version: 3.0.7(zod@3.25.76)
@@ -499,8 +499,8 @@ importers:
 
 packages:
 
-  '@ai-sdk/anthropic@3.0.13':
-    resolution: {integrity: sha512-62UqSpZWuR8pU2ZLc1IgPYiNdH01blAcaNEjrQtx4wCN7L2fUTXm/iG6Tq9qRCiRED+8eQ43olggbf0fbguqkA==}
+  '@ai-sdk/anthropic@3.0.14':
+    resolution: {integrity: sha512-71BaVg60FM6tN0JaRY7kRb/6qZtHi5R9PFF3NES+kqonY3nVD4PCPP8DoMb/tqxC7f/XezlCqsHrveT2mGfi3A==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 3.25.76
@@ -523,8 +523,8 @@ packages:
     peerDependencies:
       zod: 3.25.76
 
-  '@ai-sdk/provider-utils@4.0.6':
-    resolution: {integrity: sha512-o/SP1GQOrpXAzHjMosPHI0Pu+YkwxIMndSjSLrEXtcVixdrjqrGaA9I7xJcWf+XpRFJ9byPHrKYnprwS+36gMg==}
+  '@ai-sdk/provider-utils@4.0.7':
+    resolution: {integrity: sha512-ItzTdBxRLieGz1GHPwl9X3+HKfwTfFd9MdIa91aXRnOjUVRw68ENjAGKm3FcXGsBLkXDLaFWgjbTVdXe2igs2w==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 3.25.76
@@ -6754,10 +6754,10 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/anthropic@3.0.13(zod@3.25.76)':
+  '@ai-sdk/anthropic@3.0.14(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 3.0.3
-      '@ai-sdk/provider-utils': 4.0.6(zod@3.25.76)
+      '@ai-sdk/provider-utils': 4.0.7(zod@3.25.76)
       zod: 3.25.76
 
   '@ai-sdk/gateway@3.0.11(zod@3.25.76)':
@@ -6780,7 +6780,7 @@ snapshots:
       eventsource-parser: 3.0.6
       zod: 3.25.76
 
-  '@ai-sdk/provider-utils@4.0.6(zod@3.25.76)':
+  '@ai-sdk/provider-utils@4.0.7(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 3.0.3
       '@standard-schema/spec': 1.1.0
