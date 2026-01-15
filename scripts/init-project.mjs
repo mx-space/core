@@ -15,10 +15,10 @@ async function main() {
   const existAsset = fs.existsSync(path.resolve(cwd, 'assets'))
 
   if (!existAsset) {
-    const cmd = `git clone https://github.com/mx-space/assets.git ${path.resolve(
+    const cmd = `git clone https://github.com/mx-space/assets.git "${path.resolve(
       cwd,
       'assets',
-    )}`
+    )}"`
     console.log(cmd)
     try {
       execSync(cmd)

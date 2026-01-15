@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mix Space Admin - Resource Download</title>
+  <script src="https://cdn.jsdelivr.net/npm/ansi_up@4.0.3/ansi_up.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --accent-color: #3b82f6;
+      --accent-hover: #2563eb;
+      --success-color: #22c55e;
+      --error-color: #ef4444;
+      --border-color: #334155;
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --radius-lg: 16px;
+      --radius-md: 8px;
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f1f5f9;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #64748b;
+      --border-color: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background-color: var(--bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--bg-secondary);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-icon {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 8px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-icon:hover {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    /* Content */
+    .content {
+      padding: 32px;
+    }
+
+    .status-section {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .status-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .status-desc {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      margin: 24px 0;
+      position: relative;
+    }
+
+    .progress-track {
+      height: 8px;
+      background-color: var(--bg-primary);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-color), #8b5cf6);
+      width: 0%;
+      border-radius: 4px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0) 100%
+      );
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    /* Log Terminal */
+    .terminal {
+      background-color: #000000;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      font-family: 'Fira Code', 'Menlo', monospace;
+      font-size: 0.85rem;
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .terminal-content {
+      color: #e5e5e5;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    .terminal::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .terminal::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+
+    .terminal::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+
+    /* Status Indicators */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .status-badge.active {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--accent-color);
+    }
+
+    .status-badge.error {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: var(--error-color);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: currentColor;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    /* Action Buttons */
+    .actions {
+      margin-top: 24px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background-color: var(--accent-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--bg-secondary);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      .container {
+        border-radius: 0;
+        height: 100vh;
+        border: none;
+      }
+      body {
+        padding: 0;
+      }
+      .content {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">M</div>
+        <div class="brand-title">Mix Space</div>
+      </div>
+      <div class="controls">
+        <button class="btn-icon" id="themeToggle" title="Toggle Theme">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+        <button class="btn-icon" id="langToggle" title="Switch Language">
+          <span style="font-size: 14px; font-weight: 600;">EN</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="status-section">
+        <div class="status-badge active" id="statusBadge">
+          <div class="status-dot"></div>
+          <span data-i18n="status.downloading">Downloading Resources...</span>
+        </div>
+        <h1 class="status-title" data-i18n="title.downloading">Preparing Admin Console</h1>
+        <p class="status-desc" data-i18n="desc.init"><%= initialMessage %></p>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-track">
+          <div class="progress-fill" id="progressBar"></div>
+        </div>
+        <div class="progress-label">
+          <span data-i18n="label.progress">Progress</span>
+          <span id="progressText">0%</span>
+        </div>
+      </div>
+
+      <div class="terminal" id="terminalBlock">
+        <div class="terminal-content" id="logContent"></div>
+      </div>
+
+      <div class="actions hidden" id="errorActions">
+        <button class="btn btn-primary" onclick="window.location.reload()" data-i18n="btn.retry">Retry Download</button>
+        <button class="btn btn-secondary" onclick="window.history.back()" data-i18n="btn.back">Go Back</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // i18n Dictionary
+    const i18n = {
+      en: {
+        'status.downloading': 'Downloading Resources...',
+        'status.error': 'Download Failed',
+        'status.complete': 'Download Complete',
+        'title.downloading': 'Preparing Admin Console',
+        'title.error': 'Something Went Wrong',
+        'title.complete': 'Ready to Launch',
+        'desc.init': 'Initializing download process...',
+        'desc.timeout': 'Download timeout - no activity for 10 minutes',
+        'desc.failed': 'Failed to download admin assets.',
+        'label.progress': 'Progress',
+        'btn.retry': 'Retry Download',
+        'btn.back': 'Go Back'
+      },
+      zh: {
+        'status.downloading': '正在下载资源...',
+        'status.error': '下载失败',
+        'status.complete': '下载完成',
+        'title.downloading': '正在准备管理控制台',
+        'title.error': '发生错误',
+        'title.complete': '准备就绪',
+        'desc.init': '正在初始化下载进程...',
+        'desc.timeout': '下载超时 - 10分钟无响应',
+        'desc.failed': '下载管理后台资源失败。',
+        'label.progress': '进度',
+        'btn.retry': '重试下载',
+        'btn.back': '返回'
+      }
+    };
+
+    // State
+    let currentLang = localStorage.getItem('mx_lang') || (navigator.language.includes('zh') ? 'zh' : 'en');
+    let theme = localStorage.getItem('mx_theme') || 'dark';
+    let logs = '';
+    let lastLine = '';
+    let consecutiveEmptyResponses = 0;
+    let downloadStarted = false;
+    let progressPercentage = 0;
+
+    // Elements
+    const els = {
+      langToggle: document.getElementById('langToggle'),
+      themeToggle: document.getElementById('themeToggle'),
+      logContent: document.getElementById('logContent'),
+      terminal: document.getElementById('terminalBlock'),
+      progressBar: document.getElementById('progressBar'),
+      progressText: document.getElementById('progressText'),
+      statusBadge: document.getElementById('statusBadge'),
+      statusTitle: document.querySelector('.status-title'),
+      statusDesc: document.querySelector('.status-desc'),
+      errorActions: document.getElementById('errorActions'),
+      root: document.documentElement
+    };
+
+    // Helper: Translate
+    function t(key) {
+      return i18n[currentLang][key] || key;
+    }
+
+    function updateTexts() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        el.textContent = t(key);
+      });
+      els.langToggle.querySelector('span').textContent = currentLang === 'en' ? 'EN' : '中';
+    }
+
+    // Toggle Language
+    els.langToggle.addEventListener('click', () => {
+      currentLang = currentLang === 'en' ? 'zh' : 'en';
+      localStorage.setItem('mx_lang', currentLang);
+      updateTexts();
+    });
+
+    // Toggle Theme
+    function setTheme(newTheme) {
+      theme = newTheme;
+      localStorage.setItem('mx_theme', theme);
+      els.root.setAttribute('data-theme', theme);
+      // Update icon if needed
+    }
+    
+    els.themeToggle.addEventListener('click', () => {
+      setTheme(theme === 'dark' ? 'light' : 'dark');
+    });
+
+    // Init UI
+    setTheme(theme);
+    updateTexts();
+    const ansi_up = new AnsiUp();
+
+    // Progress Logic
+    function updateProgress(text) {
+      const progressMatch = text.match(/Download progress: (\d+)%/);
+      if (progressMatch) {
+        const percentage = parseInt(progressMatch[1]);
+        if (percentage > progressPercentage) {
+          progressPercentage = percentage;
+          els.progressBar.style.width = percentage + '%';
+          els.progressText.textContent = percentage + '%';
+        }
+      }
+    }
+
+    // Polling Logic
+    const timer = setInterval(function() {
+      fetch('?log=1')
+        .then(res => {
+          if (res.status === 204) {
+            // Completed
+            clearInterval(timer);
+            els.progressBar.style.width = '100%';
+            els.progressText.textContent = '100%';
+            els.statusBadge.querySelector('span').textContent = t('status.complete');
+            els.statusBadge.className = 'status-badge active';
+            els.statusBadge.style.color = 'var(--success-color)';
+            els.statusBadge.style.backgroundColor = 'rgba(34, 197, 94, 0.1)';
+            setTimeout(() => window.location.reload(), 1500);
+            return null;
+          }
+          if (res.status >= 400) {
+            return res.text().then(err => { throw new Error(err) });
+          }
+          return res.text();
+        })
+        .then(text => {
+          if (text === null) return;
+
+          if (!text || text === '...') {
+            consecutiveEmptyResponses++;
+            if (consecutiveEmptyResponses > 20 && !downloadStarted) {
+              clearInterval(timer);
+              showError(t('desc.failed'));
+            }
+            return;
+          }
+
+          consecutiveEmptyResponses = 0;
+          downloadStarted = true;
+
+          if (lastLine !== text) {
+            logs += text + '\n';
+            lastLine = text;
+            updateProgress(text);
+            els.logContent.innerHTML = ansi_up.ansi_to_html(logs);
+            els.terminal.scrollTop = els.terminal.scrollHeight;
+          }
+        })
+        .catch(error => {
+          clearInterval(timer);
+          showError(error.message);
+        });
+    }, 1000);
+
+    function showError(msg) {
+      els.statusBadge.className = 'status-badge error';
+      els.statusBadge.querySelector('span').textContent = t('status.error');
+      els.statusTitle.textContent = t('title.error');
+      els.statusDesc.textContent = msg;
+      els.statusDesc.style.color = 'var(--error-color)';
+      els.errorActions.classList.remove('hidden');
+      els.progressBar.style.backgroundColor = 'var(--error-color)';
+    }
+
+    // Timeout
+    setTimeout(() => {
+      if (!downloadStarted) {
+        clearInterval(timer);
+        showError(t('desc.timeout'));
+      }
+    }, 60000);
+
+  </script>
+</body>
+</html>
