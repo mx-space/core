@@ -295,8 +295,8 @@ importers:
         specifier: 0.2.2
         version: 0.2.2
       remove-markdown:
-        specifier: 0.6.2
-        version: 0.6.2
+        specifier: 0.6.3
+        version: 0.6.3
       remove-md-codeblock:
         specifier: 0.0.4
         version: 0.0.4
@@ -5700,8 +5700,8 @@ packages:
     resolution: {integrity: sha512-cnE+y8bz4NhMjISKbgeVJtqNbtf5QpjZP+Bslo+UqkIt9QPnX9q095eiRRASJG1/tz6dlNr6Z5NsBiWYokp6EQ==}
     hasBin: true
 
-  remove-markdown@0.6.2:
-    resolution: {integrity: sha512-EijDXJZbzpGbQBd852ViUzcqgpMujthM+SAEHiWCMcZonRbZ+xViWKLJA/vrwbDwYdxrs1aFDjpBhcGrZoJRGA==}
+  remove-markdown@0.6.3:
+    resolution: {integrity: sha512-Qvp2p0Q1irE7AaJO7QemJe04HdObHylJrG+q4hszvPlYp7q4EvfINpEIaIEFdB+3XTDp1h6fiyT60ae00gmRow==}
 
   remove-md-codeblock@0.0.4:
     resolution: {integrity: sha512-DE77wmQz99pE0Ma3SjOt1+ihHkzGgLHtSR58XzGWHvcCkQFfdV/YRAbRruHpBRrcppCLEMW+iJoSy/VpIaq7UA==}
@@ -12645,7 +12645,7 @@ snapshots:
     dependencies:
       jsesc: 3.0.2
 
-  remove-markdown@0.6.2: {}
+  remove-markdown@0.6.3: {}
 
   remove-md-codeblock@0.0.4: {}
 
