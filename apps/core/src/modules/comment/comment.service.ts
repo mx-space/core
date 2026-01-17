@@ -551,7 +551,7 @@ export class CommentService implements OnModuleInit {
         ).toString()
       }
       case CollectionRefTypes.Recently: {
-        return new URL(`/recently/${model._id}`, base).toString()
+        return new URL(`/thinking/${model._id}`, base).toString()
       }
     }
   }
