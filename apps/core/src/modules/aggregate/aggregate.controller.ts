@@ -134,4 +134,40 @@ export class AggregateController {
       length: await this.aggregateService.getAllSiteWordsCount(),
     }
   }
+
+  @Get('/stat/category-distribution')
+  @Auth()
+  async getCategoryDistribution() {
+    return await this.aggregateService.getCategoryDistribution()
+  }
+
+  @Get('/stat/tag-cloud')
+  @Auth()
+  async getTagCloud() {
+    return await this.aggregateService.getTagCloud()
+  }
+
+  @Get('/stat/publication-trend')
+  @Auth()
+  async getPublicationTrend() {
+    return await this.aggregateService.getPublicationTrend()
+  }
+
+  @Get('/stat/top-articles')
+  @Auth()
+  async getTopArticles() {
+    return await this.aggregateService.getTopArticles()
+  }
+
+  @Get('/stat/comment-activity')
+  @Auth()
+  async getCommentActivity() {
+    return await this.aggregateService.getCommentActivity()
+  }
+
+  @Get('/stat/traffic-source')
+  @Auth()
+  async getTrafficSource() {
+    return await this.aggregateService.getTrafficSource()
+  }
 }

@@ -166,6 +166,112 @@ export class AiSummaryService {
     }
   }
 
+  async getAllSummariesGrouped(pager: PagerDto) {
+    const { page, size } = pager
+
+    // First, get unique refIds with pagination
+    const aggregateResult = await this.aiSummaryModel.aggregate([
+      {
+        $group: {
+          _id: '$refId',
+          latestCreated: { $max: '$created' },
+          summaryCount: { $sum: 1 },
+        },
+      },
+      { $sort: { latestCreated: -1 } },
+      {
+        $facet: {
+          metadata: [{ $count: 'total' }],
+          data: [{ $skip: (page - 1) * size }, { $limit: size }],
+        },
+      },
+    ])
+
+    const metadata = aggregateResult[0]?.metadata[0]
+    const groupedRefIds = aggregateResult[0]?.data || []
+    const total = metadata?.total || 0
+
+    if (groupedRefIds.length === 0) {
+      return {
+        data: [],
+        pagination: {
+          total: 0,
+          currentPage: page,
+          totalPage: 0,
+          size,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      }
+    }
+
+    // Get all summaries for these refIds
+    const refIds = groupedRefIds.map((g: { _id: string }) => g._id)
+    const summaries = await this.aiSummaryModel
+      .find({ refId: { $in: refIds } })
+      .sort({ created: -1 })
+      .lean()
+
+    // Get article info
+    const articles = await this.databaseService.findGlobalByIds(refIds)
+    const articleMap = {} as Record<
+      string,
+      { title: string; id: string; type: CollectionRefTypes }
+    >
+    for (const a of articles.notes) {
+      articleMap[a.id] = {
+        title: a.title,
+        id: a.id,
+        type: CollectionRefTypes.Note,
+      }
+    }
+    for (const a of articles.posts) {
+      articleMap[a.id] = {
+        title: a.title,
+        id: a.id,
+        type: CollectionRefTypes.Post,
+      }
+    }
+
+    // Group summaries by refId
+    const summariesByRefId = summaries.reduce(
+      (acc, summary) => {
+        if (!acc[summary.refId]) {
+          acc[summary.refId] = []
+        }
+        acc[summary.refId].push(summary)
+        return acc
+      },
+      {} as Record<string, AISummaryModel[]>,
+    )
+
+    // Build grouped data maintaining the order from aggregation
+    const groupedData = refIds
+      .map((refId: string) => {
+        const article = articleMap[refId]
+        if (!article) return null
+        return {
+          article,
+          summaries: summariesByRefId[refId] || [],
+        }
+      })
+      .filter(Boolean)
+
+    const totalPage = Math.ceil(total / size)
+
+    return {
+      data: groupedData,
+      pagination: {
+        total,
+        currentPage: page,
+        totalPage,
+        size,
+        hasNextPage: page < totalPage,
+        hasPrevPage: page > 1,
+      },
+    }
+  }
+
   private async getRefArticles(docs: AISummaryModel[]) {
     const articles = await this.databaseService.findGlobalByIds(
       docs.map((d) => d.refId),

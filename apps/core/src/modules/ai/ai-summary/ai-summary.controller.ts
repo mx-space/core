@@ -42,6 +42,12 @@ export class AiSummaryController {
     return this.service.getAllSummaries(query)
   }
 
+  @Get('/grouped')
+  @Auth()
+  async getSummariesGrouped(@Query() query: PagerDto) {
+    return this.service.getAllSummariesGrouped(query)
+  }
+
   @Patch('/:id')
   @Auth()
   async updateSummary(
