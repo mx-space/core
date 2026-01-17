@@ -120,7 +120,7 @@
     "pluralize": "^8.0.0",
     "qs": "6.14.1",
     "reflect-metadata": "0.2.2",
-    "remove-markdown": "0.6.2",
+    "remove-markdown": "0.6.3",
     "remove-md-codeblock": "0.0.4",
     "rxjs": "7.8.2",
     "semver": "7.7.3",
