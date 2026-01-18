@@ -5,6 +5,7 @@ import { AuthnModel } from '~/modules/authn/authn.model'
 import { CategoryModel } from '~/modules/category/category.model'
 import { CommentModel } from '~/modules/comment/comment.model'
 import { OptionModel } from '~/modules/configs/configs.model'
+import { DraftModel } from '~/modules/draft/draft.model'
 import { LinkModel } from '~/modules/link/link.model'
 import { NoteModel } from '~/modules/note/note.model'
 import { PageModel } from '~/modules/page/page.model'
@@ -30,6 +31,7 @@ export const databaseModels = [
   AuthnModel,
   CategoryModel,
   CommentModel,
+  DraftModel,
   LinkModel,
   NoteModel,
   OptionModel,

@@ -31,6 +31,7 @@ import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
 import { DebugModule } from './modules/debug/debug.module'
 import { DependencyModule } from './modules/dependency/dependency.module'
+import { DraftModule } from './modules/draft/draft.module'
 import { FeedModule } from './modules/feed/feed.module'
 import { FileModule } from './modules/file/file.module'
 import { HealthModule } from './modules/health/health.module'
@@ -85,6 +86,7 @@ import { RedisModule } from './processors/redis/redis.module'
     ConfigsModule,
 
     DependencyModule,
+    DraftModule,
     FeedModule,
     FileModule,
     HealthModule,
