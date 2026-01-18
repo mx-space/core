@@ -128,6 +128,16 @@ Deployment uses PM2 with ecosystem configuration files for cluster management.
 - **class-validator** - Input validation
 - **Vitest** - Testing framework
 
+## API Response Rules
+
+`ResponseInterceptor` auto-wraps responses:
+- **Array** → `{ data: [...] }` (always wrapped)
+- **Object** → returned directly (no wrapper)
+- **@Paginator** → `{ data: [...], pagination: {...} }` (requires `mongoose.PaginateResult<T>` input from `model.paginate()`)
+- **@Bypass** → skips all transformation
+
+`JSONTransformInterceptor` converts all keys to **snake_case** (e.g., `createdAt` → `created_at`)
+
 ## Common Development Tasks
 
 ### Adding a New Module
