@@ -1,5 +1,25 @@
 # CHANGELOG
 
+# [8.7.0](https://github.com/mx-space/core/compare/v8.6.0...v8.7.0) (2026-01-18)
+
+
+### Bug Fixes
+
+* **deps:** update babel monorepo to v7.28.6 ([#2527](https://github.com/mx-space/core/issues/2527)) ([7711eb9](https://github.com/mx-space/core/commit/7711eb9b0a89589a1737b1a036a39f86aab36d72))
+* **deps:** update dependency @ai-sdk/openai to v3.0.12 ([#2532](https://github.com/mx-space/core/issues/2532)) ([d3e1a32](https://github.com/mx-space/core/commit/d3e1a32eec9e5d86032214468fc987d33035fad6))
+* **deps:** update dependency ai to v6.0.39 ([#2534](https://github.com/mx-space/core/issues/2534)) ([6a2db5f](https://github.com/mx-space/core/commit/6a2db5fa5327150d6fe0871f698c9044892fa861))
+* **deps:** update dependency cache-manager to v7.2.8 ([#2535](https://github.com/mx-space/core/issues/2535)) ([cb8c287](https://github.com/mx-space/core/commit/cb8c28760601748e0e24421cfe273a21a82347c9))
+* **deps:** update dependency remove-markdown to v0.6.3 ([#2536](https://github.com/mx-space/core/issues/2536)) ([222d8f2](https://github.com/mx-space/core/commit/222d8f2a4ff3398ed0f75608511e5c506a21cb81))
+* **deps:** update nest monorepo ([#2538](https://github.com/mx-space/core/issues/2538)) ([8ceae42](https://github.com/mx-space/core/commit/8ceae42162c54f59870334472b7de625c71fd4bb))
+
+
+### Features
+
+* **aggregate:** add new statistical endpoints for category distribution, tag cloud, publication trend, top articles, comment activity, and traffic source ([1eb5dd7](https://github.com/mx-space/core/commit/1eb5dd7090bdc080535edef443a371f5610c96f2))
+* **draft:** implement draft module with CRUD operations and history management ([8adf43e](https://github.com/mx-space/core/commit/8adf43e702213638b1de45febecfdd29dd495b57))
+
+
+
 # [8.6.0](https://github.com/mx-space/core/compare/v8.5.1...v8.6.0) (2026-01-15)
 
 
