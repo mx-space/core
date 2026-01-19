@@ -39,7 +39,6 @@ export class DraftHistoryModel {
   savedAt: Date
 }
 
-@index({ refType: 1, refId: 1 })
 @index({ refType: 1, refId: 1 }, { sparse: true })
 @index({ updated: -1 })
 @modelOptions({
