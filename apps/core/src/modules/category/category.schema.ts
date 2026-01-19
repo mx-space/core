@@ -8,7 +8,7 @@ import { CategoryType } from './category.model'
  */
 export const CategorySchema = z.object({
   name: zNonEmptyString,
-  type: z.nativeEnum(CategoryType).default(CategoryType.Category).optional(),
+  type: z.enum(CategoryType).default(CategoryType.Category).optional(),
   slug: zNonEmptyString.optional(),
 })
 
@@ -82,7 +82,7 @@ export const MultiCategoriesQuerySchema = z.object({
             ? +val
             : CategoryType.Category
       }
-    }, z.nativeEnum(CategoryType))
+    }, z.enum(CategoryType))
     .optional(),
 })
 

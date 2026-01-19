@@ -3,7 +3,7 @@ import {
   CollectionRefTypes,
   RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
-import { BaseCommentIndexModel } from '~/shared/model/base-comment.index.model'
+import { BaseCommentIndexModel } from '~/shared/model/base-comment.model'
 
 export type RefType = {
   title: string

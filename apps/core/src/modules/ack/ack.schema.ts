@@ -11,7 +11,7 @@ export enum AckEventType {
  * Ack schema for API validation
  */
 export const AckSchema = z.object({
-  type: z.nativeEnum(AckEventType),
+  type: z.enum(AckEventType),
   payload: z.any(),
 })
 
@@ -21,7 +21,7 @@ export class AckDto extends createZodDto(AckSchema) {}
  * Ack read payload schema
  */
 export const AckReadPayloadSchema = z.object({
-  type: z.nativeEnum(ArticleTypeEnum),
+  type: z.enum(ArticleTypeEnum),
   id: zMongoId,
 })
 

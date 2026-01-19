@@ -14,7 +14,7 @@ export enum SnippetType {
  * Snippet schema for API validation
  */
 export const SnippetSchema = BaseSchema.extend({
-  type: z.nativeEnum(SnippetType).default(SnippetType.JSON),
+  type: z.enum(SnippetType).default(SnippetType.JSON),
   private: z.boolean().default(false).optional(),
   raw: z
     .string()

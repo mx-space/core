@@ -13,7 +13,6 @@ import { fastifyApp } from './common/adapters/fastify.adapter'
 import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { SpiderGuard } from './common/guards/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
-import { ExtendedValidationPipe } from './common/pipes/validation.pipe'
 import { extendedZodValidationPipeInstance } from './common/zod'
 import { logger } from './global/consola.global'
 import { isMainProcess, isTest } from './global/env.global'
@@ -79,14 +78,7 @@ export async function bootstrap() {
     app.useGlobalInterceptors(new LoggingInterceptor())
   }
 
-  // Use both validation pipes during migration:
-  // - ExtendedValidationPipe: handles class-validator decorated DTOs
-  // - extendedZodValidationPipeInstance: handles Zod schema DTOs
-  // After migration is complete, remove ExtendedValidationPipe
-  app.useGlobalPipes(
-    ExtendedValidationPipe.shared,
-    extendedZodValidationPipeInstance,
-  )
+  app.useGlobalPipes(extendedZodValidationPipeInstance)
   app.useGlobalGuards(new SpiderGuard())
   !isTest && app.useWebSocketAdapter(new RedisIoAdapter(app))
 

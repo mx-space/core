@@ -73,7 +73,7 @@ export const CommentRefTypesSchema = z.object({
     .preprocess((val) => {
       if (!val) return undefined
       return normalizeRefType(val as any)
-    }, z.nativeEnum(CollectionRefTypes))
+    }, z.enum(CollectionRefTypes))
     .optional(),
 })
 

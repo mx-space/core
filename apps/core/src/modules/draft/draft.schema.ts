@@ -15,13 +15,13 @@ const ImageModelSchema = z.object({
 })
 
 export const CreateDraftSchema = z.object({
-  refType: z.nativeEnum(DraftRefType),
+  refType: z.enum(DraftRefType),
   refId: zMongoId.optional(),
   title: z.string().optional(),
   text: z.string().optional(),
   images: z.array(ImageModelSchema).optional(),
-  meta: z.record(z.any()).optional(),
-  typeSpecificData: z.record(z.any()).optional(),
+  meta: z.record(z.string(), z.any()).optional(),
+  typeSpecificData: z.record(z.string(), z.any()).optional(),
 })
 
 export class CreateDraftDto extends createZodDto(CreateDraftSchema) {}
@@ -36,14 +36,14 @@ export const DraftPagerSchema = z.object({
   select: z.string().min(1).optional(),
   sortBy: z.string().optional(),
   sortOrder: zSortOrder,
-  refType: z.nativeEnum(DraftRefType).optional(),
+  refType: z.enum(DraftRefType).optional(),
   hasRef: zCoerceBoolean.optional(),
 })
 
 export class DraftPagerDto extends createZodDto(DraftPagerSchema) {}
 
 export const DraftRefTypeSchema = z.object({
-  refType: z.nativeEnum(DraftRefType),
+  refType: z.enum(DraftRefType),
 })
 
 export class DraftRefTypeDto extends createZodDto(DraftRefTypeSchema) {}

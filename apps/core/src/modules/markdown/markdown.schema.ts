@@ -38,7 +38,7 @@ export class DatatypeDto extends createZodDto(DatatypeSchema) {}
 export const DataListSchema = z.object({
   type: z.preprocess(
     (val) => (typeof val === 'string' ? val.toLowerCase() : val),
-    z.nativeEnum(ArticleTypeEnum),
+    z.enum(ArticleTypeEnum),
   ),
   data: z.array(DatatypeSchema),
 })

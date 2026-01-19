@@ -11,7 +11,7 @@ export enum AiQueryType {
  */
 export const GenerateAiSchema = z
   .object({
-    type: z.nativeEnum(AiQueryType),
+    type: z.enum(AiQueryType),
     text: z.string().optional(),
     title: z.string().optional(),
   })

@@ -11,7 +11,7 @@ export const WebhookSchema = z.object({
   events: z.array(z.string()),
   enabled: z.boolean(),
   secret: z.string(),
-  scope: z.nativeEnum(EventScope),
+  scope: z.enum(EventScope),
 })
 
 export class WebhookDto extends createZodDto(WebhookSchema) {}

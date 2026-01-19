@@ -81,7 +81,10 @@ export const CommentOptionsSchema = section('评论设置', {
     description: '敏感时期专用',
   }),
   spamKeywords: field.array(z.array(z.string()).optional(), '自定义屏蔽关键词'),
-  blockIps: field.array(z.array(z.string().ip()).optional(), '自定义屏蔽 IP'),
+  blockIps: field.array(
+    z.array(z.union([z.string().ipv4(), z.string().ipv6()])).optional(),
+    '自定义屏蔽 IP',
+  ),
   disableNoChinese: field.toggle(z.boolean().optional(), '禁止非中文评论'),
   commentShouldAudit: field.toggle(z.boolean().optional(), '只展示已读评论'),
   recordIpLocation: field.toggle(z.boolean().optional(), '评论公开归属地'),
@@ -252,7 +255,7 @@ const AIProviderConfigSchema = withMeta(
       description: '唯一标识符，如 "openai-main", "deepseek"',
     }),
     name: field.plain(z.string().min(1), '显示名称'),
-    type: field.plain(z.nativeEnum(AIProviderType), 'Provider 类型', {
+    type: field.plain(z.enum(AIProviderType), 'Provider 类型', {
       description: 'openai | openai-compatible | anthropic | openrouter',
     }),
     apiKey: field.password(z.string().min(1), 'API Key'),
@@ -320,11 +323,15 @@ const OAuthProviderSchema = z.object({
   enabled: z.boolean(),
 })
 
-export const OAuthSchema = z.object({
-  providers: z.array(OAuthProviderSchema).optional(),
-  secrets: z.record(z.string(), z.record(z.string(), z.string())).optional(),
-  public: z.record(z.string(), z.record(z.string(), z.string())).optional(),
-})
+export const OAuthSchema = section(
+  'OAuth',
+  {
+    providers: z.array(OAuthProviderSchema).optional(),
+    secrets: z.record(z.string(), z.record(z.string(), z.string())).optional(),
+    public: z.record(z.string(), z.record(z.string(), z.string())).optional(),
+  },
+  { 'ui:options': { type: 'hidden' } },
+)
 export class OAuthDto extends createZodDto(OAuthSchema) {}
 export type OAuthConfig = z.infer<typeof OAuthSchema>
 

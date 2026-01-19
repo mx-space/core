@@ -11,7 +11,7 @@ export const UserOptionSchema = z.object({
   url: z.string().url({ message: '请更正为正确的网址' }).optional(),
   name: z.string().optional(),
   avatar: zAllowedUrl.optional(),
-  socialIds: z.record(z.any()).optional(),
+  socialIds: z.record(z.string(), z.any()).optional(),
 })
 
 /**

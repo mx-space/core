@@ -96,7 +96,7 @@ export const zPaginationSize = z.coerce
   .int()
   .min(1)
   .max(50)
-  .default(10)
+  .default(20)
 
 /**
  * Pagination page (min 1, default 1)

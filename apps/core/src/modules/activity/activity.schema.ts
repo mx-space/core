@@ -12,7 +12,7 @@ const transformEnum = (val: any) =>
  * Activity type params schema
  */
 export const ActivityTypeParamsSchema = z.object({
-  type: z.preprocess((val) => transformEnum(val), z.nativeEnum(Activity)),
+  type: z.preprocess((val) => transformEnum(val), z.enum(Activity)),
 })
 
 export class ActivityTypeParamsDto extends createZodDto(
@@ -32,10 +32,7 @@ export class ActivityDeleteDto extends createZodDto(ActivityDeleteSchema) {}
  * Activity query schema
  */
 export const ActivityQuerySchema = PagerSchema.extend({
-  type: z.preprocess(
-    (val) => transformEnum(val),
-    z.nativeEnum(Activity).optional(),
-  ),
+  type: z.preprocess((val) => transformEnum(val), z.enum(Activity).optional()),
 })
 
 export class ActivityQueryDto extends createZodDto(ActivityQuerySchema) {}

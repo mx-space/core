@@ -16,8 +16,8 @@ export const LinkSchema = z.object({
     )
     .optional(),
   description: zMaxLengthString(50, '描述信息超过 50 会坏掉的！').optional(),
-  type: z.nativeEnum(LinkType).default(LinkType.Friend).optional(),
-  state: z.nativeEnum(LinkState).default(LinkState.Pass).optional(),
+  type: z.enum(LinkType).default(LinkType.Friend).optional(),
+  state: z.enum(LinkState).default(LinkState.Pass).optional(),
   email: z
     .preprocess(
       (val) => (val === '' ? null : val),
@@ -49,7 +49,7 @@ export class PartialLinkDto extends createZodDto(PartialLinkSchema) {}
  */
 export const AuditReasonSchema = z.object({
   reason: z.string().min(1, '请输入审核理由'),
-  state: z.nativeEnum(LinkState),
+  state: z.enum(LinkState),
 })
 
 export class AuditReasonDto extends createZodDto(AuditReasonSchema) {}

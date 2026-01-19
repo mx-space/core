@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { zodToJsonSchema } from 'zod-to-json-schema'
 
 /**
  * UI Options for JSON Schema form rendering
@@ -148,84 +147,4 @@ export function section<T extends z.ZodRawShape>(
 ): z.ZodObject<T> {
   const schema = z.object(shape)
   return withMeta(schema, { title, ...options })
-}
-
-/**
- * Convert Zod schema to JSON Schema with UI metadata
- */
-export function zodToJsonSchemaWithMeta(
-  schema: z.ZodTypeAny,
-  options?: { definitions?: Record<string, any> },
-): Record<string, any> {
-  // Use any type assertion to avoid deep type instantiation error with complex nested schemas
-  // Only pass definitions if it's actually provided and not undefined
-  const zodToJsonSchemaOptions: Record<string, any> = {
-    $refStrategy: 'none',
-  }
-  if (options?.definitions) {
-    zodToJsonSchemaOptions.definitions = options.definitions
-  }
-  const baseSchema = zodToJsonSchema(
-    schema as any,
-    zodToJsonSchemaOptions as any,
-  ) as Record<string, any>
-
-  // Apply metadata recursively
-  return applyMetadataToJsonSchema(schema, baseSchema)
-}
-
-function applyMetadataToJsonSchema(
-  zodSchema: z.ZodTypeAny,
-  jsonSchema: Record<string, any>,
-): Record<string, any> {
-  const meta = getMeta(zodSchema)
-
-  // Apply metadata to this schema
-  if (meta) {
-    if (meta.title) jsonSchema.title = meta.title
-    if (meta.description) jsonSchema.description = meta.description
-    if (meta['ui:options']) jsonSchema['ui:options'] = meta['ui:options']
-  }
-
-  // Handle ZodObject - apply metadata to properties
-  if (zodSchema instanceof z.ZodObject) {
-    const shape = zodSchema.shape
-    if (jsonSchema.properties) {
-      for (const [key, propSchema] of Object.entries(shape)) {
-        if (jsonSchema.properties[key]) {
-          jsonSchema.properties[key] = applyMetadataToJsonSchema(
-            propSchema as z.ZodTypeAny,
-            jsonSchema.properties[key],
-          )
-        }
-      }
-    }
-  }
-
-  // Handle ZodOptional
-  if (zodSchema instanceof z.ZodOptional) {
-    const innerMeta = getMeta(zodSchema._def.innerType)
-    if (innerMeta) {
-      if (innerMeta.title) jsonSchema.title = innerMeta.title
-      if (innerMeta.description) jsonSchema.description = innerMeta.description
-      if (innerMeta['ui:options'])
-        jsonSchema['ui:options'] = innerMeta['ui:options']
-    }
-    return applyMetadataToJsonSchema(zodSchema._def.innerType, jsonSchema)
-  }
-
-  // Handle ZodDefault
-  if (zodSchema instanceof z.ZodDefault) {
-    return applyMetadataToJsonSchema(zodSchema._def.innerType, jsonSchema)
-  }
-
-  // Handle ZodArray
-  if (zodSchema instanceof z.ZodArray && jsonSchema.items) {
-    jsonSchema.items = applyMetadataToJsonSchema(
-      zodSchema._def.type,
-      jsonSchema.items,
-    )
-  }
-
-  return jsonSchema
 }

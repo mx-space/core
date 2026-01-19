@@ -30,7 +30,7 @@ export const TimelineQuerySchema = z.object({
   year: zCoerceInt.optional(),
   type: z.preprocess(
     (val) => (typeof val === 'string' ? Math.trunc(Number(val)) : val),
-    z.nativeEnum(TimelineType).optional(),
+    z.enum(TimelineType).optional(),
   ),
 })
 
@@ -57,7 +57,7 @@ export enum ReadAndLikeCountDocumentType {
 export const ReadAndLikeCountTypeSchema = z.object({
   type: z.preprocess(
     (val) => (typeof val === 'string' ? Math.trunc(Number(val)) : val),
-    z.nativeEnum(ReadAndLikeCountDocumentType).optional(),
+    z.enum(ReadAndLikeCountDocumentType).optional(),
   ),
 })
 

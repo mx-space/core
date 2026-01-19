@@ -10,7 +10,6 @@ import { Cookies } from '~/common/decorators/cookie.decorator'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
-import { CacheService } from '~/processors/redis/cache.service'
 import type { CountModel } from '~/shared/model/count.model'
 import { FastifyReply } from 'fastify'
 import { AckDto, AckEventType, AckReadPayloadSchema } from './ack.schema'
@@ -18,7 +17,6 @@ import { AckDto, AckEventType, AckReadPayloadSchema } from './ack.schema'
 @ApiController('ack')
 export class AckController {
   constructor(
-    private readonly cacheService: CacheService,
     private readonly countingService: CountingService,
 
     private readonly webGateway: WebEventsGateway,
@@ -37,7 +35,7 @@ export class AckController {
       case AckEventType.READ: {
         const result = AckReadPayloadSchema.safeParse(payload)
         if (!result.success) {
-          const errorMessages = result.error.errors.map((err) => {
+          const errorMessages = result.error.issues.map((err) => {
             const path = err.path.join('.')
             return path ? `${path}: ${err.message}` : err.message
           })

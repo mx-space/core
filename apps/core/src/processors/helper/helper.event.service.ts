@@ -42,18 +42,19 @@ export class EventManagerService {
     this.listenSystemEvents()
   }
 
-  private mapScopeToInstance: Record<
+  private get mapScopeToInstance(): Record<
     EventScope,
     (WebEventsGateway | AdminEventsGateway | EventEmitter2)[]
-  > = {
-    [EventScope.ALL]: [this.webGateway, this.adminGateway, this.emitter2],
-    [EventScope.TO_VISITOR]: [this.webGateway],
-    [EventScope.TO_ADMIN]: [this.adminGateway],
-    [EventScope.TO_SYSTEM]: [this.emitter2],
-    [EventScope.TO_VISITOR_ADMIN]: [this.webGateway, this.adminGateway],
-
-    [EventScope.TO_SYSTEM_VISITOR]: [this.emitter2, this.webGateway],
-    [EventScope.TO_SYSTEM_ADMIN]: [this.emitter2, this.adminGateway],
+  > {
+    return {
+      [EventScope.ALL]: [this.webGateway, this.adminGateway, this.emitter2],
+      [EventScope.TO_VISITOR]: [this.webGateway],
+      [EventScope.TO_ADMIN]: [this.adminGateway],
+      [EventScope.TO_SYSTEM]: [this.emitter2],
+      [EventScope.TO_VISITOR_ADMIN]: [this.webGateway, this.adminGateway],
+      [EventScope.TO_SYSTEM_VISITOR]: [this.emitter2, this.webGateway],
+      [EventScope.TO_SYSTEM_ADMIN]: [this.emitter2, this.adminGateway],
+    }
   }
 
   #key = 'event-manager'

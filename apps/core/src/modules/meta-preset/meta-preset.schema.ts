@@ -12,7 +12,7 @@ const MetaFieldOptionSchema = z.object({
 const MetaPresetChildSchema = z.object({
   key: zNonEmptyString,
   label: zNonEmptyString,
-  type: z.nativeEnum(MetaFieldType),
+  type: z.enum(MetaFieldType),
   description: z.string().optional(),
   placeholder: z.string().optional(),
   options: z.array(MetaFieldOptionSchema).optional(),
@@ -21,10 +21,10 @@ const MetaPresetChildSchema = z.object({
 export const CreateMetaPresetSchema = z.object({
   key: zNonEmptyString,
   label: zNonEmptyString,
-  type: z.nativeEnum(MetaFieldType),
+  type: z.enum(MetaFieldType),
   description: z.string().optional(),
   placeholder: z.string().optional(),
-  scope: z.nativeEnum(MetaPresetScope).optional(),
+  scope: z.enum(MetaPresetScope).optional(),
   options: z.array(MetaFieldOptionSchema).optional(),
   allowCustomOption: z.boolean().optional(),
   children: z.array(MetaPresetChildSchema).optional(),
@@ -39,7 +39,7 @@ export const UpdateMetaPresetSchema = CreateMetaPresetSchema.partial()
 export class UpdateMetaPresetDto extends createZodDto(UpdateMetaPresetSchema) {}
 
 export const QueryMetaPresetSchema = z.object({
-  scope: z.nativeEnum(MetaPresetScope).optional(),
+  scope: z.enum(MetaPresetScope).optional(),
   enabledOnly: zCoerceBoolean.optional(),
 })
 

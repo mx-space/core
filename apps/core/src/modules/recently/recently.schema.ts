@@ -24,7 +24,7 @@ export class RecentlyDto extends createZodDto(RecentlySchema) {}
 export const RecentlyAttitudeSchema = z.object({
   attitude: z.preprocess(
     (val) => (typeof val === 'string' ? Number(val) : val),
-    z.nativeEnum(RecentlyAttitudeEnum),
+    z.enum(RecentlyAttitudeEnum),
   ),
 })
 

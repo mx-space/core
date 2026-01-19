@@ -11,7 +11,7 @@ export enum SupportedMessageEvent {
  * Message event schema
  */
 export const MessageEventSchema = z.object({
-  type: z.nativeEnum(SupportedMessageEvent),
+  type: z.enum(SupportedMessageEvent),
   payload: z.unknown(),
 })
 

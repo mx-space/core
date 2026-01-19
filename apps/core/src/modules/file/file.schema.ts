@@ -6,7 +6,7 @@ import { FileTypeEnum } from './file.type'
  * File query schema
  */
 export const FileQuerySchema = z.object({
-  type: z.nativeEnum(FileTypeEnum),
+  type: z.enum(FileTypeEnum),
   name: z.string(),
 })
 
@@ -16,7 +16,7 @@ export class FileQueryDto extends createZodDto(FileQuerySchema) {}
  * File upload schema
  */
 export const FileUploadSchema = z.object({
-  type: z.nativeEnum(FileTypeEnum).optional(),
+  type: z.enum(FileTypeEnum).optional(),
 })
 
 export class FileUploadDto extends createZodDto(FileUploadSchema) {}

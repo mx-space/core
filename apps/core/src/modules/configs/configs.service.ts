@@ -288,13 +288,13 @@ export class ConfigsService {
     const result = schema.safeParse(value)
     if (!result.success) {
       const zodError = result.error as ZodError
-      const errorMessages = zodError.errors.map((err) => {
+      const errorMessages = zodError.issues.map((err) => {
         const path = err.path.join('.')
         return path ? `${path}: ${err.message}` : err.message
       })
       throw new UnprocessableEntityException({
         message: errorMessages.join('; '),
-        errors: zodError.errors,
+        errors: zodError.issues,
       })
     }
     return result.data

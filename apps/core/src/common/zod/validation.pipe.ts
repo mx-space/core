@@ -13,7 +13,7 @@ import type { ZodError } from 'zod'
  */
 export const ExtendedZodValidationPipe = createZodValidationPipe({
   createValidationException: (error: ZodError) => {
-    const firstError = error.errors[0]
+    const firstError = error.issues[0]
     const path = firstError?.path.join('.') || ''
     const message = firstError
       ? path
@@ -24,7 +24,7 @@ export const ExtendedZodValidationPipe = createZodValidationPipe({
     return new UnprocessableEntityException({
       statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       message,
-      errors: error.errors.map((err) => ({
+      errors: error.issues.map((err) => ({
         field: err.path.join('.'),
         message: err.message,
       })),
