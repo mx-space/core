@@ -99,9 +99,14 @@ jobs:
         uses: ./.github/actions/setup-node
         with:
           node-version: '22.x'
+      - name: Install Redis Server
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y redis-server
       - name: Run Lint
         run: npm run lint
       - name: Run Tests
         run: npm run test
         env:
           CI: true
+          REDIS_BINARY_PATH: /usr/bin/redis-server
