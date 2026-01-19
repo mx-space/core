@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { installPackage } from '@mx-space/compiled/install-pkg'
 import { NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { logger } from '~/global/consola.global'
-import { cloneDeep } from 'lodash'
+import { cloneDeep } from 'es-toolkit/compat'
 
 export const md5 = (text: string) =>
   createHash('md5').update(text).digest('hex') as string

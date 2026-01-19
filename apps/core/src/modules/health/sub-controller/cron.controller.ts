@@ -15,7 +15,7 @@ import { CRON_DESCRIPTION } from '~/constants/meta.constant'
 import { CronService } from '~/processors/helper/helper.cron.service'
 import { TaskQueueService } from '~/processors/helper/helper.tq.service'
 import { isString } from '~/utils/validator.util'
-import { isFunction } from 'lodash'
+import { isFunction } from 'es-toolkit/compat'
 
 @ApiController('health/cron')
 @Auth()

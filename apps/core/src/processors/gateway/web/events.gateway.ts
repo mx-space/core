@@ -17,7 +17,7 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getShortDate } from '~/utils/time.util'
-import { debounce, uniqBy } from 'lodash'
+import { debounce, uniqBy } from 'es-toolkit/compat'
 import SocketIO from 'socket.io'
 import type {
   DecorateAcknowledgementsWithMultipleResponses,

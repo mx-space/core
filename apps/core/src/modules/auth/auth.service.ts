@@ -15,7 +15,7 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import dayjs from 'dayjs'
-import { isDate, omit } from 'lodash'
+import { isDate, omit } from 'es-toolkit/compat'
 import { Types } from 'mongoose'
 import {
   AUTH_JS_ACCOUNT_COLLECTION,

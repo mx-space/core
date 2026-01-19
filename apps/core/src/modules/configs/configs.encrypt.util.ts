@@ -1,5 +1,5 @@
 import { EncryptUtil } from '~/utils/encrypt.util'
-import { isArrayLike, isObject } from 'lodash'
+import { isArrayLike, isObject } from 'es-toolkit/compat'
 import { LRUCache } from 'lru-cache'
 
 const metaKey = 'configs:encrypt'
