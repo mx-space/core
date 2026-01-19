@@ -3,8 +3,7 @@ import {
   CollectionRefTypes,
   RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
-import { BaseCommentIndexModel } from '~/shared/model/base-comment.model'
-import { IsOptional } from 'class-validator'
+import { BaseCommentIndexModel } from '~/shared/model/base-comment.index.model'
 
 export type RefType = {
   title: string
@@ -27,7 +26,6 @@ export class RecentlyModel extends BaseCommentIndexModel {
   refType: CollectionRefTypes
 
   @prop()
-  @IsOptional()
   modified?: Date
 
   /**

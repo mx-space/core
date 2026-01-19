@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '~/transformers/model.transformer'
 import { Types } from 'mongoose'
-import type { CreateDraftDto, UpdateDraftDto } from './draft.dto'
 import { DraftHistoryModel, DraftModel, DraftRefType } from './draft.model'
+import type { CreateDraftDto, UpdateDraftDto } from './draft.schema'
 
 @Injectable()
 export class DraftService {

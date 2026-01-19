@@ -16,7 +16,7 @@ import {
   QueryMetaPresetDto,
   UpdateMetaPresetDto,
   UpdateOrderDto,
-} from './meta-preset.dto'
+} from './meta-preset.schema'
 import { MetaPresetService } from './meta-preset.service'
 
 @ApiController({ path: 'meta-presets' })

@@ -3,6 +3,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { MongoIdDto } from '~/shared/dto/id.dto'
+import { DraftRefType } from './draft.model'
 import {
   CreateDraftDto,
   DraftPagerDto,
@@ -10,8 +11,7 @@ import {
   DraftRefTypeDto,
   RestoreVersionDto,
   UpdateDraftDto,
-} from './draft.dto'
-import { DraftRefType } from './draft.model'
+} from './draft.schema'
 import { DraftService } from './draft.service'
 
 @ApiController('drafts')

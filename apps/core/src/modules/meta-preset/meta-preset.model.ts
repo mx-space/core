@@ -1,16 +1,5 @@
 import { modelOptions, prop, Severity } from '@typegoose/typegoose'
 import { BaseModel } from '~/shared/model/base.model'
-import { Type } from 'class-transformer'
-import {
-  IsArray,
-  IsBoolean,
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator'
 import { Schema } from 'mongoose'
 
 /**
@@ -43,17 +32,12 @@ export enum MetaPresetScope {
  */
 export class MetaFieldOption {
   @prop({ type: Schema.Types.Mixed, required: true })
-  @IsNotEmpty()
   value!: any
 
   @prop({ required: true })
-  @IsString()
-  @IsNotEmpty()
   label!: string
 
   @prop({ default: false })
-  @IsOptional()
-  @IsBoolean()
   exclusive?: boolean
 }
 
@@ -62,34 +46,21 @@ export class MetaFieldOption {
  */
 export class MetaPresetChild {
   @prop({ required: true })
-  @IsString()
-  @IsNotEmpty()
   key!: string
 
   @prop({ required: true })
-  @IsString()
-  @IsNotEmpty()
   label!: string
 
   @prop({ required: true, enum: MetaFieldType })
-  @IsEnum(MetaFieldType)
   type!: MetaFieldType
 
   @prop()
-  @IsOptional()
-  @IsString()
   description?: string
 
   @prop()
-  @IsOptional()
-  @IsString()
   placeholder?: string
 
   @prop({ type: () => [MetaFieldOption], default: [] })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => MetaFieldOption)
   options?: MetaFieldOption[]
 }
 
@@ -107,27 +78,18 @@ export class MetaPresetChild {
 })
 export class MetaPresetModel extends BaseModel {
   @prop({ required: true, unique: true })
-  @IsString()
-  @IsNotEmpty()
   key!: string
 
   @prop({ required: true })
-  @IsString()
-  @IsNotEmpty()
   label!: string
 
   @prop({ required: true, enum: MetaFieldType })
-  @IsEnum(MetaFieldType)
   type!: MetaFieldType
 
   @prop()
-  @IsOptional()
-  @IsString()
   description?: string
 
   @prop()
-  @IsOptional()
-  @IsString()
   placeholder?: string
 
   @prop({
@@ -135,38 +97,24 @@ export class MetaPresetModel extends BaseModel {
     enum: MetaPresetScope,
     default: MetaPresetScope.Both,
   })
-  @IsEnum(MetaPresetScope)
   scope!: MetaPresetScope
 
   @prop({ type: () => [MetaFieldOption], default: [] })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => MetaFieldOption)
   options?: MetaFieldOption[]
 
   @prop({ default: false })
-  @IsOptional()
-  @IsBoolean()
   allowCustomOption?: boolean
 
   @prop({ type: () => [MetaPresetChild], default: [] })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => MetaPresetChild)
   children?: MetaPresetChild[]
 
   @prop({ default: false })
-  @IsBoolean()
   isBuiltin!: boolean
 
   @prop({ default: 0 })
-  @IsNumber()
   order!: number
 
   @prop({ default: true })
-  @IsBoolean()
   enabled!: boolean
 
   updated?: Date

@@ -2,15 +2,6 @@ import { index, modelOptions, prop, PropType } from '@typegoose/typegoose'
 import { DRAFT_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 import { ImageModel } from '~/shared/model/image.model'
-import { Transform, Type } from 'class-transformer'
-import {
-  IsArray,
-  IsEnum,
-  IsObject,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator'
 import { Types } from 'mongoose'
 
 export enum DraftRefType {
@@ -52,30 +43,18 @@ export class DraftHistoryModel {
 })
 export class DraftModel extends BaseModel {
   @prop({ required: true, enum: DraftRefType })
-  @IsEnum(DraftRefType)
   refType: DraftRefType
 
   @prop({ type: Types.ObjectId })
-  @IsOptional()
-  @Transform(({ value }) =>
-    value ? Types.ObjectId.createFromHexString(value) : undefined,
-  )
   refId?: Types.ObjectId
 
   @prop({ trim: true, default: '' })
-  @IsString()
-  @IsOptional()
   title: string
 
   @prop({ trim: true, default: '' })
-  @IsString()
-  @IsOptional()
   text: string
 
   @prop({ type: ImageModel })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => ImageModel)
   images?: ImageModel[]
 
   @prop(
@@ -90,16 +69,9 @@ export class DraftModel extends BaseModel {
     },
     PropType.NONE,
   )
-  @IsOptional()
-  @IsObject()
   meta?: Record<string, any>
 
   @prop({ type: String })
-  @IsOptional()
-  @IsObject()
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value : JSON.stringify(value),
-  )
   typeSpecificData?: string
 
   @prop({ default: 1 })
@@ -109,10 +81,6 @@ export class DraftModel extends BaseModel {
   updated?: Date
 
   @prop({ type: () => [DraftHistoryModel], default: [] })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => DraftHistoryModel)
   history: DraftHistoryModel[]
 
   static get protectedKeys() {
