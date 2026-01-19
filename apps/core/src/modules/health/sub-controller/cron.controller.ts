@@ -63,7 +63,11 @@ export class HealthCronController {
     if (!hasMethod) {
       throw new BadRequestException(`${name} is not a cron`)
     }
-    this.taskQueue.add(name, async () => this.cronService[name]())
+    const method = cron[name]
+    if (!isFunction(method)) {
+      throw new BadRequestException(`${name} is not a valid cron method`)
+    }
+    this.taskQueue.add(name, async () => method.call(this.cronService))
   }
 
   @Get('/task/:name')
