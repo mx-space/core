@@ -10,7 +10,6 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
-import { PartialType } from '@nestjs/mapped-types'
 import type { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -36,9 +35,11 @@ export function BaseCrudFactory<
 
   const eventNamePrefix = `${prefix.toUpperCase()}_`
 
-  class PDto extends PartialType(model as any) {}
+  // Simple DTO classes without class-validator metadata
+  // Validation is handled by Zod schemas when needed
+  class PDto {}
 
-  class Dto extends model {}
+  class Dto {}
 
   const Upper = classUpper || class {}
 
@@ -122,8 +123,7 @@ export function BaseCrudFactory<
     @Auth()
     @HttpCode(204)
     async patch(@Body() body: PDto, @Param() param: MongoIdDto) {
-      // @ts-expect-error
-      await this.update(body, param)
+      await this.update(body as any, param)
       return
     }
 

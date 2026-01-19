@@ -1,7 +1,7 @@
 import { UnprocessableEntityException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
-import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
+import { extendedZodValidationPipeInstance } from '~/common/zod/validation.pipe'
 import { RedisKeys } from '~/constants/cache.constant'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { OptionModel } from '~/modules/configs/configs.model'
@@ -48,7 +48,7 @@ describe('Test ConfigsService', () => {
         },
         {
           provide: VALIDATION_PIPE_INJECTION,
-          useValue: ExtendedValidationPipe.shared,
+          useValue: extendedZodValidationPipeInstance,
         },
       ],
     }).compile()

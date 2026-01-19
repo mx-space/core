@@ -1,6 +1,8 @@
 import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { OptionModel } from '~/modules/configs/configs.model'
+import { DraftModel } from '~/modules/draft/draft.model'
+import { DraftService } from '~/modules/draft/draft.service'
 import { NoteController } from '~/modules/note/note.controller'
 import { NoteModel } from '~/modules/note/note.model'
 import { NoteService } from '~/modules/note/note.service'
@@ -53,9 +55,10 @@ describe('NoteController (e2e)', async () => {
       authProvider,
 
       countingServiceProvider,
+      DraftService,
     ],
     imports: [],
-    models: [NoteModel, OptionModel, UserModel],
+    models: [NoteModel, OptionModel, UserModel, DraftModel],
     async pourData(modelMap) {
       // @ts-ignore
       const { model: _model } = modelMap.get(NoteModel) as {

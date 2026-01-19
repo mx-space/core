@@ -8,11 +8,11 @@ describe('OptionController (e2e)', () => {
     controllers: [BaseOptionController],
     providers: [configProvider],
   })
-  test('GET /config/jsonschema', () => {
+  test('GET /config/form-schema', () => {
     return proxy.app
       .inject({
         method: 'GET',
-        url: '/config/jsonschema',
+        url: '/config/form-schema',
         headers: {
           ...authPassHeader,
         },
@@ -21,10 +21,8 @@ describe('OptionController (e2e)', () => {
         expect(res.statusCode).toBe(200)
         const json = res.json()
 
-        expect(
-          typeof json.properties === 'object' && json.properties,
-        ).toBeTruthy()
-        expect(typeof json.default === 'object' && json.default).toBeTruthy()
+        expect(typeof json.groups === 'object' && json.groups).toBeTruthy()
+        expect(typeof json.defaults === 'object' && json.defaults).toBeTruthy()
       })
   })
 })

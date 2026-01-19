@@ -1,6 +1,6 @@
 import { createRedisProvider } from '@/mock/modules/redis.mock'
 import type { ReturnModelType } from '@typegoose/typegoose'
-import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
+import { extendedZodValidationPipeInstance } from '~/common/zod/validation.pipe'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
@@ -38,7 +38,7 @@ describe('Test LinkController(E2E)', async () => {
       ...eventEmitterProvider,
       {
         provide: VALIDATION_PIPE_INJECTION,
-        useValue: ExtendedValidationPipe.shared,
+        useValue: extendedZodValidationPipeInstance,
       },
     ],
     async pourData(modelMap) {
