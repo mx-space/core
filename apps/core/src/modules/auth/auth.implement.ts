@@ -28,6 +28,7 @@ export async function CreateAuth(
   providers: BetterAuthOptions['socialProviders'],
 ) {
   const auth = betterAuth({
+    telemetry: { enabled: false },
     database: mongodbAdapter(db),
     socialProviders: providers,
     basePath: isDev ? '/auth' : `/api/v${API_VERSION}/auth`,
