@@ -61,6 +61,12 @@ export class CategoryAndSlugDto extends createZodDto(CategoryAndSlugSchema) {}
  */
 export const PostPagerSchema = PagerSchema.extend({
   truncate: zCoerceInt.optional(),
+  categoryIds: z
+    .preprocess(
+      (val) => (typeof val === 'string' ? val.split(',') : val),
+      z.array(zMongoId),
+    )
+    .optional(),
 })
 
 export class PostPagerDto extends createZodDto(PostPagerSchema) {}

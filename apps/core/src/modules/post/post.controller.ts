@@ -42,7 +42,16 @@ export class PostController {
     @Query() query: PostPagerDto,
     @IsAuthenticated() isAuthenticated: boolean,
   ) {
-    const { size, select, page, year, sortBy, sortOrder, truncate } = query
+    const {
+      size,
+      select,
+      page,
+      year,
+      sortBy,
+      sortOrder,
+      truncate,
+      categoryIds,
+    } = query
 
     return this.postService.model
       .aggregatePaginate(
@@ -53,6 +62,17 @@ export class PostController {
                 ...addYearCondition(year),
                 // 非认证用户只能看到已发布的文章
                 ...(isAuthenticated ? {} : { isPublished: true }),
+                // 分类筛选
+                ...(categoryIds?.length
+                  ? {
+                      categoryId: {
+                        $in: categoryIds.map(
+                          (id) =>
+                            new this.postService.model.base.Types.ObjectId(id),
+                        ),
+                      },
+                    }
+                  : {}),
               },
             },
             // @see https://stackoverflow.com/questions/54810712/mongodb-sort-by-field-a-if-field-b-null-otherwise-sort-by-field-c
@@ -87,14 +107,17 @@ export class PostController {
             },
             select && {
               $project: {
-                ...(select?.split(' ').reduce(
-                  (acc, cur) => {
-                    const field = cur.trim()
-                    acc[field] = 1
-                    return acc
-                  },
-                  Object.keys(new PostModel()).map((k) => ({ [k]: 0 })),
-                ) as any),
+                ...select
+                  .split(' ')
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+                  .reduce(
+                    (acc, field) => {
+                      acc[field] = 1
+                      return acc
+                    },
+                    {} as Record<string, 1>,
+                  ),
               },
             },
             {
