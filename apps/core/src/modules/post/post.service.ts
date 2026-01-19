@@ -25,6 +25,7 @@ import slugify from 'slugify'
 import { getArticleIdFromRoomName } from '../activity/activity.util'
 import { CategoryService } from '../category/category.service'
 import { CommentModel } from '../comment/comment.model'
+import { DraftService } from '../draft/draft.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { PostModel } from './post.model'
 
@@ -44,14 +45,16 @@ export class PostService {
     private readonly textMacroService: TextMacroService,
 
     private readonly slugTrackerService: SlugTrackerService,
+    @Inject(forwardRef(() => DraftService))
+    private readonly draftService: DraftService,
   ) {}
 
   get model() {
     return this.postModel
   }
 
-  async create(post: PostModel) {
-    const { categoryId } = post
+  async create(post: PostModel & { draftId?: string }) {
+    const { categoryId, draftId } = post
 
     const category = await this.categoryService.findCategoryById(
       categoryId as any as string,
@@ -83,6 +86,12 @@ export class PostService {
 
     // 双向关联
     await this.relatedEachOther(doc, relatedIds)
+
+    // 处理草稿：标记为已发布，并关联到新创建的文章
+    if (draftId) {
+      await this.draftService.linkToPublished(draftId, doc.id)
+      await this.draftService.markAsPublished(draftId)
+    }
 
     scheduleManager.schedule(async () => {
       const doc = cloned
@@ -233,11 +242,17 @@ export class PostService {
     }
   }
 
-  async updateById(id: string, data: Partial<PostModel>) {
+  async updateById(
+    id: string,
+    data: Partial<PostModel> & { draftId?: string },
+  ) {
     const oldDocument = await this.postModel.findById(id)
     if (!oldDocument) {
       throw new BadRequestException('文章不存在')
     }
+
+    const { draftId } = data
+
     // 看看 category 改了没
     const { categoryId } = data
     if (categoryId && categoryId !== oldDocument.categoryId) {
@@ -289,6 +304,12 @@ export class PostService {
     )
 
     await oldDocument.save()
+
+    // 处理草稿：标记为已发布
+    if (draftId) {
+      await this.draftService.markAsPublished(draftId)
+    }
+
     scheduleManager.schedule(() => this.afterUpdatePost(id, data, oldDocument))
 
     return oldDocument.toObject()

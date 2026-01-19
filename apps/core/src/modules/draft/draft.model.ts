@@ -77,6 +77,13 @@ export class DraftModel extends BaseModel {
   @prop({ default: 1 })
   version: number
 
+  /**
+   * 草稿最后被发布时的版本号
+   * 当 publishedVersion === version 时，表示草稿内容与已发布内容一致
+   */
+  @prop()
+  publishedVersion?: number
+
   @prop()
   updated?: Date
 
@@ -84,6 +91,8 @@ export class DraftModel extends BaseModel {
   history: DraftHistoryModel[]
 
   static get protectedKeys() {
-    return ['version', 'history', 'updated'].concat(super.protectedKeys)
+    return ['version', 'history', 'updated', 'publishedVersion'].concat(
+      super.protectedKeys,
+    )
   }
 }

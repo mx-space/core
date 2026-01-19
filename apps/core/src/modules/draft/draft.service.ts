@@ -111,6 +111,16 @@ export class DraftService {
       .lean({ getters: true })
 
     if (!draft) return null
+
+    // 如果草稿已发布（publishedVersion === version），返回 null
+    // 表示草稿内容已与已发布内容同步，不需要恢复
+    if (
+      draft.publishedVersion !== undefined &&
+      draft.publishedVersion === draft.version
+    ) {
+      return null
+    }
+
     return this.transformDraft(draft)
   }
 
@@ -204,6 +214,18 @@ export class DraftService {
     await this.draftModel.findByIdAndUpdate(draftId, {
       refId: Types.ObjectId.createFromHexString(publishedId),
     })
+  }
+
+  /**
+   * 标记草稿为已发布
+   * 将 publishedVersion 设置为当前 version，表示草稿内容已同步到已发布内容
+   */
+  async markAsPublished(draftId: string): Promise<void> {
+    const draft = await this.draftModel.findById(draftId)
+    if (!draft) return
+
+    draft.publishedVersion = draft.version
+    await draft.save()
   }
 
   private transformDraft(draft: DraftModel): DraftModel {

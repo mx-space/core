@@ -17,6 +17,7 @@ import { debounce, omit } from 'lodash'
 import type { FilterQuery, PaginateOptions } from 'mongoose'
 import { getArticleIdFromRoomName } from '../activity/activity.util'
 import { CommentService } from '../comment/comment.service'
+import { DraftService } from '../draft/draft.service'
 import { NoteModel } from './note.model'
 
 @Injectable()
@@ -30,6 +31,8 @@ export class NoteService {
     private readonly commentService: CommentService,
 
     private readonly textMacrosService: TextMacroService,
+    @Inject(forwardRef(() => DraftService))
+    private readonly draftService: DraftService,
   ) {}
 
   public get model() {
@@ -147,10 +150,18 @@ export class NoteService {
     return isValid
   }
 
-  public async create(document: NoteModel) {
+  public async create(document: NoteModel & { draftId?: string }) {
+    const { draftId } = document
     document.created = getLessThanNow(document.created)
 
     const note = await this.noteModel.create(document)
+
+    // 处理草稿：标记为已发布，并关联到新创建的日记
+    if (draftId) {
+      await this.draftService.linkToPublished(draftId, note.id)
+      await this.draftService.markAsPublished(draftId)
+    }
+
     scheduleManager.schedule(async () => {
       await Promise.all([
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
@@ -193,12 +204,17 @@ export class NoteService {
     return note
   }
 
-  public async updateById(id: string, data: Partial<NoteModel>) {
+  public async updateById(
+    id: string,
+    data: Partial<NoteModel> & { draftId?: string },
+  ) {
     const oldDoc = await this.noteModel.findById(id).lean()
 
     if (!oldDoc) {
       throw new NoContentCanBeModifiedException()
     }
+
+    const { draftId } = data
 
     const hasFieldChanged = (
       [
@@ -252,6 +268,11 @@ export class NoteService {
 
     if (!updated) {
       throw new NoContentCanBeModifiedException()
+    }
+
+    // 处理草稿：标记为已发布
+    if (draftId) {
+      await this.draftService.markAsPublished(draftId)
     }
 
     scheduleManager.schedule(async () => {

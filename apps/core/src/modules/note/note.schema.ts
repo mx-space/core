@@ -42,6 +42,8 @@ export const NoteSchema = WriteBaseSchema.extend({
   location: z.string().optional(),
   topicId: zMongoId.optional(),
   images: z.array(ImageSchema).optional(),
+  /** 关联的草稿 ID，发布时标记该草稿为已发布 */
+  draftId: zMongoId.optional(),
 })
 
 export class NoteDto extends createZodDto(NoteSchema) {}
