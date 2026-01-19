@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [8.7.1](https://github.com/mx-space/core/compare/v8.7.0...v8.7.1) (2026-01-19)
+
+
+
 # [8.7.0](https://github.com/mx-space/core/compare/v8.6.0...v8.7.0) (2026-01-18)
 
 
