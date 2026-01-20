@@ -3,6 +3,7 @@ import { configProvider } from '@/mock/modules/config.mock'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { AuthService } from '~/modules/auth/auth.service'
 import { AuthnService } from '~/modules/authn/authn.service'
 import { UserController } from '~/modules/user/user.controller'
@@ -57,7 +58,7 @@ describe('AppController (e2e)', () => {
     return app
       .inject({
         method: 'POST',
-        url: '/master/register',
+        url: `${apiRoutePrefix}/master/register`,
         payload: {
           email: '11@example.com',
           username: '11',
@@ -77,7 +78,7 @@ describe('AppController (e2e)', () => {
     return app
       .inject({
         method: 'POST',
-        url: '/master/register',
+        url: `${apiRoutePrefix}/master/register`,
         payload: {
           username: '111',
           password: 'aaa',
@@ -92,7 +93,7 @@ describe('AppController (e2e)', () => {
     return app
       .inject({
         method: 'POST',
-        url: '/master/login',
+        url: `${apiRoutePrefix}/master/login`,
         payload: {
           username: '11',
           password: '11',

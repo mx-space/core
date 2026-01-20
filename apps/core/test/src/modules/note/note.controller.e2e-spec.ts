@@ -1,5 +1,6 @@
 import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { APP_INTERCEPTOR } from '@nestjs/core'
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { DraftModel } from '~/modules/draft/draft.model'
 import { DraftService } from '~/modules/draft/draft.service'
@@ -79,7 +80,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'GET',
-      url: '/notes',
+      url: `${apiRoutePrefix}/notes`,
     })
     const data = res.json()
     expect(res.statusCode).toBe(200)
@@ -104,7 +105,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'POST',
-      url: '/notes',
+      url: `${apiRoutePrefix}/notes`,
       payload: createdNoteData,
       headers: {
         ...authPassHeader,
@@ -123,7 +124,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'PATCH',
-      url: `/notes/${createdNoteData.id}`,
+      url: `${apiRoutePrefix}/notes/${createdNoteData.id}`,
       payload: {
         title: 'Note 2 (updated)',
         text: `Content 2 (updated)`,
@@ -142,7 +143,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/${createdNoteData.id}`,
+      url: `${apiRoutePrefix}/notes/${createdNoteData.id}`,
       headers: {
         ...authPassHeader,
       },
@@ -159,7 +160,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/list/${createdNoteData.id}`,
+      url: `${apiRoutePrefix}/notes/list/${createdNoteData.id}`,
     })
 
     expect(res.statusCode).toBe(200)
@@ -176,7 +177,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/nid/${createdNoteData.nid}`,
+      url: `${apiRoutePrefix}/notes/nid/${createdNoteData.nid}`,
     })
 
     expect(res.statusCode).toBe(200)
@@ -198,7 +199,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'DELETE',
-      url: `/notes/${createdNoteData.id}`,
+      url: `${apiRoutePrefix}/notes/${createdNoteData.id}`,
       headers: {
         ...authPassHeader,
       },
@@ -212,7 +213,7 @@ describe('NoteController (e2e)', async () => {
     {
       const res = await app.inject({
         method: 'GET',
-        url: `/notes/${createdNoteData.id}`,
+        url: `${apiRoutePrefix}/notes/${createdNoteData.id}`,
         headers: {
           ...authPassHeader,
         },
@@ -223,7 +224,7 @@ describe('NoteController (e2e)', async () => {
     {
       const res = await app.inject({
         method: 'GET',
-        url: `/notes/nid/${createdNoteData.nid}`,
+        url: `${apiRoutePrefix}/notes/nid/${createdNoteData.nid}`,
         headers: {
           ...authPassHeader,
         },
@@ -237,7 +238,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'GET',
-      url: '/notes/latest',
+      url: `${apiRoutePrefix}/notes/latest`,
     })
 
     expect(res.statusCode).toBe(200)
@@ -270,7 +271,7 @@ describe('NoteController (e2e)', async () => {
     await createMockDataWithLocation()
     const res = await app.inject({
       method: 'GET',
-      url: '/notes',
+      url: `${apiRoutePrefix}/notes`,
     })
 
     const json = res.json()
@@ -283,7 +284,7 @@ describe('NoteController (e2e)', async () => {
 
     const res = await app.inject({
       method: 'GET',
-      url: '/notes',
+      url: `${apiRoutePrefix}/notes`,
       query: {
         select: '+coordinates',
       },
@@ -301,7 +302,7 @@ describe('NoteController (e2e)', async () => {
 
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/nid/${mockDataWithLocationNid}`,
+      url: `${apiRoutePrefix}/notes/nid/${mockDataWithLocationNid}`,
     })
 
     const json = res.json()
@@ -327,7 +328,7 @@ describe('NoteController (e2e)', async () => {
     await createMockDataWithPassword()
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/nid/${mockDataWithPasswordNid}`,
+      url: `${apiRoutePrefix}/notes/nid/${mockDataWithPasswordNid}`,
     })
 
     expect(res.statusCode).toBe(403)
@@ -338,7 +339,7 @@ describe('NoteController (e2e)', async () => {
 
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/nid/${mockDataWithPasswordNid}`,
+      url: `${apiRoutePrefix}/notes/nid/${mockDataWithPasswordNid}`,
       query: {
         password: 'password',
       },
@@ -352,7 +353,7 @@ describe('NoteController (e2e)', async () => {
 
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/nid/${mockDataWithPasswordNid}`,
+      url: `${apiRoutePrefix}/notes/nid/${mockDataWithPasswordNid}`,
       headers: {
         ...authPassHeader,
       },

@@ -3,6 +3,7 @@ import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
 import { AppController } from '~/app.controller'
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getModelToken } from '~/transformers/model.transformer'
@@ -36,19 +37,12 @@ describe('AppController (e2e)', async () => {
     return app
       .inject({
         method: 'GET',
-        url: '/ping',
+        url: `${apiRoutePrefix}/ping`,
       })
       .then((res) => {
         expect(res.statusCode).toBe(200)
         expect(res.payload).toBe('pong')
       })
-  })
-
-  test('GET /', () => {
-    return app.inject({ url: '/' }).then((res) => {
-      expect(res.statusCode).toBe(200)
-      expect(res.payload).toBeDefined()
-    })
   })
 
   test('GET /favicon.ico', () => {

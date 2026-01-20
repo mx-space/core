@@ -21,7 +21,11 @@ export { SnippetType }
 @index({ name: 1, reference: 1 })
 @index({ type: 1 })
 export class SnippetModel extends BaseModel {
-  @prop({ default: SnippetType.JSON, enum: SnippetType })
+  @prop({
+    type: () => String,
+    default: SnippetType.JSON,
+    enum: Object.values(SnippetType),
+  })
   type: SnippetType
 
   @prop({ default: false })

@@ -1,5 +1,6 @@
 import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { APP_INTERCEPTOR } from '@nestjs/core'
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { CategoryModel } from '~/modules/category/category.model'
 import { CategoryService } from '~/modules/category/category.service'
 import { CommentModel } from '~/modules/comment/comment.model'
@@ -94,7 +95,7 @@ describe('PostController (e2e)', async () => {
   test('GET /', async () => {
     const data = await proxy.app.inject({
       method: 'GET',
-      url: '/posts',
+      url: `${apiRoutePrefix}/posts`,
     })
 
     expect(data.statusCode).toBe(200)

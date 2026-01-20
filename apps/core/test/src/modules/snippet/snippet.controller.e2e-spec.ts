@@ -1,6 +1,7 @@
 import { redisHelper } from '@/helper/redis-mock.helper'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import type { ReturnModelType } from '@typegoose/typegoose'
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetController } from '~/modules/snippet/snippet.controller'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
@@ -62,7 +63,7 @@ describe('test /snippets', async () => {
     await app
       .inject({
         method: 'POST',
-        url: '/snippets',
+        url: `${apiRoutePrefix}/snippets`,
         headers: {
           ...authPassHeader,
         },
@@ -82,7 +83,7 @@ describe('test /snippets', async () => {
   test('POST /snippets, should create successfully', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: '/snippets',
+      url: `${apiRoutePrefix}/snippets`,
       payload: mockPayload1,
       headers: {
         ...authPassHeader,
@@ -99,7 +100,7 @@ describe('test /snippets', async () => {
     await app
       .inject({
         method: 'POST',
-        url: '/snippets',
+        url: `${apiRoutePrefix}/snippets`,
         headers: {
           ...authPassHeader,
         },
@@ -119,7 +120,7 @@ describe('test /snippets', async () => {
     await app
       .inject({
         method: 'GET',
-        url: `/snippets/${id}`,
+        url: `${apiRoutePrefix}/snippets/${id}`,
         headers: {
           ...authPassHeader,
         },
@@ -136,7 +137,7 @@ describe('test /snippets', async () => {
     await app
       .inject({
         method: 'GET',
-        url: `/snippets/root/${mockPayload1.name}`,
+        url: `${apiRoutePrefix}/snippets/root/${mockPayload1.name}`,
       })
       .then((res) => {
         const json = res.json()
@@ -148,7 +149,7 @@ describe('test /snippets', async () => {
 
   const snippetFuncType = {
     type: SnippetType.Function,
-    raw: async function handler(context, require) {
+    raw: async function handler() {
       return 1 + 1
     }.toString(),
     name: 'func-1',
@@ -160,7 +161,7 @@ describe('test /snippets', async () => {
     await app
       .inject({
         method: 'POST',
-        url: '/snippets',
+        url: `${apiRoutePrefix}/snippets`,
         headers: {
           ...authPassHeader,
         },
@@ -177,7 +178,7 @@ describe('test /snippets', async () => {
     await app
       .inject({
         method: 'GET',
-        url: '/snippets/root/func-1',
+        url: `${apiRoutePrefix}/snippets/root/func-1`,
       })
       .then((res) => {
         expect(res.statusCode).toBe(404)
@@ -187,7 +188,7 @@ describe('test /snippets', async () => {
   test('POST /snippets, can not create function with reserved reference', async () => {
     const result = await app.inject({
       method: 'POST',
-      url: '/snippets',
+      url: `${apiRoutePrefix}/snippets`,
       payload: {
         ...snippetFuncType,
         reference: 'built-in',
@@ -206,7 +207,7 @@ describe('test /snippets', async () => {
     })
     const result = await app.inject({
       method: 'DELETE',
-      url: `/snippets/${doc.id}`,
+      url: `${apiRoutePrefix}/snippets/${doc.id}`,
       headers: {
         ...authPassHeader,
       },
@@ -222,7 +223,7 @@ describe('test /snippets', async () => {
     })
     const result = await app.inject({
       method: 'PUT',
-      url: `/snippets/${doc.id}`,
+      url: `${apiRoutePrefix}/snippets/${doc.id}`,
       payload: {
         // @ts-ignore
         ...doc.toObject(),

@@ -1,3 +1,4 @@
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { BaseOptionController } from '~/modules/option/controllers/base.option.controller'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
@@ -12,7 +13,7 @@ describe('OptionController (e2e)', () => {
     return proxy.app
       .inject({
         method: 'GET',
-        url: '/config/form-schema',
+        url: `${apiRoutePrefix}/config/form-schema`,
         headers: {
           ...authPassHeader,
         },
