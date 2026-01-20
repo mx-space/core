@@ -16,8 +16,8 @@ import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { PageReorderDto } from './page.dto'
-import { PageModel, PartialPageModel } from './page.model'
+import { PageModel } from './page.model'
+import { PageDto, PageReorderDto, PartialPageDto } from './page.schema'
 import { PageService } from './page.service'
 
 @ApiController('pages')
@@ -78,24 +78,24 @@ export class PageController {
   @Post('/')
   @Auth()
   @HTTPDecorators.Idempotence()
-  async create(@Body() body: PageModel) {
-    return await this.pageService.create(body)
+  async create(@Body() body: PageDto) {
+    return await this.pageService.create(body as unknown as PageModel)
   }
 
   @Put('/:id')
   @Auth()
-  async modify(@Body() body: PageModel, @Param() params: MongoIdDto) {
+  async modify(@Body() body: PageDto, @Param() params: MongoIdDto) {
     const { id } = params
-    await this.pageService.updateById(id, body)
+    await this.pageService.updateById(id, body as unknown as PageModel)
 
     return await this.pageService.model.findById(id).lean()
   }
 
   @Patch('/:id')
   @Auth()
-  async patch(@Body() body: PartialPageModel, @Param() params: MongoIdDto) {
+  async patch(@Body() body: PartialPageDto, @Param() params: MongoIdDto) {
     const { id } = params
-    await this.pageService.updateById(id, body)
+    await this.pageService.updateById(id, body as unknown as Partial<PageModel>)
 
     return
   }

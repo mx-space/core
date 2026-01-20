@@ -1,6 +1,7 @@
 import { createRedisProvider } from '@/mock/modules/redis.mock'
 import type { ReturnModelType } from '@typegoose/typegoose'
-import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
+import { extendedZodValidationPipeInstance } from '~/common/zod/validation.pipe'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
@@ -38,7 +39,7 @@ describe('Test LinkController(E2E)', async () => {
       ...eventEmitterProvider,
       {
         provide: VALIDATION_PIPE_INJECTION,
-        useValue: ExtendedValidationPipe.shared,
+        useValue: extendedZodValidationPipeInstance,
       },
     ],
     async pourData(modelMap) {
@@ -58,7 +59,7 @@ describe('Test LinkController(E2E)', async () => {
     const app = proxy.app
     const res = await app.inject({
       method: 'post',
-      url: '/links/audit',
+      url: `${apiRoutePrefix}/links/audit`,
       payload: {
         url: 'https://innei.in',
         name: 'innnnn',
@@ -74,7 +75,7 @@ describe('Test LinkController(E2E)', async () => {
     const app = proxy.app
     const res = await app.inject({
       method: 'post',
-      url: '/links/audit',
+      url: `${apiRoutePrefix}/links/audit`,
       payload: {
         url: 'https://innei.in',
         name: 'innnnn',

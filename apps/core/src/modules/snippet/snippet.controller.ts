@@ -16,8 +16,8 @@ import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
-import { SnippetMoreDto } from './snippet.dto'
 import { SnippetModel } from './snippet.model'
+import { SnippetDto, SnippetMoreDto } from './snippet.schema'
 import { SnippetService } from './snippet.service'
 
 @ApiController('snippets')
@@ -46,7 +46,9 @@ export class SnippetController {
   @Auth()
   async importSnippets(@Body() body: SnippetMoreDto) {
     const { snippets } = body
-    const tasks = snippets.map((snippet) => this.create(snippet))
+    const tasks = snippets.map((snippet) =>
+      this.snippetService.create(snippet as unknown as SnippetModel),
+    )
 
     await Promise.all(tasks)
 
@@ -56,8 +58,8 @@ export class SnippetController {
   @Post('/')
   @Auth()
   @HTTPDecorators.Idempotence()
-  async create(@Body() body: SnippetModel) {
-    return await this.snippetService.create(body)
+  async create(@Body() body: SnippetDto) {
+    return await this.snippetService.create(body as unknown as SnippetModel)
   }
 
   @Get('/:id')
@@ -163,10 +165,10 @@ export class SnippetController {
 
   @Put('/:id')
   @Auth()
-  async update(@Param() param: MongoIdDto, @Body() body: SnippetModel) {
+  async update(@Param() param: MongoIdDto, @Body() body: SnippetDto) {
     const { id } = param
 
-    return await this.snippetService.update(id, body)
+    return await this.snippetService.update(id, body as unknown as SnippetModel)
   }
 
   @Delete('/:id')

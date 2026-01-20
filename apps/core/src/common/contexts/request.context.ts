@@ -1,13 +1,15 @@
 /* eslint-disable dot-notation */
 // @reference https://github.com/ever-co/ever-gauzy/blob/d36b4f40b1446f3c33d02e0ba00b53a83109d950/packages/core/src/core/context/request-context.ts
+import { AsyncLocalStorage } from 'node:async_hooks'
 import type { ServerResponse } from 'node:http'
 import { UnauthorizedException } from '@nestjs/common'
 import type { UserModel } from '~/modules/user/user.model'
 import type { BizIncomingMessage } from '~/transformers/get-req.transformer'
-import * as cls from 'cls-hooked'
 
 type Nullable<T> = T | null
 export class RequestContext {
+  private static readonly storage = new AsyncLocalStorage<RequestContext>()
+
   readonly id: number
   request: BizIncomingMessage
   response: ServerResponse
@@ -18,13 +20,12 @@ export class RequestContext {
     this.response = response
   }
 
-  static currentRequestContext(): Nullable<RequestContext> {
-    const session = cls.getNamespace(RequestContext.name)
-    if (session && session.active) {
-      return session.get(RequestContext.name)
-    }
+  static run<T>(requestContext: RequestContext, callback: () => T): T {
+    return RequestContext.storage.run(requestContext, callback)
+  }
 
-    return null
+  static currentRequestContext(): Nullable<RequestContext> {
+    return RequestContext.storage.getStore() ?? null
   }
 
   static currentRequest(): Nullable<BizIncomingMessage> {

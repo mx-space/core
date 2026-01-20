@@ -26,7 +26,7 @@ import { S3Uploader } from '~/utils/s3.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getFolderSize, installPKG } from '~/utils/system.util'
 import { getMediumDateTime } from '~/utils/time.util'
-import { flatten } from 'lodash'
+import { flatten } from 'es-toolkit/compat'
 import { mkdirp } from 'mkdirp'
 import { ConfigsService } from '../configs/configs.service'
 

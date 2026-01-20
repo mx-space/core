@@ -12,7 +12,7 @@ overrides:
   semver: 7.7.3
   typescript: 5.9.3
   whatwg-url: 14.1.1
-  zod: 3.25.76
+  zod: 4.3.5
 
 importers:
 
@@ -80,10 +80,10 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: ^3.0.9
-        version: 3.0.15(zod@3.25.76)
+        version: 3.0.15(zod@4.3.5)
       '@ai-sdk/openai':
         specifier: 3.0.12
-        version: 3.0.12(zod@3.25.76)
+        version: 3.0.12(zod@4.3.5)
       '@algolia/client-search':
         specifier: ^4.22.1
         version: 4.25.3
@@ -170,7 +170,7 @@ importers:
         version: 9.0.10
       ai:
         specifier: 6.0.39
-        version: 6.0.39(zod@3.25.76)
+        version: 6.0.39(zod@4.3.5)
       algoliasearch:
         specifier: 4.24.0
         version: 4.24.0
@@ -189,18 +189,6 @@ importers:
       cache-manager:
         specifier: 7.2.8
         version: 7.2.8
-      class-transformer:
-        specifier: 0.5.1
-        version: 0.5.1
-      class-validator:
-        specifier: 0.13.2
-        version: 0.13.2
-      class-validator-jsonschema:
-        specifier: npm:@innei/class-validator-jsonschema@3.1.2
-        version: '@innei/class-validator-jsonschema@3.1.2(class-transformer@0.5.1)(class-validator@0.13.2)'
-      cls-hooked:
-        specifier: ^4.2.2
-        version: 4.2.2
       commander:
         specifier: 14.0.2
         version: 14.0.2
@@ -216,6 +204,9 @@ importers:
       ejs:
         specifier: 3.1.10
         version: 3.1.10
+      es-toolkit:
+        specifier: ^1.44.0
+        version: 1.44.0
       form-data:
         specifier: 4.0.5
         version: 4.0.5
@@ -243,9 +234,6 @@ importers:
       linkedom:
         specifier: 0.18.12
         version: 0.18.12
-      lodash:
-        specifier: ^4.17.21
-        version: 4.17.21
       lru-cache:
         specifier: 11.2.4
         version: 11.2.4
@@ -276,6 +264,9 @@ importers:
       mongoose-paginate-v2:
         specifier: 1.9.1
         version: 1.9.1(mongoose@8.19.4)
+      nestjs-zod:
+        specifier: ^5.1.1
+        version: 5.1.1(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)(zod@4.3.5)
       node-machine-id:
         specifier: 1.1.12
         version: 1.1.12
@@ -284,7 +275,7 @@ importers:
         version: 7.0.12
       openai:
         specifier: 5.23.2
-        version: 5.23.2(ws@8.18.3)(zod@3.25.76)
+        version: 5.23.2(ws@8.18.3)(zod@4.3.5)
       pluralize:
         specifier: ^8.0.0
         version: 8.0.0
@@ -327,6 +318,9 @@ importers:
       xss:
         specifier: 1.0.15
         version: 1.0.15
+      zod:
+        specifier: 4.3.5
+        version: 4.3.5
       zx-cjs:
         specifier: 7.0.7-0
         version: 7.0.7-0
@@ -346,9 +340,6 @@ importers:
       '@types/babel__core':
         specifier: 7.20.5
         version: 7.20.5
-      '@types/cls-hooked':
-        specifier: ^4.3.9
-        version: 4.3.9
       '@types/ejs':
         specifier: 3.1.5
         version: 3.1.5
@@ -358,9 +349,6 @@ importers:
       '@types/js-yaml':
         specifier: 4.0.9
         version: 4.0.9
-      '@types/lodash':
-        specifier: 4.17.23
-        version: 4.17.23
       '@types/mime-types':
         specifier: 3.0.1
         version: 3.0.1
@@ -430,9 +418,6 @@ importers:
       '@types/express':
         specifier: 5.0.6
         version: 5.0.6
-      '@types/lodash':
-        specifier: 4.17.23
-        version: 4.17.23
       abort-controller:
         specifier: 3.0.0
         version: 3.0.0
@@ -445,15 +430,15 @@ importers:
       cors:
         specifier: 2.8.5
         version: 2.8.5
+      es-toolkit:
+        specifier: 1.44.0
+        version: 1.44.0
       express:
         specifier: 4.21.2
         version: 4.21.2
       form-data:
         specifier: 4.0.5
         version: 4.0.5
-      lodash:
-        specifier: ^4.17.21
-        version: 4.17.21
       tsdown:
         specifier: 0.18.4
         version: 0.18.4(synckit@0.11.11)(typescript@5.9.3)
@@ -474,16 +459,13 @@ importers:
         version: 1.1.0
       better-auth:
         specifier: 1.3.7
-        version: 1.3.7(zod@3.25.76)
+        version: 1.3.7(zod@4.3.5)
       nanoid:
         specifier: 5.1.6
         version: 5.1.6
       tsdown:
         specifier: 0.18.4
         version: 0.18.4(synckit@0.11.11)(typescript@5.9.3)
-      zod:
-        specifier: 3.25.76
-        version: 3.25.76
       zx:
         specifier: 7.2.3
         version: 7.2.3
@@ -503,25 +485,25 @@ packages:
     resolution: {integrity: sha512-FCNy6pABPe5Qb1VPbdLLIi/XkQN2g/fKUcl1GcXxIU3Ofr+vOND8cyZfH20cMODR523FSGfwswJoJic8skr8qg==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: 3.25.76
+      zod: 4.3.5
 
   '@ai-sdk/gateway@3.0.16':
     resolution: {integrity: sha512-OOY5CfRJiHvh/8np2vs1RQaCZ5hWv2qOeEmmeiABXK3gLQHUVnCO+1hhoLsZdHM5iElu6M407dAOfyvTsKJqcQ==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: 3.25.76
+      zod: 4.3.5
 
   '@ai-sdk/openai@3.0.12':
     resolution: {integrity: sha512-zqLWEKuaKnjXhu7xCw1jgz/+yTbd3F7EtgU4T2Q8BAo8OJC5wZv14l+kwM7Jai7M1/2Y2T/zBkrfiIu+7NsvfQ==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: 3.25.76
+      zod: 4.3.5
 
   '@ai-sdk/provider-utils@4.0.8':
     resolution: {integrity: sha512-ns9gN7MmpI8vTRandzgz+KK/zNMLzhrriiKECMt4euLtQFSBgNfydtagPOX4j4pS1/3KvHF6RivhT3gNQgBZsg==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: 3.25.76
+      zod: 4.3.5
 
   '@ai-sdk/provider@3.0.4':
     resolution: {integrity: sha512-5KXyBOSEX+l67elrEa+wqo/LSsSTtrPj9Uoh3zMbe/ceQX4ucHI3b9nUEfNkGF3Ry1svv90widAt+aiKdIJasQ==}
@@ -1538,12 +1520,6 @@ packages:
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [x64]
     os: [win32]
-
-  '@innei/class-validator-jsonschema@3.1.2':
-    resolution: {integrity: sha512-TtexCmngzF7irt9MB0fbT8M2/CH38tdOrxkaqH6rsgumnHDyxzlevSAoKpcxFG7nz3CtN9OjQ2YbgTC7MOIeaQ==}
-    peerDependencies:
-      class-transformer: ^0.4.0 || ^0.5.0
-      class-validator: ^0.13.1
 
   '@innei/next-async@0.3.0':
     resolution: {integrity: sha512-f3+o2yMWw2aiPmd2E/Lm1tSw41hHJw7eaQ4xSdmcTfT9QMfYTXO5Rv2MWIll/vXvm9OmgY7yJswtJk0nyULtWw==}
@@ -2636,9 +2612,6 @@ packages:
   '@types/chroma-js@3.1.1':
     resolution: {integrity: sha512-SFCr4edNkZ1bGaLzGz7rgR1bRzVX4MmMxwsIa3/Bh6ose8v+hRpneoizHv0KChdjxaXyjRtaMq7sCuZSzPomQA==}
 
-  '@types/cls-hooked@4.3.9':
-    resolution: {integrity: sha512-CMtHMz6Q/dkfcHarq9nioXH8BDPP+v5xvd+N90lBQ2bdmu06UvnLDqxTKoOJzz4SzIwb/x9i4UXGAAcnUDuIvg==}
-
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
 
@@ -2686,9 +2659,6 @@ packages:
 
   '@types/jsonwebtoken@9.0.10':
     resolution: {integrity: sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA==}
-
-  '@types/lodash@4.17.23':
-    resolution: {integrity: sha512-RDvF6wTulMPjrNdCoYRC8gNR880JNGT8uB+REUpC2Ns4pRqQJhGz90wh7rgdXDPpCczF3VGktDuFGVnz8zP7HA==}
 
   '@types/luxon@3.6.2':
     resolution: {integrity: sha512-R/BdP7OxEMc44l2Ex5lSXHoIXTB2JLNa3y2QISIbr58U/YcsffyQrYW//hZSdrfxrjRZj3GcUoxMPGdO8gSYuw==}
@@ -3064,7 +3034,7 @@ packages:
     resolution: {integrity: sha512-hF05gF4H+IxuilA8kNANVVHQXduTJsJaH74jmlmy8mcQt3NZgPYe2zZNyGBV4DPDYTUDt1h31hbLgQqJTn5LGA==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: 3.25.76
+      zod: 4.3.5
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
@@ -3164,10 +3134,6 @@ packages:
     resolution: {integrity: sha512-m1Q/RaVOnTp9JxPX+F+Zn7IcLYMzM8kZofDImfsKZd8MbR+ikdOzTeztStWqfrqIxZnYWryyI9ePm3NGjnZgGw==}
     engines: {node: '>=20.19.0'}
 
-  async-hook-jl@1.7.6:
-    resolution: {integrity: sha512-gFaHkFfSxTjvoxDMYqDuGHlcRyUuamF8s+ZTtJdDzqjws4mCt7v0vuV79/E2Wr2/riMQgtG4/yUtXWs1gZ7JMg==}
-    engines: {node: ^4.7 || >=6.9 || >=7.3}
-
   async-mutex@0.5.0:
     resolution: {integrity: sha512-1A94B18jkJ3DYq284ohPxoXbfTA5HsQ7/Mf4DEhcyLx3Bz27Rh59iScbB6EPiP+B+joue6YCxcMXSbFC1tZKwA==}
 
@@ -3231,7 +3197,7 @@ packages:
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
-      zod: 3.25.76
+      zod: 4.3.5
     peerDependenciesMeta:
       react:
         optional: true
@@ -3421,10 +3387,6 @@ packages:
   clone@1.0.4:
     resolution: {integrity: sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg==}
     engines: {node: '>=0.8'}
-
-  cls-hooked@4.2.2:
-    resolution: {integrity: sha512-J4Xj5f5wq/4jAvcdgoGsL3G103BtWpZrMo8NEinRltN+xpTZdI+M38pyQqhuFU/P792xkMFvnKSf+Lm81U1bxw==}
-    engines: {node: ^4.7 || >=6.9 || >=7.3 || >=8.2.1}
 
   cluster-key-slot@1.1.2:
     resolution: {integrity: sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==}
@@ -3745,9 +3707,6 @@ packages:
   electron-to-chromium@1.5.267:
     resolution: {integrity: sha512-0Drusm6MVRXSOJpGbaSVgcQsuB4hEkMpHXaVstcPmhu5LIedxs1xNK/nIxmQIU/RPC0+1/o0AVZfBTkTNJOdUw==}
 
-  emitter-listener@1.1.2:
-    resolution: {integrity: sha512-Bt1sBAGFHY9DKY+4/2cV6izcKJUf5T7/gkdmkxzX/qv9CcGH8xSwVRW5mtX03SWJtRTWSOpzCuWN9rBFYZepZQ==}
-
   emoji-regex@10.5.0:
     resolution: {integrity: sha512-lb49vf1Xzfx080OKA0o6l8DQQpV+6Vg95zyCJX9VB/BqKYlhG7N4wgROUUHRA+ZPUefLnteQOad7z1kT2bV7bg==}
 
@@ -3827,6 +3786,9 @@ packages:
   es-set-tostringtag@2.1.0:
     resolution: {integrity: sha512-j6vWzfrGVfyXxge+O0x5sh6cvxAog0a/4Rdd2K36zCMV5eJ+/+tOAngRO8cODMNWbVRdVlmGZQL2YS3yR8bIUA==}
     engines: {node: '>= 0.4'}
+
+  es-toolkit@1.44.0:
+    resolution: {integrity: sha512-6penXeZalaV88MM3cGkFZZfOoLGWshWWfdy0tWw/RlVVyhvMaWSBTOvXNeiW3e5FwdS5ePW0LGEu17zT139ktg==}
 
   esbuild@0.21.5:
     resolution: {integrity: sha512-mg3OPMV4hXywwpoDxu3Qda5xCKQi+vCTZq8S9J/EpkhB2HzKXq4SNFZE3+NK93JYxc8VMSep+lOUSC/RVKaBqw==}
@@ -4802,9 +4764,6 @@ packages:
   lodash.defaultsdeep@4.6.1:
     resolution: {integrity: sha512-3j8wdDzYuWO3lM3Reg03MuQR957t287Rpcxp1njpEa8oDrikb+FwGdW3n+FELh/A6qib6yPit0j/pv9G/yeAqA==}
 
-  lodash.groupby@4.6.0:
-    resolution: {integrity: sha512-5dcWxm23+VAoz+awKmBaiBvzox8+RqMgFhi7UvX9DHZr2HdxHXM/Wrf8cfKpsW37RNrvtPn6hSwNqurSILbmJw==}
-
   lodash.includes@4.3.0:
     resolution: {integrity: sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w==}
 
@@ -5284,6 +5243,17 @@ packages:
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
+  nestjs-zod@5.1.1:
+    resolution: {integrity: sha512-pXa9Jrdip7iedKvGxJTvvCFVRCoIcNENPCsHjpCefPH3PcFejRgkZkUcr3TYITRyxnUk7Zy5OsLpirZGLYBfBQ==}
+    peerDependencies:
+      '@nestjs/common': ^10.0.0 || ^11.0.0
+      '@nestjs/swagger': ^7.4.2 || ^8.0.0 || ^11.0.0
+      rxjs: ^7.0.0
+      zod: 4.3.5
+    peerDependenciesMeta:
+      '@nestjs/swagger':
+        optional: true
+
   new-find-package-json@2.0.0:
     resolution: {integrity: sha512-lDcBsjBSMlj3LXH2v/FW3txlh2pYTjmbOXPYJD93HI5EwuLzI11tdHSIpUMmfq/IOsldj4Ps8M8flhm+pCK4Ew==}
     engines: {node: '>=12.22.0'}
@@ -5377,15 +5347,12 @@ packages:
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
-      zod: 3.25.76
+      zod: 4.3.5
     peerDependenciesMeta:
       ws:
         optional: true
       zod:
         optional: true
-
-  openapi3-ts@2.0.2:
-    resolution: {integrity: sha512-TxhYBMoqx9frXyOgnRHufjQfPXomTIHYKhSKJ6jHfj13kS8OEIhvmE8CTuQyKtjjWttAjX5DPxM1vmalEpo8Qw==}
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -5681,9 +5648,6 @@ packages:
     resolution: {integrity: sha512-J8rn6v4DBb2nnFqkqwy6/NnTYMcgLA+sLr0iIO41qpv0n+ngb7ksag2tMRl0inb1bbO/esUwzW1vbJi7K0sI0g==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
 
-  reflect-metadata@0.1.14:
-    resolution: {integrity: sha512-ZhYeb6nRaXCfhnndflDK8qI6ZQ/YcWZCISRAWICW9XYqMUwjZM9Z0DveWX/ABN01oxSHwVxKQmxeYZSsm0jh5A==}
-
   reflect-metadata@0.2.2:
     resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
 
@@ -5857,9 +5821,6 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
 
-  shimmer@1.2.1:
-    resolution: {integrity: sha512-sQTKC1Re/rM6XyFM6fIAGHRPVGvyXfgzIDvzoq608vM+jeyVD0Tu1E6Np0Kc2zAIFWIj963V2800iF/9LPieQw==}
-
   side-channel-list@1.0.0:
     resolution: {integrity: sha512-FCLHtRD/gnpCiCHEiJLOwdmFP+wzCmDEkc9y7NsYxeF4u7Btsn1ZuwgwJGxImImHicJArLP4R0yX4c2KCrMrTA==}
     engines: {node: '>= 0.4'}
@@ -5966,9 +5927,6 @@ packages:
   stable-hash-x@0.2.0:
     resolution: {integrity: sha512-o3yWv49B/o4QZk5ZcsALc6t0+eCelPc44zZsLtCQnZPDwFpDYSWcDnrv2TtMmMbQ7uKo3J0HTURCqckw23czNQ==}
     engines: {node: '>=12.0.0'}
-
-  stack-chain@1.3.7:
-    resolution: {integrity: sha512-D8cWtWVdIe/jBA7v5p5Hwl5yOSOrmZPWDPe2KxQ5UAGD+nxbxU0lKXA4h85Ta6+qgdKVL3vUxsbIZjc1kBG7ug==}
 
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
@@ -6732,8 +6690,8 @@ packages:
     resolution: {integrity: sha512-U/PBtDf35ff0D8X8D0jfdzHYEPFxAI7jJlxZXwCSez5M3190m+QobIfh+sWDWSHMCWWJN2AWamkegn6vr6YBTw==}
     engines: {node: '>=18'}
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+  zod@4.3.5:
+    resolution: {integrity: sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -6749,31 +6707,31 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/anthropic@3.0.15(zod@3.25.76)':
+  '@ai-sdk/anthropic@3.0.15(zod@4.3.5)':
     dependencies:
       '@ai-sdk/provider': 3.0.4
-      '@ai-sdk/provider-utils': 4.0.8(zod@3.25.76)
-      zod: 3.25.76
+      '@ai-sdk/provider-utils': 4.0.8(zod@4.3.5)
+      zod: 4.3.5
 
-  '@ai-sdk/gateway@3.0.16(zod@3.25.76)':
+  '@ai-sdk/gateway@3.0.16(zod@4.3.5)':
     dependencies:
       '@ai-sdk/provider': 3.0.4
-      '@ai-sdk/provider-utils': 4.0.8(zod@3.25.76)
+      '@ai-sdk/provider-utils': 4.0.8(zod@4.3.5)
       '@vercel/oidc': 3.1.0
-      zod: 3.25.76
+      zod: 4.3.5
 
-  '@ai-sdk/openai@3.0.12(zod@3.25.76)':
+  '@ai-sdk/openai@3.0.12(zod@4.3.5)':
     dependencies:
       '@ai-sdk/provider': 3.0.4
-      '@ai-sdk/provider-utils': 4.0.8(zod@3.25.76)
-      zod: 3.25.76
+      '@ai-sdk/provider-utils': 4.0.8(zod@4.3.5)
+      zod: 4.3.5
 
-  '@ai-sdk/provider-utils@4.0.8(zod@3.25.76)':
+  '@ai-sdk/provider-utils@4.0.8(zod@4.3.5)':
     dependencies:
       '@ai-sdk/provider': 3.0.4
       '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.0.6
-      zod: 3.25.76
+      zod: 4.3.5
 
   '@ai-sdk/provider@3.0.4':
     dependencies:
@@ -8027,16 +7985,6 @@ snapshots:
   '@img/sharp-win32-x64@0.34.5':
     optional: true
 
-  '@innei/class-validator-jsonschema@3.1.2(class-transformer@0.5.1)(class-validator@0.13.2)':
-    dependencies:
-      class-transformer: 0.5.1
-      class-validator: 0.13.2
-      lodash.groupby: 4.6.0
-      lodash.merge: 4.6.2
-      openapi3-ts: 2.0.2
-      reflect-metadata: 0.1.14
-      tslib: 2.8.1
-
   '@innei/next-async@0.3.0': {}
 
   '@innei/pretty-logger-core@0.3.4':
@@ -9256,10 +9204,6 @@ snapshots:
 
   '@types/chroma-js@3.1.1': {}
 
-  '@types/cls-hooked@4.3.9':
-    dependencies:
-      '@types/node': 25.0.9
-
   '@types/connect@3.4.38':
     dependencies:
       '@types/node': 25.0.9
@@ -9323,8 +9267,6 @@ snapshots:
     dependencies:
       '@types/ms': 2.1.0
       '@types/node': 25.0.9
-
-  '@types/lodash@4.17.23': {}
 
   '@types/luxon@3.6.2': {}
 
@@ -9733,13 +9675,13 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai@6.0.39(zod@3.25.76):
+  ai@6.0.39(zod@4.3.5):
     dependencies:
-      '@ai-sdk/gateway': 3.0.16(zod@3.25.76)
+      '@ai-sdk/gateway': 3.0.16(zod@4.3.5)
       '@ai-sdk/provider': 3.0.4
-      '@ai-sdk/provider-utils': 4.0.8(zod@3.25.76)
+      '@ai-sdk/provider-utils': 4.0.8(zod@4.3.5)
       '@opentelemetry/api': 1.9.0
-      zod: 3.25.76
+      zod: 4.3.5
 
   ajv-formats@2.1.1(ajv@8.17.1):
     optionalDependencies:
@@ -9835,10 +9777,6 @@ snapshots:
       '@babel/parser': 7.28.5
       pathe: 2.0.3
 
-  async-hook-jl@1.7.6:
-    dependencies:
-      stack-chain: 1.3.7
-
   async-mutex@0.5.0:
     dependencies:
       tslib: 2.8.1
@@ -9881,7 +9819,7 @@ snapshots:
 
   bcryptjs@3.0.3: {}
 
-  better-auth@1.3.7(zod@3.25.76):
+  better-auth@1.3.7(zod@4.3.5):
     dependencies:
       '@better-auth/utils': 0.2.6
       '@better-fetch/fetch': 1.1.18
@@ -9894,7 +9832,7 @@ snapshots:
       jose: 5.10.0
       kysely: 0.28.7
       nanostores: 0.11.4
-      zod: 3.25.76
+      zod: 4.3.5
 
   better-call@1.0.19:
     dependencies:
@@ -10054,12 +9992,14 @@ snapshots:
 
   ci-info@4.3.0: {}
 
-  class-transformer@0.5.1: {}
+  class-transformer@0.5.1:
+    optional: true
 
   class-validator@0.13.2:
     dependencies:
       libphonenumber-js: 1.12.15
       validator: 13.15.15
+    optional: true
 
   clean-regexp@1.0.0:
     dependencies:
@@ -10089,12 +10029,6 @@ snapshots:
   cli-width@4.1.0: {}
 
   clone@1.0.4: {}
-
-  cls-hooked@4.2.2:
-    dependencies:
-      async-hook-jl: 1.7.6
-      emitter-listener: 1.1.2
-      semver: 7.7.3
 
   cluster-key-slot@1.1.2: {}
 
@@ -10348,10 +10282,6 @@ snapshots:
 
   electron-to-chromium@1.5.267: {}
 
-  emitter-listener@1.1.2:
-    dependencies:
-      shimmer: 1.2.1
-
   emoji-regex@10.5.0: {}
 
   emoji-regex@8.0.0: {}
@@ -10428,6 +10358,8 @@ snapshots:
       get-intrinsic: 1.3.0
       has-tostringtag: 1.0.2
       hasown: 2.0.2
+
+  es-toolkit@1.44.0: {}
 
   esbuild@0.21.5:
     optionalDependencies:
@@ -11507,7 +11439,8 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  libphonenumber-js@1.12.15: {}
+  libphonenumber-js@1.12.15:
+    optional: true
 
   lie@3.3.0:
     dependencies:
@@ -11580,8 +11513,6 @@ snapshots:
   lodash.defaults@4.2.0: {}
 
   lodash.defaultsdeep@4.6.1: {}
-
-  lodash.groupby@4.6.0: {}
 
   lodash.includes@4.3.0: {}
 
@@ -12210,6 +12141,13 @@ snapshots:
 
   neo-async@2.6.2: {}
 
+  nestjs-zod@5.1.1(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)(zod@4.3.5):
+    dependencies:
+      '@nestjs/common': 11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      deepmerge: 4.3.1
+      rxjs: 7.8.2
+      zod: 4.3.5
+
   new-find-package-json@2.0.0:
     dependencies:
       debug: 4.4.3
@@ -12290,14 +12228,10 @@ snapshots:
     dependencies:
       mimic-function: 5.0.1
 
-  openai@5.23.2(ws@8.18.3)(zod@3.25.76):
+  openai@5.23.2(ws@8.18.3)(zod@4.3.5):
     optionalDependencies:
       ws: 8.18.3
-      zod: 3.25.76
-
-  openapi3-ts@2.0.2:
-    dependencies:
-      yaml: 1.10.2
+      zod: 4.3.5
 
   optionator@0.9.4:
     dependencies:
@@ -12621,8 +12555,6 @@ snapshots:
     dependencies:
       '@eslint-community/regexpp': 4.12.1
 
-  reflect-metadata@0.1.14: {}
-
   reflect-metadata@0.2.2: {}
 
   regexp-ast-analysis@0.7.1:
@@ -12857,8 +12789,6 @@ snapshots:
 
   shebang-regex@3.0.0: {}
 
-  shimmer@1.2.1: {}
-
   side-channel-list@1.0.0:
     dependencies:
       es-errors: 1.3.0
@@ -12987,8 +12917,6 @@ snapshots:
       through: 2.3.8
 
   stable-hash-x@0.2.0: {}
-
-  stack-chain@1.3.7: {}
 
   stackback@0.0.2: {}
 
@@ -13412,7 +13340,8 @@ snapshots:
 
   v8-compile-cache-lib@3.0.1: {}
 
-  validator@13.15.15: {}
+  validator@13.15.15:
+    optional: true
 
   vary@1.1.2: {}
 
@@ -13740,7 +13669,7 @@ snapshots:
 
   yoctocolors-cjs@2.1.3: {}
 
-  zod@3.25.76: {}
+  zod@4.3.5: {}
 
   zwitch@2.0.4: {}
 

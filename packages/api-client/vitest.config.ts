@@ -10,7 +10,4 @@ export default defineConfig({
 
   // @ts-ignore
   plugins: [tsPath()],
-  optimizeDeps: {
-    needsInterop: ['lodash'],
-  },
 })

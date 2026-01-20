@@ -13,7 +13,7 @@ import { fastifyApp } from './common/adapters/fastify.adapter'
 import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { SpiderGuard } from './common/guards/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
-import { ExtendedValidationPipe } from './common/pipes/validation.pipe'
+import { extendedZodValidationPipeInstance } from './common/zod'
 import { logger } from './global/consola.global'
 import { isMainProcess, isTest } from './global/env.global'
 import { checkInit } from './utils/check-init.util'
@@ -78,7 +78,7 @@ export async function bootstrap() {
     app.useGlobalInterceptors(new LoggingInterceptor())
   }
 
-  app.useGlobalPipes(ExtendedValidationPipe.shared)
+  app.useGlobalPipes(extendedZodValidationPipeInstance)
   app.useGlobalGuards(new SpiderGuard())
   !isTest && app.useWebSocketAdapter(new RedisIoAdapter(app))
 

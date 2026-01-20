@@ -15,7 +15,7 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
-import { pick } from 'lodash'
+import { pick } from 'es-toolkit/compat'
 import type { PipelineStage } from 'mongoose'
 import { AnalyzeService } from '../analyze/analyze.service'
 import type { CategoryModel } from '../category/category.model'
@@ -31,8 +31,8 @@ import { PostService } from '../post/post.service'
 import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
 import { UserService } from '../user/user.service'
-import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.dto'
 import type { RSSProps } from './aggregate.interface'
+import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.schema'
 
 @Injectable()
 export class AggregateService {

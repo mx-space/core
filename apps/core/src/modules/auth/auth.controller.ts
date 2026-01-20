@@ -16,29 +16,23 @@ import { HttpCache } from '~/common/decorators/cache.decorator'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { FastifyBizRequest } from '~/transformers/get-req.transformer'
-import { Transform } from 'class-transformer'
-import {
-  IsDate,
-  isMongoId,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator'
-import { omit } from 'lodash'
+import { isMongoId } from '~/utils/validator.util'
+import { omit } from 'es-toolkit/compat'
+import { createZodDto } from 'nestjs-zod'
+import { z } from 'zod'
 import { AuthInstanceInjectKey } from './auth.constant'
 import { InjectAuthInstance } from './auth.interface'
 import { AuthService } from './auth.service'
 
-export class TokenDto {
-  @IsDate()
-  @IsOptional()
-  @Transform(({ value: v }) => new Date(v))
-  expired?: Date
+const TokenSchema = z.object({
+  expired: z.preprocess(
+    (val) => (val ? new Date(val as string) : undefined),
+    z.date().optional(),
+  ),
+  name: z.string().min(1),
+})
 
-  @IsString()
-  @IsNotEmpty()
-  name: string
-}
+export class TokenDto extends createZodDto(TokenSchema) {}
 @ApiController({
   path: 'auth',
 })

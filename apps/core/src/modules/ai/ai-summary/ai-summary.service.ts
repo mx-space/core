@@ -1,4 +1,3 @@
-import { z } from '@mx-space/compiled/zod'
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { BizException } from '~/common/exceptions/biz.exception'
@@ -13,6 +12,7 @@ import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { md5 } from '~/utils/tool.util'
 import { generateObject } from 'ai'
 import removeMdCodeblock from 'remove-md-codeblock'
+import { z } from 'zod'
 import { ConfigsService } from '../../configs/configs.service'
 import { AI_TASK_LOCK_TTL, DEFAULT_SUMMARY_LANG } from '../ai.constants'
 import { AI_PROMPTS } from '../ai.prompts'
@@ -343,7 +343,7 @@ export class AiSummaryService {
 
     const aiSummaryTargetLanguage = await this.configService
       .get('ai')
-      .then((c) => c.aiSummaryTargetLanguage)
+      .then((c) => c.aiSummaryTargetLanguage || DEFAULT_SUMMARY_LANG)
 
     const targetLanguage =
       aiSummaryTargetLanguage === 'auto'
@@ -404,7 +404,7 @@ export class AiSummaryService {
     }
     const targetLanguage = await this.configService
       .get('ai')
-      .then((c) => c.aiSummaryTargetLanguage)
+      .then((c) => c.aiSummaryTargetLanguage || DEFAULT_SUMMARY_LANG)
 
     await this.generateSummaryByOpenAI(
       event.id,

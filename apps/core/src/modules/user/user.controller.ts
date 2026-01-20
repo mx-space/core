@@ -25,9 +25,9 @@ import { getAvatar } from '~/utils/tool.util'
 import { AuthService } from '../auth/auth.service'
 import { AuthnService } from '../authn/authn.service'
 import { ConfigsService } from '../configs/configs.service'
-import { LoginDto, UserDto, UserPatchDto } from './user.dto'
 import type { UserModel } from './user.model'
 import { UserDocument } from './user.model'
+import { LoginDto, UserDto, UserPatchDto } from './user.schema'
 import { UserService } from './user.service'
 
 @ApiController(['master', 'user'])

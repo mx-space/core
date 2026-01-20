@@ -5,20 +5,21 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { keyBy, pick } from 'lodash'
+import { keyBy, pick } from 'es-toolkit/compat'
 import snakecaseKeys from 'snakecase-keys'
 import { ReaderService } from '../reader/reader.service'
 import { Activity } from './activity.constant'
-import { ActivityService } from './activity.service'
 import {
   ActivityDeleteDto,
   ActivityNotificationDto,
   ActivityQueryDto,
   ActivityRangeDto,
   ActivityTypeParamsDto,
-} from './dtos/activity.dto'
-import { LikeBodyDto } from './dtos/like.dto'
-import { GetPresenceQueryDto, UpdatePresenceDto } from './dtos/presence.dto'
+  GetPresenceQueryDto,
+  LikeBodyDto,
+  UpdatePresenceDto,
+} from './activity.schema'
+import { ActivityService } from './activity.service'
 
 @ApiController('/activity')
 export class ActivityController {

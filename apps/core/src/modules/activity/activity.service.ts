@@ -23,7 +23,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { checkRefModelCollectionType } from '~/utils/biz.util'
 import { camelcaseKeys } from '~/utils/tool.util'
-import { omit, pick, uniqBy } from 'lodash'
+import { omit, pick, uniqBy } from 'es-toolkit/compat'
 import { ObjectId } from 'mongodb'
 import type { Document } from 'mongoose'
 import type { Socket } from 'socket.io'
@@ -45,12 +45,12 @@ import type {
   ActivityPresence,
 } from './activity.interface'
 import { ActivityModel } from './activity.model'
+import type { UpdatePresenceDto } from './activity.schema'
 import {
   extractArticleIdFromRoomName,
   isValidRoomName,
   parseRoomName,
 } from './activity.util'
-import type { UpdatePresenceDto } from './dtos/presence.dto'
 
 declare module '~/types/socket-meta' {
   interface SocketMetadata {

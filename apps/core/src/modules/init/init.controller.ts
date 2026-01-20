@@ -18,7 +18,7 @@ import { isZipMinetype } from '~/utils/mine.util'
 import { FastifyRequest } from 'fastify'
 import { BackupService } from '../backup/backup.service'
 import { ConfigsService } from '../configs/configs.service'
-import { ConfigKeyDto } from '../option/dtoes/config.dto'
+import { ConfigKeyDto } from '../option/option.schema'
 import { InitGuard } from './init.guard'
 import { InitService } from './init.service'
 

@@ -5,7 +5,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
-import { omit } from 'lodash'
+import { omit } from 'es-toolkit/compat'
 import { AnalyzeService } from '../analyze/analyze.service'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteService } from '../note/note.service'
@@ -17,7 +17,7 @@ import {
   ReadAndLikeCountTypeDto,
   TimelineQueryDto,
   TopQueryDto,
-} from './aggregate.dto'
+} from './aggregate.schema'
 import { AggregateService } from './aggregate.service'
 
 @ApiController('aggregate')

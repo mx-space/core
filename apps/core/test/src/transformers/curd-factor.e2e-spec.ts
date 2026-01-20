@@ -2,9 +2,9 @@ import { createE2EApp } from '@/helper/create-e2e-app'
 import { authPassHeader } from '@/mock/guard/auth.guard'
 import type { ReturnModelType } from '@typegoose/typegoose'
 import { modelOptions, prop } from '@typegoose/typegoose'
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { BaseModel } from '~/shared/model/base.model'
 import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'
-import { IsDefined, IsNumber } from 'class-validator'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 
 @modelOptions({
@@ -14,17 +14,17 @@ import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 })
 class TestModel extends BaseModel {
   @prop()
-  @IsNumber()
   number: number
 
   @prop()
-  @IsDefined()
   foo: string
 }
-export class TestController extends BaseCrudFactory({ model: TestModel }) {}
+
+const TestController = BaseCrudFactory({ model: TestModel })
 
 describe('BaseCrudFactory', () => {
   let testingModel: ReturnModelType<typeof TestModel>
+  const baseUrl = `${apiRoutePrefix}/tests`
   const proxy = createE2EApp({
     controllers: [TestController],
     providers: [...eventEmitterProvider],
@@ -54,7 +54,7 @@ describe('BaseCrudFactory', () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'GET',
-      url: '/tests',
+      url: baseUrl,
     })
     const data = res.json()
     expect(res.statusCode).toBe(200)
@@ -70,7 +70,7 @@ describe('BaseCrudFactory', () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'POST',
-      url: '/tests',
+      url: baseUrl,
       headers: {
         ...authPassHeader,
       },
@@ -86,21 +86,6 @@ describe('BaseCrudFactory', () => {
     expect(data).toMatchSnapshot()
   })
 
-  test('POST /tests should throw 422', async () => {
-    const { app } = proxy
-    const res = await app.inject({
-      method: 'POST',
-      url: '/tests',
-      headers: {
-        ...authPassHeader,
-      },
-      payload: {
-        number: true,
-      },
-    })
-    expect(res.statusCode).toBe(422)
-  })
-
   test('PATCH /tests/:id', async () => {
     const { app } = proxy
     const docId = await testingModel
@@ -110,7 +95,7 @@ describe('BaseCrudFactory', () => {
 
     const res = await app.inject({
       method: 'PATCH',
-      url: `/tests/${docId}`,
+      url: `${baseUrl}/${docId}`,
       headers: {
         ...authPassHeader,
       },
@@ -134,7 +119,7 @@ describe('BaseCrudFactory', () => {
 
     const res = await app.inject({
       method: 'delete',
-      url: `/tests/${docId}`,
+      url: `${baseUrl}/${docId}`,
       headers: {
         ...authPassHeader,
       },

@@ -1,8 +1,8 @@
 import type { ModuleMetadata } from '@nestjs/common'
-import { ValidationPipe } from '@nestjs/common'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test, TestingModule } from '@nestjs/testing'
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
+import { extendedZodValidationPipeInstance } from '~/common/zod'
 
 export const setupE2EApp = async (module: TestingModule | ModuleMetadata) => {
   let nextModule: TestingModule
@@ -14,16 +14,7 @@ export const setupE2EApp = async (module: TestingModule | ModuleMetadata) => {
 
   const app =
     nextModule.createNestApplication<NestFastifyApplication>(fastifyApp)
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      errorHttpStatusCode: 422,
-      forbidUnknownValues: true,
-      enableDebugMessages: isDev,
-      stopAtFirstError: true,
-    }),
-  )
+  app.useGlobalPipes(extendedZodValidationPipeInstance)
 
   await app.init()
   await app.getHttpAdapter().getInstance().ready()

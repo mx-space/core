@@ -22,7 +22,7 @@ import { UploadService } from '~/processors/helper/helper.upload.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
-import { FileQueryDto, FileUploadDto, RenameFileQueryDto } from './file.dto'
+import { FileQueryDto, FileUploadDto, RenameFileQueryDto } from './file.schema'
 import { FileService } from './file.service'
 
 const { customAlphabet } = nanoid

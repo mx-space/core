@@ -1,11 +1,14 @@
 import cluster from 'node:cluster'
-import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  UnprocessableEntityException,
+} from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
-import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
 import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import type { AIProviderConfig } from '~/modules/ai/ai.types'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
@@ -13,15 +16,13 @@ import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { camelcaseKeys, sleep } from '~/utils/tool.util'
-import { plainToInstance } from 'class-transformer'
-import type { ClassConstructor } from 'class-transformer'
-import { validateSync } from 'class-validator'
-import { cloneDeep, merge, mergeWith } from 'lodash'
+import { cloneDeep, merge, mergeWith } from 'es-toolkit/compat'
+import type { z, ZodError } from 'zod'
 import { generateDefaultConfig } from './configs.default'
-import { OAuthDto } from './configs.dto'
 import { decryptObject, encryptObject } from './configs.encrypt.util'
 import { configDtoMapping, IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
+import type { OAuthConfig } from './configs.schema'
 
 const configsKeySet = new Set(Object.keys(configDtoMapping))
 
@@ -42,9 +43,6 @@ export class ConfigsService {
     private readonly subpub: SubPubBridgeService,
 
     private readonly eventManager: EventManagerService,
-
-    @Inject(VALIDATION_PIPE_INJECTION)
-    private readonly validate: ExtendedValidationPipe,
   ) {
     this.configInit().then(() => {
       this.logger.log('Config 已经加载完毕！')
@@ -120,12 +118,8 @@ export class ConfigsService {
 
     if (configCache) {
       try {
-        const instanceConfigsValue = plainToInstance<IConfig, any>(
-          IConfig as any,
-          JSON.parse(configCache) as any,
-        ) as any as IConfig
-
-        return decryptObject(instanceConfigsValue)
+        const configValue = JSON.parse(configCache) as IConfig
+        return decryptObject(configValue)
       } catch (error) {
         await this.configInit()
         if (errorRetryCount > 0) {
@@ -203,18 +197,21 @@ export class ConfigsService {
         )
       }
     }
-    const instanceValue = this.validWithDto(dto, value)
+    const instanceValue = this.validWithDto(dto, value) as Partial<IConfig[T]>
 
     encryptObject(instanceValue)
 
     switch (key) {
       case 'url': {
-        const newValue = await this.patch(key, instanceValue)
+        const newValue = await this.patch(key, instanceValue as any)
         this.subpub.publish(EventBusEvents.AppUrlChanged, newValue)
         return newValue
       }
       case 'mailOptions': {
-        const option = await this.patch(key as 'mailOptions', instanceValue)
+        const option = await this.patch(
+          key as 'mailOptions',
+          instanceValue as any,
+        )
         if (option.enable) {
           if (cluster.isPrimary) {
             this.eventManager.emit(EventBusEvents.EmailInit, null, {
@@ -231,7 +228,7 @@ export class ConfigsService {
       case 'algoliaSearchOptions': {
         const option = await this.patch(
           key as 'algoliaSearchOptions',
-          instanceValue,
+          instanceValue as any,
         )
         if (option.enable) {
           this.eventManager.emit(EventBusEvents.PushSearch, null, {
@@ -242,10 +239,10 @@ export class ConfigsService {
       }
 
       case 'oauth': {
-        const value = instanceValue as OAuthDto
+        const value = instanceValue as unknown as OAuthConfig
         const current = await this.get('oauth')
 
-        const currentProvidersMap = current.providers.reduce(
+        const currentProvidersMap = (current.providers || []).reduce(
           (acc, item) => {
             acc[item.type] = item
             return acc
@@ -253,9 +250,10 @@ export class ConfigsService {
           {} as Record<string, any>,
         )
 
-        value.providers.forEach((p) => {
+        const currentProviders = current.providers || []
+        ;(value.providers || []).forEach((p) => {
           if (!currentProvidersMap[p.type]) {
-            current.providers.push(p)
+            currentProviders.push(p)
           } else {
             Object.assign(currentProvidersMap[p.type], p)
           }
@@ -271,7 +269,7 @@ export class ConfigsService {
           nextAuthPublic = merge(current.public, nextAuthPublic)
         }
         const option = await this.patch(key as 'oauth', {
-          providers: current.providers,
+          providers: currentProviders,
           secrets: nextAuthSecrets,
           public: nextAuthPublic,
         })
@@ -281,25 +279,25 @@ export class ConfigsService {
       }
 
       default: {
-        return this.patch(key, instanceValue)
+        return this.patch(key, instanceValue as any)
       }
     }
   }
 
-  private validWithDto<T extends object>(dto: ClassConstructor<T>, value: any) {
-    const validModel = plainToInstance(dto, value)
-    const errors = Array.isArray(validModel)
-      ? (validModel as Array<any>).reduce(
-          (acc, item) =>
-            acc.concat(validateSync(item, ExtendedValidationPipe.options)),
-          [],
-        )
-      : validateSync(validModel, ExtendedValidationPipe.options)
-    if (errors.length > 0) {
-      const error = this.validate.createExceptionFactory()(errors as any[])
-      throw error
+  private validWithDto(schema: z.ZodTypeAny, value: unknown): any {
+    const result = schema.safeParse(value)
+    if (!result.success) {
+      const zodError = result.error as ZodError
+      const errorMessages = zodError.issues.map((err) => {
+        const path = err.path.join('.')
+        return path ? `${path}: ${err.message}` : err.message
+      })
+      throw new UnprocessableEntityException({
+        message: errorMessages.join('; '),
+        errors: zodError.issues,
+      })
     }
-    return validModel
+    return result.data
   }
 
   public async getAiProviderById(

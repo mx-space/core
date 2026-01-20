@@ -1,15 +1,15 @@
 import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common'
 import { ReturnModelType } from '@typegoose/typegoose'
 import { InjectModel } from '~/transformers/model.transformer'
-import type {
-  CreateMetaPresetDto,
-  UpdateMetaPresetDto,
-} from './meta-preset.dto'
 import {
   MetaFieldType,
   MetaPresetModel,
   MetaPresetScope,
 } from './meta-preset.model'
+import type {
+  CreateMetaPresetDto,
+  UpdateMetaPresetDto,
+} from './meta-preset.schema'
 
 /**
  * 内置预设字段种子数据

@@ -1,5 +1,4 @@
 import { URL } from 'node:url'
-import { z } from '@mx-space/compiled/zod'
 import type { OnModuleInit } from '@nestjs/common'
 import {
   BadRequestException,
@@ -25,8 +24,9 @@ import { scheduleManager } from '~/utils/schedule.util'
 import { getAvatar, hasChinese } from '~/utils/tool.util'
 import { generateObject } from 'ai'
 import { render } from 'ejs'
-import { omit, pick } from 'lodash'
+import { omit, pick } from 'es-toolkit/compat'
 import { isObjectIdOrHexString, Types } from 'mongoose'
+import { z } from 'zod'
 import { AI_PROMPTS } from '../ai/ai.prompts'
 import { AiService } from '../ai/ai.service'
 import { ConfigsService } from '../configs/configs.service'

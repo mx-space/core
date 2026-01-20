@@ -2,27 +2,16 @@
   "compilerOptions": {
     "incremental": true,
     "target": "es2022",
-    "lib": [
-      "ES2021",
-      "es2020"
-    ],
+    "lib": ["ES2021", "es2020"],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "baseUrl": "..",
     "module": "CommonJS",
     "paths": {
-      "~": [
-        "./src"
-      ],
-      "~/*": [
-        "./src/*"
-      ],
-      "@/": [
-        "./test"
-      ],
-      "@/*": [
-        "./test/*"
-      ]
+      "~": ["./src"],
+      "~/*": ["./src/*"],
+      "@/": ["./test"],
+      "@/*": ["./test/*"]
     },
     "resolveJsonModule": true,
     "allowJs": true,
@@ -42,6 +31,6 @@
     "./src/**/*.tsx",
     "./src/**/*.js",
     "./src/**/*.jsx",
-    "./**/*.ts",
-  ],
+    "./**/*.ts"
+  ]
 }

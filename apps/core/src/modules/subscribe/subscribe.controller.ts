@@ -4,7 +4,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { SubscribeTypeToBitMap } from './subscribe.constant'
-import { CancelSubscribeDto, SubscribeDto } from './subscribe.dto'
+import { CancelSubscribeDto, SubscribeDto } from './subscribe.schema'
 import { SubscribeService } from './subscribe.service'
 
 @ApiController('subscribe')

@@ -17,7 +17,7 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getShortDate } from '~/utils/time.util'
-import { debounce, uniqBy } from 'lodash'
+import { debounce, uniqBy } from 'es-toolkit/compat'
 import SocketIO from 'socket.io'
 import type {
   DecorateAcknowledgementsWithMultipleResponses,
@@ -26,7 +26,7 @@ import type {
 import { BroadcastBaseGateway } from '../base.gateway'
 import type { SocketType } from '../gateway.service'
 import { GatewayService } from '../gateway.service'
-import { MessageEventDto, SupportedMessageEvent } from './dtos/message'
+import { MessageEventDto, SupportedMessageEvent } from './dtos/message.schema'
 import type { EventGatewayHooks } from './hook.interface'
 
 declare module '~/types/socket-meta' {

@@ -19,12 +19,14 @@ import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import type { PipelineStage } from 'mongoose'
 import type { CategoryModel } from '../category/category.model'
+import { PostModel } from './post.model'
 import {
   CategoryAndSlugDto,
+  PartialPostDto,
+  PostDto,
   PostPagerDto,
   SetPostPublishStatusDto,
-} from './post.dto'
-import { PartialPostModel, PostModel } from './post.model'
+} from './post.schema'
 import { PostService } from './post.service'
 
 @ApiController('posts')
@@ -40,7 +42,16 @@ export class PostController {
     @Query() query: PostPagerDto,
     @IsAuthenticated() isAuthenticated: boolean,
   ) {
-    const { size, select, page, year, sortBy, sortOrder, truncate } = query
+    const {
+      size,
+      select,
+      page,
+      year,
+      sortBy,
+      sortOrder,
+      truncate,
+      categoryIds,
+    } = query
 
     return this.postService.model
       .aggregatePaginate(
@@ -51,6 +62,17 @@ export class PostController {
                 ...addYearCondition(year),
                 // 非认证用户只能看到已发布的文章
                 ...(isAuthenticated ? {} : { isPublished: true }),
+                // 分类筛选
+                ...(categoryIds?.length
+                  ? {
+                      categoryId: {
+                        $in: categoryIds.map(
+                          (id) =>
+                            new this.postService.model.base.Types.ObjectId(id),
+                        ),
+                      },
+                    }
+                  : {}),
               },
             },
             // @see https://stackoverflow.com/questions/54810712/mongodb-sort-by-field-a-if-field-b-null-otherwise-sort-by-field-c
@@ -85,14 +107,17 @@ export class PostController {
             },
             select && {
               $project: {
-                ...(select?.split(' ').reduce(
-                  (acc, cur) => {
-                    const field = cur.trim()
-                    acc[field] = 1
-                    return acc
-                  },
-                  Object.keys(new PostModel()).map((k) => ({ [k]: 0 })),
-                ) as any),
+                ...select
+                  .split(' ')
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+                  .reduce(
+                    (acc, field) => {
+                      acc[field] = 1
+                      return acc
+                    },
+                    {} as Record<string, 1>,
+                  ),
               },
             },
             {
@@ -229,9 +254,9 @@ export class PostController {
   @Post('/')
   @Auth()
   @HTTPDecorators.Idempotence()
-  async create(@Body() body: PostModel) {
+  async create(@Body() body: PostDto) {
     return await this.postService.create({
-      ...body,
+      ...(body as unknown as PostModel),
       modified: null,
       slug: body.slug,
       related: body.relatedId as any,
@@ -240,14 +265,20 @@ export class PostController {
 
   @Put('/:id')
   @Auth()
-  async update(@Param() params: MongoIdDto, @Body() body: PostModel) {
-    return await this.postService.updateById(params.id, body)
+  async update(@Param() params: MongoIdDto, @Body() body: PostDto) {
+    return await this.postService.updateById(
+      params.id,
+      body as unknown as PostModel,
+    )
   }
 
   @Patch('/:id')
   @Auth()
-  async patch(@Param() params: MongoIdDto, @Body() body: PartialPostModel) {
-    await this.postService.updateById(params.id, body)
+  async patch(@Param() params: MongoIdDto, @Body() body: PartialPostDto) {
+    await this.postService.updateById(
+      params.id,
+      body as unknown as Partial<PostModel>,
+    )
     return
   }
 
