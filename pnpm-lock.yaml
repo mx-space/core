@@ -310,8 +310,8 @@ importers:
         specifier: 2.0.7
         version: 2.0.7
       vm2:
-        specifier: 3.9.19
-        version: 3.9.19
+        specifier: 3.10.0
+        version: 3.10.0
       wildcard-match:
         specifier: 5.1.4
         version: 5.1.4
@@ -6518,10 +6518,9 @@ packages:
       jsdom:
         optional: true
 
-  vm2@3.9.19:
-    resolution: {integrity: sha512-J637XF0DHDMV57R6JyVsTak7nIL8gy5KH4r1HiwWLf/4GBbb5MKL5y7LpmF4A8E2nR6XmzpmMFQ7V7ppPTmUQg==}
+  vm2@3.10.0:
+    resolution: {integrity: sha512-3ggF4Bs0cw4M7Rxn19/Cv3nJi04xrgHwt4uLto+zkcZocaKwP/nKP9wPx6ggN2X0DSXxOOIc63BV1jvES19wXQ==}
     engines: {node: '>=6.0'}
-    deprecated: The library contains critical security issues and should not be used for production! The maintenance of the project has been discontinued. Consider migrating your code to isolated-vm.
     hasBin: true
 
   vue-eslint-parser@10.2.0:
@@ -13486,7 +13485,7 @@ snapshots:
       - supports-color
       - terser
 
-  vm2@3.9.19:
+  vm2@3.10.0:
     dependencies:
       acorn: 8.15.0
       acorn-walk: 8.3.4
