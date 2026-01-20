@@ -27,7 +27,7 @@
     "eslint": "^9.36.0",
     "lint-staged": "16.2.7",
     "mongodb-memory-server": "11.0.1",
-    "prettier": "3.7.4",
+    "prettier": "3.8.0",
     "prettier-package-json": "2.8.0",
     "prettier-plugin-ember-template-tag": "2.1.2",
     "redis-memory-server": "0.14.1",

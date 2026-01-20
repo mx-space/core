@@ -20,7 +20,7 @@ importers:
     devDependencies:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: 4.7.0
-        version: 4.7.0(@prettier/plugin-oxc@0.0.4)(content-tag@4.0.0)(prettier-plugin-ember-template-tag@2.1.2(prettier@3.7.4))(prettier@3.7.4)
+        version: 4.7.0(@prettier/plugin-oxc@0.0.4)(content-tag@4.0.0)(prettier-plugin-ember-template-tag@2.1.2(prettier@3.8.0))(prettier@3.8.0)
       '@sxzz/eslint-config':
         specifier: 7.1.4
         version: 7.1.4(@types/eslint@9.6.1)(@typescript-eslint/eslint-plugin@8.44.1(@typescript-eslint/parser@8.44.1(eslint@9.39.2(jiti@2.6.0))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.0))(typescript@5.9.3))(@typescript-eslint/parser@8.44.1(eslint@9.39.2(jiti@2.6.0))(typescript@5.9.3))(@typescript-eslint/utils@8.44.1(eslint@9.39.2(jiti@2.6.0))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.0))(typescript@5.9.3)
@@ -40,14 +40,14 @@ importers:
         specifier: 11.0.1
         version: 11.0.1
       prettier:
-        specifier: 3.7.4
-        version: 3.7.4
+        specifier: 3.8.0
+        version: 3.8.0
       prettier-package-json:
         specifier: 2.8.0
         version: 2.8.0
       prettier-plugin-ember-template-tag:
         specifier: 2.1.2
-        version: 2.1.2(prettier@3.7.4)
+        version: 2.1.2(prettier@3.8.0)
       redis-memory-server:
         specifier: 0.14.1
         version: 0.14.1
@@ -5518,8 +5518,8 @@ packages:
     peerDependencies:
       prettier: '>= 3.0.0'
 
-  prettier@3.7.4:
-    resolution: {integrity: sha512-v6UNi1+3hSlVvv8fSaoUbggEM5VErKmmpGA7Pl3HF8V6uKY7rvClBOJlH6yNwQtfTueNkGVpOv/mtWL9L4bgRA==}
+  prettier@3.8.0:
+    resolution: {integrity: sha512-yEPsovQfpxYfgWNhCfECjG5AQaO+K3dp6XERmOepyPDVqcJm+bjyCVO3pmU+nAPe0N5dDvekfGezt/EIiRe1TA==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -7833,18 +7833,18 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@ianvs/prettier-plugin-sort-imports@4.7.0(@prettier/plugin-oxc@0.0.4)(content-tag@4.0.0)(prettier-plugin-ember-template-tag@2.1.2(prettier@3.7.4))(prettier@3.7.4)':
+  '@ianvs/prettier-plugin-sort-imports@4.7.0(@prettier/plugin-oxc@0.0.4)(content-tag@4.0.0)(prettier-plugin-ember-template-tag@2.1.2(prettier@3.8.0))(prettier@3.8.0)':
     dependencies:
       '@babel/generator': 7.28.3
       '@babel/parser': 7.28.3
       '@babel/traverse': 7.28.3
       '@babel/types': 7.28.6
-      prettier: 3.7.4
+      prettier: 3.8.0
       semver: 7.7.3
     optionalDependencies:
       '@prettier/plugin-oxc': 0.0.4
       content-tag: 4.0.0
-      prettier-plugin-ember-template-tag: 2.1.2(prettier@3.7.4)
+      prettier-plugin-ember-template-tag: 2.1.2(prettier@3.8.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -9073,7 +9073,7 @@ snapshots:
       eslint-plugin-n: 17.23.1(eslint@9.39.2(jiti@2.6.0))(typescript@5.9.3)
       eslint-plugin-perfectionist: 4.15.0(eslint@9.39.2(jiti@2.6.0))(typescript@5.9.3)
       eslint-plugin-pnpm: 1.1.2(eslint@9.39.2(jiti@2.6.0))
-      eslint-plugin-prettier: 5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.39.2(jiti@2.6.0)))(eslint@9.39.2(jiti@2.6.0))(prettier@3.7.4)
+      eslint-plugin-prettier: 5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.39.2(jiti@2.6.0)))(eslint@9.39.2(jiti@2.6.0))(prettier@3.8.0)
       eslint-plugin-regexp: 2.10.0(eslint@9.39.2(jiti@2.6.0))
       eslint-plugin-sxzz: 0.4.1(eslint@9.39.2(jiti@2.6.0))
       eslint-plugin-unicorn: 60.0.0(eslint@9.39.2(jiti@2.6.0))
@@ -9083,7 +9083,7 @@ snapshots:
       globals: 16.4.0
       jsonc-eslint-parser: 2.4.1
       local-pkg: 1.1.2
-      prettier: 3.7.4
+      prettier: 3.8.0
       typescript-eslint: 8.44.1(eslint@9.39.2(jiti@2.6.0))(typescript@5.9.3)
       vue-eslint-parser: 10.2.0(eslint@9.39.2(jiti@2.6.0))
       yaml-eslint-parser: 1.3.0
@@ -10522,10 +10522,10 @@ snapshots:
       tinyglobby: 0.2.15
       yaml-eslint-parser: 1.3.0
 
-  eslint-plugin-prettier@5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.39.2(jiti@2.6.0)))(eslint@9.39.2(jiti@2.6.0))(prettier@3.7.4):
+  eslint-plugin-prettier@5.5.4(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.39.2(jiti@2.6.0)))(eslint@9.39.2(jiti@2.6.0))(prettier@3.8.0):
     dependencies:
       eslint: 9.39.2(jiti@2.6.0)
-      prettier: 3.7.4
+      prettier: 3.8.0
       prettier-linter-helpers: 1.0.0
       synckit: 0.11.11
     optionalDependencies:
@@ -12387,15 +12387,15 @@ snapshots:
       sort-object-keys: 1.1.3
       sort-order: 1.1.2
 
-  prettier-plugin-ember-template-tag@2.1.2(prettier@3.7.4):
+  prettier-plugin-ember-template-tag@2.1.2(prettier@3.8.0):
     dependencies:
       '@babel/core': 7.28.6
       content-tag: 4.0.0
-      prettier: 3.7.4
+      prettier: 3.8.0
     transitivePeerDependencies:
       - supports-color
 
-  prettier@3.7.4: {}
+  prettier@3.8.0: {}
 
   pretty-format@29.7.0:
     dependencies:
