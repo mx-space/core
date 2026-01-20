@@ -50,7 +50,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.9",
     "@ai-sdk/openai": "3.0.12",
-    "@algolia/client-search": "^4.22.1",
+    "@algolia/client-search": "^5.46.4",
     "@babel/core": "7.28.6",
     "@babel/plugin-transform-modules-commonjs": "7.27.1",
     "@babel/plugin-transform-typescript": "7.28.6",
@@ -79,7 +79,7 @@
     "@typegoose/typegoose": "12.20.1",
     "@types/jsonwebtoken": "9.0.10",
     "ai": "6.0.39",
-    "algoliasearch": "4.24.0",
+    "algoliasearch": "5.46.4",
     "axios": "^1.13.2",
     "axios-retry": "4.5.0",
     "bcryptjs": "^3.0.3",

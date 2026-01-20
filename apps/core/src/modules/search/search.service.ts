@@ -1,4 +1,4 @@
-import type { SearchResponse } from '@algolia/client-search'
+import type { SearchClient, SearchResponse } from '@algolia/client-search'
 import {
   BadRequestException,
   forwardRef,
@@ -16,8 +16,7 @@ import type { SearchDto } from '~/modules/search/search.schema'
 import { DatabaseService } from '~/processors/database/database.service'
 import type { Pagination } from '~/shared/interface/paginator.interface'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
-import algoliasearch from 'algoliasearch'
-import type { SearchIndex } from 'algoliasearch'
+import { algoliasearch } from 'algoliasearch'
 import { omit } from 'es-toolkit/compat'
 import removeMdCodeblock from 'remove-md-codeblock'
 import { ConfigsService } from '../configs/configs.service'
@@ -94,7 +93,7 @@ export class SearchService {
     )
   }
 
-  public async getAlgoliaSearchIndex() {
+  public async getAlgoliaSearchClient() {
     const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
     if (!algoliaSearchOptions.enable) {
       throw new BadRequestException('algolia not enable.')
@@ -110,8 +109,7 @@ export class SearchService {
       algoliaSearchOptions.appId,
       algoliaSearchOptions.apiKey,
     )
-    const index = client.initIndex(algoliaSearchOptions.indexName)
-    return index
+    return { client, indexName: algoliaSearchOptions.indexName }
   }
 
   async searchAlgolia(searchOption: SearchDto): Promise<
@@ -131,46 +129,46 @@ export class SearchService {
       })
   > {
     const { keyword, size, page } = searchOption
-    const index = await this.getAlgoliaSearchIndex()
+    const { client, indexName } = await this.getAlgoliaSearchClient()
 
-    const search = await index.search<{
+    const search = await client.searchSingleIndex<{
       id: string
       text: string
       title: string
       type: 'post' | 'note' | 'page'
-    }>(keyword, {
-      // start with 0
-      page: page - 1,
-      hitsPerPage: size,
-      attributesToRetrieve: ['*'],
-      snippetEllipsisText: '...',
-      responseFields: ['*'],
-      facets: ['*'],
+    }>({
+      indexName,
+      searchParams: {
+        query: keyword,
+        page: page - 1,
+        hitsPerPage: size,
+        attributesToRetrieve: ['*'],
+        snippetEllipsisText: '...',
+        facets: ['*'],
+      },
     })
     if (searchOption.rawAlgolia) {
       return search
     }
     const data: any[] = []
-    const tasks = search.hits.map((hit) => {
+    const tasks = search.hits.map(async (hit) => {
       const { type, objectID } = hit
 
       const model = this.databaseService.getModelByRefType(type as 'post')
       if (!model) {
-        return Promise.resolve()
+        return
       }
-      return model
+      const doc = await model
         .findById(objectID)
         .select('_id title created modified categoryId slug nid')
         .lean({
           getters: true,
           autopopulate: true,
         })
-        .then((doc) => {
-          if (doc) {
-            Reflect.set(doc, 'type', type)
-            data.push(doc)
-          }
-        })
+      if (doc) {
+        Reflect.set(doc, 'type', type)
+        data.push(doc)
+      }
     })
     await Promise.all(tasks)
     return {
@@ -178,11 +176,11 @@ export class SearchService {
       raw: search,
       pagination: {
         currentPage: page,
-        total: search.nbHits,
-        hasNextPage: search.nbPages > search.page,
-        hasPrevPage: search.page > 1,
-        size: search.hitsPerPage,
-        totalPage: search.nbPages,
+        total: search.nbHits ?? 0,
+        hasNextPage: (search.nbPages ?? 0) > (search.page ?? 0),
+        hasPrevPage: (search.page ?? 0) > 1,
+        size: search.hitsPerPage ?? size,
+        totalPage: search.nbPages ?? 0,
       },
     }
   }
@@ -200,18 +198,22 @@ export class SearchService {
     if (!configs.algoliaSearchOptions.enable || isDev) {
       return
     }
-    const index = await this.getAlgoliaSearchIndex()
+    const { client, indexName } = await this.getAlgoliaSearchClient()
 
     this.logger.log('--> 开始推送到 Algolia')
 
     const documents = await this.buildAlgoliaIndexData()
     try {
       await Promise.all([
-        index.replaceAllObjects(documents, {
-          autoGenerateObjectIDIfNotExist: false,
+        client.replaceAllObjects({
+          indexName,
+          objects: documents,
         }),
-        index.setSettings({
-          attributesToHighlight: ['text', 'title'],
+        client.setSettings({
+          indexName,
+          indexSettings: {
+            attributesToHighlight: ['text', 'title'],
+          },
         }),
       ])
 
@@ -298,29 +300,28 @@ export class SearchService {
 
     if (!data) return
 
-    this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
-      const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
+    this.executeAlgoliaSearchOperationIfEnabled(
+      async ({ client, indexName }) => {
+        const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
 
-      this.logger.log(
-        `detect post created or update, save to algolia, data id:${data.id}`,
-      )
-      await index.saveObject(
-        adjustObjectSizeEfficiently(
-          {
-            ...omit(data, '_id'),
-            objectID: data.id,
-            id: data.id,
-
-            type: 'post',
-          },
-          algoliaSearchOptions.maxTruncateSize,
-        ),
-        {
-          autoGenerateObjectIDIfNotExist: false,
-        },
-      )
-      this.logger.log(`save to algolia success, id: ${data.id}`)
-    })
+        this.logger.log(
+          `detect post created or update, save to algolia, data id:${data.id}`,
+        )
+        await client.saveObject({
+          indexName,
+          body: adjustObjectSizeEfficiently(
+            {
+              ...omit(data, '_id'),
+              objectID: data.id,
+              id: data.id,
+              type: 'post',
+            },
+            algoliaSearchOptions.maxTruncateSize,
+          ),
+        })
+        this.logger.log(`save to algolia success, id: ${data.id}`)
+      },
+    )
   }
 
   @OnEvent(BusinessEvents.NOTE_CREATE)
@@ -330,49 +331,51 @@ export class SearchService {
 
     if (!data) return
 
-    this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
-      this.logger.log(
-        `detect post created or update, save to algolia, data id:${data.id}`,
-      )
-      const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
+    this.executeAlgoliaSearchOperationIfEnabled(
+      async ({ client, indexName }) => {
+        this.logger.log(
+          `detect post created or update, save to algolia, data id:${data.id}`,
+        )
+        const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
 
-      await index.saveObject(
-        adjustObjectSizeEfficiently(
-          {
-            ...omit(data, '_id'),
-            objectID: data.id,
-            id: data.id,
-            type: 'note',
-          },
-          algoliaSearchOptions.maxTruncateSize,
-        ),
-        {
-          autoGenerateObjectIDIfNotExist: false,
-        },
-      )
-      this.logger.log(`save to algolia success, id: ${data.id}`)
-    })
+        await client.saveObject({
+          indexName,
+          body: adjustObjectSizeEfficiently(
+            {
+              ...omit(data, '_id'),
+              objectID: data.id,
+              id: data.id,
+              type: 'note',
+            },
+            algoliaSearchOptions.maxTruncateSize,
+          ),
+        })
+        this.logger.log(`save to algolia success, id: ${data.id}`)
+      },
+    )
   }
 
   @OnEvent(BusinessEvents.POST_DELETE)
   @OnEvent(BusinessEvents.NOTE_DELETE)
   async onPostDelete({ data: id }: { data: string }) {
-    await this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
-      this.logger.log(`detect data delete, save to algolia, data id: ${id}`)
+    await this.executeAlgoliaSearchOperationIfEnabled(
+      async ({ client, indexName }) => {
+        this.logger.log(`detect data delete, save to algolia, data id: ${id}`)
 
-      await index.deleteObject(id)
-    })
+        await client.deleteObject({ indexName, objectID: id })
+      },
+    )
   }
 
   private async executeAlgoliaSearchOperationIfEnabled(
-    caller: (index: SearchIndex) => Promise<any>,
+    caller: (ctx: { client: SearchClient; indexName: string }) => Promise<any>,
   ) {
     const configs = await this.configs.waitForConfigReady()
     if (!configs.algoliaSearchOptions.enable || isDev) {
       return
     }
-    const index = await this.getAlgoliaSearchIndex()
-    return caller(index)
+    const { client, indexName } = await this.getAlgoliaSearchClient()
+    return caller({ client, indexName })
   }
 }
 

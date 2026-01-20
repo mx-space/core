@@ -28,14 +28,15 @@ export interface Url {
   webUrl: string
 }
 
-export interface AggregateTopNote
-  extends Pick<NoteModel, 'id' | 'title' | 'created' | 'nid' | 'images'> {}
+export interface AggregateTopNote extends Pick<
+  NoteModel,
+  'id' | 'title' | 'created' | 'nid' | 'images'
+> {}
 
-export interface AggregateTopPost
-  extends Pick<
-    PostModel,
-    'id' | 'slug' | 'created' | 'title' | 'category' | 'images'
-  > {}
+export interface AggregateTopPost extends Pick<
+  PostModel,
+  'id' | 'slug' | 'created' | 'title' | 'category' | 'images'
+> {}
 
 export interface AggregateTop {
   notes: AggregateTopNote[]

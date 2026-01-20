@@ -30,6 +30,7 @@ export enum MetaPresetScope {
 /**
  * 字段选项（嵌入式）
  */
+@modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class MetaFieldOption {
   @prop({ type: Schema.Types.Mixed, required: true })
   value!: any
