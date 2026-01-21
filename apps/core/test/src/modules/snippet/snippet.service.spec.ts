@@ -1,5 +1,4 @@
 import { createRedisProvider } from '@/mock/modules/redis.mock'
-import { nanoid } from '@mx-space/compiled'
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
@@ -10,6 +9,7 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getModelToken } from '~/transformers/model.transformer'
+import { nanoid } from 'nanoid'
 import { stringify } from 'qs'
 import { redisHelper } from 'test/helper/redis-mock.helper'
 
@@ -106,12 +106,12 @@ describe('test Snippet Service', async () => {
   describe('update function snippet with secret', () => {
     const createTestingModel = () =>
       ({
-        name: `test-fn-${nanoid.nanoid()}`,
+        name: `test-fn-${nanoid()}`,
         raw: 'export default async function handler() {}',
         type: SnippetType.Function,
         private: false,
         reference: 'root',
-        id: nanoid.nanoid(),
+        id: nanoid(),
         secret: 'username=123&password=123',
       }) as SnippetModel
 

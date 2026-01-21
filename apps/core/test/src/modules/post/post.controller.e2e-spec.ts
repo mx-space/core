@@ -1,6 +1,11 @@
 import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
+import {
+  CATEGORY_SERVICE_TOKEN,
+  DRAFT_SERVICE_TOKEN,
+  POST_SERVICE_TOKEN,
+} from '~/constants/injection.constant'
 import { CategoryModel } from '~/modules/category/category.model'
 import { CategoryService } from '~/modules/category/category.service'
 import { CommentModel } from '~/modules/comment/comment.model'
@@ -33,8 +38,16 @@ describe('PostController (e2e)', async () => {
     controllers: [PostController],
     providers: [
       PostService,
+      {
+        provide: POST_SERVICE_TOKEN,
+        useExisting: PostService,
+      },
       ImageService,
       CategoryService,
+      {
+        provide: CATEGORY_SERVICE_TOKEN,
+        useExisting: CategoryService,
+      },
       SlugTrackerService,
       {
         provide: APP_INTERCEPTOR,
@@ -62,6 +75,10 @@ describe('PostController (e2e)', async () => {
 
       countingServiceProvider,
       DraftService,
+      {
+        provide: DRAFT_SERVICE_TOKEN,
+        useExisting: DraftService,
+      },
     ],
     imports: [],
     models: [

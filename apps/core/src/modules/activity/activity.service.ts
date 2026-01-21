@@ -23,6 +23,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { checkRefModelCollectionType } from '~/utils/biz.util'
+import { dbTransforms } from '~/utils/db-transform.util'
 import { camelcaseKeys } from '~/utils/tool.util'
 import { omit, pick, uniqBy } from 'es-toolkit/compat'
 import { ObjectId } from 'mongodb'
@@ -117,7 +118,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         }
         this.activityModel.create({
           type: Activity.ReadDuration,
-          payload: {
+          payload: dbTransforms.json({
             connectedAt,
             operationTime,
             updatedAt,
@@ -126,7 +127,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
             displayName,
             joinedAt,
             ip,
-          },
+          }),
         })
       }
     }
@@ -357,12 +358,12 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     await this.activityModel.create({
       type: Activity.Like,
       created: new Date(),
-      payload: {
+      payload: dbTransforms.json({
         ip,
         type,
         id,
         readerId: reader ? readerId : undefined,
-      } as ActivityLikePayload,
+      } as ActivityLikePayload),
     })
   }
 

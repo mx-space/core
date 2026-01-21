@@ -8,6 +8,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 import { InjectModel } from '~/transformers/model.transformer'
+import { dbTransforms } from '~/utils/db-transform.util'
 import { WebhookEventModel } from './webhook-event.model'
 import { WebhookModel } from './webhook.model'
 
@@ -135,11 +136,11 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     }
     const webhookEvent = await this.webhookEventModel.create({
       event,
-      headers,
+      headers: dbTransforms.json(headers),
       success: false,
       payload: stringifyPayload,
-      hookId: webhook.id,
-      response: null,
+      hookId: webhook.id as unknown as WebhookEventModel['hookId'],
+      response: null as unknown as string,
     })
     return this.httpService.axiosRef
       .post(webhook.payloadUrl, clonedPayload, {

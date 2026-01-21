@@ -7,6 +7,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { isDefined } from '~/utils/validator.util'
 import { omit } from 'es-toolkit/compat'
@@ -44,6 +45,9 @@ export class PageService {
       ...doc,
       slug: slugify(doc.slug),
       created: new Date(),
+      meta: doc.meta
+        ? (dbTransforms.json(doc.meta) as unknown as PageModel['meta'])
+        : undefined,
     })
 
     // 处理草稿：标记为已发布，并关联到新创建的页面
@@ -87,7 +91,12 @@ export class PageService {
     const newDoc = await this.model
       .findOneAndUpdate(
         { _id: id },
-        { ...omit(doc, PageModel.protectedKeys) },
+        {
+          ...omit(doc, PageModel.protectedKeys),
+          ...(doc.meta !== undefined
+            ? { meta: dbTransforms.json(doc.meta) }
+            : {}),
+        },
         { new: true },
       )
       .lean({ getters: true })

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '~/transformers/model.transformer'
+import { dbTransforms } from '~/utils/db-transform.util'
 import { Types } from 'mongoose'
 import { DraftHistoryModel, DraftModel, DraftRefType } from './draft.model'
 import type { CreateDraftDto, UpdateDraftDto } from './draft.schema'
@@ -37,6 +38,9 @@ export class DraftService {
         : undefined,
       typeSpecificData: dto.typeSpecificData
         ? JSON.stringify(dto.typeSpecificData)
+        : undefined,
+      meta: dto.meta
+        ? (dbTransforms.json(dto.meta) as unknown as DraftModel['meta'])
         : undefined,
       version: 1,
       history: [],
@@ -79,7 +83,7 @@ export class DraftService {
     if (dto.title !== undefined) draft.title = dto.title
     if (dto.text !== undefined) draft.text = dto.text
     if (dto.images !== undefined) draft.images = dto.images
-    if (dto.meta !== undefined) draft.meta = dto.meta
+    if (dto.meta !== undefined) draft.meta = dbTransforms.json(dto.meta) as any
     if (dto.typeSpecificData !== undefined) {
       draft.typeSpecificData = JSON.stringify(dto.typeSpecificData)
     }

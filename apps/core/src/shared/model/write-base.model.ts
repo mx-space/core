@@ -21,12 +21,8 @@ export class WriteBaseModel extends BaseCommentIndexModel {
   @prop(
     {
       type: String,
-
       get(jsonString) {
         return JSON.safeParse(jsonString)
-      },
-      set(val) {
-        return JSON.stringify(val)
       },
     },
     PropType.NONE,

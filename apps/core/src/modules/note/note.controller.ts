@@ -21,7 +21,7 @@ import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
-import type { FilterQuery } from 'mongoose'
+import type { QueryFilter } from 'mongoose'
 import { NoteModel } from './note.model'
 import {
   ListQueryDto,
@@ -288,7 +288,7 @@ export class NoteController {
       sortBy,
       sortOrder,
     } = query
-    const condition: FilterQuery<NoteModel> = isAuthenticated
+    const condition: QueryFilter<NoteModel> = isAuthenticated
       ? { $or: [{ isPublished: false }, { isPublished: true }] }
       : { isPublished: true }
 

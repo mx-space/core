@@ -76,7 +76,10 @@ export class UserService {
       throw new BadRequestException('我已经有一个主人了哦')
     }
     const avatar = model.avatar ?? getAvatar(model.mail)
-    const res = await this.userModel.create({ ...model, avatar })
+    const res = await this.userModel.create({
+      ...model,
+      avatar,
+    })
     const token = await this.authService.jwtServicePublic.sign(res.id)
     return { token, username: res.username }
   }
@@ -109,6 +112,9 @@ export class UserService {
 
       // 2. 撤销所有 token
       await this.authService.jwtServicePublic.revokeAll()
+
+      // 3. 更新密码（model setter 会自动哈希）
+      doc.password = password
     }
     return await this.userModel.updateOne({ _id: user._id }, doc)
   }

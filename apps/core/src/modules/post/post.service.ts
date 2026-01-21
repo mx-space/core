@@ -20,6 +20,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getLessThanNow } from '~/utils/time.util'
 import { isDefined } from '~/utils/validator.util'
@@ -91,6 +92,9 @@ export class PostService implements OnApplicationBootstrap {
       categoryId: category.id,
       created: getLessThanNow(post.created),
       modified: null,
+      meta: post.meta
+        ? (dbTransforms.json(post.meta) as unknown as PostModel['meta'])
+        : undefined,
     })
 
     const doc = newPost.toJSON()
@@ -311,6 +315,11 @@ export class PostService implements OnApplicationBootstrap {
       data.created
         ? {
             created: getLessThanNow(data.created),
+          }
+        : {},
+      data.meta !== undefined
+        ? {
+            meta: dbTransforms.json(data.meta),
           }
         : {},
     )

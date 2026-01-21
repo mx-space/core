@@ -51,7 +51,7 @@ export class LinkControllerCrud extends BaseCrudFactory({
     @IsAuthenticated() isAuthenticated: boolean,
   ) {
     // 过滤未通过审核和被拒绝的
-    const condition: mongoose.FilterQuery<LinkModel> = {
+    const condition: mongoose.QueryFilter<LinkModel> = {
       $nor: [
         { state: LinkState.Audit },
         {

@@ -9,12 +9,6 @@ type JSON = string
 
 const JSONProps = {
   type: String,
-  set(value) {
-    if (typeof value === 'object' && value) {
-      return JSON.stringify(value)
-    }
-    return value
-  },
 }
 @modelOptions({
   schemaOptions: {

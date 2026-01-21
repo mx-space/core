@@ -55,13 +55,10 @@ export class UserModel extends BaseModel {
 
   @prop({
     select: false,
-    get(val) {
-      return val
-    },
+    required: true,
     set(val) {
       return hashSync(val, 6)
     },
-    required: true,
   })
   password!: string
 

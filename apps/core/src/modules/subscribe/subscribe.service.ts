@@ -207,7 +207,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
         email,
         subscribe,
         cancelToken: token,
-      })
+      } as unknown as Partial<SubscribeModel>)
     }
 
     this.subscribeMap.set(email, subscribe)

@@ -9,12 +9,13 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getLessThanNow } from '~/utils/time.util'
 import { isDefined, isMongoId } from '~/utils/validator.util'
 import dayjs from 'dayjs'
 import { debounce, omit } from 'es-toolkit/compat'
-import type { FilterQuery, PaginateOptions } from 'mongoose'
+import type { PaginateOptions, QueryFilter } from 'mongoose'
 import { getArticleIdFromRoomName } from '../activity/activity.util'
 import { CommentService } from '../comment/comment.service'
 import { DraftService } from '../draft/draft.service'
@@ -92,7 +93,7 @@ export class NoteService {
     }
   }
   async getLatestOne(
-    condition: FilterQuery<DocumentType<NoteModel>> = {},
+    condition: QueryFilter<DocumentType<NoteModel>> = {},
     projection: any = undefined,
   ) {
     const latest: NoteModel | null = await this.noteModel
@@ -153,6 +154,9 @@ export class NoteService {
   public async create(document: NoteModel & { draftId?: string }) {
     const { draftId } = document
     document.created = getLessThanNow(document.created)
+    if (document.meta) {
+      document.meta = dbTransforms.json(document.meta) as any
+    }
 
     const note = await this.noteModel.create(document)
 
@@ -249,6 +253,11 @@ export class NoteService {
       hasContentChanged
         ? {
             modified: new Date(),
+          }
+        : {},
+      data.meta !== undefined
+        ? {
+            meta: dbTransforms.json(data.meta),
           }
         : {},
     )
@@ -400,7 +409,7 @@ export class NoteService {
   async getNotePaginationByTopicId(
     topicId: string,
     pagination: PaginateOptions = {},
-    condition?: FilterQuery<NoteModel>,
+    condition?: QueryFilter<NoteModel>,
   ) {
     const { page = 1, limit = 10, ...rest } = pagination
 

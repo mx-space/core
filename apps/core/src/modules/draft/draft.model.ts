@@ -63,9 +63,6 @@ export class DraftModel extends BaseModel {
       get(jsonString) {
         return JSON.safeParse(jsonString)
       },
-      set(val) {
-        return JSON.stringify(val)
-      },
     },
     PropType.NONE,
   )

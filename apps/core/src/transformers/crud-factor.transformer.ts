@@ -84,18 +84,19 @@ export function BaseCrudFactory<
     @HTTPDecorators.Idempotence()
     @Auth()
     async create(@Body() body: Dto) {
-      return await this._model
-        .create({ ...body, created: new Date() })
-        .then((res) => {
-          this.eventManager.broadcast(
-            `${eventNamePrefix}CREATE` as any,
-            res.toObject(),
-            {
-              scope: EventScope.TO_SYSTEM_VISITOR,
-            },
-          )
-          return res
-        })
+      // Mongoose 9 create() has stricter types for generic models
+      const res = await (this._model.create as Function)({
+        ...body,
+        created: new Date(),
+      })
+      this.eventManager.broadcast(
+        `${eventNamePrefix}CREATE` as any,
+        res.toObject(),
+        {
+          scope: EventScope.TO_SYSTEM_VISITOR,
+        },
+      )
+      return res
     }
 
     @Put('/:id')

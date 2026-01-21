@@ -15,7 +15,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import { omit } from 'es-toolkit/compat'
-import type { FilterQuery } from 'mongoose'
+import type { QueryFilter } from 'mongoose'
 import type { PostModel } from '../post/post.model'
 import type { PostService } from '../post/post.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
@@ -90,7 +90,7 @@ export class CategoryService implements OnApplicationBootstrap {
 
   async findArticleWithTag(
     tag: string,
-    condition: FilterQuery<DocumentType<PostModel>> = {},
+    condition: QueryFilter<DocumentType<PostModel>> = {},
   ): Promise<null | any[]> {
     const posts = await this.postService.model
       .find(

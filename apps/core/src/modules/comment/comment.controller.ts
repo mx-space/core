@@ -34,7 +34,7 @@ import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import { isUndefined, keyBy } from 'es-toolkit/compat'
-import type { Document, FilterQuery } from 'mongoose'
+import type { Document, QueryFilter } from 'mongoose'
 import { ConfigsService } from '../configs/configs.service'
 import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
@@ -134,7 +134,7 @@ export class CommentController {
     const configs = await this.configsService.get('commentOptions')
     const { commentShouldAudit } = configs
 
-    const $and: FilterQuery<CommentModel & Document<any, any, any>>[] = [
+    const $and: QueryFilter<CommentModel & Document<any, any, any>>[] = [
       {
         parent: undefined,
         ref: id,

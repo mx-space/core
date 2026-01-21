@@ -9,6 +9,10 @@
     "module": "CommonJS",
     "paths": {
       "~": ["./src"],
+      "~/app.config": ["./src/app.config.test.ts"],
+      "~/common/decorators/auth.decorator": [
+        "./test/mock/decorators/auth.decorator"
+      ],
       "~/*": ["./src/*"],
       "@/": ["./test"],
       "@/*": ["./test/*"]

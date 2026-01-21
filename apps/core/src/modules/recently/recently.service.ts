@@ -283,7 +283,7 @@ export class RecentlyService {
 
     const res = await this.model.create({
       content: model.content,
-      ref: model.refId,
+      ref: model.refId as unknown as RecentlyModel['ref'],
       refType: model.refType,
     })
 

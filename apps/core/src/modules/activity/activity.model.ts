@@ -21,9 +21,6 @@ export class ActivityModel extends BaseModel {
     get(val) {
       return JSON.safeParse(val)
     },
-    set(val) {
-      return JSON.stringify(val)
-    },
     type: String,
   })
   payload: any
