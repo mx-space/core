@@ -17,12 +17,11 @@ services:
 
       # MongoDB (service in this stack)
       # NOTE: In Docker Swarm stack, service names are prefixed with the stack name,
-      # e.g. `mx-core_mongo` / `mx-core_redis`. If you deploy the stack with a
-      # different name, override these via env.
-      DB_CONNECTION_STRING: ${DB_CONNECTION_STRING:-mongodb://mx-core_mongo:27017/mx-space}
+      # e.g. `mx-core_mongo` / `mx-core_redis`.
+      DB_CONNECTION_STRING: mongodb://mx-core_mongo:27017/mx-space
 
       # Redis (service in this stack)
-      REDIS_HOST: ${REDIS_HOST:-mx-core_redis}
+      REDIS_HOST: mx-core_redis
       REDIS_PORT: "6379"
 
       # Security (optional)
