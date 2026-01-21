@@ -151,8 +151,8 @@ importers:
         specifier: 11.1.12
         version: 11.1.12(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(@nestjs/platform-socket.io@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@simplewebauthn/server':
-        specifier: 10.0.1
-        version: 10.0.1(encoding@0.1.13)
+        specifier: 13.2.2
+        version: 13.2.2
       '@socket.io/redis-adapter':
         specifier: 8.3.0
         version: 8.3.0(socket.io-adapter@2.5.6)
@@ -2006,9 +2006,6 @@ packages:
   '@oxc-project/types@0.74.0':
     resolution: {integrity: sha512-KOw/RZrVlHGhCXh1RufBFF7Nuo7HdY5w1lRJukM/igIl6x9qtz8QycDvZdzb4qnHO7znrPyo2sJrFJK2eKHgfQ==}
 
-  '@peculiar/asn1-android@2.4.0':
-    resolution: {integrity: sha512-YFueREq97CLslZZBI8dKzis7jMfEHSLxM+nr0Zdx1POiXFLjqqwoY5s0F1UimdBiEw/iKlHey2m56MRDv7Jtyg==}
-
   '@peculiar/asn1-android@2.5.0':
     resolution: {integrity: sha512-t8A83hgghWQkcneRsgGs2ebAlRe54ns88p7ouv8PW2tzF1nAW4yHcL4uZKrFpIU+uszIRzTkcCuie37gpkId0A==}
 
@@ -2017,9 +2014,6 @@ packages:
 
   '@peculiar/asn1-csr@2.5.0':
     resolution: {integrity: sha512-ioigvA6WSYN9h/YssMmmoIwgl3RvZlAYx4A/9jD2qaqXZwGcNlAxaw54eSx2QG1Yu7YyBC5Rku3nNoHrQ16YsQ==}
-
-  '@peculiar/asn1-ecc@2.4.0':
-    resolution: {integrity: sha512-fJiYUBCJBDkjh347zZe5H81BdJ0+OGIg0X9z06v8xXUoql3MFeENUX0JsjCaVaU9A0L85PefLPGYkIoGpTnXLQ==}
 
   '@peculiar/asn1-ecc@2.5.0':
     resolution: {integrity: sha512-t4eYGNhXtLRxaP50h3sfO6aJebUCDGQACoeexcelL4roMFRRVgB20yBIu2LxsPh/tdW9I282gNgMOyg3ywg/mg==}
@@ -2033,23 +2027,14 @@ packages:
   '@peculiar/asn1-pkcs9@2.5.0':
     resolution: {integrity: sha512-UgqSMBLNLR5TzEZ5ZzxR45Nk6VJrammxd60WMSkofyNzd3DQLSNycGWSK5Xg3UTYbXcDFyG8pA/7/y/ztVCa6A==}
 
-  '@peculiar/asn1-rsa@2.4.0':
-    resolution: {integrity: sha512-6PP75voaEnOSlWR9sD25iCQyLgFZHXbmxvUfnnDcfL6Zh5h2iHW38+bve4LfH7a60x7fkhZZNmiYqAlAff9Img==}
-
   '@peculiar/asn1-rsa@2.5.0':
     resolution: {integrity: sha512-qMZ/vweiTHy9syrkkqWFvbT3eLoedvamcUdnnvwyyUNv5FgFXA3KP8td+ATibnlZ0EANW5PYRm8E6MJzEB/72Q==}
-
-  '@peculiar/asn1-schema@2.4.0':
-    resolution: {integrity: sha512-umbembjIWOrPSOzEGG5vxFLkeM8kzIhLkgigtsOrfLKnuzxWxejAcUX+q/SoZCdemlODOcr5WiYa7+dIEzBXZQ==}
 
   '@peculiar/asn1-schema@2.5.0':
     resolution: {integrity: sha512-YM/nFfskFJSlHqv59ed6dZlLZqtZQwjRVJ4bBAiWV08Oc+1rSd5lDZcBEx0lGDHfSoH3UziI2pXt2UM33KerPQ==}
 
   '@peculiar/asn1-x509-attr@2.5.0':
     resolution: {integrity: sha512-9f0hPOxiJDoG/bfNLAFven+Bd4gwz/VzrCIIWc1025LEI4BXO0U5fOCTNDPbbp2ll+UzqKsZ3g61mpBp74gk9A==}
-
-  '@peculiar/asn1-x509@2.4.0':
-    resolution: {integrity: sha512-F7mIZY2Eao2TaoVqigGMLv+NDdpwuBKU1fucHPONfzaBS4JXXCNCmfO0Z3dsy7JzKGqtDcYC1mr9JjaZQZNiuw==}
 
   '@peculiar/asn1-x509@2.5.0':
     resolution: {integrity: sha512-CpwtMCTJvfvYTFMuiME5IH+8qmDe3yEWzKHe7OOADbGfq7ohxeLaXwQo0q4du3qs0AII3UbLCvb9NF/6q0oTKQ==}
@@ -2268,17 +2253,9 @@ packages:
   '@simplewebauthn/browser@13.2.0':
     resolution: {integrity: sha512-N3fuA1AAnTo5gCStYoIoiasPccC+xPLx2YU88Dv0GeAmPQTWHETlZQq5xZ0DgUq1H9loXMWQH5qqUjcI7BHJ1A==}
 
-  '@simplewebauthn/server@10.0.1':
-    resolution: {integrity: sha512-djNWcRn+H+6zvihBFJSpG3fzb0NQS9c/Mw5dYOtZ9H+oDw8qn9Htqxt4cpqRvSOAfwqP7rOvE9rwqVaoGGc3hg==}
+  '@simplewebauthn/server@13.2.2':
+    resolution: {integrity: sha512-HcWLW28yTMGXpwE9VLx9J+N2KEUaELadLrkPEEI9tpI5la70xNEVEsu/C+m3u7uoq4FulLqZQhgBCzR9IZhFpA==}
     engines: {node: '>=20.0.0'}
-
-  '@simplewebauthn/server@13.2.1':
-    resolution: {integrity: sha512-Inmfye5opZXe3HI0GaksqBnQiM7glcNySoG6DH1GgkO1Lh9dvuV4XSV9DK02DReUVX39HpcDob9nxHELjECoQw==}
-    engines: {node: '>=20.0.0'}
-
-  '@simplewebauthn/types@10.0.0':
-    resolution: {integrity: sha512-SFXke7xkgPRowY2E+8djKbdEznTVnD5R6GO7GPTthpHrokLvNKw8C3lFZypTxLI7KkCfGPfhtqB3d7OVGGa9jQ==}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -3512,9 +3489,6 @@ packages:
     resolution: {integrity: sha512-GsYosgnACZTADcmEyJctkJIoqAhHjttw7RsFrVoJNXbsWWqaq6Ym+7kZjq6mS45O0jij6vtiReppKQEtqWy6Dw==}
     engines: {node: '>=20'}
     hasBin: true
-
-  cross-fetch@4.1.0:
-    resolution: {integrity: sha512-uKm5PU+MHTootlWEY+mZ4vvXoCn4fLQxT9dSc1sXVMSFkINTJVN8cAQROpwcKm8bJ/c7rgZVIBWzH5T78sNZZw==}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -5275,15 +5249,6 @@ packages:
 
   node-fetch@1.7.3:
     resolution: {integrity: sha512-NhZ4CsKx7cYm2vSrBAr2PvFOe6sWDf0UYLRqA6svUYg7+/TSfVAu49jYC4BvQ4Sms9SZgdqGBgroqfDhJdTyKQ==}
-
-  node-fetch@2.7.0:
-    resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
-    engines: {node: 4.x || >=6.0.0}
-    peerDependencies:
-      encoding: ^0.1.0
-    peerDependenciesMeta:
-      encoding:
-        optional: true
 
   node-fetch@3.3.1:
     resolution: {integrity: sha512-cRVc/kyto/7E5shrWca1Wsea4y6tL9iYJE5FBCius3JQfb/4P4I295PfhgbJQBLTx6lATE4z+wK0rPM4VS2uow==}
@@ -8454,12 +8419,6 @@ snapshots:
   '@oxc-project/types@0.74.0':
     optional: true
 
-  '@peculiar/asn1-android@2.4.0':
-    dependencies:
-      '@peculiar/asn1-schema': 2.4.0
-      asn1js: 3.0.6
-      tslib: 2.8.1
-
   '@peculiar/asn1-android@2.5.0':
     dependencies:
       '@peculiar/asn1-schema': 2.5.0
@@ -8478,13 +8437,6 @@ snapshots:
     dependencies:
       '@peculiar/asn1-schema': 2.5.0
       '@peculiar/asn1-x509': 2.5.0
-      asn1js: 3.0.6
-      tslib: 2.8.1
-
-  '@peculiar/asn1-ecc@2.4.0':
-    dependencies:
-      '@peculiar/asn1-schema': 2.4.0
-      '@peculiar/asn1-x509': 2.4.0
       asn1js: 3.0.6
       tslib: 2.8.1
 
@@ -8522,24 +8474,11 @@ snapshots:
       asn1js: 3.0.6
       tslib: 2.8.1
 
-  '@peculiar/asn1-rsa@2.4.0':
-    dependencies:
-      '@peculiar/asn1-schema': 2.4.0
-      '@peculiar/asn1-x509': 2.4.0
-      asn1js: 3.0.6
-      tslib: 2.8.1
-
   '@peculiar/asn1-rsa@2.5.0':
     dependencies:
       '@peculiar/asn1-schema': 2.5.0
       '@peculiar/asn1-x509': 2.5.0
       asn1js: 3.0.6
-      tslib: 2.8.1
-
-  '@peculiar/asn1-schema@2.4.0':
-    dependencies:
-      asn1js: 3.0.6
-      pvtsutils: 1.3.6
       tslib: 2.8.1
 
   '@peculiar/asn1-schema@2.5.0':
@@ -8553,13 +8492,6 @@ snapshots:
       '@peculiar/asn1-schema': 2.5.0
       '@peculiar/asn1-x509': 2.5.0
       asn1js: 3.0.6
-      tslib: 2.8.1
-
-  '@peculiar/asn1-x509@2.4.0':
-    dependencies:
-      '@peculiar/asn1-schema': 2.4.0
-      asn1js: 3.0.6
-      pvtsutils: 1.3.6
       tslib: 2.8.1
 
   '@peculiar/asn1-x509@2.5.0':
@@ -8714,21 +8646,7 @@ snapshots:
 
   '@simplewebauthn/browser@13.2.0': {}
 
-  '@simplewebauthn/server@10.0.1(encoding@0.1.13)':
-    dependencies:
-      '@hexagon/base64': 1.1.28
-      '@levischuck/tiny-cbor': 0.2.11
-      '@peculiar/asn1-android': 2.4.0
-      '@peculiar/asn1-ecc': 2.4.0
-      '@peculiar/asn1-rsa': 2.4.0
-      '@peculiar/asn1-schema': 2.4.0
-      '@peculiar/asn1-x509': 2.4.0
-      '@simplewebauthn/types': 10.0.0
-      cross-fetch: 4.1.0(encoding@0.1.13)
-    transitivePeerDependencies:
-      - encoding
-
-  '@simplewebauthn/server@13.2.1':
+  '@simplewebauthn/server@13.2.2':
     dependencies:
       '@hexagon/base64': 1.1.28
       '@levischuck/tiny-cbor': 0.2.11
@@ -8738,8 +8656,6 @@ snapshots:
       '@peculiar/asn1-schema': 2.5.0
       '@peculiar/asn1-x509': 2.5.0
       '@peculiar/x509': 1.14.0
-
-  '@simplewebauthn/types@10.0.0': {}
 
   '@sinclair/typebox@0.27.8': {}
 
@@ -9825,7 +9741,7 @@ snapshots:
       '@noble/ciphers': 0.6.0
       '@noble/hashes': 1.8.0
       '@simplewebauthn/browser': 13.2.0
-      '@simplewebauthn/server': 13.2.1
+      '@simplewebauthn/server': 13.2.2
       better-call: 1.0.19
       defu: 6.1.4
       jose: 5.10.0
@@ -10131,12 +10047,6 @@ snapshots:
     dependencies:
       '@epic-web/invariant': 1.0.0
       cross-spawn: 7.0.6
-
-  cross-fetch@4.1.0(encoding@0.1.13):
-    dependencies:
-      node-fetch: 2.7.0(encoding@0.1.13)
-    transitivePeerDependencies:
-      - encoding
 
   cross-spawn@7.0.6:
     dependencies:
@@ -12174,12 +12084,6 @@ snapshots:
     dependencies:
       encoding: 0.1.13
       is-stream: 1.1.0
-
-  node-fetch@2.7.0(encoding@0.1.13):
-    dependencies:
-      whatwg-url: 14.1.1
-    optionalDependencies:
-      encoding: 0.1.13
 
   node-fetch@3.3.1:
     dependencies:

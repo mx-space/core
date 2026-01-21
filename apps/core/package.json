@@ -72,7 +72,7 @@
     "@nestjs/schedule": "6.1.0",
     "@nestjs/throttler": "6.5.0",
     "@nestjs/websockets": "11.1.12",
-    "@simplewebauthn/server": "10.0.1",
+    "@simplewebauthn/server": "13.2.2",
     "@socket.io/redis-adapter": "8.3.0",
     "@socket.io/redis-emitter": "5.1.0",
     "@typegoose/auto-increment": "4.13.2",
