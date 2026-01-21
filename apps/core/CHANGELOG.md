@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [9.0.0-alpha.1](https://github.com/mx-space/core/compare/v9.0.0-alpha.0...v9.0.0-alpha.1) (2026-01-21)
+
+
+### Features
+
+* add Docker Compose and Docker Stack configurations for mx-core and Redis services ([f83ab46](https://github.com/mx-space/core/commit/f83ab463ad7d6a51e44865529c656cd4132a5505))
+
+
+
 # [9.0.0-alpha.0](https://github.com/mx-space/core/compare/v8.8.0...v9.0.0-alpha.0) (2026-01-21)
 
 
