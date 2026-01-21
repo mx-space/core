@@ -11,7 +11,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { hashString, md5 } from '~/utils/tool.util'
-import { render } from 'ejs'
+import ejs from 'ejs'
 import { LRUCache } from 'lru-cache'
 import { nanoid } from 'nanoid'
 import type Mail from 'nodemailer/lib/mailer'
@@ -275,7 +275,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       ...{
         subject: `[${seo.title || 'Mx Space'}] 发布了新内容~`,
         to: email,
-        html: render(finalTemplate, source),
+        html: ejs.render(finalTemplate, source),
       },
 
       headers: {

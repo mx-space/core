@@ -6,8 +6,8 @@ import { IpLocation } from '~/common/decorators/ip.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { PagerDto } from '~/shared/dto/pager.dto'
+import { snakecaseKeysWithCompat } from '~/utils/case.util'
 import { keyBy, pick } from 'es-toolkit/compat'
-import snakecaseKeys from 'snakecase-keys'
 import { ReaderService } from '../reader/reader.service'
 import { Activity } from './activity.constant'
 import {
@@ -88,7 +88,7 @@ export class ActivityController {
       .findReaderInIds(readerIds)
       .then((arr) => {
         return arr.map((item) => {
-          return snakecaseKeys({
+          return snakecaseKeysWithCompat({
             ...item,
             id: item._id.toHexString(),
           })
@@ -98,7 +98,7 @@ export class ActivityController {
     return {
       data: keyBy(
         roomPresence.map(({ ip, ...item }) => {
-          return snakecaseKeys(item)
+          return snakecaseKeysWithCompat(item)
         }),
         'identity',
       ),

@@ -6,7 +6,7 @@ import { SkipThrottle } from '@nestjs/throttler'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import { AssetService } from '~/processors/helper/helper.asset.service'
-import { render } from 'ejs'
+import ejs from 'ejs'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
 import { AdminDownloadManager } from './admin-download.manager'
@@ -71,7 +71,7 @@ export class PageProxyController {
 
     const urls = await this.service.getUrls()
     reply.type('text/html').send(
-      render(template, {
+      ejs.render(template, {
         web_url: urls.webUrl,
         gateway_url: urls.wsUrl,
         base_api: urls.serverUrl,

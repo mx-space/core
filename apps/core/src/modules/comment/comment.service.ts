@@ -22,7 +22,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getAvatar, hasChinese } from '~/utils/tool.util'
 import { generateObject } from 'ai'
-import { render } from 'ejs'
+import ejs from 'ejs'
 import { omit, pick } from 'es-toolkit/compat'
 import { isObjectIdOrHexString, Types } from 'mongoose'
 import { z } from 'zod'
@@ -658,7 +658,7 @@ export class CommentService implements OnModuleInit {
         from: sendfrom,
         subject: `[${seo.title || 'Mx Space'}] 主人给你了新的回复呐`,
         to,
-        html: render(
+        html: ejs.render(
           (await this.mailService.readTemplate(type)) as string,
           source,
         ),
@@ -676,7 +676,7 @@ export class CommentService implements OnModuleInit {
         from: sendfrom,
         subject: `[${seo.title || 'Mx Space'}] 有新回复了耶~`,
         to,
-        html: render(
+        html: ejs.render(
           (await this.mailService.readTemplate(type)) as string,
           source,
         ),

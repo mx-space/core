@@ -55,7 +55,7 @@ export async function CreateAuth(
           after: [
             {
               matcher(context) {
-                return context.path.startsWith('/callback')
+                return context.path?.startsWith('/callback') ?? false
               },
               handler: createAuthMiddleware(async (ctx) => {
                 {

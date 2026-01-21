@@ -20,12 +20,12 @@ export default defineConfig({
   root: './test',
   test: {
     include: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
+    exclude: ['**/node_modules/**', '**/.git/**'],
 
     globals: true,
     globalSetup: [resolve(__dirname, './test/setup.ts')],
     setupFiles: [resolve(__dirname, './test/setup-global.ts')],
     environment: 'node',
-    includeSource: [resolve(__dirname, './test')],
   },
 
   resolve: {

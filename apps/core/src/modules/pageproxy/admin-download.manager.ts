@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { AssetService } from '~/processors/helper/helper.asset.service'
-import { render } from 'ejs'
+import ejs from 'ejs'
 import { Observable } from 'rxjs'
 import { UpdateService } from '../update/update.service'
 
@@ -107,7 +107,7 @@ export class AdminDownloadManager {
           encoding: 'utf-8',
         },
       )) as string
-      return render(template, { initialMessage })
+      return ejs.render(template, { initialMessage })
     } catch {
       return `
         <h1>Downloading Admin Assets...</h1>

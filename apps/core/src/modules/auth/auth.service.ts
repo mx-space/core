@@ -157,8 +157,8 @@ export class AuthService {
       return null
     }
 
-    const providerAccountId = accounts[0].id
-    const provider = accounts[0].provider
+    const providerAccountId = accounts[0].accountId
+    const provider = accounts[0].providerId
 
     return {
       ...session,
