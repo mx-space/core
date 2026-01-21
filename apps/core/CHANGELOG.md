@@ -1,5 +1,17 @@
 # CHANGELOG
 
+# [9.0.0-alpha.0](https://github.com/mx-space/core/compare/v8.8.0...v9.0.0-alpha.0) (2026-01-21)
+
+
+### Bug Fixes
+
+* **comment:** 邮件通知速记跳转前端路由 ([#2541](https://github.com/mx-space/core/issues/2541)) ([3c12235](https://github.com/mx-space/core/commit/3c1223569ef9caf3480183eb4e922d2719b27925))
+* **deps:** update dependency @ai-sdk/openai to v3.0.13 ([#2546](https://github.com/mx-space/core/issues/2546)) ([7213840](https://github.com/mx-space/core/commit/721384031a02b951958debc14b3fdf6d0131f95a))
+* **deps:** update dependency @keyv/redis to v5.1.6 ([#2547](https://github.com/mx-space/core/issues/2547)) ([5a00a9b](https://github.com/mx-space/core/commit/5a00a9b0272faede2c082eebb978fb4572d56cc4))
+* replace zx with native Node.js APIs in download script ([b93d6d9](https://github.com/mx-space/core/commit/b93d6d9959f7b79ec7611191f016c93f7da3657e))
+
+
+
 # [8.8.0](https://github.com/mx-space/core/compare/v8.7.1...v8.8.0) (2026-01-20)
 
 
