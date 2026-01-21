@@ -1,5 +1,9 @@
 # CHANGELOG
 
+# [9.0.0-alpha.3](https://github.com/mx-space/core/compare/v9.0.0-alpha.2...v9.0.0-alpha.3) (2026-01-21)
+
+
+
 # [9.0.0-alpha.2](https://github.com/mx-space/core/compare/v9.0.0-alpha.1...v9.0.0-alpha.2) (2026-01-21)
 
 
