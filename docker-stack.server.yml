@@ -16,10 +16,13 @@ services:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-localhost:*}
 
       # MongoDB (service in this stack)
-      DB_CONNECTION_STRING: ${DB_CONNECTION_STRING:-mongodb://mongo:27017/mx-space}
+      # NOTE: In Docker Swarm stack, service names are prefixed with the stack name,
+      # e.g. `mx-core_mongo` / `mx-core_redis`. If you deploy the stack with a
+      # different name, override these via env.
+      DB_CONNECTION_STRING: ${DB_CONNECTION_STRING:-mongodb://mx-core_mongo:27017/mx-space}
 
       # Redis (service in this stack)
-      REDIS_HOST: redis
+      REDIS_HOST: ${REDIS_HOST:-mx-core_redis}
       REDIS_PORT: "6379"
 
       # Security (optional)
@@ -40,6 +43,8 @@ services:
     depends_on:
       - mongo
       - redis
+    networks:
+      default: {}
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:2333/api/v2/ping"]
@@ -80,6 +85,8 @@ services:
       replicas: 1
       restart_policy:
         condition: any
+    networks:
+      default: {}
 
   mongo:
     image: mongo:7
@@ -98,7 +105,10 @@ services:
       replicas: 1
       restart_policy:
         condition: any
+    networks:
+      default: {}
 
 networks:
   default:
     driver: overlay
+    attachable: true

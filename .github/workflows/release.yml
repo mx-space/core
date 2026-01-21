@@ -199,7 +199,10 @@ jobs:
           TZ=${TZ:-Asia/Shanghai}
           MX_PORT=${MX_PORT:-2333}
           ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-localhost:*}
-          DB_CONNECTION_STRING=${DB_CONNECTION_STRING:-mongodb://mongo:27017/mx-space}
+          # For Swarm stack name `mx-core`, service names are `mx-core_mongo` / `mx-core_redis`
+          DB_CONNECTION_STRING=${DB_CONNECTION_STRING:-mongodb://mx-core_mongo:27017/mx-space}
+          REDIS_HOST=${REDIS_HOST:-mx-core_redis}
+          REDIS_PORT=${REDIS_PORT:-6379}
           ENCRYPT_ENABLE=${ENCRYPT_ENABLE:-true}
           ENCRYPT_KEY=${ENCRYPT_KEY:-}
           JWT_SECRET=${JWT_SECRET:-}
