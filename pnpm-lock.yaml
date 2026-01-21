@@ -115,8 +115,8 @@ importers:
         specifier: 0.3.4
         version: 0.3.4(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@keyv/redis':
-        specifier: 5.1.5
-        version: 5.1.5(keyv@5.5.5)
+        specifier: 5.1.6
+        version: 5.1.6(keyv@5.5.5)
       '@mx-space/compiled':
         specifier: workspace:*
         version: link:../../packages/compiled
@@ -1719,11 +1719,11 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@keyv/redis@5.1.5':
-    resolution: {integrity: sha512-8tD98mQoZTHHHFG7bcI2T4gkvAL9YsBI7TqCW4sXbx33WmAaPQ+JofxdN+rCu5LKxiboapfS8swZWJ7Tl/XbQg==}
+  '@keyv/redis@5.1.6':
+    resolution: {integrity: sha512-eKvW6pspvVaU5dxigaIDZr635/Uw6urTXL3gNbY9WTR8d3QigZQT+r8gxYSEOsw4+1cCBsC4s7T2ptR0WC9LfQ==}
     engines: {node: '>= 18'}
     peerDependencies:
-      keyv: ^5.5.5
+      keyv: ^5.6.0
 
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
@@ -8198,7 +8198,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@keyv/redis@5.1.5(keyv@5.5.5)':
+  '@keyv/redis@5.1.6(keyv@5.5.5)':
     dependencies:
       '@redis/client': 5.10.0
       cluster-key-slot: 1.1.2
