@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [9.0.0-alpha.2](https://github.com/mx-space/core/compare/v9.0.0-alpha.1...v9.0.0-alpha.2) (2026-01-21)
+
+
+### Bug Fixes
+
+* enhance OpenAI-compatible provider handling ([fab4d9d](https://github.com/mx-space/core/commit/fab4d9dfda1b5e976ac505001630b09d82b4ca2b))
+
+
+
 # [9.0.0-alpha.1](https://github.com/mx-space/core/compare/v9.0.0-alpha.0...v9.0.0-alpha.1) (2026-01-21)
 
 
