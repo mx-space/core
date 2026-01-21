@@ -1,5 +1,7 @@
 import { BaseSchema } from '~/shared/schema'
+import { isNil } from 'es-toolkit/compat'
 import { createZodDto } from 'nestjs-zod'
+import qs from 'qs'
 import { z } from 'zod'
 
 export enum SnippetType {
@@ -28,7 +30,20 @@ export const SnippetSchema = BaseSchema.extend({
   metatype: z.string().max(20).optional(),
   schema: z.string().optional(),
   method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'ALL']).optional(),
-  secret: z.string().optional(),
+
+  /**
+   * For `Function` snippet only.
+   * - Request payload might send `secret` as an object (e.g. `{ foo: "bar" }`)
+   * - DB stores it as a qs string (e.g. `foo=bar`)
+   */
+  secret: z
+    .union([z.string(), z.record(z.string(), z.unknown())])
+    .optional()
+    .transform((val) => {
+      if (isNil(val)) return val
+      if (typeof val === 'string') return val
+      return qs.stringify(val)
+    }),
   enable: z.boolean().optional(),
 })
 

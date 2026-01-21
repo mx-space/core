@@ -13,6 +13,7 @@ import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
 import { load } from 'js-yaml'
 import JSON5 from 'json5'
@@ -216,8 +217,6 @@ export class SnippetService {
     if (!doc) {
       throw new NotFoundException()
     }
-
-    // transform sth.
     const nextSnippet = this.transformLeanSnippetModel(doc)
 
     return nextSnippet
@@ -227,7 +226,7 @@ export class SnippetService {
     const nextSnippet = { ...snippet }
     // transform sth.
     if (snippet.type === SnippetType.Function && snippet.secret) {
-      const secretObj = qs.parse(snippet.secret)
+      const secretObj = qs.parse(EncryptUtil.decrypt(snippet.secret))
 
       for (const key in secretObj) {
         // remove secret value, only keep key
@@ -243,7 +242,7 @@ export class SnippetService {
    *
    * @param name
    * @param reference 引用类型，可以理解为 type, 或者一级分类
-   * @returns
+   * @returns snippet document
    */
   async getSnippetByName(name: string, reference: string) {
     const doc = await this.model

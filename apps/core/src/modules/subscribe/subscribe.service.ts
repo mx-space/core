@@ -1,6 +1,6 @@
 import cluster from 'node:cluster'
 import { Co } from '@innei/next-async'
-import type { CoAction } from '@innei/next-async/types/interface'
+import type { CoAction } from '@innei/next-async'
 import { nanoid as N } from '@mx-space/compiled'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { BadRequestException, Injectable } from '@nestjs/common'

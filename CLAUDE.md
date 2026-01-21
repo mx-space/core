@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 MX Space is a personal blog server application built with NestJS, MongoDB, and Redis. This is a monorepo containing the core server application and related packages. The main application is located in `apps/core/`.
 
+## Related Projects
+
+- **Dashboard (admin-vue3)**: `../admin-vue3` - 后台管理面板，Vue 3 项目
+
 ## Development Commands
 
 All commands should be run from the repository root unless specified otherwise.

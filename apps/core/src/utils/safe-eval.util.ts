@@ -1,24 +1,43 @@
-import vm2 from 'vm2'
+import vm from 'node:vm'
 
-export function safeEval(code: string, context = {}, options?: vm2.VMOptions) {
+interface SafeEvalOptions {
+  timeout?: number
+}
+
+/**
+ * Simple synchronous code evaluation using Node.js vm module.
+ *
+ * WARNING: This is NOT a secure sandbox. The vm module does not provide
+ * security isolation. Use SandboxService for untrusted code execution.
+ *
+ * This function is intended for:
+ * - Simple template expressions
+ * - Trusted internal code evaluation
+ * - Macro processing
+ *
+ * @deprecated For serverless functions, use SandboxService instead.
+ */
+export function safeEval<T = unknown>(
+  code: string,
+  context: Record<string, unknown> = {},
+  options?: SafeEvalOptions,
+): T {
   const sandbox = {
     global: {},
+    ...context,
   }
 
-  code = `((() => { ${code} })())`
-  if (context) {
-    Object.keys(context).forEach((key) => {
-      sandbox[key] = context[key]
-    })
-  }
+  const wrappedCode = `((() => { ${code} })())`
 
-  const VM = new vm2.VM({
-    timeout: 60_0000,
-    sandbox,
-
-    eval: false,
-    ...options,
+  const vmContext = vm.createContext(sandbox, {
+    codeGeneration: {
+      strings: false,
+      wasm: false,
+    },
   })
 
-  return VM.run(code)
+  return vm.runInContext(wrappedCode, vmContext, {
+    timeout: options?.timeout ?? 60000,
+    breakOnSigint: true,
+  }) as T
 }

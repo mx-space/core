@@ -1,9 +1,8 @@
 import fs, { mkdir, stat } from 'node:fs/promises'
-import { createRequire } from 'node:module'
-import path, { resolve } from 'node:path'
+import path from 'node:path'
 import { parseAsync, transformAsync } from '@babel/core'
 import * as t from '@babel/types'
-import type { OnModuleInit } from '@nestjs/common'
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import {
   Injectable,
   InternalServerErrorException,
@@ -17,23 +16,17 @@ import {
 } from '~/constants/cache.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
-import { isTest } from '~/global/env.global'
+import { isDev } from '~/global/env.global'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { HttpService } from '~/processors/helper/helper.http.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
-import { safeEval } from '~/utils/safe-eval.util'
-import { scheduleManager } from '~/utils/schedule.util'
-import { safeProcessEnv } from '~/utils/system.util'
+import { SandboxService } from '~/utils/sandbox'
 import { safePathJoin } from '~/utils/tool.util'
-import { isURL } from '~/utils/validator.util'
 import { isPlainObject } from 'es-toolkit/compat'
-import { LRUCache } from 'lru-cache'
-import { mongo } from 'mongoose'
 import qs from 'qs'
 import { ConfigsService } from '../configs/configs.service'
 import { SnippetModel, SnippetType } from '../snippet/snippet.model'
@@ -51,21 +44,16 @@ type ScopeContext = {
   res: FunctionContextResponse
   isAuthenticated: boolean
 }
-class CleanableScope {
-  public scopeContextLRU = new LRUCache<string, any>({
-    max: 100,
-    ttl: 1000 * 60 * 5,
-  })
-}
+
 @Injectable()
-export class ServerlessService implements OnModuleInit {
+export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   private readonly logger: Logger
-  private readonly cleanableScope: CleanableScope
+  private readonly sandboxService: SandboxService
+
   constructor(
     @InjectModel(SnippetModel)
     private readonly snippetModel: MongooseModel<SnippetModel>,
     private readonly assetService: AssetService,
-    private readonly httpService: HttpService,
     private readonly databaseService: DatabaseService,
 
     private readonly redisService: RedisService,
@@ -74,7 +62,62 @@ export class ServerlessService implements OnModuleInit {
     private readonly eventService: EventManagerService,
   ) {
     this.logger = new Logger(ServerlessService.name)
-    this.cleanableScope = new CleanableScope()
+    this.sandboxService = this.createSandboxService()
+  }
+
+  async onModuleDestroy() {
+    await this.sandboxService.shutdown()
+  }
+
+  private createSandboxService(): SandboxService {
+    return new SandboxService({
+      maxWorkers: 4,
+      defaultTimeout: 30000,
+      requireBasePath: NODE_REQUIRE_PATH,
+      bridgeHandlers: {
+        'storage.cache.get': (key: string) => this.mockStorageCache.get(key),
+        'storage.cache.set': (key: string, value: unknown, ttl?: number) =>
+          this.mockStorageCache.set(
+            key,
+            value as object | string,
+            ttl?.toString(),
+          ),
+        'storage.cache.del': (key: string) =>
+          this.mockStorageCache.del(key).then(() => {}),
+        'storage.db.get': (namespace: string, key: string) =>
+          this.mockDb(namespace).get(key),
+        'storage.db.find': (namespace: string, condition: unknown) =>
+          this.mockDb(namespace).find(condition as KV),
+        'storage.db.set': (namespace: string, key: string, value: unknown) =>
+          this.mockDb(namespace).set(key, value),
+        'storage.db.insert': (namespace: string, key: string, value: unknown) =>
+          this.mockDb(namespace).insert(key, value),
+        'storage.db.update': (namespace: string, key: string, value: unknown) =>
+          this.mockDb(namespace).update(key, value),
+        'storage.db.del': (namespace: string, key: string) =>
+          this.mockDb(namespace).del(key),
+        getMaster: () => this.mockGetMaster(),
+        'config.get': (key: string) => this.configService.get(key as any),
+        broadcast: (type: string, data: unknown) => {
+          // @ts-ignore
+          this.eventService.broadcast(`fn#${type}`, data, {
+            scope: EventScope.TO_VISITOR_ADMIN,
+          })
+        },
+        writeAsset: async (path: string, data: unknown, options?: unknown) => {
+          await this.assetService.writeUserCustomAsset(
+            safePathJoin(path),
+            data as Parameters<typeof fs.writeFile>[1],
+            options as Parameters<typeof fs.writeFile>[2],
+          )
+        },
+        readAsset: (path: string, options?: unknown) =>
+          this.assetService.getAsset(
+            safePathJoin(path),
+            options as Parameters<typeof fs.readFile>[1],
+          ),
+      },
+    })
   }
 
   async onModuleInit() {
@@ -254,43 +297,12 @@ export class ServerlessService implements OnModuleInit {
     } as const
   }
 
-  private async getService(serviceName: 'http' | 'config') {
-    switch (serviceName) {
-      case 'http': {
-        return {
-          axios: this.httpService.axiosRef,
-          requestWithCache: this.httpService.getAndCacheRequest.bind(
-            this.httpService,
-          ),
-        }
-      }
-      case 'config': {
-        return {
-          get: (key: string) => this.configService.get(key as any),
-        }
-      }
-    }
-
-    throw new BizException(
-      ErrorCodeEnum.ServerlessError,
-      `${serviceName} service not provide`,
-    )
-  }
-
   async injectContextIntoServerlessFunctionAndCall(
     model: SnippetModel,
     context: ScopeContext,
-  ) {
+  ): Promise<any> {
     const { raw: functionString } = model
     const scope = `${model.reference}/${model.name}`
-
-    const logger = new Logger(`fx:${scope}`)
-    const globalContext = await this.createScopeContext(
-      scope,
-      context,
-      model,
-      logger,
-    )
 
     const cacheKey = model.updated
       ? getRedisKey(
@@ -318,31 +330,64 @@ export class ServerlessService implements OnModuleInit {
     }
     await redis.expire(cacheKey, SERVERLESS_COMPLIE_CACHE_TTL)
 
-    return await safeEval(
-      `async function func() {
-        ${compliedCode};
-      return handler(context, require)
-      }
-      return func()
-      `,
-      {
-        ...globalContext,
-        global: globalContext,
-        globalThis: globalContext,
-        exports: {},
-        module: {
-          exports: {},
-        },
-      },
-    ).catch((error) => {
-      logger.error(error)
-      return Promise.reject(
-        new BizException(
-          ErrorCodeEnum.ServerlessError,
-          error.message || 'Unknown error, please check log',
-        ),
+    const secretObj = model.secret
+      ? qs.parse(EncryptUtil.decrypt(model.secret))
+      : {}
+
+    if (!isPlainObject(secretObj)) {
+      throw new InternalServerErrorException(
+        `secret parsing error, must be object, got ${typeof secretObj}`,
       )
-    })
+    }
+
+    // 只提取可序列化的数据，过滤掉函数
+    const serializableReq = {
+      query: context.req.query,
+      headers: Object.fromEntries(
+        Object.entries(context.req.headers || {}).filter(
+          ([, v]) => typeof v !== 'function',
+        ),
+      ),
+      params: context.req.params,
+      method: context.req.method,
+      url: context.req.url,
+      ip: context.req.ip,
+      body: context.req.body,
+    }
+
+    const sandboxContext = {
+      req: serializableReq,
+      res: {}, // res 的方法会在 worker 内部通过 bridge 重建
+      isAuthenticated: context.isAuthenticated,
+      secret: secretObj as Record<string, unknown>,
+      model: {
+        id: model.id,
+        name: model.name,
+        reference: model.reference,
+      },
+    }
+
+    const result = await this.sandboxService.execute(
+      compliedCode,
+      sandboxContext,
+      {
+        timeout: 30000,
+        namespace: scope,
+      },
+    )
+
+    if (!result.success) {
+      this.logger.error(
+        `Serverless function error [${scope}]: ${result.error?.message}`,
+        result.error?.stack,
+      )
+      throw new BizException(
+        ErrorCodeEnum.ServerlessError,
+        result.error?.message || 'Unknown error, please check log',
+      )
+    }
+
+    return result.data
   }
 
   private async complieTypescriptCode(
@@ -354,184 +399,6 @@ export class ServerlessService implements OnModuleInit {
     }
 
     return res.code
-  }
-
-  private createNewContextRequire() {
-    const __require = isTest
-      ? createRequire(resolve(process.cwd(), './node_modules'))
-      : createRequire(NODE_REQUIRE_PATH)
-
-    async function $require(
-      this: ServerlessService,
-      id: string,
-      useCache = true,
-    ) {
-      if (!id || typeof id !== 'string') {
-        throw new Error('require id is not valid')
-      }
-
-      // 1. if is remote module
-      if (isURL(id, { protocols: ['http', 'https'], require_protocol: true })) {
-        let text: string
-
-        try {
-          text = useCache
-            ? await this.httpService.getAndCacheRequest(id)
-            : await this.httpService.axiosRef.get(id).then((res) => res.data)
-        } catch {
-          throw new InternalServerErrorException(
-            'Failed to fetch remote module',
-          )
-        }
-        return await safeEval(
-          `${text}; return module.exports ? module.exports : exports.default ? exports.default : exports`,
-          {
-            exports: {},
-            module: {
-              exports: null,
-            },
-          },
-        )
-      }
-
-      const bannedLibs = [
-        'child_process',
-        'cluster',
-        'fs',
-        'fs/promises',
-        'os',
-        'process',
-        'sys',
-        'v8',
-        'vm',
-      ]
-
-      for (const lib of [...bannedLibs]) {
-        bannedLibs.push(`node:${lib}`)
-      }
-
-      if (bannedLibs.includes(id)) {
-        throw new Error(`cannot require ${id}`)
-      }
-
-      return __require(id)
-    }
-
-    return $require.bind(this) as NodeRequire
-  }
-
-  private async createScopeContext(
-    scope: string,
-    context: ScopeContext,
-    model: SnippetModel,
-    logger: Logger,
-  ) {
-    const secretObj = model.secret
-      ? qs.parse(EncryptUtil.decrypt(model.secret))
-      : {}
-
-    if (!isPlainObject(secretObj)) {
-      throw new InternalServerErrorException(
-        `secret parsing error, must be object, got ${typeof secretObj}`,
-      )
-    }
-
-    const requestContext = {
-      ...context,
-      ...context.res,
-      query: context.req.query,
-      headers: context.req.headers,
-      // TODO wildcard params
-      params: context.req.params || {},
-      method: context.req.method,
-
-      secret: secretObj,
-
-      model,
-      document: model,
-      name: model.name,
-      reference: model.reference,
-    }
-
-    const require = this.createNewContextRequire()
-    if (this.cleanableScope.scopeContextLRU.has(scope)) {
-      const context = this.cleanableScope.scopeContextLRU.get(scope)
-
-      return Object.assign({}, context, {
-        context: { ...context.context, ...requestContext, require },
-      })
-    }
-
-    const createdContext = {
-      context: {
-        ...requestContext,
-
-        storage: {
-          cache: this.mockStorageCache,
-          db: this.mockDb(
-            `${model.reference || '#########debug######'}@${model.name}`,
-          ),
-          dangerousAccessDbInstance: () => {
-            return [this.databaseService.db, mongo]
-          },
-        },
-
-        getMaster: this.mockGetMaster.bind(this),
-        getService: this.getService.bind(this),
-
-        broadcast: (type: string, data: any) =>
-          // @ts-ignore
-          this.eventService.broadcast(`fn#${type}`, data, {
-            scope: EventScope.TO_VISITOR_ADMIN,
-          }),
-
-        writeAsset: async (
-          path: string,
-          data: any,
-          options: Parameters<typeof fs.writeFile>[2],
-        ) => {
-          return await this.assetService.writeUserCustomAsset(
-            safePathJoin(path),
-            data,
-            options,
-          )
-        },
-        readAsset: async (
-          path: string,
-          options: Parameters<typeof fs.readFile>[1],
-        ) => {
-          return await this.assetService.getAsset(safePathJoin(path), options)
-        },
-      },
-
-      // inject global
-      __dirname: DATA_DIR,
-      __filename: '',
-
-      // inject some zx utils
-      fetch,
-
-      // inject Global API
-      Buffer,
-
-      // inject logger
-      console: logger,
-      logger,
-
-      require,
-      import(module: string) {
-        return Promise.resolve(require(module))
-      },
-
-      process: {
-        env: safeProcessEnv(),
-        nextTick: scheduleManager.schedule.bind(null),
-      },
-    }
-
-    this.cleanableScope.scopeContextLRU.set(scope, createdContext)
-
-    return createdContext
   }
 
   async isValidServerlessFunction(raw: string) {
