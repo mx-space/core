@@ -4,12 +4,20 @@ import { describe, expect, it, vi } from 'vitest'
 
 // Mock the SDK providers
 vi.mock('@ai-sdk/openai', () => ({
-  createOpenAI: vi.fn(
-    (config: { apiKey: string; baseURL?: string }) => (model: string) => ({
+  createOpenAI: vi.fn((config: { apiKey: string; baseURL?: string }) => {
+    const provider = ((model: string) => ({
       id: `openai:${model}`,
       config,
-    }),
-  ),
+    })) as any
+
+    // The real SDK provider exposes typed helpers like `.chat(...)`.
+    provider.chat = (model: string) => ({
+      id: `openai.chat:${model}`,
+      config,
+    })
+
+    return provider
+  }),
 }))
 
 vi.mock('@ai-sdk/anthropic', () => ({
@@ -63,7 +71,7 @@ describe('createLanguageModel', () => {
     }
     const model = createLanguageModel(config) as any
     expect(model).toBeDefined()
-    expect(model.id).toBe('openai:deepseek-chat')
+    expect(model.id).toBe('openai.chat:deepseek-chat')
     expect(model.config.baseURL).toBe('https://api.deepseek.com')
   })
 

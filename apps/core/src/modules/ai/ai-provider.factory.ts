@@ -15,17 +15,22 @@ export function createLanguageModel(
         baseURL: config.endpoint || undefined,
       })(modelName)
 
-    case AIProviderType.OpenAICompatible:
+    case AIProviderType.OpenAICompatible: {
       if (!config.endpoint) {
         throw new Error(
           `Endpoint is required for OpenAI-compatible provider: ${config.id}`,
         )
       }
-      // OpenAI-compatible providers use the same createOpenAI with custom baseURL
-      return createOpenAI({
+      // OpenAI-compatible providers: create a custom provider instance.
+      // Many "OpenAI-compatible" gateways don't fully support the SDK's automatic
+      // API selection (responses/chat/completions). Force chat models to avoid
+      // mismatches on these providers.
+      const openai = createOpenAI({
         apiKey: config.apiKey,
         baseURL: config.endpoint,
-      })(modelName)
+      })
+      return openai.chat(modelName)
+    }
 
     case AIProviderType.Anthropic:
       return createAnthropic({
