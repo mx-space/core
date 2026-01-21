@@ -3,6 +3,9 @@
   "version": "1.18.1",
   "description": "A api client for mx-space server@next",
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "author": "Innei",
   "main": "dist/index.cjs",

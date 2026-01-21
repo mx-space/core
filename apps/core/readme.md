@@ -41,7 +41,7 @@ docker-compose up -d
 
 需要以下环境：
 
-- Node.js 20+
+- Node.js 22+
 - MongoDB
 - Redis
 
@@ -60,7 +60,7 @@ node index.js
 node index.js
 ```
 
-所有的依赖都打包进了产物，无需黑洞一般的 node_modules
+所有的依赖都打包进了产物（不再使用 ncc），无需黑洞一般的 node_modules
 
 > [!NOTE]
 > 编译之后的产物错误堆栈是被压缩过的，如果你遇到任何问题，请使用 `node index.debug.js` 启动，复现问题并提供完整堆栈，然后提交 issue。

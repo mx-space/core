@@ -1,4 +1,3 @@
-import { webcrypto } from 'node:crypto'
 import { BadRequestException, Injectable } from '@nestjs/common'
 import type {
   AuthenticationResponseJSON,
@@ -24,10 +23,6 @@ import { ConfigsService } from '../configs/configs.service'
 import type { UserDocument } from '../user/user.model'
 import { AuthnModel } from './authn.model'
 
-// TODO Compatible with versions below node v20
-if (!globalThis.crypto) {
-  globalThis.crypto = webcrypto as Crypto
-}
 @Injectable()
 export class AuthnService {
   constructor(

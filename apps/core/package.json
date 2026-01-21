@@ -3,6 +3,9 @@
   "version": "8.8.0",
   "type": "module",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "license": "AGPLv3",
   "homepage": "https://github.com/mx-space/core/tree/master/apps/core#readme",
   "repository": {

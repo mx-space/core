@@ -57,7 +57,7 @@ function registerGlobal() {
 
 function nodeEnvInjection() {
   // # https://github.com/kriszyp/cbor-x/blob/master/node-index.js#L16 https://github.com/kriszyp/cbor-x/blob/master/node-index.js#L10
-  // # ncc not support runtime require so disable ACCELERATION
+  // # Bundled builds don't support runtime native requires; disable ACCELERATION
   process.env.CBOR_NATIVE_ACCELERATION_DISABLED = 'true'
 }
 
