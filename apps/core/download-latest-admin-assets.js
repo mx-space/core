@@ -1,8 +1,14 @@
 #!env node
-import { appendFileSync } from 'node:fs'
+import { execSync } from 'node:child_process'
+import {
+  appendFileSync,
+  readdirSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+} from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
-import { $ } from 'zx'
 
 const require = createRequire(import.meta.url)
 const {
@@ -16,13 +22,20 @@ const endpoint = `https://api.github.com/repos/${repo}/releases/tags/v${version}
     (asset) => asset.name === 'release.zip',
   ).browser_download_url
   const buffer = await fetch(downloadUrl).then((res) => res.arrayBuffer())
-  appendFileSync(join(process.cwd(), 'admin-release.zip'), Buffer.from(buffer))
+  const zipPath = join(process.cwd(), 'admin-release.zip')
+  appendFileSync(zipPath, Buffer.from(buffer))
 
-  await $`ls -lh`
+  const files = readdirSync(process.cwd())
+  for (const file of files) {
+    const stat = statSync(join(process.cwd(), file))
+    console.log(
+      `${stat.isDirectory() ? 'd' : '-'} ${file} (${stat.size} bytes)`,
+    )
+  }
 
-  await $`unzip admin-release.zip -d out`
-  await $`mv out/dist out/admin`
-  await $`rm -f admin-release.zip`
+  execSync('unzip admin-release.zip -d out', { stdio: 'inherit' })
+  renameSync(join(process.cwd(), 'out/dist'), join(process.cwd(), 'out/admin'))
+  unlinkSync(zipPath)
   // release.zip > dist > index.html
 })().catch((error) => {
   console.error(error)
