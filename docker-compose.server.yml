@@ -9,17 +9,13 @@ services:
     ports:
       - "${MX_PORT:-2333}:2333"
 
-    # For Linux hosts: allow reaching host Mongo via host.docker.internal
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
     environment:
       TZ: ${TZ:-Asia/Shanghai}
       PORT: "2333"
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-localhost:*}
 
-      # MongoDB (host machine)
-      DB_CONNECTION_STRING: ${DB_CONNECTION_STRING:-mongodb://host.docker.internal:27017/mx-space}
+      # MongoDB (container in this compose)
+      DB_CONNECTION_STRING: ${DB_CONNECTION_STRING:-mongodb://mongo:27017/mx-space}
 
       # Redis (container in this compose)
       REDIS_HOST: redis
@@ -45,6 +41,7 @@ services:
       - ./data/mx-space:/root/.mx-space
 
     depends_on:
+      - mongo
       - redis
 
     healthcheck:
@@ -67,4 +64,12 @@ services:
       interval: 30s
       retries: 5
       timeout: 3s
+
+  mongo:
+    image: mongo:7
+    container_name: mx-mongo
+    restart: unless-stopped
+    command: ["mongod", "--bind_ip_all"]
+    volumes:
+      - ./data/db:/data/db
 

@@ -199,7 +199,7 @@ jobs:
           TZ=${TZ:-Asia/Shanghai}
           MX_PORT=${MX_PORT:-2333}
           ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-localhost:*}
-          DB_CONNECTION_STRING=${DB_CONNECTION_STRING:-mongodb://host.docker.internal:27017/mx-space}
+          DB_CONNECTION_STRING=${DB_CONNECTION_STRING:-mongodb://mongo:27017/mx-space}
           ENCRYPT_ENABLE=${ENCRYPT_ENABLE:-true}
           ENCRYPT_KEY=${ENCRYPT_KEY:-}
           JWT_SECRET=${JWT_SECRET:-}
@@ -259,6 +259,10 @@ jobs:
           script: |
             set -euo pipefail
             cd "$HOME/mx-core-deploy"
+
+            # Bind-mount source dirs must exist on the host for Swarm.
+            # Keep them inside the deploy dir to match docker-stack.server.yml paths.
+            mkdir -p ./data/mx-space ./data/redis ./data/db
 
             IMAGE_TAG="${REF_NAME#v}"
             FULL_IMAGE="${IMAGE_REPO}:${IMAGE_TAG}"

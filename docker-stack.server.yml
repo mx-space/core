@@ -15,8 +15,8 @@ services:
       PORT: "2333"
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-localhost:*}
 
-      # MongoDB (host machine)
-      DB_CONNECTION_STRING: ${DB_CONNECTION_STRING:-mongodb://host.docker.internal:27017/mx-space}
+      # MongoDB (service in this stack)
+      DB_CONNECTION_STRING: ${DB_CONNECTION_STRING:-mongodb://mongo:27017/mx-space}
 
       # Redis (service in this stack)
       REDIS_HOST: redis
@@ -38,6 +38,7 @@ services:
         target: /root/.mx-space
 
     depends_on:
+      - mongo
       - redis
 
     healthcheck:
@@ -80,7 +81,24 @@ services:
       restart_policy:
         condition: any
 
+  mongo:
+    image: mongo:7
+    command: ["mongod", "--bind_ip_all"]
+    volumes:
+      - type: bind
+        source: ./data/db
+        target: /data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' | grep 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
 networks:
   default:
-    name: mx-core
     driver: overlay
