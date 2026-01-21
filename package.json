@@ -30,7 +30,7 @@
     "prettier": "3.8.0",
     "prettier-package-json": "2.8.0",
     "prettier-plugin-ember-template-tag": "2.1.2",
-    "redis-memory-server": "0.14.1",
+    "redis-memory-server": "0.15.0",
     "rimraf": "6.1.2",
     "rolldown": "1.0.0-beta.60",
     "simple-git-hooks": "2.13.1",
