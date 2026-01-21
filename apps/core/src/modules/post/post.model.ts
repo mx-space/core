@@ -3,11 +3,11 @@ import {
   modelOptions,
   plugin,
   prop,
-  Ref,
   Severity,
 } from '@typegoose/typegoose'
+import type { Ref } from '@typegoose/typegoose'
 import { POST_COLLECTION_NAME } from '~/constants/db.constant'
-import type { Paginator } from '~/shared/interface/paginator.interface'
+import { Paginator } from '~/shared/interface/paginator.interface'
 import { CountModel as Count } from '~/shared/model/count.model'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
 import { Types } from 'mongoose'

@@ -1,6 +1,7 @@
+import { createReadStream, existsSync } from 'node:fs'
+import { stat as fsStat, readdir, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { fs } from '@mx-space/compiled'
 import {
   BadRequestException,
   Delete,
@@ -14,7 +15,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { LOG_DIR } from '~/constants/path.constant'
-import { AdapterResponse } from '~/types/request'
+import type { AdapterResponse } from '~/types/request'
 import { getTodayLogFilePath } from '~/utils/path.util'
 import { formatByteSize } from '~/utils/system.util'
 import type { Readable } from 'form-data'
@@ -37,10 +38,10 @@ export class HealthLogController {
         break
     }
 
-    if (!fs.pathExistsSync(logDir)) {
+    if (!existsSync(logDir)) {
       throw new BadRequestException('log dir not exists')
     }
-    const files = await fs.readdir(logDir)
+    const files = await readdir(logDir)
     const allFile = [] as string[]
     switch (type) {
       case 'pm2':
@@ -62,8 +63,8 @@ export class HealthLogController {
       created: number
     }[]
     for (const [i, file] of Object.entries(allFile)) {
-      const stat = await fs.stat(path.join(logDir, file))
-      const byteSize = stat.size
+      const fileStat = await fsStat(path.join(logDir, file))
+      const byteSize = fileStat.size
 
       const size = formatByteSize(byteSize)
       let index: number
@@ -84,7 +85,7 @@ export class HealthLogController {
         filename: file,
         index,
         type: _type,
-        created: stat.ctimeMs,
+        created: fileStat.ctimeMs,
       })
     }
 
@@ -105,17 +106,17 @@ export class HealthLogController {
         const { index, type = 'out', filename: __filename } = query
         const logDir = path.resolve(os.homedir(), '.pm2', 'logs')
 
-        if (!fs.pathExistsSync(logDir)) {
+        if (!existsSync(logDir)) {
           throw new BadRequestException('log dir not exists')
         }
         const filename =
           __filename ?? `mx-server-${type}${index === 0 ? '' : `-${index}`}.log`
         const logPath = path.join(logDir, filename)
-        if (!fs.existsSync(logPath)) {
+        if (!existsSync(logPath)) {
           throw new BadRequestException('log file not exists')
         }
 
-        stream = fs.createReadStream(logPath, {
+        stream = createReadStream(logPath, {
           encoding: 'utf8',
         })
 
@@ -128,7 +129,7 @@ export class HealthLogController {
           throw new UnprocessableEntityException('filename must be string')
         }
 
-        stream = fs.createReadStream(path.join(logDir, filename), {
+        stream = createReadStream(path.join(logDir, filename), {
           encoding: 'utf-8',
         })
 
@@ -154,18 +155,18 @@ export class HealthLogController {
         const todayLogFile = getTodayLogFilePath()
 
         if (logPath.endsWith('error.log') || todayLogFile === logPath) {
-          await fs.writeFile(logPath, '', { encoding: 'utf8', flag: 'w' })
+          await writeFile(logPath, '', { encoding: 'utf8', flag: 'w' })
           break
         }
-        await fs.rm(logPath)
+        await rm(logPath)
         break
       }
       case 'pm2': {
         const logDir = path.resolve(os.homedir(), '.pm2', 'logs')
-        if (!fs.pathExistsSync(logDir)) {
+        if (!existsSync(logDir)) {
           throw new BadRequestException('log dir not exists')
         }
-        await fs.rm(path.join(logDir, filename))
+        await rm(path.join(logDir, filename))
         break
       }
     }

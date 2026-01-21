@@ -38,7 +38,7 @@ import type { SnippetModel } from '../snippet/snippet.model'
 import { SnippetType } from '../snippet/snippet.model'
 import { UserModel } from '../user/user.model'
 import { UserService } from '../user/user.service'
-import BlockedKeywords from './block-keywords.json'
+import BlockedKeywords from './block-keywords.json' with { type: 'json' }
 import type {
   CommentEmailTemplateRenderProps,
   CommentModelRenderProps,

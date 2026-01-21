@@ -19,14 +19,14 @@ import {
   CurrentUserToken,
 } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation } from '~/common/decorators/ip.decorator'
+import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { getAvatar } from '~/utils/tool.util'
 import { AuthService } from '../auth/auth.service'
 import { AuthnService } from '../authn/authn.service'
 import { ConfigsService } from '../configs/configs.service'
-import type { UserModel } from './user.model'
-import { UserDocument } from './user.model'
+import type { UserDocument, UserModel } from './user.model'
 import { LoginDto, UserDto, UserPatchDto } from './user.schema'
 import { UserService } from './user.service'
 

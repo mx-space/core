@@ -3,7 +3,7 @@
 import type { ServerResponse } from 'node:http'
 import type { NestMiddleware } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
-import { BizIncomingMessage } from '~/transformers/get-req.transformer'
+import type { BizIncomingMessage } from '~/transformers/get-req.transformer'
 import { RequestContext } from '../contexts/request.context'
 
 @Injectable()

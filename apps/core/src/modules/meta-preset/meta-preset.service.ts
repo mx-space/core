@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
+import { BadRequestException, Injectable } from '@nestjs/common'
+import type { OnModuleInit } from '@nestjs/common'
+import type { ReturnModelType } from '@typegoose/typegoose'
 import { InjectModel } from '~/transformers/model.transformer'
 import {
   MetaFieldType,

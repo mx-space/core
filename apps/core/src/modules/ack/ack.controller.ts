@@ -11,7 +11,7 @@ import { BusinessEvents } from '~/constants/business-event.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import type { CountModel } from '~/shared/model/count.model'
-import { FastifyReply } from 'fastify'
+import type { FastifyReply } from 'fastify'
 import { AckDto, AckEventType, AckReadPayloadSchema } from './ack.schema'
 
 @ApiController('ack')

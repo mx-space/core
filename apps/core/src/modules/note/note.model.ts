@@ -1,5 +1,6 @@
 import { AutoIncrementID } from '@typegoose/auto-increment'
-import { index, modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
+import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
+import type { Ref } from '@typegoose/typegoose'
 import { NOTE_COLLECTION_NAME } from '~/constants/db.constant'
 import { CountModel } from '~/shared/model/count.model'
 import { WriteBaseModel } from '~/shared/model/write-base.model'

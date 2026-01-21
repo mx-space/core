@@ -1,17 +1,17 @@
 import { access, cp, mkdir, rename, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { chalk } from '@mx-space/compiled'
 import { Injectable } from '@nestjs/common'
-import { dashboard } from '~/../package.json'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
+import { PKG } from '~/utils/pkg.util'
 import axios, { AxiosRequestConfig } from 'axios'
 import JSZip from 'jszip'
+import pc from 'picocolors'
 import { Observable } from 'rxjs'
 import { catchError } from 'rxjs/operators'
 import { ConfigsService } from '../configs/configs.service'
 
-const { repo } = dashboard
+const { repo } = PKG.dashboard!
 
 interface DownloadMirror {
   name: string
@@ -76,7 +76,7 @@ export class UpdateService {
         // 检查下载锁
         if (this.downloadLock) {
           subscriber.next(
-            chalk.yellow('Another download is in progress, please wait...\n'),
+            pc.yellow('Another download is in progress, please wait...\n'),
           )
           subscriber.complete()
           return
@@ -107,9 +107,9 @@ export class UpdateService {
           )
 
           if (!asset) {
-            subscriber.next(chalk.red('release.zip not found in assets.\n'))
+            subscriber.next(pc.red('release.zip not found in assets.\n'))
             subscriber.next(
-              chalk.red(
+              pc.red(
                 `Available assets: ${releaseInfo.assets
                   .map((a: any) => a.name)
                   .join(', ')}\n`,
@@ -138,14 +138,14 @@ export class UpdateService {
           await this.extractAndInstall(buffer, version, subscriber)
 
           subscriber.next(
-            chalk.green(
+            pc.green(
               `Admin asset v${version} downloaded and installed successfully.\n`,
             ),
           )
         } catch (error) {
           const errorMsg =
             error instanceof Error ? error.message : String(error)
-          subscriber.next(chalk.red(`Download failed: ${errorMsg}\n`))
+          subscriber.next(pc.red(`Download failed: ${errorMsg}\n`))
 
           // 清理可能的部分下载文件
           await this.cleanup().catch(() => {})
@@ -257,19 +257,19 @@ export class UpdateService {
 
         if (buffer && buffer.byteLength === expectedSize) {
           subscriber.next(
-            chalk.green(`Successfully downloaded from ${mirror.name}\n`),
+            pc.green(`Successfully downloaded from ${mirror.name}\n`),
           )
           return buffer
         } else {
           subscriber.next(
-            chalk.yellow(
+            pc.yellow(
               `Size mismatch from ${mirror.name}, trying next mirror...\n`,
             ),
           )
         }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error)
-        subscriber.next(chalk.yellow(`${mirror.name} failed: ${errorMsg}\n`))
+        subscriber.next(pc.yellow(`${mirror.name} failed: ${errorMsg}\n`))
         continue
       }
     }
@@ -387,7 +387,7 @@ export class UpdateService {
         // 验证安装是否成功
         await this.verifyInstallation()
 
-        subscriber.next(chalk.green('Installation completed successfully.\n'))
+        subscriber.next(pc.green('Installation completed successfully.\n'))
 
         // 清理备份
         if (
@@ -406,9 +406,7 @@ export class UpdateService {
         ) {
           await rm(LOCAL_ADMIN_ASSET_PATH, { recursive: true, force: true })
           await this.moveDirectory(backupPath, LOCAL_ADMIN_ASSET_PATH)
-          subscriber.next(
-            chalk.yellow('Installation failed, backup restored.\n'),
-          )
+          subscriber.next(pc.yellow('Installation failed, backup restored.\n'))
         }
         throw installError
       }

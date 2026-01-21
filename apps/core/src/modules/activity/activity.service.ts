@@ -14,6 +14,7 @@ import {
   POST_COLLECTION_NAME,
   RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
+import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { GatewayService } from '~/processors/gateway/gateway.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
@@ -34,7 +35,7 @@ import type { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
 import type { PageModel } from '../page/page.model'
 import type { PostModel } from '../post/post.model'
-import { PostService } from '../post/post.service'
+import type { PostService } from '../post/post.service'
 import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
 import type { RecentlyModel } from '../recently/recently.model'
@@ -76,7 +77,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     private readonly gatewayService: GatewayService,
     private readonly configsService: ConfigsService,
 
-    @Inject(forwardRef(() => PostService))
+    @Inject(POST_SERVICE_TOKEN)
     private readonly postService: PostService,
     @Inject(forwardRef(() => NoteService))
     private readonly noteService: NoteService,

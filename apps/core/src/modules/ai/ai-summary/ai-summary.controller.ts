@@ -12,7 +12,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { FastifyBizRequest } from '~/transformers/get-req.transformer'
+import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import {
   GenerateAiSummaryDto,
   GetSummaryQueryDto,

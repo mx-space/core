@@ -20,7 +20,7 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { isZipMinetype } from '~/utils/mine.util'
 import { getMediumDateTime } from '~/utils/time.util'
-import { FastifyRequest } from 'fastify'
+import type { FastifyRequest } from 'fastify'
 import { BackupService } from './backup.service'
 
 @ApiController({ path: 'backups' })

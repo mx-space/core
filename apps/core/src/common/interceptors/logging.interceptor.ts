@@ -5,7 +5,6 @@
  * @author Surmon <https://github.com/surmon-china>
  * @author Innei <https://github.com/Innei>
  */
-import { chalk } from '@mx-space/compiled'
 import type {
   CallHandler,
   ExecutionContext,
@@ -14,7 +13,8 @@ import type {
 import { Injectable, Logger, SetMetadata } from '@nestjs/common'
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-import type { Observable } from 'rxjs'
+import pc from 'picocolors'
+import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
 
 @Injectable()
@@ -40,7 +40,7 @@ export class LoggingInterceptor implements NestInterceptor {
     return call$.pipe(
       tap(() =>
         this.logger.debug(
-          `--- 响应请求：${content}${chalk.yellow(` +${Date.now() - now}ms`)}`,
+          `--- 响应请求：${content}${pc.yellow(` +${Date.now() - now}ms`)}`,
         ),
       ),
     )

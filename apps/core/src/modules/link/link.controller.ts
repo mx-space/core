@@ -14,10 +14,8 @@ import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import {
-  BaseCrudFactory,
-  BaseCrudModuleType,
-} from '~/transformers/crud-factor.transformer'
+import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'
+import type { BaseCrudModuleType } from '~/transformers/crud-factor.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import type mongoose from 'mongoose'
 import { LinkModel, LinkState } from './link.model'

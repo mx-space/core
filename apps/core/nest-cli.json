@@ -2,6 +2,11 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "plugins": []
+    "builder": "swc",
+    "typeCheck": true,
+    "plugins": [],
+    "assets": [
+      "**/*.json"
+    ]
   }
 }

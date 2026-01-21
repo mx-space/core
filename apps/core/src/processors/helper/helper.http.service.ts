@@ -1,16 +1,16 @@
 import { inspect } from 'node:util'
-import { chalk } from '@mx-space/compiled'
 import { Injectable, Logger } from '@nestjs/common'
 import { AXIOS_CONFIG, DEBUG_MODE } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
+import { PKG } from '~/utils/pkg.util'
 import { getRedisKey } from '~/utils/redis.util'
 import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import axiosRetry, { exponentialDelay } from 'axios-retry'
-import { version } from '../../../package.json'
+import pc from 'picocolors'
 import { RedisService } from '../redis/redis.service'
 
-const DEFAULT_UA = `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 MX-Space/${version}`
+const DEFAULT_UA = `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 MX-Space/${PKG.version}`
 declare module 'axios' {
   interface AxiosRequestConfig {
     __requestStartedAt?: number
@@ -153,7 +153,7 @@ data: ${this.prettyStringify(req.data)}`,
           return error
         }
         this.logger.error(
-          chalk.red(
+          pc.red(
             `HTTP Response Failed ${`${res.config.baseURL || ''}${
               res.config.url
             }`}\n${this.prettyStringify(res.data)}`,

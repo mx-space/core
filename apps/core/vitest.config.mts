@@ -30,7 +30,6 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      'zx-cjs': 'zx',
       '~/app.config': resolve(__dirname, './src/app.config.test.ts'),
       '~/common/decorators/auth.decorator': resolve(
         __dirname,

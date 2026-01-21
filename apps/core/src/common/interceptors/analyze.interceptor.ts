@@ -12,7 +12,7 @@ import type {
 } from '@nestjs/common'
 import { Inject, Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import { ReturnModelType } from '@typegoose/typegoose'
+import type { ReturnModelType } from '@typegoose/typegoose'
 import { RedisKeys } from '~/constants/cache.constant'
 import * as SYSTEM from '~/constants/system.constant'
 import { REFLECTOR } from '~/constants/system.constant'
@@ -25,7 +25,7 @@ import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { isbot } from 'isbot'
-import type { Observable } from 'rxjs'
+import { Observable } from 'rxjs'
 import { UAParser } from 'ua-parser-js'
 
 @Injectable()

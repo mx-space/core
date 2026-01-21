@@ -19,10 +19,7 @@ import { scheduleManager } from '~/utils/schedule.util'
 import { getShortDate } from '~/utils/time.util'
 import { debounce, uniqBy } from 'es-toolkit/compat'
 import type SocketIO from 'socket.io'
-import type {
-  DecorateAcknowledgementsWithMultipleResponses,
-  DefaultEventsMap,
-} from 'socket.io/dist/typed-events'
+import { DefaultEventsMap } from 'socket.io'
 import { BroadcastBaseGateway } from '../base.gateway'
 import type { SocketType } from '../gateway.service'
 import { GatewayService } from '../gateway.service'
@@ -255,13 +252,7 @@ export class WebEventsGateway
 
   public getSocketsOfRoom(
     roomName: string,
-  ): Promise<
-    | SocketIO.Socket[]
-    | SocketIO.RemoteSocket<
-        DecorateAcknowledgementsWithMultipleResponses<DefaultEventsMap>,
-        any
-      >[]
-  > {
+  ): Promise<SocketIO.Socket[] | SocketIO.RemoteSocket<any, any>[]> {
     return this.namespace.in(roomName).fetchSockets()
   }
 

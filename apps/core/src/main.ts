@@ -3,8 +3,7 @@
 import 'dotenv-expand/config'
 import cluster from 'node:cluster'
 import { cpus } from 'node:os'
-import { argv } from '@mx-space/compiled'
-import { DEBUG_MODE } from './app.config'
+import { DEBUG_MODE } from './app.config.js'
 import { registerForMemoryDump } from './dump'
 import { logger } from './global/consola.global'
 import { isMainCluster, isMainProcess } from './global/env.global'
@@ -24,12 +23,12 @@ async function main() {
 
   const [{ bootstrap }, { CLUSTER, ENCRYPT }, { Cluster }] = await Promise.all([
     import('./bootstrap'),
-    import('./app.config'),
+    import('./app.config.js'),
     import('./cluster'),
   ])
 
   if (!CLUSTER.enable || cluster.isPrimary || isMainCluster) {
-    logger.debug(argv)
+    logger.debug(process.argv)
     logger.log('cwd: ', cwd)
   }
 

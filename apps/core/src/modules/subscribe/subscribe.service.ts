@@ -1,7 +1,6 @@
 import cluster from 'node:cluster'
 import { Co } from '@innei/next-async'
 import type { CoAction } from '@innei/next-async'
-import { nanoid as N } from '@mx-space/compiled'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -14,6 +13,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { hashString, md5 } from '~/utils/tool.util'
 import { render } from 'ejs'
 import { LRUCache } from 'lru-cache'
+import { nanoid } from 'nanoid'
 import type Mail from 'nodemailer/lib/mailer'
 import { ConfigsService } from '../configs/configs.service'
 import type { NoteModel } from '../note/note.model'
@@ -28,8 +28,6 @@ import {
 import type { SubscribeTemplateRenderProps } from './subscribe.email.default'
 import { defaultSubscribeForRenderProps } from './subscribe.email.default'
 import { SubscribeModel } from './subscribe.model'
-
-const { nanoid } = N
 
 declare type Email = string
 declare type SubscribeBit = number

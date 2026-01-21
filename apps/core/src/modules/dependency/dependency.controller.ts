@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { chalk } from '@mx-space/compiled'
 import { BadRequestException, Get, Query, Sse } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { DATA_DIR } from '~/constants/path.constant'
 import { installPKG } from '~/utils/system.util'
+import pc from 'picocolors'
 import { Observable } from 'rxjs'
 import { ServerlessService } from '../serverless/serverless.service'
 
@@ -42,10 +42,10 @@ export class DependencyController {
 
       pty.onExit(async ({ exitCode }) => {
         if (exitCode != 0) {
-          subscriber.next(chalk.red(`Error: Exit code: ${exitCode}\n`))
+          subscriber.next(pc.red(`Error: Exit code: ${exitCode}\n`))
         }
 
-        subscriber.next(chalk.green('任务完成，可关闭此窗口。'))
+        subscriber.next(pc.green('任务完成，可关闭此窗口。'))
         subscriber.complete()
       })
     })

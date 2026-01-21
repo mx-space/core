@@ -12,6 +12,7 @@ import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import type { SearchDto } from '~/modules/search/search.schema'
 import { DatabaseService } from '~/processors/database/database.service'
 import type { Pagination } from '~/shared/interface/paginator.interface'
@@ -24,7 +25,7 @@ import { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
 import { PostModel } from '../post/post.model'
-import { PostService } from '../post/post.service'
+import type { PostService } from '../post/post.service'
 
 @Injectable()
 export class SearchService {
@@ -33,7 +34,7 @@ export class SearchService {
     @Inject(forwardRef(() => NoteService))
     private readonly noteService: NoteService,
 
-    @Inject(forwardRef(() => PostService))
+    @Inject(POST_SERVICE_TOKEN)
     private readonly postService: PostService,
 
     @Inject(forwardRef(() => PageService))

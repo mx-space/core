@@ -11,8 +11,7 @@ import { Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { RESPONSE_PASSTHROUGH_METADATA } from '~/constants/system.constant'
 import { isObjectLike } from 'es-toolkit/compat'
-import { map } from 'rxjs'
-import type { Observable } from 'rxjs'
+import { map, Observable } from 'rxjs'
 import snakecaseKeys from 'snakecase-keys'
 
 @Injectable()

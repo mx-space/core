@@ -1,38 +1,42 @@
 import {
   BadRequestException,
-  forwardRef,
-  Inject,
   Injectable,
+  OnApplicationBootstrap,
 } from '@nestjs/common'
-import type { DocumentType } from '@typegoose/typegoose'
-import { ReturnModelType } from '@typegoose/typegoose'
+import { ModuleRef } from '@nestjs/core'
+import type { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import { omit } from 'es-toolkit/compat'
 import type { FilterQuery } from 'mongoose'
 import type { PostModel } from '../post/post.model'
-import { PostService } from '../post/post.service'
+import type { PostService } from '../post/post.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { CategoryModel, CategoryType } from './category.model'
 
 @Injectable()
-export class CategoryService {
+export class CategoryService implements OnApplicationBootstrap {
+  private postService: PostService
+
   constructor(
     @InjectModel(CategoryModel)
     private readonly categoryModel: ReturnModelType<typeof CategoryModel>,
-    @Inject(forwardRef(() => PostService))
-    private readonly postService: PostService,
     private readonly eventManager: EventManagerService,
-
     private readonly slugTrackerService: SlugTrackerService,
+    private readonly moduleRef: ModuleRef,
   ) {
     this.createDefaultCategory()
+  }
+
+  onApplicationBootstrap() {
+    this.postService = this.moduleRef.get(POST_SERVICE_TOKEN, { strict: false })
   }
 
   async findCategoryById(categoryId: string) {

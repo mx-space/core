@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { BadRequestException, Injectable } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
+import type { ReturnModelType } from '@typegoose/typegoose'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'

@@ -1,24 +1,48 @@
 #!/usr/bin/env zx
 // @ts-check
+import { createRequire as nodeCreateRequire } from 'node:module'
+import { homedir } from 'node:os'
+import path from 'node:path'
+import { $, argv as av, cd, fs, nothrow, sleep } from 'zx'
 
-const {
-  cd,
-  $,
-  os,
-  fs,
-  path,
-  fetch,
-  nothrow,
-  sleep,
-  argv: av,
-} = require('zx-cjs')
-const { homedir } = os
+const require = nodeCreateRequire(import.meta.url)
 const { repository } = require('../package.json')
 
 const argv = process.argv.slice(2)
 const scpPath = av.scp_path
 function getOsBuildAssetName() {
   return `release-linux.zip`
+}
+
+function printExecError(err, title) {
+  if (title) console.error(title)
+  if (!err) return
+
+  /** @type {any} */
+  const e = err
+
+  if (e?.cmd) console.error(`[cmd] ${e.cmd}`)
+  if (typeof e?.exitCode !== 'undefined')
+    console.error(`[exitCode] ${e.exitCode}`)
+  if (e?.signal) console.error(`[signal] ${e.signal}`)
+
+  if (e?.stdout) {
+    console.error('--- stdout ---')
+    console.error(String(e.stdout))
+  }
+  if (e?.stderr) {
+    console.error('--- stderr ---')
+    console.error(String(e.stderr))
+  }
+
+  if (e?.stack) {
+    console.error('--- stack ---')
+    console.error(String(e.stack))
+  } else if (e?.message) {
+    console.error(String(e.message))
+  } else {
+    console.error(e)
+  }
 }
 
 async function main() {
@@ -44,9 +68,9 @@ async function main() {
 
     const buffer = await fetch(
       `https://mirror.ghproxy.com/${downloadUrl}`,
-    ).then((res) => res.buffer())
+    ).then((res) => res.arrayBuffer())
     const tmpName = (Math.random() * 10).toString(16)
-    fs.writeFileSync(`/tmp/${tmpName}.zip`, buffer, { flag: 'w' })
+    fs.writeFileSync(`/tmp/${tmpName}.zip`, Buffer.from(buffer), { flag: 'w' })
 
     await $`mv ./run ./run.bak`
 
@@ -59,12 +83,12 @@ async function main() {
     await $`rm ${scpPath}`
   }
 
-  await $`rm ./run/ecosystem.config.js`
-  await $`cp ./run.bak/ecosystem.config.js ./run/ecosystem.config.js`
+  await $`rm ./run/ecosystem.config.cjs`
+  await $`cp ./run.bak/ecosystem.config.cjs ./run/ecosystem.config.cjs`
 
   cd('./run')
 
-  await nothrow($`pm2 reload ecosystem.config.js -- ${argv}`)
+  await nothrow($`pm2 reload ecosystem.config.cjs -- ${argv}`)
   console.log('等待 8 秒')
   await sleep(8000)
   try {
@@ -72,16 +96,31 @@ async function main() {
     await $`pm2 save`
     cd(path.resolve(homedir(), 'mx'))
     await $`rm -rf ./run.bak`
-  } catch {
-    await $`pm2 stop ecosystem.config.js`
-    // throw new Error('server is not running')
-    console.error('server start error, now rollback...')
-    cd(path.resolve(homedir(), 'mx'))
-    await $`rm -rf ./run`
-    await $`mv ./run.bak ./run`
-    cd('./run')
-    await $`pm2 delete ecosystem.config.js`
-    await $`pm2 start ecosystem.config.js`
+  } catch (error) {
+    printExecError(error, 'server start error (healthcheck failed)')
+
+    const status = await nothrow($`pm2 status`)
+    if (status?.stdout) console.error(String(status.stdout))
+    if (status?.stderr) console.error(String(status.stderr))
+
+    const logs = await nothrow($`pm2 logs --lines 200 --nostream`)
+    if (logs?.stdout) console.error(String(logs.stdout))
+    if (logs?.stderr) console.error(String(logs.stderr))
+
+    try {
+      await $`pm2 stop ecosystem.config.cjs`
+      // throw new Error('server is not running')
+      console.error('now rollback...')
+      cd(path.resolve(homedir(), 'mx'))
+      await $`rm -rf ./run`
+      await $`mv ./run.bak ./run`
+      cd('./run')
+      await $`pm2 delete ecosystem.config.cjs`
+      await $`pm2 start ecosystem.config.cjs`
+    } catch (error) {
+      printExecError(error, 'rollback failed')
+      throw error
+    }
   }
 }
 

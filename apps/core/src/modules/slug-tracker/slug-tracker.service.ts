@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
+import type { ReturnModelType } from '@typegoose/typegoose'
 import type { ArticleTypeEnum } from '~/constants/article.constant'
 import { InjectModel } from '~/transformers/model.transformer'
 import { SlugTrackerModel } from './slug-tracker.model'

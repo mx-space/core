@@ -15,17 +15,14 @@ import { ImageService } from '~/processors/helper/helper.image.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { AsyncQueue } from '~/utils/queue.util'
-import { FastifyReply } from 'fastify'
+import type { FastifyReply } from 'fastify'
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
 import { PostService } from '../post/post.service'
-import { HelperService } from './helper.service'
 
 @ApiController('helper')
 export class HelperController {
   constructor(
-    private readonly helperService: HelperService,
-
     private readonly urlBulderService: UrlBuilderService,
     private readonly databaseService: DatabaseService,
 

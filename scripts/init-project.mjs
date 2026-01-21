@@ -2,7 +2,7 @@
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
-import { chalk } from 'zx-cjs'
+import { chalk } from 'zx'
 
 async function main() {
   const cwd = process.cwd()

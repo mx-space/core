@@ -1,4 +1,4 @@
-import { sleep } from '@mx-space/compiled'
+import { sleep } from './shell.util'
 
 export function scheduleMicrotask(callback: () => void) {
   sleep(0).then(callback)

@@ -1,7 +1,14 @@
-import { createWriteStream } from 'node:fs'
+import { createReadStream, createWriteStream } from 'node:fs'
+import {
+  access,
+  copyFile,
+  mkdir,
+  readdir,
+  rename,
+  unlink,
+} from 'node:fs/promises'
 import path, { resolve } from 'node:path'
 import type { Readable } from 'node:stream'
-import { fs } from '@mx-space/compiled'
 import {
   BadRequestException,
   Injectable,
@@ -29,7 +36,7 @@ export class FileService {
 
   private async checkIsExist(path: string) {
     try {
-      await fs.access(path)
+      await access(path)
       return true
     } catch {
       return false
@@ -41,7 +48,7 @@ export class FileService {
     if (!exists) {
       throw new NotFoundException('文件不存在')
     }
-    return fs.createReadStream(this.resolveFilePath(type, name))
+    return createReadStream(this.resolveFilePath(type, name))
   }
 
   writeFile(
@@ -57,7 +64,7 @@ export class FileService {
         reject(new BadRequestException('文件已存在'))
         return
       }
-      await fs.mkdir(path.dirname(filePath), { recursive: true })
+      await mkdir(path.dirname(filePath), { recursive: true })
 
       const writable = createWriteStream(filePath, {
         encoding,
@@ -77,8 +84,8 @@ export class FileService {
   async deleteFile(type: FileType, name: string) {
     try {
       const path = this.resolveFilePath(type, name)
-      await fs.copyFile(path, resolve(STATIC_FILE_TRASH_DIR, name))
-      await fs.unlink(path)
+      await copyFile(path, resolve(STATIC_FILE_TRASH_DIR, name))
+      await unlink(path)
     } catch (error) {
       this.logger.error('删除文件失败', error)
 
@@ -87,9 +94,9 @@ export class FileService {
   }
 
   async getDir(type: FileType) {
-    await fs.mkdir(this.resolveFilePath(type, ''), { recursive: true })
+    await mkdir(this.resolveFilePath(type, ''), { recursive: true })
     const path_1 = path.resolve(STATIC_FILE_DIR, type)
-    return await fs.readdir(path_1)
+    return await readdir(path_1)
   }
 
   async resolveFileUrl(type: FileType, name: string) {
@@ -101,7 +108,7 @@ export class FileService {
     const oldPath = this.resolveFilePath(type, name)
     const newPath = this.resolveFilePath(type, newName)
     try {
-      await fs.rename(oldPath, newPath)
+      await rename(oldPath, newPath)
     } catch (error) {
       this.logger.error('重命名文件失败', error.message)
       throw new BadRequestException('重命名文件失败')

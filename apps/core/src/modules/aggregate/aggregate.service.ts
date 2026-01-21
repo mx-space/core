@@ -9,6 +9,10 @@ import {
   RedisKeys,
 } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import {
+  CATEGORY_SERVICE_TOKEN,
+  POST_SERVICE_TOKEN,
+} from '~/constants/injection.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
 import { RedisService } from '~/processors/redis/redis.service'
@@ -19,7 +23,7 @@ import { pick } from 'es-toolkit/compat'
 import type { PipelineStage } from 'mongoose'
 import { AnalyzeService } from '../analyze/analyze.service'
 import type { CategoryModel } from '../category/category.model'
-import { CategoryService } from '../category/category.service'
+import type { CategoryService } from '../category/category.service'
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
@@ -27,7 +31,7 @@ import { LinkState } from '../link/link.model'
 import { LinkService } from '../link/link.service'
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
-import { PostService } from '../post/post.service'
+import type { PostService } from '../post/post.service'
 import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
 import { UserService } from '../user/user.service'
@@ -37,12 +41,12 @@ import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.schema'
 @Injectable()
 export class AggregateService {
   constructor(
-    @Inject(forwardRef(() => PostService))
+    @Inject(POST_SERVICE_TOKEN)
     private readonly postService: PostService,
     @Inject(forwardRef(() => NoteService))
     private readonly noteService: NoteService,
 
-    @Inject(forwardRef(() => CategoryService))
+    @Inject(CATEGORY_SERVICE_TOKEN)
     private readonly categoryService: CategoryService,
 
     @Inject(forwardRef(() => PageService))

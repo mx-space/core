@@ -1,7 +1,6 @@
 import { createWriteStream } from 'node:fs'
 import type { WriteStream } from 'node:fs'
 import { resolve } from 'node:path'
-import { chalk } from '@mx-space/compiled'
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 import {
   Catch,
@@ -21,6 +20,7 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import type { FastifyReply, FastifyRequest } from 'fastify'
+import pc from 'picocolors'
 import { getIp } from '../../utils/ip.util'
 import { BizException } from '../exceptions/biz.exception'
 import { LoggingInterceptor } from '../interceptors/logging.interceptor'
@@ -147,7 +147,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (prevRequestTs) {
       const content = `${request.method} -> ${request.url}`
       Logger.debug(
-        `--- 响应异常请求：${content}${chalk.yellow(
+        `--- 响应异常请求：${content}${pc.yellow(
           ` +${Date.now() - prevRequestTs}ms`,
         )}`,
         LoggingInterceptor.name,

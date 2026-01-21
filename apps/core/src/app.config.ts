@@ -4,9 +4,11 @@ import { seconds } from '@nestjs/throttler'
 import type { AxiosRequestConfig } from 'axios'
 import { program } from 'commander'
 import { load as yamlLoad } from 'js-yaml'
-import { machineIdSync } from 'node-machine-id'
+import nodeMachineId from 'node-machine-id'
 import { isDebugMode, isDev } from './global/env.global'
 import { parseBooleanishValue } from './utils/tool.util'
+
+const { machineIdSync } = nodeMachineId
 
 const {
   PORT: ENV_PORT,

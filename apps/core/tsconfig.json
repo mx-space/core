@@ -1,15 +1,25 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "target": "es2023",
-    "lib": ["es2023", "DOM", "DOM.Iterable"],
+    "target": "esnext",
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable",
+      "ES2022",
+      "ES2021"
+    ],
     "emitDecoratorMetadata": true,
+    "moduleResolution": "bundler",
     "experimentalDecorators": true,
-    "baseUrl": ".",
-    "module": "CommonJS",
+    "module": "esnext",
     "paths": {
-      "~": ["./src"],
-      "~/*": ["./src/*"]
+      "~": [
+        "./src"
+      ],
+      "~/*": [
+        "./src/*"
+      ]
     },
     "resolveJsonModule": true,
     "allowJs": true,
@@ -24,6 +34,13 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "*.d.ts"],
-  "exclude": ["dist", "tmp", "assets/types/type.declare.ts"]
+  "include": [
+    "src/**/*",
+    "*.d.ts"
+  ],
+  "exclude": [
+    "dist",
+    "tmp",
+    "assets/types/type.declare.ts"
+  ]
 }

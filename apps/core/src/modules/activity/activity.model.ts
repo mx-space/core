@@ -14,7 +14,7 @@ import { Activity } from './activity.constant'
   },
 })
 export class ActivityModel extends BaseModel {
-  @prop()
+  @prop({ type: Number, enum: Activity })
   type: Activity
 
   @prop({

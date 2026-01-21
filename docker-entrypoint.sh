@@ -224,7 +224,7 @@ if [ "$ENABLE_CLOUDFLARED" = "true" ]; then
 fi
 echo "============================================"
 
-command="node index.js $command_args"
+command="node main.mjs $command_args"
 
 if [ "$ENABLE_CLOUDFLARED" = "true" ]; then
   echo "Starting Cloudflared Tunnel"

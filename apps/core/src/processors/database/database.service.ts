@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { mongoose, ReturnModelType } from '@typegoose/typegoose'
+import { mongoose } from '@typegoose/typegoose'
+import type { ReturnModelType } from '@typegoose/typegoose'
 import type { ArticleTypeEnum } from '~/constants/article.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { DB_CONNECTION_TOKEN } from '~/constants/system.constant'

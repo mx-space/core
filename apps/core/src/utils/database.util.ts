@@ -1,7 +1,6 @@
 /**
  * @see https://github.com/surmon-china/nodepress/blob/main/src/processors/database/database.provider.ts
  */
-import { chalk } from '@mx-space/compiled'
 import { MONGO_DB } from '~/app.config'
 import type { CollectionRefTypes } from '~/constants/db.constant'
 import {
@@ -12,6 +11,7 @@ import {
 } from '~/constants/db.constant'
 import { logger } from '~/global/consola.global'
 import mongoose from 'mongoose'
+import pc from 'picocolors'
 
 let databaseConnectionPromise: Promise<mongoose.Connection> | null = null
 
@@ -29,10 +29,10 @@ export const getDatabaseConnection = () => {
       .createConnection(MONGO_DB.customConnectionString || MONGO_DB.uri, {})
       .asPromise()
   }
-  const Badge = `[${chalk.yellow('MongoDB')}]`
+  const Badge = `[${pc.yellow('MongoDB')}]`
 
   const color = (str: TemplateStringsArray) => {
-    return str.map((s) => chalk.green(s)).join('')
+    return str.map((s) => pc.green(s)).join('')
   }
   mongoose.connection.on('connecting', () => {
     logger.info(Badge, color`connecting...`)
@@ -49,7 +49,7 @@ export const getDatabaseConnection = () => {
   mongoose.connection.on('disconnected', () => {
     logger.error(
       Badge,
-      chalk.red(`disconnected! retry when after ${RECONNECT_INTERVAL / 1000}s`),
+      pc.red(`disconnected! retry when after ${RECONNECT_INTERVAL / 1000}s`),
     )
     reconnectionTask = setTimeout(connection, RECONNECT_INTERVAL)
   })

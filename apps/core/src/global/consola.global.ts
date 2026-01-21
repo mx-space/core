@@ -18,8 +18,9 @@ if (!isTest) {
     logger.warn('wrap console failed')
   }
   logger.onData((data) => {
-    const { redisSubPub } = require('../utils/redis-subpub.util')
-    redisSubPub.publish('log', data)
+    import('../utils/redis-subpub.util').then(({ redisSubPub }) => {
+      redisSubPub.publish('log', data)
+    })
   })
 }
 

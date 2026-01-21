@@ -1,6 +1,5 @@
 import { Readable } from 'node:stream'
 import { URL } from 'node:url'
-import { nanoid } from '@mx-space/compiled'
 import {
   BadRequestException,
   Injectable,
@@ -12,12 +11,12 @@ import { alphabet } from '~/constants/other.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { validateImageBuffer } from '~/utils/image.util'
+import { customAlphabet } from 'nanoid'
 import { ConfigsService } from '../configs/configs.service'
 import { FileService } from '../file/file.service'
 import type { FileType } from '../file/file.type'
 import { LinkModel, LinkState } from './link.model'
 
-const { customAlphabet } = nanoid
 const AVATAR_TYPE: FileType = 'avatar'
 
 const ALLOWED_IMAGE_MIME_TYPES = new Set([

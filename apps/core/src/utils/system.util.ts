@@ -1,9 +1,10 @@
 import cdp, { exec } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
-import { $, cd, fs } from '@mx-space/compiled'
+import { $ } from './shell.util'
 
 export async function getFolderSize(folderPath: string) {
   try {
@@ -64,7 +65,7 @@ const INSTALL_COMMANDS: Record<PackageManager, string> = {
 export const installPKG = async (name: string, cwd: string) => {
   let manager: PackageManager | null = null
   for (const lock of Object.keys(LOCKS)) {
-    const isExist = await fs.pathExists(path.join(cwd, lock))
+    const isExist = existsSync(path.join(cwd, lock))
     if (isExist) {
       manager = LOCKS[lock]
       break
@@ -73,7 +74,7 @@ export const installPKG = async (name: string, cwd: string) => {
 
   if (!manager) {
     for (const managerName of Object.values(LOCKS)) {
-      const res = await $`${managerName} --version`.nothrow()
+      const res = await $(`${managerName} --version`)
       if (res.exitCode === 0) {
         manager = managerName
         break
@@ -82,14 +83,14 @@ export const installPKG = async (name: string, cwd: string) => {
   }
   if (!manager) {
     // fallback to npm
-    const npmVersion = await $`npm -v`.nothrow()
+    const npmVersion = await $('npm -v')
     if (npmVersion.exitCode === 0) {
       manager = 'npm'
     } else {
       throw new Error('No package manager found')
     }
   }
-  cd(cwd)
+  process.chdir(cwd)
   // await $`${manager} ${INSTALL_COMMANDS[manager]} ${name}`
   const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash'
   const pty = spawnShell(

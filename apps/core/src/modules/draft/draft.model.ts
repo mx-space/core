@@ -42,7 +42,7 @@ export class DraftHistoryModel {
   },
 })
 export class DraftModel extends BaseModel {
-  @prop({ required: true, enum: DraftRefType })
+  @prop({ required: true, type: String, enum: DraftRefType })
   refType: DraftRefType
 
   @prop({ type: Types.ObjectId })

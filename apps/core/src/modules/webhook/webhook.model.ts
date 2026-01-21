@@ -28,6 +28,6 @@ export class WebhookModel {
   @prop({ required: true, select: false })
   secret: string
 
-  @prop({ enum: EventScope })
+  @prop({ type: Number, enum: EventScope })
   scope: EventScope
 }

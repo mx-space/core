@@ -1,14 +1,14 @@
 import { OnEvent } from '@nestjs/event-emitter'
-import {
+import { WebSocketServer } from '@nestjs/websockets'
+import type {
   OnGatewayConnection,
   OnGatewayDisconnect,
-  WebSocketServer,
 } from '@nestjs/websockets'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import { Namespace, Socket } from 'socket.io'
+import type { Namespace, Socket } from 'socket.io'
 import { BusinessEvents } from '../../../constants/business-event.constant'
 import { BroadcastBaseGateway } from '../base.gateway'
 

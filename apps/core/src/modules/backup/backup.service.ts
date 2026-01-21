@@ -1,7 +1,6 @@
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import { readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path, { join, resolve } from 'node:path'
-import { $, cd } from '@mx-space/compiled'
 import {
   BadRequestException,
   Injectable,
@@ -24,6 +23,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { S3Uploader } from '~/utils/s3.util'
 import { scheduleManager } from '~/utils/schedule.util'
+import { $throw } from '~/utils/shell.util'
 import { getFolderSize, installPKG } from '~/utils/system.util'
 import { getMediumDateTime } from '~/utils/time.util'
 import { flatten } from 'es-toolkit/compat'
@@ -98,34 +98,39 @@ export class BackupService {
     const backupDirPath = join(BACKUP_DIR, dateDir)
     mkdirp.sync(backupDirPath)
     try {
-      await $`mongodump --uri ${MONGO_DB.customConnectionString || MONGO_DB.uri} -d ${
-        MONGO_DB.dbName
-      }  ${flatten(
+      const excludeCollectionArgs = flatten(
         excludeCollections.map((collection) => [
           '--excludeCollection',
-
           collection,
         ]),
-      )} -o ${backupDirPath} >/dev/null 2>&1`
+      ).join(' ')
+      await $throw(
+        `mongodump --uri "${MONGO_DB.customConnectionString || MONGO_DB.uri}" -d ${MONGO_DB.dbName} ${excludeCollectionArgs} -o ${backupDirPath} >/dev/null 2>&1`,
+      )
       // 打包 DB
-      cd(backupDirPath)
-      await $`mv ${MONGO_DB.dbName} mx-space`.quiet().nothrow()
-      await $`zip -r backup-${dateDir} mx-space/* && rm -rf mx-space`.quiet()
+      await $throw(`mv ${MONGO_DB.dbName} mx-space`, {
+        cwd: backupDirPath,
+      }).catch(() => {})
+      await $throw(`zip -r backup-${dateDir} mx-space/* && rm -rf mx-space`, {
+        cwd: backupDirPath,
+      })
 
       // 打包数据目录
 
-      const flags = excludeFolders.flatMap((item) => ['--exclude', item])
-      cd(DATA_DIR)
+      const flags = excludeFolders.map((item) => `--exclude ${item}`).join(' ')
       await rm(join(DATA_DIR, 'backup_data'), { recursive: true, force: true })
       await rm(join(DATA_DIR, 'temp_copy_need'), {
         recursive: true,
         force: true,
       })
 
-      await $`rsync -a . ./temp_copy_need --exclude temp_copy_need ${flags} && mv temp_copy_need backup_data && zip -r ${join(
-        backupDirPath,
-        `backup-${dateDir}`,
-      )} ./backup_data && rm -rf backup_data`
+      await $throw(
+        `rsync -a . ./temp_copy_need --exclude temp_copy_need ${flags} && mv temp_copy_need backup_data && zip -r ${join(
+          backupDirPath,
+          `backup-${dateDir}`,
+        )} ./backup_data && rm -rf backup_data`,
+        { cwd: DATA_DIR },
+      )
 
       this.logger.log('--> 备份成功')
     } catch (error) {
@@ -192,8 +197,7 @@ export class BackupService {
 
     // 解压
     try {
-      cd(dirPath)
-      await $`unzip ${restoreFilePath}`
+      await $throw(`unzip ${restoreFilePath}`, { cwd: dirPath })
     } catch {
       throw new InternalServerErrorException('服务端 unzip 命令未找到')
     }
@@ -203,8 +207,10 @@ export class BackupService {
         throw new InternalServerErrorException('备份文件错误，目录不存在')
       }
 
-      cd(dirPath)
-      await $`mongorestore --uri ${MONGO_DB.customConnectionString || MONGO_DB.uri} -d ${MONGO_DB.dbName} ./mx-space --drop  >/dev/null 2>&1`
+      await $throw(
+        `mongorestore --uri "${MONGO_DB.customConnectionString || MONGO_DB.uri}" -d ${MONGO_DB.dbName} ./mx-space --drop >/dev/null 2>&1`,
+        { cwd: dirPath },
+      )
 
       await migrateDatabase()
     } catch (error) {
@@ -226,7 +232,7 @@ export class BackupService {
 
         await rm(targetPath, { recursive: true, force: true })
 
-        await $`cp -r ${fullpath} ${targetPath}`
+        await $throw(`cp -r ${fullpath} ${targetPath}`)
       }),
     )
 

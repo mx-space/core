@@ -2,10 +2,9 @@ import cluster from 'node:cluster'
 import { performance } from 'node:perf_hooks'
 import type { FastifyCorsOptions } from '@fastify/cors'
 import { Logger } from '@innei/pretty-logger-nestjs'
-import { chalk } from '@mx-space/compiled'
-import type { LogLevel } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
+import pc from 'picocolors'
 import wcmatch from 'wildcard-match'
 import { CROSS_DOMAIN, DEBUG_MODE, PORT } from './app.config'
 import { AppModule } from './app.module'
@@ -22,8 +21,6 @@ const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
   ? [...CROSS_DOMAIN.allowedOrigins, '*.shizuri.net', '22333322.xyz']
   : false
 
-declare const module: any
-
 export async function bootstrap() {
   const isInit = await checkInit()
 
@@ -31,11 +28,7 @@ export async function bootstrap() {
     AppModule.register(isInit),
     fastifyApp,
     {
-      logger: ['error'].concat(
-        isDev || DEBUG_MODE.logging
-          ? (['debug'] as any as LogLevel[])
-          : ([] as LogLevel[]),
-      ) as LogLevel[],
+      logger: DEBUG_MODE.logging ? ['verbose'] : ['warn'],
     },
   )
 
@@ -108,14 +101,7 @@ export async function bootstrap() {
       logger.info(
         `[${prefix + pid}] If you want to debug local dev dashboard on dev environment with same site domain, you can go to: http://localhost:2333/proxy/qaqdmin/dev-proxy`,
       )
-      logger.info(
-        `Server is up. ${chalk.yellow(`+${performance.now() | 0}ms`)}`,
-      )
+      logger.info(`Server is up. ${pc.yellow(`+${performance.now() | 0}ms`)}`)
     },
   )
-
-  if (module.hot) {
-    module.hot.accept()
-    module.hot.dispose(() => app.close())
-  }
 }

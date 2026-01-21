@@ -1,10 +1,10 @@
 import {
   BadRequestException,
-  forwardRef,
-  Inject,
   Injectable,
   NotFoundException,
+  OnApplicationBootstrap,
 } from '@nestjs/common'
+import { ModuleRef } from '@nestjs/core'
 import type { DocumentType } from '@typegoose/typegoose'
 import { BusinessException } from '~/common/exceptions/biz.exception'
 import { ArticleTypeEnum } from '~/constants/article.constant'
@@ -12,6 +12,10 @@ import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import {
+  CATEGORY_SERVICE_TOKEN,
+  DRAFT_SERVICE_TOKEN,
+} from '~/constants/injection.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
@@ -20,34 +24,42 @@ import { scheduleManager } from '~/utils/schedule.util'
 import { getLessThanNow } from '~/utils/time.util'
 import { isDefined } from '~/utils/validator.util'
 import { debounce, omit } from 'es-toolkit/compat'
-import type { AggregatePaginateModel, Document, Types } from 'mongoose'
+import { Types } from 'mongoose'
+import type { AggregatePaginateModel, Document } from 'mongoose'
 import slugify from 'slugify'
 import { getArticleIdFromRoomName } from '../activity/activity.util'
-import { CategoryService } from '../category/category.service'
+import type { CategoryService } from '../category/category.service'
 import { CommentModel } from '../comment/comment.model'
-import { DraftService } from '../draft/draft.service'
+import type { DraftService } from '../draft/draft.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { PostModel } from './post.model'
 
 @Injectable()
-export class PostService {
+export class PostService implements OnApplicationBootstrap {
+  private categoryService: CategoryService
+  private draftService: DraftService
+
   constructor(
     @InjectModel(PostModel)
     private readonly postModel: MongooseModel<PostModel> &
       AggregatePaginateModel<PostModel & Document>,
     @InjectModel(CommentModel)
     private readonly commentModel: MongooseModel<CommentModel>,
-
-    @Inject(forwardRef(() => CategoryService))
-    private categoryService: CategoryService,
     private readonly imageService: ImageService,
     private readonly eventManager: EventManagerService,
     private readonly textMacroService: TextMacroService,
-
     private readonly slugTrackerService: SlugTrackerService,
-    @Inject(forwardRef(() => DraftService))
-    private readonly draftService: DraftService,
+    private readonly moduleRef: ModuleRef,
   ) {}
+
+  onApplicationBootstrap() {
+    this.categoryService = this.moduleRef.get(CATEGORY_SERVICE_TOKEN, {
+      strict: false,
+    })
+    this.draftService = this.moduleRef.get(DRAFT_SERVICE_TOKEN, {
+      strict: false,
+    })
+  }
 
   get model() {
     return this.postModel

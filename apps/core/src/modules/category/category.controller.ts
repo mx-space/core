@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Body,
   Delete,
-  forwardRef,
   Get,
   HttpCode,
   Inject,
@@ -16,9 +15,10 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { isValidObjectId } from 'mongoose'
-import { PostService } from '../post/post.service'
+import type { PostService } from '../post/post.service'
 import { CategoryType } from './category.model'
 import {
   CategoryDto,
@@ -33,7 +33,7 @@ import { CategoryService } from './category.service'
 export class CategoryController {
   constructor(
     private readonly categoryService: CategoryService,
-    @Inject(forwardRef(() => PostService))
+    @Inject(POST_SERVICE_TOKEN)
     private readonly postService: PostService,
   ) {}
 

@@ -6,7 +6,7 @@ import type {
 import { Injectable } from '@nestjs/common'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import qs from 'qs'
-import type { Observable } from 'rxjs'
+import { Observable } from 'rxjs'
 
 /** 此拦截器用于转换 req.query.query -> js object，用于直接数据库查询，需要鉴权  */
 @Injectable()

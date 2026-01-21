@@ -52,7 +52,7 @@ export class MetaPresetChild {
   @prop({ required: true })
   label!: string
 
-  @prop({ required: true, enum: MetaFieldType })
+  @prop({ required: true, type: String, enum: MetaFieldType })
   type!: MetaFieldType
 
   @prop()
@@ -84,7 +84,7 @@ export class MetaPresetModel extends BaseModel {
   @prop({ required: true })
   label!: string
 
-  @prop({ required: true, enum: MetaFieldType })
+  @prop({ required: true, type: String, enum: MetaFieldType })
   type!: MetaFieldType
 
   @prop()
@@ -95,6 +95,7 @@ export class MetaPresetModel extends BaseModel {
 
   @prop({
     required: true,
+    type: String,
     enum: MetaPresetScope,
     default: MetaPresetScope.Both,
   })

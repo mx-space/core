@@ -1,17 +1,19 @@
 // @ts-check
-const { resolve } = require('path')
-const { readdirSync } = require('fs')
-const inquirer = require('inquirer')
+import { readdirSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { resolve } from 'node:path'
+import inquirer from 'inquirer'
+import { $, chalk } from 'zx'
 
+const require = createRequire(import.meta.url)
 const prompt = inquirer.createPromptModule()
-const { $, chalk } = require('zx-cjs')
-const package = require('../package.json')
+const package_ = require('../package.json')
 const PATCH_DIR = resolve(process.cwd(), './patch')
 
-async function bootstarp() {
+async function bootstrap() {
   console.log(chalk.yellowBright('mx-space server patch center'))
 
-  console.log(chalk.yellow(`current version: ${package.version}`))
+  console.log(chalk.yellow(`current version: ${package_.version}`))
 
   const patchFiles = readdirSync(PATCH_DIR).filter(
     (file) => file.startsWith('v') && file.endsWith('.js'),
@@ -29,4 +31,4 @@ async function bootstarp() {
   })
 }
 
-bootstarp()
+bootstrap()

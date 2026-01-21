@@ -1,17 +1,11 @@
 #!/usr/bin/env zx
 // @ts-check
-const {
-  cd,
-  $,
-  os,
-  fs,
-  path,
-  fetch,
-  nothrow,
-  sleep,
-  argv: Ar,
-} = require('zx-cjs')
-const { homedir } = os
+import { createRequire as nodeCreateRequire } from 'node:module'
+import { homedir } from 'node:os'
+import path from 'node:path'
+import { $, argv as Ar, cd, fs, nothrow, sleep } from 'zx'
+
+const require = nodeCreateRequire(import.meta.url)
 const { repository } = require('../package.json')
 
 const owner = 'mx-space'
@@ -21,7 +15,7 @@ const argv = process.argv.slice(2)
 
 const tag = Ar.tag || `4.5.3`
 const ghMirror = `github.hscsec.cn`
-const tagDownloadUrl = `https://${ghMirror}/${owner}/${repo}/releases/download/v${tag}/release-ubuntu-latest.zip`
+const _tagDownloadUrl = `https://${ghMirror}/${owner}/${repo}/releases/download/v${tag}/release-ubuntu-latest.zip`
 
 function getOsBuildAssetName() {
   const platform = process.platform
@@ -38,12 +32,6 @@ function getOsBuildAssetName() {
 }
 
 const getProxyDownloadUrl = (downloadUrl) => {
-  const url = new URL(downloadUrl)
-
-  // url.host = ghMirror
-
-  // return url.toString()
-
   return `https://ghproxy.com/${downloadUrl}`
 }
 
@@ -62,22 +50,22 @@ async function main() {
   }
 
   const buffer = await fetch(getProxyDownloadUrl(downloadUrl)).then((res) =>
-    res.buffer(),
+    res.arrayBuffer(),
   )
   const tmpName = (Math.random() * 10).toString(16)
-  fs.writeFileSync(`/tmp/${tmpName}.zip`, buffer, { flag: 'w' })
+  fs.writeFileSync(`/tmp/${tmpName}.zip`, Buffer.from(buffer), { flag: 'w' })
 
   await $`mv ./run ./run.bak`
 
   await $`unzip /tmp/${tmpName}.zip -d ./run`
   await $`rm /tmp/${tmpName}.zip`
 
-  await $`rm ./run/ecosystem.config.js`
-  await $`cp ./run.bak/ecosystem.config.js ./run/ecosystem.config.js`
+  await $`rm ./run/ecosystem.config.cjs`
+  await $`cp ./run.bak/ecosystem.config.cjs ./run/ecosystem.config.cjs`
 
   cd('./run')
 
-  await nothrow($`pm2 reload ecosystem.config.js -- ${argv}`)
+  await nothrow($`pm2 reload ecosystem.config.cjs -- ${argv}`)
   console.log('等待 8 秒')
   await sleep(8000)
   try {
@@ -86,15 +74,15 @@ async function main() {
     cd(path.resolve(homedir(), 'mx'))
     await $`rm -rf ./run.bak`
   } catch {
-    await $`pm2 stop ecosystem.config.js`
+    await $`pm2 stop ecosystem.config.cjs`
     // throw new Error('server is not running')
     console.error('server start error, now rollback...')
     cd(path.resolve(homedir(), 'mx'))
     await $`rm -rf ./run`
     await $`mv ./run.bak ./run`
     cd('./run')
-    await $`pm2 delete ecosystem.config.js`
-    await $`pm2 start ecosystem.config.js`
+    await $`pm2 delete ecosystem.config.cjs`
+    await $`pm2 start ecosystem.config.cjs`
   }
 }
 

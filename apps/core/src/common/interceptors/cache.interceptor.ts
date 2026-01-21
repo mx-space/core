@@ -20,8 +20,7 @@ import { CacheService } from '~/processors/redis/cache.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { hashString } from '~/utils/tool.util'
 import type { FastifyReply } from 'fastify'
-import { of, tap } from 'rxjs'
-import type { Observable } from 'rxjs'
+import { Observable, of, tap } from 'rxjs'
 
 /**
  * @class HttpCacheInterceptor

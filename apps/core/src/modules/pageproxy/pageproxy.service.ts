@@ -1,8 +1,8 @@
 import path from 'node:path'
 import { URL } from 'node:url'
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
-import PKG from '~/../package.json'
 import { API_VERSION } from '~/app.config'
+import { PKG } from '~/utils/pkg.util'
 import { parseHTML } from 'linkedom'
 import { ConfigsService } from '../configs/configs.service'
 import { UserService } from '../user/user.service'
@@ -32,7 +32,7 @@ export class PageProxyService {
     )
     // tag_name: v3.6.x
     const { tag_name } = await fetch(
-      `https://api.github.com/repos/${PKG.dashboard.repo}/releases/latest`,
+      `https://api.github.com/repos/${PKG.dashboard!.repo}/releases/latest`,
       {
         headers: {
           Authorization: githubToken || `Bearer ${githubToken}`,

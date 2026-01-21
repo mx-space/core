@@ -8,7 +8,7 @@ import type { CanActivate, ExecutionContext } from '@nestjs/common'
 import { ForbiddenException, Injectable } from '@nestjs/common'
 import { isDev } from '~/global/env.global'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-import type { Observable } from 'rxjs'
+import { Observable } from 'rxjs'
 
 @Injectable()
 export class SpiderGuard implements CanActivate {
