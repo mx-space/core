@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [9.0.0](https://github.com/mx-space/core/compare/v9.0.0-alpha.9...v9.0.0) (2026-01-22)
+
+
+### Features
+
+* add analyze apis ([3f51a95](https://github.com/mx-space/core/commit/3f51a95ad0d9dc85e624056fa9d871d432b0cf38))
+
+
+
 # [9.0.0-alpha.9](https://github.com/mx-space/core/compare/v9.0.0-alpha.8...v9.0.0-alpha.9) (2026-01-22)
 
 
