@@ -242,7 +242,7 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           # port: ${{ secrets.PORT }}
           key: ${{ secrets.KEY }}
-          source: scripts/server-deploy.mjs
+          source: scripts/server-deploy.mjs,scripts/node-utils.mjs
           target: /tmp/mx-core
       
       - name: Upload docker env file
@@ -271,6 +271,7 @@ jobs:
             cd mx
             ls -a
             cp /tmp/mx-core/scripts/server-deploy.mjs ./server-deploy.mjs
+            cp /tmp/mx-core/scripts/node-utils.mjs ./node-utils.mjs
             set -a
             source /tmp/mx-core/mx-core.docker.env
             set +a

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // @ts-check
+import { copyFile, rename, rm, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import path from 'node:path'
-import { copyFile, rm, rename, writeFile } from 'node:fs/promises'
 import { exec, execNothrow, getArgValue, sleep } from './node-utils.mjs'
 
 const repository = {
