@@ -16,12 +16,10 @@ services:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-localhost:*}
 
       # MongoDB (service in this stack)
-      # NOTE: In Docker Swarm stack, service names are prefixed with the stack name,
-      # e.g. `mx-core_mongo` / `mx-core_redis`.
-      DB_CONNECTION_STRING: mongodb://mx-core_mongo:27017/mx-space
+      DB_CONNECTION_STRING: mongodb://mongo:27017/mx-space
 
       # Redis (service in this stack)
-      REDIS_HOST: mx-core_redis
+      REDIS_HOST: redis
       REDIS_PORT: "6379"
 
       # Security (optional)
@@ -39,9 +37,8 @@ services:
         source: ./data/mx-space
         target: /root/.mx-space
 
-    depends_on:
-      - mongo
-      - redis
+    # NOTE: `depends_on` is ignored by Docker Swarm stack deploy.
+    # Do NOT rely on it for startup order; use retry/restart policy instead.
     networks:
       default: {}
 
@@ -50,12 +47,17 @@ services:
       interval: 30s
       timeout: 5s
       retries: 10
-      start_period: 30s
+      # Cold start can be slow: wait longer before marking unhealthy.
+      start_period: 60s
 
     deploy:
-      replicas: 2
+      # If the app runs migrations/initialization on startup, set replicas to 1 first.
+      replicas: ${MX_CORE_REPLICAS:-2}
       restart_policy:
         condition: any
+        delay: 10s
+        max_attempts: 10
+        window: 2m
       update_config:
         parallelism: 1
         order: start-first
@@ -84,8 +86,15 @@ services:
       replicas: 1
       restart_policy:
         condition: any
+        delay: 5s
+        max_attempts: 20
+        window: 2m
     networks:
-      default: {}
+      default:
+        aliases:
+          # Ensure both stack-scoped and short names resolve
+          - redis
+          - mx-core_redis
 
   mongo:
     image: mongo:7
@@ -99,13 +108,20 @@ services:
       interval: 30s
       timeout: 5s
       retries: 10
-      start_period: 30s
+      # mongod init (journaling/replica-set/lock) can take time on cold disks.
+      start_period: 60s
     deploy:
       replicas: 1
       restart_policy:
         condition: any
+        delay: 5s
+        max_attempts: 20
+        window: 2m
     networks:
-      default: {}
+      default:
+        aliases:
+          - mongo
+          - mx-core_mongo
 
 networks:
   default:
