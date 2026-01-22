@@ -30,5 +30,8 @@ export class AnalyzeModel extends BaseModel {
   @prop()
   path?: string
 
+  @prop()
+  referer?: string
+
   timestamp: Date
 }

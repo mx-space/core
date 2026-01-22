@@ -116,6 +116,7 @@ export class AnalyzeInterceptor implements NestInterceptor {
           path: new URL(`http://a.com${url}`).pathname,
           country:
             request.headers['cf-ipcountry'] || request.headers['CF-IPCountry'],
+          referer: request.headers.referer || request.headers.Referer,
         })
 
         // ip access in redis

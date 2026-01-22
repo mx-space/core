@@ -160,6 +160,18 @@ export class AnalyzeController {
     )
   }
 
+  @Get('/traffic-source')
+  async getTrafficSource(@Query() query: AnalyzeDto) {
+    const { from, to } = query
+    return this.service.getTrafficSource(from, to)
+  }
+
+  @Get('/device')
+  async getDeviceDistribution(@Query() query: AnalyzeDto) {
+    const { from, to } = query
+    return this.service.getDeviceDistribution(from, to)
+  }
+
   @Delete('/')
   @HttpCode(204)
   async clearAnalyze(@Query() query: AnalyzeDto) {

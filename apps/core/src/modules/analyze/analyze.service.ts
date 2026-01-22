@@ -291,4 +291,185 @@ export class AnalyzeService {
 
     return fromRedisIps
   }
+
+  async getDeviceDistribution(from?: Date, to?: Date) {
+    from = from ?? new Date(Date.now() - 1000 * 24 * 3600 * 7)
+    to = to ?? new Date()
+
+    const result = await this.analyzeModel.aggregate([
+      {
+        $match: {
+          timestamp: {
+            $gte: from,
+            $lte: to,
+          },
+        },
+      },
+      {
+        $project: {
+          browser: { $ifNull: ['$ua.browser.name', 'Unknown'] },
+          os: { $ifNull: ['$ua.os.name', 'Unknown'] },
+          device: { $ifNull: ['$ua.device.type', 'desktop'] },
+        },
+      },
+      {
+        $facet: {
+          browsers: [
+            { $group: { _id: '$browser', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 10 },
+          ],
+          os: [
+            { $group: { _id: '$os', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 10 },
+          ],
+          devices: [
+            { $group: { _id: '$device', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+          ],
+        },
+      },
+    ])
+
+    const data = result[0] || { browsers: [], os: [], devices: [] }
+
+    const deviceTypeMap: Record<string, string> = {
+      desktop: '桌面端',
+      mobile: '移动端',
+      tablet: '平板',
+      unknown: '未知',
+    }
+
+    return {
+      browsers: data.browsers.map((item: any) => ({
+        name: item._id || 'Unknown',
+        value: item.count,
+      })),
+      os: data.os.map((item: any) => ({
+        name: item._id || 'Unknown',
+        value: item.count,
+      })),
+      devices: data.devices.map((item: any) => ({
+        name: deviceTypeMap[item._id?.toLowerCase()] || item._id || '桌面端',
+        value: item.count,
+      })),
+    }
+  }
+
+  async getTrafficSource(from?: Date, to?: Date) {
+    from = from ?? new Date(Date.now() - 1000 * 24 * 3600 * 7)
+    to = to ?? new Date()
+
+    const result = await this.analyzeModel.aggregate([
+      {
+        $match: {
+          timestamp: {
+            $gte: from,
+            $lte: to,
+          },
+        },
+      },
+      {
+        $project: {
+          referer: { $ifNull: ['$referer', ''] },
+        },
+      },
+      {
+        $group: {
+          _id: '$referer',
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { count: -1 },
+      },
+    ])
+
+    const categories: Record<string, number> = {
+      direct: 0,
+      search: 0,
+      social: 0,
+      other: 0,
+    }
+
+    const searchEngines = [
+      'google',
+      'bing',
+      'baidu',
+      'sogou',
+      'so.com',
+      '360.cn',
+      'yahoo',
+      'duckduckgo',
+      'yandex',
+    ]
+    const socialNetworks = [
+      'twitter',
+      'x.com',
+      'facebook',
+      'weibo',
+      'zhihu',
+      'douban',
+      'reddit',
+      'linkedin',
+      'instagram',
+      'tiktok',
+      'youtube',
+      'bilibili',
+      't.me',
+      'telegram',
+      'discord',
+    ]
+
+    const details: Array<{ source: string; count: number }> = []
+
+    for (const item of result) {
+      const referer = (item._id as string).toLowerCase()
+      const count = item.count as number
+
+      if (!referer || referer === '') {
+        categories.direct += count
+        continue
+      }
+
+      let hostname = ''
+      try {
+        hostname = new URL(referer).hostname.toLowerCase()
+      } catch {
+        categories.other += count
+        continue
+      }
+
+      const isSearch = searchEngines.some((engine) => hostname.includes(engine))
+      const isSocial = socialNetworks.some((network) =>
+        hostname.includes(network),
+      )
+
+      if (isSearch) {
+        categories.search += count
+      } else if (isSocial) {
+        categories.social += count
+      } else {
+        categories.other += count
+      }
+
+      const existing = details.find((d) => d.source === hostname)
+      if (existing) {
+        existing.count += count
+      } else {
+        details.push({ source: hostname, count })
+      }
+    }
+
+    return {
+      categories: [
+        { name: '直接访问', value: categories.direct },
+        { name: '搜索引擎', value: categories.search },
+        { name: '社交媒体', value: categories.social },
+        { name: '其他来源', value: categories.other },
+      ].filter((c) => c.value > 0),
+      details: details.sort((a, b) => b.count - a.count).slice(0, 10),
+    }
+  }
 }

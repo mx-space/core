@@ -151,6 +151,19 @@ export class ActivityController {
     }
   }
 
+  @Get('/online-count')
+  async getOnlineCount() {
+    const roomInfo = await this.service.getAllRoomNames()
+    const total = Object.values(roomInfo.roomCount).reduce(
+      (acc: number, count: number) => acc + count,
+      0,
+    )
+    return {
+      total,
+      rooms: roomInfo.roomCount,
+    }
+  }
+
   @Auth()
   @Get('/reading/rank')
   async getReadingRangeRank(@Query() query: ActivityRangeDto) {
