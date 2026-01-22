@@ -1,6 +1,3 @@
-import { createWriteStream } from 'node:fs'
-import type { WriteStream } from 'node:fs'
-import { resolve } from 'node:path'
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 import {
   Catch,
@@ -12,18 +9,13 @@ import {
 import { Reflector } from '@nestjs/core'
 import { EventScope } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
-import { LOG_DIR } from '~/constants/path.constant'
 import { REFLECTOR } from '~/constants/system.constant'
-import { isDev } from '~/global/env.global'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import pc from 'picocolors'
 import { getIp } from '../../utils/ip.util'
 import { BizException } from '../exceptions/biz.exception'
-import { LoggingInterceptor } from '../interceptors/logging.interceptor'
 
 type myError = {
   readonly status: number
@@ -36,7 +28,6 @@ let once = false
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name)
-  private errorLogPipe: WriteStream
   constructor(
     @Inject(REFLECTOR) private reflector: Reflector,
     private readonly eventManager: EventManagerService,
@@ -118,39 +109,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
           scope: EventScope.TO_SYSTEM,
         },
       )
-      if (!isDev) {
-        this.errorLogPipe =
-          this.errorLogPipe ??
-          createWriteStream(resolve(LOG_DIR, 'error.log'), {
-            flags: 'a+',
-            encoding: 'utf-8',
-          })
-
-        this.errorLogPipe.write(
-          `[${new Date().toLocaleString('en-US', {
-            timeStyle: 'medium',
-            dateStyle: 'long',
-          })}] ${decodeURI(url)}: ${
-            (exception as any)?.response?.message ||
-            (exception as myError)?.message
-          }\n${(exception as Error).stack}\n`,
-        )
-      }
     } else {
       this.logger.warn(
         `IP: ${ip} 错误信息：(${status}) ${message} Path: ${decodeURI(url)}`,
-      )
-    }
-    // @ts-ignore
-    const prevRequestTs = this.reflector.get(HTTP_REQUEST_TIME, request as any)
-
-    if (prevRequestTs) {
-      const content = `${request.method} -> ${request.url}`
-      Logger.debug(
-        `--- 响应异常请求：${content}${pc.yellow(
-          ` +${Date.now() - prevRequestTs}ms`,
-        )}`,
-        LoggingInterceptor.name,
       )
     }
     const res = (exception as any).response
