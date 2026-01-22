@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsdown'
 
 export default defineConfig({
-  clean: true,
+  clean: false,
   target: 'es2023',
   entry: ['src/main.ts'],
   dts: false,

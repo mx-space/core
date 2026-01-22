@@ -134,6 +134,7 @@ export const CROSS_DOMAIN = {
   // allowedReferer: 'innei.ren',
 }
 
+const customConnectionString = argv.db_connection_string || MONGO_CONNECTION
 export const MONGO_DB = {
   dbName: argv.collection_name || 'mx-space',
   host: argv.db_host || '127.0.0.1',
@@ -148,7 +149,11 @@ export const MONGO_DB = {
     const dbOptions = this.options ? `?${this.options}` : ''
     return `mongodb://${userPassword}${this.host}:${this.port}/${this.dbName}${dbOptions}`
   },
-  customConnectionString: argv.db_connection_string || MONGO_CONNECTION,
+  get customConnectionString() {
+    return customConnectionString
+      ? `${customConnectionString}/${this.dbName}`
+      : undefined
+  },
 }
 
 export const REDIS = {

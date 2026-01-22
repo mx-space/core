@@ -23,7 +23,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { S3Uploader } from '~/utils/s3.util'
 import { scheduleManager } from '~/utils/schedule.util'
-import { $throw } from '~/utils/shell.util'
+import { $, $throw } from '~/utils/shell.util'
 import { getFolderSize, installPKG } from '~/utils/system.util'
 import { getMediumDateTime } from '~/utils/time.util'
 import { flatten } from 'es-toolkit/compat'
@@ -55,6 +55,23 @@ export class BackupService {
     private readonly redisService: RedisService,
   ) {
     this.logger = new Logger(BackupService.name)
+  }
+
+  private async safeListDir(dir: string, limit = 30) {
+    try {
+      const entries = await readdir(dir, { withFileTypes: true })
+      return entries
+        .slice(0, limit)
+        .map((e) => `${e.isDirectory() ? 'dir' : 'file'}:${e.name}`)
+        .join(', ')
+    } catch (error: any) {
+      return `<unreadable: ${error?.message || String(error)}>`
+    }
+  }
+
+  private async commandExists(command: string) {
+    const res = await $(`command -v ${command} >/dev/null 2>&1`)
+    return res.exitCode === 0
   }
 
   async list() {
@@ -97,6 +114,21 @@ export class BackupService {
 
     const backupDirPath = join(BACKUP_DIR, dateDir)
     mkdirp.sync(backupDirPath)
+
+    const runStep = async (
+      step: string,
+      command: string,
+      options?: Parameters<typeof $throw>[1],
+    ) => {
+      try {
+        return await $throw(command, options)
+      } catch (error: any) {
+        error.step = step
+        error.cwd = options?.cwd || process.cwd()
+        throw error
+      }
+    }
+
     try {
       const excludeCollectionArgs = flatten(
         excludeCollections.map((collection) => [
@@ -104,16 +136,49 @@ export class BackupService {
           collection,
         ]),
       ).join(' ')
-      await $throw(
-        `mongodump --uri "${MONGO_DB.customConnectionString || MONGO_DB.uri}" -d ${MONGO_DB.dbName} ${excludeCollectionArgs} -o ${backupDirPath} >/dev/null 2>&1`,
+
+      await runStep(
+        'mongodump',
+        `mongodump --quiet --uri "${MONGO_DB.customConnectionString || MONGO_DB.uri}" -d ${MONGO_DB.dbName} ${excludeCollectionArgs} -o ${backupDirPath}`,
       )
+
+      const dumpedDbDir = join(backupDirPath, MONGO_DB.dbName)
+      if (!existsSync(dumpedDbDir)) {
+        const error = new Error(
+          `mongodump 已执行，但未生成目录：${dumpedDbDir}（请检查 DB 名称、连接与权限）`,
+        ) as any
+        error.step = 'mongodump'
+        error.cwd = backupDirPath
+        throw error
+      }
+      const dumpedEntries = await readdir(dumpedDbDir)
+      const hasDumpFiles = dumpedEntries.some(
+        (name) => name.endsWith('.bson') || name.endsWith('.metadata.json'),
+      )
+      if (!hasDumpFiles) {
+        const error = new Error(
+          `mongodump 生成目录为空或没有 bson 文件：${dumpedDbDir}（zip exit code 12 常见原因）`,
+        ) as any
+        error.step = 'mongodump'
+        error.cwd = backupDirPath
+        error.dirListing = dumpedEntries.slice(0, 30)
+        throw error
+      }
+
       // 打包 DB
-      await $throw(`mv ${MONGO_DB.dbName} mx-space`, {
-        cwd: backupDirPath,
-      }).catch(() => {})
-      await $throw(`zip -r backup-${dateDir} mx-space/* && rm -rf mx-space`, {
-        cwd: backupDirPath,
-      })
+      if (MONGO_DB.dbName !== 'mx-space') {
+        await runStep('rename-db-dir', `mv "${MONGO_DB.dbName}" mx-space`, {
+          cwd: backupDirPath,
+        })
+      }
+      // 使用目录而非通配符，避免目录为空时触发 "zip error: Nothing to do" (exit code 12)
+      await runStep(
+        'zip-db',
+        `zip -r backup-${dateDir} mx-space && rm -rf mx-space`,
+        {
+          cwd: backupDirPath,
+        },
+      )
 
       // 打包数据目录
 
@@ -124,7 +189,8 @@ export class BackupService {
         force: true,
       })
 
-      await $throw(
+      await runStep(
+        'zip-data',
         `rsync -a . ./temp_copy_need --exclude temp_copy_need ${flags} && mv temp_copy_need backup_data && zip -r ${join(
           backupDirPath,
           `backup-${dateDir}`,
@@ -134,10 +200,34 @@ export class BackupService {
 
       this.logger.log('--> 备份成功')
     } catch (error) {
+      const step = (error as any)?.step ? `step=${(error as any).step}` : ''
+      const cwd = (error as any)?.cwd ? `cwd=${(error as any).cwd}` : ''
+      const stderr = (error as any)?.stderr
+        ? `\n\nstderr:\n${(error as any).stderr}`
+        : ''
+      const stdout = (error as any)?.stdout
+        ? `\n\nstdout:\n${(error as any).stdout}`
+        : ''
+      const dirListing = (error as any)?.dirListing?.length
+        ? `\n\ndirListing(${MONGO_DB.dbName}): ${(error as any).dirListing.join(', ')}`
+        : ''
+
+      // 额外诊断：命令是否存在、备份目录当前内容
+      const [hasZip, hasMongoDump, hasMongoRestore] = await Promise.all([
+        this.commandExists('zip'),
+        this.commandExists('mongodump'),
+        this.commandExists('mongorestore'),
+      ])
+      const backupDirContent = await this.safeListDir(backupDirPath)
+
       this.logger.error(
-        `--> 备份失败，请确保已安装 zip 或 mongo-tools, mongo-tools 的版本需要与 mongod 版本一致，${error.message}\n\n${
-          error.stderr
-        }`,
+        `--> 备份失败（${[step, cwd].filter(Boolean).join(', ')}），${error.message}` +
+          `${stderr}${stdout}${dirListing}\n\n` +
+          `diagnostics:\n` +
+          `- zip: ${hasZip ? 'found' : 'missing'}\n` +
+          `- mongodump: ${hasMongoDump ? 'found' : 'missing'}\n` +
+          `- mongorestore: ${hasMongoRestore ? 'found' : 'missing'}\n` +
+          `- backupDir(${backupDirPath}): ${backupDirContent}`,
       )
       throw error
     }
@@ -198,8 +288,14 @@ export class BackupService {
     // 解压
     try {
       await $throw(`unzip ${restoreFilePath}`, { cwd: dirPath })
-    } catch {
-      throw new InternalServerErrorException('服务端 unzip 命令未找到')
+    } catch (error: any) {
+      if (error?.exitCode === 127) {
+        throw new InternalServerErrorException('服务端 unzip 命令未找到')
+      }
+      this.logger.error(
+        `unzip 失败：${error?.message || error}\n\n${error?.stderr || ''}`,
+      )
+      throw error
     }
     try {
       // 验证
@@ -208,13 +304,17 @@ export class BackupService {
       }
 
       await $throw(
-        `mongorestore --uri "${MONGO_DB.customConnectionString || MONGO_DB.uri}" -d ${MONGO_DB.dbName} ./mx-space --drop >/dev/null 2>&1`,
+        `mongorestore --quiet --uri "${MONGO_DB.customConnectionString || MONGO_DB.uri}" -d ${MONGO_DB.dbName} ./mx-space --drop`,
         { cwd: dirPath },
       )
 
       await migrateDatabase()
     } catch (error) {
-      this.logger.error(error)
+      this.logger.error(
+        `restore 失败：${(error as any)?.message || error}\n\n${
+          (error as any)?.stderr || ''
+        }`,
+      )
       throw error
     } finally {
       await rm(join(dirPath, 'mx-space'), { recursive: true, force: true })
