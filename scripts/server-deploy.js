@@ -1,15 +1,35 @@
 #!/usr/bin/env zx
 // @ts-check
-import { createRequire as nodeCreateRequire } from 'node:module'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { $, argv as av, cd, fs, nothrow, sleep } from 'zx'
 
-const require = nodeCreateRequire(import.meta.url)
-const { repository } = require('../package.json')
+const repository = {
+  directory: 'mx-space/core',
+  url: 'https://github.com/mx-space/core',
+}
 
 const argv = process.argv.slice(2)
 const scpPath = av.scp_path
+
+function stripArgv(argv) {
+  const out = []
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i]
+
+    // internal args for this deploy script (do not forward to pm2 app)
+    if (a === '--scp_path' || a === '--scpPath') {
+      i++ // skip next value
+      continue
+    }
+    if (a.startsWith('--scp_path=') || a.startsWith('--scpPath=')) continue
+
+    out.push(a)
+  }
+  return out
+}
+
+const argvForPm2 = stripArgv(argv)
 function getOsBuildAssetName() {
   return `release-linux.zip`
 }
@@ -66,11 +86,11 @@ async function main() {
       throw new Error('no download url found')
     }
 
-    const buffer = await fetch(
-      `https://mirror.ghproxy.com/${downloadUrl}`,
-    ).then((res) => res.arrayBuffer())
+    const buffer = await fetch(downloadUrl)
+      .then((res) => res.arrayBuffer())
+      .then((buffer) => Buffer.from(buffer))
     const tmpName = (Math.random() * 10).toString(16)
-    fs.writeFileSync(`/tmp/${tmpName}.zip`, Buffer.from(buffer), { flag: 'w' })
+    fs.writeFileSync(`/tmp/${tmpName}.zip`, buffer, { flag: 'w' })
 
     await $`mv ./run ./run.bak`
 
@@ -88,9 +108,9 @@ async function main() {
 
   cd('./run')
 
-  await nothrow($`pm2 reload ecosystem.config.cjs -- ${argv}`)
-  console.log('等待 8 秒')
-  await sleep(8000)
+  await nothrow($`pm2 reload ecosystem.config.cjs -- ${argvForPm2}`)
+  console.log('等待 18 秒')
+  await sleep(18000)
   try {
     await $`curl -f -m 3 localhost:2333/api/v2 -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36'`
     await $`pm2 save`

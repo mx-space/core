@@ -188,6 +188,36 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
+      - name: Checkout (for deploy script)
+        uses: actions/checkout@v6
+      
+      - name: Generate docker env file
+        shell: bash
+        env:
+          JWT_SECRET: ${{ secrets.JWTSECRET }}
+          ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+          ENCRYPT_KEY: ${{ secrets.MX_ENCRYPT_KEY }}
+          MONGO_CONNECTION: ${{ secrets.MONGO_CONNECTION }}
+        run: |
+          : > mx-core.docker.env
+
+          if [ -n "${JWT_SECRET:-}" ]; then
+            printf '%s\n' "JWT_SECRET=$JWT_SECRET" >> mx-core.docker.env
+          fi
+
+          if [ -n "${ALLOWED_ORIGINS:-}" ]; then
+            printf '%s\n' "ALLOWED_ORIGINS=$ALLOWED_ORIGINS" >> mx-core.docker.env
+          fi
+
+          if [ -n "${ENCRYPT_KEY:-}" ]; then
+            printf '%s\n' "# must be 64bit" >> mx-core.docker.env
+            printf '%s\n' "ENCRYPT_KEY=$ENCRYPT_KEY" >> mx-core.docker.env
+          fi
+
+          if [ -n "${MONGO_CONNECTION:-}" ]; then
+            printf '%s\n' "# CUSTOM MONGO CONNECTION" >> mx-core.docker.env
+            printf '%s\n' "MONGO_CONNECTION=$MONGO_CONNECTION" >> mx-core.docker.env
+          fi
       - uses: robinraju/release-downloader@v1.12
         name: Download release
         with:
@@ -203,23 +233,47 @@ jobs:
           key: ${{ secrets.KEY }}
           source: release-linux.zip
           target: /tmp/mx-core
+      
+      - name: Upload deploy script
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          password: ${{ secrets.PASSWORD }}
+          # port: ${{ secrets.PORT }}
+          key: ${{ secrets.KEY }}
+          source: scripts/server-deploy.js
+          target: /tmp/mx-core
+      
+      - name: Upload docker env file
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          password: ${{ secrets.PASSWORD }}
+          # port: ${{ secrets.PORT }}
+          key: ${{ secrets.KEY }}
+          source: mx-core.docker.env
+          target: /tmp/mx-core
 
       - name: Exec deploy script with SSH
         uses: appleboy/ssh-action@master
-        env:
-          JWTSECRET: ${{ secrets.JWTSECRET }}
-          MX_ENCRYPT_KEY: ${{ secrets.MX_ENCRYPT_KEY }}
         with:
           command_timeout: 5m
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASSWORD }}
           key: ${{ secrets.KEY }}
-          envs: JWTSECRET,MX_ENCRYPT_KEY
           script: |
             whoami
             cd
             source ~/.zshrc
             cd mx
             ls -a
+            cp /tmp/mx-core/scripts/server-deploy.js ./server-deploy.js
+            set -a
+            source /tmp/mx-core/mx-core.docker.env
+            set +a
+            if [ -n "${JWT_SECRET:-}" ]; then export JWTSECRET="$JWT_SECRET"; fi
+            if [ -n "${ENCRYPT_KEY:-}" ]; then export MX_ENCRYPT_KEY="$ENCRYPT_KEY"; fi
             node server-deploy.js --jwtSecret=$JWTSECRET --encrypt_key=$MX_ENCRYPT_KEY --encrypt_enable --scp_path=/tmp/mx-core/release-linux.zip || { echo "Deploy failed"; exit 1; }
