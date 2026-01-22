@@ -1,8 +1,8 @@
+import { writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import axios from 'axios'
-import { fs } from 'zx'
 
 const require = createRequire(import.meta.url)
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
@@ -35,7 +35,7 @@ async function main() {
 
   Package.dashboard.version = version
 
-  await fs.writeFile(
+  await writeFile(
     resolve(__dirname, './package.json'),
     JSON.stringify(Package, null, 2),
   )

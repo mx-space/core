@@ -49,7 +49,7 @@ docker-compose up -d
 
 ```sh
 curl https://cdn.jsdelivr.net/gh/mx-space/mx-server@master/scripts/download-latest-asset.js >> download.js
-zx ./download.js
+node ./download.js
 cd mx-server
 node index.js
 ```
@@ -104,8 +104,6 @@ pnpm dev
 │   ├── interface                   # 接口
 │   └── model                       # 基本数据模型
 ├── utils                           # 工具类
-└── zx.global.ts
-
 ```
 
 ## 应用结构

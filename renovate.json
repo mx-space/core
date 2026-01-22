@@ -21,7 +21,6 @@
     "vitest",
     "vite",
     "snakecase-keys",
-    "zx",
     "algoliasearch",
     "@algolia/client-search"
   ],

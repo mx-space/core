@@ -72,9 +72,6 @@ importers:
       vite-tsconfig-paths:
         specifier: 6.0.4
         version: 6.0.4(typescript@5.9.3)(vite@7.3.1(@types/node@25.0.9)(jiti@2.6.0)(terser@5.44.1)(yaml@2.8.1))
-      zx:
-        specifier: 8.8.5
-        version: 8.8.5
 
   apps/core:
     dependencies:
@@ -327,9 +324,6 @@ importers:
       zod:
         specifier: 4.3.5
         version: 4.3.5
-      zx:
-        specifier: 8.8.5
-        version: 8.8.5
     devDependencies:
       '@nestjs/cli':
         specifier: 11.0.16
@@ -6675,11 +6669,6 @@ packages:
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
-
-  zx@8.8.5:
-    resolution: {integrity: sha512-SNgDF5L0gfN7FwVOdEFguY3orU5AkfFZm9B5YSHog/UDHv+lvmd82ZAsOenOkQixigwH2+yyH198AwNdKhj+RA==}
-    engines: {node: '>= 12.17.0'}
-    hasBin: true
 
 snapshots:
 
@@ -13612,5 +13601,3 @@ snapshots:
   zod@4.3.5: {}
 
   zwitch@2.0.4: {}
-
-  zx@8.8.5: {}

@@ -1,8 +1,9 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
 // @ts-check
 import { homedir } from 'node:os'
 import path from 'node:path'
-import { $, argv as av, cd, fs, nothrow, sleep } from 'zx'
+import { copyFile, rm, rename, writeFile } from 'node:fs/promises'
+import { exec, execNothrow, getArgValue, sleep } from './node-utils.mjs'
 
 const repository = {
   directory: 'mx-space/core',
@@ -10,7 +11,7 @@ const repository = {
 }
 
 const argv = process.argv.slice(2)
-const scpPath = av.scp_path
+const scpPath = getArgValue(argv, ['--scp_path', '--scpPath'])
 
 function stripArgv(argv) {
   const out = []
@@ -66,7 +67,7 @@ function printExecError(err, title) {
 }
 
 async function main() {
-  cd(path.resolve(homedir(), 'mx'))
+  process.chdir(path.resolve(homedir(), 'mx'))
   if (!scpPath) {
     const releases = await fetch(
       `https://api.github.com/repos/${repository.directory}/releases`,
@@ -90,53 +91,72 @@ async function main() {
       .then((res) => res.arrayBuffer())
       .then((buffer) => Buffer.from(buffer))
     const tmpName = (Math.random() * 10).toString(16)
-    fs.writeFileSync(`/tmp/${tmpName}.zip`, buffer, { flag: 'w' })
+    const zipPath = `/tmp/${tmpName}.zip`
+    await writeFile(zipPath, buffer, { flag: 'w' })
 
-    await $`mv ./run ./run.bak`
+    await rm('./run.bak', { recursive: true, force: true })
+    await rename('./run', './run.bak')
 
-    await $`unzip /tmp/${tmpName}.zip -d ./run`
-    await $`rm /tmp/${tmpName}.zip`
+    await exec('unzip', [zipPath, '-d', './run'])
+    await rm(zipPath, { force: true })
   } else {
-    await $`mv ./run ./run.bak`
+    await rm('./run.bak', { recursive: true, force: true })
+    await rename('./run', './run.bak')
 
-    await $`unzip ${scpPath} -d ./run`
-    await $`rm ${scpPath}`
+    await exec('unzip', [scpPath, '-d', './run'])
+    await rm(scpPath, { force: true })
   }
 
-  await $`rm ./run/ecosystem.config.cjs`
-  await $`cp ./run.bak/ecosystem.config.cjs ./run/ecosystem.config.cjs`
+  await rm('./run/ecosystem.config.cjs', { force: true })
+  await copyFile('./run.bak/ecosystem.config.cjs', './run/ecosystem.config.cjs')
 
-  cd('./run')
+  process.chdir('./run')
 
-  await nothrow($`pm2 reload ecosystem.config.cjs -- ${argvForPm2}`)
+  await execNothrow('pm2', [
+    'reload',
+    'ecosystem.config.cjs',
+    '--',
+    ...argvForPm2,
+  ])
   console.log('等待 18 秒')
   await sleep(18000)
   try {
-    await $`curl -f -m 3 localhost:2333/api/v2 -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36'`
-    await $`pm2 save`
-    cd(path.resolve(homedir(), 'mx'))
-    await $`rm -rf ./run.bak`
+    await exec('curl', [
+      '-f',
+      '-m',
+      '3',
+      'localhost:2333/api/v2',
+      '-H',
+      'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36',
+    ])
+    await exec('pm2', ['save'])
+    process.chdir(path.resolve(homedir(), 'mx'))
+    await rm('./run.bak', { recursive: true, force: true })
   } catch (error) {
     printExecError(error, 'server start error (healthcheck failed)')
 
-    const status = await nothrow($`pm2 status`)
+    const status = await execNothrow('pm2', ['status'], { stdio: 'pipe' })
     if (status?.stdout) console.error(String(status.stdout))
     if (status?.stderr) console.error(String(status.stderr))
 
-    const logs = await nothrow($`pm2 logs --lines 200 --nostream`)
+    const logs = await execNothrow(
+      'pm2',
+      ['logs', '--lines', '200', '--nostream'],
+      { stdio: 'pipe' },
+    )
     if (logs?.stdout) console.error(String(logs.stdout))
     if (logs?.stderr) console.error(String(logs.stderr))
 
     try {
-      await $`pm2 stop ecosystem.config.cjs`
+      await exec('pm2', ['stop', 'ecosystem.config.cjs'])
       // throw new Error('server is not running')
       console.error('now rollback...')
-      cd(path.resolve(homedir(), 'mx'))
-      await $`rm -rf ./run`
-      await $`mv ./run.bak ./run`
-      cd('./run')
-      await $`pm2 delete ecosystem.config.cjs`
-      await $`pm2 start ecosystem.config.cjs`
+      process.chdir(path.resolve(homedir(), 'mx'))
+      await rm('./run', { recursive: true, force: true })
+      await rename('./run.bak', './run')
+      process.chdir('./run')
+      await exec('pm2', ['delete', 'ecosystem.config.cjs'])
+      await exec('pm2', ['start', 'ecosystem.config.cjs'])
     } catch (error) {
       printExecError(error, 'rollback failed')
       throw error

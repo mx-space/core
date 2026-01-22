@@ -2,14 +2,14 @@
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
-import { chalk } from 'zx'
+import { color } from './node-utils.mjs'
 
 async function main() {
   const cwd = process.cwd()
 
   const isRootDir = fs.existsSync(path.resolve(cwd, 'pnpm-workspace.yaml'))
   if (!isRootDir) {
-    console.warn(chalk.yellow('not a root dir, skip init assets'))
+    console.warn(color.yellow('not a root dir, skip init assets'))
     return
   }
   const existAsset = fs.existsSync(path.resolve(cwd, 'assets'))

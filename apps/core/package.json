@@ -134,8 +134,7 @@
     "ua-parser-js": "2.0.8",
     "wildcard-match": "5.1.4",
     "xss": "1.0.15",
-    "zod": "4.3.5",
-    "zx": "8.8.5"
+    "zod": "4.3.5"
   },
   "devDependencies": {
     "@nestjs/cli": "11.0.16",
