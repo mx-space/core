@@ -131,7 +131,7 @@ export class AggregateController {
   @Get('/count_site_words')
   async getSiteWords() {
     return {
-      length: await this.aggregateService.getAllSiteWordsCount(),
+      count: await this.aggregateService.getAllSiteWordsCount(),
     }
   }
 
