@@ -277,4 +277,5 @@ jobs:
             set +a
             if [ -n "${JWT_SECRET:-}" ]; then export JWTSECRET="$JWT_SECRET"; fi
             if [ -n "${ENCRYPT_KEY:-}" ]; then export MX_ENCRYPT_KEY="$ENCRYPT_KEY"; fi
+            cp /tmp/mx-core/mx-core.docker.env ./run/.env
             node server-deploy.mjs --jwtSecret=$JWTSECRET --encrypt_key=$MX_ENCRYPT_KEY --encrypt_enable --scp_path=/tmp/mx-core/release-linux.zip || { echo "Deploy failed"; exit 1; }
