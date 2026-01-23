@@ -1,7 +1,6 @@
 import { mkdirSync } from 'node:fs'
 import {
   DATA_DIR,
-  LOG_DIR,
   STATIC_FILE_DIR,
   TEMP_DIR,
   THEME_DIR,
@@ -13,7 +12,6 @@ import { RedisMemoryServer } from 'redis-memory-server'
 export async function setup() {
   mkdirSync(DATA_DIR, { recursive: true })
   mkdirSync(TEMP_DIR, { recursive: true })
-  mkdirSync(LOG_DIR, { recursive: true })
   mkdirSync(USER_ASSET_DIR, { recursive: true })
   mkdirSync(STATIC_FILE_DIR, { recursive: true })
   mkdirSync(THEME_DIR, { recursive: true })
