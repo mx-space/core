@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [9.0.1](https://github.com/mx-space/core/compare/v9.0.0...v9.0.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* **aggregate:** rename wordCount field from length to count ([9c883c9](https://github.com/mx-space/core/commit/9c883c9cbea94d82b2822c4b3534e2a7c7e0504d))
+* **note.schema:** allow nullable fields and set default for images ([74f0aed](https://github.com/mx-space/core/commit/74f0aedc4f13a28627a2a0d5597c2f8454159bff))
+
+
+
 # [9.0.0](https://github.com/mx-space/core/compare/v9.0.0-alpha.9...v9.0.0) (2026-01-22)
 
 
