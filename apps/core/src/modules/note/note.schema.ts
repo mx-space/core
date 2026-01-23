@@ -38,10 +38,10 @@ export const NoteSchema = WriteBaseSchema.extend({
   mood: z.string().optional(),
   weather: z.string().optional(),
   bookmark: z.boolean().default(false).optional(),
-  coordinates: CoordinateSchema.optional(),
-  location: z.string().optional(),
-  topicId: zMongoId.optional(),
-  images: z.array(ImageSchema).optional(),
+  coordinates: CoordinateSchema.optional().nullable(),
+  location: z.string().optional().nullable(),
+  topicId: zMongoId.optional().nullable(),
+  images: z.array(ImageSchema).optional().default([]),
   /** 关联的草稿 ID，发布时标记该草稿为已发布 */
   draftId: zMongoId.optional(),
 })
