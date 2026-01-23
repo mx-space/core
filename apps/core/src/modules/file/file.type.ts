@@ -1,7 +1,7 @@
 export enum FileTypeEnum {
   icon = 'icon',
-  photo = 'photo',
   file = 'file',
   avatar = 'avatar',
+  image = 'image',
 }
 export type FileType = keyof typeof FileTypeEnum
