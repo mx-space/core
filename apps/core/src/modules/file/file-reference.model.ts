@@ -30,12 +30,16 @@ export class FileReferenceModel extends BaseModel {
   @prop({ required: true })
   fileName!: string
 
-  @prop({ enum: FileReferenceStatus, default: FileReferenceStatus.Pending })
+  @prop({
+    type: String,
+    enum: FileReferenceStatus,
+    default: FileReferenceStatus.Pending,
+  })
   status!: FileReferenceStatus
 
   @prop({ type: String })
   refId?: string
 
-  @prop({ enum: FileReferenceType })
+  @prop({ type: String, enum: FileReferenceType })
   refType?: FileReferenceType
 }
