@@ -82,11 +82,27 @@ export class FileService {
   }
 
   async deleteFile(type: FileType, name: string) {
+    const sourcePath = this.resolveFilePath(type, name)
+    const trashPath = resolve(STATIC_FILE_TRASH_DIR, name)
+
     try {
-      const path = this.resolveFilePath(type, name)
-      await copyFile(path, resolve(STATIC_FILE_TRASH_DIR, name))
-      await unlink(path)
+      await mkdir(STATIC_FILE_TRASH_DIR, { recursive: true })
+
+      await copyFile(sourcePath, trashPath)
+
+      try {
+        await unlink(sourcePath)
+      } catch (error) {
+        if (error?.code !== 'ENOENT') {
+          throw error
+        }
+      }
     } catch (error) {
+      if (error?.code === 'ENOENT') {
+        // 幂等：源文件不存在就视为已删除
+        this.logger.warn(`删除文件：源文件不存在，跳过 (${type}/${name})`)
+        return
+      }
       this.logger.error('删除文件失败', error)
 
       throw new InternalServerErrorException(`删除文件失败，${error.message}`)

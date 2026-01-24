@@ -90,7 +90,6 @@ export const generateDefaultConfig: () => IConfig = () => ({
     emailSubscribe: false,
   },
   thirdPartyServiceIntegration: {
-    xLogSiteId: '',
     githubToken: '',
   },
 

@@ -233,6 +233,24 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async unsubscribeBatch(emails?: string[], all?: boolean) {
+    if (all) {
+      const result = await this.model.deleteMany({})
+      this.subscribeMap.clear()
+      return result.deletedCount
+    }
+
+    if (emails && emails.length > 0) {
+      const result = await this.model.deleteMany({ email: { $in: emails } })
+      for (const email of emails) {
+        this.subscribeMap.delete(email)
+      }
+      return result.deletedCount
+    }
+
+    return 0
+  }
+
   createCancelToken(email: string) {
     return hashString(md5(email) + nanoid(8))
   }

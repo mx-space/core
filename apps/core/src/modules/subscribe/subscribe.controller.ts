@@ -1,10 +1,21 @@
-import { BadRequestException, Body, Get, Post, Query } from '@nestjs/common'
+import {
+  BadRequestException,
+  Body,
+  Delete,
+  Get,
+  Post,
+  Query,
+} from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { SubscribeTypeToBitMap } from './subscribe.constant'
-import { CancelSubscribeDto, SubscribeDto } from './subscribe.schema'
+import {
+  BatchUnsubscribeDto,
+  CancelSubscribeDto,
+  SubscribeDto,
+} from './subscribe.schema'
 import { SubscribeService } from './subscribe.service'
 
 @ApiController('subscribe')
@@ -71,5 +82,13 @@ export class SubscribeController {
       return '已取消订阅'
     }
     return '出现错误'
+  }
+
+  @Delete('/unsubscribe/batch')
+  @Auth()
+  async unsubscribeBatch(@Body() body: BatchUnsubscribeDto) {
+    const { emails, all } = body
+    const deletedCount = await this.service.unsubscribeBatch(emails, all)
+    return { deletedCount }
   }
 }

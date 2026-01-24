@@ -255,9 +255,6 @@ export type FeatureListConfig = z.infer<typeof FeatureListSchema>
 
 // ==================== Third Party Service Integration ====================
 export const ThirdPartyServiceIntegrationSchema = section('第三方服务信息', {
-  xLogSiteId: field.plain(z.string().optional(), 'xLog SiteId', {
-    description: '文章发布同步到 [xLog](https://xlog.app)',
-  }),
   githubToken: field.password(z.string().optional(), 'GitHub Token', {
     description:
       '用于调用 GitHub API，获取仓库信息等；可选参数，如果没有遇到限流问题，可以不填写',
