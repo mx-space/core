@@ -1,12 +1,8 @@
 import { URL } from 'node:url'
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { isDev } from '~/global/env.global'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -51,10 +47,10 @@ export class LinkService {
       switch (existedDoc.state) {
         case LinkState.Pass:
         case LinkState.Audit:
-          throw new BadRequestException('请不要重复申请友链哦')
+          throw new BizException(ErrorCodeEnum.DuplicateLink)
 
         case LinkState.Banned:
-          throw new BadRequestException('您的友链已被禁用，请联系管理员')
+          throw new BizException(ErrorCodeEnum.LinkDisabled)
         case LinkState.Reject:
         case LinkState.Outdate:
           nextModel = await this.model
@@ -74,7 +70,7 @@ export class LinkService {
       const pathname = url.pathname
 
       if (pathname !== '/' && !allowSubPath) {
-        throw new UnprocessableEntityException('管理员当前禁用了子路径友链申请')
+        throw new BizException(ErrorCodeEnum.SubpathLinkDisabled)
       }
 
       nextModel = await this.model.create({
@@ -102,7 +98,7 @@ export class LinkService {
     )
 
     if (!doc) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.LinkNotFound)
     }
 
     const convertedAvatar = await this.linkAvatarService.convertToInternal(doc)
@@ -268,7 +264,7 @@ export class LinkService {
   async sendAuditResultByEmail(id: string, reason: string, state: LinkState) {
     const doc = await this.model.findById(id)
     if (!doc) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.LinkNotFound)
     }
 
     doc.state = state

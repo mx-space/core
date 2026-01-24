@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  Logger,
-  UnprocessableEntityException,
-} from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose'
 import {
   BizException,
@@ -33,11 +27,11 @@ export class UserService {
     const user = await this.userModel.findOne({ username }).select('+password')
     if (!user) {
       await sleep(3000)
-      throw new ForbiddenException('用户名不正确')
+      throw new BizException(ErrorCodeEnum.AuthUsernameIncorrect)
     }
     if (!compareSync(password, user.password)) {
       await sleep(3000)
-      throw new ForbiddenException('密码不正确')
+      throw new BizException(ErrorCodeEnum.AuthPasswordIncorrect)
     }
 
     return user
@@ -61,7 +55,7 @@ export class UserService {
   public async getMaster() {
     const master = await this.userModel.findOne().lean()
     if (!master) {
-      throw new BadRequestException('我还没有主人')
+      throw new BizException(ErrorCodeEnum.UserNotExists)
     }
     return master
   }
@@ -73,7 +67,7 @@ export class UserService {
     const hasMaster = await this.hasMaster()
     // 禁止注册两个以上账户
     if (hasMaster) {
-      throw new BadRequestException('我已经有一个主人了哦')
+      throw new BizException(ErrorCodeEnum.UserAlreadyExists)
     }
     const avatar = model.avatar ?? getAvatar(model.mail)
     const res = await this.userModel.create({
@@ -107,7 +101,7 @@ export class UserService {
       // 1. 验证新旧密码是否一致
       const isSamePassword = compareSync(password, currentUser.password)
       if (isSamePassword) {
-        throw new UnprocessableEntityException('密码可不能和原来的一样哦')
+        throw new BizException(ErrorCodeEnum.PasswordSameAsOld)
       }
 
       // 2. 撤销所有 token

@@ -1,5 +1,6 @@
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
+import { ImageService } from '~/processors/helper/helper.image.service'
 import { defineProvider } from 'test/helper/defineProvider'
 
 export const fileReferenceProvider = defineProvider({
@@ -34,6 +35,23 @@ export const imageMigrationProvider = defineProvider({
         newText: text,
         newImages: images || [],
         migratedCount: 0,
+      }
+    },
+  },
+})
+
+export const imageServiceProvider = defineProvider({
+  provide: ImageService,
+  useValue: {
+    onModuleInit() {},
+    async saveImageDimensionsFromMarkdownText() {
+      // Mock: do nothing, skip image processing in tests
+    },
+    async getOnlineImageSizeAndMeta() {
+      return {
+        size: { width: 100, height: 100, type: 'image/png' },
+        accent: '#ffffff',
+        blurHash: '',
       }
     },
   },

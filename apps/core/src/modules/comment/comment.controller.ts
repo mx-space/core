@@ -1,7 +1,6 @@
 import {
   Body,
   Delete,
-  ForbiddenException,
   forwardRef,
   Get,
   Inject,
@@ -234,7 +233,7 @@ export class CommentController {
       !(await this.commentService.allowComment(id, ref)) &&
       !isAuthenticated
     ) {
-      throw new ForbiddenException('主人禁止了评论')
+      throw new BizException(ErrorCodeEnum.CommentForbidden)
     }
 
     const model: Partial<CommentModel> = { ...body, ...ipLocation }
@@ -514,7 +513,7 @@ export class CommentController {
       throw new CannotFindException()
     }
     if (comment.readerId !== readerId && !isAuthenticated) {
-      throw new ForbiddenException()
+      throw new BizException(ErrorCodeEnum.CommentForbidden)
     }
     await this.commentService.editComment(id, text)
   }

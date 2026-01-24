@@ -1,4 +1,5 @@
 import * as crypto from 'node:crypto'
+import { isDev } from '~/global/env.global'
 
 export interface S3UploaderOptions {
   bucket: string
@@ -174,17 +175,35 @@ export class S3Uploader {
     // Create and send PUT request
     const requestUrl = `${this.endpoint}${canonicalUri}`
 
-    const response = await fetch(requestUrl, {
+    const fetchOptions: RequestInit & { dispatcher?: unknown } = {
       method: 'PUT',
       headers: {
         ...headers,
         Authorization: authorization,
       },
       body: new Uint8Array(fileData),
-    })
+    }
 
-    if (!response.ok) {
-      throw new Error(`Upload failed with status code: ${response.status}`)
+    let originalTlsReject: string | undefined
+    if (isDev) {
+      originalTlsReject = process.env.NODE_TLS_REJECT_UNAUTHORIZED
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+    }
+
+    try {
+      const response = await fetch(requestUrl, fetchOptions as RequestInit)
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status code: ${response.status}`)
+      }
+    } finally {
+      if (isDev) {
+        if (originalTlsReject === undefined) {
+          delete process.env.NODE_TLS_REJECT_UNAUTHORIZED
+        } else {
+          process.env.NODE_TLS_REJECT_UNAUTHORIZED = originalTlsReject
+        }
+      }
     }
   }
 }

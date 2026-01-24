@@ -1,14 +1,12 @@
-import {
-  BadRequestException,
-  Injectable,
-  OnApplicationBootstrap,
-} from '@nestjs/common'
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import type { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -190,7 +188,7 @@ export class CategoryService implements OnApplicationBootstrap {
     }
     const postsInCategory = await this.findPostsInCategory(category.id)
     if (postsInCategory.length > 0) {
-      throw new BadRequestException('该分类中有其他文章，无法被删除')
+      throw new BizException(ErrorCodeEnum.CategoryHasPosts)
     }
     const res = await this.model.deleteOne({
       _id: category._id,

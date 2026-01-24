@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Delete,
   Get,
@@ -14,7 +13,9 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { isValidObjectId } from 'mongoose'
@@ -87,7 +88,7 @@ export class CategoryController {
     @Query() { tag }: MultiQueryTagAndCategoryDto,
   ) {
     if (!query) {
-      throw new BadRequestException()
+      throw new BizException(ErrorCodeEnum.InvalidParameter)
     }
     if (tag === true) {
       return {

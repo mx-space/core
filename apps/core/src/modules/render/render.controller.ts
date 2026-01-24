@@ -2,7 +2,6 @@ import { CacheTTL } from '@nestjs/cache-manager'
 import {
   Body,
   Controller,
-  ForbiddenException,
   Get,
   Header,
   Param,
@@ -13,6 +12,8 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils/time.util'
 import dayjs from 'dayjs'
@@ -63,7 +64,7 @@ export class RenderEjsController {
       ('password' in document && !isNil(document.password))
 
     if (!isAuthenticated && isPrivateOrEncrypt) {
-      throw new ForbiddenException('该文章已隐藏或加密')
+      throw new BizException(ErrorCodeEnum.PostHiddenOrEncrypted)
     }
 
     const relativePath = (() => {

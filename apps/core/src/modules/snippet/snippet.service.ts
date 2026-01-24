@@ -1,14 +1,9 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { RequestContext } from '~/common/contexts/request.context'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
@@ -46,7 +41,8 @@ export class SnippetService {
       model.enable ??= true
 
       if (this.reservedReferenceKeys.includes(model.reference)) {
-        throw new BadRequestException(
+        throw new BizException(
+          ErrorCodeEnum.InvalidParameter,
           `"${model.reference}" as reference is reserved`,
         )
       }
@@ -58,7 +54,7 @@ export class SnippetService {
     })
 
     if (isExist) {
-      throw new BadRequestException('snippet is exist')
+      throw new BizException(ErrorCodeEnum.SnippetExists)
     }
     // 验证正确类型
     await this.validateTypeAndCleanup(model)
@@ -80,14 +76,15 @@ export class SnippetService {
     })
 
     if (!old) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
 
     if (
       old.type === SnippetType.Function &&
       newModel.type !== SnippetType.Function
     ) {
-      throw new BadRequestException(
+      throw new BizException(
+        ErrorCodeEnum.InvalidParameter,
         '`type` is not allowed to change if this snippet set to Function type.',
       )
     }
@@ -143,11 +140,12 @@ export class SnippetService {
   async delete(id: string) {
     const doc = await this.model.findOneAndDelete({ _id: id }).lean()
     if (!doc) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
 
     if (doc.type === SnippetType.Function && doc.reference === 'built-in') {
-      throw new BadRequestException(
+      throw new BizException(
+        ErrorCodeEnum.InvalidParameter,
         'built-in function snippet is not allowed to delete',
       )
     }
@@ -161,7 +159,7 @@ export class SnippetService {
         try {
           JSON.parse(model.raw)
         } catch {
-          throw new BadRequestException('content is not valid json')
+          throw new BizException(ErrorCodeEnum.SnippetInvalidJson)
         }
         break
       }
@@ -169,7 +167,7 @@ export class SnippetService {
         try {
           JSON5.parse(model.raw)
         } catch {
-          throw new BadRequestException('content is not valid json5')
+          throw new BizException(ErrorCodeEnum.SnippetInvalidJson5)
         }
         break
       }
@@ -177,7 +175,7 @@ export class SnippetService {
         try {
           load(model.raw)
         } catch {
-          throw new BadRequestException('content is not valid yaml')
+          throw new BizException(ErrorCodeEnum.SnippetInvalidYaml)
         }
         break
       }
@@ -187,10 +185,10 @@ export class SnippetService {
         )
         // if isValid is string, eq error message
         if (typeof isValid === 'string') {
-          throw new BadRequestException(isValid)
+          throw new BizException(ErrorCodeEnum.SnippetInvalidFunction, isValid)
         }
         if (!isValid) {
-          throw new BadRequestException('serverless function is not valid')
+          throw new BizException(ErrorCodeEnum.SnippetInvalidFunction)
         }
         break
       }
@@ -215,7 +213,7 @@ export class SnippetService {
       getters: true,
     })
     if (!doc) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
     const nextSnippet = this.transformLeanSnippetModel(doc)
 
@@ -249,7 +247,7 @@ export class SnippetService {
       .findOne({ name, reference, type: { $ne: SnippetType.Function } })
       .lean()
     if (!doc) {
-      throw new NotFoundException('snippet is not found')
+      throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
     return doc
   }
@@ -257,11 +255,11 @@ export class SnippetService {
   async getPublicSnippetByName(name: string, reference: string) {
     const snippet = await this.getSnippetByName(name, reference)
     if (snippet.type === SnippetType.Function) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
 
     if (snippet.private && !RequestContext.currentIsAuthenticated()) {
-      throw new ForbiddenException('snippet is private')
+      throw new BizException(ErrorCodeEnum.SnippetPrivate)
     }
 
     return this.attachSnippet(snippet).then((res) => {
@@ -272,7 +270,7 @@ export class SnippetService {
 
   async attachSnippet(model: SnippetModel) {
     if (!model) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
     switch (model.type) {
       case SnippetType.JSON: {

@@ -1,12 +1,9 @@
 import { CacheTTL } from '@nestjs/cache-manager'
 import {
   All,
-  BadRequestException,
   Delete,
-  ForbiddenException,
   Get,
   InternalServerErrorException,
-  NotFoundException,
   Param,
   Request,
   Response,
@@ -16,6 +13,8 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { SnippetType } from '../snippet/snippet.model'
@@ -101,19 +100,21 @@ export class ServerlessController {
 
     const errorPath = `Path: /${reference}/${name}`
     if (!snippet) {
-      throw new NotFoundException(
+      throw new BizException(
+        ErrorCodeEnum.FunctionNotFound,
         `serverless function is not exist, ${errorPath}`,
       )
     }
 
     if (!snippet.enable) {
-      throw new BadRequestException(
+      throw new BizException(
+        ErrorCodeEnum.InvalidParameter,
         `serverless function is not enabled, ${errorPath}`,
       )
     }
 
     if (snippet.private && !isAuthenticated) {
-      throw new ForbiddenException('no permission to run this function')
+      throw new BizException(ErrorCodeEnum.ServerlessNoPermission)
     }
 
     const result =
@@ -135,10 +136,10 @@ export class ServerlessController {
   async resetBuiltInFunction(@Param('id') id: string) {
     const builtIn = await this.serverlessService.isBuiltInFunction(id)
     if (!builtIn) {
-      // throw new BadRequestException('can not reset a non-builtin function')
+      // throw new BizException('can not reset a non-builtin function')
       const snippet = await this.serverlessService.model.findById(id)
       if (!snippet) {
-        throw new BadRequestException('function not found')
+        throw new BizException(ErrorCodeEnum.FunctionNotFound)
       }
       await this.serverlessService.model.deleteOne({
         _id: id,

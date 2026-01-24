@@ -1,7 +1,6 @@
 import {
   Body,
   Delete,
-  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -15,7 +14,9 @@ import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -229,7 +230,7 @@ export class NoteController {
       !this.noteService.checkPasswordToAccess(current, password) &&
       !isAuthenticated
     ) {
-      throw new ForbiddenException('不要偷看人家的小心思啦~')
+      throw new BizException(ErrorCodeEnum.NoteForbidden)
     }
 
     const liked = await this.countingService

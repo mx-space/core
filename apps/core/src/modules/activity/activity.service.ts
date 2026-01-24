@@ -1,12 +1,7 @@
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  Logger,
-} from '@nestjs/common'
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { RequestContext } from '~/common/contexts/request.context'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import {
@@ -14,6 +9,7 @@ import {
   POST_COLLECTION_NAME,
   RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { GatewayService } from '~/processors/gateway/gateway.service'
@@ -324,10 +320,10 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         ip,
       )
       if (!res) {
-        throw new BadRequestException('你已经支持过啦！')
+        throw new BizException(ErrorCodeEnum.AlreadySupported)
       }
     } catch (error: any) {
-      throw new BadRequestException(error)
+      throw new BizException(ErrorCodeEnum.AlreadySupported, error?.message)
     }
 
     const refModel = await this.databaseService
@@ -371,7 +367,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const roomName = data.roomName
 
     if (!isValidRoomName(roomName)) {
-      throw new BadRequestException('invalid room_name')
+      throw new BizException(ErrorCodeEnum.InvalidRoomName)
     }
     const roomSockets = await this.webGateway.getSocketsOfRoom(roomName)
 

@@ -1,9 +1,11 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { BadRequestException, Get, Query, Sse } from '@nestjs/common'
+import { Get, Query, Sse } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DATA_DIR } from '~/constants/path.constant'
 import { installPKG } from '~/utils/system.util'
 import pc from 'picocolors'
@@ -31,7 +33,10 @@ export class DependencyController {
     const { packageNames } = query
 
     if (typeof packageNames != 'string') {
-      throw new BadRequestException('packageNames must be string')
+      throw new BizException(
+        ErrorCodeEnum.InvalidParameter,
+        'packageNames must be string',
+      )
     }
 
     const pty = await installPKG(packageNames.split(',').join(' '), DATA_DIR)

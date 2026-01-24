@@ -1,12 +1,9 @@
 import { Readable } from 'node:stream'
 import { URL } from 'node:url'
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import type { DocumentType } from '@typegoose/typegoose'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { alphabet } from '~/constants/other.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -58,7 +55,7 @@ export class LinkAvatarService {
       typeof link === 'string' ? await this.linkModel.findById(link) : link
     if (!doc) {
       if (typeof link === 'string') {
-        throw new NotFoundException()
+        throw new BizException(ErrorCodeEnum.LinkNotFound)
       }
       return false
     }
@@ -123,7 +120,10 @@ export class LinkAvatarService {
     })
 
     if (!validation.ok) {
-      throw new BadRequestException(validation.reason)
+      throw new BizException(
+        ErrorCodeEnum.LinkAvatarValidationFailed,
+        validation.reason,
+      )
     }
 
     const { ext } = validation

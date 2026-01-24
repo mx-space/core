@@ -7,12 +7,13 @@ import {
   Post,
   Put,
   Query,
-  UnprocessableEntityException,
 } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
@@ -58,7 +59,7 @@ export class PageController {
   @Get('/slug/:slug')
   async getPageBySlug(@Param('slug') slug: string) {
     if (typeof slug !== 'string') {
-      throw new UnprocessableEntityException('slug must be string')
+      throw new BizException(ErrorCodeEnum.InvalidSlug)
     }
     const page = await this.pageService.model
       .findOne({
@@ -107,7 +108,7 @@ export class PageController {
     const orders = seq.map(($) => $.order)
     const uniq = new Set(orders)
     if (uniq.size !== orders.length) {
-      throw new UnprocessableEntityException('order must be unique')
+      throw new BizException(ErrorCodeEnum.InvalidOrderValue)
     }
     const tasks = seq.map(({ id, order }) => {
       return this.pageService.model.updateOne(

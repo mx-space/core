@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -64,7 +66,7 @@ export class DraftService {
   async update(id: string, dto: UpdateDraftDto): Promise<DraftModel> {
     const draft = await this.draftModel.findById(id)
     if (!draft) {
-      throw new NotFoundException('草稿不存在')
+      throw new BizException(ErrorCodeEnum.DraftNotFound)
     }
 
     // 只有内容有实际变化时才保存到历史
@@ -165,7 +167,7 @@ export class DraftService {
   async delete(id: string): Promise<void> {
     const result = await this.draftModel.deleteOne({ _id: id })
     if (result.deletedCount === 0) {
-      throw new NotFoundException('草稿不存在')
+      throw new BizException(ErrorCodeEnum.DraftNotFound)
     }
 
     // Remove file references associated with this draft
@@ -180,7 +182,7 @@ export class DraftService {
   ): Promise<Array<{ version: number; title: string; savedAt: Date }>> {
     const draft = await this.draftModel.findById(id).lean()
     if (!draft) {
-      throw new NotFoundException('草稿不存在')
+      throw new BizException(ErrorCodeEnum.DraftNotFound)
     }
 
     return draft.history.map((h) => ({
@@ -196,12 +198,12 @@ export class DraftService {
   ): Promise<DraftHistoryModel> {
     const draft = await this.draftModel.findById(id).lean()
     if (!draft) {
-      throw new NotFoundException('草稿不存在')
+      throw new BizException(ErrorCodeEnum.DraftNotFound)
     }
 
     const historyEntry = draft.history.find((h) => h.version === version)
     if (!historyEntry) {
-      throw new NotFoundException('历史版本不存在')
+      throw new BizException(ErrorCodeEnum.DraftHistoryNotFound)
     }
 
     return historyEntry
@@ -210,12 +212,12 @@ export class DraftService {
   async restoreVersion(id: string, version: number): Promise<DraftModel> {
     const draft = await this.draftModel.findById(id)
     if (!draft) {
-      throw new NotFoundException('草稿不存在')
+      throw new BizException(ErrorCodeEnum.DraftNotFound)
     }
 
     const historyEntry = draft.history.find((h) => h.version === version)
     if (!historyEntry) {
-      throw new NotFoundException('历史版本不存在')
+      throw new BizException(ErrorCodeEnum.DraftHistoryNotFound)
     }
 
     // 保存当前版本到历史

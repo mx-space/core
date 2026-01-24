@@ -2,7 +2,6 @@ import { createReadStream, existsSync, statSync } from 'node:fs'
 import { readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path, { join, resolve } from 'node:path'
 import {
-  BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -11,12 +10,14 @@ import { CronExpression } from '@nestjs/schedule'
 import { MONGO_DB } from '~/app.config'
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import {
   ANALYZE_COLLECTION_NAME,
   MIGRATE_COLLECTION_NAME,
   WEBHOOK_EVENT_COLLECTION_NAME,
 } from '~/constants/db.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { migrateDatabase } from '~/migration/migrate'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -249,7 +250,7 @@ export class BackupService {
   checkBackupExist(dirname: string) {
     const path = join(BACKUP_DIR, dirname, `backup-${dirname}.zip`)
     if (!existsSync(path)) {
-      throw new BadRequestException('文件不存在')
+      throw new BizException(ErrorCodeEnum.FileNotFound)
     }
     return path
   }
@@ -377,7 +378,7 @@ export class BackupService {
   async deleteBackup(filename) {
     const path = join(BACKUP_DIR, filename)
     if (!existsSync(path)) {
-      throw new BadRequestException('文件不存在')
+      throw new BizException(ErrorCodeEnum.FileNotFound)
     }
 
     await rm(path, { recursive: true })

@@ -20,7 +20,7 @@ export const CreateDraftSchema = z.object({
   title: z.string().optional(),
   text: z.string().optional(),
   images: z.array(ImageModelSchema).optional(),
-  meta: z.record(z.string(), z.any()).optional(),
+  meta: z.record(z.string(), z.any()).optional().nullable().default(null),
   typeSpecificData: z.record(z.string(), z.any()).optional(),
 })
 

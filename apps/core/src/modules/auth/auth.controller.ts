@@ -3,7 +3,6 @@ import {
   Delete,
   Get,
   Inject,
-  NotFoundException,
   Patch,
   Post,
   Query,
@@ -13,6 +12,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
@@ -91,7 +92,7 @@ export class AuthController {
       })
 
     if (!token) {
-      throw new NotFoundException(`token ${id} is not found`)
+      throw new BizException(ErrorCodeEnum.TokenNotFound)
     }
     await this.authService.deleteToken(id)
 

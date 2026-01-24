@@ -1,13 +1,9 @@
-import {
-  Body,
-  HttpCode,
-  Post,
-  Res,
-  UnprocessableEntityException,
-} from '@nestjs/common'
+import { Body, HttpCode, Post, Res } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Cookies } from '~/common/decorators/cookie.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents } from '~/constants/business-event.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import type { CountModel } from '~/shared/model/count.model'
@@ -39,7 +35,10 @@ export class AckController {
             const path = err.path.join('.')
             return path ? `${path}: ${err.message}` : err.message
           })
-          throw new UnprocessableEntityException(errorMessages.join('; '))
+          throw new BizException(
+            ErrorCodeEnum.InvalidBody,
+            errorMessages.join('; '),
+          )
         }
 
         const { id, type } = result.data

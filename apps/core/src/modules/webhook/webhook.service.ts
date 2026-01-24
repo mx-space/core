@@ -1,8 +1,10 @@
 import { createHmac } from 'node:crypto'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
@@ -177,11 +179,11 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
   async redispatch(id: string) {
     const record = await this.webhookEventModel.findById(id)
     if (!record) {
-      throw new BadRequestException('Webhook event not found')
+      throw new BizException(ErrorCodeEnum.WebhookEventNotFound)
     }
     const hook = await this.webhookModel.findById(record.hookId)
     if (!hook) {
-      throw new BadRequestException('Webhook not found')
+      throw new BizException(ErrorCodeEnum.WebhookNotFound)
     }
     const scope = hook.scope
 

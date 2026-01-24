@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import type {
   AuthenticationResponseJSON,
   CredentialDeviceType,
@@ -15,7 +15,9 @@ import {
 import { isoBase64URL, isoUint8Array } from '@simplewebauthn/server/helpers'
 import type { ReturnModelType } from '@typegoose/typegoose'
 import { RequestContext } from '~/common/contexts/request.context'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { RedisKeys } from '~/constants/cache.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
@@ -119,7 +121,7 @@ export class AuthnService {
     const expectedChallenge = await this.getCurrentChallenge()
 
     if (!expectedChallenge) {
-      throw new BadRequestException('challenge is not found')
+      throw new BizException(ErrorCodeEnum.AuthChallengeMissing)
     }
 
     let verification: VerifiedRegistrationResponse
@@ -136,13 +138,13 @@ export class AuthnService {
       })
     } catch (error) {
       console.error(error)
-      throw new BadRequestException(error.message)
+      throw new BizException(ErrorCodeEnum.AuthFailed, error.message)
     }
 
     const { registrationInfo } = verification
 
     if (!registrationInfo) {
-      throw new BadRequestException('registrationInfo is not found')
+      throw new BizException(ErrorCodeEnum.AuthRegistrationMissing)
     }
     const { credential, credentialDeviceType, credentialBackedUp } =
       registrationInfo
@@ -191,7 +193,7 @@ export class AuthnService {
     const expectedChallenge = await this.getCurrentChallenge()
 
     if (!expectedChallenge) {
-      throw new BadRequestException('challenge is outdate')
+      throw new BizException(ErrorCodeEnum.AuthChallengeExpired)
     }
 
     let [authenticator] = (await this.authnModel.aggregate([
@@ -199,7 +201,8 @@ export class AuthnService {
     ])) as any as AuthnModel[]
 
     if (!authenticator) {
-      throw new BadRequestException(
+      throw new BizException(
+        ErrorCodeEnum.AuthFailed,
         `Could not find authenticator ${response.id}`,
       )
     }
@@ -230,7 +233,7 @@ export class AuthnService {
       })
     } catch (error) {
       console.error(error)
-      throw new BadRequestException(error.message)
+      throw new BizException(ErrorCodeEnum.AuthFailed, error.message)
     }
 
     return verification

@@ -2,8 +2,10 @@ import cluster from 'node:cluster'
 import { Co } from '@innei/next-async'
 import type { CoAction } from '@innei/next-async'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { isMainProcess } from '~/global/env.global'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
@@ -257,7 +259,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
 
   subscribeTypeToBit(type: keyof typeof SubscribeTypeToBitMap) {
     if (!Object.keys(SubscribeTypeToBitMap).includes(type))
-      throw new BadRequestException('subscribe type is not valid')
+      throw new BizException(ErrorCodeEnum.InvalidSubscribeType)
     return SubscribeTypeToBitMap[type]
   }
 

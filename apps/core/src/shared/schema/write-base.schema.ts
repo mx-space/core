@@ -19,7 +19,7 @@ export const WriteBaseSchema = BaseCommentIndexSchema.extend({
   text: z.string(),
   images: z.array(ImageSchema).optional(),
   created: zCoerceDate.optional(),
-  meta: z.record(z.string(), z.any()).optional(),
+  meta: z.record(z.string(), z.any()).optional().nullable().default(null),
 })
 
 export class WriteBaseDto extends createZodDto(WriteBaseSchema) {}

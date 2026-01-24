@@ -86,9 +86,8 @@ describe('Test LinkController(E2E)', async () => {
     })
     expect(res.json()).toMatchInlineSnapshot(`
           {
-            "error": "Bad Request",
+            "code": 12000,
             "message": "请不要重复申请友链哦",
-            "statusCode": 400,
           }
         `)
   })

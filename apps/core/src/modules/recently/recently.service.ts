@@ -1,14 +1,10 @@
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  UnprocessableEntityException,
-} from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
@@ -275,7 +271,7 @@ export class RecentlyService {
     if (model.refId) {
       const existModel = await this.databaseService.findGlobalById(model.refId)
       if (!existModel || !existModel.type) {
-        throw new BadRequestException('ref model not found')
+        throw new BizException(ErrorCodeEnum.RefModelNotFound)
       }
 
       model.refType = existModel.type
@@ -375,7 +371,7 @@ export class RecentlyService {
     ip: string
   }) {
     if (!ip) {
-      throw new UnprocessableEntityException('can not got your ip')
+      throw new BizException(ErrorCodeEnum.CannotGetIp)
     }
     const model = await this.model.findById(id)
 

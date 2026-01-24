@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import https from 'node:https'
 import path from 'node:path'
 import { seconds } from '@nestjs/throttler'
 import type { AxiosRequestConfig } from 'axios'
@@ -197,6 +198,9 @@ export const HTTP_CACHE = {
 
 export const AXIOS_CONFIG: AxiosRequestConfig = {
   timeout: 10000,
+  ...(isDev && {
+    httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+  }),
 }
 
 export const SECURITY = {

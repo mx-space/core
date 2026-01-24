@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Delete,
   forwardRef,
@@ -22,6 +21,8 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { getAvatar } from '~/utils/tool.util'
 import { AuthService } from '../auth/auth.service'
 import { AuthnService } from '../authn/authn.service'
@@ -106,7 +107,7 @@ export class UserController {
       false
 
     if (!allowPasswordLogin && !isDev)
-      throw new BadRequestException('密码登录已禁用')
+      throw new BizException(ErrorCodeEnum.PasswordLoginDisabled)
 
     const user = await this.userService.login(dto.username, dto.password)
     const footstep = await this.userService.recordFootstep(ipLocation.ip)

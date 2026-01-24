@@ -1,6 +1,6 @@
-import { UnprocessableEntityException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { extendedZodValidationPipeInstance } from '~/common/zod/validation.pipe'
 import { RedisKeys } from '~/constants/cache.constant'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
@@ -100,7 +100,7 @@ describe('Test ConfigsService', () => {
   it('should throw error if set a wrong type of config value', async () => {
     await expect(
       service.patchAndValid('seo', { title: true } as any),
-    ).rejects.toThrow(UnprocessableEntityException)
+    ).rejects.toThrow(BizException)
   })
 
   it('should emit event if enable email option and update search', async () => {

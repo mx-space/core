@@ -1,6 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import type { OnModuleInit } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { InjectModel } from '~/transformers/model.transformer'
 import {
   MetaFieldType,
@@ -192,7 +194,7 @@ export class MetaPresetService implements OnModuleInit {
   async create(dto: CreateMetaPresetDto) {
     const exists = await this.metaPresetModel.findOne({ key: dto.key })
     if (exists) {
-      throw new BadRequestException(`预设字段 key "${dto.key}" 已存在`)
+      throw new BizException(ErrorCodeEnum.PresetKeyExists, `key: "${dto.key}"`)
     }
 
     // 获取最大 order 值
@@ -217,7 +219,7 @@ export class MetaPresetService implements OnModuleInit {
   async update(id: string, dto: UpdateMetaPresetDto) {
     const preset = await this.metaPresetModel.findById(id)
     if (!preset) {
-      throw new BadRequestException('预设字段不存在')
+      throw new BizException(ErrorCodeEnum.PresetNotFound)
     }
 
     // 内置预设只能修改 enabled 和 order
@@ -240,7 +242,10 @@ export class MetaPresetService implements OnModuleInit {
     if (dto.key && dto.key !== preset.key) {
       const exists = await this.metaPresetModel.findOne({ key: dto.key })
       if (exists) {
-        throw new BadRequestException(`预设字段 key "${dto.key}" 已存在`)
+        throw new BizException(
+          ErrorCodeEnum.PresetKeyExists,
+          `key: "${dto.key}"`,
+        )
       }
     }
 
@@ -255,11 +260,11 @@ export class MetaPresetService implements OnModuleInit {
   async delete(id: string) {
     const preset = await this.metaPresetModel.findById(id)
     if (!preset) {
-      throw new BadRequestException('预设字段不存在')
+      throw new BizException(ErrorCodeEnum.PresetNotFound)
     }
 
     if (preset.isBuiltin) {
-      throw new BadRequestException('内置预设字段不能删除')
+      throw new BizException(ErrorCodeEnum.BuiltinPresetCannotDelete)
     }
 
     return this.metaPresetModel.findByIdAndDelete(id)

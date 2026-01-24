@@ -1,13 +1,10 @@
 import cluster from 'node:cluster'
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  UnprocessableEntityException,
-} from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import type { AIProviderConfig } from '~/modules/ai/ai.types'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -185,16 +182,14 @@ export class ConfigsService {
 
     const dto = configDtoMapping[key]
     if (!dto) {
-      throw new BadRequestException('设置不存在')
+      throw new BizException(ErrorCodeEnum.ConfigNotFound)
     }
     // 如果是评论设置，并且尝试启用 AI 审核，就检查 AI 配置
     if (key === 'commentOptions' && (value as any).aiReview === true) {
       const aiConfig = await this.get('ai')
       const hasEnabledProvider = aiConfig.providers?.some((p) => p.enabled)
       if (!hasEnabledProvider) {
-        throw new BadRequestException(
-          '没有配置启用的 AI Provider，无法启用 AI 评论审核',
-        )
+        throw new BizException(ErrorCodeEnum.AIProviderNotEnabled)
       }
     }
     const instanceValue = this.validWithDto(dto, value) as Partial<IConfig[T]>
@@ -292,10 +287,10 @@ export class ConfigsService {
         const path = err.path.join('.')
         return path ? `${path}: ${err.message}` : err.message
       })
-      throw new UnprocessableEntityException({
-        message: errorMessages.join('; '),
-        errors: zodError.issues,
-      })
+      throw new BizException(
+        ErrorCodeEnum.ConfigValidationFailed,
+        errorMessages.join('; '),
+      )
     }
     return result.data
   }

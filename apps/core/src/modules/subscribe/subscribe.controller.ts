@@ -1,14 +1,9 @@
-import {
-  BadRequestException,
-  Body,
-  Delete,
-  Get,
-  Post,
-  Query,
-} from '@nestjs/common'
+import { Body, Delete, Get, Post, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { SubscribeTypeToBitMap } from './subscribe.constant'
 import {
@@ -58,7 +53,7 @@ export class SubscribeController {
   @Post('/')
   async subscribe(@Body() body: SubscribeDto) {
     if (!(await this.service.checkEnable())) {
-      throw new BadRequestException('订阅功能未开启')
+      throw new BizException(ErrorCodeEnum.SubscribeNotEnabled)
     }
     const { email, types } = body
     let bit = 0
@@ -67,7 +62,7 @@ export class SubscribeController {
     }
 
     if (bit === 0) {
-      throw new BadRequestException('订阅类型不为空')
+      throw new BizException(ErrorCodeEnum.SubscribeTypeEmpty)
     }
     await this.service.subscribe(email, bit)
   }

@@ -1,7 +1,7 @@
 import { createRedisProvider } from '@/mock/modules/redis.mock'
-import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
@@ -66,7 +66,7 @@ describe('test Snippet Service', async () => {
   })
 
   it('should not allow duplicate create', async () => {
-    await expect(service.create(snippet)).rejects.toThrow(BadRequestException)
+    await expect(service.create(snippet)).rejects.toThrow(BizException)
   })
 
   test('get snippet by name', async () => {
@@ -100,7 +100,7 @@ describe('test Snippet Service', async () => {
 
   test('delete', async () => {
     await service.delete(id)
-    await expect(service.getSnippetById(id)).rejects.toThrow(NotFoundException)
+    await expect(service.getSnippetById(id)).rejects.toThrow(BizException)
   })
 
   describe('update function snippet with secret', () => {

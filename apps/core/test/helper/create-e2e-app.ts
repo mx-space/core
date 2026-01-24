@@ -92,7 +92,11 @@ export const createE2EApp = (module: ModuleMetadata & E2EAppMetaData) => {
 
   afterAll(async () => {
     if (pourDataCleanup) {
-      return await pourDataCleanup()
+      await pourDataCleanup()
+    }
+    // Close the app to ensure all pending async operations complete
+    if (proxy.app) {
+      await proxy.app.close()
     }
   })
 

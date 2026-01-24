@@ -64,7 +64,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     secretId: null!,
     secretKey: null!,
     bucket: null!,
-    region: null!,
+    region: 'auto',
     customDomain: '',
     prefix: '',
   },

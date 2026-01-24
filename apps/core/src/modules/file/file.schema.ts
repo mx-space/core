@@ -30,7 +30,24 @@ export const RenameFileQuerySchema = z.object({
 
 export class RenameFileQueryDto extends createZodDto(RenameFileQuerySchema) {}
 
+/**
+ * Batch orphan delete schema
+ */
+export const BatchOrphanDeleteSchema = z
+  .object({
+    ids: z.array(z.string()).optional(),
+    all: z.boolean().optional(),
+  })
+  .refine((data) => data.ids?.length || data.all, {
+    message: 'Either ids or all must be provided',
+  })
+
+export class BatchOrphanDeleteDto extends createZodDto(
+  BatchOrphanDeleteSchema,
+) {}
+
 // Type exports
 export type FileQueryInput = z.infer<typeof FileQuerySchema>
 export type FileUploadInput = z.infer<typeof FileUploadSchema>
 export type RenameFileQueryInput = z.infer<typeof RenameFileQuerySchema>
+export type BatchOrphanDeleteInput = z.infer<typeof BatchOrphanDeleteSchema>

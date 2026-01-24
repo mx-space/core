@@ -1,12 +1,10 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-  OnApplicationBootstrap,
-} from '@nestjs/common'
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import type { DocumentType } from '@typegoose/typegoose'
-import { BusinessException } from '~/common/exceptions/biz.exception'
+import {
+  BizException,
+  BusinessException,
+} from '~/common/exceptions/biz.exception'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
@@ -78,7 +76,7 @@ export class PostService implements OnApplicationBootstrap {
       categoryId as any as string,
     )
     if (!category) {
-      throw new BadRequestException('分类丢失了 ಠ_ಠ')
+      throw new BizException(ErrorCodeEnum.CategoryNotFound)
     }
 
     const slug = post.slug ? slugify(post.slug) : slugify(post.title)
@@ -196,7 +194,7 @@ export class PostService implements OnApplicationBootstrap {
       oldDocument.categoryId.toString(),
     )
     if (!oldDocumentRefCategory) {
-      throw new BadRequestException('分类丢失了 ಠ_ಠ')
+      throw new BizException(ErrorCodeEnum.CategoryNotFound)
     }
     const oldSlugMeta = {
       slug: oldDocument.slug,
@@ -234,12 +232,12 @@ export class PostService implements OnApplicationBootstrap {
     if (!categoryDocument) {
       const trackedPost = await findTrackedPost()
       if (!trackedPost) {
-        throw new NotFoundException('该分类未找到 (｡•́︿•̀｡)')
+        throw new BizException(ErrorCodeEnum.CategoryNotFound)
       }
 
       // 检查发布状态
       if (!isAuthenticated && !trackedPost.isPublished) {
-        throw new NotFoundException('该文章未找到')
+        throw new BizException(ErrorCodeEnum.PostNotFound)
       }
 
       return trackedPost
@@ -269,7 +267,7 @@ export class PostService implements OnApplicationBootstrap {
 
     // 检查追踪文章的发布状态
     if (trackedPost && !isAuthenticated && !trackedPost.isPublished) {
-      throw new NotFoundException('该文章未找到')
+      throw new BizException(ErrorCodeEnum.PostNotFound)
     }
 
     return trackedPost
@@ -298,7 +296,7 @@ export class PostService implements OnApplicationBootstrap {
   ) {
     const oldDocument = await this.postModel.findById(id)
     if (!oldDocument) {
-      throw new BadRequestException('文章不存在')
+      throw new BizException(ErrorCodeEnum.PostNotFound)
     }
 
     const { draftId } = data
@@ -310,7 +308,7 @@ export class PostService implements OnApplicationBootstrap {
         categoryId as any as string,
       )
       if (!category) {
-        throw new BadRequestException('分类不存在')
+        throw new BizException(ErrorCodeEnum.CategoryNotFound)
       }
     }
     // 只有修改了 text title slug 的值才触发更新 modified 的时间
@@ -491,11 +489,11 @@ export class PostService implements OnApplicationBootstrap {
         _id: { $in: cloned.relatedId },
       })
       if (relatedPosts.length !== cloned.relatedId.length) {
-        throw new BadRequestException('关联文章不存在')
+        throw new BizException(ErrorCodeEnum.PostRelatedNotExists)
       } else {
         return relatedPosts.map((i) => {
           if (i.related && (i.related as string[]).includes(data.id!)) {
-            throw new BadRequestException('文章不能关联自己')
+            throw new BizException(ErrorCodeEnum.PostSelfRelation)
           }
           return i.id
         })

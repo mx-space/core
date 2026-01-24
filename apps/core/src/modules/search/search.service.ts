@@ -1,16 +1,12 @@
 import type { SearchClient, SearchResponse } from '@algolia/client-search'
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  Logger,
-} from '@nestjs/common'
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { CronExpression } from '@nestjs/schedule'
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents } from '~/constants/business-event.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import type { SearchDto } from '~/modules/search/search.schema'
@@ -97,14 +93,14 @@ export class SearchService {
   public async getAlgoliaSearchClient() {
     const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
     if (!algoliaSearchOptions.enable) {
-      throw new BadRequestException('algolia not enable.')
+      throw new BizException(ErrorCodeEnum.AlgoliaNotEnabled)
     }
     if (
       !algoliaSearchOptions.appId ||
       !algoliaSearchOptions.apiKey ||
       !algoliaSearchOptions.indexName
     ) {
-      throw new BadRequestException('algolia not config.')
+      throw new BizException(ErrorCodeEnum.AlgoliaNotConfigured)
     }
     const client = algoliasearch(
       algoliaSearchOptions.appId,

@@ -1,5 +1,5 @@
-import { BadRequestException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { AuthService } from '~/modules/auth/auth.service'
 import { UserModel } from '~/modules/user/user.model'
 import { UserService } from '~/modules/user/user.service'
@@ -64,13 +64,12 @@ describe('test UserModule service', () => {
   })
 
   it('getMaster', async () => {
-    await expect(userService.getMaster()).rejects.toBeInstanceOf(
-      BadRequestException,
-    )
+    await expect(userService.getMaster()).rejects.toBeInstanceOf(BizException)
     await userService.createMaster({
       username: 'user-1',
       name: 'user',
       password: '1 ',
+      mail: 'user1@example.com',
     })
     expect((await userService.getMaster()).username).toBe('user-1')
   })
@@ -79,6 +78,7 @@ describe('test UserModule service', () => {
       username: 'user-a',
       password: '123456',
       name: 'name',
+      mail: 'usera@example.com',
     })
     expect(user1.username).toBe('user-a')
 
@@ -87,7 +87,8 @@ describe('test UserModule service', () => {
         username: 'user-b',
         password: '123456',
         name: 'name',
+        mail: 'userb@example.com',
       }),
-    ).rejects.toThrow(BadRequestException)
+    ).rejects.toThrow(BizException)
   })
 })

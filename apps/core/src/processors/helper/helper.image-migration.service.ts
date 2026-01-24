@@ -42,8 +42,7 @@ export class ImageMigrationService {
       !config.endpoint ||
       !config.secretId ||
       !config.secretKey ||
-      !config.bucket ||
-      !config.region
+      !config.bucket
     ) {
       this.logger.warn('Image storage config incomplete, skipping migration')
       return { newText: text, newImages: images ?? [], migratedCount: 0 }
@@ -54,7 +53,7 @@ export class ImageMigrationService {
       accessKey: config.secretId,
       secretKey: config.secretKey,
       bucket: config.bucket,
-      region: config.region,
+      region: config.region || 'auto',
     })
 
     if (config.customDomain) {

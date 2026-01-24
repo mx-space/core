@@ -123,7 +123,7 @@ export const ImageStorageOptionsSchema = section('图床设置', {
   secretId: field.halfGrid(z.string().optional(), 'Access Key ID'),
   secretKey: field.passwordHalfGrid(z.string().optional(), 'Secret Access Key'),
   bucket: field.halfGrid(z.string().optional(), 'Bucket'),
-  region: field.halfGrid(z.string().optional(), 'Region'),
+  region: field.halfGrid(z.string().optional(), 'Region').default('auto'),
   customDomain: field.plain(
     z.url().optional().or(z.literal('')),
     '自定义域名 (CDN)',

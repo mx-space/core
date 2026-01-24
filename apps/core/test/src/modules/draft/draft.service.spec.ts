@@ -1,5 +1,5 @@
-import { NotFoundException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { DraftModel, DraftRefType } from '~/modules/draft/draft.model'
 import { DraftService } from '~/modules/draft/draft.service'
 import { FileReferenceType } from '~/modules/file/file-reference.model'
@@ -244,9 +244,9 @@ describe('DraftService with FileReference integration', () => {
       ).toHaveBeenCalledWith('draft123', FileReferenceType.Draft)
     })
 
-    it('should throw NotFoundException when draft does not exist', async () => {
+    it('should throw BizException when draft does not exist', async () => {
       await expect(draftService.delete('nonexistent')).rejects.toThrow(
-        NotFoundException,
+        BizException,
       )
     })
   })

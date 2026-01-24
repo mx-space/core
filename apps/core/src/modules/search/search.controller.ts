@@ -1,16 +1,11 @@
-import {
-  BadRequestException,
-  Get,
-  Param,
-  Post,
-  Query,
-  Res,
-} from '@nestjs/common'
+import { Get, Param, Post, Query, Res } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { SearchDto } from '~/modules/search/search.schema'
 import type { FastifyReply } from 'fastify'
 import { SearchService } from './search.service'
@@ -36,7 +31,7 @@ export class SearchController {
         return this.searchService.searchNote(query, isAuthenticated)
 
       default:
-        throw new BadRequestException(`Invalid search type: ${type}`)
+        throw new BizException(ErrorCodeEnum.InvalidSearchType, type)
     }
   }
 

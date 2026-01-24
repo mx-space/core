@@ -1,6 +1,5 @@
 import { Readable } from 'node:stream'
 import {
-  BadRequestException,
   Body,
   Delete,
   Get,
@@ -10,7 +9,6 @@ import {
   Post,
   Query,
   Req,
-  UnprocessableEntityException,
 } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -41,7 +39,7 @@ export class BackupController {
   async createNewBackup() {
     const res = await this.backupService.backup()
     if (typeof res == 'undefined' || typeof res.buffer === 'undefined') {
-      throw new BadRequestException('请先开启在设置开启备份功能')
+      throw new BizException(ErrorCodeEnum.BackupNotEnabled)
     }
     const stream = new Readable()
 
@@ -80,7 +78,7 @@ export class BackupController {
   @Patch(['/rollback/:dirname', '/:dirname'])
   async rollback(@Param('dirname') dirname: string) {
     if (!dirname) {
-      throw new UnprocessableEntityException('参数有误')
+      throw new BizException(ErrorCodeEnum.InvalidParameter)
     }
 
     this.backupService.rollbackTo(dirname)
@@ -94,7 +92,7 @@ export class BackupController {
   ) {
     const nextFiles = files || filesBody
     if (!nextFiles) {
-      throw new UnprocessableEntityException('参数有误')
+      throw new BizException(ErrorCodeEnum.InvalidParameter)
     }
 
     const filesList = nextFiles.split(',')

@@ -1,18 +1,10 @@
-import {
-  Body,
-  Delete,
-  ForbiddenException,
-  Get,
-  Param,
-  Post,
-  Put,
-  Query,
-  UnprocessableEntityException,
-} from '@nestjs/common'
+import { Body, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
@@ -110,7 +102,7 @@ export class SnippetController {
   @Auth()
   async getGroupByReference(@Param('reference') reference: string) {
     if (typeof reference !== 'string') {
-      throw new UnprocessableEntityException('reference should be string')
+      throw new BizException(ErrorCodeEnum.InvalidReference)
     }
 
     return this.snippetService.model.find({ reference }).lean()
@@ -130,11 +122,11 @@ export class SnippetController {
     @IsAuthenticated() isAuthenticated: boolean,
   ) {
     if (typeof name !== 'string') {
-      throw new ForbiddenException('name should be string')
+      throw new BizException(ErrorCodeEnum.InvalidName)
     }
 
     if (typeof reference !== 'string') {
-      throw new ForbiddenException('reference should be string')
+      throw new BizException(ErrorCodeEnum.InvalidReference)
     }
     let cached: string | null = null
     if (isAuthenticated) {

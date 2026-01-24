@@ -1,15 +1,4 @@
-import {
-  BadRequestException,
-  Body,
-  ForbiddenException,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Req,
-  UnprocessableEntityException,
-  UseGuards,
-} from '@nestjs/common'
+import { Body, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
@@ -45,7 +34,7 @@ export class InitController {
   async getDefaultConfig() {
     const { isInit } = await this.isInit()
     if (isInit) {
-      throw new ForbiddenException('默认设置在完成注册之后不可见')
+      throw new BizException(ErrorCodeEnum.InitForbidden)
     }
     return this.configs.defaultConfig
   }
@@ -57,10 +46,10 @@ export class InitController {
   ) {
     const { isInit } = await this.isInit()
     if (isInit) {
-      throw new BadRequestException('已经完成初始化，请登录后进行设置')
+      throw new BizException(ErrorCodeEnum.InitAlreadyCompleted)
     }
     if (typeof body !== 'object') {
-      throw new UnprocessableEntityException('body must be object')
+      throw new BizException(ErrorCodeEnum.InvalidBody)
     }
     return this.configs.patchAndValid(params.key, body)
   }
