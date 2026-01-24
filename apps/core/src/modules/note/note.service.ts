@@ -5,7 +5,10 @@ import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import { FileReferenceType } from '~/modules/file/file-reference.model'
+import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -27,6 +30,8 @@ export class NoteService {
     @InjectModel(NoteModel)
     private readonly noteModel: MongooseModel<NoteModel>,
     private readonly imageService: ImageService,
+    private readonly imageMigrationService: ImageMigrationService,
+    private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
     @Inject(forwardRef(() => CommentService))
     private readonly commentService: CommentService,
@@ -162,11 +167,37 @@ export class NoteService {
 
     // 处理草稿：标记为已发布，并关联到新创建的日记
     if (draftId) {
+      // Release draft's file references first, they will be re-associated to the note
+      await this.fileReferenceService.removeReferencesForDocument(
+        draftId,
+        FileReferenceType.Draft,
+      )
       await this.draftService.linkToPublished(draftId, note.id)
       await this.draftService.markAsPublished(draftId)
     }
 
     scheduleManager.schedule(async () => {
+      // Migrate images to S3 if published
+      if (note.isPublished !== false) {
+        const { newText, newImages, migratedCount } =
+          await this.imageMigrationService.migrateImagesToS3(
+            note.text,
+            note.images,
+          )
+        if (migratedCount > 0) {
+          note.text = newText
+          note.images = newImages
+          await note.save()
+        }
+      }
+
+      // Track file references
+      await this.fileReferenceService.activateReferences(
+        note.text,
+        note.id,
+        FileReferenceType.Note,
+      )
+
       await Promise.all([
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
@@ -285,13 +316,39 @@ export class NoteService {
     }
 
     scheduleManager.schedule(async () => {
+      // Migrate images to S3 if published
+      let currentText = updated.text
+      let currentImages = updated.images
+      if (updated.isPublished !== false) {
+        const { newText, newImages, migratedCount } =
+          await this.imageMigrationService.migrateImagesToS3(
+            updated.text,
+            updated.images,
+          )
+        if (migratedCount > 0) {
+          await this.model.updateOne(
+            { _id: id },
+            { $set: { text: newText, images: newImages } },
+          )
+          currentText = newText
+          currentImages = newImages
+        }
+      }
+
+      // Update file references
+      await this.fileReferenceService.updateReferencesForDocument(
+        currentText,
+        updated.id,
+        FileReferenceType.Note,
+      )
+
       await Promise.all([
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
         this.imageService.saveImageDimensionsFromMarkdownText(
-          updated.text,
-          updated.images,
+          currentText,
+          currentImages,
           (images) => {
             return this.model
               .updateOne(
@@ -366,6 +423,10 @@ export class NoteService {
         ref: id,
         refType: CollectionRefTypes.Note,
       }),
+      this.fileReferenceService.removeReferencesForDocument(
+        id,
+        FileReferenceType.Note,
+      ),
     ])
     scheduleManager.schedule(async () => {
       await Promise.all([

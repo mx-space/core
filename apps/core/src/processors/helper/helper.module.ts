@@ -15,6 +15,7 @@ import { CronService } from './helper.cron.service'
 import { EmailService } from './helper.email.service'
 import { EventManagerService } from './helper.event.service'
 import { HttpService } from './helper.http.service'
+import { ImageMigrationService } from './helper.image-migration.service'
 import { ImageService } from './helper.image.service'
 import { JWTService } from './helper.jwt.service'
 import { TextMacroService } from './helper.macro.service'
@@ -30,12 +31,13 @@ const providers: Provider<any>[] = [
   EmailService,
   EventManagerService,
   HttpService,
-  JWTService,
+  ImageMigrationService,
   ImageService,
-  UrlBuilderService,
+  JWTService,
   TaskQueueService,
   TextMacroService,
   UploadService,
+  UrlBuilderService,
 ]
 
 @Module({

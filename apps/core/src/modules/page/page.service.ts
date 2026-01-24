@@ -3,7 +3,10 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { FileReferenceType } from '~/modules/file/file-reference.model'
+import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -21,6 +24,8 @@ export class PageService {
     @InjectModel(PageModel)
     private readonly pageModel: MongooseModel<PageModel>,
     private readonly imageService: ImageService,
+    private readonly imageMigrationService: ImageMigrationService,
+    private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
     private readonly macroService: TextMacroService,
     @Inject(forwardRef(() => DraftService))
@@ -52,21 +57,44 @@ export class PageService {
 
     // 处理草稿：标记为已发布，并关联到新创建的页面
     if (draftId) {
+      // Release draft's file references first, they will be re-associated to the page
+      await this.fileReferenceService.removeReferencesForDocument(
+        draftId,
+        FileReferenceType.Draft,
+      )
       await this.draftService.linkToPublished(draftId, res.id)
       await this.draftService.markAsPublished(draftId)
     }
 
-    this.imageService.saveImageDimensionsFromMarkdownText(
-      doc.text,
-      res.images,
-      async (images) => {
-        res.images = images
+    scheduleManager.schedule(async () => {
+      // Migrate images to S3
+      const { newText, newImages, migratedCount } =
+        await this.imageMigrationService.migrateImagesToS3(doc.text, res.images)
+      if (migratedCount > 0) {
+        res.text = newText
+        res.images = newImages
         await res.save()
-        this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, res, {
-          scope: EventScope.TO_SYSTEM,
-        })
-      },
-    )
+      }
+
+      // Track file references
+      await this.fileReferenceService.activateReferences(
+        res.text,
+        res.id,
+        FileReferenceType.Page,
+      )
+
+      this.imageService.saveImageDimensionsFromMarkdownText(
+        res.text,
+        res.images,
+        async (images) => {
+          res.images = images
+          await res.save()
+          this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, res, {
+            scope: EventScope.TO_SYSTEM,
+          })
+        },
+      )
+    })
 
     this.eventManager.broadcast(BusinessEvents.PAGE_CREATE, res, {
       scope: EventScope.TO_SYSTEM,
@@ -111,24 +139,49 @@ export class PageService {
     }
 
     scheduleManager.schedule(async () => {
-      await Promise.all([
-        this.imageService.saveImageDimensionsFromMarkdownText(
+      // Migrate images to S3
+      let currentDoc = newDoc
+      const { newText, newImages, migratedCount } =
+        await this.imageMigrationService.migrateImagesToS3(
           newDoc.text,
           newDoc.images,
+        )
+      if (migratedCount > 0) {
+        await this.model.updateOne(
+          { _id: id },
+          { $set: { text: newText, images: newImages } },
+        )
+        currentDoc = { ...newDoc, text: newText, images: newImages }
+      }
+
+      // Update file references
+      await this.fileReferenceService.updateReferencesForDocument(
+        currentDoc.text,
+        currentDoc.id,
+        FileReferenceType.Page,
+      )
+
+      await Promise.all([
+        this.imageService.saveImageDimensionsFromMarkdownText(
+          currentDoc.text,
+          currentDoc.images,
           (images) => {
             return this.model
               .updateOne({ _id: id }, { $set: { images } })
               .exec()
           },
         ),
-        this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, newDoc, {
+        this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, currentDoc, {
           scope: EventScope.TO_SYSTEM,
         }),
         this.eventManager.broadcast(
           BusinessEvents.PAGE_UPDATE,
           {
-            ...newDoc,
-            text: await this.macroService.replaceTextMacro(newDoc.text, newDoc),
+            ...currentDoc,
+            text: await this.macroService.replaceTextMacro(
+              currentDoc.text,
+              currentDoc,
+            ),
           },
           {
             scope: EventScope.TO_VISITOR,
@@ -139,9 +192,15 @@ export class PageService {
   }
 
   async deleteById(id: string) {
-    await this.model.deleteOne({
-      _id: id,
-    })
+    await Promise.all([
+      this.model.deleteOne({
+        _id: id,
+      }),
+      this.fileReferenceService.removeReferencesForDocument(
+        id,
+        FileReferenceType.Page,
+      ),
+    ])
     this.eventManager.broadcast(BusinessEvents.PAGE_DELETE, id, {
       scope: EventScope.ALL,
     })

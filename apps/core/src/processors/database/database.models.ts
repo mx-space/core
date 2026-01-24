@@ -6,6 +6,7 @@ import { CategoryModel } from '~/modules/category/category.model'
 import { CommentModel } from '~/modules/comment/comment.model'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { DraftModel } from '~/modules/draft/draft.model'
+import { FileReferenceModel } from '~/modules/file/file-reference.model'
 import { LinkModel } from '~/modules/link/link.model'
 import { MetaPresetModel } from '~/modules/meta-preset/meta-preset.model'
 import { NoteModel } from '~/modules/note/note.model'
@@ -33,6 +34,7 @@ export const databaseModels = [
   CategoryModel,
   CommentModel,
   DraftModel,
+  FileReferenceModel,
   LinkModel,
   MetaPresetModel,
   NoteModel,

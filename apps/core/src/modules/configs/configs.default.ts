@@ -56,6 +56,18 @@ export const generateDefaultConfig: () => IConfig = () => ({
     secretId: null!,
     secretKey: null!,
   },
+  imageStorageOptions: {
+    enable: false,
+    syncOnPublish: false,
+    deleteLocalAfterSync: false,
+    endpoint: null!,
+    secretId: null!,
+    secretKey: null!,
+    bucket: null!,
+    region: null!,
+    customDomain: '',
+    prefix: '',
+  },
   baiduSearchOptions: { enable: false, token: null! },
   bingSearchOptions: { enable: false, token: null! },
   algoliaSearchOptions: {

@@ -22,6 +22,7 @@ import { PagerDto } from '~/shared/dto/pager.dto'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
 import { customAlphabet } from 'nanoid'
+import { FileReferenceService } from './file-reference.service'
 import { FileQueryDto, FileUploadDto, RenameFileQueryDto } from './file.schema'
 import { FileService } from './file.service'
 
@@ -30,7 +31,56 @@ export class FileController {
   constructor(
     private readonly service: FileService,
     private readonly uploadService: UploadService,
+    private readonly fileReferenceService: FileReferenceService,
   ) {}
+
+  @Get('/orphans/list')
+  @Auth()
+  async getOrphanFiles(@Query() query: PagerDto) {
+    const { page = 1, size = 20 } = query
+    const [files, total] = await Promise.all([
+      this.fileReferenceService.model
+        .find({ status: 'pending' })
+        .sort({ created: -1 })
+        .skip((page - 1) * size)
+        .limit(size)
+        .lean(),
+      this.fileReferenceService.model.countDocuments({ status: 'pending' }),
+    ])
+
+    return {
+      data: files.map((file) => ({
+        id: file._id,
+        fileName: file.fileName,
+        fileUrl: file.fileUrl,
+        created: file.created,
+      })),
+      pagination: {
+        currentPage: page,
+        totalPage: Math.ceil(total / size),
+        size,
+        total,
+        hasNextPage: page * size < total,
+        hasPrevPage: page > 1,
+      },
+    }
+  }
+
+  @Get('/orphans/count')
+  @Auth()
+  async getOrphanFilesCount() {
+    const count = await this.fileReferenceService.getOrphanFilesCount()
+    return { count }
+  }
+
+  @Post('/orphans/cleanup')
+  @Auth()
+  async cleanupOrphanFiles(@Query('maxAgeMinutes') maxAgeMinutes?: number) {
+    const result = await this.fileReferenceService.cleanupOrphanFiles(
+      maxAgeMinutes || 60,
+    )
+    return result
+  }
 
   @Get('/:type')
   @Auth()
@@ -95,8 +145,14 @@ export class FileController {
 
     await this.service.writeFile(type, filename, file.file)
 
+    const fileUrl = await this.service.resolveFileUrl(type, filename)
+
+    if (type === 'image') {
+      await this.fileReferenceService.createPendingReference(fileUrl, filename)
+    }
+
     return {
-      url: await this.service.resolveFileUrl(type, filename),
+      url: fileUrl,
       name: filename,
     }
   }

@@ -30,6 +30,10 @@ import { configProvider } from 'test/mock/modules/config.mock'
 import { gatewayProviders } from 'test/mock/modules/gateway.mock'
 import { countingServiceProvider } from 'test/mock/processors/counting.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
+import {
+  fileReferenceProvider,
+  imageMigrationProvider,
+} from 'test/mock/processors/file.mock'
 import MockDbData, { categoryModels } from './post.e2e-mock.db'
 
 describe('PostController (e2e)', async () => {
@@ -79,6 +83,8 @@ describe('PostController (e2e)', async () => {
         provide: DRAFT_SERVICE_TOKEN,
         useExisting: DraftService,
       },
+      fileReferenceProvider,
+      imageMigrationProvider,
     ],
     imports: [],
     models: [

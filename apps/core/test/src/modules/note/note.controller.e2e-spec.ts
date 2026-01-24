@@ -21,6 +21,10 @@ import { configProvider } from 'test/mock/modules/config.mock'
 import { gatewayProviders } from 'test/mock/modules/gateway.mock'
 import { countingServiceProvider } from 'test/mock/processors/counting.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
+import {
+  fileReferenceProvider,
+  imageMigrationProvider,
+} from 'test/mock/processors/file.mock'
 import MockDbData from './note.e2e-mock.db'
 
 describe('NoteController (e2e)', async () => {
@@ -57,6 +61,8 @@ describe('NoteController (e2e)', async () => {
 
       countingServiceProvider,
       DraftService,
+      fileReferenceProvider,
+      imageMigrationProvider,
     ],
     imports: [],
     models: [NoteModel, OptionModel, UserModel, DraftModel],

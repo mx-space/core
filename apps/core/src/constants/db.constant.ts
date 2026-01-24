@@ -18,6 +18,7 @@ export const WEBHOOK_EVENT_COLLECTION_NAME = 'webhook_events'
 export const AI_SUMMARY_COLLECTION_NAME = 'ai_summaries'
 export const AI_DEEP_READING_COLLECTION_NAME = 'ai_deep_readings'
 export const DRAFT_COLLECTION_NAME = 'drafts'
+export const FILE_REFERENCE_COLLECTION_NAME = 'file_references'
 
 export const USER_COLLECTION_NAME = 'users'
 export enum CollectionRefTypes {

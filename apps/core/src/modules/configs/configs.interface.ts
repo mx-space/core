@@ -12,6 +12,7 @@ import {
   type CommentOptionsSchema,
   type FeatureListSchema,
   type FriendLinkOptionsSchema,
+  type ImageStorageOptionsSchema,
   type MailOptionsSchema,
   type OAuthSchema,
   type SeoSchema,
@@ -39,6 +40,7 @@ export abstract class IConfig {
   barkOptions: Required<z.infer<typeof BarkOptionsSchema>>
   friendLinkOptions: Required<z.infer<typeof FriendLinkOptionsSchema>>
   backupOptions: Required<z.infer<typeof BackupOptionsSchema>>
+  imageStorageOptions: Required<z.infer<typeof ImageStorageOptionsSchema>>
   baiduSearchOptions: Required<z.infer<typeof BaiduSearchOptionsSchema>>
   bingSearchOptions: Required<z.infer<typeof BingSearchOptionsSchema>>
   algoliaSearchOptions: Required<z.infer<typeof AlgoliaSearchOptionsSchema>>

@@ -8,6 +8,7 @@ import { STATIC_FILE_TRASH_DIR, TEMP_DIR } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import dayjs from 'dayjs'
@@ -26,6 +27,7 @@ export class CronService {
     @InjectModel(AnalyzeModel)
     private readonly analyzeModel: MongooseModel<AnalyzeModel>,
     private readonly redisService: RedisService,
+    private readonly fileReferenceService: FileReferenceService,
 
     @Inject(forwardRef(() => AggregateService))
     private readonly aggregateService: AggregateService,
@@ -216,5 +218,18 @@ export class CronService {
     )
 
     this.logger.log(`--> 删除了 ${deleteCount} 个过期的 token`)
+  }
+
+  @CronDescription('清理孤儿图片')
+  @CronOnce(CronExpression.EVERY_HOUR, {
+    name: 'cleanupOrphanImages',
+  })
+  async cleanupOrphanImages() {
+    this.logger.log('--> 开始清理孤儿图片')
+    const { deletedCount, totalOrphan } =
+      await this.fileReferenceService.cleanupOrphanFiles(60)
+    this.logger.log(
+      `--> 清理孤儿图片完成：删除了 ${deletedCount}/${totalOrphan} 个文件`,
+    )
   }
 }

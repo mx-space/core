@@ -106,6 +106,42 @@ export const BackupOptionsSchema = section('备份', {
 export class BackupOptionsDto extends createZodDto(BackupOptionsSchema) {}
 export type BackupOptionsConfig = z.infer<typeof BackupOptionsSchema>
 
+// ==================== Image Storage Options ====================
+export const ImageStorageOptionsSchema = section('图床设置', {
+  enable: field.toggle(z.boolean().optional(), '开启 S3 图床'),
+  syncOnPublish: field.toggle(z.boolean().optional(), '发布时自动同步', {
+    description: '文章/日记发布时自动将本地图片迁移到 S3',
+  }),
+  deleteLocalAfterSync: field.toggle(
+    z.boolean().optional(),
+    '同步后删除本地文件',
+    {
+      description: '图片迁移到 S3 后删除服务器上的本地文件',
+    },
+  ),
+  endpoint: field.plain(z.string().optional(), 'S3 服务端点'),
+  secretId: field.halfGrid(z.string().optional(), 'Access Key ID'),
+  secretKey: field.passwordHalfGrid(z.string().optional(), 'Secret Access Key'),
+  bucket: field.halfGrid(z.string().optional(), 'Bucket'),
+  region: field.halfGrid(z.string().optional(), 'Region'),
+  customDomain: field.plain(
+    z.url().optional().or(z.literal('')),
+    '自定义域名 (CDN)',
+    {
+      description: '用于替换默认的 S3 URL，例如 CDN 域名',
+    },
+  ),
+  prefix: field.plain(z.string().optional(), '文件路径前缀', {
+    description: '上传到 S3 的文件路径前缀，例如 images/',
+  }),
+})
+export class ImageStorageOptionsDto extends createZodDto(
+  ImageStorageOptionsSchema,
+) {}
+export type ImageStorageOptionsConfig = z.infer<
+  typeof ImageStorageOptionsSchema
+>
+
 // ==================== Baidu Search Options ====================
 export const BaiduSearchOptionsSchema = section('百度推送设定', {
   enable: field.toggle(z.boolean().optional(), '开启推送'),
@@ -346,6 +382,7 @@ export const configSchemaMapping = {
   barkOptions: BarkOptionsSchema,
   friendLinkOptions: FriendLinkOptionsSchema,
   backupOptions: BackupOptionsSchema,
+  imageStorageOptions: ImageStorageOptionsSchema,
   baiduSearchOptions: BaiduSearchOptionsSchema,
   bingSearchOptions: BingSearchOptionsSchema,
   algoliaSearchOptions: AlgoliaSearchOptionsSchema,
@@ -371,6 +408,7 @@ export const FullConfigSchema = withMeta(
     barkOptions: BarkOptionsSchema,
     friendLinkOptions: FriendLinkOptionsSchema,
     backupOptions: BackupOptionsSchema,
+    imageStorageOptions: ImageStorageOptionsSchema,
     baiduSearchOptions: BaiduSearchOptionsSchema,
     bingSearchOptions: BingSearchOptionsSchema,
     algoliaSearchOptions: AlgoliaSearchOptionsSchema,

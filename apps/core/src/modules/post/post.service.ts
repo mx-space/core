@@ -16,7 +16,10 @@ import {
   CATEGORY_SERVICE_TOKEN,
   DRAFT_SERVICE_TOKEN,
 } from '~/constants/injection.constant'
+import { FileReferenceType } from '~/modules/file/file-reference.model'
+import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -47,6 +50,8 @@ export class PostService implements OnApplicationBootstrap {
     @InjectModel(CommentModel)
     private readonly commentModel: MongooseModel<CommentModel>,
     private readonly imageService: ImageService,
+    private readonly imageMigrationService: ImageMigrationService,
+    private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
     private readonly textMacroService: TextMacroService,
     private readonly slugTrackerService: SlugTrackerService,
@@ -105,12 +110,41 @@ export class PostService implements OnApplicationBootstrap {
 
     // 处理草稿：标记为已发布，并关联到新创建的文章
     if (draftId) {
+      // Release draft's file references first, they will be re-associated to the post
+      await this.fileReferenceService.removeReferencesForDocument(
+        draftId,
+        FileReferenceType.Draft,
+      )
       await this.draftService.linkToPublished(draftId, doc.id)
       await this.draftService.markAsPublished(draftId)
     }
 
     scheduleManager.schedule(async () => {
       const doc = cloned
+
+      // Migrate images to S3 if published
+      if (doc.isPublished !== false) {
+        const { newText, newImages, migratedCount } =
+          await this.imageMigrationService.migrateImagesToS3(
+            doc.text,
+            doc.images,
+          )
+        if (migratedCount > 0) {
+          newPost.text = newText
+          newPost.images = newImages
+          await newPost.save()
+          doc.text = newText
+          doc.images = newImages
+        }
+      }
+
+      // Track file references
+      await this.fileReferenceService.activateReferences(
+        doc.text,
+        doc.id,
+        FileReferenceType.Post,
+      )
+
       await Promise.all([
         this.imageService.saveImageDimensionsFromMarkdownText(
           doc.text,
@@ -342,10 +376,36 @@ export class PostService implements OnApplicationBootstrap {
       updatedData: Partial<PostModel>,
       oldDocument: DocumentType<PostModel>,
     ) => {
-      const doc = await this.postModel
+      let doc = await this.postModel
         .findById(id)
         .populate('related', 'title slug category categoryId id _id')
         .lean({ getters: true, autopopulate: true })
+
+      // Migrate images to S3 if published
+      if (doc && doc.isPublished !== false) {
+        const { newText, newImages, migratedCount } =
+          await this.imageMigrationService.migrateImagesToS3(
+            doc.text,
+            doc.images,
+          )
+        if (migratedCount > 0) {
+          await this.postModel.updateOne(
+            { _id: id },
+            { $set: { text: newText, images: newImages } },
+          )
+          doc = { ...doc, text: newText, images: newImages }
+        }
+      }
+
+      // Update file references
+      if (doc) {
+        await this.fileReferenceService.updateReferencesForDocument(
+          doc.text,
+          doc.id,
+          FileReferenceType.Post,
+        )
+      }
+
       // 更新图片信息缓存
       await Promise.all([
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
@@ -396,6 +456,10 @@ export class PostService implements OnApplicationBootstrap {
       }),
       this.removeRelatedEachOther(deletedPost),
       this.slugTrackerService.deleteAllTracker(id),
+      this.fileReferenceService.removeReferencesForDocument(
+        id,
+        FileReferenceType.Post,
+      ),
     ])
     await this.eventManager.broadcast(BusinessEvents.POST_DELETE, id, {
       scope: EventScope.TO_SYSTEM_VISITOR,

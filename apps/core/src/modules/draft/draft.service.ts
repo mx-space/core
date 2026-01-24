@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
+import { FileReferenceType } from '~/modules/file/file-reference.model'
+import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { dbTransforms } from '~/utils/db-transform.util'
 import { Types } from 'mongoose'
@@ -12,6 +14,7 @@ export class DraftService {
   constructor(
     @InjectModel(DraftModel)
     private readonly draftModel: MongooseModel<DraftModel>,
+    private readonly fileReferenceService: FileReferenceService,
   ) {}
 
   get model() {
@@ -45,6 +48,15 @@ export class DraftService {
       version: 1,
       history: [],
     })
+
+    // Track file references for the draft
+    if (draft.text) {
+      await this.fileReferenceService.updateReferencesForDocument(
+        draft.text,
+        draft.id,
+        FileReferenceType.Draft,
+      )
+    }
 
     return draft.toObject()
   }
@@ -93,6 +105,16 @@ export class DraftService {
     }
 
     await draft.save()
+
+    // Track file references for the draft
+    if (dto.text !== undefined) {
+      await this.fileReferenceService.updateReferencesForDocument(
+        draft.text,
+        draft.id,
+        FileReferenceType.Draft,
+      )
+    }
+
     return draft.toObject()
   }
 
@@ -145,6 +167,12 @@ export class DraftService {
     if (result.deletedCount === 0) {
       throw new NotFoundException('草稿不存在')
     }
+
+    // Remove file references associated with this draft
+    await this.fileReferenceService.removeReferencesForDocument(
+      id,
+      FileReferenceType.Draft,
+    )
   }
 
   async getHistory(

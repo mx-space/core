@@ -10,152 +10,111 @@ MX Space is a personal blog server application built with NestJS, MongoDB, and R
 
 - **Dashboard (admin-vue3)**: `../admin-vue3` - 后台管理面板，Vue 3 项目
 
+## Environment Requirements
+
+- **Node.js**: >= 22 (see `.nvmrc` in root)
+- **pnpm**: Use Corepack (`corepack enable`)
+
 ## Development Commands
 
 All commands should be run from the repository root unless specified otherwise.
 
-### Core Development Commands
-- `pnpm dev` - Start development server (builds externals then starts core app)
-- `pnpm build` - Build the entire project (externals + core)
+### Core Commands
+- `pnpm dev` - Start development server
+- `pnpm build` - Build the project
 - `pnpm bundle` - Create production bundle
-- `pnpm test` - Run tests
-- `pnpm lint` - Run ESLint on core app
+- `pnpm test` - Run all tests
+- `pnpm lint` - Run ESLint
 - `pnpm format` - Format code with Prettier
 
-### Core App Specific Commands (run from `apps/core/`)
-- `npm run start` - Start development server with watch mode
-- `npm run start:cluster` - Start in cluster mode with 2 workers
+### Running Single Tests
+```bash
+# Run a single test file
+pnpm test -- test/src/modules/user/user.service.spec.ts
+
+# Run tests matching a pattern
+pnpm test -- --testNamePattern="should create user"
+
+# Run tests in watch mode
+pnpm -C apps/core run test:watch
+```
+
+### Core App Commands (from `apps/core/`)
 - `npm run start:debug` - Start with debug mode
+- `npm run start:cluster` - Start in cluster mode
 - `npm run repl` - Start REPL mode
-- `npm run test:watch` - Run tests in watch mode
-- `npm run build:webpack` - Build with webpack (alternative build method)
 
 ## Architecture Overview
 
 ### Directory Structure
-- `apps/core/` - Main NestJS application
-  - `src/modules/` - Business logic modules (auth, posts, comments, etc.)
-  - `src/processors/` - Infrastructure services (database, redis, gateway, helpers)
-  - `src/common/` - Shared utilities (guards, interceptors, decorators, etc.)
-  - `src/migration/` - Database migration scripts
-  - `test/` - Test files and mocks
-- `packages/` - Shared packages
-- `external/` - External dependencies with custom implementations
+- `apps/core/src/modules/` - Business logic modules (auth, posts, comments, etc.)
+- `apps/core/src/processors/` - Infrastructure services (database, redis, gateway, helpers)
+- `apps/core/src/common/` - Shared utilities (guards, interceptors, decorators)
+- `apps/core/src/migration/` - Database migration scripts
+- `apps/core/test/` - Test files and mocks
+- `packages/` - Shared packages (api-client, webhook)
 
 ### Key Architectural Patterns
 
-**Modular Design**: Each business domain has its own module (posts, comments, auth, etc.) with controllers, services, DTOs, and models.
+**API Route Prefix**: The `@ApiController()` decorator adds `/api/v{version}` prefix in production but no prefix in development. This allows direct access during development.
 
-**Processors**: Infrastructure services are organized in `processors/`:
-- `database/` - MongoDB connection and models
+**Processors**: Infrastructure services organized in `processors/`:
+- `database/` - MongoDB connection and model registration
 - `redis/` - Redis caching and pub/sub
 - `gateway/` - WebSocket gateways for real-time features
-- `helper/` - Utility services (email, image processing, etc.)
+- `helper/` - Utility services (email, image, JWT, etc.)
 
-**Common Layer**: Shared functionality in `src/common/`:
-- Guards for authentication and authorization
-- Interceptors for response transformation, caching, and logging
-- Decorators for common patterns
-- Exception filters
+**Database Models**: Uses Mongoose with TypeGoose. All models extend a base with `_id`, `created`, `updated` fields.
 
-### Database Models
-Uses Mongoose with TypeGoose for type-safe MongoDB models. All models extend a base model with common fields like `_id`, `created`, `updated`.
-
-### Authentication
-JWT-based authentication with role-based access control. Uses decorators like `@Auth()` and `@CurrentUser()` for protection.
-
-### Caching Strategy
-Redis-based caching with cache interceptors. Uses conditional caching based on request patterns.
-
-## Configuration
-
-The application uses a command-line interface for configuration (`src/app.config.ts`). Key configuration includes:
-- Database connection (MongoDB)
-- Redis configuration
-- JWT settings
-- CORS settings
-- Cluster mode options
-
-Configuration can be provided via:
-- Environment variables
-- Command line arguments
-- YAML configuration files
-
-## Testing
-
-Uses Vitest for testing with:
-- E2E tests for controllers
-- Unit tests for services and utilities
-- Mock implementations for external dependencies
-- In-memory MongoDB and Redis for testing
-
-Test files are located in `test/` directory with mocks in `test/mock/`.
-
-## Development Patterns
-
-### Controllers
-- Use `@ApiController()` decorator for API controllers
-- Implement proper DTOs for request/response validation
-- Use guards and interceptors for cross-cutting concerns
-
-### Services
-- Implement business logic in services
-- Use dependency injection for database and external services
-- Handle errors appropriately with custom exceptions
-
-### Models
-- Use TypeGoose for MongoDB models
-- Implement proper indexes and relationships
-- Use plugins for common functionality (pagination, auto-increment)
-
-### DTOs
-- Use class-validator for input validation
-- Implement proper transformation decorators
-- Group related DTOs by module
-
-## Build and Deployment
-
-The application supports multiple build methods:
-- Standard NestJS build (`nest build`)
-- Webpack build for optimized bundles
-- Bundle script for production deployment
-
-Deployment uses PM2 with ecosystem configuration files for cluster management.
-
-## Key Dependencies
-
-- **NestJS** - Main framework
-- **Mongoose/TypeGoose** - MongoDB ODM
-- **Fastify** - HTTP server (instead of Express)
-- **Redis** - Caching and pub/sub
-- **Socket.IO** - WebSocket support
-- **class-validator** - Input validation
-- **Vitest** - Testing framework
+**Authentication**: JWT-based with decorators `@Auth()` for route protection and `@CurrentUser()` for accessing the authenticated user.
 
 ## API Response Rules
 
 `ResponseInterceptor` auto-wraps responses:
 - **Array** → `{ data: [...] }` (always wrapped)
 - **Object** → returned directly (no wrapper)
-- **@Paginator** → `{ data: [...], pagination: {...} }` (requires `mongoose.PaginateResult<T>` input from `model.paginate()`)
+- **@Paginator** → `{ data: [...], pagination: {...} }` (requires `model.paginate()` result)
 - **@Bypass** → skips all transformation
 
 `JSONTransformInterceptor` converts all keys to **snake_case** (e.g., `createdAt` → `created_at`)
 
-## Common Development Tasks
+## Testing
 
-### Adding a New Module
-1. Create module directory in `src/modules/`
-2. Implement controller, service, model, and DTOs
-3. Add module to `app.module.ts`
-4. Write tests in corresponding test directory
+Uses Vitest with in-memory MongoDB and Redis.
 
-### Database Migrations
-- Migration scripts located in `src/migration/version/`
-- Use helper functions for common migration tasks
-- Version migrations by application version
+### E2E Test Pattern
+Use `createE2EApp` helper from `test/helper/create-e2e-app.ts`:
+```typescript
+const proxy = createE2EApp({
+  imports: [...],
+  controllers: [MyController],
+  providers: [...],
+  models: [MyModel],
+  pourData: async (modelMap) => {
+    // Insert test data
+    const model = modelMap.get(MyModel)!.model
+    await model.create({ ... })
+  }
+})
 
-### Adding Tests
-- Create test files with `.spec.ts` or `.e2e-spec.ts` suffix
-- Use mock helpers from `test/helper/`
-- Use test setup files for common configuration
+it('should work', async () => {
+  const res = await proxy.app.inject({ method: 'GET', url: '/...' })
+  expect(res.statusCode).toBe(200)
+})
+```
+
+### Test Mocks
+- `test/mock/modules/` - Module-level mocks (auth, redis, gateway)
+- `test/mock/processors/` - Processor mocks (email, event)
+- `test/helper/` - Test utilities (db-mock, redis-mock)
+
+## Database Migrations
+
+Migration scripts in `src/migration/version/` are version-based and run automatically on startup when needed.
+
+## Configuration
+
+Configuration via `src/app.config.ts` supports:
+- Environment variables
+- Command line arguments
+- YAML configuration files
