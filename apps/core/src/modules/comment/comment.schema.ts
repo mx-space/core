@@ -95,6 +95,52 @@ export class CommentStatePatchDto extends createZodDto(
   CommentStatePatchSchema,
 ) {}
 
+/**
+ * Batch update comment state schema
+ */
+export const BatchCommentStateSchema = z
+  .object({
+    ids: z.array(z.string()).optional(),
+    all: z.boolean().optional(),
+    state: z
+      .number()
+      .int()
+      .refine((val) => [0, 1, 2].includes(val)),
+    currentState: z
+      .number()
+      .int()
+      .refine((val) => [0, 1, 2].includes(val))
+      .optional(),
+  })
+  .refine((data) => data.ids?.length || data.all, {
+    message: 'Either ids or all must be provided',
+  })
+
+export class BatchCommentStateDto extends createZodDto(
+  BatchCommentStateSchema,
+) {}
+
+/**
+ * Batch delete comment schema
+ */
+export const BatchCommentDeleteSchema = z
+  .object({
+    ids: z.array(z.string()).optional(),
+    all: z.boolean().optional(),
+    state: z
+      .number()
+      .int()
+      .refine((val) => [0, 1, 2].includes(val))
+      .optional(),
+  })
+  .refine((data) => data.ids?.length || data.all, {
+    message: 'Either ids or all must be provided',
+  })
+
+export class BatchCommentDeleteDto extends createZodDto(
+  BatchCommentDeleteSchema,
+) {}
+
 // Type exports
 export type CommentInput = z.infer<typeof CommentSchema>
 export type EditCommentInput = z.infer<typeof EditCommentSchema>
