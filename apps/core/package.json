@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/core",
-  "version": "9.0.1",
+  "version": "9.0.2",
   "type": "module",
   "private": true,
   "engines": {
@@ -15,7 +15,7 @@
   "author": "Innei <https://innei.in>",
   "dashboard": {
     "repo": "mx-space/mx-admin",
-    "version": "5.2.0"
+    "version": "5.3.0"
   },
   "issues": "https://github.com/mx-space/core/issues",
   "scripts": {

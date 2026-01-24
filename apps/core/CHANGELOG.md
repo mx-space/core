@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [9.0.2](https://github.com/mx-space/core/compare/v9.0.1...v9.0.2) (2026-01-24)
+
+
+### Bug Fixes
+
+* **file.type:** update FileTypeEnum to replace 'photo' with 'image' ([9d1be6c](https://github.com/mx-space/core/commit/9d1be6cae2753fd1841c067a3f36b93b36001a36))
+* **file:** add type: String for enum props in FileReferenceModel ([35cdbdd](https://github.com/mx-space/core/commit/35cdbdd2b9bc0ebc726517b73aa6ee9eeb4a6d8a))
+* **file:** remove duplicate index on fileUrl field ([bd6eec6](https://github.com/mx-space/core/commit/bd6eec679f12357a075ae07d4d7dba26ee4b9747))
+
+
+### Features
+
+* **file:** implement file reference management and image migration service ([7b22129](https://github.com/mx-space/core/commit/7b22129b0890a1875ff73564034cf5ae74628ace))
+
+
+
 ## [9.0.1](https://github.com/mx-space/core/compare/v9.0.0...v9.0.1) (2026-01-23)
 
 
