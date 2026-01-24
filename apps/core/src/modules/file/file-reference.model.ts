@@ -24,7 +24,7 @@ export enum FileReferenceType {
   },
 })
 export class FileReferenceModel extends BaseModel {
-  @prop({ required: true, index: true })
+  @prop({ required: true })
   fileUrl!: string
 
   @prop({ required: true })
