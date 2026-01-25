@@ -28,9 +28,12 @@ export async function bootstrap() {
     AppModule.register(isInit),
     fastifyApp,
     {
-      logger: DEBUG_MODE.logging ? ['verbose'] : ['warn'],
+      bufferLogs: true,
     },
   )
+
+  // 使用自定义 Logger 替换 NestJS 内置 Logger
+  app.useLogger(app.get(Logger))
 
   const allowAllCors: FastifyCorsOptions = {
     credentials: true,
@@ -81,7 +84,6 @@ export async function bootstrap() {
       port: +PORT,
     },
     async () => {
-      app.useLogger(app.get(Logger))
       logger.info('ENV:', process.env.NODE_ENV)
       const url = await app.getUrl()
       const pid = process.pid

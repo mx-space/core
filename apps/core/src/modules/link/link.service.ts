@@ -17,6 +17,8 @@ import { LinkModel, LinkState, LinkStateMap, LinkType } from './link.model'
 
 @Injectable()
 export class LinkService {
+  private readonly logger = new Logger(LinkService.name)
+
   constructor(
     @InjectModel(LinkModel)
     private readonly linkModel: MongooseModel<LinkModel>,
@@ -219,10 +221,7 @@ export class LinkService {
     const links = await this.model.find({ state: LinkState.Pass })
     const health = await Promise.all(
       links.map(({ id, url }) => {
-        Logger.debug(
-          `检查友链 ${id} 的健康状态：GET -> ${url}`,
-          LinkService.name,
-        )
+        this.logger.debug(`检查友链 ${id} 的健康状态：GET -> ${url}`)
         return this.http.axiosRef
           .get(url, {
             timeout: 5000,

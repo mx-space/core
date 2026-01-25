@@ -216,7 +216,7 @@ export class SearchService {
 
       this.logger.log('--> 推送到 algoliasearch 成功')
     } catch (error) {
-      Logger.error('algolia 推送错误', 'AlgoliaSearch')
+      this.logger.error('algolia 推送错误')
       throw error
     }
   }

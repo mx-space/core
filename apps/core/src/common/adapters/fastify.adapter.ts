@@ -5,6 +5,8 @@ import { FastifyAdapter } from '@nestjs/platform-fastify'
 import { getIp } from '~/utils/ip.util'
 import type { FastifyRequest } from 'fastify'
 
+const logger = new Logger('Fastify')
+
 const app: FastifyAdapter = new FastifyAdapter({
   trustProxy: true,
   logger: false,
@@ -64,12 +66,11 @@ app.register(fastifyCookie, {
 
 const logWarn = (desc: string, req: FastifyRequest, _context: string) => {
   const ua = req.raw.headers['user-agent']
-  Logger.log(
+  logger.warn(
     // prettier-ignore
     `${desc}\n` +
       `Path: ${req.url}\n` +
       `IP: ${getIp(req)}\n` +
       `UA: ${ua}`,
-    'GodPHP',
   )
 }

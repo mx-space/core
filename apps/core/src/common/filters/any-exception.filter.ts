@@ -98,7 +98,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       status === HttpStatus.INTERNAL_SERVER_ERROR &&
       !(exception instanceof BizException)
     ) {
-      Logger.error(exception, undefined, 'Catch')
+      this.logger.error(exception)
       this.eventManager.broadcast(
         EventBusEvents.SystemException,
         {

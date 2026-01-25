@@ -112,8 +112,8 @@ importers:
         specifier: 0.4.0
         version: 0.4.0
       '@innei/pretty-logger-nestjs':
-        specifier: 0.3.4
-        version: 0.3.4(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))
+        specifier: 0.4.0
+        version: 0.4.0(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@keyv/redis':
         specifier: 5.1.6
         version: 5.1.6(keyv@5.6.0)
@@ -1375,11 +1375,11 @@ packages:
     resolution: {integrity: sha512-GRIMLlswVGqc9IDVm3uKAtTQH99ouzQdxdCFDPrfSusQzMF2EjKVQIfeF3pWorzqcx3pPoXXbENovkamI5WuEQ==}
     engines: {pnpm: '>=7'}
 
-  '@innei/pretty-logger-core@0.3.4':
-    resolution: {integrity: sha512-Dg11D71l7r7aEfh8AmPFVk+j/16PoAX+yeR8qs1G8lqBdq56uaJnivLlbexXqgvLv2/gBD8mLErhafBJayflag==}
+  '@innei/pretty-logger-core@0.4.0':
+    resolution: {integrity: sha512-PTRafGv/BiBmm+FcQ0h4gQJFpFUx4+nrWMEE5Z+u9TwRlR/bpa6lkBS6DZHlZWvEW7UcdH/+1Mp0419t1esCaA==}
 
-  '@innei/pretty-logger-nestjs@0.3.4':
-    resolution: {integrity: sha512-JePCJBuGMgDDduWt2mLeC42lwn1gR6N5dXljnujQ/ocOfos4mn4wJUmH8ewF+H3otKW2v05pHpcqjdq0l5f3rQ==}
+  '@innei/pretty-logger-nestjs@0.4.0':
+    resolution: {integrity: sha512-v1yjlub54Gkad4JdRPCtbBPgTCuXAq499yG5WVFQG4XJnKOYmXiifi5P2C0aVwcHT3bhzyEeNLieF9rpNB9e5A==}
     peerDependencies:
       '@nestjs/common': '>=10'
 
@@ -6062,9 +6062,6 @@ packages:
   std-env@3.10.0:
     resolution: {integrity: sha512-5GS12FdOZNliM5mAOxFRg7Ir0pWz8MdpYm6AY6VPkGpbA7ZzmbzNcBJQ0GPvvyWgcY7QAhCgf9Uy89I03faLkg==}
 
-  std-env@3.9.0:
-    resolution: {integrity: sha512-UGvjygr6F6tpH7o2qyqR6QYpwraIjKSdtzyBdyytFOHmPZY917kwdwLG0RbOjWOnKmnm3PeHjaoLLMie7kPLQw==}
-
   streamx@2.23.0:
     resolution: {integrity: sha512-kn+e44esVfn2Fa/O0CPFcex27fjIL6MkVae0Mm6q+E6f0hWv578YCERbv+4m02cjxvDsPKLnmxral/rR6lBMAg==}
 
@@ -7904,21 +7901,21 @@ snapshots:
 
   '@innei/next-async@0.4.0': {}
 
-  '@innei/pretty-logger-core@0.3.4':
+  '@innei/pretty-logger-core@0.4.0':
     dependencies:
       cron: 4.3.0
       defu: 6.1.4
       picocolors: 1.1.1
-      std-env: 3.9.0
+      std-env: 3.10.0
 
-  '@innei/pretty-logger-nestjs@0.3.4(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))':
+  '@innei/pretty-logger-nestjs@0.4.0(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))':
     dependencies:
-      '@innei/pretty-logger-core': 0.3.4
+      '@innei/pretty-logger-core': 0.4.0
       '@nestjs/common': 11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       cron: 4.3.0
       defu: 6.1.4
       picocolors: 1.1.1
-      std-env: 3.9.0
+      std-env: 3.10.0
 
   '@inquirer/ansi@1.0.2': {}
 
@@ -12989,8 +12986,6 @@ snapshots:
   statuses@2.0.2: {}
 
   std-env@3.10.0: {}
-
-  std-env@3.9.0: {}
 
   streamx@2.23.0:
     dependencies:

@@ -25,6 +25,8 @@ import { markdownToHtml } from './markdown.util'
 
 @Injectable()
 export class MarkdownService {
+  private readonly logger = new Logger(MarkdownService.name)
+
   constructor(
     private readonly assetService: AssetService,
 
@@ -109,7 +111,7 @@ export class MarkdownService {
     return await this.postModel
       .insertMany(models, { ordered: false })
       .catch(() => {
-        Logger.log('一篇文章导入失败', MarkdownService.name)
+        this.logger.warn('一篇文章导入失败')
       })
   }
 

@@ -23,4 +23,7 @@ Object.defineProperty(process.stderr, 'write', {
   configurable: false,
 })
 
-export { logger as consola, logger }
+// Global Logger instance for static-like usage
+const globalLogger = new Logger('System')
+
+export { logger as consola, globalLogger, logger }
