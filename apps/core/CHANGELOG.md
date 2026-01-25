@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [9.0.5](https://github.com/mx-space/core/compare/v9.0.4...v9.0.5) (2026-01-25)
+
+
+### Bug Fixes
+
+* **config:** restore encryption logic for sensitive config fields ([043d7aa](https://github.com/mx-space/core/commit/043d7aa36da832f1e291e15456c9e92593a1da8e)), closes [#2556](https://github.com/mx-space/core/issues/2556)
+
+
+
 ## [9.0.4](https://github.com/mx-space/core/compare/v9.0.3...v9.0.4) (2026-01-25)
 
 
