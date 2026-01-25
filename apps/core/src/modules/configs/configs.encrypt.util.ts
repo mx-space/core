@@ -281,3 +281,38 @@ export const encryptObject = <T extends object>(target: T, prefix = ''): T => {
 export const getExtractedEncryptedPaths = (): string[] => {
   return Array.from(getEncryptedPaths())
 }
+
+/**
+ * Remove encrypted fields from an object before sending to frontend
+ * Sets encrypted field values to empty string
+ */
+export const sanitizeConfigForResponse = <T extends object>(
+  target: T,
+  prefix = '',
+): T => {
+  const result = { ...target }
+  const keys = Object.keys(result)
+
+  for (const key of keys) {
+    const currentPath = prefix ? `${prefix}.${key}` : key
+    const value = (result as any)[key]
+
+    if (Array.isArray(value)) {
+      ;(result as any)[key] = value.map((item, i) => {
+        const itemPath = `${currentPath}.${i}`
+        if (isObject(item) && !isArrayLike(item)) {
+          return sanitizeConfigForResponse(item, itemPath)
+        } else if (typeof item === 'string' && isEncryptedPath(itemPath)) {
+          return ''
+        }
+        return item
+      })
+    } else if (isObject(value) && !isArrayLike(value)) {
+      ;(result as any)[key] = sanitizeConfigForResponse(value, currentPath)
+    } else if (typeof value === 'string' && isEncryptedPath(currentPath)) {
+      ;(result as any)[key] = ''
+    }
+  }
+
+  return result
+}

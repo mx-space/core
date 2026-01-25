@@ -16,7 +16,11 @@ import { camelcaseKeys, sleep } from '~/utils/tool.util'
 import { cloneDeep, merge, mergeWith } from 'es-toolkit/compat'
 import type { z, ZodError } from 'zod'
 import { generateDefaultConfig } from './configs.default'
-import { decryptObject, encryptObject } from './configs.encrypt.util'
+import {
+  decryptObject,
+  encryptObject,
+  sanitizeConfigForResponse,
+} from './configs.encrypt.util'
 import { configDtoMapping, IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
 import type { OAuthConfig } from './configs.schema'
@@ -130,6 +134,30 @@ export class ConfigsService {
 
       return await this.getConfig()
     }
+  }
+
+  /**
+   * Get config with encrypted fields removed (for API response)
+   */
+  public async getConfigForResponse(): Promise<Readonly<IConfig>> {
+    const config = await this.getConfig()
+    return sanitizeConfigForResponse(config)
+  }
+
+  /**
+   * Get a specific config section with encrypted fields removed (for API response)
+   */
+  public getForResponse<T extends keyof IConfig>(
+    key: T,
+  ): Promise<Readonly<IConfig[T]>> {
+    return new Promise((resolve, reject) => {
+      this.waitForConfigReady()
+        .then((config) => {
+          const value = config[key]
+          resolve(sanitizeConfigForResponse(value as object, key) as IConfig[T])
+        })
+        .catch(reject)
+    })
   }
 
   private async patch<T extends keyof IConfig>(

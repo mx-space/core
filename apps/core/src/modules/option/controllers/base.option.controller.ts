@@ -6,6 +6,7 @@ import {
   attachAiProviderOptionsToFormDSL,
   generateFormDSL,
 } from '~/modules/configs/configs.dsl.util'
+import { sanitizeConfigForResponse } from '~/modules/configs/configs.encrypt.util'
 import { IConfig } from '~/modules/configs/configs.interface'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { OptionController } from '../option.decorator'
@@ -16,7 +17,7 @@ export class BaseOptionController {
 
   @Get('/')
   getOption() {
-    return this.configsService.getConfig()
+    return this.configsService.getConfigForResponse()
   }
 
   @HTTPDecorators.Bypass
@@ -39,7 +40,7 @@ export class BaseOptionController {
         `key must be IConfigKeys, got ${key}`,
       )
     }
-    const value = await this.configsService.get(key)
+    const value = await this.configsService.getForResponse(key)
     if (!value) {
       throw new BizException(ErrorCodeEnum.ConfigNotFound)
     }
@@ -47,10 +48,14 @@ export class BaseOptionController {
   }
 
   @Patch('/:key')
-  patch(@Param('key') key: keyof IConfig, @Body() body: Record<string, any>) {
+  async patch(
+    @Param('key') key: keyof IConfig,
+    @Body() body: Record<string, any>,
+  ) {
     if (typeof body !== 'object') {
       throw new BizException(ErrorCodeEnum.InvalidBody)
     }
-    return this.configsService.patchAndValid(key, body)
+    const result = await this.configsService.patchAndValid(key, body)
+    return sanitizeConfigForResponse(result as object, key)
   }
 }

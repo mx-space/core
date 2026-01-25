@@ -143,6 +143,9 @@ function isEnumLikeSchema(schema: z.ZodTypeAny): boolean {
   if (schema instanceof z.ZodEnum) return true
   const enumObj = (schema as any)?.enum
   if (enumObj && typeof enumObj === 'object') return true
+  // ZodUnion also has an `options` property, but it contains Zod schemas, not enum values
+  // We need to exclude ZodUnion to avoid misidentifying union types as enums
+  if (schema instanceof z.ZodUnion) return false
   const options = (schema as any)?.options
   return Array.isArray(options)
 }

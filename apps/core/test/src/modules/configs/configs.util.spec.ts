@@ -2,6 +2,7 @@ import {
   decryptObject,
   encryptObject,
   getExtractedEncryptedPaths,
+  sanitizeConfigForResponse,
 } from '~/modules/configs/configs.encrypt.util'
 
 describe('encrypt.util', () => {
@@ -16,12 +17,13 @@ describe('encrypt.util', () => {
     expect(paths).toContain('bingSearchOptions.token')
     expect(paths).toContain('algoliaSearchOptions.apiKey')
     expect(paths).toContain('adminExtra.gaodemapKey')
+    expect(paths).toContain('barkOptions.key')
     expect(paths).toContain('thirdPartyServiceIntegration.githubToken')
     expect(paths).toContain('ai.providers.*.apiKey')
     expect(paths).toContain('oauth.secrets.*.*')
 
     // Ensure exact count
-    expect(paths.length).toBe(10)
+    expect(paths.length).toBe(11)
   })
   describe('path-based encryption', () => {
     test('should encrypt mailOptions.pass', () => {
@@ -159,6 +161,20 @@ describe('encrypt.util', () => {
       expect(encrypted.enableAdminProxy).toBe(true)
     })
 
+    test('should encrypt barkOptions.key', () => {
+      const config = {
+        enable: true,
+        key: 'bark-device-key',
+        serverUrl: 'https://api.day.app',
+      }
+
+      const encrypted = encryptObject(config, 'barkOptions')
+
+      expect(encrypted.key).toMatch(/^\$\$\{mx\}\$\$/)
+      expect(encrypted.enable).toBe(true)
+      expect(encrypted.serverUrl).toBe('https://api.day.app')
+    })
+
     test('should encrypt oauth.secrets', () => {
       const config = {
         providers: [{ type: 'github', enabled: true }],
@@ -221,6 +237,95 @@ describe('encrypt.util', () => {
       expect(decrypted.mailOptions.user).toBe('user@example.com')
       expect(decrypted.backupOptions.secretKey).toBe('s3-secret')
       expect(decrypted.seo.title).toBe('My Site')
+    })
+  })
+
+  describe('sanitizeConfigForResponse', () => {
+    test('should remove encrypted fields from mailOptions', () => {
+      const config = {
+        pass: 'smtp-password',
+        user: 'user@example.com',
+      }
+
+      const sanitized = sanitizeConfigForResponse(config, 'mailOptions')
+
+      expect(sanitized.pass).toBe('')
+      expect(sanitized.user).toBe('user@example.com')
+    })
+
+    test('should remove encrypted fields from ai.providers', () => {
+      const config = {
+        providers: [
+          { id: 'openai', apiKey: 'sk-secret-key', name: 'OpenAI' },
+          { id: 'anthropic', apiKey: 'sk-another-key', name: 'Anthropic' },
+        ],
+        enableSummary: true,
+      }
+
+      const sanitized = sanitizeConfigForResponse(config, 'ai')
+
+      expect(sanitized.providers[0].apiKey).toBe('')
+      expect(sanitized.providers[0].id).toBe('openai')
+      expect(sanitized.providers[0].name).toBe('OpenAI')
+      expect(sanitized.providers[1].apiKey).toBe('')
+      expect(sanitized.enableSummary).toBe(true)
+    })
+
+    test('should remove encrypted fields from oauth.secrets', () => {
+      const config = {
+        providers: [{ type: 'github', enabled: true }],
+        secrets: {
+          github: {
+            clientSecret: 'github-secret',
+          },
+        },
+        public: {
+          github: {
+            clientId: 'github-client-id',
+          },
+        },
+      }
+
+      const sanitized = sanitizeConfigForResponse(config, 'oauth')
+
+      expect(sanitized.secrets.github.clientSecret).toBe('')
+      expect(sanitized.public.github.clientId).toBe('github-client-id')
+    })
+
+    test('should not modify non-encrypted fields', () => {
+      const config = {
+        title: 'My Site',
+        description: 'A blog',
+      }
+
+      const sanitized = sanitizeConfigForResponse(config, 'seo')
+
+      expect(sanitized.title).toBe('My Site')
+      expect(sanitized.description).toBe('A blog')
+    })
+
+    test('should sanitize full config', () => {
+      const fullConfig = {
+        mailOptions: {
+          pass: 'smtp-password',
+          user: 'user@example.com',
+        },
+        backupOptions: {
+          secretKey: 's3-secret',
+          bucket: 'backup-bucket',
+        },
+        seo: {
+          title: 'My Site',
+        },
+      }
+
+      const sanitized = sanitizeConfigForResponse(fullConfig)
+
+      expect(sanitized.mailOptions.pass).toBe('')
+      expect(sanitized.mailOptions.user).toBe('user@example.com')
+      expect(sanitized.backupOptions.secretKey).toBe('')
+      expect(sanitized.backupOptions.bucket).toBe('backup-bucket')
+      expect(sanitized.seo.title).toBe('My Site')
     })
   })
 })

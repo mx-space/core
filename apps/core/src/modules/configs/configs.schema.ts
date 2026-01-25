@@ -34,11 +34,7 @@ const MailOptionSchema = z.object({
     { 'ui:options': { halfGrid: true } },
   ),
   host: field.halfGrid(
-    z
-      .string()
-      .url({ message: 'host must be a valid URL' })
-      .optional()
-      .or(z.literal('')),
+    z.url({ message: 'host must be a valid URL' }).optional().or(z.literal('')),
     'SMTP 主机',
   ),
   secure: field.toggle(z.boolean().optional(), '使用 SSL/TLS'),
@@ -46,7 +42,7 @@ const MailOptionSchema = z.object({
 
 export const MailOptionsSchema = section('邮件通知设置', {
   enable: field.toggle(z.boolean().optional(), '开启邮箱提醒'),
-  from: field.halfGrid(z.string().email().optional(), '发件邮箱地址'),
+  from: field.halfGrid(z.email().optional(), '发件邮箱地址'),
   user: field.halfGrid(z.string().optional(), 'SMTP 用户名'),
   pass: field.passwordHalfGrid(z.string().min(1).optional(), 'SMTP 密码'),
   options: withMeta(MailOptionSchema.optional(), {
@@ -230,7 +226,7 @@ export type TextOptionsConfig = z.infer<typeof TextOptionsSchema>
 // ==================== Bark Options ====================
 export const BarkOptionsSchema = section('Bark 通知设定', {
   enable: field.toggle(z.boolean().optional(), '开启 Bark 通知'),
-  key: field.plain(z.string().optional(), '设备 Key'),
+  key: field.password(z.string().optional(), '设备 Key'),
   serverUrl: field.plain(z.string().url().optional(), '服务器 URL', {
     description: '如果不填写，则使用默认的服务器，https://day.app',
   }),
