@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [9.0.3](https://github.com/mx-space/core/compare/v9.0.2...v9.0.3) (2026-01-25)
+
+
+### Features
+
+* **comment:** add batch update and delete functionality for comments ([deeb057](https://github.com/mx-space/core/commit/deeb05777e26d7156098b9bfdf4fbc27eaa81180))
+* **file:** add batch delete and S3 upload functionality ([9e6cfe5](https://github.com/mx-space/core/commit/9e6cfe5fac617faebe07d33aacf5fa954476a21f))
+
+
+
 ## [9.0.2](https://github.com/mx-space/core/compare/v9.0.1...v9.0.2) (2026-01-24)
 
 
