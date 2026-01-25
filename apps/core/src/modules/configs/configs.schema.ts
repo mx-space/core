@@ -82,7 +82,7 @@ export const CommentOptionsSchema = section('评论设置', {
   }),
   spamKeywords: field.array(z.array(z.string()).optional(), '自定义屏蔽关键词'),
   blockIps: field.array(
-    z.array(z.union([z.string().ipv4(), z.string().ipv6()])).optional(),
+    z.array(z.union([z.ipv4(), z.ipv6()])).optional(),
     '自定义屏蔽 IP',
   ),
   disableNoChinese: field.toggle(z.boolean().optional(), '禁止非中文评论'),
@@ -360,7 +360,10 @@ export const OAuthSchema = section(
   'OAuth',
   {
     providers: z.array(OAuthProviderSchema).optional(),
-    secrets: z.record(z.string(), z.record(z.string(), z.string())).optional(),
+    secrets: withMeta(
+      z.record(z.string(), z.record(z.string(), z.string())).optional(),
+      { encrypt: true },
+    ),
     public: z.record(z.string(), z.record(z.string(), z.string())).optional(),
   },
   { 'ui:options': { type: 'hidden' } },

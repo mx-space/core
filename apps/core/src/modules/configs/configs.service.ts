@@ -194,7 +194,7 @@ export class ConfigsService {
     }
     const instanceValue = this.validWithDto(dto, value) as Partial<IConfig[T]>
 
-    encryptObject(instanceValue)
+    encryptObject(instanceValue, key)
 
     switch (key) {
       case 'url': {

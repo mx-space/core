@@ -18,6 +18,10 @@ export interface SchemaMetadata {
   title?: string
   description?: string
   'ui:options'?: UIOptions
+  /**
+   * Mark this field as encrypted - its value will be encrypted before storage
+   */
+  encrypt?: boolean
 }
 
 // Symbol to store metadata on Zod schemas
@@ -70,6 +74,7 @@ export const field = {
   ) =>
     withMeta(schema, {
       title,
+      encrypt: true,
       ...options,
       'ui:options': { type: 'password', ...options?.['ui:options'] },
     }),
@@ -81,6 +86,7 @@ export const field = {
   ) =>
     withMeta(schema, {
       title,
+      encrypt: true,
       ...options,
       'ui:options': {
         type: 'password',
