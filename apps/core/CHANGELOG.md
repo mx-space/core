@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [9.0.4](https://github.com/mx-space/core/compare/v9.0.3...v9.0.4) (2026-01-25)
+
+
+### Features
+
+* **config:** enhance encryption utilities and schema integration ([817ec74](https://github.com/mx-space/core/commit/817ec7468405580d7db1b75f5e62fe99b8be08fc))
+
+
+
 ## [9.0.3](https://github.com/mx-space/core/compare/v9.0.2...v9.0.3) (2026-01-25)
 
 
