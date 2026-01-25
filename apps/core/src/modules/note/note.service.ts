@@ -8,7 +8,6 @@ import { EventBusEvents } from '~/constants/event-bus.constant'
 import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -30,7 +29,6 @@ export class NoteService {
     @InjectModel(NoteModel)
     private readonly noteModel: MongooseModel<NoteModel>,
     private readonly imageService: ImageService,
-    private readonly imageMigrationService: ImageMigrationService,
     private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
     @Inject(forwardRef(() => CommentService))
@@ -177,20 +175,6 @@ export class NoteService {
     }
 
     scheduleManager.schedule(async () => {
-      // Migrate images to S3 if published
-      if (note.isPublished !== false) {
-        const { newText, newImages, migratedCount } =
-          await this.imageMigrationService.migrateImagesToS3(
-            note.text,
-            note.images,
-          )
-        if (migratedCount > 0) {
-          note.text = newText
-          note.images = newImages
-          await note.save()
-        }
-      }
-
       // Track file references
       await this.fileReferenceService.activateReferences(
         note.text,
@@ -316,28 +300,9 @@ export class NoteService {
     }
 
     scheduleManager.schedule(async () => {
-      // Migrate images to S3 if published
-      let currentText = updated.text
-      let currentImages = updated.images
-      if (updated.isPublished !== false) {
-        const { newText, newImages, migratedCount } =
-          await this.imageMigrationService.migrateImagesToS3(
-            updated.text,
-            updated.images,
-          )
-        if (migratedCount > 0) {
-          await this.model.updateOne(
-            { _id: id },
-            { $set: { text: newText, images: newImages } },
-          )
-          currentText = newText
-          currentImages = newImages
-        }
-      }
-
       // Update file references
       await this.fileReferenceService.updateReferencesForDocument(
-        currentText,
+        updated.text,
         updated.id,
         FileReferenceType.Note,
       )
@@ -347,8 +312,8 @@ export class NoteService {
           scope: EventScope.TO_SYSTEM,
         }),
         this.imageService.saveImageDimensionsFromMarkdownText(
-          currentText,
-          currentImages,
+          updated.text,
+          updated.images,
           (images) => {
             return this.model
               .updateOne(

@@ -1,6 +1,5 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
-import type { DocumentType } from '@typegoose/typegoose'
 import {
   BizException,
   BusinessException,
@@ -17,7 +16,6 @@ import {
 import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -48,7 +46,6 @@ export class PostService implements OnApplicationBootstrap {
     @InjectModel(CommentModel)
     private readonly commentModel: MongooseModel<CommentModel>,
     private readonly imageService: ImageService,
-    private readonly imageMigrationService: ImageMigrationService,
     private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
     private readonly textMacroService: TextMacroService,
@@ -119,22 +116,6 @@ export class PostService implements OnApplicationBootstrap {
 
     scheduleManager.schedule(async () => {
       const doc = cloned
-
-      // Migrate images to S3 if published
-      if (doc.isPublished !== false) {
-        const { newText, newImages, migratedCount } =
-          await this.imageMigrationService.migrateImagesToS3(
-            doc.text,
-            doc.images,
-          )
-        if (migratedCount > 0) {
-          newPost.text = newText
-          newPost.images = newImages
-          await newPost.save()
-          doc.text = newText
-          doc.images = newImages
-        }
-      }
 
       // Track file references
       await this.fileReferenceService.activateReferences(
@@ -363,37 +344,17 @@ export class PostService implements OnApplicationBootstrap {
       await this.draftService.markAsPublished(draftId)
     }
 
-    scheduleManager.schedule(() => this.afterUpdatePost(id, data, oldDocument))
+    scheduleManager.schedule(() => this.afterUpdatePost(id))
 
     return oldDocument.toObject()
   }
 
   afterUpdatePost = debounce(
-    async (
-      id: string,
-      updatedData: Partial<PostModel>,
-      oldDocument: DocumentType<PostModel>,
-    ) => {
-      let doc = await this.postModel
+    async (id: string) => {
+      const doc = await this.postModel
         .findById(id)
         .populate('related', 'title slug category categoryId id _id')
         .lean({ getters: true, autopopulate: true })
-
-      // Migrate images to S3 if published
-      if (doc && doc.isPublished !== false) {
-        const { newText, newImages, migratedCount } =
-          await this.imageMigrationService.migrateImagesToS3(
-            doc.text,
-            doc.images,
-          )
-        if (migratedCount > 0) {
-          await this.postModel.updateOne(
-            { _id: id },
-            { $set: { text: newText, images: newImages } },
-          )
-          doc = { ...doc, text: newText, images: newImages }
-        }
-      }
 
       // Update file references
       if (doc) {
@@ -404,18 +365,16 @@ export class PostService implements OnApplicationBootstrap {
         )
       }
 
-      // 更新图片信息缓存
       await Promise.all([
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
-        updatedData.text &&
+        doc?.text &&
           this.imageService.saveImageDimensionsFromMarkdownText(
-            updatedData.text,
-            doc?.images,
+            doc.text,
+            doc.images,
             (images) => {
-              oldDocument.images = images
-              return oldDocument.save()
+              return this.postModel.updateOne({ _id: id }, { $set: { images } })
             },
           ),
         doc &&

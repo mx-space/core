@@ -1,4 +1,4 @@
-import { unlink } from 'node:fs/promises'
+import { access, unlink } from 'node:fs/promises'
 import path from 'node:path'
 import { Injectable, Logger } from '@nestjs/common'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
@@ -141,5 +141,58 @@ export class FileReferenceService {
     return this.fileReferenceModel.countDocuments({
       status: FileReferenceStatus.Pending,
     })
+  }
+
+  private async deleteFileIfExists(filePath: string): Promise<boolean> {
+    try {
+      await access(filePath)
+      await unlink(filePath)
+      return true
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return true
+      }
+      this.logger.warn(
+        `Failed to delete file: ${filePath}, error: ${error.message}`,
+      )
+      return false
+    }
+  }
+
+  async batchDeleteOrphans(options: { ids?: string[]; all?: boolean }) {
+    if (options.all) {
+      const orphanFiles = await this.fileReferenceModel.find({
+        status: FileReferenceStatus.Pending,
+      })
+
+      let deletedCount = 0
+      for (const file of orphanFiles) {
+        const localPath = path.join(STATIC_FILE_DIR, 'image', file.fileName)
+        const fileDeleted = await this.deleteFileIfExists(localPath)
+        if (fileDeleted) {
+          await this.fileReferenceModel.deleteOne({ _id: file._id })
+          deletedCount++
+        }
+      }
+      return { deletedCount }
+    }
+
+    if (options.ids?.length) {
+      let deletedCount = 0
+      for (const id of options.ids) {
+        const ref = await this.fileReferenceModel.findById(id)
+        if (ref && ref.status === FileReferenceStatus.Pending) {
+          const filePath = path.join(STATIC_FILE_DIR, 'image', ref.fileName)
+          const fileDeleted = await this.deleteFileIfExists(filePath)
+          if (fileDeleted) {
+            await this.fileReferenceModel.deleteOne({ _id: id })
+            deletedCount++
+          }
+        }
+      }
+      return { deletedCount }
+    }
+
+    return { deletedCount: 0 }
   }
 }

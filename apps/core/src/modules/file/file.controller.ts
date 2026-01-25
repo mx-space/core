@@ -1,8 +1,10 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
+  Body,
   Delete,
   Get,
+  Logger,
   Param,
   Patch,
   Post,
@@ -17,22 +19,131 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { alphabet } from '~/constants/other.constant'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
+import { ConfigsService } from '~/modules/configs/configs.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
+import { S3Uploader } from '~/utils/s3.util'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
 import { customAlphabet } from 'nanoid'
 import { FileReferenceService } from './file-reference.service'
-import { FileQueryDto, FileUploadDto, RenameFileQueryDto } from './file.schema'
+import {
+  BatchOrphanDeleteDto,
+  BatchS3UploadDto,
+  FileQueryDto,
+  FileUploadDto,
+  RenameFileQueryDto,
+} from './file.schema'
 import { FileService } from './file.service'
 
 @ApiController(['objects', 'files'])
 export class FileController {
+  private readonly logger = new Logger(FileController.name)
+
   constructor(
     private readonly service: FileService,
     private readonly uploadService: UploadService,
     private readonly fileReferenceService: FileReferenceService,
+    private readonly configsService: ConfigsService,
   ) {}
+
+  @Delete('/orphans/batch')
+  @Auth()
+  async batchDeleteOrphans(@Body() body: BatchOrphanDeleteDto) {
+    return this.fileReferenceService.batchDeleteOrphans(body)
+  }
+
+  @Post('/s3/batch-upload')
+  @Auth()
+  async batchUploadToS3(@Body() body: BatchS3UploadDto) {
+    const config = await this.configsService.get('imageStorageOptions')
+
+    if (!config.enable || !config.syncOnPublish) {
+      return {
+        results: body.urls.map((url) => ({
+          originalUrl: url,
+          s3Url: null,
+          error: !config.enable
+            ? 'S3 storage is not enabled'
+            : 'Sync on publish is disabled',
+        })),
+      }
+    }
+
+    if (
+      !config.endpoint ||
+      !config.secretId ||
+      !config.secretKey ||
+      !config.bucket
+    ) {
+      return {
+        results: body.urls.map((url) => ({
+          originalUrl: url,
+          s3Url: null,
+          error: 'S3 configuration is incomplete',
+        })),
+      }
+    }
+
+    const s3Uploader = new S3Uploader({
+      endpoint: config.endpoint,
+      accessKey: config.secretId,
+      secretKey: config.secretKey,
+      bucket: config.bucket,
+      region: config.region || 'auto',
+    })
+
+    if (config.customDomain) {
+      s3Uploader.setCustomDomain(config.customDomain)
+    }
+
+    const results = await Promise.all(
+      body.urls.map(async (url) => {
+        try {
+          const filename = this.extractLocalImageFilename(url)
+          if (!filename) {
+            return {
+              originalUrl: url,
+              s3Url: null,
+              error: 'Invalid URL format',
+            }
+          }
+
+          const localPath = path.join(STATIC_FILE_DIR, 'image', filename)
+          const buffer = await fs.readFile(localPath)
+          const contentType = lookup(filename) || 'application/octet-stream'
+
+          const objectKey = config.prefix
+            ? `${config.prefix.replace(/\/+$/, '')}/${filename}`
+            : filename
+
+          const s3Url = await s3Uploader.uploadBuffer(
+            buffer,
+            objectKey,
+            contentType,
+          )
+
+          this.logger.log(`Uploaded to S3: ${filename} -> ${s3Url}`)
+
+          return { originalUrl: url, s3Url }
+        } catch (error) {
+          this.logger.error(`Failed to upload ${url}:`, error)
+          return {
+            originalUrl: url,
+            s3Url: null,
+            error: error instanceof Error ? error.message : 'Upload failed',
+          }
+        }
+      }),
+    )
+
+    return { results }
+  }
+
+  private extractLocalImageFilename(url: string): string | null {
+    const match = url.match(/\/objects\/image\/([^/?#]+)/)
+    return match ? match[1] : null
+  }
 
   @Get('/orphans/list')
   @Auth()

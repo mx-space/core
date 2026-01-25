@@ -6,7 +6,6 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -24,7 +23,6 @@ export class PageService {
     @InjectModel(PageModel)
     private readonly pageModel: MongooseModel<PageModel>,
     private readonly imageService: ImageService,
-    private readonly imageMigrationService: ImageMigrationService,
     private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
     private readonly macroService: TextMacroService,
@@ -67,15 +65,6 @@ export class PageService {
     }
 
     scheduleManager.schedule(async () => {
-      // Migrate images to S3
-      const { newText, newImages, migratedCount } =
-        await this.imageMigrationService.migrateImagesToS3(doc.text, res.images)
-      if (migratedCount > 0) {
-        res.text = newText
-        res.images = newImages
-        await res.save()
-      }
-
       // Track file references
       await this.fileReferenceService.activateReferences(
         res.text,
@@ -139,49 +128,31 @@ export class PageService {
     }
 
     scheduleManager.schedule(async () => {
-      // Migrate images to S3
-      let currentDoc = newDoc
-      const { newText, newImages, migratedCount } =
-        await this.imageMigrationService.migrateImagesToS3(
-          newDoc.text,
-          newDoc.images,
-        )
-      if (migratedCount > 0) {
-        await this.model.updateOne(
-          { _id: id },
-          { $set: { text: newText, images: newImages } },
-        )
-        currentDoc = { ...newDoc, text: newText, images: newImages }
-      }
-
       // Update file references
       await this.fileReferenceService.updateReferencesForDocument(
-        currentDoc.text,
-        currentDoc.id,
+        newDoc.text,
+        newDoc.id,
         FileReferenceType.Page,
       )
 
       await Promise.all([
         this.imageService.saveImageDimensionsFromMarkdownText(
-          currentDoc.text,
-          currentDoc.images,
+          newDoc.text,
+          newDoc.images,
           (images) => {
             return this.model
               .updateOne({ _id: id }, { $set: { images } })
               .exec()
           },
         ),
-        this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, currentDoc, {
+        this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, newDoc, {
           scope: EventScope.TO_SYSTEM,
         }),
         this.eventManager.broadcast(
           BusinessEvents.PAGE_UPDATE,
           {
-            ...currentDoc,
-            text: await this.macroService.replaceTextMacro(
-              currentDoc.text,
-              currentDoc,
-            ),
+            ...newDoc,
+            text: await this.macroService.replaceTextMacro(newDoc.text, newDoc),
           },
           {
             scope: EventScope.TO_VISITOR,
