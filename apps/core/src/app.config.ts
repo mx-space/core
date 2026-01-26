@@ -25,6 +25,7 @@ const {
   THROTTLE_LIMIT,
   JWT_SECRET,
   JWTSECRET,
+  MX_DISABLE_TELEMETRY,
 } = process.env
 
 const ENV_JWT_SECRET = JWT_SECRET || JWTSECRET
@@ -107,6 +108,9 @@ const commander = program
     '--debug_memory_dump',
     'enable memory dump for debug, send SIGUSR2 to dump memory',
   )
+
+  // telemetry
+  .option('--disable_telemetry', 'disable anonymous telemetry')
 
 commander.parse()
 
@@ -238,3 +242,7 @@ if (ENCRYPT.enable && (!ENCRYPT.key || ENCRYPT.key.length !== 64))
   throw new Error(
     `你开启了 Key 加密（MX_ENCRYPT_KEY or --encrypt_key），但是 Key 的长度不为 64，当前：${ENCRYPT.key.length}`,
   )
+
+export const TELEMETRY = {
+  enable: !parseBooleanishValue(argv.disable_telemetry ?? MX_DISABLE_TELEMETRY),
+}

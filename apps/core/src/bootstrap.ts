@@ -6,7 +6,7 @@ import { NestFactory } from '@nestjs/core'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import pc from 'picocolors'
 import wcmatch from 'wildcard-match'
-import { CROSS_DOMAIN, DEBUG_MODE, PORT } from './app.config'
+import { CROSS_DOMAIN, DEBUG_MODE, PORT, TELEMETRY } from './app.config'
 import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'
 import { RedisIoAdapter } from './common/adapters/socket.adapter'
@@ -14,8 +14,9 @@ import { SpiderGuard } from './common/guards/spider.guard'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { extendedZodValidationPipeInstance } from './common/zod'
 import { logger } from './global/consola.global'
-import { isMainProcess, isTest } from './global/env.global'
+import { isDev, isMainProcess, isTest } from './global/env.global'
 import { checkInit } from './utils/check-init.util'
+import { sendTelemetry, startHeartbeat } from './utils/telemetry.util'
 
 const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
   ? [...CROSS_DOMAIN.allowedOrigins, '*.shizuri.net', '22333322.xyz']
@@ -104,6 +105,16 @@ export async function bootstrap() {
         `[${prefix + pid}] If you want to debug local dev dashboard on dev environment with same site domain, you can go to: http://localhost:2333/proxy/qaqdmin/dev-proxy`,
       )
       logger.info(`Server is up. ${pc.yellow(`+${performance.now() | 0}ms`)}`)
+
+      if (TELEMETRY.enable) {
+        logger.info(
+          '[Telemetry] Anonymous telemetry is enabled. To disable, use --disable_telemetry or set MX_DISABLE_TELEMETRY=true',
+        )
+        sendTelemetry('startup')
+        startHeartbeat()
+      } else {
+        logger.info('[Telemetry] Telemetry is disabled.')
+      }
     },
   )
 }
