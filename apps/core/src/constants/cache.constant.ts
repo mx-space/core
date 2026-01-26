@@ -29,6 +29,10 @@ export enum RedisKeys {
   Authn = 'authn',
 
   Socket = 'socket',
+
+  AnalyzeAggregate = 'analyze_aggregate',
+  AnalyzeTrafficSource = 'analyze_traffic_source',
+  AnalyzeDeviceDistribution = 'analyze_device_distribution',
 }
 export const API_CACHE_PREFIX = 'mx-api-cache:'
 export enum CacheKeys {

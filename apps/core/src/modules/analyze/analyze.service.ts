@@ -4,8 +4,6 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
-import dayjs from 'dayjs'
-import { merge } from 'es-toolkit/compat'
 import type { PipelineStage } from 'mongoose'
 import { OptionModel } from '../configs/configs.model'
 import { AnalyzeModel } from './analyze.model'
@@ -95,153 +93,87 @@ export class AnalyzeService {
     })
   }
 
-  async getIpAndPvAggregate(
-    type: 'day' | 'week' | 'month' | 'all',
+  async getIpAndPvAggregateByRange(
+    {
+      from,
+      to,
+      granularity,
+    }: {
+      from: Date
+      to: Date
+      granularity: 'hour' | 'date'
+    },
     returnObj?: boolean,
   ) {
-    let cond = {}
-    const now = dayjs()
-    const beforeDawn = now.set('minute', 0).set('second', 0).set('hour', 0)
-    switch (type) {
-      case 'day': {
-        cond = {
+    const format = granularity === 'hour' ? '%H' : '%Y-%m-%d'
+    const keyField = granularity === 'hour' ? 'hour' : 'date'
+
+    const [result] = await this.analyzeModel.aggregate([
+      {
+        $match: {
           timestamp: {
-            $gte: beforeDawn.toDate(),
+            $gte: from,
+            $lte: to,
           },
-        }
-        break
-      }
-      case 'month': {
-        cond = {
-          timestamp: {
-            $gte: beforeDawn.set('day', -30).toDate(),
+        },
+      },
+      {
+        $project: {
+          ip: 1,
+          key: {
+            $dateToString: {
+              format,
+              date: { $subtract: ['$timestamp', 0] },
+              timezone: '+08:00',
+            },
           },
-        }
-        break
-      }
-      case 'week': {
-        cond = {
-          timestamp: {
-            $gte: beforeDawn.set('day', -7).toDate(),
-          },
-        }
-        break
-      }
-      case 'all':
-      default: {
-        break
+        },
+      },
+      {
+        $facet: {
+          pv: [
+            { $group: { _id: '$key', pv: { $sum: 1 } } },
+            { $project: { _id: 0, key: '$_id', pv: 1 } },
+          ],
+          ip: [
+            { $group: { _id: { key: '$key', ip: '$ip' } } },
+            { $group: { _id: '$_id.key', ip: { $sum: 1 } } },
+            { $project: { _id: 0, key: '$_id', ip: 1 } },
+          ],
+        },
+      },
+    ])
+
+    const records = new Map<
+      string,
+      { [key: string]: string | number | undefined }
+    >()
+
+    for (const item of result?.pv ?? []) {
+      records.set(item.key, { [keyField]: item.key, pv: item.pv })
+    }
+    for (const item of result?.ip ?? []) {
+      const existing = records.get(item.key)
+      if (existing) {
+        existing.ip = item.ip
+      } else {
+        records.set(item.key, { [keyField]: item.key, ip: item.ip })
       }
     }
 
-    const [res, res2] = await Promise.all([
-      this.analyzeModel.aggregate([
-        { $match: cond },
-        {
-          $project: {
-            _id: 1,
-            timestamp: 1,
-            hour: {
-              $dateToString: {
-                format: '%H',
-                date: { $subtract: ['$timestamp', 0] },
-                timezone: '+08:00',
-              },
-            },
-            date: {
-              $dateToString: {
-                format: '%Y-%m-%d',
-                date: { $subtract: ['$timestamp', 0] },
-                timezone: '+08:00',
-              },
-            },
-          },
-        },
-        {
-          $group: {
-            _id: type === 'day' ? '$hour' : '$date',
-
-            pv: {
-              $sum: 1,
-            },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            ...(type === 'day' ? { hour: '$_id' } : { date: '$_id' }),
-            pv: 1,
-          },
-        },
-        {
-          $sort: {
-            date: -1,
-          },
-        },
-      ]),
-      this.analyzeModel.aggregate([
-        { $match: cond },
-        {
-          $project: {
-            _id: 1,
-            timestamp: 1,
-            ip: 1,
-            hour: {
-              $dateToString: {
-                format: '%H',
-                date: { $subtract: ['$timestamp', 0] },
-                timezone: '+08:00',
-              },
-            },
-            date: {
-              $dateToString: {
-                format: '%Y-%m-%d',
-                date: { $subtract: ['$timestamp', 0] },
-                timezone: '+08:00',
-              },
-            },
-          },
-        },
-        {
-          $group: {
-            _id:
-              type === 'day'
-                ? { ip: '$ip', hour: '$hour' }
-                : { ip: '$ip', date: '$date' },
-          },
-        },
-
-        {
-          $group: {
-            _id: type === 'day' ? '$_id.hour' : '$_id.date',
-            ip: {
-              $sum: 1,
-            },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            ...(type === 'day' ? { hour: '$_id' } : { date: '$_id' }),
-            ip: 1,
-          },
-        },
-        {
-          $sort: {
-            date: -1,
-          },
-        },
-      ]),
-    ])
-    const arr = merge(res, res2)
     if (returnObj) {
-      const obj = {}
-      for (const item of arr) {
-        obj[item.hour || item.date] = item
+      const obj: Record<string, { [key: string]: string | number }> = {}
+      for (const [key, value] of records) {
+        obj[key] = value as { [key: string]: string | number }
       }
-
       return obj
     }
-    return arr
+
+    return Array.from(records.values()).sort((a, b) => {
+      const left = String(a[keyField] ?? '')
+      const right = String(b[keyField] ?? '')
+      return right.localeCompare(left)
+    })
   }
 
   async getRangeOfTopPathVisitor(from?: Date, to?: Date): Promise<any[]> {
@@ -270,6 +202,9 @@ export class AnalyzeService {
         $sort: {
           count: -1,
         },
+      },
+      {
+        $limit: 50,
       },
       {
         $project: {

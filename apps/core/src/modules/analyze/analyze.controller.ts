@@ -19,6 +19,31 @@ export class AnalyzeController {
     private readonly redisService: RedisService,
   ) {}
 
+  private async getOrSetCache<T>(
+    key: string,
+    ttlSeconds: number,
+    getValue: () => Promise<T>,
+  ): Promise<T> {
+    const client = this.redisService.getClient()
+    try {
+      const cached = await client.get(key)
+      if (cached) {
+        try {
+          return JSON.parse(cached) as T
+        } catch {
+          await client.del(key)
+        }
+      }
+    } catch {}
+
+    const value = await getValue()
+    try {
+      await client.set(key, JSON.stringify(value))
+      await client.expire(key, ttlSeconds)
+    } catch {}
+    return value
+  }
+
   @Get('/')
   @Paginator
   async getAnalyze(@Query() query: AnalyzeDto & Partial<PagerDto>) {
@@ -58,89 +83,106 @@ export class AnalyzeController {
 
   @Get('/aggregate')
   async getFragment() {
-    const getIpAndPvAggregate = async () => {
-      const day = await this.service.getIpAndPvAggregate('day', true)
+    const cacheKey = getRedisKey(RedisKeys.AnalyzeAggregate)
+    return this.getOrSetCache(cacheKey, 60, async () => {
+      const getIpAndPvAggregate = async () => {
+        const now = new Date()
+        const todayEarly = getTodayEarly(now)
+        const day = await this.service.getIpAndPvAggregateByRange(
+          {
+            from: todayEarly,
+            to: now,
+            granularity: 'hour',
+          },
+          true,
+        )
 
-      const dayData = Array.from({ length: 24 })
-        .fill(undefined)
-        .map((v, i) => {
-          return [
-            {
-              hour: `${i}时`,
-              key: 'ip',
-              value: day[i.toString().padStart(2, '0')]?.ip || 0,
-            },
-            {
-              hour: `${i}时`,
-              key: 'pv',
-              value: day[i.toString().padStart(2, '0')]?.pv || 0,
-            },
-          ]
-        })
-      const all = (await this.service.getIpAndPvAggregate('all')) as any[]
-
-      const weekData = all
-        .slice(0, 7)
-        .map((item) => {
-          const date = `周${
-            ['日', '一', '二', '三', '四', '五', '六'][
-              dayjs(item.date).get('day')
+        const dayData = Array.from({ length: 24 })
+          .fill(undefined)
+          .map((v, i) => {
+            return [
+              {
+                hour: `${i}时`,
+                key: 'ip',
+                value: day[i.toString().padStart(2, '0')]?.ip || 0,
+              },
+              {
+                hour: `${i}时`,
+                key: 'pv',
+                value: day[i.toString().padStart(2, '0')]?.pv || 0,
+              },
             ]
-          }`
-          return [
-            {
-              day: date,
-              key: 'ip',
-              value: item.ip,
-            },
-            {
-              day: date,
-              key: 'pv',
-              value: item.pv,
-            },
-          ]
-        })
-        .toReversed()
+          })
+        const rangeStart = dayjs().subtract(29, 'day').startOf('day').toDate()
+        const all = (await this.service.getIpAndPvAggregateByRange({
+          from: rangeStart,
+          to: now,
+          granularity: 'date',
+        })) as any[]
 
-      const monthData = all
-        .slice(0, 30)
-        .map((item) => {
-          return [
-            {
-              date: item.date.split('-').slice(1, 3).join('-'),
-              key: 'ip',
-              value: item.ip,
-            },
-            {
-              date: item.date.split('-').slice(1, 3).join('-'),
-              key: 'pv',
-              value: item.pv,
-            },
-          ]
-        })
-        .toReversed()
-      return {
-        dayData,
-        weekData,
-        monthData,
+        const weekData = all
+          .slice(0, 7)
+          .map((item) => {
+            const date = `周${
+              ['日', '一', '二', '三', '四', '五', '六'][
+                dayjs(item.date).get('day')
+              ]
+            }`
+            return [
+              {
+                day: date,
+                key: 'ip',
+                value: item.ip,
+              },
+              {
+                day: date,
+                key: 'pv',
+                value: item.pv,
+              },
+            ]
+          })
+          .toReversed()
+
+        const monthData = all
+          .slice(0, 30)
+          .map((item) => {
+            return [
+              {
+                date: item.date.split('-').slice(1, 3).join('-'),
+                key: 'ip',
+                value: item.ip,
+              },
+              {
+                date: item.date.split('-').slice(1, 3).join('-'),
+                key: 'pv',
+                value: item.pv,
+              },
+            ]
+          })
+          .toReversed()
+        return {
+          dayData,
+          weekData,
+          monthData,
+        }
       }
-    }
-    const [paths, total, today_ips, { dayData, monthData, weekData }] =
-      await Promise.all([
-        this.service.getRangeOfTopPathVisitor(),
-        this.service.getCallTime(),
-        this.service.getTodayAccessIp(),
-        getIpAndPvAggregate(),
-      ])
-    return {
-      today: dayData.flat(),
-      weeks: weekData.flat(),
-      months: monthData.flat(),
-      paths: paths.slice(50),
+      const [paths, total, today_ips, { dayData, monthData, weekData }] =
+        await Promise.all([
+          this.service.getRangeOfTopPathVisitor(),
+          this.service.getCallTime(),
+          this.service.getTodayAccessIp(),
+          getIpAndPvAggregate(),
+        ])
+      return {
+        today: dayData.flat(),
+        weeks: weekData.flat(),
+        months: monthData.flat(),
+        paths,
 
-      total,
-      today_ips,
-    }
+        total,
+        today_ips,
+      }
+    })
   }
 
   @Get('/like')
@@ -163,13 +205,27 @@ export class AnalyzeController {
   @Get('/traffic-source')
   async getTrafficSource(@Query() query: AnalyzeDto) {
     const { from, to } = query
-    return this.service.getTrafficSource(from, to)
+    const cacheKey = getRedisKey(
+      RedisKeys.AnalyzeTrafficSource,
+      String(from?.getTime() ?? 'default'),
+      String(to?.getTime() ?? 'default'),
+    )
+    return this.getOrSetCache(cacheKey, 300, () =>
+      this.service.getTrafficSource(from, to),
+    )
   }
 
   @Get('/device')
   async getDeviceDistribution(@Query() query: AnalyzeDto) {
     const { from, to } = query
-    return this.service.getDeviceDistribution(from, to)
+    const cacheKey = getRedisKey(
+      RedisKeys.AnalyzeDeviceDistribution,
+      String(from?.getTime() ?? 'default'),
+      String(to?.getTime() ?? 'default'),
+    )
+    return this.getOrSetCache(cacheKey, 300, () =>
+      this.service.getDeviceDistribution(from, to),
+    )
   }
 
   @Delete('/')
