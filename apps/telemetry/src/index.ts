@@ -1,6 +1,5 @@
 interface Env {
   DB: D1Database
-  AUTH_TOKEN: string
 }
 
 interface TelemetryPayload {
@@ -14,35 +13,6 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-}
-
-function checkAuth(request: Request, env: Env): boolean {
-  // Check query parameter first (for dashboard access)
-  const url = new URL(request.url)
-  const tokenParam = url.searchParams.get('token')
-  if (tokenParam && tokenParam === env.AUTH_TOKEN) {
-    return true
-  }
-
-  // Check Authorization header
-  const authHeader = request.headers.get('Authorization')
-  if (!authHeader) return false
-
-  const [scheme, token] = authHeader.split(' ')
-  if (scheme !== 'Bearer' || !token) return false
-
-  return token === env.AUTH_TOKEN
-}
-
-function unauthorizedResponse(): Response {
-  return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-    status: 401,
-    headers: {
-      'Content-Type': 'application/json',
-      'WWW-Authenticate': 'Bearer',
-      ...corsHeaders,
-    },
-  })
 }
 
 function jsonResponse(data: unknown, status = 200): Response {
@@ -479,20 +449,16 @@ export default {
       return handleCollect(request, env)
     }
 
+    // Protected by Cloudflare Zero Trust
     if (url.pathname === '/stats' && request.method === 'GET') {
-      if (!checkAuth(request, env)) {
-        return unauthorizedResponse()
-      }
       return handleStats(env)
     }
 
+    // Protected by Cloudflare Zero Trust
     if (
       (url.pathname === '/' || url.pathname === '/dashboard') &&
       request.method === 'GET'
     ) {
-      if (!checkAuth(request, env)) {
-        return unauthorizedResponse()
-      }
       return handleDashboard(env)
     }
 
