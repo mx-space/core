@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [9.1.1](https://github.com/mx-space/core/compare/v9.1.0...v9.1.1) (2026-01-27)
+
+
+### Bug Fixes
+
+* api build ([410bf69](https://github.com/mx-space/core/commit/410bf69dbaeec6af9851b6510c4be2c510088132))
+
+
+### Features
+
+* add ai config in aggregation ([f814267](https://github.com/mx-space/core/commit/f81426799ffe21f9cfc3b2dcab8799317618a101))
+
+
+
 # [9.1.0](https://github.com/mx-space/core/compare/v9.0.7...v9.1.0) (2026-01-27)
 
 
