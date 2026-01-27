@@ -282,4 +282,136 @@ describe('DraftService with FileReference integration', () => {
       ).toHaveBeenCalledWith(expect.any(String), FileReferenceType.Draft)
     })
   })
+
+  describe('History with diff/snapshot hybrid strategy', () => {
+    it('should store first version as full snapshot', async () => {
+      const draft = {
+        _id: 'draft123',
+        id: 'draft123',
+        refType: DraftRefType.Post,
+        title: 'Initial',
+        text: 'Initial text content',
+        version: 1,
+        history: [],
+        updated: new Date(),
+        created: new Date(),
+      }
+      mockDrafts.push(draft)
+
+      await draftService.update('draft123', { text: 'Updated text content' })
+
+      const updatedDraft = mockDrafts.find((d) => d.id === 'draft123')
+      expect(updatedDraft.history).toHaveLength(1)
+      expect(updatedDraft.history[0].isFullSnapshot).toBe(true)
+      expect(updatedDraft.history[0].text).toBe('Initial text content')
+    })
+
+    it('should store diff for intermediate versions when text is similar', async () => {
+      // Use longer, more similar text to ensure diff is smaller than threshold
+      const baseText = 'This is a long document with lots of content. '.repeat(
+        20,
+      )
+      const draft = {
+        _id: 'draft123',
+        id: 'draft123',
+        refType: DraftRefType.Post,
+        title: 'Initial',
+        text: `${baseText} Version 2 ending.`,
+        version: 2,
+        history: [
+          {
+            version: 1,
+            title: 'Initial',
+            text: `${baseText} Version 1 ending.`,
+            savedAt: new Date(),
+            isFullSnapshot: true,
+          },
+        ],
+        updated: new Date(),
+        created: new Date(),
+      }
+      mockDrafts.push(draft)
+
+      // Small change to ensure diff is small
+      await draftService.update('draft123', {
+        text: `${baseText} Version 3 ending.`,
+      })
+
+      const updatedDraft = mockDrafts.find((d) => d.id === 'draft123')
+      expect(updatedDraft.history).toHaveLength(2)
+      // Version 2 should be stored as diff (small change, not at interval boundary)
+      expect(updatedDraft.history[0].isFullSnapshot).toBe(false)
+    })
+
+    it('should store full snapshot at interval boundary', async () => {
+      // Version 6 (6 % 5 === 1) should trigger full snapshot
+      const draft = {
+        _id: 'draft123',
+        id: 'draft123',
+        refType: DraftRefType.Post,
+        title: 'Initial',
+        text: 'Version 6 text',
+        version: 6,
+        history: [
+          {
+            version: 5,
+            title: 'v5',
+            text: 'Version 5 text',
+            savedAt: new Date(),
+            isFullSnapshot: false,
+          },
+          {
+            version: 1,
+            title: 'v1',
+            text: 'Version 1 text',
+            savedAt: new Date(),
+            isFullSnapshot: true,
+          },
+        ],
+        updated: new Date(),
+        created: new Date(),
+      }
+      mockDrafts.push(draft)
+
+      await draftService.update('draft123', { text: 'Version 7 text' })
+
+      const updatedDraft = mockDrafts.find((d) => d.id === 'draft123')
+      expect(updatedDraft.history).toHaveLength(3)
+      // Version 6 (6 % 5 === 1) should be stored as full snapshot
+      expect(updatedDraft.history[0].isFullSnapshot).toBe(true)
+      expect(updatedDraft.history[0].text).toBe('Version 6 text')
+    })
+
+    it('should fall back to full snapshot when diff is too large', async () => {
+      const originalText = 'A'
+      const completelyDifferentText = 'B'.repeat(100)
+
+      const draft = {
+        _id: 'draft123',
+        id: 'draft123',
+        refType: DraftRefType.Post,
+        title: 'Initial',
+        text: originalText,
+        version: 2,
+        history: [
+          {
+            version: 1,
+            title: 'v1',
+            text: 'Original',
+            savedAt: new Date(),
+            isFullSnapshot: true,
+          },
+        ],
+        updated: new Date(),
+        created: new Date(),
+      }
+      mockDrafts.push(draft)
+
+      await draftService.update('draft123', { text: completelyDifferentText })
+
+      const updatedDraft = mockDrafts.find((d) => d.id === 'draft123')
+      // When diff is larger than threshold, should store full snapshot
+      expect(updatedDraft.history[0].isFullSnapshot).toBe(true)
+    })
+  })
 })

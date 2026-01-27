@@ -20,6 +20,10 @@ export class DraftHistoryModel {
   @prop({ required: true })
   title: string
 
+  /**
+   * 当 isFullSnapshot 为 true 时，存储完整文本
+   * 当 isFullSnapshot 为 false 时，存储相对于最近一个全量快照的 diff patches
+   */
   @prop({ required: true })
   text: string
 
@@ -28,6 +32,14 @@ export class DraftHistoryModel {
 
   @prop({ required: true })
   savedAt: Date
+
+  /**
+   * 是否为全量快照
+   * true: text 字段存储完整内容
+   * false: text 字段存储 diff patches (JSON 序列化)
+   */
+  @prop({ default: true })
+  isFullSnapshot: boolean
 }
 
 @index({ refType: 1, refId: 1 }, { sparse: true })

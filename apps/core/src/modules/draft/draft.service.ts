@@ -5,13 +5,25 @@ import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { dbTransforms } from '~/utils/db-transform.util'
+import DiffMatchPatch from 'diff-match-patch'
 import { Types } from 'mongoose'
 import { DraftHistoryModel, DraftModel, DraftRefType } from './draft.model'
 import type { CreateDraftDto, UpdateDraftDto } from './draft.schema'
 
+const dmp = new DiffMatchPatch()
+
 @Injectable()
 export class DraftService {
-  private readonly MAX_HISTORY_VERSIONS = 10
+  private readonly MAX_HISTORY_VERSIONS = 100
+  /**
+   * 每 N 个版本存储一次全量快照
+   * 例如: v1(全量) → v2(diff) → v3(diff) → v4(diff) → v5(diff) → v6(全量) → ...
+   */
+  private readonly FULL_SNAPSHOT_INTERVAL = 5
+  /**
+   * 当 diff 大小超过原文大小的这个比例时，直接存全量
+   */
+  private readonly DIFF_SIZE_THRESHOLD = 0.7
 
   constructor(
     @InjectModel(DraftModel)
@@ -77,19 +89,21 @@ export class DraftService {
         JSON.stringify(dto.typeSpecificData) !== draft.typeSpecificData)
 
     if (hasContentChange && (draft.title || draft.text)) {
-      // 保存当前版本到历史
-      const historyEntry: DraftHistoryModel = {
-        version: draft.version,
-        title: draft.title,
-        text: draft.text,
-        typeSpecificData: draft.typeSpecificData,
-        savedAt: draft.updated || draft.created || new Date(),
-      }
+      // 保存当前版本到历史（使用混合策略）
+      const historyEntry = this.createHistoryEntry(
+        draft.version,
+        draft.title,
+        draft.text,
+        draft.typeSpecificData,
+        draft.updated || draft.created || new Date(),
+        draft.history,
+      )
 
       // 添加到历史，保持最多10个版本
       draft.history.unshift(historyEntry)
       if (draft.history.length > this.MAX_HISTORY_VERSIONS) {
-        draft.history = draft.history.slice(0, this.MAX_HISTORY_VERSIONS)
+        // 删除时确保不会断链（保留至少一个全量快照）
+        draft.history = this.trimHistoryWithFullSnapshot(draft.history)
       }
     }
 
@@ -177,9 +191,14 @@ export class DraftService {
     )
   }
 
-  async getHistory(
-    id: string,
-  ): Promise<Array<{ version: number; title: string; savedAt: Date }>> {
+  async getHistory(id: string): Promise<
+    Array<{
+      version: number
+      title: string
+      savedAt: Date
+      isFullSnapshot: boolean
+    }>
+  > {
     const draft = await this.draftModel.findById(id).lean()
     if (!draft) {
       throw new BizException(ErrorCodeEnum.DraftNotFound)
@@ -189,6 +208,7 @@ export class DraftService {
       version: h.version,
       title: h.title,
       savedAt: h.savedAt,
+      isFullSnapshot: h.isFullSnapshot ?? true,
     }))
   }
 
@@ -206,6 +226,20 @@ export class DraftService {
       throw new BizException(ErrorCodeEnum.DraftHistoryNotFound)
     }
 
+    // 如果是 diff 版本，需要恢复完整内容
+    if (!historyEntry.isFullSnapshot) {
+      const restoredText = this.restoreTextFromHistory(
+        version,
+        draft.history,
+        draft.text,
+      )
+      return {
+        ...historyEntry,
+        text: restoredText,
+        isFullSnapshot: true,
+      }
+    }
+
     return historyEntry
   }
 
@@ -220,24 +254,35 @@ export class DraftService {
       throw new BizException(ErrorCodeEnum.DraftHistoryNotFound)
     }
 
-    // 保存当前版本到历史
-    draft.history.unshift({
-      version: draft.version,
-      title: draft.title,
-      text: draft.text,
-      typeSpecificData: draft.typeSpecificData,
-      savedAt: draft.updated || new Date(),
-    })
+    // 保存当前版本到历史（使用混合策略）
+    const newHistoryEntry = this.createHistoryEntry(
+      draft.version,
+      draft.title,
+      draft.text,
+      draft.typeSpecificData,
+      draft.updated || new Date(),
+      draft.history,
+    )
+    draft.history.unshift(newHistoryEntry)
 
-    // 恢复历史版本
+    // 恢复历史版本的完整内容
+    let restoredText = historyEntry.text
+    if (!historyEntry.isFullSnapshot) {
+      restoredText = this.restoreTextFromHistory(
+        version,
+        draft.history,
+        draft.text,
+      )
+    }
+
     draft.title = historyEntry.title
-    draft.text = historyEntry.text
+    draft.text = restoredText
     draft.typeSpecificData = historyEntry.typeSpecificData
     draft.version = draft.version + 1
 
     // 保持历史版本数量限制
     if (draft.history.length > this.MAX_HISTORY_VERSIONS) {
-      draft.history = draft.history.slice(0, this.MAX_HISTORY_VERSIONS)
+      draft.history = this.trimHistoryWithFullSnapshot(draft.history)
     }
 
     await draft.save()
@@ -272,5 +317,160 @@ export class DraftService {
       }
     }
     return draft
+  }
+
+  /**
+   * 创建历史记录条目（混合策略：周期性全量 + 中间增量）
+   */
+  private createHistoryEntry(
+    version: number,
+    title: string,
+    text: string,
+    typeSpecificData: string | undefined,
+    savedAt: Date,
+    existingHistory: DraftHistoryModel[],
+  ): DraftHistoryModel {
+    // 判断是否需要存储全量快照
+    const shouldFullSnapshot = this.shouldStoreFullSnapshot(
+      version,
+      text,
+      existingHistory,
+    )
+
+    if (shouldFullSnapshot) {
+      return {
+        version,
+        title,
+        text,
+        typeSpecificData,
+        savedAt,
+        isFullSnapshot: true,
+      }
+    }
+
+    // 存储 diff：计算当前文本相对于最近全量快照的差异
+    const baseText = this.findNearestFullSnapshotText(existingHistory, text)
+    const patches = dmp.patch_make(baseText, text)
+    const patchText = dmp.patch_toText(patches)
+
+    return {
+      version,
+      title,
+      text: patchText,
+      typeSpecificData,
+      savedAt,
+      isFullSnapshot: false,
+    }
+  }
+
+  /**
+   * 判断是否应该存储全量快照
+   */
+  private shouldStoreFullSnapshot(
+    version: number,
+    text: string,
+    existingHistory: DraftHistoryModel[],
+  ): boolean {
+    // 第一个版本总是全量
+    if (existingHistory.length === 0) {
+      return true
+    }
+
+    // 每 N 个版本存一次全量
+    if (version % this.FULL_SNAPSHOT_INTERVAL === 1) {
+      return true
+    }
+
+    // 查找最近的全量快照
+    const nearestFullSnapshot = existingHistory.find((h) => h.isFullSnapshot)
+    if (!nearestFullSnapshot) {
+      return true
+    }
+
+    // 计算 diff 大小，如果 diff 太大则直接存全量
+    const patches = dmp.patch_make(nearestFullSnapshot.text, text)
+    const patchText = dmp.patch_toText(patches)
+
+    if (patchText.length > text.length * this.DIFF_SIZE_THRESHOLD) {
+      return true
+    }
+
+    return false
+  }
+
+  /**
+   * 查找最近的全量快照文本
+   */
+  private findNearestFullSnapshotText(
+    history: DraftHistoryModel[],
+    currentText: string,
+  ): string {
+    const fullSnapshot = history.find((h) => h.isFullSnapshot)
+    return fullSnapshot?.text ?? currentText
+  }
+
+  /**
+   * 从历史记录中恢复指定版本的完整文本
+   * diff 以最近全量快照为基准，因此只需要基准快照 + 目标 diff
+   */
+  private restoreTextFromHistory(
+    targetVersion: number,
+    history: DraftHistoryModel[],
+    currentText: string,
+  ): string {
+    const targetIndex = history.findIndex((h) => h.version === targetVersion)
+    if (targetIndex === -1) {
+      return currentText
+    }
+
+    const targetEntry = history[targetIndex]
+    if (targetEntry.isFullSnapshot) {
+      return targetEntry.text
+    }
+
+    // 向后查找最近的全量快照
+    let baseText = currentText
+    for (let i = targetIndex; i < history.length; i++) {
+      if (history[i].isFullSnapshot) {
+        baseText = history[i].text
+        break
+      }
+    }
+
+    try {
+      const patches = dmp.patch_fromText(targetEntry.text)
+      const [newText, results] = dmp.patch_apply(patches, baseText)
+      return results.every((r) => r) ? newText : baseText
+    } catch {
+      // patch 解析或应用失败时回退到基准快照，避免返回损坏文本
+      return baseText
+    }
+  }
+
+  /**
+   * 裁剪历史记录，确保保留至少一个全量快照
+   */
+  private trimHistoryWithFullSnapshot(
+    history: DraftHistoryModel[],
+  ): DraftHistoryModel[] {
+    if (history.length <= this.MAX_HISTORY_VERSIONS) {
+      return history
+    }
+
+    // 保留前 MAX_HISTORY_VERSIONS 个版本
+    const trimmed = history.slice(0, this.MAX_HISTORY_VERSIONS)
+
+    // 如果裁剪后没有全量快照，保留窗口之后最近的一个全量快照作为基准
+    const hasFullSnapshot = trimmed.some((h) => h.isFullSnapshot)
+    if (!hasFullSnapshot) {
+      const baselineFullSnapshot = history
+        .slice(this.MAX_HISTORY_VERSIONS)
+        .find((h) => h.isFullSnapshot)
+      if (baselineFullSnapshot) {
+        trimmed[trimmed.length - 1] = baselineFullSnapshot
+      }
+    }
+
+    return trimmed
   }
 }
