@@ -17,6 +17,7 @@ export const ANALYZE_COLLECTION_NAME = 'analyzes'
 export const WEBHOOK_EVENT_COLLECTION_NAME = 'webhook_events'
 export const AI_SUMMARY_COLLECTION_NAME = 'ai_summaries'
 export const AI_DEEP_READING_COLLECTION_NAME = 'ai_deep_readings'
+export const AI_TRANSLATION_COLLECTION_NAME = 'ai_translations'
 export const DRAFT_COLLECTION_NAME = 'drafts'
 export const FILE_REFERENCE_COLLECTION_NAME = 'file_references'
 

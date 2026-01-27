@@ -9,6 +9,7 @@ export enum AIFeatureKey {
   Summary = 'summary',
   Writer = 'writer',
   CommentReview = 'commentReview',
+  Translation = 'translation',
 }
 
 export interface AIProviderConfig {

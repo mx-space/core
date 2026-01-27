@@ -76,4 +76,53 @@ Respond with a JSON object containing the slug field.`,
       },
     },
   },
+
+  // Translation Prompts
+  translation: {
+    getTranslationPrompt: (
+      targetLang: string,
+      content: {
+        title: string
+        text: string
+        summary?: string
+        tags?: string[]
+      },
+    ) =>
+      `Translate the following content to ${LANGUAGE_CODE_TO_NAME[targetLang] || targetLang}.
+
+IMPORTANT RULES:
+1. Preserve all Markdown formatting exactly as-is (headings, lists, bold, italic, etc.)
+2. Do NOT translate content inside code blocks (\`\`\` or \`)
+3. Do NOT translate URLs or links, only translate the link text if applicable
+4. Keep technical terms, proper nouns, and brand names in their original form when appropriate
+5. Maintain the original tone and style of the writing
+6. For tags, translate them if they are common words, keep technical terms as-is
+
+Content to translate:
+
+Title: ${content.title}
+
+Text:
+${content.text}
+${content.summary ? `\nSummary: ${content.summary}` : ''}
+${content.tags?.length ? `\nTags: ${content.tags.join(', ')}` : ''}
+
+Respond with a JSON object containing the translated fields.`,
+
+    schema: {
+      title: 'The translated title in the target language',
+      text: 'The translated text content in the target language, preserving all Markdown formatting',
+      summary:
+        'The translated summary in the target language (if provided in input)',
+      tags: 'Array of translated tags (if provided in input)',
+    },
+
+    detectLanguagePrompt: (text: string) =>
+      `Detect the language of the following text and return the ISO 639-1 language code (e.g., "en", "zh", "ja", "ko").
+
+Text:
+${text.slice(0, 500)}
+
+Return only the language code.`,
+  },
 } as const

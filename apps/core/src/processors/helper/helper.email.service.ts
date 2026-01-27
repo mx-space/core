@@ -143,7 +143,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     return new Promise<boolean>((r) => {
       this.instance.verify((error) => {
         if (error) {
-          this.logger.error('邮件客户端初始化连接失败！')
+          this.logger.error('邮件客户端初始化连接失败！', error.message)
           r(false)
         } else {
           r(true)

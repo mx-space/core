@@ -23,6 +23,10 @@ export class AiService {
     return this.getModelForFeature(AIFeatureKey.CommentReview)
   }
 
+  public async getTranslationModel() {
+    return this.getModelForFeature(AIFeatureKey.Translation)
+  }
+
   private async getModelForFeature(feature: AIFeatureKey) {
     const aiConfig = await this.configService.get('ai')
 
@@ -47,6 +51,7 @@ export class AiService {
       [AIFeatureKey.Summary]: 'summaryModel',
       [AIFeatureKey.Writer]: 'writerModel',
       [AIFeatureKey.CommentReview]: 'commentReviewModel',
+      [AIFeatureKey.Translation]: 'translationModel',
     }
     return config[featureToConfigKey[feature]] as AIModelAssignment | undefined
   }

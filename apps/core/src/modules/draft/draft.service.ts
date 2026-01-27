@@ -99,7 +99,6 @@ export class DraftService {
         draft.history,
       )
 
-      // 添加到历史，保持最多10个版本
       draft.history.unshift(historyEntry)
       if (draft.history.length > this.MAX_HISTORY_VERSIONS) {
         // 删除时确保不会断链（保留至少一个全量快照）
@@ -349,10 +348,12 @@ export class DraftService {
     savedAt: Date,
     existingHistory: DraftHistoryModel[],
   ): DraftHistoryModel {
+    const historyText = text ?? ''
+
     // 判断是否需要存储全量快照
     const shouldFullSnapshot = this.shouldStoreFullSnapshot(
       version,
-      text,
+      historyText,
       existingHistory,
     )
 
@@ -360,7 +361,7 @@ export class DraftService {
       return {
         version,
         title,
-        text,
+        text: historyText,
         typeSpecificData,
         savedAt,
         isFullSnapshot: true,
@@ -369,8 +370,8 @@ export class DraftService {
 
     // 存储 diff：计算当前文本相对于最近全量快照的差异
     const baseSnapshot = this.findNearestFullSnapshot(existingHistory)
-    const baseText = baseSnapshot?.text ?? text
-    const patches = dmp.patch_make(baseText, text)
+    const baseText = baseSnapshot?.text ?? historyText
+    const patches = dmp.patch_make(baseText, historyText)
     const patchText = dmp.patch_toText(patches)
 
     // 当文本没有实际 diff（仅标题变化等），避免空字符串触发 required 校验

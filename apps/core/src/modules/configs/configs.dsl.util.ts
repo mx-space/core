@@ -382,6 +382,7 @@ export function attachAiProviderOptionsToFormDSL(
     aiConfig.summaryModel?.providerId,
     aiConfig.writerModel?.providerId,
     aiConfig.commentReviewModel?.providerId,
+    aiConfig.translationModel?.providerId,
   ].filter(Boolean) as string[]
 
   const options: Array<{ label: string; value: string }> = []

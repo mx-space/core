@@ -25,8 +25,12 @@ export class DraftHistoryModel {
    * 当 isFullSnapshot 为 false 时，存储相对于最近一个全量快照的 diff patches
    */
   @prop({
-    required(this: DraftHistoryModel) {
-      return this.refVersion === undefined
+    validate: {
+      validator(this: DraftHistoryModel, value: string | undefined) {
+        if (this.refVersion !== undefined) return true
+        return value !== undefined && value !== null
+      },
+      message: 'Path `text` is required.',
     },
   })
   text?: string

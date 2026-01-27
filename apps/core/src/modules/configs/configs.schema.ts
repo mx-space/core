@@ -342,6 +342,29 @@ export const AISchema = section('AI 设定', {
         '生成的摘要目标语言，默认为 `auto`，根据用户的语言自动选择；如果需要固定语言，请填写 [ISO 639-1 语言代码](https://www.w3schools.com/tags/ref_language_codes.asp)',
     },
   ),
+  translationModel: field.plain(
+    AIModelAssignmentSchema.optional(),
+    '翻译功能模型',
+  ),
+  enableTranslation: field.toggle(z.boolean().optional(), '可调用 AI 翻译', {
+    description: '是否开启调用 AI 去生成翻译',
+  }),
+  enableAutoGenerateTranslation: field.toggle(
+    z.boolean().optional(),
+    '开启 AI 翻译自动生成',
+    {
+      description:
+        '此选项开启后，将会在文章发布后自动生成翻译，需要开启上面的选项，否则无效',
+    },
+  ),
+  translationTargetLanguages: field.array(
+    z.array(z.string()).optional(),
+    'AI 翻译目标语言列表',
+    {
+      description:
+        '自动生成翻译的目标语言列表，使用 [ISO 639-1 语言代码](https://www.w3schools.com/tags/ref_language_codes.asp)，如 ["en", "ja", "ko"]',
+    },
+  ),
 })
 export class AIDto extends createZodDto(AISchema) {}
 export type AIConfig = z.infer<typeof AISchema>
