@@ -9,6 +9,7 @@ MX Space is a personal blog server application built with NestJS, MongoDB, and R
 ## Related Projects
 
 - **Dashboard (admin-vue3)**: `../admin-vue3` - 后台管理面板，Vue 3 项目
+- **Frontend (shiroi)**: `../shiroi` - 主站前端
 
 ## Environment Requirements
 

@@ -58,15 +58,24 @@ export class AggregateController {
               }
               return this.snippetService.getPublicSnippetByName(theme, 'theme')
             }),
+      this.configsService.get('ai'),
     ])
-    const [user, categories, pageMeta, url, seo, latestNoteId, themeConfig] =
-      tasks.map((t) => {
-        if (t.status === 'fulfilled') {
-          return t.value
-        } else {
-          return null
-        }
-      })
+    const [
+      user,
+      categories,
+      pageMeta,
+      url,
+      seo,
+      latestNoteId,
+      themeConfig,
+      aiConfig,
+    ] = tasks.map((t) => {
+      if (t.status === 'fulfilled') {
+        return t.value
+      } else {
+        return null
+      }
+    })
     return {
       user,
       seo,
@@ -75,6 +84,9 @@ export class AggregateController {
       pageMeta,
       latestNoteId,
       theme: themeConfig,
+      ai: {
+        enableSummary: aiConfig?.enableSummary ?? false,
+      },
     }
   }
 
