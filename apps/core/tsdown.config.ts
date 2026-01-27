@@ -11,4 +11,5 @@ export default defineConfig({
   outDir: 'out',
   sourcemap: true,
   shims: true,
+  inlineOnly: false,
 })
