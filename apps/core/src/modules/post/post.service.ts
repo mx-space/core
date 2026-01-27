@@ -30,6 +30,7 @@ import slugify from 'slugify'
 import { getArticleIdFromRoomName } from '../activity/activity.util'
 import type { CategoryService } from '../category/category.service'
 import { CommentModel } from '../comment/comment.model'
+import { DraftRefType } from '../draft/draft.model'
 import type { DraftService } from '../draft/draft.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { PostModel } from './post.model'
@@ -411,6 +412,7 @@ export class PostService implements OnApplicationBootstrap {
         ref: id,
         refType: CollectionRefTypes.Post,
       }),
+      this.draftService.deleteByRef(DraftRefType.Post, id),
       this.removeRelatedEachOther(deletedPost),
       this.slugTrackerService.deleteAllTracker(id),
       this.fileReferenceService.removeReferencesForDocument(

@@ -191,6 +191,25 @@ export class DraftService {
     )
   }
 
+  async deleteByRef(refType: DraftRefType, refId: string): Promise<void> {
+    const refObjectId = Types.ObjectId.createFromHexString(refId)
+    const drafts = await this.draftModel
+      .find({ refType, refId: refObjectId })
+      .select('_id')
+      .lean()
+    if (drafts.length === 0) return
+
+    await this.draftModel.deleteMany({ refType, refId: refObjectId })
+    await Promise.all(
+      drafts.map((draft) =>
+        this.fileReferenceService.removeReferencesForDocument(
+          draft._id.toString(),
+          FileReferenceType.Draft,
+        ),
+      ),
+    )
+  }
+
   async getHistory(id: string): Promise<
     Array<{
       version: number
@@ -231,7 +250,7 @@ export class DraftService {
       const restoredText = this.restoreTextFromHistory(
         version,
         draft.history,
-        draft.text,
+        draft.text ?? '',
       )
       return {
         ...historyEntry,
@@ -266,12 +285,12 @@ export class DraftService {
     draft.history.unshift(newHistoryEntry)
 
     // 恢复历史版本的完整内容
-    let restoredText = historyEntry.text
+    let restoredText = historyEntry.text ?? ''
     if (!historyEntry.isFullSnapshot) {
       restoredText = this.restoreTextFromHistory(
         version,
         draft.history,
-        draft.text,
+        draft.text ?? '',
       )
     }
 
@@ -349,9 +368,23 @@ export class DraftService {
     }
 
     // 存储 diff：计算当前文本相对于最近全量快照的差异
-    const baseText = this.findNearestFullSnapshotText(existingHistory, text)
+    const baseSnapshot = this.findNearestFullSnapshot(existingHistory)
+    const baseText = baseSnapshot?.text ?? text
     const patches = dmp.patch_make(baseText, text)
     const patchText = dmp.patch_toText(patches)
+
+    // 当文本没有实际 diff（仅标题变化等），避免空字符串触发 required 校验
+    if (!patchText) {
+      return {
+        version,
+        title,
+        typeSpecificData,
+        savedAt,
+        isFullSnapshot: false,
+        refVersion: baseSnapshot?.version,
+        baseVersion: baseSnapshot?.version,
+      }
+    }
 
     return {
       version,
@@ -360,6 +393,7 @@ export class DraftService {
       typeSpecificData,
       savedAt,
       isFullSnapshot: false,
+      baseVersion: baseSnapshot?.version,
     }
   }
 
@@ -388,7 +422,7 @@ export class DraftService {
     }
 
     // 计算 diff 大小，如果 diff 太大则直接存全量
-    const patches = dmp.patch_make(nearestFullSnapshot.text, text)
+    const patches = dmp.patch_make(nearestFullSnapshot.text ?? '', text)
     const patchText = dmp.patch_toText(patches)
 
     if (patchText.length > text.length * this.DIFF_SIZE_THRESHOLD) {
@@ -401,12 +435,17 @@ export class DraftService {
   /**
    * 查找最近的全量快照文本
    */
+  private findNearestFullSnapshot(
+    history: DraftHistoryModel[],
+  ): DraftHistoryModel | undefined {
+    return history.find((h) => h.isFullSnapshot)
+  }
+
   private findNearestFullSnapshotText(
     history: DraftHistoryModel[],
     currentText: string,
   ): string {
-    const fullSnapshot = history.find((h) => h.isFullSnapshot)
-    return fullSnapshot?.text ?? currentText
+    return this.findNearestFullSnapshot(history)?.text ?? currentText
   }
 
   /**
@@ -417,28 +456,46 @@ export class DraftService {
     targetVersion: number,
     history: DraftHistoryModel[],
     currentText: string,
+    visited: Set<number> = new Set(),
   ): string {
+    if (visited.has(targetVersion)) {
+      return currentText
+    }
+    visited.add(targetVersion)
+
     const targetIndex = history.findIndex((h) => h.version === targetVersion)
     if (targetIndex === -1) {
       return currentText
     }
 
     const targetEntry = history[targetIndex]
+    if (targetEntry.refVersion !== undefined) {
+      const refEntry = history.find((h) => h.version === targetEntry.refVersion)
+      if (refEntry?.isFullSnapshot) {
+        return refEntry.text ?? currentText
+      }
+      return this.restoreTextFromHistory(
+        targetEntry.refVersion,
+        history,
+        currentText,
+        visited,
+      )
+    }
     if (targetEntry.isFullSnapshot) {
-      return targetEntry.text
+      return targetEntry.text ?? currentText
     }
 
     // 向后查找最近的全量快照
     let baseText = currentText
     for (let i = targetIndex; i < history.length; i++) {
       if (history[i].isFullSnapshot) {
-        baseText = history[i].text
+        baseText = history[i].text ?? currentText
         break
       }
     }
 
     try {
-      const patches = dmp.patch_fromText(targetEntry.text)
+      const patches = dmp.patch_fromText(targetEntry.text ?? '')
       const [newText, results] = dmp.patch_apply(patches, baseText)
       return results.every((r) => r) ? newText : baseText
     } catch {
@@ -460,7 +517,26 @@ export class DraftService {
     // 保留前 MAX_HISTORY_VERSIONS 个版本
     const trimmed = history.slice(0, this.MAX_HISTORY_VERSIONS)
 
-    // 如果裁剪后没有全量快照，保留窗口之后最近的一个全量快照作为基准
+    // 将失效的引用转为真实快照，避免 trim 后链路断裂
+    const trimmedVersions = new Set<number>(trimmed.map((h) => h.version))
+    for (const entry of trimmed) {
+      if (
+        entry.refVersion !== undefined &&
+        !trimmedVersions.has(entry.refVersion)
+      ) {
+        const resolvedText = this.restoreTextFromHistory(
+          entry.version,
+          history,
+          '',
+        )
+        entry.text = resolvedText
+        entry.isFullSnapshot = true
+        entry.refVersion = undefined
+        entry.baseVersion = undefined
+      }
+    }
+
+    // 如果裁剪后仍然没有全量快照，保留窗口之后最近的一个全量快照作为基准
     const hasFullSnapshot = trimmed.some((h) => h.isFullSnapshot)
     if (!hasFullSnapshot) {
       const baselineFullSnapshot = history

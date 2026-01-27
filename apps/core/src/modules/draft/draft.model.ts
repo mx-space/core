@@ -24,8 +24,12 @@ export class DraftHistoryModel {
    * 当 isFullSnapshot 为 true 时，存储完整文本
    * 当 isFullSnapshot 为 false 时，存储相对于最近一个全量快照的 diff patches
    */
-  @prop({ required: true })
-  text: string
+  @prop({
+    required(this: DraftHistoryModel) {
+      return this.refVersion === undefined
+    },
+  })
+  text?: string
 
   @prop({ type: String })
   typeSpecificData?: string
@@ -40,6 +44,18 @@ export class DraftHistoryModel {
    */
   @prop({ default: true })
   isFullSnapshot: boolean
+
+  /**
+   * 指向最近的全量快照版本（用于无 diff 的去重）
+   */
+  @prop()
+  refVersion?: number
+
+  /**
+   * 当前版本基于哪个全量快照（用于前端展示引用关系）
+   */
+  @prop()
+  baseVersion?: number
 }
 
 @index({ refType: 1, refId: 1 }, { sparse: true })

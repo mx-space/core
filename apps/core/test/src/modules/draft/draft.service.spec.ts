@@ -43,13 +43,9 @@ describe('DraftService with FileReference integration', () => {
       findById: vi.fn().mockImplementation((id: string) => {
         const draft = mockDrafts.find((d) => d._id === id || d.id === id)
         if (draft) {
-          return {
-            ...draft,
-            save: vi.fn().mockImplementation(async () => {
-              return draft
-            }),
-            toObject: () => ({ ...draft }),
-          }
+          draft.save = vi.fn().mockImplementation(async () => draft)
+          draft.toObject = () => ({ ...draft })
+          return draft
         }
         return null
       }),
@@ -142,6 +138,7 @@ describe('DraftService with FileReference integration', () => {
         refType: DraftRefType.Post,
         title: 'Test Draft',
         text: `Content with ![image](${imageUrl})`,
+        meta: {},
       }
 
       const result = await draftService.create(draftData)
@@ -161,6 +158,7 @@ describe('DraftService with FileReference integration', () => {
         refType: DraftRefType.Post,
         title: 'Empty Draft',
         text: '',
+        meta: {},
       }
 
       await draftService.create(draftData)
@@ -260,6 +258,7 @@ describe('DraftService with FileReference integration', () => {
         refType: DraftRefType.Post,
         title: 'Lifecycle Test',
         text: `First image ![img1](${imageUrl1})`,
+        meta: {},
       })
 
       expect(
@@ -412,6 +411,158 @@ describe('DraftService with FileReference integration', () => {
       const updatedDraft = mockDrafts.find((d) => d.id === 'draft123')
       // When diff is larger than threshold, should store full snapshot
       expect(updatedDraft.history[0].isFullSnapshot).toBe(true)
+    })
+
+    it('should store refVersion when diff is empty', async () => {
+      const draft = {
+        _id: 'draft123',
+        id: 'draft123',
+        refType: DraftRefType.Post,
+        title: 'Title v2',
+        text: 'Same text',
+        version: 2,
+        history: [
+          {
+            version: 1,
+            title: 'Title v1',
+            text: 'Same text',
+            savedAt: new Date(),
+            isFullSnapshot: true,
+          },
+        ],
+        updated: new Date(),
+        created: new Date(),
+      }
+      mockDrafts.push(draft)
+
+      await draftService.update('draft123', { title: 'Title v3' })
+
+      const updatedDraft = mockDrafts.find((d) => d.id === 'draft123')
+      expect(updatedDraft.history).toHaveLength(2)
+      expect(updatedDraft.history[0].isFullSnapshot).toBe(false)
+      expect(updatedDraft.history[0].refVersion).toBe(1)
+      expect(updatedDraft.history[0].text).toBeUndefined()
+      expect(updatedDraft.history[0].baseVersion).toBe(1)
+    })
+
+    it('should restore text from refVersion entries', async () => {
+      const draft = {
+        _id: 'draft123',
+        id: 'draft123',
+        refType: DraftRefType.Post,
+        title: 'Title v3',
+        text: 'Same text',
+        version: 3,
+        history: [
+          {
+            version: 2,
+            title: 'Title v2',
+            savedAt: new Date(),
+            isFullSnapshot: false,
+            refVersion: 1,
+          },
+          {
+            version: 1,
+            title: 'Title v1',
+            text: 'Same text',
+            savedAt: new Date(),
+            isFullSnapshot: true,
+          },
+        ],
+        updated: new Date(),
+        created: new Date(),
+      }
+      mockDrafts.push(draft)
+
+      const restored = await draftService.restoreVersion('draft123', 2)
+
+      expect(restored.text).toBe('Same text')
+      expect(restored.title).toBe('Title v2')
+    })
+
+    it('should materialize refVersion entry when trimming history', async () => {
+      const draft = {
+        _id: 'draft123',
+        id: 'draft123',
+        refType: DraftRefType.Post,
+        title: 'Title v150',
+        text: 'Same text',
+        version: 150,
+        history: [],
+        updated: new Date(),
+        created: new Date(),
+      }
+
+      const now = Date.now()
+      for (let i = 149; i >= 1; i -= 1) {
+        const isFullSnapshot = i === 1
+        draft.history.push({
+          version: i,
+          title: `Title v${i}`,
+          text: isFullSnapshot ? 'Same text' : undefined,
+          savedAt: new Date(now - i * 1000),
+          isFullSnapshot,
+          ...(isFullSnapshot ? {} : { refVersion: 1 }),
+        })
+      }
+
+      mockDrafts.push(draft)
+
+      // Trigger trim by pushing one more history entry
+      await draftService.update('draft123', { title: 'Title v151' })
+
+      const updatedDraft = mockDrafts.find((d) => d.id === 'draft123')
+      expect(updatedDraft.history.length).toBeLessThanOrEqual(100)
+      expect(updatedDraft.history.some((h: any) => h.version === 1)).toBe(false)
+      expect(updatedDraft.history[0].isFullSnapshot).toBe(true)
+      expect(updatedDraft.history[0].refVersion).toBeUndefined()
+      expect(updatedDraft.history[0].text).toBe('Same text')
+    })
+
+    it('should resolve chained refVersion after trimming history', async () => {
+      const draft = {
+        _id: 'draft123',
+        id: 'draft123',
+        refType: DraftRefType.Post,
+        title: 'Title v150',
+        text: 'Same text',
+        version: 150,
+        history: [],
+        updated: new Date(),
+        created: new Date(),
+      }
+
+      const now = Date.now()
+      for (let i = 149; i >= 1; i -= 1) {
+        const isFullSnapshot = i === 1
+        const entry: any = {
+          version: i,
+          title: `Title v${i}`,
+          savedAt: new Date(now - i * 1000),
+          isFullSnapshot,
+        }
+        if (isFullSnapshot) {
+          entry.text = 'Same text'
+        } else if (i === 2) {
+          entry.refVersion = 1
+        } else {
+          entry.refVersion = 2
+        }
+        draft.history.push(entry)
+      }
+
+      mockDrafts.push(draft)
+
+      // Trigger trim by pushing one more history entry
+      await draftService.update('draft123', { title: 'Title v151' })
+
+      const updatedDraft = mockDrafts.find((d) => d.id === 'draft123')
+      const materialized = updatedDraft.history[0]
+
+      expect(materialized.version).toBe(150)
+      expect(materialized.isFullSnapshot).toBe(true)
+      expect(materialized.refVersion).toBeUndefined()
+      expect(materialized.text).toBe('Same text')
     })
   })
 })

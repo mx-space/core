@@ -20,6 +20,7 @@ import { debounce, omit } from 'es-toolkit/compat'
 import type { PaginateOptions, QueryFilter } from 'mongoose'
 import { getArticleIdFromRoomName } from '../activity/activity.util'
 import { CommentService } from '../comment/comment.service'
+import { DraftRefType } from '../draft/draft.model'
 import { DraftService } from '../draft/draft.service'
 import { NoteModel } from './note.model'
 
@@ -388,6 +389,7 @@ export class NoteService {
         ref: id,
         refType: CollectionRefTypes.Note,
       }),
+      this.draftService.deleteByRef(DraftRefType.Note, id),
       this.fileReferenceService.removeReferencesForDocument(
         id,
         FileReferenceType.Note,

@@ -58,6 +58,7 @@ describe('NoteService', () => {
   let mockDraftService: {
     markAsPublished: Mock
     linkToPublished: Mock
+    deleteByRef: Mock
   }
 
   let nidCounter: number
@@ -253,6 +254,7 @@ describe('NoteService', () => {
     mockDraftService = {
       markAsPublished: vi.fn().mockResolvedValue(undefined),
       linkToPublished: vi.fn().mockResolvedValue(undefined),
+      deleteByRef: vi.fn().mockResolvedValue(undefined),
     }
 
     const mockNoteModel = createMockNoteModel()

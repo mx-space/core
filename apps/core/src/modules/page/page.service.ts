@@ -14,6 +14,7 @@ import { scheduleManager } from '~/utils/schedule.util'
 import { isDefined } from '~/utils/validator.util'
 import { omit } from 'es-toolkit/compat'
 import slugify from 'slugify'
+import { DraftRefType } from '../draft/draft.model'
 import { DraftService } from '../draft/draft.service'
 import { PageModel } from './page.model'
 
@@ -167,6 +168,7 @@ export class PageService {
       this.model.deleteOne({
         _id: id,
       }),
+      this.draftService.deleteByRef(DraftRefType.Page, id),
       this.fileReferenceService.removeReferencesForDocument(
         id,
         FileReferenceType.Page,

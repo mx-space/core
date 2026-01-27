@@ -40,6 +40,7 @@ describe('PostService', () => {
   let mockDraftService: {
     markAsPublished: Mock
     linkToPublished: Mock
+    deleteByRef: Mock
   }
 
   let mockSlugTrackerService: {
@@ -243,6 +244,7 @@ describe('PostService', () => {
     mockDraftService = {
       markAsPublished: vi.fn().mockResolvedValue(undefined),
       linkToPublished: vi.fn().mockResolvedValue(undefined),
+      deleteByRef: vi.fn().mockResolvedValue(undefined),
     }
 
     mockSlugTrackerService = {
