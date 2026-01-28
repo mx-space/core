@@ -46,3 +46,14 @@ export interface TextBaseModel extends BaseCommentIndexModel {
 export type ModelWithLiked<T> = T & {
   liked: boolean
 }
+
+export interface TranslationMeta {
+  sourceLang: string
+  targetLang: string
+  translatedAt: string
+}
+
+export type ModelWithTranslation<T> = T & {
+  isTranslated: boolean
+  translationMeta?: TranslationMeta
+}

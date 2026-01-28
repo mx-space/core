@@ -8,6 +8,7 @@ import {
 import { PagerSchema } from '~/shared/dto/pager.dto'
 import { WriteBaseSchema } from '~/shared/schema'
 import { ImageSchema } from '~/shared/schema/image.schema'
+import { normalizeLanguageCode } from '~/utils/lang.util'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
@@ -76,6 +77,12 @@ export class NoteQueryDto extends createZodDto(NoteQuerySchema) {}
 export const NotePasswordQuerySchema = z.object({
   password: zNonEmptyString.optional(),
   single: zCoerceBoolean.optional(),
+  lang: z
+    .preprocess(
+      (val) => normalizeLanguageCode(val as string),
+      z.string().length(2),
+    )
+    .optional(),
 })
 
 export class NotePasswordQueryDto extends createZodDto(

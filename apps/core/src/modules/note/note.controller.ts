@@ -19,6 +19,7 @@ import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
+import { TranslationEnhancerService } from '~/processors/helper/helper.translation-enhancer.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
@@ -42,6 +43,7 @@ export class NoteController {
     private readonly countingService: CountingService,
 
     private readonly macrosService: TextMacroService,
+    private readonly translationEnhancerService: TranslationEnhancerService,
   ) {}
 
   @Get('/')
@@ -208,7 +210,7 @@ export class NoteController {
     @IpLocation() { ip }: IpRecord,
   ) {
     const { nid } = params
-    const { password, single: isSingle } = query
+    const { password, single: isSingle, lang } = query
     const condition = isAuthenticated ? {} : { isPublished: true }
     const current: NoteModel | null = await this.noteService.model
       .findOne({
@@ -237,8 +239,23 @@ export class NoteController {
       .getThisRecordIsLiked(current.id!, ip)
       .catch(() => false)
 
+    const translationResult =
+      await this.translationEnhancerService.enhanceWithTranslation({
+        articleId: current.id!,
+        targetLang: lang,
+        allowHidden: Boolean(isAuthenticated || current.password),
+        originalData: {
+          title: current.title,
+          text: current.text,
+        },
+      })
+
     const currentData = {
       ...current,
+      title: translationResult.title,
+      text: translationResult.text,
+      isTranslated: translationResult.isTranslated,
+      translationMeta: translationResult.translationMeta,
       liked,
     }
 

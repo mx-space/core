@@ -446,6 +446,7 @@ exports[`NoteController (e2e) > GET /notes/nid/:nid 1`] = `
     "created": "2023-01-17T11:01:57.851Z",
     "images": [],
     "is_published": true,
+    "is_translated": false,
     "liked": true,
     "meta": null,
     "mood": "happy",

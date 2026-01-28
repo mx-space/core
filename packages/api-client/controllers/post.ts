@@ -2,7 +2,11 @@ import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
 import type { SelectFields } from '~/interfaces/types'
-import type { ModelWithLiked, PaginateResult } from '~/models/base'
+import type {
+  ModelWithLiked,
+  ModelWithTranslation,
+  PaginateResult,
+} from '~/models/base'
 import type { PostModel } from '~/models/post'
 import { autoBind } from '~/utils/auto-bind'
 import type { HTTPClient } from '../core/client'
@@ -62,21 +66,32 @@ export class PostController<ResponseWrapper> implements IController {
    * 根据分类和路径查找文章
    * @param categoryName
    * @param slug
+   * @param options 可选参数，包含 lang 用于获取翻译版本
    */
   getPost(
     categoryName: string,
     slug: string,
-  ): RequestProxyResult<ModelWithLiked<PostModel>, ResponseWrapper>
+    options?: { lang?: string },
+  ): RequestProxyResult<
+    ModelWithLiked<ModelWithTranslation<PostModel>>,
+    ResponseWrapper
+  >
   /**
    * 根据 ID 查找文章
    * @param id
    */
   getPost(id: string): RequestProxyResult<PostModel, ResponseWrapper>
-  getPost(idOrCategoryName: string, slug?: string): any {
+  getPost(
+    idOrCategoryName: string,
+    slug?: string,
+    options?: { lang?: string },
+  ): any {
     if (arguments.length == 1) {
       return this.proxy(idOrCategoryName).get<PostModel>()
     } else {
-      return this.proxy(idOrCategoryName)(slug).get<PostModel>()
+      return this.proxy(idOrCategoryName)(slug).get<PostModel>({
+        params: options?.lang ? { lang: options.lang } : undefined,
+      })
     }
   }
 

@@ -1,4 +1,8 @@
-import type { ModelWithLiked, TextBaseModel } from './base'
+import type {
+  ModelWithLiked,
+  ModelWithTranslation,
+  TextBaseModel,
+} from './base'
 import type { TopicModel } from './topic'
 
 export interface NoteModel extends TextBaseModel {
@@ -36,6 +40,12 @@ export interface NoteWrappedPayload {
 
 export interface NoteWrappedWithLikedPayload {
   data: ModelWithLiked<NoteModel>
+  next?: Partial<NoteModel>
+  prev?: Partial<NoteModel>
+}
+
+export interface NoteWrappedWithLikedAndTranslationPayload {
+  data: ModelWithLiked<ModelWithTranslation<NoteModel>>
   next?: Partial<NoteModel>
   prev?: Partial<NoteModel>
 }

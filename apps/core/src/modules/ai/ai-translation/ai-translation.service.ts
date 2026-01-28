@@ -1,10 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { BizException } from '~/common/exceptions/biz.exception'
-import { BusinessEvents } from '~/constants/business-event.constant'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -58,6 +59,7 @@ export class AiTranslationService {
     private readonly configService: ConfigsService,
     private readonly redisService: RedisService,
     private readonly aiService: AiService,
+    private readonly eventManager: EventManagerService,
   ) {}
 
   private extractIdFromEvent(event: ArticleEventPayload): string | null {
@@ -305,6 +307,10 @@ export class AiTranslationService {
       this.logger.log(
         `AI translation updated: article=${articleId} target=${targetLang}`,
       )
+
+      // 发送翻译更新事件
+      this.emitTranslationEvent(BusinessEvents.TRANSLATION_UPDATE, existing)
+
       return existing
     }
 
@@ -322,7 +328,33 @@ export class AiTranslationService {
     this.logger.log(
       `AI translation created: article=${articleId} target=${targetLang}`,
     )
+
+    // 发送翻译创建事件
+    this.emitTranslationEvent(BusinessEvents.TRANSLATION_CREATE, created)
+
     return created
+  }
+
+  private emitTranslationEvent(
+    eventType: BusinessEvents,
+    translation: AITranslationModel,
+  ) {
+    const payload = {
+      id: translation.id,
+      refId: translation.refId,
+      refType: translation.refType,
+      lang: translation.lang,
+      sourceLang: translation.sourceLang,
+      title: translation.title,
+      text: translation.text,
+      summary: translation.summary,
+      tags: translation.tags,
+      hash: translation.hash,
+    }
+
+    this.eventManager.emit(eventType, payload, {
+      scope: EventScope.TO_VISITOR,
+    })
   }
 
   async generateTranslationsForLanguages(
@@ -508,13 +540,14 @@ export class AiTranslationService {
   async getTranslationForArticle(
     articleId: string,
     targetLang: string,
+    options?: { ignoreVisibility?: boolean },
   ): Promise<AITranslationModel | null> {
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article || !article.document) {
       throw new BizException(ErrorCodeEnum.ContentNotFound)
     }
 
-    if (!this.isArticleVisible(article)) {
+    if (!options?.ignoreVisibility && !this.isArticleVisible(article)) {
       if (article.type === CollectionRefTypes.Post) {
         throw new BizException(ErrorCodeEnum.PostHiddenOrEncrypted)
       }

@@ -6,6 +6,7 @@ import type { PaginateResult } from '~/models/base'
 import type {
   NoteModel,
   NoteWrappedPayload,
+  NoteWrappedWithLikedAndTranslationPayload,
   NoteWrappedWithLikedPayload,
 } from '~/models/note'
 import { autoBind } from '~/utils/auto-bind'
@@ -26,6 +27,12 @@ export type NoteListOptions = {
   year?: number
   sortBy?: 'weather' | 'mood' | 'title' | 'created' | 'modified'
   sortOrder?: 1 | -1
+}
+
+export type NoteByNidOptions = {
+  password?: string
+  single?: boolean
+  lang?: string
 }
 
 export class NoteController<ResponseWrapper> implements IController {
@@ -77,6 +84,28 @@ export class NoteController<ResponseWrapper> implements IController {
     } else {
       return this.proxy(id).get<NoteModel>()
     }
+  }
+
+  /**
+   * 根据 nid 获取日记，支持翻译参数
+   * @param nid 日记编号
+   * @param options 可选参数：password, single, lang
+   */
+  getNoteByNid(
+    nid: number,
+    options?: NoteByNidOptions,
+  ): RequestProxyResult<
+    NoteWrappedWithLikedAndTranslationPayload,
+    ResponseWrapper
+  > {
+    const { password, single, lang } = options || {}
+    return this.proxy.nid(nid.toString()).get({
+      params: {
+        password,
+        single: single ? '1' : undefined,
+        lang,
+      },
+    })
   }
 
   /**

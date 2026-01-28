@@ -5,6 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { ThrottlerModule } from '@nestjs/throttler'
 import { THROTTLE_OPTIONS } from '~/app.config'
 import { AggregateModule } from '~/modules/aggregate/aggregate.module'
+import { AiModule } from '~/modules/ai/ai.module'
 import { NoteModule } from '~/modules/note/note.module'
 import { PageModule } from '~/modules/page/page.module'
 import { PostModule } from '~/modules/post/post.module'
@@ -20,6 +21,7 @@ import { ImageService } from './helper.image.service'
 import { JWTService } from './helper.jwt.service'
 import { TextMacroService } from './helper.macro.service'
 import { TaskQueueService } from './helper.tq.service'
+import { TranslationEnhancerService } from './helper.translation-enhancer.service'
 import { UploadService } from './helper.upload.service'
 import { UrlBuilderService } from './helper.url-builder.service'
 
@@ -36,6 +38,7 @@ const providers: Provider<any>[] = [
   JWTService,
   TaskQueueService,
   TextMacroService,
+  TranslationEnhancerService,
   UploadService,
   UrlBuilderService,
 ]
@@ -61,6 +64,7 @@ const providers: Provider<any>[] = [
     }),
 
     forwardRef(() => AggregateModule),
+    forwardRef(() => AiModule),
     forwardRef(() => PostModule),
     forwardRef(() => NoteModule),
     forwardRef(() => PageModule),

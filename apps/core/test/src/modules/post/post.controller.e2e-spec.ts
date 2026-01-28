@@ -35,6 +35,7 @@ import {
   imageMigrationProvider,
   imageServiceProvider,
 } from 'test/mock/processors/file.mock'
+import { translationEnhancerProvider } from 'test/mock/processors/translation-enhancer.mock'
 import MockDbData, { categoryModels } from './post.e2e-mock.db'
 
 describe('PostController (e2e)', async () => {
@@ -89,6 +90,7 @@ describe('PostController (e2e)', async () => {
       },
       fileReferenceProvider,
       imageMigrationProvider,
+      translationEnhancerProvider,
     ],
     imports: [],
     models: [
