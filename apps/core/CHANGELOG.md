@@ -1,5 +1,15 @@
 # CHANGELOG
 
+# [9.3.0](https://github.com/mx-space/core/compare/v9.2.0...v9.3.0) (2026-01-28)
+
+
+### Features
+
+* **ai-summary, ai-translation:** enhance summary and translation functionalities ([c15cc55](https://github.com/mx-space/core/commit/c15cc5544d59b248ec6772d762e709135ef5cf37))
+* **deps, ai:** update dependencies and enhance AI functionalities ([f32f744](https://github.com/mx-space/core/commit/f32f744431e85fd6ffec1a0b2cc78398ea464c9a))
+
+
+
 # [9.2.0](https://github.com/mx-space/core/compare/v9.1.1...v9.2.0) (2026-01-28)
 
 
