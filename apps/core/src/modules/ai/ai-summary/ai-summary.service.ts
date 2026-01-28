@@ -18,6 +18,7 @@ import { AI_TASK_LOCK_TTL, DEFAULT_SUMMARY_LANG } from '../ai.constants'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { AISummaryModel } from './ai-summary.model'
+import type { GetSummariesGroupedQueryInput } from './ai-summary.schema'
 
 @Injectable()
 export class AiSummaryService {
@@ -166,11 +167,60 @@ export class AiSummaryService {
     }
   }
 
-  async getAllSummariesGrouped(pager: PagerDto) {
-    const { page, size } = pager
+  async getAllSummariesGrouped(query: GetSummariesGroupedQueryInput) {
+    const { page, size, search } = query
 
-    // First, get unique refIds with pagination
-    const aggregateResult = await this.aiSummaryModel.aggregate([
+    // 如果有搜索关键词，先搜索文章
+    let matchedRefIds: string[] | null = null
+    if (search && search.trim()) {
+      const keyword = search.trim()
+      const postModel = this.databaseService.getModelByRefType(
+        CollectionRefTypes.Post,
+      )
+      const noteModel = this.databaseService.getModelByRefType(
+        CollectionRefTypes.Note,
+      )
+
+      const [matchedPosts, matchedNotes] = await Promise.all([
+        postModel
+          .find({ title: { $regex: keyword, $options: 'i' } })
+          .select('_id')
+          .lean(),
+        noteModel
+          .find({ title: { $regex: keyword, $options: 'i' } })
+          .select('_id')
+          .lean(),
+      ])
+
+      matchedRefIds = [
+        ...matchedPosts.map((p) => p._id.toString()),
+        ...matchedNotes.map((n) => n._id.toString()),
+      ]
+
+      if (matchedRefIds.length === 0) {
+        return {
+          data: [],
+          pagination: {
+            total: 0,
+            currentPage: page,
+            totalPage: 0,
+            size,
+            hasNextPage: false,
+            hasPrevPage: false,
+          },
+        }
+      }
+    }
+
+    const matchStage = matchedRefIds
+      ? { $match: { refId: { $in: matchedRefIds } } }
+      : null
+
+    const pipeline: any[] = []
+    if (matchStage) {
+      pipeline.push(matchStage)
+    }
+    pipeline.push(
       {
         $group: {
           _id: '$refId',
@@ -185,7 +235,9 @@ export class AiSummaryService {
           data: [{ $skip: (page - 1) * size }, { $limit: size }],
         },
       },
-    ])
+    )
+
+    const aggregateResult = await this.aiSummaryModel.aggregate(pipeline)
 
     const metadata = aggregateResult[0]?.metadata[0]
     const groupedRefIds = aggregateResult[0]?.data || []

@@ -1,0 +1,4 @@
+export const SEARCH_TITLE_WEIGHT = 3
+export const SEARCH_TEXT_WEIGHT = 20
+
+export const DEFAULT_ALGOLIA_MAX_SIZE_IN_BYTES = 10_000

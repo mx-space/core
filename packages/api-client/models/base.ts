@@ -56,4 +56,5 @@ export interface TranslationMeta {
 export type ModelWithTranslation<T> = T & {
   isTranslated: boolean
   translationMeta?: TranslationMeta
+  availableTranslations?: string[]
 }

@@ -37,4 +37,39 @@ export class AsyncQueue {
     const wait = this.runNext()
     return async () => await wait
   }
+
+  /**
+   * Run tasks with concurrency limit and wait for all to complete
+   * Returns results array and errors map (index -> error)
+   */
+  static async runAll<T, R>(
+    items: T[],
+    fn: (item: T, index: number) => Promise<R>,
+    concurrency: number,
+  ): Promise<{ results: (R | null)[]; errors: Map<number, Error> }> {
+    const results = Array.from({ length: items.length }).fill(
+      null,
+    ) as (R | null)[]
+    const errors = new Map<number, Error>()
+    let currentIndex = 0
+
+    const worker = async () => {
+      while (currentIndex < items.length) {
+        const index = currentIndex++
+        try {
+          results[index] = await fn(items[index], index)
+        } catch (error) {
+          errors.set(index, error as Error)
+        }
+      }
+    }
+
+    const workers = Array.from(
+      { length: Math.min(concurrency, items.length) },
+      () => worker(),
+    )
+    await Promise.all(workers)
+
+    return { results, errors }
+  }
 }

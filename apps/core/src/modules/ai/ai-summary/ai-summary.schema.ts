@@ -38,8 +38,21 @@ export const UpdateSummarySchema = z.object({
 
 export class UpdateSummaryDto extends createZodDto(UpdateSummarySchema) {}
 
+export const GetSummariesGroupedQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  size: z.coerce.number().int().min(1).max(50).default(20),
+  search: z.string().optional(),
+})
+
+export class GetSummariesGroupedQueryDto extends createZodDto(
+  GetSummariesGroupedQuerySchema,
+) {}
+
 // Type exports
 export type BaseLangQueryInput = z.infer<typeof BaseLangQuerySchema>
 export type GenerateAiSummaryInput = z.infer<typeof GenerateAiSummarySchema>
 export type GetSummaryQueryInput = z.infer<typeof GetSummaryQuerySchema>
 export type UpdateSummaryInput = z.infer<typeof UpdateSummarySchema>
+export type GetSummariesGroupedQueryInput = z.infer<
+  typeof GetSummariesGroupedQuerySchema
+>

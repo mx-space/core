@@ -256,6 +256,7 @@ export class NoteController {
       text: translationResult.text,
       isTranslated: translationResult.isTranslated,
       translationMeta: translationResult.translationMeta,
+      availableTranslations: translationResult.availableTranslations,
       liked,
     }
 

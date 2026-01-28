@@ -15,6 +15,7 @@ import { PagerDto } from '~/shared/dto/pager.dto'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import {
   GenerateAiSummaryDto,
+  GetSummariesGroupedQueryDto,
   GetSummaryQueryDto,
   UpdateSummaryDto,
 } from './ai-summary.schema'
@@ -44,7 +45,7 @@ export class AiSummaryController {
 
   @Get('/grouped')
   @Auth()
-  async getSummariesGrouped(@Query() query: PagerDto) {
+  async getSummariesGrouped(@Query() query: GetSummariesGroupedQueryDto) {
     return this.service.getAllSummariesGrouped(query)
   }
 

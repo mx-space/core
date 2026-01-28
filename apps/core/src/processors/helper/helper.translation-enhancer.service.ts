@@ -15,6 +15,7 @@ export interface TranslationEnhanceResult {
   tags?: string[]
   isTranslated: boolean
   translationMeta?: TranslationMeta
+  availableTranslations?: string[]
 }
 
 @Injectable()
@@ -35,8 +36,12 @@ export class TranslationEnhancerService {
     const { articleId, targetLang, allowHidden, originalData } = options
     const normalizedTarget = normalizeLanguageCode(targetLang)
 
+    // 获取可用翻译列表
+    const availableTranslations =
+      await this.aiTranslationService.getAvailableLanguagesForArticle(articleId)
+
     if (!normalizedTarget) {
-      return { ...originalData, isTranslated: false }
+      return { ...originalData, isTranslated: false, availableTranslations }
     }
 
     try {
@@ -48,7 +53,7 @@ export class TranslationEnhancerService {
         )
 
       if (!translation) {
-        return { ...originalData, isTranslated: false }
+        return { ...originalData, isTranslated: false, availableTranslations }
       }
 
       return {
@@ -62,9 +67,10 @@ export class TranslationEnhancerService {
           targetLang: translation.lang,
           translatedAt: translation.created!,
         },
+        availableTranslations,
       }
     } catch {
-      return { ...originalData, isTranslated: false }
+      return { ...originalData, isTranslated: false, availableTranslations }
     }
   }
 }

@@ -7,8 +7,8 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import type { PagerDto } from '~/shared/dto/pager.dto'
 import { InjectModel } from '~/transformers/model.transformer'
+import { AsyncQueue } from '~/utils/queue.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { md5 } from '~/utils/tool.util'
 import { generateObject, generateText } from 'ai'
@@ -22,6 +22,7 @@ import { AI_TASK_LOCK_TTL } from '../ai.constants'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { AITranslationModel } from './ai-translation.model'
+import type { GetTranslationsGroupedQueryInput } from './ai-translation.schema'
 
 interface ArticleContent {
   title: string
@@ -401,10 +402,182 @@ export class AiTranslationService {
     return { translations, article }
   }
 
-  async getAllTranslationsGrouped(pager: PagerDto) {
-    const { page, size } = pager
+  async generateTranslationsBatch(
+    refIds: string[],
+    targetLanguages?: string[],
+  ): Promise<{ success: string[]; failed: string[] }> {
+    const aiConfig = await this.configService.get('ai')
+    if (!aiConfig.enableTranslation) {
+      throw new BizException(ErrorCodeEnum.AINotEnabled)
+    }
 
-    const aggregateResult = await this.aiTranslationModel.aggregate([
+    const CONCURRENCY = 5
+
+    const { errors } = await AsyncQueue.runAll(
+      refIds,
+      async (refId) => {
+        await this.generateTranslationsForLanguages(refId, targetLanguages)
+        return refId
+      },
+      CONCURRENCY,
+    )
+
+    const success: string[] = []
+    const failed: string[] = []
+
+    refIds.forEach((refId, index) => {
+      if (errors.has(index)) {
+        this.logger.error(
+          `Batch translation failed for ${refId}: ${errors.get(index)?.message}`,
+        )
+        failed.push(refId)
+      } else {
+        success.push(refId)
+      }
+    })
+
+    return { success, failed }
+  }
+
+  async generateTranslationsForAll(targetLanguages?: string[]): Promise<{
+    total: number
+    queued: number
+  }> {
+    const aiConfig = await this.configService.get('ai')
+    if (!aiConfig.enableTranslation) {
+      throw new BizException(ErrorCodeEnum.AINotEnabled)
+    }
+
+    const languages = targetLanguages?.length
+      ? targetLanguages
+      : aiConfig.translationTargetLanguages || []
+
+    if (!languages.length) {
+      return { total: 0, queued: 0 }
+    }
+
+    const postModel = this.databaseService.getModelByRefType(
+      CollectionRefTypes.Post,
+    )
+    const noteModel = this.databaseService.getModelByRefType(
+      CollectionRefTypes.Note,
+    )
+
+    const [posts, notes] = await Promise.all([
+      postModel
+        .find({ isPublished: { $ne: false } })
+        .select('_id')
+        .lean(),
+      noteModel
+        .find({
+          isPublished: { $ne: false },
+          password: { $in: [null, ''] },
+          $or: [{ publicAt: null }, { publicAt: { $lte: new Date() } }],
+        })
+        .select('_id')
+        .lean(),
+    ])
+
+    const allArticleIds: string[] = [
+      ...posts.map((p) => p._id.toString()),
+      ...notes.map((n) => n._id.toString()),
+    ]
+
+    const total = allArticleIds.length
+
+    if (total === 0) {
+      return { total: 0, queued: 0 }
+    }
+
+    const CONCURRENCY = 5
+
+    // 在后台执行批量翻译，不阻塞请求
+    scheduleManager.schedule(async () => {
+      this.logger.log(
+        `Batch all translation start: total=${total} concurrency=${CONCURRENCY}`,
+      )
+
+      const { errors } = await AsyncQueue.runAll(
+        allArticleIds,
+        async (refId) => {
+          await this.generateTranslationsForLanguages(refId, languages)
+          this.logger.log(`Batch all translation done: article=${refId}`)
+          return refId
+        },
+        CONCURRENCY,
+      )
+
+      const failedCount = errors.size
+      const successCount = total - failedCount
+
+      errors.forEach((error, index) => {
+        this.logger.error(
+          `Batch all translation failed for ${allArticleIds[index]}: ${error.message}`,
+        )
+      })
+
+      this.logger.log(
+        `Batch all translation completed: success=${successCount} failed=${failedCount}`,
+      )
+    })
+
+    return { total, queued: total }
+  }
+
+  async getAllTranslationsGrouped(query: GetTranslationsGroupedQueryInput) {
+    const { page, size, search } = query
+
+    // 如果有搜索关键词，先搜索文章
+    let matchedRefIds: string[] | null = null
+    if (search && search.trim()) {
+      const keyword = search.trim()
+      const postModel = this.databaseService.getModelByRefType(
+        CollectionRefTypes.Post,
+      )
+      const noteModel = this.databaseService.getModelByRefType(
+        CollectionRefTypes.Note,
+      )
+
+      const [matchedPosts, matchedNotes] = await Promise.all([
+        postModel
+          .find({ title: { $regex: keyword, $options: 'i' } })
+          .select('_id')
+          .lean(),
+        noteModel
+          .find({ title: { $regex: keyword, $options: 'i' } })
+          .select('_id')
+          .lean(),
+      ])
+
+      matchedRefIds = [
+        ...matchedPosts.map((p) => p._id.toString()),
+        ...matchedNotes.map((n) => n._id.toString()),
+      ]
+
+      if (matchedRefIds.length === 0) {
+        return {
+          data: [],
+          pagination: {
+            total: 0,
+            currentPage: page,
+            totalPage: 0,
+            size,
+            hasNextPage: false,
+            hasPrevPage: false,
+          },
+        }
+      }
+    }
+
+    const matchStage = matchedRefIds
+      ? { $match: { refId: { $in: matchedRefIds } } }
+      : null
+
+    const pipeline: any[] = []
+    if (matchStage) {
+      pipeline.push(matchStage)
+    }
+    pipeline.push(
       {
         $group: {
           _id: '$refId',
@@ -419,7 +592,9 @@ export class AiTranslationService {
           data: [{ $skip: (page - 1) * size }, { $limit: size }],
         },
       },
-    ])
+    )
+
+    const aggregateResult = await this.aiTranslationModel.aggregate(pipeline)
 
     const metadata = aggregateResult[0]?.metadata[0]
     const groupedRefIds = aggregateResult[0]?.data || []

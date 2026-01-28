@@ -277,6 +277,7 @@ export class PostController {
       tags: translationResult.tags,
       isTranslated: translationResult.isTranslated,
       translationMeta: translationResult.translationMeta,
+      availableTranslations: translationResult.availableTranslations,
       liked,
     }
   }
