@@ -487,14 +487,14 @@ describe('DraftService with FileReference integration', () => {
         refType: DraftRefType.Post,
         title: 'Title v150',
         text: 'Same text',
-        version: 150,
+        version: 151,
         history: [],
         updated: new Date(),
         created: new Date(),
       }
 
       const now = Date.now()
-      for (let i = 149; i >= 1; i -= 1) {
+      for (let i = 150; i >= 1; i -= 1) {
         const isFullSnapshot = i === 1
         draft.history.push({
           version: i,
@@ -509,7 +509,7 @@ describe('DraftService with FileReference integration', () => {
       mockDrafts.push(draft)
 
       // Trigger trim by pushing one more history entry
-      await draftService.update('draft123', { title: 'Title v151' })
+      await draftService.update('draft123', { title: 'Title v152' })
 
       const updatedDraft = mockDrafts.find((d) => d.id === 'draft123')
       expect(updatedDraft.history.length).toBeLessThanOrEqual(100)
@@ -519,6 +519,82 @@ describe('DraftService with FileReference integration', () => {
       expect(updatedDraft.history[0].text).toBe('Same text')
     })
 
+    it('should keep a full snapshot when only diffs overflow', async () => {
+      const draft = {
+        _id: 'draft123',
+        id: 'draft123',
+        refType: DraftRefType.Post,
+        title: 'Title v101',
+        text: 'Base text',
+        version: 101,
+        history: [],
+        updated: new Date(),
+        created: new Date(),
+      }
+
+      const now = Date.now()
+      for (let i = 100; i >= 1; i -= 1) {
+        const isFullSnapshot = i === 1
+        draft.history.push({
+          version: i,
+          title: `Title v${i}`,
+          text: isFullSnapshot ? 'Base text' : '@@ -1,0 +1,1 @@\n+diff\n',
+          savedAt: new Date(now - i * 1000),
+          isFullSnapshot,
+          ...(isFullSnapshot ? {} : { baseVersion: 1 }),
+        })
+      }
+
+      mockDrafts.push(draft)
+
+      // Trigger trim by pushing one more history entry
+      await draftService.update('draft123', { title: 'Title v102' })
+
+      const updatedDraft = mockDrafts.find((d) => d.id === 'draft123')
+      expect(updatedDraft.history.length).toBeLessThanOrEqual(100)
+      expect(updatedDraft.history[0].isFullSnapshot).toBe(true)
+    })
+
+    it('should defer trimming until a full snapshot reaches top', async () => {
+      const draft = {
+        _id: 'draft123',
+        id: 'draft123',
+        refType: DraftRefType.Post,
+        title: 'Title v105',
+        text: 'Base text',
+        version: 105,
+        history: [],
+        updated: new Date(),
+        created: new Date(),
+      }
+
+      const now = Date.now()
+      for (let i = 102; i >= 2; i -= 1) {
+        const isFullSnapshot = i === 2
+        draft.history.push({
+          version: i,
+          title: `Title v${i}`,
+          text: isFullSnapshot ? 'Base text' : '@@ -1,0 +1,1 @@\n+diff\n',
+          savedAt: new Date(now - i * 1000),
+          isFullSnapshot,
+          ...(isFullSnapshot ? {} : { baseVersion: 2 }),
+        })
+      }
+
+      mockDrafts.push(draft)
+
+      // Version 105 is not a full snapshot, trimming should be deferred.
+      await draftService.update('draft123', { title: 'Title v106' })
+      let updatedDraft = mockDrafts.find((d) => d.id === 'draft123')
+      expect(updatedDraft.history.length).toBe(102)
+
+      // Version 106 is a full snapshot, trimming should happen now.
+      await draftService.update('draft123', { title: 'Title v107' })
+      updatedDraft = mockDrafts.find((d) => d.id === 'draft123')
+      expect(updatedDraft.history.length).toBeLessThanOrEqual(100)
+      expect(updatedDraft.history[0].isFullSnapshot).toBe(true)
+    })
+
     it('should resolve chained refVersion after trimming history', async () => {
       const draft = {
         _id: 'draft123',
@@ -526,14 +602,14 @@ describe('DraftService with FileReference integration', () => {
         refType: DraftRefType.Post,
         title: 'Title v150',
         text: 'Same text',
-        version: 150,
+        version: 151,
         history: [],
         updated: new Date(),
         created: new Date(),
       }
 
       const now = Date.now()
-      for (let i = 149; i >= 1; i -= 1) {
+      for (let i = 150; i >= 1; i -= 1) {
         const isFullSnapshot = i === 1
         const entry: any = {
           version: i,
@@ -554,10 +630,12 @@ describe('DraftService with FileReference integration', () => {
       mockDrafts.push(draft)
 
       // Trigger trim by pushing one more history entry
-      await draftService.update('draft123', { title: 'Title v151' })
+      await draftService.update('draft123', { title: 'Title v152' })
 
       const updatedDraft = mockDrafts.find((d) => d.id === 'draft123')
-      const materialized = updatedDraft.history[0]
+      const materialized = updatedDraft.history.find(
+        (h: any) => h.version === 150,
+      )
 
       expect(materialized.version).toBe(150)
       expect(materialized.isFullSnapshot).toBe(true)

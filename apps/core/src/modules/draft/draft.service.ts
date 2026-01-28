@@ -100,7 +100,10 @@ export class DraftService {
       )
 
       draft.history.unshift(historyEntry)
-      if (draft.history.length > this.MAX_HISTORY_VERSIONS) {
+      if (
+        draft.history.length > this.MAX_HISTORY_VERSIONS &&
+        this.canTrimHistory(draft.history)
+      ) {
         // 删除时确保不会断链（保留至少一个全量快照）
         draft.history = this.trimHistoryWithFullSnapshot(draft.history)
       }
@@ -299,7 +302,10 @@ export class DraftService {
     draft.version = draft.version + 1
 
     // 保持历史版本数量限制
-    if (draft.history.length > this.MAX_HISTORY_VERSIONS) {
+    if (
+      draft.history.length > this.MAX_HISTORY_VERSIONS &&
+      this.canTrimHistory(draft.history)
+    ) {
       draft.history = this.trimHistoryWithFullSnapshot(draft.history)
     }
 
@@ -549,5 +555,12 @@ export class DraftService {
     }
 
     return trimmed
+  }
+
+  /**
+   * 只有当最新记录是全量快照时才允许裁剪
+   */
+  private canTrimHistory(history: DraftHistoryModel[]): boolean {
+    return history[0]?.isFullSnapshot === true
   }
 }

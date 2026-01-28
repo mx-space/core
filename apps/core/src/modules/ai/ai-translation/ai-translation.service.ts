@@ -639,10 +639,30 @@ export class AiTranslationService {
       return
     }
 
+    const targetLanguages = aiConfig.translationTargetLanguages || []
+    if (!targetLanguages.length) {
+      return
+    }
+
     const existingTranslations = await this.aiTranslationModel.find({
       refId: id,
     })
     if (!existingTranslations.length) {
+      scheduleManager.schedule(async () => {
+        try {
+          this.logger.log(
+            `AI auto translation update init: article=${id} targets=${targetLanguages.join(
+              ',',
+            )}`,
+          )
+          await this.generateTranslationsForLanguages(id, targetLanguages)
+          this.logger.log(`AI auto translation update init done: article=${id}`)
+        } catch (error) {
+          this.logger.error(
+            `Auto translation update init failed for article ${id}: ${error.message}`,
+          )
+        }
+      })
       return
     }
 
