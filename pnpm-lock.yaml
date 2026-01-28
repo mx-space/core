@@ -77,7 +77,7 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: ^3.0.23
-        version: 3.0.23(zod@4.3.5)
+        version: 3.0.28(zod@4.3.5)
       '@ai-sdk/openai':
         specifier: 3.0.19
         version: 3.0.19(zod@4.3.5)
@@ -481,8 +481,8 @@ importers:
 
 packages:
 
-  '@ai-sdk/anthropic@3.0.23':
-    resolution: {integrity: sha512-mu9djDW2kiJS/ihH5BwGy2c/zwSlcTjx1NWPvY/Ug12SWToqzozSyd1EIXRlfXyfwzL2CWrqMNyybqi9OVDXgg==}
+  '@ai-sdk/anthropic@3.0.28':
+    resolution: {integrity: sha512-pNo2B2Rb8nVP7C/5ZATLtV0Dwl8LouJ3gs2NJQBMiq0g66T3qjfuqqAXiK+wA3zohzDbR04ZktvMgdD2kOkVzg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.3.5
@@ -495,6 +495,12 @@ packages:
 
   '@ai-sdk/openai@3.0.19':
     resolution: {integrity: sha512-qpMGKV6eYfW8IzErk/OppchQwVui3GPc4BEfg/sQGRzR89vf2Sa8qvSavXeZi5w/oUF56d+VtobwSH0FRooFCQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: 4.3.5
+
+  '@ai-sdk/provider-utils@4.0.10':
+    resolution: {integrity: sha512-VeDAiCH+ZK8Xs4hb9Cw7pHlujWNL52RKe8TExOkrw6Ir1AmfajBZTb9XUdKOZO08RwQElIKA8+Ltm+Gqfo8djQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.3.5
@@ -6203,6 +6209,7 @@ packages:
   tar@7.5.6:
     resolution: {integrity: sha512-xqUeu2JAIJpXyvskvU3uvQW8PAmHrtXp2KDuMJwQqW8Sqq0CaZBAQ+dKS3RBXVhU4wC5NjAdKrmh84241gO9cA==}
     engines: {node: '>=18'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exhorbitant rates) by contacting i@izs.me
 
   terser-webpack-plugin@5.3.16:
     resolution: {integrity: sha512-h9oBFCWrq78NyWWVcSwZarJkZ01c2AyGrzs1crmHZO3QUg9D61Wu4NPjBy69n7JqylFF5y+CsUZYmYEIZ3mR+Q==}
@@ -6762,10 +6769,10 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/anthropic@3.0.23(zod@4.3.5)':
+  '@ai-sdk/anthropic@3.0.28(zod@4.3.5)':
     dependencies:
       '@ai-sdk/provider': 3.0.5
-      '@ai-sdk/provider-utils': 4.0.9(zod@4.3.5)
+      '@ai-sdk/provider-utils': 4.0.10(zod@4.3.5)
       zod: 4.3.5
 
   '@ai-sdk/gateway@3.0.23(zod@4.3.5)':
@@ -6779,6 +6786,13 @@ snapshots:
     dependencies:
       '@ai-sdk/provider': 3.0.5
       '@ai-sdk/provider-utils': 4.0.9(zod@4.3.5)
+      zod: 4.3.5
+
+  '@ai-sdk/provider-utils@4.0.10(zod@4.3.5)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.5
+      '@standard-schema/spec': 1.1.0
+      eventsource-parser: 3.0.6
       zod: 4.3.5
 
   '@ai-sdk/provider-utils@4.0.9(zod@4.3.5)':
