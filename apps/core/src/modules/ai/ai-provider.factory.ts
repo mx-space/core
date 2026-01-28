@@ -1,5 +1,6 @@
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createOpenAI } from '@ai-sdk/openai'
+import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { AIProviderType, type AIProviderConfig } from './ai.types'
 
 export function createLanguageModel(
@@ -39,9 +40,9 @@ export function createLanguageModel(
       })(modelName)
 
     case AIProviderType.OpenRouter:
-      return createOpenAI({
+      return createOpenRouter({
         apiKey: config.apiKey,
-        baseURL: config.endpoint || 'https://openrouter.ai/api/v1',
+        baseURL: 'https://openrouter.ai/api/v1',
       })(modelName)
 
     default:

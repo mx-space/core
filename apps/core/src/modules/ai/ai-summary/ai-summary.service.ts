@@ -10,7 +10,7 @@ import type { PagerDto } from '~/shared/dto/pager.dto'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { md5 } from '~/utils/tool.util'
-import { generateObject } from 'ai'
+import { generateText, Output } from 'ai'
 import removeMdCodeblock from 'remove-md-codeblock'
 import { z } from 'zod'
 import { ConfigsService } from '../../configs/configs.service'
@@ -44,12 +44,14 @@ export class AiSummaryService {
   private async generateSummaryViaAI(text: string, lang: string) {
     const model = await this.aiService.getSummaryModel()
 
-    const { object } = await generateObject({
-      model: model as Parameters<typeof generateObject>[0]['model'],
-      schema: z.object({
-        summary: z
-          .string()
-          .describe(AI_PROMPTS.summary.getSummaryDescription(lang)),
+    const { output } = await generateText({
+      model: model as Parameters<typeof generateText>[0]['model'],
+      output: Output.object({
+        schema: z.object({
+          summary: z
+            .string()
+            .describe(AI_PROMPTS.summary.getSummaryDescription(lang)),
+        }),
       }),
       prompt: AI_PROMPTS.summary.getSummaryPrompt(
         lang,
@@ -59,7 +61,7 @@ export class AiSummaryService {
       maxRetries: 2,
     })
 
-    return object.summary
+    return output!.summary
   }
   async generateSummaryByOpenAI(articleId: string, lang: string) {
     const {

@@ -124,8 +124,7 @@ export enum ErrorCodeEnum {
   AIException = 200002,
   AIProcessing = 200003,
   AIResultParsingError = 200004,
-  AITranslationSameLanguage = 200005,
-  AITranslationNotFound = 200006,
+  AITranslationNotFound = 200005,
 
   // system
   MasterLost = 99998,
@@ -266,10 +265,7 @@ export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
     [ErrorCodeEnum.AIException]: ['AI 服务异常', 500],
     [ErrorCodeEnum.AIProcessing]: ['AI 正在处理此请求，请稍后再试', 400],
     [ErrorCodeEnum.AIResultParsingError]: ['AI 结果解析错误', 500],
-    [ErrorCodeEnum.AITranslationSameLanguage]: [
-      '源语言和目标语言相同，无需翻译',
-      400,
-    ],
+
     [ErrorCodeEnum.AITranslationNotFound]: ['翻译不存在', 404],
 
     [ErrorCodeEnum.EmailTemplateNotFound]: ['邮件模板不存在', 400],

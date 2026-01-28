@@ -4,55 +4,76 @@ import {
   LANGUAGE_CODE_TO_NAME,
 } from './ai.constants'
 
+const escapeXml = (str: string): string =>
+  str.replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+
 export const AI_PROMPTS = {
   // AI Summary Prompts
   summary: {
-    getSummaryPrompt: (lang: string, text: string) =>
-      `Extract the summary of the following text in the ${LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]}, and the length of the summary is less than ${AI_SUMMARY_MAX_WORDS} words:\n\n${text}`,
+    getSummaryPrompt: (lang: string, text: string) => {
+      const targetLanguage =
+        LANGUAGE_CODE_TO_NAME[lang] ||
+        LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
+      return `<task>
+Extract a concise summary from the provided text.
+</task>
+
+<requirements>
+  <language>${targetLanguage}</language>
+  <max_words>${AI_SUMMARY_MAX_WORDS}</max_words>
+</requirements>
+
+<input>
+${escapeXml(text)}
+</input>`
+    },
 
     getSummaryDescription: (lang: string) =>
-      `The summary of the input text in the ${LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]}, and the length of the summary is less than ${AI_SUMMARY_MAX_WORDS} words.`,
+      `The summary of the input text in ${LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]}, max ${AI_SUMMARY_MAX_WORDS} words.`,
   },
 
   // AI Writer Prompts
   writer: {
     titleAndSlug: {
-      prompt: (text: string) =>
-        `Based on the following text content, generate a title, slug, language, and keywords.
+      prompt: (text: string) => `<task>
+Generate metadata for the provided text content.
+</task>
 
-Text content:
-${text}
+<requirements>
+  <title>A concise, engaging title in the same language as the input text</title>
+  <slug>SEO-friendly, lowercase, hyphens only, alphanumeric, in English</slug>
+  <lang>ISO 639-1 language code of the input text</lang>
+  <keywords>3-5 relevant keywords representing main topics</keywords>
+</requirements>
 
-Please generate:
-1. A concise, engaging title that captures the main topic
-2. An SEO-friendly slug (lowercase, hyphens, alphanumeric only)
-3. The language code of the text (e.g., "en" for English, "zh" for Chinese)
-4. 3-5 relevant keywords that represent the main topics
-
-Respond with a JSON object containing these fields.`,
+<input>
+${escapeXml(text)}
+</input>`,
       schema: {
         title:
-          'Generate a concise, engaging title from the input text. The title should be in the same language as the input text and capture the main topic effectively.',
-        slug: 'Create an SEO-friendly slug in English based on the title. The slug should be lowercase, use hyphens to separate words, contain only alphanumeric characters and hyphens, and include relevant keywords for better search engine ranking.',
-        lang: 'Identify the natural language of the input text (e.g., "en", "zh", "es", "fr", etc.).',
+          'A concise, engaging title in the same language as the input text that captures the main topic.',
+        slug: 'SEO-friendly slug in English. Lowercase, hyphens to separate words, alphanumeric only.',
+        lang: 'ISO 639-1 language code of the input text (e.g., "en", "zh", "ja").',
         keywords:
-          'Extract 3-5 relevant keywords or key phrases from the input text that represent its main topics.',
+          '3-5 relevant keywords or key phrases representing the main topics.',
       },
     },
     slug: {
-      prompt: (title: string) =>
-        `Generate an SEO-friendly slug from the following title: "${title}"
+      prompt: (title: string) => `<task>
+Generate an SEO-friendly slug from the provided title.
+</task>
 
-The slug should:
-- Be in lowercase
-- Use hyphens to separate words
-- Contain only alphanumeric characters and hyphens
-- Be concise while including relevant keywords
-- Be in English regardless of the title language
+<requirements>
+  <format>lowercase, hyphens to separate words, alphanumeric only</format>
+  <language>English (regardless of title language)</language>
+  <style>concise, include relevant keywords</style>
+</requirements>
 
-Respond with a JSON object containing the slug field.`,
+<input>
+  <title>${escapeXml(title)}</title>
+</input>`,
       schema: {
-        slug: 'An SEO-friendly slug in English based on the title. The slug should be lowercase, use hyphens to separate words, contain only alphanumeric characters and hyphens, and be concise while including relevant keywords from the title.',
+        slug: 'SEO-friendly slug in English. Lowercase, hyphens to separate words, alphanumeric only, concise with relevant keywords.',
       },
     },
   },
@@ -60,19 +81,44 @@ Respond with a JSON object containing the slug field.`,
   // Comment Review Prompts
   comment: {
     score: {
-      prompt: (text: string) =>
-        `分析以下评论是否包含不适当内容：${text}\n\n评估其是否包含垃圾信息、诈骗、广告、有毒内容及整体质量。`,
+      prompt: (text: string) => `<task>
+Analyze the risk level of the comment content.
+</task>
+
+<evaluation_criteria>
+  <spam>Spam, scam, advertisement</spam>
+  <toxic>Toxic content, offensive language</toxic>
+  <sensitive>Politically sensitive, pornographic, violent, or threatening content</sensitive>
+  <quality>Overall content quality</quality>
+</evaluation_criteria>
+
+<input>
+  <comment>${escapeXml(text)}</comment>
+</input>`,
       schema: {
-        score: '风险评分，1-10，越高越危险',
-        hasSensitiveContent: '是否包含政治敏感、色情、暴力或恐吓内容',
+        score: 'Risk score 1-10, higher means more dangerous',
+        hasSensitiveContent:
+          'Whether it contains politically sensitive, pornographic, violent, or threatening content',
       },
     },
     spam: {
-      prompt: (text: string) =>
-        `检查以下评论是否不适当：${text}\n\n分析其是否包含垃圾信息、广告、政治敏感内容、色情、暴力或低质量内容。`,
+      prompt: (text: string) => `<task>
+Detect whether the comment is inappropriate content.
+</task>
+
+<detection_targets>
+  <spam>Spam, advertisement</spam>
+  <sensitive>Politically sensitive, pornographic, violent content</sensitive>
+  <low_quality>Meaningless, low-quality content</low_quality>
+</detection_targets>
+
+<input>
+  <comment>${escapeXml(text)}</comment>
+</input>`,
       schema: {
-        isSpam: '是否为垃圾内容',
-        hasSensitiveContent: '是否包含政治敏感、色情、暴力或恐吓内容',
+        isSpam: 'Whether it is spam content',
+        hasSensitiveContent:
+          'Whether it contains politically sensitive, pornographic, violent, or threatening content',
       },
     },
   },
@@ -87,42 +133,51 @@ Respond with a JSON object containing the slug field.`,
         summary?: string
         tags?: string[]
       },
-    ) =>
-      `Translate the following content to ${LANGUAGE_CODE_TO_NAME[targetLang] || targetLang}.
+    ) => {
+      const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
+      return `You are a professional translator. Translate the content below into ${targetLanguage}.
 
-IMPORTANT RULES:
-1. Preserve all Markdown formatting exactly as-is (headings, lists, bold, italic, etc.)
-2. Do NOT translate content inside code blocks (\`\`\` or \`)
-3. Do NOT translate URLs or links, only translate the link text if applicable
-4. Keep technical terms, proper nouns, and brand names in their original form when appropriate
-5. Maintain the original tone and style of the writing
-6. For tags, translate them if they are common words, keep technical terms as-is
+<absolute_requirement>
+EVERY word and sentence MUST be translated into ${targetLanguage}.
+FORBIDDEN: Leaving ANY text in the source language. Mixed-language output is a critical failure.
+</absolute_requirement>
 
-Content to translate:
+<formatting_rules>
+  <rule>Preserve Markdown formatting (headings, lists, bold, italic, links)</rule>
+  <rule>Keep code blocks unchanged</rule>
+  <rule>Keep URLs unchanged, translate link text only</rule>
+  <rule>Keep widely recognized terms as-is: AI, API, WebGL, SaaS, GitHub, etc.</rule>
+</formatting_rules>
 
-Title: ${content.title}
+<source_content>
+  <title>${escapeXml(content.title)}</title>
+  <text>
+${escapeXml(content.text)}
+  </text>${
+    content.summary
+      ? `
+  <summary>${escapeXml(content.summary)}</summary>`
+      : ''
+  }${
+    content.tags?.length
+      ? `
+  <tags>${content.tags.map(escapeXml).join(', ')}</tags>`
+      : ''
+  }
+</source_content>
 
-Text:
-${content.text}
-${content.summary ? `\nSummary: ${content.summary}` : ''}
-${content.tags?.length ? `\nTags: ${content.tags.join(', ')}` : ''}
-
-Respond with a JSON object containing the translated fields.`,
-
-    schema: {
-      title: 'The translated title in the target language',
-      text: 'The translated text content in the target language, preserving all Markdown formatting',
-      summary:
-        'The translated summary in the target language (if provided in input)',
-      tags: 'Array of translated tags (if provided in input)',
+Output the translation in ${targetLanguage} only. Do not include any source language text.`
     },
 
-    detectLanguagePrompt: (text: string) =>
-      `Detect the language of the following text and return the ISO 639-1 language code (e.g., "en", "zh", "ja", "ko").
-
-Text:
-${text.slice(0, 500)}
-
-Return only the language code.`,
+    schema: {
+      sourceLang:
+        'ISO 639-1 code of the detected source language (e.g., "en", "zh", "ja")',
+      title:
+        'The title fully translated into the target language, no mixed languages',
+      text: 'The text content fully translated into the target language, preserving Markdown formatting, no mixed languages allowed',
+      summary:
+        'The summary fully translated into the target language (if provided)',
+      tags: 'Array of tags translated into the target language (if provided)',
+    },
   },
 } as const

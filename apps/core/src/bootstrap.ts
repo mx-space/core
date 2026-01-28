@@ -19,7 +19,7 @@ import { checkInit } from './utils/check-init.util'
 import { sendTelemetry, startHeartbeat } from './utils/telemetry.util'
 
 const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
-  ? [...CROSS_DOMAIN.allowedOrigins, '*.shizuri.net', '22333322.xyz']
+  ? [...CROSS_DOMAIN.allowedOrigins]
   : false
 
 export async function bootstrap() {

@@ -112,8 +112,8 @@ importers:
         specifier: 0.4.0
         version: 0.4.0
       '@innei/pretty-logger-nestjs':
-        specifier: 0.4.0
-        version: 0.4.0(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))
+        specifier: 0.4.2
+        version: 0.4.2(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@keyv/redis':
         specifier: 5.1.6
         version: 5.1.6(keyv@5.6.0)
@@ -147,6 +147,9 @@ importers:
       '@nestjs/websockets':
         specifier: 11.1.12
         version: 11.1.12(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(@nestjs/platform-socket.io@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@openrouter/ai-sdk-provider':
+        specifier: ^2.1.1
+        version: 2.1.1(ai@6.0.50(zod@4.3.5))(zod@4.3.5)
       '@simplewebauthn/server':
         specifier: 13.2.2
         version: 13.2.2
@@ -1509,11 +1512,11 @@ packages:
     resolution: {integrity: sha512-GRIMLlswVGqc9IDVm3uKAtTQH99ouzQdxdCFDPrfSusQzMF2EjKVQIfeF3pWorzqcx3pPoXXbENovkamI5WuEQ==}
     engines: {pnpm: '>=7'}
 
-  '@innei/pretty-logger-core@0.4.0':
-    resolution: {integrity: sha512-PTRafGv/BiBmm+FcQ0h4gQJFpFUx4+nrWMEE5Z+u9TwRlR/bpa6lkBS6DZHlZWvEW7UcdH/+1Mp0419t1esCaA==}
+  '@innei/pretty-logger-core@0.4.2':
+    resolution: {integrity: sha512-4ysURRiI9w8juTgqJYRQqsJh+NXY0fcYCqqGHLLdmn+M1D3nzifwMN3AyUD/4MmWrQaFNp9GX2XHMD4l8451GA==}
 
-  '@innei/pretty-logger-nestjs@0.4.0':
-    resolution: {integrity: sha512-v1yjlub54Gkad4JdRPCtbBPgTCuXAq499yG5WVFQG4XJnKOYmXiifi5P2C0aVwcHT3bhzyEeNLieF9rpNB9e5A==}
+  '@innei/pretty-logger-nestjs@0.4.2':
+    resolution: {integrity: sha512-kp+SM9FN/SK1md1jjy+1gi1itztjiH6Yc1MpgtR6lQLPm3YUpJdEn/VgKnT6M3aImjKD3K8GKo0BhR27tYpF6Q==}
     peerDependencies:
       '@nestjs/common': '>=10'
 
@@ -2139,6 +2142,13 @@ packages:
     resolution: {integrity: sha512-GXD3wy50qYbxCJ652bDrDzgMr3NFEkIS374+IgFQKkCvk9yiYcLvX2XDYr7UyQxf4wK0e+yqDYRubZ0DtOxnmQ==}
     engines: {node: ^14.18.0 || >=16.10.0, npm: '>=5.10.0'}
     hasBin: true
+
+  '@openrouter/ai-sdk-provider@2.1.1':
+    resolution: {integrity: sha512-UypPbVnSExxmG/4Zg0usRiit3auvQVrjUXSyEhm0sZ9GQnW/d8p/bKgCk2neh1W5YyRSo7PNQvCrAEBHZnqQkQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      ai: ^6.0.0
+      zod: 4.3.5
 
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
@@ -7740,16 +7750,16 @@ snapshots:
 
   '@innei/next-async@0.4.0': {}
 
-  '@innei/pretty-logger-core@0.4.0':
+  '@innei/pretty-logger-core@0.4.2':
     dependencies:
       cron: 4.3.0
       defu: 6.1.4
       picocolors: 1.1.1
       std-env: 3.10.0
 
-  '@innei/pretty-logger-nestjs@0.4.0(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))':
+  '@innei/pretty-logger-nestjs@0.4.2(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))':
     dependencies:
-      '@innei/pretty-logger-core': 0.4.0
+      '@innei/pretty-logger-core': 0.4.2
       '@nestjs/common': 11.1.12(class-transformer@0.5.1)(class-validator@0.13.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       cron: 4.3.0
       defu: 6.1.4
@@ -8344,6 +8354,11 @@ snapshots:
   '@nuxt/opencollective@0.4.1':
     dependencies:
       consola: 3.4.2
+
+  '@openrouter/ai-sdk-provider@2.1.1(ai@6.0.50(zod@4.3.5))(zod@4.3.5)':
+    dependencies:
+      ai: 6.0.50(zod@4.3.5)
+      zod: 4.3.5
 
   '@opentelemetry/api@1.9.0': {}
 

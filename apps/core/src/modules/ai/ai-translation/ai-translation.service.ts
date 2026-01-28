@@ -11,7 +11,7 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { AsyncQueue } from '~/utils/queue.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { md5 } from '~/utils/tool.util'
-import { generateObject, generateText } from 'ai'
+import { generateText, Output } from 'ai'
 import dayjs from 'dayjs'
 import removeMdCodeblock from 'remove-md-codeblock'
 import { z } from 'zod'
@@ -138,43 +138,36 @@ export class AiTranslationService {
     return removeMdCodeblock(text)
   }
 
-  private async detectLanguage(text: string): Promise<string> {
-    const model = await this.aiService.getTranslationModel()
-
-    const { text: langCode } = await generateText({
-      model: model as Parameters<typeof generateText>[0]['model'],
-      prompt: AI_PROMPTS.translation.detectLanguagePrompt(text),
-      temperature: 0.1,
-      maxRetries: 2,
-    })
-
-    return langCode.trim().toLowerCase().slice(0, 2) || 'en'
-  }
-
   private async translateContent(
     content: ArticleContent,
     targetLang: string,
   ): Promise<{
+    sourceLang: string
     title: string
     text: string
-    summary?: string
-    tags?: string[]
+    summary: string | null
+    tags: string[] | null
   }> {
     const model = await this.aiService.getTranslationModel()
 
-    const { object } = await generateObject({
-      model: model as Parameters<typeof generateObject>[0]['model'],
-      schema: z.object({
-        title: z.string().describe(AI_PROMPTS.translation.schema.title),
-        text: z.string().describe(AI_PROMPTS.translation.schema.text),
-        summary: z
-          .string()
-          .optional()
-          .describe(AI_PROMPTS.translation.schema.summary),
-        tags: z
-          .array(z.string())
-          .optional()
-          .describe(AI_PROMPTS.translation.schema.tags),
+    const { output } = await generateText({
+      model: model as Parameters<typeof generateText>[0]['model'],
+      output: Output.object({
+        schema: z.object({
+          sourceLang: z
+            .string()
+            .describe(AI_PROMPTS.translation.schema.sourceLang),
+          title: z.string().describe(AI_PROMPTS.translation.schema.title),
+          text: z.string().describe(AI_PROMPTS.translation.schema.text),
+          summary: z
+            .string()
+            .nullable()
+            .describe(AI_PROMPTS.translation.schema.summary),
+          tags: z
+            .array(z.string())
+            .nullable()
+            .describe(AI_PROMPTS.translation.schema.tags),
+        }),
       }),
       prompt: AI_PROMPTS.translation.getTranslationPrompt(targetLang, {
         title: content.title,
@@ -186,7 +179,7 @@ export class AiTranslationService {
       maxRetries: 2,
     })
 
-    return object
+    return output!
   }
 
   async generateTranslation(
@@ -213,16 +206,9 @@ export class AiTranslationService {
 
     const document = article.document as ArticleDocument
 
-    const sourceLang =
-      this.getMetaLang(document) || (await this.detectLanguage(document.text))
-
     this.logger.log(
-      `AI translation start: article=${articleId} source=${sourceLang} target=${targetLang}`,
+      `AI translation start: article=${articleId} target=${targetLang}`,
     )
-
-    if (sourceLang === targetLang) {
-      throw new BizException(ErrorCodeEnum.AITranslationSameLanguage)
-    }
 
     const taskId = `ai:translation:${articleId}:${targetLang}`
     const redis = this.redisService.getClient()
@@ -247,7 +233,6 @@ export class AiTranslationService {
         articleId,
         article.type,
         document,
-        sourceLang,
         targetLang,
         taskId,
         redis,
@@ -280,7 +265,6 @@ export class AiTranslationService {
     articleId: string,
     refType: CollectionRefTypes,
     document: ArticleDocument,
-    sourceLang: string,
     targetLang: string,
     taskId: string,
     redis: ReturnType<RedisService['getClient']>,
@@ -289,6 +273,7 @@ export class AiTranslationService {
 
     const content = this.toArticleContent(document)
     const translated = await this.translateContent(content, targetLang)
+    const { sourceLang } = translated
     const hash = this.computeContentHash(content, sourceLang)
 
     const existing = await this.aiTranslationModel.findOne({
@@ -302,8 +287,8 @@ export class AiTranslationService {
       existing.sourceLang = sourceLang
       existing.title = translated.title
       existing.text = translated.text
-      existing.summary = translated.summary
-      existing.tags = translated.tags
+      existing.summary = translated.summary ?? undefined
+      existing.tags = translated.tags ?? undefined
       await existing.save()
       this.logger.log(
         `AI translation updated: article=${articleId} target=${targetLang}`,
@@ -323,8 +308,8 @@ export class AiTranslationService {
       sourceLang,
       title: translated.title,
       text: translated.text,
-      summary: translated.summary,
-      tags: translated.tags,
+      summary: translated.summary ?? undefined,
+      tags: translated.tags ?? undefined,
     })
     this.logger.log(
       `AI translation created: article=${articleId} target=${targetLang}`,
@@ -377,12 +362,6 @@ export class AiTranslationService {
         const translation = await this.generateTranslation(articleId, lang)
         results.push(translation)
       } catch (error) {
-        if (
-          error instanceof BizException &&
-          error.bizCode === ErrorCodeEnum.AITranslationSameLanguage
-        ) {
-          continue
-        }
         this.logger.error(
           `Failed to generate translation for ${articleId} to ${lang}: ${error.message}`,
         )
