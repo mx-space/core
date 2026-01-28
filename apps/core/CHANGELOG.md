@@ -1,5 +1,17 @@
 # CHANGELOG
 
+# [9.2.0](https://github.com/mx-space/core/compare/v9.1.1...v9.2.0) (2026-01-28)
+
+
+### Features
+
+* **ai-translation:** implement AI translation module with controller, service, model, and schema; add translation error codes and prompts ([19652ae](https://github.com/mx-space/core/commit/19652ae5b0011ab426efa7f2d4040d356bca489c))
+* **draft:** enhance draft history management with refVersion and baseVersion properties; implement deleteByRef method for draft cleanup ([924dd3b](https://github.com/mx-space/core/commit/924dd3b4bcd98fba6c6a426a83ffce3da6f771fc))
+* **draft:** improve draft history trimming logic and add canTrimHistory method for better snapshot management ([3a1487d](https://github.com/mx-space/core/commit/3a1487d12a408b4a236d767b2e9987582836c6c3))
+* **translation:** add translation event handling and enhance note/post retrieval with translation support ([ab78738](https://github.com/mx-space/core/commit/ab7873873df4b7886bf4c6ae9b0161559f08505b))
+
+
+
 ## [9.1.1](https://github.com/mx-space/core/compare/v9.1.0...v9.1.1) (2026-01-27)
 
 
