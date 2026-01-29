@@ -16,7 +16,7 @@ runs:
         node-version: ${{ inputs.node-version }}
 
     - name: Setup pnpm
-      uses: pnpm/action-setup@e94b270858c939f4f8b43f5c1438fa1d9a67ad5d # version with cache support
+      uses: pnpm/action-setup@1e1c8eafbd745f64b1ef30a7d7ed7965034c486c # version with cache support
       with:
         run_install: true
         cache: true
