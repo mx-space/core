@@ -79,8 +79,8 @@ importers:
         specifier: ^3.0.23
         version: 3.0.29(zod@4.3.6)
       '@ai-sdk/openai':
-        specifier: 3.0.19
-        version: 3.0.19(zod@4.3.6)
+        specifier: 3.0.21
+        version: 3.0.21(zod@4.3.6)
       '@algolia/client-search':
         specifier: ^5.46.4
         version: 5.47.0
@@ -496,8 +496,8 @@ packages:
     peerDependencies:
       zod: 4.3.6
 
-  '@ai-sdk/openai@3.0.19':
-    resolution: {integrity: sha512-qpMGKV6eYfW8IzErk/OppchQwVui3GPc4BEfg/sQGRzR89vf2Sa8qvSavXeZi5w/oUF56d+VtobwSH0FRooFCQ==}
+  '@ai-sdk/openai@3.0.21':
+    resolution: {integrity: sha512-6RzVqDNoJOptlMD4Wn9D2pZytiVgzeJSpm+E3Yvb2mO51CtklqhLmNur+DW2RpP/cGKgBDCbyns3yoJUd1hIhQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: 4.3.6
@@ -6792,10 +6792,10 @@ snapshots:
       '@vercel/oidc': 3.1.0
       zod: 4.3.6
 
-  '@ai-sdk/openai@3.0.19(zod@4.3.6)':
+  '@ai-sdk/openai@3.0.21(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.5
-      '@ai-sdk/provider-utils': 4.0.9(zod@4.3.6)
+      '@ai-sdk/provider-utils': 4.0.10(zod@4.3.6)
       zod: 4.3.6
 
   '@ai-sdk/provider-utils@4.0.10(zod@4.3.6)':
