@@ -2,7 +2,7 @@ import { IncomingMessage } from 'node:http'
 import type { ServerResponse } from 'node:http'
 import { API_VERSION, CROSS_DOMAIN, MONGO_DB } from '~/app.config'
 import { SECURITY } from '~/app.config.test'
-import type { BetterAuthOptions, BetterAuthPlugin } from 'better-auth'
+import type { BetterAuthOptions } from 'better-auth'
 import { betterAuth } from 'better-auth'
 import { mongodbAdapter } from 'better-auth/adapters/mongodb'
 import { APIError, createAuthMiddleware } from 'better-auth/api'
@@ -26,15 +26,28 @@ export async function CreateAuth(
     database: mongodbAdapter(db),
     socialProviders: providers,
     basePath: isDev ? '/auth' : `/api/v${API_VERSION}/auth`,
-    trustedOrigins: CROSS_DOMAIN.allowedOrigins.reduce(
-      (acc: string[], origin: string) => {
-        if (origin.startsWith('http')) {
-          return [...acc, origin]
+    trustedOrigins: async (request) => {
+      if (isDev) {
+        if (!request) return ['http://localhost:2323']
+        const origin = request.headers.get('origin')
+        if (origin?.includes('localhost') || origin?.includes('127.0.0.1')) {
+          return [origin]
         }
-        return [...acc, `https://${origin}`, `http://${origin}`]
-      },
-      [],
-    ),
+      }
+
+      return CROSS_DOMAIN.allowedOrigins.reduce(
+        (acc: string[], origin: string) => {
+          if (origin.startsWith('http')) {
+            return [...acc, origin]
+          }
+          if (origin.includes(':*')) {
+            return acc
+          }
+          return [...acc, `https://${origin}`, `http://${origin}`]
+        },
+        [],
+      )
+    },
     account: {
       modelName: AUTH_JS_ACCOUNT_COLLECTION,
       accountLinking: {
@@ -44,74 +57,54 @@ export async function CreateAuth(
     },
     session: {
       modelName: AUTH_JS_SESSION_COLLECTION,
+      additionalFields: {
+        provider: {
+          type: 'string',
+          required: false,
+        },
+      },
     },
     appName: 'mx-core',
     secret: SECURITY.jwtSecret,
-    plugins: [
-      // @see https://gist.github.com/Bekacru/44cca7b3cf7dcdf1cee431a11d917b87
-      {
-        id: 'add-account-to-session',
-        hooks: {
-          after: [
-            {
-              matcher(context) {
-                return context.path?.startsWith('/callback') ?? false
-              },
-              handler: createAuthMiddleware(async (ctx) => {
-                {
-                  let provider = ctx.params.id
+    hooks: {
+      after: createAuthMiddleware(async (ctx) => {
+        if (!ctx.path?.startsWith('/callback')) {
+          return
+        }
 
-                  if (!provider) {
-                    if (!ctx.request) {
-                      return
-                    }
-                    const pathname = new URL(ctx.request.url).pathname
-                    provider = ctx.params.id || pathname.split('/callback/')[1]
-                    if (!provider) {
-                      return
-                    }
-                  }
+        let provider = ctx.params?.id
+        if (!provider && ctx.path.includes('/callback/')) {
+          provider = ctx.path.split('/callback/')[1]
+        }
+        if (!provider) {
+          return
+        }
 
-                  const responseHeader = (ctx.context.returned as any)
-                    .headers as Headers
+        const newSession = ctx.context.newSession as
+          | {
+              token?: string
+              sessionToken?: string
+              session?: { token?: string }
+            }
+          | undefined
 
-                  let finalSessionId = ''
-                  const setSessionToken = responseHeader.get('set-cookie')
+        const sessionToken =
+          newSession?.token ||
+          newSession?.sessionToken ||
+          newSession?.session?.token
 
-                  if (setSessionToken) {
-                    const sessionId = setSessionToken
-                      .split(';')[0]
-                      .split('=')[1]
-                      .split('.')[0]
+        if (!sessionToken) {
+          return
+        }
 
-                    if (sessionId) {
-                      finalSessionId = sessionId
-                    }
-                  }
-
-                  await db.collection(AUTH_JS_SESSION_COLLECTION).updateOne(
-                    {
-                      token: finalSessionId,
-                    },
-                    { $set: { provider } },
-                  )
-                }
-              }),
-            },
-          ],
-        },
-        schema: {
-          session: {
-            fields: {
-              provider: {
-                type: 'string',
-                required: false,
-              },
-            },
+        await db.collection(AUTH_JS_SESSION_COLLECTION).updateOne(
+          {
+            token: sessionToken,
           },
-        },
-      } satisfies BetterAuthPlugin,
-    ],
+          { $set: { provider } },
+        )
+      }),
+    },
     user: {
       modelName: AUTH_JS_USER_COLLECTION,
       additionalFields: {

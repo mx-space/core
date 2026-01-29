@@ -150,21 +150,31 @@ export class AuthService {
       headers: cookieHeader,
     })
 
+    if (!session) {
+      return null
+    }
+
     const accounts = await auth.api.listUserAccounts({
       headers: cookieHeader,
     })
 
-    if (!accounts) {
+    if (!accounts || accounts.length === 0) {
       return null
     }
 
-    const providerAccountId = accounts[0].accountId
-    const provider = accounts[0].providerId
+    const sessionProvider = (session as { session?: { provider?: string } })
+      .session?.provider
+    const matchedAccount = sessionProvider
+      ? accounts.find((account) => account.providerId === sessionProvider)
+      : undefined
+    const primaryAccount = matchedAccount || accounts[0]
+    const providerAccountId = primaryAccount.accountId || primaryAccount.id
+    const provider = primaryAccount.providerId
 
     return {
       ...session,
       providerAccountId,
-      provider,
+      provider: provider || sessionProvider,
       user: session?.user,
     }
   }
