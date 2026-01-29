@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [9.3.1](https://github.com/mx-space/core/compare/v9.3.0...v9.3.1) (2026-01-29)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @ai-sdk/openai to v3.0.21 ([#2566](https://github.com/mx-space/core/issues/2566)) ([2be3e07](https://github.com/mx-space/core/commit/2be3e07d64f5b4c978dc48ac06d305bb955fa6e2))
+* **migration:** better auth login issue ([f19a49b](https://github.com/mx-space/core/commit/f19a49bb2c227874f558587cdabda29ef50addc4))
+
+
+
 # [9.3.0](https://github.com/mx-space/core/compare/v9.2.0...v9.3.0) (2026-01-28)
 
 
