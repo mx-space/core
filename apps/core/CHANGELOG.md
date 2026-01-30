@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [9.3.3](https://github.com/mx-space/core/compare/v9.3.2...v9.3.3) (2026-01-30)
+
+
+### Features
+
+* **note:** enhance note retrieval with translation support ([a378cd3](https://github.com/mx-space/core/commit/a378cd35c178792e97832e4c045ebd81e12042ed))
+
+
+
 ## [9.3.2](https://github.com/mx-space/core/compare/v9.3.1...v9.3.2) (2026-01-30)
 
 
