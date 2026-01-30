@@ -732,6 +732,61 @@ export class AiTranslationService {
     return translation
   }
 
+  async getValidTranslationsForArticles(
+    articles: Array<{
+      id: string
+      title: string
+      text: string
+      summary?: string | null
+      tags?: string[]
+      meta?: { lang?: string }
+    }>,
+    targetLang: string,
+  ): Promise<Map<string, AITranslationModel>> {
+    if (!articles.length) {
+      return new Map()
+    }
+
+    const translations = await this.aiTranslationModel.find({
+      refId: { $in: articles.map((article) => article.id) },
+      lang: targetLang,
+    })
+
+    if (!translations.length) {
+      return new Map()
+    }
+
+    const translationMap = new Map(
+      translations.map((translation) => [translation.refId, translation]),
+    )
+    const result = new Map<string, AITranslationModel>()
+
+    for (const article of articles) {
+      const translation = translationMap.get(article.id)
+      if (!translation) {
+        continue
+      }
+
+      const sourceLang =
+        article.meta?.lang || translation.sourceLang || 'unknown'
+      const currentHash = this.computeContentHash(
+        {
+          title: article.title,
+          text: article.text,
+          summary: article.summary ?? undefined,
+          tags: article.tags,
+        },
+        sourceLang,
+      )
+
+      if (translation.hash === currentHash) {
+        result.set(article.id, translation)
+      }
+    }
+
+    return result
+  }
+
   async getAvailableLanguagesForArticle(articleId: string): Promise<string[]> {
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article || !article.document || !this.isArticleVisible(article)) {

@@ -7,6 +7,7 @@ import { CommentController } from './comment'
 import { LinkController } from './link'
 import { NoteController } from './note'
 import { PageController } from './page'
+import type { PostListItem, PostListOptions } from './post'
 import { PostController } from './post'
 import { ProjectController } from './project'
 import {
@@ -95,3 +96,5 @@ export {
   TopicController,
   UserController,
 }
+
+export type { PostListItem, PostListOptions }

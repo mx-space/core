@@ -84,6 +84,12 @@ export const PostPagerSchema = PagerSchema.extend({
       z.array(zMongoId),
     )
     .optional(),
+  lang: z
+    .preprocess(
+      (val) => normalizeLanguageCode(val as string),
+      z.string().length(2),
+    )
+    .optional(),
 })
 
 export class PostPagerDto extends createZodDto(PostPagerSchema) {}

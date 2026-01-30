@@ -16,7 +16,10 @@ import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
-import { TranslationEnhancerService } from '~/processors/helper/helper.translation-enhancer.service'
+import {
+  TranslationEnhancerService,
+  type ArticleTranslationInput,
+} from '~/processors/helper/helper.translation-enhancer.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import type { PipelineStage } from 'mongoose'
@@ -55,6 +58,7 @@ export class PostController {
       sortOrder,
       truncate,
       categoryIds,
+      lang,
     } = query
 
     return this.postService.model
@@ -145,14 +149,55 @@ export class PostController {
           page,
         },
       )
-      .then((res) => {
-        res.docs = res.docs.map((doc: PostModel) => {
-          doc.text = truncate ? doc.text.slice(0, truncate) : doc.text
+      .then(async (res) => {
+        const translationInputs: ArticleTranslationInput[] = []
+        for (const doc of res.docs) {
+          const originalText = doc.text
           if (doc.meta && typeof doc.meta === 'string') {
             doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
           }
-          return doc
-        })
+
+          if (lang && typeof originalText === 'string') {
+            translationInputs.push({
+              id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
+              title: doc.title,
+              text: originalText,
+              summary: doc.summary,
+              tags: doc.tags,
+              meta: doc.meta,
+            })
+          }
+
+          doc.text = truncate ? doc.text.slice(0, truncate) : doc.text
+        }
+
+        if (lang && translationInputs.length) {
+          const translationResults =
+            await this.translationEnhancerService.enhanceListWithTranslation({
+              articles: translationInputs,
+              targetLang: lang,
+            })
+
+          res.docs = res.docs.map((doc) => {
+            const docId = doc._id?.toString?.() ?? doc.id ?? String(doc._id)
+            const translation = translationResults.get(docId)
+            if (!translation?.isTranslated) {
+              return doc
+            }
+
+            return {
+              ...doc,
+              title: translation.title,
+              text: translation.text,
+              summary: translation.summary,
+              tags: translation.tags,
+              isTranslated: translation.isTranslated,
+              translationMeta: translation.translationMeta,
+            }
+          })
+        }
+
+        console.log(res.docs)
         return res
       })
   }
