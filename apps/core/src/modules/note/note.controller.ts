@@ -21,7 +21,6 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { TranslationEnhancerService } from '~/processors/helper/helper.translation-enhancer.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import type { QueryFilter } from 'mongoose'
 import { NoteModel } from './note.model'
@@ -31,6 +30,7 @@ import {
   NoteDto,
   NotePasswordQueryDto,
   NoteQueryDto,
+  NoteTopicPagerDto,
   PartialNoteDto,
   SetNotePublishStatusDto,
 } from './note.schema'
@@ -102,12 +102,12 @@ export class NoteController {
     @Param() params: MongoIdDto,
     @IsAuthenticated() isAuthenticated: boolean,
   ) {
-    const { size = 10 } = query
+    const { size = 10, lang } = query
     const half = size >> 1
     const { id } = params
     const select = isAuthenticated
-      ? 'nid _id title created isPublished'
-      : 'nid _id title created'
+      ? 'nid _id title created isPublished text'
+      : 'nid _id title created text'
     const condition = isAuthenticated ? {} : { isPublished: true }
 
     // 当前文档直接找，不用加条件，反正里面的东西是看不到的
@@ -150,9 +150,43 @@ export class NoteController {
           .limit(half - 1)
           .sort({ created: -1 })
           .lean()
-    const data = [...prevList, ...nextList, currentDocument].sort(
+    let data = [...prevList, ...nextList, currentDocument].sort(
       (a: any, b: any) => b.created - a.created,
     )
+
+    // 处理翻译
+    if (lang && data.length) {
+      const translationResults =
+        await this.translationEnhancerService.enhanceListWithTranslation({
+          articles: data.map((item: any) => ({
+            id: item._id?.toString?.() ?? item.id ?? String(item._id),
+            title: item.title,
+            text: item.text || '',
+          })),
+          targetLang: lang,
+        })
+
+      data = data.map((item: any) => {
+        const itemId = item._id?.toString?.() ?? item.id ?? String(item._id)
+        const translation = translationResults.get(itemId)
+        const { text: _text, ...rest } = item
+        if (!translation?.isTranslated) {
+          return rest
+        }
+        return {
+          ...rest,
+          title: translation.title,
+          isTranslated: translation.isTranslated,
+          translationMeta: translation.translationMeta,
+        }
+      })
+    } else {
+      // 不返回 text 字段
+      data = data.map((item: any) => {
+        const { text: _text, ...rest } = item
+        return rest
+      })
+    }
 
     return { data, size: data.length }
   }
@@ -296,22 +330,23 @@ export class NoteController {
   @HTTPDecorators.Paginator
   async getNotesByTopic(
     @Param() params: MongoIdDto,
-    @Query() query: PagerDto,
+    @Query() query: NoteTopicPagerDto,
     @IsAuthenticated() isAuthenticated: boolean,
   ) {
     const { id } = params
     const {
       size,
       page,
-      select = '_id title nid id created modified',
+      select = '_id title nid id created modified text',
       sortBy,
       sortOrder,
+      lang,
     } = query
     const condition: QueryFilter<NoteModel> = isAuthenticated
       ? { $or: [{ isPublished: false }, { isPublished: true }] }
       : { isPublished: true }
 
-    return await this.noteService.getNotePaginationByTopicId(
+    const result = await this.noteService.getNotePaginationByTopicId(
       id,
       {
         page,
@@ -321,6 +356,43 @@ export class NoteController {
       },
       { ...condition },
     )
+
+    // 处理翻译
+    if (lang && result.docs.length) {
+      const translationResults =
+        await this.translationEnhancerService.enhanceListWithTranslation({
+          articles: result.docs.map((item: any) => ({
+            id: item._id?.toString?.() ?? item.id ?? String(item._id),
+            title: item.title,
+            text: item.text || '',
+          })),
+          targetLang: lang,
+        })
+
+      result.docs = result.docs.map((item: any) => {
+        const itemId = item._id?.toString?.() ?? item.id ?? String(item._id)
+        console.log(itemId)
+        const translation = translationResults.get(itemId)
+        const { text: _text, ...rest } = item
+        if (!translation?.isTranslated) {
+          return rest
+        }
+        return {
+          ...rest,
+          title: translation.title,
+          isTranslated: translation.isTranslated,
+          translationMeta: translation.translationMeta,
+        }
+      })
+    } else {
+      // 不返回 text 字段
+      result.docs = result.docs.map((item: any) => {
+        const { text: _text, ...rest } = item
+        return rest
+      })
+    }
+
+    return result
   }
 
   @Patch('/:id/publish')

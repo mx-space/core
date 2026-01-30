@@ -94,6 +94,12 @@ export class NotePasswordQueryDto extends createZodDto(
  */
 export const ListQuerySchema = z.object({
   size: zCoerceInt.min(1).max(20).optional(),
+  lang: z
+    .preprocess(
+      (val) => normalizeLanguageCode(val as string),
+      z.string().length(2),
+    )
+    .optional(),
 })
 
 export class ListQueryDto extends createZodDto(ListQuerySchema) {}
@@ -120,6 +126,20 @@ export const SetNotePublishStatusSchema = z.object({
 export class SetNotePublishStatusDto extends createZodDto(
   SetNotePublishStatusSchema,
 ) {}
+
+/**
+ * Note topic pager schema (extends PagerSchema with lang support)
+ */
+export const NoteTopicPagerSchema = PagerSchema.extend({
+  lang: z
+    .preprocess(
+      (val) => normalizeLanguageCode(val as string),
+      z.string().length(2),
+    )
+    .optional(),
+})
+
+export class NoteTopicPagerDto extends createZodDto(NoteTopicPagerSchema) {}
 
 // Type exports
 export type CoordinateInput = z.infer<typeof CoordinateSchema>
