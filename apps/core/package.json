@@ -82,7 +82,7 @@
     "@typegoose/auto-increment": "^5.0.0",
     "@typegoose/typegoose": "^13.0.0",
     "@types/jsonwebtoken": "9.0.10",
-    "ai": "6.0.50",
+    "ai": "6.0.62",
     "algoliasearch": "5.47.0",
     "axios": "^1.13.3",
     "axios-retry": "4.5.0",
