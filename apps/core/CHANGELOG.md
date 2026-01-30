@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [9.3.2](https://github.com/mx-space/core/compare/v9.3.1...v9.3.2) (2026-01-30)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ai to v6.0.62 ([#2569](https://github.com/mx-space/core/issues/2569)) ([1cdac56](https://github.com/mx-space/core/commit/1cdac56f6a940b7993d1b3de8dc03de788941ed8))
+* **deps:** update dependency better-auth to v1.4.18 ([#2570](https://github.com/mx-space/core/issues/2570)) ([ea0070a](https://github.com/mx-space/core/commit/ea0070a39312058ab14ae66464a639e1187b3e51))
+
+
+### Features
+
+* **translation:** enhance translation capabilities for articles ([038d728](https://github.com/mx-space/core/commit/038d72840534c15a5c3ea8bee9a3b04035a6a6a3))
+
+
+
 ## [9.3.1](https://github.com/mx-space/core/compare/v9.3.0...v9.3.1) (2026-01-29)
 
 
