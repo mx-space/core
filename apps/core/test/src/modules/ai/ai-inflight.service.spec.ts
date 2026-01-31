@@ -30,6 +30,11 @@ class FakeRedis {
     return 1
   }
 
+  async del(key: string) {
+    this.store.delete(key)
+    return 1
+  }
+
   async xadd(key: string, ...args: string[]) {
     const starIndex = args.lastIndexOf('*')
     const fields = args.slice(starIndex + 1)
@@ -153,6 +158,9 @@ describe('AiInFlightService', () => {
 
   it('fails fast when lock missing and no result', async () => {
     const fakeRedis = new FakeRedis()
+    // Set lock first so this instance becomes a follower
+    await fakeRedis.set('ai:stream:missing:lock', 'some-leader')
+
     const module = await Test.createTestingModule({
       providers: [
         AiInFlightService,
@@ -161,7 +169,7 @@ describe('AiInFlightService', () => {
     }).compile()
 
     const service = module.get(AiInFlightService)
-    const { events } = await service.runWithStream({
+    const { events, result } = await service.runWithStream({
       key: 'missing',
       lockTtlSec: 1,
       resultTtlSec: 60,
@@ -171,6 +179,12 @@ describe('AiInFlightService', () => {
       onLeader: async () => ({ result: { id: 'x' }, resultId: 'x' }),
       parseResult: async (id: string) => ({ id }),
     })
+
+    // Delete lock to simulate leader crash
+    await fakeRedis.del('ai:stream:missing:lock')
+
+    // Consume result promise to avoid unhandled rejection
+    result.catch(() => {})
 
     let caught: unknown = null
     try {
