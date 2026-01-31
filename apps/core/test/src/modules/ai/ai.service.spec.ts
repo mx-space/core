@@ -5,11 +5,16 @@ import { AIProviderType } from '~/modules/ai/ai.types'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Mock the factory
-vi.mock('~/modules/ai/ai-provider.factory', () => ({
-  createLanguageModel: vi.fn((config, modelOverride) => ({
-    id: `${config.type}:${modelOverride || config.defaultModel}`,
-    providerId: config.id,
+// Mock the runtime factory
+vi.mock('~/modules/ai/runtime', () => ({
+  createModelRuntime: vi.fn((config, modelOverride) => ({
+    providerInfo: {
+      id: config.id,
+      type: config.type,
+      model: modelOverride || config.defaultModel,
+    },
+    generateText: vi.fn(),
+    generateStructured: vi.fn(),
   })),
 }))
 
@@ -70,27 +75,27 @@ describe('AiService', () => {
 
   describe('getSummaryModel', () => {
     it('should get summary model from assigned provider', async () => {
-      const model = (await service.getSummaryModel()) as any
-      expect(model).toBeDefined()
-      expect(model.providerId).toBe('main')
-      expect(model.id).toBe('openai:gpt-4o')
+      const runtime = await service.getSummaryModel()
+      expect(runtime).toBeDefined()
+      expect(runtime.providerInfo.id).toBe('main')
+      expect(runtime.providerInfo.model).toBe('gpt-4o')
     })
   })
 
   describe('getWriterModel', () => {
     it('should get writer model with overridden model name', async () => {
-      const model = (await service.getWriterModel()) as any
-      expect(model).toBeDefined()
-      expect(model.providerId).toBe('backup')
-      expect(model.id).toBe('openai:gpt-4o-mini')
+      const runtime = await service.getWriterModel()
+      expect(runtime).toBeDefined()
+      expect(runtime.providerInfo.id).toBe('backup')
+      expect(runtime.providerInfo.model).toBe('gpt-4o-mini')
     })
   })
 
   describe('getCommentReviewModel', () => {
     it('should get comment review model from assigned provider', async () => {
-      const model = (await service.getCommentReviewModel()) as any
-      expect(model).toBeDefined()
-      expect(model.providerId).toBe('main')
+      const runtime = await service.getCommentReviewModel()
+      expect(runtime).toBeDefined()
+      expect(runtime.providerInfo.id).toBe('main')
     })
   })
 
@@ -112,9 +117,9 @@ describe('AiService', () => {
         ...mockAiConfig,
         summaryModel: { providerId: 'non-existent' },
       })
-      const model = (await service.getSummaryModel()) as any
-      expect(model).toBeDefined()
-      expect(model.providerId).toBe('main')
+      const runtime = await service.getSummaryModel()
+      expect(runtime).toBeDefined()
+      expect(runtime.providerInfo.id).toBe('main')
     })
 
     it('should fallback to first enabled provider when no assignment', async () => {
@@ -122,9 +127,9 @@ describe('AiService', () => {
         ...mockAiConfig,
         summaryModel: undefined,
       })
-      const model = (await service.getSummaryModel()) as any
-      expect(model).toBeDefined()
-      expect(model.providerId).toBe('main')
+      const runtime = await service.getSummaryModel()
+      expect(runtime).toBeDefined()
+      expect(runtime.providerInfo.id).toBe('main')
     })
 
     it('should skip disabled providers in fallback', async () => {
@@ -149,8 +154,8 @@ describe('AiService', () => {
         ],
         summaryModel: undefined,
       })
-      const model = (await service.getSummaryModel()) as any
-      expect(model.providerId).toBe('enabled-second')
+      const runtime = await service.getSummaryModel()
+      expect(runtime.providerInfo.id).toBe('enabled-second')
     })
   })
 })

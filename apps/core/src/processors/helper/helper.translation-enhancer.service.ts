@@ -6,6 +6,7 @@ export interface TranslationMeta {
   sourceLang: string
   targetLang: string
   translatedAt: Date
+  model?: string
 }
 
 export interface TranslationEnhanceResult {
@@ -76,6 +77,7 @@ export class TranslationEnhancerService {
           sourceLang: translation.sourceLang,
           targetLang: translation.lang,
           translatedAt: translation.created!,
+          model: translation.aiModel,
         },
         availableTranslations,
       }
@@ -142,6 +144,7 @@ export class TranslationEnhancerService {
                 sourceLang: translation.sourceLang,
                 targetLang: translation.lang,
                 translatedAt: translation.created!,
+                model: translation.aiModel,
               },
             },
           ]

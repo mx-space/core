@@ -36,4 +36,17 @@ export class AITranslationModel extends BaseModel {
 
   @prop({ type: () => [String] })
   tags?: string[]
+
+  /**
+   * AI model metadata for audit/debug.
+   * Note: existing documents may not have these fields.
+   */
+  @prop()
+  aiModel?: string
+
+  @prop()
+  aiProviderId?: string
+
+  @prop()
+  aiProviderType?: string
 }

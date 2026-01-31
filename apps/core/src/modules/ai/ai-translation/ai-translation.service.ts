@@ -11,10 +11,8 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { AsyncQueue } from '~/utils/queue.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { md5 } from '~/utils/tool.util'
-import { generateText, Output } from 'ai'
 import dayjs from 'dayjs'
 import removeMdCodeblock from 'remove-md-codeblock'
-import { z } from 'zod'
 import { ConfigsService } from '../../configs/configs.service'
 import type { NoteModel } from '../../note/note.model'
 import type { PostModel } from '../../post/post.model'
@@ -147,29 +145,14 @@ export class AiTranslationService {
     text: string
     summary: string | null
     tags: string[] | null
+    aiModel: string
+    aiProviderId: string
+    aiProviderType: string
   }> {
-    const model = await this.aiService.getTranslationModel()
+    const { runtime, info } = await this.aiService.getTranslationModelWithInfo()
 
-    const { output } = await generateText({
-      model: model as Parameters<typeof generateText>[0]['model'],
-      output: Output.object({
-        schema: z.object({
-          sourceLang: z
-            .string()
-            .describe(AI_PROMPTS.translation.schema.sourceLang),
-          title: z.string().describe(AI_PROMPTS.translation.schema.title),
-          text: z.string().describe(AI_PROMPTS.translation.schema.text),
-          summary: z
-            .string()
-            .nullable()
-            .describe(AI_PROMPTS.translation.schema.summary),
-          tags: z
-            .array(z.string())
-            .nullable()
-            .describe(AI_PROMPTS.translation.schema.tags),
-        }),
-      }),
-      prompt: AI_PROMPTS.translation.getTranslationPrompt(targetLang, {
+    const { output } = await runtime.generateStructured({
+      ...AI_PROMPTS.translation(targetLang, {
         title: content.title,
         text: this.serializeText(content.text),
         summary: content.summary ?? undefined,
@@ -179,7 +162,12 @@ export class AiTranslationService {
       maxRetries: 2,
     })
 
-    return output!
+    return {
+      ...output,
+      aiModel: info.model,
+      aiProviderId: info.providerId,
+      aiProviderType: info.providerType,
+    }
   }
 
   async generateTranslation(
@@ -289,6 +277,9 @@ export class AiTranslationService {
       existing.text = translated.text
       existing.summary = translated.summary ?? undefined
       existing.tags = translated.tags ?? undefined
+      existing.aiModel = translated.aiModel
+      existing.aiProviderId = translated.aiProviderId
+      existing.aiProviderType = translated.aiProviderType
       await existing.save()
       this.logger.log(
         `AI translation updated: article=${articleId} target=${targetLang}`,
@@ -310,6 +301,9 @@ export class AiTranslationService {
       text: translated.text,
       summary: translated.summary ?? undefined,
       tags: translated.tags ?? undefined,
+      aiModel: translated.aiModel,
+      aiProviderId: translated.aiProviderId,
+      aiProviderType: translated.aiProviderType,
     })
     this.logger.log(
       `AI translation created: article=${articleId} target=${targetLang}`,
@@ -336,6 +330,9 @@ export class AiTranslationService {
       summary: translation.summary,
       tags: translation.tags,
       hash: translation.hash,
+      aiModel: translation.aiModel,
+      aiProviderId: translation.aiProviderId,
+      aiProviderType: translation.aiProviderType,
     }
 
     this.eventManager.emit(eventType, payload, {

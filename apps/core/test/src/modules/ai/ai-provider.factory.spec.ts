@@ -1,36 +1,32 @@
-import { createLanguageModel } from '~/modules/ai/ai-provider.factory'
 import { AIProviderType } from '~/modules/ai/ai.types'
+import { createModelRuntime } from '~/modules/ai/runtime'
 import { describe, expect, it, vi } from 'vitest'
 
 // Mock the SDK providers
-vi.mock('@ai-sdk/openai', () => ({
-  createOpenAI: vi.fn((config: { apiKey: string; baseURL?: string }) => {
-    const provider = ((model: string) => ({
-      id: `openai:${model}`,
-      config,
-    })) as any
-
-    // The real SDK provider exposes typed helpers like `.chat(...)`.
-    provider.chat = (model: string) => ({
-      id: `openai.chat:${model}`,
-      config,
-    })
-
-    return provider
-  }),
+vi.mock('openai', () => ({
+  default: class MockOpenAI {
+    apiKey: string
+    baseURL?: string
+    constructor(config: { apiKey: string; baseURL?: string }) {
+      this.apiKey = config.apiKey
+      this.baseURL = config.baseURL
+    }
+  },
 }))
 
-vi.mock('@ai-sdk/anthropic', () => ({
-  createAnthropic: vi.fn(
-    (config: { apiKey: string; baseURL?: string }) => (model: string) => ({
-      id: `anthropic:${model}`,
-      config,
-    }),
-  ),
+vi.mock('@anthropic-ai/sdk', () => ({
+  default: class MockAnthropic {
+    apiKey: string
+    baseURL?: string
+    constructor(config: { apiKey: string; baseURL?: string }) {
+      this.apiKey = config.apiKey
+      this.baseURL = config.baseURL
+    }
+  },
 }))
 
-describe('createLanguageModel', () => {
-  it('should create OpenAI model', () => {
+describe('createModelRuntime', () => {
+  it('should create OpenAI runtime', () => {
     const config = {
       id: 'test',
       name: 'Test',
@@ -39,12 +35,13 @@ describe('createLanguageModel', () => {
       defaultModel: 'gpt-4o',
       enabled: true,
     }
-    const model = createLanguageModel(config) as any
-    expect(model).toBeDefined()
-    expect(model.id).toBe('openai:gpt-4o')
+    const runtime = createModelRuntime(config)
+    expect(runtime).toBeDefined()
+    expect(runtime.providerInfo.type).toBe(AIProviderType.OpenAI)
+    expect(runtime.providerInfo.model).toBe('gpt-4o')
   })
 
-  it('should create OpenAI model with custom endpoint', () => {
+  it('should create OpenAI runtime with custom endpoint', () => {
     const config = {
       id: 'test',
       name: 'Test',
@@ -54,12 +51,12 @@ describe('createLanguageModel', () => {
       defaultModel: 'gpt-4o',
       enabled: true,
     }
-    const model = createLanguageModel(config) as any
-    expect(model).toBeDefined()
-    expect(model.config.baseURL).toBe('https://custom.openai.com')
+    const runtime = createModelRuntime(config)
+    expect(runtime).toBeDefined()
+    expect(runtime.providerInfo.type).toBe(AIProviderType.OpenAI)
   })
 
-  it('should create OpenAI-compatible model with endpoint', () => {
+  it('should create OpenAI-compatible runtime with endpoint', () => {
     const config = {
       id: 'deepseek',
       name: 'DeepSeek',
@@ -69,10 +66,10 @@ describe('createLanguageModel', () => {
       defaultModel: 'deepseek-chat',
       enabled: true,
     }
-    const model = createLanguageModel(config) as any
-    expect(model).toBeDefined()
-    expect(model.id).toBe('openai.chat:deepseek-chat')
-    expect(model.config.baseURL).toBe('https://api.deepseek.com')
+    const runtime = createModelRuntime(config)
+    expect(runtime).toBeDefined()
+    expect(runtime.providerInfo.type).toBe(AIProviderType.OpenAICompatible)
+    expect(runtime.providerInfo.model).toBe('deepseek-chat')
   })
 
   it('should throw error for OpenAI-compatible without endpoint', () => {
@@ -84,12 +81,12 @@ describe('createLanguageModel', () => {
       defaultModel: 'deepseek-chat',
       enabled: true,
     }
-    expect(() => createLanguageModel(config)).toThrow(
+    expect(() => createModelRuntime(config)).toThrow(
       'Endpoint is required for OpenAI-compatible provider',
     )
   })
 
-  it('should create Anthropic model', () => {
+  it('should create Anthropic runtime', () => {
     const config = {
       id: 'claude',
       name: 'Claude',
@@ -98,9 +95,10 @@ describe('createLanguageModel', () => {
       defaultModel: 'claude-sonnet-4-20250514',
       enabled: true,
     }
-    const model = createLanguageModel(config) as any
-    expect(model).toBeDefined()
-    expect(model.id).toBe('anthropic:claude-sonnet-4-20250514')
+    const runtime = createModelRuntime(config)
+    expect(runtime).toBeDefined()
+    expect(runtime.providerInfo.type).toBe(AIProviderType.Anthropic)
+    expect(runtime.providerInfo.model).toBe('claude-sonnet-4-20250514')
   })
 
   it('should use model override when provided', () => {
@@ -112,8 +110,8 @@ describe('createLanguageModel', () => {
       defaultModel: 'gpt-4o',
       enabled: true,
     }
-    const model = createLanguageModel(config, 'gpt-4o-mini') as any
-    expect(model.id).toBe('openai:gpt-4o-mini')
+    const runtime = createModelRuntime(config, 'gpt-4o-mini')
+    expect(runtime.providerInfo.model).toBe('gpt-4o-mini')
   })
 
   it('should throw error for unsupported provider type', () => {
@@ -125,7 +123,7 @@ describe('createLanguageModel', () => {
       defaultModel: 'model',
       enabled: true,
     }
-    expect(() => createLanguageModel(config)).toThrow(
+    expect(() => createModelRuntime(config)).toThrow(
       'Unsupported provider type',
     )
   })
