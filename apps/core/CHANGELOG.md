@@ -1,5 +1,15 @@
 # CHANGELOG
 
+# [9.4.0](https://github.com/mx-space/core/compare/v9.3.4...v9.4.0) (2026-01-31)
+
+
+### Features
+
+* **ai:** implement language utilities for AI processing ([82ed676](https://github.com/mx-space/core/commit/82ed676edda8fbd734bb0bd4d3a2a7bb1de16e9c))
+* **ai:** introduce task queue for AI operations and enhance streaming capabilities ([2005c3d](https://github.com/mx-space/core/commit/2005c3d911fdfbe782ed44cfb2695c236c81298e))
+
+
+
 ## [9.3.4](https://github.com/mx-space/core/compare/v9.3.3...v9.3.4) (2026-01-30)
 
 
