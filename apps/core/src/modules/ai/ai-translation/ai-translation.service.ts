@@ -443,6 +443,79 @@ export class AiTranslationService implements OnModuleInit {
     return false
   }
 
+  /**
+   * 获取并验证文章，用于翻译相关操作
+   */
+  private async resolveArticleForTranslation(articleId: string): Promise<{
+    document: ArticleDocument
+    type: CollectionRefTypes.Post | CollectionRefTypes.Note
+  }> {
+    const article = await this.databaseService.findGlobalById(articleId)
+    if (!article || !article.document) {
+      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    }
+
+    if (
+      article.type === CollectionRefTypes.Recently ||
+      article.type === CollectionRefTypes.Page
+    ) {
+      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    }
+
+    return {
+      document: article.document as ArticleDocument,
+      type: article.type,
+    }
+  }
+
+  /**
+   * 检查数据库中是否存在 hash 匹配的有效翻译
+   */
+  private async findValidTranslation(
+    articleId: string,
+    targetLang: string,
+    document: ArticleDocument,
+  ): Promise<AITranslationModel | null> {
+    const translation = await this.aiTranslationModel.findOne({
+      refId: articleId,
+      lang: targetLang,
+    })
+
+    if (!translation) {
+      return null
+    }
+
+    const sourceLang =
+      this.getMetaLang(document) || translation.sourceLang || 'unknown'
+    const currentHash = this.computeContentHash(
+      this.toArticleContent(document),
+      sourceLang,
+    )
+
+    if (translation.hash !== currentHash) {
+      return null
+    }
+
+    return translation
+  }
+
+  /**
+   * 将已有翻译包装为立即返回的 stream 格式
+   */
+  private wrapAsImmediateStream(translation: AITranslationModel): {
+    events: AsyncIterable<AiStreamEvent>
+    result: Promise<AITranslationModel>
+  } {
+    const events = (async function* () {
+      yield { type: 'done' as const, data: { resultId: translation.id } }
+    })()
+
+    return {
+      events,
+      result: Promise.resolve(translation),
+    }
+  }
+
   private computeContentHash(
     document: ArticleContent,
     sourceLang: string,
@@ -569,19 +642,8 @@ export class AiTranslationService implements OnModuleInit {
       throw new BizException(ErrorCodeEnum.AINotEnabled)
     }
 
-    const article = await this.databaseService.findGlobalById(articleId)
-    if (!article || !article.document) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
-    }
-
-    if (
-      article.type === CollectionRefTypes.Recently ||
-      article.type === CollectionRefTypes.Page
-    ) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
-    }
-
-    const document = article.document as ArticleDocument
+    const { document, type } =
+      await this.resolveArticleForTranslation(articleId)
 
     this.logger.log(
       `AI translation start: article=${articleId} target=${targetLang}`,
@@ -591,7 +653,7 @@ export class AiTranslationService implements OnModuleInit {
       const { result } = await this.runTranslationGeneration(
         articleId,
         targetLang,
-        article.type,
+        type,
         document,
       )
       const translated = await result
@@ -710,25 +772,24 @@ export class AiTranslationService implements OnModuleInit {
       throw new BizException(ErrorCodeEnum.AINotEnabled)
     }
 
-    const article = await this.databaseService.findGlobalById(articleId)
-    if (!article || !article.document) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
-    }
+    const { document, type } =
+      await this.resolveArticleForTranslation(articleId)
 
-    if (
-      article.type === CollectionRefTypes.Recently ||
-      article.type === CollectionRefTypes.Page
-    ) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
-    }
-
-    const document = article.document as ArticleDocument
-    return this.runTranslationGeneration(
+    // 检查数据库中是否已有有效翻译（hash 匹配）
+    const existingTranslation = await this.findValidTranslation(
       articleId,
       targetLang,
-      article.type,
       document,
     )
+
+    if (existingTranslation) {
+      this.logger.debug(
+        `Translation cache hit: article=${articleId} lang=${targetLang}`,
+      )
+      return this.wrapAsImmediateStream(existingTranslation)
+    }
+
+    return this.runTranslationGeneration(articleId, targetLang, type, document)
   }
 
   private emitTranslationEvent(
@@ -1007,28 +1068,11 @@ export class AiTranslationService implements OnModuleInit {
       throw new BizException(ErrorCodeEnum.NoteForbidden)
     }
 
-    const translation = await this.aiTranslationModel.findOne({
-      refId: articleId,
-      lang: targetLang,
-    })
-
-    if (!translation) {
-      return null
-    }
-
-    const document = article.document as ArticleDocument
-    const sourceLang =
-      this.getMetaLang(document) || translation.sourceLang || 'unknown'
-    const currentHash = this.computeContentHash(
-      this.toArticleContent(document),
-      sourceLang,
+    return this.findValidTranslation(
+      articleId,
+      targetLang,
+      article.document as ArticleDocument,
     )
-
-    if (translation.hash !== currentHash) {
-      return null
-    }
-
-    return translation
   }
 
   async getValidTranslationsForArticles(

@@ -17,6 +17,10 @@ import removeMdCodeblock from 'remove-md-codeblock'
 import { ConfigsService } from '../../configs/configs.service'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
+import {
+  resolveTargetLanguage,
+  type ResolveLanguageOptions,
+} from '../ai-language.util'
 import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
 import {
   AI_STREAM_IDLE_TIMEOUT_MS,
@@ -104,6 +108,87 @@ export class AiSummaryService implements OnModuleInit {
     )
   }
 
+  /**
+   * 计算内容 hash，用于检测内容是否变更
+   */
+  private computeContentHash(text: string): string {
+    return md5(this.serializeText(text))
+  }
+
+  /**
+   * 获取并验证文章，用于摘要相关操作
+   */
+  private async resolveArticleForSummary(articleId: string): Promise<{
+    document: { text: string; title: string }
+    type: CollectionRefTypes.Post | CollectionRefTypes.Note
+  }> {
+    const article = await this.databaseService.findGlobalById(articleId)
+    if (!article || !article.document) {
+      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    }
+
+    if (
+      article.type === CollectionRefTypes.Recently ||
+      article.type === CollectionRefTypes.Page
+    ) {
+      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    }
+
+    return {
+      document: article.document,
+      type: article.type,
+    }
+  }
+
+  /**
+   * 检查数据库中是否存在 hash 匹配的有效摘要
+   */
+  private async findValidSummary(
+    articleId: string,
+    lang: string,
+    text: string,
+  ): Promise<AISummaryModel | null> {
+    const contentHash = this.computeContentHash(text)
+
+    const doc = await this.aiSummaryModel.findOne({
+      refId: articleId,
+      lang,
+      hash: contentHash,
+    })
+
+    return doc
+  }
+
+  /**
+   * 将已有摘要包装为立即返回的 stream 格式
+   */
+  private wrapAsImmediateStream(summary: AISummaryModel): {
+    events: AsyncIterable<AiStreamEvent>
+    result: Promise<AISummaryModel>
+  } {
+    const events = (async function* () {
+      yield { type: 'done' as const, data: { resultId: summary.id } }
+    })()
+
+    return {
+      events,
+      result: Promise.resolve(summary),
+    }
+  }
+
+  /**
+   * 计算摘要的目标语言
+   */
+  private async getTargetLanguage(
+    options: ResolveLanguageOptions,
+  ): Promise<string> {
+    const aiConfig = await this.configService.get('ai')
+    return resolveTargetLanguage(options, {
+      configuredLanguage: aiConfig.aiSummaryTargetLanguage,
+      defaultLanguage: DEFAULT_SUMMARY_LANG,
+    })
+  }
+
   private async generateSummaryViaAIStream(
     text: string,
     lang: string,
@@ -154,17 +239,12 @@ export class AiSummaryService implements OnModuleInit {
     return { summary: parsed.summary, rawText: fullText }
   }
 
-  private async runSummaryGeneration(articleId: string, lang: string) {
-    const article = await this.databaseService.findGlobalById(articleId)
-    if (!article) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
-    }
-
-    if (article.type === CollectionRefTypes.Recently) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
-    }
-
-    const text = this.serializeText(article.document.text)
+  private async runSummaryGeneration(
+    articleId: string,
+    lang: string,
+    document: { text: string },
+  ) {
+    const text = this.serializeText(document.text)
     const key = this.buildSummaryKey(articleId, lang, text)
 
     return this.aiInFlightService.runWithStream<AISummaryModel>({
@@ -210,8 +290,14 @@ export class AiSummaryService implements OnModuleInit {
       throw new BizException(ErrorCodeEnum.AINotEnabled)
     }
 
+    const { document } = await this.resolveArticleForSummary(articleId)
+
     try {
-      const { result } = await this.runSummaryGeneration(articleId, lang)
+      const { result } = await this.runSummaryGeneration(
+        articleId,
+        lang,
+        document,
+      )
       return await result
     } catch (error) {
       if (error instanceof BizException) {
@@ -456,23 +542,8 @@ export class AiSummaryService implements OnModuleInit {
     return doc
   }
   async getSummaryByArticleId(articleId: string, lang = DEFAULT_SUMMARY_LANG) {
-    const article = await this.databaseService.findGlobalById(articleId)
-    if (!article) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
-    }
-
-    if (article.type === CollectionRefTypes.Recently) {
-      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
-    }
-
-    const contentMd5 = md5(this.serializeText(article.document.text))
-    const doc = await this.aiSummaryModel.findOne({
-      hash: contentMd5,
-
-      lang,
-    })
-
-    return doc
+    const { document } = await this.resolveArticleForSummary(articleId)
+    return this.findValidSummary(articleId, lang, document.text)
   }
 
   async getSummaryById(id: string) {
@@ -490,31 +561,6 @@ export class AiSummaryService implements OnModuleInit {
     events: AsyncIterable<AiStreamEvent>
     result: Promise<AISummaryModel>
   }> {
-    const { preferredLang, acceptLanguage } = options
-
-    const nextLang = preferredLang || acceptLanguage
-    const autoDetectedLanguage =
-      nextLang?.split('-').shift() || DEFAULT_SUMMARY_LANG
-
-    const aiSummaryTargetLanguage = await this.configService
-      .get('ai')
-      .then((c) => c.aiSummaryTargetLanguage || DEFAULT_SUMMARY_LANG)
-
-    const targetLanguage =
-      aiSummaryTargetLanguage === 'auto'
-        ? autoDetectedLanguage
-        : aiSummaryTargetLanguage
-
-    const dbStored = await this.getSummaryByArticleId(articleId, targetLanguage)
-    if (dbStored) {
-      return {
-        events: (async function* () {
-          yield { type: 'done', data: { resultId: dbStored.id } }
-        })(),
-        result: Promise.resolve(dbStored),
-      }
-    }
-
     const aiConfig = await this.configService.get('ai')
     const shouldGenerate =
       aiConfig?.enableAutoGenerateSummary && aiConfig.enableSummary
@@ -523,7 +569,24 @@ export class AiSummaryService implements OnModuleInit {
       throw new BizException(ErrorCodeEnum.AINotEnabled)
     }
 
-    return this.runSummaryGeneration(articleId, targetLanguage)
+    const targetLanguage = await this.getTargetLanguage(options)
+    const { document } = await this.resolveArticleForSummary(articleId)
+
+    // 检查数据库中是否已有有效摘要（hash 匹配）
+    const existingSummary = await this.findValidSummary(
+      articleId,
+      targetLanguage,
+      document.text,
+    )
+
+    if (existingSummary) {
+      this.logger.debug(
+        `Summary cache hit: article=${articleId} lang=${targetLanguage}`,
+      )
+      return this.wrapAsImmediateStream(existingSummary)
+    }
+
+    return this.runSummaryGeneration(articleId, targetLanguage, document)
   }
 
   async getOrGenerateSummaryForArticle(
@@ -534,21 +597,9 @@ export class AiSummaryService implements OnModuleInit {
       onlyDb?: boolean
     },
   ) {
-    const { preferredLang, acceptLanguage, onlyDb } = options
+    const { onlyDb } = options
 
-    const nextLang = preferredLang || acceptLanguage
-    const autoDetectedLanguage =
-      nextLang?.split('-').shift() || DEFAULT_SUMMARY_LANG
-
-    const aiSummaryTargetLanguage = await this.configService
-      .get('ai')
-      .then((c) => c.aiSummaryTargetLanguage || DEFAULT_SUMMARY_LANG)
-
-    const targetLanguage =
-      aiSummaryTargetLanguage === 'auto'
-        ? autoDetectedLanguage
-        : aiSummaryTargetLanguage
-
+    const targetLanguage = await this.getTargetLanguage(options)
     const dbStored = await this.getSummaryByArticleId(articleId, targetLanguage)
 
     if (dbStored) {
