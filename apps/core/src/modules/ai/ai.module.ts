@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common'
+import { AiInFlightService } from './ai-inflight/ai-inflight.service'
 import { AiSummaryController } from './ai-summary/ai-summary.controller'
 import { AiSummaryService } from './ai-summary/ai-summary.service'
+import { AiTaskModule } from './ai-task/ai-task.module'
 import { AiTranslationController } from './ai-translation/ai-translation.controller'
 import { AiTranslationService } from './ai-translation/ai-translation.service'
 import { AiWriterController } from './ai-writer/ai-writer.controller'
@@ -9,8 +11,10 @@ import { AiController } from './ai.controller'
 import { AiService } from './ai.service'
 
 @Module({
+  imports: [AiTaskModule],
   providers: [
     AiSummaryService,
+    AiInFlightService,
     AiService,
     AiWriterService,
     AiTranslationService,
@@ -21,6 +25,6 @@ import { AiService } from './ai.service'
     AiWriterController,
     AiTranslationController,
   ],
-  exports: [AiService, AiTranslationService],
+  exports: [AiService, AiTranslationService, AiSummaryService],
 })
 export class AiModule {}

@@ -29,6 +29,12 @@ export const GetSummaryQuerySchema = BaseLangQuerySchema.extend({
 
 export class GetSummaryQueryDto extends createZodDto(GetSummaryQuerySchema) {}
 
+export const GetSummaryStreamQuerySchema = BaseLangQuerySchema.extend({})
+
+export class GetSummaryStreamQueryDto extends createZodDto(
+  GetSummaryStreamQuerySchema,
+) {}
+
 /**
  * Update summary schema
  */

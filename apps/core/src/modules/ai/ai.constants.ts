@@ -1,7 +1,16 @@
 export const DEFAULT_SUMMARY_LANG = 'zh'
 
-/** Redis lock TTL for AI processing tasks (in seconds) */
-export const AI_TASK_LOCK_TTL = 30
+/** Redis lock TTL for AI streaming tasks (in seconds) */
+export const AI_STREAM_LOCK_TTL = 60
+/** Redis TTL for AI streaming results (in seconds) */
+export const AI_STREAM_RESULT_TTL = 10 * 60
+/** Max Redis Stream length for AI streaming */
+export const AI_STREAM_MAXLEN = 2000
+/** Redis Stream block time (ms) */
+// 200ms balances smooth SSE animation and Redis load in dev
+export const AI_STREAM_READ_BLOCK_MS = 200
+/** Idle timeout for AI streaming follower (ms) */
+export const AI_STREAM_IDLE_TIMEOUT_MS = 120_000
 
 /** Maximum word count for AI-generated summaries */
 export const AI_SUMMARY_MAX_WORDS = 150

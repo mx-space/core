@@ -12,6 +12,12 @@ export const MongoIdSchema = z.object({
 
 export class MongoIdDto extends createZodDto(MongoIdSchema) {}
 
+export const StringIdSchema = z.object({
+  id: z.string(),
+})
+
+export class StringIdDto extends createZodDto(StringIdSchema) {}
+
 /**
  * Int or MongoId validation schema
  * Accepts either a valid MongoDB ObjectId string or a positive integer

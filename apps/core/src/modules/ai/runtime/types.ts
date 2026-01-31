@@ -23,6 +23,12 @@ export interface GenerateTextOptions {
   reasoningEffort?: ReasoningEffort
 }
 
+export interface GenerateTextStreamOptions extends GenerateTextOptions {}
+
+export interface TextStreamChunk {
+  text: string
+}
+
 export interface GenerateTextResult {
   text: string
   usage?: {

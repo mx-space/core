@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -6,9 +6,12 @@ import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { RedisService } from '~/processors/redis/redis.service'
+import {
+  TaskQueueProcessor,
+  TaskQueueService,
+  type TaskExecuteContext,
+} from '~/processors/task-queue'
 import { InjectModel } from '~/transformers/model.transformer'
-import { AsyncQueue } from '~/utils/queue.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { md5 } from '~/utils/tool.util'
 import dayjs from 'dayjs'
@@ -16,7 +19,22 @@ import removeMdCodeblock from 'remove-md-codeblock'
 import { ConfigsService } from '../../configs/configs.service'
 import type { NoteModel } from '../../note/note.model'
 import type { PostModel } from '../../post/post.model'
-import { AI_TASK_LOCK_TTL } from '../ai.constants'
+import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
+import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
+import {
+  AITaskType,
+  computeAITaskDedupKey,
+  type TranslationAllTaskPayload,
+  type TranslationBatchTaskPayload,
+  type TranslationTaskPayload,
+} from '../ai-task/ai-task.types'
+import {
+  AI_STREAM_IDLE_TIMEOUT_MS,
+  AI_STREAM_LOCK_TTL,
+  AI_STREAM_MAXLEN,
+  AI_STREAM_READ_BLOCK_MS,
+  AI_STREAM_RESULT_TTL,
+} from '../ai.constants'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { AITranslationModel } from './ai-translation.model'
@@ -47,19 +65,327 @@ type GlobalArticle =
     }
 
 @Injectable()
-export class AiTranslationService {
+export class AiTranslationService implements OnModuleInit {
   private readonly logger = new Logger(AiTranslationService.name)
-  private cachedTaskId2Promise = new Map<string, Promise<AITranslationModel>>()
 
   constructor(
     @InjectModel(AITranslationModel)
     private readonly aiTranslationModel: MongooseModel<AITranslationModel>,
     private readonly databaseService: DatabaseService,
     private readonly configService: ConfigsService,
-    private readonly redisService: RedisService,
     private readonly aiService: AiService,
+    private readonly aiInFlightService: AiInFlightService,
     private readonly eventManager: EventManagerService,
+    private readonly taskProcessor: TaskQueueProcessor,
+    private readonly taskQueueService: TaskQueueService,
   ) {}
+
+  onModuleInit() {
+    this.registerTaskHandlers()
+  }
+
+  private registerTaskHandlers() {
+    // Translation handler
+    this.taskProcessor.registerHandler({
+      type: AITaskType.Translation,
+      execute: async (
+        payload: TranslationTaskPayload,
+        context: TaskExecuteContext,
+      ) => {
+        await this.executeTranslationTask(payload, context)
+      },
+    })
+
+    // Translation batch handler
+    this.taskProcessor.registerHandler({
+      type: AITaskType.TranslationBatch,
+      execute: async (
+        payload: TranslationBatchTaskPayload,
+        context: TaskExecuteContext,
+      ) => {
+        await this.executeTranslationBatchTask(payload, context)
+      },
+    })
+
+    // Translation all handler
+    this.taskProcessor.registerHandler({
+      type: AITaskType.TranslationAll,
+      execute: async (
+        payload: TranslationAllTaskPayload,
+        context: TaskExecuteContext,
+      ) => {
+        await this.executeTranslationAllTask(payload, context)
+      },
+    })
+
+    this.logger.log('AI translation task handlers registered')
+  }
+
+  private async executeTranslationTask(
+    payload: TranslationTaskPayload,
+    context: TaskExecuteContext,
+  ) {
+    this.checkAborted(context)
+
+    const aiConfig = await this.configService.get('ai')
+    const languages = payload.targetLanguages?.length
+      ? payload.targetLanguages
+      : aiConfig.translationTargetLanguages || []
+
+    if (!languages.length) {
+      await context.appendLog('warn', 'No target languages specified')
+      return
+    }
+
+    await context.updateProgress(0, 'Starting translation', 0, languages.length)
+
+    const translations: Array<{
+      translationId: string
+      lang: string
+      title: string
+    }> = []
+
+    for (let i = 0; i < languages.length; i++) {
+      this.checkAborted(context)
+
+      const lang = languages[i]
+      await context.appendLog(
+        'info',
+        `Translating to ${lang} (${i + 1}/${languages.length})`,
+      )
+
+      try {
+        const result = await this.generateTranslation(payload.refId, lang)
+        translations.push({
+          translationId: result.id,
+          lang: result.lang,
+          title: result.title,
+        })
+      } catch (error) {
+        await context.appendLog(
+          'error',
+          `Failed to translate to ${lang}: ${error.message}`,
+        )
+      }
+
+      const progress = Math.round(((i + 1) / languages.length) * 100)
+      await context.updateProgress(
+        progress,
+        `Translated ${i + 1}/${languages.length}`,
+        i + 1,
+        languages.length,
+      )
+    }
+
+    await context.setResult({ translations })
+  }
+
+  private async executeTranslationBatchTask(
+    payload: TranslationBatchTaskPayload,
+    context: TaskExecuteContext,
+  ) {
+    this.checkAborted(context)
+
+    const { refIds, targetLanguages } = payload
+    const total = refIds.length
+
+    await context.appendLog(
+      'info',
+      `Creating ${total} translation tasks for batch`,
+    )
+
+    // Fetch article info for all refIds
+    const articles = await this.databaseService.findGlobalByIds(refIds)
+    const articleMap = new Map<string, { title: string; type: string }>()
+    for (const post of articles.posts) {
+      articleMap.set(post.id, { title: post.title, type: 'Post' })
+    }
+    for (const note of articles.notes) {
+      articleMap.set(note.id, { title: note.title, type: 'Note' })
+    }
+
+    const createdTaskIds: string[] = []
+
+    for (const refId of refIds) {
+      this.checkAborted(context)
+
+      const articleInfo = articleMap.get(refId)
+      const taskPayload: TranslationTaskPayload = {
+        refId,
+        targetLanguages,
+        title: articleInfo?.title,
+        refType: articleInfo?.type,
+      }
+
+      const dedupKey = computeAITaskDedupKey(
+        AITaskType.Translation,
+        taskPayload,
+      )
+      const result = await this.taskQueueService.createTask({
+        type: AITaskType.Translation,
+        payload: taskPayload as unknown as Record<string, unknown>,
+        dedupKey,
+        groupId: context.taskId,
+      })
+
+      if (result.created) {
+        createdTaskIds.push(result.taskId)
+        await context.appendLog(
+          'info',
+          `Created task for "${articleInfo?.title || refId}"`,
+        )
+      } else {
+        await context.appendLog(
+          'info',
+          `Task already exists for "${articleInfo?.title || refId}": ${result.taskId}`,
+        )
+      }
+    }
+
+    await context.setResult({
+      total,
+      createdCount: createdTaskIds.length,
+      taskIds: createdTaskIds,
+      groupId: context.taskId,
+    })
+
+    await context.appendLog(
+      'info',
+      `Batch task completed: created ${createdTaskIds.length}/${total} tasks (groupId: ${context.taskId})`,
+    )
+  }
+
+  private async executeTranslationAllTask(
+    payload: TranslationAllTaskPayload,
+    context: TaskExecuteContext,
+  ) {
+    this.checkAborted(context)
+
+    const aiConfig = await this.configService.get('ai')
+    const languages = payload.targetLanguages?.length
+      ? payload.targetLanguages
+      : aiConfig.translationTargetLanguages || []
+
+    if (!languages.length) {
+      await context.appendLog('warn', 'No target languages specified')
+      return
+    }
+
+    await context.appendLog('info', 'Fetching all articles for translation')
+
+    const postModel = this.databaseService.getModelByRefType(
+      CollectionRefTypes.Post,
+    )
+    const noteModel = this.databaseService.getModelByRefType(
+      CollectionRefTypes.Note,
+    )
+
+    const [posts, notes] = await Promise.all([
+      postModel
+        .find({ isPublished: { $ne: false } })
+        .select('_id title')
+        .lean(),
+      noteModel
+        .find({
+          isPublished: { $ne: false },
+          password: { $in: [null, ''] },
+          $or: [{ publicAt: null }, { publicAt: { $lte: new Date() } }],
+        })
+        .select('_id title')
+        .lean(),
+    ])
+
+    // Build article info map
+    const articleMap = new Map<string, { title: string; type: string }>()
+    for (const post of posts) {
+      articleMap.set(post._id.toString(), { title: post.title, type: 'Post' })
+    }
+    for (const note of notes) {
+      articleMap.set(note._id.toString(), { title: note.title, type: 'Note' })
+    }
+
+    const allArticleIds = Array.from(articleMap.keys())
+    const total = allArticleIds.length
+
+    if (total === 0) {
+      await context.appendLog('info', 'No articles found for translation')
+      await context.setResult({ total: 0, createdCount: 0 })
+      return
+    }
+
+    await context.appendLog(
+      'info',
+      `Found ${total} articles to translate to ${languages.join(', ')}`,
+    )
+    await context.updateProgress(
+      0,
+      `Creating tasks for ${total} articles`,
+      0,
+      total,
+    )
+
+    const createdTaskIds: string[] = []
+
+    for (let i = 0; i < allArticleIds.length; i++) {
+      this.checkAborted(context)
+
+      const refId = allArticleIds[i]
+      const articleInfo = articleMap.get(refId)
+
+      const taskPayload: TranslationTaskPayload = {
+        refId,
+        targetLanguages: languages,
+        title: articleInfo?.title,
+        refType: articleInfo?.type,
+      }
+
+      const dedupKey = computeAITaskDedupKey(
+        AITaskType.Translation,
+        taskPayload,
+      )
+      const result = await this.taskQueueService.createTask({
+        type: AITaskType.Translation,
+        payload: taskPayload as unknown as Record<string, unknown>,
+        dedupKey,
+        groupId: context.taskId,
+      })
+
+      if (result.created) {
+        createdTaskIds.push(result.taskId)
+      }
+
+      // Update progress every 10 items
+      if ((i + 1) % 10 === 0 || i === allArticleIds.length - 1) {
+        const progress = Math.round(((i + 1) / total) * 100)
+        await context.updateProgress(
+          progress,
+          `Created ${createdTaskIds.length} tasks`,
+          i + 1,
+          total,
+        )
+      }
+    }
+
+    await context.setResult({
+      total,
+      createdCount: createdTaskIds.length,
+      taskIds: createdTaskIds,
+      groupId: context.taskId,
+    })
+
+    await context.appendLog(
+      'info',
+      `All task completed: created ${createdTaskIds.length}/${total} translation tasks (groupId: ${context.taskId})`,
+    )
+  }
+
+  private checkAborted(context: TaskExecuteContext) {
+    if (context.isAborted()) {
+      const error = new Error('Task aborted')
+      error.name = 'AbortError'
+      throw error
+    }
+  }
 
   private extractIdFromEvent(event: ArticleEventPayload): string | null {
     if ('data' in event) {
@@ -132,13 +458,32 @@ export class AiTranslationService {
     )
   }
 
+  private buildTranslationKey(
+    articleId: string,
+    targetLang: string,
+    content: ArticleContent,
+  ): string {
+    return md5(
+      JSON.stringify({
+        feature: 'translation',
+        articleId,
+        targetLang,
+        title: content.title,
+        text: this.serializeText(content.text),
+        summary: content.summary ?? null,
+        tags: content.tags ?? null,
+      }),
+    )
+  }
+
   private serializeText(text: string): string {
     return removeMdCodeblock(text)
   }
 
-  private async translateContent(
+  private async translateContentStream(
     content: ArticleContent,
     targetLang: string,
+    push?: (event: AiStreamEvent) => Promise<void>,
   ): Promise<{
     sourceLang: string
     title: string
@@ -151,19 +496,63 @@ export class AiTranslationService {
   }> {
     const { runtime, info } = await this.aiService.getTranslationModelWithInfo()
 
-    const { output } = await runtime.generateStructured({
-      ...AI_PROMPTS.translation(targetLang, {
+    const { systemPrompt, prompt, reasoningEffort } =
+      AI_PROMPTS.translationStream(targetLang, {
         title: content.title,
         text: this.serializeText(content.text),
         summary: content.summary ?? undefined,
         tags: content.tags,
-      }),
-      temperature: 0.3,
-      maxRetries: 2,
-    })
+      })
+
+    const messages = [
+      { role: 'system' as const, content: systemPrompt },
+      { role: 'user' as const, content: prompt },
+    ]
+
+    let fullText = ''
+    if (runtime.generateTextStream) {
+      for await (const chunk of runtime.generateTextStream({
+        messages,
+        temperature: 0.3,
+        maxRetries: 2,
+        reasoningEffort,
+      })) {
+        fullText += chunk.text
+        if (push) {
+          await push({ type: 'token', data: chunk.text })
+        }
+      }
+    } else {
+      const result = await runtime.generateText({
+        messages,
+        temperature: 0.3,
+        maxRetries: 2,
+        reasoningEffort,
+      })
+      fullText = result.text
+      if (push && result.text) {
+        await push({ type: 'token', data: result.text })
+      }
+    }
+
+    const parsed = JSON.parse(fullText) as {
+      sourceLang?: string
+      title?: string
+      text?: string
+      summary?: string | null
+      tags?: string[] | null
+    }
+
+    if (!parsed?.title || !parsed?.text || !parsed?.sourceLang) {
+      throw new Error('Invalid translation JSON response')
+    }
 
     return {
-      ...output,
+      sourceLang: parsed.sourceLang,
+      title: parsed.title,
+      text: parsed.text,
+      summary: parsed.summary ?? null,
+      tags: parsed.tags ?? null,
       aiModel: info.model,
       aiProviderId: info.providerId,
       aiProviderType: info.providerType,
@@ -198,42 +587,20 @@ export class AiTranslationService {
       `AI translation start: article=${articleId} target=${targetLang}`,
     )
 
-    const taskId = `ai:translation:${articleId}:${targetLang}`
-    const redis = this.redisService.getClient()
-
     try {
-      if (this.cachedTaskId2Promise.has(taskId)) {
-        this.logger.log(
-          `AI translation dedupe: article=${articleId} target=${targetLang}`,
-        )
-        return this.cachedTaskId2Promise.get(taskId)!
-      }
-
-      const isProcessing = await redis.get(taskId)
-      if (isProcessing === 'processing') {
-        this.logger.warn(
-          `AI translation locked: article=${articleId} target=${targetLang}`,
-        )
-        throw new BizException(ErrorCodeEnum.AIProcessing)
-      }
-
-      const taskPromise = this.executeTranslation(
+      const { result } = await this.runTranslationGeneration(
         articleId,
+        targetLang,
         article.type,
         document,
-        targetLang,
-        taskId,
-        redis,
       )
-
-      this.cachedTaskId2Promise.set(taskId, taskPromise)
-      const result = await taskPromise
+      const translated = await result
       this.logger.log(
         `AI translation done: article=${articleId} target=${targetLang} ms=${
           Date.now() - startedAt
         }`,
       )
-      return result
+      return translated
     } catch (error) {
       if (error instanceof BizException) {
         throw error
@@ -243,76 +610,125 @@ export class AiTranslationService {
         error.stack,
       )
       throw new BizException(ErrorCodeEnum.AIException, error.message)
-    } finally {
-      this.cachedTaskId2Promise.delete(taskId)
-      await redis.del(taskId)
     }
   }
 
-  private async executeTranslation(
+  private async runTranslationGeneration(
     articleId: string,
+    targetLang: string,
     refType: CollectionRefTypes,
     document: ArticleDocument,
-    targetLang: string,
-    taskId: string,
-    redis: ReturnType<RedisService['getClient']>,
-  ): Promise<AITranslationModel> {
-    await redis.set(taskId, 'processing', 'EX', AI_TASK_LOCK_TTL)
-
+  ) {
     const content = this.toArticleContent(document)
-    const translated = await this.translateContent(content, targetLang)
-    const { sourceLang } = translated
-    const hash = this.computeContentHash(content, sourceLang)
+    const key = this.buildTranslationKey(articleId, targetLang, content)
 
-    const existing = await this.aiTranslationModel.findOne({
-      refId: articleId,
-      refType,
-      lang: targetLang,
+    return this.aiInFlightService.runWithStream<AITranslationModel>({
+      key,
+      lockTtlSec: AI_STREAM_LOCK_TTL,
+      resultTtlSec: AI_STREAM_RESULT_TTL,
+      streamMaxLen: AI_STREAM_MAXLEN,
+      readBlockMs: AI_STREAM_READ_BLOCK_MS,
+      idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
+      onLeader: async ({ push }) => {
+        const translated = await this.translateContentStream(
+          content,
+          targetLang,
+          push,
+        )
+        const { sourceLang } = translated
+        const hash = this.computeContentHash(content, sourceLang)
+
+        const existing = await this.aiTranslationModel.findOne({
+          refId: articleId,
+          refType,
+          lang: targetLang,
+        })
+
+        if (existing) {
+          existing.hash = hash
+          existing.sourceLang = sourceLang
+          existing.title = translated.title
+          existing.text = translated.text
+          existing.summary = translated.summary ?? undefined
+          existing.tags = translated.tags ?? undefined
+          existing.aiModel = translated.aiModel
+          existing.aiProviderId = translated.aiProviderId
+          existing.aiProviderType = translated.aiProviderType
+          await existing.save()
+          this.logger.log(
+            `AI translation updated: article=${articleId} target=${targetLang}`,
+          )
+
+          // 发送翻译更新事件
+          this.emitTranslationEvent(BusinessEvents.TRANSLATION_UPDATE, existing)
+
+          return { result: existing, resultId: existing.id }
+        }
+
+        const created = await this.aiTranslationModel.create({
+          hash,
+          refId: articleId,
+          refType,
+          lang: targetLang,
+          sourceLang,
+          title: translated.title,
+          text: translated.text,
+          summary: translated.summary ?? undefined,
+          tags: translated.tags ?? undefined,
+          aiModel: translated.aiModel,
+          aiProviderId: translated.aiProviderId,
+          aiProviderType: translated.aiProviderType,
+        })
+        this.logger.log(
+          `AI translation created: article=${articleId} target=${targetLang}`,
+        )
+
+        // 发送翻译创建事件
+        this.emitTranslationEvent(BusinessEvents.TRANSLATION_CREATE, created)
+
+        return { result: created, resultId: created.id }
+      },
+      parseResult: async (resultId) => {
+        const doc = await this.aiTranslationModel.findById(resultId)
+        if (!doc) {
+          throw new BizException(ErrorCodeEnum.AITranslationNotFound)
+        }
+        return doc
+      },
     })
+  }
 
-    if (existing) {
-      existing.hash = hash
-      existing.sourceLang = sourceLang
-      existing.title = translated.title
-      existing.text = translated.text
-      existing.summary = translated.summary ?? undefined
-      existing.tags = translated.tags ?? undefined
-      existing.aiModel = translated.aiModel
-      existing.aiProviderId = translated.aiProviderId
-      existing.aiProviderType = translated.aiProviderType
-      await existing.save()
-      this.logger.log(
-        `AI translation updated: article=${articleId} target=${targetLang}`,
-      )
-
-      // 发送翻译更新事件
-      this.emitTranslationEvent(BusinessEvents.TRANSLATION_UPDATE, existing)
-
-      return existing
+  async streamTranslationForArticle(
+    articleId: string,
+    targetLang: string,
+  ): Promise<{
+    events: AsyncIterable<AiStreamEvent>
+    result: Promise<AITranslationModel>
+  }> {
+    const aiConfig = await this.configService.get('ai')
+    if (!aiConfig.enableTranslation) {
+      throw new BizException(ErrorCodeEnum.AINotEnabled)
     }
 
-    const created = await this.aiTranslationModel.create({
-      hash,
-      refId: articleId,
-      refType,
-      lang: targetLang,
-      sourceLang,
-      title: translated.title,
-      text: translated.text,
-      summary: translated.summary ?? undefined,
-      tags: translated.tags ?? undefined,
-      aiModel: translated.aiModel,
-      aiProviderId: translated.aiProviderId,
-      aiProviderType: translated.aiProviderType,
-    })
-    this.logger.log(
-      `AI translation created: article=${articleId} target=${targetLang}`,
+    const article = await this.databaseService.findGlobalById(articleId)
+    if (!article || !article.document) {
+      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    }
+
+    if (
+      article.type === CollectionRefTypes.Recently ||
+      article.type === CollectionRefTypes.Page
+    ) {
+      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    }
+
+    const document = article.document as ArticleDocument
+    return this.runTranslationGeneration(
+      articleId,
+      targetLang,
+      article.type,
+      document,
     )
-
-    // 发送翻译创建事件
-    this.emitTranslationEvent(BusinessEvents.TRANSLATION_CREATE, created)
-
-    return created
   }
 
   private emitTranslationEvent(
@@ -378,126 +794,12 @@ export class AiTranslationService {
     return { translations, article }
   }
 
-  async generateTranslationsBatch(
-    refIds: string[],
-    targetLanguages?: string[],
-  ): Promise<{ success: string[]; failed: string[] }> {
-    const aiConfig = await this.configService.get('ai')
-    if (!aiConfig.enableTranslation) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
+  async getTranslationById(id: string) {
+    const doc = await this.aiTranslationModel.findById(id)
+    if (!doc) {
+      throw new BizException(ErrorCodeEnum.AITranslationNotFound)
     }
-
-    const CONCURRENCY = 5
-
-    const { errors } = await AsyncQueue.runAll(
-      refIds,
-      async (refId) => {
-        await this.generateTranslationsForLanguages(refId, targetLanguages)
-        return refId
-      },
-      CONCURRENCY,
-    )
-
-    const success: string[] = []
-    const failed: string[] = []
-
-    refIds.forEach((refId, index) => {
-      if (errors.has(index)) {
-        this.logger.error(
-          `Batch translation failed for ${refId}: ${errors.get(index)?.message}`,
-        )
-        failed.push(refId)
-      } else {
-        success.push(refId)
-      }
-    })
-
-    return { success, failed }
-  }
-
-  async generateTranslationsForAll(targetLanguages?: string[]): Promise<{
-    total: number
-    queued: number
-  }> {
-    const aiConfig = await this.configService.get('ai')
-    if (!aiConfig.enableTranslation) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
-    }
-
-    const languages = targetLanguages?.length
-      ? targetLanguages
-      : aiConfig.translationTargetLanguages || []
-
-    if (!languages.length) {
-      return { total: 0, queued: 0 }
-    }
-
-    const postModel = this.databaseService.getModelByRefType(
-      CollectionRefTypes.Post,
-    )
-    const noteModel = this.databaseService.getModelByRefType(
-      CollectionRefTypes.Note,
-    )
-
-    const [posts, notes] = await Promise.all([
-      postModel
-        .find({ isPublished: { $ne: false } })
-        .select('_id')
-        .lean(),
-      noteModel
-        .find({
-          isPublished: { $ne: false },
-          password: { $in: [null, ''] },
-          $or: [{ publicAt: null }, { publicAt: { $lte: new Date() } }],
-        })
-        .select('_id')
-        .lean(),
-    ])
-
-    const allArticleIds: string[] = [
-      ...posts.map((p) => p._id.toString()),
-      ...notes.map((n) => n._id.toString()),
-    ]
-
-    const total = allArticleIds.length
-
-    if (total === 0) {
-      return { total: 0, queued: 0 }
-    }
-
-    const CONCURRENCY = 5
-
-    // 在后台执行批量翻译，不阻塞请求
-    scheduleManager.schedule(async () => {
-      this.logger.log(
-        `Batch all translation start: total=${total} concurrency=${CONCURRENCY}`,
-      )
-
-      const { errors } = await AsyncQueue.runAll(
-        allArticleIds,
-        async (refId) => {
-          await this.generateTranslationsForLanguages(refId, languages)
-          this.logger.log(`Batch all translation done: article=${refId}`)
-          return refId
-        },
-        CONCURRENCY,
-      )
-
-      const failedCount = errors.size
-      const successCount = total - failedCount
-
-      errors.forEach((error, index) => {
-        this.logger.error(
-          `Batch all translation failed for ${allArticleIds[index]}: ${error.message}`,
-        )
-      })
-
-      this.logger.log(
-        `Batch all translation completed: success=${successCount} failed=${failedCount}`,
-      )
-    })
-
-    return { total, queued: total }
+    return doc
   }
 
   async getAllTranslationsGrouped(query: GetTranslationsGroupedQueryInput) {

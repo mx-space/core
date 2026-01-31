@@ -28,9 +28,6 @@ export async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule.register(isInit),
     fastifyApp,
-    {
-      bufferLogs: true,
-    },
   )
 
   // 使用自定义 Logger 替换 NestJS 内置 Logger

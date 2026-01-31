@@ -1,43 +1,57 @@
-import { Body, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
+import {
+  Body,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { MongoIdDto } from '~/shared/dto/id.dto'
 import {
-  GenerateTranslationAllDto,
-  GenerateTranslationBatchDto,
-  GenerateTranslationDto,
+  CreateTranslationAllTaskDto,
+  CreateTranslationBatchTaskDto,
+  CreateTranslationTaskDto,
+} from '~/modules/ai/ai-task/ai-task.dto'
+import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
+import { MongoIdDto } from '~/shared/dto/id.dto'
+import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
+import type { FastifyReply } from 'fastify'
+import {
   GetTranslationQueryDto,
   GetTranslationsGroupedQueryDto,
+  GetTranslationStreamQueryDto,
   UpdateTranslationDto,
 } from './ai-translation.schema'
 import { AiTranslationService } from './ai-translation.service'
 
 @ApiController('ai/translations')
 export class AiTranslationController {
-  constructor(private readonly service: AiTranslationService) {}
+  constructor(
+    private readonly service: AiTranslationService,
+    private readonly taskService: AiTaskService,
+  ) {}
 
-  @Post('/generate')
+  @Post('/task')
   @Auth()
-  async generateTranslation(@Body() body: GenerateTranslationDto) {
-    return this.service.generateTranslationsForLanguages(
-      body.refId,
-      body.targetLanguages,
-    )
+  async createTranslationTask(@Body() body: CreateTranslationTaskDto) {
+    return this.taskService.createTranslationTask(body)
   }
 
-  @Post('/generate/batch')
+  @Post('/task/batch')
   @Auth()
-  async generateTranslationBatch(@Body() body: GenerateTranslationBatchDto) {
-    return this.service.generateTranslationsBatch(
-      body.refIds,
-      body.targetLanguages,
-    )
+  async createTranslationBatchTask(
+    @Body() body: CreateTranslationBatchTaskDto,
+  ) {
+    return this.taskService.createTranslationBatchTask(body)
   }
 
-  @Post('/generate/all')
+  @Post('/task/all')
   @Auth()
-  async generateTranslationAll(@Body() body: GenerateTranslationAllDto) {
-    return this.service.generateTranslationsForAll(body.targetLanguages)
+  async createTranslationAllTask(@Body() body: CreateTranslationAllTaskDto) {
+    return this.taskService.createTranslationAllTask(body)
   }
 
   @Get('/ref/:id')
@@ -78,5 +92,56 @@ export class AiTranslationController {
   @Get('/article/:id/languages')
   async getAvailableLanguages(@Param() params: MongoIdDto) {
     return this.service.getAvailableLanguagesForArticle(params.id)
+  }
+
+  @Get('/article/:id/generate')
+  async streamArticleTranslation(
+    @Param() params: MongoIdDto,
+    @Query() query: GetTranslationStreamQueryDto,
+    @Res() reply: FastifyReply,
+  ) {
+    initSse(reply)
+
+    let closed = false
+    reply.raw.on('close', () => {
+      closed = true
+    })
+
+    try {
+      const { events } = await this.service.streamTranslationForArticle(
+        params.id,
+        query.lang,
+      )
+
+      let sentToken = false
+      for await (const event of events) {
+        if (closed) break
+        if (event.type === 'token') {
+          sendSseEvent(reply, 'token', event.data)
+          sentToken = true
+        } else if (event.type === 'done') {
+          if (!sentToken) {
+            const doc = await this.service.getTranslationById(
+              event.data.resultId,
+            )
+            sendSseEvent(reply, 'token', doc)
+          }
+          sendSseEvent(reply, 'done', undefined)
+        } else {
+          sendSseEvent(reply, 'error', event.data)
+        }
+        if (event.type === 'done' || event.type === 'error') break
+      }
+    } catch (error) {
+      if (!closed) {
+        sendSseEvent(reply, 'error', {
+          message: (error as Error)?.message || 'AI stream error',
+        })
+      }
+    } finally {
+      if (!closed) {
+        endSse(reply)
+      }
+    }
   }
 }

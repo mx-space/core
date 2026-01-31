@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { isDev } from '~/global/env.global'
 import type { z } from 'zod'
 import { BaseRuntime } from './base.runtime'
 import type {
@@ -6,9 +7,11 @@ import type {
   GenerateStructuredResult,
   GenerateTextOptions,
   GenerateTextResult,
+  GenerateTextStreamOptions,
   ModelInfo,
   RuntimeConfig,
   RuntimeProviderInfo,
+  TextStreamChunk,
 } from './types'
 
 // https://docs.anthropic.com/en/docs/about-claude/models
@@ -136,6 +139,59 @@ export class AnthropicRuntime extends BaseRuntime {
         },
       }
     }, maxRetries)
+  }
+
+  async *generateTextStream(
+    options: GenerateTextStreamOptions,
+  ): AsyncIterable<TextStreamChunk> {
+    const { prompt, messages, temperature, maxTokens } = options
+
+    const anthropicMessages: Anthropic.MessageParam[] = messages
+      ? messages
+          .filter((m) => m.role !== 'system')
+          .map((m) => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          }))
+      : [{ role: 'user' as const, content: prompt! }]
+
+    const systemMessage = messages?.find((m) => m.role === 'system')?.content
+
+    const clientAny = this.client as any
+    if (clientAny?.messages?.create) {
+      try {
+        const stream = await clientAny.messages.create({
+          model: this.providerInfo.model,
+          messages: anthropicMessages,
+          system: systemMessage,
+          temperature,
+          max_tokens: maxTokens || 4096,
+          stream: true,
+        })
+
+        for await (const event of stream as AsyncIterable<any>) {
+          const deltaText =
+            event?.delta?.text || event?.content_block?.text || event?.text
+          if (deltaText) {
+            if (isDev) {
+              // eslint-disable-next-line no-console
+              console.debug(
+                `[runtime:anthropic] chunk size=${deltaText.length}`,
+              )
+            }
+            yield { text: deltaText }
+          }
+        }
+        return
+      } catch {
+        // fallback to non-streaming
+      }
+    }
+
+    const fallback = await this.generateText(options)
+    if (fallback.text) {
+      yield { text: fallback.text }
+    }
   }
 
   async listModels(): Promise<ModelInfo[]> {

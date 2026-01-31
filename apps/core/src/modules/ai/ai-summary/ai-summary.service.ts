@@ -1,25 +1,38 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
-import { RedisService } from '~/processors/redis/redis.service'
+import {
+  TaskQueueProcessor,
+  type TaskExecuteContext,
+} from '~/processors/task-queue'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { md5 } from '~/utils/tool.util'
 import removeMdCodeblock from 'remove-md-codeblock'
 import { ConfigsService } from '../../configs/configs.service'
-import { AI_TASK_LOCK_TTL, DEFAULT_SUMMARY_LANG } from '../ai.constants'
+import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
+import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
+import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
+import {
+  AI_STREAM_IDLE_TIMEOUT_MS,
+  AI_STREAM_LOCK_TTL,
+  AI_STREAM_MAXLEN,
+  AI_STREAM_READ_BLOCK_MS,
+  AI_STREAM_RESULT_TTL,
+  DEFAULT_SUMMARY_LANG,
+} from '../ai.constants'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { AISummaryModel } from './ai-summary.model'
 import type { GetSummariesGroupedQueryInput } from './ai-summary.schema'
 
 @Injectable()
-export class AiSummaryService {
+export class AiSummaryService implements OnModuleInit {
   private readonly logger: Logger
   constructor(
     @InjectModel(AISummaryModel)
@@ -27,38 +40,121 @@ export class AiSummaryService {
     private readonly databaseService: DatabaseService,
     private readonly configService: ConfigsService,
 
-    private readonly redisService: RedisService,
     private readonly aiService: AiService,
+    private readonly aiInFlightService: AiInFlightService,
+    private readonly taskProcessor: TaskQueueProcessor,
   ) {
     this.logger = new Logger(AiSummaryService.name)
   }
 
-  private cachedTaskId2AiPromise = new Map<string, Promise<AISummaryModel>>()
+  onModuleInit() {
+    this.registerTaskHandler()
+  }
+
+  private registerTaskHandler() {
+    this.taskProcessor.registerHandler({
+      type: AITaskType.Summary,
+      execute: async (
+        payload: SummaryTaskPayload,
+        context: TaskExecuteContext,
+      ) => {
+        this.checkAborted(context)
+
+        await context.appendLog(
+          'info',
+          `Generating summary for article ${payload.refId}`,
+        )
+
+        const lang = payload.lang || DEFAULT_SUMMARY_LANG
+        const result = await this.generateSummaryByOpenAI(payload.refId, lang)
+
+        this.checkAborted(context)
+
+        await context.setResult({
+          summaryId: result.id,
+          summary: result.summary,
+          lang: result.lang,
+        })
+      },
+    })
+
+    this.logger.log('AI summary task handler registered')
+  }
+
+  private checkAborted(context: TaskExecuteContext) {
+    if (context.isAborted()) {
+      const error = new Error('Task aborted')
+      error.name = 'AbortError'
+      throw error
+    }
+  }
 
   private serializeText(text: string) {
     return removeMdCodeblock(text)
   }
 
-  private async generateSummaryViaAI(text: string, lang: string) {
-    const runtime = await this.aiService.getSummaryModel()
-
-    const { output } = await runtime.generateStructured({
-      ...AI_PROMPTS.summary(lang, this.serializeText(text)),
-      temperature: 0.5,
-      maxRetries: 2,
-    })
-
-    return output.summary
+  private buildSummaryKey(articleId: string, lang: string, text: string) {
+    return md5(
+      JSON.stringify({
+        feature: 'summary',
+        articleId,
+        lang,
+        textHash: md5(text),
+      }),
+    )
   }
-  async generateSummaryByOpenAI(articleId: string, lang: string) {
-    const {
-      ai: { enableSummary },
-    } = await this.configService.waitForConfigReady()
 
-    if (!enableSummary) {
-      throw new BizException(ErrorCodeEnum.AINotEnabled)
+  private async generateSummaryViaAIStream(
+    text: string,
+    lang: string,
+    push?: (event: AiStreamEvent) => Promise<void>,
+  ) {
+    const runtime = await this.aiService.getSummaryModel()
+    const { systemPrompt, prompt, reasoningEffort } = AI_PROMPTS.summaryStream(
+      lang,
+      text,
+    )
+
+    const messages = [
+      { role: 'system' as const, content: systemPrompt },
+      { role: 'user' as const, content: prompt },
+    ]
+
+    let fullText = ''
+    if (runtime.generateTextStream) {
+      for await (const chunk of runtime.generateTextStream({
+        messages,
+        temperature: 0.5,
+        maxRetries: 2,
+        reasoningEffort,
+      })) {
+        fullText += chunk.text
+        if (push) {
+          await push({ type: 'token', data: chunk.text })
+        }
+      }
+    } else {
+      const result = await runtime.generateText({
+        messages,
+        temperature: 0.5,
+        maxRetries: 2,
+        reasoningEffort,
+      })
+      fullText = result.text
+      if (push && result.text) {
+        await push({ type: 'token', data: result.text })
+      }
     }
 
+    const parsed = JSON.parse(fullText) as { summary?: string }
+    if (!parsed?.summary || typeof parsed.summary !== 'string') {
+      throw new Error('Invalid summary JSON response')
+    }
+
+    return { summary: parsed.summary, rawText: fullText }
+  }
+
+  private async runSummaryGeneration(articleId: string, lang: string) {
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article) {
       throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
@@ -68,53 +164,64 @@ export class AiSummaryService {
       throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
     }
 
-    const taskId = `ai:summary:${articleId}:${lang}`
-    const redis = this.redisService.getClient()
-    try {
-      if (this.cachedTaskId2AiPromise.has(taskId)) {
-        return this.cachedTaskId2AiPromise.get(taskId)
-      }
+    const text = this.serializeText(article.document.text)
+    const key = this.buildSummaryKey(articleId, lang, text)
 
-      const isProcessing = await redis.get(taskId)
-
-      if (isProcessing === 'processing') {
-        throw new BizException(ErrorCodeEnum.AIProcessing)
-      }
-
-      const taskPromise = handle.bind(this)(
-        articleId,
-        this.serializeText(article.document.text),
-      )
-
-      this.cachedTaskId2AiPromise.set(taskId, taskPromise)
-      return await taskPromise
-
-      async function handle(this: AiSummaryService, id: string, text: string) {
-        await redis.set(taskId, 'processing', 'EX', AI_TASK_LOCK_TTL)
-
-        const summary = await this.generateSummaryViaAI(text, lang)
-
+    return this.aiInFlightService.runWithStream<AISummaryModel>({
+      key,
+      lockTtlSec: AI_STREAM_LOCK_TTL,
+      resultTtlSec: AI_STREAM_RESULT_TTL,
+      streamMaxLen: AI_STREAM_MAXLEN,
+      readBlockMs: AI_STREAM_READ_BLOCK_MS,
+      idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
+      onLeader: async ({ push }) => {
+        const { summary } = await this.generateSummaryViaAIStream(
+          text,
+          lang,
+          push,
+        )
         const contentMd5 = md5(text)
 
         const doc = await this.aiSummaryModel.create({
           hash: contentMd5,
           lang,
-          refId: id,
+          refId: articleId,
           summary,
         })
 
+        return { result: doc, resultId: doc.id }
+      },
+      parseResult: async (resultId) => {
+        const doc = await this.aiSummaryModel.findById(resultId)
+        if (!doc) {
+          throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+        }
         return doc
-      }
+      },
+    })
+  }
+
+  async generateSummaryByOpenAI(articleId: string, lang: string) {
+    const {
+      ai: { enableSummary },
+    } = await this.configService.waitForConfigReady()
+
+    if (!enableSummary) {
+      throw new BizException(ErrorCodeEnum.AINotEnabled)
+    }
+
+    try {
+      const { result } = await this.runSummaryGeneration(articleId, lang)
+      return await result
     } catch (error) {
+      if (error instanceof BizException) {
+        throw error
+      }
       this.logger.error(
         `OpenAI 在处理文章 ${articleId} 时出错：${error.message}`,
         error.stack,
       )
-
       throw new BizException(ErrorCodeEnum.AIException, error.message)
-    } finally {
-      this.cachedTaskId2AiPromise.delete(taskId)
-      await redis.del(taskId)
     }
   }
 
@@ -366,6 +473,57 @@ export class AiSummaryService {
     })
 
     return doc
+  }
+
+  async getSummaryById(id: string) {
+    const doc = await this.aiSummaryModel.findById(id)
+    if (!doc) {
+      throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    }
+    return doc
+  }
+
+  async streamSummaryForArticle(
+    articleId: string,
+    options: { preferredLang?: string; acceptLanguage?: string },
+  ): Promise<{
+    events: AsyncIterable<AiStreamEvent>
+    result: Promise<AISummaryModel>
+  }> {
+    const { preferredLang, acceptLanguage } = options
+
+    const nextLang = preferredLang || acceptLanguage
+    const autoDetectedLanguage =
+      nextLang?.split('-').shift() || DEFAULT_SUMMARY_LANG
+
+    const aiSummaryTargetLanguage = await this.configService
+      .get('ai')
+      .then((c) => c.aiSummaryTargetLanguage || DEFAULT_SUMMARY_LANG)
+
+    const targetLanguage =
+      aiSummaryTargetLanguage === 'auto'
+        ? autoDetectedLanguage
+        : aiSummaryTargetLanguage
+
+    const dbStored = await this.getSummaryByArticleId(articleId, targetLanguage)
+    if (dbStored) {
+      return {
+        events: (async function* () {
+          yield { type: 'done', data: { resultId: dbStored.id } }
+        })(),
+        result: Promise.resolve(dbStored),
+      }
+    }
+
+    const aiConfig = await this.configService.get('ai')
+    const shouldGenerate =
+      aiConfig?.enableAutoGenerateSummary && aiConfig.enableSummary
+
+    if (!shouldGenerate) {
+      throw new BizException(ErrorCodeEnum.AINotEnabled)
+    }
+
+    return this.runSummaryGeneration(articleId, targetLanguage)
   }
 
   async getOrGenerateSummaryForArticle(

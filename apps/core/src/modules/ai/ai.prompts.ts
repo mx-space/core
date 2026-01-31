@@ -24,6 +24,28 @@ TARGET_LANGUAGE: Language name
 Text to summarize
 CONTENT`
 
+const SUMMARY_STREAM_SYSTEM = `You are a professional content summarizer.
+
+## Task
+Extract a concise summary from the provided text.
+
+## Requirements
+- Output MUST be in the target language specified
+- Maximum ${AI_SUMMARY_MAX_WORDS} words
+- Focus on core meaning, avoid unnecessary details
+- Maintain the original tone and style
+- Output MUST be valid JSON
+
+## Output JSON Format
+{"summary":"..."}
+
+## Input Format
+TARGET_LANGUAGE: Language name
+
+<<<CONTENT
+Text to summarize
+CONTENT`
+
 const TITLE_AND_SLUG_SYSTEM = `You are a content metadata generator.
 
 ## Task
@@ -141,6 +163,61 @@ TAGS
 ## Output
 Return translated content in the target language only. No source language text allowed.`
 
+const TRANSLATION_STREAM_SYSTEM = `You are a professional translator.
+
+## Absolute Requirement
+EVERY word and sentence MUST be translated into the target language specified in the user message.
+FORBIDDEN: Leaving ANY text in the source language. Mixed-language output is a critical failure.
+
+## Formatting Rules
+- Preserve Markdown formatting (headings, lists, bold, italic, links)
+- Keep code blocks unchanged
+- Keep URLs unchanged, translate link text only
+- Keep widely recognized terms as-is: AI, API, WebGL, SaaS, GitHub, etc.
+- Do NOT HTML-escape angle brackets in the output
+
+## Structure Preservation Rules (CRITICAL)
+- Do NOT modify ANY embedded React/JSX tags or HTML tags (including tag names, attributes/props, quoting style, whitespace, indentation, self-closing style, nesting, and order)
+- Translate ONLY the human-readable text content (text nodes) around/between tags; keep the tag structure exactly the same as input
+- Do NOT translate or rewrite anything inside JSX expressions like \`{...}\`, nor inside HTML/JSX attribute values unless the attribute is clearly plain visible text and translating it will not change its syntax (when in doubt: keep attribute values unchanged)
+- Do NOT modify the structure of any Markdown extension syntax / directives (including but not limited to MDX components, callouts/admonitions, footnotes, tables, task lists, math blocks, frontmatter, and fenced blocks). Keep all markers and delimiters exactly unchanged; only translate the human-readable text within them
+
+## Japanese Specialization (apply only when target language is Japanese)
+<goal>Improve readability by adding furigana for hard-to-read loanwords and proper nouns.</goal>
+<ruby_format>Use HTML ruby tags: <ruby>表記<rt>annotation</rt></ruby></ruby_format>
+<rules>
+  <rule>Apply ruby ONLY in TEXT_MARKDOWN section, NOT in TITLE, SUMMARY, or TAGS</rule>
+  <rule>For Katakana loanwords: keep Katakana visible, put source word in <rt></rule>
+  <rule>For difficult Kanji: put reading in Hiragana in <rt></rule>
+  <rule>Do NOT add ruby in code blocks, inline code, URLs, or filenames</rule>
+  <rule>Do NOT overuse - apply only to unfamiliar/ambiguous terms</rule>
+</rules>
+
+## Output JSON Format
+{"sourceLang":"...", "title":"...", "text":"...", "summary":null, "tags":[]}
+
+## Input Format
+TARGET_LANGUAGE: Language name (the language to translate into)
+
+<<<TITLE
+Title text
+TITLE
+
+<<<TEXT_MARKDOWN
+Main content in Markdown
+TEXT_MARKDOWN
+
+<<<SUMMARY (optional)
+Summary text
+SUMMARY
+
+<<<TAGS (optional)
+Comma-separated tags
+TAGS
+
+## Output
+Return translated content as JSON only. No extra text.`
+
 // Default: disable reasoning for all AI tasks (cost & latency optimization)
 const NO_REASONING: ReasoningEffort = 'none'
 
@@ -163,6 +240,19 @@ CONTENT`,
             `The summary of the input text in ${targetLanguage}, max ${AI_SUMMARY_MAX_WORDS} words.`,
           ),
       }),
+      reasoningEffort: NO_REASONING,
+    }
+  },
+  summaryStream: (lang: string, text: string) => {
+    const targetLanguage =
+      LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
+    return {
+      systemPrompt: SUMMARY_STREAM_SYSTEM,
+      prompt: `TARGET_LANGUAGE: ${targetLanguage}
+
+<<<CONTENT
+${text}
+CONTENT`,
       reasoningEffort: NO_REASONING,
     }
   },
@@ -320,6 +410,47 @@ TAGS`
             'Array of tags translated into the target language (if provided)',
           ),
       }),
+      reasoningEffort: NO_REASONING,
+    }
+  },
+  translationStream: (
+    targetLang: string,
+    content: {
+      title: string
+      text: string
+      summary?: string
+      tags?: string[]
+    },
+  ) => {
+    const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
+    let prompt = `TARGET_LANGUAGE: ${targetLanguage}
+
+<<<TITLE
+${content.title}
+TITLE
+
+<<<TEXT_MARKDOWN
+${content.text}
+TEXT_MARKDOWN`
+
+    if (content.summary) {
+      prompt += `
+
+<<<SUMMARY
+${content.summary}
+SUMMARY`
+    }
+    if (content.tags?.length) {
+      prompt += `
+
+<<<TAGS
+${content.tags.join(', ')}
+TAGS`
+    }
+
+    return {
+      systemPrompt: TRANSLATION_STREAM_SYSTEM,
+      prompt,
       reasoningEffort: NO_REASONING,
     }
   },

@@ -1,3 +1,4 @@
+import { isDev } from '~/global/env.global'
 import OpenAI from 'openai'
 import type { z } from 'zod'
 import { AIProviderType } from '../ai.types'
@@ -7,9 +8,11 @@ import type {
   GenerateStructuredResult,
   GenerateTextOptions,
   GenerateTextResult,
+  GenerateTextStreamOptions,
   ModelInfo,
   RuntimeConfig,
   RuntimeProviderInfo,
+  TextStreamChunk,
 } from './types'
 
 export class OpenAICompatibleRuntime extends BaseRuntime {
@@ -149,6 +152,35 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
           : undefined,
       }
     }, maxRetries)
+  }
+
+  async *generateTextStream(
+    options: GenerateTextStreamOptions,
+  ): AsyncIterable<TextStreamChunk> {
+    const { prompt, messages, temperature, maxTokens } = options
+
+    const chatMessages: OpenAI.ChatCompletionMessageParam[] = messages
+      ? messages.map((m) => ({ role: m.role, content: m.content }))
+      : [{ role: 'user', content: prompt! }]
+
+    const response = await this.client.chat.completions.create({
+      model: this.providerInfo.model,
+      messages: chatMessages,
+      temperature,
+      max_tokens: maxTokens,
+      stream: true,
+    })
+
+    for await (const chunk of response) {
+      const delta = chunk.choices?.[0]?.delta?.content
+      if (delta) {
+        if (isDev) {
+          // eslint-disable-next-line no-console
+          console.debug(`[runtime:openai] chunk size=${delta.length}`)
+        }
+        yield { text: delta }
+      }
+    }
   }
 
   async listModels(): Promise<ModelInfo[]> {

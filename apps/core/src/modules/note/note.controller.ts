@@ -371,7 +371,7 @@ export class NoteController {
 
       result.docs = result.docs.map((item: any) => {
         const itemId = item._id?.toString?.() ?? item.id ?? String(item._id)
-        console.log(itemId)
+
         const translation = translationResults.get(itemId)
         const { text: _text, ...rest } = item
         if (!translation?.isTranslated) {

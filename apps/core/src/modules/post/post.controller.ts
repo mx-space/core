@@ -197,7 +197,6 @@ export class PostController {
           })
         }
 
-        console.log(res.docs)
         return res
       })
   }
