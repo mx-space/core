@@ -30,26 +30,31 @@ exports[`NoteController (e2e) > GET /list/:id 1`] = `
   "data": [
     {
       "created": "2023-01-17T11:01:57.851Z",
+      "is_published": true,
       "nid": 21,
       "title": "Note 2 (updated)",
     },
     {
       "created": "2021-03-20T00:00:00.000Z",
+      "is_published": true,
       "nid": 20,
       "title": "Note 20",
     },
     {
       "created": "2021-03-19T00:00:00.000Z",
+      "is_published": true,
       "nid": 19,
       "title": "Note 19",
     },
     {
       "created": "2021-03-18T00:00:00.000Z",
+      "is_published": true,
       "nid": 18,
       "title": "Note 18",
     },
     {
       "created": "2021-03-17T00:00:00.000Z",
+      "is_published": true,
       "nid": 17,
       "title": "Note 17",
     },
