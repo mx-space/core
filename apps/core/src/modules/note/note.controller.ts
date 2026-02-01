@@ -13,6 +13,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
+import { Lang } from '~/common/decorators/lang.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -35,6 +36,17 @@ import {
   SetNotePublishStatusDto,
 } from './note.schema'
 import { NoteService } from './note.service'
+
+type NoteListItem = {
+  _id?: { toString?: () => string } | string
+  id?: string
+  title: string
+  created?: Date
+  modified?: Date | null
+  text?: string
+  isTranslated?: boolean
+  translationMeta?: unknown
+}
 
 @ApiController({ path: 'notes' })
 export class NoteController {
@@ -101,13 +113,12 @@ export class NoteController {
     @Query() query: ListQueryDto,
     @Param() params: MongoIdDto,
     @IsAuthenticated() isAuthenticated: boolean,
+    @Lang() lang?: string,
   ) {
-    const { size = 10, lang } = query
+    const { size = 10 } = query
     const half = size >> 1
     const { id } = params
-    const select = isAuthenticated
-      ? 'nid _id title created isPublished text'
-      : 'nid _id title created text'
+    const select = 'nid _id title created isPublished modified'
     const condition = isAuthenticated ? {} : { isPublished: true }
 
     // 当前文档直接找，不用加条件，反正里面的东西是看不到的
@@ -150,43 +161,31 @@ export class NoteController {
           .limit(half - 1)
           .sort({ created: -1 })
           .lean()
-    let data = [...prevList, ...nextList, currentDocument].sort(
-      (a: any, b: any) => b.created - a.created,
+    let data = [...prevList, ...nextList, currentDocument] as NoteListItem[]
+    data = data.sort(
+      (a, b) => (b.created?.valueOf() ?? 0) - (a.created?.valueOf() ?? 0),
     )
 
     // 处理翻译
-    if (lang && data.length) {
-      const translationResults =
-        await this.translationEnhancerService.enhanceListWithTranslation({
-          articles: data.map((item: any) => ({
-            id: item._id?.toString?.() ?? item.id ?? String(item._id),
-            title: item.title,
-            text: item.text || '',
-          })),
-          targetLang: lang,
-        })
-
-      data = data.map((item: any) => {
-        const itemId = item._id?.toString?.() ?? item.id ?? String(item._id)
-        const translation = translationResults.get(itemId)
-        const { text: _text, ...rest } = item
-        if (!translation?.isTranslated) {
-          return rest
+    data = await this.translationEnhancerService.translateList({
+      items: data,
+      targetLang: lang,
+      translationFields: ['title', 'translationMeta'] as const,
+      getInput: (item) => ({
+        id: item._id?.toString?.() ?? item.id ?? String(item._id),
+        title: item.title,
+        modified: item.modified,
+        created: item.created,
+      }),
+      applyResult: (item, translation) => {
+        if (translation?.isTranslated) {
+          item.title = translation.title
+          item.isTranslated = true
+          item.translationMeta = translation.translationMeta
         }
-        return {
-          ...rest,
-          title: translation.title,
-          isTranslated: translation.isTranslated,
-          translationMeta: translation.translationMeta,
-        }
-      })
-    } else {
-      // 不返回 text 字段
-      data = data.map((item: any) => {
-        const { text: _text, ...rest } = item
-        return rest
-      })
-    }
+        return item
+      },
+    })
 
     return { data, size: data.length }
   }
@@ -242,9 +241,10 @@ export class NoteController {
     @IsAuthenticated() isAuthenticated: boolean,
     @Query() query: NotePasswordQueryDto,
     @IpLocation() { ip }: IpRecord,
+    @Lang() lang?: string,
   ) {
     const { nid } = params
-    const { password, single: isSingle, lang } = query
+    const { password, single: isSingle } = query
     const condition = isAuthenticated ? {} : { isPublished: true }
     const current: NoteModel | null = await this.noteService.model
       .findOne({
@@ -332,6 +332,7 @@ export class NoteController {
     @Param() params: MongoIdDto,
     @Query() query: NoteTopicPagerDto,
     @IsAuthenticated() isAuthenticated: boolean,
+    @Lang() lang?: string,
   ) {
     const { id } = params
     const {
@@ -340,7 +341,6 @@ export class NoteController {
       select = '_id title nid id created modified text',
       sortBy,
       sortOrder,
-      lang,
     } = query
     const condition: QueryFilter<NoteModel> = isAuthenticated
       ? { $or: [{ isPublished: false }, { isPublished: true }] }
@@ -358,39 +358,27 @@ export class NoteController {
     )
 
     // 处理翻译
-    if (lang && result.docs.length) {
-      const translationResults =
-        await this.translationEnhancerService.enhanceListWithTranslation({
-          articles: result.docs.map((item: any) => ({
-            id: item._id?.toString?.() ?? item.id ?? String(item._id),
-            title: item.title,
-            text: item.text || '',
-          })),
-          targetLang: lang,
-        })
-
-      result.docs = result.docs.map((item: any) => {
-        const itemId = item._id?.toString?.() ?? item.id ?? String(item._id)
-
-        const translation = translationResults.get(itemId)
-        const { text: _text, ...rest } = item
-        if (!translation?.isTranslated) {
-          return rest
+    const translatedDocs = await this.translationEnhancerService.translateList({
+      items: result.docs as unknown as NoteListItem[],
+      targetLang: lang,
+      translationFields: ['title', 'translationMeta'] as const,
+      getInput: (item) => ({
+        id: item._id?.toString?.() ?? item.id ?? String(item._id),
+        title: item.title,
+        modified: item.modified,
+        created: item.created,
+      }),
+      applyResult: (item, translation) => {
+        delete (item as { text?: string }).text // 始终移除 text
+        if (translation?.isTranslated) {
+          item.title = translation.title
+          item.isTranslated = true
+          item.translationMeta = translation.translationMeta
         }
-        return {
-          ...rest,
-          title: translation.title,
-          isTranslated: translation.isTranslated,
-          translationMeta: translation.translationMeta,
-        }
-      })
-    } else {
-      // 不返回 text 字段
-      result.docs = result.docs.map((item: any) => {
-        const { text: _text, ...rest } = item
-        return rest
-      })
-    }
+        return item
+      },
+    })
+    result.docs = translatedDocs as typeof result.docs
 
     return result
   }

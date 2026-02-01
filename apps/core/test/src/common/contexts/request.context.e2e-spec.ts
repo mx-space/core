@@ -4,9 +4,11 @@ import {
   MiddlewareConsumer,
   Module,
   NestModule,
+  Query,
 } from '@nestjs/common'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { RequestContext } from '~/common/contexts/request.context'
+import { Lang } from '~/common/decorators/lang.decorator'
 import { RequestContextMiddleware } from '~/common/middlewares/request-context.middleware'
 import { setupE2EApp } from 'test/helper/setup-e2e'
 
@@ -57,6 +59,26 @@ class RequestContextTestController {
     checks.push(...parallelChecks)
 
     return { requestId, consistent: checks.every(Boolean) }
+  }
+
+  @Get('lang')
+  async getLang(@Lang() lang?: string) {
+    return {
+      lang,
+      contextLang: RequestContext.currentLang(),
+    }
+  }
+
+  @Get('lang-with-query')
+  async getLangWithQuery(
+    @Query('lang') queryLang: string,
+    @Lang() lang?: string,
+  ) {
+    return {
+      queryLang,
+      lang,
+      contextLang: RequestContext.currentLang(),
+    }
   }
 }
 
@@ -127,5 +149,128 @@ describe('RequestContext (e2e)', () => {
     expect(bodyB.requestId).toBe('req-b')
     expect(bodyA.consistent).toBe(true)
     expect(bodyB.consistent).toBe(true)
+  })
+
+  describe('x-lang header and @Lang() decorator', () => {
+    test('extracts lang from x-lang header', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/request-context/lang',
+        headers: {
+          'x-lang': 'en',
+        },
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = await res.json()
+      expect(body.lang).toBe('en')
+      expect(body.contextLang).toBe('en')
+    })
+
+    test('normalizes language code from header (en-US -> en)', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/request-context/lang',
+        headers: {
+          'x-lang': 'en-US',
+        },
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = await res.json()
+      expect(body.lang).toBe('en')
+      expect(body.contextLang).toBe('en')
+    })
+
+    test('normalizes zh-CN to zh', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/request-context/lang',
+        headers: {
+          'x-lang': 'zh-CN',
+        },
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = await res.json()
+      expect(body.lang).toBe('zh')
+      expect(body.contextLang).toBe('zh')
+    })
+
+    test('returns undefined when no lang is provided', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/request-context/lang',
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = await res.json()
+      expect(body.lang).toBeUndefined()
+      expect(body.contextLang).toBeUndefined()
+    })
+
+    test('query lang takes priority over header lang', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/request-context/lang-with-query?lang=zh',
+        headers: {
+          'x-lang': 'en',
+        },
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = await res.json()
+      expect(body.queryLang).toBe('zh')
+      expect(body.lang).toBe('zh')
+      expect(body.contextLang).toBe('en')
+    })
+
+    test('falls back to header lang when query lang is not provided', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/request-context/lang-with-query',
+        headers: {
+          'x-lang': 'ja',
+        },
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = await res.json()
+      expect(body.queryLang).toBeUndefined()
+      expect(body.lang).toBe('ja')
+      expect(body.contextLang).toBe('ja')
+    })
+
+    test('isolates lang across concurrent requests', async () => {
+      const [resEn, resZh, resJa] = await Promise.all([
+        app.inject({
+          method: 'GET',
+          url: '/request-context/lang',
+          headers: { 'x-lang': 'en' },
+        }),
+        app.inject({
+          method: 'GET',
+          url: '/request-context/lang',
+          headers: { 'x-lang': 'zh' },
+        }),
+        app.inject({
+          method: 'GET',
+          url: '/request-context/lang',
+          headers: { 'x-lang': 'ja' },
+        }),
+      ])
+
+      expect(resEn.statusCode).toBe(200)
+      expect(resZh.statusCode).toBe(200)
+      expect(resJa.statusCode).toBe(200)
+
+      const bodyEn = await resEn.json()
+      const bodyZh = await resZh.json()
+      const bodyJa = await resJa.json()
+
+      expect(bodyEn.lang).toBe('en')
+      expect(bodyZh.lang).toBe('zh')
+      expect(bodyJa.lang).toBe('ja')
+    })
   })
 })

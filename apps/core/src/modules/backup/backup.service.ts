@@ -105,10 +105,6 @@ export class BackupService {
   }
 
   async backup() {
-    const { backupOptions: configs } = await this.configs.waitForConfigReady()
-    if (!configs.enable) {
-      return
-    }
     this.logger.log('--> 备份数据库中')
     // 用时间格式命名文件夹
     const dateDir = getMediumDateTime(new Date())
@@ -388,11 +384,12 @@ export class BackupService {
   @CronOnce(CronExpression.EVERY_DAY_AT_1AM, { name: 'backupDB' })
   @CronDescription('备份 DB 并上传 COS')
   async backupDB() {
-    const backup = await this.backup()
-    if (!backup) {
-      this.logger.log('没有开启备份')
+    const { backupOptions: configs } = await this.configs.waitForConfigReady()
+    if (!configs.enable) {
       return
     }
+
+    const backup = await this.backup()
 
     scheduleManager.schedule(async () => {
       const { backupOptions } = await this.configs.waitForConfigReady()

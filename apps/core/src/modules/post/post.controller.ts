@@ -13,6 +13,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
+import { Lang } from '~/common/decorators/lang.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
@@ -48,6 +49,7 @@ export class PostController {
   async getPaginate(
     @Query() query: PostPagerDto,
     @IsAuthenticated() isAuthenticated: boolean,
+    @Lang() lang?: string,
   ) {
     const {
       size,
@@ -58,7 +60,6 @@ export class PostController {
       sortOrder,
       truncate,
       categoryIds,
-      lang,
     } = query
 
     return this.postService.model
@@ -165,6 +166,7 @@ export class PostController {
               summary: doc.summary,
               tags: doc.tags,
               meta: doc.meta,
+              modified: doc.modified,
             })
           }
 
@@ -274,12 +276,12 @@ export class PostController {
   @Get('/:category/:slug')
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,
-    @Query() query: PostDetailQueryDto,
+    @Query() _query: PostDetailQueryDto,
     @IpLocation() { ip }: IpRecord,
     @IsAuthenticated() isAuthenticated?: boolean,
+    @Lang() lang?: string,
   ) {
     const { category, slug } = params
-    const { lang } = query
     const postDocument = await this.postService.getPostBySlug(
       category,
       slug,

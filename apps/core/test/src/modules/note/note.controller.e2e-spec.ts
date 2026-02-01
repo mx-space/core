@@ -176,6 +176,7 @@ describe('NoteController (e2e)', async () => {
 
     data.data.forEach((note) => {
       delete note.id
+      delete note.modified
     })
 
     expect(data).toMatchSnapshot()

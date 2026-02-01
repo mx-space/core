@@ -176,6 +176,73 @@ describe('AiTranslationService', () => {
     })
   })
 
+  describe('getValidTranslationsForArticles', () => {
+    it('should validate by sourceModified when available', async () => {
+      const articleModified = new Date('2024-01-01T00:00:00.000Z')
+      const translationModified = new Date('2024-01-02T00:00:00.000Z')
+      const translations = [
+        {
+          ...mockTranslation,
+          refId: 'article-1',
+          sourceModified: translationModified,
+        },
+      ]
+
+      const query = {
+        select: vi.fn().mockReturnThis(),
+        then: (resolve: (value: any) => void, reject: (reason?: any) => void) =>
+          Promise.resolve(translations).then(resolve, reject),
+      }
+
+      mockTranslationModel.find.mockReturnValue(query)
+
+      const result = await service.getValidTranslationsForArticles(
+        [
+          {
+            id: 'article-1',
+            title: mockArticle.title,
+            text: '',
+            modified: articleModified,
+          },
+        ],
+        'en',
+      )
+
+      expect(result.get('article-1')).toEqual(translations[0])
+    })
+
+    it('should apply select fields when provided', async () => {
+      const translations = [mockTranslation]
+      const query = {
+        select: vi.fn().mockReturnThis(),
+        then: (resolve: (value: any) => void, reject: (reason?: any) => void) =>
+          Promise.resolve(translations).then(resolve, reject),
+      }
+
+      mockTranslationModel.find.mockReturnValue(query)
+
+      await service.getValidTranslationsForArticles(
+        [
+          {
+            id: 'article-1',
+            title: mockArticle.title,
+            text: mockArticle.text,
+          },
+        ],
+        'en',
+        { select: 'refId title' },
+      )
+
+      expect(query.select).toHaveBeenCalledTimes(1)
+      const selectArg = query.select.mock.calls[0][0] as string
+      expect(selectArg).toContain('refId')
+      expect(selectArg).toContain('title')
+      expect(selectArg).toContain('hash')
+      expect(selectArg).toContain('sourceLang')
+      expect(selectArg).toContain('sourceModified')
+    })
+  })
+
   describe('wrapAsImmediateStream', () => {
     it('should return correct stream format with done event', async () => {
       const translation = { ...mockTranslation, id: 'trans-123' }

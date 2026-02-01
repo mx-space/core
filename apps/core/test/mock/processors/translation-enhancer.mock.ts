@@ -10,5 +10,9 @@ export const translationEnhancerProvider = defineProvider({
         isTranslated: false,
       }
     },
+    async translateList(options) {
+      const { items, applyResult } = options
+      return items.map((item) => applyResult(item, undefined))
+    },
   },
 })

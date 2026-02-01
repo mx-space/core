@@ -708,6 +708,7 @@ export class AiTranslationService implements OnModuleInit {
     onToken?: (count?: number) => Promise<void>,
   ) {
     const content = this.toArticleContent(document)
+    const sourceModified = document.modified ?? undefined
     const key = this.buildTranslationKey(articleId, targetLang, content)
 
     return this.aiInFlightService.runWithStream<AITranslationModel>({
@@ -740,6 +741,9 @@ export class AiTranslationService implements OnModuleInit {
           existing.text = translated.text
           existing.summary = translated.summary ?? undefined
           existing.tags = translated.tags ?? undefined
+          if (sourceModified) {
+            existing.sourceModified = sourceModified
+          }
           existing.aiModel = translated.aiModel
           existing.aiProvider = translated.aiProvider
           await existing.save()
@@ -763,6 +767,7 @@ export class AiTranslationService implements OnModuleInit {
           text: translated.text,
           summary: translated.summary ?? undefined,
           tags: translated.tags ?? undefined,
+          sourceModified,
           aiModel: translated.aiModel,
           aiProvider: translated.aiProvider,
         })
@@ -1103,21 +1108,43 @@ export class AiTranslationService implements OnModuleInit {
     articles: Array<{
       id: string
       title: string
-      text: string
+      text?: string
       summary?: string | null
       tags?: string[]
       meta?: { lang?: string }
+      modified?: Date | null
+      created?: Date | null
     }>,
     targetLang: string,
+    options?: {
+      select?: string
+    },
   ): Promise<Map<string, AITranslationModel>> {
     if (!articles.length) {
       return new Map()
     }
 
-    const translations = await this.aiTranslationModel.find({
+    const requiredSelectFields = [
+      'refId',
+      'hash',
+      'sourceLang',
+      'sourceModified',
+      'created',
+    ]
+    const defaultSelect =
+      'refId refType lang sourceLang title text summary tags hash sourceModified created aiModel aiProvider'
+    const select = options?.select
+      ? `${options.select} ${requiredSelectFields.join(' ')}`
+      : defaultSelect
+
+    const query = this.aiTranslationModel.find({
       refId: { $in: articles.map((article) => article.id) },
       lang: targetLang,
     })
+
+    query.select(select)
+
+    const translations = await query
 
     if (!translations.length) {
       return new Map()
@@ -1134,12 +1161,32 @@ export class AiTranslationService implements OnModuleInit {
         continue
       }
 
+      const articleTimestamp = article.modified ?? article.created ?? null
+
+      if (translation.sourceModified && articleTimestamp) {
+        if (translation.sourceModified >= articleTimestamp) {
+          result.set(article.id, translation)
+        }
+        continue
+      }
+
+      if (
+        !translation.sourceModified &&
+        articleTimestamp &&
+        translation.created &&
+        translation.created >= articleTimestamp
+      ) {
+        result.set(article.id, translation)
+        continue
+      }
+
       const sourceLang =
         article.meta?.lang || translation.sourceLang || 'unknown'
+
       const currentHash = this.computeContentHash(
         {
           title: article.title,
-          text: article.text,
+          text: article.text ?? '',
           summary: article.summary ?? undefined,
           tags: article.tags,
         },

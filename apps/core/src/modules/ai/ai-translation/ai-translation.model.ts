@@ -38,6 +38,12 @@ export class AITranslationModel extends BaseModel {
   tags?: string[]
 
   /**
+   * Snapshot of source article's modified time when translation is generated.
+   */
+  @prop({ type: Date })
+  sourceModified?: Date
+
+  /**
    * AI model metadata for audit/debug.
    * Note: existing documents may not have these fields.
    */

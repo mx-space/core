@@ -38,8 +38,11 @@ export class BackupController {
   @HTTPDecorators.Bypass
   async createNewBackup() {
     const res = await this.backupService.backup()
-    if (typeof res == 'undefined' || typeof res.buffer === 'undefined') {
+    if (typeof res == 'undefined') {
       throw new BizException(ErrorCodeEnum.BackupNotEnabled)
+    }
+    if (typeof res.buffer === 'undefined') {
+      throw new BizException(ErrorCodeEnum.FileNotFound, 'backup zip missing')
     }
     const stream = new Readable()
 

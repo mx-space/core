@@ -35,6 +35,71 @@ describe('RequestContext', () => {
     expect(RequestContext.currentRequestContext()).toBeNull()
   })
 
+  test('stores and retrieves lang property', async () => {
+    const request = {
+      isAuthenticated: false,
+      isGuest: true,
+    } as BizIncomingMessage
+    const response = {} as ServerResponse
+    const context = new RequestContext(request, response)
+    context.lang = 'en'
+
+    await RequestContext.run(context, async () => {
+      expect(RequestContext.currentLang()).toBe('en')
+
+      await wait(0)
+      expect(RequestContext.currentLang()).toBe('en')
+    })
+
+    expect(RequestContext.currentLang()).toBeUndefined()
+  })
+
+  test('returns undefined when lang is not set', async () => {
+    const request = {
+      isAuthenticated: false,
+      isGuest: true,
+    } as BizIncomingMessage
+    const response = {} as ServerResponse
+    const context = new RequestContext(request, response)
+
+    await RequestContext.run(context, async () => {
+      expect(RequestContext.currentLang()).toBeUndefined()
+    })
+  })
+
+  test('isolates lang across concurrent requests', async () => {
+    const makeContext = (lang?: string) => {
+      const request = {
+        isAuthenticated: false,
+        isGuest: true,
+      } as BizIncomingMessage
+      const response = {} as ServerResponse
+      const context = new RequestContext(request, response)
+      context.lang = lang
+      return context
+    }
+
+    const contextA = makeContext('en')
+    const contextB = makeContext('zh')
+    const contextC = makeContext(undefined)
+
+    const run = (context: RequestContext, delay: number) =>
+      RequestContext.run(context, async () => {
+        await wait(delay)
+        return RequestContext.currentLang()
+      })
+
+    const [langA, langB, langC] = await Promise.all([
+      run(contextA, 20),
+      run(contextB, 5),
+      run(contextC, 10),
+    ])
+
+    expect(langA).toBe('en')
+    expect(langB).toBe('zh')
+    expect(langC).toBeUndefined()
+  })
+
   test('isolates concurrent request contexts', async () => {
     const makeContext = (readerId: string) => {
       const request = {

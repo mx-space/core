@@ -13,6 +13,7 @@ export class RequestContext {
   readonly id: number
   request: BizIncomingMessage
   response: ServerResponse
+  lang?: string
 
   constructor(request: BizIncomingMessage, response: ServerResponse) {
     this.id = Math.random()
@@ -68,5 +69,10 @@ export class RequestContext {
     }
 
     return false
+  }
+
+  static currentLang(): string | undefined {
+    const requestContext = RequestContext.currentRequestContext()
+    return requestContext?.lang
   }
 }

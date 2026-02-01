@@ -407,12 +407,6 @@ export class NoteService {
     })
   }
 
-  /**
-   * 查找 nid 时候正确，返回 _id
-   *
-   * @param {number} nid
-   * @returns {Types.ObjectId}
-   */
   async getIdByNid(nid: number) {
     const document = await this.model
       .findOne({
