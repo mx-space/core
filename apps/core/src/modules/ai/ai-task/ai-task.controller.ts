@@ -40,10 +40,17 @@ export class AiTaskController {
     return this.service.retryTask(params.id)
   }
 
-  @Delete('/:id')
+  @Post('/:id/cancel')
   @Auth()
   async cancelTask(@Param() params: StringIdDto) {
     await this.service.cancelTask(params.id)
+    return { success: true }
+  }
+
+  @Delete('/:id')
+  @Auth()
+  async deleteTask(@Param() params: StringIdDto) {
+    await this.service.deleteTask(params.id)
     return { success: true }
   }
 
