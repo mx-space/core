@@ -9,8 +9,7 @@ import type { IModelRuntime } from './runtime'
 import { createModelRuntime } from './runtime'
 
 export interface AIResolvedModelInfo {
-  providerId: string
-  providerType: AIProviderType
+  provider: AIProviderType
   model: string
 }
 
@@ -79,8 +78,7 @@ export class AiService {
     return {
       runtime: createModelRuntime(provider, assignment?.model),
       info: {
-        providerId: provider.id,
-        providerType: provider.type,
+        provider: provider.type,
         model: modelName,
       },
     }

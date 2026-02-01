@@ -16,6 +16,7 @@ import v8_5_0 from './version/v8.5.0'
 import v9_0_8 from './version/v9.0.8'
 import v9_3_1 from './version/v9.3.1'
 import v9_3_2 from './version/v9.3.2'
+import v9_4_1 from './version/v9.4.1'
 
 export default [
   v200Alpha1,
@@ -36,4 +37,5 @@ export default [
   v9_0_8,
   v9_3_1,
   v9_3_2,
+  v9_4_1,
 ]

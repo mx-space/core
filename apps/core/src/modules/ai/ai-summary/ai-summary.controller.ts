@@ -87,8 +87,8 @@ export class AiSummaryController {
     })
   }
 
-  @Get('/article/:id/stream')
-  async streamArticleSummary(
+  @Get('/article/:id/generate')
+  async generateArticleSummary(
     @Param() params: MongoIdDto,
     @Query() query: GetSummaryStreamQueryDto,
     @Req() req: FastifyBizRequest,

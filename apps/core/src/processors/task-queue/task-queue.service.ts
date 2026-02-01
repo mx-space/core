@@ -20,9 +20,12 @@ import {
 import {
   parseTask,
   TaskStatus,
+  type SubTaskStats,
   type Task,
   type TaskRedis,
 } from './task-queue.types'
+
+const BATCH_TASK_TYPES = ['ai:translation:batch', 'ai:translation:all']
 
 type LogLevel = 'info' | 'warn' | 'error'
 
@@ -94,6 +97,7 @@ export class TaskQueueService implements OnModuleDestroy {
       progressMessage: '',
       totalItems: '',
       completedItems: '',
+      tokensGenerated: '0',
       createdAt: String(now),
       startedAt: '',
       completedAt: '',
@@ -153,7 +157,70 @@ export class TaskQueueService implements OnModuleDestroy {
       return null
     }
 
-    return parseTask(rawTask as unknown as TaskRedis, logs)
+    const task = parseTask(rawTask as unknown as TaskRedis, logs)
+
+    // For batch tasks, compute sub-task statistics
+    if (BATCH_TASK_TYPES.includes(task.type)) {
+      task.subTaskStats = await this.computeSubTaskStats(taskId)
+    }
+
+    return task
+  }
+
+  private async computeSubTaskStats(
+    groupId: string,
+  ): Promise<SubTaskStats | undefined> {
+    const indexGroup = this.getKey(TASK_QUEUE_KEYS.indexByGroup(groupId))
+    const taskIds = await this.redis.zrange(indexGroup, 0, -1)
+
+    if (!taskIds.length) {
+      return undefined
+    }
+
+    const stats: SubTaskStats = {
+      total: taskIds.length,
+      completed: 0,
+      partialFailed: 0,
+      failed: 0,
+      running: 0,
+      pending: 0,
+    }
+
+    // Batch fetch all task statuses
+    const pipeline = this.redis.pipeline()
+    for (const id of taskIds) {
+      const taskKey = this.getKey(TASK_QUEUE_KEYS.task(id))
+      pipeline.hget(taskKey, 'status')
+    }
+
+    const results = await pipeline.exec()
+    if (!results) return stats
+
+    for (const [err, status] of results) {
+      if (err || !status) continue
+      switch (status as string) {
+        case TaskStatus.Completed:
+          stats.completed++
+          break
+        case TaskStatus.PartialFailed:
+          stats.partialFailed++
+          break
+        case TaskStatus.Failed:
+          stats.failed++
+          break
+        case TaskStatus.Running:
+          stats.running++
+          break
+        case TaskStatus.Pending:
+          stats.pending++
+          break
+        case TaskStatus.Cancelled:
+          stats.failed++ // Count cancelled as failed for simplicity
+          break
+      }
+    }
+
+    return stats
   }
 
   async getTasks(options: {
@@ -210,6 +277,7 @@ export class TaskQueueService implements OnModuleDestroy {
 
     if (
       task.status === TaskStatus.Completed ||
+      task.status === TaskStatus.PartialFailed ||
       task.status === TaskStatus.Failed ||
       task.status === TaskStatus.Cancelled
     ) {
@@ -292,16 +360,21 @@ export class TaskQueueService implements OnModuleDestroy {
 
     const taskKey = this.getKey(TASK_QUEUE_KEYS.task(taskId))
     const logsKey = this.getKey(TASK_QUEUE_KEYS.logs(taskId))
+    const lockKey = this.getKey(TASK_QUEUE_KEYS.lock(taskId))
     const indexAll = this.getKey(TASK_QUEUE_KEYS.indexAll)
     const indexStatus = this.getKey(TASK_QUEUE_KEYS.indexByStatus(task.status))
     const indexType = this.getKey(TASK_QUEUE_KEYS.indexByType(task.type))
+    const processingSet = this.getKey(TASK_QUEUE_KEYS.processingSet)
 
     const pipeline = this.redis.pipeline()
     pipeline.del(taskKey)
     pipeline.del(logsKey)
+    pipeline.del(lockKey)
     pipeline.zrem(indexAll, taskId)
     pipeline.zrem(indexStatus, taskId)
     pipeline.zrem(indexType, taskId)
+    // Always remove from processing set to prevent recovery from recreating deleted tasks
+    pipeline.zrem(processingSet, taskId)
 
     if (task.groupId) {
       const indexGroup = this.getKey(TASK_QUEUE_KEYS.indexByGroup(task.groupId))
@@ -349,6 +422,7 @@ export class TaskQueueService implements OnModuleDestroy {
         if (
           task &&
           (task.status === TaskStatus.Completed ||
+            task.status === TaskStatus.PartialFailed ||
             task.status === TaskStatus.Failed ||
             task.status === TaskStatus.Cancelled)
         ) {
@@ -450,36 +524,51 @@ export class TaskQueueService implements OnModuleDestroy {
     await this.redis.hset(taskKey, updates)
   }
 
+  async incrementTokens(taskId: string, count: number = 1): Promise<void> {
+    const taskKey = this.getKey(TASK_QUEUE_KEYS.task(taskId))
+    const currentValue = await this.redis.hget(taskKey, 'tokensGenerated')
+    if (
+      currentValue === null ||
+      currentValue === '' ||
+      Number.isNaN(Number(currentValue))
+    ) {
+      await this.redis.hset(taskKey, 'tokensGenerated', '0')
+    }
+    await this.redis.hincrby(taskKey, 'tokensGenerated', count)
+  }
+
   async updateStatus(
     taskId: string,
     status: TaskStatus,
     extra?: Record<string, string>,
   ): Promise<void> {
-    const task = await this.getTask(taskId)
-    if (!task) return
-
+    // Check if task exists to prevent "reviving" deleted tasks
     const taskKey = this.getKey(TASK_QUEUE_KEYS.task(taskId))
-    const oldIndexKey = this.getKey(TASK_QUEUE_KEYS.indexByStatus(task.status))
-    const newIndexKey = this.getKey(TASK_QUEUE_KEYS.indexByStatus(status))
+    const exists = await this.redis.exists(taskKey)
+    if (!exists) return
+
     const processingSet = this.getKey(TASK_QUEUE_KEYS.processingSet)
+    // Pass the status index prefix so Lua can build correct keys based on actual oldStatus
+    // getKey(indexByStatus('')) returns full Redis key like "mx:task-queue:index:status:" ending with ':'
+    const statusIndexPrefix = this.getKey(TASK_QUEUE_KEYS.indexByStatus(''))
 
     const extraArgs = extra ? Object.entries(extra).flat() : []
 
     await this.redis.eval(
       LUA_UPDATE_STATUS,
-      4,
+      2,
       taskKey,
-      oldIndexKey,
-      newIndexKey,
       processingSet,
       taskId,
       status,
       String(Date.now()),
+      statusIndexPrefix,
       ...extraArgs,
     )
 
     if (
       status === TaskStatus.Completed ||
+      status === TaskStatus.PartialFailed ||
       status === TaskStatus.Failed ||
       status === TaskStatus.Cancelled
     ) {
@@ -492,8 +581,9 @@ export class TaskQueueService implements OnModuleDestroy {
   async setResult(taskId: string, result: unknown): Promise<void> {
     const taskKey = this.getKey(TASK_QUEUE_KEYS.task(taskId))
     let json = JSON.stringify(result)
+    const originalSize = json.length
 
-    if (json.length > TASK_QUEUE_LIMITS.maxResultSize) {
+    if (originalSize > TASK_QUEUE_LIMITS.maxResultSize) {
       if (result && typeof result === 'object' && 'items' in result) {
         const summary = {
           _truncated: true,
@@ -507,7 +597,7 @@ export class TaskQueueService implements OnModuleDestroy {
       await this.appendLog(
         taskId,
         'warn',
-        `Result truncated, original size: ${json.length} bytes`,
+        `Result truncated, original size: ${originalSize} bytes`,
       )
     }
 
@@ -554,6 +644,7 @@ export class TaskQueueService implements OnModuleDestroy {
       this.getKey(TASK_QUEUE_KEYS.task('')),
       this.getKey(TASK_QUEUE_KEYS.indexByStatus(TaskStatus.Pending)),
       this.getKey(TASK_QUEUE_KEYS.indexByStatus(TaskStatus.Failed)),
+      this.getKey(TASK_QUEUE_KEYS.indexByStatus(TaskStatus.Running)),
     )
 
     const recovered = result as number

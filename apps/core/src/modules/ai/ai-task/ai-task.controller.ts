@@ -1,4 +1,4 @@
-import { Delete, Get, Param, Query } from '@nestjs/common'
+import { Delete, Get, Param, Post, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { StringIdDto } from '~/shared/dto/id.dto'
@@ -32,6 +32,12 @@ export class AiTaskController {
   @Auth()
   async getTasks(@Query() query: GetTasksQueryDto) {
     return this.service.getTasks(query)
+  }
+
+  @Post('/:id/retry')
+  @Auth()
+  async retryTask(@Param() params: StringIdDto) {
+    return this.service.retryTask(params.id)
   }
 
   @Delete('/:id')

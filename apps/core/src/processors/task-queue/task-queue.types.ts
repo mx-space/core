@@ -2,6 +2,7 @@ export enum TaskStatus {
   Pending = 'pending',
   Running = 'running',
   Completed = 'completed',
+  PartialFailed = 'partial_failed',
   Failed = 'failed',
   Cancelled = 'cancelled',
 }
@@ -10,6 +11,15 @@ export interface TaskLog {
   timestamp: number
   level: 'info' | 'warn' | 'error'
   message: string
+}
+
+export interface SubTaskStats {
+  total: number
+  completed: number
+  partialFailed: number
+  failed: number
+  running: number
+  pending: number
 }
 
 export interface TaskRedis {
@@ -24,6 +34,7 @@ export interface TaskRedis {
   progressMessage: string
   totalItems: string
   completedItems: string
+  tokensGenerated: string
 
   createdAt: string
   startedAt: string
@@ -49,6 +60,7 @@ export interface Task<TPayload = Record<string, unknown>, TResult = unknown> {
   progressMessage?: string
   totalItems?: number
   completedItems?: number
+  tokensGenerated?: number
 
   createdAt: number
   startedAt?: number
@@ -60,6 +72,9 @@ export interface Task<TPayload = Record<string, unknown>, TResult = unknown> {
 
   workerId?: string
   retryCount: number
+
+  // For batch tasks: sub-task statistics
+  subTaskStats?: SubTaskStats
 }
 
 export interface TaskExecuteContext {
@@ -71,11 +86,13 @@ export interface TaskExecuteContext {
     completed?: number,
     total?: number,
   ) => Promise<void>
+  incrementTokens: (count?: number) => Promise<void>
   appendLog: (
     level: 'info' | 'warn' | 'error',
     message: string,
   ) => Promise<void>
   setResult: (result: unknown) => Promise<void>
+  setStatus: (status: TaskStatus) => void
   isAborted: () => boolean
 }
 
@@ -95,6 +112,9 @@ export function parseTask(raw: TaskRedis, logs: string[]): Task {
     progressMessage: raw.progressMessage || undefined,
     totalItems: raw.totalItems ? Number(raw.totalItems) : undefined,
     completedItems: raw.completedItems ? Number(raw.completedItems) : undefined,
+    tokensGenerated: raw.tokensGenerated
+      ? Number(raw.tokensGenerated)
+      : undefined,
     createdAt: Number(raw.createdAt),
     startedAt: raw.startedAt ? Number(raw.startedAt) : undefined,
     completedAt: raw.completedAt ? Number(raw.completedAt) : undefined,

@@ -44,13 +44,12 @@ return taskId
  * Lua script: Atomically update task status with index maintenance
  *
  * KEYS[1] = task hash key
- * KEYS[2] = old status index
- * KEYS[3] = new status index
- * KEYS[4] = processing zset
+ * KEYS[2] = processing zset
  * ARGV[1] = taskId
  * ARGV[2] = newStatus
  * ARGV[3] = now
- * ARGV[4...] = additional field pairs (key, value, key, value, ...)
+ * ARGV[4] = statusIndexPrefix (e.g., "mx:task-queue:index:status:")
+ * ARGV[5...] = additional field pairs (key, value, key, value, ...)
  *
  * Returns: 1 if updated, 0 if status unchanged
  */
@@ -60,22 +59,24 @@ if oldStatus == ARGV[2] then return 0 end
 
 -- Update Hash
 redis.call('HSET', KEYS[1], 'status', ARGV[2], 'lastHeartbeat', ARGV[3])
-for i = 4, #ARGV, 2 do
+for i = 5, #ARGV, 2 do
   if ARGV[i] and ARGV[i+1] then
     redis.call('HSET', KEYS[1], ARGV[i], ARGV[i+1])
   end
 end
 
--- Update indexes
+-- Update indexes based on actual oldStatus from Redis
 local score = redis.call('HGET', KEYS[1], 'createdAt')
 if oldStatus then
-  redis.call('ZREM', KEYS[2], ARGV[1])
+  local oldIndexKey = ARGV[4] .. oldStatus
+  redis.call('ZREM', oldIndexKey, ARGV[1])
 end
-redis.call('ZADD', KEYS[3], score, ARGV[1])
+local newIndexKey = ARGV[4] .. ARGV[2]
+redis.call('ZADD', newIndexKey, score, ARGV[1])
 
 -- If task is no longer running, remove from processing set
 if ARGV[2] ~= 'running' then
-  redis.call('ZREM', KEYS[4], ARGV[1])
+  redis.call('ZREM', KEYS[2], ARGV[1])
 end
 
 return 1
@@ -94,6 +95,7 @@ return 1
  * ARGV[6] = taskKeyPrefix
  * ARGV[7] = pendingIndexKey
  * ARGV[8] = failedIndexKey
+ * ARGV[9] = runningIndexKey
  *
  * Returns: number of recovered tasks
  */
@@ -109,42 +111,50 @@ for _, taskId in ipairs(stale) do
   local lockExists = redis.call('EXISTS', lockKey)
   if lockExists == 0 then
     -- Lock expired, can recover
-    local retryCount = tonumber(redis.call('HGET', taskKey, 'retryCount') or '0')
-    local createdAt = redis.call('HGET', taskKey, 'createdAt')
-
-    -- Remove from processing
-    redis.call('ZREM', KEYS[1], taskId)
-
-    -- Remove from running index
-    redis.call('ZREM', ARGV[6] .. ':index:status:running', taskId)
-
-    if retryCount < tonumber(ARGV[2]) then
-      -- Re-queue
-      redis.call('HSET', taskKey,
-        'status', 'pending',
-        'retryCount', tostring(retryCount + 1),
-        'lastHeartbeat', ARGV[3],
-        'workerId', ''
-      )
-      redis.call('RPUSH', KEYS[2], taskId)
-      -- Update status index
-      redis.call('ZADD', ARGV[7], createdAt, taskId)
+    -- First check if task hash exists (might have been deleted)
+    local taskExists = redis.call('EXISTS', taskKey)
+    if taskExists == 0 then
+      -- Task was deleted, just remove from processing set
+      redis.call('ZREM', KEYS[1], taskId)
+      redis.call('ZREM', ARGV[9], taskId)
     else
-      -- Mark as failed
-      redis.call('HSET', taskKey,
-        'status', 'failed',
-        'error', 'Max retries exceeded',
-        'completedAt', ARGV[3],
-        'lastHeartbeat', ARGV[3]
-      )
-      -- Set 24h TTL
-      redis.call('EXPIRE', taskKey, 86400)
-      redis.call('EXPIRE', taskKey .. ':logs', 86400)
-      -- Update status index
-      redis.call('ZADD', ARGV[8], createdAt, taskId)
-    end
+      local retryCount = tonumber(redis.call('HGET', taskKey, 'retryCount') or '0')
+      local createdAt = redis.call('HGET', taskKey, 'createdAt')
 
-    recovered = recovered + 1
+      -- Remove from processing
+      redis.call('ZREM', KEYS[1], taskId)
+
+      -- Remove from running index
+      redis.call('ZREM', ARGV[9], taskId)
+
+      if retryCount < tonumber(ARGV[2]) then
+        -- Re-queue
+        redis.call('HSET', taskKey,
+          'status', 'pending',
+          'retryCount', tostring(retryCount + 1),
+          'lastHeartbeat', ARGV[3],
+          'workerId', ''
+        )
+        redis.call('RPUSH', KEYS[2], taskId)
+        -- Update status index
+        redis.call('ZADD', ARGV[7], createdAt, taskId)
+      else
+        -- Mark as failed
+        redis.call('HSET', taskKey,
+          'status', 'failed',
+          'error', 'Max retries exceeded',
+          'completedAt', ARGV[3],
+          'lastHeartbeat', ARGV[3]
+        )
+        -- Set 24h TTL
+        redis.call('EXPIRE', taskKey, 86400)
+        redis.call('EXPIRE', taskKey .. ':logs', 86400)
+        -- Update status index
+        redis.call('ZADD', ARGV[8], createdAt, taskId)
+      end
+
+      recovered = recovered + 1
+    end
   end
 end
 
@@ -183,8 +193,9 @@ redis.call('LREM', KEYS[2], 1, ARGV[1])
 redis.call('ZREM', KEYS[3], ARGV[1])
 redis.call('ZADD', KEYS[4], createdAt, ARGV[1])
 
--- Set 24h TTL
+-- Set 24h TTL for both task hash and logs
 redis.call('EXPIRE', KEYS[1], 86400)
+redis.call('EXPIRE', KEYS[1] .. ':logs', 86400)
 
 return 1
 `

@@ -9,6 +9,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import {
   TaskQueueProcessor,
   TaskQueueService,
+  TaskStatus,
   type TaskExecuteContext,
 } from '~/processors/task-queue'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -145,6 +146,8 @@ export class AiTranslationService implements OnModuleInit {
       title: string
     }> = []
 
+    let failedCount = 0
+
     for (let i = 0; i < languages.length; i++) {
       this.checkAborted(context)
 
@@ -155,13 +158,18 @@ export class AiTranslationService implements OnModuleInit {
       )
 
       try {
-        const result = await this.generateTranslation(payload.refId, lang)
+        const result = await this.generateTranslation(
+          payload.refId,
+          lang,
+          context.incrementTokens,
+        )
         translations.push({
           translationId: result.id,
           lang: result.lang,
           title: result.title,
         })
       } catch (error) {
+        failedCount++
         await context.appendLog(
           'error',
           `Failed to translate to ${lang}: ${error.message}`,
@@ -178,6 +186,16 @@ export class AiTranslationService implements OnModuleInit {
     }
 
     await context.setResult({ translations })
+
+    // Set status based on results
+    if (failedCount === languages.length) {
+      // All failed
+      context.setStatus(TaskStatus.Failed)
+    } else if (failedCount > 0) {
+      // Some failed
+      context.setStatus(TaskStatus.PartialFailed)
+    }
+    // If no failures, status will default to Completed
   }
 
   private async executeTranslationBatchTask(
@@ -557,6 +575,7 @@ export class AiTranslationService implements OnModuleInit {
     content: ArticleContent,
     targetLang: string,
     push?: (event: AiStreamEvent) => Promise<void>,
+    onToken?: (count?: number) => Promise<void>,
   ): Promise<{
     sourceLang: string
     title: string
@@ -564,8 +583,7 @@ export class AiTranslationService implements OnModuleInit {
     summary: string | null
     tags: string[] | null
     aiModel: string
-    aiProviderId: string
-    aiProviderType: string
+    aiProvider: string
   }> {
     const { runtime, info } = await this.aiService.getTranslationModelWithInfo()
 
@@ -594,6 +612,9 @@ export class AiTranslationService implements OnModuleInit {
         if (push) {
           await push({ type: 'token', data: chunk.text })
         }
+        if (onToken) {
+          await onToken()
+        }
       }
     } else {
       const result = await runtime.generateText({
@@ -605,6 +626,9 @@ export class AiTranslationService implements OnModuleInit {
       fullText = result.text
       if (push && result.text) {
         await push({ type: 'token', data: result.text })
+      }
+      if (onToken && result.text) {
+        await onToken()
       }
     }
 
@@ -627,14 +651,14 @@ export class AiTranslationService implements OnModuleInit {
       summary: parsed.summary ?? null,
       tags: parsed.tags ?? null,
       aiModel: info.model,
-      aiProviderId: info.providerId,
-      aiProviderType: info.providerType,
+      aiProvider: info.provider,
     }
   }
 
   async generateTranslation(
     articleId: string,
     targetLang: string,
+    onToken?: (count?: number) => Promise<void>,
   ): Promise<AITranslationModel> {
     const startedAt = Date.now()
     const aiConfig = await this.configService.get('ai')
@@ -655,6 +679,7 @@ export class AiTranslationService implements OnModuleInit {
         targetLang,
         type,
         document,
+        onToken,
       )
       const translated = await result
       this.logger.log(
@@ -680,6 +705,7 @@ export class AiTranslationService implements OnModuleInit {
     targetLang: string,
     refType: CollectionRefTypes,
     document: ArticleDocument,
+    onToken?: (count?: number) => Promise<void>,
   ) {
     const content = this.toArticleContent(document)
     const key = this.buildTranslationKey(articleId, targetLang, content)
@@ -696,6 +722,7 @@ export class AiTranslationService implements OnModuleInit {
           content,
           targetLang,
           push,
+          onToken,
         )
         const { sourceLang } = translated
         const hash = this.computeContentHash(content, sourceLang)
@@ -714,8 +741,7 @@ export class AiTranslationService implements OnModuleInit {
           existing.summary = translated.summary ?? undefined
           existing.tags = translated.tags ?? undefined
           existing.aiModel = translated.aiModel
-          existing.aiProviderId = translated.aiProviderId
-          existing.aiProviderType = translated.aiProviderType
+          existing.aiProvider = translated.aiProvider
           await existing.save()
           this.logger.log(
             `AI translation updated: article=${articleId} target=${targetLang}`,
@@ -738,8 +764,7 @@ export class AiTranslationService implements OnModuleInit {
           summary: translated.summary ?? undefined,
           tags: translated.tags ?? undefined,
           aiModel: translated.aiModel,
-          aiProviderId: translated.aiProviderId,
-          aiProviderType: translated.aiProviderType,
+          aiProvider: translated.aiProvider,
         })
         this.logger.log(
           `AI translation created: article=${articleId} target=${targetLang}`,
@@ -808,8 +833,7 @@ export class AiTranslationService implements OnModuleInit {
       tags: translation.tags,
       hash: translation.hash,
       aiModel: translation.aiModel,
-      aiProviderId: translation.aiProviderId,
-      aiProviderType: translation.aiProviderType,
+      aiProvider: translation.aiProvider,
     }
 
     this.eventManager.emit(eventType, payload, {

@@ -147,6 +147,8 @@ export class TaskQueueProcessor implements OnModuleInit, OnModuleDestroy {
       }
     }, TASK_QUEUE_LIMITS.cancelCheckIntervalMs)
 
+    let handlerSetStatus: TaskStatus | null = null
+
     const context: TaskExecuteContext = {
       taskId,
       signal: controller.signal,
@@ -158,9 +160,14 @@ export class TaskQueueProcessor implements OnModuleInit, OnModuleDestroy {
           completed,
           total,
         ),
+      incrementTokens: (count = 1) =>
+        this.taskService.incrementTokens(taskId, count),
       appendLog: (level, message) =>
         this.taskService.appendLog(taskId, level, message),
       setResult: (result) => this.taskService.setResult(taskId, result),
+      setStatus: (status) => {
+        handlerSetStatus = status
+      },
       isAborted: () => controller.signal.aborted,
     }
 
@@ -175,14 +182,39 @@ export class TaskQueueProcessor implements OnModuleInit, OnModuleDestroy {
           'Task cancelled but work completed',
         )
       } else {
-        await this.taskService.updateProgress(taskId, 100, 'Completed')
-        await this.taskService.updateStatus(taskId, TaskStatus.Completed, {
+        const status = handlerSetStatus ?? TaskStatus.Completed
+
+        // Use appropriate progress message and log based on final status
+        const statusMessages: Record<
+          string,
+          { progress: string; log: string }
+        > = {
+          [TaskStatus.Completed]: {
+            progress: 'Completed',
+            log: 'Task completed',
+          },
+          [TaskStatus.PartialFailed]: {
+            progress: 'Completed with errors',
+            log: 'Task completed with partial failures',
+          },
+          [TaskStatus.Failed]: {
+            progress: 'Failed',
+            log: 'Task failed',
+          },
+        }
+        const messages =
+          statusMessages[status] ?? statusMessages[TaskStatus.Completed]
+
+        await this.taskService.updateProgress(taskId, 100, messages.progress)
+        await this.taskService.updateStatus(taskId, status, {
           completedAt: String(Date.now()),
         })
-        await this.taskService.appendLog(taskId, 'info', 'Task completed')
+        await this.taskService.appendLog(taskId, 'info', messages.log)
       }
 
-      this.logger.log(`Task completed: id=${taskId}`)
+      this.logger.log(
+        `Task finished: id=${taskId} status=${handlerSetStatus ?? TaskStatus.Completed}`,
+      )
     } catch (error) {
       if (error.name === 'AbortError' || controller.signal.aborted) {
         this.logger.log(`Task aborted: id=${taskId}`)

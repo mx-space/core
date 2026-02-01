@@ -45,8 +45,5 @@ export class AITranslationModel extends BaseModel {
   aiModel?: string
 
   @prop()
-  aiProviderId?: string
-
-  @prop()
-  aiProviderType?: string
+  aiProvider?: string
 }

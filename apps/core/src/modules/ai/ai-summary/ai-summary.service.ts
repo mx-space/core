@@ -70,7 +70,11 @@ export class AiSummaryService implements OnModuleInit {
         )
 
         const lang = payload.lang || DEFAULT_SUMMARY_LANG
-        const result = await this.generateSummaryByOpenAI(payload.refId, lang)
+        const result = await this.generateSummaryByOpenAI(
+          payload.refId,
+          lang,
+          context.incrementTokens,
+        )
 
         this.checkAborted(context)
 
@@ -193,6 +197,7 @@ export class AiSummaryService implements OnModuleInit {
     text: string,
     lang: string,
     push?: (event: AiStreamEvent) => Promise<void>,
+    onToken?: (count?: number) => Promise<void>,
   ) {
     const runtime = await this.aiService.getSummaryModel()
     const { systemPrompt, prompt, reasoningEffort } = AI_PROMPTS.summaryStream(
@@ -217,6 +222,9 @@ export class AiSummaryService implements OnModuleInit {
         if (push) {
           await push({ type: 'token', data: chunk.text })
         }
+        if (onToken) {
+          await onToken()
+        }
       }
     } else {
       const result = await runtime.generateText({
@@ -228,6 +236,9 @@ export class AiSummaryService implements OnModuleInit {
       fullText = result.text
       if (push && result.text) {
         await push({ type: 'token', data: result.text })
+      }
+      if (onToken && result.text) {
+        await onToken()
       }
     }
 
@@ -243,6 +254,7 @@ export class AiSummaryService implements OnModuleInit {
     articleId: string,
     lang: string,
     document: { text: string },
+    onToken?: (count?: number) => Promise<void>,
   ) {
     const text = this.serializeText(document.text)
     const key = this.buildSummaryKey(articleId, lang, text)
@@ -259,6 +271,7 @@ export class AiSummaryService implements OnModuleInit {
           text,
           lang,
           push,
+          onToken,
         )
         const contentMd5 = md5(text)
 
@@ -281,7 +294,11 @@ export class AiSummaryService implements OnModuleInit {
     })
   }
 
-  async generateSummaryByOpenAI(articleId: string, lang: string) {
+  async generateSummaryByOpenAI(
+    articleId: string,
+    lang: string,
+    onToken?: (count?: number) => Promise<void>,
+  ) {
     const {
       ai: { enableSummary },
     } = await this.configService.waitForConfigReady()
@@ -297,6 +314,7 @@ export class AiSummaryService implements OnModuleInit {
         articleId,
         lang,
         document,
+        onToken,
       )
       return await result
     } catch (error) {
