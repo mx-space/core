@@ -1,5 +1,21 @@
 # CHANGELOG
 
+# [9.5.0](https://github.com/mx-space/core/compare/v9.4.0...v9.5.0) (2026-02-01)
+
+
+### Bug Fixes
+
+* **tests:** update snapshots for NoteController e2e tests to reflect published status ([49d08e6](https://github.com/mx-space/core/commit/49d08e683076d97d6102196f2a9219f4b29f18c7))
+
+
+### Features
+
+* **ai:** add retry functionality for AI tasks and enhance error handling ([5770839](https://github.com/mx-space/core/commit/577083925cec434ca9fbb516762670a3f7175ff1))
+* **ai:** add task cancellation and deletion endpoints in AiTaskController ([1975b58](https://github.com/mx-space/core/commit/1975b58c68fab94aa0be2a91dcdefe3685bca0cb))
+* **lang:** implement language handling in request context and enhance translation capabilities ([9ca8291](https://github.com/mx-space/core/commit/9ca82919f16c0f3ab04d4a8064e85aa26d73abbf))
+
+
+
 # [9.4.0](https://github.com/mx-space/core/compare/v9.3.4...v9.4.0) (2026-01-31)
 
 
