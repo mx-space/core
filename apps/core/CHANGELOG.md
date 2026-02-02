@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [9.6.1](https://github.com/mx-space/core/compare/v9.6.0...v9.6.1) (2026-02-02)
+
+
+
 # [9.6.0](https://github.com/mx-space/core/compare/v9.5.0...v9.6.0) (2026-02-02)
 
 
