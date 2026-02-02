@@ -19,6 +19,11 @@ export interface UIConfig {
   hidden?: boolean
   placeholder?: string
   options?: Array<{ label: string; value: string | number }>
+  /**
+   * Conditionally show this field based on sibling field values.
+   * When the condition is not met, the field and all its nested children are hidden.
+   */
+  showWhen?: Record<string, string | string[]>
 }
 
 export interface FormField {
@@ -248,6 +253,10 @@ function extractField(key: string, schema: z.ZodTypeAny): FormField {
 
   if (uiOptions?.type === 'hidden' || uiOptions?.hide) {
     field.ui.hidden = true
+  }
+
+  if (uiOptions?.showWhen) {
+    field.ui.showWhen = uiOptions.showWhen
   }
 
   if (component === 'select') {

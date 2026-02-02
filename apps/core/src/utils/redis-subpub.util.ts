@@ -17,16 +17,21 @@ class RedisSubPub {
   }
 
   public init() {
-    const redisOptions: RedisOptions = {
+    const baseOptions: RedisOptions = {
       host: REDIS.host,
       port: REDIS.port,
+      username: (REDIS as any).username,
+      db: (REDIS as any).db,
+      ...(REDIS.tls ? { tls: {} } : {}),
     }
 
     if (REDIS.password) {
-      redisOptions.password = REDIS.password
+      baseOptions.password = REDIS.password
     }
 
-    const pubClient = new IORedis(redisOptions)
+    const pubClient = REDIS.url
+      ? new IORedis(REDIS.url, baseOptions)
+      : new IORedis(baseOptions)
     const subClient = pubClient.duplicate()
     this.pubClient = pubClient
     this.subClient = subClient

@@ -30,10 +30,7 @@ export function exec(cmd, args = [], opts = {}) {
     const spawnOpts = {
       cwd,
       env: env ? { ...process.env, ...env } : process.env,
-      stdio:
-        stdio === 'pipe'
-          ? ['ignore', 'pipe', 'pipe']
-          : ('inherit'),
+      stdio: stdio === 'pipe' ? ['ignore', 'pipe', 'pipe'] : 'inherit',
     }
 
     const child = spawn(cmd, args, spawnOpts)
@@ -89,8 +86,8 @@ export function exec(cmd, args = [], opts = {}) {
 export async function execNothrow(cmd, args = [], opts) {
   try {
     return await exec(cmd, args, opts)
-  } catch (e) {
-    return /** @type {any} */ (e)
+  } catch (error) {
+    return /** @type {any} */ (error)
   }
 }
 
@@ -113,6 +110,19 @@ export function getArgValue(argv, names) {
       if (a.startsWith(`${n}=`)) return a.slice(n.length + 1)
     }
   }
+  // fallback to env (env key = argv key uppercased)
+  // e.g.
+  // - --scp_path -> SCP_PATH
+  // - --scpPath  -> SCP_PATH
+  const toEnvKey = (flag) => {
+    const raw = String(flag).replace(/^-+/, '')
+    if (raw.includes('_')) return raw.toUpperCase()
+    return raw.replaceAll(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()
+  }
+  for (const n of names) {
+    const envKey = toEnvKey(n)
+    if (envKey in process.env) return process.env[envKey]
+  }
   return undefined
 }
 
@@ -120,8 +130,7 @@ export function getArgValue(argv, names) {
  * Minimal color helpers (avoid chalk dependency).
  */
 export const color = {
-  yellow: (s) => `\u001b[33m${s}\u001b[39m`,
-  yellowBright: (s) => `\u001b[93m${s}\u001b[39m`,
-  green: (s) => `\u001b[32m${s}\u001b[39m`,
+  yellow: (s) => `\u001B[33m${s}\u001B[39m`,
+  yellowBright: (s) => `\u001B[93m${s}\u001B[39m`,
+  green: (s) => `\u001B[32m${s}\u001B[39m`,
 }
-

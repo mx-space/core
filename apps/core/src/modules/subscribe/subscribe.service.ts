@@ -274,8 +274,8 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     unsubscribeLink: string,
   ) {
     const { seo, mailOptions } = await this.configService.waitForConfigReady()
-    const { from, user } = mailOptions
-    const sendfrom = `"${seo.title || 'Mx Space'}" <${from || user}>`
+    const senderEmail = mailOptions.from || mailOptions.smtp?.user
+    const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
     let finalTemplate = ''
 
     const cacheKey = 'template'

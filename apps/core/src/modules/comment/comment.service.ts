@@ -630,8 +630,8 @@ export class CommentService implements OnModuleInit {
     type: CommentReplyMailType
   }) {
     const { seo, mailOptions } = await this.configsService.waitForConfigReady()
-    const { from, user } = mailOptions
-    const sendfrom = `"${seo.title || 'Mx Space'}" <${from || user}>`
+    const senderEmail = mailOptions.from || mailOptions.smtp?.user
+    const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
 
     source.ip ??= ''
     if (type === CommentReplyMailType.Guest) {

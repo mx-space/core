@@ -10,15 +10,25 @@ export declare class UrlOptionModel {
   serverUrl: string
   wsUrl: string
 }
-declare class MailOptionModel {
-  port: number
-  host: string
+declare class SmtpOptionsModel {
+  port?: number
+  host?: string
+  secure?: boolean
+}
+declare class SmtpConfigModel {
+  user?: string
+  pass?: string
+  options?: SmtpOptionsModel
+}
+declare class ResendConfigModel {
+  apiKey?: string
 }
 export declare class MailOptionsModel {
   enable: boolean
-  user: string
-  pass: string
-  options?: MailOptionModel
+  provider?: 'smtp' | 'resend'
+  from?: string
+  smtp?: SmtpConfigModel
+  resend?: ResendConfigModel
 }
 export declare class CommentOptionsModel {
   antiSpam: boolean
@@ -60,6 +70,10 @@ export declare class AdminExtraModel {
   enableAdminProxy?: boolean
 }
 
+export declare class ThirdPartyServiceIntegrationModel {
+  githubToken?: string
+}
+
 export interface IConfig {
   seo: SeoOptionModel
   url: UrlOptionModel
@@ -69,5 +83,6 @@ export interface IConfig {
   baiduSearchOptions: BaiduSearchOptionsModel
   algoliaSearchOptions: AlgoliaSearchOptionsModel
   adminExtra: AdminExtraModel
+  thirdPartyServiceIntegration: ThirdPartyServiceIntegrationModel
 }
 export declare type IConfigKeys = keyof IConfig

@@ -32,6 +32,83 @@ const ENV_JWT_SECRET = JWT_SECRET || JWTSECRET
 const ENCRYPT_KEY_FROM_ENV = MX_ENCRYPT_KEY || ENV_ENCRYPT_KEY
 const ENCRYPT_ENABLE_FROM_ENV = MX_ENCRYPT_ENABLE || ENV_ENCRYPT_ENABLE
 
+function parseRedisConnectionString(input: string) {
+  const raw = String(input).trim()
+  if (!raw) return null
+
+  const withProtocol =
+    raw.includes('://') || raw.startsWith('redis:') || raw.startsWith('rediss:')
+      ? raw
+      : `redis://${raw}`
+
+  const url = new URL(withProtocol)
+
+  // `redis:` / `rediss:`
+  if (url.protocol !== 'redis:' && url.protocol !== 'rediss:') {
+    throw new Error(`Invalid redis connection string protocol: ${url.protocol}`)
+  }
+
+  const host = url.hostname
+  const port = url.port ? Number(url.port) : undefined
+  const username = url.username ? decodeURIComponent(url.username) : undefined
+  const password = url.password ? decodeURIComponent(url.password) : undefined
+
+  const dbFromPath = url.pathname?.replace(/^\//, '')
+  const db =
+    dbFromPath && /^\d+$/.test(dbFromPath) ? Number(dbFromPath) : undefined
+
+  // Build a sanitized URL (no auth) for downstream clients.
+  const origin =
+    url.port && url.port.length > 0
+      ? `${url.protocol}//${url.hostname}:${url.port}`
+      : `${url.protocol}//${url.hostname}`
+  const sanitizedUrl = `${origin}${url.pathname || ''}${url.search || ''}`
+
+  return {
+    url: sanitizedUrl,
+    host,
+    port,
+    username,
+    password,
+    db,
+    tls: url.protocol === 'rediss:',
+  }
+}
+
+function applyArgvEnvFallback(argv: Record<string, any>) {
+  // Fallback rule:
+  // - If argv key is missing, fallback to env.
+  // - env key = argv key uppercased (camelCase will be converted to SNAKE_CASE).
+  //
+  // NOTE: We only apply to commander-defined options to avoid accidentally
+  // coercing unrelated config keys.
+  for (const option of commander.options) {
+    const optionKey = option.attributeName()
+    const optionRawName = option.name() // usually snake_case from long flag, e.g. db_host
+    const envKey = optionRawName.toUpperCase()
+
+    // Do not override values from cli/config/default.
+    if (argv[optionKey] !== undefined || argv[optionRawName] !== undefined) {
+      continue
+    }
+
+    if (!(envKey in process.env)) continue
+    const envVal = process.env[envKey]
+
+    if (option.isBoolean()) {
+      // Commander treats boolean env var as "present => true", but we want to support
+      // explicit false like CLUSTER=false.
+      const parsed = parseBooleanishValue(envVal)
+      const value = parsed ?? true
+      argv[optionKey] = value
+      argv[optionRawName] = value
+    } else {
+      argv[optionKey] = envVal
+      argv[optionRawName] = envVal
+    }
+  }
+}
+
 const commander = program
   .option('-p, --port <number>', 'server port', ENV_PORT)
 
@@ -41,6 +118,7 @@ const commander = program
     ALLOWED_ORIGINS,
   )
   .option('-c, --config <path>', 'load yaml config from file')
+  .option('--demo', 'enable demo mode')
 
   // db
   .option('--collection_name <string>', 'mongodb collection name')
@@ -55,6 +133,7 @@ const commander = program
     MONGO_CONNECTION,
   )
   // redis
+  .option('--redis_connection_string <string>', 'redis connection string')
   .option('--redis_host <string>', 'redis host')
   .option('--redis_port <number>', 'redis port')
   .option('--redis_password <string>', 'redis password')
@@ -123,6 +202,8 @@ if (argv.config) {
   Object.assign(argv, config)
 }
 
+applyArgvEnvFallback(argv)
+
 export const PORT = argv.port || 2333
 export const API_VERSION = 2
 
@@ -174,10 +255,18 @@ export const MONGO_DB = {
   },
 }
 
+const redisConnection = argv.redis_connection_string
+  ? parseRedisConnectionString(argv.redis_connection_string)
+  : null
+
 export const REDIS = {
-  host: argv.redis_host || 'localhost',
-  port: argv.redis_port || 6379,
-  password: argv.redis_password || null,
+  host: redisConnection?.host || argv.redis_host || 'localhost',
+  port: redisConnection?.port || argv.redis_port || 6379,
+  username: redisConnection?.username,
+  password: redisConnection?.password || argv.redis_password || null,
+  db: redisConnection?.db,
+  url: redisConnection?.url,
+  tls: redisConnection?.tls ?? false,
   ttl: null,
   max: 120,
   disableApiCache: isDev,
@@ -222,7 +311,11 @@ export const DEBUG_MODE = {
   httpRequestVerbose:
     argv.httpRequestVerbose ?? argv.http_request_verbose ?? true,
   memoryDump:
-    (argv.debug_memory_dump || process.env.MX_DEBUG_MEMORY_DUMP) ?? false,
+    parseBooleanishValue(
+      argv.debug_memory_dump ??
+        process.env.DEBUG_MEMORY_DUMP ??
+        process.env.MX_DEBUG_MEMORY_DUMP,
+    ) ?? false,
 }
 export const THROTTLE_OPTIONS = {
   ttl: seconds(Number(argv.throttle_ttl ?? THROTTLE_TTL ?? 10)),

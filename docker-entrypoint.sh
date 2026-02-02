@@ -4,6 +4,16 @@ command_args=""
 
 # ======= Helper Functions =======
 
+apply_env_alias() {
+  # apply_env_alias TARGET_VAR FALLBACK_VAR
+  # If TARGET_VAR is empty and FALLBACK_VAR is set, copy it.
+  TARGET_VAR=$1
+  FALLBACK_VAR=$2
+  if [ -z "${!TARGET_VAR}" ] && [ -n "${!FALLBACK_VAR}" ]; then
+    export "$TARGET_VAR"="${!FALLBACK_VAR}"
+  fi
+}
+
 get_boolean_str() {
   if [ "$1" = "true" ]; then
     echo "true"
@@ -137,18 +147,55 @@ get_mongodb_configuration() {
   echo "$CONNECTION_STRING"
 }
 
+get_redis_configuration() {
+  CMD=$@
+  CONNECTION_STRING=""
+
+  mask_password() {
+    local raw_conn="$1"
+    # mask redis://user:pass@host -> redis://user:************@host
+    echo "$raw_conn" | sed -E 's/(redis(s)?:\/\/)([^:\/]+):([^@]+)@/\1\3:************@/'
+  }
+
+  if [ "$(is_in_cmd_with_value "--redis_connection_string=" $CMD)" = "true" ]; then
+    raw_conn=$(get_cmd_value "--redis_connection_string=" $CMD)
+    CONN_MASKED=$(mask_password "$raw_conn")
+    echo "$CONN_MASKED"
+    CONNECTION_STRING="$raw_conn"
+  else
+    local redis_host=$(get_cmd_value "--redis_host=" $CMD)
+    local redis_port=$(get_cmd_value "--redis_port=" $CMD)
+    local redis_pass=$(get_cmd_value "--redis_password=" $CMD)
+
+    local conn="redis://"
+    [ -n "$redis_pass" ] && conn+=":************@"
+    conn+="$redis_host"
+    [ -n "$redis_port" ] && conn+=":$redis_port"
+
+    echo "$conn"
+    CONNECTION_STRING=""
+  fi
+
+  echo "$CONNECTION_STRING"
+}
+
 # ================================
 
 # ======= Environment Variables =======
+
+# Backward-compatible aliases (old env -> new env or real argv env)
+apply_env_alias CONFIG CONFIG_PATH
+apply_env_alias COLLECTION_NAME DB_COLLECTION_NAME
+apply_env_alias HTTP_REQUEST_VERBOSE DEBUG
 
 declare -A valueMap=(
   [PORT]="value,--port=,2333"
   [DEMO]="switch,--demo,false"
   [ALLOWED_ORIGINS]="value,--allowed_origins=,localhost"
-  [CONFIG_PATH]="value,--config_path=,@@NULL@@"
+  [CONFIG]="value,--config=,@@NULL@@"
 
   # DB
-  [DB_COLLECTION_NAME]="value,--collection_name=,mx-space"
+  [COLLECTION_NAME]="value,--collection_name=,mx-space"
   [DB_HOST]="value,--db_host=,127.0.0.1"
   [DB_PORT]="value,--db_port=,27017"
   [DB_USER]="value,--db_user=,@@NULL@@"
@@ -157,6 +204,7 @@ declare -A valueMap=(
   [DB_CONNECTION_STRING]="value,--db_connection_string=,@@NULL@@"
 
   # Redis
+  [REDIS_CONNECTION_STRING]="value,--redis_connection_string=,@@NULL@@"
   [REDIS_HOST]="value,--redis_host=,127.0.0.1"
   [REDIS_PORT]="value,--redis_port=,6379"
   [REDIS_PASSWORD]="value,--redis_password=,@@NULL@@"
@@ -171,12 +219,12 @@ declare -A valueMap=(
   [CLUSTER_WORKERS]="value,--cluster_workers=,@@NULL@@"
 
   # Debug
-  [DEBUG]="switch,--http_request_verbose,false"
+  [HTTP_REQUEST_VERBOSE]="switch,--http_request_verbose,false"
   [DEBUG_MEMORY_DUMP]="switch,--debug_memory_dump,false"
 
   # Cache
   [CACHE_TTL]="value,--http_cache_ttl=,@@NULL@@"
-  [CACHE_CDN_HEADER]="switch,--http_cache_enable_cdn_header=,false"
+  [CACHE_CDN_HEADER]="switch,--http_cache_enable_cdn_header,false"
   [CACHE_FORCE_HEADER]="switch,--http_cache_enable_force_cache_header,false"
 
   # Security
@@ -214,9 +262,9 @@ echo "Starting Mix Space"
 echo "============== Configurations =============="
 echo "Listen Port: $(get_cmd_value "--port=" $command_args)"
 echo "MongoDB: $(get_mongodb_configuration $command_args)"
-echo "Redis: $(get_cmd_value "--redis_host=" $command_args):$(get_cmd_value "--redis_port=" $command_args)"
+echo "Redis: $(get_redis_configuration $command_args)"
 echo "Allowed Origins: $(get_cmd_value "--allowed_origins=" $command_args)"
-echo "Config Path: $(if [ -z "$(get_cmd_value "--config_path=" $command_args)" ]; then echo "NULL"; else echo "$(get_cmd_value "--config_path=" $command_args)"; fi)"
+echo "Config Path: $(if [ -z "$(get_cmd_value "--config=" $command_args)" ]; then echo "NULL"; else echo "$(get_cmd_value "--config=" $command_args)"; fi)"
 echo "Encryption: $(get_boolean_str $(is_in_cmd "--encrypt_enable" $command_args))"
 echo "Cluster: $(get_boolean_str $(is_in_cmd "--cluster" $command_args))"
 echo "============================================"

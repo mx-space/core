@@ -10,7 +10,8 @@ describe('encrypt.util', () => {
     const paths = getExtractedEncryptedPaths()
 
     // Verify ALL encrypted paths are extracted
-    expect(paths).toContain('mailOptions.pass')
+    expect(paths).toContain('mailOptions.smtp.pass')
+    expect(paths).toContain('mailOptions.resend.apiKey')
     expect(paths).toContain('backupOptions.secretKey')
     expect(paths).toContain('imageStorageOptions.secretKey')
     expect(paths).toContain('baiduSearchOptions.token')
@@ -23,35 +24,43 @@ describe('encrypt.util', () => {
     expect(paths).toContain('oauth.secrets.*.*')
 
     // Ensure exact count
-    expect(paths.length).toBe(11)
+    expect(paths.length).toBe(12)
   })
   describe('path-based encryption', () => {
-    test('should encrypt mailOptions.pass', () => {
+    test('should encrypt mailOptions.smtp.pass', () => {
       const config = {
-        pass: 'my-secret-password',
-        user: 'user@example.com',
+        smtp: { pass: 'my-smtp-password', user: 'user@example.com' },
       }
 
       const encrypted = encryptObject(config, 'mailOptions')
 
-      expect(encrypted.pass).toMatch(/^\$\$\{mx\}\$\$/)
-      expect(encrypted.user).toBe('user@example.com')
+      expect(encrypted.smtp.pass).toMatch(/^\$\$\{mx\}\$\$/)
+      expect(encrypted.smtp.user).toBe('user@example.com')
     })
 
-    test('should decrypt mailOptions.pass', () => {
+    test('should encrypt mailOptions.resend.apiKey', () => {
       const config = {
-        pass: 'my-secret-password',
-        user: 'user@example.com',
+        resend: { apiKey: 're_123456' },
+      }
+
+      const encrypted = encryptObject(config, 'mailOptions')
+
+      expect(encrypted.resend.apiKey).toMatch(/^\$\$\{mx\}\$\$/)
+    })
+
+    test('should decrypt mailOptions.smtp.pass', () => {
+      const config = {
+        smtp: { pass: 'my-secret-password', user: 'user@example.com' },
       }
 
       // First encrypt
       const encrypted = encryptObject({ ...config }, 'mailOptions')
-      expect(encrypted.pass).toMatch(/^\$\$\{mx\}\$\$/)
+      expect(encrypted.smtp.pass).toMatch(/^\$\$\{mx\}\$\$/)
 
       // Then decrypt
       const decrypted = decryptObject(encrypted, 'mailOptions')
-      expect(decrypted.pass).toBe('my-secret-password')
-      expect(decrypted.user).toBe('user@example.com')
+      expect(decrypted.smtp.pass).toBe('my-secret-password')
+      expect(decrypted.smtp.user).toBe('user@example.com')
     })
 
     test('should encrypt ai.providers.*.apiKey', () => {
@@ -211,12 +220,15 @@ describe('encrypt.util', () => {
     test('full config encryption and decryption', () => {
       const fullConfig = {
         mailOptions: {
-          pass: 'smtp-password',
-          user: 'user@example.com',
+          smtp: { pass: 'smtp-password', user: 'user@example.com' },
+          resend: { apiKey: 're_123' },
         },
         backupOptions: {
           secretKey: 's3-secret',
           bucket: 'backup-bucket',
+        },
+        thirdPartyServiceIntegration: {
+          githubToken: 'ghp_xxx',
         },
         seo: {
           title: 'My Site',
@@ -225,17 +237,23 @@ describe('encrypt.util', () => {
 
       const encrypted = encryptObject(fullConfig)
 
-      expect(encrypted.mailOptions.pass).toMatch(/^\$\$\{mx\}\$\$/)
-      expect(encrypted.mailOptions.user).toBe('user@example.com')
+      expect(encrypted.mailOptions.smtp.pass).toMatch(/^\$\$\{mx\}\$\$/)
+      expect(encrypted.mailOptions.smtp.user).toBe('user@example.com')
+      expect(encrypted.mailOptions.resend.apiKey).toMatch(/^\$\$\{mx\}\$\$/)
       expect(encrypted.backupOptions.secretKey).toMatch(/^\$\$\{mx\}\$\$/)
       expect(encrypted.backupOptions.bucket).toBe('backup-bucket')
+      expect(encrypted.thirdPartyServiceIntegration.githubToken).toMatch(
+        /^\$\$\{mx\}\$\$/,
+      )
       expect(encrypted.seo.title).toBe('My Site')
 
       const decrypted = decryptObject(encrypted)
 
-      expect(decrypted.mailOptions.pass).toBe('smtp-password')
-      expect(decrypted.mailOptions.user).toBe('user@example.com')
+      expect(decrypted.mailOptions.smtp.pass).toBe('smtp-password')
+      expect(decrypted.mailOptions.smtp.user).toBe('user@example.com')
+      expect(decrypted.mailOptions.resend.apiKey).toBe('re_123')
       expect(decrypted.backupOptions.secretKey).toBe('s3-secret')
+      expect(decrypted.thirdPartyServiceIntegration.githubToken).toBe('ghp_xxx')
       expect(decrypted.seo.title).toBe('My Site')
     })
   })
@@ -243,14 +261,15 @@ describe('encrypt.util', () => {
   describe('sanitizeConfigForResponse', () => {
     test('should remove encrypted fields from mailOptions', () => {
       const config = {
-        pass: 'smtp-password',
-        user: 'user@example.com',
+        smtp: { pass: 'smtp-password', user: 'user@example.com' },
+        resend: { apiKey: 're_123' },
       }
 
       const sanitized = sanitizeConfigForResponse(config, 'mailOptions')
 
-      expect(sanitized.pass).toBe('')
-      expect(sanitized.user).toBe('user@example.com')
+      expect(sanitized.smtp.pass).toBe('')
+      expect(sanitized.smtp.user).toBe('user@example.com')
+      expect(sanitized.resend.apiKey).toBe('')
     })
 
     test('should remove encrypted fields from ai.providers', () => {
@@ -307,12 +326,15 @@ describe('encrypt.util', () => {
     test('should sanitize full config', () => {
       const fullConfig = {
         mailOptions: {
-          pass: 'smtp-password',
-          user: 'user@example.com',
+          smtp: { pass: 'smtp-password', user: 'user@example.com' },
+          resend: { apiKey: 're_123' },
         },
         backupOptions: {
           secretKey: 's3-secret',
           bucket: 'backup-bucket',
+        },
+        thirdPartyServiceIntegration: {
+          githubToken: 'ghp_xxx',
         },
         seo: {
           title: 'My Site',
@@ -321,10 +343,12 @@ describe('encrypt.util', () => {
 
       const sanitized = sanitizeConfigForResponse(fullConfig)
 
-      expect(sanitized.mailOptions.pass).toBe('')
-      expect(sanitized.mailOptions.user).toBe('user@example.com')
+      expect(sanitized.mailOptions.smtp.pass).toBe('')
+      expect(sanitized.mailOptions.smtp.user).toBe('user@example.com')
+      expect(sanitized.mailOptions.resend.apiKey).toBe('')
       expect(sanitized.backupOptions.secretKey).toBe('')
       expect(sanitized.backupOptions.bucket).toBe('backup-bucket')
+      expect(sanitized.thirdPartyServiceIntegration.githubToken).toBe('')
       expect(sanitized.seo.title).toBe('My Site')
     })
   })

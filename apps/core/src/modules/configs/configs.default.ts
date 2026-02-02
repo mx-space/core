@@ -14,14 +14,19 @@ export const generateDefaultConfig: () => IConfig = () => ({
   },
   mailOptions: {
     enable: false,
-
-    user: '',
-    pass: '',
+    provider: 'smtp',
     from: '',
-    options: {
-      host: '',
-      port: 465,
-      secure: true,
+    smtp: {
+      user: '',
+      pass: '',
+      options: {
+        host: '',
+        port: 465,
+        secure: true,
+      },
+    },
+    resend: {
+      apiKey: '',
     },
   },
   commentOptions: {

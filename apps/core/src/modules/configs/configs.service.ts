@@ -222,6 +222,14 @@ export class ConfigsService {
     }
     const instanceValue = this.validWithDto(dto, value) as Partial<IConfig[T]>
 
+    if (key === 'mailOptions') {
+      const nextConfig = await this.buildNextConfigForValidation(
+        key,
+        instanceValue,
+      )
+      this.validateMailProvider(nextConfig)
+    }
+
     encryptObject(instanceValue, key)
 
     switch (key) {
@@ -247,7 +255,6 @@ export class ConfigsService {
 
         return option
       }
-
       case 'algoliaSearchOptions': {
         const option = await this.patch(
           key as 'algoliaSearchOptions',
@@ -304,6 +311,56 @@ export class ConfigsService {
       default: {
         return this.patch(key, instanceValue as any)
       }
+    }
+  }
+
+  private async buildNextConfigForValidation<T extends keyof IConfig>(
+    key: T,
+    data: Partial<IConfig[T]>,
+  ): Promise<IConfig> {
+    const current = await this.getConfig()
+    const mergedSection = mergeWith(
+      cloneDeep(current[key]),
+      data,
+      (old, newer) => {
+        if (Array.isArray(old)) {
+          return newer
+        }
+        if (typeof old === 'object' && typeof newer === 'object') {
+          return { ...old, ...newer }
+        }
+      },
+    )
+    return Object.assign({}, current, { [key]: mergedSection })
+  }
+
+  private validateMailProvider(config: IConfig) {
+    const { mailOptions } = config
+    const errors: string[] = []
+
+    if (mailOptions.provider === 'resend') {
+      // Resend 验证: from 和 apiKey 必填
+      if (!mailOptions.from) {
+        errors.push('mailOptions.from: 发件邮箱地址不能为空')
+      }
+      if (!mailOptions.resend?.apiKey) {
+        errors.push('mailOptions.resend.apiKey: Resend API Key 不能为空')
+      }
+    } else if (
+      mailOptions.provider === 'smtp' && // SMTP 验证: 至少需要 user 或 from
+      !mailOptions.smtp?.user &&
+      !mailOptions.from
+    ) {
+      errors.push(
+        'mailOptions.smtp.user 或 mailOptions.from: 至少需要填写一个发件人',
+      )
+    }
+
+    if (errors.length > 0) {
+      throw new BizException(
+        ErrorCodeEnum.ConfigValidationFailed,
+        errors.join('; '),
+      )
     }
   }
 

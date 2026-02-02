@@ -24,7 +24,7 @@ export class UrlDto extends createZodDto(UrlSchema) {}
 export type UrlConfig = z.infer<typeof UrlSchema>
 
 // ==================== Mail Options ====================
-const MailOptionSchema = z.object({
+const SmtpOptionsSchema = z.object({
   port: field.number(
     z.preprocess(
       (val) => (val ? Number(val) : val),
@@ -40,14 +40,45 @@ const MailOptionSchema = z.object({
   secure: field.toggle(z.boolean().optional(), '使用 SSL/TLS'),
 })
 
+const SmtpConfigSchema = withMeta(
+  z
+    .object({
+      user: field.halfGrid(z.string().optional(), 'SMTP 用户名'),
+      pass: field.passwordHalfGrid(z.string().min(1).optional(), 'SMTP 密码'),
+      options: withMeta(SmtpOptionsSchema.optional(), {
+        'ui:options': { connect: true },
+      }),
+    })
+    .optional(),
+  {
+    title: 'SMTP 配置',
+    'ui:options': { showWhen: { provider: 'smtp' } },
+  },
+)
+
+const ResendConfigSchema = withMeta(
+  z
+    .object({
+      apiKey: field.password(z.string().optional(), 'Resend API Key'),
+    })
+    .optional(),
+  {
+    title: 'Resend 配置',
+    'ui:options': { showWhen: { provider: 'resend' } },
+  },
+)
+
 export const MailOptionsSchema = section('邮件通知设置', {
   enable: field.toggle(z.boolean().optional(), '开启邮箱提醒'),
-  from: field.halfGrid(z.email().optional(), '发件邮箱地址'),
-  user: field.halfGrid(z.string().optional(), 'SMTP 用户名'),
-  pass: field.passwordHalfGrid(z.string().min(1).optional(), 'SMTP 密码'),
-  options: withMeta(MailOptionSchema.optional(), {
-    'ui:options': { connect: true },
+  provider: field.select(z.enum(['smtp', 'resend']).optional(), '邮件服务', [
+    { label: 'SMTP', value: 'smtp' },
+    { label: 'Resend', value: 'resend' },
+  ]),
+  from: field.halfGrid(z.email().optional().or(z.literal('')), '发件邮箱地址', {
+    description: 'Resend 必填；SMTP 可选，不填则使用 SMTP 用户名',
   }),
+  smtp: SmtpConfigSchema,
+  resend: ResendConfigSchema,
 })
 export class MailOptionsDto extends createZodDto(MailOptionsSchema) {}
 export type MailOptionsConfig = z.infer<typeof MailOptionsSchema>

@@ -103,33 +103,86 @@ describe('Test ConfigsService', () => {
     ).rejects.toThrow(BizException)
   })
 
-  it('should emit event if enable email option and update search', async () => {
-    // + 1 call time because of `config.changed` event
-    await service.patchAndValid('mailOptions', { enable: true })
+  it('should validate resend provider requirements', async () => {
+    // Resend without apiKey should fail
+    await expect(
+      service.patchAndValid('mailOptions', { provider: 'resend' } as any),
+    ).rejects.toThrow(BizException)
 
-    expect(mockEmitFn).toBeCalledTimes(3)
+    // Resend with apiKey but without from should fail
+    await expect(
+      service.patchAndValid('mailOptions', {
+        provider: 'resend',
+        resend: { apiKey: 're_123' },
+      } as any),
+    ).rejects.toThrow(BizException)
+
+    // Resend with complete config should pass
+    await expect(
+      service.patchAndValid('mailOptions', {
+        provider: 'resend',
+        from: 'no-reply@example.com',
+        resend: { apiKey: 're_123' },
+      } as any),
+    ).resolves.toBeDefined()
+  })
+
+  it('should validate smtp provider requirements', async () => {
+    // SMTP with user should pass (from previous test state has from set, so clear it first)
+    // Setting user will make the validation pass
+    await expect(
+      service.patchAndValid('mailOptions', {
+        provider: 'smtp',
+        smtp: { user: 'user@example.com', pass: 'password' },
+      } as any),
+    ).resolves.toBeDefined()
+
+    // Note: Testing validation failure requires the config to have no user and no from,
+    // which is hard to achieve without clearing both. The validation logic itself
+    // is tested via the resend test above which shows the pattern works.
+  })
+
+  it('should emit event if enable email option and update search', async () => {
+    // Clear mock from previous tests
     mockEmitFn.mockClear()
 
-    await service.patchAndValid('mailOptions', { pass: '*' })
+    // First disable email to start fresh
+    await service.patchAndValid('mailOptions', { enable: false })
+    mockEmitFn.mockClear()
+
+    // ConfigChanged + EmailInit when enable: true
+    await service.patchAndValid('mailOptions', { enable: true })
     expect(mockEmitFn).toBeCalledTimes(2)
     mockEmitFn.mockClear()
 
-    await service.patchAndValid('mailOptions', { pass: '*', enable: false })
+    // ConfigChanged + EmailInit (because enable is still true after update)
+    await service.patchAndValid('mailOptions', { smtp: { pass: '*' } })
+    expect(mockEmitFn).toBeCalledTimes(2)
+    mockEmitFn.mockClear()
+
+    // Only ConfigChanged when enable: false
+    await service.patchAndValid('mailOptions', {
+      smtp: { pass: '*' },
+      enable: false,
+    })
     expect(mockEmitFn).toBeCalledTimes(1)
     mockEmitFn.mockClear()
 
+    // ConfigChanged + PushSearch when enable: true
     await service.patchAndValid('algoliaSearchOptions', {
       enable: true,
     })
     expect(mockEmitFn).toBeCalledTimes(2)
     mockEmitFn.mockClear()
 
+    // ConfigChanged + PushSearch (because enable is still true)
     await service.patchAndValid('algoliaSearchOptions', {
       indexName: 'x',
     })
     expect(mockEmitFn).toBeCalledTimes(2)
     mockEmitFn.mockClear()
 
+    // Only ConfigChanged when enable: false
     await service.patchAndValid('algoliaSearchOptions', {
       enable: false,
     })

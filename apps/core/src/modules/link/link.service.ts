@@ -196,9 +196,9 @@ export class LinkService {
     template: LinkApplyEmailType
   }) {
     const { seo, mailOptions } = await this.configsService.waitForConfigReady()
-    const { from, user } = mailOptions
-    const sendfrom = `"${seo.title || 'Mx Space'}" <${from || user}>`
-    await this.emailService.getInstance().sendMail({
+    const senderEmail = mailOptions.from || mailOptions.smtp?.user
+    const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
+    await this.emailService.send({
       from: sendfrom,
       to,
       subject:
@@ -276,9 +276,9 @@ export class LinkService {
       return
     }
 
-    const { from, user } = mailOptions
-    const sendfrom = `"${seo.title || 'Mx Space'}" <${from || user}>`
-    await this.emailService.getInstance().sendMail({
+    const senderEmail = mailOptions.from || mailOptions.smtp?.user
+    const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
+    await this.emailService.send({
       from: sendfrom,
       to: doc.email,
       subject: `嘿!~, 主人已处理你的友链申请!~`,
