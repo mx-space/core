@@ -1,5 +1,15 @@
 # CHANGELOG
 
+# [9.6.0](https://github.com/mx-space/core/compare/v9.5.0...v9.6.0) (2026-02-02)
+
+
+### Features
+
+* **ai:** update translation prompts to enforce strict JSON output requirements ([810aaac](https://github.com/mx-space/core/commit/810aaac8ce530fff598c61bc70b0553540a14b6d))
+* **redis:** enhance Redis configuration and email service integration ([634297c](https://github.com/mx-space/core/commit/634297cb2a14ee651e3a254c0454a5ed99315a17))
+
+
+
 # [9.5.0](https://github.com/mx-space/core/compare/v9.4.0...v9.5.0) (2026-02-01)
 
 
