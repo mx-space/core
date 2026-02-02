@@ -1,274 +1,175 @@
 #!/bin/bash
 
-command_args=""
+set -euo pipefail
 
-# ======= Helper Functions =======
+# Keep this entrypoint tiny:
+# - `apps/core/src/app.config.ts` already supports argv + env fallback.
+# - Here we only provide backward-compatible env aliases, a masked config summary,
+#   and then exec the real command.
+
+log_kv() {
+  # log_kv "Key" "Value" ["Source"]
+  local k="$1"
+  local v="${2:-}"
+  local src="${3:-}"
+  if [ -n "$src" ]; then
+    echo "- ${k}: ${v} (${src})"
+  else
+    echo "- ${k}: ${v}"
+  fi
+}
+
+env_source() {
+  # env_source VAR_NAME DEFAULT_VALUE
+  local name="$1"
+  local def="${2:-}"
+  if [ -n "${!name:-}" ]; then
+    echo "env"
+  else
+    echo "default:${def}"
+  fi
+}
+
+mask_secret_hint() {
+  # mask_secret_hint "secret" -> "<empty>" | "<set,len=...>"
+  local raw="${1:-}"
+  if [ -z "$raw" ]; then
+    echo "<empty>"
+  else
+    echo "<set,len=${#raw}>"
+  fi
+}
 
 apply_env_alias() {
   # apply_env_alias TARGET_VAR FALLBACK_VAR
   # If TARGET_VAR is empty and FALLBACK_VAR is set, copy it.
-  TARGET_VAR=$1
-  FALLBACK_VAR=$2
-  if [ -z "${!TARGET_VAR}" ] && [ -n "${!FALLBACK_VAR}" ]; then
+  local TARGET_VAR=$1
+  local FALLBACK_VAR=$2
+  if [ -z "${!TARGET_VAR:-}" ] && [ -n "${!FALLBACK_VAR:-}" ]; then
     export "$TARGET_VAR"="${!FALLBACK_VAR}"
   fi
 }
 
-get_boolean_str() {
-  if [ "$1" = "true" ]; then
-    echo "true"
-  else
-    echo "false"
-  fi
+parse_booleanish() {
+  # returns: true | false | empty (unknown)
+  case "${1:-}" in
+  true | TRUE | 1 | yes | YES | on | ON) echo "true" ;;
+  false | FALSE | 0 | no | NO | off | OFF) echo "false" ;;
+  *) echo "" ;;
+  esac
 }
 
-is_in_cmd_with_value() {
-  CMD_ARG=$1
-  for arg in "${@:1}"
-  do
-    if [[ "$arg" == "$CMD_ARG"* ]] && [ -n "${arg#*=}" ]; then
-      echo "true"
-      return
-    fi
-  done
-
-  echo "false"
+mask_mongo_password() {
+  # mongodb://user:pass@host -> mongodb://user:************@host
+  # mongodb+srv://user:pass@host -> mongodb+srv://user:************@host
+  echo "${1:-}" | sed -E 's/(mongodb(\+srv)?:\/\/)([^:]+):([^@]+)@/\1\3:************@/'
 }
 
-set_value() {
-  VAR_NAME=$1
-  CMD_ARG=$2
-  DEFAULT_VALUE=$3
-
-  # if command line argument is preset, use it
-  if [ "$(is_in_cmd_with_value "$CMD_ARG" ${@:3})" = "true" ]; then
-    command_args+=" $CMD_ARG$(get_cmd_value "$CMD_ARG" ${@:3})"
-    return
-  fi
-  
-  # if environment variable is preset, use it
-  if [ -n "${!VAR_NAME}" ]; then
-    command_args+=" $CMD_ARG${!VAR_NAME}"
-    return
-  fi
-
-  # if default value is not '@@NULL@@', use it
-  if [ "$DEFAULT_VALUE" != "@@NULL@@" ]; then
-    command_args+=" $CMD_ARG$DEFAULT_VALUE"
-  fi
+mask_redis_password() {
+  # redis://user:pass@host -> redis://user:************@host
+  # rediss://user:pass@host -> rediss://user:************@host
+  echo "${1:-}" | sed -E 's/(redis(s)?:\/\/)([^:\/]+):([^@]+)@/\1\3:************@/'
 }
 
-is_in_cmd() {
-  CMD_ARG=$1
-  for arg in "${@:2}"
-  do
-    if [[ "$arg" == "$CMD_ARG" ]]; then
-      echo "true"
-      return
-    fi
-  done
-
-  echo "false"
-}
-
-set_switch() {
-    VAR_NAME=$1
-    CMD_ARG=$2
-    DEFAULT_VALUE=$3
-
-    # if command line argument is preset, use it
-    if [ "$(is_in_cmd "$CMD_ARG" ${@:3})" = "true" ]; then
-        command_args+=" $CMD_ARG"
-        return
-    fi
-  
-    # if environment variable is preset, use it
-    if [ -n "${!VAR_NAME}" ]; then
-      if [ "${!VAR_NAME}" = "true" ]; then
-        command_args+=" $CMD_ARG"
-      fi
-
-      return
-    fi
-
-    # use default value
-    if [ "$DEFAULT_VALUE" = "true" ]; then
-      command_args+=" $CMD_ARG"
-    fi
-}
-
-get_cmd_value() {
-  CMD_ARG=$1
-  for arg in "${@:2}"
-  do
-    if [[ "$arg" == "$CMD_ARG"* ]]; then
-      echo "${arg#*=}"
-      return
-    fi
-  done
-
-  echo ""
-}
-
-get_mongodb_configuration() {
-  CMD=$@
-  CONNECTION_STRING=""
-  
-  mask_password() {
-    local raw_conn="$1"
-    echo "$raw_conn" | sed -E 's/(mongodb(\+srv)?:\/\/)([^:]+):([^@]+)@/\1\3:************@/'
-  }
-
-  if [ "$(is_in_cmd_with_value "--db_connection_string=" $CMD)" = "true" ]; then
-    raw_conn=$(get_cmd_value "--db_connection_string=" $CMD)
-    CONN_MASKED=$(mask_password "$raw_conn")
-    echo "$CONN_MASKED"
-    CONNECTION_STRING="$raw_conn"
-  else
-    local db_user=$(get_cmd_value "--db_user=" $CMD)
-    local db_pass=$(get_cmd_value "--db_password=" $CMD)
-    local db_host=$(get_cmd_value "--db_host=" $CMD)
-    local db_port=$(get_cmd_value "--db_port=" $CMD)
-    local db_name=$(get_cmd_value "--collection_name=" $CMD)
-    
-    local conn="mongodb://"
-    [ -n "$db_user" ] && conn+="$db_user:"
-    [ -n "$db_pass" ] && conn+="$db_pass@"
-    conn+="$db_host"
-    [ -n "$db_port" ] && conn+=":$db_port"
-    conn+="/$db_name"
-    
-    CONN_MASKED=$(echo "$conn" | sed -E 's/(mongodb:\/\/[^:]+:)[^@]+(@.*)/\1************\2/')
-    echo "$CONN_MASKED"
-    
-    CONNECTION_STRING="$conn"
-  fi
-
-  echo "$CONNECTION_STRING"
-}
-
-get_redis_configuration() {
-  CMD=$@
-  CONNECTION_STRING=""
-
-  mask_password() {
-    local raw_conn="$1"
-    # mask redis://user:pass@host -> redis://user:************@host
-    echo "$raw_conn" | sed -E 's/(redis(s)?:\/\/)([^:\/]+):([^@]+)@/\1\3:************@/'
-  }
-
-  if [ "$(is_in_cmd_with_value "--redis_connection_string=" $CMD)" = "true" ]; then
-    raw_conn=$(get_cmd_value "--redis_connection_string=" $CMD)
-    CONN_MASKED=$(mask_password "$raw_conn")
-    echo "$CONN_MASKED"
-    CONNECTION_STRING="$raw_conn"
-  else
-    local redis_host=$(get_cmd_value "--redis_host=" $CMD)
-    local redis_port=$(get_cmd_value "--redis_port=" $CMD)
-    local redis_pass=$(get_cmd_value "--redis_password=" $CMD)
-
-    local conn="redis://"
-    [ -n "$redis_pass" ] && conn+=":************@"
-    conn+="$redis_host"
-    [ -n "$redis_port" ] && conn+=":$redis_port"
-
-    echo "$conn"
-    CONNECTION_STRING=""
-  fi
-
-  echo "$CONNECTION_STRING"
-}
-
-# ================================
-
-# ======= Environment Variables =======
-
-# Backward-compatible aliases (old env -> new env or real argv env)
+# Backward-compatible aliases (old env -> new env).
+# NOTE: app.config.ts uses env fallback based on commander option names:
+# - `--config` -> CONFIG
+# - `--collection_name` -> COLLECTION_NAME
+# - `--http_request_verbose` -> HTTP_REQUEST_VERBOSE
 apply_env_alias CONFIG CONFIG_PATH
 apply_env_alias COLLECTION_NAME DB_COLLECTION_NAME
 apply_env_alias HTTP_REQUEST_VERBOSE DEBUG
 
-declare -A valueMap=(
-  [PORT]="value,--port=,2333"
-  [DEMO]="switch,--demo,false"
-  [ALLOWED_ORIGINS]="value,--allowed_origins=,localhost"
-  [CONFIG]="value,--config=,@@NULL@@"
+echo "Starting Mix Space"
+echo "============== Entrypoint =============="
+echo "- PWD: $(pwd)"
+echo "- User: uid=$(id -u) gid=$(id -g)"
+echo "- Node: $(node -v 2>/dev/null || echo '<node not found>')"
+echo "- Args: ${*:-<none>}"
+echo "============== Configurations =============="
 
-  # DB
-  [COLLECTION_NAME]="value,--collection_name=,mx-space"
-  [DB_HOST]="value,--db_host=,127.0.0.1"
-  [DB_PORT]="value,--db_port=,27017"
-  [DB_USER]="value,--db_user=,@@NULL@@"
-  [DB_PASSWORD]="value,--db_password=,@@NULL@@"
-  [DB_OPTIONS]="value,--db_options=,@@NULL@@"
-  [DB_CONNECTION_STRING]="value,--db_connection_string=,@@NULL@@"
+log_kv "Listen Port" "${PORT:-2333}" "$(env_source PORT 2333)"
+log_kv "Allowed Origins" "${ALLOWED_ORIGINS:-localhost}" "$(env_source ALLOWED_ORIGINS localhost)"
+log_kv "Config Path" "${CONFIG:-NULL}" "$(env_source CONFIG NULL)"
 
-  # Redis
-  [REDIS_CONNECTION_STRING]="value,--redis_connection_string=,@@NULL@@"
-  [REDIS_HOST]="value,--redis_host=,127.0.0.1"
-  [REDIS_PORT]="value,--redis_port=,6379"
-  [REDIS_PASSWORD]="value,--redis_password=,@@NULL@@"
-  [DISABLE_CACHE]="switch,--disable_cache,false"
- 
-  # JWT
-  [JWT_SECRET]="value,--jwt_secret=,@@NULL@@"
-  [JWT_EXPIRE]="value,--jwt_expire=,@@NULL@@"
+# Mongo summary (prefer connection strings if present)
+if [ -n "${MONGO_CONNECTION:-}" ]; then
+  log_kv "MongoDB" "$(mask_mongo_password "$MONGO_CONNECTION")" "env:MONGO_CONNECTION"
+elif [ -n "${DB_CONNECTION_STRING:-}" ]; then
+  log_kv "MongoDB" "$(mask_mongo_password "$DB_CONNECTION_STRING")" "env:DB_CONNECTION_STRING"
+else
+  mongo_db="${COLLECTION_NAME:-mx-space}"
+  mongo_host="${DB_HOST:-127.0.0.1}"
+  mongo_port="${DB_PORT:-27017}"
+  mongo_user="${DB_USER:-}"
+  mongo_pass="${DB_PASSWORD:-}"
+  mongo_options="${DB_OPTIONS:-}"
 
-  # Cluster
-  [CLUSTER]="switch,--cluster,false"
-  [CLUSTER_WORKERS]="value,--cluster_workers=,@@NULL@@"
-
-  # Debug
-  [HTTP_REQUEST_VERBOSE]="switch,--http_request_verbose,false"
-  [DEBUG_MEMORY_DUMP]="switch,--debug_memory_dump,false"
-
-  # Cache
-  [CACHE_TTL]="value,--http_cache_ttl=,@@NULL@@"
-  [CACHE_CDN_HEADER]="switch,--http_cache_enable_cdn_header,false"
-  [CACHE_FORCE_HEADER]="switch,--http_cache_enable_force_cache_header,false"
-
-  # Security
-  [ENCRYPT_ENABLE]="switch,--encrypt_enable,false"
-  [ENCRYPT_KEY]="value,--encrypt_key=,@@NULL@@"
-  [ENCRYPT_ALGORITHM]="value,--encrypt_algorithm=,@@NULL@@"
-
-  # Throttle
-  [THROTTLE_TTL]="value,--throttle_ttl=,@@NULL@@"
-  [THROTTLE_LIMIT]="value,--throttle_limit=,@@NULL@@"
-
-  # Color
-  [COLOR]="switch,--color,true"
-)
-
-for key in "${!valueMap[@]}"; do
-  IFS=',' read -ra tuple <<< "${valueMap[$key]}"
-  TYPE=${tuple[0]}
-  CMD_ARG=${tuple[1]}
-  DEFAULT=${tuple[2]}
-
-  if [ "$TYPE" = "value" ]; then
-    set_value $key $CMD_ARG $DEFAULT $@
-  elif [ "$TYPE" = "switch" ]; then
-    set_switch $key $CMD_ARG $DEFAULT $@
+  mongo_auth=""
+  if [ -n "$mongo_user" ] && [ -n "$mongo_pass" ]; then
+    mongo_auth="${mongo_user}:************@"
+  elif [ -n "$mongo_user" ]; then
+    mongo_auth="${mongo_user}@"
   fi
 
-done
+  mongo_uri="mongodb://${mongo_auth}${mongo_host}:${mongo_port}/${mongo_db}"
+  if [ -n "$mongo_options" ]; then
+    mongo_uri="${mongo_uri}?${mongo_options}"
+  fi
 
-# ====================================
+  log_kv "MongoDB" "$mongo_uri" "env:DB_*"
+fi
 
-echo "Starting Mix Space"
+# Redis summary
+if [ -n "${REDIS_CONNECTION_STRING:-}" ]; then
+  log_kv "Redis" "$(mask_redis_password "$REDIS_CONNECTION_STRING")" "env:REDIS_CONNECTION_STRING"
+else
+  redis_host="${REDIS_HOST:-127.0.0.1}"
+  redis_port="${REDIS_PORT:-6379}"
+  redis_pass="${REDIS_PASSWORD:-}"
+  if [ -n "$redis_pass" ]; then
+    log_kv "Redis" "redis://:************@${redis_host}:${redis_port}" "env:REDIS_*"
+  else
+    log_kv "Redis" "redis://${redis_host}:${redis_port}" "env:REDIS_*"
+  fi
+fi
 
+encrypt_enable="$(parse_booleanish "${MX_ENCRYPT_ENABLE:-${ENCRYPT_ENABLE:-}}")"
+if [ -z "$encrypt_enable" ] && [ -n "${MX_ENCRYPT_KEY:-${ENCRYPT_KEY:-}}" ]; then
+  encrypt_enable="true"
+fi
+log_kv "Encryption" "${encrypt_enable:-false}" "env:MX_ENCRYPT_ENABLE/ENCRYPT_ENABLE (+key implies true)"
+log_kv "Encrypt Key" "$(mask_secret_hint "${MX_ENCRYPT_KEY:-${ENCRYPT_KEY:-}}")" "env:MX_ENCRYPT_KEY/ENCRYPT_KEY"
+log_kv "Encrypt Algorithm" "${ENCRYPT_ALGORITHM:-<default>}" "$(env_source ENCRYPT_ALGORITHM '<default>')"
 
-echo "============== Configurations =============="
-echo "Listen Port: $(get_cmd_value "--port=" $command_args)"
-echo "MongoDB: $(get_mongodb_configuration $command_args)"
-echo "Redis: $(get_redis_configuration $command_args)"
-echo "Allowed Origins: $(get_cmd_value "--allowed_origins=" $command_args)"
-echo "Config Path: $(if [ -z "$(get_cmd_value "--config=" $command_args)" ]; then echo "NULL"; else echo "$(get_cmd_value "--config=" $command_args)"; fi)"
-echo "Encryption: $(get_boolean_str $(is_in_cmd "--encrypt_enable" $command_args))"
-echo "Cluster: $(get_boolean_str $(is_in_cmd "--cluster" $command_args))"
+cluster_enable="$(parse_booleanish "${CLUSTER:-}")"
+log_kv "Cluster" "${cluster_enable:-false}" "$(env_source CLUSTER false)"
+log_kv "Cluster Workers" "${CLUSTER_WORKERS:-<auto>}" "$(env_source CLUSTER_WORKERS '<auto>')"
+
+log_kv "Disable Cache" "$(parse_booleanish "${DISABLE_CACHE:-}")" "$(env_source DISABLE_CACHE false)"
+
+log_kv "HTTP Request Verbose" "$(parse_booleanish "${HTTP_REQUEST_VERBOSE:-}")" "$(env_source HTTP_REQUEST_VERBOSE false)"
+log_kv "Debug Memory Dump" "$(parse_booleanish "${DEBUG_MEMORY_DUMP:-${MX_DEBUG_MEMORY_DUMP:-}}")" "env:DEBUG_MEMORY_DUMP/MX_DEBUG_MEMORY_DUMP"
+
+log_kv "JWT Secret" "$(mask_secret_hint "${JWT_SECRET:-${JWTSECRET:-}}")" "env:JWT_SECRET/JWTSECRET"
+log_kv "JWT Expire(d)" "${JWT_EXPIRE:-<default>}" "$(env_source JWT_EXPIRE '<default>')"
+
+log_kv "Throttle TTL" "${THROTTLE_TTL:-<default>}" "$(env_source THROTTLE_TTL '<default>')"
+log_kv "Throttle Limit" "${THROTTLE_LIMIT:-<default>}" "$(env_source THROTTLE_LIMIT '<default>')"
+
+log_kv "HTTP Cache TTL" "${CACHE_TTL:-<default>}" "$(env_source CACHE_TTL '<default>')"
+log_kv "CDN Cache Header" "${CDN_CACHE_HEADER:-<unset>}" "$(env_source CDN_CACHE_HEADER '<unset>')"
+log_kv "Force Cache Header" "${FORCE_CACHE_HEADER:-<unset>}" "$(env_source FORCE_CACHE_HEADER '<unset>')"
+
+log_kv "Disable Telemetry" "$(parse_booleanish "${MX_DISABLE_TELEMETRY:-}")" "$(env_source MX_DISABLE_TELEMETRY false)"
+
 echo "============================================"
 
-command="node main.mjs $command_args"
+# Allow overriding the container command, e.g. `docker run ... bash`
+if [ "${1:-}" != "" ] && [[ "${1:-}" != -* ]]; then
+  echo "Exec: $*"
+  exec "$@"
+fi
 
-exec $command
+echo "Exec: node main.mjs ${*:-<none>}"
+exec node main.mjs "$@"
