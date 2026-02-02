@@ -234,6 +234,17 @@ export const CROSS_DOMAIN = {
 }
 
 const customConnectionString = argv.db_connection_string || MONGO_CONNECTION
+
+function buildMongoConnectionString(
+  connectionString: string,
+  dbName: string,
+): string {
+  const url = new URL(connectionString)
+  // Replace or set the pathname to the database name
+  url.pathname = `/${dbName}`
+  return url.toString()
+}
+
 export const MONGO_DB = {
   dbName: argv.collection_name || 'mx-space',
   host: argv.db_host || '127.0.0.1',
@@ -250,7 +261,7 @@ export const MONGO_DB = {
   },
   get customConnectionString() {
     return customConnectionString
-      ? `${customConnectionString}/${this.dbName}`
+      ? buildMongoConnectionString(customConnectionString, this.dbName)
       : undefined
   },
 }
