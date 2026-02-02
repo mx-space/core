@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [9.6.2](https://github.com/mx-space/core/compare/v9.6.1...v9.6.2) (2026-02-02)
+
+
+### Bug Fixes
+
+* **entrypoint:** improve Redis connection string handling and logging ([23abde6](https://github.com/mx-space/core/commit/23abde69111c1a38699f6bb3d506e80dcfb74e04))
+
+
+### Features
+
+* **mongo:** enhance custom MongoDB connection string handling ([e0e4f24](https://github.com/mx-space/core/commit/e0e4f2498e793b8716424608ed6f49de3c8f0261))
+
+
+
 ## [9.6.1](https://github.com/mx-space/core/compare/v9.6.0...v9.6.1) (2026-02-02)
 
 
