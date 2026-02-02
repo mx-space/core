@@ -19,6 +19,7 @@ import dayjs from 'dayjs'
 import removeMdCodeblock from 'remove-md-codeblock'
 import { ConfigsService } from '../../configs/configs.service'
 import type { NoteModel } from '../../note/note.model'
+import type { PageModel } from '../../page/page.model'
 import type { PostModel } from '../../post/post.model'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
@@ -49,7 +50,7 @@ interface ArticleContent {
   meta?: { lang?: string }
 }
 
-type ArticleDocument = PostModel | NoteModel
+type ArticleDocument = PostModel | NoteModel | PageModel
 
 type ArticleEventDocument = ArticleDocument & {
   _id?: { toString?: () => string } | string
@@ -60,9 +61,10 @@ type ArticleEventPayload = ArticleEventDocument | { data: string }
 type GlobalArticle =
   | { document: PostModel; type: CollectionRefTypes.Post }
   | { document: NoteModel; type: CollectionRefTypes.Note }
+  | { document: PageModel; type: CollectionRefTypes.Page }
   | {
       document: unknown
-      type: CollectionRefTypes.Page | CollectionRefTypes.Recently
+      type: CollectionRefTypes.Recently
     }
 
 @Injectable()
@@ -221,6 +223,9 @@ export class AiTranslationService implements OnModuleInit {
     for (const note of articles.notes) {
       articleMap.set(note.id, { title: note.title, type: 'Note' })
     }
+    for (const page of articles.pages) {
+      articleMap.set(page.id, { title: page.title, type: 'Page' })
+    }
 
     const createdTaskIds: string[] = []
 
@@ -297,8 +302,11 @@ export class AiTranslationService implements OnModuleInit {
     const noteModel = this.databaseService.getModelByRefType(
       CollectionRefTypes.Note,
     )
+    const pageModel = this.databaseService.getModelByRefType(
+      CollectionRefTypes.Page,
+    )
 
-    const [posts, notes] = await Promise.all([
+    const [posts, notes, pages] = await Promise.all([
       postModel
         .find({ isPublished: { $ne: false } })
         .select('_id title')
@@ -311,6 +319,7 @@ export class AiTranslationService implements OnModuleInit {
         })
         .select('_id title')
         .lean(),
+      pageModel.find().select('_id title').lean(),
     ])
 
     // Build article info map
@@ -320,6 +329,9 @@ export class AiTranslationService implements OnModuleInit {
     }
     for (const note of notes) {
       articleMap.set(note._id.toString(), { title: note.title, type: 'Note' })
+    }
+    for (const page of pages) {
+      articleMap.set(page._id.toString(), { title: page.title, type: 'Page' })
     }
 
     const allArticleIds = Array.from(articleMap.keys())
@@ -443,6 +455,12 @@ export class AiTranslationService implements OnModuleInit {
     return article.type === CollectionRefTypes.Note
   }
 
+  private isPageArticle(
+    article: GlobalArticle,
+  ): article is { type: CollectionRefTypes.Page; document: PageModel } {
+    return article.type === CollectionRefTypes.Page
+  }
+
   private isArticleVisible(article: GlobalArticle): boolean {
     if (this.isPostArticle(article)) {
       return article.document.isPublished !== false
@@ -458,6 +476,10 @@ export class AiTranslationService implements OnModuleInit {
       return true
     }
 
+    if (this.isPageArticle(article)) {
+      return true
+    }
+
     return false
   }
 
@@ -466,17 +488,17 @@ export class AiTranslationService implements OnModuleInit {
    */
   private async resolveArticleForTranslation(articleId: string): Promise<{
     document: ArticleDocument
-    type: CollectionRefTypes.Post | CollectionRefTypes.Note
+    type:
+      | CollectionRefTypes.Post
+      | CollectionRefTypes.Note
+      | CollectionRefTypes.Page
   }> {
     const article = await this.databaseService.findGlobalById(articleId)
     if (!article || !article.document) {
       throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
     }
 
-    if (
-      article.type === CollectionRefTypes.Recently ||
-      article.type === CollectionRefTypes.Page
-    ) {
+    if (article.type === CollectionRefTypes.Recently) {
       throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
     }
 
@@ -905,8 +927,11 @@ export class AiTranslationService implements OnModuleInit {
       const noteModel = this.databaseService.getModelByRefType(
         CollectionRefTypes.Note,
       )
+      const pageModel = this.databaseService.getModelByRefType(
+        CollectionRefTypes.Page,
+      )
 
-      const [matchedPosts, matchedNotes] = await Promise.all([
+      const [matchedPosts, matchedNotes, matchedPages] = await Promise.all([
         postModel
           .find({ title: { $regex: keyword, $options: 'i' } })
           .select('_id')
@@ -915,11 +940,16 @@ export class AiTranslationService implements OnModuleInit {
           .find({ title: { $regex: keyword, $options: 'i' } })
           .select('_id')
           .lean(),
+        pageModel
+          .find({ title: { $regex: keyword, $options: 'i' } })
+          .select('_id')
+          .lean(),
       ])
 
       matchedRefIds = [
         ...matchedPosts.map((p) => p._id.toString()),
         ...matchedNotes.map((n) => n._id.toString()),
+        ...matchedPages.map((p) => p._id.toString()),
       ]
 
       if (matchedRefIds.length === 0) {
@@ -1006,6 +1036,13 @@ export class AiTranslationService implements OnModuleInit {
         title: a.title,
         id: a.id,
         type: CollectionRefTypes.Post,
+      }
+    }
+    for (const a of articles.pages) {
+      articleMap[a.id] = {
+        title: a.title,
+        id: a.id,
+        type: CollectionRefTypes.Page,
       }
     }
 
@@ -1228,6 +1265,7 @@ export class AiTranslationService implements OnModuleInit {
 
   @OnEvent(BusinessEvents.POST_DELETE)
   @OnEvent(BusinessEvents.NOTE_DELETE)
+  @OnEvent(BusinessEvents.PAGE_DELETE)
   async handleDeleteArticle(event: ArticleEventPayload) {
     const id = this.extractIdFromEvent(event)
     if (!id) return
@@ -1236,6 +1274,7 @@ export class AiTranslationService implements OnModuleInit {
 
   @OnEvent(BusinessEvents.POST_CREATE)
   @OnEvent(BusinessEvents.NOTE_CREATE)
+  @OnEvent(BusinessEvents.PAGE_CREATE)
   async handleCreateArticle(event: ArticleEventPayload) {
     const aiConfig = await this.configService.get('ai')
 
@@ -1278,6 +1317,7 @@ export class AiTranslationService implements OnModuleInit {
 
   @OnEvent(BusinessEvents.POST_UPDATE)
   @OnEvent(BusinessEvents.NOTE_UPDATE)
+  @OnEvent(BusinessEvents.PAGE_UPDATE)
   async handleUpdateArticle(event: ArticleEventPayload) {
     const aiConfig = await this.configService.get('ai')
     if (
