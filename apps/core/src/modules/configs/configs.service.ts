@@ -19,6 +19,7 @@ import { generateDefaultConfig } from './configs.default'
 import {
   decryptObject,
   encryptObject,
+  removeEmptyEncryptedFields,
   sanitizeConfigForResponse,
 } from './configs.encrypt.util'
 import { configDtoMapping, IConfig } from './configs.interface'
@@ -203,6 +204,9 @@ export class ConfigsService {
     value: Partial<IConfig[T]>,
   ) {
     value = camelcaseKeys(value) as any
+    value = removeEmptyEncryptedFields(value as object, key) as Partial<
+      IConfig[T]
+    >
 
     if (key === 'ai') {
       value = await this.hydrateAiProviderApiKeys(value as any)

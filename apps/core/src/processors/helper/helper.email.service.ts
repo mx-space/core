@@ -152,16 +152,16 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
           }
         } else {
           const { smtp } = mailOptions
-          const { user, pass, options } = smtp || {}
+          const { user, pass, host, port, secure } = smtp || {}
           if (!user && !pass) {
             const message = '未启动邮件通知'
             this.logger.warn(message)
             return
           }
           this.instance = createTransport({
-            host: options?.host || '',
-            port: Number.parseInt((options?.port as any) || '465'),
-            secure: options?.secure,
+            host: host || '',
+            port: Number.parseInt((port as any) || '465'),
+            secure,
             auth: { user, pass },
             tls: {
               rejectUnauthorized: false,

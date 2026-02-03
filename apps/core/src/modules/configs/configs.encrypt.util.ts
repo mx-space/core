@@ -316,3 +316,48 @@ export const sanitizeConfigForResponse = <T extends object>(
 
   return result
 }
+
+/**
+ * Remove empty string values from encrypted fields
+ * This prevents empty values from overwriting existing encrypted data during merge
+ */
+export const removeEmptyEncryptedFields = <T extends object>(
+  target: T,
+  prefix = '',
+): T => {
+  const result = { ...target }
+  const keys = Object.keys(result)
+
+  for (const key of keys) {
+    const currentPath = prefix ? `${prefix}.${key}` : key
+    const value = (result as any)[key]
+
+    if (Array.isArray(value)) {
+      ;(result as any)[key] = value
+        .map((item, i) => {
+          const itemPath = `${currentPath}.${i}`
+          if (isObject(item) && !isArrayLike(item)) {
+            return removeEmptyEncryptedFields(item, itemPath)
+          } else if (
+            typeof item === 'string' &&
+            item === '' &&
+            isEncryptedPath(itemPath)
+          ) {
+            return undefined
+          }
+          return item
+        })
+        .filter((item) => item !== undefined)
+    } else if (isObject(value) && !isArrayLike(value)) {
+      ;(result as any)[key] = removeEmptyEncryptedFields(value, currentPath)
+    } else if (
+      typeof value === 'string' &&
+      value === '' &&
+      isEncryptedPath(currentPath)
+    ) {
+      delete (result as any)[key]
+    }
+  }
+
+  return result
+}

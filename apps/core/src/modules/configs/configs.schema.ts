@@ -24,30 +24,21 @@ export class UrlDto extends createZodDto(UrlSchema) {}
 export type UrlConfig = z.infer<typeof UrlSchema>
 
 // ==================== Mail Options ====================
-const SmtpOptionsSchema = z.object({
-  port: field.number(
-    z.preprocess(
-      (val) => (val ? Number(val) : val),
-      z.number().int().optional(),
-    ),
-    'SMTP 端口',
-    { 'ui:options': { halfGrid: true } },
-  ),
-  host: field.halfGrid(
-    z.url({ message: 'host must be a valid URL' }).optional().or(z.literal('')),
-    'SMTP 主机',
-  ),
-  secure: field.toggle(z.boolean().optional(), '使用 SSL/TLS'),
-})
-
 const SmtpConfigSchema = withMeta(
   z
     .object({
       user: field.halfGrid(z.string().optional(), 'SMTP 用户名'),
       pass: field.passwordHalfGrid(z.string().min(1).optional(), 'SMTP 密码'),
-      options: withMeta(SmtpOptionsSchema.optional(), {
-        'ui:options': { connect: true },
-      }),
+      host: field.halfGrid(z.string().optional(), 'SMTP 主机'),
+      port: field.number(
+        z.preprocess(
+          (val) => (val ? Number(val) : val),
+          z.number().int().optional(),
+        ),
+        'SMTP 端口',
+        { 'ui:options': { halfGrid: true } },
+      ),
+      secure: field.toggle(z.boolean().optional(), '使用 SSL/TLS'),
     })
     .optional(),
   {
