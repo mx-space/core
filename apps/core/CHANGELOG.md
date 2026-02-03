@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [9.6.3](https://github.com/mx-space/core/compare/v9.6.2...v9.6.3) (2026-02-03)
+
+
+### Bug Fixes
+
+* **ai:** use Tool Calling instead of response_format for structured output ([3c09a82](https://github.com/mx-space/core/commit/3c09a82e118ad1c4a8b4623627e90f7b5c95f76f)), closes [#2575](https://github.com/mx-space/core/issues/2575)
+
+
+### Features
+
+* **ai-translation:** extend article handling to include PageModel ([e8166b6](https://github.com/mx-space/core/commit/e8166b6f1d812f96f8f306124b88ae1cb5cd1395))
+* **ai:** add comment review endpoint and enhance AI configuration options ([6101bc9](https://github.com/mx-space/core/commit/6101bc944fa092c224dffd84e55596a698020a19))
+* **migration:** add v9.6.3 migration and enhance SMTP options handling ([a1a0b30](https://github.com/mx-space/core/commit/a1a0b302a2906ef79d82ea96aa9bafd7586304cb))
+* **page:** enhance language handling and translation integration in PageController ([5a749ba](https://github.com/mx-space/core/commit/5a749ba51b19cab058df589e15abf6b1131daf44))
+
+
+
 ## [9.6.2](https://github.com/mx-space/core/compare/v9.6.1...v9.6.2) (2026-02-02)
 
 
