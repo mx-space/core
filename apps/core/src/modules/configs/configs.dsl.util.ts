@@ -12,6 +12,7 @@ export type UIComponent =
   | 'switch'
   | 'select'
   | 'tags'
+  | 'action'
 
 export interface UIConfig {
   component: UIComponent
@@ -24,6 +25,18 @@ export interface UIConfig {
    * When the condition is not met, the field and all its nested children are hidden.
    */
   showWhen?: Record<string, string | string[]>
+  /**
+   * Action button configuration (only used when component is 'action')
+   */
+  actionId?: string
+  actionLabel?: string
+  actionVariant?:
+    | 'default'
+    | 'primary'
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'error'
 }
 
 export interface FormField {
@@ -164,6 +177,7 @@ function inferUIComponent(
   if (uiOptions?.type === 'password') return 'password'
   if (uiOptions?.type === 'textarea') return 'textarea'
   if (uiOptions?.type === 'select') return 'select'
+  if (uiOptions?.type === 'action') return 'action'
 
   const unwrapped = unwrapZodType(schema)
 
@@ -263,6 +277,18 @@ function extractField(key: string, schema: z.ZodTypeAny): FormField {
     const options = getSelectOptions(schema, effectiveMeta)
     if (options) {
       field.ui.options = options
+    }
+  }
+
+  if (component === 'action') {
+    if (uiOptions?.actionId) {
+      field.ui.actionId = uiOptions.actionId
+    }
+    if (uiOptions?.actionLabel) {
+      field.ui.actionLabel = uiOptions.actionLabel
+    }
+    if (uiOptions?.actionVariant) {
+      field.ui.actionVariant = uiOptions.actionVariant
     }
   }
 

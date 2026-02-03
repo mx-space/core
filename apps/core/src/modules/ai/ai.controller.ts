@@ -4,6 +4,8 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { ConfigsService } from '../configs/configs.service'
+import { AI_PROMPTS } from './ai.prompts'
+import { AiService } from './ai.service'
 import { AIProviderType } from './ai.types'
 import type { IModelRuntime, ModelInfo } from './runtime'
 import { createModelRuntime, createRuntimeForModelList } from './runtime'
@@ -31,9 +33,17 @@ interface TestConnectionDto {
   model?: string
 }
 
+interface TestCommentReviewDto {
+  text: string
+  author?: string
+}
+
 @ApiController('ai')
 export class AiController {
-  constructor(private readonly configsService: ConfigsService) {}
+  constructor(
+    private readonly configsService: ConfigsService,
+    private readonly aiService: AiService,
+  ) {}
 
   @Get('/models')
   @Auth()
@@ -148,6 +158,79 @@ export class AiController {
       throw new BizException(
         ErrorCodeEnum.AIException,
         error?.message || 'AI test failed',
+      )
+    }
+  }
+
+  @Post('/comment-review/test')
+  @Auth()
+  async testCommentReview(
+    @Body() body: TestCommentReviewDto,
+  ): Promise<{ isSpam: boolean; score?: number; reason?: string }> {
+    const { text } = body
+
+    if (!text?.trim()) {
+      throw new BizException(
+        ErrorCodeEnum.ContentNotFoundCantProcess,
+        'Comment text is required',
+      )
+    }
+
+    const commentConfig = await this.configsService.get('commentOptions')
+    if (!commentConfig.aiReview) {
+      throw new BizException(
+        ErrorCodeEnum.AINotEnabled,
+        'AI review is not enabled',
+      )
+    }
+
+    try {
+      const runtime = await this.aiService.getCommentReviewModel()
+
+      const reviewType = commentConfig.aiReviewType || 'binary'
+      const threshold = commentConfig.aiReviewThreshold || 5
+
+      if (reviewType === 'score') {
+        const promptConfig = AI_PROMPTS.comment.score(text)
+        const result = await runtime.generateStructured({
+          ...promptConfig,
+        })
+
+        const isSpam =
+          result.output.score >= threshold ||
+          result.output.hasSensitiveContent === true
+
+        return {
+          isSpam,
+          score: result.output.score,
+          reason: result.output.hasSensitiveContent
+            ? '包含敏感内容'
+            : isSpam
+              ? `评分 ${result.output.score} 超过阈值 ${threshold}`
+              : undefined,
+        }
+      } else {
+        const promptConfig = AI_PROMPTS.comment.spam(text)
+        const result = await runtime.generateStructured({
+          ...promptConfig,
+        })
+
+        const isSpam =
+          result.output.isSpam || result.output.hasSensitiveContent === true
+
+        return {
+          isSpam,
+          reason: result.output.hasSensitiveContent
+            ? '包含敏感内容'
+            : result.output.isSpam
+              ? '判定为垃圾评论'
+              : undefined,
+        }
+      }
+    } catch (error: any) {
+      throw new BizException(
+        ErrorCodeEnum.AIException,
+        error?.message || 'AI comment review test failed',
       )
     }
   }

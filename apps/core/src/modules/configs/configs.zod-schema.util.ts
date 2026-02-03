@@ -4,7 +4,7 @@ import { z } from 'zod'
  * UI Options for JSON Schema form rendering
  */
 export interface UIOptions {
-  type?: 'password' | 'textarea' | 'select' | 'hidden'
+  type?: 'password' | 'textarea' | 'select' | 'hidden' | 'action'
   halfGrid?: boolean
   hide?: boolean
   connect?: boolean
@@ -16,6 +16,18 @@ export interface UIOptions {
    * @example { provider: ['smtp', 'sendgrid'] } - show when provider equals any of these
    */
   showWhen?: Record<string, string | string[]>
+  /**
+   * Action button configuration (only used when type is 'action')
+   */
+  actionId?: string
+  actionLabel?: string
+  actionVariant?:
+    | 'default'
+    | 'primary'
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'error'
 }
 
 /**
@@ -147,6 +159,34 @@ export const field = {
     withMeta(schema, {
       title,
       'ui:options': { type: 'hidden' },
+    }),
+
+  action: (
+    title: string,
+    actionId: string,
+    options?: {
+      description?: string
+      actionLabel?: string
+      actionVariant?:
+        | 'default'
+        | 'primary'
+        | 'info'
+        | 'success'
+        | 'warning'
+        | 'error'
+      showWhen?: Record<string, string | string[]>
+    },
+  ) =>
+    withMeta(z.literal('__action__').optional(), {
+      title,
+      description: options?.description,
+      'ui:options': {
+        type: 'action',
+        actionId,
+        actionLabel: options?.actionLabel || title,
+        actionVariant: options?.actionVariant,
+        showWhen: options?.showWhen,
+      },
     }),
 }
 

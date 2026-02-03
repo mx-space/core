@@ -104,6 +104,11 @@ export const CommentOptionsSchema = section('评论设置', {
     'AI 审核阈值',
     { description: '分数大于多少时会被归类为垃圾评论，范围为 1-10, 默认为 5' },
   ),
+  testAiReview: field.action('测试 AI 审核', 'test-ai-review', {
+    description: '输入测试内容，验证 AI 审核功能是否正常工作',
+    actionLabel: '测试',
+    showWhen: { aiReview: 'true' },
+  }),
   disableComment: field.toggle(z.boolean().optional(), '全站禁止评论', {
     description: '敏感时期专用',
   }),
