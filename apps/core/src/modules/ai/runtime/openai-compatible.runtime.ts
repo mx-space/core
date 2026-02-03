@@ -117,40 +117,78 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
         ? reasoningEffort
         : undefined
 
-    return this.withRetry(async () => {
-      const response = await this.client.chat.completions.create({
-        model: this.providerInfo.model,
-        messages,
-        temperature,
-        max_tokens: maxTokens,
-        reasoning_effort: openaiReasoningEffort,
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: 'response',
-            strict: true,
-            schema: jsonSchema,
+    const toolConfig = {
+      tools: [
+        {
+          type: 'function' as const,
+          function: {
+            name: 'structured_output',
+            description: 'Generate structured output based on the given schema',
+            parameters: jsonSchema,
           },
         },
-      } as OpenAI.ChatCompletionCreateParamsNonStreaming)
+      ],
+      tool_choice: {
+        type: 'function' as const,
+        function: { name: 'structured_output' },
+      },
+    }
 
-      const content = response.choices[0]?.message?.content
-      if (!content) {
-        throw new Error('No content in response')
+    return this.withRetry(async () => {
+      // Some models may output thinking content before calling the tool
+      // Loop until we get a tool call or reach max iterations
+      const maxIterations = 5
+      const conversationMessages = [...messages]
+      const totalUsage = {
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
       }
 
-      const parsed = JSON.parse(content) as z.infer<T>
+      for (let i = 0; i < maxIterations; i++) {
+        const response = await this.client.chat.completions.create({
+          model: this.providerInfo.model,
+          messages: conversationMessages,
+          temperature,
+          max_tokens: maxTokens,
+          reasoning_effort: openaiReasoningEffort,
+          ...toolConfig,
+        } as OpenAI.ChatCompletionCreateParamsNonStreaming)
 
-      return {
-        output: parsed,
-        usage: response.usage
-          ? {
-              promptTokens: response.usage.prompt_tokens,
-              completionTokens: response.usage.completion_tokens,
-              totalTokens: response.usage.total_tokens,
-            }
-          : undefined,
+        if (response.usage) {
+          totalUsage.promptTokens += response.usage.prompt_tokens
+          totalUsage.completionTokens += response.usage.completion_tokens
+          totalUsage.totalTokens += response.usage.total_tokens
+        }
+
+        const message = response.choices[0]?.message
+        const toolCall = message?.tool_calls?.[0] as
+          | { type: 'function'; function: { name: string; arguments: string } }
+          | undefined
+
+        if (toolCall?.function.name === 'structured_output') {
+          const parsed = JSON.parse(toolCall.function.arguments) as z.infer<T>
+          return {
+            output: parsed,
+            usage: totalUsage.totalTokens > 0 ? totalUsage : undefined,
+          }
+        }
+
+        // No tool call yet, append assistant message and continue
+        if (message?.content) {
+          conversationMessages.push({
+            role: 'assistant',
+            content: message.content,
+          })
+        } else {
+          // No content and no tool call, something is wrong
+          throw new Error('No tool call or content in response')
+        }
       }
+
+      throw new Error(
+        `Failed to get structured output after ${maxIterations} iterations`,
+      )
     }, maxRetries)
   }
 
