@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [9.7.0](https://github.com/mx-space/core/compare/v9.6.3...v9.7.0) (2026-02-04)
+
+
+### Features
+
+* **cron-task:** implement cron task module with business logic and scheduling ([6926e77](https://github.com/mx-space/core/commit/6926e7745c8ec9d470d7a6fd17990cf35be96e34))
+
+
+
 ## [9.6.3](https://github.com/mx-space/core/compare/v9.6.2...v9.6.3) (2026-02-03)
 
 
