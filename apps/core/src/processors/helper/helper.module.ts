@@ -12,7 +12,6 @@ import { PostModule } from '~/modules/post/post.module'
 import { AssetService } from './helper.asset.service'
 import { BarkPushService } from './helper.bark.service'
 import { CountingService } from './helper.counting.service'
-import { CronService } from './helper.cron.service'
 import { EmailService } from './helper.email.service'
 import { EventManagerService } from './helper.event.service'
 import { HttpService } from './helper.http.service'
@@ -29,7 +28,6 @@ const providers: Provider<any>[] = [
   AssetService,
   BarkPushService,
   CountingService,
-  CronService,
   EmailService,
   EventManagerService,
   HttpService,

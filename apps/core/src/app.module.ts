@@ -29,6 +29,7 @@ import { BackupModule } from './modules/backup/backup.module'
 import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
+import { CronTaskModule } from './modules/cron-task/cron-task.module'
 import { DebugModule } from './modules/debug/debug.module'
 import { DependencyModule } from './modules/dependency/dependency.module'
 import { DraftModule } from './modules/draft/draft.module'
@@ -87,6 +88,7 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
     CategoryModule,
     CommentModule,
     ConfigsModule,
+    CronTaskModule,
 
     DependencyModule,
     DraftModule,
