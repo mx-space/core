@@ -16,7 +16,6 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import { md5 } from '~/utils/tool.util'
 import dayjs from 'dayjs'
-import removeMdCodeblock from 'remove-md-codeblock'
 import { ConfigsService } from '../../configs/configs.service'
 import type { NoteModel } from '../../note/note.model'
 import type { PageModel } from '../../page/page.model'
@@ -582,17 +581,12 @@ export class AiTranslationService implements OnModuleInit {
         articleId,
         targetLang,
         title: content.title,
-        text: this.serializeText(content.text),
+        text: content.text,
         summary: content.summary ?? null,
         tags: content.tags ?? null,
       }),
     )
   }
-
-  private serializeText(text: string): string {
-    return removeMdCodeblock(text)
-  }
-
   private async translateContentStream(
     content: ArticleContent,
     targetLang: string,
@@ -612,7 +606,7 @@ export class AiTranslationService implements OnModuleInit {
     const { systemPrompt, prompt, reasoningEffort } =
       AI_PROMPTS.translationStream(targetLang, {
         title: content.title,
-        text: this.serializeText(content.text),
+        text: content.text,
         summary: content.summary ?? undefined,
         tags: content.tags,
       })
