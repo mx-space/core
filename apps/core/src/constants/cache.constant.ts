@@ -26,8 +26,6 @@ export enum RedisKeys {
   /** 函数编译缓存 */
   FunctionComplieCache = 'function_complie_cache',
 
-  Authn = 'authn',
-
   Socket = 'socket',
 
   AnalyzeAggregate = 'analyze_aggregate',

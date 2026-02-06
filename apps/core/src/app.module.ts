@@ -24,7 +24,6 @@ import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AiModule } from './modules/ai/ai.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
-import { AuthnModule } from './modules/authn/auth.module'
 import { BackupModule } from './modules/backup/backup.module'
 import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
@@ -82,7 +81,6 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
     AggregateModule,
     AnalyzeModule,
     AuthModule.forRoot(),
-    AuthnModule,
     BackupModule,
     BizHelperModule,
     CategoryModule,

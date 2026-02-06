@@ -9,7 +9,6 @@ export const SESSION_COLLECTION_NAME = 'sessions'
 /// biz
 export const ACTIVITY_COLLECTION_NAME = 'activities'
 export const ANALYZE_COLLECTION_NAME = 'analyzes'
-export const AUTHN_COLLECTION_NAME = 'authns'
 export const CATEGORY_COLLECTION_NAME = 'categories'
 export const COMMENT_COLLECTION_NAME = 'comments'
 export const DRAFT_COLLECTION_NAME = 'drafts'

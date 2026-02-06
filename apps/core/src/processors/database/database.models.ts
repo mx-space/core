@@ -2,7 +2,6 @@ import { ActivityModel } from '~/modules/activity/activity.model'
 import { AISummaryModel } from '~/modules/ai/ai-summary/ai-summary.model'
 import { AITranslationModel } from '~/modules/ai/ai-translation/ai-translation.model'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
-import { AuthnModel } from '~/modules/authn/authn.model'
 import { CategoryModel } from '~/modules/category/category.model'
 import { CommentModel } from '~/modules/comment/comment.model'
 import { OptionModel } from '~/modules/configs/configs.model'
@@ -32,7 +31,6 @@ export const databaseModels = [
   AISummaryModel,
   AITranslationModel,
   AnalyzeModel,
-  AuthnModel,
   CategoryModel,
   CommentModel,
   DraftModel,
