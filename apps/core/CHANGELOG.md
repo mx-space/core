@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [10.0.0-alpha.0](https://github.com/mx-space/core/compare/v9.7.0...v10.0.0-alpha.0) (2026-02-06)
+
+
+### Bug Fixes
+
+* **ip-query:** update IP API endpoint and response handling ([fa641a5](https://github.com/mx-space/core/commit/fa641a5e31d59a9bfbf6fdaac354ba010dd422c1))
+* **migration:** skip v9.7.5 migration when readers collection does not exist ([db4de1f](https://github.com/mx-space/core/commit/db4de1ff04f02f945b85723095d859ad5588c7ad))
+
+
+### Features
+
+* add lightweight /reading/top endpoint and optimize /reading/rank ([50fb01d](https://github.com/mx-space/core/commit/50fb01d69e72224dcc1e3e37de65752ae5168f46))
+
+
+
 # [9.7.0](https://github.com/mx-space/core/compare/v9.6.3...v9.7.0) (2026-02-04)
 
 
