@@ -1,7 +1,9 @@
-import { UserService } from '~/modules/user/user.service'
+import { OwnerService } from '~/modules/owner/owner.service'
 import { defineProvider } from 'test/helper/defineProvider'
 
 export const userProvider = defineProvider({
-  provide: UserService,
+  provide: OwnerService,
   useValue: {},
 })
+
+export const ownerProvider = userProvider

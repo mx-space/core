@@ -155,6 +155,7 @@
     "@types/semver": "7.7.1",
     "@types/ua-parser-js": "0.7.39",
     "@types/validator": "13.15.10",
+    "@vitest/coverage-v8": "^4.0.18",
     "ioredis": "5.9.2",
     "mongodb-memory-server": "^11.0.1",
     "redis-memory-server": "^0.15.0",

@@ -16,7 +16,7 @@ import { LinkService } from '~/modules/link/link.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { gatewayProviders } from 'test/mock/modules/gateway.mock'
-import { userProvider } from 'test/mock/modules/user.mock'
+import { ownerProvider } from 'test/mock/modules/user.mock'
 import { emailProvider } from 'test/mock/processors/email.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 
@@ -33,7 +33,7 @@ describe('Test LinkController(E2E)', async () => {
       emailProvider,
       HttpService,
 
-      userProvider,
+      ownerProvider,
       await createRedisProvider(),
       ConfigsService,
       ...eventEmitterProvider,

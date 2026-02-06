@@ -6,7 +6,6 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { UserService } from '~/modules/user/user.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
@@ -36,7 +35,6 @@ describe('Test ConfigsService', () => {
           provide: getModelToken(OptionModel.name),
           useValue: optionModel,
         },
-        { provide: UserService, useValue: {} },
         {
           provide: RedisService,
           useValue: redisService$,

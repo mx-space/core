@@ -382,6 +382,9 @@ importers:
       '@types/validator':
         specifier: 13.15.10
         version: 13.15.10
+      '@vitest/coverage-v8':
+        specifier: ^4.0.18
+        version: 4.0.18(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.0.10)(jiti@2.6.0)(terser@5.44.1)(yaml@2.8.1))
       ioredis:
         specifier: 5.9.2
         version: 5.9.2
@@ -701,6 +704,11 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
+  '@babel/parser@7.29.0':
+    resolution: {integrity: sha512-IyDgFV5GeDUVX4YdF/3CPULtVGSXXMLh1xVIgdCgxApktqnQV0r7/8Nqthg+8YLGaAtdyIlo2qIdZrbCv4+7ww==}
+    engines: {node: '>=6.0.0'}
+    hasBin: true
+
   '@babel/parser@8.0.0-beta.4':
     resolution: {integrity: sha512-fBcUqUN3eenLyg25QFkOwY1lmV6L0RdG92g6gxyS2CVCY8kHdibkQz1+zV3bLzxcvNnfHoi3i9n5Dci+g93acg==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -752,9 +760,17 @@ packages:
     resolution: {integrity: sha512-0ZrskXVEHSWIqZM/sQZ4EV3jZJXRkio/WCxaqKZP1g//CEWEPSfeZFcms4XeKBCHU0ZKnIkdJeU/kF+eRp5lBg==}
     engines: {node: '>=6.9.0'}
 
+  '@babel/types@7.29.0':
+    resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
+    engines: {node: '>=6.9.0'}
+
   '@babel/types@8.0.0-beta.4':
     resolution: {integrity: sha512-xjk2xqYp25ePzAs0I08hN2lrbUDDQFfCjwq6MIEa8HwHa0WK8NfNtdvtXod8Ku2CbE1iui7qwWojGvjQiyrQeA==}
     engines: {node: ^20.19.0 || >=22.12.0}
+
+  '@bcoe/v8-coverage@1.0.2':
+    resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
+    engines: {node: '>=18'}
 
   '@better-auth/core@1.4.18':
     resolution: {integrity: sha512-q+awYgC7nkLEBdx2sW0iJjkzgSHlIxGnOpsN1r/O1+a4m7osJNHtfK2mKJSL1I+GfNyIlxJF8WvD/NLuYMpmcg==}
@@ -3018,6 +3034,15 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@vitest/coverage-v8@4.0.18':
+    resolution: {integrity: sha512-7i+N2i0+ME+2JFZhfuz7Tg/FqKtilHjGyGvoHYQ6iLV0zahbsJ9sljC9OcFcPDbhYKCet+sG8SsVqlyGvPflZg==}
+    peerDependencies:
+      '@vitest/browser': 4.0.18
+      vitest: 4.0.18
+    peerDependenciesMeta:
+      '@vitest/browser':
+        optional: true
+
   '@vitest/expect@4.0.18':
     resolution: {integrity: sha512-8sCWUyckXXYvx4opfzVY03EOiYVxyNrHS5QxX3DAIi5dpJAAkyJezHCP77VMX4HKA2LDT/Jpfo8i2r5BE3GnQQ==}
 
@@ -3270,6 +3295,9 @@ packages:
   ast-kit@3.0.0-beta.1:
     resolution: {integrity: sha512-trmleAnZ2PxN/loHWVhhx1qeOHSRXq4TDsBBxq3GqeJitfk3+jTQ+v/C1km/KYq9M7wKqCewMh+/NAvVH7m+bw==}
     engines: {node: '>=20.19.0'}
+
+  ast-v8-to-istanbul@0.3.11:
+    resolution: {integrity: sha512-Qya9fkoofMjCBNVdWINMjB5KZvkYfaO9/anwkWnjxibpWUxo5iHl2sOdP7/uAqaRuUYuoo8rDwnbaaKVFxoUvw==}
 
   async-mutex@0.5.0:
     resolution: {integrity: sha512-1A94B18jkJ3DYq284ohPxoXbfTA5HsQ7/Mf4DEhcyLx3Bz27Rh59iScbB6EPiP+B+joue6YCxcMXSbFC1tZKwA==}
@@ -4609,6 +4637,9 @@ packages:
   hookified@1.14.0:
     resolution: {integrity: sha512-pi1ynXIMFx/uIIwpWJ/5CEtOHLGtnUB0WhGeeYT+fKcQ+WCQbm3/rrkAXnpfph++PgepNqPdTC2WTj8A6k6zoQ==}
 
+  html-escaper@2.0.2:
+    resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
+
   html-escaper@3.0.3:
     resolution: {integrity: sha512-RuMffC89BOWQoY0WKGpIhn5gX3iI54O6nRA0yC124NYVtzjmFWBIiFd8M0x+ZdX0P9R4lADg1mgP8C7PxGOWuQ==}
 
@@ -4793,6 +4824,18 @@ packages:
   isomorphic-fetch@2.2.1:
     resolution: {integrity: sha512-9c4TNAKYXM5PRyVcwUZrF3W09nQ+sO7+jydgs4ZGW9dhsLG2VOlISJABombdQqQRXCwuYG3sYV/puGf5rp0qmA==}
 
+  istanbul-lib-coverage@3.2.2:
+    resolution: {integrity: sha512-O8dpsF+r0WV/8MNRKfnmrtCWhuKjxrq2w+jpzBL5UZKTi2LeVWnWOmWRxFlesJONmc+wLAGvKQZEOanko0LFTg==}
+    engines: {node: '>=8'}
+
+  istanbul-lib-report@3.0.1:
+    resolution: {integrity: sha512-GCfE1mtsHGOELCU8e/Z7YWzpmybrx/+dSTfLrvY8qRmaY6zXTKWn6WQIjaAFw069icm6GVMNkgu0NzI4iPZUNw==}
+    engines: {node: '>=10'}
+
+  istanbul-reports@3.2.0:
+    resolution: {integrity: sha512-HGYWWS/ehqTV3xN10i23tkPkpH46MLCIMFNCaaKNavAXTF1RkqxawEPtnjnGZ6XKSInBKkiOA5BKS+aZiY3AvA==}
+    engines: {node: '>=8'}
+
   iterare@1.2.1:
     resolution: {integrity: sha512-RKYVTCjAnRthyJes037NX/IiqeidgN1xc3j1RjFfECFp28A1GVwK9nA+i0rJPaHqSZwygLzRnFlzUuHFoWWy+Q==}
     engines: {node: '>=6'}
@@ -4815,6 +4858,9 @@ packages:
 
   jose@6.1.3:
     resolution: {integrity: sha512-0TpaTfihd4QMNwrz/ob2Bp7X04yuxJkjRGi4aKmOqwhov54i6u79oCv7T+C7lo70MKH6BesI3vscD1yb/yzKXQ==}
+
+  js-tokens@10.0.0:
+    resolution: {integrity: sha512-lM/UBzQmfJRo9ABXbPWemivdCW8V2G8FHaHdypQaIy523snUjog0W71ayWXTjiR+ixeMyVHN2XcpnTd/liPg/Q==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -5072,12 +5118,19 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
+  magicast@0.5.2:
+    resolution: {integrity: sha512-E3ZJh4J3S9KfwdjZhe2afj6R9lGIN5Pher1pF39UGrXRqq/VDaGVIGN13BjHd2u8B61hArAGOnso7nBOouW3TQ==}
+
   mailparser@3.9.1:
     resolution: {integrity: sha512-6vHZcco3fWsDMkf4Vz9iAfxvwrKNGbHx0dV1RKVphQ/zaNY34Buc7D37LSa09jeSeybWzYcTPjhiZFxzVRJedA==}
 
   make-dir@3.1.0:
     resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}
     engines: {node: '>=8'}
+
+  make-dir@4.0.0:
+    resolution: {integrity: sha512-hXdUTZYIVOt1Ex//jAQi+wTZZpUpwBj/0QsOzqegb3rGMMeJiSEu5xLHnYfBrRV4RH2+OCSOO95Is/7x1WJ4bw==}
+    engines: {node: '>=10'}
 
   make-error@1.3.6:
     resolution: {integrity: sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==}
@@ -7179,6 +7232,10 @@ snapshots:
     dependencies:
       '@babel/types': 7.28.6
 
+  '@babel/parser@7.29.0':
+    dependencies:
+      '@babel/types': 7.29.0
+
   '@babel/parser@8.0.0-beta.4':
     dependencies:
       '@babel/types': 8.0.0-beta.4
@@ -7262,10 +7319,17 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
+  '@babel/types@7.29.0':
+    dependencies:
+      '@babel/helper-string-parser': 7.27.1
+      '@babel/helper-validator-identifier': 7.28.5
+
   '@babel/types@8.0.0-beta.4':
     dependencies:
       '@babel/helper-string-parser': 8.0.0-beta.4
       '@babel/helper-validator-identifier': 8.0.0-beta.4
+
+  '@bcoe/v8-coverage@1.0.2': {}
 
   '@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.6))(jose@6.1.3)(kysely@0.28.10)(nanostores@1.1.0)':
     dependencies:
@@ -9255,6 +9319,20 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
 
+  '@vitest/coverage-v8@4.0.18(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.0.10)(jiti@2.6.0)(terser@5.44.1)(yaml@2.8.1))':
+    dependencies:
+      '@bcoe/v8-coverage': 1.0.2
+      '@vitest/utils': 4.0.18
+      ast-v8-to-istanbul: 0.3.11
+      istanbul-lib-coverage: 3.2.2
+      istanbul-lib-report: 3.0.1
+      istanbul-reports: 3.2.0
+      magicast: 0.5.2
+      obug: 2.1.1
+      std-env: 3.10.0
+      tinyrainbow: 3.0.3
+      vitest: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.0.10)(jiti@2.6.0)(terser@5.44.1)(yaml@2.8.1)
+
   '@vitest/expect@4.0.18':
     dependencies:
       '@standard-schema/spec': 1.1.0
@@ -9593,6 +9671,12 @@ snapshots:
       '@babel/parser': 8.0.0-beta.4
       estree-walker: 3.0.3
       pathe: 2.0.3
+
+  ast-v8-to-istanbul@0.3.11:
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      estree-walker: 3.0.3
+      js-tokens: 10.0.0
 
   async-mutex@0.5.0:
     dependencies:
@@ -10984,6 +11068,8 @@ snapshots:
 
   hookified@1.14.0: {}
 
+  html-escaper@2.0.2: {}
+
   html-escaper@3.0.3: {}
 
   html-to-text@9.0.5:
@@ -11165,6 +11251,19 @@ snapshots:
       node-fetch: 1.7.3
       whatwg-fetch: 3.6.20
 
+  istanbul-lib-coverage@3.2.2: {}
+
+  istanbul-lib-report@3.0.1:
+    dependencies:
+      istanbul-lib-coverage: 3.2.2
+      make-dir: 4.0.0
+      supports-color: 7.2.0
+
+  istanbul-reports@3.2.0:
+    dependencies:
+      html-escaper: 2.0.2
+      istanbul-lib-report: 3.0.1
+
   iterare@1.2.1: {}
 
   jackspeak@3.4.3:
@@ -11189,6 +11288,8 @@ snapshots:
     optional: true
 
   jose@6.1.3: {}
+
+  js-tokens@10.0.0: {}
 
   js-tokens@4.0.0: {}
 
@@ -11440,6 +11541,12 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  magicast@0.5.2:
+    dependencies:
+      '@babel/parser': 7.29.0
+      '@babel/types': 7.29.0
+      source-map-js: 1.2.1
+
   mailparser@3.9.1:
     dependencies:
       '@zone-eu/mailsplit': 5.4.8
@@ -11454,6 +11561,10 @@ snapshots:
       tlds: 1.261.0
 
   make-dir@3.1.0:
+    dependencies:
+      semver: 7.7.3
+
+  make-dir@4.0.0:
     dependencies:
       semver: 7.7.3
 

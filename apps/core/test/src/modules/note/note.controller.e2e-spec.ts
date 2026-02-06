@@ -7,8 +7,6 @@ import { DraftService } from '~/modules/draft/draft.service'
 import { NoteController } from '~/modules/note/note.controller'
 import { NoteModel } from '~/modules/note/note.model'
 import { NoteService } from '~/modules/note/note.service'
-import { UserModel } from '~/modules/user/user.model'
-import { UserService } from '~/modules/user/user.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
@@ -55,7 +53,6 @@ describe('NoteController (e2e)', async () => {
       configProvider,
       await createRedisProvider(),
 
-      UserService,
       ...eventEmitterProvider,
       ...gatewayProviders,
       authProvider,
@@ -67,7 +64,7 @@ describe('NoteController (e2e)', async () => {
       translationEnhancerProvider,
     ],
     imports: [],
-    models: [NoteModel, OptionModel, UserModel, DraftModel],
+    models: [NoteModel, OptionModel, DraftModel],
     async pourData(modelMap) {
       // @ts-ignore
       const { model: _model } = modelMap.get(NoteModel) as {
