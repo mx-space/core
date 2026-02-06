@@ -1,4 +1,4 @@
-import { AUTH_JS_ACCOUNT_COLLECTION } from '~/modules/auth/auth.constant'
+import { ACCOUNT_COLLECTION_NAME } from '~/constants/db.constant'
 import type { Db } from 'mongodb'
 import { Types } from 'mongoose'
 import { defineMigration } from '../helper'
@@ -6,7 +6,7 @@ import { defineMigration } from '../helper'
 export default defineMigration(
   'v9.3.2-dedupe-auth-accounts',
   async (db: Db) => {
-    const accounts = db.collection(AUTH_JS_ACCOUNT_COLLECTION)
+    const accounts = db.collection(ACCOUNT_COLLECTION_NAME)
 
     const cursor = accounts.aggregate<{
       _id: {

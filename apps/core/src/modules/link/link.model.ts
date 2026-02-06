@@ -1,4 +1,5 @@
 import { modelOptions, prop } from '@typegoose/typegoose'
+import { LINK_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 
 export enum LinkType {
@@ -22,7 +23,7 @@ export const LinkStateMap = {
   [LinkState.Reject]: '已拒绝',
 }
 
-@modelOptions({ options: { customName: 'Link' } })
+@modelOptions({ options: { customName: LINK_COLLECTION_NAME } })
 export class LinkModel extends BaseModel {
   @prop({ required: true, trim: true, unique: true })
   name: string

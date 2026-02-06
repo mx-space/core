@@ -14,7 +14,11 @@ import {
   RedisKeys,
   SERVERLESS_COMPLIE_CACHE_TTL,
 } from '~/constants/cache.constant'
-import { OWNER_PROFILE_COLLECTION_NAME } from '~/constants/db.constant'
+import {
+  OWNER_PROFILE_COLLECTION_NAME,
+  READER_COLLECTION_NAME,
+  SERVERLESS_STORAGE_COLLECTION_NAME,
+} from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { isDev } from '~/global/env.global'
@@ -30,7 +34,6 @@ import { safePathJoin } from '~/utils/tool.util'
 import { isPlainObject } from 'es-toolkit/compat'
 import { Types } from 'mongoose'
 import qs from 'qs'
-import { AUTH_JS_USER_COLLECTION } from '../auth/auth.constant'
 import { ConfigsService } from '../configs/configs.service'
 import { SnippetModel, SnippetType } from '../snippet/snippet.model'
 import type {
@@ -39,7 +42,6 @@ import type {
   FunctionContextResponse,
 } from './function.types'
 import { allBuiltInSnippetPack as builtInSnippets } from './pack'
-import { ServerlessStorageCollectionName } from './serverless.model'
 import { complieTypeScriptBabelOptions, hashStable } from './serverless.util'
 
 type ScopeContext = {
@@ -169,7 +171,7 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   })
   private async mockGetOwner() {
     const owner = await this.databaseService.db
-      .collection(AUTH_JS_USER_COLLECTION)
+      .collection(READER_COLLECTION_NAME)
       .find({ role: 'owner' })
       .sort({ createdAt: 1, _id: 1 })
       .limit(1)
@@ -205,7 +207,7 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
 
   private mockDb(namespace: string) {
     const db = this.databaseService.db
-    const collection = db.collection(ServerlessStorageCollectionName)
+    const collection = db.collection(SERVERLESS_STORAGE_COLLECTION_NAME)
 
     const checkRecordIsExist = async (key: string) => {
       const has = await collection

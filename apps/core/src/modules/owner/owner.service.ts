@@ -4,13 +4,15 @@ import {
   BizException,
   BusinessException,
 } from '~/common/exceptions/biz.exception'
-import { OWNER_PROFILE_COLLECTION_NAME } from '~/constants/db.constant'
+import {
+  OWNER_PROFILE_COLLECTION_NAME,
+  READER_COLLECTION_NAME,
+} from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar } from '~/utils/tool.util'
 import { Types } from 'mongoose'
-import { AUTH_JS_USER_COLLECTION } from '../auth/auth.constant'
 import { OwnerProfileModel } from './owner-profile.model'
 import type { OwnerDocument } from './owner.model'
 import { OwnerModel } from './owner.model'
@@ -28,7 +30,7 @@ export class OwnerService {
   ) {}
 
   private get readersCollection() {
-    return this.databaseService.db.collection(AUTH_JS_USER_COLLECTION)
+    return this.databaseService.db.collection(READER_COLLECTION_NAME)
   }
 
   private get ownerProfileCollection() {

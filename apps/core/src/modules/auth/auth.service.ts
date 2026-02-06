@@ -6,7 +6,11 @@ import {
 } from '@nestjs/common'
 import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
-import { OWNER_PROFILE_COLLECTION_NAME } from '~/constants/db.constant'
+import {
+  ACCOUNT_COLLECTION_NAME,
+  OWNER_PROFILE_COLLECTION_NAME,
+  READER_COLLECTION_NAME,
+} from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { alphabet } from '~/constants/other.constant'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -14,11 +18,7 @@ import { getAvatar } from '~/utils/tool.util'
 import { hashPassword } from 'better-auth/crypto'
 import { Types } from 'mongoose'
 import { customAlphabet } from 'nanoid'
-import {
-  AUTH_JS_ACCOUNT_COLLECTION,
-  AUTH_JS_USER_COLLECTION,
-  AuthInstanceInjectKey,
-} from './auth.constant'
+import { AuthInstanceInjectKey } from './auth.constant'
 import type { TokenDto } from './auth.controller'
 import type { InjectAuthInstance } from './auth.interface'
 import type { SessionUser } from './auth.types'
@@ -43,11 +43,11 @@ export class AuthService {
   ) {}
 
   private get readersCollection() {
-    return this.databaseService.db.collection(AUTH_JS_USER_COLLECTION)
+    return this.databaseService.db.collection(READER_COLLECTION_NAME)
   }
 
   private get accountsCollection() {
-    return this.databaseService.db.collection(AUTH_JS_ACCOUNT_COLLECTION)
+    return this.databaseService.db.collection(ACCOUNT_COLLECTION_NAME)
   }
 
   private resolveObjectId(id: string) {
@@ -438,7 +438,7 @@ export class AuthService {
 
   async getOauthUserAccount(providerAccountId: string) {
     const account = await this.databaseService.db
-      .collection(AUTH_JS_ACCOUNT_COLLECTION)
+      .collection(ACCOUNT_COLLECTION_NAME)
       .findOne(
         {
           providerAccountId,
@@ -460,7 +460,7 @@ export class AuthService {
 
     if (account?.userId) {
       const user = await this.databaseService.db
-        .collection(AUTH_JS_USER_COLLECTION)
+        .collection(READER_COLLECTION_NAME)
         .findOne(
           {
             _id: account.userId,

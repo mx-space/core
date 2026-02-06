@@ -1,4 +1,4 @@
-import { AUTH_JS_USER_COLLECTION } from '~/modules/auth/auth.constant'
+import { READER_COLLECTION_NAME } from '~/constants/db.constant'
 import { getDatabaseConnection } from './database.util'
 
 export const checkInit = async () => {
@@ -6,7 +6,7 @@ export const checkInit = async () => {
   const db = connection.db!
   const isUserExist =
     (await db
-      .collection(AUTH_JS_USER_COLLECTION)
+      .collection(READER_COLLECTION_NAME)
       .countDocuments({ role: 'owner' })) > 0
 
   return isUserExist

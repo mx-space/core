@@ -1,10 +1,11 @@
 import { modelOptions, prop } from '@typegoose/typegoose'
+import { ACTIVITY_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 import { Activity } from './activity.constant'
 
 @modelOptions({
   options: {
-    customName: 'activities',
+    customName: ACTIVITY_COLLECTION_NAME,
   },
   schemaOptions: {
     timestamps: {

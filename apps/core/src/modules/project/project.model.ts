@@ -1,4 +1,5 @@
 import { modelOptions, prop } from '@typegoose/typegoose'
+import { PROJECT_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 
 /**
@@ -28,7 +29,7 @@ const validateURL = {
 
 @modelOptions({
   options: {
-    customName: 'Project',
+    customName: PROJECT_COLLECTION_NAME,
   },
 })
 export class ProjectModel extends BaseModel {

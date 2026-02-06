@@ -1,11 +1,9 @@
 import {
+  ACCOUNT_COLLECTION_NAME,
   OWNER_PROFILE_COLLECTION_NAME,
+  READER_COLLECTION_NAME,
   USER_COLLECTION_NAME,
 } from '~/constants/db.constant'
-import {
-  AUTH_JS_ACCOUNT_COLLECTION,
-  AUTH_JS_USER_COLLECTION,
-} from '~/modules/auth/auth.constant'
 import type { Db, Filter, ObjectId } from 'mongodb'
 import { defineMigration } from '../helper'
 
@@ -32,8 +30,8 @@ const buildReaderIdQuery = (id: string | ObjectId): Filter<any> => {
 export default defineMigration(
   'v9.7.4-owner-profile-and-password-migration',
   async (db: Db) => {
-    const readers = db.collection(AUTH_JS_USER_COLLECTION)
-    const accounts = db.collection(AUTH_JS_ACCOUNT_COLLECTION)
+    const readers = db.collection(READER_COLLECTION_NAME)
+    const accounts = db.collection(ACCOUNT_COLLECTION_NAME)
     const users = db.collection(USER_COLLECTION_NAME)
     const ownerProfiles = db.collection(OWNER_PROFILE_COLLECTION_NAME)
 

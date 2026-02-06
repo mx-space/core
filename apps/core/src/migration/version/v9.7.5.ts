@@ -1,4 +1,4 @@
-import { AUTH_JS_USER_COLLECTION } from '~/modules/auth/auth.constant'
+import { READER_COLLECTION_NAME } from '~/constants/db.constant'
 import type { Db } from 'mongodb'
 import { defineMigration } from '../helper'
 
@@ -6,13 +6,13 @@ const OWNER_UNIQUE_INDEX = 'readers_owner_unique_role'
 
 export default defineMigration('v9.7.5-owner-uniqueness', async (db: Db) => {
   const collections = await db
-    .listCollections({ name: AUTH_JS_USER_COLLECTION })
+    .listCollections({ name: READER_COLLECTION_NAME })
     .toArray()
   if (collections.length === 0) {
     return
   }
 
-  const readers = db.collection(AUTH_JS_USER_COLLECTION)
+  const readers = db.collection(READER_COLLECTION_NAME)
 
   await readers.updateMany(
     {

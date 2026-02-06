@@ -4,7 +4,12 @@ import type { PasskeyOptions } from '@better-auth/passkey'
 import { passkey } from '@better-auth/passkey'
 import { API_VERSION, CROSS_DOMAIN, MONGO_DB } from '~/app.config'
 import { SECURITY } from '~/app.config.test'
-import { OWNER_PROFILE_COLLECTION_NAME } from '~/constants/db.constant'
+import {
+  ACCOUNT_COLLECTION_NAME,
+  OWNER_PROFILE_COLLECTION_NAME,
+  READER_COLLECTION_NAME,
+  SESSION_COLLECTION_NAME,
+} from '~/constants/db.constant'
 import { compare } from 'bcryptjs'
 import type { BetterAuthOptions } from 'better-auth'
 import { betterAuth } from 'better-auth'
@@ -14,11 +19,6 @@ import { hashPassword, verifyPassword } from 'better-auth/crypto'
 import { toNodeHandler } from 'better-auth/node'
 import { apiKey, username } from 'better-auth/plugins'
 import { MongoClient, ObjectId } from 'mongodb'
-import {
-  AUTH_JS_ACCOUNT_COLLECTION,
-  AUTH_JS_SESSION_COLLECTION,
-  AUTH_JS_USER_COLLECTION,
-} from './auth.constant'
 
 const client = new MongoClient(MONGO_DB.customConnectionString || MONGO_DB.uri)
 
@@ -60,7 +60,7 @@ export async function CreateAuth(
       )
     },
     account: {
-      modelName: AUTH_JS_ACCOUNT_COLLECTION,
+      modelName: ACCOUNT_COLLECTION_NAME,
       accountLinking: {
         enabled: true,
         trustedProviders: ['google', 'github'],
@@ -81,7 +81,7 @@ export async function CreateAuth(
       },
     },
     session: {
-      modelName: AUTH_JS_SESSION_COLLECTION,
+      modelName: SESSION_COLLECTION_NAME,
       additionalFields: {
         provider: {
           type: 'string',
@@ -136,29 +136,27 @@ export async function CreateAuth(
           const userObjectId = ObjectId.isValid(userId)
             ? new ObjectId(userId)
             : null
-          const account = await db
-            .collection(AUTH_JS_ACCOUNT_COLLECTION)
-            .findOne(
-              userObjectId
-                ? {
-                    userId: { $in: [userId, userObjectId] },
-                    providerId: 'credential',
-                  }
-                : { userId, providerId: 'credential' },
-              {
-                projection: {
-                  _id: 1,
-                  password: 1,
-                },
+          const account = await db.collection(ACCOUNT_COLLECTION_NAME).findOne(
+            userObjectId
+              ? {
+                  userId: { $in: [userId, userObjectId] },
+                  providerId: 'credential',
+                }
+              : { userId, providerId: 'credential' },
+            {
+              projection: {
+                _id: 1,
+                password: 1,
               },
-            )
+            },
+          )
 
           if (account?.password && isBcryptHash(account.password)) {
             const password = ctx.body?.password
             if (typeof password === 'string' && password.length > 0) {
               const nextHash = await hashPassword(password)
               await db
-                .collection(AUTH_JS_ACCOUNT_COLLECTION)
+                .collection(ACCOUNT_COLLECTION_NAME)
                 .updateOne(
                   { _id: account._id },
                   { $set: { password: nextHash, updatedAt: new Date() } },
@@ -173,7 +171,7 @@ export async function CreateAuth(
             : null
           const reader = userObjectId
             ? await db
-                .collection(AUTH_JS_USER_COLLECTION)
+                .collection(READER_COLLECTION_NAME)
                 .findOne({ _id: userObjectId }, { projection: { role: 1 } })
             : null
           if (reader?.role === 'owner') {
@@ -215,7 +213,7 @@ export async function CreateAuth(
           return
         }
 
-        await db.collection(AUTH_JS_SESSION_COLLECTION).updateOne(
+        await db.collection(SESSION_COLLECTION_NAME).updateOne(
           {
             token: sessionToken,
           },
@@ -224,7 +222,7 @@ export async function CreateAuth(
       }),
     },
     user: {
-      modelName: AUTH_JS_USER_COLLECTION,
+      modelName: READER_COLLECTION_NAME,
       additionalFields: {
         role: {
           type: 'string',

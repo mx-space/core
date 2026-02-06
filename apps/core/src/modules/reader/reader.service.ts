@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose'
+import { READER_COLLECTION_NAME } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { Document } from 'mongodb'
 import { Types } from 'mongoose'
-import { AUTH_JS_USER_COLLECTION } from '../auth/auth.constant'
 import { AuthService } from '../auth/auth.service'
 import { ReaderModel } from './reader.model'
 
@@ -72,7 +72,7 @@ export class ReaderService {
   }
   find() {
     return this.databaseService.db
-      .collection(AUTH_JS_USER_COLLECTION)
+      .collection(READER_COLLECTION_NAME)
       .aggregate(this.buildQueryPipeline())
       .toArray()
   }
@@ -80,7 +80,7 @@ export class ReaderService {
   async findPaginated(page: number, size: number) {
     const skip = (page - 1) * size
     const collection = this.databaseService.db.collection(
-      AUTH_JS_USER_COLLECTION,
+      READER_COLLECTION_NAME,
     )
 
     const pipeline = this.buildQueryPipeline()

@@ -1,5 +1,7 @@
-import { USER_COLLECTION_NAME } from '~/constants/db.constant'
-import { AUTH_JS_USER_COLLECTION } from '~/modules/auth/auth.constant'
+import {
+  READER_COLLECTION_NAME,
+  USER_COLLECTION_NAME,
+} from '~/constants/db.constant'
 import type { Db } from 'mongodb'
 import { defineMigration } from '../helper'
 
@@ -13,7 +15,7 @@ const base64UrlToBase64 = (value: string) => {
 export default defineMigration(
   'v9.7.0-better-auth-migration',
   async (db: Db) => {
-    const readers = db.collection(AUTH_JS_USER_COLLECTION)
+    const readers = db.collection(READER_COLLECTION_NAME)
     let owner = await readers.findOne({ isOwner: true })
 
     if (!owner) {

@@ -1,9 +1,9 @@
-import { AUTH_JS_USER_COLLECTION } from '~/modules/auth/auth.constant'
+import { READER_COLLECTION_NAME } from '~/constants/db.constant'
 import type { Db } from 'mongodb'
 import { defineMigration } from '../helper'
 
 export default defineMigration('v9.7.3-role-migration', async (db: Db) => {
-  const readers = db.collection(AUTH_JS_USER_COLLECTION)
+  const readers = db.collection(READER_COLLECTION_NAME)
 
   await readers.updateMany({ isOwner: true }, { $set: { role: 'owner' } })
 

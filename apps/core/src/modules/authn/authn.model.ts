@@ -1,4 +1,5 @@
 import { modelOptions, plugin, prop } from '@typegoose/typegoose'
+import { AUTHN_COLLECTION_NAME } from '~/constants/db.constant'
 import { mongooseLeanGetters } from 'mongoose-lean-getters'
 
 type CredentialDeviceType = 'singleDevice' | 'multiDevice'
@@ -25,7 +26,7 @@ const uint8ArrayGetterSetter = {
 
 @modelOptions({
   options: {
-    customName: 'authn',
+    customName: AUTHN_COLLECTION_NAME,
   },
   schemaOptions: {
     timestamps: {

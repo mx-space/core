@@ -1,4 +1,5 @@
 import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
+import { SNIPPET_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 import { EncryptUtil } from '~/utils/encrypt.util'
 import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
@@ -8,7 +9,7 @@ export { SnippetType }
 
 @modelOptions({
   options: {
-    customName: 'snippet',
+    customName: SNIPPET_COLLECTION_NAME,
   },
   schemaOptions: {
     timestamps: {

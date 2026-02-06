@@ -1,5 +1,7 @@
-import { USER_COLLECTION_NAME } from '~/constants/db.constant'
-import { AUTH_JS_USER_COLLECTION } from '~/modules/auth/auth.constant'
+import {
+  READER_COLLECTION_NAME,
+  USER_COLLECTION_NAME,
+} from '~/constants/db.constant'
 import type { Db } from 'mongodb'
 import { defineMigration } from '../helper'
 
@@ -13,7 +15,7 @@ const normalizeUsername = (username?: string | null) => {
 export default defineMigration(
   'v9.7.1-better-auth-username-migration',
   async (db: Db) => {
-    const readers = db.collection(AUTH_JS_USER_COLLECTION)
+    const readers = db.collection(READER_COLLECTION_NAME)
     const owner = await db.collection(USER_COLLECTION_NAME).findOne({})
     if (!owner) {
       return

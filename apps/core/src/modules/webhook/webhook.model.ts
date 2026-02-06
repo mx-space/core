@@ -1,5 +1,6 @@
 import { modelOptions, plugin, prop } from '@typegoose/typegoose'
 import { EventScope } from '~/constants/business-event.constant'
+import { WEBHOOK_COLLECTION_NAME } from '~/constants/db.constant'
 import { mongooseLeanId } from '~/shared/model/plugins/lean-id'
 
 @modelOptions({
@@ -9,7 +10,7 @@ import { mongooseLeanId } from '~/shared/model/plugins/lean-id'
     },
   },
   options: {
-    customName: 'webhooks',
+    customName: WEBHOOK_COLLECTION_NAME,
   },
 })
 @plugin(mongooseLeanId)

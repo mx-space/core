@@ -1,4 +1,5 @@
 import { modelOptions, prop, Severity } from '@typegoose/typegoose'
+import { META_PRESET_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 import { Schema } from 'mongoose'
 
@@ -69,7 +70,10 @@ export class MetaPresetChild {
  * 元数据预设字段模型
  */
 @modelOptions({
-  options: { allowMixed: Severity.ALLOW, customName: 'MetaPreset' },
+  options: {
+    allowMixed: Severity.ALLOW,
+    customName: META_PRESET_COLLECTION_NAME,
+  },
   schemaOptions: {
     timestamps: {
       createdAt: 'created',
