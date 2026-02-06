@@ -18,6 +18,11 @@ interface ICacheOption {
    * 是否使用查询参数作为缓存键的一部分
    */
   withQuery?: boolean
+
+  /**
+   * 强制缓存，即使请求已认证也使用缓存
+   */
+  force?: boolean
 }
 
 /**
