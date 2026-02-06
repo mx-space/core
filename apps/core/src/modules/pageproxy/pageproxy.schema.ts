@@ -2,9 +2,6 @@ import { zAllowedUrl } from '~/common/zod'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-/**
- * Page proxy debug schema
- */
 export const PageProxyDebugSchema = z.object({
   __debug: z
     .preprocess((val) => (val === 'false' ? false : true), z.literal(false))

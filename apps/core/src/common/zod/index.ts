@@ -1,15 +1,6 @@
-/**
- * Zod validation utilities
- *
- * This module provides Zod-based validation infrastructure
- * to replace class-validator decorators
- */
-
-// Re-export zod for convenience
 export { z } from 'zod'
 export { createZodDto } from 'nestjs-zod'
 
-// Primitive types
 export {
   zAllowedUrl,
   zArrayUnique,
@@ -33,7 +24,6 @@ export {
   zUniqueStringArray,
 } from './primitives'
 
-// Custom validators (migrated from class-validator)
 export {
   zBooleanOrString,
   zEmail,
@@ -46,7 +36,6 @@ export {
   zUrl,
 } from './custom'
 
-// Validation pipe
 export {
   ExtendedZodValidationPipe,
   extendedZodValidationPipeInstance,

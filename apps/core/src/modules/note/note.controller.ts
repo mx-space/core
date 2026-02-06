@@ -343,7 +343,7 @@ export class NoteController {
       sortOrder,
     } = query
     const condition: QueryFilter<NoteModel> = isAuthenticated
-      ? { $or: [{ isPublished: false }, { isPublished: true }] }
+      ? {}
       : { isPublished: true }
 
     const result = await this.noteService.getNotePaginationByTopicId(

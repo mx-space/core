@@ -73,22 +73,14 @@ export class AuthnService {
       userID: isoUint8Array.fromUTF8String(userId),
       userName: username,
 
-      excludeCredentials: userAuthenticators.map((authenticator) => {
-        return {
-          id: isoBase64URL.fromBuffer(
-            new Uint8Array(authenticator.credentialID),
-          ),
-          type: 'public-key',
-          // Optional
-          // transports: authenticator.transports,
-        }
-      }),
+      excludeCredentials: userAuthenticators.map((authenticator) => ({
+        id: isoBase64URL.fromBuffer(new Uint8Array(authenticator.credentialID)),
+        type: 'public-key',
+      })),
 
       authenticatorSelection: {
-        // Defaults
         residentKey: 'preferred',
         userVerification: 'preferred',
-        // Optional
         authenticatorAttachment: 'platform',
       },
     })
@@ -106,8 +98,7 @@ export class AuthnService {
   private async setCurrentChallenge(challenge: string) {
     const redisClient = this.redisService.getClient()
     await redisClient.set(getRedisKey(RedisKeys.Authn), challenge)
-    // 5 min
-    await redisClient.expire(getRedisKey(RedisKeys.Authn), 1000 * 60 * 5)
+    await redisClient.expire(getRedisKey(RedisKeys.Authn), 60 * 5)
   }
 
   private async getCurrentChallenge() {
@@ -149,17 +140,14 @@ export class AuthnService {
     const { credential, credentialDeviceType, credentialBackedUp } =
       registrationInfo
 
-    const authenticator: Authenticator = {
+    const authenticator: Authenticator & { name: string } = {
       credentialID: isoBase64URL.toBuffer(credential.id),
       credentialPublicKey: credential.publicKey,
       counter: credential.counter,
       credentialDeviceType,
       credentialBackedUp,
-    }
-
-    Object.assign(authenticator, {
       name: response.name,
-    })
+    }
 
     await this.authnModel.create(authenticator)
 
@@ -182,8 +170,6 @@ export class AuthnService {
       })),
       userVerification: 'preferred',
     })
-
-    // (Pseudocode) Remember this challenge for this user
 
     await this.setCurrentChallenge(options.challenge)
     return options
@@ -240,11 +226,7 @@ export class AuthnService {
   }
 
   getAllAuthnItems() {
-    return this.authnModel.aggregate([
-      {
-        $match: {},
-      },
-    ])
+    return this.authnModel.find().lean()
   }
 
   deleteAuthnItem(id: string) {

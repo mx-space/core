@@ -267,7 +267,7 @@ export class PostController {
         category: (last.category as CategoryModel).slug,
         slug: last.slug,
       },
-      {} as PostDetailQueryDto,
+      {} as any,
       ip,
       isAuthenticated,
     )
@@ -276,7 +276,7 @@ export class PostController {
   @Get('/:category/:slug')
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,
-    @Query() _query: PostDetailQueryDto,
+    @Query() _: PostDetailQueryDto,
     @IpLocation() { ip }: IpRecord,
     @IsAuthenticated() isAuthenticated?: boolean,
     @Lang() lang?: string,

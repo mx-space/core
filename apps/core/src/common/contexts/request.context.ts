@@ -1,5 +1,3 @@
-/* eslint-disable dot-notation */
-// @reference https://github.com/ever-co/ever-gauzy/blob/d36b4f40b1446f3c33d02e0ba00b53a83109d950/packages/core/src/core/context/request-context.ts
 import { AsyncLocalStorage } from 'node:async_hooks'
 import type { ServerResponse } from 'node:http'
 import { UnauthorizedException } from '@nestjs/common'
@@ -7,6 +5,7 @@ import type { SessionUser } from '~/modules/auth/auth.types'
 import type { BizIncomingMessage } from '~/transformers/get-req.transformer'
 
 type Nullable<T> = T | null
+
 export class RequestContext {
   private static readonly storage = new AsyncLocalStorage<RequestContext>()
 
@@ -30,24 +29,14 @@ export class RequestContext {
   }
 
   static currentRequest(): Nullable<BizIncomingMessage> {
-    const requestContext = RequestContext.currentRequestContext()
-
-    if (requestContext) {
-      return requestContext.request
-    }
-
-    return null
+    return RequestContext.currentRequestContext()?.request ?? null
   }
 
   static currentUser(throwError?: boolean): Nullable<SessionUser> {
-    const requestContext = RequestContext.currentRequestContext()
+    const user = RequestContext.currentRequestContext()?.request.user
 
-    if (requestContext) {
-      const user = requestContext.request['user']
-
-      if (user) {
-        return user
-      }
+    if (user) {
+      return user
     }
 
     if (throwError) {
@@ -57,22 +46,12 @@ export class RequestContext {
     return null
   }
 
-  static currentIsAuthenticated() {
-    const requestContext = RequestContext.currentRequestContext()
-
-    if (requestContext) {
-      const isAuthenticated =
-        requestContext.request['isAuthenticated'] ||
-        requestContext.request['isAuthenticated']
-
-      return !!isAuthenticated
-    }
-
-    return false
+  static currentIsAuthenticated(): boolean {
+    const request = RequestContext.currentRequestContext()?.request
+    return !!request?.isAuthenticated
   }
 
   static currentLang(): string | undefined {
-    const requestContext = RequestContext.currentRequestContext()
-    return requestContext?.lang
+    return RequestContext.currentRequestContext()?.lang
   }
 }

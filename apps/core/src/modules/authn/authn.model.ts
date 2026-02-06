@@ -6,7 +6,7 @@ type CredentialDeviceType = 'singleDevice' | 'multiDevice'
 
 const uint8ArrayGetterSetter = {
   get(uint8string: string) {
-    const base64String = uint8string.replaceAll('-', '+').replaceAll('_', '/') // 将 URL 安全字符转换回标准 Base64 字符
+    const base64String = uint8string.replaceAll('-', '+').replaceAll('_', '/')
     const buffer = Buffer.from(base64String, 'base64')
     return buffer.buffer.slice(
       buffer.byteOffset,
@@ -39,13 +39,9 @@ export class AuthnModel {
   @prop({ unique: true })
   name: string
 
-  @prop({
-    ...uint8ArrayGetterSetter,
-  })
+  @prop(uint8ArrayGetterSetter)
   credentialID: Uint8Array
-  @prop({
-    ...uint8ArrayGetterSetter,
-  })
+  @prop(uint8ArrayGetterSetter)
   credentialPublicKey: Uint8Array
   @prop()
   counter: number

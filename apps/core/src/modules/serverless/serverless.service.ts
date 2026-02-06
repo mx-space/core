@@ -210,14 +210,8 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     const collection = db.collection(SERVERLESS_STORAGE_COLLECTION_NAME)
 
     const checkRecordIsExist = async (key: string) => {
-      const has = await collection
-        .countDocuments({
-          namespace,
-          key,
-        })
-        .then((count) => count > 0)
-
-      return has
+      const count = await collection.countDocuments({ namespace, key })
+      return count > 0
     }
 
     const updateKey = async (key: string, value: any) => {
@@ -285,14 +279,7 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
         })
       },
       async insert(key: string, value: any) {
-        const has = await collection
-          .countDocuments({
-            namespace,
-            key,
-          })
-          .then((count) => count > 0)
-
-        if (has) {
+        if (await checkRecordIsExist(key)) {
           throw new InternalServerErrorException('key already exists')
         }
 
@@ -355,7 +342,6 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
       )
     }
 
-    // 只提取可序列化的数据，过滤掉函数
     const serializableReq = {
       query: context.req.query,
       headers: Object.fromEntries(
@@ -372,7 +358,7 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
 
     const sandboxContext = {
       req: serializableReq,
-      res: {}, // res 的方法会在 worker 内部通过 bridge 重建
+      res: {},
       isAuthenticated: context.isAuthenticated,
       secret: secretObj as Record<string, unknown>,
       model: {
@@ -418,7 +404,6 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
 
   async isValidServerlessFunction(raw: string) {
     try {
-      // 验证 handler 是否存在并且是函数
       const ast = (await parseAsync(
         raw,
         complieTypeScriptBabelOptions,
@@ -454,32 +439,25 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // 0. get built-in functions is exist in db
     const result = await this.model.find({
       name: {
         $in: paths,
       },
-      // FIXME reference not only `built-in` now
       reference: {
         $in: ['built-in'].concat(Array.from(references.values())),
       },
       type: SnippetType.Function,
     })
 
-    // 1. filter is exist
     const migrationTasks = [] as Promise<any>[]
     for (const doc of result) {
-      const path = doc.name
-      pathCodeMap.delete(path)
+      pathCodeMap.delete(doc.name)
 
-      // migration, add builtIn set to `true`
       if (!doc.builtIn) {
         migrationTasks.push(doc.updateOne({ builtIn: true }))
       }
     }
     await Promise.all(migrationTasks)
-
-    // 2. pour
 
     for (const [path, { code, method, name, reference }] of pathCodeMap) {
       this.logger.log(`pour built-in function: ${name}`)

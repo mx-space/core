@@ -7,6 +7,17 @@ import type { FastifyRequest } from 'fastify'
 
 const logger = new Logger('Fastify')
 
+function logWarn(desc: string, req: FastifyRequest, _context: string) {
+  const ua = req.raw.headers['user-agent']
+  logger.warn(
+    // prettier-ignore
+    `${desc}\n` +
+      `Path: ${req.url}\n` +
+      `IP: ${getIp(req)}\n` +
+      `UA: ${ua}`,
+  )
+}
+
 const app: FastifyAdapter = new FastifyAdapter({
   trustProxy: true,
   logger: false,
@@ -15,21 +26,17 @@ export { app as fastifyApp }
 
 app.register(FastifyMultipart, {
   limits: {
-    fieldNameSize: 100, // Max field name size
+    fieldNameSize: 100,
     files: 1,
-
-    fileSize: 1024 * 1024 * 6, // 限制的最大文件大小，后续在 service 层再次限制
+    fileSize: 1024 * 1024 * 6,
   },
 })
 
 app.getInstance().addHook('onRequest', (request, reply, done) => {
-  // set undefined origin
   const origin = request.headers.origin
   if (!origin) {
     request.headers.origin = request.headers.host
   }
-
-  // forbidden php
 
   const url = request.url
   const ua = request.raw.headers['user-agent']
@@ -52,7 +59,6 @@ app.getInstance().addHook('onRequest', (request, reply, done) => {
     return reply.send('Check request header to find an egg.')
   }
 
-  // skip favicon request
   if (/favicon\.ico$/.test(url) || /manifest\.json$/.test(url)) {
     return reply.code(204).send()
   }
@@ -61,16 +67,5 @@ app.getInstance().addHook('onRequest', (request, reply, done) => {
 })
 
 app.register(fastifyCookie, {
-  secret: 'cookie-secret', // 这个 secret 不太重要，不存鉴权相关，无关紧要
+  secret: 'cookie-secret',
 })
-
-const logWarn = (desc: string, req: FastifyRequest, _context: string) => {
-  const ua = req.raw.headers['user-agent']
-  logger.warn(
-    // prettier-ignore
-    `${desc}\n` +
-      `Path: ${req.url}\n` +
-      `IP: ${getIp(req)}\n` +
-      `UA: ${ua}`,
-  )
-}

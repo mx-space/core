@@ -12,9 +12,6 @@ export enum SnippetType {
   YAML = 'yaml',
 }
 
-/**
- * Snippet schema for API validation
- */
 export const SnippetSchema = BaseSchema.extend({
   type: z.enum(SnippetType).default(SnippetType.JSON),
   private: z.boolean().default(false).optional(),
@@ -49,16 +46,10 @@ export const SnippetSchema = BaseSchema.extend({
 
 export class SnippetDto extends createZodDto(SnippetSchema) {}
 
-/**
- * Partial snippet schema for PATCH operations
- */
 export const PartialSnippetSchema = SnippetSchema.partial()
 
 export class PartialSnippetDto extends createZodDto(PartialSnippetSchema) {}
 
-/**
- * Snippet more schema for batch import
- */
 export const SnippetMoreSchema = z.object({
   snippets: z.array(SnippetSchema),
   packages: z.array(z.string()).optional(),

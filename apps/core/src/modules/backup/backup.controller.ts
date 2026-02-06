@@ -75,8 +75,6 @@ export class BackupController {
     }
 
     await this.backupService.saveTempBackupByUpload(await data.toBuffer())
-
-    return
   }
   @Patch(['/rollback/:dirname', '/:dirname'])
   async rollback(@Param('dirname') dirname: string) {
@@ -85,7 +83,6 @@ export class BackupController {
     }
 
     this.backupService.rollbackTo(dirname)
-    return
   }
 
   @Delete('/')
@@ -101,7 +98,6 @@ export class BackupController {
     const filesList = nextFiles.split(',')
 
     await Promise.all(filesList.map((f) => this.backupService.deleteBackup(f)))
-    return
   }
 
   @Delete('/:filename')
@@ -110,12 +106,10 @@ export class BackupController {
       return
     }
     await this.backupService.deleteBackup(filename)
-    return
   }
 
   @Post('/upload-to-s3')
   async backupAndUploadToS3() {
     this.backupService.backupDB()
-    return
   }
 }

@@ -31,8 +31,8 @@ import type { SubscribeTemplateRenderProps } from './subscribe.email.default'
 import { defaultSubscribeForRenderProps } from './subscribe.email.default'
 import { SubscribeModel } from './subscribe.model'
 
-declare type Email = string
-declare type SubscribeBit = number
+type Email = string
+type SubscribeBit = number
 
 @Injectable()
 export class SubscribeService implements OnModuleInit, OnModuleDestroy {
@@ -84,7 +84,6 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
 
   private async observeEvents() {
     if (!isMainProcess && cluster.isWorker && cluster.worker?.id !== 1) return
-    // init from db
 
     const docs = await this.model.find().lean()
 
@@ -170,7 +169,6 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     }
 
     return [
-      // TODO 抽离逻辑
       this.eventManager.on(
         BusinessEvents.NOTE_CREATE,
         (e) => new Co().use(precheck, noteAndPostHandler).start(e),
@@ -213,8 +211,6 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     }
 
     this.subscribeMap.set(email, subscribe)
-
-    // event subscribe update
   }
 
   async unsubscribe(email: string, token: string) {
@@ -276,14 +272,10 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     const { seo, mailOptions } = await this.configService.waitForConfigReady()
     const senderEmail = mailOptions.from || mailOptions.smtp?.user
     const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
-    let finalTemplate = ''
-
     const cacheKey = 'template'
+    let finalTemplate = this.lruCache.get(cacheKey)
 
-    const cachedEmailTemplate = this.lruCache.get(cacheKey)
-
-    if (cachedEmailTemplate) finalTemplate = cachedEmailTemplate
-    else {
+    if (!finalTemplate) {
       finalTemplate = await this.emailService.readTemplate(
         SubscribeMailType.Newsletter,
       )
@@ -292,15 +284,10 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
 
     const options: Mail.Options = {
       from: sendfrom,
-      ...{
-        subject: `[${seo.title || 'Mx Space'}] 发布了新内容~`,
-        to: email,
-        html: ejs.render(finalTemplate, source),
-      },
-
+      subject: `[${seo.title || 'Mx Space'}] 发布了新内容~`,
+      to: email,
+      html: ejs.render(finalTemplate, source),
       headers: {
-        // https://mailtrap.io/blog/list-unsubscribe-header/
-
         'List-Unsubscribe': `<${unsubscribeLink}>`,
       },
     }

@@ -10,13 +10,10 @@ import { DATA_DIR } from '~/constants/path.constant'
 import { installPKG } from '~/utils/system.util'
 import pc from 'picocolors'
 import { Observable } from 'rxjs'
-import { ServerlessService } from '../serverless/serverless.service'
 
 @ApiController('dependencies')
 @Auth()
 export class DependencyController {
-  constructor(private readonly servierlessService: ServerlessService) {}
-
   @Get('/graph')
   @HTTPDecorators.Bypass
   async getDependencyGraph() {
@@ -32,7 +29,7 @@ export class DependencyController {
   async installDepsPty(@Query() query: any): Promise<Observable<string>> {
     const { packageNames } = query
 
-    if (typeof packageNames != 'string') {
+    if (typeof packageNames !== 'string') {
       throw new BizException(
         ErrorCodeEnum.InvalidParameter,
         'packageNames must be string',
@@ -46,7 +43,7 @@ export class DependencyController {
       })
 
       pty.onExit(async ({ exitCode }) => {
-        if (exitCode != 0) {
+        if (exitCode !== 0) {
           subscriber.next(pc.red(`Error: Exit code: ${exitCode}\n`))
         }
 

@@ -18,14 +18,12 @@ export class SubscribeController {
   constructor(private readonly service: SubscribeService) {}
 
   @Get('/status')
-  // 检查特征是否开启
   @HTTPDecorators.Bypass
   async checkStatus() {
     const allow_types = ['note_c', 'post_c']
     return {
       enable: await this.service.checkEnable(),
       bit_map: SubscribeTypeToBitMap,
-      // TODO move to service
       allow_bits: allow_types.map((t) => SubscribeTypeToBitMap[t]),
       allow_types,
     }

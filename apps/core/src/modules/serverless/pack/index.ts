@@ -1,3 +1,3 @@
 import { builtInSnippets } from './built-in'
 
-export const allBuiltInSnippetPack = [...builtInSnippets]
+export const allBuiltInSnippetPack = builtInSnippets

@@ -71,13 +71,7 @@ export class AggregateController {
       latestNoteId,
       themeConfig,
       aiConfig,
-    ] = tasks.map((t) => {
-      if (t.status === 'fulfilled') {
-        return t.value
-      } else {
-        return null
-      }
-    })
+    ] = tasks.map((t) => (t.status === 'fulfilled' ? t.value : null))
     return {
       user,
       seo,

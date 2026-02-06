@@ -18,7 +18,7 @@ import { isDefined, isMongoId } from '~/utils/validator.util'
 import dayjs from 'dayjs'
 import { debounce, omit } from 'es-toolkit/compat'
 import type { PaginateOptions, QueryFilter } from 'mongoose'
-import { getArticleIdFromRoomName } from '../activity/activity.util'
+import { extractArticleIdFromRoomName } from '../activity/activity.util'
 import { CommentService } from '../comment/comment.service'
 import { DraftRefType } from '../draft/draft.model'
 import { DraftService } from '../draft/draft.service'
@@ -76,9 +76,7 @@ export class NoteService {
     if (!note.publicAt) {
       return false
     }
-    const isSecret = dayjs(note.publicAt).isAfter(new Date())
-
-    return isSecret
+    return dayjs(note.publicAt).isAfter(new Date())
   }
 
   async getLatestNoteId() {
@@ -144,15 +142,13 @@ export class NoteService {
     doc: T,
     password?: string,
   ): boolean {
-    const hasPassword = doc.password
-    if (!hasPassword) {
+    if (!doc.password) {
       return true
     }
     if (!password) {
       return false
     }
-    const isValid = Object.is(password, doc.password)
-    return isValid
+    return Object.is(password, doc.password)
   }
 
   public async create(document: NoteModel & { draftId?: string }) {
@@ -214,7 +210,7 @@ export class NoteService {
               {
                 scope: EventScope.TO_VISITOR,
                 gateway: {
-                  rooms: [getArticleIdFromRoomName(note.id)],
+                  rooms: [extractArticleIdFromRoomName(note.id)],
                 },
               },
             ),
@@ -333,12 +329,12 @@ export class NoteService {
       ])
     })
 
-    await this.boardcaseNoteUpdateEvent(updated)
+    await this.broadcastNoteUpdateEvent(updated)
 
     return updated
   }
 
-  private boardcaseNoteUpdateEvent = debounce(
+  private broadcastNoteUpdateEvent = debounce(
     async (updated: NoteModel) => {
       if (!updated) {
         return

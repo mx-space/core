@@ -125,8 +125,7 @@ export class AuthService {
   }
 
   async generateAccessToken() {
-    const ap = customAlphabet(alphabet, 40)
-    const nanoid = await ap()
+    const nanoid = customAlphabet(alphabet, 40)()
 
     return `txo${nanoid}`
   }

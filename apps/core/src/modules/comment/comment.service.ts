@@ -51,7 +51,6 @@ export class CommentService implements OnModuleInit {
     private readonly commentModel: MongooseModel<CommentModel>,
 
     private readonly databaseService: DatabaseService,
-    private readonly configs: ConfigsService,
     private readonly ownerService: OwnerService,
     private readonly mailService: EmailService,
 
@@ -159,7 +158,7 @@ export class CommentService implements OnModuleInit {
 
   async checkSpam(doc: CommentModel) {
     const res = await (async () => {
-      const commentOptions = await this.configs.get('commentOptions')
+      const commentOptions = await this.configsService.get('commentOptions')
       if (!commentOptions.antiSpam) {
         return false
       }
@@ -324,9 +323,7 @@ export class CommentService implements OnModuleInit {
         },
       )
 
-      if (commentShouldAudit || comment.isWhispers) {
-        /* empty */
-      } else {
+      if (!commentShouldAudit && !comment.isWhispers) {
         await this.eventManager.broadcast(
           BusinessEvents.COMMENT_CREATE,
           omit(comment, ['ip', 'agent']),
@@ -446,7 +443,7 @@ export class CommentService implements OnModuleInit {
   }
 
   async sendEmail(comment: CommentModel, type: CommentReplyMailType) {
-    const enable = await this.configs
+    const enable = await this.configsService
       .get('mailOptions')
       .then((config) => config.enable)
     if (!enable) {
@@ -513,7 +510,7 @@ export class CommentService implements OnModuleInit {
   async resolveUrlByType(type: CollectionRefTypes, model: any) {
     const {
       url: { webUrl: base },
-    } = await this.configs.waitForConfigReady()
+    } = await this.configsService.waitForConfigReady()
     switch (type) {
       case CollectionRefTypes.Note: {
         return new URL(`/notes/${model.nid}`, base).toString()
@@ -629,45 +626,29 @@ export class CommentService implements OnModuleInit {
     const { seo, mailOptions } = await this.configsService.waitForConfigReady()
     const senderEmail = mailOptions.from || mailOptions.smtp?.user
     const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
+    const subject =
+      type === CommentReplyMailType.Guest
+        ? `[${seo.title || 'Mx Space'}] 主人给你了新的回复呐`
+        : `[${seo.title || 'Mx Space'}] 有新回复了耶~`
 
     source.ip ??= ''
-    if (type === CommentReplyMailType.Guest) {
-      const options = {
-        from: sendfrom,
-        subject: `[${seo.title || 'Mx Space'}] 主人给你了新的回复呐`,
-        to,
-        html: ejs.render(
-          (await this.mailService.readTemplate(type)) as string,
-          source,
-        ),
-      }
-      if (isDev) {
-        // @ts-ignore
-        delete options.html
-        Object.assign(options, { source })
-        this.logger.log(options)
-        return
-      }
-      await this.mailService.send(options)
-    } else {
-      const options = {
-        from: sendfrom,
-        subject: `[${seo.title || 'Mx Space'}] 有新回复了耶~`,
-        to,
-        html: ejs.render(
-          (await this.mailService.readTemplate(type)) as string,
-          source,
-        ),
-      }
-      if (isDev) {
-        // @ts-ignore
-        delete options.html
-        Object.assign(options, { source })
-        this.logger.log(options)
-        return
-      }
-      await this.mailService.send(options)
+    const options = {
+      from: sendfrom,
+      subject,
+      to,
+      html: ejs.render(
+        (await this.mailService.readTemplate(type)) as string,
+        source,
+      ),
     }
+    if (isDev) {
+      // @ts-ignore
+      delete options.html
+      Object.assign(options, { source })
+      this.logger.log(options)
+      return
+    }
+    await this.mailService.send(options)
   }
 
   // push comment
@@ -675,14 +656,11 @@ export class CommentService implements OnModuleInit {
   async pushCommentEvent(comment: CommentModel) {
     const { enable, enableComment } =
       await this.configsService.get('barkOptions')
-    if (!enable) {
-      return
-    }
-    if (!enableComment) {
+    if (!enable || !enableComment) {
       return
     }
     const owner = await this.ownerService.getOwner()
-    if (comment.author == owner.name && comment.author == owner.username) {
+    if (comment.author === owner.name || comment.author === owner.username) {
       return
     }
     const { adminUrl } = await this.configsService.get('url')

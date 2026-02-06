@@ -32,7 +32,6 @@ import { isUndefined, keyBy } from 'es-toolkit/compat'
 import type { Document, QueryFilter } from 'mongoose'
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerService } from '../owner/owner.service'
-import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
 import { CommentReplyMailType } from './comment.enum'
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
@@ -76,10 +75,6 @@ export class CommentController {
     const readers = await this.readerService.findReaderInIds(
       comments.docs.map((doc) => doc.readerId).filter(Boolean) as string[],
     )
-    const readerMap = new Map<string, ReaderModel>()
-    for (const reader of readers) {
-      readerMap.set(reader._id.toHexString(), reader)
-    }
 
     const res = transformDataToPaginate(comments)
     Object.assign(res, {
@@ -153,17 +148,7 @@ export class CommentController {
       },
     ]
 
-    if (isAuthenticated) {
-      $and.push({
-        $or: [
-          { isWhispers: true },
-          { isWhispers: false },
-          {
-            isWhispers: { $exists: false },
-          },
-        ],
-      })
-    } else {
+    if (!isAuthenticated) {
       $and.push({
         $or: [
           { isWhispers: false },
@@ -193,7 +178,7 @@ export class CommentController {
     const result = transformDataToPaginate(comments)
     const readerIds = comments.docs
       .map((comment) => comment.readerId)
-      .filter((id) => !!id) as string[]
+      .filter(Boolean) as string[]
     const readers = await this.readerService.findReaderInIds(readerIds)
 
     Object.assign(result, {
@@ -400,10 +385,10 @@ export class CommentController {
     const { id } = params
     const { state, pin } = body
 
-    const updateResult = {} as any
+    const updateResult: Record<string, any> = {}
 
-    !isUndefined(state) && Reflect.set(updateResult, 'state', state)
-    !isUndefined(pin) && Reflect.set(updateResult, 'pin', pin)
+    if (!isUndefined(state)) updateResult.state = state
+    if (!isUndefined(pin)) updateResult.pin = pin
 
     if (pin) {
       const currentRefModel = await this.commentService.model

@@ -49,12 +49,10 @@ export class AnalyzeController {
   async getAnalyze(@Query() query: AnalyzeDto & Partial<PagerDto>) {
     const { from, to = new Date(), page = 1, size = 50 } = query
 
-    const data = await this.service.getRangeAnalyzeData(from, to, {
+    return this.service.getRangeAnalyzeData(from, to, {
       limit: Math.trunc(size),
       page,
     })
-
-    return data
   }
 
   @Get('/today')
@@ -97,22 +95,20 @@ export class AnalyzeController {
           true,
         )
 
-        const dayData = Array.from({ length: 24 })
-          .fill(undefined)
-          .map((v, i) => {
-            return [
-              {
-                hour: `${i}时`,
-                key: 'ip',
-                value: day[i.toString().padStart(2, '0')]?.ip || 0,
-              },
-              {
-                hour: `${i}时`,
-                key: 'pv',
-                value: day[i.toString().padStart(2, '0')]?.pv || 0,
-              },
-            ]
-          })
+        const dayData = Array.from({ length: 24 }, (_, i) => {
+          return [
+            {
+              hour: `${i}时`,
+              key: 'ip',
+              value: day[i.toString().padStart(2, '0')]?.ip || 0,
+            },
+            {
+              hour: `${i}时`,
+              key: 'pv',
+              value: day[i.toString().padStart(2, '0')]?.pv || 0,
+            },
+          ]
+        })
         const rangeStart = dayjs().subtract(29, 'day').startOf('day').toDate()
         const all = (await this.service.getIpAndPvAggregateByRange({
           from: rangeStart,
@@ -233,6 +229,5 @@ export class AnalyzeController {
   async clearAnalyze(@Query() query: AnalyzeDto) {
     const { from = new Date('2020-01-01'), to = new Date() } = query
     await this.service.cleanAnalyzeRange({ from, to })
-    return
   }
 }

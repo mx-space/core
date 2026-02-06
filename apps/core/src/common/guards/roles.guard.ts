@@ -2,12 +2,7 @@ import type { CanActivate, ExecutionContext } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { AuthGuard } from './auth.guard'
-
-/**
- * 区分游客和主人的守卫
- */
 
 @Injectable()
 export class RolesGuard extends AuthGuard implements CanActivate {
@@ -17,6 +12,7 @@ export class RolesGuard extends AuthGuard implements CanActivate {
   ) {
     super(authService)
   }
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = this.getRequest(context)
     let isAuthenticated = false
@@ -30,10 +26,7 @@ export class RolesGuard extends AuthGuard implements CanActivate {
 
     if (readerId) {
       request.readerId = readerId
-
-      Object.assign(request.raw, {
-        readerId,
-      })
+      Object.assign(request.raw, { readerId })
     }
 
     request.isGuest = !isAuthenticated
@@ -41,14 +34,9 @@ export class RolesGuard extends AuthGuard implements CanActivate {
 
     Object.assign(request.raw, {
       isGuest: !isAuthenticated,
-
       isAuthenticated,
     })
 
     return true
-  }
-
-  getRequest(context: ExecutionContext) {
-    return getNestExecutionContextRequest(context)
   }
 }

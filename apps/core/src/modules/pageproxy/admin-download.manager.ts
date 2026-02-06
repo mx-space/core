@@ -30,8 +30,8 @@ export class AdminDownloadManager {
     lastActivity: 0,
   }
 
-  private readonly DOWNLOAD_TIMEOUT = 600000 // 10分钟超时
-  private readonly LOG_RETENTION_TIME = 300000 // 5分钟日志保留时间
+  private readonly DOWNLOAD_TIMEOUT = 10 * 60 * 1000
+  private readonly LOG_RETENTION_TIME = 5 * 60 * 1000
 
   constructor(
     private readonly updateService: UpdateService,
@@ -63,7 +63,7 @@ export class AdminDownloadManager {
     }
 
     if (this.state.logs.length > 0) {
-      const log = this.state.logs.shift() || '...'
+      const log = this.state.logs.shift()!
       this.state.lastActivity = Date.now()
       return { code: 200, type: 'text/html', body: log }
     }

@@ -187,10 +187,7 @@ export class FileController {
   @Post('/orphans/cleanup')
   @Auth()
   async cleanupOrphanFiles(@Query('maxAgeMinutes') maxAgeMinutes?: number) {
-    const result = await this.fileReferenceService.cleanupOrphanFiles(
-      maxAgeMinutes || 60,
-    )
-    return result
+    return this.fileReferenceService.cleanupOrphanFiles(maxAgeMinutes || 60)
   }
 
   @Get('/:type')

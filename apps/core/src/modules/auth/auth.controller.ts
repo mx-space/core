@@ -56,7 +56,7 @@ export class AuthController {
         .verifyCustomToken(token)
         .then(([isValid]) => isValid)
     }
-    if (id && typeof id === 'string' && isMongoId(id)) {
+    if (typeof id === 'string' && isMongoId(id)) {
       return await this.authService.getTokenSecret(id)
     }
     return await this.authService.getAllAccessToken()
@@ -80,16 +80,8 @@ export class AuthController {
   @Auth()
   async deleteToken(@Query() query: MongoIdDto) {
     const { id } = query
-    const token = await this.authService
-      .getAllAccessToken()
-      .then((models) =>
-        models.find((model) => {
-          return (model as any).id === id
-        }),
-      )
-      .then((model) => {
-        return model?.token
-      })
+    const models = await this.authService.getAllAccessToken()
+    const token = models.find((model) => model.id === id)?.token
 
     if (!token) {
       throw new BizException(ErrorCodeEnum.TokenNotFound)

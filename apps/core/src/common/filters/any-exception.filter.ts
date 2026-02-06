@@ -1,15 +1,7 @@
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
-import {
-  Catch,
-  HttpException,
-  HttpStatus,
-  Inject,
-  Logger,
-} from '@nestjs/common'
-import { Reflector } from '@nestjs/core'
+import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common'
 import { EventScope } from '~/constants/business-event.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import { REFLECTOR } from '~/constants/system.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -17,19 +9,19 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { getIp } from '../../utils/ip.util'
 import { BizException } from '../exceptions/biz.exception'
 
-type myError = {
+interface ErrorLike {
   readonly status: number
   readonly statusCode?: number
-
   readonly message?: string
 }
 
 let once = false
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name)
+
   constructor(
-    @Inject(REFLECTOR) private reflector: Reflector,
     private readonly eventManager: EventManagerService,
     private readonly barkService: BarkPushService,
     private readonly configService: ConfigsService,
@@ -37,7 +29,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     this.registerCatchAllExceptionsHook()
   }
 
-  registerCatchAllExceptionsHook() {
+  private registerCatchAllExceptionsHook() {
     if (once) {
       return
     }
@@ -50,9 +42,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       this.eventManager.broadcast(
         EventBusEvents.SystemException,
         { message: err?.message ?? err, stack: err?.stack || '' },
-        {
-          scope: EventScope.TO_SYSTEM,
-        },
+        { scope: EventScope.TO_SYSTEM },
       )
     })
     once = true
@@ -64,30 +54,32 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const request = ctx.getRequest<FastifyRequest>()
 
     if (request.method === 'OPTIONS') return response.status(204).send()
-    const ip = getIp(request)
 
+    const ip = getIp(request)
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
-        : (exception as myError)?.status ||
-          (exception as myError)?.statusCode ||
+        : (exception as ErrorLike)?.status ||
+          (exception as ErrorLike)?.statusCode ||
           HttpStatus.INTERNAL_SERVER_ERROR
 
     const message =
       (exception as any)?.response?.message ||
-      (exception as myError)?.message ||
+      (exception as ErrorLike)?.message ||
       ''
     const url = request.raw?.url || request.url || 'Unknown URL'
+
     if (status === HttpStatus.TOO_MANY_REQUESTS) {
       this.logger.warn(`IP: ${ip} 疑似遭到攻击 Path: ${decodeURI(url)}`)
 
       const { enableThrottleGuard } =
         await this.configService.get('barkOptions')
-      if (enableThrottleGuard)
+      if (enableThrottleGuard) {
         this.barkService.throttlePush({
           title: '疑似遭到攻击',
           body: `IP: ${ip} Path: ${decodeURI(url)}`,
         })
+      }
 
       return response.status(429).send({
         message: '请求过于频繁，请稍后再试',
@@ -105,15 +97,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
           message: (exception as Error)?.message,
           stack: (exception as Error)?.stack,
         },
-        {
-          scope: EventScope.TO_SYSTEM,
-        },
+        { scope: EventScope.TO_SYSTEM },
       )
     } else {
       this.logger.warn(
         `IP: ${ip} 错误信息：(${status}) ${message} Path: ${decodeURI(url)}`,
       )
     }
+
     const res = (exception as any).response
     response
       .status(status)

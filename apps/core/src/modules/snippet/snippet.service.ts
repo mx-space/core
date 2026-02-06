@@ -56,7 +56,6 @@ export class SnippetService {
     if (isExist) {
       throw new BizException(ErrorCodeEnum.SnippetExists)
     }
-    // 验证正确类型
     await this.validateTypeAndCleanup(model)
 
     if (model.reference === 'theme') {
@@ -93,10 +92,8 @@ export class SnippetService {
     if (old.secret && newModel.secret) {
       const oldSecret = qs.parse(old.secret)
 
-      // newSecret will be e.g. `{ foo: '' }`
       const newSecret = qs.parse(newModel.secret)
 
-      // first delete key if newer secret not provide
       for (const key in oldSecret) {
         if (!(key in newSecret)) {
           delete oldSecret[key]
@@ -104,8 +101,6 @@ export class SnippetService {
       }
 
       for (const key in newSecret) {
-        // if newSecret has same key, but value is empty, remove it
-
         if (newSecret[key] === '' && oldSecret[key] !== '') {
           delete newSecret[key]
         }
@@ -128,13 +123,11 @@ export class SnippetService {
       })
     }
 
-    if (newerDoc) {
-      const nextSnippet = this.transformLeanSnippetModel(newerDoc.toObject())
-
-      return nextSnippet
+    if (!newerDoc) {
+      return newerDoc
     }
 
-    return newerDoc
+    return this.transformLeanSnippetModel(newerDoc.toObject())
   }
 
   async delete(id: string) {
@@ -198,13 +191,10 @@ export class SnippetService {
         break
       }
     }
-    // TODO refactor
-    // cleanup
     if (model.type !== SnippetType.Function) {
-      const deleteKeys: (keyof SnippetModel)[] = ['enable', 'method', 'secret']
-      deleteKeys.forEach((key) => {
-        Reflect.deleteProperty(model, key)
-      })
+      delete model.enable
+      delete model.method
+      delete model.secret
     }
   }
 
@@ -215,33 +205,21 @@ export class SnippetService {
     if (!doc) {
       throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
-    const nextSnippet = this.transformLeanSnippetModel(doc)
-
-    return nextSnippet
+    return this.transformLeanSnippetModel(doc)
   }
 
   private transformLeanSnippetModel(snippet: SnippetModel) {
     const nextSnippet = { ...snippet }
-    // transform sth.
     if (snippet.type === SnippetType.Function && snippet.secret) {
       const secretObj = qs.parse(EncryptUtil.decrypt(snippet.secret))
-
       for (const key in secretObj) {
-        // remove secret value, only keep key
         secretObj[key] = ''
       }
       nextSnippet.secret = secretObj as any
     }
-
     return nextSnippet
   }
 
-  /**
-   *
-   * @param name
-   * @param reference 引用类型，可以理解为 type, 或者一级分类
-   * @returns snippet document
-   */
   async getSnippetByName(name: string, reference: string) {
     const doc = await this.model
       .findOne({ name, reference, type: { $ne: SnippetType.Function } })

@@ -49,11 +49,7 @@ export class RecentlyController {
   @HTTPDecorators.Idempotence()
   @Auth()
   async create(@Body() body: RecentlyDto) {
-    const res = await this.recentlyService.create(
-      body as unknown as RecentlyModel,
-    )
-
-    return res
+    return await this.recentlyService.create(body as unknown as RecentlyModel)
   }
 
   @Delete('/:id')

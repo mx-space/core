@@ -27,7 +27,7 @@ import { debounce, omit } from 'es-toolkit/compat'
 import { Types } from 'mongoose'
 import type { AggregatePaginateModel, Document } from 'mongoose'
 import slugify from 'slugify'
-import { getArticleIdFromRoomName } from '../activity/activity.util'
+import { extractArticleIdFromRoomName } from '../activity/activity.util'
 import type { CategoryService } from '../category/category.service'
 import { CommentModel } from '../comment/comment.model'
 import { DraftRefType } from '../draft/draft.model'
@@ -81,8 +81,6 @@ export class PostService implements OnApplicationBootstrap {
     if (!(await this.isAvailableSlug(slug))) {
       throw new BusinessException(ErrorCodeEnum.SlugNotAvailable)
     }
-
-    // 有关联文章
 
     const relatedIds = await this.checkRelated(post)
     post.related = relatedIds as any
@@ -207,8 +205,22 @@ export class PostService implements OnApplicationBootstrap {
     slug: string,
     isAuthenticated?: boolean,
   ) {
-    const slugTrackerService = this.slugTrackerService
-    const postModel = this.postModel
+    const findTrackedPost = async () => {
+      const tracked = await this.slugTrackerService.findTrackerBySlug(
+        `/${categorySlug}/${slug}`,
+        ArticleTypeEnum.Post,
+      )
+
+      if (tracked) {
+        return this.postModel
+          .findById(tracked.targetId)
+          .populate('category')
+          .populate({
+            path: 'related',
+            select: 'title slug id _id categoryId category',
+          })
+      }
+    }
 
     const categoryDocument = await this.getCategoryBySlug(categorySlug)
     if (!categoryDocument) {
@@ -217,7 +229,6 @@ export class PostService implements OnApplicationBootstrap {
         throw new BizException(ErrorCodeEnum.CategoryNotFound)
       }
 
-      // 检查发布状态
       if (!isAuthenticated && !trackedPost.isPublished) {
         throw new BizException(ErrorCodeEnum.PostNotFound)
       }
@@ -230,7 +241,6 @@ export class PostService implements OnApplicationBootstrap {
       categoryId: categoryDocument._id,
     }
 
-    // 非认证用户只能查看已发布的文章
     if (!isAuthenticated) {
       queryConditions.isPublished = true
     }
@@ -247,29 +257,11 @@ export class PostService implements OnApplicationBootstrap {
 
     const trackedPost = await findTrackedPost()
 
-    // 检查追踪文章的发布状态
     if (trackedPost && !isAuthenticated && !trackedPost.isPublished) {
       throw new BizException(ErrorCodeEnum.PostNotFound)
     }
 
     return trackedPost
-
-    async function findTrackedPost() {
-      const tracked = await slugTrackerService.findTrackerBySlug(
-        `/${categorySlug}/${slug}`,
-        ArticleTypeEnum.Post,
-      )
-
-      if (tracked) {
-        return postModel
-          .findById(tracked.targetId)
-          .populate('category')
-          .populate({
-            path: 'related',
-            select: 'title slug id _id categoryId category',
-          })
-      }
-    }
   }
 
   async updateById(
@@ -424,13 +416,13 @@ export class PostService implements OnApplicationBootstrap {
       scope: EventScope.TO_SYSTEM_VISITOR,
       nextTick: true,
       gateway: {
-        rooms: [getArticleIdFromRoomName(id)],
+        rooms: [extractArticleIdFromRoomName(id)],
       },
     })
   }
 
   async getCategoryBySlug(slug: string) {
-    return await this.categoryService.model.findOne({ slug })
+    return this.categoryService.model.findOne({ slug })
   }
 
   async isAvailableSlug(slug: string) {
@@ -442,25 +434,23 @@ export class PostService implements OnApplicationBootstrap {
   async checkRelated<
     T extends Partial<Pick<PostModel, 'id' | 'related' | 'relatedId'>>,
   >(data: T): Promise<string[]> {
-    const cloned = { ...data }
-
-    // 有关联文章
-    if (cloned.relatedId && cloned.relatedId.length > 0) {
-      const relatedPosts = await this.postModel.find({
-        _id: { $in: cloned.relatedId },
-      })
-      if (relatedPosts.length !== cloned.relatedId.length) {
-        throw new BizException(ErrorCodeEnum.PostRelatedNotExists)
-      } else {
-        return relatedPosts.map((i) => {
-          if (i.related && (i.related as string[]).includes(data.id!)) {
-            throw new BizException(ErrorCodeEnum.PostSelfRelation)
-          }
-          return i.id
-        })
-      }
+    if (!data.relatedId || data.relatedId.length === 0) {
+      return []
     }
-    return []
+
+    const relatedPosts = await this.postModel.find({
+      _id: { $in: data.relatedId },
+    })
+    if (relatedPosts.length !== data.relatedId.length) {
+      throw new BizException(ErrorCodeEnum.PostRelatedNotExists)
+    }
+
+    return relatedPosts.map((i) => {
+      if (i.related && (i.related as string[]).includes(data.id!)) {
+        throw new BizException(ErrorCodeEnum.PostSelfRelation)
+      }
+      return i.id
+    })
   }
 
   async relatedEachOther(post: PostModel, relatedIds: string[]) {

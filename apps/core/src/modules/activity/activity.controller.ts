@@ -24,6 +24,17 @@ import {
 } from './activity.schema'
 import { ActivityService } from './activity.service'
 
+const ARTICLE_REF_FIELDS = [
+  'title',
+  'slug',
+  'cover',
+  'created',
+  'category',
+  'categoryId',
+  'id',
+  'nid',
+] as const
+
 @ApiController('/activity')
 export class ActivityController {
   constructor(
@@ -39,9 +50,11 @@ export class ActivityController {
     const { ip } = location
     const { id, type } = body
 
-    await this.service.likeAndEmit(type.toLowerCase() as any, id, ip)
-
-    return
+    await this.service.likeAndEmit(
+      type.toLowerCase() as 'post' | 'note',
+      id,
+      ip,
+    )
   }
 
   @Get('/likes')
@@ -80,12 +93,9 @@ export class ActivityController {
   async getPresence(@Query() query: GetPresenceQueryDto) {
     const roomPresence = await this.service.getRoomPresence(query.room_name)
 
-    const readerIds = [] as string[]
-    for (const item of roomPresence) {
-      if (item.readerId) {
-        readerIds.push(item.readerId)
-      }
-    }
+    const readerIds = roomPresence
+      .map((item) => item.readerId)
+      .filter(Boolean) as string[]
     const readers = await this.readerService
       .findReaderInIds(readerIds)
       .then((arr) => {
@@ -113,11 +123,11 @@ export class ActivityController {
   @Auth()
   async deletePresence(
     @Param() params: ActivityTypeParamsDto,
-    @Body() Body: ActivityDeleteDto,
+    @Body() body: ActivityDeleteDto,
   ) {
     return this.service.deleteActivityByType(
       params.type,
-      Body.before ? new Date(Body.before) : new Date(),
+      body.before ? new Date(body.before) : new Date(),
     )
   }
 
@@ -134,16 +144,7 @@ export class ActivityController {
 
     for (const type in objects) {
       objects[type] = objects[type].map((item) => {
-        return pick(item, [
-          'title',
-          'slug',
-          'cover',
-          'created',
-          'category',
-          'categoryId',
-          'id',
-          'nid',
-        ])
+        return pick(item, ARTICLE_REF_FIELDS)
       })
     }
 
@@ -157,7 +158,7 @@ export class ActivityController {
   async getOnlineCount() {
     const roomInfo = await this.service.getAllRoomNames()
     const total = Object.values(roomInfo.roomCount).reduce(
-      (acc: number, count: number) => acc + count,
+      (acc, count) => acc + count,
       0,
     )
     return {
@@ -175,16 +176,7 @@ export class ActivityController {
     const result = await this.service.getTopReadings(top, days)
     return result.map((item) => ({
       ...item,
-      ref: pick(item.ref, [
-        'title',
-        'slug',
-        'cover',
-        'created',
-        'category',
-        'categoryId',
-        'id',
-        'nid',
-      ]),
+      ref: pick(item.ref, ARTICLE_REF_FIELDS),
     }))
   }
 
@@ -202,16 +194,7 @@ export class ActivityController {
     )
     return result.map((item) => ({
       ...item,
-      ref: pick(item.ref, [
-        'title',
-        'slug',
-        'cover',
-        'created',
-        'category',
-        'categoryId',
-        'id',
-        'nid',
-      ]),
+      ref: pick(item.ref, ARTICLE_REF_FIELDS),
     }))
   }
 

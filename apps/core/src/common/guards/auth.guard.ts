@@ -1,5 +1,5 @@
 import type { CanActivate, ExecutionContext } from '@nestjs/common'
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import type { SessionUser } from '~/modules/auth/auth.types'
@@ -7,30 +7,22 @@ import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { BizException } from '../exceptions/biz.exception'
 
-/**
- * Better Auth (cookie + API key) guard
- */
-
 @Injectable()
 export class AuthGuard implements CanActivate {
-  protected readonly logger = new Logger(AuthGuard.name)
   constructor(protected readonly authService: AuthService) {}
-  async canActivate(context: ExecutionContext): Promise<any> {
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = this.getRequest(context)
 
     const session = await this.authService.getSessionUser(request.raw)
 
-    if (session) {
-      const isOwner = session.user?.role === 'owner'
-
-      if (isOwner) {
-        this.attachUserAndToken(
-          request,
-          session.user as SessionUser,
-          session.session?.token || '',
-        )
-        return true
-      }
+    if (session?.user?.role === 'owner') {
+      this.attachUserAndToken(
+        request,
+        session.user as SessionUser,
+        session.session?.token || '',
+      )
+      return true
     }
 
     const apiKey = this.authService.getApiKeyFromRequest({
@@ -40,12 +32,6 @@ export class AuthGuard implements CanActivate {
 
     if (!apiKey) {
       throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
-    }
-
-    if (apiKey.deprecated) {
-      // this.logger.warn(
-      //   '[Auth] Authorization bearer token is deprecated. Use x-api-key instead.',
-      // )
     }
 
     if (!this.authService.isCustomToken(apiKey.key)) {
@@ -82,9 +68,6 @@ export class AuthGuard implements CanActivate {
     request.user = user
     request.token = token
 
-    Object.assign(request.raw, {
-      user,
-      token,
-    })
+    Object.assign(request.raw, { user, token })
   }
 }

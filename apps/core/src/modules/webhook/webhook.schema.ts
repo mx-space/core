@@ -3,9 +3,6 @@ import { EventScope } from '~/constants/business-event.constant'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-/**
- * Webhook schema for API validation
- */
 export const WebhookSchema = z.object({
   payloadUrl: zStrictUrl,
   events: z.array(z.string()),
@@ -16,9 +13,6 @@ export const WebhookSchema = z.object({
 
 export class WebhookDto extends createZodDto(WebhookSchema) {}
 
-/**
- * Partial webhook schema for PATCH operations
- */
 export const PartialWebhookSchema = WebhookSchema.partial()
 
 export class WebhookDtoPartial extends createZodDto(PartialWebhookSchema) {}

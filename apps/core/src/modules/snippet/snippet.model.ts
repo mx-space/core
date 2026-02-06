@@ -38,22 +38,18 @@ export class SnippetModel extends BaseModel {
   @prop({ require: true, trim: true })
   name: string
 
-  // 适用于
   @prop({ default: 'root' })
   reference: string
 
-  // 注释
   @prop({})
   comment?: string
 
-  // 元数据类型（预留二级类型，暂时不用）
   @prop({ maxlength: 20 })
   metatype?: string
 
   @prop()
   schema?: string
 
-  // for function start
   @prop()
   method?: string
 
@@ -66,9 +62,7 @@ export class SnippetModel extends BaseModel {
       return EncryptUtil.encrypt(val)
     },
   })
-  // username=123&password=123
   secret?: string
-  // for function end
 
   @prop()
   enable?: boolean

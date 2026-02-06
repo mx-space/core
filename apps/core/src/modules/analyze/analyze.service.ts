@@ -215,16 +215,12 @@ export class AnalyzeService {
       },
     ]
 
-    const res = await this.analyzeModel.aggregate(pipeline).exec()
-
-    return res
+    return this.analyzeModel.aggregate(pipeline).exec()
   }
 
   async getTodayAccessIp(): Promise<string[]> {
     const redis = this.redisService.getClient()
-    const fromRedisIps = await redis.smembers(getRedisKey(RedisKeys.AccessIp))
-
-    return fromRedisIps
+    return redis.smembers(getRedisKey(RedisKeys.AccessIp))
   }
 
   async getDeviceDistribution(from?: Date, to?: Date) {

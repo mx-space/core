@@ -233,22 +233,22 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     }
 
     const docsWithRefModel = activities.docs.map((ac) => {
-      const nextAc = ac.toJSON()
+      const nextAc = ac.toJSON() as any
       const refModel = refModelData.get(ac.payload.id)
 
-      refModel && Reflect.set(nextAc, 'ref', refModel)
+      if (refModel) {
+        nextAc.ref = refModel
+      }
       const readerId = ac.payload.readerId
       if (readerId) {
         const reader = readerMap.get(readerId)
         if (reader) {
-          Object.assign(nextAc, {
-            reader,
-          })
+          nextAc.reader = reader
         }
       }
 
       return nextAc
-    }) as any as (ActivityModel & {
+    }) as (ActivityModel & {
       payload: any
       ref: PostModel | NoteModel
     })[]
@@ -282,7 +282,6 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       const refId = extractArticleIdFromRoomName(roomName)
       articleIds.push(refId)
 
-      // Explicitly type the document conversion
       const document = data.data[i] as Document & ActivityModel
       data.data[i] = document.toObject()
       ;(data.data[i] as any).refId = refId
@@ -369,13 +368,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     }
     const roomSockets = await this.webGateway.getSocketsOfRoom(roomName)
 
-    // TODO 或许应该找到所有的同一个用户的 socket 最早的一个连接时间
-    const socket = roomSockets.find(
-      (socket) =>
-        // (await this.gatewayService.getSocketMetadata(socket))?.sessionId ===
-        // data.identity,
-        socket.id === data.sid,
-    )
+    const socket = roomSockets.find((socket) => socket.id === data.sid)
     if (!socket) {
       this.logger.debug(
         `socket not found, room_name: ${roomName} identity: ${data.identity}`,
@@ -393,8 +386,8 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       ip,
     }
 
-    Reflect.deleteProperty(presenceData, 'ts')
-    const serializedPresenceData = omit(presenceData, 'ip')
+    delete (presenceData as any).ts
+    const serializedPresenceData = omit(presenceData, 'ip') as any
     if (data.readerId) {
       const reader = await this.readerService.findReaderInIds([data.readerId])
       if (reader.length) {
@@ -411,7 +404,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const roomJoinedAtMap =
       await this.webGateway.getSocketRoomJoinedAtMap(socket)
 
-    Reflect.set(serializedPresenceData, 'joinedAt', roomJoinedAtMap[roomName])
+    serializedPresenceData.joinedAt = roomJoinedAtMap[roomName]
 
     this.webGateway.broadcast(
       BusinessEvents.ACTIVITY_UPDATE_PRESENCE,
@@ -434,24 +427,15 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       roomSocket.map((socket) => this.gatewayService.getSocketMetadata(socket)),
     )
 
-    return uniqBy(
-      socketMeta
-        .filter((x) => x?.presence)
-        .map((x) => {
-          // eslint-disable-next-line array-callback-return
-          if (!x.presence) return
+    const presences = socketMeta
+      .filter((x) => x?.presence)
+      .map((x) => ({
+        ...x.presence!,
+        joinedAt: x.roomJoinedAtMap?.[roomName],
+      }))
+      .sort((a, b) => a.updatedAt - b.updatedAt)
 
-          return {
-            ...x.presence,
-            joinedAt: x.roomJoinedAtMap?.[roomName],
-          }
-        })
-        .sort((a, b) => {
-          if (a && b) return a.updatedAt - b.updatedAt
-          return 1
-        }) as ActivityPresence[],
-      (x) => x.identity,
-    )
+    return uniqBy(presences, (x) => x.identity)
   }
 
   async deleteActivityByType(type: Activity, beforeDate: Date) {
@@ -470,15 +454,11 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   async getAllRoomNames() {
     const roomMap = await this.webGateway.getAllRooms()
     const rooms = Object.keys(roomMap)
-    return {
-      rooms,
-      roomCount: rooms.reduce((acc, roomName) => {
-        return {
-          ...acc,
-          [roomName]: roomMap[roomName].length,
-        }
-      }, {}) as any as Record<string, number>,
+    const roomCount: Record<string, number> = {}
+    for (const roomName of rooms) {
+      roomCount[roomName] = roomMap[roomName].length
     }
+    return { rooms, roomCount }
   }
 
   async getRefsFromRoomNames(roomNames: string[]) {
@@ -560,9 +540,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
               $in: [CommentState.Read, CommentState.Unread],
             },
       })
-
       .populate('ref', 'title nid slug subtitle content categoryId')
-
       .lean({ getters: true })
       .sort({
         created: -1,
@@ -570,16 +548,11 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       .limit(3)
 
     await this.commentService.fillAndReplaceAvatarUrl(docs)
-    return docs.map((doc) => {
-      return Object.assign(
-        {},
-        pick(doc, 'created', 'author', 'text', 'avatar'),
-        pick(doc.ref, 'title', 'nid', 'slug', 'id'),
-        {
-          type: checkRefModelCollectionType(doc.ref),
-        },
-      )
-    })
+    return docs.map((doc) => ({
+      ...pick(doc, 'created', 'author', 'text', 'avatar'),
+      ...pick(doc.ref, 'title', 'nid', 'slug', 'id'),
+      type: checkRefModelCollectionType(doc.ref),
+    }))
   }
 
   async getRecentPublish() {
@@ -597,7 +570,6 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
           created: -1,
         })
         .limit(3)
-
         .toArray(),
       this.databaseService.db
         .collection(POST_COLLECTION_NAME)
@@ -615,37 +587,6 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         })
         .limit(3)
         .toArray(),
-      // .aggregate([
-      //   {
-      //     $lookup: {
-      //       from: CATEGORY_COLLECTION_NAME,
-      //       localField: 'categoryId',
-      //       foreignField: '_id',
-      //       as: 'category',
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       title: 1,
-      //       slug: 1,
-      //       created: 1,
-      //       category: {
-      //         $arrayElemAt: ['$category', 0],
-      //       },
-      //       categoryId: 1,
-      //       id: '$_id',
-      //     },
-      //   },
-      //   {
-      //     $sort: {
-      //       created: -1,
-      //     },
-      //   },
-      //   {
-      //     $limit: 3,
-      //   },
-      // ])
-      // .toArray(),
       this.databaseService.db
         .collection(NOTE_COLLECTION_NAME)
         .find({

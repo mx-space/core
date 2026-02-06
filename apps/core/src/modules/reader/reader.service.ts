@@ -3,7 +3,7 @@ import type { ReturnModelType } from '@typegoose/typegoose'
 import { READER_COLLECTION_NAME } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { Document } from 'mongodb'
+import type { Document } from 'mongodb'
 import { Types } from 'mongoose'
 import { AuthService } from '../auth/auth.service'
 import { ReaderModel } from './reader.model'
@@ -27,11 +27,7 @@ export class ReaderService {
           as: 'account',
         },
       },
-      {
-        // flat account array
-        $unwind: '$account',
-      },
-
+      { $unwind: '$account' },
       {
         $project: {
           _id: 1,
@@ -48,7 +44,6 @@ export class ReaderService {
         },
       },
 
-      // account field flat to root level
       {
         $replaceRoot: {
           newRoot: {
@@ -85,10 +80,7 @@ export class ReaderService {
 
     const pipeline = this.buildQueryPipeline()
 
-    // Get total count (unique users, not accounts)
     const totalDocs = await collection.countDocuments()
-
-    // Add pagination to pipeline
     const paginatedPipeline = [...pipeline, { $skip: skip }, { $limit: size }]
 
     const docs = await collection.aggregate(paginatedPipeline).toArray()
@@ -97,7 +89,6 @@ export class ReaderService {
     const hasNextPage = page < totalPages
     const hasPrevPage = page > 1
 
-    // Return mongoose PaginateResult compatible format
     return {
       docs,
       totalDocs,

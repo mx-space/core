@@ -4,9 +4,6 @@ import { SubscribeTypeToBitMap } from './subscribe.constant'
 
 const subscribeTypeKeys = Object.keys(SubscribeTypeToBitMap)
 
-/**
- * Subscribe schema
- */
 export const SubscribeSchema = z.object({
   email: z.string().email(),
   types: z.array(z.enum(subscribeTypeKeys as [string, ...string[]])),
@@ -14,9 +11,6 @@ export const SubscribeSchema = z.object({
 
 export class SubscribeDto extends createZodDto(SubscribeSchema) {}
 
-/**
- * Cancel subscribe schema
- */
 export const CancelSubscribeSchema = z.object({
   email: z.string().email(),
   cancelToken: z.string(),
@@ -24,9 +18,6 @@ export const CancelSubscribeSchema = z.object({
 
 export class CancelSubscribeDto extends createZodDto(CancelSubscribeSchema) {}
 
-/**
- * Batch unsubscribe schema
- */
 export const BatchUnsubscribeSchema = z
   .object({
     emails: z.array(z.email()).optional(),

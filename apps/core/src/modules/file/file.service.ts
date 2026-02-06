@@ -44,11 +44,12 @@ export class FileService {
   }
 
   async getFileStream(type: FileType, name: string) {
-    const exists = await this.checkIsExist(this.resolveFilePath(type, name))
+    const filePath = this.resolveFilePath(type, name)
+    const exists = await this.checkIsExist(filePath)
     if (!exists) {
       throw new BizException(ErrorCodeEnum.FileNotFound)
     }
-    return createReadStream(this.resolveFilePath(type, name))
+    return createReadStream(filePath)
   }
 
   writeFile(
@@ -110,9 +111,9 @@ export class FileService {
   }
 
   async getDir(type: FileType) {
-    await mkdir(this.resolveFilePath(type, ''), { recursive: true })
-    const path_1 = path.resolve(STATIC_FILE_DIR, type)
-    return await readdir(path_1)
+    const dirPath = this.resolveFilePath(type, '')
+    await mkdir(dirPath, { recursive: true })
+    return readdir(dirPath)
   }
 
   async resolveFileUrl(type: FileType, name: string) {

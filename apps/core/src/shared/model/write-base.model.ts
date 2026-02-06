@@ -28,8 +28,4 @@ export class WriteBaseModel extends BaseCommentIndexModel {
     PropType.NONE,
   )
   meta?: Record<string, any>
-
-  static get protectedKeys() {
-    return super.protectedKeys
-  }
 }

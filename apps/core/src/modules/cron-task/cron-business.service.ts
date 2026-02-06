@@ -110,11 +110,7 @@ export class CronBusinessService {
       }
 
       const pushUrls = await this.aggregateService.getSiteMapContent()
-      const urls = pushUrls
-        .map((item) => {
-          return item.url
-        })
-        .join('\n')
+      const urls = pushUrls.map((item) => item.url).join('\n')
 
       try {
         const res = await this.http.axiosRef.post(

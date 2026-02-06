@@ -2,28 +2,21 @@ import { HttpStatus, UnprocessableEntityException } from '@nestjs/common'
 import { createZodValidationPipe } from 'nestjs-zod'
 import type { ZodError } from 'zod'
 
-/**
- * Extended Zod validation pipe that matches the behavior of
- * the original ExtendedValidationPipe (class-validator based)
- *
- * Key features:
- * - Returns 422 status code for validation errors
- * - Stops at first error
- * - Transforms and validates data
- */
+function formatValidationMessage(error: ZodError): string {
+  const firstError = error.issues[0]
+  if (!firstError) return 'Validation failed'
+
+  const path = firstError.path.join('.')
+  if (path) return `${path}: ${firstError.message}`
+
+  return firstError.message
+}
+
 export const ExtendedZodValidationPipe = createZodValidationPipe({
   createValidationException: (error: ZodError) => {
-    const firstError = error.issues[0]
-    const path = firstError?.path.join('.') || ''
-    const message = firstError
-      ? path
-        ? `${path}: ${firstError.message}`
-        : firstError.message
-      : 'Validation failed'
-
     return new UnprocessableEntityException({
       statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      message,
+      message: formatValidationMessage(error),
       errors: error.issues.map((err) => ({
         field: err.path.join('.'),
         message: err.message,
@@ -32,7 +25,4 @@ export const ExtendedZodValidationPipe = createZodValidationPipe({
   },
 })
 
-/**
- * Shared instance for global use
- */
 export const extendedZodValidationPipeInstance = new ExtendedZodValidationPipe()

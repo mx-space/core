@@ -3,9 +3,6 @@ import { PagerSchema } from '~/shared/dto/pager.dto'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-/**
- * Search schema
- */
 export const SearchSchema = PagerSchema.extend({
   keyword: zNonEmptyString,
   orderBy: zNonEmptyString.optional(),

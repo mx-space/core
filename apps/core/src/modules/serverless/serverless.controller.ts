@@ -136,18 +136,13 @@ export class ServerlessController {
   async resetBuiltInFunction(@Param('id') id: string) {
     const builtIn = await this.serverlessService.isBuiltInFunction(id)
     if (!builtIn) {
-      // throw new BizException('can not reset a non-builtin function')
       const snippet = await this.serverlessService.model.findById(id)
       if (!snippet) {
         throw new BizException(ErrorCodeEnum.FunctionNotFound)
       }
-      await this.serverlessService.model.deleteOne({
-        _id: id,
-      })
+      await this.serverlessService.model.deleteOne({ _id: id })
       return
     }
     await this.serverlessService.resetBuiltInFunction(builtIn)
-
-    return
   }
 }

@@ -23,12 +23,11 @@ export class LinkService {
     @InjectModel(LinkModel)
     private readonly linkModel: MongooseModel<LinkModel>,
     private readonly emailService: EmailService,
-    private readonly configs: ConfigsService,
+    private readonly configsService: ConfigsService,
 
     private readonly ownerService: OwnerService,
     private readonly eventManager: EventManagerService,
     private readonly http: HttpService,
-    private readonly configsService: ConfigsService,
     private readonly linkAvatarService: LinkAvatarService,
   ) {}
 
@@ -146,7 +145,7 @@ export class LinkService {
     if (!model.email) {
       return
     }
-    const { enable } = await this.configs.get('mailOptions')
+    const { enable } = await this.configsService.get('mailOptions')
     if (!enable || isDev) {
       console.info(`
       To: ${model.email}
@@ -164,7 +163,7 @@ export class LinkService {
     })
   }
   async sendToOwner(authorName: string, model: LinkModel) {
-    const enable = (await this.configs.get('mailOptions')).enable
+    const enable = (await this.configsService.get('mailOptions')).enable
     if (!enable || isDev) {
       console.info(`来自 ${authorName} 的友链请求：
         站点标题：${model.name}
@@ -258,9 +257,8 @@ export class LinkService {
   }
 
   async canApplyLink() {
-    const configs = await this.configs.get('friendLinkOptions')
-    const can = configs.allowApply
-    return can
+    const { allowApply } = await this.configsService.get('friendLinkOptions')
+    return allowApply
   }
 
   async sendAuditResultByEmail(id: string, reason: string, state: LinkState) {

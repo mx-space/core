@@ -102,14 +102,11 @@ export class ConfigsService {
     this.configInitd = true
   }
 
-  public get<T extends keyof IConfig>(key: T): Promise<Readonly<IConfig[T]>> {
-    return new Promise((resolve, reject) => {
-      this.waitForConfigReady()
-        .then((config) => {
-          resolve(config[key])
-        })
-        .catch(reject)
-    })
+  public async get<T extends keyof IConfig>(
+    key: T,
+  ): Promise<Readonly<IConfig[T]>> {
+    const config = await this.waitForConfigReady()
+    return config[key]
   }
 
   // Config 在此收口
@@ -148,17 +145,12 @@ export class ConfigsService {
   /**
    * Get a specific config section with encrypted fields removed (for API response)
    */
-  public getForResponse<T extends keyof IConfig>(
+  public async getForResponse<T extends keyof IConfig>(
     key: T,
   ): Promise<Readonly<IConfig[T]>> {
-    return new Promise((resolve, reject) => {
-      this.waitForConfigReady()
-        .then((config) => {
-          const value = config[key]
-          resolve(sanitizeConfigForResponse(value as object, key) as IConfig[T])
-        })
-        .catch(reject)
-    })
+    const config = await this.waitForConfigReady()
+    const value = config[key]
+    return sanitizeConfigForResponse(value as object, key) as IConfig[T]
   }
 
   private async patch<T extends keyof IConfig>(

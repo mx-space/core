@@ -58,7 +58,7 @@ export class CategoryService implements OnApplicationBootstrap {
     )
 
     for (const [i, datum] of data.entries()) {
-      Reflect.set(datum, 'count', counts[i])
+      ;(datum as any).count = counts[i]
     }
 
     return data
@@ -144,39 +144,27 @@ export class CategoryService implements OnApplicationBootstrap {
 
     const originalSlug = `/${category.slug}`
 
-    const allPostReferenceThisCategory = await this.postService.model.find({
+    const posts = await this.postService.model.find({
       categoryId: documentId,
     })
 
-    const needTrackerMetaList = [] as [string, string][]
-    for (const post of allPostReferenceThisCategory) {
-      needTrackerMetaList.push([post.slug, post.id])
-    }
-
-    for (const postSlugMeta of needTrackerMetaList) {
-      const [postSlug, postId] = postSlugMeta
+    for (const post of posts) {
       await this.slugTrackerService.createTracker(
-        `${originalSlug}/${postSlug}`,
+        `${originalSlug}/${post.slug}`,
         ArticleTypeEnum.Post,
-        postId,
+        post.id,
       )
     }
   }
   async update(id: string, partialDoc: Partial<CategoryModel>) {
     if (partialDoc?.slug) await this.trackerSlugChanges(id, partialDoc.slug)
-    const newDoc = await this.model.findOneAndUpdate(
-      { _id: id },
-      {
-        ...partialDoc,
-      },
-      {
-        new: true,
-      },
-    )
+    const newDoc = await this.model.findOneAndUpdate({ _id: id }, partialDoc, {
+      new: true,
+    })
 
     this.clearCache()
 
-    this.eventManager.broadcast(BusinessEvents.CATEGORY_CREATE, newDoc, {
+    this.eventManager.broadcast(BusinessEvents.CATEGORY_UPDATE, newDoc, {
       scope: EventScope.TO_SYSTEM_VISITOR,
     })
     return newDoc

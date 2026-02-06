@@ -94,12 +94,9 @@ export class BackupService {
       })
     }
     return Promise.all(
-      backups.map(async (item) => {
-        const { path } = item
+      backups.map(async ({ filename, path }) => {
         const size = await getFolderSize(path)
-        // @ts-ignore
-        delete item.path
-        return { ...item, size }
+        return { filename, size }
       }),
     )
   }
@@ -238,9 +235,7 @@ export class BackupService {
 
   async getFileStream(dirname: string) {
     const path = this.checkBackupExist(dirname)
-    const stream = createReadStream(path)
-
-    return stream
+    return createReadStream(path)
   }
 
   checkBackupExist(dirname: string) {

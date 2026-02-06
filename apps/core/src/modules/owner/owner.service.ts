@@ -1,9 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose'
-import {
-  BizException,
-  BusinessException,
-} from '~/common/exceptions/biz.exception'
+import { BizException } from '~/common/exceptions/biz.exception'
 import {
   OWNER_PROFILE_COLLECTION_NAME,
   READER_COLLECTION_NAME,
@@ -122,7 +119,7 @@ export class OwnerService {
   async patchOwnerData(data: Partial<OwnerModel>) {
     const reader = await this.getOwnerReader()
     if (!reader?._id) {
-      throw new BusinessException(ErrorCodeEnum.MasterLost)
+      throw new BizException(ErrorCodeEnum.MasterLost)
     }
 
     const readerPatch: Record<string, any> = {}
@@ -177,7 +174,7 @@ export class OwnerService {
   ): Promise<Record<string, Date | string | null>> {
     const reader = await this.getOwnerReader()
     if (!reader?._id) {
-      throw new BusinessException(ErrorCodeEnum.MasterLost)
+      throw new BizException(ErrorCodeEnum.MasterLost)
     }
     const profile = await this.getOwnerProfile(reader._id, true)
     const prevFootstep = {
@@ -224,7 +221,7 @@ export class OwnerService {
   }
 
   async getSiteOwnerOrMocked() {
-    return await this.getOwnerInfo().catch((error) => {
+    return this.getOwnerInfo().catch((error) => {
       if (
         error instanceof BizException &&
         error.bizCode === ErrorCodeEnum.MasterLost

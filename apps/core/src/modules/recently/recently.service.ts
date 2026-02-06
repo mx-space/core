@@ -38,8 +38,8 @@ export class RecentlyService {
     return this.recentlyModel
   }
 
-  async getAll() {
-    const result = (await this.model.aggregate([
+  private get commentCountPipeline() {
+    return [
       {
         $lookup: {
           from: 'comments',
@@ -48,7 +48,6 @@ export class RecentlyService {
           localField: '_id',
         },
       },
-
       {
         $addFields: {
           comments: {
@@ -66,6 +65,12 @@ export class RecentlyService {
           created: -1,
         },
       },
+    ] as const
+  }
+
+  async getAll() {
+    const result = (await this.model.aggregate([
+      ...this.commentCountPipeline,
     ])) as RecentlyModel[]
 
     await this.populateRef(result)
@@ -75,32 +80,7 @@ export class RecentlyService {
 
   async getOne(id: string) {
     const result = (await this.model.aggregate([
-      {
-        $lookup: {
-          from: 'comments',
-          as: 'comment',
-          foreignField: 'ref',
-          localField: '_id',
-        },
-      },
-
-      {
-        $addFields: {
-          comments: {
-            $size: '$comment',
-          },
-        },
-      },
-      {
-        $project: {
-          comment: 0,
-        },
-      },
-      {
-        $sort: {
-          created: -1,
-        },
-      },
+      ...this.commentCountPipeline,
       {
         $match: {
           _id: new ObjectId(id),
@@ -128,7 +108,7 @@ export class RecentlyService {
       refMap[doc.refType]?.push(doc.ref)
     }
 
-    const foreignIdMap = {} as any
+    const foreignIdMap: Record<string, any> = {}
 
     for (const refType in refMap) {
       const refIds = refMap[refType as CollectionRefTypes]
@@ -180,15 +160,11 @@ export class RecentlyService {
 
     const result = await this.recentlyModel.aggregate([
       {
-        $match: after
-          ? {
-              _id: {
-                $gt: new ObjectId(after),
-              },
-            }
-          : before
-            ? { _id: { $lt: new ObjectId(before) } }
-            : {},
+        $match: (() => {
+          if (after) return { _id: { $gt: new ObjectId(after) } }
+          if (before) return { _id: { $lt: new ObjectId(before) } }
+          return {}
+        })(),
       },
 
       {

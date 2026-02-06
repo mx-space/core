@@ -107,7 +107,6 @@ export class PageProxyController {
 
     try {
       const stream = createReadStream(assetPath)
-      const minetype = lookup(extname(assetPath))
 
       reply.header('cache-control', 'public, max-age=31536000')
       reply.header(
@@ -122,11 +121,11 @@ export class PageProxyController {
         }
       })
 
-      if (minetype) {
-        return reply.type(minetype).send(stream)
-      } else {
-        return reply.send(stream)
+      const mimeType = lookup(extname(assetPath))
+      if (mimeType) {
+        reply.type(mimeType)
       }
+      return reply.send(stream)
     } catch (error) {
       console.error('Asset serving error:', error)
       return reply.code(500).send({

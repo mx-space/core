@@ -150,11 +150,6 @@ export class AggregateService {
           list.map((item) => ({
             ...pick(item, ['_id', 'title', 'slug', 'created', 'modified']),
             category: item.category,
-            // summary:
-            //   item.summary ??
-            //   (item.text.length > 150
-            //     ? item.text.slice(0, 150) + '...'
-            //     : item.text),
             url: encodeURI(
               `/posts/${(item.category as CategoryModel).slug}/${item.slug}`,
             ),
@@ -476,7 +471,7 @@ export class AggregateService {
         break
       }
       case ReadAndLikeCountDocumentType.Note: {
-        const result = await this.postService.model.aggregate(pipeline)
+        const result = await this.noteService.model.aggregate(pipeline)
         if (result[0]) counts = result[0]
         break
       }

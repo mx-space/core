@@ -43,39 +43,25 @@ export class CategoryController {
     const { ids, joint, type = CategoryType.Category } = query // categories is category's mongo id
     if (ids) {
       const ignoreKeys = '-text -summary -isPublished -images -commentsIndex'
-      if (joint) {
-        const map = new Object()
+      const map: Record<string, any> = {}
 
-        await Promise.all(
-          ids.map(async (id) => {
-            const item = await this.postService.model
-              .find({ categoryId: id }, ignoreKeys)
-              .sort({ created: -1 })
-              .lean()
+      await Promise.all(
+        ids.map(async (id) => {
+          const posts = await this.postService.model
+            .find({ categoryId: id }, ignoreKeys)
+            .sort({ created: -1 })
+            .lean()
 
-            map[id] = item
-            return id
-          }),
-        )
-
-        return { entries: map }
-      } else {
-        const map = new Object()
-
-        await Promise.all(
-          ids.map(async (id) => {
-            const posts = await this.postService.model
-              .find({ categoryId: id }, ignoreKeys)
-              .sort({ created: -1 })
-              .lean()
+          if (joint) {
+            map[id] = posts
+          } else {
             const category = await this.categoryService.findCategoryById(id)
-            map[id] = Object.assign({ ...category, children: posts })
-            return id
-          }),
-        )
+            map[id] = { ...category, children: posts }
+          }
+        }),
+      )
 
-        return { entries: map }
-      }
+      return { entries: map }
     }
     return type === CategoryType.Category
       ? await this.categoryService.findAllCategory()

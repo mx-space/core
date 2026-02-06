@@ -239,7 +239,6 @@ export async function CreateAuth(
 
   const handler = async (req: IncomingMessage, res: ServerResponse) => {
     try {
-      // cors
       res.setHeader(
         'Access-Control-Allow-Origin',
         req.headers.origin || req.headers.referer || req.headers.host || '*',
@@ -250,22 +249,19 @@ export async function CreateAuth(
       res.setHeader('Access-Control-Max-Age', '86400')
 
       const clonedRequest = new IncomingMessage(req.socket)
-      const handler = toNodeHandler(auth)(
+      return toNodeHandler(auth)(
         Object.assign(clonedRequest, req, {
           url: req.originalUrl,
 
           // https://github.com/Bekacru/better-call/blob/main/src/adapter/node.ts
           socket: Object.assign(req.socket, {
-            encrypted: isDev ? false : true,
+            encrypted: !isDev,
           }),
         }),
         res,
       )
-
-      return handler
     } catch (error) {
       console.error(error)
-      // throw error
       res.end(error.message)
     }
   }
@@ -276,9 +272,6 @@ export async function CreateAuth(
       options: auth.options,
       api: {
         ...auth.api,
-        getSession(params: Parameters<typeof auth.api.getSession>[0]) {
-          return auth.api.getSession(params)
-        },
         getProviders() {
           return Object.keys(auth.options.socialProviders || {})
         },
@@ -286,8 +279,7 @@ export async function CreateAuth(
           params: Parameters<typeof auth.api.listUserAccounts>[0],
         ) {
           try {
-            const result = await auth.api.listUserAccounts(params)
-            return result
+            return await auth.api.listUserAccounts(params)
           } catch (error) {
             if (error instanceof APIError) {
               return null

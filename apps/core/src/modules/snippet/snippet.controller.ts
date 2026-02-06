@@ -57,10 +57,7 @@ export class SnippetController {
   @Get('/:id')
   @Auth()
   async getSnippetById(@Param() param: MongoIdDto) {
-    const { id } = param
-    const snippet = await this.snippetService.getSnippetById(id)
-
-    return snippet
+    return this.snippetService.getSnippetById(param.id)
   }
 
   @Get('/group')

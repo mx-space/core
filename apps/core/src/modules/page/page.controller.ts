@@ -102,7 +102,7 @@ export class PageController {
   @Get('/:id')
   @Auth()
   async getPageById(@Param() params: MongoIdDto) {
-    const page = this.pageService.model
+    const page = await this.pageService.model
       .findById(params.id)
       .lean({ getters: true })
     if (!page) {

@@ -34,12 +34,6 @@ export class BaseOptionController {
 
   @Get('/:key')
   async getOptionKey(@Param('key') key: keyof IConfig) {
-    if (typeof key !== 'string' && !key) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        `key must be IConfigKeys, got ${key}`,
-      )
-    }
     const value = await this.configsService.getForResponse(key)
     if (!value) {
       throw new BizException(ErrorCodeEnum.ConfigNotFound)

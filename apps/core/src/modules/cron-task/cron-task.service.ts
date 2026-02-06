@@ -36,7 +36,7 @@ export class CronTaskService implements OnModuleInit {
   }
 
   private registerTaskHandlers() {
-    for (const [type, _meta] of Object.entries(CronTaskMetas)) {
+    for (const type of Object.keys(CronTaskMetas)) {
       this.taskQueueProcessor.registerHandler({
         type,
         execute: async (

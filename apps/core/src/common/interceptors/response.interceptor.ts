@@ -1,7 +1,3 @@
-/**
- * 对响应体进行转换结构
- * @author Innei
- */
 import type {
   CallHandler,
   ExecutionContext,
@@ -23,6 +19,7 @@ export interface Response<T> {
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
   constructor(private readonly reflector: Reflector) {}
+
   intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -30,13 +27,11 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
     if (!context.switchToHttp().getRequest()) {
       return next.handle()
     }
-    const handler = context.getHandler()
-    const classType = context.getClass()
 
-    // 跳过 bypass 装饰的请求
+    const handler = context.getHandler()
     const bypass = this.reflector.getAllAndOverride<boolean>(
       SYSTEM.RESPONSE_PASSTHROUGH_METADATA,
-      [classType, handler],
+      [context.getClass(), handler],
     )
     if (bypass) {
       return next.handle()
@@ -48,7 +43,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
           context.switchToHttp().getResponse().status(204)
           return data
         }
-        // 分页转换
+
         if (this.reflector.get(HTTP_RES_TRANSFORM_PAGINATE, handler)) {
           return transformDataToPaginate(data)
         }

@@ -96,8 +96,6 @@ export class LinkController {
         body as unknown as LinkModel,
       )
     })
-
-    return
   }
 
   @Patch('/audit/:id')

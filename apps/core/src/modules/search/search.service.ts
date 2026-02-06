@@ -388,13 +388,12 @@ export class SearchService {
     docs: T[],
     keywordRegexes: RegExp[],
   ) {
-    const normalized = docs.map((doc) =>
-      typeof (doc as any).toObject === 'function'
-        ? (doc as any).toObject()
-        : doc,
-    )
-
-    return normalized
+    return docs
+      .map((doc) =>
+        typeof (doc as any).toObject === 'function'
+          ? (doc as any).toObject()
+          : doc,
+      )
       .map((doc) => ({
         ...doc,
         __search_weight: this.calculateSearchWeight(doc, keywordRegexes),
@@ -436,8 +435,7 @@ export class SearchService {
 function adjustObjectSizeEfficiently<T extends { text: string }>(
   originalObject: T,
   maxSizeInBytes: number = DEFAULT_ALGOLIA_MAX_SIZE_IN_BYTES,
-): any {
-  // 克隆原始对象以避免修改引用
+): T {
   const objectToAdjust = JSON.parse(JSON.stringify(originalObject))
   const text = objectToAdjust.text
 
@@ -453,18 +451,14 @@ function adjustObjectSizeEfficiently<T extends { text: string }>(
     ).length
 
     if (currentSize > maxSizeInBytes) {
-      // 如果当前大小超过限制，减少 text 长度
       high = mid - 1
     } else if (currentSize < maxSizeInBytes) {
-      // 如果当前大小未达限制，尝试增加text长度
       low = mid + 1
     } else {
-      // 精确匹配，退出循环
       break
     }
   }
 
-  // 微调，确保不超过最大大小
   while (
     new TextEncoder().encode(JSON.stringify(objectToAdjust)).length >
     maxSizeInBytes
@@ -472,6 +466,5 @@ function adjustObjectSizeEfficiently<T extends { text: string }>(
     objectToAdjust.text = objectToAdjust.text.slice(0, -1)
   }
 
-  // 返回调整后的对象
   return objectToAdjust as T
 }
