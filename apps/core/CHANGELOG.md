@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [10.0.0-alpha.1](https://github.com/mx-space/core/compare/v10.0.0-alpha.0...v10.0.0-alpha.1) (2026-02-06)
+
+
+### Features
+
+* **i18n:** add translation support to activity, aggregate, and category controllers ([e33d214](https://github.com/mx-space/core/commit/e33d2142eb03f7c32ff531ffd59ccb9cefff33ef))
+
+
+
 # [10.0.0-alpha.0](https://github.com/mx-space/core/compare/v9.7.0...v10.0.0-alpha.0) (2026-02-06)
 
 
