@@ -1,77 +1,72 @@
 import type { CanActivate, ExecutionContext } from '@nestjs/common'
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { AuthService } from '~/modules/auth/auth.service'
-import { ConfigsService } from '~/modules/configs/configs.service'
-import type { UserModel } from '~/modules/user/user.model'
-import { UserService } from '~/modules/user/user.service'
+import type { SessionUser } from '~/modules/auth/auth.types'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-import { isJWT } from '~/utils/validator.util'
+import { BizException } from '../exceptions/biz.exception'
 
 /**
- * JWT auth guard
+ * Better Auth (cookie + API key) guard
  */
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(
-    protected readonly authService: AuthService,
-    protected readonly configs: ConfigsService,
-
-    protected readonly userService: UserService,
-  ) {}
+  protected readonly logger = new Logger(AuthGuard.name)
+  constructor(protected readonly authService: AuthService) {}
   async canActivate(context: ExecutionContext): Promise<any> {
     const request = this.getRequest(context)
 
-    const query = request.query as any
-    const headers = request.headers
-
     const session = await this.authService.getSessionUser(request.raw)
 
-    const Authorization: string =
-      headers.authorization || headers.Authorization || query.token
-
     if (session) {
-      const isOwner = !!session.user?.isOwner
+      const isOwner = session.user?.role === 'owner'
 
       if (isOwner) {
         this.attachUserAndToken(
           request,
-          await this.userService.getMaster(),
-          Authorization,
+          session.user as SessionUser,
+          session.session?.token || '',
         )
         return true
       }
     }
 
-    if (!Authorization) {
-      throw new UnauthorizedException('未登录')
+    const apiKey = this.authService.getApiKeyFromRequest({
+      headers: request.headers,
+      query: request.query as any,
+    })
+
+    if (!apiKey) {
+      throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
     }
 
-    if (this.authService.isCustomToken(Authorization)) {
-      const [isValid, userModel] =
-        await this.authService.verifyCustomToken(Authorization)
-      if (!isValid) {
-        throw new UnauthorizedException('令牌无效')
-      }
-
-      this.attachUserAndToken(request, userModel, Authorization)
-      return true
+    if (apiKey.deprecated) {
+      // this.logger.warn(
+      //   '[Auth] Authorization bearer token is deprecated. Use x-api-key instead.',
+      // )
     }
 
-    const jwt = Authorization.replace(/[Bb]earer /, '')
-
-    if (!isJWT(jwt)) {
-      throw new UnauthorizedException('令牌无效')
+    if (!this.authService.isCustomToken(apiKey.key)) {
+      throw new BizException(ErrorCodeEnum.AuthTokenInvalid)
     }
-    const valid = await this.authService.jwtServicePublic.verify(jwt)
 
-    if (!valid) throw new UnauthorizedException('身份过期')
-    this.attachUserAndToken(
-      request,
-      await this.userService.getMaster(),
-      Authorization,
-    )
+    const result = await this.authService.verifyApiKey(apiKey.key)
+    if (!result?.userId) {
+      throw new BizException(ErrorCodeEnum.AuthTokenInvalid)
+    }
+
+    const isOwner = await this.authService.isOwnerReaderId(result.userId)
+    if (!isOwner) {
+      throw new BizException(ErrorCodeEnum.AuthTokenInvalid)
+    }
+
+    const readerUser = await this.authService.getReaderById(result.userId)
+    if (!readerUser) {
+      throw new BizException(ErrorCodeEnum.AuthTokenInvalid)
+    }
+    this.attachUserAndToken(request, readerUser, apiKey.key)
     return true
   }
 
@@ -81,7 +76,7 @@ export class AuthGuard implements CanActivate {
 
   attachUserAndToken(
     request: FastifyBizRequest,
-    user: UserModel,
+    user: SessionUser,
     token: string,
   ) {
     request.user = user

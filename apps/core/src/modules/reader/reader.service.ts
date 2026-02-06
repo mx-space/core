@@ -5,12 +5,14 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { Document } from 'mongodb'
 import { Types } from 'mongoose'
 import { AUTH_JS_USER_COLLECTION } from '../auth/auth.constant'
+import { AuthService } from '../auth/auth.service'
 import { ReaderModel } from './reader.model'
 
 @Injectable()
 export class ReaderService {
   constructor(
     private readonly databaseService: DatabaseService,
+    private readonly authService: AuthService,
     @InjectModel(ReaderModel)
     private readonly readerModel: ReturnModelType<typeof ReaderModel>,
   ) {}
@@ -34,7 +36,7 @@ export class ReaderService {
         $project: {
           _id: 1,
           email: 1,
-          isOwner: 1,
+          role: 1,
           image: 1,
           name: 1,
           handle: 1,
@@ -106,15 +108,11 @@ export class ReaderService {
       hasPrevPage,
     }
   }
-  async updateAsOwner(id: string) {
-    return this.databaseService.db
-      .collection(AUTH_JS_USER_COLLECTION)
-      .updateOne({ _id: new Types.ObjectId(id) }, { $set: { isOwner: true } })
+  async transferOwner(id: string) {
+    return this.authService.transferOwnerRole(id)
   }
   async revokeOwner(id: string) {
-    return this.databaseService.db
-      .collection(AUTH_JS_USER_COLLECTION)
-      .updateOne({ _id: new Types.ObjectId(id) }, { $set: { isOwner: false } })
+    return this.authService.revokeOwnerRole(id)
   }
   async findReaderInIds(ids: string[]) {
     return this.readerModel

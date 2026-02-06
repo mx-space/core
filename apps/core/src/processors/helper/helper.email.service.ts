@@ -6,7 +6,7 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { UserService } from '~/modules/user/user.service'
+import { OwnerService } from '~/modules/owner/owner.service'
 import { createTransport } from 'nodemailer'
 import type Mail from 'nodemailer/lib/mailer'
 import { Resend } from 'resend'
@@ -29,7 +29,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     private readonly configsService: ConfigsService,
     private readonly assetService: AssetService,
     private readonly subpub: SubPubBridgeService,
-    private readonly userService: UserService,
+    private readonly ownerService: OwnerService,
   ) {
     this.logger = new Logger(EmailService.name)
   }
@@ -207,12 +207,12 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   }
 
   async sendTestEmail() {
-    const master = await this.userService.getMaster()
+    const owner = await this.ownerService.getOwner()
     const mailOptions = await this.configsService.get('mailOptions')
     const senderEmail = mailOptions.from || mailOptions.smtp?.user
     return this.instance?.sendMail({
       from: `"Mx Space" <${senderEmail}>`,
-      to: master.mail,
+      to: owner.mail,
       subject: '测试邮件',
       text: '这是一封测试邮件',
     })

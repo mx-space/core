@@ -34,6 +34,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     aiReview: false,
     aiReviewType: 'binary',
     aiReviewThreshold: 5,
+    testAiReview: '__action__',
     disableComment: false,
     blockIps: [],
     disableNoChinese: false,

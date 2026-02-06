@@ -77,6 +77,8 @@ export enum ErrorCodeEnum {
   AuthSessionNotFound = 15005,
   AuthUserIdNotFound = 15006,
   AuthFailed = 15007,
+  AuthNotLoggedIn = 15008,
+  AuthTokenInvalid = 15009,
 
   // biz - operation failed (400)
   CategoryHasPosts = 16000,
@@ -230,6 +232,8 @@ export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
     [ErrorCodeEnum.AuthSessionNotFound]: ['会话不存在', 400],
     [ErrorCodeEnum.AuthUserIdNotFound]: ['用户 ID 不存在', 400],
     [ErrorCodeEnum.AuthFailed]: ['认证失败', 400],
+    [ErrorCodeEnum.AuthNotLoggedIn]: ['未登录', 401],
+    [ErrorCodeEnum.AuthTokenInvalid]: ['令牌无效', 401],
 
     // operation failed (400)
     [ErrorCodeEnum.CategoryHasPosts]: ['该分类中有其他文章，无法被删除', 400],

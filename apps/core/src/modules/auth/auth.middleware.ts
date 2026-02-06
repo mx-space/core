@@ -28,6 +28,7 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
   async onModuleInit() {
     const handler = async () => {
       const oauth = await this.configService.get('oauth')
+      const urls = await this.configService.get('url')
 
       const providers = {} as NonNullable<BetterAuthOptions['socialProviders']>
       await Promise.all(
@@ -39,7 +40,6 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
             ...(oauth.public?.[type] || {}),
             ...(oauth.secrets?.[type] || {}),
           }
-          const urls = await this.configService.get('url')
           switch (type) {
             case 'github': {
               if (!mergedConfig.clientId || !mergedConfig.clientSecret) return
@@ -72,7 +72,22 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
         }),
       )
 
-      const { handler, auth } = await CreateAuth(providers)
+      const parsedAdminUrl = new URL(urls.adminUrl)
+      const passkeyOptions = {
+        rpID: parsedAdminUrl.hostname,
+        rpName: 'MixSpace',
+        origin: isDev
+          ? [
+              parsedAdminUrl.origin,
+              'http://localhost:9528',
+              'http://127.0.0.1:9528',
+              'http://localhost:2323',
+              'http://127.0.0.1:2323',
+            ]
+          : parsedAdminUrl.origin,
+      }
+
+      const { handler, auth } = await CreateAuth(providers, passkeyOptions)
       this.authHandler = handler
 
       this.authInstance.set(auth)

@@ -30,11 +30,11 @@ import { ConfigsService } from '../configs/configs.service'
 import { LinkState } from '../link/link.model'
 import { LinkService } from '../link/link.service'
 import { NoteService } from '../note/note.service'
+import { OwnerService } from '../owner/owner.service'
 import { PageService } from '../page/page.service'
 import type { PostService } from '../post/post.service'
 import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
-import { UserService } from '../user/user.service'
 import type { RSSProps } from './aggregate.interface'
 import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.schema'
 
@@ -62,8 +62,8 @@ export class AggregateService {
     @Inject(forwardRef(() => RecentlyService))
     private readonly recentlyService: RecentlyService,
 
-    @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService,
+    @Inject(forwardRef(() => OwnerService))
+    private readonly ownerService: OwnerService,
     private readonly urlService: UrlBuilderService,
 
     private readonly configs: ConfigsService,
@@ -268,7 +268,7 @@ export class AggregateService {
   async buildRssStructure(): Promise<RSSProps> {
     const data = await this.getRSSFeedContent()
     const seo = await this.configs.get('seo')
-    const author = (await this.userService.getMaster()).name
+    const author = (await this.ownerService.getOwner()).name
     const url = (await this.configs.get('url')).webUrl
     return {
       title: seo.title,

@@ -11,8 +11,8 @@ import { omit } from 'es-toolkit/compat'
 import { AnalyzeService } from '../analyze/analyze.service'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteService } from '../note/note.service'
+import { OwnerService } from '../owner/owner.service'
 import { SnippetService } from '../snippet/snippet.service'
-import { UserService } from '../user/user.service'
 import {
   AggregateQueryDto,
   ReadAndLikeCountDocumentType,
@@ -30,7 +30,7 @@ export class AggregateController {
     private readonly analyzeService: AnalyzeService,
     private readonly noteService: NoteService,
     private readonly snippetService: SnippetService,
-    private readonly userService: UserService,
+    private readonly ownerService: OwnerService,
     private readonly translationEnhancerService: TranslationEnhancerService,
   ) {}
 
@@ -44,7 +44,7 @@ export class AggregateController {
     const { theme } = query
 
     const tasks = await Promise.allSettled([
-      this.userService.getMaster(),
+      this.ownerService.getOwner(),
       this.aggregateService.getAllCategory(),
       this.aggregateService.getAllPages(),
       this.configsService.get('url'),

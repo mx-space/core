@@ -23,14 +23,14 @@ import { isObjectIdOrHexString, Types } from 'mongoose'
 import { AI_PROMPTS } from '../ai/ai.prompts'
 import { AiService } from '../ai/ai.service'
 import { ConfigsService } from '../configs/configs.service'
+import { OwnerModel } from '../owner/owner.model'
+import { OwnerService } from '../owner/owner.service'
 import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
 import type { SnippetModel } from '../snippet/snippet.model'
 import { SnippetType } from '../snippet/snippet.model'
-import { UserModel } from '../user/user.model'
-import { UserService } from '../user/user.service'
 import BlockedKeywords from './block-keywords.json' with { type: 'json' }
 import type {
   CommentEmailTemplateRenderProps,
@@ -52,7 +52,7 @@ export class CommentService implements OnModuleInit {
 
     private readonly databaseService: DatabaseService,
     private readonly configs: ConfigsService,
-    private readonly userService: UserService,
+    private readonly ownerService: OwnerService,
     private readonly mailService: EmailService,
 
     private readonly configsService: ConfigsService,
@@ -67,26 +67,25 @@ export class CommentService implements OnModuleInit {
   ) {}
 
   private async getMailOwnerProps() {
-    const masterInfo = await this.userService.getSiteMasterOrMocked()
-    return UserModel.serialize(masterInfo)
+    const ownerInfo = await this.ownerService.getSiteOwnerOrMocked()
+    return OwnerModel.serialize(ownerInfo)
   }
 
   async onModuleInit() {
-    const masterInfo = await this.getMailOwnerProps()
+    const ownerInfo = await this.getMailOwnerProps()
     const renderProps = {
       ...baseRenderProps,
 
-      master: masterInfo.name,
+      owner: ownerInfo.name,
 
       aggregate: {
         ...baseRenderProps.aggregate,
-        owner: omit(masterInfo, [
+        owner: omit(ownerInfo, [
           'password',
-          'apiToken',
           'lastLoginIp',
           'lastLoginTime',
           'oauth2',
-        ] as (keyof UserModel)[]),
+        ] as (keyof OwnerModel)[]),
       },
     }
     this.mailService.registerEmailType(CommentReplyMailType.Guest, {
@@ -164,8 +163,8 @@ export class CommentService implements OnModuleInit {
       if (!commentOptions.antiSpam) {
         return false
       }
-      const master = await this.userService.getMaster()
-      if (doc.author === master.username) {
+      const owner = await this.ownerService.getOwner()
+      if (doc.author === owner.username) {
         return false
       }
       if (commentOptions.blockIps) {
@@ -340,9 +339,7 @@ export class CommentService implements OnModuleInit {
   }
 
   async validAuthorName(author: string): Promise<void> {
-    const isExist = await this.userService.model.findOne({
-      name: author,
-    })
+    const isExist = await this.ownerService.isOwnerName(author)
     if (isExist) {
       throw new BizException(
         ErrorCodeEnum.InvalidParameter,
@@ -456,7 +453,7 @@ export class CommentService implements OnModuleInit {
       return
     }
 
-    const masterInfo = await this.userService.getMasterInfo()
+    const ownerInfo = await this.ownerService.getOwnerInfo()
 
     const refType = comment.refType
     const refModel = this.getModelByRefType(refType)
@@ -470,29 +467,29 @@ export class CommentService implements OnModuleInit {
       time.getMonth() + 1
     }/${time.getFullYear()}`
 
-    if (!refDoc || !masterInfo.mail) {
+    if (!refDoc || !ownerInfo.mail) {
       return
     }
 
     this.sendCommentNotificationMail({
-      to: type === CommentReplyMailType.Owner ? masterInfo.mail : parent!.mail,
+      to: type === CommentReplyMailType.Owner ? ownerInfo.mail : parent!.mail,
       type,
       source: {
         title: refType === CollectionRefTypes.Recently ? '速记' : refDoc.title,
         text: comment.text,
         author:
           type === CommentReplyMailType.Guest ? parent!.author : comment.author,
-        master: masterInfo.name,
+        owner: ownerInfo.name,
         link: await this.resolveUrlByType(refType, refDoc).then(
           (url) => `${url}#comments-${comment.id}`,
         ),
         time: parsedTime,
         mail:
-          CommentReplyMailType.Owner === type ? comment.mail : masterInfo.mail,
+          CommentReplyMailType.Owner === type ? comment.mail : ownerInfo.mail,
         ip: comment.ip || '',
 
         aggregate: {
-          owner: masterInfo,
+          owner: ownerInfo,
           commentor: {
             ...pick(comment, defaultCommentModelKeys),
             created: new Date(comment.created!).toISOString(),
@@ -589,15 +586,15 @@ export class CommentService implements OnModuleInit {
   }
 
   async fillAndReplaceAvatarUrl(comments: CommentModel[]) {
-    const master = await this.userService.getMaster()
+    const owner = await this.ownerService.getOwner()
 
     comments.forEach(function process(comment) {
       if (typeof comment == 'string') {
         return
       }
       // 如果是 author 是站长，就用站长自己设定的头像替换
-      if (comment.author === master.name) {
-        comment.avatar = master.avatar || comment.avatar
+      if (comment.author === owner.name) {
+        comment.avatar = owner.avatar || comment.avatar
       }
 
       // 如果不存在头像就
@@ -684,8 +681,8 @@ export class CommentService implements OnModuleInit {
     if (!enableComment) {
       return
     }
-    const master = await this.userService.getMaster()
-    if (comment.author == master.name && comment.author == master.username) {
+    const owner = await this.ownerService.getOwner()
+    if (comment.author == owner.name && comment.author == owner.username) {
       return
     }
     const { adminUrl } = await this.configsService.get('url')

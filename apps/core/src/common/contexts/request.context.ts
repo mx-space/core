@@ -3,7 +3,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import type { ServerResponse } from 'node:http'
 import { UnauthorizedException } from '@nestjs/common'
-import type { UserModel } from '~/modules/user/user.model'
+import type { SessionUser } from '~/modules/auth/auth.types'
 import type { BizIncomingMessage } from '~/transformers/get-req.transformer'
 
 type Nullable<T> = T | null
@@ -39,7 +39,7 @@ export class RequestContext {
     return null
   }
 
-  static currentUser(throwError?: boolean): Nullable<UserModel> {
+  static currentUser(throwError?: boolean): Nullable<SessionUser> {
     const requestContext = RequestContext.currentRequestContext()
 
     if (requestContext) {

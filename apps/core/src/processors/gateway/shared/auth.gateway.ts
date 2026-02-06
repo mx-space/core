@@ -6,7 +6,6 @@ import type {
 } from '@nestjs/websockets'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthService } from '~/modules/auth/auth.service'
-import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import type { Namespace, Socket } from 'socket.io'
 import { BusinessEvents } from '../../../constants/business-event.constant'
@@ -14,7 +13,6 @@ import { BroadcastBaseGateway } from '../base.gateway'
 
 export type AuthGatewayOptions = {
   namespace: string
-  authway?: 'jwt' | 'custom-token' | 'all'
 }
 
 // @ts-ignore
@@ -24,10 +22,9 @@ export interface IAuthGateway
 export const createAuthGateway = (
   options: AuthGatewayOptions,
 ): new (...args: any[]) => IAuthGateway => {
-  const { namespace, authway = 'all' } = options
+  const { namespace } = options
   class AuthGateway extends BroadcastBaseGateway implements IAuthGateway {
     constructor(
-      protected readonly jwtService: JWTService,
       protected readonly authService: AuthService,
       private readonly redisService: RedisService,
     ) {
@@ -44,56 +41,44 @@ export const createAuthGateway = (
       client.disconnect()
     }
 
-    async authToken(token: string): Promise<boolean> {
-      if (typeof token !== 'string') {
-        return false
-      }
-      const validCustomToken = async () => {
-        const [verifyCustomToken] =
-          await this.authService.verifyCustomToken(token)
-        if (verifyCustomToken) {
-          return true
-        }
-        return false
-      }
-
-      const validJwt = async () => {
-        try {
-          const ok = await this.jwtService.verify(token)
-
-          if (!ok) {
-            return false
-          }
-        } catch {
-          return false
-        }
-        // is not crash, is verify
-        return true
-      }
-
-      switch (authway) {
-        case 'custom-token': {
-          return await validCustomToken()
-        }
-        case 'jwt': {
-          return await validJwt()
-        }
-        case 'all': {
-          const validCustomTokenResult = await validCustomToken()
-          return validCustomTokenResult || (await validJwt())
-        }
-      }
-    }
-
     async handleConnection(client: Socket) {
-      const token =
-        client.handshake.query.token ||
-        client.handshake.headers.authorization ||
-        client.handshake.headers.Authorization
-      if (!token) {
+      const cookie = client.handshake.headers.cookie as string | undefined
+      const origin = client.handshake.headers.origin as string | undefined
+      if (cookie) {
+        const headers = new Headers()
+        headers.set('cookie', cookie)
+        if (origin) {
+          headers.set('origin', origin)
+        }
+        const session =
+          await this.authService.getSessionUserFromHeaders(headers)
+        if (session?.user?.role === 'owner') {
+          super.handleConnect(client)
+          if (session.session?.token) {
+            this.tokenSocketIdMap.set(session.session.token, client.id)
+          }
+          return
+        }
+      }
+
+      const headerApiKey = client.handshake.headers['x-api-key']
+      const headerAuthorization = client.handshake.headers.authorization
+      const apiKey =
+        (Array.isArray(headerApiKey) ? headerApiKey[0] : headerApiKey) ||
+        (Array.isArray(headerAuthorization)
+          ? headerAuthorization[0]
+          : headerAuthorization) ||
+        (client.handshake.query.token as string | undefined)
+      if (!apiKey) {
         return this.authFailed(client)
       }
-      if (!(await this.authToken(token as string))) {
+
+      const token = apiKey.replace(/^Bearer\s+/i, '')
+      if (!this.authService.isCustomToken(token)) {
+        return this.authFailed(client)
+      }
+      const result = await this.authService.verifyApiKey(token)
+      if (!result || !(await this.authService.isOwnerReaderId(result.userId))) {
         return this.authFailed(client)
       }
 

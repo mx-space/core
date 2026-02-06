@@ -18,5 +18,5 @@ export class ReaderModel extends BaseModel {
   image: string
 
   @prop()
-  isOwner: boolean
+  role: 'reader' | 'owner'
 }

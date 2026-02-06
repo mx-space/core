@@ -11,6 +11,7 @@ import { FileReferenceModel } from '~/modules/file/file-reference.model'
 import { LinkModel } from '~/modules/link/link.model'
 import { MetaPresetModel } from '~/modules/meta-preset/meta-preset.model'
 import { NoteModel } from '~/modules/note/note.model'
+import { OwnerProfileModel } from '~/modules/owner/owner-profile.model'
 import { PageModel } from '~/modules/page/page.model'
 import { PostModel } from '~/modules/post/post.model'
 import { ProjectModel } from '~/modules/project/project.model'
@@ -22,7 +23,6 @@ import { SlugTrackerModel } from '~/modules/slug-tracker/slug-tracker.model'
 import { SnippetModel } from '~/modules/snippet/snippet.model'
 import { SubscribeModel } from '~/modules/subscribe/subscribe.model'
 import { TopicModel } from '~/modules/topic/topic.model'
-import { UserModel } from '~/modules/user/user.model'
 import { WebhookEventModel } from '~/modules/webhook/webhook-event.model'
 import { WebhookModel } from '~/modules/webhook/webhook.model'
 import { getProviderByTypegooseClass } from '~/transformers/model.transformer'
@@ -52,7 +52,7 @@ export const databaseModels = [
   SnippetModel,
   SubscribeModel,
   TopicModel,
-  UserModel,
+  OwnerProfileModel,
   WebhookEventModel,
   WebhookModel,
 ].map((model) => getProviderByTypegooseClass(model))

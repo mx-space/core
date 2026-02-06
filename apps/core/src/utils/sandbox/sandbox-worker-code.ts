@@ -150,7 +150,7 @@ function createBridgeContext(namespace) {
         del: (key) => requestBridgeCall('storage.db.del', [namespace, key]),
       },
     },
-    getMaster: () => requestBridgeCall('getMaster', []),
+    getOwner: () => requestBridgeCall('getOwner', []),
     getService: async (name) => {
       if (name === 'http') return createHttpService();
       if (name === 'config') return { get: (key) => requestBridgeCall('config.get', [key]) };

@@ -1,4 +1,4 @@
-import type { UserModel } from '~/modules/user/user.model'
+import type { SessionUser } from '~/modules/auth/auth.types'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 export type AdapterRequest = FastifyRequest &
@@ -8,7 +8,7 @@ export type AdapterRequest = FastifyRequest &
         isAuthenticated: false
       }
     | {
-        user: UserModel
+        user: SessionUser
         token: string
         isGuest: false
         isAuthenticated: true

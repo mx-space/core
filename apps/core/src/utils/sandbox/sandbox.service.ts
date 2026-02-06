@@ -35,7 +35,7 @@ interface BridgeHandlers {
     value: unknown,
   ) => Promise<unknown>
   'storage.db.del': (namespace: string, key: string) => Promise<unknown>
-  getMaster: () => Promise<unknown>
+  getOwner: () => Promise<unknown>
   'config.get': (key: string) => Promise<unknown>
   broadcast: (type: string, data: unknown) => void
   writeAsset: (path: string, data: unknown, options?: unknown) => Promise<void>

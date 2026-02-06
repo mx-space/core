@@ -23,6 +23,12 @@
 - `pnpm test`：运行测试
 - `pnpm lint`：运行 ESLint
 
+## 升级指南
+
+从 v9 升级到 v10 涉及鉴权体系重构，属于 **breaking change**。
+
+详细升级指南请查看 **[Upgrading to v10](./docs/migrations/v10.md)**
+
 # 许可
 
 此项目在 `apps/` 目录下的所有文件均使用 GNU Affero General Public License v3.0 (AGPLv3) with Additional Terms (ADDITIONAL_TERMS) 许可。

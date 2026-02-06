@@ -19,8 +19,8 @@ import { nanoid } from 'nanoid'
 import type Mail from 'nodemailer/lib/mailer'
 import { ConfigsService } from '../configs/configs.service'
 import type { NoteModel } from '../note/note.model'
+import { OwnerService } from '../owner/owner.service'
 import type { PostModel } from '../post/post.model'
-import { UserService } from '../user/user.service'
 import { SubscribeMailType } from './subscribe-mail.enum'
 import {
   SubscribeNoteCreateBit,
@@ -45,7 +45,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     private readonly configService: ConfigsService,
     private readonly urlBuilderService: UrlBuilderService,
     private readonly emailService: EmailService,
-    private readonly userService: UserService,
+    private readonly ownerService: OwnerService,
   ) {}
 
   private subscribeMap = new Map<Email, SubscribeBit>()
@@ -68,7 +68,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async registerEmailTemplate() {
-    const owner = await this.userService.getSiteMasterOrMocked()
+    const owner = await this.ownerService.getSiteOwnerOrMocked()
     const renderProps: SubscribeTemplateRenderProps = {
       ...defaultSubscribeForRenderProps,
       aggregate: {
@@ -108,7 +108,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     const noteAndPostHandler: CoAction<never> = async function (
       noteOrPost: NoteModel | PostModel,
     ) {
-      const owner = await self.userService.getMaster()
+      const owner = await self.ownerService.getOwner()
       for (const [email, subscribe] of self.subscribeMap.entries()) {
         const unsubscribeLink = await getUnsubscribeLink(email)
 
@@ -127,7 +127,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
               text: `${noteOrPost.text.slice(0, 150)}...`,
               title: noteOrPost.title,
               unsubscribe_link: unsubscribeLink,
-              master: owner.name,
+              owner: owner.name,
 
               aggregate: {
                 owner,

@@ -43,6 +43,7 @@ import { MarkdownModule } from './modules/markdown/markdown.module'
 import { MetaPresetModule } from './modules/meta-preset/meta-preset.module'
 import { NoteModule } from './modules/note/note.module'
 import { OptionModule } from './modules/option/option.module'
+import { OwnerModule } from './modules/owner/owner.module'
 import { PageModule } from './modules/page/page.module'
 import { PageProxyModule } from './modules/pageproxy/pageproxy.module'
 import { PostModule } from './modules/post/post.module'
@@ -60,7 +61,6 @@ import { SnippetModule } from './modules/snippet/snippet.module'
 import { SubscribeModule } from './modules/subscribe/subscribe.module'
 import { TopicModule } from './modules/topic/topic.module'
 import { UpdateModule } from './modules/update/update.module'
-import { UserModule } from './modules/user/user.module'
 import { WebhookModule } from './modules/webhook/webhook.module'
 import { DatabaseModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
@@ -115,7 +115,7 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
     SubscribeModule,
     TopicModule,
     UpdateModule,
-    UserModule,
+    OwnerModule,
     WebhookModule,
 
     PageProxyModule,

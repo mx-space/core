@@ -2,7 +2,6 @@ import type { CanActivate, ExecutionContext } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { UserService } from '~/modules/user/user.service'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { AuthGuard } from './auth.guard'
 
@@ -15,10 +14,8 @@ export class RolesGuard extends AuthGuard implements CanActivate {
   constructor(
     protected readonly authService: AuthService,
     protected readonly configs: ConfigsService,
-
-    protected readonly userService: UserService,
   ) {
-    super(authService, configs, userService)
+    super(authService)
   }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = this.getRequest(context)
@@ -29,10 +26,9 @@ export class RolesGuard extends AuthGuard implements CanActivate {
     } catch {}
 
     const session = await this.authService.getSessionUser(request.raw)
+    const readerId = session?.user?.id || request.user?.id
 
-    if (session) {
-      const readerId = session.user?.id
-
+    if (readerId) {
       request.readerId = readerId
 
       Object.assign(request.raw, {

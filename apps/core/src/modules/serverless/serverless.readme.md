@@ -13,7 +13,7 @@ async function handler() {
   const extra = await require('@mx-space/extra')
 
   const { BiliClient } = extra
-  const bl = await context.getMaster().then((user) => user.socialIds.bilibili)
+  const bl = await context.getOwner().then((user) => user.socialIds.bilibili)
   const client = new BiliClient(Number.parseInt(bl || uid))
   const bangumi = await client.getFavoriteBangumi(Number.parseInt(len))
   return bangumi
@@ -99,7 +99,7 @@ const remoteModule =
 
 `context.model` 当前 Snippet 的 Model
 
-`context.getMaster()` Promise<UserModel>，可以获取到主人的信息
+`context.getOwner()` Promise<OwnerModel>，可以获取到主人的信息
 
 `context.getService(name: string)` Promise<unknown>，当前支持 `axios`, `config`
 

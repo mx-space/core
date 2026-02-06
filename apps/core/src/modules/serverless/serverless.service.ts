@@ -14,6 +14,7 @@ import {
   RedisKeys,
   SERVERLESS_COMPLIE_CACHE_TTL,
 } from '~/constants/cache.constant'
+import { OWNER_PROFILE_COLLECTION_NAME } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { isDev } from '~/global/env.global'
@@ -27,7 +28,9 @@ import { getRedisKey } from '~/utils/redis.util'
 import { SandboxService } from '~/utils/sandbox'
 import { safePathJoin } from '~/utils/tool.util'
 import { isPlainObject } from 'es-toolkit/compat'
+import { Types } from 'mongoose'
 import qs from 'qs'
+import { AUTH_JS_USER_COLLECTION } from '../auth/auth.constant'
 import { ConfigsService } from '../configs/configs.service'
 import { SnippetModel, SnippetType } from '../snippet/snippet.model'
 import type {
@@ -96,7 +99,7 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
           this.mockDb(namespace).update(key, value),
         'storage.db.del': (namespace: string, key: string) =>
           this.mockDb(namespace).del(key),
-        getMaster: () => this.mockGetMaster(),
+        getOwner: () => this.mockGetOwner(),
         'config.get': (key: string) => this.configService.get(key as any),
         broadcast: (type: string, data: unknown) => {
           // @ts-ignore
@@ -164,30 +167,40 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
       return client.hdel(getRedisKey(RedisKeys.ServerlessStorage), key)
     },
   })
-  private async mockGetMaster() {
-    const collection = this.databaseService.db.collection('users')
-    const cur = collection.aggregate([
-      {
-        $project: {
-          id: 1,
-          _id: 1,
-          username: 1,
-          name: 1,
-          introduce: 1,
-          avatar: 1,
-          mail: 1,
-          url: 1,
-          lastLoginTime: 1,
-          lastLoginIp: 1,
-          socialIds: 1,
-        },
-      },
-    ])
+  private async mockGetOwner() {
+    const owner = await this.databaseService.db
+      .collection(AUTH_JS_USER_COLLECTION)
+      .find({ role: 'owner' })
+      .sort({ createdAt: 1, _id: 1 })
+      .limit(1)
+      .next()
 
-    return await cur.next().then((doc) => {
-      cur.close()
-      return doc
-    })
+    if (!owner?._id) {
+      return null
+    }
+
+    const ownerProfile = await this.databaseService.db
+      .collection(OWNER_PROFILE_COLLECTION_NAME)
+      .findOne({
+        readerId:
+          Types.ObjectId.isValid(owner._id?.toString?.()) && owner._id
+            ? new Types.ObjectId(owner._id.toString())
+            : owner._id,
+      })
+
+    return {
+      id: owner._id.toString(),
+      _id: owner._id,
+      username: owner.username ?? owner.handle ?? '',
+      name: owner.name,
+      introduce: ownerProfile?.introduce,
+      avatar: owner.image,
+      mail: ownerProfile?.mail ?? owner.email,
+      url: ownerProfile?.url,
+      lastLoginTime: ownerProfile?.lastLoginTime,
+      lastLoginIp: ownerProfile?.lastLoginIp,
+      socialIds: ownerProfile?.socialIds,
+    }
   }
 
   private mockDb(namespace: string) {

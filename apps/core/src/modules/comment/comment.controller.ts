@@ -8,16 +8,12 @@ import {
   Patch,
   Post,
   Query,
-  Req,
   UseInterceptors,
 } from '@nestjs/common'
 import type { DocumentType } from '@typegoose/typegoose'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import {
-  CurrentReaderId,
-  CurrentUser,
-} from '~/common/decorators/current-user.decorator'
+import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
@@ -35,9 +31,9 @@ import { scheduleManager } from '~/utils/schedule.util'
 import { isUndefined, keyBy } from 'es-toolkit/compat'
 import type { Document, QueryFilter } from 'mongoose'
 import { ConfigsService } from '../configs/configs.service'
+import { OwnerService } from '../owner/owner.service'
 import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
-import { UserModel } from '../user/user.model'
 import { CommentReplyMailType } from './comment.enum'
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
 import type { CommentModel } from './comment.model'
@@ -62,6 +58,7 @@ export class CommentController {
     private readonly commentService: CommentService,
     private readonly eventManager: EventManagerService,
     private readonly configsService: ConfigsService,
+    private readonly ownerService: OwnerService,
     @Inject(forwardRef(() => ReaderService))
     private readonly readerService: ReaderService,
   ) {}
@@ -346,20 +343,20 @@ export class CommentController {
       .then((docs) => docs[0])
   }
 
-  @Post('/master/comment/:id')
+  @Post('/owner/comment/:id')
   @Auth()
   @HTTPDecorators.Idempotence({
     expired: 20,
     errorMessage: idempotenceMessage,
   })
-  async commentByMaster(
-    @CurrentUser() user: UserModel,
+  async commentByOwner(
     @Param() params: MongoIdDto,
     @Body() body: TextOnlyDto,
     @IpLocation() ipLocation: IpRecord,
     @Query() query: CommentRefTypesDto,
   ) {
-    const { name, mail, url } = user
+    const owner = await this.ownerService.getOwner()
+    const { name, mail, url } = owner
     const model: CommentDto = {
       author: name,
       ...body,
@@ -370,19 +367,19 @@ export class CommentController {
     return await this.comment(params, model as any, true, ipLocation, query)
   }
 
-  @Post('/master/reply/:id')
+  @Post('/owner/reply/:id')
   @Auth()
   @HTTPDecorators.Idempotence({
     expired: 20,
     errorMessage: idempotenceMessage,
   })
-  async replyByMaster(
-    @Req() req: any,
+  async replyByOwner(
     @Param() params: MongoIdDto,
     @Body() body: TextOnlyDto,
     @IpLocation() ipLocation: IpRecord,
   ) {
-    const { name, mail, url } = req.user
+    const owner = await this.ownerService.getOwner()
+    const { name, mail, url } = owner
     const model: CommentDto = {
       author: name,
       ...body,

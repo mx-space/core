@@ -1,75 +1,128 @@
-import { Body, Delete, Get, Param, Post } from '@nestjs/common'
+import {
+  Body,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { CurrentUser } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IpLocation } from '~/common/decorators/ip.decorator'
-import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import { AuthService } from '../auth/auth.service'
-import type { UserDocument } from '../user/user.model'
-import { UserService } from '../user/user.service'
-import { AuthnService } from './authn.service'
+import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
+import type { FastifyReply } from 'fastify'
+import { AuthInstanceInjectKey } from '../auth/auth.constant'
+import type { InjectAuthInstance } from '../auth/auth.interface'
 
 @ApiController('/passkey')
 export class AuthnController {
   constructor(
-    private readonly authnService: AuthnService,
-    private readonly authService: AuthService,
-    private readonly userService: UserService,
+    @Inject(AuthInstanceInjectKey)
+    private readonly authInstance: InjectAuthInstance,
   ) {}
 
   @Post('/register')
   @HTTPDecorators.Bypass
   @Auth()
-  async newAuthn(@CurrentUser() user: UserDocument) {
-    const r = await this.authnService.generateRegistrationOptions(user)
-    return r.registrationOptions
+  async newAuthn(@Req() req: FastifyBizRequest) {
+    const headers = this.buildHeaders(req)
+    const options = await this.authInstance
+      .get()
+      .api.generatePasskeyRegistrationOptions({
+        headers,
+      })
+    return { deprecated: true, ...options }
   }
 
   @Post('/register/verify')
   @HTTPDecorators.Bypass
   @Auth()
-  async responseAuthn(@CurrentUser() user: UserDocument, @Body() body: any) {
-    return this.authnService.verifyRegistrationResponse(user, body)
+  async responseAuthn(@Req() req: FastifyBizRequest, @Body() body: any) {
+    const headers = this.buildHeaders(req)
+    const response = body?.response ?? body
+    const result = await this.authInstance.get().api.verifyPasskeyRegistration({
+      headers,
+      body: {
+        response,
+        name: body?.name,
+      },
+    })
+    return { deprecated: true, ...result }
   }
 
   @Post('/authentication')
   @HTTPDecorators.Bypass
-  async newAuthentication() {
-    return await this.authnService.generateAuthenticationOptions()
+  async newAuthentication(@Req() req: FastifyBizRequest) {
+    const headers = this.buildHeaders(req)
+    const options = await this.authInstance
+      .get()
+      .api.generatePasskeyAuthenticationOptions({
+        headers,
+      })
+    return { deprecated: true, ...options }
   }
 
   @Post('/authentication/verify')
   @HTTPDecorators.Bypass
   async verifyauthenticationAuthn(
-    @IpLocation() ipLocation: IpRecord,
+    @Req() req: FastifyBizRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
     @Body() body: any,
   ) {
-    const result = await this.authnService.verifyAuthenticationResponse(body)
-    if (result.verified && !body.test) {
-      const user = await this.userService.getMaster()
-      Object.assign(result, {
-        token: await this.authService.jwtServicePublic.sign(user.id, {
-          ip: ipLocation.ip,
-          ua: ipLocation.agent,
-        }),
+    const headers = this.buildHeaders(req)
+    const response = body?.response ?? body
+    const result = await this.authInstance
+      .get()
+      .api.verifyPasskeyAuthentication({
+        headers,
+        body: { response },
+        returnHeaders: true,
       })
+    const setCookie = result.headers?.get('set-cookie')
+    if (setCookie) {
+      reply.header('set-cookie', setCookie)
     }
-
-    return result
+    return { deprecated: true, ...result.response }
   }
 
   @Get('/items')
   @Auth()
   @HTTPDecorators.Bypass
-  async getAllAuthnItems() {
-    return await this.authnService.getAllAuthnItems()
+  async getAllAuthnItems(@Req() req: FastifyBizRequest) {
+    const headers = this.buildHeaders(req)
+    const result = await this.authInstance.get().api.listPasskeys({ headers })
+    return { deprecated: true, items: result }
   }
 
   @Delete('/items/:id')
   @Auth()
-  async deleteAuthnItem(@Param() params: MongoIdDto) {
-    return await this.authnService.deleteAuthnItem(params.id)
+  async deleteAuthnItem(
+    @Req() req: FastifyBizRequest,
+    @Param() params: MongoIdDto,
+  ) {
+    const headers = this.buildHeaders(req)
+    const result = await this.authInstance.get().api.deletePasskey({
+      headers,
+      body: {
+        id: params.id,
+      },
+    })
+    return { deprecated: true, ...result }
+  }
+
+  private buildHeaders(req: FastifyBizRequest) {
+    const headers = new Headers()
+    const cookie = req.raw?.headers.cookie
+    if (cookie) {
+      headers.set('cookie', cookie)
+    }
+    const origin = req.raw?.headers.origin
+    if (typeof origin === 'string') {
+      headers.set('origin', origin)
+    }
+    return headers
   }
 }

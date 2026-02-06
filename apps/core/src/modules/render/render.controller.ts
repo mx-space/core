@@ -24,9 +24,9 @@ import { ConfigsService } from '../configs/configs.service'
 import { MarkdownPreviewDto } from '../markdown/markdown.schema'
 import { MarkdownService } from '../markdown/markdown.service'
 import type { NoteModel } from '../note/note.model'
+import { OwnerService } from '../owner/owner.service'
 import type { PageModel } from '../page/page.model'
 import type { PostModel } from '../post/post.model'
-import { UserService } from '../user/user.service'
 
 @Controller('/render')
 @HTTPDecorators.Bypass
@@ -34,7 +34,7 @@ export class RenderEjsController {
   constructor(
     private readonly service: MarkdownService,
     private readonly configs: ConfigsService,
-    private readonly userService: UserService,
+    private readonly ownerService: OwnerService,
   ) {}
 
   @Get('/markdown/:id')
@@ -56,7 +56,7 @@ export class RenderEjsController {
     ] = await Promise.all([
       this.service.renderArticle(id),
       this.configs.waitForConfigReady(),
-      this.userService.getMaster(),
+      this.ownerService.getOwner(),
     ])
 
     const isPrivateOrEncrypt =

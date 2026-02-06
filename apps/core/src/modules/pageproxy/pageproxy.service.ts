@@ -5,13 +5,13 @@ import { API_VERSION } from '~/app.config'
 import { PKG } from '~/utils/pkg.util'
 import { parseHTML } from 'linkedom'
 import { ConfigsService } from '../configs/configs.service'
-import { UserService } from '../user/user.service'
+import { OwnerService } from '../owner/owner.service'
 
 @Injectable()
 export class PageProxyService {
   constructor(
     private readonly configs: ConfigsService,
-    private readonly userService: UserService,
+    private readonly ownerService: OwnerService,
   ) {}
 
   async checkCanAccessAdminProxy() {
@@ -78,7 +78,7 @@ export class PageProxyService {
         window.injectData = ${JSON.stringify(injectData)};
         window.injectData.BASE_API = '${baseApiUrl}';
         window.injectData.GATEWAY = '${gatewayUrl}';
-        window.injectData.INIT = ${await this.userService.hasMaster()}
+        window.injectData.INIT = ${await this.ownerService.hasOwner()}
     `
 
     // Replace placeholder in the HTML entry

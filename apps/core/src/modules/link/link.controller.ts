@@ -91,7 +91,7 @@ export class LinkController {
 
     await this.linkService.applyForLink(body as unknown as LinkModel)
     scheduleManager.schedule(async () => {
-      await this.linkService.sendToMaster(
+      await this.linkService.sendToOwner(
         body.author,
         body as unknown as LinkModel,
       )

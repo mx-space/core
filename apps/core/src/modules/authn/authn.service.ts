@@ -22,7 +22,7 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { ConfigsService } from '../configs/configs.service'
-import type { UserDocument } from '../user/user.model'
+import type { OwnerDocument } from '../owner/owner.model'
 import { AuthnModel } from './authn.model'
 
 @Injectable()
@@ -62,7 +62,7 @@ export class AuthnService {
     }
   }
 
-  async generateRegistrationOptions(user: UserDocument) {
+  async generateRegistrationOptions(user: OwnerDocument) {
     const { username, id: userId } = user
 
     const { rpID } = await this.getConfig()
@@ -115,7 +115,7 @@ export class AuthnService {
   }
 
   async verifyRegistrationResponse(
-    user: UserDocument,
+    user: OwnerDocument,
     response: RegistrationResponseJSON & { name: string },
   ) {
     const expectedChallenge = await this.getCurrentChallenge()

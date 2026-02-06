@@ -20,6 +20,13 @@ import v9_4_1 from './version/v9.4.1'
 import v9_5_0 from './version/v9.5.0'
 import v9_6_0 from './version/v9.6.0'
 import v9_6_3 from './version/v9.6.3'
+import v9_7_0 from './version/v9.7.0'
+import v9_7_1 from './version/v9.7.1'
+import v9_7_2 from './version/v9.7.2'
+import v9_7_3 from './version/v9.7.3'
+import v9_7_4 from './version/v9.7.4'
+import v9_7_5 from './version/v9.7.5'
+import v9_7_6 from './version/v9.7.6'
 
 export default [
   v200Alpha1,
@@ -44,4 +51,11 @@ export default [
   v9_5_0,
   v9_6_0,
   v9_6_3,
+  v9_7_0,
+  v9_7_1,
+  v9_7_2,
+  v9_7_3,
+  v9_7_4,
+  v9_7_5,
+  v9_7_6,
 ]

@@ -9,6 +9,7 @@ import { BackupService } from '../backup/backup.service'
 import { ConfigsService } from '../configs/configs.service'
 import { ConfigKeyDto } from '../option/option.schema'
 import { InitGuard } from './init.guard'
+import { InitOwnerCreateDto } from './init.schema'
 import { InitService } from './init.service'
 
 @ApiController('/init')
@@ -52,6 +53,16 @@ export class InitController {
       throw new BizException(ErrorCodeEnum.InvalidBody)
     }
     return this.configs.patchAndValid(params.key, body)
+  }
+
+  @Post('/owner')
+  async createOwner(@Body() body: InitOwnerCreateDto) {
+    const { isInit } = await this.isInit()
+    if (isInit) {
+      throw new BizException(ErrorCodeEnum.InitAlreadyCompleted)
+    }
+
+    return this.initService.createOwner(body)
   }
 
   @Post('/restore')

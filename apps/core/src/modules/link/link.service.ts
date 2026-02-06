@@ -10,7 +10,7 @@ import { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import { ConfigsService } from '../configs/configs.service'
-import { UserService } from '../user/user.service'
+import { OwnerService } from '../owner/owner.service'
 import { LinkAvatarService } from './link-avatar.service'
 import { LinkApplyEmailType } from './link-mail.enum'
 import { LinkModel, LinkState, LinkStateMap, LinkType } from './link.model'
@@ -25,7 +25,7 @@ export class LinkService {
     private readonly emailService: EmailService,
     private readonly configs: ConfigsService,
 
-    private readonly userService: UserService,
+    private readonly ownerService: OwnerService,
     private readonly eventManager: EventManagerService,
     private readonly http: HttpService,
     private readonly configsService: ConfigsService,
@@ -163,7 +163,7 @@ export class LinkService {
       template: LinkApplyEmailType.ToCandidate,
     })
   }
-  async sendToMaster(authorName: string, model: LinkModel) {
+  async sendToOwner(authorName: string, model: LinkModel) {
     const enable = (await this.configs.get('mailOptions')).enable
     if (!enable || isDev) {
       console.info(`来自 ${authorName} 的友链请求：
@@ -173,13 +173,16 @@ export class LinkService {
       return
     }
     scheduleManager.schedule(async () => {
-      const master = await this.userService.getMaster()
+      const owner = await this.ownerService.getOwner()
+      if (!owner.mail) {
+        return
+      }
 
       await this.sendLinkApplyEmail({
         authorName,
         model,
-        to: master.mail,
-        template: LinkApplyEmailType.ToMaster,
+        to: owner.mail,
+        template: LinkApplyEmailType.ToOwner,
       })
     })
   }
@@ -202,11 +205,11 @@ export class LinkService {
       from: sendfrom,
       to,
       subject:
-        template === LinkApplyEmailType.ToMaster
+        template === LinkApplyEmailType.ToOwner
           ? `[${seo.title || 'Mx Space'}] 新的朋友 ${authorName}`
           : `嘿!~, 主人已通过你的友链申请!~`,
       text:
-        template === LinkApplyEmailType.ToMaster
+        template === LinkApplyEmailType.ToOwner
           ? `来自 ${model.name} 的友链请求：
           站点标题：${model.name}
           站点网站：${model.url}

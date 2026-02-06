@@ -22,6 +22,7 @@ export const DRAFT_COLLECTION_NAME = 'drafts'
 export const FILE_REFERENCE_COLLECTION_NAME = 'file_references'
 
 export const USER_COLLECTION_NAME = 'users'
+export const OWNER_PROFILE_COLLECTION_NAME = 'owner_profiles'
 export enum CollectionRefTypes {
   Post = POST_COLLECTION_NAME,
   Note = NOTE_COLLECTION_NAME,

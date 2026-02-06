@@ -17,9 +17,9 @@ export class ReaderAuthController {
     return this.readerService.findPaginated(page, size)
   }
 
-  @Patch('/as-owner')
-  async updateAsOwner(@Body() body: MongoIdDto) {
-    return this.readerService.updateAsOwner(body.id)
+  @Patch('/transfer-owner')
+  async transferOwner(@Body() body: MongoIdDto) {
+    return this.readerService.transferOwner(body.id)
   }
 
   @Patch('/revoke-owner')

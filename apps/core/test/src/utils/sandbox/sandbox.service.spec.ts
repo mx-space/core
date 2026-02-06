@@ -10,7 +10,7 @@ describe('SandboxService', () => {
       defaultTimeout: 5000,
       idleTimeout: 1000,
       bridgeHandlers: {
-        getMaster: async () => ({ name: 'test-master' }),
+        getOwner: async () => ({ name: 'test-owner' }),
         'config.get': async (key: string) => `config-${key}`,
         'storage.cache.get': async () => null,
         'storage.cache.set': async () => {},
@@ -327,9 +327,9 @@ describe('SandboxService', () => {
   })
 
   describe('bridge calls', () => {
-    test('should call getMaster through bridge', async () => {
+    test('should call getOwner through bridge', async () => {
       const result = await sandboxService.execute(
-        'async function handler(ctx) { return await ctx.getMaster() }',
+        'async function handler(ctx) { return await ctx.getOwner() }',
         {
           req: {},
           res: {},
@@ -339,7 +339,7 @@ describe('SandboxService', () => {
       )
 
       expect(result.success).toBe(true)
-      expect(result.data).toEqual({ name: 'test-master' })
+      expect(result.data).toEqual({ name: 'test-owner' })
     })
 
     test('should call config.get through bridge', async () => {
