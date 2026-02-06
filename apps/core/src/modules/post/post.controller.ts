@@ -18,9 +18,9 @@ import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import {
-  TranslationEnhancerService,
+  TranslationService,
   type ArticleTranslationInput,
-} from '~/processors/helper/helper.translation-enhancer.service'
+} from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import type { PipelineStage } from 'mongoose'
@@ -41,7 +41,7 @@ export class PostController {
   constructor(
     private readonly postService: PostService,
     private readonly countingService: CountingService,
-    private readonly translationEnhancerService: TranslationEnhancerService,
+    private readonly translationService: TranslationService,
   ) {}
 
   @Get('/')
@@ -175,7 +175,7 @@ export class PostController {
 
         if (lang && translationInputs.length) {
           const translationResults =
-            await this.translationEnhancerService.enhanceListWithTranslation({
+            await this.translationService.translateArticleList({
               articles: translationInputs,
               targetLang: lang,
             })
@@ -302,18 +302,17 @@ export class PostController {
     )
 
     const baseData = postDocument.toObject()
-    const translationResult =
-      await this.translationEnhancerService.enhanceWithTranslation({
-        articleId: postDocument.id,
-        targetLang: lang,
-        allowHidden: Boolean(isAuthenticated),
-        originalData: {
-          title: baseData.title,
-          text: baseData.text,
-          summary: baseData.summary,
-          tags: baseData.tags,
-        },
-      })
+    const translationResult = await this.translationService.translateArticle({
+      articleId: postDocument.id,
+      targetLang: lang,
+      allowHidden: Boolean(isAuthenticated),
+      originalData: {
+        title: baseData.title,
+        text: baseData.text,
+        summary: baseData.summary,
+        tags: baseData.tags,
+      },
+    })
 
     return {
       ...baseData,

@@ -20,7 +20,7 @@ import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
-import { TranslationEnhancerService } from '~/processors/helper/helper.translation-enhancer.service'
+import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import type { QueryFilter } from 'mongoose'
@@ -55,7 +55,7 @@ export class NoteController {
     private readonly countingService: CountingService,
 
     private readonly macrosService: TextMacroService,
-    private readonly translationEnhancerService: TranslationEnhancerService,
+    private readonly translationService: TranslationService,
   ) {}
 
   @Get('/')
@@ -167,7 +167,7 @@ export class NoteController {
     )
 
     // 处理翻译
-    data = await this.translationEnhancerService.translateList({
+    data = await this.translationService.translateList({
       items: data,
       targetLang: lang,
       translationFields: ['title', 'translationMeta'] as const,
@@ -273,16 +273,15 @@ export class NoteController {
       .getThisRecordIsLiked(current.id!, ip)
       .catch(() => false)
 
-    const translationResult =
-      await this.translationEnhancerService.enhanceWithTranslation({
-        articleId: current.id!,
-        targetLang: lang,
-        allowHidden: Boolean(isAuthenticated || current.password),
-        originalData: {
-          title: current.title,
-          text: current.text,
-        },
-      })
+    const translationResult = await this.translationService.translateArticle({
+      articleId: current.id!,
+      targetLang: lang,
+      allowHidden: Boolean(isAuthenticated || current.password),
+      originalData: {
+        title: current.title,
+        text: current.text,
+      },
+    })
 
     const currentData = {
       ...current,
@@ -358,7 +357,7 @@ export class NoteController {
     )
 
     // 处理翻译
-    const translatedDocs = await this.translationEnhancerService.translateList({
+    const translatedDocs = await this.translationService.translateList({
       items: result.docs as unknown as NoteListItem[],
       targetLang: lang,
       translationFields: ['title', 'translationMeta'] as const,

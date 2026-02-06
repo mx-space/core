@@ -9,7 +9,7 @@ export interface TranslationMeta {
   model?: string
 }
 
-export interface TranslationEnhanceResult {
+export interface TranslationResult {
   title: string
   text: string
   summary?: string | null
@@ -19,10 +19,10 @@ export interface TranslationEnhanceResult {
   availableTranslations?: string[]
 }
 
-export type TranslationEnhanceField = keyof TranslationEnhanceResult
-export type TranslationEnhanceResultPick<
-  Fields extends TranslationEnhanceField = TranslationEnhanceField,
-> = { isTranslated: boolean } & Pick<TranslationEnhanceResult, Fields>
+export type TranslationField = keyof TranslationResult
+export type TranslationResultPick<
+  Fields extends TranslationField = TranslationField,
+> = { isTranslated: boolean } & Pick<TranslationResult, Fields>
 
 export interface ArticleTranslationInput {
   id: string
@@ -36,11 +36,11 @@ export interface ArticleTranslationInput {
 }
 
 @Injectable()
-export class TranslationEnhancerService {
-  private readonly logger = new Logger(TranslationEnhancerService.name)
+export class TranslationService {
+  private readonly logger = new Logger(TranslationService.name)
   constructor(private readonly aiTranslationService: AiTranslationService) {}
 
-  async enhanceWithTranslation(options: {
+  async translateArticle(options: {
     articleId: string
     targetLang?: string
     allowHidden?: boolean
@@ -50,11 +50,10 @@ export class TranslationEnhancerService {
       summary?: string | null
       tags?: string[]
     }
-  }): Promise<TranslationEnhanceResult> {
+  }): Promise<TranslationResult> {
     const { articleId, targetLang, allowHidden, originalData } = options
     const normalizedTarget = normalizeLanguageCode(targetLang)
 
-    // 获取可用翻译列表
     const availableTranslations =
       await this.aiTranslationService.getAvailableLanguagesForArticle(articleId)
 
@@ -102,7 +101,7 @@ export class TranslationEnhancerService {
    */
   async translateList<
     T,
-    Fields extends TranslationEnhanceField = TranslationEnhanceField,
+    Fields extends TranslationField = TranslationField,
   >(options: {
     items: T[]
     targetLang?: string
@@ -110,38 +109,36 @@ export class TranslationEnhancerService {
     getInput: (item: T) => ArticleTranslationInput
     applyResult: (
       item: T,
-      result: TranslationEnhanceResultPick<Fields> | undefined,
+      result: TranslationResultPick<Fields> | undefined,
     ) => T
   }): Promise<T[]> {
     const { items, targetLang, getInput, applyResult, translationFields } =
       options
     const normalizedTarget = normalizeLanguageCode(targetLang)
 
-    // 无 lang 或空列表时，直接返回，避免不必要的 getInput 调用
     if (!normalizedTarget || !items.length) {
       return items.map((item) => applyResult(item, undefined))
     }
 
-    // 仅在需要翻译时才计算 inputs（避免无 lang 时的无效计算）
     const inputs = items.map(getInput)
 
-    const translationResults = await this.enhanceListWithTranslation({
+    const translationResults = await this.translateArticleList({
       articles: inputs,
       targetLang: normalizedTarget,
       translationFields,
     })
 
     return items.map((item, index) => {
-      const input = inputs[index] // 使用预计算的 input（通过 index 匹配）
+      const input = inputs[index]
       const translation = translationResults.get(input.id)
       return applyResult(item, translation)
     })
   }
 
-  private pickTranslationFields<Fields extends TranslationEnhanceField>(
-    result: TranslationEnhanceResult,
+  private pickTranslationFields<Fields extends TranslationField>(
+    result: TranslationResult,
     fields: readonly Fields[],
-  ): TranslationEnhanceResultPick<Fields> {
+  ): TranslationResultPick<Fields> {
     const picked = { isTranslated: result.isTranslated } as Record<
       string,
       unknown
@@ -151,12 +148,10 @@ export class TranslationEnhancerService {
       picked[field] = result[field]
     }
 
-    return picked as TranslationEnhanceResultPick<Fields>
+    return picked as TranslationResultPick<Fields>
   }
 
-  private buildTranslationSelect(
-    fields: readonly TranslationEnhanceField[],
-  ): string {
+  private buildTranslationSelect(fields: readonly TranslationField[]): string {
     const selectFields = new Set([
       'refId',
       'hash',
@@ -177,15 +172,15 @@ export class TranslationEnhancerService {
     return [...selectFields].join(' ')
   }
 
-  async enhanceListWithTranslation<
-    Fields extends TranslationEnhanceField = TranslationEnhanceField,
+  async translateArticleList<
+    Fields extends TranslationField = TranslationField,
   >(options: {
     articles: ArticleTranslationInput[]
     targetLang?: string
     translationFields?: readonly Fields[]
-  }): Promise<Map<string, TranslationEnhanceResultPick<Fields>>> {
+  }): Promise<Map<string, TranslationResultPick<Fields>>> {
     const { articles, targetLang } = options
-    const defaultFields: readonly TranslationEnhanceField[] = [
+    const defaultFields: readonly TranslationField[] = [
       'title',
       'text',
       'summary',
@@ -196,7 +191,7 @@ export class TranslationEnhancerService {
     const translationFields = (options.translationFields ??
       defaultFields) as readonly Fields[]
     const translationFieldList =
-      translationFields as readonly TranslationEnhanceField[]
+      translationFields as readonly TranslationField[]
     const normalizedTarget = normalizeLanguageCode(targetLang)
 
     if (!normalizedTarget || !articles.length) {
@@ -226,50 +221,48 @@ export class TranslationEnhancerService {
         )
 
       return new Map(
-        articles.map(
-          (article): [string, TranslationEnhanceResultPick<Fields>] => {
-            const translation = translationMap.get(article.id)
-            if (!translation) {
-              return [
-                article.id,
-                this.pickTranslationFields(
-                  {
-                    title: article.title,
-                    text: article.text ?? '',
-                    summary: article.summary,
-                    tags: article.tags,
-                    isTranslated: false,
-                  },
-                  translationFields,
-                ),
-              ]
-            }
-
+        articles.map((article): [string, TranslationResultPick<Fields>] => {
+          const translation = translationMap.get(article.id)
+          if (!translation) {
             return [
               article.id,
               this.pickTranslationFields(
                 {
-                  title: translation.title,
-                  text: translation.text,
-                  summary: translation.summary ?? article.summary,
-                  tags: translation.tags ?? article.tags,
-                  isTranslated: true,
-                  translationMeta: translationFieldList.includes(
-                    'translationMeta',
-                  )
-                    ? {
-                        sourceLang: translation.sourceLang,
-                        targetLang: translation.lang,
-                        translatedAt: translation.created!,
-                        model: translation.aiModel,
-                      }
-                    : undefined,
+                  title: article.title,
+                  text: article.text ?? '',
+                  summary: article.summary,
+                  tags: article.tags,
+                  isTranslated: false,
                 },
                 translationFields,
               ),
             ]
-          },
-        ),
+          }
+
+          return [
+            article.id,
+            this.pickTranslationFields(
+              {
+                title: translation.title,
+                text: translation.text,
+                summary: translation.summary ?? article.summary,
+                tags: translation.tags ?? article.tags,
+                isTranslated: true,
+                translationMeta: translationFieldList.includes(
+                  'translationMeta',
+                )
+                  ? {
+                      sourceLang: translation.sourceLang,
+                      targetLang: translation.lang,
+                      translatedAt: translation.created!,
+                      model: translation.aiModel,
+                    }
+                  : undefined,
+              },
+              translationFields,
+            ),
+          ]
+        }),
       )
     } catch (error) {
       this.logger.error(error)

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
 export const MIGRATE_COLLECTION_NAME = 'migrations'
+export const MIGRATION_LOCK_COLLECTION_NAME = 'migration_locks'
 export const CHECKSUM_COLLECTION_NAME = 'checksum'
 
 /// auth

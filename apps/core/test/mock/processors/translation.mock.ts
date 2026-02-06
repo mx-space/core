@@ -1,10 +1,10 @@
-import { TranslationEnhancerService } from '~/processors/helper/helper.translation-enhancer.service'
+import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { defineProvider } from 'test/helper/defineProvider'
 
-export const translationEnhancerProvider = defineProvider({
-  provide: TranslationEnhancerService,
+export const translationProvider = defineProvider({
+  provide: TranslationService,
   useValue: {
-    async enhanceWithTranslation(options) {
+    async translateArticle(options) {
       return {
         ...options.originalData,
         isTranslated: false,

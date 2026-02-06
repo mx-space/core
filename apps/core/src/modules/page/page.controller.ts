@@ -17,9 +17,9 @@ import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import {
-  TranslationEnhancerService,
+  TranslationService,
   type ArticleTranslationInput,
-} from '~/processors/helper/helper.translation-enhancer.service'
+} from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { PageModel } from './page.model'
@@ -31,7 +31,7 @@ export class PageController {
   constructor(
     private readonly pageService: PageService,
     private readonly macroService: TextMacroService,
-    private readonly translationEnhancerService: TranslationEnhancerService,
+    private readonly translationService: TranslationService,
   ) {}
 
   @Get('/')
@@ -73,7 +73,7 @@ export class PageController {
 
     if (translationInputs.length) {
       const translationResults =
-        await this.translationEnhancerService.enhanceListWithTranslation({
+        await this.translationService.translateArticleList({
           articles: translationInputs,
           targetLang: lang,
         })
@@ -128,15 +128,14 @@ export class PageController {
 
     page.text = await this.macroService.replaceTextMacro(page.text, page)
 
-    const translationResult =
-      await this.translationEnhancerService.enhanceWithTranslation({
-        articleId: page._id?.toString?.() ?? page.id ?? String(page._id),
-        targetLang: lang,
-        originalData: {
-          title: page.title,
-          text: page.text,
-        },
-      })
+    const translationResult = await this.translationService.translateArticle({
+      articleId: page._id?.toString?.() ?? page.id ?? String(page._id),
+      targetLang: lang,
+      originalData: {
+        title: page.title,
+        text: page.text,
+      },
+    })
 
     return {
       ...page,

@@ -6,7 +6,7 @@ import { HttpCache } from '~/common/decorators/cache.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
-import { TranslationEnhancerService } from '~/processors/helper/helper.translation-enhancer.service'
+import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { omit } from 'es-toolkit/compat'
 import { AnalyzeService } from '../analyze/analyze.service'
 import { ConfigsService } from '../configs/configs.service'
@@ -31,7 +31,7 @@ export class AggregateController {
     private readonly noteService: NoteService,
     private readonly snippetService: SnippetService,
     private readonly ownerService: OwnerService,
-    private readonly translationEnhancerService: TranslationEnhancerService,
+    private readonly translationService: TranslationService,
   ) {}
 
   @Get('/')
@@ -40,7 +40,7 @@ export class AggregateController {
     ttl: 10 * 60,
     withQuery: true,
   })
-  async aggregate(@Query() query: AggregateQueryDto) {
+  async aggregate(@Query() query: AggregateQueryDto, @Lang() lang?: string) {
     const { theme } = query
 
     const tasks = await Promise.allSettled([
@@ -72,12 +72,29 @@ export class AggregateController {
       themeConfig,
       aiConfig,
     ] = tasks.map((t) => (t.status === 'fulfilled' ? t.value : null))
+    let translatedPageMeta = pageMeta as any[]
+    if (lang && translatedPageMeta?.length) {
+      translatedPageMeta = await this.translationService.translateList({
+        items: translatedPageMeta,
+        targetLang: lang,
+        translationFields: ['title'] as const,
+        getInput: (item: any) => ({
+          id: item._id?.toString?.() ?? '',
+          title: item.title ?? '',
+        }),
+        applyResult: (item: any, translation) => {
+          if (!translation?.isTranslated) return item
+          return { ...item, title: translation.title }
+        },
+      })
+    }
+
     return {
       user,
       seo,
       url: omit(url, ['adminUrl']),
       categories,
-      pageMeta,
+      pageMeta: translatedPageMeta,
       latestNoteId,
       theme: themeConfig,
       ai: {
@@ -90,9 +107,71 @@ export class AggregateController {
   async top(
     @Query() query: TopQueryDto,
     @IsAuthenticated() isAuthenticated: boolean,
+    @Lang() lang?: string,
   ) {
     const { size } = query
-    return await this.aggregateService.topActivity(size, isAuthenticated)
+    const result = await this.aggregateService.topActivity(
+      size,
+      isAuthenticated,
+    )
+
+    if (lang) {
+      type TopItem = {
+        _id?: any
+        id?: string
+        title?: string
+        created?: Date | null
+        modified?: Date | null
+      } & Record<string, any>
+
+      if (result.posts?.length) {
+        result.posts = await this.translationService.translateList({
+          items: result.posts as TopItem[],
+          targetLang: lang,
+          translationFields: ['title', 'translationMeta'] as const,
+          getInput: (item) => ({
+            id: item._id?.toString?.() ?? item.id ?? '',
+            title: item.title ?? '',
+            created: item.created,
+            modified: item.modified,
+          }),
+          applyResult: (item, translation) => {
+            if (!translation?.isTranslated) return item
+            return {
+              ...item,
+              title: translation.title,
+              isTranslated: true,
+              translationMeta: translation.translationMeta,
+            }
+          },
+        })
+      }
+
+      if (result.notes?.length) {
+        result.notes = await this.translationService.translateList({
+          items: result.notes as TopItem[],
+          targetLang: lang,
+          translationFields: ['title', 'translationMeta'] as const,
+          getInput: (item) => ({
+            id: item._id?.toString?.() ?? item.id ?? '',
+            title: item.title ?? '',
+            created: item.created,
+            modified: item.modified,
+          }),
+          applyResult: (item, translation) => {
+            if (!translation?.isTranslated) return item
+            return {
+              ...item,
+              title: translation.title,
+              isTranslated: true,
+              translationMeta: translation.translationMeta,
+            }
+          },
+        })
+      }
+    }
+
+    return result
   }
 
   @Get('/timeline')
@@ -110,7 +189,7 @@ export class AggregateController {
     // 处理 posts 翻译
     if (lang && data.posts?.length) {
       const posts = data.posts as TimelineItem[]
-      data.posts = await this.translationEnhancerService.translateList({
+      data.posts = await this.translationService.translateList({
         items: posts,
         targetLang: lang,
         translationFields: ['title', 'translationMeta'] as const,
@@ -135,7 +214,7 @@ export class AggregateController {
     // 处理 notes 翻译
     if (lang && data.notes?.length) {
       const notes = data.notes as TimelineItem[]
-      data.notes = await this.translationEnhancerService.translateList({
+      data.notes = await this.translationService.translateList({
         items: notes,
         targetLang: lang,
         translationFields: ['title', 'translationMeta'] as const,
@@ -222,8 +301,26 @@ export class AggregateController {
 
   @Get('/stat/top-articles')
   @Auth()
-  async getTopArticles() {
-    return await this.aggregateService.getTopArticles()
+  async getTopArticles(@Lang() lang?: string) {
+    const result = await this.aggregateService.getTopArticles()
+
+    if (lang && result.length) {
+      return this.translationService.translateList({
+        items: result,
+        targetLang: lang,
+        translationFields: ['title'] as const,
+        getInput: (item) => ({
+          id: item.id?.toString?.() ?? '',
+          title: item.title ?? '',
+        }),
+        applyResult: (item, translation) => {
+          if (!translation?.isTranslated) return item
+          return { ...item, title: translation.title }
+        },
+      })
+    }
+
+    return result
   }
 
   @Get('/stat/comment-activity')

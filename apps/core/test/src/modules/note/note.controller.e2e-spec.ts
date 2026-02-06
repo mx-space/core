@@ -23,7 +23,7 @@ import {
   fileReferenceProvider,
   imageMigrationProvider,
 } from 'test/mock/processors/file.mock'
-import { translationEnhancerProvider } from 'test/mock/processors/translation-enhancer.mock'
+import { translationProvider } from 'test/mock/processors/translation.mock'
 import MockDbData from './note.e2e-mock.db'
 
 describe('NoteController (e2e)', async () => {
@@ -61,7 +61,7 @@ describe('NoteController (e2e)', async () => {
       DraftService,
       fileReferenceProvider,
       imageMigrationProvider,
-      translationEnhancerProvider,
+      translationProvider,
     ],
     imports: [],
     models: [NoteModel, OptionModel, DraftModel],
