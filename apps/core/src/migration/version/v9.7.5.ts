@@ -5,6 +5,13 @@ import { defineMigration } from '../helper'
 const OWNER_UNIQUE_INDEX = 'readers_owner_unique_role'
 
 export default defineMigration('v9.7.5-owner-uniqueness', async (db: Db) => {
+  const collections = await db
+    .listCollections({ name: AUTH_JS_USER_COLLECTION })
+    .toArray()
+  if (collections.length === 0) {
+    return
+  }
+
   const readers = db.collection(AUTH_JS_USER_COLLECTION)
 
   await readers.updateMany(
