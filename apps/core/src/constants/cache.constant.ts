@@ -33,6 +33,8 @@ export enum RedisKeys {
   AnalyzeAggregate = 'analyze_aggregate',
   AnalyzeTrafficSource = 'analyze_traffic_source',
   AnalyzeDeviceDistribution = 'analyze_device_distribution',
+
+  ActivityTopReading = 'activity_top_reading',
 }
 export const API_CACHE_PREFIX = 'mx-api-cache:'
 export enum CacheKeys {

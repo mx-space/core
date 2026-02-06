@@ -43,9 +43,22 @@ export class ActivityQueryDto extends createZodDto(ActivityQuerySchema) {}
 export const ActivityRangeSchema = z.object({
   start: zCoerceInt.optional(),
   end: zCoerceInt.optional(),
+  limit: zCoerceInt.min(1).max(200).default(50).optional(),
 })
 
 export class ActivityRangeDto extends createZodDto(ActivityRangeSchema) {}
+
+/**
+ * Activity top readings schema
+ */
+export const ActivityTopReadingsSchema = z.object({
+  top: zCoerceInt.min(1).max(50).default(5).optional(),
+  days: zCoerceInt.min(1).max(365).default(14).optional(),
+})
+
+export class ActivityTopReadingsDto extends createZodDto(
+  ActivityTopReadingsSchema,
+) {}
 
 /**
  * Activity notification schema
@@ -105,6 +118,7 @@ export type ActivityRangeInput = z.infer<typeof ActivityRangeSchema>
 export type ActivityNotificationInput = z.infer<
   typeof ActivityNotificationSchema
 >
+export type ActivityTopReadingsInput = z.infer<typeof ActivityTopReadingsSchema>
 export type LikeBodyInput = z.infer<typeof LikeBodySchema>
 export type UpdatePresenceInput = z.infer<typeof UpdatePresenceSchema>
 export type GetPresenceQueryInput = z.infer<typeof GetPresenceQuerySchema>

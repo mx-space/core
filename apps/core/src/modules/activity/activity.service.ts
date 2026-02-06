@@ -30,12 +30,10 @@ import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
 import type { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
-import type { PageModel } from '../page/page.model'
 import type { PostModel } from '../post/post.model'
 import type { PostService } from '../post/post.service'
 import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
-import type { RecentlyModel } from '../recently/recently.model'
 import { Activity } from './activity.constant'
 import type {
   ActivityLikePayload,
@@ -503,7 +501,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     return { objects }
   }
 
-  async getDateRangeOfReadings(startAt?: Date, endAt?: Date) {
+  async getDateRangeOfReadings(startAt?: Date, endAt?: Date, limit = 50) {
     startAt = startAt ?? new Date('2020-01-01')
     endAt = endAt ?? new Date()
 
@@ -515,52 +513,38 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         },
         type: Activity.ReadDuration,
       })
+      .select('payload')
       .lean({
         getters: true,
       })
 
-    const refIds = new Set<string>()
+    const countMap = new Map<string, number>()
     for (const item of activities) {
-      const parsed = item.payload
-      const refId = extractArticleIdFromRoomName(parsed.roomName)
+      const refId = extractArticleIdFromRoomName(item.payload.roomName)
       if (!refId) continue
-      refIds.add(refId)
+      countMap.set(refId, (countMap.get(refId) || 0) + 1)
     }
 
-    const activityCountingMap = activities.reduce(
-      (acc, item) => {
-        const refId = extractArticleIdFromRoomName(item.payload.roomName)
-        if (!refId) return acc
-        if (!acc[refId]) {
-          acc[refId] = 0
-        }
-        acc[refId]++
+    const sorted = [...countMap.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
 
-        return acc
-      },
-      {} as Record<string, number>,
-    )
-
-    const result = [] as {
-      refId: string
-      count: number
-      ref: PostModel | NoteModel | PageModel | RecentlyModel
-    }[]
-
-    const idsCollections = await this.databaseService.findGlobalByIds(
-      Array.from(refIds),
-    )
-
+    const topRefIds = sorted.map(([id]) => id)
+    const idsCollections = await this.databaseService.findGlobalByIds(topRefIds)
     const mapping = this.databaseService.flatCollectionToMap(idsCollections)
-    for (const refId of refIds) {
-      result.push({
-        refId,
-        count: activityCountingMap[refId] ?? 0,
-        ref: mapping[refId],
-      })
-    }
 
-    return result
+    return sorted.map(([refId, count]) => ({
+      refId,
+      count,
+      ref: mapping[refId],
+    }))
+  }
+
+  async getTopReadings(limit = 5, days = 14) {
+    const endAt = new Date()
+    const startAt = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+
+    return this.getDateRangeOfReadings(startAt, endAt, limit)
   }
 
   async getRecentComment() {

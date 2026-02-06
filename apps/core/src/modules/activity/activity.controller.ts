@@ -4,9 +4,12 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
+import { RedisKeys } from '~/constants/cache.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { RedisService } from '~/processors/redis/redis.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { snakecaseKeysWithCompat } from '~/utils/case.util'
+import { getRedisKey } from '~/utils/redis.util'
 import { keyBy, pick } from 'es-toolkit/compat'
 import { ReaderService } from '../reader/reader.service'
 import { Activity } from './activity.constant'
@@ -15,6 +18,7 @@ import {
   ActivityNotificationDto,
   ActivityQueryDto,
   ActivityRangeDto,
+  ActivityTopReadingsDto,
   ActivityTypeParamsDto,
   GetPresenceQueryDto,
   LikeBodyDto,
@@ -27,7 +31,23 @@ export class ActivityController {
   constructor(
     private readonly service: ActivityService,
     private readonly readerService: ReaderService,
+    private readonly redisService: RedisService,
   ) {}
+
+  private async getOrSetCache<T>(
+    key: string,
+    ttlSeconds: number,
+    getValue: () => Promise<T>,
+  ): Promise<T> {
+    const client = this.redisService.getClient()
+    const cached = await client.get(key)
+    if (cached) {
+      return JSON.parse(cached)
+    }
+    const value = await getValue()
+    await client.set(key, JSON.stringify(value), 'EX', ttlSeconds)
+    return value
+  }
 
   @Post('/like')
   async thumbsUpArticle(
@@ -165,37 +185,58 @@ export class ActivityController {
   }
 
   @Auth()
+  @Get('/reading/top')
+  async getTopReadings(@Query() query: ActivityTopReadingsDto) {
+    const top = query.top ?? 5
+    const days = query.days ?? 14
+    const cacheKey = getRedisKey(
+      RedisKeys.ActivityTopReading,
+      String(top),
+      String(days),
+    )
+    return this.getOrSetCache(cacheKey, 300, async () => {
+      const result = await this.service.getTopReadings(top, days)
+      return result.map((item) => ({
+        ...item,
+        ref: pick(item.ref, [
+          'title',
+          'slug',
+          'cover',
+          'created',
+          'category',
+          'categoryId',
+          'id',
+          'nid',
+        ]),
+      }))
+    })
+  }
+
+  @Auth()
   @Get('/reading/rank')
   async getReadingRangeRank(@Query() query: ActivityRangeDto) {
     const startAt = query.start ? new Date(query.start) : undefined
     const endAt = query.end ? new Date(query.end) : undefined
+    const limit = query.limit ?? 50
 
-    return this.service
-      .getDateRangeOfReadings(startAt, endAt)
-      .then((arr) => {
-        return arr.sort((a, b) => {
-          return b.count - a.count
-        })
-      })
-      .then((arr) => {
-        // omit ref fields
-
-        return arr.map((item) => {
-          return {
-            ...item,
-            ref: pick(item.ref, [
-              'title',
-              'slug',
-              'cover',
-              'created',
-              'category',
-              'categoryId',
-              'id',
-              'nid',
-            ]),
-          }
-        })
-      })
+    const result = await this.service.getDateRangeOfReadings(
+      startAt,
+      endAt,
+      limit,
+    )
+    return result.map((item) => ({
+      ...item,
+      ref: pick(item.ref, [
+        'title',
+        'slug',
+        'cover',
+        'created',
+        'category',
+        'categoryId',
+        'id',
+        'nid',
+      ]),
+    }))
   }
 
   @Get('/recent')
