@@ -55,7 +55,7 @@ async function requestBridgeCall(method, args) {
 
 const BANNED_MODULES = new Set([
   'child_process', 'cluster', 'dgram', 'dns', 'fs', 'fs/promises',
-  'http', 'http2', 'https', 'inspector', 'net', 'os', 'process',
+  'inspector', 'os', 'process',
   'repl', 'sys', 'tls', 'v8', 'vm', 'worker_threads',
   // 防止通过 module.createRequire 绕过沙箱限制
   'module',
