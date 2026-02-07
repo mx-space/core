@@ -3,7 +3,6 @@ import {
   All,
   Delete,
   Get,
-  InternalServerErrorException,
   NotFoundException,
   Param,
   Query,
@@ -17,8 +16,8 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { AssetService } from '~/processors/helper/helper.asset.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
+import { getSandboxTypeDeclaration } from '~/utils/sandbox'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { SnippetType } from '../snippet/snippet.model'
 import { createMockedContextResponse } from './mock-response.util'
@@ -30,26 +29,16 @@ import { ServerlessService } from './serverless.service'
 
 @ApiController(['serverless', 'fn'])
 export class ServerlessController {
-  constructor(
-    private readonly serverlessService: ServerlessService,
-    private readonly assetService: AssetService,
-  ) {}
+  constructor(private readonly serverlessService: ServerlessService) {}
 
   @Get('/types')
   @Auth()
   @HTTPDecorators.Bypass
   @CacheTTL(60 * 60 * 24)
-  async getCodeDefined() {
-    try {
-      const text = await this.assetService.getAsset('/types/type.declare.ts', {
-        encoding: 'utf-8',
-      })
-
-      return text
-    } catch {
-      throw new InternalServerErrorException('code defined file not found')
-    }
+  getCodeDefined() {
+    return getSandboxTypeDeclaration()
   }
+
   @Get('/logs/:id')
   @Auth()
   async getInvocationLogs(
