@@ -73,4 +73,7 @@ export class SnippetModel extends BaseModel {
     default: false,
   })
   builtIn?: boolean
+
+  @prop({ select: false })
+  compiledCode?: string
 }

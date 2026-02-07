@@ -93,16 +93,43 @@ function createAsyncRequire(basePath) {
   };
 }
 
-// console 直接在 Worker 中实现
 function createSandboxConsole(namespace) {
   const prefix = '[sandbox:' + namespace + ']';
-  return {
-    log: (...args) => console.log(prefix, ...args),
-    info: (...args) => console.info(prefix, ...args),
-    warn: (...args) => console.warn(prefix, ...args),
-    error: (...args) => console.error(prefix, ...args),
-    debug: (...args) => console.debug(prefix, ...args),
+  const logs = [];
+  const MAX_LOGS = 200;
+  const MAX_ARG_SIZE = 1024;
+
+  function sanitizeArg(arg) {
+    try {
+      if (arg === undefined) return 'undefined';
+      if (arg === null) return null;
+      if (typeof arg === 'string') {
+        return arg.length > MAX_ARG_SIZE ? arg.slice(0, MAX_ARG_SIZE) + '...(truncated)' : arg;
+      }
+      if (typeof arg === 'number' || typeof arg === 'boolean') return arg;
+      const str = JSON.stringify(arg);
+      if (str && str.length > MAX_ARG_SIZE) {
+        return str.slice(0, MAX_ARG_SIZE) + '...(truncated)';
+      }
+      return arg;
+    } catch { return String(arg); }
+  }
+
+  function capture(level, args) {
+    if (logs.length < MAX_LOGS) {
+      logs.push({ level, timestamp: Date.now(), args: args.map(sanitizeArg) });
+    }
+  }
+
+  const sandboxConsole = {
+    log: (...args) => { capture('log', args); console.log(prefix, ...args); },
+    info: (...args) => { capture('info', args); console.info(prefix, ...args); },
+    warn: (...args) => { capture('warn', args); console.warn(prefix, ...args); },
+    error: (...args) => { capture('error', args); console.error(prefix, ...args); },
+    debug: (...args) => { capture('debug', args); console.debug(prefix, ...args); },
   };
+
+  return { console: sandboxConsole, getLogs: () => logs };
 }
 
 // ===== 以下功能需要通过 Bridge 访问主线程 =====
@@ -230,11 +257,11 @@ async function executeCode(payload) {
   const startTime = Date.now();
   const { code, context, timeout, namespace } = payload;
   const timerManager = createTimerManager();
+  const { console: sandboxConsole, getLogs } = createSandboxConsole(namespace);
 
   try {
     const sandboxRequire = createSandboxRequire(workerData.requireBasePath || process.cwd());
     const asyncRequire = createAsyncRequire(workerData.requireBasePath || process.cwd());
-    const sandboxConsole = createSandboxConsole(namespace);
     const bridgeContext = createBridgeContext(namespace);
 
     const req = context.req || {};
@@ -437,12 +464,13 @@ async function executeCode(payload) {
     const script = new vm.Script(wrappedCode, { filename: 'sandbox:' + namespace });
     const result = await script.runInContext(vmContext, { timeout, breakOnSigint: true });
 
-    return { success: true, data: result, executionTime: Date.now() - startTime };
+    return { success: true, data: result, executionTime: Date.now() - startTime, logs: getLogs() };
   } catch (error) {
     return {
       success: false,
       error: { name: error.name || 'Error', message: error.message || 'Unknown error', stack: error.stack },
       executionTime: Date.now() - startTime,
+      logs: getLogs(),
     };
   } finally {
     // 清理所有定时器

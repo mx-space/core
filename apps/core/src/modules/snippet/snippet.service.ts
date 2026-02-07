@@ -58,6 +58,15 @@ export class SnippetService {
     }
     await this.validateTypeAndCleanup(model)
 
+    if (model.type === SnippetType.Function) {
+      const compiled = await this.serverlessService.compileTypescriptCode(
+        model.raw,
+      )
+      if (compiled) {
+        model.compiledCode = compiled
+      }
+    }
+
     if (model.reference === 'theme') {
       await this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
         scope: EventScope.TO_SYSTEM,
@@ -110,6 +119,15 @@ export class SnippetService {
     }
 
     await this.deleteCachedSnippet(old.reference, old.name)
+
+    if (newModel.type === SnippetType.Function && newModel.raw) {
+      const compiled = await this.serverlessService.compileTypescriptCode(
+        newModel.raw,
+      )
+      if (compiled) {
+        newModel.compiledCode = compiled
+      }
+    }
 
     const newerDoc = await this.model.findByIdAndUpdate(
       id,

@@ -4,7 +4,9 @@ import {
   Delete,
   Get,
   InternalServerErrorException,
+  NotFoundException,
   Param,
+  Query,
   Request,
   Response,
 } from '@nestjs/common'
@@ -16,10 +18,14 @@ import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { AssetService } from '~/processors/helper/helper.asset.service'
+import { MongoIdDto } from '~/shared/dto/id.dto'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { SnippetType } from '../snippet/snippet.model'
 import { createMockedContextResponse } from './mock-response.util'
-import { ServerlessReferenceDto } from './serverless.schema'
+import {
+  ServerlessLogQueryDto,
+  ServerlessReferenceDto,
+} from './serverless.schema'
 import { ServerlessService } from './serverless.service'
 
 @ApiController(['serverless', 'fn'])
@@ -44,6 +50,45 @@ export class ServerlessController {
       throw new InternalServerErrorException('code defined file not found')
     }
   }
+  @Get('/logs/:id')
+  @Auth()
+  async getInvocationLogs(
+    @Param() param: MongoIdDto,
+    @Query() query: ServerlessLogQueryDto,
+  ) {
+    const { id } = param
+    const { page, size, status } = query
+    return this.serverlessService.getInvocationLogs(id, {
+      page,
+      size,
+      status,
+    })
+  }
+
+  @Get('/compiled/:id')
+  @Auth()
+  @HTTPDecorators.Bypass
+  async getCompiledCode(@Param() param: MongoIdDto) {
+    const snippet = await this.serverlessService.model
+      .findById(param.id)
+      .select('+compiledCode')
+      .lean()
+    if (!snippet) {
+      throw new NotFoundException('Snippet not found')
+    }
+    return snippet.compiledCode ?? null
+  }
+
+  @Get('/log/:id')
+  @Auth()
+  async getInvocationLogDetail(@Param('id') id: string) {
+    const log = await this.serverlessService.getInvocationLogDetail(id)
+    if (!log) {
+      throw new NotFoundException('Invocation log not found')
+    }
+    return log
+  }
+
   @All('/:reference/:name/*')
   @Throttle({
     default: {
@@ -93,7 +138,7 @@ export class ServerlessController {
           },
         ],
       })
-      .select('+secret')
+      .select('+secret +compiledCode')
       .lean({
         getters: true,
       })

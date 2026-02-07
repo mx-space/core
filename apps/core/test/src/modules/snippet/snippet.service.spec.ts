@@ -31,6 +31,9 @@ describe('test Snippet Service', async () => {
             isValidServerlessFunction() {
               return true
             },
+            async compileTypescriptCode(code: string) {
+              return code
+            },
           },
         },
         { provide: EventManagerService, useValue: mockedEventManageService },

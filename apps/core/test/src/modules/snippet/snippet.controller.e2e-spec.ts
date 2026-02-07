@@ -37,6 +37,9 @@ describe('test /snippets', async () => {
           isValidServerlessFunction() {
             return true
           },
+          async compileTypescriptCode(code: string) {
+            return code
+          },
         },
       },
     ],

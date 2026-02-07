@@ -56,6 +56,7 @@ interface PooledWorker {
   worker: Worker
   busy: boolean
   lastUsed: number
+  terminating: boolean
 }
 
 interface PendingExecution {
@@ -137,6 +138,7 @@ export class SandboxService {
   }
 
   private terminateWorker(pooledWorker: PooledWorker): void {
+    pooledWorker.terminating = true
     pooledWorker.worker.postMessage({
       id: generateId(),
       type: WorkerMessageType.Terminate,
@@ -166,6 +168,7 @@ export class SandboxService {
         worker,
         busy: false,
         lastUsed: Date.now(),
+        terminating: false,
       }
 
       const onReady = (message: WorkerMessage) => {
@@ -265,7 +268,7 @@ export class SandboxService {
     })
 
     worker.on('exit', (code) => {
-      if (code !== 0) {
+      if (code !== 0 && !pooledWorker.terminating) {
         console.error(`[SandboxService] Worker exited with code ${code}`)
       }
       this.removeWorker(pooledWorker)
@@ -327,6 +330,7 @@ export class SandboxService {
       const timeoutId = setTimeout(() => {
         this.pendingExecutions.delete(id)
         pooledWorker.busy = false
+        pooledWorker.terminating = true
 
         pooledWorker.worker.terminate().then(() => {
           this.removeWorker(pooledWorker)
@@ -360,6 +364,7 @@ export class SandboxService {
     }
 
     const terminatePromises = this.workers.map((pooledWorker) => {
+      pooledWorker.terminating = true
       pooledWorker.worker.postMessage({
         id: generateId(),
         type: WorkerMessageType.Terminate,

@@ -17,6 +17,12 @@ export interface SandboxContext {
   }
 }
 
+export interface SandboxLogEntry {
+  level: 'log' | 'info' | 'warn' | 'error' | 'debug'
+  timestamp: number
+  args: unknown[]
+}
+
 export interface SandboxResult<T = unknown> {
   success: boolean
   data?: T
@@ -26,6 +32,7 @@ export interface SandboxResult<T = unknown> {
     stack?: string
   }
   executionTime: number
+  logs?: SandboxLogEntry[]
 }
 
 export enum WorkerMessageType {

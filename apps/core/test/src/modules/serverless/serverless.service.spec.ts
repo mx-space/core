@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { createMockedContextResponse } from '~/modules/serverless/mock-response.util'
+import { ServerlessLogModel } from '~/modules/serverless/serverless-log.model'
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -36,6 +37,10 @@ describe('test serverless function service', () => {
         {
           provide: getModelToken('SnippetModel'),
           useValue: getModelForClass(SnippetModel),
+        },
+        {
+          provide: getModelToken('ServerlessLogModel'),
+          useValue: getModelForClass(ServerlessLogModel),
         },
         {
           provide: ConfigsService,

@@ -10,10 +10,7 @@ import {
 } from '@nestjs/common'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { EventScope } from '~/constants/business-event.constant'
-import {
-  RedisKeys,
-  SERVERLESS_COMPLIE_CACHE_TTL,
-} from '~/constants/cache.constant'
+import { RedisKeys } from '~/constants/cache.constant'
 import {
   OWNER_PROFILE_COLLECTION_NAME,
   READER_COLLECTION_NAME,
@@ -29,6 +26,7 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
+import type { SandboxResult } from '~/utils/sandbox'
 import { SandboxService } from '~/utils/sandbox'
 import { safePathJoin } from '~/utils/tool.util'
 import { isPlainObject } from 'es-toolkit/compat'
@@ -42,7 +40,8 @@ import type {
   FunctionContextResponse,
 } from './function.types'
 import { allBuiltInSnippetPack as builtInSnippets } from './pack'
-import { complieTypeScriptBabelOptions, hashStable } from './serverless.util'
+import { ServerlessLogModel } from './serverless-log.model'
+import { complieTypeScriptBabelOptions } from './serverless.util'
 
 type ScopeContext = {
   req: FunctionContextRequest
@@ -58,6 +57,8 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @InjectModel(SnippetModel)
     private readonly snippetModel: MongooseModel<SnippetModel>,
+    @InjectModel(ServerlessLogModel)
+    private readonly logModel: MongooseModel<ServerlessLogModel>,
     private readonly assetService: AssetService,
     private readonly databaseService: DatabaseService,
 
@@ -306,31 +307,26 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     const { raw: functionString } = model
     const scope = `${model.reference}/${model.name}`
 
-    const cacheKey = model.updated
-      ? getRedisKey(
-          RedisKeys.FunctionComplieCache,
-          hashStable(`${model.id}_${model.updated}`),
-        )
-      : ''
-
-    const redis = this.redisService.getClient()
-    let cached: string | null = null
-    if (cacheKey) {
-      cached = await redis.get(cacheKey)
+    let compiledCode = model.compiledCode
+    if (!compiledCode) {
+      compiledCode =
+        (await this.compileTypescriptCode(functionString)) ?? undefined
+      if (compiledCode) {
+        this.snippetModel
+          .updateOne({ _id: model.id }, { compiledCode })
+          .catch((error) => {
+            this.logger.error(
+              `Backfill compiledCode failed for ${scope}: ${error.message}`,
+            )
+          })
+      }
     }
 
-    const compliedCode =
-      cached ?? (await this.complieTypescriptCode(functionString))
-
-    if (!compliedCode) {
+    if (!compiledCode) {
       throw new InternalServerErrorException(
-        'Complie serverless function code failed',
+        'Compile serverless function code failed',
       )
     }
-    if (!cached && cacheKey) {
-      await redis.set(cacheKey, compliedCode)
-    }
-    await redis.expire(cacheKey, SERVERLESS_COMPLIE_CACHE_TTL)
 
     const secretObj = model.secret
       ? qs.parse(EncryptUtil.decrypt(model.secret))
@@ -369,13 +365,17 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     }
 
     const result = await this.sandboxService.execute(
-      compliedCode,
+      compiledCode,
       sandboxContext,
       {
         timeout: 30000,
         namespace: scope,
       },
     )
+
+    this.saveInvocationLog(model, context, result).catch((error) => {
+      this.logger.error(`Save invocation log failed: ${error.message}`)
+    })
 
     if (!result.success) {
       this.logger.error(
@@ -391,7 +391,7 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     return result.data
   }
 
-  private async complieTypescriptCode(
+  async compileTypescriptCode(
     code: string,
   ): Promise<string | null | undefined> {
     const res = await transformAsync(code, complieTypeScriptBabelOptions)
@@ -400,6 +400,61 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     }
 
     return res.code
+  }
+
+  private async saveInvocationLog(
+    model: SnippetModel,
+    context: ScopeContext,
+    result: SandboxResult,
+  ) {
+    await this.logModel.create({
+      functionId: model.id || (model as any)._id?.toString(),
+      reference: model.reference,
+      name: model.name,
+      method: context.req.method,
+      ip: context.req.ip,
+      status: result.success ? 'success' : 'error',
+      executionTime: result.executionTime,
+      logs: result.logs || [],
+      error: result.error,
+    })
+  }
+
+  async getInvocationLogs(
+    functionId: string,
+    options: { page: number; size: number; status?: 'success' | 'error' },
+  ) {
+    const { page, size, status } = options
+    const condition: Record<string, unknown> = { functionId }
+    if (status) condition.status = status
+
+    const [data, total] = await Promise.all([
+      this.logModel
+        .find(condition)
+        .sort({ created: -1 })
+        .skip((page - 1) * size)
+        .limit(size)
+        .select('-logs')
+        .lean({ getters: true }),
+      this.logModel.countDocuments(condition),
+    ])
+
+    const totalPage = Math.ceil(total / size)
+    return {
+      data,
+      pagination: {
+        total,
+        size,
+        currentPage: page,
+        totalPage,
+        hasNextPage: page < totalPage,
+        hasPrevPage: page > 1,
+      },
+    }
+  }
+
+  async getInvocationLogDetail(id: string) {
+    return this.logModel.findById(id).lean({ getters: true })
   }
 
   async isValidServerlessFunction(raw: string) {
@@ -461,11 +516,13 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
 
     for (const [path, { code, method, name, reference }] of pathCodeMap) {
       this.logger.log(`pour built-in function: ${name}`)
+      const compiledCode = await this.compileTypescriptCode(code)
       await this.model.create({
         type: SnippetType.Function,
         name: path,
         reference: reference || 'built-in',
         raw: code,
+        compiledCode: compiledCode ?? undefined,
         method: method || 'get',
         enable: true,
         private: false,
@@ -495,11 +552,12 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
       throw new InternalServerErrorException('built-in function not found')
     }
 
+    const compiledCode = await this.compileTypescriptCode(builtInSnippet.code)
     await this.model.updateOne(
       {
         name,
       },
-      { raw: builtInSnippet.code },
+      { raw: builtInSnippet.code, compiledCode: compiledCode ?? undefined },
     )
   }
 }
