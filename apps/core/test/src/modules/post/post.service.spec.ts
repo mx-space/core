@@ -14,7 +14,6 @@ import { SlugTrackerService } from '~/modules/slug-tracker/slug-tracker.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { getModelToken } from '~/transformers/model.transformer'
 import { Types } from 'mongoose'
 import {
@@ -66,10 +65,6 @@ describe('PostService', () => {
 
   let mockImageMigrationService: {
     migrateImagesToS3: Mock
-  }
-
-  let mockTextMacroService: {
-    replaceTextMacro: Mock
   }
 
   const createMockPostModel = () => {
@@ -276,12 +271,6 @@ describe('PostService', () => {
       }),
     }
 
-    mockTextMacroService = {
-      replaceTextMacro: vi
-        .fn()
-        .mockImplementation((text) => Promise.resolve(text)),
-    }
-
     const mockModuleRef = {
       get: vi.fn().mockImplementation((token: any) => {
         if (token === CATEGORY_SERVICE_TOKEN) {
@@ -323,10 +312,6 @@ describe('PostService', () => {
         {
           provide: EventManagerService,
           useValue: mockEventManager,
-        },
-        {
-          provide: TextMacroService,
-          useValue: mockTextMacroService,
         },
         {
           provide: SlugTrackerService,

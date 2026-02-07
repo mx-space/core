@@ -9,7 +9,6 @@ import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
@@ -35,7 +34,6 @@ export class NoteService {
     @Inject(forwardRef(() => CommentService))
     private readonly commentService: CommentService,
 
-    private readonly textMacrosService: TextMacroService,
     @Inject(forwardRef(() => DraftService))
     private readonly draftService: DraftService,
   ) {}
@@ -111,11 +109,6 @@ export class NoteService {
     if (!latest) {
       return null
     }
-
-    latest.text = await this.textMacrosService.replaceTextMacro(
-      latest.text,
-      latest,
-    )
 
     // 是否存在上一条记录 (旧记录)
     // 统一：next 为较老的记录  prev 为较新的记录
@@ -202,10 +195,7 @@ export class NoteService {
               BusinessEvents.NOTE_CREATE,
               {
                 ...note.toJSON(),
-                text: await this.textMacrosService.replaceTextMacro(
-                  note.text,
-                  note,
-                ),
+                text: note.text,
               },
               {
                 scope: EventScope.TO_VISITOR,
@@ -354,10 +344,7 @@ export class NoteService {
         BusinessEvents.NOTE_UPDATE,
         {
           ...updated,
-          text: await this.textMacrosService.replaceTextMacro(
-            updated.text,
-            updated,
-          ),
+          text: updated.text,
         },
         {
           scope: EventScope.TO_VISITOR,

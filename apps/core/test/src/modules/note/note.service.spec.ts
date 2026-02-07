@@ -9,7 +9,6 @@ import { NoteService } from '~/modules/note/note.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { getModelToken } from '~/transformers/model.transformer'
 import {
   afterEach,
@@ -49,10 +48,6 @@ describe('NoteService', () => {
 
   let mockImageMigrationService: {
     migrateImagesToS3: Mock
-  }
-
-  let mockTextMacroService: {
-    replaceTextMacro: Mock
   }
 
   let mockDraftService: {
@@ -245,12 +240,6 @@ describe('NoteService', () => {
       }),
     }
 
-    mockTextMacroService = {
-      replaceTextMacro: vi
-        .fn()
-        .mockImplementation((text) => Promise.resolve(text)),
-    }
-
     mockDraftService = {
       markAsPublished: vi.fn().mockResolvedValue(undefined),
       linkToPublished: vi.fn().mockResolvedValue(undefined),
@@ -285,10 +274,6 @@ describe('NoteService', () => {
         {
           provide: CommentService,
           useValue: mockCommentService,
-        },
-        {
-          provide: TextMacroService,
-          useValue: mockTextMacroService,
         },
         {
           provide: DraftService,
@@ -403,25 +388,6 @@ describe('NoteService', () => {
       const result = await noteService.getLatestOne()
 
       expect(result).toBeNull()
-    })
-
-    it('should apply text macro replacement', async () => {
-      mockNotes.push({
-        _id: 'note-1',
-        id: 'note-1',
-        nid: 1,
-        title: 'Note 1',
-        text: 'Content with {{macro}}',
-        created: new Date('2021-01-01'),
-      })
-
-      mockTextMacroService.replaceTextMacro.mockResolvedValue(
-        'Content with replaced',
-      )
-
-      await noteService.getLatestOne()
-
-      expect(mockTextMacroService.replaceTextMacro).toHaveBeenCalled()
     })
   })
 

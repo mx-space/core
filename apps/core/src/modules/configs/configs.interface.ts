@@ -16,7 +16,6 @@ import {
   type MailOptionsSchema,
   type OAuthSchema,
   type SeoSchema,
-  type TextOptionsSchema,
   type ThirdPartyServiceIntegrationSchema,
   type UrlSchema,
 } from './configs.schema'
@@ -34,7 +33,6 @@ export abstract class IConfig {
   url: Required<z.infer<typeof UrlSchema>>
   seo: Required<z.infer<typeof SeoSchema>>
   adminExtra: Required<z.infer<typeof AdminExtraSchema>>
-  textOptions: Required<z.infer<typeof TextOptionsSchema>>
   mailOptions: Required<z.infer<typeof MailOptionsSchema>>
   commentOptions: Required<z.infer<typeof CommentOptionsSchema>>
   barkOptions: Required<z.infer<typeof BarkOptionsSchema>>

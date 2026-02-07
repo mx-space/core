@@ -9,7 +9,6 @@ import { NoteModel } from '~/modules/note/note.model'
 import { NoteService } from '~/modules/note/note.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
@@ -41,14 +40,6 @@ describe('NoteController (e2e)', async () => {
 
       commentProvider,
 
-      {
-        provide: TextMacroService,
-        useValue: {
-          async replaceTextMacro(text) {
-            return text
-          },
-        },
-      },
       HttpService,
       configProvider,
       await createRedisProvider(),

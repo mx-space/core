@@ -15,7 +15,6 @@ import { Lang } from '~/common/decorators/lang.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import {
   TranslationService,
   type ArticleTranslationInput,
@@ -30,7 +29,6 @@ import { PageService } from './page.service'
 export class PageController {
   constructor(
     private readonly pageService: PageService,
-    private readonly macroService: TextMacroService,
     private readonly translationService: TranslationService,
   ) {}
 
@@ -125,8 +123,6 @@ export class PageController {
     if (!page) {
       throw new CannotFindException()
     }
-
-    page.text = await this.macroService.replaceTextMacro(page.text, page)
 
     const translationResult = await this.translationService.translateArticle({
       articleId: page._id?.toString?.() ?? page.id ?? String(page._id),

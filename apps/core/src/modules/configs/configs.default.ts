@@ -89,9 +89,6 @@ export const generateDefaultConfig: () => IConfig = () => ({
     background: '',
     gaodemapKey: null!,
   },
-  textOptions: {
-    macros: true,
-  },
   featureList: {
     emailSubscribe: false,
   },

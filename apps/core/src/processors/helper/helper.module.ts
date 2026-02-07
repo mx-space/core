@@ -18,8 +18,6 @@ import { HttpService } from './helper.http.service'
 import { ImageMigrationService } from './helper.image-migration.service'
 import { ImageService } from './helper.image.service'
 import { JWTService } from './helper.jwt.service'
-import { TextMacroService } from './helper.macro.service'
-import { TaskQueueService } from './helper.tq.service'
 import { TranslationService } from './helper.translation.service'
 import { UploadService } from './helper.upload.service'
 import { UrlBuilderService } from './helper.url-builder.service'
@@ -34,8 +32,6 @@ const providers: Provider<any>[] = [
   ImageMigrationService,
   ImageService,
   JWTService,
-  TaskQueueService,
-  TextMacroService,
   TranslationService,
   UploadService,
   UrlBuilderService,

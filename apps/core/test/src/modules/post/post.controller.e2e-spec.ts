@@ -18,7 +18,6 @@ import { PostService } from '~/modules/post/post.service'
 import { SlugTrackerModel } from '~/modules/slug-tracker/slug-tracker.model'
 import { SlugTrackerService } from '~/modules/slug-tracker/slug-tracker.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
@@ -64,14 +63,6 @@ describe('PostController (e2e)', async () => {
 
       commentProvider,
 
-      {
-        provide: TextMacroService,
-        useValue: {
-          async replaceTextMacro(text: string) {
-            return text
-          },
-        },
-      },
       HttpService,
       configProvider,
 

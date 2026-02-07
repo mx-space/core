@@ -17,7 +17,6 @@ import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
@@ -49,7 +48,6 @@ export class PostService implements OnApplicationBootstrap {
     private readonly imageService: ImageService,
     private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
-    private readonly textMacroService: TextMacroService,
     private readonly slugTrackerService: SlugTrackerService,
     private readonly moduleRef: ModuleRef,
   ) {}
@@ -150,7 +148,7 @@ export class PostService implements OnApplicationBootstrap {
           {
             ...doc,
             category,
-            text: await this.textMacroService.replaceTextMacro(doc.text, doc),
+            text: doc.text,
           },
           {
             scope: EventScope.TO_VISITOR,
@@ -375,7 +373,7 @@ export class PostService implements OnApplicationBootstrap {
             BusinessEvents.POST_UPDATE,
             {
               ...doc,
-              text: await this.textMacroService.replaceTextMacro(doc.text, doc),
+              text: doc.text,
             },
             {
               scope: EventScope.TO_VISITOR,

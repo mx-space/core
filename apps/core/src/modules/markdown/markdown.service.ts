@@ -9,7 +9,6 @@ import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { omit } from 'es-toolkit/compat'
 import { dump } from 'js-yaml'
@@ -40,8 +39,6 @@ export class MarkdownService {
     private readonly pageModel: ReturnModelType<typeof PageModel>,
 
     private readonly databaseService: DatabaseService,
-
-    private readonly macroService: TextMacroService,
   ) {}
 
   async insertPostsToDb(data: DatatypeDto[]) {
@@ -223,12 +220,7 @@ ${text.trim()}
       throw new BizException(ErrorCodeEnum.DocumentNotFound)
 
     return {
-      html: this.renderMarkdownContent(
-        await this.macroService.replaceTextMacro(
-          result.document.text,
-          result.document,
-        ),
-      ),
+      html: this.renderMarkdownContent(result.document.text),
       ...result,
       document: result.document,
     }

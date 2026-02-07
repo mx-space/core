@@ -19,7 +19,6 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { CountingService } from '~/processors/helper/helper.counting.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
@@ -54,7 +53,6 @@ export class NoteController {
     private readonly noteService: NoteService,
     private readonly countingService: CountingService,
 
-    private readonly macrosService: TextMacroService,
     private readonly translationService: TranslationService,
   ) {}
 
@@ -260,7 +258,7 @@ export class NoteController {
     current.text =
       !isAuthenticated && this.noteService.checkNoteIsSecret(current)
         ? ''
-        : await this.macrosService.replaceTextMacro(current.text, current)
+        : current.text
 
     if (
       !this.noteService.checkPasswordToAccess(current, password) &&

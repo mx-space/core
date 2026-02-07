@@ -243,13 +243,6 @@ export class FriendLinkOptionsDto extends createZodDto(
 ) {}
 export type FriendLinkOptionsConfig = z.infer<typeof FriendLinkOptionsSchema>
 
-// ==================== Text Options ====================
-export const TextOptionsSchema = section('文本设定', {
-  macros: field.toggle(z.boolean().optional(), '开启文本宏替换'),
-})
-export class TextOptionsDto extends createZodDto(TextOptionsSchema) {}
-export type TextOptionsConfig = z.infer<typeof TextOptionsSchema>
-
 // ==================== Bark Options ====================
 export const BarkOptionsSchema = section('Bark 通知设定', {
   enable: field.toggle(z.boolean().optional(), '开启 Bark 通知'),
@@ -422,7 +415,6 @@ export const configSchemaMapping = {
   url: UrlSchema,
   seo: SeoSchema,
   adminExtra: AdminExtraSchema,
-  textOptions: TextOptionsSchema,
   mailOptions: MailOptionsSchema,
   commentOptions: CommentOptionsSchema,
   barkOptions: BarkOptionsSchema,
@@ -448,7 +440,6 @@ export const FullConfigSchema = withMeta(
     url: UrlSchema,
     seo: SeoSchema,
     adminExtra: AdminExtraSchema,
-    textOptions: TextOptionsSchema,
     mailOptions: MailOptionsSchema,
     commentOptions: CommentOptionsSchema,
     barkOptions: BarkOptionsSchema,

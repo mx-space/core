@@ -92,9 +92,9 @@ const groupConfigs: GroupConfig[] = [
   {
     key: 'content',
     title: '内容',
-    description: '评论、文本、友链',
+    description: '评论、友链',
     icon: 'file-text',
-    sectionKeys: ['commentOptions', 'textOptions', 'friendLinkOptions'],
+    sectionKeys: ['commentOptions', 'friendLinkOptions'],
   },
   {
     key: 'notification',
