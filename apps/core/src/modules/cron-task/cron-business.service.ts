@@ -343,7 +343,21 @@ export class CronBusinessService {
       }
     }
 
-    const migrationSources = [
+    type MigrationDoc = {
+      _id: any
+      id?: string
+      text: string
+      images?: any[]
+    }
+    type MigrationSource = {
+      name: string
+      model: MongooseModel<any>
+      refType: FileReferenceType
+      docs: MigrationDoc[]
+      counter: { migratedDocs: number; migratedImages: number }
+    }
+
+    const migrationSources: MigrationSource[] = [
       {
         name: 'post',
         model: this.postModel,
@@ -365,18 +379,7 @@ export class CronBusinessService {
         docs: pages,
         counter: summary.pages,
       },
-    ] satisfies Array<{
-      name: string
-      model: MongooseModel<any>
-      refType: FileReferenceType
-      docs: Array<{
-        _id: any
-        id?: string
-        text: string
-        images?: any[]
-      }>
-      counter: { migratedDocs: number; migratedImages: number }
-    }>
+    ]
 
     for (const source of migrationSources) {
       for (const doc of source.docs) {
