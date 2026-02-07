@@ -101,4 +101,15 @@ export class CronTaskScheduler {
       `cleanupOrphanImages task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
     )
   }
+
+  @CronOnce(CronExpression.EVERY_HOUR, { name: 'syncPublishedImagesToS3' })
+  async scheduleSyncPublishedImagesToS3() {
+    this.logger.log('Scheduling syncPublishedImagesToS3 task')
+    const result = await this.cronTaskService.createCronTask(
+      CronTaskType.SyncPublishedImagesToS3,
+    )
+    this.logger.log(
+      `syncPublishedImagesToS3 task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
+    )
+  }
 }

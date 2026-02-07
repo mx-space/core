@@ -5,8 +5,13 @@ import { STATIC_FILE_TRASH_DIR, TEMP_DIR } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
+import { NoteModel } from '~/modules/note/note.model'
+import { PageModel } from '~/modules/page/page.model'
+import { PostModel } from '~/modules/post/post.model'
 import { HttpService } from '~/processors/helper/helper.http.service'
+import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import type { StoreJWTPayload } from '~/processors/helper/helper.jwt.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { RedisService } from '~/processors/redis/redis.service'
@@ -29,8 +34,15 @@ export class CronBusinessService {
     private readonly configs: ConfigsService,
     @InjectModel(AnalyzeModel)
     private readonly analyzeModel: MongooseModel<AnalyzeModel>,
+    @InjectModel(PostModel)
+    private readonly postModel: MongooseModel<PostModel>,
+    @InjectModel(NoteModel)
+    private readonly noteModel: MongooseModel<NoteModel>,
+    @InjectModel(PageModel)
+    private readonly pageModel: MongooseModel<PageModel>,
     private readonly redisService: RedisService,
     private readonly fileReferenceService: FileReferenceService,
+    private readonly imageMigrationService: ImageMigrationService,
 
     @Inject(forwardRef(() => AggregateService))
     private readonly aggregateService: AggregateService,
@@ -231,5 +243,174 @@ export class CronBusinessService {
       `--> 清理孤儿图片完成：删除了 ${deletedCount}/${totalOrphan} 个文件`,
     )
     return { deletedCount, totalOrphan }
+  }
+
+  /**
+   * 同步已发布内容中的本地图片到 S3（兜底补偿任务）
+   */
+  async syncPublishedImagesToS3() {
+    const config = await this.configs.get('imageStorageOptions')
+    if (!config.enable || !config.syncOnPublish) {
+      return {
+        skipped: true,
+        reason: 'image storage sync is disabled',
+      }
+    }
+
+    const localImagePattern = /\/objects\/image\//
+    const [posts, notes, pages] = await Promise.all([
+      this.postModel
+        .find({
+          isPublished: { $ne: false },
+          text: localImagePattern,
+        })
+        .select('_id id text images')
+        .lean(),
+      this.noteModel
+        .find({
+          isPublished: { $ne: false },
+          text: localImagePattern,
+        })
+        .select('_id id text images')
+        .lean(),
+      this.pageModel
+        .find({
+          text: localImagePattern,
+        })
+        .select('_id id text images')
+        .lean(),
+    ])
+
+    const summary = {
+      posts: { scanned: posts.length, migratedDocs: 0, migratedImages: 0 },
+      notes: { scanned: notes.length, migratedDocs: 0, migratedImages: 0 },
+      pages: { scanned: pages.length, migratedDocs: 0, migratedImages: 0 },
+      failedDocs: 0,
+      deletedLocalFiles: 0,
+    }
+
+    const migratedLocalUrls = new Set<string>()
+
+    const processDocument = async (
+      model: MongooseModel<any>,
+      refType: FileReferenceType,
+      doc: {
+        _id: any
+        id?: string
+        text: string
+        images?: any[]
+      },
+      counter: { migratedDocs: number; migratedImages: number },
+    ) => {
+      const {
+        newText,
+        newImages,
+        migratedCount,
+        migratedLocalUrls: urls,
+      } = await this.imageMigrationService.migrateImagesToS3(
+        doc.text,
+        doc.images,
+        {
+          deleteLocalAfterSync: false,
+        },
+      )
+
+      if (migratedCount <= 0) {
+        return
+      }
+
+      await model.updateOne(
+        { _id: doc._id },
+        {
+          $set: {
+            text: newText,
+            images: newImages,
+          },
+        },
+      )
+
+      const refId = doc.id ?? String(doc._id)
+      await this.fileReferenceService.updateReferencesForDocument(
+        newText,
+        refId,
+        refType,
+      )
+
+      counter.migratedDocs += 1
+      counter.migratedImages += migratedCount
+      for (const url of urls) {
+        migratedLocalUrls.add(url)
+      }
+    }
+
+    const migrationSources = [
+      {
+        name: 'post',
+        model: this.postModel,
+        refType: FileReferenceType.Post,
+        docs: posts,
+        counter: summary.posts,
+      },
+      {
+        name: 'note',
+        model: this.noteModel,
+        refType: FileReferenceType.Note,
+        docs: notes,
+        counter: summary.notes,
+      },
+      {
+        name: 'page',
+        model: this.pageModel,
+        refType: FileReferenceType.Page,
+        docs: pages,
+        counter: summary.pages,
+      },
+    ] satisfies Array<{
+      name: string
+      model: MongooseModel<any>
+      refType: FileReferenceType
+      docs: Array<{
+        _id: any
+        id?: string
+        text: string
+        images?: any[]
+      }>
+      counter: { migratedDocs: number; migratedImages: number }
+    }>
+
+    for (const source of migrationSources) {
+      for (const doc of source.docs) {
+        try {
+          await processDocument(
+            source.model,
+            source.refType,
+            doc,
+            source.counter,
+          )
+        } catch (error) {
+          summary.failedDocs += 1
+          this.logger.error(
+            `Failed to migrate ${source.name} images: ${doc.id}`,
+            error,
+          )
+        }
+      }
+    }
+
+    if (config.deleteLocalAfterSync && migratedLocalUrls.size > 0) {
+      for (const fileUrl of migratedLocalUrls) {
+        const { deleted } =
+          await this.fileReferenceService.deleteLocalFileIfUnreferenced(fileUrl)
+        if (deleted) {
+          summary.deletedLocalFiles += 1
+        }
+      }
+    }
+
+    this.logger.log(
+      `--> 图片补偿迁移完成：post ${summary.posts.migratedDocs}/${summary.posts.scanned}, note ${summary.notes.migratedDocs}/${summary.notes.scanned}, page ${summary.pages.migratedDocs}/${summary.pages.scanned}, failed ${summary.failedDocs}`,
+    )
+
+    return summary
   }
 }

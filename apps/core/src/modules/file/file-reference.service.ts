@@ -125,6 +125,41 @@ export class FileReferenceService {
     return { deletedCount, totalOrphan: orphanFiles.length }
   }
 
+  async deleteLocalFileIfUnreferenced(fileUrl: string) {
+    const activeCount = await this.fileReferenceModel.countDocuments({
+      fileUrl,
+      status: FileReferenceStatus.Active,
+    })
+    if (activeCount > 0) {
+      return { deleted: false, reason: 'active-reference-exists' as const }
+    }
+
+    const existingRef = await this.fileReferenceModel
+      .findOne({ fileUrl })
+      .select('fileName')
+      .lean()
+    const fileName =
+      existingRef?.fileName ?? this.extractLocalImageFilename(fileUrl)
+
+    if (!fileName) {
+      return { deleted: false, reason: 'filename-not-found' as const }
+    }
+
+    const localPath = path.join(STATIC_FILE_DIR, 'image', fileName)
+    const fileDeleted = await this.deleteFileIfExists(localPath)
+
+    if (!fileDeleted) {
+      return { deleted: false, reason: 'delete-failed' as const }
+    }
+
+    await this.fileReferenceModel.deleteMany({
+      fileUrl,
+      status: FileReferenceStatus.Pending,
+    })
+
+    return { deleted: true, reason: 'deleted' as const }
+  }
+
   async getFileReferences(fileUrl: string) {
     return this.fileReferenceModel.find({ fileUrl })
   }
@@ -157,6 +192,11 @@ export class FileReferenceService {
       )
       return false
     }
+  }
+
+  private extractLocalImageFilename(url: string): string | null {
+    const match = url.match(/\/objects\/image\/([^/?#]+)/)
+    return match ? match[1] : null
   }
 
   async batchDeleteOrphans(options: { ids?: string[]; all?: boolean }) {

@@ -11,6 +11,7 @@ export interface ImageMigrationResult {
   newText: string
   newImages: ImageModel[]
   migratedCount: number
+  migratedLocalUrls: string[]
 }
 
 @Injectable()
@@ -31,11 +32,19 @@ export class ImageMigrationService {
   async migrateImagesToS3(
     text: string,
     images?: ImageModel[],
+    options?: {
+      deleteLocalAfterSync?: boolean
+    },
   ): Promise<ImageMigrationResult> {
     const config = await this.configsService.get('imageStorageOptions')
 
-    if (!config.enable) {
-      return { newText: text, newImages: images ?? [], migratedCount: 0 }
+    if (!config.enable || !config.syncOnPublish) {
+      return {
+        newText: text,
+        newImages: images ?? [],
+        migratedCount: 0,
+        migratedLocalUrls: [],
+      }
     }
 
     if (
@@ -45,7 +54,12 @@ export class ImageMigrationService {
       !config.bucket
     ) {
       this.logger.warn('Image storage config incomplete, skipping migration')
-      return { newText: text, newImages: images ?? [], migratedCount: 0 }
+      return {
+        newText: text,
+        newImages: images ?? [],
+        migratedCount: 0,
+        migratedLocalUrls: [],
+      }
     }
 
     const s3Uploader = new S3Uploader({
@@ -66,6 +80,9 @@ export class ImageMigrationService {
     let newText = text
     const newImages = [...(images ?? [])]
     let migratedCount = 0
+    const migratedLocalUrls = new Set<string>()
+    const shouldDeleteLocal =
+      options?.deleteLocalAfterSync ?? config.deleteLocalAfterSync
 
     for (const match of matches) {
       const [fullMatch, altText, imageUrl] = match
@@ -96,9 +113,10 @@ export class ImageMigrationService {
         }
 
         migratedCount++
+        migratedLocalUrls.add(imageUrl)
         this.logger.log(`Migrated image: ${filename} -> ${s3Url}`)
 
-        if (config.deleteLocalAfterSync) {
+        if (shouldDeleteLocal) {
           try {
             await unlink(localPath)
             this.logger.log(`Deleted local file: ${localPath}`)
@@ -114,6 +132,11 @@ export class ImageMigrationService {
       }
     }
 
-    return { newText, newImages, migratedCount }
+    return {
+      newText,
+      newImages,
+      migratedCount,
+      migratedLocalUrls: [...migratedLocalUrls],
+    }
   }
 }
