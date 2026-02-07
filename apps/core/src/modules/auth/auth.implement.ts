@@ -113,6 +113,13 @@ export async function CreateAuth(
       username(),
     ],
     hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        if (ctx.body?.role !== undefined) {
+          throw new APIError('FORBIDDEN', {
+            message: 'role cannot be modified',
+          })
+        }
+      }),
       after: createAuthMiddleware(async (ctx) => {
         const newSession = ctx.context.newSession as
           | {
