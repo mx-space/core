@@ -1,5 +1,19 @@
 # CHANGELOG
 
+# [10.0.0-alpha.2](https://github.com/mx-space/core/compare/v10.0.0-alpha.1...v10.0.0-alpha.2) (2026-02-07)
+
+
+### Bug Fixes
+
+* **auth:** add role validation in CreateAuth middleware ([1aa9549](https://github.com/mx-space/core/commit/1aa954962a72e0b198fe4c1f3a106c934f110bd1))
+
+
+### Features
+
+* **serverless:** implement logging for serverless function invocations ([59e9d4d](https://github.com/mx-space/core/commit/59e9d4d031cb497cb1ad38d821e53738272ee50a))
+
+
+
 # [10.0.0-alpha.1](https://github.com/mx-space/core/compare/v10.0.0-alpha.0...v10.0.0-alpha.1) (2026-02-06)
 
 
