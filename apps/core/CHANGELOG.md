@@ -1,5 +1,23 @@
 # CHANGELOG
 
+# [10.0.0-alpha.3](https://github.com/mx-space/core/compare/v10.0.0-alpha.2...v10.0.0-alpha.3) (2026-02-08)
+
+
+### Bug Fixes
+
+* add missing imports for HeadingNode, QuoteNode, TRANSFORMERS in LexicalService ([5072036](https://github.com/mx-space/core/commit/50720360ee067b68d6d82d1de505670c53cb9c04))
+* remove CodeHighlightNode to eliminate PrismJS dependency in server bundle ([d3289f6](https://github.com/mx-space/core/commit/d3289f6a3624fe42227c4b9570c1923dddba1b71))
+* replace @lexical/code and @lexical/markdown with custom nodes to eliminate PrismJS ([3e791d6](https://github.com/mx-space/core/commit/3e791d6aa78d23861b608059012b325f7a2a1aaf))
+
+
+### Features
+
+* add Lexical block editor content format support ([8fe2508](https://github.com/mx-space/core/commit/8fe2508605ed3658c56ca13079366b6f1b0373e8))
+* **cron:** add syncPublishedImagesToS3 functionality and scheduling ([5be2dfa](https://github.com/mx-space/core/commit/5be2dfa4c37d07738dd662649c079a35655d1aea))
+* **snippet:** add custom path support for snippets ([04a1bfc](https://github.com/mx-space/core/commit/04a1bfcb433275207cc626b680b1884a28facd70))
+
+
+
 # [10.0.0-alpha.2](https://github.com/mx-space/core/compare/v10.0.0-alpha.1...v10.0.0-alpha.2) (2026-02-07)
 
 
