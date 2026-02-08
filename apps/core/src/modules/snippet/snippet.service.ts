@@ -56,6 +56,19 @@ export class SnippetService {
     if (isExist) {
       throw new BizException(ErrorCodeEnum.SnippetExists)
     }
+
+    if (model.customPath) {
+      const cpExists = await this.model.countDocuments({
+        customPath: model.customPath,
+      })
+      if (cpExists) {
+        throw new BizException(
+          ErrorCodeEnum.InvalidParameter,
+          'customPath already exists',
+        )
+      }
+    }
+
     await this.validateTypeAndCleanup(model)
 
     if (model.type === SnippetType.Function) {
@@ -118,6 +131,25 @@ export class SnippetService {
       newModel.secret = qs.stringify({ ...oldSecret, ...newSecret })
     }
 
+    if (newModel.customPath !== undefined) {
+      if (newModel.customPath) {
+        const cpExists = await this.model.countDocuments({
+          customPath: newModel.customPath,
+          _id: { $ne: id },
+        })
+        if (cpExists) {
+          throw new BizException(
+            ErrorCodeEnum.InvalidParameter,
+            'customPath already exists',
+          )
+        }
+      }
+
+      if (old.customPath) {
+        await this.deleteCachedSnippetByCustomPath(old.customPath)
+      }
+    }
+
     await this.deleteCachedSnippet(old.reference, old.name)
 
     if (newModel.type === SnippetType.Function && newModel.raw) {
@@ -129,11 +161,22 @@ export class SnippetService {
       }
     }
 
-    const newerDoc = await this.model.findByIdAndUpdate(
-      id,
-      { ...newModel, modified: new Date() },
-      { new: true },
-    )
+    const updateOp: any = { ...newModel, modified: new Date() }
+    const unsetFields: Record<string, 1> = {}
+
+    if ('customPath' in newModel && !newModel.customPath) {
+      delete updateOp.customPath
+      unsetFields.customPath = 1
+    }
+
+    const updateQuery: any = { $set: updateOp }
+    if (Object.keys(unsetFields).length > 0) {
+      updateQuery.$unset = unsetFields
+    }
+
+    const newerDoc = await this.model.findByIdAndUpdate(id, updateQuery, {
+      new: true,
+    })
 
     if (old.reference === 'theme' || newModel.reference === 'theme') {
       await this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
@@ -162,6 +205,9 @@ export class SnippetService {
     }
 
     await this.deleteCachedSnippet(doc.reference, doc.name)
+    if (doc.customPath) {
+      await this.deleteCachedSnippetByCustomPath(doc.customPath)
+    }
   }
 
   private async validateTypeAndCleanup(model: SnippetModel) {
@@ -323,6 +369,83 @@ export class SnippetService {
       [key1, key2].map((key) => {
         return client.hdel(getRedisKey(RedisKeys.SnippetCache), key)
       }),
+    )
+  }
+
+  // --- customPath methods ---
+
+  async getSnippetByCustomPath(
+    customPath: string,
+  ): Promise<SnippetModel | null> {
+    return this.model
+      .findOne({ customPath, type: { $ne: SnippetType.Function } })
+      .lean()
+  }
+
+  async getFunctionSnippetByCustomPath(
+    customPath: string,
+    method: string,
+  ): Promise<SnippetModel | null> {
+    return this.model
+      .findOne({
+        customPath,
+        type: SnippetType.Function,
+        $or: [{ method: 'ALL' }, { method }],
+      })
+      .select('+secret +compiledCode')
+      .lean({ getters: true })
+  }
+
+  async getFunctionSnippetByCustomPathPrefix(
+    candidatePaths: string[],
+    method: string,
+  ): Promise<SnippetModel | null> {
+    const results = await this.model
+      .find({
+        customPath: { $in: candidatePaths },
+        type: SnippetType.Function,
+        $or: [{ method: 'ALL' }, { method }],
+      })
+      .select('+secret +compiledCode')
+      .lean({ getters: true })
+
+    if (results.length === 0) return null
+    return results.reduce((a, b) =>
+      (a.customPath?.length ?? 0) >= (b.customPath?.length ?? 0) ? a : b,
+    )
+  }
+
+  async cacheSnippetByCustomPath(
+    customPath: string,
+    isPrivate: boolean,
+    value: any,
+  ) {
+    const key = `cp:${customPath}:${isPrivate ? 'private' : ''}`
+    const client = this.redisService.getClient()
+    await client.hset(
+      getRedisKey(RedisKeys.SnippetCache),
+      key,
+      typeof value !== 'string' ? JSON.stringify(value) : value,
+    )
+  }
+
+  async getCachedSnippetByCustomPath(
+    customPath: string,
+    accessType: 'public' | 'private',
+  ) {
+    const key = `cp:${customPath}:${accessType === 'private' ? 'private' : ''}`
+    const client = this.redisService.getClient()
+    return client.hget(getRedisKey(RedisKeys.SnippetCache), key)
+  }
+
+  async deleteCachedSnippetByCustomPath(customPath: string) {
+    const key1 = `cp:${customPath}:`
+    const key2 = `cp:${customPath}:private`
+    const client = this.redisService.getClient()
+    await Promise.all(
+      [key1, key2].map((key) =>
+        client.hdel(getRedisKey(RedisKeys.SnippetCache), key),
+      ),
     )
   }
 }

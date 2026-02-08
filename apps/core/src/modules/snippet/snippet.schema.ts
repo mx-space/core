@@ -27,6 +27,15 @@ export const SnippetSchema = BaseSchema.extend({
   metatype: z.string().max(20).optional(),
   schema: z.string().optional(),
   method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'ALL']).optional(),
+  customPath: z
+    .string()
+    .regex(/^[\w-](?:[\w\-/]*[\w-])?$/)
+    .refine((val) => !val.includes('//'), {
+      message: 'customPath must not contain consecutive slashes',
+    })
+    .pipe(z.string().max(200))
+    .optional()
+    .transform((val) => val?.replace(/^\/+|\/+$/g, '') || undefined),
 
   /**
    * For `Function` snippet only.

@@ -21,6 +21,7 @@ export { SnippetType }
 @plugin(aggregatePaginate)
 @index({ name: 1, reference: 1 })
 @index({ type: 1 })
+@index({ customPath: 1 }, { unique: true, sparse: true })
 export class SnippetModel extends BaseModel {
   @prop({
     type: () => String,
@@ -52,6 +53,9 @@ export class SnippetModel extends BaseModel {
 
   @prop()
   method?: string
+
+  @prop({ trim: true, sparse: true, unique: true })
+  customPath?: string
 
   @prop({
     select: false,

@@ -30,6 +30,7 @@
     "start:cluster": "cross-env NODE_ENV=development nest start --watch -- --cluster --cluster_workers 2",
     "start:prod": "cross-env NODE_ENV=production node dist/src/main",
     "lint": "eslint src/**/*.ts --fix",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "prod": "cross-env NODE_ENV=production pm2-runtime start ecosystem.config.cjs",
     "prod:pm2": "cross-env NODE_ENV=production pm2 restart ecosystem.config.cjs",
     "prod:stop": "pm2 stop ecosystem.config.cjs",

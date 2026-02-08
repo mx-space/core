@@ -3,6 +3,7 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
+import { ContentFormat } from '~/shared/types/content-format.type'
 import { InjectModel } from '~/transformers/model.transformer'
 import { dbTransforms } from '~/utils/db-transform.util'
 import DiffMatchPatch from 'diff-match-patch'
@@ -97,6 +98,7 @@ export class DraftService {
         draft.typeSpecificData,
         draft.updated || draft.created || new Date(),
         draft.history,
+        draft.contentFormat,
       )
 
       draft.history.unshift(historyEntry)
@@ -283,6 +285,7 @@ export class DraftService {
       draft.typeSpecificData,
       draft.updated || new Date(),
       draft.history,
+      draft.contentFormat,
     )
     draft.history.unshift(newHistoryEntry)
 
@@ -353,6 +356,7 @@ export class DraftService {
     typeSpecificData: string | undefined,
     savedAt: Date,
     existingHistory: DraftHistoryModel[],
+    contentFormat: ContentFormat = ContentFormat.Markdown,
   ): DraftHistoryModel {
     const historyText = text ?? ''
 
@@ -368,6 +372,7 @@ export class DraftService {
         version,
         title,
         text: historyText,
+        contentFormat,
         typeSpecificData,
         savedAt,
         isFullSnapshot: true,
@@ -385,6 +390,7 @@ export class DraftService {
       return {
         version,
         title,
+        contentFormat,
         typeSpecificData,
         savedAt,
         isFullSnapshot: false,
@@ -397,6 +403,7 @@ export class DraftService {
       version,
       title,
       text: patchText,
+      contentFormat,
       typeSpecificData,
       savedAt,
       isFullSnapshot: false,

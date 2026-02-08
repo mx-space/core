@@ -11,9 +11,25 @@ on:
 name: CI
 
 jobs:
+  quality:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node
+        with:
+          node-version: '22.x'
+      - name: Run Lint
+        run: npm run lint
+      - name: Run Typecheck
+        run: npm run typecheck
+
   docker:
     name: Docker build
     runs-on: ubuntu-latest
+    needs: quality
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -55,6 +71,7 @@ jobs:
   core:
     name: Build (Core)
     runs-on: ubuntu-latest
+    needs: quality
     env:
       REDISMS_DISABLE_POSTINSTALL: 1
       MONGOMS_DISABLE_POSTINSTALL: 1
@@ -83,6 +100,7 @@ jobs:
     name: Test
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    needs: quality
     services:
       mongodb:
         image: mongo
@@ -103,8 +121,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y redis-server
-      - name: Run Lint
-        run: npm run lint
       - name: Run Tests
         run: npm run test
         env:

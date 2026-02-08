@@ -19,6 +19,7 @@
     "bundle": "pnpm -C \"apps/core\" run bundle",
     "test": "pnpm -C \"apps/core\" run test",
     "lint": "pnpm -C \"apps/core\" run lint",
+    "typecheck": "pnpm -C \"apps/core\" run typecheck",
     "publish:core": "cd apps/core && npm run publish"
   },
   "devDependencies": {
