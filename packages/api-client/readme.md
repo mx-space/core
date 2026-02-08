@@ -2,6 +2,75 @@
 
 这是一个适用于 MServer v3 的 JS SDK，封装了常用接口请求方法以及返回类型的声明，以快速开发前端应用。
 
+## 版本兼容性
+
+| api-client 版本 | 支持的 Server 版本 | 说明                          |
+| --------------- | ------------------ | ----------------------------- |
+| v2.x            | >= 10              | 基于 Better Auth 的新认证系统 |
+| v1.x            | <= 9               | 旧版认证系统                  |
+
+**注意**: v2 版本与 v1 版本存在 Breaking Changes，升级时请参考下方迁移指南。
+
+## 迁移到 v2
+
+### Breaking Changes
+
+#### 1. 控制器重命名
+
+`user` 控制器已重命名为 `owner`，`master` 别名已被移除：
+
+```diff
+- client.user.getMasterInfo()
++ client.owner.getOwnerInfo()
+
+- client.master.getMasterInfo()
++ client.owner.getOwnerInfo()
+```
+
+#### 2. 登录接口变更
+
+登录接口从 `POST /master/login` 变更为 `POST /auth/sign-in`：
+
+```diff
+- client.user.login(username, password)
++ client.owner.login(username, password, { rememberMe: boolean })
+```
+
+v2 版本的 `login` 方法返回的数据结构也发生了变化，现在返回 `{ token, user }` 格式。
+
+#### 3. 新增 Better Auth 相关接口
+
+v2 版本新增了 Better Auth 认证相关的接口：
+
+```ts
+// 获取当前会话
+client.owner.getSession()
+
+// 获取 Better Auth 原生会话
+client.owner.getAuthSession()
+
+// 登出
+client.owner.logout()
+
+// 获取支持的登录方式
+client.owner.getAllowLoginMethods()
+
+// 获取 OAuth 提供商列表
+client.owner.getProviders()
+
+// 列出所有会话
+client.owner.listSessions()
+
+// 撤销指定会话
+client.owner.revokeSession(token)
+
+// 撤销所有会话
+client.owner.revokeSessions()
+
+// 撤销其他会话
+client.owner.revokeOtherSessions()
+```
+
 ## 迁移到 v1
 
 不再提供 camelcase-keys 的 re-export，此库不再依赖 camelcase-keys 库，如有需要可自行安装。
@@ -44,7 +113,7 @@ $axios.interceptors.request.use(
   (config) => {
     const token = getToken()
     if (token) {
-      config.headers!.Authorization = `bearer ${  getToken()}`
+      config.headers!.Authorization = `bearer ${getToken()}`
     }
 
     return config
