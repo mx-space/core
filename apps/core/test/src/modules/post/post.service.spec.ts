@@ -14,6 +14,7 @@ import { SlugTrackerService } from '~/modules/slug-tracker/slug-tracker.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { getModelToken } from '~/transformers/model.transformer'
 import { Types } from 'mongoose'
 import {
@@ -316,6 +317,13 @@ describe('PostService', () => {
         {
           provide: SlugTrackerService,
           useValue: mockSlugTrackerService,
+        },
+        {
+          provide: LexicalService,
+          useValue: {
+            lexicalToMarkdown: vi.fn().mockReturnValue(''),
+            populateText: vi.fn(),
+          },
         },
         {
           provide: ModuleRef,

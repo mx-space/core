@@ -6,13 +6,16 @@ import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import {
   TaskQueueProcessor,
   TaskQueueService,
   TaskStatus,
   type TaskExecuteContext,
 } from '~/processors/task-queue'
+import { ContentFormat } from '~/shared/types/content-format.type'
 import { InjectModel } from '~/transformers/model.transformer'
+import { computeContentHash as computeContentHashUtil } from '~/utils/content.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { md5 } from '~/utils/tool.util'
 import dayjs from 'dayjs'
@@ -47,6 +50,8 @@ interface ArticleContent {
   summary?: string | null
   tags?: string[]
   meta?: { lang?: string }
+  contentFormat?: string
+  content?: string
 }
 
 type ArticleDocument = PostModel | NoteModel | PageModel
@@ -80,6 +85,7 @@ export class AiTranslationService implements OnModuleInit {
     private readonly eventManager: EventManagerService,
     private readonly taskProcessor: TaskQueueProcessor,
     private readonly taskQueueService: TaskQueueService,
+    private readonly lexicalService: LexicalService,
   ) {}
 
   onModuleInit() {
@@ -439,6 +445,8 @@ export class AiTranslationService implements OnModuleInit {
       summary:
         'summary' in document ? (document.summary ?? undefined) : undefined,
       tags: 'tags' in document ? document.tags : undefined,
+      contentFormat: document.contentFormat,
+      content: document.content,
     }
   }
 
@@ -559,6 +567,19 @@ export class AiTranslationService implements OnModuleInit {
     document: ArticleContent,
     sourceLang: string,
   ): string {
+    if (document.contentFormat === ContentFormat.Lexical) {
+      return computeContentHashUtil(
+        {
+          title: document.title,
+          text: document.text,
+          contentFormat: document.contentFormat,
+          content: document.content,
+          summary: document.summary,
+          tags: document.tags,
+        },
+        sourceLang,
+      )
+    }
     return md5(
       JSON.stringify({
         title: document.title,
@@ -580,8 +601,10 @@ export class AiTranslationService implements OnModuleInit {
         feature: 'translation',
         articleId,
         targetLang,
+        contentFormat: content.contentFormat,
         title: content.title,
         text: content.text,
+        content: content.content ?? null,
         summary: content.summary ?? null,
         tags: content.tags ?? null,
       }),
@@ -600,16 +623,26 @@ export class AiTranslationService implements OnModuleInit {
     tags: string[] | null
     aiModel: string
     aiProvider: string
+    contentFormat?: string
+    content?: string
   }> {
     const { runtime, info } = await this.aiService.getTranslationModelWithInfo()
 
-    const { systemPrompt, prompt, reasoningEffort } =
-      AI_PROMPTS.translationStream(targetLang, {
-        title: content.title,
-        text: content.text,
-        summary: content.summary ?? undefined,
-        tags: content.tags,
-      })
+    const isLexical = content.contentFormat === ContentFormat.Lexical
+
+    const { systemPrompt, prompt, reasoningEffort } = isLexical
+      ? AI_PROMPTS.translationStreamLexical(targetLang, {
+          title: content.title,
+          content: content.content!,
+          summary: content.summary ?? undefined,
+          tags: content.tags,
+        })
+      : AI_PROMPTS.translationStream(targetLang, {
+          title: content.title,
+          text: content.text,
+          summary: content.summary ?? undefined,
+          tags: content.tags,
+        })
 
     const messages = [
       { role: 'system' as const, content: systemPrompt },
@@ -652,8 +685,27 @@ export class AiTranslationService implements OnModuleInit {
       sourceLang?: string
       title?: string
       text?: string
+      content?: any
       summary?: string | null
       tags?: string[] | null
+    }
+
+    if (isLexical) {
+      if (!parsed?.title || !parsed?.content || !parsed?.sourceLang) {
+        throw new Error('Invalid Lexical translation JSON response')
+      }
+      const translatedContent = JSON.stringify(parsed.content)
+      return {
+        sourceLang: parsed.sourceLang,
+        title: parsed.title,
+        text: this.lexicalService.lexicalToMarkdown(translatedContent),
+        contentFormat: ContentFormat.Lexical,
+        content: translatedContent,
+        summary: parsed.summary ?? null,
+        tags: parsed.tags ?? null,
+        aiModel: info.model,
+        aiProvider: info.provider,
+      }
     }
 
     if (!parsed?.title || !parsed?.text || !parsed?.sourceLang) {
@@ -757,6 +809,8 @@ export class AiTranslationService implements OnModuleInit {
           existing.text = translated.text
           existing.summary = translated.summary ?? undefined
           existing.tags = translated.tags ?? undefined
+          existing.contentFormat = translated.contentFormat
+          existing.content = translated.content
           if (sourceModified) {
             existing.sourceModified = sourceModified
           }
@@ -783,6 +837,8 @@ export class AiTranslationService implements OnModuleInit {
           text: translated.text,
           summary: translated.summary ?? undefined,
           tags: translated.tags ?? undefined,
+          contentFormat: translated.contentFormat,
+          content: translated.content,
           sourceModified,
           aiModel: translated.aiModel,
           aiProvider: translated.aiProvider,

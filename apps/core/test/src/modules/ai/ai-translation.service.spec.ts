@@ -7,6 +7,7 @@ import { AiService } from '~/modules/ai/ai.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { TaskQueueProcessor, TaskQueueService } from '~/processors/task-queue'
 import { getModelToken } from '~/transformers/model.transformer'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -100,6 +101,10 @@ describe('AiTranslationService', () => {
         { provide: EventManagerService, useValue: mockEventManager },
         { provide: TaskQueueProcessor, useValue: mockTaskProcessor },
         { provide: TaskQueueService, useValue: mockTaskQueueService },
+        {
+          provide: LexicalService,
+          useValue: { lexicalToMarkdown: vi.fn().mockReturnValue('') },
+        },
       ],
     }).compile()
 

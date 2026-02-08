@@ -6,6 +6,7 @@ exports[`NoteController (e2e) > GET /latest 1`] = `
     "allow_comment": true,
     "bookmark": false,
     "comments_index": 0,
+    "content_format": "markdown",
     "count": {
       "like": 0,
       "read": 0,
@@ -70,6 +71,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -88,6 +90,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -106,6 +109,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -124,6 +128,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -142,6 +147,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -160,6 +166,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -178,6 +185,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -196,6 +204,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -214,6 +223,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -232,6 +242,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -250,6 +261,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -268,6 +280,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -286,6 +299,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -304,6 +318,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -322,6 +337,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -340,6 +356,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -358,6 +375,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -376,6 +394,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -394,6 +413,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -412,6 +432,7 @@ exports[`NoteController (e2e) > GET /notes 1`] = `
       "allow_comment": true,
       "bookmark": false,
       "comments_index": 0,
+      "content_format": "markdown",
       "count": {
         "like": 0,
         "read": 0,
@@ -444,6 +465,7 @@ exports[`NoteController (e2e) > GET /notes/nid/:nid 1`] = `
     "allow_comment": true,
     "bookmark": false,
     "comments_index": 0,
+    "content_format": "markdown",
     "count": {
       "like": 0,
       "read": 0,
@@ -476,6 +498,7 @@ exports[`NoteController (e2e) > Get patched note 1`] = `
   "allow_comment": true,
   "bookmark": false,
   "comments_index": 0,
+  "content_format": "markdown",
   "count": {
     "like": 0,
     "read": 0,
@@ -497,6 +520,7 @@ exports[`NoteController (e2e) > POST /notes 1`] = `
   "allow_comment": true,
   "bookmark": false,
   "comments_index": 0,
+  "content_format": "markdown",
   "count": {
     "like": 0,
     "read": 0,

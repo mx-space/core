@@ -9,6 +9,7 @@ import { NoteModel } from '~/modules/note/note.model'
 import { NoteService } from '~/modules/note/note.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
@@ -32,6 +33,7 @@ describe('NoteController (e2e)', async () => {
     providers: [
       NoteService,
       ImageService,
+      LexicalService,
 
       {
         provide: APP_INTERCEPTOR,

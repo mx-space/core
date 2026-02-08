@@ -2,6 +2,7 @@ import { index, modelOptions, prop, PropType } from '@typegoose/typegoose'
 import { DRAFT_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 import { ImageModel } from '~/shared/model/image.model'
+import { ContentFormat } from '~/shared/types/content-format.type'
 import { Types } from 'mongoose'
 
 export enum DraftRefType {
@@ -34,6 +35,12 @@ export class DraftHistoryModel {
     },
   })
   text?: string
+
+  @prop({ type: String, default: ContentFormat.Markdown })
+  contentFormat: ContentFormat
+
+  @prop()
+  content?: string
 
   @prop({ type: String })
   typeSpecificData?: string
@@ -85,6 +92,12 @@ export class DraftModel extends BaseModel {
 
   @prop({ trim: true, default: '' })
   text: string
+
+  @prop({ type: String, default: ContentFormat.Markdown })
+  contentFormat: ContentFormat
+
+  @prop()
+  content?: string
 
   @prop({ type: ImageModel })
   images?: ImageModel[]

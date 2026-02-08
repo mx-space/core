@@ -1,4 +1,5 @@
 import { zCoerceDate, zNonEmptyString } from '~/common/zod'
+import { ContentFormat } from '~/shared/types/content-format.type'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 import { BaseCommentIndexSchema } from './base.schema'
@@ -10,7 +11,22 @@ export const WriteBaseSchema = BaseCommentIndexSchema.extend({
   images: z.array(ImageSchema).optional(),
   created: zCoerceDate.optional(),
   meta: z.record(z.string(), z.any()).optional().nullable().default(null),
+  contentFormat: z
+    .enum([ContentFormat.Markdown, ContentFormat.Lexical])
+    .default(ContentFormat.Markdown)
+    .optional(),
+  content: z.string().optional(),
 })
+
+export const WriteBaseSchemaWithRefine = WriteBaseSchema.refine(
+  (data) =>
+    data.contentFormat !== ContentFormat.Lexical ||
+    (data.content != null && data.content.length > 0),
+  {
+    message: 'content is required when contentFormat is lexical',
+    path: ['content'],
+  },
+)
 
 export class WriteBaseDto extends createZodDto(WriteBaseSchema) {}
 

@@ -7,6 +7,7 @@ import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
@@ -25,6 +26,7 @@ export class PageService {
     private readonly imageService: ImageService,
     private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
+    private readonly lexicalService: LexicalService,
     @Inject(forwardRef(() => DraftService))
     private readonly draftService: DraftService,
   ) {}
@@ -34,6 +36,8 @@ export class PageService {
   }
 
   public async create(doc: PageModel & { draftId?: string }) {
+    this.lexicalService.populateText(doc as any)
+
     const { draftId } = doc
     const count = await this.model.countDocuments({})
     if (count >= 10) {
@@ -95,6 +99,8 @@ export class PageService {
     id: string,
     doc: Partial<PageModel> & { draftId?: string },
   ) {
+    this.lexicalService.populateText(doc as any)
+
     const { draftId } = doc
 
     if (['text', 'title', 'subtitle'].some((key) => isDefined(doc[key]))) {

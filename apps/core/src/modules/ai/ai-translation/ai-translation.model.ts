@@ -52,4 +52,10 @@ export class AITranslationModel extends BaseModel {
 
   @prop()
   aiProvider?: string
+
+  @prop()
+  contentFormat?: string
+
+  @prop()
+  content?: string
 }

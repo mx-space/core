@@ -9,6 +9,7 @@ import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
@@ -31,6 +32,7 @@ export class NoteService {
     private readonly imageService: ImageService,
     private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
+    private readonly lexicalService: LexicalService,
     @Inject(forwardRef(() => CommentService))
     private readonly commentService: CommentService,
 
@@ -145,6 +147,8 @@ export class NoteService {
   }
 
   public async create(document: NoteModel & { draftId?: string }) {
+    this.lexicalService.populateText(document)
+
     const { draftId } = document
     document.created = getLessThanNow(document.created)
     if (document.meta) {
@@ -214,6 +218,8 @@ export class NoteService {
     id: string,
     data: Partial<NoteModel> & { draftId?: string },
   ) {
+    this.lexicalService.populateText(data as any)
+
     const oldDoc = await this.noteModel.findById(id).lean()
 
     if (!oldDoc) {

@@ -18,6 +18,7 @@ import { HttpService } from './helper.http.service'
 import { ImageMigrationService } from './helper.image-migration.service'
 import { ImageService } from './helper.image.service'
 import { JWTService } from './helper.jwt.service'
+import { LexicalService } from './helper.lexical.service'
 import { TranslationService } from './helper.translation.service'
 import { UploadService } from './helper.upload.service'
 import { UrlBuilderService } from './helper.url-builder.service'
@@ -25,6 +26,7 @@ import { UrlBuilderService } from './helper.url-builder.service'
 const providers: Provider<any>[] = [
   AssetService,
   BarkPushService,
+  LexicalService,
   CountingService,
   EmailService,
   EventManagerService,

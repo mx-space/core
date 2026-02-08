@@ -1,4 +1,5 @@
 import { prop, PropType } from '@typegoose/typegoose'
+import { ContentFormat } from '~/shared/types/content-format.type'
 import { BaseCommentIndexModel } from './base-comment.model'
 import { ImageModel } from './image.model'
 
@@ -8,6 +9,12 @@ export class WriteBaseModel extends BaseCommentIndexModel {
 
   @prop({ trim: true })
   text: string
+
+  @prop({ type: String, default: ContentFormat.Markdown })
+  contentFormat: ContentFormat
+
+  @prop()
+  content?: string
 
   @prop({ type: ImageModel })
   images?: ImageModel[]

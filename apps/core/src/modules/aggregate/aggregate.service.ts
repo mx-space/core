@@ -95,7 +95,7 @@ export class AggregateService {
       .sort({ created: -1 })
       .limit(size)
       .select(
-        '_id title name slug avatar nid created meta images tags modified',
+        '_id title name slug avatar nid created meta images tags modified contentFormat',
       )
   }
 
@@ -330,6 +330,8 @@ export class AggregateService {
         modified: post.modified,
         link: baseURL + this.urlService.build(post),
         images: post.images || [],
+        contentFormat: post.contentFormat,
+        content: post.content,
       }
     })
     const notesRss: RSSProps['data'] = notes.map((note) => {
@@ -341,6 +343,8 @@ export class AggregateService {
         modified: note.modified,
         link: baseURL + this.urlService.build(note),
         images: note.images || [],
+        contentFormat: note.contentFormat,
+        content: note.content,
       }
     })
 

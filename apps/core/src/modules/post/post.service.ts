@@ -17,6 +17,7 @@ import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
@@ -49,6 +50,7 @@ export class PostService implements OnApplicationBootstrap {
     private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
     private readonly slugTrackerService: SlugTrackerService,
+    private readonly lexicalService: LexicalService,
     private readonly moduleRef: ModuleRef,
   ) {}
 
@@ -66,6 +68,8 @@ export class PostService implements OnApplicationBootstrap {
   }
 
   async create(post: PostModel & { draftId?: string }) {
+    this.lexicalService.populateText(post)
+
     const { categoryId, draftId } = post
 
     const category = await this.categoryService.findCategoryById(
@@ -266,6 +270,8 @@ export class PostService implements OnApplicationBootstrap {
     id: string,
     data: Partial<PostModel> & { draftId?: string },
   ) {
+    this.lexicalService.populateText(data as any)
+
     const oldDocument = await this.postModel.findById(id)
     if (!oldDocument) {
       throw new BizException(ErrorCodeEnum.PostNotFound)

@@ -5,6 +5,7 @@ import {
   zPaginationSize,
   zSortOrder,
 } from '~/common/zod'
+import { ContentFormat } from '~/shared/types/content-format.type'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 import { DraftRefType } from './draft.model'
@@ -19,6 +20,11 @@ export const CreateDraftSchema = z.object({
   refId: zMongoId.optional(),
   title: z.string().optional(),
   text: z.string().optional(),
+  contentFormat: z
+    .enum([ContentFormat.Markdown, ContentFormat.Lexical])
+    .default(ContentFormat.Markdown)
+    .optional(),
+  content: z.string().optional(),
   images: z.array(ImageModelSchema).optional(),
   meta: z.record(z.string(), z.any()).optional().nullable().default(null),
   typeSpecificData: z.record(z.string(), z.any()).optional(),

@@ -9,6 +9,7 @@ import { NoteService } from '~/modules/note/note.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { getModelToken } from '~/transformers/model.transformer'
 import {
   afterEach,
@@ -278,6 +279,13 @@ describe('NoteService', () => {
         {
           provide: DraftService,
           useValue: mockDraftService,
+        },
+        {
+          provide: LexicalService,
+          useValue: {
+            lexicalToMarkdown: vi.fn().mockReturnValue(''),
+            populateText: vi.fn(),
+          },
         },
       ],
     }).compile()
