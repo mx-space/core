@@ -1,4 +1,4 @@
-import { CodeHighlightNode, CodeNode } from '@lexical/code'
+import { CodeNode } from '@lexical/code'
 import { createHeadlessEditor } from '@lexical/headless'
 import { AutoLinkNode, LinkNode } from '@lexical/link'
 import { ListItemNode, ListNode } from '@lexical/list'
@@ -14,7 +14,6 @@ const EDITOR_NODES: Klass<LexicalNode>[] = [
   ListNode,
   ListItemNode,
   CodeNode,
-  CodeHighlightNode,
   LinkNode,
   AutoLinkNode,
 ]

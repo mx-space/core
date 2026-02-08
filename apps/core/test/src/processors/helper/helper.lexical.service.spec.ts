@@ -187,18 +187,7 @@ describe('LexicalService', () => {
   it('converts code block', () => {
     const state = makeEditorState([
       {
-        children: [
-          {
-            detail: 0,
-            format: 0,
-            mode: 'normal',
-            style: '',
-            text: 'const x = 1',
-            type: 'code-highlight',
-            version: 1,
-            highlightType: null,
-          },
-        ],
+        children: [textNode('const x = 1')],
         direction: 'ltr',
         format: '',
         indent: 0,
