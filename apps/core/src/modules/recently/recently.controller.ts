@@ -1,20 +1,15 @@
-import {
-  BadRequestException,
-  Body,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Query,
-} from '@nestjs/common'
+import { Body, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation } from '~/common/decorators/ip.decorator'
+import type { IpRecord } from '~/common/decorators/ip.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { OffsetDto } from '~/shared/dto/pager.dto'
-import { RecentlyAttitudeDto } from './recently.dto'
 import { RecentlyModel } from './recently.model'
+import { RecentlyAttitudeDto, RecentlyDto } from './recently.schema'
 import { RecentlyService } from './recently.service'
 
 @ApiController(['recently', 'shorthand'])
@@ -36,7 +31,10 @@ export class RecentlyController {
     const { before, after, size } = query
 
     if (before && after) {
-      throw new BadRequestException('you can only choose `before` or `after`')
+      throw new BizException(
+        ErrorCodeEnum.InvalidParameter,
+        'you can only choose `before` or `after`',
+      )
     }
 
     return await this.recentlyService.getOffset({ before, after, size })
@@ -50,10 +48,8 @@ export class RecentlyController {
   @Post('/')
   @HTTPDecorators.Idempotence()
   @Auth()
-  async create(@Body() body: RecentlyModel) {
-    const res = await this.recentlyService.create(body)
-
-    return res
+  async create(@Body() body: RecentlyDto) {
+    return await this.recentlyService.create(body as unknown as RecentlyModel)
   }
 
   @Delete('/:id')
@@ -61,10 +57,21 @@ export class RecentlyController {
   async del(@Param() { id }: MongoIdDto) {
     const res = await this.recentlyService.delete(id)
     if (!res) {
-      throw new BadRequestException('删除失败，条目不存在')
+      throw new BizException(ErrorCodeEnum.EntryNotFound)
     }
 
     return
+  }
+
+  @Put('/:id')
+  @Auth()
+  async update(@Param() { id }: MongoIdDto, @Body() body: RecentlyModel) {
+    const res = await this.recentlyService.update(id, body)
+    if (!res) {
+      throw new BizException(ErrorCodeEnum.EntryNotFound)
+    }
+
+    return res
   }
 
   /**

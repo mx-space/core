@@ -3,19 +3,12 @@ import { RedisKeys } from '~/constants/cache.constant'
 import type { SocketMetadata } from '~/types/socket-meta'
 import { getRedisKey } from '~/utils/redis.util'
 import { safeJSONParse } from '~/utils/tool.util'
-import type { RemoteSocket, Socket } from 'socket.io'
-import type {
-  DecorateAcknowledgementsWithMultipleResponses,
-  DefaultEventsMap,
-} from 'socket.io/dist/typed-events'
+import type { DefaultEventsMap, RemoteSocket, Socket } from 'socket.io'
 import { RedisService } from '../redis/redis.service'
 
 export type SocketType =
   | Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>
-  | RemoteSocket<
-      DecorateAcknowledgementsWithMultipleResponses<DefaultEventsMap>,
-      any
-    >
+  | RemoteSocket<any, any>
 
 @Injectable()
 export class GatewayService {

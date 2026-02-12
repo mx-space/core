@@ -41,7 +41,7 @@ docker-compose up -d
 
 需要以下环境：
 
-- Node.js 20+
+- Node.js 22+
 - MongoDB
 - Redis
 
@@ -49,7 +49,7 @@ docker-compose up -d
 
 ```sh
 curl https://cdn.jsdelivr.net/gh/mx-space/mx-server@master/scripts/download-latest-asset.js >> download.js
-zx ./download.js
+node ./download.js
 cd mx-server
 node index.js
 ```
@@ -60,7 +60,7 @@ node index.js
 node index.js
 ```
 
-所有的依赖都打包进了产物，无需黑洞一般的 node_modules
+所有的依赖都打包进了产物（不再使用 ncc），无需黑洞一般的 node_modules
 
 > [!NOTE]
 > 编译之后的产物错误堆栈是被压缩过的，如果你遇到任何问题，请使用 `node index.debug.js` 启动，复现问题并提供完整堆栈，然后提交 issue。
@@ -104,14 +104,11 @@ pnpm dev
 │   ├── interface                   # 接口
 │   └── model                       # 基本数据模型
 ├── utils                           # 工具类
-└── zx.global.ts
-
 ```
 
 ## 应用结构
 
 - 请求处理流程
-
   1. request：收到请求
   1. middleware：中间件过滤爬虫 PHP 肉鸡扫描路径，记录访问历史
   1. guard：守卫过滤（鉴权）和角色附加
@@ -129,7 +126,6 @@ ResponseInterceptor -> ResponseFilterInterceptor -> JSONTransformInterceptor -> 
 ```
 
 - [业务逻辑模块](https://github.com/mx-space/mx-server/tree/master/src/modules)
-
   1. [Aggregate] 聚合
   1. [Analyze] 数据统计
   1. [Auth] 认证

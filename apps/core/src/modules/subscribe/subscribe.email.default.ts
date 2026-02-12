@@ -1,4 +1,4 @@
-import type { UserModel, UserModelSecurityKeys } from '../user/user.model'
+import type { OwnerModel, OwnerModelSecurityKeys } from '../owner/owner.model'
 import { SubscribeAllBit } from './subscribe.constant'
 
 const defaultPostProps = {
@@ -12,10 +12,10 @@ export const defaultSubscribeForRenderProps = {
   author: '',
   detail_link: '#detail_link',
   unsubscribe_link: '#unsubscribe_link',
-  master: '',
+  owner: '',
 
   aggregate: {
-    owner: {} as Omit<UserModel, UserModelSecurityKeys>,
+    owner: {} as Omit<OwnerModel, OwnerModelSecurityKeys>,
     subscriber: {
       email: 'subscriber@mail.com',
       subscribe: SubscribeAllBit,

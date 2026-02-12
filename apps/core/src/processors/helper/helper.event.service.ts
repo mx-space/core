@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import type { EventBusEvents } from '~/constants/event-bus.constant'
 import { scheduleManager } from '~/utils/schedule.util'
-import { merge } from 'lodash'
+import { merge } from 'es-toolkit/compat'
 import { AdminEventsGateway } from '../gateway/admin/events.gateway'
 import { BroadcastBaseGateway } from '../gateway/base.gateway'
 import { WebEventsGateway } from '../gateway/web/events.gateway'
@@ -42,18 +42,19 @@ export class EventManagerService {
     this.listenSystemEvents()
   }
 
-  private mapScopeToInstance: Record<
+  private get mapScopeToInstance(): Record<
     EventScope,
     (WebEventsGateway | AdminEventsGateway | EventEmitter2)[]
-  > = {
-    [EventScope.ALL]: [this.webGateway, this.adminGateway, this.emitter2],
-    [EventScope.TO_VISITOR]: [this.webGateway],
-    [EventScope.TO_ADMIN]: [this.adminGateway],
-    [EventScope.TO_SYSTEM]: [this.emitter2],
-    [EventScope.TO_VISITOR_ADMIN]: [this.webGateway, this.adminGateway],
-
-    [EventScope.TO_SYSTEM_VISITOR]: [this.emitter2, this.webGateway],
-    [EventScope.TO_SYSTEM_ADMIN]: [this.emitter2, this.adminGateway],
+  > {
+    return {
+      [EventScope.ALL]: [this.webGateway, this.adminGateway, this.emitter2],
+      [EventScope.TO_VISITOR]: [this.webGateway],
+      [EventScope.TO_ADMIN]: [this.adminGateway],
+      [EventScope.TO_SYSTEM]: [this.emitter2],
+      [EventScope.TO_VISITOR_ADMIN]: [this.webGateway, this.adminGateway],
+      [EventScope.TO_SYSTEM_VISITOR]: [this.emitter2, this.webGateway],
+      [EventScope.TO_SYSTEM_ADMIN]: [this.emitter2, this.adminGateway],
+    }
   }
 
   #key = 'event-manager'

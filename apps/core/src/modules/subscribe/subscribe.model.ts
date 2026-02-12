@@ -1,9 +1,10 @@
 import { modelOptions, prop } from '@typegoose/typegoose'
+import { SUBSCRIBE_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 
 @modelOptions({
   options: {
-    customName: 'Subscribe',
+    customName: SUBSCRIBE_COLLECTION_NAME,
   },
   schemaOptions: {
     timestamps: {

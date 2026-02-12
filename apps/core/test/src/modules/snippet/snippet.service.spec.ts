@@ -1,8 +1,7 @@
 import { createRedisProvider } from '@/mock/modules/redis.mock'
-import { nanoid } from '@mx-space/compiled'
-import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { SnippetService } from '~/modules/snippet/snippet.service'
@@ -10,6 +9,7 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { CacheService } from '~/processors/redis/cache.service'
 import { getModelToken } from '~/transformers/model.transformer'
+import { nanoid } from 'nanoid'
 import { stringify } from 'qs'
 import { redisHelper } from 'test/helper/redis-mock.helper'
 
@@ -30,6 +30,9 @@ describe('test Snippet Service', async () => {
           useValue: {
             isValidServerlessFunction() {
               return true
+            },
+            async compileTypescriptCode(code: string) {
+              return code
             },
           },
         },
@@ -66,7 +69,7 @@ describe('test Snippet Service', async () => {
   })
 
   it('should not allow duplicate create', async () => {
-    await expect(service.create(snippet)).rejects.toThrow(BadRequestException)
+    await expect(service.create(snippet)).rejects.toThrow(BizException)
   })
 
   test('get snippet by name', async () => {
@@ -100,18 +103,18 @@ describe('test Snippet Service', async () => {
 
   test('delete', async () => {
     await service.delete(id)
-    await expect(service.getSnippetById(id)).rejects.toThrow(NotFoundException)
+    await expect(service.getSnippetById(id)).rejects.toThrow(BizException)
   })
 
   describe('update function snippet with secret', () => {
     const createTestingModel = () =>
       ({
-        name: `test-fn-${nanoid.nanoid()}`,
+        name: `test-fn-${nanoid()}`,
         raw: 'export default async function handler() {}',
         type: SnippetType.Function,
         private: false,
         reference: 'root',
-        id: nanoid.nanoid(),
+        id: nanoid(),
         secret: 'username=123&password=123',
       }) as SnippetModel
 

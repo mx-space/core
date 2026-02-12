@@ -1,4 +1,5 @@
-import { modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
+import { modelOptions, plugin, prop } from '@typegoose/typegoose'
+import type { Ref } from '@typegoose/typegoose'
 import { WEBHOOK_EVENT_COLLECTION_NAME } from '~/constants/db.constant'
 import { mongooseLeanId } from '~/shared/model/plugins/lean-id'
 import Paginate from 'mongoose-paginate-v2'
@@ -8,12 +9,6 @@ type JSON = string
 
 const JSONProps = {
   type: String,
-  set(value) {
-    if (typeof value === 'object' && value) {
-      return JSON.stringify(value)
-    }
-    return value
-  },
 }
 @modelOptions({
   schemaOptions: {

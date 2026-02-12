@@ -13,5 +13,7 @@ export interface RSSProps {
     text: string
     id: string
     images: ImageModel[]
+    contentFormat?: string
+    content?: string
   }[]
 }

@@ -1,16 +1,21 @@
-import { Injectable } from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { FileReferenceType } from '~/modules/file/file-reference.model'
+import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
-import { isDefined } from 'class-validator'
-import { omit } from 'lodash'
+import { isDefined } from '~/utils/validator.util'
+import { omit } from 'es-toolkit/compat'
 import slugify from 'slugify'
+import { DraftRefType } from '../draft/draft.model'
+import { DraftService } from '../draft/draft.service'
 import { PageModel } from './page.model'
 
 @Injectable()
@@ -19,15 +24,21 @@ export class PageService {
     @InjectModel(PageModel)
     private readonly pageModel: MongooseModel<PageModel>,
     private readonly imageService: ImageService,
+    private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
-    private readonly macroService: TextMacroService,
+    private readonly lexicalService: LexicalService,
+    @Inject(forwardRef(() => DraftService))
+    private readonly draftService: DraftService,
   ) {}
 
   public get model() {
     return this.pageModel
   }
 
-  public async create(doc: PageModel) {
+  public async create(doc: PageModel & { draftId?: string }) {
+    this.lexicalService.populateText(doc as any)
+
+    const { draftId } = doc
     const count = await this.model.countDocuments({})
     if (count >= 10) {
       throw new BizException(ErrorCodeEnum.MaxCountLimit)
@@ -40,19 +51,42 @@ export class PageService {
       ...doc,
       slug: slugify(doc.slug),
       created: new Date(),
+      meta: doc.meta
+        ? (dbTransforms.json(doc.meta) as unknown as PageModel['meta'])
+        : undefined,
     })
 
-    this.imageService.saveImageDimensionsFromMarkdownText(
-      doc.text,
-      res.images,
-      async (images) => {
-        res.images = images
-        await res.save()
-        this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, res, {
-          scope: EventScope.TO_SYSTEM,
-        })
-      },
-    )
+    // 处理草稿：标记为已发布，并关联到新创建的页面
+    if (draftId) {
+      // Release draft's file references first, they will be re-associated to the page
+      await this.fileReferenceService.removeReferencesForDocument(
+        draftId,
+        FileReferenceType.Draft,
+      )
+      await this.draftService.linkToPublished(draftId, res.id)
+      await this.draftService.markAsPublished(draftId)
+    }
+
+    scheduleManager.schedule(async () => {
+      // Track file references
+      await this.fileReferenceService.activateReferences(
+        res.text,
+        res.id,
+        FileReferenceType.Page,
+      )
+
+      this.imageService.saveImageDimensionsFromMarkdownText(
+        res.text,
+        res.images,
+        async (images) => {
+          res.images = images
+          await res.save()
+          this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, res, {
+            scope: EventScope.TO_SYSTEM,
+          })
+        },
+      )
+    })
 
     this.eventManager.broadcast(BusinessEvents.PAGE_CREATE, res, {
       scope: EventScope.TO_SYSTEM,
@@ -61,7 +95,14 @@ export class PageService {
     return res
   }
 
-  public async updateById(id: string, doc: Partial<PageModel>) {
+  public async updateById(
+    id: string,
+    doc: Partial<PageModel> & { draftId?: string },
+  ) {
+    this.lexicalService.populateText(doc as any)
+
+    const { draftId } = doc
+
     if (['text', 'title', 'subtitle'].some((key) => isDefined(doc[key]))) {
       doc.modified = new Date()
     }
@@ -72,7 +113,12 @@ export class PageService {
     const newDoc = await this.model
       .findOneAndUpdate(
         { _id: id },
-        { ...omit(doc, PageModel.protectedKeys) },
+        {
+          ...omit(doc, PageModel.protectedKeys),
+          ...(doc.meta !== undefined
+            ? { meta: dbTransforms.json(doc.meta) }
+            : {}),
+        },
         { new: true },
       )
       .lean({ getters: true })
@@ -81,7 +127,19 @@ export class PageService {
       throw new NoContentCanBeModifiedException()
     }
 
+    // 处理草稿：标记为已发布
+    if (draftId) {
+      await this.draftService.markAsPublished(draftId)
+    }
+
     scheduleManager.schedule(async () => {
+      // Update file references
+      await this.fileReferenceService.updateReferencesForDocument(
+        newDoc.text,
+        newDoc.id,
+        FileReferenceType.Page,
+      )
+
       await Promise.all([
         this.imageService.saveImageDimensionsFromMarkdownText(
           newDoc.text,
@@ -99,7 +157,7 @@ export class PageService {
           BusinessEvents.PAGE_UPDATE,
           {
             ...newDoc,
-            text: await this.macroService.replaceTextMacro(newDoc.text, newDoc),
+            text: newDoc.text,
           },
           {
             scope: EventScope.TO_VISITOR,
@@ -110,9 +168,16 @@ export class PageService {
   }
 
   async deleteById(id: string) {
-    await this.model.deleteOne({
-      _id: id,
-    })
+    await Promise.all([
+      this.model.deleteOne({
+        _id: id,
+      }),
+      this.draftService.deleteByRef(DraftRefType.Page, id),
+      this.fileReferenceService.removeReferencesForDocument(
+        id,
+        FileReferenceType.Page,
+      ),
+    ])
     this.eventManager.broadcast(BusinessEvents.PAGE_DELETE, id, {
       scope: EventScope.ALL,
     })

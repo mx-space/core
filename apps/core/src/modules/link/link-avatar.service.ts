@@ -1,23 +1,19 @@
 import { Readable } from 'node:stream'
 import { URL } from 'node:url'
-import { nanoid } from '@mx-space/compiled'
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import type { DocumentType } from '@typegoose/typegoose'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { alphabet } from '~/constants/other.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { validateImageBuffer } from '~/utils/image.util'
+import { customAlphabet } from 'nanoid'
 import { ConfigsService } from '../configs/configs.service'
 import { FileService } from '../file/file.service'
 import type { FileType } from '../file/file.type'
 import { LinkModel, LinkState } from './link.model'
 
-const { customAlphabet } = nanoid
 const AVATAR_TYPE: FileType = 'avatar'
 
 const ALLOWED_IMAGE_MIME_TYPES = new Set([
@@ -59,7 +55,7 @@ export class LinkAvatarService {
       typeof link === 'string' ? await this.linkModel.findById(link) : link
     if (!doc) {
       if (typeof link === 'string') {
-        throw new NotFoundException()
+        throw new BizException(ErrorCodeEnum.LinkNotFound)
       }
       return false
     }
@@ -124,7 +120,10 @@ export class LinkAvatarService {
     })
 
     if (!validation.ok) {
-      throw new BadRequestException(validation.reason)
+      throw new BizException(
+        ErrorCodeEnum.LinkAvatarValidationFailed,
+        validation.reason,
+      )
     }
 
     const { ext } = validation

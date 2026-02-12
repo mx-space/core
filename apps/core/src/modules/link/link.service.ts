@@ -1,12 +1,8 @@
 import { URL } from 'node:url'
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { isDev } from '~/global/env.global'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -14,23 +10,24 @@ import { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import { ConfigsService } from '../configs/configs.service'
-import { UserService } from '../user/user.service'
+import { OwnerService } from '../owner/owner.service'
 import { LinkAvatarService } from './link-avatar.service'
 import { LinkApplyEmailType } from './link-mail.enum'
 import { LinkModel, LinkState, LinkStateMap, LinkType } from './link.model'
 
 @Injectable()
 export class LinkService {
+  private readonly logger = new Logger(LinkService.name)
+
   constructor(
     @InjectModel(LinkModel)
     private readonly linkModel: MongooseModel<LinkModel>,
     private readonly emailService: EmailService,
-    private readonly configs: ConfigsService,
+    private readonly configsService: ConfigsService,
 
-    private readonly userService: UserService,
+    private readonly ownerService: OwnerService,
     private readonly eventManager: EventManagerService,
     private readonly http: HttpService,
-    private readonly configsService: ConfigsService,
     private readonly linkAvatarService: LinkAvatarService,
   ) {}
 
@@ -51,10 +48,10 @@ export class LinkService {
       switch (existedDoc.state) {
         case LinkState.Pass:
         case LinkState.Audit:
-          throw new BadRequestException('请不要重复申请友链哦')
+          throw new BizException(ErrorCodeEnum.DuplicateLink)
 
         case LinkState.Banned:
-          throw new BadRequestException('您的友链已被禁用，请联系管理员')
+          throw new BizException(ErrorCodeEnum.LinkDisabled)
         case LinkState.Reject:
         case LinkState.Outdate:
           nextModel = await this.model
@@ -74,7 +71,7 @@ export class LinkService {
       const pathname = url.pathname
 
       if (pathname !== '/' && !allowSubPath) {
-        throw new UnprocessableEntityException('管理员当前禁用了子路径友链申请')
+        throw new BizException(ErrorCodeEnum.SubpathLinkDisabled)
       }
 
       nextModel = await this.model.create({
@@ -102,7 +99,7 @@ export class LinkService {
     )
 
     if (!doc) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.LinkNotFound)
     }
 
     const convertedAvatar = await this.linkAvatarService.convertToInternal(doc)
@@ -148,7 +145,7 @@ export class LinkService {
     if (!model.email) {
       return
     }
-    const { enable } = await this.configs.get('mailOptions')
+    const { enable } = await this.configsService.get('mailOptions')
     if (!enable || isDev) {
       console.info(`
       To: ${model.email}
@@ -165,8 +162,8 @@ export class LinkService {
       template: LinkApplyEmailType.ToCandidate,
     })
   }
-  async sendToMaster(authorName: string, model: LinkModel) {
-    const enable = (await this.configs.get('mailOptions')).enable
+  async sendToOwner(authorName: string, model: LinkModel) {
+    const enable = (await this.configsService.get('mailOptions')).enable
     if (!enable || isDev) {
       console.info(`来自 ${authorName} 的友链请求：
         站点标题：${model.name}
@@ -175,13 +172,16 @@ export class LinkService {
       return
     }
     scheduleManager.schedule(async () => {
-      const master = await this.userService.getMaster()
+      const owner = await this.ownerService.getOwner()
+      if (!owner.mail) {
+        return
+      }
 
       await this.sendLinkApplyEmail({
         authorName,
         model,
-        to: master.mail,
-        template: LinkApplyEmailType.ToMaster,
+        to: owner.mail,
+        template: LinkApplyEmailType.ToOwner,
       })
     })
   }
@@ -198,17 +198,17 @@ export class LinkService {
     template: LinkApplyEmailType
   }) {
     const { seo, mailOptions } = await this.configsService.waitForConfigReady()
-    const { from, user } = mailOptions
-    const sendfrom = `"${seo.title || 'Mx Space'}" <${from || user}>`
-    await this.emailService.getInstance().sendMail({
+    const senderEmail = mailOptions.from || mailOptions.smtp?.user
+    const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
+    await this.emailService.send({
       from: sendfrom,
       to,
       subject:
-        template === LinkApplyEmailType.ToMaster
+        template === LinkApplyEmailType.ToOwner
           ? `[${seo.title || 'Mx Space'}] 新的朋友 ${authorName}`
           : `嘿!~, 主人已通过你的友链申请!~`,
       text:
-        template === LinkApplyEmailType.ToMaster
+        template === LinkApplyEmailType.ToOwner
           ? `来自 ${model.name} 的友链请求：
           站点标题：${model.name}
           站点网站：${model.url}
@@ -223,10 +223,7 @@ export class LinkService {
     const links = await this.model.find({ state: LinkState.Pass })
     const health = await Promise.all(
       links.map(({ id, url }) => {
-        Logger.debug(
-          `检查友链 ${id} 的健康状态：GET -> ${url}`,
-          LinkService.name,
-        )
+        this.logger.debug(`检查友链 ${id} 的健康状态：GET -> ${url}`)
         return this.http.axiosRef
           .get(url, {
             timeout: 5000,
@@ -260,15 +257,14 @@ export class LinkService {
   }
 
   async canApplyLink() {
-    const configs = await this.configs.get('friendLinkOptions')
-    const can = configs.allowApply
-    return can
+    const { allowApply } = await this.configsService.get('friendLinkOptions')
+    return allowApply
   }
 
   async sendAuditResultByEmail(id: string, reason: string, state: LinkState) {
     const doc = await this.model.findById(id)
     if (!doc) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.LinkNotFound)
     }
 
     doc.state = state
@@ -281,9 +277,9 @@ export class LinkService {
       return
     }
 
-    const { from, user } = mailOptions
-    const sendfrom = `"${seo.title || 'Mx Space'}" <${from || user}>`
-    await this.emailService.getInstance().sendMail({
+    const senderEmail = mailOptions.from || mailOptions.smtp?.user
+    const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
+    await this.emailService.send({
       from: sendfrom,
       to: doc.email,
       subject: `嘿!~, 主人已处理你的友链申请!~`,

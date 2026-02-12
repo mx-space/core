@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { createMockedContextResponse } from '~/modules/serverless/mock-response.util'
+import { ServerlessLogModel } from '~/modules/serverless/serverless-log.model'
 import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -36,6 +37,10 @@ describe('test serverless function service', () => {
         {
           provide: getModelToken('SnippetModel'),
           useValue: getModelForClass(SnippetModel),
+        },
+        {
+          provide: getModelToken('ServerlessLogModel'),
+          useValue: getModelForClass(ServerlessLogModel),
         },
         {
           provide: ConfigsService,
@@ -159,27 +164,29 @@ describe('test serverless function service', () => {
     const model = new SnippetModel()
     Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
       type: SnippetType.Function,
-      raw: `import axios from 'axios';async function handler(context, require) { return axios }`,
+      // 验证 ESM default import 正常工作，返回可序列化的值
+      raw: `import axios from 'axios';async function handler(context, require) { return typeof axios.get === 'function' }`,
     })
     const data = await service.injectContextIntoServerlessFunctionAndCall(
       model,
       { req: {} as any, res: {} as any, isAuthenticated: false },
     )
 
-    expect(typeof data.get).toBe('function')
+    expect(data).toBe(true)
   })
 
   test('case-7: esm named import', async () => {
     const model = new SnippetModel()
     Object.assign<SnippetModel, Partial<SnippetModel>>(model, {
       type: SnippetType.Function,
-      raw: `import {get} from 'axios';async function handler(context, require) { return get }`,
+      // 验证 ESM named import 正常工作，返回可序列化的值
+      raw: `import {isAxiosError} from 'axios';async function handler(context, require) { return typeof isAxiosError === 'function' }`,
     })
     const data = await service.injectContextIntoServerlessFunctionAndCall(
       model,
       { req: {} as any, res: {} as any, isAuthenticated: false },
     )
-    expect(typeof data).toBe('function')
+    expect(data).toBe(true)
   })
 
   test('case-8: reset built-in function', async () => {

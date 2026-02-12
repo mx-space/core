@@ -1,5 +1,467 @@
 # CHANGELOG
 
+# [10.0.0](https://github.com/mx-space/core/compare/v10.0.0-alpha.3...v10.0.0) (2026-02-08)
+
+
+
+# [10.0.0-alpha.3](https://github.com/mx-space/core/compare/v10.0.0-alpha.2...v10.0.0-alpha.3) (2026-02-08)
+
+
+### Bug Fixes
+
+* add missing imports for HeadingNode, QuoteNode, TRANSFORMERS in LexicalService ([5072036](https://github.com/mx-space/core/commit/50720360ee067b68d6d82d1de505670c53cb9c04))
+* remove CodeHighlightNode to eliminate PrismJS dependency in server bundle ([d3289f6](https://github.com/mx-space/core/commit/d3289f6a3624fe42227c4b9570c1923dddba1b71))
+* replace @lexical/code and @lexical/markdown with custom nodes to eliminate PrismJS ([3e791d6](https://github.com/mx-space/core/commit/3e791d6aa78d23861b608059012b325f7a2a1aaf))
+
+
+### Features
+
+* add Lexical block editor content format support ([8fe2508](https://github.com/mx-space/core/commit/8fe2508605ed3658c56ca13079366b6f1b0373e8))
+* **cron:** add syncPublishedImagesToS3 functionality and scheduling ([5be2dfa](https://github.com/mx-space/core/commit/5be2dfa4c37d07738dd662649c079a35655d1aea))
+* **snippet:** add custom path support for snippets ([04a1bfc](https://github.com/mx-space/core/commit/04a1bfcb433275207cc626b680b1884a28facd70))
+
+
+
+# [10.0.0-alpha.2](https://github.com/mx-space/core/compare/v10.0.0-alpha.1...v10.0.0-alpha.2) (2026-02-07)
+
+
+### Bug Fixes
+
+* **auth:** add role validation in CreateAuth middleware ([1aa9549](https://github.com/mx-space/core/commit/1aa954962a72e0b198fe4c1f3a106c934f110bd1))
+
+
+### Features
+
+* **serverless:** implement logging for serverless function invocations ([59e9d4d](https://github.com/mx-space/core/commit/59e9d4d031cb497cb1ad38d821e53738272ee50a))
+
+
+
+# [10.0.0-alpha.1](https://github.com/mx-space/core/compare/v10.0.0-alpha.0...v10.0.0-alpha.1) (2026-02-06)
+
+
+### Features
+
+* **i18n:** add translation support to activity, aggregate, and category controllers ([e33d214](https://github.com/mx-space/core/commit/e33d2142eb03f7c32ff531ffd59ccb9cefff33ef))
+
+
+
+# [10.0.0-alpha.0](https://github.com/mx-space/core/compare/v9.7.0...v10.0.0-alpha.0) (2026-02-06)
+
+
+### Bug Fixes
+
+* **ip-query:** update IP API endpoint and response handling ([fa641a5](https://github.com/mx-space/core/commit/fa641a5e31d59a9bfbf6fdaac354ba010dd422c1))
+* **migration:** skip v9.7.5 migration when readers collection does not exist ([db4de1f](https://github.com/mx-space/core/commit/db4de1ff04f02f945b85723095d859ad5588c7ad))
+
+
+### Features
+
+* add lightweight /reading/top endpoint and optimize /reading/rank ([50fb01d](https://github.com/mx-space/core/commit/50fb01d69e72224dcc1e3e37de65752ae5168f46))
+
+
+
+# [9.7.0](https://github.com/mx-space/core/compare/v9.6.3...v9.7.0) (2026-02-04)
+
+
+### Features
+
+* **cron-task:** implement cron task module with business logic and scheduling ([6926e77](https://github.com/mx-space/core/commit/6926e7745c8ec9d470d7a6fd17990cf35be96e34))
+
+
+
+## [9.6.3](https://github.com/mx-space/core/compare/v9.6.2...v9.6.3) (2026-02-03)
+
+
+### Bug Fixes
+
+* **ai:** use Tool Calling instead of response_format for structured output ([3c09a82](https://github.com/mx-space/core/commit/3c09a82e118ad1c4a8b4623627e90f7b5c95f76f)), closes [#2575](https://github.com/mx-space/core/issues/2575)
+
+
+### Features
+
+* **ai-translation:** extend article handling to include PageModel ([e8166b6](https://github.com/mx-space/core/commit/e8166b6f1d812f96f8f306124b88ae1cb5cd1395))
+* **ai:** add comment review endpoint and enhance AI configuration options ([6101bc9](https://github.com/mx-space/core/commit/6101bc944fa092c224dffd84e55596a698020a19))
+* **migration:** add v9.6.3 migration and enhance SMTP options handling ([a1a0b30](https://github.com/mx-space/core/commit/a1a0b302a2906ef79d82ea96aa9bafd7586304cb))
+* **page:** enhance language handling and translation integration in PageController ([5a749ba](https://github.com/mx-space/core/commit/5a749ba51b19cab058df589e15abf6b1131daf44))
+
+
+
+## [9.6.2](https://github.com/mx-space/core/compare/v9.6.1...v9.6.2) (2026-02-02)
+
+
+### Bug Fixes
+
+* **entrypoint:** improve Redis connection string handling and logging ([23abde6](https://github.com/mx-space/core/commit/23abde69111c1a38699f6bb3d506e80dcfb74e04))
+
+
+### Features
+
+* **mongo:** enhance custom MongoDB connection string handling ([e0e4f24](https://github.com/mx-space/core/commit/e0e4f2498e793b8716424608ed6f49de3c8f0261))
+
+
+
+## [9.6.1](https://github.com/mx-space/core/compare/v9.6.0...v9.6.1) (2026-02-02)
+
+
+
+# [9.6.0](https://github.com/mx-space/core/compare/v9.5.0...v9.6.0) (2026-02-02)
+
+
+### Features
+
+* **ai:** update translation prompts to enforce strict JSON output requirements ([810aaac](https://github.com/mx-space/core/commit/810aaac8ce530fff598c61bc70b0553540a14b6d))
+* **redis:** enhance Redis configuration and email service integration ([634297c](https://github.com/mx-space/core/commit/634297cb2a14ee651e3a254c0454a5ed99315a17))
+
+
+
+# [9.5.0](https://github.com/mx-space/core/compare/v9.4.0...v9.5.0) (2026-02-01)
+
+
+### Bug Fixes
+
+* **tests:** update snapshots for NoteController e2e tests to reflect published status ([49d08e6](https://github.com/mx-space/core/commit/49d08e683076d97d6102196f2a9219f4b29f18c7))
+
+
+### Features
+
+* **ai:** add retry functionality for AI tasks and enhance error handling ([5770839](https://github.com/mx-space/core/commit/577083925cec434ca9fbb516762670a3f7175ff1))
+* **ai:** add task cancellation and deletion endpoints in AiTaskController ([1975b58](https://github.com/mx-space/core/commit/1975b58c68fab94aa0be2a91dcdefe3685bca0cb))
+* **lang:** implement language handling in request context and enhance translation capabilities ([9ca8291](https://github.com/mx-space/core/commit/9ca82919f16c0f3ab04d4a8064e85aa26d73abbf))
+
+
+
+# [9.4.0](https://github.com/mx-space/core/compare/v9.3.4...v9.4.0) (2026-01-31)
+
+
+### Features
+
+* **ai:** implement language utilities for AI processing ([82ed676](https://github.com/mx-space/core/commit/82ed676edda8fbd734bb0bd4d3a2a7bb1de16e9c))
+* **ai:** introduce task queue for AI operations and enhance streaming capabilities ([2005c3d](https://github.com/mx-space/core/commit/2005c3d911fdfbe782ed44cfb2695c236c81298e))
+
+
+
+## [9.3.4](https://github.com/mx-space/core/compare/v9.3.3...v9.3.4) (2026-01-30)
+
+
+
+## [9.3.3](https://github.com/mx-space/core/compare/v9.3.2...v9.3.3) (2026-01-30)
+
+
+### Features
+
+* **note:** enhance note retrieval with translation support ([a378cd3](https://github.com/mx-space/core/commit/a378cd35c178792e97832e4c045ebd81e12042ed))
+
+
+
+## [9.3.2](https://github.com/mx-space/core/compare/v9.3.1...v9.3.2) (2026-01-30)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ai to v6.0.62 ([#2569](https://github.com/mx-space/core/issues/2569)) ([1cdac56](https://github.com/mx-space/core/commit/1cdac56f6a940b7993d1b3de8dc03de788941ed8))
+* **deps:** update dependency better-auth to v1.4.18 ([#2570](https://github.com/mx-space/core/issues/2570)) ([ea0070a](https://github.com/mx-space/core/commit/ea0070a39312058ab14ae66464a639e1187b3e51))
+
+
+### Features
+
+* **translation:** enhance translation capabilities for articles ([038d728](https://github.com/mx-space/core/commit/038d72840534c15a5c3ea8bee9a3b04035a6a6a3))
+
+
+
+## [9.3.1](https://github.com/mx-space/core/compare/v9.3.0...v9.3.1) (2026-01-29)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @ai-sdk/openai to v3.0.21 ([#2566](https://github.com/mx-space/core/issues/2566)) ([2be3e07](https://github.com/mx-space/core/commit/2be3e07d64f5b4c978dc48ac06d305bb955fa6e2))
+* **migration:** better auth login issue ([f19a49b](https://github.com/mx-space/core/commit/f19a49bb2c227874f558587cdabda29ef50addc4))
+
+
+
+# [9.3.0](https://github.com/mx-space/core/compare/v9.2.0...v9.3.0) (2026-01-28)
+
+
+### Features
+
+* **ai-summary, ai-translation:** enhance summary and translation functionalities ([c15cc55](https://github.com/mx-space/core/commit/c15cc5544d59b248ec6772d762e709135ef5cf37))
+* **deps, ai:** update dependencies and enhance AI functionalities ([f32f744](https://github.com/mx-space/core/commit/f32f744431e85fd6ffec1a0b2cc78398ea464c9a))
+
+
+
+# [9.2.0](https://github.com/mx-space/core/compare/v9.1.1...v9.2.0) (2026-01-28)
+
+
+### Features
+
+* **ai-translation:** implement AI translation module with controller, service, model, and schema; add translation error codes and prompts ([19652ae](https://github.com/mx-space/core/commit/19652ae5b0011ab426efa7f2d4040d356bca489c))
+* **draft:** enhance draft history management with refVersion and baseVersion properties; implement deleteByRef method for draft cleanup ([924dd3b](https://github.com/mx-space/core/commit/924dd3b4bcd98fba6c6a426a83ffce3da6f771fc))
+* **draft:** improve draft history trimming logic and add canTrimHistory method for better snapshot management ([3a1487d](https://github.com/mx-space/core/commit/3a1487d12a408b4a236d767b2e9987582836c6c3))
+* **translation:** add translation event handling and enhance note/post retrieval with translation support ([ab78738](https://github.com/mx-space/core/commit/ab7873873df4b7886bf4c6ae9b0161559f08505b))
+
+
+
+## [9.1.1](https://github.com/mx-space/core/compare/v9.1.0...v9.1.1) (2026-01-27)
+
+
+### Bug Fixes
+
+* api build ([410bf69](https://github.com/mx-space/core/commit/410bf69dbaeec6af9851b6510c4be2c510088132))
+
+
+### Features
+
+* add ai config in aggregation ([f814267](https://github.com/mx-space/core/commit/f81426799ffe21f9cfc3b2dcab8799317618a101))
+
+
+
+# [9.1.0](https://github.com/mx-space/core/compare/v9.0.7...v9.1.0) (2026-01-27)
+
+
+### Bug Fixes
+
+* **draft:** migrate and simplify full snapshot handling ([c8c226f](https://github.com/mx-space/core/commit/c8c226ff63a97bc678d3086362785ace59e3e40c))
+* tsdown config ([e95962e](https://github.com/mx-space/core/commit/e95962e1313372fe0d36d950488e91706a0b03a1))
+
+
+### Features
+
+* **analyze:** implement caching for analysis endpoints and enhance data aggregation ([74e910b](https://github.com/mx-space/core/commit/74e910b27c7565e7d9147eb578ab79de8705fec2))
+* **telemetry:** implement telemetry data collection and dashboard ([871705f](https://github.com/mx-space/core/commit/871705fe64a35556824841552d8dce142377f707))
+
+
+
+## [9.0.7](https://github.com/mx-space/core/compare/v9.0.6...v9.0.7) (2026-01-26)
+
+
+
+## [9.0.6](https://github.com/mx-space/core/compare/v9.0.5...v9.0.6) (2026-01-25)
+
+
+
+## [9.0.5](https://github.com/mx-space/core/compare/v9.0.4...v9.0.5) (2026-01-25)
+
+
+### Bug Fixes
+
+* **config:** restore encryption logic for sensitive config fields ([043d7aa](https://github.com/mx-space/core/commit/043d7aa36da832f1e291e15456c9e92593a1da8e)), closes [#2556](https://github.com/mx-space/core/issues/2556)
+
+
+
+## [9.0.4](https://github.com/mx-space/core/compare/v9.0.3...v9.0.4) (2026-01-25)
+
+
+### Features
+
+* **config:** enhance encryption utilities and schema integration ([817ec74](https://github.com/mx-space/core/commit/817ec7468405580d7db1b75f5e62fe99b8be08fc))
+
+
+
+## [9.0.3](https://github.com/mx-space/core/compare/v9.0.2...v9.0.3) (2026-01-25)
+
+
+### Features
+
+* **comment:** add batch update and delete functionality for comments ([deeb057](https://github.com/mx-space/core/commit/deeb05777e26d7156098b9bfdf4fbc27eaa81180))
+* **file:** add batch delete and S3 upload functionality ([9e6cfe5](https://github.com/mx-space/core/commit/9e6cfe5fac617faebe07d33aacf5fa954476a21f))
+
+
+
+## [9.0.2](https://github.com/mx-space/core/compare/v9.0.1...v9.0.2) (2026-01-24)
+
+
+### Bug Fixes
+
+* **file.type:** update FileTypeEnum to replace 'photo' with 'image' ([9d1be6c](https://github.com/mx-space/core/commit/9d1be6cae2753fd1841c067a3f36b93b36001a36))
+* **file:** add type: String for enum props in FileReferenceModel ([35cdbdd](https://github.com/mx-space/core/commit/35cdbdd2b9bc0ebc726517b73aa6ee9eeb4a6d8a))
+* **file:** remove duplicate index on fileUrl field ([bd6eec6](https://github.com/mx-space/core/commit/bd6eec679f12357a075ae07d4d7dba26ee4b9747))
+
+
+### Features
+
+* **file:** implement file reference management and image migration service ([7b22129](https://github.com/mx-space/core/commit/7b22129b0890a1875ff73564034cf5ae74628ace))
+
+
+
+## [9.0.1](https://github.com/mx-space/core/compare/v9.0.0...v9.0.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* **aggregate:** rename wordCount field from length to count ([9c883c9](https://github.com/mx-space/core/commit/9c883c9cbea94d82b2822c4b3534e2a7c7e0504d))
+* **note.schema:** allow nullable fields and set default for images ([74f0aed](https://github.com/mx-space/core/commit/74f0aedc4f13a28627a2a0d5597c2f8454159bff))
+
+
+
+# [9.0.0](https://github.com/mx-space/core/compare/v9.0.0-alpha.9...v9.0.0) (2026-01-22)
+
+
+### Features
+
+* add analyze apis ([3f51a95](https://github.com/mx-space/core/commit/3f51a95ad0d9dc85e624056fa9d871d432b0cf38))
+
+
+
+# [9.0.0-alpha.9](https://github.com/mx-space/core/compare/v9.0.0-alpha.8...v9.0.0-alpha.9) (2026-01-22)
+
+
+
+# [9.0.0-alpha.8](https://github.com/mx-space/core/compare/v9.0.0-alpha.7...v9.0.0-alpha.8) (2026-01-22)
+
+
+
+# [9.0.0-alpha.7](https://github.com/mx-space/core/compare/v9.0.0-alpha.6...v9.0.0-alpha.7) (2026-01-22)
+
+
+
+# [9.0.0-alpha.6](https://github.com/mx-space/core/compare/v9.0.0-alpha.5...v9.0.0-alpha.6) (2026-01-22)
+
+
+
+# [9.0.0-alpha.5](https://github.com/mx-space/core/compare/v9.0.0-alpha.4...v9.0.0-alpha.5) (2026-01-22)
+
+
+
+# [9.0.0-alpha.4](https://github.com/mx-space/core/compare/v9.0.0-alpha.3...v9.0.0-alpha.4) (2026-01-22)
+
+
+
+# [9.0.0-alpha.3](https://github.com/mx-space/core/compare/v9.0.0-alpha.2...v9.0.0-alpha.3) (2026-01-21)
+
+
+
+# [9.0.0-alpha.2](https://github.com/mx-space/core/compare/v9.0.0-alpha.1...v9.0.0-alpha.2) (2026-01-21)
+
+
+### Bug Fixes
+
+* enhance OpenAI-compatible provider handling ([fab4d9d](https://github.com/mx-space/core/commit/fab4d9dfda1b5e976ac505001630b09d82b4ca2b))
+
+
+
+# [9.0.0-alpha.1](https://github.com/mx-space/core/compare/v9.0.0-alpha.0...v9.0.0-alpha.1) (2026-01-21)
+
+
+### Features
+
+* add Docker Compose and Docker Stack configurations for mx-core and Redis services ([f83ab46](https://github.com/mx-space/core/commit/f83ab463ad7d6a51e44865529c656cd4132a5505))
+
+
+
+# [9.0.0-alpha.0](https://github.com/mx-space/core/compare/v8.8.0...v9.0.0-alpha.0) (2026-01-21)
+
+
+### Bug Fixes
+
+* **comment:** 邮件通知速记跳转前端路由 ([#2541](https://github.com/mx-space/core/issues/2541)) ([3c12235](https://github.com/mx-space/core/commit/3c1223569ef9caf3480183eb4e922d2719b27925))
+* **deps:** update dependency @ai-sdk/openai to v3.0.13 ([#2546](https://github.com/mx-space/core/issues/2546)) ([7213840](https://github.com/mx-space/core/commit/721384031a02b951958debc14b3fdf6d0131f95a))
+* **deps:** update dependency @keyv/redis to v5.1.6 ([#2547](https://github.com/mx-space/core/issues/2547)) ([5a00a9b](https://github.com/mx-space/core/commit/5a00a9b0272faede2c082eebb978fb4572d56cc4))
+* replace zx with native Node.js APIs in download script ([b93d6d9](https://github.com/mx-space/core/commit/b93d6d9959f7b79ec7611191f016c93f7da3657e))
+
+
+
+# [8.8.0](https://github.com/mx-space/core/compare/v8.7.1...v8.8.0) (2026-01-20)
+
+
+### Features
+
+* **meta-preset:** add MetaPreset module with CRUD operations and built-in presets ([d03a881](https://github.com/mx-space/core/commit/d03a8818da546b8fffa1771e856cf4207255e67e))
+
+
+
+## [8.7.1](https://github.com/mx-space/core/compare/v8.7.0...v8.7.1) (2026-01-19)
+
+
+
+# [8.7.0](https://github.com/mx-space/core/compare/v8.6.0...v8.7.0) (2026-01-18)
+
+
+### Bug Fixes
+
+* **deps:** update babel monorepo to v7.28.6 ([#2527](https://github.com/mx-space/core/issues/2527)) ([7711eb9](https://github.com/mx-space/core/commit/7711eb9b0a89589a1737b1a036a39f86aab36d72))
+* **deps:** update dependency @ai-sdk/openai to v3.0.12 ([#2532](https://github.com/mx-space/core/issues/2532)) ([d3e1a32](https://github.com/mx-space/core/commit/d3e1a32eec9e5d86032214468fc987d33035fad6))
+* **deps:** update dependency ai to v6.0.39 ([#2534](https://github.com/mx-space/core/issues/2534)) ([6a2db5f](https://github.com/mx-space/core/commit/6a2db5fa5327150d6fe0871f698c9044892fa861))
+* **deps:** update dependency cache-manager to v7.2.8 ([#2535](https://github.com/mx-space/core/issues/2535)) ([cb8c287](https://github.com/mx-space/core/commit/cb8c28760601748e0e24421cfe273a21a82347c9))
+* **deps:** update dependency remove-markdown to v0.6.3 ([#2536](https://github.com/mx-space/core/issues/2536)) ([222d8f2](https://github.com/mx-space/core/commit/222d8f2a4ff3398ed0f75608511e5c506a21cb81))
+* **deps:** update nest monorepo ([#2538](https://github.com/mx-space/core/issues/2538)) ([8ceae42](https://github.com/mx-space/core/commit/8ceae42162c54f59870334472b7de625c71fd4bb))
+
+
+### Features
+
+* **aggregate:** add new statistical endpoints for category distribution, tag cloud, publication trend, top articles, comment activity, and traffic source ([1eb5dd7](https://github.com/mx-space/core/commit/1eb5dd7090bdc080535edef443a371f5610c96f2))
+* **draft:** implement draft module with CRUD operations and history management ([8adf43e](https://github.com/mx-space/core/commit/8adf43e702213638b1de45febecfdd29dd495b57))
+
+
+
+# [8.6.0](https://github.com/mx-space/core/compare/v8.5.1...v8.6.0) (2026-01-15)
+
+
+### Bug Fixes
+
+* **backup:** 修复 S3 备份上传错误 ([#2524](https://github.com/mx-space/core/issues/2524)) ([43cbdc8](https://github.com/mx-space/core/commit/43cbdc8729083778f70321d69bcbb2839f0f746b))
+* **render:** 修复渲染预览类型路由匹配 ([#2523](https://github.com/mx-space/core/issues/2523)) ([d82f8ff](https://github.com/mx-space/core/commit/d82f8ff8f4d67577b025eff7304f3f06a7b8f96d))
+* update mongo image to version 7 in docker-compose.yml ([#2474](https://github.com/mx-space/core/issues/2474)) ([03b5105](https://github.com/mx-space/core/commit/03b51056ac15358c33e4f78a3a9fae7345319615))
+
+
+### Features
+
+* **core:** refactor admin asset download logic with multi-mirror support and improved reliability ([d77a152](https://github.com/mx-space/core/commit/d77a152bc8a60a185ab8a1f2ad2269bfc03ce986))
+
+
+
+## [8.5.1](https://github.com/mx-space/core/compare/v8.5.0...v8.5.1) (2026-01-14)
+
+
+### Bug Fixes
+
+* build mod script ([800c0cb](https://github.com/mx-space/core/commit/800c0cb5f3924b91ce02c0e29f2c3ec47f1addba))
+* **deps:** update dependency ua-parser-js to v2.0.7 ([#2509](https://github.com/mx-space/core/issues/2509)) ([d021823](https://github.com/mx-space/core/commit/d021823d0700f5a9e58b3d893bc28fc546ac0adf))
+
+
+### Features
+
+* **auth:** add profile mapping function to GitHub authentication ([f7d96c3](https://github.com/mx-space/core/commit/f7d96c3152074507f0d4da4704d38c5ceda7caf4))
+* **recently:** 新增速记编辑功能 ([#2521](https://github.com/mx-space/core/issues/2521)) ([99043bd](https://github.com/mx-space/core/commit/99043bd94c07a7a1c1b96dbad21b1f8f4e58a430))
+
+
+
+# [8.5.0](https://github.com/mx-space/core/compare/v8.4.5...v8.5.0) (2026-01-12)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ai to v5.0.118 ([#2511](https://github.com/mx-space/core/issues/2511)) ([2b4f31e](https://github.com/mx-space/core/commit/2b4f31e1e533b9ecb9bd956d3e87534256d5b51b))
+
+
+### Features
+
+* **ai:** implement multi-provider support and migration for AI configuration ([b55916d](https://github.com/mx-space/core/commit/b55916d9d03ada0447f7671ca6058764b9c89728))
+
+
+
+## [8.4.5](https://github.com/mx-space/core/compare/v8.4.4...v8.4.5) (2026-01-08)
+
+
+### Bug Fixes
+
+* ignore eslint rule ([bac4736](https://github.com/mx-space/core/commit/bac473693252a8cbc20807545205a27222b1fe91))
+
+
+
+## [8.4.4](https://github.com/mx-space/core/compare/v8.4.3...v8.4.4) (2026-01-08)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @ai-sdk/openai to v2.0.89 ([#2506](https://github.com/mx-space/core/issues/2506)) ([d71bd54](https://github.com/mx-space/core/commit/d71bd545a995d26ea12a78a6fc178c741db09974))
+* **deps:** update dependency @typegoose/typegoose to v12.20.1 ([#2500](https://github.com/mx-space/core/issues/2500)) ([d84a71f](https://github.com/mx-space/core/commit/d84a71fae68c035cfd2e633cc60492d4d67fccc5))
+* **deps:** update dependency ai to v5.0.117 ([#2501](https://github.com/mx-space/core/issues/2501)) ([b47a482](https://github.com/mx-space/core/commit/b47a482429f6ccce4c449049bbd05bba54790a28))
+* **deps:** update dependency mongoose to v8.19.4 ([#2507](https://github.com/mx-space/core/issues/2507)) ([7f56be4](https://github.com/mx-space/core/commit/7f56be4684a094bdd298a66e0b4011f07724ba86))
+* **deps:** update dependency openai to v5.23.2 ([#2508](https://github.com/mx-space/core/issues/2508)) ([d2ae37d](https://github.com/mx-space/core/commit/d2ae37d3a8e331b1050dcd5ddbdc413afc554e44))
+* **deps:** update dependency qs to v6.14.1 [security] ([#2504](https://github.com/mx-space/core/issues/2504)) ([6cb3d36](https://github.com/mx-space/core/commit/6cb3d3603611ec9fdbf49a25d64b3c6e432f49ca))
+* **markdown:** export markdown permalink ([3bc74e7](https://github.com/mx-space/core/commit/3bc74e76a2935ccfb30b3357052ddfafb29d26cc))
+
+
+
 ## [8.4.3](https://github.com/mx-space/core/compare/v8.4.2...v8.4.3) (2025-12-27)
 
 

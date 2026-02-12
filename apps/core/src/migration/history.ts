@@ -12,6 +12,23 @@ import v7_2_1 from './version/v7.2.1'
 import v8_4_0 from './version/v8.4.0'
 import v8_4_0__1 from './version/v8.4.0.fix1'
 import v8_4_0__2 from './version/v8.4.0.fix2'
+import v8_5_0 from './version/v8.5.0'
+import v9_0_8 from './version/v9.0.8'
+import v9_3_1 from './version/v9.3.1'
+import v9_3_2 from './version/v9.3.2'
+import v9_4_1 from './version/v9.4.1'
+import v9_5_0 from './version/v9.5.0'
+import v9_6_0 from './version/v9.6.0'
+import v9_6_3 from './version/v9.6.3'
+import v9_7_0 from './version/v9.7.0'
+import v9_7_1 from './version/v9.7.1'
+import v9_7_2 from './version/v9.7.2'
+import v9_7_3 from './version/v9.7.3'
+import v9_7_4 from './version/v9.7.4'
+import v9_7_5 from './version/v9.7.5'
+import v9_7_6 from './version/v9.7.6'
+import v9_7_7 from './version/v9.7.7'
+import v10_0_0 from './version/v10.0.0'
 
 export default [
   v200Alpha1,
@@ -28,4 +45,21 @@ export default [
   v8_4_0,
   v8_4_0__1,
   v8_4_0__2,
+  v8_5_0,
+  v9_0_8,
+  v9_3_1,
+  v9_3_2,
+  v9_4_1,
+  v9_5_0,
+  v9_6_0,
+  v9_6_3,
+  v9_7_0,
+  v9_7_1,
+  v9_7_2,
+  v9_7_3,
+  v9_7_4,
+  v9_7_5,
+  v9_7_6,
+  v9_7_7,
+  v10_0_0,
 ]

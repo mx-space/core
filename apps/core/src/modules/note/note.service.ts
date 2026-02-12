@@ -5,18 +5,23 @@ import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import { FileReferenceType } from '~/modules/file/file-reference.model'
+import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getLessThanNow } from '~/utils/time.util'
-import { isDefined, isMongoId } from 'class-validator'
+import { isDefined, isMongoId } from '~/utils/validator.util'
 import dayjs from 'dayjs'
-import { debounce, omit } from 'lodash'
-import type { FilterQuery, PaginateOptions } from 'mongoose'
-import { getArticleIdFromRoomName } from '../activity/activity.util'
+import { debounce, omit } from 'es-toolkit/compat'
+import type { PaginateOptions, QueryFilter } from 'mongoose'
+import { extractArticleIdFromRoomName } from '../activity/activity.util'
 import { CommentService } from '../comment/comment.service'
+import { DraftRefType } from '../draft/draft.model'
+import { DraftService } from '../draft/draft.service'
 import { NoteModel } from './note.model'
 
 @Injectable()
@@ -25,11 +30,14 @@ export class NoteService {
     @InjectModel(NoteModel)
     private readonly noteModel: MongooseModel<NoteModel>,
     private readonly imageService: ImageService,
+    private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
+    private readonly lexicalService: LexicalService,
     @Inject(forwardRef(() => CommentService))
     private readonly commentService: CommentService,
 
-    private readonly textMacrosService: TextMacroService,
+    @Inject(forwardRef(() => DraftService))
+    private readonly draftService: DraftService,
   ) {}
 
   public get model() {
@@ -68,9 +76,7 @@ export class NoteService {
     if (!note.publicAt) {
       return false
     }
-    const isSecret = dayjs(note.publicAt).isAfter(new Date())
-
-    return isSecret
+    return dayjs(note.publicAt).isAfter(new Date())
   }
 
   async getLatestNoteId() {
@@ -89,7 +95,7 @@ export class NoteService {
     }
   }
   async getLatestOne(
-    condition: FilterQuery<DocumentType<NoteModel>> = {},
+    condition: QueryFilter<DocumentType<NoteModel>> = {},
     projection: any = undefined,
   ) {
     const latest: NoteModel | null = await this.noteModel
@@ -105,11 +111,6 @@ export class NoteService {
     if (!latest) {
       return null
     }
-
-    latest.text = await this.textMacrosService.replaceTextMacro(
-      latest.text,
-      latest,
-    )
 
     // 是否存在上一条记录 (旧记录)
     // 统一：next 为较老的记录  prev 为较新的记录
@@ -136,22 +137,45 @@ export class NoteService {
     doc: T,
     password?: string,
   ): boolean {
-    const hasPassword = doc.password
-    if (!hasPassword) {
+    if (!doc.password) {
       return true
     }
     if (!password) {
       return false
     }
-    const isValid = Object.is(password, doc.password)
-    return isValid
+    return Object.is(password, doc.password)
   }
 
-  public async create(document: NoteModel) {
+  public async create(document: NoteModel & { draftId?: string }) {
+    this.lexicalService.populateText(document)
+
+    const { draftId } = document
     document.created = getLessThanNow(document.created)
+    if (document.meta) {
+      document.meta = dbTransforms.json(document.meta) as any
+    }
 
     const note = await this.noteModel.create(document)
+
+    // 处理草稿：标记为已发布，并关联到新创建的日记
+    if (draftId) {
+      // Release draft's file references first, they will be re-associated to the note
+      await this.fileReferenceService.removeReferencesForDocument(
+        draftId,
+        FileReferenceType.Draft,
+      )
+      await this.draftService.linkToPublished(draftId, note.id)
+      await this.draftService.markAsPublished(draftId)
+    }
+
     scheduleManager.schedule(async () => {
+      // Track file references
+      await this.fileReferenceService.activateReferences(
+        note.text,
+        note.id,
+        FileReferenceType.Note,
+      )
+
       await Promise.all([
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
@@ -175,15 +199,12 @@ export class NoteService {
               BusinessEvents.NOTE_CREATE,
               {
                 ...note.toJSON(),
-                text: await this.textMacrosService.replaceTextMacro(
-                  note.text,
-                  note,
-                ),
+                text: note.text,
               },
               {
                 scope: EventScope.TO_VISITOR,
                 gateway: {
-                  rooms: [getArticleIdFromRoomName(note.id)],
+                  rooms: [extractArticleIdFromRoomName(note.id)],
                 },
               },
             ),
@@ -193,12 +214,19 @@ export class NoteService {
     return note
   }
 
-  public async updateById(id: string, data: Partial<NoteModel>) {
+  public async updateById(
+    id: string,
+    data: Partial<NoteModel> & { draftId?: string },
+  ) {
+    this.lexicalService.populateText(data as any)
+
     const oldDoc = await this.noteModel.findById(id).lean()
 
     if (!oldDoc) {
       throw new NoContentCanBeModifiedException()
     }
+
+    const { draftId } = data
 
     const hasFieldChanged = (
       [
@@ -213,6 +241,10 @@ export class NoteService {
       return isDefined(data[key]) && data[key] !== oldDoc[key]
     })
 
+    const hasContentChanged = ['title', 'text'].some((key) =>
+      isDefined(data[key as keyof NoteModel]),
+    )
+
     const updatedData = Object.assign(
       {},
       omit(data, NoteModel.protectedKeys),
@@ -226,11 +258,17 @@ export class NoteService {
             updated: new Date(),
           }
         : {},
+      hasContentChanged
+        ? {
+            modified: new Date(),
+          }
+        : {},
+      data.meta !== undefined
+        ? {
+            meta: dbTransforms.json(data.meta),
+          }
+        : {},
     )
-
-    if (['title', 'text'].some((key) => isDefined(data[key]))) {
-      data.modified = new Date()
-    }
 
     const updated = await this.noteModel
       .findOneAndUpdate(
@@ -249,7 +287,19 @@ export class NoteService {
       throw new NoContentCanBeModifiedException()
     }
 
+    // 处理草稿：标记为已发布
+    if (draftId) {
+      await this.draftService.markAsPublished(draftId)
+    }
+
     scheduleManager.schedule(async () => {
+      // Update file references
+      await this.fileReferenceService.updateReferencesForDocument(
+        updated.text,
+        updated.id,
+        FileReferenceType.Note,
+      )
+
       await Promise.all([
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
@@ -275,12 +325,12 @@ export class NoteService {
       ])
     })
 
-    await this.boardcaseNoteUpdateEvent(updated)
+    await this.broadcastNoteUpdateEvent(updated)
 
     return updated
   }
 
-  private boardcaseNoteUpdateEvent = debounce(
+  private broadcastNoteUpdateEvent = debounce(
     async (updated: NoteModel) => {
       if (!updated) {
         return
@@ -300,10 +350,7 @@ export class NoteService {
         BusinessEvents.NOTE_UPDATE,
         {
           ...updated,
-          text: await this.textMacrosService.replaceTextMacro(
-            updated.text,
-            updated,
-          ),
+          text: updated.text,
         },
         {
           scope: EventScope.TO_VISITOR,
@@ -331,6 +378,11 @@ export class NoteService {
         ref: id,
         refType: CollectionRefTypes.Note,
       }),
+      this.draftService.deleteByRef(DraftRefType.Note, id),
+      this.fileReferenceService.removeReferencesForDocument(
+        id,
+        FileReferenceType.Note,
+      ),
     ])
     scheduleManager.schedule(async () => {
       await Promise.all([
@@ -344,12 +396,6 @@ export class NoteService {
     })
   }
 
-  /**
-   * 查找 nid 时候正确，返回 _id
-   *
-   * @param {number} nid
-   * @returns {Types.ObjectId}
-   */
   async getIdByNid(nid: number) {
     const document = await this.model
       .findOne({
@@ -374,7 +420,7 @@ export class NoteService {
   async getNotePaginationByTopicId(
     topicId: string,
     pagination: PaginateOptions = {},
-    condition?: FilterQuery<NoteModel>,
+    condition?: QueryFilter<NoteModel>,
   ) {
     const { page = 1, limit = 10, ...rest } = pagination
 

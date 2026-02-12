@@ -1,0 +1,129 @@
+services:
+  mx-core:
+    image: ${MX_CORE_IMAGE:-mx-core:latest}
+    ports:
+      - target: 2333
+        published: ${MX_PORT:-2333}
+        protocol: tcp
+        mode: ingress
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      PORT: "2333"
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-localhost:*}
+
+      # MongoDB (service in this stack)
+      DB_CONNECTION_STRING: mongodb://mongo:27017/mx-space
+
+      # Redis (service in this stack)
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+
+      # Security (optional)
+      ENCRYPT_ENABLE: ${ENCRYPT_ENABLE:-true}
+      ENCRYPT_KEY: ${ENCRYPT_KEY:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_EXPIRE: ${JWT_EXPIRE:-}
+
+      DISABLE_CACHE: ${DISABLE_CACHE:-false}
+      DEBUG: ${DEBUG:-false}
+      DEBUG_MEMORY_DUMP: ${DEBUG_MEMORY_DUMP:-false}
+
+    volumes:
+      - type: bind
+        source: ./data/mx-space
+        target: /root/.mx-space
+
+    # NOTE: `depends_on` is ignored by Docker Swarm stack deploy.
+    # Do NOT rely on it for startup order; use retry/restart policy instead.
+    networks:
+      default: {}
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:2333/api/v2/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      # Cold start can be slow: wait longer before marking unhealthy.
+      start_period: 60s
+
+    deploy:
+      # If the app runs migrations/initialization on startup, set replicas to 1 first.
+      replicas: ${MX_CORE_REPLICAS:-2}
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 10
+        window: 2m
+      update_config:
+        parallelism: 1
+        order: start-first
+        delay: 10s
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+        monitor: 30s
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - type: bind
+        source: ./data/redis
+        target: /data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 20
+        window: 2m
+    networks:
+      default:
+        aliases:
+          # Ensure both stack-scoped and short names resolve
+          - redis
+          - mx-core_redis
+
+  mongo:
+    image: mongo:7
+    command: ["mongod", "--bind_ip_all"]
+    volumes:
+      - type: bind
+        source: ./data/db
+        target: /data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' | grep 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      # mongod init (journaling/replica-set/lock) can take time on cold disks.
+      start_period: 60s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 20
+        window: 2m
+    networks:
+      default:
+        aliases:
+          - mongo
+          - mx-core_mongo
+
+networks:
+  default:
+    driver: overlay
+    attachable: true

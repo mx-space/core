@@ -5,13 +5,12 @@ import {
   prop,
   Severity,
 } from '@typegoose/typegoose'
-
-export const ServerlessStorageCollectionName = `serverlessstorages`
+import { SERVERLESS_STORAGE_COLLECTION_NAME } from '~/constants/db.constant'
 
 @modelOptions({
   schemaOptions: {},
   options: {
-    customName: ServerlessStorageCollectionName,
+    customName: SERVERLESS_STORAGE_COLLECTION_NAME,
     allowMixed: Severity.ALLOW,
   },
 })

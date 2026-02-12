@@ -9,17 +9,18 @@
   ],
   "packageRules": [
     {
-      "updateTypes": ["major"],
-      "labels": ["UPDATE-MAJOR"]
+      "updateTypes": [
+        "major"
+      ],
+      "labels": [
+        "UPDATE-MAJOR"
+      ]
     }
   ],
   "ignoreDeps": [
-    "class-validator",
-    "class-transformer",
     "vitest",
     "vite",
     "snakecase-keys",
-    "zx",
     "algoliasearch",
     "@algolia/client-search"
   ],

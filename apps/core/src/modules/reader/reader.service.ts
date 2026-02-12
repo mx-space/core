@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
+import type { ReturnModelType } from '@typegoose/typegoose'
+import { READER_COLLECTION_NAME } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { Document } from 'mongodb'
+import type { Document } from 'mongodb'
 import { Types } from 'mongoose'
-import { AUTH_JS_USER_COLLECTION } from '../auth/auth.constant'
+import { AuthService } from '../auth/auth.service'
 import { ReaderModel } from './reader.model'
 
 @Injectable()
 export class ReaderService {
   constructor(
     private readonly databaseService: DatabaseService,
+    private readonly authService: AuthService,
     @InjectModel(ReaderModel)
     private readonly readerModel: ReturnModelType<typeof ReaderModel>,
   ) {}
@@ -25,16 +27,12 @@ export class ReaderService {
           as: 'account',
         },
       },
-      {
-        // flat account array
-        $unwind: '$account',
-      },
-
+      { $unwind: '$account' },
       {
         $project: {
           _id: 1,
           email: 1,
-          isOwner: 1,
+          role: 1,
           image: 1,
           name: 1,
           handle: 1,
@@ -46,7 +44,6 @@ export class ReaderService {
         },
       },
 
-      // account field flat to root level
       {
         $replaceRoot: {
           newRoot: {
@@ -70,19 +67,43 @@ export class ReaderService {
   }
   find() {
     return this.databaseService.db
-      .collection(AUTH_JS_USER_COLLECTION)
+      .collection(READER_COLLECTION_NAME)
       .aggregate(this.buildQueryPipeline())
       .toArray()
   }
-  async updateAsOwner(id: string) {
-    return this.databaseService.db
-      .collection(AUTH_JS_USER_COLLECTION)
-      .updateOne({ _id: new Types.ObjectId(id) }, { $set: { isOwner: true } })
+
+  async findPaginated(page: number, size: number) {
+    const skip = (page - 1) * size
+    const collection = this.databaseService.db.collection(
+      READER_COLLECTION_NAME,
+    )
+
+    const pipeline = this.buildQueryPipeline()
+
+    const totalDocs = await collection.countDocuments()
+    const paginatedPipeline = [...pipeline, { $skip: skip }, { $limit: size }]
+
+    const docs = await collection.aggregate(paginatedPipeline).toArray()
+
+    const totalPages = Math.ceil(totalDocs / size)
+    const hasNextPage = page < totalPages
+    const hasPrevPage = page > 1
+
+    return {
+      docs,
+      totalDocs,
+      page,
+      limit: size,
+      totalPages,
+      hasNextPage,
+      hasPrevPage,
+    }
+  }
+  async transferOwner(id: string) {
+    return this.authService.transferOwnerRole(id)
   }
   async revokeOwner(id: string) {
-    return this.databaseService.db
-      .collection(AUTH_JS_USER_COLLECTION)
-      .updateOne({ _id: new Types.ObjectId(id) }, { $set: { isOwner: false } })
+    return this.authService.revokeOwnerRole(id)
   }
   async findReaderInIds(ids: string[]) {
     return this.readerModel

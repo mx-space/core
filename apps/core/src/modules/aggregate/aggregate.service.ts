@@ -9,39 +9,44 @@ import {
   RedisKeys,
 } from '~/constants/cache.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import {
+  CATEGORY_SERVICE_TOKEN,
+  POST_SERVICE_TOKEN,
+} from '~/constants/injection.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { getShortDate } from '~/utils/time.util'
-import { pick } from 'lodash'
+import { pick } from 'es-toolkit/compat'
 import type { PipelineStage } from 'mongoose'
+import { AnalyzeService } from '../analyze/analyze.service'
 import type { CategoryModel } from '../category/category.model'
-import { CategoryService } from '../category/category.service'
+import type { CategoryService } from '../category/category.service'
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
 import { LinkState } from '../link/link.model'
 import { LinkService } from '../link/link.service'
 import { NoteService } from '../note/note.service'
+import { OwnerService } from '../owner/owner.service'
 import { PageService } from '../page/page.service'
-import { PostService } from '../post/post.service'
+import type { PostService } from '../post/post.service'
 import { RecentlyService } from '../recently/recently.service'
 import { SayService } from '../say/say.service'
-import { UserService } from '../user/user.service'
-import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.dto'
 import type { RSSProps } from './aggregate.interface'
+import { ReadAndLikeCountDocumentType, TimelineType } from './aggregate.schema'
 
 @Injectable()
 export class AggregateService {
   constructor(
-    @Inject(forwardRef(() => PostService))
+    @Inject(POST_SERVICE_TOKEN)
     private readonly postService: PostService,
     @Inject(forwardRef(() => NoteService))
     private readonly noteService: NoteService,
 
-    @Inject(forwardRef(() => CategoryService))
+    @Inject(CATEGORY_SERVICE_TOKEN)
     private readonly categoryService: CategoryService,
 
     @Inject(forwardRef(() => PageService))
@@ -57,13 +62,14 @@ export class AggregateService {
     @Inject(forwardRef(() => RecentlyService))
     private readonly recentlyService: RecentlyService,
 
-    @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService,
+    @Inject(forwardRef(() => OwnerService))
+    private readonly ownerService: OwnerService,
     private readonly urlService: UrlBuilderService,
 
     private readonly configs: ConfigsService,
     private readonly gateway: WebEventsGateway,
     private readonly redisService: RedisService,
+    private readonly analyzeService: AnalyzeService,
   ) {}
 
   getAllCategory() {
@@ -89,7 +95,7 @@ export class AggregateService {
       .sort({ created: -1 })
       .limit(size)
       .select(
-        '_id title name slug avatar nid created meta images tags modified',
+        '_id title name slug avatar nid created meta images tags modified contentFormat',
       )
   }
 
@@ -144,11 +150,6 @@ export class AggregateService {
           list.map((item) => ({
             ...pick(item, ['_id', 'title', 'slug', 'created', 'modified']),
             category: item.category,
-            // summary:
-            //   item.summary ??
-            //   (item.text.length > 150
-            //     ? item.text.slice(0, 150) + '...'
-            //     : item.text),
             url: encodeURI(
               `/posts/${(item.category as CategoryModel).slug}/${item.slug}`,
             ),
@@ -262,7 +263,7 @@ export class AggregateService {
   async buildRssStructure(): Promise<RSSProps> {
     const data = await this.getRSSFeedContent()
     const seo = await this.configs.get('seo')
-    const author = (await this.userService.getMaster()).name
+    const author = (await this.ownerService.getOwner()).name
     const url = (await this.configs.get('url')).webUrl
     return {
       title: seo.title,
@@ -329,6 +330,8 @@ export class AggregateService {
         modified: post.modified,
         link: baseURL + this.urlService.build(post),
         images: post.images || [],
+        contentFormat: post.contentFormat,
+        content: post.content,
       }
     })
     const notesRss: RSSProps['data'] = notes.map((note) => {
@@ -340,6 +343,8 @@ export class AggregateService {
         modified: note.modified,
         link: baseURL + this.urlService.build(note),
         images: note.images || [],
+        contentFormat: note.contentFormat,
+        content: note.content,
       }
     })
 
@@ -470,7 +475,7 @@ export class AggregateService {
         break
       }
       case ReadAndLikeCountDocumentType.Note: {
-        const result = await this.postService.model.aggregate(pipeline)
+        const result = await this.noteService.model.aggregate(pipeline)
         if (result[0]) counts = result[0]
         break
       }
@@ -520,5 +525,192 @@ export class AggregateService {
       if (!result) return prev
       return prev + result.totalCharacters
     }, 0)
+  }
+
+  /**
+   * 获取分类分布统计
+   */
+  async getCategoryDistribution() {
+    const result = await this.postService.model.aggregate([
+      { $match: { isPublished: true } },
+      { $group: { _id: '$categoryId', count: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'category',
+        },
+      },
+      { $unwind: '$category' },
+      {
+        $project: {
+          _id: 0,
+          id: '$_id',
+          name: '$category.name',
+          slug: '$category.slug',
+          count: 1,
+        },
+      },
+      { $sort: { count: -1 } },
+    ])
+    return result
+  }
+
+  /**
+   * 获取标签热词统计 (Top 20)
+   */
+  async getTagCloud() {
+    const result = await this.postService.model.aggregate([
+      { $match: { isPublished: true, tags: { $exists: true, $ne: [] } } },
+      { $unwind: '$tags' },
+      { $group: { _id: '$tags', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 20 },
+      { $project: { _id: 0, tag: '$_id', count: 1 } },
+    ])
+    return result
+  }
+
+  /**
+   * 获取发布趋势 (最近12个月)
+   */
+  async getPublicationTrend() {
+    const twelveMonthsAgo = new Date()
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
+
+    const pipeline: PipelineStage[] = [
+      { $match: { created: { $gte: twelveMonthsAgo } } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m', date: '$created' },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+      { $project: { _id: 0, date: '$_id', count: 1 } },
+    ]
+
+    const [posts, notes] = await Promise.all([
+      this.postService.model.aggregate([
+        { $match: { isPublished: true } },
+        ...pipeline,
+      ]),
+      this.noteService.model.aggregate([
+        { $match: { isPublished: true } },
+        ...pipeline,
+      ]),
+    ])
+
+    // 合并数据，按日期对齐
+    const dateMap = new Map<string, { posts: number; notes: number }>()
+
+    for (const item of posts) {
+      dateMap.set(item.date, { posts: item.count, notes: 0 })
+    }
+    for (const item of notes) {
+      const existing = dateMap.get(item.date) || { posts: 0, notes: 0 }
+      dateMap.set(item.date, { ...existing, notes: item.count })
+    }
+
+    return Array.from(dateMap.entries())
+      .map(([date, counts]) => ({ date, ...counts }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+  }
+
+  /**
+   * 获取热门文章 (Top 10)
+   */
+  async getTopArticles() {
+    const posts = await this.postService.model
+      .find({ isPublished: true })
+      .sort({ 'count.read': -1 })
+      .limit(10)
+      .select('title slug count.read count.like categoryId')
+      .populate('categoryId', 'name slug')
+      .lean()
+
+    return posts.map((post) => ({
+      id: post._id,
+      title: post.title,
+      slug: post.slug,
+      reads: post.count?.read || 0,
+      likes: post.count?.like || 0,
+      category: post.categoryId
+        ? {
+            name: (post.categoryId as any).name,
+            slug: (post.categoryId as any).slug,
+          }
+        : null,
+    }))
+  }
+
+  /**
+   * 获取评论活跃度 (最近30天)
+   */
+  async getCommentActivity() {
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    const result = await this.commentService.model.aggregate([
+      {
+        $match: {
+          created: { $gte: thirtyDaysAgo },
+          $or: [{ state: CommentState.Read }, { state: CommentState.Unread }],
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$created' } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+      { $project: { _id: 0, date: '$_id', count: 1 } },
+    ])
+    return result
+  }
+
+  /**
+   * 获取访问来源分布 (最近7天)
+   */
+  async getTrafficSource() {
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+    const analyzeModel = this.analyzeService.model
+
+    const [osDist, browserDist] = await Promise.all([
+      analyzeModel.aggregate([
+        { $match: { timestamp: { $gte: sevenDaysAgo } } },
+        {
+          $group: {
+            _id: '$ua.os.name',
+            count: { $sum: 1 },
+          },
+        },
+        { $match: { _id: { $ne: null } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 },
+        { $project: { _id: 0, name: '$_id', count: 1 } },
+      ]),
+      analyzeModel.aggregate([
+        { $match: { timestamp: { $gte: sevenDaysAgo } } },
+        {
+          $group: {
+            _id: '$ua.browser.name',
+            count: { $sum: 1 },
+          },
+        },
+        { $match: { _id: { $ne: null } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 },
+        { $project: { _id: 0, name: '$_id', count: 1 } },
+      ]),
+    ])
+
+    return { os: osDist, browser: browserDist }
   }
 }

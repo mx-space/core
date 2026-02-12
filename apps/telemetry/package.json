@@ -1,0 +1,15 @@
+{
+  "name": "@mx-space/telemetry",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 execute mx-telemetry --local --file=./schema.sql",
+    "db:migrate:remote": "wrangler d1 execute mx-telemetry --remote --file=./schema.sql"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260127.0",
+    "wrangler": "^4.0.0"
+  }
+}

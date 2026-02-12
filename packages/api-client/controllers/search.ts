@@ -3,9 +3,9 @@ import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
 import type { PaginateResult } from '~/models/base'
 import type { NoteModel } from '~/models/note'
+import type { PageModel } from '~/models/page'
 import type { PostModel } from '~/models/post'
 import { autoBind } from '~/utils/auto-bind'
-import type { PageModel } from '..'
 import type { HTTPClient } from '../core'
 
 declare module '../core/client' {

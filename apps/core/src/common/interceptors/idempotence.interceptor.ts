@@ -61,7 +61,6 @@ export class IdempotenceInterceptor implements NestInterceptor {
   async intercept(context: ExecutionContext, next: CallHandler) {
     const request = context.switchToHttp().getRequest<FastifyRequest>()
 
-    // skip Get 请求
     if (request.method.toUpperCase() === 'GET') {
       return next.handle()
     }

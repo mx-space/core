@@ -1,5 +1,5 @@
 import * as crypto from 'node:crypto'
-import { extname } from 'node:path'
+import { isDev } from '~/global/env.global'
 
 export interface S3UploaderOptions {
   bucket: string
@@ -65,12 +65,30 @@ export class S3Uploader {
     return `${path}/${objectKey}`
   }
 
-  async uploadFile(fileData: Buffer, path: string): Promise<string> {
-    const md5Filename = crypto.createHash('md5').update(fileData).digest('hex')
-    const ext = extname(path)
-    const objectKey = `${path}/${md5Filename}${ext}`
+  getPublicUrl(objectKey: string): string {
+    if (this.customDomain && this.customDomain.length > 0) {
+      return `${this.customDomain.replace(/\/+$/, '')}/${objectKey}`
+    }
+    return `${this.endpoint}/${this.bucket}/${objectKey}`
+  }
+
+  async uploadBuffer(
+    buffer: Buffer,
+    objectKey: string,
+    contentType: string,
+  ): Promise<string> {
+    await this.uploadToS3(objectKey, buffer, contentType)
+    return this.getPublicUrl(objectKey)
+  }
+
+  async uploadFile(
+    fileData: Buffer,
+    filename: string,
+    dir?: string,
+  ): Promise<string> {
+    const objectKey = dir ? `${dir}/${filename}` : filename
     await this.uploadToS3(objectKey, fileData, 'application/octet-stream')
-    return `${path}/${objectKey}`
+    return objectKey
   }
 
   // Generic S3-compatible storage upload function
@@ -95,6 +113,13 @@ export class S3Uploader {
     const host = url.host
     const contentLength = fileData.length.toString()
 
+    // URI encode each path segment for signing
+    const encodedObjectKey = objectKey
+      .split('/')
+      .map((seg) => encodeURIComponent(seg))
+      .join('/')
+    const canonicalUri = `/${this.bucket}/${encodedObjectKey}`
+
     const headers: Record<string, string> = {
       Host: host,
       'Content-Type': contentType,
@@ -114,7 +139,7 @@ export class S3Uploader {
 
     const canonicalRequest = [
       'PUT',
-      `/${this.bucket}/${objectKey}`,
+      canonicalUri,
       '', // No query parameters
       String(canonicalHeaders),
       '', // Extra newline
@@ -148,28 +173,37 @@ export class S3Uploader {
     const authorization = `${algorithm} Credential=${this.accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
 
     // Create and send PUT request
-    const requestUrl = `${this.endpoint}/${this.bucket}/${objectKey}`
+    const requestUrl = `${this.endpoint}${canonicalUri}`
 
-    const response = await fetch(requestUrl, {
+    const fetchOptions: RequestInit & { dispatcher?: unknown } = {
       method: 'PUT',
       headers: {
         ...headers,
         Authorization: authorization,
       },
+      body: new Uint8Array(fileData),
+    }
 
-      body: toArrayBuffer(fileData),
-    })
+    let originalTlsReject: string | undefined
+    if (isDev) {
+      originalTlsReject = process.env.NODE_TLS_REJECT_UNAUTHORIZED
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+    }
 
-    if (!response.ok) {
-      throw new Error(`Upload failed with status code: ${response.status}`)
+    try {
+      const response = await fetch(requestUrl, fetchOptions as RequestInit)
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status code: ${response.status}`)
+      }
+    } finally {
+      if (isDev) {
+        if (originalTlsReject === undefined) {
+          delete process.env.NODE_TLS_REJECT_UNAUTHORIZED
+        } else {
+          process.env.NODE_TLS_REJECT_UNAUTHORIZED = originalTlsReject
+        }
+      }
     }
   }
-}
-function toArrayBuffer(buffer) {
-  const arrayBuffer = new ArrayBuffer(buffer.length)
-  const view = new Uint8Array(arrayBuffer)
-  for (const [i, element] of buffer.entries()) {
-    view[i] = element
-  }
-  return arrayBuffer
 }

@@ -1,38 +1,40 @@
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-} from '@nestjs/common'
-import type { DocumentType } from '@typegoose/typegoose'
-import { ReturnModelType } from '@typegoose/typegoose'
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
+import { ModuleRef } from '@nestjs/core'
+import type { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
-import { omit } from 'lodash'
-import type { FilterQuery } from 'mongoose'
+import { omit } from 'es-toolkit/compat'
+import type { QueryFilter } from 'mongoose'
 import type { PostModel } from '../post/post.model'
-import { PostService } from '../post/post.service'
+import type { PostService } from '../post/post.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { CategoryModel, CategoryType } from './category.model'
 
 @Injectable()
-export class CategoryService {
+export class CategoryService implements OnApplicationBootstrap {
+  private postService: PostService
+
   constructor(
     @InjectModel(CategoryModel)
     private readonly categoryModel: ReturnModelType<typeof CategoryModel>,
-    @Inject(forwardRef(() => PostService))
-    private readonly postService: PostService,
     private readonly eventManager: EventManagerService,
-
     private readonly slugTrackerService: SlugTrackerService,
+    private readonly moduleRef: ModuleRef,
   ) {
     this.createDefaultCategory()
+  }
+
+  onApplicationBootstrap() {
+    this.postService = this.moduleRef.get(POST_SERVICE_TOKEN, { strict: false })
   }
 
   async findCategoryById(categoryId: string) {
@@ -56,7 +58,7 @@ export class CategoryService {
     )
 
     for (const [i, datum] of data.entries()) {
-      Reflect.set(datum, 'count', counts[i])
+      ;(datum as any).count = counts[i]
     }
 
     return data
@@ -86,7 +88,7 @@ export class CategoryService {
 
   async findArticleWithTag(
     tag: string,
-    condition: FilterQuery<DocumentType<PostModel>> = {},
+    condition: QueryFilter<DocumentType<PostModel>> = {},
   ): Promise<null | any[]> {
     const posts = await this.postService.model
       .find(
@@ -142,39 +144,27 @@ export class CategoryService {
 
     const originalSlug = `/${category.slug}`
 
-    const allPostReferenceThisCategory = await this.postService.model.find({
+    const posts = await this.postService.model.find({
       categoryId: documentId,
     })
 
-    const needTrackerMetaList = [] as [string, string][]
-    for (const post of allPostReferenceThisCategory) {
-      needTrackerMetaList.push([post.slug, post.id])
-    }
-
-    for (const postSlugMeta of needTrackerMetaList) {
-      const [postSlug, postId] = postSlugMeta
+    for (const post of posts) {
       await this.slugTrackerService.createTracker(
-        `${originalSlug}/${postSlug}`,
+        `${originalSlug}/${post.slug}`,
         ArticleTypeEnum.Post,
-        postId,
+        post.id,
       )
     }
   }
   async update(id: string, partialDoc: Partial<CategoryModel>) {
     if (partialDoc?.slug) await this.trackerSlugChanges(id, partialDoc.slug)
-    const newDoc = await this.model.findOneAndUpdate(
-      { _id: id },
-      {
-        ...partialDoc,
-      },
-      {
-        new: true,
-      },
-    )
+    const newDoc = await this.model.findOneAndUpdate({ _id: id }, partialDoc, {
+      new: true,
+    })
 
     this.clearCache()
 
-    this.eventManager.broadcast(BusinessEvents.CATEGORY_CREATE, newDoc, {
+    this.eventManager.broadcast(BusinessEvents.CATEGORY_UPDATE, newDoc, {
       scope: EventScope.TO_SYSTEM_VISITOR,
     })
     return newDoc
@@ -186,7 +176,7 @@ export class CategoryService {
     }
     const postsInCategory = await this.findPostsInCategory(category.id)
     if (postsInCategory.length > 0) {
-      throw new BadRequestException('该分类中有其他文章，无法被删除')
+      throw new BizException(ErrorCodeEnum.CategoryHasPosts)
     }
     const res = await this.model.deleteOne({
       _id: category._id,

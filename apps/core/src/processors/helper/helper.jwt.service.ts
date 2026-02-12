@@ -5,8 +5,10 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { logger } from '~/global/consola.global'
 import { getRedisKey } from '~/utils/redis.util'
 import { md5 } from '~/utils/tool.util'
-import { sign, verify } from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 import { RedisService } from '../redis/redis.service'
+
+const { sign, verify } = jwt
 
 @Injectable()
 export class JWTService {

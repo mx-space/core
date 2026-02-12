@@ -1,12 +1,7 @@
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  Logger,
-} from '@nestjs/common'
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { RequestContext } from '~/common/contexts/request.context'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import {
@@ -14,6 +9,8 @@ import {
   POST_COLLECTION_NAME,
   RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { GatewayService } from '~/processors/gateway/gateway.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
@@ -22,8 +19,9 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { checkRefModelCollectionType } from '~/utils/biz.util'
+import { dbTransforms } from '~/utils/db-transform.util'
 import { camelcaseKeys } from '~/utils/tool.util'
-import { omit, pick, uniqBy } from 'lodash'
+import { omit, pick, uniqBy } from 'es-toolkit/compat'
 import { ObjectId } from 'mongodb'
 import type { Document } from 'mongoose'
 import type { Socket } from 'socket.io'
@@ -32,12 +30,10 @@ import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
 import type { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
-import type { PageModel } from '../page/page.model'
 import type { PostModel } from '../post/post.model'
-import { PostService } from '../post/post.service'
+import type { PostService } from '../post/post.service'
 import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
-import type { RecentlyModel } from '../recently/recently.model'
 import { Activity } from './activity.constant'
 import type {
   ActivityLikePayload,
@@ -45,12 +41,12 @@ import type {
   ActivityPresence,
 } from './activity.interface'
 import { ActivityModel } from './activity.model'
+import type { UpdatePresenceDto } from './activity.schema'
 import {
   extractArticleIdFromRoomName,
   isValidRoomName,
   parseRoomName,
 } from './activity.util'
-import type { UpdatePresenceDto } from './dtos/presence.dto'
 
 declare module '~/types/socket-meta' {
   interface SocketMetadata {
@@ -76,7 +72,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     private readonly gatewayService: GatewayService,
     private readonly configsService: ConfigsService,
 
-    @Inject(forwardRef(() => PostService))
+    @Inject(POST_SERVICE_TOKEN)
     private readonly postService: PostService,
     @Inject(forwardRef(() => NoteService))
     private readonly noteService: NoteService,
@@ -116,7 +112,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         }
         this.activityModel.create({
           type: Activity.ReadDuration,
-          payload: {
+          payload: dbTransforms.json({
             connectedAt,
             operationTime,
             updatedAt,
@@ -125,7 +121,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
             displayName,
             joinedAt,
             ip,
-          },
+          }),
         })
       }
     }
@@ -237,22 +233,22 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     }
 
     const docsWithRefModel = activities.docs.map((ac) => {
-      const nextAc = ac.toJSON()
+      const nextAc = ac.toJSON() as any
       const refModel = refModelData.get(ac.payload.id)
 
-      refModel && Reflect.set(nextAc, 'ref', refModel)
+      if (refModel) {
+        nextAc.ref = refModel
+      }
       const readerId = ac.payload.readerId
       if (readerId) {
         const reader = readerMap.get(readerId)
         if (reader) {
-          Object.assign(nextAc, {
-            reader,
-          })
+          nextAc.reader = reader
         }
       }
 
       return nextAc
-    }) as any as (ActivityModel & {
+    }) as (ActivityModel & {
       payload: any
       ref: PostModel | NoteModel
     })[]
@@ -286,7 +282,6 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       const refId = extractArticleIdFromRoomName(roomName)
       articleIds.push(refId)
 
-      // Explicitly type the document conversion
       const document = data.data[i] as Document & ActivityModel
       data.data[i] = document.toObject()
       ;(data.data[i] as any).refId = refId
@@ -322,10 +317,10 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         ip,
       )
       if (!res) {
-        throw new BadRequestException('你已经支持过啦！')
+        throw new BizException(ErrorCodeEnum.AlreadySupported)
       }
     } catch (error: any) {
-      throw new BadRequestException(error)
+      throw new BizException(ErrorCodeEnum.AlreadySupported, error?.message)
     }
 
     const refModel = await this.databaseService
@@ -356,12 +351,12 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     await this.activityModel.create({
       type: Activity.Like,
       created: new Date(),
-      payload: {
+      payload: dbTransforms.json({
         ip,
         type,
         id,
         readerId: reader ? readerId : undefined,
-      } as ActivityLikePayload,
+      } as ActivityLikePayload),
     })
   }
 
@@ -369,17 +364,11 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const roomName = data.roomName
 
     if (!isValidRoomName(roomName)) {
-      throw new BadRequestException('invalid room_name')
+      throw new BizException(ErrorCodeEnum.InvalidRoomName)
     }
     const roomSockets = await this.webGateway.getSocketsOfRoom(roomName)
 
-    // TODO 或许应该找到所有的同一个用户的 socket 最早的一个连接时间
-    const socket = roomSockets.find(
-      (socket) =>
-        // (await this.gatewayService.getSocketMetadata(socket))?.sessionId ===
-        // data.identity,
-        socket.id === data.sid,
-    )
+    const socket = roomSockets.find((socket) => socket.id === data.sid)
     if (!socket) {
       this.logger.debug(
         `socket not found, room_name: ${roomName} identity: ${data.identity}`,
@@ -397,8 +386,8 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       ip,
     }
 
-    Reflect.deleteProperty(presenceData, 'ts')
-    const serializedPresenceData = omit(presenceData, 'ip')
+    delete (presenceData as any).ts
+    const serializedPresenceData = omit(presenceData, 'ip') as any
     if (data.readerId) {
       const reader = await this.readerService.findReaderInIds([data.readerId])
       if (reader.length) {
@@ -415,7 +404,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const roomJoinedAtMap =
       await this.webGateway.getSocketRoomJoinedAtMap(socket)
 
-    Reflect.set(serializedPresenceData, 'joinedAt', roomJoinedAtMap[roomName])
+    serializedPresenceData.joinedAt = roomJoinedAtMap[roomName]
 
     this.webGateway.broadcast(
       BusinessEvents.ACTIVITY_UPDATE_PRESENCE,
@@ -438,24 +427,15 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       roomSocket.map((socket) => this.gatewayService.getSocketMetadata(socket)),
     )
 
-    return uniqBy(
-      socketMeta
-        .filter((x) => x?.presence)
-        .map((x) => {
-          // eslint-disable-next-line array-callback-return
-          if (!x.presence) return
+    const presences = socketMeta
+      .filter((x) => x?.presence)
+      .map((x) => ({
+        ...x.presence!,
+        joinedAt: x.roomJoinedAtMap?.[roomName],
+      }))
+      .sort((a, b) => a.updatedAt - b.updatedAt)
 
-          return {
-            ...x.presence,
-            joinedAt: x.roomJoinedAtMap?.[roomName],
-          }
-        })
-        .sort((a, b) => {
-          if (a && b) return a.updatedAt - b.updatedAt
-          return 1
-        }) as ActivityPresence[],
-      (x) => x.identity,
-    )
+    return uniqBy(presences, (x) => x.identity)
   }
 
   async deleteActivityByType(type: Activity, beforeDate: Date) {
@@ -474,15 +454,11 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   async getAllRoomNames() {
     const roomMap = await this.webGateway.getAllRooms()
     const rooms = Object.keys(roomMap)
-    return {
-      rooms,
-      roomCount: rooms.reduce((acc, roomName) => {
-        return {
-          ...acc,
-          [roomName]: roomMap[roomName].length,
-        }
-      }, {}) as any as Record<string, number>,
+    const roomCount: Record<string, number> = {}
+    for (const roomName of rooms) {
+      roomCount[roomName] = roomMap[roomName].length
     }
+    return { rooms, roomCount }
   }
 
   async getRefsFromRoomNames(roomNames: string[]) {
@@ -505,7 +481,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     return { objects }
   }
 
-  async getDateRangeOfReadings(startAt?: Date, endAt?: Date) {
+  async getDateRangeOfReadings(startAt?: Date, endAt?: Date, limit = 50) {
     startAt = startAt ?? new Date('2020-01-01')
     endAt = endAt ?? new Date()
 
@@ -517,52 +493,38 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         },
         type: Activity.ReadDuration,
       })
+      .select('payload')
       .lean({
         getters: true,
       })
 
-    const refIds = new Set<string>()
+    const countMap = new Map<string, number>()
     for (const item of activities) {
-      const parsed = item.payload
-      const refId = extractArticleIdFromRoomName(parsed.roomName)
+      const refId = extractArticleIdFromRoomName(item.payload.roomName)
       if (!refId) continue
-      refIds.add(refId)
+      countMap.set(refId, (countMap.get(refId) || 0) + 1)
     }
 
-    const activityCountingMap = activities.reduce(
-      (acc, item) => {
-        const refId = extractArticleIdFromRoomName(item.payload.roomName)
-        if (!refId) return acc
-        if (!acc[refId]) {
-          acc[refId] = 0
-        }
-        acc[refId]++
+    const sorted = [...countMap.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
 
-        return acc
-      },
-      {} as Record<string, number>,
-    )
-
-    const result = [] as {
-      refId: string
-      count: number
-      ref: PostModel | NoteModel | PageModel | RecentlyModel
-    }[]
-
-    const idsCollections = await this.databaseService.findGlobalByIds(
-      Array.from(refIds),
-    )
-
+    const topRefIds = sorted.map(([id]) => id)
+    const idsCollections = await this.databaseService.findGlobalByIds(topRefIds)
     const mapping = this.databaseService.flatCollectionToMap(idsCollections)
-    for (const refId of refIds) {
-      result.push({
-        refId,
-        count: activityCountingMap[refId] ?? 0,
-        ref: mapping[refId],
-      })
-    }
 
-    return result
+    return sorted.map(([refId, count]) => ({
+      refId,
+      count,
+      ref: mapping[refId],
+    }))
+  }
+
+  async getTopReadings(limit = 5, days = 14) {
+    const endAt = new Date()
+    const startAt = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+
+    return this.getDateRangeOfReadings(startAt, endAt, limit)
   }
 
   async getRecentComment() {
@@ -578,9 +540,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
               $in: [CommentState.Read, CommentState.Unread],
             },
       })
-
       .populate('ref', 'title nid slug subtitle content categoryId')
-
       .lean({ getters: true })
       .sort({
         created: -1,
@@ -588,16 +548,11 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       .limit(3)
 
     await this.commentService.fillAndReplaceAvatarUrl(docs)
-    return docs.map((doc) => {
-      return Object.assign(
-        {},
-        pick(doc, 'created', 'author', 'text', 'avatar'),
-        pick(doc.ref, 'title', 'nid', 'slug', 'id'),
-        {
-          type: checkRefModelCollectionType(doc.ref),
-        },
-      )
-    })
+    return docs.map((doc) => ({
+      ...pick(doc, 'created', 'author', 'text', 'avatar'),
+      ...pick(doc.ref, 'title', 'nid', 'slug', 'id'),
+      type: checkRefModelCollectionType(doc.ref),
+    }))
   }
 
   async getRecentPublish() {
@@ -615,7 +570,6 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
           created: -1,
         })
         .limit(3)
-
         .toArray(),
       this.databaseService.db
         .collection(POST_COLLECTION_NAME)
@@ -633,37 +587,6 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         })
         .limit(3)
         .toArray(),
-      // .aggregate([
-      //   {
-      //     $lookup: {
-      //       from: CATEGORY_COLLECTION_NAME,
-      //       localField: 'categoryId',
-      //       foreignField: '_id',
-      //       as: 'category',
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       title: 1,
-      //       slug: 1,
-      //       created: 1,
-      //       category: {
-      //         $arrayElemAt: ['$category', 0],
-      //       },
-      //       categoryId: 1,
-      //       id: '$_id',
-      //     },
-      //   },
-      //   {
-      //     $sort: {
-      //       created: -1,
-      //     },
-      //   },
-      //   {
-      //     $limit: 3,
-      //   },
-      // ])
-      // .toArray(),
       this.databaseService.db
         .collection(NOTE_COLLECTION_NAME)
         .find({

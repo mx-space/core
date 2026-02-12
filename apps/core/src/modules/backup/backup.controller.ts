@@ -1,6 +1,5 @@
 import { Readable } from 'node:stream'
 import {
-  BadRequestException,
   Body,
   Delete,
   Get,
@@ -10,7 +9,6 @@ import {
   Post,
   Query,
   Req,
-  UnprocessableEntityException,
 } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -20,7 +18,7 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { isZipMinetype } from '~/utils/mine.util'
 import { getMediumDateTime } from '~/utils/time.util'
-import { FastifyRequest } from 'fastify'
+import type { FastifyRequest } from 'fastify'
 import { BackupService } from './backup.service'
 
 @ApiController({ path: 'backups' })
@@ -40,8 +38,11 @@ export class BackupController {
   @HTTPDecorators.Bypass
   async createNewBackup() {
     const res = await this.backupService.backup()
-    if (typeof res == 'undefined' || typeof res.buffer === 'undefined') {
-      throw new BadRequestException('请先开启在设置开启备份功能')
+    if (typeof res == 'undefined') {
+      throw new BizException(ErrorCodeEnum.BackupNotEnabled)
+    }
+    if (typeof res.buffer === 'undefined') {
+      throw new BizException(ErrorCodeEnum.FileNotFound, 'backup zip missing')
     }
     const stream = new Readable()
 
@@ -74,17 +75,14 @@ export class BackupController {
     }
 
     await this.backupService.saveTempBackupByUpload(await data.toBuffer())
-
-    return
   }
   @Patch(['/rollback/:dirname', '/:dirname'])
   async rollback(@Param('dirname') dirname: string) {
     if (!dirname) {
-      throw new UnprocessableEntityException('参数有误')
+      throw new BizException(ErrorCodeEnum.InvalidParameter)
     }
 
     this.backupService.rollbackTo(dirname)
-    return
   }
 
   @Delete('/')
@@ -94,13 +92,12 @@ export class BackupController {
   ) {
     const nextFiles = files || filesBody
     if (!nextFiles) {
-      throw new UnprocessableEntityException('参数有误')
+      throw new BizException(ErrorCodeEnum.InvalidParameter)
     }
 
     const filesList = nextFiles.split(',')
 
     await Promise.all(filesList.map((f) => this.backupService.deleteBackup(f)))
-    return
   }
 
   @Delete('/:filename')
@@ -109,6 +106,10 @@ export class BackupController {
       return
     }
     await this.backupService.deleteBackup(filename)
-    return
+  }
+
+  @Post('/upload-to-s3')
+  async backupAndUploadToS3() {
+    this.backupService.backupDB()
   }
 }

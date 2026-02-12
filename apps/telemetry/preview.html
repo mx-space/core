@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MX Space Telemetry</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      color: #e5e5e5;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      color: #fff;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: #171717;
+      border: 1px solid #262626;
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: #a3a3a3;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.5rem;
+    }
+    .chart-card {
+      background: #171717;
+      border: 1px solid #262626;
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+    .chart-card.full-width {
+      grid-column: 1 / -1;
+    }
+    .chart-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #d4d4d4;
+      margin-bottom: 1rem;
+    }
+    .chart-container {
+      position: relative;
+      height: 280px;
+    }
+    .chart-container.line-chart {
+      height: 200px;
+    }
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      color: #525252;
+      font-size: 0.75rem;
+    }
+    footer a { color: #737373; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>MX Space Telemetry</h1>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Instances</div>
+        <div class="stat-value">1,247</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Online Now</div>
+        <div class="stat-value">89</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Today Startups</div>
+        <div class="stat-value">156</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Today</div>
+        <div class="stat-value">312</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active (7 days)</div>
+        <div class="stat-value">523</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active (30 days)</div>
+        <div class="stat-value">892</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card full-width">
+        <div class="chart-title">Daily Activity (Last 30 Days)</div>
+        <div class="chart-container line-chart">
+          <canvas id="dailyChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Version Distribution</div>
+        <div class="chart-container">
+          <canvas id="versionChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Node.js Version Distribution</div>
+        <div class="chart-container">
+          <canvas id="nodeChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>Anonymous telemetry data from <a href="https://github.com/mx-space/core" target="_blank">MX Space</a></p>
+    </footer>
+  </div>
+
+  <script>
+    const chartColors = [
+      '#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#22c55e',
+      '#06b6d4', '#eab308', '#ef4444', '#14b8a6', '#a855f7'
+    ];
+
+    // Mock data
+    const dailyLabels = [];
+    const dailyStartupData = [];
+    const dailyActiveData = [];
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      dailyLabels.push(date.toISOString().split('T')[0]);
+      dailyStartupData.push(Math.floor(Math.random() * 80) + 40);
+      dailyActiveData.push(Math.floor(Math.random() * 120) + 80);
+    }
+
+    const versionLabels = ['9.0.7', '9.0.6', '9.0.5', '9.0.4', '8.5.2', '8.5.1', '8.4.0'];
+    const versionData = [312, 245, 156, 89, 45, 28, 17];
+
+    const nodeLabels = ['22.0.0', '20.18.0', '20.17.0', '20.15.0', '18.20.0', '18.19.0'];
+    const nodeData = [425, 312, 156, 89, 45, 28];
+
+    new Chart(document.getElementById('dailyChart'), {
+      type: 'line',
+      data: {
+        labels: dailyLabels,
+        datasets: [{
+          label: 'Startups',
+          data: dailyStartupData,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 2,
+        }, {
+          label: 'Active Instances',
+          data: dailyActiveData,
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            labels: { color: '#a3a3a3' }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: '#262626' },
+            ticks: { color: '#737373', maxTicksLimit: 10 }
+          },
+          y: {
+            grid: { color: '#262626' },
+            ticks: { color: '#737373' },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('versionChart'), {
+      type: 'doughnut',
+      data: {
+        labels: versionLabels,
+        datasets: [{
+          data: versionData,
+          backgroundColor: chartColors,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { color: '#a3a3a3', boxWidth: 12, padding: 8 }
+          }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('nodeChart'), {
+      type: 'doughnut',
+      data: {
+        labels: nodeLabels,
+        datasets: [{
+          data: nodeData,
+          backgroundColor: chartColors,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { color: '#a3a3a3', boxWidth: 12, padding: 8 }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

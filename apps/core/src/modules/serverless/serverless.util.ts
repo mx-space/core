@@ -4,17 +4,6 @@ import BabelPluginTransformTS from '@babel/plugin-transform-typescript'
 import type * as t from '@babel/types'
 import type { VariableDeclaration } from '@babel/types'
 
-export const hashStable = (str: string): string => {
-  let hash = 5381
-  let i = str.length
-
-  while (i) {
-    hash = (hash * 33) ^ str.charCodeAt(--i)
-  }
-
-  return (hash >>> 0).toString(36)
-}
-
 export const complieTypeScriptBabelOptions: TransformOptions = {
   comments: false,
   plugins: [

@@ -1,13 +1,11 @@
 import { CacheTTL } from '@nestjs/cache-manager'
 import {
   All,
-  BadRequestException,
   Delete,
-  ForbiddenException,
   Get,
-  InternalServerErrorException,
   NotFoundException,
   Param,
+  Query,
   Request,
   Response,
 } from '@nestjs/common'
@@ -16,35 +14,70 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
-import { AssetService } from '~/processors/helper/helper.asset.service'
-import { FastifyReply, FastifyRequest } from 'fastify'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { MongoIdDto } from '~/shared/dto/id.dto'
+import { getSandboxTypeDeclaration } from '~/utils/sandbox'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 import { SnippetType } from '../snippet/snippet.model'
 import { createMockedContextResponse } from './mock-response.util'
-import { ServerlessReferenceDto } from './serverless.dto'
+import {
+  ServerlessLogQueryDto,
+  ServerlessReferenceDto,
+} from './serverless.schema'
 import { ServerlessService } from './serverless.service'
 
 @ApiController(['serverless', 'fn'])
 export class ServerlessController {
-  constructor(
-    private readonly serverlessService: ServerlessService,
-    private readonly assetService: AssetService,
-  ) {}
+  constructor(private readonly serverlessService: ServerlessService) {}
 
   @Get('/types')
   @Auth()
   @HTTPDecorators.Bypass
   @CacheTTL(60 * 60 * 24)
-  async getCodeDefined() {
-    try {
-      const text = await this.assetService.getAsset('/types/type.declare.ts', {
-        encoding: 'utf-8',
-      })
-
-      return text
-    } catch {
-      throw new InternalServerErrorException('code defined file not found')
-    }
+  getCodeDefined() {
+    return getSandboxTypeDeclaration()
   }
+
+  @Get('/logs/:id')
+  @Auth()
+  async getInvocationLogs(
+    @Param() param: MongoIdDto,
+    @Query() query: ServerlessLogQueryDto,
+  ) {
+    const { id } = param
+    const { page, size, status } = query
+    return this.serverlessService.getInvocationLogs(id, {
+      page,
+      size,
+      status,
+    })
+  }
+
+  @Get('/compiled/:id')
+  @Auth()
+  @HTTPDecorators.Bypass
+  async getCompiledCode(@Param() param: MongoIdDto) {
+    const snippet = await this.serverlessService.model
+      .findById(param.id)
+      .select('+compiledCode')
+      .lean()
+    if (!snippet) {
+      throw new NotFoundException('Snippet not found')
+    }
+    return snippet.compiledCode ?? null
+  }
+
+  @Get('/log/:id')
+  @Auth()
+  async getInvocationLogDetail(@Param('id') id: string) {
+    const log = await this.serverlessService.getInvocationLogDetail(id)
+    if (!log) {
+      throw new NotFoundException('Invocation log not found')
+    }
+    return log
+  }
+
   @All('/:reference/:name/*')
   @Throttle({
     default: {
@@ -94,26 +127,28 @@ export class ServerlessController {
           },
         ],
       })
-      .select('+secret')
+      .select('+secret +compiledCode')
       .lean({
         getters: true,
       })
 
     const errorPath = `Path: /${reference}/${name}`
     if (!snippet) {
-      throw new NotFoundException(
+      throw new BizException(
+        ErrorCodeEnum.FunctionNotFound,
         `serverless function is not exist, ${errorPath}`,
       )
     }
 
     if (!snippet.enable) {
-      throw new BadRequestException(
+      throw new BizException(
+        ErrorCodeEnum.InvalidParameter,
         `serverless function is not enabled, ${errorPath}`,
       )
     }
 
     if (snippet.private && !isAuthenticated) {
-      throw new ForbiddenException('no permission to run this function')
+      throw new BizException(ErrorCodeEnum.ServerlessNoPermission)
     }
 
     const result =
@@ -135,18 +170,13 @@ export class ServerlessController {
   async resetBuiltInFunction(@Param('id') id: string) {
     const builtIn = await this.serverlessService.isBuiltInFunction(id)
     if (!builtIn) {
-      // throw new BadRequestException('can not reset a non-builtin function')
       const snippet = await this.serverlessService.model.findById(id)
       if (!snippet) {
-        throw new BadRequestException('function not found')
+        throw new BizException(ErrorCodeEnum.FunctionNotFound)
       }
-      await this.serverlessService.model.deleteOne({
-        _id: id,
-      })
+      await this.serverlessService.model.deleteOne({ _id: id })
       return
     }
     await this.serverlessService.resetBuiltInFunction(builtIn)
-
-    return
   }
 }

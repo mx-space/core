@@ -3,7 +3,8 @@ export const REFLECTOR = 'Reflector'
 export const RESPONSE_PASSTHROUGH_METADATA = '__responsePassthrough__'
 // @nestjs/schedule
 
-export { SCHEDULE_CRON_OPTIONS } from '@nestjs/schedule/dist/schedule.constants'
+// ESM requires explicit extension for deep imports under Node (e.g. Node 24+).
+export { SCHEDULE_CRON_OPTIONS } from '@nestjs/schedule/dist/schedule.constants.js'
 
 export const DB_CONNECTION_TOKEN = '__db_connection_token__'
 

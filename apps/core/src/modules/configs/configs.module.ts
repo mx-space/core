@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common'
-import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
+import { extendedZodValidationPipeInstance } from '~/common/zod'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
-import { UserModule } from '../user/user.module'
+import { OwnerModule } from '../owner/owner.module'
 import { ConfigsService } from './configs.service'
 
 @Global()
@@ -10,10 +10,10 @@ import { ConfigsService } from './configs.service'
     ConfigsService,
     {
       provide: VALIDATION_PIPE_INJECTION,
-      useValue: ExtendedValidationPipe.shared,
+      useValue: extendedZodValidationPipeInstance,
     },
   ],
-  imports: [UserModule],
+  imports: [OwnerModule],
   exports: [ConfigsService],
 })
 export class ConfigsModule {}

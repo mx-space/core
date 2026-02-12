@@ -1,0 +1,9 @@
+name = "mx-telemetry"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+account_id = "de7ecb0eaa0a328071255d557a6adb66"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mx-telemetry"
+database_id = "26369d03-d91b-48e5-97c6-0523c0b51417"

@@ -5,8 +5,8 @@ rm -rf assets/.git
 cp -r ./apps/core/out ./out
 
 cp -R assets out
-# Copy core ecosystem.config.js to $root/out
-cp ./apps/core/ecosystem.config.js out
+# Copy core ecosystem.config.cjs to $root/out
+cp ./apps/core/ecosystem.config.cjs out
 node ./apps/core/download-latest-admin-assets.js
 cd out
 zip -r ../release.zip ./*

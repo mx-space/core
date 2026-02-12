@@ -1,8 +1,6 @@
 import {
-  BadRequestException,
   Body,
   Delete,
-  forwardRef,
   Get,
   HttpCode,
   Inject,
@@ -15,68 +13,65 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { Lang } from '~/common/decorators/lang.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
+import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { isValidObjectId } from 'mongoose'
-import { PostService } from '../post/post.service'
+import type { PostService } from '../post/post.service'
+import { CategoryType } from './category.model'
 import {
+  CategoryDto,
   MultiCategoriesQueryDto,
   MultiQueryTagAndCategoryDto,
+  PartialCategoryDto,
   SlugOrIdDto,
-} from './category.dto'
-import {
-  CategoryModel,
-  CategoryType,
-  PartialCategoryModel,
-} from './category.model'
+} from './category.schema'
 import { CategoryService } from './category.service'
 
 @ApiController({ path: 'categories' })
 export class CategoryController {
   constructor(
     private readonly categoryService: CategoryService,
-    @Inject(forwardRef(() => PostService))
+    @Inject(POST_SERVICE_TOKEN)
     private readonly postService: PostService,
+    private readonly translationService: TranslationService,
   ) {}
 
   @Get('/')
-  async getCategories(@Query() query: MultiCategoriesQueryDto) {
+  async getCategories(
+    @Query() query: MultiCategoriesQueryDto,
+    @Lang() lang?: string,
+  ) {
     const { ids, joint, type = CategoryType.Category } = query // categories is category's mongo id
     if (ids) {
       const ignoreKeys = '-text -summary -isPublished -images -commentsIndex'
-      if (joint) {
-        const map = new Object()
+      const map: Record<string, any> = {}
 
-        await Promise.all(
-          ids.map(async (id) => {
-            const item = await this.postService.model
-              .find({ categoryId: id }, ignoreKeys)
-              .sort({ created: -1 })
-              .lean()
+      await Promise.all(
+        ids.map(async (id) => {
+          let posts: any[] = await this.postService.model
+            .find({ categoryId: id }, ignoreKeys)
+            .sort({ created: -1 })
+            .lean()
 
-            map[id] = item
-            return id
-          }),
-        )
+          if (lang && posts.length) {
+            posts = await this.translatePostTitles(posts, lang)
+          }
 
-        return { entries: map }
-      } else {
-        const map = new Object()
-
-        await Promise.all(
-          ids.map(async (id) => {
-            const posts = await this.postService.model
-              .find({ categoryId: id }, ignoreKeys)
-              .sort({ created: -1 })
-              .lean()
+          if (joint) {
+            map[id] = posts
+          } else {
             const category = await this.categoryService.findCategoryById(id)
-            map[id] = Object.assign({ ...category, children: posts })
-            return id
-          }),
-        )
+            map[id] = { ...category, children: posts }
+          }
+        }),
+      )
 
-        return { entries: map }
-      }
+      return { entries: map }
     }
     return type === CategoryType.Category
       ? await this.categoryService.findAllCategory()
@@ -87,15 +82,17 @@ export class CategoryController {
   async getCategoryById(
     @Param() { query }: SlugOrIdDto,
     @Query() { tag }: MultiQueryTagAndCategoryDto,
+    @Lang() lang?: string,
   ) {
     if (!query) {
-      throw new BadRequestException()
+      throw new BizException(ErrorCodeEnum.InvalidParameter)
     }
     if (tag === true) {
-      return {
-        tag: query,
-        data: await this.categoryService.findArticleWithTag(query),
+      let data = await this.categoryService.findArticleWithTag(query)
+      if (lang && data?.length) {
+        data = await this.translatePostTitles(data, lang)
       }
+      return { tag: query, data }
     }
 
     const isId = isValidObjectId(query)
@@ -113,24 +110,54 @@ export class CategoryController {
       throw new CannotFindException()
     }
 
-    const children =
+    let children: any[] =
       (await this.categoryService.findCategoryPost(res._id.toHexString(), {
         $and: [tag ? { tags: tag } : {}],
       })) || []
+
+    if (lang && children.length) {
+      children = await this.translatePostTitles(children, lang)
+    }
+
     return { data: { ...res, children } }
+  }
+
+  private translatePostTitles(posts: any[], lang: string) {
+    return this.translationService.translateList({
+      items: posts,
+      targetLang: lang,
+      translationFields: ['title', 'translationMeta'] as const,
+      getInput: (item: any) => ({
+        id: item._id?.toString?.() ?? item.id ?? '',
+        title: item.title ?? '',
+        created: item.created,
+        modified: item.modified,
+      }),
+      applyResult: (item: any, translation) => {
+        if (!translation?.isTranslated) return item
+        const plain =
+          typeof item.toObject === 'function' ? item.toObject() : item
+        return {
+          ...plain,
+          title: translation.title,
+          isTranslated: true,
+          translationMeta: translation.translationMeta,
+        }
+      },
+    })
   }
 
   @Post('/')
   @Auth()
   @HTTPDecorators.Idempotence()
-  async create(@Body() body: CategoryModel) {
+  async create(@Body() body: CategoryDto) {
     const { name, slug } = body
-    return this.categoryService.create(name, slug)
+    return this.categoryService.create(name, slug!)
   }
 
   @Put('/:id')
   @Auth()
-  async modify(@Param() params: MongoIdDto, @Body() body: CategoryModel) {
+  async modify(@Param() params: MongoIdDto, @Body() body: CategoryDto) {
     const { type, slug, name } = body
     const { id } = params
     await this.categoryService.update(id, {
@@ -144,7 +171,7 @@ export class CategoryController {
   @Patch('/:id')
   @HttpCode(204)
   @Auth()
-  async patch(@Param() params: MongoIdDto, @Body() body: PartialCategoryModel) {
+  async patch(@Param() params: MongoIdDto, @Body() body: PartialCategoryDto) {
     const { id } = params
     await this.categoryService.update(id, body)
     return

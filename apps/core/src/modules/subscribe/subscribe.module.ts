@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { UserModule } from '../user/user.module'
+import { OwnerModule } from '../owner/owner.module'
 import { SubscribeController } from './subscribe.controller'
 import { SubscribeService } from './subscribe.service'
 
@@ -7,6 +7,6 @@ import { SubscribeService } from './subscribe.service'
   controllers: [SubscribeController],
   providers: [SubscribeService],
   exports: [SubscribeService],
-  imports: [UserModule],
+  imports: [OwnerModule],
 })
 export class SubscribeModule {}

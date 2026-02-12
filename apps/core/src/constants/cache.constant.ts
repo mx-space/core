@@ -23,12 +23,11 @@ export enum RedisKeys {
   JWTStore = 'jwt_store',
   /** 最近速记的点赞，点踩记录 */
   RecentlyAttitude = 'recently_attitude',
-  /** 函数编译缓存 */
-  FunctionComplieCache = 'function_complie_cache',
-
-  Authn = 'authn',
-
   Socket = 'socket',
+
+  AnalyzeAggregate = 'analyze_aggregate',
+  AnalyzeTrafficSource = 'analyze_traffic_source',
+  AnalyzeDeviceDistribution = 'analyze_device_distribution',
 }
 export const API_CACHE_PREFIX = 'mx-api-cache:'
 export enum CacheKeys {
@@ -38,6 +37,3 @@ export enum CacheKeys {
   RSSXml = `${API_CACHE_PREFIX}rss_xml`,
   Aggregate = `${API_CACHE_PREFIX}aggregate`,
 }
-
-// 30 days
-export const SERVERLESS_COMPLIE_CACHE_TTL = 60 * 60 * 24 * 30

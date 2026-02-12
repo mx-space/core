@@ -17,6 +17,9 @@ import { UAParser } from 'ua-parser-js'
   },
 })
 @index({ timestamp: -1 })
+@index({ timestamp: -1, path: 1 })
+@index({ timestamp: -1, referer: 1 })
+@index({ timestamp: -1, ip: 1 })
 export class AnalyzeModel extends BaseModel {
   @prop()
   ip?: string
@@ -29,6 +32,9 @@ export class AnalyzeModel extends BaseModel {
 
   @prop()
   path?: string
+
+  @prop()
+  referer?: string
 
   timestamp: Date
 }

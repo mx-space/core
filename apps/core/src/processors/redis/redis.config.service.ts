@@ -17,13 +17,15 @@ import { REDIS } from '~/app.config'
 export class RedisConfigService implements CacheOptionsFactory {
   // 缓存配置
   public createCacheOptions(): CacheModuleOptions {
+    const url = REDIS.url ?? `redis://${REDIS.host}:${REDIS.port}`
     return {
       ttl: REDIS.ttl ?? undefined,
       max: REDIS.max,
 
       stores: [
         new Keyv({
-          url: `redis://${REDIS.host}:${REDIS.port}`,
+          url,
+          username: (REDIS as any).username,
           password: REDIS.password as any,
         }),
       ],

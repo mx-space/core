@@ -1,7 +1,6 @@
 import {
   Body,
   Delete,
-  ForbiddenException,
   forwardRef,
   Get,
   Inject,
@@ -9,18 +8,15 @@ import {
   Patch,
   Post,
   Query,
-  Req,
   UseInterceptors,
 } from '@nestjs/common'
 import type { DocumentType } from '@typegoose/typegoose'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import {
-  CurrentReaderId,
-  CurrentUser,
-} from '~/common/decorators/current-user.decorator'
+import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation } from '~/common/decorators/ip.decorator'
+import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -32,23 +28,24 @@ import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
-import { isUndefined, keyBy } from 'lodash'
-import type { Document, FilterQuery } from 'mongoose'
+import { isUndefined, keyBy } from 'es-toolkit/compat'
+import type { Document, QueryFilter } from 'mongoose'
 import { ConfigsService } from '../configs/configs.service'
-import { ReaderModel } from '../reader/reader.model'
+import { OwnerService } from '../owner/owner.service'
 import { ReaderService } from '../reader/reader.service'
-import { UserModel } from '../user/user.model'
+import { CommentReplyMailType } from './comment.enum'
+import { CommentFilterEmailInterceptor } from './comment.interceptor'
+import type { CommentModel } from './comment.model'
+import { CommentState } from './comment.model'
 import {
+  BatchCommentDeleteDto,
+  BatchCommentStateDto,
   CommentDto,
   CommentRefTypesDto,
   CommentStatePatchDto,
   EditCommentDto,
   TextOnlyDto,
-} from './comment.dto'
-import { CommentReplyMailType } from './comment.enum'
-import { CommentFilterEmailInterceptor } from './comment.interceptor'
-import type { CommentModel } from './comment.model'
-import { CommentState } from './comment.model'
+} from './comment.schema'
 import { CommentService } from './comment.service'
 
 const idempotenceMessage = '哦吼，这句话你已经说过啦'
@@ -60,6 +57,7 @@ export class CommentController {
     private readonly commentService: CommentService,
     private readonly eventManager: EventManagerService,
     private readonly configsService: ConfigsService,
+    private readonly ownerService: OwnerService,
     @Inject(forwardRef(() => ReaderService))
     private readonly readerService: ReaderService,
   ) {}
@@ -77,10 +75,6 @@ export class CommentController {
     const readers = await this.readerService.findReaderInIds(
       comments.docs.map((doc) => doc.readerId).filter(Boolean) as string[],
     )
-    const readerMap = new Map<string, ReaderModel>()
-    for (const reader of readers) {
-      readerMap.set(reader._id.toHexString(), reader)
-    }
 
     const res = transformDataToPaginate(comments)
     Object.assign(res, {
@@ -133,7 +127,7 @@ export class CommentController {
     const configs = await this.configsService.get('commentOptions')
     const { commentShouldAudit } = configs
 
-    const $and: FilterQuery<CommentModel & Document<any, any, any>>[] = [
+    const $and: QueryFilter<CommentModel & Document<any, any, any>>[] = [
       {
         parent: undefined,
         ref: id,
@@ -154,17 +148,7 @@ export class CommentController {
       },
     ]
 
-    if (isAuthenticated) {
-      $and.push({
-        $or: [
-          { isWhispers: true },
-          { isWhispers: false },
-          {
-            isWhispers: { $exists: false },
-          },
-        ],
-      })
-    } else {
+    if (!isAuthenticated) {
       $and.push({
         $or: [
           { isWhispers: false },
@@ -194,7 +178,7 @@ export class CommentController {
     const result = transformDataToPaginate(comments)
     const readerIds = comments.docs
       .map((comment) => comment.readerId)
-      .filter((id) => !!id) as string[]
+      .filter(Boolean) as string[]
     const readers = await this.readerService.findReaderInIds(readerIds)
 
     Object.assign(result, {
@@ -231,7 +215,7 @@ export class CommentController {
       !(await this.commentService.allowComment(id, ref)) &&
       !isAuthenticated
     ) {
-      throw new ForbiddenException('主人禁止了评论')
+      throw new BizException(ErrorCodeEnum.CommentForbidden)
     }
 
     const model: Partial<CommentModel> = { ...body, ...ipLocation }
@@ -344,20 +328,20 @@ export class CommentController {
       .then((docs) => docs[0])
   }
 
-  @Post('/master/comment/:id')
+  @Post('/owner/comment/:id')
   @Auth()
   @HTTPDecorators.Idempotence({
     expired: 20,
     errorMessage: idempotenceMessage,
   })
-  async commentByMaster(
-    @CurrentUser() user: UserModel,
+  async commentByOwner(
     @Param() params: MongoIdDto,
     @Body() body: TextOnlyDto,
     @IpLocation() ipLocation: IpRecord,
     @Query() query: CommentRefTypesDto,
   ) {
-    const { name, mail, url } = user
+    const owner = await this.ownerService.getOwner()
+    const { name, mail, url } = owner
     const model: CommentDto = {
       author: name,
       ...body,
@@ -368,19 +352,19 @@ export class CommentController {
     return await this.comment(params, model as any, true, ipLocation, query)
   }
 
-  @Post('/master/reply/:id')
+  @Post('/owner/reply/:id')
   @Auth()
   @HTTPDecorators.Idempotence({
     expired: 20,
     errorMessage: idempotenceMessage,
   })
-  async replyByMaster(
-    @Req() req: any,
+  async replyByOwner(
     @Param() params: MongoIdDto,
     @Body() body: TextOnlyDto,
     @IpLocation() ipLocation: IpRecord,
   ) {
-    const { name, mail, url } = req.user
+    const owner = await this.ownerService.getOwner()
+    const { name, mail, url } = owner
     const model: CommentDto = {
       author: name,
       ...body,
@@ -401,10 +385,10 @@ export class CommentController {
     const { id } = params
     const { state, pin } = body
 
-    const updateResult = {} as any
+    const updateResult: Record<string, any> = {}
 
-    !isUndefined(state) && Reflect.set(updateResult, 'state', state)
-    !isUndefined(pin) && Reflect.set(updateResult, 'pin', pin)
+    if (!isUndefined(state)) updateResult.state = state
+    if (!isUndefined(pin)) updateResult.pin = pin
 
     if (pin) {
       const currentRefModel = await this.commentService.model
@@ -453,6 +437,50 @@ export class CommentController {
     return
   }
 
+  @Patch('/batch/state')
+  @Auth()
+  async batchUpdateState(@Body() body: BatchCommentStateDto) {
+    const { ids, all, state, currentState } = body
+
+    if (all) {
+      const filter: Record<string, any> = {}
+      if (!isUndefined(currentState)) {
+        filter.state = currentState
+      }
+      await this.commentService.model.updateMany(filter, { state })
+    } else if (ids?.length) {
+      await this.commentService.model.updateMany(
+        { _id: { $in: ids } },
+        { state },
+      )
+    }
+
+    return
+  }
+
+  @Delete('/batch')
+  @Auth()
+  async batchDelete(@Body() body: BatchCommentDeleteDto) {
+    const { ids, all, state } = body
+
+    if (all) {
+      const filter: Record<string, any> = {}
+      if (!isUndefined(state)) {
+        filter.state = state
+      }
+      const comments = await this.commentService.model.find(filter).lean()
+      for (const comment of comments) {
+        await this.commentService.deleteComments(comment._id.toString())
+      }
+    } else if (ids?.length) {
+      for (const id of ids) {
+        await this.commentService.deleteComments(id)
+      }
+    }
+
+    return
+  }
+
   @Patch('/edit/:id')
   async editComment(
     @Param() params: MongoIdDto,
@@ -467,7 +495,7 @@ export class CommentController {
       throw new CannotFindException()
     }
     if (comment.readerId !== readerId && !isAuthenticated) {
-      throw new ForbiddenException()
+      throw new BizException(ErrorCodeEnum.CommentForbidden)
     }
     await this.commentService.editComment(id, text)
   }

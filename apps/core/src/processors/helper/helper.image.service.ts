@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
+import type { OnModuleInit } from '@nestjs/common'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import type { ImageModel } from '~/shared/model/image.model'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'

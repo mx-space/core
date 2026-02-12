@@ -1,15 +1,17 @@
+import { existsSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { chalk, fs } from '@mx-space/compiled'
 import { Query, Sse } from '@nestjs/common'
-import { dashboard } from '~/../package.json'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
-import { isSemVer } from 'class-validator'
+import { PKG } from '~/utils/pkg.util'
+import { isSemVer } from '~/utils/validator.util'
+import pc from 'picocolors'
 import { catchError, lastValueFrom, Observable } from 'rxjs'
 import { lt, major, minor } from 'semver'
-import { UpdateAdminDto } from './update.dto'
+import { UpdateAdminDto } from './update.schema'
 import { UpdateService } from './update.service'
 
 @ApiController('update')
@@ -28,9 +30,9 @@ export class UpdateController {
     const sseOutput$ = new Observable<string>((observer) => {
       ;(async () => {
         // 1. check current local admin version if exist.
-        let { version: currentVersion } = dashboard
+        let { version: currentVersion } = PKG.dashboard!
 
-        const isExistLocalAdmin = fs.pathExistsSync(LOCAL_ADMIN_ASSET_PATH)
+        const isExistLocalAdmin = existsSync(LOCAL_ADMIN_ASSET_PATH)
 
         if (!isExistLocalAdmin) {
           // 2. if not has local admin, then pull remote admin version.
@@ -44,12 +46,11 @@ export class UpdateController {
         }
 
         const versionPath = path.resolve(LOCAL_ADMIN_ASSET_PATH, 'version')
-        const isHasVersion = fs.existsSync(versionPath)
+        const isHasVersion = existsSync(versionPath)
         if (isHasVersion) {
-          const versionInfo = await fs.promises
-            .readFile(versionPath, {
-              encoding: 'utf8',
-            })
+          const versionInfo = await readFile(versionPath, {
+            encoding: 'utf8',
+          })
             .then((data) => data.split('\n')[0])
             .catch(() => '')
           if (isSemVer(versionInfo)) {
@@ -62,9 +63,7 @@ export class UpdateController {
           .getLatestAdminVersion()
           .catch((error) => {
             observer.next(
-              chalk.red(
-                `Fetching latest admin version error: ${error.message}\n`,
-              ),
+              pc.red(`Fetching latest admin version error: ${error.message}\n`),
             )
             observer.complete()
             return ''
@@ -75,7 +74,7 @@ export class UpdateController {
         }
 
         if (!lt(currentVersion, latestVersion)) {
-          observer.next(chalk.green(`Admin dashboard is up to date.\n`))
+          observer.next(pc.green(`Admin dashboard is up to date.\n`))
           observer.complete()
           return
         }
@@ -86,7 +85,7 @@ export class UpdateController {
             major(currentVersion) !== major(latestVersion))
         ) {
           observer.next(
-            chalk.red(
+            pc.red(
               `The latest version is ${latestVersion}, current version is ${currentVersion}, can not cross-version upgrade.\n`,
             ),
           )

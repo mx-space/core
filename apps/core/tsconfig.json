@@ -1,18 +1,18 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "target": "es2020",
+    "target": "esnext",
     "lib": [
-      "es2021",
-      "es2020",
-      "es2022",
+      "ESNext",
       "DOM",
-      "DOM.Iterable"
+      "DOM.Iterable",
+      "ES2022",
+      "ES2021"
     ],
     "emitDecoratorMetadata": true,
+    "moduleResolution": "bundler",
     "experimentalDecorators": true,
-    "baseUrl": ".",
-    "module": "CommonJS",
+    "module": "esnext",
     "paths": {
       "~": [
         "./src"

@@ -1,7 +1,5 @@
-/**
- * @copy from mongoose-lean-id
- */
-export function mongooseLeanId(schema) {
+// Adapted from mongoose-lean-id
+export function mongooseLeanId(schema: any) {
   schema.post('find', attachId)
   schema.post('findOne', attachId)
   schema.post('findOneAndUpdate', attachId)
@@ -9,48 +7,44 @@ export function mongooseLeanId(schema) {
   schema.post('findOneAndDelete', attachId)
 }
 
-function attachId(res) {
-  if (res == null) {
+function replaceId(res: any) {
+  if (Array.isArray(res)) {
+    for (const item of res) {
+      if (!item || isObjectId(item)) continue
+      if (item._id) {
+        item.id = item._id.toString()
+      }
+      for (const key of Object.keys(item)) {
+        if (Array.isArray(item[key])) {
+          replaceId(item[key])
+        }
+      }
+    }
     return
   }
 
-  function replaceId(res) {
-    if (Array.isArray(res)) {
-      res.forEach((v) => {
-        if (!v) return
-        if (isObjectId(v)) {
-          return
-        }
-        if (v._id) {
-          v.id = v._id.toString()
-        }
-        Object.keys(v).forEach((k) => {
-          if (Array.isArray(v[k])) {
-            replaceId(v[k])
-          }
-        })
-      })
-    } else {
-      if (isObjectId(res)) {
-        return res
-      }
-      if (res._id) {
-        res.id = res._id.toString()
-      }
-      Object.keys(res).forEach((k) => {
-        if (Array.isArray(res[k])) {
-          replaceId(res[k])
-        }
-      })
+  if (isObjectId(res)) return
+
+  if (res._id) {
+    res.id = res._id.toString()
+  }
+  for (const key of Object.keys(res)) {
+    if (Array.isArray(res[key])) {
+      replaceId(res[key])
     }
   }
+}
 
+function attachId(this: any, res: any) {
+  if (res == null) {
+    return
+  }
   if (this._mongooseOptions.lean) {
     replaceId(res)
   }
 }
 
-function isObjectId(v) {
+function isObjectId(v: any) {
   if (v == null) {
     return false
   }

@@ -11,20 +11,29 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
-import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation } from '~/common/decorators/ip.decorator'
+import type { IpRecord } from '~/common/decorators/ip.decorator'
+import { Lang } from '~/common/decorators/lang.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
+import {
+  TranslationService,
+  type ArticleTranslationInput,
+} from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import type { PipelineStage } from 'mongoose'
 import type { CategoryModel } from '../category/category.model'
+import { PostModel } from './post.model'
 import {
   CategoryAndSlugDto,
+  PartialPostDto,
+  PostDetailQueryDto,
+  PostDto,
   PostPagerDto,
   SetPostPublishStatusDto,
-} from './post.dto'
-import { PartialPostModel, PostModel } from './post.model'
+} from './post.schema'
 import { PostService } from './post.service'
 
 @ApiController('posts')
@@ -32,6 +41,7 @@ export class PostController {
   constructor(
     private readonly postService: PostService,
     private readonly countingService: CountingService,
+    private readonly translationService: TranslationService,
   ) {}
 
   @Get('/')
@@ -39,8 +49,18 @@ export class PostController {
   async getPaginate(
     @Query() query: PostPagerDto,
     @IsAuthenticated() isAuthenticated: boolean,
+    @Lang() lang?: string,
   ) {
-    const { size, select, page, year, sortBy, sortOrder, truncate } = query
+    const {
+      size,
+      select,
+      page,
+      year,
+      sortBy,
+      sortOrder,
+      truncate,
+      categoryIds,
+    } = query
 
     return this.postService.model
       .aggregatePaginate(
@@ -51,6 +71,17 @@ export class PostController {
                 ...addYearCondition(year),
                 // 非认证用户只能看到已发布的文章
                 ...(isAuthenticated ? {} : { isPublished: true }),
+                // 分类筛选
+                ...(categoryIds?.length
+                  ? {
+                      categoryId: {
+                        $in: categoryIds.map(
+                          (id) =>
+                            new this.postService.model.base.Types.ObjectId(id),
+                        ),
+                      },
+                    }
+                  : {}),
               },
             },
             // @see https://stackoverflow.com/questions/54810712/mongodb-sort-by-field-a-if-field-b-null-otherwise-sort-by-field-c
@@ -85,14 +116,17 @@ export class PostController {
             },
             select && {
               $project: {
-                ...(select?.split(' ').reduce(
-                  (acc, cur) => {
-                    const field = cur.trim()
-                    acc[field] = 1
-                    return acc
-                  },
-                  Object.keys(new PostModel()).map((k) => ({ [k]: 0 })),
-                ) as any),
+                ...select
+                  .split(' ')
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+                  .reduce(
+                    (acc, field) => {
+                      acc[field] = 1
+                      return acc
+                    },
+                    {} as Record<string, 1>,
+                  ),
               },
             },
             {
@@ -116,14 +150,55 @@ export class PostController {
           page,
         },
       )
-      .then((res) => {
-        res.docs = res.docs.map((doc: PostModel) => {
-          doc.text = truncate ? doc.text.slice(0, truncate) : doc.text
+      .then(async (res) => {
+        const translationInputs: ArticleTranslationInput[] = []
+        for (const doc of res.docs) {
+          const originalText = doc.text
           if (doc.meta && typeof doc.meta === 'string') {
             doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
           }
-          return doc
-        })
+
+          if (lang && typeof originalText === 'string') {
+            translationInputs.push({
+              id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
+              title: doc.title,
+              text: originalText,
+              summary: doc.summary,
+              tags: doc.tags,
+              meta: doc.meta,
+              modified: doc.modified,
+            })
+          }
+
+          doc.text = truncate ? doc.text.slice(0, truncate) : doc.text
+        }
+
+        if (lang && translationInputs.length) {
+          const translationResults =
+            await this.translationService.translateArticleList({
+              articles: translationInputs,
+              targetLang: lang,
+            })
+
+          res.docs = res.docs.map((doc) => {
+            const docId = doc._id?.toString?.() ?? doc.id ?? String(doc._id)
+            const translation = translationResults.get(docId)
+            if (!translation?.isTranslated) {
+              return doc
+            }
+
+            return {
+              ...doc,
+              title: translation.title,
+              text: translation.text,
+              summary: translation.summary,
+              tags: translation.tags,
+              isTranslated: translation.isTranslated,
+              translationMeta: translation.translationMeta,
+            }
+          })
+        }
+
         return res
       })
   }
@@ -192,6 +267,7 @@ export class PostController {
         category: (last.category as CategoryModel).slug,
         slug: last.slug,
       },
+      {} as any,
       ip,
       isAuthenticated,
     )
@@ -200,8 +276,10 @@ export class PostController {
   @Get('/:category/:slug')
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,
+    @Query() _: PostDetailQueryDto,
     @IpLocation() { ip }: IpRecord,
     @IsAuthenticated() isAuthenticated?: boolean,
+    @Lang() lang?: string,
   ) {
     const { category, slug } = params
     const postDocument = await this.postService.getPostBySlug(
@@ -223,15 +301,38 @@ export class PostController {
       ip,
     )
 
-    return { ...postDocument.toObject(), liked }
+    const baseData = postDocument.toObject()
+    const translationResult = await this.translationService.translateArticle({
+      articleId: postDocument.id,
+      targetLang: lang,
+      allowHidden: Boolean(isAuthenticated),
+      originalData: {
+        title: baseData.title,
+        text: baseData.text,
+        summary: baseData.summary,
+        tags: baseData.tags,
+      },
+    })
+
+    return {
+      ...baseData,
+      title: translationResult.title,
+      text: translationResult.text,
+      summary: translationResult.summary,
+      tags: translationResult.tags,
+      isTranslated: translationResult.isTranslated,
+      translationMeta: translationResult.translationMeta,
+      availableTranslations: translationResult.availableTranslations,
+      liked,
+    }
   }
 
   @Post('/')
   @Auth()
   @HTTPDecorators.Idempotence()
-  async create(@Body() body: PostModel) {
+  async create(@Body() body: PostDto) {
     return await this.postService.create({
-      ...body,
+      ...(body as unknown as PostModel),
       modified: null,
       slug: body.slug,
       related: body.relatedId as any,
@@ -240,14 +341,20 @@ export class PostController {
 
   @Put('/:id')
   @Auth()
-  async update(@Param() params: MongoIdDto, @Body() body: PostModel) {
-    return await this.postService.updateById(params.id, body)
+  async update(@Param() params: MongoIdDto, @Body() body: PostDto) {
+    return await this.postService.updateById(
+      params.id,
+      body as unknown as PostModel,
+    )
   }
 
   @Patch('/:id')
   @Auth()
-  async patch(@Param() params: MongoIdDto, @Body() body: PartialPostModel) {
-    await this.postService.updateById(params.id, body)
+  async patch(@Param() params: MongoIdDto, @Body() body: PartialPostDto) {
+    await this.postService.updateById(
+      params.id,
+      body as unknown as Partial<PostModel>,
+    )
     return
   }
 

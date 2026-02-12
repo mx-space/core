@@ -1,14 +1,21 @@
-import { createWriteStream } from 'node:fs'
+import { createReadStream, createWriteStream } from 'node:fs'
+import {
+  access,
+  copyFile,
+  mkdir,
+  readdir,
+  rename,
+  unlink,
+} from 'node:fs/promises'
 import path, { resolve } from 'node:path'
 import type { Readable } from 'node:stream'
-import { fs } from '@mx-space/compiled'
 import {
-  BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
 } from '@nestjs/common'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import {
   STATIC_FILE_DIR,
   STATIC_FILE_TRASH_DIR,
@@ -29,7 +36,7 @@ export class FileService {
 
   private async checkIsExist(path: string) {
     try {
-      await fs.access(path)
+      await access(path)
       return true
     } catch {
       return false
@@ -37,11 +44,12 @@ export class FileService {
   }
 
   async getFileStream(type: FileType, name: string) {
-    const exists = await this.checkIsExist(this.resolveFilePath(type, name))
+    const filePath = this.resolveFilePath(type, name)
+    const exists = await this.checkIsExist(filePath)
     if (!exists) {
-      throw new NotFoundException('文件不存在')
+      throw new BizException(ErrorCodeEnum.FileNotFound)
     }
-    return fs.createReadStream(this.resolveFilePath(type, name))
+    return createReadStream(filePath)
   }
 
   writeFile(
@@ -54,10 +62,10 @@ export class FileService {
     return new Promise(async (resolve, reject) => {
       const filePath = this.resolveFilePath(type, name)
       if (await this.checkIsExist(filePath)) {
-        reject(new BadRequestException('文件已存在'))
+        reject(new BizException(ErrorCodeEnum.FileExists))
         return
       }
-      await fs.mkdir(path.dirname(filePath), { recursive: true })
+      await mkdir(path.dirname(filePath), { recursive: true })
 
       const writable = createWriteStream(filePath, {
         encoding,
@@ -75,11 +83,27 @@ export class FileService {
   }
 
   async deleteFile(type: FileType, name: string) {
+    const sourcePath = this.resolveFilePath(type, name)
+    const trashPath = resolve(STATIC_FILE_TRASH_DIR, name)
+
     try {
-      const path = this.resolveFilePath(type, name)
-      await fs.copyFile(path, resolve(STATIC_FILE_TRASH_DIR, name))
-      await fs.unlink(path)
+      await mkdir(STATIC_FILE_TRASH_DIR, { recursive: true })
+
+      await copyFile(sourcePath, trashPath)
+
+      try {
+        await unlink(sourcePath)
+      } catch (error) {
+        if (error?.code !== 'ENOENT') {
+          throw error
+        }
+      }
     } catch (error) {
+      if (error?.code === 'ENOENT') {
+        // 幂等：源文件不存在就视为已删除
+        this.logger.warn(`删除文件：源文件不存在，跳过 (${type}/${name})`)
+        return
+      }
       this.logger.error('删除文件失败', error)
 
       throw new InternalServerErrorException(`删除文件失败，${error.message}`)
@@ -87,9 +111,9 @@ export class FileService {
   }
 
   async getDir(type: FileType) {
-    await fs.mkdir(this.resolveFilePath(type, ''), { recursive: true })
-    const path_1 = path.resolve(STATIC_FILE_DIR, type)
-    return await fs.readdir(path_1)
+    const dirPath = this.resolveFilePath(type, '')
+    await mkdir(dirPath, { recursive: true })
+    return readdir(dirPath)
   }
 
   async resolveFileUrl(type: FileType, name: string) {
@@ -101,10 +125,10 @@ export class FileService {
     const oldPath = this.resolveFilePath(type, name)
     const newPath = this.resolveFilePath(type, newName)
     try {
-      await fs.rename(oldPath, newPath)
+      await rename(oldPath, newPath)
     } catch (error) {
       this.logger.error('重命名文件失败', error.message)
-      throw new BadRequestException('重命名文件失败')
+      throw new BizException(ErrorCodeEnum.FileRenameFailed)
     }
   }
 }

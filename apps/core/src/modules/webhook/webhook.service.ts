@@ -1,13 +1,16 @@
 import { createHmac } from 'node:crypto'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import { BadRequestException, Injectable } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
+import { Injectable } from '@nestjs/common'
+import type { ReturnModelType } from '@typegoose/typegoose'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 import { InjectModel } from '~/transformers/model.transformer'
+import { dbTransforms } from '~/utils/db-transform.util'
 import { WebhookEventModel } from './webhook-event.model'
 import { WebhookModel } from './webhook.model'
 
@@ -135,11 +138,11 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     }
     const webhookEvent = await this.webhookEventModel.create({
       event,
-      headers,
+      headers: dbTransforms.json(headers),
       success: false,
       payload: stringifyPayload,
-      hookId: webhook.id,
-      response: null,
+      hookId: webhook.id as unknown as WebhookEventModel['hookId'],
+      response: null as unknown as string,
     })
     return this.httpService.axiosRef
       .post(webhook.payloadUrl, clonedPayload, {
@@ -176,11 +179,11 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
   async redispatch(id: string) {
     const record = await this.webhookEventModel.findById(id)
     if (!record) {
-      throw new BadRequestException('Webhook event not found')
+      throw new BizException(ErrorCodeEnum.WebhookEventNotFound)
     }
     const hook = await this.webhookModel.findById(record.hookId)
     if (!hook) {
-      throw new BadRequestException('Webhook not found')
+      throw new BizException(ErrorCodeEnum.WebhookNotFound)
     }
     const scope = hook.scope
 

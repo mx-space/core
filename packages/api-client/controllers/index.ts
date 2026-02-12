@@ -5,8 +5,16 @@ import { AIController } from './ai'
 import { CategoryController } from './category'
 import { CommentController } from './comment'
 import { LinkController } from './link'
+import type {
+  NoteMiddleListOptions,
+  NoteTimelineItem,
+  NoteTopicListItem,
+  NoteTopicListOptions,
+} from './note'
 import { NoteController } from './note'
+import { UserController } from './owner'
 import { PageController } from './page'
+import type { PostListItem, PostListOptions } from './post'
 import { PostController } from './post'
 import { ProjectController } from './project'
 import {
@@ -20,7 +28,6 @@ import { ServerlessController } from './severless'
 import { SnippetController } from './snippet'
 import { SubscribeController } from './subscribe'
 import { TopicController } from './topic'
-import { UserController } from './user'
 
 export const allControllers = [
   AckController,
@@ -63,11 +70,10 @@ export const allControllerNames = [
   'snippet',
   'serverless',
   'subscribe',
-  'user',
+  'owner',
 
   // alias,
   'friend',
-  'master',
   'shorthand',
 ] as const
 
@@ -95,3 +101,11 @@ export {
   TopicController,
   UserController,
 }
+
+export type {
+  NoteMiddleListOptions,
+  NoteTimelineItem,
+  NoteTopicListItem,
+  NoteTopicListOptions,
+}
+export type { PostListItem, PostListOptions }

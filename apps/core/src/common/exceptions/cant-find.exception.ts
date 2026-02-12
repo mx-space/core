@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common'
-import { sample } from 'lodash'
+import { sample } from 'es-toolkit/compat'
 
 export const NotFoundMessage = [
   '真不巧，内容走丢了 o(╥﹏╥)o',

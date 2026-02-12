@@ -1,26 +1,30 @@
 import cluster from 'node:cluster'
-import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
-import { ExtendedValidationPipe } from '~/common/pipes/validation.pipe'
+import { Injectable, Logger } from '@nestjs/common'
+import type { ReturnModelType } from '@typegoose/typegoose'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
+import type { AIProviderConfig } from '~/modules/ai/ai.types'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { camelcaseKeys, sleep } from '~/utils/tool.util'
-import { plainToInstance } from 'class-transformer'
-import type { ClassConstructor } from 'class-transformer'
-import { validateSync } from 'class-validator'
-import { cloneDeep, merge, mergeWith } from 'lodash'
+import { cloneDeep, merge, mergeWith } from 'es-toolkit/compat'
+import type { z, ZodError } from 'zod'
 import { generateDefaultConfig } from './configs.default'
-import { OAuthDto } from './configs.dto'
-import { decryptObject, encryptObject } from './configs.encrypt.util'
+import {
+  decryptObject,
+  encryptObject,
+  removeEmptyEncryptedFields,
+  sanitizeConfigForResponse,
+} from './configs.encrypt.util'
 import { configDtoMapping, IConfig } from './configs.interface'
 import { OptionModel } from './configs.model'
+import type { OAuthConfig } from './configs.schema'
 
 const configsKeySet = new Set(Object.keys(configDtoMapping))
 
@@ -41,9 +45,6 @@ export class ConfigsService {
     private readonly subpub: SubPubBridgeService,
 
     private readonly eventManager: EventManagerService,
-
-    @Inject(VALIDATION_PIPE_INJECTION)
-    private readonly validate: ExtendedValidationPipe,
   ) {
     this.configInit().then(() => {
       this.logger.log('Config 已经加载完毕！')
@@ -101,14 +102,11 @@ export class ConfigsService {
     this.configInitd = true
   }
 
-  public get<T extends keyof IConfig>(key: T): Promise<Readonly<IConfig[T]>> {
-    return new Promise((resolve, reject) => {
-      this.waitForConfigReady()
-        .then((config) => {
-          resolve(config[key])
-        })
-        .catch(reject)
-    })
+  public async get<T extends keyof IConfig>(
+    key: T,
+  ): Promise<Readonly<IConfig[T]>> {
+    const config = await this.waitForConfigReady()
+    return config[key]
   }
 
   // Config 在此收口
@@ -119,12 +117,8 @@ export class ConfigsService {
 
     if (configCache) {
       try {
-        const instanceConfigsValue = plainToInstance<IConfig, any>(
-          IConfig as any,
-          JSON.parse(configCache) as any,
-        ) as any as IConfig
-
-        return decryptObject(instanceConfigsValue)
+        const configValue = JSON.parse(configCache) as IConfig
+        return decryptObject(configValue)
       } catch (error) {
         await this.configInit()
         if (errorRetryCount > 0) {
@@ -138,6 +132,25 @@ export class ConfigsService {
 
       return await this.getConfig()
     }
+  }
+
+  /**
+   * Get config with encrypted fields removed (for API response)
+   */
+  public async getConfigForResponse(): Promise<Readonly<IConfig>> {
+    const config = await this.getConfig()
+    return sanitizeConfigForResponse(config)
+  }
+
+  /**
+   * Get a specific config section with encrypted fields removed (for API response)
+   */
+  public async getForResponse<T extends keyof IConfig>(
+    key: T,
+  ): Promise<Readonly<IConfig[T]>> {
+    const config = await this.waitForConfigReady()
+    const value = config[key]
+    return sanitizeConfigForResponse(value as object, key) as IConfig[T]
   }
 
   private async patch<T extends keyof IConfig>(
@@ -183,33 +196,49 @@ export class ConfigsService {
     value: Partial<IConfig[T]>,
   ) {
     value = camelcaseKeys(value) as any
+    value = removeEmptyEncryptedFields(value as object, key) as Partial<
+      IConfig[T]
+    >
+
+    if (key === 'ai') {
+      value = await this.hydrateAiProviderApiKeys(value as any)
+    }
 
     const dto = configDtoMapping[key]
     if (!dto) {
-      throw new BadRequestException('设置不存在')
+      throw new BizException(ErrorCodeEnum.ConfigNotFound)
     }
     // 如果是评论设置，并且尝试启用 AI 审核，就检查 AI 配置
     if (key === 'commentOptions' && (value as any).aiReview === true) {
       const aiConfig = await this.get('ai')
-      const { openAiEndpoint, openAiKey } = aiConfig
-      if (!openAiEndpoint || !openAiKey) {
-        throw new BadRequestException(
-          'OpenAI API Key/Endpoint 未设置，无法启用 AI 评论审核',
-        )
+      const hasEnabledProvider = aiConfig.providers?.some((p) => p.enabled)
+      if (!hasEnabledProvider) {
+        throw new BizException(ErrorCodeEnum.AIProviderNotEnabled)
       }
     }
-    const instanceValue = this.validWithDto(dto, value)
+    const instanceValue = this.validWithDto(dto, value) as Partial<IConfig[T]>
 
-    encryptObject(instanceValue)
+    if (key === 'mailOptions') {
+      const nextConfig = await this.buildNextConfigForValidation(
+        key,
+        instanceValue,
+      )
+      this.validateMailProvider(nextConfig)
+    }
+
+    encryptObject(instanceValue, key)
 
     switch (key) {
       case 'url': {
-        const newValue = await this.patch(key, instanceValue)
+        const newValue = await this.patch(key, instanceValue as any)
         this.subpub.publish(EventBusEvents.AppUrlChanged, newValue)
         return newValue
       }
       case 'mailOptions': {
-        const option = await this.patch(key as 'mailOptions', instanceValue)
+        const option = await this.patch(
+          key as 'mailOptions',
+          instanceValue as any,
+        )
         if (option.enable) {
           if (cluster.isPrimary) {
             this.eventManager.emit(EventBusEvents.EmailInit, null, {
@@ -222,11 +251,10 @@ export class ConfigsService {
 
         return option
       }
-
       case 'algoliaSearchOptions': {
         const option = await this.patch(
           key as 'algoliaSearchOptions',
-          instanceValue,
+          instanceValue as any,
         )
         if (option.enable) {
           this.eventManager.emit(EventBusEvents.PushSearch, null, {
@@ -237,10 +265,10 @@ export class ConfigsService {
       }
 
       case 'oauth': {
-        const value = instanceValue as OAuthDto
+        const value = instanceValue as unknown as OAuthConfig
         const current = await this.get('oauth')
 
-        const currentProvidersMap = current.providers.reduce(
+        const currentProvidersMap = (current.providers || []).reduce(
           (acc, item) => {
             acc[item.type] = item
             return acc
@@ -248,9 +276,10 @@ export class ConfigsService {
           {} as Record<string, any>,
         )
 
-        value.providers.forEach((p) => {
+        const currentProviders = current.providers || []
+        ;(value.providers || []).forEach((p) => {
           if (!currentProvidersMap[p.type]) {
-            current.providers.push(p)
+            currentProviders.push(p)
           } else {
             Object.assign(currentProvidersMap[p.type], p)
           }
@@ -266,7 +295,7 @@ export class ConfigsService {
           nextAuthPublic = merge(current.public, nextAuthPublic)
         }
         const option = await this.patch(key as 'oauth', {
-          providers: current.providers,
+          providers: currentProviders,
           secrets: nextAuthSecrets,
           public: nextAuthPublic,
         })
@@ -276,24 +305,120 @@ export class ConfigsService {
       }
 
       default: {
-        return this.patch(key, instanceValue)
+        return this.patch(key, instanceValue as any)
       }
     }
   }
 
-  private validWithDto<T extends object>(dto: ClassConstructor<T>, value: any) {
-    const validModel = plainToInstance(dto, value)
-    const errors = Array.isArray(validModel)
-      ? (validModel as Array<any>).reduce(
-          (acc, item) =>
-            acc.concat(validateSync(item, ExtendedValidationPipe.options)),
-          [],
-        )
-      : validateSync(validModel, ExtendedValidationPipe.options)
-    if (errors.length > 0) {
-      const error = this.validate.createExceptionFactory()(errors as any[])
-      throw error
+  private async buildNextConfigForValidation<T extends keyof IConfig>(
+    key: T,
+    data: Partial<IConfig[T]>,
+  ): Promise<IConfig> {
+    const current = await this.getConfig()
+    const mergedSection = mergeWith(
+      cloneDeep(current[key]),
+      data,
+      (old, newer) => {
+        if (Array.isArray(old)) {
+          return newer
+        }
+        if (typeof old === 'object' && typeof newer === 'object') {
+          return { ...old, ...newer }
+        }
+      },
+    )
+    return Object.assign({}, current, { [key]: mergedSection })
+  }
+
+  private validateMailProvider(config: IConfig) {
+    const { mailOptions } = config
+    const errors: string[] = []
+
+    if (mailOptions.provider === 'resend') {
+      // Resend 验证: from 和 apiKey 必填
+      if (!mailOptions.from) {
+        errors.push('mailOptions.from: 发件邮箱地址不能为空')
+      }
+      if (!mailOptions.resend?.apiKey) {
+        errors.push('mailOptions.resend.apiKey: Resend API Key 不能为空')
+      }
+    } else if (
+      mailOptions.provider === 'smtp' && // SMTP 验证: 至少需要 user 或 from
+      !mailOptions.smtp?.user &&
+      !mailOptions.from
+    ) {
+      errors.push(
+        'mailOptions.smtp.user 或 mailOptions.from: 至少需要填写一个发件人',
+      )
     }
-    return validModel
+
+    if (errors.length > 0) {
+      throw new BizException(
+        ErrorCodeEnum.ConfigValidationFailed,
+        errors.join('; '),
+      )
+    }
+  }
+
+  private validWithDto(schema: z.ZodTypeAny, value: unknown): any {
+    const result = schema.safeParse(value)
+    if (!result.success) {
+      const zodError = result.error as ZodError
+      const errorMessages = zodError.issues.map((err) => {
+        const path = err.path.join('.')
+        return path ? `${path}: ${err.message}` : err.message
+      })
+      throw new BizException(
+        ErrorCodeEnum.ConfigValidationFailed,
+        errorMessages.join('; '),
+      )
+    }
+    return result.data
+  }
+
+  public async getAiProviderById(
+    providerId?: string,
+  ): Promise<AIProviderConfig | null> {
+    if (!providerId) {
+      return null
+    }
+
+    const row = await this.optionModel.findOne({ name: 'ai' }).lean()
+    const providers = row?.value?.providers as AIProviderConfig[] | undefined
+    const storedProvider = providers?.find((p) => p.id === providerId)
+
+    if (storedProvider) {
+      return storedProvider
+    }
+
+    const cached = await this.get('ai')
+    const cachedProvider = cached.providers?.find((p) => p.id === providerId)
+
+    return cachedProvider || null
+  }
+
+  private async hydrateAiProviderApiKeys(value: any) {
+    if (!value || !Array.isArray(value.providers)) {
+      return value
+    }
+
+    const current = await this.get('ai')
+    if (!current?.providers?.length) {
+      return value
+    }
+
+    const providerMap = new Map(current.providers.map((p) => [p.id, p]))
+    const providers = value.providers.map((provider: any) => {
+      if (provider?.apiKey) {
+        return provider
+      }
+      const existing = providerMap.get(provider?.id)
+      if (existing?.apiKey) {
+        return { ...provider, apiKey: existing.apiKey }
+      }
+      return provider
+    })
+
+    return { ...value, providers }
   }
 }

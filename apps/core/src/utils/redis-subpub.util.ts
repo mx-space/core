@@ -5,6 +5,7 @@ import type { Redis, RedisOptions } from 'ioredis'
 import { isTest } from '../global/env.global'
 
 class RedisSubPub {
+  private readonly logger = new Logger(RedisSubPub.name)
   public pubClient: Redis
   public subClient: Redis
   constructor(private channelPrefix: string = 'mx-channel#') {
@@ -16,16 +17,21 @@ class RedisSubPub {
   }
 
   public init() {
-    const redisOptions: RedisOptions = {
+    const baseOptions: RedisOptions = {
       host: REDIS.host,
       port: REDIS.port,
+      username: (REDIS as any).username,
+      db: (REDIS as any).db,
+      ...(REDIS.tls ? { tls: {} } : {}),
     }
 
     if (REDIS.password) {
-      redisOptions.password = REDIS.password
+      baseOptions.password = REDIS.password
     }
 
-    const pubClient = new IORedis(redisOptions)
+    const pubClient = REDIS.url
+      ? new IORedis(REDIS.url, baseOptions)
+      : new IORedis(baseOptions)
     const subClient = pubClient.duplicate()
     this.pubClient = pubClient
     this.subClient = subClient
@@ -34,7 +40,7 @@ class RedisSubPub {
     const channel = this.channelPrefix + event
     const _data = JSON.stringify(data)
     if (event !== 'log') {
-      Logger.debug(`发布事件：${channel} <- ${_data}`, RedisSubPub.name)
+      this.logger.debug(`发布事件：${channel} <- ${_data}`)
     }
     await this.pubClient.publish(channel, _data)
   }
@@ -48,7 +54,7 @@ class RedisSubPub {
     const cb = (channel, message) => {
       if (channel === myChannel) {
         if (event !== 'log') {
-          Logger.debug(`接收事件：${channel} -> ${message}`, RedisSubPub.name)
+          this.logger.debug(`接收事件：${channel} -> ${message}`)
         }
         callback(JSON.parse(message))
       }

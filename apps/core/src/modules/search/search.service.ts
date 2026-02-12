@@ -1,31 +1,32 @@
-import type { SearchResponse } from '@algolia/client-search'
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  Logger,
-} from '@nestjs/common'
+import type { SearchClient, SearchResponse } from '@algolia/client-search'
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { CronExpression } from '@nestjs/schedule'
 import { CronDescription } from '~/common/decorators/cron-description.decorator'
 import { CronOnce } from '~/common/decorators/cron-once.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents } from '~/constants/business-event.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import type { SearchDto } from '~/modules/search/search.dto'
+import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
+import type { SearchDto } from '~/modules/search/search.schema'
 import { DatabaseService } from '~/processors/database/database.service'
 import type { Pagination } from '~/shared/interface/paginator.interface'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
-import algoliasearch from 'algoliasearch'
-import type { SearchIndex } from 'algoliasearch'
-import { omit } from 'lodash'
+import { algoliasearch } from 'algoliasearch'
+import { omit } from 'es-toolkit/compat'
 import removeMdCodeblock from 'remove-md-codeblock'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
 import { PostModel } from '../post/post.model'
-import { PostService } from '../post/post.service'
+import type { PostService } from '../post/post.service'
+import {
+  DEFAULT_ALGOLIA_MAX_SIZE_IN_BYTES,
+  SEARCH_TEXT_WEIGHT,
+  SEARCH_TITLE_WEIGHT,
+} from './search.constants'
 
 @Injectable()
 export class SearchService {
@@ -34,7 +35,7 @@ export class SearchService {
     @Inject(forwardRef(() => NoteService))
     private readonly noteService: NoteService,
 
-    @Inject(forwardRef(() => PostService))
+    @Inject(POST_SERVICE_TOKEN)
     private readonly postService: PostService,
 
     @Inject(forwardRef(() => PageService))
@@ -47,71 +48,67 @@ export class SearchService {
   async searchNote(searchOption: SearchDto, showHidden: boolean) {
     const { keyword, page, size } = searchOption
     const select = '_id title created modified nid'
+    const keywordArr = this.buildSearchKeywordRegexes(keyword)
 
-    const keywordArr = keyword
-      .split(/\s+/)
-      .map((item) => new RegExp(String(item), 'gi'))
-
-    return transformDataToPaginate(
-      await this.noteService.model.paginate(
-        {
-          $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }],
-          $and: [
-            { password: { $not: null } },
-            { isPublished: { $in: showHidden ? [false, true] : [true] } },
-            {
-              $or: [
-                { publicAt: { $not: null } },
-                { publicAt: { $lte: new Date() } },
-              ],
-            },
-          ],
-        },
-        {
-          limit: size,
-          page,
-          select,
-        },
-      ),
+    const result = await this.noteService.model.paginate(
+      {
+        $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }],
+        $and: [
+          { password: { $ne: null } },
+          { isPublished: { $in: showHidden ? [false, true] : [true] } },
+          {
+            $or: [
+              { publicAt: { $ne: null } },
+              { publicAt: { $lte: new Date() } },
+            ],
+          },
+        ],
+      },
+      {
+        limit: size,
+        page,
+        select: `${select} text`,
+      },
     )
+    result.docs = this.applyWeightedSort(result.docs, keywordArr)
+    return transformDataToPaginate(result)
   }
 
   async searchPost(searchOption: SearchDto) {
     const { keyword, page, size } = searchOption
     const select = '_id title created modified categoryId slug'
-    const keywordArr = keyword
-      .split(/\s+/)
-      .map((item) => new RegExp(String(item), 'gi'))
-    return await this.postService.model.paginate(
+    const keywordArr = this.buildSearchKeywordRegexes(keyword)
+    const result = await this.postService.model.paginate(
       {
         $or: [{ title: { $in: keywordArr } }, { text: { $in: keywordArr } }],
       },
       {
         limit: size,
         page,
-        select,
+        select: `${select} text`,
       },
     )
+    result.docs = this.applyWeightedSort(result.docs, keywordArr)
+    return result
   }
 
-  public async getAlgoliaSearchIndex() {
+  public async getAlgoliaSearchClient() {
     const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
     if (!algoliaSearchOptions.enable) {
-      throw new BadRequestException('algolia not enable.')
+      throw new BizException(ErrorCodeEnum.AlgoliaNotEnabled)
     }
     if (
       !algoliaSearchOptions.appId ||
       !algoliaSearchOptions.apiKey ||
       !algoliaSearchOptions.indexName
     ) {
-      throw new BadRequestException('algolia not config.')
+      throw new BizException(ErrorCodeEnum.AlgoliaNotConfigured)
     }
     const client = algoliasearch(
       algoliaSearchOptions.appId,
       algoliaSearchOptions.apiKey,
     )
-    const index = client.initIndex(algoliaSearchOptions.indexName)
-    return index
+    return { client, indexName: algoliaSearchOptions.indexName }
   }
 
   async searchAlgolia(searchOption: SearchDto): Promise<
@@ -131,46 +128,46 @@ export class SearchService {
       })
   > {
     const { keyword, size, page } = searchOption
-    const index = await this.getAlgoliaSearchIndex()
+    const { client, indexName } = await this.getAlgoliaSearchClient()
 
-    const search = await index.search<{
+    const search = await client.searchSingleIndex<{
       id: string
       text: string
       title: string
       type: 'post' | 'note' | 'page'
-    }>(keyword, {
-      // start with 0
-      page: page - 1,
-      hitsPerPage: size,
-      attributesToRetrieve: ['*'],
-      snippetEllipsisText: '...',
-      responseFields: ['*'],
-      facets: ['*'],
+    }>({
+      indexName,
+      searchParams: {
+        query: keyword,
+        page: page - 1,
+        hitsPerPage: size,
+        attributesToRetrieve: ['*'],
+        snippetEllipsisText: '...',
+        facets: ['*'],
+      },
     })
     if (searchOption.rawAlgolia) {
       return search
     }
     const data: any[] = []
-    const tasks = search.hits.map((hit) => {
+    const tasks = search.hits.map(async (hit) => {
       const { type, objectID } = hit
 
       const model = this.databaseService.getModelByRefType(type as 'post')
       if (!model) {
-        return Promise.resolve()
+        return
       }
-      return model
+      const doc = await model
         .findById(objectID)
         .select('_id title created modified categoryId slug nid')
         .lean({
           getters: true,
           autopopulate: true,
         })
-        .then((doc) => {
-          if (doc) {
-            Reflect.set(doc, 'type', type)
-            data.push(doc)
-          }
-        })
+      if (doc) {
+        Reflect.set(doc, 'type', type)
+        data.push(doc)
+      }
     })
     await Promise.all(tasks)
     return {
@@ -178,11 +175,11 @@ export class SearchService {
       raw: search,
       pagination: {
         currentPage: page,
-        total: search.nbHits,
-        hasNextPage: search.nbPages > search.page,
-        hasPrevPage: search.page > 1,
-        size: search.hitsPerPage,
-        totalPage: search.nbPages,
+        total: search.nbHits ?? 0,
+        hasNextPage: (search.nbPages ?? 0) > (search.page ?? 0),
+        hasPrevPage: (search.page ?? 0) > 1,
+        size: search.hitsPerPage ?? size,
+        totalPage: search.nbPages ?? 0,
       },
     }
   }
@@ -200,24 +197,28 @@ export class SearchService {
     if (!configs.algoliaSearchOptions.enable || isDev) {
       return
     }
-    const index = await this.getAlgoliaSearchIndex()
+    const { client, indexName } = await this.getAlgoliaSearchClient()
 
     this.logger.log('--> 开始推送到 Algolia')
 
     const documents = await this.buildAlgoliaIndexData()
     try {
       await Promise.all([
-        index.replaceAllObjects(documents, {
-          autoGenerateObjectIDIfNotExist: false,
+        client.replaceAllObjects({
+          indexName,
+          objects: documents,
         }),
-        index.setSettings({
-          attributesToHighlight: ['text', 'title'],
+        client.setSettings({
+          indexName,
+          indexSettings: {
+            attributesToHighlight: ['text', 'title'],
+          },
         }),
       ])
 
       this.logger.log('--> 推送到 algoliasearch 成功')
     } catch (error) {
-      Logger.error('algolia 推送错误', 'AlgoliaSearch')
+      this.logger.error('algolia 推送错误')
       throw error
     }
   }
@@ -298,29 +299,28 @@ export class SearchService {
 
     if (!data) return
 
-    this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
-      const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
+    this.executeAlgoliaSearchOperationIfEnabled(
+      async ({ client, indexName }) => {
+        const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
 
-      this.logger.log(
-        `detect post created or update, save to algolia, data id:${data.id}`,
-      )
-      await index.saveObject(
-        adjustObjectSizeEfficiently(
-          {
-            ...omit(data, '_id'),
-            objectID: data.id,
-            id: data.id,
-
-            type: 'post',
-          },
-          algoliaSearchOptions.maxTruncateSize,
-        ),
-        {
-          autoGenerateObjectIDIfNotExist: false,
-        },
-      )
-      this.logger.log(`save to algolia success, id: ${data.id}`)
-    })
+        this.logger.log(
+          `detect post created or update, save to algolia, data id:${data.id}`,
+        )
+        await client.saveObject({
+          indexName,
+          body: adjustObjectSizeEfficiently(
+            {
+              ...omit(data, '_id'),
+              objectID: data.id,
+              id: data.id,
+              type: 'post',
+            },
+            algoliaSearchOptions.maxTruncateSize,
+          ),
+        })
+        this.logger.log(`save to algolia success, id: ${data.id}`)
+      },
+    )
   }
 
   @OnEvent(BusinessEvents.NOTE_CREATE)
@@ -330,58 +330,112 @@ export class SearchService {
 
     if (!data) return
 
-    this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
-      this.logger.log(
-        `detect post created or update, save to algolia, data id:${data.id}`,
-      )
-      const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
+    this.executeAlgoliaSearchOperationIfEnabled(
+      async ({ client, indexName }) => {
+        this.logger.log(
+          `detect post created or update, save to algolia, data id:${data.id}`,
+        )
+        const { algoliaSearchOptions } = await this.configs.waitForConfigReady()
 
-      await index.saveObject(
-        adjustObjectSizeEfficiently(
-          {
-            ...omit(data, '_id'),
-            objectID: data.id,
-            id: data.id,
-            type: 'note',
-          },
-          algoliaSearchOptions.maxTruncateSize,
-        ),
-        {
-          autoGenerateObjectIDIfNotExist: false,
-        },
-      )
-      this.logger.log(`save to algolia success, id: ${data.id}`)
-    })
+        await client.saveObject({
+          indexName,
+          body: adjustObjectSizeEfficiently(
+            {
+              ...omit(data, '_id'),
+              objectID: data.id,
+              id: data.id,
+              type: 'note',
+            },
+            algoliaSearchOptions.maxTruncateSize,
+          ),
+        })
+        this.logger.log(`save to algolia success, id: ${data.id}`)
+      },
+    )
   }
 
   @OnEvent(BusinessEvents.POST_DELETE)
   @OnEvent(BusinessEvents.NOTE_DELETE)
   async onPostDelete({ data: id }: { data: string }) {
-    await this.executeAlgoliaSearchOperationIfEnabled(async (index) => {
-      this.logger.log(`detect data delete, save to algolia, data id: ${id}`)
+    await this.executeAlgoliaSearchOperationIfEnabled(
+      async ({ client, indexName }) => {
+        this.logger.log(`detect data delete, save to algolia, data id: ${id}`)
 
-      await index.deleteObject(id)
-    })
+        await client.deleteObject({ indexName, objectID: id })
+      },
+    )
   }
 
   private async executeAlgoliaSearchOperationIfEnabled(
-    caller: (index: SearchIndex) => Promise<any>,
+    caller: (ctx: { client: SearchClient; indexName: string }) => Promise<any>,
   ) {
     const configs = await this.configs.waitForConfigReady()
     if (!configs.algoliaSearchOptions.enable || isDev) {
       return
     }
-    const index = await this.getAlgoliaSearchIndex()
-    return caller(index)
+    const { client, indexName } = await this.getAlgoliaSearchClient()
+    return caller({ client, indexName })
+  }
+
+  private buildSearchKeywordRegexes(keyword: string) {
+    return keyword
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((item) => new RegExp(String(item), 'gi'))
+  }
+
+  private applyWeightedSort<T extends Record<string, any>>(
+    docs: T[],
+    keywordRegexes: RegExp[],
+  ) {
+    return docs
+      .map((doc) =>
+        typeof (doc as any).toObject === 'function'
+          ? (doc as any).toObject()
+          : doc,
+      )
+      .map((doc) => ({
+        ...doc,
+        __search_weight: this.calculateSearchWeight(doc, keywordRegexes),
+      }))
+      .sort((a, b) => {
+        if (a.__search_weight !== b.__search_weight) {
+          return b.__search_weight - a.__search_weight
+        }
+        const dateA = new Date(a.modified ?? a.created ?? 0).valueOf()
+        const dateB = new Date(b.modified ?? b.created ?? 0).valueOf()
+        return dateB - dateA
+      })
+      .map(({ __search_weight, text, ...rest }) => rest)
+  }
+
+  private calculateSearchWeight(
+    doc: { title?: string; text?: string },
+    keywordRegexes: RegExp[],
+  ) {
+    const title = doc.title ?? ''
+    const text = doc.text ?? ''
+    let score = 0
+    for (const keywordRegex of keywordRegexes) {
+      const titleMatches = this.countKeywordMatches(title, keywordRegex)
+      const textMatches = this.countKeywordMatches(text, keywordRegex)
+      score +=
+        titleMatches * SEARCH_TITLE_WEIGHT + textMatches * SEARCH_TEXT_WEIGHT
+    }
+    return score
+  }
+
+  private countKeywordMatches(text: string, keywordRegex: RegExp) {
+    if (!text) return 0
+    const safeRegex = new RegExp(keywordRegex.source, keywordRegex.flags)
+    return text.match(safeRegex)?.length ?? 0
   }
 }
 
-const MAX_SIZE_IN_BYTES = 10_000
 function adjustObjectSizeEfficiently<T extends { text: string }>(
   originalObject: T,
-  maxSizeInBytes: number = MAX_SIZE_IN_BYTES,
-): any {
-  // 克隆原始对象以避免修改引用
+  maxSizeInBytes: number = DEFAULT_ALGOLIA_MAX_SIZE_IN_BYTES,
+): T {
   const objectToAdjust = JSON.parse(JSON.stringify(originalObject))
   const text = objectToAdjust.text
 
@@ -397,18 +451,14 @@ function adjustObjectSizeEfficiently<T extends { text: string }>(
     ).length
 
     if (currentSize > maxSizeInBytes) {
-      // 如果当前大小超过限制，减少 text 长度
       high = mid - 1
     } else if (currentSize < maxSizeInBytes) {
-      // 如果当前大小未达限制，尝试增加text长度
       low = mid + 1
     } else {
-      // 精确匹配，退出循环
       break
     }
   }
 
-  // 微调，确保不超过最大大小
   while (
     new TextEncoder().encode(JSON.stringify(objectToAdjust)).length >
     maxSizeInBytes
@@ -416,6 +466,5 @@ function adjustObjectSizeEfficiently<T extends { text: string }>(
     objectToAdjust.text = objectToAdjust.text.slice(0, -1)
   }
 
-  // 返回调整后的对象
   return objectToAdjust as T
 }

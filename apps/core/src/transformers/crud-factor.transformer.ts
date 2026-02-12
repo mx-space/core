@@ -10,7 +10,6 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
-import { PartialType } from '@nestjs/mapped-types'
 import type { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -36,9 +35,11 @@ export function BaseCrudFactory<
 
   const eventNamePrefix = `${prefix.toUpperCase()}_`
 
-  class PDto extends PartialType(model as any) {}
+  // Simple DTO classes without class-validator metadata
+  // Validation is handled by Zod schemas when needed
+  class PDto {}
 
-  class Dto extends model {}
+  class Dto {}
 
   const Upper = classUpper || class {}
 
@@ -83,18 +84,19 @@ export function BaseCrudFactory<
     @HTTPDecorators.Idempotence()
     @Auth()
     async create(@Body() body: Dto) {
-      return await this._model
-        .create({ ...body, created: new Date() })
-        .then((res) => {
-          this.eventManager.broadcast(
-            `${eventNamePrefix}CREATE` as any,
-            res.toObject(),
-            {
-              scope: EventScope.TO_SYSTEM_VISITOR,
-            },
-          )
-          return res
-        })
+      // Mongoose 9 create() has stricter types for generic models
+      const res = await (this._model.create as Function)({
+        ...body,
+        created: new Date(),
+      })
+      this.eventManager.broadcast(
+        `${eventNamePrefix}CREATE` as any,
+        res.toObject(),
+        {
+          scope: EventScope.TO_SYSTEM_VISITOR,
+        },
+      )
+      return res
     }
 
     @Put('/:id')
@@ -122,8 +124,7 @@ export function BaseCrudFactory<
     @Auth()
     @HttpCode(204)
     async patch(@Body() body: PDto, @Param() param: MongoIdDto) {
-      // @ts-expect-error
-      await this.update(body, param)
+      await this.update(body as any, param)
       return
     }
 

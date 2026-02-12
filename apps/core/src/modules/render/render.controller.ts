@@ -2,7 +2,6 @@ import { CacheTTL } from '@nestjs/cache-manager'
 import {
   Body,
   Controller,
-  ForbiddenException,
   Get,
   Header,
   Param,
@@ -13,19 +12,21 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils/time.util'
 import dayjs from 'dayjs'
-import { render } from 'ejs'
-import { isNil } from 'lodash'
+import ejs from 'ejs'
+import { isNil } from 'es-toolkit/compat'
 import xss from 'xss'
 import { ConfigsService } from '../configs/configs.service'
-import { MarkdownPreviewDto } from '../markdown/markdown.dto'
+import { MarkdownPreviewDto } from '../markdown/markdown.schema'
 import { MarkdownService } from '../markdown/markdown.service'
 import type { NoteModel } from '../note/note.model'
+import { OwnerService } from '../owner/owner.service'
 import type { PageModel } from '../page/page.model'
 import type { PostModel } from '../post/post.model'
-import { UserService } from '../user/user.service'
 
 @Controller('/render')
 @HTTPDecorators.Bypass
@@ -33,7 +34,7 @@ export class RenderEjsController {
   constructor(
     private readonly service: MarkdownService,
     private readonly configs: ConfigsService,
-    private readonly userService: UserService,
+    private readonly ownerService: OwnerService,
   ) {}
 
   @Get('/markdown/:id')
@@ -55,7 +56,7 @@ export class RenderEjsController {
     ] = await Promise.all([
       this.service.renderArticle(id),
       this.configs.waitForConfigReady(),
-      this.userService.getMaster(),
+      this.ownerService.getOwner(),
     ])
 
     const isPrivateOrEncrypt =
@@ -63,18 +64,18 @@ export class RenderEjsController {
       ('password' in document && !isNil(document.password))
 
     if (!isAuthenticated && isPrivateOrEncrypt) {
-      throw new ForbiddenException('该文章已隐藏或加密')
+      throw new BizException(ErrorCodeEnum.PostHiddenOrEncrypted)
     }
 
     const relativePath = (() => {
-      switch (type.toLowerCase()) {
-        case 'post':
+      switch (type) {
+        case 'posts':
           return `/posts/${((document as PostModel).category as any).slug}/${
             (document as PostModel).slug
           }`
-        case 'note':
+        case 'notes':
           return `/notes/${(document as NoteModel).nid}`
-        case 'page':
+        case 'pages':
           return `/${(document as PageModel).slug}`
       }
     })()
@@ -87,7 +88,7 @@ export class RenderEjsController {
       theme,
     )
 
-    const html = render(await this.service.getMarkdownEjsRenderTemplate(), {
+    const html = ejs.render(await this.service.getMarkdownEjsRenderTemplate(), {
       ...structure,
       info: isPrivateOrEncrypt ? '正在查看的文章还未公开' : undefined,
 
@@ -109,9 +110,6 @@ export class RenderEjsController {
     return html.trim()
   }
 
-  /**
-   * 后台预览 Markdown 可用接口，传入 `title` 和 `md`
-   */
   @Post('/markdown')
   @HttpCache.disable
   @Auth()
@@ -127,10 +125,12 @@ export class RenderEjsController {
       title,
       theme,
     )
-    return render(await this.service.getMarkdownEjsRenderTemplate(), {
-      ...structure,
+    return ejs
+      .render(await this.service.getMarkdownEjsRenderTemplate(), {
+        ...structure,
 
-      title: xss(title),
-    }).trim()
+        title: xss(title),
+      })
+      .trim()
   }
 }

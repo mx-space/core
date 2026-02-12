@@ -1,15 +1,7 @@
 import { createLogger, Logger } from '@innei/pretty-logger-nestjs'
-import { LOG_DIR } from '~/constants/path.constant'
 import { isTest } from './env.global'
 
-const logger = createLogger({
-  writeToFile: !isTest
-    ? {
-        loggerDir: LOG_DIR,
-        errWriteToStdout: true,
-      }
-    : undefined,
-})
+const logger = createLogger()
 Logger.setLoggerInstance(logger)
 if (!isTest) {
   try {
@@ -17,10 +9,6 @@ if (!isTest) {
   } catch {
     logger.warn('wrap console failed')
   }
-  logger.onData((data) => {
-    const { redisSubPub } = require('../utils/redis-subpub.util')
-    redisSubPub.publish('log', data)
-  })
 }
 
 // HACK: forhidden pm2 to override this method
@@ -35,4 +23,7 @@ Object.defineProperty(process.stderr, 'write', {
   configurable: false,
 })
 
-export { logger as consola, logger }
+// Global Logger instance for static-like usage
+const globalLogger = new Logger('System')
+
+export { logger as consola, globalLogger, logger }

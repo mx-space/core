@@ -24,13 +24,14 @@ import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AiModule } from './modules/ai/ai.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
-import { AuthnModule } from './modules/authn/auth.module'
 import { BackupModule } from './modules/backup/backup.module'
 import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
 import { ConfigsModule } from './modules/configs/configs.module'
+import { CronTaskModule } from './modules/cron-task/cron-task.module'
 import { DebugModule } from './modules/debug/debug.module'
 import { DependencyModule } from './modules/dependency/dependency.module'
+import { DraftModule } from './modules/draft/draft.module'
 import { FeedModule } from './modules/feed/feed.module'
 import { FileModule } from './modules/file/file.module'
 import { HealthModule } from './modules/health/health.module'
@@ -38,9 +39,10 @@ import { HelperModule as BizHelperModule } from './modules/helper/helper.module'
 import { InitModule } from './modules/init/init.module'
 import { LinkModule } from './modules/link/link.module'
 import { MarkdownModule } from './modules/markdown/markdown.module'
-import { McpModule } from './modules/mcp/mcp.module'
+import { MetaPresetModule } from './modules/meta-preset/meta-preset.module'
 import { NoteModule } from './modules/note/note.module'
 import { OptionModule } from './modules/option/option.module'
+import { OwnerModule } from './modules/owner/owner.module'
 import { PageModule } from './modules/page/page.module'
 import { PageProxyModule } from './modules/pageproxy/pageproxy.module'
 import { PostModule } from './modules/post/post.module'
@@ -58,18 +60,19 @@ import { SnippetModule } from './modules/snippet/snippet.module'
 import { SubscribeModule } from './modules/subscribe/subscribe.module'
 import { TopicModule } from './modules/topic/topic.module'
 import { UpdateModule } from './modules/update/update.module'
-import { UserModule } from './modules/user/user.module'
 import { WebhookModule } from './modules/webhook/webhook.module'
 import { DatabaseModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
 import { RedisModule } from './processors/redis/redis.module'
+import { TaskQueueModule } from './processors/task-queue/task-queue.module'
 
 @Module({
   imports: [
     LoggerModule,
     DatabaseModule,
     RedisModule,
+    TaskQueueModule,
 
     // biz module
     AiModule,
@@ -78,20 +81,21 @@ import { RedisModule } from './processors/redis/redis.module'
     AggregateModule,
     AnalyzeModule,
     AuthModule.forRoot(),
-    AuthnModule,
     BackupModule,
     BizHelperModule,
     CategoryModule,
     CommentModule,
     ConfigsModule,
+    CronTaskModule,
 
     DependencyModule,
+    DraftModule,
     FeedModule,
     FileModule,
     HealthModule,
     LinkModule,
     MarkdownModule,
-    McpModule,
+    MetaPresetModule,
     NoteModule,
     OptionModule,
     PageModule,
@@ -109,7 +113,7 @@ import { RedisModule } from './processors/redis/redis.module'
     SubscribeModule,
     TopicModule,
     UpdateModule,
-    UserModule,
+    OwnerModule,
     WebhookModule,
 
     PageProxyModule,

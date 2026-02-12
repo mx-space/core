@@ -6,6 +6,10 @@ import type { SayModel } from './say'
 import type { SeoOptionModel } from './setting'
 import type { UserModel } from './user'
 
+export interface AggregateAIConfig {
+  enableSummary: boolean
+}
+
 export interface AggregateRoot {
   user: UserModel
   seo: SeoOptionModel
@@ -16,6 +20,10 @@ export interface AggregateRoot {
    * @available 4.2.2
    */
   latestNoteId: { id: string; nid: number }
+  /**
+   * @available 9.2.0
+   */
+  ai?: AggregateAIConfig
 }
 
 export interface AggregateRootWithTheme<Theme = unknown> extends AggregateRoot {
@@ -28,14 +36,15 @@ export interface Url {
   webUrl: string
 }
 
-export interface AggregateTopNote
-  extends Pick<NoteModel, 'id' | 'title' | 'created' | 'nid' | 'images'> {}
+export interface AggregateTopNote extends Pick<
+  NoteModel,
+  'id' | 'title' | 'created' | 'nid' | 'images'
+> {}
 
-export interface AggregateTopPost
-  extends Pick<
-    PostModel,
-    'id' | 'slug' | 'created' | 'title' | 'category' | 'images'
-  > {}
+export interface AggregateTopPost extends Pick<
+  PostModel,
+  'id' | 'slug' | 'created' | 'title' | 'category' | 'images'
+> {}
 
 export interface AggregateTop {
   notes: AggregateTopNote[]

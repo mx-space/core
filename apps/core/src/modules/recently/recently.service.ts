@@ -1,14 +1,10 @@
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  UnprocessableEntityException,
-} from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
@@ -20,8 +16,8 @@ import pluralize from 'pluralize'
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
-import { RecentlyAttitudeEnum } from './recently.dto'
 import { RecentlyModel } from './recently.model'
+import { RecentlyAttitudeEnum } from './recently.schema'
 
 const { ObjectId } = mongo
 
@@ -42,8 +38,8 @@ export class RecentlyService {
     return this.recentlyModel
   }
 
-  async getAll() {
-    const result = (await this.model.aggregate([
+  private get commentCountPipeline() {
+    return [
       {
         $lookup: {
           from: 'comments',
@@ -52,7 +48,6 @@ export class RecentlyService {
           localField: '_id',
         },
       },
-
       {
         $addFields: {
           comments: {
@@ -70,6 +65,12 @@ export class RecentlyService {
           created: -1,
         },
       },
+    ] as const
+  }
+
+  async getAll() {
+    const result = (await this.model.aggregate([
+      ...this.commentCountPipeline,
     ])) as RecentlyModel[]
 
     await this.populateRef(result)
@@ -79,32 +80,7 @@ export class RecentlyService {
 
   async getOne(id: string) {
     const result = (await this.model.aggregate([
-      {
-        $lookup: {
-          from: 'comments',
-          as: 'comment',
-          foreignField: 'ref',
-          localField: '_id',
-        },
-      },
-
-      {
-        $addFields: {
-          comments: {
-            $size: '$comment',
-          },
-        },
-      },
-      {
-        $project: {
-          comment: 0,
-        },
-      },
-      {
-        $sort: {
-          created: -1,
-        },
-      },
+      ...this.commentCountPipeline,
       {
         $match: {
           _id: new ObjectId(id),
@@ -132,7 +108,7 @@ export class RecentlyService {
       refMap[doc.refType]?.push(doc.ref)
     }
 
-    const foreignIdMap = {} as any
+    const foreignIdMap: Record<string, any> = {}
 
     for (const refType in refMap) {
       const refIds = refMap[refType as CollectionRefTypes]
@@ -184,15 +160,11 @@ export class RecentlyService {
 
     const result = await this.recentlyModel.aggregate([
       {
-        $match: after
-          ? {
-              _id: {
-                $gt: new ObjectId(after),
-              },
-            }
-          : before
-            ? { _id: { $lt: new ObjectId(before) } }
-            : {},
+        $match: (() => {
+          if (after) return { _id: { $gt: new ObjectId(after) } }
+          if (before) return { _id: { $lt: new ObjectId(before) } }
+          return {}
+        })(),
       },
 
       {
@@ -275,7 +247,7 @@ export class RecentlyService {
     if (model.refId) {
       const existModel = await this.databaseService.findGlobalById(model.refId)
       if (!existModel || !existModel.type) {
-        throw new BadRequestException('ref model not found')
+        throw new BizException(ErrorCodeEnum.RefModelNotFound)
       }
 
       model.refType = existModel.type
@@ -283,7 +255,7 @@ export class RecentlyService {
 
     const res = await this.model.create({
       content: model.content,
-      ref: model.refId,
+      ref: model.refId as unknown as RecentlyModel['ref'],
       refType: model.refType,
     })
 
@@ -331,6 +303,40 @@ export class RecentlyService {
     return isDeleted
   }
 
+  async update(id: string, model: Partial<RecentlyModel>) {
+    const res = await this.model.findByIdAndUpdate(
+      id,
+      { content: model.content, modified: new Date() },
+      { new: true },
+    )
+
+    if (!res) {
+      return null
+    }
+
+    const withRef = await this.model
+      .findById(res._id)
+      .populate([
+        {
+          path: 'ref',
+          select: '-text',
+        },
+      ])
+      .lean()
+
+    scheduleManager.schedule(async () => {
+      await this.eventManager.broadcast(
+        BusinessEvents.RECENTLY_UPDATE,
+        withRef,
+        {
+          scope: EventScope.TO_SYSTEM_VISITOR,
+        },
+      )
+    })
+
+    return withRef
+  }
+
   async updateAttitude({
     id,
     attitude,
@@ -341,7 +347,7 @@ export class RecentlyService {
     ip: string
   }) {
     if (!ip) {
-      throw new UnprocessableEntityException('can not got your ip')
+      throw new BizException(ErrorCodeEnum.CannotGetIp)
     }
     const model = await this.model.findById(id)
 

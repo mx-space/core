@@ -10,11 +10,23 @@ import IORedis from 'ioredis'
 export class RedisService {
   private redisClient: IORedis
   constructor() {
-    this.redisClient = new IORedis({
-      host: REDIS.host,
-      port: REDIS.port,
-      password: REDIS.password,
-    })
+    if (REDIS.url) {
+      this.redisClient = new IORedis(REDIS.url, {
+        username: (REDIS as any).username,
+        password: REDIS.password ?? undefined,
+        db: (REDIS as any).db,
+        ...(REDIS.tls ? { tls: {} } : {}),
+      })
+    } else {
+      this.redisClient = new IORedis({
+        host: REDIS.host,
+        port: REDIS.port,
+        username: (REDIS as any).username,
+        password: REDIS.password ?? undefined,
+        db: (REDIS as any).db,
+        ...(REDIS.tls ? { tls: {} } : {}),
+      })
+    }
   }
 
   private _emitter: Emitter

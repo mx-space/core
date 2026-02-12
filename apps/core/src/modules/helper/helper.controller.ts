@@ -1,31 +1,23 @@
-import {
-  BadRequestException,
-  Get,
-  Param,
-  Post,
-  Query,
-  Res,
-} from '@nestjs/common'
+import { Get, Param, Post, Query, Res } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { AsyncQueue } from '~/utils/queue.util'
-import { FastifyReply } from 'fastify'
+import type { FastifyReply } from 'fastify'
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
 import { PostService } from '../post/post.service'
-import { HelperService } from './helper.service'
 
 @ApiController('helper')
 export class HelperController {
   constructor(
-    private readonly helperService: HelperService,
-
     private readonly urlBulderService: UrlBuilderService,
     private readonly databaseService: DatabaseService,
 
@@ -42,7 +34,8 @@ export class HelperController {
     const doc = await this.databaseService.findGlobalById(params.id)
     if (!doc || doc.type === CollectionRefTypes.Recently) {
       if (redirect) {
-        throw new BadRequestException(
+        throw new BizException(
+          ErrorCodeEnum.DocumentNotFound,
           'not found or this type can not redirect to',
         )
       }

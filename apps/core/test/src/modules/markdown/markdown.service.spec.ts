@@ -6,7 +6,6 @@ import { PageModel } from '~/modules/page/page.model'
 import { PostModel } from '~/modules/post/post.model'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { getModelToken } from '~/transformers/model.transformer'
 import { vi } from 'vitest'
 
@@ -40,13 +39,6 @@ describe('test Markdown Service', () => {
         {
           provide: DatabaseService,
           useValue: vi.fn(),
-        },
-
-        {
-          provide: TextMacroService,
-          useValue: {
-            replaceTextMacro: vi.fn(),
-          },
         },
       ],
     }).compile()

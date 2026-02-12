@@ -1,7 +1,6 @@
 import {
   Body,
   Delete,
-  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -12,24 +11,41 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
-import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation } from '~/common/decorators/ip.decorator'
+import type { IpRecord } from '~/common/decorators/ip.decorator'
+import { Lang } from '~/common/decorators/lang.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { CountingService } from '~/processors/helper/helper.counting.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
+import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
-import type { FilterQuery } from 'mongoose'
+import type { QueryFilter } from 'mongoose'
+import { NoteModel } from './note.model'
 import {
   ListQueryDto,
   NidType,
+  NoteDto,
   NotePasswordQueryDto,
   NoteQueryDto,
+  NoteTopicPagerDto,
+  PartialNoteDto,
   SetNotePublishStatusDto,
-} from './note.dto'
-import { NoteModel, PartialNoteModel } from './note.model'
+} from './note.schema'
 import { NoteService } from './note.service'
+
+type NoteListItem = {
+  _id?: { toString?: () => string } | string
+  id?: string
+  title: string
+  created?: Date
+  modified?: Date | null
+  text?: string
+  isTranslated?: boolean
+  translationMeta?: unknown
+}
 
 @ApiController({ path: 'notes' })
 export class NoteController {
@@ -37,7 +53,7 @@ export class NoteController {
     private readonly noteService: NoteService,
     private readonly countingService: CountingService,
 
-    private readonly macrosService: TextMacroService,
+    private readonly translationService: TranslationService,
   ) {}
 
   @Get('/')
@@ -95,13 +111,12 @@ export class NoteController {
     @Query() query: ListQueryDto,
     @Param() params: MongoIdDto,
     @IsAuthenticated() isAuthenticated: boolean,
+    @Lang() lang?: string,
   ) {
     const { size = 10 } = query
     const half = size >> 1
     const { id } = params
-    const select = isAuthenticated
-      ? 'nid _id title created isPublished'
-      : 'nid _id title created'
+    const select = 'nid _id title created isPublished modified'
     const condition = isAuthenticated ? {} : { isPublished: true }
 
     // 当前文档直接找，不用加条件，反正里面的东西是看不到的
@@ -144,9 +159,31 @@ export class NoteController {
           .limit(half - 1)
           .sort({ created: -1 })
           .lean()
-    const data = [...prevList, ...nextList, currentDocument].sort(
-      (a: any, b: any) => b.created - a.created,
+    let data = [...prevList, ...nextList, currentDocument] as NoteListItem[]
+    data = data.sort(
+      (a, b) => (b.created?.valueOf() ?? 0) - (a.created?.valueOf() ?? 0),
     )
+
+    // 处理翻译
+    data = await this.translationService.translateList({
+      items: data,
+      targetLang: lang,
+      translationFields: ['title', 'translationMeta'] as const,
+      getInput: (item) => ({
+        id: item._id?.toString?.() ?? item.id ?? String(item._id),
+        title: item.title,
+        modified: item.modified,
+        created: item.created,
+      }),
+      applyResult: (item, translation) => {
+        if (translation?.isTranslated) {
+          item.title = translation.title
+          item.isTranslated = true
+          item.translationMeta = translation.translationMeta
+        }
+        return item
+      },
+    })
 
     return { data, size: data.length }
   }
@@ -154,21 +191,24 @@ export class NoteController {
   @Post('/')
   @HTTPDecorators.Idempotence()
   @Auth()
-  async create(@Body() body: NoteModel) {
-    return await this.noteService.create(body)
+  async create(@Body() body: NoteDto) {
+    return await this.noteService.create(body as unknown as NoteModel)
   }
 
   @Put('/:id')
   @Auth()
-  async modify(@Body() body: NoteModel, @Param() params: MongoIdDto) {
-    await this.noteService.updateById(params.id, body)
+  async modify(@Body() body: NoteDto, @Param() params: MongoIdDto) {
+    await this.noteService.updateById(params.id, body as unknown as NoteModel)
     return this.noteService.findOneByIdOrNid(params.id)
   }
 
   @Patch('/:id')
   @Auth()
-  async patch(@Body() body: PartialNoteModel, @Param() params: MongoIdDto) {
-    await this.noteService.updateById(params.id, body)
+  async patch(@Body() body: PartialNoteDto, @Param() params: MongoIdDto) {
+    await this.noteService.updateById(
+      params.id,
+      body as unknown as Partial<NoteModel>,
+    )
     return
   }
 
@@ -199,6 +239,7 @@ export class NoteController {
     @IsAuthenticated() isAuthenticated: boolean,
     @Query() query: NotePasswordQueryDto,
     @IpLocation() { ip }: IpRecord,
+    @Lang() lang?: string,
   ) {
     const { nid } = params
     const { password, single: isSingle } = query
@@ -217,21 +258,36 @@ export class NoteController {
     current.text =
       !isAuthenticated && this.noteService.checkNoteIsSecret(current)
         ? ''
-        : await this.macrosService.replaceTextMacro(current.text, current)
+        : current.text
 
     if (
       !this.noteService.checkPasswordToAccess(current, password) &&
       !isAuthenticated
     ) {
-      throw new ForbiddenException('不要偷看人家的小心思啦~')
+      throw new BizException(ErrorCodeEnum.NoteForbidden)
     }
 
     const liked = await this.countingService
       .getThisRecordIsLiked(current.id!, ip)
       .catch(() => false)
 
+    const translationResult = await this.translationService.translateArticle({
+      articleId: current.id!,
+      targetLang: lang,
+      allowHidden: Boolean(isAuthenticated || current.password),
+      originalData: {
+        title: current.title,
+        text: current.text,
+      },
+    })
+
     const currentData = {
       ...current,
+      title: translationResult.title,
+      text: translationResult.text,
+      isTranslated: translationResult.isTranslated,
+      translationMeta: translationResult.translationMeta,
+      availableTranslations: translationResult.availableTranslations,
       liked,
     }
 
@@ -271,22 +327,23 @@ export class NoteController {
   @HTTPDecorators.Paginator
   async getNotesByTopic(
     @Param() params: MongoIdDto,
-    @Query() query: PagerDto,
+    @Query() query: NoteTopicPagerDto,
     @IsAuthenticated() isAuthenticated: boolean,
+    @Lang() lang?: string,
   ) {
     const { id } = params
     const {
       size,
       page,
-      select = '_id title nid id created modified',
+      select = '_id title nid id created modified text',
       sortBy,
       sortOrder,
     } = query
-    const condition: FilterQuery<NoteModel> = isAuthenticated
-      ? { $or: [{ isPublished: false }, { isPublished: true }] }
+    const condition: QueryFilter<NoteModel> = isAuthenticated
+      ? {}
       : { isPublished: true }
 
-    return await this.noteService.getNotePaginationByTopicId(
+    const result = await this.noteService.getNotePaginationByTopicId(
       id,
       {
         page,
@@ -296,6 +353,31 @@ export class NoteController {
       },
       { ...condition },
     )
+
+    // 处理翻译
+    const translatedDocs = await this.translationService.translateList({
+      items: result.docs as unknown as NoteListItem[],
+      targetLang: lang,
+      translationFields: ['title', 'translationMeta'] as const,
+      getInput: (item) => ({
+        id: item._id?.toString?.() ?? item.id ?? String(item._id),
+        title: item.title,
+        modified: item.modified,
+        created: item.created,
+      }),
+      applyResult: (item, translation) => {
+        delete (item as { text?: string }).text // 始终移除 text
+        if (translation?.isTranslated) {
+          item.title = translation.title
+          item.isTranslated = true
+          item.translationMeta = translation.translationMeta
+        }
+        return item
+      },
+    })
+    result.docs = translatedDocs as typeof result.docs
+
+    return result
   }
 
   @Patch('/:id/publish')

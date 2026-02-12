@@ -1,11 +1,12 @@
 import { modelOptions, prop } from '@typegoose/typegoose'
+import { SLUG_TRACKER_COLLECTION_NAME } from '~/constants/db.constant'
 
 @modelOptions({
   schemaOptions: {
     timestamps: false,
   },
   options: {
-    customName: 'slug_tracker',
+    customName: SLUG_TRACKER_COLLECTION_NAME,
   },
 })
 export class SlugTrackerModel {

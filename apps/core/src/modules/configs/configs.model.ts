@@ -1,8 +1,9 @@
 import { modelOptions, prop, Severity } from '@typegoose/typegoose'
+import { OPTION_COLLECTION_NAME } from '~/constants/db.constant'
 import { Schema } from 'mongoose'
 
 @modelOptions({
-  options: { allowMixed: Severity.ALLOW, customName: 'Option' },
+  options: { allowMixed: Severity.ALLOW, customName: OPTION_COLLECTION_NAME },
   schemaOptions: {
     timestamps: {
       createdAt: false,

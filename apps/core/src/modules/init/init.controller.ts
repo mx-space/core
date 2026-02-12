@@ -1,25 +1,15 @@
-import {
-  BadRequestException,
-  Body,
-  ForbiddenException,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Req,
-  UnprocessableEntityException,
-  UseGuards,
-} from '@nestjs/common'
+import { Body, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { isZipMinetype } from '~/utils/mine.util'
-import { FastifyRequest } from 'fastify'
+import type { FastifyRequest } from 'fastify'
 import { BackupService } from '../backup/backup.service'
 import { ConfigsService } from '../configs/configs.service'
-import { ConfigKeyDto } from '../option/dtoes/config.dto'
+import { ConfigKeyDto } from '../option/option.schema'
 import { InitGuard } from './init.guard'
+import { InitOwnerCreateDto } from './init.schema'
 import { InitService } from './init.service'
 
 @ApiController('/init')
@@ -45,7 +35,7 @@ export class InitController {
   async getDefaultConfig() {
     const { isInit } = await this.isInit()
     if (isInit) {
-      throw new ForbiddenException('默认设置在完成注册之后不可见')
+      throw new BizException(ErrorCodeEnum.InitForbidden)
     }
     return this.configs.defaultConfig
   }
@@ -57,12 +47,22 @@ export class InitController {
   ) {
     const { isInit } = await this.isInit()
     if (isInit) {
-      throw new BadRequestException('已经完成初始化，请登录后进行设置')
+      throw new BizException(ErrorCodeEnum.InitAlreadyCompleted)
     }
     if (typeof body !== 'object') {
-      throw new UnprocessableEntityException('body must be object')
+      throw new BizException(ErrorCodeEnum.InvalidBody)
     }
     return this.configs.patchAndValid(params.key, body)
+  }
+
+  @Post('/owner')
+  async createOwner(@Body() body: InitOwnerCreateDto) {
+    const { isInit } = await this.isInit()
+    if (isInit) {
+      throw new BizException(ErrorCodeEnum.InitAlreadyCompleted)
+    }
+
+    return this.initService.createOwner(body)
   }
 
   @Post('/restore')

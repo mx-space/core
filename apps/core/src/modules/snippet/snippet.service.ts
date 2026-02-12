@@ -1,18 +1,14 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { RequestContext } from '~/common/contexts/request.context'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
 import { load } from 'js-yaml'
 import JSON5 from 'json5'
@@ -45,7 +41,8 @@ export class SnippetService {
       model.enable ??= true
 
       if (this.reservedReferenceKeys.includes(model.reference)) {
-        throw new BadRequestException(
+        throw new BizException(
+          ErrorCodeEnum.InvalidParameter,
           `"${model.reference}" as reference is reserved`,
         )
       }
@@ -57,10 +54,31 @@ export class SnippetService {
     })
 
     if (isExist) {
-      throw new BadRequestException('snippet is exist')
+      throw new BizException(ErrorCodeEnum.SnippetExists)
     }
-    // 验证正确类型
+
+    if (model.customPath) {
+      const cpExists = await this.model.countDocuments({
+        customPath: model.customPath,
+      })
+      if (cpExists) {
+        throw new BizException(
+          ErrorCodeEnum.InvalidParameter,
+          'customPath already exists',
+        )
+      }
+    }
+
     await this.validateTypeAndCleanup(model)
+
+    if (model.type === SnippetType.Function) {
+      const compiled = await this.serverlessService.compileTypescriptCode(
+        model.raw,
+      )
+      if (compiled) {
+        model.compiledCode = compiled
+      }
+    }
 
     if (model.reference === 'theme') {
       await this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
@@ -79,14 +97,15 @@ export class SnippetService {
     })
 
     if (!old) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
 
     if (
       old.type === SnippetType.Function &&
       newModel.type !== SnippetType.Function
     ) {
-      throw new BadRequestException(
+      throw new BizException(
+        ErrorCodeEnum.InvalidParameter,
         '`type` is not allowed to change if this snippet set to Function type.',
       )
     }
@@ -95,10 +114,8 @@ export class SnippetService {
     if (old.secret && newModel.secret) {
       const oldSecret = qs.parse(old.secret)
 
-      // newSecret will be e.g. `{ foo: '' }`
       const newSecret = qs.parse(newModel.secret)
 
-      // first delete key if newer secret not provide
       for (const key in oldSecret) {
         if (!(key in newSecret)) {
           delete oldSecret[key]
@@ -106,8 +123,6 @@ export class SnippetService {
       }
 
       for (const key in newSecret) {
-        // if newSecret has same key, but value is empty, remove it
-
         if (newSecret[key] === '' && oldSecret[key] !== '') {
           delete newSecret[key]
         }
@@ -116,13 +131,52 @@ export class SnippetService {
       newModel.secret = qs.stringify({ ...oldSecret, ...newSecret })
     }
 
+    if (newModel.customPath !== undefined) {
+      if (newModel.customPath) {
+        const cpExists = await this.model.countDocuments({
+          customPath: newModel.customPath,
+          _id: { $ne: id },
+        })
+        if (cpExists) {
+          throw new BizException(
+            ErrorCodeEnum.InvalidParameter,
+            'customPath already exists',
+          )
+        }
+      }
+
+      if (old.customPath) {
+        await this.deleteCachedSnippetByCustomPath(old.customPath)
+      }
+    }
+
     await this.deleteCachedSnippet(old.reference, old.name)
 
-    const newerDoc = await this.model.findByIdAndUpdate(
-      id,
-      { ...newModel, modified: new Date() },
-      { new: true },
-    )
+    if (newModel.type === SnippetType.Function && newModel.raw) {
+      const compiled = await this.serverlessService.compileTypescriptCode(
+        newModel.raw,
+      )
+      if (compiled) {
+        newModel.compiledCode = compiled
+      }
+    }
+
+    const updateOp: any = { ...newModel, modified: new Date() }
+    const unsetFields: Record<string, 1> = {}
+
+    if ('customPath' in newModel && !newModel.customPath) {
+      delete updateOp.customPath
+      unsetFields.customPath = 1
+    }
+
+    const updateQuery: any = { $set: updateOp }
+    if (Object.keys(unsetFields).length > 0) {
+      updateQuery.$unset = unsetFields
+    }
+
+    const newerDoc = await this.model.findByIdAndUpdate(id, updateQuery, {
+      new: true,
+    })
 
     if (old.reference === 'theme' || newModel.reference === 'theme') {
       await this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
@@ -130,28 +184,30 @@ export class SnippetService {
       })
     }
 
-    if (newerDoc) {
-      const nextSnippet = this.transformLeanSnippetModel(newerDoc.toObject())
-
-      return nextSnippet
+    if (!newerDoc) {
+      return newerDoc
     }
 
-    return newerDoc
+    return this.transformLeanSnippetModel(newerDoc.toObject())
   }
 
   async delete(id: string) {
     const doc = await this.model.findOneAndDelete({ _id: id }).lean()
     if (!doc) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
 
     if (doc.type === SnippetType.Function && doc.reference === 'built-in') {
-      throw new BadRequestException(
+      throw new BizException(
+        ErrorCodeEnum.InvalidParameter,
         'built-in function snippet is not allowed to delete',
       )
     }
 
     await this.deleteCachedSnippet(doc.reference, doc.name)
+    if (doc.customPath) {
+      await this.deleteCachedSnippetByCustomPath(doc.customPath)
+    }
   }
 
   private async validateTypeAndCleanup(model: SnippetModel) {
@@ -160,7 +216,7 @@ export class SnippetService {
         try {
           JSON.parse(model.raw)
         } catch {
-          throw new BadRequestException('content is not valid json')
+          throw new BizException(ErrorCodeEnum.SnippetInvalidJson)
         }
         break
       }
@@ -168,7 +224,7 @@ export class SnippetService {
         try {
           JSON5.parse(model.raw)
         } catch {
-          throw new BadRequestException('content is not valid json5')
+          throw new BizException(ErrorCodeEnum.SnippetInvalidJson5)
         }
         break
       }
@@ -176,7 +232,7 @@ export class SnippetService {
         try {
           load(model.raw)
         } catch {
-          throw new BadRequestException('content is not valid yaml')
+          throw new BizException(ErrorCodeEnum.SnippetInvalidYaml)
         }
         break
       }
@@ -186,10 +242,10 @@ export class SnippetService {
         )
         // if isValid is string, eq error message
         if (typeof isValid === 'string') {
-          throw new BadRequestException(isValid)
+          throw new BizException(ErrorCodeEnum.SnippetInvalidFunction, isValid)
         }
         if (!isValid) {
-          throw new BadRequestException('serverless function is not valid')
+          throw new BizException(ErrorCodeEnum.SnippetInvalidFunction)
         }
         break
       }
@@ -199,13 +255,10 @@ export class SnippetService {
         break
       }
     }
-    // TODO refactor
-    // cleanup
     if (model.type !== SnippetType.Function) {
-      const deleteKeys: (keyof SnippetModel)[] = ['enable', 'method', 'secret']
-      deleteKeys.forEach((key) => {
-        Reflect.deleteProperty(model, key)
-      })
+      delete model.enable
+      delete model.method
+      delete model.secret
     }
   }
 
@@ -214,43 +267,29 @@ export class SnippetService {
       getters: true,
     })
     if (!doc) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
-
-    // transform sth.
-    const nextSnippet = this.transformLeanSnippetModel(doc)
-
-    return nextSnippet
+    return this.transformLeanSnippetModel(doc)
   }
 
   private transformLeanSnippetModel(snippet: SnippetModel) {
     const nextSnippet = { ...snippet }
-    // transform sth.
     if (snippet.type === SnippetType.Function && snippet.secret) {
-      const secretObj = qs.parse(snippet.secret)
-
+      const secretObj = qs.parse(EncryptUtil.decrypt(snippet.secret))
       for (const key in secretObj) {
-        // remove secret value, only keep key
         secretObj[key] = ''
       }
       nextSnippet.secret = secretObj as any
     }
-
     return nextSnippet
   }
 
-  /**
-   *
-   * @param name
-   * @param reference 引用类型，可以理解为 type, 或者一级分类
-   * @returns
-   */
   async getSnippetByName(name: string, reference: string) {
     const doc = await this.model
       .findOne({ name, reference, type: { $ne: SnippetType.Function } })
       .lean()
     if (!doc) {
-      throw new NotFoundException('snippet is not found')
+      throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
     return doc
   }
@@ -258,11 +297,11 @@ export class SnippetService {
   async getPublicSnippetByName(name: string, reference: string) {
     const snippet = await this.getSnippetByName(name, reference)
     if (snippet.type === SnippetType.Function) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
 
     if (snippet.private && !RequestContext.currentIsAuthenticated()) {
-      throw new ForbiddenException('snippet is private')
+      throw new BizException(ErrorCodeEnum.SnippetPrivate)
     }
 
     return this.attachSnippet(snippet).then((res) => {
@@ -273,7 +312,7 @@ export class SnippetService {
 
   async attachSnippet(model: SnippetModel) {
     if (!model) {
-      throw new NotFoundException()
+      throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
     switch (model.type) {
       case SnippetType.JSON: {
@@ -330,6 +369,83 @@ export class SnippetService {
       [key1, key2].map((key) => {
         return client.hdel(getRedisKey(RedisKeys.SnippetCache), key)
       }),
+    )
+  }
+
+  // --- customPath methods ---
+
+  async getSnippetByCustomPath(
+    customPath: string,
+  ): Promise<SnippetModel | null> {
+    return this.model
+      .findOne({ customPath, type: { $ne: SnippetType.Function } })
+      .lean()
+  }
+
+  async getFunctionSnippetByCustomPath(
+    customPath: string,
+    method: string,
+  ): Promise<SnippetModel | null> {
+    return this.model
+      .findOne({
+        customPath,
+        type: SnippetType.Function,
+        $or: [{ method: 'ALL' }, { method }],
+      })
+      .select('+secret +compiledCode')
+      .lean({ getters: true })
+  }
+
+  async getFunctionSnippetByCustomPathPrefix(
+    candidatePaths: string[],
+    method: string,
+  ): Promise<SnippetModel | null> {
+    const results = await this.model
+      .find({
+        customPath: { $in: candidatePaths },
+        type: SnippetType.Function,
+        $or: [{ method: 'ALL' }, { method }],
+      })
+      .select('+secret +compiledCode')
+      .lean({ getters: true })
+
+    if (results.length === 0) return null
+    return results.reduce((a, b) =>
+      (a.customPath?.length ?? 0) >= (b.customPath?.length ?? 0) ? a : b,
+    )
+  }
+
+  async cacheSnippetByCustomPath(
+    customPath: string,
+    isPrivate: boolean,
+    value: any,
+  ) {
+    const key = `cp:${customPath}:${isPrivate ? 'private' : ''}`
+    const client = this.redisService.getClient()
+    await client.hset(
+      getRedisKey(RedisKeys.SnippetCache),
+      key,
+      typeof value !== 'string' ? JSON.stringify(value) : value,
+    )
+  }
+
+  async getCachedSnippetByCustomPath(
+    customPath: string,
+    accessType: 'public' | 'private',
+  ) {
+    const key = `cp:${customPath}:${accessType === 'private' ? 'private' : ''}`
+    const client = this.redisService.getClient()
+    return client.hget(getRedisKey(RedisKeys.SnippetCache), key)
+  }
+
+  async deleteCachedSnippetByCustomPath(customPath: string) {
+    const key1 = `cp:${customPath}:`
+    const key2 = `cp:${customPath}:private`
+    const client = this.redisService.getClient()
+    await Promise.all(
+      [key1, key2].map((key) =>
+        client.hdel(getRedisKey(RedisKeys.SnippetCache), key),
+      ),
     )
   }
 }

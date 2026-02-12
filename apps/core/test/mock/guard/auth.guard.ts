@@ -1,9 +1,9 @@
 import type { ExecutionContext } from '@nestjs/common'
 import { UnauthorizedException } from '@nestjs/common'
-import type { UserModel } from '~/modules/user/user.model'
+import type { OwnerModel } from '~/modules/owner/owner.model'
 import { authJWTToken } from '../constants/token'
 
-export const mockUser1: UserModel = {
+export const mockUser1: Partial<OwnerModel> = {
   id: '1',
   name: 'John Doe',
   mail: 'example@ee.com',

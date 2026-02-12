@@ -1,7 +1,7 @@
 export {
   CACHE_KEY_METADATA as HTTP_CACHE_KEY_METADATA,
   CACHE_TTL_METADATA as HTTP_CACHE_TTL_METADATA,
-} from '@nestjs/common/cache/cache.constants'
+} from '@nestjs/common/cache/cache.constants.js'
 
 export const HTTP_CACHE_DISABLE = 'cache_module:cache_disable'
 export const HTTP_CACHE_META_OPTIONS = 'cache_module:cache_meta_options'

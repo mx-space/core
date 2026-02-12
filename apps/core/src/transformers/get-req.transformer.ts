@@ -1,10 +1,10 @@
 import type { IncomingMessage } from 'node:http'
 import type { ExecutionContext } from '@nestjs/common'
-import type { UserModel } from '~/modules/user/user.model'
+import type { SessionUser } from '~/modules/auth/auth.types'
 import type { FastifyRequest } from 'fastify'
 
 type BizRequest = {
-  user?: UserModel
+  user?: SessionUser
   isGuest: boolean
 
   isAuthenticated: boolean

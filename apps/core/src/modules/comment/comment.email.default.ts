@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import type { UserModel, UserModelSecurityKeys } from '../user/user.model'
+import type { OwnerModel, OwnerModelSecurityKeys } from '../owner/owner.model'
 import type { CommentModel } from './comment.model'
 
 export interface CommentModelRenderProps {
@@ -50,13 +50,13 @@ export const baseRenderProps = Object.freeze({
 
   time: dayjs().format('YYYY/MM/DD'),
   title: defaultPostModelForRenderProps.title,
-  master: 'innei' as string,
+  owner: 'innei' as string,
 
   aggregate: {
     post: defaultPostModelForRenderProps,
     commentor: defaultCommentModelForRenderProps,
     parent: null as CommentModel | null,
-    owner: {} as Omit<UserModel, UserModelSecurityKeys>,
+    owner: {} as Omit<OwnerModel, OwnerModelSecurityKeys>,
   },
 })
 type Writeable<T> = { -readonly [P in keyof T]: T[P] }

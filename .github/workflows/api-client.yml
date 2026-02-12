@@ -26,24 +26,12 @@ jobs:
         node-version: [22.x]
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache pnpm modules
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-pnpm-modules
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/package.json') }}
-
-      - uses: pnpm/action-setup@v4.1.0
-        with:
-          run_install: true
 
       - name: Test and Build
         working-directory: ./packages/api-client

@@ -1,14 +1,15 @@
 import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { APP_INTERCEPTOR } from '@nestjs/core'
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { OptionModel } from '~/modules/configs/configs.model'
+import { DraftModel } from '~/modules/draft/draft.model'
+import { DraftService } from '~/modules/draft/draft.service'
 import { NoteController } from '~/modules/note/note.controller'
 import { NoteModel } from '~/modules/note/note.model'
 import { NoteService } from '~/modules/note/note.service'
-import { UserModel } from '~/modules/user/user.model'
-import { UserService } from '~/modules/user/user.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
@@ -18,6 +19,11 @@ import { configProvider } from 'test/mock/modules/config.mock'
 import { gatewayProviders } from 'test/mock/modules/gateway.mock'
 import { countingServiceProvider } from 'test/mock/processors/counting.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
+import {
+  fileReferenceProvider,
+  imageMigrationProvider,
+} from 'test/mock/processors/file.mock'
+import { translationProvider } from 'test/mock/processors/translation.mock'
 import MockDbData from './note.e2e-mock.db'
 
 describe('NoteController (e2e)', async () => {
@@ -27,6 +33,7 @@ describe('NoteController (e2e)', async () => {
     providers: [
       NoteService,
       ImageService,
+      LexicalService,
 
       {
         provide: APP_INTERCEPTOR,
@@ -35,27 +42,22 @@ describe('NoteController (e2e)', async () => {
 
       commentProvider,
 
-      {
-        provide: TextMacroService,
-        useValue: {
-          async replaceTextMacro(text) {
-            return text
-          },
-        },
-      },
       HttpService,
       configProvider,
       await createRedisProvider(),
 
-      UserService,
       ...eventEmitterProvider,
       ...gatewayProviders,
       authProvider,
 
       countingServiceProvider,
+      DraftService,
+      fileReferenceProvider,
+      imageMigrationProvider,
+      translationProvider,
     ],
     imports: [],
-    models: [NoteModel, OptionModel, UserModel],
+    models: [NoteModel, OptionModel, DraftModel],
     async pourData(modelMap) {
       // @ts-ignore
       const { model: _model } = modelMap.get(NoteModel) as {
@@ -76,7 +78,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'GET',
-      url: '/notes',
+      url: `${apiRoutePrefix}/notes`,
     })
     const data = res.json()
     expect(res.statusCode).toBe(200)
@@ -101,7 +103,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'POST',
-      url: '/notes',
+      url: `${apiRoutePrefix}/notes`,
       payload: createdNoteData,
       headers: {
         ...authPassHeader,
@@ -120,7 +122,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'PATCH',
-      url: `/notes/${createdNoteData.id}`,
+      url: `${apiRoutePrefix}/notes/${createdNoteData.id}`,
       payload: {
         title: 'Note 2 (updated)',
         text: `Content 2 (updated)`,
@@ -139,7 +141,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/${createdNoteData.id}`,
+      url: `${apiRoutePrefix}/notes/${createdNoteData.id}`,
       headers: {
         ...authPassHeader,
       },
@@ -148,6 +150,7 @@ describe('NoteController (e2e)', async () => {
     expect(res.statusCode).toBe(200)
     const data = res.json()
     delete data.id
+    delete data.modified
     expect(data).toMatchSnapshot()
   })
 
@@ -155,7 +158,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/list/${createdNoteData.id}`,
+      url: `${apiRoutePrefix}/notes/list/${createdNoteData.id}`,
     })
 
     expect(res.statusCode).toBe(200)
@@ -163,6 +166,7 @@ describe('NoteController (e2e)', async () => {
 
     data.data.forEach((note) => {
       delete note.id
+      delete note.modified
     })
 
     expect(data).toMatchSnapshot()
@@ -172,13 +176,14 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/nid/${createdNoteData.nid}`,
+      url: `${apiRoutePrefix}/notes/nid/${createdNoteData.nid}`,
     })
 
     expect(res.statusCode).toBe(200)
     const data = res.json()
     delete data.id
     delete data.data.id
+    delete data.data.modified
     if (data.prev) {
       delete data.prev.id
     }
@@ -193,7 +198,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'DELETE',
-      url: `/notes/${createdNoteData.id}`,
+      url: `${apiRoutePrefix}/notes/${createdNoteData.id}`,
       headers: {
         ...authPassHeader,
       },
@@ -207,7 +212,7 @@ describe('NoteController (e2e)', async () => {
     {
       const res = await app.inject({
         method: 'GET',
-        url: `/notes/${createdNoteData.id}`,
+        url: `${apiRoutePrefix}/notes/${createdNoteData.id}`,
         headers: {
           ...authPassHeader,
         },
@@ -218,7 +223,7 @@ describe('NoteController (e2e)', async () => {
     {
       const res = await app.inject({
         method: 'GET',
-        url: `/notes/nid/${createdNoteData.nid}`,
+        url: `${apiRoutePrefix}/notes/nid/${createdNoteData.nid}`,
         headers: {
           ...authPassHeader,
         },
@@ -232,7 +237,7 @@ describe('NoteController (e2e)', async () => {
     const { app } = proxy
     const res = await app.inject({
       method: 'GET',
-      url: '/notes/latest',
+      url: `${apiRoutePrefix}/notes/latest`,
     })
 
     expect(res.statusCode).toBe(200)
@@ -265,7 +270,7 @@ describe('NoteController (e2e)', async () => {
     await createMockDataWithLocation()
     const res = await app.inject({
       method: 'GET',
-      url: '/notes',
+      url: `${apiRoutePrefix}/notes`,
     })
 
     const json = res.json()
@@ -278,7 +283,7 @@ describe('NoteController (e2e)', async () => {
 
     const res = await app.inject({
       method: 'GET',
-      url: '/notes',
+      url: `${apiRoutePrefix}/notes`,
       query: {
         select: '+coordinates',
       },
@@ -296,7 +301,7 @@ describe('NoteController (e2e)', async () => {
 
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/nid/${mockDataWithLocationNid}`,
+      url: `${apiRoutePrefix}/notes/nid/${mockDataWithLocationNid}`,
     })
 
     const json = res.json()
@@ -322,7 +327,7 @@ describe('NoteController (e2e)', async () => {
     await createMockDataWithPassword()
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/nid/${mockDataWithPasswordNid}`,
+      url: `${apiRoutePrefix}/notes/nid/${mockDataWithPasswordNid}`,
     })
 
     expect(res.statusCode).toBe(403)
@@ -333,7 +338,7 @@ describe('NoteController (e2e)', async () => {
 
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/nid/${mockDataWithPasswordNid}`,
+      url: `${apiRoutePrefix}/notes/nid/${mockDataWithPasswordNid}`,
       query: {
         password: 'password',
       },
@@ -347,7 +352,7 @@ describe('NoteController (e2e)', async () => {
 
     const res = await app.inject({
       method: 'GET',
-      url: `/notes/nid/${mockDataWithPasswordNid}`,
+      url: `${apiRoutePrefix}/notes/nid/${mockDataWithPasswordNid}`,
       headers: {
         ...authPassHeader,
       },

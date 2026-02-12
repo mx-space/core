@@ -14,14 +14,19 @@ export const generateDefaultConfig: () => IConfig = () => ({
   },
   mailOptions: {
     enable: false,
-
-    user: '',
-    pass: '',
+    provider: 'smtp',
     from: '',
-    options: {
-      host: '',
-      port: 465,
-      secure: true,
+    smtp: {
+      user: '',
+      pass: '',
+      options: {
+        host: '',
+        port: 465,
+        secure: true,
+      },
+    },
+    resend: {
+      apiKey: '',
     },
   },
   commentOptions: {
@@ -29,6 +34,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     aiReview: false,
     aiReviewType: 'binary',
     aiReviewThreshold: 5,
+    testAiReview: '__action__',
     disableComment: false,
     blockIps: [],
     disableNoChinese: false,
@@ -56,6 +62,18 @@ export const generateDefaultConfig: () => IConfig = () => ({
     secretId: null!,
     secretKey: null!,
   },
+  imageStorageOptions: {
+    enable: false,
+    syncOnPublish: false,
+    deleteLocalAfterSync: false,
+    endpoint: null!,
+    secretId: null!,
+    secretKey: null!,
+    bucket: null!,
+    region: 'auto',
+    customDomain: '',
+    prefix: '',
+  },
   baiduSearchOptions: { enable: false, token: null! },
   bingSearchOptions: { enable: false, token: null! },
   algoliaSearchOptions: {
@@ -71,14 +89,10 @@ export const generateDefaultConfig: () => IConfig = () => ({
     background: '',
     gaodemapKey: null!,
   },
-  textOptions: {
-    macros: true,
-  },
   featureList: {
     emailSubscribe: false,
   },
   thirdPartyServiceIntegration: {
-    xLogSiteId: '',
     githubToken: '',
   },
 
@@ -86,13 +100,13 @@ export const generateDefaultConfig: () => IConfig = () => ({
     disablePasswordLogin: false,
   },
   ai: {
-    enableAutoGenerateSummary: false,
+    providers: [],
+    summaryModel: undefined,
+    writerModel: undefined,
+    commentReviewModel: undefined,
     enableSummary: false,
-    openAiEndpoint: '',
-    openAiPreferredModel: 'gpt-5o-mini',
-    openAiKey: '',
+    enableAutoGenerateSummary: false,
     aiSummaryTargetLanguage: 'auto',
-    enableDeepReading: false,
   },
   oauth: {
     providers: [],

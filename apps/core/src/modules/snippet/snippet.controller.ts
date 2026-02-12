@@ -1,23 +1,15 @@
-import {
-  Body,
-  Delete,
-  ForbiddenException,
-  Get,
-  Param,
-  Post,
-  Put,
-  Query,
-  UnprocessableEntityException,
-} from '@nestjs/common'
+import { Body, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
-import { SnippetMoreDto } from './snippet.dto'
 import { SnippetModel } from './snippet.model'
+import { SnippetDto, SnippetMoreDto } from './snippet.schema'
 import { SnippetService } from './snippet.service'
 
 @ApiController('snippets')
@@ -46,7 +38,9 @@ export class SnippetController {
   @Auth()
   async importSnippets(@Body() body: SnippetMoreDto) {
     const { snippets } = body
-    const tasks = snippets.map((snippet) => this.create(snippet))
+    const tasks = snippets.map((snippet) =>
+      this.snippetService.create(snippet as unknown as SnippetModel),
+    )
 
     await Promise.all(tasks)
 
@@ -56,17 +50,14 @@ export class SnippetController {
   @Post('/')
   @Auth()
   @HTTPDecorators.Idempotence()
-  async create(@Body() body: SnippetModel) {
-    return await this.snippetService.create(body)
+  async create(@Body() body: SnippetDto) {
+    return await this.snippetService.create(body as unknown as SnippetModel)
   }
 
   @Get('/:id')
   @Auth()
   async getSnippetById(@Param() param: MongoIdDto) {
-    const { id } = param
-    const snippet = await this.snippetService.getSnippetById(id)
-
-    return snippet
+    return this.snippetService.getSnippetById(param.id)
   }
 
   @Get('/group')
@@ -108,7 +99,7 @@ export class SnippetController {
   @Auth()
   async getGroupByReference(@Param('reference') reference: string) {
     if (typeof reference !== 'string') {
-      throw new UnprocessableEntityException('reference should be string')
+      throw new BizException(ErrorCodeEnum.InvalidReference)
     }
 
     return this.snippetService.model.find({ reference }).lean()
@@ -128,11 +119,11 @@ export class SnippetController {
     @IsAuthenticated() isAuthenticated: boolean,
   ) {
     if (typeof name !== 'string') {
-      throw new ForbiddenException('name should be string')
+      throw new BizException(ErrorCodeEnum.InvalidName)
     }
 
     if (typeof reference !== 'string') {
-      throw new ForbiddenException('reference should be string')
+      throw new BizException(ErrorCodeEnum.InvalidReference)
     }
     let cached: string | null = null
     if (isAuthenticated) {
@@ -163,10 +154,10 @@ export class SnippetController {
 
   @Put('/:id')
   @Auth()
-  async update(@Param() param: MongoIdDto, @Body() body: SnippetModel) {
+  async update(@Param() param: MongoIdDto, @Body() body: SnippetDto) {
     const { id } = param
 
-    return await this.snippetService.update(id, body)
+    return await this.snippetService.update(id, body as unknown as SnippetModel)
   }
 
   @Delete('/:id')

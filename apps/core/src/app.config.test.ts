@@ -1,12 +1,11 @@
-import { argv } from '@mx-space/compiled'
 import type { AxiosRequestConfig } from 'axios'
 
 export const PORT = process.env.PORT || 2333
 export const API_VERSION = 2
 
 export const CROSS_DOMAIN = {
-  allowedOrigins: argv.allowed_origins
-    ? argv.allowed_origins?.split?.(',')
+  allowedOrigins: process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',')
     : [
         'innei.ren',
         '*.innei.ren',
@@ -27,7 +26,7 @@ export const MONGO_DB = {
   host: '127.0.0.1',
   port: 27017,
   user: '',
-  password: argv.db_password || '',
+  password: process.env.DB_PASSWORD || '',
   get uri() {
     const userPassword =
       this.user && this.password ? `${this.user}:${this.password}@` : ''
@@ -50,13 +49,13 @@ export const AXIOS_CONFIG: AxiosRequestConfig = {
 }
 
 export const SECURITY = {
-  jwtSecret: argv.jwt_secret || argv.jwtSecret,
-  jwtExpire: +argv.jwt_expire || 14,
+  jwtSecret: process.env.JWT_SECRET,
+  jwtExpire: Number(process.env.JWT_EXPIRE) || 14,
 }
 
 export const CLUSTER = {
-  enable: argv.cluster ?? false,
-  workers: argv.cluster_workers,
+  enable: process.env.CLUSTER === 'true',
+  workers: process.env.CLUSTER_WORKERS,
 }
 
 export const DEBUG_MODE = {

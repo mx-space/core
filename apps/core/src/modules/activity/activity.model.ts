@@ -1,10 +1,11 @@
 import { modelOptions, prop } from '@typegoose/typegoose'
+import { ACTIVITY_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 import { Activity } from './activity.constant'
 
 @modelOptions({
   options: {
-    customName: 'activities',
+    customName: ACTIVITY_COLLECTION_NAME,
   },
   schemaOptions: {
     timestamps: {
@@ -14,15 +15,12 @@ import { Activity } from './activity.constant'
   },
 })
 export class ActivityModel extends BaseModel {
-  @prop()
+  @prop({ type: Number, enum: Activity })
   type: Activity
 
   @prop({
     get(val) {
       return JSON.safeParse(val)
-    },
-    set(val) {
-      return JSON.stringify(val)
     },
     type: String,
   })

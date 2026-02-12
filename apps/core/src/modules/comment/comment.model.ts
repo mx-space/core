@@ -1,5 +1,5 @@
-import { URL } from 'node:url'
-import { modelOptions, plugin, prop, Ref } from '@typegoose/typegoose'
+import { modelOptions, plugin, prop } from '@typegoose/typegoose'
+import type { Ref } from '@typegoose/typegoose'
 import {
   CollectionRefTypes,
   COMMENT_COLLECTION_NAME,

@@ -40,6 +40,7 @@ export interface EventPayloadMapping {
   [BusinessEvents.SAY_DELETE]: PayloadOnlyId
 
   [BusinessEvents.RECENTLY_CREATE]: RecentlyModel
+  [BusinessEvents.RECENTLY_UPDATE]: RecentlyModel
 
   [BusinessEvents.ACTIVITY_LIKE]: IActivityLike
 
@@ -89,6 +90,7 @@ export type GenericEvent =
   | { type: BusinessEvents.SAY_UPDATE; payload: SayModel }
   | { type: BusinessEvents.SAY_DELETE; payload: PayloadOnlyId }
   | { type: BusinessEvents.RECENTLY_CREATE; payload: RecentlyModel }
+  | { type: BusinessEvents.RECENTLY_UPDATE; payload: RecentlyModel }
   | { type: BusinessEvents.ACTIVITY_LIKE; payload: IActivityLike }
   | { type: BusinessEvents.LINK_APPLY; payload: LinkModel }
   | {

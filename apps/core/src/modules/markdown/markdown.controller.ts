@@ -7,11 +7,11 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
+import { omit } from 'es-toolkit/compat'
 import JSZip from 'jszip'
-import { omit } from 'lodash'
 import type { CategoryModel } from '../category/category.model'
-import { DataListDto, ExportMarkdownQueryDto } from './markdown.dto'
 import type { MarkdownYAMLProperty } from './markdown.interface'
+import { DataListDto, ExportMarkdownQueryDto } from './markdown.schema'
 import { MarkdownService } from './markdown.service'
 
 @ApiController('markdown')
@@ -78,7 +78,7 @@ export class MarkdownController {
         categories: (post.category as CategoryModel).name,
         tags: post.tags,
         type: 'post',
-        permalink: `/posts/${(post.category as CategoryModel).name}/${post.slug}`,
+        permalink: `/posts/${(post.category as CategoryModel).slug}/${post.slug}`,
       }),
     )
     const convertNote = notes.map((note) =>

@@ -1,5 +1,4 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { RequestContext } from '~/common/contexts/request.context'
 
 export async function trackResponseTimeMiddleware(
   req: IncomingMessage,
@@ -12,7 +11,6 @@ export async function trackResponseTimeMiddleware(
     : Date.now()
 
   res.setHeader('Content-Type', 'application/json')
-  // cors
   res.setHeader(
     'Access-Control-Allow-Origin',
     req.headers.origin || req.headers.referer || req.headers.host || '*',

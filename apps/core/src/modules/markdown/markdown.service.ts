@@ -1,29 +1,31 @@
 import {
-  BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common'
-import { ReturnModelType } from '@typegoose/typegoose'
+import type { ReturnModelType } from '@typegoose/typegoose'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
-import { TextMacroService } from '~/processors/helper/helper.macro.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { omit } from 'es-toolkit/compat'
 import { dump } from 'js-yaml'
 import JSZip from 'jszip'
-import { omit } from 'lodash'
 import { Types } from 'mongoose'
 import { CategoryModel } from '../category/category.model'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
-import type { DatatypeDto } from './markdown.dto'
 import type { MarkdownYAMLProperty } from './markdown.interface'
+import type { DatatypeDto } from './markdown.schema'
 import { markdownToHtml } from './markdown.util'
 
 @Injectable()
 export class MarkdownService {
+  private readonly logger = new Logger(MarkdownService.name)
+
   constructor(
     private readonly assetService: AssetService,
 
@@ -37,8 +39,6 @@ export class MarkdownService {
     private readonly pageModel: ReturnModelType<typeof PageModel>,
 
     private readonly databaseService: DatabaseService,
-
-    private readonly macroService: TextMacroService,
   ) {}
 
   async insertPostsToDb(data: DatatypeDto[]) {
@@ -82,7 +82,7 @@ export class MarkdownService {
     if (!defaultCategory) {
       throw new InternalServerErrorException('分类不存在')
     }
-    for await (const item of data) {
+    for (const item of data) {
       if (!item.meta) {
         models.push({
           title: `未命名-${count++}`,
@@ -108,26 +108,18 @@ export class MarkdownService {
     return await this.postModel
       .insertMany(models, { ordered: false })
       .catch(() => {
-        Logger.log('一篇文章导入失败', MarkdownService.name)
+        this.logger.warn('一篇文章导入失败')
       })
   }
 
   async insertNotesToDb(data: DatatypeDto[]) {
     const models = [] as NoteModel[]
-    for await (const item of data) {
-      if (!item.meta) {
-        models.push({
-          title: '未命名记录',
-          text: item.text,
-          ...this.genDate(item),
-        } as NoteModel)
-      } else {
-        models.push({
-          title: item.meta.title,
-          text: item.text,
-          ...this.genDate(item),
-        } as NoteModel)
-      }
+    for (const item of data) {
+      models.push({
+        title: item.meta?.title ?? '未命名记录',
+        text: item.text,
+        ...this.genDate(item),
+      } as NoteModel)
     }
 
     return await this.noteModel.create(models)
@@ -225,15 +217,10 @@ ${text.trim()}
     const result = await this.databaseService.findGlobalById(id)
 
     if (!result || result.type === CollectionRefTypes.Recently)
-      throw new BadRequestException('文档不存在')
+      throw new BizException(ErrorCodeEnum.DocumentNotFound)
 
     return {
-      html: this.renderMarkdownContent(
-        await this.macroService.replaceTextMacro(
-          result.document.text,
-          result.document,
-        ),
-      ),
+      html: this.renderMarkdownContent(result.document.text),
       ...result,
       document: result.document,
     }
@@ -268,9 +255,6 @@ ${text.trim()}
         '<script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/prism/1.23.0/components/prism-core.min.js"></script>',
         '<script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/prism/1.23.0/plugins/autoloader/prism-autoloader.min.js"></script>',
         '<script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/prism/1.23.0/plugins/line-numbers/prism-line-numbers.min.js"></script>',
-        // '<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/show-language/prism-show-language.min.js" defer></script>',
-        // '<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/normalize-whitespace/prism-normalize-whitespace.min.js" defer></script>',
-        // '<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js" defer></script>',
         '<script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/KaTeX/0.15.2/katex.min.js" async defer></script>',
       ],
       script: [
@@ -295,8 +279,4 @@ ${text.trim()}
       encoding: 'utf8',
     }) as Promise<string>
   }
-
-  // getMarkdownRenderTheme() {
-  //   return ['newsprint', 'github', 'han', 'gothic'] as const
-  // }
 }

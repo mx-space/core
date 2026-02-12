@@ -1,9 +1,8 @@
 import fs, { mkdir, stat } from 'node:fs/promises'
-import { createRequire } from 'node:module'
-import path, { resolve } from 'node:path'
+import path from 'node:path'
 import { parseAsync, transformAsync } from '@babel/core'
 import * as t from '@babel/types'
-import type { OnModuleInit } from '@nestjs/common'
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import {
   Injectable,
   InternalServerErrorException,
@@ -11,29 +10,27 @@ import {
 } from '@nestjs/common'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { EventScope } from '~/constants/business-event.constant'
+import { RedisKeys } from '~/constants/cache.constant'
 import {
-  RedisKeys,
-  SERVERLESS_COMPLIE_CACHE_TTL,
-} from '~/constants/cache.constant'
+  OWNER_PROFILE_COLLECTION_NAME,
+  READER_COLLECTION_NAME,
+  SERVERLESS_STORAGE_COLLECTION_NAME,
+} from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
-import { isTest } from '~/global/env.global'
+import { isDev } from '~/global/env.global'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { HttpService } from '~/processors/helper/helper.http.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
-import { safeEval } from '~/utils/safe-eval.util'
-import { scheduleManager } from '~/utils/schedule.util'
-import { safeProcessEnv } from '~/utils/system.util'
+import type { SandboxResult } from '~/utils/sandbox'
+import { SandboxService } from '~/utils/sandbox'
 import { safePathJoin } from '~/utils/tool.util'
-import { isURL } from 'class-validator'
-import { isPlainObject } from 'lodash'
-import { LRUCache } from 'lru-cache'
-import { mongo } from 'mongoose'
+import { isPlainObject } from 'es-toolkit/compat'
+import { Types } from 'mongoose'
 import qs from 'qs'
 import { ConfigsService } from '../configs/configs.service'
 import { SnippetModel, SnippetType } from '../snippet/snippet.model'
@@ -43,29 +40,26 @@ import type {
   FunctionContextResponse,
 } from './function.types'
 import { allBuiltInSnippetPack as builtInSnippets } from './pack'
-import { ServerlessStorageCollectionName } from './serverless.model'
-import { complieTypeScriptBabelOptions, hashStable } from './serverless.util'
+import { ServerlessLogModel } from './serverless-log.model'
+import { complieTypeScriptBabelOptions } from './serverless.util'
 
 type ScopeContext = {
   req: FunctionContextRequest
   res: FunctionContextResponse
   isAuthenticated: boolean
 }
-class CleanableScope {
-  public scopeContextLRU = new LRUCache<string, any>({
-    max: 100,
-    ttl: 1000 * 60 * 5,
-  })
-}
+
 @Injectable()
-export class ServerlessService implements OnModuleInit {
+export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   private readonly logger: Logger
-  private readonly cleanableScope: CleanableScope
+  private readonly sandboxService: SandboxService
+
   constructor(
     @InjectModel(SnippetModel)
     private readonly snippetModel: MongooseModel<SnippetModel>,
+    @InjectModel(ServerlessLogModel)
+    private readonly logModel: MongooseModel<ServerlessLogModel>,
     private readonly assetService: AssetService,
-    private readonly httpService: HttpService,
     private readonly databaseService: DatabaseService,
 
     private readonly redisService: RedisService,
@@ -74,7 +68,62 @@ export class ServerlessService implements OnModuleInit {
     private readonly eventService: EventManagerService,
   ) {
     this.logger = new Logger(ServerlessService.name)
-    this.cleanableScope = new CleanableScope()
+    this.sandboxService = this.createSandboxService()
+  }
+
+  async onModuleDestroy() {
+    await this.sandboxService.shutdown()
+  }
+
+  private createSandboxService(): SandboxService {
+    return new SandboxService({
+      maxWorkers: 4,
+      defaultTimeout: 30000,
+      requireBasePath: NODE_REQUIRE_PATH,
+      bridgeHandlers: {
+        'storage.cache.get': (key: string) => this.mockStorageCache.get(key),
+        'storage.cache.set': (key: string, value: unknown, ttl?: number) =>
+          this.mockStorageCache.set(
+            key,
+            value as object | string,
+            ttl?.toString(),
+          ),
+        'storage.cache.del': (key: string) =>
+          this.mockStorageCache.del(key).then(() => {}),
+        'storage.db.get': (namespace: string, key: string) =>
+          this.mockDb(namespace).get(key),
+        'storage.db.find': (namespace: string, condition: unknown) =>
+          this.mockDb(namespace).find(condition as KV),
+        'storage.db.set': (namespace: string, key: string, value: unknown) =>
+          this.mockDb(namespace).set(key, value),
+        'storage.db.insert': (namespace: string, key: string, value: unknown) =>
+          this.mockDb(namespace).insert(key, value),
+        'storage.db.update': (namespace: string, key: string, value: unknown) =>
+          this.mockDb(namespace).update(key, value),
+        'storage.db.del': (namespace: string, key: string) =>
+          this.mockDb(namespace).del(key),
+        getOwner: () => this.mockGetOwner(),
+        'config.get': (key: string) => this.configService.get(key as any),
+        broadcast: (type: string, data: unknown) => {
+          // @ts-ignore
+          this.eventService.broadcast(`fn#${type}`, data, {
+            scope: EventScope.TO_VISITOR_ADMIN,
+          })
+        },
+        writeAsset: async (path: string, data: unknown, options?: unknown) => {
+          await this.assetService.writeUserCustomAsset(
+            safePathJoin(path),
+            data as Parameters<typeof fs.writeFile>[1],
+            options as Parameters<typeof fs.writeFile>[2],
+          )
+        },
+        readAsset: (path: string, options?: unknown) =>
+          this.assetService.getAsset(
+            safePathJoin(path),
+            options as Parameters<typeof fs.readFile>[1],
+          ),
+      },
+    })
   }
 
   async onModuleInit() {
@@ -121,45 +170,49 @@ export class ServerlessService implements OnModuleInit {
       return client.hdel(getRedisKey(RedisKeys.ServerlessStorage), key)
     },
   })
-  private async mockGetMaster() {
-    const collection = this.databaseService.db.collection('users')
-    const cur = collection.aggregate([
-      {
-        $project: {
-          id: 1,
-          _id: 1,
-          username: 1,
-          name: 1,
-          introduce: 1,
-          avatar: 1,
-          mail: 1,
-          url: 1,
-          lastLoginTime: 1,
-          lastLoginIp: 1,
-          socialIds: 1,
-        },
-      },
-    ])
+  private async mockGetOwner() {
+    const owner = await this.databaseService.db
+      .collection(READER_COLLECTION_NAME)
+      .find({ role: 'owner' })
+      .sort({ createdAt: 1, _id: 1 })
+      .limit(1)
+      .next()
 
-    return await cur.next().then((doc) => {
-      cur.close()
-      return doc
-    })
+    if (!owner?._id) {
+      return null
+    }
+
+    const ownerProfile = await this.databaseService.db
+      .collection(OWNER_PROFILE_COLLECTION_NAME)
+      .findOne({
+        readerId:
+          Types.ObjectId.isValid(owner._id?.toString?.()) && owner._id
+            ? new Types.ObjectId(owner._id.toString())
+            : owner._id,
+      })
+
+    return {
+      id: owner._id.toString(),
+      _id: owner._id,
+      username: owner.username ?? owner.handle ?? '',
+      name: owner.name,
+      introduce: ownerProfile?.introduce,
+      avatar: owner.image,
+      mail: ownerProfile?.mail ?? owner.email,
+      url: ownerProfile?.url,
+      lastLoginTime: ownerProfile?.lastLoginTime,
+      lastLoginIp: ownerProfile?.lastLoginIp,
+      socialIds: ownerProfile?.socialIds,
+    }
   }
 
   private mockDb(namespace: string) {
     const db = this.databaseService.db
-    const collection = db.collection(ServerlessStorageCollectionName)
+    const collection = db.collection(SERVERLESS_STORAGE_COLLECTION_NAME)
 
     const checkRecordIsExist = async (key: string) => {
-      const has = await collection
-        .countDocuments({
-          namespace,
-          key,
-        })
-        .then((count) => count > 0)
-
-      return has
+      const count = await collection.countDocuments({ namespace, key })
+      return count > 0
     }
 
     const updateKey = async (key: string, value: any) => {
@@ -227,14 +280,7 @@ export class ServerlessService implements OnModuleInit {
         })
       },
       async insert(key: string, value: any) {
-        const has = await collection
-          .countDocuments({
-            namespace,
-            key,
-          })
-          .then((count) => count > 0)
-
-        if (has) {
+        if (await checkRecordIsExist(key)) {
           throw new InternalServerErrorException('key already exists')
         }
 
@@ -254,178 +300,34 @@ export class ServerlessService implements OnModuleInit {
     } as const
   }
 
-  private async getService(serviceName: 'http' | 'config') {
-    switch (serviceName) {
-      case 'http': {
-        return {
-          axios: this.httpService.axiosRef,
-          requestWithCache: this.httpService.getAndCacheRequest.bind(
-            this.httpService,
-          ),
-        }
-      }
-      case 'config': {
-        return {
-          get: (key: string) => this.configService.get(key as any),
-        }
-      }
-    }
-
-    throw new BizException(
-      ErrorCodeEnum.ServerlessError,
-      `${serviceName} service not provide`,
-    )
-  }
-
   async injectContextIntoServerlessFunctionAndCall(
     model: SnippetModel,
     context: ScopeContext,
-  ) {
+  ): Promise<any> {
     const { raw: functionString } = model
     const scope = `${model.reference}/${model.name}`
 
-    const logger = new Logger(`fx:${scope}`)
-    const globalContext = await this.createScopeContext(
-      scope,
-      context,
-      model,
-      logger,
-    )
-
-    const cacheKey = model.updated
-      ? getRedisKey(
-          RedisKeys.FunctionComplieCache,
-          hashStable(`${model.id}_${model.updated}`),
-        )
-      : ''
-
-    const redis = this.redisService.getClient()
-    let cached: string | null = null
-    if (cacheKey) {
-      cached = await redis.get(cacheKey)
+    let compiledCode = model.compiledCode
+    if (!compiledCode) {
+      compiledCode =
+        (await this.compileTypescriptCode(functionString)) ?? undefined
+      if (compiledCode) {
+        this.snippetModel
+          .updateOne({ _id: model.id }, { compiledCode })
+          .catch((error) => {
+            this.logger.error(
+              `Backfill compiledCode failed for ${scope}: ${error.message}`,
+            )
+          })
+      }
     }
 
-    const compliedCode =
-      cached ?? (await this.complieTypescriptCode(functionString))
-
-    if (!compliedCode) {
+    if (!compiledCode) {
       throw new InternalServerErrorException(
-        'Complie serverless function code failed',
+        'Compile serverless function code failed',
       )
     }
-    if (!cached && cacheKey) {
-      await redis.set(cacheKey, compliedCode)
-    }
-    await redis.expire(cacheKey, SERVERLESS_COMPLIE_CACHE_TTL)
 
-    return await safeEval(
-      `async function func() {
-        ${compliedCode};
-      return handler(context, require)
-      }
-      return func()
-      `,
-      {
-        ...globalContext,
-        global: globalContext,
-        globalThis: globalContext,
-        exports: {},
-        module: {
-          exports: {},
-        },
-      },
-    ).catch((error) => {
-      logger.error(error)
-      return Promise.reject(
-        new BizException(
-          ErrorCodeEnum.ServerlessError,
-          error.message || 'Unknown error, please check log',
-        ),
-      )
-    })
-  }
-
-  private async complieTypescriptCode(
-    code: string,
-  ): Promise<string | null | undefined> {
-    const res = await transformAsync(code, complieTypeScriptBabelOptions)
-    if (!res) {
-      throw new InternalServerErrorException('convert code error')
-    }
-
-    return res.code
-  }
-
-  private createNewContextRequire() {
-    const __require = isTest
-      ? createRequire(resolve(process.cwd(), './node_modules'))
-      : createRequire(NODE_REQUIRE_PATH)
-
-    async function $require(
-      this: ServerlessService,
-      id: string,
-      useCache = true,
-    ) {
-      if (!id || typeof id !== 'string') {
-        throw new Error('require id is not valid')
-      }
-
-      // 1. if is remote module
-      if (isURL(id, { protocols: ['http', 'https'], require_protocol: true })) {
-        let text: string
-
-        try {
-          text = useCache
-            ? await this.httpService.getAndCacheRequest(id)
-            : await this.httpService.axiosRef.get(id).then((res) => res.data)
-        } catch {
-          throw new InternalServerErrorException(
-            'Failed to fetch remote module',
-          )
-        }
-        return await safeEval(
-          `${text}; return module.exports ? module.exports : exports.default ? exports.default : exports`,
-          {
-            exports: {},
-            module: {
-              exports: null,
-            },
-          },
-        )
-      }
-
-      const bannedLibs = [
-        'child_process',
-        'cluster',
-        'fs',
-        'fs/promises',
-        'os',
-        'process',
-        'sys',
-        'v8',
-        'vm',
-      ]
-
-      for (const lib of [...bannedLibs]) {
-        bannedLibs.push(`node:${lib}`)
-      }
-
-      if (bannedLibs.includes(id)) {
-        throw new Error(`cannot require ${id}`)
-      }
-
-      return __require(id)
-    }
-
-    return $require.bind(this) as NodeRequire
-  }
-
-  private async createScopeContext(
-    scope: string,
-    context: ScopeContext,
-    model: SnippetModel,
-    logger: Logger,
-  ) {
     const secretObj = model.secret
       ? qs.parse(EncryptUtil.decrypt(model.secret))
       : {}
@@ -436,107 +338,127 @@ export class ServerlessService implements OnModuleInit {
       )
     }
 
-    const requestContext = {
-      ...context,
-      ...context.res,
+    const serializableReq = {
       query: context.req.query,
-      headers: context.req.headers,
-      // TODO wildcard params
-      params: context.req.params || {},
+      headers: Object.fromEntries(
+        Object.entries(context.req.headers || {}).filter(
+          ([, v]) => typeof v !== 'function',
+        ),
+      ),
+      params: context.req.params,
       method: context.req.method,
+      url: context.req.url,
+      ip: context.req.ip,
+      body: context.req.body,
+    }
 
-      secret: secretObj,
+    const sandboxContext = {
+      req: serializableReq,
+      res: {},
+      isAuthenticated: context.isAuthenticated,
+      secret: secretObj as Record<string, unknown>,
+      model: {
+        id: model.id,
+        name: model.name,
+        reference: model.reference,
+      },
+    }
 
-      model,
-      document: model,
-      name: model.name,
+    const result = await this.sandboxService.execute(
+      compiledCode,
+      sandboxContext,
+      {
+        timeout: 30000,
+        namespace: scope,
+      },
+    )
+
+    this.saveInvocationLog(model, context, result).catch((error) => {
+      this.logger.error(`Save invocation log failed: ${error.message}`)
+    })
+
+    if (!result.success) {
+      this.logger.error(
+        `Serverless function error [${scope}]: ${result.error?.message}`,
+        result.error?.stack,
+      )
+      throw new BizException(
+        ErrorCodeEnum.ServerlessError,
+        result.error?.message || 'Unknown error, please check log',
+      )
+    }
+
+    return result.data
+  }
+
+  async compileTypescriptCode(
+    code: string,
+  ): Promise<string | null | undefined> {
+    const res = await transformAsync(code, complieTypeScriptBabelOptions)
+    if (!res) {
+      throw new InternalServerErrorException('convert code error')
+    }
+
+    return res.code
+  }
+
+  private async saveInvocationLog(
+    model: SnippetModel,
+    context: ScopeContext,
+    result: SandboxResult,
+  ) {
+    await this.logModel.create({
+      functionId: model.id || (model as any)._id?.toString(),
       reference: model.reference,
-    }
+      name: model.name,
+      method: context.req.method,
+      ip: context.req.ip,
+      status: result.success ? 'success' : 'error',
+      executionTime: result.executionTime,
+      logs: result.logs || [],
+      error: result.error,
+    })
+  }
 
-    const require = this.createNewContextRequire()
-    if (this.cleanableScope.scopeContextLRU.has(scope)) {
-      const context = this.cleanableScope.scopeContextLRU.get(scope)
+  async getInvocationLogs(
+    functionId: string,
+    options: { page: number; size: number; status?: 'success' | 'error' },
+  ) {
+    const { page, size, status } = options
+    const condition: Record<string, unknown> = { functionId }
+    if (status) condition.status = status
 
-      return Object.assign({}, context, {
-        context: { ...context.context, ...requestContext, require },
-      })
-    }
+    const [data, total] = await Promise.all([
+      this.logModel
+        .find(condition)
+        .sort({ created: -1 })
+        .skip((page - 1) * size)
+        .limit(size)
+        .select('-logs')
+        .lean({ getters: true }),
+      this.logModel.countDocuments(condition),
+    ])
 
-    const createdContext = {
-      context: {
-        ...requestContext,
-
-        storage: {
-          cache: this.mockStorageCache,
-          db: this.mockDb(
-            `${model.reference || '#########debug######'}@${model.name}`,
-          ),
-          dangerousAccessDbInstance: () => {
-            return [this.databaseService.db, mongo]
-          },
-        },
-
-        getMaster: this.mockGetMaster.bind(this),
-        getService: this.getService.bind(this),
-
-        broadcast: (type: string, data: any) =>
-          // @ts-ignore
-          this.eventService.broadcast(`fn#${type}`, data, {
-            scope: EventScope.TO_VISITOR_ADMIN,
-          }),
-
-        writeAsset: async (
-          path: string,
-          data: any,
-          options: Parameters<typeof fs.writeFile>[2],
-        ) => {
-          return await this.assetService.writeUserCustomAsset(
-            safePathJoin(path),
-            data,
-            options,
-          )
-        },
-        readAsset: async (
-          path: string,
-          options: Parameters<typeof fs.readFile>[1],
-        ) => {
-          return await this.assetService.getAsset(safePathJoin(path), options)
-        },
-      },
-
-      // inject global
-      __dirname: DATA_DIR,
-      __filename: '',
-
-      // inject some zx utils
-      fetch,
-
-      // inject Global API
-      Buffer,
-
-      // inject logger
-      console: logger,
-      logger,
-
-      require,
-      import(module: string) {
-        return Promise.resolve(require(module))
-      },
-
-      process: {
-        env: safeProcessEnv(),
-        nextTick: scheduleManager.schedule.bind(null),
+    const totalPage = Math.ceil(total / size)
+    return {
+      data,
+      pagination: {
+        total,
+        size,
+        currentPage: page,
+        totalPage,
+        hasNextPage: page < totalPage,
+        hasPrevPage: page > 1,
       },
     }
+  }
 
-    this.cleanableScope.scopeContextLRU.set(scope, createdContext)
-
-    return createdContext
+  async getInvocationLogDetail(id: string) {
+    return this.logModel.findById(id).lean({ getters: true })
   }
 
   async isValidServerlessFunction(raw: string) {
     try {
-      // 验证 handler 是否存在并且是函数
       const ast = (await parseAsync(
         raw,
         complieTypeScriptBabelOptions,
@@ -572,40 +494,35 @@ export class ServerlessService implements OnModuleInit {
       }
     }
 
-    // 0. get built-in functions is exist in db
     const result = await this.model.find({
       name: {
         $in: paths,
       },
-      // FIXME reference not only `built-in` now
       reference: {
         $in: ['built-in'].concat(Array.from(references.values())),
       },
       type: SnippetType.Function,
     })
 
-    // 1. filter is exist
     const migrationTasks = [] as Promise<any>[]
     for (const doc of result) {
-      const path = doc.name
-      pathCodeMap.delete(path)
+      pathCodeMap.delete(doc.name)
 
-      // migration, add builtIn set to `true`
       if (!doc.builtIn) {
         migrationTasks.push(doc.updateOne({ builtIn: true }))
       }
     }
     await Promise.all(migrationTasks)
 
-    // 2. pour
-
     for (const [path, { code, method, name, reference }] of pathCodeMap) {
       this.logger.log(`pour built-in function: ${name}`)
+      const compiledCode = await this.compileTypescriptCode(code)
       await this.model.create({
         type: SnippetType.Function,
         name: path,
         reference: reference || 'built-in',
         raw: code,
+        compiledCode: compiledCode ?? undefined,
         method: method || 'get',
         enable: true,
         private: false,
@@ -635,11 +552,12 @@ export class ServerlessService implements OnModuleInit {
       throw new InternalServerErrorException('built-in function not found')
     }
 
+    const compiledCode = await this.compileTypescriptCode(builtInSnippet.code)
     await this.model.updateOne(
       {
         name,
       },
-      { raw: builtInSnippet.code },
+      { raw: builtInSnippet.code, compiledCode: compiledCode ?? undefined },
     )
   }
 }

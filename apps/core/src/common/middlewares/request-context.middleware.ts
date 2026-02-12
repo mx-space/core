@@ -3,8 +3,8 @@
 import type { ServerResponse } from 'node:http'
 import type { NestMiddleware } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
-import { BizIncomingMessage } from '~/transformers/get-req.transformer'
-import * as cls from 'cls-hooked'
+import type { BizIncomingMessage } from '~/transformers/get-req.transformer'
+import { normalizeLanguageCode, parseAcceptLanguage } from '~/utils/lang.util'
 import { RequestContext } from '../contexts/request.context'
 
 @Injectable()
@@ -12,13 +12,19 @@ export class RequestContextMiddleware implements NestMiddleware {
   use(req: BizIncomingMessage, res: ServerResponse, next: () => any) {
     const requestContext = new RequestContext(req, res)
 
-    const session =
-      cls.getNamespace(RequestContext.name) ||
-      cls.createNamespace(RequestContext.name)
+    // Extract x-lang header and normalize
+    const headerLang = req.headers['x-lang']
+    if (typeof headerLang === 'string') {
+      requestContext.lang = normalizeLanguageCode(headerLang)
+    }
 
-    session.run(async () => {
-      session.set(RequestContext.name, requestContext)
-      next()
-    })
+    if (!requestContext.lang) {
+      const acceptLang = parseAcceptLanguage(req.headers['accept-language'])
+      if (acceptLang) {
+        requestContext.lang = acceptLang
+      }
+    }
+
+    RequestContext.run(requestContext, () => next())
   }
 }

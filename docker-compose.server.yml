@@ -1,0 +1,75 @@
+services:
+  mx-core:
+    # CI build this image, then ship it to your SERVER.
+    # e.g. ghcr.io/<org>/<repo>:<tag>
+    image: ${MX_CORE_IMAGE:-mx-core:latest}
+    container_name: mx-core
+    restart: unless-stopped
+
+    ports:
+      - "${MX_PORT:-2333}:2333"
+
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      PORT: "2333"
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-localhost:*}
+
+      # MongoDB (container in this compose)
+      DB_CONNECTION_STRING: ${DB_CONNECTION_STRING:-mongodb://mongo:27017/mx-space}
+
+      # Redis (container in this compose)
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      # REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+
+      # Security (optional)
+      # ENCRYPT_KEY must be length 64 if ENCRYPT_ENABLE=true
+      ENCRYPT_ENABLE: ${ENCRYPT_ENABLE:-true}
+      ENCRYPT_KEY: ${ENCRYPT_KEY:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_EXPIRE: ${JWT_EXPIRE:-}
+
+      # Cache
+      DISABLE_CACHE: ${DISABLE_CACHE:-false}
+
+      # Debug (optional)
+      DEBUG: ${DEBUG:-false}
+      DEBUG_MEMORY_DUMP: ${DEBUG_MEMORY_DUMP:-false}
+
+    volumes:
+      # production data dir: ~/.mx-space
+      - ./data/mx-space:/root/.mx-space
+
+    depends_on:
+      - mongo
+      - redis
+
+    healthcheck:
+      test: [CMD, curl, -f, "http://127.0.0.1:2333/api/v2/ping"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: mx-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./data/redis:/data
+    healthcheck:
+      test: [CMD-SHELL, "redis-cli ping | grep PONG"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 3s
+
+  mongo:
+    image: mongo:7
+    container_name: mx-mongo
+    restart: unless-stopped
+    command: ["mongod", "--bind_ip_all"]
+    volumes:
+      - ./data/db:/data/db
+
