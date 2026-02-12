@@ -282,6 +282,10 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       this.lruCache.set(cacheKey, finalTemplate)
     }
 
+    // 获取一言数据
+    const { hitokoto } = await this.emailService.getHitokotoForTemplate()
+    source.hitokoto = hitokoto
+
     const options: Mail.Options = {
       from: sendfrom,
       subject: `[${seo.title || 'Mx Space'}] 发布了新内容~`,

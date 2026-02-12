@@ -1,3 +1,4 @@
+import type { HitokotoData } from '~/processors/helper/helper.hitokoto.service'
 import dayjs from 'dayjs'
 import type { OwnerModel, OwnerModelSecurityKeys } from '../owner/owner.model'
 import type { CommentModel } from './comment.model'
@@ -58,6 +59,8 @@ export const baseRenderProps = Object.freeze({
     parent: null as CommentModel | null,
     owner: {} as Omit<OwnerModel, OwnerModelSecurityKeys>,
   },
+
+  hitokoto: null as HitokotoData | null,
 })
 type Writeable<T> = { -readonly [P in keyof T]: T[P] }
 

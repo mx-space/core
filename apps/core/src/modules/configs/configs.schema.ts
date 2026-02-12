@@ -70,6 +70,15 @@ export const MailOptionsSchema = section('邮件通知设置', {
   }),
   smtp: SmtpConfigSchema,
   resend: ResendConfigSchema,
+  hitokoto: withMeta(
+    z
+      .object({
+        enable: field.toggle(z.boolean().optional(), '启用一言'),
+        api: field.plain(z.string().url().optional(), '一言 API 地址'),
+      })
+      .optional(),
+    { title: '一言设置' },
+  ),
 })
 export class MailOptionsDto extends createZodDto(MailOptionsSchema) {}
 export type MailOptionsConfig = z.infer<typeof MailOptionsSchema>

@@ -632,6 +632,11 @@ export class CommentService implements OnModuleInit {
         : `[${seo.title || 'Mx Space'}] 有新回复了耶~`
 
     source.ip ??= ''
+
+    // 获取一言数据
+    const { hitokoto } = await this.mailService.getHitokotoForTemplate()
+    source.hitokoto = hitokoto
+
     const options = {
       from: sendfrom,
       subject,

@@ -11,5 +11,14 @@ export const emailProvider = defineProvider({
     sendTestEmail() {
       return Promise.resolve()
     },
+    async getHitokotoForTemplate() {
+      return {
+        hitokoto: {
+          text: '测试一言',
+          from: '测试出处',
+          author: '测试作者',
+        },
+      }
+    },
   },
 })
