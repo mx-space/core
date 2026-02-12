@@ -128,6 +128,8 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
               unsubscribe_link: unsubscribeLink,
               owner: owner.name,
 
+              hitokoto: null,
+
               aggregate: {
                 owner,
                 subscriber: {

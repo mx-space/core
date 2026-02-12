@@ -485,6 +485,8 @@ export class CommentService implements OnModuleInit {
           CommentReplyMailType.Owner === type ? comment.mail : ownerInfo.mail,
         ip: comment.ip || '',
 
+        hitokoto: null,
+
         aggregate: {
           owner: ownerInfo,
           commentor: {
