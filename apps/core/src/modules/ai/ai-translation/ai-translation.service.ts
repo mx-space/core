@@ -41,8 +41,13 @@ import {
 } from '../ai.constants'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
+import { IModelRuntime } from '../runtime'
 import { AITranslationModel } from './ai-translation.model'
 import type { GetTranslationsGroupedQueryInput } from './ai-translation.schema'
+import {
+  parseLexicalForTranslation,
+  restoreLexicalTranslation,
+} from './lexical-translation-parser'
 
 interface ArticleContent {
   title: string
@@ -630,19 +635,41 @@ export class AiTranslationService implements OnModuleInit {
 
     const isLexical = content.contentFormat === ContentFormat.Lexical
 
-    const { systemPrompt, prompt, reasoningEffort } = isLexical
-      ? AI_PROMPTS.translationStreamLexical(targetLang, {
-          title: content.title,
-          content: content.content!,
-          summary: content.summary ?? undefined,
-          tags: content.tags,
-        })
-      : AI_PROMPTS.translationStream(targetLang, {
-          title: content.title,
-          text: content.text,
-          summary: content.summary ?? undefined,
-          tags: content.tags,
-        })
+    if (isLexical) {
+      return this.translateLexicalContent(
+        content,
+        targetLang,
+        runtime,
+        info,
+        onToken,
+      )
+    }
+
+    return this.translateMarkdownContent(
+      content,
+      targetLang,
+      runtime,
+      info,
+      push,
+      onToken,
+    )
+  }
+
+  private async translateMarkdownContent(
+    content: ArticleContent,
+    targetLang: string,
+    runtime: IModelRuntime,
+    info: { model: string; provider: string },
+    push?: (event: AiStreamEvent) => Promise<void>,
+    onToken?: (count?: number) => Promise<void>,
+  ) {
+    const { systemPrompt, prompt, reasoningEffort } =
+      AI_PROMPTS.translationStream(targetLang, {
+        title: content.title,
+        text: content.text,
+        summary: content.summary ?? undefined,
+        tags: content.tags,
+      })
 
     const messages = [
       { role: 'system' as const, content: systemPrompt },
@@ -685,27 +712,8 @@ export class AiTranslationService implements OnModuleInit {
       sourceLang?: string
       title?: string
       text?: string
-      content?: any
       summary?: string | null
       tags?: string[] | null
-    }
-
-    if (isLexical) {
-      if (!parsed?.title || !parsed?.content || !parsed?.sourceLang) {
-        throw new Error('Invalid Lexical translation JSON response')
-      }
-      const translatedContent = JSON.stringify(parsed.content)
-      return {
-        sourceLang: parsed.sourceLang,
-        title: parsed.title,
-        text: this.lexicalService.lexicalToMarkdown(translatedContent),
-        contentFormat: ContentFormat.Lexical,
-        content: translatedContent,
-        summary: parsed.summary ?? null,
-        tags: parsed.tags ?? null,
-        aiModel: info.model,
-        aiProvider: info.provider,
-      }
     }
 
     if (!parsed?.title || !parsed?.text || !parsed?.sourceLang) {
@@ -720,6 +728,142 @@ export class AiTranslationService implements OnModuleInit {
       tags: parsed.tags ?? null,
       aiModel: info.model,
       aiProvider: info.provider,
+    }
+  }
+
+  private async translateLexicalContent(
+    content: ArticleContent,
+    targetLang: string,
+    runtime: IModelRuntime,
+    info: { model: string; provider: string },
+    onToken?: (count?: number) => Promise<void>,
+  ) {
+    const { chunks, editorState } = parseLexicalForTranslation(content.content!)
+    const allTranslations = new Map<string, string>()
+    let sourceLang = ''
+
+    // Edge case: no translatable nodes (entire document is code/embeds)
+    if (chunks.length === 0) {
+      const metaEntries = { __title__: content.title } as Record<string, string>
+      if (content.summary) metaEntries.__summary__ = content.summary
+      if (content.tags?.length) metaEntries.__tags__ = content.tags.join('|||')
+
+      const result = await this.callChunkTranslation(
+        targetLang,
+        { markdown: content.title, textEntries: metaEntries },
+        runtime,
+        onToken,
+      )
+      sourceLang = result.sourceLang
+      for (const [id, text] of Object.entries(result.translations)) {
+        allTranslations.set(id, text)
+      }
+    }
+
+    for (const [i, chunk] of chunks.entries()) {
+      const textEntries: Record<string, string> = {}
+      for (const ref of chunk.textNodes) {
+        textEntries[ref.id] = ref.originalText
+      }
+
+      if (i === 0) {
+        textEntries.__title__ = content.title
+        if (content.summary) textEntries.__summary__ = content.summary
+        if (content.tags?.length)
+          textEntries.__tags__ = content.tags.join('|||')
+      }
+
+      const result = await this.callChunkTranslation(
+        targetLang,
+        {
+          markdown: chunk.markdown,
+          textEntries,
+          ...(i === 0
+            ? {
+                title: content.title,
+                summary: content.summary ?? undefined,
+                tags: content.tags,
+              }
+            : {}),
+        },
+        runtime,
+        onToken,
+      )
+
+      if (!sourceLang) sourceLang = result.sourceLang
+      for (const [id, text] of Object.entries(result.translations)) {
+        allTranslations.set(id, text)
+      }
+    }
+
+    const translatedContent = restoreLexicalTranslation(
+      editorState,
+      allTranslations,
+      chunks,
+    )
+    const title = allTranslations.get('__title__') ?? content.title
+    const summary =
+      allTranslations.get('__summary__') ?? content.summary ?? null
+    const tagsStr = allTranslations.get('__tags__')
+    const tags = tagsStr ? tagsStr.split('|||') : (content.tags ?? null)
+
+    return {
+      sourceLang,
+      title,
+      text: this.lexicalService.lexicalToMarkdown(translatedContent),
+      contentFormat: ContentFormat.Lexical,
+      content: translatedContent,
+      summary,
+      tags,
+      aiModel: info.model,
+      aiProvider: info.provider,
+    }
+  }
+
+  private async callChunkTranslation(
+    targetLang: string,
+    chunk: {
+      markdown: string
+      textEntries: Record<string, string>
+      title?: string
+      summary?: string | null
+      tags?: string[]
+    },
+    runtime: any,
+    onToken?: (count?: number) => Promise<void>,
+  ): Promise<{ sourceLang: string; translations: Record<string, string> }> {
+    const { systemPrompt, prompt, reasoningEffort } =
+      AI_PROMPTS.translationChunk(targetLang, chunk)
+
+    const messages = [
+      { role: 'system' as const, content: systemPrompt },
+      { role: 'user' as const, content: prompt },
+    ]
+
+    let fullText = ''
+    if (runtime.generateTextStream) {
+      for await (const c of runtime.generateTextStream({
+        messages,
+        temperature: 0.3,
+        maxRetries: 2,
+        reasoningEffort,
+      })) {
+        fullText += c.text
+        if (onToken) await onToken()
+      }
+    } else {
+      const result = await runtime.generateText({
+        messages,
+        temperature: 0.3,
+        maxRetries: 2,
+        reasoningEffort,
+      })
+      fullText = result.text
+    }
+
+    return JSON.parse(fullText) as {
+      sourceLang: string
+      translations: Record<string, string>
     }
   }
 
