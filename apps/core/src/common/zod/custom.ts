@@ -57,8 +57,8 @@ export const zLang = z
   .preprocess(
     (val) =>
       typeof val === 'string' && val.toLowerCase() === 'original'
-        ? 'original'
+        ? undefined
         : normalizeLanguageCode(val as string),
-    z.union([z.string().length(2), z.literal('original')]),
+    z.string().length(2).optional(),
   )
   .optional()
