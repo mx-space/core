@@ -1,6 +1,7 @@
 import {
   zArrayUnique,
   zCoerceInt,
+  zLang,
   zMongoId,
   zNonEmptyString,
   zPinDate,
@@ -8,7 +9,6 @@ import {
 import { PagerSchema } from '~/shared/dto/pager.dto'
 import { WriteBaseSchema } from '~/shared/schema'
 import { ImageSchema } from '~/shared/schema/image.schema'
-import { normalizeLanguageCode } from '~/utils/lang.util'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
@@ -63,12 +63,7 @@ export class CategoryAndSlugDto extends createZodDto(CategoryAndSlugSchema) {}
  * Post detail query schema
  */
 export const PostDetailQuerySchema = z.object({
-  lang: z
-    .preprocess(
-      (val) => normalizeLanguageCode(val as string),
-      z.string().length(2),
-    )
-    .optional(),
+  lang: zLang,
 })
 
 export class PostDetailQueryDto extends createZodDto(PostDetailQuerySchema) {}
@@ -84,12 +79,7 @@ export const PostPagerSchema = PagerSchema.extend({
       z.array(zMongoId),
     )
     .optional(),
-  lang: z
-    .preprocess(
-      (val) => normalizeLanguageCode(val as string),
-      z.string().length(2),
-    )
-    .optional(),
+  lang: zLang,
 })
 
 export class PostPagerDto extends createZodDto(PostPagerSchema) {}

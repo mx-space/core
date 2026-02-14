@@ -1,3 +1,4 @@
+import { normalizeLanguageCode } from '~/utils/lang.util'
 import { z } from 'zod'
 
 export const zBooleanOrString = z.union([z.boolean(), z.string()])
@@ -51,3 +52,13 @@ export const zRefTypeTransform = z.preprocess((val) => {
   }
   return mapping[val.toLowerCase()] || val
 }, z.string().optional())
+
+export const zLang = z
+  .preprocess(
+    (val) =>
+      typeof val === 'string' && val.toLowerCase() === 'original'
+        ? 'original'
+        : normalizeLanguageCode(val as string),
+    z.union([z.string().length(2), z.literal('original')]),
+  )
+  .optional()
