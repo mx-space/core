@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [10.0.2](https://github.com/mx-space/core/compare/v10.0.1...v10.0.2) (2026-02-14)
+
+
+### Bug Fixes
+
+* **zod:** zLang should convert 'original' to undefined instead of passing through ([2b58461](https://github.com/mx-space/core/commit/2b584615ab32c2cab68f44289ff2b51501b754c7))
+
+
+
 ## [10.0.1](https://github.com/mx-space/core/compare/v10.0.0...v10.0.1) (2026-02-14)
 
 
