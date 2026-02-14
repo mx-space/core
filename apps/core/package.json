@@ -126,7 +126,7 @@
     "openai": "6.16.0",
     "picocolors": "^1.1.1",
     "pluralize": "^8.0.0",
-    "qs": "6.14.1",
+    "qs": "6.14.2",
     "reflect-metadata": "0.2.2",
     "remove-markdown": "0.6.3",
     "remove-md-codeblock": "0.0.4",
