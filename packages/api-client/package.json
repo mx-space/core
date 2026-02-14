@@ -57,7 +57,7 @@
     "camelcase-keys": "^10.0.2",
     "cors": "2.8.6",
     "es-toolkit": "1.44.0",
-    "express": "4.21.2",
+    "express": "4.22.1",
     "form-data": "4.0.5",
     "tsdown": "0.20.1",
     "umi-request": "1.4.0",
