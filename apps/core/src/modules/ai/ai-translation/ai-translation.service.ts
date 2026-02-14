@@ -16,7 +16,6 @@ import {
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { InjectModel } from '~/transformers/model.transformer'
 import { computeContentHash as computeContentHashUtil } from '~/utils/content.util'
-import { scheduleManager } from '~/utils/schedule.util'
 import { md5 } from '~/utils/tool.util'
 import dayjs from 'dayjs'
 import { ConfigsService } from '../../configs/configs.service'
@@ -25,6 +24,7 @@ import type { PageModel } from '../../page/page.model'
 import type { PostModel } from '../../post/post.model'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
+import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   AITaskType,
   computeAITaskDedupKey,
@@ -91,6 +91,7 @@ export class AiTranslationService implements OnModuleInit {
     private readonly taskProcessor: TaskQueueProcessor,
     private readonly taskQueueService: TaskQueueService,
     private readonly lexicalService: LexicalService,
+    private readonly aiTaskService: AiTaskService,
   ) {}
 
   onModuleInit() {
@@ -1492,20 +1493,12 @@ export class AiTranslationService implements OnModuleInit {
       return
     }
 
-    scheduleManager.schedule(async () => {
-      try {
-        this.logger.log(
-          `AI auto translation start: article=${id} targets=${targetLanguages.join(
-            ',',
-          )}`,
-        )
-        await this.generateTranslationsForLanguages(id, targetLanguages)
-        this.logger.log(`AI auto translation done: article=${id}`)
-      } catch (error) {
-        this.logger.error(
-          `Auto translation failed for article ${id}: ${error.message}`,
-        )
-      }
+    this.logger.log(
+      `AI auto translation task created: article=${id} targets=${targetLanguages.join(',')}`,
+    )
+    await this.aiTaskService.createTranslationTask({
+      refId: id,
+      targetLanguages,
     })
   }
 
@@ -1538,20 +1531,12 @@ export class AiTranslationService implements OnModuleInit {
       refId: id,
     })
     if (!existingTranslations.length) {
-      scheduleManager.schedule(async () => {
-        try {
-          this.logger.log(
-            `AI auto translation update init: article=${id} targets=${targetLanguages.join(
-              ',',
-            )}`,
-          )
-          await this.generateTranslationsForLanguages(id, targetLanguages)
-          this.logger.log(`AI auto translation update init done: article=${id}`)
-        } catch (error) {
-          this.logger.error(
-            `Auto translation update init failed for article ${id}: ${error.message}`,
-          )
-        }
+      this.logger.log(
+        `AI auto translation task created (update init): article=${id} targets=${targetLanguages.join(',')}`,
+      )
+      await this.aiTaskService.createTranslationTask({
+        refId: id,
+        targetLanguages,
       })
       return
     }
@@ -1574,20 +1559,12 @@ export class AiTranslationService implements OnModuleInit {
       return
     }
 
-    scheduleManager.schedule(async () => {
-      try {
-        this.logger.log(
-          `AI auto translation update start: article=${id} targets=${outdatedLanguages.join(
-            ',',
-          )}`,
-        )
-        await this.generateTranslationsForLanguages(id, outdatedLanguages)
-        this.logger.log(`AI auto translation update done: article=${id}`)
-      } catch (error) {
-        this.logger.error(
-          `Auto translation update failed for article ${id}: ${error.message}`,
-        )
-      }
+    this.logger.log(
+      `AI auto translation task created (update): article=${id} targets=${outdatedLanguages.join(',')}`,
+    )
+    await this.aiTaskService.createTranslationTask({
+      refId: id,
+      targetLanguages: outdatedLanguages,
     })
   }
 }
