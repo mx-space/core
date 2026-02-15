@@ -137,7 +137,12 @@ export function replaceFilenameTemplate(
     return extractFolderLevel(localFolderPath, lvl)
   })
 
-  return result
+  // 防止路径遍历：移除父目录引用（..）
+  const segments = result.split(/[/\\]+/)
+  const safeSegments = segments.filter(segment => segment !== '..')
+  const safeResult = safeSegments.join('/')
+
+  return safeResult
 }
 
 /**
