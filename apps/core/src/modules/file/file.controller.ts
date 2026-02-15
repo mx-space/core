@@ -17,15 +17,17 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { alphabet } from '~/constants/other.constant'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
+import {
+  generateFilename,
+  generateFilePath,
+} from '~/utils/filename-template.util'
 import { S3Uploader } from '~/utils/s3.util'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
-import { customAlphabet } from 'nanoid'
 import { FileReferenceService } from './file-reference.service'
 import {
   BatchOrphanDeleteDto,
@@ -248,20 +250,46 @@ export class FileController {
     const file = await this.uploadService.getAndValidMultipartField(req)
     const { type = 'file' } = query
 
-    const ext = path.extname(file.filename)
-    const filename = customAlphabet(alphabet)(18) + ext.toLowerCase()
+    // 获取文件上传配置
+    const uploadConfig = await this.configsService.get('fileUploadOptions')
 
-    await this.service.writeFile(type, filename, file.file)
+    // 生成文件名（可能包含子路径）
+    const rawFilename = generateFilename(uploadConfig, {
+      originalFilename: file.filename,
+      fileType: type,
+    })
 
-    const fileUrl = await this.service.resolveFileUrl(type, filename)
+    // 生成基础路径
+    const basePath = generateFilePath(uploadConfig, {
+      originalFilename: file.filename,
+      fileType: type,
+    })
+
+    // 合并路径和文件名
+    // basePath 通常是 type 或自定义路径
+    // rawFilename 可能包含子目录（比如 "2026/01/15/file.jpg"）
+    const fullPath = basePath
+      ? path.join(basePath, rawFilename)
+      : path.join(type, rawFilename)
+
+    // 分离出目录和最终文件名
+    const directory = path.dirname(fullPath)
+    const finalFilename = path.basename(fullPath)
+
+    await this.service.writeFile(directory, finalFilename, file.file)
+
+    const fileUrl = await this.service.resolveFileUrl(directory, finalFilename)
 
     if (type === 'image') {
-      await this.fileReferenceService.createPendingReference(fileUrl, filename)
+      await this.fileReferenceService.createPendingReference(
+        fileUrl,
+        finalFilename,
+      )
     }
 
     return {
       url: fileUrl,
-      name: filename,
+      name: finalFilename,
     }
   }
 
