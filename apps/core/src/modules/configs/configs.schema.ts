@@ -155,7 +155,8 @@ export const ImageStorageOptionsSchema = section('图床设置', {
     },
   ),
   prefix: field.plain(z.string().optional(), '文件路径前缀', {
-    description: '上传到 S3 的文件路径前缀，例如 images/',
+    description:
+      '上传到 S3 的文件路径前缀，支持模板占位符: {Y}年4位, {y}年2位, {m}月, {d}日, {h}时, {i}分, {s}秒, {md5}随机MD5, {type}文件类型等。例如: blog/{Y}/{m}/{d} 或 images/',
   }),
 })
 export class ImageStorageOptionsDto extends createZodDto(

@@ -24,6 +24,7 @@ import { PagerDto } from '~/shared/dto/pager.dto'
 import {
   generateFilename,
   generateFilePath,
+  replaceFilenameTemplate,
 } from '~/utils/filename-template.util'
 import { S3Uploader } from '~/utils/s3.util'
 import type { FastifyReply, FastifyRequest } from 'fastify'
@@ -115,9 +116,17 @@ export class FileController {
           const buffer = await fs.readFile(localPath)
           const contentType = lookup(filename) || 'application/octet-stream'
 
-          const objectKey = config.prefix
-            ? `${config.prefix.replace(/\/+$/, '')}/${filename}`
-            : filename
+          // 处理 prefix 中的模板变量
+          let prefixPath = ''
+          if (config.prefix) {
+            prefixPath = replaceFilenameTemplate(config.prefix, {
+              originalFilename: filename,
+              fileType: 'image',
+            })
+            prefixPath = prefixPath.replace(/\/+$/, '')
+          }
+
+          const objectKey = prefixPath ? `${prefixPath}/${filename}` : filename
 
           const s3Url = await s3Uploader.uploadBuffer(
             buffer,
