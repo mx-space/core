@@ -118,7 +118,14 @@ export class S3Uploader {
       .split('/')
       .map((seg) => encodeURIComponent(seg))
       .join('/')
-    const canonicalUri = `/${this.bucket}/${encodedObjectKey}`
+
+    // Determine canonical URI based on endpoint style
+    // Virtual-hosted style: bucket in host, just use /key
+    // Path style: bucket in path
+    const isVirtualHosted = host.startsWith(`${this.bucket}.`)
+    const canonicalUri = isVirtualHosted
+      ? `/${encodedObjectKey}`
+      : `/${this.bucket}/${encodedObjectKey}`
 
     const headers: Record<string, string> = {
       Host: host,
