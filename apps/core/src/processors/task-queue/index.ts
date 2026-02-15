@@ -1,3 +1,4 @@
+export * from './scoped-task.service'
 export * from './task-queue.constants'
 export * from './task-queue.module'
 export * from './task-queue.processor'

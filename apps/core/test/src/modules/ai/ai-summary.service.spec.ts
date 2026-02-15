@@ -3,6 +3,7 @@ import { CollectionRefTypes } from '~/constants/db.constant'
 import { AiInFlightService } from '~/modules/ai/ai-inflight/ai-inflight.service'
 import { AISummaryModel } from '~/modules/ai/ai-summary/ai-summary.model'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
+import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { AiService } from '~/modules/ai/ai.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -83,6 +84,13 @@ describe('AiSummaryService', () => {
         { provide: AiService, useValue: mockAiService },
         { provide: AiInFlightService, useValue: mockAiInFlightService },
         { provide: TaskQueueProcessor, useValue: mockTaskProcessor },
+        {
+          provide: AiTaskService,
+          useValue: {
+            crud: { createTask: vi.fn() },
+            createSummaryTask: vi.fn(),
+          },
+        },
       ],
     }).compile()
 

@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing'
 import { AiInFlightService } from '~/modules/ai/ai-inflight/ai-inflight.service'
+import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { AITranslationModel } from '~/modules/ai/ai-translation/ai-translation.model'
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import { parseLexicalForTranslation } from '~/modules/ai/ai-translation/lexical-translation-parser'
@@ -8,7 +9,7 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
-import { TaskQueueProcessor, TaskQueueService } from '~/processors/task-queue'
+import { TaskQueueProcessor } from '~/processors/task-queue'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { getModelToken } from '~/transformers/model.transformer'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -177,7 +178,13 @@ describe('translateLexicalContent (real-world data)', () => {
         { provide: AiInFlightService, useValue: { runWithStream: vi.fn() } },
         { provide: EventManagerService, useValue: { emit: vi.fn() } },
         { provide: TaskQueueProcessor, useValue: { registerHandler: vi.fn() } },
-        { provide: TaskQueueService, useValue: { createTask: vi.fn() } },
+        {
+          provide: AiTaskService,
+          useValue: {
+            crud: { createTask: vi.fn() },
+            createTranslationTask: vi.fn(),
+          },
+        },
         {
           provide: LexicalService,
           useValue: {

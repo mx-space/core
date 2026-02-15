@@ -11,6 +11,8 @@ export const TASK_QUEUE_KEYS = {
   indexByStatus: (status: string) =>
     `${TASK_QUEUE_KEY_PREFIX}:index:status:${status}`,
   indexByType: (type: string) => `${TASK_QUEUE_KEY_PREFIX}:index:type:${type}`,
+  indexByScope: (scope: string) =>
+    `${TASK_QUEUE_KEY_PREFIX}:index:scope:${scope}`,
   indexByGroup: (groupId: string) =>
     `${TASK_QUEUE_KEY_PREFIX}:index:group:${groupId}`,
   lock: (id: string) => `${TASK_QUEUE_KEY_PREFIX}:lock:${id}`,

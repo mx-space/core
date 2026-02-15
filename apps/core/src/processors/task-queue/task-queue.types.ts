@@ -29,6 +29,7 @@ export interface TaskRedis {
   payload: string
   payloadHash: string
   groupId: string
+  scope: string
 
   progress: string
   progressMessage: string
@@ -55,6 +56,7 @@ export interface Task<TPayload = Record<string, unknown>, TResult = unknown> {
   status: TaskStatus
   payload: TPayload
   groupId?: string
+  scope?: string
 
   progress?: number
   progressMessage?: string
@@ -108,6 +110,7 @@ export function parseTask(raw: TaskRedis, logs: string[]): Task {
     status: raw.status as TaskStatus,
     payload: JSON.parse(raw.payload || '{}'),
     groupId: raw.groupId || undefined,
+    scope: raw.scope || undefined,
     progress: raw.progress ? Number(raw.progress) : undefined,
     progressMessage: raw.progressMessage || undefined,
     totalItems: raw.totalItems ? Number(raw.totalItems) : undefined,

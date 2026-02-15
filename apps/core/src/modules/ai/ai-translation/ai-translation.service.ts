@@ -9,7 +9,6 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import {
   TaskQueueProcessor,
-  TaskQueueService,
   TaskStatus,
   type TaskExecuteContext,
 } from '~/processors/task-queue'
@@ -89,7 +88,6 @@ export class AiTranslationService implements OnModuleInit {
     private readonly aiInFlightService: AiInFlightService,
     private readonly eventManager: EventManagerService,
     private readonly taskProcessor: TaskQueueProcessor,
-    private readonly taskQueueService: TaskQueueService,
     private readonly lexicalService: LexicalService,
     private readonly aiTaskService: AiTaskService,
   ) {}
@@ -255,7 +253,7 @@ export class AiTranslationService implements OnModuleInit {
         AITaskType.Translation,
         taskPayload,
       )
-      const result = await this.taskQueueService.createTask({
+      const result = await this.aiTaskService.crud.createTask({
         type: AITaskType.Translation,
         payload: taskPayload as unknown as Record<string, unknown>,
         dedupKey,
@@ -384,7 +382,7 @@ export class AiTranslationService implements OnModuleInit {
         AITaskType.Translation,
         taskPayload,
       )
-      const result = await this.taskQueueService.createTask({
+      const result = await this.aiTaskService.crud.createTask({
         type: AITaskType.Translation,
         payload: taskPayload as unknown as Record<string, unknown>,
         dedupKey,
