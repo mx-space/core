@@ -80,8 +80,9 @@ export class EncryptUtil {
         }
         return result
       }
-      default:
+      default: {
         return data
+      }
     }
   }
 
@@ -113,8 +114,9 @@ export class EncryptUtil {
         }
         return result
       }
-      default:
+      default: {
         return data
+      }
     }
   }
 

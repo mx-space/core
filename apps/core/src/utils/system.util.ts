@@ -37,7 +37,6 @@ export const formatByteSize = (byteSize: number) => {
 export const isBuiltinModule = (module: string, ignoreList: string[] = []) => {
   return (
     // @ts-ignore
-    // eslint-disable-next-line node/no-deprecated-api
     (builtinModules || (Object.keys(process.binding('natives')) as string[]))
       .filter(
         (x) =>
