@@ -28,6 +28,10 @@ export const generateDefaultConfig: () => IConfig = () => ({
     resend: {
       apiKey: '',
     },
+    hitokoto: {
+      enable: false,
+      api: 'https://v1.hitokoto.cn',
+    },
   },
   commentOptions: {
     antiSpam: false,
