@@ -21,6 +21,7 @@ import {
   resolveTargetLanguage,
   type ResolveLanguageOptions,
 } from '../ai-language.util'
+import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
 import {
   AI_STREAM_IDLE_TIMEOUT_MS,
@@ -47,6 +48,7 @@ export class AiSummaryService implements OnModuleInit {
     private readonly aiService: AiService,
     private readonly aiInFlightService: AiInFlightService,
     private readonly taskProcessor: TaskQueueProcessor,
+    private readonly aiTaskService: AiTaskService,
   ) {
     this.logger = new Logger(AiSummaryService.name)
   }
@@ -664,19 +666,55 @@ export class AiSummaryService implements OnModuleInit {
   @OnEvent(BusinessEvents.POST_CREATE)
   @OnEvent(BusinessEvents.NOTE_CREATE)
   async handleCreateArticle(event: { id: string }) {
-    const enableAutoGenerate = await this.configService
-      .get('ai')
-      .then((c) => c.enableAutoGenerateSummary && c.enableSummary)
-    if (!enableAutoGenerate) {
+    const aiConfig = await this.configService.get('ai')
+    if (!aiConfig.enableAutoGenerateSummary || !aiConfig.enableSummary) {
       return
     }
-    const targetLanguage = await this.configService
-      .get('ai')
-      .then((c) => c.aiSummaryTargetLanguage || DEFAULT_SUMMARY_LANG)
+    const targetLanguage =
+      aiConfig.aiSummaryTargetLanguage || DEFAULT_SUMMARY_LANG
 
-    await this.generateSummaryByOpenAI(
-      event.id,
-      targetLanguage === 'auto' ? DEFAULT_SUMMARY_LANG : targetLanguage,
-    )
+    this.logger.log(`AI auto summary task created: article=${event.id}`)
+    await this.aiTaskService.createSummaryTask({
+      refId: event.id,
+      lang: targetLanguage === 'auto' ? DEFAULT_SUMMARY_LANG : targetLanguage,
+    })
+  }
+
+  @OnEvent(BusinessEvents.POST_UPDATE)
+  @OnEvent(BusinessEvents.NOTE_UPDATE)
+  async handleUpdateArticle(event: { id: string }) {
+    const aiConfig = await this.configService.get('ai')
+    if (!aiConfig.enableAutoGenerateSummary || !aiConfig.enableSummary) {
+      return
+    }
+
+    const id = event.id
+    let document: { text: string; title: string }
+    try {
+      const resolved = await this.resolveArticleForSummary(id)
+      document = resolved.document
+    } catch {
+      return
+    }
+
+    const existingSummaries = await this.aiSummaryModel.find({ refId: id })
+    if (!existingSummaries.length) {
+      return
+    }
+
+    const newHash = this.computeContentHash(document.text)
+    const hasOutdated = existingSummaries.some((s) => s.hash !== newHash)
+    if (!hasOutdated) {
+      return
+    }
+
+    const targetLanguage =
+      aiConfig.aiSummaryTargetLanguage || DEFAULT_SUMMARY_LANG
+
+    this.logger.log(`AI auto summary task created (update): article=${id}`)
+    await this.aiTaskService.createSummaryTask({
+      refId: id,
+      lang: targetLanguage === 'auto' ? DEFAULT_SUMMARY_LANG : targetLanguage,
+    })
   }
 }

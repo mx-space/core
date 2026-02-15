@@ -34,6 +34,7 @@ export interface CreateTaskOptions {
   payload: Record<string, unknown>
   dedupKey?: string
   groupId?: string
+  scope?: string
 }
 
 @Injectable()
@@ -64,7 +65,7 @@ export class TaskQueueService implements OnModuleDestroy {
   async createTask(
     options: CreateTaskOptions,
   ): Promise<{ taskId: string; created: boolean }> {
-    const { type, payload, dedupKey, groupId } = options
+    const { type, payload, dedupKey, groupId, scope } = options
     const payloadHash = this.computeDedupHash(type, dedupKey)
 
     if (dedupKey) {
@@ -93,6 +94,7 @@ export class TaskQueueService implements OnModuleDestroy {
       payload: JSON.stringify(payload),
       payloadHash,
       groupId: groupId || '',
+      scope: scope || '',
       progress: '',
       progressMessage: '',
       totalItems: '',
@@ -124,6 +126,11 @@ export class TaskQueueService implements OnModuleDestroy {
     pipeline.zadd(indexAll, now, taskId)
     pipeline.zadd(indexPending, now, taskId)
     pipeline.zadd(indexType, now, taskId)
+
+    if (scope) {
+      const indexScope = this.getKey(TASK_QUEUE_KEYS.indexByScope(scope))
+      pipeline.zadd(indexScope, now, taskId)
+    }
 
     if (groupId) {
       const indexGroup = this.getKey(TASK_QUEUE_KEYS.indexByGroup(groupId))
@@ -226,15 +233,18 @@ export class TaskQueueService implements OnModuleDestroy {
   async getTasks(options: {
     status?: TaskStatus
     type?: string
+    scope?: string
     page: number
     size: number
     includeSubTasks?: boolean
   }): Promise<{ data: Task[]; total: number }> {
-    const { status, type, page, size, includeSubTasks = false } = options
+    const { status, type, scope, page, size, includeSubTasks = false } = options
 
     let indexKey: string
     if (type) {
       indexKey = this.getKey(TASK_QUEUE_KEYS.indexByType(type))
+    } else if (scope) {
+      indexKey = this.getKey(TASK_QUEUE_KEYS.indexByScope(scope))
     } else if (status) {
       indexKey = this.getKey(TASK_QUEUE_KEYS.indexByStatus(status))
     } else {
@@ -252,9 +262,17 @@ export class TaskQueueService implements OnModuleDestroy {
     const allTasks = await Promise.all(allTaskIds.map((id) => this.getTask(id)))
     let filteredTasks = allTasks.filter((t): t is Task => t !== null)
 
-    // Filter by status if both type and status are specified
-    if (type && status) {
+    if (
+      status &&
+      indexKey !== this.getKey(TASK_QUEUE_KEYS.indexByStatus(status))
+    ) {
       filteredTasks = filteredTasks.filter((t) => t.status === status)
+    }
+    if (
+      scope &&
+      indexKey !== this.getKey(TASK_QUEUE_KEYS.indexByScope(scope))
+    ) {
+      filteredTasks = filteredTasks.filter((t) => t.scope === scope)
     }
 
     // Exclude sub-tasks (tasks with groupId) unless explicitly included
@@ -376,6 +394,11 @@ export class TaskQueueService implements OnModuleDestroy {
     // Always remove from processing set to prevent recovery from recreating deleted tasks
     pipeline.zrem(processingSet, taskId)
 
+    if (task.scope) {
+      const indexScope = this.getKey(TASK_QUEUE_KEYS.indexByScope(task.scope))
+      pipeline.zrem(indexScope, taskId)
+    }
+
     if (task.groupId) {
       const indexGroup = this.getKey(TASK_QUEUE_KEYS.indexByGroup(task.groupId))
       pipeline.zrem(indexGroup, taskId)
@@ -389,9 +412,10 @@ export class TaskQueueService implements OnModuleDestroy {
   async deleteTasks(options: {
     status?: TaskStatus
     type?: string
+    scope?: string
     before: number
   }): Promise<number> {
-    const { status, type, before } = options
+    const { status, type, scope, before } = options
 
     if (before >= Date.now()) {
       throw new BizException(
@@ -403,6 +427,8 @@ export class TaskQueueService implements OnModuleDestroy {
     let indexKey: string
     if (type) {
       indexKey = this.getKey(TASK_QUEUE_KEYS.indexByType(type))
+    } else if (scope) {
+      indexKey = this.getKey(TASK_QUEUE_KEYS.indexByScope(scope))
     } else if (status) {
       indexKey = this.getKey(TASK_QUEUE_KEYS.indexByStatus(status))
     } else {
@@ -419,16 +445,17 @@ export class TaskQueueService implements OnModuleDestroy {
     for (const taskId of taskIds) {
       try {
         const task = await this.getTask(taskId)
-        if (
-          task &&
-          (task.status === TaskStatus.Completed ||
-            task.status === TaskStatus.PartialFailed ||
-            task.status === TaskStatus.Failed ||
-            task.status === TaskStatus.Cancelled)
-        ) {
-          await this.deleteTask(taskId)
-          deleted++
-        }
+        if (!task) continue
+        if (scope && task.scope !== scope) continue
+        const isTerminal =
+          task.status === TaskStatus.Completed ||
+          task.status === TaskStatus.PartialFailed ||
+          task.status === TaskStatus.Failed ||
+          task.status === TaskStatus.Cancelled
+        if (!isTerminal) continue
+        if (status && task.status !== status) continue
+        await this.deleteTask(taskId)
+        deleted++
       } catch {
         // ignore
       }

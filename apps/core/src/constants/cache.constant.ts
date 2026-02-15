@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-literal-enum-member */
 export enum RedisKeys {
   AccessIp = 'access_ip',
   Like = 'like',

@@ -1,3 +1,4 @@
+import { logger } from '~/global/consola.global'
 import { isDev } from '~/global/env.global'
 import type { FastifyReply } from 'fastify'
 
@@ -16,8 +17,7 @@ export function sendSseEvent(
 ) {
   if (data === undefined) {
     if (isDev) {
-      // eslint-disable-next-line no-console
-      console.debug(`[sse] event=${event} no-data`)
+      logger.debug(`[sse] event=${event} no-data`)
     }
     reply.raw.write(`event: ${event}\n\n`)
     return
@@ -25,8 +25,8 @@ export function sendSseEvent(
   const payload = typeof data === 'string' ? data : JSON.stringify(data ?? null)
   if (isDev) {
     const size = typeof payload === 'string' ? payload.length : 0
-    // eslint-disable-next-line no-console
-    console.debug(`[sse] event=${event} size=${size}`)
+
+    logger.debug(`[sse] event=${event} size=${size}`)
   }
   reply.raw.write(`event: ${event}\n`)
   reply.raw.write(`data: ${payload}\n\n`)

@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## [10.0.3](https://github.com/mx-space/core/compare/v10.0.2...v10.0.3) (2026-02-15)
+
+
+
+## [10.0.2](https://github.com/mx-space/core/compare/v10.0.1...v10.0.2) (2026-02-14)
+
+
+### Bug Fixes
+
+* **zod:** zLang should convert 'original' to undefined instead of passing through ([2b58461](https://github.com/mx-space/core/commit/2b584615ab32c2cab68f44289ff2b51501b754c7))
+
+
+
+## [10.0.1](https://github.com/mx-space/core/compare/v10.0.0...v10.0.1) (2026-02-14)
+
+
+### Bug Fixes
+
+* **deps:** update dependency qs to v6.14.2 [security] ([#2581](https://github.com/mx-space/core/issues/2581)) ([868f0eb](https://github.com/mx-space/core/commit/868f0eb3995845b8ba3f3336b8e4b928524362e8))
+* **lang.decorator:** handle 'original' language query parameter ([91be732](https://github.com/mx-space/core/commit/91be73254d084aec8d0b99ba5dcc55a348b31937))
+
+
+### Features
+
+* **translation:** implement lexical content translation support ([dd8bdde](https://github.com/mx-space/core/commit/dd8bdde5b65232d82af73aac4a210e33c1e10c57))
+
+
+
 # [10.0.0](https://github.com/mx-space/core/compare/v10.0.0-alpha.3...v10.0.0) (2026-02-08)
 
 

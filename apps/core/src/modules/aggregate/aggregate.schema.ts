@@ -1,5 +1,4 @@
-import { zCoerceInt } from '~/common/zod'
-import { normalizeLanguageCode } from '~/utils/lang.util'
+import { zCoerceInt, zLang } from '~/common/zod'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
@@ -33,12 +32,7 @@ export const TimelineQuerySchema = z.object({
     (val) => (typeof val === 'string' ? Math.trunc(Number(val)) : val),
     z.enum(TimelineType).optional(),
   ),
-  lang: z
-    .preprocess(
-      (val) => normalizeLanguageCode(val as string),
-      z.string().length(2),
-    )
-    .optional(),
+  lang: zLang,
 })
 
 export class TimelineQueryDto extends createZodDto(TimelineQuerySchema) {}

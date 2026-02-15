@@ -27,6 +27,7 @@ export {
 export {
   zBooleanOrString,
   zEmail,
+  zLang,
   zMaxLengthString,
   zPinDate,
   zRefTypeTransform,

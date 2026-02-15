@@ -2,20 +2,15 @@ import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { SchedulerRegistry } from '@nestjs/schedule'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { TaskQueueProcessor } from '~/processors/task-queue/task-queue.processor'
 import {
+  ScopedTaskService,
+  TaskQueueProcessor,
   TaskQueueService,
-  type CreateTaskOptions,
-} from '~/processors/task-queue/task-queue.service'
-import {
-  TaskStatus,
-  type Task,
   type TaskExecuteContext,
-} from '~/processors/task-queue/task-queue.types'
+} from '~/processors/task-queue'
 import { CronBusinessService } from './cron-business.service'
 import {
   CronTaskMetas,
-  CronTaskType,
   type CronTaskDefinition,
   type CronTaskTypeValue,
 } from './cron-task.types'
@@ -23,13 +18,16 @@ import {
 @Injectable()
 export class CronTaskService implements OnModuleInit {
   private readonly logger = new Logger(CronTaskService.name)
+  readonly crud: ScopedTaskService
 
   constructor(
-    private readonly taskQueueService: TaskQueueService,
+    taskQueueService: TaskQueueService,
     private readonly taskQueueProcessor: TaskQueueProcessor,
     private readonly cronBusinessService: CronBusinessService,
     private readonly schedulerRegistry: SchedulerRegistry,
-  ) {}
+  ) {
+    this.crud = new ScopedTaskService(taskQueueService, 'cron')
+  }
 
   onModuleInit() {
     this.registerTaskHandlers()
@@ -95,13 +93,11 @@ export class CronTaskService implements OnModuleInit {
       throw new BizException(ErrorCodeEnum.CronNotFound, type)
     }
 
-    const options: CreateTaskOptions = {
+    return this.crud.createTask({
       type,
       payload: {},
       dedupKey: type,
-    }
-
-    return this.taskQueueService.createTask(options)
+    })
   }
 
   async getCronDefinitions(): Promise<CronTaskDefinition[]> {
@@ -134,87 +130,5 @@ export class CronTaskService implements OnModuleInit {
     }
 
     return definitions
-  }
-
-  async getTasks(options: {
-    status?: TaskStatus
-    type?: CronTaskTypeValue
-    page: number
-    size: number
-  }): Promise<{ data: Task[]; total: number }> {
-    const { status, type, page, size } = options
-
-    // Get all cron task types
-    const cronTypes = Object.values(CronTaskType)
-
-    // If specific type is requested, filter to that type only
-    if (type) {
-      return this.taskQueueService.getTasks({
-        status,
-        type,
-        page,
-        size,
-        includeSubTasks: false,
-      })
-    }
-
-    // Otherwise, get all tasks and filter to cron types only
-    const result = await this.taskQueueService.getTasks({
-      status,
-      page: 1,
-      size: 10000,
-      includeSubTasks: false,
-    })
-
-    const cronTasks = result.data.filter((task) =>
-      cronTypes.includes(task.type as CronTaskTypeValue),
-    )
-
-    const total = cronTasks.length
-    const start = (page - 1) * size
-    const paginatedTasks = cronTasks.slice(start, start + size)
-
-    return { data: paginatedTasks, total }
-  }
-
-  async getTask(taskId: string): Promise<Task | null> {
-    return this.taskQueueService.getTask(taskId)
-  }
-
-  async cancelTask(taskId: string): Promise<boolean> {
-    return this.taskQueueService.cancelTask(taskId)
-  }
-
-  async retryTask(
-    taskId: string,
-  ): Promise<{ taskId: string; created: boolean }> {
-    const task = await this.taskQueueService.getTask(taskId)
-    if (!task) {
-      throw new BizException(ErrorCodeEnum.AITaskNotFound)
-    }
-
-    if (
-      task.status !== TaskStatus.Failed &&
-      task.status !== TaskStatus.Cancelled
-    ) {
-      throw new BizException(
-        ErrorCodeEnum.AITaskCannotRetry,
-        'Task is not in a retryable state',
-      )
-    }
-
-    return this.createCronTask(task.type as CronTaskTypeValue)
-  }
-
-  async deleteTask(taskId: string): Promise<void> {
-    return this.taskQueueService.deleteTask(taskId)
-  }
-
-  async deleteTasks(options: {
-    status?: TaskStatus
-    type?: CronTaskTypeValue
-    before: number
-  }): Promise<number> {
-    return this.taskQueueService.deleteTasks(options)
   }
 }

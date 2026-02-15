@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
+import { logger } from '~/global/consola.global'
 import axios from 'axios'
 import FormData from 'form-data'
 
@@ -76,10 +77,8 @@ export const uploadFileToCOS = async (
       },
     })
     .catch((error) => {
-      if (isDev) {
-        console.dir(error)
-      }
-      console.log(error.response.data)
+      logger.error(error)
+      logger.log(error.response.data)
       throw error
     })
 }

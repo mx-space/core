@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { AiInFlightService } from '~/modules/ai/ai-inflight/ai-inflight.service'
+import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { AITranslationModel } from '~/modules/ai/ai-translation/ai-translation.model'
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import { AiService } from '~/modules/ai/ai.service'
@@ -8,7 +9,7 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
-import { TaskQueueProcessor, TaskQueueService } from '~/processors/task-queue'
+import { TaskQueueProcessor } from '~/processors/task-queue'
 import { getModelToken } from '~/transformers/model.transformer'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -83,8 +84,9 @@ describe('AiTranslationService', () => {
       registerHandler: vi.fn(),
     }
 
-    const mockTaskQueueService = {
-      createTask: vi.fn(),
+    const mockAiTaskService = {
+      crud: { createTask: vi.fn() },
+      createTranslationTask: vi.fn(),
     }
 
     const module = await Test.createTestingModule({
@@ -100,11 +102,11 @@ describe('AiTranslationService', () => {
         { provide: AiInFlightService, useValue: mockAiInFlightService },
         { provide: EventManagerService, useValue: mockEventManager },
         { provide: TaskQueueProcessor, useValue: mockTaskProcessor },
-        { provide: TaskQueueService, useValue: mockTaskQueueService },
         {
           provide: LexicalService,
           useValue: { lexicalToMarkdown: vi.fn().mockReturnValue('') },
         },
+        { provide: AiTaskService, useValue: mockAiTaskService },
       ],
     }).compile()
 

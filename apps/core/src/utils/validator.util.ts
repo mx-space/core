@@ -21,7 +21,7 @@ export function isString(value: unknown): value is string {
  */
 export function isMongoId(value: unknown): boolean {
   if (typeof value !== 'string') return false
-  return /^[a-f0-9]{24}$/i.test(value)
+  return /^[\da-f]{24}$/i.test(value)
 }
 
 /**
@@ -71,6 +71,6 @@ export function isSemVer(value: unknown): boolean {
   // Match standard semver format: X.Y.Z with optional pre-release and build metadata
   // Using non-capturing groups since we only need to test, not extract
   const semverRegex =
-    /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[a-z-][0-9a-z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-z-][0-9a-z-]*))*)?(?:\+[0-9a-z-]+(?:\.[0-9a-z-]+)*)?$/i
+    /^(?:(?:0|[1-9]\d*)\.){2}(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[a-z-][\da-z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-z-][\da-z-]*))*)?(?:\+[\da-z-]+(?:\.[\da-z-]+)*)?$/i
   return semverRegex.test(value)
 }

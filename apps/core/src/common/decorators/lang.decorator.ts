@@ -16,6 +16,7 @@ export const Lang = createParamDecorator(
     const query = request.query as Record<string, unknown>
     const queryLang = query?.lang
     if (typeof queryLang === 'string') {
+      if (queryLang.toLowerCase() === 'original') return undefined
       const normalized = normalizeLanguageCode(queryLang)
       if (normalized) return normalized
     }

@@ -1,3 +1,4 @@
+import './dayjs.global'
 import cluster from 'node:cluster'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { CLUSTER } from '~/app.config'
@@ -8,11 +9,10 @@ import {
   TEMP_DIR,
   USER_ASSET_DIR,
 } from '~/constants/path.constant'
+import pc from 'picocolors'
 import { consola, globalLogger, logger } from './consola.global'
 import { cwd, isDev } from './env.global'
 import { registerJSONGlobal } from './json.global'
-import './dayjs.global'
-import pc from 'picocolors'
 
 // 建立目录
 function createAppFolders() {
@@ -46,6 +46,7 @@ function registerGlobal() {
     consola,
     cwd,
   })
+  // eslint-disable-next-line no-console
   console.debug = (...rest) => {
     if (isDev) {
       logger.log.call(console, ...rest)

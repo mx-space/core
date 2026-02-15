@@ -1,6 +1,7 @@
 import {
   zCoerceBoolean,
   zCoerceInt,
+  zLang,
   zMongoId,
   zNonEmptyString,
   zTransformEmptyNull,
@@ -8,7 +9,6 @@ import {
 import { PagerSchema } from '~/shared/dto/pager.dto'
 import { WriteBaseSchema } from '~/shared/schema'
 import { ImageSchema } from '~/shared/schema/image.schema'
-import { normalizeLanguageCode } from '~/utils/lang.util'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
@@ -77,12 +77,7 @@ export class NoteQueryDto extends createZodDto(NoteQuerySchema) {}
 export const NotePasswordQuerySchema = z.object({
   password: zNonEmptyString.optional(),
   single: zCoerceBoolean.optional(),
-  lang: z
-    .preprocess(
-      (val) => normalizeLanguageCode(val as string),
-      z.string().length(2),
-    )
-    .optional(),
+  lang: zLang,
 })
 
 export class NotePasswordQueryDto extends createZodDto(
@@ -94,12 +89,7 @@ export class NotePasswordQueryDto extends createZodDto(
  */
 export const ListQuerySchema = z.object({
   size: zCoerceInt.min(1).max(20).optional(),
-  lang: z
-    .preprocess(
-      (val) => normalizeLanguageCode(val as string),
-      z.string().length(2),
-    )
-    .optional(),
+  lang: zLang,
 })
 
 export class ListQueryDto extends createZodDto(ListQuerySchema) {}
@@ -131,12 +121,7 @@ export class SetNotePublishStatusDto extends createZodDto(
  * Note topic pager schema (extends PagerSchema with lang support)
  */
 export const NoteTopicPagerSchema = PagerSchema.extend({
-  lang: z
-    .preprocess(
-      (val) => normalizeLanguageCode(val as string),
-      z.string().length(2),
-    )
-    .optional(),
+  lang: zLang,
 })
 
 export class NoteTopicPagerDto extends createZodDto(NoteTopicPagerSchema) {}
