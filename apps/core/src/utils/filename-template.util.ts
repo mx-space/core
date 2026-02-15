@@ -116,6 +116,7 @@ export function replaceFilenameTemplate(
   result = result.replaceAll('{uuid}', () => generateUuid())
 
   // 自定义长度的随机字符串 {str-数字}
+  // eslint-disable-next-line unicorn/better-regex
   result = result.replaceAll(/\{str-(\d+)\}/g, (_match, length) => {
     const len = Number.parseInt(length, 10)
     return customAlphabet(alphabet)(len)
@@ -130,6 +131,7 @@ export function replaceFilenameTemplate(
   result = result.replaceAll('{type}', fileType)
 
   // 本地文件夹占位符 {localFolder:数字}
+  // eslint-disable-next-line unicorn/better-regex
   result = result.replaceAll(/\{localFolder:(\d+)\}/g, (_match, level) => {
     const lvl = Number.parseInt(level, 10)
     return extractFolderLevel(localFolderPath, lvl)
