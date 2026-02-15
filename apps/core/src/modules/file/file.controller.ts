@@ -143,7 +143,7 @@ export class FileController {
   }
 
   private extractLocalImageFilename(url: string): string | null {
-    const match = url.match(/\/objects\/image\/([^/?#]+)/)
+    const match = url.match(/\/objects\/image\/([^#/?]+)/)
     return match ? match[1] : null
   }
 
@@ -265,31 +265,35 @@ export class FileController {
       fileType: type,
     })
 
-    // 合并路径和文件名
-    // basePath 通常是 type 或自定义路径
-    // rawFilename 可能包含子目录（比如 "2026/01/15/file.jpg"）
-    const fullPath = basePath
-      ? path.join(basePath, rawFilename)
-      : path.join(type, rawFilename)
+    // 构建相对路径（相对于文件类型目录）
+    // 如果 basePath 就是 type，则直接使用 rawFilename
+    // 否则，将 basePath 中除去 type 部分后与 rawFilename 合并
+    let relativePath: string
+    if (basePath === type || !basePath) {
+      // basePath 就是 type 或为空，直接使用 rawFilename
+      relativePath = rawFilename
+    } else {
+      // basePath 包含自定义路径，需要去除开头的 type 部分
+      const pathWithoutType = basePath.startsWith(`${type}/`)
+        ? basePath.slice(Math.max(0, type.length + 1))
+        : basePath
+      relativePath = path.join(pathWithoutType, rawFilename)
+    }
 
-    // 分离出目录和最终文件名
-    const directory = path.dirname(fullPath)
-    const finalFilename = path.basename(fullPath)
+    await this.service.writeFile(type, relativePath, file.file)
 
-    await this.service.writeFile(directory, finalFilename, file.file)
-
-    const fileUrl = await this.service.resolveFileUrl(directory, finalFilename)
+    const fileUrl = await this.service.resolveFileUrl(type, relativePath)
 
     if (type === 'image') {
       await this.fileReferenceService.createPendingReference(
         fileUrl,
-        finalFilename,
+        relativePath,
       )
     }
 
     return {
       url: fileUrl,
-      name: finalFilename,
+      name: path.basename(relativePath),
     }
   }
 
