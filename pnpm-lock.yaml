@@ -399,8 +399,8 @@ importers:
         specifier: ^4.0.18
         version: 4.0.18(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.0.10)(happy-dom@20.5.0)(jiti@2.6.1)(terser@5.44.1)(yaml@2.8.1))
       ioredis:
-        specifier: 5.9.2
-        version: 5.9.2
+        specifier: 5.9.3
+        version: 5.9.3
       mongodb-memory-server:
         specifier: ^11.0.1
         version: 11.0.1
@@ -4870,8 +4870,8 @@ packages:
     resolution: {integrity: sha512-4gd7VpWNQNB4UKKCFFVcp1AVv+FMOgs9NKzjHKusc8jTMhd5eL1NqQqOpE0KzMds804/yHlglp3uxgluOqAPLw==}
     engines: {node: '>= 0.4'}
 
-  ioredis@5.9.2:
-    resolution: {integrity: sha512-tAAg/72/VxOUW7RQSX1pIxJVucYKcjFjfvj60L57jrZpYCHC3XN0WCQ3sNYL4Gmvv+7GPvTAjc+KSdeNuE8oWQ==}
+  ioredis@5.9.3:
+    resolution: {integrity: sha512-VI5tMCdeoxZWU5vjHWsiE/Su76JGhBvWF1MJnV9ZtGltHk9BmD48oDq8Tj8haZ85aceXZMxLNDQZRVo5QKNgXA==}
     engines: {node: '>=12.22.0'}
 
   ipaddr.js@1.9.1:
@@ -11673,7 +11673,7 @@ snapshots:
       hasown: 2.0.2
       side-channel: 1.1.0
 
-  ioredis@5.9.2:
+  ioredis@5.9.3:
     dependencies:
       '@ioredis/commands': 1.5.0
       cluster-key-slot: 1.1.2
