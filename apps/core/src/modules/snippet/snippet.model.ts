@@ -54,7 +54,7 @@ export class SnippetModel extends BaseModel {
   @prop()
   method?: string
 
-  @prop({ trim: true, sparse: true, unique: true })
+  @prop({ trim: true })
   customPath?: string
 
   @prop({

@@ -1,12 +1,13 @@
 import cluster from 'node:cluster'
-import { Co } from '@innei/next-async'
 import type { CoAction } from '@innei/next-async'
+import { Co } from '@innei/next-async'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { isMainProcess } from '~/global/env.global'
+import { DatabaseService } from '~/processors/database/database.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -41,6 +42,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     private readonly subscribeModel: MongooseModel<SubscribeModel>,
 
     private readonly eventManager: EventManagerService,
+    private readonly databaseService: DatabaseService,
 
     private readonly configService: ConfigsService,
     private readonly urlBuilderService: UrlBuilderService,
@@ -103,6 +105,12 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this
+
+    const resolveDocument = async (payload: { id: string }) => {
+      const result = await self.databaseService.findGlobalById(payload.id)
+      if (!result) return null
+      return result.document as NoteModel | PostModel
+    }
 
     const noteAndPostHandler: CoAction<never> = async function (
       noteOrPost: NoteModel | PostModel,
@@ -168,18 +176,16 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       this.abort()
     }
 
-    return [
-      this.eventManager.on(
-        BusinessEvents.NOTE_CREATE,
-        (e) => new Co().use(precheck, noteAndPostHandler).start(e),
-        scopeCfg,
-      ),
+    const handleEvent = async (e: { id: string }) => {
+      const doc = await resolveDocument(e)
+      if (!doc) return
+      new Co().use(precheck, noteAndPostHandler).start(doc)
+    }
 
-      this.eventManager.on(
-        BusinessEvents.POST_CREATE,
-        (e) => new Co().use(precheck, noteAndPostHandler).start(e),
-        scopeCfg,
-      ),
+    return [
+      this.eventManager.on(BusinessEvents.NOTE_CREATE, handleEvent, scopeCfg),
+
+      this.eventManager.on(BusinessEvents.POST_CREATE, handleEvent, scopeCfg),
     ]
   }
 

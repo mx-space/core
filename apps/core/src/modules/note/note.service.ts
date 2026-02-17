@@ -18,7 +18,6 @@ import { isDefined, isMongoId } from '~/utils/validator.util'
 import dayjs from 'dayjs'
 import { debounce, omit } from 'es-toolkit/compat'
 import type { PaginateOptions, QueryFilter } from 'mongoose'
-import { extractArticleIdFromRoomName } from '../activity/activity.util'
 import { CommentService } from '../comment/comment.service'
 import { DraftRefType } from '../draft/draft.model'
 import { DraftService } from '../draft/draft.service'
@@ -180,9 +179,13 @@ export class NoteService {
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
-        this.eventManager.emit(BusinessEvents.NOTE_CREATE, note.toJSON(), {
-          scope: EventScope.TO_SYSTEM,
-        }),
+        this.eventManager.emit(
+          BusinessEvents.NOTE_CREATE,
+          { id: note.id },
+          {
+            scope: EventScope.TO_SYSTEM_VISITOR,
+          },
+        ),
         this.imageService.saveImageDimensionsFromMarkdownText(
           note.text,
           note.images,
@@ -191,23 +194,6 @@ export class NoteService {
             return note.save()
           },
         ),
-        note.isPublished === false ||
-        note.password ||
-        this.checkNoteIsSecret(note)
-          ? null
-          : this.eventManager.broadcast(
-              BusinessEvents.NOTE_CREATE,
-              {
-                ...note.toJSON(),
-                text: note.text,
-              },
-              {
-                scope: EventScope.TO_VISITOR,
-                gateway: {
-                  rooms: [extractArticleIdFromRoomName(note.id)],
-                },
-              },
-            ),
       ])
     })
 
@@ -335,28 +321,11 @@ export class NoteService {
       if (!updated) {
         return
       }
-      this.eventManager.broadcast(BusinessEvents.NOTE_UPDATE, updated, {
-        scope: EventScope.TO_SYSTEM,
-      })
-
-      if (
-        updated.password ||
-        updated.isPublished === false ||
-        updated.publicAt
-      ) {
-        return
-      }
-      this.eventManager.broadcast(
+      this.eventManager.emit(
         BusinessEvents.NOTE_UPDATE,
+        { id: updated.id },
         {
-          ...updated,
-          text: updated.text,
-        },
-        {
-          scope: EventScope.TO_VISITOR,
-          // gateway: {
-          //   rooms: [getArticleIdFromRoomName(updated.id)],
-          // },
+          scope: EventScope.TO_SYSTEM_VISITOR,
         },
       )
     },
@@ -389,9 +358,13 @@ export class NoteService {
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
-        this.eventManager.broadcast(BusinessEvents.NOTE_DELETE, id, {
-          scope: EventScope.TO_SYSTEM_VISITOR,
-        }),
+        this.eventManager.emit(
+          BusinessEvents.NOTE_DELETE,
+          { id },
+          {
+            scope: EventScope.TO_SYSTEM_VISITOR,
+          },
+        ),
       ])
     })
   }

@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common'
 import type {
   GatewayMetadata,
   OnGatewayConnection,
@@ -29,6 +30,7 @@ import type { EventGatewayHooks } from './hook.interface'
 declare module '~/types/socket-meta' {
   interface SocketMetadata {
     sessionId: string
+    lang?: string
 
     roomJoinedAtMap: Record<string, number>
   }
@@ -44,6 +46,8 @@ export class WebEventsGateway
   extends BroadcastBaseGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
+  private readonly logger = new Logger(WebEventsGateway.name)
+
   constructor(
     private readonly redisService: RedisService,
 
@@ -119,6 +123,7 @@ export class WebEventsGateway
         const { roomName } = payload as { roomName: string }
         if (roomName) {
           socket.join(roomName)
+          this.logger.log(`Socket ${socket.id} joined room [${roomName}]`)
           this.hooks.onJoinRoom.forEach((fn) => fn(socket, roomName))
 
           const roomJoinedAtMap = await this.getSocketRoomJoinedAtMap(socket)
@@ -151,6 +156,18 @@ export class WebEventsGateway
           await this.gatewayService.setSocketMetadata(socket, { sessionId })
           this.whenUserOnline()
         }
+        break
+      }
+      case SupportedMessageEvent.UpdateLang: {
+        const { lang } = payload as { lang: string }
+        if (
+          lang &&
+          typeof lang === 'string' &&
+          /^[a-z]{2}(?:-[A-Za-z]{2,})?$/.test(lang)
+        ) {
+          await this.updateSocketLang(socket, lang)
+        }
+        break
       }
     }
 
@@ -164,15 +181,34 @@ export class WebEventsGateway
       // fallback sid
       socket.id
 
-    // logger.debug('webSessionId', webSessionId)
+    const rawLang = socket.handshake.query.lang as string | undefined
+    const lang =
+      rawLang && /^[a-z]{2}(?:-[A-Za-z]{2,})?$/.test(rawLang)
+        ? rawLang
+        : undefined
 
     await this.gatewayService.setSocketMetadata(socket, {
       sessionId: webSessionId,
+      ...(lang ? { lang } : {}),
     })
+
+    if (lang) {
+      socket.join(`lang:${lang}`)
+    }
 
     this.whenUserOnline()
     super.handleConnect(socket)
     this.hooks.onConnected.forEach((fn) => fn(socket))
+  }
+
+  private async updateSocketLang(socket: SocketIO.Socket, lang: string) {
+    const meta = await this.gatewayService.getSocketMetadata(socket)
+    const prevLang = meta?.lang
+    if (prevLang) {
+      socket.leave(`lang:${prevLang}`)
+    }
+    socket.join(`lang:${lang}`)
+    await this.gatewayService.setSocketMetadata(socket, { lang })
   }
 
   whenUserOnline = debounce(
@@ -242,7 +278,10 @@ export class WebEventsGateway
     const exclude = options?.exclude
 
     if (rooms && rooms.length > 0) {
+      this.logger.log(`broadcast [${event}] to rooms [${rooms.join(',')}]`)
       socket = socket.in(rooms)
+    } else {
+      this.logger.log(`broadcast [${event}] to all`)
     }
     if (exclude && exclude.length > 0) {
       socket = socket.except(exclude)

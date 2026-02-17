@@ -1,13 +1,14 @@
 import { OnEvent } from '@nestjs/event-emitter'
-import { WebSocketServer } from '@nestjs/websockets'
 import type {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
+import { WebSocketServer } from '@nestjs/websockets'
+import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import type { Namespace, Socket } from 'socket.io'
+import type { DefaultEventsMap, Namespace, Socket } from 'socket.io'
 import { BusinessEvents } from '../../../constants/business-event.constant'
 import { BroadcastBaseGateway } from '../base.gateway'
 
@@ -73,7 +74,7 @@ export const createAuthGateway = (
         return this.authFailed(client)
       }
 
-      const token = apiKey.replace(/^Bearer\s+/i, '')
+      const token = apiKey.replace(/^bearer\s+/i, '')
       if (!this.authService.isCustomToken(token)) {
         return this.authFailed(client)
       }
@@ -111,10 +112,26 @@ export const createAuthGateway = (
       return false
     }
 
-    override broadcast(event: BusinessEvents, data: any) {
-      this.redisService.emitter
-        .of(`/${namespace}`)
-        .emit('message', this.gatewayMessageFormat(event, data))
+    override broadcast(
+      event: BusinessEvents,
+      data: any,
+      options?: {
+        rooms?: string[]
+        exclude?: string[]
+      },
+    ) {
+      let socket = this.redisService.emitter.of(`/${namespace}`) as
+        | Emitter<DefaultEventsMap>
+        | BroadcastOperator<DefaultEventsMap>
+
+      if (options?.rooms?.length) {
+        socket = socket.in(options.rooms)
+      }
+      if (options?.exclude?.length) {
+        socket = socket.except(options.exclude)
+      }
+
+      socket.emit('message', this.gatewayMessageFormat(event, data))
     }
   }
 

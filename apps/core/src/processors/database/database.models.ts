@@ -1,4 +1,8 @@
 import { ActivityModel } from '~/modules/activity/activity.model'
+import { AIAgentActionModel } from '~/modules/ai/ai-agent/ai-agent-action.model'
+import { AIAgentMessageModel } from '~/modules/ai/ai-agent/ai-agent-message.model'
+import { AIAgentRuntimeConfigModel } from '~/modules/ai/ai-agent/ai-agent-runtime-config.model'
+import { AIAgentSessionModel } from '~/modules/ai/ai-agent/ai-agent-session.model'
 import { AISummaryModel } from '~/modules/ai/ai-summary/ai-summary.model'
 import { AITranslationModel } from '~/modules/ai/ai-translation/ai-translation.model'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
@@ -31,6 +35,10 @@ export const databaseModels = [
   ActivityModel,
   AISummaryModel,
   AITranslationModel,
+  AIAgentActionModel,
+  AIAgentMessageModel,
+  AIAgentRuntimeConfigModel,
+  AIAgentSessionModel,
   AnalyzeModel,
   CategoryModel,
   CommentModel,

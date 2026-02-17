@@ -64,7 +64,10 @@ type ArticleEventDocument = ArticleDocument & {
   _id?: { toString?: () => string } | string
 }
 
-type ArticleEventPayload = ArticleEventDocument | { data: string }
+type ArticleEventPayload =
+  | ArticleEventDocument
+  | { data: string }
+  | { id: string }
 
 type GlobalArticle =
   | { document: PostModel; type: CollectionRefTypes.Post }
@@ -428,12 +431,16 @@ export class AiTranslationService implements OnModuleInit {
 
   private extractIdFromEvent(event: ArticleEventPayload): string | null {
     if ('data' in event) {
-      return event.data ?? null
+      return (event as { data: string }).data ?? null
     }
-    if (event._id && typeof event._id === 'string') {
-      return event._id
+    if ('id' in event && typeof event.id === 'string') {
+      return event.id
     }
-    return event.id ?? event._id?.toString?.() ?? null
+    const doc = event as ArticleEventDocument
+    if (doc._id && typeof doc._id === 'string') {
+      return doc._id
+    }
+    return doc.id ?? doc._id?.toString?.() ?? null
   }
 
   private getMetaLang(document: {
@@ -1057,7 +1064,7 @@ export class AiTranslationService implements OnModuleInit {
     }
 
     this.eventManager.emit(eventType, payload, {
-      scope: EventScope.TO_VISITOR,
+      scope: EventScope.TO_SYSTEM_VISITOR,
     })
   }
 
@@ -1454,6 +1461,23 @@ export class AiTranslationService implements OnModuleInit {
     )
 
     return translations.filter((t) => t.hash === currentHash).map((t) => t.lang)
+  }
+
+  async getValidTranslationsByRefId(
+    refId: string,
+    document: PostModel | NoteModel | PageModel,
+  ): Promise<AITranslationModel[]> {
+    const translations = await this.aiTranslationModel.find({ refId })
+    if (!translations.length) return []
+
+    const sourceLang =
+      this.getMetaLang(document) || translations[0]?.sourceLang || 'unknown'
+    const currentHash = this.computeContentHash(
+      this.toArticleContent(document as ArticleDocument),
+      sourceLang,
+    )
+
+    return translations.filter((t) => t.hash === currentHash)
   }
 
   @OnEvent(BusinessEvents.POST_DELETE)

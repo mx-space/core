@@ -131,7 +131,7 @@ export class CategoryService implements OnApplicationBootstrap {
   async create(name: string, slug?: string) {
     const doc = await this.model.create({ name, slug: slug ?? name })
     this.clearCache()
-    this.eventManager.broadcast(BusinessEvents.CATEGORY_CREATE, doc, {
+    this.eventManager.emit(BusinessEvents.CATEGORY_CREATE, doc, {
       scope: EventScope.TO_SYSTEM_VISITOR,
     })
     return doc
@@ -164,7 +164,7 @@ export class CategoryService implements OnApplicationBootstrap {
 
     this.clearCache()
 
-    this.eventManager.broadcast(BusinessEvents.CATEGORY_UPDATE, newDoc, {
+    this.eventManager.emit(BusinessEvents.CATEGORY_UPDATE, newDoc, {
       scope: EventScope.TO_SYSTEM_VISITOR,
     })
     return newDoc
@@ -186,9 +186,13 @@ export class CategoryService implements OnApplicationBootstrap {
     }
     this.clearCache()
 
-    this.eventManager.broadcast(BusinessEvents.CATEGORY_DELETE, id, {
-      scope: EventScope.ALL,
-    })
+    this.eventManager.emit(
+      BusinessEvents.CATEGORY_DELETE,
+      { id },
+      {
+        scope: EventScope.TO_SYSTEM_VISITOR,
+      },
+    )
     return res
   }
 

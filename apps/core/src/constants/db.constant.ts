@@ -36,6 +36,11 @@ export const WEBHOOK_EVENT_COLLECTION_NAME = 'webhook_events'
 export const AI_SUMMARY_COLLECTION_NAME = 'ai_summaries'
 export const AI_DEEP_READING_COLLECTION_NAME = 'ai_deep_readings'
 export const AI_TRANSLATION_COLLECTION_NAME = 'ai_translations'
+export const AI_AGENT_SESSION_COLLECTION_NAME = 'ai_agent_sessions'
+export const AI_AGENT_MESSAGE_COLLECTION_NAME = 'ai_agent_messages'
+export const AI_AGENT_ACTION_COLLECTION_NAME = 'ai_agent_actions'
+export const AI_AGENT_RUNTIME_CONFIG_COLLECTION_NAME =
+  'ai_agent_runtime_configs'
 
 export const USER_COLLECTION_NAME = 'users'
 export enum CollectionRefTypes {
