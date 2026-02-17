@@ -1,156 +1,88 @@
-import { access, cp, mkdir, rename, rm, writeFile } from 'node:fs/promises'
-import path from 'node:path'
-import { Injectable } from '@nestjs/common'
-import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
-import { HttpService } from '~/processors/helper/helper.http.service'
+import { rm } from 'node:fs/promises'
+import { Injectable, Logger } from '@nestjs/common'
+import { RedisService } from '~/processors/redis/redis.service'
 import { PKG } from '~/utils/pkg.util'
-import axios, { AxiosRequestConfig } from 'axios'
-import JSZip from 'jszip'
 import pc from 'picocolors'
 import { Observable } from 'rxjs'
 import { catchError } from 'rxjs/operators'
-import { ConfigsService } from '../configs/configs.service'
+import { UpdateDownloadService } from './update-download.service'
+import { UpdateInstallService } from './update-install.service'
 
 const { repo } = PKG.dashboard!
 
-interface DownloadMirror {
-  name: string
-  urlTransform: (url: string) => string
-  priority: number
-}
+const REDIS_KEY_PREFIX = 'update:admin'
+
+const LUA_RELEASE_LOCK = `
+if redis.call("get", KEYS[1]) == ARGV[1] then
+  return redis.call("del", KEYS[1])
+else
+  return 0
+end
+`
+
+const LUA_EXTEND_LOCK = `
+if redis.call("get", KEYS[1]) == ARGV[1] then
+  return redis.call("expire", KEYS[1], ARGV[2])
+else
+  return 0
+end
+`
+
+const INSTALL_LOCK_KEY = `${REDIS_KEY_PREFIX}:install-lock`
 
 @Injectable()
 export class UpdateService {
-  private downloadLock = false
-  private readonly DOWNLOAD_TIMEOUT = 300000 // 5分钟
-  private readonly MAX_RETRIES = 3
-
-  // 镜像源配置，按优先级排序
-  private readonly downloadMirrors: DownloadMirror[] = [
-    {
-      name: 'GhFast',
-      urlTransform: (url: string) => `https://ghfast.top/${url}`,
-      priority: 0,
-    },
-    {
-      name: 'GitHub Direct',
-      urlTransform: (url: string) => url,
-      priority: 1,
-    },
-    {
-      name: 'XMLY Proxy',
-      urlTransform: (url: string) => `https://gh.xmly.dev/${url}`,
-      priority: 2,
-    },
-    {
-      name: 'FastGit',
-      urlTransform: (url: string) =>
-        url.replace('github.com', 'download.fastgit.org'),
-      priority: 3,
-    },
-    {
-      name: 'JSDeliver',
-      urlTransform: (url: string) => {
-        // 将 GitHub release 下载链接转换为 JSDeliver CDN 链接
-        const match = url.match(
-          /github\.com\/([^/]+)\/([^/]+)\/releases\/download\/([^/]+)\/(.+)/,
-        )
-        if (match) {
-          const [, owner, repoName, tag, filename] = match
-          return `https://cdn.jsdelivr.net/gh/${owner}/${repoName}@${tag}/${filename}`
-        }
-        return url
-      },
-      priority: 4,
-    },
-  ]
+  private readonly logger = new Logger(UpdateService.name)
+  private readonly LOCK_TTL_SEC = 600
+  private readonly BUFFER_TTL_SEC = 600
+  private readonly STREAM_MAX_LEN = 200
+  private readonly DOWNLOAD_TIMEOUT = 1800000
+  private readonly INSTALL_LOCK_TTL_SEC = 120
 
   constructor(
-    protected readonly httpService: HttpService,
-    protected readonly configService: ConfigsService,
+    private readonly redisService: RedisService,
+    private readonly downloadService: UpdateDownloadService,
+    private readonly installService: UpdateInstallService,
   ) {}
+
+  private get redis() {
+    return this.redisService.getClient()
+  }
+
+  private buildKeys(version: string) {
+    return {
+      lockKey: `${REDIS_KEY_PREFIX}:lock:${version}`,
+      streamKey: `${REDIS_KEY_PREFIX}:stream:${version}`,
+      bufferKey: `${REDIS_KEY_PREFIX}:buffer:${version}`,
+      doneKey: `${REDIS_KEY_PREFIX}:done:${version}`,
+      errorKey: `${REDIS_KEY_PREFIX}:error:${version}`,
+    }
+  }
 
   downloadAdminAsset(version: string) {
     const observable$ = new Observable<string>((subscriber) => {
       ;(async () => {
-        // 检查下载锁
-        if (this.downloadLock) {
-          subscriber.next(
-            pc.yellow('Another download is in progress, please wait...\n'),
-          )
-          subscriber.complete()
-          return
-        }
-
-        this.downloadLock = true
-
         try {
-          const endpoint = `https://api.github.com/repos/${repo}/releases/tags/v${version}`
+          const keys = this.buildKeys(version)
+          const instanceId = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
-          subscriber.next(`Getting release info from ${endpoint}.\n`)
-
-          // 获取发布信息，带重试机制
-          const releaseInfo = await this.fetchWithRetry(endpoint, {
-            timeout: 30000,
-            headers: {
-              'User-Agent': 'Mix-Space-Admin-Updater',
-              Accept: 'application/vnd.github.v3+json',
-            },
-          })
-
-          if (!releaseInfo?.assets) {
-            throw new Error('Release assets not found')
-          }
-
-          const asset = releaseInfo.assets.find(
-            (asset: any) => asset.name === 'release.zip',
+          const lockResult = await this.redis.set(
+            keys.lockKey,
+            instanceId,
+            'EX',
+            this.LOCK_TTL_SEC,
+            'NX',
           )
 
-          if (!asset) {
-            subscriber.next(pc.red('release.zip not found in assets.\n'))
-            subscriber.next(
-              pc.red(
-                `Available assets: ${releaseInfo.assets
-                  .map((a: any) => a.name)
-                  .join(', ')}\n`,
-              ),
-            )
-            return
+          if (lockResult === 'OK') {
+            await this.runAsLeader(version, keys, instanceId, subscriber)
+          } else {
+            await this.runAsFollower(version, keys, subscriber)
           }
-
-          const downloadUrl = asset.browser_download_url
-          const fileSize = asset.size
-
-          subscriber.next(`Found release.zip (${this.formatBytes(fileSize)})\n`)
-
-          // 尝试多个镜像源下载
-          const buffer = await this.downloadWithMirrors(
-            downloadUrl,
-            fileSize,
-            subscriber,
-          )
-
-          if (!buffer) {
-            throw new Error('All download sources failed')
-          }
-
-          // 解压和安装
-          await this.extractAndInstall(buffer, version, subscriber)
-
-          subscriber.next(
-            pc.green(
-              `Admin asset v${version} downloaded and installed successfully.\n`,
-            ),
-          )
         } catch (error) {
           const errorMsg =
             error instanceof Error ? error.message : String(error)
-          subscriber.next(pc.red(`Download failed: ${errorMsg}\n`))
-
-          // 清理可能的部分下载文件
-          await this.cleanup().catch(() => {})
-        } finally {
-          this.downloadLock = false
+          subscriber.next(pc.red(`Update failed: ${errorMsg}\n`))
           subscriber.complete()
         }
       })()
@@ -158,18 +90,342 @@ export class UpdateService {
 
     return observable$.pipe(
       catchError((err) => {
-        this.downloadLock = false
-        console.error('Download observable error:', err)
+        this.logger.error('Download observable error:', err)
         return observable$
       }),
     )
+  }
+
+  private async runAsLeader(
+    version: string,
+    keys: ReturnType<typeof this.buildKeys>,
+    instanceId: string,
+    subscriber: any,
+  ) {
+    this.logger.log(`Leader elected (${instanceId}) for v${version}`)
+
+    await this.redis.del(keys.doneKey, keys.errorKey, keys.streamKey)
+
+    const heartbeat = setInterval(
+      () => {
+        this.redis
+          .eval(LUA_EXTEND_LOCK, 1, keys.lockKey, instanceId, this.LOCK_TTL_SEC)
+          .catch(() => {})
+      },
+      Math.floor(this.LOCK_TTL_SEC * 500),
+    )
+
+    try {
+      const pushProgress = async (msg: string) => {
+        subscriber.next(msg)
+        await this.redis
+          .xadd(
+            keys.streamKey,
+            'MAXLEN',
+            '~',
+            this.STREAM_MAX_LEN,
+            '*',
+            'type',
+            'progress',
+            'data',
+            msg,
+          )
+          .catch(() => {})
+      }
+
+      const endpoint = `https://api.github.com/repos/${repo}/releases/tags/v${version}`
+      await pushProgress(`Getting release info from ${endpoint}.\n`)
+
+      const releaseInfo = await this.downloadService.fetchWithRetry(endpoint, {
+        timeout: 30000,
+        headers: {
+          'User-Agent': 'Mix-Space-Admin-Updater',
+          Accept: 'application/vnd.github.v3+json',
+        },
+      })
+
+      if (!releaseInfo?.assets) {
+        throw new Error('Release assets not found')
+      }
+
+      const asset = releaseInfo.assets.find(
+        (asset: any) => asset.name === 'release.zip',
+      )
+
+      if (!asset) {
+        const msg = `release.zip not found. Available: ${releaseInfo.assets.map((a: any) => a.name).join(', ')}`
+        throw new Error(msg)
+      }
+
+      const downloadUrl = asset.browser_download_url
+      const fileSize = asset.size
+
+      await pushProgress(
+        `Found release.zip (${this.downloadService.formatBytes(fileSize)})\n`,
+      )
+
+      const buffer = await this.downloadService.downloadWithMirrors(
+        downloadUrl,
+        fileSize,
+        async (msg: string) => pushProgress(msg),
+      )
+
+      if (!buffer) {
+        throw new Error('All download sources failed')
+      }
+
+      await pushProgress('Storing buffer to Redis for other instances...\n')
+      await this.redis.setex(
+        keys.bufferKey,
+        this.BUFFER_TTL_SEC,
+        Buffer.from(buffer),
+      )
+
+      await this.acquireInstallLock(instanceId)
+      const installHeartbeat = this.startInstallLockHeartbeat(instanceId)
+      try {
+        await this.installService.extractAndInstall(
+          buffer,
+          version,
+          async (msg: string) => pushProgress(msg),
+        )
+      } finally {
+        clearInterval(installHeartbeat)
+        await this.releaseInstallLock(instanceId)
+      }
+
+      await this.redis.expire(keys.bufferKey, this.BUFFER_TTL_SEC)
+      await this.redis.setex(keys.doneKey, this.BUFFER_TTL_SEC, version)
+      await this.redis.xadd(
+        keys.streamKey,
+        'MAXLEN',
+        '~',
+        this.STREAM_MAX_LEN,
+        '*',
+        'type',
+        'done',
+        'data',
+        version,
+      )
+      await this.redis.expire(keys.streamKey, this.BUFFER_TTL_SEC)
+
+      subscriber.next(
+        pc.green(
+          `Admin asset v${version} downloaded and installed successfully.\n`,
+        ),
+      )
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error)
+
+      await this.redis.setex(keys.errorKey, 300, errorMsg)
+      await this.redis
+        .xadd(
+          keys.streamKey,
+          'MAXLEN',
+          '~',
+          this.STREAM_MAX_LEN,
+          '*',
+          'type',
+          'error',
+          'data',
+          errorMsg,
+        )
+        .catch(() => {})
+      await this.redis
+        .expire(keys.streamKey, this.BUFFER_TTL_SEC)
+        .catch(() => {})
+
+      subscriber.next(pc.red(`Download failed: ${errorMsg}\n`))
+      await rm('admin-release.zip', { force: true }).catch(() => {})
+    } finally {
+      clearInterval(heartbeat)
+      await this.redis
+        .eval(LUA_RELEASE_LOCK, 1, keys.lockKey, instanceId)
+        .catch(() => {})
+      subscriber.complete()
+    }
+  }
+
+  private async runAsFollower(
+    version: string,
+    keys: ReturnType<typeof this.buildKeys>,
+    subscriber: any,
+  ) {
+    this.logger.log(`Follower joining update stream for v${version}`)
+    subscriber.next(
+      pc.cyan('Another instance is downloading, waiting for completion...\n'),
+    )
+
+    try {
+      const alreadyDone = await this.redis.get(keys.doneKey)
+      if (alreadyDone) {
+        subscriber.next('Update already completed by another instance.\n')
+        await this.installFromRedisBuffer(version, keys, subscriber)
+        subscriber.complete()
+        return
+      }
+
+      let lastId = '0-0'
+      const startAt = Date.now()
+      const timeoutMs = this.DOWNLOAD_TIMEOUT + 60000
+
+      while (true) {
+        if (Date.now() - startAt > timeoutMs) {
+          throw new Error('Follower wait timeout')
+        }
+
+        const response = await this.redis.xread(
+          'BLOCK',
+          2000,
+          'STREAMS',
+          keys.streamKey,
+          lastId,
+        )
+
+        if (!response) {
+          const done = await this.redis.get(keys.doneKey)
+          if (done) break
+
+          const errorMsg = await this.redis.get(keys.errorKey)
+          if (errorMsg) {
+            throw new Error(`Leader failed: ${errorMsg}`)
+          }
+
+          const lockExists = await this.redis.exists(keys.lockKey)
+          if (!lockExists) {
+            const done = await this.redis.get(keys.doneKey)
+            if (done) break
+            throw new Error('Leader lost without completion')
+          }
+          continue
+        }
+
+        for (const [, entries] of response) {
+          for (const [id, fields] of entries) {
+            lastId = id
+            const record = this.parseStreamFields(fields)
+
+            if (record.type === 'progress') {
+              subscriber.next(pc.dim(`[leader] ${record.data}`))
+            } else if (record.type === 'error') {
+              throw new Error(`Leader failed: ${record.data}`)
+            }
+          }
+        }
+
+        const done = await this.redis.get(keys.doneKey)
+        if (done) break
+      }
+
+      await this.installFromRedisBuffer(version, keys, subscriber)
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      subscriber.next(pc.red(`Follower update failed: ${errorMsg}\n`))
+    } finally {
+      subscriber.complete()
+    }
+  }
+
+  private async installFromRedisBuffer(
+    version: string,
+    keys: ReturnType<typeof this.buildKeys>,
+    subscriber: any,
+  ) {
+    subscriber.next('Fetching buffer from Redis...\n')
+
+    const bufferData = await this.redis.getBuffer(keys.bufferKey)
+    if (!bufferData) {
+      throw new Error(
+        'Buffer expired in Redis, please retry the update manually',
+      )
+    }
+
+    const buffer: ArrayBuffer = bufferData.buffer.slice(
+      bufferData.byteOffset,
+      bufferData.byteOffset + bufferData.byteLength,
+    ) as ArrayBuffer
+
+    const instanceId = `${process.pid}-${Date.now()}`
+    await this.acquireInstallLock(instanceId)
+    const installHeartbeat = this.startInstallLockHeartbeat(instanceId)
+    try {
+      await this.installService.extractAndInstall(
+        buffer,
+        version,
+        async (msg: string) => {
+          subscriber.next(msg)
+        },
+      )
+    } finally {
+      clearInterval(installHeartbeat)
+      await this.releaseInstallLock(instanceId)
+    }
+
+    subscriber.next(
+      pc.green(
+        `Admin asset v${version} installed from Redis buffer successfully.\n`,
+      ),
+    )
+  }
+
+  private async acquireInstallLock(instanceId: string) {
+    const startAt = Date.now()
+    while (true) {
+      const result = await this.redis.set(
+        INSTALL_LOCK_KEY,
+        instanceId,
+        'EX',
+        this.INSTALL_LOCK_TTL_SEC,
+        'NX',
+      )
+      if (result === 'OK') return
+
+      if (Date.now() - startAt > this.INSTALL_LOCK_TTL_SEC * 1000) {
+        throw new Error('Install lock acquisition timeout')
+      }
+      await this.sleep(500)
+    }
+  }
+
+  private startInstallLockHeartbeat(instanceId: string) {
+    return setInterval(
+      () => {
+        this.redis
+          .eval(
+            LUA_EXTEND_LOCK,
+            1,
+            INSTALL_LOCK_KEY,
+            instanceId,
+            this.INSTALL_LOCK_TTL_SEC,
+          )
+          .catch(() => {})
+      },
+      Math.floor(this.INSTALL_LOCK_TTL_SEC * 500),
+    )
+  }
+
+  private async releaseInstallLock(instanceId: string) {
+    await this.redis
+      .eval(LUA_RELEASE_LOCK, 1, INSTALL_LOCK_KEY, instanceId)
+      .catch(() => {})
+  }
+
+  private parseStreamFields(fields: string[]): {
+    type: string
+    data: string
+  } {
+    const record: Record<string, string> = {}
+    for (let i = 0; i < fields.length; i += 2) {
+      record[fields[i]] = fields[i + 1]
+    }
+    return { type: record.type ?? 'unknown', data: record.data ?? '' }
   }
 
   async getLatestAdminVersion() {
     const endpoint = `https://api.github.com/repos/${repo}/releases/latest`
 
     try {
-      const data = await this.fetchWithRetry(endpoint, {
+      const data = await this.downloadService.fetchWithRetry(endpoint, {
         headers: {
           'User-Agent': 'Mix-Space-Admin-Updater',
           Accept: 'application/vnd.github.v3+json',
@@ -183,290 +439,10 @@ export class UpdateService {
       return tag.replace(/^v/, '')
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error)
-      throw new Error(`Failed to get latest version: ${errorMsg}`)
+      throw new Error(`Failed to get latest version: ${errorMsg}`, {
+        cause: error,
+      })
     }
-  }
-
-  /**
-   * 带重试机制的网络请求
-   */
-  private async fetchWithRetry(
-    url: string,
-    config: AxiosRequestConfig = {},
-    retries = this.MAX_RETRIES,
-  ): Promise<any> {
-    // 获取 GitHub Token
-    const { githubToken } = await this.configService.get(
-      'thirdPartyServiceIntegration',
-    )
-    const token = githubToken || process.env.GITHUB_TOKEN
-    const headers = {
-      ...config.headers,
-      ...(token && { Authorization: `Bearer ${token}` }),
-    }
-
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      try {
-        const response = await this.httpService.axiosRef.get(url, {
-          timeout: this.DOWNLOAD_TIMEOUT,
-          ...config,
-          headers,
-        })
-        return response.data
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : String(error)
-
-        if (attempt === retries) {
-          let finalMsg = `Failed after ${retries} attempts: ${errorMsg}`
-          if (axios.isAxiosError(error) && error.response?.status === 403) {
-            finalMsg +=
-              ' (API Rate Limit Exceeded. Please configure GitHub Token in settings or env GITHUB_TOKEN)'
-          }
-          throw new Error(finalMsg)
-        }
-
-        // 指数退避
-        const delay = Math.min(1000 * 2 ** (attempt - 1), 10000)
-        await this.sleep(delay)
-      }
-    }
-  }
-
-  /**
-   * 多镜像源下载
-   */
-  private async downloadWithMirrors(
-    originalUrl: string,
-    expectedSize: number,
-    subscriber: any,
-  ): Promise<ArrayBuffer | null> {
-    const sortedMirrors = [...this.downloadMirrors].sort(
-      (a, b) => a.priority - b.priority,
-    )
-
-    for (const mirror of sortedMirrors) {
-      try {
-        const mirrorUrl = mirror.urlTransform(originalUrl)
-        subscriber.next(`Trying ${mirror.name}: ${mirrorUrl}\n`)
-
-        const buffer = await this.downloadWithProgress(
-          mirrorUrl,
-          expectedSize,
-          subscriber,
-        )
-
-        if (buffer && buffer.byteLength === expectedSize) {
-          subscriber.next(
-            pc.green(`Successfully downloaded from ${mirror.name}\n`),
-          )
-          return buffer
-        } else {
-          subscriber.next(
-            pc.yellow(
-              `Size mismatch from ${mirror.name}, trying next mirror...\n`,
-            ),
-          )
-        }
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : String(error)
-        subscriber.next(pc.yellow(`${mirror.name} failed: ${errorMsg}\n`))
-        continue
-      }
-    }
-
-    return null
-  }
-
-  /**
-   * 带进度显示的下载
-   */
-  private async downloadWithProgress(
-    url: string,
-    expectedSize: number,
-    subscriber: any,
-  ): Promise<ArrayBuffer> {
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Download timeout'))
-      }, this.DOWNLOAD_TIMEOUT)
-
-      axios
-        .get(url, {
-          responseType: 'arraybuffer',
-          timeout: this.DOWNLOAD_TIMEOUT,
-          onDownloadProgress: (progressEvent) => {
-            if (progressEvent.total) {
-              const percentage = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total,
-              )
-              const downloaded = this.formatBytes(progressEvent.loaded)
-              const total = this.formatBytes(progressEvent.total)
-              subscriber.next(
-                `Download progress: ${percentage}% (${downloaded}/${total})\n`,
-              )
-            }
-          },
-        })
-        .then((response) => {
-          clearTimeout(timeout)
-          resolve(response.data as ArrayBuffer)
-        })
-        .catch((error) => {
-          clearTimeout(timeout)
-          reject(error)
-        })
-    })
-  }
-
-  /**
-   * 解压和安装文件
-   */
-  private async extractAndInstall(
-    buffer: ArrayBuffer,
-    version: string,
-    subscriber: any,
-  ): Promise<void> {
-    subscriber.next('Extracting archive...\n')
-
-    // 创建临时目录
-    const tempDir = `${LOCAL_ADMIN_ASSET_PATH}_temp_${Date.now()}`
-    await mkdir(tempDir, { recursive: true })
-
-    try {
-      // 解压 ZIP 文件
-      const zip = new JSZip()
-      await zip.loadAsync(buffer)
-
-      const files = Object.keys(zip.files)
-      if (files.length === 0) {
-        throw new Error('Archive is empty')
-      }
-
-      subscriber.next(`Extracting ${files.length} files...\n`)
-
-      // 解压所有文件到临时目录
-      for (const filename of files) {
-        const file = zip.files[filename]
-        if (!file.dir) {
-          const content = await file.async('nodebuffer')
-          const filePath = path.join(tempDir, filename)
-          const dirPath = path.dirname(filePath)
-
-          await mkdir(dirPath, { recursive: true })
-          await writeFile(filePath, Uint8Array.from(content))
-        }
-      }
-
-      // 查找实际的内容目录 (通常是 dist 目录)
-      const distPath = path.join(tempDir, 'dist')
-      const contentPath = await access(distPath)
-        .then(() => distPath)
-        .catch(() => tempDir)
-
-      // 备份现有版本
-      const backupPath = `${LOCAL_ADMIN_ASSET_PATH}_backup_${Date.now()}`
-      try {
-        await access(LOCAL_ADMIN_ASSET_PATH)
-        await this.moveDirectory(LOCAL_ADMIN_ASSET_PATH, backupPath)
-        subscriber.next('Existing version backed up.\n')
-      } catch {
-        // 目录不存在，无需备份
-      }
-
-      try {
-        // 移动新版本到目标位置
-        await this.moveDirectory(contentPath, LOCAL_ADMIN_ASSET_PATH)
-
-        // 写入版本文件
-        await writeFile(
-          path.join(LOCAL_ADMIN_ASSET_PATH, 'version'),
-          version,
-          'utf8',
-        )
-
-        // 验证安装是否成功
-        await this.verifyInstallation()
-
-        subscriber.next(pc.green('Installation completed successfully.\n'))
-
-        // 清理备份
-        if (
-          await access(backupPath)
-            .then(() => true)
-            .catch(() => false)
-        ) {
-          await rm(backupPath, { recursive: true, force: true })
-        }
-      } catch (installError) {
-        // 安装失败，恢复备份
-        if (
-          await access(backupPath)
-            .then(() => true)
-            .catch(() => false)
-        ) {
-          await rm(LOCAL_ADMIN_ASSET_PATH, { recursive: true, force: true })
-          await this.moveDirectory(backupPath, LOCAL_ADMIN_ASSET_PATH)
-          subscriber.next(pc.yellow('Installation failed, backup restored.\n'))
-        }
-        throw installError
-      }
-    } finally {
-      // 清理临时目录
-      await rm(tempDir, { recursive: true, force: true })
-    }
-  }
-
-  /**
-   * 跨平台兼容的目录移动
-   */
-  private async moveDirectory(src: string, dest: string): Promise<void> {
-    try {
-      // 尝试原子重命名
-      await rename(src, dest)
-    } catch {
-      // 重命名失败（可能跨分区），使用复制+删除
-      await cp(src, dest, { recursive: true })
-      await rm(src, { recursive: true, force: true })
-    }
-  }
-
-  /**
-   * 验证安装是否成功
-   */
-  private async verifyInstallation(): Promise<void> {
-    const indexPath = path.join(LOCAL_ADMIN_ASSET_PATH, 'index.html')
-    const versionPath = path.join(LOCAL_ADMIN_ASSET_PATH, 'version')
-
-    try {
-      await access(indexPath)
-      await access(versionPath)
-    } catch {
-      throw new Error(
-        'Installation verification failed: required files not found',
-      )
-    }
-  }
-
-  /**
-   * 清理操作
-   */
-  private async cleanup() {
-    await rm('admin-release.zip', { force: true })
-  }
-
-  /**
-   * 格式化字节大小
-   */
-  private formatBytes(bytes: number, decimals = 2) {
-    if (bytes === 0) return '0 Bytes'
-
-    const k = 1024
-    const dm = Math.max(decimals, 0)
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-
-    return `${Number.parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`
   }
 
   private sleep(ms: number) {
