@@ -258,7 +258,7 @@ jobs:
           tag: ${{ github.ref_name }}
           fileName: release-linux.zip
       - name: copy file via ssh password
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
@@ -269,7 +269,7 @@ jobs:
           target: /tmp/mx-core
       
       - name: Upload deploy script
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
@@ -280,7 +280,7 @@ jobs:
           target: /tmp/mx-core
       
       - name: Upload docker env file
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
