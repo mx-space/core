@@ -260,11 +260,9 @@ export class CommentService implements OnModuleInit {
 
     const comment = await this.commentModel.create({
       ...doc,
-      state:
-        doc.state ??
-        (RequestContext.currentIsAuthenticated()
-          ? CommentState.Read
-          : CommentState.Unread),
+      state: RequestContext.currentIsAuthenticated()
+        ? CommentState.Read
+        : CommentState.Unread,
       ref: new Types.ObjectId(id),
       readerId: reader ? reader.id : undefined,
       refType,
