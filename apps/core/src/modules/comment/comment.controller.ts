@@ -276,6 +276,9 @@ export class CommentController {
       ...ipLocation,
       key,
       isWhispers: parent.isWhispers,
+      state:
+        (body as any).state ??
+        (isAuthenticated ? CommentState.Read : CommentState.Unread),
     }
 
     await this.commentService.assignReaderToComment(model)

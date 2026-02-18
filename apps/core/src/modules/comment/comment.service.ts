@@ -163,7 +163,7 @@ export class CommentService implements OnModuleInit {
         return false
       }
       const owner = await this.ownerService.getOwner()
-      if (doc.author === owner.username) {
+      if (doc.author === owner.username || doc.author === owner.name) {
         return false
       }
       if (commentOptions.blockIps) {
@@ -260,7 +260,11 @@ export class CommentService implements OnModuleInit {
 
     const comment = await this.commentModel.create({
       ...doc,
-      state: CommentState.Unread,
+      state:
+        doc.state ??
+        (RequestContext.currentIsAuthenticated()
+          ? CommentState.Read
+          : CommentState.Unread),
       ref: new Types.ObjectId(id),
       readerId: reader ? reader.id : undefined,
       refType,
@@ -323,7 +327,7 @@ export class CommentService implements OnModuleInit {
         },
       )
 
-      if (!commentShouldAudit && !comment.isWhispers) {
+      if ((!commentShouldAudit || isAuthenticated) && !comment.isWhispers) {
         await this.eventManager.broadcast(
           BusinessEvents.COMMENT_CREATE,
           omit(comment, ['ip', 'agent']),
