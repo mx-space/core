@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { AIAgentModule } from './ai-agent/ai-agent.module'
 import { AiInFlightService } from './ai-inflight/ai-inflight.service'
 import { AiSummaryController } from './ai-summary/ai-summary.controller'
 import { AiSummaryService } from './ai-summary/ai-summary.service'
@@ -11,7 +12,7 @@ import { AiController } from './ai.controller'
 import { AiService } from './ai.service'
 
 @Module({
-  imports: [AiTaskModule],
+  imports: [AiTaskModule, AIAgentModule],
   providers: [
     AiSummaryService,
     AiInFlightService,
