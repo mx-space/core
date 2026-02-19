@@ -111,17 +111,39 @@ export class S3Uploader {
     // Set request headers
     const url = new URL(this.endpoint)
     const host = url.host
-    const contentLength = fileData.length.toString()
+    let requestHost = host
+    let canonicalUri: string
 
     // URI encode each path segment for signing
     const encodedObjectKey = objectKey
       .split('/')
       .map((seg) => encodeURIComponent(seg))
       .join('/')
-    const canonicalUri = `/${this.bucket}/${encodedObjectKey}`
+
+    // Determine canonical URI based on endpoint style
+    // For Tencent COS and other services that require virtual-hosted style
+    const isTencentCos = host.includes('myqcloud.com') || host.includes('.cos.')
+
+    if (isTencentCos) {
+      // Tencent COS requires virtual-hosted style
+      // Convert cos.ap-guangzhou.myqcloud.com to bucket.cos.ap-guangzhou.myqcloud.com
+      const cosMatch = host.match(/^cos\.(.+)$/)
+      if (cosMatch) {
+        requestHost = `${this.bucket}.cos.${cosMatch[1]}`
+      }
+      canonicalUri = `/${encodedObjectKey}`
+    } else {
+      // Check if already in virtual-hosted style
+      const isVirtualHosted = host.startsWith(`${this.bucket}.`)
+      canonicalUri = isVirtualHosted
+        ? `/${encodedObjectKey}`
+        : `/${this.bucket}/${encodedObjectKey}`
+    }
+
+    const contentLength = fileData.length.toString()
 
     const headers: Record<string, string> = {
-      Host: host,
+      Host: requestHost,
       'Content-Type': contentType,
       'Content-Length': contentLength,
       'x-amz-date': xAmzDate,
@@ -173,7 +195,11 @@ export class S3Uploader {
     const authorization = `${algorithm} Credential=${this.accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
 
     // Create and send PUT request
-    const requestUrl = `${this.endpoint}${canonicalUri}`
+    // For Tencent COS, use virtual-hosted style URL
+    const baseUrl = isTencentCos
+      ? `${url.protocol}//${requestHost}`
+      : this.endpoint
+    const requestUrl = `${baseUrl}${canonicalUri}`
 
     const fetchOptions: RequestInit & { dispatcher?: unknown } = {
       method: 'PUT',
@@ -194,7 +220,10 @@ export class S3Uploader {
       const response = await fetch(requestUrl, fetchOptions as RequestInit)
 
       if (!response.ok) {
-        throw new Error(`Upload failed with status code: ${response.status}`)
+        const responseText = await response.text()
+        throw new Error(
+          `Upload failed with status code: ${response.status} - ${responseText}`,
+        )
       }
     } finally {
       if (isDev) {

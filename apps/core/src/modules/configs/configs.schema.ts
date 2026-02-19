@@ -155,7 +155,8 @@ export const ImageStorageOptionsSchema = section('图床设置', {
     },
   ),
   prefix: field.plain(z.string().optional(), '文件路径前缀', {
-    description: '上传到 S3 的文件路径前缀，例如 images/',
+    description:
+      '上传到 S3 的文件路径前缀，支持模板占位符: {Y}年4位, {y}年2位, {m}月, {d}日, {h}时, {i}分, {s}秒, {md5}随机MD5, {type}文件类型等。例如: blog/{Y}/{m}/{d} 或 images/',
   }),
 })
 export class ImageStorageOptionsDto extends createZodDto(
@@ -164,6 +165,29 @@ export class ImageStorageOptionsDto extends createZodDto(
 export type ImageStorageOptionsConfig = z.infer<
   typeof ImageStorageOptionsSchema
 >
+
+// ==================== File Upload Options ====================
+export const FileUploadOptionsSchema = section('文件上传设定', {
+  enableCustomNaming: field.toggle(
+    z.boolean().optional(),
+    '启用自定义文件命名',
+    {
+      description: '开启后将使用下方的命名模板规则',
+    },
+  ),
+  filenameTemplate: field.plain(z.string().optional(), '文件名模板', {
+    description:
+      '支持占位符: {Y}年4位, {y}年2位, {m}月, {d}日, {h}时, {i}分, {s}秒, {ms}毫秒, {timestamp}时间戳, {md5}随机MD5, {md5-16}随机MD5(16位), {uuid}UUID, {str-数字}随机字符串, {filename}原文件名(含扩展名), {name}原文件名(不含扩展名), {ext}扩展名',
+  }),
+  pathTemplate: field.plain(z.string().optional(), '文件路径模板', {
+    description:
+      '支持占位符同文件名模板，另外支持 {type} 文件类型, {localFolder:数字} 原文件所在文件夹层级',
+  }),
+})
+export class FileUploadOptionsDto extends createZodDto(
+  FileUploadOptionsSchema,
+) {}
+export type FileUploadOptionsConfig = z.infer<typeof FileUploadOptionsSchema>
 
 // ==================== Baidu Search Options ====================
 export const BaiduSearchOptionsSchema = section('百度推送设定', {
@@ -421,6 +445,7 @@ export const configSchemaMapping = {
   friendLinkOptions: FriendLinkOptionsSchema,
   backupOptions: BackupOptionsSchema,
   imageStorageOptions: ImageStorageOptionsSchema,
+  fileUploadOptions: FileUploadOptionsSchema,
   baiduSearchOptions: BaiduSearchOptionsSchema,
   bingSearchOptions: BingSearchOptionsSchema,
   algoliaSearchOptions: AlgoliaSearchOptionsSchema,
@@ -446,6 +471,7 @@ export const FullConfigSchema = withMeta(
     friendLinkOptions: FriendLinkOptionsSchema,
     backupOptions: BackupOptionsSchema,
     imageStorageOptions: ImageStorageOptionsSchema,
+    fileUploadOptions: FileUploadOptionsSchema,
     baiduSearchOptions: BaiduSearchOptionsSchema,
     bingSearchOptions: BingSearchOptionsSchema,
     algoliaSearchOptions: AlgoliaSearchOptionsSchema,

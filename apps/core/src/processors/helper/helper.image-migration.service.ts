@@ -4,6 +4,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import type { ImageModel } from '~/shared/model/image.model'
+import { replaceFilenameTemplate } from '~/utils/filename-template.util'
 import { S3Uploader } from '~/utils/s3.util'
 import { lookup } from 'mime-types'
 
@@ -25,7 +26,7 @@ export class ImageMigrationService {
   }
 
   extractLocalImageFilename(url: string): string | null {
-    const match = url.match(/\/objects\/image\/([^/?#]+)/)
+    const match = url.match(/\/objects\/image\/([^#/?]+)/)
     return match ? match[1] : null
   }
 
@@ -95,9 +96,17 @@ export class ImageMigrationService {
         const buffer = await readFile(localPath)
         const contentType = lookup(filename) || 'application/octet-stream'
 
-        const objectKey = config.prefix
-          ? `${config.prefix.replace(/\/+$/, '')}/${filename}`
-          : filename
+        // 处理 prefix 中的模板变量
+        let prefixPath = ''
+        if (config.prefix) {
+          prefixPath = replaceFilenameTemplate(config.prefix, {
+            originalFilename: filename,
+            fileType: 'image',
+          })
+          prefixPath = prefixPath.replace(/\/+$/, '')
+        }
+
+        const objectKey = prefixPath ? `${prefixPath}/${filename}` : filename
 
         const s3Url = await s3Uploader.uploadBuffer(
           buffer,

@@ -17,15 +17,18 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { alphabet } from '~/constants/other.constant'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
+import {
+  generateFilename,
+  generateFilePath,
+  replaceFilenameTemplate,
+} from '~/utils/filename-template.util'
 import { S3Uploader } from '~/utils/s3.util'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
-import { customAlphabet } from 'nanoid'
 import { FileReferenceService } from './file-reference.service'
 import {
   BatchOrphanDeleteDto,
@@ -113,9 +116,17 @@ export class FileController {
           const buffer = await fs.readFile(localPath)
           const contentType = lookup(filename) || 'application/octet-stream'
 
-          const objectKey = config.prefix
-            ? `${config.prefix.replace(/\/+$/, '')}/${filename}`
-            : filename
+          // 处理 prefix 中的模板变量
+          let prefixPath = ''
+          if (config.prefix) {
+            prefixPath = replaceFilenameTemplate(config.prefix, {
+              originalFilename: filename,
+              fileType: 'image',
+            })
+            prefixPath = prefixPath.replace(/\/+$/, '')
+          }
+
+          const objectKey = prefixPath ? `${prefixPath}/${filename}` : filename
 
           const s3Url = await s3Uploader.uploadBuffer(
             buffer,
@@ -141,7 +152,7 @@ export class FileController {
   }
 
   private extractLocalImageFilename(url: string): string | null {
-    const match = url.match(/\/objects\/image\/([^/?#]+)/)
+    const match = url.match(/\/objects\/image\/([^#/?]+)/)
     return match ? match[1] : null
   }
 
@@ -248,20 +259,50 @@ export class FileController {
     const file = await this.uploadService.getAndValidMultipartField(req)
     const { type = 'file' } = query
 
-    const ext = path.extname(file.filename)
-    const filename = customAlphabet(alphabet)(18) + ext.toLowerCase()
+    // 获取文件上传配置
+    const uploadConfig = await this.configsService.get('fileUploadOptions')
 
-    await this.service.writeFile(type, filename, file.file)
+    // 生成文件名（可能包含子路径）
+    const rawFilename = generateFilename(uploadConfig, {
+      originalFilename: file.filename,
+      fileType: type,
+    })
 
-    const fileUrl = await this.service.resolveFileUrl(type, filename)
+    // 生成基础路径
+    const basePath = generateFilePath(uploadConfig, {
+      originalFilename: file.filename,
+      fileType: type,
+    })
+
+    // 构建相对路径（相对于文件类型目录）
+    // 如果 basePath 就是 type，则直接使用 rawFilename
+    // 否则，将 basePath 中除去 type 部分后与 rawFilename 合并
+    let relativePath: string
+    if (basePath === type || !basePath) {
+      // basePath 就是 type 或为空，直接使用 rawFilename
+      relativePath = rawFilename
+    } else {
+      // basePath 包含自定义路径，需要去除开头的 type 部分
+      const pathWithoutType = basePath.startsWith(`${type}/`)
+        ? basePath.slice(Math.max(0, type.length + 1))
+        : basePath
+      relativePath = path.join(pathWithoutType, rawFilename)
+    }
+
+    await this.service.writeFile(type, relativePath, file.file)
+
+    const fileUrl = await this.service.resolveFileUrl(type, relativePath)
 
     if (type === 'image') {
-      await this.fileReferenceService.createPendingReference(fileUrl, filename)
+      await this.fileReferenceService.createPendingReference(
+        fileUrl,
+        relativePath,
+      )
     }
 
     return {
       url: fileUrl,
-      name: filename,
+      name: path.basename(relativePath),
     }
   }
 
