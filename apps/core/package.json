@@ -70,6 +70,8 @@
     "@lexical/link": "^0.40.0",
     "@lexical/list": "^0.40.0",
     "@lexical/rich-text": "^0.40.0",
+    "@mariozechner/pi-agent-core": "^0.52.12",
+    "@mariozechner/pi-ai": "^0.52.12",
     "@nestjs/cache-manager": "3.1.0",
     "@nestjs/common": "11.1.12",
     "@nestjs/core": "11.1.12",

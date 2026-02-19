@@ -120,18 +120,36 @@ export const createAuthGateway = (
         exclude?: string[]
       },
     ) {
+      const payload = this.gatewayMessageFormat(event, data)
+      const rooms = options?.rooms
+      const exclude = options?.exclude
+
+      if (this.namespace) {
+        let socket: any = this.namespace as Namespace
+
+        if (rooms?.length) {
+          socket = socket.to(rooms)
+        }
+        if (exclude?.length) {
+          socket = socket.except(exclude)
+        }
+
+        socket.emit('message', payload)
+        return
+      }
+
       let socket = this.redisService.emitter.of(`/${namespace}`) as
         | Emitter<DefaultEventsMap>
         | BroadcastOperator<DefaultEventsMap>
 
-      if (options?.rooms?.length) {
-        socket = socket.in(options.rooms)
+      if (rooms?.length) {
+        socket = socket.to(rooms)
       }
-      if (options?.exclude?.length) {
-        socket = socket.except(options.exclude)
+      if (exclude?.length) {
+        socket = socket.except(exclude)
       }
 
-      socket.emit('message', this.gatewayMessageFormat(event, data))
+      socket.emit('message', payload)
     }
   }
 
