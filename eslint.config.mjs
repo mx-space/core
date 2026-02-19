@@ -18,6 +18,7 @@ export default defineConfig(
       'packages/*/esm',
       'packages/*/types',
       'test/**/*.db.ts',
+      'apps/agent-ui/**',
     ],
     sortKeys: false,
     typescript: true,
