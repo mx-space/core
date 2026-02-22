@@ -29,6 +29,7 @@ export class DraftHistoryModel {
     validate: {
       validator(this: DraftHistoryModel, value: string | undefined) {
         if (this.refVersion !== undefined) return true
+        if (this.contentFormat === ContentFormat.Lexical) return true
         return value !== undefined && value !== null
       },
       message: 'Path `text` is required.',
