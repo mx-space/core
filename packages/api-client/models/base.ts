@@ -36,22 +36,24 @@ export interface BaseCommentIndexModel extends BaseModel {
 
   allowComment: boolean
 }
-interface TextBaseModelMarkdown extends BaseCommentIndexModel {
+export interface TextBaseModelMarkdown extends BaseCommentIndexModel {
   title: string
   text: string
   contentFormat?: 'markdown'
   content?: undefined
   images?: Image[]
   modified: string | null
+  meta?: Record<string, any> | null
 }
 
-interface TextBaseModelLexical extends BaseCommentIndexModel {
+export interface TextBaseModelLexical extends BaseCommentIndexModel {
   title: string
   text?: string
   contentFormat: 'lexical'
   content: string
   images?: Image[]
   modified: string | null
+  meta?: Record<string, any> | null
 }
 
 export type TextBaseModel = TextBaseModelMarkdown | TextBaseModelLexical

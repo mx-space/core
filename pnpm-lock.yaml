@@ -15,6 +15,11 @@ overrides:
   zod: 4.3.6
   eslint-plugin-react-compiler>zod: 3.24.2
 
+patchedDependencies:
+  '@lexical/code@0.40.0':
+    hash: 3a60a4c0395d298d5f1d14c21f74cebc271604f991dbc49f2da1d57207e28444
+    path: patches/@lexical__code@0.40.0.patch
+
 importers:
 
   .:
@@ -123,7 +128,7 @@ importers:
         version: 5.1.6(keyv@5.6.0)
       '@lexical/code':
         specifier: ^0.40.0
-        version: 0.40.0
+        version: 0.40.0(patch_hash=3a60a4c0395d298d5f1d14c21f74cebc271604f991dbc49f2da1d57207e28444)
       '@lexical/extension':
         specifier: ^0.40.0
         version: 0.40.0
@@ -7907,7 +7912,7 @@ snapshots:
 
   '@haklex/rich-headless@0.0.12(lexical@0.40.0)':
     dependencies:
-      '@lexical/code': 0.40.0
+      '@lexical/code': 0.40.0(patch_hash=3a60a4c0395d298d5f1d14c21f74cebc271604f991dbc49f2da1d57207e28444)
       '@lexical/extension': 0.40.0
       '@lexical/link': 0.40.0
       '@lexical/list': 0.40.0
@@ -8386,7 +8391,7 @@ snapshots:
       '@lexical/utils': 0.40.0
       lexical: 0.40.0
 
-  '@lexical/code@0.40.0':
+  '@lexical/code@0.40.0(patch_hash=3a60a4c0395d298d5f1d14c21f74cebc271604f991dbc49f2da1d57207e28444)':
     dependencies:
       '@lexical/utils': 0.40.0
       lexical: 0.40.0
@@ -8432,7 +8437,7 @@ snapshots:
 
   '@lexical/markdown@0.40.0':
     dependencies:
-      '@lexical/code': 0.40.0
+      '@lexical/code': 0.40.0(patch_hash=3a60a4c0395d298d5f1d14c21f74cebc271604f991dbc49f2da1d57207e28444)
       '@lexical/link': 0.40.0
       '@lexical/list': 0.40.0
       '@lexical/rich-text': 0.40.0
