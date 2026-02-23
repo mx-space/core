@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [10.0.4](https://github.com/mx-space/core/compare/v10.0.3...v10.0.4) (2026-02-18)
+
+
+### Bug Fixes
+
+* **auth:** allow hyphen in better-auth username validation ([6ae65a8](https://github.com/mx-space/core/commit/6ae65a8234625ea6b4f7eed4b186d96e8c2768df))
+
+
+### Features
+
+* **comment:** auto-approve owner comments and enhance spam check ([63b62dc](https://github.com/mx-space/core/commit/63b62dc0d9e368a6d71d5b8e1d68e9f729a3065f))
+* **dokploy:** add workflow step to trigger Dokploy redeploy on release ([2e071ba](https://github.com/mx-space/core/commit/2e071bae37691dfe39f02ad6c4307d1d7ca3fa29))
+* **update:** add Redis-based multi-instance sync and split into modules ([a742698](https://github.com/mx-space/core/commit/a74269843da8d6da1ed9235565635ddc086bfe43))
+* **visitor-events:** implement visitor event dispatch service and related decorators ([165b74d](https://github.com/mx-space/core/commit/165b74df0fce79392339be1b38ac19aaf5c17ef2))
+
+
+
 ## [10.0.3](https://github.com/mx-space/core/compare/v10.0.2...v10.0.3) (2026-02-15)
 
 

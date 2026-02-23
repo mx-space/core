@@ -6,7 +6,6 @@ import { scheduleManager } from '~/utils/schedule.util'
 import { merge } from 'es-toolkit/compat'
 import { AdminEventsGateway } from '../gateway/admin/events.gateway'
 import { BroadcastBaseGateway } from '../gateway/base.gateway'
-import { WebEventsGateway } from '../gateway/web/events.gateway'
 
 interface GatewayOption {
   rooms?: string[]
@@ -31,8 +30,6 @@ export class EventManagerService {
   }
 
   constructor(
-    private readonly webGateway: WebEventsGateway,
-
     private readonly adminGateway: AdminEventsGateway,
 
     private readonly emitter2: EventEmitter2,
@@ -44,15 +41,17 @@ export class EventManagerService {
 
   private get mapScopeToInstance(): Record<
     EventScope,
-    (WebEventsGateway | AdminEventsGateway | EventEmitter2)[]
+    (AdminEventsGateway | EventEmitter2)[]
   > {
+    // Web visitor broadcasting is handled by VisitorEventDispatchService
+    // via registerHandler + scope check, not by direct gateway broadcast.
     return {
-      [EventScope.ALL]: [this.webGateway, this.adminGateway, this.emitter2],
-      [EventScope.TO_VISITOR]: [this.webGateway],
+      [EventScope.ALL]: [this.adminGateway, this.emitter2],
+      [EventScope.TO_VISITOR]: [this.emitter2],
       [EventScope.TO_ADMIN]: [this.adminGateway],
       [EventScope.TO_SYSTEM]: [this.emitter2],
-      [EventScope.TO_VISITOR_ADMIN]: [this.webGateway, this.adminGateway],
-      [EventScope.TO_SYSTEM_VISITOR]: [this.emitter2, this.webGateway],
+      [EventScope.TO_VISITOR_ADMIN]: [this.adminGateway, this.emitter2],
+      [EventScope.TO_SYSTEM_VISITOR]: [this.emitter2],
       [EventScope.TO_SYSTEM_ADMIN]: [this.emitter2, this.adminGateway],
     }
   }
@@ -83,7 +82,6 @@ export class EventManagerService {
     const instances = this.mapScopeToInstance[scope]
 
     const tasks = Promise.all(
-      // eslint-disable-next-line array-callback-return
       instances.map((instance) => {
         if (instance instanceof EventEmitter2) {
           const isObjectLike = typeof data === 'object' && data !== null
@@ -156,7 +154,9 @@ export class EventManagerService {
   private listenSystemEvents() {
     this.emitter2.on(this.#key, (data) => {
       const { event, payload, scope } = data
-      console.debug(`[${scope}]: Received event: [${event}]`, payload)
+      this.logger.log(
+        `[scope=${scope}] event=[${event}] handlers=${this.#handlers.length}`,
+      )
 
       // emit current event directly
       this.emitter2.emit(event, payload)

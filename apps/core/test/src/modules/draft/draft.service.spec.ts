@@ -1,9 +1,11 @@
 import { Test } from '@nestjs/testing'
 import { BizException } from '~/common/exceptions/biz.exception'
+import { DraftHistoryService } from '~/modules/draft/draft-history.service'
 import { DraftModel, DraftRefType } from '~/modules/draft/draft.model'
 import { DraftService } from '~/modules/draft/draft.service'
 import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
+import { ContentFormat } from '~/shared/types/content-format.type'
 import { getModelToken } from '~/transformers/model.transformer'
 import {
   afterEach,
@@ -111,6 +113,7 @@ describe('DraftService with FileReference integration', () => {
 
     const module = await Test.createTestingModule({
       providers: [
+        DraftHistoryService,
         DraftService,
         {
           provide: getModelToken(DraftModel.name),
@@ -641,6 +644,220 @@ describe('DraftService with FileReference integration', () => {
       expect(materialized.isFullSnapshot).toBe(true)
       expect(materialized.refVersion).toBeUndefined()
       expect(materialized.text).toBe('Same text')
+    })
+  })
+
+  describe('Lexical contentFormat history', () => {
+    const makeLexical = (text: string) =>
+      JSON.stringify({
+        root: {
+          children: [{ type: 'paragraph', children: [{ type: 'text', text }] }],
+        },
+      })
+
+    it('should store first Lexical version as full snapshot with content', async () => {
+      const content1 = makeLexical('Hello')
+      const draft = {
+        _id: 'lexdraft1',
+        id: 'lexdraft1',
+        refType: DraftRefType.Post,
+        title: 'Lexical v1',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: content1,
+        version: 1,
+        history: [],
+        updated: new Date(),
+        created: new Date(),
+      }
+      mockDrafts.push(draft)
+
+      const content2 = makeLexical('Hello World')
+      await draftService.update('lexdraft1', { content: content2 })
+
+      const updatedDraft = mockDrafts.find((d) => d.id === 'lexdraft1')
+      expect(updatedDraft.history).toHaveLength(1)
+      expect(updatedDraft.history[0].isFullSnapshot).toBe(true)
+      expect(updatedDraft.history[0].content).toBe(content1)
+      expect(updatedDraft.history[0].contentFormat).toBe(ContentFormat.Lexical)
+    })
+
+    it('should store incremental diff for Lexical intermediate versions', async () => {
+      const baseObj = {
+        root: {
+          children: Array.from({ length: 20 }, (_, i) => ({
+            type: 'paragraph',
+            children: [{ type: 'text', text: `Paragraph ${i}` }],
+          })),
+        },
+      }
+      const base = JSON.stringify(baseObj)
+
+      const updatedObj = structuredClone(baseObj)
+      updatedObj.root.children[0].children[0].text = 'Modified Paragraph 0'
+      const updated = JSON.stringify(updatedObj)
+
+      const draft = {
+        _id: 'lexdraft2',
+        id: 'lexdraft2',
+        refType: DraftRefType.Post,
+        title: 'Lexical v2',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: updated,
+        version: 2,
+        history: [
+          {
+            version: 1,
+            title: 'Lexical v1',
+            content: base,
+            contentFormat: ContentFormat.Lexical,
+            savedAt: new Date(),
+            isFullSnapshot: true,
+          },
+        ],
+        updated: new Date(),
+        created: new Date(),
+      }
+      mockDrafts.push(draft)
+
+      const nextObj = structuredClone(updatedObj)
+      nextObj.root.children[1].children[0].text = 'Modified Paragraph 1'
+      await draftService.update('lexdraft2', {
+        content: JSON.stringify(nextObj),
+      })
+
+      const updatedDraft = mockDrafts.find((d) => d.id === 'lexdraft2')
+      expect(updatedDraft.history).toHaveLength(2)
+      expect(updatedDraft.history[0].isFullSnapshot).toBe(false)
+    })
+
+    it('should restore Lexical version from history', async () => {
+      const content1 = makeLexical('Version 1')
+      const content2 = makeLexical('Version 2')
+      const content3 = makeLexical('Version 3')
+
+      const draft = {
+        _id: 'lexdraft3',
+        id: 'lexdraft3',
+        refType: DraftRefType.Post,
+        title: 'Lexical v3',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: content3,
+        version: 3,
+        history: [
+          {
+            version: 2,
+            title: 'Lexical v2',
+            content: content2,
+            contentFormat: ContentFormat.Lexical,
+            savedAt: new Date(),
+            isFullSnapshot: true,
+          },
+          {
+            version: 1,
+            title: 'Lexical v1',
+            content: content1,
+            contentFormat: ContentFormat.Lexical,
+            savedAt: new Date(),
+            isFullSnapshot: true,
+          },
+        ],
+        updated: new Date(),
+        created: new Date(),
+      }
+      mockDrafts.push(draft)
+
+      const restored = await draftService.restoreVersion('lexdraft3', 1)
+      expect(restored.content).toBe(content1)
+      expect(restored.title).toBe('Lexical v1')
+    })
+
+    it('should store full Lexical snapshot at interval boundary', async () => {
+      const content6 = makeLexical('Version 6')
+      const draft = {
+        _id: 'lexdraft4',
+        id: 'lexdraft4',
+        refType: DraftRefType.Post,
+        title: 'Lexical v6',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: content6,
+        version: 6,
+        history: [
+          {
+            version: 5,
+            title: 'v5',
+            content: makeLexical('Version 5'),
+            contentFormat: ContentFormat.Lexical,
+            savedAt: new Date(),
+            isFullSnapshot: false,
+          },
+          {
+            version: 1,
+            title: 'v1',
+            content: makeLexical('Version 1'),
+            contentFormat: ContentFormat.Lexical,
+            savedAt: new Date(),
+            isFullSnapshot: true,
+          },
+        ],
+        updated: new Date(),
+        created: new Date(),
+      }
+      mockDrafts.push(draft)
+
+      await draftService.update('lexdraft4', {
+        content: makeLexical('Version 7'),
+      })
+
+      const updatedDraft = mockDrafts.find((d) => d.id === 'lexdraft4')
+      expect(updatedDraft.history).toHaveLength(3)
+      expect(updatedDraft.history[0].isFullSnapshot).toBe(true)
+      expect(updatedDraft.history[0].content).toBe(content6)
+    })
+
+    it('should trim Lexical history and materialize entries', async () => {
+      const content1 = makeLexical('Same content')
+      const draft = {
+        _id: 'lexdraft5',
+        id: 'lexdraft5',
+        refType: DraftRefType.Post,
+        title: 'Lexical v150',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: content1,
+        version: 151,
+        history: [] as any[],
+        updated: new Date(),
+        created: new Date(),
+      }
+
+      const now = Date.now()
+      for (let i = 150; i >= 1; i -= 1) {
+        const isFullSnapshot = i === 1
+        draft.history.push({
+          version: i,
+          title: `Lexical v${i}`,
+          content: isFullSnapshot ? content1 : undefined,
+          contentFormat: ContentFormat.Lexical,
+          savedAt: new Date(now - i * 1000),
+          isFullSnapshot,
+          ...(isFullSnapshot ? {} : { refVersion: 1 }),
+        })
+      }
+
+      mockDrafts.push(draft)
+
+      await draftService.update('lexdraft5', { title: 'Lexical v152' })
+
+      const updatedDraft = mockDrafts.find((d) => d.id === 'lexdraft5')
+      expect(updatedDraft.history.length).toBeLessThanOrEqual(100)
+      expect(updatedDraft.history.some((h: any) => h.version === 1)).toBe(false)
+      expect(updatedDraft.history[0].isFullSnapshot).toBe(true)
+      expect(updatedDraft.history[0].refVersion).toBeUndefined()
+      expect(updatedDraft.history[0].content).toBe(content1)
     })
   })
 })

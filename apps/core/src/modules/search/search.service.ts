@@ -17,10 +17,8 @@ import { algoliasearch } from 'algoliasearch'
 import { omit } from 'es-toolkit/compat'
 import removeMdCodeblock from 'remove-md-codeblock'
 import { ConfigsService } from '../configs/configs.service'
-import { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
-import { PostModel } from '../post/post.model'
 import type { PostService } from '../post/post.service'
 import {
   DEFAULT_ALGOLIA_MAX_SIZE_IN_BYTES,
@@ -294,7 +292,7 @@ export class SearchService {
 
   @OnEvent(BusinessEvents.POST_CREATE)
   @OnEvent(BusinessEvents.POST_UPDATE)
-  async onPostCreate(post: PostModel) {
+  async onPostCreate(post: { id: string }) {
     const data = await this.postService.model.findById(post.id).lean()
 
     if (!data) return
@@ -325,7 +323,7 @@ export class SearchService {
 
   @OnEvent(BusinessEvents.NOTE_CREATE)
   @OnEvent(BusinessEvents.NOTE_UPDATE)
-  async onNoteCreate(note: NoteModel) {
+  async onNoteCreate(note: { id: string }) {
     const data = await this.noteService.model.findById(note.id).lean()
 
     if (!data) return
@@ -356,7 +354,7 @@ export class SearchService {
 
   @OnEvent(BusinessEvents.POST_DELETE)
   @OnEvent(BusinessEvents.NOTE_DELETE)
-  async onPostDelete({ data: id }: { data: string }) {
+  async onPostDelete({ id }: { id: string }) {
     await this.executeAlgoliaSearchOperationIfEnabled(
       async ({ client, indexName }) => {
         this.logger.log(`detect data delete, save to algolia, data id: ${id}`)
@@ -436,12 +434,12 @@ function adjustObjectSizeEfficiently<T extends { text: string }>(
   originalObject: T,
   maxSizeInBytes: number = DEFAULT_ALGOLIA_MAX_SIZE_IN_BYTES,
 ): T {
-  const objectToAdjust = JSON.parse(JSON.stringify(originalObject))
+  const objectToAdjust = structuredClone(originalObject)
   const text = objectToAdjust.text
 
   let low = 0
   let high = text.length
-  let mid = 0
+  let mid: number
 
   while (low <= high) {
     mid = Math.floor((low + high) / 2)

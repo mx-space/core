@@ -9,7 +9,7 @@ import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import { PKG } from '~/utils/pkg.util'
 import { isSemVer } from '~/utils/validator.util'
 import pc from 'picocolors'
-import { catchError, lastValueFrom, Observable } from 'rxjs'
+import { catchError, Observable } from 'rxjs'
 import { lt, major, minor } from 'semver'
 import { UpdateAdminDto } from './update.schema'
 import { UpdateService } from './update.service'
@@ -35,12 +35,14 @@ export class UpdateController {
         const isExistLocalAdmin = existsSync(LOCAL_ADMIN_ASSET_PATH)
 
         if (!isExistLocalAdmin) {
-          // 2. if not has local admin, then pull remote admin version.
           const stream$ = this.service.downloadAdminAsset(currentVersion)
-          stream$.subscribe((data) => {
-            observer.next(data)
+          await new Promise<void>((resolve) => {
+            stream$.subscribe({
+              next: (data) => observer.next(data),
+              complete: () => resolve(),
+              error: () => resolve(),
+            })
           })
-          await lastValueFrom(stream$)
           observer.complete()
           return
         }
@@ -93,13 +95,14 @@ export class UpdateController {
           return
         }
 
-        // 4. download latest admin version
         const stream$ = this.service.downloadAdminAsset(latestVersion)
-
-        stream$.subscribe((data) => {
-          observer.next(data)
+        await new Promise<void>((resolve) => {
+          stream$.subscribe({
+            next: (data) => observer.next(data),
+            complete: () => resolve(),
+            error: () => resolve(),
+          })
         })
-        await lastValueFrom(stream$)
         observer.complete()
       })()
     })

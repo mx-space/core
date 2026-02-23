@@ -12,6 +12,7 @@ import { AdminEventsGateway } from './admin/events.gateway'
 import { GatewayService } from './gateway.service'
 import { SharedGateway } from './shared/events.gateway'
 import { WebEventsGateway } from './web/events.gateway'
+import { VisitorEventDispatchService } from './web/visitor-event-dispatch.service'
 
 @Global()
 @Module({
@@ -24,6 +25,8 @@ import { WebEventsGateway } from './web/events.gateway'
     AuthService,
 
     GatewayService,
+
+    VisitorEventDispatchService,
   ],
   exports: [
     AdminEventsGateway,

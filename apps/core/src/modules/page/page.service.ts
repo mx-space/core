@@ -88,9 +88,13 @@ export class PageService {
       )
     })
 
-    this.eventManager.broadcast(BusinessEvents.PAGE_CREATE, res, {
-      scope: EventScope.TO_SYSTEM,
-    })
+    this.eventManager.emit(
+      BusinessEvents.PAGE_CREATE,
+      { id: res.id },
+      {
+        scope: EventScope.TO_SYSTEM_VISITOR,
+      },
+    )
 
     return res
   }
@@ -150,17 +154,11 @@ export class PageService {
               .exec()
           },
         ),
-        this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, newDoc, {
-          scope: EventScope.TO_SYSTEM,
-        }),
-        this.eventManager.broadcast(
+        this.eventManager.emit(
           BusinessEvents.PAGE_UPDATE,
+          { id: newDoc.id },
           {
-            ...newDoc,
-            text: newDoc.text,
-          },
-          {
-            scope: EventScope.TO_VISITOR,
+            scope: EventScope.TO_SYSTEM_VISITOR,
           },
         ),
       ])
@@ -178,8 +176,12 @@ export class PageService {
         FileReferenceType.Page,
       ),
     ])
-    this.eventManager.broadcast(BusinessEvents.PAGE_DELETE, id, {
-      scope: EventScope.ALL,
-    })
+    this.eventManager.emit(
+      BusinessEvents.PAGE_DELETE,
+      { id },
+      {
+        scope: EventScope.TO_SYSTEM_VISITOR,
+      },
+    )
   }
 }

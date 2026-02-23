@@ -136,7 +136,7 @@ export function BaseCrudFactory<
 
       await this.eventManager.broadcast(
         `${eventNamePrefix}DELETE` as any,
-        param.id,
+        { id: param.id },
         {
           scope: EventScope.ALL,
         },

@@ -15,8 +15,8 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IpLocation } from '~/common/decorators/ip.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation } from '~/common/decorators/ip.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -276,6 +276,7 @@ export class CommentController {
       ...ipLocation,
       key,
       isWhispers: parent.isWhispers,
+      state: isAuthenticated ? CommentState.Read : CommentState.Unread,
     }
 
     await this.commentService.assignReaderToComment(model)
@@ -430,10 +431,14 @@ export class CommentController {
   async deleteComment(@Param() params: MongoIdDto) {
     const { id } = params
     await this.commentService.deleteComments(id)
-    await this.eventManager.broadcast(BusinessEvents.COMMENT_DELETE, id, {
-      scope: EventScope.TO_SYSTEM_VISITOR,
-      nextTick: true,
-    })
+    await this.eventManager.emit(
+      BusinessEvents.COMMENT_DELETE,
+      { id },
+      {
+        scope: EventScope.TO_SYSTEM_VISITOR,
+        nextTick: true,
+      },
+    )
     return
   }
 

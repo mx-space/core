@@ -24,10 +24,9 @@ import { scheduleManager } from '~/utils/schedule.util'
 import { getLessThanNow } from '~/utils/time.util'
 import { isDefined } from '~/utils/validator.util'
 import { debounce, omit } from 'es-toolkit/compat'
-import { Types } from 'mongoose'
 import type { AggregatePaginateModel, Document } from 'mongoose'
+import { Types } from 'mongoose'
 import slugify from 'slugify'
-import { extractArticleIdFromRoomName } from '../activity/activity.util'
 import type { CategoryService } from '../category/category.service'
 import { CommentModel } from '../comment/comment.model'
 import { DraftRefType } from '../draft/draft.model'
@@ -137,25 +136,11 @@ export class PostService implements OnApplicationBootstrap {
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
-        this.eventManager.broadcast(
+        this.eventManager.emit(
           BusinessEvents.POST_CREATE,
+          { id: doc.id },
           {
-            ...doc,
-            category,
-          },
-          {
-            scope: EventScope.TO_SYSTEM,
-          },
-        ),
-        this.eventManager.broadcast(
-          BusinessEvents.POST_CREATE,
-          {
-            ...doc,
-            category,
-            text: doc.text,
-          },
-          {
-            scope: EventScope.TO_VISITOR,
+            scope: EventScope.TO_SYSTEM_VISITOR,
           },
         ),
       ])
@@ -375,23 +360,13 @@ export class PostService implements OnApplicationBootstrap {
             },
           ),
         doc &&
-          this.eventManager.broadcast(
+          this.eventManager.emit(
             BusinessEvents.POST_UPDATE,
+            { id: doc.id },
             {
-              ...doc,
-              text: doc.text,
-            },
-            {
-              scope: EventScope.TO_VISITOR,
-              // gateway: {
-              //   rooms: [getArticleIdFromRoomName(doc.id)],
-              // },
+              scope: EventScope.TO_SYSTEM_VISITOR,
             },
           ),
-        doc &&
-          this.eventManager.broadcast(BusinessEvents.POST_UPDATE, doc, {
-            scope: EventScope.TO_SYSTEM,
-          }),
       ])
     },
     1000,
@@ -416,13 +391,14 @@ export class PostService implements OnApplicationBootstrap {
         FileReferenceType.Post,
       ),
     ])
-    await this.eventManager.broadcast(BusinessEvents.POST_DELETE, id, {
-      scope: EventScope.TO_SYSTEM_VISITOR,
-      nextTick: true,
-      gateway: {
-        rooms: [extractArticleIdFromRoomName(id)],
+    await this.eventManager.emit(
+      BusinessEvents.POST_DELETE,
+      { id },
+      {
+        scope: EventScope.TO_SYSTEM_VISITOR,
+        nextTick: true,
       },
-    })
+    )
   }
 
   async getCategoryBySlug(slug: string) {

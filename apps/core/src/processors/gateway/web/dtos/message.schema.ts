@@ -5,6 +5,7 @@ export enum SupportedMessageEvent {
   Join = 'join',
   Leave = 'leave',
   UpdateSid = 'updateSid',
+  UpdateLang = 'updateLang',
 }
 
 /**

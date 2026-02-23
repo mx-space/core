@@ -269,13 +269,9 @@ export class RecentlyService {
       ])
       .lean()
     scheduleManager.schedule(async () => {
-      await this.eventManager.broadcast(
-        BusinessEvents.RECENTLY_CREATE,
-        withRef,
-        {
-          scope: EventScope.TO_SYSTEM_VISITOR,
-        },
-      )
+      await this.eventManager.emit(BusinessEvents.RECENTLY_CREATE, withRef, {
+        scope: EventScope.TO_SYSTEM_VISITOR,
+      })
     })
     return withRef
   }
@@ -294,9 +290,13 @@ export class RecentlyService {
     const isDeleted = deletedCount === 1
     scheduleManager.schedule(async () => {
       if (isDeleted) {
-        await this.eventManager.broadcast(BusinessEvents.RECENTLY_DELETE, id, {
-          scope: EventScope.TO_SYSTEM_VISITOR,
-        })
+        await this.eventManager.emit(
+          BusinessEvents.RECENTLY_DELETE,
+          { id },
+          {
+            scope: EventScope.TO_SYSTEM_VISITOR,
+          },
+        )
       }
     })
 
@@ -325,13 +325,9 @@ export class RecentlyService {
       .lean()
 
     scheduleManager.schedule(async () => {
-      await this.eventManager.broadcast(
-        BusinessEvents.RECENTLY_UPDATE,
-        withRef,
-        {
-          scope: EventScope.TO_SYSTEM_VISITOR,
-        },
-      )
+      await this.eventManager.emit(BusinessEvents.RECENTLY_UPDATE, withRef, {
+        scope: EventScope.TO_SYSTEM_VISITOR,
+      })
     })
 
     return withRef

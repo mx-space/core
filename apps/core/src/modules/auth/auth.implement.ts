@@ -1,5 +1,5 @@
-import { IncomingMessage } from 'node:http'
 import type { ServerResponse } from 'node:http'
+import { IncomingMessage } from 'node:http'
 import type { PasskeyOptions } from '@better-auth/passkey'
 import { passkey } from '@better-auth/passkey'
 import { API_VERSION, CROSS_DOMAIN, MONGO_DB } from '~/app.config'
@@ -19,6 +19,7 @@ import { hashPassword, verifyPassword } from 'better-auth/crypto'
 import { toNodeHandler } from 'better-auth/node'
 import { apiKey, username } from 'better-auth/plugins'
 import { MongoClient, ObjectId } from 'mongodb'
+import { validateMxUsername } from './auth.username-validator'
 
 const client = new MongoClient(MONGO_DB.customConnectionString || MONGO_DB.uri)
 
@@ -110,7 +111,9 @@ export async function CreateAuth(
         },
       }),
       passkey(passkeyOptions),
-      username(),
+      username({
+        usernameValidator: validateMxUsername,
+      }),
     ],
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
