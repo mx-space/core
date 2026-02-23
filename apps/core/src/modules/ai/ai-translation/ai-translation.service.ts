@@ -44,6 +44,7 @@ import { IModelRuntime } from '../runtime'
 import { AITranslationModel } from './ai-translation.model'
 import type { GetTranslationsGroupedQueryInput } from './ai-translation.schema'
 import {
+  extractDocumentContext,
   parseLexicalForTranslation,
   restoreLexicalTranslation,
 } from './lexical-translation-parser'
@@ -744,19 +745,36 @@ export class AiTranslationService implements OnModuleInit {
     info: { model: string; provider: string },
     onToken?: (count?: number) => Promise<void>,
   ) {
-    const { chunks, editorState } = parseLexicalForTranslation(content.content!)
+    const parseResult = parseLexicalForTranslation(content.content!)
+    const { segments, propertySegments, editorState } = parseResult
     const allTranslations = new Map<string, string>()
     let sourceLang = ''
 
-    // Edge case: no translatable nodes (entire document is code/embeds)
-    if (chunks.length === 0) {
-      const metaEntries = { __title__: content.title } as Record<string, string>
-      if (content.summary) metaEntries.__summary__ = content.summary
-      if (content.tags?.length) metaEntries.__tags__ = content.tags.join('|||')
+    const documentContext = extractDocumentContext(
+      editorState.root?.children ?? [],
+    )
 
+    // Build translatable entries
+    const allEntries: Record<string, string> = {}
+    for (const seg of segments) {
+      if (seg.translatable) {
+        allEntries[seg.id] = seg.text
+      }
+    }
+    for (const prop of propertySegments) {
+      allEntries[prop.id] = prop.text
+    }
+
+    // Meta entries
+    const metaEntries: Record<string, string> = { __title__: content.title }
+    if (content.summary) metaEntries.__summary__ = content.summary
+    if (content.tags?.length) metaEntries.__tags__ = content.tags.join('|||')
+
+    // Edge case: no translatable content
+    if (Object.keys(allEntries).length === 0) {
       const result = await this.callChunkTranslation(
         targetLang,
-        { markdown: content.title, textEntries: metaEntries },
+        { documentContext: content.title, textEntries: metaEntries },
         runtime,
         onToken,
       )
@@ -764,48 +782,87 @@ export class AiTranslationService implements OnModuleInit {
       for (const [id, text] of Object.entries(result.translations)) {
         allTranslations.set(id, text)
       }
-    }
+    } else {
+      // Split into batches by token budget
+      const MAX_BATCH_TOKENS = 4000
+      const estimateTokens = (text: string) => Math.ceil(text.length / 3)
 
-    for (const [i, chunk] of chunks.entries()) {
-      const textEntries: Record<string, string> = {}
-      for (const ref of chunk.textNodes) {
-        textEntries[ref.id] = ref.originalText
-      }
-
-      if (i === 0) {
-        textEntries.__title__ = content.title
-        if (content.summary) textEntries.__summary__ = content.summary
-        if (content.tags?.length)
-          textEntries.__tags__ = content.tags.join('|||')
-      }
-
-      const result = await this.callChunkTranslation(
-        targetLang,
-        {
-          markdown: chunk.markdown,
-          textEntries,
-          ...(i === 0
-            ? {
-                title: content.title,
-                summary: content.summary ?? undefined,
-                tags: content.tags,
-              }
-            : {}),
-        },
-        runtime,
-        onToken,
+      const batches: Array<Record<string, string>> = []
+      let currentBatch: Record<string, string> = { ...metaEntries }
+      let currentTokens = Object.values(metaEntries).reduce(
+        (s, t) => s + estimateTokens(t),
+        0,
       )
+      let hasContentEntry = false
 
-      if (!sourceLang) sourceLang = result.sourceLang
-      for (const [id, text] of Object.entries(result.translations)) {
-        allTranslations.set(id, text)
+      for (const [id, text] of Object.entries(allEntries)) {
+        const tokens = estimateTokens(text)
+        if (hasContentEntry && currentTokens + tokens > MAX_BATCH_TOKENS) {
+          batches.push(currentBatch)
+          currentBatch = {}
+          currentTokens = 0
+        }
+        currentBatch[id] = text
+        currentTokens += tokens
+        hasContentEntry = true
+      }
+      if (Object.keys(currentBatch).length > 0) {
+        batches.push(currentBatch)
+      }
+
+      for (const batch of batches) {
+        const result = await this.callChunkTranslation(
+          targetLang,
+          { documentContext, textEntries: batch },
+          runtime,
+          onToken,
+        )
+        if (!sourceLang) sourceLang = result.sourceLang
+        for (const [id, text] of Object.entries(result.translations)) {
+          allTranslations.set(id, text)
+        }
+
+        // Validate: check for missing IDs and retry once
+        const missingIds = Object.keys(batch).filter(
+          (id) => !(id in result.translations),
+        )
+        if (missingIds.length > 0) {
+          const retryEntries: Record<string, string> = {}
+          for (const id of missingIds) {
+            retryEntries[id] = batch[id]
+          }
+          try {
+            const retryResult = await this.callChunkTranslation(
+              targetLang,
+              { documentContext, textEntries: retryEntries },
+              runtime,
+              onToken,
+            )
+            for (const [id, text] of Object.entries(retryResult.translations)) {
+              allTranslations.set(id, text)
+            }
+            const stillMissing = missingIds.filter(
+              (id) => !(id in retryResult.translations),
+            )
+            for (const id of stillMissing) {
+              this.logger.warn(
+                `Translation missing for segment ${id} after retry, falling back to original`,
+              )
+            }
+          } catch {
+            for (const id of missingIds) {
+              this.logger.warn(
+                `Translation retry failed for segment ${id}, falling back to original`,
+              )
+            }
+          }
+        }
       }
     }
 
     const translatedContent = restoreLexicalTranslation(
-      editorState,
+      parseResult,
       allTranslations,
-      chunks,
     )
     const title = allTranslations.get('__title__') ?? content.title
     const summary =
@@ -829,11 +886,8 @@ export class AiTranslationService implements OnModuleInit {
   private async callChunkTranslation(
     targetLang: string,
     chunk: {
-      markdown: string
+      documentContext: string
       textEntries: Record<string, string>
-      title?: string
-      summary?: string | null
-      tags?: string[]
     },
     runtime: any,
     onToken?: (count?: number) => Promise<void>,
@@ -1290,6 +1344,7 @@ export class AiTranslationService implements OnModuleInit {
       text?: string
       summary?: string
       tags?: string[]
+      content?: string
     },
   ) {
     const doc = await this.aiTranslationModel.findById(id)
@@ -1298,9 +1353,15 @@ export class AiTranslationService implements OnModuleInit {
     }
 
     if (data.title !== undefined) doc.title = data.title
-    if (data.text !== undefined) doc.text = data.text
     if (data.summary !== undefined) doc.summary = data.summary
     if (data.tags !== undefined) doc.tags = data.tags
+
+    if (data.content !== undefined) {
+      doc.content = data.content
+      doc.text = this.lexicalService.lexicalToMarkdown(data.content)
+    } else if (data.text !== undefined) {
+      doc.text = data.text
+    }
 
     await doc.save()
     return doc

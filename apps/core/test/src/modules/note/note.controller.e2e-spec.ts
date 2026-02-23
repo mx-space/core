@@ -2,6 +2,7 @@ import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { OptionModel } from '~/modules/configs/configs.model'
+import { DraftHistoryService } from '~/modules/draft/draft-history.service'
 import { DraftModel } from '~/modules/draft/draft.model'
 import { DraftService } from '~/modules/draft/draft.service'
 import { NoteController } from '~/modules/note/note.controller'
@@ -51,6 +52,7 @@ describe('NoteController (e2e)', async () => {
       authProvider,
 
       countingServiceProvider,
+      DraftHistoryService,
       DraftService,
       fileReferenceProvider,
       imageMigrationProvider,

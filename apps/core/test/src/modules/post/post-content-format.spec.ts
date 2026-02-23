@@ -10,6 +10,7 @@ import { CategoryModel } from '~/modules/category/category.model'
 import { CategoryService } from '~/modules/category/category.service'
 import { CommentModel } from '~/modules/comment/comment.model'
 import { OptionModel } from '~/modules/configs/configs.model'
+import { DraftHistoryService } from '~/modules/draft/draft-history.service'
 import { DraftModel } from '~/modules/draft/draft.model'
 import { DraftService } from '~/modules/draft/draft.service'
 import { PostController } from '~/modules/post/post.controller'
@@ -67,6 +68,7 @@ describe('Post ContentFormat (e2e)', async () => {
       ...gatewayProviders,
       authProvider,
       countingServiceProvider,
+      DraftHistoryService,
       DraftService,
       {
         provide: DRAFT_SERVICE_TOKEN,
