@@ -82,7 +82,7 @@ export class PostController<ResponseWrapper> implements IController {
   getPost(
     categoryName: string,
     slug: string,
-    options?: { lang?: string },
+    options?: { lang?: string; prefer?: 'lexical' },
   ): RequestProxyResult<
     ModelWithLiked<ModelWithTranslation<PostModel>>,
     ResponseWrapper
@@ -95,13 +95,16 @@ export class PostController<ResponseWrapper> implements IController {
   getPost(
     idOrCategoryName: string,
     slug?: string,
-    options?: { lang?: string },
+    options?: { lang?: string; prefer?: 'lexical' },
   ): any {
     if (arguments.length == 1) {
       return this.proxy(idOrCategoryName).get<PostModel>()
     } else {
+      const params: Record<string, string | undefined> = {}
+      if (options?.lang) params.lang = options.lang
+      if (options?.prefer) params.prefer = options.prefer
       return this.proxy(idOrCategoryName)(slug).get<PostModel>({
-        params: options?.lang ? { lang: options.lang } : undefined,
+        params: Object.keys(params).length ? params : undefined,
       })
     }
   }

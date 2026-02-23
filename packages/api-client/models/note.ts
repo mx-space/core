@@ -5,7 +5,7 @@ import type {
 } from './base'
 import type { TopicModel } from './topic'
 
-export interface NoteModel extends TextBaseModel {
+export type NoteModel = TextBaseModel & {
   isPublished: boolean
   count: {
     read: number

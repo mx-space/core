@@ -58,7 +58,7 @@ export default defineConfig(
       '@typescript-eslint/no-unsafe-function-type': 0,
       'unicorn/no-array-callback-reference': 0,
 
-     
+     "unicorn/no-thenable": 0,
       'no-duplicate-imports': 'off',
       'unicorn/explicit-length-check': 0,
       'unicorn/prefer-top-level-await': 0,

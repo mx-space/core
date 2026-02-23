@@ -11,8 +11,8 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
-import { IpLocation } from '~/common/decorators/ip.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
@@ -22,6 +22,7 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
+import { applyContentPreference } from '~/utils/content.util'
 import type { QueryFilter } from 'mongoose'
 import { NoteModel } from './note.model'
 import {
@@ -76,7 +77,7 @@ export class NoteController {
       page,
       select: isAuthenticated
         ? select
-        : select?.replace(/[+-]?(coordinates|location|password)/g, ''),
+        : select?.replaceAll(/[+-]?(coordinates|location|password)/g, ''),
       sort: sortBy ? { [sortBy]: sortOrder || -1 } : { created: -1 },
     })
   }
@@ -242,7 +243,7 @@ export class NoteController {
     @Lang() lang?: string,
   ) {
     const { nid } = params
-    const { password, single: isSingle } = query
+    const { password, single: isSingle, prefer } = query
     const condition = isAuthenticated ? {} : { isPublished: true }
     const current: NoteModel | null = await this.noteService.model
       .findOne({
@@ -292,7 +293,7 @@ export class NoteController {
     }
 
     if (isSingle) {
-      return currentData
+      return applyContentPreference(currentData, prefer)
     }
 
     const select = '_id title nid id created modified'
@@ -320,7 +321,7 @@ export class NoteController {
     if (currentData.password) {
       currentData.password = '*'
     }
-    return { data: currentData, next, prev }
+    return { data: applyContentPreference(currentData, prefer), next, prev }
   }
 
   @Get('/topics/:id')

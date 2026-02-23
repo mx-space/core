@@ -64,6 +64,20 @@ export function computeContentHash(
   )
 }
 
+export function applyContentPreference<
+  T extends { text?: string; contentFormat?: string; content?: string },
+>(doc: T, prefer?: string): T {
+  if (
+    prefer === 'lexical' &&
+    doc.contentFormat === ContentFormat.Lexical &&
+    doc.content
+  ) {
+    const { text, ...rest } = doc
+    return rest as T
+  }
+  return doc
+}
+
 function traverseLexicalNodes(node: any, visitor: (node: any) => void): void {
   if (!node) return
   visitor(node)

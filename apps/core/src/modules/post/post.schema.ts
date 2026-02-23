@@ -5,6 +5,7 @@ import {
   zMongoId,
   zNonEmptyString,
   zPinDate,
+  zPrefer,
 } from '~/common/zod'
 import { PagerSchema } from '~/shared/dto/pager.dto'
 import { WriteBaseSchema } from '~/shared/schema'
@@ -64,6 +65,7 @@ export class CategoryAndSlugDto extends createZodDto(CategoryAndSlugSchema) {}
  */
 export const PostDetailQuerySchema = z.object({
   lang: zLang,
+  prefer: zPrefer,
 })
 
 export class PostDetailQueryDto extends createZodDto(PostDetailQuerySchema) {}

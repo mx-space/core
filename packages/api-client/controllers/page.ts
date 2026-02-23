@@ -58,7 +58,9 @@ export class PageController<ResponseWrapper> implements IController {
    * @param slug 路径
    * @returns
    */
-  getBySlug(slug: string) {
-    return this.proxy.slug(slug).get<PageModel>({})
+  getBySlug(slug: string, options?: { prefer?: 'lexical' }) {
+    return this.proxy.slug(slug).get<PageModel>({
+      params: options?.prefer ? { prefer: options.prefer } : undefined,
+    })
   }
 }

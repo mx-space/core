@@ -21,8 +21,14 @@ import {
 } from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
+import { applyContentPreference } from '~/utils/content.util'
 import { PageModel } from './page.model'
-import { PageDto, PageReorderDto, PartialPageDto } from './page.schema'
+import {
+  PageDetailQueryDto,
+  PageDto,
+  PageReorderDto,
+  PartialPageDto,
+} from './page.schema'
 import { PageService } from './page.service'
 
 @ApiController('pages')
@@ -110,7 +116,11 @@ export class PageController {
   }
 
   @Get('/slug/:slug')
-  async getPageBySlug(@Param('slug') slug: string, @Lang() lang?: string) {
+  async getPageBySlug(
+    @Param('slug') slug: string,
+    @Query() query: PageDetailQueryDto,
+    @Lang() lang?: string,
+  ) {
     if (typeof slug !== 'string') {
       throw new BizException(ErrorCodeEnum.InvalidSlug)
     }
@@ -133,14 +143,17 @@ export class PageController {
       },
     })
 
-    return {
-      ...page,
-      title: translationResult.title,
-      text: translationResult.text,
-      isTranslated: translationResult.isTranslated,
-      translationMeta: translationResult.translationMeta,
-      availableTranslations: translationResult.availableTranslations,
-    }
+    return applyContentPreference(
+      {
+        ...page,
+        title: translationResult.title,
+        text: translationResult.text,
+        isTranslated: translationResult.isTranslated,
+        translationMeta: translationResult.translationMeta,
+        availableTranslations: translationResult.availableTranslations,
+      },
+      query.prefer,
+    )
   }
 
   @Post('/')

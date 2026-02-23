@@ -11,8 +11,8 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
-import { IpLocation } from '~/common/decorators/ip.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -23,6 +23,7 @@ import {
 } from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
+import { applyContentPreference } from '~/utils/content.util'
 import type { PipelineStage } from 'mongoose'
 import type { CategoryModel } from '../category/category.model'
 import { PostModel } from './post.model'
@@ -276,7 +277,7 @@ export class PostController {
   @Get('/:category/:slug')
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,
-    @Query() _: PostDetailQueryDto,
+    @Query() query: PostDetailQueryDto,
     @IpLocation() { ip }: IpRecord,
     @IsAuthenticated() isAuthenticated?: boolean,
     @Lang() lang?: string,
@@ -314,17 +315,20 @@ export class PostController {
       },
     })
 
-    return {
-      ...baseData,
-      title: translationResult.title,
-      text: translationResult.text,
-      summary: translationResult.summary,
-      tags: translationResult.tags,
-      isTranslated: translationResult.isTranslated,
-      translationMeta: translationResult.translationMeta,
-      availableTranslations: translationResult.availableTranslations,
-      liked,
-    }
+    return applyContentPreference(
+      {
+        ...baseData,
+        title: translationResult.title,
+        text: translationResult.text,
+        summary: translationResult.summary,
+        tags: translationResult.tags,
+        isTranslated: translationResult.isTranslated,
+        translationMeta: translationResult.translationMeta,
+        availableTranslations: translationResult.availableTranslations,
+        liked,
+      },
+      query.prefer,
+    )
   }
 
   @Post('/')
