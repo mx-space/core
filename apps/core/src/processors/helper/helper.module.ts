@@ -14,6 +14,7 @@ import { BarkPushService } from './helper.bark.service'
 import { CountingService } from './helper.counting.service'
 import { EmailService } from './helper.email.service'
 import { EventManagerService } from './helper.event.service'
+import { HitokotoService } from './helper.hitokoto.service'
 import { HttpService } from './helper.http.service'
 import { ImageMigrationService } from './helper.image-migration.service'
 import { ImageService } from './helper.image.service'
@@ -30,6 +31,7 @@ const providers: Provider<any>[] = [
   CountingService,
   EmailService,
   EventManagerService,
+  HitokotoService,
   HttpService,
   ImageMigrationService,
   ImageService,

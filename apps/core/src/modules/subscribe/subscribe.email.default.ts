@@ -1,3 +1,4 @@
+import type { HitokotoData } from '~/processors/helper/helper.hitokoto.service'
 import type { OwnerModel, OwnerModelSecurityKeys } from '../owner/owner.model'
 import { SubscribeAllBit } from './subscribe.constant'
 
@@ -26,6 +27,8 @@ export const defaultSubscribeForRenderProps = {
       created: '2023-06-04T15:02:09.179Z',
     },
   },
+
+  hitokoto: null as HitokotoData | null,
 }
 
 export type SubscribeTemplateRenderProps = typeof defaultSubscribeForRenderProps

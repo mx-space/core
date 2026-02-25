@@ -136,6 +136,8 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
               unsubscribe_link: unsubscribeLink,
               owner: owner.name,
 
+              hitokoto: null,
+
               aggregate: {
                 owner,
                 subscriber: {
@@ -287,6 +289,10 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       )
       this.lruCache.set(cacheKey, finalTemplate)
     }
+
+    // 获取一言数据
+    const { hitokoto } = await this.emailService.getHitokotoForTemplate()
+    source.hitokoto = hitokoto
 
     const options: Mail.Options = {
       from: sendfrom,

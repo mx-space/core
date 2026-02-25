@@ -487,6 +487,8 @@ export class CommentService implements OnModuleInit {
           CommentReplyMailType.Owner === type ? comment.mail : ownerInfo.mail,
         ip: comment.ip || '',
 
+        hitokoto: null,
+
         aggregate: {
           owner: ownerInfo,
           commentor: {
@@ -634,6 +636,11 @@ export class CommentService implements OnModuleInit {
         : `[${seo.title || 'Mx Space'}] 有新回复了耶~`
 
     source.ip ??= ''
+
+    // 获取一言数据
+    const { hitokoto } = await this.mailService.getHitokotoForTemplate()
+    source.hitokoto = hitokoto
+
     const options = {
       from: sendfrom,
       subject,

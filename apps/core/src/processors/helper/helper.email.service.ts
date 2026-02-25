@@ -12,6 +12,8 @@ import type Mail from 'nodemailer/lib/mailer'
 import { Resend } from 'resend'
 import { SubPubBridgeService } from '../redis/subpub.service'
 import { AssetService } from './helper.asset.service'
+import type { HitokotoData } from './helper.hitokoto.service'
+import { HitokotoService } from './helper.hitokoto.service'
 
 type MailProvider = 'smtp' | 'resend'
 type MailClient = {
@@ -30,6 +32,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     private readonly assetService: AssetService,
     private readonly subpub: SubPubBridgeService,
     private readonly ownerService: OwnerService,
+    private readonly hitokotoService: HitokotoService,
   ) {
     this.logger = new Logger(EmailService.name)
   }
@@ -284,5 +287,14 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       return input.toString()
     }
     return undefined
+  }
+
+  /**
+   * 获取一言数据，用于邮件模板渲染
+   * @returns 一言数据对象，如果未启用或获取失败则返回默认值
+   */
+  async getHitokotoForTemplate(): Promise<{ hitokoto: HitokotoData | null }> {
+    const hitokoto = await this.hitokotoService.getHitokoto()
+    return { hitokoto }
   }
 }
