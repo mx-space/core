@@ -64,8 +64,6 @@ export const generateDefaultConfig: () => IConfig = () => ({
   },
   imageStorageOptions: {
     enable: false,
-    syncOnPublish: false,
-    deleteLocalAfterSync: false,
     endpoint: null!,
     secretId: null!,
     secretKey: null!,

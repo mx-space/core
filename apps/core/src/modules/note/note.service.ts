@@ -11,6 +11,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { isLexical } from '~/utils/content.util'
 import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getLessThanNow } from '~/utils/time.util'
@@ -186,14 +187,15 @@ export class NoteService {
             scope: EventScope.TO_SYSTEM_VISITOR,
           },
         ),
-        this.imageService.saveImageDimensionsFromMarkdownText(
-          note.text,
-          note.images,
-          (images) => {
-            note.images = images
-            return note.save()
-          },
-        ),
+        !isLexical(note) &&
+          this.imageService.saveImageDimensionsFromMarkdownText(
+            note.text,
+            note.images,
+            (images) => {
+              note.images = images
+              return note.save()
+            },
+          ),
       ])
     })
 
@@ -290,24 +292,25 @@ export class NoteService {
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
-        this.imageService.saveImageDimensionsFromMarkdownText(
-          updated.text,
-          updated.images,
-          (images) => {
-            return this.model
-              .updateOne(
-                {
-                  _id: id,
-                },
-                {
-                  $set: {
-                    images,
+        !isLexical(updated) &&
+          this.imageService.saveImageDimensionsFromMarkdownText(
+            updated.text,
+            updated.images,
+            (images) => {
+              return this.model
+                .updateOne(
+                  {
+                    _id: id,
                   },
-                },
-              )
-              .exec()
-          },
-        ),
+                  {
+                    $set: {
+                      images,
+                    },
+                  },
+                )
+                .exec()
+            },
+          ),
       ])
     })
 

@@ -7,7 +7,6 @@ import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { NoteModel } from '~/modules/note/note.model'
 import { NoteService } from '~/modules/note/note.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { getModelToken } from '~/transformers/model.transformer'
@@ -45,10 +44,6 @@ describe('NoteService', () => {
 
   let mockImageService: {
     saveImageDimensionsFromMarkdownText: Mock
-  }
-
-  let mockImageMigrationService: {
-    migrateImagesToS3: Mock
   }
 
   let mockDraftService: {
@@ -233,14 +228,6 @@ describe('NoteService', () => {
       saveImageDimensionsFromMarkdownText: vi.fn().mockResolvedValue(undefined),
     }
 
-    mockImageMigrationService = {
-      migrateImagesToS3: vi.fn().mockResolvedValue({
-        newText: '',
-        newImages: [],
-        migratedCount: 0,
-      }),
-    }
-
     mockDraftService = {
       markAsPublished: vi.fn().mockResolvedValue(undefined),
       linkToPublished: vi.fn().mockResolvedValue(undefined),
@@ -259,10 +246,6 @@ describe('NoteService', () => {
         {
           provide: ImageService,
           useValue: mockImageService,
-        },
-        {
-          provide: ImageMigrationService,
-          useValue: mockImageMigrationService,
         },
         {
           provide: FileReferenceService,

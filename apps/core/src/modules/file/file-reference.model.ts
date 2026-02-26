@@ -42,4 +42,7 @@ export class FileReferenceModel extends BaseModel {
 
   @prop({ type: String, enum: FileReferenceType })
   refType?: FileReferenceType
+
+  @prop({ type: String })
+  s3ObjectKey?: string
 }

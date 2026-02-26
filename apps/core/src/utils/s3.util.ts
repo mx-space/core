@@ -91,6 +91,103 @@ export class S3Uploader {
     return objectKey
   }
 
+  async deleteObject(objectKey: string): Promise<void> {
+    const service = 's3'
+    const date = new Date()
+    const xAmzDate = date.toISOString().replaceAll(/[:-]|\.\d{3}/g, '')
+    const dateStamp = xAmzDate.slice(0, 8)
+
+    const hashedPayload = crypto.createHash('sha256').update('').digest('hex')
+
+    const url = new URL(this.endpoint)
+    const host = url.host
+
+    const encodedObjectKey = objectKey
+      .split('/')
+      .map((seg) => encodeURIComponent(seg))
+      .join('/')
+    const canonicalUri = `/${this.bucket}/${encodedObjectKey}`
+
+    const headers: Record<string, string> = {
+      Host: host,
+      'x-amz-date': xAmzDate,
+      'x-amz-content-sha256': hashedPayload,
+    }
+
+    const sortedHeaders = Object.keys(headers).sort()
+    const canonicalHeaders = sortedHeaders
+      .map((key) => `${key.toLowerCase()}:${headers[key].trim()}`)
+      .join('\n')
+    const signedHeaders = sortedHeaders
+      .map((key) => key.toLowerCase())
+      .join(';')
+
+    const canonicalRequest = [
+      'DELETE',
+      canonicalUri,
+      '',
+      String(canonicalHeaders),
+      '',
+      signedHeaders,
+      hashedPayload,
+    ].join('\n')
+
+    const algorithm = 'AWS4-HMAC-SHA256'
+    const credentialScope = `${dateStamp}/${this.region}/${service}/aws4_request`
+    const hashedCanonicalRequest = crypto
+      .createHash('sha256')
+      .update(canonicalRequest)
+      .digest('hex')
+    const stringToSign = [
+      algorithm,
+      xAmzDate,
+      credentialScope,
+      hashedCanonicalRequest,
+    ].join('\n')
+
+    const kSecret = Buffer.from(`AWS4${this.secretKey}`)
+    const kDate = this.hmacSha256(kSecret, dateStamp)
+    const kRegion = this.hmacSha256(kDate, this.region)
+    const kService = this.hmacSha256(kRegion, service)
+    const kSigning = this.hmacSha256(kService, 'aws4_request')
+    const signature = this.hmacSha256(kSigning, stringToSign).toString('hex')
+
+    const authorization = `${algorithm} Credential=${this.accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
+
+    const requestUrl = `${this.endpoint}${canonicalUri}`
+
+    const fetchOptions: RequestInit & { dispatcher?: unknown } = {
+      method: 'DELETE',
+      headers: {
+        ...headers,
+        Authorization: authorization,
+      },
+    }
+
+    let originalTlsReject: string | undefined
+    if (isDev) {
+      originalTlsReject = process.env.NODE_TLS_REJECT_UNAUTHORIZED
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+    }
+
+    try {
+      const response = await fetch(requestUrl, fetchOptions as RequestInit)
+
+      if (response.status === 404) return
+      if (!response.ok) {
+        throw new Error(`Delete failed with status code: ${response.status}`)
+      }
+    } finally {
+      if (isDev) {
+        if (originalTlsReject === undefined) {
+          delete process.env.NODE_TLS_REJECT_UNAUTHORIZED
+        } else {
+          process.env.NODE_TLS_REJECT_UNAUTHORIZED = originalTlsReject
+        }
+      }
+    }
+  }
+
   // Generic S3-compatible storage upload function
   async uploadToS3(
     objectKey: string,

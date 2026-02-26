@@ -31,7 +31,6 @@ import { countingServiceProvider } from 'test/mock/processors/counting.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 import {
   fileReferenceProvider,
-  imageMigrationProvider,
   imageServiceProvider,
 } from 'test/mock/processors/file.mock'
 import { translationProvider } from 'test/mock/processors/translation.mock'
@@ -81,7 +80,6 @@ describe('PostController (e2e)', async () => {
         useExisting: DraftService,
       },
       fileReferenceProvider,
-      imageMigrationProvider,
       translationProvider,
     ],
     imports: [],

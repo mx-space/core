@@ -19,6 +19,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { isLexical } from '~/utils/content.util'
 import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getLessThanNow } from '~/utils/time.util'
@@ -125,14 +126,15 @@ export class PostService implements OnApplicationBootstrap {
       )
 
       await Promise.all([
-        this.imageService.saveImageDimensionsFromMarkdownText(
-          doc.text,
-          doc.images,
-          (images) => {
-            newPost.images = images
-            return newPost.save()
-          },
-        ),
+        !isLexical(doc) &&
+          this.imageService.saveImageDimensionsFromMarkdownText(
+            doc.text,
+            doc.images,
+            (images) => {
+              newPost.images = images
+              return newPost.save()
+            },
+          ),
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
@@ -352,6 +354,7 @@ export class PostService implements OnApplicationBootstrap {
           scope: EventScope.TO_SYSTEM,
         }),
         doc?.text &&
+          !isLexical(doc) &&
           this.imageService.saveImageDimensionsFromMarkdownText(
             doc.text,
             doc.images,

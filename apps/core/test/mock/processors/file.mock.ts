@@ -1,5 +1,4 @@
 import { FileReferenceService } from '~/modules/file/file-reference.service'
-import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { defineProvider } from 'test/helper/defineProvider'
 
@@ -23,19 +22,6 @@ export const fileReferenceProvider = defineProvider({
     },
     async getOrphanFilesCount() {
       return 0
-    },
-  },
-})
-
-export const imageMigrationProvider = defineProvider({
-  provide: ImageMigrationService,
-  useValue: {
-    async migrateImagesToS3(text: string, images: any[]) {
-      return {
-        newText: text,
-        newImages: images || [],
-        migratedCount: 0,
-      }
     },
   },
 })

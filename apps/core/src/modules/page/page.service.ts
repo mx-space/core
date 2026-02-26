@@ -9,6 +9,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { isLexical } from '~/utils/content.util'
 import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { isDefined } from '~/utils/validator.util'
@@ -75,17 +76,19 @@ export class PageService {
         FileReferenceType.Page,
       )
 
-      this.imageService.saveImageDimensionsFromMarkdownText(
-        res.text,
-        res.images,
-        async (images) => {
-          res.images = images
-          await res.save()
-          this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, res, {
-            scope: EventScope.TO_SYSTEM,
-          })
-        },
-      )
+      if (!isLexical(res)) {
+        this.imageService.saveImageDimensionsFromMarkdownText(
+          res.text,
+          res.images,
+          async (images) => {
+            res.images = images
+            await res.save()
+            this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, res, {
+              scope: EventScope.TO_SYSTEM,
+            })
+          },
+        )
+      }
     })
 
     this.eventManager.emit(
@@ -145,15 +148,16 @@ export class PageService {
       )
 
       await Promise.all([
-        this.imageService.saveImageDimensionsFromMarkdownText(
-          newDoc.text,
-          newDoc.images,
-          (images) => {
-            return this.model
-              .updateOne({ _id: id }, { $set: { images } })
-              .exec()
-          },
-        ),
+        !isLexical(newDoc) &&
+          this.imageService.saveImageDimensionsFromMarkdownText(
+            newDoc.text,
+            newDoc.images,
+            (images) => {
+              return this.model
+                .updateOne({ _id: id }, { $set: { images } })
+                .exec()
+            },
+          ),
         this.eventManager.emit(
           BusinessEvents.PAGE_UPDATE,
           { id: newDoc.id },

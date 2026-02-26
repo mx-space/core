@@ -20,10 +20,7 @@ import { configProvider } from 'test/mock/modules/config.mock'
 import { gatewayProviders } from 'test/mock/modules/gateway.mock'
 import { countingServiceProvider } from 'test/mock/processors/counting.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
-import {
-  fileReferenceProvider,
-  imageMigrationProvider,
-} from 'test/mock/processors/file.mock'
+import { fileReferenceProvider } from 'test/mock/processors/file.mock'
 import { translationProvider } from 'test/mock/processors/translation.mock'
 import MockDbData from './note.e2e-mock.db'
 
@@ -55,7 +52,6 @@ describe('NoteController (e2e)', async () => {
       DraftHistoryService,
       DraftService,
       fileReferenceProvider,
-      imageMigrationProvider,
       translationProvider,
     ],
     imports: [],

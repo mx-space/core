@@ -132,16 +132,6 @@ export type BackupOptionsConfig = z.infer<typeof BackupOptionsSchema>
 // ==================== Image Storage Options ====================
 export const ImageStorageOptionsSchema = section('图床设置', {
   enable: field.toggle(z.boolean().optional(), '开启 S3 图床'),
-  syncOnPublish: field.toggle(z.boolean().optional(), '发布时自动同步', {
-    description: '文章/日记发布时自动将本地图片迁移到 S3',
-  }),
-  deleteLocalAfterSync: field.toggle(
-    z.boolean().optional(),
-    '同步后删除本地文件',
-    {
-      description: '图片迁移到 S3 后删除服务器上的本地文件',
-    },
-  ),
   endpoint: field.plain(z.string().optional(), 'S3 服务端点'),
   secretId: field.halfGrid(z.string().optional(), 'Access Key ID'),
   secretKey: field.passwordHalfGrid(z.string().optional(), 'Secret Access Key'),

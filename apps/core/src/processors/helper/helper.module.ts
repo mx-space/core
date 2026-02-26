@@ -15,7 +15,6 @@ import { CountingService } from './helper.counting.service'
 import { EmailService } from './helper.email.service'
 import { EventManagerService } from './helper.event.service'
 import { HttpService } from './helper.http.service'
-import { ImageMigrationService } from './helper.image-migration.service'
 import { ImageService } from './helper.image.service'
 import { JWTService } from './helper.jwt.service'
 import { LexicalService } from './helper.lexical.service'
@@ -31,7 +30,6 @@ const providers: Provider<any>[] = [
   EmailService,
   EventManagerService,
   HttpService,
-  ImageMigrationService,
   ImageService,
   JWTService,
   TranslationService,
