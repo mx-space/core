@@ -44,6 +44,7 @@ import {
   CommentRefTypesDto,
   CommentStatePatchDto,
   EditCommentDto,
+  ReplyCommentDto,
   TextOnlyDto,
 } from './comment.schema'
 import { CommentService } from './comment.service'
@@ -119,6 +120,7 @@ export class CommentController {
   async getCommentsByRefId(
     @Param() params: MongoIdDto,
     @Query() query: PagerDto,
+    @Query('hasAnchor') hasAnchor: string,
     @IsAuthenticated() isAuthenticated: boolean,
   ) {
     const { id } = params
@@ -158,6 +160,11 @@ export class CommentController {
         ],
       })
     }
+
+    if (hasAnchor === 'true') {
+      $and.push({ anchor: { $exists: true } })
+    }
+
     const comments = await this.commentService.model.paginate(
       {
         $and,
@@ -240,7 +247,7 @@ export class CommentController {
   })
   async replyByCid(
     @Param() params: MongoIdDto,
-    @Body() body: CommentDto,
+    @Body() body: ReplyCommentDto,
     @Body('author') author: string,
     @IsAuthenticated() isAuthenticated: boolean,
     @IpLocation() ipLocation: IpRecord,

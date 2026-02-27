@@ -792,6 +792,8 @@ describe('LexicalService', () => {
       }
       expect(service.populateText(doc)).toBe(true)
       expect(doc.text).toContain('Hello')
+      const parsed = JSON.parse(doc.content!)
+      expect(parsed.root.children[0].$.blockId).toMatch(/^blk_/)
     })
 
     it('returns false for Markdown format', () => {
@@ -825,6 +827,63 @@ describe('LexicalService', () => {
     it('returns false when contentFormat is missing', () => {
       const doc = { content: 'x', text: '' } as any
       expect(service.populateText(doc)).toBe(false)
+    })
+  })
+
+  describe('normalizeBlockIds', () => {
+    it('adds missing block ids and deduplicates repeated ids', () => {
+      const state = makeEditorState([
+        { ...paragraph(textNode('A')), $: { blockId: 'same-id' } } as any,
+        { ...paragraph(textNode('B')), $: { blockId: 'same-id' } } as any,
+        paragraph(textNode('C')),
+      ])
+
+      const normalized = service.normalizeBlockIds(state)
+
+      expect(normalized.changed).toBe(true)
+      const parsed = JSON.parse(normalized.content)
+      const ids = parsed.root.children.map((child: any) => child.$.blockId)
+      expect(ids).toHaveLength(3)
+      expect(new Set(ids).size).toBe(3)
+    })
+
+    it('keeps content unchanged when block ids are already valid', () => {
+      const state = makeEditorState([
+        { ...paragraph(textNode('A')), $: { blockId: 'blk_a' } } as any,
+        { ...paragraph(textNode('B')), $: { blockId: 'blk_b' } } as any,
+      ])
+
+      const normalized = service.normalizeBlockIds(state)
+
+      expect(normalized.changed).toBe(false)
+      expect(normalized.content).toBe(state)
+    })
+  })
+
+  describe('extractRootBlocks', () => {
+    it('extracts root block metadata from lexical content', () => {
+      const state = makeEditorState([
+        {
+          ...paragraph(textNode('Hello')),
+          $: { blockId: 'blk_hello' },
+        } as any,
+        {
+          type: 'code-block',
+          version: 1,
+          language: 'ts',
+          code: 'const a = 1',
+          $: { blockId: 'blk_code' },
+        },
+      ])
+
+      const blocks = service.extractRootBlocks(state)
+
+      expect(blocks).toHaveLength(2)
+      expect(blocks[0].id).toBe('blk_hello')
+      expect(blocks[0].type).toBe('paragraph')
+      expect(blocks[0].text).toContain('Hello')
+      expect(blocks[1].id).toBe('blk_code')
+      expect(blocks[1].text).toContain('const a = 1')
     })
   })
 

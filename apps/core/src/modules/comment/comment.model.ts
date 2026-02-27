@@ -1,5 +1,5 @@
-import { modelOptions, plugin, prop } from '@typegoose/typegoose'
 import type { Ref } from '@typegoose/typegoose'
+import { modelOptions, plugin, prop } from '@typegoose/typegoose'
 import {
   CollectionRefTypes,
   COMMENT_COLLECTION_NAME,
@@ -16,6 +16,52 @@ export enum CommentState {
   Unread,
   Read,
   Junk,
+}
+
+export enum CommentAnchorMode {
+  Block = 'block',
+  Range = 'range',
+}
+
+export class CommentAnchorModel {
+  @prop({ required: true, enum: CommentAnchorMode, type: String })
+  mode: CommentAnchorMode
+
+  @prop({ required: true, trim: true })
+  blockId: string
+
+  @prop({ trim: true })
+  blockType?: string
+
+  @prop({ trim: true })
+  blockFingerprint?: string
+
+  @prop()
+  snapshotText?: string
+
+  @prop()
+  quote?: string
+
+  @prop()
+  prefix?: string
+
+  @prop()
+  suffix?: string
+
+  @prop()
+  startOffset?: number
+
+  @prop()
+  endOffset?: number
+
+  @prop()
+  contentHashAtCreate?: string
+
+  @prop()
+  contentHashCurrent?: string
+
+  @prop()
+  lastResolvedAt?: Date
 }
 
 @modelOptions({
@@ -129,4 +175,7 @@ export class CommentModel extends BaseModel {
   readerId?: string
   @prop()
   editedAt?: Date
+
+  @prop({ type: () => CommentAnchorModel, _id: false })
+  anchor?: CommentAnchorModel
 }
