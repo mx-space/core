@@ -1,12 +1,15 @@
 import { Test } from '@nestjs/testing'
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
-import { TranslationService } from '~/processors/helper/helper.translation.service'
 import type { ArticleTranslationInput } from '~/processors/helper/helper.translation.service'
+import { TranslationService } from '~/processors/helper/helper.translation.service'
 
 const createMockAiTranslationService = () => ({
   getAvailableLanguagesForArticle: vi.fn(),
   getTranslationForArticle: vi.fn(),
   getValidTranslationsForArticles: vi.fn(),
+  scheduleRegenerationForStaleTranslations: vi
+    .fn()
+    .mockResolvedValue(undefined),
 })
 
 describe('TranslationService', () => {
