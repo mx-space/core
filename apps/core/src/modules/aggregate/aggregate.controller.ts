@@ -15,6 +15,7 @@ import { OwnerService } from '../owner/owner.service'
 import { SnippetService } from '../snippet/snippet.service'
 import {
   AggregateQueryDto,
+  LatestQueryDto,
   ReadAndLikeCountDocumentType,
   ReadAndLikeCountTypeDto,
   TimelineQueryDto,
@@ -172,6 +173,57 @@ export class AggregateController {
     }
 
     return result
+  }
+
+  @Get('/latest')
+  async getLatest(@Query() query: LatestQueryDto, @Lang() lang?: string) {
+    const { limit = 5, types, combined = false } = query
+    const result = await this.aggregateService.getLatest(limit, types, combined)
+
+    if (!lang) return result
+
+    type LatestItem = {
+      _id?: any
+      id?: string
+      title?: string
+      created?: Date | null
+      modified?: Date | null
+    } & Record<string, any>
+
+    const translateItems = (items: LatestItem[]) =>
+      this.translationService.translateList({
+        items,
+        targetLang: lang,
+        translationFields: ['title', 'translationMeta'] as const,
+        getInput: (item) => ({
+          id: item._id?.toString?.() ?? item.id ?? '',
+          title: item.title ?? '',
+          created: item.created,
+          modified: item.modified,
+        }),
+        applyResult: (item, translation) => {
+          if (!translation?.isTranslated) return item
+          return {
+            ...item,
+            title: translation.title,
+            isTranslated: true,
+            translationMeta: translation.translationMeta,
+          }
+        },
+      })
+
+    if (combined) {
+      return translateItems(result as LatestItem[])
+    }
+
+    const data = result as Record<string, any>
+    if (data.posts?.length) {
+      data.posts = await translateItems(data.posts)
+    }
+    if (data.notes?.length) {
+      data.notes = await translateItems(data.notes)
+    }
+    return data
   }
 
   @Get('/timeline')

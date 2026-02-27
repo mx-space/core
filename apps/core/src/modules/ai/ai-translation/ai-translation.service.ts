@@ -1550,6 +1550,43 @@ export class AiTranslationService implements OnModuleInit {
     await this.deleteTranslationsByRefId(id)
   }
 
+  async scheduleRegenerationForStaleTranslations(
+    articleIds: string[],
+    targetLang: string,
+  ) {
+    if (!articleIds.length) return
+
+    const aiConfig = await this.configService.get('ai')
+    if (
+      !aiConfig.enableAutoGenerateTranslation ||
+      !aiConfig.enableTranslation
+    ) {
+      return
+    }
+
+    const existingTranslations = await this.aiTranslationModel
+      .find({
+        refId: { $in: articleIds },
+        lang: targetLang,
+      })
+      .select('refId')
+      .lean()
+
+    if (!existingTranslations.length) return
+
+    const staleRefIds = [...new Set(existingTranslations.map((t) => t.refId))]
+
+    for (const refId of staleRefIds) {
+      this.logger.log(
+        `Scheduling stale translation regeneration: article=${refId} lang=${targetLang}`,
+      )
+      await this.aiTaskService.createTranslationTask({
+        refId,
+        targetLanguages: [targetLang],
+      })
+    }
+  }
+
   @OnEvent(BusinessEvents.POST_CREATE)
   @OnEvent(BusinessEvents.NOTE_CREATE)
   @OnEvent(BusinessEvents.PAGE_CREATE)

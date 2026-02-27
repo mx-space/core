@@ -220,6 +220,24 @@ export class TranslationService {
           { select: this.buildTranslationSelect(translationFieldList) },
         )
 
+      const missingIds = articles
+        .filter((a) => !translationMap.has(a.id))
+        .map((a) => a.id)
+
+      if (missingIds.length) {
+        this.aiTranslationService
+          .scheduleRegenerationForStaleTranslations(
+            missingIds,
+            normalizedTarget,
+          )
+          .catch((err) =>
+            this.logger.error(
+              'Failed to schedule stale translation regeneration',
+              err,
+            ),
+          )
+      }
+
       return new Map(
         articles.map((article): [string, TranslationResultPick<Fields>] => {
           const translation = translationMap.get(article.id)

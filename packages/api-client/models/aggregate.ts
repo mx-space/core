@@ -76,6 +76,34 @@ export interface TimelineData {
   > & { url: string })[]
 }
 
+export interface LatestPostItem extends Pick<
+  PostModel,
+  'id' | 'title' | 'slug' | 'created' | 'modified' | 'tags'
+> {
+  category: Pick<CategoryModel, 'name' | 'slug'> | null
+}
+
+export interface LatestNoteItem extends Pick<
+  NoteModel,
+  | 'id'
+  | 'title'
+  | 'nid'
+  | 'created'
+  | 'modified'
+  | 'mood'
+  | 'weather'
+  | 'bookmark'
+> {}
+
+export interface LatestData {
+  posts?: LatestPostItem[]
+  notes?: LatestNoteItem[]
+}
+
+export type LatestCombinedItem =
+  | (LatestPostItem & { type: 'post' })
+  | (LatestNoteItem & { type: 'note' })
+
 export interface AggregateStat {
   allComments: number
   categories: number

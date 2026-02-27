@@ -6,6 +6,8 @@ import type {
   AggregateRootWithTheme,
   AggregateStat,
   AggregateTop,
+  LatestCombinedItem,
+  LatestData,
   TimelineData,
   TimelineType,
 } from '~/models/aggregate'
@@ -66,6 +68,31 @@ export class AggregateController<ResponseWrapper> implements IController {
       },
     })
   }
+  getLatest(options: {
+    limit?: number
+    types?: TimelineType[]
+    combined: true
+  }): RequestProxyResult<LatestCombinedItem[], ResponseWrapper>
+  getLatest(options?: {
+    limit?: number
+    types?: TimelineType[]
+    combined?: false
+  }): RequestProxyResult<LatestData, ResponseWrapper>
+  getLatest(options?: {
+    limit?: number
+    types?: TimelineType[]
+    combined?: boolean
+  }): RequestProxyResult<LatestData | LatestCombinedItem[], ResponseWrapper> {
+    const { limit, types, combined } = options || {}
+    return this.proxy.latest.get<LatestData | LatestCombinedItem[]>({
+      params: {
+        limit,
+        types: types?.join(','),
+        combined,
+      },
+    })
+  }
+
   /**
    * 获取聚合数据统计
    */
