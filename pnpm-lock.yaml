@@ -17,7 +17,7 @@ overrides:
 
 patchedDependencies:
   '@lexical/code@0.41.0':
-    hash: 43552c89dce072aa5833a7ecd90fb57d881c543d9390784f667336693fd5d618
+    hash: db8a78f13b2c361c187382d5f95c57e49dba6c1c63a72c1b733f6637bd531740
     path: patches/@lexical__code@0.41.0.patch
 
 importers:
@@ -128,7 +128,7 @@ importers:
         version: 5.1.6(keyv@5.6.0)
       '@lexical/code':
         specifier: ^0.41.0
-        version: 0.41.0(patch_hash=43552c89dce072aa5833a7ecd90fb57d881c543d9390784f667336693fd5d618)
+        version: 0.41.0(patch_hash=db8a78f13b2c361c187382d5f95c57e49dba6c1c63a72c1b733f6637bd531740)
       '@lexical/extension':
         specifier: ^0.41.0
         version: 0.41.0
@@ -7928,7 +7928,7 @@ snapshots:
 
   '@haklex/rich-headless@0.0.44(lexical@0.41.0)':
     dependencies:
-      '@lexical/code': 0.41.0(patch_hash=43552c89dce072aa5833a7ecd90fb57d881c543d9390784f667336693fd5d618)
+      '@lexical/code': 0.41.0(patch_hash=db8a78f13b2c361c187382d5f95c57e49dba6c1c63a72c1b733f6637bd531740)
       '@lexical/extension': 0.41.0
       '@lexical/link': 0.41.0
       '@lexical/list': 0.41.0
@@ -8401,7 +8401,7 @@ snapshots:
       '@lexical/utils': 0.41.0
       lexical: 0.41.0
 
-  '@lexical/code@0.41.0(patch_hash=43552c89dce072aa5833a7ecd90fb57d881c543d9390784f667336693fd5d618)':
+  '@lexical/code@0.41.0(patch_hash=db8a78f13b2c361c187382d5f95c57e49dba6c1c63a72c1b733f6637bd531740)':
     dependencies:
       '@lexical/utils': 0.41.0
       lexical: 0.41.0
@@ -8447,7 +8447,7 @@ snapshots:
 
   '@lexical/markdown@0.41.0':
     dependencies:
-      '@lexical/code': 0.41.0(patch_hash=43552c89dce072aa5833a7ecd90fb57d881c543d9390784f667336693fd5d618)
+      '@lexical/code': 0.41.0(patch_hash=db8a78f13b2c361c187382d5f95c57e49dba6c1c63a72c1b733f6637bd531740)
       '@lexical/link': 0.41.0
       '@lexical/list': 0.41.0
       '@lexical/rich-text': 0.41.0
