@@ -353,4 +353,36 @@ describe('AiTranslationService', () => {
       ).rejects.toThrow()
     })
   })
+
+  describe('parseModelJson', () => {
+    it('should parse JSON wrapped in code fence', () => {
+      const parsed = (service as any).parseModelJson(
+        '```json\n{"sourceLang":"en","translations":{"t_0":"ok"}}\n```',
+        'test',
+      )
+
+      expect(parsed.sourceLang).toBe('en')
+      expect(parsed.translations.t_0).toBe('ok')
+    })
+
+    it('should parse JSON5-like response', () => {
+      const parsed = (service as any).parseModelJson(
+        '{sourceLang:"en",translations:{t_0:"ok"}}',
+        'test',
+      )
+
+      expect(parsed.sourceLang).toBe('en')
+      expect(parsed.translations.t_0).toBe('ok')
+    })
+
+    it('should parse first JSON object from noisy response', () => {
+      const parsed = (service as any).parseModelJson(
+        'analysis... {"sourceLang":"en","translations":{"t_0":"ok"}} trailing',
+        'test',
+      )
+
+      expect(parsed.sourceLang).toBe('en')
+      expect(parsed.translations.t_0).toBe('ok')
+    })
+  })
 })

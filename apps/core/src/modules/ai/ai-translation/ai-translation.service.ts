@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/better-regex */
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { BizException } from '~/common/exceptions/biz.exception'
@@ -15,8 +16,10 @@ import {
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { InjectModel } from '~/transformers/model.transformer'
 import { computeContentHash as computeContentHashUtil } from '~/utils/content.util'
+import { extractFirstJsonObject } from '~/utils/json.util'
 import { md5 } from '~/utils/tool.util'
 import dayjs from 'dayjs'
+import JSON5 from 'json5'
 import { ConfigsService } from '../../configs/configs.service'
 import type { NoteModel } from '../../note/note.model'
 import type { PageModel } from '../../page/page.model'
@@ -137,6 +140,61 @@ export class AiTranslationService implements OnModuleInit {
     this.logger.log('AI translation task handlers registered')
   }
 
+  private parseModelJson<T extends Record<string, any>>(
+    rawText: string,
+    context: string,
+  ): T {
+    const trimmed = rawText.trim()
+    const candidates = new Set<string>()
+
+    const addCandidate = (value: string | null | undefined) => {
+      if (!value) return
+      const text = value.trim()
+      if (!text) return
+      candidates.add(text)
+    }
+
+    addCandidate(trimmed)
+
+    const codeFenceMatch = trimmed.match(
+      // eslint-disable-next-line regexp/no-super-linear-backtracking
+      /^```(?:json|JSON)?\s*([\s\S]*?)\s*```$/,
+    )
+    addCandidate(codeFenceMatch?.[1])
+    addCandidate(extractFirstJsonObject(trimmed))
+    if (codeFenceMatch?.[1]) {
+      addCandidate(extractFirstJsonObject(codeFenceMatch[1]))
+    }
+
+    let lastError: unknown
+
+    for (const candidate of candidates) {
+      try {
+        return JSON.parse(candidate) as T
+      } catch (error) {
+        // eslint-disable-next-line no-useless-assignment
+        lastError = error
+      }
+      try {
+        return JSON5.parse(candidate) as T
+      } catch (error) {
+        lastError = error
+      }
+    }
+
+    this.logger.warn(
+      `${context}: failed to parse model JSON. length=${rawText.length} head=${JSON.stringify(
+        trimmed.slice(0, 240),
+      )} tail=${JSON.stringify(trimmed.slice(-240))}`,
+    )
+
+    throw new Error(
+      `${context}: invalid JSON output (${
+        lastError instanceof Error ? lastError.message : String(lastError)
+      })`,
+    )
+  }
+
   private async executeTranslationTask(
     payload: TranslationTaskPayload,
     context: TaskExecuteContext,
@@ -177,6 +235,7 @@ export class AiTranslationService implements OnModuleInit {
           payload.refId,
           lang,
           context.incrementTokens,
+          context.signal,
         )
         translations.push({
           translationId: result.id,
@@ -184,6 +243,7 @@ export class AiTranslationService implements OnModuleInit {
           title: result.title,
         })
       } catch (error) {
+        if (error.name === 'AbortError') throw error
         failedCount++
         await context.appendLog(
           'error',
@@ -430,6 +490,35 @@ export class AiTranslationService implements OnModuleInit {
     }
   }
 
+  private async cancelActiveTranslationTasks(refId: string) {
+    for (const status of [TaskStatus.Running, TaskStatus.Pending]) {
+      const { data: tasks } = await this.aiTaskService.crud.getTasks({
+        type: AITaskType.Translation,
+        status,
+        page: 1,
+        size: 100,
+        includeSubTasks: true,
+      })
+      for (const task of tasks) {
+        const payload = task.payload as Record<string, unknown> | undefined
+        if (
+          !payload ||
+          typeof payload.refId !== 'string' ||
+          payload.refId !== refId
+        )
+          continue
+        try {
+          await this.aiTaskService.crud.cancelTask(task.id)
+          this.logger.log(
+            `Cancelled stale translation task ${task.id} for article=${refId}`,
+          )
+        } catch {
+          // task may already be completed
+        }
+      }
+    }
+  }
+
   private extractIdFromEvent(event: ArticleEventPayload): string | null {
     if ('data' in event) {
       return (event as { data: string }).data ?? null
@@ -627,6 +716,7 @@ export class AiTranslationService implements OnModuleInit {
     targetLang: string,
     push?: (event: AiStreamEvent) => Promise<void>,
     onToken?: (count?: number) => Promise<void>,
+    signal?: AbortSignal,
   ): Promise<{
     sourceLang: string
     title: string
@@ -649,6 +739,7 @@ export class AiTranslationService implements OnModuleInit {
         runtime,
         info,
         onToken,
+        signal,
       )
     }
 
@@ -659,6 +750,7 @@ export class AiTranslationService implements OnModuleInit {
       info,
       push,
       onToken,
+      signal,
     )
   }
 
@@ -669,6 +761,7 @@ export class AiTranslationService implements OnModuleInit {
     info: { model: string; provider: string },
     push?: (event: AiStreamEvent) => Promise<void>,
     onToken?: (count?: number) => Promise<void>,
+    signal?: AbortSignal,
   ) {
     const { systemPrompt, prompt, reasoningEffort } =
       AI_PROMPTS.translationStream(targetLang, {
@@ -690,7 +783,11 @@ export class AiTranslationService implements OnModuleInit {
         temperature: 0.3,
         maxRetries: 2,
         reasoningEffort,
+        signal,
       })) {
+        if (signal?.aborted) {
+          throw Object.assign(new Error('Task aborted'), { name: 'AbortError' })
+        }
         fullText += chunk.text
         if (push) {
           await push({ type: 'token', data: chunk.text })
@@ -705,6 +802,7 @@ export class AiTranslationService implements OnModuleInit {
         temperature: 0.3,
         maxRetries: 2,
         reasoningEffort,
+        signal,
       })
       fullText = result.text
       if (push && result.text) {
@@ -715,13 +813,13 @@ export class AiTranslationService implements OnModuleInit {
       }
     }
 
-    const parsed = JSON.parse(fullText) as {
+    const parsed = this.parseModelJson<{
       sourceLang?: string
       title?: string
       text?: string
       summary?: string | null
       tags?: string[] | null
-    }
+    }>(fullText, 'translateMarkdownContent')
 
     if (!parsed?.title || !parsed?.text || !parsed?.sourceLang) {
       throw new Error('Invalid translation JSON response')
@@ -744,6 +842,7 @@ export class AiTranslationService implements OnModuleInit {
     runtime: IModelRuntime,
     info: { model: string; provider: string },
     onToken?: (count?: number) => Promise<void>,
+    signal?: AbortSignal,
   ) {
     const parseResult = parseLexicalForTranslation(content.content!)
     const { segments, propertySegments, editorState } = parseResult
@@ -756,27 +855,44 @@ export class AiTranslationService implements OnModuleInit {
 
     // Build translatable entries
     const allEntries: Record<string, string> = {}
+    const allEntryMeta: Record<string, string> = {}
     for (const seg of segments) {
       if (seg.translatable) {
         allEntries[seg.id] = seg.text
+        allEntryMeta[seg.id] = 'text'
       }
     }
     for (const prop of propertySegments) {
       allEntries[prop.id] = prop.text
+      if (prop.property === 'reading' && prop.node?.type === 'ruby') {
+        allEntryMeta[prop.id] = 'ruby.reading'
+      } else {
+        allEntryMeta[prop.id] = `property.${prop.property}`
+      }
     }
 
     // Meta entries
     const metaEntries: Record<string, string> = { __title__: content.title }
+    const metaEntryMeta: Record<string, string> = { __title__: 'meta.title' }
     if (content.summary) metaEntries.__summary__ = content.summary
-    if (content.tags?.length) metaEntries.__tags__ = content.tags.join('|||')
+    if (content.summary) metaEntryMeta.__summary__ = 'meta.summary'
+    if (content.tags?.length) {
+      metaEntries.__tags__ = content.tags.join('|||')
+      metaEntryMeta.__tags__ = 'meta.tags'
+    }
 
     // Edge case: no translatable content
     if (Object.keys(allEntries).length === 0) {
       const result = await this.callChunkTranslation(
         targetLang,
-        { documentContext: content.title, textEntries: metaEntries },
+        {
+          documentContext: content.title,
+          textEntries: metaEntries,
+          segmentMeta: metaEntryMeta,
+        },
         runtime,
         onToken,
+        signal,
       )
       sourceLang = result.sourceLang
       for (const [id, text] of Object.entries(result.translations)) {
@@ -787,8 +903,12 @@ export class AiTranslationService implements OnModuleInit {
       const MAX_BATCH_TOKENS = 4000
       const estimateTokens = (text: string) => Math.ceil(text.length / 3)
 
-      const batches: Array<Record<string, string>> = []
+      const batches: Array<{
+        textEntries: Record<string, string>
+        segmentMeta: Record<string, string>
+      }> = []
       let currentBatch: Record<string, string> = { ...metaEntries }
+      let currentBatchMeta: Record<string, string> = { ...metaEntryMeta }
       let currentTokens = Object.values(metaEntries).reduce(
         (s, t) => s + estimateTokens(t),
         0,
@@ -798,24 +918,40 @@ export class AiTranslationService implements OnModuleInit {
       for (const [id, text] of Object.entries(allEntries)) {
         const tokens = estimateTokens(text)
         if (hasContentEntry && currentTokens + tokens > MAX_BATCH_TOKENS) {
-          batches.push(currentBatch)
+          batches.push({
+            textEntries: currentBatch,
+            segmentMeta: currentBatchMeta,
+          })
           currentBatch = {}
+          currentBatchMeta = {}
           currentTokens = 0
         }
         currentBatch[id] = text
+        currentBatchMeta[id] = allEntryMeta[id] ?? 'text'
         currentTokens += tokens
         hasContentEntry = true
       }
       if (Object.keys(currentBatch).length > 0) {
-        batches.push(currentBatch)
+        batches.push({
+          textEntries: currentBatch,
+          segmentMeta: currentBatchMeta,
+        })
       }
 
       for (const batch of batches) {
+        if (signal?.aborted) {
+          throw Object.assign(new Error('Task aborted'), { name: 'AbortError' })
+        }
         const result = await this.callChunkTranslation(
           targetLang,
-          { documentContext, textEntries: batch },
+          {
+            documentContext,
+            textEntries: batch.textEntries,
+            segmentMeta: batch.segmentMeta,
+          },
           runtime,
           onToken,
+          signal,
         )
         if (!sourceLang) sourceLang = result.sourceLang
         for (const [id, text] of Object.entries(result.translations)) {
@@ -823,20 +959,29 @@ export class AiTranslationService implements OnModuleInit {
         }
 
         // Validate: check for missing IDs and retry once
-        const missingIds = Object.keys(batch).filter(
+        const missingIds = Object.keys(batch.textEntries).filter(
           (id) => !(id in result.translations),
         )
         if (missingIds.length > 0) {
           const retryEntries: Record<string, string> = {}
+          const retryMeta: Record<string, string> = {}
           for (const id of missingIds) {
-            retryEntries[id] = batch[id]
+            retryEntries[id] = batch.textEntries[id]
+            if (batch.segmentMeta[id]) {
+              retryMeta[id] = batch.segmentMeta[id]
+            }
           }
           try {
             const retryResult = await this.callChunkTranslation(
               targetLang,
-              { documentContext, textEntries: retryEntries },
+              {
+                documentContext,
+                textEntries: retryEntries,
+                segmentMeta: retryMeta,
+              },
               runtime,
               onToken,
+              signal,
             )
             for (const [id, text] of Object.entries(retryResult.translations)) {
               allTranslations.set(id, text)
@@ -888,9 +1033,11 @@ export class AiTranslationService implements OnModuleInit {
     chunk: {
       documentContext: string
       textEntries: Record<string, string>
+      segmentMeta?: Record<string, string>
     },
     runtime: any,
     onToken?: (count?: number) => Promise<void>,
+    signal?: AbortSignal,
   ): Promise<{ sourceLang: string; translations: Record<string, string> }> {
     const { systemPrompt, prompt, reasoningEffort } =
       AI_PROMPTS.translationChunk(targetLang, chunk)
@@ -907,7 +1054,11 @@ export class AiTranslationService implements OnModuleInit {
         temperature: 0.3,
         maxRetries: 2,
         reasoningEffort,
+        signal,
       })) {
+        if (signal?.aborted) {
+          throw Object.assign(new Error('Task aborted'), { name: 'AbortError' })
+        }
         fullText += c.text
         if (onToken) await onToken()
       }
@@ -917,20 +1068,22 @@ export class AiTranslationService implements OnModuleInit {
         temperature: 0.3,
         maxRetries: 2,
         reasoningEffort,
+        signal,
       })
       fullText = result.text
     }
 
-    return JSON.parse(fullText) as {
+    return this.parseModelJson<{
       sourceLang: string
       translations: Record<string, string>
-    }
+    }>(fullText, 'callChunkTranslation')
   }
 
   async generateTranslation(
     articleId: string,
     targetLang: string,
     onToken?: (count?: number) => Promise<void>,
+    signal?: AbortSignal,
   ): Promise<AITranslationModel> {
     const startedAt = Date.now()
     const aiConfig = await this.configService.get('ai')
@@ -952,6 +1105,7 @@ export class AiTranslationService implements OnModuleInit {
         type,
         document,
         onToken,
+        signal,
       )
       const translated = await result
       this.logger.log(
@@ -961,7 +1115,7 @@ export class AiTranslationService implements OnModuleInit {
       )
       return translated
     } catch (error) {
-      if (error instanceof BizException) {
+      if (error instanceof BizException || error.name === 'AbortError') {
         throw error
       }
       this.logger.error(
@@ -978,6 +1132,7 @@ export class AiTranslationService implements OnModuleInit {
     refType: CollectionRefTypes,
     document: ArticleDocument,
     onToken?: (count?: number) => Promise<void>,
+    signal?: AbortSignal,
   ) {
     const content = this.toArticleContent(document)
     const sourceModified = document.modified ?? undefined
@@ -996,6 +1151,7 @@ export class AiTranslationService implements OnModuleInit {
           targetLang,
           push,
           onToken,
+          signal,
         )
         const { sourceLang } = translated
         const hash = this.computeContentHash(content, sourceLang)
@@ -1613,6 +1769,8 @@ export class AiTranslationService implements OnModuleInit {
       return
     }
 
+    await this.cancelActiveTranslationTasks(id)
+
     this.logger.log(
       `AI auto translation task created: article=${id} targets=${targetLanguages.join(',')}`,
     )
@@ -1651,6 +1809,7 @@ export class AiTranslationService implements OnModuleInit {
       refId: id,
     })
     if (!existingTranslations.length) {
+      await this.cancelActiveTranslationTasks(id)
       this.logger.log(
         `AI auto translation task created (update init): article=${id} targets=${targetLanguages.join(',')}`,
       )
@@ -1679,6 +1838,7 @@ export class AiTranslationService implements OnModuleInit {
       return
     }
 
+    await this.cancelActiveTranslationTasks(id)
     this.logger.log(
       `AI auto translation task created (update): article=${id} targets=${outdatedLanguages.join(',')}`,
     )

@@ -195,26 +195,29 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
   async *generateTextStream(
     options: GenerateTextStreamOptions,
   ): AsyncIterable<TextStreamChunk> {
-    const { prompt, messages, temperature, maxTokens } = options
+    const { prompt, messages, temperature, maxTokens, signal } = options
 
     const chatMessages: OpenAI.ChatCompletionMessageParam[] = messages
       ? messages.map((m) => ({ role: m.role, content: m.content }))
       : [{ role: 'user', content: prompt! }]
 
-    const response = await this.client.chat.completions.create({
-      model: this.providerInfo.model,
-      messages: chatMessages,
-      temperature,
-      max_tokens: maxTokens,
-      stream: true,
-    })
+    const response = await this.client.chat.completions.create(
+      {
+        model: this.providerInfo.model,
+        messages: chatMessages,
+        temperature,
+        max_tokens: maxTokens,
+        stream: true,
+      },
+      { signal },
+    )
 
     for await (const chunk of response) {
       const delta = chunk.choices?.[0]?.delta?.content
       if (delta) {
         if (isDev) {
           // eslint-disable-next-line no-console
-          console.debug(`[runtime:openai] chunk size=${delta.length}`)
+          console.debug(`[runtime:openai] chunk size=${delta.length}: ${delta}`)
         }
         yield { text: delta }
       }
@@ -261,7 +264,7 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
     } catch (error: any) {
       clearTimeout(timeoutId)
       if (error.name === 'AbortError') {
-        throw new Error('Request timeout after 10s')
+        throw new Error('Request timeout after 10s', { cause: error })
       }
       throw error
     }

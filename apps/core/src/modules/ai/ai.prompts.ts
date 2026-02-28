@@ -368,7 +368,7 @@ TAGS`
   return prompt
 }
 
-const TRANSLATION_CHUNK_SYSTEM = `Role: Professional translator.
+const TRANSLATION_CHUNK_BASE = `Role: Professional translator.
 
 IMPORTANT: Output MUST be valid JSON only.
 ABSOLUTE: DO NOT wrap the JSON in markdown/code fences (no \`\`\` or \`\`\`json).
@@ -394,17 +394,44 @@ The LAST character of your response MUST be \`}\`.
 
 {"sourceLang":"xx","translations":{"id":"translated text",...}}`
 
+const TRANSLATION_CHUNK_JAPANESE_RUBY = `
+
+## Japanese Ruby Annotation (Lexical)
+When TARGET_LANGUAGE is Japanese:
+- Segment metadata may include "ruby.reading"
+- For "ruby.reading" segments, output ONLY the reading text itself (kana/romaji as appropriate to style), with no tags
+- NEVER output <ruby>, <rt>, or any HTML/JSX tags in segment values
+- For non-ruby segments, translate natural language normally without adding markup`
+
+const buildTranslationChunkSystem = (isJapanese: boolean) => {
+  if (!isJapanese) {
+    return TRANSLATION_CHUNK_BASE
+  }
+
+  return `${TRANSLATION_CHUNK_BASE}${TRANSLATION_CHUNK_JAPANESE_RUBY}`
+}
+
 const buildTranslationChunkPrompt = (
   targetLanguage: string,
   chunk: {
     documentContext: string
     textEntries: Record<string, string>
+    segmentMeta?: Record<string, string>
   },
 ) => {
-  const prompt = `TARGET_LANGUAGE: ${targetLanguage}
+  let prompt = `TARGET_LANGUAGE: ${targetLanguage}
 
 ## Document context (for semantic reference, DO NOT output this)
-${chunk.documentContext}
+${chunk.documentContext}`
+
+  if (chunk.segmentMeta && Object.keys(chunk.segmentMeta).length > 0) {
+    prompt += `
+
+## Segment metadata (for translation guidance only, DO NOT output this)
+${JSON.stringify(chunk.segmentMeta)}`
+  }
+
+  prompt += `
 
 ## Segments to translate
 ${JSON.stringify(chunk.textEntries)}`
@@ -607,11 +634,13 @@ COMMENT`,
     chunk: {
       documentContext: string
       textEntries: Record<string, string>
+      segmentMeta?: Record<string, string>
     },
   ) => {
     const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
+    const isJapanese = targetLang === 'ja'
     return {
-      systemPrompt: TRANSLATION_CHUNK_SYSTEM,
+      systemPrompt: buildTranslationChunkSystem(isJapanese),
       prompt: buildTranslationChunkPrompt(targetLanguage, chunk),
       reasoningEffort: NO_REASONING,
     }

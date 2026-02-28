@@ -18,6 +18,7 @@ import {
 } from '@haklex/rich-headless'
 
 const FORMAT_CODE = 16
+const NODE_STATE_KEY = '$'
 
 const SKIP_BLOCKS = new Set([
   'code',
@@ -63,6 +64,7 @@ const KNOWN_STRUCTURAL_PROPS = new Set([
   'colSpan',
   'headerState',
   'width',
+  NODE_STATE_KEY,
 ])
 
 export interface TranslationSegment {
@@ -126,6 +128,15 @@ function walkNode(
         })
       }
     }
+  }
+
+  if (node.type === 'ruby' && typeof node.reading === 'string') {
+    propertySegments.push({
+      id: `p_${counter.p++}`,
+      text: node.reading,
+      node,
+      property: 'reading',
+    })
   }
 
   // Text leaf
@@ -259,7 +270,7 @@ export function extractDocumentContext(rootChildren: any[]): string {
 export function parseLexicalForTranslation(
   editorStateJson: string,
 ): LexicalTranslationResult {
-  const editorState = structuredClone(JSON.parse(editorStateJson))
+  const editorState = JSON.parse(editorStateJson)
   const rootChildren: any[] = editorState.root?.children ?? []
 
   const segments: TranslationSegment[] = []

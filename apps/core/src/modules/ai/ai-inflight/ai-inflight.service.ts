@@ -36,10 +36,20 @@ export class AiInFlightService {
       if (isDev) {
         this.logger.debug(`inflight result hit key=${options.key}`)
       }
-      return {
-        role: 'follower',
-        events: this.createImmediateDoneStream(existingResultId),
-        result: options.parseResult(existingResultId),
+      try {
+        const result = await options.parseResult(existingResultId)
+        return {
+          role: 'follower',
+          events: this.createImmediateDoneStream(existingResultId),
+          result: Promise.resolve(result),
+        }
+      } catch {
+        this.logger.debug(
+          `inflight stale result, clearing cache key=${options.key}`,
+        )
+        await redis.del(resultKey)
+        await redis.del(streamKey)
+        await redis.del(errorKey)
       }
     }
 

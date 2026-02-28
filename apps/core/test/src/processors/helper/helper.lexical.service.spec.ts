@@ -242,7 +242,7 @@ describe('LexicalService', () => {
     expect(service.lexicalToMarkdown(state)).toContain('> quoted')
   })
 
-  it('converts lexical code block', () => {
+  it('handles legacy lexical code node as plain text fallback', () => {
     const state = makeEditorState([
       {
         children: [textNode('x=1')],
@@ -255,8 +255,7 @@ describe('LexicalService', () => {
       },
     ])
     const md = service.lexicalToMarkdown(state)
-    expect(md).toContain('```python')
-    expect(md).toContain('x=1')
+    expect(md.trim()).toBe('x=1')
   })
 
   it('converts link', () => {

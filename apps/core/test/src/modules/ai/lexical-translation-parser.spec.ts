@@ -169,6 +169,15 @@ const footnoteSection = (definitions: Record<string, string>) => ({
   version: 1,
 })
 
+const rubyNode = (base: string, reading: string) => ({
+  type: 'ruby',
+  reading,
+  children: [textNode(base)],
+  direction: 'ltr',
+  format: '',
+  indent: 0,
+})
+
 const FORMAT_BOLD = 1
 const FORMAT_ITALIC = 2
 const FORMAT_CODE = 16
@@ -326,6 +335,19 @@ describe('lexical-translation-parser', () => {
       expect(segments[0].text).toBe('Hidden text')
     })
 
+    it('ruby node base text + reading property → both collected', () => {
+      const json = makeEditorState([paragraph(rubyNode('漢字', 'かんじ'))])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(segments[0].text).toBe('漢字')
+      expect(segments[0].translatable).toBe(true)
+
+      expect(propertySegments).toHaveLength(1)
+      expect(propertySegments[0].property).toBe('reading')
+      expect(propertySegments[0].text).toBe('かんじ')
+    })
+
     it('details.summary → PropertySegment', () => {
       const json = makeEditorState([
         detailsNode('Click to expand', paragraph(textNode('Details body'))),
@@ -406,6 +428,19 @@ describe('lexical-translation-parser', () => {
       expect(segments[0].text).toBe('Cell A')
       expect(segments[1].text).toBe('Cell B')
     })
+
+    it('ignores lexical node state key "$" (blockId metadata)', () => {
+      const json = makeEditorState([
+        {
+          ...paragraph(textNode('With block id')),
+          $: { blockId: 'abc123' },
+        },
+      ])
+      const { segments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(segments[0].text).toBe('With block id')
+    })
   })
 
   describe('restoreLexicalTranslation', () => {
@@ -444,6 +479,30 @@ describe('lexical-translation-parser', () => {
 
       expect(parsed.root.children[0].summary).toBe('点击展开')
       expect(parsed.root.children[0].children[0].children[0].text).toBe('正文')
+    })
+
+    it('apply translations to ruby reading property', () => {
+      const json = makeEditorState([paragraph(rubyNode('漢字', 'かんじ'))])
+      const result = parseLexicalForTranslation(json)
+
+      const rubyText = result.segments.find((seg) => seg.text === '漢字')
+      const rubyReading = result.propertySegments.find(
+        (seg) => seg.property === 'reading',
+      )
+
+      expect(rubyText).toBeDefined()
+      expect(rubyReading).toBeDefined()
+
+      const translations = new Map<string, string>([
+        [rubyText!.id, '漢字'],
+        [rubyReading!.id, 'かんじ（注音）'],
+      ])
+
+      const restored = restoreLexicalTranslation(result, translations)
+      const parsed = JSON.parse(restored)
+
+      expect(parsed.root.children[0].children[0].reading).toBe('かんじ（注音）')
+      expect(parsed.root.children[0].children[0].children[0].text).toBe('漢字')
     })
 
     it('apply translations to PropertySegments with key (definitions)', () => {
