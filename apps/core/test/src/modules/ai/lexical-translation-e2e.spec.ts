@@ -201,7 +201,6 @@ describe('translateLexicalContent (real-world data)', () => {
       ],
     }).compile()
 
-    service = module.get(AiTranslationService)
     lexicalStrategy = module.get(LEXICAL_TRANSLATION_STRATEGY)
   })
 
