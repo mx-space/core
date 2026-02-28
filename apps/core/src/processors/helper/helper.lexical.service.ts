@@ -42,7 +42,7 @@ export interface LexicalRootBlock {
 @Injectable()
 export class LexicalService {
   private createBlockId() {
-    return `blk_${nanoid(6)}`
+    return nanoid(8)
   }
 
   private parseEditorState(content: string): any | null {

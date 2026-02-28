@@ -6,7 +6,7 @@ const COLLECTIONS = ['posts', 'notes', 'pages']
 const NODE_STATE_KEY = '$'
 const BLOCK_ID_STATE_KEY = 'blockId'
 
-const createBlockId = () => `blk_${nanoid(6)}`
+const createBlockId = () => nanoid(8)
 
 function normalizeLexicalRootBlockIds(content: string): string | null {
   let editorState: any

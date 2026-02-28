@@ -183,8 +183,8 @@ describe('Post ContentFormat (e2e)', async () => {
     expect(json.content_format).toBe('lexical')
     const parsed = JSON.parse(json.content)
     expect(parsed.root.children).toHaveLength(2)
-    expect(parsed.root.children[0].$.blockId).toMatch(/^blk_/)
-    expect(parsed.root.children[1].$.blockId).toMatch(/^blk_/)
+    expect(parsed.root.children[0].$.blockId).toMatch(/^[\w-]{8}$/)
+    expect(parsed.root.children[1].$.blockId).toMatch(/^[\w-]{8}$/)
     expect(parsed.root.children[0].children[0].text).toBe('Hello Lexical')
     expect(parsed.root.children[1].children[0].text).toBe(
       'This is paragraph text.',

@@ -793,7 +793,7 @@ describe('LexicalService', () => {
       expect(service.populateText(doc)).toBe(true)
       expect(doc.text).toContain('Hello')
       const parsed = JSON.parse(doc.content!)
-      expect(parsed.root.children[0].$.blockId).toMatch(/^blk_/)
+      expect(parsed.root.children[0].$.blockId).toMatch(/^[\w-]{8}$/)
     })
 
     it('returns false for Markdown format', () => {
@@ -849,8 +849,8 @@ describe('LexicalService', () => {
 
     it('keeps content unchanged when block ids are already valid', () => {
       const state = makeEditorState([
-        { ...paragraph(textNode('A')), $: { blockId: 'blk_a' } } as any,
-        { ...paragraph(textNode('B')), $: { blockId: 'blk_b' } } as any,
+        { ...paragraph(textNode('A')), $: { blockId: 'abcd1234' } } as any,
+        { ...paragraph(textNode('B')), $: { blockId: 'wxyz5678' } } as any,
       ])
 
       const normalized = service.normalizeBlockIds(state)
@@ -865,24 +865,24 @@ describe('LexicalService', () => {
       const state = makeEditorState([
         {
           ...paragraph(textNode('Hello')),
-          $: { blockId: 'blk_hello' },
+          $: { blockId: 'hello123' },
         } as any,
         {
           type: 'code-block',
           version: 1,
           language: 'ts',
           code: 'const a = 1',
-          $: { blockId: 'blk_code' },
+          $: { blockId: 'code1234' },
         },
       ])
 
       const blocks = service.extractRootBlocks(state)
 
       expect(blocks).toHaveLength(2)
-      expect(blocks[0].id).toBe('blk_hello')
+      expect(blocks[0].id).toBe('hello123')
       expect(blocks[0].type).toBe('paragraph')
       expect(blocks[0].text).toContain('Hello')
-      expect(blocks[1].id).toBe('blk_code')
+      expect(blocks[1].id).toBe('code1234')
       expect(blocks[1].text).toContain('const a = 1')
     })
   })
