@@ -1,5 +1,33 @@
 # CHANGELOG
 
+# [10.1.0](https://github.com/mx-space/core/compare/v10.0.4...v10.1.0) (2026-02-28)
+
+
+### Bug Fixes
+
+* **release:** update Dokploy webhook handling in release workflow ([328013a](https://github.com/mx-space/core/commit/328013af093f1fc274ca179d7ade81d8cd118c0e))
+* **test:** add missing scheduleRegenerationForStaleTranslations mock in translation service spec ([4e701a2](https://github.com/mx-space/core/commit/4e701a2580f4cd389fac72b88a080b2d76da0db5))
+* **test:** remove unnecessary whitespace in lexical-translation-e2e.spec.ts ([c623a20](https://github.com/mx-space/core/commit/c623a20097aa0b09564b872c125b9bac931738e3))
+* update @lexical/code patch to improve syntax highlighting support ([3bf4873](https://github.com/mx-space/core/commit/3bf4873e58fce0bef810c60f4377bd0de0fdd4c6))
+
+
+### Features
+
+* add patch for @lexical/code@0.41.0 and remove outdated patch ([e2c1492](https://github.com/mx-space/core/commit/e2c14928854af53b915cbf62f28aaf11a7ca1d9f))
+* add v10.0.5 migration for Lexical root block ID backfill ([66c3650](https://github.com/mx-space/core/commit/66c365061364fa64a2792cb9950aadfcb8350a33))
+* **aggregate:** add /latest endpoint for top content per type ([563a716](https://github.com/mx-space/core/commit/563a716ac8fe7d584a182f5dc94d74edd753d653))
+* **ai:** enhance translation service with new lexical features and dependencies ([534b0f7](https://github.com/mx-space/core/commit/534b0f71c697f96216bf6c61c19173cdc9367cd4))
+* **ai:** enhance translation strategies and introduce new event handler ([426dc07](https://github.com/mx-space/core/commit/426dc07cc4d9ff24f9cfc09d626d6234a7d45619))
+* **ai:** improve lexical translation and update utilities ([7475a8d](https://github.com/mx-space/core/commit/7475a8d49ec95c0105f111af047c86d8fc52419f))
+* **ai:** refine AI translation, runtime, and add json util ([481beeb](https://github.com/mx-space/core/commit/481beeb49b44c0891194b2461bbe1d89903d3d10))
+* **ai:** update translation prompts with enhanced safety and structure rules ([4f035f2](https://github.com/mx-space/core/commit/4f035f2bbbb9095dae35702d28210c7c9f8a0ea6))
+* **comment:** add language support for comment anchors and enhance anchor resolution ([2218ae2](https://github.com/mx-space/core/commit/2218ae2bc5cdddfc0afd7220ef88e66af1be81c5))
+* **content:** introduce content preference handling for notes and pages ([14ed55b](https://github.com/mx-space/core/commit/14ed55b9a4c61fdf4f3fa47d18f3824e86ff006d))
+* **draft:** implement draft history service with diff strategies ([5171707](https://github.com/mx-space/core/commit/5171707e6b32a7d0d115f0624a9860d5814ca2a9))
+* **patch:** add patch for @lexical/code@0.40.0 and update workspace configuration ([066171f](https://github.com/mx-space/core/commit/066171fe6d1001403f646dcd85be2f23390340bb))
+
+
+
 ## [10.0.4](https://github.com/mx-space/core/compare/v10.0.3...v10.0.4) (2026-02-18)
 
 
