@@ -1,12 +1,14 @@
 import type { Ref } from '@typegoose/typegoose'
 import { modelOptions, plugin, prop } from '@typegoose/typegoose'
+import { Types } from 'mongoose'
+import autopopulate from 'mongoose-autopopulate'
+
 import {
   CollectionRefTypes,
   COMMENT_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
-import { Types } from 'mongoose'
-import autopopulate from 'mongoose-autopopulate'
+
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
@@ -62,6 +64,9 @@ export class CommentAnchorModel {
 
   @prop()
   lastResolvedAt?: Date
+
+  @prop()
+  lang?: string | null
 }
 
 @modelOptions({

@@ -1,4 +1,6 @@
 import { Test } from '@nestjs/testing'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { ConfigsService } from '~/modules/configs/configs.service'
 import {
   FileReferenceModel,
@@ -7,7 +9,6 @@ import {
 } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { getModelToken } from '~/transformers/model.transformer'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('FileReferenceService', () => {
   let fileReferenceService: FileReferenceService
@@ -183,7 +184,7 @@ describe('FileReferenceService', () => {
       const refId = 'post123'
       const refType = FileReferenceType.Post
 
-      await fileReferenceService.activateReferences(text, refId, refType)
+      await fileReferenceService.activateReferences({ text }, refId, refType)
 
       expect(mockReferences[0].status).toBe(FileReferenceStatus.Active)
       expect(mockReferences[0].refId).toBe(refId)
@@ -203,7 +204,7 @@ describe('FileReferenceService', () => {
 
       const text = `![tracked](${trackedUrl}) ![external](${externalUrl})`
       await fileReferenceService.activateReferences(
-        text,
+        { text },
         'post123',
         FileReferenceType.Post,
       )
@@ -237,7 +238,7 @@ describe('FileReferenceService', () => {
 
       const newText = `Updated content with ![new](${newUrl})`
       await fileReferenceService.updateReferencesForDocument(
-        newText,
+        { text: newText },
         refId,
         refType,
       )
@@ -297,7 +298,7 @@ describe('FileReferenceService', () => {
 
       const postText = `Content with ![image](${imageUrl})`
       await fileReferenceService.activateReferences(
-        postText,
+        { text: postText },
         postId,
         FileReferenceType.Post,
       )

@@ -16,7 +16,9 @@ export function isLexical(doc: Pick<ContentDoc, 'contentFormat'>): boolean {
   return doc.contentFormat === ContentFormat.Lexical
 }
 
-export function extractImagesFromContent(doc: ContentDoc): string[] {
+export function extractImagesFromContent(
+  doc: Pick<ContentDoc, 'text' | 'contentFormat' | 'content'>,
+): string[] {
   if (!isLexical(doc)) {
     return pickImagesFromMarkdown(doc.text)
   }
@@ -29,6 +31,12 @@ export function extractImagesFromContent(doc: ContentDoc): string[] {
     traverseLexicalNodes(editorState.root, (node) => {
       if (node.type === 'image' && node.src) {
         images.push(node.src)
+      } else if (node.type === 'gallery' && Array.isArray(node.images)) {
+        for (const img of node.images) {
+          if (img?.src) images.push(img.src)
+        }
+      } else if (node.type === 'link-card' && node.image) {
+        images.push(node.image)
       }
     })
     return images

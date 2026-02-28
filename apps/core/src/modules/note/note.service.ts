@@ -1,5 +1,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import type { DocumentType } from '@typegoose/typegoose'
+import dayjs from 'dayjs'
+import { debounce, omit } from 'es-toolkit/compat'
+import type { PaginateOptions, QueryFilter } from 'mongoose'
+
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -16,9 +20,7 @@ import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getLessThanNow } from '~/utils/time.util'
 import { isDefined, isMongoId } from '~/utils/validator.util'
-import dayjs from 'dayjs'
-import { debounce, omit } from 'es-toolkit/compat'
-import type { PaginateOptions, QueryFilter } from 'mongoose'
+
 import { CommentService } from '../comment/comment.service'
 import { DraftRefType } from '../draft/draft.model'
 import { DraftService } from '../draft/draft.service'
@@ -171,7 +173,7 @@ export class NoteService {
     scheduleManager.schedule(async () => {
       // Track file references
       await this.fileReferenceService.activateReferences(
-        note.text,
+        note,
         note.id,
         FileReferenceType.Note,
       )
@@ -283,7 +285,7 @@ export class NoteService {
     scheduleManager.schedule(async () => {
       // Update file references
       await this.fileReferenceService.updateReferencesForDocument(
-        updated.text,
+        updated,
         updated.id,
         FileReferenceType.Note,
       )

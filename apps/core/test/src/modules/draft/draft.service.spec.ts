@@ -1,21 +1,22 @@
 import { Test } from '@nestjs/testing'
-import { BizException } from '~/common/exceptions/biz.exception'
-import { DraftHistoryService } from '~/modules/draft/draft-history.service'
-import { DraftModel, DraftRefType } from '~/modules/draft/draft.model'
-import { DraftService } from '~/modules/draft/draft.service'
-import { FileReferenceType } from '~/modules/file/file-reference.model'
-import { FileReferenceService } from '~/modules/file/file-reference.service'
-import { ContentFormat } from '~/shared/types/content-format.type'
-import { getModelToken } from '~/transformers/model.transformer'
 import {
   afterEach,
   beforeEach,
   describe,
   expect,
   it,
-  vi,
   type Mock,
+  vi,
 } from 'vitest'
+
+import { BizException } from '~/common/exceptions/biz.exception'
+import { DraftModel, DraftRefType } from '~/modules/draft/draft.model'
+import { DraftService } from '~/modules/draft/draft.service'
+import { DraftHistoryService } from '~/modules/draft/draft-history.service'
+import { FileReferenceType } from '~/modules/file/file-reference.model'
+import { FileReferenceService } from '~/modules/file/file-reference.service'
+import { ContentFormat } from '~/shared/types/content-format.type'
+import { getModelToken } from '~/transformers/model.transformer'
 
 describe('DraftService with FileReference integration', () => {
   let draftService: DraftService
@@ -150,7 +151,7 @@ describe('DraftService with FileReference integration', () => {
       expect(
         mockFileReferenceService.updateReferencesForDocument,
       ).toHaveBeenCalledWith(
-        draftData.text,
+        expect.objectContaining({ text: draftData.text }),
         expect.any(String),
         FileReferenceType.Draft,
       )
@@ -197,7 +198,7 @@ describe('DraftService with FileReference integration', () => {
       expect(
         mockFileReferenceService.updateReferencesForDocument,
       ).toHaveBeenCalledWith(
-        updateData.text,
+        expect.objectContaining({ text: updateData.text }),
         'draft123',
         FileReferenceType.Draft,
       )

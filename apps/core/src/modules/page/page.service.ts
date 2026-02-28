@@ -1,4 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import { omit } from 'es-toolkit/compat'
+import slugify from 'slugify'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -13,8 +16,7 @@ import { isLexical } from '~/utils/content.util'
 import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { isDefined } from '~/utils/validator.util'
-import { omit } from 'es-toolkit/compat'
-import slugify from 'slugify'
+
 import { DraftRefType } from '../draft/draft.model'
 import { DraftService } from '../draft/draft.service'
 import { PageModel } from './page.model'
@@ -71,7 +73,7 @@ export class PageService {
     scheduleManager.schedule(async () => {
       // Track file references
       await this.fileReferenceService.activateReferences(
-        res.text,
+        res,
         res.id,
         FileReferenceType.Page,
       )
@@ -142,7 +144,7 @@ export class PageService {
     scheduleManager.schedule(async () => {
       // Update file references
       await this.fileReferenceService.updateReferencesForDocument(
-        newDoc.text,
+        newDoc,
         newDoc.id,
         FileReferenceType.Page,
       )

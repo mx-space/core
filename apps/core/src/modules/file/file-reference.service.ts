@@ -1,16 +1,26 @@
 import { unlink } from 'node:fs/promises'
 import path from 'node:path'
+
 import { Injectable, Logger } from '@nestjs/common'
+
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import type { ContentFormat } from '~/shared/types/content-format.type'
 import { InjectModel } from '~/transformers/model.transformer'
-import { pickImagesFromMarkdown } from '~/utils/pic.util'
+import { extractImagesFromContent } from '~/utils/content.util'
 import { S3Uploader } from '~/utils/s3.util'
+
 import {
   FileReferenceModel,
   FileReferenceStatus,
   FileReferenceType,
 } from './file-reference.model'
+
+interface ContentLike {
+  text: string
+  contentFormat?: ContentFormat | string
+  content?: string
+}
 
 @Injectable()
 export class FileReferenceService {
@@ -45,11 +55,11 @@ export class FileReferenceService {
   }
 
   async activateReferences(
-    text: string,
+    doc: ContentLike,
     refId: string,
     refType: FileReferenceType,
   ) {
-    const imageUrls = pickImagesFromMarkdown(text)
+    const imageUrls = extractImagesFromContent(doc)
     if (imageUrls.length === 0) return
 
     await this.fileReferenceModel.updateMany(
@@ -67,11 +77,11 @@ export class FileReferenceService {
   }
 
   async updateReferencesForDocument(
-    text: string,
+    doc: ContentLike,
     refId: string,
     refType: FileReferenceType,
   ) {
-    const imageUrls = pickImagesFromMarkdown(text)
+    const imageUrls = extractImagesFromContent(doc)
 
     await this.fileReferenceModel.updateMany(
       { refId, refType },

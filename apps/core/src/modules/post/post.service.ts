@@ -1,5 +1,10 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
+import { debounce, omit } from 'es-toolkit/compat'
+import type { AggregatePaginateModel, Document } from 'mongoose'
+import { Types } from 'mongoose'
+import slugify from 'slugify'
+
 import {
   BizException,
   BusinessException,
@@ -24,10 +29,7 @@ import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getLessThanNow } from '~/utils/time.util'
 import { isDefined } from '~/utils/validator.util'
-import { debounce, omit } from 'es-toolkit/compat'
-import type { AggregatePaginateModel, Document } from 'mongoose'
-import { Types } from 'mongoose'
-import slugify from 'slugify'
+
 import type { CategoryService } from '../category/category.service'
 import { CommentModel } from '../comment/comment.model'
 import { DraftRefType } from '../draft/draft.model'
@@ -120,7 +122,7 @@ export class PostService implements OnApplicationBootstrap {
 
       // Track file references
       await this.fileReferenceService.activateReferences(
-        doc.text,
+        doc,
         doc.id,
         FileReferenceType.Post,
       )
@@ -343,7 +345,7 @@ export class PostService implements OnApplicationBootstrap {
       // Update file references
       if (doc) {
         await this.fileReferenceService.updateReferencesForDocument(
-          doc.text,
+          doc,
           doc.id,
           FileReferenceType.Post,
         )

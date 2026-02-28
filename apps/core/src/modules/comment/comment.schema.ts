@@ -1,7 +1,9 @@
-import { CollectionRefTypes } from '~/constants/db.constant'
-import { normalizeRefType } from '~/utils/database.util'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { CollectionRefTypes } from '~/constants/db.constant'
+import { normalizeRefType } from '~/utils/database.util'
+
 import { CommentAnchorMode } from './comment.model'
 
 const BlockCommentAnchorSchema = z.object({
@@ -10,6 +12,7 @@ const BlockCommentAnchorSchema = z.object({
   blockType: z.string().trim().min(1).max(64).optional(),
   blockFingerprint: z.string().trim().min(1).max(64).optional(),
   snapshotText: z.string().max(20000).optional(),
+  lang: z.string().trim().min(1).max(10).nullish(),
 })
 
 const RangeCommentAnchorSchema = z
@@ -19,6 +22,7 @@ const RangeCommentAnchorSchema = z
     blockType: z.string().trim().min(1).max(64).optional(),
     blockFingerprint: z.string().trim().min(1).max(64).optional(),
     snapshotText: z.string().max(20000).optional(),
+    lang: z.string().trim().min(1).max(10).nullish(),
     quote: z.string().min(1).max(1000),
     prefix: z.string().max(300).default(''),
     suffix: z.string().max(300).default(''),

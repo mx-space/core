@@ -2,6 +2,11 @@ import type { OnModuleInit } from '@nestjs/common'
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import type { ReturnModelType } from '@typegoose/typegoose/lib/types'
+import DiffMatchPatch from 'diff-match-patch'
+import ejs from 'ejs'
+import { omit, pick } from 'es-toolkit/compat'
+import { isObjectIdOrHexString, Types } from 'mongoose'
+
 import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -14,20 +19,18 @@ import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import {
-  LexicalService,
   type LexicalRootBlock,
+  LexicalService,
 } from '~/processors/helper/helper.lexical.service'
 import type { WriteBaseModel } from '~/shared/model/write-base.model'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getAvatar, hasChinese, md5 } from '~/utils/tool.util'
-import DiffMatchPatch from 'diff-match-patch'
-import ejs from 'ejs'
-import { omit, pick } from 'es-toolkit/compat'
-import { isObjectIdOrHexString, Types } from 'mongoose'
+
 import { AI_PROMPTS } from '../ai/ai.prompts'
 import { AiService } from '../ai/ai.service'
+import { AITranslationModel } from '../ai/ai-translation/ai-translation.model'
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerModel } from '../owner/owner.model'
 import { OwnerService } from '../owner/owner.service'
@@ -49,9 +52,9 @@ import {
 import { CommentReplyMailType } from './comment.enum'
 import {
   CommentAnchorMode,
+  type CommentAnchorModel,
   CommentModel,
   CommentState,
-  type CommentAnchorModel,
 } from './comment.model'
 import type { CommentAnchorInput } from './comment.schema'
 
@@ -78,6 +81,8 @@ export class CommentService implements OnModuleInit {
     @Inject(forwardRef(() => ReaderService))
     private readonly readerService: ReaderService,
     private readonly lexicalService: LexicalService,
+    @InjectModel(AITranslationModel)
+    private readonly aiTranslationModel: MongooseModel<AITranslationModel>,
   ) {}
 
   private async getMailOwnerProps() {
@@ -244,26 +249,45 @@ export class CommentService implements OnModuleInit {
     return null
   }
 
-  private resolveAnchorForCreate(
+  private async resolveAnchorForCreate(
     anchor: CommentAnchorInput | undefined,
-    refDoc: Pick<WriteBaseModel, 'contentFormat' | 'content'>,
-  ): CommentAnchorModel | undefined {
+    refDoc: Pick<WriteBaseModel, 'contentFormat' | 'content'> & { _id: any },
+  ): Promise<CommentAnchorModel | undefined> {
     if (!anchor) {
       return undefined
     }
 
-    if (
-      refDoc.contentFormat !== ContentFormat.Lexical ||
-      !refDoc.content ||
-      typeof refDoc.content !== 'string'
-    ) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'Anchor comments are only supported for lexical content.',
-      )
+    let lexicalContent: string | undefined
+
+    if (anchor.lang) {
+      const translation = await this.aiTranslationModel
+        .findOne({ refId: refDoc._id.toString(), lang: anchor.lang })
+        .lean()
+
+      if (
+        translation?.contentFormat === ContentFormat.Lexical &&
+        translation.content &&
+        typeof translation.content === 'string'
+      ) {
+        lexicalContent = translation.content
+      }
     }
 
-    const blocks = this.lexicalService.extractRootBlocks(refDoc.content)
+    if (!lexicalContent) {
+      if (
+        refDoc.contentFormat !== ContentFormat.Lexical ||
+        !refDoc.content ||
+        typeof refDoc.content !== 'string'
+      ) {
+        throw new BizException(
+          ErrorCodeEnum.InvalidParameter,
+          'Anchor comments are only supported for lexical content.',
+        )
+      }
+      lexicalContent = refDoc.content
+    }
+
+    const blocks = this.lexicalService.extractRootBlocks(lexicalContent)
     const block = this.findBlockByAnchor(anchor, blocks)
     if (!block || !block.id) {
       throw new BizException(
@@ -273,7 +297,8 @@ export class CommentService implements OnModuleInit {
     }
 
     const now = new Date()
-    const contentHash = md5(refDoc.content)
+    const contentHash = md5(lexicalContent)
+    const langField = anchor.lang ?? undefined
 
     if (anchor.mode === CommentAnchorMode.Block) {
       return {
@@ -285,6 +310,7 @@ export class CommentService implements OnModuleInit {
         contentHashAtCreate: contentHash,
         contentHashCurrent: contentHash,
         lastResolvedAt: now,
+        lang: langField,
       }
     }
 
@@ -297,6 +323,7 @@ export class CommentService implements OnModuleInit {
     }
 
     const initialSlice = block.text.slice(anchor.startOffset, anchor.endOffset)
+
     const range =
       initialSlice === quote
         ? {
@@ -331,6 +358,7 @@ export class CommentService implements OnModuleInit {
       contentHashAtCreate: contentHash,
       contentHashCurrent: contentHash,
       lastResolvedAt: now,
+      lang: langField,
     }
   }
 
@@ -449,6 +477,7 @@ export class CommentService implements OnModuleInit {
         refType,
         parent: undefined,
         anchor: { $exists: true },
+        $or: [{ 'anchor.lang': null }, { 'anchor.lang': { $exists: false } }],
       })
       .lean()
 
@@ -646,7 +675,7 @@ export class CommentService implements OnModuleInit {
     if (!ref) {
       throw new BizException(ErrorCodeEnum.CommentPostNotExists)
     }
-    const normalizedAnchor = this.resolveAnchorForCreate(
+    const normalizedAnchor = await this.resolveAnchorForCreate(
       doc.anchor as CommentAnchorInput | undefined,
       ref,
     )
