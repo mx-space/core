@@ -11,6 +11,11 @@
     "url": "https://github.com/mx-space/core"
   },
   "author": "Innei <https://innei.in>",
+  "pnpm": {
+    "patchedDependencies": {
+      "@lexical/code@0.41.0": "patches/@lexical__code@0.41.0.patch"
+    }
+  },
   "scripts": {
     "format": "prettier --write \"apps/**/*.ts\"",
     "prepare": "simple-git-hooks && node scripts/init-project.mjs",
