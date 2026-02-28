@@ -1,9 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { isDev } from '~/global/env.global'
 import { RedisService } from '~/processors/redis/redis.service'
 import { sleep } from '~/utils/tool.util'
+
 import type { AiInFlightOptions, AiStreamEvent } from './ai-inflight.types'
 
 @Injectable()
@@ -79,7 +81,10 @@ export class AiInFlightService {
         streamKey,
         resultKey,
         errorKey,
-      }).finally(() => clearInterval(heartbeat))
+      }).finally(async () => {
+        clearInterval(heartbeat)
+        await redis.del(lockKey)
+      })
 
       return {
         role: 'leader',
@@ -155,7 +160,9 @@ export class AiInFlightService {
       return result
     } catch (error) {
       const message = (error as Error)?.message || 'Unknown AI error'
-      await redis.set(keys.errorKey, message, 'EX', options.resultTtlSec)
+      // Use short TTL for error cache so retries are not blocked by stale errors.
+      const errorTtl = Math.min(options.lockTtlSec, 30)
+      await redis.set(keys.errorKey, message, 'EX', errorTtl)
       await redis.xadd(
         keys.streamKey,
         'MAXLEN',
@@ -167,7 +174,7 @@ export class AiInFlightService {
         'data',
         JSON.stringify({ message }),
       )
-      await redis.expire(keys.streamKey, options.resultTtlSec)
+      await redis.expire(keys.streamKey, errorTtl)
       throw error
     }
   }
