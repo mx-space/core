@@ -1,4 +1,5 @@
 import { z } from 'zod'
+
 import {
   AI_SUMMARY_MAX_WORDS,
   DEFAULT_SUMMARY_LANG,
@@ -386,6 +387,12 @@ Use the provided document context for coherent, fluent translation.
 - DO NOT translate segment IDs or keys
 - If title/summary/tags keys are present in segments, translate them too
 - For __tags__, preserve the ||| delimiter between tags
+
+## Key Completeness (CRITICAL)
+- The "translations" object MUST contain EVERY key from the input "segments" object
+- Do NOT omit any key, even if the value appears untranslatable
+- Do NOT add keys that were not in the input
+- If a segment needs no translation (e.g. code, URL), return it unchanged
 
 ## Output Format (STRICT)
 NEVER output anything except the raw JSON object.

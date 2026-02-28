@@ -8,6 +8,8 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
+import type { QueryFilter } from 'mongoose'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
@@ -23,7 +25,7 @@ import { TranslationService } from '~/processors/helper/helper.translation.servi
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import { applyContentPreference } from '~/utils/content.util'
-import type { QueryFilter } from 'mongoose'
+
 import { NoteModel } from './note.model'
 import {
   ListQueryDto,
@@ -286,6 +288,10 @@ export class NoteController {
       ...current,
       title: translationResult.title,
       text: translationResult.text,
+      ...(translationResult.content && {
+        content: translationResult.content,
+        contentFormat: translationResult.contentFormat,
+      }),
       isTranslated: translationResult.isTranslated,
       translationMeta: translationResult.translationMeta,
       availableTranslations: translationResult.availableTranslations,

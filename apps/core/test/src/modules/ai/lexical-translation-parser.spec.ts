@@ -1,9 +1,10 @@
+import { describe, expect, it } from 'vitest'
+
 import {
   extractDocumentContext,
   parseLexicalForTranslation,
   restoreLexicalTranslation,
 } from '~/modules/ai/ai-translation/lexical-translation-parser'
-import { describe, expect, it } from 'vitest'
 
 const makeEditorState = (children: any[]) =>
   JSON.stringify({ root: { children, type: 'root', direction: 'ltr' } })
@@ -440,6 +441,78 @@ describe('lexical-translation-parser', () => {
 
       expect(segments).toHaveLength(1)
       expect(segments[0].text).toBe('With block id')
+    })
+
+    it('segments carry correct blockId and rootIndex from root children', () => {
+      const json = makeEditorState([
+        {
+          ...paragraph(textNode('First')),
+          $: { blockId: 'block-a' },
+        },
+        {
+          ...paragraph(textNode('Second')),
+          $: { blockId: 'block-b' },
+        },
+        paragraph(textNode('No blockId')),
+      ])
+      const { segments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(3)
+      expect(segments[0].blockId).toBe('block-a')
+      expect(segments[0].rootIndex).toBe(0)
+      expect(segments[1].blockId).toBe('block-b')
+      expect(segments[1].rootIndex).toBe(1)
+      expect(segments[2].blockId).toBeNull()
+      expect(segments[2].rootIndex).toBe(2)
+    })
+
+    it('nested editor content inherits root block blockId', () => {
+      const json = makeEditorState([
+        {
+          ...alertQuoteNode('note', paragraph(textNode('Inside alert'))),
+          $: { blockId: 'alert-block' },
+        },
+      ])
+      const { segments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(segments[0].text).toBe('Inside alert')
+      expect(segments[0].blockId).toBe('alert-block')
+      expect(segments[0].rootIndex).toBe(0)
+    })
+
+    it('property segments carry correct blockId and rootIndex', () => {
+      const json = makeEditorState([
+        {
+          ...detailsNode('Expand me', paragraph(textNode('Body'))),
+          $: { blockId: 'details-1' },
+        },
+      ])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(segments[0].blockId).toBe('details-1')
+
+      expect(propertySegments).toHaveLength(1)
+      expect(propertySegments[0].blockId).toBe('details-1')
+      expect(propertySegments[0].rootIndex).toBe(0)
+    })
+
+    it('ruby reading segments have correct block attribution', () => {
+      const json = makeEditorState([
+        {
+          ...paragraph(rubyNode('漢字', 'かんじ')),
+          $: { blockId: 'ruby-block' },
+        },
+      ])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(segments[0].blockId).toBe('ruby-block')
+
+      expect(propertySegments).toHaveLength(1)
+      expect(propertySegments[0].property).toBe('reading')
+      expect(propertySegments[0].blockId).toBe('ruby-block')
     })
   })
 

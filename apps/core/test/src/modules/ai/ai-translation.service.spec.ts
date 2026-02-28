@@ -1,17 +1,18 @@
 import { Test } from '@nestjs/testing'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { AiService } from '~/modules/ai/ai.service'
 import { AiInFlightService } from '~/modules/ai/ai-inflight/ai-inflight.service'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { AITranslationModel } from '~/modules/ai/ai-translation/ai-translation.model'
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
-import { AiService } from '~/modules/ai/ai.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { TaskQueueProcessor } from '~/processors/task-queue'
 import { getModelToken } from '~/transformers/model.transformer'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('AiTranslationService', () => {
   let service: AiTranslationService
@@ -104,7 +105,24 @@ describe('AiTranslationService', () => {
         { provide: TaskQueueProcessor, useValue: mockTaskProcessor },
         {
           provide: LexicalService,
-          useValue: { lexicalToMarkdown: vi.fn().mockReturnValue('') },
+          useValue: {
+            lexicalToMarkdown: vi.fn().mockReturnValue(''),
+            extractRootBlocks: vi.fn((content: string) => {
+              try {
+                const parsed = JSON.parse(content)
+                const children = parsed?.root?.children ?? []
+                return children.map((child: any, index: number) => ({
+                  id: child?.$?.blockId ?? '',
+                  type: child?.type ?? 'unknown',
+                  text: '',
+                  fingerprint: `fp_${index}`,
+                  index,
+                }))
+              } catch {
+                return []
+              }
+            }),
+          },
         },
         { provide: AiTaskService, useValue: mockAiTaskService },
       ],
@@ -351,6 +369,71 @@ describe('AiTranslationService', () => {
       await expect(
         (service as any).resolveArticleForTranslation('article-1'),
       ).rejects.toThrow()
+    })
+  })
+
+  describe('buildSourceSnapshots', () => {
+    it('should return undefined for non-lexical content', () => {
+      const content = { title: 'test', text: 'text' }
+      const result = (service as any).buildSourceSnapshots(content)
+      expect(result).toBeUndefined()
+    })
+
+    it('should extract block snapshots for lexical content', () => {
+      const editorState = JSON.stringify({
+        root: {
+          children: [
+            {
+              type: 'paragraph',
+              children: [{ type: 'text', text: 'Hello' }],
+              $: { blockId: 'a1' },
+            },
+            {
+              type: 'heading',
+              children: [{ type: 'text', text: 'Title' }],
+              $: { blockId: 'b2' },
+            },
+          ],
+          type: 'root',
+        },
+      })
+      const content = {
+        title: 'test',
+        text: 'text',
+        contentFormat: 'lexical',
+        content: editorState,
+      }
+      const result = (service as any).buildSourceSnapshots(content)
+      expect(result).toHaveLength(2)
+      expect(result[0].id).toBe('a1')
+      expect(result[0].type).toBe('paragraph')
+      expect(result[0].index).toBe(0)
+      expect(result[1].id).toBe('b2')
+      expect(result[1].index).toBe(1)
+      expect(typeof result[0].fingerprint).toBe('string')
+    })
+  })
+
+  describe('buildSourceMetaHashes', () => {
+    it('should hash title, summary and tags', () => {
+      const content = {
+        title: 'Test Title',
+        text: '',
+        summary: 'A summary',
+        tags: ['a', 'b'],
+      }
+      const result = (service as any).buildSourceMetaHashes(content)
+      expect(result.title).toBeTruthy()
+      expect(result.summary).toBeTruthy()
+      expect(result.tags).toBeTruthy()
+    })
+
+    it('should omit summary and tags when absent', () => {
+      const content = { title: 'Test', text: '' }
+      const result = (service as any).buildSourceMetaHashes(content)
+      expect(result.title).toBeTruthy()
+      expect(result.summary).toBeUndefined()
+      expect(result.tags).toBeUndefined()
     })
   })
 

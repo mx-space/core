@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+
 import { DATA_DIR } from '~/constants/path.constant'
+
 import { PKG } from './pkg.util'
 
 const TELEMETRY_URL = 'https://mx-telemetry.tukon479.workers.dev'

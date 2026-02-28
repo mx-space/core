@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+
 import { ENCRYPT } from '~/app.config'
 
 const SALT = 'mx-encrypt-salt'

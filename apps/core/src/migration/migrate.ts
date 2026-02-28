@@ -1,11 +1,14 @@
 import { randomUUID } from 'node:crypto'
+
+import type { Db } from 'mongodb'
+
 import {
   MIGRATE_COLLECTION_NAME,
   MIGRATION_LOCK_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { logger } from '~/global/consola.global'
 import { getDatabaseConnection } from '~/utils/database.util'
-import type { Db } from 'mongodb'
+
 import VersionList from './history'
 
 const LOCK_ID = 'migrate_lock'

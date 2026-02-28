@@ -17,8 +17,12 @@ import {
   VideoNode,
 } from '@haklex/rich-headless'
 
+import {
+  BLOCK_ID_STATE_KEY,
+  NODE_STATE_KEY,
+} from '~/constants/lexical.constant'
+
 const FORMAT_CODE = 16
-const NODE_STATE_KEY = '$'
 
 const SKIP_BLOCKS = new Set([
   'code',
@@ -72,6 +76,8 @@ export interface TranslationSegment {
   text: string
   node: any
   translatable: boolean
+  blockId: string | null
+  rootIndex: number
 }
 
 export interface PropertySegment {
@@ -80,6 +86,8 @@ export interface PropertySegment {
   node: any
   property: string
   key?: string
+  blockId: string | null
+  rootIndex: number
 }
 
 export interface LexicalTranslationResult {
@@ -88,11 +96,17 @@ export interface LexicalTranslationResult {
   editorState: any
 }
 
+interface BlockContext {
+  blockId: string | null
+  rootIndex: number
+}
+
 function walkNode(
   node: any,
   segments: TranslationSegment[],
   propertySegments: PropertySegment[],
   counter: { t: number; p: number },
+  ctx: BlockContext,
 ): void {
   if (!node) return
   if (SKIP_BLOCKS.has(node.type)) return
@@ -109,6 +123,8 @@ function walkNode(
       text: node.summary,
       node,
       property: 'summary',
+      blockId: ctx.blockId,
+      rootIndex: ctx.rootIndex,
     })
   }
 
@@ -125,6 +141,8 @@ function walkNode(
           node,
           property: 'definitions',
           key,
+          blockId: ctx.blockId,
+          rootIndex: ctx.rootIndex,
         })
       }
     }
@@ -136,6 +154,8 @@ function walkNode(
       text: node.reading,
       node,
       property: 'reading',
+      blockId: ctx.blockId,
+      rootIndex: ctx.rootIndex,
     })
   }
 
@@ -147,6 +167,8 @@ function walkNode(
         text: node.text,
         node,
         translatable: !(node.format & FORMAT_CODE),
+        blockId: ctx.blockId,
+        rootIndex: ctx.rootIndex,
       })
     }
     return
@@ -155,12 +177,12 @@ function walkNode(
   // Recurse children first (main content order)
   if (Array.isArray(node.children)) {
     for (const child of node.children) {
-      walkNode(child, segments, propertySegments, counter)
+      walkNode(child, segments, propertySegments, counter, ctx)
     }
   }
 
   // Then scan nested editor states (fixed traversal order)
-  scanNestedEditorStates(node, segments, propertySegments, counter)
+  scanNestedEditorStates(node, segments, propertySegments, counter, ctx)
 }
 
 function scanNestedEditorStates(
@@ -168,6 +190,7 @@ function scanNestedEditorStates(
   segments: TranslationSegment[],
   propertySegments: PropertySegment[],
   counter: { t: number; p: number },
+  ctx: BlockContext,
 ): void {
   for (const [propName, propValue] of Object.entries(node)) {
     if (KNOWN_STRUCTURAL_PROPS.has(propName)) continue
@@ -181,7 +204,7 @@ function scanNestedEditorStates(
       Array.isArray((propValue as any).root.children)
     ) {
       for (const child of (propValue as any).root.children) {
-        walkNode(child, segments, propertySegments, counter)
+        walkNode(child, segments, propertySegments, counter, ctx)
       }
       continue
     }
@@ -196,7 +219,7 @@ function scanNestedEditorStates(
           Array.isArray(item.root.children)
         ) {
           for (const child of item.root.children) {
-            walkNode(child, segments, propertySegments, counter)
+            walkNode(child, segments, propertySegments, counter, ctx)
           }
         }
       }
@@ -267,6 +290,13 @@ export function extractDocumentContext(rootChildren: any[]): string {
 
 // ── Parser ──
 
+function readBlockId(node: any): string | null {
+  const state = node?.[NODE_STATE_KEY]
+  if (!state || typeof state !== 'object' || Array.isArray(state)) return null
+  const blockId = state[BLOCK_ID_STATE_KEY]
+  return typeof blockId === 'string' && blockId.trim() ? blockId.trim() : null
+}
+
 export function parseLexicalForTranslation(
   editorStateJson: string,
 ): LexicalTranslationResult {
@@ -277,8 +307,13 @@ export function parseLexicalForTranslation(
   const propertySegments: PropertySegment[] = []
   const counter = { t: 0, p: 0 }
 
-  for (const child of rootChildren) {
-    walkNode(child, segments, propertySegments, counter)
+  for (let i = 0; i < rootChildren.length; i++) {
+    const child = rootChildren[i]
+    const ctx: BlockContext = {
+      blockId: readBlockId(child),
+      rootIndex: i,
+    }
+    walkNode(child, segments, propertySegments, counter, ctx)
   }
 
   return { segments, propertySegments, editorState }

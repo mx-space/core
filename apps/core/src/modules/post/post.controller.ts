@@ -8,6 +8,8 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
+import type { PipelineStage } from 'mongoose'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
@@ -18,13 +20,13 @@ import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import {
-  TranslationService,
   type ArticleTranslationInput,
+  TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import { applyContentPreference } from '~/utils/content.util'
-import type { PipelineStage } from 'mongoose'
+
 import type { CategoryModel } from '../category/category.model'
 import { PostModel } from './post.model'
 import {
@@ -322,6 +324,10 @@ export class PostController {
         text: translationResult.text,
         summary: translationResult.summary,
         tags: translationResult.tags,
+        ...(translationResult.content && {
+          content: translationResult.content,
+          contentFormat: translationResult.contentFormat,
+        }),
         isTranslated: translationResult.isTranslated,
         translationMeta: translationResult.translationMeta,
         availableTranslations: translationResult.availableTranslations,

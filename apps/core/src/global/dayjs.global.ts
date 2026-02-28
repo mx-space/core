@@ -1,4 +1,5 @@
 import 'dayjs/locale/zh-cn.js'
+
 import dayjs from 'dayjs'
 import duration from 'dayjs/plugin/duration.js'
 import localizedFormat from 'dayjs/plugin/localizedFormat.js'

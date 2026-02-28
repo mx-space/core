@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
+
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import { normalizeLanguageCode } from '~/utils/lang.util'
 
@@ -14,6 +15,8 @@ export interface TranslationResult {
   text: string
   summary?: string | null
   tags?: string[]
+  content?: string
+  contentFormat?: string
   isTranslated: boolean
   translationMeta?: TranslationMeta
   availableTranslations?: string[]
@@ -78,6 +81,8 @@ export class TranslationService {
         text: translation.text,
         summary: translation.summary ?? originalData.summary,
         tags: translation.tags ?? originalData.tags,
+        content: translation.content,
+        contentFormat: translation.contentFormat,
         isTranslated: true,
         translationMeta: {
           sourceLang: translation.sourceLang,
@@ -163,6 +168,10 @@ export class TranslationService {
     if (fields.includes('text')) selectFields.add('text')
     if (fields.includes('summary')) selectFields.add('summary')
     if (fields.includes('tags')) selectFields.add('tags')
+    if (fields.includes('content')) {
+      selectFields.add('content')
+      selectFields.add('contentFormat')
+    }
     if (fields.includes('translationMeta')) {
       selectFields.add('lang')
       selectFields.add('created')
@@ -185,6 +194,7 @@ export class TranslationService {
       'text',
       'summary',
       'tags',
+      'content',
       'translationMeta',
       'availableTranslations',
     ]
@@ -265,6 +275,8 @@ export class TranslationService {
                 text: translation.text,
                 summary: translation.summary ?? article.summary,
                 tags: translation.tags ?? article.tags,
+                content: translation.content,
+                contentFormat: translation.contentFormat,
                 isTranslated: true,
                 translationMeta: translationFieldList.includes(
                   'translationMeta',

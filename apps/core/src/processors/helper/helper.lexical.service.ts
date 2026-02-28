@@ -1,12 +1,15 @@
 import { $toMarkdown, allHeadlessNodes } from '@haklex/rich-headless'
 import { createHeadlessEditor } from '@lexical/headless'
 import { Injectable } from '@nestjs/common'
-import { ContentFormat } from '~/shared/types/content-format.type'
-import { md5 } from '~/utils/tool.util'
 import { nanoid } from 'nanoid'
 
-const NODE_STATE_KEY = '$'
-const BLOCK_ID_STATE_KEY = 'blockId'
+import {
+  BLOCK_ID_STATE_KEY,
+  NODE_STATE_KEY,
+} from '~/constants/lexical.constant'
+import { ContentFormat } from '~/shared/types/content-format.type'
+import { md5 } from '~/utils/tool.util'
+
 const KNOWN_STRUCTURAL_PROPS = new Set([
   'children',
   'type',

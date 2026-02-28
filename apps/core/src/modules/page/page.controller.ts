@@ -8,6 +8,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
@@ -16,12 +17,13 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import {
-  TranslationService,
   type ArticleTranslationInput,
+  TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { applyContentPreference } from '~/utils/content.util'
+
 import { PageModel } from './page.model'
 import {
   PageDetailQueryDto,
@@ -148,6 +150,10 @@ export class PageController {
         ...page,
         title: translationResult.title,
         text: translationResult.text,
+        ...(translationResult.content && {
+          content: translationResult.content,
+          contentFormat: translationResult.contentFormat,
+        }),
         isTranslated: translationResult.isTranslated,
         translationMeta: translationResult.translationMeta,
         availableTranslations: translationResult.availableTranslations,

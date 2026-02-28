@@ -1,10 +1,12 @@
 import { Test } from '@nestjs/testing'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { AiService } from '~/modules/ai/ai.service'
 import { AiInFlightService } from '~/modules/ai/ai-inflight/ai-inflight.service'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { AITranslationModel } from '~/modules/ai/ai-translation/ai-translation.model'
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import { parseLexicalForTranslation } from '~/modules/ai/ai-translation/lexical-translation-parser'
-import { AiService } from '~/modules/ai/ai.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -12,7 +14,7 @@ import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { TaskQueueProcessor } from '~/processors/task-queue'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { getModelToken } from '~/transformers/model.transformer'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { COMPLEX_EN_TO_ZH, complexDocData } from './complex-doc-data'
 import { lexicalData } from './real-world-lexical-data'
 
@@ -536,5 +538,355 @@ describe('translateLexicalContent (real-world data)', () => {
 
     // Structural shape match (allows summary/definitions to differ)
     assertShapeMatch(complexDocData, translated)
+  })
+})
+
+describe('incremental translation', () => {
+  let service: AiTranslationService
+
+  const makeEditorState = (children: any[]) =>
+    JSON.stringify({ root: { children, type: 'root', direction: 'ltr' } })
+
+  const textNode = (text: string, format = 0) => ({
+    type: 'text',
+    text,
+    format,
+    detail: 0,
+    mode: 'normal',
+    style: '',
+  })
+
+  const paragraph = (blockId: string, ...children: any[]) => ({
+    type: 'paragraph',
+    children,
+    direction: 'ltr',
+    format: '',
+    indent: 0,
+    $: { blockId },
+  })
+
+  const heading = (blockId: string, tag: string, ...children: any[]) => ({
+    type: 'heading',
+    tag,
+    children,
+    direction: 'ltr',
+    format: '',
+    indent: 0,
+    $: { blockId },
+  })
+
+  const createMockRuntime = (translations: Record<string, string>) => ({
+    generateText: vi.fn(
+      async ({
+        messages,
+      }: {
+        messages: Array<{ role: string; content: string }>
+      }) => {
+        const userPrompt = messages[1].content
+        const segmentsSection = userPrompt.split(
+          '## Segments to translate\n',
+        )[1]
+        const segments = JSON.parse(segmentsSection) as Record<string, string>
+
+        const result: Record<string, string> = {}
+        for (const [id, text] of Object.entries(segments)) {
+          result[id] = translations[text] ?? `[TR]${text}`
+        }
+
+        return {
+          text: JSON.stringify({ sourceLang: 'zh', translations: result }),
+        }
+      },
+    ),
+  })
+
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      providers: [
+        AiTranslationService,
+        {
+          provide: getModelToken(AITranslationModel.name),
+          useValue: {
+            findOne: vi.fn(),
+            find: vi.fn(),
+            findById: vi.fn(),
+            create: vi.fn(),
+            deleteOne: vi.fn(),
+            deleteMany: vi.fn(),
+            aggregate: vi.fn(),
+          },
+        },
+        { provide: DatabaseService, useValue: { findGlobalById: vi.fn() } },
+        {
+          provide: ConfigsService,
+          useValue: {
+            get: vi.fn().mockResolvedValue({
+              enableTranslation: true,
+              translationTargetLanguages: ['en'],
+            }),
+          },
+        },
+        {
+          provide: AiService,
+          useValue: { getTranslationModelWithInfo: vi.fn() },
+        },
+        { provide: AiInFlightService, useValue: { runWithStream: vi.fn() } },
+        { provide: EventManagerService, useValue: { emit: vi.fn() } },
+        { provide: TaskQueueProcessor, useValue: { registerHandler: vi.fn() } },
+        {
+          provide: AiTaskService,
+          useValue: {
+            crud: { createTask: vi.fn() },
+            createTranslationTask: vi.fn(),
+          },
+        },
+        { provide: LexicalService, useClass: LexicalService },
+      ],
+    }).compile()
+
+    service = module.get(AiTranslationService)
+  })
+
+  it('second pass with one changed paragraph: only changed block enters AI input', async () => {
+    // First pass: full translation
+    const originalContent = makeEditorState([
+      heading('blk-h1', 'h1', textNode('标题')),
+      paragraph('blk-p1', textNode('段落一')),
+      paragraph('blk-p2', textNode('段落二')),
+    ])
+
+    const mockRuntime = createMockRuntime({})
+    const info = { model: 'test', provider: 'test' }
+
+    const firstResult = await (service as any).translateLexicalContentFull(
+      {
+        title: '标题',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: originalContent,
+      },
+      'en',
+      mockRuntime,
+      info,
+    )
+
+    // Build snapshots from original content
+    const lexicalService = new LexicalService()
+    const snapshots = lexicalService
+      .extractRootBlocks(originalContent)
+      .map((b: any) => ({
+        id: b.id ?? '',
+        fingerprint: b.fingerprint,
+        type: b.type,
+        index: b.index,
+      }))
+
+    // Second pass: change only paragraph 2
+    const modifiedContent = makeEditorState([
+      heading('blk-h1', 'h1', textNode('标题')),
+      paragraph('blk-p1', textNode('段落一')),
+      paragraph('blk-p2', textNode('段落二已修改')),
+    ])
+
+    const mockRuntime2 = createMockRuntime({})
+    mockRuntime2.generateText.mockClear()
+
+    const existing = {
+      sourceLang: 'zh',
+      title: firstResult.title,
+      text: firstResult.text,
+      content: firstResult.content,
+      contentFormat: ContentFormat.Lexical,
+      summary: undefined,
+      tags: undefined,
+      sourceBlockSnapshots: snapshots,
+      sourceMetaHashes: {
+        title: (await import('~/utils/tool.util')).md5('标题'),
+      },
+    } as any
+
+    const secondResult = await (
+      service as any
+    ).translateLexicalContentIncremental(
+      {
+        title: '标题',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: modifiedContent,
+      },
+      'en',
+      mockRuntime2,
+      info,
+      existing,
+    )
+
+    // Only the changed block's text should appear in AI input
+    expect(mockRuntime2.generateText).toHaveBeenCalled()
+    const aiInput =
+      mockRuntime2.generateText.mock.calls[0][0].messages[1].content
+    expect(aiInput).toContain('段落二已修改')
+    expect(aiInput).not.toContain('__title__')
+
+    // Result should have translated content
+    expect(secondResult.content).toBeTruthy()
+    const translated = JSON.parse(secondResult.content)
+    expect(translated.root.children).toHaveLength(3)
+  })
+
+  it('block reorder with no content change: 0 new translations', async () => {
+    const originalContent = makeEditorState([
+      paragraph('blk-a', textNode('Alpha')),
+      paragraph('blk-b', textNode('Beta')),
+    ])
+
+    const mockRuntime = createMockRuntime({})
+    const info = { model: 'test', provider: 'test' }
+
+    const firstResult = await (service as any).translateLexicalContentFull(
+      {
+        title: 'Title',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: originalContent,
+      },
+      'en',
+      mockRuntime,
+      info,
+    )
+
+    const lexicalService = new LexicalService()
+    const snapshots = lexicalService
+      .extractRootBlocks(originalContent)
+      .map((b: any) => ({
+        id: b.id ?? '',
+        fingerprint: b.fingerprint,
+        type: b.type,
+        index: b.index,
+      }))
+
+    // Reorder: swap blocks
+    const reorderedContent = makeEditorState([
+      paragraph('blk-b', textNode('Beta')),
+      paragraph('blk-a', textNode('Alpha')),
+    ])
+
+    const mockRuntime2 = createMockRuntime({})
+    mockRuntime2.generateText.mockClear()
+
+    const { md5: md5Fn } = await import('~/utils/tool.util')
+    const existing = {
+      sourceLang: 'en',
+      title: firstResult.title,
+      text: firstResult.text,
+      content: firstResult.content,
+      contentFormat: ContentFormat.Lexical,
+      summary: undefined,
+      tags: undefined,
+      sourceBlockSnapshots: snapshots,
+      sourceMetaHashes: { title: md5Fn('Title') },
+    } as any
+
+    const secondResult = await (
+      service as any
+    ).translateLexicalContentIncremental(
+      {
+        title: 'Title',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: reorderedContent,
+      },
+      'en',
+      mockRuntime2,
+      info,
+      existing,
+    )
+
+    // No AI calls needed — all blocks unchanged
+    expect(mockRuntime2.generateText).not.toHaveBeenCalled()
+
+    // Result should have reordered blocks with translated content
+    const translated = JSON.parse(secondResult.content)
+    expect(translated.root.children).toHaveLength(2)
+  })
+
+  it('delete and add blocks: only new block is translated', async () => {
+    const originalContent = makeEditorState([
+      paragraph('blk-a', textNode('Keep')),
+      paragraph('blk-b', textNode('Remove')),
+    ])
+
+    const mockRuntime = createMockRuntime({})
+    const info = { model: 'test', provider: 'test' }
+
+    const firstResult = await (service as any).translateLexicalContentFull(
+      {
+        title: 'Title',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: originalContent,
+      },
+      'en',
+      mockRuntime,
+      info,
+    )
+
+    const lexicalService = new LexicalService()
+    const snapshots = lexicalService
+      .extractRootBlocks(originalContent)
+      .map((b: any) => ({
+        id: b.id ?? '',
+        fingerprint: b.fingerprint,
+        type: b.type,
+        index: b.index,
+      }))
+
+    // Delete blk-b, add blk-c
+    const modifiedContent = makeEditorState([
+      paragraph('blk-a', textNode('Keep')),
+      paragraph('blk-c', textNode('New block')),
+    ])
+
+    const mockRuntime2 = createMockRuntime({})
+    mockRuntime2.generateText.mockClear()
+
+    const { md5: md5Fn } = await import('~/utils/tool.util')
+    const existing = {
+      sourceLang: 'en',
+      title: firstResult.title,
+      text: firstResult.text,
+      content: firstResult.content,
+      contentFormat: ContentFormat.Lexical,
+      summary: undefined,
+      tags: undefined,
+      sourceBlockSnapshots: snapshots,
+      sourceMetaHashes: { title: md5Fn('Title') },
+    } as any
+
+    const secondResult = await (
+      service as any
+    ).translateLexicalContentIncremental(
+      {
+        title: 'Title',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: modifiedContent,
+      },
+      'en',
+      mockRuntime2,
+      info,
+      existing,
+    )
+
+    // AI should be called for the new block only
+    expect(mockRuntime2.generateText).toHaveBeenCalled()
+    const aiInput =
+      mockRuntime2.generateText.mock.calls[0][0].messages[1].content
+    const segmentsSection = aiInput.split('## Segments to translate\n')[1]
+    expect(segmentsSection).toContain('New block')
+    expect(segmentsSection).not.toContain('Keep')
+
+    // Deleted block should not appear
+    const translated = JSON.parse(secondResult.content)
+    expect(translated.root.children).toHaveLength(2)
   })
 })

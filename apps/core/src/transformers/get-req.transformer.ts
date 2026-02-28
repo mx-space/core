@@ -1,7 +1,9 @@
 import type { IncomingMessage } from 'node:http'
+
 import type { ExecutionContext } from '@nestjs/common'
-import type { SessionUser } from '~/modules/auth/auth.types'
 import type { FastifyRequest } from 'fastify'
+
+import type { SessionUser } from '~/modules/auth/auth.types'
 
 type BizRequest = {
   user?: SessionUser

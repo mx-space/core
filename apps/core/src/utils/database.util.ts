@@ -1,6 +1,9 @@
 /**
  * @see https://github.com/surmon-china/nodepress/blob/main/src/processors/database/database.provider.ts
  */
+import mongoose from 'mongoose'
+import pc from 'picocolors'
+
 import { MONGO_DB } from '~/app.config'
 import type { CollectionRefTypes } from '~/constants/db.constant'
 import {
@@ -10,8 +13,6 @@ import {
   RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { logger } from '~/global/consola.global'
-import mongoose from 'mongoose'
-import pc from 'picocolors'
 
 let databaseConnectionPromise: Promise<mongoose.Connection> | null = null
 
