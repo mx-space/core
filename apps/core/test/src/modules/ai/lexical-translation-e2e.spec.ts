@@ -7,6 +7,14 @@ import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { AITranslationModel } from '~/modules/ai/ai-translation/ai-translation.model'
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import { parseLexicalForTranslation } from '~/modules/ai/ai-translation/lexical-translation-parser'
+import { LexicalTranslationStrategy } from '~/modules/ai/ai-translation/strategies/lexical-translation.strategy'
+import { MarkdownTranslationStrategy } from '~/modules/ai/ai-translation/strategies/markdown-translation.strategy'
+import type { ITranslationStrategy } from '~/modules/ai/ai-translation/translation-strategy.interface'
+import {
+  LEXICAL_TRANSLATION_STRATEGY,
+  MARKDOWN_TRANSLATION_STRATEGY,
+} from '~/modules/ai/ai-translation/translation-strategy.interface'
+import type { IModelRuntime } from '~/modules/ai/runtime'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -120,9 +128,28 @@ function assertShapeMatch(original: any, translated: any, path = 'root'): void {
 }
 
 describe('translateLexicalContent (real-world data)', () => {
-  let service: AiTranslationService
+  let lexicalStrategy: ITranslationStrategy
 
   beforeEach(async () => {
+    const mockLexicalService = {
+      lexicalToMarkdown: vi.fn().mockReturnValue('[markdown placeholder]'),
+      extractRootBlocks: vi.fn((content: string) => {
+        try {
+          const parsed = JSON.parse(content)
+          const children = parsed?.root?.children ?? []
+          return children.map((child: any, index: number) => ({
+            id: child?.$?.blockId ?? '',
+            type: child?.type ?? 'unknown',
+            text: '',
+            fingerprint: `fp_${index}`,
+            index,
+          }))
+        } catch {
+          return []
+        }
+      }),
+    }
+
     const module = await Test.createTestingModule({
       providers: [
         AiTranslationService,
@@ -162,18 +189,20 @@ describe('translateLexicalContent (real-world data)', () => {
             createTranslationTask: vi.fn(),
           },
         },
+        { provide: LexicalService, useValue: mockLexicalService },
         {
-          provide: LexicalService,
-          useValue: {
-            lexicalToMarkdown: vi
-              .fn()
-              .mockReturnValue('[markdown placeholder]'),
-          },
+          provide: LEXICAL_TRANSLATION_STRATEGY,
+          useClass: LexicalTranslationStrategy,
+        },
+        {
+          provide: MARKDOWN_TRANSLATION_STRATEGY,
+          useClass: MarkdownTranslationStrategy,
         },
       ],
     }).compile()
 
     service = module.get(AiTranslationService)
+    lexicalStrategy = module.get(LEXICAL_TRANSLATION_STRATEGY)
   })
 
   it('should parse real data into expected segment structure', () => {
@@ -236,12 +265,12 @@ describe('translateLexicalContent (real-world data)', () => {
       tokenCount.value++
     })
 
-    const result = await (service as any).translateLexicalContent(
+    const result = await lexicalStrategy.translate(
       content,
       'zh',
-      mockRuntime,
+      mockRuntime as unknown as IModelRuntime,
       { model: 'test-model', provider: 'test-provider' },
-      onToken,
+      { onToken },
     )
 
     // ── Verify return shape ──
@@ -382,11 +411,12 @@ describe('translateLexicalContent (real-world data)', () => {
       }),
     }
 
-    const result = await (service as any).translateLexicalContent(
+    const result = await lexicalStrategy.translate(
       content,
       'zh',
-      mockRuntime,
+      mockRuntime as unknown as IModelRuntime,
       { model: 'stream-model', provider: 'stream-provider' },
+      {},
     )
 
     expect(result.sourceLang).toBe('en')
@@ -436,11 +466,12 @@ describe('translateLexicalContent (real-world data)', () => {
       ),
     }
 
-    const result = await (service as any).translateLexicalContent(
+    const result = await lexicalStrategy.translate(
       content,
       'zh',
-      mockRuntime,
+      mockRuntime as unknown as IModelRuntime,
       { model: 'test-model', provider: 'test-provider' },
+      {},
     )
 
     expect(result.sourceLang).toBe('en')
@@ -542,7 +573,7 @@ describe('translateLexicalContent (real-world data)', () => {
 })
 
 describe('incremental translation', () => {
-  let service: AiTranslationService
+  let lexicalStrategy: ITranslationStrategy
 
   const makeEditorState = (children: any[]) =>
     JSON.stringify({ root: { children, type: 'root', direction: 'ltr' } })
@@ -641,10 +672,18 @@ describe('incremental translation', () => {
           },
         },
         { provide: LexicalService, useClass: LexicalService },
+        {
+          provide: LEXICAL_TRANSLATION_STRATEGY,
+          useClass: LexicalTranslationStrategy,
+        },
+        {
+          provide: MARKDOWN_TRANSLATION_STRATEGY,
+          useClass: MarkdownTranslationStrategy,
+        },
       ],
     }).compile()
 
-    service = module.get(AiTranslationService)
+    lexicalStrategy = module.get(LEXICAL_TRANSLATION_STRATEGY)
   })
 
   it('second pass with one changed paragraph: only changed block enters AI input', async () => {
@@ -658,7 +697,7 @@ describe('incremental translation', () => {
     const mockRuntime = createMockRuntime({})
     const info = { model: 'test', provider: 'test' }
 
-    const firstResult = await (service as any).translateLexicalContentFull(
+    const firstResult = await lexicalStrategy.translate(
       {
         title: '标题',
         text: '',
@@ -666,8 +705,9 @@ describe('incremental translation', () => {
         content: originalContent,
       },
       'en',
-      mockRuntime,
+      mockRuntime as unknown as IModelRuntime,
       info,
+      {},
     )
 
     // Build snapshots from original content
@@ -705,9 +745,7 @@ describe('incremental translation', () => {
       },
     } as any
 
-    const secondResult = await (
-      service as any
-    ).translateLexicalContentIncremental(
+    const secondResult = await lexicalStrategy.translate(
       {
         title: '标题',
         text: '',
@@ -715,9 +753,9 @@ describe('incremental translation', () => {
         content: modifiedContent,
       },
       'en',
-      mockRuntime2,
+      mockRuntime2 as unknown as IModelRuntime,
       info,
-      existing,
+      { existing },
     )
 
     // Only the changed block's text should appear in AI input
@@ -742,7 +780,7 @@ describe('incremental translation', () => {
     const mockRuntime = createMockRuntime({})
     const info = { model: 'test', provider: 'test' }
 
-    const firstResult = await (service as any).translateLexicalContentFull(
+    const firstResult = await lexicalStrategy.translate(
       {
         title: 'Title',
         text: '',
@@ -750,8 +788,9 @@ describe('incremental translation', () => {
         content: originalContent,
       },
       'en',
-      mockRuntime,
+      mockRuntime as unknown as IModelRuntime,
       info,
+      {},
     )
 
     const lexicalService = new LexicalService()
@@ -786,9 +825,7 @@ describe('incremental translation', () => {
       sourceMetaHashes: { title: md5Fn('Title') },
     } as any
 
-    const secondResult = await (
-      service as any
-    ).translateLexicalContentIncremental(
+    const secondResult = await lexicalStrategy.translate(
       {
         title: 'Title',
         text: '',
@@ -796,9 +833,9 @@ describe('incremental translation', () => {
         content: reorderedContent,
       },
       'en',
-      mockRuntime2,
+      mockRuntime2 as unknown as IModelRuntime,
       info,
-      existing,
+      { existing },
     )
 
     // No AI calls needed — all blocks unchanged
@@ -818,7 +855,7 @@ describe('incremental translation', () => {
     const mockRuntime = createMockRuntime({})
     const info = { model: 'test', provider: 'test' }
 
-    const firstResult = await (service as any).translateLexicalContentFull(
+    const firstResult = await lexicalStrategy.translate(
       {
         title: 'Title',
         text: '',
@@ -826,8 +863,9 @@ describe('incremental translation', () => {
         content: originalContent,
       },
       'en',
-      mockRuntime,
+      mockRuntime as unknown as IModelRuntime,
       info,
+      {},
     )
 
     const lexicalService = new LexicalService()
@@ -862,9 +900,7 @@ describe('incremental translation', () => {
       sourceMetaHashes: { title: md5Fn('Title') },
     } as any
 
-    const secondResult = await (
-      service as any
-    ).translateLexicalContentIncremental(
+    const secondResult = await lexicalStrategy.translate(
       {
         title: 'Title',
         text: '',
@@ -872,9 +908,9 @@ describe('incremental translation', () => {
         content: modifiedContent,
       },
       'en',
-      mockRuntime2,
+      mockRuntime2 as unknown as IModelRuntime,
       info,
-      existing,
+      { existing },
     )
 
     // AI should be called for the new block only
