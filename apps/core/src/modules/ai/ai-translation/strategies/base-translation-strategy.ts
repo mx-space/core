@@ -2,7 +2,10 @@
 import { Logger } from '@nestjs/common'
 import JSON5 from 'json5'
 
-import { extractFirstJsonObject } from '~/utils/json.util'
+import {
+  extractFirstJsonObject,
+  extractLastJsonObject,
+} from '~/utils/json.util'
 
 import { AI_PROMPTS } from '../../ai.prompts'
 import type { IModelRuntime } from '../../runtime'
@@ -36,6 +39,7 @@ export abstract class BaseTranslationStrategy {
     )
     addCandidate(codeFenceMatch?.[1])
     addCandidate(extractFirstJsonObject(trimmed))
+    addCandidate(extractLastJsonObject(trimmed))
     if (codeFenceMatch?.[1]) {
       addCandidate(extractFirstJsonObject(codeFenceMatch[1]))
     }
