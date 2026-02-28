@@ -1,17 +1,9 @@
-/* eslint-disable unicorn/better-regex */
-import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
-import { OnEvent } from '@nestjs/event-emitter'
-import dayjs from 'dayjs'
-import JSON5 from 'json5'
+import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import {
-  BLOCK_ID_STATE_KEY,
-  NODE_STATE_KEY,
-} from '~/constants/lexical.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
@@ -22,14 +14,9 @@ import {
 } from '~/processors/task-queue'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { InjectModel } from '~/transformers/model.transformer'
-import { computeContentHash as computeContentHashUtil } from '~/utils/content.util'
-import { extractFirstJsonObject } from '~/utils/json.util'
 import { md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../../configs/configs.service'
-import type { NoteModel } from '../../note/note.model'
-import type { PageModel } from '../../page/page.model'
-import type { PostModel } from '../../post/post.model'
 import {
   AI_STREAM_IDLE_TIMEOUT_MS,
   AI_STREAM_LOCK_TTL,
@@ -37,7 +24,6 @@ import {
   AI_STREAM_READ_BLOCK_MS,
   AI_STREAM_RESULT_TTL,
 } from '../ai.constants'
-import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
@@ -49,47 +35,26 @@ import {
   type TranslationBatchTaskPayload,
   type TranslationTaskPayload,
 } from '../ai-task/ai-task.types'
-import { IModelRuntime } from '../runtime'
 import { AITranslationModel } from './ai-translation.model'
 import type { GetTranslationsGroupedQueryInput } from './ai-translation.schema'
+import type {
+  ArticleContent,
+  ArticleDocument,
+  ArticleEventDocument,
+  ArticleEventPayload,
+} from './ai-translation.types'
+import { BaseTranslationService } from './base-translation.service'
+import type { ITranslationStrategy } from './translation-strategy.interface'
 import {
-  extractDocumentContext,
-  parseLexicalForTranslation,
-  restoreLexicalTranslation,
-} from './lexical-translation-parser'
-
-interface ArticleContent {
-  title: string
-  text: string
-  summary?: string | null
-  tags?: string[]
-  meta?: { lang?: string }
-  contentFormat?: string
-  content?: string
-}
-
-type ArticleDocument = PostModel | NoteModel | PageModel
-
-type ArticleEventDocument = ArticleDocument & {
-  _id?: { toString?: () => string } | string
-}
-
-type ArticleEventPayload =
-  | ArticleEventDocument
-  | { data: string }
-  | { id: string }
-
-type GlobalArticle =
-  | { document: PostModel; type: CollectionRefTypes.Post }
-  | { document: NoteModel; type: CollectionRefTypes.Note }
-  | { document: PageModel; type: CollectionRefTypes.Page }
-  | {
-      document: unknown
-      type: CollectionRefTypes.Recently
-    }
+  LEXICAL_TRANSLATION_STRATEGY,
+  MARKDOWN_TRANSLATION_STRATEGY,
+} from './translation-strategy.interface'
 
 @Injectable()
-export class AiTranslationService implements OnModuleInit {
+export class AiTranslationService
+  extends BaseTranslationService
+  implements OnModuleInit
+{
   private readonly logger = new Logger(AiTranslationService.name)
 
   constructor(
@@ -103,7 +68,19 @@ export class AiTranslationService implements OnModuleInit {
     private readonly taskProcessor: TaskQueueProcessor,
     private readonly lexicalService: LexicalService,
     private readonly aiTaskService: AiTaskService,
-  ) {}
+    @Inject(LEXICAL_TRANSLATION_STRATEGY)
+    private readonly lexicalStrategy: ITranslationStrategy,
+    @Inject(MARKDOWN_TRANSLATION_STRATEGY)
+    private readonly markdownStrategy: ITranslationStrategy,
+  ) {
+    super()
+  }
+
+  private getStrategy(contentFormat?: string): ITranslationStrategy {
+    return contentFormat === ContentFormat.Lexical
+      ? this.lexicalStrategy
+      : this.markdownStrategy
+  }
 
   onModuleInit() {
     this.registerTaskHandlers()
@@ -144,61 +121,6 @@ export class AiTranslationService implements OnModuleInit {
     })
 
     this.logger.log('AI translation task handlers registered')
-  }
-
-  private parseModelJson<T extends Record<string, any>>(
-    rawText: string,
-    context: string,
-  ): T {
-    const trimmed = rawText.trim()
-    const candidates = new Set<string>()
-
-    const addCandidate = (value: string | null | undefined) => {
-      if (!value) return
-      const text = value.trim()
-      if (!text) return
-      candidates.add(text)
-    }
-
-    addCandidate(trimmed)
-
-    const codeFenceMatch = trimmed.match(
-      // eslint-disable-next-line regexp/no-super-linear-backtracking
-      /^```(?:json|JSON)?\s*([\s\S]*?)\s*```$/,
-    )
-    addCandidate(codeFenceMatch?.[1])
-    addCandidate(extractFirstJsonObject(trimmed))
-    if (codeFenceMatch?.[1]) {
-      addCandidate(extractFirstJsonObject(codeFenceMatch[1]))
-    }
-
-    let lastError: unknown
-
-    for (const candidate of candidates) {
-      try {
-        return JSON.parse(candidate) as T
-      } catch (error) {
-        // eslint-disable-next-line no-useless-assignment
-        lastError = error
-      }
-      try {
-        return JSON5.parse(candidate) as T
-      } catch (error) {
-        lastError = error
-      }
-    }
-
-    this.logger.warn(
-      `${context}: failed to parse model JSON. length=${rawText.length} head=${JSON.stringify(
-        trimmed.slice(0, 240),
-      )} tail=${JSON.stringify(trimmed.slice(-240))}`,
-    )
-
-    throw new Error(
-      `${context}: invalid JSON output (${
-        lastError instanceof Error ? lastError.message : String(lastError)
-      })`,
-    )
   }
 
   private async executeTranslationTask(
@@ -496,7 +418,7 @@ export class AiTranslationService implements OnModuleInit {
     }
   }
 
-  private async cancelActiveTranslationTasks(refId: string) {
+  async cancelActiveTranslationTasks(refId: string) {
     for (const status of [TaskStatus.Running, TaskStatus.Pending]) {
       const { data: tasks } = await this.aiTaskService.crud.getTasks({
         type: AITaskType.Translation,
@@ -525,7 +447,7 @@ export class AiTranslationService implements OnModuleInit {
     }
   }
 
-  private extractIdFromEvent(event: ArticleEventPayload): string | null {
+  extractIdFromEvent(event: ArticleEventPayload): string | null {
     if ('data' in event) {
       return (event as { data: string }).data ?? null
     }
@@ -537,64 +459,6 @@ export class AiTranslationService implements OnModuleInit {
       return doc._id
     }
     return doc.id ?? doc._id?.toString?.() ?? null
-  }
-
-  private getMetaLang(document: {
-    meta?: { lang?: string }
-  }): string | undefined {
-    return document.meta?.lang
-  }
-
-  private toArticleContent(document: ArticleDocument): ArticleContent {
-    return {
-      title: document.title,
-      text: document.text,
-      summary:
-        'summary' in document ? (document.summary ?? undefined) : undefined,
-      tags: 'tags' in document ? document.tags : undefined,
-      contentFormat: document.contentFormat,
-      content: document.content,
-    }
-  }
-
-  private isPostArticle(
-    article: GlobalArticle,
-  ): article is { type: CollectionRefTypes.Post; document: PostModel } {
-    return article.type === CollectionRefTypes.Post
-  }
-
-  private isNoteArticle(
-    article: GlobalArticle,
-  ): article is { type: CollectionRefTypes.Note; document: NoteModel } {
-    return article.type === CollectionRefTypes.Note
-  }
-
-  private isPageArticle(
-    article: GlobalArticle,
-  ): article is { type: CollectionRefTypes.Page; document: PageModel } {
-    return article.type === CollectionRefTypes.Page
-  }
-
-  private isArticleVisible(article: GlobalArticle): boolean {
-    if (this.isPostArticle(article)) {
-      return article.document.isPublished !== false
-    }
-
-    if (this.isNoteArticle(article)) {
-      const document = article.document
-      if (document.isPublished === false) return false
-      if (document.password) return false
-      if (document.publicAt && dayjs(document.publicAt).isAfter(new Date())) {
-        return false
-      }
-      return true
-    }
-
-    if (this.isPageArticle(article)) {
-      return true
-    }
-
-    return false
   }
 
   /**
@@ -670,34 +534,6 @@ export class AiTranslationService implements OnModuleInit {
     }
   }
 
-  private computeContentHash(
-    document: ArticleContent,
-    sourceLang: string,
-  ): string {
-    if (document.contentFormat === ContentFormat.Lexical) {
-      return computeContentHashUtil(
-        {
-          title: document.title,
-          text: document.text,
-          contentFormat: document.contentFormat,
-          content: document.content,
-          summary: document.summary,
-          tags: document.tags,
-        },
-        sourceLang,
-      )
-    }
-    return md5(
-      JSON.stringify({
-        title: document.title,
-        text: document.text,
-        summary: document.summary,
-        tags: document.tags,
-        sourceLang,
-      }),
-    )
-  }
-
   private buildTranslationKey(
     articleId: string,
     targetLang: string,
@@ -748,675 +584,15 @@ export class AiTranslationService implements OnModuleInit {
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
     existing?: AITranslationModel | null,
-  ): Promise<{
-    sourceLang: string
-    title: string
-    text: string
-    summary: string | null
-    tags: string[] | null
-    aiModel: string
-    aiProvider: string
-    contentFormat?: string
-    content?: string
-  }> {
+  ) {
     const { runtime, info } = await this.aiService.getTranslationModelWithInfo()
-
-    const isLexical = content.contentFormat === ContentFormat.Lexical
-
-    if (isLexical) {
-      return this.translateLexicalContent(
-        content,
-        targetLang,
-        runtime,
-        info,
-        onToken,
-        signal,
-        existing,
-      )
-    }
-
-    return this.translateMarkdownContent(
-      content,
-      targetLang,
-      runtime,
-      info,
+    const strategy = this.getStrategy(content.contentFormat)
+    return strategy.translate(content, targetLang, runtime, info, {
       push,
       onToken,
       signal,
-    )
-  }
-
-  private async translateMarkdownContent(
-    content: ArticleContent,
-    targetLang: string,
-    runtime: IModelRuntime,
-    info: { model: string; provider: string },
-    push?: (event: AiStreamEvent) => Promise<void>,
-    onToken?: (count?: number) => Promise<void>,
-    signal?: AbortSignal,
-  ) {
-    const { systemPrompt, prompt, reasoningEffort } =
-      AI_PROMPTS.translationStream(targetLang, {
-        title: content.title,
-        text: content.text,
-        summary: content.summary ?? undefined,
-        tags: content.tags,
-      })
-
-    const messages = [
-      { role: 'system' as const, content: systemPrompt },
-      { role: 'user' as const, content: prompt },
-    ]
-
-    let fullText = ''
-    if (runtime.generateTextStream) {
-      for await (const chunk of runtime.generateTextStream({
-        messages,
-        temperature: 0.3,
-        maxRetries: 2,
-        reasoningEffort,
-        signal,
-      })) {
-        if (signal?.aborted) {
-          throw Object.assign(new Error('Task aborted'), { name: 'AbortError' })
-        }
-        fullText += chunk.text
-        if (push) {
-          await push({ type: 'token', data: chunk.text })
-        }
-        if (onToken) {
-          await onToken()
-        }
-      }
-    } else {
-      const result = await runtime.generateText({
-        messages,
-        temperature: 0.3,
-        maxRetries: 2,
-        reasoningEffort,
-        signal,
-      })
-      fullText = result.text
-      if (push && result.text) {
-        await push({ type: 'token', data: result.text })
-      }
-      if (onToken && result.text) {
-        await onToken()
-      }
-    }
-
-    const parsed = this.parseModelJson<{
-      sourceLang?: string
-      title?: string
-      text?: string
-      summary?: string | null
-      tags?: string[] | null
-    }>(fullText, 'translateMarkdownContent')
-
-    if (!parsed?.title || !parsed?.text || !parsed?.sourceLang) {
-      throw new Error('Invalid translation JSON response')
-    }
-
-    return {
-      sourceLang: parsed.sourceLang,
-      title: parsed.title,
-      text: parsed.text,
-      summary: parsed.summary ?? null,
-      tags: parsed.tags ?? null,
-      aiModel: info.model,
-      aiProvider: info.provider,
-    }
-  }
-
-  private async translateLexicalContent(
-    content: ArticleContent,
-    targetLang: string,
-    runtime: IModelRuntime,
-    info: { model: string; provider: string },
-    onToken?: (count?: number) => Promise<void>,
-    signal?: AbortSignal,
-    existing?: AITranslationModel | null,
-  ) {
-    const isLexical = content.contentFormat === ContentFormat.Lexical
-    const canIncremental =
-      isLexical && existing?.content && existing.sourceBlockSnapshots?.length
-
-    if (canIncremental) {
-      try {
-        this.logger.log(`Incremental translation path: target=${targetLang}`)
-        return await this.translateLexicalContentIncremental(
-          content,
-          targetLang,
-          runtime,
-          info,
-          existing,
-          onToken,
-          signal,
-        )
-      } catch (error) {
-        if (error.name === 'AbortError') throw error
-        this.logger.warn(
-          `Incremental translation failed, falling back to full: ${error.message}`,
-        )
-      }
-    }
-
-    this.logger.log(`Full translation path: target=${targetLang}`)
-    return this.translateLexicalContentFull(
-      content,
-      targetLang,
-      runtime,
-      info,
-      onToken,
-      signal,
-    )
-  }
-
-  private async translateLexicalContentFull(
-    content: ArticleContent,
-    targetLang: string,
-    runtime: IModelRuntime,
-    info: { model: string; provider: string },
-    onToken?: (count?: number) => Promise<void>,
-    signal?: AbortSignal,
-  ) {
-    const parseResult = parseLexicalForTranslation(content.content!)
-    const { segments, propertySegments, editorState } = parseResult
-    const allTranslations = new Map<string, string>()
-    let sourceLang: string
-
-    // Build translatable entries
-    const allEntries: Record<string, string> = {}
-    const allEntryMeta: Record<string, string> = {}
-    for (const seg of segments) {
-      if (seg.translatable) {
-        allEntries[seg.id] = seg.text
-        allEntryMeta[seg.id] = 'text'
-      }
-    }
-    for (const prop of propertySegments) {
-      allEntries[prop.id] = prop.text
-      if (prop.property === 'reading' && prop.node?.type === 'ruby') {
-        allEntryMeta[prop.id] = 'ruby.reading'
-      } else {
-        allEntryMeta[prop.id] = `property.${prop.property}`
-      }
-    }
-
-    // Meta entries
-    const metaEntries: Record<string, string> = { __title__: content.title }
-    const metaEntryMeta: Record<string, string> = { __title__: 'meta.title' }
-    if (content.summary) metaEntries.__summary__ = content.summary
-    if (content.summary) metaEntryMeta.__summary__ = 'meta.summary'
-    if (content.tags?.length) {
-      metaEntries.__tags__ = content.tags.join('|||')
-      metaEntryMeta.__tags__ = 'meta.tags'
-    }
-
-    // Edge case: no translatable content
-    if (Object.keys(allEntries).length === 0) {
-      const result = await this.callChunkTranslation(
-        targetLang,
-        {
-          documentContext: content.title,
-          textEntries: metaEntries,
-          segmentMeta: metaEntryMeta,
-        },
-        runtime,
-        onToken,
-        signal,
-      )
-      sourceLang = result.sourceLang
-      for (const [id, text] of Object.entries(result.translations)) {
-        allTranslations.set(id, text)
-      }
-    } else {
-      const documentContext = extractDocumentContext(
-        editorState.root?.children ?? [],
-      )
-      sourceLang = await this.translateChunkedEntries(
-        targetLang,
-        documentContext,
-        allEntries,
-        allEntryMeta,
-        metaEntries,
-        metaEntryMeta,
-        allTranslations,
-        runtime,
-        onToken,
-        signal,
-      )
-    }
-
-    const translatedContent = restoreLexicalTranslation(
-      parseResult,
-      allTranslations,
-    )
-    const title = allTranslations.get('__title__') ?? content.title
-    const summary =
-      allTranslations.get('__summary__') ?? content.summary ?? null
-    const tagsStr = allTranslations.get('__tags__')
-    const tags = tagsStr ? tagsStr.split('|||') : (content.tags ?? null)
-
-    return {
-      sourceLang,
-      title,
-      text: this.lexicalService.lexicalToMarkdown(translatedContent),
-      contentFormat: ContentFormat.Lexical,
-      content: translatedContent,
-      summary,
-      tags,
-      aiModel: info.model,
-      aiProvider: info.provider,
-    }
-  }
-
-  private async translateLexicalContentIncremental(
-    content: ArticleContent,
-    targetLang: string,
-    runtime: IModelRuntime,
-    info: { model: string; provider: string },
-    existing: AITranslationModel,
-    onToken?: (count?: number) => Promise<void>,
-    signal?: AbortSignal,
-  ) {
-    const currentBlocks = this.lexicalService.extractRootBlocks(
-      content.content!,
-    )
-    const oldSnapshots = existing.sourceBlockSnapshots!
-    const oldFpMap = new Map(oldSnapshots.map((s) => [s.id, s.fingerprint]))
-
-    // Diff blocks
-    const changedBlockIds = new Set<string | null>()
-    const unchangedBlockIds = new Set<string>()
-
-    for (const block of currentBlocks) {
-      if (
-        block.id &&
-        oldFpMap.has(block.id) &&
-        oldFpMap.get(block.id) === block.fingerprint
-      ) {
-        unchangedBlockIds.add(block.id)
-      } else {
-        changedBlockIds.add(block.id)
-      }
-    }
-
-    this.logger.log(
-      `Incremental diff: totalBlocks=${currentBlocks.length} changed=${changedBlockIds.size} reused=${unchangedBlockIds.size}`,
-    )
-
-    // Parse current content
-    const parseResult = parseLexicalForTranslation(content.content!)
-    const { segments, propertySegments, editorState } = parseResult
-    const allTranslations = new Map<string, string>()
-    let sourceLang = existing.sourceLang || ''
-
-    // Parse old translated content to build blockId→rootNode map
-    let oldTranslatedState: any
-    try {
-      oldTranslatedState = JSON.parse(existing.content!)
-    } catch {
-      throw new Error('Failed to parse existing translated content')
-    }
-
-    const oldTranslatedRootChildren: any[] =
-      oldTranslatedState?.root?.children ?? []
-    const oldBlockNodeMap = new Map<string, any>()
-    for (const child of oldTranslatedRootChildren) {
-      const state = child?.[NODE_STATE_KEY]
-      const blockId =
-        state &&
-        typeof state === 'object' &&
-        typeof state[BLOCK_ID_STATE_KEY] === 'string'
-          ? state[BLOCK_ID_STATE_KEY].trim()
-          : null
-      if (blockId) {
-        oldBlockNodeMap.set(blockId, child)
-      }
-    }
-
-    // Replace unchanged blocks in current editorState with old translated blocks
-    const currentRootChildren = editorState.root?.children ?? []
-    for (let i = 0; i < currentRootChildren.length; i++) {
-      const child = currentRootChildren[i]
-      const state = child?.[NODE_STATE_KEY]
-      const blockId =
-        state &&
-        typeof state === 'object' &&
-        typeof state[BLOCK_ID_STATE_KEY] === 'string'
-          ? state[BLOCK_ID_STATE_KEY].trim()
-          : null
-
-      if (
-        blockId &&
-        unchangedBlockIds.has(blockId) &&
-        oldBlockNodeMap.has(blockId)
-      ) {
-        currentRootChildren[i] = oldBlockNodeMap.get(blockId)
-      }
-    }
-
-    // Build entries only for changed blocks
-    const documentContext = extractDocumentContext(
-      editorState.root?.children ?? [],
-    )
-
-    const allEntries: Record<string, string> = {}
-    const allEntryMeta: Record<string, string> = {}
-    for (const seg of segments) {
-      if (!seg.translatable) continue
-      if (seg.blockId && unchangedBlockIds.has(seg.blockId)) continue
-      allEntries[seg.id] = seg.text
-      allEntryMeta[seg.id] = 'text'
-    }
-    for (const prop of propertySegments) {
-      if (prop.blockId && unchangedBlockIds.has(prop.blockId)) continue
-      allEntries[prop.id] = prop.text
-      if (prop.property === 'reading' && prop.node?.type === 'ruby') {
-        allEntryMeta[prop.id] = 'ruby.reading'
-      } else {
-        allEntryMeta[prop.id] = `property.${prop.property}`
-      }
-    }
-
-    // Meta entries: only translate changed meta fields
-    const metaEntries: Record<string, string> = {}
-    const metaEntryMeta: Record<string, string> = {}
-    const oldMetaHashes = existing.sourceMetaHashes
-
-    const currentTitleHash = md5(content.title)
-    if (!oldMetaHashes || oldMetaHashes.title !== currentTitleHash) {
-      metaEntries.__title__ = content.title
-      metaEntryMeta.__title__ = 'meta.title'
-    } else {
-      allTranslations.set('__title__', existing.title)
-    }
-
-    if (content.summary) {
-      const currentSummaryHash = md5(content.summary)
-      if (!oldMetaHashes || oldMetaHashes.summary !== currentSummaryHash) {
-        metaEntries.__summary__ = content.summary
-        metaEntryMeta.__summary__ = 'meta.summary'
-      } else if (existing.summary) {
-        allTranslations.set('__summary__', existing.summary)
-      }
-    }
-
-    if (content.tags?.length) {
-      const currentTagsHash = md5(content.tags.join('|||'))
-      if (!oldMetaHashes || oldMetaHashes.tags !== currentTagsHash) {
-        metaEntries.__tags__ = content.tags.join('|||')
-        metaEntryMeta.__tags__ = 'meta.tags'
-      } else if (existing.tags?.length) {
-        allTranslations.set('__tags__', existing.tags.join('|||'))
-      }
-    }
-
-    const totalEntries =
-      Object.keys(allEntries).length + Object.keys(metaEntries).length
-
-    this.logger.log(
-      `Incremental entries: content=${Object.keys(allEntries).length} meta=${Object.keys(metaEntries).length} total=${totalEntries}`,
-    )
-
-    if (totalEntries === 0) {
-      // Nothing changed in translatable content — rebuild from replaced state
-      const translatedContent = JSON.stringify(editorState)
-      return {
-        sourceLang,
-        title: allTranslations.get('__title__') ?? existing.title,
-        text: this.lexicalService.lexicalToMarkdown(translatedContent),
-        contentFormat: ContentFormat.Lexical,
-        content: translatedContent,
-        summary: allTranslations.get('__summary__') ?? existing.summary ?? null,
-        tags: existing.tags ?? null,
-        aiModel: info.model,
-        aiProvider: info.provider,
-      }
-    }
-
-    // Translate only changed entries
-    if (Object.keys(allEntries).length === 0) {
-      // Only meta changed
-      const result = await this.callChunkTranslation(
-        targetLang,
-        {
-          documentContext: content.title,
-          textEntries: metaEntries,
-          segmentMeta: metaEntryMeta,
-        },
-        runtime,
-        onToken,
-        signal,
-      )
-      if (result.sourceLang) sourceLang = result.sourceLang
-      for (const [id, text] of Object.entries(result.translations)) {
-        allTranslations.set(id, text)
-      }
-    } else {
-      const sl = await this.translateChunkedEntries(
-        targetLang,
-        documentContext,
-        allEntries,
-        allEntryMeta,
-        metaEntries,
-        metaEntryMeta,
-        allTranslations,
-        runtime,
-        onToken,
-        signal,
-      )
-      if (sl) sourceLang = sl
-    }
-
-    // Restore only changed segments
-    for (const seg of parseResult.segments) {
-      if (seg.translatable && allTranslations.has(seg.id)) {
-        seg.node.text = allTranslations.get(seg.id) ?? seg.text
-      }
-    }
-    for (const prop of parseResult.propertySegments) {
-      if (!allTranslations.has(prop.id)) continue
-      const translated = allTranslations.get(prop.id) ?? prop.text
-      if (prop.key !== undefined) {
-        prop.node[prop.property][prop.key] = translated
-      } else {
-        prop.node[prop.property] = translated
-      }
-    }
-
-    const translatedContent = JSON.stringify(editorState)
-    const title = allTranslations.get('__title__') ?? existing.title
-    const summary =
-      allTranslations.get('__summary__') ?? existing.summary ?? null
-    const tagsStr = allTranslations.get('__tags__')
-    const tags = tagsStr
-      ? tagsStr.split('|||')
-      : (existing.tags ?? content.tags ?? null)
-
-    return {
-      sourceLang,
-      title,
-      text: this.lexicalService.lexicalToMarkdown(translatedContent),
-      contentFormat: ContentFormat.Lexical,
-      content: translatedContent,
-      summary,
-      tags,
-      aiModel: info.model,
-      aiProvider: info.provider,
-    }
-  }
-
-  private async translateChunkedEntries(
-    targetLang: string,
-    documentContext: string,
-    allEntries: Record<string, string>,
-    allEntryMeta: Record<string, string>,
-    metaEntries: Record<string, string>,
-    metaEntryMeta: Record<string, string>,
-    allTranslations: Map<string, string>,
-    runtime: IModelRuntime,
-    onToken?: (count?: number) => Promise<void>,
-    signal?: AbortSignal,
-  ): Promise<string> {
-    let sourceLang = ''
-    const MAX_BATCH_TOKENS = 4000
-    const estimateTokens = (text: string) => Math.ceil(text.length / 3)
-
-    const batches: Array<{
-      textEntries: Record<string, string>
-      segmentMeta: Record<string, string>
-    }> = []
-    let currentBatch: Record<string, string> = { ...metaEntries }
-    let currentBatchMeta: Record<string, string> = { ...metaEntryMeta }
-    let currentTokens = Object.values(metaEntries).reduce(
-      (s, t) => s + estimateTokens(t),
-      0,
-    )
-    let hasContentEntry = false
-
-    for (const [id, text] of Object.entries(allEntries)) {
-      const tokens = estimateTokens(text)
-      if (hasContentEntry && currentTokens + tokens > MAX_BATCH_TOKENS) {
-        batches.push({
-          textEntries: currentBatch,
-          segmentMeta: currentBatchMeta,
-        })
-        currentBatch = {}
-        currentBatchMeta = {}
-        currentTokens = 0
-      }
-      currentBatch[id] = text
-      currentBatchMeta[id] = allEntryMeta[id] ?? 'text'
-      currentTokens += tokens
-      hasContentEntry = true
-    }
-    if (Object.keys(currentBatch).length > 0) {
-      batches.push({
-        textEntries: currentBatch,
-        segmentMeta: currentBatchMeta,
-      })
-    }
-
-    for (const batch of batches) {
-      if (signal?.aborted) {
-        throw Object.assign(new Error('Task aborted'), { name: 'AbortError' })
-      }
-      const result = await this.callChunkTranslation(
-        targetLang,
-        {
-          documentContext,
-          textEntries: batch.textEntries,
-          segmentMeta: batch.segmentMeta,
-        },
-        runtime,
-        onToken,
-        signal,
-      )
-      if (!sourceLang) sourceLang = result.sourceLang
-      for (const [id, text] of Object.entries(result.translations)) {
-        allTranslations.set(id, text)
-      }
-
-      // Validate: check for missing IDs and retry once
-      const missingIds = Object.keys(batch.textEntries).filter(
-        (id) => !(id in result.translations),
-      )
-      if (missingIds.length > 0) {
-        const retryEntries: Record<string, string> = {}
-        const retryMeta: Record<string, string> = {}
-        for (const id of missingIds) {
-          retryEntries[id] = batch.textEntries[id]
-          if (batch.segmentMeta[id]) {
-            retryMeta[id] = batch.segmentMeta[id]
-          }
-        }
-        try {
-          const retryResult = await this.callChunkTranslation(
-            targetLang,
-            {
-              documentContext,
-              textEntries: retryEntries,
-              segmentMeta: retryMeta,
-            },
-            runtime,
-            onToken,
-            signal,
-          )
-          for (const [id, text] of Object.entries(retryResult.translations)) {
-            allTranslations.set(id, text)
-          }
-          const stillMissing = missingIds.filter(
-            (id) => !(id in retryResult.translations),
-          )
-          for (const id of stillMissing) {
-            this.logger.warn(
-              `Translation missing for segment ${id} after retry, falling back to original`,
-            )
-          }
-        } catch {
-          for (const id of missingIds) {
-            this.logger.warn(
-              `Translation retry failed for segment ${id}, falling back to original`,
-            )
-          }
-        }
-      }
-    }
-
-    return sourceLang
-  }
-
-  private async callChunkTranslation(
-    targetLang: string,
-    chunk: {
-      documentContext: string
-      textEntries: Record<string, string>
-      segmentMeta?: Record<string, string>
-    },
-    runtime: any,
-    onToken?: (count?: number) => Promise<void>,
-    signal?: AbortSignal,
-  ): Promise<{ sourceLang: string; translations: Record<string, string> }> {
-    const { systemPrompt, prompt, reasoningEffort } =
-      AI_PROMPTS.translationChunk(targetLang, chunk)
-
-    const messages = [
-      { role: 'system' as const, content: systemPrompt },
-      { role: 'user' as const, content: prompt },
-    ]
-
-    let fullText = ''
-    if (runtime.generateTextStream) {
-      for await (const c of runtime.generateTextStream({
-        messages,
-        temperature: 0.3,
-        maxRetries: 2,
-        reasoningEffort,
-        signal,
-      })) {
-        if (signal?.aborted) {
-          throw Object.assign(new Error('Task aborted'), { name: 'AbortError' })
-        }
-        fullText += c.text
-        if (onToken) await onToken()
-      }
-    } else {
-      const result = await runtime.generateText({
-        messages,
-        temperature: 0.3,
-        maxRetries: 2,
-        reasoningEffort,
-        signal,
-      })
-      fullText = result.text
-    }
-
-    return this.parseModelJson<{
-      sourceLang: string
-      translations: Record<string, string>
-    }>(fullText, 'callChunkTranslation')
+      existing,
+    })
   }
 
   async generateTranslation(
@@ -2028,32 +1204,6 @@ export class AiTranslationService implements OnModuleInit {
     return translations.filter((t) => t.hash === currentHash).map((t) => t.lang)
   }
 
-  async getValidTranslationsByRefId(
-    refId: string,
-    document: PostModel | NoteModel | PageModel,
-  ): Promise<AITranslationModel[]> {
-    const translations = await this.aiTranslationModel.find({ refId })
-    if (!translations.length) return []
-
-    const sourceLang =
-      this.getMetaLang(document) || translations[0]?.sourceLang || 'unknown'
-    const currentHash = this.computeContentHash(
-      this.toArticleContent(document as ArticleDocument),
-      sourceLang,
-    )
-
-    return translations.filter((t) => t.hash === currentHash)
-  }
-
-  @OnEvent(BusinessEvents.POST_DELETE)
-  @OnEvent(BusinessEvents.NOTE_DELETE)
-  @OnEvent(BusinessEvents.PAGE_DELETE)
-  async handleDeleteArticle(event: ArticleEventPayload) {
-    const id = this.extractIdFromEvent(event)
-    if (!id) return
-    await this.deleteTranslationsByRefId(id)
-  }
-
   async scheduleRegenerationForStaleTranslations(
     articleIds: string[],
     targetLang: string,
@@ -2089,110 +1239,5 @@ export class AiTranslationService implements OnModuleInit {
         targetLanguages: [targetLang],
       })
     }
-  }
-
-  @OnEvent(BusinessEvents.POST_CREATE)
-  @OnEvent(BusinessEvents.NOTE_CREATE)
-  @OnEvent(BusinessEvents.PAGE_CREATE)
-  async handleCreateArticle(event: ArticleEventPayload) {
-    const aiConfig = await this.configService.get('ai')
-
-    if (
-      !aiConfig.enableAutoGenerateTranslation ||
-      !aiConfig.enableTranslation
-    ) {
-      return
-    }
-
-    const id = this.extractIdFromEvent(event)
-    if (!id) return
-
-    const article = await this.databaseService.findGlobalById(id)
-    if (!article || !this.isArticleVisible(article)) {
-      return
-    }
-
-    const targetLanguages = aiConfig.translationTargetLanguages || []
-    if (!targetLanguages.length) {
-      return
-    }
-
-    await this.cancelActiveTranslationTasks(id)
-
-    this.logger.log(
-      `AI auto translation task created: article=${id} targets=${targetLanguages.join(',')}`,
-    )
-    await this.aiTaskService.createTranslationTask({
-      refId: id,
-      targetLanguages,
-    })
-  }
-
-  @OnEvent(BusinessEvents.POST_UPDATE)
-  @OnEvent(BusinessEvents.NOTE_UPDATE)
-  @OnEvent(BusinessEvents.PAGE_UPDATE)
-  async handleUpdateArticle(event: ArticleEventPayload) {
-    const aiConfig = await this.configService.get('ai')
-    if (
-      !aiConfig.enableAutoGenerateTranslation ||
-      !aiConfig.enableTranslation
-    ) {
-      return
-    }
-
-    const id = this.extractIdFromEvent(event)
-    if (!id) return
-
-    const article = await this.databaseService.findGlobalById(id)
-    if (!article || !this.isArticleVisible(article)) {
-      return
-    }
-
-    const targetLanguages = aiConfig.translationTargetLanguages || []
-    if (!targetLanguages.length) {
-      return
-    }
-
-    const existingTranslations = await this.aiTranslationModel.find({
-      refId: id,
-    })
-    if (!existingTranslations.length) {
-      await this.cancelActiveTranslationTasks(id)
-      this.logger.log(
-        `AI auto translation task created (update init): article=${id} targets=${targetLanguages.join(',')}`,
-      )
-      await this.aiTaskService.createTranslationTask({
-        refId: id,
-        targetLanguages,
-      })
-      return
-    }
-
-    const document = article.document as ArticleDocument
-    const sourceLang =
-      this.getMetaLang(document) ||
-      existingTranslations[0]?.sourceLang ||
-      'unknown'
-    const newHash = this.computeContentHash(
-      this.toArticleContent(document),
-      sourceLang,
-    )
-
-    const outdatedLanguages = existingTranslations
-      .filter((t) => t.hash !== newHash)
-      .map((t) => t.lang)
-
-    if (!outdatedLanguages.length) {
-      return
-    }
-
-    await this.cancelActiveTranslationTasks(id)
-    this.logger.log(
-      `AI auto translation task created (update): article=${id} targets=${outdatedLanguages.join(',')}`,
-    )
-    await this.aiTaskService.createTranslationTask({
-      refId: id,
-      targetLanguages: outdatedLanguages,
-    })
   }
 }

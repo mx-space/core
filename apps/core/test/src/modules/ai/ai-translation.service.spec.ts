@@ -7,6 +7,10 @@ import { AiInFlightService } from '~/modules/ai/ai-inflight/ai-inflight.service'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { AITranslationModel } from '~/modules/ai/ai-translation/ai-translation.model'
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
+import {
+  LEXICAL_TRANSLATION_STRATEGY,
+  MARKDOWN_TRANSLATION_STRATEGY,
+} from '~/modules/ai/ai-translation/translation-strategy.interface'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
@@ -90,6 +94,9 @@ describe('AiTranslationService', () => {
       createTranslationTask: vi.fn(),
     }
 
+    const mockLexicalStrategy = { translate: vi.fn() }
+    const mockMarkdownStrategy = { translate: vi.fn() }
+
     const module = await Test.createTestingModule({
       providers: [
         AiTranslationService,
@@ -125,6 +132,14 @@ describe('AiTranslationService', () => {
           },
         },
         { provide: AiTaskService, useValue: mockAiTaskService },
+        {
+          provide: LEXICAL_TRANSLATION_STRATEGY,
+          useValue: mockLexicalStrategy,
+        },
+        {
+          provide: MARKDOWN_TRANSLATION_STRATEGY,
+          useValue: mockMarkdownStrategy,
+        },
       ],
     }).compile()
 
@@ -142,8 +157,8 @@ describe('AiTranslationService', () => {
       }
 
       // Compute expected hash using the same logic as service
-      const expectedHash = (service as any).computeContentHash(
-        (service as any).toArticleContent(document),
+      const expectedHash = service.computeContentHash(
+        service.toArticleContent(document),
         'zh',
       )
 
@@ -301,8 +316,8 @@ describe('AiTranslationService', () => {
         meta: mockArticle.meta,
       }
 
-      const expectedHash = (service as any).computeContentHash(
-        (service as any).toArticleContent(document),
+      const expectedHash = service.computeContentHash(
+        service.toArticleContent(document),
         'zh',
       )
 
@@ -437,35 +452,5 @@ describe('AiTranslationService', () => {
     })
   })
 
-  describe('parseModelJson', () => {
-    it('should parse JSON wrapped in code fence', () => {
-      const parsed = (service as any).parseModelJson(
-        '```json\n{"sourceLang":"en","translations":{"t_0":"ok"}}\n```',
-        'test',
-      )
-
-      expect(parsed.sourceLang).toBe('en')
-      expect(parsed.translations.t_0).toBe('ok')
-    })
-
-    it('should parse JSON5-like response', () => {
-      const parsed = (service as any).parseModelJson(
-        '{sourceLang:"en",translations:{t_0:"ok"}}',
-        'test',
-      )
-
-      expect(parsed.sourceLang).toBe('en')
-      expect(parsed.translations.t_0).toBe('ok')
-    })
-
-    it('should parse first JSON object from noisy response', () => {
-      const parsed = (service as any).parseModelJson(
-        'analysis... {"sourceLang":"en","translations":{"t_0":"ok"}} trailing',
-        'test',
-      )
-
-      expect(parsed.sourceLang).toBe('en')
-      expect(parsed.translations.t_0).toBe('ok')
-    })
-  })
+  // parseModelJson is now in BaseTranslationStrategy and tested via strategy tests
 })
