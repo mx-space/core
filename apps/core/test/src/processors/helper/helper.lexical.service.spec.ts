@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing'
+
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
@@ -255,7 +256,7 @@ describe('LexicalService', () => {
       },
     ])
     const md = service.lexicalToMarkdown(state)
-    expect(md.trim()).toBe('x=1')
+    expect(md.trim()).toBe('```python\nx=1\n```')
   })
 
   it('converts link', () => {
