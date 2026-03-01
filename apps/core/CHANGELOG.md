@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [10.1.1](https://github.com/mx-space/core/compare/v10.1.0...v10.1.1) (2026-03-01)
+
+
+### Bug Fixes
+
+* **ai:** improve error handling and cleanup in AiInFlightService ([2267810](https://github.com/mx-space/core/commit/22678104ec185b73fc47bb5fbc487e75ba332150))
+
+
+### Features
+
+* **ai-task:** add smart retry for partial-failed translation tasks ([ecdbf50](https://github.com/mx-space/core/commit/ecdbf50879f8313b739172d54fc1a71b16b6d24f))
+* **ai:** enhance JSON extraction utilities and update translation strategy ([f673630](https://github.com/mx-space/core/commit/f67363036c6da979ac71ffe16bfd8c8a7ff3412e))
+* **visitor-event:** enhance visitor event dispatch with additional content fields ([74d9398](https://github.com/mx-space/core/commit/74d939820195a7fdfb608c61c37c749284a23c89))
+
+
+
 # [10.1.0](https://github.com/mx-space/core/compare/v10.0.4...v10.1.0) (2026-02-28)
 
 
