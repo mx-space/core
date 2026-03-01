@@ -136,11 +136,13 @@ export class LexicalTranslationStrategy
       )
       sourceLang = await this.translateChunkedEntries(
         targetLang,
-        documentContext,
-        allEntries,
-        allEntryMeta,
-        metaEntries,
-        metaEntryMeta,
+        {
+          documentContext,
+          entries: allEntries,
+          entryMeta: allEntryMeta,
+          metaEntries,
+          metaEntryMeta,
+        },
         allTranslations,
         runtime,
         onToken,
@@ -348,11 +350,13 @@ export class LexicalTranslationStrategy
     } else {
       const sl = await this.translateChunkedEntries(
         targetLang,
-        documentContext,
-        allEntries,
-        allEntryMeta,
-        metaEntries,
-        metaEntryMeta,
+        {
+          documentContext,
+          entries: allEntries,
+          entryMeta: allEntryMeta,
+          metaEntries,
+          metaEntryMeta,
+        },
         allTranslations,
         runtime,
         onToken,
@@ -361,22 +365,10 @@ export class LexicalTranslationStrategy
       if (sl) sourceLang = sl
     }
 
-    for (const seg of parseResult.segments) {
-      if (seg.translatable && allTranslations.has(seg.id)) {
-        seg.node.text = allTranslations.get(seg.id) ?? seg.text
-      }
-    }
-    for (const prop of parseResult.propertySegments) {
-      if (!allTranslations.has(prop.id)) continue
-      const translated = allTranslations.get(prop.id) ?? prop.text
-      if (prop.key !== undefined) {
-        prop.node[prop.property][prop.key] = translated
-      } else {
-        prop.node[prop.property] = translated
-      }
-    }
-
-    const translatedContent = JSON.stringify(editorState)
+    const translatedContent = restoreLexicalTranslation(
+      parseResult,
+      allTranslations,
+    )
     const title = allTranslations.get('__title__') ?? existing.title
     const summary =
       allTranslations.get('__summary__') ?? existing.summary ?? null
@@ -400,16 +392,26 @@ export class LexicalTranslationStrategy
 
   private async translateChunkedEntries(
     targetLang: string,
-    documentContext: string,
-    allEntries: Record<string, string>,
-    allEntryMeta: Record<string, string>,
-    metaEntries: Record<string, string>,
-    metaEntryMeta: Record<string, string>,
-    allTranslations: Map<string, string>,
+    ctx: {
+      documentContext: string
+      entries: Record<string, string>
+      entryMeta: Record<string, string>
+      metaEntries: Record<string, string>
+      metaEntryMeta: Record<string, string>
+    },
+    output: Map<string, string>,
     runtime: IModelRuntime,
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
   ): Promise<string> {
+    const {
+      documentContext,
+      entries: allEntries,
+      entryMeta: allEntryMeta,
+      metaEntries,
+      metaEntryMeta,
+    } = ctx
+    const allTranslations = output
     let sourceLang = ''
     const MAX_BATCH_TOKENS = 4000
     const estimateTokens = (text: string) => Math.ceil(text.length / 3)

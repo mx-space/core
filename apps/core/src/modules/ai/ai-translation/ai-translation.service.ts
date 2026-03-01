@@ -217,16 +217,7 @@ export class AiTranslationService
 
     // Fetch article info for all refIds
     const articles = await this.databaseService.findGlobalByIds(refIds)
-    const articleMap = new Map<string, { title: string; type: string }>()
-    for (const post of articles.posts) {
-      articleMap.set(post.id, { title: post.title, type: 'Post' })
-    }
-    for (const note of articles.notes) {
-      articleMap.set(note.id, { title: note.title, type: 'Note' })
-    }
-    for (const page of articles.pages) {
-      articleMap.set(page.id, { title: page.title, type: 'Page' })
-    }
+    const articleMap = this.buildArticleInfoMap(articles)
 
     const createdTaskIds: string[] = []
 
@@ -410,6 +401,24 @@ export class AiTranslationService
     )
   }
 
+  private buildArticleInfoMap(articles: {
+    posts: Array<{ id: string; title: string }>
+    notes: Array<{ id: string; title: string }>
+    pages: Array<{ id: string; title: string }>
+  }): Map<string, { title: string; type: string }> {
+    const map = new Map<string, { title: string; type: string }>()
+    for (const post of articles.posts) {
+      map.set(post.id, { title: post.title, type: 'Post' })
+    }
+    for (const note of articles.notes) {
+      map.set(note.id, { title: note.title, type: 'Note' })
+    }
+    for (const page of articles.pages) {
+      map.set(page.id, { title: page.title, type: 'Page' })
+    }
+    return map
+  }
+
   private checkAborted(context: TaskExecuteContext) {
     if (context.isAborted()) {
       const error = new Error('Task aborted')
@@ -419,30 +428,33 @@ export class AiTranslationService
   }
 
   async cancelActiveTranslationTasks(refId: string) {
-    for (const status of [TaskStatus.Running, TaskStatus.Pending]) {
-      const { data: tasks } = await this.aiTaskService.crud.getTasks({
-        type: AITaskType.Translation,
-        status,
-        page: 1,
-        size: 100,
-        includeSubTasks: true,
-      })
-      for (const task of tasks) {
-        const payload = task.payload as Record<string, unknown> | undefined
-        if (
-          !payload ||
-          typeof payload.refId !== 'string' ||
-          payload.refId !== refId
+    const results = await Promise.all(
+      [TaskStatus.Running, TaskStatus.Pending].map((status) =>
+        this.aiTaskService.crud.getTasks({
+          type: AITaskType.Translation,
+          status,
+          page: 1,
+          size: 100,
+          includeSubTasks: true,
+        }),
+      ),
+    )
+    const tasks = results.flatMap((r) => r.data)
+    for (const task of tasks) {
+      const payload = task.payload as Record<string, unknown> | undefined
+      if (
+        !payload ||
+        typeof payload.refId !== 'string' ||
+        payload.refId !== refId
+      )
+        continue
+      try {
+        await this.aiTaskService.crud.cancelTask(task.id)
+        this.logger.log(
+          `Cancelled stale translation task ${task.id} for article=${refId}`,
         )
-          continue
-        try {
-          await this.aiTaskService.crud.cancelTask(task.id)
-          this.logger.log(
-            `Cancelled stale translation task ${task.id} for article=${refId}`,
-          )
-        } catch {
-          // task may already be completed
-        }
+      } catch {
+        // task may already be completed
       }
     }
   }
@@ -831,12 +843,14 @@ export class AiTranslationService
   }
 
   async getTranslationsByRefId(refId: string) {
-    const article = await this.databaseService.findGlobalById(refId)
+    const [article, translations] = await Promise.all([
+      this.databaseService.findGlobalById(refId),
+      this.aiTranslationModel.find({ refId }),
+    ])
     if (!article) {
       throw new BizException(ErrorCodeEnum.ContentNotFound)
     }
 
-    const translations = await this.aiTranslationModel.find({ refId })
     return { translations, article }
   }
 
@@ -947,29 +961,30 @@ export class AiTranslationService
     }
 
     const refIds = groupedRefIds.map((g: { _id: string }) => g._id)
-    const translations = await this.aiTranslationModel
-      .find({ refId: { $in: refIds } })
-      .sort({ created: -1 })
-      .lean()
+    const [translations, articles] = await Promise.all([
+      this.aiTranslationModel
+        .find({ refId: { $in: refIds } })
+        .sort({ created: -1 })
+        .lean(),
+      this.databaseService.findGlobalByIds(refIds),
+    ])
 
-    const articles = await this.databaseService.findGlobalByIds(refIds)
     const articleMap = {} as Record<
       string,
       { title: string; id: string; type: CollectionRefTypes }
     >
-
-    for (const a of articles.notes) {
-      articleMap[a.id] = {
-        title: a.title,
-        id: a.id,
-        type: CollectionRefTypes.Note,
-      }
-    }
     for (const a of articles.posts) {
       articleMap[a.id] = {
         title: a.title,
         id: a.id,
         type: CollectionRefTypes.Post,
+      }
+    }
+    for (const a of articles.notes) {
+      articleMap[a.id] = {
+        title: a.title,
+        id: a.id,
+        type: CollectionRefTypes.Note,
       }
     }
     for (const a of articles.pages) {
@@ -1186,9 +1201,9 @@ export class AiTranslationService
     }
 
     const document = article.document as ArticleDocument
-    const translations = await this.aiTranslationModel.find({
-      refId: articleId,
-    })
+    const translations = await this.aiTranslationModel
+      .find({ refId: articleId })
+      .select('hash lang sourceLang')
 
     if (!translations.length) {
       return []

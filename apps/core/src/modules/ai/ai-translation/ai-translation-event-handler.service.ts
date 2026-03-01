@@ -98,9 +98,9 @@ export class AiTranslationEventHandlerService {
       return
     }
 
-    const existingTranslations = await this.aiTranslationModel.find({
-      refId: id,
-    })
+    const existingTranslations = await this.aiTranslationModel
+      .find({ refId: id })
+      .select('hash lang sourceLang')
     if (!existingTranslations.length) {
       await this.aiTranslationService.cancelActiveTranslationTasks(id)
       this.logger.log(
