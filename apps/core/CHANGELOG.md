@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [10.1.3](https://github.com/mx-space/core/compare/v10.1.2...v10.1.3) (2026-03-01)
+
+
+### Features
+
+* **socket:** optimize socket fetching and configuration ([13eb074](https://github.com/mx-space/core/commit/13eb0747f19a0bb957cfb90e0fafd7a0af1221f1))
+* **translation:** add content fields to translation and controller services ([6526893](https://github.com/mx-space/core/commit/6526893f0c0db0a7607053d5ebe2e67a605201b8))
+
+
+
 ## [10.1.2](https://github.com/mx-space/core/compare/v10.1.1...v10.1.2) (2026-03-01)
 
 
