@@ -46,6 +46,8 @@ import type {
   ArticleEventPayload,
 } from './ai-translation.types'
 import { BaseTranslationService } from './base-translation.service'
+import { TranslationConsistencyService } from './translation-consistency.service'
+import type { TranslationSourceSnapshot } from './translation-consistency.types'
 import type { ITranslationStrategy } from './translation-strategy.interface'
 import {
   LEXICAL_TRANSLATION_STRATEGY,
@@ -63,6 +65,7 @@ export class AiTranslationService
     @InjectModel(AITranslationModel)
     private readonly aiTranslationModel: MongooseModel<AITranslationModel>,
     private readonly databaseService: DatabaseService,
+    private readonly translationConsistencyService: TranslationConsistencyService,
     private readonly configService: ConfigsService,
     private readonly aiService: AiService,
     private readonly aiInFlightService: AiInFlightService,
@@ -1101,18 +1104,7 @@ export class AiTranslationService
   }
 
   async getValidTranslationsForArticles(
-    articles: Array<{
-      id: string
-      title: string
-      text?: string
-      summary?: string | null
-      tags?: string[]
-      meta?: { lang?: string }
-      contentFormat?: string
-      content?: string
-      modified?: Date | null
-      created?: Date | null
-    }>,
+    articles: TranslationSourceSnapshot[],
     targetLang: string,
     options?: {
       select?: string
@@ -1125,18 +1117,9 @@ export class AiTranslationService
       return { validTranslations: new Map(), staleRefIds: [] }
     }
 
-    const requiredSelectFields = [
-      'refId',
-      'hash',
-      'sourceLang',
-      'sourceModified',
-      'created',
-    ]
-    const defaultSelect =
-      'refId refType lang sourceLang title text summary tags hash sourceModified created aiModel aiProvider'
-    const select = options?.select
-      ? `${options.select} ${requiredSelectFields.join(' ')}`
-      : defaultSelect
+    const select = this.translationConsistencyService.buildValidationSelect(
+      options?.select,
+    )
 
     const query = this.aiTranslationModel.find({
       refId: { $in: articles.map((article) => article.id) },
@@ -1151,66 +1134,10 @@ export class AiTranslationService
       return { validTranslations: new Map(), staleRefIds: [] }
     }
 
-    const translationMap = new Map(
-      translations.map((translation) => [translation.refId, translation]),
+    return this.translationConsistencyService.partitionValidAndStaleTranslations(
+      articles,
+      translations,
     )
-    const validTranslations = new Map<string, AITranslationModel>()
-    const staleRefIds = new Set<string>()
-
-    for (const article of articles) {
-      const translation = translationMap.get(article.id)
-      if (!translation) {
-        continue
-      }
-
-      const articleTimestamp = article.modified ?? article.created ?? null
-
-      if (
-        translation.sourceModified &&
-        articleTimestamp &&
-        translation.sourceModified >= articleTimestamp
-      ) {
-        validTranslations.set(article.id, translation)
-        continue
-      }
-
-      if (
-        !translation.sourceModified &&
-        articleTimestamp &&
-        translation.created &&
-        translation.created >= articleTimestamp
-      ) {
-        validTranslations.set(article.id, translation)
-        continue
-      }
-
-      const sourceLang =
-        article.meta?.lang || translation.sourceLang || 'unknown'
-
-      const currentHash = this.computeContentHash(
-        {
-          title: article.title,
-          text: article.text ?? '',
-          summary: article.summary ?? undefined,
-          tags: article.tags,
-          contentFormat: article.contentFormat,
-          content: article.content,
-        },
-        sourceLang,
-      )
-
-      if (translation.hash === currentHash) {
-        validTranslations.set(article.id, translation)
-        continue
-      }
-
-      staleRefIds.add(article.id)
-    }
-
-    return {
-      validTranslations,
-      staleRefIds: [...staleRefIds],
-    }
   }
 
   async getAvailableLanguagesForArticle(articleId: string): Promise<string[]> {
@@ -1262,30 +1189,11 @@ export class AiTranslationService
 
     if (!existingTranslations.length) return
 
-    const refIds = [...new Set(existingTranslations.map((t) => t.refId))]
-    const groupedArticles = await this.databaseService.findGlobalByIds(refIds)
-    const articleMap = this.databaseService.flatCollectionToMap(groupedArticles)
-    const staleRefIds = new Set<string>()
-
-    for (const translation of existingTranslations) {
-      const document = articleMap[translation.refId]
-      if (!this.isTranslatableDocument(document)) {
-        continue
-      }
-
-      const sourceLang =
-        this.getMetaLang(document) || translation.sourceLang || 'unknown'
-      const currentHash = this.computeContentHash(
-        this.toArticleContent(document),
-        sourceLang,
+    const staleRefIds =
+      await this.translationConsistencyService.filterTrulyStaleTranslations(
+        existingTranslations,
       )
-
-      if (translation.hash !== currentHash) {
-        staleRefIds.add(translation.refId)
-      }
-    }
-
-    if (!staleRefIds.size) return
+    if (!staleRefIds.length) return
 
     for (const refId of staleRefIds) {
       this.logger.log(
@@ -1296,13 +1204,5 @@ export class AiTranslationService
         targetLanguages: [targetLang],
       })
     }
-  }
-
-  private isTranslatableDocument(
-    document: unknown,
-  ): document is ArticleDocument {
-    if (!document || typeof document !== 'object') return false
-    const value = document as Record<string, unknown>
-    return typeof value.title === 'string' && typeof value.text === 'string'
   }
 }

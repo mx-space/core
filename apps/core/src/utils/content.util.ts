@@ -68,6 +68,15 @@ export function computeContentHash(
   )
 }
 
+export function getTranslationPayload(
+  doc: Pick<ContentDoc, 'title' | 'text' | 'contentFormat' | 'content'>,
+): { format: string; title: string; text?: string; content?: string } {
+  if (isLexical(doc)) {
+    return { format: 'lexical', title: doc.title, content: doc.content }
+  }
+  return { format: 'markdown', title: doc.title, text: doc.text }
+}
+
 export function applyContentPreference<
   T extends { text?: string; contentFormat?: string; content?: string },
 >(doc: T, prefer?: string): T {

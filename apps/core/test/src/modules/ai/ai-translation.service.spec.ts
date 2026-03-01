@@ -7,6 +7,7 @@ import { AiInFlightService } from '~/modules/ai/ai-inflight/ai-inflight.service'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { AITranslationModel } from '~/modules/ai/ai-translation/ai-translation.model'
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
+import { TranslationConsistencyService } from '~/modules/ai/ai-translation/translation-consistency.service'
 import {
   LEXICAL_TRANSLATION_STRATEGY,
   MARKDOWN_TRANSLATION_STRATEGY,
@@ -23,6 +24,8 @@ describe('AiTranslationService', () => {
   let mockTranslationModel: any
   let mockDatabaseService: any
   let mockConfigService: any
+  let mockAiTaskService: any
+  let mockTranslationConsistencyService: any
 
   const mockArticle = {
     id: 'article-1',
@@ -65,6 +68,7 @@ describe('AiTranslationService', () => {
 
     mockConfigService = {
       get: vi.fn().mockResolvedValue({
+        enableAutoGenerateTranslation: true,
         enableTranslation: true,
         translationTargetLanguages: ['en', 'ja'],
       }),
@@ -89,13 +93,27 @@ describe('AiTranslationService', () => {
       registerHandler: vi.fn(),
     }
 
-    const mockAiTaskService = {
+    mockAiTaskService = {
       crud: { createTask: vi.fn() },
       createTranslationTask: vi.fn(),
     }
 
     const mockLexicalStrategy = { translate: vi.fn() }
     const mockMarkdownStrategy = { translate: vi.fn() }
+    mockTranslationConsistencyService = {
+      buildValidationSelect: vi
+        .fn()
+        .mockImplementation((select?: string) => select || 'default-select'),
+      partitionValidAndStaleTranslations: vi
+        .fn()
+        .mockImplementation((_articles: any[], translations: any[]) => ({
+          validTranslations: new Map(
+            translations.map((translation) => [translation.refId, translation]),
+          ),
+          staleRefIds: [],
+        })),
+      filterTrulyStaleTranslations: vi.fn().mockResolvedValue([]),
+    }
 
     const module = await Test.createTestingModule({
       providers: [
@@ -132,6 +150,10 @@ describe('AiTranslationService', () => {
           },
         },
         { provide: AiTaskService, useValue: mockAiTaskService },
+        {
+          provide: TranslationConsistencyService,
+          useValue: mockTranslationConsistencyService,
+        },
         {
           provide: LEXICAL_TRANSLATION_STRATEGY,
           useValue: mockLexicalStrategy,
@@ -217,7 +239,7 @@ describe('AiTranslationService', () => {
   })
 
   describe('getValidTranslationsForArticles', () => {
-    it('should validate by sourceModified when available', async () => {
+    it('should delegate partitioning and return structured result', async () => {
       const articleModified = new Date('2024-01-01T00:00:00.000Z')
       const translationModified = new Date('2024-01-02T00:00:00.000Z')
       const translations = [
@@ -235,6 +257,13 @@ describe('AiTranslationService', () => {
       }
 
       mockTranslationModel.find.mockReturnValue(query)
+      const expected = {
+        validTranslations: new Map([['article-1', translations[0]]]),
+        staleRefIds: ['article-2'],
+      }
+      mockTranslationConsistencyService.partitionValidAndStaleTranslations.mockReturnValue(
+        expected,
+      )
 
       const result = await service.getValidTranslationsForArticles(
         [
@@ -248,7 +277,20 @@ describe('AiTranslationService', () => {
         'en',
       )
 
-      expect(result.get('article-1')).toEqual(translations[0])
+      expect(result).toEqual(expected)
+      expect(
+        mockTranslationConsistencyService.partitionValidAndStaleTranslations,
+      ).toHaveBeenCalledWith(
+        [
+          {
+            id: 'article-1',
+            title: mockArticle.title,
+            text: '',
+            modified: articleModified,
+          },
+        ],
+        translations,
+      )
     })
 
     it('should apply select fields when provided', async () => {
@@ -260,6 +302,9 @@ describe('AiTranslationService', () => {
       }
 
       mockTranslationModel.find.mockReturnValue(query)
+      mockTranslationConsistencyService.buildValidationSelect.mockReturnValue(
+        'normalized-select',
+      )
 
       await service.getValidTranslationsForArticles(
         [
@@ -273,13 +318,61 @@ describe('AiTranslationService', () => {
         { select: 'refId title' },
       )
 
+      expect(
+        mockTranslationConsistencyService.buildValidationSelect,
+      ).toHaveBeenCalledWith('refId title')
       expect(query.select).toHaveBeenCalledTimes(1)
-      const selectArg = query.select.mock.calls[0][0] as string
-      expect(selectArg).toContain('refId')
-      expect(selectArg).toContain('title')
-      expect(selectArg).toContain('hash')
-      expect(selectArg).toContain('sourceLang')
-      expect(selectArg).toContain('sourceModified')
+      expect(query.select).toHaveBeenCalledWith('normalized-select')
+    })
+  })
+
+  describe('scheduleRegenerationForStaleTranslations', () => {
+    it('should schedule tasks for truly stale translations only', async () => {
+      const existingTranslations = [
+        { refId: 'article-1', hash: 'old-1', sourceLang: 'zh' },
+        { refId: 'article-2', hash: 'old-2', sourceLang: 'zh' },
+      ]
+      const query = {
+        select: vi.fn().mockReturnThis(),
+        lean: vi.fn().mockResolvedValue(existingTranslations as any),
+      }
+      mockTranslationModel.find.mockReturnValue(query)
+      mockTranslationConsistencyService.filterTrulyStaleTranslations.mockResolvedValue(
+        ['article-2'],
+      )
+
+      await service.scheduleRegenerationForStaleTranslations(
+        ['article-1', 'article-2'],
+        'en',
+      )
+
+      expect(query.select).toHaveBeenCalledWith('refId hash sourceLang')
+      expect(
+        mockTranslationConsistencyService.filterTrulyStaleTranslations,
+      ).toHaveBeenCalledWith(existingTranslations)
+      expect(mockAiTaskService.createTranslationTask).toHaveBeenCalledTimes(1)
+      expect(mockAiTaskService.createTranslationTask).toHaveBeenCalledWith({
+        refId: 'article-2',
+        targetLanguages: ['en'],
+      })
+    })
+
+    it('should skip scheduling when auto-generate is disabled', async () => {
+      mockConfigService.get.mockResolvedValue({
+        enableAutoGenerateTranslation: false,
+        enableTranslation: true,
+      })
+
+      await service.scheduleRegenerationForStaleTranslations(
+        ['article-1'],
+        'en',
+      )
+
+      expect(mockTranslationModel.find).not.toHaveBeenCalled()
+      expect(
+        mockTranslationConsistencyService.filterTrulyStaleTranslations,
+      ).not.toHaveBeenCalled()
+      expect(mockAiTaskService.createTranslationTask).not.toHaveBeenCalled()
     })
   })
 

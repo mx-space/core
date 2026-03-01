@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common'
 
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
+import type { TranslationSourceSnapshot } from '~/modules/ai/ai-translation/translation-consistency.types'
 import { normalizeLanguageCode } from '~/utils/lang.util'
 
 export interface TranslationMeta {
@@ -26,19 +27,7 @@ export type TranslationField = keyof TranslationResult
 export type TranslationResultPick<
   Fields extends TranslationField = TranslationField,
 > = { isTranslated: boolean } & Pick<TranslationResult, Fields>
-
-export interface ArticleTranslationInput {
-  id: string
-  title: string
-  text?: string
-  summary?: string | null
-  tags?: string[]
-  meta?: { lang?: string }
-  contentFormat?: string
-  content?: string
-  modified?: Date | null
-  created?: Date | null
-}
+export type ArticleTranslationInput = TranslationSourceSnapshot
 
 @Injectable()
 export class TranslationService {
@@ -113,7 +102,7 @@ export class TranslationService {
     items: T[]
     targetLang?: string
     translationFields?: readonly Fields[]
-    getInput: (item: T) => ArticleTranslationInput
+    getInput: (item: T) => TranslationSourceSnapshot
     applyResult: (
       item: T,
       result: TranslationResultPick<Fields> | undefined,
@@ -186,7 +175,7 @@ export class TranslationService {
   async translateArticleList<
     Fields extends TranslationField = TranslationField,
   >(options: {
-    articles: ArticleTranslationInput[]
+    articles: TranslationSourceSnapshot[]
     targetLang?: string
     translationFields?: readonly Fields[]
   }): Promise<Map<string, TranslationResultPick<Fields>>> {

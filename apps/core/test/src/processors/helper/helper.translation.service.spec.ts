@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing'
+
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import type { ArticleTranslationInput } from '~/processors/helper/helper.translation.service'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
@@ -10,6 +11,14 @@ const createMockAiTranslationService = () => ({
   scheduleRegenerationForStaleTranslations: vi
     .fn()
     .mockResolvedValue(undefined),
+})
+
+const createTranslationLookup = (
+  entries: Array<[string, any]> = [],
+  staleRefIds: string[] = [],
+) => ({
+  validTranslations: new Map(entries),
+  staleRefIds,
 })
 
 describe('TranslationService', () => {
@@ -282,7 +291,7 @@ describe('TranslationService', () => {
 
     it('should translate items and apply results', async () => {
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        new Map([
+        createTranslationLookup([
           [
             '1',
             {
@@ -345,7 +354,7 @@ describe('TranslationService', () => {
     it('should return translated results when translations exist', async () => {
       const createdDate = new Date()
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        new Map([
+        createTranslationLookup([
           [
             '1',
             {
@@ -389,7 +398,7 @@ describe('TranslationService', () => {
 
     it('should use original values when translation has null fields', async () => {
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        new Map([
+        createTranslationLookup([
           [
             '1',
             {
@@ -430,9 +439,67 @@ describe('TranslationService', () => {
       expect(result.get('1')?.title).toBe('Title 1')
     })
 
+    it('should schedule regeneration only for stale ids', async () => {
+      mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
+        createTranslationLookup(
+          [
+            [
+              '1',
+              {
+                title: 'Translated Title 1',
+                text: 'Translated Text 1',
+                sourceLang: 'zh',
+                lang: 'en',
+                created: new Date(),
+              },
+            ],
+          ],
+          ['2'],
+        ),
+      )
+
+      await service.translateArticleList({
+        articles,
+        targetLang: 'en',
+      })
+
+      expect(
+        mockAiTranslationService.scheduleRegenerationForStaleTranslations,
+      ).toHaveBeenCalledTimes(1)
+      expect(
+        mockAiTranslationService.scheduleRegenerationForStaleTranslations,
+      ).toHaveBeenCalledWith(['2'], 'en')
+    })
+
+    it('should not schedule regeneration when no stale ids', async () => {
+      mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
+        createTranslationLookup([
+          [
+            '1',
+            {
+              title: 'Translated Title 1',
+              text: 'Translated Text 1',
+              sourceLang: 'zh',
+              lang: 'en',
+              created: new Date(),
+            },
+          ],
+        ]),
+      )
+
+      await service.translateArticleList({
+        articles,
+        targetLang: 'en',
+      })
+
+      expect(
+        mockAiTranslationService.scheduleRegenerationForStaleTranslations,
+      ).not.toHaveBeenCalled()
+    })
+
     it('should handle custom translationFields', async () => {
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        new Map([
+        createTranslationLookup([
           [
             '1',
             {
@@ -460,7 +527,7 @@ describe('TranslationService', () => {
 
     it('should exclude translationMeta when not in fields', async () => {
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        new Map([
+        createTranslationLookup([
           [
             '1',
             {
@@ -488,7 +555,7 @@ describe('TranslationService', () => {
 
     it('should build correct select string', async () => {
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        new Map(),
+        createTranslationLookup(),
       )
 
       await service.translateArticleList({
@@ -510,7 +577,7 @@ describe('TranslationService', () => {
 
     it('should normalize various language code formats', async () => {
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        new Map(),
+        createTranslationLookup(),
       )
 
       await service.translateArticleList({
@@ -625,7 +692,7 @@ describe('TranslationService', () => {
   describe('buildTranslationSelect (private method via translateArticleList)', () => {
     it('should include all fields for default fields', async () => {
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        new Map(),
+        createTranslationLookup(),
       )
 
       await service.translateArticleList({
@@ -652,7 +719,7 @@ describe('TranslationService', () => {
 
     it('should include only specified fields', async () => {
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        new Map(),
+        createTranslationLookup(),
       )
 
       await service.translateArticleList({
@@ -675,7 +742,7 @@ describe('TranslationService', () => {
   describe('pickTranslationFields (private method via translateArticleList)', () => {
     it('should pick specified fields correctly', async () => {
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        new Map([
+        createTranslationLookup([
           [
             '1',
             {

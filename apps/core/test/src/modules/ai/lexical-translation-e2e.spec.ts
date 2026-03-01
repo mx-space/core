@@ -9,6 +9,7 @@ import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation
 import { parseLexicalForTranslation } from '~/modules/ai/ai-translation/lexical-translation-parser'
 import { LexicalTranslationStrategy } from '~/modules/ai/ai-translation/strategies/lexical-translation.strategy'
 import { MarkdownTranslationStrategy } from '~/modules/ai/ai-translation/strategies/markdown-translation.strategy'
+import { TranslationConsistencyService } from '~/modules/ai/ai-translation/translation-consistency.service'
 import type { ITranslationStrategy } from '~/modules/ai/ai-translation/translation-strategy.interface'
 import {
   LEXICAL_TRANSLATION_STRATEGY,
@@ -190,6 +191,14 @@ describe('translateLexicalContent (real-world data)', () => {
           },
         },
         { provide: LexicalService, useValue: mockLexicalService },
+        {
+          provide: TranslationConsistencyService,
+          useValue: {
+            partitionValidAndStaleTranslations: vi.fn(),
+            buildValidationSelect: vi.fn(),
+            filterTrulyStaleTranslations: vi.fn(),
+          },
+        },
         {
           provide: LEXICAL_TRANSLATION_STRATEGY,
           useClass: LexicalTranslationStrategy,
@@ -671,6 +680,14 @@ describe('incremental translation', () => {
           },
         },
         { provide: LexicalService, useClass: LexicalService },
+        {
+          provide: TranslationConsistencyService,
+          useValue: {
+            partitionValidAndStaleTranslations: vi.fn(),
+            buildValidationSelect: vi.fn(),
+            filterTrulyStaleTranslations: vi.fn(),
+          },
+        },
         {
           provide: LEXICAL_TRANSLATION_STRATEGY,
           useClass: LexicalTranslationStrategy,

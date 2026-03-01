@@ -11,6 +11,7 @@ import { AiTranslationService } from './ai-translation/ai-translation.service'
 import { AiTranslationEventHandlerService } from './ai-translation/ai-translation-event-handler.service'
 import { LexicalTranslationStrategy } from './ai-translation/strategies/lexical-translation.strategy'
 import { MarkdownTranslationStrategy } from './ai-translation/strategies/markdown-translation.strategy'
+import { TranslationConsistencyService } from './ai-translation/translation-consistency.service'
 import {
   LEXICAL_TRANSLATION_STRATEGY,
   MARKDOWN_TRANSLATION_STRATEGY,
@@ -33,6 +34,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
       provide: MARKDOWN_TRANSLATION_STRATEGY,
       useClass: MarkdownTranslationStrategy,
     },
+    TranslationConsistencyService,
     AiTranslationService,
     AiTranslationEventHandlerService,
   ],
