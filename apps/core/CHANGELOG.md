@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [10.1.4](https://github.com/mx-space/core/compare/v10.1.3...v10.1.4) (2026-03-01)
+
+
+### Features
+
+* **translation:** introduce TranslationConsistencyService for improved translation validation ([341cfd2](https://github.com/mx-space/core/commit/341cfd2f3829505b75df421a375a29348c3fbea5))
+
+
+
 ## [10.1.3](https://github.com/mx-space/core/compare/v10.1.2...v10.1.3) (2026-03-01)
 
 
