@@ -71,6 +71,8 @@ export class PageController {
           title: doc.title,
           text: originalText,
           meta: doc.meta as { lang?: string } | undefined,
+          contentFormat: doc.contentFormat,
+          content: doc.content,
           modified: doc.modified,
           created: doc.created,
         })

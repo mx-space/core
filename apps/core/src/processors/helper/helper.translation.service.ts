@@ -34,6 +34,8 @@ export interface ArticleTranslationInput {
   summary?: string | null
   tags?: string[]
   meta?: { lang?: string }
+  contentFormat?: string
+  content?: string
   modified?: Date | null
   created?: Date | null
 }
@@ -223,21 +225,17 @@ export class TranslationService {
     }
 
     try {
-      const translationMap =
+      const { validTranslations: translationMap, staleRefIds } =
         await this.aiTranslationService.getValidTranslationsForArticles(
           articles,
           normalizedTarget,
           { select: this.buildTranslationSelect(translationFieldList) },
         )
 
-      const missingIds = articles
-        .filter((a) => !translationMap.has(a.id))
-        .map((a) => a.id)
-
-      if (missingIds.length) {
+      if (staleRefIds.length) {
         this.aiTranslationService
           .scheduleRegenerationForStaleTranslations(
-            missingIds,
+            staleRefIds,
             normalizedTarget,
           )
           .catch((err) =>

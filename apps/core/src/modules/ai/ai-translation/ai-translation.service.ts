@@ -1108,6 +1108,8 @@ export class AiTranslationService
       summary?: string | null
       tags?: string[]
       meta?: { lang?: string }
+      contentFormat?: string
+      content?: string
       modified?: Date | null
       created?: Date | null
     }>,
@@ -1115,9 +1117,12 @@ export class AiTranslationService
     options?: {
       select?: string
     },
-  ): Promise<Map<string, AITranslationModel>> {
+  ): Promise<{
+    validTranslations: Map<string, AITranslationModel>
+    staleRefIds: string[]
+  }> {
     if (!articles.length) {
-      return new Map()
+      return { validTranslations: new Map(), staleRefIds: [] }
     }
 
     const requiredSelectFields = [
@@ -1143,13 +1148,14 @@ export class AiTranslationService
     const translations = await query
 
     if (!translations.length) {
-      return new Map()
+      return { validTranslations: new Map(), staleRefIds: [] }
     }
 
     const translationMap = new Map(
       translations.map((translation) => [translation.refId, translation]),
     )
-    const result = new Map<string, AITranslationModel>()
+    const validTranslations = new Map<string, AITranslationModel>()
+    const staleRefIds = new Set<string>()
 
     for (const article of articles) {
       const translation = translationMap.get(article.id)
@@ -1159,10 +1165,12 @@ export class AiTranslationService
 
       const articleTimestamp = article.modified ?? article.created ?? null
 
-      if (translation.sourceModified && articleTimestamp) {
-        if (translation.sourceModified >= articleTimestamp) {
-          result.set(article.id, translation)
-        }
+      if (
+        translation.sourceModified &&
+        articleTimestamp &&
+        translation.sourceModified >= articleTimestamp
+      ) {
+        validTranslations.set(article.id, translation)
         continue
       }
 
@@ -1172,7 +1180,7 @@ export class AiTranslationService
         translation.created &&
         translation.created >= articleTimestamp
       ) {
-        result.set(article.id, translation)
+        validTranslations.set(article.id, translation)
         continue
       }
 
@@ -1185,16 +1193,24 @@ export class AiTranslationService
           text: article.text ?? '',
           summary: article.summary ?? undefined,
           tags: article.tags,
+          contentFormat: article.contentFormat,
+          content: article.content,
         },
         sourceLang,
       )
 
       if (translation.hash === currentHash) {
-        result.set(article.id, translation)
+        validTranslations.set(article.id, translation)
+        continue
       }
+
+      staleRefIds.add(article.id)
     }
 
-    return result
+    return {
+      validTranslations,
+      staleRefIds: [...staleRefIds],
+    }
   }
 
   async getAvailableLanguagesForArticle(articleId: string): Promise<string[]> {
@@ -1241,12 +1257,35 @@ export class AiTranslationService
         refId: { $in: articleIds },
         lang: targetLang,
       })
-      .select('refId')
+      .select('refId hash sourceLang')
       .lean()
 
     if (!existingTranslations.length) return
 
-    const staleRefIds = [...new Set(existingTranslations.map((t) => t.refId))]
+    const refIds = [...new Set(existingTranslations.map((t) => t.refId))]
+    const groupedArticles = await this.databaseService.findGlobalByIds(refIds)
+    const articleMap = this.databaseService.flatCollectionToMap(groupedArticles)
+    const staleRefIds = new Set<string>()
+
+    for (const translation of existingTranslations) {
+      const document = articleMap[translation.refId]
+      if (!this.isTranslatableDocument(document)) {
+        continue
+      }
+
+      const sourceLang =
+        this.getMetaLang(document) || translation.sourceLang || 'unknown'
+      const currentHash = this.computeContentHash(
+        this.toArticleContent(document),
+        sourceLang,
+      )
+
+      if (translation.hash !== currentHash) {
+        staleRefIds.add(translation.refId)
+      }
+    }
+
+    if (!staleRefIds.size) return
 
     for (const refId of staleRefIds) {
       this.logger.log(
@@ -1257,5 +1296,13 @@ export class AiTranslationService
         targetLanguages: [targetLang],
       })
     }
+  }
+
+  private isTranslatableDocument(
+    document: unknown,
+  ): document is ArticleDocument {
+    if (!document || typeof document !== 'object') return false
+    const value = document as Record<string, unknown>
+    return typeof value.title === 'string' && typeof value.text === 'string'
   }
 }

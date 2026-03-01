@@ -169,7 +169,10 @@ export class PostController {
               summary: doc.summary,
               tags: doc.tags,
               meta: doc.meta,
+              contentFormat: doc.contentFormat,
+              content: doc.content,
               modified: doc.modified,
+              created: doc.created,
             })
           }
 
