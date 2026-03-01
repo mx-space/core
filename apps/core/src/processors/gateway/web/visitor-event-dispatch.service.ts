@@ -1,4 +1,5 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
+
 import {
   collectVisitorEventHandlers,
   hasVisitorScope,
@@ -12,6 +13,7 @@ import { PostModel } from '~/modules/post/post.model'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { InjectModel } from '~/transformers/model.transformer'
+
 import { GatewayService } from '../gateway.service'
 import { WebEventsGateway } from './events.gateway'
 
@@ -322,6 +324,10 @@ export class VisitorEventDispatchService implements OnModuleInit {
         text: result.text,
         summary: result.summary,
         tags: result.tags,
+        ...(result.content != null && { content: result.content }),
+        ...(result.contentFormat != null && {
+          contentFormat: result.contentFormat,
+        }),
         isTranslated: result.isTranslated,
         translationMeta: result.translationMeta,
         availableTranslations: result.availableTranslations,
