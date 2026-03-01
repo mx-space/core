@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [10.1.2](https://github.com/mx-space/core/compare/v10.1.1...v10.1.2) (2026-03-01)
+
+
+### Features
+
+* **content:** enhance content hashing for Lexical format ([3b5e177](https://github.com/mx-space/core/commit/3b5e17726c8002ca42e4516578fb4ebc0460ac91))
+
+
+
 ## [10.1.1](https://github.com/mx-space/core/compare/v10.1.0...v10.1.1) (2026-03-01)
 
 
