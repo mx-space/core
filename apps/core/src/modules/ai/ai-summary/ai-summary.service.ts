@@ -1,28 +1,23 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
+import removeMdCodeblock from 'remove-md-codeblock'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import {
-  TaskQueueProcessor,
   type TaskExecuteContext,
+  TaskQueueProcessor,
 } from '~/processors/task-queue'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
+import { createAbortError } from '~/utils/abort.util'
 import { md5 } from '~/utils/tool.util'
-import removeMdCodeblock from 'remove-md-codeblock'
+
 import { ConfigsService } from '../../configs/configs.service'
-import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
-import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
-import {
-  resolveTargetLanguage,
-  type ResolveLanguageOptions,
-} from '../ai-language.util'
-import { AiTaskService } from '../ai-task/ai-task.service'
-import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
 import {
   AI_STREAM_IDLE_TIMEOUT_MS,
   AI_STREAM_LOCK_TTL,
@@ -33,6 +28,14 @@ import {
 } from '../ai.constants'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
+import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
+import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
+import {
+  type ResolveLanguageOptions,
+  resolveTargetLanguage,
+} from '../ai-language.util'
+import { AiTaskService } from '../ai-task/ai-task.service'
+import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
 import { AISummaryModel } from './ai-summary.model'
 import type { GetSummariesGroupedQueryInput } from './ai-summary.schema'
 
@@ -93,9 +96,7 @@ export class AiSummaryService implements OnModuleInit {
 
   private checkAborted(context: TaskExecuteContext) {
     if (context.isAborted()) {
-      const error = new Error('Task aborted')
-      error.name = 'AbortError'
-      throw error
+      throw createAbortError()
     }
   }
 

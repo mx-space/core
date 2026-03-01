@@ -2,6 +2,7 @@
 import { Logger } from '@nestjs/common'
 import JSON5 from 'json5'
 
+import { throwIfAborted } from '~/utils/abort.util'
 import {
   extractFirstJsonObject,
   extractLastJsonObject,
@@ -101,9 +102,7 @@ export abstract class BaseTranslationStrategy {
         reasoningEffort,
         signal,
       })) {
-        if (signal?.aborted) {
-          throw Object.assign(new Error('Task aborted'), { name: 'AbortError' })
-        }
+        throwIfAborted(signal)
         fullText += c.text
         if (onToken) await onToken()
       }

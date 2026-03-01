@@ -62,6 +62,7 @@ export function computeContentHash(
   sourceLang: string,
 ): string {
   const sourceOfTruth = isLexical(doc) ? doc.content : doc.text
+
   return md5(
     JSON.stringify({
       title: doc.title,

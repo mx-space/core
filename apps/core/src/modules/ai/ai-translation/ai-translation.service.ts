@@ -14,6 +14,7 @@ import {
 } from '~/processors/task-queue'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { InjectModel } from '~/transformers/model.transformer'
+import { createAbortError } from '~/utils/abort.util'
 import { md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../../configs/configs.service'
@@ -27,6 +28,7 @@ import {
 import { AiService } from '../ai.service'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
+import { resolveTargetLanguages } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   AITaskType,
@@ -130,9 +132,10 @@ export class AiTranslationService
     this.checkAborted(context)
 
     const aiConfig = await this.configService.get('ai')
-    const languages = payload.targetLanguages?.length
-      ? payload.targetLanguages
-      : aiConfig.translationTargetLanguages || []
+    const languages = resolveTargetLanguages(
+      payload.targetLanguages,
+      aiConfig.translationTargetLanguages,
+    )
 
     if (!languages.length) {
       await context.appendLog('warn', 'No target languages specified')
@@ -277,9 +280,10 @@ export class AiTranslationService
     this.checkAborted(context)
 
     const aiConfig = await this.configService.get('ai')
-    const languages = payload.targetLanguages?.length
-      ? payload.targetLanguages
-      : aiConfig.translationTargetLanguages || []
+    const languages = resolveTargetLanguages(
+      payload.targetLanguages,
+      aiConfig.translationTargetLanguages,
+    )
 
     if (!languages.length) {
       await context.appendLog('warn', 'No target languages specified')
@@ -421,9 +425,7 @@ export class AiTranslationService
 
   private checkAborted(context: TaskExecuteContext) {
     if (context.isAborted()) {
-      const error = new Error('Task aborted')
-      error.name = 'AbortError'
-      throw error
+      throw createAbortError()
     }
   }
 
@@ -819,9 +821,10 @@ export class AiTranslationService
     targetLanguages?: string[],
   ): Promise<AITranslationModel[]> {
     const aiConfig = await this.configService.get('ai')
-    const languages = targetLanguages?.length
-      ? targetLanguages
-      : aiConfig.translationTargetLanguages || []
+    const languages = resolveTargetLanguages(
+      targetLanguages,
+      aiConfig.translationTargetLanguages,
+    )
 
     if (!languages.length) {
       return []

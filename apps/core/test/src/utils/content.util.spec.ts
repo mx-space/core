@@ -145,5 +145,23 @@ describe('content.util', () => {
       )
       expect(h1).not.toBe(h2)
     })
+
+    it('markdown: same input → stable hash', () => {
+      const doc = { title: 'T', text: 'body', summary: 's', tags: ['a'] }
+      expect(computeContentHash(doc, 'en')).toBe(computeContentHash(doc, 'en'))
+    })
+
+    it('markdown: different text → different hash', () => {
+      const a = computeContentHash({ title: 'T', text: 'v1' }, 'en')
+      const b = computeContentHash({ title: 'T', text: 'v2' }, 'en')
+      expect(a).not.toBe(b)
+    })
+
+    it('different sourceLang → different hash', () => {
+      const doc = { title: 'T', text: 'body' }
+      expect(computeContentHash(doc, 'en')).not.toBe(
+        computeContentHash(doc, 'zh'),
+      )
+    })
   })
 })

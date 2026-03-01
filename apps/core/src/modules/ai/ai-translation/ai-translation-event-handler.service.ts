@@ -6,6 +6,7 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { ConfigsService } from '../../configs/configs.service'
+import { resolveTargetLanguages } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITranslationModel } from './ai-translation.model'
 import { AiTranslationService } from './ai-translation.service'
@@ -57,7 +58,10 @@ export class AiTranslationEventHandlerService {
       return
     }
 
-    const targetLanguages = aiConfig.translationTargetLanguages || []
+    const targetLanguages = resolveTargetLanguages(
+      undefined,
+      aiConfig.translationTargetLanguages,
+    )
     if (!targetLanguages.length) {
       return
     }
@@ -93,7 +97,10 @@ export class AiTranslationEventHandlerService {
       return
     }
 
-    const targetLanguages = aiConfig.translationTargetLanguages || []
+    const targetLanguages = resolveTargetLanguages(
+      undefined,
+      aiConfig.translationTargetLanguages,
+    )
     if (!targetLanguages.length) {
       return
     }

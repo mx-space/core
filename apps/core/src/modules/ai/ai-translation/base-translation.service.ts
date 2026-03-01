@@ -1,9 +1,7 @@
 import dayjs from 'dayjs'
 
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { ContentFormat } from '~/shared/types/content-format.type'
 import { computeContentHash as computeContentHashUtil } from '~/utils/content.util'
-import { md5 } from '~/utils/tool.util'
 
 import type { NoteModel } from '../../note/note.model'
 import type { PageModel } from '../../page/page.model'
@@ -32,27 +30,16 @@ export abstract class BaseTranslationService {
   }
 
   computeContentHash(document: ArticleContent, sourceLang: string): string {
-    if (document.contentFormat === ContentFormat.Lexical) {
-      return computeContentHashUtil(
-        {
-          title: document.title,
-          text: document.text,
-          contentFormat: document.contentFormat,
-          content: document.content,
-          summary: document.summary,
-          tags: document.tags,
-        },
-        sourceLang,
-      )
-    }
-    return md5(
-      JSON.stringify({
+    return computeContentHashUtil(
+      {
         title: document.title,
         text: document.text,
+        contentFormat: document.contentFormat,
+        content: document.content,
         summary: document.summary,
         tags: document.tags,
-        sourceLang,
-      }),
+      },
+      sourceLang,
     )
   }
 

@@ -6,6 +6,7 @@ import {
 } from '~/constants/lexical.constant'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
+import { throwIfAborted } from '~/utils/abort.util'
 import { md5 } from '~/utils/tool.util'
 
 import type { IModelRuntime } from '../../runtime'
@@ -452,9 +453,7 @@ export class LexicalTranslationStrategy
     }
 
     for (const batch of batches) {
-      if (signal?.aborted) {
-        throw Object.assign(new Error('Task aborted'), { name: 'AbortError' })
-      }
+      throwIfAborted(signal)
       const result = await this.callChunkTranslation(
         targetLang,
         {

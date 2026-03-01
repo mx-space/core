@@ -1,9 +1,11 @@
-import { Delete, Get, Param } from '@nestjs/common'
+import { Delete, Get, Param, Post } from '@nestjs/common'
+
 import { BaseTaskController } from '~/common/controllers/base-task.controller'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import type { ScopedTaskService } from '~/processors/task-queue'
 import { StringIdDto } from '~/shared/dto/id.dto'
+
 import { AiTaskService } from './ai-task.service'
 
 @ApiController('ai/tasks')
@@ -14,6 +16,12 @@ export class AiTaskController extends BaseTaskController {
 
   protected get taskCrudService(): ScopedTaskService {
     return this.service.crud
+  }
+
+  @Post('/:id/retry')
+  @Auth()
+  override async retryTask(@Param() params: StringIdDto) {
+    return this.service.retryTaskWithFailedOnly(params.id)
   }
 
   @Get('/group/:id')

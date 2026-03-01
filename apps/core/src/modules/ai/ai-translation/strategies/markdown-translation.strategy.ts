@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common'
 
+import { throwIfAborted } from '~/utils/abort.util'
+
 import { AI_PROMPTS } from '../../ai.prompts'
 import type { IModelRuntime } from '../../runtime'
 import type { ArticleContent } from '../ai-translation.types'
@@ -50,9 +52,7 @@ export class MarkdownTranslationStrategy
         reasoningEffort,
         signal,
       })) {
-        if (signal?.aborted) {
-          throw Object.assign(new Error('Task aborted'), { name: 'AbortError' })
-        }
+        throwIfAborted(signal)
         fullText += chunk.text
         if (push) {
           await push({ type: 'token', data: chunk.text })
