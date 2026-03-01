@@ -5,7 +5,10 @@ import {
   hasVisitorScope,
   OnVisitorEvent,
 } from '~/common/decorators/visitor-event.decorator'
-import { BusinessEvents } from '~/constants/business-event.constant'
+import {
+  BusinessEvents,
+  SERVERLESS_EVENT_PREFIX,
+} from '~/constants/business-event.constant'
 import { buildArticleRoomName } from '~/modules/activity/activity.util'
 import { NoteModel } from '~/modules/note/note.model'
 import { PageModel } from '~/modules/page/page.model'
@@ -58,6 +61,15 @@ export class VisitorEventDispatchService implements OnModuleInit {
               err.stack,
             )
           })
+      } else if (event.startsWith(SERVERLESS_EVENT_PREFIX)) {
+        const payload =
+          data &&
+          typeof data === 'object' &&
+          'data' in data &&
+          Object.keys(data).length === 1
+            ? (data as any).data
+            : data
+        this.webGateway.broadcast(event as any, payload)
       }
     }) as any)
   }

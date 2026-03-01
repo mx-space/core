@@ -1,5 +1,6 @@
 import fs, { mkdir, stat } from 'node:fs/promises'
 import path from 'node:path'
+
 import { parseAsync, transformAsync } from '@babel/core'
 import * as t from '@babel/types'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
@@ -8,8 +9,15 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common'
+import { isPlainObject } from 'es-toolkit/compat'
+import { Types } from 'mongoose'
+import qs from 'qs'
+
 import { BizException } from '~/common/exceptions/biz.exception'
-import { EventScope } from '~/constants/business-event.constant'
+import {
+  EventScope,
+  SERVERLESS_EVENT_PREFIX,
+} from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import {
   OWNER_PROFILE_COLLECTION_NAME,
@@ -29,9 +37,7 @@ import { getRedisKey } from '~/utils/redis.util'
 import type { SandboxResult } from '~/utils/sandbox'
 import { SandboxService } from '~/utils/sandbox'
 import { safePathJoin } from '~/utils/tool.util'
-import { isPlainObject } from 'es-toolkit/compat'
-import { Types } from 'mongoose'
-import qs from 'qs'
+
 import { ConfigsService } from '../configs/configs.service'
 import { SnippetModel, SnippetType } from '../snippet/snippet.model'
 import type {
@@ -40,8 +46,8 @@ import type {
   FunctionContextResponse,
 } from './function.types'
 import { allBuiltInSnippetPack as builtInSnippets } from './pack'
-import { ServerlessLogModel } from './serverless-log.model'
 import { complieTypeScriptBabelOptions } from './serverless.util'
+import { ServerlessLogModel } from './serverless-log.model'
 
 type ScopeContext = {
   req: FunctionContextRequest
@@ -106,9 +112,13 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
         'config.get': (key: string) => this.configService.get(key as any),
         broadcast: (type: string, data: unknown) => {
           // @ts-ignore
-          this.eventService.broadcast(`fn#${type}`, data, {
-            scope: EventScope.TO_VISITOR_ADMIN,
-          })
+          this.eventService.broadcast(
+            `${SERVERLESS_EVENT_PREFIX}${type}`,
+            data,
+            {
+              scope: EventScope.TO_VISITOR_ADMIN,
+            },
+          )
         },
         writeAsset: async (path: string, data: unknown, options?: unknown) => {
           await this.assetService.writeUserCustomAsset(
