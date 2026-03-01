@@ -1,7 +1,9 @@
 import { createHmac } from 'node:crypto'
+
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
@@ -11,8 +13,9 @@ import { HttpService } from '~/processors/helper/helper.http.service'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 import { InjectModel } from '~/transformers/model.transformer'
 import { dbTransforms } from '~/utils/db-transform.util'
-import { WebhookEventModel } from './webhook-event.model'
+
 import { WebhookModel } from './webhook.model'
+import { WebhookEventModel } from './webhook-event.model'
 
 const ACCEPT_EVENTS = new Set(Object.values(BusinessEvents))
 
@@ -194,7 +197,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     const { page, size } = query
     const skip = (page - 1) * size
 
-    return await this.webhookEventModel.paginate(
+    return this.webhookEventModel.paginate(
       {
         hookId,
       },

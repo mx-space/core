@@ -111,7 +111,6 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
         getOwner: () => this.mockGetOwner(),
         'config.get': (key: string) => this.configService.get(key as any),
         broadcast: (type: string, data: unknown) => {
-          // @ts-ignore
           this.eventService.broadcast(
             `${SERVERLESS_EVENT_PREFIX}${type}`,
             data,
