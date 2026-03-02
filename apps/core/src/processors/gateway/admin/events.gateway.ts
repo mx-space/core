@@ -10,8 +10,13 @@ import {
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets'
-import { RedisService } from '~/processors/redis/redis.service'
+import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
+import type { DefaultEventsMap } from 'socket.io'
 import type SocketIO from 'socket.io'
+
+import { BusinessEvents } from '~/constants/business-event.constant'
+import { RedisService } from '~/processors/redis/redis.service'
+
 import { AuthService } from '../../../modules/auth/auth.service'
 import { createAuthGateway } from '../shared/auth.gateway'
 
@@ -31,6 +36,25 @@ export class AdminEventsGateway
 
   handleDisconnect(client: SocketIO.Socket) {
     super.handleDisconnect(client)
+  }
+
+  override broadcast(
+    event: BusinessEvents,
+    data: any,
+    options?: { rooms?: string[]; exclude?: string[] },
+  ) {
+    let socket = this.redisService.emitter.of('/admin') as
+      | Emitter<DefaultEventsMap>
+      | BroadcastOperator<DefaultEventsMap>
+
+    if (options?.rooms?.length) {
+      socket = socket.in(options.rooms)
+    }
+    if (options?.exclude?.length) {
+      socket = socket.except(options.exclude)
+    }
+
+    socket.emit('message', this.gatewayMessageFormat(event, data))
   }
 
   @SubscribeMessage('ai-agent:join')
