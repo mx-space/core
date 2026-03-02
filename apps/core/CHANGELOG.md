@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [10.1.5](https://github.com/mx-space/core/compare/v10.1.4...v10.1.5) (2026-03-02)
+
+
+### Bug Fixes
+
+* **webhook:** update pagination logic in getEventsByHookId method ([2450f9d](https://github.com/mx-space/core/commit/2450f9d08b2b36e8c71dd12c20ccc5983542e10c))
+
+
+
 ## [10.1.4](https://github.com/mx-space/core/compare/v10.1.3...v10.1.4) (2026-03-01)
 
 
