@@ -9,6 +9,7 @@ import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { EventPayloadEnricherService } from '~/processors/helper/helper.event-payload.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -28,6 +29,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     private readonly webhookEventModel: MongooseModel<WebhookEventModel>,
     private readonly httpService: HttpService,
     private readonly eventService: EventManagerService,
+    private readonly enricher: EventPayloadEnricherService,
   ) {}
 
   private eventListenerDisposer: IEventManagerHandlerDisposer
@@ -93,7 +95,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     return this.webhookModel.find().lean()
   }
 
-  async sendWebhook(event: string, payload: any, scope: EventScope) {
+  async sendWebhook(event: string, rawPayload: any, scope: EventScope) {
     const enabledWebHooks = await this.webhookModel
       .find({
         events: {
@@ -108,8 +110,15 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
       if (typeof webhook.scope === 'undefined') {
         return true
       }
-      return (EventScope.ALL & scope) === scope
+      return (webhook.scope & scope) !== 0
     })
+
+    if (scopedWebhooks.length === 0) return
+
+    const payload = await this.enricher.enrichPayload(
+      event as BusinessEvents,
+      rawPayload,
+    )
 
     await Promise.all(
       scopedWebhooks.map((webhook) => {
@@ -184,13 +193,15 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     if (!record) {
       throw new BizException(ErrorCodeEnum.WebhookEventNotFound)
     }
-    const hook = await this.webhookModel.findById(record.hookId)
+    const hook = await this.webhookModel
+      .findById(record.hookId)
+      .select('+secret')
+      .lean()
     if (!hook) {
       throw new BizException(ErrorCodeEnum.WebhookNotFound)
     }
-    const scope = hook.scope
 
-    await this.sendWebhook(record.event, JSON.parse(record.payload), scope)
+    await this.sendWebhookEvent(record.event, JSON.parse(record.payload), hook)
   }
 
   async getEventsByHookId(hookId: string, query: PagerDto) {

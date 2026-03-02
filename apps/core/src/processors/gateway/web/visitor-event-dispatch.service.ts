@@ -14,8 +14,8 @@ import { NoteModel } from '~/modules/note/note.model'
 import { PageModel } from '~/modules/page/page.model'
 import { PostModel } from '~/modules/post/post.model'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { EventPayloadEnricherService } from '~/processors/helper/helper.event-payload.service'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
-import { InjectModel } from '~/transformers/model.transformer'
 
 import { GatewayService } from '../gateway.service'
 import { WebEventsGateway } from './events.gateway'
@@ -25,12 +25,7 @@ export class VisitorEventDispatchService implements OnModuleInit {
   private readonly logger = new Logger(VisitorEventDispatchService.name)
 
   constructor(
-    @InjectModel(PostModel)
-    private readonly postModel: MongooseModel<PostModel>,
-    @InjectModel(NoteModel)
-    private readonly noteModel: MongooseModel<NoteModel>,
-    @InjectModel(PageModel)
-    private readonly pageModel: MongooseModel<PageModel>,
+    private readonly enricher: EventPayloadEnricherService,
     private readonly webGateway: WebEventsGateway,
     private readonly eventManager: EventManagerService,
     private readonly translationService: TranslationService,
@@ -78,25 +73,21 @@ export class VisitorEventDispatchService implements OnModuleInit {
 
   @OnVisitorEvent(BusinessEvents.POST_CREATE)
   async onPostCreate(payload: { id: string }) {
-    const doc = await this.postModel
-      .findById(payload.id)
-      .populate('category')
-      .lean({ getters: true })
-    if (!doc) return
+    const doc = await this.enricher.enrichPayload(
+      BusinessEvents.POST_CREATE,
+      payload,
+    )
+    if (!doc || doc === payload) return
     this.webGateway.broadcast(BusinessEvents.POST_CREATE, doc)
   }
 
   @OnVisitorEvent(BusinessEvents.POST_UPDATE)
   async onPostUpdate(payload: { id: string }) {
-    const doc = await this.postModel
-      .findById(payload.id)
-      .populate('category')
-      .populate({
-        path: 'related',
-        select: 'title slug id _id categoryId category',
-      })
-      .lean({ getters: true })
-    if (!doc) return
+    const doc = await this.enricher.enrichPayload(
+      BusinessEvents.POST_UPDATE,
+      payload,
+    )
+    if (!doc || doc === payload) return
 
     await this.broadcastWithTranslation(
       BusinessEvents.POST_UPDATE,
@@ -116,10 +107,11 @@ export class VisitorEventDispatchService implements OnModuleInit {
 
   @OnVisitorEvent(BusinessEvents.NOTE_CREATE)
   async onNoteCreate(payload: { id: string }) {
-    const doc = await this.noteModel
-      .findById(payload.id)
-      .lean({ getters: true })
-    if (!doc) return
+    const doc = await this.enricher.enrichPayload(
+      BusinessEvents.NOTE_CREATE,
+      payload,
+    )
+    if (!doc || doc === payload) return
 
     if (
       doc.isPublished === false ||
@@ -134,10 +126,11 @@ export class VisitorEventDispatchService implements OnModuleInit {
 
   @OnVisitorEvent(BusinessEvents.NOTE_UPDATE)
   async onNoteUpdate(payload: { id: string }) {
-    const doc = await this.noteModel
-      .findById(payload.id)
-      .lean({ getters: true })
-    if (!doc) return
+    const doc = await this.enricher.enrichPayload(
+      BusinessEvents.NOTE_UPDATE,
+      payload,
+    )
+    if (!doc || doc === payload) return
 
     if (doc.password || doc.isPublished === false || doc.publicAt) return
 
@@ -159,19 +152,21 @@ export class VisitorEventDispatchService implements OnModuleInit {
 
   @OnVisitorEvent(BusinessEvents.PAGE_CREATE)
   async onPageCreate(payload: { id: string }) {
-    const doc = await this.pageModel
-      .findById(payload.id)
-      .lean({ getters: true })
-    if (!doc) return
+    const doc = await this.enricher.enrichPayload(
+      BusinessEvents.PAGE_CREATE,
+      payload,
+    )
+    if (!doc || doc === payload) return
     this.webGateway.broadcast(BusinessEvents.PAGE_CREATE, doc)
   }
 
   @OnVisitorEvent(BusinessEvents.PAGE_UPDATE)
   async onPageUpdate(payload: { id: string }) {
-    const doc = await this.pageModel
-      .findById(payload.id)
-      .lean({ getters: true })
-    if (!doc) return
+    const doc = await this.enricher.enrichPayload(
+      BusinessEvents.PAGE_UPDATE,
+      payload,
+    )
+    if (!doc || doc === payload) return
 
     await this.broadcastWithTranslation(
       BusinessEvents.PAGE_UPDATE,
