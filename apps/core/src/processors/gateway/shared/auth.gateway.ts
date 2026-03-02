@@ -5,10 +5,12 @@ import type {
 } from '@nestjs/websockets'
 import { WebSocketServer } from '@nestjs/websockets'
 import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
+import type { DefaultEventsMap, Namespace, Socket } from 'socket.io'
+
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import type { DefaultEventsMap, Namespace, Socket } from 'socket.io'
+
 import { BusinessEvents } from '../../../constants/business-event.constant'
 import { BroadcastBaseGateway } from '../base.gateway'
 
@@ -79,7 +81,10 @@ export const createAuthGateway = (
         return this.authFailed(client)
       }
       const result = await this.authService.verifyApiKey(token)
-      if (!result || !(await this.authService.isOwnerReaderId(result.userId))) {
+      if (
+        !result ||
+        !(await this.authService.isOwnerReaderId(result.referenceId))
+      ) {
         return this.authFailed(client)
       }
 

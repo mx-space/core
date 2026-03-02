@@ -1,8 +1,9 @@
 import type { ExecutionContext } from '@nestjs/common'
+import { vi } from 'vitest'
+
 import { RolesGuard } from '~/common/guards/roles.guard'
 import type { SessionUser } from '~/modules/auth/auth.types'
 import type { ConfigsService } from '~/modules/configs/configs.service'
-import { vi } from 'vitest'
 
 function createMockAuthService(): Record<string, any> {
   return {
@@ -149,7 +150,7 @@ describe('RolesGuard', () => {
       deprecated: false,
     })
     authService.isCustomToken.mockReturnValue(true)
-    authService.verifyApiKey.mockResolvedValue({ userId: 'owner-1' })
+    authService.verifyApiKey.mockResolvedValue({ referenceId: 'owner-1' })
     authService.isOwnerReaderId.mockResolvedValue(true)
     authService.getReaderById.mockResolvedValue(ownerUser)
 

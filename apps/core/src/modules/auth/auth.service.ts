@@ -1,9 +1,14 @@
 import { IncomingMessage } from 'node:http'
+
 import {
   Inject,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common'
+import { hashPassword } from 'better-auth/crypto'
+import { Types } from 'mongoose'
+import { customAlphabet } from 'nanoid'
+
 import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
 import {
@@ -15,9 +20,7 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { alphabet } from '~/constants/other.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { getAvatar } from '~/utils/tool.util'
-import { hashPassword } from 'better-auth/crypto'
-import { Types } from 'mongoose'
-import { customAlphabet } from 'nanoid'
+
 import { AuthInstanceInjectKey } from './auth.constant'
 import type { TokenDto } from './auth.controller'
 import type { InjectAuthInstance } from './auth.interface'
@@ -141,7 +144,7 @@ export class AuthService {
     if (!apiKey) {
       return [false, null]
     }
-    return [true, { userId: apiKey.userId }]
+    return [true, { userId: apiKey.referenceId }]
   }
 
   async saveToken(model: TokenDto & { token: string }) {
@@ -339,7 +342,10 @@ export class AuthService {
     const providerAccountId = primaryAccount.accountId || primaryAccount.id
     const provider = primaryAccount.providerId
 
-    let sessionUser = session?.user
+    let sessionUser = session?.user as (typeof session)['user'] & {
+      role?: string
+      handle?: string
+    }
     if (sessionUser?.id && !sessionUser.role) {
       const reader = await this.readersCollection.findOne(
         this.buildUserIdQuery(sessionUser.id),
@@ -533,7 +539,7 @@ export class AuthService {
       ? authorizationValue[0]
       : authorizationValue
     if (authorization) {
-      const match = authorization.match(/^Bearer\s+(\S+)$/i)
+      const match = authorization.match(/^bearer\s+(\S+)$/i)
       if (match) {
         return { key: match[1], deprecated: true }
       }

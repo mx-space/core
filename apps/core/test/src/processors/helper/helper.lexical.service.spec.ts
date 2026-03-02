@@ -731,15 +731,15 @@ describe('LexicalService', () => {
     })
   })
 
-  describe('tldraw', () => {
-    it('exports <tldraw> wrapper', () => {
+  describe('excalidraw', () => {
+    it('exports <excalidraw> wrapper', () => {
       const state = makeEditorState([
-        { type: 'tldraw', version: 1, snapshot: '{"shapes":[]}' },
+        { type: 'excalidraw', version: 1, snapshot: '{"shapes":[]}' },
       ])
       const md = service.lexicalToMarkdown(state)
-      expect(md).toContain('<tldraw>')
+      expect(md).toContain('<excalidraw>')
       expect(md).toContain('{"shapes":[]}')
-      expect(md).toContain('</tldraw>')
+      expect(md).toContain('</excalidraw>')
     })
   })
 
@@ -1327,7 +1327,7 @@ async function fetchUsers(): Promise<User[]> {
       expect(md).toContain('![Image 4](https://picsum.photos/400/300?random=4)')
     })
 
-    it('tldraw sample: canvas with shapes', () => {
+    it('excalidraw sample: canvas with shapes', () => {
       const snapshot = JSON.stringify({
         store: {
           'document:document': {
@@ -1341,18 +1341,18 @@ async function fetchUsers(): Promise<User[]> {
             x: 100,
             y: 100,
             type: 'geo',
-            props: { w: 200, h: 120, text: 'Hello Tldraw' },
+            props: { w: 200, h: 120, text: 'Hello Excalidraw' },
           },
         },
         schema: { schemaVersion: 2, sequences: {} },
       })
       const state = makeEditorState([
-        { type: 'tldraw', snapshot, version: 1 } as any,
+        { type: 'excalidraw', snapshot, version: 1 } as any,
       ])
       const md = service.lexicalToMarkdown(state)
-      expect(md).toContain('<tldraw>')
-      expect(md).toContain('Hello Tldraw')
-      expect(md).toContain('</tldraw>')
+      expect(md).toContain('<excalidraw>')
+      expect(md).toContain('Hello Excalidraw')
+      expect(md).toContain('</excalidraw>')
     })
 
     it('grid-container sample: 2-col with formatted text', () => {

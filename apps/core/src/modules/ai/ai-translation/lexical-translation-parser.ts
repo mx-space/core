@@ -5,6 +5,7 @@ import {
   CodeBlockNode,
   CodeSnippetNode,
   EmbedNode,
+  ExcalidrawNode,
   FootnoteNode,
   GalleryNode,
   ImageNode,
@@ -13,7 +14,6 @@ import {
   LinkCardNode,
   MentionNode,
   MermaidNode,
-  TldrawNode,
   VideoNode,
 } from '@haklex/rich-headless'
 
@@ -36,7 +36,7 @@ const SKIP_BLOCKS = new Set([
   KaTeXBlockNode.getType(),
   MermaidNode.getType(),
   EmbedNode.getType(),
-  TldrawNode.getType(),
+  ExcalidrawNode.getType(),
   'horizontalrule',
   'component',
 ])
