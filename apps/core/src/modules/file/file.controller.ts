@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+
 import {
   Body,
   Delete,
@@ -7,11 +8,16 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
   Res,
 } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+import { lookup } from 'mime-types'
+import { customAlphabet } from 'nanoid'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
@@ -24,10 +30,7 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { S3Uploader } from '~/utils/s3.util'
-import type { FastifyReply, FastifyRequest } from 'fastify'
-import { lookup } from 'mime-types'
-import { customAlphabet } from 'nanoid'
-import { FileReferenceService } from './file-reference.service'
+
 import {
   BatchOrphanDeleteDto,
   FileQueryDto,
@@ -35,6 +38,7 @@ import {
   RenameFileQueryDto,
 } from './file.schema'
 import { FileService } from './file.service'
+import { FileReferenceService } from './file-reference.service'
 
 @ApiController(['objects', 'files'])
 export class FileController {
@@ -216,6 +220,16 @@ export class FileController {
     const fileUrl = await this.service.resolveFileUrl(type, filename)
 
     return { url: fileUrl, name: filename }
+  }
+
+  @Put('/:type/:name')
+  @Auth()
+  async update(@Param() params: FileQueryDto, @Req() req: FastifyRequest) {
+    const { type, name } = params
+    const file = await this.uploadService.getAndValidMultipartField(req)
+    await this.service.updateFile(type, name, file.file)
+    const fileUrl = await this.service.resolveFileUrl(type, name)
+    return { url: fileUrl, name }
   }
 
   @Delete('/:type/:name')
