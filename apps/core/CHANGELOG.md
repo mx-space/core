@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [10.1.6](https://github.com/mx-space/core/compare/v10.1.5...v10.1.6) (2026-03-02)
+
+
+### Features
+
+* **webhook:** introduce EventPayloadEnricherService for payload enrichment ([a5a2b79](https://github.com/mx-space/core/commit/a5a2b79bd6e406375c04aeb0d259907d131fa4d5))
+
+
+
 ## [10.1.5](https://github.com/mx-space/core/compare/v10.1.4...v10.1.5) (2026-03-02)
 
 
