@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [10.1.7](https://github.com/mx-space/core/compare/v10.1.6...v10.1.7) (2026-03-02)
+
+
+### Features
+
+* **gateway:** implement broadcast method for admin events ([ff3cf68](https://github.com/mx-space/core/commit/ff3cf68c742e2928bf249e641bfb9584f0c6956e))
+
+
+
 ## [10.1.6](https://github.com/mx-space/core/compare/v10.1.5...v10.1.6) (2026-03-02)
 
 
