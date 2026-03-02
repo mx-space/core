@@ -195,7 +195,6 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
 
   async getEventsByHookId(hookId: string, query: PagerDto) {
     const { page, size } = query
-    const skip = (page - 1) * size
 
     return this.webhookEventModel.paginate(
       {
@@ -203,7 +202,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
       },
       {
         limit: size,
-        skip,
+        page,
         sort: {
           timestamp: -1,
         },
