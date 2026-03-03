@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [10.1.9](https://github.com/mx-space/core/compare/v10.1.8...v10.1.9) (2026-03-03)
+
+
+### Bug Fixes
+
+* **telemetry:** harden telemetry module robustness and security ([515c0e7](https://github.com/mx-space/core/commit/515c0e7dbe9ee1c1bc5a5d16a7ad4883d7e83437))
+
+
+
 ## [10.1.8](https://github.com/mx-space/core/compare/v10.1.7...v10.1.8) (2026-03-03)
 
 
