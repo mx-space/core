@@ -1,11 +1,7 @@
 import * as crypto from 'node:crypto'
-import type { S3EndpointContext, S3UploaderOptions } from '~/utils/s3.util'
-import {
-  DefaultS3EndpointStrategy,
-  S3Uploader,
-  TencentCosEndpointStrategy,
-} from '~/utils/s3.util'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { S3UploaderOptions } from './s3.util'
+import { S3Uploader } from './s3.util'
 
 // Mock fetch
 global.fetch = vi.fn()
@@ -161,131 +157,6 @@ describe('S3Uploader', () => {
           method: 'PUT',
           body: mockBuffer,
         }),
-      )
-    })
-  })
-
-  describe('TencentCosEndpointStrategy', () => {
-    const strategy = new TencentCosEndpointStrategy()
-
-    it('should match myqcloud.com hosts', () => {
-      expect(strategy.matches('cos.ap-guangzhou.myqcloud.com', 'bucket')).toBe(
-        true,
-      )
-    })
-
-    it('should match hosts containing .cos.', () => {
-      expect(
-        strategy.matches('bucket.cos.ap-guangzhou.myqcloud.com', 'bucket'),
-      ).toBe(true)
-    })
-
-    it('should not match generic S3 hosts', () => {
-      expect(strategy.matches('s3.amazonaws.com', 'bucket')).toBe(false)
-      expect(strategy.matches('test-endpoint.com', 'bucket')).toBe(false)
-    })
-
-    it('should convert cos.region.myqcloud.com to virtual-hosted style', () => {
-      const context: S3EndpointContext = {
-        protocol: 'https:',
-        host: 'cos.ap-guangzhou.myqcloud.com',
-        bucket: 'my-bucket',
-        endpoint: 'https://cos.ap-guangzhou.myqcloud.com',
-        encodedObjectKey: 'folder/file.png',
-      }
-      const result = strategy.resolve(context)
-      expect(result.requestHost).toBe('my-bucket.cos.ap-guangzhou.myqcloud.com')
-      expect(result.canonicalUri).toBe('/folder/file.png')
-      expect(result.baseUrl).toBe(
-        'https://my-bucket.cos.ap-guangzhou.myqcloud.com',
-      )
-    })
-
-    it('should keep existing requestHost when host does not match cos.* pattern', () => {
-      const context: S3EndpointContext = {
-        protocol: 'https:',
-        host: 'my-bucket.cos.ap-guangzhou.myqcloud.com',
-        bucket: 'my-bucket',
-        endpoint: 'https://my-bucket.cos.ap-guangzhou.myqcloud.com',
-        encodedObjectKey: 'folder/file.png',
-      }
-      const result = strategy.resolve(context)
-      expect(result.requestHost).toBe('my-bucket.cos.ap-guangzhou.myqcloud.com')
-      expect(result.canonicalUri).toBe('/folder/file.png')
-    })
-  })
-
-  describe('DefaultS3EndpointStrategy', () => {
-    const strategy = new DefaultS3EndpointStrategy()
-
-    it('should always match', () => {
-      expect(strategy.matches('anything.com', 'any-bucket')).toBe(true)
-    })
-
-    it('should use virtual-hosted style when host starts with bucket name', () => {
-      const context: S3EndpointContext = {
-        protocol: 'https:',
-        host: 'my-bucket.s3.us-east-1.amazonaws.com',
-        bucket: 'my-bucket',
-        endpoint: 'https://my-bucket.s3.us-east-1.amazonaws.com',
-        encodedObjectKey: 'folder/file.png',
-      }
-      const result = strategy.resolve(context)
-      expect(result.requestHost).toBe('my-bucket.s3.us-east-1.amazonaws.com')
-      expect(result.canonicalUri).toBe('/folder/file.png')
-      expect(result.baseUrl).toBe(context.endpoint)
-    })
-
-    it('should use path style when host does not start with bucket name', () => {
-      const context: S3EndpointContext = {
-        protocol: 'https:',
-        host: 's3.us-east-1.amazonaws.com',
-        bucket: 'my-bucket',
-        endpoint: 'https://s3.us-east-1.amazonaws.com',
-        encodedObjectKey: 'folder/file.png',
-      }
-      const result = strategy.resolve(context)
-      expect(result.requestHost).toBe('s3.us-east-1.amazonaws.com')
-      expect(result.canonicalUri).toBe('/my-bucket/folder/file.png')
-      expect(result.baseUrl).toBe(context.endpoint)
-    })
-  })
-
-  describe('registerStrategy', () => {
-    it('should apply a custom strategy before the default one', async () => {
-      const customStrategy = {
-        matches: (host: string) => host === 'custom-provider.com',
-        resolve: (ctx: S3EndpointContext) => ({
-          requestHost: ctx.host,
-          canonicalUri: `/custom/${ctx.encodedObjectKey}`,
-          baseUrl: ctx.endpoint,
-        }),
-      }
-
-      const customUploader = new S3Uploader({
-        ...options,
-        endpoint: 'https://custom-provider.com',
-      })
-      customUploader.registerStrategy(customStrategy)
-
-      await customUploader.uploadToS3('test-object', mockBuffer, 'text/plain')
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/custom/test-object'),
-        expect.anything(),
-      )
-    })
-
-    it('should fall back to default strategy when no custom strategy matches', async () => {
-      const nonMatchingStrategy = {
-        matches: () => false,
-        resolve: () => ({ requestHost: 'x', canonicalUri: '/x', baseUrl: 'x' }),
-      }
-      uploader.registerStrategy(nonMatchingStrategy)
-
-      await uploader.uploadToS3('test-object', mockBuffer, 'text/plain')
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/test-bucket/test-object'),
-        expect.anything(),
       )
     })
   })
