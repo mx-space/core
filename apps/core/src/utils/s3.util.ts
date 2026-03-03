@@ -9,12 +9,112 @@ export interface S3UploaderOptions {
   endpoint?: string
 }
 
+export interface S3EndpointContext {
+  protocol: string
+  host: string
+  bucket: string
+  endpoint: string
+  encodedObjectKey: string
+}
+
+export interface S3EndpointResolution {
+  requestHost: string
+  canonicalUri: string
+  baseUrl: string
+}
+
+export interface S3EndpointStrategy {
+  matches: (host: string, bucket: string) => boolean
+  resolve: (context: S3EndpointContext) => S3EndpointResolution
+}
+
+export class TencentCosEndpointStrategy implements S3EndpointStrategy {
+  matches(host: string): boolean {
+    return (
+      host === 'myqcloud.com' ||
+      host.endsWith('.myqcloud.com') ||
+      host.includes('.cos.')
+    )
+  }
+
+  resolve({
+    protocol,
+    host,
+    bucket,
+    encodedObjectKey,
+  }: S3EndpointContext): S3EndpointResolution {
+    let requestHost = host
+    const cosMatch = host.match(/^cos\.(.+)$/)
+    if (cosMatch) {
+      requestHost = `${bucket}.cos.${cosMatch[1]}`
+    }
+    return {
+      requestHost,
+      canonicalUri: `/${encodedObjectKey}`,
+      baseUrl: `${protocol}//${requestHost}`,
+    }
+  }
+}
+
+export class DefaultS3EndpointStrategy implements S3EndpointStrategy {
+  matches(_host: string, _bucket: string): boolean {
+    return true
+  }
+
+  resolve({
+    host,
+    bucket,
+    endpoint,
+    encodedObjectKey,
+  }: S3EndpointContext): S3EndpointResolution {
+    const isVirtualHosted = host.startsWith(`${bucket}.`)
+    return {
+      requestHost: host,
+      canonicalUri: isVirtualHosted
+        ? `/${encodedObjectKey}`
+        : `/${bucket}/${encodedObjectKey}`,
+      baseUrl: endpoint,
+    }
+  }
+}
+
 export class S3Uploader {
   private options: S3UploaderOptions
   private customDomain: string = ''
+  private strategies: S3EndpointStrategy[] = [
+    new TencentCosEndpointStrategy(),
+    new DefaultS3EndpointStrategy(),
+  ]
 
   constructor(options: S3UploaderOptions) {
     this.options = options
+  }
+
+  registerStrategy(strategy: S3EndpointStrategy): this {
+    // Insert before the default (fallback) strategy, which is always last
+    this.strategies.splice(this.strategies.length - 1, 0, strategy)
+    return this
+  }
+
+  private resolveEndpoint(
+    url: URL,
+    encodedObjectKey: string,
+  ): S3EndpointResolution {
+    const context: S3EndpointContext = {
+      protocol: url.protocol,
+      host: url.host,
+      bucket: this.bucket,
+      endpoint: this.endpoint,
+      encodedObjectKey,
+    }
+    for (const strategy of this.strategies) {
+      if (strategy.matches(url.host, this.bucket)) {
+        return strategy.resolve(context)
+      }
+    }
+    // Unreachable: DefaultS3EndpointStrategy always matches
+    /* c8 ignore next */
+    return new DefaultS3EndpointStrategy().resolve(context)
   }
 
   get endpoint(): string {
@@ -110,9 +210,6 @@ export class S3Uploader {
 
     // Set request headers
     const url = new URL(this.endpoint)
-    const host = url.host
-    let requestHost = host
-    let canonicalUri: string
 
     // URI encode each path segment for signing
     const encodedObjectKey = objectKey
@@ -120,25 +217,10 @@ export class S3Uploader {
       .map((seg) => encodeURIComponent(seg))
       .join('/')
 
-    // Determine canonical URI based on endpoint style
-    // For Tencent COS and other services that require virtual-hosted style
-    const isTencentCos = host.includes('myqcloud.com') || host.includes('.cos.')
-
-    if (isTencentCos) {
-      // Tencent COS requires virtual-hosted style
-      // Convert cos.ap-guangzhou.myqcloud.com to bucket.cos.ap-guangzhou.myqcloud.com
-      const cosMatch = host.match(/^cos\.(.+)$/)
-      if (cosMatch) {
-        requestHost = `${this.bucket}.cos.${cosMatch[1]}`
-      }
-      canonicalUri = `/${encodedObjectKey}`
-    } else {
-      // Check if already in virtual-hosted style
-      const isVirtualHosted = host.startsWith(`${this.bucket}.`)
-      canonicalUri = isVirtualHosted
-        ? `/${encodedObjectKey}`
-        : `/${this.bucket}/${encodedObjectKey}`
-    }
+    const { requestHost, canonicalUri, baseUrl } = this.resolveEndpoint(
+      url,
+      encodedObjectKey,
+    )
 
     const contentLength = fileData.length.toString()
 
@@ -195,10 +277,6 @@ export class S3Uploader {
     const authorization = `${algorithm} Credential=${this.accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
 
     // Create and send PUT request
-    // For Tencent COS, use virtual-hosted style URL
-    const baseUrl = isTencentCos
-      ? `${url.protocol}//${requestHost}`
-      : this.endpoint
     const requestUrl = `${baseUrl}${canonicalUri}`
 
     const fetchOptions: RequestInit & { dispatcher?: unknown } = {
