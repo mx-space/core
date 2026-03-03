@@ -4,10 +4,11 @@ CREATE TABLE IF NOT EXISTS telemetry (
   instance_id TEXT NOT NULL,
   version TEXT NOT NULL,
   node_version TEXT,
-  event TEXT NOT NULL,
+  event TEXT NOT NULL CHECK(event IN ('startup', 'heartbeat')),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_instance_id ON telemetry(instance_id);
 CREATE INDEX IF NOT EXISTS idx_created_at ON telemetry(created_at);
 CREATE INDEX IF NOT EXISTS idx_version ON telemetry(version);
+CREATE INDEX IF NOT EXISTS idx_event_created_at ON telemetry(event, created_at);

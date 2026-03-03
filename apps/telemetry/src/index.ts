@@ -9,6 +9,10 @@ interface TelemetryPayload {
   event: string
 }
 
+const ALLOWED_EVENTS = new Set(['startup', 'heartbeat'])
+const UUID_RE = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i
+const MAX_FIELD_LENGTH = 64
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -25,12 +29,31 @@ function jsonResponse(data: unknown, status = 200): Response {
   })
 }
 
+function safeJsonStringify(value: unknown): string {
+  return JSON.stringify(value).replaceAll('</', '<\\/')
+}
+
 async function handleCollect(request: Request, env: Env): Promise<Response> {
   try {
     const payload = (await request.json()) as TelemetryPayload
 
     if (!payload.instanceId || !payload.version || !payload.event) {
       return jsonResponse({ error: 'Missing required fields' }, 400)
+    }
+
+    if (!UUID_RE.test(payload.instanceId)) {
+      return jsonResponse({ error: 'Invalid instanceId format' }, 400)
+    }
+
+    if (!ALLOWED_EVENTS.has(payload.event)) {
+      return jsonResponse({ error: 'Invalid event type' }, 400)
+    }
+
+    if (
+      payload.version.length > MAX_FIELD_LENGTH ||
+      (payload.nodeVersion && payload.nodeVersion.length > MAX_FIELD_LENGTH)
+    ) {
+      return jsonResponse({ error: 'Field too long' }, 400)
     }
 
     await env.DB.prepare(
@@ -67,70 +90,83 @@ interface StatsData {
 }
 
 async function getStatsData(env: Env): Promise<StatsData> {
-  const totalInstances = await env.DB.prepare(
-    'SELECT COUNT(DISTINCT instance_id) as count FROM telemetry',
-  ).first<{ count: number }>()
+  const [
+    totalInstances,
+    activeInstancesToday,
+    activeInstances7d,
+    activeInstances30d,
+    todayStartups,
+    onlineNow,
+    versionDistribution,
+    nodeVersionDistribution,
+    dailyStartups,
+    dailyActiveInstances,
+  ] = await Promise.all([
+    env.DB.prepare(
+      'SELECT COUNT(DISTINCT instance_id) as count FROM telemetry',
+    ).first<{ count: number }>(),
 
-  const activeInstancesToday = await env.DB.prepare(
-    `SELECT COUNT(DISTINCT instance_id) as count FROM telemetry
-     WHERE DATE(created_at) = DATE('now')`,
-  ).first<{ count: number }>()
+    env.DB.prepare(
+      `SELECT COUNT(DISTINCT instance_id) as count FROM telemetry
+       WHERE DATE(created_at) = DATE('now')`,
+    ).first<{ count: number }>(),
 
-  const activeInstances7d = await env.DB.prepare(
-    `SELECT COUNT(DISTINCT instance_id) as count FROM telemetry
-     WHERE created_at >= datetime('now', '-7 days')`,
-  ).first<{ count: number }>()
+    env.DB.prepare(
+      `SELECT COUNT(DISTINCT instance_id) as count FROM telemetry
+       WHERE created_at >= datetime('now', '-7 days')`,
+    ).first<{ count: number }>(),
 
-  const activeInstances30d = await env.DB.prepare(
-    `SELECT COUNT(DISTINCT instance_id) as count FROM telemetry
-     WHERE created_at >= datetime('now', '-30 days')`,
-  ).first<{ count: number }>()
+    env.DB.prepare(
+      `SELECT COUNT(DISTINCT instance_id) as count FROM telemetry
+       WHERE created_at >= datetime('now', '-30 days')`,
+    ).first<{ count: number }>(),
 
-  const todayStartups = await env.DB.prepare(
-    `SELECT COUNT(*) as count FROM telemetry
-     WHERE event = 'startup' AND DATE(created_at) = DATE('now')`,
-  ).first<{ count: number }>()
+    env.DB.prepare(
+      `SELECT COUNT(*) as count FROM telemetry
+       WHERE event = 'startup' AND DATE(created_at) = DATE('now')`,
+    ).first<{ count: number }>(),
 
-  const onlineNow = await env.DB.prepare(
-    `SELECT COUNT(DISTINCT instance_id) as count FROM telemetry
-     WHERE created_at >= datetime('now', '-1 hour')`,
-  ).first<{ count: number }>()
+    env.DB.prepare(
+      `SELECT COUNT(DISTINCT instance_id) as count FROM telemetry
+       WHERE created_at >= datetime('now', '-1 hour')`,
+    ).first<{ count: number }>(),
 
-  const versionDistribution = await env.DB.prepare(
-    `SELECT version, COUNT(DISTINCT instance_id) as count
-     FROM telemetry
-     WHERE created_at >= datetime('now', '-30 days')
-     GROUP BY version
-     ORDER BY count DESC
-     LIMIT 20`,
-  ).all<{ version: string; count: number }>()
+    env.DB.prepare(
+      `SELECT version, COUNT(DISTINCT instance_id) as count
+       FROM telemetry
+       WHERE created_at >= datetime('now', '-30 days')
+       GROUP BY version
+       ORDER BY count DESC
+       LIMIT 20`,
+    ).all<{ version: string; count: number }>(),
 
-  const nodeVersionDistribution = await env.DB.prepare(
-    `SELECT node_version, COUNT(DISTINCT instance_id) as count
-     FROM telemetry
-     WHERE node_version IS NOT NULL
-       AND created_at >= datetime('now', '-30 days')
-     GROUP BY node_version
-     ORDER BY count DESC
-     LIMIT 20`,
-  ).all<{ node_version: string; count: number }>()
+    env.DB.prepare(
+      `SELECT node_version, COUNT(DISTINCT instance_id) as count
+       FROM telemetry
+       WHERE node_version IS NOT NULL
+         AND created_at >= datetime('now', '-30 days')
+       GROUP BY node_version
+       ORDER BY count DESC
+       LIMIT 20`,
+    ).all<{ node_version: string; count: number }>(),
 
-  const dailyStartups = await env.DB.prepare(
-    `SELECT DATE(created_at) as date, COUNT(*) as count
-     FROM telemetry
-     WHERE event = 'startup'
-       AND created_at >= datetime('now', '-30 days')
-     GROUP BY DATE(created_at)
-     ORDER BY date ASC`,
-  ).all<{ date: string; count: number }>()
+    env.DB.prepare(
+      `SELECT DATE(created_at) as date, COUNT(*) as count
+       FROM telemetry
+       WHERE event = 'startup'
+         AND created_at >= datetime('now', '-30 days')
+       GROUP BY DATE(created_at)
+       ORDER BY date ASC`,
+    ).all<{ date: string; count: number }>(),
 
-  const dailyActiveInstances = await env.DB.prepare(
-    `SELECT DATE(created_at) as date, COUNT(DISTINCT instance_id) as count
-     FROM telemetry
-     WHERE created_at >= datetime('now', '-30 days')
-     GROUP BY DATE(created_at)
-     ORDER BY date ASC`,
-  ).all<{ date: string; count: number }>()
+    env.DB.prepare(
+      `SELECT DATE(created_at) as date, COUNT(DISTINCT instance_id) as count
+       FROM telemetry
+       WHERE created_at >= datetime('now', '-30 days')
+       GROUP BY DATE(created_at)
+       ORDER BY date ASC`,
+    ).all<{ date: string; count: number }>(),
+  ])
 
   return {
     totalInstances: totalInstances?.count || 0,
@@ -159,23 +195,23 @@ async function handleStats(env: Env): Promise<Response> {
 }
 
 function generateDashboardHtml(stats: StatsData): string {
-  const versionLabels = JSON.stringify(
+  const versionLabels = safeJsonStringify(
     stats.versionDistribution.map((v) => v.version),
   )
-  const versionData = JSON.stringify(
+  const versionData = safeJsonStringify(
     stats.versionDistribution.map((v) => v.count),
   )
-  const nodeLabels = JSON.stringify(
+  const nodeLabels = safeJsonStringify(
     stats.nodeVersionDistribution.map((v) => v.node_version),
   )
-  const nodeData = JSON.stringify(
+  const nodeData = safeJsonStringify(
     stats.nodeVersionDistribution.map((v) => v.count),
   )
-  const dailyLabels = JSON.stringify(stats.dailyStartups.map((d) => d.date))
-  const dailyStartupData = JSON.stringify(
+  const dailyLabels = safeJsonStringify(stats.dailyStartups.map((d) => d.date))
+  const dailyStartupData = safeJsonStringify(
     stats.dailyStartups.map((d) => d.count),
   )
-  const dailyActiveData = JSON.stringify(
+  const dailyActiveData = safeJsonStringify(
     stats.dailyActiveInstances.map((d) => d.count),
   )
 
@@ -433,6 +469,12 @@ async function handleDashboard(env: Env): Promise<Response> {
   }
 }
 
+async function handleCleanup(env: Env): Promise<void> {
+  await env.DB.prepare(
+    `DELETE FROM telemetry WHERE created_at < datetime('now', '-90 days')`,
+  ).run()
+}
+
 export default {
   async fetch(
     request: Request,
@@ -463,5 +505,9 @@ export default {
     }
 
     return jsonResponse({ error: 'Not found' }, 404)
+  },
+
+  async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    ctx.waitUntil(handleCleanup(env))
   },
 }
