@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [10.1.8](https://github.com/mx-space/core/compare/v10.1.7...v10.1.8) (2026-03-03)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @haklex/rich-headless to v0.0.50 ([#2608](https://github.com/mx-space/core/issues/2608)) ([4258242](https://github.com/mx-space/core/commit/42582429982db7fe108a8a0db3a4bdf1e2c281e9))
+* **deps:** update dependency @haklex/rich-headless to v0.0.54 ([#2610](https://github.com/mx-space/core/issues/2610)) ([027f62f](https://github.com/mx-space/core/commit/027f62f126d55fa812ff066907764ccf832a2959))
+* **deps:** update dependency @nestjs/schedule to v6.1.1 ([#2604](https://github.com/mx-space/core/issues/2604)) ([45a297a](https://github.com/mx-space/core/commit/45a297a95788b7c563a9e075ce1c8444142d5cd7))
+
+
+
 ## [10.1.7](https://github.com/mx-space/core/compare/v10.1.6...v10.1.7) (2026-03-02)
 
 
