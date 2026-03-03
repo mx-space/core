@@ -14,6 +14,7 @@ exports[`NoteController (e2e) > GET /latest 1`] = `
     "created": "2021-03-20T00:00:00.000Z",
     "images": [],
     "is_published": true,
+    "is_translated": false,
     "modified": null,
     "nid": 20,
     "text": "Content 20",

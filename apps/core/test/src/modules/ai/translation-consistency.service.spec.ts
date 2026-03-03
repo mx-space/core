@@ -163,6 +163,144 @@ describe('TranslationConsistencyService', () => {
     })
   })
 
+  describe('evaluateTranslationFreshness', () => {
+    it('should return valid when sourceModified >= article modified', () => {
+      const article = {
+        id: 'a1',
+        title: 'T',
+        text: 'X',
+        modified: new Date('2024-01-01'),
+      }
+      const translation = {
+        refId: 'a1',
+        hash: 'wrong',
+        sourceLang: 'zh',
+        sourceModified: new Date('2024-01-02'),
+        created: new Date('2024-01-02'),
+      }
+
+      expect(service.evaluateTranslationFreshness(article, translation)).toBe(
+        'valid',
+      )
+    })
+
+    it('should return valid when sourceModified equals article modified', () => {
+      const ts = new Date('2024-06-15')
+      const article = { id: 'a1', title: 'T', text: 'X', modified: ts }
+      const translation = {
+        refId: 'a1',
+        hash: 'wrong',
+        sourceLang: 'zh',
+        sourceModified: ts,
+        created: ts,
+      }
+
+      expect(service.evaluateTranslationFreshness(article, translation)).toBe(
+        'valid',
+      )
+    })
+
+    it('should fall back to created when sourceModified is missing', () => {
+      const article = {
+        id: 'a1',
+        title: 'T',
+        text: 'X',
+        created: new Date('2024-01-01'),
+      }
+      const translation = {
+        refId: 'a1',
+        hash: 'wrong',
+        sourceLang: 'zh',
+        sourceModified: undefined as any,
+        created: new Date('2024-01-02'),
+      }
+
+      expect(service.evaluateTranslationFreshness(article, translation)).toBe(
+        'valid',
+      )
+    })
+
+    it('should return unknown when source has no comparable text/content', () => {
+      const article = { id: 'a1', title: 'T' }
+      const translation = {
+        refId: 'a1',
+        hash: 'some-hash',
+        sourceLang: 'zh',
+        sourceModified: undefined as any,
+        created: undefined as any,
+      }
+
+      expect(service.evaluateTranslationFreshness(article, translation)).toBe(
+        'unknown',
+      )
+    })
+
+    it('should return valid when hash matches', () => {
+      const article = {
+        id: 'a1',
+        title: 'Title',
+        text: 'Text',
+        meta: { lang: 'zh' },
+      }
+      const hash = service.computeContentHash(
+        { title: article.title, text: article.text },
+        'zh',
+      )
+      const translation = {
+        refId: 'a1',
+        hash,
+        sourceLang: 'zh',
+        sourceModified: undefined as any,
+        created: undefined as any,
+      }
+
+      expect(service.evaluateTranslationFreshness(article, translation)).toBe(
+        'valid',
+      )
+    })
+
+    it('should return stale when hash does not match and timestamps cannot confirm', () => {
+      const article = {
+        id: 'a1',
+        title: 'Title',
+        text: 'Text',
+        meta: { lang: 'zh' },
+      }
+      const translation = {
+        refId: 'a1',
+        hash: 'outdated-hash',
+        sourceLang: 'zh',
+        sourceModified: undefined as any,
+        created: undefined as any,
+      }
+
+      expect(service.evaluateTranslationFreshness(article, translation)).toBe(
+        'stale',
+      )
+    })
+
+    it('should use article.created when article.modified is null', () => {
+      const article = {
+        id: 'a1',
+        title: 'T',
+        text: 'X',
+        modified: null,
+        created: new Date('2024-03-01'),
+      }
+      const translation = {
+        refId: 'a1',
+        hash: 'wrong',
+        sourceLang: 'zh',
+        sourceModified: new Date('2024-03-02'),
+        created: new Date('2024-03-02'),
+      }
+
+      expect(service.evaluateTranslationFreshness(article, translation)).toBe(
+        'valid',
+      )
+    })
+  })
+
   describe('filterTrulyStaleTranslations', () => {
     it('should return only truly stale ref ids after db re-check', async () => {
       const article1 = {

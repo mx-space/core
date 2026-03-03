@@ -1096,11 +1096,24 @@ export class AiTranslationService
       throw new BizException(ErrorCodeEnum.NoteForbidden)
     }
 
-    return this.findValidTranslation(
-      articleId,
-      targetLang,
-      article.document as ArticleDocument,
-    )
+    const document = article.document as ArticleDocument
+    const translation = await this.aiTranslationModel.findOne({
+      refId: articleId,
+      lang: targetLang,
+    })
+
+    if (!translation) {
+      return null
+    }
+
+    const snapshot = this.buildSnapshotFromDocument(articleId, document)
+    const status =
+      this.translationConsistencyService.evaluateTranslationFreshness(
+        snapshot,
+        translation,
+      )
+
+    return status === 'valid' ? translation : null
   }
 
   async getValidTranslationsForArticles(
@@ -1134,10 +1147,25 @@ export class AiTranslationService
       return { validTranslations: new Map(), staleRefIds: [] }
     }
 
-    return this.translationConsistencyService.partitionValidAndStaleTranslations(
-      articles,
-      translations,
-    )
+    const result =
+      this.translationConsistencyService.partitionValidAndStaleTranslations(
+        articles,
+        translations,
+      )
+
+    if (result.staleRefIds.length) {
+      this.scheduleRegenerationForStaleTranslations(
+        result.staleRefIds,
+        targetLang,
+      ).catch((err) =>
+        this.logger.error(
+          'Failed to schedule stale translation regeneration',
+          err,
+        ),
+      )
+    }
+
+    return result
   }
 
   async getAvailableLanguagesForArticle(articleId: string): Promise<string[]> {
@@ -1149,20 +1177,118 @@ export class AiTranslationService
     const document = article.document as ArticleDocument
     const translations = await this.aiTranslationModel
       .find({ refId: articleId })
-      .select('hash lang sourceLang')
+      .select('hash lang sourceLang sourceModified created')
 
     if (!translations.length) {
       return []
     }
 
-    const sourceLang =
-      this.getMetaLang(document) || translations[0]?.sourceLang || 'unknown'
-    const currentHash = this.computeContentHash(
-      this.toArticleContent(document),
-      sourceLang,
-    )
+    const snapshot = this.buildSnapshotFromDocument(articleId, document)
 
-    return translations.filter((t) => t.hash === currentHash).map((t) => t.lang)
+    return translations
+      .filter(
+        (t) =>
+          this.translationConsistencyService.evaluateTranslationFreshness(
+            snapshot,
+            t,
+          ) === 'valid',
+      )
+      .map((t) => t.lang)
+  }
+
+  private buildSnapshotFromDocument(
+    articleId: string,
+    document: ArticleDocument,
+  ): TranslationSourceSnapshot {
+    return {
+      id: articleId,
+      title: document.title,
+      text: document.text,
+      summary:
+        'summary' in document ? (document.summary ?? undefined) : undefined,
+      tags: 'tags' in document ? document.tags : undefined,
+      meta: document.meta,
+      contentFormat: document.contentFormat,
+      content: document.content,
+      modified: document.modified,
+      created: document.created,
+    }
+  }
+
+  async getTranslationAndAvailableLanguages(
+    articleId: string,
+    targetLang?: string,
+    options?: { ignoreVisibility?: boolean },
+  ): Promise<{
+    availableTranslations: string[]
+    translation: AITranslationModel | null
+  }> {
+    const article = await this.databaseService.findGlobalById(articleId)
+    if (!article || !article.document) {
+      throw new BizException(ErrorCodeEnum.ContentNotFound)
+    }
+
+    if (!options?.ignoreVisibility && !this.isArticleVisible(article)) {
+      if (article.type === CollectionRefTypes.Post) {
+        throw new BizException(ErrorCodeEnum.PostHiddenOrEncrypted)
+      }
+      throw new BizException(ErrorCodeEnum.NoteForbidden)
+    }
+
+    const document = article.document as ArticleDocument
+    const translations = await this.aiTranslationModel
+      .find({ refId: articleId })
+      .select('hash lang sourceLang sourceModified created')
+
+    if (!translations.length) {
+      return { availableTranslations: [], translation: null }
+    }
+
+    const snapshot = this.buildSnapshotFromDocument(articleId, document)
+    const validLangs: string[] = []
+    const staleLangs: string[] = []
+    let matchedTranslation: AITranslationModel | null = null
+
+    for (const t of translations) {
+      const status =
+        this.translationConsistencyService.evaluateTranslationFreshness(
+          snapshot,
+          t,
+        )
+      if (status === 'valid') {
+        validLangs.push(t.lang)
+        if (targetLang && t.lang === targetLang) {
+          matchedTranslation = t
+        }
+      } else if (status === 'stale') {
+        staleLangs.push(t.lang)
+      }
+    }
+
+    if (targetLang && matchedTranslation) {
+      const fullTranslation = await this.aiTranslationModel.findOne({
+        refId: articleId,
+        lang: targetLang,
+      })
+      matchedTranslation = fullTranslation
+    }
+
+    if (staleLangs.length && targetLang) {
+      this.scheduleRegenerationForStaleTranslations(
+        [articleId],
+        targetLang,
+      ).catch((err) =>
+        this.logger.error(
+          'Failed to schedule stale translation regeneration',
+          err,
+        ),
+      )
+    }
+
+    return {
+      availableTranslations: validLangs,
+      translation: matchedTranslation,
+    }
   }
 
   async scheduleRegenerationForStaleTranslations(

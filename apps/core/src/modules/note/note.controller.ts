@@ -222,7 +222,10 @@ export class NoteController {
   }
 
   @Get('/latest')
-  async getLatestOne(@IsAuthenticated() isAuthenticated: boolean) {
+  async getLatestOne(
+    @IsAuthenticated() isAuthenticated: boolean,
+    @Lang() lang?: string,
+  ) {
     const result = await this.noteService.getLatestOne(
       isAuthenticated ? {} : this.noteService.publicNoteQueryCondition,
       isAuthenticated ? '+location +coordinates' : '-location -coordinates',
@@ -232,7 +235,31 @@ export class NoteController {
     const { latest, next } = result
     latest.text = this.noteService.checkNoteIsSecret(latest) ? '' : latest.text
 
-    return { data: latest, next }
+    const translationResult = await this.translationService.translateArticle({
+      articleId: latest.id!,
+      targetLang: lang,
+      allowHidden: Boolean(isAuthenticated),
+      originalData: {
+        title: latest.title,
+        text: latest.text,
+      },
+    })
+
+    return {
+      data: {
+        ...latest,
+        title: translationResult.title,
+        text: translationResult.text,
+        ...(translationResult.content && {
+          content: translationResult.content,
+          contentFormat: translationResult.contentFormat,
+        }),
+        isTranslated: translationResult.isTranslated,
+        translationMeta: translationResult.translationMeta,
+        availableTranslations: translationResult.availableTranslations,
+      },
+      next,
+    }
   }
 
   // C 端入口

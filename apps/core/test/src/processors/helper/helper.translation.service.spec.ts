@@ -7,10 +7,8 @@ import { TranslationService } from '~/processors/helper/helper.translation.servi
 const createMockAiTranslationService = () => ({
   getAvailableLanguagesForArticle: vi.fn(),
   getTranslationForArticle: vi.fn(),
+  getTranslationAndAvailableLanguages: vi.fn(),
   getValidTranslationsForArticles: vi.fn(),
-  scheduleRegenerationForStaleTranslations: vi
-    .fn()
-    .mockResolvedValue(undefined),
 })
 
 const createTranslationLookup = (
@@ -56,8 +54,8 @@ describe('TranslationService', () => {
     }
 
     it('should return original data when targetLang is undefined', async () => {
-      mockAiTranslationService.getAvailableLanguagesForArticle.mockResolvedValue(
-        ['en', 'ja'],
+      mockAiTranslationService.getTranslationAndAvailableLanguages.mockResolvedValue(
+        { availableTranslations: ['en', 'ja'], translation: null },
       )
 
       const result = await service.translateArticle({
@@ -74,8 +72,8 @@ describe('TranslationService', () => {
     })
 
     it('should return original data when targetLang is empty string', async () => {
-      mockAiTranslationService.getAvailableLanguagesForArticle.mockResolvedValue(
-        [],
+      mockAiTranslationService.getTranslationAndAvailableLanguages.mockResolvedValue(
+        { availableTranslations: [], translation: null },
       )
 
       const result = await service.translateArticle({
@@ -89,10 +87,9 @@ describe('TranslationService', () => {
     })
 
     it('should return original data when no translation found', async () => {
-      mockAiTranslationService.getAvailableLanguagesForArticle.mockResolvedValue(
-        ['ja'],
+      mockAiTranslationService.getTranslationAndAvailableLanguages.mockResolvedValue(
+        { availableTranslations: ['ja'], translation: null },
       )
-      mockAiTranslationService.getTranslationForArticle.mockResolvedValue(null)
 
       const result = await service.translateArticle({
         articleId: 'article-1',
@@ -109,19 +106,21 @@ describe('TranslationService', () => {
 
     it('should return translated data when translation exists', async () => {
       const translatedAt = new Date()
-      mockAiTranslationService.getAvailableLanguagesForArticle.mockResolvedValue(
-        ['en', 'ja'],
+      mockAiTranslationService.getTranslationAndAvailableLanguages.mockResolvedValue(
+        {
+          availableTranslations: ['en', 'ja'],
+          translation: {
+            title: 'Translated Title',
+            text: 'Translated Content',
+            summary: 'Translated Summary',
+            tags: ['translated-tag'],
+            sourceLang: 'zh',
+            lang: 'en',
+            created: translatedAt,
+            aiModel: 'gpt-4',
+          },
+        },
       )
-      mockAiTranslationService.getTranslationForArticle.mockResolvedValue({
-        title: 'Translated Title',
-        text: 'Translated Content',
-        summary: 'Translated Summary',
-        tags: ['translated-tag'],
-        sourceLang: 'zh',
-        lang: 'en',
-        created: translatedAt,
-        aiModel: 'gpt-4',
-      })
 
       const result = await service.translateArticle({
         articleId: 'article-1',
@@ -146,19 +145,21 @@ describe('TranslationService', () => {
     })
 
     it('should use original summary when translation has no summary', async () => {
-      mockAiTranslationService.getAvailableLanguagesForArticle.mockResolvedValue(
-        [],
+      mockAiTranslationService.getTranslationAndAvailableLanguages.mockResolvedValue(
+        {
+          availableTranslations: [],
+          translation: {
+            title: 'Translated Title',
+            text: 'Translated Content',
+            summary: null,
+            tags: null,
+            sourceLang: 'zh',
+            lang: 'en',
+            created: new Date(),
+            aiModel: 'gpt-4',
+          },
+        },
       )
-      mockAiTranslationService.getTranslationForArticle.mockResolvedValue({
-        title: 'Translated Title',
-        text: 'Translated Content',
-        summary: null,
-        tags: null,
-        sourceLang: 'zh',
-        lang: 'en',
-        created: new Date(),
-        aiModel: 'gpt-4',
-      })
 
       const result = await service.translateArticle({
         articleId: 'article-1',
@@ -171,10 +172,9 @@ describe('TranslationService', () => {
     })
 
     it('should pass allowHidden option correctly', async () => {
-      mockAiTranslationService.getAvailableLanguagesForArticle.mockResolvedValue(
-        [],
+      mockAiTranslationService.getTranslationAndAvailableLanguages.mockResolvedValue(
+        { availableTranslations: [], translation: null },
       )
-      mockAiTranslationService.getTranslationForArticle.mockResolvedValue(null)
 
       await service.translateArticle({
         articleId: 'article-1',
@@ -184,15 +184,12 @@ describe('TranslationService', () => {
       })
 
       expect(
-        mockAiTranslationService.getTranslationForArticle,
+        mockAiTranslationService.getTranslationAndAvailableLanguages,
       ).toHaveBeenCalledWith('article-1', 'en', { ignoreVisibility: true })
     })
 
     it('should return original data when translation service throws error', async () => {
-      mockAiTranslationService.getAvailableLanguagesForArticle.mockResolvedValue(
-        ['en'],
-      )
-      mockAiTranslationService.getTranslationForArticle.mockRejectedValue(
+      mockAiTranslationService.getTranslationAndAvailableLanguages.mockRejectedValue(
         new Error('Service error'),
       )
 
@@ -205,15 +202,13 @@ describe('TranslationService', () => {
       expect(result).toEqual({
         ...originalData,
         isTranslated: false,
-        availableTranslations: ['en'],
       })
     })
 
     it('should normalize language code correctly', async () => {
-      mockAiTranslationService.getAvailableLanguagesForArticle.mockResolvedValue(
-        [],
+      mockAiTranslationService.getTranslationAndAvailableLanguages.mockResolvedValue(
+        { availableTranslations: [], translation: null },
       )
-      mockAiTranslationService.getTranslationForArticle.mockResolvedValue(null)
 
       await service.translateArticle({
         articleId: 'article-1',
@@ -222,7 +217,7 @@ describe('TranslationService', () => {
       })
 
       expect(
-        mockAiTranslationService.getTranslationForArticle,
+        mockAiTranslationService.getTranslationAndAvailableLanguages,
       ).toHaveBeenCalledWith('article-1', 'zh', undefined)
     })
   })
@@ -439,64 +434,6 @@ describe('TranslationService', () => {
       expect(result.get('1')?.title).toBe('Title 1')
     })
 
-    it('should schedule regeneration only for stale ids', async () => {
-      mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        createTranslationLookup(
-          [
-            [
-              '1',
-              {
-                title: 'Translated Title 1',
-                text: 'Translated Text 1',
-                sourceLang: 'zh',
-                lang: 'en',
-                created: new Date(),
-              },
-            ],
-          ],
-          ['2'],
-        ),
-      )
-
-      await service.translateArticleList({
-        articles,
-        targetLang: 'en',
-      })
-
-      expect(
-        mockAiTranslationService.scheduleRegenerationForStaleTranslations,
-      ).toHaveBeenCalledTimes(1)
-      expect(
-        mockAiTranslationService.scheduleRegenerationForStaleTranslations,
-      ).toHaveBeenCalledWith(['2'], 'en')
-    })
-
-    it('should not schedule regeneration when no stale ids', async () => {
-      mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        createTranslationLookup([
-          [
-            '1',
-            {
-              title: 'Translated Title 1',
-              text: 'Translated Text 1',
-              sourceLang: 'zh',
-              lang: 'en',
-              created: new Date(),
-            },
-          ],
-        ]),
-      )
-
-      await service.translateArticleList({
-        articles,
-        targetLang: 'en',
-      })
-
-      expect(
-        mockAiTranslationService.scheduleRegenerationForStaleTranslations,
-      ).not.toHaveBeenCalled()
-    })
-
     it('should handle custom translationFields', async () => {
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
         createTranslationLookup([
@@ -606,10 +543,9 @@ describe('TranslationService', () => {
 
   describe('edge cases', () => {
     it('should handle special language codes', async () => {
-      mockAiTranslationService.getAvailableLanguagesForArticle.mockResolvedValue(
-        [],
+      mockAiTranslationService.getTranslationAndAvailableLanguages.mockResolvedValue(
+        { availableTranslations: [], translation: null },
       )
-      mockAiTranslationService.getTranslationForArticle.mockResolvedValue(null)
 
       const originalData = { title: 'Test', text: 'Text' }
 
@@ -630,24 +566,26 @@ describe('TranslationService', () => {
         })
 
         expect(
-          mockAiTranslationService.getTranslationForArticle,
+          mockAiTranslationService.getTranslationAndAvailableLanguages,
         ).toHaveBeenCalledWith('article-1', testCase.expected, undefined)
       }
     })
 
     it('should handle null summary in original data', async () => {
-      mockAiTranslationService.getAvailableLanguagesForArticle.mockResolvedValue(
-        [],
+      mockAiTranslationService.getTranslationAndAvailableLanguages.mockResolvedValue(
+        {
+          availableTranslations: [],
+          translation: {
+            title: 'Translated',
+            text: 'Translated Text',
+            summary: null,
+            tags: null,
+            sourceLang: 'zh',
+            lang: 'en',
+            created: new Date(),
+          },
+        },
       )
-      mockAiTranslationService.getTranslationForArticle.mockResolvedValue({
-        title: 'Translated',
-        text: 'Translated Text',
-        summary: null,
-        tags: null,
-        sourceLang: 'zh',
-        lang: 'en',
-        created: new Date(),
-      })
 
       const result = await service.translateArticle({
         articleId: 'article-1',
@@ -663,18 +601,20 @@ describe('TranslationService', () => {
     })
 
     it('should handle undefined tags in original data', async () => {
-      mockAiTranslationService.getAvailableLanguagesForArticle.mockResolvedValue(
-        [],
+      mockAiTranslationService.getTranslationAndAvailableLanguages.mockResolvedValue(
+        {
+          availableTranslations: [],
+          translation: {
+            title: 'Translated',
+            text: 'Translated Text',
+            summary: null,
+            tags: null,
+            sourceLang: 'zh',
+            lang: 'en',
+            created: new Date(),
+          },
+        },
       )
-      mockAiTranslationService.getTranslationForArticle.mockResolvedValue({
-        title: 'Translated',
-        text: 'Translated Text',
-        summary: null,
-        tags: null,
-        sourceLang: 'zh',
-        lang: 'en',
-        created: new Date(),
-      })
 
       const result = await service.translateArticle({
         articleId: 'article-1',

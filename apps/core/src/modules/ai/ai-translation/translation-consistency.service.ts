@@ -11,7 +11,7 @@ import {
   type TranslationSourceSnapshot,
 } from './translation-consistency.types'
 
-type FreshnessStatus = 'valid' | 'stale' | 'unknown'
+export type FreshnessStatus = 'valid' | 'stale' | 'unknown'
 type TranslationSnapshot = Pick<
   AITranslationModel,
   'refId' | 'hash' | 'sourceLang' | 'sourceModified' | 'created'
@@ -99,7 +99,7 @@ export class TranslationConsistencyService extends BaseTranslationService {
     return [...staleRefIds]
   }
 
-  private evaluateTranslationFreshness(
+  evaluateTranslationFreshness(
     article: TranslationSourceSnapshot,
     translation: TranslationSnapshot,
   ): FreshnessStatus {

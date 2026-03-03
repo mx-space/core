@@ -253,6 +253,7 @@ export class PostController {
   async getLatest(
     @IpLocation() ip: IpRecord,
     @IsAuthenticated() isAuthenticated: boolean,
+    @Lang() lang?: string,
   ) {
     const query: any = {}
 
@@ -276,6 +277,7 @@ export class PostController {
       {} as any,
       ip,
       isAuthenticated,
+      lang,
     )
   }
 

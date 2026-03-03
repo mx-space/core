@@ -98,8 +98,6 @@ export class PageController {
           translation.isTranslated
         ;(doc as { translationMeta?: unknown }).translationMeta =
           translation.translationMeta
-        ;(doc as { availableTranslations?: string[] }).availableTranslations =
-          translation.availableTranslations
         return doc
       })
     }

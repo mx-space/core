@@ -48,22 +48,15 @@ export class TranslationService {
     const { articleId, targetLang, allowHidden, originalData } = options
     const normalizedTarget = normalizeLanguageCode(targetLang)
 
-    const availableTranslations =
-      await this.aiTranslationService.getAvailableLanguagesForArticle(articleId)
-
-    if (!normalizedTarget) {
-      return { ...originalData, isTranslated: false, availableTranslations }
-    }
-
     try {
-      const translation =
-        await this.aiTranslationService.getTranslationForArticle(
+      const { availableTranslations, translation } =
+        await this.aiTranslationService.getTranslationAndAvailableLanguages(
           articleId,
-          normalizedTarget,
+          normalizedTarget || undefined,
           allowHidden ? { ignoreVisibility: true } : undefined,
         )
 
-      if (!translation) {
+      if (!normalizedTarget || !translation) {
         return { ...originalData, isTranslated: false, availableTranslations }
       }
 
@@ -85,7 +78,7 @@ export class TranslationService {
       }
     } catch (error) {
       this.logger.error(error)
-      return { ...originalData, isTranslated: false, availableTranslations }
+      return { ...originalData, isTranslated: false }
     }
   }
 
@@ -187,7 +180,6 @@ export class TranslationService {
       'tags',
       'content',
       'translationMeta',
-      'availableTranslations',
     ]
     const translationFields = (options.translationFields ??
       defaultFields) as readonly Fields[]
@@ -214,26 +206,12 @@ export class TranslationService {
     }
 
     try {
-      const { validTranslations: translationMap, staleRefIds } =
+      const { validTranslations: translationMap } =
         await this.aiTranslationService.getValidTranslationsForArticles(
           articles,
           normalizedTarget,
           { select: this.buildTranslationSelect(translationFieldList) },
         )
-
-      if (staleRefIds.length) {
-        this.aiTranslationService
-          .scheduleRegenerationForStaleTranslations(
-            staleRefIds,
-            normalizedTarget,
-          )
-          .catch((err) =>
-            this.logger.error(
-              'Failed to schedule stale translation regeneration',
-              err,
-            ),
-          )
-      }
 
       return new Map(
         articles.map((article): [string, TranslationResultPick<Fields>] => {
