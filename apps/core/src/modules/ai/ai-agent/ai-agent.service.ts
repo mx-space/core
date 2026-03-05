@@ -1,82 +1,88 @@
-import {
-  Agent,
-  type AgentMessage,
-  type AgentTool,
-} from '@mariozechner/pi-agent-core'
-import type { Model } from '@mariozechner/pi-ai'
+import { type AgentMessage, type AgentTool } from '@mariozechner/pi-agent-core'
 import { Injectable, Logger } from '@nestjs/common'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { AIProviderType, type AIProviderConfig } from '../ai.types'
+
+import type { AIProviderConfig } from '../ai.types'
+import {
+  type SendAIAgentMessageInput,
+  type UpsertAIAgentConfigInput,
+} from './ai-agent.schema'
+import {
+  AIAgentActionState,
+  AIAgentEventType,
+  AIAgentMessageKind,
+  AIAgentOperationMode,
+  AIAgentOperationStatus,
+  type AIAgentRuntimeConfigValue,
+  AIAgentSessionStatus,
+  type AIAgentToolId,
+  BUILTIN_AGENT_TOOL_IDS,
+  getAgentSessionRoom,
+} from './ai-agent.types'
 import { AIAgentActionModel } from './ai-agent-action.model'
+import { AIAgentEventModel } from './ai-agent-event.model'
 import { AIAgentMessageModel } from './ai-agent-message.model'
+import { AIAgentOperationModel } from './ai-agent-operation.model'
 import { AIAgentRuntimeConfigModel } from './ai-agent-runtime-config.model'
 import { AIAgentSessionModel } from './ai-agent-session.model'
 import { AI_AGENT_SYSTEM_PROMPT_LINES } from './ai-agent-system-prompt'
-import type {
-  SendAIAgentMessageInput,
-  UpsertAIAgentConfigInput,
-} from './ai-agent.schema'
+import { AIAgentContextEngineService } from './context-engine/ai-agent-context-engine.service'
+import { AIAgentSessionLockService } from './infra/ai-agent-session-lock.service'
+import { AIAgentModelFactoryService } from './model-runtime/ai-agent-model-factory.service'
+import { AIAgentRuntimeService } from './runtime/ai-agent-runtime.service'
 import {
-  AIAgentActionRiskLevel,
-  AIAgentActionState,
-  AIAgentMessageKind,
-  AIAgentSessionStatus,
-  getAgentSessionRoom,
-  type AIAgentRuntimeConfigValue,
-  type AIAgentToolId,
-} from './ai-agent.types'
-import {
-  createConnectorRegistry,
-  normalizeEnabledToolIds,
-  resolveEnabledConnectors,
-} from './tools/connector-registry'
-import {
-  buildConnectorSystemPrompt,
   type AIAgentToolConnector,
+  buildConnectorSystemPrompt,
 } from './tools/connector.types'
-import {
-  createMongoToolConnector,
-  executeMongoConfirmedAction,
-  executeMongoTool,
-  type MongoToolArgs,
-} from './tools/connectors/mongodb'
-import {
-  createShellToolConnector,
-  executeShellConfirmedAction,
-  executeShellTool,
-  type ShellToolArgs,
-} from './tools/connectors/shell'
+import { executeMongoConfirmedAction } from './tools/connectors/mongodb'
+import { executeShellConfirmedAction } from './tools/connectors/shell'
+import { AIAgentToolsEngineService } from './tools-engine/ai-agent-tools-engine.service'
 
 const AGENT_RUNTIME_CONFIG_KEY = 'default'
 const MAX_TOOL_OUTPUT_LENGTH = 16_000
 
-type AIAgentLoopStart = { mode: 'prompt'; input: string } | { mode: 'continue' }
+type AIAgentLoopStart =
+  | { mode: AIAgentOperationMode.Prompt; input: string }
+  | { mode: AIAgentOperationMode.Continue; triggerActionId?: string }
 
 @Injectable()
 export class AIAgentService {
   private readonly logger = new Logger(AIAgentService.name)
   private readonly runningSessions = new Map<string, Promise<void>>()
+  private readonly pendingContinueBySession = new Map<
+    string,
+    string | undefined
+  >()
 
   constructor(
     @InjectModel(AIAgentRuntimeConfigModel)
     private readonly runtimeConfigModel: MongooseModel<AIAgentRuntimeConfigModel>,
     @InjectModel(AIAgentSessionModel)
     private readonly sessionModel: MongooseModel<AIAgentSessionModel>,
+    @InjectModel(AIAgentOperationModel)
+    private readonly operationModel: MongooseModel<AIAgentOperationModel>,
+    @InjectModel(AIAgentEventModel)
+    private readonly eventModel: MongooseModel<AIAgentEventModel>,
     @InjectModel(AIAgentMessageModel)
     private readonly messageModel: MongooseModel<AIAgentMessageModel>,
     @InjectModel(AIAgentActionModel)
     private readonly actionModel: MongooseModel<AIAgentActionModel>,
     private readonly databaseService: DatabaseService,
     private readonly eventManager: EventManagerService,
+    private readonly contextEngine: AIAgentContextEngineService,
+    private readonly modelFactory: AIAgentModelFactoryService,
+    private readonly runtimeService: AIAgentRuntimeService,
+    private readonly toolsEngine: AIAgentToolsEngineService,
+    private readonly sessionLockService: AIAgentSessionLockService,
   ) {}
 
   async getRuntimeConfig(): Promise<AIAgentRuntimeConfigValue> {
-    const connectorRegistry = this.buildConnectorRegistry()
     const doc = await this.runtimeConfigModel
       .findOne({ key: AGENT_RUNTIME_CONFIG_KEY })
       .lean()
@@ -84,30 +90,34 @@ export class AIAgentService {
     if (!doc) {
       return {
         providers: [],
-        enabledTools: normalizeEnabledToolIds(undefined, connectorRegistry),
+        enabledTools: [...BUILTIN_AGENT_TOOL_IDS],
+        maxSteps: 20,
+        historyWindow: 80,
+        contextCharBudget: 200_000,
       }
     }
 
     return {
       providers: (doc.providers || []) as AIProviderConfig[],
       agentModel: doc.agentModel,
-      enabledTools: normalizeEnabledToolIds(
+      enabledTools: this.normalizeEnabledToolIds(
         doc.enabledTools as string[] | undefined,
-        connectorRegistry,
       ),
+      maxSteps: doc.maxSteps || 20,
+      historyWindow: doc.historyWindow || 80,
+      contextCharBudget: doc.contextCharBudget || 200_000,
     }
   }
 
   async upsertRuntimeConfig(input: UpsertAIAgentConfigInput) {
-    const connectorRegistry = this.buildConnectorRegistry()
     const providers = input.providers.map((provider) => ({
       ...provider,
       apiKey: provider.apiKey.trim(),
       endpoint: provider.endpoint?.trim() || undefined,
     }))
-    const enabledTools = normalizeEnabledToolIds(
+
+    const enabledTools = this.normalizeEnabledToolIds(
       input.enabledTools as string[] | undefined,
-      connectorRegistry,
     )
 
     const doc = await this.runtimeConfigModel.findOneAndUpdate(
@@ -118,6 +128,9 @@ export class AIAgentService {
           providers,
           agentModel: input.agentModel,
           enabledTools,
+          maxSteps: input.maxSteps || 20,
+          historyWindow: input.historyWindow || 80,
+          contextCharBudget: input.contextCharBudget || 200_000,
           updated: new Date(),
         },
       },
@@ -130,10 +143,12 @@ export class AIAgentService {
     return {
       providers: (doc.providers || []) as AIProviderConfig[],
       agentModel: doc.agentModel,
-      enabledTools: normalizeEnabledToolIds(
+      enabledTools: this.normalizeEnabledToolIds(
         doc.enabledTools as string[] | undefined,
-        connectorRegistry,
       ),
+      maxSteps: doc.maxSteps,
+      historyWindow: doc.historyWindow,
+      contextCharBudget: doc.contextCharBudget,
     }
   }
 
@@ -168,9 +183,15 @@ export class AIAgentService {
       .sort({ created: -1 })
       .lean()
 
+    const latestOperation = await this.operationModel
+      .findOne({ sessionId })
+      .sort({ created: -1 })
+      .lean()
+
     return {
       session,
       pendingActions,
+      latestOperation,
       running: this.runningSessions.has(sessionId),
     }
   }
@@ -214,12 +235,12 @@ export class AIAgentService {
       )
     }
 
-    const started = this.startAgentLoop(sessionId, {
-      mode: 'prompt',
+    const queued = await this.queueOperation(sessionId, {
+      mode: AIAgentOperationMode.Prompt,
       input: body.content,
     })
 
-    if (!started) {
+    if (!queued.started) {
       throw new BizException(
         ErrorCodeEnum.AIProcessing,
         'Agent is already running for this session',
@@ -229,52 +250,92 @@ export class AIAgentService {
     return {
       accepted: true,
       running: true,
+      operationId: queued.operationId,
     }
   }
 
   async confirmAction(actionId: string) {
-    const action = await this.actionModel.findById(actionId)
-    if (!action) {
-      throw new BizException(ErrorCodeEnum.ResourceNotFound, 'Action not found')
-    }
+    const action = await this.actionModel.findOneAndUpdate(
+      {
+        _id: actionId,
+        state: AIAgentActionState.Pending,
+      },
+      {
+        $set: {
+          state: AIAgentActionState.Confirmed,
+          updated: new Date(),
+        },
+      },
+      { new: true },
+    )
 
-    if (action.state !== AIAgentActionState.Pending) {
+    if (!action) {
+      const current = await this.actionModel.findById(actionId).lean()
+      if (!current) {
+        throw new BizException(
+          ErrorCodeEnum.ResourceNotFound,
+          'Action not found',
+        )
+      }
+
       throw new BizException(
         ErrorCodeEnum.InvalidParameter,
-        `Action is not pending: ${action.state}`,
+        `Action is not pending: ${current.state}`,
       )
     }
 
-    action.state = AIAgentActionState.Confirmed
-    action.updated = new Date()
-    await action.save()
-
-    let result: Record<string, unknown>
     let errorMessage: string | undefined
 
     try {
-      result = await this.executeConfirmedAction(action)
-      action.state = AIAgentActionState.Executed
-      action.result = result
+      const result = await this.executeConfirmedAction(
+        action.toolName,
+        action.arguments,
+      )
+      await this.actionModel.updateOne(
+        {
+          _id: action.id,
+          state: AIAgentActionState.Confirmed,
+        },
+        {
+          $set: {
+            state: AIAgentActionState.Executed,
+            result,
+            updated: new Date(),
+          },
+        },
+      )
     } catch (error) {
       errorMessage = (error as Error)?.message || 'Unknown execution error'
-      action.state = AIAgentActionState.Cancelled
-      action.error = errorMessage
-      action.result = {
-        error: errorMessage,
-      }
+      await this.actionModel.updateOne(
+        {
+          _id: action.id,
+          state: AIAgentActionState.Confirmed,
+        },
+        {
+          $set: {
+            state: AIAgentActionState.Cancelled,
+            error: errorMessage,
+            result: {
+              error: errorMessage,
+            },
+            updated: new Date(),
+          },
+        },
+      )
     }
 
-    action.updated = new Date()
-    await action.save()
+    const latest = await this.actionModel.findById(action.id).lean()
+    if (!latest) {
+      throw new BizException(ErrorCodeEnum.ResourceNotFound, 'Action not found')
+    }
 
-    const seq = { value: await this.getNextSeq(action.sessionId) }
+    const seq = { value: await this.getNextMessageSeq(action.sessionId) }
     const confirmContent = {
-      actionId: action.id,
-      state: action.state,
-      toolName: action.toolName,
-      result: action.result,
-      error: action.error,
+      actionId: latest.id,
+      state: latest.state,
+      toolName: latest.toolName,
+      result: latest.result,
+      error: latest.error,
     }
 
     await this.createMessage(
@@ -288,7 +349,13 @@ export class AIAgentService {
     await this.createAgentMessage(
       action.sessionId,
       seq,
-      this.createActionResolutionMessage(action),
+      this.createActionResolutionMessage(
+        latest.state,
+        latest.id,
+        latest.toolName,
+        latest.result,
+        latest.error,
+      ),
       AIAgentMessageKind.ConfirmResult,
     )
 
@@ -298,32 +365,52 @@ export class AIAgentService {
       confirmContent,
     )
 
-    await this.maybeResumeAfterConfirmations(action.sessionId)
+    await this.appendEvent(
+      latest.operationId,
+      action.sessionId,
+      AIAgentEventType.ConfirmResult,
+      confirmContent,
+    )
+
+    await this.maybeResumeAfterConfirmations(action.sessionId, latest.id)
 
     return {
       success: !errorMessage,
-      action,
+      action: latest,
     }
   }
 
   async rejectAction(actionId: string) {
-    const action = await this.actionModel.findById(actionId)
-    if (!action) {
-      throw new BizException(ErrorCodeEnum.ResourceNotFound, 'Action not found')
-    }
+    const action = await this.actionModel.findOneAndUpdate(
+      {
+        _id: actionId,
+        state: AIAgentActionState.Pending,
+      },
+      {
+        $set: {
+          state: AIAgentActionState.Rejected,
+          updated: new Date(),
+        },
+      },
+      { new: true },
+    )
 
-    if (action.state !== AIAgentActionState.Pending) {
+    if (!action) {
+      const current = await this.actionModel.findById(actionId).lean()
+      if (!current) {
+        throw new BizException(
+          ErrorCodeEnum.ResourceNotFound,
+          'Action not found',
+        )
+      }
+
       throw new BizException(
         ErrorCodeEnum.InvalidParameter,
-        `Action is not pending: ${action.state}`,
+        `Action is not pending: ${current.state}`,
       )
     }
 
-    action.state = AIAgentActionState.Rejected
-    action.updated = new Date()
-    await action.save()
-
-    const seq = { value: await this.getNextSeq(action.sessionId) }
+    const seq = { value: await this.getNextMessageSeq(action.sessionId) }
     const rejectContent = {
       actionId: action.id,
       state: action.state,
@@ -341,7 +428,13 @@ export class AIAgentService {
     await this.createAgentMessage(
       action.sessionId,
       seq,
-      this.createActionResolutionMessage(action),
+      this.createActionResolutionMessage(
+        action.state,
+        action.id,
+        action.toolName,
+        action.result,
+        action.error,
+      ),
       AIAgentMessageKind.ConfirmResult,
     )
 
@@ -351,7 +444,14 @@ export class AIAgentService {
       rejectContent,
     )
 
-    await this.maybeResumeAfterConfirmations(action.sessionId)
+    await this.appendEvent(
+      action.operationId,
+      action.sessionId,
+      AIAgentEventType.ConfirmResult,
+      rejectContent,
+    )
+
+    await this.maybeResumeAfterConfirmations(action.sessionId, action.id)
 
     return {
       success: true,
@@ -359,27 +459,78 @@ export class AIAgentService {
     }
   }
 
-  private startAgentLoop(sessionId: string, start: AIAgentLoopStart) {
+  private async queueOperation(sessionId: string, start: AIAgentLoopStart) {
+    if (this.runningSessions.has(sessionId)) {
+      return {
+        started: false,
+      } as const
+    }
+
+    const operation = await this.operationModel.create({
+      sessionId,
+      mode: start.mode,
+      prompt:
+        start.mode === AIAgentOperationMode.Prompt ? start.input : undefined,
+      status: AIAgentOperationStatus.Queued,
+      triggerActionId:
+        start.mode === AIAgentOperationMode.Continue
+          ? start.triggerActionId
+          : undefined,
+    })
+
+    const started = this.startAgentLoop(sessionId, operation.id, start)
+    if (!started) {
+      await this.operationModel.updateOne(
+        { _id: operation.id },
+        {
+          $set: {
+            status: AIAgentOperationStatus.Cancelled,
+            error: 'Session already running',
+            endedAt: new Date(),
+          },
+        },
+      )
+
+      return {
+        started: false,
+      } as const
+    }
+
+    return {
+      started: true,
+      operationId: operation.id,
+    } as const
+  }
+
+  private startAgentLoop(
+    sessionId: string,
+    operationId: string,
+    start: AIAgentLoopStart,
+  ) {
     if (this.runningSessions.has(sessionId)) {
       return false
     }
 
-    const task = this.runAgentLoop(sessionId, start)
+    const task = this.runAgentLoop(sessionId, operationId, start)
       .catch((error) => {
         this.logger.error(
-          `runAgentLoop failed: mode=${start.mode} session=${sessionId} error=${error?.message || error}`,
+          `runAgentLoop failed: mode=${start.mode} session=${sessionId} operation=${operationId} error=${error?.message || error}`,
           error?.stack,
         )
       })
-      .finally(() => {
+      .finally(async () => {
         this.runningSessions.delete(sessionId)
+        await this.tryDrainPendingContinue(sessionId)
       })
 
     this.runningSessions.set(sessionId, task)
     return true
   }
 
-  private async maybeResumeAfterConfirmations(sessionId: string) {
+  private async maybeResumeAfterConfirmations(
+    sessionId: string,
+    triggerActionId: string,
+  ) {
     const pendingActionCount = await this.actionModel.countDocuments({
       sessionId,
       state: AIAgentActionState.Pending,
@@ -388,166 +539,319 @@ export class AIAgentService {
       return
     }
 
-    this.startAgentLoop(sessionId, { mode: 'continue' })
+    const queued = await this.queueOperation(sessionId, {
+      mode: AIAgentOperationMode.Continue,
+      triggerActionId,
+    })
+
+    if (!queued.started) {
+      this.pendingContinueBySession.set(sessionId, triggerActionId)
+    }
   }
 
-  private async runAgentLoop(sessionId: string, start: AIAgentLoopStart) {
-    const historyMessages = await this.loadAgentMessagesForLoop(sessionId)
-    const runtime = await this.getRuntimeConfig()
-    const { model, selectedProvider } = this.resolvePiModel(runtime)
-    const enabledConnectors = this.resolveEnabledConnectors(
-      runtime.enabledTools,
-    )
-    const apiKeyResolver = this.createApiKeyResolver(runtime.providers)
-
-    const seq = {
-      value: await this.getNextSeq(sessionId),
+  private async tryDrainPendingContinue(sessionId: string) {
+    if (!this.pendingContinueBySession.has(sessionId)) {
+      return
     }
 
-    let promptMessage: AgentMessage | null = null
-    if (start.mode === 'prompt') {
-      promptMessage = this.createUserMessage(start.input)
-      await this.createAgentMessage(
-        sessionId,
-        seq,
-        promptMessage,
-        AIAgentMessageKind.User,
-      )
+    if (this.runningSessions.has(sessionId)) {
+      return
     }
 
-    await this.sessionModel.updateOne(
-      { _id: sessionId },
-      {
-        $set: { updated: new Date() },
-      },
-    )
-
-    await this.emitToSession(sessionId, BusinessEvents.AI_AGENT_SESSION_STATE, {
+    const pendingActionCount = await this.actionModel.countDocuments({
       sessionId,
-      state: 'running',
+      state: AIAgentActionState.Pending,
     })
 
-    const agent = new Agent({
-      initialState: {
-        systemPrompt: this.buildSystemPrompt(enabledConnectors),
-        model,
-        messages: historyMessages,
-        tools: this.buildAgentTools(enabledConnectors, sessionId, seq),
-      },
-      getApiKey: (providerName) => {
-        return apiKeyResolver(providerName) || selectedProvider.apiKey
-      },
-      transport: 'websocket',
-      maxRetryDelayMs: 60_000,
+    if (pendingActionCount > 0) {
+      return
+    }
+
+    const triggerActionId = this.pendingContinueBySession.get(sessionId)
+    this.pendingContinueBySession.delete(sessionId)
+
+    const queued = await this.queueOperation(sessionId, {
+      mode: AIAgentOperationMode.Continue,
+      triggerActionId,
     })
 
-    let persistQueue = Promise.resolve()
-    let hasPersistedAssistantOrToolMessage = false
-    let isPausedForConfirmation = false
+    if (!queued.started) {
+      this.pendingContinueBySession.set(sessionId, triggerActionId)
+    }
+  }
 
-    const unsubscribe = agent.subscribe((event) => {
-      // Pause the current loop as soon as a tool reports pending confirmation.
-      if (
-        this.isPendingConfirmationToolEvent(event) &&
-        !isPausedForConfirmation
-      ) {
-        isPausedForConfirmation = true
-        agent.abort()
-      }
+  private async runAgentLoop(
+    sessionId: string,
+    operationId: string,
+    start: AIAgentLoopStart,
+  ) {
+    const lock = await this.sessionLockService.acquire(sessionId)
+    if (!lock) {
+      await this.operationModel.updateOne(
+        { _id: operationId },
+        {
+          $set: {
+            status: AIAgentOperationStatus.Cancelled,
+            error: 'Session lock is held by another worker',
+            endedAt: new Date(),
+          },
+        },
+      )
+      return
+    }
 
-      persistQueue = persistQueue.then(async () => {
-        switch (event.type) {
-          case 'message_update': {
-            if (event.assistantMessageEvent.type === 'text_delta') {
-              await this.emitToSession(
-                sessionId,
-                BusinessEvents.AI_AGENT_MESSAGE,
-                {
-                  sessionId,
-                  kind: 'assistant_delta',
-                  delta: event.assistantMessageEvent.delta,
-                },
-              )
-            }
-            break
-          }
+    const lockRenewTimer = setInterval(() => {
+      this.sessionLockService
+        .renew(sessionId, lock.token)
+        .catch(() => undefined)
+    }, 30_000)
 
-          case 'message_end': {
-            if (
-              event.message.role === 'assistant' ||
-              event.message.role === 'toolResult'
-            ) {
-              if (
-                isPausedForConfirmation &&
-                event.message.role === 'assistant' &&
-                this.isAbortAssistantMessage(event.message)
-              ) {
-                break
-              }
-
-              hasPersistedAssistantOrToolMessage = true
-              const kind =
-                event.message.role === 'assistant'
-                  ? AIAgentMessageKind.Assistant
-                  : AIAgentMessageKind.ToolResult
-              await this.createAgentMessage(sessionId, seq, event.message, kind)
-            }
-            break
-          }
-
-          case 'agent_end': {
-            // If provider initialization failed before message streaming starts
-            // (e.g. missing api key), pi-agent may emit only agent_end with an
-            // assistant error message. Persist it so UI can render the failure.
-            if (hasPersistedAssistantOrToolMessage) {
-              break
-            }
-
-            const lastMessage = event.messages.at(-1)
-            if (
-              lastMessage?.role === 'assistant' &&
-              !(
-                isPausedForConfirmation &&
-                this.isAbortAssistantMessage(lastMessage)
-              )
-            ) {
-              await this.createAgentMessage(
-                sessionId,
-                seq,
-                lastMessage,
-                AIAgentMessageKind.Assistant,
-              )
-              hasPersistedAssistantOrToolMessage = true
-            }
-            break
-          }
-
-          case 'tool_execution_start':
-          case 'tool_execution_update':
-          case 'tool_execution_end': {
-            await this.emitToSession(
-              sessionId,
-              BusinessEvents.AI_AGENT_TOOL_EVENT,
-              {
-                sessionId,
-                event,
-              },
-            )
-            break
-          }
-        }
-      })
-    })
+    const eventSeq = { value: 1 }
 
     try {
-      if (start.mode === 'prompt') {
-        await agent.prompt(promptMessage as AgentMessage)
-      } else {
-        await agent.continue()
+      const runtime = await this.getRuntimeConfig()
+      const contextResult = await this.contextEngine.buildContext({
+        sessionId,
+        historyWindow: runtime.historyWindow,
+        contextCharBudget: runtime.contextCharBudget,
+      })
+
+      await this.operationModel.updateOne(
+        { _id: operationId },
+        {
+          $set: {
+            status: AIAgentOperationStatus.Running,
+            startedAt: new Date(),
+            error: undefined,
+          },
+        },
+      )
+
+      await this.sessionModel.updateOne(
+        { _id: sessionId },
+        {
+          $set: {
+            updated: new Date(),
+            lastOperationId: operationId,
+          },
+        },
+      )
+
+      await this.emitToSession(
+        sessionId,
+        BusinessEvents.AI_AGENT_SESSION_STATE,
+        {
+          sessionId,
+          state: 'running',
+        },
+      )
+
+      await this.appendEventWithSeq(
+        operationId,
+        sessionId,
+        eventSeq,
+        AIAgentEventType.SessionState,
+        { state: 'running' },
+      )
+
+      if (contextResult.compressed) {
+        await this.appendEventWithSeq(
+          operationId,
+          sessionId,
+          eventSeq,
+          AIAgentEventType.Compression,
+          {
+            summary: contextResult.summary,
+            applied: true,
+          },
+        )
       }
-      await persistQueue
+
+      const seq = {
+        value: await this.getNextMessageSeq(sessionId),
+      }
+
+      if (start.mode === AIAgentOperationMode.Prompt) {
+        await this.createAgentMessage(
+          sessionId,
+          seq,
+          this.createUserMessage(start.input),
+          AIAgentMessageKind.User,
+        )
+      }
+
+      const { model, selectedProvider } =
+        this.modelFactory.resolvePiModel(runtime)
+      const apiKeyResolver = this.modelFactory.createApiKeyResolver(
+        runtime.providers,
+      )
+
+      const connectors = this.toolsEngine.resolveEnabled(runtime.enabledTools, {
+        db: this.databaseService.db,
+        safeJson: (input) => this.safeJson(input),
+        createPendingAction: (sid, msgSeq, toolName, args, dryRunPreview) => {
+          return this.createPendingAction(
+            operationId,
+            eventSeq,
+            sid,
+            msgSeq,
+            toolName,
+            args,
+            dryRunPreview,
+          )
+        },
+      })
+
+      const tools = this.buildAgentTools(connectors, sessionId, seq)
+
+      const runtimeResult = await this.runtimeService.executeLoop({
+        mode: start.mode,
+        prompt:
+          start.mode === AIAgentOperationMode.Prompt ? start.input : undefined,
+        maxSteps: runtime.maxSteps,
+        model,
+        getApiKey: (providerName) => {
+          return apiKeyResolver(providerName) || selectedProvider.apiKey
+        },
+        messages: contextResult.messages,
+        tools,
+        systemPrompt: this.buildSystemPrompt(connectors),
+        onDelta: async (delta) => {
+          await this.emitToSession(sessionId, BusinessEvents.AI_AGENT_MESSAGE, {
+            sessionId,
+            kind: 'assistant_delta',
+            delta,
+          })
+
+          await this.appendEventWithSeq(
+            operationId,
+            sessionId,
+            eventSeq,
+            AIAgentEventType.MessageDelta,
+            { delta },
+          )
+        },
+        onToolEvent: async (event) => {
+          await this.emitToSession(
+            sessionId,
+            BusinessEvents.AI_AGENT_TOOL_EVENT,
+            {
+              sessionId,
+              event,
+            },
+          )
+
+          await this.appendEventWithSeq(
+            operationId,
+            sessionId,
+            eventSeq,
+            AIAgentEventType.ToolEvent,
+            { event },
+          )
+        },
+        onMessage: async (message) => {
+          const kind =
+            message.role === 'assistant'
+              ? AIAgentMessageKind.Assistant
+              : AIAgentMessageKind.ToolResult
+
+          await this.createAgentMessage(sessionId, seq, message, kind)
+
+          await this.appendEventWithSeq(
+            operationId,
+            sessionId,
+            eventSeq,
+            AIAgentEventType.MessagePersisted,
+            {
+              role: message.role,
+              kind,
+            },
+          )
+        },
+      })
+
+      const reachedStepLimit = runtimeResult.reason === 'max_steps'
+      const maxStepsMessage = reachedStepLimit
+        ? `Agent stopped after reaching maxSteps=${runtime.maxSteps}.`
+        : undefined
+
+      if (maxStepsMessage) {
+        await this.createMessage(
+          sessionId,
+          seq,
+          'system',
+          AIAgentMessageKind.RuntimeError,
+          {
+            message: maxStepsMessage,
+          },
+        )
+
+        await this.appendEventWithSeq(
+          operationId,
+          sessionId,
+          eventSeq,
+          AIAgentEventType.RuntimeError,
+          {
+            message: maxStepsMessage,
+          },
+        )
+      }
+
+      await this.operationModel.updateOne(
+        { _id: operationId },
+        {
+          $set: {
+            status: runtimeResult.pausedForHuman
+              ? AIAgentOperationStatus.WaitingHuman
+              : reachedStepLimit
+                ? AIAgentOperationStatus.Cancelled
+                : AIAgentOperationStatus.Done,
+            stepCount: runtimeResult.stepCount,
+            error: maxStepsMessage,
+            endedAt: new Date(),
+          },
+        },
+      )
+    } catch (error) {
+      const message = (error as Error)?.message || 'Runtime error'
+      await this.operationModel.updateOne(
+        { _id: operationId },
+        {
+          $set: {
+            status: AIAgentOperationStatus.Error,
+            error: message,
+            endedAt: new Date(),
+          },
+        },
+      )
+
+      const seq = { value: await this.getNextMessageSeq(sessionId) }
+      await this.createMessage(
+        sessionId,
+        seq,
+        'system',
+        AIAgentMessageKind.RuntimeError,
+        {
+          message,
+        },
+      )
+
+      await this.appendEventWithSeq(
+        operationId,
+        sessionId,
+        eventSeq,
+        AIAgentEventType.RuntimeError,
+        {
+          message,
+          stack: (error as Error)?.stack,
+        },
+      )
+
+      throw error
     } finally {
-      unsubscribe()
+      clearInterval(lockRenewTimer)
+      await this.sessionLockService.release(sessionId, lock.token)
+
       await this.emitToSession(
         sessionId,
         BusinessEvents.AI_AGENT_SESSION_STATE,
@@ -556,24 +860,15 @@ export class AIAgentService {
           state: 'idle',
         },
       )
+
+      await this.appendEventWithSeq(
+        operationId,
+        sessionId,
+        eventSeq,
+        AIAgentEventType.SessionState,
+        { state: 'idle' },
+      )
     }
-  }
-
-  private buildConnectorRegistry() {
-    return createConnectorRegistry([
-      createMongoToolConnector((id, seq, params) => {
-        return this.handleMongoToolExecution(id, seq, params)
-      }),
-      createShellToolConnector((id, seq, params) => {
-        return this.handleShellToolExecution(id, seq, params)
-      }),
-    ])
-  }
-
-  private resolveEnabledConnectors(enabledTools: readonly AIAgentToolId[]) {
-    const registry = this.buildConnectorRegistry()
-    const normalized = normalizeEnabledToolIds(enabledTools, registry)
-    return resolveEnabledConnectors(normalized, registry)
   }
 
   private buildAgentTools(
@@ -589,52 +884,24 @@ export class AIAgentService {
     })
   }
 
-  private async handleMongoToolExecution(
-    sessionId: string,
-    seq: { value: number },
-    params: MongoToolArgs,
+  private async executeConfirmedAction(
+    toolName: string,
+    args: Record<string, unknown>,
   ) {
-    return executeMongoTool({
-      db: this.databaseService.db,
-      sessionId,
-      seq,
-      params,
-      safeJson: (input) => this.safeJson(input),
-      createPendingAction: (id, currentSeq, toolName, args, dryRunPreview) => {
-        return this.createPendingAction(
-          id,
-          currentSeq,
-          toolName,
-          args,
-          dryRunPreview,
-        )
-      },
-    })
-  }
+    if (toolName === 'mongodb') {
+      return executeMongoConfirmedAction(this.databaseService.db, args)
+    }
 
-  private async handleShellToolExecution(
-    sessionId: string,
-    seq: { value: number },
-    params: ShellToolArgs,
-  ) {
-    return executeShellTool({
-      sessionId,
-      seq,
-      params,
-      safeJson: (input) => this.safeJson(input),
-      createPendingAction: (id, currentSeq, toolName, args, dryRunPreview) => {
-        return this.createPendingAction(
-          id,
-          currentSeq,
-          toolName,
-          args,
-          dryRunPreview,
-        )
-      },
-    })
+    if (toolName === 'shell') {
+      return executeShellConfirmedAction(args)
+    }
+
+    throw new Error(`Unsupported action tool: ${toolName}`)
   }
 
   private async createPendingAction(
+    operationId: string,
+    eventSeq: { value: number },
     sessionId: string,
     seq: { value: number },
     toolName: string,
@@ -643,9 +910,9 @@ export class AIAgentService {
   ) {
     const action = await this.actionModel.create({
       sessionId,
+      operationId,
       toolName,
       arguments: args,
-      riskLevel: AIAgentActionRiskLevel.Dangerous,
       state: AIAgentActionState.Pending,
       dryRunPreview,
       updated: new Date(),
@@ -653,6 +920,7 @@ export class AIAgentService {
 
     const payload = {
       actionId: action.id,
+      operationId,
       toolName,
       args,
       dryRunPreview,
@@ -667,6 +935,14 @@ export class AIAgentService {
       payload,
     )
 
+    await this.appendEventWithSeq(
+      operationId,
+      sessionId,
+      eventSeq,
+      AIAgentEventType.ConfirmRequest,
+      payload,
+    )
+
     await this.emitToSession(
       sessionId,
       BusinessEvents.AI_AGENT_CONFIRM_REQUEST,
@@ -674,21 +950,6 @@ export class AIAgentService {
     )
 
     return action
-  }
-
-  private async executeConfirmedAction(action: AIAgentActionModel) {
-    if (action.toolName === 'mongodb') {
-      return executeMongoConfirmedAction(
-        this.databaseService.db,
-        action.arguments,
-      )
-    }
-
-    if (action.toolName === 'shell') {
-      return executeShellConfirmedAction(action.arguments)
-    }
-
-    throw new Error(`Unsupported action tool: ${action.toolName}`)
   }
 
   private async assertSessionExists(sessionId: string) {
@@ -699,30 +960,6 @@ export class AIAgentService {
         'Session not found',
       )
     }
-  }
-
-  private async loadAgentMessagesForLoop(sessionId: string) {
-    const docs = await this.messageModel
-      .find({ sessionId })
-      .sort({ seq: 1 })
-      .lean()
-
-    const messages: AgentMessage[] = []
-    for (const doc of docs) {
-      const message = (doc.content as any)?.message
-      if (!message || typeof message !== 'object') {
-        continue
-      }
-      if (
-        message.role === 'user' ||
-        message.role === 'assistant' ||
-        message.role === 'toolResult'
-      ) {
-        messages.push(message as AgentMessage)
-      }
-    }
-
-    return messages
   }
 
   private createUserMessage(content: string): AgentMessage {
@@ -780,7 +1017,42 @@ export class AIAgentService {
     return message
   }
 
-  private async getNextSeq(sessionId: string) {
+  private async appendEvent(
+    operationId: string,
+    sessionId: string,
+    type: AIAgentEventType,
+    payload: Record<string, unknown>,
+  ) {
+    const seq = await this.getNextEventSeq(operationId)
+
+    await this.eventModel.create({
+      operationId,
+      sessionId,
+      seq,
+      type,
+      payload,
+    })
+  }
+
+  private async appendEventWithSeq(
+    operationId: string,
+    sessionId: string,
+    seq: { value: number },
+    type: AIAgentEventType,
+    payload: Record<string, unknown>,
+  ) {
+    await this.eventModel.create({
+      operationId,
+      sessionId,
+      seq: seq.value,
+      type,
+      payload,
+    })
+
+    seq.value += 1
+  }
+
+  private async getNextMessageSeq(sessionId: string) {
     const doc = await this.messageModel
       .findOne({ sessionId })
       .sort({ seq: -1 })
@@ -790,187 +1062,66 @@ export class AIAgentService {
     return (doc?.seq || 0) + 1
   }
 
-  private resolvePiModel(config: AIAgentRuntimeConfigValue): {
-    model: Model<any>
-    selectedProvider: AIProviderConfig
-  } {
-    const enabledProviders = (config.providers || []).filter((provider) => {
-      return provider.enabled && provider.apiKey?.trim()
-    })
+  private async getNextEventSeq(operationId: string) {
+    const doc = await this.eventModel
+      .findOne({ operationId })
+      .sort({ seq: -1 })
+      .select('seq')
+      .lean()
 
-    if (!enabledProviders.length) {
-      throw new BizException(
-        ErrorCodeEnum.AINotEnabled,
-        'No enabled provider with API key configured for AI agent',
-      )
-    }
-
-    let selectedProvider: AIProviderConfig | undefined
-    if (config.agentModel?.providerId) {
-      selectedProvider = enabledProviders.find(
-        (provider) => provider.id === config.agentModel!.providerId,
-      )
-    }
-
-    selectedProvider ||= enabledProviders[0]
-
-    const selectedModel =
-      config.agentModel?.model?.trim() || selectedProvider.defaultModel
-
-    const baseCost = {
-      input: 0,
-      output: 0,
-      cacheRead: 0,
-      cacheWrite: 0,
-    }
-
-    switch (selectedProvider.type) {
-      case AIProviderType.Anthropic: {
-        return {
-          model: {
-            id: selectedModel,
-            name: selectedModel,
-            api: 'anthropic-messages',
-            provider: 'anthropic',
-            baseUrl:
-              this.normalizeEndpoint(selectedProvider.endpoint) ||
-              'https://api.anthropic.com/v1',
-            reasoning: true,
-            input: ['text', 'image'],
-            cost: baseCost,
-            contextWindow: 200_000,
-            maxTokens: 8_192,
-          },
-          selectedProvider,
-        }
-      }
-
-      case AIProviderType.OpenRouter: {
-        return {
-          model: {
-            id: selectedModel,
-            name: selectedModel,
-            api: 'openai-completions',
-            provider: 'openrouter',
-            baseUrl:
-              this.normalizeEndpoint(selectedProvider.endpoint) ||
-              'https://openrouter.ai/api/v1',
-            reasoning: true,
-            input: ['text', 'image'],
-            cost: baseCost,
-            contextWindow: 128_000,
-            maxTokens: 16_384,
-          },
-          selectedProvider,
-        }
-      }
-
-      case AIProviderType.OpenAICompatible: {
-        const endpoint = this.normalizeEndpoint(selectedProvider.endpoint)
-        if (!endpoint) {
-          throw new BizException(
-            ErrorCodeEnum.InvalidParameter,
-            `Endpoint is required for provider: ${selectedProvider.id}`,
-          )
-        }
-        return {
-          model: {
-            id: selectedModel,
-            name: selectedModel,
-            api: 'openai-completions',
-            provider: selectedProvider.id,
-            baseUrl: endpoint,
-            reasoning: true,
-            input: ['text', 'image'],
-            cost: baseCost,
-            contextWindow: 128_000,
-            maxTokens: 16_384,
-          },
-          selectedProvider,
-        }
-      }
-
-      case AIProviderType.OpenAI:
-      default: {
-        return {
-          model: {
-            id: selectedModel,
-            name: selectedModel,
-            api: 'openai-completions',
-            provider: 'openai',
-            baseUrl:
-              this.normalizeEndpoint(selectedProvider.endpoint) ||
-              'https://api.openai.com/v1',
-            reasoning: true,
-            input: ['text', 'image'],
-            cost: baseCost,
-            contextWindow: 128_000,
-            maxTokens: 16_384,
-          },
-          selectedProvider,
-        }
-      }
-    }
+    return (doc?.seq || 0) + 1
   }
 
-  private createApiKeyResolver(providers: AIProviderConfig[]) {
-    const enabledProviders = (providers || [])
-      .filter((provider) => provider.enabled && provider.apiKey?.trim())
-      .map((provider) => ({
-        ...provider,
-        apiKey: provider.apiKey.trim(),
-      }))
+  private normalizeEnabledToolIds(enabledTools: readonly string[] | undefined) {
+    if (!Array.isArray(enabledTools)) {
+      return [...BUILTIN_AGENT_TOOL_IDS]
+    }
 
-    const keyByProviderId = new Map(
-      enabledProviders.map((provider) => [provider.id, provider.apiKey]),
+    return Array.from(
+      new Set(
+        enabledTools.filter((id): id is AIAgentToolId => {
+          return BUILTIN_AGENT_TOOL_IDS.includes(id as AIAgentToolId)
+        }),
+      ),
     )
-    const keyByProviderType = new Map<AIProviderType, string>()
+  }
 
-    for (const provider of enabledProviders) {
-      if (!keyByProviderType.has(provider.type)) {
-        keyByProviderType.set(provider.type, provider.apiKey)
+  private safeJson(input: unknown) {
+    try {
+      const json = JSON.stringify(input, null, 2)
+      if (!json) {
+        return ''
       }
-    }
-
-    return (providerName: string) => {
-      if (!providerName) {
-        return undefined
+      if (json.length <= MAX_TOOL_OUTPUT_LENGTH) {
+        return json
       }
-
-      if (keyByProviderId.has(providerName)) {
-        return keyByProviderId.get(providerName)
-      }
-
-      switch (providerName) {
-        case 'openrouter': {
-          return keyByProviderType.get(AIProviderType.OpenRouter)
-        }
-        case 'anthropic': {
-          return keyByProviderType.get(AIProviderType.Anthropic)
-        }
-        case 'openai': {
-          return (
-            keyByProviderType.get(AIProviderType.OpenAI) ||
-            keyByProviderType.get(AIProviderType.OpenAICompatible)
-          )
-        }
-        default: {
-          return undefined
-        }
-      }
+      return `${json.slice(0, MAX_TOOL_OUTPUT_LENGTH)}\n...<truncated>`
+    } catch {
+      return String(input)
     }
   }
 
-  private normalizeEndpoint(endpoint?: string) {
-    if (!endpoint) {
-      return undefined
+  private createActionResolutionMessage(
+    state: string,
+    actionId: string,
+    toolName: string,
+    result?: Record<string, unknown>,
+    error?: string,
+  ): AgentMessage {
+    const summary = {
+      actionId,
+      toolName,
+      state,
+      result,
+      error,
     }
 
-    let normalized = endpoint.trim().replace(/\/+$/, '')
-    if (!normalized.endsWith('/v1')) {
-      normalized = `${normalized}/v1`
-    }
-    return normalized
+    return this.createUserMessage(
+      [
+        'Tool confirmation resolved. Continue the previous task with this outcome:',
+        this.safeJson(summary),
+      ].join('\n'),
+    )
   }
 
   private buildSystemPrompt(connectors: AIAgentToolConnector[]) {
@@ -994,74 +1145,6 @@ export class AIAgentService {
       connectorPrompt,
       '</tool_capabilities>',
     ].join('\n')
-  }
-
-  private safeJson(input: unknown) {
-    try {
-      const json = JSON.stringify(input, null, 2)
-      if (!json) {
-        return ''
-      }
-      if (json.length <= MAX_TOOL_OUTPUT_LENGTH) {
-        return json
-      }
-      return `${json.slice(0, MAX_TOOL_OUTPUT_LENGTH)}\n...<truncated>`
-    } catch {
-      return String(input)
-    }
-  }
-
-  private createActionResolutionMessage(
-    action: AIAgentActionModel,
-  ): AgentMessage {
-    const summary = {
-      actionId: action.id,
-      toolName: action.toolName,
-      state: action.state,
-      result: action.result,
-      error: action.error,
-    }
-
-    return this.createUserMessage(
-      [
-        'Tool confirmation resolved. Continue the previous task with this outcome:',
-        this.safeJson(summary),
-      ].join('\n'),
-    )
-  }
-
-  private isPendingConfirmationToolEvent(event: unknown) {
-    if (!event || typeof event !== 'object') {
-      return false
-    }
-    if ((event as any).type !== 'tool_execution_end') {
-      return false
-    }
-
-    const details = (event as any).result?.details
-    return Boolean(
-      details &&
-      typeof details === 'object' &&
-      (details as Record<string, unknown>).pendingConfirmation === true,
-    )
-  }
-
-  private isAbortAssistantMessage(message: AgentMessage) {
-    if (message.role !== 'assistant') {
-      return false
-    }
-
-    const stopReason = (message as any).stopReason
-    if (stopReason !== 'aborted') {
-      return false
-    }
-
-    const errorMessage = (message as any).errorMessage
-    if (typeof errorMessage !== 'string') {
-      return true
-    }
-
-    return /aborted/i.test(errorMessage)
   }
 
   private async emitToSession(

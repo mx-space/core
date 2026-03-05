@@ -1,5 +1,7 @@
 import { spawn } from 'node:child_process'
-import { Type, type Static } from '@mariozechner/pi-ai'
+
+import { type Static, Type } from '@mariozechner/pi-ai'
+
 import type { AIAgentToolResult } from '../../../ai-agent.types'
 
 const SHELL_TIMEOUT_MS = 15_000
@@ -40,6 +42,147 @@ export function isWhitelistedShellCommand(command: string) {
   return SHELL_COMMAND_WHITELIST.includes(name as any)
 }
 
+const SENSITIVE_READ_PATHS = [
+  /\.env/i,
+  /id_rsa|id_ed25519|id_ecdsa/i,
+  /\.aws\/credentials/i,
+  /\.docker\/config\.json/i,
+  /\.kube\/config/i,
+  /\.git-credentials/i,
+  /\.npmrc/i,
+  /\.(bash_history|zsh_history|history)/i,
+]
+
+function hasUnsafeShellMetaChars(command: string) {
+  // Auto-run path only allows direct command invocation without shell control operators.
+  return /[\n\r$&();<>\\`|]/.test(command)
+}
+
+function isSensitiveReadCommand(command: string) {
+  const readVerb = /\b(?:cat|head|tail|sed|awk|grep|less|more)\b/i
+  if (!readVerb.test(command)) {
+    return false
+  }
+
+  return SENSITIVE_READ_PATHS.some((pattern) => pattern.test(command))
+}
+
+function tokenizeCommand(command: string) {
+  return command.trim().split(/\s+/).filter(Boolean)
+}
+
+function stripWrappingQuotes(value: string) {
+  return value.replaceAll(/^["']+|["']+$/g, '')
+}
+
+function isProtectedDeleteTarget(target: string) {
+  const normalized = stripWrappingQuotes(target.trim()).replaceAll(/\/+$/g, '')
+  if (!normalized || normalized === '/') {
+    return true
+  }
+
+  if (normalized === '~' || normalized === '$HOME') {
+    return true
+  }
+
+  if (/^\/users\/[^/]+$/i.test(normalized)) {
+    return true
+  }
+
+  if (/^\/home\/[^/]+$/i.test(normalized)) {
+    return true
+  }
+
+  return false
+}
+
+function isRecursiveDeleteOnProtectedPath(command: string) {
+  const tokens = tokenizeCommand(command)
+  if (!tokens.length || tokens[0].toLowerCase() !== 'rm') {
+    return false
+  }
+
+  let hasRecursive = false
+  let hasForce = false
+  const targets: string[] = []
+
+  for (const token of tokens.slice(1)) {
+    if (token.startsWith('-') && token.length > 1) {
+      const flags = token.slice(1).toLowerCase()
+      if (flags.includes('r')) {
+        hasRecursive = true
+      }
+      if (flags.includes('f')) {
+        hasForce = true
+      }
+      continue
+    }
+
+    targets.push(token)
+  }
+
+  if (!(hasRecursive && hasForce)) {
+    return false
+  }
+
+  if (!targets.length) {
+    return false
+  }
+
+  return targets.some((target) => isProtectedDeleteTarget(target))
+}
+
+function isDiskFormattingCommand(command: string) {
+  const normalized = command.toLowerCase()
+  if (/\bmkfs\b/.test(normalized)) {
+    return true
+  }
+  if (/\bfdisk\b/.test(normalized)) {
+    return true
+  }
+  if (/\bparted\b/.test(normalized)) {
+    return true
+  }
+
+  if (!/\bdd\b/.test(normalized)) {
+    return false
+  }
+
+  return normalized.includes('of=/dev/') || normalized.includes(' of /dev/')
+}
+
+function getBlockedReason(command: string) {
+  if (isRecursiveDeleteOnProtectedPath(command)) {
+    return 'Recursive delete on home/root path is blocked'
+  }
+
+  if (isDiskFormattingCommand(command)) {
+    return 'Disk formatting commands are blocked'
+  }
+
+  return null
+}
+
+function shouldAutoExecuteCommand(command: string) {
+  if (!isWhitelistedShellCommand(command)) {
+    return false
+  }
+
+  if (hasUnsafeShellMetaChars(command)) {
+    return false
+  }
+
+  if (isSensitiveReadCommand(command)) {
+    return false
+  }
+
+  if (getBlockedReason(command)) {
+    return false
+  }
+
+  return true
+}
+
 interface ExecuteShellToolContext {
   sessionId: string
   seq: { value: number }
@@ -57,7 +200,12 @@ interface ExecuteShellToolContext {
 export async function executeShellTool(
   context: ExecuteShellToolContext,
 ): Promise<AIAgentToolResult> {
-  if (isWhitelistedShellCommand(context.params.command)) {
+  const blockedReason = getBlockedReason(context.params.command)
+  if (blockedReason) {
+    throw new Error(`Command blocked by policy: ${blockedReason}`)
+  }
+
+  if (shouldAutoExecuteCommand(context.params.command)) {
     const result = await executeShellCommand(
       context.params.command,
       context.params.cwd,
@@ -80,7 +228,7 @@ export async function executeShellTool(
   const dryRunPreview = {
     command: context.params.command,
     cwd: context.params.cwd,
-    reason: 'Command is not in hardcoded whitelist',
+    reason: 'Unsafe or non-whitelisted command requires confirmation',
     commandName: parseShellCommandName(context.params.command),
   }
 
@@ -119,6 +267,11 @@ export async function executeShellConfirmedAction(
     throw new Error('Invalid shell action payload: missing command')
   }
 
+  const blockedReason = getBlockedReason(command)
+  if (blockedReason) {
+    throw new Error(`Command blocked by policy: ${blockedReason}`)
+  }
+
   return executeShellCommand(command, cwd)
 }
 
@@ -127,7 +280,13 @@ export async function executeShellCommand(command: string, cwd?: string) {
     const startedAt = Date.now()
     const child = spawn('sh', ['-lc', command], {
       cwd: cwd || process.cwd(),
-      env: process.env,
+      env: {
+        HOME: process.env.HOME,
+        LANG: process.env.LANG,
+        PATH: process.env.PATH,
+        SHELL: process.env.SHELL,
+        TERM: process.env.TERM,
+      },
     })
 
     let stdout = ''

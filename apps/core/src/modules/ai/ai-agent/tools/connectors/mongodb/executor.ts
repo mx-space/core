@@ -1,5 +1,6 @@
-import { Type, type Static } from '@mariozechner/pi-ai'
+import { type Static, Type } from '@mariozechner/pi-ai'
 import type { Db, Filter } from 'mongodb'
+
 import type { AIAgentToolResult } from '../../../ai-agent.types'
 
 export const MONGO_TOOL_OPERATIONS = [
@@ -63,6 +64,13 @@ const MONGO_READ_OPERATIONS = new Set([
   'aggregate',
 ])
 
+const PROTECTED_COLLECTIONS = new Set([
+  'migrations',
+  'migration_locks',
+  'checksum',
+  'sessions',
+])
+
 export function normalizeMongoOperation(operation: string) {
   return operation.trim().toLowerCase()
 }
@@ -73,6 +81,17 @@ export function isMongoWriteOperation(operation: string) {
 
 export function isMongoReadOperation(operation: string) {
   return MONGO_READ_OPERATIONS.has(operation.toLowerCase())
+}
+
+function ensureCollectionAllowed(collection: string, operation: string) {
+  const normalized = collection.trim().toLowerCase()
+  if (
+    (normalized.startsWith('ai_agent') ||
+      PROTECTED_COLLECTIONS.has(normalized)) &&
+    isMongoWriteOperation(operation)
+  ) {
+    throw new Error(`Writes to protected collection are blocked: ${collection}`)
+  }
 }
 
 interface ExecuteMongoToolContext {
@@ -94,6 +113,7 @@ export async function executeMongoTool(
   context: ExecuteMongoToolContext,
 ): Promise<AIAgentToolResult> {
   const operation = normalizeMongoOperation(context.params.operation)
+  ensureCollectionAllowed(context.params.collection, operation)
 
   if (isMongoReadOperation(operation)) {
     const result = await executeMongoReadOperation(context.db, context.params)
@@ -153,6 +173,7 @@ export async function executeMongoConfirmedAction(
   const args = params as unknown as MongoToolArgs
   const collection = db.collection(args.collection)
   const operation = normalizeMongoOperation(args.operation)
+  ensureCollectionAllowed(args.collection, operation)
 
   switch (operation) {
     case 'insertone': {

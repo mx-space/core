@@ -1,6 +1,8 @@
 import { modelOptions, prop } from '@typegoose/typegoose'
+
 import { AI_AGENT_SESSION_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
+
 import { AIAgentSessionStatus } from './ai-agent.types'
 
 @modelOptions({
@@ -22,4 +24,7 @@ export class AIAgentSessionModel extends BaseModel {
 
   @prop({ type: Date, default: () => new Date() })
   updated?: Date
+
+  @prop({ type: String })
+  lastOperationId?: string
 }

@@ -1,6 +1,8 @@
 import { index, modelOptions, prop, Severity } from '@typegoose/typegoose'
+
 import { AI_AGENT_ACTION_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
+
 import { AIAgentActionRiskLevel, AIAgentActionState } from './ai-agent.types'
 
 @modelOptions({
@@ -13,6 +15,9 @@ import { AIAgentActionRiskLevel, AIAgentActionState } from './ai-agent.types'
 export class AIAgentActionModel extends BaseModel {
   @prop({ required: true })
   sessionId: string
+
+  @prop({ required: true })
+  operationId: string
 
   @prop({ required: true })
   toolName: string

@@ -1,5 +1,7 @@
 import { index, modelOptions, prop, Severity } from '@typegoose/typegoose'
+
 import { AI_AGENT_RUNTIME_CONFIG_COLLECTION_NAME } from '~/constants/db.constant'
+
 import type { AIAgentRuntimeConfigValue } from './ai-agent.types'
 
 @modelOptions({
@@ -21,6 +23,15 @@ export class AIAgentRuntimeConfigModel {
 
   @prop({ type: () => [String], default: [] })
   enabledTools: AIAgentRuntimeConfigValue['enabledTools']
+
+  @prop({ type: Number, default: 20 })
+  maxSteps: number
+
+  @prop({ type: Number, default: 80 })
+  historyWindow: number
+
+  @prop({ type: Number, default: 200_000 })
+  contextCharBudget: number
 
   @prop({ type: Date, default: () => new Date() })
   updated?: Date

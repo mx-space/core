@@ -1,6 +1,8 @@
-import { AIProviderType } from '~/modules/ai/ai.types'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { AIProviderType } from '~/modules/ai/ai.types'
+
 import { BUILTIN_AGENT_TOOL_IDS } from './ai-agent.types'
 
 const AgentProviderSchema = z.object({
@@ -22,6 +24,14 @@ export const UpsertAIAgentConfigSchema = z.object({
   providers: z.array(AgentProviderSchema),
   agentModel: AgentModelAssignmentSchema.optional(),
   enabledTools: z.array(z.enum(BUILTIN_AGENT_TOOL_IDS)).optional(),
+  maxSteps: z.coerce.number().int().min(1).max(100).optional(),
+  historyWindow: z.coerce.number().int().min(10).max(200).optional(),
+  contextCharBudget: z.coerce
+    .number()
+    .int()
+    .min(20_000)
+    .max(1_000_000)
+    .optional(),
 })
 
 export class UpsertAIAgentConfigDto extends createZodDto(

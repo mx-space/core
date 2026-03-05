@@ -12,6 +12,9 @@ export interface AIAgentRuntimeConfigValue {
   providers: AIProviderConfig[]
   agentModel?: AIModelAssignment
   enabledTools: AIAgentToolId[]
+  maxSteps: number
+  historyWindow: number
+  contextCharBudget: number
 }
 
 export enum AIAgentSessionStatus {
@@ -23,6 +26,7 @@ export enum AIAgentMessageKind {
   User = 'user',
   Assistant = 'assistant',
   ToolResult = 'tool_result',
+  RuntimeError = 'runtime_error',
   ConfirmRequest = 'confirm_request',
   ConfirmResult = 'confirm_result',
 }
@@ -38,6 +42,31 @@ export enum AIAgentActionState {
   Rejected = 'rejected',
   Executed = 'executed',
   Cancelled = 'cancelled',
+}
+
+export enum AIAgentOperationMode {
+  Prompt = 'prompt',
+  Continue = 'continue',
+}
+
+export enum AIAgentOperationStatus {
+  Queued = 'queued',
+  Running = 'running',
+  WaitingHuman = 'waiting_human',
+  Done = 'done',
+  Error = 'error',
+  Cancelled = 'cancelled',
+}
+
+export enum AIAgentEventType {
+  SessionState = 'session_state',
+  MessageDelta = 'message_delta',
+  MessagePersisted = 'message_persisted',
+  ToolEvent = 'tool_event',
+  ConfirmRequest = 'confirm_request',
+  ConfirmResult = 'confirm_result',
+  RuntimeError = 'runtime_error',
+  Compression = 'compression',
 }
 
 export interface AIAgentToolActionArgument {
