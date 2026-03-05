@@ -1,6 +1,7 @@
-import { zCoerceInt, zLang } from '~/common/zod'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { zCoerceInt, zLang } from '~/common/zod'
 
 /**
  * Top query schema
@@ -66,6 +67,30 @@ export class ReadAndLikeCountTypeDto extends createZodDto(
   ReadAndLikeCountTypeSchema,
 ) {}
 
+/**
+ * Latest query schema
+ */
+export const LatestQuerySchema = z.object({
+  limit: z.preprocess(
+    (val) => (typeof val === 'string' ? Number.parseInt(val, 10) : val),
+    z.number().min(1).max(20).optional(),
+  ),
+  types: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') return val.split(',').map(Number)
+      if (Array.isArray(val)) return val.map(Number)
+      return val
+    },
+    z.array(z.nativeEnum(TimelineType)).optional(),
+  ),
+  combined: z.preprocess(
+    (val) => val === 'true' || val === true,
+    z.boolean().optional(),
+  ),
+})
+
+export class LatestQueryDto extends createZodDto(LatestQuerySchema) {}
+
 // Type exports
 export type TopQueryInput = z.infer<typeof TopQuerySchema>
 export type TimelineQueryInput = z.infer<typeof TimelineQuerySchema>
@@ -73,3 +98,4 @@ export type AggregateQueryInput = z.infer<typeof AggregateQuerySchema>
 export type ReadAndLikeCountTypeInput = z.infer<
   typeof ReadAndLikeCountTypeSchema
 >
+export type LatestQueryInput = z.infer<typeof LatestQuerySchema>

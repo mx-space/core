@@ -1,4 +1,3 @@
-import sortPlugin from '@ianvs/prettier-plugin-sort-imports'
 import jsonPlugin from 'prettier-package-json'
 
 export default {
@@ -11,5 +10,5 @@ export default {
 
   arrowParens: 'always',
   endOfLine: 'lf',
-  plugins: [jsonPlugin, sortPlugin],
+  plugins: [jsonPlugin],
 }

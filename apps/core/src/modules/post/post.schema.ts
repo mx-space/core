@@ -1,3 +1,6 @@
+import { createZodDto } from 'nestjs-zod'
+import { z } from 'zod'
+
 import {
   zArrayUnique,
   zCoerceInt,
@@ -5,12 +8,11 @@ import {
   zMongoId,
   zNonEmptyString,
   zPinDate,
+  zPrefer,
 } from '~/common/zod'
 import { PagerSchema } from '~/shared/dto/pager.dto'
 import { WriteBaseSchema } from '~/shared/schema'
 import { ImageSchema } from '~/shared/schema/image.schema'
-import { createZodDto } from 'nestjs-zod'
-import { z } from 'zod'
 
 /**
  * Post schema for API validation
@@ -64,6 +66,7 @@ export class CategoryAndSlugDto extends createZodDto(CategoryAndSlugSchema) {}
  */
 export const PostDetailQuerySchema = z.object({
   lang: zLang,
+  prefer: zPrefer,
 })
 
 export class PostDetailQueryDto extends createZodDto(PostDetailQuerySchema) {}

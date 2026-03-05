@@ -57,6 +57,7 @@ export enum ErrorCodeEnum {
   SubscribeNotEnabled = 13005,
   PasswordLoginDisabled = 13006,
   AIProviderNotEnabled = 13007,
+  ImageStorageNotConfigured = 13008,
 
   // biz - forbidden (403)
   NoteForbidden = 14000,
@@ -210,6 +211,10 @@ export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
     [ErrorCodeEnum.PasswordLoginDisabled]: ['密码登录已禁用', 400],
     [ErrorCodeEnum.AIProviderNotEnabled]: [
       '没有配置启用的 AI Provider，无法启用 AI 评论审核',
+      400,
+    ],
+    [ErrorCodeEnum.ImageStorageNotConfigured]: [
+      'S3 图床未配置或配置不完整',
       400,
     ],
 

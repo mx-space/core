@@ -5,7 +5,7 @@ export enum EnumPageType {
   'html' = 'html',
   'frame' = 'frame',
 }
-export interface PageModel extends TextBaseModel {
+export type PageModel = TextBaseModel & {
   created: string
 
   slug: string

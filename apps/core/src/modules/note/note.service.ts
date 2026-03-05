@@ -1,5 +1,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import type { DocumentType } from '@typegoose/typegoose'
+import dayjs from 'dayjs'
+import { debounce, omit } from 'es-toolkit/compat'
+import type { PaginateOptions, QueryFilter } from 'mongoose'
+
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -11,13 +15,12 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { isLexical } from '~/utils/content.util'
 import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getLessThanNow } from '~/utils/time.util'
 import { isDefined, isMongoId } from '~/utils/validator.util'
-import dayjs from 'dayjs'
-import { debounce, omit } from 'es-toolkit/compat'
-import type { PaginateOptions, QueryFilter } from 'mongoose'
+
 import { CommentService } from '../comment/comment.service'
 import { DraftRefType } from '../draft/draft.model'
 import { DraftService } from '../draft/draft.service'
@@ -170,7 +173,7 @@ export class NoteService {
     scheduleManager.schedule(async () => {
       // Track file references
       await this.fileReferenceService.activateReferences(
-        note.text,
+        note,
         note.id,
         FileReferenceType.Note,
       )
@@ -186,14 +189,15 @@ export class NoteService {
             scope: EventScope.TO_SYSTEM_VISITOR,
           },
         ),
-        this.imageService.saveImageDimensionsFromMarkdownText(
-          note.text,
-          note.images,
-          (images) => {
-            note.images = images
-            return note.save()
-          },
-        ),
+        !isLexical(note) &&
+          this.imageService.saveImageDimensionsFromMarkdownText(
+            note.text,
+            note.images,
+            (images) => {
+              note.images = images
+              return note.save()
+            },
+          ),
       ])
     })
 
@@ -281,7 +285,7 @@ export class NoteService {
     scheduleManager.schedule(async () => {
       // Update file references
       await this.fileReferenceService.updateReferencesForDocument(
-        updated.text,
+        updated,
         updated.id,
         FileReferenceType.Note,
       )
@@ -290,24 +294,25 @@ export class NoteService {
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
-        this.imageService.saveImageDimensionsFromMarkdownText(
-          updated.text,
-          updated.images,
-          (images) => {
-            return this.model
-              .updateOne(
-                {
-                  _id: id,
-                },
-                {
-                  $set: {
-                    images,
+        !isLexical(updated) &&
+          this.imageService.saveImageDimensionsFromMarkdownText(
+            updated.text,
+            updated.images,
+            (images) => {
+              return this.model
+                .updateOne(
+                  {
+                    _id: id,
                   },
-                },
-              )
-              .exec()
-          },
-        ),
+                  {
+                    $set: {
+                      images,
+                    },
+                  },
+                )
+                .exec()
+            },
+          ),
       ])
     })
 

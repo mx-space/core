@@ -1,6 +1,7 @@
+import type { FastifyReply } from 'fastify'
+
 import { logger } from '~/global/consola.global'
 import { isDev } from '~/global/env.global'
-import type { FastifyReply } from 'fastify'
 
 export function initSse(reply: FastifyReply) {
   reply.raw.setHeader('Content-Type', 'text/event-stream')

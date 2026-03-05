@@ -1,11 +1,12 @@
 import { Test } from '@nestjs/testing'
+import { Types } from 'mongoose'
+import { vi } from 'vitest'
+
 import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { AuthInstanceInjectKey } from '~/modules/auth/auth.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { DatabaseService } from '~/processors/database/database.service'
-import { Types } from 'mongoose'
-import { vi } from 'vitest'
 
 function createMockCollection(docs: any[] = []) {
   return {
@@ -391,7 +392,7 @@ describe('AuthService', () => {
         api: {
           verifyApiKey: vi
             .fn()
-            .mockResolvedValue({ valid: true, key: { userId: 'uid1' } }),
+            .mockResolvedValue({ valid: true, key: { referenceId: 'uid1' } }),
         },
       })
       const { service } = await createTestService({ authInstance })

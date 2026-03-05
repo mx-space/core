@@ -1,14 +1,26 @@
-import { access, unlink } from 'node:fs/promises'
+import { unlink } from 'node:fs/promises'
 import path from 'node:path'
+
 import { Injectable, Logger } from '@nestjs/common'
+
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
+import { ConfigsService } from '~/modules/configs/configs.service'
+import type { ContentFormat } from '~/shared/types/content-format.type'
 import { InjectModel } from '~/transformers/model.transformer'
-import { pickImagesFromMarkdown } from '~/utils/pic.util'
+import { extractImagesFromContent } from '~/utils/content.util'
+import { S3Uploader } from '~/utils/s3.util'
+
 import {
   FileReferenceModel,
   FileReferenceStatus,
   FileReferenceType,
 } from './file-reference.model'
+
+interface ContentLike {
+  text: string
+  contentFormat?: ContentFormat | string
+  content?: string
+}
 
 @Injectable()
 export class FileReferenceService {
@@ -17,13 +29,18 @@ export class FileReferenceService {
   constructor(
     @InjectModel(FileReferenceModel)
     private readonly fileReferenceModel: MongooseModel<FileReferenceModel>,
+    private readonly configsService: ConfigsService,
   ) {}
 
   get model() {
     return this.fileReferenceModel
   }
 
-  async createPendingReference(fileUrl: string, fileName: string) {
+  async createPendingReference(
+    fileUrl: string,
+    fileName: string,
+    s3ObjectKey?: string,
+  ) {
     const existing = await this.fileReferenceModel.findOne({ fileUrl })
     if (existing) {
       return existing
@@ -33,24 +50,21 @@ export class FileReferenceService {
       fileUrl,
       fileName,
       status: FileReferenceStatus.Pending,
+      ...(s3ObjectKey && { s3ObjectKey }),
     })
   }
 
   async activateReferences(
-    text: string,
+    doc: ContentLike,
     refId: string,
     refType: FileReferenceType,
   ) {
-    const imageUrls = pickImagesFromMarkdown(text)
-    const localImageUrls = imageUrls.filter((url) =>
-      url.includes('/objects/image/'),
-    )
-
-    if (localImageUrls.length === 0) return
+    const imageUrls = extractImagesFromContent(doc)
+    if (imageUrls.length === 0) return
 
     await this.fileReferenceModel.updateMany(
       {
-        fileUrl: { $in: localImageUrls },
+        fileUrl: { $in: imageUrls },
       },
       {
         $set: {
@@ -63,22 +77,19 @@ export class FileReferenceService {
   }
 
   async updateReferencesForDocument(
-    text: string,
+    doc: ContentLike,
     refId: string,
     refType: FileReferenceType,
   ) {
-    const imageUrls = pickImagesFromMarkdown(text)
-    const localImageUrls = imageUrls.filter((url) =>
-      url.includes('/objects/image/'),
-    )
+    const imageUrls = extractImagesFromContent(doc)
 
     await this.fileReferenceModel.updateMany(
       { refId, refType },
       { $set: { status: FileReferenceStatus.Pending, refId: null } },
     )
 
-    if (localImageUrls.length > 0) {
-      for (const fileUrl of localImageUrls) {
+    if (imageUrls.length > 0) {
+      for (const fileUrl of imageUrls) {
         await this.fileReferenceModel.updateOne(
           { fileUrl },
           {
@@ -88,7 +99,6 @@ export class FileReferenceService {
               refType,
             },
           },
-          { upsert: true },
         )
       }
     }
@@ -109,11 +119,23 @@ export class FileReferenceService {
       created: { $lt: cutoffTime },
     })
 
+    const s3Uploader = await this.buildS3Uploader()
     let deletedCount = 0
+
     for (const file of orphanFiles) {
       try {
-        const localPath = path.join(STATIC_FILE_DIR, 'image', file.fileName)
-        await unlink(localPath)
+        if (file.s3ObjectKey) {
+          if (!s3Uploader) {
+            this.logger.warn(`S3 not configured, skip: ${file.fileName}`)
+            continue
+          }
+          await s3Uploader.deleteObject(file.s3ObjectKey)
+        } else if (file.fileUrl.includes('/objects/image/')) {
+          const localPath = path.join(STATIC_FILE_DIR, 'image', file.fileName)
+          await unlink(localPath)
+        } else {
+          continue
+        }
         await this.fileReferenceModel.deleteOne({ _id: file._id })
         deletedCount++
         this.logger.log(`Deleted orphan file: ${file.fileName}`)
@@ -123,41 +145,6 @@ export class FileReferenceService {
     }
 
     return { deletedCount, totalOrphan: orphanFiles.length }
-  }
-
-  async deleteLocalFileIfUnreferenced(fileUrl: string) {
-    const activeCount = await this.fileReferenceModel.countDocuments({
-      fileUrl,
-      status: FileReferenceStatus.Active,
-    })
-    if (activeCount > 0) {
-      return { deleted: false, reason: 'active-reference-exists' as const }
-    }
-
-    const existingRef = await this.fileReferenceModel
-      .findOne({ fileUrl })
-      .select('fileName')
-      .lean()
-    const fileName =
-      existingRef?.fileName ?? this.extractLocalImageFilename(fileUrl)
-
-    if (!fileName) {
-      return { deleted: false, reason: 'filename-not-found' as const }
-    }
-
-    const localPath = path.join(STATIC_FILE_DIR, 'image', fileName)
-    const fileDeleted = await this.deleteFileIfExists(localPath)
-
-    if (!fileDeleted) {
-      return { deleted: false, reason: 'delete-failed' as const }
-    }
-
-    await this.fileReferenceModel.deleteMany({
-      fileUrl,
-      status: FileReferenceStatus.Pending,
-    })
-
-    return { deleted: true, reason: 'deleted' as const }
   }
 
   async getFileReferences(fileUrl: string) {
@@ -178,28 +165,23 @@ export class FileReferenceService {
     })
   }
 
-  private async deleteFileIfExists(filePath: string): Promise<boolean> {
-    try {
-      await access(filePath)
-      await unlink(filePath)
-      return true
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+  async batchDeleteOrphans(options: { ids?: string[]; all?: boolean }) {
+    const s3Uploader = await this.buildS3Uploader()
+
+    const deleteFile = async (file: FileReferenceModel): Promise<boolean> => {
+      if (file.s3ObjectKey) {
+        if (!s3Uploader) return false
+        await s3Uploader.deleteObject(file.s3ObjectKey)
         return true
       }
-      this.logger.warn(
-        `Failed to delete file: ${filePath}, error: ${error.message}`,
-      )
+      if (file.fileUrl.includes('/objects/image/')) {
+        const localPath = path.join(STATIC_FILE_DIR, 'image', file.fileName)
+        await unlink(localPath)
+        return true
+      }
       return false
     }
-  }
 
-  private extractLocalImageFilename(url: string): string | null {
-    const match = url.match(/\/objects\/image\/([^/?#]+)/)
-    return match ? match[1] : null
-  }
-
-  async batchDeleteOrphans(options: { ids?: string[]; all?: boolean }) {
     if (options.all) {
       const orphanFiles = await this.fileReferenceModel.find({
         status: FileReferenceStatus.Pending,
@@ -207,11 +189,13 @@ export class FileReferenceService {
 
       let deletedCount = 0
       for (const file of orphanFiles) {
-        const localPath = path.join(STATIC_FILE_DIR, 'image', file.fileName)
-        const fileDeleted = await this.deleteFileIfExists(localPath)
-        if (fileDeleted) {
-          await this.fileReferenceModel.deleteOne({ _id: file._id })
-          deletedCount++
+        try {
+          if (await deleteFile(file)) {
+            await this.fileReferenceModel.deleteOne({ _id: file._id })
+            deletedCount++
+          }
+        } catch {
+          this.logger.warn(`Failed to delete orphan: ${file.fileName}`)
         }
       }
       return { deletedCount }
@@ -222,11 +206,13 @@ export class FileReferenceService {
       for (const id of options.ids) {
         const ref = await this.fileReferenceModel.findById(id)
         if (ref && ref.status === FileReferenceStatus.Pending) {
-          const filePath = path.join(STATIC_FILE_DIR, 'image', ref.fileName)
-          const fileDeleted = await this.deleteFileIfExists(filePath)
-          if (fileDeleted) {
-            await this.fileReferenceModel.deleteOne({ _id: id })
-            deletedCount++
+          try {
+            if (await deleteFile(ref)) {
+              await this.fileReferenceModel.deleteOne({ _id: id })
+              deletedCount++
+            }
+          } catch {
+            this.logger.warn(`Failed to delete orphan: ${ref.fileName}`)
           }
         }
       }
@@ -234,5 +220,29 @@ export class FileReferenceService {
     }
 
     return { deletedCount: 0 }
+  }
+
+  private async buildS3Uploader(): Promise<S3Uploader | null> {
+    const config = await this.configsService.get('imageStorageOptions')
+    if (
+      !config.enable ||
+      !config.endpoint ||
+      !config.secretId ||
+      !config.secretKey ||
+      !config.bucket
+    ) {
+      return null
+    }
+    const uploader = new S3Uploader({
+      endpoint: config.endpoint,
+      accessKey: config.secretId,
+      secretKey: config.secretKey,
+      bucket: config.bucket,
+      region: config.region || 'auto',
+    })
+    if (config.customDomain) {
+      uploader.setCustomDomain(config.customDomain)
+    }
+    return uploader
   }
 }

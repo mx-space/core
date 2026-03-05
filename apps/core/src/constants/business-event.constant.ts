@@ -1,3 +1,6 @@
+/** Prefix for serverless function broadcast events */
+export const SERVERLESS_EVENT_PREFIX = 'fn#'
+
 export enum BusinessEvents {
   GATEWAY_CONNECT = 'GATEWAY_CONNECT',
   GATEWAY_DISCONNECT = 'GATEWAY_DISCONNECT',

@@ -1,5 +1,16 @@
 import { ModuleRef } from '@nestjs/core'
 import { Test } from '@nestjs/testing'
+import { Types } from 'mongoose'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type Mock,
+  vi,
+} from 'vitest'
+
 import { BusinessException } from '~/common/exceptions/biz.exception'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import {
@@ -12,20 +23,9 @@ import { PostModel } from '~/modules/post/post.model'
 import { PostService } from '~/modules/post/post.service'
 import { SlugTrackerService } from '~/modules/slug-tracker/slug-tracker.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { ImageMigrationService } from '~/processors/helper/helper.image-migration.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { getModelToken } from '~/transformers/model.transformer'
-import { Types } from 'mongoose'
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-  type Mock,
-} from 'vitest'
 
 describe('PostService', () => {
   let postService: PostService
@@ -62,10 +62,6 @@ describe('PostService', () => {
 
   let mockImageService: {
     saveImageDimensionsFromMarkdownText: Mock
-  }
-
-  let mockImageMigrationService: {
-    migrateImagesToS3: Mock
   }
 
   const createMockPostModel = () => {
@@ -264,14 +260,6 @@ describe('PostService', () => {
       saveImageDimensionsFromMarkdownText: vi.fn().mockResolvedValue(undefined),
     }
 
-    mockImageMigrationService = {
-      migrateImagesToS3: vi.fn().mockResolvedValue({
-        newText: '',
-        newImages: [],
-        migratedCount: 0,
-      }),
-    }
-
     const mockModuleRef = {
       get: vi.fn().mockImplementation((token: any) => {
         if (token === CATEGORY_SERVICE_TOKEN) {
@@ -301,10 +289,6 @@ describe('PostService', () => {
         {
           provide: ImageService,
           useValue: mockImageService,
-        },
-        {
-          provide: ImageMigrationService,
-          useValue: mockImageMigrationService,
         },
         {
           provide: FileReferenceService,

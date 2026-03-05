@@ -145,5 +145,156 @@ describe('content.util', () => {
       )
       expect(h1).not.toBe(h2)
     })
+
+    it('markdown: same input → stable hash', () => {
+      const doc = { title: 'T', text: 'body', summary: 's', tags: ['a'] }
+      expect(computeContentHash(doc, 'en')).toBe(computeContentHash(doc, 'en'))
+    })
+
+    it('markdown: different text → different hash', () => {
+      const a = computeContentHash({ title: 'T', text: 'v1' }, 'en')
+      const b = computeContentHash({ title: 'T', text: 'v2' }, 'en')
+      expect(a).not.toBe(b)
+    })
+
+    it('different sourceLang → different hash', () => {
+      const doc = { title: 'T', text: 'body' }
+      expect(computeContentHash(doc, 'en')).not.toBe(
+        computeContentHash(doc, 'zh'),
+      )
+    })
+
+    it('lexical: ignores blockId-only changes', () => {
+      const contentA = JSON.stringify({
+        root: {
+          type: 'root',
+          version: 1,
+          format: '',
+          indent: 0,
+          direction: null,
+          children: [
+            {
+              type: 'paragraph',
+              version: 1,
+              format: '',
+              indent: 0,
+              direction: null,
+              $: { blockId: 'aaaa1111' },
+              children: [
+                {
+                  type: 'text',
+                  version: 1,
+                  text: 'hello',
+                  detail: 0,
+                  format: 0,
+                  mode: 'normal',
+                  style: '',
+                },
+              ],
+            },
+          ],
+        },
+      })
+
+      const contentB = JSON.stringify({
+        root: {
+          direction: null,
+          indent: 0,
+          format: '',
+          version: 1,
+          type: 'root',
+          children: [
+            {
+              direction: null,
+              indent: 0,
+              format: '',
+              version: 1,
+              type: 'paragraph',
+              $: { blockId: 'bbbb2222' },
+              children: [
+                {
+                  style: '',
+                  mode: 'normal',
+                  format: 0,
+                  detail: 0,
+                  text: 'hello',
+                  version: 1,
+                  type: 'text',
+                },
+              ],
+            },
+          ],
+        },
+      })
+
+      const hashA = computeContentHash(
+        {
+          title: 'T',
+          text: 'degraded',
+          contentFormat: ContentFormat.Lexical,
+          content: contentA,
+        },
+        'en',
+      )
+      const hashB = computeContentHash(
+        {
+          title: 'T',
+          text: 'degraded',
+          contentFormat: ContentFormat.Lexical,
+          content: contentB,
+        },
+        'en',
+      )
+
+      expect(hashA).toBe(hashB)
+    })
+
+    it('lexical: keeps semantic text changes hash-sensitive', () => {
+      const contentA = JSON.stringify({
+        root: {
+          children: [
+            {
+              type: 'paragraph',
+              version: 1,
+              $: { blockId: 'same1111' },
+              children: [{ type: 'text', version: 1, text: 'hello' }],
+            },
+          ],
+        },
+      })
+      const contentB = JSON.stringify({
+        root: {
+          children: [
+            {
+              type: 'paragraph',
+              version: 1,
+              $: { blockId: 'same1111' },
+              children: [{ type: 'text', version: 1, text: 'hello world' }],
+            },
+          ],
+        },
+      })
+
+      const hashA = computeContentHash(
+        {
+          title: 'T',
+          text: 'degraded',
+          contentFormat: ContentFormat.Lexical,
+          content: contentA,
+        },
+        'en',
+      )
+      const hashB = computeContentHash(
+        {
+          title: 'T',
+          text: 'degraded',
+          contentFormat: ContentFormat.Lexical,
+          content: contentB,
+        },
+        'en',
+      )
+
+      expect(hashA).not.toBe(hashB)
+    })
   })
 })

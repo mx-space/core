@@ -1,10 +1,12 @@
 import type { CanActivate, ExecutionContext } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
+
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import type { SessionUser } from '~/modules/auth/auth.types'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+
 import { BizException } from '../exceptions/biz.exception'
 
 @Injectable()
@@ -39,16 +41,16 @@ export class AuthGuard implements CanActivate {
     }
 
     const result = await this.authService.verifyApiKey(apiKey.key)
-    if (!result?.userId) {
+    if (!result?.referenceId) {
       throw new BizException(ErrorCodeEnum.AuthTokenInvalid)
     }
 
-    const isOwner = await this.authService.isOwnerReaderId(result.userId)
+    const isOwner = await this.authService.isOwnerReaderId(result.referenceId)
     if (!isOwner) {
       throw new BizException(ErrorCodeEnum.AuthTokenInvalid)
     }
 
-    const readerUser = await this.authService.getReaderById(result.userId)
+    const readerUser = await this.authService.getReaderById(result.referenceId)
     if (!readerUser) {
       throw new BizException(ErrorCodeEnum.AuthTokenInvalid)
     }

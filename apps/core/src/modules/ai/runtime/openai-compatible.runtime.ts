@@ -1,6 +1,8 @@
-import { isDev } from '~/global/env.global'
 import OpenAI from 'openai'
 import type { z } from 'zod'
+
+import { isDev } from '~/global/env.global'
+
 import { AIProviderType } from '../ai.types'
 import { BaseRuntime } from './base.runtime'
 import type {
@@ -61,11 +63,23 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
   async generateText(
     options: GenerateTextOptions,
   ): Promise<GenerateTextResult> {
-    const { prompt, messages, temperature, maxTokens, maxRetries = 2 } = options
+    const {
+      prompt,
+      messages,
+      temperature,
+      maxTokens,
+      maxRetries = 2,
+      reasoningEffort,
+    } = options
 
     const chatMessages: OpenAI.ChatCompletionMessageParam[] = messages
       ? messages.map((m) => ({ role: m.role, content: m.content }))
       : [{ role: 'user', content: prompt! }]
+
+    const openaiReasoningEffort =
+      reasoningEffort && reasoningEffort !== 'none'
+        ? reasoningEffort
+        : undefined
 
     return this.withRetry(async () => {
       const response = await this.client.chat.completions.create({
@@ -73,7 +87,8 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
         messages: chatMessages,
         temperature,
         max_tokens: maxTokens,
-      })
+        reasoning_effort: openaiReasoningEffort,
+      } as OpenAI.ChatCompletionCreateParamsNonStreaming)
 
       const choice = response.choices[0]
       return {
@@ -195,26 +210,42 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
   async *generateTextStream(
     options: GenerateTextStreamOptions,
   ): AsyncIterable<TextStreamChunk> {
-    const { prompt, messages, temperature, maxTokens } = options
+    const {
+      prompt,
+      messages,
+      temperature,
+      maxTokens,
+      signal,
+      reasoningEffort,
+    } = options
 
     const chatMessages: OpenAI.ChatCompletionMessageParam[] = messages
       ? messages.map((m) => ({ role: m.role, content: m.content }))
       : [{ role: 'user', content: prompt! }]
 
-    const response = await this.client.chat.completions.create({
-      model: this.providerInfo.model,
-      messages: chatMessages,
-      temperature,
-      max_tokens: maxTokens,
-      stream: true,
-    })
+    const openaiReasoningEffort =
+      reasoningEffort && reasoningEffort !== 'none'
+        ? reasoningEffort
+        : undefined
+
+    const response = await this.client.chat.completions.create(
+      {
+        model: this.providerInfo.model,
+        messages: chatMessages,
+        temperature,
+        max_tokens: maxTokens,
+        stream: true,
+        reasoning_effort: openaiReasoningEffort,
+      } as OpenAI.ChatCompletionCreateParams & { stream: true },
+      { signal },
+    )
 
     for await (const chunk of response) {
       const delta = chunk.choices?.[0]?.delta?.content
       if (delta) {
         if (isDev) {
           // eslint-disable-next-line no-console
-          console.debug(`[runtime:openai] chunk size=${delta.length}`)
+          console.debug(`[runtime:openai] chunk size=${delta.length}: ${delta}`)
         }
         yield { text: delta }
       }
@@ -261,7 +292,7 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
     } catch (error: any) {
       clearTimeout(timeoutId)
       if (error.name === 'AbortError') {
-        throw new Error('Request timeout after 10s')
+        throw new Error('Request timeout after 10s', { cause: error })
       }
       throw error
     }

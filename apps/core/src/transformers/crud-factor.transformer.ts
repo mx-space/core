@@ -11,6 +11,8 @@ import {
   Query,
 } from '@nestjs/common'
 import type { AnyParamConstructor } from '@typegoose/typegoose/lib/types'
+import pluralize from 'pluralize'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
@@ -20,7 +22,6 @@ import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import type { BaseModel } from '~/shared/model/base.model'
 import { InjectModel } from '~/transformers/model.transformer'
-import pluralize from 'pluralize'
 
 export type BaseCrudModuleType<T> = {
   _model: MongooseModel<T>

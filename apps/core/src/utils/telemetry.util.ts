@@ -1,24 +1,34 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+
 import { DATA_DIR } from '~/constants/path.constant'
+
 import { PKG } from './pkg.util'
 
 const TELEMETRY_URL = 'https://mx-telemetry.tukon479.workers.dev'
 const TELEMETRY_ID_FILE = join(DATA_DIR, 'telemetry-id')
 
+let cachedInstanceId: string | null = null
+
 function getOrCreateInstanceId(): string {
+  if (cachedInstanceId) return cachedInstanceId
+
   if (!existsSync(DATA_DIR)) {
     mkdirSync(DATA_DIR, { recursive: true })
   }
 
   if (existsSync(TELEMETRY_ID_FILE)) {
     const id = readFileSync(TELEMETRY_ID_FILE, 'utf-8').trim()
-    if (id) return id
+    if (id) {
+      cachedInstanceId = id
+      return id
+    }
   }
 
   const newId = randomUUID()
   writeFileSync(TELEMETRY_ID_FILE, newId, 'utf-8')
+  cachedInstanceId = newId
   return newId
 }
 
@@ -36,14 +46,16 @@ export async function sendTelemetry(event: string): Promise<void> {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 5000)
 
-    await fetch(`${TELEMETRY_URL}/collect`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    })
-
-    clearTimeout(timeout)
+    try {
+      await fetch(`${TELEMETRY_URL}/collect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      })
+    } finally {
+      clearTimeout(timeout)
+    }
   } catch {
     // Silently ignore telemetry errors
   }

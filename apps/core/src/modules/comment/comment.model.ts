@@ -1,12 +1,14 @@
-import { modelOptions, plugin, prop } from '@typegoose/typegoose'
 import type { Ref } from '@typegoose/typegoose'
+import { modelOptions, plugin, prop } from '@typegoose/typegoose'
+import { Types } from 'mongoose'
+import autopopulate from 'mongoose-autopopulate'
+
 import {
   CollectionRefTypes,
   COMMENT_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
-import { Types } from 'mongoose'
-import autopopulate from 'mongoose-autopopulate'
+
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
 import { PostModel } from '../post/post.model'
@@ -16,6 +18,55 @@ export enum CommentState {
   Unread,
   Read,
   Junk,
+}
+
+export enum CommentAnchorMode {
+  Block = 'block',
+  Range = 'range',
+}
+
+export class CommentAnchorModel {
+  @prop({ required: true, enum: CommentAnchorMode, type: String })
+  mode: CommentAnchorMode
+
+  @prop({ required: true, trim: true })
+  blockId: string
+
+  @prop({ trim: true })
+  blockType?: string
+
+  @prop({ trim: true })
+  blockFingerprint?: string
+
+  @prop()
+  snapshotText?: string
+
+  @prop()
+  quote?: string
+
+  @prop()
+  prefix?: string
+
+  @prop()
+  suffix?: string
+
+  @prop()
+  startOffset?: number
+
+  @prop()
+  endOffset?: number
+
+  @prop()
+  contentHashAtCreate?: string
+
+  @prop()
+  contentHashCurrent?: string
+
+  @prop()
+  lastResolvedAt?: Date
+
+  @prop()
+  lang?: string | null
 }
 
 @modelOptions({
@@ -129,4 +180,7 @@ export class CommentModel extends BaseModel {
   readerId?: string
   @prop()
   editedAt?: Date
+
+  @prop({ type: () => CommentAnchorModel, _id: false })
+  anchor?: CommentAnchorModel
 }

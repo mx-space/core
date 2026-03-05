@@ -1,4 +1,7 @@
 import { Test } from '@nestjs/testing'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { ConfigsService } from '~/modules/configs/configs.service'
 import {
   FileReferenceModel,
   FileReferenceStatus,
@@ -6,7 +9,6 @@ import {
 } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { getModelToken } from '~/transformers/model.transformer'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('FileReferenceService', () => {
   let fileReferenceService: FileReferenceService
@@ -82,28 +84,15 @@ describe('FileReferenceService', () => {
         return Promise.resolve({ modifiedCount: matchCount })
       }),
 
-      updateOne: vi
-        .fn()
-        .mockImplementation((query: any, update: any, options: any) => {
-          let ref = mockReferences.find((r) => r.fileUrl === query.fileUrl)
+      updateOne: vi.fn().mockImplementation((query: any, update: any) => {
+        const ref = mockReferences.find((r) => r.fileUrl === query.fileUrl)
 
-          if (!ref && options?.upsert) {
-            ref = {
-              _id: `ref_${Date.now()}_${Math.random()}`,
-              fileUrl: query.fileUrl,
-              fileName: query.fileUrl.split('/').pop(),
-              status: FileReferenceStatus.Pending,
-              created: new Date(),
-            }
-            mockReferences.push(ref)
-          }
+        if (ref && update.$set) {
+          Object.assign(ref, update.$set)
+        }
 
-          if (ref && update.$set) {
-            Object.assign(ref, update.$set)
-          }
-
-          return Promise.resolve({ modifiedCount: ref ? 1 : 0 })
-        }),
+        return Promise.resolve({ modifiedCount: ref ? 1 : 0 })
+      }),
 
       deleteOne: vi.fn().mockImplementation((query: any) => {
         const index = mockReferences.findIndex((r) => r._id === query._id)
@@ -133,6 +122,12 @@ describe('FileReferenceService', () => {
         {
           provide: getModelToken(FileReferenceModel.name),
           useValue: mockModel,
+        },
+        {
+          provide: ConfigsService,
+          useValue: {
+            get: vi.fn().mockResolvedValue({ enable: false }),
+          },
         },
       ],
     }).compile()
@@ -189,32 +184,33 @@ describe('FileReferenceService', () => {
       const refId = 'post123'
       const refType = FileReferenceType.Post
 
-      await fileReferenceService.activateReferences(text, refId, refType)
+      await fileReferenceService.activateReferences({ text }, refId, refType)
 
       expect(mockReferences[0].status).toBe(FileReferenceStatus.Active)
       expect(mockReferences[0].refId).toBe(refId)
       expect(mockReferences[0].refType).toBe(refType)
     })
 
-    it('should not activate non-local images', async () => {
-      const localUrl = 'http://example.com/objects/image/local.jpg'
+    it('should only activate images that have DB records', async () => {
+      const trackedUrl = 'https://s3.example.com/bucket/img.jpg'
       const externalUrl = 'http://external.com/image.jpg'
 
       mockReferences.push({
         _id: 'ref1',
-        fileUrl: localUrl,
-        fileName: 'local.jpg',
+        fileUrl: trackedUrl,
+        fileName: 'img.jpg',
         status: FileReferenceStatus.Pending,
       })
 
-      const text = `![local](${localUrl}) ![external](${externalUrl})`
+      const text = `![tracked](${trackedUrl}) ![external](${externalUrl})`
       await fileReferenceService.activateReferences(
-        text,
+        { text },
         'post123',
         FileReferenceType.Post,
       )
 
       expect(mockReferences[0].status).toBe(FileReferenceStatus.Active)
+      expect(mockReferences.length).toBe(1)
     })
   })
 
@@ -242,7 +238,7 @@ describe('FileReferenceService', () => {
 
       const newText = `Updated content with ![new](${newUrl})`
       await fileReferenceService.updateReferencesForDocument(
-        newText,
+        { text: newText },
         refId,
         refType,
       )
@@ -302,7 +298,7 @@ describe('FileReferenceService', () => {
 
       const postText = `Content with ![image](${imageUrl})`
       await fileReferenceService.activateReferences(
-        postText,
+        { text: postText },
         postId,
         FileReferenceType.Post,
       )

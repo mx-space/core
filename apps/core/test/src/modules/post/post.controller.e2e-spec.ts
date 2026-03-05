@@ -1,5 +1,20 @@
-import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { APP_INTERCEPTOR } from '@nestjs/core'
+import { createE2EApp } from 'test/helper/create-e2e-app'
+import { authPassHeader } from 'test/mock/guard/auth.guard'
+import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
+import { authProvider } from 'test/mock/modules/auth.mock'
+import { commentProvider } from 'test/mock/modules/comment.mock'
+import { configProvider } from 'test/mock/modules/config.mock'
+import { gatewayProviders } from 'test/mock/modules/gateway.mock'
+import { countingServiceProvider } from 'test/mock/processors/counting.mock'
+import { eventEmitterProvider } from 'test/mock/processors/event.mock'
+import {
+  fileReferenceProvider,
+  imageServiceProvider,
+} from 'test/mock/processors/file.mock'
+import { translationProvider } from 'test/mock/processors/translation.mock'
+
+import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import {
   CATEGORY_SERVICE_TOKEN,
@@ -12,6 +27,7 @@ import { CommentModel } from '~/modules/comment/comment.model'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { DraftModel } from '~/modules/draft/draft.model'
 import { DraftService } from '~/modules/draft/draft.service'
+import { DraftHistoryService } from '~/modules/draft/draft-history.service'
 import { PostController } from '~/modules/post/post.controller'
 import { PostModel } from '~/modules/post/post.model'
 import { PostService } from '~/modules/post/post.service'
@@ -19,21 +35,7 @@ import { SlugTrackerModel } from '~/modules/slug-tracker/slug-tracker.model'
 import { SlugTrackerService } from '~/modules/slug-tracker/slug-tracker.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
-import { createE2EApp } from 'test/helper/create-e2e-app'
-import { authPassHeader } from 'test/mock/guard/auth.guard'
-import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
-import { authProvider } from 'test/mock/modules/auth.mock'
-import { commentProvider } from 'test/mock/modules/comment.mock'
-import { configProvider } from 'test/mock/modules/config.mock'
-import { gatewayProviders } from 'test/mock/modules/gateway.mock'
-import { countingServiceProvider } from 'test/mock/processors/counting.mock'
-import { eventEmitterProvider } from 'test/mock/processors/event.mock'
-import {
-  fileReferenceProvider,
-  imageMigrationProvider,
-  imageServiceProvider,
-} from 'test/mock/processors/file.mock'
-import { translationProvider } from 'test/mock/processors/translation.mock'
+
 import MockDbData, { categoryModels } from './post.e2e-mock.db'
 
 describe('PostController (e2e)', async () => {
@@ -73,13 +75,13 @@ describe('PostController (e2e)', async () => {
       authProvider,
 
       countingServiceProvider,
+      DraftHistoryService,
       DraftService,
       {
         provide: DRAFT_SERVICE_TOKEN,
         useExisting: DraftService,
       },
       fileReferenceProvider,
-      imageMigrationProvider,
       translationProvider,
     ],
     imports: [],

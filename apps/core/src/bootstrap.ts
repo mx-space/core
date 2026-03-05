@@ -1,11 +1,13 @@
 import cluster from 'node:cluster'
 import { performance } from 'node:perf_hooks'
+
 import type { FastifyCorsOptions } from '@fastify/cors'
 import { Logger } from '@innei/pretty-logger-nestjs'
 import { NestFactory } from '@nestjs/core'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import pc from 'picocolors'
 import wcmatch from 'wildcard-match'
+
 import { CROSS_DOMAIN, DEBUG_MODE, PORT, TELEMETRY } from './app.config'
 import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'
@@ -16,7 +18,11 @@ import { extendedZodValidationPipeInstance } from './common/zod'
 import { logger } from './global/consola.global'
 import { isDev, isMainProcess, isTest } from './global/env.global'
 import { checkInit } from './utils/check-init.util'
-import { sendTelemetry, startHeartbeat } from './utils/telemetry.util'
+import {
+  sendTelemetry,
+  startHeartbeat,
+  stopHeartbeat,
+} from './utils/telemetry.util'
 
 const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
   ? [...CROSS_DOMAIN.allowedOrigins]
@@ -109,6 +115,10 @@ export async function bootstrap() {
         )
         sendTelemetry('startup')
         startHeartbeat()
+
+        const shutdown = () => stopHeartbeat()
+        process.once('SIGINT', shutdown)
+        process.once('SIGTERM', shutdown)
       } else {
         logger.info('[Telemetry] Telemetry is disabled.')
       }

@@ -8,11 +8,13 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
+import type { QueryFilter } from 'mongoose'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
-import { IpLocation } from '~/common/decorators/ip.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
@@ -22,7 +24,8 @@ import { CountingService } from '~/processors/helper/helper.counting.service'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
-import type { QueryFilter } from 'mongoose'
+import { applyContentPreference } from '~/utils/content.util'
+
 import { NoteModel } from './note.model'
 import {
   ListQueryDto,
@@ -76,7 +79,7 @@ export class NoteController {
       page,
       select: isAuthenticated
         ? select
-        : select?.replace(/[+-]?(coordinates|location|password)/g, ''),
+        : select?.replaceAll(/[+-]?(coordinates|location|password)/g, ''),
       sort: sortBy ? { [sortBy]: sortOrder || -1 } : { created: -1 },
     })
   }
@@ -219,7 +222,10 @@ export class NoteController {
   }
 
   @Get('/latest')
-  async getLatestOne(@IsAuthenticated() isAuthenticated: boolean) {
+  async getLatestOne(
+    @IsAuthenticated() isAuthenticated: boolean,
+    @Lang() lang?: string,
+  ) {
     const result = await this.noteService.getLatestOne(
       isAuthenticated ? {} : this.noteService.publicNoteQueryCondition,
       isAuthenticated ? '+location +coordinates' : '-location -coordinates',
@@ -229,7 +235,31 @@ export class NoteController {
     const { latest, next } = result
     latest.text = this.noteService.checkNoteIsSecret(latest) ? '' : latest.text
 
-    return { data: latest, next }
+    const translationResult = await this.translationService.translateArticle({
+      articleId: latest.id!,
+      targetLang: lang,
+      allowHidden: Boolean(isAuthenticated),
+      originalData: {
+        title: latest.title,
+        text: latest.text,
+      },
+    })
+
+    return {
+      data: {
+        ...latest,
+        title: translationResult.title,
+        text: translationResult.text,
+        ...(translationResult.content && {
+          content: translationResult.content,
+          contentFormat: translationResult.contentFormat,
+        }),
+        isTranslated: translationResult.isTranslated,
+        translationMeta: translationResult.translationMeta,
+        availableTranslations: translationResult.availableTranslations,
+      },
+      next,
+    }
   }
 
   // C 端入口
@@ -242,7 +272,7 @@ export class NoteController {
     @Lang() lang?: string,
   ) {
     const { nid } = params
-    const { password, single: isSingle } = query
+    const { password, single: isSingle, prefer } = query
     const condition = isAuthenticated ? {} : { isPublished: true }
     const current: NoteModel | null = await this.noteService.model
       .findOne({
@@ -285,6 +315,10 @@ export class NoteController {
       ...current,
       title: translationResult.title,
       text: translationResult.text,
+      ...(translationResult.content && {
+        content: translationResult.content,
+        contentFormat: translationResult.contentFormat,
+      }),
       isTranslated: translationResult.isTranslated,
       translationMeta: translationResult.translationMeta,
       availableTranslations: translationResult.availableTranslations,
@@ -292,7 +326,7 @@ export class NoteController {
     }
 
     if (isSingle) {
-      return currentData
+      return applyContentPreference(currentData, prefer)
     }
 
     const select = '_id title nid id created modified'
@@ -320,7 +354,7 @@ export class NoteController {
     if (currentData.password) {
       currentData.password = '*'
     }
-    return { data: currentData, next, prev }
+    return { data: applyContentPreference(currentData, prefer), next, prev }
   }
 
   @Get('/topics/:id')

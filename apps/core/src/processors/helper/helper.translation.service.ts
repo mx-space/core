@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common'
+
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
+import type { TranslationSourceSnapshot } from '~/modules/ai/ai-translation/translation-consistency.types'
 import { normalizeLanguageCode } from '~/utils/lang.util'
 
 export interface TranslationMeta {
@@ -14,6 +16,8 @@ export interface TranslationResult {
   text: string
   summary?: string | null
   tags?: string[]
+  content?: string
+  contentFormat?: string
   isTranslated: boolean
   translationMeta?: TranslationMeta
   availableTranslations?: string[]
@@ -23,17 +27,7 @@ export type TranslationField = keyof TranslationResult
 export type TranslationResultPick<
   Fields extends TranslationField = TranslationField,
 > = { isTranslated: boolean } & Pick<TranslationResult, Fields>
-
-export interface ArticleTranslationInput {
-  id: string
-  title: string
-  text?: string
-  summary?: string | null
-  tags?: string[]
-  meta?: { lang?: string }
-  modified?: Date | null
-  created?: Date | null
-}
+export type ArticleTranslationInput = TranslationSourceSnapshot
 
 @Injectable()
 export class TranslationService {
@@ -54,22 +48,15 @@ export class TranslationService {
     const { articleId, targetLang, allowHidden, originalData } = options
     const normalizedTarget = normalizeLanguageCode(targetLang)
 
-    const availableTranslations =
-      await this.aiTranslationService.getAvailableLanguagesForArticle(articleId)
-
-    if (!normalizedTarget) {
-      return { ...originalData, isTranslated: false, availableTranslations }
-    }
-
     try {
-      const translation =
-        await this.aiTranslationService.getTranslationForArticle(
+      const { availableTranslations, translation } =
+        await this.aiTranslationService.getTranslationAndAvailableLanguages(
           articleId,
-          normalizedTarget,
+          normalizedTarget || undefined,
           allowHidden ? { ignoreVisibility: true } : undefined,
         )
 
-      if (!translation) {
+      if (!normalizedTarget || !translation) {
         return { ...originalData, isTranslated: false, availableTranslations }
       }
 
@@ -78,6 +65,8 @@ export class TranslationService {
         text: translation.text,
         summary: translation.summary ?? originalData.summary,
         tags: translation.tags ?? originalData.tags,
+        content: translation.content,
+        contentFormat: translation.contentFormat,
         isTranslated: true,
         translationMeta: {
           sourceLang: translation.sourceLang,
@@ -89,7 +78,7 @@ export class TranslationService {
       }
     } catch (error) {
       this.logger.error(error)
-      return { ...originalData, isTranslated: false, availableTranslations }
+      return { ...originalData, isTranslated: false }
     }
   }
 
@@ -106,7 +95,7 @@ export class TranslationService {
     items: T[]
     targetLang?: string
     translationFields?: readonly Fields[]
-    getInput: (item: T) => ArticleTranslationInput
+    getInput: (item: T) => TranslationSourceSnapshot
     applyResult: (
       item: T,
       result: TranslationResultPick<Fields> | undefined,
@@ -163,6 +152,10 @@ export class TranslationService {
     if (fields.includes('text')) selectFields.add('text')
     if (fields.includes('summary')) selectFields.add('summary')
     if (fields.includes('tags')) selectFields.add('tags')
+    if (fields.includes('content')) {
+      selectFields.add('content')
+      selectFields.add('contentFormat')
+    }
     if (fields.includes('translationMeta')) {
       selectFields.add('lang')
       selectFields.add('created')
@@ -175,7 +168,7 @@ export class TranslationService {
   async translateArticleList<
     Fields extends TranslationField = TranslationField,
   >(options: {
-    articles: ArticleTranslationInput[]
+    articles: TranslationSourceSnapshot[]
     targetLang?: string
     translationFields?: readonly Fields[]
   }): Promise<Map<string, TranslationResultPick<Fields>>> {
@@ -185,8 +178,8 @@ export class TranslationService {
       'text',
       'summary',
       'tags',
+      'content',
       'translationMeta',
-      'availableTranslations',
     ]
     const translationFields = (options.translationFields ??
       defaultFields) as readonly Fields[]
@@ -213,7 +206,7 @@ export class TranslationService {
     }
 
     try {
-      const translationMap =
+      const { validTranslations: translationMap } =
         await this.aiTranslationService.getValidTranslationsForArticles(
           articles,
           normalizedTarget,
@@ -247,6 +240,8 @@ export class TranslationService {
                 text: translation.text,
                 summary: translation.summary ?? article.summary,
                 tags: translation.tags ?? article.tags,
+                content: translation.content,
+                contentFormat: translation.contentFormat,
                 isTranslated: true,
                 translationMeta: translationFieldList.includes(
                   'translationMeta',

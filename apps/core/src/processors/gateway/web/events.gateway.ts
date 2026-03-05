@@ -12,15 +12,17 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets'
 import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
+import { debounce, uniqBy } from 'es-toolkit/compat'
+import type SocketIO from 'socket.io'
+import { DefaultEventsMap } from 'socket.io'
+
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getShortDate } from '~/utils/time.util'
-import { debounce, uniqBy } from 'es-toolkit/compat'
-import type SocketIO from 'socket.io'
-import { DefaultEventsMap } from 'socket.io'
+
 import { BroadcastBaseGateway } from '../base.gateway'
 import type { SocketType } from '../gateway.service'
 import { GatewayService } from '../gateway.service'
@@ -47,6 +49,8 @@ export class WebEventsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   private readonly logger = new Logger(WebEventsGateway.name)
+  private readonly socketFetchSoftTimeoutMs = 800
+  private lastSocketFetchWarnAt = 0
 
   constructor(
     private readonly redisService: RedisService,
@@ -90,23 +94,25 @@ export class WebEventsGateway
   async getCurrentClientCount() {
     const server = this.namespace.server
 
-    const socketsMeta = await Promise.all(
-      await server
-        .of(`/${namespace}`)
-        .fetchSockets()
-        .then((sockets) => {
+    try {
+      const socketsMeta = await Promise.all(
+        await this.fetchSocketsWithSoftTimeout(
+          () => server.of(`/${namespace}`).fetchSockets(),
+          'getCurrentClientCount',
+        ).then((sockets) => {
           return sockets.map((socket) =>
             this.gatewayService.getSocketMetadata(socket),
           )
         }),
-    )
-    // // 这里用 web socket id 作为同一用户，一般 web 用 userId 或者 local storage sessionId 作为 socket session id
-    // return uniqBy(socketsMeta, async (x) => {
-    //   const meta = await this.gatewayService.getSocketMetadata(x)
-    //   console.log(meta, 'meta', x.id, 'x.id')
-    //   return meta?.sessionId || true
-    // }).length
-    return uniqBy(socketsMeta, (x) => x?.sessionId).length
+      )
+      return uniqBy(socketsMeta, (x) => x?.sessionId).length
+    } catch (error) {
+      this.warnSocketFetchFailure(
+        'fetchSockets failed in getCurrentClientCount, fallback to local sockets count',
+        error,
+      )
+      return this.namespace.sockets.size
+    }
   }
 
   @SubscribeMessage('message')
@@ -289,17 +295,56 @@ export class WebEventsGateway
     socket.emit('message', this.gatewayMessageFormat(event, data))
   }
 
-  public getSocketsOfRoom(
+  public async getSocketsOfRoom(
     roomName: string,
   ): Promise<SocketIO.Socket[] | SocketIO.RemoteSocket<any, any>[]> {
-    return this.namespace.in(roomName).fetchSockets()
+    try {
+      return await this.fetchSocketsWithSoftTimeout(
+        () => this.namespace.in(roomName).fetchSockets(),
+        `getSocketsOfRoom(${roomName})`,
+      )
+    } catch (error) {
+      this.warnSocketFetchFailure(
+        `fetchSockets failed for room [${roomName}], fallback to local room sockets`,
+        error,
+      )
+      try {
+        return await this.namespace.in(roomName).local.fetchSockets()
+      } catch (fallbackError) {
+        this.warnSocketFetchFailure(
+          `local fetchSockets failed for room [${roomName}], returning empty`,
+          fallbackError,
+        )
+        return []
+      }
+    }
   }
 
   // private isValidBizRoomName(roomName: string) {
   //   return roomName.split('-').length === 2
   // }
   public async getAllRooms() {
-    const sockets = await this.namespace.fetchSockets()
+    let sockets: Awaited<ReturnType<typeof this.namespace.fetchSockets>>
+    try {
+      sockets = await this.fetchSocketsWithSoftTimeout(
+        () => this.namespace.fetchSockets(),
+        'getAllRooms',
+      )
+    } catch (error) {
+      this.warnSocketFetchFailure(
+        'fetchSockets failed in getAllRooms, fallback to local sockets',
+        error,
+      )
+      try {
+        sockets = await this.namespace.local.fetchSockets()
+      } catch (fallbackError) {
+        this.warnSocketFetchFailure(
+          'local fetchSockets failed in getAllRooms, returning empty',
+          fallbackError,
+        )
+        return {}
+      }
+    }
     const roomToSocketsMap = {} as Record<string, (typeof sockets)[number][]>
     for (const socket of sockets) {
       socket.rooms.forEach((roomName) => {
@@ -320,5 +365,42 @@ export class WebEventsGateway
       {}
 
     return roomJoinedAtMap
+  }
+
+  private async fetchSocketsWithSoftTimeout<T>(
+    fetcher: () => Promise<T>,
+    context: string,
+  ): Promise<T> {
+    let timer: NodeJS.Timeout | undefined
+
+    try {
+      return await Promise.race([
+        fetcher(),
+        new Promise<T>((_, reject) => {
+          timer = setTimeout(() => {
+            reject(
+              new Error(
+                `fetchSockets soft timeout (${this.socketFetchSoftTimeoutMs}ms) in ${context}`,
+              ),
+            )
+          }, this.socketFetchSoftTimeoutMs)
+        }),
+      ])
+    } finally {
+      if (timer) {
+        clearTimeout(timer)
+      }
+    }
+  }
+
+  private warnSocketFetchFailure(message: string, error: unknown) {
+    const now = Date.now()
+    if (now - this.lastSocketFetchWarnAt < 10_000) {
+      return
+    }
+    this.lastSocketFetchWarnAt = now
+
+    const reason = error instanceof Error ? error.message : String(error)
+    this.logger.warn(`${message}. reason=${reason}`)
   }
 }

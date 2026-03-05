@@ -1,6 +1,10 @@
 import './dayjs.global'
+
 import cluster from 'node:cluster'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+
+import pc from 'picocolors'
+
 import { CLUSTER } from '~/app.config'
 import {
   DATA_DIR,
@@ -9,7 +13,7 @@ import {
   TEMP_DIR,
   USER_ASSET_DIR,
 } from '~/constants/path.constant'
-import pc from 'picocolors'
+
 import { consola, globalLogger, logger } from './consola.global'
 import { cwd, isDev } from './env.global'
 import { registerJSONGlobal } from './json.global'

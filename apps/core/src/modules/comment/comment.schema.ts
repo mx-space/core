@@ -1,7 +1,43 @@
-import { CollectionRefTypes } from '~/constants/db.constant'
-import { normalizeRefType } from '~/utils/database.util'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { CollectionRefTypes } from '~/constants/db.constant'
+import { normalizeRefType } from '~/utils/database.util'
+
+import { CommentAnchorMode } from './comment.model'
+
+const BlockCommentAnchorSchema = z.object({
+  mode: z.literal(CommentAnchorMode.Block),
+  blockId: z.string().trim().min(1).max(128),
+  blockType: z.string().trim().min(1).max(64).optional(),
+  blockFingerprint: z.string().trim().min(1).max(64).optional(),
+  snapshotText: z.string().max(20000).optional(),
+  lang: z.string().trim().min(1).max(10).nullish(),
+})
+
+const RangeCommentAnchorSchema = z
+  .object({
+    mode: z.literal(CommentAnchorMode.Range),
+    blockId: z.string().trim().min(1).max(128),
+    blockType: z.string().trim().min(1).max(64).optional(),
+    blockFingerprint: z.string().trim().min(1).max(64).optional(),
+    snapshotText: z.string().max(20000).optional(),
+    lang: z.string().trim().min(1).max(10).nullish(),
+    quote: z.string().min(1).max(1000),
+    prefix: z.string().max(300).default(''),
+    suffix: z.string().max(300).default(''),
+    startOffset: z.number().int().min(0),
+    endOffset: z.number().int().min(0),
+  })
+  .refine((data) => data.endOffset >= data.startOffset, {
+    message: 'endOffset must be greater than or equal to startOffset',
+    path: ['endOffset'],
+  })
+
+export const CommentAnchorSchema = z.discriminatedUnion('mode', [
+  BlockCommentAnchorSchema,
+  RangeCommentAnchorSchema,
+])
 
 /**
  * Comment schema for API validation
@@ -27,9 +63,13 @@ export const CommentSchema = z.object({
       message: '头像必须是合法的 HTTPS URL 哦',
     })
     .optional(),
+  anchor: CommentAnchorSchema.optional(),
 })
 
 export class CommentDto extends createZodDto(CommentSchema) {}
+export class ReplyCommentDto extends createZodDto(
+  CommentSchema.omit({ anchor: true }),
+) {}
 
 /**
  * Edit comment schema
@@ -61,6 +101,7 @@ export class RequiredGuestReaderCommentDto extends createZodDto(
 export const TextOnlySchema = z.object({
   text: z.string().min(1),
   source: z.string().optional(),
+  anchor: CommentAnchorSchema.optional(),
 })
 
 export class TextOnlyDto extends createZodDto(TextOnlySchema) {}
@@ -143,6 +184,7 @@ export class BatchCommentDeleteDto extends createZodDto(
 
 // Type exports
 export type CommentInput = z.infer<typeof CommentSchema>
+export type CommentAnchorInput = z.infer<typeof CommentAnchorSchema>
 export type EditCommentInput = z.infer<typeof EditCommentSchema>
 export type RequiredGuestReaderCommentInput = z.infer<
   typeof RequiredGuestReaderCommentSchema

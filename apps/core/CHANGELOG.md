@@ -1,5 +1,124 @@
 # CHANGELOG
 
+## [10.1.9](https://github.com/mx-space/core/compare/v10.1.8...v10.1.9) (2026-03-03)
+
+
+### Bug Fixes
+
+* **telemetry:** harden telemetry module robustness and security ([515c0e7](https://github.com/mx-space/core/commit/515c0e7dbe9ee1c1bc5a5d16a7ad4883d7e83437))
+
+
+
+## [10.1.8](https://github.com/mx-space/core/compare/v10.1.7...v10.1.8) (2026-03-03)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @haklex/rich-headless to v0.0.50 ([#2608](https://github.com/mx-space/core/issues/2608)) ([4258242](https://github.com/mx-space/core/commit/42582429982db7fe108a8a0db3a4bdf1e2c281e9))
+* **deps:** update dependency @haklex/rich-headless to v0.0.54 ([#2610](https://github.com/mx-space/core/issues/2610)) ([027f62f](https://github.com/mx-space/core/commit/027f62f126d55fa812ff066907764ccf832a2959))
+* **deps:** update dependency @nestjs/schedule to v6.1.1 ([#2604](https://github.com/mx-space/core/issues/2604)) ([45a297a](https://github.com/mx-space/core/commit/45a297a95788b7c563a9e075ce1c8444142d5cd7))
+
+
+
+## [10.1.7](https://github.com/mx-space/core/compare/v10.1.6...v10.1.7) (2026-03-02)
+
+
+### Features
+
+* **gateway:** implement broadcast method for admin events ([ff3cf68](https://github.com/mx-space/core/commit/ff3cf68c742e2928bf249e641bfb9584f0c6956e))
+
+
+
+## [10.1.6](https://github.com/mx-space/core/compare/v10.1.5...v10.1.6) (2026-03-02)
+
+
+### Features
+
+* **webhook:** introduce EventPayloadEnricherService for payload enrichment ([a5a2b79](https://github.com/mx-space/core/commit/a5a2b79bd6e406375c04aeb0d259907d131fa4d5))
+
+
+
+## [10.1.5](https://github.com/mx-space/core/compare/v10.1.4...v10.1.5) (2026-03-02)
+
+
+### Bug Fixes
+
+* **webhook:** update pagination logic in getEventsByHookId method ([2450f9d](https://github.com/mx-space/core/commit/2450f9d08b2b36e8c71dd12c20ccc5983542e10c))
+
+
+
+## [10.1.4](https://github.com/mx-space/core/compare/v10.1.3...v10.1.4) (2026-03-01)
+
+
+### Features
+
+* **translation:** introduce TranslationConsistencyService for improved translation validation ([341cfd2](https://github.com/mx-space/core/commit/341cfd2f3829505b75df421a375a29348c3fbea5))
+
+
+
+## [10.1.3](https://github.com/mx-space/core/compare/v10.1.2...v10.1.3) (2026-03-01)
+
+
+### Features
+
+* **socket:** optimize socket fetching and configuration ([13eb074](https://github.com/mx-space/core/commit/13eb0747f19a0bb957cfb90e0fafd7a0af1221f1))
+* **translation:** add content fields to translation and controller services ([6526893](https://github.com/mx-space/core/commit/6526893f0c0db0a7607053d5ebe2e67a605201b8))
+
+
+
+## [10.1.2](https://github.com/mx-space/core/compare/v10.1.1...v10.1.2) (2026-03-01)
+
+
+### Features
+
+* **content:** enhance content hashing for Lexical format ([3b5e177](https://github.com/mx-space/core/commit/3b5e17726c8002ca42e4516578fb4ebc0460ac91))
+
+
+
+## [10.1.1](https://github.com/mx-space/core/compare/v10.1.0...v10.1.1) (2026-03-01)
+
+
+### Bug Fixes
+
+* **ai:** improve error handling and cleanup in AiInFlightService ([2267810](https://github.com/mx-space/core/commit/22678104ec185b73fc47bb5fbc487e75ba332150))
+
+
+### Features
+
+* **ai-task:** add smart retry for partial-failed translation tasks ([ecdbf50](https://github.com/mx-space/core/commit/ecdbf50879f8313b739172d54fc1a71b16b6d24f))
+* **ai:** enhance JSON extraction utilities and update translation strategy ([f673630](https://github.com/mx-space/core/commit/f67363036c6da979ac71ffe16bfd8c8a7ff3412e))
+* **visitor-event:** enhance visitor event dispatch with additional content fields ([74d9398](https://github.com/mx-space/core/commit/74d939820195a7fdfb608c61c37c749284a23c89))
+
+
+
+# [10.1.0](https://github.com/mx-space/core/compare/v10.0.4...v10.1.0) (2026-02-28)
+
+
+### Bug Fixes
+
+* **release:** update Dokploy webhook handling in release workflow ([328013a](https://github.com/mx-space/core/commit/328013af093f1fc274ca179d7ade81d8cd118c0e))
+* **test:** add missing scheduleRegenerationForStaleTranslations mock in translation service spec ([4e701a2](https://github.com/mx-space/core/commit/4e701a2580f4cd389fac72b88a080b2d76da0db5))
+* **test:** remove unnecessary whitespace in lexical-translation-e2e.spec.ts ([c623a20](https://github.com/mx-space/core/commit/c623a20097aa0b09564b872c125b9bac931738e3))
+* update @lexical/code patch to improve syntax highlighting support ([3bf4873](https://github.com/mx-space/core/commit/3bf4873e58fce0bef810c60f4377bd0de0fdd4c6))
+
+
+### Features
+
+* add patch for @lexical/code@0.41.0 and remove outdated patch ([e2c1492](https://github.com/mx-space/core/commit/e2c14928854af53b915cbf62f28aaf11a7ca1d9f))
+* add v10.0.5 migration for Lexical root block ID backfill ([66c3650](https://github.com/mx-space/core/commit/66c365061364fa64a2792cb9950aadfcb8350a33))
+* **aggregate:** add /latest endpoint for top content per type ([563a716](https://github.com/mx-space/core/commit/563a716ac8fe7d584a182f5dc94d74edd753d653))
+* **ai:** enhance translation service with new lexical features and dependencies ([534b0f7](https://github.com/mx-space/core/commit/534b0f71c697f96216bf6c61c19173cdc9367cd4))
+* **ai:** enhance translation strategies and introduce new event handler ([426dc07](https://github.com/mx-space/core/commit/426dc07cc4d9ff24f9cfc09d626d6234a7d45619))
+* **ai:** improve lexical translation and update utilities ([7475a8d](https://github.com/mx-space/core/commit/7475a8d49ec95c0105f111af047c86d8fc52419f))
+* **ai:** refine AI translation, runtime, and add json util ([481beeb](https://github.com/mx-space/core/commit/481beeb49b44c0891194b2461bbe1d89903d3d10))
+* **ai:** update translation prompts with enhanced safety and structure rules ([4f035f2](https://github.com/mx-space/core/commit/4f035f2bbbb9095dae35702d28210c7c9f8a0ea6))
+* **comment:** add language support for comment anchors and enhance anchor resolution ([2218ae2](https://github.com/mx-space/core/commit/2218ae2bc5cdddfc0afd7220ef88e66af1be81c5))
+* **content:** introduce content preference handling for notes and pages ([14ed55b](https://github.com/mx-space/core/commit/14ed55b9a4c61fdf4f3fa47d18f3824e86ff006d))
+* **draft:** implement draft history service with diff strategies ([5171707](https://github.com/mx-space/core/commit/5171707e6b32a7d0d115f0624a9860d5814ca2a9))
+* **patch:** add patch for @lexical/code@0.40.0 and update workspace configuration ([066171f](https://github.com/mx-space/core/commit/066171fe6d1001403f646dcd85be2f23390340bb))
+
+
+
 ## [10.0.4](https://github.com/mx-space/core/compare/v10.0.3...v10.0.4) (2026-02-18)
 
 

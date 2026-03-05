@@ -36,14 +36,27 @@ export interface BaseCommentIndexModel extends BaseModel {
 
   allowComment: boolean
 }
-export interface TextBaseModel extends BaseCommentIndexModel {
+export interface TextBaseModelMarkdown extends BaseCommentIndexModel {
   title: string
   text: string
+  contentFormat?: 'markdown'
+  content?: undefined
   images?: Image[]
   modified: string | null
-  contentFormat?: 'markdown' | 'lexical'
-  content?: string
+  meta?: Record<string, any> | null
 }
+
+export interface TextBaseModelLexical extends BaseCommentIndexModel {
+  title: string
+  text?: string
+  contentFormat: 'lexical'
+  content: string
+  images?: Image[]
+  modified: string | null
+  meta?: Record<string, any> | null
+}
+
+export type TextBaseModel = TextBaseModelMarkdown | TextBaseModelLexical
 
 export type ModelWithLiked<T> = T & {
   liked: boolean

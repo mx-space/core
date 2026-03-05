@@ -4,6 +4,7 @@ import { builtinModules } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
+
 import { $ } from './shell.util'
 
 export async function getFolderSize(folderPath: string) {

@@ -1,8 +1,10 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
-import { logger } from '~/global/consola.global'
+
 import axios from 'axios'
 import FormData from 'form-data'
+
+import { logger } from '~/global/consola.global'
 
 const sha1 = (str: string) =>
   crypto.createHash('sha1').update(str).digest('hex').toLowerCase()

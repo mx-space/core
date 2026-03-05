@@ -1,4 +1,5 @@
 import type { z } from 'zod'
+
 import type { AIProviderType } from '../ai.types'
 
 export interface RuntimeProviderInfo {
@@ -21,6 +22,7 @@ export interface GenerateTextOptions {
   maxTokens?: number
   maxRetries?: number
   reasoningEffort?: ReasoningEffort
+  signal?: AbortSignal
 }
 
 export interface GenerateTextStreamOptions extends GenerateTextOptions {}

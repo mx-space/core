@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { isDev } from '~/global/env.global'
 import type { z } from 'zod'
+
+import { isDev } from '~/global/env.global'
+
 import { BaseRuntime } from './base.runtime'
 import type {
   GenerateStructuredOptions,
@@ -160,14 +162,17 @@ export class AnthropicRuntime extends BaseRuntime {
     const clientAny = this.client as any
     if (clientAny?.messages?.create) {
       try {
-        const stream = await clientAny.messages.create({
-          model: this.providerInfo.model,
-          messages: anthropicMessages,
-          system: systemMessage,
-          temperature,
-          max_tokens: maxTokens || 4096,
-          stream: true,
-        })
+        const stream = await clientAny.messages.create(
+          {
+            model: this.providerInfo.model,
+            messages: anthropicMessages,
+            system: systemMessage,
+            temperature,
+            max_tokens: maxTokens || 4096,
+            stream: true,
+          },
+          { signal: options.signal },
+        )
 
         for await (const event of stream as AsyncIterable<any>) {
           const deltaText =
@@ -183,7 +188,8 @@ export class AnthropicRuntime extends BaseRuntime {
           }
         }
         return
-      } catch {
+      } catch (error: any) {
+        if (error?.name === 'AbortError') throw error
         // fallback to non-streaming
       }
     }

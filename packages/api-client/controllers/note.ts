@@ -10,6 +10,7 @@ import type {
   NoteWrappedWithLikedPayload,
 } from '~/models/note'
 import { autoBind } from '~/utils/auto-bind'
+
 import type { HTTPClient } from '../core/client'
 import type { SortOptions } from './base'
 
@@ -33,6 +34,7 @@ export type NoteByNidOptions = {
   password?: string
   single?: boolean
   lang?: string
+  prefer?: 'lexical'
 }
 
 export type NoteMiddleListOptions = {
@@ -119,12 +121,13 @@ export class NoteController<ResponseWrapper> implements IController {
     NoteWrappedWithLikedAndTranslationPayload,
     ResponseWrapper
   > {
-    const { password, single, lang } = options || {}
+    const { password, single, lang, prefer } = options || {}
     return this.proxy.nid(nid.toString()).get({
       params: {
         password,
         single: single ? '1' : undefined,
         lang,
+        prefer,
       },
     })
   }

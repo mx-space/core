@@ -1,7 +1,7 @@
 import {
   execSync,
-  spawn,
   type ExecSyncOptions,
+  spawn,
   type SpawnOptions,
 } from 'node:child_process'
 

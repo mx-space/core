@@ -35,6 +35,13 @@ export interface ResolveLanguageConfig {
  * 3. 否则使用 acceptLanguage（浏览器请求头）
  * 4. 最后使用默认语言
  */
+export function resolveTargetLanguages(
+  explicit?: string[],
+  configured?: string[],
+): string[] {
+  return explicit?.length ? explicit : (configured ?? [])
+}
+
 export function resolveTargetLanguage(
   options: ResolveLanguageOptions,
   config: ResolveLanguageConfig,

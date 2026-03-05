@@ -1,7 +1,19 @@
 import type { ServerResponse } from 'node:http'
 import { IncomingMessage } from 'node:http'
+
+import { apiKey } from '@better-auth/api-key'
 import type { PasskeyOptions } from '@better-auth/passkey'
 import { passkey } from '@better-auth/passkey'
+import { compare } from 'bcryptjs'
+import type { BetterAuthOptions } from 'better-auth'
+import { betterAuth } from 'better-auth'
+import { mongodbAdapter } from 'better-auth/adapters/mongodb'
+import { APIError, createAuthMiddleware } from 'better-auth/api'
+import { hashPassword, verifyPassword } from 'better-auth/crypto'
+import { toNodeHandler } from 'better-auth/node'
+import { username } from 'better-auth/plugins'
+import { MongoClient, ObjectId } from 'mongodb'
+
 import { API_VERSION, CROSS_DOMAIN, MONGO_DB } from '~/app.config'
 import { SECURITY } from '~/app.config.test'
 import {
@@ -10,15 +22,7 @@ import {
   READER_COLLECTION_NAME,
   SESSION_COLLECTION_NAME,
 } from '~/constants/db.constant'
-import { compare } from 'bcryptjs'
-import type { BetterAuthOptions } from 'better-auth'
-import { betterAuth } from 'better-auth'
-import { mongodbAdapter } from 'better-auth/adapters/mongodb'
-import { APIError, createAuthMiddleware } from 'better-auth/api'
-import { hashPassword, verifyPassword } from 'better-auth/crypto'
-import { toNodeHandler } from 'better-auth/node'
-import { apiKey, username } from 'better-auth/plugins'
-import { MongoClient, ObjectId } from 'mongodb'
+
 import { validateMxUsername } from './auth.username-validator'
 
 const client = new MongoClient(MONGO_DB.customConnectionString || MONGO_DB.uri)
@@ -280,24 +284,26 @@ export async function CreateAuth(
     handler,
     auth: {
       options: auth.options,
-      api: {
-        ...auth.api,
-        getProviders() {
-          return Object.keys(auth.options.socialProviders || {})
-        },
-        async listUserAccounts(
-          params: Parameters<typeof auth.api.listUserAccounts>[0],
-        ) {
-          try {
-            return await auth.api.listUserAccounts(params)
-          } catch (error) {
-            if (error instanceof APIError) {
-              return null
+      api: (() => {
+        const _listUserAccounts = auth.api.listUserAccounts.bind(auth.api)
+        return Object.assign(auth.api, {
+          getProviders() {
+            return Object.keys(auth.options.socialProviders || {})
+          },
+          async listUserAccounts(
+            params: Parameters<typeof auth.api.listUserAccounts>[0],
+          ) {
+            try {
+              return await _listUserAccounts(params)
+            } catch (error) {
+              if (error instanceof APIError) {
+                return null
+              }
+              throw error
             }
-            throw error
-          }
-        },
-      },
+          },
+        })
+      })(),
     },
   }
 }

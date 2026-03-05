@@ -1,9 +1,11 @@
+import { describe, expect, it } from 'vitest'
+
 import {
   getLanguageName,
   parseLanguageCode,
   resolveTargetLanguage,
+  resolveTargetLanguages,
 } from '~/modules/ai/ai-language.util'
-import { describe, expect, it } from 'vitest'
 
 describe('ai-language.util', () => {
   describe('parseLanguageCode', () => {
@@ -92,6 +94,28 @@ describe('ai-language.util', () => {
         { configuredLanguage: undefined },
       )
       expect(result).toBe('fr')
+    })
+  })
+
+  describe('resolveTargetLanguages', () => {
+    it('should return explicit languages when provided', () => {
+      expect(resolveTargetLanguages(['en', 'ja'], ['ko'])).toEqual(['en', 'ja'])
+    })
+
+    it('should fallback to configured when explicit is empty', () => {
+      expect(resolveTargetLanguages([], ['ko', 'ja'])).toEqual(['ko', 'ja'])
+    })
+
+    it('should fallback to configured when explicit is undefined', () => {
+      expect(resolveTargetLanguages(undefined, ['zh'])).toEqual(['zh'])
+    })
+
+    it('should return empty array when both are undefined', () => {
+      expect(resolveTargetLanguages(undefined, undefined)).toEqual([])
+    })
+
+    it('should return empty array when both are empty', () => {
+      expect(resolveTargetLanguages([], [])).toEqual([])
     })
   })
 })

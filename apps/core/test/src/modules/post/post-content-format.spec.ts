@@ -1,5 +1,20 @@
-import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { APP_INTERCEPTOR } from '@nestjs/core'
+import { createE2EApp } from 'test/helper/create-e2e-app'
+import { authPassHeader } from 'test/mock/guard/auth.guard'
+import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
+import { authProvider } from 'test/mock/modules/auth.mock'
+import { commentProvider } from 'test/mock/modules/comment.mock'
+import { configProvider } from 'test/mock/modules/config.mock'
+import { gatewayProviders } from 'test/mock/modules/gateway.mock'
+import { countingServiceProvider } from 'test/mock/processors/counting.mock'
+import { eventEmitterProvider } from 'test/mock/processors/event.mock'
+import {
+  fileReferenceProvider,
+  imageServiceProvider,
+} from 'test/mock/processors/file.mock'
+import { translationProvider } from 'test/mock/processors/translation.mock'
+
+import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import {
   CATEGORY_SERVICE_TOKEN,
@@ -12,6 +27,7 @@ import { CommentModel } from '~/modules/comment/comment.model'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { DraftModel } from '~/modules/draft/draft.model'
 import { DraftService } from '~/modules/draft/draft.service'
+import { DraftHistoryService } from '~/modules/draft/draft-history.service'
 import { PostController } from '~/modules/post/post.controller'
 import { PostModel } from '~/modules/post/post.model'
 import { PostService } from '~/modules/post/post.service'
@@ -20,21 +36,6 @@ import { SlugTrackerService } from '~/modules/slug-tracker/slug-tracker.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
-import { createE2EApp } from 'test/helper/create-e2e-app'
-import { authPassHeader } from 'test/mock/guard/auth.guard'
-import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
-import { authProvider } from 'test/mock/modules/auth.mock'
-import { commentProvider } from 'test/mock/modules/comment.mock'
-import { configProvider } from 'test/mock/modules/config.mock'
-import { gatewayProviders } from 'test/mock/modules/gateway.mock'
-import { countingServiceProvider } from 'test/mock/processors/counting.mock'
-import { eventEmitterProvider } from 'test/mock/processors/event.mock'
-import {
-  fileReferenceProvider,
-  imageMigrationProvider,
-  imageServiceProvider,
-} from 'test/mock/processors/file.mock'
-import { translationProvider } from 'test/mock/processors/translation.mock'
 
 describe('Post ContentFormat (e2e)', async () => {
   let categoryId: string
@@ -67,13 +68,13 @@ describe('Post ContentFormat (e2e)', async () => {
       ...gatewayProviders,
       authProvider,
       countingServiceProvider,
+      DraftHistoryService,
       DraftService,
       {
         provide: DRAFT_SERVICE_TOKEN,
         useExisting: DraftService,
       },
       fileReferenceProvider,
-      imageMigrationProvider,
       translationProvider,
     ],
     imports: [],
@@ -181,7 +182,14 @@ describe('Post ContentFormat (e2e)', async () => {
     expect(res.statusCode).toBe(201)
     const json = res.json()
     expect(json.content_format).toBe('lexical')
-    expect(json.content).toBe(lexicalContent)
+    const parsed = JSON.parse(json.content)
+    expect(parsed.root.children).toHaveLength(2)
+    expect(parsed.root.children[0].$.blockId).toMatch(/^[\w-]{8}$/)
+    expect(parsed.root.children[1].$.blockId).toMatch(/^[\w-]{8}$/)
+    expect(parsed.root.children[0].children[0].text).toBe('Hello Lexical')
+    expect(parsed.root.children[1].children[0].text).toBe(
+      'This is paragraph text.',
+    )
     // text should be auto-generated from lexical content
     expect(json.text).toContain('Hello Lexical')
     expect(json.text).toContain('This is paragraph text.')

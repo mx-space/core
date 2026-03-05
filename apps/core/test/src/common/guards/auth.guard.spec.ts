@@ -1,10 +1,11 @@
 import type { ExecutionContext } from '@nestjs/common'
+import { vi } from 'vitest'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { AuthGuard } from '~/common/guards/auth.guard'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import type { AuthService } from '~/modules/auth/auth.service'
 import type { SessionUser } from '~/modules/auth/auth.types'
-import { vi } from 'vitest'
 
 function createMockAuthService(): Record<keyof AuthService, any> {
   return {
@@ -156,7 +157,7 @@ describe('AuthGuard', () => {
       )
     })
 
-    it('should throw AuthTokenInvalid when verifyApiKey has no userId', async () => {
+    it('should throw AuthTokenInvalid when verifyApiKey has no referenceId', async () => {
       const { context } = createMockContext()
       authService.getApiKeyFromRequest.mockReturnValue({
         key: 'txo-valid-key',
@@ -177,7 +178,7 @@ describe('AuthGuard', () => {
         deprecated: false,
       })
       authService.isCustomToken.mockReturnValue(true)
-      authService.verifyApiKey.mockResolvedValue({ userId: 'reader-1' })
+      authService.verifyApiKey.mockResolvedValue({ referenceId: 'reader-1' })
       authService.isOwnerReaderId.mockResolvedValue(false)
 
       await expect(guard.canActivate(context)).rejects.toThrow(
@@ -192,7 +193,7 @@ describe('AuthGuard', () => {
         deprecated: false,
       })
       authService.isCustomToken.mockReturnValue(true)
-      authService.verifyApiKey.mockResolvedValue({ userId: 'owner-1' })
+      authService.verifyApiKey.mockResolvedValue({ referenceId: 'owner-1' })
       authService.isOwnerReaderId.mockResolvedValue(true)
       authService.getReaderById.mockResolvedValue(null)
 
@@ -209,7 +210,7 @@ describe('AuthGuard', () => {
         deprecated: false,
       })
       authService.isCustomToken.mockReturnValue(true)
-      authService.verifyApiKey.mockResolvedValue({ userId: 'owner-1' })
+      authService.verifyApiKey.mockResolvedValue({ referenceId: 'owner-1' })
       authService.isOwnerReaderId.mockResolvedValue(true)
       authService.getReaderById.mockResolvedValue(ownerUser)
 
@@ -231,7 +232,7 @@ describe('AuthGuard', () => {
         deprecated: true,
       })
       authService.isCustomToken.mockReturnValue(true)
-      authService.verifyApiKey.mockResolvedValue({ userId: 'owner-1' })
+      authService.verifyApiKey.mockResolvedValue({ referenceId: 'owner-1' })
       authService.isOwnerReaderId.mockResolvedValue(true)
       authService.getReaderById.mockResolvedValue(ownerUser)
 
@@ -255,7 +256,7 @@ describe('AuthGuard', () => {
         deprecated: false,
       })
       authService.isCustomToken.mockReturnValue(true)
-      authService.verifyApiKey.mockResolvedValue({ userId: 'owner-1' })
+      authService.verifyApiKey.mockResolvedValue({ referenceId: 'owner-1' })
       authService.isOwnerReaderId.mockResolvedValue(true)
       authService.getReaderById.mockResolvedValue(ownerUser)
 

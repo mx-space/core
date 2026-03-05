@@ -1,8 +1,9 @@
-import { zCoerceInt, zMongoId, zNonEmptyString } from '~/common/zod'
-import { WriteBaseSchema } from '~/shared/schema'
-import { ImageSchema } from '~/shared/schema/image.schema'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { zCoerceInt, zMongoId, zNonEmptyString, zPrefer } from '~/common/zod'
+import { WriteBaseSchema } from '~/shared/schema'
+import { ImageSchema } from '~/shared/schema/image.schema'
 
 /**
  * Page schema for API validation
@@ -45,6 +46,15 @@ export const PageReorderSchema = z.object({
 })
 
 export class PageReorderDto extends createZodDto(PageReorderSchema) {}
+
+/**
+ * Page detail query schema
+ */
+export const PageDetailQuerySchema = z.object({
+  prefer: zPrefer,
+})
+
+export class PageDetailQueryDto extends createZodDto(PageDetailQuerySchema) {}
 
 // Type exports
 export type PageInput = z.infer<typeof PageSchema>

@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common'
+import { Types } from 'mongoose'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { dbTransforms } from '~/utils/db-transform.util'
-import { Types } from 'mongoose'
-import { DraftHistoryService } from './draft-history.service'
+
 import { DraftHistoryModel, DraftModel, DraftRefType } from './draft.model'
 import type { CreateDraftDto, UpdateDraftDto } from './draft.schema'
+import { DraftHistoryService } from './draft-history.service'
 
 @Injectable()
 export class DraftService {
@@ -51,7 +53,7 @@ export class DraftService {
 
     if (draft.text) {
       await this.fileReferenceService.updateReferencesForDocument(
-        draft.text,
+        draft,
         draft.id,
         FileReferenceType.Draft,
       )
@@ -111,7 +113,7 @@ export class DraftService {
 
     if (dto.text !== undefined) {
       await this.fileReferenceService.updateReferencesForDocument(
-        draft.text,
+        draft,
         draft.id,
         FileReferenceType.Draft,
       )

@@ -1,16 +1,18 @@
+import { createZodDto } from 'nestjs-zod'
+import { z } from 'zod'
+
 import {
   zCoerceBoolean,
   zCoerceInt,
   zLang,
   zMongoId,
   zNonEmptyString,
+  zPrefer,
   zTransformEmptyNull,
 } from '~/common/zod'
 import { PagerSchema } from '~/shared/dto/pager.dto'
 import { WriteBaseSchema } from '~/shared/schema'
 import { ImageSchema } from '~/shared/schema/image.schema'
-import { createZodDto } from 'nestjs-zod'
-import { z } from 'zod'
 
 /**
  * Coordinate schema
@@ -78,6 +80,7 @@ export const NotePasswordQuerySchema = z.object({
   password: zNonEmptyString.optional(),
   single: zCoerceBoolean.optional(),
   lang: zLang,
+  prefer: zPrefer,
 })
 
 export class NotePasswordQueryDto extends createZodDto(

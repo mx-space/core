@@ -3,6 +3,9 @@ main = "src/index.ts"
 compatibility_date = "2024-11-01"
 account_id = "de7ecb0eaa0a328071255d557a6adb66"
 
+[triggers]
+crons = ["0 3 * * *"]
+
 [[d1_databases]]
 binding = "DB"
 database_name = "mx-telemetry"

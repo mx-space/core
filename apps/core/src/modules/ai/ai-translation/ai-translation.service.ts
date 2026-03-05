@@ -1,5 +1,5 @@
-import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
-import { OnEvent } from '@nestjs/event-emitter'
+import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
@@ -8,21 +8,27 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import {
+  type TaskExecuteContext,
   TaskQueueProcessor,
   TaskStatus,
-  type TaskExecuteContext,
 } from '~/processors/task-queue'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { InjectModel } from '~/transformers/model.transformer'
-import { computeContentHash as computeContentHashUtil } from '~/utils/content.util'
+import { createAbortError } from '~/utils/abort.util'
 import { md5 } from '~/utils/tool.util'
-import dayjs from 'dayjs'
+
 import { ConfigsService } from '../../configs/configs.service'
-import type { NoteModel } from '../../note/note.model'
-import type { PageModel } from '../../page/page.model'
-import type { PostModel } from '../../post/post.model'
+import {
+  AI_STREAM_IDLE_TIMEOUT_MS,
+  AI_STREAM_LOCK_TTL,
+  AI_STREAM_MAXLEN,
+  AI_STREAM_READ_BLOCK_MS,
+  AI_STREAM_RESULT_TTL,
+} from '../ai.constants'
+import { AiService } from '../ai.service'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
+import { resolveTargetLanguages } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   AITaskType,
@@ -31,61 +37,35 @@ import {
   type TranslationBatchTaskPayload,
   type TranslationTaskPayload,
 } from '../ai-task/ai-task.types'
-import {
-  AI_STREAM_IDLE_TIMEOUT_MS,
-  AI_STREAM_LOCK_TTL,
-  AI_STREAM_MAXLEN,
-  AI_STREAM_READ_BLOCK_MS,
-  AI_STREAM_RESULT_TTL,
-} from '../ai.constants'
-import { AI_PROMPTS } from '../ai.prompts'
-import { AiService } from '../ai.service'
-import { IModelRuntime } from '../runtime'
 import { AITranslationModel } from './ai-translation.model'
 import type { GetTranslationsGroupedQueryInput } from './ai-translation.schema'
+import type {
+  ArticleContent,
+  ArticleDocument,
+  ArticleEventDocument,
+  ArticleEventPayload,
+} from './ai-translation.types'
+import { BaseTranslationService } from './base-translation.service'
+import { TranslationConsistencyService } from './translation-consistency.service'
+import type { TranslationSourceSnapshot } from './translation-consistency.types'
+import type { ITranslationStrategy } from './translation-strategy.interface'
 import {
-  parseLexicalForTranslation,
-  restoreLexicalTranslation,
-} from './lexical-translation-parser'
-
-interface ArticleContent {
-  title: string
-  text: string
-  summary?: string | null
-  tags?: string[]
-  meta?: { lang?: string }
-  contentFormat?: string
-  content?: string
-}
-
-type ArticleDocument = PostModel | NoteModel | PageModel
-
-type ArticleEventDocument = ArticleDocument & {
-  _id?: { toString?: () => string } | string
-}
-
-type ArticleEventPayload =
-  | ArticleEventDocument
-  | { data: string }
-  | { id: string }
-
-type GlobalArticle =
-  | { document: PostModel; type: CollectionRefTypes.Post }
-  | { document: NoteModel; type: CollectionRefTypes.Note }
-  | { document: PageModel; type: CollectionRefTypes.Page }
-  | {
-      document: unknown
-      type: CollectionRefTypes.Recently
-    }
+  LEXICAL_TRANSLATION_STRATEGY,
+  MARKDOWN_TRANSLATION_STRATEGY,
+} from './translation-strategy.interface'
 
 @Injectable()
-export class AiTranslationService implements OnModuleInit {
+export class AiTranslationService
+  extends BaseTranslationService
+  implements OnModuleInit
+{
   private readonly logger = new Logger(AiTranslationService.name)
 
   constructor(
     @InjectModel(AITranslationModel)
     private readonly aiTranslationModel: MongooseModel<AITranslationModel>,
     private readonly databaseService: DatabaseService,
+    private readonly translationConsistencyService: TranslationConsistencyService,
     private readonly configService: ConfigsService,
     private readonly aiService: AiService,
     private readonly aiInFlightService: AiInFlightService,
@@ -93,7 +73,19 @@ export class AiTranslationService implements OnModuleInit {
     private readonly taskProcessor: TaskQueueProcessor,
     private readonly lexicalService: LexicalService,
     private readonly aiTaskService: AiTaskService,
-  ) {}
+    @Inject(LEXICAL_TRANSLATION_STRATEGY)
+    private readonly lexicalStrategy: ITranslationStrategy,
+    @Inject(MARKDOWN_TRANSLATION_STRATEGY)
+    private readonly markdownStrategy: ITranslationStrategy,
+  ) {
+    super()
+  }
+
+  private getStrategy(contentFormat?: string): ITranslationStrategy {
+    return contentFormat === ContentFormat.Lexical
+      ? this.lexicalStrategy
+      : this.markdownStrategy
+  }
 
   onModuleInit() {
     this.registerTaskHandlers()
@@ -143,9 +135,10 @@ export class AiTranslationService implements OnModuleInit {
     this.checkAborted(context)
 
     const aiConfig = await this.configService.get('ai')
-    const languages = payload.targetLanguages?.length
-      ? payload.targetLanguages
-      : aiConfig.translationTargetLanguages || []
+    const languages = resolveTargetLanguages(
+      payload.targetLanguages,
+      aiConfig.translationTargetLanguages,
+    )
 
     if (!languages.length) {
       await context.appendLog('warn', 'No target languages specified')
@@ -176,6 +169,7 @@ export class AiTranslationService implements OnModuleInit {
           payload.refId,
           lang,
           context.incrementTokens,
+          context.signal,
         )
         translations.push({
           translationId: result.id,
@@ -183,6 +177,7 @@ export class AiTranslationService implements OnModuleInit {
           title: result.title,
         })
       } catch (error) {
+        if (error.name === 'AbortError') throw error
         failedCount++
         await context.appendLog(
           'error',
@@ -228,16 +223,7 @@ export class AiTranslationService implements OnModuleInit {
 
     // Fetch article info for all refIds
     const articles = await this.databaseService.findGlobalByIds(refIds)
-    const articleMap = new Map<string, { title: string; type: string }>()
-    for (const post of articles.posts) {
-      articleMap.set(post.id, { title: post.title, type: 'Post' })
-    }
-    for (const note of articles.notes) {
-      articleMap.set(note.id, { title: note.title, type: 'Note' })
-    }
-    for (const page of articles.pages) {
-      articleMap.set(page.id, { title: page.title, type: 'Page' })
-    }
+    const articleMap = this.buildArticleInfoMap(articles)
 
     const createdTaskIds: string[] = []
 
@@ -297,9 +283,10 @@ export class AiTranslationService implements OnModuleInit {
     this.checkAborted(context)
 
     const aiConfig = await this.configService.get('ai')
-    const languages = payload.targetLanguages?.length
-      ? payload.targetLanguages
-      : aiConfig.translationTargetLanguages || []
+    const languages = resolveTargetLanguages(
+      payload.targetLanguages,
+      aiConfig.translationTargetLanguages,
+    )
 
     if (!languages.length) {
       await context.appendLog('warn', 'No target languages specified')
@@ -421,15 +408,63 @@ export class AiTranslationService implements OnModuleInit {
     )
   }
 
+  private buildArticleInfoMap(articles: {
+    posts: Array<{ id: string; title: string }>
+    notes: Array<{ id: string; title: string }>
+    pages: Array<{ id: string; title: string }>
+  }): Map<string, { title: string; type: string }> {
+    const map = new Map<string, { title: string; type: string }>()
+    for (const post of articles.posts) {
+      map.set(post.id, { title: post.title, type: 'Post' })
+    }
+    for (const note of articles.notes) {
+      map.set(note.id, { title: note.title, type: 'Note' })
+    }
+    for (const page of articles.pages) {
+      map.set(page.id, { title: page.title, type: 'Page' })
+    }
+    return map
+  }
+
   private checkAborted(context: TaskExecuteContext) {
     if (context.isAborted()) {
-      const error = new Error('Task aborted')
-      error.name = 'AbortError'
-      throw error
+      throw createAbortError()
     }
   }
 
-  private extractIdFromEvent(event: ArticleEventPayload): string | null {
+  async cancelActiveTranslationTasks(refId: string) {
+    const results = await Promise.all(
+      [TaskStatus.Running, TaskStatus.Pending].map((status) =>
+        this.aiTaskService.crud.getTasks({
+          type: AITaskType.Translation,
+          status,
+          page: 1,
+          size: 100,
+          includeSubTasks: true,
+        }),
+      ),
+    )
+    const tasks = results.flatMap((r) => r.data)
+    for (const task of tasks) {
+      const payload = task.payload as Record<string, unknown> | undefined
+      if (
+        !payload ||
+        typeof payload.refId !== 'string' ||
+        payload.refId !== refId
+      )
+        continue
+      try {
+        await this.aiTaskService.crud.cancelTask(task.id)
+        this.logger.log(
+          `Cancelled stale translation task ${task.id} for article=${refId}`,
+        )
+      } catch {
+        // task may already be completed
+      }
+    }
+  }
+
+  extractIdFromEvent(event: ArticleEventPayload): string | null {
     if ('data' in event) {
       return (event as { data: string }).data ?? null
     }
@@ -441,64 +476,6 @@ export class AiTranslationService implements OnModuleInit {
       return doc._id
     }
     return doc.id ?? doc._id?.toString?.() ?? null
-  }
-
-  private getMetaLang(document: {
-    meta?: { lang?: string }
-  }): string | undefined {
-    return document.meta?.lang
-  }
-
-  private toArticleContent(document: ArticleDocument): ArticleContent {
-    return {
-      title: document.title,
-      text: document.text,
-      summary:
-        'summary' in document ? (document.summary ?? undefined) : undefined,
-      tags: 'tags' in document ? document.tags : undefined,
-      contentFormat: document.contentFormat,
-      content: document.content,
-    }
-  }
-
-  private isPostArticle(
-    article: GlobalArticle,
-  ): article is { type: CollectionRefTypes.Post; document: PostModel } {
-    return article.type === CollectionRefTypes.Post
-  }
-
-  private isNoteArticle(
-    article: GlobalArticle,
-  ): article is { type: CollectionRefTypes.Note; document: NoteModel } {
-    return article.type === CollectionRefTypes.Note
-  }
-
-  private isPageArticle(
-    article: GlobalArticle,
-  ): article is { type: CollectionRefTypes.Page; document: PageModel } {
-    return article.type === CollectionRefTypes.Page
-  }
-
-  private isArticleVisible(article: GlobalArticle): boolean {
-    if (this.isPostArticle(article)) {
-      return article.document.isPublished !== false
-    }
-
-    if (this.isNoteArticle(article)) {
-      const document = article.document
-      if (document.isPublished === false) return false
-      if (document.password) return false
-      if (document.publicAt && dayjs(document.publicAt).isAfter(new Date())) {
-        return false
-      }
-      return true
-    }
-
-    if (this.isPageArticle(article)) {
-      return true
-    }
-
-    return false
   }
 
   /**
@@ -574,34 +551,6 @@ export class AiTranslationService implements OnModuleInit {
     }
   }
 
-  private computeContentHash(
-    document: ArticleContent,
-    sourceLang: string,
-  ): string {
-    if (document.contentFormat === ContentFormat.Lexical) {
-      return computeContentHashUtil(
-        {
-          title: document.title,
-          text: document.text,
-          contentFormat: document.contentFormat,
-          content: document.content,
-          summary: document.summary,
-          tags: document.tags,
-        },
-        sourceLang,
-      )
-    }
-    return md5(
-      JSON.stringify({
-        title: document.title,
-        text: document.text,
-        summary: document.summary,
-        tags: document.tags,
-        sourceLang,
-      }),
-    )
-  }
-
   private buildTranslationKey(
     articleId: string,
     targetLang: string,
@@ -621,262 +570,53 @@ export class AiTranslationService implements OnModuleInit {
       }),
     )
   }
+
+  private buildSourceSnapshots(
+    content: ArticleContent,
+  ): AITranslationModel['sourceBlockSnapshots'] {
+    if (content.contentFormat !== ContentFormat.Lexical || !content.content) {
+      return undefined
+    }
+    return this.lexicalService.extractRootBlocks(content.content).map((b) => ({
+      id: b.id ?? '',
+      fingerprint: b.fingerprint,
+      type: b.type,
+      index: b.index,
+    }))
+  }
+
+  private buildSourceMetaHashes(
+    content: ArticleContent,
+  ): AITranslationModel['sourceMetaHashes'] {
+    return {
+      title: md5(content.title),
+      summary: content.summary ? md5(content.summary) : undefined,
+      tags: content.tags?.length ? md5(content.tags.join('|||')) : undefined,
+    }
+  }
   private async translateContentStream(
     content: ArticleContent,
     targetLang: string,
     push?: (event: AiStreamEvent) => Promise<void>,
     onToken?: (count?: number) => Promise<void>,
-  ): Promise<{
-    sourceLang: string
-    title: string
-    text: string
-    summary: string | null
-    tags: string[] | null
-    aiModel: string
-    aiProvider: string
-    contentFormat?: string
-    content?: string
-  }> {
+    signal?: AbortSignal,
+    existing?: AITranslationModel | null,
+  ) {
     const { runtime, info } = await this.aiService.getTranslationModelWithInfo()
-
-    const isLexical = content.contentFormat === ContentFormat.Lexical
-
-    if (isLexical) {
-      return this.translateLexicalContent(
-        content,
-        targetLang,
-        runtime,
-        info,
-        onToken,
-      )
-    }
-
-    return this.translateMarkdownContent(
-      content,
-      targetLang,
-      runtime,
-      info,
+    const strategy = this.getStrategy(content.contentFormat)
+    return strategy.translate(content, targetLang, runtime, info, {
       push,
       onToken,
-    )
-  }
-
-  private async translateMarkdownContent(
-    content: ArticleContent,
-    targetLang: string,
-    runtime: IModelRuntime,
-    info: { model: string; provider: string },
-    push?: (event: AiStreamEvent) => Promise<void>,
-    onToken?: (count?: number) => Promise<void>,
-  ) {
-    const { systemPrompt, prompt, reasoningEffort } =
-      AI_PROMPTS.translationStream(targetLang, {
-        title: content.title,
-        text: content.text,
-        summary: content.summary ?? undefined,
-        tags: content.tags,
-      })
-
-    const messages = [
-      { role: 'system' as const, content: systemPrompt },
-      { role: 'user' as const, content: prompt },
-    ]
-
-    let fullText = ''
-    if (runtime.generateTextStream) {
-      for await (const chunk of runtime.generateTextStream({
-        messages,
-        temperature: 0.3,
-        maxRetries: 2,
-        reasoningEffort,
-      })) {
-        fullText += chunk.text
-        if (push) {
-          await push({ type: 'token', data: chunk.text })
-        }
-        if (onToken) {
-          await onToken()
-        }
-      }
-    } else {
-      const result = await runtime.generateText({
-        messages,
-        temperature: 0.3,
-        maxRetries: 2,
-        reasoningEffort,
-      })
-      fullText = result.text
-      if (push && result.text) {
-        await push({ type: 'token', data: result.text })
-      }
-      if (onToken && result.text) {
-        await onToken()
-      }
-    }
-
-    const parsed = JSON.parse(fullText) as {
-      sourceLang?: string
-      title?: string
-      text?: string
-      summary?: string | null
-      tags?: string[] | null
-    }
-
-    if (!parsed?.title || !parsed?.text || !parsed?.sourceLang) {
-      throw new Error('Invalid translation JSON response')
-    }
-
-    return {
-      sourceLang: parsed.sourceLang,
-      title: parsed.title,
-      text: parsed.text,
-      summary: parsed.summary ?? null,
-      tags: parsed.tags ?? null,
-      aiModel: info.model,
-      aiProvider: info.provider,
-    }
-  }
-
-  private async translateLexicalContent(
-    content: ArticleContent,
-    targetLang: string,
-    runtime: IModelRuntime,
-    info: { model: string; provider: string },
-    onToken?: (count?: number) => Promise<void>,
-  ) {
-    const { chunks, editorState } = parseLexicalForTranslation(content.content!)
-    const allTranslations = new Map<string, string>()
-    let sourceLang = ''
-
-    // Edge case: no translatable nodes (entire document is code/embeds)
-    if (chunks.length === 0) {
-      const metaEntries = { __title__: content.title } as Record<string, string>
-      if (content.summary) metaEntries.__summary__ = content.summary
-      if (content.tags?.length) metaEntries.__tags__ = content.tags.join('|||')
-
-      const result = await this.callChunkTranslation(
-        targetLang,
-        { markdown: content.title, textEntries: metaEntries },
-        runtime,
-        onToken,
-      )
-      sourceLang = result.sourceLang
-      for (const [id, text] of Object.entries(result.translations)) {
-        allTranslations.set(id, text)
-      }
-    }
-
-    for (const [i, chunk] of chunks.entries()) {
-      const textEntries: Record<string, string> = {}
-      for (const ref of chunk.textNodes) {
-        textEntries[ref.id] = ref.originalText
-      }
-
-      if (i === 0) {
-        textEntries.__title__ = content.title
-        if (content.summary) textEntries.__summary__ = content.summary
-        if (content.tags?.length)
-          textEntries.__tags__ = content.tags.join('|||')
-      }
-
-      const result = await this.callChunkTranslation(
-        targetLang,
-        {
-          markdown: chunk.markdown,
-          textEntries,
-          ...(i === 0
-            ? {
-                title: content.title,
-                summary: content.summary ?? undefined,
-                tags: content.tags,
-              }
-            : {}),
-        },
-        runtime,
-        onToken,
-      )
-
-      if (!sourceLang) sourceLang = result.sourceLang
-      for (const [id, text] of Object.entries(result.translations)) {
-        allTranslations.set(id, text)
-      }
-    }
-
-    const translatedContent = restoreLexicalTranslation(
-      editorState,
-      allTranslations,
-      chunks,
-    )
-    const title = allTranslations.get('__title__') ?? content.title
-    const summary =
-      allTranslations.get('__summary__') ?? content.summary ?? null
-    const tagsStr = allTranslations.get('__tags__')
-    const tags = tagsStr ? tagsStr.split('|||') : (content.tags ?? null)
-
-    return {
-      sourceLang,
-      title,
-      text: this.lexicalService.lexicalToMarkdown(translatedContent),
-      contentFormat: ContentFormat.Lexical,
-      content: translatedContent,
-      summary,
-      tags,
-      aiModel: info.model,
-      aiProvider: info.provider,
-    }
-  }
-
-  private async callChunkTranslation(
-    targetLang: string,
-    chunk: {
-      markdown: string
-      textEntries: Record<string, string>
-      title?: string
-      summary?: string | null
-      tags?: string[]
-    },
-    runtime: any,
-    onToken?: (count?: number) => Promise<void>,
-  ): Promise<{ sourceLang: string; translations: Record<string, string> }> {
-    const { systemPrompt, prompt, reasoningEffort } =
-      AI_PROMPTS.translationChunk(targetLang, chunk)
-
-    const messages = [
-      { role: 'system' as const, content: systemPrompt },
-      { role: 'user' as const, content: prompt },
-    ]
-
-    let fullText = ''
-    if (runtime.generateTextStream) {
-      for await (const c of runtime.generateTextStream({
-        messages,
-        temperature: 0.3,
-        maxRetries: 2,
-        reasoningEffort,
-      })) {
-        fullText += c.text
-        if (onToken) await onToken()
-      }
-    } else {
-      const result = await runtime.generateText({
-        messages,
-        temperature: 0.3,
-        maxRetries: 2,
-        reasoningEffort,
-      })
-      fullText = result.text
-    }
-
-    return JSON.parse(fullText) as {
-      sourceLang: string
-      translations: Record<string, string>
-    }
+      signal,
+      existing,
+    })
   }
 
   async generateTranslation(
     articleId: string,
     targetLang: string,
     onToken?: (count?: number) => Promise<void>,
+    signal?: AbortSignal,
   ): Promise<AITranslationModel> {
     const startedAt = Date.now()
     const aiConfig = await this.configService.get('ai')
@@ -898,6 +638,7 @@ export class AiTranslationService implements OnModuleInit {
         type,
         document,
         onToken,
+        signal,
       )
       const translated = await result
       this.logger.log(
@@ -907,7 +648,7 @@ export class AiTranslationService implements OnModuleInit {
       )
       return translated
     } catch (error) {
-      if (error instanceof BizException) {
+      if (error instanceof BizException || error.name === 'AbortError') {
         throw error
       }
       this.logger.error(
@@ -924,6 +665,7 @@ export class AiTranslationService implements OnModuleInit {
     refType: CollectionRefTypes,
     document: ArticleDocument,
     onToken?: (count?: number) => Promise<void>,
+    signal?: AbortSignal,
   ) {
     const content = this.toArticleContent(document)
     const sourceModified = document.modified ?? undefined
@@ -937,20 +679,27 @@ export class AiTranslationService implements OnModuleInit {
       readBlockMs: AI_STREAM_READ_BLOCK_MS,
       idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
       onLeader: async ({ push }) => {
-        const translated = await this.translateContentStream(
-          content,
-          targetLang,
-          push,
-          onToken,
-        )
-        const { sourceLang } = translated
-        const hash = this.computeContentHash(content, sourceLang)
-
+        // Fetch existing translation for incremental path
         const existing = await this.aiTranslationModel.findOne({
           refId: articleId,
           refType,
           lang: targetLang,
         })
+
+        const translated = await this.translateContentStream(
+          content,
+          targetLang,
+          push,
+          onToken,
+          signal,
+          existing,
+        )
+        const { sourceLang } = translated
+        const hash = this.computeContentHash(content, sourceLang)
+
+        // Build source snapshots for future incremental translations
+        const sourceSnapshots = this.buildSourceSnapshots(content)
+        const sourceMetaHashes = this.buildSourceMetaHashes(content)
 
         if (existing) {
           existing.hash = hash
@@ -966,12 +715,13 @@ export class AiTranslationService implements OnModuleInit {
           }
           existing.aiModel = translated.aiModel
           existing.aiProvider = translated.aiProvider
+          existing.sourceBlockSnapshots = sourceSnapshots
+          existing.sourceMetaHashes = sourceMetaHashes
           await existing.save()
           this.logger.log(
             `AI translation updated: article=${articleId} target=${targetLang}`,
           )
 
-          // 发送翻译更新事件
           this.emitTranslationEvent(BusinessEvents.TRANSLATION_UPDATE, existing)
 
           return { result: existing, resultId: existing.id }
@@ -992,12 +742,13 @@ export class AiTranslationService implements OnModuleInit {
           sourceModified,
           aiModel: translated.aiModel,
           aiProvider: translated.aiProvider,
+          sourceBlockSnapshots: sourceSnapshots,
+          sourceMetaHashes,
         })
         this.logger.log(
           `AI translation created: article=${articleId} target=${targetLang}`,
         )
 
-        // 发送翻译创建事件
         this.emitTranslationEvent(BusinessEvents.TRANSLATION_CREATE, created)
 
         return { result: created, resultId: created.id }
@@ -1073,9 +824,10 @@ export class AiTranslationService implements OnModuleInit {
     targetLanguages?: string[],
   ): Promise<AITranslationModel[]> {
     const aiConfig = await this.configService.get('ai')
-    const languages = targetLanguages?.length
-      ? targetLanguages
-      : aiConfig.translationTargetLanguages || []
+    const languages = resolveTargetLanguages(
+      targetLanguages,
+      aiConfig.translationTargetLanguages,
+    )
 
     if (!languages.length) {
       return []
@@ -1097,12 +849,14 @@ export class AiTranslationService implements OnModuleInit {
   }
 
   async getTranslationsByRefId(refId: string) {
-    const article = await this.databaseService.findGlobalById(refId)
+    const [article, translations] = await Promise.all([
+      this.databaseService.findGlobalById(refId),
+      this.aiTranslationModel.find({ refId }),
+    ])
     if (!article) {
       throw new BizException(ErrorCodeEnum.ContentNotFound)
     }
 
-    const translations = await this.aiTranslationModel.find({ refId })
     return { translations, article }
   }
 
@@ -1213,29 +967,30 @@ export class AiTranslationService implements OnModuleInit {
     }
 
     const refIds = groupedRefIds.map((g: { _id: string }) => g._id)
-    const translations = await this.aiTranslationModel
-      .find({ refId: { $in: refIds } })
-      .sort({ created: -1 })
-      .lean()
+    const [translations, articles] = await Promise.all([
+      this.aiTranslationModel
+        .find({ refId: { $in: refIds } })
+        .sort({ created: -1 })
+        .lean(),
+      this.databaseService.findGlobalByIds(refIds),
+    ])
 
-    const articles = await this.databaseService.findGlobalByIds(refIds)
     const articleMap = {} as Record<
       string,
       { title: string; id: string; type: CollectionRefTypes }
     >
-
-    for (const a of articles.notes) {
-      articleMap[a.id] = {
-        title: a.title,
-        id: a.id,
-        type: CollectionRefTypes.Note,
-      }
-    }
     for (const a of articles.posts) {
       articleMap[a.id] = {
         title: a.title,
         id: a.id,
         type: CollectionRefTypes.Post,
+      }
+    }
+    for (const a of articles.notes) {
+      articleMap[a.id] = {
+        title: a.title,
+        id: a.id,
+        type: CollectionRefTypes.Note,
       }
     }
     for (const a of articles.pages) {
@@ -1290,6 +1045,7 @@ export class AiTranslationService implements OnModuleInit {
       text?: string
       summary?: string
       tags?: string[]
+      content?: string
     },
   ) {
     const doc = await this.aiTranslationModel.findById(id)
@@ -1298,9 +1054,15 @@ export class AiTranslationService implements OnModuleInit {
     }
 
     if (data.title !== undefined) doc.title = data.title
-    if (data.text !== undefined) doc.text = data.text
     if (data.summary !== undefined) doc.summary = data.summary
     if (data.tags !== undefined) doc.tags = data.tags
+
+    if (data.content !== undefined) {
+      doc.content = data.content
+      doc.text = this.lexicalService.lexicalToMarkdown(data.content)
+    } else if (data.text !== undefined) {
+      doc.text = data.text
+    }
 
     await doc.save()
     return doc
@@ -1334,45 +1096,43 @@ export class AiTranslationService implements OnModuleInit {
       throw new BizException(ErrorCodeEnum.NoteForbidden)
     }
 
-    return this.findValidTranslation(
-      articleId,
-      targetLang,
-      article.document as ArticleDocument,
-    )
+    const document = article.document as ArticleDocument
+    const translation = await this.aiTranslationModel.findOne({
+      refId: articleId,
+      lang: targetLang,
+    })
+
+    if (!translation) {
+      return null
+    }
+
+    const snapshot = this.buildSnapshotFromDocument(articleId, document)
+    const status =
+      this.translationConsistencyService.evaluateTranslationFreshness(
+        snapshot,
+        translation,
+      )
+
+    return status === 'valid' ? translation : null
   }
 
   async getValidTranslationsForArticles(
-    articles: Array<{
-      id: string
-      title: string
-      text?: string
-      summary?: string | null
-      tags?: string[]
-      meta?: { lang?: string }
-      modified?: Date | null
-      created?: Date | null
-    }>,
+    articles: TranslationSourceSnapshot[],
     targetLang: string,
     options?: {
       select?: string
     },
-  ): Promise<Map<string, AITranslationModel>> {
+  ): Promise<{
+    validTranslations: Map<string, AITranslationModel>
+    staleRefIds: string[]
+  }> {
     if (!articles.length) {
-      return new Map()
+      return { validTranslations: new Map(), staleRefIds: [] }
     }
 
-    const requiredSelectFields = [
-      'refId',
-      'hash',
-      'sourceLang',
-      'sourceModified',
-      'created',
-    ]
-    const defaultSelect =
-      'refId refType lang sourceLang title text summary tags hash sourceModified created aiModel aiProvider'
-    const select = options?.select
-      ? `${options.select} ${requiredSelectFields.join(' ')}`
-      : defaultSelect
+    const select = this.translationConsistencyService.buildValidationSelect(
+      options?.select,
+    )
 
     const query = this.aiTranslationModel.find({
       refId: { $in: articles.map((article) => article.id) },
@@ -1384,55 +1144,25 @@ export class AiTranslationService implements OnModuleInit {
     const translations = await query
 
     if (!translations.length) {
-      return new Map()
+      return { validTranslations: new Map(), staleRefIds: [] }
     }
 
-    const translationMap = new Map(
-      translations.map((translation) => [translation.refId, translation]),
-    )
-    const result = new Map<string, AITranslationModel>()
-
-    for (const article of articles) {
-      const translation = translationMap.get(article.id)
-      if (!translation) {
-        continue
-      }
-
-      const articleTimestamp = article.modified ?? article.created ?? null
-
-      if (translation.sourceModified && articleTimestamp) {
-        if (translation.sourceModified >= articleTimestamp) {
-          result.set(article.id, translation)
-        }
-        continue
-      }
-
-      if (
-        !translation.sourceModified &&
-        articleTimestamp &&
-        translation.created &&
-        translation.created >= articleTimestamp
-      ) {
-        result.set(article.id, translation)
-        continue
-      }
-
-      const sourceLang =
-        article.meta?.lang || translation.sourceLang || 'unknown'
-
-      const currentHash = this.computeContentHash(
-        {
-          title: article.title,
-          text: article.text ?? '',
-          summary: article.summary ?? undefined,
-          tags: article.tags,
-        },
-        sourceLang,
+    const result =
+      this.translationConsistencyService.partitionValidAndStaleTranslations(
+        articles,
+        translations,
       )
 
-      if (translation.hash === currentHash) {
-        result.set(article.id, translation)
-      }
+    if (result.staleRefIds.length) {
+      this.scheduleRegenerationForStaleTranslations(
+        result.staleRefIds,
+        targetLang,
+      ).catch((err) =>
+        this.logger.error(
+          'Failed to schedule stale translation regeneration',
+          err,
+        ),
+      )
     }
 
     return result
@@ -1445,148 +1175,160 @@ export class AiTranslationService implements OnModuleInit {
     }
 
     const document = article.document as ArticleDocument
-    const translations = await this.aiTranslationModel.find({
-      refId: articleId,
-    })
+    const translations = await this.aiTranslationModel
+      .find({ refId: articleId })
+      .select('hash lang sourceLang sourceModified created')
 
     if (!translations.length) {
       return []
     }
 
-    const sourceLang =
-      this.getMetaLang(document) || translations[0]?.sourceLang || 'unknown'
-    const currentHash = this.computeContentHash(
-      this.toArticleContent(document),
-      sourceLang,
-    )
+    const snapshot = this.buildSnapshotFromDocument(articleId, document)
 
-    return translations.filter((t) => t.hash === currentHash).map((t) => t.lang)
-  }
-
-  async getValidTranslationsByRefId(
-    refId: string,
-    document: PostModel | NoteModel | PageModel,
-  ): Promise<AITranslationModel[]> {
-    const translations = await this.aiTranslationModel.find({ refId })
-    if (!translations.length) return []
-
-    const sourceLang =
-      this.getMetaLang(document) || translations[0]?.sourceLang || 'unknown'
-    const currentHash = this.computeContentHash(
-      this.toArticleContent(document as ArticleDocument),
-      sourceLang,
-    )
-
-    return translations.filter((t) => t.hash === currentHash)
-  }
-
-  @OnEvent(BusinessEvents.POST_DELETE)
-  @OnEvent(BusinessEvents.NOTE_DELETE)
-  @OnEvent(BusinessEvents.PAGE_DELETE)
-  async handleDeleteArticle(event: ArticleEventPayload) {
-    const id = this.extractIdFromEvent(event)
-    if (!id) return
-    await this.deleteTranslationsByRefId(id)
-  }
-
-  @OnEvent(BusinessEvents.POST_CREATE)
-  @OnEvent(BusinessEvents.NOTE_CREATE)
-  @OnEvent(BusinessEvents.PAGE_CREATE)
-  async handleCreateArticle(event: ArticleEventPayload) {
-    const aiConfig = await this.configService.get('ai')
-
-    if (
-      !aiConfig.enableAutoGenerateTranslation ||
-      !aiConfig.enableTranslation
-    ) {
-      return
-    }
-
-    const id = this.extractIdFromEvent(event)
-    if (!id) return
-
-    const article = await this.databaseService.findGlobalById(id)
-    if (!article || !this.isArticleVisible(article)) {
-      return
-    }
-
-    const targetLanguages = aiConfig.translationTargetLanguages || []
-    if (!targetLanguages.length) {
-      return
-    }
-
-    this.logger.log(
-      `AI auto translation task created: article=${id} targets=${targetLanguages.join(',')}`,
-    )
-    await this.aiTaskService.createTranslationTask({
-      refId: id,
-      targetLanguages,
-    })
-  }
-
-  @OnEvent(BusinessEvents.POST_UPDATE)
-  @OnEvent(BusinessEvents.NOTE_UPDATE)
-  @OnEvent(BusinessEvents.PAGE_UPDATE)
-  async handleUpdateArticle(event: ArticleEventPayload) {
-    const aiConfig = await this.configService.get('ai')
-    if (
-      !aiConfig.enableAutoGenerateTranslation ||
-      !aiConfig.enableTranslation
-    ) {
-      return
-    }
-
-    const id = this.extractIdFromEvent(event)
-    if (!id) return
-
-    const article = await this.databaseService.findGlobalById(id)
-    if (!article || !this.isArticleVisible(article)) {
-      return
-    }
-
-    const targetLanguages = aiConfig.translationTargetLanguages || []
-    if (!targetLanguages.length) {
-      return
-    }
-
-    const existingTranslations = await this.aiTranslationModel.find({
-      refId: id,
-    })
-    if (!existingTranslations.length) {
-      this.logger.log(
-        `AI auto translation task created (update init): article=${id} targets=${targetLanguages.join(',')}`,
+    return translations
+      .filter(
+        (t) =>
+          this.translationConsistencyService.evaluateTranslationFreshness(
+            snapshot,
+            t,
+          ) === 'valid',
       )
-      await this.aiTaskService.createTranslationTask({
-        refId: id,
-        targetLanguages,
-      })
-      return
+      .map((t) => t.lang)
+  }
+
+  private buildSnapshotFromDocument(
+    articleId: string,
+    document: ArticleDocument,
+  ): TranslationSourceSnapshot {
+    return {
+      id: articleId,
+      title: document.title,
+      text: document.text,
+      summary:
+        'summary' in document ? (document.summary ?? undefined) : undefined,
+      tags: 'tags' in document ? document.tags : undefined,
+      meta: document.meta,
+      contentFormat: document.contentFormat,
+      content: document.content,
+      modified: document.modified,
+      created: document.created,
+    }
+  }
+
+  async getTranslationAndAvailableLanguages(
+    articleId: string,
+    targetLang?: string,
+    options?: { ignoreVisibility?: boolean },
+  ): Promise<{
+    availableTranslations: string[]
+    translation: AITranslationModel | null
+  }> {
+    const article = await this.databaseService.findGlobalById(articleId)
+    if (!article || !article.document) {
+      throw new BizException(ErrorCodeEnum.ContentNotFound)
+    }
+
+    if (!options?.ignoreVisibility && !this.isArticleVisible(article)) {
+      if (article.type === CollectionRefTypes.Post) {
+        throw new BizException(ErrorCodeEnum.PostHiddenOrEncrypted)
+      }
+      throw new BizException(ErrorCodeEnum.NoteForbidden)
     }
 
     const document = article.document as ArticleDocument
-    const sourceLang =
-      this.getMetaLang(document) ||
-      existingTranslations[0]?.sourceLang ||
-      'unknown'
-    const newHash = this.computeContentHash(
-      this.toArticleContent(document),
-      sourceLang,
-    )
+    const translations = await this.aiTranslationModel
+      .find({ refId: articleId })
+      .select('hash lang sourceLang sourceModified created')
 
-    const outdatedLanguages = existingTranslations
-      .filter((t) => t.hash !== newHash)
-      .map((t) => t.lang)
+    if (!translations.length) {
+      return { availableTranslations: [], translation: null }
+    }
 
-    if (!outdatedLanguages.length) {
+    const snapshot = this.buildSnapshotFromDocument(articleId, document)
+    const validLangs: string[] = []
+    const staleLangs: string[] = []
+    let matchedTranslation: AITranslationModel | null = null
+
+    for (const t of translations) {
+      const status =
+        this.translationConsistencyService.evaluateTranslationFreshness(
+          snapshot,
+          t,
+        )
+      if (status === 'valid') {
+        validLangs.push(t.lang)
+        if (targetLang && t.lang === targetLang) {
+          matchedTranslation = t
+        }
+      } else if (status === 'stale') {
+        staleLangs.push(t.lang)
+      }
+    }
+
+    if (targetLang && matchedTranslation) {
+      const fullTranslation = await this.aiTranslationModel.findOne({
+        refId: articleId,
+        lang: targetLang,
+      })
+      matchedTranslation = fullTranslation
+    }
+
+    if (staleLangs.length && targetLang) {
+      this.scheduleRegenerationForStaleTranslations(
+        [articleId],
+        targetLang,
+      ).catch((err) =>
+        this.logger.error(
+          'Failed to schedule stale translation regeneration',
+          err,
+        ),
+      )
+    }
+
+    return {
+      availableTranslations: validLangs,
+      translation: matchedTranslation,
+    }
+  }
+
+  async scheduleRegenerationForStaleTranslations(
+    articleIds: string[],
+    targetLang: string,
+  ) {
+    if (!articleIds.length) return
+
+    const aiConfig = await this.configService.get('ai')
+    if (
+      !aiConfig.enableAutoGenerateTranslation ||
+      !aiConfig.enableTranslation
+    ) {
       return
     }
 
-    this.logger.log(
-      `AI auto translation task created (update): article=${id} targets=${outdatedLanguages.join(',')}`,
-    )
-    await this.aiTaskService.createTranslationTask({
-      refId: id,
-      targetLanguages: outdatedLanguages,
-    })
+    const existingTranslations = await this.aiTranslationModel
+      .find({
+        refId: { $in: articleIds },
+        lang: targetLang,
+      })
+      .select('refId hash sourceLang')
+      .lean()
+
+    if (!existingTranslations.length) return
+
+    const staleRefIds =
+      await this.translationConsistencyService.filterTrulyStaleTranslations(
+        existingTranslations,
+      )
+    if (!staleRefIds.length) return
+
+    for (const refId of staleRefIds) {
+      this.logger.log(
+        `Scheduling stale translation regeneration: article=${refId} lang=${targetLang}`,
+      )
+      await this.aiTaskService.createTranslationTask({
+        refId,
+        targetLanguages: [targetLang],
+      })
+    }
   }
 }

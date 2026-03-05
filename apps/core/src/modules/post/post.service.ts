@@ -1,5 +1,10 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
+import { debounce, omit } from 'es-toolkit/compat'
+import type { AggregatePaginateModel, Document } from 'mongoose'
+import { Types } from 'mongoose'
+import slugify from 'slugify'
+
 import {
   BizException,
   BusinessException,
@@ -19,14 +24,12 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { isLexical } from '~/utils/content.util'
 import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getLessThanNow } from '~/utils/time.util'
 import { isDefined } from '~/utils/validator.util'
-import { debounce, omit } from 'es-toolkit/compat'
-import type { AggregatePaginateModel, Document } from 'mongoose'
-import { Types } from 'mongoose'
-import slugify from 'slugify'
+
 import type { CategoryService } from '../category/category.service'
 import { CommentModel } from '../comment/comment.model'
 import { DraftRefType } from '../draft/draft.model'
@@ -119,20 +122,21 @@ export class PostService implements OnApplicationBootstrap {
 
       // Track file references
       await this.fileReferenceService.activateReferences(
-        doc.text,
+        doc,
         doc.id,
         FileReferenceType.Post,
       )
 
       await Promise.all([
-        this.imageService.saveImageDimensionsFromMarkdownText(
-          doc.text,
-          doc.images,
-          (images) => {
-            newPost.images = images
-            return newPost.save()
-          },
-        ),
+        !isLexical(doc) &&
+          this.imageService.saveImageDimensionsFromMarkdownText(
+            doc.text,
+            doc.images,
+            (images) => {
+              newPost.images = images
+              return newPost.save()
+            },
+          ),
         this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
           scope: EventScope.TO_SYSTEM,
         }),
@@ -341,7 +345,7 @@ export class PostService implements OnApplicationBootstrap {
       // Update file references
       if (doc) {
         await this.fileReferenceService.updateReferencesForDocument(
-          doc.text,
+          doc,
           doc.id,
           FileReferenceType.Post,
         )
@@ -352,6 +356,7 @@ export class PostService implements OnApplicationBootstrap {
           scope: EventScope.TO_SYSTEM,
         }),
         doc?.text &&
+          !isLexical(doc) &&
           this.imageService.saveImageDimensionsFromMarkdownText(
             doc.text,
             doc.images,

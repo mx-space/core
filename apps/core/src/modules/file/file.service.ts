@@ -9,17 +9,20 @@ import {
 } from 'node:fs/promises'
 import path, { resolve } from 'node:path'
 import type { Readable } from 'node:stream'
+
 import {
   Injectable,
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import {
   STATIC_FILE_DIR,
   STATIC_FILE_TRASH_DIR,
 } from '~/constants/path.constant'
+
 import { ConfigsService } from '../configs/configs.service'
 import type { FileType } from './file.type'
 
@@ -70,6 +73,32 @@ export class FileService {
       const writable = createWriteStream(filePath, {
         encoding,
       })
+      data.pipe(writable)
+      writable.on('close', () => {
+        resolve(null)
+      })
+      writable.on('error', () => reject(null))
+      data.on('end', () => {
+        writable.end()
+      })
+      data.on('error', () => reject(null))
+    })
+  }
+
+  updateFile(
+    type: FileType,
+    name: string,
+    data: Readable,
+    encoding?: BufferEncoding,
+  ) {
+    // eslint-disable-next-line no-async-promise-executor
+    return new Promise(async (resolve, reject) => {
+      const filePath = this.resolveFilePath(type, name)
+      if (!(await this.checkIsExist(filePath))) {
+        reject(new BizException(ErrorCodeEnum.FileNotFound))
+        return
+      }
+      const writable = createWriteStream(filePath, { encoding })
       data.pipe(writable)
       writable.on('close', () => {
         resolve(null)

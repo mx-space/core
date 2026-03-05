@@ -1,205 +1,342 @@
-// Lexical translation parser: extract translatable text nodes, convert to Markdown, restore after translation.
-// Operates on serialized JSON only (no Lexical runtime).
+// Lexical translation parser: extract translatable segments from serialized JSON.
+// Uses blacklist-based skipping + generalized nested editor detection.
 
-const TRANSLATABLE_TYPES = new Set([
-  'paragraph',
-  'heading',
-  'list',
-  'quote',
-  'listitem',
+import {
+  CodeBlockNode,
+  CodeSnippetNode,
+  EmbedNode,
+  ExcalidrawNode,
+  FootnoteNode,
+  GalleryNode,
+  ImageNode,
+  KaTeXBlockNode,
+  KaTeXInlineNode,
+  LinkCardNode,
+  MentionNode,
+  MermaidNode,
+  VideoNode,
+} from '@haklex/rich-headless'
+
+import {
+  BLOCK_ID_STATE_KEY,
+  NODE_STATE_KEY,
+} from '~/constants/lexical.constant'
+
+const FORMAT_CODE = 16
+
+const SKIP_BLOCKS = new Set([
+  'code',
+  CodeBlockNode.getType(),
+  CodeSnippetNode.getType(),
+  'code-highlight',
+  ImageNode.getType(),
+  VideoNode.getType(),
+  GalleryNode.getType(),
+  LinkCardNode.getType(),
+  KaTeXBlockNode.getType(),
+  MermaidNode.getType(),
+  EmbedNode.getType(),
+  ExcalidrawNode.getType(),
+  'horizontalrule',
+  'component',
 ])
 
-function isTranslatable(type: string): boolean {
-  return TRANSLATABLE_TYPES.has(type)
-}
+const SKIP_INLINE = new Set([
+  KaTeXInlineNode.getType(),
+  MentionNode.getType(),
+  FootnoteNode.getType(),
+])
 
-function hasNestedEditorContent(node: any): boolean {
-  return !!node.content?.root?.children
-}
+const KNOWN_STRUCTURAL_PROPS = new Set([
+  'children',
+  'type',
+  'version',
+  'direction',
+  'format',
+  'indent',
+  'style',
+  'detail',
+  'mode',
+  'text',
+  'tag',
+  'listType',
+  'start',
+  'value',
+  'url',
+  'rel',
+  'target',
+  'colSpan',
+  'headerState',
+  'width',
+  NODE_STATE_KEY,
+])
 
-export interface TextNodeRef {
+export interface TranslationSegment {
   id: string
+  text: string
   node: any
-  originalText: string
+  translatable: boolean
+  blockId: string | null
+  rootIndex: number
 }
 
-export interface TranslationChunk {
-  markdown: string
-  textNodes: TextNodeRef[]
+export interface PropertySegment {
+  id: string
+  text: string
+  node: any
+  property: string
+  key?: string
+  blockId: string | null
+  rootIndex: number
 }
 
-export interface LexicalTranslationParseResult {
-  chunks: TranslationChunk[]
+export interface LexicalTranslationResult {
+  segments: TranslationSegment[]
+  propertySegments: PropertySegment[]
   editorState: any
 }
 
-// ── Text format bitmask (mirrors helper.lexical.service.ts) ──
-
-const FORMAT_BOLD = 1
-const FORMAT_ITALIC = 2
-const FORMAT_STRIKETHROUGH = 4
-const FORMAT_CODE = 16
-
-function wrapTextFormat(text: string, format: number): string {
-  let r = text
-  if (format & FORMAT_CODE) r = `\`${r}\``
-  if (format & FORMAT_BOLD) r = `**${r}**`
-  if (format & FORMAT_ITALIC) r = `*${r}*`
-  if (format & FORMAT_STRIKETHROUGH) r = `~~${r}~~`
-  return r
+interface BlockContext {
+  blockId: string | null
+  rootIndex: number
 }
 
-// ── Standalone JSON-based Markdown converter ──
-
-function inlineNodeToMarkdown(node: any): string {
-  if (!node) return ''
-
-  if (node.type === 'text') {
-    return wrapTextFormat(node.text ?? '', node.format ?? 0)
-  }
-  if (node.type === 'linebreak') return '\n'
-  if (node.type === 'link' || node.type === 'autolink') {
-    const children = (node.children ?? []).map(inlineNodeToMarkdown).join('')
-    return `[${children}](${node.url ?? ''})`
-  }
-  if (Array.isArray(node.children)) {
-    return node.children.map(inlineNodeToMarkdown).join('')
-  }
-  return node.text ?? ''
-}
-
-function blockNodeToMarkdown(node: any): string {
-  if (!node) return ''
-
-  if (node.type === 'heading') {
-    const tag: string = node.tag ?? 'h1'
-    const level = Number(tag.replace('h', '')) || 1
-    const text = (node.children ?? []).map(inlineNodeToMarkdown).join('')
-    return `${'#'.repeat(level)} ${text}`
-  }
-
-  if (node.type === 'quote') {
-    const text = (node.children ?? []).map(inlineNodeToMarkdown).join('')
-    return `> ${text}`
-  }
-
-  if (node.type === 'list') {
-    return listNodeToMarkdown(node, 0)
-  }
-
-  if (node.type === 'paragraph') {
-    return (node.children ?? []).map(inlineNodeToMarkdown).join('')
-  }
-
-  // Nodes with nested editor content (e.g. alert-quote)
-  if (hasNestedEditorContent(node)) {
-    const nestedChildren: any[] = node.content.root.children ?? []
-    return nestedChildren.map(blockNodeToMarkdown).join('\n\n')
-  }
-
-  if (Array.isArray(node.children)) {
-    return node.children.map(inlineNodeToMarkdown).join('')
-  }
-
-  return node.text ?? ''
-}
-
-function listNodeToMarkdown(node: any, depth: number): string {
-  const items: any[] = node.children ?? []
-  const lines: string[] = []
-  const indent = '    '.repeat(depth)
-  const isOrdered = node.listType === 'number'
-
-  for (const [i, item] of items.entries()) {
-    if (item.type !== 'listitem') continue
-    const children: any[] = item.children ?? []
-    const nested = children.find((c: any) => c.type === 'list')
-    const inlineChildren = children.filter((c: any) => c.type !== 'list')
-    const text = inlineChildren.map(inlineNodeToMarkdown).join('')
-    const bullet = isOrdered ? `${item.value ?? i + 1}. ` : '- '
-    lines.push(`${indent}${bullet}${text}`)
-    if (nested) lines.push(listNodeToMarkdown(nested, depth + 1))
-  }
-
-  return lines.join('\n')
-}
-
-// ── Collect text leaf nodes from a translatable block ──
-
-function collectTextNodes(
+function walkNode(
   node: any,
-  refs: TextNodeRef[],
-  counter: { value: number },
+  segments: TranslationSegment[],
+  propertySegments: PropertySegment[],
+  counter: { t: number; p: number },
+  ctx: BlockContext,
 ): void {
   if (!node) return
+  if (SKIP_BLOCKS.has(node.type)) return
+  if (SKIP_INLINE.has(node.type)) return
+
+  // Special translatable properties
+  if (
+    node.type === 'details' &&
+    typeof node.summary === 'string' &&
+    node.summary.trim()
+  ) {
+    propertySegments.push({
+      id: `p_${counter.p++}`,
+      text: node.summary,
+      node,
+      property: 'summary',
+      blockId: ctx.blockId,
+      rootIndex: ctx.rootIndex,
+    })
+  }
+
+  if (
+    node.type === 'footnote-section' &&
+    node.definitions &&
+    typeof node.definitions === 'object'
+  ) {
+    for (const [key, value] of Object.entries(node.definitions)) {
+      if (typeof value === 'string' && (value as string).trim()) {
+        propertySegments.push({
+          id: `p_${counter.p++}`,
+          text: value as string,
+          node,
+          property: 'definitions',
+          key,
+          blockId: ctx.blockId,
+          rootIndex: ctx.rootIndex,
+        })
+      }
+    }
+  }
+
+  if (node.type === 'ruby' && typeof node.reading === 'string') {
+    propertySegments.push({
+      id: `p_${counter.p++}`,
+      text: node.reading,
+      node,
+      property: 'reading',
+      blockId: ctx.blockId,
+      rootIndex: ctx.rootIndex,
+    })
+  }
+
+  // Text leaf
   if (node.type === 'text') {
-    const text = node.text ?? ''
-    if (!text.trim()) return
-    const id = `t_${counter.value++}`
-    refs.push({ id, node, originalText: text })
+    if (node.text?.trim()) {
+      segments.push({
+        id: `t_${counter.t++}`,
+        text: node.text,
+        node,
+        translatable: !(node.format & FORMAT_CODE),
+        blockId: ctx.blockId,
+        rootIndex: ctx.rootIndex,
+      })
+    }
     return
   }
-  // Descend into nested editor content (e.g. alert-quote)
-  if (hasNestedEditorContent(node)) {
-    for (const child of node.content.root.children) {
-      collectTextNodes(child, refs, counter)
-    }
-  }
+
+  // Recurse children first (main content order)
   if (Array.isArray(node.children)) {
     for (const child of node.children) {
-      collectTextNodes(child, refs, counter)
+      walkNode(child, segments, propertySegments, counter, ctx)
     }
   }
+
+  // Then scan nested editor states (fixed traversal order)
+  scanNestedEditorStates(node, segments, propertySegments, counter, ctx)
+}
+
+function scanNestedEditorStates(
+  node: any,
+  segments: TranslationSegment[],
+  propertySegments: PropertySegment[],
+  counter: { t: number; p: number },
+  ctx: BlockContext,
+): void {
+  for (const [propName, propValue] of Object.entries(node)) {
+    if (KNOWN_STRUCTURAL_PROPS.has(propName)) continue
+
+    // Single nested editor state: { root: { children: [...] } }
+    if (
+      propValue &&
+      typeof propValue === 'object' &&
+      !Array.isArray(propValue) &&
+      (propValue as any).root &&
+      Array.isArray((propValue as any).root.children)
+    ) {
+      for (const child of (propValue as any).root.children) {
+        walkNode(child, segments, propertySegments, counter, ctx)
+      }
+      continue
+    }
+
+    // Array of nested editor states
+    if (Array.isArray(propValue)) {
+      for (const item of propValue) {
+        if (
+          item &&
+          typeof item === 'object' &&
+          item.root &&
+          Array.isArray(item.root.children)
+        ) {
+          for (const child of item.root.children) {
+            walkNode(child, segments, propertySegments, counter, ctx)
+          }
+        }
+      }
+    }
+  }
+}
+
+// ── Document context extraction ──
+
+const BLOCK_TYPES = new Set([
+  'listitem',
+  'tablecell',
+  'tablerow',
+  'details',
+  'list',
+  'table',
+  'root',
+])
+
+function extractBlockText(node: any): string {
+  if (!node) return ''
+  if (SKIP_BLOCKS.has(node.type)) return ''
+  if (SKIP_INLINE.has(node.type)) return ''
+  if (node.type === 'text') return node.text ?? ''
+  if (node.type === 'linebreak') return '\n'
+
+  const parts: string[] = []
+
+  if (Array.isArray(node.children)) {
+    const sep = BLOCK_TYPES.has(node.type) ? '\n' : ''
+    const joined = node.children.map(extractBlockText).filter(Boolean).join(sep)
+    if (joined) parts.push(joined)
+  }
+
+  // Nested editor states (same generic scan)
+  for (const [propName, propValue] of Object.entries(node)) {
+    if (KNOWN_STRUCTURAL_PROPS.has(propName)) continue
+    if (
+      propValue &&
+      typeof propValue === 'object' &&
+      !Array.isArray(propValue) &&
+      (propValue as any).root &&
+      Array.isArray((propValue as any).root.children)
+    ) {
+      const nested = (propValue as any).root.children
+        .map(extractBlockText)
+        .filter(Boolean)
+      if (nested.length) parts.push(nested.join('\n'))
+    }
+    if (Array.isArray(propValue)) {
+      for (const item of propValue) {
+        if (item?.root && Array.isArray(item.root.children)) {
+          const nested = item.root.children
+            .map(extractBlockText)
+            .filter(Boolean)
+          if (nested.length) parts.push(nested.join('\n'))
+        }
+      }
+    }
+  }
+
+  return parts.join('\n')
+}
+
+export function extractDocumentContext(rootChildren: any[]): string {
+  return rootChildren.map(extractBlockText).filter(Boolean).join('\n\n')
 }
 
 // ── Parser ──
 
+function readBlockId(node: any): string | null {
+  const state = node?.[NODE_STATE_KEY]
+  if (!state || typeof state !== 'object' || Array.isArray(state)) return null
+  const blockId = state[BLOCK_ID_STATE_KEY]
+  return typeof blockId === 'string' && blockId.trim() ? blockId.trim() : null
+}
+
 export function parseLexicalForTranslation(
   editorStateJson: string,
-): LexicalTranslationParseResult {
-  const editorState = structuredClone(JSON.parse(editorStateJson))
+): LexicalTranslationResult {
+  const editorState = JSON.parse(editorStateJson)
   const rootChildren: any[] = editorState.root?.children ?? []
 
-  const chunks: TranslationChunk[] = []
-  let currentNodes: any[] = []
-  const counter = { value: 0 }
+  const segments: TranslationSegment[] = []
+  const propertySegments: PropertySegment[] = []
+  const counter = { t: 0, p: 0 }
 
-  const finalizeChunk = () => {
-    if (!currentNodes.length) return
-    const textNodes: TextNodeRef[] = []
-    for (const node of currentNodes) {
-      collectTextNodes(node, textNodes, counter)
+  for (let i = 0; i < rootChildren.length; i++) {
+    const child = rootChildren[i]
+    const ctx: BlockContext = {
+      blockId: readBlockId(child),
+      rootIndex: i,
     }
-    if (textNodes.length) {
-      const markdown = currentNodes.map(blockNodeToMarkdown).join('\n\n')
-      chunks.push({ markdown, textNodes })
-    }
-    currentNodes = []
+    walkNode(child, segments, propertySegments, counter, ctx)
   }
 
-  for (const child of rootChildren) {
-    if (isTranslatable(child.type) || hasNestedEditorContent(child)) {
-      currentNodes.push(child)
-    } else {
-      finalizeChunk()
-    }
-  }
-  finalizeChunk()
-
-  return { chunks, editorState }
+  return { segments, propertySegments, editorState }
 }
 
 // ── Restorer ──
 
 export function restoreLexicalTranslation(
-  editorState: any,
+  result: LexicalTranslationResult,
   translations: Map<string, string>,
-  chunks: TranslationChunk[],
 ): string {
-  for (const chunk of chunks) {
-    for (const ref of chunk.textNodes) {
-      ref.node.text = translations.get(ref.id) ?? ref.originalText
+  for (const seg of result.segments) {
+    if (seg.translatable) {
+      seg.node.text = translations.get(seg.id) ?? seg.text
     }
   }
-  return JSON.stringify(editorState)
+  for (const prop of result.propertySegments) {
+    const translated = translations.get(prop.id) ?? prop.text
+    if (prop.key !== undefined) {
+      prop.node[prop.property][prop.key] = translated
+    } else {
+      prop.node[prop.property] = translated
+    }
+  }
+  return JSON.stringify(result.editorState)
 }

@@ -1,8 +1,10 @@
+import { describe, expect, it } from 'vitest'
+
 import {
+  extractDocumentContext,
   parseLexicalForTranslation,
   restoreLexicalTranslation,
 } from '~/modules/ai/ai-translation/lexical-translation-parser'
-import { describe, expect, it } from 'vitest'
 
 const makeEditorState = (children: any[]) =>
   JSON.stringify({ root: { children, type: 'root', direction: 'ltr' } })
@@ -82,169 +84,527 @@ const linkNode = (url: string, ...children: any[]) => ({
   target: null,
 })
 
+const alertQuoteNode = (alertType: string, ...children: any[]) => ({
+  type: 'alert-quote',
+  alertType,
+  content: {
+    root: { children, type: 'root', direction: 'ltr' },
+  },
+  version: 1,
+})
+
+const bannerNode = (bannerType: string, ...children: any[]) => ({
+  type: 'banner',
+  bannerType,
+  content: {
+    root: { children, type: 'root', direction: 'ltr' },
+  },
+  version: 1,
+})
+
+const imageNode = (src = 'https://example.com/img.jpg') => ({
+  type: 'image',
+  src,
+  altText: '',
+  version: 1,
+})
+
+const videoNode = (src = 'https://example.com/vid.mp4') => ({
+  type: 'video',
+  src,
+  version: 1,
+})
+
+const mermaidNode = (diagram = 'graph LR; A-->B') => ({
+  type: 'mermaid',
+  diagram,
+  version: 1,
+})
+
+const katexBlockNode = (equation = 'E=mc^2') => ({
+  type: 'katex-block',
+  equation,
+  version: 1,
+})
+
+const hrNode = () => ({ type: 'horizontalrule', version: 1 })
+
+const tableNode = (...rows: any[]) => ({
+  type: 'table',
+  children: rows,
+  direction: 'ltr',
+  format: '',
+  indent: 0,
+})
+
+const tableRowNode = (...cells: any[]) => ({
+  type: 'tablerow',
+  children: cells,
+  direction: 'ltr',
+  format: '',
+  indent: 0,
+})
+
+const tableCellNode = (...children: any[]) => ({
+  type: 'tablecell',
+  children,
+  headerState: 0,
+  direction: 'ltr',
+  format: '',
+  indent: 0,
+})
+
+const detailsNode = (summary: string, ...children: any[]) => ({
+  type: 'details',
+  summary,
+  open: false,
+  children,
+  direction: 'ltr',
+  format: '',
+  indent: 0,
+})
+
+const footnoteSection = (definitions: Record<string, string>) => ({
+  type: 'footnote-section',
+  definitions,
+  version: 1,
+})
+
+const rubyNode = (base: string, reading: string) => ({
+  type: 'ruby',
+  reading,
+  children: [textNode(base)],
+  direction: 'ltr',
+  format: '',
+  indent: 0,
+})
+
+const FORMAT_BOLD = 1
+const FORMAT_ITALIC = 2
+const FORMAT_CODE = 16
+
 describe('lexical-translation-parser', () => {
   describe('parseLexicalForTranslation', () => {
-    it('simple paragraph → 1 chunk, 1 text node', () => {
+    it('simple paragraph → segments with text', () => {
       const json = makeEditorState([paragraph(textNode('Hello world'))])
-      const { chunks } = parseLexicalForTranslation(json)
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
 
-      expect(chunks).toHaveLength(1)
-      expect(chunks[0].textNodes).toHaveLength(1)
-      expect(chunks[0].textNodes[0].id).toBe('t_0')
-      expect(chunks[0].textNodes[0].originalText).toBe('Hello world')
+      expect(segments).toHaveLength(1)
+      expect(segments[0].id).toBe('t_0')
+      expect(segments[0].text).toBe('Hello world')
+      expect(segments[0].translatable).toBe(true)
+      expect(propertySegments).toHaveLength(0)
     })
 
-    it('heading + paragraphs → 1 chunk, multiple text nodes', () => {
+    it('heading + paragraphs → multiple segments', () => {
       const json = makeEditorState([
         heading('h2', textNode('Title')),
         paragraph(textNode('First paragraph')),
         paragraph(textNode('Second paragraph')),
       ])
-      const { chunks } = parseLexicalForTranslation(json)
+      const { segments } = parseLexicalForTranslation(json)
 
-      expect(chunks).toHaveLength(1)
-      expect(chunks[0].textNodes).toHaveLength(3)
-      expect(chunks[0].textNodes[0].originalText).toBe('Title')
-      expect(chunks[0].textNodes[1].originalText).toBe('First paragraph')
-      expect(chunks[0].textNodes[2].originalText).toBe('Second paragraph')
+      expect(segments).toHaveLength(3)
+      expect(segments[0].text).toBe('Title')
+      expect(segments[1].text).toBe('First paragraph')
+      expect(segments[2].text).toBe('Second paragraph')
     })
 
-    it('paragraph + code + paragraph → 2 chunks', () => {
+    it('code block skips entire subtree', () => {
       const json = makeEditorState([
         paragraph(textNode('Before code')),
         codeBlock('const x = 1', 'typescript'),
         paragraph(textNode('After code')),
       ])
-      const { chunks } = parseLexicalForTranslation(json)
+      const { segments } = parseLexicalForTranslation(json)
 
-      expect(chunks).toHaveLength(2)
-      expect(chunks[0].textNodes).toHaveLength(1)
-      expect(chunks[0].textNodes[0].originalText).toBe('Before code')
-      expect(chunks[1].textNodes).toHaveLength(1)
-      expect(chunks[1].textNodes[0].originalText).toBe('After code')
+      expect(segments).toHaveLength(2)
+      expect(segments[0].text).toBe('Before code')
+      expect(segments[1].text).toBe('After code')
     })
 
-    it('all non-translatable → 0 chunks', () => {
+    it('all skip-blocks → 0 segments', () => {
       const json = makeEditorState([
         codeBlock('const a = 1'),
-        { type: 'horizontalrule', version: 1 },
+        hrNode(),
         codeBlock('const b = 2'),
+        imageNode(),
+        videoNode(),
+        mermaidNode(),
+        katexBlockNode(),
       ])
-      const { chunks } = parseLexicalForTranslation(json)
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
 
-      expect(chunks).toHaveLength(0)
+      expect(segments).toHaveLength(0)
+      expect(propertySegments).toHaveLength(0)
     })
 
-    it('nested list with bold text → correct text node collection', () => {
+    it('nested list with formatted text → all text collected', () => {
       const json = makeEditorState([
         listNode(
           'bullet',
-          { children: [textNode('Item one', 1)] },
+          { children: [textNode('Item one', FORMAT_BOLD)] },
           {
             children: [
               textNode('Item two'),
               listNode('bullet', {
-                children: [textNode('Nested item', 2)],
+                children: [textNode('Nested item', FORMAT_ITALIC)],
               }),
             ],
           },
         ),
       ])
-      const { chunks } = parseLexicalForTranslation(json)
+      const { segments } = parseLexicalForTranslation(json)
 
-      expect(chunks).toHaveLength(1)
-      expect(chunks[0].textNodes).toHaveLength(3)
-      expect(chunks[0].textNodes[0].originalText).toBe('Item one')
-      expect(chunks[0].textNodes[1].originalText).toBe('Item two')
-      expect(chunks[0].textNodes[2].originalText).toBe('Nested item')
+      expect(segments).toHaveLength(3)
+      expect(segments[0].text).toBe('Item one')
+      expect(segments[1].text).toBe('Item two')
+      expect(segments[2].text).toBe('Nested item')
     })
 
-    it('nested editor content (alert-quote) collects text nodes', () => {
-      const alertQuote = {
-        type: 'alert-quote',
-        alertType: 'info',
-        content: {
-          root: {
-            children: [paragraph(textNode('Nested alert text'))],
-            type: 'root',
-            direction: 'ltr',
-          },
-        },
-      }
+    it('nested editor content (alert-quote, banner) collected via generic scan', () => {
       const json = makeEditorState([
         paragraph(textNode('Before')),
-        alertQuote,
+        alertQuoteNode('note', paragraph(textNode('Alert text'))),
+        bannerNode('tip', paragraph(textNode('Banner text'))),
         paragraph(textNode('After')),
       ])
-      const { chunks } = parseLexicalForTranslation(json)
+      const { segments } = parseLexicalForTranslation(json)
 
-      // alert-quote has nested content so it groups with adjacent translatables
-      const allTexts = chunks.flatMap((c) =>
-        c.textNodes.map((n) => n.originalText),
-      )
-      expect(allTexts).toContain('Before')
-      expect(allTexts).toContain('Nested alert text')
-      expect(allTexts).toContain('After')
+      const texts = segments.map((s) => s.text)
+      expect(texts).toEqual(['Before', 'Alert text', 'Banner text', 'After'])
     })
 
     it('empty text nodes are skipped', () => {
       const json = makeEditorState([
         paragraph(textNode(''), textNode('  '), textNode('Real text')),
       ])
-      const { chunks } = parseLexicalForTranslation(json)
+      const { segments } = parseLexicalForTranslation(json)
 
-      expect(chunks).toHaveLength(1)
-      expect(chunks[0].textNodes).toHaveLength(1)
-      expect(chunks[0].textNodes[0].originalText).toBe('Real text')
+      expect(segments).toHaveLength(1)
+      expect(segments[0].text).toBe('Real text')
+    })
+
+    it('inline code → translatable: false', () => {
+      const json = makeEditorState([
+        paragraph(textNode('normal text'), textNode('code text', FORMAT_CODE)),
+      ])
+      const { segments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(2)
+      expect(segments[0].translatable).toBe(true)
+      expect(segments[1].translatable).toBe(false)
+    })
+
+    it('skip-inline nodes (katex-inline, mention, footnote) → not collected', () => {
+      const json = makeEditorState([
+        paragraph(
+          textNode('Before'),
+          { type: 'katex-inline', equation: 'x^2', version: 1 },
+          textNode('Middle'),
+          { type: 'mention', value: '@user', version: 1 },
+          textNode('After'),
+          { type: 'footnote', id: '1', version: 1 },
+        ),
+      ])
+      const { segments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(3)
+      expect(segments.map((s) => s.text)).toEqual(['Before', 'Middle', 'After'])
+    })
+
+    it('link inner text → collected', () => {
+      const json = makeEditorState([
+        paragraph(linkNode('https://example.com', textNode('Click here'))),
+      ])
+      const { segments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(segments[0].text).toBe('Click here')
+    })
+
+    it('spoiler inner text → collected', () => {
+      const json = makeEditorState([
+        paragraph({
+          type: 'spoiler',
+          children: [textNode('Hidden text')],
+        }),
+      ])
+      const { segments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(segments[0].text).toBe('Hidden text')
+    })
+
+    it('ruby node base text + reading property → both collected', () => {
+      const json = makeEditorState([paragraph(rubyNode('漢字', 'かんじ'))])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(segments[0].text).toBe('漢字')
+      expect(segments[0].translatable).toBe(true)
+
+      expect(propertySegments).toHaveLength(1)
+      expect(propertySegments[0].property).toBe('reading')
+      expect(propertySegments[0].text).toBe('かんじ')
+    })
+
+    it('details.summary → PropertySegment', () => {
+      const json = makeEditorState([
+        detailsNode('Click to expand', paragraph(textNode('Details body'))),
+      ])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(segments[0].text).toBe('Details body')
+
+      expect(propertySegments).toHaveLength(1)
+      expect(propertySegments[0].id).toBe('p_0')
+      expect(propertySegments[0].text).toBe('Click to expand')
+      expect(propertySegments[0].property).toBe('summary')
+      expect(propertySegments[0].key).toBeUndefined()
+    })
+
+    it('footnote-section.definitions → PropertySegments for each value', () => {
+      const json = makeEditorState([
+        footnoteSection({
+          '1': 'First footnote text',
+          '2': 'Second footnote text',
+          '3': '',
+        }),
+      ])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(0)
+      expect(propertySegments).toHaveLength(2)
+      expect(propertySegments[0].text).toBe('First footnote text')
+      expect(propertySegments[0].property).toBe('definitions')
+      expect(propertySegments[0].key).toBe('1')
+      expect(propertySegments[1].text).toBe('Second footnote text')
+      expect(propertySegments[1].key).toBe('2')
+    })
+
+    it('all IDs unique across document', () => {
+      const json = makeEditorState([
+        heading('h1', textNode('Title')),
+        paragraph(textNode('Paragraph one')),
+        detailsNode('Summary', paragraph(textNode('Details body'))),
+        alertQuoteNode('note', paragraph(textNode('Alert text'))),
+        footnoteSection({ '1': 'Footnote one' }),
+      ])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      const allIds = [
+        ...segments.map((s) => s.id),
+        ...propertySegments.map((p) => p.id),
+      ]
+      expect(new Set(allIds).size).toBe(allIds.length)
+    })
+
+    it('grid-container cells detected via generic nested scan', () => {
+      const gridContainer = {
+        type: 'grid-container',
+        cells: [
+          {
+            root: {
+              children: [paragraph(textNode('Cell A'))],
+              type: 'root',
+              direction: 'ltr',
+            },
+          },
+          {
+            root: {
+              children: [paragraph(textNode('Cell B'))],
+              type: 'root',
+              direction: 'ltr',
+            },
+          },
+        ],
+        version: 1,
+      }
+      const json = makeEditorState([gridContainer])
+      const { segments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(2)
+      expect(segments[0].text).toBe('Cell A')
+      expect(segments[1].text).toBe('Cell B')
+    })
+
+    it('ignores lexical node state key "$" (blockId metadata)', () => {
+      const json = makeEditorState([
+        {
+          ...paragraph(textNode('With block id')),
+          $: { blockId: 'abc123' },
+        },
+      ])
+      const { segments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(segments[0].text).toBe('With block id')
+    })
+
+    it('segments carry correct blockId and rootIndex from root children', () => {
+      const json = makeEditorState([
+        {
+          ...paragraph(textNode('First')),
+          $: { blockId: 'block-a' },
+        },
+        {
+          ...paragraph(textNode('Second')),
+          $: { blockId: 'block-b' },
+        },
+        paragraph(textNode('No blockId')),
+      ])
+      const { segments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(3)
+      expect(segments[0].blockId).toBe('block-a')
+      expect(segments[0].rootIndex).toBe(0)
+      expect(segments[1].blockId).toBe('block-b')
+      expect(segments[1].rootIndex).toBe(1)
+      expect(segments[2].blockId).toBeNull()
+      expect(segments[2].rootIndex).toBe(2)
+    })
+
+    it('nested editor content inherits root block blockId', () => {
+      const json = makeEditorState([
+        {
+          ...alertQuoteNode('note', paragraph(textNode('Inside alert'))),
+          $: { blockId: 'alert-block' },
+        },
+      ])
+      const { segments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(segments[0].text).toBe('Inside alert')
+      expect(segments[0].blockId).toBe('alert-block')
+      expect(segments[0].rootIndex).toBe(0)
+    })
+
+    it('property segments carry correct blockId and rootIndex', () => {
+      const json = makeEditorState([
+        {
+          ...detailsNode('Expand me', paragraph(textNode('Body'))),
+          $: { blockId: 'details-1' },
+        },
+      ])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(segments[0].blockId).toBe('details-1')
+
+      expect(propertySegments).toHaveLength(1)
+      expect(propertySegments[0].blockId).toBe('details-1')
+      expect(propertySegments[0].rootIndex).toBe(0)
+    })
+
+    it('ruby reading segments have correct block attribution', () => {
+      const json = makeEditorState([
+        {
+          ...paragraph(rubyNode('漢字', 'かんじ')),
+          $: { blockId: 'ruby-block' },
+        },
+      ])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(segments[0].blockId).toBe('ruby-block')
+
+      expect(propertySegments).toHaveLength(1)
+      expect(propertySegments[0].property).toBe('reading')
+      expect(propertySegments[0].blockId).toBe('ruby-block')
     })
   })
 
   describe('restoreLexicalTranslation', () => {
-    it('apply translations by ID, verify JSON output', () => {
+    it('apply translations to segments', () => {
       const json = makeEditorState([
         paragraph(textNode('Hello')),
         paragraph(textNode('World')),
       ])
-      const { chunks, editorState } = parseLexicalForTranslation(json)
+      const result = parseLexicalForTranslation(json)
 
       const translations = new Map<string, string>([
         ['t_0', '你好'],
         ['t_1', '世界'],
       ])
 
-      const result = restoreLexicalTranslation(
-        editorState,
-        translations,
-        chunks,
-      )
-      const parsed = JSON.parse(result)
+      const restored = restoreLexicalTranslation(result, translations)
+      const parsed = JSON.parse(restored)
 
       expect(parsed.root.children[0].children[0].text).toBe('你好')
       expect(parsed.root.children[1].children[0].text).toBe('世界')
     })
 
-    it('restores nested editor content (alert-quote)', () => {
-      const alertQuote = {
-        type: 'alert-quote',
-        alertType: 'info',
-        content: {
-          root: {
-            children: [paragraph(textNode('Alert text'))],
-            type: 'root',
-            direction: 'ltr',
-          },
-        },
-      }
-      const json = makeEditorState([alertQuote])
-      const { chunks, editorState } = parseLexicalForTranslation(json)
+    it('apply translations to PropertySegments (summary)', () => {
+      const json = makeEditorState([
+        detailsNode('Click to expand', paragraph(textNode('Body'))),
+      ])
+      const result = parseLexicalForTranslation(json)
+
+      const translations = new Map<string, string>([
+        ['t_0', '正文'],
+        ['p_0', '点击展开'],
+      ])
+
+      const restored = restoreLexicalTranslation(result, translations)
+      const parsed = JSON.parse(restored)
+
+      expect(parsed.root.children[0].summary).toBe('点击展开')
+      expect(parsed.root.children[0].children[0].children[0].text).toBe('正文')
+    })
+
+    it('apply translations to ruby reading property', () => {
+      const json = makeEditorState([paragraph(rubyNode('漢字', 'かんじ'))])
+      const result = parseLexicalForTranslation(json)
+
+      const rubyText = result.segments.find((seg) => seg.text === '漢字')
+      const rubyReading = result.propertySegments.find(
+        (seg) => seg.property === 'reading',
+      )
+
+      expect(rubyText).toBeDefined()
+      expect(rubyReading).toBeDefined()
+
+      const translations = new Map<string, string>([
+        [rubyText!.id, '漢字'],
+        [rubyReading!.id, 'かんじ（注音）'],
+      ])
+
+      const restored = restoreLexicalTranslation(result, translations)
+      const parsed = JSON.parse(restored)
+
+      expect(parsed.root.children[0].children[0].reading).toBe('かんじ（注音）')
+      expect(parsed.root.children[0].children[0].children[0].text).toBe('漢字')
+    })
+
+    it('apply translations to PropertySegments with key (definitions)', () => {
+      const json = makeEditorState([
+        footnoteSection({ '1': 'Note A', '2': 'Note B' }),
+      ])
+      const result = parseLexicalForTranslation(json)
+
+      const translations = new Map<string, string>([
+        ['p_0', '注释 A'],
+        ['p_1', '注释 B'],
+      ])
+
+      const restored = restoreLexicalTranslation(result, translations)
+      const parsed = JSON.parse(restored)
+
+      expect(parsed.root.children[0].definitions['1']).toBe('注释 A')
+      expect(parsed.root.children[0].definitions['2']).toBe('注释 B')
+    })
+
+    it('restore nested editor content', () => {
+      const json = makeEditorState([
+        alertQuoteNode('note', paragraph(textNode('Alert text'))),
+      ])
+      const result = parseLexicalForTranslation(json)
 
       const translations = new Map<string, string>([['t_0', '警告文本']])
-      const result = restoreLexicalTranslation(
-        editorState,
-        translations,
-        chunks,
-      )
-      const parsed = JSON.parse(result)
+      const restored = restoreLexicalTranslation(result, translations)
+      const parsed = JSON.parse(restored)
 
       expect(
         parsed.root.children[0].content.root.children[0].children[0].text,
@@ -253,88 +613,427 @@ describe('lexical-translation-parser', () => {
 
     it('missing translation falls back to original', () => {
       const json = makeEditorState([paragraph(textNode('Keep me'))])
-      const { chunks, editorState } = parseLexicalForTranslation(json)
+      const result = parseLexicalForTranslation(json)
 
       const translations = new Map<string, string>()
-      const result = restoreLexicalTranslation(
-        editorState,
-        translations,
-        chunks,
-      )
-      const parsed = JSON.parse(result)
+      const restored = restoreLexicalTranslation(result, translations)
+      const parsed = JSON.parse(restored)
 
       expect(parsed.root.children[0].children[0].text).toBe('Keep me')
     })
+
+    it('non-translatable segments (inline code) are not modified', () => {
+      const json = makeEditorState([
+        paragraph(textNode('normal'), textNode('code', FORMAT_CODE)),
+      ])
+      const result = parseLexicalForTranslation(json)
+
+      const translations = new Map<string, string>([
+        ['t_0', '普通'],
+        ['t_1', '代码'],
+      ])
+      const restored = restoreLexicalTranslation(result, translations)
+      const parsed = JSON.parse(restored)
+
+      expect(parsed.root.children[0].children[0].text).toBe('普通')
+      expect(parsed.root.children[0].children[1].text).toBe('code')
+    })
   })
 
-  describe('Markdown extraction', () => {
-    it('heading produces correct Markdown', () => {
-      const json = makeEditorState([heading('h2', textNode('My Title'))])
-      const { chunks } = parseLexicalForTranslation(json)
+  describe('extractDocumentContext', () => {
+    it('headings and paragraphs → separated by \\n\\n', () => {
+      const json = makeEditorState([
+        heading('h1', textNode('Title')),
+        paragraph(textNode('Body text')),
+      ])
+      const { editorState } = parseLexicalForTranslation(json)
+      const context = extractDocumentContext(editorState.root.children)
 
-      expect(chunks[0].markdown).toBe('## My Title')
+      expect(context).toBe('Title\n\nBody text')
     })
 
-    it('paragraph produces plain text', () => {
-      const json = makeEditorState([paragraph(textNode('Some text'))])
-      const { chunks } = parseLexicalForTranslation(json)
+    it('skip-blocks excluded from context', () => {
+      const json = makeEditorState([
+        paragraph(textNode('Before')),
+        codeBlock('const x = 1'),
+        imageNode(),
+        paragraph(textNode('After')),
+      ])
+      const { editorState } = parseLexicalForTranslation(json)
+      const context = extractDocumentContext(editorState.root.children)
 
-      expect(chunks[0].markdown).toBe('Some text')
+      expect(context).toBe('Before\n\nAfter')
     })
 
-    it('quote produces blockquote Markdown', () => {
-      const json = makeEditorState([quoteNode(textNode('A quote'))])
-      const { chunks } = parseLexicalForTranslation(json)
+    it('nested editor content included', () => {
+      const json = makeEditorState([
+        bannerNode('tip', paragraph(textNode('Banner text'))),
+        paragraph(textNode('Body')),
+      ])
+      const { editorState } = parseLexicalForTranslation(json)
+      const context = extractDocumentContext(editorState.root.children)
 
-      expect(chunks[0].markdown).toBe('> A quote')
+      expect(context).toContain('Banner text')
+      expect(context).toContain('Body')
     })
 
-    it('list produces bullet Markdown', () => {
+    it('inline nodes joined without separator', () => {
+      const json = makeEditorState([
+        paragraph(
+          textNode('Hello '),
+          textNode('world', FORMAT_BOLD),
+          textNode('!'),
+        ),
+      ])
+      const { editorState } = parseLexicalForTranslation(json)
+      const context = extractDocumentContext(editorState.root.children)
+
+      expect(context).toBe('Hello world!')
+    })
+
+    it('list items separated by \\n', () => {
       const json = makeEditorState([
         listNode(
           'bullet',
-          { children: [textNode('First')] },
-          { children: [textNode('Second')] },
+          { children: [textNode('Item one')] },
+          { children: [textNode('Item two')] },
         ),
       ])
-      const { chunks } = parseLexicalForTranslation(json)
+      const { editorState } = parseLexicalForTranslation(json)
+      const context = extractDocumentContext(editorState.root.children)
 
-      expect(chunks[0].markdown).toContain('- First')
-      expect(chunks[0].markdown).toContain('- Second')
+      expect(context).toBe('Item one\nItem two')
     })
+  })
 
-    it('link produces Markdown link', () => {
+  // ── Complex document tests ──
+
+  describe('complex documents', () => {
+    it('blog post: all text collected, skip-blocks excluded', () => {
       const json = makeEditorState([
-        paragraph(linkNode('https://example.com', textNode('Click here'))),
-      ])
-      const { chunks } = parseLexicalForTranslation(json)
-
-      expect(chunks[0].markdown).toBe('[Click here](https://example.com)')
-    })
-
-    it('formatted text produces correct Markdown', () => {
-      const json = makeEditorState([
+        heading('h1', textNode('Building Rich Editors')),
+        paragraph(textNode('Lexical is a modern editor framework.')),
+        alertQuoteNode('note', paragraph(textNode('Based on Lexical v0.39.'))),
+        heading('h2', textNode('Why Lexical')),
         paragraph(
-          textNode('bold', 1),
+          textNode('Alternatives: '),
+          textNode('ProseMirror', FORMAT_CODE),
           textNode(' and '),
-          textNode('italic', 2),
-          textNode(' and '),
-          textNode('code', 16),
+          textNode('Slate', FORMAT_CODE),
+          textNode('.'),
         ),
+        codeBlock('const editor = createEditor()', 'typescript'),
+        paragraph(textNode('After the code block.')),
+        heading('h2', textNode('Summary')),
+        paragraph(textNode('Lexical is worth trying.')),
       ])
-      const { chunks } = parseLexicalForTranslation(json)
 
-      expect(chunks[0].markdown).toBe('**bold** and *italic* and `code`')
+      const { segments } = parseLexicalForTranslation(json)
+      const texts = segments.map((n) => n.text)
+
+      expect(texts).toContain('Building Rich Editors')
+      expect(texts).toContain('Lexical is a modern editor framework.')
+      expect(texts).toContain('Based on Lexical v0.39.')
+      expect(texts).toContain('Why Lexical')
+      expect(texts).toContain('ProseMirror')
+      expect(texts).toContain('Slate')
+      expect(texts).toContain('After the code block.')
+      expect(texts).toContain('Summary')
+      expect(texts).toContain('Lexical is worth trying.')
+      // code-highlight child of code block NOT collected
+      expect(texts).not.toContain('const editor = createEditor()')
     })
 
-    it('multiple blocks joined with double newline', () => {
+    it('tech doc: katexBlock and mermaid skipped, rest collected', () => {
+      const json = makeEditorState([
+        heading('h1', textNode('ML Quick Reference')),
+        bannerNode('tip', paragraph(textNode('Last updated Dec 2025.'))),
+        paragraph(
+          textNode('Linear regression finds optimal '),
+          textNode('θ', FORMAT_ITALIC),
+        ),
+        katexBlockNode('J(\\theta) = ...'),
+        paragraph(textNode('Where the hypothesis is hθ(x).')),
+        mermaidNode('graph TD; A-->B; B-->C'),
+        paragraph(textNode('Activation functions:')),
+        listNode(
+          'bullet',
+          { children: [textNode('Sigmoid')] },
+          { children: [textNode('ReLU')] },
+          { children: [textNode('GELU')] },
+        ),
+      ])
+
+      const { segments } = parseLexicalForTranslation(json)
+      const texts = segments.map((n) => n.text)
+
+      expect(texts).toContain('ML Quick Reference')
+      expect(texts).toContain('Last updated Dec 2025.')
+      expect(texts).toContain('Linear regression finds optimal ')
+      expect(texts).toContain('θ')
+      expect(texts).toContain('Where the hypothesis is hθ(x).')
+      expect(texts).toContain('Activation functions:')
+      expect(texts).toContain('Sigmoid')
+      expect(texts).toContain('ReLU')
+      expect(texts).toContain('GELU')
+    })
+
+    it('movie review: media skipped, details and table collected', () => {
+      const json = makeEditorState([
+        heading('h1', textNode('Film Review')),
+        bannerNode('note', paragraph(textNode('Published in Film Column'))),
+        paragraph(textNode('A masterpiece of cinema.')),
+        imageNode(),
+        heading('h2', textNode('Narrative Structure')),
+        paragraph(textNode('Non-linear storytelling.')),
+        mermaidNode('graph LR; A-->B'),
+        heading('h2', textNode('Cast')),
+        listNode('bullet', {
+          children: [
+            textNode('Actor A'),
+            textNode(' — lead role', FORMAT_BOLD),
+          ],
+        }),
+        alertQuoteNode(
+          'warning',
+          paragraph(textNode('Spoiler warning below.')),
+        ),
+        detailsNode('Spoilers', paragraph(textNode('Hidden spoiler content.'))),
+        tableNode(
+          tableRowNode(tableCellNode(paragraph(textNode('Category')))),
+          tableRowNode(tableCellNode(paragraph(textNode('Rating')))),
+        ),
+        hrNode(),
+        paragraph(textNode('Final score: 5/5')),
+      ])
+
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+      const texts = segments.map((n) => n.text)
+
+      expect(texts).toContain('Film Review')
+      expect(texts).toContain('Published in Film Column')
+      expect(texts).toContain('A masterpiece of cinema.')
+      expect(texts).toContain('Narrative Structure')
+      expect(texts).toContain('Non-linear storytelling.')
+      expect(texts).toContain('Cast')
+      expect(texts).toContain('Actor A')
+      expect(texts).toContain(' — lead role')
+      expect(texts).toContain('Spoiler warning below.')
+      expect(texts).toContain('Hidden spoiler content.')
+      expect(texts).toContain('Category')
+      expect(texts).toContain('Rating')
+      expect(texts).toContain('Final score: 5/5')
+
+      // details.summary collected
+      expect(propertySegments).toHaveLength(1)
+      expect(propertySegments[0].text).toBe('Spoilers')
+    })
+
+    it('consecutive skip-blocks produce no segments', () => {
+      const json = makeEditorState([
+        paragraph(textNode('Before')),
+        codeBlock('x=1'),
+        imageNode(),
+        videoNode(),
+        mermaidNode(),
+        paragraph(textNode('After')),
+      ])
+
+      const { segments } = parseLexicalForTranslation(json)
+      expect(segments).toHaveLength(2)
+      expect(segments[0].text).toBe('Before')
+      expect(segments[1].text).toBe('After')
+    })
+
+    it('all text node IDs are globally unique', () => {
       const json = makeEditorState([
         heading('h1', textNode('Title')),
+        paragraph(textNode('Paragraph one')),
+        codeBlock('code here'),
+        paragraph(textNode('Paragraph two')),
+        imageNode(),
+        heading('h2', textNode('Section')),
+        paragraph(textNode('Paragraph three')),
+        mermaidNode(),
+        listNode(
+          'bullet',
+          { children: [textNode('Item 1')] },
+          { children: [textNode('Item 2')] },
+        ),
+        detailsNode('Summary', paragraph(textNode('Body'))),
+      ])
+
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+      const allIds = [
+        ...segments.map((s) => s.id),
+        ...propertySegments.map((p) => p.id),
+      ]
+      expect(new Set(allIds).size).toBe(allIds.length)
+      // Text IDs are sequential
+      const tIds = segments.map((s) => s.id)
+      expect(tIds[0]).toBe('t_0')
+      expect(tIds.at(-1)).toBe(`t_${tIds.length - 1}`)
+    })
+
+    it('restore: translations applied across entire document', () => {
+      const json = makeEditorState([
+        heading('h1', textNode('Title')),
+        alertQuoteNode('note', paragraph(textNode('Alert text'))),
+        paragraph(textNode('Body text')),
+        imageNode(),
+        paragraph(textNode('After image')),
+        detailsNode('Expand', paragraph(textNode('Hidden'))),
+      ])
+
+      const result = parseLexicalForTranslation(json)
+      const translations = new Map<string, string>()
+      for (const seg of result.segments) {
+        translations.set(seg.id, `[TR]${seg.text}`)
+      }
+      for (const prop of result.propertySegments) {
+        translations.set(prop.id, `[TR]${prop.text}`)
+      }
+
+      const restored = JSON.parse(
+        restoreLexicalTranslation(result, translations),
+      )
+
+      expect(restored.root.children[0].children[0].text).toBe('[TR]Title')
+      expect(
+        restored.root.children[1].content.root.children[0].children[0].text,
+      ).toBe('[TR]Alert text')
+      expect(restored.root.children[2].children[0].text).toBe('[TR]Body text')
+      expect(restored.root.children[3].type).toBe('image')
+      expect(restored.root.children[4].children[0].text).toBe('[TR]After image')
+      expect(restored.root.children[5].summary).toBe('[TR]Expand')
+      expect(restored.root.children[5].children[0].children[0].text).toBe(
+        '[TR]Hidden',
+      )
+    })
+
+    it('banner and alertQuote text both collected', () => {
+      const json = makeEditorState([
+        bannerNode('tip', paragraph(textNode('Banner text'))),
+        heading('h1', textNode('Title')),
+        alertQuoteNode('warning', paragraph(textNode('Alert text'))),
         paragraph(textNode('Body')),
       ])
-      const { chunks } = parseLexicalForTranslation(json)
 
-      expect(chunks[0].markdown).toBe('# Title\n\nBody')
+      const { segments } = parseLexicalForTranslation(json)
+      const texts = segments.map((n) => n.text)
+      expect(texts).toEqual(['Banner text', 'Title', 'Alert text', 'Body'])
+    })
+
+    it('integration: full blog post parse + context + restore', () => {
+      const json = makeEditorState([
+        heading('h1', textNode('Modern Rich Text Editors')),
+        paragraph(
+          textNode('Lexical is '),
+          textNode('lightweight and extensible', FORMAT_ITALIC),
+          textNode('. This covers core concepts.'),
+        ),
+        alertQuoteNode('note', paragraph(textNode('Based on Lexical v0.39.'))),
+        heading('h2', textNode('Why Lexical')),
+        paragraph(
+          textNode('Alternatives: '),
+          textNode('ProseMirror', FORMAT_CODE),
+          textNode(', '),
+          textNode('Slate', FORMAT_CODE),
+          textNode('. Its '),
+          textNode('node system', FORMAT_BOLD),
+          textNode(' provides type safety.'),
+        ),
+        listNode(
+          'bullet',
+          { children: [textNode('Lightweight (~22KB)')] },
+          { children: [textNode('Collaboration support')] },
+          { children: [textNode('Accessibility')] },
+        ),
+        heading('h2', textNode('Architecture')),
+        paragraph(textNode('Three layers:')),
+        listNode(
+          'number',
+          { children: [textNode('Core'), textNode(' — state tree')] },
+          { children: [textNode('Nodes'), textNode(' — data structures')] },
+          {
+            children: [textNode('Plugins'), textNode(' — functionality')],
+          },
+        ),
+        quoteNode(textNode('Lexical is framework-agnostic.', FORMAT_ITALIC)),
+        heading('h2', textNode('Code Block Node')),
+        paragraph(
+          textNode('Create a '),
+          textNode('DecoratorNode', FORMAT_CODE),
+          textNode(' subclass:'),
+        ),
+        codeBlock('class CodeBlockNode extends DecoratorNode {}', 'ts'),
+        paragraph(
+          textNode('Note: '),
+          textNode('clone()', FORMAT_CODE),
+          textNode(' and '),
+          textNode('exportJSON()', FORMAT_CODE),
+          textNode(' are required.'),
+        ),
+        heading('h2', textNode('Summary')),
+        paragraph(textNode('Lexical excels in performance and DX.')),
+        listNode('bullet', {
+          children: [
+            linkNode('https://lexical.dev', textNode('Official Docs')),
+          ],
+        }),
+      ])
+
+      const result = parseLexicalForTranslation(json)
+      const { segments, editorState } = result
+
+      const totalTexts = segments.length
+      expect(totalTexts).toBeGreaterThan(25)
+
+      // All IDs unique
+      const allIds = segments.map((s) => s.id)
+      expect(new Set(allIds).size).toBe(allIds.length)
+
+      // Inline code marked non-translatable
+      const codeSegs = segments.filter((s) => !s.translatable)
+      expect(codeSegs.length).toBeGreaterThan(0)
+      expect(codeSegs.map((s) => s.text)).toContain('ProseMirror')
+
+      // Context extraction
+      const context = extractDocumentContext(editorState.root.children)
+      expect(context).toContain('Modern Rich Text Editors')
+      expect(context).toContain('Based on Lexical v0.39.')
+      expect(context).toContain('Lightweight (~22KB)')
+      expect(context).not.toContain('class CodeBlockNode')
+
+      // Restore
+      const translations = new Map<string, string>()
+      for (const seg of segments) {
+        if (seg.translatable) {
+          translations.set(seg.id, `[ZH]${seg.text}`)
+        }
+      }
+
+      const restored = JSON.parse(
+        restoreLexicalTranslation(result, translations),
+      )
+
+      expect(restored.root.children[0].children[0].text).toBe(
+        '[ZH]Modern Rich Text Editors',
+      )
+      expect(
+        restored.root.children[2].content.root.children[0].children[0].text,
+      ).toBe('[ZH]Based on Lexical v0.39.')
+
+      // Code block unchanged
+      const cb = restored.root.children.find((n: any) => n.type === 'code')
+      expect(cb.children[0].text).toContain('class CodeBlockNode')
+
+      // Inline code unchanged (non-translatable)
+      const codeBlockNodePara = restored.root.children[11]
+      const decoratorNode = codeBlockNodePara.children.find(
+        (c: any) => c.text === 'DecoratorNode',
+      )
+      expect(decoratorNode.text).toBe('DecoratorNode')
     })
   })
 })

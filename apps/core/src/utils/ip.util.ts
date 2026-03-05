@@ -4,6 +4,7 @@
  */
 import type { IncomingMessage } from 'node:http'
 import { URL } from 'node:url'
+
 import type { FastifyRequest } from 'fastify'
 
 export const getIp = (request: FastifyRequest | IncomingMessage) => {
