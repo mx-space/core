@@ -118,8 +118,8 @@ importers:
         specifier: 9.0.0
         version: 9.0.0
       '@haklex/rich-headless':
-        specifier: 0.0.54
-        version: 0.0.54(lexical@0.41.0)
+        specifier: 0.0.62
+        version: 0.0.62(lexical@0.41.0)
       '@innei/next-async':
         specifier: 0.4.0
         version: 0.4.0
@@ -1407,8 +1407,8 @@ packages:
   '@fastify/static@9.0.0':
     resolution: {integrity: sha512-r64H8Woe/vfilg5RTy7lwWlE8ZZcTrc3kebYFMEUBrMqlydhQyoiExQXdYAy2REVpST/G35+stAM8WYp1WGmMA==}
 
-  '@haklex/rich-headless@0.0.54':
-    resolution: {integrity: sha512-34tkRoVy8RCikTylVJ65n8c2ZRPqA4PhOOeVPKu+QPOLuQAGVKMVdqbNfLcfjdsatmatnosd3u1GutTAlXBCzw==}
+  '@haklex/rich-headless@0.0.62':
+    resolution: {integrity: sha512-A9xlkB5lg437pp0HinrfLf0kuc7UasgE0gnKqL09IOp0IlwYl8/OrdbI3mWF2l2z2g7NNmv1iMOVBzCvFkwJIA==}
     peerDependencies:
       lexical: ^0.41.0
 
@@ -8445,7 +8445,7 @@ snapshots:
       fastq: 1.20.1
       glob: 13.0.0
 
-  '@haklex/rich-headless@0.0.54(lexical@0.41.0)':
+  '@haklex/rich-headless@0.0.62(lexical@0.41.0)':
     dependencies:
       '@lexical/code': 0.41.0(patch_hash=bd3e29adf8293ffdcb1d49ec445bf98877abf7435840deb5484e32bf749be408)
       '@lexical/extension': 0.41.0
