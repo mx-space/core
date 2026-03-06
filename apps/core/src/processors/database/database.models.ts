@@ -1,4 +1,10 @@
 import { ActivityModel } from '~/modules/activity/activity.model'
+import { AIAgentActionModel } from '~/modules/ai/ai-agent/ai-agent-action.model'
+import { AIAgentEventModel } from '~/modules/ai/ai-agent/ai-agent-event.model'
+import { AIAgentMessageModel } from '~/modules/ai/ai-agent/ai-agent-message.model'
+import { AIAgentOperationModel } from '~/modules/ai/ai-agent/ai-agent-operation.model'
+import { AIAgentRuntimeConfigModel } from '~/modules/ai/ai-agent/ai-agent-runtime-config.model'
+import { AIAgentSessionModel } from '~/modules/ai/ai-agent/ai-agent-session.model'
 import { AISummaryModel } from '~/modules/ai/ai-summary/ai-summary.model'
 import { AITranslationModel } from '~/modules/ai/ai-translation/ai-translation.model'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
@@ -17,19 +23,25 @@ import { ProjectModel } from '~/modules/project/project.model'
 import { ReaderModel } from '~/modules/reader/reader.model'
 import { RecentlyModel } from '~/modules/recently/recently.model'
 import { SayModel } from '~/modules/say/say.model'
-import { ServerlessLogModel } from '~/modules/serverless/serverless-log.model'
 import { ServerlessStorageModel } from '~/modules/serverless/serverless.model'
+import { ServerlessLogModel } from '~/modules/serverless/serverless-log.model'
 import { SlugTrackerModel } from '~/modules/slug-tracker/slug-tracker.model'
 import { SnippetModel } from '~/modules/snippet/snippet.model'
 import { SubscribeModel } from '~/modules/subscribe/subscribe.model'
 import { TopicModel } from '~/modules/topic/topic.model'
-import { WebhookEventModel } from '~/modules/webhook/webhook-event.model'
 import { WebhookModel } from '~/modules/webhook/webhook.model'
+import { WebhookEventModel } from '~/modules/webhook/webhook-event.model'
 import { getProviderByTypegooseClass } from '~/transformers/model.transformer'
 
 export const databaseModels = [
   ActivityModel,
   AISummaryModel,
+  AIAgentActionModel,
+  AIAgentEventModel,
+  AIAgentMessageModel,
+  AIAgentOperationModel,
+  AIAgentRuntimeConfigModel,
+  AIAgentSessionModel,
   AITranslationModel,
   AnalyzeModel,
   CategoryModel,
