@@ -8,8 +8,16 @@ MX Space is a personal blog server application built with NestJS, MongoDB, and R
 
 ## Related Projects
 
-- **Dashboard (admin-vue3)**: `../admin-vue3` - 后台管理面板，Vue 3 项目
-- **Frontend (shiroi)**: `../shiroi` - 主站前端
+- **Dashboard (admin-vue3)**: `../admin-vue3` — 后台管理面板，Vue 3 项目
+- **Frontend (Shiroi)**: `../Shiroi` — 主站前端 (Next.js)
+- **haklex**: `../haklex` (standalone) / `../Shiroi/haklex` (original host) — Rich editor packages (`@haklex/*`)
+
+### Lexical Content Processing
+
+mx-core uses `@haklex/rich-headless` (zero-React, server-side only) for Lexical JSON processing:
+- `helper.lexical.service.ts` — `createHeadlessEditor()` + `allHeadlessNodes` + `$toMarkdown()` for JSON → Markdown conversion
+- `ai-translation/lexical-translation-parser.ts` — AI translation content parsing
+- After haklex releases, update the pinned version in `apps/core/package.json`
 
 ## Environment Requirements
 
