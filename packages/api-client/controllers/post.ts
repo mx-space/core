@@ -10,6 +10,7 @@ import type {
 } from '~/models/base'
 import type { PostModel } from '~/models/post'
 import { autoBind } from '~/utils/auto-bind'
+
 import type { HTTPClient } from '../core/client'
 
 declare module '../core/client' {

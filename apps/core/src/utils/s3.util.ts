@@ -10,9 +10,147 @@ export interface S3UploaderOptions {
   endpoint?: string
 }
 
+/**
+ * Resolved endpoint information used for signing and sending S3 requests.
+ */
+export interface S3ResolvedEndpoint {
+  /** The Host header value */
+  requestHost: string
+  /** The canonical URI used for AWS Signature V4 signing */
+  canonicalUri: string
+  /** The base URL (scheme + host) for the final HTTP request */
+  baseUrl: string
+}
+
+/**
+ * Extensible strategy interface for resolving S3-compatible endpoint styles.
+ *
+ * Implement this interface to add support for additional S3-compatible storage
+ * providers that require custom host / URI resolution (e.g. virtual-hosted
+ * style, path style, or provider-specific conventions).
+ */
+export interface S3EndpointStrategy {
+  /** Human-readable name for debugging / logging */
+  readonly name: string
+
+  /**
+   * Return `true` when this strategy should handle the given host.
+   * Strategies are evaluated in registration order; the first match wins.
+   */
+  matches: (host: string) => boolean
+
+  /**
+   * Resolve the request host, canonical URI, and base URL for the given
+   * endpoint information.
+   */
+  resolve: (ctx: {
+    host: string
+    bucket: string
+    encodedObjectKey: string
+    protocol: string
+  }) => S3ResolvedEndpoint
+}
+
+// ---------------------------------------------------------------------------
+// Built-in strategies
+// ---------------------------------------------------------------------------
+
+/**
+ * Strategy for Tencent Cloud COS.
+ *
+ * Converts `cos.<region>.myqcloud.com` → `<bucket>.cos.<region>.myqcloud.com`
+ * (virtual-hosted style) and uses `/<key>` as the canonical URI.
+ */
+export class TencentCosStrategy implements S3EndpointStrategy {
+  readonly name = 'TencentCOS'
+
+  matches(host: string): boolean {
+    return host.includes('myqcloud.com') || host.includes('.cos.')
+  }
+
+  resolve(ctx: {
+    host: string
+    bucket: string
+    encodedObjectKey: string
+    protocol: string
+  }): S3ResolvedEndpoint {
+    let requestHost = ctx.host
+    const cosMatch = ctx.host.match(/^cos\.(.+)$/)
+    if (cosMatch) {
+      requestHost = `${ctx.bucket}.cos.${cosMatch[1]}`
+    }
+    return {
+      requestHost,
+      canonicalUri: `/${ctx.encodedObjectKey}`,
+      baseUrl: `${ctx.protocol}//${requestHost}`,
+    }
+  }
+}
+
+/**
+ * Default strategy for AWS S3 and most S3-compatible services.
+ *
+ * - If the host already starts with `<bucket>.`, it assumes virtual-hosted
+ *   style and uses `/<key>` as the canonical URI.
+ * - Otherwise it falls back to path style: `/<bucket>/<key>`.
+ */
+export class DefaultS3Strategy implements S3EndpointStrategy {
+  readonly name = 'DefaultS3'
+
+  /** Always matches – used as the fallback strategy. */
+  matches(_host: string): boolean {
+    return true
+  }
+
+  resolve(ctx: {
+    host: string
+    bucket: string
+    encodedObjectKey: string
+    protocol: string
+  }): S3ResolvedEndpoint {
+    const isVirtualHosted = ctx.host.startsWith(`${ctx.bucket}.`)
+    const canonicalUri = isVirtualHosted
+      ? `/${ctx.encodedObjectKey}`
+      : `/${ctx.bucket}/${ctx.encodedObjectKey}`
+    return {
+      requestHost: ctx.host,
+      canonicalUri,
+      baseUrl: `${ctx.protocol}//${ctx.host}`,
+    }
+  }
+}
+
 export class S3Uploader {
   private options: S3UploaderOptions
   private customDomain: string = ''
+
+  /**
+   * Ordered list of endpoint strategies. The first strategy whose `matches()`
+   * returns `true` is used. The {@link DefaultS3Strategy} is always appended
+   * as a fallback.
+   */
+  private static globalStrategies: S3EndpointStrategy[] = [
+    new TencentCosStrategy(),
+  ]
+
+  /**
+   * Register a custom endpoint strategy. Strategies registered earlier take
+   * precedence. The built-in {@link DefaultS3Strategy} is always evaluated
+   * last, so you do not need to worry about ordering relative to it.
+   */
+  static registerStrategy(strategy: S3EndpointStrategy): void {
+    S3Uploader.globalStrategies.push(strategy)
+  }
+
+  /**
+   * Remove all custom strategies and reset to defaults.
+   * Useful in tests.
+   */
+  static resetStrategies(): void {
+    S3Uploader.globalStrategies = [new TencentCosStrategy()]
+  }
+
+  private static readonly defaultStrategy = new DefaultS3Strategy()
 
   constructor(options: S3UploaderOptions) {
     this.options = options
@@ -52,6 +190,26 @@ export class S3Uploader {
   // Helper function to calculate HMAC-SHA256
   private hmacSha256(key: Buffer, message: string): Buffer {
     return crypto.createHmac('sha256', key).update(message).digest()
+  }
+
+  /**
+   * Walk the strategy chain and return the first matching result.
+   */
+  private resolveEndpoint(
+    host: string,
+    encodedObjectKey: string,
+    protocol: string,
+  ): S3ResolvedEndpoint {
+    const ctx = { host, bucket: this.bucket, encodedObjectKey, protocol }
+
+    for (const strategy of S3Uploader.globalStrategies) {
+      if (strategy.matches(host)) {
+        return strategy.resolve(ctx)
+      }
+    }
+
+    // Fallback – always matches
+    return S3Uploader.defaultStrategy.resolve(ctx)
   }
 
   async uploadImage(imageData: Buffer, path: string): Promise<string> {
@@ -209,17 +367,21 @@ export class S3Uploader {
     // Set request headers
     const url = new URL(this.endpoint)
     const host = url.host
-    const contentLength = fileData.length.toString()
 
     // URI encode each path segment for signing
     const encodedObjectKey = objectKey
       .split('/')
       .map((seg) => encodeURIComponent(seg))
       .join('/')
-    const canonicalUri = `/${this.bucket}/${encodedObjectKey}`
+
+    // Resolve endpoint using the extensible strategy chain
+    const resolved = this.resolveEndpoint(host, encodedObjectKey, url.protocol)
+    const { requestHost, canonicalUri } = resolved
+
+    const contentLength = fileData.length.toString()
 
     const headers: Record<string, string> = {
-      Host: host,
+      Host: requestHost,
       'Content-Type': contentType,
       'Content-Length': contentLength,
       'x-amz-date': xAmzDate,
@@ -271,7 +433,7 @@ export class S3Uploader {
     const authorization = `${algorithm} Credential=${this.accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
 
     // Create and send PUT request
-    const requestUrl = `${this.endpoint}${canonicalUri}`
+    const requestUrl = `${resolved.baseUrl}${canonicalUri}`
 
     const fetchOptions: RequestInit & { dispatcher?: unknown } = {
       method: 'PUT',
@@ -292,7 +454,10 @@ export class S3Uploader {
       const response = await fetch(requestUrl, fetchOptions as RequestInit)
 
       if (!response.ok) {
-        throw new Error(`Upload failed with status code: ${response.status}`)
+        const responseText = await response.text()
+        throw new Error(
+          `Upload failed with status code: ${response.status} - ${responseText}`,
+        )
       }
     } finally {
       if (isDev) {

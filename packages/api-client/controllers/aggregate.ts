@@ -13,6 +13,7 @@ import type {
 } from '~/models/aggregate'
 import { sortOrderToNumber } from '~/utils'
 import { autoBind } from '~/utils/auto-bind'
+
 import type { HTTPClient } from '../core'
 
 declare module '../core/client' {

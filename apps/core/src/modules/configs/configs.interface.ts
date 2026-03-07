@@ -11,6 +11,7 @@ import {
   type BingSearchOptionsSchema,
   type CommentOptionsSchema,
   type FeatureListSchema,
+  type FileUploadOptionsSchema,
   type FriendLinkOptionsSchema,
   type ImageStorageOptionsSchema,
   type MailOptionsSchema,
@@ -39,6 +40,7 @@ export abstract class IConfig {
   friendLinkOptions: Required<z.infer<typeof FriendLinkOptionsSchema>>
   backupOptions: Required<z.infer<typeof BackupOptionsSchema>>
   imageStorageOptions: Required<z.infer<typeof ImageStorageOptionsSchema>>
+  fileUploadOptions: Required<z.infer<typeof FileUploadOptionsSchema>>
   baiduSearchOptions: Required<z.infer<typeof BaiduSearchOptionsSchema>>
   bingSearchOptions: Required<z.infer<typeof BingSearchOptionsSchema>>
   algoliaSearchOptions: Required<z.infer<typeof AlgoliaSearchOptionsSchema>>

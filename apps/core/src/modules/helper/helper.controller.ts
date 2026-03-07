@@ -1,5 +1,7 @@
 import { Get, Param, Post, Query, Res } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
+import type { FastifyReply } from 'fastify'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
@@ -11,7 +13,7 @@ import { UrlBuilderService } from '~/processors/helper/helper.url-builder.servic
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { isLexical } from '~/utils/content.util'
 import { AsyncQueue } from '~/utils/queue.util'
-import type { FastifyReply } from 'fastify'
+
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
 import { PostService } from '../post/post.service'

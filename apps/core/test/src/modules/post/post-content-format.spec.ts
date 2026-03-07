@@ -1,26 +1,4 @@
-import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { APP_INTERCEPTOR } from '@nestjs/core'
-import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
-import {
-  CATEGORY_SERVICE_TOKEN,
-  DRAFT_SERVICE_TOKEN,
-  POST_SERVICE_TOKEN,
-} from '~/constants/injection.constant'
-import { CategoryModel } from '~/modules/category/category.model'
-import { CategoryService } from '~/modules/category/category.service'
-import { CommentModel } from '~/modules/comment/comment.model'
-import { OptionModel } from '~/modules/configs/configs.model'
-import { DraftHistoryService } from '~/modules/draft/draft-history.service'
-import { DraftModel } from '~/modules/draft/draft.model'
-import { DraftService } from '~/modules/draft/draft.service'
-import { PostController } from '~/modules/post/post.controller'
-import { PostModel } from '~/modules/post/post.model'
-import { PostService } from '~/modules/post/post.service'
-import { SlugTrackerModel } from '~/modules/slug-tracker/slug-tracker.model'
-import { SlugTrackerService } from '~/modules/slug-tracker/slug-tracker.service'
-import { HttpService } from '~/processors/helper/helper.http.service'
-import { LexicalService } from '~/processors/helper/helper.lexical.service'
-import { ContentFormat } from '~/shared/types/content-format.type'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
@@ -35,6 +13,29 @@ import {
   imageServiceProvider,
 } from 'test/mock/processors/file.mock'
 import { translationProvider } from 'test/mock/processors/translation.mock'
+
+import { createRedisProvider } from '@/mock/modules/redis.mock'
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
+import {
+  CATEGORY_SERVICE_TOKEN,
+  DRAFT_SERVICE_TOKEN,
+  POST_SERVICE_TOKEN,
+} from '~/constants/injection.constant'
+import { CategoryModel } from '~/modules/category/category.model'
+import { CategoryService } from '~/modules/category/category.service'
+import { CommentModel } from '~/modules/comment/comment.model'
+import { OptionModel } from '~/modules/configs/configs.model'
+import { DraftModel } from '~/modules/draft/draft.model'
+import { DraftService } from '~/modules/draft/draft.service'
+import { DraftHistoryService } from '~/modules/draft/draft-history.service'
+import { PostController } from '~/modules/post/post.controller'
+import { PostModel } from '~/modules/post/post.model'
+import { PostService } from '~/modules/post/post.service'
+import { SlugTrackerModel } from '~/modules/slug-tracker/slug-tracker.model'
+import { SlugTrackerService } from '~/modules/slug-tracker/slug-tracker.service'
+import { HttpService } from '~/processors/helper/helper.http.service'
+import { LexicalService } from '~/processors/helper/helper.lexical.service'
+import { ContentFormat } from '~/shared/types/content-format.type'
 
 describe('Post ContentFormat (e2e)', async () => {
   let categoryId: string

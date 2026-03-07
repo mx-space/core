@@ -72,6 +72,11 @@ export const generateDefaultConfig: () => IConfig = () => ({
     customDomain: '',
     prefix: '',
   },
+  fileUploadOptions: {
+    enableCustomNaming: false,
+    filenameTemplate: '{Y}{m}{d}/{md5-16}{ext}',
+    pathTemplate: '{type}',
+  },
   baiduSearchOptions: { enable: false, token: null! },
   bingSearchOptions: { enable: false, token: null! },
   algoliaSearchOptions: {

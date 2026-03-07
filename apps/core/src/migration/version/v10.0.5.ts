@@ -1,5 +1,6 @@
 import type { Db } from 'mongodb'
 import { nanoid } from 'nanoid'
+
 import { defineMigration } from '../helper'
 
 const COLLECTIONS = ['posts', 'notes', 'pages']
