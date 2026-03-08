@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="https://cdn.jsdelivr.net/gh/mx-space/core@master/assets/logo.svg" alt="MX Space" width="100" />
-</p>
-
 <h1 align="center">MX Space Core</h1>
 
 <p align="center">
