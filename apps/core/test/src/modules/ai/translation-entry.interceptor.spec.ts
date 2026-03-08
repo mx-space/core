@@ -58,6 +58,55 @@ describe('TranslationEntryInterceptor path utilities', () => {
       expect(data.notes[0].mood).toBe('开心')
     })
 
+    it('should clone document-like values via toJSON before translating', async () => {
+      const translationEntryService = {
+        getTranslationsBatch: vi.fn().mockResolvedValue({
+          entityMaps: new Map([
+            ['category.name', new Map([['id-1', 'Frontend']])],
+          ]),
+          dictMaps: new Map(),
+        }),
+      }
+
+      const realInterceptor = new TranslationEntryInterceptor(
+        { get: vi.fn() } as any,
+        translationEntryService as any,
+      )
+
+      class CategoryDoc {
+        _id = 'id-1'
+        name = '前端'
+        self = this
+
+        toJSON() {
+          return {
+            _id: this._id,
+            name: this.name,
+          }
+        }
+      }
+
+      const data = {
+        categories: [new CategoryDoc()],
+      }
+
+      const result = await realInterceptor['applyTranslations'](
+        data,
+        [
+          {
+            keyPath: 'category.name',
+            path: 'categories[].name',
+            idField: '_id',
+          },
+        ],
+        'en',
+      )
+
+      expect(result).not.toBe(data)
+      expect(result.categories[0]).toEqual({ _id: 'id-1', name: 'Frontend' })
+      expect('self' in result.categories[0]).toBe(false)
+    })
+
     it('should clone non-structured-cloneable payloads safely', async () => {
       const translationEntryService = {
         getTranslationsBatch: vi.fn().mockResolvedValue({
@@ -177,6 +226,18 @@ describe('TranslationEntryInterceptor path utilities', () => {
       const cloned = clone(arr)
       expect(cloned).toEqual(arr)
       expect(cloned[0]).not.toBe(arr[0])
+    })
+
+    it('should preserve circular references without overflowing', () => {
+      const obj: any = { name: 'root' }
+      obj.self = obj
+      obj.children = [{ parent: obj }]
+
+      const cloned = clone(obj)
+      expect(cloned).not.toBe(obj)
+      expect(cloned.self).toBe(cloned)
+      expect(cloned.children[0]).not.toBe(obj.children[0])
+      expect(cloned.children[0].parent).toBe(cloned)
     })
 
     it('should handle null and primitives', () => {

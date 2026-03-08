@@ -144,14 +144,35 @@ export class TranslationEntryInterceptor implements NestInterceptor {
     return result
   }
 
-  private deepClone(obj: any): any {
+  private deepClone(obj: any, seen = new WeakMap<object, any>()): any {
     if (obj === null || typeof obj !== 'object') return obj
     if (obj instanceof Date) return new Date(obj.getTime())
-    if (Array.isArray(obj)) return obj.map((item) => this.deepClone(item))
     if (typeof obj.toHexString === 'function') return obj
+
+    const cached = seen.get(obj)
+    if (cached) return cached
+
+    if (typeof obj.toJSON === 'function') {
+      return this.deepClone(obj.toJSON(), seen)
+    }
+
+    if (typeof obj.toObject === 'function') {
+      return this.deepClone(obj.toObject(), seen)
+    }
+
+    if (Array.isArray(obj)) {
+      const clone: any[] = []
+      seen.set(obj, clone)
+      for (const item of obj) {
+        clone.push(this.deepClone(item, seen))
+      }
+      return clone
+    }
+
     const clone: any = {}
+    seen.set(obj, clone)
     for (const key of Object.keys(obj)) {
-      clone[key] = this.deepClone(obj[key])
+      clone[key] = this.deepClone(obj[key], seen)
     }
     return clone
   }
