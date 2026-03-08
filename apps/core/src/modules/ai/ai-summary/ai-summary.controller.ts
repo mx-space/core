@@ -19,6 +19,7 @@ import { PagerDto } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
+import { parseLanguageCode } from '../ai-language.util'
 import {
   GetSummariesGroupedQueryDto,
   GetSummaryQueryDto,
@@ -79,7 +80,7 @@ export class AiSummaryController {
     @Query() query: GetSummaryQueryDto,
   ) {
     return this.service.getOrGenerateSummaryForArticle(params.id, {
-      lang: query.lang || DEFAULT_SUMMARY_LANG,
+      lang: query.lang ? parseLanguageCode(query.lang) : DEFAULT_SUMMARY_LANG,
       onlyDb: query.onlyDb,
     })
   }
@@ -99,7 +100,7 @@ export class AiSummaryController {
 
     try {
       const { events } = await this.service.streamSummaryForArticle(params.id, {
-        lang: query.lang || DEFAULT_SUMMARY_LANG,
+        lang: query.lang ? parseLanguageCode(query.lang) : DEFAULT_SUMMARY_LANG,
       })
 
       let sentToken = false
