@@ -5,6 +5,7 @@ import type { SelectFields } from '~/interfaces/types'
 import type { PaginateResult } from '~/models/base'
 import type { PageModel } from '~/models/page'
 import { autoBind } from '~/utils/auto-bind'
+
 import type { HTTPClient } from '../core'
 
 declare module '../core/client' {

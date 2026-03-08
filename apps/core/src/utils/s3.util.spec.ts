@@ -1,9 +1,9 @@
 import * as crypto from 'node:crypto'
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { S3UploaderOptions } from './s3.util'
-import { S3Uploader } from './s3.util'
+import type { S3EndpointStrategy, S3UploaderOptions } from './s3.util'
+import { DefaultS3Strategy, S3Uploader, TencentCosStrategy } from './s3.util'
 
 // Mock fetch
 global.fetch = vi.fn()
@@ -160,6 +160,125 @@ describe('S3Uploader', () => {
           body: mockBuffer,
         }),
       )
+    })
+  })
+
+  describe('endpoint strategies', () => {
+    afterEach(() => {
+      S3Uploader.resetStrategies()
+    })
+
+    describe('TencentCosStrategy', () => {
+      const strategy = new TencentCosStrategy()
+
+      it('should match myqcloud.com hosts', () => {
+        expect(strategy.matches('cos.ap-guangzhou.myqcloud.com')).toBe(true)
+      })
+
+      it('should match hosts containing .cos.', () => {
+        expect(strategy.matches('bucket.cos.ap-guangzhou.myqcloud.com')).toBe(
+          true,
+        )
+      })
+
+      it('should not match unrelated hosts', () => {
+        expect(strategy.matches('s3.amazonaws.com')).toBe(false)
+      })
+
+      it('should resolve virtual-hosted style for cos.* hosts', () => {
+        const result = strategy.resolve({
+          host: 'cos.ap-guangzhou.myqcloud.com',
+          bucket: 'my-bucket',
+          encodedObjectKey: 'path/to/file.png',
+          protocol: 'https:',
+        })
+        expect(result.requestHost).toBe(
+          'my-bucket.cos.ap-guangzhou.myqcloud.com',
+        )
+        expect(result.canonicalUri).toBe('/path/to/file.png')
+        expect(result.baseUrl).toBe(
+          'https://my-bucket.cos.ap-guangzhou.myqcloud.com',
+        )
+      })
+    })
+
+    describe('DefaultS3Strategy', () => {
+      const strategy = new DefaultS3Strategy()
+
+      it('should match any host', () => {
+        expect(strategy.matches('anything.example.com')).toBe(true)
+      })
+
+      it('should use path style when host does not start with bucket', () => {
+        const result = strategy.resolve({
+          host: 's3.us-east-1.amazonaws.com',
+          bucket: 'my-bucket',
+          encodedObjectKey: 'file.txt',
+          protocol: 'https:',
+        })
+        expect(result.canonicalUri).toBe('/my-bucket/file.txt')
+        expect(result.requestHost).toBe('s3.us-east-1.amazonaws.com')
+      })
+
+      it('should use virtual-hosted style when host starts with bucket', () => {
+        const result = strategy.resolve({
+          host: 'my-bucket.s3.us-east-1.amazonaws.com',
+          bucket: 'my-bucket',
+          encodedObjectKey: 'file.txt',
+          protocol: 'https:',
+        })
+        expect(result.canonicalUri).toBe('/file.txt')
+      })
+    })
+
+    describe('custom strategy registration', () => {
+      it('should use a registered custom strategy when it matches', async () => {
+        const customStrategy: S3EndpointStrategy = {
+          name: 'CustomProvider',
+          matches: (host) => host.includes('custom-storage.example.com'),
+          resolve: (ctx) => ({
+            requestHost: `${ctx.bucket}.custom-storage.example.com`,
+            canonicalUri: `/${ctx.encodedObjectKey}`,
+            baseUrl: `${ctx.protocol}//${ctx.bucket}.custom-storage.example.com`,
+          }),
+        }
+
+        S3Uploader.registerStrategy(customStrategy)
+
+        const customUploader = new S3Uploader({
+          bucket: 'test-bucket',
+          region: 'us-east-1',
+          accessKey: 'key',
+          secretKey: 'secret',
+          endpoint: 'https://custom-storage.example.com',
+        })
+
+        await customUploader.uploadToS3('obj', mockBuffer, 'text/plain')
+
+        expect(fetch).toHaveBeenCalledWith(
+          'https://test-bucket.custom-storage.example.com/obj',
+          expect.objectContaining({ method: 'PUT' }),
+        )
+      })
+
+      it('should fall back to default strategy when no custom matches', async () => {
+        const neverMatchStrategy: S3EndpointStrategy = {
+          name: 'NeverMatch',
+          matches: () => false,
+          resolve: () => {
+            throw new Error('Should not be called')
+          },
+        }
+
+        S3Uploader.registerStrategy(neverMatchStrategy)
+
+        await uploader.uploadToS3('obj', mockBuffer, 'text/plain')
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/test-bucket/obj'),
+          expect.objectContaining({ method: 'PUT' }),
+        )
+      })
     })
   })
 })

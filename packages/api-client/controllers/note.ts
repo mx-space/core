@@ -10,6 +10,7 @@ import type {
   NoteWrappedWithLikedPayload,
 } from '~/models/note'
 import { autoBind } from '~/utils/auto-bind'
+
 import type { HTTPClient } from '../core/client'
 import type { SortOptions } from './base'
 

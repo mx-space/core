@@ -16,7 +16,6 @@ import {
 import { Throttle } from '@nestjs/throttler'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
-import { customAlphabet } from 'nanoid'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -24,11 +23,15 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { alphabet } from '~/constants/other.constant'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
+import {
+  generateFilename,
+  generateFilePath,
+  replaceFilenameTemplate,
+} from '~/utils/filename-template.util'
 import { S3Uploader } from '~/utils/s3.util'
 
 import {
@@ -157,6 +160,9 @@ export class FileController {
   async upload(@Query() query: FileUploadDto, @Req() req: FastifyRequest) {
     const { type = 'file' } = query
 
+    // 获取文件上传配置
+    const uploadConfig = await this.configsService.get('fileUploadOptions')
+
     if (type === 'image') {
       const config = await this.configsService.get('imageStorageOptions')
       if (
@@ -173,11 +179,23 @@ export class FileController {
         maxFileSize: 20 * 1024 * 1024,
       })
 
-      const ext = path.extname(file.filename)
-      const filename = customAlphabet(alphabet)(18) + ext.toLowerCase()
-      const objectKey = config.prefix
-        ? `${config.prefix.replace(/\/+$/, '')}/${filename}`
-        : filename
+      // 生成文件名（支持模板或默认随机名）
+      const filename = generateFilename(uploadConfig, {
+        originalFilename: file.filename,
+        fileType: type,
+      })
+
+      // 处理 prefix 中的模板变量
+      let prefixPath = ''
+      if (config.prefix) {
+        prefixPath = replaceFilenameTemplate(config.prefix, {
+          originalFilename: file.filename,
+          fileType: 'image',
+        })
+        prefixPath = prefixPath.replace(/\/+$/, '')
+      }
+
+      const objectKey = prefixPath ? `${prefixPath}/${filename}` : filename
 
       const chunks: Buffer[] = []
       for await (const chunk of file.file) {
@@ -213,13 +231,34 @@ export class FileController {
     }
 
     const file = await this.uploadService.getAndValidMultipartField(req)
-    const ext = path.extname(file.filename)
-    const filename = customAlphabet(alphabet)(18) + ext.toLowerCase()
 
-    await this.service.writeFile(type, filename, file.file)
-    const fileUrl = await this.service.resolveFileUrl(type, filename)
+    // 生成文件名（可能包含子路径）
+    const rawFilename = generateFilename(uploadConfig, {
+      originalFilename: file.filename,
+      fileType: type,
+    })
 
-    return { url: fileUrl, name: filename }
+    // 生成基础路径
+    const basePath = generateFilePath(uploadConfig, {
+      originalFilename: file.filename,
+      fileType: type,
+    })
+
+    // 构建相对路径（相对于文件类型目录）
+    let relativePath: string
+    if (basePath === type || !basePath) {
+      relativePath = rawFilename
+    } else {
+      const pathWithoutType = basePath.startsWith(`${type}/`)
+        ? basePath.slice(Math.max(0, type.length + 1))
+        : basePath
+      relativePath = path.join(pathWithoutType, rawFilename)
+    }
+
+    await this.service.writeFile(type, relativePath, file.file)
+    const fileUrl = await this.service.resolveFileUrl(type, relativePath)
+
+    return { url: fileUrl, name: path.basename(relativePath) }
   }
 
   @Put('/:type/:name')

@@ -1,4 +1,5 @@
 import { index, modelOptions, prop, Severity } from '@typegoose/typegoose'
+
 import { FILE_REFERENCE_COLLECTION_NAME } from '~/constants/db.constant'
 import { BaseModel } from '~/shared/model/base.model'
 

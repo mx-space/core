@@ -1,5 +1,6 @@
-import { normalizeLanguageCode } from '~/utils/lang.util'
 import { z } from 'zod'
+
+import { normalizeLanguageCode } from '~/utils/lang.util'
 
 export const zBooleanOrString = z.union([z.boolean(), z.string()])
 

@@ -1,6 +1,7 @@
+import { defineProvider } from 'test/helper/defineProvider'
+
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
-import { defineProvider } from 'test/helper/defineProvider'
 
 export const fileReferenceProvider = defineProvider({
   provide: FileReferenceService,

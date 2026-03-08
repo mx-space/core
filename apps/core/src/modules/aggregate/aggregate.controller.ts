@@ -1,5 +1,7 @@
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager'
 import { Get, Query } from '@nestjs/common'
+import { omit } from 'es-toolkit/compat'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
@@ -7,7 +9,7 @@ import { Lang } from '~/common/decorators/lang.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
-import { omit } from 'es-toolkit/compat'
+
 import { AnalyzeService } from '../analyze/analyze.service'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteService } from '../note/note.service'
