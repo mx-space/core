@@ -1,5 +1,31 @@
 # CHANGELOG
 
+# [10.2.0](https://github.com/mx-space/core/compare/v0.7.0...v10.2.0) (2026-03-08)
+
+
+
+# [0.7.0](https://github.com/mx-space/core/compare/v0.6.0...v0.7.0) (2026-03-08)
+
+
+### Bug Fixes
+
+* **webhook:** correct dist output paths for tsdown esm/cjs ([5fc8a03](https://github.com/mx-space/core/commit/5fc8a039088a70d0c29d5c914e7fa6d89868c34e))
+
+
+
+# [0.6.0](https://github.com/mx-space/core/compare/v10.1.10...v0.6.0) (2026-03-08)
+
+
+### Features
+
+* **webhook:** add X-Webhook-Source header to indicate event origin ([899a5f1](https://github.com/mx-space/core/commit/899a5f16495eb88ed9181f344a3956cfa9dc8bee))
+
+
+
+## [10.1.10](https://github.com/mx-space/core/compare/v10.1.9...v10.1.10) (2026-03-07)
+
+
+
 ## [10.1.9](https://github.com/mx-space/core/compare/v10.1.8...v10.1.9) (2026-03-03)
 
 

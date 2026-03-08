@@ -7,7 +7,7 @@ export enum AITaskType {
 
 export interface SummaryTaskPayload {
   refId: string
-  lang?: string
+  targetLanguages?: string[]
   // Human-readable info
   title?: string
   refType?: string
@@ -46,7 +46,7 @@ export function computeAITaskDedupKey(
   switch (type) {
     case AITaskType.Summary: {
       const p = payload as SummaryTaskPayload
-      return `${p.refId}:${p.lang || 'default'}`
+      return `${p.refId}:${(p.targetLanguages || []).slice().sort().join(',')}`
     }
     case AITaskType.Translation: {
       const p = payload as TranslationTaskPayload

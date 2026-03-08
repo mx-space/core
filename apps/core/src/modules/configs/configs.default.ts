@@ -109,7 +109,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     commentReviewModel: undefined,
     enableSummary: false,
     enableAutoGenerateSummary: false,
-    aiSummaryTargetLanguage: 'auto',
+    summaryTargetLanguages: [],
   },
   oauth: {
     providers: [],

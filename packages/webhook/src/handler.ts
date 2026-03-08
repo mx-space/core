@@ -2,9 +2,14 @@ import assert from 'node:assert'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+
 import { InvalidSignatureError } from './error'
 import type { BusinessEvents } from './event.enum'
-import type { ExtendedEventEmitter, GenericEvent } from './types'
+import type {
+  ExtendedEventEmitter,
+  GenericEvent,
+  WebhookEventSource,
+} from './types'
 
 interface CreateHandlerOptions {
   secret: string
@@ -24,12 +29,13 @@ export const createHandler = (options: CreateHandlerOptions): Handler => {
     try {
       const data = await readDataFromRequest({ req, secret })
 
-      const { type: event, payload } = data
+      const { type: event, payload, source } = data
 
-      handler.emitter.emit(event as any, payload)
+      handler.emitter.emit(event as any, payload, source)
       handler.emitter.emit('*', {
         type: event,
         payload,
+        source,
       })
       res.statusCode = 200
       res.setHeader('Content-Type', 'application/json')
@@ -74,10 +80,14 @@ export const readDataFromRequest = async ({
     verifyWebhook(secret, stringifyPayload, signature256 as string) &&
     verifyWebhookSha1(secret, stringifyPayload, signature as string)
 
+  const source = (req.headers['x-webhook-source'] ||
+    'system') as WebhookEventSource
+
   if (isValid) {
     return {
       type: event as BusinessEvents,
       payload: obj as any,
+      source,
     } as GenericEvent
   } else {
     console.error('revice a invalidate webhook payload', req.headers)

@@ -1,11 +1,13 @@
-import { TaskStatus } from '~/processors/task-queue'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { TaskStatus } from '~/processors/task-queue'
+
 import { AITaskType } from './ai-task.types'
 
 export const CreateSummaryTaskSchema = z.object({
   refId: z.string(),
-  lang: z.string().optional(),
+  targetLanguages: z.array(z.string()).optional(),
 })
 
 export class CreateSummaryTaskDto extends createZodDto(

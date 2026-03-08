@@ -20,6 +20,18 @@ import { WebhookEventModel } from './webhook-event.model'
 
 const ACCEPT_EVENTS = new Set(Object.values(BusinessEvents))
 
+type WebhookEventSource = 'admin' | 'visitor' | 'system'
+
+function scopeToSource(scope: EventScope): WebhookEventSource {
+  const hasVisitor = (scope & EventScope.TO_VISITOR) !== 0
+  const hasAdmin = (scope & EventScope.TO_ADMIN) !== 0
+
+  if (hasVisitor && !hasAdmin) return 'admin'
+  if (hasAdmin && !hasVisitor) return 'visitor'
+  if (hasVisitor && hasAdmin) return 'admin'
+  return 'system'
+}
+
 @Injectable()
 export class WebhookService implements OnModuleInit, OnModuleDestroy {
   constructor(
@@ -120,9 +132,11 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
       rawPayload,
     )
 
+    const source = scopeToSource(scope)
+
     await Promise.all(
       scopedWebhooks.map((webhook) => {
-        return this.sendWebhookEvent(event, payload, webhook)
+        return this.sendWebhookEvent(event, payload, webhook, source)
       }),
     )
   }
@@ -131,6 +145,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     event: string,
     payload: object,
     webhook: WebhookModel,
+    source: WebhookEventSource = 'system',
   ) {
     const stringifyPayload = JSON.stringify(payload)
     const clonedPayload = JSON.parse(stringifyPayload)
@@ -147,6 +162,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
         webhook.secret,
         stringifyPayload,
       ),
+      'X-Webhook-Source': source,
     }
     const webhookEvent = await this.webhookEventModel.create({
       event,

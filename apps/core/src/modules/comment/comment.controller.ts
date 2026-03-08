@@ -30,13 +30,12 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
-import { scheduleManager } from '~/utils/schedule.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerService } from '../owner/owner.service'
 import { ReaderService } from '../reader/reader.service'
-import { CommentReplyMailType } from './comment.enum'
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
+import { CommentLifecycleService } from './comment.lifecycle.service'
 import type { CommentModel } from './comment.model'
 import { CommentState } from './comment.model'
 import {
@@ -58,6 +57,7 @@ const NESTED_REPLY_MAX = 10
 export class CommentController {
   constructor(
     private readonly commentService: CommentService,
+    private readonly lifecycleService: CommentLifecycleService,
     private readonly eventManager: EventManagerService,
     private readonly configsService: ConfigsService,
     private readonly ownerService: OwnerService,
@@ -117,7 +117,6 @@ export class CommentController {
     return data
   }
 
-  // 面向 C 端的评论查询接口
   @Get('/ref/:id')
   async getCommentsByRefId(
     @Param() params: MongoIdDto,
@@ -231,7 +230,7 @@ export class CommentController {
 
     const comment = await this.commentService.createComment(id, model, ref)
 
-    this.commentService.afterCreateComment(
+    this.lifecycleService.afterCreateComment(
       comment.id,
       ipLocation,
       isAuthenticated,
@@ -291,13 +290,6 @@ export class CommentController {
     await this.commentService.assignReaderToComment(model)
 
     const comment = await this.commentService.model.create(model)
-    const commentId = comment._id.toString()
-    scheduleManager.schedule(async () => {
-      if (isAuthenticated) {
-        return
-      }
-      await this.commentService.appendIpLocation(commentId, ipLocation.ip)
-    })
 
     await parent.updateOne({
       $push: {
@@ -312,27 +304,13 @@ export class CommentController {
           ? CommentState.Read
           : parent.state,
     })
-    if (isAuthenticated) {
-      this.commentService.sendEmail(comment, CommentReplyMailType.Guest)
-      this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
-        scope: EventScope.TO_SYSTEM_VISITOR,
-      })
-    } else {
-      const configs = await this.configsService.get('commentOptions')
-      const { commentShouldAudit } = configs
 
-      if (commentShouldAudit) {
-        this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
-          scope: EventScope.TO_SYSTEM_ADMIN,
-        })
-        return
-      }
+    this.lifecycleService.afterReplyComment(
+      comment,
+      ipLocation,
+      isAuthenticated,
+    )
 
-      this.commentService.sendEmail(comment, CommentReplyMailType.Owner)
-      this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
-        scope: EventScope.ALL,
-      })
-    }
     return this.commentService
       .fillAndReplaceAvatarUrl([comment])
       .then((docs) => docs[0])

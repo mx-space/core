@@ -370,12 +370,12 @@ export const AISchema = section('AI 设定', {
         '此选项开启后，将会在文章发布后自动生成摘要，需要开启上面的选项，否则无效',
     },
   ),
-  aiSummaryTargetLanguage: field.plain(
-    z.string().optional(),
-    'AI 摘要目标语言',
+  summaryTargetLanguages: field.array(
+    z.array(z.string()).optional(),
+    'AI 摘要目标语言列表',
     {
       description:
-        '生成的摘要目标语言，默认为 `auto`，根据用户的语言自动选择；如果需要固定语言，请填写 [ISO 639-1 语言代码](https://www.w3schools.com/tags/ref_language_codes.asp)',
+        '自动生成摘要的目标语言列表，使用 [ISO 639-1 语言代码](https://www.w3schools.com/tags/ref_language_codes.asp)，如 ["zh", "en", "ja"]',
     },
   ),
   translationModel: field.plain(

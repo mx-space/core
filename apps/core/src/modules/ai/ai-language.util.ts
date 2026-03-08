@@ -17,48 +17,9 @@ export function getLanguageName(langCode: string): string {
   return LANGUAGE_CODE_TO_NAME[langCode] || langCode
 }
 
-export interface ResolveLanguageOptions {
-  preferredLang?: string
-  acceptLanguage?: string
-}
-
-export interface ResolveLanguageConfig {
-  configuredLanguage?: string
-  defaultLanguage?: string
-}
-
-/**
- * 解析目标语言
- * 优先级：
- * 1. 如果配置语言不是 'auto'，使用配置语言
- * 2. 否则使用 preferredLang（用户明确指定）
- * 3. 否则使用 acceptLanguage（浏览器请求头）
- * 4. 最后使用默认语言
- */
 export function resolveTargetLanguages(
   explicit?: string[],
   configured?: string[],
 ): string[] {
   return explicit?.length ? explicit : (configured ?? [])
-}
-
-export function resolveTargetLanguage(
-  options: ResolveLanguageOptions,
-  config: ResolveLanguageConfig,
-): string {
-  const { preferredLang, acceptLanguage } = options
-  const { configuredLanguage, defaultLanguage = DEFAULT_SUMMARY_LANG } = config
-
-  // 如果配置了特定语言（非 auto），直接使用
-  if (configuredLanguage && configuredLanguage !== 'auto') {
-    return configuredLanguage
-  }
-
-  // auto 模式：从用户偏好或请求头推断
-  const userLang = preferredLang || acceptLanguage
-  if (userLang) {
-    return parseLanguageCode(userLang)
-  }
-
-  return defaultLanguage
 }

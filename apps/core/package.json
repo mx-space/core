@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/core",
-  "version": "10.1.9",
+  "version": "10.2.0",
   "type": "module",
   "private": true,
   "engines": {
@@ -15,7 +15,7 @@
   "author": "Innei <https://innei.in>",
   "dashboard": {
     "repo": "mx-space/mx-admin",
-    "version": "6.1.5"
+    "version": "6.2.0"
   },
   "issues": "https://github.com/mx-space/core/issues",
   "scripts": {
@@ -64,7 +64,7 @@
     "@fastify/cookie": "11.0.2",
     "@fastify/multipart": "9.4.0",
     "@fastify/static": "9.0.0",
-    "@haklex/rich-headless": "0.0.66",
+    "@haklex/rich-headless": "0.0.70",
     "@innei/next-async": "0.4.0",
     "@innei/pretty-logger-nestjs": "0.4.2",
     "@keyv/redis": "5.1.6",
