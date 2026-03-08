@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { zCoerceInt, zMongoId, zNonEmptyString, zPrefer } from '~/common/zod'
 import { WriteBaseSchema } from '~/shared/schema'
 import { ImageSchema } from '~/shared/schema/image.schema'
+import { ContentFormat } from '~/shared/types/content-format.type'
 
 /**
  * Page schema for API validation
@@ -25,8 +26,19 @@ export class PageDto extends createZodDto(PageSchema) {}
 
 /**
  * Partial page schema for PATCH operations
+ * Override fields with .default() to prevent defaults from being applied during partial updates
  */
-export const PartialPageSchema = PageSchema.partial()
+export const PartialPageSchema = PageSchema.extend({
+  contentFormat: z
+    .enum([ContentFormat.Markdown, ContentFormat.Lexical])
+    .optional(),
+  meta: z.record(z.string(), z.any()).optional().nullable(),
+  order: z.preprocess(
+    (val) =>
+      typeof val === 'string' ? Number.parseInt(val, 10) : (val as number),
+    z.number().int().min(0).optional(),
+  ),
+}).partial()
 
 export class PartialPageDto extends createZodDto(PartialPageSchema) {}
 

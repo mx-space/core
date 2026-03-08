@@ -13,6 +13,7 @@ import {
 import { PagerSchema } from '~/shared/dto/pager.dto'
 import { WriteBaseSchema } from '~/shared/schema'
 import { ImageSchema } from '~/shared/schema/image.schema'
+import { ContentFormat } from '~/shared/types/content-format.type'
 
 /**
  * Coordinate schema
@@ -53,8 +54,21 @@ export class NoteDto extends createZodDto(NoteSchema) {}
 
 /**
  * Partial note schema for PATCH operations
+ * Override fields with .default() to prevent defaults from being applied during partial updates
  */
-export const PartialNoteSchema = NoteSchema.partial()
+export const PartialNoteSchema = NoteSchema.extend({
+  title: z
+    .string()
+    .transform((val) => (val.length === 0 ? '无题' : val))
+    .optional(),
+  contentFormat: z
+    .enum([ContentFormat.Markdown, ContentFormat.Lexical])
+    .optional(),
+  meta: z.record(z.string(), z.any()).optional().nullable(),
+  isPublished: z.boolean().optional(),
+  bookmark: z.boolean().optional(),
+  images: z.array(ImageSchema).optional(),
+}).partial()
 
 export class PartialNoteDto extends createZodDto(PartialNoteSchema) {}
 

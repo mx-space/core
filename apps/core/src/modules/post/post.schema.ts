@@ -13,6 +13,7 @@ import {
 import { PagerSchema } from '~/shared/dto/pager.dto'
 import { WriteBaseSchema } from '~/shared/schema'
 import { ImageSchema } from '~/shared/schema/image.schema'
+import { ContentFormat } from '~/shared/types/content-format.type'
 
 /**
  * Post schema for API validation
@@ -41,8 +42,16 @@ export class PostDto extends createZodDto(PostSchema) {}
 
 /**
  * Partial post schema for PATCH operations
+ * Override fields with .default() to prevent defaults from being applied during partial updates
  */
-export const PartialPostSchema = PostSchema.partial()
+export const PartialPostSchema = PostSchema.extend({
+  contentFormat: z
+    .enum([ContentFormat.Markdown, ContentFormat.Lexical])
+    .optional(),
+  meta: z.record(z.string(), z.any()).optional().nullable(),
+  copyright: z.boolean().optional(),
+  isPublished: z.boolean().optional(),
+}).partial()
 
 export class PartialPostDto extends createZodDto(PartialPostSchema) {}
 
