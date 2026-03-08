@@ -82,7 +82,7 @@ export interface IActivityLike {
 }
 
 // Auto Generaged type.
-export type GenericEvent = (
+export type GenericEvent =
   | { type: BusinessEvents.POST_CREATE; payload: NormalizedPost }
   | { type: BusinessEvents.POST_UPDATE; payload: NormalizedPost }
   | { type: BusinessEvents.POST_DELETE; payload: PayloadOnlyId }
@@ -121,4 +121,3 @@ export type GenericEvent = (
       }
     }
   | { type: 'health_check'; payload: {} }
-) & { source: WebhookEventSource }

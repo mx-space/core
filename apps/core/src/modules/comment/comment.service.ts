@@ -1,10 +1,7 @@
-import type { OnModuleInit } from '@nestjs/common'
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import type { ReturnModelType } from '@typegoose/typegoose/lib/types'
 import DiffMatchPatch from 'diff-match-patch'
-import ejs from 'ejs'
-import { omit, pick } from 'es-toolkit/compat'
 import { isObjectIdOrHexString, Types } from 'mongoose'
 
 import { RequestContext } from '~/common/contexts/request.context'
@@ -15,8 +12,6 @@ import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
-import { BarkPushService } from '~/processors/helper/helper.bark.service'
-import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import {
   type LexicalRootBlock,
@@ -25,31 +20,12 @@ import {
 import type { WriteBaseModel } from '~/shared/model/write-base.model'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { InjectModel } from '~/transformers/model.transformer'
-import { scheduleManager } from '~/utils/schedule.util'
-import { getAvatar, hasChinese, md5 } from '~/utils/tool.util'
+import { getAvatar, md5 } from '~/utils/tool.util'
 
-import { AI_PROMPTS } from '../ai/ai.prompts'
-import { AiService } from '../ai/ai.service'
 import { AITranslationModel } from '../ai/ai-translation/ai-translation.model'
-import { ConfigsService } from '../configs/configs.service'
-import { OwnerModel } from '../owner/owner.model'
 import { OwnerService } from '../owner/owner.service'
 import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
-import { createMockedContextResponse } from '../serverless/mock-response.util'
-import { ServerlessService } from '../serverless/serverless.service'
-import type { SnippetModel } from '../snippet/snippet.model'
-import { SnippetType } from '../snippet/snippet.model'
-import BlockedKeywords from './block-keywords.json' with { type: 'json' }
-import type {
-  CommentEmailTemplateRenderProps,
-  CommentModelRenderProps,
-} from './comment.email.default'
-import {
-  baseRenderProps,
-  defaultCommentModelKeys,
-} from './comment.email.default'
-import { CommentReplyMailType } from './comment.enum'
 import {
   CommentAnchorMode,
   type CommentAnchorModel,
@@ -61,7 +37,7 @@ import type { CommentAnchorInput } from './comment.schema'
 const dmp = new DiffMatchPatch()
 
 @Injectable()
-export class CommentService implements OnModuleInit {
+export class CommentService {
   private readonly logger: Logger = new Logger(CommentService.name)
   constructor(
     @InjectModel(CommentModel)
@@ -69,15 +45,8 @@ export class CommentService implements OnModuleInit {
 
     private readonly databaseService: DatabaseService,
     private readonly ownerService: OwnerService,
-    private readonly mailService: EmailService,
 
-    private readonly configsService: ConfigsService,
-    @Inject(forwardRef(() => AiService))
-    private readonly aiService: AiService,
-    @Inject(forwardRef(() => ServerlessService))
-    private readonly serverlessService: ServerlessService,
     private readonly eventManager: EventManagerService,
-    private readonly barkService: BarkPushService,
     @Inject(forwardRef(() => ReaderService))
     private readonly readerService: ReaderService,
     private readonly lexicalService: LexicalService,
@@ -85,35 +54,6 @@ export class CommentService implements OnModuleInit {
     private readonly aiTranslationModel: MongooseModel<AITranslationModel>,
   ) {}
 
-  private async getMailOwnerProps() {
-    const ownerInfo = await this.ownerService.getSiteOwnerOrMocked()
-    return OwnerModel.serialize(ownerInfo)
-  }
-
-  async onModuleInit() {
-    const ownerInfo = await this.getMailOwnerProps()
-    const renderProps = {
-      ...baseRenderProps,
-
-      owner: ownerInfo.name,
-
-      aggregate: {
-        ...baseRenderProps.aggregate,
-        owner: omit(ownerInfo, [
-          'password',
-          'lastLoginIp',
-          'lastLoginTime',
-          'oauth2',
-        ] as (keyof OwnerModel)[]),
-      },
-    }
-    this.mailService.registerEmailType(CommentReplyMailType.Guest, {
-      ...renderProps,
-    })
-    this.mailService.registerEmailType(CommentReplyMailType.Owner, {
-      ...renderProps,
-    })
-  }
   public get model() {
     return this.commentModel
   }
@@ -524,112 +464,6 @@ export class CommentService implements OnModuleInit {
     }
   }
 
-  /**
-   * 使用 AI 评估评论内容
-   * @param text 评论文本
-   * @param aiReviewType 评审类型
-   * @param aiReviewThreshold 阈值
-   * @returns 是否应该被标记为垃圾评论
-   */
-  private async evaluateCommentWithAI(
-    text: string,
-    aiReviewType: 'binary' | 'score',
-    aiReviewThreshold: number,
-  ): Promise<boolean> {
-    const runtime = await this.aiService.getCommentReviewModel()
-
-    // 评分模式
-    if (aiReviewType === 'score') {
-      try {
-        const { output } = await runtime.generateStructured({
-          ...AI_PROMPTS.comment.score(text),
-        })
-
-        // 如果包含敏感内容直接拒绝
-        if (output.hasSensitiveContent) {
-          return true
-        }
-        // 否则根据评分判断
-        return output.score > aiReviewThreshold
-      } catch (error) {
-        this.logger.error('AI 评审评分模式出错', error)
-        return false
-      }
-    }
-    // 垃圾检测模式
-    else {
-      try {
-        const { output } = await runtime.generateStructured({
-          ...AI_PROMPTS.comment.spam(text),
-        })
-
-        // 如果包含敏感内容直接拒绝
-        if (output.hasSensitiveContent) {
-          return true
-        }
-        // 否则按照是否 spam 判断
-        return output.isSpam
-      } catch (error) {
-        this.logger.error('AI 评审垃圾检测模式出错', error)
-        return false
-      }
-    }
-  }
-
-  async checkSpam(doc: CommentModel) {
-    const res = await (async () => {
-      const commentOptions = await this.configsService.get('commentOptions')
-      if (!commentOptions.antiSpam) {
-        return false
-      }
-      const owner = await this.ownerService.getOwner()
-      if (doc.author === owner.username || doc.author === owner.name) {
-        return false
-      }
-      if (commentOptions.blockIps) {
-        if (!doc.ip) {
-          return false
-        }
-        const isBlock = commentOptions.blockIps.some((ip) =>
-          // @ts-ignore
-          new RegExp(ip, 'gi').test(doc.ip),
-        )
-        if (isBlock) {
-          return true
-        }
-      }
-
-      const customKeywords = commentOptions.spamKeywords || []
-      const isBlock = [...customKeywords, ...BlockedKeywords].some((keyword) =>
-        new RegExp(keyword, 'gi').test(doc.text),
-      )
-
-      if (isBlock) {
-        return true
-      }
-
-      if (commentOptions.disableNoChinese && !hasChinese(doc.text)) {
-        return true
-      }
-
-      if (commentOptions.aiReview) {
-        return this.evaluateCommentWithAI(
-          doc.text,
-          commentOptions.aiReviewType,
-          commentOptions.aiReviewThreshold,
-        )
-      }
-      return false
-    })()
-    if (res) {
-      this.logger.warn(
-        '--> 检测到一条垃圾评论：' +
-          `作者：${doc.author}, IP: ${doc.ip}, 内容为：${doc.text}`,
-      )
-    }
-    return res
-  }
-
   async assignReaderToComment(
     doc: Partial<CommentModel>,
   ): Promise<(ReaderModel & { id: string }) | null> {
@@ -651,6 +485,7 @@ export class CommentService implements OnModuleInit {
 
     return { ...reader, id: readerId! }
   }
+
   async createComment(
     id: string,
     doc: Partial<CommentModel>,
@@ -708,63 +543,6 @@ export class CommentService implements OnModuleInit {
     )
 
     return comment
-  }
-
-  async afterCreateComment(
-    commentId: string,
-    ipLocation: { ip: string },
-    isAuthenticated: boolean,
-  ) {
-    const comment = await this.commentModel
-      .findById(commentId)
-      .lean({
-        getters: true,
-      })
-      .select('+ip +agent')
-
-    const readerId = RequestContext.currentRequest()?.readerId
-    if (!comment) return
-    scheduleManager.schedule(async () => {
-      if (isAuthenticated) {
-        return
-      }
-      await this.appendIpLocation(commentId, ipLocation.ip)
-    })
-
-    scheduleManager.batch(async () => {
-      const configs = await this.configsService.get('commentOptions')
-      const { commentShouldAudit } = configs
-      if ((await this.checkSpam(comment)) && !readerId) {
-        await this.commentModel.updateOne(
-          { _id: commentId },
-          {
-            state: CommentState.Junk,
-          },
-        )
-
-        return
-      } else if (!isAuthenticated) {
-        this.sendEmail(comment, CommentReplyMailType.Owner)
-      }
-
-      await this.eventManager.broadcast(
-        BusinessEvents.COMMENT_CREATE,
-        comment,
-        {
-          scope: EventScope.TO_SYSTEM_ADMIN,
-        },
-      )
-
-      if ((!commentShouldAudit || isAuthenticated) && !comment.isWhispers) {
-        await this.eventManager.broadcast(
-          BusinessEvents.COMMENT_CREATE,
-          omit(comment, ['ip', 'agent']),
-          {
-            scope: EventScope.TO_VISITOR,
-          },
-        )
-      }
-    })
   }
 
   async validAuthorName(author: string): Promise<void> {
@@ -832,8 +610,6 @@ export class CommentService implements OnModuleInit {
           { path: 'parent', select: '-children' },
           {
             path: 'ref',
-            // categoryId for post
-            // content for recently
             select: 'title _id slug nid categoryId content',
           },
         ],
@@ -842,7 +618,6 @@ export class CommentService implements OnModuleInit {
       },
     )
 
-    // 过滤脏数据
     this.cleanDirtyData(queryList.docs)
 
     await this.fillAndReplaceAvatarUrl(queryList.docs)
@@ -874,146 +649,6 @@ export class CommentService implements OnModuleInit {
     }
   }
 
-  async sendEmail(comment: CommentModel, type: CommentReplyMailType) {
-    const enable = await this.configsService
-      .get('mailOptions')
-      .then((config) => config.enable)
-    if (!enable) {
-      return
-    }
-
-    const ownerInfo = await this.ownerService.getOwnerInfo()
-
-    const refType = comment.refType
-    const refModel = this.getModelByRefType(refType)
-    const refDoc = await refModel.findById(comment.ref)
-    const time = new Date(comment.created!)
-    const parent: CommentModel | null = await this.commentModel
-      .findOne({ _id: comment.parent })
-      .lean()
-
-    const parsedTime = `${time.getDate()}/${
-      time.getMonth() + 1
-    }/${time.getFullYear()}`
-
-    if (!refDoc || !ownerInfo.mail) {
-      return
-    }
-
-    this.sendCommentNotificationMail({
-      to: type === CommentReplyMailType.Owner ? ownerInfo.mail : parent!.mail,
-      type,
-      source: {
-        title: refType === CollectionRefTypes.Recently ? '速记' : refDoc.title,
-        text: comment.text,
-        author:
-          type === CommentReplyMailType.Guest ? parent!.author : comment.author,
-        owner: ownerInfo.name,
-        link: await this.resolveUrlByType(refType, refDoc).then(
-          (url) => `${url}#comments-${comment.id}`,
-        ),
-        time: parsedTime,
-        mail:
-          CommentReplyMailType.Owner === type ? comment.mail : ownerInfo.mail,
-        ip: comment.ip || '',
-
-        aggregate: {
-          owner: ownerInfo,
-          commentor: {
-            ...pick(comment, defaultCommentModelKeys),
-            created: new Date(comment.created!).toISOString(),
-            isWhispers: comment.isWhispers || false,
-          } as CommentModelRenderProps,
-          parent,
-          post: {
-            title: refDoc.title,
-            created: new Date(refDoc.created!).toISOString(),
-            id: refDoc.id!,
-            modified: refDoc.modified
-              ? new Date(refDoc.modified!).toISOString()
-              : null,
-            text: refDoc.text,
-          },
-        },
-      },
-    })
-  }
-
-  async resolveUrlByType(type: CollectionRefTypes, model: any) {
-    const {
-      url: { webUrl: base },
-    } = await this.configsService.waitForConfigReady()
-    switch (type) {
-      case CollectionRefTypes.Note: {
-        return new URL(`/notes/${model.nid}`, base).toString()
-      }
-      case CollectionRefTypes.Page: {
-        return new URL(`/${model.slug}`, base).toString()
-      }
-      case CollectionRefTypes.Post: {
-        return new URL(
-          `/posts/${model.category.slug}/${model.slug}`,
-          base,
-        ).toString()
-      }
-      case CollectionRefTypes.Recently: {
-        return new URL(`/thinking/${model._id}`, base).toString()
-      }
-    }
-  }
-
-  async appendIpLocation(id: string, ip: string) {
-    if (!ip) {
-      return
-    }
-    const { recordIpLocation } = await this.configsService.get('commentOptions')
-
-    if (!recordIpLocation) {
-      return
-    }
-
-    const model = this.commentModel.findById(id).lean()
-    if (!model) {
-      return
-    }
-
-    const fnModel = (await this.serverlessService.model
-      .findOne({
-        name: 'ip',
-        reference: 'built-in',
-        type: SnippetType.Function,
-      })
-      .select('+secret')
-      .lean({
-        getters: true,
-      })) as SnippetModel
-
-    if (!fnModel) {
-      this.logger.error('[Serverless Fn] ip query function is missing.')
-      return model
-    }
-
-    const result =
-      await this.serverlessService.injectContextIntoServerlessFunctionAndCall(
-        fnModel,
-        {
-          req: {
-            query: { ip },
-          },
-          res: createMockedContextResponse({} as any),
-        } as any,
-      )
-
-    const location =
-      `${result.countryName || ''}${
-        result.regionName && result.regionName !== result.cityName
-          ? String(result.regionName)
-          : ''
-      }${result.cityName ? String(result.cityName) : ''}` || undefined
-
-    if (location) await this.commentModel.updateOne({ _id: id }, { location })
-  }
-
   async fillAndReplaceAvatarUrl(comments: CommentModel[]) {
     const owner = await this.ownerService.getOwner()
 
@@ -1021,12 +656,10 @@ export class CommentService implements OnModuleInit {
       if (typeof comment == 'string') {
         return
       }
-      // 如果是 author 是站长，就用站长自己设定的头像替换
       if (comment.author === owner.name) {
         comment.avatar = owner.avatar || comment.avatar
       }
 
-      // 如果不存在头像就
       if (!comment.avatar) {
         comment.avatar = getAvatar(comment.mail)
       }
@@ -1041,46 +674,6 @@ export class CommentService implements OnModuleInit {
     })
 
     return comments
-  }
-
-  async sendCommentNotificationMail({
-    to,
-    source,
-    type,
-  }: {
-    to: string
-    source: Pick<
-      CommentEmailTemplateRenderProps,
-      keyof CommentEmailTemplateRenderProps
-    >
-    type: CommentReplyMailType
-  }) {
-    const { seo, mailOptions } = await this.configsService.waitForConfigReady()
-    const senderEmail = mailOptions.from || mailOptions.smtp?.user
-    const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
-    const subject =
-      type === CommentReplyMailType.Guest
-        ? `[${seo.title || 'Mx Space'}] 主人给你了新的回复呐`
-        : `[${seo.title || 'Mx Space'}] 有新回复了耶~`
-
-    source.ip ??= ''
-    const options = {
-      from: sendfrom,
-      subject,
-      to,
-      html: ejs.render(
-        (await this.mailService.readTemplate(type)) as string,
-        source,
-      ),
-    }
-    if (isDev) {
-      // @ts-ignore
-      delete options.html
-      Object.assign(options, { source })
-      this.logger.log(options)
-      return
-    }
-    await this.mailService.send(options)
   }
 
   @OnEvent(BusinessEvents.POST_UPDATE)
@@ -1099,30 +692,6 @@ export class CommentService implements OnModuleInit {
   async handlePageUpdate(payload: { id?: string }) {
     if (!payload?.id) return
     await this.reanchorCommentsByRef(CollectionRefTypes.Page, payload.id)
-  }
-
-  // push comment
-  @OnEvent(BusinessEvents.COMMENT_CREATE)
-  async pushCommentEvent(comment: CommentModel) {
-    const { enable, enableComment } =
-      await this.configsService.get('barkOptions')
-    if (!enable || !enableComment) {
-      return
-    }
-    const owner = await this.ownerService.getOwner()
-    if (comment.author === owner.name || comment.author === owner.username) {
-      return
-    }
-    const { adminUrl } = await this.configsService.get('url')
-
-    await this.barkService.push({
-      title: '收到一条新评论',
-      body: `${comment.author} 评论了你的${
-        comment.refType === CollectionRefTypes.Recently ? '速记' : '文章'
-      }：${comment.text}`,
-      icon: comment.avatar,
-      url: `${adminUrl}#/comments`,
-    })
   }
 
   async editComment(id: string, text: string) {

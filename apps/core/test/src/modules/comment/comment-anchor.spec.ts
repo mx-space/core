@@ -2,17 +2,12 @@ import { Test } from '@nestjs/testing'
 import { Types } from 'mongoose'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { AiService } from '~/modules/ai/ai.service'
 import { CommentAnchorMode } from '~/modules/comment/comment.model'
 import { CommentAnchorSchema } from '~/modules/comment/comment.schema'
 import { CommentService } from '~/modules/comment/comment.service'
-import { ConfigsService } from '~/modules/configs/configs.service'
 import { OwnerService } from '~/modules/owner/owner.service'
 import { ReaderService } from '~/modules/reader/reader.service'
-import { ServerlessService } from '~/modules/serverless/serverless.service'
 import { DatabaseService } from '~/processors/database/database.service'
-import { BarkPushService } from '~/processors/helper/helper.bark.service'
-import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
@@ -194,30 +189,9 @@ describe('CommentService — lang-aware anchor resolution', () => {
           },
         },
         {
-          provide: EmailService,
-          useValue: {
-            registerEmailType: vi.fn(),
-            readTemplate: vi.fn(),
-            send: vi.fn(),
-          },
-        },
-        {
-          provide: ConfigsService,
-          useValue: {
-            get: vi.fn().mockResolvedValue({}),
-            waitForConfigReady: vi.fn(),
-          },
-        },
-        { provide: AiService, useValue: {} },
-        {
-          provide: ServerlessService,
-          useValue: { model: { findOne: vi.fn() } },
-        },
-        {
           provide: EventManagerService,
           useValue: { emit: vi.fn(), broadcast: vi.fn() },
         },
-        { provide: BarkPushService, useValue: { push: vi.fn() } },
         {
           provide: ReaderService,
           useValue: { findReaderInIds: vi.fn().mockResolvedValue([]) },
