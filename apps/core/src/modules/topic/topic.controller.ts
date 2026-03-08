@@ -5,13 +5,18 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import type { EventManagerService } from '~/processors/helper/helper.event.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'
 
 import { TopicModel } from './topic.model'
 
 class Upper {
-  constructor(private readonly _model: MongooseModel<TopicModel>) {}
+  constructor(
+    private readonly _model: MongooseModel<TopicModel>,
+    private readonly eventManager: EventManagerService,
+  ) {}
 
   @Get('/slug/:slug')
   @TranslateFields(
@@ -32,15 +37,25 @@ class Upper {
   @HTTPDecorators.Idempotence()
   @Auth()
   async create(@Body() body: Partial<TopicModel>) {
-    return await this._model.create(body)
+    const doc = await this._model.create(body)
+    this.eventManager.emit(BusinessEvents.TOPIC_CREATE, doc.toObject(), {
+      scope: EventScope.TO_SYSTEM_VISITOR,
+    })
+    return doc
   }
 
   @Put('/:id')
   @Auth()
   async update(@Body() body: Partial<TopicModel>, @Param() param: MongoIdDto) {
-    return await this._model
+    const doc = await this._model
       .findOneAndUpdate({ _id: param.id }, body, { new: true })
       .lean()
+    if (doc) {
+      this.eventManager.emit(BusinessEvents.TOPIC_UPDATE, doc, {
+        scope: EventScope.TO_SYSTEM_VISITOR,
+      })
+    }
+    return doc
   }
 }
 

@@ -391,6 +391,120 @@ export class TranslationEntryService {
     return { created, skipped }
   }
 
+  async generateForValues(
+    values: CollectedValue[],
+  ): Promise<{ created: number; skipped: number }> {
+    if (!values.length) return { created: 0, skipped: 0 }
+
+    const aiConfig = await this.configService.get('ai')
+    const rawLangs = aiConfig.translationTargetLanguages || []
+    const targetLangs = rawLangs
+      .map((l) => normalizeLanguageCode(l))
+      .filter(Boolean) as string[]
+
+    if (!targetLangs.length) return { created: 0, skipped: 0 }
+
+    let created = 0
+    let skipped = 0
+
+    for (const lang of targetLangs) {
+      const dictCacheEntries: DictCacheEntry[] = []
+      const existingEntries = await this.entryModel
+        .find({
+          lang,
+          $or: values.map((v) => ({
+            keyPath: v.keyPath,
+            lookupKey: v.lookupKey,
+          })),
+        })
+        .select('keyPath lookupKey sourceText')
+        .lean()
+
+      const existingMap = new Map(
+        existingEntries.map((e) => [
+          `${e.keyPath}:${e.lookupKey}`,
+          e.sourceText,
+        ]),
+      )
+
+      const toTranslate: CollectedValue[] = []
+      for (const value of values) {
+        const key = `${value.keyPath}:${value.lookupKey}`
+        const existing = existingMap.get(key)
+        if (existing === undefined) {
+          toTranslate.push(value)
+        } else if (existing !== value.sourceText) {
+          toTranslate.push(value)
+        } else {
+          skipped++
+        }
+      }
+
+      if (!toTranslate.length) continue
+
+      const fields: Record<string, string> = {}
+      for (const item of toTranslate) {
+        fields[`${item.keyPath}::${item.lookupKey}`] = item.sourceText
+      }
+
+      try {
+        const runtime = await this.aiService.getTranslationModel()
+        const promptData = AI_PROMPTS.fieldTranslation(lang, fields)
+        const result = await runtime.generateStructured({
+          prompt: promptData.prompt,
+          systemPrompt: promptData.systemPrompt,
+          schema: promptData.schema,
+          reasoningEffort: promptData.reasoningEffort,
+        })
+
+        const translations = result.output.translations
+        for (const item of toTranslate) {
+          const compositeKey = `${item.keyPath}::${item.lookupKey}`
+          const translatedText = translations[compositeKey]
+          if (!translatedText) continue
+
+          await this.entryModel.updateOne(
+            {
+              keyPath: item.keyPath,
+              lang,
+              keyType: item.keyType,
+              lookupKey: item.lookupKey,
+            },
+            {
+              $set: {
+                sourceText: item.sourceText,
+                translatedText,
+                ...(item.keyType === 'entity'
+                  ? { sourceUpdatedAt: new Date() }
+                  : {}),
+              },
+            },
+            { upsert: true },
+          )
+
+          if (item.keyType === 'dict') {
+            dictCacheEntries.push({
+              keyPath: item.keyPath,
+              lang,
+              lookupKey: item.lookupKey,
+              translatedText,
+            })
+          }
+
+          created++
+        }
+
+        await this.cacheDictTranslations(dictCacheEntries)
+      } catch (error) {
+        this.logger.error(
+          `Auto field translation failed for lang=${lang}: ${(error as Error).message}`,
+        )
+      }
+    }
+
+    return { created, skipped }
+  }
+
   async handleEntityUpdate(
     keyPath: TranslationEntryKeyPath,
     refId: string,

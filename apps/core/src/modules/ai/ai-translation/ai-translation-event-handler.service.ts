@@ -150,6 +150,29 @@ export class AiTranslationEventHandlerService {
     })
   }
 
+  // === Translation Entry: Category ===
+
+  @OnEvent(BusinessEvents.CATEGORY_CREATE)
+  async handleCategoryCreate(event: any) {
+    if (!(await this.isAutoEntryEnabled())) return
+    const doc = event
+    if (!doc?._id || !doc?.name) return
+    const id = doc._id.toString()
+    this.logger.log(`Auto-generating translation entry for category: ${id}`)
+    await this.translationEntryService
+      .generateForValues([
+        {
+          keyPath: 'category.name',
+          keyType: 'entity',
+          lookupKey: id,
+          sourceText: doc.name,
+        },
+      ])
+      .catch((err) =>
+        this.logger.error(`Category entry generation failed: ${err.message}`),
+      )
+  }
+
   @OnEvent(BusinessEvents.CATEGORY_UPDATE)
   async handleCategoryUpdate(event: any) {
     const doc = event
@@ -160,6 +183,22 @@ export class AiTranslationEventHandlerService {
       id,
       doc.name,
     )
+
+    if (!(await this.isAutoEntryEnabled())) return
+    await this.translationEntryService
+      .generateForValues([
+        {
+          keyPath: 'category.name',
+          keyType: 'entity',
+          lookupKey: id,
+          sourceText: doc.name,
+        },
+      ])
+      .catch((err) =>
+        this.logger.error(
+          `Category entry re-generation failed: ${err.message}`,
+        ),
+      )
   }
 
   @OnEvent(BusinessEvents.CATEGORY_DELETE)
@@ -167,6 +206,41 @@ export class AiTranslationEventHandlerService {
     const id = event?.id?.toString?.() ?? event?._id?.toString?.()
     if (!id) return
     await this.translationEntryService.deleteByKeyPath('category.name', id)
+  }
+
+  // === Translation Entry: Topic ===
+
+  @OnEvent(BusinessEvents.TOPIC_CREATE)
+  async handleTopicCreate(event: any) {
+    if (!(await this.isAutoEntryEnabled())) return
+    const doc = event
+    if (!doc?._id) return
+    const id = doc._id.toString()
+    const values: Parameters<TranslationEntryService['generateForValues']>[0] =
+      []
+    if (doc.name) {
+      values.push({
+        keyPath: 'topic.name',
+        keyType: 'entity',
+        lookupKey: id,
+        sourceText: doc.name,
+      })
+    }
+    if (doc.introduce) {
+      values.push({
+        keyPath: 'topic.introduce',
+        keyType: 'entity',
+        lookupKey: id,
+        sourceText: doc.introduce,
+      })
+    }
+    if (!values.length) return
+    this.logger.log(`Auto-generating translation entries for topic: ${id}`)
+    await this.translationEntryService
+      .generateForValues(values)
+      .catch((err) =>
+        this.logger.error(`Topic entry generation failed: ${err.message}`),
+      )
   }
 
   @OnEvent(BusinessEvents.TOPIC_UPDATE)
@@ -188,6 +262,32 @@ export class AiTranslationEventHandlerService {
         doc.introduce,
       )
     }
+
+    if (!(await this.isAutoEntryEnabled())) return
+    const values: Parameters<TranslationEntryService['generateForValues']>[0] =
+      []
+    if (doc.name) {
+      values.push({
+        keyPath: 'topic.name',
+        keyType: 'entity',
+        lookupKey: id,
+        sourceText: doc.name,
+      })
+    }
+    if (doc.introduce) {
+      values.push({
+        keyPath: 'topic.introduce',
+        keyType: 'entity',
+        lookupKey: id,
+        sourceText: doc.introduce,
+      })
+    }
+    if (!values.length) return
+    await this.translationEntryService
+      .generateForValues(values)
+      .catch((err) =>
+        this.logger.error(`Topic entry re-generation failed: ${err.message}`),
+      )
   }
 
   @OnEvent(BusinessEvents.TOPIC_DELETE)
@@ -196,5 +296,72 @@ export class AiTranslationEventHandlerService {
     if (!id) return
     await this.translationEntryService.deleteByKeyPath('topic.name', id)
     await this.translationEntryService.deleteByKeyPath('topic.introduce', id)
+  }
+
+  // === Translation Entry: Note mood/weather ===
+
+  @OnEvent(BusinessEvents.NOTE_CREATE)
+  async handleNoteCreateEntry(event: any) {
+    if (!(await this.isAutoEntryEnabled())) return
+    const id = event?.id?.toString?.() ?? event?._id?.toString?.()
+    if (!id) return
+    const note = await this.databaseService.findGlobalById(id)
+    if (!note) return
+    const values = this.collectNoteDictValues(note.document)
+    if (!values.length) return
+    await this.translationEntryService
+      .generateForValues(values)
+      .catch((err) =>
+        this.logger.error(`Note entry generation failed: ${err.message}`),
+      )
+  }
+
+  @OnEvent(BusinessEvents.NOTE_UPDATE)
+  async handleNoteUpdateEntry(event: any) {
+    if (!(await this.isAutoEntryEnabled())) return
+    const id = event?.id?.toString?.() ?? event?._id?.toString?.()
+    if (!id) return
+    const note = await this.databaseService.findGlobalById(id)
+    if (!note) return
+    const values = this.collectNoteDictValues(note.document)
+    if (!values.length) return
+    await this.translationEntryService
+      .generateForValues(values)
+      .catch((err) =>
+        this.logger.error(`Note entry generation failed: ${err.message}`),
+      )
+  }
+
+  // === Helpers ===
+
+  private async isAutoEntryEnabled(): Promise<boolean> {
+    const aiConfig = await this.configService.get('ai')
+    return Boolean(
+      aiConfig.enableAutoGenerateTranslation && aiConfig.enableTranslation,
+    )
+  }
+
+  private collectNoteDictValues(
+    doc: any,
+  ): Parameters<TranslationEntryService['generateForValues']>[0] {
+    const values: Parameters<TranslationEntryService['generateForValues']>[0] =
+      []
+    if (doc?.mood && typeof doc.mood === 'string') {
+      values.push({
+        keyPath: 'note.mood',
+        keyType: 'dict',
+        lookupKey: TranslationEntryService.hashSourceText(doc.mood),
+        sourceText: doc.mood,
+      })
+    }
+    if (doc?.weather && typeof doc.weather === 'string') {
+      values.push({
+        keyPath: 'note.weather',
+        keyType: 'dict',
+        lookupKey: TranslationEntryService.hashSourceText(doc.weather),
+        sourceText: doc.weather,
+      })
+    }
+    return values
   }
 }
