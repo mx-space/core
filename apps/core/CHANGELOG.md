@@ -1,5 +1,22 @@
 # CHANGELOG
 
+# [10.3.0](https://github.com/mx-space/core/compare/v10.2.0...v10.3.0) (2026-03-08)
+
+
+### Bug Fixes
+
+* **ai-summary:** normalize lang query param with parseLanguageCode ([3dc7492](https://github.com/mx-space/core/commit/3dc74923ecff10255fc03fe6772c330b2842d144))
+
+
+### Features
+
+* **ai:** add auto-generation of translation entries for categories, topics, and notes ([65711aa](https://github.com/mx-space/core/commit/65711aa64380eb011f3f8faa9819bc312acb7b50))
+* **ai:** translation entry model, service, controller and translate-fields interceptor ([a55fc7a](https://github.com/mx-space/core/commit/a55fc7a654c8f1e8610b24a71ad8e671231d4168))
+* **schema:** enhance partial schemas for notes, pages, and posts with new fields ([f66c9ed](https://github.com/mx-space/core/commit/f66c9ed9cca1091730985813334adccb9462affd))
+* 更新文件上传前缀支持模板占位符，增强灵活性 ([#2584](https://github.com/mx-space/core/issues/2584)) ([2b5354a](https://github.com/mx-space/core/commit/2b5354a6f907947993dda64733e8bbd62c6cc62d))
+
+
+
 # [10.2.0](https://github.com/mx-space/core/compare/v0.7.0...v10.2.0) (2026-03-08)
 
 
