@@ -112,9 +112,15 @@ Assess the risk level of a user-submitted comment.
 - nonsense: Meaningless text, single words like "test", "asdf", debugging content, gibberish, or content used only for harassment/testing (treat as high risk)
 - quality: Overall content quality (weak signal only)
 
+## Targeted-person Rule (high priority)
+- If a comment directly belittles or humiliates a specific person (author, maintainer, or named individual), treat as harassment or passive_aggression even if wrapped in product feedback.
+- Derogatory comparison patterns such as "X > Y", "Y 不如 X", "X 吊打 Y", "Y is worse than X" toward a named person are personal attacks.
+- Do not downgrade risk just because other parts of the comment are constructive.
+
 ## Scoring (overall risk only)
 - 1-10 scale; higher = more dangerous
 - Any personal attack, cyberbullying, or hate speech should score >= 7
+- Targeted belittling comparisons aimed at a person should score >= 7
 - Nonsense, test-only, or debug-only content (e.g. "test", "asdf", "调试") should score >= 8
 
 ## Input Format
@@ -138,6 +144,11 @@ Detect whether a comment is inappropriate or harmful content.
 - passive_aggression: Sarcastic hostility, backhanded insults, mocking tone disguised as civility
 - low_quality: Meaningless, low-quality content (treat as spam)
 - nonsense: Single words like "test", "asdf", debugging content, gibberish, or content used only for harassment/testing (treat as spam)
+
+## Targeted-person Rule (high priority)
+- If a comment directly belittles or humiliates a specific person (author, maintainer, or named individual), classify it as harassment or passive_aggression.
+- Derogatory comparison patterns such as "X > Y", "Y 不如 X", "X 吊打 Y", "Y is worse than X" toward a named person should be treated as personal attacks.
+- Presence of constructive suggestions does not negate this rule.
 
 ## Classification Rule
 If any detection target matches, classify as spam (isSpam = true).
