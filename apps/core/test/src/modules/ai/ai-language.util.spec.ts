@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import {
   getLanguageName,
   parseLanguageCode,
-  resolveTargetLanguage,
   resolveTargetLanguages,
 } from '~/modules/ai/ai-language.util'
 
@@ -47,53 +46,6 @@ describe('ai-language.util', () => {
     it('should return code itself for unknown codes', () => {
       expect(getLanguageName('unknown')).toBe('unknown')
       expect(getLanguageName('xyz')).toBe('xyz')
-    })
-  })
-
-  describe('resolveTargetLanguage', () => {
-    it('should use configured language when not auto', () => {
-      const result = resolveTargetLanguage(
-        { preferredLang: 'ja', acceptLanguage: 'en-US' },
-        { configuredLanguage: 'ko' },
-      )
-      expect(result).toBe('ko')
-    })
-
-    it('should use preferredLang in auto mode', () => {
-      const result = resolveTargetLanguage(
-        { preferredLang: 'ja', acceptLanguage: 'en-US' },
-        { configuredLanguage: 'auto' },
-      )
-      expect(result).toBe('ja')
-    })
-
-    it('should use acceptLanguage when no preferredLang in auto mode', () => {
-      const result = resolveTargetLanguage(
-        { acceptLanguage: 'en-US' },
-        { configuredLanguage: 'auto' },
-      )
-      expect(result).toBe('en')
-    })
-
-    it('should use default language when no user preference', () => {
-      const result = resolveTargetLanguage(
-        {},
-        { configuredLanguage: 'auto', defaultLanguage: 'zh' },
-      )
-      expect(result).toBe('zh')
-    })
-
-    it('should fallback to default when no config', () => {
-      const result = resolveTargetLanguage({}, {})
-      expect(result).toBe('zh') // DEFAULT_SUMMARY_LANG
-    })
-
-    it('should handle undefined configuredLanguage as auto', () => {
-      const result = resolveTargetLanguage(
-        { preferredLang: 'fr' },
-        { configuredLanguage: undefined },
-      )
-      expect(result).toBe('fr')
     })
   })
 

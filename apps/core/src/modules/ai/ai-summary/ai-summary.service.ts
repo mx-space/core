@@ -10,6 +10,7 @@ import { DatabaseService } from '~/processors/database/database.service'
 import {
   type TaskExecuteContext,
   TaskQueueProcessor,
+  TaskStatus,
 } from '~/processors/task-queue'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -30,10 +31,7 @@ import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
-import {
-  type ResolveLanguageOptions,
-  resolveTargetLanguage,
-} from '../ai-language.util'
+import { resolveTargetLanguages } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
 import { AISummaryModel } from './ai-summary.model'
@@ -69,25 +67,77 @@ export class AiSummaryService implements OnModuleInit {
       ) => {
         this.checkAborted(context)
 
-        await context.appendLog(
-          'info',
-          `Generating summary for article ${payload.refId}`,
+        const aiConfig = await this.configService.get('ai')
+        const languages = resolveTargetLanguages(
+          payload.targetLanguages,
+          aiConfig.summaryTargetLanguages,
         )
 
-        const lang = payload.lang || DEFAULT_SUMMARY_LANG
-        const result = await this.generateSummaryByOpenAI(
-          payload.refId,
-          lang,
-          context.incrementTokens,
+        if (!languages.length) {
+          await context.appendLog('warn', 'No target languages specified')
+          return
+        }
+
+        await context.updateProgress(
+          0,
+          'Starting summary generation',
+          0,
+          languages.length,
         )
 
-        this.checkAborted(context)
+        const summaries: Array<{
+          summaryId: string
+          lang: string
+          summary: string
+        }> = []
 
-        await context.setResult({
-          summaryId: result.id,
-          summary: result.summary,
-          lang: result.lang,
-        })
+        let failedCount = 0
+
+        for (let i = 0; i < languages.length; i++) {
+          this.checkAborted(context)
+
+          const lang = languages[i]
+          await context.appendLog(
+            'info',
+            `Generating summary in ${lang} (${i + 1}/${languages.length})`,
+          )
+
+          try {
+            const result = await this.generateSummaryByOpenAI(
+              payload.refId,
+              lang,
+              context.incrementTokens,
+            )
+            summaries.push({
+              summaryId: result.id,
+              lang: result.lang!,
+              summary: result.summary,
+            })
+          } catch (error) {
+            if (error.name === 'AbortError') throw error
+            failedCount++
+            await context.appendLog(
+              'error',
+              `Failed to generate summary in ${lang}: ${error.message}`,
+            )
+          }
+
+          const progress = Math.round(((i + 1) / languages.length) * 100)
+          await context.updateProgress(
+            progress,
+            `Generated ${i + 1}/${languages.length}`,
+            i + 1,
+            languages.length,
+          )
+        }
+
+        await context.setResult({ summaries })
+
+        if (failedCount === languages.length) {
+          context.setStatus(TaskStatus.Failed)
+        } else if (failedCount > 0) {
+          context.setStatus(TaskStatus.PartialFailed)
+        }
       },
     })
 
@@ -181,19 +231,6 @@ export class AiSummaryService implements OnModuleInit {
       events,
       result: Promise.resolve(summary),
     }
-  }
-
-  /**
-   * 计算摘要的目标语言
-   */
-  private async getTargetLanguage(
-    options: ResolveLanguageOptions,
-  ): Promise<string> {
-    const aiConfig = await this.configService.get('ai')
-    return resolveTargetLanguage(options, {
-      configuredLanguage: aiConfig.aiSummaryTargetLanguage,
-      defaultLanguage: DEFAULT_SUMMARY_LANG,
-    })
   }
 
   private async generateSummaryViaAIStream(
@@ -577,7 +614,7 @@ export class AiSummaryService implements OnModuleInit {
 
   async streamSummaryForArticle(
     articleId: string,
-    options: { preferredLang?: string; acceptLanguage?: string },
+    options: { lang: string },
   ): Promise<{
     events: AsyncIterable<AiStreamEvent>
     result: Promise<AISummaryModel>
@@ -590,38 +627,33 @@ export class AiSummaryService implements OnModuleInit {
       throw new BizException(ErrorCodeEnum.AINotEnabled)
     }
 
-    const targetLanguage = await this.getTargetLanguage(options)
+    const { lang } = options
     const { document } = await this.resolveArticleForSummary(articleId)
 
-    // 检查数据库中是否已有有效摘要（hash 匹配）
     const existingSummary = await this.findValidSummary(
       articleId,
-      targetLanguage,
+      lang,
       document.text,
     )
 
     if (existingSummary) {
-      this.logger.debug(
-        `Summary cache hit: article=${articleId} lang=${targetLanguage}`,
-      )
+      this.logger.debug(`Summary cache hit: article=${articleId} lang=${lang}`)
       return this.wrapAsImmediateStream(existingSummary)
     }
 
-    return this.runSummaryGeneration(articleId, targetLanguage, document)
+    return this.runSummaryGeneration(articleId, lang, document)
   }
 
   async getOrGenerateSummaryForArticle(
     articleId: string,
     options: {
-      preferredLang?: string
-      acceptLanguage?: string
+      lang: string
       onlyDb?: boolean
     },
   ) {
-    const { onlyDb } = options
+    const { onlyDb, lang } = options
 
-    const targetLanguage = await this.getTargetLanguage(options)
-    const dbStored = await this.getSummaryByArticleId(articleId, targetLanguage)
+    const dbStored = await this.getSummaryByArticleId(articleId, lang)
 
     if (dbStored) {
       return dbStored
@@ -636,7 +668,7 @@ export class AiSummaryService implements OnModuleInit {
       aiConfig?.enableAutoGenerateSummary && aiConfig.enableSummary
 
     if (shouldGenerate) {
-      return this.generateSummaryByOpenAI(articleId, targetLanguage)
+      return this.generateSummaryByOpenAI(articleId, lang)
     }
 
     if (!aiConfig.enableSummary || !aiConfig.enableAutoGenerateSummary) {
@@ -671,13 +703,18 @@ export class AiSummaryService implements OnModuleInit {
     if (!aiConfig.enableAutoGenerateSummary || !aiConfig.enableSummary) {
       return
     }
-    const targetLanguage =
-      aiConfig.aiSummaryTargetLanguage || DEFAULT_SUMMARY_LANG
+    const targetLanguages = resolveTargetLanguages(
+      undefined,
+      aiConfig.summaryTargetLanguages,
+    )
+    if (!targetLanguages.length) {
+      return
+    }
 
     this.logger.log(`AI auto summary task created: article=${event.id}`)
     await this.aiTaskService.createSummaryTask({
       refId: event.id,
-      lang: targetLanguage === 'auto' ? DEFAULT_SUMMARY_LANG : targetLanguage,
+      targetLanguages,
     })
   }
 
@@ -704,18 +741,19 @@ export class AiSummaryService implements OnModuleInit {
     }
 
     const newHash = this.computeContentHash(document.text)
-    const hasOutdated = existingSummaries.some((s) => s.hash !== newHash)
-    if (!hasOutdated) {
+    const outdatedLanguages = existingSummaries
+      .filter((s) => s.hash !== newHash)
+      .map((s) => s.lang)
+      .filter(Boolean) as string[]
+
+    if (!outdatedLanguages.length) {
       return
     }
-
-    const targetLanguage =
-      aiConfig.aiSummaryTargetLanguage || DEFAULT_SUMMARY_LANG
 
     this.logger.log(`AI auto summary task created (update): article=${id}`)
     await this.aiTaskService.createSummaryTask({
       refId: id,
-      lang: targetLanguage === 'auto' ? DEFAULT_SUMMARY_LANG : targetLanguage,
+      targetLanguages: outdatedLanguages,
     })
   }
 }

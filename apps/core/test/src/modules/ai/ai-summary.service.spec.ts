@@ -1,15 +1,16 @@
 import { Test } from '@nestjs/testing'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { AiService } from '~/modules/ai/ai.service'
 import { AiInFlightService } from '~/modules/ai/ai-inflight/ai-inflight.service'
 import { AISummaryModel } from '~/modules/ai/ai-summary/ai-summary.model'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
-import { AiService } from '~/modules/ai/ai.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { DatabaseService } from '~/processors/database/database.service'
 import { TaskQueueProcessor } from '~/processors/task-queue'
 import { getModelToken } from '~/transformers/model.transformer'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('AiSummaryService', () => {
   let service: AiSummaryService
@@ -53,7 +54,7 @@ describe('AiSummaryService', () => {
       get: vi.fn().mockResolvedValue({
         enableSummary: true,
         enableAutoGenerateSummary: true,
-        aiSummaryTargetLanguage: 'zh',
+        summaryTargetLanguages: ['zh'],
       }),
       waitForConfigReady: vi.fn().mockResolvedValue({
         ai: { enableSummary: true },
@@ -173,7 +174,7 @@ describe('AiSummaryService', () => {
 
       const { events, result } = await service.streamSummaryForArticle(
         'article-1',
-        { preferredLang: 'zh' },
+        { lang: 'zh' },
       )
 
       const collectedEvents: any[] = []
@@ -222,54 +223,6 @@ describe('AiSummaryService', () => {
       await expect(
         (service as any).resolveArticleForSummary('article-1'),
       ).rejects.toThrow()
-    })
-  })
-
-  describe('getTargetLanguage', () => {
-    it('should use preferredLang when provided', async () => {
-      mockConfigService.get.mockResolvedValue({
-        aiSummaryTargetLanguage: 'auto',
-      })
-
-      const result = await (service as any).getTargetLanguage({
-        preferredLang: 'ja',
-      })
-
-      expect(result).toBe('ja')
-    })
-
-    it('should use acceptLanguage when preferredLang not provided', async () => {
-      mockConfigService.get.mockResolvedValue({
-        aiSummaryTargetLanguage: 'auto',
-      })
-
-      const result = await (service as any).getTargetLanguage({
-        acceptLanguage: 'en-US',
-      })
-
-      expect(result).toBe('en')
-    })
-
-    it('should use configured language when not auto', async () => {
-      mockConfigService.get.mockResolvedValue({
-        aiSummaryTargetLanguage: 'ko',
-      })
-
-      const result = await (service as any).getTargetLanguage({
-        preferredLang: 'ja',
-      })
-
-      expect(result).toBe('ko')
-    })
-
-    it('should fallback to default when no language provided and auto mode', async () => {
-      mockConfigService.get.mockResolvedValue({
-        aiSummaryTargetLanguage: 'auto',
-      })
-
-      const result = await (service as any).getTargetLanguage({})
-
-      expect(result).toBe('zh') // DEFAULT_SUMMARY_LANG
     })
   })
 
