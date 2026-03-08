@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common'
 
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import type { TranslationSourceSnapshot } from '~/modules/ai/ai-translation/translation-consistency.types'
+import type { TranslationEntryKeyPath } from '~/modules/ai/ai-translation/translation-entry.model'
+import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
 import { normalizeLanguageCode } from '~/utils/lang.util'
 
 export interface TranslationMeta {
@@ -32,7 +34,10 @@ export type ArticleTranslationInput = TranslationSourceSnapshot
 @Injectable()
 export class TranslationService {
   private readonly logger = new Logger(TranslationService.name)
-  constructor(private readonly aiTranslationService: AiTranslationService) {}
+  constructor(
+    private readonly aiTranslationService: AiTranslationService,
+    private readonly translationEntryService: TranslationEntryService,
+  ) {}
 
   async translateArticle(options: {
     articleId: string
@@ -276,6 +281,44 @@ export class TranslationService {
           ),
         ]),
       )
+    }
+  }
+
+  async getEntityTranslations(
+    keyPath: TranslationEntryKeyPath,
+    lang: string,
+    lookupKeys: string[],
+  ): Promise<Map<string, string>> {
+    const normalized = normalizeLanguageCode(lang)
+    if (!normalized || !lookupKeys.length) return new Map()
+    try {
+      return await this.translationEntryService.getTranslations(
+        keyPath,
+        normalized,
+        lookupKeys,
+      )
+    } catch (error) {
+      this.logger.error(error)
+      return new Map()
+    }
+  }
+
+  async getDictTranslations(
+    keyPath: TranslationEntryKeyPath,
+    lang: string,
+    sourceTexts: string[],
+  ): Promise<Map<string, string>> {
+    const normalized = normalizeLanguageCode(lang)
+    if (!normalized || !sourceTexts.length) return new Map()
+    try {
+      return await this.translationEntryService.getTranslationsForDict(
+        keyPath,
+        normalized,
+        sourceTexts,
+      )
+    } catch (error) {
+      this.logger.error(error)
+      return new Map()
     }
   }
 }

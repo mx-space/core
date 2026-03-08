@@ -15,6 +15,8 @@ export enum RedisKeys {
   HTTPCache = 'http_cache',
   /** Snippet 缓存 */
   SnippetCache = 'snippet_cache',
+  /** 翻译词表缓存 */
+  TranslationEntryDict = 'translation_entry_dict',
 
   /** 云函数缓存数据 */
   ServerlessStorage = 'serverless_storage',

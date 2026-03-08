@@ -1,16 +1,23 @@
 import { Body, Get, Param, Post, Put } from '@nestjs/common'
+import slugify from 'slugify'
+
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'
-import slugify from 'slugify'
+
 import { TopicModel } from './topic.model'
 
 class Upper {
   constructor(private readonly _model: MongooseModel<TopicModel>) {}
 
   @Get('/slug/:slug')
+  @TranslateFields(
+    { path: 'name', keyPath: 'topic.name', idField: '_id' },
+    { path: 'introduce', keyPath: 'topic.introduce', idField: '_id' },
+  )
   async getTopicByTopic(@Param('slug') slug: string) {
     slug = slugify(slug)
     const topic = await this._model.findOne({ slug }).lean()

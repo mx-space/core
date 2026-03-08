@@ -8,6 +8,8 @@ import {
   Query,
   Res,
 } from '@nestjs/common'
+import type { FastifyReply } from 'fastify'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import {
@@ -18,7 +20,7 @@ import {
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
-import type { FastifyReply } from 'fastify'
+
 import {
   GetTranslationQueryDto,
   GetTranslationsGroupedQueryDto,

@@ -81,7 +81,7 @@ export class AggregateService {
 
   getAllPages() {
     return this.pageService.model
-      .find({}, 'title _id slug order')
+      .find({}, 'title _id slug order created modified')
       .sort({
         order: -1,
         modified: -1,

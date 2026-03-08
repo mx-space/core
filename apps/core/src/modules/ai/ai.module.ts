@@ -12,6 +12,8 @@ import { AiTranslationEventHandlerService } from './ai-translation/ai-translatio
 import { LexicalTranslationStrategy } from './ai-translation/strategies/lexical-translation.strategy'
 import { MarkdownTranslationStrategy } from './ai-translation/strategies/markdown-translation.strategy'
 import { TranslationConsistencyService } from './ai-translation/translation-consistency.service'
+import { TranslationEntryController } from './ai-translation/translation-entry.controller'
+import { TranslationEntryService } from './ai-translation/translation-entry.service'
 import {
   LEXICAL_TRANSLATION_STRATEGY,
   MARKDOWN_TRANSLATION_STRATEGY,
@@ -37,13 +39,20 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     TranslationConsistencyService,
     AiTranslationService,
     AiTranslationEventHandlerService,
+    TranslationEntryService,
   ],
   controllers: [
     AiController,
     AiSummaryController,
     AiWriterController,
     AiTranslationController,
+    TranslationEntryController,
   ],
-  exports: [AiService, AiTranslationService, AiSummaryService],
+  exports: [
+    AiService,
+    AiTranslationService,
+    AiSummaryService,
+    TranslationEntryService,
+  ],
 })
 export class AiModule {}

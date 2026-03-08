@@ -7,6 +7,7 @@ import type {
 } from '@nestjs/common'
 import { Module } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
+
 import { AppController } from './app.controller'
 import { AllExceptionsFilter } from './common/filters/any-exception.filter'
 import { RolesGuard } from './common/guards/roles.guard'
@@ -17,6 +18,7 @@ import { DbQueryInterceptor } from './common/interceptors/db-query.interceptor'
 import { IdempotenceInterceptor } from './common/interceptors/idempotence.interceptor'
 import { JSONTransformInterceptor } from './common/interceptors/json-transform.interceptor'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
+import { TranslationEntryInterceptor } from './common/interceptors/translation-entry.interceptor'
 import { RequestContextMiddleware } from './common/middlewares/request-context.middleware'
 import { AckModule } from './modules/ack/ack.module'
 import { ActivityModule } from './modules/activity/activity.module'
@@ -146,6 +148,10 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
       useClass: JSONTransformInterceptor,
     },
 
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TranslationEntryInterceptor,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,

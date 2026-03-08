@@ -1,7 +1,9 @@
 import crypto from 'node:crypto'
 import path from 'node:path'
-import { alphabet } from '~/constants/other.constant'
+
 import { customAlphabet } from 'nanoid'
+
+import { alphabet } from '~/constants/other.constant'
 
 /**
  * 文件名模板占位符替换工具
@@ -139,7 +141,7 @@ export function replaceFilenameTemplate(
 
   // 防止路径遍历：移除父目录引用（..）
   const segments = result.split(/[/\\]+/)
-  const safeSegments = segments.filter(segment => segment !== '..')
+  const safeSegments = segments.filter((segment) => segment !== '..')
   const safeResult = safeSegments.join('/')
 
   return safeResult

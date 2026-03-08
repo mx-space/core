@@ -7,6 +7,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 
@@ -42,6 +43,11 @@ export class AggregateController {
     key: CacheKeys.Aggregate,
     ttl: 10 * 60,
     withQuery: true,
+  })
+  @TranslateFields({
+    path: 'categories[].name',
+    keyPath: 'category.name',
+    idField: '_id',
   })
   async aggregate(@Query() query: AggregateQueryDto, @Lang() lang?: string) {
     const { theme } = query
@@ -80,14 +86,21 @@ export class AggregateController {
       translatedPageMeta = await this.translationService.translateList({
         items: translatedPageMeta,
         targetLang: lang,
-        translationFields: ['title'] as const,
+        translationFields: ['title', 'translationMeta'] as const,
         getInput: (item: any) => ({
           id: item._id?.toString?.() ?? '',
           title: item.title ?? '',
+          created: item.created,
+          modified: item.modified,
         }),
         applyResult: (item: any, translation) => {
           if (!translation?.isTranslated) return item
-          return { ...item, title: translation.title }
+          return {
+            ...item,
+            title: translation.title,
+            isTranslated: true,
+            translationMeta: translation.translationMeta,
+          }
         },
       })
     }
@@ -107,6 +120,10 @@ export class AggregateController {
   }
 
   @Get('/top')
+  @TranslateFields(
+    { path: 'notes[].mood', keyPath: 'note.mood' },
+    { path: 'notes[].weather', keyPath: 'note.weather' },
+  )
   async top(
     @Query() query: TopQueryDto,
     @IsAuthenticated() isAuthenticated: boolean,
@@ -178,6 +195,12 @@ export class AggregateController {
   }
 
   @Get('/latest')
+  @TranslateFields(
+    { path: 'notes[].mood', keyPath: 'note.mood' },
+    { path: 'notes[].weather', keyPath: 'note.weather' },
+    { path: 'data[].mood', keyPath: 'note.mood' },
+    { path: 'data[].weather', keyPath: 'note.weather' },
+  )
   async getLatest(@Query() query: LatestQueryDto, @Lang() lang?: string) {
     const { limit = 5, types, combined = false } = query
     const result = await this.aggregateService.getLatest(limit, types, combined)
@@ -229,6 +252,10 @@ export class AggregateController {
   }
 
   @Get('/timeline')
+  @TranslateFields(
+    { path: 'data.notes[].mood', keyPath: 'note.mood' },
+    { path: 'data.notes[].weather', keyPath: 'note.weather' },
+  )
   async getTimeline(@Query() query: TimelineQueryDto, @Lang() lang?: string) {
     const { sort = 1, type, year } = query
     const data = await this.aggregateService.getTimeline(year, type, sort)

@@ -1,6 +1,7 @@
 import { ActivityModel } from '~/modules/activity/activity.model'
 import { AISummaryModel } from '~/modules/ai/ai-summary/ai-summary.model'
 import { AITranslationModel } from '~/modules/ai/ai-translation/ai-translation.model'
+import { TranslationEntryModel } from '~/modules/ai/ai-translation/translation-entry.model'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { CategoryModel } from '~/modules/category/category.model'
 import { CommentModel } from '~/modules/comment/comment.model'
@@ -17,14 +18,14 @@ import { ProjectModel } from '~/modules/project/project.model'
 import { ReaderModel } from '~/modules/reader/reader.model'
 import { RecentlyModel } from '~/modules/recently/recently.model'
 import { SayModel } from '~/modules/say/say.model'
-import { ServerlessLogModel } from '~/modules/serverless/serverless-log.model'
 import { ServerlessStorageModel } from '~/modules/serverless/serverless.model'
+import { ServerlessLogModel } from '~/modules/serverless/serverless-log.model'
 import { SlugTrackerModel } from '~/modules/slug-tracker/slug-tracker.model'
 import { SnippetModel } from '~/modules/snippet/snippet.model'
 import { SubscribeModel } from '~/modules/subscribe/subscribe.model'
 import { TopicModel } from '~/modules/topic/topic.model'
-import { WebhookEventModel } from '~/modules/webhook/webhook-event.model'
 import { WebhookModel } from '~/modules/webhook/webhook.model'
+import { WebhookEventModel } from '~/modules/webhook/webhook-event.model'
 import { getProviderByTypegooseClass } from '~/transformers/model.transformer'
 
 export const databaseModels = [
@@ -52,6 +53,7 @@ export const databaseModels = [
   SnippetModel,
   SubscribeModel,
   TopicModel,
+  TranslationEntryModel,
   OwnerProfileModel,
   WebhookEventModel,
   WebhookModel,

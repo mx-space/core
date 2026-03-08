@@ -82,6 +82,16 @@ export const normalizeLanguageCode = (
   return undefined
 }
 
+export const resolveRequestedLanguage = (
+  input: unknown,
+  fallback?: string,
+): string | undefined => {
+  if (typeof input !== 'string') return fallback
+  if (input.toLowerCase() === 'original') return undefined
+
+  return normalizeLanguageCode(input) ?? fallback
+}
+
 export const parseAcceptLanguage = (
   header?: string | string[] | null,
 ): string | undefined => {

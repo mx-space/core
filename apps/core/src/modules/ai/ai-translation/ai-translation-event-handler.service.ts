@@ -14,6 +14,7 @@ import type {
   ArticleDocument,
   ArticleEventPayload,
 } from './ai-translation.types'
+import { TranslationEntryService } from './translation-entry.service'
 
 @Injectable()
 export class AiTranslationEventHandlerService {
@@ -26,6 +27,7 @@ export class AiTranslationEventHandlerService {
     private readonly aiTaskService: AiTaskService,
     @InjectModel(AITranslationModel)
     private readonly aiTranslationModel: MongooseModel<AITranslationModel>,
+    private readonly translationEntryService: TranslationEntryService,
   ) {}
 
   @OnEvent(BusinessEvents.POST_DELETE)
@@ -146,5 +148,53 @@ export class AiTranslationEventHandlerService {
       refId: id,
       targetLanguages: outdatedLanguages,
     })
+  }
+
+  @OnEvent(BusinessEvents.CATEGORY_UPDATE)
+  async handleCategoryUpdate(event: any) {
+    const doc = event
+    if (!doc?._id || !doc?.name) return
+    const id = doc._id.toString()
+    await this.translationEntryService.handleEntityUpdate(
+      'category.name',
+      id,
+      doc.name,
+    )
+  }
+
+  @OnEvent(BusinessEvents.CATEGORY_DELETE)
+  async handleCategoryDelete(event: any) {
+    const id = event?.id?.toString?.() ?? event?._id?.toString?.()
+    if (!id) return
+    await this.translationEntryService.deleteByKeyPath('category.name', id)
+  }
+
+  @OnEvent(BusinessEvents.TOPIC_UPDATE)
+  async handleTopicUpdate(event: any) {
+    const doc = event
+    if (!doc?._id) return
+    const id = doc._id.toString()
+    if (doc.name != null) {
+      await this.translationEntryService.handleEntityUpdate(
+        'topic.name',
+        id,
+        doc.name,
+      )
+    }
+    if (doc.introduce != null) {
+      await this.translationEntryService.handleEntityUpdate(
+        'topic.introduce',
+        id,
+        doc.introduce,
+      )
+    }
+  }
+
+  @OnEvent(BusinessEvents.TOPIC_DELETE)
+  async handleTopicDelete(event: any) {
+    const id = event?.id?.toString?.() ?? event?._id?.toString?.()
+    if (!id) return
+    await this.translationEntryService.deleteByKeyPath('topic.name', id)
+    await this.translationEntryService.deleteByKeyPath('topic.introduce', id)
   }
 }

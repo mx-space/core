@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing'
 
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
+import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
 import type { ArticleTranslationInput } from '~/processors/helper/helper.translation.service'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 
@@ -34,6 +35,13 @@ describe('TranslationService', () => {
         {
           provide: AiTranslationService,
           useValue: mockAiTranslationService,
+        },
+        {
+          provide: TranslationEntryService,
+          useValue: {
+            getTranslations: vi.fn().mockResolvedValue(new Map()),
+            getTranslationsForDict: vi.fn().mockResolvedValue(new Map()),
+          },
         },
       ],
     }).compile()

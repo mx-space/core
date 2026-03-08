@@ -1,8 +1,9 @@
 import type { ExecutionContext } from '@nestjs/common'
 import { createParamDecorator } from '@nestjs/common'
+
 import { RequestContext } from '~/common/contexts/request.context'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-import { normalizeLanguageCode } from '~/utils/lang.util'
+import { resolveRequestedLanguage } from '~/utils/lang.util'
 
 /**
  * Get the language parameter from the request.
@@ -11,17 +12,8 @@ import { normalizeLanguageCode } from '~/utils/lang.util'
 export const Lang = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): string | undefined => {
     const request = getNestExecutionContextRequest(ctx)
-
-    // Priority 1: query parameter
     const query = request.query as Record<string, unknown>
-    const queryLang = query?.lang
-    if (typeof queryLang === 'string') {
-      if (queryLang.toLowerCase() === 'original') return undefined
-      const normalized = normalizeLanguageCode(queryLang)
-      if (normalized) return normalized
-    }
 
-    // Priority 2: header (already normalized in middleware)
-    return RequestContext.currentLang()
+    return resolveRequestedLanguage(query?.lang, RequestContext.currentLang())
   },
 )

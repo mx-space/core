@@ -17,6 +17,7 @@ import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
@@ -61,6 +62,10 @@ export class NoteController {
 
   @Get('/')
   @Paginator
+  @TranslateFields(
+    { path: 'data[].mood', keyPath: 'note.mood' },
+    { path: 'data[].weather', keyPath: 'note.weather' },
+  )
   async getNotes(
     @IsAuthenticated() isAuthenticated: boolean,
     @Query() query: NoteQueryDto,
@@ -85,6 +90,10 @@ export class NoteController {
   }
 
   @Get(':id')
+  @TranslateFields(
+    { path: 'mood', keyPath: 'note.mood' },
+    { path: 'weather', keyPath: 'note.weather' },
+  )
   async getOneNote(
     @Param() params: MongoIdDto,
     @IsAuthenticated() isAuthenticated: boolean,
@@ -222,6 +231,16 @@ export class NoteController {
   }
 
   @Get('/latest')
+  @TranslateFields(
+    { path: 'data.mood', keyPath: 'note.mood' },
+    { path: 'data.weather', keyPath: 'note.weather' },
+    { path: 'data.topic.name', keyPath: 'topic.name', idField: '_id' },
+    {
+      path: 'data.topic.introduce',
+      keyPath: 'topic.introduce',
+      idField: '_id',
+    },
+  )
   async getLatestOne(
     @IsAuthenticated() isAuthenticated: boolean,
     @Lang() lang?: string,
@@ -264,6 +283,20 @@ export class NoteController {
 
   // C 端入口
   @Get('/nid/:nid')
+  @TranslateFields(
+    { path: 'mood', keyPath: 'note.mood' },
+    { path: 'weather', keyPath: 'note.weather' },
+    { path: 'topic.name', keyPath: 'topic.name', idField: '_id' },
+    { path: 'topic.introduce', keyPath: 'topic.introduce', idField: '_id' },
+    { path: 'data.mood', keyPath: 'note.mood' },
+    { path: 'data.weather', keyPath: 'note.weather' },
+    { path: 'data.topic.name', keyPath: 'topic.name', idField: '_id' },
+    {
+      path: 'data.topic.introduce',
+      keyPath: 'topic.introduce',
+      idField: '_id',
+    },
+  )
   async getNoteByNid(
     @Param() params: NidType,
     @IsAuthenticated() isAuthenticated: boolean,
@@ -359,6 +392,10 @@ export class NoteController {
 
   @Get('/topics/:id')
   @HTTPDecorators.Paginator
+  @TranslateFields(
+    { path: 'data[].mood', keyPath: 'note.mood' },
+    { path: 'data[].weather', keyPath: 'note.weather' },
+  )
   async getNotesByTopic(
     @Param() params: MongoIdDto,
     @Query() query: NoteTopicPagerDto,

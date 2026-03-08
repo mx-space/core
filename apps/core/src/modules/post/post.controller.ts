@@ -17,6 +17,7 @@ import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import {
@@ -49,6 +50,11 @@ export class PostController {
 
   @Get('/')
   @Paginator
+  @TranslateFields({
+    path: 'data[].category.name',
+    keyPath: 'category.name',
+    idField: '_id',
+  })
   async getPaginate(
     @Query() query: PostPagerDto,
     @IsAuthenticated() isAuthenticated: boolean,
@@ -225,6 +231,11 @@ export class PostController {
   }
 
   @Get('/:id')
+  @TranslateFields({
+    path: 'category.name',
+    keyPath: 'category.name',
+    idField: '_id',
+  })
   async getById(
     @Param() params: MongoIdDto,
     @IsAuthenticated() isAuthenticated: boolean,
@@ -250,6 +261,11 @@ export class PostController {
   }
 
   @Get('/latest')
+  @TranslateFields({
+    path: 'category.name',
+    keyPath: 'category.name',
+    idField: '_id',
+  })
   async getLatest(
     @IpLocation() ip: IpRecord,
     @IsAuthenticated() isAuthenticated: boolean,
@@ -282,6 +298,11 @@ export class PostController {
   }
 
   @Get('/:category/:slug')
+  @TranslateFields({
+    path: 'category.name',
+    keyPath: 'category.name',
+    idField: '_id',
+  })
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,
     @Query() query: PostDetailQueryDto,

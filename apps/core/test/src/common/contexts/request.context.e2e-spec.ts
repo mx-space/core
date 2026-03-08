@@ -7,10 +7,11 @@ import {
   Query,
 } from '@nestjs/common'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
+import { setupE2EApp } from 'test/helper/setup-e2e'
+
 import { RequestContext } from '~/common/contexts/request.context'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { RequestContextMiddleware } from '~/common/middlewares/request-context.middleware'
-import { setupE2EApp } from 'test/helper/setup-e2e'
 
 const wait = (ms = 0) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
@@ -33,17 +34,17 @@ class RequestContextTestController {
       RequestContext.currentRequestContext() === initialContext &&
       RequestContext.currentRequest() === initialRequest
 
-    const checks: boolean[] = []
-    checks.push(checkSame())
+    let checks: boolean[] = []
+    checks = [...checks, checkSame()]
 
     await Promise.resolve()
-    checks.push(checkSame())
+    checks = [...checks, checkSame()]
 
     await wait(0)
-    checks.push(checkSame())
+    checks = [...checks, checkSame()]
 
     await new Promise<void>((resolve) => process.nextTick(resolve))
-    checks.push(checkSame())
+    checks = [...checks, checkSame()]
 
     const parallelChecks = await Promise.all([
       (async () => {
@@ -239,6 +240,38 @@ describe('RequestContext (e2e)', () => {
       expect(body.queryLang).toBeUndefined()
       expect(body.lang).toBe('ja')
       expect(body.contextLang).toBe('ja')
+    })
+
+    test('falls back to header lang when query lang is invalid', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/request-context/lang-with-query?lang=invalid-lang',
+        headers: {
+          'x-lang': 'ja',
+        },
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = await res.json()
+      expect(body.queryLang).toBe('invalid-lang')
+      expect(body.lang).toBe('ja')
+      expect(body.contextLang).toBe('ja')
+    })
+
+    test('query original disables translation even when header lang exists', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/request-context/lang-with-query?lang=original',
+        headers: {
+          'x-lang': 'en',
+        },
+      })
+
+      expect(res.statusCode).toBe(200)
+      const body = await res.json()
+      expect(body.queryLang).toBe('original')
+      expect(body.lang).toBeUndefined()
+      expect(body.contextLang).toBe('en')
     })
 
     test('isolates lang across concurrent requests', async () => {

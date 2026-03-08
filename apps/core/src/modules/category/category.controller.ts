@@ -10,17 +10,20 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
+import { isValidObjectId } from 'mongoose'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
+import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import { isValidObjectId } from 'mongoose'
+
 import type { PostService } from '../post/post.service'
 import { CategoryType } from './category.model'
 import {
@@ -42,6 +45,11 @@ export class CategoryController {
   ) {}
 
   @Get('/')
+  @TranslateFields({
+    path: 'data[].name',
+    keyPath: 'category.name',
+    idField: '_id',
+  })
   async getCategories(
     @Query() query: MultiCategoriesQueryDto,
     @Lang() lang?: string,
@@ -79,6 +87,11 @@ export class CategoryController {
   }
 
   @Get('/:query')
+  @TranslateFields({
+    path: 'data.name',
+    keyPath: 'category.name',
+    idField: '_id',
+  })
   async getCategoryById(
     @Param() { query }: SlugOrIdDto,
     @Query() { tag }: MultiQueryTagAndCategoryDto,
