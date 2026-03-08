@@ -1,4 +1,5 @@
 import type { EventEmitter } from 'node:events'
+
 import type { CommentModel } from '@core/modules/comment/comment.model'
 import type { LinkModel } from '@core/modules/link/link.model'
 import type { NoteModel } from '@core/modules/note/note.model'
@@ -8,14 +9,19 @@ import type { PostModel } from '@core/modules/post/post.model'
 import type { NormalizedPost } from '@core/modules/post/post.type'
 import type { RecentlyModel } from '@core/modules/recently/recently.model'
 import type { SayModel } from '@core/modules/say/say.model'
+
 import type { ReaderModel } from '~/modules/reader/reader.model'
+
 import type { BusinessEvents } from './event.enum'
+
+export type WebhookEventSource = 'admin' | 'visitor' | 'system'
 
 export interface ExtendedEventEmitter extends EventEmitter {
   on: (<T extends BusinessEvents>(
     event: T,
     listener: (
       data: EventPayloadMapping[Extract<T, keyof EventPayloadMapping>],
+      source: WebhookEventSource,
     ) => void,
   ) => this) &
     ((event: '*', listener: (event: GenericEvent) => void) => this)
@@ -76,7 +82,7 @@ export interface IActivityLike {
 }
 
 // Auto Generaged type.
-export type GenericEvent =
+export type GenericEvent = (
   | { type: BusinessEvents.POST_CREATE; payload: NormalizedPost }
   | { type: BusinessEvents.POST_UPDATE; payload: NormalizedPost }
   | { type: BusinessEvents.POST_DELETE; payload: PayloadOnlyId }
@@ -115,3 +121,4 @@ export type GenericEvent =
       }
     }
   | { type: 'health_check'; payload: {} }
+) & { source: WebhookEventSource }
