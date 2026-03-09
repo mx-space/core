@@ -1,11 +1,20 @@
 // https://github.dev/ever-co/ever-gauzy/packages/core/src/core/context/request-context.middleware.ts
 
 import type { ServerResponse } from 'node:http'
+
 import type { NestMiddleware } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
+
 import type { BizIncomingMessage } from '~/transformers/get-req.transformer'
 import { normalizeLanguageCode, parseAcceptLanguage } from '~/utils/lang.util'
+
 import { RequestContext } from '../contexts/request.context'
+
+function parseCookieLocale(cookie?: string): string | undefined {
+  if (!cookie) return undefined
+  const match = cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]+)/)
+  return match ? normalizeLanguageCode(match[1]) : undefined
+}
 
 @Injectable()
 export class RequestContextMiddleware implements NestMiddleware {
@@ -16,6 +25,13 @@ export class RequestContextMiddleware implements NestMiddleware {
     const headerLang = req.headers['x-lang']
     if (typeof headerLang === 'string') {
       requestContext.lang = normalizeLanguageCode(headerLang)
+    }
+
+    if (!requestContext.lang) {
+      const cookieLang = parseCookieLocale(req.headers.cookie)
+      if (cookieLang) {
+        requestContext.lang = cookieLang
+      }
     }
 
     if (!requestContext.lang) {
