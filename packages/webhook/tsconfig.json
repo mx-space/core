@@ -6,19 +6,9 @@
       "DOM",
       "DOM.Iterable"
     ],
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
     "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "node",
-    "paths": {
-      "~/*": [
-        "../../apps/core/src/*"
-      ],
-      "@core/*": [
-        "../../apps/core/src/*"
-      ],
-    },
     "resolveJsonModule": true,
     "strict": false,
     "declaration": true,

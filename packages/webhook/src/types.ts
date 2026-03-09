@@ -1,18 +1,18 @@
 import type { EventEmitter } from 'node:events'
 
-import type { CommentModel } from '@core/modules/comment/comment.model'
-import type { LinkModel } from '@core/modules/link/link.model'
-import type { NoteModel } from '@core/modules/note/note.model'
-import type { NormalizedNote } from '@core/modules/note/note.type'
-import type { PageModel } from '@core/modules/page/page.model'
-import type { PostModel } from '@core/modules/post/post.model'
-import type { NormalizedPost } from '@core/modules/post/post.type'
-import type { RecentlyModel } from '@core/modules/recently/recently.model'
-import type { SayModel } from '@core/modules/say/say.model'
-
-import type { ReaderModel } from '~/modules/reader/reader.model'
-
 import type { BusinessEvents } from './event.enum'
+import type {
+  CommentModel,
+  LinkModel,
+  NormalizedNote,
+  NormalizedPost,
+  NoteModel,
+  PageModel,
+  PostModel,
+  ReaderModel,
+  RecentlyModel,
+  SayModel,
+} from './models.generated'
 
 export type WebhookEventSource = 'admin' | 'visitor' | 'system'
 

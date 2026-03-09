@@ -1,4 +1,1 @@
-export {
-  BusinessEvents,
-  EventScope,
-} from '@core/constants/business-event.constant'
+export { BusinessEvents, EventScope } from './models.generated'

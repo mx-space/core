@@ -24,7 +24,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "node scripts/generate.js && tsdown && node scripts/post-build.cjs"
+    "build": "node scripts/extract-models.js && node scripts/generate.js && tsdown"
   },
   "devDependencies": {
     "express": "4.21.2",
