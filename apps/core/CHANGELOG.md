@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [10.3.1](https://github.com/mx-space/core/compare/v10.3.0...v10.3.1) (2026-03-09)
+
+
+### Bug Fixes
+
+* include lang in cache key and support NEXT_LOCALE cookie for request context ([bcef061](https://github.com/mx-space/core/commit/bcef0612ba27177c733ff6d9cfcfd5fb1b8dd26a))
+* translation entry interceptor ([ac8009d](https://github.com/mx-space/core/commit/ac8009d0056ae76d9c17c82fa3448f8f12fbf10c))
+
+
+### Features
+
+* translation entry interceptor, topic controller e2e, object-scan types, image/tool utils ([c33157c](https://github.com/mx-space/core/commit/c33157c25ee37b1bfb60b81f03f25ccd2c59ab90))
+
+
+
 # [10.3.0](https://github.com/mx-space/core/compare/v10.2.0...v10.3.0) (2026-03-08)
 
 
