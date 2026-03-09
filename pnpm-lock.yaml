@@ -118,8 +118,8 @@ importers:
         specifier: 9.0.0
         version: 9.0.0
       '@haklex/rich-headless':
-        specifier: 0.0.71
-        version: 0.0.71(lexical@0.41.0)
+        specifier: 0.0.72
+        version: 0.0.72(@lexical/utils@0.41.0)(lexical@0.41.0)
       '@innei/next-async':
         specifier: 0.4.0
         version: 0.4.0
@@ -1410,8 +1410,8 @@ packages:
   '@fastify/static@9.0.0':
     resolution: {integrity: sha512-r64H8Woe/vfilg5RTy7lwWlE8ZZcTrc3kebYFMEUBrMqlydhQyoiExQXdYAy2REVpST/G35+stAM8WYp1WGmMA==}
 
-  '@haklex/rich-headless@0.0.71':
-    resolution: {integrity: sha512-QeQ/2Lqh+MxcVxpYnFXCNDYdXNgoazgS8VJTbaCMFIoNS1IwXJgV1MNO6NlGT9pyFoji7+3gzB1bs16X6au1Cw==}
+  '@haklex/rich-headless@0.0.72':
+    resolution: {integrity: sha512-+EXA337rag3cqOy1qkk3JN14jGSohuoD8wjR5j0fTnG4XQjssP+Fih8O44NTCjUJEZKZ8A1JqI0UGgSdv+O7PQ==}
     peerDependencies:
       lexical: ^0.41.0
 
@@ -5574,6 +5574,12 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
+  lexical-code-no-prism@0.41.0:
+    resolution: {integrity: sha512-cFgCC/VMXjch58iod4TIhBHb1bx7Da8IdduUwltua581dhLmugcaFnUvgC0naBaPeYVuirA6cuDsyOdPgEEDLA==}
+    peerDependencies:
+      '@lexical/utils': '>=0.28.0'
+      lexical: '>=0.28.0'
+
   lexical@0.41.0:
     resolution: {integrity: sha512-pNIm5+n+hVnJHB9gYPDYsIO5Y59dNaDU9rJmPPsfqQhP2ojKFnUoPbcRnrI9FJLXB14sSumcY8LUw7Sq70TZqA==}
 
@@ -8452,9 +8458,9 @@ snapshots:
       fastq: 1.20.1
       glob: 13.0.0
 
-  '@haklex/rich-headless@0.0.71(lexical@0.41.0)':
+  '@haklex/rich-headless@0.0.72(@lexical/utils@0.41.0)(lexical@0.41.0)':
     dependencies:
-      '@lexical/code': 0.41.0(patch_hash=bd3e29adf8293ffdcb1d49ec445bf98877abf7435840deb5484e32bf749be408)
+      '@lexical/code': lexical-code-no-prism@0.41.0(@lexical/utils@0.41.0)(lexical@0.41.0)
       '@lexical/extension': 0.41.0
       '@lexical/link': 0.41.0
       '@lexical/list': 0.41.0
@@ -8462,6 +8468,8 @@ snapshots:
       '@lexical/rich-text': 0.41.0
       '@lexical/table': 0.41.0
       lexical: 0.41.0
+    transitivePeerDependencies:
+      - '@lexical/utils'
 
   '@hexagon/base64@1.1.28': {}
 
@@ -12837,6 +12845,11 @@ snapshots:
     dependencies:
       prelude-ls: 1.2.1
       type-check: 0.4.0
+
+  lexical-code-no-prism@0.41.0(@lexical/utils@0.41.0)(lexical@0.41.0):
+    dependencies:
+      '@lexical/utils': 0.41.0
+      lexical: 0.41.0
 
   lexical@0.41.0: {}
 
