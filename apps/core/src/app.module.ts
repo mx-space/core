@@ -150,11 +150,11 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
 
     {
       provide: APP_INTERCEPTOR,
-      useClass: TranslationEntryInterceptor,
+      useClass: ResponseInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: ResponseInterceptor,
+      useClass: TranslationEntryInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,

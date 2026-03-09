@@ -312,6 +312,9 @@ importers:
       nodemailer:
         specifier: 8.0.1
         version: 8.0.1
+      object-scan:
+        specifier: ^20.0.4
+        version: 20.0.4
       openai:
         specifier: 6.25.0
         version: 6.25.0(ws@8.18.3)(zod@4.3.6)
@@ -6073,6 +6076,10 @@ packages:
   object-keys@1.1.1:
     resolution: {integrity: sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==}
     engines: {node: '>= 0.4'}
+
+  object-scan@20.0.4:
+    resolution: {integrity: sha512-vMqbTgApoYh7BAXPjRWn9bHDDF+iW+5Nfdm4vs7RhrqhpN/Pqv/RpKVe6fik+JFia/ltmqSseYBLS7qjyKYheg==}
+    engines: {node: '>= 20'}
 
   object.assign@4.1.7:
     resolution: {integrity: sha512-nK28WOo+QIjBkDduTINE4JkF/UJJKyf2EJxvJKfblDpyg0Q+pkOHNTL0Qwy6NP6FhE/EnzV73BxxqcJaXY9anw==}
@@ -13286,6 +13293,8 @@ snapshots:
   object-inspect@1.13.4: {}
 
   object-keys@1.1.1: {}
+
+  object-scan@20.0.4: {}
 
   object.assign@4.1.7:
     dependencies:

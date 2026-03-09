@@ -5,6 +5,7 @@ import type {
 } from '@nestjs/common'
 import { Injectable, Logger } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
+import objectScan from 'object-scan'
 import type { Observable } from 'rxjs'
 import { from, switchMap } from 'rxjs'
 
@@ -28,9 +29,22 @@ interface DictLookup {
   texts: Set<string>
 }
 
+interface ScanMatch {
+  parent: Record<string | number, any> | any[] | undefined
+  property: string | number | undefined
+  value: any
+}
+
+interface ScanContext {
+  visitor: (match: ScanMatch) => void
+}
+
+type ObjectScanner = (haystack: any, context: ScanContext) => ScanContext
+
 @Injectable()
 export class TranslationEntryInterceptor implements NestInterceptor {
   private readonly logger = new Logger(TranslationEntryInterceptor.name)
+  private scannerCache?: Map<string, ObjectScanner>
 
   constructor(
     private readonly reflector: Reflector,
@@ -125,85 +139,53 @@ export class TranslationEntryInterceptor implements NestInterceptor {
     )
     if (!hasTranslations) return data
 
-    const result = this.deepClone(data)
-
     for (const rule of rules) {
       if (rule.idField) {
         const map = entityMaps.get(rule.keyPath)
         if (map?.size) {
-          this.replaceEntityValues(result, rule.path, rule.idField, map)
+          this.replaceEntityValues(data, rule.path, rule.idField, map)
         }
       } else {
         const map = dictMaps.get(rule.keyPath)
         if (map?.size) {
-          this.replaceDictValues(result, rule.path, map)
+          this.replaceDictValues(data, rule.path, map)
         }
       }
     }
 
-    return result
+    return data
   }
 
-  private deepClone(obj: any, seen = new WeakMap<object, any>()): any {
-    if (obj === null || typeof obj !== 'object') return obj
-    if (obj instanceof Date) return new Date(obj.getTime())
-    if (typeof obj.toHexString === 'function') return obj
-
-    const cached = seen.get(obj)
-    if (cached) return cached
-
-    if (typeof obj.toJSON === 'function') {
-      return this.deepClone(obj.toJSON(), seen)
-    }
-
-    if (typeof obj.toObject === 'function') {
-      return this.deepClone(obj.toObject(), seen)
-    }
-
-    if (Array.isArray(obj)) {
-      const clone: any[] = []
-      seen.set(obj, clone)
-      for (const item of obj) {
-        clone.push(this.deepClone(item, seen))
-      }
-      return clone
-    }
-
-    const clone: any = {}
-    seen.set(obj, clone)
-    for (const key of Object.keys(obj)) {
-      clone[key] = this.deepClone(obj[key], seen)
-    }
-    return clone
+  private toObjectScanPath(path: string): string {
+    return path.replaceAll('[]', '[*]')
   }
 
-  private resolvePath(obj: any, segments: string[]): any[] {
-    if (!segments.length) return [obj]
-    const [head, ...rest] = segments
-    if (head === '[]') {
-      if (!Array.isArray(obj)) return []
-      return obj.flatMap((item) => this.resolvePath(item, rest))
+  private getScanner(path: string): ObjectScanner {
+    const normalizedPath = this.toObjectScanPath(path)
+    this.scannerCache ??= new Map<string, ObjectScanner>()
+
+    const cached = this.scannerCache.get(normalizedPath)
+    if (cached) {
+      return cached
     }
-    if (obj == null || typeof obj !== 'object') return []
-    return this.resolvePath(obj[head], rest)
+
+    const scanner = objectScan<ScanContext>([normalizedPath], {
+      rtn: 'context',
+      filterFn: ({ parent, property, value, context }) => {
+        context.visitor({ parent, property, value })
+      },
+    }) as ObjectScanner
+
+    this.scannerCache.set(normalizedPath, scanner)
+    return scanner
   }
 
-  private parsePathSegments(path: string): {
-    parentSegments: string[]
-    field: string
-  } {
-    const parts = path.split('.')
-    const segments: string[] = []
-    for (const part of parts) {
-      if (part.endsWith('[]')) {
-        segments.push(part.slice(0, -2))
-        segments.push('[]')
-      } else {
-        segments.push(part)
-      }
-    }
-    const field = segments.pop()!
-    return { parentSegments: segments, field }
+  private visitMatches(
+    data: any,
+    path: string,
+    visitor: (match: ScanMatch) => void,
+  ): void {
+    this.getScanner(path)(data, { visitor })
   }
 
   private collectEntityIds(
@@ -212,29 +194,23 @@ export class TranslationEntryInterceptor implements NestInterceptor {
     idField: string,
     ids: Set<string>,
   ): void {
-    const { parentSegments, field: _ } = this.parsePathSegments(path)
-    const parents = this.resolvePath(data, parentSegments)
-    for (const parent of parents) {
-      if (parent == null || typeof parent !== 'object') continue
+    this.visitMatches(data, path, ({ parent }) => {
+      if (parent == null || typeof parent !== 'object') return
       const id = parent[idField]
       if (id != null) {
         ids.add(
           typeof id === 'object' && id.toString ? id.toString() : String(id),
         )
       }
-    }
+    })
   }
 
   private collectDictTexts(data: any, path: string, texts: Set<string>): void {
-    const { parentSegments, field } = this.parsePathSegments(path)
-    const parents = this.resolvePath(data, parentSegments)
-    for (const parent of parents) {
-      if (parent == null || typeof parent !== 'object') continue
-      const val = parent[field]
-      if (typeof val === 'string' && val) {
-        texts.add(val)
+    this.visitMatches(data, path, ({ value }) => {
+      if (typeof value === 'string' && value) {
+        texts.add(value)
       }
-    }
+    })
   }
 
   private replaceEntityValues(
@@ -243,19 +219,25 @@ export class TranslationEntryInterceptor implements NestInterceptor {
     idField: string,
     map: Map<string, string>,
   ): void {
-    const { parentSegments, field } = this.parsePathSegments(path)
-    const parents = this.resolvePath(data, parentSegments)
-    for (const parent of parents) {
-      if (parent == null || typeof parent !== 'object') continue
+    this.visitMatches(data, path, ({ parent, property }) => {
+      if (
+        parent == null ||
+        typeof parent !== 'object' ||
+        property == null ||
+        !(property in parent)
+      ) {
+        return
+      }
+
       const id = parent[idField]
-      if (id == null) continue
+      if (id == null) return
       const idStr =
         typeof id === 'object' && id.toString ? id.toString() : String(id)
       const translated = map.get(idStr)
       if (translated) {
-        parent[field] = translated
+        parent[property] = translated
       }
-    }
+    })
   }
 
   private replaceDictValues(
@@ -263,17 +245,22 @@ export class TranslationEntryInterceptor implements NestInterceptor {
     path: string,
     map: Map<string, string>,
   ): void {
-    const { parentSegments, field } = this.parsePathSegments(path)
-    const parents = this.resolvePath(data, parentSegments)
-    for (const parent of parents) {
-      if (parent == null || typeof parent !== 'object') continue
-      const val = parent[field]
-      if (typeof val === 'string' && val) {
-        const translated = map.get(val)
-        if (translated) {
-          parent[field] = translated
-        }
+    this.visitMatches(data, path, ({ parent, property, value }) => {
+      if (
+        parent == null ||
+        typeof parent !== 'object' ||
+        property == null ||
+        !(property in parent) ||
+        typeof value !== 'string' ||
+        !value
+      ) {
+        return
       }
-    }
+
+      const translated = map.get(value)
+      if (translated) {
+        parent[property] = translated
+      }
+    })
   }
 }

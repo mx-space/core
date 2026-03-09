@@ -51,14 +51,55 @@ describe('TranslationEntryInterceptor path utilities', () => {
           dictLookups: [{ keyPath: 'note.mood', sourceTexts: ['开心'] }],
         },
       )
-      expect(result).not.toBe(data)
+      expect(result).toBe(data)
       expect(result.categories[0].name).toBe('Frontend')
       expect(result.notes[0].mood).toBe('Happy')
-      expect(data.categories[0].name).toBe('前端')
-      expect(data.notes[0].mood).toBe('开心')
+      expect(data.categories[0].name).toBe('Frontend')
+      expect(data.notes[0].mood).toBe('Happy')
     })
 
-    it('should clone document-like values via toJSON before translating', async () => {
+    it('should translate entity fields on root arrays', async () => {
+      const translationEntryService = {
+        getTranslationsBatch: vi.fn().mockResolvedValue({
+          entityMaps: new Map([
+            ['topic.name', new Map([['id-1', 'Frontend']])],
+          ]),
+          dictMaps: new Map(),
+        }),
+      }
+
+      const realInterceptor = new TranslationEntryInterceptor(
+        { get: vi.fn() } as any,
+        translationEntryService as any,
+      )
+
+      const data = [{ _id: 'id-1', name: '前端' }]
+
+      const result = await realInterceptor['applyTranslations'](
+        data,
+        [
+          {
+            keyPath: 'topic.name',
+            path: '[].name',
+            idField: '_id',
+          },
+        ],
+        'en',
+      )
+
+      expect(translationEntryService.getTranslationsBatch).toHaveBeenCalledWith(
+        'en',
+        {
+          entityLookups: [{ keyPath: 'topic.name', lookupKeys: ['id-1'] }],
+          dictLookups: [],
+        },
+      )
+      expect(result).toBe(data)
+      expect(result[0].name).toBe('Frontend')
+      expect(data[0].name).toBe('Frontend')
+    })
+
+    it('should translate document-like values in place', async () => {
       const translationEntryService = {
         getTranslationsBatch: vi.fn().mockResolvedValue({
           entityMaps: new Map([
@@ -102,12 +143,13 @@ describe('TranslationEntryInterceptor path utilities', () => {
         'en',
       )
 
-      expect(result).not.toBe(data)
-      expect(result.categories[0]).toEqual({ _id: 'id-1', name: 'Frontend' })
-      expect('self' in result.categories[0]).toBe(false)
+      expect(result).toBe(data)
+      expect(result.categories[0]).toBeInstanceOf(CategoryDoc)
+      expect(result.categories[0].name).toBe('Frontend')
+      expect(result.categories[0].self).toBe(result.categories[0])
     })
 
-    it('should clone non-structured-cloneable payloads safely', async () => {
+    it('should preserve non-structured-cloneable payloads when translating', async () => {
       const translationEntryService = {
         getTranslationsBatch: vi.fn().mockResolvedValue({
           entityMaps: new Map(),
@@ -130,120 +172,34 @@ describe('TranslationEntryInterceptor path utilities', () => {
         'en',
       )
 
+      expect(result).toBe(data)
       expect(result.notes[0].mood).toBe('Happy')
       expect(typeof result.notes[0].meta.formatter).toBe('function')
-      expect(data.notes[0].mood).toBe('开心')
+      expect(data.notes[0].mood).toBe('Happy')
     })
   })
 
-  describe('parsePathSegments', () => {
-    const parse = interceptor['parsePathSegments'].bind(interceptor)
+  describe('toObjectScanPath', () => {
+    const normalize = interceptor['toObjectScanPath'].bind(interceptor)
 
-    it('should parse simple path', () => {
-      const { parentSegments, field } = parse('categories[].name')
-      expect(parentSegments).toEqual(['categories', '[]'])
-      expect(field).toBe('name')
+    it('should normalize root array path', () => {
+      expect(normalize('[].name')).toBe('[*].name')
     })
 
-    it('should parse nested path', () => {
-      const { parentSegments, field } = parse('data.notes[].mood')
-      expect(parentSegments).toEqual(['data', 'notes', '[]'])
-      expect(field).toBe('mood')
+    it('should normalize simple array path', () => {
+      expect(normalize('categories[].name')).toBe('categories[*].name')
     })
 
-    it('should parse deep nested without array', () => {
-      const { parentSegments, field } = parse('data.topic.name')
-      expect(parentSegments).toEqual(['data', 'topic'])
-      expect(field).toBe('name')
+    it('should normalize nested array path', () => {
+      expect(normalize('data.notes[].mood')).toBe('data.notes[*].mood')
     })
 
-    it('should parse single field', () => {
-      const { parentSegments, field } = parse('mood')
-      expect(parentSegments).toEqual([])
-      expect(field).toBe('mood')
-    })
-  })
-
-  describe('resolvePath', () => {
-    const resolve = interceptor['resolvePath'].bind(interceptor)
-
-    it('should resolve array path', () => {
-      const data = { categories: [{ name: 'A' }, { name: 'B' }] }
-      const result = resolve(data, ['categories', '[]'])
-      expect(result).toEqual([{ name: 'A' }, { name: 'B' }])
+    it('should preserve plain object path', () => {
+      expect(normalize('data.topic.name')).toBe('data.topic.name')
     })
 
-    it('should resolve nested path', () => {
-      const data = { data: { notes: [{ mood: 'happy' }] } }
-      const result = resolve(data, ['data', 'notes', '[]'])
-      expect(result).toEqual([{ mood: 'happy' }])
-    })
-
-    it('should return empty for missing path', () => {
-      const data = { foo: 'bar' }
-      const result = resolve(data, ['missing', '[]'])
-      expect(result).toEqual([])
-    })
-
-    it('should handle null gracefully', () => {
-      const result = resolve(null, ['a', 'b'])
-      expect(result).toEqual([])
-    })
-  })
-
-  describe('deepClone', () => {
-    const clone = interceptor['deepClone'].bind(interceptor)
-
-    it('should clone plain objects', () => {
-      const obj = { a: 1, b: { c: 2 } }
-      const cloned = clone(obj)
-      expect(cloned).toEqual(obj)
-      expect(cloned).not.toBe(obj)
-      expect(cloned.b).not.toBe(obj.b)
-    })
-
-    it('should preserve Date instances', () => {
-      const d = new Date('2024-01-01')
-      const obj = { created: d }
-      const cloned = clone(obj)
-      expect(cloned.created).toBeInstanceOf(Date)
-      expect(cloned.created.getTime()).toBe(d.getTime())
-      expect(cloned.created).not.toBe(d)
-    })
-
-    it('should preserve ObjectId-like objects', () => {
-      const oid = {
-        toHexString: () => '507f1f77bcf86cd799439011',
-        toString: () => '507f1f77bcf86cd799439011',
-      }
-      const obj = { _id: oid }
-      const cloned = clone(obj)
-      expect(cloned._id).toBe(oid) // same reference, not cloned
-    })
-
-    it('should clone arrays', () => {
-      const arr = [{ a: 1 }, { b: 2 }]
-      const cloned = clone(arr)
-      expect(cloned).toEqual(arr)
-      expect(cloned[0]).not.toBe(arr[0])
-    })
-
-    it('should preserve circular references without overflowing', () => {
-      const obj: any = { name: 'root' }
-      obj.self = obj
-      obj.children = [{ parent: obj }]
-
-      const cloned = clone(obj)
-      expect(cloned).not.toBe(obj)
-      expect(cloned.self).toBe(cloned)
-      expect(cloned.children[0]).not.toBe(obj.children[0])
-      expect(cloned.children[0].parent).toBe(cloned)
-    })
-
-    it('should handle null and primitives', () => {
-      expect(clone(null)).toBeNull()
-      expect(clone(42)).toBe(42)
-      expect(clone('hello')).toBe('hello')
+    it('should preserve single field', () => {
+      expect(normalize('mood')).toBe('mood')
     })
   })
 
@@ -254,7 +210,7 @@ describe('TranslationEntryInterceptor path utilities', () => {
       const data = { notes: [{ mood: '开心' }, { mood: '' }, { mood: '伤心' }] }
       const texts = new Set<string>()
       collect(data, 'notes[].mood', texts)
-      expect([...texts]).toEqual(['开心', '伤心'])
+      expect([...texts].sort()).toEqual(['伤心', '开心'])
     })
 
     it('should handle missing paths', () => {
@@ -277,7 +233,7 @@ describe('TranslationEntryInterceptor path utilities', () => {
       }
       const ids = new Set<string>()
       collect(data, 'categories[].name', '_id', ids)
-      expect([...ids]).toEqual(['id-1', 'id-2'])
+      expect([...ids].sort()).toEqual(['id-1', 'id-2'])
     })
   })
 

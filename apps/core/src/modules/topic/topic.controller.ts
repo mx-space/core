@@ -1,29 +1,49 @@
-import { Body, Get, Param, Post, Put } from '@nestjs/common'
+import { Get, Param } from '@nestjs/common'
 import slugify from 'slugify'
 
-import { Auth } from '~/common/decorators/auth.decorator'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import type { EventManagerService } from '~/processors/helper/helper.event.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'
+import {
+  BaseCrudFactory,
+  type BaseCrudModuleType,
+} from '~/transformers/crud-factor.transformer'
 
 import { TopicModel } from './topic.model'
 
-class Upper {
-  constructor(
-    private readonly _model: MongooseModel<TopicModel>,
-    private readonly eventManager: EventManagerService,
-  ) {}
+const topicTranslateFields = [
+  { path: 'name', keyPath: 'topic.name' as const, idField: '_id' as const },
+  {
+    path: 'introduce',
+    keyPath: 'topic.introduce' as const,
+    idField: '_id' as const,
+  },
+]
+
+const topicTranslateListFields = [
+  { path: '[].name', keyPath: 'topic.name' as const, idField: '_id' as const },
+  {
+    path: '[].introduce',
+    keyPath: 'topic.introduce' as const,
+    idField: '_id' as const,
+  },
+]
+
+export class TopicBaseController extends BaseCrudFactory({
+  model: TopicModel,
+}) {
+  @Get('/all')
+  @TranslateFields(...topicTranslateListFields)
+  async getAll(this: BaseCrudModuleType<TopicModel>) {
+    return await this._model.find({}).sort({ created: -1 }).lean()
+  }
 
   @Get('/slug/:slug')
-  @TranslateFields(
-    { path: 'name', keyPath: 'topic.name', idField: '_id' },
-    { path: 'introduce', keyPath: 'topic.introduce', idField: '_id' },
-  )
-  async getTopicByTopic(@Param('slug') slug: string) {
+  @TranslateFields(...topicTranslateFields)
+  async getTopicByTopic(
+    this: BaseCrudModuleType<TopicModel>,
+    @Param('slug') slug: string,
+  ) {
     slug = slugify(slug)
     const topic = await this._model.findOne({ slug }).lean()
     if (!topic) {
@@ -33,34 +53,9 @@ class Upper {
     return topic
   }
 
-  @Post('/')
-  @HTTPDecorators.Idempotence()
-  @Auth()
-  async create(@Body() body: Partial<TopicModel>) {
-    const doc = await this._model.create(body)
-    this.eventManager.emit(BusinessEvents.TOPIC_CREATE, doc.toObject(), {
-      scope: EventScope.TO_SYSTEM_VISITOR,
-    })
-    return doc
-  }
-
-  @Put('/:id')
-  @Auth()
-  async update(@Body() body: Partial<TopicModel>, @Param() param: MongoIdDto) {
-    const doc = await this._model
-      .findOneAndUpdate({ _id: param.id }, body, { new: true })
-      .lean()
-    if (doc) {
-      this.eventManager.emit(BusinessEvents.TOPIC_UPDATE, doc, {
-        scope: EventScope.TO_SYSTEM_VISITOR,
-      })
-    }
-    return doc
+  @Get('/:id')
+  @TranslateFields(...topicTranslateFields)
+  async get(this: BaseCrudModuleType<TopicModel>, @Param() param: MongoIdDto) {
+    return await this._model.findById(param.id).lean()
   }
 }
-
-export const TopicBaseController = BaseCrudFactory({
-  model: TopicModel,
-
-  classUpper: Upper,
-})
