@@ -1,10 +1,13 @@
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager'
 import { Controller, Get, Header } from '@nestjs/common'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { CacheKeys } from '~/constants/cache.constant'
-import { escapeXml } from '~/utils/tool.util'
 import RemoveMarkdown from 'remove-markdown'
 import xss from 'xss'
+
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { CacheKeys } from '~/constants/cache.constant'
+import { ContentFormat } from '~/shared/types/content-format.type'
+import { escapeXml } from '~/utils/tool.util'
+
 import { AggregateService } from '../aggregate/aggregate.service'
 import type { CategoryModel } from '../category/category.model'
 import { ConfigsService } from '../configs/configs.service'
@@ -49,22 +52,30 @@ export class FeedController {
 </image>
 ${await Promise.all(
   data.map(async (item) => {
+    const isLexical = item.contentFormat === ContentFormat.Lexical
     const renderResult = await this.markdownService.renderArticle(item.id)
+
+    const description = isLexical
+      ? '富文本内容，请前往原站查看'
+      : escapeXml(xss(RemoveMarkdown(renderResult.document.text).slice(0, 50)))
+
+    const contentEncoded = isLexical
+      ? `<p>前往原站查看：<a href="${xss(item.link)}">${xss(item.link)}</a></p>`
+      : `<blockquote>该渲染由 marked 生成，可能存在排版问题，最佳体验请前往：<a href='${xss(
+          item.link,
+        )}'>${xss(item.link)}</a></blockquote>
+      ${renderResult.html}
+      <p style='text-align: right'>
+      <a href='${`${xss(item.link)}#comments`}'>看完了？说点什么呢</a>
+      </p>`
+
     return `<item>
     <title>${escapeXml(item.title)}</title>
     <link>${xss(item.link)}</link>
     <pubDate>${item.created!.toUTCString()}</pubDate>
-    <description>${escapeXml(
-      xss(RemoveMarkdown(renderResult.document.text).slice(0, 50)),
-    )}</description>
+    <description>${description}</description>
     <content:encoded><![CDATA[
-      ${`<blockquote>该渲染由 marked 生成，可能存在排版问题，最佳体验请前往：<a href='${xss(
-        item.link,
-      )}'>${xss(item.link)}</a></blockquote>
-      ${renderResult.html}
-      <p style='text-align: right'>
-      <a href='${`${xss(item.link)}#comments`}'>看完了？说点什么呢</a>
-      </p>`}
+      ${contentEncoded}
     ]]>
     </content:encoded>
   <guid isPermaLink="false">${item.id}</guid>
