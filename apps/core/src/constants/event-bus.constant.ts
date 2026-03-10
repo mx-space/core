@@ -7,4 +7,5 @@ export enum EventBusEvents {
   ConfigChanged = 'config.changed',
   OauthChanged = 'oauth.changed',
   AppUrlChanged = 'app.url.changed',
+  AdminDashboardUpdateTriggered = 'admin.dashboard.update.triggered',
 }

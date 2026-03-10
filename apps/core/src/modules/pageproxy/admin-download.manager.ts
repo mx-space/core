@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common'
-import { AssetService } from '~/processors/helper/helper.asset.service'
 import ejs from 'ejs'
 import { Observable } from 'rxjs'
+
+import { AssetService } from '~/processors/helper/helper.asset.service'
+
 import { UpdateService } from '../update/update.service'
 
 interface DownloadState {
@@ -90,7 +92,8 @@ export class AdminDownloadManager {
     this.updateService
       .getLatestAdminVersion()
       .then((version) => {
-        this.state.observer = this.updateService.downloadAdminAsset(version)
+        this.state.observer =
+          this.updateService.startClusterAdminAssetUpdate(version)
         this.setupSubscription()
       })
       .catch((error) => {

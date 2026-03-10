@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
@@ -22,9 +23,20 @@ export const BACKUP_DIR = !isDev
   ? join(DATA_DIR, 'backup')
   : join(TEMP_DIR, 'backup')
 
-// 生产环境直接打包到 目录的 admin 下
-export const LOCAL_ADMIN_ASSET_PATH = isDev
-  ? join(DATA_DIR, 'admin')
+// Swarm/容器环境下，更新后的 admin 资源需要落到持久化数据目录。
+export const LOCAL_ADMIN_ASSET_PATH = join(DATA_DIR, 'admin')
+export const BUNDLED_ADMIN_ASSET_PATH = isDev
+  ? LOCAL_ADMIN_ASSET_PATH
   : join(cwd, './admin')
+
+export const resolveAdminAssetRoot = (relativePath = 'index.html') => {
+  for (const basePath of [LOCAL_ADMIN_ASSET_PATH, BUNDLED_ADMIN_ASSET_PATH]) {
+    if (existsSync(join(basePath, relativePath))) {
+      return basePath
+    }
+  }
+
+  return LOCAL_ADMIN_ASSET_PATH
+}
 
 export const NODE_REQUIRE_PATH = join(DATA_DIR, 'node_modules')

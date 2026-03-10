@@ -1,11 +1,13 @@
 import { Test } from '@nestjs/testing'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { UpdateService } from '~/modules/update/update.service'
 import { UpdateDownloadService } from '~/modules/update/update-download.service'
 import { UpdateInstallService } from '~/modules/update/update-install.service'
-import { UpdateService } from '~/modules/update/update.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 
 class FakeRedis {
   private store = new Map<string, string | Buffer>()
@@ -119,9 +121,19 @@ describe('UpdateService', () => {
   let downloadService: UpdateDownloadService
   let installService: UpdateInstallService
   let fakeRedis: FakeRedis
+  let subpubMock: {
+    publish: ReturnType<typeof vi.fn>
+    subscribe: ReturnType<typeof vi.fn>
+    unsubscribe: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(async () => {
     fakeRedis = new FakeRedis()
+    subpubMock = {
+      publish: vi.fn().mockResolvedValue(undefined),
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+    }
 
     const mockHttpService = {
       axiosRef: { get: vi.fn() },
@@ -137,12 +149,14 @@ describe('UpdateService', () => {
         UpdateDownloadService,
         UpdateInstallService,
         { provide: RedisService, useValue: { getClient: () => fakeRedis } },
+        { provide: SubPubBridgeService, useValue: subpubMock },
         { provide: HttpService, useValue: mockHttpService },
         { provide: ConfigsService, useValue: mockConfigsService },
       ],
     }).compile()
 
     service = module.get(UpdateService)
+    service.onModuleInit()
     downloadService = module.get(UpdateDownloadService)
     installService = module.get(UpdateInstallService)
     vi.spyOn(installService, 'extractAndInstall').mockResolvedValue(undefined)
@@ -184,6 +198,97 @@ describe('UpdateService', () => {
             m.includes('Another instance') || m.includes('already completed'),
         ),
       ).toBe(true)
+    })
+
+    it('reuses the same in-flight job on the same instance', async () => {
+      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue({
+        assets: [
+          {
+            name: 'release.zip',
+            browser_download_url: 'https://example.com/r.zip',
+            size: 100,
+          },
+        ],
+      })
+      const downloadSpy = vi
+        .spyOn(downloadService, 'downloadWithMirrors')
+        .mockResolvedValue(new ArrayBuffer(100))
+
+      const stream1$ = service.downloadAdminAsset('1.0.1')
+      const stream2$ = service.downloadAdminAsset('1.0.1')
+
+      const [messages1, messages2] = await Promise.all([
+        subscribeOnce(stream1$),
+        subscribeOnce(stream2$),
+      ])
+
+      expect(messages1.length).toBeGreaterThan(0)
+      expect(messages2.length).toBeGreaterThan(0)
+      expect(downloadSpy).toHaveBeenCalledTimes(1)
+      expect(installService.extractAndInstall).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('cluster broadcast', () => {
+    it('publishes cluster update event once for a new local job', async () => {
+      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue({
+        assets: [
+          {
+            name: 'release.zip',
+            browser_download_url: 'https://example.com/r.zip',
+            size: 100,
+          },
+        ],
+      })
+      vi.spyOn(downloadService, 'downloadWithMirrors').mockResolvedValue(
+        new ArrayBuffer(100),
+      )
+
+      const messages = await subscribeOnce(
+        service.startClusterAdminAssetUpdate('1.2.0'),
+      )
+
+      expect(messages.length).toBeGreaterThan(0)
+      expect(subpubMock.publish).toHaveBeenCalledTimes(1)
+      expect(subpubMock.publish).toHaveBeenCalledWith(
+        'admin.dashboard.update.triggered',
+        expect.objectContaining({
+          version: '1.2.0',
+        }),
+      )
+    })
+
+    it('starts local update when receiving remote cluster event', async () => {
+      vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue({
+        assets: [
+          {
+            name: 'release.zip',
+            browser_download_url: 'https://example.com/r.zip',
+            size: 100,
+          },
+        ],
+      })
+      const downloadSpy = vi
+        .spyOn(downloadService, 'downloadWithMirrors')
+        .mockResolvedValue(new ArrayBuffer(100))
+
+      const handler = subpubMock.subscribe.mock.calls.find(
+        ([event]) => event === 'admin.dashboard.update.triggered',
+      )?.[1] as ((payload: any) => void) | undefined
+
+      expect(handler).toBeTypeOf('function')
+
+      handler?.({
+        version: '1.3.0',
+        sourceHost: 'remote-node',
+        sourceInstanceId: 'remote-instance',
+        emittedAt: Date.now(),
+      })
+
+      const messages = await subscribeOnce(service.downloadAdminAsset('1.3.0'))
+
+      expect(messages.length).toBeGreaterThan(0)
+      expect(downloadSpy).toHaveBeenCalledTimes(1)
     })
   })
 

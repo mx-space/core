@@ -1,10 +1,20 @@
 import { rm } from 'node:fs/promises'
-import { Injectable, Logger } from '@nestjs/common'
-import { RedisService } from '~/processors/redis/redis.service'
-import { PKG } from '~/utils/pkg.util'
+import { hostname } from 'node:os'
+
+import {
+  Injectable,
+  Logger,
+  type OnModuleDestroy,
+  type OnModuleInit,
+} from '@nestjs/common'
 import pc from 'picocolors'
-import { Observable } from 'rxjs'
-import { catchError } from 'rxjs/operators'
+import { Observable, ReplaySubject } from 'rxjs'
+
+import { EventBusEvents } from '~/constants/event-bus.constant'
+import { RedisService } from '~/processors/redis/redis.service'
+import { SubPubBridgeService } from '~/processors/redis/subpub.service'
+import { PKG } from '~/utils/pkg.util'
+
 import { UpdateDownloadService } from './update-download.service'
 import { UpdateInstallService } from './update-install.service'
 
@@ -30,19 +40,49 @@ end
 
 const INSTALL_LOCK_KEY = `${REDIS_KEY_PREFIX}:install-lock`
 
+interface UpdateSubscriber {
+  next: (message: string) => void
+  complete: () => void
+}
+
+interface AdminUpdateBroadcastPayload {
+  version: string
+  sourceHost: string
+  sourceInstanceId: string
+  emittedAt: number
+}
+
 @Injectable()
-export class UpdateService {
+export class UpdateService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(UpdateService.name)
   private readonly LOCK_TTL_SEC = 600
   private readonly BUFFER_TTL_SEC = 600
   private readonly STREAM_MAX_LEN = 200
   private readonly DOWNLOAD_TIMEOUT = 1800000
   private readonly INSTALL_LOCK_TTL_SEC = 120
+  private readonly instanceId = `${hostname()}:${process.pid}:${Math.random().toString(36).slice(2, 8)}`
+  private readonly runningUpdateSubjects = new Map<
+    string,
+    ReplaySubject<string>
+  >()
+  private readonly clusterUpdateHandler = (
+    payload: AdminUpdateBroadcastPayload,
+  ) => {
+    if (!payload?.version || payload.sourceInstanceId === this.instanceId) {
+      return
+    }
+
+    this.logger.log(
+      `Received cluster admin update trigger for v${payload.version} from ${payload.sourceHost} (${payload.sourceInstanceId})`,
+    )
+    this.downloadAdminAsset(payload.version)
+  }
 
   constructor(
     private readonly redisService: RedisService,
     private readonly downloadService: UpdateDownloadService,
     private readonly installService: UpdateInstallService,
+    private readonly subpub: SubPubBridgeService,
   ) {}
 
   private get redis() {
@@ -59,48 +99,80 @@ export class UpdateService {
     }
   }
 
-  downloadAdminAsset(version: string) {
-    const observable$ = new Observable<string>((subscriber) => {
-      ;(async () => {
-        try {
-          const keys = this.buildKeys(version)
-          const instanceId = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-
-          const lockResult = await this.redis.set(
-            keys.lockKey,
-            instanceId,
-            'EX',
-            this.LOCK_TTL_SEC,
-            'NX',
-          )
-
-          if (lockResult === 'OK') {
-            await this.runAsLeader(version, keys, instanceId, subscriber)
-          } else {
-            await this.runAsFollower(version, keys, subscriber)
-          }
-        } catch (error) {
-          const errorMsg =
-            error instanceof Error ? error.message : String(error)
-          subscriber.next(pc.red(`Update failed: ${errorMsg}\n`))
-          subscriber.complete()
-        }
-      })()
-    })
-
-    return observable$.pipe(
-      catchError((err) => {
-        this.logger.error('Download observable error:', err)
-        return observable$
-      }),
+  onModuleInit() {
+    this.subpub.subscribe(
+      EventBusEvents.AdminDashboardUpdateTriggered,
+      this.clusterUpdateHandler,
     )
+  }
+
+  onModuleDestroy() {
+    this.subpub.unsubscribe(
+      EventBusEvents.AdminDashboardUpdateTriggered,
+      this.clusterUpdateHandler,
+    )
+  }
+
+  startClusterAdminAssetUpdate(version: string): Observable<string> {
+    const shouldBroadcast = !this.runningUpdateSubjects.has(version)
+    const observable$ = this.downloadAdminAsset(version)
+
+    if (shouldBroadcast) {
+      void this.broadcastClusterUpdate(version)
+    }
+
+    return observable$
+  }
+
+  downloadAdminAsset(version: string) {
+    const existing = this.runningUpdateSubjects.get(version)
+    if (existing) {
+      return existing.asObservable()
+    }
+
+    const subject = new ReplaySubject<string>(this.STREAM_MAX_LEN)
+    this.runningUpdateSubjects.set(version, subject)
+
+    void this.executeDownloadAdminAsset(version, subject)
+
+    return subject.asObservable()
+  }
+
+  private async executeDownloadAdminAsset(
+    version: string,
+    subscriber: UpdateSubscriber,
+  ) {
+    try {
+      const keys = this.buildKeys(version)
+      const instanceId = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+      const lockResult = await this.redis.set(
+        keys.lockKey,
+        instanceId,
+        'EX',
+        this.LOCK_TTL_SEC,
+        'NX',
+      )
+
+      if (lockResult === 'OK') {
+        await this.runAsLeader(version, keys, instanceId, subscriber)
+      } else {
+        await this.runAsFollower(version, keys, subscriber)
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      subscriber.next(pc.red(`Update failed: ${errorMsg}\n`))
+    } finally {
+      this.runningUpdateSubjects.delete(version)
+      subscriber.complete()
+    }
   }
 
   private async runAsLeader(
     version: string,
     keys: ReturnType<typeof this.buildKeys>,
     instanceId: string,
-    subscriber: any,
+    subscriber: UpdateSubscriber,
   ) {
     this.logger.log(`Leader elected (${instanceId}) for v${version}`)
 
@@ -242,14 +314,13 @@ export class UpdateService {
       await this.redis
         .eval(LUA_RELEASE_LOCK, 1, keys.lockKey, instanceId)
         .catch(() => {})
-      subscriber.complete()
     }
   }
 
   private async runAsFollower(
     version: string,
     keys: ReturnType<typeof this.buildKeys>,
-    subscriber: any,
+    subscriber: UpdateSubscriber,
   ) {
     this.logger.log(`Follower joining update stream for v${version}`)
     subscriber.next(
@@ -321,15 +392,13 @@ export class UpdateService {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error)
       subscriber.next(pc.red(`Follower update failed: ${errorMsg}\n`))
-    } finally {
-      subscriber.complete()
     }
   }
 
   private async installFromRedisBuffer(
     version: string,
     keys: ReturnType<typeof this.buildKeys>,
-    subscriber: any,
+    subscriber: UpdateSubscriber,
   ) {
     subscriber.next('Fetching buffer from Redis...\n')
 
@@ -366,6 +435,23 @@ export class UpdateService {
         `Admin asset v${version} installed from Redis buffer successfully.\n`,
       ),
     )
+  }
+
+  private async broadcastClusterUpdate(version: string) {
+    try {
+      await this.subpub.publish(EventBusEvents.AdminDashboardUpdateTriggered, {
+        version,
+        sourceHost: hostname(),
+        sourceInstanceId: this.instanceId,
+        emittedAt: Date.now(),
+      } satisfies AdminUpdateBroadcastPayload)
+    } catch (error) {
+      this.logger.warn(
+        `Failed to broadcast cluster admin update for v${version}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      )
+    }
   }
 
   private async acquireInstallLock(instanceId: string) {

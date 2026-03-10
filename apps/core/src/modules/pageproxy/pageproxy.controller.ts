@@ -1,14 +1,17 @@
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path, { extname, join } from 'node:path'
+
 import { Controller, Get, Query, Req, Res } from '@nestjs/common'
 import { SkipThrottle } from '@nestjs/throttler'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
-import { AssetService } from '~/processors/helper/helper.asset.service'
 import ejs from 'ejs'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { lookup } from 'mime-types'
+
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { resolveAdminAssetRoot } from '~/constants/path.constant'
+import { AssetService } from '~/processors/helper/helper.asset.service'
+
 import { AdminDownloadManager } from './admin-download.manager'
 import { PageProxyService } from './pageproxy.service'
 
@@ -34,7 +37,10 @@ export class PageProxyController {
       return this.sendResponse(reply, this.downloadManager.handleLogPolling())
     }
 
-    const entryPath = path.join(LOCAL_ADMIN_ASSET_PATH, 'index.html')
+    const entryPath = path.join(
+      resolveAdminAssetRoot('index.html'),
+      'index.html',
+    )
     if (!existsSync(entryPath)) {
       return this.sendResponse(
         reply,
@@ -93,7 +99,7 @@ export class PageProxyController {
 
     const url = request.url
     const relativePath = url.replace(/^\/proxy\//, '')
-    const assetPath = join(LOCAL_ADMIN_ASSET_PATH, relativePath)
+    const assetPath = join(resolveAdminAssetRoot(relativePath), relativePath)
 
     if (!existsSync(assetPath)) {
       return reply.code(404).send().callNotFound()

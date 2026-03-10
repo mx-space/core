@@ -1,16 +1,20 @@
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
+
 import { Query, Sse } from '@nestjs/common'
-import { ApiController } from '~/common/decorators/api-controller.decorator'
-import { Auth } from '~/common/decorators/auth.decorator'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
-import { PKG } from '~/utils/pkg.util'
-import { isSemVer } from '~/utils/validator.util'
 import pc from 'picocolors'
 import { catchError, Observable } from 'rxjs'
 import { lt, major, minor } from 'semver'
+
+import { ApiController } from '~/common/decorators/api-controller.decorator'
+import { Auth } from '~/common/decorators/auth.decorator'
+import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { resolveAdminAssetRoot } from '~/constants/path.constant'
+import { isDev } from '~/global/env.global'
+import { PKG } from '~/utils/pkg.util'
+import { isSemVer } from '~/utils/validator.util'
+
 import { UpdateAdminDto } from './update.schema'
 import { UpdateService } from './update.service'
 
@@ -32,10 +36,14 @@ export class UpdateController {
         // 1. check current local admin version if exist.
         let { version: currentVersion } = PKG.dashboard!
 
-        const isExistLocalAdmin = existsSync(LOCAL_ADMIN_ASSET_PATH)
+        const adminAssetRoot = resolveAdminAssetRoot('index.html')
+        const isExistLocalAdmin = existsSync(
+          path.join(adminAssetRoot, 'index.html'),
+        )
 
         if (!isExistLocalAdmin) {
-          const stream$ = this.service.downloadAdminAsset(currentVersion)
+          const stream$ =
+            this.service.startClusterAdminAssetUpdate(currentVersion)
           await new Promise<void>((resolve) => {
             stream$.subscribe({
               next: (data) => observer.next(data),
@@ -47,7 +55,7 @@ export class UpdateController {
           return
         }
 
-        const versionPath = path.resolve(LOCAL_ADMIN_ASSET_PATH, 'version')
+        const versionPath = path.resolve(adminAssetRoot, 'version')
         const isHasVersion = existsSync(versionPath)
         if (isHasVersion) {
           const versionInfo = await readFile(versionPath, {
@@ -95,7 +103,7 @@ export class UpdateController {
           return
         }
 
-        const stream$ = this.service.downloadAdminAsset(latestVersion)
+        const stream$ = this.service.startClusterAdminAssetUpdate(latestVersion)
         await new Promise<void>((resolve) => {
           stream$.subscribe({
             next: (data) => observer.next(data),
