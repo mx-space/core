@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [10.3.2](https://github.com/mx-space/core/compare/v10.3.1...v10.3.2) (2026-03-10)
+
+
+### Bug Fixes
+
+* add Redis timeout and error handling to prevent request hanging ([46206e8](https://github.com/mx-space/core/commit/46206e88a79e167bfaa6654095c980c927c163eb))
+
+
+### Features
+
+* enhance admin asset update process and introduce event broadcasting ([e2868c2](https://github.com/mx-space/core/commit/e2868c25f33a0d9d389a3978b1f76c164e7f412a))
+* enhance feed content rendering with lexical format support ([a6bbd75](https://github.com/mx-space/core/commit/a6bbd7573da20f3eab5bc0054ca8ad73ce8662e0))
+* refactor webhook package structure and add model extraction script ([1f189d7](https://github.com/mx-space/core/commit/1f189d7fcd1a267924ff562c4d4766717ccdcc94))
+* translate text within excalidraw nodes during AI translation ([4b2c938](https://github.com/mx-space/core/commit/4b2c9380d0b5c598abe32f4a9ef27fc6135f28fb))
+
+
+
 ## [10.3.1](https://github.com/mx-space/core/compare/v10.3.0...v10.3.1) (2026-03-09)
 
 
