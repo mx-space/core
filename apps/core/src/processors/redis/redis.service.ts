@@ -1,13 +1,26 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { Emitter } from '@socket.io/redis-emitter'
+import type { RedisOptions } from 'ioredis'
+import IORedis from 'ioredis'
+
 import { REDIS } from '~/app.config'
 import { RedisIoAdapterKey } from '~/common/adapters/socket.adapter'
 import { API_CACHE_PREFIX } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils/redis.util'
-import IORedis from 'ioredis'
+
+export const REDIS_CLIENT_OPTIONS: RedisOptions = {
+  commandTimeout: 5000,
+  connectTimeout: 10000,
+  maxRetriesPerRequest: 3,
+  enableOfflineQueue: false,
+  retryStrategy(times: number) {
+    return Math.min(times * 200, 5000)
+  },
+}
 
 @Injectable()
 export class RedisService {
+  private readonly logger = new Logger(RedisService.name)
   private redisClient: IORedis
   constructor() {
     if (REDIS.url) {
@@ -16,6 +29,7 @@ export class RedisService {
         password: REDIS.password ?? undefined,
         db: (REDIS as any).db,
         ...(REDIS.tls ? { tls: {} } : {}),
+        ...REDIS_CLIENT_OPTIONS,
       })
     } else {
       this.redisClient = new IORedis({
@@ -25,8 +39,22 @@ export class RedisService {
         password: REDIS.password ?? undefined,
         db: (REDIS as any).db,
         ...(REDIS.tls ? { tls: {} } : {}),
+        ...REDIS_CLIENT_OPTIONS,
       })
     }
+
+    this.redisClient.on('error', (err) => {
+      this.logger.error(`Redis error: ${err.message}`)
+    })
+    this.redisClient.on('ready', () => {
+      this.logger.log('Redis connection ready')
+    })
+    this.redisClient.on('reconnecting', () => {
+      this.logger.warn('Redis reconnecting...')
+    })
+    this.redisClient.on('close', () => {
+      this.logger.warn('Redis connection closed')
+    })
   }
 
   private _emitter: Emitter

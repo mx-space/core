@@ -7,9 +7,13 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  Logger,
   SetMetadata,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
+import type { FastifyRequest } from 'fastify'
+import { catchError, tap } from 'rxjs'
+
 import {
   HTTP_IDEMPOTENCE_KEY,
   HTTP_IDEMPOTENCE_OPTIONS,
@@ -19,8 +23,6 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
 import { hashString } from '~/utils/tool.util'
-import type { FastifyRequest } from 'fastify'
-import { catchError, tap } from 'rxjs'
 
 const IdempotenceHeaderKey = 'x-idempotence'
 
@@ -53,6 +55,8 @@ export type IdempotenceOption = {
 
 @Injectable()
 export class IdempotenceInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(IdempotenceInterceptor.name)
+
   constructor(
     private readonly redisService: RedisService,
     @Inject(REFLECTOR) private readonly reflector: Reflector,
@@ -97,30 +101,41 @@ export class IdempotenceInterceptor implements NestInterceptor {
     SetMetadata(HTTP_IDEMPOTENCE_KEY, idempotenceKey)(handler)
 
     if (idempotenceKey) {
-      const resultValue: '0' | '1' | null = (await redis.get(
-        idempotenceKey,
-      )) as any
-      if (resultValue !== null) {
-        if (errorHandler) {
-          return await errorHandler(request)
-        }
+      try {
+        const resultValue: '0' | '1' | null = (await redis.get(
+          idempotenceKey,
+        )) as any
+        if (resultValue !== null) {
+          if (errorHandler) {
+            return await errorHandler(request)
+          }
 
-        const message = {
-          1: errorMessage,
-          0: pendingMessage,
-        }[resultValue]
-        throw new ConflictException(message)
-      } else {
-        await redis.set(idempotenceKey, '0', 'EX', expired)
+          const message = {
+            1: errorMessage,
+            0: pendingMessage,
+          }[resultValue]
+          throw new ConflictException(message)
+        } else {
+          await redis.set(idempotenceKey, '0', 'EX', expired)
+        }
+      } catch (err) {
+        if (err instanceof ConflictException) throw err
+        this.logger.warn(
+          `Idempotence check failed, skipping: ${(err as Error).message}`,
+        )
       }
     }
     return next.handle().pipe(
       tap(async () => {
-        idempotenceKey && (await redis.set(idempotenceKey, '1', 'KEEPTTL'))
+        try {
+          idempotenceKey && (await redis.set(idempotenceKey, '1', 'KEEPTTL'))
+        } catch {
+          // Redis failure on completion mark is non-critical
+        }
       }),
       catchError(async (err) => {
         if (idempotenceKey) {
-          await redis.del(idempotenceKey)
+          await redis.del(idempotenceKey).catch(() => {})
         }
         throw err
       }),

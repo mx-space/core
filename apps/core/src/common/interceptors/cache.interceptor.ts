@@ -71,7 +71,12 @@ export class HttpCacheInterceptor implements NestInterceptor {
     const ttl = metaTTL || HTTP_CACHE.ttl
 
     try {
-      const value = await this.cacheManager.get(key)
+      const value = await Promise.race([
+        this.cacheManager.get(key),
+        new Promise<undefined>((resolve) =>
+          setTimeout(() => resolve(undefined), 3000),
+        ),
+      ])
 
       if (value) {
         this.logger.debug(`hit cache:${key}`)
@@ -89,7 +94,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
             }),
           )
     } catch (error) {
-      console.error(error)
+      this.logger.warn(`Cache get failed for key=${key}: ${error}`)
       return call$
     }
   }

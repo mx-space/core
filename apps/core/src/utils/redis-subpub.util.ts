@@ -25,6 +25,13 @@ class RedisSubPub {
       username: (REDIS as any).username,
       db: (REDIS as any).db,
       ...(REDIS.tls ? { tls: {} } : {}),
+      commandTimeout: 5000,
+      connectTimeout: 10000,
+      maxRetriesPerRequest: 3,
+      enableOfflineQueue: false,
+      retryStrategy(times: number) {
+        return Math.min(times * 200, 5000)
+      },
     }
 
     if (REDIS.password) {
@@ -37,6 +44,24 @@ class RedisSubPub {
     const subClient = pubClient.duplicate()
     this.pubClient = pubClient
     this.subClient = subClient
+
+    for (const [name, client] of [
+      ['pub', pubClient],
+      ['sub', subClient],
+    ] as const) {
+      client.on('error', (err) => {
+        this.logger.error(`RedisSubPub [${name}] error: ${err.message}`)
+      })
+      client.on('ready', () => {
+        this.logger.log(`RedisSubPub [${name}] ready`)
+      })
+      client.on('reconnecting', () => {
+        this.logger.warn(`RedisSubPub [${name}] reconnecting...`)
+      })
+      client.on('close', () => {
+        this.logger.warn(`RedisSubPub [${name}] connection closed`)
+      })
+    }
   }
   public async publish(event: string, data: any) {
     const channel = this.channelPrefix + event
