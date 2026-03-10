@@ -24,6 +24,8 @@ import {
 
 const FORMAT_CODE = 16
 
+const EXCALIDRAW_TYPE = ExcalidrawNode.getType()
+
 const SKIP_BLOCKS = new Set([
   'code',
   CodeBlockNode.getType(),
@@ -36,7 +38,6 @@ const SKIP_BLOCKS = new Set([
   KaTeXBlockNode.getType(),
   MermaidNode.getType(),
   EmbedNode.getType(),
-  ExcalidrawNode.getType(),
   'horizontalrule',
   'component',
 ])
@@ -101,6 +102,68 @@ interface BlockContext {
   rootIndex: number
 }
 
+function extractExcalidrawTexts(
+  node: any,
+  propertySegments: PropertySegment[],
+  counter: { t: number; p: number },
+  ctx: BlockContext,
+): void {
+  if (!node.snapshot || typeof node.snapshot !== 'string') return
+  let parsed: any
+  try {
+    parsed = JSON.parse(node.snapshot)
+  } catch {
+    return
+  }
+  if (!parsed.store || typeof parsed.store !== 'object') return
+
+  let hasSegments = false
+  for (const value of Object.values(parsed.store)) {
+    const shape = value as any
+    if (
+      shape?.props?.text &&
+      typeof shape.props.text === 'string' &&
+      shape.props.text.trim()
+    ) {
+      propertySegments.push({
+        id: `p_${counter.p++}`,
+        text: shape.props.text,
+        node: shape.props,
+        property: 'text',
+        blockId: ctx.blockId,
+        rootIndex: ctx.rootIndex,
+      })
+      hasSegments = true
+    }
+  }
+
+  if (hasSegments) {
+    node.__excalidrawParsed = parsed
+  }
+}
+
+function extractExcalidrawTextForContext(node: any): string {
+  if (!node.snapshot || typeof node.snapshot !== 'string') return ''
+  try {
+    const parsed = JSON.parse(node.snapshot)
+    if (!parsed.store) return ''
+    const texts: string[] = []
+    for (const value of Object.values(parsed.store)) {
+      const shape = value as any
+      if (
+        shape?.props?.text &&
+        typeof shape.props.text === 'string' &&
+        shape.props.text.trim()
+      ) {
+        texts.push(shape.props.text)
+      }
+    }
+    return texts.join('\n')
+  } catch {
+    return ''
+  }
+}
+
 function walkNode(
   node: any,
   segments: TranslationSegment[],
@@ -109,6 +172,13 @@ function walkNode(
   ctx: BlockContext,
 ): void {
   if (!node) return
+
+  // Handle excalidraw: extract text from shapes within snapshot
+  if (node.type === EXCALIDRAW_TYPE) {
+    extractExcalidrawTexts(node, propertySegments, counter, ctx)
+    return
+  }
+
   if (SKIP_BLOCKS.has(node.type)) return
   if (SKIP_INLINE.has(node.type)) return
 
@@ -241,6 +311,8 @@ const BLOCK_TYPES = new Set([
 
 function extractBlockText(node: any): string {
   if (!node) return ''
+  if (node.type === EXCALIDRAW_TYPE)
+    return extractExcalidrawTextForContext(node)
   if (SKIP_BLOCKS.has(node.type)) return ''
   if (SKIP_INLINE.has(node.type)) return ''
   if (node.type === 'text') return node.text ?? ''
@@ -321,6 +393,47 @@ export function parseLexicalForTranslation(
 
 // ── Restorer ──
 
+function reStringifyExcalidrawSnapshots(node: any): void {
+  if (!node) return
+  if (node.__excalidrawParsed) {
+    node.snapshot = JSON.stringify(node.__excalidrawParsed)
+    delete node.__excalidrawParsed
+  }
+  if (Array.isArray(node.children)) {
+    for (const child of node.children) {
+      reStringifyExcalidrawSnapshots(child)
+    }
+  }
+  // Scan nested editor states
+  for (const [key, val] of Object.entries(node)) {
+    if (
+      key === 'children' ||
+      key === '__excalidrawParsed' ||
+      key === 'snapshot'
+    )
+      continue
+    if (
+      val &&
+      typeof val === 'object' &&
+      !Array.isArray(val) &&
+      (val as any).root?.children
+    ) {
+      for (const child of (val as any).root.children) {
+        reStringifyExcalidrawSnapshots(child)
+      }
+    }
+    if (Array.isArray(val)) {
+      for (const item of val) {
+        if (item?.root?.children) {
+          for (const child of item.root.children) {
+            reStringifyExcalidrawSnapshots(child)
+          }
+        }
+      }
+    }
+  }
+}
+
 export function restoreLexicalTranslation(
   result: LexicalTranslationResult,
   translations: Map<string, string>,
@@ -338,5 +451,9 @@ export function restoreLexicalTranslation(
       prop.node[prop.property] = translated
     }
   }
+
+  // Re-stringify excalidraw snapshots after translation applied
+  reStringifyExcalidrawSnapshots(result.editorState.root)
+
   return JSON.stringify(result.editorState)
 }

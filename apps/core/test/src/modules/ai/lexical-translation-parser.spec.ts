@@ -1036,4 +1036,122 @@ describe('lexical-translation-parser', () => {
       expect(decoratorNode.text).toBe('DecoratorNode')
     })
   })
+
+  describe('excalidraw text extraction', () => {
+    const excalidrawNode = (store: Record<string, any>) => ({
+      type: 'excalidraw',
+      version: 1,
+      snapshot: JSON.stringify({ store, schema: { schemaVersion: 2 } }),
+    })
+
+    it('extracts text from excalidraw shapes as PropertySegments', () => {
+      const json = makeEditorState([
+        excalidrawNode({
+          'document:document': {
+            id: 'document:document',
+            typeName: 'document',
+          },
+          'shape:rect1': {
+            type: 'geo',
+            props: { w: 200, h: 120, text: 'Hello Excalidraw' },
+          },
+        }),
+      ])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(0)
+      expect(propertySegments).toHaveLength(1)
+      expect(propertySegments[0].text).toBe('Hello Excalidraw')
+      expect(propertySegments[0].property).toBe('text')
+    })
+
+    it('extracts multiple shape texts', () => {
+      const json = makeEditorState([
+        excalidrawNode({
+          'shape:a': { type: 'geo', props: { text: 'Box A' } },
+          'shape:b': { type: 'text', props: { text: 'Label B' } },
+          'shape:c': { type: 'arrow', props: { text: '' } },
+        }),
+      ])
+      const { propertySegments } = parseLexicalForTranslation(json)
+
+      expect(propertySegments).toHaveLength(2)
+      expect(propertySegments[0].text).toBe('Box A')
+      expect(propertySegments[1].text).toBe('Label B')
+    })
+
+    it('skips shapes without text', () => {
+      const json = makeEditorState([
+        excalidrawNode({
+          'shape:img': { type: 'image', props: { src: 'https://x.jpg' } },
+        }),
+      ])
+      const { propertySegments } = parseLexicalForTranslation(json)
+      expect(propertySegments).toHaveLength(0)
+    })
+
+    it('restores translated text back into snapshot', () => {
+      const json = makeEditorState([
+        excalidrawNode({
+          'shape:r1': { type: 'geo', props: { text: 'Start' } },
+          'shape:r2': { type: 'geo', props: { text: 'End' } },
+        }),
+      ])
+      const result = parseLexicalForTranslation(json)
+
+      const translations = new Map<string, string>([
+        [result.propertySegments[0].id, '开始'],
+        [result.propertySegments[1].id, '结束'],
+      ])
+
+      const restored = JSON.parse(
+        restoreLexicalTranslation(result, translations),
+      )
+      const snapshot = JSON.parse(restored.root.children[0].snapshot)
+
+      expect(snapshot.store['shape:r1'].props.text).toBe('开始')
+      expect(snapshot.store['shape:r2'].props.text).toBe('结束')
+    })
+
+    it('excalidraw text included in document context', () => {
+      const json = makeEditorState([
+        paragraph(textNode('Before')),
+        excalidrawNode({
+          'shape:a': { type: 'geo', props: { text: 'Diagram Label' } },
+        }),
+        paragraph(textNode('After')),
+      ])
+      const { editorState } = parseLexicalForTranslation(json)
+      const context = extractDocumentContext(editorState.root.children)
+
+      expect(context).toContain('Before')
+      expect(context).toContain('Diagram Label')
+      expect(context).toContain('After')
+    })
+
+    it('handles invalid snapshot JSON gracefully', () => {
+      const json = makeEditorState([
+        { type: 'excalidraw', version: 1, snapshot: 'not-json' },
+      ])
+      const { propertySegments } = parseLexicalForTranslation(json)
+      expect(propertySegments).toHaveLength(0)
+    })
+
+    it('carries correct blockId and rootIndex', () => {
+      const json = makeEditorState([
+        paragraph(textNode('First')),
+        {
+          ...excalidrawNode({
+            'shape:a': { type: 'geo', props: { text: 'Labeled' } },
+          }),
+          $: { blockId: 'exc-block' },
+        },
+      ])
+      const { propertySegments } = parseLexicalForTranslation(json)
+
+      expect(propertySegments).toHaveLength(1)
+      expect(propertySegments[0].blockId).toBe('exc-block')
+      expect(propertySegments[0].rootIndex).toBe(1)
+    })
+  })
 })

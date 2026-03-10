@@ -123,6 +123,11 @@ export class LexicalService {
       return node.code
     }
 
+    // Include snapshot content for fingerprinting (e.g., excalidraw)
+    if (typeof node.snapshot === 'string') {
+      return node.snapshot
+    }
+
     const segments: string[] = []
 
     if (Array.isArray(node.children)) {
