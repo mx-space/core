@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [10.4.0](https://github.com/mx-space/core/compare/v10.3.3...v10.4.0) (2026-03-13)
+
+
+### Bug Fixes
+
+* **note:** expose slug in note timeline list ([5b2f7b5](https://github.com/mx-space/core/commit/5b2f7b5fd6c60f585600c0229265bbcd3cfc1f07))
+* **topic:** validate slug params with zod ([2de6b2b](https://github.com/mx-space/core/commit/2de6b2b6baa152e28dffef3ce5e185cf29da8c51))
+
+
+### Features
+
+* **note:** add seo slug route and sdk updates ([0203692](https://github.com/mx-space/core/commit/02036928760e3d4093fa93ee2d547a896b1dce95))
+
+
+
 ## [10.3.3](https://github.com/mx-space/core/compare/v10.3.2...v10.3.3) (2026-03-13)
 
 
