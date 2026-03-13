@@ -56,6 +56,7 @@ export const GetTasksQuerySchema = z.object({
       AITaskType.Translation,
       AITaskType.TranslationBatch,
       AITaskType.TranslationAll,
+      AITaskType.SlugBackfill,
     ])
     .optional(),
   page: z.coerce.number().int().min(1).default(1),
@@ -74,6 +75,7 @@ export const DeleteTasksQuerySchema = z.object({
       AITaskType.Translation,
       AITaskType.TranslationBatch,
       AITaskType.TranslationAll,
+      AITaskType.SlugBackfill,
     ])
     .optional(),
   before: z.coerce.number().int().positive(),

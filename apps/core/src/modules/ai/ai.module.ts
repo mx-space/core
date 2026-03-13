@@ -18,6 +18,7 @@ import {
   LEXICAL_TRANSLATION_STRATEGY,
   MARKDOWN_TRANSLATION_STRATEGY,
 } from './ai-translation/translation-strategy.interface'
+import { AiSlugBackfillService } from './ai-writer/ai-slug-backfill.service'
 import { AiWriterController } from './ai-writer/ai-writer.controller'
 import { AiWriterService } from './ai-writer/ai-writer.service'
 
@@ -28,6 +29,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiInFlightService,
     AiService,
     AiWriterService,
+    AiSlugBackfillService,
     {
       provide: LEXICAL_TRANSLATION_STRATEGY,
       useClass: LexicalTranslationStrategy,

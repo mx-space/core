@@ -3,6 +3,7 @@ export enum AITaskType {
   Translation = 'ai:translation',
   TranslationBatch = 'ai:translation:batch',
   TranslationAll = 'ai:translation:all',
+  SlugBackfill = 'ai:slug:backfill',
 }
 
 export interface SummaryTaskPayload {
@@ -33,11 +34,17 @@ export interface TranslationAllTaskPayload {
   articleCount?: number
 }
 
+export interface SlugBackfillTaskPayload {
+  // Human-readable info
+  noteCount?: number
+}
+
 export type AITaskPayload =
   | SummaryTaskPayload
   | TranslationTaskPayload
   | TranslationBatchTaskPayload
   | TranslationAllTaskPayload
+  | SlugBackfillTaskPayload
 
 export function computeAITaskDedupKey(
   type: AITaskType,
@@ -59,6 +66,9 @@ export function computeAITaskDedupKey(
     case AITaskType.TranslationAll: {
       const p = payload as TranslationAllTaskPayload
       return `all:${(p.targetLanguages || []).slice().sort().join(',')}`
+    }
+    case AITaskType.SlugBackfill: {
+      return `slug:backfill`
     }
   }
 }

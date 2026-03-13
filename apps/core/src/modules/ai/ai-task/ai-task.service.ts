@@ -9,6 +9,7 @@ import {
   type AITaskPayload,
   AITaskType,
   computeAITaskDedupKey,
+  type SlugBackfillTaskPayload,
   type SummaryTaskPayload,
   type TranslationAllTaskPayload,
   type TranslationBatchTaskPayload,
@@ -62,6 +63,12 @@ export class AiTaskService {
     payload: TranslationAllTaskPayload,
   ): Promise<{ taskId: string; created: boolean }> {
     return this.createTask(AITaskType.TranslationAll, payload)
+  }
+
+  async createSlugBackfillTask(
+    payload: SlugBackfillTaskPayload,
+  ): Promise<{ taskId: string; created: boolean }> {
+    return this.createTask(AITaskType.SlugBackfill, payload)
   }
 
   async retryTaskWithFailedOnly(
