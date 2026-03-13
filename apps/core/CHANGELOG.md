@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [10.3.3](https://github.com/mx-space/core/compare/v10.3.2...v10.3.3) (2026-03-13)
+
+
+### Bug Fixes
+
+* **core:** degrade redis bootstrap paths ([976b6cb](https://github.com/mx-space/core/commit/976b6cb5d3fa746ab191e4c5f581a1797bc706e2))
+
+
+
 ## [10.3.2](https://github.com/mx-space/core/compare/v10.3.1...v10.3.2) (2026-03-10)
 
 
