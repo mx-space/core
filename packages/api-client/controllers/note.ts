@@ -37,6 +37,8 @@ export type NoteByNidOptions = {
   prefer?: 'lexical'
 }
 
+export type NoteBySlugDateOptions = NoteByNidOptions
+
 export type NoteMiddleListOptions = {
   lang?: string
 }
@@ -123,6 +125,29 @@ export class NoteController<ResponseWrapper> implements IController {
   > {
     const { password, single, lang, prefer } = options || {}
     return this.proxy.nid(nid.toString()).get({
+      params: {
+        password,
+        single: single ? '1' : undefined,
+        lang,
+        prefer,
+      },
+    })
+  }
+
+  getNoteBySlugDate(
+    year: number,
+    month: number,
+    day: number,
+    slug: string,
+    options?: NoteBySlugDateOptions,
+  ): RequestProxyResult<
+    NoteWrappedWithLikedAndTranslationPayload,
+    ResponseWrapper
+  > {
+    const { password, single, lang, prefer } = options || {}
+    return this.proxy(year.toString())(month.toString())(day.toString())(
+      slug,
+    ).get({
       params: {
         password,
         single: single ? '1' : undefined,

@@ -32,6 +32,7 @@ import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
 import { LinkState } from '../link/link.model'
 import { LinkService } from '../link/link.service'
+import type { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
 import { OwnerService } from '../owner/owner.service'
 import { PageService } from '../page/page.service'
@@ -300,7 +301,10 @@ export class AggregateService {
         .then((list) =>
           list.map((doc) => {
             return {
-              url: new URL(`/notes/${doc.nid}`, baseURL),
+              url: new URL(
+                this.noteService.buildPublicPath(doc as NoteModel),
+                baseURL,
+              ),
               published_at: doc.modified
                 ? new Date(doc.modified)
                 : new Date(doc.created!),

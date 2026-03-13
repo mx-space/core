@@ -3,11 +3,18 @@ import type { DocumentType } from '@typegoose/typegoose'
 import dayjs from 'dayjs'
 import { debounce, omit } from 'es-toolkit/compat'
 import type { PaginateOptions, QueryFilter } from 'mongoose'
+import slugify from 'slugify'
 
+import {
+  BizException,
+  BusinessException,
+} from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
+import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { FileReferenceType } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
@@ -24,6 +31,8 @@ import { isDefined, isMongoId } from '~/utils/validator.util'
 import { CommentService } from '../comment/comment.service'
 import { DraftRefType } from '../draft/draft.model'
 import { DraftService } from '../draft/draft.service'
+import { AiWriterService } from '../ai/ai-writer/ai-writer.service'
+import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { NoteModel } from './note.model'
 
 @Injectable()
@@ -35,6 +44,8 @@ export class NoteService {
     private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
     private readonly lexicalService: LexicalService,
+    private readonly slugTrackerService: SlugTrackerService,
+    private readonly aiWriterService: AiWriterService,
     @Inject(forwardRef(() => CommentService))
     private readonly commentService: CommentService,
 
@@ -79,6 +90,156 @@ export class NoteService {
       return false
     }
     return dayjs(note.publicAt).isAfter(new Date())
+  }
+
+  private normalizeSlug(slug?: string | null) {
+    if (!slug) {
+      return undefined
+    }
+
+    const normalized = slugify(slug, { lower: true, strict: true, trim: true })
+
+    return normalized || undefined
+  }
+
+  private getDateRange(year: number, month: number, day: number) {
+    const start = new Date(Date.UTC(year, month - 1, day))
+    const end = new Date(Date.UTC(year, month - 1, day + 1))
+
+    return { start, end }
+  }
+
+  private isDateWithinRange(date: Date | string, year: number, month: number, day: number) {
+    const { start, end } = this.getDateRange(year, month, day)
+    const value = new Date(date)
+    return value >= start && value < end
+  }
+
+  public buildSeoPath(note: Pick<NoteModel, 'created' | 'slug'>) {
+    const normalizedSlug = this.normalizeSlug(note.slug)
+    if (!normalizedSlug || !note.created) {
+      return null
+    }
+
+    const date = new Date(note.created)
+    const year = date.getUTCFullYear()
+    const month = date.getUTCMonth() + 1
+    const day = date.getUTCDate()
+
+    return `/notes/${year}/${month}/${day}/${normalizedSlug}`
+  }
+
+  public buildPublicPath(note: Pick<NoteModel, 'created' | 'slug' | 'nid'>) {
+    return this.buildSeoPath(note) ?? `/notes/${note.nid}`
+  }
+
+  private async ensureSlugAvailable(slug?: string, excludeId?: string) {
+    if (!slug) {
+      return
+    }
+
+    const existing = await this.noteModel.findOne({ slug }).lean()
+    if (!existing) {
+      return
+    }
+
+    const existingId = existing.id ?? existing._id?.toString?.()
+    if (excludeId && existingId === excludeId) {
+      return
+    }
+
+    throw new BusinessException(ErrorCodeEnum.SlugNotAvailable)
+  }
+
+  private async tryGenerateSlugByTitle(title?: string) {
+    if (!title) {
+      return undefined
+    }
+
+    try {
+      const result = await this.aiWriterService.generateSlugByTitleViaOpenAI(
+        title,
+      )
+      return this.normalizeSlug(result.slug)
+    } catch {
+      return undefined
+    }
+  }
+
+  private async trackSeoPathChanges(
+    oldDocument: NoteModel,
+    nextState: Pick<NoteModel, 'created' | 'slug'>,
+    targetId: string,
+  ) {
+    const oldPath = this.buildSeoPath(oldDocument)
+    const nextPath = this.buildSeoPath(nextState)
+
+    if (!oldPath || oldPath === nextPath) {
+      return
+    }
+
+    return this.slugTrackerService.createTracker(
+      oldPath,
+      ArticleTypeEnum.Note,
+      targetId,
+    )
+  }
+
+  async findOneByDateAndSlug(
+    year: number,
+    month: number,
+    day: number,
+    slug: string,
+    options?: { includeLocation?: boolean },
+  ) {
+    const normalizedSlug = this.normalizeSlug(slug)
+    if (!normalizedSlug) {
+      throw new BizException(ErrorCodeEnum.InvalidSlug)
+    }
+
+    const { start, end } = this.getDateRange(year, month, day)
+    const protectedSelect = `+password ${
+      options?.includeLocation ? '+location +coordinates' : ''
+    }`
+
+    const direct = await this.noteModel
+      .findOne({
+        slug: normalizedSlug,
+        created: {
+          $gte: start,
+          $lt: end,
+        },
+      })
+      .select(protectedSelect)
+      .lean({ getters: true, autopopulate: true })
+
+    if (direct) {
+      return direct
+    }
+
+    const tracked = await this.slugTrackerService.findTrackerBySlug(
+      `/notes/${year}/${month}/${day}/${normalizedSlug}`,
+      ArticleTypeEnum.Note,
+    )
+
+    if (!tracked) {
+      return null
+    }
+
+    const trackedDocument = await this.noteModel
+      .findById(tracked.targetId)
+      .select(protectedSelect)
+      .lean({ getters: true, autopopulate: true })
+
+    if (!trackedDocument) {
+      return null
+    }
+
+    if (!this.isDateWithinRange(trackedDocument.created!, year, month, day)) {
+      return null
+    }
+
+    return trackedDocument
   }
 
   async getLatestNoteId() {
@@ -152,6 +313,16 @@ export class NoteService {
     this.lexicalService.populateText(document)
 
     const { draftId } = document
+    const normalizedSlug =
+      this.normalizeSlug(document.slug) ??
+      (await this.tryGenerateSlugByTitle(document.title))
+
+    await this.ensureSlugAvailable(normalizedSlug)
+
+    if (normalizedSlug) {
+      document.slug = normalizedSlug
+    }
+
     document.created = getLessThanNow(document.created)
     if (document.meta) {
       document.meta = dbTransforms.json(document.meta) as any
@@ -217,6 +388,14 @@ export class NoteService {
     }
 
     const { draftId } = data
+    const hasSlugInput = Object.prototype.hasOwnProperty.call(data, 'slug')
+    const normalizedSlug = hasSlugInput
+      ? this.normalizeSlug(data.slug ?? undefined)
+      : undefined
+
+    if (hasSlugInput && normalizedSlug && normalizedSlug !== oldDoc.slug) {
+      await this.ensureSlugAvailable(normalizedSlug, id)
+    }
 
     const hasFieldChanged = (
       [
@@ -226,8 +405,12 @@ export class NoteService {
         'weather',
         'meta',
         'topicId',
+        'slug',
       ] as (keyof NoteModel)[]
     ).some((key) => {
+      if (key === 'slug' && hasSlugInput) {
+        return normalizedSlug !== oldDoc.slug
+      }
       return isDefined(data[key]) && data[key] !== oldDoc[key]
     })
 
@@ -237,7 +420,7 @@ export class NoteService {
 
     const updatedData = Object.assign(
       {},
-      omit(data, NoteModel.protectedKeys),
+      omit(data, NoteModel.protectedKeys.concat('slug' as any)),
       data.created
         ? {
             created: getLessThanNow(data.created),
@@ -258,6 +441,11 @@ export class NoteService {
             meta: dbTransforms.json(data.meta),
           }
         : {},
+      hasSlugInput && normalizedSlug
+        ? {
+            slug: normalizedSlug,
+          }
+        : {},
     )
 
     const updated = await this.noteModel
@@ -276,6 +464,15 @@ export class NoteService {
     if (!updated) {
       throw new NoContentCanBeModifiedException()
     }
+
+    await this.trackSeoPathChanges(
+      oldDoc as NoteModel,
+      {
+        created: (updatedData.created as Date | undefined) ?? oldDoc.created,
+        slug: hasSlugInput ? normalizedSlug : oldDoc.slug,
+      } as Pick<NoteModel, 'created' | 'slug'>,
+      id,
+    )
 
     // 处理草稿：标记为已发布
     if (draftId) {
@@ -357,6 +554,7 @@ export class NoteService {
         id,
         FileReferenceType.Note,
       ),
+      this.slugTrackerService.deleteAllTracker(id),
     ])
     scheduleManager.schedule(async () => {
       await Promise.all([

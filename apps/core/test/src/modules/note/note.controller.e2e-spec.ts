@@ -1,4 +1,5 @@
 import { APP_INTERCEPTOR } from '@nestjs/core'
+import { vi } from 'vitest'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
@@ -17,9 +18,12 @@ import { OptionModel } from '~/modules/configs/configs.model'
 import { DraftModel } from '~/modules/draft/draft.model'
 import { DraftService } from '~/modules/draft/draft.service'
 import { DraftHistoryService } from '~/modules/draft/draft-history.service'
+import { AiWriterService } from '~/modules/ai/ai-writer/ai-writer.service'
 import { NoteController } from '~/modules/note/note.controller'
 import { NoteModel } from '~/modules/note/note.model'
 import { NoteService } from '~/modules/note/note.service'
+import { SlugTrackerModel } from '~/modules/slug-tracker/slug-tracker.model'
+import { SlugTrackerService } from '~/modules/slug-tracker/slug-tracker.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
@@ -55,9 +59,18 @@ describe('NoteController (e2e)', async () => {
       DraftService,
       fileReferenceProvider,
       translationProvider,
+      SlugTrackerService,
+      {
+        provide: AiWriterService,
+        useValue: {
+          generateSlugByTitleViaOpenAI: vi
+            .fn()
+            .mockResolvedValue({ slug: 'generated-note-slug' }),
+        },
+      },
     ],
     imports: [],
-    models: [NoteModel, OptionModel, DraftModel],
+    models: [NoteModel, OptionModel, DraftModel, SlugTrackerModel],
     async pourData(modelMap) {
       // @ts-ignore
       const { model: _model } = modelMap.get(NoteModel) as {
@@ -93,6 +106,7 @@ describe('NoteController (e2e)', async () => {
   const createdNoteData: Partial<NoteModel> = {
     title: 'Note 2',
     text: 'Content 2',
+    slug: 'note-2',
 
     allowComment: true,
     // use cutsom date
@@ -114,7 +128,29 @@ describe('NoteController (e2e)', async () => {
     expect(res.statusCode).toBe(201)
     createdNoteData.id = data.id
     createdNoteData.nid = data.nid
+    createdNoteData.slug = data.slug
     delete data.id
+    expect(data).toMatchSnapshot()
+  })
+
+  test('GET /notes/:year/:month/:day/:slug', async () => {
+    const { app } = proxy
+    const res = await app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/notes/2023/1/17/note-2`,
+    })
+
+    expect(res.statusCode).toBe(200)
+    const data = res.json()
+    delete data.id
+    delete data.data.id
+    delete data.data.modified
+    if (data.prev) {
+      delete data.prev.id
+    }
+    if (data.next) {
+      delete data.next.id
+    }
     expect(data).toMatchSnapshot()
   })
 
@@ -126,6 +162,7 @@ describe('NoteController (e2e)', async () => {
       payload: {
         title: 'Note 2 (updated)',
         text: `Content 2 (updated)`,
+        slug: 'note-2-updated',
         mood: 'happy',
         weather: 'sunny',
       },
@@ -135,6 +172,27 @@ describe('NoteController (e2e)', async () => {
     })
 
     expect(res.statusCode).toBe(204)
+  })
+
+  test('GET /notes/:year/:month/:day/:slug should resolve tracked old slug', async () => {
+    const { app } = proxy
+    const res = await app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/notes/2023/1/17/note-2`,
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(res.json().data.slug).toBe('note-2-updated')
+  })
+
+  test('GET /notes/:year/:month/:day/:slug should 404 when date mismatch', async () => {
+    const { app } = proxy
+    const res = await app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/notes/2023/1/16/note-2-updated`,
+    })
+
+    expect(res.statusCode).toBe(404)
   })
 
   test('Get patched note', async () => {
@@ -316,7 +374,9 @@ describe('NoteController (e2e)', async () => {
       title: 'Note 4',
       text: 'Content 3',
       allowComment: true,
+      slug: 'note-4',
       password: 'password',
+      created: new Date('2021-03-22T00:00:00.000Z'),
     })
     mockDataWithPasswordNid = note.nid
     return () => model.deleteOne({ _id: note._id })
@@ -328,6 +388,17 @@ describe('NoteController (e2e)', async () => {
     const res = await app.inject({
       method: 'GET',
       url: `${apiRoutePrefix}/notes/nid/${mockDataWithPasswordNid}`,
+    })
+
+    expect(res.statusCode).toBe(403)
+  })
+
+  test('GET /:year/:month/:day/:slug, should ban if has password', async () => {
+    const app = proxy.app
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/notes/2021/3/22/note-4`,
     })
 
     expect(res.statusCode).toBe(403)

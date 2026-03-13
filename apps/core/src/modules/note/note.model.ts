@@ -30,6 +30,9 @@ export class NoteModel extends WriteBaseModel {
   @prop({ required: false, unique: true })
   public nid: number
 
+  @prop({ required: false, trim: true, unique: true, sparse: true })
+  slug?: string
+
   @prop({ default: true })
   isPublished?: boolean
 

@@ -19,6 +19,7 @@ export type NoteModel = TextBaseModel & {
   publicAt?: Date
   password?: string | null
   nid: number
+  slug?: string
 
   location?: string
 

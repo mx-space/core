@@ -31,6 +31,7 @@ import { NoteModel } from './note.model'
 import {
   ListQueryDto,
   NidType,
+  NoteSlugDateParamsDto,
   NoteDto,
   NotePasswordQueryDto,
   NoteQueryDto,
@@ -59,6 +60,88 @@ export class NoteController {
 
     private readonly translationService: TranslationService,
   ) {}
+
+  private async buildPublicNoteResponse(
+    current: NoteModel,
+    isAuthenticated: boolean,
+    query: NotePasswordQueryDto,
+    ip: string,
+    lang?: string,
+  ) {
+    const { password, single: isSingle, prefer } = query
+    const condition = isAuthenticated ? {} : { isPublished: true }
+
+    current.text =
+      !isAuthenticated && this.noteService.checkNoteIsSecret(current)
+        ? ''
+        : current.text
+
+    if (
+      !this.noteService.checkPasswordToAccess(current, password) &&
+      !isAuthenticated
+    ) {
+      throw new BizException(ErrorCodeEnum.NoteForbidden)
+    }
+
+    const liked = await this.countingService
+      .getThisRecordIsLiked(current.id!, ip)
+      .catch(() => false)
+
+    const translationResult = await this.translationService.translateArticle({
+      articleId: current.id!,
+      targetLang: lang,
+      allowHidden: Boolean(isAuthenticated || current.password),
+      originalData: {
+        title: current.title,
+        text: current.text,
+      },
+    })
+
+    const currentData = {
+      ...current,
+      title: translationResult.title,
+      text: translationResult.text,
+      ...(translationResult.content && {
+        content: translationResult.content,
+        contentFormat: translationResult.contentFormat,
+      }),
+      isTranslated: translationResult.isTranslated,
+      translationMeta: translationResult.translationMeta,
+      availableTranslations: translationResult.availableTranslations,
+      liked,
+    }
+
+    if (isSingle) {
+      return applyContentPreference(currentData, prefer)
+    }
+
+    const select = '_id title nid id created modified slug'
+
+    const prev = await this.noteService.model
+      .findOne({
+        ...condition,
+        created: {
+          $gt: current.created,
+        },
+      })
+      .sort({ created: 1 })
+      .select(select)
+      .lean()
+    const next = await this.noteService.model
+      .findOne({
+        ...condition,
+        created: {
+          $lt: current.created,
+        },
+      })
+      .sort({ created: -1 })
+      .select(select)
+      .lean()
+    if (currentData.password) {
+      currentData.password = '*'
+    }
+    return { data: applyContentPreference(currentData, prefer), next, prev }
+  }
 
   @Get('/')
   @Paginator
@@ -116,6 +199,52 @@ export class NoteController {
     }
 
     return current
+  }
+
+  @Get('/:year/:month/:day/:slug')
+  @TranslateFields(
+    { path: 'mood', keyPath: 'note.mood' },
+    { path: 'weather', keyPath: 'note.weather' },
+    { path: 'topic.name', keyPath: 'topic.name', idField: '_id' },
+    { path: 'topic.introduce', keyPath: 'topic.introduce', idField: '_id' },
+    { path: 'data.mood', keyPath: 'note.mood' },
+    { path: 'data.weather', keyPath: 'note.weather' },
+    { path: 'data.topic.name', keyPath: 'topic.name', idField: '_id' },
+    {
+      path: 'data.topic.introduce',
+      keyPath: 'topic.introduce',
+      idField: '_id',
+    },
+  )
+  async getNoteByDateAndSlug(
+    @Param() params: NoteSlugDateParamsDto,
+    @IsAuthenticated() isAuthenticated: boolean,
+    @Query() query: NotePasswordQueryDto,
+    @IpLocation() { ip }: IpRecord,
+    @Lang() lang?: string,
+  ) {
+    const { year, month, day, slug } = params
+    const current = await this.noteService.findOneByDateAndSlug(
+      year,
+      month,
+      day,
+      slug,
+      {
+        includeLocation: isAuthenticated,
+      },
+    )
+
+    if (!current || (!isAuthenticated && !current.isPublished)) {
+      throw new CannotFindException()
+    }
+
+    return this.buildPublicNoteResponse(
+      current as NoteModel,
+      isAuthenticated,
+      query,
+      ip,
+      lang,
+    )
   }
 
   @Get('/list/:id')
@@ -305,7 +434,6 @@ export class NoteController {
     @Lang() lang?: string,
   ) {
     const { nid } = params
-    const { password, single: isSingle, prefer } = query
     const condition = isAuthenticated ? {} : { isPublished: true }
     const current: NoteModel | null = await this.noteService.model
       .findOne({
@@ -318,76 +446,13 @@ export class NoteController {
       throw new CannotFindException()
     }
 
-    current.text =
-      !isAuthenticated && this.noteService.checkNoteIsSecret(current)
-        ? ''
-        : current.text
-
-    if (
-      !this.noteService.checkPasswordToAccess(current, password) &&
-      !isAuthenticated
-    ) {
-      throw new BizException(ErrorCodeEnum.NoteForbidden)
-    }
-
-    const liked = await this.countingService
-      .getThisRecordIsLiked(current.id!, ip)
-      .catch(() => false)
-
-    const translationResult = await this.translationService.translateArticle({
-      articleId: current.id!,
-      targetLang: lang,
-      allowHidden: Boolean(isAuthenticated || current.password),
-      originalData: {
-        title: current.title,
-        text: current.text,
-      },
-    })
-
-    const currentData = {
-      ...current,
-      title: translationResult.title,
-      text: translationResult.text,
-      ...(translationResult.content && {
-        content: translationResult.content,
-        contentFormat: translationResult.contentFormat,
-      }),
-      isTranslated: translationResult.isTranslated,
-      translationMeta: translationResult.translationMeta,
-      availableTranslations: translationResult.availableTranslations,
-      liked,
-    }
-
-    if (isSingle) {
-      return applyContentPreference(currentData, prefer)
-    }
-
-    const select = '_id title nid id created modified'
-
-    const prev = await this.noteService.model
-      .findOne({
-        ...condition,
-        created: {
-          $gt: current.created,
-        },
-      })
-      .sort({ created: 1 })
-      .select(select)
-      .lean()
-    const next = await this.noteService.model
-      .findOne({
-        ...condition,
-        created: {
-          $lt: current.created,
-        },
-      })
-      .sort({ created: -1 })
-      .select(select)
-      .lean()
-    if (currentData.password) {
-      currentData.password = '*'
-    }
-    return { data: applyContentPreference(currentData, prefer), next, prev }
+    return this.buildPublicNoteResponse(
+      current,
+      isAuthenticated,
+      query,
+      ip,
+      lang,
+    )
   }
 
   @Get('/topics/:id')

@@ -86,6 +86,13 @@ describe('test note client', () => {
     expect(data.title).toBe('1')
   })
 
+  it('should get note by date and slug', async () => {
+    mockResponse('/notes/2023/1/17/note-2', { data: { title: '1' } })
+
+    const data = await client.note.getNoteBySlugDate(2023, 1, 17, 'note-2')
+    expect(data.data.title).toBe('1')
+  })
+
   it('should forbidden if no password provide', async () => {
     spyOn(axiosAdaptor, 'get').mockRejectedValue({
       response: {

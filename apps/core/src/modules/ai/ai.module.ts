@@ -50,6 +50,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
   ],
   exports: [
     AiService,
+    AiWriterService,
     AiTranslationService,
     AiSummaryService,
     TranslationEntryService,
