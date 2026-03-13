@@ -172,6 +172,7 @@ describe('NoteController (e2e)', async () => {
     })
 
     expect(res.statusCode).toBe(204)
+    createdNoteData.slug = 'note-2-updated'
   })
 
   test('GET /notes/:year/:month/:day/:slug should resolve tracked old slug', async () => {
@@ -227,6 +228,9 @@ describe('NoteController (e2e)', async () => {
       delete note.modified
     })
 
+    expect(
+      data.data.some((note) => note.slug === createdNoteData.slug),
+    ).toBe(true)
     expect(data).toMatchSnapshot()
   })
 

@@ -49,7 +49,7 @@ export type NoteTopicListOptions = SortOptions & {
 
 export type NoteTimelineItem = Pick<
   NoteModel,
-  'id' | 'title' | 'nid' | 'created' | 'isPublished'
+  'id' | 'title' | 'nid' | 'slug' | 'created' | 'isPublished'
 > & {
   isTranslated?: boolean
   translationMeta?: TranslationMeta

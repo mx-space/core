@@ -42,9 +42,11 @@ describe('test note client', () => {
       data: [
         {
           id: '1',
+          slug: 'note-1',
         },
         {
           id: '2',
+          slug: 'note-2',
         },
       ],
       size: 2,
@@ -54,9 +56,11 @@ describe('test note client', () => {
       data: [
         {
           id: '1',
+          slug: 'note-1',
         },
         {
           id: '2',
+          slug: 'note-2',
         },
       ],
       size: 2,

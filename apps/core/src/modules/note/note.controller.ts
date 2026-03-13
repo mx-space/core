@@ -257,7 +257,7 @@ export class NoteController {
     const { size = 10 } = query
     const half = size >> 1
     const { id } = params
-    const select = 'nid _id title created isPublished modified'
+    const select = 'nid _id title slug created isPublished modified'
     const condition = isAuthenticated ? {} : { isPublished: true }
 
     // 当前文档直接找，不用加条件，反正里面的东西是看不到的

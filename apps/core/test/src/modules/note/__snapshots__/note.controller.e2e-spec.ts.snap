@@ -34,6 +34,7 @@ exports[`NoteController (e2e) > GET /list/:id 1`] = `
       "created": "2023-01-17T11:01:57.851Z",
       "is_published": true,
       "nid": 21,
+      "slug": "note-2-updated",
       "title": "Note 2 (updated)",
     },
     {
