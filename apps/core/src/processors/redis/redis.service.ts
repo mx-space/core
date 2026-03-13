@@ -44,16 +44,20 @@ export class RedisService {
     }
 
     this.redisClient.on('error', (err) => {
-      this.logger.error(`Redis error: ${err.message}`)
+      this.logger.error(
+        this.formatStateLog('Redis connection error', {
+          error: err.message,
+        }),
+      )
     })
     this.redisClient.on('ready', () => {
-      this.logger.log('Redis connection ready')
+      this.logger.log(this.formatStateLog('Redis connection ready'))
     })
     this.redisClient.on('reconnecting', () => {
-      this.logger.warn('Redis reconnecting...')
+      this.logger.warn(this.formatStateLog('Redis reconnecting'))
     })
     this.redisClient.on('close', () => {
-      this.logger.warn('Redis connection closed')
+      this.logger.warn(this.formatStateLog('Redis connection closed'))
     })
   }
 
@@ -61,6 +65,35 @@ export class RedisService {
 
   public getClient() {
     return this.redisClient
+  }
+
+  public isReady() {
+    return this.redisClient.status === 'ready'
+  }
+
+  public getStatus() {
+    return this.redisClient.status
+  }
+
+  public isUnavailableError(error: unknown) {
+    return (
+      error instanceof Error &&
+      error.message.includes(
+        "Stream isn't writeable and enableOfflineQueue options is false",
+      )
+    )
+  }
+
+  public formatStateLog(
+    message: string,
+    extra?: Record<string, string | number | boolean | null | undefined>,
+  ) {
+    return JSON.stringify({
+      module: RedisService.name,
+      message,
+      redisStatus: this.getStatus(),
+      ...extra,
+    })
   }
 
   public get emitter(): Emitter {

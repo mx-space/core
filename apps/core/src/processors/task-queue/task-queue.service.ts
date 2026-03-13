@@ -49,6 +49,18 @@ export class TaskQueueService implements OnModuleDestroy {
     return this.redisService.getClient()
   }
 
+  isRedisReady() {
+    return this.redisService.isReady()
+  }
+
+  getRedisStatus() {
+    return this.redisService.getStatus()
+  }
+
+  isRedisUnavailableError(error: unknown) {
+    return this.redisService.isUnavailableError(error)
+  }
+
   private getKey(key: string) {
     return getRedisKey(key as any)
   }
