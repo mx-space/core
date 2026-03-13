@@ -100,4 +100,24 @@ describe('TopicBaseController translation (e2e)', () => {
     expect(json.data[0].name).toBe('Frontend')
     expect(json.data[0].introduce).toBe('Frontend Intro')
   })
+
+  test('GET /topics/slug/:slug returns a topic by slug', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/topics/slug/frontend`,
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(res.json().slug).toBe('frontend')
+  })
+
+  test('GET /topics/:id returns a topic by id', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/topics/${translatedTopicId}`,
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(res.json().slug).toBe('frontend')
+  })
 })
