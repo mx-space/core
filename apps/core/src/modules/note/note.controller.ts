@@ -34,10 +34,10 @@ import { NoteModel } from './note.model'
 import {
   ListQueryDto,
   NidType,
-  NoteSlugDateParamsDto,
   NoteDto,
   NotePasswordQueryDto,
   NoteQueryDto,
+  NoteSlugDateParamsDto,
   NoteTopicPagerDto,
   PartialNoteDto,
   SetNotePublishStatusDto,
@@ -149,8 +149,14 @@ export class NoteController {
   @Get('/')
   @Paginator
   @TranslateFields(
-    { path: 'data[].mood', keyPath: 'note.mood' },
-    { path: 'data[].weather', keyPath: 'note.weather' },
+    { path: 'docs[].mood', keyPath: 'note.mood' },
+    { path: 'docs[].weather', keyPath: 'note.weather' },
+    { path: 'docs[].topic.name', keyPath: 'topic.name', idField: '_id' },
+    {
+      path: 'docs[].topic.introduce',
+      keyPath: 'topic.introduce',
+      idField: '_id',
+    },
   )
   async getNotes(
     @IsAuthenticated() isAuthenticated: boolean,
@@ -166,14 +172,17 @@ export class NoteController {
       Object.assign(condition, this.noteService.publicNoteQueryCondition)
     }
 
-    const result = await this.noteService.model.paginate(db_query ?? condition, {
-      limit: size,
-      page,
-      select: isAuthenticated
-        ? select
-        : select?.replaceAll(/[+-]?(coordinates|location|password)/g, ''),
-      sort: sortBy ? { [sortBy]: sortOrder || -1 } : { created: -1 },
-    })
+    const result = await this.noteService.model.paginate(
+      db_query ?? condition,
+      {
+        limit: size,
+        page,
+        select: isAuthenticated
+          ? select
+          : select?.replaceAll(/[+-]?(coordinates|location|password)/g, ''),
+        sort: sortBy ? { [sortBy]: sortOrder || -1 } : { created: -1 },
+      },
+    )
 
     if (!lang || !result.docs.length) {
       return result
@@ -203,10 +212,11 @@ export class NoteController {
       return result
     }
 
-    const translationResults = await this.translationService.translateArticleList({
-      articles: translationInputs,
-      targetLang: lang,
-    })
+    const translationResults =
+      await this.translationService.translateArticleList({
+        articles: translationInputs,
+        targetLang: lang,
+      })
 
     result.docs = result.docs.map((doc) => {
       const docId = doc._id?.toString?.() ?? doc.id ?? String(doc._id)
@@ -521,8 +531,8 @@ export class NoteController {
   @Get('/topics/:id')
   @HTTPDecorators.Paginator
   @TranslateFields(
-    { path: 'data[].mood', keyPath: 'note.mood' },
-    { path: 'data[].weather', keyPath: 'note.weather' },
+    { path: 'docs[].mood', keyPath: 'note.mood' },
+    { path: 'docs[].weather', keyPath: 'note.weather' },
   )
   async getNotesByTopic(
     @Param() params: MongoIdDto,

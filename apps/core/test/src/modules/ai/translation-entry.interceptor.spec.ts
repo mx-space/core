@@ -203,6 +203,69 @@ describe('TranslationEntryInterceptor path utilities', () => {
     })
   })
 
+  describe('toScannableObject', () => {
+    const toScannableObject =
+      interceptor['toScannableObject']?.bind(interceptor)
+
+    it('should keep plain objects by reference', () => {
+      const data = { notes: [{ mood: '开心' }] }
+      expect(toScannableObject(data)).toBe(data)
+    })
+
+    it('should keep arrays by reference', () => {
+      const data = [{ mood: '开心' }]
+      expect(toScannableObject(data)).toBe(data)
+    })
+
+    it('should prefer toJSON for document-like objects', () => {
+      const jsonData = { notes: [{ mood: '开心' }] }
+      class MockDoc {
+        toJSON = vi.fn(() => jsonData)
+        toObject = vi.fn(() => ({ notes: [{ mood: 'ignored' }] }))
+      }
+      const data = new MockDoc()
+
+      expect(toScannableObject(data)).toBe(jsonData)
+      expect(data.toJSON).toHaveBeenCalledOnce()
+      expect(data.toObject).not.toHaveBeenCalled()
+    })
+
+    it('should fall back to toObject when toJSON is unavailable', () => {
+      const objectData = { notes: [{ mood: '开心' }] }
+      class MockDoc {
+        toObject = vi.fn(() => objectData)
+      }
+      const data = new MockDoc()
+
+      expect(toScannableObject(data)).toBe(objectData)
+      expect(data.toObject).toHaveBeenCalledOnce()
+    })
+
+    it('should recursively normalize document-like values nested under plain objects', () => {
+      class TopicDoc {
+        toJSON = vi.fn(() => ({ _id: 'topic-1', name: '近况' }))
+      }
+
+      class NoteDoc {
+        toJSON = vi.fn(() => ({
+          _id: 'note-1',
+          mood: '开心',
+          topic: new TopicDoc(),
+        }))
+      }
+
+      const data = { docs: [new NoteDoc()] }
+      const result = toScannableObject(data)
+
+      expect(result).not.toBe(data)
+      expect(result.docs[0]).toEqual({
+        _id: 'note-1',
+        mood: '开心',
+        topic: { _id: 'topic-1', name: '近况' },
+      })
+    })
+  })
+
   describe('collectDictTexts', () => {
     const collect = interceptor['collectDictTexts'].bind(interceptor)
 

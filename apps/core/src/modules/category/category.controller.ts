@@ -46,7 +46,7 @@ export class CategoryController {
 
   @Get('/')
   @TranslateFields({
-    path: 'data[].name',
+    path: '[].name',
     keyPath: 'category.name',
     idField: '_id',
   })

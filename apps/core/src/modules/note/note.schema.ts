@@ -90,6 +90,7 @@ export const NoteQuerySchema = PagerSchema.extend({
     (val) => (typeof val === 'string' ? Math.trunc(Number(val)) : val),
     z.union([z.literal(1), z.literal(-1)]).optional(),
   ),
+  lang: zLang,
 })
 
 export class NoteQueryDto extends createZodDto(NoteQuerySchema) {}

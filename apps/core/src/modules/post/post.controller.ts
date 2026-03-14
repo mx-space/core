@@ -51,7 +51,7 @@ export class PostController {
   @Get('/')
   @Paginator
   @TranslateFields({
-    path: 'data[].category.name',
+    path: 'docs[].category.name',
     keyPath: 'category.name',
     idField: '_id',
   })

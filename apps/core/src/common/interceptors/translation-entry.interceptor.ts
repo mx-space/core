@@ -5,6 +5,7 @@ import type {
 } from '@nestjs/common'
 import { Injectable, Logger } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
+import { isPlainObject } from 'es-toolkit/compat'
 import objectScan from 'object-scan'
 import type { Observable } from 'rxjs'
 import { from, switchMap } from 'rxjs'
@@ -40,6 +41,10 @@ interface ScanContext {
 }
 
 type ObjectScanner = (haystack: any, context: ScanContext) => ScanContext
+type LookupMaps = {
+  entityLookups: Map<TranslationEntryKeyPath, EntityLookup>
+  dictLookups: Map<TranslationEntryKeyPath, DictLookup>
+}
 
 @Injectable()
 export class TranslationEntryInterceptor implements NestInterceptor {
@@ -81,28 +86,23 @@ export class TranslationEntryInterceptor implements NestInterceptor {
   ): Promise<any> {
     if (data == null) return data
 
-    const entityLookups = new Map<TranslationEntryKeyPath, EntityLookup>()
-    const dictLookups = new Map<TranslationEntryKeyPath, DictLookup>()
+    let translationTarget = data
+    let { entityLookups, dictLookups } = this.buildLookups(data, rules)
 
-    for (const rule of rules) {
-      if (rule.idField) {
-        if (!entityLookups.has(rule.keyPath)) {
-          entityLookups.set(rule.keyPath, {
-            keyPath: rule.keyPath,
-            ids: new Set(),
-          })
+    if (!this.hasLookupCandidates(entityLookups, dictLookups)) {
+      const plainData = this.toScannableObject(data)
+      if (plainData) {
+        const plainLookups = this.buildLookups(plainData, rules)
+        if (
+          this.hasLookupCandidates(
+            plainLookups.entityLookups,
+            plainLookups.dictLookups,
+          )
+        ) {
+          translationTarget = plainData
+          entityLookups = plainLookups.entityLookups
+          dictLookups = plainLookups.dictLookups
         }
-        const lookup = entityLookups.get(rule.keyPath)!
-        this.collectEntityIds(data, rule.path, rule.idField, lookup.ids)
-      } else {
-        if (!dictLookups.has(rule.keyPath)) {
-          dictLookups.set(rule.keyPath, {
-            keyPath: rule.keyPath,
-            texts: new Set(),
-          })
-        }
-        const lookup = dictLookups.get(rule.keyPath)!
-        this.collectDictTexts(data, rule.path, lookup.texts)
       }
     }
 
@@ -143,17 +143,117 @@ export class TranslationEntryInterceptor implements NestInterceptor {
       if (rule.idField) {
         const map = entityMaps.get(rule.keyPath)
         if (map?.size) {
-          this.replaceEntityValues(data, rule.path, rule.idField, map)
+          this.replaceEntityValues(
+            translationTarget,
+            rule.path,
+            rule.idField,
+            map,
+          )
         }
       } else {
         const map = dictMaps.get(rule.keyPath)
         if (map?.size) {
-          this.replaceDictValues(data, rule.path, map)
+          this.replaceDictValues(translationTarget, rule.path, map)
         }
       }
     }
 
-    return data
+    return translationTarget
+  }
+
+  private buildLookups(data: any, rules: TranslateFieldRule[]): LookupMaps {
+    const entityLookups = new Map<TranslationEntryKeyPath, EntityLookup>()
+    const dictLookups = new Map<TranslationEntryKeyPath, DictLookup>()
+
+    for (const rule of rules) {
+      if (rule.idField) {
+        if (!entityLookups.has(rule.keyPath)) {
+          entityLookups.set(rule.keyPath, {
+            keyPath: rule.keyPath,
+            ids: new Set(),
+          })
+        }
+        const lookup = entityLookups.get(rule.keyPath)!
+        this.collectEntityIds(data, rule.path, rule.idField, lookup.ids)
+      } else {
+        if (!dictLookups.has(rule.keyPath)) {
+          dictLookups.set(rule.keyPath, {
+            keyPath: rule.keyPath,
+            texts: new Set(),
+          })
+        }
+        const lookup = dictLookups.get(rule.keyPath)!
+        this.collectDictTexts(data, rule.path, lookup.texts)
+      }
+    }
+
+    return { entityLookups, dictLookups }
+  }
+
+  private hasLookupCandidates(
+    entityLookups: Map<TranslationEntryKeyPath, EntityLookup>,
+    dictLookups: Map<TranslationEntryKeyPath, DictLookup>,
+  ): boolean {
+    return (
+      [...entityLookups.values()].some((lookup) => lookup.ids.size > 0) ||
+      [...dictLookups.values()].some((lookup) => lookup.texts.size > 0)
+    )
+  }
+
+  private toScannableObject(data: any): any | null {
+    if (data == null || typeof data !== 'object') {
+      return null
+    }
+
+    return this.normalizeScannableValue(data)
+  }
+
+  private normalizeScannableValue(value: any): any {
+    if (value == null || typeof value !== 'object') {
+      return value
+    }
+
+    if (Array.isArray(value)) {
+      let changed = false
+      const normalized = value.map((item) => {
+        const next = this.normalizeScannableValue(item)
+        if (next !== item) {
+          changed = true
+        }
+        return next
+      })
+
+      return changed ? normalized : value
+    }
+
+    if (!isPlainObject(value)) {
+      if (typeof value.toJSON === 'function') {
+        return this.normalizeScannableValue(value.toJSON())
+      }
+
+      if (typeof value.toObject === 'function') {
+        return this.normalizeScannableValue(value.toObject())
+      }
+
+      try {
+        return JSON.parse(JSON.stringify(value))
+      } catch {
+        return value
+      }
+    }
+
+    let changed = false
+    const normalized: Record<string, unknown> = {}
+
+    for (const [key, child] of Object.entries(value)) {
+      const next = this.normalizeScannableValue(child)
+      if (next !== child) {
+        changed = true
+      }
+      normalized[key] = next
+    }
+
+    return changed ? normalized : value
   }
 
   private toObjectScanPath(path: string): string {
