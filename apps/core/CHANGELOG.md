@@ -1,5 +1,22 @@
 # CHANGELOG
 
+# [10.5.0](https://github.com/mx-space/core/compare/v10.4.0...v10.5.0) (2026-03-14)
+
+
+### Bug Fixes
+
+* **note:** translate list results by request locale ([5c44178](https://github.com/mx-space/core/commit/5c44178386ff0817b82c78921d1c1d2aa8688bd0))
+
+
+### Features
+
+* **ai:** add slug backfill task for notes without slug ([0835863](https://github.com/mx-space/core/commit/083586358adcb4d32321b68d0ca9f38486fb6960))
+* flatten comment threads ([70385d9](https://github.com/mx-space/core/commit/70385d9e104106cb20ca8bc54f2f750e5ae0f121))
+* **note:** add withSummary option to note list API ([6e56df9](https://github.com/mx-space/core/commit/6e56df901b17f38cb7788844d3abc9f71304bb0f))
+* **note:** enhance note pagination with summary retrieval ([855ef99](https://github.com/mx-space/core/commit/855ef99e8591d340d1d1c8efb7093f27b955e27a))
+
+
+
 # [10.4.0](https://github.com/mx-space/core/compare/v10.3.3...v10.4.0) (2026-03-13)
 
 
