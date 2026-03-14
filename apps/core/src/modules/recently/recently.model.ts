@@ -1,9 +1,13 @@
 import { modelOptions, prop } from '@typegoose/typegoose'
+import mongoose from 'mongoose'
+
 import {
   CollectionRefTypes,
   RECENTLY_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { BaseCommentIndexModel } from '~/shared/model/base-comment.model'
+
+import { RecentlyTypeEnum } from './recently.schema'
 
 export type RefType = {
   title: string
@@ -16,8 +20,18 @@ export type RefType = {
   },
 })
 export class RecentlyModel extends BaseCommentIndexModel {
-  @prop({ required: true })
+  @prop({ default: '' })
   content: string
+
+  @prop({
+    type: String,
+    enum: Object.values(RecentlyTypeEnum),
+    default: RecentlyTypeEnum.Text,
+  })
+  type: RecentlyTypeEnum
+
+  @prop({ type: () => mongoose.Schema.Types.Mixed })
+  metadata?: Record<string, any>
 
   @prop({ refPath: 'refType' })
   ref: RefType
@@ -28,20 +42,10 @@ export class RecentlyModel extends BaseCommentIndexModel {
   @prop()
   modified?: Date
 
-  /**
-   * 顶
-   */
-  @prop({
-    default: 0,
-  })
+  @prop({ default: 0 })
   up: number
 
-  /**
-   * 踩
-   */
-  @prop({
-    default: 0,
-  })
+  @prop({ default: 0 })
   down: number
 
   get refId() {
