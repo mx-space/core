@@ -37,6 +37,7 @@ export interface TranslationAllTaskPayload {
 export interface SlugBackfillTaskPayload {
   // Human-readable info
   noteCount?: number
+  noteIds?: string[]
 }
 
 export type AITaskPayload =
@@ -68,6 +69,10 @@ export function computeAITaskDedupKey(
       return `all:${(p.targetLanguages || []).slice().sort().join(',')}`
     }
     case AITaskType.SlugBackfill: {
+      const p = payload as SlugBackfillTaskPayload
+      if (p.noteIds?.length) {
+        return `slug:backfill:${p.noteIds.slice().sort().join(',')}`
+      }
       return `slug:backfill`
     }
   }

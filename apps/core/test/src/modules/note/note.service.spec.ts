@@ -10,7 +10,7 @@ import {
 } from 'vitest'
 
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { AiWriterService } from '~/modules/ai/ai-writer/ai-writer.service'
+import { AiSlugBackfillService } from '~/modules/ai/ai-writer/ai-slug-backfill.service'
 import { CommentService } from '~/modules/comment/comment.service'
 import { DraftService } from '~/modules/draft/draft.service'
 import { FileReferenceType } from '~/modules/file/file-reference.model'
@@ -22,11 +22,13 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { getModelToken } from '~/transformers/model.transformer'
+import { scheduleManager } from '~/utils/schedule.util'
 
 describe('NoteService', () => {
   let noteService: NoteService
   let mockNotes: any[]
   let mockComments: any[]
+  let mockNoteModel: ReturnType<typeof createMockNoteModel>
 
   let mockFileReferenceService: {
     activateReferences: Mock
@@ -61,8 +63,8 @@ describe('NoteService', () => {
     deleteAllTracker: Mock
   }
 
-  let mockAiWriterService: {
-    generateSlugByTitleViaOpenAI: Mock
+  let mockAiSlugBackfillService: {
+    createBackfillTaskForNotes: Mock
   }
 
   let nidCounter: number
@@ -218,8 +220,26 @@ describe('NoteService', () => {
         return Promise.resolve(mockNotes.length)
       }),
 
-      updateOne: vi.fn().mockImplementation(() => ({
-        exec: vi.fn().mockResolvedValue({ modifiedCount: 1 }),
+      updateOne: vi.fn().mockImplementation((query: any, update: any) => ({
+        exec: vi.fn().mockImplementation(async () => {
+          const note = mockNotes.find(
+            (n) =>
+              n._id === query._id ||
+              n.id === query._id ||
+              n._id === query.id ||
+              n.id === query.id,
+          )
+
+          if (!note) {
+            return { modifiedCount: 0 }
+          }
+
+          if (update?.$set) {
+            Object.assign(note, update.$set)
+          }
+
+          return { modifiedCount: 1 }
+        }),
       })),
 
       paginate: vi.fn().mockImplementation((query: any, options: any) => {
@@ -283,13 +303,13 @@ describe('NoteService', () => {
       deleteAllTracker: vi.fn().mockResolvedValue(undefined),
     }
 
-    mockAiWriterService = {
-      generateSlugByTitleViaOpenAI: vi
+    mockAiSlugBackfillService = {
+      createBackfillTaskForNotes: vi
         .fn()
-        .mockResolvedValue({ slug: 'generated-by-ai' }),
+        .mockResolvedValue({ taskId: 'task-1', created: true }),
     }
 
-    const mockNoteModel = createMockNoteModel()
+    mockNoteModel = createMockNoteModel()
 
     const module = await Test.createTestingModule({
       providers: [
@@ -330,8 +350,8 @@ describe('NoteService', () => {
           useValue: mockSlugTrackerService,
         },
         {
-          provide: AiWriterService,
-          useValue: mockAiWriterService,
+          provide: AiSlugBackfillService,
+          useValue: mockAiSlugBackfillService,
         },
       ],
     }).compile()
@@ -342,6 +362,7 @@ describe('NoteService', () => {
   afterEach(() => {
     mockNotes = []
     mockComments = []
+    vi.useRealTimers()
     vi.clearAllMocks()
   })
 
@@ -509,32 +530,46 @@ describe('NoteService', () => {
       } as NoteModel)
 
       expect(result.slug).toBe('hello-world')
-      expect(mockAiWriterService.generateSlugByTitleViaOpenAI).not.toHaveBeenCalled()
+      expect(
+        mockAiSlugBackfillService.createBackfillTaskForNotes,
+      ).not.toHaveBeenCalled()
     })
 
-    it('should generate slug with ai when creating note without slug', async () => {
+    it('should create note and queue slug backfill task when slug is missing', async () => {
+      vi.spyOn(scheduleManager, 'schedule').mockImplementation((callback) => {
+        callback()
+      })
+
       const result = await noteService.create({
         title: 'Title For AI',
         text: 'Test content',
       } as NoteModel)
 
-      expect(mockAiWriterService.generateSlugByTitleViaOpenAI).toHaveBeenCalledWith(
-        'Title For AI',
-      )
-      expect(result.slug).toBe('generated-by-ai')
+      expect(result.slug).toBeUndefined()
+      expect(mockNoteModel.create).toHaveBeenCalled()
+      expect(
+        mockAiSlugBackfillService.createBackfillTaskForNotes,
+      ).toHaveBeenCalledWith([result.id])
     })
 
-    it('should skip slug generation when ai writer is unavailable', async () => {
-      mockAiWriterService.generateSlugByTitleViaOpenAI.mockRejectedValueOnce(
-        new Error('ai disabled'),
+    it('should continue when slug backfill task enqueue fails', async () => {
+      vi.spyOn(scheduleManager, 'schedule').mockImplementation((callback) => {
+        callback()
+      })
+
+      mockAiSlugBackfillService.createBackfillTaskForNotes.mockRejectedValueOnce(
+        new Error('queue unavailable'),
       )
 
       const result = await noteService.create({
-        title: 'Title Without AI',
+        title: 'Title Without Task',
         text: 'Test content',
       } as NoteModel)
 
       expect(result.slug).toBeUndefined()
+      expect(
+        mockAiSlugBackfillService.createBackfillTaskForNotes,
+      ).toHaveBeenCalledWith([result.id])
     })
 
     it('should reject duplicate slug when creating note', async () => {

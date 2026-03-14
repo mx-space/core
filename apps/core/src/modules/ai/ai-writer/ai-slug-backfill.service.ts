@@ -72,14 +72,53 @@ export class AiSlugBackfillService implements OnModuleInit {
     })
   }
 
+  async createBackfillTaskForNotes(noteIds: string[]) {
+    const uniqueNoteIds = [...new Set(noteIds)].filter(Boolean)
+    if (!uniqueNoteIds.length) {
+      return { taskId: '', created: false }
+    }
+
+    return this.aiTaskService.createSlugBackfillTask({
+      noteIds: uniqueNoteIds,
+      noteCount: uniqueNoteIds.length,
+    })
+  }
+
+  private getSluglessQuery(noteIds?: string[]) {
+    return {
+      ...(noteIds?.length
+        ? {
+            _id: {
+              $in: noteIds,
+            },
+          }
+        : {}),
+      $or: [{ slug: { $exists: false } }, { slug: null }, { slug: '' }],
+    }
+  }
+
+  private describeBackfillScope(payload: SlugBackfillTaskPayload) {
+    if (payload.noteIds?.length) {
+      return `Backfill scope: targeted notes (${payload.noteIds.length}) ids=${payload.noteIds.join(', ')}`
+    }
+
+    return 'Backfill scope: all notes without slug'
+  }
+
   private registerTaskHandler() {
     this.taskProcessor.registerHandler({
       type: AITaskType.SlugBackfill,
       execute: async (
-        _payload: SlugBackfillTaskPayload,
+        payload: SlugBackfillTaskPayload,
         context: TaskExecuteContext,
       ) => {
-        const notes = await this.getNotesWithoutSlug()
+        await context.appendLog('info', this.describeBackfillScope(payload))
+
+        const notes = await this.noteModel
+          .find(this.getSluglessQuery(payload.noteIds))
+          .select('_id title nid')
+          .sort({ created: -1 })
+          .lean()
 
         if (notes.length === 0) {
           await context.appendLog('info', 'No notes without slug found')

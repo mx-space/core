@@ -28,10 +28,10 @@ import { scheduleManager } from '~/utils/schedule.util'
 import { getLessThanNow } from '~/utils/time.util'
 import { isDefined, isMongoId } from '~/utils/validator.util'
 
+import { AiSlugBackfillService } from '../ai/ai-writer/ai-slug-backfill.service'
 import { CommentService } from '../comment/comment.service'
 import { DraftRefType } from '../draft/draft.model'
 import { DraftService } from '../draft/draft.service'
-import { AiWriterService } from '../ai/ai-writer/ai-writer.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { NoteModel } from './note.model'
 
@@ -45,7 +45,7 @@ export class NoteService {
     private readonly eventManager: EventManagerService,
     private readonly lexicalService: LexicalService,
     private readonly slugTrackerService: SlugTrackerService,
-    private readonly aiWriterService: AiWriterService,
+    private readonly aiSlugBackfillService: AiSlugBackfillService,
     @Inject(forwardRef(() => CommentService))
     private readonly commentService: CommentService,
 
@@ -109,7 +109,12 @@ export class NoteService {
     return { start, end }
   }
 
-  private isDateWithinRange(date: Date | string, year: number, month: number, day: number) {
+  private isDateWithinRange(
+    date: Date | string,
+    year: number,
+    month: number,
+    day: number,
+  ) {
     const { start, end } = this.getDateRange(year, month, day)
     const value = new Date(date)
     return value >= start && value < end
@@ -149,21 +154,6 @@ export class NoteService {
     }
 
     throw new BusinessException(ErrorCodeEnum.SlugNotAvailable)
-  }
-
-  private async tryGenerateSlugByTitle(title?: string) {
-    if (!title) {
-      return undefined
-    }
-
-    try {
-      const result = await this.aiWriterService.generateSlugByTitleViaOpenAI(
-        title,
-      )
-      return this.normalizeSlug(result.slug)
-    } catch {
-      return undefined
-    }
   }
 
   private async trackSeoPathChanges(
@@ -313,9 +303,7 @@ export class NoteService {
     this.lexicalService.populateText(document)
 
     const { draftId } = document
-    const normalizedSlug =
-      this.normalizeSlug(document.slug) ??
-      (await this.tryGenerateSlugByTitle(document.title))
+    const normalizedSlug = this.normalizeSlug(document.slug)
 
     await this.ensureSlugAvailable(normalizedSlug)
 
@@ -360,6 +348,10 @@ export class NoteService {
             scope: EventScope.TO_SYSTEM_VISITOR,
           },
         ),
+        !normalizedSlug &&
+          this.aiSlugBackfillService
+            .createBackfillTaskForNotes([note.id])
+            .catch(() => undefined),
         !isLexical(note) &&
           this.imageService.saveImageDimensionsFromMarkdownText(
             note.text,

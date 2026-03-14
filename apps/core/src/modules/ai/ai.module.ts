@@ -53,6 +53,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
   exports: [
     AiService,
     AiWriterService,
+    AiSlugBackfillService,
     AiTranslationService,
     AiSummaryService,
     TranslationEntryService,
