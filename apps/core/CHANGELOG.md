@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [10.5.1](https://github.com/mx-space/core/compare/v10.5.0...v10.5.1) (2026-03-14)
+
+
+### Bug Fixes
+
+* **ai-translation:** normalize tags in translation events ([61d9fb5](https://github.com/mx-space/core/commit/61d9fb5c5d8641d59aeb3f78f6b1e04d82a19eb7))
+* **recently:** resolve type compatibility issue in RecentlyDto ([3566ac6](https://github.com/mx-space/core/commit/3566ac6f6dadad991b42fb08bd2e9fea02bc507a))
+
+
+### Features
+
+* **api-client:** add RecentlyTypeEnum and metadata interfaces ([4339332](https://github.com/mx-space/core/commit/4339332eb94f56e78cbec262a5347ed366745f8c))
+* **comment:** add reader ref support and migration ([135868b](https://github.com/mx-space/core/commit/135868b3562a89d4ba3929e83a3132c69ca2c4c1))
+* **recently:** add typed metadata schema and model fields ([46a8ae5](https://github.com/mx-space/core/commit/46a8ae562e2e413f56783b0571b9b786ddf10fd8))
+* **recently:** pass type/metadata in service create/update ([c6c8b2b](https://github.com/mx-space/core/commit/c6c8b2bb56ed662fb759bded881ae3d67170025b))
+
+
+
 # [10.5.0](https://github.com/mx-space/core/compare/v10.4.0...v10.5.0) (2026-03-14)
 
 
