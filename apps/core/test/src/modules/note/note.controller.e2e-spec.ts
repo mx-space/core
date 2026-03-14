@@ -27,11 +27,72 @@ import { SlugTrackerService } from '~/modules/slug-tracker/slug-tracker.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
+import { TranslationService } from '~/processors/helper/helper.translation.service'
 
 import MockDbData from './note.e2e-mock.db'
 
 describe('NoteController (e2e)', async () => {
   let model: MongooseModel<NoteModel>
+  const translationServiceMock = {
+    translateArticle: vi.fn(async (options) => ({
+      ...options.originalData,
+      title: options.targetLang
+        ? `${options.originalData.title} [${options.targetLang}]`
+        : options.originalData.title,
+      text: options.targetLang
+        ? `${options.originalData.text} [${options.targetLang}]`
+        : options.originalData.text,
+      isTranslated: Boolean(options.targetLang),
+      ...(options.targetLang && {
+        translationMeta: {
+          sourceLang: 'zh',
+          targetLang: options.targetLang,
+          translatedAt: new Date('2026-03-14T00:00:00.000Z'),
+        },
+        availableTranslations: [options.targetLang],
+      }),
+    })),
+    translateList: vi.fn(async ({ items, targetLang, applyResult }) =>
+      items.map((item) =>
+        applyResult(
+          item,
+          targetLang
+            ? {
+                isTranslated: true,
+                title: `${item.title} [${targetLang}]`,
+                translationMeta: {
+                  sourceLang: 'zh',
+                  targetLang,
+                  translatedAt: new Date('2026-03-14T00:00:00.000Z'),
+                },
+              }
+            : undefined,
+        ),
+      ),
+    ),
+    translateArticleList: vi.fn(async ({ articles, targetLang }) => {
+      return new Map(
+        articles.map((article) => [
+          article.id,
+          {
+            ...article,
+            title: targetLang
+              ? `${article.title} [${targetLang}]`
+              : article.title,
+            text: targetLang ? `${article.text} [${targetLang}]` : article.text,
+            isTranslated: Boolean(targetLang),
+            ...(targetLang && {
+              translationMeta: {
+                sourceLang: 'zh',
+                targetLang,
+                translatedAt: new Date('2026-03-14T00:00:00.000Z'),
+              },
+            }),
+          },
+        ]),
+      )
+    }),
+  }
   const proxy = createE2EApp({
     controllers: [NoteController],
     providers: [
@@ -58,7 +119,10 @@ describe('NoteController (e2e)', async () => {
       DraftHistoryService,
       DraftService,
       fileReferenceProvider,
-      translationProvider,
+      {
+        provide: TranslationService,
+        useValue: translationServiceMock,
+      },
       SlugTrackerService,
       {
         provide: AiWriterService,
@@ -87,6 +151,10 @@ describe('NoteController (e2e)', async () => {
     await model.deleteMany({})
   })
 
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
   test('GET /notes', async () => {
     const { app } = proxy
     const res = await app.inject({
@@ -101,6 +169,23 @@ describe('NoteController (e2e)', async () => {
       delete d._id
     })
     expect(data).toMatchSnapshot()
+  })
+
+  test('GET /notes?lang=en translates list titles', async () => {
+    const { app } = proxy
+    const res = await app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/notes`,
+      query: {
+        lang: 'en',
+      },
+    })
+
+    expect(res.statusCode).toBe(200)
+    const data = res.json()
+
+    expect(translationServiceMock.translateArticleList).toHaveBeenCalledOnce()
+    expect(data.data[0]?.title).toContain('[en]')
   })
 
   const createdNoteData: Partial<NoteModel> = {

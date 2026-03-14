@@ -22,7 +22,10 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { CountingService } from '~/processors/helper/helper.counting.service'
-import { TranslationService } from '~/processors/helper/helper.translation.service'
+import {
+  type ArticleTranslationInput,
+  TranslationService,
+} from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import { applyContentPreference } from '~/utils/content.util'
@@ -152,6 +155,7 @@ export class NoteController {
   async getNotes(
     @IsAuthenticated() isAuthenticated: boolean,
     @Query() query: NoteQueryDto,
+    @Lang() lang?: string,
   ) {
     const { size, select, page, sortBy, sortOrder, year, db_query } = query
     const condition = {
@@ -162,7 +166,7 @@ export class NoteController {
       Object.assign(condition, this.noteService.publicNoteQueryCondition)
     }
 
-    return await this.noteService.model.paginate(db_query ?? condition, {
+    const result = await this.noteService.model.paginate(db_query ?? condition, {
       limit: size,
       page,
       select: isAuthenticated
@@ -170,6 +174,61 @@ export class NoteController {
         : select?.replaceAll(/[+-]?(coordinates|location|password)/g, ''),
       sort: sortBy ? { [sortBy]: sortOrder || -1 } : { created: -1 },
     })
+
+    if (!lang || !result.docs.length) {
+      return result
+    }
+
+    const translationInputs: ArticleTranslationInput[] = []
+    for (const doc of result.docs) {
+      if (doc.meta && typeof doc.meta === 'string') {
+        doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
+      }
+
+      if (typeof doc.text === 'string') {
+        translationInputs.push({
+          id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
+          title: doc.title,
+          text: doc.text,
+          meta: doc.meta as { lang?: string } | undefined,
+          contentFormat: doc.contentFormat,
+          content: doc.content,
+          modified: doc.modified,
+          created: doc.created,
+        })
+      }
+    }
+
+    if (!translationInputs.length) {
+      return result
+    }
+
+    const translationResults = await this.translationService.translateArticleList({
+      articles: translationInputs,
+      targetLang: lang,
+    })
+
+    result.docs = result.docs.map((doc) => {
+      const docId = doc._id?.toString?.() ?? doc.id ?? String(doc._id)
+      const translation = translationResults.get(docId)
+      if (!translation?.isTranslated) {
+        return doc
+      }
+
+      doc.title = translation.title
+      doc.text = translation.text
+      if (translation.content) {
+        doc.content = translation.content
+        doc.contentFormat = doc.contentFormat ?? translation.contentFormat
+      }
+      ;(doc as { isTranslated?: boolean }).isTranslated =
+        translation.isTranslated
+      ;(doc as { translationMeta?: unknown }).translationMeta =
+        translation.translationMeta
+      return doc
+    })
+
+    return result
   }
 
   @Get(':id')
@@ -361,6 +420,10 @@ export class NoteController {
 
   @Get('/latest')
   @TranslateFields(
+    { path: 'mood', keyPath: 'note.mood' },
+    { path: 'weather', keyPath: 'note.weather' },
+    { path: 'topic.name', keyPath: 'topic.name', idField: '_id' },
+    { path: 'topic.introduce', keyPath: 'topic.introduce', idField: '_id' },
     { path: 'data.mood', keyPath: 'note.mood' },
     { path: 'data.weather', keyPath: 'note.weather' },
     { path: 'data.topic.name', keyPath: 'topic.name', idField: '_id' },
