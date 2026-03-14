@@ -27,7 +27,7 @@
     "build": "node scripts/extract-models.js && node scripts/generate.js && tsdown"
   },
   "devDependencies": {
-    "express": "4.21.2",
+    "express": "4.22.1",
     "tsdown": "0.21.0-beta.2"
   },
   "bump": {
