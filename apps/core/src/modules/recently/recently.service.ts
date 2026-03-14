@@ -1,4 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import { mongo } from 'mongoose'
+import pluralize from 'pluralize'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -11,8 +14,7 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
-import { mongo } from 'mongoose'
-import pluralize from 'pluralize'
+
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
@@ -255,6 +257,8 @@ export class RecentlyService {
 
     const res = await this.model.create({
       content: model.content,
+      type: (model as any).type,
+      metadata: (model as any).metadata,
       ref: model.refId as unknown as RecentlyModel['ref'],
       refType: model.refType,
     })
@@ -306,7 +310,12 @@ export class RecentlyService {
   async update(id: string, model: Partial<RecentlyModel>) {
     const res = await this.model.findByIdAndUpdate(
       id,
-      { content: model.content, modified: new Date() },
+      {
+        content: model.content,
+        type: model.type,
+        metadata: model.metadata,
+        modified: new Date(),
+      },
       { new: true },
     )
 

@@ -1,13 +1,15 @@
 import { Body, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IpLocation } from '~/common/decorators/ip.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation } from '~/common/decorators/ip.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { OffsetDto } from '~/shared/dto/pager.dto'
+
 import { RecentlyModel } from './recently.model'
 import { RecentlyAttitudeDto, RecentlyDto } from './recently.schema'
 import { RecentlyService } from './recently.service'
@@ -65,7 +67,7 @@ export class RecentlyController {
 
   @Put('/:id')
   @Auth()
-  async update(@Param() { id }: MongoIdDto, @Body() body: RecentlyModel) {
+  async update(@Param() { id }: MongoIdDto, @Body() body: RecentlyDto) {
     const res = await this.recentlyService.update(id, body)
     if (!res) {
       throw new BizException(ErrorCodeEnum.EntryNotFound)
