@@ -799,6 +799,13 @@ export class AiTranslationService
     eventType: BusinessEvents,
     translation: AITranslationModel,
   ) {
+    // `translation` can be a live Mongoose document. Its array fields may carry
+    // Mongoose-specific internals that fail the gateway's `structuredClone()`.
+    // Materialize `tags` into a plain array before emitting.
+    const tags = Array.isArray(translation.tags)
+      ? [...translation.tags]
+      : translation.tags
+
     const payload = {
       id: translation.id,
       refId: translation.refId,
@@ -808,7 +815,7 @@ export class AiTranslationService
       title: translation.title,
       text: translation.text,
       summary: translation.summary,
-      tags: translation.tags,
+      tags,
       hash: translation.hash,
       aiModel: translation.aiModel,
       aiProvider: translation.aiProvider,

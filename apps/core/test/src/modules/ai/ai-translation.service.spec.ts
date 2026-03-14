@@ -1,6 +1,8 @@
 import { Test } from '@nestjs/testing'
+import mongoose from 'mongoose'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { AiService } from '~/modules/ai/ai.service'
 import { AiInFlightService } from '~/modules/ai/ai-inflight/ai-inflight.service'
@@ -26,6 +28,7 @@ describe('AiTranslationService', () => {
   let mockConfigService: any
   let mockAiTaskService: any
   let mockTranslationConsistencyService: any
+  let mockEventManager: any
 
   const mockArticle = {
     id: 'article-1',
@@ -85,7 +88,7 @@ describe('AiTranslationService', () => {
       getTranslationModelWithInfo: vi.fn(),
     }
 
-    const mockEventManager = {
+    mockEventManager = {
       emit: vi.fn(),
     }
 
@@ -456,6 +459,56 @@ describe('AiTranslationService', () => {
 
       const resolvedResult = await result
       expect(resolvedResult).toEqual(translation)
+    })
+  })
+
+  describe('emitTranslationEvent', () => {
+    it('emits a structured-cloneable payload for mongoose translation documents', () => {
+      const modelName = `TmpAiTranslation_${crypto.randomUUID()}`
+      const TranslationModel = mongoose.model(
+        modelName,
+        new mongoose.Schema({
+          refId: String,
+          refType: String,
+          lang: String,
+          sourceLang: String,
+          title: String,
+          text: String,
+          summary: String,
+          tags: [String],
+          hash: String,
+          aiModel: String,
+          aiProvider: String,
+        }),
+      )
+
+      const translation = new TranslationModel({
+        refId: 'article-1',
+        refType: CollectionRefTypes.Post,
+        lang: 'en',
+        sourceLang: 'zh',
+        title: 'Translated Title',
+        text: 'Translated content',
+        summary: 'Translated summary',
+        tags: ['news', 'ai'],
+        hash: 'hash-1',
+        aiModel: 'gpt-test',
+        aiProvider: 'openai',
+      })
+
+      ;(service as any).emitTranslationEvent(
+        BusinessEvents.TRANSLATION_CREATE,
+        translation,
+      )
+
+      expect(mockEventManager.emit).toHaveBeenCalledTimes(1)
+
+      const [, payload, options] = mockEventManager.emit.mock.calls[0]
+      expect(options).toEqual({ scope: EventScope.TO_SYSTEM_VISITOR })
+      expect(payload.tags).toEqual(['news', 'ai'])
+      expect(() => structuredClone(payload)).not.toThrow()
+
+      mongoose.deleteModel(modelName)
     })
   })
 
