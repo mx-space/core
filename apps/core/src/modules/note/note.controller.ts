@@ -24,12 +24,15 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import {
   type ArticleTranslationInput,
+  type TranslationMeta,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import { applyContentPreference } from '~/utils/content.util'
 
+import { DEFAULT_SUMMARY_LANG } from '../ai/ai.constants'
+import { AiSummaryService } from '../ai/ai-summary/ai-summary.service'
 import { NoteModel } from './note.model'
 import {
   ListQueryDto,
@@ -47,12 +50,14 @@ import { NoteService } from './note.service'
 type NoteListItem = {
   _id?: { toString?: () => string } | string
   id?: string
+  nid?: number
   title: string
-  created?: Date
+  slug?: string
+  created?: Date | null
   modified?: Date | null
-  text?: string
+  isPublished?: boolean
   isTranslated?: boolean
-  translationMeta?: unknown
+  translationMeta?: TranslationMeta
 }
 
 @ApiController({ path: 'notes' })
@@ -62,6 +67,7 @@ export class NoteController {
     private readonly countingService: CountingService,
 
     private readonly translationService: TranslationService,
+    private readonly aiSummaryService: AiSummaryService,
   ) {}
 
   private async buildPublicNoteResponse(
@@ -163,7 +169,16 @@ export class NoteController {
     @Query() query: NoteQueryDto,
     @Lang() lang?: string,
   ) {
-    const { size, select, page, sortBy, sortOrder, year, db_query } = query
+    const {
+      size,
+      select,
+      page,
+      sortBy,
+      sortOrder,
+      year,
+      db_query,
+      withSummary,
+    } = query
     const condition = {
       ...addYearCondition(year),
     }
@@ -184,7 +199,16 @@ export class NoteController {
       },
     )
 
-    if (!lang || !result.docs.length) {
+    if (!result.docs.length) {
+      return result
+    }
+
+    if (withSummary && !lang) {
+      await this.enrichDocsWithSummary(result)
+      return result
+    }
+
+    if (!lang) {
       return result
     }
 
@@ -238,7 +262,43 @@ export class NoteController {
       return doc
     })
 
+    if (withSummary) {
+      await this.enrichDocsWithSummary(result, lang)
+    }
+
     return result
+  }
+
+  private async enrichDocsWithSummary(
+    result: {
+      docs: (NoteModel & {
+        _id?: { toString: () => string }
+        toObject?: () => Record<string, unknown>
+      })[]
+    },
+    lang?: string,
+  ) {
+    const ids = result.docs.map((d) => d.id || d._id!.toString())
+    const summaryMap = await this.aiSummaryService.batchGetSummariesByRefIds(
+      ids,
+      lang || DEFAULT_SUMMARY_LANG,
+    )
+
+    const enriched = result.docs.map((doc) => {
+      const plain = (
+        typeof doc.toObject === 'function' ? doc.toObject() : doc
+      ) as Record<string, unknown>
+      const docId =
+        (plain.id as string) ||
+        (plain._id as { toString: () => string })?.toString()
+      plain.summary =
+        summaryMap.get(docId) ?? (plain.text as string)?.slice(0, 150) ?? ''
+      delete plain.text
+      delete plain.content
+      return plain
+    })
+
+    ;(result as unknown as { docs: typeof enriched }).docs = enriched
   }
 
   @Get(':id')

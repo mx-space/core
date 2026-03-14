@@ -369,6 +369,29 @@ export class AiSummaryService implements OnModuleInit {
     }
   }
 
+  async batchGetSummariesByRefIds(
+    refIds: string[],
+    lang = DEFAULT_SUMMARY_LANG,
+  ): Promise<Map<string, string>> {
+    if (!refIds.length) return new Map()
+
+    const summaries = await this.aiSummaryModel
+      .find({
+        refId: { $in: refIds },
+        lang,
+      })
+      .sort({ created: -1 })
+      .lean()
+
+    const map = new Map<string, string>()
+    for (const s of summaries) {
+      if (!map.has(s.refId)) {
+        map.set(s.refId, s.summary)
+      }
+    }
+    return map
+  }
+
   async getSummariesByRefId(refId: string) {
     const article = await this.databaseService.findGlobalById(refId)
 

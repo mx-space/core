@@ -29,6 +29,7 @@ export type NoteListOptions = {
   sortBy?: 'weather' | 'mood' | 'title' | 'created' | 'modified'
   sortOrder?: 1 | -1
   lang?: string
+  withSummary?: boolean
 }
 
 export type NoteByNidOptions = {
@@ -163,7 +164,7 @@ export class NoteController<ResponseWrapper> implements IController {
    */
 
   getList(page = 1, perPage = 10, options: NoteListOptions = {}) {
-    const { select, sortBy, sortOrder, year, lang } = options
+    const { select, sortBy, sortOrder, year, lang, withSummary } = options
     return this.proxy.get<PaginateResult<NoteModel>>({
       params: {
         page,
@@ -173,6 +174,7 @@ export class NoteController<ResponseWrapper> implements IController {
         sortOrder,
         year,
         lang,
+        withSummary: withSummary ? '1' : undefined,
       },
     })
   }

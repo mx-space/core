@@ -53,3 +53,4 @@ dist
 dev/
 
 .eslintcache
+.superpowers
