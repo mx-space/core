@@ -2,13 +2,13 @@
 
 ## Summary
 
-Refactor comment author identity to use `readerId` as the source of truth for logged-in commenters, including `owner`. Logged-in comments and replies should accept only text/content fields at write time. Anonymous comments remain snapshot-based and become gated by a new `allowGuestComment` setting.
+Refactor comment author identity to use `readerId` as the source of truth for logged-in commenters, including `owner`. Logged-in comments and replies should use explicit `reader` routes and accept only text/content fields at write time. Anonymous comments should use explicit `guest` routes, remain snapshot-based, and become gated by a new `allowGuestComment` setting.
 
 This change also removes the comment `source` field from the active model. Historical comments that were originally posted by logged-in readers should be migrated by matching comment `mail + source` against Better Auth `readers + accounts` data. Before running that migration, the comments collection must be dumped to provide a regression baseline and rollback aid.
 
 ## Motivation
 
-The current comment flow still requires `author` and `mail` even for logged-in readers, then overwrites parts of that payload from request context. This keeps redundant identity data in comments, makes the write API inconsistent for logged-in users, and prevents comment identity from reflecting later reader profile updates.
+The current comment flow mixes anonymous and logged-in writes into the same endpoints, and the old owner-specific endpoints still route through legacy validation. This keeps redundant identity data in comments, makes the write API inconsistent for logged-in users, and prevents comment identity from reflecting later reader profile updates.
 
 Using `readerId` directly for logged-in comments solves the model mismatch:
 - logged-in `reader` and `owner` comments become dynamic identity references
@@ -23,6 +23,7 @@ Using `readerId` directly for logged-in comments solves the model mismatch:
 4. Add `allowGuestComment` to gate all anonymous create and reply operations.
 5. Require a pre-migration dump of the comments collection before any write migration runs.
 6. For historical migration, only rewrite comments when `mail + source` resolves to exactly one reader; zero-match or multi-match records are skipped.
+7. Replace mixed write endpoints with explicit guest and reader routes; remove owner-specific write routes.
 
 ## Data Model
 
@@ -52,9 +53,22 @@ Behavior:
 
 ## API Changes
 
+### Write Routes
+
+- Anonymous comment: `POST /comments/guest/:id`
+- Anonymous reply: `POST /comments/guest/reply/:id`
+- Logged-in comment: `POST /comments/reader/:id`
+- Logged-in reply: `POST /comments/reader/reply/:id`
+
+Remove or fully retire:
+- `POST /comments/:id`
+- `POST /comments/reply/:id`
+- `POST /comments/owner/comment/:id`
+- `POST /comments/owner/reply/:id`
+
 ### Logged-in Create/Reply Input
 
-When request context contains `readerId`, comment write endpoints accept only content fields:
+`/comments/reader/*` accepts only content fields:
 
 ```ts
 {
@@ -68,7 +82,7 @@ Replies omit `anchor` if the current API keeps that restriction.
 
 ### Anonymous Create/Reply Input
 
-When request context does not contain `readerId`, comment write endpoints continue to require:
+`/comments/guest/*` continues to require:
 
 ```ts
 {
@@ -82,20 +96,23 @@ When request context does not contain `readerId`, comment write endpoints contin
 }
 ```
 
-If `allowGuestComment` is `false`, anonymous create and reply requests fail before anonymous DTO validation is used for persistence.
+If `allowGuestComment` is `false`, `/comments/guest/*` requests fail before anonymous DTO validation is used for persistence.
 
 ## Request Handling
 
 ### Controller
 
-`POST /comments/:id` and `POST /comments/reply/:id` should branch by request context:
+Controller write handling should become route-based instead of context-splitting within a single endpoint:
 
-- `readerId` exists:
-  - validate with logged-in DTO
-  - skip anonymous-only checks such as `author/mail` presence
-- `readerId` missing:
-  - reject if `allowGuestComment` is `false`
+- `/comments/guest/:id` and `/comments/guest/reply/:id`
   - validate with anonymous DTO
+  - reject when `allowGuestComment` is `false`
+  - keep anonymous-only checks such as owner-name conflict validation
+- `/comments/reader/:id` and `/comments/reader/reply/:id`
+  - require a valid logged-in reader or owner context
+  - validate with logged-in DTO
+  - never require `author` or `mail`
+- owner comments should use the same reader routes rather than dedicated owner-only endpoints
 
 ### Service
 
@@ -166,11 +183,11 @@ Comments that already have `readerId` are ignored.
 
 ### Comment Write Behavior
 
-- logged-in reader create accepts text-only payload
-- logged-in reader reply accepts text-only payload
-- logged-in owner create/reply also accept text-only payload
-- anonymous create/reply succeed when `allowGuestComment=true`
-- anonymous create/reply fail when `allowGuestComment=false`
+- `POST /comments/reader/:id` accepts text-only payload
+- `POST /comments/reader/reply/:id` accepts text-only payload
+- logged-in owner uses the same `reader` routes with text-only payload
+- `POST /comments/guest/:id` and `/comments/guest/reply/:id` succeed when `allowGuestComment=true`
+- `POST /comments/guest/:id` and `/comments/guest/reply/:id` fail when `allowGuestComment=false`
 
 ### Identity Read Behavior
 
