@@ -147,7 +147,11 @@ export const RecentlySchema = z.preprocess((val: any) => {
   return val
 }, RecentlyDiscriminatedSchema)
 
-export class RecentlyDto extends createZodDto(RecentlySchema) {}
+// z.preprocess returns ZodEffects which is incompatible with createZodDto's type constraint,
+// but runtime behavior is correct. Use type assertion to bypass.
+export class RecentlyDto extends createZodDto(
+  RecentlySchema as unknown as z.ZodObject<any>,
+) {}
 
 // --- Attitude schema (unchanged) ---
 
