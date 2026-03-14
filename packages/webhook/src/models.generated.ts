@@ -142,7 +142,7 @@ export interface CommentAnchorModel {
 export interface CommentModel extends BaseModel {
   ref: string
   refType: CollectionRefTypes
-  author: string
+  author?: string
   mail: string
   url?: string
   text: string
@@ -162,7 +162,6 @@ export interface CommentModel extends BaseModel {
   recently: string
   location?: string
   isWhispers?: boolean
-  source?: string
   avatar?: string
   meta?: string
   readerId?: string
@@ -257,6 +256,8 @@ export type RefType = {
 
 export interface RecentlyModel extends BaseCommentIndexModel {
   content: string
+  type: RecentlyTypeEnum
+  metadata?: Record<string, any>
   ref: RefType
   refType: CollectionRefTypes
   modified?: Date
