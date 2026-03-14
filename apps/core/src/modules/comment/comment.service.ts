@@ -642,6 +642,13 @@ export class CommentService {
     delete doc.url
   }
 
+  private assignAuthProviderToComment(doc: Partial<CommentModel>) {
+    const authProvider = RequestContext.currentRequest()?.authProvider
+    if (authProvider) {
+      doc.authProvider = authProvider
+    }
+  }
+
   async createComment(
     id: string,
     doc: Partial<CommentModel>,
@@ -650,6 +657,7 @@ export class CommentService {
     const reader = await this.assignReaderToComment()
     if (reader) {
       this.stripReaderIdentitySnapshot(doc)
+      this.assignAuthProviderToComment(doc)
     }
 
     let ref: (WriteBaseModel & { _id: any }) | null = null
@@ -739,6 +747,7 @@ export class CommentService {
     const reader = await this.assignReaderToComment()
     if (reader) {
       this.stripReaderIdentitySnapshot(doc)
+      this.assignAuthProviderToComment(doc)
     }
     const rootCommentId = parent.rootCommentId || parent._id
 

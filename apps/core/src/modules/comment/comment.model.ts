@@ -183,6 +183,9 @@ export class CommentModel extends BaseModel {
   avatar?: string
 
   @prop()
+  authProvider?: string
+
+  @prop()
   meta?: string
   @prop({})
   readerId?: string

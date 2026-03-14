@@ -162,6 +162,7 @@ describe('CommentService logged-in identity handling', () => {
   it('stores logged-in comments by readerId without copying identity snapshot fields', async () => {
     const request = {
       readerId: 'reader-1',
+      authProvider: 'github',
       isAuthenticated: false,
       isGuest: true,
     } as BizIncomingMessage
@@ -180,6 +181,7 @@ describe('CommentService logged-in identity handling', () => {
       expect.objectContaining({
         text: 'hello from reader',
         readerId: 'reader-1',
+        authProvider: 'github',
       }),
     )
 

@@ -69,7 +69,7 @@ describe('v10.4.2 comment reader ref migration', () => {
     expect(updateOne).toHaveBeenCalledWith(
       { _id: 'comment-1' },
       {
-        $set: { readerId: readerId.toHexString() },
+        $set: { readerId: readerId.toHexString(), authProvider: 'github' },
         $unset: {
           author: 1,
           mail: 1,
@@ -184,7 +184,7 @@ describe('v10.4.2 comment reader ref migration', () => {
     expect(updateOne).toHaveBeenCalledWith(
       { _id: 'comment-1' },
       expect.objectContaining({
-        $set: { readerId: readerId.toHexString() },
+        $set: { readerId: readerId.toHexString(), authProvider: 'github' },
       }),
     )
   })

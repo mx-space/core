@@ -112,7 +112,7 @@ export default defineMigration('v10.4.2-comment-reader-ref', async (db: Db) => {
     await comments.updateOne(
       { _id: comment._id },
       {
-        $set: { readerId: matchedReaderIds[0] },
+        $set: { readerId: matchedReaderIds[0], authProvider: comment.source },
         $unset: {
           author: 1,
           mail: 1,

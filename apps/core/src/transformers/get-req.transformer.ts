@@ -9,6 +9,7 @@ type BizRequest = {
   user?: SessionUser
   isGuest: boolean
 
+  authProvider?: string
   isAuthenticated: boolean
   token?: string
   readerId?: string
