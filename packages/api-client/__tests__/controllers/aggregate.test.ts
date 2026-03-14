@@ -1,8 +1,9 @@
+import camelcaseKeys from 'camelcase-keys'
+
 import { mockRequestInstance } from '~/__tests__/helpers/instance'
 import { mockResponse } from '~/__tests__/helpers/response'
 import { AggregateController } from '~/controllers'
 import { TimelineType } from '~/models/aggregate'
-import camelcaseKeys from 'camelcase-keys'
 
 describe('test aggregate client', () => {
   const client = mockRequestInstance(AggregateController)
@@ -127,12 +128,18 @@ describe('test aggregate client', () => {
           server_url: 'https://api.innei.ren/v2',
           web_url: 'https://innei.in',
         },
+        comment_options: {
+          disable_comment: false,
+          allow_guest_comment: true,
+        },
       },
     )
     const data = await client.aggregate.getAggregateData()
     expect(data.$raw.data).toEqual(mocked)
     expect(data.user.name).toEqual(mocked.user.name)
     expect(data.url.webUrl).toEqual(mocked.url.web_url)
+    expect(data.commentOptions.disableComment).toBe(false)
+    expect(data.commentOptions.allowGuestComment).toBe(true)
   })
 
   test('GET /aggregate/top', async () => {

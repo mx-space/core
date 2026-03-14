@@ -58,6 +58,7 @@ export class AggregateController {
       this.aggregateService.getAllPages(),
       this.configsService.get('url'),
       this.configsService.get('seo'),
+      this.configsService.get('commentOptions'),
       this.noteService.getLatestNoteId(),
       !theme
         ? Promise.resolve()
@@ -77,6 +78,7 @@ export class AggregateController {
       pageMeta,
       url,
       seo,
+      commentOptions,
       latestNoteId,
       themeConfig,
       aiConfig,
@@ -109,6 +111,12 @@ export class AggregateController {
       user,
       seo,
       url: omit(url, ['adminUrl']),
+      commentOptions: commentOptions
+        ? {
+            disableComment: commentOptions.disableComment ?? false,
+            allowGuestComment: commentOptions.allowGuestComment ?? true,
+          }
+        : undefined,
       categories,
       pageMeta: translatedPageMeta,
       latestNoteId,

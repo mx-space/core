@@ -3,7 +3,7 @@ import type { NoteModel } from './note'
 import type { PageModel } from './page'
 import type { PostModel } from './post'
 import type { SayModel } from './say'
-import type { SeoOptionModel } from './setting'
+import type { CommentOptionsModel, SeoOptionModel } from './setting'
 import type { UserModel } from './user'
 
 export interface AggregateAIConfig {
@@ -14,6 +14,10 @@ export interface AggregateRoot {
   user: UserModel
   seo: SeoOptionModel
   url: Url
+  commentOptions?: Pick<
+    CommentOptionsModel,
+    'disableComment' | 'allowGuestComment'
+  >
   categories: CategoryModel[]
   pageMeta: Pick<PageModel, 'title' | 'id' | 'slug' | 'order'>[] | null
   /**
