@@ -28,7 +28,6 @@ export interface CommentModel extends BaseModel {
   isWhispers?: boolean
   location?: string
 
-  source?: string
   readerId?: string
   editedAt?: string
 }

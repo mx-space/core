@@ -105,6 +105,9 @@ export const CommentOptionsSchema = section('评论设置', {
   disableComment: field.toggle(z.boolean().optional(), '全站禁止评论', {
     description: '敏感时期专用',
   }),
+  allowGuestComment: field.toggle(z.boolean().optional(), '允许未登录评论', {
+    description: '关闭后，只有已登录 reader 或 owner 可以评论和回复',
+  }),
   spamKeywords: field.array(z.array(z.string()).optional(), '自定义屏蔽关键词'),
   blockIps: field.array(
     z.array(z.union([z.ipv4(), z.ipv6()])).optional(),

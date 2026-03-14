@@ -85,8 +85,8 @@ export class CommentModel extends BaseModel {
   @prop({ required: true, type: String })
   refType: CollectionRefTypes
 
-  @prop({ trim: true, required: true })
-  author!: string
+  @prop({ trim: true })
+  author?: string
 
   @prop({ trim: true })
   mail: string
@@ -178,9 +178,6 @@ export class CommentModel extends BaseModel {
   // 悄悄话
   @prop({ default: false })
   isWhispers?: boolean
-
-  @prop()
-  source?: string
 
   @prop()
   avatar?: string

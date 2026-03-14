@@ -55,7 +55,6 @@ export const CommentSchema = z.object({
     .max(50, { message: '地址不得大于 50 个字符' })
     .optional(),
   isWhispers: z.boolean().optional(),
-  source: z.string().optional(),
   avatar: z
     .string()
     .url({ message: '头像必须是合法的 HTTPS URL 哦' })
@@ -66,9 +65,26 @@ export const CommentSchema = z.object({
   anchor: CommentAnchorSchema.optional(),
 })
 
-export class CommentDto extends createZodDto(CommentSchema) {}
+export const AnonymousCommentSchema = CommentSchema
+export const AnonymousReplyCommentSchema = CommentSchema.omit({ anchor: true })
+
+export const ReaderCommentSchema = z.object({
+  text: z.string().min(1).max(500, { message: '评论内容不得大于 500 个字符' }),
+  isWhispers: z.boolean().optional(),
+  anchor: CommentAnchorSchema.optional(),
+})
+
+export const ReaderReplyCommentSchema = ReaderCommentSchema.omit({
+  anchor: true,
+})
+
+export class CommentDto extends createZodDto(AnonymousCommentSchema) {}
 export class ReplyCommentDto extends createZodDto(
-  CommentSchema.omit({ anchor: true }),
+  AnonymousReplyCommentSchema,
+) {}
+export class ReaderCommentDto extends createZodDto(ReaderCommentSchema) {}
+export class ReaderReplyCommentDto extends createZodDto(
+  ReaderReplyCommentSchema,
 ) {}
 
 /**
@@ -100,7 +116,6 @@ export class RequiredGuestReaderCommentDto extends createZodDto(
  */
 export const TextOnlySchema = z.object({
   text: z.string().min(1),
-  source: z.string().optional(),
   anchor: CommentAnchorSchema.optional(),
 })
 
@@ -184,6 +199,12 @@ export class BatchCommentDeleteDto extends createZodDto(
 
 // Type exports
 export type CommentInput = z.infer<typeof CommentSchema>
+export type AnonymousCommentInput = z.infer<typeof AnonymousCommentSchema>
+export type AnonymousReplyCommentInput = z.infer<
+  typeof AnonymousReplyCommentSchema
+>
+export type ReaderCommentInput = z.infer<typeof ReaderCommentSchema>
+export type ReaderReplyCommentInput = z.infer<typeof ReaderReplyCommentSchema>
 export type CommentAnchorInput = z.infer<typeof CommentAnchorSchema>
 export type EditCommentInput = z.infer<typeof EditCommentSchema>
 export type RequiredGuestReaderCommentInput = z.infer<

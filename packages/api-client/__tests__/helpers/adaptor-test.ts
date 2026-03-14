@@ -2,6 +2,7 @@ import { allControllers } from '~/controllers'
 import type { HTTPClient } from '~/core'
 import { createClient, RequestError } from '~/core'
 import type { IRequestAdapter } from '~/interfaces/adapter'
+
 import { createMockServer } from './e2e-mock-server'
 
 export const testAdaptor = (adaptor: IRequestAdapter) => {
@@ -34,7 +35,7 @@ export const testAdaptor = (adaptor: IRequestAdapter) => {
   })
 
   test('post', async () => {
-    app.post('/comments/1', (req, res) => {
+    app.post('/comments/guest/1', (req, res) => {
       const { body } = req
 
       res.send({
@@ -46,7 +47,7 @@ export const testAdaptor = (adaptor: IRequestAdapter) => {
       author: 'test',
       mail: '1@ee.com',
     }
-    const res = await client.comment.comment('1', dto)
+    const res = await client.comment.guestComment('1', dto)
 
     expect(res).toStrictEqual(dto)
   })

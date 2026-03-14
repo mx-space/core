@@ -12,7 +12,7 @@ import type {
 import { autoBind } from '~/utils/auto-bind'
 
 import type { HTTPClient } from '../core'
-import type { CommentDto } from '../dtos/comment'
+import type { AnonymousCommentDto, ReaderCommentDto } from '../dtos/comment'
 
 declare module '../core/client' {
   interface HTTPClient<
@@ -68,8 +68,8 @@ export class CommentController<ResponseWrapper> implements IController {
   /**
    * 评论
    */
-  comment(refId: string, data: CommentDto) {
-    return this.proxy(refId).post<CommentModel>({
+  guestComment(refId: string, data: AnonymousCommentDto) {
+    return this.proxy.guest(refId).post<CommentModel>({
       data,
     })
   }
@@ -77,8 +77,20 @@ export class CommentController<ResponseWrapper> implements IController {
   /**
    * 回复评论
    */
-  reply(commentId: string, data: CommentDto) {
-    return this.proxy.reply(commentId).post<CommentModel>({
+  guestReply(commentId: string, data: AnonymousCommentDto) {
+    return this.proxy.guest.reply(commentId).post<CommentModel>({
+      data,
+    })
+  }
+
+  readerComment(refId: string, data: ReaderCommentDto) {
+    return this.proxy.reader(refId).post<CommentModel>({
+      data,
+    })
+  }
+
+  readerReply(commentId: string, data: ReaderCommentDto) {
+    return this.proxy.reader.reply(commentId).post<CommentModel>({
       data,
     })
   }

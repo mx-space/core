@@ -30,7 +30,6 @@ import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
 import { ConfigsService } from '../configs/configs.service'
-import { OwnerService } from '../owner/owner.service'
 import { ReaderService } from '../reader/reader.service'
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
 import { CommentLifecycleService } from './comment.lifecycle.service'
@@ -43,8 +42,9 @@ import {
   CommentRefTypesDto,
   CommentStatePatchDto,
   EditCommentDto,
+  ReaderCommentDto,
+  ReaderReplyCommentDto,
   ReplyCommentDto,
-  TextOnlyDto,
 } from './comment.schema'
 import { CommentService } from './comment.service'
 
@@ -57,10 +57,65 @@ export class CommentController {
     private readonly lifecycleService: CommentLifecycleService,
     private readonly eventManager: EventManagerService,
     private readonly configsService: ConfigsService,
-    private readonly ownerService: OwnerService,
     @Inject(forwardRef(() => ReaderService))
     private readonly readerService: ReaderService,
   ) {}
+
+  private async createCommentWithBody(
+    params: MongoIdDto,
+    body: Partial<CommentModel>,
+    isAuthenticated: boolean,
+    ipLocation: IpRecord,
+    query: CommentRefTypesDto,
+  ) {
+    const { ref } = query
+    const id = params.id
+
+    if (
+      !(await this.commentService.allowComment(id, ref)) &&
+      !isAuthenticated
+    ) {
+      throw new BizException(ErrorCodeEnum.CommentForbidden)
+    }
+
+    const model: Partial<CommentModel> = { ...body, ...ipLocation }
+    const comment = await this.commentService.createComment(id, model, ref)
+
+    this.lifecycleService.afterCreateComment(
+      String((comment as any).id || (comment as any)._id),
+      ipLocation,
+      isAuthenticated,
+    )
+
+    return this.commentService
+      .fillAndReplaceAvatarUrl([comment])
+      .then((docs) => docs[0])
+  }
+
+  private async replyCommentWithBody(
+    params: MongoIdDto,
+    body: Partial<CommentModel>,
+    isAuthenticated: boolean,
+    ipLocation: IpRecord,
+  ) {
+    const model: Partial<CommentModel> = {
+      ...body,
+      ...ipLocation,
+      state: isAuthenticated ? CommentState.Read : CommentState.Unread,
+    }
+
+    const comment = await this.commentService.replyComment(params.id, model)
+
+    this.lifecycleService.afterReplyComment(
+      comment,
+      ipLocation,
+      isAuthenticated,
+    )
+
+    return this.commentService
+      .fillAndReplaceAvatarUrl([comment])
+      .then((docs) => docs[0])
+  }
 
   @Get('/')
   @Auth()
@@ -164,61 +219,104 @@ export class CommentController {
     return data
   }
 
-  @Post('/:id')
+  @Post('/guest/:id')
   @HTTPDecorators.Idempotence({
     expired: 20,
     errorMessage: idempotenceMessage,
   })
-  async comment(
+  async guestComment(
     @Param() params: MongoIdDto,
     @Body() body: CommentDto,
     @IsAuthenticated() isAuthenticated: boolean,
     @IpLocation() ipLocation: IpRecord,
     @Query() query: CommentRefTypesDto,
   ) {
-    const { disableComment } = await this.configsService.get('commentOptions')
+    const { allowGuestComment, disableComment } =
+      await this.configsService.get('commentOptions')
     if (disableComment) {
       throw new BizException(ErrorCodeEnum.CommentDisabled)
     }
-    if (!isAuthenticated) {
-      await this.commentService.validAuthorName(body.author)
-    }
-
-    const { ref } = query
-
-    const id = params.id
-    if (
-      !(await this.commentService.allowComment(id, ref)) &&
-      !isAuthenticated
-    ) {
+    if (!allowGuestComment) {
       throw new BizException(ErrorCodeEnum.CommentForbidden)
     }
 
-    const model: Partial<CommentModel> = { ...body, ...ipLocation }
+    await this.commentService.validAuthorName(body.author)
 
-    const comment = await this.commentService.createComment(id, model, ref)
-
-    this.lifecycleService.afterCreateComment(
-      String((comment as any).id || (comment as any)._id),
-      ipLocation,
+    return this.createCommentWithBody(
+      params,
+      body,
       isAuthenticated,
+      ipLocation,
+      query,
     )
-
-    return this.commentService
-      .fillAndReplaceAvatarUrl([comment])
-      .then((docs) => docs[0])
   }
 
-  @Post('/reply/:id')
+  @Post('/reader/:id')
   @HTTPDecorators.Idempotence({
     expired: 20,
     errorMessage: idempotenceMessage,
   })
-  async replyByCid(
+  async readerComment(
+    @Param() params: MongoIdDto,
+    @Body() body: ReaderCommentDto,
+    @IsAuthenticated() isAuthenticated: boolean,
+    @CurrentReaderId() readerId: string,
+    @IpLocation() ipLocation: IpRecord,
+    @Query() query: CommentRefTypesDto,
+  ) {
+    const { disableComment } = await this.configsService.get('commentOptions')
+    if (disableComment) {
+      throw new BizException(ErrorCodeEnum.CommentDisabled)
+    }
+    if (!readerId) {
+      throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
+    }
+
+    return this.createCommentWithBody(
+      params,
+      body,
+      isAuthenticated,
+      ipLocation,
+      query,
+    )
+  }
+
+  @Post('/guest/reply/:id')
+  @HTTPDecorators.Idempotence({
+    expired: 20,
+    errorMessage: idempotenceMessage,
+  })
+  async guestReplyByCid(
     @Param() params: MongoIdDto,
     @Body() body: ReplyCommentDto,
-    @Body('author') author: string,
     @IsAuthenticated() isAuthenticated: boolean,
+    @IpLocation() ipLocation: IpRecord,
+  ) {
+    const { allowGuestComment, disableComment } =
+      await this.configsService.get('commentOptions')
+    if (disableComment) {
+      throw new BizException(ErrorCodeEnum.CommentDisabled)
+    }
+
+    if (!allowGuestComment) {
+      throw new BizException(ErrorCodeEnum.CommentForbidden)
+    }
+
+    await this.commentService.validAuthorName(body.author)
+
+    return this.replyCommentWithBody(params, body, isAuthenticated, ipLocation)
+  }
+
+  @Post('/reader/reply/:id')
+  @HTTPDecorators.Idempotence({
+    expired: 20,
+    errorMessage: idempotenceMessage,
+  })
+  async readerReplyByCid(
+    @Param() params: MongoIdDto,
+    @Body() body: ReaderReplyCommentDto,
+    @IsAuthenticated() isAuthenticated: boolean,
+    @CurrentReaderId() readerId: string,
     @IpLocation() ipLocation: IpRecord,
   ) {
     const { disableComment } = await this.configsService.get('commentOptions')
@@ -226,76 +324,11 @@ export class CommentController {
       throw new BizException(ErrorCodeEnum.CommentDisabled)
     }
 
-    if (!isAuthenticated) {
-      await this.commentService.validAuthorName(author)
+    if (!readerId) {
+      throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
     }
 
-    const { id } = params
-    const model: Partial<CommentModel> = {
-      ...body,
-      ...ipLocation,
-      state: isAuthenticated ? CommentState.Read : CommentState.Unread,
-    }
-
-    const comment = await this.commentService.replyComment(id, model)
-
-    this.lifecycleService.afterReplyComment(
-      comment,
-      ipLocation,
-      isAuthenticated,
-    )
-
-    return this.commentService
-      .fillAndReplaceAvatarUrl([comment])
-      .then((docs) => docs[0])
-  }
-
-  @Post('/owner/comment/:id')
-  @Auth()
-  @HTTPDecorators.Idempotence({
-    expired: 20,
-    errorMessage: idempotenceMessage,
-  })
-  async commentByOwner(
-    @Param() params: MongoIdDto,
-    @Body() body: TextOnlyDto,
-    @IpLocation() ipLocation: IpRecord,
-    @Query() query: CommentRefTypesDto,
-  ) {
-    const owner = await this.ownerService.getOwner()
-    const { name, mail, url } = owner
-    const model: CommentDto = {
-      author: name,
-      ...body,
-      mail,
-      url,
-      state: CommentState.Read,
-    } as CommentDto
-    return await this.comment(params, model as any, true, ipLocation, query)
-  }
-
-  @Post('/owner/reply/:id')
-  @Auth()
-  @HTTPDecorators.Idempotence({
-    expired: 20,
-    errorMessage: idempotenceMessage,
-  })
-  async replyByOwner(
-    @Param() params: MongoIdDto,
-    @Body() body: TextOnlyDto,
-    @IpLocation() ipLocation: IpRecord,
-  ) {
-    const owner = await this.ownerService.getOwner()
-    const { name, mail, url } = owner
-    const model: CommentDto = {
-      author: name,
-      ...body,
-      mail,
-      url,
-      state: CommentState.Read,
-    } as CommentDto
-    // @ts-ignore
-    return await this.replyByCid(params, model, undefined, true, ipLocation)
+    return this.replyCommentWithBody(params, body, isAuthenticated, ipLocation)
   }
 
   @Patch('/:id')

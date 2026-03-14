@@ -89,7 +89,7 @@ describe('test note client', () => {
 
   it('should comment successfully', async () => {
     mockResponse(
-      '/comments/1',
+      '/comments/guest/1',
       {
         id: '1',
         text: 'bar',
@@ -97,7 +97,7 @@ describe('test note client', () => {
       'post',
     )
 
-    const data = await client.comment.comment('1', {
+    const data = await client.comment.guestComment('1', {
       author: 'foo',
       text: 'bar',
       mail: 'xx@aa.com',
@@ -111,7 +111,7 @@ describe('test note client', () => {
 
   it('should reply comment successfully', async () => {
     mockResponse(
-      '/comments/reply/1',
+      '/comments/guest/reply/1',
       {
         id: '1',
         text: 'bar',
@@ -119,10 +119,44 @@ describe('test note client', () => {
       'post',
     )
 
-    const data = await client.comment.reply('1', {
+    const data = await client.comment.guestReply('1', {
       author: 'f',
       text: 'bar',
       mail: 'a@q.com',
+    })
+
+    expect(data).toEqual({ id: '1', text: 'bar' })
+  })
+
+  it('should comment as reader successfully', async () => {
+    mockResponse(
+      '/comments/reader/1',
+      {
+        id: '1',
+        text: 'bar',
+      },
+      'post',
+    )
+
+    const data = await client.comment.readerComment('1', {
+      text: 'bar',
+    })
+
+    expect(data).toEqual({ id: '1', text: 'bar' })
+  })
+
+  it('should reply as reader successfully', async () => {
+    mockResponse(
+      '/comments/reader/reply/1',
+      {
+        id: '1',
+        text: 'bar',
+      },
+      'post',
+    )
+
+    const data = await client.comment.readerReply('1', {
+      text: 'bar',
     })
 
     expect(data).toEqual({ id: '1', text: 'bar' })

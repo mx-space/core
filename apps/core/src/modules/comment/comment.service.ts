@@ -616,9 +616,9 @@ export class CommentService {
     }
   }
 
-  async assignReaderToComment(
-    doc: Partial<CommentModel>,
-  ): Promise<(ReaderModel & { id: string }) | null> {
+  async assignReaderToComment(): Promise<
+    (ReaderModel & { id: string }) | null
+  > {
     const readerId = RequestContext.currentRequest()?.readerId
 
     let reader: ReaderModel | null = null
@@ -631,11 +631,15 @@ export class CommentService {
     if (!reader) {
       return null
     }
-    doc.author = reader.name
-    doc.mail = reader.email
-    doc.avatar = reader.image
 
     return { ...reader, id: readerId! }
+  }
+
+  private stripReaderIdentitySnapshot(doc: Partial<CommentModel>) {
+    delete doc.author
+    delete doc.mail
+    delete doc.avatar
+    delete doc.url
   }
 
   async createComment(
@@ -643,7 +647,10 @@ export class CommentService {
     doc: Partial<CommentModel>,
     type?: CollectionRefTypes,
   ) {
-    const reader = await this.assignReaderToComment(doc)
+    const reader = await this.assignReaderToComment()
+    if (reader) {
+      this.stripReaderIdentitySnapshot(doc)
+    }
 
     let ref: (WriteBaseModel & { _id: any }) | null = null
     let refType = type
@@ -729,7 +736,10 @@ export class CommentService {
       throw new CannotFindException()
     }
 
-    const reader = await this.assignReaderToComment(doc)
+    const reader = await this.assignReaderToComment()
+    if (reader) {
+      this.stripReaderIdentitySnapshot(doc)
+    }
     const rootCommentId = parent.rootCommentId || parent._id
 
     const comment = (await this.commentModel.create({
@@ -1022,10 +1032,49 @@ export class CommentService {
 
   async fillAndReplaceAvatarUrl(comments: CommentModel[]) {
     const owner = await this.ownerService.getOwner()
+    const readerIds = new Set<string>()
+
+    comments.forEach(function collect(comment) {
+      if (typeof comment == 'string') {
+        return
+      }
+      if (comment.readerId) {
+        readerIds.add(comment.readerId)
+      }
+
+      const replies = (comment as CommentModel & { replies?: CommentModel[] })
+        .replies
+      if (replies?.length) {
+        replies.forEach((child) => {
+          collect(child as CommentModel)
+        })
+      }
+    })
+
+    const readers = readerIds.size
+      ? await this.readerService.findReaderInIds([...readerIds])
+      : []
+    const readerMap = new Map<string, ReaderModel>()
+    readers.forEach((reader) => {
+      const id = (reader as any).id || (reader as any)._id?.toString?.()
+      if (id) {
+        readerMap.set(id, reader)
+      }
+    })
 
     comments.forEach(function process(comment) {
       if (typeof comment == 'string') {
         return
+      }
+      const reader = comment.readerId ? readerMap.get(comment.readerId) : null
+      if (reader) {
+        const isOwner = reader.role === 'owner'
+        comment.author =
+          isOwner && owner.name ? owner.name : reader.name || comment.author
+        comment.avatar =
+          (isOwner ? owner.avatar : undefined) ||
+          reader.image ||
+          getAvatar(reader.email)
       }
       if (comment.author === owner.name) {
         comment.avatar = owner.avatar || comment.avatar

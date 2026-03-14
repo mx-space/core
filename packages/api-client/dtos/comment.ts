@@ -1,4 +1,4 @@
-export interface CommentDto {
+export interface AnonymousCommentDto {
   author: string
 
   text: string
@@ -7,6 +7,15 @@ export interface CommentDto {
 
   url?: string
 
-  source?: 'github' | 'google'
   avatar?: string
+
+  isWhispers?: boolean
 }
+
+export interface ReaderCommentDto {
+  text: string
+
+  isWhispers?: boolean
+}
+
+export type CommentDto = AnonymousCommentDto | ReaderCommentDto

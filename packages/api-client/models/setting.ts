@@ -32,6 +32,7 @@ export declare class MailOptionsModel {
 }
 export declare class CommentOptionsModel {
   antiSpam: boolean
+  allowGuestComment: boolean
   spamKeywords?: string[]
   blockIps?: string[]
   disableNoChinese?: boolean

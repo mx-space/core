@@ -180,6 +180,8 @@ export class CommentLifecycleService implements OnModuleInit {
     }/${time.getFullYear()}`
 
     if (!refDoc || !ownerInfo.mail) return
+    if (type === CommentReplyMailType.Owner && !comment.mail) return
+    if (type === CommentReplyMailType.Guest && !parent?.mail) return
 
     this.sendCommentNotificationMail({
       to: type === CommentReplyMailType.Owner ? ownerInfo.mail : parent!.mail,
@@ -188,7 +190,9 @@ export class CommentLifecycleService implements OnModuleInit {
         title: refType === CollectionRefTypes.Recently ? '速记' : refDoc.title,
         text: comment.text,
         author:
-          type === CommentReplyMailType.Guest ? parent!.author : comment.author,
+          (type === CommentReplyMailType.Guest
+            ? parent!.author
+            : comment.author) || '',
         owner: ownerInfo.name,
         link: await this.resolveUrlByType(refType, refDoc).then(
           (url) => `${url}#comments-${comment.id}`,

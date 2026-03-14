@@ -5,5 +5,5 @@ export interface ReaderModel {
 
   image: string
 
-  isOwner: boolean
+  role?: 'reader' | 'owner'
 }
