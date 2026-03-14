@@ -1,5 +1,4 @@
 import { APP_INTERCEPTOR } from '@nestjs/core'
-import { vi } from 'vitest'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { MockingCountingInterceptor } from 'test/mock/interceptors/counting.interceptor'
@@ -10,15 +9,16 @@ import { gatewayProviders } from 'test/mock/modules/gateway.mock'
 import { countingServiceProvider } from 'test/mock/processors/counting.mock'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 import { fileReferenceProvider } from 'test/mock/processors/file.mock'
-import { translationProvider } from 'test/mock/processors/translation.mock'
+import { vi } from 'vitest'
 
 import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
+import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
+import { AiWriterService } from '~/modules/ai/ai-writer/ai-writer.service'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { DraftModel } from '~/modules/draft/draft.model'
 import { DraftService } from '~/modules/draft/draft.service'
 import { DraftHistoryService } from '~/modules/draft/draft-history.service'
-import { AiWriterService } from '~/modules/ai/ai-writer/ai-writer.service'
 import { NoteController } from '~/modules/note/note.controller'
 import { NoteModel } from '~/modules/note/note.model'
 import { NoteService } from '~/modules/note/note.service'
@@ -130,6 +130,12 @@ describe('NoteController (e2e)', async () => {
           generateSlugByTitleViaOpenAI: vi
             .fn()
             .mockResolvedValue({ slug: 'generated-note-slug' }),
+        },
+      },
+      {
+        provide: AiSummaryService,
+        useValue: {
+          batchGetSummariesByRefIds: vi.fn().mockResolvedValue(new Map()),
         },
       },
     ],
@@ -313,9 +319,9 @@ describe('NoteController (e2e)', async () => {
       delete note.modified
     })
 
-    expect(
-      data.data.some((note) => note.slug === createdNoteData.slug),
-    ).toBe(true)
+    expect(data.data.some((note) => note.slug === createdNoteData.slug)).toBe(
+      true,
+    )
     expect(data).toMatchSnapshot()
   })
 

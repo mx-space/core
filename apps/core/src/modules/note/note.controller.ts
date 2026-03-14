@@ -187,14 +187,20 @@ export class NoteController {
       Object.assign(condition, this.noteService.publicNoteQueryCondition)
     }
 
+    // When withSummary, ensure text is fetched for translation + fallback, will be stripped later
+    let paginateSelect = isAuthenticated
+      ? select
+      : select?.replaceAll(/[+-]?(coordinates|location|password)/g, '')
+    if (withSummary && paginateSelect && !paginateSelect.includes('text')) {
+      paginateSelect = `${paginateSelect} text`
+    }
+
     const result = await this.noteService.model.paginate(
       db_query ?? condition,
       {
         limit: size,
         page,
-        select: isAuthenticated
-          ? select
-          : select?.replaceAll(/[+-]?(coordinates|location|password)/g, ''),
+        select: paginateSelect,
         sort: sortBy ? { [sortBy]: sortOrder || -1 } : { created: -1 },
       },
     )
@@ -233,6 +239,9 @@ export class NoteController {
     }
 
     if (!translationInputs.length) {
+      if (withSummary) {
+        await this.enrichDocsWithSummary(result, lang)
+      }
       return result
     }
 
