@@ -14,6 +14,7 @@ import { vi } from 'vitest'
 import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
+import { AiSlugBackfillService } from '~/modules/ai/ai-writer/ai-slug-backfill.service'
 import { AiWriterService } from '~/modules/ai/ai-writer/ai-writer.service'
 import { OptionModel } from '~/modules/configs/configs.model'
 import { DraftModel } from '~/modules/draft/draft.model'
@@ -136,6 +137,14 @@ describe('NoteController (e2e)', async () => {
         provide: AiSummaryService,
         useValue: {
           batchGetSummariesByRefIds: vi.fn().mockResolvedValue(new Map()),
+        },
+      },
+      {
+        provide: AiSlugBackfillService,
+        useValue: {
+          createBackfillTaskForNotes: vi
+            .fn()
+            .mockResolvedValue({ taskId: 'task-1', created: true }),
         },
       },
     ],
