@@ -1,5 +1,5 @@
 import type { Ref } from '@typegoose/typegoose'
-import { modelOptions, plugin, prop } from '@typegoose/typegoose'
+import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
 import { Types } from 'mongoose'
 import autopopulate from 'mongoose-autopopulate'
 
@@ -69,6 +69,9 @@ export class CommentAnchorModel {
   lang?: string | null
 }
 
+@index({ ref: 1, parentCommentId: 1, pin: -1, created: -1 })
+@index({ rootCommentId: 1, created: 1 })
+@index({ parentCommentId: 1 })
 @modelOptions({
   options: {
     customName: COMMENT_COLLECTION_NAME,
@@ -109,16 +112,24 @@ export class CommentModel extends BaseModel {
   @prop({ default: 0 })
   state?: CommentState
 
-  @prop({ ref: () => CommentModel })
-  parent?: Ref<CommentModel>
+  @prop({ ref: () => CommentModel, type: Types.ObjectId, default: null })
+  parentCommentId?: Ref<CommentModel> | null
 
-  @prop({ ref: () => CommentModel, type: Types.ObjectId, autopopulate: true })
-  children?: Ref<CommentModel>[]
+  @prop({ ref: () => CommentModel, type: Types.ObjectId })
+  rootCommentId?: Ref<CommentModel>
 
-  @prop({ default: 1 })
-  commentsIndex?: number
+  @prop({ default: 0 })
+  replyCount?: number
+
   @prop()
-  key?: string
+  latestReplyAt?: Date
+
+  @prop({ default: false })
+  isDeleted?: boolean
+
+  @prop()
+  deletedAt?: Date
+
   @prop({ select: false })
   ip?: string
 

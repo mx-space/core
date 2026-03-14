@@ -10,9 +10,7 @@ import {
   Query,
   UseInterceptors,
 } from '@nestjs/common'
-import type { DocumentType } from '@typegoose/typegoose'
 import { isUndefined, keyBy } from 'es-toolkit/compat'
-import type { Document, QueryFilter } from 'mongoose'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -51,7 +49,6 @@ import {
 import { CommentService } from './comment.service'
 
 const idempotenceMessage = '哦吼，这句话你已经说过啦'
-const NESTED_REPLY_MAX = 10
 @ApiController({ path: 'comments' })
 @UseInterceptors(CommentFilterEmailInterceptor)
 export class CommentController {
@@ -86,6 +83,56 @@ export class CommentController {
     return res
   }
 
+  @Get('/ref/:id')
+  async getCommentsByRefId(
+    @Param() params: MongoIdDto,
+    @Query() query: PagerDto,
+    @Query('hasAnchor') hasAnchor: string,
+    @IsAuthenticated() isAuthenticated: boolean,
+  ) {
+    const { id } = params
+    const { page = 1, size = 10 } = query
+
+    const configs = await this.configsService.get('commentOptions')
+    const { commentShouldAudit } = configs
+
+    const comments = await this.commentService.getCommentsByRefId(id, {
+      page,
+      size,
+      isAuthenticated,
+      commentShouldAudit,
+      hasAnchor: hasAnchor === 'true',
+    })
+
+    const result = transformDataToPaginate(comments)
+    const readerIds = this.commentService.collectThreadReaderIds(comments.docs)
+    const readers = await this.readerService.findReaderInIds(readerIds)
+
+    Object.assign(result, {
+      readers: keyBy(readers, 'id'),
+    })
+
+    return result
+  }
+
+  @Get('/thread/:rootCommentId')
+  async getThreadReplies(
+    @Param('rootCommentId') rootCommentId: string,
+    @Query() query: PagerDto,
+    @Query('cursor') cursor: string,
+    @IsAuthenticated() isAuthenticated: boolean,
+  ) {
+    const { size = 10 } = query
+    const configs = await this.configsService.get('commentOptions')
+
+    return this.commentService.getThreadReplies(rootCommentId, {
+      cursor,
+      size,
+      isAuthenticated,
+      commentShouldAudit: configs.commentShouldAudit,
+    })
+  }
+
   @Get('/:id')
   async getComments(
     @Param() params: MongoIdDto,
@@ -96,7 +143,7 @@ export class CommentController {
       .findOne({
         _id: id,
       })
-      .populate('parent')
+      .populate('parentCommentId')
       .lean()
 
     if (!data) {
@@ -115,85 +162,6 @@ export class CommentController {
     }
 
     return data
-  }
-
-  @Get('/ref/:id')
-  async getCommentsByRefId(
-    @Param() params: MongoIdDto,
-    @Query() query: PagerDto,
-    @Query('hasAnchor') hasAnchor: string,
-    @IsAuthenticated() isAuthenticated: boolean,
-  ) {
-    const { id } = params
-    const { page = 1, size = 10 } = query
-
-    const configs = await this.configsService.get('commentOptions')
-    const { commentShouldAudit } = configs
-
-    const $and: QueryFilter<CommentModel & Document<any, any, any>>[] = [
-      {
-        parent: undefined,
-        ref: id,
-      },
-      {
-        $or: commentShouldAudit
-          ? [
-              {
-                state: CommentState.Read,
-              },
-            ]
-          : [
-              {
-                state: CommentState.Read,
-              },
-              { state: CommentState.Unread },
-            ],
-      },
-    ]
-
-    if (!isAuthenticated) {
-      $and.push({
-        $or: [
-          { isWhispers: false },
-          {
-            isWhispers: { $exists: false },
-          },
-        ],
-      })
-    }
-
-    if (hasAnchor === 'true') {
-      $and.push({ anchor: { $exists: true } })
-    }
-
-    const comments = await this.commentService.model.paginate(
-      {
-        $and,
-      },
-      {
-        limit: size,
-        page,
-        sort: { pin: -1, created: -1 },
-        populate: {
-          path: 'children',
-          maxDepth: NESTED_REPLY_MAX,
-        },
-      },
-    )
-
-    await this.commentService.fillAndReplaceAvatarUrl(comments.docs)
-    this.commentService.cleanDirtyData(comments.docs)
-    const result = transformDataToPaginate(comments)
-    const readerIds = comments.docs
-      .map((comment) => comment.readerId)
-      .filter(Boolean) as string[]
-    const readers = await this.readerService.findReaderInIds(readerIds)
-
-    Object.assign(result, {
-      readers: keyBy(readers, 'id'),
-    })
-
-    return result
   }
 
   @Post('/:id')
@@ -231,7 +199,7 @@ export class CommentController {
     const comment = await this.commentService.createComment(id, model, ref)
 
     this.lifecycleService.afterCreateComment(
-      comment.id,
+      String((comment as any).id || (comment as any)._id),
       ipLocation,
       isAuthenticated,
     )
@@ -263,47 +231,13 @@ export class CommentController {
     }
 
     const { id } = params
-
-    const parent = await this.commentService.model.findById(id).populate('ref')
-    if (!parent) {
-      throw new CannotFindException()
-    }
-    const commentIndex = parent.commentsIndex
-
-    if (parent.key && parent.key.split('#').length >= NESTED_REPLY_MAX) {
-      throw new BizException(ErrorCodeEnum.CommentTooDeep)
-    }
-
-    const key = `${parent.key}#${commentIndex}`
-
     const model: Partial<CommentModel> = {
-      parent,
-      ref: (parent.ref as DocumentType<any>)._id,
-      refType: parent.refType,
       ...body,
       ...ipLocation,
-      key,
-      isWhispers: parent.isWhispers,
       state: isAuthenticated ? CommentState.Read : CommentState.Unread,
     }
 
-    await this.commentService.assignReaderToComment(model)
-
-    const comment = await this.commentService.model.create(model)
-
-    await parent.updateOne({
-      $push: {
-        children: comment._id,
-      },
-      $inc: {
-        commentsIndex: 1,
-      },
-      state:
-        comment.state === CommentState.Read &&
-        parent.state !== CommentState.Read
-          ? CommentState.Read
-          : parent.state,
-    })
+    const comment = await this.commentService.replyComment(id, model)
 
     this.lifecycleService.afterReplyComment(
       comment,
@@ -417,7 +351,7 @@ export class CommentController {
   @Auth()
   async deleteComment(@Param() params: MongoIdDto) {
     const { id } = params
-    await this.commentService.deleteComments(id)
+    await this.commentService.softDeleteComment(id)
     await this.eventManager.emit(
       BusinessEvents.COMMENT_DELETE,
       { id },
@@ -462,11 +396,11 @@ export class CommentController {
       }
       const comments = await this.commentService.model.find(filter).lean()
       for (const comment of comments) {
-        await this.commentService.deleteComments(comment._id.toString())
+        await this.commentService.softDeleteComment(comment._id.toString())
       }
     } else if (ids?.length) {
       for (const id of ids) {
-        await this.commentService.deleteComments(id)
+        await this.commentService.softDeleteComment(id)
       }
     }
 

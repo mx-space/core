@@ -320,7 +320,14 @@ describe('CommentService — lang-aware anchor resolution', () => {
 
       expect(findMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          $or: [{ 'anchor.lang': null }, { 'anchor.lang': { $exists: false } }],
+          $and: expect.arrayContaining([
+            expect.objectContaining({
+              $or: [
+                { 'anchor.lang': null },
+                { 'anchor.lang': { $exists: false } },
+              ],
+            }),
+          ]),
         }),
       )
     })

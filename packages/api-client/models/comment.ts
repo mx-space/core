@@ -1,4 +1,5 @@
 import { CollectionRefTypes } from '@core/constants/db.constant'
+
 import type { BaseModel } from './base'
 import type { CategoryModel } from './category'
 
@@ -7,20 +8,22 @@ export interface CommentModel extends BaseModel {
   refType: CollectionRefTypes
   ref: string
   state: number
-  commentsIndex: number
   author: string
   text: string
   mail?: string
   url?: string
   ip?: string
   agent?: string
-  key: string
   pin?: boolean
 
   avatar: string
 
-  parent?: CommentModel | string
-  children: CommentModel[]
+  parentCommentId?: string | null
+  rootCommentId?: string | null
+  replyCount?: number
+  latestReplyAt?: string | null
+  isDeleted?: boolean
+  deletedAt?: string
 
   isWhispers?: boolean
   location?: string
@@ -29,6 +32,28 @@ export interface CommentModel extends BaseModel {
   readerId?: string
   editedAt?: string
 }
+
+export interface CommentReplyWindow {
+  total: number
+  returned: number
+  threshold: number
+  hasHidden: boolean
+  hiddenCount: number
+  nextCursor?: string
+}
+
+export interface CommentThreadItem extends CommentModel {
+  replies: CommentModel[]
+  replyWindow: CommentReplyWindow
+}
+
+export interface CommentThreadReplies {
+  replies: CommentModel[]
+  nextCursor?: string
+  remaining: number
+  done: boolean
+}
+
 export interface CommentRef {
   id: string
   categoryId?: string

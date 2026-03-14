@@ -31,6 +31,7 @@ import v9_7_7 from './version/v9.7.7'
 import v10_0_0 from './version/v10.0.0'
 import v10_0_5 from './version/v10.0.5'
 import v10_1_0 from './version/v10.1.0'
+import v10_4_1 from './version/v10.4.1'
 
 export default [
   v200Alpha1,
@@ -66,4 +67,5 @@ export default [
   v10_0_0,
   v10_0_5,
   v10_1_0,
+  v10_4_1,
 ]

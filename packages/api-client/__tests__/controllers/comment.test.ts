@@ -1,7 +1,8 @@
+import camelcaseKeys from 'camelcase-keys'
+
 import { mockRequestInstance } from '~/__tests__/helpers/instance'
 import { mockResponse } from '~/__tests__/helpers/response'
 import { CommentController } from '~/controllers/comment'
-import camelcaseKeys from 'camelcase-keys'
 
 describe('test note client', () => {
   const client = mockRequestInstance(CommentController)
@@ -10,13 +11,13 @@ describe('test note client', () => {
     mockResponse('/comments/11111', {
       ref_type: 'Page',
       state: 1,
-      children: [],
-      comments_index: 1,
+      root_comment_id: null,
+      parent_comment_id: null,
+      reply_count: 0,
       id: '6188b80b6290547080c9e1f3',
       author: 'yss',
       text: '做的框架模板不错。(•౪• ) ',
       url: 'https://gitee.com/kmyss/',
-      key: '#26',
       ref: '5e0318319332d06503619337',
       created: '2021-11-08T05:39:23.010Z',
       avatar:
@@ -24,7 +25,7 @@ describe('test note client', () => {
     })
 
     const data = await client.comment.getById('11111')
-    expect(data.children).toEqual([])
+    expect(data.parentCommentId).toBeNull()
     expect(data.text).toBeDefined()
   })
 
@@ -33,15 +34,32 @@ describe('test note client', () => {
       {
         ref_type: 'Page',
         state: 1,
-        children: [],
-        comments_index: 1,
+        root_comment_id: null,
+        parent_comment_id: null,
+        reply_count: 1,
         id: '6188b80b6290547080c9e1f3',
         author: 'yss',
         text: '做的框架模板不错。(•౪• ) ',
         url: 'https://gitee.com/kmyss/',
-        key: '#26',
         ref: '5e0318319332d06503619337',
         created: '2021-11-08T05:39:23.010Z',
+        replies: [
+          {
+            id: 'reply-1',
+            root_comment_id: '6188b80b6290547080c9e1f3',
+            parent_comment_id: '6188b80b6290547080c9e1f3',
+            text: 'reply',
+            author: 'guest',
+            created: '2021-11-09T05:39:23.010Z',
+          },
+        ],
+        reply_window: {
+          total: 1,
+          returned: 1,
+          threshold: 20,
+          has_hidden: false,
+          hidden_count: 0,
+        },
         avatar:
           'https://sdn.geekzu.org/avatar/8675fa376c044b0d93a23374549c4248?d=retro',
       },

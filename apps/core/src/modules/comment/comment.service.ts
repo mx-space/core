@@ -2,7 +2,7 @@ import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import type { ReturnModelType } from '@typegoose/typegoose/lib/types'
 import DiffMatchPatch from 'diff-match-patch'
-import { isObjectIdOrHexString, Types } from 'mongoose'
+import { Types } from 'mongoose'
 
 import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
@@ -35,6 +35,10 @@ import {
 import type { CommentAnchorInput } from './comment.schema'
 
 const dmp = new DiffMatchPatch()
+const COMMENT_REPLY_THRESHOLD = 20
+const COMMENT_REPLY_EDGE_SIZE = 3
+const COMMENT_THREAD_BATCH_SIZE = 10
+const COMMENT_DELETED_PLACEHOLDER = '该评论已删除'
 
 @Injectable()
 export class CommentService {
@@ -56,6 +60,140 @@ export class CommentService {
 
   public get model() {
     return this.commentModel
+  }
+
+  private toObjectId(id: string | Types.ObjectId | { _id?: unknown }) {
+    if (id instanceof Types.ObjectId) {
+      return id
+    }
+
+    if (typeof id === 'object' && id && '_id' in id) {
+      return this.toObjectId((id as { _id?: unknown })._id as any)
+    }
+
+    return new Types.ObjectId(String(id))
+  }
+
+  private buildMixedIdCandidates(
+    ids: Array<string | Types.ObjectId | undefined | null>,
+  ) {
+    const candidates: Array<string | Types.ObjectId> = []
+
+    for (const id of ids) {
+      if (!id) continue
+
+      if (id instanceof Types.ObjectId) {
+        candidates.push(id, id.toHexString())
+        continue
+      }
+
+      const raw = String(id)
+      candidates.push(raw)
+      if (Types.ObjectId.isValid(raw)) {
+        candidates.push(new Types.ObjectId(raw))
+      }
+    }
+
+    const seen = new Set<string>()
+    return candidates.filter((candidate) => {
+      const key =
+        candidate instanceof Types.ObjectId
+          ? `oid:${candidate.toHexString()}`
+          : `str:${candidate}`
+      if (seen.has(key)) {
+        return false
+      }
+      seen.add(key)
+      return true
+    })
+  }
+
+  private createPublicQueryFilters({
+    isAuthenticated,
+    commentShouldAudit,
+    hasAnchor,
+  }: {
+    isAuthenticated: boolean
+    commentShouldAudit: boolean
+    hasAnchor?: boolean
+  }) {
+    const filters: Record<string, any>[] = [
+      {
+        $or: commentShouldAudit
+          ? [{ state: CommentState.Read }]
+          : [{ state: CommentState.Read }, { state: CommentState.Unread }],
+      },
+    ]
+
+    if (!isAuthenticated) {
+      filters.push({
+        $or: [{ isWhispers: false }, { isWhispers: { $exists: false } }],
+      })
+    }
+
+    if (hasAnchor) {
+      filters.push({ anchor: { $exists: true } })
+    }
+
+    return filters
+  }
+
+  private buildReplyWindow(replies: CommentModel[]) {
+    if (replies.length <= COMMENT_REPLY_THRESHOLD) {
+      return {
+        replies,
+        replyWindow: {
+          total: replies.length,
+          returned: replies.length,
+          threshold: COMMENT_REPLY_THRESHOLD,
+          hasHidden: false,
+          hiddenCount: 0,
+        },
+      }
+    }
+
+    const head = replies.slice(0, COMMENT_REPLY_EDGE_SIZE)
+    const tail = replies.slice(-COMMENT_REPLY_EDGE_SIZE)
+    const selected = [...head]
+
+    const seen = new Set(head.map((reply) => reply.id))
+    for (const reply of tail) {
+      if (!seen.has(reply.id)) {
+        selected.push(reply)
+      }
+    }
+
+    return {
+      replies: selected,
+      replyWindow: {
+        total: replies.length,
+        returned: selected.length,
+        threshold: COMMENT_REPLY_THRESHOLD,
+        hasHidden: true,
+        hiddenCount: replies.length - selected.length,
+        nextCursor: head.at(-1)?.id,
+      },
+    }
+  }
+
+  private collectNestedReaderIds(
+    comments: Array<CommentModel & { replies?: CommentModel[] }>,
+  ) {
+    const readerIds = new Set<string>()
+
+    for (const comment of comments) {
+      if (comment.readerId) {
+        readerIds.add(comment.readerId)
+      }
+
+      for (const reply of comment.replies || []) {
+        if (reply.readerId) {
+          readerIds.add(reply.readerId)
+        }
+      }
+    }
+
+    return [...readerIds]
   }
 
   private getModelByRefType(
@@ -413,11 +551,25 @@ export class CommentService {
 
     const comments = await this.commentModel
       .find({
-        ref: refId,
-        refType,
-        parent: undefined,
+        $and: [
+          {
+            ref: refId,
+            refType,
+          },
+          {
+            $or: [
+              { parentCommentId: null },
+              { parentCommentId: { $exists: false } },
+            ],
+          },
+          {
+            $or: [
+              { 'anchor.lang': null },
+              { 'anchor.lang': { $exists: false } },
+            ],
+          },
+        ],
         anchor: { $exists: true },
-        $or: [{ 'anchor.lang': null }, { 'anchor.lang': { $exists: false } }],
       })
       .lean()
 
@@ -449,7 +601,7 @@ export class CommentService {
 
     for (const id of deleting) {
       try {
-        await this.deleteComments(id)
+        await this.hardDeleteRootComment(id)
         await this.eventManager.emit(
           BusinessEvents.COMMENT_DELETE,
           { id },
@@ -520,17 +672,33 @@ export class CommentService {
       delete (doc as Partial<CommentModel>).anchor
     }
 
-    const commentIndex = ref.commentsIndex || 0
-    doc.key = `#${commentIndex + 1}`
-
-    const comment = await this.commentModel.create({
+    const comment = (await this.commentModel.create({
       ...doc,
       state: RequestContext.currentIsAuthenticated()
         ? CommentState.Read
         : CommentState.Unread,
       ref: new Types.ObjectId(id),
+      parentCommentId: null,
+      replyCount: 0,
+      isDeleted: false,
       readerId: reader ? reader.id : undefined,
       refType,
+    })) as CommentModel & { _id: Types.ObjectId }
+
+    await this.commentModel.updateOne(
+      { _id: comment._id },
+      {
+        $set: {
+          rootCommentId: null,
+        },
+      },
+    )
+
+    Object.assign(comment, {
+      rootCommentId: null,
+      parentCommentId: null,
+      replyCount: 0,
+      isDeleted: false,
     })
 
     await this.databaseService.getModelByRefType(refType!).updateOne(
@@ -555,31 +723,81 @@ export class CommentService {
     }
   }
 
-  async deleteComments(id: string) {
+  async replyComment(id: string, doc: Partial<CommentModel>) {
+    const parent = await this.commentModel.findById(id)
+    if (!parent) {
+      throw new CannotFindException()
+    }
+
+    const reader = await this.assignReaderToComment(doc)
+    const rootCommentId = parent.rootCommentId || parent._id
+
+    const comment = (await this.commentModel.create({
+      ...doc,
+      state:
+        doc.state ??
+        (RequestContext.currentIsAuthenticated()
+          ? CommentState.Read
+          : CommentState.Unread),
+      ref: this.toObjectId(parent.ref as any),
+      refType: parent.refType,
+      parentCommentId: parent._id,
+      rootCommentId,
+      isWhispers: parent.isWhispers,
+      readerId: reader ? reader.id : undefined,
+      replyCount: 0,
+      isDeleted: false,
+    })) as CommentModel & { _id: Types.ObjectId; created?: Date }
+
+    await this.commentModel.updateOne(
+      { _id: rootCommentId },
+      {
+        $inc: { replyCount: 1 },
+        $set: { latestReplyAt: comment.created ?? new Date() },
+      },
+    )
+
+    Object.assign(comment, {
+      parentCommentId: parent._id,
+      rootCommentId,
+      replyCount: 0,
+      isDeleted: false,
+    })
+
+    return comment
+  }
+
+  async softDeleteComment(id: string) {
     const comment = await this.commentModel.findById(id).lean()
     if (!comment) {
       throw new NoContentCanBeModifiedException()
     }
 
-    const { children, parent } = comment
-    if (children && children.length > 0) {
-      await Promise.all(
-        children.map(async (id) => {
-          await this.deleteComments(id as any as string)
-        }),
-      )
+    if (comment.isDeleted) {
+      return
     }
-    if (parent) {
-      const parent = await this.commentModel.findById(comment.parent)
-      if (parent) {
-        await parent.updateOne({
-          $pull: {
-            children: comment._id,
-          },
-        })
-      }
-    }
-    await this.commentModel.deleteOne({ _id: id })
+
+    await this.commentModel.updateOne(
+      { _id: id },
+      {
+        $set: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          text: COMMENT_DELETED_PLACEHOLDER,
+          editedAt: new Date(),
+        },
+      },
+    )
+  }
+
+  async deleteComments(id: string) {
+    return this.softDeleteComment(id)
+  }
+
+  private async hardDeleteRootComment(id: string) {
+    await this.commentModel.deleteMany({
+      $or: [{ _id: id }, { rootCommentId: id }],
+    })
   }
 
   async allowComment(id: string, type?: CollectionRefTypes) {
@@ -603,11 +821,11 @@ export class CommentService {
     const queryList = await this.commentModel.paginate(
       { state },
       {
-        select: '+ip +agent -children',
+        select: '+ip +agent',
         page,
         limit: size,
         populate: [
-          { path: 'parent', select: '-children' },
+          { path: 'parentCommentId' },
           {
             path: 'ref',
             select: 'title _id slug nid categoryId content',
@@ -618,35 +836,188 @@ export class CommentService {
       },
     )
 
-    this.cleanDirtyData(queryList.docs)
-
     await this.fillAndReplaceAvatarUrl(queryList.docs)
 
     return queryList
   }
 
-  cleanDirtyData(docs: CommentModel[]) {
-    for (const doc of docs) {
-      if (!doc.children || doc.children.length === 0) {
-        continue
-      }
+  async getCommentsByRefId(
+    refId: string,
+    {
+      page,
+      size,
+      isAuthenticated,
+      commentShouldAudit,
+      hasAnchor = false,
+    }: {
+      page: number
+      size: number
+      isAuthenticated: boolean
+      commentShouldAudit: boolean
+      hasAnchor?: boolean
+    },
+  ) {
+    const filters = this.createPublicQueryFilters({
+      isAuthenticated,
+      commentShouldAudit,
+      hasAnchor,
+    })
 
-      const nextChildren = [] as any[]
+    const comments = await this.commentModel.paginate(
+      {
+        $and: [
+          { ref: refId },
+          {
+            $or: [
+              { parentCommentId: null },
+              { parentCommentId: { $exists: false } },
+            ],
+          },
+          ...filters,
+        ],
+      },
+      {
+        limit: size,
+        page,
+        sort: { pin: -1, created: -1 },
+        lean: true,
+        autopopulate: false,
+      },
+    )
 
-      for (const child of doc.children) {
-        if (isObjectIdOrHexString(child)) {
-          this.logger.warn(`--> 检测到一条脏数据：${doc.id}.child: ${child}`)
-          continue
-        }
-        nextChildren.push(child)
+    const rootIds = comments.docs.map((comment: any) =>
+      (comment.rootCommentId || comment._id).toString(),
+    )
 
-        if ((child as CommentModel).children) {
-          this.cleanDirtyData((child as CommentModel).children as any[])
-        }
-      }
+    const replies = rootIds.length
+      ? await this.commentModel
+          .find({
+            $and: [
+              {
+                rootCommentId: {
+                  $in: this.buildMixedIdCandidates(rootIds),
+                },
+              },
+              { parentCommentId: { $ne: null } },
+              ...filters,
+            ],
+          })
+          .sort({ created: 1 })
+          .lean()
+      : []
 
-      doc.children = nextChildren
+    const repliesByRootId = new Map<string, CommentModel[]>()
+    for (const reply of replies as CommentModel[]) {
+      const key = String(reply.rootCommentId)
+      const current = repliesByRootId.get(key) || []
+      current.push(reply)
+      repliesByRootId.set(key, current)
     }
+
+    const docs = comments.docs.map((comment: any) => {
+      const rootId = String(comment.rootCommentId || comment._id)
+      const threadReplies = repliesByRootId.get(rootId) || []
+      const { replies, replyWindow } = this.buildReplyWindow(threadReplies)
+
+      return {
+        ...comment,
+        rootCommentId: comment.rootCommentId ?? null,
+        parentCommentId: comment.parentCommentId ?? null,
+        replies,
+        replyWindow,
+      }
+    })
+
+    await this.fillAndReplaceAvatarUrl([
+      ...docs,
+      ...docs.flatMap((comment) => comment.replies || []),
+    ] as CommentModel[])
+
+    return {
+      ...comments,
+      docs,
+    }
+  }
+
+  async getThreadReplies(
+    rootCommentId: string,
+    {
+      cursor,
+      size = COMMENT_THREAD_BATCH_SIZE,
+      isAuthenticated,
+      commentShouldAudit,
+    }: {
+      cursor?: string
+      size?: number
+      isAuthenticated: boolean
+      commentShouldAudit: boolean
+    },
+  ) {
+    const replies = (await this.commentModel
+      .find({
+        $and: [
+          {
+            rootCommentId: {
+              $in: this.buildMixedIdCandidates([rootCommentId]),
+            },
+          },
+          { parentCommentId: { $ne: null } },
+          ...this.createPublicQueryFilters({
+            isAuthenticated,
+            commentShouldAudit,
+          }),
+        ],
+      })
+      .sort({ created: 1 })
+      .lean()) as CommentModel[]
+
+    const total = replies.length
+    if (total <= COMMENT_REPLY_THRESHOLD) {
+      await this.fillAndReplaceAvatarUrl(replies)
+      return {
+        replies,
+        remaining: 0,
+        done: true,
+      }
+    }
+
+    const headSize = Math.min(COMMENT_REPLY_EDGE_SIZE, total)
+    const tailStart = Math.max(headSize, total - COMMENT_REPLY_EDGE_SIZE)
+    const middleStart = headSize
+    const middleEnd = tailStart
+
+    let startIndex = middleStart
+    if (cursor) {
+      const cursorIndex = replies.findIndex((reply) => reply.id === cursor)
+      if (cursorIndex >= middleStart) {
+        startIndex = cursorIndex + 1
+      }
+    }
+
+    const nextReplies = replies.slice(
+      startIndex,
+      Math.min(startIndex + size, middleEnd),
+    )
+    await this.fillAndReplaceAvatarUrl(nextReplies)
+
+    const consumedEnd = startIndex + nextReplies.length
+
+    return {
+      replies: nextReplies,
+      nextCursor: nextReplies.at(-1)?.id,
+      remaining: Math.max(0, middleEnd - consumedEnd),
+      done: consumedEnd >= middleEnd,
+    }
+  }
+
+  collectThreadReaderIds(
+    comments: Array<CommentModel & { replies?: CommentModel[] }>,
+  ) {
+    return this.collectNestedReaderIds(comments)
+  }
+
+  cleanDirtyData<T>(docs: T[]) {
+    return docs
   }
 
   async fillAndReplaceAvatarUrl(comments: CommentModel[]) {
@@ -664,8 +1035,10 @@ export class CommentService {
         comment.avatar = getAvatar(comment.mail)
       }
 
-      if (comment.children?.length) {
-        comment.children.forEach((child) => {
+      const replies = (comment as CommentModel & { replies?: CommentModel[] })
+        .replies
+      if (replies?.length) {
+        replies.forEach((child) => {
           process(child as CommentModel)
         })
       }
@@ -698,6 +1071,9 @@ export class CommentService {
     const comment = await this.commentModel.findById(id).lean()
     if (!comment) {
       throw new CannotFindException()
+    }
+    if (comment.isDeleted) {
+      throw new NoContentCanBeModifiedException()
     }
     await this.commentModel.updateOne(
       { _id: id },

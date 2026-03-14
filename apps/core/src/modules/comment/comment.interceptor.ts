@@ -4,11 +4,12 @@ import type {
   NestInterceptor,
 } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
+import { cloneDeep, isArrayLike, isObjectLike } from 'es-toolkit/compat'
+import { map } from 'rxjs'
+
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { getAvatar } from '~/utils/tool.util'
 import { isDefined } from '~/utils/validator.util'
-import { cloneDeep, isArrayLike, isObjectLike } from 'es-toolkit/compat'
-import { map } from 'rxjs'
 
 @Injectable()
 export class CommentFilterEmailInterceptor implements NestInterceptor {
@@ -33,8 +34,8 @@ export class CommentFilterEmailInterceptor implements NestInterceptor {
                 data.data[i].avatar = getAvatar(item.mail)
                 delete data.data[i].mail
               }
-              if (item.children) {
-                handle({ data: data.data[i].children })
+              if (item.replies) {
+                handle({ data: data.data[i].replies })
               }
             })
           }

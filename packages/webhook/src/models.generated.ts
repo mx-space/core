@@ -147,10 +147,12 @@ export interface CommentModel extends BaseModel {
   url?: string
   text: string
   state?: CommentState
-  parent?: string
-  children?: string[]
-  commentsIndex?: number
-  key?: string
+  parentCommentId?: string | null
+  rootCommentId?: string
+  replyCount?: number
+  latestReplyAt?: Date
+  isDeleted?: boolean
+  deletedAt?: Date
   ip?: string
   agent?: string
   pin?: boolean
@@ -213,6 +215,7 @@ export interface LinkModel extends BaseModel {
 export interface NoteModel extends WriteBaseModel {
   title: string
   nid: number
+  slug?: string
   isPublished?: boolean
   password: string | null
   publicAt: Date | null
