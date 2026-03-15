@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [10.5.2](https://github.com/mx-space/core/compare/v10.5.1...v10.5.2) (2026-03-15)
+
+
+### Features
+
+* **aggregate:** add comment options to aggregate response ([a31db1f](https://github.com/mx-space/core/commit/a31db1f8622b5bdd8345a388c8898676c5e4eed9))
+* **aggregate:** add public /aggregate/site_info endpoint ([88bd758](https://github.com/mx-space/core/commit/88bd75860d1f5b669ed92b4a3b7bb15cb6e6feaf))
+* **aggregate:** update aggregate service and models to include summary and mood/weather fields ([ab426b1](https://github.com/mx-space/core/commit/ab426b107a7672f3c9aacc1ca8d7533e7f03c293))
+* **comment:** add disableComment option to CommentOptionsModel ([cc31bbd](https://github.com/mx-space/core/commit/cc31bbd74dae969ec46cd69601db60cbd2a3bcc8))
+* **comment:** use authProvider for comment auth channel ([0b9da3b](https://github.com/mx-space/core/commit/0b9da3b724578288cc848f6634ac84afd7da8d28))
+
+
+
 ## [10.5.1](https://github.com/mx-space/core/compare/v10.5.0...v10.5.1) (2026-03-14)
 
 
