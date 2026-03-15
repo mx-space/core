@@ -602,6 +602,38 @@ export class AggregateService {
     }, 0)
   }
 
+  async getSiteInfo() {
+    const [postCount, noteCount, totalWordCount, firstPost, firstNote] =
+      await Promise.all([
+        this.postService.model.countDocuments(),
+        this.noteService.model.countDocuments(),
+        this.getAllSiteWordsCount(),
+        this.postService.model
+          .findOne({}, 'created', { sort: { created: 1 } })
+          .lean(),
+        this.noteService.model
+          .findOne({}, 'created', { sort: { created: 1 } })
+          .lean(),
+      ])
+
+    const firstPostDate = firstPost?.created
+    const firstNoteDate = firstNote?.created
+    let firstPublishDate: Date | null
+    if (firstPostDate && firstNoteDate) {
+      firstPublishDate =
+        firstPostDate < firstNoteDate ? firstPostDate : firstNoteDate
+    } else {
+      firstPublishDate = firstPostDate || firstNoteDate || null
+    }
+
+    return {
+      postCount,
+      noteCount,
+      totalWordCount,
+      firstPublishDate: firstPublishDate?.toISOString() ?? null,
+    }
+  }
+
   /**
    * 获取分类分布统计
    */

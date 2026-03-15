@@ -370,6 +370,11 @@ export class AggregateController {
     }
   }
 
+  @Get('/site_info')
+  async getSiteInfo() {
+    return await this.aggregateService.getSiteInfo()
+  }
+
   @Get('/stat/category-distribution')
   @Auth()
   async getCategoryDistribution() {
