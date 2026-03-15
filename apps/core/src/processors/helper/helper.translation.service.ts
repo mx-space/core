@@ -16,6 +16,7 @@ export interface TranslationMeta {
 export interface TranslationResult {
   title: string
   text: string
+  subtitle?: string | null
   summary?: string | null
   tags?: string[]
   content?: string
@@ -46,6 +47,7 @@ export class TranslationService {
     originalData: {
       title: string
       text: string
+      subtitle?: string | null
       summary?: string | null
       tags?: string[]
     }
@@ -68,6 +70,7 @@ export class TranslationService {
       return {
         title: translation.title,
         text: translation.text,
+        subtitle: translation.subtitle ?? originalData.subtitle,
         summary: translation.summary ?? originalData.summary,
         tags: translation.tags ?? originalData.tags,
         content: translation.content,
@@ -155,6 +158,7 @@ export class TranslationService {
 
     if (fields.includes('title')) selectFields.add('title')
     if (fields.includes('text')) selectFields.add('text')
+    if (fields.includes('subtitle')) selectFields.add('subtitle')
     if (fields.includes('summary')) selectFields.add('summary')
     if (fields.includes('tags')) selectFields.add('tags')
     if (fields.includes('content')) {
@@ -181,6 +185,7 @@ export class TranslationService {
     const defaultFields: readonly TranslationField[] = [
       'title',
       'text',
+      'subtitle',
       'summary',
       'tags',
       'content',
@@ -200,6 +205,7 @@ export class TranslationService {
             {
               title: article.title,
               text: article.text ?? '',
+              subtitle: article.subtitle,
               summary: article.summary,
               tags: article.tags,
               isTranslated: false,
@@ -228,6 +234,7 @@ export class TranslationService {
                 {
                   title: article.title,
                   text: article.text ?? '',
+                  subtitle: article.subtitle,
                   summary: article.summary,
                   tags: article.tags,
                   isTranslated: false,
@@ -243,6 +250,7 @@ export class TranslationService {
               {
                 title: translation.title,
                 text: translation.text,
+                subtitle: translation.subtitle ?? article.subtitle,
                 summary: translation.summary ?? article.summary,
                 tags: translation.tags ?? article.tags,
                 content: translation.content,
@@ -273,6 +281,7 @@ export class TranslationService {
             {
               title: article.title,
               text: article.text ?? '',
+              subtitle: article.subtitle,
               summary: article.summary,
               tags: article.tags,
               isTranslated: false,

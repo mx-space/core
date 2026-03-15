@@ -309,6 +309,10 @@ TITLE
 Main content in Markdown
 TEXT_MARKDOWN
 
+<<<SUBTITLE (optional)
+Subtitle text
+SUBTITLE
+
 <<<SUMMARY (optional)
 Summary text
 SUMMARY
@@ -330,18 +334,20 @@ Return a JSON object with these fields:
 - sourceLang: ISO 639-1 code of the detected source language
 - title: translated title
 - text: translated text content with Markdown preserved and correctly JSON-escaped
+- subtitle: translated subtitle, or null if not provided
 - summary: translated summary, or null if not provided
 - tags: array of translated tags, or null if not provided
 
 Rules for fields:
 - \`title\` must be fully translated natural language
 - \`text\` must preserve Markdown, MDX, HTML, and JSX structure exactly while translating all natural-language text
+- \`subtitle\` must be fully translated natural language when present
 - \`summary\` must be fully translated natural language when present
 - \`tags\` must translate tag labels, but preserve technical terms when applicable
 - Use null only when the corresponding input block is absent
 
 Example valid output:
-{"sourceLang":"en","title":"...","text":"Line1\\nLine2","summary":null,"tags":null}`
+{"sourceLang":"en","title":"...","text":"Line1\\nLine2","subtitle":null,"summary":null,"tags":null}`
 
 const buildTranslationSystem = (isJapanese: boolean, isStream: boolean) => {
   let system = TRANSLATION_BASE
@@ -364,7 +370,13 @@ REMINDER: Output raw JSON only. Start with \`{\`, end with \`}\`. No markdown fe
 
 const buildTranslationPrompt = (
   targetLanguage: string,
-  content: { title: string; text: string; summary?: string; tags?: string[] },
+  content: {
+    title: string
+    text: string
+    subtitle?: string
+    summary?: string
+    tags?: string[]
+  },
 ) => {
   let prompt = `TARGET_LANGUAGE: ${targetLanguage}
 
@@ -375,6 +387,14 @@ TITLE
 <<<TEXT_MARKDOWN
 ${content.text}
 TEXT_MARKDOWN`
+
+  if (content.subtitle) {
+    prompt += `
+
+<<<SUBTITLE
+${content.subtitle}
+SUBTITLE`
+  }
 
   if (content.summary) {
     prompt += `
@@ -410,7 +430,7 @@ Use the provided document context for coherent, fluent translation.
 - Keep code, URLs, HTML/JSX tags unchanged
 - Ensure natural, fluent translation using the context for reference
 - DO NOT translate segment IDs or keys
-- If title/summary/tags keys are present in segments, translate them too
+- If title/subtitle/summary/tags keys are present in segments, translate them too
 - For __tags__, preserve the ||| delimiter between tags
 
 ## Key Completeness (CRITICAL)
@@ -626,6 +646,7 @@ COMMENT`,
     content: {
       title: string
       text: string
+      subtitle?: string
       summary?: string
       tags?: string[]
     },
@@ -652,6 +673,12 @@ COMMENT`,
           .describe(
             'The text content fully translated into the target language, preserving Markdown formatting, no mixed languages allowed',
           ),
+        subtitle: z
+          .string()
+          .nullable()
+          .describe(
+            'The subtitle fully translated into the target language (if provided)',
+          ),
         summary: z
           .string()
           .nullable()
@@ -673,6 +700,7 @@ COMMENT`,
     content: {
       title: string
       text: string
+      subtitle?: string
       summary?: string
       tags?: string[]
     },

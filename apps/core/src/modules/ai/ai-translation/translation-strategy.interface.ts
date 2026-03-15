@@ -14,6 +14,7 @@ export interface TranslationResult {
   sourceLang: string
   title: string
   text: string
+  subtitle: string | null
   summary: string | null
   tags: string[] | null
   aiModel: string

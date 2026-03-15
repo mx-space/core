@@ -108,6 +108,8 @@ export class LexicalTranslationStrategy
 
     const metaEntries: Record<string, string> = { __title__: content.title }
     const metaEntryMeta: Record<string, string> = { __title__: 'meta.title' }
+    if (content.subtitle) metaEntries.__subtitle__ = content.subtitle
+    if (content.subtitle) metaEntryMeta.__subtitle__ = 'meta.subtitle'
     if (content.summary) metaEntries.__summary__ = content.summary
     if (content.summary) metaEntryMeta.__summary__ = 'meta.summary'
     if (content.tags?.length) {
@@ -156,6 +158,8 @@ export class LexicalTranslationStrategy
       allTranslations,
     )
     const title = allTranslations.get('__title__') ?? content.title
+    const subtitle =
+      allTranslations.get('__subtitle__') ?? content.subtitle ?? null
     const summary =
       allTranslations.get('__summary__') ?? content.summary ?? null
     const tagsStr = allTranslations.get('__tags__')
@@ -167,6 +171,7 @@ export class LexicalTranslationStrategy
       text: this.lexicalService.lexicalToMarkdown(translatedContent),
       contentFormat: ContentFormat.Lexical,
       content: translatedContent,
+      subtitle,
       summary,
       tags,
       aiModel: info.model,
@@ -290,6 +295,16 @@ export class LexicalTranslationStrategy
       allTranslations.set('__title__', existing.title)
     }
 
+    if (content.subtitle) {
+      const currentSubtitleHash = md5(content.subtitle)
+      if (!oldMetaHashes || oldMetaHashes.subtitle !== currentSubtitleHash) {
+        metaEntries.__subtitle__ = content.subtitle
+        metaEntryMeta.__subtitle__ = 'meta.subtitle'
+      } else if (existing.subtitle) {
+        allTranslations.set('__subtitle__', existing.subtitle)
+      }
+    }
+
     if (content.summary) {
       const currentSummaryHash = md5(content.summary)
       if (!oldMetaHashes || oldMetaHashes.summary !== currentSummaryHash) {
@@ -325,6 +340,8 @@ export class LexicalTranslationStrategy
         text: this.lexicalService.lexicalToMarkdown(translatedContent),
         contentFormat: ContentFormat.Lexical,
         content: translatedContent,
+        subtitle:
+          allTranslations.get('__subtitle__') ?? existing.subtitle ?? null,
         summary: allTranslations.get('__summary__') ?? existing.summary ?? null,
         tags: existing.tags ?? null,
         aiModel: info.model,
@@ -371,6 +388,8 @@ export class LexicalTranslationStrategy
       allTranslations,
     )
     const title = allTranslations.get('__title__') ?? existing.title
+    const subtitle =
+      allTranslations.get('__subtitle__') ?? existing.subtitle ?? null
     const summary =
       allTranslations.get('__summary__') ?? existing.summary ?? null
     const tagsStr = allTranslations.get('__tags__')
@@ -384,6 +403,7 @@ export class LexicalTranslationStrategy
       text: this.lexicalService.lexicalToMarkdown(translatedContent),
       contentFormat: ContentFormat.Lexical,
       content: translatedContent,
+      subtitle,
       summary,
       tags,
       aiModel: info.model,

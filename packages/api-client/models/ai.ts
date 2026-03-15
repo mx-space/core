@@ -17,6 +17,7 @@ export interface AITranslationModel {
   sourceLang: string
   title: string
   text: string
+  subtitle?: string
   summary?: string
   tags?: string[]
   aiModel?: string

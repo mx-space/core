@@ -57,6 +57,7 @@ describe('TranslationService', () => {
     const originalData = {
       title: 'Test Title',
       text: 'Test Content',
+      subtitle: 'Test Subtitle',
       summary: 'Test Summary',
       tags: ['tag1', 'tag2'],
     }
@@ -120,6 +121,7 @@ describe('TranslationService', () => {
           translation: {
             title: 'Translated Title',
             text: 'Translated Content',
+            subtitle: 'Translated Subtitle',
             summary: 'Translated Summary',
             tags: ['translated-tag'],
             sourceLang: 'zh',
@@ -139,6 +141,7 @@ describe('TranslationService', () => {
       expect(result).toEqual({
         title: 'Translated Title',
         text: 'Translated Content',
+        subtitle: 'Translated Subtitle',
         summary: 'Translated Summary',
         tags: ['translated-tag'],
         isTranslated: true,
@@ -159,6 +162,7 @@ describe('TranslationService', () => {
           translation: {
             title: 'Translated Title',
             text: 'Translated Content',
+            subtitle: null,
             summary: null,
             tags: null,
             sourceLang: 'zh',
@@ -177,6 +181,7 @@ describe('TranslationService', () => {
 
       expect(result.summary).toBe(originalData.summary)
       expect(result.tags).toEqual(originalData.tags)
+      expect((result as any).subtitle).toBe(originalData.subtitle)
     })
 
     it('should pass allowHidden option correctly', async () => {
@@ -327,10 +332,17 @@ describe('TranslationService', () => {
         id: '1',
         title: 'Title 1',
         text: 'Text 1',
+        subtitle: 'Subtitle 1',
         summary: 'Summary 1',
         tags: ['a'],
-      },
-      { id: '2', title: 'Title 2', text: 'Text 2', summary: null },
+      } as ArticleTranslationInput,
+      {
+        id: '2',
+        title: 'Title 2',
+        text: 'Text 2',
+        subtitle: 'Subtitle 2',
+        summary: null,
+      } as ArticleTranslationInput,
     ]
 
     it('should return untranslated results when no targetLang', async () => {
@@ -363,6 +375,7 @@ describe('TranslationService', () => {
             {
               title: 'Translated Title 1',
               text: 'Translated Text 1',
+              subtitle: 'Translated Subtitle 1',
               summary: 'Translated Summary 1',
               tags: ['translated-a'],
               sourceLang: 'zh',
@@ -385,6 +398,7 @@ describe('TranslationService', () => {
       expect(translated.isTranslated).toBe(true)
       expect(translated.title).toBe('Translated Title 1')
       expect(translated.text).toBe('Translated Text 1')
+      expect((translated as any).subtitle).toBe('Translated Subtitle 1')
       expect(translated.summary).toBe('Translated Summary 1')
       expect(translated.tags).toEqual(['translated-a'])
       expect(translated.translationMeta).toEqual({
@@ -407,6 +421,7 @@ describe('TranslationService', () => {
             {
               title: 'Translated Title 1',
               text: 'Translated Text 1',
+              subtitle: null,
               summary: null,
               tags: null,
               sourceLang: 'zh',
@@ -423,6 +438,7 @@ describe('TranslationService', () => {
       })
 
       const translated = result.get('1')!
+      expect((translated as any).subtitle).toBe('Subtitle 1')
       expect(translated.summary).toBe('Summary 1')
       expect(translated.tags).toEqual(['a'])
     })

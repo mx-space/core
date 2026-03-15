@@ -33,6 +33,9 @@ export class AITranslationModel extends BaseModel {
   text: string
 
   @prop()
+  subtitle?: string
+
+  @prop()
   summary?: string
 
   @prop({ type: () => [String] })
@@ -71,6 +74,7 @@ export class AITranslationModel extends BaseModel {
   @prop({ type: () => Object })
   sourceMetaHashes?: {
     title: string
+    subtitle?: string
     summary?: string
     tags?: string
   }

@@ -131,6 +131,7 @@ export class TranslationConsistencyService extends BaseTranslationService {
       {
         title: article.title,
         text: article.text ?? '',
+        subtitle: article.subtitle,
         summary: article.summary ?? undefined,
         tags: article.tags,
         contentFormat: article.contentFormat,

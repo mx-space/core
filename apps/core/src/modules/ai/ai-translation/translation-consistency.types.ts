@@ -2,6 +2,7 @@ export interface TranslationSourceSnapshot {
   id: string
   title: string
   text?: string
+  subtitle?: string | null
   summary?: string | null
   tags?: string[]
   meta?: { lang?: string }
@@ -20,4 +21,4 @@ export const TRANSLATION_VALIDATION_REQUIRED_SELECT_FIELDS = [
 ] as const
 
 export const TRANSLATION_VALIDATION_DEFAULT_SELECT =
-  'refId refType lang sourceLang title text summary tags hash sourceModified created aiModel aiProvider'
+  'refId refType lang sourceLang title text subtitle summary tags hash sourceModified created aiModel aiProvider'

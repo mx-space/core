@@ -34,6 +34,7 @@ export class MarkdownTranslationStrategy
       AI_PROMPTS.translationStream(targetLang, {
         title: content.title,
         text: content.text,
+        subtitle: content.subtitle ?? undefined,
         summary: content.summary ?? undefined,
         tags: content.tags,
       })
@@ -82,6 +83,7 @@ export class MarkdownTranslationStrategy
       sourceLang?: string
       title?: string
       text?: string
+      subtitle?: string | null
       summary?: string | null
       tags?: string[] | null
     }>(fullText, 'translateMarkdownContent')
@@ -94,6 +96,7 @@ export class MarkdownTranslationStrategy
       sourceLang: parsed.sourceLang,
       title: parsed.title,
       text: parsed.text,
+      subtitle: parsed.subtitle ?? null,
       summary: parsed.summary ?? null,
       tags: parsed.tags ?? null,
       aiModel: info.model,

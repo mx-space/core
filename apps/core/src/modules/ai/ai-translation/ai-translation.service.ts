@@ -565,6 +565,7 @@ export class AiTranslationService
         title: content.title,
         text: content.text,
         content: content.content ?? null,
+        subtitle: content.subtitle ?? null,
         summary: content.summary ?? null,
         tags: content.tags ?? null,
       }),
@@ -590,6 +591,7 @@ export class AiTranslationService
   ): AITranslationModel['sourceMetaHashes'] {
     return {
       title: md5(content.title),
+      subtitle: content.subtitle ? md5(content.subtitle) : undefined,
       summary: content.summary ? md5(content.summary) : undefined,
       tags: content.tags?.length ? md5(content.tags.join('|||')) : undefined,
     }
@@ -706,6 +708,7 @@ export class AiTranslationService
           existing.sourceLang = sourceLang
           existing.title = translated.title
           existing.text = translated.text
+          existing.subtitle = translated.subtitle ?? undefined
           existing.summary = translated.summary ?? undefined
           existing.tags = translated.tags ?? undefined
           existing.contentFormat = translated.contentFormat
@@ -735,6 +738,7 @@ export class AiTranslationService
           sourceLang,
           title: translated.title,
           text: translated.text,
+          subtitle: translated.subtitle ?? undefined,
           summary: translated.summary ?? undefined,
           tags: translated.tags ?? undefined,
           contentFormat: translated.contentFormat,
@@ -814,6 +818,7 @@ export class AiTranslationService
       sourceLang: translation.sourceLang,
       title: translation.title,
       text: translation.text,
+      subtitle: translation.subtitle,
       summary: translation.summary,
       tags,
       hash: translation.hash,
@@ -1050,6 +1055,7 @@ export class AiTranslationService
     data: {
       title?: string
       text?: string
+      subtitle?: string | null
       summary?: string
       tags?: string[]
       content?: string
@@ -1061,6 +1067,7 @@ export class AiTranslationService
     }
 
     if (data.title !== undefined) doc.title = data.title
+    if (data.subtitle !== undefined) doc.subtitle = data.subtitle ?? undefined
     if (data.summary !== undefined) doc.summary = data.summary
     if (data.tags !== undefined) doc.tags = data.tags
 
@@ -1211,6 +1218,8 @@ export class AiTranslationService
       id: articleId,
       title: document.title,
       text: document.text,
+      subtitle:
+        'subtitle' in document ? (document.subtitle ?? undefined) : undefined,
       summary:
         'summary' in document ? (document.summary ?? undefined) : undefined,
       tags: 'tags' in document ? document.tags : undefined,

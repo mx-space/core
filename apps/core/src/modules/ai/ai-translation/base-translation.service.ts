@@ -17,6 +17,8 @@ export abstract class BaseTranslationService {
     return {
       title: document.title,
       text: document.text,
+      subtitle:
+        'subtitle' in document ? (document.subtitle ?? undefined) : undefined,
       summary:
         'summary' in document ? (document.summary ?? undefined) : undefined,
       tags: 'tags' in document ? document.tags : undefined,
@@ -34,6 +36,7 @@ export abstract class BaseTranslationService {
       {
         title: document.title,
         text: document.text,
+        subtitle: document.subtitle,
         contentFormat: document.contentFormat,
         content: document.content,
         summary: document.summary,

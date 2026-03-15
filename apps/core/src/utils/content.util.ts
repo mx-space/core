@@ -10,6 +10,7 @@ import { md5 } from './tool.util'
 interface ContentDoc {
   text: string
   title: string
+  subtitle?: string | null
   contentFormat?: ContentFormat | string
   content?: string
   summary?: string | null
@@ -60,6 +61,7 @@ export function computeContentHash(
   return md5(
     JSON.stringify({
       title: doc.title,
+      subtitle: doc.subtitle,
       content: sourceOfTruth,
       summary: doc.summary,
       tags: doc.tags,

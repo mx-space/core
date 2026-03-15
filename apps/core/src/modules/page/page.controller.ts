@@ -70,6 +70,7 @@ export class PageController {
           id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
           title: doc.title,
           text: originalText,
+          subtitle: doc.subtitle,
           meta: doc.meta as { lang?: string } | undefined,
           contentFormat: doc.contentFormat,
           content: doc.content,
@@ -94,6 +95,7 @@ export class PageController {
         }
         doc.title = translation.title
         doc.text = translation.text
+        doc.subtitle = translation.subtitle
         ;(doc as { isTranslated?: boolean }).isTranslated =
           translation.isTranslated
         ;(doc as { translationMeta?: unknown }).translationMeta =
@@ -142,6 +144,7 @@ export class PageController {
       originalData: {
         title: page.title,
         text: page.text,
+        subtitle: page.subtitle,
       },
     })
 
@@ -150,6 +153,7 @@ export class PageController {
         ...page,
         title: translationResult.title,
         text: translationResult.text,
+        subtitle: translationResult.subtitle,
         ...(translationResult.content && {
           content: translationResult.content,
           contentFormat: translationResult.contentFormat,

@@ -636,25 +636,40 @@ describe('AiTranslationService', () => {
   })
 
   describe('buildSourceMetaHashes', () => {
-    it('should hash title, summary and tags', () => {
+    it('should hash title, subtitle, summary and tags', () => {
       const content = {
         title: 'Test Title',
+        subtitle: 'Test Subtitle',
         text: '',
         summary: 'A summary',
         tags: ['a', 'b'],
       }
       const result = (service as any).buildSourceMetaHashes(content)
       expect(result.title).toBeTruthy()
+      expect(result.subtitle).toBeTruthy()
       expect(result.summary).toBeTruthy()
       expect(result.tags).toBeTruthy()
     })
 
-    it('should omit summary and tags when absent', () => {
+    it('should omit subtitle, summary and tags when absent', () => {
       const content = { title: 'Test', text: '' }
       const result = (service as any).buildSourceMetaHashes(content)
       expect(result.title).toBeTruthy()
+      expect(result.subtitle).toBeUndefined()
       expect(result.summary).toBeUndefined()
       expect(result.tags).toBeUndefined()
+    })
+  })
+
+  describe('toArticleContent', () => {
+    it('should include subtitle for page documents', () => {
+      const result = service.toArticleContent({
+        title: 'About',
+        subtitle: 'About Subtitle',
+        text: 'Page content',
+      } as any)
+
+      expect((result as any).subtitle).toBe('About Subtitle')
     })
   })
 
