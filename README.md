@@ -201,6 +201,10 @@ All response keys are converted to **snake_case** (e.g., `createdAt` → `create
 
 ## Upgrading
 
+### v10 → v11
+
+v11 refactors the Aggregate API: `categories` and `pageMeta` are removed from `GET /aggregate`; a new `GET /aggregate/site` endpoint is added for lightweight site metadata. See [Upgrading to v11](./docs/migrations/v11.md).
+
 ### v9 → v10
 
 v10 includes a breaking auth system refactor. See [Upgrading to v10](./docs/migrations/v10.md).

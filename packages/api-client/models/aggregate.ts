@@ -1,6 +1,4 @@
-import type { CategoryModel } from './category'
 import type { NoteModel } from './note'
-import type { PageModel } from './page'
 import type { PostModel } from './post'
 import type { SayModel } from './say'
 import type { CommentOptionsModel, SeoOptionModel } from './setting'
@@ -18,8 +16,6 @@ export interface AggregateRoot {
     CommentOptionsModel,
     'disableComment' | 'allowGuestComment'
   >
-  categories: CategoryModel[]
-  pageMeta: Pick<PageModel, 'title' | 'id' | 'slug' | 'order'>[] | null
   /**
    * @available 4.2.2
    */
@@ -32,6 +28,12 @@ export interface AggregateRoot {
 
 export interface AggregateRootWithTheme<Theme = unknown> extends AggregateRoot {
   theme?: Theme
+}
+
+export interface AggregateSiteInfo {
+  user: Pick<UserModel, 'id' | 'name' | 'socialIds'>
+  seo: SeoOptionModel
+  url: Pick<Url, 'webUrl'>
 }
 
 export interface Url {

@@ -4,6 +4,7 @@ import type { SortOrder } from '~/interfaces/options'
 import type { IRequestHandler, RequestProxyResult } from '~/interfaces/request'
 import type {
   AggregateRootWithTheme,
+  AggregateSiteInfo,
   AggregateStat,
   AggregateTop,
   LatestCombinedItem,
@@ -46,6 +47,10 @@ export class AggregateController<ResponseWrapper> implements IController {
         theme,
       },
     })
+  }
+
+  getSiteMetadata(): RequestProxyResult<AggregateSiteInfo, ResponseWrapper> {
+    return this.proxy.site.get<AggregateSiteInfo>()
   }
 
   /**

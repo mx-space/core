@@ -2,6 +2,7 @@ export declare class SeoOptionModel {
   title: string
   description: string
   icon?: string
+  iconDark?: string
   keywords?: string[]
 }
 export declare class UrlOptionModel {

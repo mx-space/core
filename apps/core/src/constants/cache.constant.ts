@@ -37,4 +37,5 @@ export enum CacheKeys {
   RSS = `${API_CACHE_PREFIX}rss`,
   RSSXml = `${API_CACHE_PREFIX}rss_xml`,
   Aggregate = `${API_CACHE_PREFIX}aggregate`,
+  AggregateSite = `${API_CACHE_PREFIX}aggregate_site`,
 }

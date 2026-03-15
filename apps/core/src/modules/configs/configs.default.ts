@@ -4,6 +4,8 @@ export const generateDefaultConfig: () => IConfig = () => ({
   seo: {
     title: '我的小世界呀',
     description: '哈喽~欢迎光临',
+    icon: '',
+    iconDark: '',
     keywords: [],
   },
   url: {

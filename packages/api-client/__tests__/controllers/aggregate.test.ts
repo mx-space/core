@@ -35,94 +35,6 @@ describe('test aggregate client', () => {
           description: '致虚极，守静笃。',
           keywords: ['blog', 'mx-space', 'space', '静かな森'],
         },
-        categories: [
-          {
-            id: '5eb2c62a613a5ab0642f1f7a',
-            type: 0,
-            count: 34,
-            name: '编程',
-            slug: 'programming',
-            created: '2020-05-06T14:14:02.339Z',
-          },
-          {
-            id: '5eb2c62a613a5ab0642f1f7b',
-            type: 0,
-            count: 19,
-            name: '折腾',
-            slug: 'Z-Turn',
-            created: '2020-05-06T14:14:02.356Z',
-          },
-          {
-            id: '5eb2c62a613a5ab0642f1f7c',
-            type: 0,
-            count: 18,
-            name: '学习',
-            slug: 'learning-process',
-            created: '2020-05-06T14:14:02.364Z',
-          },
-          {
-            id: '5eb2c62a613a5ab0642f1f7e',
-            type: 0,
-            count: 11,
-            name: '技术',
-            slug: 'technology',
-            created: '2020-05-06T14:14:02.375Z',
-          },
-          {
-            id: '5ed09730a0a8f94af569c96c',
-            type: 0,
-            count: 9,
-            slug: 'website',
-            name: '站点日志',
-            created: '2020-05-29T05:01:36.315Z',
-          },
-          {
-            id: '5ed5be418f3d6b6cb9ab7700',
-            type: 0,
-            count: 2,
-            slug: 'reprinta',
-            name: '转载',
-            created: '2020-06-02T02:49:37.424Z',
-          },
-        ],
-        page_meta: [
-          {
-            id: '5e0318319332d06503619337',
-            title: '自述',
-            slug: 'about',
-            order: 1,
-          },
-          {
-            id: '5ea52aafa27a8a01dee55f53',
-            order: 1,
-            title: '栈',
-            slug: 'stack',
-          },
-          {
-            id: '5eb3b6e032c759467b0ad71e',
-            order: 0,
-            title: '历史',
-            slug: 'history',
-          },
-          {
-            id: '5eb54fc06c9cc86c3692349f',
-            order: 0,
-            title: '留言',
-            slug: 'message',
-          },
-          {
-            id: '5f0aaeeaddf2006d12773b12',
-            order: 0,
-            title: '此站点',
-            slug: 'about-site',
-          },
-          {
-            id: '601bce41a0630165aa48b9d0',
-            order: 0,
-            title: '迭代',
-            slug: 'sprint',
-          },
-        ],
         url: {
           ws_url: 'https://api.innei.ren',
           server_url: 'https://api.innei.ren/v2',
@@ -140,6 +52,8 @@ describe('test aggregate client', () => {
     expect(data.url.webUrl).toEqual(mocked.url.web_url)
     expect(data.commentOptions.disableComment).toBe(false)
     expect(data.commentOptions.allowGuestComment).toBe(true)
+    expect('categories' in data).toBe(false)
+    expect('pageMeta' in data).toBe(false)
   })
 
   test('GET /aggregate/top', async () => {
@@ -300,6 +214,36 @@ describe('test aggregate client', () => {
       '终于可以使用 Docker 托管整个 Mix Space 了',
     )
     expect(data.notes).toBeDefined()
+  })
+
+  test('GET /aggregate/site', async () => {
+    const mocked = mockResponse('/aggregate/site', {
+      user: {
+        id: '5ea4fe632507ba128f4c938c',
+        name: 'Innei',
+        social_ids: {
+          github: 'Innei',
+          x: '__oQuery',
+        },
+      },
+      seo: {
+        title: '静かな森',
+        description: '致虚极，守静笃。',
+        keywords: ['blog', 'mx-space', 'space', '静かな森'],
+        icon: '/favicon-light.svg',
+        icon_dark: '/favicon-dark.svg',
+      },
+      url: {
+        web_url: 'https://innei.in',
+      },
+    })
+
+    const data = await client.aggregate.getSiteMetadata()
+
+    expect(data.$raw.data).toEqual(mocked)
+    expect(data.user.socialIds?.x).toBe('__oQuery')
+    expect(data.url.webUrl).toBe('https://innei.in')
+    expect(data.seo.iconDark).toBe('/favicon-dark.svg')
   })
 
   it('should filter undefined value in url query, get `/top`', async () => {

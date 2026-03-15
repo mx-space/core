@@ -38,44 +38,42 @@ export class AggregateController {
     private readonly translationService: TranslationService,
   ) {}
 
+  private async getThemeConfig(theme?: string) {
+    if (!theme) {
+      return
+    }
+
+    const cached = await this.snippetService.getCachedSnippet(
+      'theme',
+      theme,
+      'public',
+    )
+    if (cached) {
+      return JSON.safeParse(cached) || cached
+    }
+    return this.snippetService.getPublicSnippetByName(theme, 'theme')
+  }
+
   @Get('/')
   @HttpCache({
     key: CacheKeys.Aggregate,
     ttl: 10 * 60,
     withQuery: true,
   })
-  @TranslateFields({
-    path: 'categories[].name',
-    keyPath: 'category.name',
-    idField: '_id',
-  })
-  async aggregate(@Query() query: AggregateQueryDto, @Lang() lang?: string) {
+  async aggregate(@Query() query: AggregateQueryDto) {
     const { theme } = query
 
     const tasks = await Promise.allSettled([
       this.ownerService.getOwner(),
-      this.aggregateService.getAllCategory(),
-      this.aggregateService.getAllPages(),
       this.configsService.get('url'),
       this.configsService.get('seo'),
       this.configsService.get('commentOptions'),
       this.noteService.getLatestNoteId(),
-      !theme
-        ? Promise.resolve()
-        : this.snippetService
-            .getCachedSnippet('theme', theme, 'public')
-            .then((cached) => {
-              if (cached) {
-                return JSON.safeParse(cached) || cached
-              }
-              return this.snippetService.getPublicSnippetByName(theme, 'theme')
-            }),
+      this.getThemeConfig(theme),
       this.configsService.get('ai'),
     ])
     const [
       user,
-      categories,
-      pageMeta,
       url,
       seo,
       commentOptions,
@@ -83,29 +81,6 @@ export class AggregateController {
       themeConfig,
       aiConfig,
     ] = tasks.map((t) => (t.status === 'fulfilled' ? t.value : null))
-    let translatedPageMeta = pageMeta as any[]
-    if (lang && translatedPageMeta?.length) {
-      translatedPageMeta = await this.translationService.translateList({
-        items: translatedPageMeta,
-        targetLang: lang,
-        translationFields: ['title', 'translationMeta'] as const,
-        getInput: (item: any) => ({
-          id: item._id?.toString?.() ?? '',
-          title: item.title ?? '',
-          created: item.created,
-          modified: item.modified,
-        }),
-        applyResult: (item: any, translation) => {
-          if (!translation?.isTranslated) return item
-          return {
-            ...item,
-            title: translation.title,
-            isTranslated: true,
-            translationMeta: translation.translationMeta,
-          }
-        },
-      })
-    }
 
     return {
       user,
@@ -117,12 +92,36 @@ export class AggregateController {
             allowGuestComment: commentOptions.allowGuestComment ?? true,
           }
         : undefined,
-      categories,
-      pageMeta: translatedPageMeta,
       latestNoteId,
       theme: themeConfig,
       ai: {
         enableSummary: aiConfig?.enableSummary ?? false,
+      },
+    }
+  }
+
+  @Get('/site')
+  @HttpCache({
+    key: CacheKeys.AggregateSite,
+    ttl: 10 * 60,
+    withQuery: true,
+  })
+  async site() {
+    const [user, url, seo] = await Promise.all([
+      this.ownerService.getOwner(),
+      this.configsService.get('url'),
+      this.configsService.get('seo'),
+    ])
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        socialIds: user.socialIds,
+      },
+      seo,
+      url: {
+        webUrl: url.webUrl,
       },
     }
   }

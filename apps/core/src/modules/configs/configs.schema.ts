@@ -10,6 +10,8 @@ import { field, section, withMeta } from './configs.zod-schema.util'
 export const SeoSchema = section('SEO 优化', {
   title: field.plain(z.string().min(1).optional(), '网站标题'),
   description: field.plain(z.string().min(1).optional(), '网站描述'),
+  icon: field.halfGrid(z.string().optional(), '浅色图标 URL'),
+  iconDark: field.halfGrid(z.string().optional(), '深色图标 URL'),
   keywords: field.array(z.array(z.string()).optional(), '关键字'),
 })
 export class SeoDto extends createZodDto(SeoSchema) {}
