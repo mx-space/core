@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [10.5.3](https://github.com/mx-space/core/compare/v10.5.2...v10.5.3) (2026-03-15)
+
+
+### Bug Fixes
+
+* **ai-translation:** translate page subtitles ([c20bf6e](https://github.com/mx-space/core/commit/c20bf6ee6627f07ebe142e63914953fb79b4f9ef))
+* **core:** prevent slugged notes from breaking url builder ([6731c88](https://github.com/mx-space/core/commit/6731c88de6e2c3004ad1666752fa42020dd8c38b))
+
+
+
 ## [10.5.2](https://github.com/mx-space/core/compare/v10.5.1...v10.5.2) (2026-03-15)
 
 
