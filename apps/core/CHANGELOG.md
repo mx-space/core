@@ -1,5 +1,9 @@
 # CHANGELOG
 
+# [11.0.0-alpha.0](https://github.com/mx-space/core/compare/v10.5.3...v11.0.0-alpha.0) (2026-03-15)
+
+
+
 ## [10.5.3](https://github.com/mx-space/core/compare/v10.5.2...v10.5.3) (2026-03-15)
 
 
