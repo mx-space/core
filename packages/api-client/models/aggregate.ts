@@ -42,12 +42,12 @@ export interface Url {
 
 export interface AggregateTopNote extends Pick<
   NoteModel,
-  'id' | 'title' | 'created' | 'nid' | 'images'
+  'id' | 'title' | 'created' | 'nid' | 'images' | 'mood' | 'weather'
 > {}
 
 export interface AggregateTopPost extends Pick<
   PostModel,
-  'id' | 'slug' | 'created' | 'title' | 'category' | 'images'
+  'id' | 'slug' | 'created' | 'title' | 'category' | 'images' | 'summary'
 > {}
 
 export interface AggregateTop {

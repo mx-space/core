@@ -99,7 +99,7 @@ export class AggregateService {
       .sort({ created: -1 })
       .limit(size)
       .select(
-        '_id title name slug avatar nid created meta images tags modified contentFormat',
+        '_id title name slug avatar nid created meta images tags modified contentFormat summary mood weather',
       )
   }
 
