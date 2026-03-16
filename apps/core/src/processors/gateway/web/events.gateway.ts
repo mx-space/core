@@ -205,6 +205,17 @@ export class WebEventsGateway
     this.whenUserOnline()
     super.handleConnect(socket)
     this.hooks.onConnected.forEach((fn) => fn(socket))
+
+    // Send current online count directly to the connecting socket,
+    // bypassing Redis emitter to ensure delivery
+    this.sendOnlineNumber()
+      .then((data) => {
+        socket.emit(
+          'message',
+          this.gatewayMessageFormat(BusinessEvents.VISITOR_ONLINE, data),
+        )
+      })
+      .catch(() => {})
   }
 
   private async updateSocketLang(socket: SocketIO.Socket, lang: string) {
