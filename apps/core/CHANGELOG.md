@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [11.0.0-alpha.1](https://github.com/mx-space/core/compare/v11.0.0-alpha.0...v11.0.0-alpha.1) (2026-03-16)
+
+
+### Bug Fixes
+
+* **gateway:** send online count directly to connecting socket ([386b8c3](https://github.com/mx-space/core/commit/386b8c3ca42a4836086dbd8cbd8b51786b0662c1))
+
+
+
 # [11.0.0-alpha.0](https://github.com/mx-space/core/compare/v10.5.3...v11.0.0-alpha.0) (2026-03-15)
 
 
