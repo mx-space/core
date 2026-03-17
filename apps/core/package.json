@@ -80,7 +80,7 @@
     "@nestjs/core": "11.1.14",
     "@nestjs/event-emitter": "3.0.1",
     "@nestjs/mapped-types": "^2.1.0",
-    "@nestjs/platform-fastify": "11.1.14",
+    "@nestjs/platform-fastify": "11.1.16",
     "@nestjs/platform-socket.io": "11.1.14",
     "@nestjs/schedule": "6.1.1",
     "@nestjs/throttler": "6.5.0",
