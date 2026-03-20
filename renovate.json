@@ -20,9 +20,7 @@
   "ignoreDeps": [
     "vitest",
     "vite",
-    "snakecase-keys",
-    "algoliasearch",
-    "@algolia/client-search"
+    "snakecase-keys"
   ],
   "enabled": true
 }

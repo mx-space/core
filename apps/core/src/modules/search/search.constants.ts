@@ -1,4 +1,8 @@
-export const SEARCH_TITLE_WEIGHT = 3
-export const SEARCH_TEXT_WEIGHT = 20
-
-export const DEFAULT_ALGOLIA_MAX_SIZE_IN_BYTES = 10_000
+export const SEARCH_EXACT_TITLE_BONUS = 80
+export const SEARCH_PREFIX_TITLE_BONUS = 30
+export const SEARCH_CANDIDATE_MULTIPLIER = 12
+export const SEARCH_MAX_CANDIDATES = 300
+export const SEARCH_BM25_TITLE_WEIGHT = 3
+export const SEARCH_BM25_BODY_WEIGHT = 1.2
+export const SEARCH_BM25_K1 = 1.2
+export const SEARCH_BM25_B = 0.75

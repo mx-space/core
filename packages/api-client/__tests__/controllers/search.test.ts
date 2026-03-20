@@ -1,8 +1,8 @@
+import camelcaseKeys from 'camelcase-keys'
+
 import { mockRequestInstance } from '~/__tests__/helpers/instance'
 import { mockResponse } from '~/__tests__/helpers/response'
 import { SearchController } from '~/controllers'
-import camelcaseKeys from 'camelcase-keys'
-import mockData from '../mock/algolia.json'
 
 describe('test search client, /search', () => {
   const client = mockRequestInstance(SearchController)
@@ -67,13 +67,38 @@ describe('test search client, /search', () => {
     expect(data.data[0].id).toEqual('5eb35d6f5ae43bbd0c90b8c0')
   })
 
-  test('GET /search/algolia', async () => {
-    mockResponse('/search/algolia', mockData)
-    const data = await client.search.searchByAlgolia('algolia')
+  test('GET /search', async () => {
+    const mocked = mockResponse('/search?keyword=1', {
+      data: [
+        {
+          modified: '2020-11-14T16:15:36.162Z',
+          id: '5eb2c62a613a5ab0642f1f80',
+          title: '打印沙漏(C#实现)',
+          slug: 'acm-test',
+          created: '2019-01-31T13:02:00.000Z',
+          type: 'post',
+          category: {
+            type: 0,
+            id: '5eb2c62a613a5ab0642f1f7a',
+            count: 56,
+            name: '编程',
+            slug: 'programming',
+            created: '2020-05-06T14:14:02.339Z',
+          },
+        },
+      ],
+      pagination: {
+        total: 86,
+        current_page: 1,
+        total_page: 9,
+        size: 10,
+        has_next_page: true,
+        has_prev_page: false,
+      },
+    })
 
-    expect(data.data[0].id).toEqual('5fe97d1d5b11408f99ada0fd')
-    expect(data.raw).toBeDefined()
-
-    expect(data.$raw.data).toEqual(mockData)
+    const data = await client.search.searchAll('1')
+    expect(data).toEqual(camelcaseKeys(mocked, { deep: true }))
+    expect(data.data[0].type).toEqual('post')
   })
 })

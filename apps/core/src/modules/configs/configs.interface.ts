@@ -1,15 +1,15 @@
 import type { z } from 'zod'
+
 import {
-  configSchemaMapping,
   type AdminExtraSchema,
   type AISchema,
-  type AlgoliaSearchOptionsSchema,
   type AuthSecuritySchema,
   type BackupOptionsSchema,
   type BaiduSearchOptionsSchema,
   type BarkOptionsSchema,
   type BingSearchOptionsSchema,
   type CommentOptionsSchema,
+  configSchemaMapping,
   type FeatureListSchema,
   type FileUploadOptionsSchema,
   type FriendLinkOptionsSchema,
@@ -43,7 +43,6 @@ export abstract class IConfig {
   fileUploadOptions: Required<z.infer<typeof FileUploadOptionsSchema>>
   baiduSearchOptions: Required<z.infer<typeof BaiduSearchOptionsSchema>>
   bingSearchOptions: Required<z.infer<typeof BingSearchOptionsSchema>>
-  algoliaSearchOptions: Required<z.infer<typeof AlgoliaSearchOptionsSchema>>
   featureList: Required<z.infer<typeof FeatureListSchema>>
   thirdPartyServiceIntegration: Required<
     z.infer<typeof ThirdPartyServiceIntegrationSchema>

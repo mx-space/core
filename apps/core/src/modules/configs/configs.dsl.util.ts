@@ -1,4 +1,5 @@
 import { z } from 'zod'
+
 import { configSchemaMapping, FullConfigSchema } from './configs.schema'
 import { getMeta, type SchemaMetadata } from './configs.zod-schema.util'
 
@@ -108,11 +109,7 @@ const groupConfigs: GroupConfig[] = [
     title: '搜索推送',
     description: '搜索引擎、全文检索',
     icon: 'search',
-    sectionKeys: [
-      'baiduSearchOptions',
-      'bingSearchOptions',
-      'algoliaSearchOptions',
-    ],
+    sectionKeys: ['baiduSearchOptions', 'bingSearchOptions'],
   },
   {
     key: 'storage',
@@ -459,8 +456,7 @@ function formatProviderLabel(provider: AIProviderInfo): string {
   const id = provider.id || ''
 
   const nameLooksLikeUuid =
-    !!name &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(name)
+    !!name && /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(name)
 
   const displayName = !nameLooksLikeUuid && name ? name : ''
 

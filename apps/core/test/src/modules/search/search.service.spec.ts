@@ -1,46 +1,27 @@
 import { Test } from '@nestjs/testing'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
-import { ConfigsService } from '~/modules/configs/configs.service'
 import { NoteService } from '~/modules/note/note.service'
 import { PageService } from '~/modules/page/page.service'
 import { SearchService } from '~/modules/search/search.service'
-import { DatabaseService } from '~/processors/database/database.service'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { SearchDocumentModel } from '~/modules/search/search-document.model'
+import { getModelToken } from '~/transformers/model.transformer'
 
 describe('SearchService', () => {
   let searchService: SearchService
-  let mockNoteService: {
-    model: {
-      paginate: ReturnType<typeof vi.fn>
-    }
-  }
-  let mockPostService: {
-    model: {
-      paginate: ReturnType<typeof vi.fn>
-    }
-  }
 
   beforeEach(async () => {
-    mockNoteService = {
-      model: {
-        paginate: vi.fn(),
-      },
-    }
-
-    mockPostService = {
-      model: {
-        paginate: vi.fn(),
-      },
-    }
-
     const module = await Test.createTestingModule({
       providers: [
         SearchService,
-        { provide: NoteService, useValue: mockNoteService },
-        { provide: POST_SERVICE_TOKEN, useValue: mockPostService },
-        { provide: PageService, useValue: {} },
-        { provide: ConfigsService, useValue: {} },
-        { provide: DatabaseService, useValue: {} },
+        { provide: NoteService, useValue: { model: {} } },
+        { provide: POST_SERVICE_TOKEN, useValue: { model: {} } },
+        { provide: PageService, useValue: { model: {} } },
+        {
+          provide: getModelToken(SearchDocumentModel.name),
+          useValue: {},
+        },
       ],
     }).compile()
 
@@ -51,80 +32,88 @@ describe('SearchService', () => {
     vi.clearAllMocks()
   })
 
-  it('should apply weighted sort for note search results', async () => {
-    mockNoteService.model.paginate.mockResolvedValue({
-      docs: [
+  it('should prefer exact title matches over body-only matches', () => {
+    const keywordRegexes = (searchService as any).buildSearchKeywordRegexes(
+      'hello',
+    )
+    const searchTerms = (searchService as any).buildSearchTerms('hello')
+
+    const ranked = (searchService as any).rankSearchHits(
+      [
         {
-          _id: 'note-a',
-          title: 'hello world',
-          text: 'content',
+          refType: 'note',
+          refId: 'note-a',
+          title: 'hello',
+          searchText: 'world',
+          titleTerms: ['hello'],
+          bodyTerms: ['world'],
+          titleLength: 1,
+          bodyLength: 1,
           created: new Date('2024-01-01'),
         },
         {
-          _id: 'note-b',
-          title: '',
-          text: 'hello hello',
+          refType: 'note',
+          refId: 'note-b',
+          title: 'world',
+          searchText: 'hello hello hello',
+          titleTerms: ['world'],
+          bodyTerms: ['hello', 'hello', 'hello'],
+          titleLength: 1,
+          bodyLength: 3,
           created: new Date('2024-01-02'),
         },
         {
-          _id: 'note-c',
-          title: 'hello',
-          text: 'hello',
+          refType: 'note',
+          refId: 'note-c',
+          title: 'hello world',
+          searchText: 'hello',
+          titleTerms: ['hello', 'world'],
+          bodyTerms: ['hello'],
+          titleLength: 2,
+          bodyLength: 1,
           created: new Date('2024-01-03'),
-          modified: new Date('2024-01-04'),
         },
       ],
-      totalDocs: 3,
-      limit: 10,
-      page: 1,
-      totalPages: 1,
-      hasNextPage: false,
-      hasPrevPage: false,
-    })
-
-    const result = await searchService.searchNote(
-      { keyword: 'hello', page: 1, size: 10 } as any,
-      true,
+      keywordRegexes,
+      searchTerms,
+      { totalDocs: 3, avgTitleLength: 1.33, avgBodyLength: 1.66 },
+      new Map([['hello', 3]]),
     )
 
-    expect(result.data.map((item) => item._id)).toEqual([
-      'note-b',
-      'note-c',
+    expect(ranked.map((item) => item.refId)).toEqual([
       'note-a',
+      'note-c',
+      'note-b',
     ])
-    expect(result.data.some((item) => 'text' in item)).toBe(false)
   })
 
-  it('should use modified/created as tie breaker for post search', async () => {
-    mockPostService.model.paginate.mockResolvedValue({
-      docs: [
-        {
-          _id: 'post-a',
-          title: 'hello',
-          text: 'content',
-          created: new Date('2024-01-01'),
-        },
-        {
-          _id: 'post-b',
-          title: 'hello',
-          text: 'content',
-          created: new Date('2024-01-02'),
-          modified: new Date('2024-01-03'),
-        },
-      ],
-      totalDocs: 2,
-      limit: 10,
-      page: 1,
-      totalPages: 1,
-    })
+  it('should escape special regex characters in keyword', () => {
+    const keywordRegexes = (searchService as any).buildSearchKeywordRegexes(
+      'hello.*',
+    )
 
-    const result = await searchService.searchPost({
-      keyword: 'hello',
-      page: 1,
-      size: 10,
-    } as any)
+    expect(keywordRegexes).toHaveLength(1)
+    expect(keywordRegexes[0].source).toBe('hello\\.\\*')
+    expect(
+      (searchService as any).countKeywordMatches(
+        'hello world',
+        keywordRegexes[0],
+      ),
+    ).toBe(0)
+    expect(
+      (searchService as any).countKeywordMatches(
+        'hello.* world',
+        keywordRegexes[0],
+      ),
+    ).toBe(1)
+  })
 
-    expect(result.docs.map((item) => item._id)).toEqual(['post-b', 'post-a'])
-    expect(result.docs.some((item) => 'text' in item)).toBe(false)
+  it('should tokenize cjk text into searchable terms', () => {
+    const searchTerms = (searchService as any).buildSearchTerms('中文搜索')
+
+    expect(searchTerms).toContain('中')
+    expect(searchTerms).toContain('中文')
+    expect(searchTerms).toContain('搜索')
+    expect(searchTerms).toContain('中文搜索')
   })
 })
