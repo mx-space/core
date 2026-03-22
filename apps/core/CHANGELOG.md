@@ -1,5 +1,21 @@
 # CHANGELOG
 
+# [11.0.0](https://github.com/mx-space/core/compare/v11.0.0-alpha.1...v11.0.0) (2026-03-22)
+
+
+### Bug Fixes
+
+* **category:** handle null category in category service ([71f4f91](https://github.com/mx-space/core/commit/71f4f91f41fe662003f22325fef80dccad723d39))
+* **deps:** update dependency @nestjs/platform-fastify to v11.1.16 [security] ([#2620](https://github.com/mx-space/core/issues/2620)) ([1d3da45](https://github.com/mx-space/core/commit/1d3da453debe5c64bf8acacd843d84de5c7b6788))
+* **post:** add Types import from mongoose ([9cdb244](https://github.com/mx-space/core/commit/9cdb244e600ba08d52fed6652a922ed3504e956a))
+
+
+### Features
+
+* replace Algolia with local CJK search ([#2621](https://github.com/mx-space/core/issues/2621)) ([2095087](https://github.com/mx-space/core/commit/209508791dd0c71af3845583560ae414110b276f))
+
+
+
 # [11.0.0-alpha.1](https://github.com/mx-space/core/compare/v11.0.0-alpha.0...v11.0.0-alpha.1) (2026-03-16)
 
 
