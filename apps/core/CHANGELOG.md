@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.0.1](https://github.com/mx-space/core/compare/v11.0.0...v11.0.1) (2026-03-22)
+
+
+### Bug Fixes
+
+* **file:** orphan cleanup idempotency; remove orphan cleanup cron ([2b4e946](https://github.com/mx-space/core/commit/2b4e946a49b46b24e97af6f737c9969add130cac))
+
+
+
 # [11.0.0](https://github.com/mx-space/core/compare/v11.0.0-alpha.1...v11.0.0) (2026-03-22)
 
 
