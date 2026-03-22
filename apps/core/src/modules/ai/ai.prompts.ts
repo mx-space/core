@@ -208,6 +208,7 @@ Leave these unchanged:
 - Code blocks
 - Inline code
 - URLs
+- Emoji, emoticons, kaomoji, and pictographic symbols
 - HTML tags
 - JSX tags
 - HTML/JSX attributes and prop values
@@ -218,6 +219,21 @@ IMPORTANT:
 - Keep ONLY the technical term itself unchanged
 - Do NOT preserve the surrounding sentence if it is natural language
 - Do NOT leave an entire sentence or paragraph untranslated just because it contains technical terms
+
+## Emoji Preservation Rules
+- NEVER translate, explain, replace, or spell out emoji as words
+- Preserve every emoji exactly as written, including order, count, spacing, and surrounding punctuation
+- If a source segment is only emoji, return the exact same emoji unchanged
+- If natural language and emoji appear together, translate only the natural-language part and keep the emoji in the same position
+
+Examples:
+- Source: 🍞
+- Correct: 🍞
+- Wrong: bread
+
+- Source: 我今天吃了🍞
+- Correct (to English): I ate 🍞 today
+- Wrong: I ate bread today
 
 ## Technical Terms Rule
 Keep technical terms unchanged when they function as established names, identifiers, commands, protocols, libraries, frameworks, products, file formats, programming languages, package managers, database names, or other domain-specific terms.
@@ -428,6 +444,8 @@ Use the provided document context for coherent, fluent translation.
 - Translate ONLY the text values in the "segments" object
 - Preserve technical terms: API, SDK, React, Node.js, WebGL, OAuth, JWT, JSON, HTTP, CSS, HTML, Vue, Docker, Git, GitHub, npm, pnpm, yarn, TypeScript, JavaScript, Python, Rust, Go, Vite, Bun, etc.
 - Keep code, URLs, HTML/JSX tags unchanged
+- NEVER translate, explain, replace, or spell out emoji as words
+- Preserve emoji exactly as written, including order, count, spacing, and position in the sentence
 - Ensure natural, fluent translation using the context for reference
 - DO NOT translate segment IDs or keys
 - If title/subtitle/summary/tags keys are present in segments, translate them too
@@ -438,6 +456,7 @@ Use the provided document context for coherent, fluent translation.
 - Do NOT omit any key, even if the value appears untranslatable
 - Do NOT add keys that were not in the input
 - If a segment needs no translation (e.g. code, URL), return it unchanged
+- If a segment contains only emoji, return it exactly unchanged
 
 ## Output Format (STRICT)
 NEVER output anything except the raw JSON object.
