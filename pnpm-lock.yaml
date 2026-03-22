@@ -110,8 +110,8 @@ importers:
         specifier: 9.0.0
         version: 9.0.0
       '@haklex/rich-headless':
-        specifier: 0.0.86
-        version: 0.0.86(lexical@0.42.0)
+        specifier: 0.0.87
+        version: 0.0.87(lexical@0.42.0)
       '@innei/next-async':
         specifier: 0.4.0
         version: 0.4.0
@@ -1343,8 +1343,8 @@ packages:
   '@fastify/static@9.0.0':
     resolution: {integrity: sha512-r64H8Woe/vfilg5RTy7lwWlE8ZZcTrc3kebYFMEUBrMqlydhQyoiExQXdYAy2REVpST/G35+stAM8WYp1WGmMA==}
 
-  '@haklex/rich-headless@0.0.86':
-    resolution: {integrity: sha512-q/FmA10eZodd3hOF3sUCIcjSk7pMra3pPkMbiUki53RUkz73QG4Nu51nrA8bBnGLpju8D2Wmi7g8LizOwF18Sw==}
+  '@haklex/rich-headless@0.0.87':
+    resolution: {integrity: sha512-74Zmt2i6Pf4rS6eh5DQQNPTWbpB9h/63ijCrzzX1FZHQgXvzmUFTK9/YMY8gd5otJnUT7uhzYqycc+G2HZlBDQ==}
     peerDependencies:
       lexical: ^0.42.0
 
@@ -8434,7 +8434,7 @@ snapshots:
       fastq: 1.20.1
       glob: 13.0.0
 
-  '@haklex/rich-headless@0.0.86(lexical@0.42.0)':
+  '@haklex/rich-headless@0.0.87(lexical@0.42.0)':
     dependencies:
       '@lexical/code-core': 0.42.0
       '@lexical/extension': 0.42.0
@@ -13298,7 +13298,7 @@ snapshots:
     dependencies:
       citty: 0.2.1
       pathe: 2.0.3
-      tinyexec: 1.0.2
+      tinyexec: 1.0.4
 
   object-assign@4.1.1: {}
 
