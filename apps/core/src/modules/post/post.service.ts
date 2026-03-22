@@ -92,7 +92,7 @@ export class PostService implements OnApplicationBootstrap {
     const newPost = await this.postModel.create({
       ...post,
       slug,
-      categoryId: category.id,
+      categoryId: new Types.ObjectId(String(categoryId)),
       created: getLessThanNow(post.created),
       modified: null,
       meta: post.meta
