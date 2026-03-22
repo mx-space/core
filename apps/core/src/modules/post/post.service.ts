@@ -1,7 +1,7 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import { debounce, omit } from 'es-toolkit/compat'
-import type { AggregatePaginateModel, Document } from 'mongoose'
+import type { AggregatePaginateModel, Document, Types } from 'mongoose'
 import slugify from 'slugify'
 
 import {
