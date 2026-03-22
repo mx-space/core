@@ -1,6 +1,9 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import type { DocumentType, ReturnModelType } from '@typegoose/typegoose'
+import { omit } from 'es-toolkit/compat'
+import type { QueryFilter } from 'mongoose'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
@@ -12,8 +15,7 @@ import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
-import { omit } from 'es-toolkit/compat'
-import type { QueryFilter } from 'mongoose'
+
 import type { PostModel } from '../post/post.model'
 import type { PostService } from '../post/post.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
@@ -42,6 +44,9 @@ export class CategoryService implements OnApplicationBootstrap {
       this.model.findById(categoryId).lean(),
       this.postService.model.countDocuments({ categoryId }),
     ])
+    if (!category) {
+      return null
+    }
     return {
       ...category,
       count,

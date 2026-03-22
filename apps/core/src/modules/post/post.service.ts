@@ -2,7 +2,6 @@ import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import { debounce, omit } from 'es-toolkit/compat'
 import type { AggregatePaginateModel, Document } from 'mongoose'
-import { Types } from 'mongoose'
 import slugify from 'slugify'
 
 import {
@@ -92,7 +91,7 @@ export class PostService implements OnApplicationBootstrap {
     const newPost = await this.postModel.create({
       ...post,
       slug,
-      categoryId: new Types.ObjectId(String(categoryId)),
+      categoryId: category._id ?? category.id,
       created: getLessThanNow(post.created),
       modified: null,
       meta: post.meta
