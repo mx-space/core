@@ -24,6 +24,16 @@ export type SearchOption = {
   orderBy?: string
   order?: number
 }
+
+export type SearchHighlight = {
+  keywords: string[]
+  snippet: string | null
+}
+
+type SearchResultHighlight = {
+  highlight: SearchHighlight
+}
+
 export class SearchController<ResponseWrapper> implements IController {
   base = 'search'
   name = 'search'
@@ -43,7 +53,8 @@ export class SearchController<ResponseWrapper> implements IController {
   ): Promise<
     RequestProxyResult<
       PaginateResult<
-        Pick<NoteModel, 'modified' | 'id' | 'title' | 'created' | 'nid'>
+        Pick<NoteModel, 'modified' | 'id' | 'title' | 'created' | 'nid'> &
+          SearchResultHighlight
       >,
       ResponseWrapper
     >
@@ -58,7 +69,8 @@ export class SearchController<ResponseWrapper> implements IController {
         Pick<
           PostModel,
           'modified' | 'id' | 'title' | 'created' | 'slug' | 'category'
-        >
+        > &
+          SearchResultHighlight
       >,
       ResponseWrapper
     >
@@ -70,7 +82,8 @@ export class SearchController<ResponseWrapper> implements IController {
   ): Promise<
     RequestProxyResult<
       PaginateResult<
-        Pick<PageModel, 'modified' | 'id' | 'title' | 'created' | 'slug'>
+        Pick<PageModel, 'modified' | 'id' | 'title' | 'created' | 'slug'> &
+          SearchResultHighlight
       >,
       ResponseWrapper
     >
@@ -88,15 +101,12 @@ export class SearchController<ResponseWrapper> implements IController {
           | (Pick<
               PostModel,
               'modified' | 'id' | 'title' | 'created' | 'slug' | 'category'
-            > & { type: 'post' })
-          | (Pick<
-              NoteModel,
-              'id' | 'created' | 'modified' | 'title' | 'nid'
-            > & { type: 'note' })
-          | (Pick<
-              PageModel,
-              'id' | 'title' | 'created' | 'modified' | 'slug'
-            > & { type: 'page' })
+            > &
+              SearchResultHighlight & { type: 'post' })
+          | (Pick<NoteModel, 'id' | 'created' | 'modified' | 'title' | 'nid'> &
+              SearchResultHighlight & { type: 'note' })
+          | (Pick<PageModel, 'id' | 'title' | 'created' | 'modified' | 'slug'> &
+              SearchResultHighlight & { type: 'page' })
         >,
         ResponseWrapper
       >

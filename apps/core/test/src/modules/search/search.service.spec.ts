@@ -116,4 +116,22 @@ describe('SearchService', () => {
     expect(searchTerms).toContain('搜索')
     expect(searchTerms).toContain('中文搜索')
   })
+
+  it('should generate compact highlight keywords and snippet for cjk search', () => {
+    const highlight = (searchService as any).buildSearchHighlight(
+      {
+        refType: 'post',
+        refId: 'post-1',
+        title: '关于中文搜索',
+        searchText: '这里记录了中文搜索功能的实现细节以及 bm25 重排。',
+        titleTerms: ['关于', '中文', '搜索', '中文搜索'],
+        bodyTerms: ['这里', '记录', '中文', '搜索', '中文搜索', '功能'],
+      },
+      ['中文搜索'],
+      (searchService as any).buildSearchTerms('中文搜索'),
+    )
+
+    expect(highlight.keywords).toEqual(['中文搜索'])
+    expect(highlight.snippet).toContain('中文搜索')
+  })
 })

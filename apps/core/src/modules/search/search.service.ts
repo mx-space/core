@@ -39,6 +39,11 @@ type SearchCorpusStats = {
   avgBodyLength: number
 }
 
+type SearchHighlight = {
+  keywords: string[]
+  snippet: string | null
+}
+
 @Injectable()
 export class SearchService {
   private readonly logger = new Logger(SearchService.name)
@@ -153,6 +158,8 @@ export class SearchService {
   ): Promise<Pagination<any>> {
     const { keyword, page, size } = searchOption
     const searchTerms = this.buildSearchTerms(keyword)
+    const highlightKeywordFragments =
+      this.buildHighlightKeywordFragments(keyword)
     const keywordRegexes = this.buildSearchKeywordRegexes(keyword)
     const candidateLimit = Math.min(
       SEARCH_MAX_CANDIDATES,
@@ -196,7 +203,12 @@ export class SearchService {
     )
     const start = (page - 1) * size
     const pageHits = ranked.slice(start, start + size)
-    const data = await this.loadSearchResultData(pageHits, isAuthenticated)
+    const data = await this.loadSearchResultData(
+      pageHits,
+      isAuthenticated,
+      highlightKeywordFragments,
+      searchTerms,
+    )
     const output = refType ? data.map(({ type, ...item }) => item) : data
 
     return {
@@ -394,6 +406,8 @@ export class SearchService {
   private async loadSearchResultData(
     hits: Array<SearchDocumentLean & { refType: SearchDocumentRefType }>,
     isAuthenticated: boolean,
+    highlightKeywordFragments: string[],
+    searchTerms: string[],
   ) {
     if (!hits.length) {
       return []
@@ -470,7 +484,21 @@ export class SearchService {
     }
 
     return hits
-      .map((hit) => map.get(`${hit.refType}:${hit.refId}`))
+      .map((hit) => {
+        const item = map.get(`${hit.refType}:${hit.refId}`)
+        if (!item) {
+          return null
+        }
+
+        return {
+          ...item,
+          highlight: this.buildSearchHighlight(
+            hit,
+            highlightKeywordFragments,
+            searchTerms,
+          ),
+        }
+      })
       .filter(Boolean)
   }
 
@@ -583,6 +611,10 @@ export class SearchService {
         }),
       ),
     ]
+  }
+
+  private buildHighlightKeywordFragments(keyword: string) {
+    return this.normalizeSearchText(keyword).split(/\s+/).filter(Boolean)
   }
 
   private buildRegexClauses(keywordRegexes: RegExp[]) {
@@ -708,6 +740,99 @@ export class SearchService {
       created: 1,
       modified: 1,
     }
+  }
+
+  private buildSearchHighlight(
+    doc: SearchDocumentLean,
+    highlightKeywordFragments: string[],
+    searchTerms: string[],
+  ): SearchHighlight {
+    const keywords = this.buildMatchedHighlightKeywords(
+      doc,
+      highlightKeywordFragments,
+      searchTerms,
+    )
+
+    return {
+      keywords,
+      snippet: this.buildSearchSnippet(doc.searchText ?? '', keywords),
+    }
+  }
+
+  private buildMatchedHighlightKeywords(
+    doc: SearchDocumentLean,
+    highlightKeywordFragments: string[],
+    searchTerms: string[],
+  ) {
+    const title = doc.title ?? ''
+    const text = doc.searchText ?? ''
+    const docTerms = new Set([
+      ...(doc.titleTerms ?? []),
+      ...(doc.bodyTerms ?? []),
+    ])
+    const candidates = new Set<string>()
+
+    for (const fragment of highlightKeywordFragments) {
+      if (fragment && (title.includes(fragment) || text.includes(fragment))) {
+        candidates.add(fragment)
+      }
+    }
+
+    for (const term of searchTerms) {
+      if (docTerms.has(term)) {
+        candidates.add(term)
+      }
+    }
+
+    const compactKeywords: string[] = []
+    for (const candidate of [...candidates].sort((a, b) => {
+      if (a.length !== b.length) {
+        return b.length - a.length
+      }
+      return a.localeCompare(b)
+    })) {
+      if (compactKeywords.some((keyword) => keyword.includes(candidate))) {
+        continue
+      }
+      compactKeywords.push(candidate)
+      if (compactKeywords.length >= 6) {
+        break
+      }
+    }
+
+    return compactKeywords
+  }
+
+  private buildSearchSnippet(text: string, keywords: string[]) {
+    if (!text || !keywords.length) {
+      return null
+    }
+
+    const match = keywords
+      .map((keyword) => ({ keyword, index: text.indexOf(keyword) }))
+      .filter((item) => item.index >= 0)
+      .sort((a, b) => {
+        if (a.index !== b.index) {
+          return a.index - b.index
+        }
+        return b.keyword.length - a.keyword.length
+      })[0]
+
+    if (!match) {
+      return null
+    }
+
+    const contextBefore = 36
+    const contextAfter = 84
+    const sliceStart = Math.max(0, match.index - contextBefore)
+    const sliceEnd = Math.min(
+      text.length,
+      match.index + match.keyword.length + contextAfter,
+    )
+    const prefix = sliceStart > 0 ? '...' : ''
+    const suffix = sliceEnd < text.length ? '...' : ''
+
+    return `${prefix}${text.slice(sliceStart, sliceEnd).trim()}${suffix}`
   }
 }
 
