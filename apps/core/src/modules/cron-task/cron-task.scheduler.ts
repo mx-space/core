@@ -93,17 +93,6 @@ export class CronTaskScheduler {
     )
   }
 
-  @CronOnce(CronExpression.EVERY_HOUR, { name: 'cleanupOrphanImages' })
-  async scheduleCleanupOrphanImages() {
-    this.logger.log('Scheduling cleanupOrphanImages task')
-    const result = await this.cronTaskService.createCronTask(
-      CronTaskType.CleanupOrphanImages,
-    )
-    this.logger.log(
-      `cleanupOrphanImages task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
-    )
-  }
-
   @CronOnce(CronExpression.EVERY_DAY_AT_4AM, { name: 'rebuildSearchIndex' })
   async scheduleRebuildSearchIndex() {
     this.logger.log('Scheduling rebuildSearchIndex task')

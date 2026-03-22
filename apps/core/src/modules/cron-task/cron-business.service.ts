@@ -9,7 +9,6 @@ import { STATIC_FILE_TRASH_DIR, TEMP_DIR } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { SearchService } from '~/modules/search/search.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import type { StoreJWTPayload } from '~/processors/helper/helper.jwt.service'
@@ -33,7 +32,6 @@ export class CronBusinessService {
     @InjectModel(AnalyzeModel)
     private readonly analyzeModel: MongooseModel<AnalyzeModel>,
     private readonly redisService: RedisService,
-    private readonly fileReferenceService: FileReferenceService,
 
     @Inject(forwardRef(() => AggregateService))
     private readonly aggregateService: AggregateService,
@@ -223,19 +221,6 @@ export class CronBusinessService {
 
     this.logger.log(`--> 删除了 ${deleteCount} 个过期的 token`)
     return { deletedCount: deleteCount }
-  }
-
-  /**
-   * 清理孤儿图片
-   */
-  async cleanupOrphanImages() {
-    this.logger.log('--> 开始清理孤儿图片')
-    const { deletedCount, totalOrphan } =
-      await this.fileReferenceService.cleanupOrphanFiles(60)
-    this.logger.log(
-      `--> 清理孤儿图片完成：删除了 ${deletedCount}/${totalOrphan} 个文件`,
-    )
-    return { deletedCount, totalOrphan }
   }
 
   /**

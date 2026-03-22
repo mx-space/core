@@ -6,7 +6,6 @@ export const CronTaskType = {
   PushToBaiduSearch: 'cron:push-to-baidu-search',
   PushToBingSearch: 'cron:push-to-bing-search',
   DeleteExpiredJWT: 'cron:delete-expired-jwt',
-  CleanupOrphanImages: 'cron:cleanup-orphan-images',
   RebuildSearchIndex: 'cron:rebuild-search-index',
 } as const
 
@@ -65,12 +64,6 @@ export const CronTaskMetas: Record<
     description: '删除过期 JWT',
     cronExpression: 'EVERY_DAY_AT_1AM',
     methodName: 'deleteExpiredJWT',
-  },
-  [CronTaskType.CleanupOrphanImages]: {
-    name: 'cleanupOrphanImages',
-    description: '清理孤儿图片',
-    cronExpression: 'EVERY_HOUR',
-    methodName: 'cleanupOrphanImages',
   },
   [CronTaskType.RebuildSearchIndex]: {
     name: 'rebuildSearchIndex',

@@ -26,6 +26,30 @@ interface ContentLike {
 export class FileReferenceService {
   private readonly logger = new Logger(FileReferenceService.name)
 
+  private isEnoent(err: unknown): boolean {
+    return (
+      typeof err === 'object' &&
+      err !== null &&
+      'code' in err &&
+      (err as NodeJS.ErrnoException).code === 'ENOENT'
+    )
+  }
+
+  /**
+   * 删除本地孤儿图片文件。若磁盘上已不存在（ENOENT），视为已清理成功，避免 DB 残留导致接口仍引用缺失文件。
+   */
+  private async unlinkLocalOrphanImage(fileName: string): Promise<void> {
+    const localPath = path.join(STATIC_FILE_DIR, 'image', fileName)
+    try {
+      await unlink(localPath)
+    } catch (err) {
+      if (this.isEnoent(err)) {
+        return
+      }
+      throw err
+    }
+  }
+
   constructor(
     @InjectModel(FileReferenceModel)
     private readonly fileReferenceModel: MongooseModel<FileReferenceModel>,
@@ -131,8 +155,7 @@ export class FileReferenceService {
           }
           await s3Uploader.deleteObject(file.s3ObjectKey)
         } else if (file.fileUrl.includes('/objects/image/')) {
-          const localPath = path.join(STATIC_FILE_DIR, 'image', file.fileName)
-          await unlink(localPath)
+          await this.unlinkLocalOrphanImage(file.fileName)
         } else {
           continue
         }
@@ -175,8 +198,7 @@ export class FileReferenceService {
         return true
       }
       if (file.fileUrl.includes('/objects/image/')) {
-        const localPath = path.join(STATIC_FILE_DIR, 'image', file.fileName)
-        await unlink(localPath)
+        await this.unlinkLocalOrphanImage(file.fileName)
         return true
       }
       return false

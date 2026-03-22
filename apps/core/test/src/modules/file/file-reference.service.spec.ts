@@ -1,3 +1,5 @@
+import { unlink } from 'node:fs/promises'
+
 import { Test } from '@nestjs/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -9,6 +11,11 @@ import {
 } from '~/modules/file/file-reference.model'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { getModelToken } from '~/transformers/model.transformer'
+
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>()
+  return { ...actual, unlink: vi.fn(actual.unlink) }
+})
 
 describe('FileReferenceService', () => {
   let fileReferenceService: FileReferenceService
@@ -138,6 +145,40 @@ describe('FileReferenceService', () => {
 
   afterEach(() => {
     mockReferences = []
+  })
+
+  describe('cleanupOrphanFiles', () => {
+    beforeEach(() => {
+      vi.mocked(unlink).mockReset()
+      vi.mocked(unlink).mockResolvedValue(undefined)
+    })
+
+    it('should delete DB record when local file is already missing (ENOENT)', async () => {
+      const orphan = {
+        _id: 'ref_orphan',
+        fileUrl: 'http://example.com/objects/image/gone.png',
+        fileName: 'gone.png',
+        status: FileReferenceStatus.Pending,
+        created: new Date(Date.now() - 120 * 60 * 1000),
+      }
+      mockReferences.push(orphan)
+
+      const model = fileReferenceService['fileReferenceModel'] as {
+        find: ReturnType<typeof vi.fn>
+        deleteOne: ReturnType<typeof vi.fn>
+      }
+      vi.spyOn(model, 'find').mockResolvedValue([orphan] as never)
+      const deleteOneSpy = vi.spyOn(model, 'deleteOne')
+
+      vi.mocked(unlink).mockRejectedValueOnce(
+        Object.assign(new Error('ENOENT'), { code: 'ENOENT' }),
+      )
+
+      const result = await fileReferenceService.cleanupOrphanFiles(60)
+
+      expect(deleteOneSpy).toHaveBeenCalledWith({ _id: 'ref_orphan' })
+      expect(result.deletedCount).toBe(1)
+    })
   })
 
   describe('createPendingReference', () => {
