@@ -30,11 +30,11 @@ export class SearchDocumentModel {
   @prop({ type: () => [String], default: [] })
   terms!: string[]
 
-  @prop({ type: () => [String], default: [] })
-  titleTerms!: string[]
+  @prop({ type: () => Object, default: {} })
+  titleTermFreq!: Record<string, number>
 
-  @prop({ type: () => [String], default: [] })
-  bodyTerms!: string[]
+  @prop({ type: () => Object, default: {} })
+  bodyTermFreq!: Record<string, number>
 
   @prop({ default: 0 })
   titleLength!: number

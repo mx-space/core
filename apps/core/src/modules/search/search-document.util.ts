@@ -43,15 +43,19 @@ export function buildSearchDocument(
     includeCjkUnigrams: false,
     maxTokens: 512,
   })
+  const titleTermFreq = buildTermFrequency(titleTerms)
+  const bodyTermFreq = buildTermFrequency(bodyTerms)
 
   return {
     refType,
     refId: data.id ?? data._id?.toString?.() ?? '',
     title: normalizedTitle,
     searchText: normalizedBody,
-    terms: [...new Set([...titleTerms, ...bodyTerms])],
-    titleTerms,
-    bodyTerms,
+    terms: [
+      ...new Set([...Object.keys(titleTermFreq), ...Object.keys(bodyTermFreq)]),
+    ],
+    titleTermFreq,
+    bodyTermFreq,
     titleLength: titleTerms.length,
     bodyLength: bodyTerms.length,
     slug: data.slug ?? undefined,
@@ -62,6 +66,14 @@ export function buildSearchDocument(
     created: data.created ?? null,
     modified: data.modified ?? null,
   }
+}
+
+export function buildTermFrequency(tokens: string[]) {
+  const map: Record<string, number> = {}
+  for (const token of tokens) {
+    map[token] = (map[token] ?? 0) + 1
+  }
+  return map
 }
 
 export function normalizeSearchText(text: unknown) {

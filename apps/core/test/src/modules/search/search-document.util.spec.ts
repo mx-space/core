@@ -15,8 +15,8 @@ describe('search-document.util', () => {
 
     expect(document.refId).toBe('note-1')
     expect(document.terms).toContain('中文搜索')
-    expect(document.titleTerms).toContain('中')
-    expect(document.bodyTerms).toContain('中文')
+    expect(document.titleTermFreq.中).toBe(1)
+    expect(document.bodyTermFreq.中文).toBe(1)
     expect(document.hasPassword).toBe(false)
   })
 
@@ -41,5 +41,6 @@ describe('search-document.util', () => {
 
     expect(document.searchText).toContain('富文本搜索')
     expect(document.terms).toContain('富文本搜索')
+    expect(document.bodyTermFreq.富文本搜索).toBe(1)
   })
 })

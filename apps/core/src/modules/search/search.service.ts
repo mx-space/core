@@ -641,8 +641,8 @@ export class SearchService {
     const title = doc.title ?? ''
     const text = doc.searchText ?? ''
     const loweredTitle = title.toLowerCase()
-    const titleTermFrequency = countTerms(doc.titleTerms ?? [])
-    const bodyTermFrequency = countTerms(doc.bodyTerms ?? [])
+    const titleTermFrequency = doc.titleTermFreq ?? {}
+    const bodyTermFrequency = doc.bodyTermFreq ?? {}
     let score = 0
 
     for (const searchTerm of searchTerms) {
@@ -652,8 +652,8 @@ export class SearchService {
       }
 
       const idf = computeBm25Idf(corpusStats.totalDocs, df)
-      const titleTf = titleTermFrequency.get(searchTerm) ?? 0
-      const bodyTf = bodyTermFrequency.get(searchTerm) ?? 0
+      const titleTf = titleTermFrequency[searchTerm] ?? 0
+      const bodyTf = bodyTermFrequency[searchTerm] ?? 0
 
       score +=
         computeBm25Score({
@@ -705,8 +705,8 @@ export class SearchService {
       title: 1,
       searchText: 1,
       terms: 1,
-      titleTerms: 1,
-      bodyTerms: 1,
+      titleTermFreq: 1,
+      bodyTermFreq: 1,
       titleLength: 1,
       bodyLength: 1,
       created: 1,
@@ -739,8 +739,8 @@ export class SearchService {
     const title = doc.title ?? ''
     const text = doc.searchText ?? ''
     const docTerms = new Set([
-      ...(doc.titleTerms ?? []),
-      ...(doc.bodyTerms ?? []),
+      ...Object.keys(doc.titleTermFreq ?? {}),
+      ...Object.keys(doc.bodyTermFreq ?? {}),
     ])
     const candidates = new Set<string>()
 
@@ -810,14 +810,6 @@ export class SearchService {
 
 function escapeRegExp(input: string) {
   return input.replaceAll(/[$()*+.?[\\\]^{|}]/g, '\\$&')
-}
-
-function countTerms(terms: string[]) {
-  const map = new Map<string, number>()
-  for (const term of terms) {
-    map.set(term, (map.get(term) ?? 0) + 1)
-  }
-  return map
 }
 
 function computeBm25Idf(totalDocs: number, documentFrequency: number) {

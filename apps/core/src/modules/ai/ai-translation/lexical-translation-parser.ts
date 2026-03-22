@@ -2,75 +2,18 @@
 // Uses blacklist-based skipping + generalized nested editor detection.
 
 import {
-  CodeBlockNode,
-  CodeSnippetNode,
-  EmbedNode,
-  ExcalidrawNode,
-  FootnoteNode,
-  GalleryNode,
-  ImageNode,
-  KaTeXBlockNode,
-  KaTeXInlineNode,
-  LinkCardNode,
-  MentionNode,
-  MermaidNode,
-  VideoNode,
-} from '@haklex/rich-headless'
-
-import {
   BLOCK_ID_STATE_KEY,
   NODE_STATE_KEY,
 } from '~/constants/lexical.constant'
+import {
+  isNestedLexicalEditorState,
+  KNOWN_LEXICAL_STRUCTURAL_PROPS,
+  LEXICAL_CONTEXT_EXCALIDRAW_TYPE,
+  LEXICAL_CONTEXT_SKIP_BLOCKS,
+  LEXICAL_CONTEXT_SKIP_INLINE,
+} from '~/utils/content.util'
 
 const FORMAT_CODE = 16
-
-const EXCALIDRAW_TYPE = ExcalidrawNode.getType()
-
-const SKIP_BLOCKS = new Set([
-  'code',
-  CodeBlockNode.getType(),
-  CodeSnippetNode.getType(),
-  'code-highlight',
-  ImageNode.getType(),
-  VideoNode.getType(),
-  GalleryNode.getType(),
-  LinkCardNode.getType(),
-  KaTeXBlockNode.getType(),
-  MermaidNode.getType(),
-  EmbedNode.getType(),
-  'horizontalrule',
-  'component',
-])
-
-const SKIP_INLINE = new Set([
-  KaTeXInlineNode.getType(),
-  MentionNode.getType(),
-  FootnoteNode.getType(),
-])
-
-const KNOWN_STRUCTURAL_PROPS = new Set([
-  'children',
-  'type',
-  'version',
-  'direction',
-  'format',
-  'indent',
-  'style',
-  'detail',
-  'mode',
-  'text',
-  'tag',
-  'listType',
-  'start',
-  'value',
-  'url',
-  'rel',
-  'target',
-  'colSpan',
-  'headerState',
-  'width',
-  NODE_STATE_KEY,
-])
 
 export interface TranslationSegment {
   id: string
@@ -142,28 +85,6 @@ function extractExcalidrawTexts(
   }
 }
 
-function extractExcalidrawTextForContext(node: any): string {
-  if (!node.snapshot || typeof node.snapshot !== 'string') return ''
-  try {
-    const parsed = JSON.parse(node.snapshot)
-    if (!parsed.store) return ''
-    const texts: string[] = []
-    for (const value of Object.values(parsed.store)) {
-      const shape = value as any
-      if (
-        shape?.props?.text &&
-        typeof shape.props.text === 'string' &&
-        shape.props.text.trim()
-      ) {
-        texts.push(shape.props.text)
-      }
-    }
-    return texts.join('\n')
-  } catch {
-    return ''
-  }
-}
-
 function walkNode(
   node: any,
   segments: TranslationSegment[],
@@ -174,13 +95,13 @@ function walkNode(
   if (!node) return
 
   // Handle excalidraw: extract text from shapes within snapshot
-  if (node.type === EXCALIDRAW_TYPE) {
+  if (node.type === LEXICAL_CONTEXT_EXCALIDRAW_TYPE) {
     extractExcalidrawTexts(node, propertySegments, counter, ctx)
     return
   }
 
-  if (SKIP_BLOCKS.has(node.type)) return
-  if (SKIP_INLINE.has(node.type)) return
+  if (LEXICAL_CONTEXT_SKIP_BLOCKS.has(node.type)) return
+  if (LEXICAL_CONTEXT_SKIP_INLINE.has(node.type)) return
 
   // Special translatable properties
   if (
@@ -263,17 +184,11 @@ function scanNestedEditorStates(
   ctx: BlockContext,
 ): void {
   for (const [propName, propValue] of Object.entries(node)) {
-    if (KNOWN_STRUCTURAL_PROPS.has(propName)) continue
+    if (KNOWN_LEXICAL_STRUCTURAL_PROPS.has(propName)) continue
 
     // Single nested editor state: { root: { children: [...] } }
-    if (
-      propValue &&
-      typeof propValue === 'object' &&
-      !Array.isArray(propValue) &&
-      (propValue as any).root &&
-      Array.isArray((propValue as any).root.children)
-    ) {
-      for (const child of (propValue as any).root.children) {
+    if (isNestedLexicalEditorState(propValue)) {
+      for (const child of propValue.root.children) {
         walkNode(child, segments, propertySegments, counter, ctx)
       }
       continue
@@ -282,12 +197,7 @@ function scanNestedEditorStates(
     // Array of nested editor states
     if (Array.isArray(propValue)) {
       for (const item of propValue) {
-        if (
-          item &&
-          typeof item === 'object' &&
-          item.root &&
-          Array.isArray(item.root.children)
-        ) {
+        if (isNestedLexicalEditorState(item)) {
           for (const child of item.root.children) {
             walkNode(child, segments, propertySegments, counter, ctx)
           }
@@ -295,69 +205,6 @@ function scanNestedEditorStates(
       }
     }
   }
-}
-
-// ── Document context extraction ──
-
-const BLOCK_TYPES = new Set([
-  'listitem',
-  'tablecell',
-  'tablerow',
-  'details',
-  'list',
-  'table',
-  'root',
-])
-
-function extractBlockText(node: any): string {
-  if (!node) return ''
-  if (node.type === EXCALIDRAW_TYPE)
-    return extractExcalidrawTextForContext(node)
-  if (SKIP_BLOCKS.has(node.type)) return ''
-  if (SKIP_INLINE.has(node.type)) return ''
-  if (node.type === 'text') return node.text ?? ''
-  if (node.type === 'linebreak') return '\n'
-
-  const parts: string[] = []
-
-  if (Array.isArray(node.children)) {
-    const sep = BLOCK_TYPES.has(node.type) ? '\n' : ''
-    const joined = node.children.map(extractBlockText).filter(Boolean).join(sep)
-    if (joined) parts.push(joined)
-  }
-
-  // Nested editor states (same generic scan)
-  for (const [propName, propValue] of Object.entries(node)) {
-    if (KNOWN_STRUCTURAL_PROPS.has(propName)) continue
-    if (
-      propValue &&
-      typeof propValue === 'object' &&
-      !Array.isArray(propValue) &&
-      (propValue as any).root &&
-      Array.isArray((propValue as any).root.children)
-    ) {
-      const nested = (propValue as any).root.children
-        .map(extractBlockText)
-        .filter(Boolean)
-      if (nested.length) parts.push(nested.join('\n'))
-    }
-    if (Array.isArray(propValue)) {
-      for (const item of propValue) {
-        if (item?.root && Array.isArray(item.root.children)) {
-          const nested = item.root.children
-            .map(extractBlockText)
-            .filter(Boolean)
-          if (nested.length) parts.push(nested.join('\n'))
-        }
-      }
-    }
-  }
-
-  return parts.join('\n')
-}
-
-export function extractDocumentContext(rootChildren: any[]): string {
-  return rootChildren.map(extractBlockText).filter(Boolean).join('\n\n')
 }
 
 // ── Parser ──

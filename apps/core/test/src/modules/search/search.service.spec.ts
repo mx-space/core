@@ -45,8 +45,8 @@ describe('SearchService', () => {
           refId: 'note-a',
           title: 'hello',
           searchText: 'world',
-          titleTerms: ['hello'],
-          bodyTerms: ['world'],
+          titleTermFreq: { hello: 1 },
+          bodyTermFreq: { world: 1 },
           titleLength: 1,
           bodyLength: 1,
           created: new Date('2024-01-01'),
@@ -56,8 +56,8 @@ describe('SearchService', () => {
           refId: 'note-b',
           title: 'world',
           searchText: 'hello hello hello',
-          titleTerms: ['world'],
-          bodyTerms: ['hello', 'hello', 'hello'],
+          titleTermFreq: { world: 1 },
+          bodyTermFreq: { hello: 3 },
           titleLength: 1,
           bodyLength: 3,
           created: new Date('2024-01-02'),
@@ -67,8 +67,8 @@ describe('SearchService', () => {
           refId: 'note-c',
           title: 'hello world',
           searchText: 'hello',
-          titleTerms: ['hello', 'world'],
-          bodyTerms: ['hello'],
+          titleTermFreq: { hello: 1, world: 1 },
+          bodyTermFreq: { hello: 1 },
           titleLength: 2,
           bodyLength: 1,
           created: new Date('2024-01-03'),
@@ -124,8 +124,15 @@ describe('SearchService', () => {
         refId: 'post-1',
         title: '关于中文搜索',
         searchText: '这里记录了中文搜索功能的实现细节以及 bm25 重排。',
-        titleTerms: ['关于', '中文', '搜索', '中文搜索'],
-        bodyTerms: ['这里', '记录', '中文', '搜索', '中文搜索', '功能'],
+        titleTermFreq: { 关于: 1, 中文: 1, 搜索: 1, 中文搜索: 1 },
+        bodyTermFreq: {
+          这里: 1,
+          记录: 1,
+          中文: 1,
+          搜索: 1,
+          中文搜索: 1,
+          功能: 1,
+        },
       },
       ['中文搜索'],
       (searchService as any).buildSearchTerms('中文搜索'),
@@ -157,5 +164,6 @@ describe('SearchService', () => {
     expect(document.searchText).toContain('最新富文本正文')
     expect(document.searchText).not.toContain('旧摘要')
     expect(document.terms).toContain('最新富文本正文')
+    expect(document.bodyTermFreq.最新富文本正文).toBe(1)
   })
 })
