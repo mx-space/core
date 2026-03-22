@@ -10,6 +10,7 @@ import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
+import { SearchService } from '~/modules/search/search.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import type { StoreJWTPayload } from '~/processors/helper/helper.jwt.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
@@ -36,6 +37,8 @@ export class CronBusinessService {
 
     @Inject(forwardRef(() => AggregateService))
     private readonly aggregateService: AggregateService,
+
+    private readonly searchService: SearchService,
   ) {
     this.logger = new Logger(CronBusinessService.name)
   }
@@ -233,5 +236,15 @@ export class CronBusinessService {
       `--> 清理孤儿图片完成：删除了 ${deletedCount}/${totalOrphan} 个文件`,
     )
     return { deletedCount, totalOrphan }
+  }
+
+  /**
+   * 重建搜索索引
+   */
+  async rebuildSearchIndex() {
+    this.logger.log('--> 开始重建搜索索引')
+    const result = await this.searchService.rebuildSearchDocuments()
+    this.logger.log(`--> 搜索索引重建完成，共 ${result.total} 条`)
+    return result
   }
 }

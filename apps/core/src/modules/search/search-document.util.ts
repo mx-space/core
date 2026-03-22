@@ -1,0 +1,117 @@
+import removeMdCodeblock from 'remove-md-codeblock'
+
+import { extractTextFromContent } from '~/utils/content.util'
+
+import type {
+  SearchDocumentModel,
+  SearchDocumentRefType,
+} from './search-document.model'
+
+type SearchDocumentSource = {
+  id?: string
+  _id?: { toString: () => string }
+  title?: string | null
+  text?: string | null
+  contentFormat?: string | null
+  content?: string | null
+  slug?: string | null
+  nid?: number | null
+  isPublished?: boolean | null
+  publicAt?: Date | null
+  password?: string | null
+  created?: Date | null
+  modified?: Date | null
+}
+
+export function buildSearchDocument(
+  refType: SearchDocumentRefType,
+  data: SearchDocumentSource,
+): Omit<SearchDocumentModel, '_id'> {
+  const normalizedTitle = normalizeSearchText(data.title)
+  const normalizedBody = normalizeSearchText(
+    extractTextFromContent({
+      text: data.text ?? '',
+      contentFormat: data.contentFormat ?? undefined,
+      content: data.content ?? undefined,
+    }),
+  )
+  const titleTerms = tokenizeSearchText(normalizedTitle, {
+    includeCjkUnigrams: true,
+    maxTokens: 96,
+  })
+  const bodyTerms = tokenizeSearchText(normalizedBody, {
+    includeCjkUnigrams: false,
+    maxTokens: 512,
+  })
+
+  return {
+    refType,
+    refId: data.id ?? data._id?.toString?.() ?? '',
+    title: normalizedTitle,
+    searchText: normalizedBody,
+    terms: [...new Set([...titleTerms, ...bodyTerms])],
+    titleTerms,
+    bodyTerms,
+    titleLength: titleTerms.length,
+    bodyLength: bodyTerms.length,
+    slug: data.slug ?? undefined,
+    nid: data.nid ?? undefined,
+    isPublished: refType === 'page' ? true : data.isPublished !== false,
+    publicAt: data.publicAt ?? null,
+    hasPassword: Boolean(data.password),
+    created: data.created ?? null,
+    modified: data.modified ?? null,
+  }
+}
+
+export function normalizeSearchText(text: unknown) {
+  return removeMdCodeblock(typeof text === 'string' ? text : '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .replaceAll(/\s+/g, ' ')
+    .trim()
+}
+
+export function tokenizeSearchText(
+  text: string,
+  options: { includeCjkUnigrams: boolean; maxTokens: number },
+) {
+  if (!text) {
+    return []
+  }
+
+  const tokens: string[] = []
+  const segments = text.match(
+    /[\da-z]+|[\u3040-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF]+/g,
+  )
+
+  for (const segment of segments ?? []) {
+    if (isCjkSegment(segment)) {
+      if (options.includeCjkUnigrams) {
+        for (const char of segment) {
+          tokens.push(char)
+        }
+      }
+      if (segment.length <= 8) {
+        tokens.push(segment)
+      }
+      for (let index = 0; index < segment.length - 1; index++) {
+        tokens.push(segment.slice(index, index + 2))
+      }
+    } else {
+      tokens.push(segment)
+    }
+
+    if (tokens.length >= options.maxTokens) {
+      break
+    }
+  }
+
+  return tokens.slice(0, options.maxTokens)
+}
+
+function isCjkSegment(input: string) {
+  return /[\u3040-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF]/.test(
+    input,
+  )
+}

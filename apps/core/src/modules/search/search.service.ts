@@ -2,7 +2,6 @@ import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import type { ReturnModelType } from '@typegoose/typegoose'
 import type { QueryFilter } from 'mongoose'
-import removeMdCodeblock from 'remove-md-codeblock'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
@@ -27,6 +26,11 @@ import {
   SearchDocumentModel,
   type SearchDocumentRefType,
 } from './search-document.model'
+import {
+  buildSearchDocument,
+  normalizeSearchText,
+  tokenizeSearchText,
+} from './search-document.util'
 
 type SearchDocumentLean = SearchDocumentModel & {
   id?: string
@@ -97,16 +101,18 @@ export class SearchService {
     const [posts, pages, notes] = await Promise.all([
       this.postService.model
         .find()
-        .select('title text slug created modified isPublished')
+        .select(
+          'title text content contentFormat slug created modified isPublished',
+        )
         .lean(),
       this.pageService.model
         .find()
-        .select('title text slug created modified')
+        .select('title text content contentFormat slug created modified')
         .lean(),
       this.noteService.model
         .find()
         .select(
-          'title text nid slug created modified isPublished publicAt +password',
+          'title text content contentFormat nid slug created modified isPublished publicAt +password',
         )
         .lean(),
     ])
@@ -531,21 +537,23 @@ export class SearchService {
       case 'post': {
         return this.postService.model
           .findById(id)
-          .select('title text slug created modified isPublished')
+          .select(
+            'title text content contentFormat slug created modified isPublished',
+          )
           .lean()
       }
       case 'note': {
         return this.noteService.model
           .findById(id)
           .select(
-            'title text nid slug created modified isPublished publicAt +password',
+            'title text content contentFormat nid slug created modified isPublished publicAt +password',
           )
           .lean()
       }
       case 'page': {
         return this.pageService.model
           .findById(id)
-          .select('title text slug created modified')
+          .select('title text content contentFormat slug created modified')
           .lean()
       }
     }
@@ -555,43 +563,7 @@ export class SearchService {
     refType: SearchDocumentRefType,
     data: Record<string, any>,
   ): SearchDocumentModel {
-    const normalizedTitle = this.normalizeSearchText(data.title)
-    const normalizedBody = this.normalizeSearchText(data.text)
-    const titleTerms = tokenizeSearchText(normalizedTitle, {
-      includeCjkUnigrams: true,
-      maxTokens: 96,
-    })
-    const bodyTerms = tokenizeSearchText(normalizedBody, {
-      includeCjkUnigrams: false,
-      maxTokens: 512,
-    })
-
-    return {
-      refType,
-      refId: data.id ?? data._id?.toString?.(),
-      title: normalizedTitle,
-      searchText: normalizedBody,
-      terms: [...new Set([...titleTerms, ...bodyTerms])],
-      titleTerms,
-      bodyTerms,
-      titleLength: titleTerms.length,
-      bodyLength: bodyTerms.length,
-      slug: data.slug,
-      nid: data.nid,
-      isPublished: refType === 'page' ? true : data.isPublished !== false,
-      publicAt: data.publicAt ?? null,
-      hasPassword: Boolean(data.password),
-      created: data.created ?? null,
-      modified: data.modified ?? null,
-    }
-  }
-
-  private normalizeSearchText(text: unknown) {
-    return removeMdCodeblock(typeof text === 'string' ? text : '')
-      .normalize('NFKC')
-      .toLowerCase()
-      .replaceAll(/\s+/g, ' ')
-      .trim()
+    return buildSearchDocument(refType, data) as SearchDocumentModel
   }
 
   private buildSearchKeywordRegexes(keyword: string) {
@@ -605,7 +577,7 @@ export class SearchService {
   private buildSearchTerms(keyword: string) {
     return [
       ...new Set(
-        tokenizeSearchText(this.normalizeSearchText(keyword), {
+        tokenizeSearchText(normalizeSearchText(keyword), {
           includeCjkUnigrams: true,
           maxTokens: 48,
         }),
@@ -614,7 +586,7 @@ export class SearchService {
   }
 
   private buildHighlightKeywordFragments(keyword: string) {
-    return this.normalizeSearchText(keyword).split(/\s+/).filter(Boolean)
+    return normalizeSearchText(keyword).split(/\s+/).filter(Boolean)
   }
 
   private buildRegexClauses(keywordRegexes: RegExp[]) {
@@ -838,50 +810,6 @@ export class SearchService {
 
 function escapeRegExp(input: string) {
   return input.replaceAll(/[$()*+.?[\\\]^{|}]/g, '\\$&')
-}
-
-function tokenizeSearchText(
-  text: string,
-  options: { includeCjkUnigrams: boolean; maxTokens: number },
-) {
-  if (!text) {
-    return []
-  }
-
-  const tokens: string[] = []
-  const segments = text.match(
-    /[\da-z]+|[\u3040-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF]+/g,
-  )
-
-  for (const segment of segments ?? []) {
-    if (isCjkSegment(segment)) {
-      if (options.includeCjkUnigrams) {
-        for (const char of segment) {
-          tokens.push(char)
-        }
-      }
-      if (segment.length <= 8) {
-        tokens.push(segment)
-      }
-      for (let index = 0; index < segment.length - 1; index++) {
-        tokens.push(segment.slice(index, index + 2))
-      }
-    } else {
-      tokens.push(segment)
-    }
-
-    if (tokens.length >= options.maxTokens) {
-      break
-    }
-  }
-
-  return tokens.slice(0, options.maxTokens)
-}
-
-function isCjkSegment(input: string) {
-  return /[\u3040-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF]/.test(
-    input,
-  )
 }
 
 function countTerms(terms: string[]) {

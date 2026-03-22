@@ -134,4 +134,28 @@ describe('SearchService', () => {
     expect(highlight.keywords).toEqual(['中文搜索'])
     expect(highlight.snippet).toContain('中文搜索')
   })
+
+  it('should prefer lexical content over stale text when building search document', () => {
+    const document = (searchService as any).toSearchDocument('post', {
+      _id: { toString: () => 'post-lexical' },
+      title: '富文本文章',
+      text: '旧摘要',
+      contentFormat: 'lexical',
+      content: JSON.stringify({
+        root: {
+          type: 'root',
+          children: [
+            {
+              type: 'paragraph',
+              children: [{ type: 'text', text: '最新富文本正文' }],
+            },
+          ],
+        },
+      }),
+    })
+
+    expect(document.searchText).toContain('最新富文本正文')
+    expect(document.searchText).not.toContain('旧摘要')
+    expect(document.terms).toContain('最新富文本正文')
+  })
 })

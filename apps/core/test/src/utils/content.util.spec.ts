@@ -1,300 +1,284 @@
-import { ContentFormat } from '~/shared/types/content-format.type'
-import {
-  computeContentHash,
-  extractImagesFromContent,
-  getTranslationPayload,
-  isLexical,
-} from '~/utils/content.util'
+import { describe, expect, it } from 'vitest'
+
+import { extractTextFromContent } from '~/utils/content.util'
+
+const textNode = (text: string) => ({
+  type: 'text',
+  version: 1,
+  text,
+})
+
+const paragraph = (...children: any[]) => ({
+  type: 'paragraph',
+  version: 1,
+  children,
+})
+
+const nestedState = (text: string) => ({
+  root: {
+    type: 'root',
+    version: 1,
+    children: [paragraph(textNode(text))],
+  },
+})
 
 describe('content.util', () => {
-  describe('isLexical', () => {
-    it('markdown → false', () => {
-      expect(isLexical({ contentFormat: ContentFormat.Markdown })).toBe(false)
-    })
-    it('lexical → true', () => {
-      expect(isLexical({ contentFormat: ContentFormat.Lexical })).toBe(true)
-    })
-    it('undefined → false', () => {
-      expect(isLexical({})).toBe(false)
-    })
-  })
-
-  describe('extractImagesFromContent', () => {
-    it('markdown: extract images from text', () => {
-      const doc = {
-        title: 'test',
-        text: '![img](https://example.com/a.png)\n\nsome text\n\n![img2](https://example.com/b.jpg)',
-        contentFormat: ContentFormat.Markdown,
-      }
-      const images = extractImagesFromContent(doc)
-      expect(images).toEqual([
-        'https://example.com/a.png',
-        'https://example.com/b.jpg',
-      ])
-    })
-
-    it('lexical: extract images from content JSON', () => {
-      const doc = {
-        title: 'test',
-        text: '',
-        contentFormat: ContentFormat.Lexical,
-        content: JSON.stringify({
-          root: {
+  it('should extract text from builtin and headless lexical nodes', () => {
+    const content = JSON.stringify({
+      root: {
+        type: 'root',
+        version: 1,
+        children: [
+          {
+            type: 'heading',
+            tag: 'h1',
+            version: 1,
+            children: [textNode('标题节点')],
+          },
+          {
+            type: 'quote',
+            version: 1,
+            children: [textNode('引用节点')],
+          },
+          {
+            type: 'list',
+            listType: 'bullet',
+            start: 1,
+            version: 1,
             children: [
               {
-                type: 'paragraph',
-                children: [{ type: 'text', text: 'hello' }],
+                type: 'listitem',
+                version: 1,
+                children: [paragraph(textNode('列表节点'))],
               },
+            ],
+          },
+          paragraph({
+            type: 'link',
+            url: 'https://example.com',
+            version: 1,
+            children: [textNode('链接节点')],
+          }),
+          {
+            type: 'table',
+            version: 1,
+            children: [
               {
-                type: 'image',
-                src: 'https://example.com/a.png',
-              },
-              {
-                type: 'paragraph',
+                type: 'tablerow',
+                version: 1,
                 children: [
                   {
-                    type: 'image',
-                    src: 'https://example.com/b.jpg',
+                    type: 'tablecell',
+                    headerState: 0,
+                    colSpan: 1,
+                    version: 1,
+                    children: [paragraph(textNode('表格节点'))],
                   },
                 ],
               },
             ],
           },
-        }),
-      }
-      const images = extractImagesFromContent(doc)
-      expect(images).toEqual([
-        'https://example.com/a.png',
-        'https://example.com/b.jpg',
-      ])
-    })
-
-    it('lexical: returns empty on invalid JSON', () => {
-      const doc = {
-        title: 'test',
-        text: '',
-        contentFormat: ContentFormat.Lexical,
-        content: 'not json',
-      }
-      expect(extractImagesFromContent(doc)).toEqual([])
-    })
-  })
-
-  describe('getTranslationPayload', () => {
-    it('markdown → returns text', () => {
-      const result = getTranslationPayload({
-        title: 'Title',
-        text: 'Hello',
-        contentFormat: ContentFormat.Markdown,
-      })
-      expect(result).toEqual({
-        format: 'markdown',
-        title: 'Title',
-        text: 'Hello',
-      })
-    })
-
-    it('lexical → returns content', () => {
-      const result = getTranslationPayload({
-        title: 'Title',
-        text: '',
-        contentFormat: ContentFormat.Lexical,
-        content: '{"root":{}}',
-      })
-      expect(result).toEqual({
-        format: 'lexical',
-        title: 'Title',
-        content: '{"root":{}}',
-      })
-    })
-  })
-
-  describe('computeContentHash', () => {
-    it('markdown: hash based on text', () => {
-      const doc = {
-        title: 'T',
-        text: 'hello',
-        contentFormat: ContentFormat.Markdown,
-      }
-      const hash = computeContentHash(doc, 'en')
-      expect(typeof hash).toBe('string')
-      expect(hash.length).toBe(32)
-    })
-
-    it('lexical: hash based on content', () => {
-      const doc = {
-        title: 'T',
-        text: 'degraded',
-        contentFormat: ContentFormat.Lexical,
-        content: '{"root":{}}',
-      }
-      const hash = computeContentHash(doc, 'en')
-      expect(typeof hash).toBe('string')
-      expect(hash.length).toBe(32)
-    })
-
-    it('same doc different format → different hash', () => {
-      const base = { title: 'T', text: 'hello', content: '{"root":{}}' }
-      const h1 = computeContentHash(
-        { ...base, contentFormat: ContentFormat.Markdown },
-        'en',
-      )
-      const h2 = computeContentHash(
-        { ...base, contentFormat: ContentFormat.Lexical },
-        'en',
-      )
-      expect(h1).not.toBe(h2)
-    })
-
-    it('markdown: same input → stable hash', () => {
-      const doc = { title: 'T', text: 'body', summary: 's', tags: ['a'] }
-      expect(computeContentHash(doc, 'en')).toBe(computeContentHash(doc, 'en'))
-    })
-
-    it('markdown: different text → different hash', () => {
-      const a = computeContentHash({ title: 'T', text: 'v1' }, 'en')
-      const b = computeContentHash({ title: 'T', text: 'v2' }, 'en')
-      expect(a).not.toBe(b)
-    })
-
-    it('different sourceLang → different hash', () => {
-      const doc = { title: 'T', text: 'body' }
-      expect(computeContentHash(doc, 'en')).not.toBe(
-        computeContentHash(doc, 'zh'),
-      )
-    })
-
-    it('lexical: ignores blockId-only changes', () => {
-      const contentA = JSON.stringify({
-        root: {
-          type: 'root',
-          version: 1,
-          format: '',
-          indent: 0,
-          direction: null,
-          children: [
-            {
-              type: 'paragraph',
-              version: 1,
-              format: '',
-              indent: 0,
-              direction: null,
-              $: { blockId: 'aaaa1111' },
-              children: [
-                {
-                  type: 'text',
-                  version: 1,
-                  text: 'hello',
-                  detail: 0,
-                  format: 0,
-                  mode: 'normal',
-                  style: '',
-                },
-              ],
+          {
+            type: 'code',
+            version: 1,
+            children: [textNode('内建代码节点')],
+          },
+          { type: 'horizontalrule', version: 1 },
+          paragraph({
+            type: 'spoiler',
+            version: 1,
+            children: [textNode('剧透节点')],
+          }),
+          paragraph({
+            type: 'ruby',
+            version: 1,
+            reading: 'zhuyin',
+            children: [textNode('注音节点')],
+          }),
+          {
+            type: 'details',
+            version: 1,
+            summary: '详情摘要',
+            open: true,
+            children: [paragraph(textNode('详情正文'))],
+          },
+          {
+            type: 'image',
+            version: 1,
+            src: 'https://cdn.example.com/image.png',
+            altText: '图片说明',
+            caption: '图片标题',
+          },
+          {
+            type: 'video',
+            version: 1,
+            src: 'https://cdn.example.com/video.mp4',
+            poster: 'https://cdn.example.com/poster.png',
+          },
+          {
+            type: 'link-card',
+            version: 1,
+            url: 'https://example.com/card',
+            title: '卡片标题',
+            description: '卡片描述',
+          },
+          {
+            type: 'katex-inline',
+            version: 1,
+            equation: 'E=mc^2',
+          },
+          {
+            type: 'katex-block',
+            version: 1,
+            equation: 'a^2+b^2=c^2',
+          },
+          {
+            type: 'mermaid',
+            version: 1,
+            diagram: 'graph TD; A-->B;',
+          },
+          {
+            type: 'mention',
+            version: 1,
+            platform: 'github',
+            handle: 'innei',
+            displayName: 'Innei',
+          },
+          {
+            type: 'code-block',
+            version: 1,
+            code: 'const rich = true',
+            language: 'ts',
+          },
+          {
+            type: 'footnote',
+            version: 1,
+            identifier: 'fn-1',
+          },
+          {
+            type: 'footnote-section',
+            version: 1,
+            definitions: {
+              'fn-1': '脚注内容',
             },
-          ],
-        },
-      })
-
-      const contentB = JSON.stringify({
-        root: {
-          direction: null,
-          indent: 0,
-          format: '',
-          version: 1,
-          type: 'root',
-          children: [
-            {
-              direction: null,
-              indent: 0,
-              format: '',
-              version: 1,
-              type: 'paragraph',
-              $: { blockId: 'bbbb2222' },
-              children: [
-                {
-                  style: '',
-                  mode: 'normal',
-                  format: 0,
-                  detail: 0,
-                  text: 'hello',
-                  version: 1,
-                  type: 'text',
-                },
-              ],
-            },
-          ],
-        },
-      })
-
-      const hashA = computeContentHash(
-        {
-          title: 'T',
-          text: 'degraded',
-          contentFormat: ContentFormat.Lexical,
-          content: contentA,
-        },
-        'en',
-      )
-      const hashB = computeContentHash(
-        {
-          title: 'T',
-          text: 'degraded',
-          contentFormat: ContentFormat.Lexical,
-          content: contentB,
-        },
-        'en',
-      )
-
-      expect(hashA).toBe(hashB)
+          },
+          {
+            type: 'embed',
+            version: 1,
+            url: 'https://example.com/embed',
+            source: 'youtube',
+          },
+          {
+            type: 'code-snippet',
+            version: 1,
+            files: [
+              {
+                filename: 'index.ts',
+                content: 'export const snippet = true',
+                language: 'ts',
+              },
+            ],
+          },
+          {
+            type: 'gallery',
+            version: 1,
+            layout: 'grid',
+            images: [
+              {
+                src: 'https://cdn.example.com/gallery-1.png',
+                alt: '画廊图片',
+                caption: '画廊说明',
+              },
+            ],
+          },
+          {
+            type: 'excalidraw',
+            version: 1,
+            snapshot: '{"elements":[{"text":"白板节点"}]}',
+          },
+          {
+            type: 'banner',
+            version: 1,
+            bannerType: 'note',
+            content: nestedState('横幅内容'),
+          },
+          {
+            type: 'alert-quote',
+            version: 1,
+            alertType: 'warning',
+            content: nestedState('警告内容'),
+          },
+          {
+            type: 'nested-doc',
+            version: 1,
+            content: nestedState('嵌套文档内容'),
+          },
+          {
+            type: 'grid-container',
+            version: 1,
+            cols: 2,
+            gap: '16px',
+            cells: [nestedState('网格一'), nestedState('网格二')],
+          },
+          paragraph({
+            type: 'tag',
+            version: 1,
+            text: '标签节点',
+          }),
+          paragraph({
+            type: 'comment',
+            version: 1,
+            text: '评论节点',
+          }),
+        ],
+      },
     })
 
-    it('lexical: keeps semantic text changes hash-sensitive', () => {
-      const contentA = JSON.stringify({
-        root: {
-          children: [
-            {
-              type: 'paragraph',
-              version: 1,
-              $: { blockId: 'same1111' },
-              children: [{ type: 'text', version: 1, text: 'hello' }],
-            },
-          ],
-        },
-      })
-      const contentB = JSON.stringify({
-        root: {
-          children: [
-            {
-              type: 'paragraph',
-              version: 1,
-              $: { blockId: 'same1111' },
-              children: [{ type: 'text', version: 1, text: 'hello world' }],
-            },
-          ],
-        },
-      })
-
-      const hashA = computeContentHash(
-        {
-          title: 'T',
-          text: 'degraded',
-          contentFormat: ContentFormat.Lexical,
-          content: contentA,
-        },
-        'en',
-      )
-      const hashB = computeContentHash(
-        {
-          title: 'T',
-          text: 'degraded',
-          contentFormat: ContentFormat.Lexical,
-          content: contentB,
-        },
-        'en',
-      )
-
-      expect(hashA).not.toBe(hashB)
+    const extracted = extractTextFromContent({
+      text: '',
+      contentFormat: 'lexical',
+      content,
     })
+
+    for (const token of [
+      '标题节点',
+      '引用节点',
+      '列表节点',
+      '链接节点',
+      '表格节点',
+      '内建代码节点',
+      '剧透节点',
+      '注音节点',
+      '详情摘要',
+      '详情正文',
+      '图片说明',
+      '图片标题',
+      '卡片标题',
+      '卡片描述',
+      'E=mc^2',
+      'a^2+b^2=c^2',
+      'graph TD; A-->B;',
+      'innei',
+      'Innei',
+      'const rich = true',
+      '脚注内容',
+      'index.ts',
+      'export const snippet = true',
+      '画廊图片',
+      '画廊说明',
+      '白板节点',
+      '横幅内容',
+      '警告内容',
+      '嵌套文档内容',
+      '网格一',
+      '网格二',
+      '标签节点',
+      '评论节点',
+    ]) {
+      expect(extracted).toContain(token)
+    }
+
+    expect(extracted).not.toContain('https://example.com/card')
+    expect(extracted).not.toContain('https://cdn.example.com/video.mp4')
   })
 })

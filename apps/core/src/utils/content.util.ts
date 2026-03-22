@@ -21,6 +21,29 @@ export function isLexical(doc: Pick<ContentDoc, 'contentFormat'>): boolean {
   return doc.contentFormat === ContentFormat.Lexical
 }
 
+export function extractTextFromContent(
+  doc: Pick<ContentDoc, 'text' | 'contentFormat' | 'content'>,
+): string {
+  if (!isLexical(doc)) {
+    return doc.text || ''
+  }
+
+  if (!doc.content) {
+    return doc.text || ''
+  }
+
+  try {
+    const editorState = JSON.parse(doc.content)
+    if (!editorState?.root) {
+      return doc.text || ''
+    }
+
+    return normalizeExtractedText(extractLexicalNodeText(editorState.root))
+  } catch {
+    return doc.text || ''
+  }
+}
+
 export function extractImagesFromContent(
   doc: Pick<ContentDoc, 'text' | 'contentFormat' | 'content'>,
 ): string[] {
@@ -159,4 +182,159 @@ function normalizeLexicalValueForHash(value: unknown): unknown {
   }
 
   return normalized
+}
+
+const KNOWN_TEXT_STRUCTURAL_PROPS = new Set([
+  'children',
+  'type',
+  'version',
+  'direction',
+  'format',
+  'indent',
+  'style',
+  'detail',
+  'mode',
+  'text',
+  'tag',
+  'listType',
+  'start',
+  'value',
+  'url',
+  'rel',
+  'target',
+  'colSpan',
+  'headerState',
+  'width',
+  NODE_STATE_KEY,
+])
+
+const IGNORED_TEXT_METADATA_KEYS = new Set([
+  'src',
+  'url',
+  'id',
+  'source',
+  'favicon',
+  'image',
+  'poster',
+  'thumbhash',
+  'accent',
+  'layout',
+  'platform',
+  'language',
+  'identifier',
+  'bannerType',
+  'alertType',
+  'cols',
+  'gap',
+  'open',
+  'width',
+  'height',
+])
+
+function extractLexicalNodeText(node: any): string {
+  if (!node) return ''
+
+  if (node.type === 'text') {
+    return String(node.text || '')
+  }
+
+  if (typeof node.text === 'string' && node.text.trim()) {
+    return node.text
+  }
+
+  if (node.type === 'linebreak') {
+    return '\n'
+  }
+
+  if (typeof node.code === 'string') {
+    return node.code
+  }
+
+  if (typeof node.snapshot === 'string') {
+    return node.snapshot
+  }
+
+  const segments: string[] = []
+
+  if (Array.isArray(node.children)) {
+    const childText = node.children
+      .map((child: any) => extractLexicalNodeText(child))
+      .join('')
+    if (childText) {
+      segments.push(childText)
+    }
+  }
+
+  for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+    if (KNOWN_TEXT_STRUCTURAL_PROPS.has(key)) continue
+
+    const extracted = extractTextFragmentsFromUnknown(value, key)
+    if (extracted.length) {
+      segments.push(extracted.join('\n'))
+    }
+  }
+
+  return segments.join('\n')
+}
+
+function extractTextFragmentsFromUnknown(
+  value: unknown,
+  key?: string,
+): string[] {
+  if (
+    value == null ||
+    typeof value === 'boolean' ||
+    typeof value === 'number'
+  ) {
+    return []
+  }
+
+  if (typeof value === 'string') {
+    if (!value.trim()) {
+      return []
+    }
+    if (key && IGNORED_TEXT_METADATA_KEYS.has(key)) {
+      return []
+    }
+    return [value]
+  }
+
+  if (isNestedEditorState(value)) {
+    const nested = value.root.children
+      .map((child: any) => extractLexicalNodeText(child))
+      .join('\n')
+    return nested ? [nested] : []
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => extractTextFragmentsFromUnknown(item, key))
+  }
+
+  if (typeof value !== 'object') {
+    return []
+  }
+
+  return Object.entries(value as Record<string, unknown>).flatMap(
+    ([entryKey, entryValue]) =>
+      extractTextFragmentsFromUnknown(entryValue, entryKey),
+  )
+}
+
+function isNestedEditorState(
+  value: unknown,
+): value is { root: { children: any[] } } {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    'root' in value &&
+    !!value.root &&
+    typeof value.root === 'object' &&
+    'children' in value.root &&
+    Array.isArray(value.root.children)
+  )
+}
+
+function normalizeExtractedText(text: string) {
+  return text.replaceAll(/\s+/g, ' ').trim()
 }
