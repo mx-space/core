@@ -103,4 +103,15 @@ export class CronTaskScheduler {
       `cleanupOrphanImages task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
     )
   }
+
+  @CronOnce(CronExpression.EVERY_DAY_AT_4AM, { name: 'rebuildSearchIndex' })
+  async scheduleRebuildSearchIndex() {
+    this.logger.log('Scheduling rebuildSearchIndex task')
+    const result = await this.cronTaskService.createCronTask(
+      CronTaskType.RebuildSearchIndex,
+    )
+    this.logger.log(
+      `rebuildSearchIndex task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
+    )
+  }
 }

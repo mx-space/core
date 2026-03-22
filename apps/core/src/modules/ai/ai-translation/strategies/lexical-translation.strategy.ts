@@ -7,13 +7,13 @@ import {
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { throwIfAborted } from '~/utils/abort.util'
+import { extractDocumentContext } from '~/utils/content.util'
 import { md5 } from '~/utils/tool.util'
 
 import type { IModelRuntime } from '../../runtime'
 import type { AITranslationModel } from '../ai-translation.model'
 import type { ArticleContent } from '../ai-translation.types'
 import {
-  extractDocumentContext,
   parseLexicalForTranslation,
   restoreLexicalTranslation,
 } from '../lexical-translation-parser'

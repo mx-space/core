@@ -1,5 +1,8 @@
 import { forwardRef, Module } from '@nestjs/common'
+
 import { AggregateModule } from '~/modules/aggregate/aggregate.module'
+import { SearchModule } from '~/modules/search/search.module'
+
 import { CronBusinessService } from './cron-business.service'
 import {
   CronDefinitionController,
@@ -9,7 +12,7 @@ import { CronTaskScheduler } from './cron-task.scheduler'
 import { CronTaskService } from './cron-task.service'
 
 @Module({
-  imports: [forwardRef(() => AggregateModule)],
+  imports: [forwardRef(() => AggregateModule), SearchModule],
   controllers: [CronDefinitionController, CronTaskController],
   providers: [CronBusinessService, CronTaskService, CronTaskScheduler],
   exports: [CronTaskService, CronBusinessService],

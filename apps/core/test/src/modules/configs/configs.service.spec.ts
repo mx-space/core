@@ -1,5 +1,9 @@
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
+import type { MockCacheService } from 'test/helper/redis-mock.helper'
+import { redisHelper } from 'test/helper/redis-mock.helper'
+import { vi } from 'vitest'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { extendedZodValidationPipeInstance } from '~/common/zod/validation.pipe'
 import { RedisKeys } from '~/constants/cache.constant'
@@ -11,9 +15,6 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { getModelToken } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
-import { redisHelper } from 'test/helper/redis-mock.helper'
-import type { MockCacheService } from 'test/helper/redis-mock.helper'
-import { vi } from 'vitest'
 
 describe('Test ConfigsService', () => {
   let service: ConfigsService
@@ -140,7 +141,7 @@ describe('Test ConfigsService', () => {
     // is tested via the resend test above which shows the pattern works.
   })
 
-  it('should emit event if enable email option and update search', async () => {
+  it('should emit event if enable email option', async () => {
     // Clear mock from previous tests
     mockEmitFn.mockClear()
 
@@ -161,27 +162,6 @@ describe('Test ConfigsService', () => {
     // Only ConfigChanged when enable: false
     await service.patchAndValid('mailOptions', {
       smtp: { pass: '*' },
-      enable: false,
-    })
-    expect(mockEmitFn).toBeCalledTimes(1)
-    mockEmitFn.mockClear()
-
-    // ConfigChanged + PushSearch when enable: true
-    await service.patchAndValid('algoliaSearchOptions', {
-      enable: true,
-    })
-    expect(mockEmitFn).toBeCalledTimes(2)
-    mockEmitFn.mockClear()
-
-    // ConfigChanged + PushSearch (because enable is still true)
-    await service.patchAndValid('algoliaSearchOptions', {
-      indexName: 'x',
-    })
-    expect(mockEmitFn).toBeCalledTimes(2)
-    mockEmitFn.mockClear()
-
-    // Only ConfigChanged when enable: false
-    await service.patchAndValid('algoliaSearchOptions', {
       enable: false,
     })
     expect(mockEmitFn).toBeCalledTimes(1)

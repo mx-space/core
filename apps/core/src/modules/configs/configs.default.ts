@@ -82,13 +82,6 @@ export const generateDefaultConfig: () => IConfig = () => ({
   },
   baiduSearchOptions: { enable: false, token: null! },
   bingSearchOptions: { enable: false, token: null! },
-  algoliaSearchOptions: {
-    enable: false,
-    apiKey: '',
-    appId: '',
-    indexName: '',
-    maxTruncateSize: 10000,
-  },
   adminExtra: {
     enableAdminProxy: true,
 

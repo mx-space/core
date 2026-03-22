@@ -6,6 +6,7 @@ import type { NoteModel } from '~/models/note'
 import type { PageModel } from '~/models/page'
 import type { PostModel } from '~/models/post'
 import { autoBind } from '~/utils/auto-bind'
+
 import type { HTTPClient } from '../core'
 
 declare module '../core/client' {
@@ -17,13 +18,22 @@ declare module '../core/client' {
   }
 }
 
-export type SearchType = 'post' | 'note'
+export type SearchType = 'post' | 'note' | 'page'
 
 export type SearchOption = {
   orderBy?: string
   order?: number
-  rawAlgolia?: boolean
 }
+
+export type SearchHighlight = {
+  keywords: string[]
+  snippet: string | null
+}
+
+type SearchResultHighlight = {
+  highlight: SearchHighlight
+}
+
 export class SearchController<ResponseWrapper> implements IController {
   base = 'search'
   name = 'search'
@@ -39,11 +49,12 @@ export class SearchController<ResponseWrapper> implements IController {
   search(
     type: 'note',
     keyword: string,
-    options?: Omit<SearchOption, 'rawAlgolia'>,
+    options?: SearchOption,
   ): Promise<
     RequestProxyResult<
       PaginateResult<
-        Pick<NoteModel, 'modified' | 'id' | 'title' | 'created' | 'nid'>
+        Pick<NoteModel, 'modified' | 'id' | 'title' | 'created' | 'nid'> &
+          SearchResultHighlight
       >,
       ResponseWrapper
     >
@@ -51,56 +62,52 @@ export class SearchController<ResponseWrapper> implements IController {
   search(
     type: 'post',
     keyword: string,
-    options?: Omit<SearchOption, 'rawAlgolia'>,
+    options?: SearchOption,
   ): Promise<
     RequestProxyResult<
       PaginateResult<
         Pick<
           PostModel,
           'modified' | 'id' | 'title' | 'created' | 'slug' | 'category'
-        >
+        > &
+          SearchResultHighlight
       >,
       ResponseWrapper
     >
   >
   search(
-    type: SearchType,
+    type: 'page',
     keyword: string,
-    options: Omit<SearchOption, 'rawAlgolia'> = {},
-  ): any {
+    options?: SearchOption,
+  ): Promise<
+    RequestProxyResult<
+      PaginateResult<
+        Pick<PageModel, 'modified' | 'id' | 'title' | 'created' | 'slug'> &
+          SearchResultHighlight
+      >,
+      ResponseWrapper
+    >
+  >
+  search(type: SearchType, keyword: string, options: SearchOption = {}): any {
     return this.proxy(type).get({
       params: { keyword, ...options },
     })
   }
-  /**
-   * 从 algolya 搜索
-   * https://www.algolia.com/doc/api-reference/api-methods/search/
-   * @param keyword
-   * @param options
-   * @returns
-   */
-  searchByAlgolia(keyword: string, options?: SearchOption) {
-    return this.proxy('algolia').get<
+
+  searchAll(keyword: string, options?: SearchOption) {
+    return this.proxy.get<
       RequestProxyResult<
         PaginateResult<
           | (Pick<
               PostModel,
               'modified' | 'id' | 'title' | 'created' | 'slug' | 'category'
-            > & { type: 'post' })
-          | (Pick<
-              NoteModel,
-              'id' | 'created' | 'id' | 'modified' | 'title' | 'nid'
-            > & { type: 'note' })
-          | (Pick<
-              PageModel,
-              'id' | 'title' | 'created' | 'modified' | 'slug'
-            > & { type: 'page' })
-        > & {
-          /**
-           * @see: algoliasearch <https://www.algolia.com/doc/api-reference/api-methods/search/>
-           */
-          raw?: any
-        },
+            > &
+              SearchResultHighlight & { type: 'post' })
+          | (Pick<NoteModel, 'id' | 'created' | 'modified' | 'title' | 'nid'> &
+              SearchResultHighlight & { type: 'note' })
+          | (Pick<PageModel, 'id' | 'title' | 'created' | 'modified' | 'slug'> &
+              SearchResultHighlight & { type: 'page' })
+        >,
         ResponseWrapper
       >
     >({ params: { keyword, ...options } })

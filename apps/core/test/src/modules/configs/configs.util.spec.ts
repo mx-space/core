@@ -16,7 +16,6 @@ describe('encrypt.util', () => {
     expect(paths).toContain('imageStorageOptions.secretKey')
     expect(paths).toContain('baiduSearchOptions.token')
     expect(paths).toContain('bingSearchOptions.token')
-    expect(paths).toContain('algoliaSearchOptions.apiKey')
     expect(paths).toContain('adminExtra.gaodemapKey')
     expect(paths).toContain('barkOptions.key')
     expect(paths).toContain('thirdPartyServiceIntegration.githubToken')
@@ -24,7 +23,7 @@ describe('encrypt.util', () => {
     expect(paths).toContain('oauth.secrets.*.*')
 
     // Ensure exact count
-    expect(paths.length).toBe(12)
+    expect(paths.length).toBe(11)
   })
   describe('path-based encryption', () => {
     test('should encrypt mailOptions.smtp.pass', () => {
@@ -131,21 +130,6 @@ describe('encrypt.util', () => {
 
       expect(encrypted.token).toMatch(/^\$\$\{mx\}\$\$/)
       expect(encrypted.enable).toBe(true)
-    })
-
-    test('should encrypt algoliaSearchOptions.apiKey', () => {
-      const config = {
-        enable: true,
-        apiKey: 'algolia-api-key',
-        appId: 'algolia-app-id',
-        indexName: 'my-index',
-      }
-
-      const encrypted = encryptObject(config, 'algoliaSearchOptions')
-
-      expect(encrypted.apiKey).toMatch(/^\$\$\{mx\}\$\$/)
-      expect(encrypted.appId).toBe('algolia-app-id')
-      expect(encrypted.indexName).toBe('my-index')
     })
 
     test('should encrypt thirdPartyServiceIntegration.githubToken', () => {

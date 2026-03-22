@@ -26,7 +26,7 @@ MX Space Core is a headless CMS server built with **NestJS**, **MongoDB**, and *
 | **AI Workflow** | Summary generation, multi-language translation, comment moderation, writing assistance, streaming responses |
 | **LLM Providers** | OpenAI, OpenAI-compatible, Anthropic, OpenRouter |
 | **Real-time** | WebSocket via Socket.IO with Redis adapter for multi-instance broadcast |
-| **Distribution** | RSS/Atom feeds, sitemap, Algolia search, aggregate API |
+| **Distribution** | RSS/Atom feeds, sitemap, local search, aggregate API |
 | **Auth** | JWT sessions, passkeys, OAuth, API keys (via better-auth) |
 | **Deployment** | Docker (multi-arch), PM2, standalone binary |
 

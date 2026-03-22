@@ -1,6 +1,10 @@
 import cluster from 'node:cluster'
+
 import { Injectable, Logger } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose'
+import { cloneDeep, merge, mergeWith } from 'es-toolkit/compat'
+import type { z, ZodError } from 'zod'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
@@ -13,8 +17,7 @@ import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { camelcaseKeys, sleep } from '~/utils/tool.util'
-import { cloneDeep, merge, mergeWith } from 'es-toolkit/compat'
-import type { z, ZodError } from 'zod'
+
 import { generateDefaultConfig } from './configs.default'
 import {
   decryptObject,
@@ -122,7 +125,7 @@ export class ConfigsService {
       } catch (error) {
         await this.configInit()
         if (errorRetryCount > 0) {
-          return await this.getConfig(--errorRetryCount)
+          return await this.getConfig(errorRetryCount - 1)
         }
         this.logger.error('获取配置失败')
         throw error
@@ -251,19 +254,6 @@ export class ConfigsService {
 
         return option
       }
-      case 'algoliaSearchOptions': {
-        const option = await this.patch(
-          key as 'algoliaSearchOptions',
-          instanceValue as any,
-        )
-        if (option.enable) {
-          this.eventManager.emit(EventBusEvents.PushSearch, null, {
-            scope: EventScope.TO_SYSTEM,
-          })
-        }
-        return option
-      }
-
       case 'oauth': {
         const value = instanceValue as unknown as OAuthConfig
         const current = await this.get('oauth')

@@ -18,6 +18,7 @@ import { ProjectModel } from '~/modules/project/project.model'
 import { ReaderModel } from '~/modules/reader/reader.model'
 import { RecentlyModel } from '~/modules/recently/recently.model'
 import { SayModel } from '~/modules/say/say.model'
+import { SearchDocumentModel } from '~/modules/search/search-document.model'
 import { ServerlessStorageModel } from '~/modules/serverless/serverless.model'
 import { ServerlessLogModel } from '~/modules/serverless/serverless-log.model'
 import { SlugTrackerModel } from '~/modules/slug-tracker/slug-tracker.model'
@@ -47,6 +48,7 @@ export const databaseModels = [
   ReaderModel,
   RecentlyModel,
   SayModel,
+  SearchDocumentModel,
   ServerlessLogModel,
   ServerlessStorageModel,
   SlugTrackerModel,

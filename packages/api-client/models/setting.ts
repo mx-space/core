@@ -55,13 +55,6 @@ export declare class BingSearchOptionsModel {
   token?: string
 }
 
-export declare class AlgoliaSearchOptionsModel {
-  enable: boolean
-  apiKey?: string
-  appId?: string
-  indexName?: string
-}
-
 export declare class AdminExtraModel {
   background?: string
 
@@ -84,7 +77,6 @@ export interface IConfig {
   commentOptions: CommentOptionsModel
   backupOptions: BackupOptionsModel
   baiduSearchOptions: BaiduSearchOptionsModel
-  algoliaSearchOptions: AlgoliaSearchOptionsModel
   adminExtra: AdminExtraModel
   thirdPartyServiceIntegration: ThirdPartyServiceIntegrationModel
 }

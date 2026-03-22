@@ -206,31 +206,6 @@ export class BingSearchOptionsDto extends createZodDto(
 ) {}
 export type BingSearchOptionsConfig = z.infer<typeof BingSearchOptionsSchema>
 
-// ==================== Algolia Search Options ====================
-export const AlgoliaSearchOptionsSchema = section('Algolia Search', {
-  enable: field.plain(z.boolean().optional(), '开启 Algolia Search'),
-  apiKey: field.password(z.string().optional(), 'ApiKey'),
-  appId: field.plain(z.string().optional(), 'AppId'),
-  indexName: field.plain(z.string().optional(), 'IndexName'),
-  maxTruncateSize: field.plain(
-    z.preprocess(
-      (val) => (val ? Number(val) : val),
-      z.number().int().min(100).optional(),
-    ),
-    '最大文档大小',
-    {
-      description:
-        'Algolia 文档大小限制，单位为字节，免费版本为 10K, 填写为 10000',
-    },
-  ),
-})
-export class AlgoliaSearchOptionsDto extends createZodDto(
-  AlgoliaSearchOptionsSchema,
-) {}
-export type AlgoliaSearchOptionsConfig = z.infer<
-  typeof AlgoliaSearchOptionsSchema
->
-
 // ==================== Admin Extra ====================
 export const AdminExtraSchema = section('后台附加设置', {
   enableAdminProxy: field.toggle(z.boolean().optional(), '开启后台管理反代', {
@@ -445,7 +420,6 @@ export const configSchemaMapping = {
   fileUploadOptions: FileUploadOptionsSchema,
   baiduSearchOptions: BaiduSearchOptionsSchema,
   bingSearchOptions: BingSearchOptionsSchema,
-  algoliaSearchOptions: AlgoliaSearchOptionsSchema,
   featureList: FeatureListSchema,
   thirdPartyServiceIntegration: ThirdPartyServiceIntegrationSchema,
   authSecurity: AuthSecuritySchema,
@@ -471,7 +445,6 @@ export const FullConfigSchema = withMeta(
     fileUploadOptions: FileUploadOptionsSchema,
     baiduSearchOptions: BaiduSearchOptionsSchema,
     bingSearchOptions: BingSearchOptionsSchema,
-    algoliaSearchOptions: AlgoliaSearchOptionsSchema,
     featureList: FeatureListSchema,
     thirdPartyServiceIntegration: ThirdPartyServiceIntegrationSchema,
     authSecurity: AuthSecuritySchema,
