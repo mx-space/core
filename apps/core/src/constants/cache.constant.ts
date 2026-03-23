@@ -10,6 +10,8 @@ export enum RedisKeys {
   AdminPage = 'admin_next_index_entry',
   /** 配置项缓存 */
   ConfigCache = 'config_cache',
+  /** 配置版本号 */
+  ConfigVersion = 'config_version',
   PTYSession = 'pty_session',
   /** HTTP 请求缓存 */
   HTTPCache = 'http_cache',
@@ -25,6 +27,7 @@ export enum RedisKeys {
   /** 最近速记的点赞，点踩记录 */
   RecentlyAttitude = 'recently_attitude',
   Socket = 'socket',
+  ClusterEventStream = 'cluster_event_stream',
 
   AnalyzeAggregate = 'analyze_aggregate',
   AnalyzeTrafficSource = 'analyze_traffic_source',

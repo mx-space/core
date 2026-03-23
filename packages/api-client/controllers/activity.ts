@@ -9,6 +9,8 @@ import type {
   RoomsData,
 } from '~/models/activity'
 import { autoBind } from '~/utils/auto-bind'
+import { camelcaseKeys } from '~/utils/camelcase-keys'
+
 import type { HTTPClient } from '../core'
 
 declare module '../core/client' {
@@ -55,6 +57,34 @@ export class ActivityController<ResponseWrapper> implements IController {
     }>({
       params: {
         room_name: roomName,
+      },
+      transformResponse: (data) => {
+        const payload = data as {
+          data?: Record<string, unknown>
+          readers?: Record<string, unknown>
+        }
+
+        return {
+          ...camelcaseKeys(
+            Object.fromEntries(
+              Object.entries(payload).filter(
+                ([key]) => key !== 'data' && key !== 'readers',
+              ),
+            ),
+          ),
+          data: Object.fromEntries(
+            Object.entries(payload.data ?? {}).map(([identity, value]) => [
+              identity,
+              camelcaseKeys<ActivityPresence>(value),
+            ]),
+          ),
+          readers: Object.fromEntries(
+            Object.entries(payload.readers ?? {}).map(([id, value]) => [
+              id,
+              camelcaseKeys<AuthUser>(value),
+            ]),
+          ),
+        }
       },
     })
   }

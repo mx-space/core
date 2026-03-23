@@ -1,5 +1,4 @@
-import cluster from 'node:cluster'
-
+import type { OnModuleInit } from '@nestjs/common'
 import { Injectable, Logger } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose'
 import { cloneDeep, merge, mergeWith } from 'es-toolkit/compat'
@@ -12,11 +11,14 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import type { AIProviderConfig } from '~/modules/ai/ai.types'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import {
+  ConfigVersionScopes,
+  ConfigVersionService,
+} from '~/processors/redis/config-version.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
-import { camelcaseKeys, sleep } from '~/utils/tool.util'
+import { camelcaseKeys } from '~/utils/tool.util'
 
 import { generateDefaultConfig } from './configs.default'
 import {
@@ -38,53 +40,77 @@ const configsKeySet = new Set(Object.keys(configDtoMapping))
  * 3. 何时解密，在 Node 中消费时，即 getConfig 时统一解密。
  */
 @Injectable()
-export class ConfigsService {
-  private logger: Logger
+export class ConfigsService implements OnModuleInit {
+  private readonly logger = new Logger(ConfigsService.name)
+  private configInitd = false
+  private configInitPromise?: Promise<void>
+
   constructor(
     @InjectModel(OptionModel)
     private readonly optionModel: ReturnModelType<typeof OptionModel>,
 
     private readonly redisService: RedisService,
-    private readonly subpub: SubPubBridgeService,
+    private readonly configVersionService: ConfigVersionService,
 
     private readonly eventManager: EventManagerService,
-  ) {
-    this.configInit().then(() => {
-      this.logger.log('Config 已经加载完毕！')
-    })
+  ) {}
 
-    this.logger = new Logger(ConfigsService.name)
+  async onModuleInit() {
+    await this.ensureConfigInitialized()
+    this.logger.log('Config 已经加载完毕！')
   }
-  private configInitd = false
+
+  private async getRedisClient() {
+    await this.redisService.waitForReady()
+
+    return this.redisService.getClient()
+  }
 
   private async setConfig(config: IConfig) {
-    const redis = this.redisService.getClient()
+    const redis = await this.getRedisClient()
     await redis.set(getRedisKey(RedisKeys.ConfigCache), JSON.stringify(config))
   }
 
-  public async waitForConfigReady() {
-    if (this.configInitd) {
-      return await this.getConfig()
+  private async ensureConfigInitialized(force = false) {
+    if (!force && this.configInitd) {
+      return
     }
 
-    let retryCount = 0
-    while (true) {
-      if (this.configInitd) {
-        return await this.getConfig()
-      }
-      retryCount++
-      if (retryCount % 10 === 0) {
-        throw `重试 ${retryCount} 次获取配置失败，即将进行下一轮尝试`
-      }
-      await sleep(1500)
+    if (!force && this.configInitPromise) {
+      await this.configInitPromise
+      return
     }
+
+    const initPromise = this.configInit(force)
+      .then(() => {
+        this.configInitd = true
+      })
+      .catch((error) => {
+        this.configInitd = false
+        if (this.configInitPromise === initPromise) {
+          this.configInitPromise = undefined
+        }
+        throw error
+      })
+
+    this.configInitPromise = initPromise
+    await initPromise
+  }
+
+  public async waitForConfigReady() {
+    await this.ensureConfigInitialized()
+    return this.getConfig()
   }
 
   public get defaultConfig() {
     return generateDefaultConfig()
   }
 
-  protected async configInit() {
+  protected async configInit(force = false) {
+    if (!force && this.configInitd) {
+      return
+    }
+
     const configs = await this.optionModel.find().lean()
     const mergedConfig = generateDefaultConfig()
     configs.forEach((field) => {
@@ -102,7 +128,6 @@ export class ConfigsService {
     })
 
     await this.setConfig(mergedConfig)
-    this.configInitd = true
   }
 
   public async get<T extends keyof IConfig>(
@@ -114,16 +139,17 @@ export class ConfigsService {
 
   // Config 在此收口
   public async getConfig(errorRetryCount = 3): Promise<Readonly<IConfig>> {
-    const configCache = await this.redisService
-      .getClient()
-      .get(getRedisKey(RedisKeys.ConfigCache))
+    await this.ensureConfigInitialized()
+
+    const redis = await this.getRedisClient()
+    const configCache = await redis.get(getRedisKey(RedisKeys.ConfigCache))
 
     if (configCache) {
       try {
         const configValue = JSON.parse(configCache) as IConfig
         return decryptObject(configValue)
       } catch (error) {
-        await this.configInit()
+        await this.ensureConfigInitialized(true)
         if (errorRetryCount > 0) {
           return await this.getConfig(errorRetryCount - 1)
         }
@@ -131,7 +157,7 @@ export class ConfigsService {
         throw error
       }
     } else {
-      await this.configInit()
+      await this.ensureConfigInitialized(true)
 
       return await this.getConfig()
     }
@@ -234,7 +260,7 @@ export class ConfigsService {
     switch (key) {
       case 'url': {
         const newValue = await this.patch(key, instanceValue as any)
-        this.subpub.publish(EventBusEvents.AppUrlChanged, newValue)
+        await this.configVersionService.bump(ConfigVersionScopes.Url)
         return newValue
       }
       case 'mailOptions': {
@@ -242,15 +268,10 @@ export class ConfigsService {
           key as 'mailOptions',
           instanceValue as any,
         )
-        if (option.enable) {
-          if (cluster.isPrimary) {
-            this.eventManager.emit(EventBusEvents.EmailInit, null, {
-              scope: EventScope.TO_SYSTEM,
-            })
-          } else {
-            this.subpub.publish(EventBusEvents.EmailInit, '')
-          }
-        }
+        await this.configVersionService.bump(ConfigVersionScopes.Mail)
+        await this.eventManager.emit(EventBusEvents.EmailInit, null, {
+          scope: EventScope.TO_SYSTEM,
+        })
 
         return option
       }
@@ -290,7 +311,7 @@ export class ConfigsService {
           public: nextAuthPublic,
         })
 
-        this.subpub.publish(EventBusEvents.OauthChanged, option)
+        await this.configVersionService.bump(ConfigVersionScopes.OAuth)
         return option
       }
 

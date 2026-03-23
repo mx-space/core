@@ -18,14 +18,40 @@ describe('test activity client', () => {
 
   test('GET /presence', async () => {
     mockResponse('/activity/presence', {
-      s1122: {
-        identity: 'user1',
-        position: 0,
-        ts: 123123123,
+      data: {
+        owner_a07f1234: {
+          identity: 'owner_a07f1234',
+          position: 0,
+          ts: 123123123,
+          reader_id: 'reader_1',
+        },
+      },
+      readers: {
+        reader_1: {
+          display_name: 'Reader One',
+        },
       },
     })
 
-    await expect(client.activity.getPresence('122')).resolves.not.toThrowError()
+    await expect(client.activity.getPresence('122')).resolves.toMatchObject({
+      data: {
+        owner_a07f1234: {
+          identity: 'owner_a07f1234',
+          position: 0,
+          ts: 123123123,
+          readerId: 'reader_1',
+        },
+      },
+      readers: {
+        reader_1: {
+          displayName: 'Reader One',
+        },
+      },
+    })
+
+    const result = await client.activity.getPresence('122')
+    expect(result.$serialized.data).toHaveProperty('owner_a07f1234')
+    expect(result.$serialized.data).not.toHaveProperty('ownerA07f1234')
   })
 
   test('POST /presence/update', async () => {

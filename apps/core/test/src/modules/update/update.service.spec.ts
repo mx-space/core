@@ -7,7 +7,6 @@ import { UpdateDownloadService } from '~/modules/update/update-download.service'
 import { UpdateInstallService } from '~/modules/update/update-install.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 
 class FakeRedis {
   private store = new Map<string, string | Buffer>()
@@ -121,19 +120,9 @@ describe('UpdateService', () => {
   let downloadService: UpdateDownloadService
   let installService: UpdateInstallService
   let fakeRedis: FakeRedis
-  let subpubMock: {
-    publish: ReturnType<typeof vi.fn>
-    subscribe: ReturnType<typeof vi.fn>
-    unsubscribe: ReturnType<typeof vi.fn>
-  }
 
   beforeEach(async () => {
     fakeRedis = new FakeRedis()
-    subpubMock = {
-      publish: vi.fn().mockResolvedValue(undefined),
-      subscribe: vi.fn(),
-      unsubscribe: vi.fn(),
-    }
 
     const mockHttpService = {
       axiosRef: { get: vi.fn() },
@@ -149,7 +138,6 @@ describe('UpdateService', () => {
         UpdateDownloadService,
         UpdateInstallService,
         { provide: RedisService, useValue: { getClient: () => fakeRedis } },
-        { provide: SubPubBridgeService, useValue: subpubMock },
         { provide: HttpService, useValue: mockHttpService },
         { provide: ConfigsService, useValue: mockConfigsService },
       ],
@@ -230,7 +218,7 @@ describe('UpdateService', () => {
   })
 
   describe('cluster broadcast', () => {
-    it('publishes cluster update event once for a new local job', async () => {
+    it('marks target version once for a new local job', async () => {
       vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue({
         assets: [
           {
@@ -249,16 +237,12 @@ describe('UpdateService', () => {
       )
 
       expect(messages.length).toBeGreaterThan(0)
-      expect(subpubMock.publish).toHaveBeenCalledTimes(1)
-      expect(subpubMock.publish).toHaveBeenCalledWith(
-        'admin.dashboard.update.triggered',
-        expect.objectContaining({
-          version: '1.2.0',
-        }),
+      expect(await fakeRedis.get('update:admin:target')).toEqual(
+        expect.stringContaining('"version":"1.2.0"'),
       )
     })
 
-    it('starts local update when receiving remote cluster event', async () => {
+    it('starts local update when reconciling remote target version', async () => {
       vi.spyOn(downloadService, 'fetchWithRetry').mockResolvedValue({
         assets: [
           {
@@ -272,18 +256,17 @@ describe('UpdateService', () => {
         .spyOn(downloadService, 'downloadWithMirrors')
         .mockResolvedValue(new ArrayBuffer(100))
 
-      const handler = subpubMock.subscribe.mock.calls.find(
-        ([event]) => event === 'admin.dashboard.update.triggered',
-      )?.[1] as ((payload: any) => void) | undefined
+      fakeRedis._set(
+        'update:admin:target',
+        JSON.stringify({
+          version: '1.3.0',
+          sourceHost: 'remote-node',
+          sourceInstanceId: 'remote-instance',
+          emittedAt: Date.now(),
+        }),
+      )
 
-      expect(handler).toBeTypeOf('function')
-
-      handler?.({
-        version: '1.3.0',
-        sourceHost: 'remote-node',
-        sourceInstanceId: 'remote-instance',
-        emittedAt: Date.now(),
-      })
+      await (service as any).reconcileTargetVersion()
 
       const messages = await subscribeOnce(service.downloadAdminAsset('1.3.0'))
 

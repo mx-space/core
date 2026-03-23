@@ -5,10 +5,11 @@
  */
 import { CacheModule as NestCacheModule } from '@nestjs/cache-manager'
 import { Global, Module } from '@nestjs/common'
+
 import { CacheService } from './cache.service'
+import { ConfigVersionService } from './config-version.service'
 import { RedisConfigService } from './redis.config.service'
 import { RedisService } from './redis.service'
-import { SubPubBridgeService } from './subpub.service'
 
 @Global()
 @Module({
@@ -21,9 +22,9 @@ import { SubPubBridgeService } from './subpub.service'
   providers: [
     RedisConfigService,
     CacheService,
-    SubPubBridgeService,
+    ConfigVersionService,
     RedisService,
   ],
-  exports: [CacheService, SubPubBridgeService, RedisService],
+  exports: [CacheService, ConfigVersionService, RedisService],
 })
 export class RedisModule {}

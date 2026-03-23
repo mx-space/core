@@ -10,9 +10,7 @@ import {
 import pc from 'picocolors'
 import { Observable, ReplaySubject } from 'rxjs'
 
-import { EventBusEvents } from '~/constants/event-bus.constant'
 import { RedisService } from '~/processors/redis/redis.service'
-import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { PKG } from '~/utils/pkg.util'
 
 import { UpdateDownloadService } from './update-download.service'
@@ -60,29 +58,21 @@ export class UpdateService implements OnModuleInit, OnModuleDestroy {
   private readonly STREAM_MAX_LEN = 200
   private readonly DOWNLOAD_TIMEOUT = 1800000
   private readonly INSTALL_LOCK_TTL_SEC = 120
+  private readonly TARGET_TTL_SEC = 1800
+  private readonly RECONCILE_INTERVAL_MS = 5000
   private readonly instanceId = `${hostname()}:${process.pid}:${Math.random().toString(36).slice(2, 8)}`
   private readonly runningUpdateSubjects = new Map<
     string,
     ReplaySubject<string>
   >()
-  private readonly clusterUpdateHandler = (
-    payload: AdminUpdateBroadcastPayload,
-  ) => {
-    if (!payload?.version || payload.sourceInstanceId === this.instanceId) {
-      return
-    }
-
-    this.logger.log(
-      `Received cluster admin update trigger for v${payload.version} from ${payload.sourceHost} (${payload.sourceInstanceId})`,
-    )
-    this.downloadAdminAsset(payload.version)
-  }
+  private readonly completedUpdateVersions = new Set<string>()
+  private reconcileTimer?: ReturnType<typeof setInterval>
+  private reconcilePromise?: Promise<void>
 
   constructor(
     private readonly redisService: RedisService,
     private readonly downloadService: UpdateDownloadService,
     private readonly installService: UpdateInstallService,
-    private readonly subpub: SubPubBridgeService,
   ) {}
 
   private get redis() {
@@ -91,6 +81,7 @@ export class UpdateService implements OnModuleInit, OnModuleDestroy {
 
   private buildKeys(version: string) {
     return {
+      targetKey: `${REDIS_KEY_PREFIX}:target`,
       lockKey: `${REDIS_KEY_PREFIX}:lock:${version}`,
       streamKey: `${REDIS_KEY_PREFIX}:stream:${version}`,
       bufferKey: `${REDIS_KEY_PREFIX}:buffer:${version}`,
@@ -100,28 +91,21 @@ export class UpdateService implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleInit() {
-    this.subpub.subscribe(
-      EventBusEvents.AdminDashboardUpdateTriggered,
-      this.clusterUpdateHandler,
-    )
+    this.reconcileTimer = setInterval(() => {
+      void this.reconcileTargetVersion()
+    }, this.RECONCILE_INTERVAL_MS)
+    void this.reconcileTargetVersion()
   }
 
   onModuleDestroy() {
-    this.subpub.unsubscribe(
-      EventBusEvents.AdminDashboardUpdateTriggered,
-      this.clusterUpdateHandler,
-    )
+    if (this.reconcileTimer) {
+      clearInterval(this.reconcileTimer)
+    }
   }
 
   startClusterAdminAssetUpdate(version: string): Observable<string> {
-    const shouldBroadcast = !this.runningUpdateSubjects.has(version)
-    const observable$ = this.downloadAdminAsset(version)
-
-    if (shouldBroadcast) {
-      void this.broadcastClusterUpdate(version)
-    }
-
-    return observable$
+    void this.markTargetVersion(version)
+    return this.downloadAdminAsset(version)
   }
 
   downloadAdminAsset(version: string) {
@@ -142,6 +126,7 @@ export class UpdateService implements OnModuleInit, OnModuleDestroy {
     version: string,
     subscriber: UpdateSubscriber,
   ) {
+    let completed = false
     try {
       const keys = this.buildKeys(version)
       const instanceId = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -159,10 +144,14 @@ export class UpdateService implements OnModuleInit, OnModuleDestroy {
       } else {
         await this.runAsFollower(version, keys, subscriber)
       }
+      completed = true
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error)
       subscriber.next(pc.red(`Update failed: ${errorMsg}\n`))
     } finally {
+      if (completed) {
+        this.completedUpdateVersions.add(version)
+      }
       this.runningUpdateSubjects.delete(version)
       subscriber.complete()
     }
@@ -188,6 +177,8 @@ export class UpdateService implements OnModuleInit, OnModuleDestroy {
     )
 
     try {
+      await this.markTargetVersion(version)
+
       const pushProgress = async (msg: string) => {
         subscriber.next(msg)
         await this.redis
@@ -268,6 +259,7 @@ export class UpdateService implements OnModuleInit, OnModuleDestroy {
 
       await this.redis.expire(keys.bufferKey, this.BUFFER_TTL_SEC)
       await this.redis.setex(keys.doneKey, this.BUFFER_TTL_SEC, version)
+      await this.markTargetVersion(version)
       await this.redis.xadd(
         keys.streamKey,
         'MAXLEN',
@@ -437,21 +429,69 @@ export class UpdateService implements OnModuleInit, OnModuleDestroy {
     )
   }
 
-  private async broadcastClusterUpdate(version: string) {
+  private async markTargetVersion(version: string) {
+    const { targetKey } = this.buildKeys(version)
     try {
-      await this.subpub.publish(EventBusEvents.AdminDashboardUpdateTriggered, {
-        version,
-        sourceHost: hostname(),
-        sourceInstanceId: this.instanceId,
-        emittedAt: Date.now(),
-      } satisfies AdminUpdateBroadcastPayload)
+      await this.redis.setex(
+        targetKey,
+        this.TARGET_TTL_SEC,
+        JSON.stringify({
+          version,
+          sourceHost: hostname(),
+          sourceInstanceId: this.instanceId,
+          emittedAt: Date.now(),
+        } satisfies AdminUpdateBroadcastPayload),
+      )
     } catch (error) {
       this.logger.warn(
-        `Failed to broadcast cluster admin update for v${version}: ${
+        `Failed to mark cluster admin target for v${version}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       )
     }
+  }
+
+  private async reconcileTargetVersion() {
+    if (this.reconcilePromise) {
+      return this.reconcilePromise
+    }
+
+    this.reconcilePromise = (async () => {
+      try {
+        const targetRaw = await this.redis.get(`${REDIS_KEY_PREFIX}:target`)
+        if (!targetRaw) {
+          return
+        }
+
+        const payload = JSON.parse(targetRaw) as AdminUpdateBroadcastPayload
+        if (!payload?.version) {
+          return
+        }
+
+        if (this.completedUpdateVersions.has(payload.version)) {
+          return
+        }
+
+        if (this.runningUpdateSubjects.has(payload.version)) {
+          return
+        }
+
+        this.logger.log(
+          `Reconciling cluster admin update for v${payload.version} from ${payload.sourceHost} (${payload.sourceInstanceId})`,
+        )
+        this.downloadAdminAsset(payload.version)
+      } catch (error) {
+        this.logger.warn(
+          `Failed to reconcile cluster admin target: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        )
+      }
+    })().finally(() => {
+      this.reconcilePromise = undefined
+    })
+
+    return this.reconcilePromise
   }
 
   private async acquireInstallLock(instanceId: string) {

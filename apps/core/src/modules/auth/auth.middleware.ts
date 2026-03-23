@@ -1,9 +1,14 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+
 import type { NestMiddleware, OnModuleInit } from '@nestjs/common'
 import { Inject } from '@nestjs/common'
-import { EventBusEvents } from '~/constants/event-bus.constant'
-import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import type { BetterAuthOptions } from 'better-auth'
+
+import {
+  ConfigVersionScopes,
+  ConfigVersionService,
+} from '~/processors/redis/config-version.service'
+
 import { ConfigsService } from '../configs/configs.service'
 import { AuthInstanceInjectKey } from './auth.constant'
 import { CreateAuth } from './auth.implement'
@@ -17,16 +22,44 @@ declare module 'http' {
 
 export class AuthMiddleware implements NestMiddleware, OnModuleInit {
   private authHandler: Awaited<ReturnType<typeof CreateAuth>>['handler']
+  private reloadPromise?: Promise<void>
+  private readonly appliedVersions = {
+    [ConfigVersionScopes.OAuth]: 0,
+    [ConfigVersionScopes.Url]: 0,
+  }
 
   constructor(
-    private readonly redisSub: SubPubBridgeService,
+    private readonly configVersionService: ConfigVersionService,
     private readonly configService: ConfigsService,
     @Inject(AuthInstanceInjectKey)
     private readonly authInstance: InjectAuthInstance,
   ) {}
 
   async onModuleInit() {
-    const handler = async () => {
+    await this.ensureAuthHandlerFresh(true)
+  }
+
+  private async ensureAuthHandlerFresh(force = false) {
+    const currentVersions = await this.configVersionService.getVersions(
+      [ConfigVersionScopes.OAuth, ConfigVersionScopes.Url] as const,
+      this.appliedVersions,
+    )
+    const isStale =
+      force ||
+      !this.authHandler ||
+      currentVersions.oauth !== this.appliedVersions.oauth ||
+      currentVersions.url !== this.appliedVersions.url
+
+    if (!isStale) {
+      return
+    }
+
+    if (this.reloadPromise) {
+      await this.reloadPromise
+      return
+    }
+
+    this.reloadPromise = (async () => {
       const oauth = await this.configService.get('oauth')
       const urls = await this.configService.get('url')
 
@@ -37,8 +70,8 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
           const type = provider.type as string
 
           const mergedConfig = {
-            ...(oauth.public?.[type] || {}),
-            ...(oauth.secrets?.[type] || {}),
+            ...oauth.public?.[type],
+            ...oauth.secrets?.[type],
           }
           switch (type) {
             case 'github': {
@@ -91,11 +124,12 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
       this.authHandler = handler
 
       this.authInstance.set(auth)
-    }
-    this.redisSub.subscribe(EventBusEvents.OauthChanged, handler)
-    this.redisSub.subscribe(EventBusEvents.AppUrlChanged, handler)
+      Object.assign(this.appliedVersions, currentVersions)
+    })().finally(() => {
+      this.reloadPromise = undefined
+    })
 
-    await handler()
+    await this.reloadPromise
   }
 
   async use(req: IncomingMessage, res: ServerResponse, next: () => void) {
@@ -114,6 +148,8 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
       next()
       return
     }
+
+    await this.ensureAuthHandlerFresh()
 
     return await this.authHandler(req, res)
   }

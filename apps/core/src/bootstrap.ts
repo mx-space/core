@@ -17,6 +17,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { extendedZodValidationPipeInstance } from './common/zod'
 import { logger } from './global/consola.global'
 import { isDev, isMainProcess, isTest } from './global/env.global'
+import { RedisService } from './processors/redis/redis.service'
 import { checkInit } from './utils/check-init.util'
 import {
   sendTelemetry,
@@ -80,7 +81,8 @@ export async function bootstrap() {
 
   app.useGlobalPipes(extendedZodValidationPipeInstance)
   app.useGlobalGuards(new SpiderGuard())
-  !isTest && app.useWebSocketAdapter(new RedisIoAdapter(app))
+  !isTest &&
+    app.useWebSocketAdapter(new RedisIoAdapter(app, app.get(RedisService)))
 
   await app.listen(
     {

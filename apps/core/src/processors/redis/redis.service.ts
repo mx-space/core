@@ -71,8 +71,44 @@ export class RedisService {
     return this.redisClient.status === 'ready'
   }
 
+  public isClientReady(client: IORedis | undefined) {
+    return client?.status === 'ready'
+  }
+
   public getStatus() {
     return this.redisClient.status
+  }
+
+  public duplicateClient() {
+    return this.redisClient.duplicate()
+  }
+
+  public waitForReady(client: IORedis = this.redisClient, timeoutMs = 15000) {
+    if (this.isClientReady(client)) {
+      return Promise.resolve()
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      const onReady = () => {
+        cleanup()
+        resolve()
+      }
+      const onTimeout = () => {
+        cleanup()
+        reject(
+          new Error(
+            `Redis client did not become ready within ${timeoutMs}ms (status: ${client.status})`,
+          ),
+        )
+      }
+      const cleanup = () => {
+        clearTimeout(timer)
+        client.off('ready', onReady)
+      }
+
+      const timer = setTimeout(onTimeout, timeoutMs)
+      client.once('ready', onReady)
+    })
   }
 
   public isUnavailableError(error: unknown) {

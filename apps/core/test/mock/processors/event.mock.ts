@@ -1,29 +1,38 @@
 import { EventEmitter2 } from '@nestjs/event-emitter'
-import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { SubPubBridgeService } from '~/processors/redis/subpub.service'
 import { defineProviders } from 'test/helper/defineProvider'
+
+import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { ConfigVersionService } from '~/processors/redis/config-version.service'
 
 export const eventEmitterProvider = defineProviders([
   {
     provide: EventEmitter2,
     useValue: {
-      emit(event, data) {
+      emit(_event, _data) {
         return true
       },
     },
   },
   {
-    provide: SubPubBridgeService,
+    provide: ConfigVersionService,
     useValue: {
-      async publish(event, data) {},
-      async subscribe(event, callback) {},
-      async unsubscribe(event, callback) {},
+      async bump() {
+        return 0
+      },
+      async getVersion(_scope, fallback = 0) {
+        return fallback
+      },
+      async getVersions(scopes, fallback = {}) {
+        return Object.fromEntries(
+          scopes.map((scope) => [scope, fallback[scope] ?? 0]),
+        )
+      },
     },
   },
   {
     provide: EventManagerService,
     useValue: {
-      async broadcast(event, data) {},
+      async broadcast(_event, _data) {},
       async emit() {},
       on() {
         return noop

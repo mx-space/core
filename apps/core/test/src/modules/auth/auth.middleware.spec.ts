@@ -1,10 +1,15 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { AuthMiddleware } from '~/modules/auth/auth.middleware'
+
 import { vi } from 'vitest'
+
+import { AuthMiddleware } from '~/modules/auth/auth.middleware'
 
 function createMiddleware(handler?: any) {
   const middleware = Object.create(AuthMiddleware.prototype) as AuthMiddleware
   ;(middleware as any).authHandler = handler ?? null
+  ;(middleware as any).ensureAuthHandlerFresh = vi
+    .fn()
+    .mockResolvedValue(undefined)
   return middleware
 }
 
@@ -87,6 +92,7 @@ describe('AuthMiddleware', () => {
 
       await middleware.use(req, res, next)
 
+      expect((middleware as any).ensureAuthHandlerFresh).toHaveBeenCalledOnce()
       expect(handler).toHaveBeenCalledWith(req, res)
       expect(next).not.toHaveBeenCalled()
     })
@@ -101,6 +107,7 @@ describe('AuthMiddleware', () => {
 
       await middleware.use(req, res, next)
 
+      expect((middleware as any).ensureAuthHandlerFresh).toHaveBeenCalledOnce()
       expect(handler).toHaveBeenCalledWith(req, res)
       expect(next).not.toHaveBeenCalled()
     })
@@ -115,6 +122,7 @@ describe('AuthMiddleware', () => {
 
       await middleware.use(req, res, next)
 
+      expect((middleware as any).ensureAuthHandlerFresh).toHaveBeenCalledOnce()
       expect(handler).toHaveBeenCalledWith(req, res)
       expect(next).not.toHaveBeenCalled()
     })

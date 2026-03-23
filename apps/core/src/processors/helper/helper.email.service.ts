@@ -1,16 +1,20 @@
-import cluster from 'node:cluster'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
+import { createTransport } from 'nodemailer'
+import type Mail from 'nodemailer/lib/mailer'
+import { Resend } from 'resend'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { OwnerService } from '~/modules/owner/owner.service'
-import { createTransport } from 'nodemailer'
-import type Mail from 'nodemailer/lib/mailer'
-import { Resend } from 'resend'
-import { SubPubBridgeService } from '../redis/subpub.service'
+import {
+  ConfigVersionScopes,
+  ConfigVersionService,
+} from '~/processors/redis/config-version.service'
+
 import { AssetService } from './helper.asset.service'
 
 type MailProvider = 'smtp' | 'resend'
@@ -25,22 +29,20 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   private instance?: MailClient
   private provider: MailProvider = 'smtp'
   private logger: Logger
+  private refreshPromise?: Promise<void>
+  private appliedMailVersion = 0
+  private mailConfigSynced = false
   constructor(
     private readonly configsService: ConfigsService,
     private readonly assetService: AssetService,
-    private readonly subpub: SubPubBridgeService,
+    private readonly configVersionService: ConfigVersionService,
     private readonly ownerService: OwnerService,
   ) {
     this.logger = new Logger(EmailService.name)
   }
 
   onModuleInit() {
-    this.init()
-    if (cluster.isWorker) {
-      this.subpub.subscribe(EventBusEvents.EmailInit, () => {
-        this.init()
-      })
-    }
+    void this.ensureMailTransportFresh(true)
   }
 
   onModuleDestroy() {
@@ -101,84 +103,119 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
 
   @OnEvent(EventBusEvents.EmailInit)
   init() {
-    this.configsService
-      .waitForConfigReady()
-      .then(({ mailOptions }) => {
-        this.teardown()
-        this.provider = (mailOptions.provider || 'smtp') as MailProvider
-
-        if (this.provider === 'resend') {
-          const apiKey = mailOptions.resend?.apiKey
-          if (!apiKey) {
-            this.logger.warn('Resend API Key 未配置，邮件服务未启动')
-            return
-          }
-          const resend = new Resend(apiKey)
-          this.instance = {
-            sendMail: async (options: Mail.Options) => {
-              const from = this.normalizeSingleAddress(
-                options.from as unknown as
-                  | string
-                  | Mail.Address
-                  | Array<string | Mail.Address>
-                  | undefined,
-              )
-              const to = this.normalizeAddressList(options.to)
-              if (!from || !to) {
-                throw new BizException('邮件发送失败')
-              }
-              const cc = this.normalizeAddressList(options.cc)
-              const bcc = this.normalizeAddressList(options.bcc)
-              const replyTo = this.normalizeSingleAddress(options.replyTo)
-              const html =
-                this.normalizeContent(options.html) ||
-                this.normalizeContent(options.text)
-              if (!html) {
-                throw new BizException('邮件发送失败')
-              }
-
-              return resend.emails.send({
-                from,
-                to,
-                subject: options.subject as string,
-                html,
-                text: this.normalizeContent(options.text),
-                cc,
-                bcc,
-                replyTo,
-                headers: options.headers as Record<string, string> | undefined,
-              })
-            },
-          }
-        } else {
-          const { smtp } = mailOptions
-          const { user, pass, host, port, secure } = smtp || {}
-          if (!user && !pass) {
-            const message = '未启动邮件通知'
-            this.logger.warn(message)
-            return
-          }
-          this.instance = createTransport({
-            host: host || '',
-            port: Number.parseInt((port as any) || '465'),
-            secure,
-            auth: { user, pass },
-            tls: {
-              rejectUnauthorized: false,
-            },
-          })
-        }
-
-        this.checkIsReady().then((ready) => {
-          if (ready) {
-            this.logger.log('送信服务已经加载完毕！')
-          }
-        })
-      })
-      .catch(() => {})
+    void this.ensureMailTransportFresh(true)
   }
 
-  async checkIsReady() {
+  private async ensureMailTransportFresh(force = false) {
+    const nextVersion = await this.configVersionService.getVersion(
+      ConfigVersionScopes.Mail,
+      this.appliedMailVersion,
+    )
+    const isStale =
+      force || !this.mailConfigSynced || nextVersion !== this.appliedMailVersion
+
+    if (!isStale) {
+      return
+    }
+
+    if (this.refreshPromise) {
+      await this.refreshPromise
+      return
+    }
+
+    this.refreshPromise = this.refreshTransport(nextVersion).finally(() => {
+      this.refreshPromise = undefined
+    })
+
+    await this.refreshPromise
+  }
+
+  private async refreshTransport(nextVersion: number) {
+    try {
+      const { mailOptions } = await this.configsService.waitForConfigReady()
+      this.teardown()
+      this.provider = (mailOptions.provider || 'smtp') as MailProvider
+
+      if (this.provider === 'resend') {
+        const apiKey = mailOptions.resend?.apiKey
+        if (!apiKey) {
+          this.logger.warn('Resend API Key 未配置，邮件服务未启动')
+          this.appliedMailVersion = nextVersion
+          this.mailConfigSynced = true
+          return
+        }
+        const resend = new Resend(apiKey)
+        this.instance = {
+          sendMail: async (options: Mail.Options) => {
+            const from = this.normalizeSingleAddress(
+              options.from as unknown as
+                | string
+                | Mail.Address
+                | Array<string | Mail.Address>
+                | undefined,
+            )
+            const to = this.normalizeAddressList(options.to)
+            if (!from || !to) {
+              throw new BizException('邮件发送失败')
+            }
+            const cc = this.normalizeAddressList(options.cc)
+            const bcc = this.normalizeAddressList(options.bcc)
+            const replyTo = this.normalizeSingleAddress(options.replyTo)
+            const html =
+              this.normalizeContent(options.html) ||
+              this.normalizeContent(options.text)
+            if (!html) {
+              throw new BizException('邮件发送失败')
+            }
+
+            return resend.emails.send({
+              from,
+              to,
+              subject: options.subject as string,
+              html,
+              text: this.normalizeContent(options.text),
+              cc,
+              bcc,
+              replyTo,
+              headers: options.headers as Record<string, string> | undefined,
+            })
+          },
+        }
+      } else {
+        const { smtp } = mailOptions
+        const { user, pass, host, port, secure } = smtp || {}
+        if (!user && !pass) {
+          this.logger.warn('未启动邮件通知')
+          this.appliedMailVersion = nextVersion
+          this.mailConfigSynced = true
+          return
+        }
+        this.instance = createTransport({
+          host: host || '',
+          port: Number.parseInt((port as any) || '465'),
+          secure,
+          auth: { user, pass },
+          tls: {
+            rejectUnauthorized: false,
+          },
+        })
+      }
+
+      this.appliedMailVersion = nextVersion
+      this.mailConfigSynced = true
+      const ready = await this.checkIsReady(false)
+      if (ready) {
+        this.logger.log('送信服务已经加载完毕！')
+      }
+    } catch (error) {
+      this.logger.error(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  async checkIsReady(ensureFresh = true) {
+    if (ensureFresh) {
+      await this.ensureMailTransportFresh()
+    }
     if (!this.instance) {
       return false
     }
@@ -207,6 +244,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   }
 
   async sendTestEmail() {
+    await this.ensureMailTransportFresh()
     const owner = await this.ownerService.getOwner()
     const mailOptions = await this.configsService.get('mailOptions')
     const senderEmail = mailOptions.from || mailOptions.smtp?.user
@@ -224,6 +262,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
 
   async send(options: Mail.Options) {
     try {
+      await this.ensureMailTransportFresh()
       if (!this.instance) {
         throw new Error('邮件服务未初始化')
       }

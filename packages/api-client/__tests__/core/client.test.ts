@@ -1,4 +1,7 @@
-/* eslint-disable unicorn/custom-error-definition */
+import type { AxiosResponse } from 'axios'
+import { AxiosError } from 'axios'
+import { vi } from 'vitest'
+
 import { axiosAdaptor } from '~/adaptors/axios'
 import { umiAdaptor } from '~/adaptors/umi-request'
 import {
@@ -10,9 +13,6 @@ import {
 import { createClient, RequestError } from '~/core'
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { ClientOptions } from '~/interfaces/client'
-import { AxiosError } from 'axios'
-import type { AxiosResponse } from 'axios'
-import { vi } from 'vitest'
 
 const { spyOn } = vi
 
@@ -197,6 +197,48 @@ describe('test client', () => {
 
     const data = await client.proxy.a.get()
     expect(data).toBe('foo')
+  })
+
+  it('should allow request-level response transform override', async () => {
+    const client = generateClient<AxiosResponse>(axiosAdaptor)
+    spyOn(axiosAdaptor, 'get').mockImplementation((url) => {
+      if (url === 'http://127.0.0.1:2323/a') {
+        return Promise.resolve({
+          data: {
+            foo_bar: 1,
+            nested_value: {
+              bar_baz: 2,
+            },
+          },
+          status: 200,
+        })
+      }
+
+      return Promise.resolve({ data: null })
+    })
+
+    const data = await client.proxy.a.get({
+      transformResponse: (payload) => ({
+        raw: payload,
+      }),
+    })
+
+    expect(data).toStrictEqual({
+      raw: {
+        foo_bar: 1,
+        nested_value: {
+          bar_baz: 2,
+        },
+      },
+    })
+    expect(data.$serialized).toStrictEqual({
+      raw: {
+        foo_bar: 1,
+        nested_value: {
+          bar_baz: 2,
+        },
+      },
+    })
   })
 
   it('should throw exception with custom message and code', async () => {

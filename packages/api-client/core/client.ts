@@ -10,6 +10,7 @@ import type { Class } from '~/interfaces/types'
 import { isPlainObject } from '~/utils'
 import { camelcaseKeys } from '~/utils/camelcase-keys'
 import { resolveFullPath } from '~/utils/path'
+
 import { allControllerNames } from '../controllers'
 import { attachRequestMethod } from './attach-request'
 import { RequestError } from './error'
@@ -140,14 +141,18 @@ class HTTPClient<
               }
             }
           if (methods.includes(name)) {
-            return async (options: RequestOptions) => {
+            return async (options: RequestOptions = {}) => {
               const url = resolveFullPath(that.endpoint, route.join('/'))
               route.length = 0
+              const {
+                transformResponse: perRequestTransformResponse,
+                ...requestOptions
+              } = options
               let res: Record<string, any> & { data: any }
               try {
                 res = await manager.request({
                   method: name,
-                  ...options,
+                  ...requestOptions,
                   url,
                 })
               } catch (error: any) {
@@ -178,10 +183,15 @@ class HTTPClient<
                 return null
               }
 
+              const responseTransformer =
+                perRequestTransformResponse === undefined
+                  ? that.options.transformResponse
+                  : perRequestTransformResponse || undefined
+
               const cameledObject =
                 (Array.isArray(data) || isPlainObject(data)) &&
-                that.options.transformResponse
-                  ? that.options.transformResponse(data)
+                responseTransformer
+                  ? responseTransformer(data)
                   : data
 
               let nextObject: any = cameledObject
