@@ -3,6 +3,7 @@ import { AIProviderType } from '../ai.types'
 import { AnthropicRuntime } from './anthropic.runtime'
 import type { IModelRuntime } from './model-runtime.interface'
 import { OpenAICompatibleRuntime } from './openai-compatible.runtime'
+import type { RuntimeConfig } from './types'
 
 export function createModelRuntime(
   config: AIProviderConfig,
@@ -10,7 +11,7 @@ export function createModelRuntime(
 ): IModelRuntime {
   const model = modelOverride || config.defaultModel
 
-  const runtimeConfig = {
+  const runtimeConfig: RuntimeConfig = {
     apiKey: config.apiKey,
     endpoint: config.endpoint,
     model,
@@ -19,16 +20,19 @@ export function createModelRuntime(
   }
 
   switch (config.type) {
-    case AIProviderType.Anthropic:
+    case AIProviderType.Anthropic: {
       return new AnthropicRuntime(runtimeConfig)
+    }
 
     case AIProviderType.OpenAI:
     case AIProviderType.OpenAICompatible:
-    case AIProviderType.OpenRouter:
+    case AIProviderType.OpenRouter: {
       return new OpenAICompatibleRuntime(runtimeConfig)
+    }
 
-    default:
+    default: {
       throw new Error(`Unsupported provider type: ${config.type}`)
+    }
   }
 }
 

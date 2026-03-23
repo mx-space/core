@@ -92,6 +92,45 @@ const EN_TO_ZH: Record<string, string> = {
   'demo|||lexical|||renderer': '演示|||Lexical|||渲染器',
 }
 
+function translateLexicalChunkEntries(
+  segments: Record<string, unknown>,
+  dictionary: Record<string, string>,
+  fallback?: (text: string) => string,
+): Record<string, string | Record<string, string>> {
+  const translations: Record<string, string | Record<string, string>> = {}
+
+  for (const [id, text] of Object.entries(segments)) {
+    if (typeof text === 'string') {
+      translations[id] = dictionary[text] ?? fallback?.(text) ?? text
+      continue
+    }
+
+    if (
+      text &&
+      typeof text === 'object' &&
+      !Array.isArray(text) &&
+      (text as any).type === 'text.group' &&
+      Array.isArray((text as any).segments)
+    ) {
+      const groupSegments = (text as any).segments as Array<{
+        id: string
+        text: string
+      }>
+      translations[id] = Object.fromEntries(
+        groupSegments.map(({ id: segmentId, text: segmentText }) => [
+          segmentId,
+          dictionary[segmentText] ?? fallback?.(segmentText) ?? segmentText,
+        ]),
+      )
+      continue
+    }
+
+    throw new TypeError(`Unsupported chunk entry for ${id}`)
+  }
+
+  return translations
+}
+
 // Recursively assert two JSON trees have identical structure.
 // Only text node `.text`, details `.summary`, and footnote-section `.definitions` may differ.
 function assertShapeMatch(original: any, translated: any, path = 'root'): void {
@@ -254,12 +293,12 @@ describe('translateLexicalContent (real-world data)', () => {
           const segmentsSection = userPrompt.split(
             '## Segments to translate\n',
           )[1]
-          const segments = JSON.parse(segmentsSection) as Record<string, string>
+          const segments = JSON.parse(segmentsSection) as Record<
+            string,
+            unknown
+          >
 
-          const translations: Record<string, string> = {}
-          for (const [id, text] of Object.entries(segments)) {
-            translations[id] = EN_TO_ZH[text] ?? text
-          }
+          const translations = translateLexicalChunkEntries(segments, EN_TO_ZH)
 
           return {
             text: JSON.stringify({ sourceLang: 'en', translations }),
@@ -379,6 +418,51 @@ describe('translateLexicalContent (real-world data)', () => {
     expect(rootChildren).toMatchSnapshot()
   })
 
+  it('should prefer structured output for lexical chunk translation when runtime supports it', async () => {
+    const editorStateJson = JSON.stringify(lexicalData)
+    const content = {
+      title: 'Enhanced Renderers Demo',
+      text: '',
+      summary: 'A demo showcasing enhanced renderers',
+      tags: ['demo', 'lexical', 'renderer'],
+      contentFormat: ContentFormat.Lexical,
+      content: editorStateJson,
+    }
+
+    const mockRuntime = {
+      generateStructured: vi.fn(async ({ prompt }: { prompt: string }) => {
+        const segmentsSection = prompt.split('## Segments to translate\n')[1]
+        const segments = JSON.parse(segmentsSection) as Record<string, unknown>
+        const translations = translateLexicalChunkEntries(segments, EN_TO_ZH)
+
+        return {
+          output: {
+            sourceLang: 'en',
+            translations,
+          },
+        }
+      }),
+      generateText: vi.fn(),
+    }
+
+    const result = await lexicalStrategy.translate(
+      content,
+      'zh',
+      mockRuntime as unknown as IModelRuntime,
+      { model: 'structured-model', provider: 'structured-provider' },
+      {},
+    )
+
+    expect(mockRuntime.generateStructured).toHaveBeenCalled()
+    expect(mockRuntime.generateText).not.toHaveBeenCalled()
+    expect(result.sourceLang).toBe('en')
+    expect(result.title).toBe('增强渲染器演示')
+    expect(result.summary).toBe('展示增强渲染器的演示文档')
+
+    const translated = JSON.parse(result.content)
+    expect(translated.root.children[0].children[0].text).toBe('增强渲染器演示')
+  })
+
   it('should handle streaming runtime variant', async () => {
     const editorStateJson = JSON.stringify(lexicalData)
     const content = {
@@ -400,12 +484,9 @@ describe('translateLexicalContent (real-world data)', () => {
         const segmentsSection = userPrompt.split(
           '## Segments to translate\n',
         )[1]
-        const segments = JSON.parse(segmentsSection) as Record<string, string>
+        const segments = JSON.parse(segmentsSection) as Record<string, unknown>
 
-        const translations: Record<string, string> = {}
-        for (const [id, text] of Object.entries(segments)) {
-          translations[id] = EN_TO_ZH[text] ?? text
-        }
+        const translations = translateLexicalChunkEntries(segments, EN_TO_ZH)
 
         const fullJson = JSON.stringify({
           sourceLang: 'en',
@@ -438,6 +519,100 @@ describe('translateLexicalContent (real-world data)', () => {
     assertShapeMatch(lexicalData, translated)
   })
 
+  it('should group adjacent inline text nodes into a structured AI-visible segment and split them back by keys', async () => {
+    const editorStateJson = JSON.stringify({
+      root: {
+        type: 'root',
+        direction: 'ltr',
+        children: [
+          {
+            type: 'paragraph',
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            children: [
+              {
+                type: 'text',
+                text: '后面她才开始慢慢地想要寻回记忆。',
+                format: 0,
+                detail: 0,
+                mode: 'normal',
+                style: '',
+              },
+              {
+                type: 'text',
+                text: '记忆会被遗忘，但爱不会。',
+                format: 0,
+                detail: 0,
+                mode: 'normal',
+                style: 'color: #3b82f6;',
+              },
+            ],
+          },
+        ],
+      },
+    })
+
+    const mockRuntime = {
+      generateText: vi.fn(
+        async ({
+          messages,
+        }: {
+          messages: Array<{ role: string; content: string }>
+        }) => {
+          const userPrompt = messages[1].content
+          const segments = JSON.parse(
+            userPrompt.split('## Segments to translate\n')[1],
+          ) as Record<string, unknown>
+
+          return {
+            text: JSON.stringify({
+              sourceLang: 'zh',
+              translations: {
+                ...translateLexicalChunkEntries(segments, {
+                  '后面她才开始慢慢地想要寻回记忆。':
+                    'Only later did she begin trying to recover her memories.',
+                  '记忆会被遗忘，但爱不会。':
+                    ' Love may be forgotten, but love itself remains.',
+                }),
+                __title__: 'Title',
+              },
+            }),
+          }
+        },
+      ),
+    }
+
+    const result = await lexicalStrategy.translate(
+      {
+        title: 'Title',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: editorStateJson,
+      },
+      'en',
+      mockRuntime as unknown as IModelRuntime,
+      { model: 'test-model', provider: 'test-provider' },
+      {},
+    )
+
+    const firstPrompt =
+      mockRuntime.generateText.mock.calls[0][0].messages[1].content
+    expect(firstPrompt).toContain('"type":"text.group"')
+    expect(firstPrompt).toContain('"segments":[{"id":"t_0"')
+
+    const translated = JSON.parse(result.content)
+    expect(translated.root.children[0].children[0].text).toBe(
+      'Only later did she begin trying to recover her memories.',
+    )
+    expect(translated.root.children[0].children[1].text).toBe(
+      ' Love may be forgotten, but love itself remains.',
+    )
+    expect(translated.root.children[0].children[1].style).toBe(
+      'color: #3b82f6;',
+    )
+  })
+
   it('should translate complex doc with banner, alertQuote, details, table, mermaid', async () => {
     const editorStateJson = JSON.stringify(complexDocData)
     const content = {
@@ -460,12 +635,15 @@ describe('translateLexicalContent (real-world data)', () => {
           const segmentsSection = userPrompt.split(
             '## Segments to translate\n',
           )[1]
-          const segments = JSON.parse(segmentsSection) as Record<string, string>
+          const segments = JSON.parse(segmentsSection) as Record<
+            string,
+            unknown
+          >
 
-          const translations: Record<string, string> = {}
-          for (const [id, text] of Object.entries(segments)) {
-            translations[id] = COMPLEX_EN_TO_ZH[text] ?? text
-          }
+          const translations = translateLexicalChunkEntries(
+            segments,
+            COMPLEX_EN_TO_ZH,
+          )
 
           return {
             text: JSON.stringify({ sourceLang: 'en', translations }),
@@ -625,12 +803,13 @@ describe('incremental translation', () => {
         const segmentsSection = userPrompt.split(
           '## Segments to translate\n',
         )[1]
-        const segments = JSON.parse(segmentsSection) as Record<string, string>
+        const segments = JSON.parse(segmentsSection) as Record<string, unknown>
 
-        const result: Record<string, string> = {}
-        for (const [id, text] of Object.entries(segments)) {
-          result[id] = translations[text] ?? `[TR]${text}`
-        }
+        const result = translateLexicalChunkEntries(
+          segments,
+          translations,
+          (text) => `[TR]${text}`,
+        )
 
         return {
           text: JSON.stringify({ sourceLang: 'zh', translations: result }),

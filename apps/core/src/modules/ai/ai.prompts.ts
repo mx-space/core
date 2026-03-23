@@ -220,20 +220,7 @@ IMPORTANT:
 - Do NOT preserve the surrounding sentence if it is natural language
 - Do NOT leave an entire sentence or paragraph untranslated just because it contains technical terms
 
-## Emoji Preservation Rules
-- NEVER translate, explain, replace, or spell out emoji as words
-- Preserve every emoji exactly as written, including order, count, spacing, and surrounding punctuation
-- If a source segment is only emoji, return the exact same emoji unchanged
-- If natural language and emoji appear together, translate only the natural-language part and keep the emoji in the same position
-
-Examples:
-- Source: 🍞
-- Correct: 🍞
-- Wrong: bread
-
-- Source: 我今天吃了🍞
-- Correct (to English): I ate 🍞 today
-- Wrong: I ate bread today
+- Preserve emoji exactly as written; never translate, explain, replace, or spell them out, keep their order, count, spacing, punctuation, and position unchanged, return emoji-only content unchanged, and translate only the surrounding natural language
 
 ## Technical Terms Rule
 Keep technical terms unchanged when they function as established names, identifiers, commands, protocols, libraries, frameworks, products, file formats, programming languages, package managers, database names, or other domain-specific terms.
@@ -444,26 +431,40 @@ Use the provided document context for coherent, fluent translation.
 - Translate ONLY the text values in the "segments" object
 - Preserve technical terms: API, SDK, React, Node.js, WebGL, OAuth, JWT, JSON, HTTP, CSS, HTML, Vue, Docker, Git, GitHub, npm, pnpm, yarn, TypeScript, JavaScript, Python, Rust, Go, Vite, Bun, etc.
 - Keep code, URLs, HTML/JSX tags unchanged
-- NEVER translate, explain, replace, or spell out emoji as words
-- Preserve emoji exactly as written, including order, count, spacing, and position in the sentence
+- Escape any double quotes that appear inside translated string values so the final JSON remains valid
+- If quoted speech appears inside a translated value, prefer typographic quotes or single quotes instead of raw ASCII double quotes unless escaping is unavoidable
+- Preserve emoji exactly as written; never translate, explain, replace, or spell them out, keep their order, count, spacing, punctuation, and position unchanged, return emoji-only content unchanged, and translate only the surrounding natural language
 - Ensure natural, fluent translation using the context for reference
 - DO NOT translate segment IDs or keys
 - If title/subtitle/summary/tags keys are present in segments, translate them too
 - For __tags__, preserve the ||| delimiter between tags
+- Some segment values may be group objects with this shape:
+  {"type":"text.group","segments":[{"id":"t_0","text":"part A"},{"id":"t_1","text":"part B"}]}
+- For a group object:
+  - Read the "segments" array in order and treat the concatenation of those items as one continuous sentence or paragraph for translation
+  - The concatenation of the returned segment values in array order MUST exactly form the final translated sentence or paragraph, including spaces and punctuation
+  - Return an object for that same key, not a string
+  - The returned object MUST contain EVERY "id" from the input "segments" array
+  - Translate each segment so that concatenating the returned segment values in the same array order reads naturally in the target language
+  - You MAY add leading or trailing whitespace inside a segment value when needed for natural spacing
+  - If the translated text needs visible whitespace at a segment boundary, put that whitespace at the end of the previous segment or the start of the next one
+  - Example valid output: input segments ["Hello.", "World."] -> {"t_0":"Hello. ","t_1":"World."} or {"t_0":"Hello.","t_1":" World."}
+  - Example invalid output: {"t_0":"Hello.","t_1":"World."} because concatenation loses the required space
+  - Do NOT add or remove segment keys
+  - Do NOT return extra wrapper fields like "type" or "segments" in the output
 
 ## Key Completeness (CRITICAL)
 - The "translations" object MUST contain EVERY key from the input "segments" object
 - Do NOT omit any key, even if the value appears untranslatable
 - Do NOT add keys that were not in the input
-- If a segment needs no translation (e.g. code, URL), return it unchanged
-- If a segment contains only emoji, return it exactly unchanged
+- If a segment needs no translation (e.g. code, URL, emoji-only content), return it unchanged
 
 ## Output Format (STRICT)
 NEVER output anything except the raw JSON object.
 The FIRST character of your response MUST be \`{\`.
 The LAST character of your response MUST be \`}\`.
 
-{"sourceLang":"xx","translations":{"id":"translated text",...}}`
+{"sourceLang":"xx","translations":{"plain_id":"translated text","group_id":{"t_0":"translated part A","t_1":" translated part B"}}}`
 
 const TRANSLATION_CHUNK_JAPANESE_RUBY = `
 
@@ -486,7 +487,7 @@ const buildTranslationChunkPrompt = (
   targetLanguage: string,
   chunk: {
     documentContext: string
-    textEntries: Record<string, string>
+    textEntries: Record<string, unknown>
     segmentMeta?: Record<string, string>
   },
 ) => {
@@ -508,6 +509,47 @@ ${JSON.stringify(chunk.segmentMeta)}`
 ${JSON.stringify(chunk.textEntries)}`
 
   return prompt
+}
+
+const buildTranslationChunkSchema = (textEntries: Record<string, unknown>) => {
+  const translationShape: Record<string, z.ZodTypeAny> = {}
+
+  for (const [key, value] of Object.entries(textEntries)) {
+    if (
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      (value as any).type === 'text.group' &&
+      Array.isArray((value as any).segments)
+    ) {
+      const groupShape = Object.fromEntries(
+        ((value as any).segments as Array<{ id: string }>).map((segment) => [
+          segment.id,
+          z.string(),
+        ]),
+      )
+
+      translationShape[key] = z
+        .object(groupShape)
+        .strict()
+        .describe(`Translated segment map for group ${key}`)
+      continue
+    }
+
+    translationShape[key] = z.string()
+  }
+
+  return z.object({
+    sourceLang: z
+      .string()
+      .describe('Detected source language as an ISO 639-1 code'),
+    translations: z
+      .object(translationShape)
+      .strict()
+      .describe(
+        'Exact map of segment key to translated text, or group key to a translated member-id map',
+      ),
+  })
 }
 
 const FIELD_TRANSLATION_SYSTEM = `Role: Professional translator for short metadata fields.
@@ -737,7 +779,7 @@ COMMENT`,
     targetLang: string,
     chunk: {
       documentContext: string
-      textEntries: Record<string, string>
+      textEntries: Record<string, unknown>
       segmentMeta?: Record<string, string>
     },
   ) => {
@@ -746,6 +788,7 @@ COMMENT`,
     return {
       systemPrompt: buildTranslationChunkSystem(isJapanese),
       prompt: buildTranslationChunkPrompt(targetLanguage, chunk),
+      schema: buildTranslationChunkSchema(chunk.textEntries),
       reasoningEffort: NO_REASONING,
     }
   },

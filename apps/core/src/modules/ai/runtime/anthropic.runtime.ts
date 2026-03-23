@@ -3,6 +3,7 @@ import type { z } from 'zod'
 
 import { isDev } from '~/global/env.global'
 
+import { buildAiSdkDefaultHeaders } from './ai-sdk-attribution'
 import { BaseRuntime } from './base.runtime'
 import type {
   GenerateStructuredOptions,
@@ -16,20 +17,50 @@ import type {
   TextStreamChunk,
 } from './types'
 
+/** Prompt caching breakpoint (Anthropic Messages API). */
+const EPHEMERAL_CACHE: Anthropic.CacheControlEphemeral = { type: 'ephemeral' }
+
+function systemWithPromptCache(
+  system: string | undefined,
+): string | Anthropic.TextBlockParam[] | undefined {
+  if (system === undefined || !system.trim()) {
+    return undefined
+  }
+  return [
+    {
+      type: 'text',
+      text: system,
+      cache_control: EPHEMERAL_CACHE,
+    },
+  ]
+}
+
+function userContentWithPromptCache(
+  text: string,
+): Anthropic.ContentBlockParam[] {
+  return [{ type: 'text', text, cache_control: EPHEMERAL_CACHE }]
+}
+
 // https://docs.anthropic.com/en/docs/about-claude/models
 const ANTHROPIC_MODELS: ModelInfo[] = [
-  // Claude 4.x series
-  { id: 'claude-opus-4-20250514', name: 'Claude Opus 4' },
+  // Claude 4.6
+  { id: 'claude-opus-4-6', name: 'Claude Opus 4.6' },
+  { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6' },
+  { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5' },
+  // Claude 4.5
+  { id: 'claude-sonnet-4-5-20250929', name: 'Claude Sonnet 4.5' },
+  { id: 'claude-opus-4-5-20251101', name: 'Claude Opus 4.5' },
+  // Claude 4.1 / 4.0
+  { id: 'claude-opus-4-1-20250805', name: 'Claude Opus 4.1' },
   { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4' },
-  // Claude 4.1 series
-  { id: 'claude-opus-4-1-20250414', name: 'Claude Opus 4.1' },
-  // Claude 3.7 series
+  { id: 'claude-opus-4-20250514', name: 'Claude Opus 4' },
+  // Claude 3.7
   { id: 'claude-3-7-sonnet-20250219', name: 'Claude Sonnet 3.7' },
-  // Claude 3.5 series
+  // Claude 3.5
   { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet v2' },
   { id: 'claude-3-5-sonnet-20240620', name: 'Claude 3.5 Sonnet' },
   { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku' },
-  // Claude 3 series
+  // Claude 3
   { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' },
   { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet' },
   { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' },
@@ -50,6 +81,7 @@ export class AnthropicRuntime extends BaseRuntime {
     this.client = new Anthropic({
       apiKey: config.apiKey,
       baseURL: config.endpoint || undefined,
+      defaultHeaders: buildAiSdkDefaultHeaders(),
     })
   }
 
@@ -65,7 +97,12 @@ export class AnthropicRuntime extends BaseRuntime {
             role: m.role as 'user' | 'assistant',
             content: m.content,
           }))
-      : [{ role: 'user' as const, content: prompt! }]
+      : [
+          {
+            role: 'user' as const,
+            content: userContentWithPromptCache(prompt!),
+          },
+        ]
 
     const systemMessage = messages?.find((m) => m.role === 'system')?.content
 
@@ -73,7 +110,7 @@ export class AnthropicRuntime extends BaseRuntime {
       const response = await this.client.messages.create({
         model: this.providerInfo.model,
         messages: anthropicMessages,
-        system: systemMessage,
+        system: systemWithPromptCache(systemMessage),
         temperature,
         max_tokens: maxTokens || 4096,
       })
@@ -113,13 +150,14 @@ export class AnthropicRuntime extends BaseRuntime {
       name: 'structured_output',
       description: 'Generate structured output based on the given schema',
       input_schema: jsonSchema as Anthropic.Tool.InputSchema,
+      cache_control: EPHEMERAL_CACHE,
     }
 
     return this.withRetry(async () => {
       const response = await this.client.messages.create({
         model: this.providerInfo.model,
         messages: [{ role: 'user', content: prompt }],
-        system: systemPrompt,
+        system: systemWithPromptCache(systemPrompt),
         temperature,
         max_tokens: maxTokens || 4096,
         tools: [tool],
@@ -155,7 +193,12 @@ export class AnthropicRuntime extends BaseRuntime {
             role: m.role as 'user' | 'assistant',
             content: m.content,
           }))
-      : [{ role: 'user' as const, content: prompt! }]
+      : [
+          {
+            role: 'user' as const,
+            content: userContentWithPromptCache(prompt!),
+          },
+        ]
 
     const systemMessage = messages?.find((m) => m.role === 'system')?.content
 
@@ -166,7 +209,7 @@ export class AnthropicRuntime extends BaseRuntime {
           {
             model: this.providerInfo.model,
             messages: anthropicMessages,
-            system: systemMessage,
+            system: systemWithPromptCache(systemMessage),
             temperature,
             max_tokens: maxTokens || 4096,
             stream: true,

@@ -22,6 +22,7 @@ export interface TranslationSegment {
   translatable: boolean
   blockId: string | null
   rootIndex: number
+  flowId: string | null
 }
 
 export interface PropertySegment {
@@ -44,6 +45,14 @@ interface BlockContext {
   blockId: string | null
   rootIndex: number
 }
+
+const INLINE_FLOW_ROOT_TYPES = new Set([
+  'paragraph',
+  'heading',
+  'quote',
+  'listitem',
+  'tablecell',
+])
 
 function extractExcalidrawTexts(
   node: any,
@@ -89,8 +98,9 @@ function walkNode(
   node: any,
   segments: TranslationSegment[],
   propertySegments: PropertySegment[],
-  counter: { t: number; p: number },
+  counter: { t: number; p: number; f: number },
   ctx: BlockContext,
+  currentFlowId: string | null,
 ): void {
   if (!node) return
 
@@ -150,6 +160,10 @@ function walkNode(
     })
   }
 
+  const nextFlowId =
+    currentFlowId ??
+    (INLINE_FLOW_ROOT_TYPES.has(node.type) ? `f_${counter.f++}` : null)
+
   // Text leaf
   if (node.type === 'text') {
     if (node.text?.trim()) {
@@ -160,6 +174,7 @@ function walkNode(
         translatable: !(node.format & FORMAT_CODE),
         blockId: ctx.blockId,
         rootIndex: ctx.rootIndex,
+        flowId: nextFlowId,
       })
     }
     return
@@ -168,7 +183,7 @@ function walkNode(
   // Recurse children first (main content order)
   if (Array.isArray(node.children)) {
     for (const child of node.children) {
-      walkNode(child, segments, propertySegments, counter, ctx)
+      walkNode(child, segments, propertySegments, counter, ctx, nextFlowId)
     }
   }
 
@@ -180,7 +195,7 @@ function scanNestedEditorStates(
   node: any,
   segments: TranslationSegment[],
   propertySegments: PropertySegment[],
-  counter: { t: number; p: number },
+  counter: { t: number; p: number; f: number },
   ctx: BlockContext,
 ): void {
   for (const [propName, propValue] of Object.entries(node)) {
@@ -189,7 +204,7 @@ function scanNestedEditorStates(
     // Single nested editor state: { root: { children: [...] } }
     if (isNestedLexicalEditorState(propValue)) {
       for (const child of propValue.root.children) {
-        walkNode(child, segments, propertySegments, counter, ctx)
+        walkNode(child, segments, propertySegments, counter, ctx, null)
       }
       continue
     }
@@ -199,7 +214,7 @@ function scanNestedEditorStates(
       for (const item of propValue) {
         if (isNestedLexicalEditorState(item)) {
           for (const child of item.root.children) {
-            walkNode(child, segments, propertySegments, counter, ctx)
+            walkNode(child, segments, propertySegments, counter, ctx, null)
           }
         }
       }
@@ -224,7 +239,7 @@ export function parseLexicalForTranslation(
 
   const segments: TranslationSegment[] = []
   const propertySegments: PropertySegment[] = []
-  const counter = { t: 0, p: 0 }
+  const counter = { t: 0, p: 0, f: 0 }
 
   for (let i = 0; i < rootChildren.length; i++) {
     const child = rootChildren[i]
@@ -232,7 +247,7 @@ export function parseLexicalForTranslation(
       blockId: readBlockId(child),
       rootIndex: i,
     }
-    walkNode(child, segments, propertySegments, counter, ctx)
+    walkNode(child, segments, propertySegments, counter, ctx, null)
   }
 
   return { segments, propertySegments, editorState }

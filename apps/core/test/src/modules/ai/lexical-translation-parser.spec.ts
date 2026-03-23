@@ -638,6 +638,36 @@ describe('lexical-translation-parser', () => {
       expect(parsed.root.children[0].children[0].text).toBe('普通')
       expect(parsed.root.children[0].children[1].text).toBe('code')
     })
+
+    it('adjacent text nodes in the same inline flow share the same flowId', () => {
+      const json = makeEditorState([
+        paragraph(textNode('后面她才开始慢慢地想要寻回记忆。'), {
+          ...textNode('记忆会被遗忘，但爱不会。'),
+          style: 'color: #3b82f6;',
+        }),
+      ])
+      const result = parseLexicalForTranslation(json)
+
+      expect(result.segments).toHaveLength(2)
+      expect(result.segments[0].flowId).toBeTruthy()
+      expect(result.segments[0].flowId).toBe(result.segments[1].flowId)
+    })
+
+    it('different block-level inline flows receive different flowIds', () => {
+      const json = makeEditorState([
+        listNode(
+          'bullet',
+          { children: [textNode('Item one')] },
+          { children: [textNode('Item two')] },
+        ),
+      ])
+      const result = parseLexicalForTranslation(json)
+
+      expect(result.segments).toHaveLength(2)
+      expect(result.segments[0].flowId).toBeTruthy()
+      expect(result.segments[1].flowId).toBeTruthy()
+      expect(result.segments[0].flowId).not.toBe(result.segments[1].flowId)
+    })
   })
 
   describe('extractDocumentContext', () => {

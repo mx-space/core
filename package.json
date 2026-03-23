@@ -13,6 +13,7 @@
   "author": "Innei <https://innei.in>",
   "scripts": {
     "format": "prettier --write \"apps/**/*.ts\"",
+    "lexical-live": "pnpm -C apps/core exec node scripts/lexical-translation-live.mjs",
     "prepare": "simple-git-hooks && node scripts/init-project.mjs",
     "build": "pnpm -C \"apps/core\" run build",
     "dev": "pnpm -C \"apps/core\" run start",

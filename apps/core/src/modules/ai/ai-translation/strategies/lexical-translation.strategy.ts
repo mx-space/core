@@ -16,6 +16,7 @@ import type { ArticleContent } from '../ai-translation.types'
 import {
   parseLexicalForTranslation,
   restoreLexicalTranslation,
+  type TranslationSegment,
 } from '../lexical-translation-parser'
 import type {
   ITranslationStrategy,
@@ -23,6 +24,20 @@ import type {
   TranslationStrategyOptions,
 } from '../translation-strategy.interface'
 import { BaseTranslationStrategy } from './base-translation-strategy'
+
+interface TranslationUnit {
+  id: string
+  payload:
+    | string
+    | {
+        type: 'text.group'
+        segments: Array<{ id: string; text: string }>
+      }
+  meta: string
+  memberIds?: string[]
+}
+
+const GROUP_UNIT_PREFIX = '__inline_group__'
 
 @Injectable()
 export class LexicalTranslationStrategy
@@ -88,42 +103,19 @@ export class LexicalTranslationStrategy
     const { segments, propertySegments, editorState } = parseResult
     const allTranslations = new Map<string, string>()
     let sourceLang: string
+    const contentUnits = this.buildContentTranslationUnits(
+      segments,
+      propertySegments,
+    )
+    const metaUnits = this.buildMetaTranslationUnits(content)
 
-    const allEntries: Record<string, string> = {}
-    const allEntryMeta: Record<string, string> = {}
-    for (const seg of segments) {
-      if (seg.translatable) {
-        allEntries[seg.id] = seg.text
-        allEntryMeta[seg.id] = 'text'
-      }
-    }
-    for (const prop of propertySegments) {
-      allEntries[prop.id] = prop.text
-      if (prop.property === 'reading' && prop.node?.type === 'ruby') {
-        allEntryMeta[prop.id] = 'ruby.reading'
-      } else {
-        allEntryMeta[prop.id] = `property.${prop.property}`
-      }
-    }
-
-    const metaEntries: Record<string, string> = { __title__: content.title }
-    const metaEntryMeta: Record<string, string> = { __title__: 'meta.title' }
-    if (content.subtitle) metaEntries.__subtitle__ = content.subtitle
-    if (content.subtitle) metaEntryMeta.__subtitle__ = 'meta.subtitle'
-    if (content.summary) metaEntries.__summary__ = content.summary
-    if (content.summary) metaEntryMeta.__summary__ = 'meta.summary'
-    if (content.tags?.length) {
-      metaEntries.__tags__ = content.tags.join('|||')
-      metaEntryMeta.__tags__ = 'meta.tags'
-    }
-
-    if (Object.keys(allEntries).length === 0) {
+    if (contentUnits.length === 0) {
       const result = await this.callChunkTranslation(
         targetLang,
         {
           documentContext: content.title,
-          textEntries: metaEntries,
-          segmentMeta: metaEntryMeta,
+          textEntries: this.unitsToEntries(metaUnits),
+          segmentMeta: this.unitsToMeta(metaUnits),
         },
         runtime,
         onToken,
@@ -131,20 +123,20 @@ export class LexicalTranslationStrategy
       )
       sourceLang = result.sourceLang
       for (const [id, text] of Object.entries(result.translations)) {
-        allTranslations.set(id, text)
+        if (typeof text === 'string') {
+          allTranslations.set(id, text)
+        }
       }
     } else {
       const documentContext = extractDocumentContext(
         editorState.root?.children ?? [],
       )
-      sourceLang = await this.translateChunkedEntries(
+      sourceLang = await this.translateChunkedUnits(
         targetLang,
         {
           documentContext,
-          entries: allEntries,
-          entryMeta: allEntryMeta,
-          metaEntries,
-          metaEntryMeta,
+          contentUnits,
+          metaUnits,
         },
         allTranslations,
         runtime,
@@ -264,33 +256,30 @@ export class LexicalTranslationStrategy
     const documentContext = extractDocumentContext(
       editorState.root?.children ?? [],
     )
+    const changedSegments = segments.filter((seg) => {
+      if (!seg.translatable) return false
+      if (!seg.blockId) return true
+      return !unchangedBlockIds.has(seg.blockId)
+    })
+    const changedPropertySegments = propertySegments.filter((prop) => {
+      if (!prop.blockId) return true
+      return !unchangedBlockIds.has(prop.blockId)
+    })
+    const contentUnits = this.buildContentTranslationUnits(
+      changedSegments,
+      changedPropertySegments,
+    )
 
-    const allEntries: Record<string, string> = {}
-    const allEntryMeta: Record<string, string> = {}
-    for (const seg of segments) {
-      if (!seg.translatable) continue
-      if (seg.blockId && unchangedBlockIds.has(seg.blockId)) continue
-      allEntries[seg.id] = seg.text
-      allEntryMeta[seg.id] = 'text'
-    }
-    for (const prop of propertySegments) {
-      if (prop.blockId && unchangedBlockIds.has(prop.blockId)) continue
-      allEntries[prop.id] = prop.text
-      if (prop.property === 'reading' && prop.node?.type === 'ruby') {
-        allEntryMeta[prop.id] = 'ruby.reading'
-      } else {
-        allEntryMeta[prop.id] = `property.${prop.property}`
-      }
-    }
-
-    const metaEntries: Record<string, string> = {}
-    const metaEntryMeta: Record<string, string> = {}
+    const metaUnits: TranslationUnit[] = []
     const oldMetaHashes = existing.sourceMetaHashes
 
     const currentTitleHash = md5(content.title)
     if (!oldMetaHashes || oldMetaHashes.title !== currentTitleHash) {
-      metaEntries.__title__ = content.title
-      metaEntryMeta.__title__ = 'meta.title'
+      metaUnits.push({
+        id: '__title__',
+        payload: content.title,
+        meta: 'meta.title',
+      })
     } else {
       allTranslations.set('__title__', existing.title)
     }
@@ -298,8 +287,11 @@ export class LexicalTranslationStrategy
     if (content.subtitle) {
       const currentSubtitleHash = md5(content.subtitle)
       if (!oldMetaHashes || oldMetaHashes.subtitle !== currentSubtitleHash) {
-        metaEntries.__subtitle__ = content.subtitle
-        metaEntryMeta.__subtitle__ = 'meta.subtitle'
+        metaUnits.push({
+          id: '__subtitle__',
+          payload: content.subtitle,
+          meta: 'meta.subtitle',
+        })
       } else if (existing.subtitle) {
         allTranslations.set('__subtitle__', existing.subtitle)
       }
@@ -308,8 +300,11 @@ export class LexicalTranslationStrategy
     if (content.summary) {
       const currentSummaryHash = md5(content.summary)
       if (!oldMetaHashes || oldMetaHashes.summary !== currentSummaryHash) {
-        metaEntries.__summary__ = content.summary
-        metaEntryMeta.__summary__ = 'meta.summary'
+        metaUnits.push({
+          id: '__summary__',
+          payload: content.summary,
+          meta: 'meta.summary',
+        })
       } else if (existing.summary) {
         allTranslations.set('__summary__', existing.summary)
       }
@@ -318,18 +313,20 @@ export class LexicalTranslationStrategy
     if (content.tags?.length) {
       const currentTagsHash = md5(content.tags.join('|||'))
       if (!oldMetaHashes || oldMetaHashes.tags !== currentTagsHash) {
-        metaEntries.__tags__ = content.tags.join('|||')
-        metaEntryMeta.__tags__ = 'meta.tags'
+        metaUnits.push({
+          id: '__tags__',
+          payload: content.tags.join('|||'),
+          meta: 'meta.tags',
+        })
       } else if (existing.tags?.length) {
         allTranslations.set('__tags__', existing.tags.join('|||'))
       }
     }
 
-    const totalEntries =
-      Object.keys(allEntries).length + Object.keys(metaEntries).length
+    const totalEntries = contentUnits.length + metaUnits.length
 
     this.logger.log(
-      `Incremental entries: content=${Object.keys(allEntries).length} meta=${Object.keys(metaEntries).length} total=${totalEntries}`,
+      `Incremental entries: content=${contentUnits.length} meta=${metaUnits.length} total=${totalEntries}`,
     )
 
     if (totalEntries === 0) {
@@ -349,13 +346,13 @@ export class LexicalTranslationStrategy
       }
     }
 
-    if (Object.keys(allEntries).length === 0) {
+    if (contentUnits.length === 0) {
       const result = await this.callChunkTranslation(
         targetLang,
         {
           documentContext: content.title,
-          textEntries: metaEntries,
-          segmentMeta: metaEntryMeta,
+          textEntries: this.unitsToEntries(metaUnits),
+          segmentMeta: this.unitsToMeta(metaUnits),
         },
         runtime,
         onToken,
@@ -363,17 +360,17 @@ export class LexicalTranslationStrategy
       )
       if (result.sourceLang) sourceLang = result.sourceLang
       for (const [id, text] of Object.entries(result.translations)) {
-        allTranslations.set(id, text)
+        if (typeof text === 'string') {
+          allTranslations.set(id, text)
+        }
       }
     } else {
-      const sl = await this.translateChunkedEntries(
+      const sl = await this.translateChunkedUnits(
         targetLang,
         {
           documentContext,
-          entries: allEntries,
-          entryMeta: allEntryMeta,
-          metaEntries,
-          metaEntryMeta,
+          contentUnits,
+          metaUnits,
         },
         allTranslations,
         runtime,
@@ -411,65 +408,234 @@ export class LexicalTranslationStrategy
     }
   }
 
-  private async translateChunkedEntries(
+  private buildContentTranslationUnits(
+    segments: TranslationSegment[],
+    propertySegments: Array<{
+      id: string
+      text: string
+      property: string
+      node: any
+    }>,
+  ): TranslationUnit[] {
+    const units: TranslationUnit[] = []
+    let groupIndex = 0
+    let pendingGroup: TranslationSegment[] = []
+
+    const flushGroup = () => {
+      if (pendingGroup.length === 0) return
+      if (pendingGroup.length === 1) {
+        const [segment] = pendingGroup
+        units.push({
+          id: segment.id,
+          payload: segment.text,
+          meta: 'text',
+        })
+      } else {
+        units.push({
+          id: `${GROUP_UNIT_PREFIX}_${groupIndex++}`,
+          payload: {
+            type: 'text.group',
+            segments: pendingGroup.map((segment) => ({
+              id: segment.id,
+              text: segment.text,
+            })),
+          },
+          meta: 'text.group',
+          memberIds: pendingGroup.map((segment) => segment.id),
+        })
+      }
+      pendingGroup = []
+    }
+
+    for (const segment of segments) {
+      if (!segment.translatable) {
+        flushGroup()
+        continue
+      }
+
+      if (!segment.flowId) {
+        flushGroup()
+        units.push({
+          id: segment.id,
+          payload: segment.text,
+          meta: 'text',
+        })
+        continue
+      }
+
+      if (
+        pendingGroup.length > 0 &&
+        pendingGroup[0].flowId !== segment.flowId
+      ) {
+        flushGroup()
+      }
+
+      pendingGroup.push(segment)
+    }
+
+    flushGroup()
+
+    for (const prop of propertySegments) {
+      units.push({
+        id: prop.id,
+        payload: prop.text,
+        meta:
+          prop.property === 'reading' && prop.node?.type === 'ruby'
+            ? 'ruby.reading'
+            : `property.${prop.property}`,
+      })
+    }
+
+    return units
+  }
+
+  private buildMetaTranslationUnits(
+    content: ArticleContent,
+  ): TranslationUnit[] {
+    const units: TranslationUnit[] = [
+      { id: '__title__', payload: content.title, meta: 'meta.title' },
+    ]
+
+    if (content.subtitle) {
+      units.push({
+        id: '__subtitle__',
+        payload: content.subtitle,
+        meta: 'meta.subtitle',
+      })
+    }
+    if (content.summary) {
+      units.push({
+        id: '__summary__',
+        payload: content.summary,
+        meta: 'meta.summary',
+      })
+    }
+    if (content.tags?.length) {
+      units.push({
+        id: '__tags__',
+        payload: content.tags.join('|||'),
+        meta: 'meta.tags',
+      })
+    }
+
+    return units
+  }
+
+  private unitsToEntries(units: TranslationUnit[]): Record<string, unknown> {
+    return Object.fromEntries(units.map((unit) => [unit.id, unit.payload]))
+  }
+
+  private unitsToMeta(units: TranslationUnit[]): Record<string, string> {
+    return Object.fromEntries(units.map((unit) => [unit.id, unit.meta]))
+  }
+
+  private parseGroupedTranslation(
+    translated: unknown,
+    memberIds: string[],
+  ): Record<string, string> | null {
+    if (
+      !translated ||
+      typeof translated !== 'object' ||
+      Array.isArray(translated)
+    ) {
+      return null
+    }
+
+    const result: Record<string, string> = {}
+    for (const memberId of memberIds) {
+      const value = (translated as Record<string, unknown>)[memberId]
+      if (typeof value !== 'string') {
+        return null
+      }
+      result[memberId] = value
+    }
+
+    return result
+  }
+
+  private getUnitTokenText(unit: TranslationUnit): string {
+    return typeof unit.payload === 'string'
+      ? unit.payload
+      : unit.payload.segments.map((segment) => segment.text).join('')
+  }
+
+  private resolveUnitTranslations(
+    units: TranslationUnit[],
+    translations: Record<string, string | Record<string, string>>,
+    output: Map<string, string>,
+  ): string[] {
+    const unresolvedUnitIds: string[] = []
+
+    for (const unit of units) {
+      const translated = translations[unit.id]
+      if (translated === undefined) {
+        unresolvedUnitIds.push(unit.id)
+        continue
+      }
+
+      if (!unit.memberIds?.length) {
+        if (typeof translated !== 'string') {
+          unresolvedUnitIds.push(unit.id)
+          continue
+        }
+        output.set(unit.id, translated)
+        continue
+      }
+
+      const parsed = this.parseGroupedTranslation(translated, unit.memberIds)
+      if (!parsed) {
+        unresolvedUnitIds.push(unit.id)
+        continue
+      }
+
+      for (const [memberId, memberText] of Object.entries(parsed)) {
+        output.set(memberId, memberText)
+      }
+    }
+
+    return unresolvedUnitIds
+  }
+
+  private async translateChunkedUnits(
     targetLang: string,
     ctx: {
       documentContext: string
-      entries: Record<string, string>
-      entryMeta: Record<string, string>
-      metaEntries: Record<string, string>
-      metaEntryMeta: Record<string, string>
+      contentUnits: TranslationUnit[]
+      metaUnits: TranslationUnit[]
     },
     output: Map<string, string>,
     runtime: IModelRuntime,
     onToken?: (count?: number) => Promise<void>,
     signal?: AbortSignal,
   ): Promise<string> {
-    const {
-      documentContext,
-      entries: allEntries,
-      entryMeta: allEntryMeta,
-      metaEntries,
-      metaEntryMeta,
-    } = ctx
+    const { documentContext, contentUnits, metaUnits } = ctx
     const allTranslations = output
     let sourceLang = ''
     const MAX_BATCH_TOKENS = 4000
     const estimateTokens = (text: string) => Math.ceil(text.length / 3)
 
-    const batches: Array<{
-      textEntries: Record<string, string>
-      segmentMeta: Record<string, string>
-    }> = []
-    let currentBatch: Record<string, string> = { ...metaEntries }
-    let currentBatchMeta: Record<string, string> = { ...metaEntryMeta }
-    let currentTokens = Object.values(metaEntries).reduce(
-      (s, t) => s + estimateTokens(t),
+    const batches: TranslationUnit[][] = []
+    let currentBatch = [...metaUnits]
+    let currentTokens = metaUnits.reduce(
+      (sum, unit) => sum + estimateTokens(this.getUnitTokenText(unit)),
       0,
     )
-    let hasContentEntry = false
+    let hasContentUnit = false
 
-    for (const [id, text] of Object.entries(allEntries)) {
-      const tokens = estimateTokens(text)
-      if (hasContentEntry && currentTokens + tokens > MAX_BATCH_TOKENS) {
-        batches.push({
-          textEntries: currentBatch,
-          segmentMeta: currentBatchMeta,
-        })
-        currentBatch = {}
-        currentBatchMeta = {}
+    for (const unit of contentUnits) {
+      const tokens = estimateTokens(this.getUnitTokenText(unit))
+      if (hasContentUnit && currentTokens + tokens > MAX_BATCH_TOKENS) {
+        batches.push(currentBatch)
+        currentBatch = []
         currentTokens = 0
       }
-      currentBatch[id] = text
-      currentBatchMeta[id] = allEntryMeta[id] ?? 'text'
+      currentBatch.push(unit)
       currentTokens += tokens
-      hasContentEntry = true
+      hasContentUnit = true
     }
-    if (Object.keys(currentBatch).length > 0) {
-      batches.push({
-        textEntries: currentBatch,
-        segmentMeta: currentBatchMeta,
-      })
+
+    if (currentBatch.length > 0) {
+      batches.push(currentBatch)
     }
 
     for (const batch of batches) {
@@ -478,57 +644,61 @@ export class LexicalTranslationStrategy
         targetLang,
         {
           documentContext,
-          textEntries: batch.textEntries,
-          segmentMeta: batch.segmentMeta,
+          textEntries: this.unitsToEntries(batch),
+          segmentMeta: this.unitsToMeta(batch),
         },
         runtime,
         onToken,
         signal,
       )
       if (!sourceLang) sourceLang = result.sourceLang
-      for (const [id, text] of Object.entries(result.translations)) {
-        allTranslations.set(id, text)
-      }
 
-      const missingIds = Object.keys(batch.textEntries).filter(
-        (id) => !(id in result.translations),
+      const unresolvedUnitIds = this.resolveUnitTranslations(
+        batch,
+        result.translations,
+        allTranslations,
       )
-      if (missingIds.length > 0) {
-        const retryEntries: Record<string, string> = {}
-        const retryMeta: Record<string, string> = {}
-        for (const id of missingIds) {
-          retryEntries[id] = batch.textEntries[id]
-          if (batch.segmentMeta[id]) {
-            retryMeta[id] = batch.segmentMeta[id]
-          }
-        }
+
+      if (unresolvedUnitIds.length > 0) {
+        const retryUnits = batch.filter((unit) =>
+          unresolvedUnitIds.includes(unit.id),
+        )
         try {
           const retryResult = await this.callChunkTranslation(
             targetLang,
             {
               documentContext,
-              textEntries: retryEntries,
-              segmentMeta: retryMeta,
+              textEntries: this.unitsToEntries(retryUnits),
+              segmentMeta: this.unitsToMeta(retryUnits),
             },
             runtime,
             onToken,
             signal,
           )
-          for (const [id, text] of Object.entries(retryResult.translations)) {
-            allTranslations.set(id, text)
-          }
-          const stillMissing = missingIds.filter(
-            (id) => !(id in retryResult.translations),
+          this.resolveUnitTranslations(
+            retryUnits,
+            retryResult.translations,
+            allTranslations,
           )
-          for (const id of stillMissing) {
+
+          const stillMissing = retryUnits.filter((unit) => {
+            if (unit.memberIds?.length) {
+              return unit.memberIds.some(
+                (memberId) => !allTranslations.has(memberId),
+              )
+            }
+            return !allTranslations.has(unit.id)
+          })
+
+          for (const unit of stillMissing) {
             this.logger.warn(
-              `Translation missing for segment ${id} after retry, falling back to original`,
+              `Translation missing for unit ${unit.id} after retry, falling back to original`,
             )
           }
         } catch {
-          for (const id of missingIds) {
+          for (const unit of retryUnits) {
             this.logger.warn(
-              `Translation retry failed for segment ${id}, falling back to original`,
+              `Translation retry failed for unit ${unit.id}, falling back to original`,
             )
           }
         }

@@ -4,6 +4,7 @@ import type { z } from 'zod'
 import { isDev } from '~/global/env.global'
 
 import { AIProviderType } from '../ai.types'
+import { buildAiSdkDefaultHeaders } from './ai-sdk-attribution'
 import { BaseRuntime } from './base.runtime'
 import type {
   GenerateStructuredOptions,
@@ -33,6 +34,7 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
     this.client = new OpenAI({
       apiKey: config.apiKey,
       baseURL,
+      defaultHeaders: buildAiSdkDefaultHeaders(),
     })
   }
 

@@ -108,6 +108,7 @@
     "js-yaml": "^4.1.1",
     "json5": "2.2.3",
     "jsondiffpatch": "^0.7.3",
+    "jsonrepair": "^3.13.3",
     "jsonwebtoken": "9.0.3",
     "jszip": "3.10.1",
     "keyv": "5.6.0",
