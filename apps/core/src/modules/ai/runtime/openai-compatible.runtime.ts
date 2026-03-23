@@ -21,6 +21,7 @@ import type {
 export class OpenAICompatibleRuntime extends BaseRuntime {
   readonly providerInfo: RuntimeProviderInfo
   private readonly client: OpenAI
+  private readonly baseURL: string
 
   constructor(config: RuntimeConfig) {
     super()
@@ -31,6 +32,7 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
     }
 
     const baseURL = this.resolveBaseURL(config)
+    this.baseURL = baseURL
     this.client = new OpenAI({
       apiKey: config.apiKey,
       baseURL,
@@ -62,6 +64,38 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
     return normalized
   }
 
+  private isVercelAiGateway(): boolean {
+    try {
+      return new URL(this.baseURL).hostname === 'ai-gateway.vercel.sh'
+    } catch {
+      return false
+    }
+  }
+
+  private withGatewayPromptCache<T extends Record<string, unknown>>(
+    params: T,
+  ): T {
+    if (!this.isVercelAiGateway()) {
+      return params
+    }
+
+    const providerOptions = (
+      params as { providerOptions?: Record<string, any> }
+    ).providerOptions
+    const gatewayOptions = providerOptions?.gateway
+
+    return {
+      ...params,
+      providerOptions: {
+        ...providerOptions,
+        gateway: {
+          ...gatewayOptions,
+          caching: 'auto',
+        },
+      },
+    }
+  }
+
   async generateText(
     options: GenerateTextOptions,
   ): Promise<GenerateTextResult> {
@@ -84,13 +118,15 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
         : undefined
 
     return this.withRetry(async () => {
-      const response = await this.client.chat.completions.create({
-        model: this.providerInfo.model,
-        messages: chatMessages,
-        temperature,
-        max_tokens: maxTokens,
-        reasoning_effort: openaiReasoningEffort,
-      } as OpenAI.ChatCompletionCreateParamsNonStreaming)
+      const response = await this.client.chat.completions.create(
+        this.withGatewayPromptCache({
+          model: this.providerInfo.model,
+          messages: chatMessages,
+          temperature,
+          max_tokens: maxTokens,
+          reasoning_effort: openaiReasoningEffort,
+        }) as OpenAI.ChatCompletionCreateParamsNonStreaming,
+      )
 
       const choice = response.choices[0]
       return {
@@ -163,14 +199,16 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
       }
 
       for (let i = 0; i < maxIterations; i++) {
-        const response = await this.client.chat.completions.create({
-          model: this.providerInfo.model,
-          messages: conversationMessages,
-          temperature,
-          max_tokens: maxTokens,
-          reasoning_effort: openaiReasoningEffort,
-          ...toolConfig,
-        } as OpenAI.ChatCompletionCreateParamsNonStreaming)
+        const response = await this.client.chat.completions.create(
+          this.withGatewayPromptCache({
+            model: this.providerInfo.model,
+            messages: conversationMessages,
+            temperature,
+            max_tokens: maxTokens,
+            reasoning_effort: openaiReasoningEffort,
+            ...toolConfig,
+          }) as OpenAI.ChatCompletionCreateParamsNonStreaming,
+        )
 
         if (response.usage) {
           totalUsage.promptTokens += response.usage.prompt_tokens
@@ -231,14 +269,14 @@ export class OpenAICompatibleRuntime extends BaseRuntime {
         : undefined
 
     const response = await this.client.chat.completions.create(
-      {
+      this.withGatewayPromptCache({
         model: this.providerInfo.model,
         messages: chatMessages,
         temperature,
         max_tokens: maxTokens,
         stream: true,
         reasoning_effort: openaiReasoningEffort,
-      } as OpenAI.ChatCompletionCreateParams & { stream: true },
+      }) as OpenAI.ChatCompletionCreateParams & { stream: true },
       { signal },
     )
 
