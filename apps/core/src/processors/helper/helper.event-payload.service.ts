@@ -2,9 +2,12 @@ import { Injectable } from '@nestjs/common'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { NoteModel } from '~/modules/note/note.model'
+import { OwnerService } from '~/modules/owner/owner.service'
 import { PageModel } from '~/modules/page/page.model'
 import { PostModel } from '~/modules/post/post.model'
+import { ReaderService } from '~/modules/reader/reader.service'
 import { InjectModel } from '~/transformers/model.transformer'
+import { getAvatar } from '~/utils/tool.util'
 
 @Injectable()
 export class EventPayloadEnricherService {
@@ -15,7 +18,39 @@ export class EventPayloadEnricherService {
     private readonly noteModel: MongooseModel<NoteModel>,
     @InjectModel(PageModel)
     private readonly pageModel: MongooseModel<PageModel>,
+    private readonly readerService: ReaderService,
+    private readonly ownerService: OwnerService,
   ) {}
+
+  private async enrichCommentPayload(data: any): Promise<any> {
+    if (!data?.readerId) {
+      return data
+    }
+
+    const reader = await this.readerService
+      .findReaderInIds([data.readerId])
+      .then((readers) => readers[0] ?? null)
+
+    if (!reader) {
+      return data
+    }
+
+    if (reader.role === 'owner') {
+      const owner = await this.ownerService.getOwner().catch(() => null)
+
+      return {
+        ...data,
+        author: owner?.name || reader.name || data.author,
+        avatar: owner?.avatar || reader.image || getAvatar(reader.email),
+      }
+    }
+
+    return {
+      ...data,
+      author: reader.name || data.author,
+      avatar: reader.image || data.avatar || getAvatar(reader.email),
+    }
+  }
 
   async enrichPayload(event: BusinessEvents, data: any): Promise<any> {
     if (!data?.id) return data
@@ -54,6 +89,9 @@ export class EventPayloadEnricherService {
           (await this.pageModel.findById(data.id).lean({ getters: true })) ??
           data
         )
+      }
+      case BusinessEvents.COMMENT_CREATE: {
+        return this.enrichCommentPayload(data)
       }
       default: {
         return data

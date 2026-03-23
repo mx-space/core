@@ -10,6 +10,7 @@ import { AiModule } from '~/modules/ai/ai.module'
 import { NoteModule } from '~/modules/note/note.module'
 import { PageModule } from '~/modules/page/page.module'
 import { PostModule } from '~/modules/post/post.module'
+import { ReaderModule } from '~/modules/reader/reader.module'
 
 import { AssetService } from './helper.asset.service'
 import { BarkPushService } from './helper.bark.service'
@@ -66,6 +67,7 @@ const providers: Provider<any>[] = [
     forwardRef(() => PostModule),
     forwardRef(() => NoteModule),
     forwardRef(() => PageModule),
+    forwardRef(() => ReaderModule),
   ],
   providers,
   exports: providers,
