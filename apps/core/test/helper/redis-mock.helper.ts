@@ -1,8 +1,10 @@
 import fs from 'node:fs'
-import { CacheService } from '~/processors/redis/cache.service'
-import IORedis from 'ioredis'
+
 import type { Redis } from 'ioredis'
+import IORedis from 'ioredis'
 import RedisMemoryServer from 'redis-memory-server'
+
+import { CacheService } from '~/processors/redis/cache.service'
 
 /**
  * 查找系统上的 redis-server 二进制文件
@@ -61,6 +63,18 @@ export class MockCacheService {
 
   public getClient() {
     return this.redisClient
+  }
+
+  public waitForReady() {
+    return Promise.resolve()
+  }
+
+  public isReady() {
+    return true
+  }
+
+  public getStatus() {
+    return 'ready'
   }
 }
 
