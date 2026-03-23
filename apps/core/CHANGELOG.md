@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.0.2](https://github.com/mx-space/core/compare/v11.0.1...v11.0.2) (2026-03-23)
+
+
+### Bug Fixes
+
+* **webhook:** enrich comment payload author and avatar ([2833c38](https://github.com/mx-space/core/commit/2833c38957c670b494065f863b3f21867623a28d))
+
+
+
 ## [11.0.1](https://github.com/mx-space/core/compare/v11.0.0...v11.0.1) (2026-03-22)
 
 
