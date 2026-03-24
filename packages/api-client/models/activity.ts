@@ -1,4 +1,5 @@
 import type { CollectionRefTypes } from '@core/constants/db.constant'
+
 import type { CategoryModel } from './category'
 
 export interface ActivityPresence {
@@ -66,6 +67,7 @@ export interface RecentComment {
   type: string
   avatar: string
   nid?: string
+  category?: { slug: string; name: string }
 }
 
 export interface RecentLike {

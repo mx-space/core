@@ -1,5 +1,10 @@
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
+import { omit, pick, uniqBy } from 'es-toolkit/compat'
+import { ObjectId } from 'mongodb'
+import type { Document } from 'mongoose'
+import type { Socket } from 'socket.io'
+
 import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ArticleTypeEnum } from '~/constants/article.constant'
@@ -21,10 +26,7 @@ import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { checkRefModelCollectionType } from '~/utils/biz.util'
 import { dbTransforms } from '~/utils/db-transform.util'
 import { camelcaseKeys } from '~/utils/tool.util'
-import { omit, pick, uniqBy } from 'es-toolkit/compat'
-import { ObjectId } from 'mongodb'
-import type { Document } from 'mongoose'
-import type { Socket } from 'socket.io'
+
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
@@ -540,7 +542,11 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
               $in: [CommentState.Read, CommentState.Unread],
             },
       })
-      .populate('ref', 'title nid slug subtitle content categoryId')
+      .populate({
+        path: 'ref',
+        select: 'title nid slug subtitle content categoryId category',
+        populate: { path: 'category', select: 'slug name' },
+      })
       .lean({ getters: true })
       .sort({
         created: -1,
@@ -551,6 +557,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     return docs.map((doc) => ({
       ...pick(doc, 'created', 'author', 'text', 'avatar'),
       ...pick(doc.ref, 'title', 'nid', 'slug', 'id'),
+      category: (doc.ref as any)?.category ?? undefined,
       type: checkRefModelCollectionType(doc.ref),
     }))
   }
