@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [11.0.3](https://github.com/mx-space/core/compare/v11.0.2...v11.0.3) (2026-03-24)
+
+
+### Bug Fixes
+
+* **activity:** populate category in getRecentComment and expose in response ([7dadc81](https://github.com/mx-space/core/commit/7dadc8167f257f41ed4a3b306a449a778568c83c))
+
+
+### Features
+
+* **ai:** harden lexical translation structured output ([25ca95d](https://github.com/mx-space/core/commit/25ca95dfb9944fbdd424e805c8d689981dc4c34c))
+* **ai:** implement Vercel AI Gateway prompt caching in OpenAICompatibleRuntime ([8c2afef](https://github.com/mx-space/core/commit/8c2afefa7a71d8ce3c30dcd00078b4a26855cbdc))
+
+
+
 ## [11.0.2](https://github.com/mx-space/core/compare/v11.0.1...v11.0.2) (2026-03-23)
 
 
