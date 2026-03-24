@@ -10,6 +10,7 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import {
+  CATEGORY_COLLECTION_NAME,
   NOTE_COLLECTION_NAME,
   POST_COLLECTION_NAME,
   RECENTLY_COLLECTION_NAME,
@@ -542,29 +543,43 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
               $in: [CommentState.Read, CommentState.Unread],
             },
       })
-      .populate({
-        path: 'ref',
-        select: 'title nid slug subtitle content categoryId category',
-        populate: {
-          path: 'category',
-          select: 'slug name',
-          strictPopulate: false,
-        },
-        strictPopulate: false,
-      })
+      .populate('ref', 'title nid slug subtitle content categoryId')
       .lean({ getters: true })
       .sort({
         created: -1,
       })
       .limit(3)
 
+    // For post refs, look up their categories separately
+    const categoryIds = docs
+      .map((doc) => (doc.ref as any)?.categoryId)
+      .filter(Boolean)
+
+    const categories =
+      categoryIds.length > 0
+        ? await this.databaseService.db
+            .collection(CATEGORY_COLLECTION_NAME)
+            .find({ _id: { $in: categoryIds } })
+            .project({ slug: 1, name: 1 })
+            .toArray()
+        : []
+
+    const categoryMap = Object.fromEntries(
+      categories.map((c) => [c._id.toString(), { slug: c.slug, name: c.name }]),
+    )
+
     await this.commentService.fillAndReplaceAvatarUrl(docs)
-    return docs.map((doc) => ({
-      ...pick(doc, 'created', 'author', 'text', 'avatar'),
-      ...pick(doc.ref, 'title', 'nid', 'slug', 'id'),
-      category: (doc.ref as any)?.category ?? undefined,
-      type: checkRefModelCollectionType(doc.ref),
-    }))
+    return docs.map((doc) => {
+      const categoryId = (doc.ref as any)?.categoryId
+      return {
+        ...pick(doc, 'created', 'author', 'text', 'avatar'),
+        ...pick(doc.ref, 'title', 'nid', 'slug', 'id'),
+        category: categoryId
+          ? (categoryMap[categoryId.toString()] ?? undefined)
+          : undefined,
+        type: checkRefModelCollectionType(doc.ref),
+      }
+    })
   }
 
   async getRecentPublish() {
