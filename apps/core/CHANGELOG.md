@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [11.0.4](https://github.com/mx-space/core/compare/v11.0.3...v11.0.4) (2026-03-24)
+
+
+### Bug Fixes
+
+* **activity:** add strictPopulate false for polymorphic ref category populate ([bf20aa5](https://github.com/mx-space/core/commit/bf20aa5c727608fb18613480731e925a1e85e149))
+* **activity:** enrich recent posts with category in getRecentPublish ([e60169a](https://github.com/mx-space/core/commit/e60169a57405d3ea87379fd3c3d2bd5f86e10081))
+* **activity:** manually look up category for post refs in getRecentComment ([2961214](https://github.com/mx-space/core/commit/29612141a90e6f21e4524c281627ae8aef729e61))
+
+
+
 ## [11.0.3](https://github.com/mx-space/core/compare/v11.0.2...v11.0.3) (2026-03-24)
 
 
