@@ -545,7 +545,12 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       .populate({
         path: 'ref',
         select: 'title nid slug subtitle content categoryId category',
-        populate: { path: 'category', select: 'slug name' },
+        populate: {
+          path: 'category',
+          select: 'slug name',
+          strictPopulate: false,
+        },
+        strictPopulate: false,
       })
       .lean({ getters: true })
       .sort({
