@@ -93,6 +93,7 @@ export interface RecentPost {
   title: string
   modified: string
   slug: string
+  category?: { slug: string; name: string }
 }
 
 export interface RecentRecent {

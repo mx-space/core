@@ -633,9 +633,31 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         .toArray(),
     ])
 
+    const postCategoryIds = post.map((p: any) => p.categoryId).filter(Boolean)
+    const categories =
+      postCategoryIds.length > 0
+        ? await this.databaseService.db
+            .collection(CATEGORY_COLLECTION_NAME)
+            .find({ _id: { $in: postCategoryIds } })
+            .project({ slug: 1, name: 1 })
+            .toArray()
+        : []
+    const categoryMap = Object.fromEntries(
+      categories.map((c: any) => [
+        c._id.toString(),
+        { slug: c.slug, name: c.name },
+      ]),
+    )
+    const enrichedPost = post.map((p: any) => ({
+      ...p,
+      category: p.categoryId
+        ? (categoryMap[p.categoryId.toString()] ?? undefined)
+        : undefined,
+    }))
+
     return {
       recent,
-      post,
+      post: enrichedPost,
       note,
     }
   }
