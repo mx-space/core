@@ -28,6 +28,10 @@ export interface ExtendedEventEmitter extends EventEmitter {
 }
 export type Id = string
 export type PayloadOnlyId = { data: Id }
+export interface AggregateUpdatePayload {
+  source: 'config' | 'owner' | 'theme'
+  keys: string[]
+}
 export interface EventPayloadMapping {
   [BusinessEvents.POST_CREATE]: NormalizedPost
   [BusinessEvents.POST_UPDATE]: NormalizedPost
@@ -47,6 +51,8 @@ export interface EventPayloadMapping {
 
   [BusinessEvents.RECENTLY_CREATE]: RecentlyModel
   [BusinessEvents.RECENTLY_UPDATE]: RecentlyModel
+
+  [BusinessEvents.AGGREGATE_UPDATE]: AggregateUpdatePayload
 
   [BusinessEvents.ACTIVITY_LIKE]: IActivityLike
 
@@ -97,6 +103,7 @@ export type GenericEvent =
   | { type: BusinessEvents.SAY_DELETE; payload: PayloadOnlyId }
   | { type: BusinessEvents.RECENTLY_CREATE; payload: RecentlyModel }
   | { type: BusinessEvents.RECENTLY_UPDATE; payload: RecentlyModel }
+  | { type: BusinessEvents.AGGREGATE_UPDATE; payload: AggregateUpdatePayload }
   | { type: BusinessEvents.ACTIVITY_LIKE; payload: IActivityLike }
   | { type: BusinessEvents.LINK_APPLY; payload: LinkModel }
   | {

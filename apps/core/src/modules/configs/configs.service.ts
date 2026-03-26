@@ -5,7 +5,7 @@ import { cloneDeep, merge, mergeWith } from 'es-toolkit/compat'
 import type { z, ZodError } from 'zod'
 
 import { BizException } from '~/common/exceptions/biz.exception'
-import { EventScope } from '~/constants/business-event.constant'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
@@ -32,6 +32,12 @@ import { OptionModel } from './configs.model'
 import type { OAuthConfig } from './configs.schema'
 
 const configsKeySet = new Set(Object.keys(configDtoMapping))
+const aggregateConfigKeys = new Set<keyof IConfig>([
+  'ai',
+  'commentOptions',
+  'seo',
+  'url',
+])
 
 /*
  * NOTE:
@@ -220,6 +226,28 @@ export class ConfigsService implements OnModuleInit {
     return newData
   }
 
+  private async notifyAggregateConfigUpdate<T extends keyof IConfig>(key: T) {
+    if (!aggregateConfigKeys.has(key)) {
+      return
+    }
+
+    await Promise.all([
+      this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+        scope: EventScope.TO_SYSTEM,
+      }),
+      this.eventManager.emit(
+        BusinessEvents.AGGREGATE_UPDATE,
+        {
+          source: 'config',
+          keys: [key],
+        },
+        {
+          scope: EventScope.TO_SYSTEM,
+        },
+      ),
+    ])
+  }
+
   async patchAndValid<T extends keyof IConfig>(
     key: T,
     value: Partial<IConfig[T]>,
@@ -261,6 +289,7 @@ export class ConfigsService implements OnModuleInit {
       case 'url': {
         const newValue = await this.patch(key, instanceValue as any)
         await this.configVersionService.bump(ConfigVersionScopes.Url)
+        await this.notifyAggregateConfigUpdate(key)
         return newValue
       }
       case 'mailOptions': {
@@ -316,7 +345,9 @@ export class ConfigsService implements OnModuleInit {
       }
 
       default: {
-        return this.patch(key, instanceValue as any)
+        const nextValue = await this.patch(key, instanceValue as any)
+        await this.notifyAggregateConfigUpdate(key)
+        return nextValue
       }
     }
   }

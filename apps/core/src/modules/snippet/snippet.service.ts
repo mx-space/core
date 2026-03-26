@@ -1,7 +1,12 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import { load } from 'js-yaml'
+import JSON5 from 'json5'
+import type { AggregatePaginateModel, Document } from 'mongoose'
+import qs from 'qs'
+
 import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
-import { EventScope } from '~/constants/business-event.constant'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
@@ -10,10 +15,7 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
-import { load } from 'js-yaml'
-import JSON5 from 'json5'
-import type { AggregatePaginateModel, Document } from 'mongoose'
-import qs from 'qs'
+
 import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetModel, SnippetType } from './snippet.model'
 
@@ -34,6 +36,24 @@ export class SnippetService {
   }
 
   private readonly reservedReferenceKeys = ['system', 'built-in']
+
+  private async notifyAggregateThemeUpdate() {
+    await Promise.all([
+      this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+        scope: EventScope.TO_SYSTEM,
+      }),
+      this.eventManager.emit(
+        BusinessEvents.AGGREGATE_UPDATE,
+        {
+          source: 'theme',
+          keys: ['theme'],
+        },
+        {
+          scope: EventScope.TO_SYSTEM,
+        },
+      ),
+    ])
+  }
 
   async create(model: SnippetModel) {
     if (model.type === SnippetType.Function) {
@@ -80,13 +100,12 @@ export class SnippetService {
       }
     }
 
+    const created = await this.model.create({ ...model, created: new Date() })
     if (model.reference === 'theme') {
-      await this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
-        scope: EventScope.TO_SYSTEM,
-      })
+      await this.notifyAggregateThemeUpdate()
     }
 
-    return await this.model.create({ ...model, created: new Date() })
+    return created
   }
 
   async update(id: string, newModel: SnippetModel) {
@@ -179,9 +198,7 @@ export class SnippetService {
     })
 
     if (old.reference === 'theme' || newModel.reference === 'theme') {
-      await this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
-        scope: EventScope.TO_SYSTEM,
-      })
+      await this.notifyAggregateThemeUpdate()
     }
 
     if (!newerDoc) {
@@ -207,6 +224,9 @@ export class SnippetService {
     await this.deleteCachedSnippet(doc.reference, doc.name)
     if (doc.customPath) {
       await this.deleteCachedSnippetByCustomPath(doc.customPath)
+    }
+    if (doc.reference === 'theme') {
+      await this.notifyAggregateThemeUpdate()
     }
   }
 

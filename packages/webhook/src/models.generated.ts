@@ -32,6 +32,7 @@ export enum BusinessEvents {
   RECENTLY_CREATE = 'RECENTLY_CREATE',
   RECENTLY_UPDATE = 'RECENTLY_UPDATE',
   RECENTLY_DELETE = 'RECENTLY_DELETE',
+  AGGREGATE_UPDATE = 'AGGREGATE_UPDATE',
   TRANSLATION_CREATE = 'TRANSLATION_CREATE',
   TRANSLATION_UPDATE = 'TRANSLATION_UPDATE',
   CONTENT_REFRESH = 'CONTENT_REFRESH',
@@ -163,6 +164,7 @@ export interface CommentModel extends BaseModel {
   location?: string
   isWhispers?: boolean
   avatar?: string
+  authProvider?: string
   meta?: string
   readerId?: string
   editedAt?: Date

@@ -1,18 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose'
+import { Types } from 'mongoose'
+
 import { BizException } from '~/common/exceptions/biz.exception'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import {
   OWNER_PROFILE_COLLECTION_NAME,
   READER_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
 import { DatabaseService } from '~/processors/database/database.service'
+import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar } from '~/utils/tool.util'
-import { Types } from 'mongoose'
-import { OwnerProfileModel } from './owner-profile.model'
+
 import type { OwnerDocument } from './owner.model'
 import { OwnerModel } from './owner.model'
+import { OwnerProfileModel } from './owner-profile.model'
 
 @Injectable()
 export class OwnerService {
@@ -24,6 +29,7 @@ export class OwnerService {
     private readonly ownerProfileModel: ReturnModelType<
       typeof OwnerProfileModel
     >,
+    private readonly eventManager: EventManagerService,
   ) {}
 
   private get readersCollection() {
@@ -130,7 +136,8 @@ export class OwnerService {
       readerPatch.image = data.avatar
     }
 
-    if (Object.keys(readerPatch).length > 0) {
+    const hasReaderPatch = Object.keys(readerPatch).length > 0
+    if (hasReaderPatch) {
       readerPatch.updatedAt = new Date()
       await this.readersCollection.updateOne(
         { _id: reader._id },
@@ -152,7 +159,8 @@ export class OwnerService {
       profilePatch.socialIds = data.socialIds
     }
 
-    if (Object.keys(profilePatch).length > 0) {
+    const hasProfilePatch = Object.keys(profilePatch).length > 0
+    if (hasProfilePatch) {
       await this.ownerProfileModel.updateOne(
         { readerId: reader._id },
         {
@@ -164,6 +172,24 @@ export class OwnerService {
         },
         { upsert: true },
       )
+    }
+
+    if (hasReaderPatch || hasProfilePatch) {
+      await Promise.all([
+        this.eventManager.emit(EventBusEvents.CleanAggregateCache, null, {
+          scope: EventScope.TO_SYSTEM,
+        }),
+        this.eventManager.emit(
+          BusinessEvents.AGGREGATE_UPDATE,
+          {
+            source: 'owner',
+            keys: ['user'],
+          },
+          {
+            scope: EventScope.TO_SYSTEM,
+          },
+        ),
+      ])
     }
 
     return this.getOwnerInfo(true)
