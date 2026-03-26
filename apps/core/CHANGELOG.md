@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.0.5](https://github.com/mx-space/core/compare/v11.0.4...v11.0.5) (2026-03-26)
+
+
+### Features
+
+* **event:** add AGGREGATE_UPDATE event and enhance config update notifications ([26896fe](https://github.com/mx-space/core/commit/26896fe6860c37a01eb76f678c1570cdfb296ff1))
+
+
+
 ## [11.0.4](https://github.com/mx-space/core/compare/v11.0.3...v11.0.4) (2026-03-24)
 
 
