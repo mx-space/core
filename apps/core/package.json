@@ -127,7 +127,7 @@
     "nanoid": "5.1.7",
     "nestjs-zod": "^5.2.1",
     "node-machine-id": "1.1.12",
-    "nodemailer": "8.0.3",
+    "nodemailer": "8.0.4",
     "object-scan": "^20.0.4",
     "openai": "6.32.0",
     "picocolors": "^1.1.1",
