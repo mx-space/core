@@ -162,11 +162,14 @@ export class FileController {
 
     // 获取文件上传配置
     const uploadConfig = await this.configsService.get('fileUploadOptions')
+    const imageStorageConfig =
+      type === 'image'
+        ? await this.configsService.get('imageStorageOptions')
+        : null
 
-    if (type === 'image') {
-      const config = await this.configsService.get('imageStorageOptions')
+    if (type === 'image' && imageStorageConfig?.enable) {
+      const config = imageStorageConfig
       if (
-        !config.enable ||
         !config.endpoint ||
         !config.secretId ||
         !config.secretKey ||
@@ -230,7 +233,14 @@ export class FileController {
       return { url: s3Url, name: filename }
     }
 
-    const file = await this.uploadService.getAndValidMultipartField(req)
+    const file = await this.uploadService.getAndValidMultipartField(
+      req,
+      type === 'image'
+        ? {
+            maxFileSize: 20 * 1024 * 1024,
+          }
+        : undefined,
+    )
 
     // 生成文件名（可能包含子路径）
     const rawFilename = generateFilename(uploadConfig, {
@@ -257,6 +267,12 @@ export class FileController {
 
     await this.service.writeFile(type, relativePath, file.file)
     const fileUrl = await this.service.resolveFileUrl(type, relativePath)
+    if (type === 'image') {
+      await this.fileReferenceService.createPendingReference(
+        fileUrl,
+        relativePath,
+      )
+    }
 
     return { url: fileUrl, name: path.basename(relativePath) }
   }
