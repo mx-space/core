@@ -1,3 +1,4 @@
+import type { Ref } from '@typegoose/typegoose'
 import {
   index,
   modelOptions,
@@ -5,14 +6,15 @@ import {
   prop,
   Severity,
 } from '@typegoose/typegoose'
-import type { Ref } from '@typegoose/typegoose'
+import { Types } from 'mongoose'
+import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
+import mongooseAutoPopulate from 'mongoose-autopopulate'
+
 import { POST_COLLECTION_NAME } from '~/constants/db.constant'
 import { Paginator } from '~/shared/interface/paginator.interface'
 import { CountModel as Count } from '~/shared/model/count.model'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
-import { Types } from 'mongoose'
-import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
-import mongooseAutoPopulate from 'mongoose-autopopulate'
+
 import { CategoryModel as Category } from '../category/category.model'
 
 @plugin(aggregatePaginate)
@@ -46,6 +48,15 @@ export class PostModel extends WriteBaseModel {
 
   @prop({ default: true })
   isPublished?: boolean
+
+  @prop({
+    select: false,
+    type: String,
+  })
+  password: string | null
+
+  @prop()
+  passwordHint?: string | null
 
   @prop({ type: String })
   tags?: string[]

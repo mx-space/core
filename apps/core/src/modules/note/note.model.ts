@@ -1,10 +1,12 @@
 import { AutoIncrementID } from '@typegoose/auto-increment'
-import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
 import type { Ref } from '@typegoose/typegoose'
+import { index, modelOptions, plugin, prop } from '@typegoose/typegoose'
+import mongooseAutoPopulate from 'mongoose-autopopulate'
+
 import { NOTE_COLLECTION_NAME } from '~/constants/db.constant'
 import { CountModel } from '~/shared/model/count.model'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
-import mongooseAutoPopulate from 'mongoose-autopopulate'
+
 import { TopicModel } from '../topic/topic.model'
 import { Coordinate } from './models/coordinate.model'
 
@@ -41,6 +43,9 @@ export class NoteModel extends WriteBaseModel {
     type: String,
   })
   password: string | null
+
+  @prop()
+  passwordHint?: string | null
 
   @prop({ type: Date })
   publicAt: Date | null

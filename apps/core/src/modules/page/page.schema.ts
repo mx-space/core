@@ -1,7 +1,13 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-import { zCoerceInt, zMongoId, zNonEmptyString, zPrefer } from '~/common/zod'
+import {
+  zCoerceInt,
+  zMongoId,
+  zNonEmptyString,
+  zPrefer,
+  zTransformEmptyNull,
+} from '~/common/zod'
 import { WriteBaseSchema } from '~/shared/schema'
 import { ImageSchema } from '~/shared/schema/image.schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
@@ -12,6 +18,10 @@ import { ContentFormat } from '~/shared/types/content-format.type'
 export const PageSchema = WriteBaseSchema.extend({
   slug: zNonEmptyString,
   subtitle: z.string().nullable().optional(),
+  password: zTransformEmptyNull(z.string()).optional(),
+  passwordHint: z
+    .preprocess((val) => (val === '' ? null : val), z.string().nullable())
+    .optional(),
   order: z.preprocess(
     (val) =>
       typeof val === 'string' ? Number.parseInt(val, 10) : (val as number),
@@ -33,6 +43,10 @@ export const PartialPageSchema = PageSchema.extend({
     .enum([ContentFormat.Markdown, ContentFormat.Lexical])
     .optional(),
   meta: z.record(z.string(), z.any()).optional().nullable(),
+  password: zTransformEmptyNull(z.string()).optional(),
+  passwordHint: z
+    .preprocess((val) => (val === '' ? null : val), z.string().nullable())
+    .optional(),
   order: z.preprocess(
     (val) =>
       typeof val === 'string' ? Number.parseInt(val, 10) : (val as number),

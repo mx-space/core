@@ -40,6 +40,9 @@ export const NoteSchema = WriteBaseSchema.extend({
   }, z.string().optional()),
   isPublished: z.boolean().default(true).optional(),
   password: zTransformEmptyNull(z.string()).optional(),
+  passwordHint: z
+    .preprocess((val) => (val === '' ? null : val), z.string().nullable())
+    .optional(),
   publicAt: z
     .preprocess(
       (val) => (val ? new Date(val as string | number | Date) : null),
@@ -73,6 +76,10 @@ export const PartialNoteSchema = NoteSchema.extend({
     .optional(),
   meta: z.record(z.string(), z.any()).optional().nullable(),
   isPublished: z.boolean().optional(),
+  password: zTransformEmptyNull(z.string()).optional(),
+  passwordHint: z
+    .preprocess((val) => (val === '' ? null : val), z.string().nullable())
+    .optional(),
   bookmark: z.boolean().optional(),
   images: z.array(ImageSchema).optional(),
 }).partial()

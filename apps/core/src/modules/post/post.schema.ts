@@ -9,6 +9,7 @@ import {
   zNonEmptyString,
   zPinDate,
   zPrefer,
+  zTransformEmptyNull,
 } from '~/common/zod'
 import { PagerSchema } from '~/shared/dto/pager.dto'
 import { WriteBaseSchema } from '~/shared/schema'
@@ -26,6 +27,10 @@ export const PostSchema = WriteBaseSchema.extend({
   categoryId: zMongoId,
   copyright: z.boolean().default(true).optional(),
   isPublished: z.boolean().default(true).optional(),
+  password: zTransformEmptyNull(z.string()).optional(),
+  passwordHint: z
+    .preprocess((val) => (val === '' ? null : val), z.string().nullable())
+    .optional(),
   tags: zArrayUnique(z.string().min(1)).optional(),
   pin: zPinDate,
   pinOrder: z.preprocess(
@@ -51,6 +56,10 @@ export const PartialPostSchema = PostSchema.extend({
   meta: z.record(z.string(), z.any()).optional().nullable(),
   copyright: z.boolean().optional(),
   isPublished: z.boolean().optional(),
+  password: zTransformEmptyNull(z.string()).optional(),
+  passwordHint: z
+    .preprocess((val) => (val === '' ? null : val), z.string().nullable())
+    .optional(),
 }).partial()
 
 export class PartialPostDto extends createZodDto(PartialPostSchema) {}

@@ -1,4 +1,5 @@
 import { modelOptions, prop } from '@typegoose/typegoose'
+
 import { PAGE_COLLECTION_NAME } from '~/constants/db.constant'
 import { WriteBaseModel } from '~/shared/model/write-base.model'
 
@@ -13,6 +14,15 @@ export class PageModel extends WriteBaseModel {
 
   @prop({ trim: true, type: String })
   subtitle?: string | null
+
+  @prop({
+    select: false,
+    type: String,
+  })
+  password: string | null
+
+  @prop()
+  passwordHint?: string | null
 
   @prop({ default: 1 })
   order!: number
