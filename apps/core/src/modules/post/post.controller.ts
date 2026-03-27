@@ -18,7 +18,9 @@ import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import {
   type ArticleTranslationInput,
@@ -311,6 +313,7 @@ export class PostController {
     @Lang() lang?: string,
   ) {
     const { category, slug } = params
+    const { password } = query
     const postDocument = await this.postService.getPostBySlug(
       category,
       slug,
@@ -325,6 +328,14 @@ export class PostController {
       throw new CannotFindException()
     }
 
+    // 检查密码保护
+    if (
+      !this.postService.checkPasswordToAccess(postDocument, password) &&
+      !isAuthenticated
+    ) {
+      throw new BizException(ErrorCodeEnum.PostNotFound)
+    }
+
     const liked = await this.countingService.getThisRecordIsLiked(
       postDocument.id,
       ip,
@@ -334,7 +345,7 @@ export class PostController {
     const translationResult = await this.translationService.translateArticle({
       articleId: postDocument.id,
       targetLang: lang,
-      allowHidden: Boolean(isAuthenticated),
+      allowHidden: Boolean(isAuthenticated || postDocument.password),
       originalData: {
         title: baseData.title,
         text: baseData.text,
@@ -343,7 +354,7 @@ export class PostController {
       },
     })
 
-    return applyContentPreference(
+    const resultData = applyContentPreference(
       {
         ...baseData,
         title: translationResult.title,
@@ -361,6 +372,28 @@ export class PostController {
       },
       query.prefer,
     )
+
+    // 如果有密码，将其替换为 '*'
+    if (resultData.password) {
+      resultData.password = '*'
+    }
+
+    return resultData
+  }
+
+  @Get('/:category/:slug/password-hint')
+  async getPasswordHint(@Param() params: CategoryAndSlugDto) {
+    const { category, slug } = params
+    const postDocument = await this.postService.getPostBySlug(category, slug)
+    if (!postDocument) {
+      throw new CannotFindException()
+    }
+
+    // 只返回密码提示，不返回其他内容
+    return {
+      hasPassword: !!postDocument.password,
+      passwordHint: postDocument.passwordHint,
+    }
   }
 
   @Post('/')

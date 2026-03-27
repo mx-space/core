@@ -467,6 +467,44 @@ export class NoteController {
     return { data, size: data.length }
   }
 
+  @Get('/:nid/password-hint')
+  async getPasswordHintByNid(@Param() params: NidType) {
+    const { nid } = params
+    const note = await this.noteService.model
+      .findOne({ nid })
+      .select('+password')
+      .lean()
+
+    if (!note) {
+      throw new CannotFindException()
+    }
+
+    return {
+      hasPassword: !!note.password,
+      passwordHint: note.passwordHint,
+    }
+  }
+
+  @Get('/:year/:month/:day/:slug/password-hint')
+  async getPasswordHintBySlug(@Param() params: NoteSlugDateParamsDto) {
+    const { year, month, day, slug } = params
+    const note = await this.noteService.findOneByDateAndSlug(
+      year,
+      month,
+      day,
+      slug,
+    )
+
+    if (!note) {
+      throw new CannotFindException()
+    }
+
+    return {
+      hasPassword: !!note.password,
+      passwordHint: note.passwordHint,
+    }
+  }
+
   @Post('/')
   @HTTPDecorators.Idempotence()
   @Auth()

@@ -138,9 +138,15 @@ export class PageController {
       throw new CannotFindException()
     }
 
+    // 检查密码保护
+    if (!this.pageService.checkPasswordToAccess(page, query.password)) {
+      throw new BizException(ErrorCodeEnum.PostNotFound)
+    }
+
     const translationResult = await this.translationService.translateArticle({
       articleId: page._id?.toString?.() ?? page.id ?? String(page._id),
       targetLang: lang,
+      allowHidden: Boolean(page.password),
       originalData: {
         title: page.title,
         text: page.text,
@@ -148,7 +154,7 @@ export class PageController {
       },
     })
 
-    return applyContentPreference(
+    const resultData = applyContentPreference(
       {
         ...page,
         title: translationResult.title,
@@ -164,6 +170,33 @@ export class PageController {
       },
       query.prefer,
     )
+
+    // 如果有密码，将其替换为 '*'
+    if (resultData.password) {
+      resultData.password = '*'
+    }
+
+    return resultData
+  }
+
+  @Get('/slug/:slug/password-hint')
+  async getPasswordHint(@Param('slug') slug: string) {
+    if (typeof slug !== 'string') {
+      throw new BizException(ErrorCodeEnum.InvalidSlug)
+    }
+    const page = await this.pageService.model
+      .findOne({ slug })
+      .lean({ getters: true })
+
+    if (!page) {
+      throw new CannotFindException()
+    }
+
+    // 只返回密码提示，不返回其他内容
+    return {
+      hasPassword: !!page.password,
+      passwordHint: page.passwordHint,
+    }
   }
 
   @Post('/')

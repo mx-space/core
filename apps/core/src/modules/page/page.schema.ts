@@ -77,6 +77,7 @@ export class PageReorderDto extends createZodDto(PageReorderSchema) {}
  * Page detail query schema
  */
 export const PageDetailQuerySchema = z.object({
+  password: zNonEmptyString.optional(),
   prefer: zPrefer,
 })
 

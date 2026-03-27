@@ -83,6 +83,7 @@ export class CategoryAndSlugDto extends createZodDto(CategoryAndSlugSchema) {}
  * Post detail query schema
  */
 export const PostDetailQuerySchema = z.object({
+  password: zNonEmptyString.optional(),
   lang: zLang,
   prefer: zPrefer,
 })

@@ -152,6 +152,19 @@ export class PostService implements OnApplicationBootstrap {
     return doc
   }
 
+  checkPasswordToAccess<T extends PostModel>(
+    doc: T,
+    password?: string,
+  ): boolean {
+    if (!doc.password) {
+      return true
+    }
+    if (!password) {
+      return false
+    }
+    return Object.is(password, doc.password)
+  }
+
   private async trackSlugChanges(
     oldDocument: PostModel,
     newDocument: Partial<PostModel>,

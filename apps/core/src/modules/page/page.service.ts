@@ -104,6 +104,19 @@ export class PageService {
     return res
   }
 
+  checkPasswordToAccess<T extends PageModel>(
+    doc: T,
+    password?: string,
+  ): boolean {
+    if (!doc.password) {
+      return true
+    }
+    if (!password) {
+      return false
+    }
+    return Object.is(password, doc.password)
+  }
+
   public async updateById(
     id: string,
     doc: Partial<PageModel> & { draftId?: string },
