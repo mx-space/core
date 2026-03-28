@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [11.0.6](https://github.com/mx-space/core/compare/v11.0.5...v11.0.6) (2026-03-28)
+
+
+### Bug Fixes
+
+* **deps:** update dependency nodemailer to v8.0.4 [security] ([#2622](https://github.com/mx-space/core/issues/2622)) ([29bf581](https://github.com/mx-space/core/commit/29bf58191d43473adc6c603f5ac73acacbed7155))
+* **file:** fallback image upload to local storage when S3 is disabled ([32ce773](https://github.com/mx-space/core/commit/32ce77320061f14c9c07e60c9e0c43ba0a258aaf))
+
+
+
 ## [11.0.5](https://github.com/mx-space/core/compare/v11.0.4...v11.0.5) (2026-03-26)
 
 
