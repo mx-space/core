@@ -331,6 +331,20 @@ export class CommentController {
     return this.replyCommentWithBody(params, body, isAuthenticated, ipLocation)
   }
 
+  @Post('/owner/reply/:id')
+  @Auth()
+  @HTTPDecorators.Idempotence({
+    expired: 20,
+    errorMessage: idempotenceMessage,
+  })
+  async ownerReplyByCid(
+    @Param() params: MongoIdDto,
+    @Body() body: EditCommentDto,
+    @IpLocation() ipLocation: IpRecord,
+  ) {
+    return this.replyCommentWithBody(params, body, true, ipLocation)
+  }
+
   @Patch('/:id')
   @Auth()
   async modifyCommentState(
