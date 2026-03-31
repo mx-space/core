@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [11.0.7](https://github.com/mx-space/core/compare/v11.0.6...v11.0.7) (2026-03-31)
+
+
+### Bug Fixes
+
+* comment api ([2153077](https://github.com/mx-space/core/commit/21530770ea09550b8d023847e311b5c47ed0a7de))
+* update scripe ([25fdde6](https://github.com/mx-space/core/commit/25fdde6020d72fcc07780167ae2c425276da728c))
+
+
+
 ## [11.0.6](https://github.com/mx-space/core/compare/v11.0.5...v11.0.6) (2026-03-28)
 
 
