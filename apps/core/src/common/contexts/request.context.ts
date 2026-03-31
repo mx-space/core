@@ -46,9 +46,30 @@ export class RequestContext {
     return null
   }
 
-  static currentIsAuthenticated(): boolean {
+  static currentReaderId(): string | null {
+    return RequestContext.currentRequestContext()?.request.readerId ?? null
+  }
+
+  static currentAuthProvider(): string | null {
+    return RequestContext.currentRequestContext()?.request.authProvider ?? null
+  }
+
+  static hasReaderIdentity(): boolean {
     const request = RequestContext.currentRequestContext()?.request
-    return !!request?.isAuthenticated
+    return !!(request?.hasReaderIdentity ?? request?.readerId)
+  }
+
+  static hasAdminAccess(): boolean {
+    const request = RequestContext.currentRequestContext()?.request
+    return !!(request?.hasAdminAccess ?? request?.isAuthenticated)
+  }
+
+  static currentIsGuest(): boolean {
+    const request = RequestContext.currentRequestContext()?.request
+    if (!request) {
+      return true
+    }
+    return request.isGuest ?? !RequestContext.hasReaderIdentity()
   }
 
   static currentLang(): string | undefined {

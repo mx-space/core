@@ -39,6 +39,8 @@ const apikeyCol = createMockCollection([])
 
 const mockVerifyApiKey = vi.fn().mockResolvedValue(null)
 const mockGetProviders = vi.fn().mockResolvedValue([])
+const mockGetSession = vi.fn().mockResolvedValue(null)
+const mockListUserAccounts = vi.fn().mockResolvedValue([])
 
 const collections: Record<string, any> = {
   readers: readersCol,
@@ -60,8 +62,8 @@ describe('AuthController (e2e)', async () => {
           get: () => ({
             options: { socialProviders: { github: {} } },
             api: {
-              getSession: vi.fn().mockResolvedValue(null),
-              listUserAccounts: vi.fn().mockResolvedValue([]),
+              getSession: mockGetSession,
+              listUserAccounts: mockListUserAccounts,
               verifyApiKey: mockVerifyApiKey,
               getProviders: mockGetProviders,
             },
@@ -80,6 +82,14 @@ describe('AuthController (e2e)', async () => {
     ],
     imports: [],
     models: [],
+  })
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockVerifyApiKey.mockResolvedValue(null)
+    mockGetProviders.mockResolvedValue([])
+    mockGetSession.mockResolvedValue(null)
+    mockListUserAccounts.mockResolvedValue([])
   })
 
   describe('POST /auth/token', () => {
@@ -237,6 +247,84 @@ describe('AuthController (e2e)', async () => {
         url: `${apiRoutePrefix}/auth/session`,
       })
       expect(res.statusCode).toBe(200)
+    })
+
+    it('should prefer session user id over provider account id', async () => {
+      mockGetSession.mockResolvedValueOnce({
+        user: {
+          id: ownerId.toString(),
+          email: 'owner@test.com',
+          name: 'Owner',
+        },
+        session: {
+          provider: 'github',
+        },
+      })
+      mockListUserAccounts.mockResolvedValueOnce([
+        {
+          providerId: 'github',
+          accountId: 'github-owner-account',
+        },
+      ])
+      accountsCol.findOne.mockResolvedValueOnce({
+        providerAccountId: 'github-owner-account',
+        providerId: 'github',
+        userId: ownerId,
+      })
+
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: `${apiRoutePrefix}/auth/session`,
+        headers: {
+          cookie: 'session=valid',
+        },
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toMatchObject({
+        id: ownerId.toString(),
+        provider: 'github',
+        email: 'owner@test.com',
+        role: 'owner',
+      })
+    })
+
+    it('should fall back to provider account id when session user id is absent', async () => {
+      mockGetSession.mockResolvedValueOnce({
+        user: {
+          email: 'owner@test.com',
+          name: 'Owner',
+        },
+        session: {
+          provider: 'github',
+        },
+      })
+      mockListUserAccounts.mockResolvedValueOnce([
+        {
+          providerId: 'github',
+          accountId: 'github-owner-account-fallback',
+        },
+      ])
+      accountsCol.findOne.mockResolvedValueOnce({
+        providerAccountId: 'github-owner-account-fallback',
+        providerId: 'github',
+        userId: ownerId,
+      })
+
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: `${apiRoutePrefix}/auth/session`,
+        headers: {
+          cookie: 'session=valid',
+        },
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toMatchObject({
+        id: 'github-owner-account-fallback',
+        provider: 'github',
+        role: 'owner',
+      })
     })
   })
 

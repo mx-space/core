@@ -16,7 +16,7 @@ import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
-import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { CountingService } from '~/processors/helper/helper.counting.service'
@@ -57,7 +57,7 @@ export class PostController {
   })
   async getPaginate(
     @Query() query: PostPagerDto,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
     const {
@@ -238,7 +238,7 @@ export class PostController {
   })
   async getById(
     @Param() params: MongoIdDto,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() isAuthenticated: boolean,
   ) {
     const { id } = params
     const doc = await this.postService.model
@@ -268,7 +268,7 @@ export class PostController {
   })
   async getLatest(
     @IpLocation() ip: IpRecord,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
     const query: any = {}
@@ -307,7 +307,7 @@ export class PostController {
     @Param() params: CategoryAndSlugDto,
     @Query() query: PostDetailQueryDto,
     @IpLocation() { ip }: IpRecord,
-    @IsAuthenticated() isAuthenticated?: boolean,
+    @HasAdminAccess() isAuthenticated?: boolean,
     @Lang() lang?: string,
   ) {
     const { category, slug } = params

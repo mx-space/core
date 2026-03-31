@@ -69,8 +69,12 @@ describe('RolesGuard', () => {
 
     await guard.canActivate(context)
 
+    expect(request.hasAdminAccess).toBe(true)
+    expect(request.hasReaderIdentity).toBe(true)
     expect(request.isAuthenticated).toBe(true)
     expect(request.isGuest).toBe(false)
+    expect(request.raw.hasAdminAccess).toBe(true)
+    expect(request.raw.hasReaderIdentity).toBe(true)
     expect(request.raw.isAuthenticated).toBe(true)
     expect(request.raw.isGuest).toBe(false)
   })
@@ -81,13 +85,17 @@ describe('RolesGuard', () => {
 
     await guard.canActivate(context)
 
+    expect(request.hasAdminAccess).toBe(false)
+    expect(request.hasReaderIdentity).toBe(false)
     expect(request.isAuthenticated).toBe(false)
     expect(request.isGuest).toBe(true)
+    expect(request.raw.hasAdminAccess).toBe(false)
+    expect(request.raw.hasReaderIdentity).toBe(false)
     expect(request.raw.isAuthenticated).toBe(false)
     expect(request.raw.isGuest).toBe(true)
   })
 
-  it('should set isAuthenticated=false when session is reader (non-owner)', async () => {
+  it('should treat reader session as reader-identified but not admin-authorized', async () => {
     const { context, request } = createMockContext()
     authService.getSessionUser.mockResolvedValue({
       user: readerUser,
@@ -96,8 +104,10 @@ describe('RolesGuard', () => {
 
     await guard.canActivate(context)
 
+    expect(request.hasAdminAccess).toBe(false)
+    expect(request.hasReaderIdentity).toBe(true)
     expect(request.isAuthenticated).toBe(false)
-    expect(request.isGuest).toBe(true)
+    expect(request.isGuest).toBe(false)
   })
 
   it('should set readerId from session user', async () => {
@@ -110,6 +120,7 @@ describe('RolesGuard', () => {
     await guard.canActivate(context)
 
     expect(request.readerId).toBe('reader-42')
+    expect(request.hasReaderIdentity).toBe(true)
     expect(request.raw.readerId).toBe('reader-42')
   })
 
@@ -157,6 +168,8 @@ describe('RolesGuard', () => {
     await guard.canActivate(context)
 
     expect(request.isAuthenticated).toBe(true)
+    expect(request.hasAdminAccess).toBe(true)
+    expect(request.hasReaderIdentity).toBe(true)
     expect(request.isGuest).toBe(false)
   })
 
@@ -171,6 +184,8 @@ describe('RolesGuard', () => {
     const result = await guard.canActivate(context)
 
     expect(result).toBe(true)
+    expect(request.hasAdminAccess).toBe(false)
+    expect(request.hasReaderIdentity).toBe(false)
     expect(request.isAuthenticated).toBe(false)
     expect(request.isGuest).toBe(true)
   })

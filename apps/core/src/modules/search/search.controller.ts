@@ -3,7 +3,6 @@ import { Get, Param, Post, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
-import { IsAuthenticated } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { SearchDto } from '~/modules/search/search.schema'
@@ -16,11 +15,8 @@ export class SearchController {
 
   @HttpCache.disable
   @Get()
-  search(
-    @Query() query: SearchDto,
-    @IsAuthenticated() isAuthenticated: boolean,
-  ) {
-    return this.searchService.search(query, isAuthenticated)
+  search(@Query() query: SearchDto) {
+    return this.searchService.search(query)
   }
 
   @Post('/rebuild')
@@ -31,18 +27,14 @@ export class SearchController {
 
   @Get('/:type')
   @HttpCache.disable
-  searchByType(
-    @Query() query: SearchDto,
-    @IsAuthenticated() isAuthenticated: boolean,
-    @Param('type') type: string,
-  ) {
+  searchByType(@Query() query: SearchDto, @Param('type') type: string) {
     type = type.toLowerCase()
     switch (type) {
       case 'post': {
-        return this.searchService.searchPost(query, isAuthenticated)
+        return this.searchService.searchPost(query)
       }
       case 'note': {
-        return this.searchService.searchNote(query, isAuthenticated)
+        return this.searchService.searchNote(query)
       }
       case 'page': {
         return this.searchService.searchPage(query)

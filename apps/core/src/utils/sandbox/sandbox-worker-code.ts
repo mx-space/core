@@ -285,6 +285,7 @@ async function executeCode(payload) {
         document: context.model,
         name: context.model.name,
         reference: context.model.reference,
+        hasAdminAccess: context.hasAdminAccess ?? context.isAuthenticated,
         isAuthenticated: context.isAuthenticated,
         ...bridgeContext,
         throws,

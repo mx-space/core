@@ -9,6 +9,8 @@ describe('RequestContext', () => {
     const user = { id: 'user-1' }
     const request = {
       user,
+      hasAdminAccess: true,
+      hasReaderIdentity: true,
       isAuthenticated: true,
       isGuest: false,
       readerId: 'reader-1',
@@ -20,7 +22,9 @@ describe('RequestContext', () => {
       expect(RequestContext.currentRequestContext()).toBe(context)
       expect(RequestContext.currentRequest()).toBe(request)
       expect(RequestContext.currentUser()).toBe(user)
-      expect(RequestContext.currentIsAuthenticated()).toBe(true)
+      expect(RequestContext.currentReaderId()).toBe('reader-1')
+      expect(RequestContext.hasReaderIdentity()).toBe(true)
+      expect(RequestContext.hasAdminAccess()).toBe(true)
 
       await Promise.resolve()
       expect(RequestContext.currentRequestContext()).toBe(context)
@@ -37,6 +41,8 @@ describe('RequestContext', () => {
 
   test('stores and retrieves lang property', async () => {
     const request = {
+      hasAdminAccess: false,
+      hasReaderIdentity: false,
       isAuthenticated: false,
       isGuest: true,
     } as BizIncomingMessage
@@ -56,6 +62,8 @@ describe('RequestContext', () => {
 
   test('returns undefined when lang is not set', async () => {
     const request = {
+      hasAdminAccess: false,
+      hasReaderIdentity: false,
       isAuthenticated: false,
       isGuest: true,
     } as BizIncomingMessage
@@ -70,6 +78,8 @@ describe('RequestContext', () => {
   test('isolates lang across concurrent requests', async () => {
     const makeContext = (lang?: string) => {
       const request = {
+        hasAdminAccess: false,
+        hasReaderIdentity: false,
         isAuthenticated: false,
         isGuest: true,
       } as BizIncomingMessage
@@ -103,6 +113,8 @@ describe('RequestContext', () => {
   test('isolates concurrent request contexts', async () => {
     const makeContext = (readerId: string) => {
       const request = {
+        hasAdminAccess: true,
+        hasReaderIdentity: true,
         isAuthenticated: true,
         isGuest: false,
         readerId,
@@ -127,5 +139,33 @@ describe('RequestContext', () => {
 
     expect(readerA).toBe('reader-a')
     expect(readerB).toBe('reader-b')
+  })
+
+  test('falls back to legacy admin flag when explicit admin access flag is absent', async () => {
+    const request = {
+      isAuthenticated: true,
+      isGuest: true,
+    } as BizIncomingMessage
+    const response = {} as ServerResponse
+    const context = new RequestContext(request, response)
+
+    await RequestContext.run(context, async () => {
+      expect(RequestContext.hasAdminAccess()).toBe(true)
+    })
+  })
+
+  test('derives reader identity and guest state from readerId when explicit flags are absent', async () => {
+    const request = {
+      isAuthenticated: false,
+      readerId: 'reader-derived',
+    } as BizIncomingMessage
+    const response = {} as ServerResponse
+    const context = new RequestContext(request, response)
+
+    await RequestContext.run(context, async () => {
+      expect(RequestContext.currentReaderId()).toBe('reader-derived')
+      expect(RequestContext.hasReaderIdentity()).toBe(true)
+      expect(RequestContext.currentIsGuest()).toBe(false)
+    })
   })
 })

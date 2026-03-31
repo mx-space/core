@@ -619,7 +619,7 @@ export class CommentService {
   async assignReaderToComment(): Promise<
     (ReaderModel & { id: string }) | null
   > {
-    const readerId = RequestContext.currentRequest()?.readerId
+    const readerId = RequestContext.currentReaderId()
 
     let reader: ReaderModel | null = null
     if (readerId) {
@@ -643,7 +643,7 @@ export class CommentService {
   }
 
   private assignAuthProviderToComment(doc: Partial<CommentModel>) {
-    const authProvider = RequestContext.currentRequest()?.authProvider
+    const authProvider = RequestContext.currentAuthProvider()
     if (authProvider) {
       doc.authProvider = authProvider
     }
@@ -655,6 +655,8 @@ export class CommentService {
     type?: CollectionRefTypes,
   ) {
     const reader = await this.assignReaderToComment()
+    const isLoggedInComment =
+      !!reader || RequestContext.hasReaderIdentity() || RequestContext.hasAdminAccess()
     if (reader) {
       this.stripReaderIdentitySnapshot(doc)
       this.assignAuthProviderToComment(doc)
@@ -689,9 +691,7 @@ export class CommentService {
 
     const comment = (await this.commentModel.create({
       ...doc,
-      state: RequestContext.currentIsAuthenticated()
-        ? CommentState.Read
-        : CommentState.Unread,
+      state: isLoggedInComment ? CommentState.Read : CommentState.Unread,
       ref: new Types.ObjectId(id),
       parentCommentId: null,
       replyCount: 0,
@@ -745,6 +745,8 @@ export class CommentService {
     }
 
     const reader = await this.assignReaderToComment()
+    const isLoggedInComment =
+      !!reader || RequestContext.hasReaderIdentity() || RequestContext.hasAdminAccess()
     if (reader) {
       this.stripReaderIdentitySnapshot(doc)
       this.assignAuthProviderToComment(doc)
@@ -754,10 +756,7 @@ export class CommentService {
     const comment = (await this.commentModel.create({
       ...doc,
       state:
-        doc.state ??
-        (RequestContext.currentIsAuthenticated()
-          ? CommentState.Read
-          : CommentState.Unread),
+        doc.state ?? (isLoggedInComment ? CommentState.Read : CommentState.Unread),
       ref: this.toObjectId(parent.ref as any),
       refType: parent.refType,
       parentCommentId: parent._id,

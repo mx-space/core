@@ -89,6 +89,7 @@ declare interface Context {
   params: Record<string, string>
   method: string
 
+  hasAdminAccess: boolean
   isAuthenticated: boolean
   secret: Record<string, any>
 

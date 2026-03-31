@@ -298,7 +298,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   }
 
   async likeAndEmit(type: 'post' | 'note', id: string, ip: string) {
-    const readerId = RequestContext.currentRequest()?.readerId
+    const readerId = RequestContext.currentReaderId()
 
     let reader: ReaderModel | null = null
     if (readerId) {

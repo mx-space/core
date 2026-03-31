@@ -46,7 +46,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
       context.getHandler(),
     )
 
-    if (request.isAuthenticated && !cacheOptions?.force) {
+    if ((request.hasAdminAccess ?? request.isAuthenticated) && !cacheOptions?.force) {
       this.setPrivateCacheHeader(res)
       return call$
     }

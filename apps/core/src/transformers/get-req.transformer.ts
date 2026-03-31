@@ -10,6 +10,8 @@ type BizRequest = {
   isGuest: boolean
 
   authProvider?: string
+  hasAdminAccess?: boolean
+  hasReaderIdentity?: boolean
   isAuthenticated: boolean
   token?: string
   readerId?: string

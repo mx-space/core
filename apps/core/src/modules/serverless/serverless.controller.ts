@@ -13,7 +13,7 @@ import { Throttle } from '@nestjs/throttler'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -88,12 +88,12 @@ export class ServerlessController {
   @HTTPDecorators.Bypass
   async runServerlessFunctionWildcard(
     @Param() param: ServerlessReferenceDto,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() hasAdminAccess: boolean,
 
     @Request() req: FastifyRequest,
     @Response() reply: FastifyReply,
   ) {
-    return this.runServerlessFunction(param, isAuthenticated, req, reply)
+    return this.runServerlessFunction(param, hasAdminAccess, req, reply)
   }
 
   @All('/:reference/:name')
@@ -106,7 +106,7 @@ export class ServerlessController {
   @HTTPDecorators.Bypass
   async runServerlessFunction(
     @Param() param: ServerlessReferenceDto,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() hasAdminAccess: boolean,
 
     @Request() req: FastifyRequest,
     @Response() reply: FastifyReply,
@@ -147,14 +147,14 @@ export class ServerlessController {
       )
     }
 
-    if (snippet.private && !isAuthenticated) {
+    if (snippet.private && !hasAdminAccess) {
       throw new BizException(ErrorCodeEnum.ServerlessNoPermission)
     }
 
     const result =
       await this.serverlessService.injectContextIntoServerlessFunctionAndCall(
         snippet,
-        { req, res: createMockedContextResponse(reply), isAuthenticated },
+        { req, res: createMockedContextResponse(reply), hasAdminAccess },
       )
 
     if (!reply.sent) {

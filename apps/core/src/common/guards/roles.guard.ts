@@ -17,15 +17,16 @@ export class RolesGuard extends AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = this.getRequest(context)
-    let isAuthenticated = false
+    let hasAdminAccess = false
     try {
       await super.canActivate(context)
-      isAuthenticated = true
+      hasAdminAccess = true
     } catch {}
 
     const session = await this.authService.getSessionUser(request.raw)
     const readerId = session?.user?.id || request.user?.id
     const authProvider = session?.provider
+    const hasReaderIdentity = !!readerId
 
     if (readerId) {
       request.readerId = readerId
@@ -37,12 +38,16 @@ export class RolesGuard extends AuthGuard implements CanActivate {
       Object.assign(request.raw, { authProvider })
     }
 
-    request.isGuest = !isAuthenticated
-    request.isAuthenticated = isAuthenticated
+    request.hasAdminAccess = hasAdminAccess
+    request.hasReaderIdentity = hasReaderIdentity
+    request.isGuest = !hasReaderIdentity
+    request.isAuthenticated = hasAdminAccess
 
     Object.assign(request.raw, {
-      isGuest: !isAuthenticated,
-      isAuthenticated,
+      hasAdminAccess,
+      hasReaderIdentity,
+      isGuest: !hasReaderIdentity,
+      isAuthenticated: hasAdminAccess,
     })
 
     return true

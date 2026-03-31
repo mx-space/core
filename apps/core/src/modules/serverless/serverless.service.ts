@@ -52,7 +52,7 @@ import { ServerlessLogModel } from './serverless-log.model'
 type ScopeContext = {
   req: FunctionContextRequest
   res: FunctionContextResponse
-  isAuthenticated: boolean
+  hasAdminAccess: boolean
 }
 
 @Injectable()
@@ -364,7 +364,8 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     const sandboxContext = {
       req: serializableReq,
       res: {},
-      isAuthenticated: context.isAuthenticated,
+      hasAdminAccess: context.hasAdminAccess,
+      isAuthenticated: context.hasAdminAccess,
       secret: secretObj as Record<string, unknown>,
       model: {
         id: model.id,

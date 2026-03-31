@@ -3,6 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter'
 import type { ReturnModelType } from '@typegoose/typegoose'
 import type { QueryFilter } from 'mongoose'
 
+import { RequestContext } from '~/common/contexts/request.context'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import type { SearchDto } from '~/modules/search/search.schema'
@@ -68,20 +69,20 @@ export class SearchService {
     >,
   ) {}
 
-  async search(searchOption: SearchDto, isAuthenticated = false) {
-    return this.searchIndex(searchOption, undefined, isAuthenticated)
+  async search(searchOption: SearchDto) {
+    return this.searchIndex(searchOption, undefined)
   }
 
-  async searchNote(searchOption: SearchDto, isAuthenticated: boolean) {
-    return this.searchIndex(searchOption, 'note', isAuthenticated)
+  async searchNote(searchOption: SearchDto) {
+    return this.searchIndex(searchOption, 'note')
   }
 
-  async searchPost(searchOption: SearchDto, isAuthenticated = false) {
-    return this.searchIndex(searchOption, 'post', isAuthenticated)
+  async searchPost(searchOption: SearchDto) {
+    return this.searchIndex(searchOption, 'post')
   }
 
   async searchPage(searchOption: SearchDto) {
-    return this.searchIndex(searchOption, 'page', false)
+    return this.searchIndex(searchOption, 'page')
   }
 
   async rebuildSearchDocuments() {
@@ -160,8 +161,8 @@ export class SearchService {
   private async searchIndex(
     searchOption: SearchDto,
     refType: SearchDocumentRefType | undefined,
-    isAuthenticated: boolean,
   ): Promise<Pagination<any>> {
+    const hasAdminAccess = RequestContext.hasAdminAccess()
     const { keyword, page, size } = searchOption
     const searchTerms = this.buildSearchTerms(keyword)
     const highlightKeywordFragments =
@@ -179,16 +180,16 @@ export class SearchService {
       corpusStats,
       termDocumentFrequency,
     ] = await Promise.all([
-      this.searchByTerms(searchTerms, refType, isAuthenticated, candidateLimit),
-      this.searchByText(keyword, refType, isAuthenticated, candidateLimit),
+      this.searchByTerms(searchTerms, refType, hasAdminAccess, candidateLimit),
+      this.searchByText(keyword, refType, hasAdminAccess, candidateLimit),
       this.searchByRegex(
         keywordRegexes,
         refType,
-        isAuthenticated,
+        hasAdminAccess,
         candidateLimit,
       ),
-      this.getCorpusStats(refType, isAuthenticated),
-      this.getTermDocumentFrequency(searchTerms, refType, isAuthenticated),
+      this.getCorpusStats(refType, hasAdminAccess),
+      this.getTermDocumentFrequency(searchTerms, refType, hasAdminAccess),
     ])
 
     const merged = new Map<string, SearchDocumentLean>()
@@ -211,7 +212,7 @@ export class SearchService {
     const pageHits = ranked.slice(start, start + size)
     const data = await this.loadSearchResultData(
       pageHits,
-      isAuthenticated,
+      hasAdminAccess,
       highlightKeywordFragments,
       searchTerms,
     )
@@ -233,7 +234,7 @@ export class SearchService {
   private async searchByTerms(
     searchTerms: string[],
     refType: SearchDocumentRefType | undefined,
-    isAuthenticated: boolean,
+    hasAdminAccess: boolean,
     limit: number,
   ) {
     if (!searchTerms.length) {
@@ -243,7 +244,7 @@ export class SearchService {
     return this.searchDocumentModel
       .find({
         $and: [
-          this.buildVisibilityQuery(refType, isAuthenticated),
+          this.buildVisibilityQuery(refType, hasAdminAccess),
           { terms: { $in: searchTerms } },
         ],
       })
@@ -255,7 +256,7 @@ export class SearchService {
   private async searchByText(
     keyword: string,
     refType: SearchDocumentRefType | undefined,
-    isAuthenticated: boolean,
+    hasAdminAccess: boolean,
     limit: number,
   ) {
     if (!keyword.trim()) {
@@ -265,7 +266,7 @@ export class SearchService {
     return this.searchDocumentModel
       .find({
         $and: [
-          this.buildVisibilityQuery(refType, isAuthenticated),
+          this.buildVisibilityQuery(refType, hasAdminAccess),
           { $text: { $search: keyword.trim() } },
         ],
       })
@@ -277,7 +278,7 @@ export class SearchService {
   private async searchByRegex(
     keywordRegexes: RegExp[],
     refType: SearchDocumentRefType | undefined,
-    isAuthenticated: boolean,
+    hasAdminAccess: boolean,
     limit: number,
   ) {
     const clauses = this.buildRegexClauses(keywordRegexes)
@@ -288,7 +289,7 @@ export class SearchService {
     return this.searchDocumentModel
       .find({
         $and: [
-          this.buildVisibilityQuery(refType, isAuthenticated),
+          this.buildVisibilityQuery(refType, hasAdminAccess),
           { $or: clauses },
         ],
       })
@@ -299,11 +300,11 @@ export class SearchService {
 
   private async getCorpusStats(
     refType: SearchDocumentRefType | undefined,
-    isAuthenticated: boolean,
+    hasAdminAccess: boolean,
   ): Promise<SearchCorpusStats> {
     const visibilityMatch = this.buildVisibilityQuery(
       refType,
-      isAuthenticated,
+      hasAdminAccess,
     ) as Record<string, any>
 
     const [stats] = await this.searchDocumentModel.aggregate<{
@@ -332,7 +333,7 @@ export class SearchService {
   private async getTermDocumentFrequency(
     searchTerms: string[],
     refType: SearchDocumentRefType | undefined,
-    isAuthenticated: boolean,
+    hasAdminAccess: boolean,
   ) {
     if (!searchTerms.length) {
       return new Map<string, number>()
@@ -340,7 +341,7 @@ export class SearchService {
 
     const visibilityMatch = this.buildVisibilityQuery(
       refType,
-      isAuthenticated,
+      hasAdminAccess,
     ) as Record<string, any>
 
     const matched = await this.searchDocumentModel.aggregate<{
@@ -362,9 +363,9 @@ export class SearchService {
 
   private buildVisibilityQuery(
     refType: SearchDocumentRefType | undefined,
-    isAuthenticated: boolean,
+    hasAdminAccess: boolean,
   ): QueryFilter<SearchDocumentModel> {
-    if (isAuthenticated) {
+    if (hasAdminAccess) {
       return refType ? { refType } : {}
     }
 
@@ -411,7 +412,7 @@ export class SearchService {
 
   private async loadSearchResultData(
     hits: Array<SearchDocumentLean & { refType: SearchDocumentRefType }>,
-    isAuthenticated: boolean,
+    hasAdminAccess: boolean,
     highlightKeywordFragments: string[],
     searchTerms: string[],
   ) {
@@ -435,7 +436,7 @@ export class SearchService {
         ? this.postService.model
             .find({
               _id: { $in: idsByType.post },
-              ...(isAuthenticated ? {} : { isPublished: { $ne: false } }),
+              ...(hasAdminAccess ? {} : { isPublished: { $ne: false } }),
             })
             .select('_id title created modified categoryId slug')
             .populate('category', 'name slug')
@@ -445,7 +446,7 @@ export class SearchService {
         ? this.noteService.model
             .find({
               _id: { $in: idsByType.note },
-              ...(isAuthenticated
+              ...(hasAdminAccess
                 ? {}
                 : {
                     isPublished: true,

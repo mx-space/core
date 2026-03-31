@@ -4,7 +4,6 @@ import { OnEvent } from '@nestjs/event-emitter'
 import ejs from 'ejs'
 import { omit, pick } from 'es-toolkit/compat'
 
-import { RequestContext } from '~/common/contexts/request.context'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -13,10 +12,12 @@ import { EmailService } from '~/processors/helper/helper.email.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
+import { getAvatar } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerModel } from '../owner/owner.model'
 import { OwnerService } from '../owner/owner.service'
+import { ReaderService } from '../reader/reader.service'
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
 import type { SnippetModel } from '../snippet/snippet.model'
@@ -44,6 +45,7 @@ export class CommentLifecycleService implements OnModuleInit {
     private readonly databaseService: DatabaseService,
     private readonly configsService: ConfigsService,
     private readonly ownerService: OwnerService,
+    private readonly readerService: ReaderService,
     private readonly mailService: EmailService,
     private readonly spamFilterService: CommentSpamFilterService,
     @Inject(forwardRef(() => ServerlessService))
@@ -79,18 +81,17 @@ export class CommentLifecycleService implements OnModuleInit {
   async afterCreateComment(
     commentId: string,
     ipLocation: { ip: string },
-    isAuthenticated: boolean,
   ) {
     const comment = await this.commentModel
       .findById(commentId)
       .lean({ getters: true })
       .select('+ip +agent')
 
-    const readerId = RequestContext.currentRequest()?.readerId
     if (!comment) return
+    const isLoggedInComment = !!comment.readerId
 
     scheduleManager.schedule(async () => {
-      if (isAuthenticated) return
+      if (isLoggedInComment) return
       await this.appendIpLocation(commentId, ipLocation.ip)
     })
 
@@ -98,15 +99,18 @@ export class CommentLifecycleService implements OnModuleInit {
       const configs = await this.configsService.get('commentOptions')
       const { commentShouldAudit } = configs
 
-      if ((await this.spamFilterService.checkSpam(comment)) && !readerId) {
+      if (
+        (await this.spamFilterService.checkSpam(comment)) &&
+        !isLoggedInComment
+      ) {
         await this.commentModel.updateOne(
           { _id: commentId },
           { state: CommentState.Junk },
         )
         return
-      } else if (!isAuthenticated) {
-        this.sendEmail(comment, CommentReplyMailType.Owner)
       }
+
+      this.sendEmail(comment, CommentReplyMailType.Owner)
 
       await this.eventManager.broadcast(
         BusinessEvents.COMMENT_CREATE,
@@ -114,7 +118,7 @@ export class CommentLifecycleService implements OnModuleInit {
         { scope: EventScope.TO_SYSTEM_ADMIN },
       )
 
-      if ((!commentShouldAudit || isAuthenticated) && !comment.isWhispers) {
+      if ((!commentShouldAudit || isLoggedInComment) && !comment.isWhispers) {
         await this.eventManager.broadcast(
           BusinessEvents.COMMENT_CREATE,
           omit(comment, ['ip', 'agent']),
@@ -127,16 +131,16 @@ export class CommentLifecycleService implements OnModuleInit {
   async afterReplyComment(
     comment: CommentModel,
     ipLocation: { ip: string },
-    isAuthenticated: boolean,
   ) {
     const commentId = comment.id ?? (comment as any)._id?.toString()
+    const isLoggedInComment = !!comment.readerId
 
     scheduleManager.schedule(async () => {
-      if (isAuthenticated) return
+      if (isLoggedInComment) return
       await this.appendIpLocation(commentId, ipLocation.ip)
     })
 
-    if (isAuthenticated) {
+    if (isLoggedInComment) {
       this.sendEmail(comment, CommentReplyMailType.Guest)
       this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, comment, {
         scope: EventScope.TO_SYSTEM_VISITOR,
@@ -159,6 +163,63 @@ export class CommentLifecycleService implements OnModuleInit {
     }
   }
 
+  private async resolveReader(readerId?: string | null) {
+    if (!readerId) {
+      return null
+    }
+
+    return this.readerService
+      .findReaderInIds([readerId])
+      .then((readers) => readers[0] ?? null)
+  }
+
+  private toOwnerIdentity(ownerInfo: Awaited<ReturnType<OwnerService['getOwnerInfo']>>) {
+    return {
+      role: 'owner' as const,
+      author: ownerInfo.name || '',
+      mail: ownerInfo.mail || '',
+      avatar: ownerInfo.avatar || getAvatar(ownerInfo.mail),
+    }
+  }
+
+  private async resolveCommentIdentity(
+    comment: Partial<CommentModel> | null | undefined,
+    ownerInfo: Awaited<ReturnType<OwnerService['getOwnerInfo']>>,
+  ) {
+    if (!comment) {
+      return {
+        role: 'guest' as const,
+        author: '',
+        mail: '',
+        avatar: '',
+      }
+    }
+
+    if (comment.readerId) {
+      const reader = await this.resolveReader(comment.readerId)
+      if (reader) {
+        if (reader.role === 'owner') {
+          return this.toOwnerIdentity(ownerInfo)
+        }
+
+        return {
+          role: 'reader' as const,
+          author: reader.name || comment.author || '',
+          mail: reader.email || comment.mail || '',
+          avatar:
+            reader.image || comment.avatar || getAvatar(reader.email || comment.mail),
+        }
+      }
+    }
+
+    return {
+      role: 'guest' as const,
+      author: comment.author || '',
+      mail: comment.mail || '',
+      avatar: comment.avatar || getAvatar(comment.mail),
+    }
+  }
+
   async sendEmail(comment: CommentModel, type: CommentReplyMailType) {
     const enable = await this.configsService
       .get('mailOptions')
@@ -178,37 +239,68 @@ export class CommentLifecycleService implements OnModuleInit {
     const parsedTime = `${time.getDate()}/${
       time.getMonth() + 1
     }/${time.getFullYear()}`
+    let commentIdentity = await this.resolveCommentIdentity(comment, ownerInfo)
+    const parentIdentity = await this.resolveCommentIdentity(parent, ownerInfo)
 
     if (!refDoc || !ownerInfo.mail) return
-    if (type === CommentReplyMailType.Owner && !comment.mail) return
-    if (type === CommentReplyMailType.Guest && !parent?.mail) return
+    if (type === CommentReplyMailType.Guest && commentIdentity.role === 'guest') {
+      commentIdentity =
+        !comment.author && !comment.mail && !comment.avatar
+          ? this.toOwnerIdentity(ownerInfo)
+          : commentIdentity
+    }
+
+    if (type === CommentReplyMailType.Owner && commentIdentity.role === 'owner') {
+      return
+    }
+
+    const recipientMail =
+      type === CommentReplyMailType.Owner ? ownerInfo.mail : parentIdentity.mail
+    if (!recipientMail) return
+
+    const senderMail =
+      type === CommentReplyMailType.Owner
+        ? commentIdentity.mail
+        : commentIdentity.mail || ownerInfo.mail
 
     this.sendCommentNotificationMail({
-      to: type === CommentReplyMailType.Owner ? ownerInfo.mail : parent!.mail,
+      to: recipientMail,
       type,
       source: {
         title: refType === CollectionRefTypes.Recently ? '速记' : refDoc.title,
         text: comment.text,
         author:
           (type === CommentReplyMailType.Guest
-            ? parent!.author
-            : comment.author) || '',
-        owner: ownerInfo.name,
+            ? parentIdentity.author
+            : commentIdentity.author) || '',
+        owner:
+          type === CommentReplyMailType.Guest
+            ? commentIdentity.author || ownerInfo.name
+            : ownerInfo.name,
         link: await this.resolveUrlByType(refType, refDoc).then(
           (url) => `${url}#comments-${comment.id}`,
         ),
         time: parsedTime,
-        mail:
-          CommentReplyMailType.Owner === type ? comment.mail : ownerInfo.mail,
+        mail: senderMail,
         ip: comment.ip || '',
         aggregate: {
           owner: ownerInfo,
           commentor: {
             ...pick(comment, defaultCommentModelKeys),
+            author: commentIdentity.author,
+            avatar: commentIdentity.avatar,
+            mail: senderMail,
             created: new Date(comment.created!).toISOString(),
             isWhispers: comment.isWhispers || false,
           } as CommentModelRenderProps,
-          parent,
+          parent: parent
+            ? {
+                ...parent,
+                author: parentIdentity.author,
+                avatar: parentIdentity.avatar,
+                mail: parentIdentity.mail,
+              }
+            : null,
           post: {
             title: refDoc.title,
             created: new Date(refDoc.created!).toISOString(),
@@ -331,7 +423,7 @@ export class CommentLifecycleService implements OnModuleInit {
     const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
     const subject =
       type === CommentReplyMailType.Guest
-        ? `[${seo.title || 'Mx Space'}] 主人给你了新的回复呐`
+        ? `[${seo.title || 'Mx Space'}] ${source.owner || '有人'}给你了新的回复`
         : `[${seo.title || 'Mx Space'}] 有新回复了耶~`
 
     source.ip ??= ''

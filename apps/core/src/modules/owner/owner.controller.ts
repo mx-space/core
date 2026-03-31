@@ -3,7 +3,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { RequestContext } from '~/common/contexts/request.context'
 import { AuthService } from '../auth/auth.service'
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerPatchDto } from './owner.schema'
@@ -18,8 +18,8 @@ export class OwnerController {
   ) {}
 
   @Get()
-  async getOwnerInfo(@IsAuthenticated() isAuthenticated: boolean) {
-    return await this.ownerService.getOwnerInfo(isAuthenticated)
+  async getOwnerInfo() {
+    return await this.ownerService.getOwnerInfo(RequestContext.hasAdminAccess())
   }
 
   @Patch()
@@ -56,7 +56,8 @@ export class OwnerController {
 
   @Get('check_logged')
   @HttpCache.disable
-  checkLogged(@IsAuthenticated() isAuthenticated: boolean) {
-    return { ok: +isAuthenticated, isGuest: !isAuthenticated }
+  checkLogged() {
+    const hasAdminAccess = RequestContext.hasAdminAccess()
+    return { ok: +hasAdminAccess, isGuest: !hasAdminAccess }
   }
 }

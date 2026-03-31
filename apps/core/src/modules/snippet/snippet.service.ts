@@ -320,7 +320,7 @@ export class SnippetService {
       throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
 
-    if (snippet.private && !RequestContext.currentIsAuthenticated()) {
+    if (snippet.private && !RequestContext.hasAdminAccess()) {
       throw new BizException(ErrorCodeEnum.SnippetPrivate)
     }
 

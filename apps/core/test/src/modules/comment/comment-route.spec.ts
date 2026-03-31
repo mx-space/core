@@ -27,5 +27,9 @@ describe('CommentController routes', () => {
     expect(Reflect.getMetadata(METHOD_METADATA, prototype.readerComment)).toBe(
       RequestMethod.POST,
     )
+
+    expect((prototype as Record<string, unknown>).ownerReplyByCid).toBe(
+      undefined,
+    )
   })
 })

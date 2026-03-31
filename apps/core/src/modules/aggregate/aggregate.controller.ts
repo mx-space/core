@@ -6,7 +6,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
-import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
 import { CacheKeys } from '~/constants/cache.constant'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
@@ -133,7 +133,7 @@ export class AggregateController {
   )
   async top(
     @Query() query: TopQueryDto,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
     const { size } = query

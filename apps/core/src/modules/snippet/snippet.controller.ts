@@ -1,13 +1,15 @@
 import { Body, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
+
 import { SnippetModel } from './snippet.model'
 import { SnippetDto, SnippetMoreDto } from './snippet.schema'
 import { SnippetService } from './snippet.service'
@@ -116,7 +118,7 @@ export class SnippetController {
   async getSnippetByName(
     @Param('name') name: string,
     @Param('reference') reference: string,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() hasAdminAccess: boolean,
   ) {
     if (typeof name !== 'string') {
       throw new BizException(ErrorCodeEnum.InvalidName)
@@ -126,7 +128,7 @@ export class SnippetController {
       throw new BizException(ErrorCodeEnum.InvalidReference)
     }
     let cached: string | null = null
-    if (isAuthenticated) {
+    if (hasAdminAccess) {
       cached =
         (
           await Promise.all(

@@ -18,7 +18,8 @@ import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
-import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { HasAdminAccess } from '~/common/decorators/role.decorator'
+import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
@@ -64,16 +65,16 @@ export class CommentController {
   private async createCommentWithBody(
     params: MongoIdDto,
     body: Partial<CommentModel>,
-    isAuthenticated: boolean,
     ipLocation: IpRecord,
     query: CommentRefTypesDto,
   ) {
+    const isLoggedInComment = RequestContext.hasReaderIdentity()
     const { ref } = query
     const id = params.id
 
     if (
       !(await this.commentService.allowComment(id, ref)) &&
-      !isAuthenticated
+      !isLoggedInComment
     ) {
       throw new BizException(ErrorCodeEnum.CommentForbidden)
     }
@@ -84,7 +85,6 @@ export class CommentController {
     this.lifecycleService.afterCreateComment(
       String((comment as any).id || (comment as any)._id),
       ipLocation,
-      isAuthenticated,
     )
 
     return this.commentService
@@ -95,13 +95,13 @@ export class CommentController {
   private async replyCommentWithBody(
     params: MongoIdDto,
     body: Partial<CommentModel>,
-    isAuthenticated: boolean,
     ipLocation: IpRecord,
   ) {
+    const isLoggedInComment = RequestContext.hasReaderIdentity()
     const model: Partial<CommentModel> = {
       ...body,
       ...ipLocation,
-      state: isAuthenticated ? CommentState.Read : CommentState.Unread,
+      state: isLoggedInComment ? CommentState.Read : CommentState.Unread,
     }
 
     const comment = await this.commentService.replyComment(params.id, model)
@@ -109,7 +109,6 @@ export class CommentController {
     this.lifecycleService.afterReplyComment(
       comment,
       ipLocation,
-      isAuthenticated,
     )
 
     return this.commentService
@@ -143,7 +142,7 @@ export class CommentController {
     @Param() params: MongoIdDto,
     @Query() query: PagerDto,
     @Query('hasAnchor') hasAnchor: string,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() hasAdminAccess: boolean,
   ) {
     const { id } = params
     const { page = 1, size = 10 } = query
@@ -154,7 +153,7 @@ export class CommentController {
     const comments = await this.commentService.getCommentsByRefId(id, {
       page,
       size,
-      isAuthenticated,
+      isAuthenticated: hasAdminAccess,
       commentShouldAudit,
       hasAnchor: hasAnchor === 'true',
     })
@@ -175,7 +174,7 @@ export class CommentController {
     @Param('rootCommentId') rootCommentId: string,
     @Query() query: PagerDto,
     @Query('cursor') cursor: string,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() hasAdminAccess: boolean,
   ) {
     const { size = 10 } = query
     const configs = await this.configsService.get('commentOptions')
@@ -183,7 +182,7 @@ export class CommentController {
     return this.commentService.getThreadReplies(rootCommentId, {
       cursor,
       size,
-      isAuthenticated,
+      isAuthenticated: hasAdminAccess,
       commentShouldAudit: configs.commentShouldAudit,
     })
   }
@@ -191,7 +190,7 @@ export class CommentController {
   @Get('/:id')
   async getComments(
     @Param() params: MongoIdDto,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() hasAdminAccess: boolean,
   ) {
     const { id } = params
     const data: CommentModel | null = await this.commentService.model
@@ -204,7 +203,7 @@ export class CommentController {
     if (!data) {
       throw new CannotFindException()
     }
-    if (data.isWhispers && !isAuthenticated) {
+    if (data.isWhispers && !hasAdminAccess) {
       throw new CannotFindException()
     }
 
@@ -227,7 +226,6 @@ export class CommentController {
   async guestComment(
     @Param() params: MongoIdDto,
     @Body() body: CommentDto,
-    @IsAuthenticated() isAuthenticated: boolean,
     @IpLocation() ipLocation: IpRecord,
     @Query() query: CommentRefTypesDto,
   ) {
@@ -242,13 +240,7 @@ export class CommentController {
 
     await this.commentService.validAuthorName(body.author)
 
-    return this.createCommentWithBody(
-      params,
-      body,
-      isAuthenticated,
-      ipLocation,
-      query,
-    )
+    return this.createCommentWithBody(params, body, ipLocation, query)
   }
 
   @Post('/reader/:id')
@@ -259,7 +251,6 @@ export class CommentController {
   async readerComment(
     @Param() params: MongoIdDto,
     @Body() body: ReaderCommentDto,
-    @IsAuthenticated() isAuthenticated: boolean,
     @CurrentReaderId() readerId: string,
     @IpLocation() ipLocation: IpRecord,
     @Query() query: CommentRefTypesDto,
@@ -272,13 +263,7 @@ export class CommentController {
       throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
     }
 
-    return this.createCommentWithBody(
-      params,
-      body,
-      isAuthenticated,
-      ipLocation,
-      query,
-    )
+    return this.createCommentWithBody(params, body, ipLocation, query)
   }
 
   @Post('/guest/reply/:id')
@@ -289,7 +274,6 @@ export class CommentController {
   async guestReplyByCid(
     @Param() params: MongoIdDto,
     @Body() body: ReplyCommentDto,
-    @IsAuthenticated() isAuthenticated: boolean,
     @IpLocation() ipLocation: IpRecord,
   ) {
     const { allowGuestComment, disableComment } =
@@ -304,7 +288,7 @@ export class CommentController {
 
     await this.commentService.validAuthorName(body.author)
 
-    return this.replyCommentWithBody(params, body, isAuthenticated, ipLocation)
+    return this.replyCommentWithBody(params, body, ipLocation)
   }
 
   @Post('/reader/reply/:id')
@@ -315,7 +299,6 @@ export class CommentController {
   async readerReplyByCid(
     @Param() params: MongoIdDto,
     @Body() body: ReaderReplyCommentDto,
-    @IsAuthenticated() isAuthenticated: boolean,
     @CurrentReaderId() readerId: string,
     @IpLocation() ipLocation: IpRecord,
   ) {
@@ -328,21 +311,7 @@ export class CommentController {
       throw new BizException(ErrorCodeEnum.AuthNotLoggedIn)
     }
 
-    return this.replyCommentWithBody(params, body, isAuthenticated, ipLocation)
-  }
-
-  @Post('/owner/reply/:id')
-  @Auth()
-  @HTTPDecorators.Idempotence({
-    expired: 20,
-    errorMessage: idempotenceMessage,
-  })
-  async ownerReplyByCid(
-    @Param() params: MongoIdDto,
-    @Body() body: EditCommentDto,
-    @IpLocation() ipLocation: IpRecord,
-  ) {
-    return this.replyCommentWithBody(params, body, true, ipLocation)
+    return this.replyCommentWithBody(params, body, ipLocation)
   }
 
   @Patch('/:id')
@@ -458,7 +427,7 @@ export class CommentController {
   async editComment(
     @Param() params: MongoIdDto,
     @Body() body: EditCommentDto,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() hasAdminAccess: boolean,
     @CurrentReaderId() readerId: string,
   ) {
     const { id } = params
@@ -467,7 +436,7 @@ export class CommentController {
     if (!comment) {
       throw new CannotFindException()
     }
-    if (comment.readerId !== readerId && !isAuthenticated) {
+    if (comment.readerId !== readerId && !hasAdminAccess) {
       throw new BizException(ErrorCodeEnum.CommentForbidden)
     }
     await this.commentService.editComment(id, text)

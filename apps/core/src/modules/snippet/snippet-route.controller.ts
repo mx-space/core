@@ -2,7 +2,7 @@ import { All, Request, Response } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import type { FastifyReply, FastifyRequest } from 'fastify'
@@ -29,7 +29,7 @@ export class SnippetRouteController {
   })
   @HTTPDecorators.Bypass
   async handleCustomPath(
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() hasAdminAccess: boolean,
     @Request() req: FastifyRequest,
     @Response() reply: FastifyReply,
   ) {
@@ -44,13 +44,13 @@ export class SnippetRouteController {
     const dataSnippet = await this.snippetService.getSnippetByCustomPath(path)
 
     if (dataSnippet) {
-      if (dataSnippet.private && !isAuthenticated) {
+      if (dataSnippet.private && !hasAdminAccess) {
         throw new BizException(ErrorCodeEnum.SnippetPrivate)
       }
 
       // check cache
       let cached: string | null = null
-      if (isAuthenticated) {
+      if (hasAdminAccess) {
         cached =
           (
             await Promise.all(
@@ -86,7 +86,7 @@ export class SnippetRouteController {
       method,
     )
     if (fnSnippet) {
-      return this.executeFunction(fnSnippet, isAuthenticated, req, reply)
+      return this.executeFunction(fnSnippet, hasAdminAccess, req, reply)
     }
 
     // 3. Prefix match for function type (extra path info)
@@ -107,7 +107,7 @@ export class SnippetRouteController {
           method,
         )
       if (prefixSnippet) {
-        return this.executeFunction(prefixSnippet, isAuthenticated, req, reply)
+        return this.executeFunction(prefixSnippet, hasAdminAccess, req, reply)
       }
     }
 
@@ -116,7 +116,7 @@ export class SnippetRouteController {
 
   private async executeFunction(
     snippet: SnippetModel,
-    isAuthenticated: boolean,
+    hasAdminAccess: boolean,
     req: FastifyRequest,
     reply: FastifyReply,
   ) {
@@ -127,14 +127,14 @@ export class SnippetRouteController {
       )
     }
 
-    if (snippet.private && !isAuthenticated) {
+    if (snippet.private && !hasAdminAccess) {
       throw new BizException(ErrorCodeEnum.ServerlessNoPermission)
     }
 
     const result =
       await this.serverlessService.injectContextIntoServerlessFunctionAndCall(
         snippet,
-        { req, res: createMockedContextResponse(reply), isAuthenticated },
+        { req, res: createMockedContextResponse(reply), hasAdminAccess },
       )
 
     if (!reply.sent) {

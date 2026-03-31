@@ -6,17 +6,28 @@ import { getNestExecutionContextRequest } from '~/transformers/get-req.transform
 export const IsGuest = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const request = getNestExecutionContextRequest(ctx)
-    return request.isGuest
+    return request.isGuest ?? !request.hasReaderIdentity
   },
 )
 
-export const IsAuthenticated = createParamDecorator(
+export const HasAdminAccess = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const request = getNestExecutionContextRequest(ctx)
-    // FIXME Why can't access `isAuthenticated` in vitest test? request instance is not the same?
-    return (
-      request.isAuthenticated ||
-      (isTest ? request.headers['test-token'] : false)
-    )
+    if (typeof request.hasAdminAccess === 'boolean') {
+      return request.hasAdminAccess
+    }
+
+    if (typeof request.isAuthenticated === 'boolean') {
+      return request.isAuthenticated
+    }
+
+    return !!(isTest ? request.headers['test-token'] : false)
+  },
+)
+
+export const HasReaderIdentity = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    const request = getNestExecutionContextRequest(ctx)
+    return request.hasReaderIdentity ?? !!request.readerId
   },
 )

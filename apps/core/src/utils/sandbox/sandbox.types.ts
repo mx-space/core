@@ -8,6 +8,10 @@ export interface SandboxExecuteOptions {
 export interface SandboxContext {
   req: unknown
   res: unknown
+  hasAdminAccess: boolean
+  /**
+   * @deprecated Prefer `hasAdminAccess`.
+   */
   isAuthenticated: boolean
   secret?: Record<string, unknown>
   model: {

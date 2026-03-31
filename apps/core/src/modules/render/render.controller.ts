@@ -11,7 +11,7 @@ import {
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -43,9 +43,9 @@ export class RenderEjsController {
   async renderArticle(
     @Param() params: MongoIdDto,
     @Query('theme') theme: string,
-    @IsAuthenticated() isAuthenticated: boolean,
   ) {
     const { id } = params
+    const hasAdminAccess = RequestContext.hasAdminAccess()
     const now = performance.now()
     const [
       { html: markdownMacros, document, type },
@@ -63,7 +63,7 @@ export class RenderEjsController {
       ('isPublished' in document && !document.isPublished) ||
       ('password' in document && !isNil(document.password))
 
-    if (!isAuthenticated && isPrivateOrEncrypt) {
+    if (!hasAdminAccess && isPrivateOrEncrypt) {
       throw new BizException(ErrorCodeEnum.PostHiddenOrEncrypted)
     }
 

@@ -16,7 +16,7 @@ import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
-import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { TranslateFields } from '~/common/decorators/translate-fields.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -165,7 +165,7 @@ export class NoteController {
     },
   )
   async getNotes(
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() isAuthenticated: boolean,
     @Query() query: NoteQueryDto,
     @Lang() lang?: string,
   ) {
@@ -187,11 +187,11 @@ export class NoteController {
       Object.assign(condition, this.noteService.publicNoteQueryCondition)
     }
 
-    // When withSummary, ensure text is fetched for translation + fallback, will be stripped later
+    // When withSummary or lang, ensure text is fetched for translation + fallback, will be stripped later
     let paginateSelect = isAuthenticated
       ? select
       : select?.replaceAll(/[+-]?(coordinates|location|password)/g, '')
-    if (withSummary && paginateSelect && !paginateSelect.includes('text')) {
+    if ((withSummary || lang) && paginateSelect && !paginateSelect.includes('text')) {
       paginateSelect = `${paginateSelect} text`
     }
 
@@ -271,6 +271,16 @@ export class NoteController {
       return doc
     })
 
+    // Strip text/content if not originally requested (added only for translation)
+    const originalSelectHasText = select?.includes('text')
+    const originalSelectHasContent = select?.includes('content')
+    if (!originalSelectHasText || !originalSelectHasContent) {
+      for (const doc of result.docs) {
+        if (!originalSelectHasText && !withSummary) delete (doc as any).text
+        if (!originalSelectHasContent) delete (doc as any).content
+      }
+    }
+
     if (withSummary) {
       await this.enrichDocsWithSummary(result, lang)
     }
@@ -317,7 +327,7 @@ export class NoteController {
   )
   async getOneNote(
     @Param() params: MongoIdDto,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() isAuthenticated: boolean,
   ) {
     const { id } = params
 
@@ -356,7 +366,7 @@ export class NoteController {
   )
   async getNoteByDateAndSlug(
     @Param() params: NoteSlugDateParamsDto,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() isAuthenticated: boolean,
     @Query() query: NotePasswordQueryDto,
     @IpLocation() { ip }: IpRecord,
     @Lang() lang?: string,
@@ -389,7 +399,7 @@ export class NoteController {
   async getNoteList(
     @Query() query: ListQueryDto,
     @Param() params: MongoIdDto,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
     const { size = 10 } = query
@@ -513,7 +523,7 @@ export class NoteController {
     },
   )
   async getLatestOne(
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
     const result = await this.noteService.getLatestOne(
@@ -570,7 +580,7 @@ export class NoteController {
   )
   async getNoteByNid(
     @Param() params: NidType,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() isAuthenticated: boolean,
     @Query() query: NotePasswordQueryDto,
     @IpLocation() { ip }: IpRecord,
     @Lang() lang?: string,
@@ -606,7 +616,7 @@ export class NoteController {
   async getNotesByTopic(
     @Param() params: MongoIdDto,
     @Query() query: NoteTopicPagerDto,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
     const { id } = params

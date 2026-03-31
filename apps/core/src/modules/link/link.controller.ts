@@ -2,7 +2,7 @@ import { Body, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
-import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
@@ -26,7 +26,7 @@ export class LinkControllerCrud extends BaseCrudFactory({
   async gets(
     this: BaseCrudModuleType<LinkModel>,
     @Query() pager: PagerDto,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() hasAdminAccess: boolean,
   ) {
     const { size, page, state } = pager
 
@@ -34,14 +34,14 @@ export class LinkControllerCrud extends BaseCrudFactory({
       limit: size,
       page,
       sort: { created: -1 },
-      select: isAuthenticated ? '' : '-email',
+      select: hasAdminAccess ? '' : '-email',
     })
   }
 
   @Get('/all')
   async getAll(
     this: BaseCrudModuleType<LinkModel>,
-    @IsAuthenticated() isAuthenticated: boolean,
+    @HasAdminAccess() hasAdminAccess: boolean,
   ) {
     // 过滤未通过审核和被拒绝的
     const condition: mongoose.QueryFilter<LinkModel> = {
@@ -56,7 +56,7 @@ export class LinkControllerCrud extends BaseCrudFactory({
     return await this._model
       .find(condition)
       .sort({ created: -1 })
-      .select(isAuthenticated ? '' : '-email')
+      .select(hasAdminAccess ? '' : '-email')
       .lean()
   }
 }
