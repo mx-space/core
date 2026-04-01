@@ -86,25 +86,16 @@ export class TranslationEntryInterceptor implements NestInterceptor {
   ): Promise<any> {
     if (data == null) return data
 
-    let translationTarget = data
-    let { entityLookups, dictLookups } = this.buildLookups(data, rules)
-
-    if (!this.hasLookupCandidates(entityLookups, dictLookups)) {
-      const plainData = this.toScannableObject(data)
-      if (plainData) {
-        const plainLookups = this.buildLookups(plainData, rules)
-        if (
-          this.hasLookupCandidates(
-            plainLookups.entityLookups,
-            plainLookups.dictLookups,
-          )
-        ) {
-          translationTarget = plainData
-          entityLookups = plainLookups.entityLookups
-          dictLookups = plainLookups.dictLookups
-        }
-      }
-    }
+    // Always convert to plain objects first to ensure objectScan can
+    // traverse Mongoose documents (e.g. populated refs like category).
+    // Without this, a mix of .lean() and non-.lean() data causes partial
+    // scan success, skipping the fallback for the non-plain parts.
+    const plainData = this.toScannableObject(data)
+    const translationTarget = plainData ?? data
+    const { entityLookups, dictLookups } = this.buildLookups(
+      translationTarget,
+      rules,
+    )
 
     let entityMaps: Map<TranslationEntryKeyPath, Map<string, string>>
     let dictMaps: Map<TranslationEntryKeyPath, Map<string, string>>
@@ -188,16 +179,6 @@ export class TranslationEntryInterceptor implements NestInterceptor {
     }
 
     return { entityLookups, dictLookups }
-  }
-
-  private hasLookupCandidates(
-    entityLookups: Map<TranslationEntryKeyPath, EntityLookup>,
-    dictLookups: Map<TranslationEntryKeyPath, DictLookup>,
-  ): boolean {
-    return (
-      [...entityLookups.values()].some((lookup) => lookup.ids.size > 0) ||
-      [...dictLookups.values()].some((lookup) => lookup.texts.size > 0)
-    )
   }
 
   private toScannableObject(data: any): any | null {

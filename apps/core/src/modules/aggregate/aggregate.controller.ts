@@ -262,6 +262,11 @@ export class AggregateController {
   @TranslateFields(
     { path: 'data.notes[].mood', keyPath: 'note.mood' },
     { path: 'data.notes[].weather', keyPath: 'note.weather' },
+    {
+      path: 'data.posts[].category.name',
+      keyPath: 'category.name',
+      idField: 'id',
+    },
   )
   async getTimeline(@Query() query: TimelineQueryDto, @Lang() lang?: string) {
     const { sort = 1, type, year } = query

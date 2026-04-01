@@ -1,8 +1,10 @@
 import { Body, Get, Post, Query, Request, Response } from '@nestjs/common'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
 import { SnippetModel, SnippetType } from '../snippet/snippet.model'
@@ -35,20 +37,23 @@ export class DebugController {
     payload.date = new Date()
 
     switch (type) {
-      case 'web':
+      case 'web': {
         this.eventManager.broadcast(event, payload, {
           scope: EventScope.TO_SYSTEM_VISITOR,
         })
         break
-      case 'admin':
+      }
+      case 'admin': {
         this.eventManager.broadcast(event, payload, {
           scope: EventScope.TO_SYSTEM_ADMIN,
         })
         break
-      case 'all':
+      }
+      case 'all': {
         this.eventManager.broadcast(event, payload, { scope: EventScope.ALL })
 
         break
+      }
     }
   }
 
@@ -68,7 +73,7 @@ export class DebugController {
     const result =
       await this.serverlessService.injectContextIntoServerlessFunctionAndCall(
         model,
-        { req, res: createMockedContextResponse(res), isAuthenticated: true },
+        { req, res: createMockedContextResponse(res), hasAdminAccess: true },
       )
 
     if (!res.sent) {
