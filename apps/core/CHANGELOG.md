@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.0.9](https://github.com/mx-space/core/compare/v11.0.8...v11.0.9) (2026-04-01)
+
+
+### Bug Fixes
+
+* **test:** update translation interceptor test to match plain object conversion behavior ([990d83b](https://github.com/mx-space/core/commit/990d83b3af1dd9d1fd3dd232da4b7c39d6416715))
+
+
+
 ## [11.0.8](https://github.com/mx-space/core/compare/v11.0.7...v11.0.8) (2026-04-01)
 
 
