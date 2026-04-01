@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common'
 import { isUndefined, keyBy } from 'es-toolkit/compat'
 
+import { RequestContext } from '~/common/contexts/request.context'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
@@ -19,7 +20,6 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
-import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
@@ -68,14 +68,11 @@ export class CommentController {
     ipLocation: IpRecord,
     query: CommentRefTypesDto,
   ) {
-    const isLoggedInComment = RequestContext.hasReaderIdentity()
+    const hasAdminAccess = RequestContext.hasAdminAccess()
     const { ref } = query
     const id = params.id
 
-    if (
-      !(await this.commentService.allowComment(id, ref)) &&
-      !isLoggedInComment
-    ) {
+    if (!hasAdminAccess && !(await this.commentService.allowComment(id, ref))) {
       throw new BizException(ErrorCodeEnum.CommentForbidden)
     }
 
@@ -97,6 +94,14 @@ export class CommentController {
     body: Partial<CommentModel>,
     ipLocation: IpRecord,
   ) {
+    const hasAdminAccess = RequestContext.hasAdminAccess()
+    if (
+      !hasAdminAccess &&
+      !(await this.commentService.allowCommentByCommentId(params.id))
+    ) {
+      throw new BizException(ErrorCodeEnum.CommentForbidden)
+    }
+
     const isLoggedInComment = RequestContext.hasReaderIdentity()
     const model: Partial<CommentModel> = {
       ...body,
@@ -106,10 +111,7 @@ export class CommentController {
 
     const comment = await this.commentService.replyComment(params.id, model)
 
-    this.lifecycleService.afterReplyComment(
-      comment,
-      ipLocation,
-    )
+    this.lifecycleService.afterReplyComment(comment, ipLocation)
 
     return this.commentService
       .fillAndReplaceAvatarUrl([comment])
@@ -256,7 +258,7 @@ export class CommentController {
     @Query() query: CommentRefTypesDto,
   ) {
     const { disableComment } = await this.configsService.get('commentOptions')
-    if (disableComment) {
+    if (disableComment && !RequestContext.hasAdminAccess()) {
       throw new BizException(ErrorCodeEnum.CommentDisabled)
     }
     if (!readerId) {
@@ -291,6 +293,20 @@ export class CommentController {
     return this.replyCommentWithBody(params, body, ipLocation)
   }
 
+  @Post('/owner-reply/:id')
+  @Auth()
+  @HTTPDecorators.Idempotence({
+    expired: 20,
+    errorMessage: idempotenceMessage,
+  })
+  async replyByCid(
+    @Param() params: MongoIdDto,
+    @Body() body: ReaderReplyCommentDto,
+    @IpLocation() ipLocation: IpRecord,
+  ) {
+    return this.replyCommentWithBody(params, body, ipLocation)
+  }
+
   @Post('/reader/reply/:id')
   @HTTPDecorators.Idempotence({
     expired: 20,
@@ -303,7 +319,7 @@ export class CommentController {
     @IpLocation() ipLocation: IpRecord,
   ) {
     const { disableComment } = await this.configsService.get('commentOptions')
-    if (disableComment) {
+    if (disableComment && !RequestContext.hasAdminAccess()) {
       throw new BizException(ErrorCodeEnum.CommentDisabled)
     }
 

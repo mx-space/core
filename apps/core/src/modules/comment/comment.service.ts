@@ -656,7 +656,9 @@ export class CommentService {
   ) {
     const reader = await this.assignReaderToComment()
     const isLoggedInComment =
-      !!reader || RequestContext.hasReaderIdentity() || RequestContext.hasAdminAccess()
+      !!reader ||
+      RequestContext.hasReaderIdentity() ||
+      RequestContext.hasAdminAccess()
     if (reader) {
       this.stripReaderIdentitySnapshot(doc)
       this.assignAuthProviderToComment(doc)
@@ -746,7 +748,9 @@ export class CommentService {
 
     const reader = await this.assignReaderToComment()
     const isLoggedInComment =
-      !!reader || RequestContext.hasReaderIdentity() || RequestContext.hasAdminAccess()
+      !!reader ||
+      RequestContext.hasReaderIdentity() ||
+      RequestContext.hasAdminAccess()
     if (reader) {
       this.stripReaderIdentitySnapshot(doc)
       this.assignAuthProviderToComment(doc)
@@ -756,7 +760,8 @@ export class CommentService {
     const comment = (await this.commentModel.create({
       ...doc,
       state:
-        doc.state ?? (isLoggedInComment ? CommentState.Read : CommentState.Unread),
+        doc.state ??
+        (isLoggedInComment ? CommentState.Read : CommentState.Unread),
       ref: this.toObjectId(parent.ref as any),
       refType: parent.refType,
       parentCommentId: parent._id,
@@ -833,6 +838,19 @@ export class CommentService {
       }
       return 'allowComment' in result ? result.allowComment : true
     }
+  }
+
+  async allowCommentByCommentId(commentId: string) {
+    const comment = await this.commentModel
+      .findById(commentId)
+      .select('ref refType')
+      .lean()
+
+    if (!comment) {
+      throw new CannotFindException()
+    }
+
+    return this.allowComment(String(comment.ref), comment.refType)
   }
 
   async getComments({ page, size, state } = { page: 1, size: 10, state: 0 }) {
