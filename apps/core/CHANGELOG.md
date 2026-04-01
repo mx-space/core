@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.0.11](https://github.com/mx-space/core/compare/v11.0.10...v11.0.11) (2026-04-01)
+
+
+### Bug Fixes
+
+* **activity:** filter null refs in getRecentComment ([f6ed0c8](https://github.com/mx-space/core/commit/f6ed0c8733e50acc82448b4971c656177da7cfdb))
+
+
+
 ## [11.0.10](https://github.com/mx-space/core/compare/v11.0.9...v11.0.10) (2026-04-01)
 
 
