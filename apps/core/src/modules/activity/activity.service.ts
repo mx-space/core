@@ -569,17 +569,19 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     )
 
     await this.commentService.fillAndReplaceAvatarUrl(docs)
-    return docs.map((doc) => {
-      const categoryId = (doc.ref as any)?.categoryId
-      return {
-        ...pick(doc, 'created', 'author', 'text', 'avatar'),
-        ...pick(doc.ref, 'title', 'nid', 'slug', 'id'),
-        category: categoryId
-          ? (categoryMap[categoryId.toString()] ?? undefined)
-          : undefined,
-        type: checkRefModelCollectionType(doc.ref),
-      }
-    })
+    return docs
+      .filter((doc) => doc.ref)
+      .map((doc) => {
+        const categoryId = (doc.ref as any)?.categoryId
+        return {
+          ...pick(doc, 'created', 'author', 'text', 'avatar'),
+          ...pick(doc.ref, 'title', 'nid', 'slug', 'id'),
+          category: categoryId
+            ? (categoryMap[categoryId.toString()] ?? undefined)
+            : undefined,
+          type: checkRefModelCollectionType(doc.ref),
+        }
+      })
   }
 
   async getRecentPublish() {
