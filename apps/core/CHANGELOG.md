@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.0.10](https://github.com/mx-space/core/compare/v11.0.9...v11.0.10) (2026-04-01)
+
+
+### Features
+
+* add owner-reply endpoint for comment replies with API key auth ([f2ef0cb](https://github.com/mx-space/core/commit/f2ef0cb2e480dfb0748abf50a6cbf867df535db2))
+
+
+
 ## [11.0.9](https://github.com/mx-space/core/compare/v11.0.8...v11.0.9) (2026-04-01)
 
 
