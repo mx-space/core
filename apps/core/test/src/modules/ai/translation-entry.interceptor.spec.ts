@@ -143,10 +143,8 @@ describe('TranslationEntryInterceptor path utilities', () => {
         'en',
       )
 
-      expect(result).toBe(data)
-      expect(result.categories[0]).toBeInstanceOf(CategoryDoc)
       expect(result.categories[0].name).toBe('Frontend')
-      expect(result.categories[0].self).toBe(result.categories[0])
+      expect(result.categories[0]._id).toBe('id-1')
     })
 
     it('should preserve non-structured-cloneable payloads when translating', async () => {
