@@ -625,7 +625,7 @@ export class AuthService {
         key: token,
       },
     })
-    if (!result?.valid || !result.key) {
+    if (!result?.valid || !result.key?.referenceId) {
       return this.verifyLegacyApiKey(token)
     }
     return result.key

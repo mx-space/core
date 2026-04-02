@@ -483,8 +483,55 @@ describe('AuthService', () => {
       )
     })
 
+    it('should fall back to legacy api key when better-auth key lacks referenceId', async () => {
+      const legacyId = new Types.ObjectId()
+      const apiKeyCol = createMockCollection([
+        {
+          _id: legacyId,
+          key: 'legacy-key',
+          name: 'legacy',
+          userId: ownerId.toString(),
+          enabled: true,
+          createdAt: new Date('2025-01-01T00:00:00.000Z'),
+        },
+      ])
+      const authInstance = createAuthInstance({
+        api: {
+          verifyApiKey: vi.fn().mockResolvedValue({
+            valid: true,
+            key: { key: 'legacy-key', name: 'legacy' },
+          }),
+        },
+      })
+      const { service, collections } = await createTestService({
+        authInstance,
+        collections: createCollections({ apikey: apiKeyCol }),
+      })
+
+      const result = await service.verifyApiKey('legacy-key')
+
+      expect(result).toMatchObject({
+        key: 'legacy-key',
+        referenceId: ownerId.toString(),
+        configId: 'default',
+      })
+      expect(collections.apikey.updateOne).toHaveBeenCalledWith(
+        { _id: legacyId },
+        expect.objectContaining({
+          $set: expect.objectContaining({
+            referenceId: ownerId.toString(),
+            configId: 'default',
+          }),
+        }),
+      )
+    })
+
     it('should return key when valid', async () => {
-      const keyObj = { userId: 'u1', name: 'k' }
+      const keyObj = {
+        userId: 'u1',
+        referenceId: ownerId.toString(),
+        name: 'k',
+      }
       const authInstance = createAuthInstance({
         api: {
           verifyApiKey: vi.fn().mockResolvedValue({ valid: true, key: keyObj }),
