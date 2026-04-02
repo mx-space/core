@@ -1,6 +1,5 @@
-import type { OnModuleInit } from '@nestjs/common'
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
-import { OnEvent } from '@nestjs/event-emitter'
 import ejs from 'ejs'
 import { omit, pick } from 'es-toolkit/compat'
 
@@ -9,6 +8,7 @@ import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
+import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
@@ -35,8 +35,9 @@ import { CommentModel, CommentState } from './comment.model'
 import { CommentSpamFilterService } from './comment.spam-filter'
 
 @Injectable()
-export class CommentLifecycleService implements OnModuleInit {
+export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(CommentLifecycleService.name)
+  private commentCreateListenerDisposer?: IEventManagerHandlerDisposer
 
   constructor(
     @InjectModel(CommentModel)
@@ -76,6 +77,19 @@ export class CommentLifecycleService implements OnModuleInit {
     this.mailService.registerEmailType(CommentReplyMailType.Owner, {
       ...renderProps,
     })
+
+    this.commentCreateListenerDisposer = this.eventManager.registerHandler(
+      (event: BusinessEvents, data, scope) => {
+        if (event !== BusinessEvents.COMMENT_CREATE) return
+        if ((scope & EventScope.TO_SYSTEM) === 0) return
+
+        void this.pushCommentEvent(data)
+      },
+    )
+  }
+
+  onModuleDestroy() {
+    this.commentCreateListenerDisposer?.()
   }
 
   async afterCreateComment(
@@ -357,7 +371,6 @@ export class CommentLifecycleService implements OnModuleInit {
     if (location) await this.commentModel.updateOne({ _id: id }, { location })
   }
 
-  @OnEvent(BusinessEvents.COMMENT_CREATE)
   async pushCommentEvent(comment: CommentModel) {
     const { enable, enableComment } =
       await this.configsService.get('barkOptions')

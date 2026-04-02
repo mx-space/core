@@ -1,8 +1,9 @@
 import { Test } from '@nestjs/testing'
-import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { CommentLifecycleService } from '~/modules/comment/comment.lifecycle.service'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CommentReplyMailType } from '~/modules/comment/comment.enum'
+import { CommentLifecycleService } from '~/modules/comment/comment.lifecycle.service'
 import { CommentSpamFilterService } from '~/modules/comment/comment.spam-filter'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { OwnerService } from '~/modules/owner/owner.service'
@@ -32,6 +33,7 @@ describe('CommentLifecycleService email routing', () => {
   let mockEventManager: any
   let mockSpamFilterService: any
   let mockRefModel: any
+  let mockBarkService: any
 
   beforeEach(async () => {
     vi.useFakeTimers()
@@ -98,12 +100,24 @@ describe('CommentLifecycleService email routing', () => {
       send: vi.fn().mockResolvedValue(undefined),
     }
 
+    let registeredHandler: any
     mockEventManager = {
       broadcast: vi.fn().mockResolvedValue(undefined),
+      registerHandler: vi.fn((handler) => {
+        registeredHandler = handler
+        return vi.fn()
+      }),
+      get registeredHandler() {
+        return registeredHandler
+      },
     }
 
     mockSpamFilterService = {
       checkSpam: vi.fn().mockResolvedValue(false),
+    }
+
+    mockBarkService = {
+      push: vi.fn().mockResolvedValue(undefined),
     }
 
     const module = await Test.createTestingModule({
@@ -123,7 +137,7 @@ describe('CommentLifecycleService email routing', () => {
         { provide: EventManagerService, useValue: mockEventManager },
         {
           provide: BarkPushService,
-          useValue: { push: vi.fn().mockResolvedValue(undefined) },
+          useValue: mockBarkService,
         },
         {
           provide: ServerlessService,
@@ -186,6 +200,35 @@ describe('CommentLifecycleService email routing', () => {
       expect.objectContaining({ id: 'comment-1', readerId: 'reader-1' }),
       CommentReplyMailType.Owner,
     )
+  })
+
+  it('pushes bark notification only once for duplicated comment create scopes', async () => {
+    await service.onModuleInit()
+    const pushCommentEventSpy = vi
+      .spyOn(service, 'pushCommentEvent')
+      .mockResolvedValue(undefined)
+
+    const comment = {
+      id: 'comment-1',
+      author: 'Guest User',
+      text: 'hello world',
+      refType: 'Post',
+      avatar: 'https://example.com/avatar.png',
+    }
+
+    await mockEventManager.registeredHandler(
+      BusinessEvents.COMMENT_CREATE,
+      comment,
+      EventScope.TO_SYSTEM_ADMIN,
+    )
+    await mockEventManager.registeredHandler(
+      BusinessEvents.COMMENT_CREATE,
+      comment,
+      EventScope.TO_VISITOR,
+    )
+
+    expect(pushCommentEventSpy).toHaveBeenCalledTimes(1)
+    expect(pushCommentEventSpy).toHaveBeenCalledWith(comment)
   })
 
   it('resolves owner-notification sender mail from reader identity', async () => {
