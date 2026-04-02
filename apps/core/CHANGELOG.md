@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [11.0.12](https://github.com/mx-space/core/compare/v11.0.11...v11.0.12) (2026-04-02)
+
+
+### Bug Fixes
+
+* **comment:** dedupe bark notifications ([9bf08e8](https://github.com/mx-space/core/commit/9bf08e835fe2c8fe9b3717e7db8408e5c0b7120d)), closes [#2624](https://github.com/mx-space/core/issues/2624)
+
+
+### Features
+
+* **auth:** implement createAccessToken method and enhance API key handling ([34c1f0d](https://github.com/mx-space/core/commit/34c1f0d4491f8cd8420435643f0f753625435925))
+
+
+
 ## [11.0.11](https://github.com/mx-space/core/compare/v11.0.10...v11.0.11) (2026-04-01)
 
 
