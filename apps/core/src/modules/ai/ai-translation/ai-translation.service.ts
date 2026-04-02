@@ -1167,6 +1167,26 @@ export class AiTranslationService
         translations,
       )
 
+    if (result.unknownTranslations.size) {
+      const unknownTranslations = [...result.unknownTranslations.values()]
+      const trulyStaleRefIds =
+        await this.translationConsistencyService.filterTrulyStaleTranslations(
+          unknownTranslations,
+        )
+      const trulyStaleRefIdSet = new Set(trulyStaleRefIds)
+
+      for (const [refId, translation] of result.unknownTranslations) {
+        if (trulyStaleRefIdSet.has(refId)) {
+          if (!result.staleRefIds.includes(refId)) {
+            result.staleRefIds.push(refId)
+          }
+          continue
+        }
+
+        result.validTranslations.set(refId, translation)
+      }
+    }
+
     if (result.staleRefIds.length) {
       this.scheduleRegenerationForStaleTranslations(
         result.staleRefIds,

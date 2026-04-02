@@ -57,6 +57,7 @@ describe('TranslationConsistencyService', () => {
       )
 
       expect(result.validTranslations.has('article-1')).toBe(true)
+      expect(result.unknownTranslations.size).toBe(0)
       expect(result.staleRefIds).toEqual([])
     })
 
@@ -81,6 +82,7 @@ describe('TranslationConsistencyService', () => {
       )
 
       expect(result.validTranslations.has('article-1')).toBe(true)
+      expect(result.unknownTranslations.size).toBe(0)
       expect(result.staleRefIds).toEqual([])
     })
 
@@ -115,6 +117,7 @@ describe('TranslationConsistencyService', () => {
       )
 
       expect(result.validTranslations.has('article-1')).toBe(true)
+      expect(result.unknownTranslations.size).toBe(0)
       expect(result.staleRefIds).toEqual([])
     })
 
@@ -138,6 +141,7 @@ describe('TranslationConsistencyService', () => {
       )
 
       expect(result.validTranslations.size).toBe(0)
+      expect(result.unknownTranslations.size).toBe(0)
       expect(result.staleRefIds).toEqual(['article-1'])
     })
 
@@ -159,6 +163,7 @@ describe('TranslationConsistencyService', () => {
       )
 
       expect(result.validTranslations.size).toBe(0)
+      expect(result.unknownTranslations.has('article-1')).toBe(true)
       expect(result.staleRefIds).toEqual([])
     })
   })

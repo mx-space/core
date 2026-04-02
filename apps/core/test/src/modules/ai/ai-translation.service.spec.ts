@@ -113,6 +113,7 @@ describe('AiTranslationService', () => {
           validTranslations: new Map(
             translations.map((translation) => [translation.refId, translation]),
           ),
+          unknownTranslations: new Map(),
           staleRefIds: [],
         })),
       filterTrulyStaleTranslations: vi.fn().mockResolvedValue([]),
@@ -262,6 +263,7 @@ describe('AiTranslationService', () => {
       mockTranslationModel.find.mockReturnValue(query)
       const expected = {
         validTranslations: new Map([['article-1', translations[0]]]),
+        unknownTranslations: new Map(),
         staleRefIds: ['article-2'],
       }
       mockTranslationConsistencyService.partitionValidAndStaleTranslations.mockReturnValue(
@@ -339,6 +341,7 @@ describe('AiTranslationService', () => {
       mockTranslationConsistencyService.partitionValidAndStaleTranslations.mockReturnValue(
         {
           validTranslations: new Map([['article-1', translations[0]]]),
+          unknownTranslations: new Map(),
           staleRefIds: ['article-2', 'article-3'],
         },
       )
@@ -371,6 +374,7 @@ describe('AiTranslationService', () => {
       mockTranslationConsistencyService.partitionValidAndStaleTranslations.mockReturnValue(
         {
           validTranslations: new Map([['article-1', translations[0]]]),
+          unknownTranslations: new Map(),
           staleRefIds: [],
         },
       )
@@ -386,6 +390,38 @@ describe('AiTranslationService', () => {
 
       expect(scheduleSpy).not.toHaveBeenCalled()
       scheduleSpy.mockRestore()
+    })
+
+    it('should resolve unknown translations with a strict stale check', async () => {
+      const translations = [{ ...mockTranslation, refId: 'article-1' }]
+      const query = {
+        select: vi.fn().mockReturnThis(),
+        then: (resolve: (value: any) => void, reject: (reason?: any) => void) =>
+          Promise.resolve(translations).then(resolve, reject),
+      }
+
+      mockTranslationModel.find.mockReturnValue(query)
+      mockTranslationConsistencyService.partitionValidAndStaleTranslations.mockReturnValue(
+        {
+          validTranslations: new Map(),
+          unknownTranslations: new Map([['article-1', translations[0]]]),
+          staleRefIds: [],
+        },
+      )
+      mockTranslationConsistencyService.filterTrulyStaleTranslations.mockResolvedValue(
+        [],
+      )
+
+      const result = await service.getValidTranslationsForArticles(
+        [{ id: 'article-1', title: 'T1', modified: new Date() }],
+        'en',
+      )
+
+      expect(
+        mockTranslationConsistencyService.filterTrulyStaleTranslations,
+      ).toHaveBeenCalledWith(translations)
+      expect(result.validTranslations.get('article-1')).toEqual(translations[0])
+      expect(result.staleRefIds).toEqual([])
     })
   })
 

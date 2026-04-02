@@ -12,6 +12,7 @@
   },
   "author": "Innei <https://innei.in>",
   "scripts": {
+    "check:ai-translation-hash": "pnpm -C apps/core exec node scripts/check-ai-translation-hash.mjs",
     "format": "prettier --write \"apps/**/*.ts\"",
     "lexical-live": "pnpm -C apps/core exec node scripts/lexical-translation-live.mjs",
     "prepare": "simple-git-hooks && node scripts/init-project.mjs",

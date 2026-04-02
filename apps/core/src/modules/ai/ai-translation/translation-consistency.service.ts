@@ -35,16 +35,22 @@ export class TranslationConsistencyService extends BaseTranslationService {
     translations: AITranslationModel[],
   ): {
     validTranslations: Map<string, AITranslationModel>
+    unknownTranslations: Map<string, AITranslationModel>
     staleRefIds: string[]
   } {
     if (!articles.length || !translations.length) {
-      return { validTranslations: new Map(), staleRefIds: [] }
+      return {
+        validTranslations: new Map(),
+        unknownTranslations: new Map(),
+        staleRefIds: [],
+      }
     }
 
     const translationMap = new Map(
       translations.map((translation) => [translation.refId, translation]),
     )
     const validTranslations = new Map<string, AITranslationModel>()
+    const unknownTranslations = new Map<string, AITranslationModel>()
     const staleRefIds = new Set<string>()
 
     for (const article of articles) {
@@ -58,10 +64,16 @@ export class TranslationConsistencyService extends BaseTranslationService {
         validTranslations.set(article.id, translation)
       } else if (status === 'stale') {
         staleRefIds.add(article.id)
+      } else if (status === 'unknown') {
+        unknownTranslations.set(article.id, translation)
       }
     }
 
-    return { validTranslations, staleRefIds: [...staleRefIds] }
+    return {
+      validTranslations,
+      unknownTranslations,
+      staleRefIds: [...staleRefIds],
+    }
   }
 
   async filterTrulyStaleTranslations(
