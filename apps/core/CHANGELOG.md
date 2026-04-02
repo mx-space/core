@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.0.14](https://github.com/mx-space/core/compare/v11.0.13...v11.0.14) (2026-04-02)
+
+
+### Bug Fixes
+
+* **page:** translate page titles even when text field is not selected ([2182452](https://github.com/mx-space/core/commit/218245219ed47cff4b3f3a73f707b008b2f380f4))
+
+
+
 ## [11.0.13](https://github.com/mx-space/core/compare/v11.0.12...v11.0.13) (2026-04-02)
 
 
