@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.0.13](https://github.com/mx-space/core/compare/v11.0.12...v11.0.13) (2026-04-02)
+
+
+### Bug Fixes
+
+* key verfiy ([1a34088](https://github.com/mx-space/core/commit/1a3408894c5e6c7f30e2525ff15c172240a7cd3e))
+
+
+
 ## [11.0.12](https://github.com/mx-space/core/compare/v11.0.11...v11.0.12) (2026-04-02)
 
 
