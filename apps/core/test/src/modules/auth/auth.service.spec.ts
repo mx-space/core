@@ -66,6 +66,11 @@ function createAuthInstance(overrides: any = {}) {
       api: {
         getSession: vi.fn().mockResolvedValue(null),
         listUserAccounts: vi.fn().mockResolvedValue([]),
+        createApiKey: vi.fn().mockResolvedValue({
+          key: `txo${'x'.repeat(40)}`,
+          name: 'generated-key',
+          expiresAt: null,
+        }),
         verifyApiKey: vi.fn().mockResolvedValue(null),
         ...overrides.api,
       },
@@ -230,6 +235,23 @@ describe('AuthService', () => {
         expired: undefined,
       })
     })
+
+    it('should query both referenceId and legacy userId', async () => {
+      const apiKeyCol = createMockCollection([])
+      apiKeyCol.find.mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([]),
+      })
+      const collections = createCollections({ apikey: apiKeyCol })
+      const { service } = await createTestService({ collections })
+      await service.getAllAccessToken()
+
+      expect(apiKeyCol.find).toHaveBeenCalledWith({
+        $or: [
+          { referenceId: ownerId.toString() },
+          { userId: { $in: [ownerId.toString(), ownerId] } },
+        ],
+      })
+    })
   })
 
   describe('getTokenSecret', () => {
@@ -324,6 +346,65 @@ describe('AuthService', () => {
     })
   })
 
+  describe('createAccessToken', () => {
+    it('should create token through better-auth api', async () => {
+      const createApiKey = vi.fn().mockResolvedValue({
+        key: `txo${'y'.repeat(40)}`,
+        name: 'key',
+        expiresAt: null,
+      })
+      const authInstance = createAuthInstance({
+        api: { createApiKey },
+      })
+      const { service } = await createTestService({ authInstance })
+
+      const result = await service.createAccessToken({
+        name: 'key',
+      } as any)
+
+      expect(createApiKey).toHaveBeenCalledWith({
+        body: {
+          name: 'key',
+          userId: ownerId.toString(),
+        },
+      })
+      expect(result).toEqual({
+        name: 'key',
+        token: `txo${'y'.repeat(40)}`,
+        expired: undefined,
+      })
+    })
+
+    it('should convert expired date to expiresIn seconds', async () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date('2026-04-02T10:00:00.000Z'))
+      const createApiKey = vi.fn().mockResolvedValue({
+        key: `txo${'z'.repeat(40)}`,
+        name: 'expiring',
+        expiresAt: '2026-04-02T11:00:00.000Z',
+      })
+      const authInstance = createAuthInstance({
+        api: { createApiKey },
+      })
+      const { service } = await createTestService({ authInstance })
+
+      const result = await service.createAccessToken({
+        name: 'expiring',
+        expired: new Date('2026-04-02T11:00:00.000Z'),
+      } as any)
+
+      expect(createApiKey).toHaveBeenCalledWith({
+        body: {
+          name: 'expiring',
+          userId: ownerId.toString(),
+          expiresIn: 3600,
+        },
+      })
+      expect(result.expired).toEqual(new Date('2026-04-02T11:00:00.000Z'))
+      vi.useRealTimers()
+    })
+  })
+
   describe('deleteToken', () => {
     it('should skip delete for invalid ObjectId', async () => {
       const collections = createCollections()
@@ -358,6 +439,48 @@ describe('AuthService', () => {
       })
       const { service } = await createTestService({ authInstance })
       expect(await service.verifyApiKey('bad-key')).toBeNull()
+    })
+
+    it('should fall back to legacy api key document and migrate it', async () => {
+      const legacyId = new Types.ObjectId()
+      const apiKeyCol = createMockCollection([
+        {
+          _id: legacyId,
+          key: 'legacy-key',
+          name: 'legacy',
+          userId: ownerId.toString(),
+          enabled: true,
+          createdAt: new Date('2025-01-01T00:00:00.000Z'),
+        },
+      ])
+      const authInstance = createAuthInstance({
+        api: {
+          verifyApiKey: vi.fn().mockResolvedValue({ valid: false, key: null }),
+        },
+      })
+      const { service, collections } = await createTestService({
+        authInstance,
+        collections: createCollections({ apikey: apiKeyCol }),
+      })
+
+      const result = await service.verifyApiKey('legacy-key')
+
+      expect(result).toMatchObject({
+        key: 'legacy-key',
+        referenceId: ownerId.toString(),
+        configId: 'default',
+      })
+      expect(collections.apikey.updateOne).toHaveBeenCalledWith(
+        { _id: legacyId },
+        expect.objectContaining({
+          $set: expect.objectContaining({
+            referenceId: ownerId.toString(),
+            configId: 'default',
+            requestCount: 0,
+            rateLimitEnabled: true,
+          }),
+        }),
+      )
     })
 
     it('should return key when valid', async () => {

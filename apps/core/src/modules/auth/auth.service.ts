@@ -37,6 +37,24 @@ type CreateOwnerByCredentialInput = {
   socialIds?: Record<string, string | number>
 }
 
+type ApiKeyDocument = {
+  _id?: Types.ObjectId
+  id?: string
+  key: string
+  name?: string | null
+  createdAt?: Date
+  updatedAt?: Date
+  expiresAt?: Date | null
+  userId?: string | Types.ObjectId | null
+  referenceId?: string | null
+  configId?: string | null
+  start?: string | null
+  prefix?: string | null
+  enabled?: boolean
+  rateLimitEnabled?: boolean
+  requestCount?: number
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -67,6 +85,13 @@ export class AuthService {
     return objectId ? { userId: { $in: [userId, objectId] } } : { userId }
   }
 
+  private buildApiKeyOwnerQuery(userId: string): Record<string, any> {
+    const legacyUserQuery = this.buildAccountUserIdQuery(userId)
+    return {
+      $or: [{ referenceId: userId }, legacyUserQuery],
+    }
+  }
+
   private normalizeOptional(value?: string | null) {
     if (typeof value !== 'string') {
       return undefined
@@ -95,7 +120,7 @@ export class AuthService {
     }
     const keys = await this.databaseService.db
       .collection('apikey')
-      .find(this.buildAccountUserIdQuery(ownerId))
+      .find(this.buildApiKeyOwnerQuery(ownerId))
       .toArray()
 
     return keys.map((token) => ({
@@ -145,6 +170,44 @@ export class AuthService {
       return [false, null]
     }
     return [true, { userId: apiKey.referenceId }]
+  }
+
+  async createAccessToken(body: TokenDto) {
+    const auth = this.authInstance.get()
+    if (!auth) {
+      throw new InternalServerErrorException('auth not found')
+    }
+
+    const ownerId = await this.getOwnerReaderId()
+    if (!ownerId) {
+      throw new BizException(ErrorCodeEnum.AuthUserIdNotFound)
+    }
+
+    const expiresIn =
+      body.expired instanceof Date
+        ? Math.floor((body.expired.getTime() - Date.now()) / 1000)
+        : undefined
+
+    if (expiresIn !== undefined && expiresIn <= 0) {
+      throw new BizException(
+        ErrorCodeEnum.InvalidParameter,
+        'expired must be in the future',
+      )
+    }
+
+    const created = await auth.api.createApiKey({
+      body: {
+        name: body.name,
+        userId: ownerId,
+        ...(expiresIn ? { expiresIn } : {}),
+      },
+    })
+
+    return {
+      name: created.name ?? body.name,
+      token: created.key,
+      expired: created.expiresAt ? new Date(created.expiresAt) : undefined,
+    }
   }
 
   async saveToken(model: TokenDto & { token: string }) {
@@ -563,9 +626,89 @@ export class AuthService {
       },
     })
     if (!result?.valid || !result.key) {
-      return null
+      return this.verifyLegacyApiKey(token)
     }
     return result.key
+  }
+
+  private async verifyLegacyApiKey(token: string) {
+    const legacyDoc = (await this.databaseService.db
+      .collection('apikey')
+      .findOne({
+        key: token,
+      })) as ApiKeyDocument | null
+
+    if (!legacyDoc) {
+      return null
+    }
+
+    if (legacyDoc.enabled === false) {
+      return null
+    }
+
+    if (legacyDoc.expiresAt && legacyDoc.expiresAt.getTime() <= Date.now()) {
+      return null
+    }
+
+    const referenceId =
+      legacyDoc.referenceId ||
+      (legacyDoc.userId ? legacyDoc.userId.toString() : null)
+
+    if (!referenceId) {
+      return null
+    }
+
+    await this.migrateLegacyApiKey(legacyDoc, referenceId)
+
+    return {
+      ...legacyDoc,
+      referenceId,
+      configId: legacyDoc.configId ?? 'default',
+      enabled: legacyDoc.enabled ?? true,
+      rateLimitEnabled: legacyDoc.rateLimitEnabled ?? true,
+      requestCount: legacyDoc.requestCount ?? 0,
+    }
+  }
+
+  private async migrateLegacyApiKey(
+    legacyDoc: ApiKeyDocument,
+    referenceId: string,
+  ) {
+    if (
+      legacyDoc.referenceId &&
+      legacyDoc.configId &&
+      legacyDoc.requestCount !== undefined &&
+      legacyDoc.rateLimitEnabled !== undefined
+    ) {
+      return
+    }
+
+    if (!legacyDoc._id) {
+      return
+    }
+
+    const now = new Date()
+
+    await this.databaseService.db.collection('apikey').updateOne(
+      { _id: legacyDoc._id },
+      {
+        $set: {
+          configId: legacyDoc.configId ?? 'default',
+          referenceId,
+          start: legacyDoc.start ?? legacyDoc.key.slice(0, 6),
+          ...(legacyDoc.prefix !== undefined
+            ? { prefix: legacyDoc.prefix }
+            : legacyDoc.key.startsWith('txo')
+              ? { prefix: 'txo' }
+              : {}),
+          enabled: legacyDoc.enabled ?? true,
+          rateLimitEnabled: legacyDoc.rateLimitEnabled ?? true,
+          requestCount: legacyDoc.requestCount ?? 0,
+          createdAt: legacyDoc.createdAt ?? now,
+          updatedAt: now,
+        },
+      },
+    )
   }
 
   private async getOwnerReaderId() {

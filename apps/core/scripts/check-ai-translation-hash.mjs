@@ -177,6 +177,50 @@ function computeContentHash(doc, sourceLang) {
   )
 }
 
+function hasComparableSource(doc) {
+  return typeof doc?.text === 'string' || typeof doc?.content === 'string'
+}
+
+function evaluateTranslationFreshness(doc, translation, sourceLang) {
+  const articleTimestamp = doc.modified ?? doc.created ?? null
+
+  if (
+    translation.sourceModified &&
+    articleTimestamp &&
+    translation.sourceModified >= articleTimestamp
+  ) {
+    return 'valid_by_timestamp'
+  }
+
+  if (
+    !translation.sourceModified &&
+    articleTimestamp &&
+    translation.created &&
+    translation.created >= articleTimestamp
+  ) {
+    return 'valid_by_created'
+  }
+
+  if (!hasComparableSource(doc)) {
+    return 'unknown'
+  }
+
+  const currentHash = computeContentHash(
+    {
+      title: doc.title,
+      text: doc.text ?? '',
+      subtitle: doc.subtitle,
+      summary: doc.summary,
+      tags: doc.tags,
+      contentFormat: doc.contentFormat,
+      content: doc.content,
+    },
+    sourceLang,
+  )
+
+  return translation.hash === currentHash ? 'valid_by_hash' : 'runtime_stale'
+}
+
 function isVisible(refType, doc) {
   if (refType === 'posts') {
     return doc.isPublished !== false
@@ -232,9 +276,10 @@ function printPretty(report, limit) {
     [
       pad('refType', 10),
       pad('source', 8),
-      pad('valid', 8),
+      pad('runtime', 8),
       pad('missing', 8),
       pad('stale', 8),
+      pad('strict', 8),
     ].join(' '),
   )
 
@@ -244,20 +289,25 @@ function printPretty(report, limit) {
       [
         pad(refType, 10),
         pad(item.sourceCount, 8),
-        pad(item.validCount, 8),
+        pad(item.runtimeValidCount, 8),
         pad(item.missingCount, 8),
-        pad(item.staleCount, 8),
+        pad(item.runtimeStaleCount, 8),
+        pad(item.strictHashMismatchCount, 8),
       ].join(' '),
     )
   }
 
   console.log('')
   console.log(`Target languages: ${report.targetLanguages.join(', ')}`)
+  console.log(
+    `Runtime validity: timestamp=${report.summary.validByTimestampCount} created=${report.summary.validByCreatedCount} hash=${report.summary.validByHashCount} unknown=${report.summary.unknownCount}`,
+  )
   console.log(`Task payload count: ${report.taskPayloads.length}`)
 
   const previewSections = [
     ['Missing preview', report.missing],
-    ['Stale preview', report.stale],
+    ['Runtime stale preview', report.runtimeStale],
+    ['Strict hash mismatch preview', report.strictHashMismatch],
     ['Task payload preview', report.taskPayloads],
   ]
 
@@ -341,13 +391,19 @@ async function main() {
       summary: {
         translationRowCount: translationRows.length,
         sourceCount: 0,
-        validCount: 0,
+        runtimeValidCount: 0,
         missingCount: 0,
-        staleCount: 0,
+        runtimeStaleCount: 0,
+        strictHashMismatchCount: 0,
+        validByTimestampCount: 0,
+        validByCreatedCount: 0,
+        validByHashCount: 0,
+        unknownCount: 0,
         byRefType: {},
       },
       missing: [],
-      stale: [],
+      runtimeStale: [],
+      strictHashMismatch: [],
       taskPayloads: [],
     }
 
@@ -366,9 +422,10 @@ async function main() {
 
       report.summary.byRefType[refType] = {
         sourceCount: visibleDocs.length,
-        validCount: 0,
+        runtimeValidCount: 0,
         missingCount: 0,
-        staleCount: 0,
+        runtimeStaleCount: 0,
+        strictHashMismatchCount: 0,
       }
       report.summary.sourceCount += visibleDocs.length
 
@@ -426,7 +483,7 @@ async function main() {
 
           if (translation.hash !== currentHash) {
             const row = {
-              reason: 'stale',
+              reason: 'strict_hash_mismatch',
               refType,
               refId,
               lang,
@@ -438,9 +495,34 @@ async function main() {
               storedHash: translation.hash,
               currentHash,
             }
-            report.stale.push(row)
-            report.summary.staleCount++
-            report.summary.byRefType[refType].staleCount++
+            report.strictHashMismatch.push(row)
+            report.summary.strictHashMismatchCount++
+            report.summary.byRefType[refType].strictHashMismatchCount++
+          }
+
+          const freshness = evaluateTranslationFreshness(doc, translation, sourceLang)
+
+          if (freshness === 'runtime_stale') {
+            const row = {
+              reason: 'runtime_stale',
+              refType,
+              refId,
+              lang,
+              title: doc.title,
+              nid: doc.nid ?? null,
+              slug: doc.slug ?? null,
+              visible: visibility,
+              sourceLang,
+              storedHash: translation.hash,
+              currentHash,
+              sourceModified: translation.sourceModified ?? null,
+              created: translation.created ?? null,
+              articleModified: doc.modified ?? null,
+              articleCreated: doc.created ?? null,
+            }
+            report.runtimeStale.push(row)
+            report.summary.runtimeStaleCount++
+            report.summary.byRefType[refType].runtimeStaleCount++
 
             if (!taskMap.has(taskKey)) {
               taskMap.set(taskKey, {
@@ -455,8 +537,21 @@ async function main() {
             }
             taskMap.get(taskKey).targetLanguages.add(lang)
           } else {
-            report.summary.validCount++
-            report.summary.byRefType[refType].validCount++
+            if (freshness === 'valid_by_timestamp') {
+              report.summary.runtimeValidCount++
+              report.summary.byRefType[refType].runtimeValidCount++
+              report.summary.validByTimestampCount++
+            } else if (freshness === 'valid_by_created') {
+              report.summary.runtimeValidCount++
+              report.summary.byRefType[refType].runtimeValidCount++
+              report.summary.validByCreatedCount++
+            } else if (freshness === 'valid_by_hash') {
+              report.summary.runtimeValidCount++
+              report.summary.byRefType[refType].runtimeValidCount++
+              report.summary.validByHashCount++
+            } else if (freshness === 'unknown') {
+              report.summary.unknownCount++
+            }
           }
         }
       }

@@ -1,13 +1,14 @@
-import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
-import { AuthInstanceInjectKey } from '~/modules/auth/auth.constant'
-import { AuthController } from '~/modules/auth/auth.controller'
-import { AuthService } from '~/modules/auth/auth.service'
-import { DatabaseService } from '~/processors/database/database.service'
 import { Types } from 'mongoose'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
 import { eventEmitterProvider } from 'test/mock/processors/event.mock'
 import { vi } from 'vitest'
+
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
+import { AuthInstanceInjectKey } from '~/modules/auth/auth.constant'
+import { AuthController } from '~/modules/auth/auth.controller'
+import { AuthService } from '~/modules/auth/auth.service'
+import { DatabaseService } from '~/processors/database/database.service'
 
 const ownerId = new Types.ObjectId()
 
@@ -37,6 +38,11 @@ const readersCol = createMockCollection([
 const accountsCol = createMockCollection([])
 const apikeyCol = createMockCollection([])
 
+const mockCreateApiKey = vi.fn().mockResolvedValue({
+  key: `txo${'x'.repeat(40)}`,
+  name: 'test-key',
+  expiresAt: null,
+})
 const mockVerifyApiKey = vi.fn().mockResolvedValue(null)
 const mockGetProviders = vi.fn().mockResolvedValue([])
 const mockGetSession = vi.fn().mockResolvedValue(null)
@@ -62,6 +68,7 @@ describe('AuthController (e2e)', async () => {
           get: () => ({
             options: { socialProviders: { github: {} } },
             api: {
+              createApiKey: mockCreateApiKey,
               getSession: mockGetSession,
               listUserAccounts: mockListUserAccounts,
               verifyApiKey: mockVerifyApiKey,
@@ -86,6 +93,11 @@ describe('AuthController (e2e)', async () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    mockCreateApiKey.mockResolvedValue({
+      key: `txo${'x'.repeat(40)}`,
+      name: 'test-key',
+      expiresAt: null,
+    })
     mockVerifyApiKey.mockResolvedValue(null)
     mockGetProviders.mockResolvedValue([])
     mockGetSession.mockResolvedValue(null)
@@ -114,6 +126,12 @@ describe('AuthController (e2e)', async () => {
       expect(json.token).toBeDefined()
       expect(json.token).toMatch(/^txo/)
       expect(json.name).toBe('test-key')
+      expect(mockCreateApiKey).toHaveBeenCalledWith({
+        body: {
+          name: 'test-key',
+          userId: ownerId.toString(),
+        },
+      })
     })
 
     it('should reject without name', async () => {
