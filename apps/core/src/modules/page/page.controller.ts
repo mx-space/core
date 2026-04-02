@@ -61,23 +61,20 @@ export class PageController {
 
     const translationInputs: ArticleTranslationInput[] = []
     for (const doc of result.docs) {
-      const originalText = doc.text
       if (doc.meta && typeof doc.meta === 'string') {
         doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
       }
-      if (typeof originalText === 'string') {
-        translationInputs.push({
-          id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
-          title: doc.title,
-          text: originalText,
-          subtitle: doc.subtitle,
-          meta: doc.meta as { lang?: string } | undefined,
-          contentFormat: doc.contentFormat,
-          content: doc.content,
-          modified: doc.modified,
-          created: doc.created,
-        })
-      }
+      translationInputs.push({
+        id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
+        title: doc.title,
+        text: doc.text,
+        subtitle: doc.subtitle,
+        meta: doc.meta as { lang?: string } | undefined,
+        contentFormat: doc.contentFormat,
+        content: doc.content,
+        modified: doc.modified,
+        created: doc.created,
+      })
     }
 
     if (translationInputs.length) {
