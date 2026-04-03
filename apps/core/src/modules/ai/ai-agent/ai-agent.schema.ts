@@ -24,6 +24,7 @@ export class AppendMessagesDto extends createZodDto(AppendMessagesSchema) {}
 
 export const ListConversationsQuerySchema = z.object({
   refId: zMongoId,
+  refType: z.enum(['post', 'note', 'page']),
 })
 export class ListConversationsQueryDto extends createZodDto(
   ListConversationsQuerySchema,
