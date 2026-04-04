@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common'
 
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import type { MongooseModel } from '~/shared/model/base.model'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { AIAgentConversationModel } from './ai-agent-conversation.model'

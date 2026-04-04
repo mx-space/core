@@ -9,7 +9,7 @@ export const CreateConversationSchema = z.object({
   refId: zMongoId,
   refType: z.enum(['post', 'note', 'page']),
   title: z.string().optional(),
-  messages: z.array(z.record(z.unknown())).default([]),
+  messages: z.array(z.record(z.string(), z.unknown())).default([]),
   model: z.string().min(1),
   providerId: z.string().min(1),
 })
@@ -18,7 +18,7 @@ export class CreateConversationDto extends createZodDto(
 ) {}
 
 export const AppendMessagesSchema = z.object({
-  messages: z.array(z.record(z.unknown())).min(1),
+  messages: z.array(z.record(z.string(), z.unknown())).min(1),
 })
 export class AppendMessagesDto extends createZodDto(AppendMessagesSchema) {}
 
@@ -35,13 +35,13 @@ export class ListConversationsQueryDto extends createZodDto(
 export const ChatProxySchema = z.object({
   model: z.string().min(1),
   providerId: z.string().min(1),
-  messages: z.array(z.record(z.unknown())),
+  messages: z.array(z.record(z.string(), z.unknown())),
   tools: z
     .array(
       z.object({
         name: z.string(),
         description: z.string(),
-        parameters: z.record(z.unknown()),
+        parameters: z.record(z.string(), z.unknown()),
       }),
     )
     .optional(),
