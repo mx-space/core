@@ -87,7 +87,7 @@ export class AiAgentConversationService {
           updated: new Date(),
         },
       },
-      { returnDocument: 'after', projection: { messages: 0 }, lean: true },
+      { returnDocument: 'after', lean: true },
     )
     if (!result) {
       throw new BizException(
@@ -95,7 +95,16 @@ export class AiAgentConversationService {
         'Conversation not found',
       )
     }
-    return result
+
+    if (
+      !result.title &&
+      messages.some((m) => m.role === 'assistant' || m.type === 'assistant')
+    ) {
+      this.generateTitle(id, messages, result.model, result.providerId)
+    }
+
+    const { messages: _messages, ...rest } = result
+    return rest
   }
 
   async updateById(

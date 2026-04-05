@@ -45,12 +45,30 @@ export class PageController {
   async getPagesSummary(@Query() query: PagerDto, @Lang() lang?: string) {
     const { size, select, page, sortBy, sortOrder } = query
 
+    // When lang is present, ensure text/meta are fetched for translation even if not in select
+    let paginateSelect = select
+    if (lang && paginateSelect) {
+      for (const field of [
+        'text',
+        'meta',
+        'subtitle',
+        'content',
+        'contentFormat',
+        'modified',
+        'created',
+      ]) {
+        if (!paginateSelect.includes(field)) {
+          paginateSelect = `${paginateSelect} ${field}`
+        }
+      }
+    }
+
     const result = await this.pageService.model.paginate(
       {},
       {
         limit: size,
         page,
-        select,
+        select: paginateSelect,
         sort: sortBy ? { [sortBy]: sortOrder || -1 } : { order: -1 },
       },
     )
@@ -99,6 +117,26 @@ export class PageController {
           translation.translationMeta
         return doc
       })
+    }
+
+    // Strip fields that were added only for translation
+    if (select) {
+      const stripFields = [
+        'text',
+        'meta',
+        'subtitle',
+        'content',
+        'contentFormat',
+        'modified',
+        'created',
+      ].filter((f) => !select.includes(f))
+      if (stripFields.length) {
+        for (const doc of result.docs) {
+          for (const field of stripFields) {
+            delete (doc as any)[field]
+          }
+        }
+      }
     }
 
     return result
