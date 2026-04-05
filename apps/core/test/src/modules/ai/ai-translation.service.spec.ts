@@ -269,6 +269,10 @@ describe('AiTranslationService', () => {
       mockTranslationConsistencyService.partitionValidAndStaleTranslations.mockReturnValue(
         expected,
       )
+      vi.spyOn(
+        service,
+        'scheduleRegenerationForStaleTranslations',
+      ).mockResolvedValue(undefined)
 
       const result = await service.getValidTranslationsForArticles(
         [
@@ -1212,6 +1216,10 @@ describe('AiTranslationService', () => {
         .mockReturnValueOnce('valid')
         .mockReturnValueOnce('stale')
         .mockReturnValueOnce('valid')
+      vi.spyOn(
+        service,
+        'scheduleRegenerationForStaleTranslations',
+      ).mockResolvedValue(undefined)
 
       const result = await service.getTranslationAndAvailableLanguages(
         'article-1',
