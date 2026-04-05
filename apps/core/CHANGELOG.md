@@ -1,5 +1,24 @@
 # CHANGELOG
 
+# [11.1.0](https://github.com/mx-space/core/compare/v11.0.14...v11.1.0) (2026-04-05)
+
+
+### Bug Fixes
+
+* MongooseModel is global type, z.record needs key+value args for Zod v4 ([4efc0e2](https://github.com/mx-space/core/commit/4efc0e2ed062bdc530c919d9cc7a62d021590730))
+
+
+### Features
+
+* **ai-agent:** add multi-session support with metadata fields and endpoints ([6dbee13](https://github.com/mx-space/core/commit/6dbee13c8583386e54c691019354bc215e3f2400))
+* **ai:** add agent chat proxy service with format transformation ([645a534](https://github.com/mx-space/core/commit/645a534f5793105619fade36d1bad692cccc82cd))
+* **ai:** add agent controller and register in AI module ([96d314f](https://github.com/mx-space/core/commit/96d314f420ab1aa63a04b37c96b67204ea6dd833))
+* **ai:** add agent conversation and chat proxy DTOs ([902be67](https://github.com/mx-space/core/commit/902be6745e791995a0a8a4df004159698d77797b))
+* **ai:** add agent conversation CRUD service ([31c8756](https://github.com/mx-space/core/commit/31c875686c6c1eea9572398d48b88c3dae3db030))
+* **ai:** add agent conversation model and collection constant ([60a4374](https://github.com/mx-space/core/commit/60a4374e592e7bfb898d30429ea4d19e2271c778))
+
+
+
 ## [11.0.14](https://github.com/mx-space/core/compare/v11.0.13...v11.0.14) (2026-04-02)
 
 
