@@ -5,21 +5,30 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
+  Req,
   Res,
 } from '@nestjs/common'
-import type { FastifyReply } from 'fastify'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
+import {
+  applyRawCorsHeaders,
+  endSse,
+  initSse,
+  sendSseEvent,
+} from '~/utils/sse.util'
 
 import {
   AppendMessagesDto,
   ChatProxyDto,
   CreateConversationDto,
   ListConversationsQueryDto,
+  ReplaceMessagesDto,
+  UpdateConversationDto,
 } from './ai-agent.schema'
 import { AiAgentChatService } from './ai-agent-chat.service'
 import { AiAgentConversationService } from './ai-agent-conversation.service'
@@ -35,7 +44,11 @@ export class AiAgentController {
 
   @Post('/chat')
   @Auth()
-  async chatProxy(@Body() body: ChatProxyDto, @Res() reply: FastifyReply) {
+  async chatProxy(
+    @Body() body: ChatProxyDto,
+    @Req() request: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
     const provider = await this.chatService.resolveProvider(body.providerId)
     const {
       url,
@@ -56,7 +69,7 @@ export class AiAgentController {
 
     if (!response.ok) {
       const errorText = await response.text()
-      initSse(reply)
+      initSse(reply, request)
       sendSseEvent(reply, 'error', {
         message: `LLM API error (${response.status}): ${errorText}`,
       })
@@ -65,6 +78,7 @@ export class AiAgentController {
     }
 
     // Pipe raw SSE stream through to client
+    applyRawCorsHeaders(reply, request)
     reply.raw.setHeader('Content-Type', 'text/event-stream')
     reply.raw.setHeader('Cache-Control', 'no-cache, no-transform')
     reply.raw.setHeader('Connection', 'keep-alive')
@@ -106,6 +120,15 @@ export class AiAgentController {
     return this.conversationService.getById(params.id)
   }
 
+  @Patch('/conversations/:id')
+  @Auth()
+  async updateConversation(
+    @Param() params: MongoIdDto,
+    @Body() body: UpdateConversationDto,
+  ) {
+    return this.conversationService.updateById(params.id, body)
+  }
+
   @Patch('/conversations/:id/messages')
   @Auth()
   async appendMessages(
@@ -113,6 +136,15 @@ export class AiAgentController {
     @Body() body: AppendMessagesDto,
   ) {
     return this.conversationService.appendMessages(params.id, body.messages)
+  }
+
+  @Put('/conversations/:id/messages')
+  @Auth()
+  async replaceMessages(
+    @Param() params: MongoIdDto,
+    @Body() body: ReplaceMessagesDto,
+  ) {
+    return this.conversationService.replaceMessages(params.id, body.messages)
   }
 
   @Delete('/conversations/:id')

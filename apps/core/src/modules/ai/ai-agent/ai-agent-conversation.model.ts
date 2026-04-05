@@ -41,5 +41,14 @@ export class AIAgentConversationModel extends BaseModel {
   @prop({ required: true })
   providerId: string
 
+  @prop({ type: () => mongoose.Schema.Types.Mixed })
+  reviewState?: Record<string, unknown>
+
+  @prop({ type: () => mongoose.Schema.Types.Mixed })
+  diffState?: Record<string, unknown>
+
+  @prop({ default: 0 })
+  messageCount: number
+
   updated?: Date
 }

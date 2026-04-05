@@ -22,6 +22,20 @@ export const AppendMessagesSchema = z.object({
 })
 export class AppendMessagesDto extends createZodDto(AppendMessagesSchema) {}
 
+export const ReplaceMessagesSchema = z.object({
+  messages: z.array(z.record(z.string(), z.unknown())),
+})
+export class ReplaceMessagesDto extends createZodDto(ReplaceMessagesSchema) {}
+
+export const UpdateConversationSchema = z.object({
+  title: z.string().optional(),
+  reviewState: z.record(z.string(), z.unknown()).nullable().optional(),
+  diffState: z.record(z.string(), z.unknown()).nullable().optional(),
+})
+export class UpdateConversationDto extends createZodDto(
+  UpdateConversationSchema,
+) {}
+
 export const ListConversationsQuerySchema = z.object({
   refId: zMongoId,
   refType: z.enum(['post', 'note', 'page']),
