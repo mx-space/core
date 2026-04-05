@@ -1,9 +1,24 @@
-import type { FastifyReply } from 'fastify'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 
 import { logger } from '~/global/consola.global'
 import { isDev } from '~/global/env.global'
 
-export function initSse(reply: FastifyReply) {
+export function applyRawCorsHeaders(
+  reply: FastifyReply,
+  request?: FastifyRequest,
+) {
+  // Fastify CORS plugin sets headers on reply but we bypass via reply.raw,
+  // so mirror the essentials manually for streaming endpoints.
+  const origin = (request?.headers.origin as string | undefined) || ''
+  if (origin) {
+    reply.raw.setHeader('Access-Control-Allow-Origin', origin)
+    reply.raw.setHeader('Vary', 'Origin')
+    reply.raw.setHeader('Access-Control-Allow-Credentials', 'true')
+  }
+}
+
+export function initSse(reply: FastifyReply, request?: FastifyRequest) {
+  applyRawCorsHeaders(reply, request)
   reply.raw.setHeader('Content-Type', 'text/event-stream')
   reply.raw.setHeader('Cache-Control', 'no-cache, no-transform')
   reply.raw.setHeader('Connection', 'keep-alive')

@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common'
 import type { OnModuleInit } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { InjectModel } from '~/transformers/model.transformer'
+
 import {
   MetaFieldType,
   MetaPresetModel,
@@ -234,7 +236,11 @@ export class MetaPresetService implements OnModuleInit {
       }
 
       return this.metaPresetModel
-        .findByIdAndUpdate(id, { $set: updateData }, { new: true })
+        .findByIdAndUpdate(
+          id,
+          { $set: updateData },
+          { returnDocument: 'after' },
+        )
         .lean()
     }
 
@@ -250,7 +256,7 @@ export class MetaPresetService implements OnModuleInit {
     }
 
     return this.metaPresetModel
-      .findByIdAndUpdate(id, { $set: dto }, { new: true })
+      .findByIdAndUpdate(id, { $set: dto }, { returnDocument: 'after' })
       .lean()
   }
 

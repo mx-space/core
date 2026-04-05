@@ -128,7 +128,7 @@ export class PageService {
             ? { meta: dbTransforms.json(doc.meta) }
             : {}),
         },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .lean({ getters: true })
 

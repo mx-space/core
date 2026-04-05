@@ -164,7 +164,7 @@ export class CategoryService implements OnApplicationBootstrap {
   async update(id: string, partialDoc: Partial<CategoryModel>) {
     if (partialDoc?.slug) await this.trackerSlugChanges(id, partialDoc.slug)
     const newDoc = await this.model.findOneAndUpdate({ _id: id }, partialDoc, {
-      new: true,
+      returnDocument: 'after',
     })
 
     this.clearCache()

@@ -316,7 +316,7 @@ export class RecentlyService {
         metadata: model.metadata,
         modified: new Date(),
       },
-      { new: true },
+      { returnDocument: 'after' },
     )
 
     if (!res) {

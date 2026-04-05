@@ -446,7 +446,7 @@ export class NoteService {
           _id: id,
         },
         updatedData,
-        { new: true, timestamps: false },
+        { returnDocument: 'after', timestamps: false },
       )
       .lean({
         getters: true,

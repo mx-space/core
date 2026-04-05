@@ -194,7 +194,7 @@ export class SnippetService {
     }
 
     const newerDoc = await this.model.findByIdAndUpdate(id, updateQuery, {
-      new: true,
+      returnDocument: 'after',
     })
 
     if (old.reference === 'theme' || newModel.reference === 'theme') {

@@ -586,7 +586,7 @@ export class TranslationEntryService {
     const updated = await this.entryModel.findByIdAndUpdate(
       id,
       { $set: { translatedText } },
-      { new: true },
+      { returnDocument: 'after' },
     )
 
     if (updated?.keyType === 'dict') {

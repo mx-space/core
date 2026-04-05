@@ -110,7 +110,7 @@ export function BaseCrudFactory<
             ...body,
             modified: new Date(),
           } as any,
-          { new: true },
+          { returnDocument: 'after' },
         )
         .lean()
         .then((res) => {

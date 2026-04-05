@@ -1,5 +1,7 @@
 import { URL } from 'node:url'
+
 import { Injectable, Logger } from '@nestjs/common'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
@@ -9,11 +11,12 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
+
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerService } from '../owner/owner.service'
+import { LinkModel, LinkState, LinkStateMap, LinkType } from './link.model'
 import { LinkAvatarService } from './link-avatar.service'
 import { LinkApplyEmailType } from './link-mail.enum'
-import { LinkModel, LinkState, LinkStateMap, LinkType } from './link.model'
 
 @Injectable()
 export class LinkService {
@@ -47,13 +50,15 @@ export class LinkService {
     if (existedDoc) {
       switch (existedDoc.state) {
         case LinkState.Pass:
-        case LinkState.Audit:
+        case LinkState.Audit: {
           throw new BizException(ErrorCodeEnum.DuplicateLink)
+        }
 
-        case LinkState.Banned:
+        case LinkState.Banned: {
           throw new BizException(ErrorCodeEnum.LinkDisabled)
+        }
         case LinkState.Reject:
-        case LinkState.Outdate:
+        case LinkState.Outdate: {
           nextModel = await this.model
             .findOneAndUpdate(
               { _id: existedDoc._id },
@@ -62,9 +67,10 @@ export class LinkService {
                   state: LinkState.Audit,
                 },
               },
-              { new: true },
+              { returnDocument: 'after' },
             )
             .lean()
+        }
       }
     } else {
       const url = new URL(model.url)
@@ -95,7 +101,7 @@ export class LinkService {
       {
         $set: { state: LinkState.Pass },
       },
-      { new: true },
+      { returnDocument: 'after' },
     )
 
     if (!doc) {
@@ -273,7 +279,7 @@ export class LinkService {
     const { seo, mailOptions } = await this.configsService.waitForConfigReady()
     const { enable } = mailOptions
     if (!enable || isDev) {
-      console.log(`友链结果通知：${reason}, 状态：${state}`)
+      console.info(`友链结果通知：${reason}, 状态：${state}`)
       return
     }
 

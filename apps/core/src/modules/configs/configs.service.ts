@@ -208,7 +208,7 @@ export class ConfigsService implements OnModuleInit {
             }
           }),
         },
-        { upsert: true, new: true },
+        { upsert: true, returnDocument: 'after' },
       )
       .lean()
     const newData = updatedConfigRow.value
