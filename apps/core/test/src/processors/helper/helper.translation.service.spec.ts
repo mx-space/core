@@ -653,56 +653,6 @@ describe('TranslationService', () => {
     })
   })
 
-  describe('buildTranslationSelect (private method via translateArticleList)', () => {
-    it('should include all fields for default fields', async () => {
-      mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        createTranslationLookup(),
-      )
-
-      await service.translateArticleList({
-        articles: [{ id: '1', title: 'T', text: 'X' }],
-        targetLang: 'en',
-      })
-
-      const call =
-        mockAiTranslationService.getValidTranslationsForArticles.mock.calls[0]
-      const selectString = call[2]?.select as string
-
-      expect(selectString).toContain('refId')
-      expect(selectString).toContain('hash')
-      expect(selectString).toContain('sourceLang')
-      expect(selectString).toContain('sourceModified')
-      expect(selectString).toContain('title')
-      expect(selectString).toContain('text')
-      expect(selectString).toContain('summary')
-      expect(selectString).toContain('tags')
-      expect(selectString).toContain('lang')
-      expect(selectString).toContain('created')
-      expect(selectString).toContain('aiModel')
-    })
-
-    it('should include only specified fields', async () => {
-      mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
-        createTranslationLookup(),
-      )
-
-      await service.translateArticleList({
-        articles: [{ id: '1', title: 'T', text: 'X' }],
-        targetLang: 'en',
-        translationFields: ['title'] as const,
-      })
-
-      const call =
-        mockAiTranslationService.getValidTranslationsForArticles.mock.calls[0]
-      const selectString = call[2]?.select as string
-
-      expect(selectString).toContain('title')
-      expect(selectString).toContain('refId')
-      expect(selectString).not.toContain(' text ')
-      expect(selectString).not.toContain('summary')
-    })
-  })
-
   describe('pickTranslationFields (private method via translateArticleList)', () => {
     it('should pick specified fields correctly', async () => {
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(

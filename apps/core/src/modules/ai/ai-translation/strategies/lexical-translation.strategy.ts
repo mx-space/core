@@ -1,9 +1,5 @@
 import { Injectable } from '@nestjs/common'
 
-import {
-  BLOCK_ID_STATE_KEY,
-  NODE_STATE_KEY,
-} from '~/constants/lexical.constant'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { throwIfAborted } from '~/utils/abort.util'
@@ -14,7 +10,9 @@ import type { IModelRuntime } from '../../runtime'
 import type { AITranslationModel } from '../ai-translation.model'
 import type { ArticleContent } from '../ai-translation.types'
 import {
+  type LexicalTranslationResult,
   parseLexicalForTranslation,
+  type PropertySegment,
   restoreLexicalTranslation,
   type TranslationSegment,
 } from '../lexical-translation-parser'
@@ -37,7 +35,15 @@ interface TranslationUnit {
   memberIds?: string[]
 }
 
+interface BlockTranslationSegments {
+  segments: TranslationSegment[]
+  propertySegments: PropertySegment[]
+}
+
 const GROUP_UNIT_PREFIX = '__inline_group__'
+const REMOVED_SUBTITLE_KEY = '__subtitle__'
+const REMOVED_SUMMARY_KEY = '__summary__'
+const REMOVED_TAGS_KEY = '__tags__'
 
 @Injectable()
 export class LexicalTranslationStrategy
@@ -208,49 +214,21 @@ export class LexicalTranslationStrategy
     const parseResult = parseLexicalForTranslation(content.content!)
     const { segments, propertySegments, editorState } = parseResult
     const allTranslations = new Map<string, string>()
+    const removedMetaKeys = new Set<string>()
     let sourceLang = existing.sourceLang || ''
 
-    let oldTranslatedState: any
     try {
-      oldTranslatedState = JSON.parse(existing.content!)
+      const translatedParseResult = parseLexicalForTranslation(
+        existing.content!,
+      )
+      this.backfillReusableBlockTranslations(
+        parseResult,
+        translatedParseResult,
+        unchangedBlockIds,
+        allTranslations,
+      )
     } catch {
       throw new Error('Failed to parse existing translated content')
-    }
-
-    const oldTranslatedRootChildren: any[] =
-      oldTranslatedState?.root?.children ?? []
-    const oldBlockNodeMap = new Map<string, any>()
-    for (const child of oldTranslatedRootChildren) {
-      const state = child?.[NODE_STATE_KEY]
-      const blockId =
-        state &&
-        typeof state === 'object' &&
-        typeof state[BLOCK_ID_STATE_KEY] === 'string'
-          ? state[BLOCK_ID_STATE_KEY].trim()
-          : null
-      if (blockId) {
-        oldBlockNodeMap.set(blockId, child)
-      }
-    }
-
-    const currentRootChildren = editorState.root?.children ?? []
-    for (let i = 0; i < currentRootChildren.length; i++) {
-      const child = currentRootChildren[i]
-      const state = child?.[NODE_STATE_KEY]
-      const blockId =
-        state &&
-        typeof state === 'object' &&
-        typeof state[BLOCK_ID_STATE_KEY] === 'string'
-          ? state[BLOCK_ID_STATE_KEY].trim()
-          : null
-
-      if (
-        blockId &&
-        unchangedBlockIds.has(blockId) &&
-        oldBlockNodeMap.has(blockId)
-      ) {
-        currentRootChildren[i] = oldBlockNodeMap.get(blockId)
-      }
     }
 
     const documentContext = extractDocumentContext(
@@ -259,11 +237,11 @@ export class LexicalTranslationStrategy
     const changedSegments = segments.filter((seg) => {
       if (!seg.translatable) return false
       if (!seg.blockId) return true
-      return !unchangedBlockIds.has(seg.blockId)
+      return !allTranslations.has(seg.id)
     })
     const changedPropertySegments = propertySegments.filter((prop) => {
       if (!prop.blockId) return true
-      return !unchangedBlockIds.has(prop.blockId)
+      return !allTranslations.has(prop.id)
     })
     const contentUnits = this.buildContentTranslationUnits(
       changedSegments,
@@ -288,39 +266,45 @@ export class LexicalTranslationStrategy
       const currentSubtitleHash = md5(content.subtitle)
       if (!oldMetaHashes || oldMetaHashes.subtitle !== currentSubtitleHash) {
         metaUnits.push({
-          id: '__subtitle__',
+          id: REMOVED_SUBTITLE_KEY,
           payload: content.subtitle,
           meta: 'meta.subtitle',
         })
       } else if (existing.subtitle) {
-        allTranslations.set('__subtitle__', existing.subtitle)
+        allTranslations.set(REMOVED_SUBTITLE_KEY, existing.subtitle)
       }
+    } else if (oldMetaHashes?.subtitle || existing.subtitle) {
+      removedMetaKeys.add(REMOVED_SUBTITLE_KEY)
     }
 
     if (content.summary) {
       const currentSummaryHash = md5(content.summary)
       if (!oldMetaHashes || oldMetaHashes.summary !== currentSummaryHash) {
         metaUnits.push({
-          id: '__summary__',
+          id: REMOVED_SUMMARY_KEY,
           payload: content.summary,
           meta: 'meta.summary',
         })
       } else if (existing.summary) {
-        allTranslations.set('__summary__', existing.summary)
+        allTranslations.set(REMOVED_SUMMARY_KEY, existing.summary)
       }
+    } else if (oldMetaHashes?.summary || existing.summary) {
+      removedMetaKeys.add(REMOVED_SUMMARY_KEY)
     }
 
     if (content.tags?.length) {
       const currentTagsHash = md5(content.tags.join('|||'))
       if (!oldMetaHashes || oldMetaHashes.tags !== currentTagsHash) {
         metaUnits.push({
-          id: '__tags__',
+          id: REMOVED_TAGS_KEY,
           payload: content.tags.join('|||'),
           meta: 'meta.tags',
         })
       } else if (existing.tags?.length) {
-        allTranslations.set('__tags__', existing.tags.join('|||'))
+        allTranslations.set(REMOVED_TAGS_KEY, existing.tags.join('|||'))
       }
+    } else if (oldMetaHashes?.tags || existing.tags?.length) {
+      removedMetaKeys.add(REMOVED_TAGS_KEY)
     }
 
     const totalEntries = contentUnits.length + metaUnits.length
@@ -330,17 +314,29 @@ export class LexicalTranslationStrategy
     )
 
     if (totalEntries === 0) {
-      const translatedContent = JSON.stringify(editorState)
+      const translatedContent = restoreLexicalTranslation(
+        parseResult,
+        allTranslations,
+      )
       return {
         sourceLang,
         title: allTranslations.get('__title__') ?? existing.title,
         text: this.lexicalService.lexicalToMarkdown(translatedContent),
         contentFormat: ContentFormat.Lexical,
         content: translatedContent,
-        subtitle:
-          allTranslations.get('__subtitle__') ?? existing.subtitle ?? null,
-        summary: allTranslations.get('__summary__') ?? existing.summary ?? null,
-        tags: existing.tags ?? null,
+        subtitle: removedMetaKeys.has(REMOVED_SUBTITLE_KEY)
+          ? null
+          : (allTranslations.get(REMOVED_SUBTITLE_KEY) ??
+            existing.subtitle ??
+            null),
+        summary: removedMetaKeys.has(REMOVED_SUMMARY_KEY)
+          ? null
+          : (allTranslations.get(REMOVED_SUMMARY_KEY) ??
+            existing.summary ??
+            null),
+        tags: removedMetaKeys.has(REMOVED_TAGS_KEY)
+          ? null
+          : (existing.tags ?? null),
         aiModel: info.model,
         aiProvider: info.provider,
       }
@@ -385,14 +381,20 @@ export class LexicalTranslationStrategy
       allTranslations,
     )
     const title = allTranslations.get('__title__') ?? existing.title
-    const subtitle =
-      allTranslations.get('__subtitle__') ?? existing.subtitle ?? null
-    const summary =
-      allTranslations.get('__summary__') ?? existing.summary ?? null
-    const tagsStr = allTranslations.get('__tags__')
+    const subtitle = removedMetaKeys.has(REMOVED_SUBTITLE_KEY)
+      ? null
+      : (allTranslations.get(REMOVED_SUBTITLE_KEY) ?? existing.subtitle ?? null)
+    const summary = removedMetaKeys.has(REMOVED_SUMMARY_KEY)
+      ? null
+      : (allTranslations.get(REMOVED_SUMMARY_KEY) ?? existing.summary ?? null)
+    const tagsStr = removedMetaKeys.has(REMOVED_TAGS_KEY)
+      ? undefined
+      : allTranslations.get(REMOVED_TAGS_KEY)
     const tags = tagsStr
       ? tagsStr.split('|||')
-      : (existing.tags ?? content.tags ?? null)
+      : removedMetaKeys.has(REMOVED_TAGS_KEY)
+        ? null
+        : (existing.tags ?? content.tags ?? null)
 
     return {
       sourceLang,
@@ -519,6 +521,88 @@ export class LexicalTranslationStrategy
     }
 
     return units
+  }
+
+  private groupSegmentsByBlock(
+    result: LexicalTranslationResult,
+  ): Map<string, BlockTranslationSegments> {
+    const byBlock = new Map<string, BlockTranslationSegments>()
+
+    const getBucket = (blockId: string) => {
+      let bucket = byBlock.get(blockId)
+      if (!bucket) {
+        bucket = { segments: [], propertySegments: [] }
+        byBlock.set(blockId, bucket)
+      }
+      return bucket
+    }
+
+    for (const segment of result.segments) {
+      if (!segment.blockId || !segment.translatable) continue
+      getBucket(segment.blockId).segments.push(segment)
+    }
+
+    for (const propertySegment of result.propertySegments) {
+      if (!propertySegment.blockId) continue
+      getBucket(propertySegment.blockId).propertySegments.push(propertySegment)
+    }
+
+    return byBlock
+  }
+
+  private canReuseBlockTranslations(
+    currentBlock: BlockTranslationSegments,
+    translatedBlock: BlockTranslationSegments,
+  ): boolean {
+    if (currentBlock.segments.length !== translatedBlock.segments.length) {
+      return false
+    }
+
+    if (
+      currentBlock.propertySegments.length !==
+      translatedBlock.propertySegments.length
+    ) {
+      return false
+    }
+
+    return currentBlock.propertySegments.every((segment, index) => {
+      const translatedSegment = translatedBlock.propertySegments[index]
+      return (
+        translatedSegment.property === segment.property &&
+        translatedSegment.key === segment.key
+      )
+    })
+  }
+
+  private backfillReusableBlockTranslations(
+    currentResult: LexicalTranslationResult,
+    translatedResult: LexicalTranslationResult,
+    unchangedBlockIds: Set<string>,
+    output: Map<string, string>,
+  ): void {
+    const currentBlocks = this.groupSegmentsByBlock(currentResult)
+    const translatedBlocks = this.groupSegmentsByBlock(translatedResult)
+
+    for (const blockId of unchangedBlockIds) {
+      const currentBlock = currentBlocks.get(blockId)
+      const translatedBlock = translatedBlocks.get(blockId)
+
+      if (!currentBlock || !translatedBlock) continue
+      if (!this.canReuseBlockTranslations(currentBlock, translatedBlock)) {
+        continue
+      }
+
+      currentBlock.segments.forEach((segment, index) => {
+        output.set(segment.id, translatedBlock.segments[index].text)
+      })
+
+      currentBlock.propertySegments.forEach((propertySegment, index) => {
+        output.set(
+          propertySegment.id,
+          translatedBlock.propertySegments[index].text,
+        )
+      })
+    }
   }
 
   private unitsToEntries(units: TranslationUnit[]): Record<string, unknown> {

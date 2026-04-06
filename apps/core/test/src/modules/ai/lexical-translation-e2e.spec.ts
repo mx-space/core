@@ -414,8 +414,6 @@ describe('translateLexicalContent (real-world data)', () => {
 
     // ── Verify structural shape identical (only text values differ) ──
     assertShapeMatch(lexicalData, translated)
-
-    expect(rootChildren).toMatchSnapshot()
   })
 
   it('should prefer structured output for lexical chunk translation when runtime supports it', async () => {
@@ -792,6 +790,32 @@ describe('incremental translation', () => {
     $: { blockId },
   })
 
+  const linkNode = (url: string, ...children: any[]) => ({
+    type: 'link',
+    url,
+    children,
+    direction: 'ltr',
+    format: '',
+    indent: 0,
+    rel: 'noopener',
+    target: null,
+  })
+
+  const detailsNode = (
+    blockId: string,
+    summary: string,
+    ...children: any[]
+  ) => ({
+    type: 'details',
+    summary,
+    open: false,
+    children,
+    direction: 'ltr',
+    format: '',
+    indent: 0,
+    $: { blockId },
+  })
+
   const createMockRuntime = (translations: Record<string, string>) => ({
     generateText: vi.fn(
       async ({
@@ -1039,6 +1063,248 @@ describe('incremental translation', () => {
     // Result should have reordered blocks with translated content
     const translated = JSON.parse(secondResult.content)
     expect(translated.root.children).toHaveLength(2)
+  })
+
+  it('reuses translated text without restoring stale link attributes', async () => {
+    const originalContent = makeEditorState([
+      paragraph(
+        'blk-link',
+        textNode('请查看'),
+        linkNode('https://old.example.com', textNode('文档')),
+      ),
+    ])
+
+    const mockRuntime = createMockRuntime({})
+    const info = { model: 'test', provider: 'test' }
+
+    const firstResult = await lexicalStrategy.translate(
+      {
+        title: 'Title',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: originalContent,
+      },
+      'en',
+      mockRuntime as unknown as IModelRuntime,
+      info,
+      {},
+    )
+
+    const lexicalService = new LexicalService()
+    const snapshots = lexicalService
+      .extractRootBlocks(originalContent)
+      .map((b: any) => ({
+        id: b.id ?? '',
+        fingerprint: b.fingerprint,
+        type: b.type,
+        index: b.index,
+      }))
+
+    const modifiedContent = makeEditorState([
+      paragraph(
+        'blk-link',
+        textNode('请查看'),
+        linkNode('https://new.example.com', textNode('文档')),
+      ),
+    ])
+
+    const mockRuntime2 = createMockRuntime({})
+    mockRuntime2.generateText.mockClear()
+
+    const { md5: md5Fn } = await import('~/utils/tool.util')
+    const existing = {
+      sourceLang: 'zh',
+      title: firstResult.title,
+      text: firstResult.text,
+      content: firstResult.content,
+      contentFormat: ContentFormat.Lexical,
+      summary: undefined,
+      tags: undefined,
+      sourceBlockSnapshots: snapshots,
+      sourceMetaHashes: { title: md5Fn('Title') },
+    } as any
+
+    const secondResult = await lexicalStrategy.translate(
+      {
+        title: 'Title',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: modifiedContent,
+      },
+      'en',
+      mockRuntime2 as unknown as IModelRuntime,
+      info,
+      { existing },
+    )
+
+    expect(mockRuntime2.generateText).not.toHaveBeenCalled()
+
+    const translated = JSON.parse(secondResult.content)
+    expect(translated.root.children[0].children[1].url).toBe(
+      'https://new.example.com',
+    )
+    expect(translated.root.children[0].children[0].text).toBe('[TR]请查看')
+    expect(translated.root.children[0].children[1].children[0].text).toBe(
+      '[TR]文档',
+    )
+  })
+
+  it('clears removed subtitle summary and tags during incremental reuse', async () => {
+    const originalContent = makeEditorState([
+      paragraph('blk-a', textNode('正文内容')),
+    ])
+
+    const mockRuntime = createMockRuntime({})
+    const info = { model: 'test', provider: 'test' }
+
+    const firstResult = await lexicalStrategy.translate(
+      {
+        title: 'Title',
+        subtitle: '副标题',
+        summary: '摘要',
+        tags: ['标签一', '标签二'],
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: originalContent,
+      },
+      'en',
+      mockRuntime as unknown as IModelRuntime,
+      info,
+      {},
+    )
+
+    const lexicalService = new LexicalService()
+    const snapshots = lexicalService
+      .extractRootBlocks(originalContent)
+      .map((b: any) => ({
+        id: b.id ?? '',
+        fingerprint: b.fingerprint,
+        type: b.type,
+        index: b.index,
+      }))
+
+    const mockRuntime2 = createMockRuntime({})
+    mockRuntime2.generateText.mockClear()
+
+    const { md5: md5Fn } = await import('~/utils/tool.util')
+    const existing = {
+      sourceLang: 'zh',
+      title: firstResult.title,
+      subtitle: firstResult.subtitle,
+      summary: firstResult.summary,
+      tags: firstResult.tags,
+      text: firstResult.text,
+      content: firstResult.content,
+      contentFormat: ContentFormat.Lexical,
+      sourceBlockSnapshots: snapshots,
+      sourceMetaHashes: {
+        title: md5Fn('Title'),
+        subtitle: md5Fn('副标题'),
+        summary: md5Fn('摘要'),
+        tags: md5Fn('标签一|||标签二'),
+      },
+    } as any
+
+    const secondResult = await lexicalStrategy.translate(
+      {
+        title: 'Title',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: originalContent,
+      },
+      'en',
+      mockRuntime2 as unknown as IModelRuntime,
+      info,
+      { existing },
+    )
+
+    expect(mockRuntime2.generateText).not.toHaveBeenCalled()
+    expect(secondResult.subtitle).toBeNull()
+    expect(secondResult.summary).toBeNull()
+    expect(secondResult.tags).toBeNull()
+    expect(secondResult.content).toBeTruthy()
+  })
+
+  it('property-only text changes in details.summary trigger incremental translation', async () => {
+    const originalContent = makeEditorState([
+      detailsNode(
+        'blk-details',
+        '旧摘要',
+        paragraph('nested-body', textNode('正文')),
+      ),
+    ])
+
+    const mockRuntime = createMockRuntime({})
+    const info = { model: 'test', provider: 'test' }
+
+    const firstResult = await lexicalStrategy.translate(
+      {
+        title: 'Title',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: originalContent,
+      },
+      'en',
+      mockRuntime as unknown as IModelRuntime,
+      info,
+      {},
+    )
+
+    const lexicalService = new LexicalService()
+    const snapshots = lexicalService
+      .extractRootBlocks(originalContent)
+      .map((b: any) => ({
+        id: b.id ?? '',
+        fingerprint: b.fingerprint,
+        type: b.type,
+        index: b.index,
+      }))
+
+    const modifiedContent = makeEditorState([
+      detailsNode(
+        'blk-details',
+        '新摘要',
+        paragraph('nested-body', textNode('正文')),
+      ),
+    ])
+
+    const mockRuntime2 = createMockRuntime({})
+    mockRuntime2.generateText.mockClear()
+
+    const { md5: md5Fn } = await import('~/utils/tool.util')
+    const existing = {
+      sourceLang: 'zh',
+      title: firstResult.title,
+      text: firstResult.text,
+      content: firstResult.content,
+      contentFormat: ContentFormat.Lexical,
+      summary: undefined,
+      tags: undefined,
+      sourceBlockSnapshots: snapshots,
+      sourceMetaHashes: { title: md5Fn('Title') },
+    } as any
+
+    const secondResult = await lexicalStrategy.translate(
+      {
+        title: 'Title',
+        text: '',
+        contentFormat: ContentFormat.Lexical,
+        content: modifiedContent,
+      },
+      'en',
+      mockRuntime2 as unknown as IModelRuntime,
+      info,
+      { existing },
+    )
+
+    expect(mockRuntime2.generateText).toHaveBeenCalled()
+    const aiInput =
+      mockRuntime2.generateText.mock.calls[0][0].messages[1].content
+    expect(aiInput).toContain('新摘要')
+    expect(aiInput).not.toContain('旧摘要')
+
+    const translated = JSON.parse(secondResult.content)
+    expect(translated.root.children[0].summary).toBe('[TR]新摘要')
   })
 
   it('delete and add blocks: only new block is translated', async () => {

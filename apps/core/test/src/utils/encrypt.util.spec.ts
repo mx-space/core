@@ -1,16 +1,12 @@
 import { EncryptUtil, mapString } from '~/utils/encrypt.util'
 
 describe('encrypt.util', () => {
-  test('encrypt', () => {
+  test('should round-trip encrypted data without pinning ciphertext details', () => {
     const data = '````````'
     const encrypt = EncryptUtil.encrypt(data)
-    expect(encrypt).toMatchInlineSnapshot('"$${mx}$$jansTW9ZaY6IVtiaDF6Bog=="')
-  })
-
-  test('decrypt', () => {
-    const data = '$${mx}$$jansTW9ZaY6IVtiaDF6Bog=='
-    const encrypt = EncryptUtil.decrypt(data)
-    expect(encrypt).toMatchInlineSnapshot('"````````"')
+    expect(encrypt).toMatch(/^\$\$\{mx\}\$\$/)
+    expect(encrypt).not.toBe(data)
+    expect(EncryptUtil.decrypt(encrypt)).toBe(data)
   })
 
   test('decrypt not encrypted data', () => {

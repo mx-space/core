@@ -12,6 +12,7 @@ import {
   LEXICAL_CONTEXT_SKIP_BLOCKS,
   LEXICAL_CONTEXT_SKIP_INLINE,
 } from '~/utils/content.util'
+import { extractLexicalTranslatableProperties } from '~/utils/lexical-translatable-property.util'
 
 const FORMAT_CODE = 16
 
@@ -113,48 +114,13 @@ function walkNode(
   if (LEXICAL_CONTEXT_SKIP_BLOCKS.has(node.type)) return
   if (LEXICAL_CONTEXT_SKIP_INLINE.has(node.type)) return
 
-  // Special translatable properties
-  if (
-    node.type === 'details' &&
-    typeof node.summary === 'string' &&
-    node.summary.trim()
-  ) {
+  for (const property of extractLexicalTranslatableProperties(node)) {
     propertySegments.push({
       id: `p_${counter.p++}`,
-      text: node.summary,
+      text: property.text,
       node,
-      property: 'summary',
-      blockId: ctx.blockId,
-      rootIndex: ctx.rootIndex,
-    })
-  }
-
-  if (
-    node.type === 'footnote-section' &&
-    node.definitions &&
-    typeof node.definitions === 'object'
-  ) {
-    for (const [key, value] of Object.entries(node.definitions)) {
-      if (typeof value === 'string' && (value as string).trim()) {
-        propertySegments.push({
-          id: `p_${counter.p++}`,
-          text: value as string,
-          node,
-          property: 'definitions',
-          key,
-          blockId: ctx.blockId,
-          rootIndex: ctx.rootIndex,
-        })
-      }
-    }
-  }
-
-  if (node.type === 'ruby' && typeof node.reading === 'string') {
-    propertySegments.push({
-      id: `p_${counter.p++}`,
-      text: node.reading,
-      node,
-      property: 'reading',
+      property: property.property,
+      key: property.key,
       blockId: ctx.blockId,
       rootIndex: ctx.rootIndex,
     })

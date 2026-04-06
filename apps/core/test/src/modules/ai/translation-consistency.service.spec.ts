@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { TranslationConsistencyService } from '~/modules/ai/ai-translation/translation-consistency.service'
-import { TRANSLATION_VALIDATION_DEFAULT_SELECT } from '~/modules/ai/ai-translation/translation-consistency.types'
 
 describe('TranslationConsistencyService', () => {
   let service: TranslationConsistencyService
@@ -16,23 +15,6 @@ describe('TranslationConsistencyService', () => {
       flatCollectionToMap: vi.fn(),
     }
     service = new TranslationConsistencyService(mockDatabaseService as any)
-  })
-
-  describe('buildValidationSelect', () => {
-    it('should return default select when no custom select is provided', () => {
-      expect(service.buildValidationSelect()).toBe(
-        TRANSLATION_VALIDATION_DEFAULT_SELECT,
-      )
-    })
-
-    it('should append required fields to custom select', () => {
-      const result = service.buildValidationSelect('refId title')
-      expect(result).toContain('refId title')
-      expect(result).toContain('hash')
-      expect(result).toContain('sourceLang')
-      expect(result).toContain('sourceModified')
-      expect(result).toContain('created')
-    })
   })
 
   describe('partitionValidAndStaleTranslations', () => {

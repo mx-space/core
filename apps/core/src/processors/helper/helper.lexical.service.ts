@@ -8,6 +8,7 @@ import {
   NODE_STATE_KEY,
 } from '~/constants/lexical.constant'
 import { ContentFormat } from '~/shared/types/content-format.type'
+import { extractLexicalTranslatableProperties } from '~/utils/lexical-translatable-property.util'
 import { md5 } from '~/utils/tool.util'
 
 const KNOWN_STRUCTURAL_PROPS = new Set([
@@ -128,7 +129,9 @@ export class LexicalService {
       return node.snapshot
     }
 
-    const segments: string[] = []
+    const segments: string[] = extractLexicalTranslatableProperties(node).map(
+      ({ text }) => text,
+    )
 
     if (Array.isArray(node.children)) {
       const childText = node.children

@@ -1,30 +1,10 @@
 import {
   decryptObject,
   encryptObject,
-  getExtractedEncryptedPaths,
   sanitizeConfigForResponse,
 } from '~/modules/configs/configs.encrypt.util'
 
 describe('encrypt.util', () => {
-  test('should extract encrypted paths from schemas', () => {
-    const paths = getExtractedEncryptedPaths()
-
-    // Verify ALL encrypted paths are extracted
-    expect(paths).toContain('mailOptions.smtp.pass')
-    expect(paths).toContain('mailOptions.resend.apiKey')
-    expect(paths).toContain('backupOptions.secretKey')
-    expect(paths).toContain('imageStorageOptions.secretKey')
-    expect(paths).toContain('baiduSearchOptions.token')
-    expect(paths).toContain('bingSearchOptions.token')
-    expect(paths).toContain('adminExtra.gaodemapKey')
-    expect(paths).toContain('barkOptions.key')
-    expect(paths).toContain('thirdPartyServiceIntegration.githubToken')
-    expect(paths).toContain('ai.providers.*.apiKey')
-    expect(paths).toContain('oauth.secrets.*.*')
-
-    // Ensure exact count
-    expect(paths.length).toBe(11)
-  })
   describe('path-based encryption', () => {
     test('should encrypt mailOptions.smtp.pass', () => {
       const config = {

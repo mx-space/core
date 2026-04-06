@@ -885,6 +885,73 @@ describe('LexicalService', () => {
       expect(blocks[1].id).toBe('code1234')
       expect(blocks[1].text).toContain('const a = 1')
     })
+
+    it('includes translatable property text in fingerprint calculation', () => {
+      const originalState = makeEditorState([
+        {
+          ...paragraph(textNode('正文')),
+          type: 'details',
+          summary: '旧摘要',
+          $: { blockId: 'details01' },
+        } as any,
+        {
+          type: 'footnote-section',
+          version: 1,
+          definitions: { a: '旧注释' },
+          $: { blockId: 'footnote1' },
+        },
+        {
+          ...paragraph({
+            type: 'ruby',
+            reading: 'きゅう',
+            children: [textNode('旧')],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+          }),
+          $: { blockId: 'ruby0001' },
+        } as any,
+      ])
+
+      const updatedState = makeEditorState([
+        {
+          ...paragraph(textNode('正文')),
+          type: 'details',
+          summary: '新摘要',
+          $: { blockId: 'details01' },
+        } as any,
+        {
+          type: 'footnote-section',
+          version: 1,
+          definitions: { a: '新注释' },
+          $: { blockId: 'footnote1' },
+        },
+        {
+          ...paragraph({
+            type: 'ruby',
+            reading: 'しん',
+            children: [textNode('旧')],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+          }),
+          $: { blockId: 'ruby0001' },
+        } as any,
+      ])
+
+      const originalBlocks = service.extractRootBlocks(originalState)
+      const updatedBlocks = service.extractRootBlocks(updatedState)
+
+      expect(originalBlocks[0].fingerprint).not.toBe(
+        updatedBlocks[0].fingerprint,
+      )
+      expect(originalBlocks[1].fingerprint).not.toBe(
+        updatedBlocks[1].fingerprint,
+      )
+      expect(originalBlocks[2].fingerprint).not.toBe(
+        updatedBlocks[2].fingerprint,
+      )
+    })
   })
 
   // ── Error handling ──
