@@ -1,6 +1,6 @@
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager'
 import { Get, Query } from '@nestjs/common'
-import { omit } from 'es-toolkit/compat'
+import { merge, omit } from 'es-toolkit/compat'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -38,20 +38,46 @@ export class AggregateController {
     private readonly translationService: TranslationService,
   ) {}
 
-  private async getThemeConfig(theme?: string) {
+  private async getThemeConfig(theme?: string, lang?: string) {
     if (!theme) {
       return
     }
 
+    const baseConfig = await this.getSnippetData('theme', theme)
+    if (!baseConfig) {
+      return
+    }
+
+    if (!lang) {
+      return baseConfig
+    }
+
+    const langOverlay = await this.getSnippetData('theme', `${theme}.${lang}`)
+    if (
+      !langOverlay ||
+      typeof baseConfig !== 'object' ||
+      typeof langOverlay !== 'object'
+    ) {
+      return baseConfig
+    }
+
+    return merge({}, baseConfig, langOverlay)
+  }
+
+  private async getSnippetData(reference: string, name: string) {
     const cached = await this.snippetService.getCachedSnippet(
-      'theme',
-      theme,
+      reference,
+      name,
       'public',
     )
     if (cached) {
       return JSON.safeParse(cached) || cached
     }
-    return this.snippetService.getPublicSnippetByName(theme, 'theme')
+    try {
+      return await this.snippetService.getPublicSnippetByName(name, reference)
+    } catch {
+      return null
+    }
   }
 
   @Get('/')
@@ -60,7 +86,7 @@ export class AggregateController {
     ttl: 10 * 60,
     withQuery: true,
   })
-  async aggregate(@Query() query: AggregateQueryDto) {
+  async aggregate(@Query() query: AggregateQueryDto, @Lang() lang?: string) {
     const { theme } = query
 
     const tasks = await Promise.allSettled([
@@ -69,7 +95,7 @@ export class AggregateController {
       this.configsService.get('seo'),
       this.configsService.get('commentOptions'),
       this.noteService.getLatestNoteId(),
-      this.getThemeConfig(theme),
+      this.getThemeConfig(theme, lang),
       this.configsService.get('ai'),
     ])
     const [

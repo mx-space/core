@@ -43,6 +43,7 @@ export class TimelineQueryDto extends createZodDto(TimelineQuerySchema) {}
  */
 export const AggregateQuerySchema = z.object({
   theme: z.string().optional(),
+  lang: zLang,
 })
 
 export class AggregateQueryDto extends createZodDto(AggregateQuerySchema) {}
