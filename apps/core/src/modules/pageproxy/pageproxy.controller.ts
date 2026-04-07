@@ -99,7 +99,15 @@ export class PageProxyController {
 
     const url = request.url
     const relativePath = url.replace(/^\/proxy\//, '')
-    const assetPath = join(resolveAdminAssetRoot(relativePath), relativePath)
+    const assetRoot = resolveAdminAssetRoot(relativePath)
+    const assetPath = join(assetRoot, relativePath)
+    const resolvedAsset = path.resolve(assetPath)
+    if (
+      !resolvedAsset.startsWith(path.resolve(assetRoot) + path.sep) &&
+      resolvedAsset !== path.resolve(assetRoot)
+    ) {
+      return reply.code(403).send({ message: 'path traversal denied' })
+    }
 
     if (!existsSync(assetPath)) {
       return reply.code(404).send().callNotFound()

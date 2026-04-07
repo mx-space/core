@@ -1,6 +1,9 @@
 import { copyFile, mkdir, unlink } from 'node:fs/promises'
+
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { FileService } from '~/modules/file/file.service'
-import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('~/constants/path.constant', () => {
   return {
@@ -22,6 +25,10 @@ vi.mock('node:fs/promises', () => {
 
 describe('FileService.deleteFile', () => {
   const createService = () => new FileService({} as any)
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('should be idempotent when source file is missing (ENOENT)', async () => {
     vi.mocked(mkdir).mockResolvedValue(undefined as any)
@@ -69,5 +76,19 @@ describe('FileService.deleteFile', () => {
     await expect(
       service.deleteFile('image' as any, 'race.jpg'),
     ).resolves.toBeUndefined()
+  })
+
+  it('should reject path traversal names before touching the file system', async () => {
+    const service = createService()
+
+    await expect(
+      service.deleteFile('image' as any, '../secret.txt'),
+    ).rejects.toMatchObject({
+      bizCode: ErrorCodeEnum.InvalidParameter,
+    })
+
+    expect(mkdir).not.toHaveBeenCalled()
+    expect(copyFile).not.toHaveBeenCalled()
+    expect(unlink).not.toHaveBeenCalled()
   })
 })

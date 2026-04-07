@@ -62,7 +62,14 @@ const INSTALL_COMMANDS: Record<PackageManager, string> = {
   npm: 'install',
 }
 
+const SAFE_PKG_NAME = /^[\w@][\w./-]*(?:@[\w*.<=>^~-]+)?$/
+
 export const installPKG = async (name: string, cwd: string) => {
+  for (const segment of name.split(/\s+/)) {
+    if (!SAFE_PKG_NAME.test(segment)) {
+      throw new Error(`Invalid package name: ${segment}`)
+    }
+  }
   let manager: PackageManager | null = null
   for (const lock of Object.keys(LOCKS)) {
     const isExist = existsSync(path.join(cwd, lock))

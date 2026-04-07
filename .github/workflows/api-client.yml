@@ -17,6 +17,9 @@ on:
       - 'packages/api-client/**'
       - .github/workflows/api-client.yml
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest

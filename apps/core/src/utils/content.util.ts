@@ -31,6 +31,7 @@ interface ContentDoc {
   content?: string
   summary?: string | null
   tags?: string[]
+  meta?: Record<string, any> | string | null
 }
 
 export const LEXICAL_CONTEXT_EXCALIDRAW_TYPE = ExcalidrawNode.getType()
@@ -121,13 +122,17 @@ export function extractTextFromContent(
 }
 
 export function extractImagesFromContent(
-  doc: Pick<ContentDoc, 'text' | 'contentFormat' | 'content'>,
+  doc: Pick<ContentDoc, 'text' | 'contentFormat' | 'content' | 'meta'>,
 ): string[] {
+  const coverUrl = extractCoverUrlFromMeta(doc.meta)
+
   if (!isLexical(doc)) {
-    return pickImagesFromMarkdown(doc.text)
+    return dedupeImageUrls([...pickImagesFromMarkdown(doc.text), coverUrl])
   }
 
-  if (!doc.content) return []
+  if (!doc.content) {
+    return dedupeImageUrls([coverUrl])
+  }
 
   try {
     const editorState = JSON.parse(doc.content)
@@ -143,10 +148,26 @@ export function extractImagesFromContent(
         images.push(node.image)
       }
     })
-    return images
+    return dedupeImageUrls([...images, coverUrl])
   } catch {
-    return []
+    return dedupeImageUrls([coverUrl])
   }
+}
+
+function extractCoverUrlFromMeta(meta: ContentDoc['meta']): string | undefined {
+  if (!meta) return undefined
+
+  const parsedMeta =
+    typeof meta === 'string'
+      ? (JSON.safeParse(meta) as Record<string, any>)
+      : meta
+
+  const cover = parsedMeta?.cover
+  return typeof cover === 'string' && cover.trim() ? cover.trim() : undefined
+}
+
+function dedupeImageUrls(urls: Array<string | undefined>): string[] {
+  return [...new Set(urls.filter((url): url is string => !!url))]
 }
 
 export function extractExcalidrawTextForContext(node: any): string {

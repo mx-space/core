@@ -10,6 +10,9 @@ on:
   workflow_dispatch:
 name: CI
 
+permissions:
+  contents: read
+
 jobs:
   quality:
     name: Lint & Typecheck

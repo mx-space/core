@@ -242,11 +242,14 @@ export class BackupService {
   }
 
   checkBackupExist(dirname: string) {
-    const path = join(BACKUP_DIR, dirname, `backup-${dirname}.zip`)
-    if (!existsSync(path)) {
+    if (/[/\\]|\.\./.test(dirname)) {
+      throw new BizException(ErrorCodeEnum.InvalidParameter)
+    }
+    const filePath = join(BACKUP_DIR, dirname, `backup-${dirname}.zip`)
+    if (!existsSync(filePath)) {
       throw new BizException(ErrorCodeEnum.FileNotFound)
     }
-    return path
+    return filePath
   }
 
   async saveTempBackupByUpload(buffer: Buffer) {
@@ -369,13 +372,16 @@ export class BackupService {
     )
   }
 
-  async deleteBackup(filename) {
-    const path = join(BACKUP_DIR, filename)
-    if (!existsSync(path)) {
+  async deleteBackup(filename: string) {
+    if (/[/\\]|\.\./.test(filename)) {
+      throw new BizException(ErrorCodeEnum.InvalidParameter)
+    }
+    const filePath = join(BACKUP_DIR, filename)
+    if (!existsSync(filePath)) {
       throw new BizException(ErrorCodeEnum.FileNotFound)
     }
 
-    await rm(path, { recursive: true })
+    await rm(filePath, { recursive: true })
     return true
   }
 

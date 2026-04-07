@@ -34,7 +34,12 @@ export class FileService {
   }
 
   private resolveFilePath(type: FileType, name: string) {
-    return path.resolve(STATIC_FILE_DIR, type, name)
+    const base = path.resolve(STATIC_FILE_DIR, type)
+    const resolved = path.resolve(base, name)
+    if (!resolved.startsWith(base + path.sep) && resolved !== base) {
+      throw new BizException(ErrorCodeEnum.InvalidParameter)
+    }
+    return resolved
   }
 
   private async checkIsExist(path: string) {

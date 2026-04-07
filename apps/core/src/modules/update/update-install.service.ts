@@ -1,9 +1,11 @@
 import { access, cp, mkdir, rename, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+
 import { Injectable } from '@nestjs/common'
-import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 import JSZip from 'jszip'
 import pc from 'picocolors'
+
+import { LOCAL_ADMIN_ASSET_PATH } from '~/constants/path.constant'
 
 @Injectable()
 export class UpdateInstallService {
@@ -32,7 +34,10 @@ export class UpdateInstallService {
         const file = zip.files[filename]
         if (!file.dir) {
           const content = await file.async('nodebuffer')
-          const filePath = path.join(tempDir, filename)
+          const filePath = path.resolve(tempDir, filename)
+          if (!filePath.startsWith(tempDir + path.sep)) {
+            throw new Error(`Zip entry escapes target directory: ${filename}`)
+          }
           const dirPath = path.dirname(filePath)
 
           await mkdir(dirPath, { recursive: true })

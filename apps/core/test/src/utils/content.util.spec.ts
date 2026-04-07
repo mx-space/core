@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   extractDocumentContext,
+  extractImagesFromContent,
   extractTextFromContent,
 } from '~/utils/content.util'
 
@@ -102,5 +103,74 @@ describe('content.util', () => {
     expect(extracted).not.toContain('innei')
     expect(extracted).not.toContain('卡片标题')
     expect(extracted).not.toContain('const rich = true')
+  })
+
+  it('should include cover image from markdown meta and dedupe repeated urls', () => {
+    const extracted = extractImagesFromContent({
+      text: '![cover](https://img.example/cover.png)',
+      contentFormat: 'markdown',
+      meta: {
+        cover: ' https://img.example/cover.png ',
+      },
+    })
+
+    expect(extracted).toEqual(['https://img.example/cover.png'])
+  })
+
+  it('should collect lexical image sources and append cover from serialized meta', () => {
+    const extracted = extractImagesFromContent({
+      text: '',
+      contentFormat: 'lexical',
+      meta: JSON.stringify({
+        cover: 'https://img.example/cover.png',
+      }),
+      content: JSON.stringify({
+        root: {
+          type: 'root',
+          version: 1,
+          children: [
+            {
+              type: 'image',
+              version: 1,
+              src: 'https://img.example/inline.png',
+            },
+            {
+              type: 'gallery',
+              version: 1,
+              images: [
+                { src: 'https://img.example/gallery-a.png' },
+                { src: 'https://img.example/gallery-b.png' },
+              ],
+            },
+            {
+              type: 'link-card',
+              version: 1,
+              image: 'https://img.example/card.png',
+            },
+          ],
+        },
+      }),
+    })
+
+    expect(extracted).toEqual([
+      'https://img.example/inline.png',
+      'https://img.example/gallery-a.png',
+      'https://img.example/gallery-b.png',
+      'https://img.example/card.png',
+      'https://img.example/cover.png',
+    ])
+  })
+
+  it('should fall back to cover image when lexical content is invalid', () => {
+    const extracted = extractImagesFromContent({
+      text: '',
+      contentFormat: 'lexical',
+      content: '{invalid json',
+      meta: {
+        cover: 'https://img.example/cover.png',
+      },
+    })
+
+    expect(extracted).toEqual(['https://img.example/cover.png'])
   })
 })
