@@ -5,6 +5,8 @@ import { AiService } from './ai.service'
 import { AiAgentController } from './ai-agent/ai-agent.controller'
 import { AiAgentChatService } from './ai-agent/ai-agent-chat.service'
 import { AiAgentConversationService } from './ai-agent/ai-agent-conversation.service'
+import { AiImageController } from './ai-image/ai-image.controller'
+import { AiImageService } from './ai-image/ai-image.service'
 import { AiInFlightService } from './ai-inflight/ai-inflight.service'
 import { AiSummaryController } from './ai-summary/ai-summary.controller'
 import { AiSummaryService } from './ai-summary/ai-summary.service'
@@ -45,11 +47,13 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiTranslationService,
     AiTranslationEventHandlerService,
     TranslationEntryService,
+    AiImageService,
     AiAgentChatService,
     AiAgentConversationService,
   ],
   controllers: [
     AiController,
+    AiImageController,
     AiSummaryController,
     AiWriterController,
     AiTranslationController,
@@ -62,6 +66,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiSlugBackfillService,
     AiTranslationService,
     AiSummaryService,
+    AiImageService,
     TranslationEntryService,
   ],
 })

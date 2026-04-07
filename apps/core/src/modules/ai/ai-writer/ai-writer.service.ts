@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
+
 import { AI_FALLBACK_SLUG_MAX_LENGTH } from '../ai.constants'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
@@ -13,7 +14,7 @@ export class AiWriterService {
   private generateFallbackSlug(text: string): string {
     const slug = text
       .toLowerCase()
-      .replaceAll(/[^a-z0-9]+/g, '-')
+      .replaceAll(/[^\da-z]+/g, '-')
       .replaceAll(/^-+|-+$/g, '')
       .slice(0, AI_FALLBACK_SLUG_MAX_LENGTH)
 
@@ -70,6 +71,45 @@ export class AiWriterService {
       return {
         slug: this.generateFallbackSlug(title),
       }
+    }
+  }
+
+  async generateCoverPromptByOpenAI(content: {
+    title: string
+    text: string
+    subtitle?: string | null
+    summary?: string | null
+    tags?: string[]
+    targetAspect: 'landscape' | 'portrait' | 'square'
+  }) {
+    const runtime = await this.aiService.getWriterModel()
+
+    try {
+      const { output, usage } = await runtime.generateStructured({
+        ...AI_PROMPTS.writer.coverPrompt(
+          {
+            title: content.title,
+            text: content.text,
+            subtitle: content.subtitle,
+            summary: content.summary,
+            tags: content.tags,
+          },
+          content.targetAspect,
+        ),
+        temperature: 0.5,
+        maxRetries: 2,
+      })
+
+      return {
+        prompt: output.prompt.trim(),
+        usage,
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to generate cover prompt: ${error.message}`,
+        error.stack,
+      )
+      throw error
     }
   }
 }

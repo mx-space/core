@@ -4,6 +4,7 @@ export enum AITaskType {
   TranslationBatch = 'ai:translation:batch',
   TranslationAll = 'ai:translation:all',
   SlugBackfill = 'ai:slug:backfill',
+  Cover = 'ai:cover',
 }
 
 export interface SummaryTaskPayload {
@@ -40,12 +41,21 @@ export interface SlugBackfillTaskPayload {
   noteIds?: string[]
 }
 
+export interface CoverTaskPayload {
+  refId: string
+  overwrite?: boolean
+  // Human-readable info
+  title?: string
+  refType?: string
+}
+
 export type AITaskPayload =
   | SummaryTaskPayload
   | TranslationTaskPayload
   | TranslationBatchTaskPayload
   | TranslationAllTaskPayload
   | SlugBackfillTaskPayload
+  | CoverTaskPayload
 
 export function computeAITaskDedupKey(
   type: AITaskType,
@@ -74,6 +84,10 @@ export function computeAITaskDedupKey(
         return `slug:backfill:${p.noteIds.slice().sort().join(',')}`
       }
       return `slug:backfill`
+    }
+    case AITaskType.Cover: {
+      const p = payload as CoverTaskPayload
+      return `${p.refId}:${p.overwrite ? 'overwrite' : 'preserve'}`
     }
   }
 }

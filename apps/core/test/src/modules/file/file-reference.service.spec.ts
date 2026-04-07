@@ -253,6 +253,26 @@ describe('FileReferenceService', () => {
       expect(mockReferences[0].status).toBe(FileReferenceStatus.Active)
       expect(mockReferences.length).toBe(1)
     })
+
+    it('should activate cover references stored in meta.cover', async () => {
+      const fileUrl = 'http://example.com/objects/image/cover.jpg'
+      mockReferences.push({
+        _id: 'ref-cover',
+        fileUrl,
+        fileName: 'cover.jpg',
+        status: FileReferenceStatus.Pending,
+      })
+
+      await fileReferenceService.activateReferences(
+        { text: 'plain text', meta: { cover: fileUrl } },
+        'post123',
+        FileReferenceType.Post,
+      )
+
+      expect(mockReferences[0].status).toBe(FileReferenceStatus.Active)
+      expect(mockReferences[0].refId).toBe('post123')
+      expect(mockReferences[0].refType).toBe(FileReferenceType.Post)
+    })
   })
 
   describe('updateReferencesForDocument', () => {
@@ -280,6 +300,45 @@ describe('FileReferenceService', () => {
       const newText = `Updated content with ![new](${newUrl})`
       await fileReferenceService.updateReferencesForDocument(
         { text: newText },
+        refId,
+        refType,
+      )
+
+      const oldRef = mockReferences.find((r) => r.fileUrl === oldUrl)
+      const newRef = mockReferences.find((r) => r.fileUrl === newUrl)
+
+      expect(oldRef.status).toBe(FileReferenceStatus.Pending)
+      expect(oldRef.refId).toBeNull()
+      expect(newRef.status).toBe(FileReferenceStatus.Active)
+      expect(newRef.refId).toBe(refId)
+    })
+
+    it('should keep cover references active when document uses meta.cover', async () => {
+      const oldUrl = 'http://example.com/objects/image/old-cover.jpg'
+      const newUrl = 'http://example.com/objects/image/new-cover.jpg'
+      const refId = 'post123'
+      const refType = FileReferenceType.Post
+
+      mockReferences.push({
+        _id: 'ref-old-cover',
+        fileUrl: oldUrl,
+        fileName: 'old-cover.jpg',
+        status: FileReferenceStatus.Active,
+        refId,
+        refType,
+      })
+      mockReferences.push({
+        _id: 'ref-new-cover',
+        fileUrl: newUrl,
+        fileName: 'new-cover.jpg',
+        status: FileReferenceStatus.Pending,
+      })
+
+      await fileReferenceService.updateReferencesForDocument(
+        {
+          text: 'updated content',
+          meta: { cover: newUrl },
+        },
         refId,
         refType,
       )

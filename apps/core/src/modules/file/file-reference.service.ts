@@ -20,6 +20,7 @@ interface ContentLike {
   text: string
   contentFormat?: ContentFormat | string
   content?: string
+  meta?: Record<string, any> | string | null
 }
 
 @Injectable()

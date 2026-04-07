@@ -40,6 +40,13 @@ export class CreateTranslationAllTaskDto extends createZodDto(
   CreateTranslationAllTaskSchema,
 ) {}
 
+export const CreateCoverTaskSchema = z.object({
+  refId: z.string(),
+  overwrite: z.boolean().optional(),
+})
+
+export class CreateCoverTaskDto extends createZodDto(CreateCoverTaskSchema) {}
+
 export const GetTasksQuerySchema = z.object({
   status: z
     .enum([
@@ -57,6 +64,7 @@ export const GetTasksQuerySchema = z.object({
       AITaskType.TranslationBatch,
       AITaskType.TranslationAll,
       AITaskType.SlugBackfill,
+      AITaskType.Cover,
     ])
     .optional(),
   page: z.coerce.number().int().min(1).default(1),
@@ -76,6 +84,7 @@ export const DeleteTasksQuerySchema = z.object({
       AITaskType.TranslationBatch,
       AITaskType.TranslationAll,
       AITaskType.SlugBackfill,
+      AITaskType.Cover,
     ])
     .optional(),
   before: z.coerce.number().int().positive(),
@@ -93,5 +102,6 @@ export type CreateTranslationBatchTaskInput = z.infer<
 export type CreateTranslationAllTaskInput = z.infer<
   typeof CreateTranslationAllTaskSchema
 >
+export type CreateCoverTaskInput = z.infer<typeof CreateCoverTaskSchema>
 export type GetTasksQueryInput = z.infer<typeof GetTasksQuerySchema>
 export type DeleteTasksQueryInput = z.infer<typeof DeleteTasksQuerySchema>

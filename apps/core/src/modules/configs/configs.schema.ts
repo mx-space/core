@@ -327,6 +327,85 @@ const AIModelAssignmentSchema = withMeta(
   { title: 'AI 模型分配', 'ui:options': { type: 'hidden' } },
 )
 
+const JimengImageOptionsSchema = withMeta(
+  z
+    .object({
+      accessKeyId: field.halfGrid(z.string().optional(), 'Access Key ID'),
+      secretAccessKey: field.passwordHalfGrid(
+        z.string().optional(),
+        'Secret Access Key',
+      ),
+      reqKey: field.halfGrid(z.string().optional(), 'Req Key', {
+        description: '服务标识，默认 jimeng_t2i_v30',
+      }),
+      width: field.number(
+        z.preprocess(
+          (val) => (val ? Number(val) : val),
+          z.number().int().positive().optional(),
+        ),
+        '宽度',
+        {
+          description: '推荐封面横图尺寸，如 1664',
+          'ui:options': { halfGrid: true },
+        },
+      ),
+      height: field.number(
+        z.preprocess(
+          (val) => (val ? Number(val) : val),
+          z.number().int().positive().optional(),
+        ),
+        '高度',
+        {
+          description: '推荐封面横图尺寸，如 936',
+          'ui:options': { halfGrid: true },
+        },
+      ),
+      usePreLlm: field.toggle(z.boolean().optional(), '开启即梦文本扩写', {
+        description: 'prompt 较短时可开启；prompt 已较完整时建议关闭',
+      }),
+      returnUrl: field.toggle(z.boolean().optional(), '返回图片链接', {
+        description:
+          '即梦返回的原始图片链接有效期为 24 小时，系统会下载后重新存储',
+      }),
+      seed: field.number(
+        z.preprocess(
+          (val) => (val === '' || val == null ? val : Number(val)),
+          z.number().int().optional(),
+        ),
+        '随机种子',
+        {
+          description: '默认 -1 表示随机生成',
+          'ui:options': { halfGrid: true },
+        },
+      ),
+      pollIntervalMs: field.number(
+        z.preprocess(
+          (val) => (val ? Number(val) : val),
+          z.number().int().positive().optional(),
+        ),
+        '轮询间隔 (ms)',
+        {
+          'ui:options': { halfGrid: true },
+        },
+      ),
+      pollTimeoutMs: field.number(
+        z.preprocess(
+          (val) => (val ? Number(val) : val),
+          z.number().int().positive().optional(),
+        ),
+        '轮询超时 (ms)',
+        {
+          'ui:options': { halfGrid: true },
+        },
+      ),
+    })
+    .optional(),
+  {
+    title: '即梦文生图',
+    'ui:options': { showWhen: { enableCoverGeneration: 'true' } },
+  },
+)
+
 export const AISchema = section('AI 设定', {
   providers: field.array(
     z.array(AIProviderConfigSchema).optional(),
@@ -381,6 +460,14 @@ export const AISchema = section('AI 设定', {
         '自动生成翻译的目标语言列表，使用 [ISO 639-1 语言代码](https://www.w3schools.com/tags/ref_language_codes.asp)，如 ["en", "ja", "ko"]',
     },
   ),
+  enableCoverGeneration: field.toggle(
+    z.boolean().optional(),
+    '可调用 AI 封面图',
+    {
+      description: '根据文章内容生成 prompt，调用即梦文生图并回填 meta.cover',
+    },
+  ),
+  jimengOptions: field.plain(JimengImageOptionsSchema, '即梦配置'),
 })
 export class AIDto extends createZodDto(AISchema) {}
 export type AIConfig = z.infer<typeof AISchema>
