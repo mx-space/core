@@ -655,10 +655,6 @@ export class CommentService {
     type?: CollectionRefTypes,
   ) {
     const reader = await this.assignReaderToComment()
-    const isLoggedInComment =
-      !!reader ||
-      RequestContext.hasReaderIdentity() ||
-      RequestContext.hasAdminAccess()
     if (reader) {
       this.stripReaderIdentitySnapshot(doc)
       this.assignAuthProviderToComment(doc)
@@ -693,7 +689,9 @@ export class CommentService {
 
     const comment = (await this.commentModel.create({
       ...doc,
-      state: isLoggedInComment ? CommentState.Read : CommentState.Unread,
+      state: RequestContext.hasAdminAccess()
+        ? CommentState.Read
+        : CommentState.Unread,
       ref: new Types.ObjectId(id),
       parentCommentId: null,
       replyCount: 0,
@@ -747,10 +745,6 @@ export class CommentService {
     }
 
     const reader = await this.assignReaderToComment()
-    const isLoggedInComment =
-      !!reader ||
-      RequestContext.hasReaderIdentity() ||
-      RequestContext.hasAdminAccess()
     if (reader) {
       this.stripReaderIdentitySnapshot(doc)
       this.assignAuthProviderToComment(doc)
@@ -761,7 +755,9 @@ export class CommentService {
       ...doc,
       state:
         doc.state ??
-        (isLoggedInComment ? CommentState.Read : CommentState.Unread),
+        (RequestContext.hasAdminAccess()
+          ? CommentState.Read
+          : CommentState.Unread),
       ref: this.toObjectId(parent.ref as any),
       refType: parent.refType,
       parentCommentId: parent._id,
