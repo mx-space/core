@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [11.1.2](https://github.com/mx-space/core/compare/v11.1.1...v11.1.2) (2026-04-07)
+
+
+### Bug Fixes
+
+* **comment:** only mark owner comments as read on creation ([eaea177](https://github.com/mx-space/core/commit/eaea177777d42be644cd0fdb3b90041d8d54d698))
+
+
+### Features
+
+* add AI image generation service and controller ([fd3c0b0](https://github.com/mx-space/core/commit/fd3c0b0b425dc84c7d3b941e2f8db6b94625767c))
+
+
+
 ## [11.1.1](https://github.com/mx-space/core/compare/v11.1.0...v11.1.1) (2026-04-07)
 
 
