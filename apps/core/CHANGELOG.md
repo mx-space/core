@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [11.1.1](https://github.com/mx-space/core/compare/v11.1.0...v11.1.1) (2026-04-07)
+
+
+### Bug Fixes
+
+* bug ([9976922](https://github.com/mx-space/core/commit/9976922d092c02d9242b713a7a504ef2b087d819))
+
+
+### Features
+
+* **aggregate:** support i18n for theme config via lang suffix snippets ([7e89b46](https://github.com/mx-space/core/commit/7e89b46c528151be90707947f9719ef923f77bfc))
+
+
+
 # [11.1.0](https://github.com/mx-space/core/compare/v11.0.14...v11.1.0) (2026-04-05)
 
 
