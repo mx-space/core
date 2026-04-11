@@ -40,6 +40,19 @@ export class TranslationService {
     private readonly translationEntryService: TranslationEntryService,
   ) {}
 
+  async getCachedTitles(
+    refIds: string[],
+    lang?: string,
+  ): Promise<Map<string, string>> {
+    if (!lang || !refIds.length) return new Map()
+    const normalized = normalizeLanguageCode(lang)
+    if (!normalized) return new Map()
+    return this.aiTranslationService.findCachedTitlesByRefIds(
+      refIds,
+      normalized,
+    )
+  }
+
   async translateArticle(options: {
     articleId: string
     targetLang?: string

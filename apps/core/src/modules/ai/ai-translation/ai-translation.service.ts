@@ -860,6 +860,24 @@ export class AiTranslationService
     return results
   }
 
+  async findCachedTitlesByRefIds(
+    refIds: string[],
+    lang: string,
+  ): Promise<Map<string, string>> {
+    if (!refIds.length || !lang) return new Map()
+    const rows = await this.aiTranslationModel
+      .find({ refId: { $in: refIds }, lang })
+      .select('refId title')
+      .lean()
+    const map = new Map<string, string>()
+    for (const row of rows) {
+      if (row.refId && row.title) {
+        map.set(row.refId, row.title)
+      }
+    }
+    return map
+  }
+
   async getTranslationsByRefId(refId: string) {
     const [article, translations] = await Promise.all([
       this.databaseService.findGlobalById(refId),

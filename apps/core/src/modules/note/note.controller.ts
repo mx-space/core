@@ -149,7 +149,37 @@ export class NoteController {
     if (currentData.password) {
       currentData.password = '*'
     }
+
+    await this.translateAdjacentNoteTitles([prev, next], lang)
+
     return { data: applyContentPreference(currentData, prefer), next, prev }
+  }
+
+  private async translateAdjacentNoteTitles(
+    notes: Array<NoteListItem | null>,
+    lang?: string,
+  ) {
+    if (!lang) return
+    const idMap = new Map<NoteListItem, string>()
+    for (const note of notes) {
+      if (!note) continue
+      const id =
+        typeof note._id === 'string'
+          ? note._id
+          : (note._id?.toString?.() ?? note.id ?? '')
+      if (id) idMap.set(note, id)
+    }
+    if (!idMap.size) return
+
+    const titleMap = await this.translationService.getCachedTitles(
+      [...idMap.values()],
+      lang,
+    )
+
+    for (const [note, id] of idMap) {
+      const title = titleMap.get(id)
+      if (title) note.title = title
+    }
   }
 
   @Get('/')
@@ -191,7 +221,11 @@ export class NoteController {
     let paginateSelect = isAuthenticated
       ? select
       : select?.replaceAll(/[+-]?(coordinates|location|password)/g, '')
-    if ((withSummary || lang) && paginateSelect && !paginateSelect.includes('text')) {
+    if (
+      (withSummary || lang) &&
+      paginateSelect &&
+      !paginateSelect.includes('text')
+    ) {
       paginateSelect = `${paginateSelect} text`
     }
 
