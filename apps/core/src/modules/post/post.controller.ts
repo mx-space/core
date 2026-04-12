@@ -161,7 +161,9 @@ export class PostController {
         },
       )
       .then(async (res) => {
-        res.docs.forEach((doc) => normalizeDocumentIds(doc))
+        res.docs.forEach((doc) =>
+          normalizeDocumentIds(doc, this.postService.model.schema),
+        )
         const translationInputs: ArticleTranslationInput[] = []
         for (const doc of res.docs) {
           const originalText = doc.text
