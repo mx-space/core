@@ -8,8 +8,7 @@ import type {
 } from './search-document.model'
 
 type SearchDocumentSource = {
-  id?: string
-  _id?: { toString: () => string }
+  id: string
   title?: string | null
   text?: string | null
   contentFormat?: string | null
@@ -48,7 +47,7 @@ export function buildSearchDocument(
 
   return {
     refType,
-    refId: data.id ?? data._id?.toString?.() ?? '',
+    refId: data.id,
     title: normalizedTitle,
     searchText: normalizedBody,
     terms: [

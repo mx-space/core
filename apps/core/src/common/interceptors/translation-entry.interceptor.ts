@@ -272,7 +272,7 @@ export class TranslationEntryInterceptor implements NestInterceptor {
   private collectEntityIds(
     data: any,
     path: string,
-    idField: string,
+    idField: 'id',
     ids: Set<string>,
   ): void {
     this.visitMatches(data, path, ({ parent }) => {
@@ -297,7 +297,7 @@ export class TranslationEntryInterceptor implements NestInterceptor {
   private replaceEntityValues(
     data: any,
     path: string,
-    idField: string,
+    idField: 'id',
     map: Map<string, string>,
   ): void {
     this.visitMatches(data, path, ({ parent, property }) => {

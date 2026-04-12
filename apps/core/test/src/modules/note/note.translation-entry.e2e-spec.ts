@@ -108,11 +108,8 @@ describe('NoteController translation entry (e2e)', () => {
 
     getTranslationsBatch.mockResolvedValueOnce({
       entityMaps: new Map([
-        ['topic.name', new Map([[topic._id.toString(), 'Recent']])],
-        [
-          'topic.introduce',
-          new Map([[topic._id.toString(), 'Recent updates']]),
-        ],
+        ['topic.name', new Map([[topic.id, 'Recent']])],
+        ['topic.introduce', new Map([[topic.id, 'Recent updates']])],
       ]),
       dictMaps: new Map([['note.mood', new Map([['开心', 'Happy']])]]),
     })
@@ -125,8 +122,8 @@ describe('NoteController translation entry (e2e)', () => {
     expect(res.statusCode).toBe(200)
     expect(getTranslationsBatch).toHaveBeenCalledWith('en', {
       entityLookups: [
-        { keyPath: 'topic.name', lookupKeys: [topic._id.toString()] },
-        { keyPath: 'topic.introduce', lookupKeys: [topic._id.toString()] },
+        { keyPath: 'topic.name', lookupKeys: [topic.id] },
+        { keyPath: 'topic.introduce', lookupKeys: [topic.id] },
       ],
       dictLookups: [{ keyPath: 'note.mood', sourceTexts: ['开心'] }],
     })

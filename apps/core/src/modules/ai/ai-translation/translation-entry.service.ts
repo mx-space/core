@@ -215,7 +215,7 @@ export class TranslationEntryService {
         values.push({
           keyPath: 'category.name',
           keyType: 'entity',
-          lookupKey: cat._id.toString(),
+          lookupKey: cat.id,
           sourceText: cat.name,
         })
       }
@@ -227,7 +227,7 @@ export class TranslationEntryService {
         values.push({
           keyPath: 'topic.name',
           keyType: 'entity',
-          lookupKey: topic._id.toString(),
+          lookupKey: topic.id,
           sourceText: topic.name,
         })
       }
@@ -235,7 +235,7 @@ export class TranslationEntryService {
         values.push({
           keyPath: 'topic.introduce',
           keyType: 'entity',
-          lookupKey: topic._id.toString(),
+          lookupKey: topic.id,
           sourceText: topic.introduce,
         })
       }

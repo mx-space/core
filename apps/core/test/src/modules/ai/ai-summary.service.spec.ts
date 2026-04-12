@@ -257,4 +257,92 @@ describe('AiSummaryService', () => {
       expect(result).toBeNull()
     })
   })
+
+  describe('getAllSummariesGrouped', () => {
+    it('uses canonical ids for search matches from lean queries', async () => {
+      const postModel = {
+        find: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            lean: vi.fn().mockResolvedValue([{ id: 'post-1' }]),
+          }),
+        }),
+      }
+      const noteModel = {
+        find: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            lean: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      }
+
+      mockDatabaseService.getModelByRefType
+        .mockReturnValueOnce(postModel)
+        .mockReturnValueOnce(noteModel)
+      mockSummaryModel.aggregate.mockResolvedValue([
+        {
+          metadata: [{ total: 1 }],
+          data: [{ _id: 'post-1', latestCreated: new Date(), summaryCount: 1 }],
+        },
+      ])
+      mockSummaryModel.find.mockReturnValue({
+        sort: vi.fn().mockReturnValue({
+          lean: vi.fn().mockResolvedValue([
+            {
+              id: 'summary-1',
+              refId: 'post-1',
+              summary: 'Summary',
+              lang: 'zh',
+            },
+          ]),
+        }),
+      })
+      mockDatabaseService.findGlobalByIds.mockResolvedValue({
+        posts: [{ id: 'post-1', title: 'Canonical Post' }],
+        notes: [],
+      })
+
+      const result = await service.getAllSummariesGrouped({
+        page: 1,
+        size: 10,
+        search: 'canonical',
+      })
+
+      expect(postModel.find).toHaveBeenCalledWith({
+        title: { $regex: 'canonical', $options: 'i' },
+      })
+      expect(mockSummaryModel.aggregate).toHaveBeenCalledWith([
+        { $match: { refId: { $in: ['post-1'] } } },
+        {
+          $group: {
+            _id: '$refId',
+            latestCreated: { $max: '$created' },
+            summaryCount: { $sum: 1 },
+          },
+        },
+        { $sort: { latestCreated: -1 } },
+        {
+          $facet: {
+            metadata: [{ $count: 'total' }],
+            data: [{ $skip: 0 }, { $limit: 10 }],
+          },
+        },
+      ])
+      expect(result).toMatchObject({
+        data: [
+          {
+            article: {
+              id: 'post-1',
+              title: 'Canonical Post',
+              type: CollectionRefTypes.Post,
+            },
+            summaries: [{ id: 'summary-1', refId: 'post-1' }],
+          },
+        ],
+        pagination: {
+          total: 1,
+          currentPage: 1,
+        },
+      })
+    })
+  })
 })

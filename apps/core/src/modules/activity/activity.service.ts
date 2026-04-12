@@ -22,6 +22,7 @@ import { GatewayService } from '~/processors/gateway/gateway.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { normalizeDocumentIds } from '~/shared/model/plugins/lean-id'
 import { InjectModel } from '~/transformers/model.transformer'
 import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { checkRefModelCollectionType } from '~/utils/biz.util'
@@ -204,7 +205,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     const readerMap = new Map<string, ReaderModel>()
     for (const reader of readers) {
-      readerMap.set(reader._id.toHexString(), reader)
+      readerMap.set(reader.id, reader)
     }
 
     const type2Collection = {
@@ -231,7 +232,8 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         .toArray()
 
       for (const doc of docs) {
-        refModelData.set(doc._id.toHexString(), doc)
+        normalizeDocumentIds(doc)
+        refModelData.set(doc.id, doc)
       }
     }
 
@@ -337,7 +339,6 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         reader,
         ref: pick(refModel, [
           'id',
-          '_id',
           'title',
           'nid',
           'slug',
@@ -395,11 +396,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       const reader = await this.readerService.findReaderInIds([data.readerId])
       if (reader.length) {
         Object.assign(serializedPresenceData, {
-          reader: camelcaseKeys({
-            ...reader[0],
-            _id: undefined,
-            id: reader[0]._id.toHexString(),
-          }),
+          reader: camelcaseKeys(reader[0]),
         })
       }
     }
@@ -634,6 +631,10 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         .limit(3)
         .toArray(),
     ])
+
+    normalizeDocumentIds(recent)
+    normalizeDocumentIds(post)
+    normalizeDocumentIds(note)
 
     const postCategoryIds = post.map((p: any) => p.categoryId).filter(Boolean)
     const categories =

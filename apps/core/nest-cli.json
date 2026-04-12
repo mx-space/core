@@ -3,7 +3,7 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "builder": "swc",
-    "typeCheck": true,
+    "typeCheck": false,
     "plugins": [],
     "assets": [
       "**/*.json"

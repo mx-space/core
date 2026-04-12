@@ -99,8 +99,10 @@ describe('CommentService — lang-aware anchor resolution', () => {
   let mockAiTranslationModel: any
   let mockLexicalService: any
   let mockDatabaseService: any
+  let mockRefModel: any
 
   const refId = new Types.ObjectId()
+  const refIdString = refId.toString()
   const originalContent = makeLexicalContent([
     { id: 'block-1', text: 'Original paragraph one' },
     { id: 'block-2', text: 'Original paragraph two' },
@@ -139,17 +141,17 @@ describe('CommentService — lang-aware anchor resolution', () => {
 
     mockLexicalService = new LexicalService()
 
-    const mockRefModel = {
+    mockRefModel = {
       findById: vi.fn().mockReturnValue({
         lean: vi.fn().mockResolvedValue({
-          _id: refId,
+          id: refIdString,
           content: originalContent,
           contentFormat: ContentFormat.Lexical,
           commentsIndex: 0,
         }),
         select: vi.fn().mockReturnValue({
           lean: vi.fn().mockResolvedValue({
-            _id: refId,
+            id: refIdString,
             content: originalContent,
             contentFormat: ContentFormat.Lexical,
           }),
@@ -163,7 +165,7 @@ describe('CommentService — lang-aware anchor resolution', () => {
       findGlobalById: vi.fn().mockResolvedValue({
         type: 'Post',
         document: {
-          _id: refId,
+          id: refIdString,
           content: originalContent,
           contentFormat: ContentFormat.Lexical,
           commentsIndex: 0,
@@ -223,6 +225,10 @@ describe('CommentService — lang-aware anchor resolution', () => {
       await service.createComment(refId.toString(), doc)
 
       expect(mockAiTranslationModel.findOne).not.toHaveBeenCalled()
+      expect(mockRefModel.updateOne).toHaveBeenCalledWith(
+        { _id: refIdString },
+        { $inc: { commentsIndex: 1 } },
+      )
       expect(doc.anchor.blockId).toBe('block-1')
       expect(doc.anchor.lang).toBeUndefined()
     })
@@ -249,7 +255,7 @@ describe('CommentService — lang-aware anchor resolution', () => {
       await service.createComment(refId.toString(), doc)
 
       expect(mockAiTranslationModel.findOne).toHaveBeenCalledWith(
-        expect.objectContaining({ lang: 'en' }),
+        expect.objectContaining({ refId: refIdString, lang: 'en' }),
       )
       expect(doc.anchor.lang).toBe('en')
       expect(doc.anchor.snapshotText).toBe('Translated paragraph one')

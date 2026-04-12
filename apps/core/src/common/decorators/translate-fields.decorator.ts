@@ -7,7 +7,7 @@ export const TRANSLATE_FIELDS_KEY = 'translate_fields'
 export interface TranslateFieldRule {
   path: string
   keyPath: TranslationEntryKeyPath
-  idField?: string
+  idField?: 'id'
 }
 
 export const TranslateFields = (...rules: TranslateFieldRule[]) =>

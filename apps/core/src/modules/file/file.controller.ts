@@ -74,7 +74,7 @@ export class FileController {
 
     return {
       data: files.map((file) => ({
-        id: file._id,
+        id: file.id,
         fileName: file.fileName,
         fileUrl: file.fileUrl,
         created: file.created,

@@ -31,6 +31,7 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
+import { normalizeDocumentIds } from '~/shared/model/plugins/lean-id'
 import { InjectModel } from '~/transformers/model.transformer'
 import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
@@ -199,14 +200,23 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
             ? new Types.ObjectId(owner._id.toString())
             : owner._id,
       })
+    const normalizedOwner = normalizeDocumentIds({ ...owner }) as Record<
+      string,
+      unknown
+    >
+    const ownerId = normalizedOwner.id as string
 
     return {
-      id: owner._id.toString(),
-      _id: owner._id,
-      username: owner.username ?? owner.handle ?? '',
-      name: owner.name,
+      // Preserve the published sandbox contract while exposing canonical id.
+      _id: ownerId,
+      id: ownerId,
+      username:
+        (normalizedOwner.username as string | undefined) ??
+        (normalizedOwner.handle as string | undefined) ??
+        '',
+      name: normalizedOwner.name as string | undefined,
       introduce: ownerProfile?.introduce,
-      avatar: owner.image,
+      avatar: normalizedOwner.image as string | undefined,
       mail: ownerProfile?.mail ?? owner.email,
       url: ownerProfile?.url,
       lastLoginTime: ownerProfile?.lastLoginTime,
@@ -418,7 +428,7 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     result: SandboxResult,
   ) {
     await this.logModel.create({
-      functionId: model.id || (model as any)._id?.toString(),
+      functionId: model.id,
       reference: model.reference,
       name: model.name,
       method: context.req.method,

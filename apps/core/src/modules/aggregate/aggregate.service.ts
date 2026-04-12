@@ -153,7 +153,7 @@ export class AggregateService {
         .then((list) =>
           list.map((item) => ({
             ...pick(item, [
-              '_id',
+              'id',
               'title',
               'slug',
               'created',
@@ -220,7 +220,7 @@ export class AggregateService {
 
         .then((list) =>
           list.map((item) => ({
-            ...pick(item, ['_id', 'title', 'slug', 'created', 'modified']),
+            ...pick(item, ['id', 'title', 'slug', 'created', 'modified']),
             category: item.category,
             url: encodeURI(
               `/posts/${(item.category as CategoryModel).slug}/${item.slug}`,
@@ -740,7 +740,7 @@ export class AggregateService {
       .lean()
 
     return posts.map((post) => ({
-      id: post._id,
+      id: post.id,
       title: post.title,
       slug: post.slug,
       reads: post.count?.read || 0,

@@ -48,7 +48,7 @@ export class CategoryController {
   @TranslateFields({
     path: '[].name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getCategories(
     @Query() query: MultiCategoriesQueryDto,
@@ -90,7 +90,7 @@ export class CategoryController {
   @TranslateFields({
     path: 'data.name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getCategoryById(
     @Param() { query }: SlugOrIdDto,
@@ -124,7 +124,7 @@ export class CategoryController {
     }
 
     let children: any[] =
-      (await this.categoryService.findCategoryPost(res._id.toHexString(), {
+      (await this.categoryService.findCategoryPost(res.id, {
         $and: [tag ? { tags: tag } : {}],
       })) || []
 
@@ -141,7 +141,7 @@ export class CategoryController {
       targetLang: lang,
       translationFields: ['title', 'translationMeta'] as const,
       getInput: (item: any) => ({
-        id: item._id?.toString?.() ?? item.id ?? '',
+        id: item.id ?? '',
         title: item.title ?? '',
         created: item.created,
         modified: item.modified,

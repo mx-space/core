@@ -24,7 +24,7 @@ describe('TranslationEntryInterceptor path utilities', () => {
       )
 
       const data = {
-        categories: [{ _id: 'id-1', name: '前端' }],
+        categories: [{ id: 'id-1', name: '前端' }],
         notes: [{ mood: '开心' }],
       }
 
@@ -34,7 +34,7 @@ describe('TranslationEntryInterceptor path utilities', () => {
           {
             keyPath: 'category.name',
             path: 'categories[].name',
-            idField: '_id',
+            idField: 'id',
           },
           { keyPath: 'note.mood', path: 'notes[].mood' },
         ],
@@ -73,7 +73,7 @@ describe('TranslationEntryInterceptor path utilities', () => {
         translationEntryService as any,
       )
 
-      const data = [{ _id: 'id-1', name: '前端' }]
+      const data = [{ id: 'id-1', name: '前端' }]
 
       const result = await realInterceptor['applyTranslations'](
         data,
@@ -81,7 +81,7 @@ describe('TranslationEntryInterceptor path utilities', () => {
           {
             keyPath: 'topic.name',
             path: '[].name',
-            idField: '_id',
+            idField: 'id',
           },
         ],
         'en',
@@ -115,13 +115,13 @@ describe('TranslationEntryInterceptor path utilities', () => {
       )
 
       class CategoryDoc {
-        _id = 'id-1'
+        id = 'id-1'
         name = '前端'
         self = this
 
         toJSON() {
           return {
-            _id: this._id,
+            id: this.id,
             name: this.name,
           }
         }
@@ -137,14 +137,14 @@ describe('TranslationEntryInterceptor path utilities', () => {
           {
             keyPath: 'category.name',
             path: 'categories[].name',
-            idField: '_id',
+            idField: 'id',
           },
         ],
         'en',
       )
 
       expect(result.categories[0].name).toBe('Frontend')
-      expect(result.categories[0]._id).toBe('id-1')
+      expect(result.categories[0].id).toBe('id-1')
     })
 
     it('should preserve non-structured-cloneable payloads when translating', async () => {
@@ -241,12 +241,12 @@ describe('TranslationEntryInterceptor path utilities', () => {
 
     it('should recursively normalize document-like values nested under plain objects', () => {
       class TopicDoc {
-        toJSON = vi.fn(() => ({ _id: 'topic-1', name: '近况' }))
+        toJSON = vi.fn(() => ({ id: 'topic-1', name: '近况' }))
       }
 
       class NoteDoc {
         toJSON = vi.fn(() => ({
-          _id: 'note-1',
+          id: 'note-1',
           mood: '开心',
           topic: new TopicDoc(),
         }))
@@ -257,9 +257,9 @@ describe('TranslationEntryInterceptor path utilities', () => {
 
       expect(result).not.toBe(data)
       expect(result.docs[0]).toEqual({
-        _id: 'note-1',
+        id: 'note-1',
         mood: '开心',
-        topic: { _id: 'topic-1', name: '近况' },
+        topic: { id: 'topic-1', name: '近况' },
       })
     })
   })
@@ -288,12 +288,12 @@ describe('TranslationEntryInterceptor path utilities', () => {
     it('should collect ids from array items', () => {
       const data = {
         categories: [
-          { _id: 'id-1', name: '前端' },
-          { _id: 'id-2', name: '后端' },
+          { id: 'id-1', name: '前端' },
+          { id: 'id-2', name: '后端' },
         ],
       }
       const ids = new Set<string>()
-      collect(data, 'categories[].name', '_id', ids)
+      collect(data, 'categories[].name', 'id', ids)
       expect([...ids].sort()).toEqual(['id-1', 'id-2'])
     })
   })
@@ -319,12 +319,12 @@ describe('TranslationEntryInterceptor path utilities', () => {
     it('should replace by entity id', () => {
       const data = {
         categories: [
-          { _id: 'id-1', name: '前端' },
-          { _id: 'id-2', name: '后端' },
+          { id: 'id-1', name: '前端' },
+          { id: 'id-2', name: '后端' },
         ],
       }
       const map = new Map([['id-1', 'Frontend']])
-      replace(data, 'categories[].name', '_id', map)
+      replace(data, 'categories[].name', 'id', map)
       expect(data.categories[0].name).toBe('Frontend')
       expect(data.categories[1].name).toBe('后端')
     })

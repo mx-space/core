@@ -9,7 +9,6 @@ const securityKeys = [
 
 export class OwnerModel {
   id: string
-  _id?: unknown
 
   username!: string
   name!: string

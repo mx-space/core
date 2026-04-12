@@ -144,7 +144,7 @@ describe('SearchService', () => {
 
   it('should prefer lexical content over stale text when building search document', () => {
     const document = (searchService as any).toSearchDocument('post', {
-      _id: { toString: () => 'post-lexical' },
+      id: 'post-lexical',
       title: '富文本文章',
       text: '旧摘要',
       contentFormat: 'lexical',

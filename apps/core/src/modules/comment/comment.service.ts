@@ -62,13 +62,19 @@ export class CommentService {
     return this.commentModel
   }
 
-  private toObjectId(id: string | Types.ObjectId | { _id?: unknown }) {
+  private toObjectId(
+    id: string | Types.ObjectId | { _id?: unknown; id?: unknown },
+  ) {
     if (id instanceof Types.ObjectId) {
       return id
     }
 
     if (typeof id === 'object' && id && '_id' in id) {
       return this.toObjectId((id as { _id?: unknown })._id as any)
+    }
+
+    if (typeof id === 'object' && id && 'id' in id) {
+      return this.toObjectId((id as { id?: unknown }).id as any)
     }
 
     return new Types.ObjectId(String(id))
@@ -329,7 +335,7 @@ export class CommentService {
 
   private async resolveAnchorForCreate(
     anchor: CommentAnchorInput | undefined,
-    refDoc: Pick<WriteBaseModel, 'contentFormat' | 'content'> & { _id: any },
+    refDoc: Pick<WriteBaseModel, 'contentFormat' | 'content' | 'id'>,
   ): Promise<CommentAnchorModel | undefined> {
     if (!anchor) {
       return undefined
@@ -339,7 +345,7 @@ export class CommentService {
 
     if (anchor.lang) {
       const translation = await this.aiTranslationModel
-        .findOne({ refId: refDoc._id.toString(), lang: anchor.lang })
+        .findOne({ refId: refDoc.id, lang: anchor.lang })
         .lean()
 
       if (
@@ -585,12 +591,12 @@ export class CommentService {
       )
 
       if (!nextAnchor) {
-        deleting.push(comment.id ?? comment._id.toString())
+        deleting.push(comment.id)
         continue
       }
 
       await this.commentModel.updateOne(
-        { _id: comment._id },
+        { _id: comment.id },
         {
           $set: {
             anchor: nextAnchor,
@@ -660,7 +666,7 @@ export class CommentService {
       this.assignAuthProviderToComment(doc)
     }
 
-    let ref: (WriteBaseModel & { _id: any }) | null = null
+    let ref: WriteBaseModel | null = null
     let refType = type
     if (type) {
       const model = this.getModelByRefType(type)
@@ -717,7 +723,7 @@ export class CommentService {
     })
 
     await this.databaseService.getModelByRefType(refType!).updateOne(
-      { _id: ref._id },
+      { _id: ref.id },
       {
         $inc: {
           commentsIndex: 1,
@@ -918,7 +924,7 @@ export class CommentService {
     )
 
     const rootIds = comments.docs.map((comment: any) =>
-      (comment.rootCommentId || comment._id).toString(),
+      String(comment.rootCommentId ?? comment.id),
     )
 
     const replies = rootIds.length
@@ -947,7 +953,7 @@ export class CommentService {
     }
 
     const docs = comments.docs.map((comment: any) => {
-      const rootId = String(comment.rootCommentId || comment._id)
+      const rootId = String(comment.rootCommentId ?? comment.id)
       const threadReplies = repliesByRootId.get(rootId) || []
       const { replies, replyWindow } = this.buildReplyWindow(threadReplies)
 
@@ -1078,10 +1084,7 @@ export class CommentService {
       : []
     const readerMap = new Map<string, ReaderModel>()
     readers.forEach((reader) => {
-      const id = (reader as any).id || (reader as any)._id?.toString?.()
-      if (id) {
-        readerMap.set(id, reader)
-      }
+      readerMap.set(reader.id, reader)
     })
 
     comments.forEach(function process(comment) {

@@ -12,6 +12,7 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { normalizeDocumentIds } from '~/shared/model/plugins/lean-id'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar } from '~/utils/tool.util'
 
@@ -68,21 +69,25 @@ export class OwnerService {
   }
 
   private toOwnerModel(reader: any, profile: any): OwnerDocument {
+    const normalizedReader = reader ? normalizeDocumentIds({ ...reader }) : null
     const mail = profile?.mail ?? reader?.email ?? ''
     const avatar =
-      reader?.image ??
-      getAvatar(mail || reader?.email || reader?.username || 'owner@local')
+      normalizedReader?.image ??
+      getAvatar(
+        mail ||
+          normalizedReader?.email ||
+          normalizedReader?.username ||
+          'owner@local',
+      )
 
     return {
-      id: reader?._id?.toString?.() || reader?.id || '',
-      _id: reader?._id,
-
-      username: reader?.username ?? reader?.handle ?? '',
+      id: normalizedReader?.id ?? '',
+      username: normalizedReader?.username ?? normalizedReader?.handle ?? '',
       name:
-        reader?.name ??
-        reader?.displayUsername ??
-        reader?.username ??
-        reader?.handle ??
+        normalizedReader?.name ??
+        normalizedReader?.displayUsername ??
+        normalizedReader?.username ??
+        normalizedReader?.handle ??
         'owner',
       introduce: profile?.introduce,
       avatar,
@@ -92,11 +97,11 @@ export class OwnerService {
       lastLoginIp: profile?.lastLoginIp,
       socialIds: profile?.socialIds,
       role: 'owner',
-      email: reader?.email,
-      image: reader?.image,
-      handle: reader?.handle,
-      displayUsername: reader?.displayUsername,
-      created: reader?.createdAt ?? profile?.created,
+      email: normalizedReader?.email,
+      image: normalizedReader?.image,
+      handle: normalizedReader?.handle,
+      displayUsername: normalizedReader?.displayUsername,
+      created: normalizedReader?.createdAt ?? profile?.created,
     }
   }
 

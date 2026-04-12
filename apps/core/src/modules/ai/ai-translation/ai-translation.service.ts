@@ -42,7 +42,6 @@ import type { GetTranslationsGroupedQueryInput } from './ai-translation.schema'
 import type {
   ArticleContent,
   ArticleDocument,
-  ArticleEventDocument,
   ArticleEventPayload,
 } from './ai-translation.types'
 import { BaseTranslationService } from './base-translation.service'
@@ -324,13 +323,13 @@ export class AiTranslationService
     // Build article info map
     const articleMap = new Map<string, { title: string; type: string }>()
     for (const post of posts) {
-      articleMap.set(post._id.toString(), { title: post.title, type: 'Post' })
+      articleMap.set(post.id, { title: post.title, type: 'Post' })
     }
     for (const note of notes) {
-      articleMap.set(note._id.toString(), { title: note.title, type: 'Note' })
+      articleMap.set(note.id, { title: note.title, type: 'Note' })
     }
     for (const page of pages) {
-      articleMap.set(page._id.toString(), { title: page.title, type: 'Page' })
+      articleMap.set(page.id, { title: page.title, type: 'Page' })
     }
 
     const allArticleIds = Array.from(articleMap.keys())
@@ -465,17 +464,13 @@ export class AiTranslationService
   }
 
   extractIdFromEvent(event: ArticleEventPayload): string | null {
-    if ('data' in event) {
-      return (event as { data: string }).data ?? null
+    if ('data' in event && typeof event.data === 'string') {
+      return event.data
     }
     if ('id' in event && typeof event.id === 'string') {
       return event.id
     }
-    const doc = event as ArticleEventDocument
-    if (doc._id && typeof doc._id === 'string') {
-      return doc._id
-    }
-    return doc.id ?? doc._id?.toString?.() ?? null
+    return null
   }
 
   /**
@@ -931,9 +926,9 @@ export class AiTranslationService
       ])
 
       matchedRefIds = [
-        ...matchedPosts.map((p) => p._id.toString()),
-        ...matchedNotes.map((n) => n._id.toString()),
-        ...matchedPages.map((p) => p._id.toString()),
+        ...matchedPosts.map((post) => post.id),
+        ...matchedNotes.map((note) => note.id),
+        ...matchedPages.map((page) => page.id),
       ]
 
       if (matchedRefIds.length === 0) {
