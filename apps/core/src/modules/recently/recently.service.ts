@@ -11,6 +11,7 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
+import { normalizeDocumentIds } from '~/shared/model/plugins/lean-id'
 import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
@@ -75,6 +76,7 @@ export class RecentlyService {
       ...this.commentCountPipeline,
     ])) as RecentlyModel[]
 
+    normalizeDocumentIds(result)
     await this.populateRef(result)
 
     return result
@@ -90,6 +92,7 @@ export class RecentlyService {
       },
     ])) as RecentlyModel[]
 
+    normalizeDocumentIds(result)
     await this.populateRef(result)
 
     return result[0] || null
@@ -126,7 +129,8 @@ export class RecentlyService {
         })
 
       for await (const doc of cursor) {
-        foreignIdMap[doc._id.toHexString()] = Object.assign({}, doc)
+        normalizeDocumentIds(doc)
+        foreignIdMap[doc.id] = Object.assign({}, doc)
       }
     }
 
@@ -215,6 +219,7 @@ export class RecentlyService {
       },
       { $limit: size },
     ])
+    normalizeDocumentIds(result)
     await this.populateRef(result)
     return result
   }
@@ -236,7 +241,7 @@ export class RecentlyService {
 
     const commentCount = await this.commentService.model.countDocuments({
       refType: CollectionRefTypes.Recently,
-      ref: latest._id,
+      ref: latest.id,
     })
 
     return {

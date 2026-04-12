@@ -48,8 +48,7 @@ import {
 import { NoteService } from './note.service'
 
 type NoteListItem = {
-  _id?: { toString?: () => string } | string
-  id?: string
+  id: string
   nid?: number
   title: string
   slug?: string
@@ -163,11 +162,7 @@ export class NoteController {
     const idMap = new Map<NoteListItem, string>()
     for (const note of notes) {
       if (!note) continue
-      const id =
-        typeof note._id === 'string'
-          ? note._id
-          : (note._id?.toString?.() ?? note.id ?? '')
-      if (id) idMap.set(note, id)
+      if (note.id) idMap.set(note, note.id)
     }
     if (!idMap.size) return
 
@@ -187,11 +182,11 @@ export class NoteController {
   @TranslateFields(
     { path: 'docs[].mood', keyPath: 'note.mood' },
     { path: 'docs[].weather', keyPath: 'note.weather' },
-    { path: 'docs[].topic.name', keyPath: 'topic.name', idField: '_id' },
+    { path: 'docs[].topic.name', keyPath: 'topic.name', idField: 'id' },
     {
       path: 'docs[].topic.introduce',
       keyPath: 'topic.introduce',
-      idField: '_id',
+      idField: 'id',
     },
   )
   async getNotes(
@@ -260,7 +255,7 @@ export class NoteController {
 
       if (typeof doc.text === 'string') {
         translationInputs.push({
-          id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
+          id: doc.id,
           title: doc.title,
           text: doc.text,
           meta: doc.meta as { lang?: string } | undefined,
@@ -286,7 +281,7 @@ export class NoteController {
       })
 
     result.docs = result.docs.map((doc) => {
-      const docId = doc._id?.toString?.() ?? doc.id ?? String(doc._id)
+      const docId = doc.id
       const translation = translationResults.get(docId)
       if (!translation?.isTranslated) {
         return doc
@@ -325,13 +320,12 @@ export class NoteController {
   private async enrichDocsWithSummary(
     result: {
       docs: (NoteModel & {
-        _id?: { toString: () => string }
         toObject?: () => Record<string, unknown>
       })[]
     },
     lang?: string,
   ) {
-    const ids = result.docs.map((d) => d.id || d._id!.toString())
+    const ids = result.docs.map((d) => d.id)
     const summaryMap = await this.aiSummaryService.batchGetSummariesByRefIds(
       ids,
       lang || DEFAULT_SUMMARY_LANG,
@@ -341,9 +335,7 @@ export class NoteController {
       const plain = (
         typeof doc.toObject === 'function' ? doc.toObject() : doc
       ) as Record<string, unknown>
-      const docId =
-        (plain.id as string) ||
-        (plain._id as { toString: () => string })?.toString()
+      const docId = plain.id as string
       plain.summary =
         summaryMap.get(docId) ?? (plain.text as string)?.slice(0, 150) ?? ''
       delete plain.text
@@ -387,15 +379,15 @@ export class NoteController {
   @TranslateFields(
     { path: 'mood', keyPath: 'note.mood' },
     { path: 'weather', keyPath: 'note.weather' },
-    { path: 'topic.name', keyPath: 'topic.name', idField: '_id' },
-    { path: 'topic.introduce', keyPath: 'topic.introduce', idField: '_id' },
+    { path: 'topic.name', keyPath: 'topic.name', idField: 'id' },
+    { path: 'topic.introduce', keyPath: 'topic.introduce', idField: 'id' },
     { path: 'data.mood', keyPath: 'note.mood' },
     { path: 'data.weather', keyPath: 'note.weather' },
-    { path: 'data.topic.name', keyPath: 'topic.name', idField: '_id' },
+    { path: 'data.topic.name', keyPath: 'topic.name', idField: 'id' },
     {
       path: 'data.topic.introduce',
       keyPath: 'topic.introduce',
-      idField: '_id',
+      idField: 'id',
     },
   )
   async getNoteByDateAndSlug(
@@ -493,7 +485,7 @@ export class NoteController {
       targetLang: lang,
       translationFields: ['title', 'translationMeta'] as const,
       getInput: (item) => ({
-        id: item._id?.toString?.() ?? item.id ?? String(item._id),
+        id: item.id,
         title: item.title,
         modified: item.modified,
         created: item.created,
@@ -545,15 +537,15 @@ export class NoteController {
   @TranslateFields(
     { path: 'mood', keyPath: 'note.mood' },
     { path: 'weather', keyPath: 'note.weather' },
-    { path: 'topic.name', keyPath: 'topic.name', idField: '_id' },
-    { path: 'topic.introduce', keyPath: 'topic.introduce', idField: '_id' },
+    { path: 'topic.name', keyPath: 'topic.name', idField: 'id' },
+    { path: 'topic.introduce', keyPath: 'topic.introduce', idField: 'id' },
     { path: 'data.mood', keyPath: 'note.mood' },
     { path: 'data.weather', keyPath: 'note.weather' },
-    { path: 'data.topic.name', keyPath: 'topic.name', idField: '_id' },
+    { path: 'data.topic.name', keyPath: 'topic.name', idField: 'id' },
     {
       path: 'data.topic.introduce',
       keyPath: 'topic.introduce',
-      idField: '_id',
+      idField: 'id',
     },
   )
   async getLatestOne(
@@ -601,15 +593,15 @@ export class NoteController {
   @TranslateFields(
     { path: 'mood', keyPath: 'note.mood' },
     { path: 'weather', keyPath: 'note.weather' },
-    { path: 'topic.name', keyPath: 'topic.name', idField: '_id' },
-    { path: 'topic.introduce', keyPath: 'topic.introduce', idField: '_id' },
+    { path: 'topic.name', keyPath: 'topic.name', idField: 'id' },
+    { path: 'topic.introduce', keyPath: 'topic.introduce', idField: 'id' },
     { path: 'data.mood', keyPath: 'note.mood' },
     { path: 'data.weather', keyPath: 'note.weather' },
-    { path: 'data.topic.name', keyPath: 'topic.name', idField: '_id' },
+    { path: 'data.topic.name', keyPath: 'topic.name', idField: 'id' },
     {
       path: 'data.topic.introduce',
       keyPath: 'topic.introduce',
-      idField: '_id',
+      idField: 'id',
     },
   )
   async getNoteByNid(
@@ -682,7 +674,7 @@ export class NoteController {
       targetLang: lang,
       translationFields: ['title', 'translationMeta'] as const,
       getInput: (item) => ({
-        id: item._id?.toString?.() ?? item.id ?? String(item._id),
+        id: item.id,
         title: item.title,
         modified: item.modified,
         created: item.created,

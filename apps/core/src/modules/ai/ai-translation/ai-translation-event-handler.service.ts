@@ -13,6 +13,9 @@ import { AiTranslationService } from './ai-translation.service'
 import type {
   ArticleDocument,
   ArticleEventPayload,
+  CategoryTranslationEventPayload,
+  EntityDeleteEventPayload,
+  TopicTranslationEventPayload,
 } from './ai-translation.types'
 import { TranslationEntryService } from './translation-entry.service'
 
@@ -153,11 +156,10 @@ export class AiTranslationEventHandlerService {
   // === Translation Entry: Category ===
 
   @OnEvent(BusinessEvents.CATEGORY_CREATE)
-  async handleCategoryCreate(event: any) {
+  async handleCategoryCreate(event: CategoryTranslationEventPayload) {
     if (!(await this.isAutoEntryEnabled())) return
-    const doc = event
-    if (!doc?._id || !doc?.name) return
-    const id = doc._id.toString()
+    if (!event.name) return
+    const id = event.id
     this.logger.log(`Auto-generating translation entry for category: ${id}`)
     await this.translationEntryService
       .generateForValues([
@@ -165,7 +167,7 @@ export class AiTranslationEventHandlerService {
           keyPath: 'category.name',
           keyType: 'entity',
           lookupKey: id,
-          sourceText: doc.name,
+          sourceText: event.name,
         },
       ])
       .catch((err) =>
@@ -174,14 +176,13 @@ export class AiTranslationEventHandlerService {
   }
 
   @OnEvent(BusinessEvents.CATEGORY_UPDATE)
-  async handleCategoryUpdate(event: any) {
-    const doc = event
-    if (!doc?._id || !doc?.name) return
-    const id = doc._id.toString()
+  async handleCategoryUpdate(event: CategoryTranslationEventPayload) {
+    if (!event.name) return
+    const id = event.id
     await this.translationEntryService.handleEntityUpdate(
       'category.name',
       id,
-      doc.name,
+      event.name,
     )
 
     if (!(await this.isAutoEntryEnabled())) return
@@ -191,7 +192,7 @@ export class AiTranslationEventHandlerService {
           keyPath: 'category.name',
           keyType: 'entity',
           lookupKey: id,
-          sourceText: doc.name,
+          sourceText: event.name,
         },
       ])
       .catch((err) =>
@@ -202,36 +203,35 @@ export class AiTranslationEventHandlerService {
   }
 
   @OnEvent(BusinessEvents.CATEGORY_DELETE)
-  async handleCategoryDelete(event: any) {
-    const id = event?.id?.toString?.() ?? event?._id?.toString?.()
-    if (!id) return
-    await this.translationEntryService.deleteByKeyPath('category.name', id)
+  async handleCategoryDelete(event: EntityDeleteEventPayload) {
+    await this.translationEntryService.deleteByKeyPath(
+      'category.name',
+      event.id,
+    )
   }
 
   // === Translation Entry: Topic ===
 
   @OnEvent(BusinessEvents.TOPIC_CREATE)
-  async handleTopicCreate(event: any) {
+  async handleTopicCreate(event: TopicTranslationEventPayload) {
     if (!(await this.isAutoEntryEnabled())) return
-    const doc = event
-    if (!doc?._id) return
-    const id = doc._id.toString()
+    const id = event.id
     const values: Parameters<TranslationEntryService['generateForValues']>[0] =
       []
-    if (doc.name) {
+    if (event.name) {
       values.push({
         keyPath: 'topic.name',
         keyType: 'entity',
         lookupKey: id,
-        sourceText: doc.name,
+        sourceText: event.name,
       })
     }
-    if (doc.introduce) {
+    if (event.introduce) {
       values.push({
         keyPath: 'topic.introduce',
         keyType: 'entity',
         lookupKey: id,
-        sourceText: doc.introduce,
+        sourceText: event.introduce,
       })
     }
     if (!values.length) return
@@ -244,42 +244,40 @@ export class AiTranslationEventHandlerService {
   }
 
   @OnEvent(BusinessEvents.TOPIC_UPDATE)
-  async handleTopicUpdate(event: any) {
-    const doc = event
-    if (!doc?._id) return
-    const id = doc._id.toString()
-    if (doc.name != null) {
+  async handleTopicUpdate(event: TopicTranslationEventPayload) {
+    const id = event.id
+    if (event.name != null) {
       await this.translationEntryService.handleEntityUpdate(
         'topic.name',
         id,
-        doc.name,
+        event.name,
       )
     }
-    if (doc.introduce != null) {
+    if (event.introduce != null) {
       await this.translationEntryService.handleEntityUpdate(
         'topic.introduce',
         id,
-        doc.introduce,
+        event.introduce,
       )
     }
 
     if (!(await this.isAutoEntryEnabled())) return
     const values: Parameters<TranslationEntryService['generateForValues']>[0] =
       []
-    if (doc.name) {
+    if (event.name) {
       values.push({
         keyPath: 'topic.name',
         keyType: 'entity',
         lookupKey: id,
-        sourceText: doc.name,
+        sourceText: event.name,
       })
     }
-    if (doc.introduce) {
+    if (event.introduce) {
       values.push({
         keyPath: 'topic.introduce',
         keyType: 'entity',
         lookupKey: id,
-        sourceText: doc.introduce,
+        sourceText: event.introduce,
       })
     }
     if (!values.length) return
@@ -291,21 +289,20 @@ export class AiTranslationEventHandlerService {
   }
 
   @OnEvent(BusinessEvents.TOPIC_DELETE)
-  async handleTopicDelete(event: any) {
-    const id = event?.id?.toString?.() ?? event?._id?.toString?.()
-    if (!id) return
-    await this.translationEntryService.deleteByKeyPath('topic.name', id)
-    await this.translationEntryService.deleteByKeyPath('topic.introduce', id)
+  async handleTopicDelete(event: EntityDeleteEventPayload) {
+    await this.translationEntryService.deleteByKeyPath('topic.name', event.id)
+    await this.translationEntryService.deleteByKeyPath(
+      'topic.introduce',
+      event.id,
+    )
   }
 
   // === Translation Entry: Note mood/weather ===
 
   @OnEvent(BusinessEvents.NOTE_CREATE)
-  async handleNoteCreateEntry(event: any) {
+  async handleNoteCreateEntry(event: { id: string }) {
     if (!(await this.isAutoEntryEnabled())) return
-    const id = event?.id?.toString?.() ?? event?._id?.toString?.()
-    if (!id) return
-    const note = await this.databaseService.findGlobalById(id)
+    const note = await this.databaseService.findGlobalById(event.id)
     if (!note) return
     const values = this.collectNoteDictValues(note.document)
     if (!values.length) return
@@ -317,11 +314,9 @@ export class AiTranslationEventHandlerService {
   }
 
   @OnEvent(BusinessEvents.NOTE_UPDATE)
-  async handleNoteUpdateEntry(event: any) {
+  async handleNoteUpdateEntry(event: { id: string }) {
     if (!(await this.isAutoEntryEnabled())) return
-    const id = event?.id?.toString?.() ?? event?._id?.toString?.()
-    if (!id) return
-    const note = await this.databaseService.findGlobalById(id)
+    const note = await this.databaseService.findGlobalById(event.id)
     if (!note) return
     const values = this.collectNoteDictValues(note.document)
     if (!values.length) return

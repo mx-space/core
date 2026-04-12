@@ -298,7 +298,7 @@ export class VisitorEventDispatchService implements OnModuleInit {
     const sockets = await this.webGateway.getSocketsOfRoom(roomName)
     if (!sockets.length) return
 
-    const articleId = (doc as any).id || (doc as any)._id?.toString()
+    const articleId = doc.id
     const originalData = {
       title: (doc as any).title,
       text: (doc as any).text,

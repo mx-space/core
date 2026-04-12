@@ -1,9 +1,16 @@
 import { Test } from '@nestjs/testing'
 import { getModelForClass } from '@typegoose/typegoose'
+import mongoose from 'mongoose'
+import { redisHelper } from 'test/helper/redis-mock.helper'
+
+import {
+  OWNER_PROFILE_COLLECTION_NAME,
+  READER_COLLECTION_NAME,
+} from '~/constants/db.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { createMockedContextResponse } from '~/modules/serverless/mock-response.util'
-import { ServerlessLogModel } from '~/modules/serverless/serverless-log.model'
 import { ServerlessService } from '~/modules/serverless/serverless.service'
+import { ServerlessLogModel } from '~/modules/serverless/serverless-log.model'
 import { SnippetModel, SnippetType } from '~/modules/snippet/snippet.model'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
@@ -11,8 +18,6 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { getModelToken } from '~/transformers/model.transformer'
-import mongoose from 'mongoose'
-import { redisHelper } from 'test/helper/redis-mock.helper'
 
 describe('test serverless function service', () => {
   let service: ServerlessService
@@ -219,5 +224,57 @@ describe('test serverless function service', () => {
           .lean()
       ).raw,
     ).not.toEqual('`')
+  })
+
+  test('case-9: getOwner bridge preserves legacy _id alongside canonical id', async () => {
+    const ownerId = new mongoose.Types.ObjectId()
+    const db = (service as any).databaseService.db
+    const originalCollection = db.collection.bind(db)
+
+    const collectionSpy = vi
+      .spyOn(db, 'collection')
+      .mockImplementation((name: string, ...args: any[]) => {
+        if (name === READER_COLLECTION_NAME) {
+          return {
+            find: vi.fn().mockReturnValue({
+              sort: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  next: vi.fn().mockResolvedValue({
+                    _id: ownerId,
+                    username: 'owner',
+                    name: 'Owner Name',
+                    email: 'owner@example.com',
+                    image: 'https://example.com/avatar.png',
+                  }),
+                }),
+              }),
+            }),
+          } as any
+        }
+
+        if (name === OWNER_PROFILE_COLLECTION_NAME) {
+          return {
+            findOne: vi.fn().mockResolvedValue({
+              mail: 'owner@example.com',
+              socialIds: { github: 'innei' },
+            }),
+          } as any
+        }
+
+        return originalCollection(name, ...args)
+      })
+
+    try {
+      const owner = await (service as any).mockGetOwner()
+
+      expect(owner).toMatchObject({
+        _id: ownerId.toHexString(),
+        id: ownerId.toHexString(),
+        username: 'owner',
+        mail: 'owner@example.com',
+      })
+    } finally {
+      collectionSpy.mockRestore()
+    }
   })
 })

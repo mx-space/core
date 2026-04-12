@@ -170,7 +170,6 @@ export class AggregateController {
 
     if (lang) {
       type TopItem = {
-        _id?: any
         id?: string
         title?: string
         created?: Date | null
@@ -183,7 +182,7 @@ export class AggregateController {
           targetLang: lang,
           translationFields: ['title', 'translationMeta'] as const,
           getInput: (item) => ({
-            id: item._id?.toString?.() ?? item.id ?? '',
+            id: item.id ?? '',
             title: item.title ?? '',
             created: item.created,
             modified: item.modified,
@@ -206,7 +205,7 @@ export class AggregateController {
           targetLang: lang,
           translationFields: ['title', 'translationMeta'] as const,
           getInput: (item) => ({
-            id: item._id?.toString?.() ?? item.id ?? '',
+            id: item.id ?? '',
             title: item.title ?? '',
             created: item.created,
             modified: item.modified,
@@ -241,7 +240,6 @@ export class AggregateController {
     if (!lang) return result
 
     type LatestItem = {
-      _id?: any
       id?: string
       title?: string
       created?: Date | null
@@ -254,7 +252,7 @@ export class AggregateController {
         targetLang: lang,
         translationFields: ['title', 'translationMeta'] as const,
         getInput: (item) => ({
-          id: item._id?.toString?.() ?? item.id ?? '',
+          id: item.id ?? '',
           title: item.title ?? '',
           created: item.created,
           modified: item.modified,
@@ -298,7 +296,6 @@ export class AggregateController {
     const { sort = 1, type, year } = query
     const data = await this.aggregateService.getTimeline(year, type, sort)
     type TimelineItem = {
-      _id?: { toString?: () => string } | string
       id?: string
       title: string
       created?: Date | null
@@ -313,7 +310,7 @@ export class AggregateController {
         targetLang: lang,
         translationFields: ['title', 'translationMeta'] as const,
         getInput: (post) => ({
-          id: post._id?.toString?.() ?? post.id ?? String(post._id),
+          id: post.id ?? '',
           title: post.title,
           modified: post.modified,
           created: post.created,
@@ -338,7 +335,7 @@ export class AggregateController {
         targetLang: lang,
         translationFields: ['title', 'translationMeta'] as const,
         getInput: (note) => ({
-          id: note._id?.toString?.() ?? note.id ?? String(note._id),
+          id: note.id ?? '',
           title: note.title,
           modified: note.modified,
           created: note.created,

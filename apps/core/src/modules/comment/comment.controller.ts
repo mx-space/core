@@ -79,10 +79,7 @@ export class CommentController {
     const model: Partial<CommentModel> = { ...body, ...ipLocation }
     const comment = await this.commentService.createComment(id, model, ref)
 
-    this.lifecycleService.afterCreateComment(
-      String((comment as any).id || (comment as any)._id),
-      ipLocation,
-    )
+    this.lifecycleService.afterCreateComment(comment.id, ipLocation)
 
     return this.commentService
       .fillAndReplaceAvatarUrl([comment])
@@ -352,7 +349,7 @@ export class CommentController {
         .lean()
         .populate('ref')
 
-      const refId = (currentRefModel?.ref as any)?._id
+      const refId = (currentRefModel?.ref as any)?.id
       if (refId) {
         await this.commentService.model.updateMany(
           {
@@ -428,7 +425,7 @@ export class CommentController {
       }
       const comments = await this.commentService.model.find(filter).lean()
       for (const comment of comments) {
-        await this.commentService.softDeleteComment(comment._id.toString())
+        await this.commentService.softDeleteComment(comment.id)
       }
     } else if (ids?.length) {
       for (const id of ids) {

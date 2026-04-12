@@ -214,4 +214,22 @@ describe('test /recently', async () => {
     })
     expect(res.statusCode).toBe(422)
   })
+
+  test('GET /recently/latest returns canonical id without _id', async () => {
+    await model.create({
+      content: 'Latest recently',
+      type: RecentlyTypeEnum.Text,
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/recently/latest`,
+    })
+
+    expect(res.statusCode).toBe(200)
+    const data = res.json()
+    expect(data.id).toBeDefined()
+    expect(data.comments).toBe(0)
+    expect(data._id).toBeUndefined()
+  })
 })

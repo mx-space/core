@@ -5,7 +5,7 @@ import { buildSearchDocument } from '~/modules/search/search-document.util'
 describe('search-document.util', () => {
   it('should build normalized search document for cjk content', () => {
     const document = buildSearchDocument('note', {
-      _id: { toString: () => 'note-1' },
+      id: 'note-1',
       title: '中文搜索',
       text: '这里记录中文搜索功能。',
       nid: 42,
@@ -22,7 +22,7 @@ describe('search-document.util', () => {
 
   it('should extract searchable text from lexical content', () => {
     const document = buildSearchDocument('post', {
-      _id: { toString: () => 'post-1' },
+      id: 'post-1',
       title: 'Lexical',
       text: '',
       contentFormat: 'lexical',

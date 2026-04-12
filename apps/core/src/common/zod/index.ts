@@ -37,5 +37,6 @@ export {
   ExtendedZodValidationPipe,
   extendedZodValidationPipeInstance,
 } from './validation.pipe'
+export { zObjectIdString } from '~/shared/id'
 export { createZodDto } from 'nestjs-zod'
 export { z } from 'zod'

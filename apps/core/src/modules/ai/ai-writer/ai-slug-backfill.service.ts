@@ -165,7 +165,7 @@ export class AiSlugBackfillService implements OnModuleInit {
 
             const updated = await this.noteModel.updateOne(
               {
-                _id: note._id,
+                _id: note.id,
                 $or: [
                   { slug: { $exists: false } },
                   { slug: null },

@@ -49,7 +49,7 @@ export class RecentlyModel extends BaseCommentIndexModel {
   down: number
 
   get refId() {
-    return (this.ref as any)?._id ?? this.ref
+    return (this.ref as any)?.id ?? (this.ref as any)?._id ?? this.ref
   }
 
   set refId(id: string) {

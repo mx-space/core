@@ -188,7 +188,7 @@ export class DraftService {
     await Promise.all(
       drafts.map((draft) =>
         this.fileReferenceService.removeReferencesForDocument(
-          draft._id.toString(),
+          draft.id,
           FileReferenceType.Draft,
         ),
       ),

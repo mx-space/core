@@ -100,4 +100,47 @@ describe('FileController', () => {
     expect(writeFile).not.toHaveBeenCalled()
     expect(createPendingReference).not.toHaveBeenCalled()
   })
+
+  it('lists orphan files with canonical ids', async () => {
+    const lean = vi.fn().mockResolvedValue([
+      {
+        id: 'file-1',
+        fileName: 'origin.png',
+        fileUrl: 'http://example.com/origin.png',
+        created: new Date('2026-03-14T00:00:00.000Z'),
+      },
+    ])
+    const limit = vi.fn().mockReturnValue({ lean })
+    const skip = vi.fn().mockReturnValue({ limit })
+    const sort = vi.fn().mockReturnValue({ skip })
+    const find = vi.fn().mockReturnValue({ sort })
+    const countDocuments = vi.fn().mockResolvedValue(1)
+
+    const controller = new FileController(
+      {} as any,
+      {} as any,
+      {
+        model: { find, countDocuments },
+      } as any,
+      {} as any,
+    )
+
+    const result = await controller.getOrphanFiles({ page: 1, size: 20 } as any)
+
+    expect(find).toHaveBeenCalledWith({ status: 'pending' })
+    expect(result).toMatchObject({
+      data: [
+        {
+          id: 'file-1',
+          fileName: 'origin.png',
+          fileUrl: 'http://example.com/origin.png',
+        },
+      ],
+      pagination: {
+        currentPage: 1,
+        total: 1,
+      },
+    })
+    expect(result.data[0]).not.toHaveProperty('_id')
+  })
 })

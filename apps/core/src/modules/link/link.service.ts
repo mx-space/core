@@ -61,7 +61,7 @@ export class LinkService {
         case LinkState.Outdate: {
           nextModel = await this.model
             .findOneAndUpdate(
-              { _id: existedDoc._id },
+              { _id: existedDoc.id },
               {
                 $set: {
                   state: LinkState.Audit,
