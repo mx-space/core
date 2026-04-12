@@ -32,7 +32,7 @@ describe('TopicBaseController translation (e2e)', () => {
       },
     ])
 
-    translatedTopicId = translatedTopic._id.toString()
+    translatedTopicId = translatedTopic.id
 
     app = await setupE2EApp({
       controllers: [TopicBaseController],

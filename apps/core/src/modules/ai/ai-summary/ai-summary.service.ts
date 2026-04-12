@@ -456,8 +456,8 @@ export class AiSummaryService implements OnModuleInit {
       ])
 
       matchedRefIds = [
-        ...matchedPosts.map((p) => p._id.toString()),
-        ...matchedNotes.map((n) => n._id.toString()),
+        ...matchedPosts.map((post) => post.id),
+        ...matchedNotes.map((note) => note.id),
       ]
 
       if (matchedRefIds.length === 0) {

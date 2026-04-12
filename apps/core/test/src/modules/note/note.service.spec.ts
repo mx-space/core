@@ -752,14 +752,13 @@ describe('NoteService', () => {
   describe('getIdByNid', () => {
     beforeEach(() => {
       mockNotes.push({
-        _id: 'note-1',
         id: 'note-1',
         nid: 42,
         title: 'Note 42',
       })
     })
 
-    it('should return _id for valid nid', async () => {
+    it('should return canonical id for valid nid', async () => {
       const result = await noteService.getIdByNid(42)
 
       expect(result).toBe('note-1')

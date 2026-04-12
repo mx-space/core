@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing'
+import { Types } from 'mongoose'
 import {
   afterEach,
   beforeEach,
@@ -20,6 +21,7 @@ import { getModelToken } from '~/transformers/model.transformer'
 
 describe('DraftService with FileReference integration', () => {
   let draftService: DraftService
+  let mockDraftModel: ReturnType<typeof createMockDraftModel>
   let mockFileReferenceService: {
     updateReferencesForDocument: Mock
     removeReferencesForDocument: Mock
@@ -85,12 +87,53 @@ describe('DraftService with FileReference integration', () => {
         return Promise.resolve({ deletedCount: 0 })
       }),
 
-      find: vi.fn().mockImplementation(() => ({
-        sort: vi.fn().mockReturnThis(),
-        lean: vi.fn().mockImplementation(() => ({
-          getters: true,
-        })),
-      })),
+      find: vi.fn().mockImplementation((query: any = {}) => {
+        const drafts = mockDrafts.filter((draft) => {
+          if (query.refType && draft.refType !== query.refType) {
+            return false
+          }
+          if (
+            query.refId &&
+            draft.refId?.toString() !== query.refId.toString()
+          ) {
+            return false
+          }
+          if (query.refId?.$exists === false && draft.refId !== undefined) {
+            return false
+          }
+          return true
+        })
+
+        let selectedFields: string[] | null = null
+
+        const chain = {
+          select: vi.fn().mockImplementation((fields: string) => {
+            selectedFields = fields.split(/\s+/).filter(Boolean)
+            return chain
+          }),
+          sort: vi.fn().mockReturnValue(undefined),
+          lean: vi.fn().mockImplementation(() => {
+            return drafts.map((draft) => {
+              if (!selectedFields) {
+                return { ...draft }
+              }
+
+              const projected = Object.fromEntries(
+                selectedFields
+                  .filter((field) => field !== '_id')
+                  .map((field) => [field, draft[field]]),
+              )
+              return {
+                ...projected,
+                id: draft.id,
+              }
+            })
+          }),
+        }
+
+        chain.sort.mockReturnValue(chain)
+        return chain
+      }),
 
       findByIdAndUpdate: vi
         .fn()
@@ -101,6 +144,23 @@ describe('DraftService with FileReference integration', () => {
           }
           return Promise.resolve(draft)
         }),
+
+      deleteMany: vi.fn().mockImplementation((query: any) => {
+        const before = mockDrafts.length
+        mockDrafts = mockDrafts.filter((draft) => {
+          if (query.refType && draft.refType !== query.refType) {
+            return true
+          }
+          if (
+            query.refId &&
+            draft.refId?.toString() !== query.refId.toString()
+          ) {
+            return true
+          }
+          return false
+        })
+        return Promise.resolve({ deletedCount: before - mockDrafts.length })
+      }),
     }
   }
 
@@ -110,7 +170,7 @@ describe('DraftService with FileReference integration', () => {
       removeReferencesForDocument: vi.fn().mockResolvedValue(undefined),
     }
 
-    const mockDraftModel = createMockDraftModel()
+    mockDraftModel = createMockDraftModel()
 
     const module = await Test.createTestingModule({
       providers: [
@@ -250,6 +310,27 @@ describe('DraftService with FileReference integration', () => {
       await expect(draftService.delete('nonexistent')).rejects.toThrow(
         BizException,
       )
+    })
+
+    it('should remove file references by canonical id when deleting by ref', async () => {
+      const refId = new Types.ObjectId().toHexString()
+      mockDrafts.push({
+        _id: 'draft-by-ref',
+        id: 'draft-by-ref',
+        refType: DraftRefType.Post,
+        refId: new Types.ObjectId(refId),
+        title: 'By Ref',
+        text: 'content',
+        version: 1,
+        history: [],
+      })
+
+      await draftService.deleteByRef(DraftRefType.Post, refId)
+
+      expect(mockDraftModel.deleteMany).toHaveBeenCalled()
+      expect(
+        mockFileReferenceService.removeReferencesForDocument,
+      ).toHaveBeenCalledWith('draft-by-ref', FileReferenceType.Draft)
     })
   })
 

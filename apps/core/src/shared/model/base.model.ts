@@ -2,7 +2,8 @@ import { index, modelOptions, plugin } from '@typegoose/typegoose'
 import mongooseLeanGetters from 'mongoose-lean-getters'
 import mongooseLeanVirtuals from 'mongoose-lean-virtuals'
 import Paginate from 'mongoose-paginate-v2'
-import { mongooseLeanId } from './plugins/lean-id'
+
+import { mongooseLeanId, normalizeDocumentIds } from './plugins/lean-id'
 
 @plugin(mongooseLeanVirtuals)
 @plugin(Paginate)
@@ -10,8 +11,16 @@ import { mongooseLeanId } from './plugins/lean-id'
 @plugin(mongooseLeanId)
 @modelOptions({
   schemaOptions: {
-    toJSON: { virtuals: true, getters: true },
-    toObject: { virtuals: true, getters: true },
+    toJSON: {
+      virtuals: true,
+      getters: true,
+      transform: (doc, ret) => normalizeDocumentIds(ret, doc?.schema),
+    },
+    toObject: {
+      virtuals: true,
+      getters: true,
+      transform: (doc, ret) => normalizeDocumentIds(ret, doc?.schema),
+    },
     timestamps: {
       createdAt: 'created',
       updatedAt: false,

@@ -272,7 +272,7 @@ describe('TranslationEntryService', () => {
     it('should collect from categories, topics, notes', async () => {
       mockCategoryModel.find.mockReturnValue({
         select: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue([{ _id: 'cat-1', name: '前端' }]),
+          lean: vi.fn().mockResolvedValue([{ id: 'cat-1', name: '前端' }]),
         }),
       })
 
@@ -281,7 +281,7 @@ describe('TranslationEntryService', () => {
           lean: vi
             .fn()
             .mockResolvedValue([
-              { _id: 'topic-1', name: '日记', introduce: '每日记录' },
+              { id: 'topic-1', name: '日记', introduce: '每日记录' },
             ]),
         }),
       })
@@ -316,7 +316,7 @@ describe('TranslationEntryService', () => {
     it('should skip falsy values', async () => {
       mockCategoryModel.find.mockReturnValue({
         select: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue([{ _id: 'cat-1', name: '' }]),
+          lean: vi.fn().mockResolvedValue([{ id: 'cat-1', name: '' }]),
         }),
       })
       mockTopicModel.find.mockReturnValue({

@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { CommentReplyMailType } from '~/modules/comment/comment.enum'
 import { CommentLifecycleService } from '~/modules/comment/comment.lifecycle.service'
 import { CommentSpamFilterService } from '~/modules/comment/comment.spam-filter'
@@ -326,6 +327,44 @@ describe('CommentLifecycleService email routing', () => {
         source: expect.objectContaining({
           owner: ownerInfo.name,
           mail: ownerInfo.mail,
+        }),
+      }),
+    )
+  })
+
+  it('builds recently reply links from canonical id', async () => {
+    mockCommentModel.findOne.mockReturnValue({
+      lean: vi.fn().mockResolvedValue(null),
+    })
+    mockRefModel.findById.mockResolvedValueOnce({
+      id: 'recent-1',
+      title: 'Recent Title',
+      text: 'Recent Content',
+      created: new Date('2026-01-01T00:00:00.000Z'),
+      modified: null,
+    })
+
+    const sendCommentNotificationMailSpy = vi
+      .spyOn(service as any, 'sendCommentNotificationMail')
+      .mockResolvedValue(undefined)
+
+    await service.sendEmail(
+      {
+        id: 'comment-1',
+        ref: 'recent-1',
+        refType: CollectionRefTypes.Recently,
+        parentCommentId: null,
+        text: 'recent reply',
+        created: new Date('2026-01-10T00:00:00.000Z'),
+        isWhispers: false,
+      } as any,
+      CommentReplyMailType.Owner,
+    )
+
+    expect(sendCommentNotificationMailSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        source: expect.objectContaining({
+          link: 'https://mx.example.com/thinking/recent-1#comments-comment-1',
         }),
       }),
     )

@@ -10,20 +10,20 @@ import { TopicModel } from './topic.model'
 import { TopicSlugParamsDto } from './topic.schema'
 
 const topicTranslateFields = [
-  { path: 'name', keyPath: 'topic.name' as const, idField: '_id' as const },
+  { path: 'name', keyPath: 'topic.name' as const, idField: 'id' as const },
   {
     path: 'introduce',
     keyPath: 'topic.introduce' as const,
-    idField: '_id' as const,
+    idField: 'id' as const,
   },
 ]
 
 const topicTranslateListFields = [
-  { path: '[].name', keyPath: 'topic.name' as const, idField: '_id' as const },
+  { path: '[].name', keyPath: 'topic.name' as const, idField: 'id' as const },
   {
     path: '[].introduce',
     keyPath: 'topic.introduce' as const,
-    idField: '_id' as const,
+    idField: 'id' as const,
   },
 ]
 

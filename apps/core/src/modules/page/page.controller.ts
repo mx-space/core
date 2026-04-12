@@ -83,7 +83,7 @@ export class PageController {
         doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
       }
       translationInputs.push({
-        id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
+        id: doc.id,
         title: doc.title,
         text: doc.text,
         subtitle: doc.subtitle,
@@ -103,7 +103,7 @@ export class PageController {
         })
 
       result.docs = result.docs.map((doc) => {
-        const docId = doc._id?.toString?.() ?? doc.id ?? String(doc._id)
+        const docId = doc.id
         const translation = translationResults.get(docId)
         if (!translation?.isTranslated) {
           return doc
@@ -174,7 +174,7 @@ export class PageController {
     }
 
     const translationResult = await this.translationService.translateArticle({
-      articleId: page._id?.toString?.() ?? page.id ?? String(page._id),
+      articleId: page.id,
       targetLang: lang,
       originalData: {
         title: page.title,

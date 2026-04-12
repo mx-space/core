@@ -92,10 +92,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     this.commentCreateListenerDisposer?.()
   }
 
-  async afterCreateComment(
-    commentId: string,
-    ipLocation: { ip: string },
-  ) {
+  async afterCreateComment(commentId: string, ipLocation: { ip: string }) {
     const comment = await this.commentModel
       .findById(commentId)
       .lean({ getters: true })
@@ -142,11 +139,8 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     })
   }
 
-  async afterReplyComment(
-    comment: CommentModel,
-    ipLocation: { ip: string },
-  ) {
-    const commentId = comment.id ?? (comment as any)._id?.toString()
+  async afterReplyComment(comment: CommentModel, ipLocation: { ip: string }) {
+    const commentId = comment.id
     const isLoggedInComment = !!comment.readerId
 
     scheduleManager.schedule(async () => {
@@ -187,7 +181,9 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       .then((readers) => readers[0] ?? null)
   }
 
-  private toOwnerIdentity(ownerInfo: Awaited<ReturnType<OwnerService['getOwnerInfo']>>) {
+  private toOwnerIdentity(
+    ownerInfo: Awaited<ReturnType<OwnerService['getOwnerInfo']>>,
+  ) {
     return {
       role: 'owner' as const,
       author: ownerInfo.name || '',
@@ -221,7 +217,9 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
           author: reader.name || comment.author || '',
           mail: reader.email || comment.mail || '',
           avatar:
-            reader.image || comment.avatar || getAvatar(reader.email || comment.mail),
+            reader.image ||
+            comment.avatar ||
+            getAvatar(reader.email || comment.mail),
         }
       }
     }
@@ -257,14 +255,20 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     const parentIdentity = await this.resolveCommentIdentity(parent, ownerInfo)
 
     if (!refDoc || !ownerInfo.mail) return
-    if (type === CommentReplyMailType.Guest && commentIdentity.role === 'guest') {
+    if (
+      type === CommentReplyMailType.Guest &&
+      commentIdentity.role === 'guest'
+    ) {
       commentIdentity =
         !comment.author && !comment.mail && !comment.avatar
           ? this.toOwnerIdentity(ownerInfo)
           : commentIdentity
     }
 
-    if (type === CommentReplyMailType.Owner && commentIdentity.role === 'owner') {
+    if (
+      type === CommentReplyMailType.Owner &&
+      commentIdentity.role === 'owner'
+    ) {
       return
     }
 
@@ -414,7 +418,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
         ).toString()
       }
       case CollectionRefTypes.Recently: {
-        return new URL(`/thinking/${model._id}`, base).toString()
+        return new URL(`/thinking/${model.id}`, base).toString()
       }
     }
   }

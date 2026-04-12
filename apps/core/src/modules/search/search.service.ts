@@ -8,6 +8,7 @@ import { BusinessEvents } from '~/constants/business-event.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import type { SearchDto } from '~/modules/search/search.schema'
 import type { Pagination } from '~/shared/interface/paginator.interface'
+import { normalizeDocumentIds } from '~/shared/model/plugins/lean-id'
 import { InjectModel } from '~/transformers/model.transformer'
 
 import { NoteService } from '../note/note.service'
@@ -35,7 +36,6 @@ import {
 
 type SearchDocumentLean = SearchDocumentModel & {
   id?: string
-  _id?: { toString: () => string }
 }
 
 type SearchCorpusStats = {
@@ -564,7 +564,10 @@ export class SearchService {
     refType: SearchDocumentRefType,
     data: Record<string, any>,
   ): SearchDocumentModel {
-    return buildSearchDocument(refType, data) as SearchDocumentModel
+    return buildSearchDocument(
+      refType,
+      normalizeDocumentIds(data),
+    ) as SearchDocumentModel
   }
 
   private buildSearchKeywordRegexes(keyword: string) {

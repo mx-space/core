@@ -7,6 +7,7 @@ import {
   SEARCH_DOCUMENT_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { buildSearchDocument } from '~/modules/search/search-document.util'
+import { normalizeDocumentIds } from '~/shared/model/plugins/lean-id'
 
 import { defineMigration } from '../helper'
 
@@ -73,9 +74,15 @@ export default defineMigration(
     ])
 
     const documents = [
-      ...posts.map((doc) => buildSearchDocument('post', doc)),
-      ...pages.map((doc) => buildSearchDocument('page', doc)),
-      ...notes.map((doc) => buildSearchDocument('note', doc)),
+      ...posts.map((doc) =>
+        buildSearchDocument('post', normalizeDocumentIds(doc)),
+      ),
+      ...pages.map((doc) =>
+        buildSearchDocument('page', normalizeDocumentIds(doc)),
+      ),
+      ...notes.map((doc) =>
+        buildSearchDocument('note', normalizeDocumentIds(doc)),
+      ),
     ]
 
     const collection = db.collection(SEARCH_DOCUMENT_COLLECTION_NAME)

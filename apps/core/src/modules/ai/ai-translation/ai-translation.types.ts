@@ -17,14 +17,27 @@ export interface ArticleContent {
 
 export type ArticleDocument = PostModel | NoteModel | PageModel
 
-export type ArticleEventDocument = ArticleDocument & {
-  _id?: { toString?: () => string } | string
-}
+export type ArticleEventDocument = ArticleDocument
 
 export type ArticleEventPayload =
   | ArticleEventDocument
   | { data: string }
   | { id: string }
+
+export type CategoryTranslationEventPayload = {
+  id: string
+  name?: string | null
+}
+
+export type TopicTranslationEventPayload = {
+  id: string
+  name?: string | null
+  introduce?: string | null
+}
+
+export type EntityDeleteEventPayload = {
+  id: string
+}
 
 export type GlobalArticle =
   | { document: PostModel; type: CollectionRefTypes.Post }

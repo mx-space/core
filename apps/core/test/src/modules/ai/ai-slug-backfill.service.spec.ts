@@ -60,7 +60,7 @@ describe('AiSlugBackfillService', () => {
       sort: vi.fn().mockReturnThis(),
       lean: vi
         .fn()
-        .mockResolvedValue([{ _id: 'note-1', title: 'First', nid: 1 }]),
+        .mockResolvedValue([{ id: 'note-1', title: 'First', nid: 1 }]),
     })
     aiWriterService.generateSlugByTitleViaOpenAI.mockResolvedValue({
       slug: 'first',
@@ -81,5 +81,16 @@ describe('AiSlugBackfillService', () => {
     await registeredHandler!.execute({ noteIds: ['note-1', 'note-2'] }, context)
 
     expect(logs[0]?.message).toContain('note-1, note-2')
+  })
+
+  it('should update notes by canonical id when lean results omit _id', async () => {
+    const { context } = createContext()
+
+    await registeredHandler!.execute({ noteIds: ['note-1'] }, context)
+
+    expect(noteModel.updateOne).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: 'note-1' }),
+      { $set: { slug: 'first' } },
+    )
   })
 })

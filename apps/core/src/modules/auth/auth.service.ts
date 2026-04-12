@@ -19,6 +19,7 @@ import {
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { alphabet } from '~/constants/other.constant'
 import { DatabaseService } from '~/processors/database/database.service'
+import { normalizeDocumentIds } from '~/shared/model/plugins/lean-id'
 import { getAvatar } from '~/utils/tool.util'
 
 import { AuthInstanceInjectKey } from './auth.constant'
@@ -123,13 +124,18 @@ export class AuthService {
       .find(this.buildApiKeyOwnerQuery(ownerId))
       .toArray()
 
-    return keys.map((token) => ({
-      id: token._id?.toString(),
-      token: token.key,
-      name: token.name,
-      created: token.createdAt,
-      expired: token.expiresAt ?? undefined,
-    }))
+    return keys.map((token) => {
+      const normalizedToken = normalizeDocumentIds({
+        ...token,
+      }) as ApiKeyDocument
+      return {
+        id: normalizedToken.id,
+        token: normalizedToken.key,
+        name: normalizedToken.name,
+        created: normalizedToken.createdAt,
+        expired: normalizedToken.expiresAt ?? undefined,
+      }
+    })
   }
 
   async getTokenSecret(id: string) {
@@ -143,12 +149,13 @@ export class AuthService {
     if (!token) {
       return null
     }
+    const normalizedToken = normalizeDocumentIds({ ...token }) as ApiKeyDocument
     return {
-      id: token._id?.toString(),
-      token: token.key,
-      name: token.name,
-      created: token.createdAt,
-      expired: token.expiresAt ?? undefined,
+      id: normalizedToken.id,
+      token: normalizedToken.key,
+      name: normalizedToken.name,
+      created: normalizedToken.createdAt,
+      expired: normalizedToken.expiresAt ?? undefined,
     }
   }
 
@@ -774,15 +781,18 @@ export class AuthService {
     if (!reader) {
       return null
     }
+    const normalizedReader = normalizeDocumentIds({
+      ...reader,
+    }) as SessionUser & Record<string, unknown>
     return {
-      id: reader._id?.toString(),
-      email: reader.email,
-      name: reader.name,
-      image: reader.image,
-      role: reader.role,
-      handle: reader.handle,
-      username: reader.username,
-      displayUsername: reader.displayUsername,
+      id: normalizedReader.id,
+      email: normalizedReader.email as string | null | undefined,
+      name: normalizedReader.name as string | undefined,
+      image: normalizedReader.image as string | null | undefined,
+      role: normalizedReader.role as SessionUser['role'],
+      handle: normalizedReader.handle as string | undefined,
+      username: normalizedReader.username as string | undefined,
+      displayUsername: normalizedReader.displayUsername as string | undefined,
     }
   }
 }

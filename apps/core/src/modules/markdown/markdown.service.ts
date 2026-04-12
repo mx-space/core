@@ -4,16 +4,18 @@ import {
   Logger,
 } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose'
+import { omit } from 'es-toolkit/compat'
+import { dump } from 'js-yaml'
+import JSZip from 'jszip'
+import { Types } from 'mongoose'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { InjectModel } from '~/transformers/model.transformer'
-import { omit } from 'es-toolkit/compat'
-import { dump } from 'js-yaml'
-import JSZip from 'jszip'
-import { Types } from 'mongoose'
+
 import { CategoryModel } from '../category/category.model'
 import { NoteModel } from '../note/note.model'
 import { PageModel } from '../page/page.model'
@@ -45,7 +47,7 @@ export class MarkdownService {
     let count = 1
     const categoryNameAndId = (await this.categoryModel.find().lean()).map(
       (c) => {
-        return { name: c.name, _id: c._id, slug: c.slug }
+        return { name: c.name, id: c.id, slug: c.slug }
       },
     )
 
@@ -66,7 +68,7 @@ export class MarkdownService {
         })
         categoryNameAndId.push({
           name: newCategoryDoc.name,
-          _id: newCategoryDoc._id,
+          id: newCategoryDoc.id,
           slug: newCategoryDoc.slug,
         })
 
@@ -89,7 +91,7 @@ export class MarkdownService {
           slug: Date.now(),
           text: item.text,
           ...genDate(item),
-          categoryId: new Types.ObjectId(defaultCategory._id),
+          categoryId: new Types.ObjectId(defaultCategory.id),
         } as any as PostModel)
       } else {
         const category = await insertOrCreateCategory(
@@ -100,9 +102,9 @@ export class MarkdownService {
           slug: item.meta.slug || item.meta.title,
           text: item.text,
           ...genDate(item),
-          categoryId: category?._id.toHexString() || defaultCategory._id,
+          categoryId: category?.id ?? defaultCategory.id,
           tags: item.meta.tags || [],
-        } as PostModel)
+        } as unknown as PostModel)
       }
     }
     return await this.postModel

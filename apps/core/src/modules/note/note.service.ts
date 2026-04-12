@@ -148,8 +148,7 @@ export class NoteService {
       return
     }
 
-    const existingId = existing.id ?? existing._id?.toString?.()
-    if (excludeId && existingId === excludeId) {
+    if (excludeId && existing.id === excludeId) {
       return
     }
 
@@ -573,7 +572,7 @@ export class NoteService {
     if (!document) {
       return null
     }
-    return document._id
+    return document.id
   }
 
   async findOneByIdOrNid(unique: any) {

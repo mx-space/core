@@ -1,7 +1,9 @@
 import { UnprocessableEntityException } from '@nestjs/common'
-import { zMongoId } from '~/common/zod'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { zMongoId } from '~/common/zod'
+import type { ObjectIdString } from '~/shared/id'
 
 export const MongoIdSchema = z.object({
   id: zMongoId,
@@ -19,7 +21,7 @@ export const IntIdOrMongoIdSchema = z.object({
   id: z.preprocess(
     (value) => {
       if (typeof value === 'string') {
-        if (/^[0-9a-f]{24}$/i.test(value)) {
+        if (/^[\da-f]{24}$/i.test(value)) {
           return value
         }
         const nid = Number(value)
@@ -38,5 +40,7 @@ export const IntIdOrMongoIdSchema = z.object({
 
 export class IntIdOrMongoIdDto extends createZodDto(IntIdOrMongoIdSchema) {}
 
-export type MongoIdInput = z.infer<typeof MongoIdSchema>
+export type MongoIdInput = z.infer<typeof MongoIdSchema> & {
+  id: ObjectIdString
+}
 export type IntIdOrMongoIdInput = z.infer<typeof IntIdOrMongoIdSchema>

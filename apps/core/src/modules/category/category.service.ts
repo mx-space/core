@@ -57,7 +57,7 @@ export class CategoryService implements OnApplicationBootstrap {
     const data = await this.model.find({ type: CategoryType.Category }).lean()
     const counts = await Promise.all(
       data.map((item) => {
-        const id = item._id
+        const id = item.id
         return this.postService.model.countDocuments({ categoryId: id })
       }),
     )
@@ -108,12 +108,13 @@ export class CategoryService implements OnApplicationBootstrap {
     if (posts.length === 0) {
       throw new CannotFindException()
     }
-    return posts.map(({ _id, title, slug, category, created }) => ({
-      _id,
+    return posts.map(({ id, title, slug, category, created, modified }) => ({
+      id,
       title,
       slug,
       category: omit(category, ['count', '__v', 'created', 'modified']),
       created,
+      modified,
     }))
   }
 
@@ -136,7 +137,7 @@ export class CategoryService implements OnApplicationBootstrap {
   async create(name: string, slug?: string) {
     const doc = await this.model.create({ name, slug: slug ?? name })
     this.clearCache()
-    this.eventManager.emit(BusinessEvents.CATEGORY_CREATE, doc, {
+    this.eventManager.emit(BusinessEvents.CATEGORY_CREATE, doc.toObject(), {
       scope: EventScope.TO_SYSTEM_VISITOR,
     })
     return doc
@@ -169,7 +170,11 @@ export class CategoryService implements OnApplicationBootstrap {
 
     this.clearCache()
 
-    this.eventManager.emit(BusinessEvents.CATEGORY_UPDATE, newDoc, {
+    if (!newDoc) {
+      return newDoc
+    }
+
+    this.eventManager.emit(BusinessEvents.CATEGORY_UPDATE, newDoc.toObject(), {
       scope: EventScope.TO_SYSTEM_VISITOR,
     })
     return newDoc

@@ -25,6 +25,7 @@ import {
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import { MongoIdDto } from '~/shared/dto/id.dto'
+import { normalizeDocumentIds } from '~/shared/model/plugins/lean-id'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import { applyContentPreference } from '~/utils/content.util'
 
@@ -53,7 +54,7 @@ export class PostController {
   @TranslateFields({
     path: 'docs[].category.name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getPaginate(
     @Query() query: PostPagerDto,
@@ -160,6 +161,7 @@ export class PostController {
         },
       )
       .then(async (res) => {
+        res.docs.forEach((doc) => normalizeDocumentIds(doc))
         const translationInputs: ArticleTranslationInput[] = []
         for (const doc of res.docs) {
           const originalText = doc.text
@@ -169,7 +171,7 @@ export class PostController {
 
           if (lang && typeof originalText === 'string') {
             translationInputs.push({
-              id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
+              id: doc.id,
               title: doc.title,
               text: originalText,
               summary: doc.summary,
@@ -193,7 +195,7 @@ export class PostController {
             })
 
           res.docs = res.docs.map((doc) => {
-            const docId = doc._id?.toString?.() ?? doc.id ?? String(doc._id)
+            const docId = doc.id
             const translation = translationResults.get(docId)
             if (!translation?.isTranslated) {
               return doc
@@ -234,7 +236,7 @@ export class PostController {
   @TranslateFields({
     path: 'category.name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getById(
     @Param() params: MongoIdDto,
@@ -264,7 +266,7 @@ export class PostController {
   @TranslateFields({
     path: 'category.name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getLatest(
     @IpLocation() ip: IpRecord,
@@ -301,7 +303,7 @@ export class PostController {
   @TranslateFields({
     path: 'category.name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,

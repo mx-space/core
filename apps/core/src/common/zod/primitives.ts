@@ -1,10 +1,10 @@
 import { z } from 'zod'
 
+import { zObjectIdString } from '~/shared/id'
+
 // MongoDB Types
 
-export const zMongoId = z
-  .string()
-  .regex(/^[0-9a-f]{24}$/i, 'Invalid MongoDB ObjectId')
+export const zMongoId = zObjectIdString
 
 export const zMongoIdOrInt = z.union([
   zMongoId,
@@ -24,7 +24,7 @@ export const zNilOrString = z.string().nullable().optional()
 
 export const zHexColor = z
   .string()
-  .regex(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i, 'Invalid hex color')
+  .regex(/^#([\da-f]{3}|[\da-f]{6})$/i, 'Invalid hex color')
 
 // URL Types
 
