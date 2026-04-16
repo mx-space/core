@@ -112,7 +112,7 @@
     "jsonwebtoken": "9.0.3",
     "jszip": "3.10.1",
     "keyv": "5.6.0",
-    "lexical": "^0.42.0",
+    "lexical": "^0.43.0",
     "linkedom": "0.18.12",
     "lru-cache": "11.3.3",
     "marked": "18.0.0",

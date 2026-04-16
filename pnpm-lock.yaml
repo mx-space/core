@@ -111,7 +111,7 @@ importers:
         version: 9.1.0
       '@haklex/rich-headless':
         specifier: 0.0.106
-        version: 0.0.106(lexical@0.42.0)
+        version: 0.0.106(lexical@0.43.0)
       '@innei/next-async':
         specifier: 0.4.0
         version: 0.4.0
@@ -257,8 +257,8 @@ importers:
         specifier: 5.6.0
         version: 5.6.0
       lexical:
-        specifier: ^0.42.0
-        version: 0.42.0
+        specifier: ^0.43.0
+        version: 0.43.0
       linkedom:
         specifier: 0.18.12
         version: 0.18.12
@@ -8228,7 +8228,7 @@ snapshots:
       fastq: 1.20.1
       glob: 13.0.6
 
-  '@haklex/rich-headless@0.0.106(lexical@0.42.0)':
+  '@haklex/rich-headless@0.0.106(lexical@0.43.0)':
     dependencies:
       '@lexical/code-core': 0.43.0
       '@lexical/extension': 0.43.0
@@ -8237,7 +8237,7 @@ snapshots:
       '@lexical/markdown': 0.43.0
       '@lexical/rich-text': 0.43.0
       '@lexical/table': 0.43.0
-      lexical: 0.42.0
+      lexical: 0.43.0
 
   '@hexagon/base64@1.1.28': {}
 
