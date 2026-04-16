@@ -63,7 +63,7 @@
     "@fastify/cookie": "11.0.2",
     "@fastify/multipart": "10.0.0",
     "@fastify/static": "9.1.0",
-    "@haklex/rich-headless": "0.0.105",
+    "@haklex/rich-headless": "0.0.106",
     "@innei/next-async": "0.4.0",
     "@innei/pretty-logger-nestjs": "0.4.2",
     "@keyv/redis": "5.1.6",
