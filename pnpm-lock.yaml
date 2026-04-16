@@ -110,8 +110,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0
       '@haklex/rich-headless':
-        specifier: 0.0.104
-        version: 0.0.104(lexical@0.42.0)
+        specifier: 0.0.105
+        version: 0.0.105(lexical@0.42.0)
       '@innei/next-async':
         specifier: 0.4.0
         version: 0.4.0
@@ -1199,8 +1199,8 @@ packages:
   '@fastify/static@9.1.0':
     resolution: {integrity: sha512-EPRNQYqEYEYTK8yyGbcM0iHpyJaupb94bey5O6iCQfLTADr02kaZU+qeHSdd9H9TiMwTBVkrMa59V8CMbn3avQ==}
 
-  '@haklex/rich-headless@0.0.104':
-    resolution: {integrity: sha512-nKKM7RLKSQ4OMX7ZsDAdZP3pdWb6ywby5AD+3s/N5vMaesKCvKoCh4rgb2zCfn6PbD5XEQLWI+RVjf8XBUH8TA==}
+  '@haklex/rich-headless@0.0.105':
+    resolution: {integrity: sha512-fy4k4Ck5/EEAqElRmFtmUjxaTlqWiQwcxLPJ+HCXnLw3+aDr49RjDQe7/I/k07GEa2QvMteDnJ/NNc6vYu0hrQ==}
     peerDependencies:
       lexical: ^0.42.0
 
@@ -6162,11 +6162,6 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  prettier@3.8.3:
-    resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
-    engines: {node: '>=14'}
-    hasBin: true
-
   pretty-ms@9.3.0:
     resolution: {integrity: sha512-gjVS5hOP+M3wMm5nmNOucbIrqudzs9v/57bWRHQWLYklXqoXKrVfYW2W9+glfGsqtPgpiz5WwyEEB+ksXIx3gQ==}
     engines: {node: '>=18'}
@@ -8194,7 +8189,7 @@ snapshots:
       fastq: 1.20.1
       glob: 13.0.6
 
-  '@haklex/rich-headless@0.0.104(lexical@0.42.0)':
+  '@haklex/rich-headless@0.0.105(lexical@0.42.0)':
     dependencies:
       '@lexical/code-core': 0.42.0
       '@lexical/extension': 0.42.0
@@ -9317,7 +9312,7 @@ snapshots:
   '@react-email/render@1.1.2(react-dom@19.2.4(react@19.2.3))(react@19.2.3)':
     dependencies:
       html-to-text: 9.0.5
-      prettier: 3.8.3
+      prettier: 3.8.2
       react: 19.2.3
       react-dom: 19.2.4(react@19.2.3)
       react-promise-suspense: 0.3.4
@@ -13257,9 +13252,6 @@ snapshots:
       - supports-color
 
   prettier@3.8.2: {}
-
-  prettier@3.8.3:
-    optional: true
 
   pretty-ms@9.3.0:
     dependencies:
