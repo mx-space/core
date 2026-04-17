@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [11.1.4](https://github.com/mx-space/core/compare/v11.1.3...v11.1.4) (2026-04-17)
+
+
+### Bug Fixes
+
+* **ai-summary:** allow on-demand generation when auto-generate is disabled ([#2639](https://github.com/mx-space/core/issues/2639)) ([db53f0f](https://github.com/mx-space/core/commit/db53f0fa115c1b1163f7e88b37bd2e6456ffe495)), closes [#2627](https://github.com/mx-space/core/issues/2627)
+* related post transltion ([0094dda](https://github.com/mx-space/core/commit/0094ddaf773d45f1b54d5e82db636a6cf41aed2a))
+
+
+
 ## [11.1.3](https://github.com/mx-space/core/compare/v11.1.2...v11.1.3) (2026-04-17)
 
 
