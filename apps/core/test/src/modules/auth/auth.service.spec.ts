@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing'
+import { APIError } from 'better-auth/api'
 import { Types } from 'mongoose'
 import { vi } from 'vitest'
 
@@ -546,6 +547,42 @@ describe('AuthService', () => {
       const { service } = await createTestService({ authInstance })
       await expect(service.verifyApiKey('key')).rejects.toThrow()
     })
+
+    /**
+     * Installed better-auth resolves direct `auth.api.*` via `resolveDynamicContext`
+     * (`better-auth/dist/api/to-auth-endpoints.mjs`). When `options.baseURL` is a
+     * **dynamic** config and the call has neither `headers`/`request` nor
+     * `baseURL.fallback`, it throws `APIError("INTERNAL_SERVER_ERROR", { message:
+     * "Dynamic baseURL could not be resolved for this direct auth.api call..." })`.
+     * That is not a "bad key" — legacy verify must not run; callers see the error.
+     */
+    it('should propagate APIError from verifyApiKey', async () => {
+      const err = new APIError('INTERNAL_SERVER_ERROR', {
+        message:
+          'Dynamic baseURL could not be resolved for this direct auth.api call. Pass `headers: request.headers` (or `request`) to the call, or add `fallback` to your baseURL config.',
+      })
+      const authInstance = createAuthInstance({
+        api: {
+          verifyApiKey: vi.fn().mockRejectedValue(err),
+        },
+      })
+      const { service } = await createTestService({ authInstance })
+      await expect(service.verifyApiKey('any-key')).rejects.toBe(err)
+    })
+  })
+
+  describe('better-auth 1.6.x: createAccessToken direct API', () => {
+    it('should propagate APIError from createApiKey', async () => {
+      const err = new APIError('INTERNAL_SERVER_ERROR', {
+        message: 'createApiKey failed',
+      })
+      const createApiKey = vi.fn().mockRejectedValue(err)
+      const authInstance = createAuthInstance({ api: { createApiKey } })
+      const { service } = await createTestService({ authInstance })
+      await expect(
+        service.createAccessToken({ name: 'k' } as any),
+      ).rejects.toBe(err)
+    })
   })
 
   describe('verifyCustomToken', () => {
@@ -1046,6 +1083,39 @@ describe('AuthService', () => {
       const headers = new Headers()
       headers.set('cookie', 'session=abc')
       expect(await service.getSessionUserFromHeaders(headers)).toBeNull()
+    })
+
+    /**
+     * CreateAuth() wraps `listUserAccounts` and catches `APIError`, returning null
+     * (`auth.implement.ts`). The real endpoint can also reject for session/baseURL
+     * issues before returning JSON; this test only locks: **null accounts ⇒ no user**.
+     */
+    it('should return null when listUserAccounts returns null', async () => {
+      const authInstance = createAuthInstance({
+        api: {
+          getSession: vi
+            .fn()
+            .mockResolvedValue({ user: { id: '1' }, session: {} }),
+          listUserAccounts: vi.fn().mockResolvedValue(null),
+        },
+      })
+      const { service } = await createTestService({ authInstance })
+      const headers = new Headers()
+      headers.set('cookie', 'session=abc')
+      expect(await service.getSessionUserFromHeaders(headers)).toBeNull()
+    })
+
+    it('should propagate APIError from getSession', async () => {
+      const err = new APIError('UNAUTHORIZED', { message: 'invalid session' })
+      const authInstance = createAuthInstance({
+        api: {
+          getSession: vi.fn().mockRejectedValue(err),
+        },
+      })
+      const { service } = await createTestService({ authInstance })
+      const headers = new Headers()
+      headers.set('cookie', 'session=abc')
+      await expect(service.getSessionUserFromHeaders(headers)).rejects.toBe(err)
     })
 
     it('should return session with provider info', async () => {

@@ -5,6 +5,11 @@ import { describe, expect, it, vi } from 'vitest'
  * Test the api wrapper created in auth.implement.ts CreateAuth().
  * Since CreateAuth requires MongoDB + full betterAuth, we replicate
  * the wrapping logic here to verify behavior in isolation.
+ *
+ * `listUserAccounts` is a normal endpoint (sessionMiddleware + adapter); it may
+ * reject with `APIError` for several reasons. CreateAuth's wrapper turns
+ * `APIError` into null so `getSessionUserFromHeaders` does not throw (see
+ * AuthService tests for null account list behavior).
  */
 function createApiWrapper(mockApi: Record<string, any>) {
   const _listUserAccounts = mockApi.listUserAccounts.bind(mockApi)
