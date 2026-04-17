@@ -331,21 +331,40 @@ export class PostController {
     )
 
     const baseData = postDocument.toObject()
-    const translationResult = await this.translationService.translateArticle({
-      articleId: postDocument.id,
-      targetLang: lang,
-      allowHidden: Boolean(isAuthenticated),
-      originalData: {
-        title: baseData.title,
-        text: baseData.text,
-        summary: baseData.summary,
-        tags: baseData.tags,
-      },
-    })
+    const relatedList = Array.isArray(baseData.related)
+      ? (baseData.related as any[])
+      : []
+    const relatedIds = relatedList
+      .map((item) => item?._id?.toString?.() ?? item?.id)
+      .filter((id): id is string => Boolean(id))
+
+    const [translationResult, relatedTitleMap] = await Promise.all([
+      this.translationService.translateArticle({
+        articleId: postDocument.id,
+        targetLang: lang,
+        allowHidden: Boolean(isAuthenticated),
+        originalData: {
+          title: baseData.title,
+          text: baseData.text,
+          summary: baseData.summary,
+          tags: baseData.tags,
+        },
+      }),
+      this.translationService.getCachedTitles(relatedIds, lang),
+    ])
+
+    const translatedRelated = relatedTitleMap.size
+      ? relatedList.map((item) => {
+          const refId = item?._id?.toString?.() ?? item?.id
+          const translatedTitle = refId ? relatedTitleMap.get(refId) : undefined
+          return translatedTitle ? { ...item, title: translatedTitle } : item
+        })
+      : relatedList
 
     return applyContentPreference(
       {
         ...baseData,
+        related: translatedRelated,
         title: translationResult.title,
         text: translationResult.text,
         summary: translationResult.summary,
