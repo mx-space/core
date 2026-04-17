@@ -643,10 +643,8 @@ export class AiSummaryService implements OnModuleInit {
     result: Promise<AISummaryModel>
   }> {
     const aiConfig = await this.configService.get('ai')
-    const shouldGenerate =
-      aiConfig?.enableAutoGenerateSummary && aiConfig.enableSummary
 
-    if (!shouldGenerate) {
+    if (!aiConfig?.enableSummary) {
       throw new BizException(ErrorCodeEnum.AINotEnabled)
     }
 
@@ -687,18 +685,12 @@ export class AiSummaryService implements OnModuleInit {
     }
 
     const aiConfig = await this.configService.get('ai')
-    const shouldGenerate =
-      aiConfig?.enableAutoGenerateSummary && aiConfig.enableSummary
 
-    if (shouldGenerate) {
-      return this.generateSummaryByOpenAI(articleId, lang)
-    }
-
-    if (!aiConfig.enableSummary || !aiConfig.enableAutoGenerateSummary) {
+    if (!aiConfig?.enableSummary) {
       throw new BizException(ErrorCodeEnum.AINotEnabled)
     }
 
-    return null
+    return this.generateSummaryByOpenAI(articleId, lang)
   }
 
   async deleteSummaryByArticleId(articleId: string) {
