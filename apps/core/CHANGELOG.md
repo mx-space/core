@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [11.1.3](https://github.com/mx-space/core/compare/v11.1.2...v11.1.3) (2026-04-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @fastify/static to v9.1.1 [security] ([#2633](https://github.com/mx-space/core/issues/2633)) ([0a4027a](https://github.com/mx-space/core/commit/0a4027a9b422f5c3abb40c79f6775e119fc9ea10))
+* **note:** translate adjacent note titles via cached translations ([a53a2b6](https://github.com/mx-space/core/commit/a53a2b6d89497450d210259ee6729b08b1b8f09e))
+
+
+
 ## [11.1.2](https://github.com/mx-space/core/compare/v11.1.1...v11.1.2) (2026-04-07)
 
 
