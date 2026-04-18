@@ -10,6 +10,9 @@ export const translationProvider = defineProvider({
         isTranslated: false,
       }
     },
+    async getCachedTitles() {
+      return new Map()
+    },
     async translateList(options) {
       const { items, applyResult } = options
       return items.map((item) => applyResult(item, undefined))
