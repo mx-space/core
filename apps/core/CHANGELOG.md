@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [11.2.0](https://github.com/mx-space/core/compare/v11.1.4...v11.2.0) (2026-04-18)
+
+
+### Features
+
+* add comment sort ([9726f45](https://github.com/mx-space/core/commit/9726f45f72416710bd94b50e8fc48d2628f321a4))
+
+
+
 ## [11.1.4](https://github.com/mx-space/core/compare/v11.1.3...v11.1.4) (2026-04-17)
 
 
