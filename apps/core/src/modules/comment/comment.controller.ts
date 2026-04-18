@@ -144,6 +144,8 @@ export class CommentController {
     @Param() params: MongoIdDto,
     @Query() query: PagerDto,
     @Query('hasAnchor') hasAnchor: string,
+    @Query('sort') sort: string | undefined,
+    @Query('around') around: string | undefined,
     @HasAdminAccess() hasAdminAccess: boolean,
   ) {
     const { id } = params
@@ -152,12 +154,19 @@ export class CommentController {
     const configs = await this.configsService.get('commentOptions')
     const { commentShouldAudit } = configs
 
+    const resolvedSort: 'pinned' | 'newest' | 'oldest' =
+      sort === 'newest' || sort === 'oldest' || sort === 'pinned'
+        ? sort
+        : 'pinned'
+
     const comments = await this.commentService.getCommentsByRefId(id, {
       page,
       size,
       isAuthenticated: hasAdminAccess,
       commentShouldAudit,
       hasAnchor: hasAnchor === 'true',
+      sort: resolvedSort,
+      around,
     })
 
     const result = transformDataToPaginate(comments)

@@ -275,4 +275,94 @@ describe('CommentService thread model', () => {
       }),
     )
   })
+
+  describe('getCommentsByRefId sort + around', () => {
+    const baseOpts = {
+      page: 1,
+      size: 10,
+      isAuthenticated: false,
+      commentShouldAudit: false,
+    }
+
+    const stubPaginate = () => {
+      mockCommentModel.paginate.mockResolvedValue({
+        docs: [],
+        totalDocs: 0,
+        limit: 10,
+        page: 1,
+        totalPages: 0,
+        hasPrevPage: false,
+        hasNextPage: false,
+        pagingCounter: 1,
+        prevPage: null,
+        nextPage: null,
+      })
+      mockCommentModel.find.mockReturnValue(makeQueryChain([]))
+    }
+
+    it('uses { pin: -1, created: -1 } when sort is pinned (default)', async () => {
+      stubPaginate()
+      await service.getCommentsByRefId(refId, { ...baseOpts, sort: 'pinned' })
+      expect(mockCommentModel.paginate.mock.calls[0][1].sort).toEqual({
+        pin: -1,
+        created: -1,
+      })
+    })
+
+    it('uses { created: -1 } when sort is newest', async () => {
+      stubPaginate()
+      await service.getCommentsByRefId(refId, { ...baseOpts, sort: 'newest' })
+      expect(mockCommentModel.paginate.mock.calls[0][1].sort).toEqual({
+        created: -1,
+      })
+    })
+
+    it('uses { created: 1 } when sort is oldest', async () => {
+      stubPaginate()
+      await service.getCommentsByRefId(refId, { ...baseOpts, sort: 'oldest' })
+      expect(mockCommentModel.paginate.mock.calls[0][1].sort).toEqual({
+        created: 1,
+      })
+    })
+
+    it('around overrides page to the page that contains the target', async () => {
+      stubPaginate()
+      mockCommentModel.findOne.mockReturnValue({
+        lean: vi.fn().mockResolvedValue({
+          _id: 'aroundId',
+          ref: refId,
+          created: new Date('2026-04-01T00:00:00Z'),
+          pin: false,
+        }),
+      })
+      mockCommentModel.countDocuments.mockResolvedValue(12)
+
+      await service.getCommentsByRefId(refId, {
+        ...baseOpts,
+        page: 99,
+        size: 5,
+        sort: 'newest',
+        around: 'aroundId',
+      })
+
+      // 13th item (index 12) under size=5 ⇒ page 3.
+      expect(mockCommentModel.paginate.mock.calls[0][1].page).toBe(3)
+    })
+
+    it('falls back to the requested page when around id is not found', async () => {
+      stubPaginate()
+      mockCommentModel.findOne.mockReturnValue({
+        lean: vi.fn().mockResolvedValue(null),
+      })
+
+      await service.getCommentsByRefId(refId, {
+        ...baseOpts,
+        page: 7,
+        sort: 'newest',
+        around: 'missingId',
+      })
+
+      expect(mockCommentModel.paginate.mock.calls[0][1].page).toBe(7)
+    })
+  })
 })

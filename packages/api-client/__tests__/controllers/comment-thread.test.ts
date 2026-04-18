@@ -63,6 +63,55 @@ describe('comment client thread endpoints', () => {
     expect(data.data[0].replyWindow.nextCursor).toBe('reply-3')
   })
 
+  test('forwards sort + around params on getByRefId', async () => {
+    mockResponse(
+      '/comments/ref/ref-1?page=2&size=10&sort=newest&around=cmt-7',
+      {
+        data: [],
+        pagination: {
+          total: 0,
+          current_page: 2,
+          total_page: 1,
+          size: 10,
+          has_next_page: false,
+          has_prev_page: false,
+        },
+      },
+      'get',
+    )
+
+    const data = await client.comment.getByRefId('ref-1', {
+      page: 2,
+      size: 10,
+      sort: 'newest',
+      around: 'cmt-7',
+    })
+
+    expect((data as any).error).toBeUndefined()
+    expect(data.pagination.currentPage).toBe(2)
+  })
+
+  test('omits sort + around when not provided', async () => {
+    mockResponse(
+      '/comments/ref/ref-2?page=1&size=10',
+      {
+        data: [],
+        pagination: {
+          total: 0,
+          current_page: 1,
+          total_page: 1,
+          size: 10,
+          has_next_page: false,
+          has_prev_page: false,
+        },
+      },
+      'get',
+    )
+
+    const data = await client.comment.getByRefId('ref-2')
+    expect((data as any).error).toBeUndefined()
+  })
+
   test('get thread replies by root comment id', async () => {
     mockResponse(
       '/comments/thread/root-1',

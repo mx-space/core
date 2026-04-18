@@ -46,14 +46,25 @@ export class CommentController<ResponseWrapper> implements IController {
    * 获取文章的评论列表
    * @param refId 文章 Id
    */
-  getByRefId(refId: string, pagination: PaginationParams = {}) {
-    const { page, size } = pagination
+  getByRefId(
+    refId: string,
+    params: PaginationParams & {
+      sort?: 'pinned' | 'newest' | 'oldest'
+      around?: string
+    } = {},
+  ) {
+    const { page, size, sort, around } = params
     return this.proxy.ref(refId).get<
       PaginateResult<CommentThreadItem & { ref: string }> & {
         readers: Record<string, ReaderModel>
       }
     >({
-      params: { page: page || 1, size: size || 10 },
+      params: {
+        page: page || 1,
+        size: size || 10,
+        ...(sort ? { sort } : {}),
+        ...(around ? { around } : {}),
+      },
     })
   }
 

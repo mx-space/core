@@ -873,6 +873,69 @@ export class CommentService {
     return queryList
   }
 
+  private async findPageContainingComment({
+    refId,
+    commentId,
+    size,
+    sort,
+    filters,
+  }: {
+    refId: string
+    commentId: string
+    size: number
+    sort: 'pinned' | 'newest' | 'oldest'
+    filters: Record<string, any>[]
+  }): Promise<number | null> {
+    const target = (await this.commentModel
+      .findOne({
+        _id: commentId,
+        $and: [
+          { ref: refId },
+          {
+            $or: [
+              { parentCommentId: null },
+              { parentCommentId: { $exists: false } },
+            ],
+          },
+          ...filters,
+        ],
+      })
+      .lean()) as { created: Date; pin?: boolean } | null
+
+    if (!target) return null
+
+    let beforeFilter: Record<string, any>
+    if (sort === 'oldest') {
+      beforeFilter = { created: { $lt: target.created } }
+    } else if (sort === 'newest') {
+      beforeFilter = { created: { $gt: target.created } }
+    } else if (target.pin) {
+      beforeFilter = {
+        $and: [{ pin: true }, { created: { $gt: target.created } }],
+      }
+    } else {
+      beforeFilter = {
+        $or: [{ pin: true }, { created: { $gt: target.created } }],
+      }
+    }
+
+    const before = await this.commentModel.countDocuments({
+      $and: [
+        { ref: refId },
+        {
+          $or: [
+            { parentCommentId: null },
+            { parentCommentId: { $exists: false } },
+          ],
+        },
+        beforeFilter,
+        ...filters,
+      ],
+    })
+
+    return Math.floor(before / size) + 1
+  }
+
   async getCommentsByRefId(
     refId: string,
     {
@@ -881,12 +944,16 @@ export class CommentService {
       isAuthenticated,
       commentShouldAudit,
       hasAnchor = false,
+      sort = 'pinned',
+      around,
     }: {
       page: number
       size: number
       isAuthenticated: boolean
       commentShouldAudit: boolean
       hasAnchor?: boolean
+      sort?: 'pinned' | 'newest' | 'oldest'
+      around?: string
     },
   ) {
     const filters = this.createPublicQueryFilters({
@@ -894,6 +961,26 @@ export class CommentService {
       commentShouldAudit,
       hasAnchor,
     })
+
+    let resolvedPage = page
+    if (around) {
+      const aroundPage = await this.findPageContainingComment({
+        refId,
+        commentId: around,
+        size,
+        sort,
+        filters,
+      })
+      if (aroundPage !== null) {
+        resolvedPage = aroundPage
+      }
+    }
+
+    const sortMap = {
+      pinned: { pin: -1, created: -1 },
+      newest: { created: -1 },
+      oldest: { created: 1 },
+    } as const
 
     const comments = await this.commentModel.paginate(
       {
@@ -910,8 +997,8 @@ export class CommentService {
       },
       {
         limit: size,
-        page,
-        sort: { pin: -1, created: -1 },
+        page: resolvedPage,
+        sort: sortMap[sort],
         lean: true,
         autopopulate: false,
       },

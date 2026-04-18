@@ -136,6 +136,28 @@ export const CommentRefTypesSchema = z.object({
 export class CommentRefTypesDto extends createZodDto(CommentRefTypesSchema) {}
 
 /**
+ * Query schema for `GET /comments/ref/:id` list endpoint.
+ *
+ * - `sort`:
+ *   - `pinned` (default, legacy): `pin` desc, then `created` desc
+ *   - `newest`: `created` desc
+ *   - `oldest`: `created` asc
+ * - `around`: comment id; when set, the server computes the page that
+ *   contains that comment under the active sort and returns it; the
+ *   requested `page` is ignored.
+ */
+export const CommentListQuerySchema = z.object({
+  sort: z.enum(['pinned', 'newest', 'oldest']).default('pinned'),
+  around: z
+    .string()
+    .trim()
+    .regex(/^[\da-f]{24}$/i, { message: 'around must be a valid id' })
+    .optional(),
+})
+
+export class CommentListQueryDto extends createZodDto(CommentListQuerySchema) {}
+
+/**
  * Comment state patch schema
  */
 export const CommentStatePatchSchema = z.object({
@@ -212,4 +234,5 @@ export type RequiredGuestReaderCommentInput = z.infer<
 >
 export type TextOnlyInput = z.infer<typeof TextOnlySchema>
 export type CommentRefTypesInput = z.infer<typeof CommentRefTypesSchema>
+export type CommentListQueryInput = z.infer<typeof CommentListQuerySchema>
 export type CommentStatePatchInput = z.infer<typeof CommentStatePatchSchema>
