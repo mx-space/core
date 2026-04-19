@@ -340,6 +340,14 @@ export class AiInsightsService implements OnModuleInit {
     return this.generateInsights(articleId)
   }
 
+  async findSourceInsightsForArticle(
+    refId: string,
+  ): Promise<AIInsightsModel | null> {
+    return this.aiInsightsModel
+      .findOne({ refId, isTranslation: false })
+      .sort({ created: -1 })
+  }
+
   async getInsightsById(id: string) {
     const doc = await this.aiInsightsModel.findById(id)
     if (!doc) throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
