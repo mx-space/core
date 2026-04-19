@@ -2,6 +2,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 import { Test } from '@nestjs/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { AiService } from '~/modules/ai/ai.service'
 import { AiInFlightService } from '~/modules/ai/ai-inflight/ai-inflight.service'
 import { AIInsightsModel } from '~/modules/ai/ai-insights/ai-insights.model'
@@ -95,5 +96,54 @@ describe('AiInsightsService', () => {
       lang: 'zh',
       hash: expectedHash,
     })
+  })
+
+  it('generateInsights throws when enableInsights is false', async () => {
+    mockConfigService.waitForConfigReady.mockResolvedValue({
+      ai: { enableInsights: false },
+    })
+    mockDatabaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: { title: 'T', text: 'body' },
+    })
+    await expect(service.generateInsights('a')).rejects.toThrow()
+  })
+
+  it('generateInsights streams and persists', async () => {
+    mockDatabaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: { title: 'T', text: 'body', lang: 'zh' },
+    })
+    const created = {
+      id: 'ins-1',
+      refId: 'a',
+      lang: 'zh',
+      hash: (service as any).computeContentHash('body'),
+      content: '## TL;DR\nhello',
+    }
+    mockModel.create.mockResolvedValue(created)
+    const aiInFlight: any = (service as any).aiInFlightService
+    aiInFlight.runWithStream.mockImplementation(async ({ onLeader }: any) => {
+      const pushed: string[] = []
+      const out = await onLeader({
+        push: async (e: any) => {
+          pushed.push(e?.data)
+        },
+      })
+      return {
+        events: (async function* () {})(),
+        result: Promise.resolve(out.result),
+      }
+    })
+    const aiSvc: any = (service as any).aiService
+    aiSvc.getInsightsModel.mockResolvedValue({
+      generateTextStream: async function* () {
+        yield { text: '## TL;DR\n' }
+        yield { text: 'hello' }
+      },
+    })
+    const result = await service.generateInsights('a')
+    expect(result).toBe(created)
+    expect(mockModel.create).toHaveBeenCalled()
   })
 })
