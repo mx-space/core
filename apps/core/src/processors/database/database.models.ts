@@ -1,5 +1,6 @@
 import { ActivityModel } from '~/modules/activity/activity.model'
 import { AIAgentConversationModel } from '~/modules/ai/ai-agent/ai-agent-conversation.model'
+import { AIInsightsModel } from '~/modules/ai/ai-insights/ai-insights.model'
 import { AISummaryModel } from '~/modules/ai/ai-summary/ai-summary.model'
 import { AITranslationModel } from '~/modules/ai/ai-translation/ai-translation.model'
 import { TranslationEntryModel } from '~/modules/ai/ai-translation/translation-entry.model'
@@ -33,6 +34,7 @@ import { getProviderByTypegooseClass } from '~/transformers/model.transformer'
 export const databaseModels = [
   ActivityModel,
   AIAgentConversationModel,
+  AIInsightsModel,
   AISummaryModel,
   AITranslationModel,
   AnalyzeModel,
