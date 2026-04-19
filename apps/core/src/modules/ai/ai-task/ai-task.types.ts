@@ -4,6 +4,8 @@ export enum AITaskType {
   TranslationBatch = 'ai:translation:batch',
   TranslationAll = 'ai:translation:all',
   SlugBackfill = 'ai:slug:backfill',
+  Insights = 'ai:insights',
+  InsightsTranslation = 'ai:insights:translation',
 }
 
 export interface SummaryTaskPayload {
@@ -40,12 +42,28 @@ export interface SlugBackfillTaskPayload {
   noteIds?: string[]
 }
 
+export interface InsightsTaskPayload {
+  refId: string
+  title?: string
+  refType?: string
+}
+
+export interface InsightsTranslationTaskPayload {
+  refId: string
+  sourceInsightsId: string
+  targetLang: string
+  title?: string
+  refType?: string
+}
+
 export type AITaskPayload =
   | SummaryTaskPayload
   | TranslationTaskPayload
   | TranslationBatchTaskPayload
   | TranslationAllTaskPayload
   | SlugBackfillTaskPayload
+  | InsightsTaskPayload
+  | InsightsTranslationTaskPayload
 
 export function computeAITaskDedupKey(
   type: AITaskType,
@@ -74,6 +92,14 @@ export function computeAITaskDedupKey(
         return `slug:backfill:${p.noteIds.slice().sort().join(',')}`
       }
       return `slug:backfill`
+    }
+    case AITaskType.Insights: {
+      const p = payload as InsightsTaskPayload
+      return `${p.refId}`
+    }
+    case AITaskType.InsightsTranslation: {
+      const p = payload as InsightsTranslationTaskPayload
+      return `${p.refId}:${p.targetLang}`
     }
   }
 }
