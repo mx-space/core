@@ -35,6 +35,7 @@ export const WEBHOOK_COLLECTION_NAME = 'webhooks'
 export const WEBHOOK_EVENT_COLLECTION_NAME = 'webhook_events'
 
 export const AI_SUMMARY_COLLECTION_NAME = 'ai_summaries'
+export const AI_INSIGHTS_COLLECTION_NAME = 'ai_insights'
 export const AI_DEEP_READING_COLLECTION_NAME = 'ai_deep_readings'
 export const AI_TRANSLATION_COLLECTION_NAME = 'ai_translations'
 export const AI_AGENT_SESSION_COLLECTION_NAME = 'ai_agent_sessions'
