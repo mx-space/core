@@ -74,6 +74,28 @@ export const MailOptionsSchema = section('邮件通知设置', {
   }),
   smtp: SmtpConfigSchema,
   resend: ResendConfigSchema,
+  rateLimit: field.number(
+    z.preprocess(
+      (val) => (val ? Number(val) : val),
+      z.number().int().min(1).max(1000).optional(),
+    ),
+    '发送速率限制',
+    {
+      description: '每秒最大发送次数，默认 10',
+      'ui:options': { halfGrid: true },
+    },
+  ),
+  retryCount: field.number(
+    z.preprocess(
+      (val) => (val ? Number(val) : val),
+      z.number().int().min(0).max(10).optional(),
+    ),
+    '发送失败重试次数',
+    {
+      description: '发送失败后的最大重试次数，默认 3',
+      'ui:options': { halfGrid: true },
+    },
+  ),
 })
 export class MailOptionsDto extends createZodDto(MailOptionsSchema) {}
 export type MailOptionsConfig = z.infer<typeof MailOptionsSchema>
