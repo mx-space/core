@@ -49,3 +49,22 @@ export type AITranslationStreamEvent =
   | { type: 'token'; data: string }
   | { type: 'done'; data: undefined }
   | { type: 'error'; data: string }
+
+export interface AIInsightsModel {
+  id: string
+  created: string
+  updated?: string
+  hash: string
+  refId: string
+  lang: string
+  content: string
+  isTranslation: boolean
+  sourceInsightsId?: string
+  sourceLang?: string
+  modelInfo?: { provider: string; model: string }
+}
+
+export type AIInsightsStreamEvent =
+  | { type: 'token'; data: string }
+  | { type: 'done'; data: undefined }
+  | { type: 'error'; data: string }
