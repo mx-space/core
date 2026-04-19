@@ -9,6 +9,8 @@ import {
   type AITaskPayload,
   AITaskType,
   computeAITaskDedupKey,
+  type InsightsTaskPayload,
+  type InsightsTranslationTaskPayload,
   type SlugBackfillTaskPayload,
   type SummaryTaskPayload,
   type TranslationAllTaskPayload,
@@ -69,6 +71,32 @@ export class AiTaskService {
     payload: SlugBackfillTaskPayload,
   ): Promise<{ taskId: string; created: boolean }> {
     return this.createTask(AITaskType.SlugBackfill, payload)
+  }
+
+  async createInsightsTask(
+    payload: InsightsTaskPayload,
+  ): Promise<{ taskId: string; created: boolean }> {
+    if (!payload.title && payload.refId) {
+      const articleInfo = await this.getArticleInfo(payload.refId)
+      if (articleInfo) {
+        payload.title = articleInfo.title
+        payload.refType = articleInfo.type
+      }
+    }
+    return this.createTask(AITaskType.Insights, payload)
+  }
+
+  async createInsightsTranslationTask(
+    payload: InsightsTranslationTaskPayload,
+  ): Promise<{ taskId: string; created: boolean }> {
+    if (!payload.title && payload.refId) {
+      const articleInfo = await this.getArticleInfo(payload.refId)
+      if (articleInfo) {
+        payload.title = articleInfo.title
+        payload.refType = articleInfo.type
+      }
+    }
+    return this.createTask(AITaskType.InsightsTranslation, payload)
   }
 
   async retryTaskWithFailedOnly(
