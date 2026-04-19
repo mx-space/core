@@ -403,6 +403,43 @@ export const AISchema = section('AI 设定', {
         '自动生成翻译的目标语言列表，使用 [ISO 639-1 语言代码](https://www.w3schools.com/tags/ref_language_codes.asp)，如 ["en", "ja", "ko"]',
     },
   ),
+  insightsModel: field.plain(
+    AIModelAssignmentSchema.optional(),
+    'Insights 精读模型',
+    {
+      description: '用于生成 Insights 精读的 AI 模型',
+    },
+  ),
+  insightsTranslationModel: field.plain(
+    AIModelAssignmentSchema.optional(),
+    'Insights 翻译模型',
+    { description: '用于翻译 Insights 的 AI 模型，留空则复用翻译模型' },
+  ),
+  enableInsights: field.toggle(z.boolean().optional(), '可调用 AI Insights', {
+    description: '总开关',
+  }),
+  enableAutoGenerateInsightsOnCreate: field.toggle(
+    z.boolean().optional(),
+    '文章创建时自动生成 Insights',
+    { description: '需同时启用 enableInsights' },
+  ),
+  enableAutoGenerateInsightsOnUpdate: field.toggle(
+    z.boolean().optional(),
+    '文章更新时重新生成 Insights',
+    { description: '仅在源文本 hash 变化时触发' },
+  ),
+  enableAutoTranslateInsights: field.toggle(
+    z.boolean().optional(),
+    'Insights 生成后自动翻译',
+    { description: '按 insightsTargetLanguages 派发翻译任务' },
+  ),
+  insightsTargetLanguages: field.array(
+    z.array(z.string()).optional(),
+    'Insights 目标语言列表',
+    {
+      description: 'ISO 639-1 列表；源语言自动排除',
+    },
+  ),
 })
 export class AIDto extends createZodDto(AISchema) {}
 export type AIConfig = z.infer<typeof AISchema>
