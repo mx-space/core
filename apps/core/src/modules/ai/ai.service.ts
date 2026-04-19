@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
+
 import type { AIConfig } from '../configs/configs.schema'
 import { ConfigsService } from '../configs/configs.service'
 import type { AIModelAssignment, AIProviderConfig } from './ai.types'
@@ -38,6 +40,23 @@ export class AiService {
     info: AIResolvedModelInfo
   }> {
     return this.getModelWithInfoForFeature(AIFeatureKey.Translation)
+  }
+
+  public async getInsightsModel(): Promise<IModelRuntime> {
+    return this.getModelForFeature(AIFeatureKey.Insights)
+  }
+
+  public async getInsightsTranslationModel(): Promise<IModelRuntime> {
+    // Fall back to the general translation model if no insights-specific assignment is set.
+    const aiConfig = await this.configService.get('ai')
+    const assignment = this.getAssignment(
+      aiConfig,
+      AIFeatureKey.InsightsTranslation,
+    )
+    if (!assignment) {
+      return this.getTranslationModel()
+    }
+    return this.getModelForFeature(AIFeatureKey.InsightsTranslation)
   }
 
   private async getModelForFeature(
@@ -93,6 +112,8 @@ export class AiService {
       [AIFeatureKey.Writer]: 'writerModel',
       [AIFeatureKey.CommentReview]: 'commentReviewModel',
       [AIFeatureKey.Translation]: 'translationModel',
+      [AIFeatureKey.Insights]: 'insightsModel',
+      [AIFeatureKey.InsightsTranslation]: 'insightsTranslationModel',
     }
     return config[featureToConfigKey[feature]] as AIModelAssignment | undefined
   }
