@@ -109,6 +109,31 @@ describe('AiInsightsService', () => {
     await expect(service.generateInsights('a')).rejects.toThrow()
   })
 
+  it('handleCreateArticle skips when auto-generate-on-create is off', async () => {
+    mockConfigService.get.mockResolvedValue({
+      enableInsights: true,
+      enableAutoGenerateInsightsOnCreate: false,
+    })
+    const taskSvc: any = (service as any).aiTaskService
+    await service.handleCreateArticle({ id: 'a' })
+    expect(taskSvc.createInsightsTask).not.toHaveBeenCalled()
+  })
+
+  it('handleCreateArticle enqueues when enabled', async () => {
+    mockConfigService.get.mockResolvedValue({
+      enableInsights: true,
+      enableAutoGenerateInsightsOnCreate: true,
+    })
+    const taskSvc: any = (service as any).aiTaskService
+    await service.handleCreateArticle({ id: 'a' })
+    expect(taskSvc.createInsightsTask).toHaveBeenCalledWith({ refId: 'a' })
+  })
+
+  it('handleDeleteArticle cascades', async () => {
+    await service.handleDeleteArticle({ id: 'a' })
+    expect(mockModel.deleteMany).toHaveBeenCalledWith({ refId: 'a' })
+  })
+
   it('generateInsights streams and persists', async () => {
     mockDatabaseService.findGlobalById.mockResolvedValue({
       type: CollectionRefTypes.Post,

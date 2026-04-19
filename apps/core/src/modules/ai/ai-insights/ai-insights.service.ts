@@ -1,5 +1,5 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
-import { EventEmitter2 } from '@nestjs/event-emitter'
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter'
 import removeMdCodeblock from 'remove-md-codeblock'
 
 import { BizException } from '~/common/exceptions/biz.exception'
@@ -11,7 +11,9 @@ import {
   type TaskExecuteContext,
   TaskQueueProcessor,
 } from '~/processors/task-queue'
+import type { PagerDto } from '~/shared/dto/pager.dto'
 import { InjectModel } from '~/transformers/model.transformer'
+import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { createAbortError } from '~/utils/abort.util'
 import { md5 } from '~/utils/tool.util'
 
@@ -31,6 +33,7 @@ import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type InsightsTaskPayload } from '../ai-task/ai-task.types'
 import { AIInsightsModel } from './ai-insights.model'
+import type { GetInsightsGroupedQueryInput } from './ai-insights.schema'
 
 function stripTopLevelCodeFence(text: string): string {
   const trimmed = text.trim()
@@ -335,5 +338,257 @@ export class AiInsightsService implements OnModuleInit {
       throw new BizException(ErrorCodeEnum.AINotEnabled)
     }
     return this.generateInsights(articleId)
+  }
+
+  async getInsightsById(id: string) {
+    const doc = await this.aiInsightsModel.findById(id)
+    if (!doc) throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    return doc
+  }
+
+  async getInsightsByRefId(refId: string) {
+    const article = await this.databaseService.findGlobalById(refId)
+    if (!article) throw new BizException(ErrorCodeEnum.ContentNotFound)
+    const insights = await this.aiInsightsModel.find({ refId })
+    return { insights, article }
+  }
+
+  async getAllInsights(pager: PagerDto) {
+    const { page, size } = pager
+    const result = await this.aiInsightsModel.paginate(
+      {},
+      {
+        page,
+        limit: size,
+        sort: { created: -1 },
+        lean: true,
+        leanWithId: true,
+      },
+    )
+    const data = transformDataToPaginate(result)
+    return { ...data, articles: await this.getRefArticles(result.docs) }
+  }
+
+  async getAllInsightsGrouped(query: GetInsightsGroupedQueryInput) {
+    const { page, size, search } = query
+
+    let matchedRefIds: string[] | null = null
+    if (search?.trim()) {
+      const keyword = search.trim()
+      const postModel = this.databaseService.getModelByRefType(
+        CollectionRefTypes.Post,
+      )
+      const noteModel = this.databaseService.getModelByRefType(
+        CollectionRefTypes.Note,
+      )
+      const [matchedPosts, matchedNotes] = await Promise.all([
+        postModel
+          .find({ title: { $regex: keyword, $options: 'i' } })
+          .select('_id')
+          .lean(),
+        noteModel
+          .find({ title: { $regex: keyword, $options: 'i' } })
+          .select('_id')
+          .lean(),
+      ])
+      matchedRefIds = [
+        ...matchedPosts.map((p) => p._id.toString()),
+        ...matchedNotes.map((n) => n._id.toString()),
+      ]
+      if (!matchedRefIds.length) {
+        return {
+          data: [],
+          pagination: {
+            total: 0,
+            currentPage: page,
+            totalPage: 0,
+            size,
+            hasNextPage: false,
+            hasPrevPage: false,
+          },
+        }
+      }
+    }
+
+    const pipeline: any[] = []
+    if (matchedRefIds)
+      pipeline.push({ $match: { refId: { $in: matchedRefIds } } })
+    pipeline.push(
+      {
+        $group: {
+          _id: '$refId',
+          latestCreated: { $max: '$created' },
+          insightsCount: { $sum: 1 },
+        },
+      },
+      { $sort: { latestCreated: -1 } },
+      {
+        $facet: {
+          metadata: [{ $count: 'total' }],
+          data: [{ $skip: (page - 1) * size }, { $limit: size }],
+        },
+      },
+    )
+
+    const aggResult = await this.aiInsightsModel.aggregate(pipeline)
+    const metadata = aggResult[0]?.metadata[0]
+    const groupedRefIds = aggResult[0]?.data || []
+    const total = metadata?.total || 0
+    if (!groupedRefIds.length) {
+      return {
+        data: [],
+        pagination: {
+          total: 0,
+          currentPage: page,
+          totalPage: 0,
+          size,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      }
+    }
+
+    const refIds = groupedRefIds.map((g: { _id: string }) => g._id)
+    const insights = await this.aiInsightsModel
+      .find({ refId: { $in: refIds } })
+      .sort({ created: -1 })
+      .lean()
+    const articles = await this.databaseService.findGlobalByIds(refIds)
+    const articleMap: Record<
+      string,
+      { title: string; id: string; type: CollectionRefTypes }
+    > = {}
+    for (const a of articles.notes) {
+      articleMap[a.id] = {
+        title: a.title,
+        id: a.id,
+        type: CollectionRefTypes.Note,
+      }
+    }
+    for (const a of articles.posts) {
+      articleMap[a.id] = {
+        title: a.title,
+        id: a.id,
+        type: CollectionRefTypes.Post,
+      }
+    }
+    const insightsByRef = insights.reduce(
+      (acc, ins) => {
+        ;(acc[ins.refId] ||= []).push(ins)
+        return acc
+      },
+      {} as Record<string, AIInsightsModel[]>,
+    )
+    const groupedData = refIds
+      .map((refId: string) => {
+        const article = articleMap[refId]
+        if (!article) return null
+        return { article, insights: insightsByRef[refId] || [] }
+      })
+      .filter(Boolean)
+    const totalPage = Math.ceil(total / size)
+    return {
+      data: groupedData,
+      pagination: {
+        total,
+        currentPage: page,
+        totalPage,
+        size,
+        hasNextPage: page < totalPage,
+        hasPrevPage: page > 1,
+      },
+    }
+  }
+
+  private async getRefArticles(docs: AIInsightsModel[]) {
+    const articles = await this.databaseService.findGlobalByIds(
+      docs.map((d) => d.refId),
+    )
+    const articleMap: Record<
+      string,
+      { title: string; id: string; type: CollectionRefTypes }
+    > = {}
+    for (const a of articles.notes) {
+      articleMap[a.id] = {
+        title: a.title,
+        id: a.id,
+        type: CollectionRefTypes.Note,
+      }
+    }
+    for (const a of articles.posts) {
+      articleMap[a.id] = {
+        title: a.title,
+        id: a.id,
+        type: CollectionRefTypes.Post,
+      }
+    }
+    return articleMap
+  }
+
+  async updateInsightsInDb(id: string, content: string) {
+    const doc = await this.aiInsightsModel.findById(id)
+    if (!doc) throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
+    doc.content = content
+    await doc.save()
+    return doc
+  }
+
+  async deleteInsightsInDb(id: string) {
+    await this.aiInsightsModel.deleteOne({ _id: id })
+  }
+
+  async deleteInsightsByArticleId(refId: string) {
+    await this.aiInsightsModel.deleteMany({ refId })
+  }
+
+  @OnEvent(BusinessEvents.POST_DELETE)
+  @OnEvent(BusinessEvents.NOTE_DELETE)
+  async handleDeleteArticle(event: { id: string }) {
+    await this.deleteInsightsByArticleId(event.id)
+  }
+
+  @OnEvent(BusinessEvents.POST_CREATE)
+  @OnEvent(BusinessEvents.NOTE_CREATE)
+  async handleCreateArticle(event: { id: string }) {
+    const aiConfig = await this.configService.get('ai')
+    if (
+      !aiConfig.enableInsights ||
+      !aiConfig.enableAutoGenerateInsightsOnCreate
+    ) {
+      return
+    }
+    this.logger.log(`AI auto insights task created: article=${event.id}`)
+    await this.aiTaskService.createInsightsTask({ refId: event.id })
+  }
+
+  @OnEvent(BusinessEvents.POST_UPDATE)
+  @OnEvent(BusinessEvents.NOTE_UPDATE)
+  async handleUpdateArticle(event: { id: string }) {
+    const aiConfig = await this.configService.get('ai')
+    if (
+      !aiConfig.enableInsights ||
+      !aiConfig.enableAutoGenerateInsightsOnUpdate
+    ) {
+      return
+    }
+    let article: ArticleForInsights
+    try {
+      const resolved = await this.resolveArticleForInsights(event.id)
+      article = resolved.article
+    } catch {
+      return
+    }
+    const newHash = this.computeContentHash(article.text)
+    const existing = await this.aiInsightsModel.find({
+      refId: event.id,
+      isTranslation: false,
+    })
+    if (!existing.length) return
+    const stale = existing.some((doc) => doc.hash !== newHash)
+    if (!stale) return
+    this.logger.log(
+      `AI auto insights task created (update): article=${event.id}`,
+    )
+    await this.aiTaskService.createInsightsTask({ refId: event.id })
   }
 }
