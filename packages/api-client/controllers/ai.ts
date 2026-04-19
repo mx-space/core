@@ -2,9 +2,11 @@ import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
 import { autoBind } from '~/utils/auto-bind'
+
 import type { HTTPClient } from '../core'
 import type {
   AIDeepReadingModel,
+  AIInsightsModel,
   AISummaryModel,
   AITranslationModel,
 } from '../models/ai'
@@ -63,7 +65,7 @@ export class AIController<ResponseWrapper> implements IController {
   }
 
   /**
-   * Core >= 8.3.0
+   * @deprecated Feature removed from core; see ai-insights equivalent.
    * @param articleId
    */
   async getDeepReading(articleId: string) {
@@ -178,6 +180,66 @@ export class AIController<ResponseWrapper> implements IController {
     fetchOptions?: RequestInit,
   ): Promise<Response> {
     const url = this.getTranslationGenerateUrl({ articleId, lang })
+    return fetch(url, {
+      ...fetchOptions,
+      headers: {
+        Accept: 'text/event-stream',
+        ...fetchOptions?.headers,
+      },
+    })
+  }
+
+  /**
+   * Get cached AI insights for an article
+   * @support core >= 11.3.0
+   */
+  async getInsights({
+    articleId,
+    lang = 'zh',
+    onlyDb,
+  }: {
+    articleId: string
+    lang?: string
+    onlyDb?: boolean
+  }) {
+    return this.proxy.insights.article(articleId).get<AIInsightsModel | null>({
+      params: { lang, onlyDb },
+    })
+  }
+
+  /**
+   * Get URL for streaming insights generation (SSE)
+   *
+   * @see AIInsightsStreamEvent for event types
+   * @support core >= 11.3.0
+   */
+  getInsightsGenerateUrl({
+    articleId,
+    lang,
+  }: {
+    articleId: string
+    lang?: string
+  }): string {
+    const baseUrl = this.client.endpoint
+    const params = new URLSearchParams()
+    if (lang) params.set('lang', lang)
+    const query = params.toString()
+    return `${baseUrl}/${this.base}/insights/article/${articleId}/generate${
+      query ? `?${query}` : ''
+    }`
+  }
+
+  /**
+   * Stream insights generation using fetch
+   *
+   * @see AIInsightsStreamEvent for event types
+   * @support core >= 11.3.0
+   */
+  async streamInsightsGenerate(
+    { articleId, lang }: { articleId: string; lang?: string },
+    fetchOptions?: RequestInit,
+  ): Promise<Response> {
+    const url = this.getInsightsGenerateUrl({ articleId, lang })
     return fetch(url, {
       ...fetchOptions,
       headers: {
