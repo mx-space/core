@@ -1,0 +1,5 @@
+export * from './ai-insights.controller'
+export * from './ai-insights.model'
+export * from './ai-insights.schema'
+export * from './ai-insights.service'
+export * from './ai-insights-translation.service'
