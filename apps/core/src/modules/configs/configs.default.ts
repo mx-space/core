@@ -30,6 +30,8 @@ export const generateDefaultConfig: () => IConfig = () => ({
     resend: {
       apiKey: '',
     },
+    rateLimit: 10,
+    retryCount: 3,
   },
   commentOptions: {
     antiSpam: false,

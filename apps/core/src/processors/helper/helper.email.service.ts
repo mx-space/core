@@ -14,6 +14,7 @@ import {
   ConfigVersionScopes,
   ConfigVersionService,
 } from '~/processors/redis/config-version.service'
+import { sleep } from '~/utils/tool.util'
 
 import { AssetService } from './helper.asset.service'
 
@@ -32,6 +33,14 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   private refreshPromise?: Promise<void>
   private appliedMailVersion = 0
   private mailConfigSynced = false
+  private pendingQueue: Array<{
+    options: Mail.Options
+    resolve: (value: any) => void
+    reject: (reason: any) => void
+    attempts: number
+  }> = []
+  private isProcessingQueue = false
+  private lastSendTime = 0
   constructor(
     private readonly configsService: ConfigsService,
     private readonly assetService: AssetService,
@@ -244,11 +253,10 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   }
 
   async sendTestEmail() {
-    await this.ensureMailTransportFresh()
     const owner = await this.ownerService.getOwner()
     const mailOptions = await this.configsService.get('mailOptions')
     const senderEmail = mailOptions.from || mailOptions.smtp?.user
-    return this.instance?.sendMail({
+    return this.send({
       from: `"Mx Space" <${senderEmail}>`,
       to: owner.mail,
       subject: '测试邮件',
@@ -261,15 +269,59 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   }
 
   async send(options: Mail.Options) {
+    return new Promise((resolve, reject) => {
+      this.pendingQueue.push({ options, resolve, reject, attempts: 0 })
+      void this.processQueue()
+    })
+  }
+
+  private async processQueue() {
+    if (this.isProcessingQueue) return
+    this.isProcessingQueue = true
+
     try {
-      await this.ensureMailTransportFresh()
-      if (!this.instance) {
-        throw new Error('邮件服务未初始化')
+      while (this.pendingQueue.length > 0) {
+        const { mailOptions } = await this.configsService.waitForConfigReady()
+        const rateLimit = mailOptions.rateLimit ?? 10
+        const minIntervalMs = 1000 / rateLimit
+
+        const now = Date.now()
+        const waitTime = this.lastSendTime + minIntervalMs - now
+        if (waitTime > 0) {
+          await sleep(waitTime)
+        }
+
+        const item = this.pendingQueue.shift()
+        if (!item) continue
+
+        try {
+          await this.ensureMailTransportFresh()
+          if (!this.instance) {
+            throw new Error('邮件服务未初始化')
+          }
+          const result = await this.instance.sendMail(item.options)
+          this.lastSendTime = Date.now()
+          item.resolve(result)
+        } catch (error) {
+          this.lastSendTime = Date.now()
+          const maxRetry = mailOptions.retryCount ?? 3
+          if (item.attempts < maxRetry) {
+            item.attempts++
+            this.logger.warn(
+              `邮件发送失败，第 ${item.attempts} 次重试: ${error instanceof Error ? error.message : String(error)}`,
+            )
+            await sleep(1000 * item.attempts)
+            this.pendingQueue.push(item)
+            continue
+          }
+          this.logger.warn(
+            error instanceof Error ? error.message : String(error),
+          )
+          item.reject(new BizException('邮件发送失败'))
+        }
       }
-      return await this.instance.sendMail(options)
-    } catch (error) {
-      this.logger.warn(error.message)
-      throw new BizException('邮件发送失败')
+    } finally {
+      this.isProcessingQueue = false
     }
   }
 
