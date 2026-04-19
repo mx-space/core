@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [11.2.1](https://github.com/mx-space/core/compare/v11.2.0...v11.2.1) (2026-04-19)
+
+
+
 # [11.2.0](https://github.com/mx-space/core/compare/v11.1.4...v11.2.0) (2026-04-18)
 
 
@@ -372,20 +376,12 @@
 
 
 
-# [10.2.0](https://github.com/mx-space/core/compare/v0.7.0...v10.2.0) (2026-03-08)
-
-
-
-# [0.7.0](https://github.com/mx-space/core/compare/v0.6.0...v0.7.0) (2026-03-08)
+# [10.2.0](https://github.com/mx-space/core/compare/v10.1.10...v10.2.0) (2026-03-08)
 
 
 ### Bug Fixes
 
 * **webhook:** correct dist output paths for tsdown esm/cjs ([5fc8a03](https://github.com/mx-space/core/commit/5fc8a039088a70d0c29d5c914e7fa6d89868c34e))
-
-
-
-# [0.6.0](https://github.com/mx-space/core/compare/v10.1.10...v0.6.0) (2026-03-08)
 
 
 ### Features
