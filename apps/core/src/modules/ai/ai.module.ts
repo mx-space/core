@@ -6,6 +6,9 @@ import { AiAgentController } from './ai-agent/ai-agent.controller'
 import { AiAgentChatService } from './ai-agent/ai-agent-chat.service'
 import { AiAgentConversationService } from './ai-agent/ai-agent-conversation.service'
 import { AiInFlightService } from './ai-inflight/ai-inflight.service'
+import { AiInsightsController } from './ai-insights/ai-insights.controller'
+import { AiInsightsService } from './ai-insights/ai-insights.service'
+import { AiInsightsTranslationService } from './ai-insights/ai-insights-translation.service'
 import { AiSummaryController } from './ai-summary/ai-summary.controller'
 import { AiSummaryService } from './ai-summary/ai-summary.service'
 import { AiTaskModule } from './ai-task/ai-task.module'
@@ -29,6 +32,8 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
   imports: [AiTaskModule],
   providers: [
     AiSummaryService,
+    AiInsightsService,
+    AiInsightsTranslationService,
     AiInFlightService,
     AiService,
     AiWriterService,
@@ -51,6 +56,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
   controllers: [
     AiController,
     AiSummaryController,
+    AiInsightsController,
     AiWriterController,
     AiTranslationController,
     TranslationEntryController,
@@ -62,6 +68,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiSlugBackfillService,
     AiTranslationService,
     AiSummaryService,
+    AiInsightsService,
     TranslationEntryService,
   ],
 })
