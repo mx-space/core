@@ -12,6 +12,8 @@ import type { FastifyReply } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { BizException } from '~/common/exceptions/biz.exception'
+import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
@@ -50,6 +52,15 @@ export class AiInsightsController {
     const source = await this.service.findSourceInsightsForArticle(body.refId)
     if (!source) {
       return { taskId: null, created: false, reason: 'source-missing' }
+    }
+    // Guard against same-language translation which would upsert onto the
+    // source row (unique index on refId+lang) and flip isTranslation to true.
+    const sourceLang = source.sourceLang || source.lang
+    if (body.targetLang === sourceLang) {
+      throw new BizException(
+        ErrorCodeEnum.InvalidParameter,
+        'targetLang must differ from source lang',
+      )
     }
     return this.taskService.createInsightsTranslationTask({
       refId: body.refId,
