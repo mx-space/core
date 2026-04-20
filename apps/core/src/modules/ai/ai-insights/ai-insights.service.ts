@@ -234,14 +234,21 @@ export class AiInsightsService implements OnModuleInit {
           isTranslation: true,
           hash: { $ne: contentMd5 },
         })
-        const doc = await this.aiInsightsModel.create({
-          hash: contentMd5,
-          lang,
-          refId: articleId,
-          content,
-          isTranslation: false,
-          sourceLang,
-        })
+        // Upsert source row to satisfy the unique (refId, lang) index when
+        // a previous source row exists (e.g. on article text update).
+        const doc = await this.aiInsightsModel.findOneAndUpdate(
+          { refId: articleId, lang },
+          {
+            hash: contentMd5,
+            lang,
+            refId: articleId,
+            content,
+            isTranslation: false,
+            sourceLang,
+            $unset: { sourceInsightsId: '' },
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true },
+        )
         this.eventEmitter.emit(BusinessEvents.INSIGHTS_GENERATED, {
           refId: articleId,
           sourceLang,
