@@ -355,6 +355,17 @@ export class AiInsightsService implements OnModuleInit {
       .sort({ created: -1 })
   }
 
+  /**
+   * Lightweight existence check used by article responses to tell the
+   * frontend whether insights are already available in the requested lang —
+   * either as a source row or as a translation. Hash is not verified; this
+   * only answers "do we have any insights document for (refId, lang)?".
+   */
+  async hasInsightsInLang(refId: string, lang: string): Promise<boolean> {
+    const exists = await this.aiInsightsModel.exists({ refId, lang })
+    return !!exists
+  }
+
   async getInsightsById(id: string) {
     const doc = await this.aiInsightsModel.findById(id)
     if (!doc) throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)

@@ -32,6 +32,8 @@ import { addYearCondition } from '~/transformers/db-query.transformer'
 import { applyContentPreference } from '~/utils/content.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai/ai.constants'
+import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
+import { parseLanguageCode } from '../ai/ai-language.util'
 import { AiSummaryService } from '../ai/ai-summary/ai-summary.service'
 import { NoteModel } from './note.model'
 import {
@@ -68,6 +70,7 @@ export class NoteController {
 
     private readonly translationService: TranslationService,
     private readonly aiSummaryService: AiSummaryService,
+    private readonly aiInsightsService: AiInsightsService,
   ) {}
 
   private async buildPublicNoteResponse(
@@ -106,6 +109,14 @@ export class NoteController {
       },
     })
 
+    // Insights live in their own collection with an independent translation
+    // pipeline, so article-translation metadata can't answer "do we have
+    // insights in the caller's locale?". Surface a dedicated flag instead.
+    const insightsLang = parseLanguageCode(lang)
+    const hasInsightsInLocale = await this.aiInsightsService
+      .hasInsightsInLang(current.id!, insightsLang)
+      .catch(() => false)
+
     const currentData = {
       ...current,
       title: translationResult.title,
@@ -117,6 +128,7 @@ export class NoteController {
       isTranslated: translationResult.isTranslated,
       translationMeta: translationResult.translationMeta,
       availableTranslations: translationResult.availableTranslations,
+      hasInsightsInLocale,
       liked,
     }
 
@@ -579,6 +591,11 @@ export class NoteController {
       },
     })
 
+    const insightsLang = parseLanguageCode(lang)
+    const hasInsightsInLocale = await this.aiInsightsService
+      .hasInsightsInLang(latest.id!, insightsLang)
+      .catch(() => false)
+
     return {
       data: {
         ...latest,
@@ -591,6 +608,7 @@ export class NoteController {
         isTranslated: translationResult.isTranslated,
         translationMeta: translationResult.translationMeta,
         availableTranslations: translationResult.availableTranslations,
+        hasInsightsInLocale,
       },
       next,
     }

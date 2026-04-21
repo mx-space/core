@@ -72,4 +72,11 @@ export type ModelWithTranslation<T> = T & {
   isTranslated: boolean
   translationMeta?: TranslationMeta
   availableTranslations?: string[]
+  /**
+   * Whether AI insights are available in the caller's requested locale.
+   * Independent from `translationMeta` because insights maintain their own
+   * translation pipeline — the article may be translated without insights,
+   * and vice versa. Absent (undefined) on endpoints that don't surface it.
+   */
+  hasInsightsInLocale?: boolean
 }
