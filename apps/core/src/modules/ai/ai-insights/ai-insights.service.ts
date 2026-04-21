@@ -34,15 +34,7 @@ import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type InsightsTaskPayload } from '../ai-task/ai-task.types'
 import { AIInsightsModel } from './ai-insights.model'
 import type { GetInsightsGroupedQueryInput } from './ai-insights.schema'
-
-function stripTopLevelCodeFence(text: string): string {
-  const trimmed = text.trim()
-  const openMatch = /^```(?:markdown)?\n/.exec(trimmed)
-  if (!openMatch) return text
-  if (!trimmed.endsWith('```')) return text
-  const inner = trimmed.slice(openMatch[0].length, -3)
-  return inner.replace(/\n$/, '')
-}
+import { stripTopLevelCodeFence } from './insights.util'
 
 interface ArticleForInsights {
   title: string

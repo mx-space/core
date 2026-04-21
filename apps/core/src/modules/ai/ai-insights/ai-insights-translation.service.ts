@@ -28,6 +28,7 @@ import {
   type InsightsTranslationTaskPayload,
 } from '../ai-task/ai-task.types'
 import { AIInsightsModel } from './ai-insights.model'
+import { stripTopLevelCodeFence } from './insights.util'
 
 @Injectable()
 export class AiInsightsTranslationService implements OnModuleInit {
@@ -114,10 +115,7 @@ export class AiInsightsTranslationService implements OnModuleInit {
         onLeader: async ({ push }) => {
           const runtime = await this.aiService.getInsightsTranslationModel()
           const { systemPrompt, prompt, reasoningEffort } =
-            AI_PROMPTS.translationStream(payload.targetLang, {
-              title: '',
-              text: source.content,
-            })
+            AI_PROMPTS.insightsTranslation(payload.targetLang, source.content)
           const messages = [
             { role: 'system' as const, content: systemPrompt },
             { role: 'user' as const, content: prompt },
@@ -143,14 +141,11 @@ export class AiInsightsTranslationService implements OnModuleInit {
             raw = out.text
             if (push && out.text) await push({ type: 'token', data: out.text })
           }
-          let translatedText: string
-          try {
-            const parsed = JSON.parse(raw) as { text?: string }
-            translatedText = parsed.text || ''
-          } catch (err) {
+          const translatedText = stripTopLevelCodeFence(raw).trim()
+          if (!translatedText) {
             throw new BizException(
               ErrorCodeEnum.AIException,
-              `Translation JSON parse failed: ${(err as Error).message}`,
+              'Insights translation returned empty content',
             )
           }
           const doc = await this.aiInsightsModel.findOneAndUpdate(
