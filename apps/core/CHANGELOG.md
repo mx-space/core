@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# [11.4.0](https://github.com/mx-space/core/compare/v11.3.1...v11.4.0) (2026-04-21)
+
+
+### Features
+
+* **ai-summary:** split auto-generate flag into create/update ([097d27d](https://github.com/mx-space/core/commit/097d27db4f10a5f7015c51796a1e48760c3a97be))
+
+
+
 ## [11.3.1](https://github.com/mx-space/core/compare/v11.3.0...v11.3.1) (2026-04-21)
 
 
