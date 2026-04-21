@@ -1,5 +1,37 @@
 # CHANGELOG
 
+# [11.3.0](https://github.com/mx-space/core/compare/v11.2.1...v11.3.0) (2026-04-21)
+
+
+### Bug Fixes
+
+* **ai-insights:** upsert source row and reject same-lang translation ([2c7b2b1](https://github.com/mx-space/core/commit/2c7b2b1baa3e2310e8906ecdaf05b1ad2b37d938))
+* **test:** add AiInsightsService mock to note e2e tests ([9f30506](https://github.com/mx-space/core/commit/9f3050622791e846ba7ae0aa1d0ac46f5cd1dd70))
+* **test:** mock findOneAndUpdate instead of create in ai-insights spec ([7bfbe85](https://github.com/mx-space/core/commit/7bfbe852bb3b0c214c0a72f60759f836a5272ba8))
+
+
+### Features
+
+* **ai-insights:** add AIInsightsModel with indexes ([6d7df91](https://github.com/mx-space/core/commit/6d7df9132b96cdeff635db281976ecc01006a8bc))
+* **ai-insights:** add collection constant and business events ([c04f437](https://github.com/mx-space/core/commit/c04f437da0ee5490fc4296a149b10eeaff870936))
+* **ai-insights:** add config fields and defaults ([a907d06](https://github.com/mx-space/core/commit/a907d060c578221e5c705a854c4ede4af71bf112))
+* **ai-insights:** add insights DTOs ([039c551](https://github.com/mx-space/core/commit/039c551cb728464e187655a5224853afb21c44f4))
+* **ai-insights:** add insights system prompt and builders ([c2497bc](https://github.com/mx-space/core/commit/c2497bc1f0907e884390e4d2ddddacfcd40e167b))
+* **ai-insights:** add insights task types and service helpers ([2a832af](https://github.com/mx-space/core/commit/2a832af4f90275510fede85206aef51189a09510))
+* **ai-insights:** add service skeleton with cache lookup ([a2f6681](https://github.com/mx-space/core/commit/a2f66817afe95267de218a8834d3a31d543ba685))
+* **ai-insights:** admin listing, CRUD, and event hooks ([5627da9](https://github.com/mx-space/core/commit/5627da9654ebeb962908fb70e5edf56277e446f0))
+* **ai-insights:** HTTP and SSE controller ([3686cf4](https://github.com/mx-space/core/commit/3686cf449a2a51b81deb72d4da729eba747a187e))
+* **ai-insights:** implement streaming generation and public getters ([cf954f8](https://github.com/mx-space/core/commit/cf954f81fb461460c33eed509fcb2c4ab16e824f))
+* **ai-insights:** register services and controller in AiModule ([58a1b8a](https://github.com/mx-space/core/commit/58a1b8a1420bc2716b3b6a8223b5c05fc6a1bb6d))
+* **ai-insights:** translation service with auto-dispatch ([19e4d5c](https://github.com/mx-space/core/commit/19e4d5c80caff505e1667f63bc82f59046e7a09d))
+* **ai-insights:** wire AiService model getters ([39a7053](https://github.com/mx-space/core/commit/39a70531bb87500e3e97888e7e4b9e9b0c72a2d1))
+* **api-client:** add AIInsightsModel and stream event types ([12226e5](https://github.com/mx-space/core/commit/12226e575e78a16b275836a271a63e576f97048b))
+* **api-client:** add getInsights + SSE helpers ([a2e9c1e](https://github.com/mx-space/core/commit/a2e9c1effe8ae3b9a23ae06c7ad7074630373e24))
+* **email:** add in-memory send queue with configurable rate limit ([#2640](https://github.com/mx-space/core/issues/2640)) ([f77ae20](https://github.com/mx-space/core/commit/f77ae20131ccb8bda843dc3701e5b5ca7c184d8b))
+* **note:** expose hasInsightsInLocale on public note responses ([c279c31](https://github.com/mx-space/core/commit/c279c3146c5f6b4af486c48d48174f6062bd0073))
+
+
+
 ## [11.2.1](https://github.com/mx-space/core/compare/v11.2.0...v11.2.1) (2026-04-19)
 
 
@@ -376,12 +408,20 @@
 
 
 
-# [10.2.0](https://github.com/mx-space/core/compare/v10.1.10...v10.2.0) (2026-03-08)
+# [10.2.0](https://github.com/mx-space/core/compare/v0.7.0...v10.2.0) (2026-03-08)
+
+
+
+# [0.7.0](https://github.com/mx-space/core/compare/v0.6.0...v0.7.0) (2026-03-08)
 
 
 ### Bug Fixes
 
 * **webhook:** correct dist output paths for tsdown esm/cjs ([5fc8a03](https://github.com/mx-space/core/commit/5fc8a039088a70d0c29d5c914e7fa6d89868c34e))
+
+
+
+# [0.6.0](https://github.com/mx-space/core/compare/v10.1.10...v0.6.0) (2026-03-08)
 
 
 ### Features
