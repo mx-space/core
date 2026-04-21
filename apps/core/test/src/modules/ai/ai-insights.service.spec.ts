@@ -146,7 +146,7 @@ describe('AiInsightsService', () => {
       hash: (service as any).computeContentHash('body'),
       content: '## TL;DR\nhello',
     }
-    mockModel.create.mockResolvedValue(created)
+    mockModel.findOneAndUpdate.mockResolvedValue(created)
     const aiInFlight: any = (service as any).aiInFlightService
     aiInFlight.runWithStream.mockImplementation(async ({ onLeader }: any) => {
       const pushed: string[] = []
@@ -169,6 +169,6 @@ describe('AiInsightsService', () => {
     })
     const result = await service.generateInsights('a')
     expect(result).toBe(created)
-    expect(mockModel.create).toHaveBeenCalled()
+    expect(mockModel.findOneAndUpdate).toHaveBeenCalled()
   })
 })
