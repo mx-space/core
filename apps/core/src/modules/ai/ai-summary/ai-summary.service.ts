@@ -715,7 +715,10 @@ export class AiSummaryService implements OnModuleInit {
   @OnEvent(BusinessEvents.NOTE_CREATE)
   async handleCreateArticle(event: { id: string }) {
     const aiConfig = await this.configService.get('ai')
-    if (!aiConfig.enableAutoGenerateSummary || !aiConfig.enableSummary) {
+    if (
+      !aiConfig.enableSummary ||
+      !aiConfig.enableAutoGenerateSummaryOnCreate
+    ) {
       return
     }
     const targetLanguages = resolveTargetLanguages(
@@ -737,7 +740,10 @@ export class AiSummaryService implements OnModuleInit {
   @OnEvent(BusinessEvents.NOTE_UPDATE)
   async handleUpdateArticle(event: { id: string }) {
     const aiConfig = await this.configService.get('ai')
-    if (!aiConfig.enableAutoGenerateSummary || !aiConfig.enableSummary) {
+    if (
+      !aiConfig.enableSummary ||
+      !aiConfig.enableAutoGenerateSummaryOnUpdate
+    ) {
       return
     }
 

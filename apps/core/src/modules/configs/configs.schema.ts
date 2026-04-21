@@ -364,12 +364,17 @@ export const AISchema = section('AI 设定', {
   enableSummary: field.toggle(z.boolean().optional(), '可调用 AI 摘要', {
     description: '是否开启调用 AI 去生成摘要',
   }),
-  enableAutoGenerateSummary: field.toggle(
+  enableAutoGenerateSummaryOnCreate: field.toggle(
     z.boolean().optional(),
-    '开启 AI 摘要自动生成',
+    '文章创建时自动生成摘要',
+    { description: '需同时启用 enableSummary' },
+  ),
+  enableAutoGenerateSummaryOnUpdate: field.toggle(
+    z.boolean().optional(),
+    '文章更新时重新生成摘要',
     {
       description:
-        '此选项开启后，将会在文章发布后自动生成摘要，需要开启上面的选项，否则无效',
+        '仅在源文本 hash 变化的语言重新生成；需同时启用 enableSummary',
     },
   ),
   summaryTargetLanguages: field.array(

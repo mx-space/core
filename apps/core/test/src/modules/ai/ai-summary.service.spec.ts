@@ -53,7 +53,8 @@ describe('AiSummaryService', () => {
     mockConfigService = {
       get: vi.fn().mockResolvedValue({
         enableSummary: true,
-        enableAutoGenerateSummary: true,
+        enableAutoGenerateSummaryOnCreate: true,
+        enableAutoGenerateSummaryOnUpdate: true,
         summaryTargetLanguages: ['zh'],
       }),
       waitForConfigReady: vi.fn().mockResolvedValue({
