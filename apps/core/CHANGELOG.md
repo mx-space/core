@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.3.1](https://github.com/mx-space/core/compare/v11.3.0...v11.3.1) (2026-04-21)
+
+
+### Bug Fixes
+
+* **ai-insights:** use plain markdown output for translation ([2da0060](https://github.com/mx-space/core/commit/2da006078a7bb13dc54afdb708069cf68f2f6e26))
+
+
+
 # [11.3.0](https://github.com/mx-space/core/compare/v11.2.1...v11.3.0) (2026-04-21)
 
 
