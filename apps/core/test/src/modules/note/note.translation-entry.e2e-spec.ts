@@ -8,6 +8,7 @@ import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { JSONTransformInterceptor } from '~/common/interceptors/json-transform.interceptor'
 import { ResponseInterceptor } from '~/common/interceptors/response.interceptor'
 import { TranslationEntryInterceptor } from '~/common/interceptors/translation-entry.interceptor'
+import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
 import { NoteController } from '~/modules/note/note.controller'
@@ -61,6 +62,12 @@ describe('NoteController translation entry (e2e)', () => {
           provide: AiSummaryService,
           useValue: {
             batchGetSummariesByRefIds: vi.fn().mockResolvedValue(new Map()),
+          },
+        },
+        {
+          provide: AiInsightsService,
+          useValue: {
+            hasInsightsInLang: vi.fn().mockResolvedValue(false),
           },
         },
         {

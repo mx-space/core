@@ -13,6 +13,7 @@ import { vi } from 'vitest'
 
 import { createRedisProvider } from '@/mock/modules/redis.mock'
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
+import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { AiSlugBackfillService } from '~/modules/ai/ai-writer/ai-slug-backfill.service'
 import { AiWriterService } from '~/modules/ai/ai-writer/ai-writer.service'
@@ -137,6 +138,12 @@ describe('NoteController (e2e)', async () => {
         provide: AiSummaryService,
         useValue: {
           batchGetSummariesByRefIds: vi.fn().mockResolvedValue(new Map()),
+        },
+      },
+      {
+        provide: AiInsightsService,
+        useValue: {
+          hasInsightsInLang: vi.fn().mockResolvedValue(false),
         },
       },
       {
