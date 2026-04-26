@@ -1275,6 +1275,7 @@ export class AiTranslationService
     options?: { ignoreVisibility?: boolean },
   ): Promise<{
     availableTranslations: string[]
+    sourceLang: string | null
     translation: AITranslationModel | null
   }> {
     const article = await this.databaseService.findGlobalById(articleId)
@@ -1295,8 +1296,10 @@ export class AiTranslationService
       .select('hash lang sourceLang sourceModified created')
 
     if (!translations.length) {
-      return { availableTranslations: [], translation: null }
+      return { availableTranslations: [], sourceLang: null, translation: null }
     }
+
+    const sourceLang = translations[0]?.sourceLang ?? null
 
     const snapshot = this.buildSnapshotFromDocument(articleId, document)
     const validLangs: string[] = []
@@ -1341,6 +1344,7 @@ export class AiTranslationService
 
     return {
       availableTranslations: validLangs,
+      sourceLang,
       translation: matchedTranslation,
     }
   }

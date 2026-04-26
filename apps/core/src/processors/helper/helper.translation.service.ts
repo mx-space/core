@@ -22,6 +22,7 @@ export interface TranslationResult {
   content?: string
   contentFormat?: string
   isTranslated: boolean
+  sourceLang?: string
   translationMeta?: TranslationMeta
   availableTranslations?: string[]
 }
@@ -69,7 +70,7 @@ export class TranslationService {
     const normalizedTarget = normalizeLanguageCode(targetLang)
 
     try {
-      const { availableTranslations, translation } =
+      const { availableTranslations, sourceLang, translation } =
         await this.aiTranslationService.getTranslationAndAvailableLanguages(
           articleId,
           normalizedTarget || undefined,
@@ -77,7 +78,12 @@ export class TranslationService {
         )
 
       if (!normalizedTarget || !translation) {
-        return { ...originalData, isTranslated: false, availableTranslations }
+        return {
+          ...originalData,
+          isTranslated: false,
+          sourceLang: sourceLang ?? undefined,
+          availableTranslations,
+        }
       }
 
       return {
@@ -89,6 +95,7 @@ export class TranslationService {
         content: translation.content,
         contentFormat: translation.contentFormat,
         isTranslated: true,
+        sourceLang: translation.sourceLang,
         translationMeta: {
           sourceLang: translation.sourceLang,
           targetLang: translation.lang,

@@ -145,6 +145,7 @@ describe('TranslationService', () => {
         summary: 'Translated Summary',
         tags: ['translated-tag'],
         isTranslated: true,
+        sourceLang: 'zh',
         translationMeta: {
           sourceLang: 'zh',
           targetLang: 'en',

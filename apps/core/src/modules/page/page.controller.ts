@@ -194,6 +194,7 @@ export class PageController {
           contentFormat: translationResult.contentFormat,
         }),
         isTranslated: translationResult.isTranslated,
+        sourceLang: translationResult.sourceLang,
         translationMeta: translationResult.translationMeta,
         availableTranslations: translationResult.availableTranslations,
       },
