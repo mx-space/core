@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.4.2](https://github.com/mx-space/core/compare/v11.4.1...v11.4.2) (2026-04-26)
+
+
+### Features
+
+* **translation:** expose sourceLang in article responses regardless of translation match ([54ae846](https://github.com/mx-space/core/commit/54ae8460f5ed2f669175a6f5ee6e129cd241a6de))
+
+
+
 ## [11.4.1](https://github.com/mx-space/core/compare/v11.4.0...v11.4.1) (2026-04-25)
 
 
