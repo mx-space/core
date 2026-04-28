@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.4.3](https://github.com/mx-space/core/compare/v11.4.2...v11.4.3) (2026-04-28)
+
+
+### Features
+
+* **ai:** add min text length threshold for auto summary/insights ([b2444ad](https://github.com/mx-space/core/commit/b2444ad41940006a5c3b167bd842ced092569005))
+
+
+
 ## [11.4.2](https://github.com/mx-space/core/compare/v11.4.1...v11.4.2) (2026-04-26)
 
 
