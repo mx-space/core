@@ -109,6 +109,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     enableAutoGenerateSummaryOnCreate: false,
     enableAutoGenerateSummaryOnUpdate: false,
     summaryTargetLanguages: [],
+    summaryMinTextLength: 100,
     insightsModel: undefined,
     insightsTranslationModel: undefined,
     enableInsights: false,
@@ -116,6 +117,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     enableAutoGenerateInsightsOnUpdate: false,
     enableAutoTranslateInsights: false,
     insightsTargetLanguages: [],
+    insightsMinTextLength: 300,
   },
   oauth: {
     providers: [],

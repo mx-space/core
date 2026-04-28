@@ -129,6 +129,36 @@ describe('AiInsightsService', () => {
     expect(taskSvc.createInsightsTask).toHaveBeenCalledWith({ refId: 'a' })
   })
 
+  it('handleCreateArticle skips when text below insightsMinTextLength', async () => {
+    mockConfigService.get.mockResolvedValue({
+      enableInsights: true,
+      enableAutoGenerateInsightsOnCreate: true,
+      insightsMinTextLength: 100,
+    })
+    mockDatabaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: { title: 'T', text: 'short', lang: 'zh' },
+    })
+    const taskSvc: any = (service as any).aiTaskService
+    await service.handleCreateArticle({ id: 'a' })
+    expect(taskSvc.createInsightsTask).not.toHaveBeenCalled()
+  })
+
+  it('handleCreateArticle enqueues when text meets insightsMinTextLength', async () => {
+    mockConfigService.get.mockResolvedValue({
+      enableInsights: true,
+      enableAutoGenerateInsightsOnCreate: true,
+      insightsMinTextLength: 5,
+    })
+    mockDatabaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: { title: 'T', text: 'long enough body', lang: 'zh' },
+    })
+    const taskSvc: any = (service as any).aiTaskService
+    await service.handleCreateArticle({ id: 'a' })
+    expect(taskSvc.createInsightsTask).toHaveBeenCalledWith({ refId: 'a' })
+  })
+
   it('handleDeleteArticle cascades', async () => {
     await service.handleDeleteArticle({ id: 'a' })
     expect(mockModel.deleteMany).toHaveBeenCalledWith({ refId: 'a' })

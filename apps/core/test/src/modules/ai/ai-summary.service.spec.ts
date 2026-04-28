@@ -227,6 +227,56 @@ describe('AiSummaryService', () => {
     })
   })
 
+  describe('handleCreateArticle threshold', () => {
+    it('skips when text below summaryMinTextLength', async () => {
+      mockConfigService.get.mockResolvedValue({
+        enableSummary: true,
+        enableAutoGenerateSummaryOnCreate: true,
+        summaryTargetLanguages: ['zh'],
+        summaryMinTextLength: 100,
+      })
+      mockDatabaseService.findGlobalById.mockResolvedValue({
+        document: { title: 'T', text: 'short' },
+        type: CollectionRefTypes.Post,
+      })
+      const taskSvc: any = (service as any).aiTaskService
+      await service.handleCreateArticle({ id: 'a' })
+      expect(taskSvc.createSummaryTask).not.toHaveBeenCalled()
+    })
+
+    it('enqueues when text meets summaryMinTextLength', async () => {
+      mockConfigService.get.mockResolvedValue({
+        enableSummary: true,
+        enableAutoGenerateSummaryOnCreate: true,
+        summaryTargetLanguages: ['zh'],
+        summaryMinTextLength: 5,
+      })
+      mockDatabaseService.findGlobalById.mockResolvedValue({
+        document: { title: 'T', text: 'long enough body' },
+        type: CollectionRefTypes.Post,
+      })
+      const taskSvc: any = (service as any).aiTaskService
+      await service.handleCreateArticle({ id: 'a' })
+      expect(taskSvc.createSummaryTask).toHaveBeenCalledWith({
+        refId: 'a',
+        targetLanguages: ['zh'],
+      })
+    })
+
+    it('enqueues without fetching article when threshold is 0', async () => {
+      mockConfigService.get.mockResolvedValue({
+        enableSummary: true,
+        enableAutoGenerateSummaryOnCreate: true,
+        summaryTargetLanguages: ['zh'],
+        summaryMinTextLength: 0,
+      })
+      const taskSvc: any = (service as any).aiTaskService
+      await service.handleCreateArticle({ id: 'a' })
+      expect(mockDatabaseService.findGlobalById).not.toHaveBeenCalled()
+      expect(taskSvc.createSummaryTask).toHaveBeenCalled()
+    })
+  })
+
   describe('getSummaryByArticleId', () => {
     it('should return valid summary from database', async () => {
       const text = mockArticle.text

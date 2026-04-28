@@ -729,6 +729,21 @@ export class AiSummaryService implements OnModuleInit {
       return
     }
 
+    const minLen = aiConfig.summaryMinTextLength ?? 0
+    if (minLen > 0) {
+      try {
+        const { document } = await this.resolveArticleForSummary(event.id)
+        if ((document.text?.length ?? 0) < minLen) {
+          this.logger.debug(
+            `AI auto summary skipped (text below threshold ${minLen}): article=${event.id}`,
+          )
+          return
+        }
+      } catch {
+        return
+      }
+    }
+
     this.logger.log(`AI auto summary task created: article=${event.id}`)
     await this.aiTaskService.createSummaryTask({
       refId: event.id,
@@ -753,6 +768,14 @@ export class AiSummaryService implements OnModuleInit {
       const resolved = await this.resolveArticleForSummary(id)
       document = resolved.document
     } catch {
+      return
+    }
+
+    const minLen = aiConfig.summaryMinTextLength ?? 0
+    if (minLen > 0 && (document.text?.length ?? 0) < minLen) {
+      this.logger.debug(
+        `AI auto summary skipped (text below threshold ${minLen}): article=${id}`,
+      )
       return
     }
 

@@ -385,6 +385,18 @@ export const AISchema = section('AI 设定', {
         '自动生成摘要的目标语言列表，使用 [ISO 639-1 语言代码](https://www.w3schools.com/tags/ref_language_codes.asp)，如 ["zh", "en", "ja"]',
     },
   ),
+  summaryMinTextLength: field.number(
+    z.preprocess(
+      (val) =>
+        val === '' || val === null || val === undefined ? val : Number(val),
+      z.number().int().min(0).optional(),
+    ),
+    '摘要自动生成最小文本长度',
+    {
+      description:
+        '正文字符数低于此值时跳过自动钩子（OnCreate/OnUpdate），仅影响自动触发；0 表示不限。默认 100',
+    },
+  ),
   translationModel: field.plain(
     AIModelAssignmentSchema.optional(),
     '翻译功能模型',
@@ -443,6 +455,18 @@ export const AISchema = section('AI 设定', {
     'Insights 目标语言列表',
     {
       description: 'ISO 639-1 列表；源语言自动排除',
+    },
+  ),
+  insightsMinTextLength: field.number(
+    z.preprocess(
+      (val) =>
+        val === '' || val === null || val === undefined ? val : Number(val),
+      z.number().int().min(0).optional(),
+    ),
+    'Insights 自动生成最小文本长度',
+    {
+      description:
+        '正文字符数低于此值时跳过自动钩子（OnCreate/OnUpdate），仅影响自动触发；0 表示不限。默认 300',
     },
   ),
 })

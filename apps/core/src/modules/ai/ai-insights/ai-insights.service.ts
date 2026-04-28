@@ -575,6 +575,22 @@ export class AiInsightsService implements OnModuleInit {
     ) {
       return
     }
+
+    const minLen = aiConfig.insightsMinTextLength ?? 0
+    if (minLen > 0) {
+      try {
+        const { article } = await this.resolveArticleForInsights(event.id)
+        if ((article.text?.length ?? 0) < minLen) {
+          this.logger.debug(
+            `AI auto insights skipped (text below threshold ${minLen}): article=${event.id}`,
+          )
+          return
+        }
+      } catch {
+        return
+      }
+    }
+
     this.logger.log(`AI auto insights task created: article=${event.id}`)
     await this.aiTaskService.createInsightsTask({ refId: event.id })
   }
@@ -594,6 +610,13 @@ export class AiInsightsService implements OnModuleInit {
       const resolved = await this.resolveArticleForInsights(event.id)
       article = resolved.article
     } catch {
+      return
+    }
+    const minLen = aiConfig.insightsMinTextLength ?? 0
+    if (minLen > 0 && (article.text?.length ?? 0) < minLen) {
+      this.logger.debug(
+        `AI auto insights skipped (text below threshold ${minLen}): article=${event.id}`,
+      )
       return
     }
     const newHash = this.computeContentHash(article.text)
