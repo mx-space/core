@@ -1,13 +1,19 @@
 packages:
   - packages/*
   - apps/*
-
-onlyBuiltDependencies:
-  - '@nestjs/core'
-  - '@swc/core'
-  - esbuild
-  - mongodb-memory-server
-  - redis-memory-server
-  - sharp
-  - simple-git-hooks
-  - unrs-resolver
+allowBuilds:
+  "@nestjs/core": true
+  "@swc/core": true
+  esbuild: true
+  mongodb-memory-server: true
+  redis-memory-server: true
+  sharp: true
+  simple-git-hooks: true
+  unrs-resolver: true
+  workerd: true
+publicHoistPattern:
+  - "*fastify*"
+  - mongodb
+  - "*eslint*"
+  - "*webpack*"
+strictPeerDependencies: false
