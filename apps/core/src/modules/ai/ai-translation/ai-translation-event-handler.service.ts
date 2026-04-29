@@ -234,6 +234,14 @@ export class AiTranslationEventHandlerService {
         sourceText: doc.introduce,
       })
     }
+    if (doc.description) {
+      values.push({
+        keyPath: 'topic.description',
+        keyType: 'entity',
+        lookupKey: id,
+        sourceText: doc.description,
+      })
+    }
     if (!values.length) return
     this.logger.log(`Auto-generating translation entries for topic: ${id}`)
     await this.translationEntryService
@@ -262,6 +270,13 @@ export class AiTranslationEventHandlerService {
         doc.introduce,
       )
     }
+    if (doc.description != null) {
+      await this.translationEntryService.handleEntityUpdate(
+        'topic.description',
+        id,
+        doc.description,
+      )
+    }
 
     if (!(await this.isAutoEntryEnabled())) return
     const values: Parameters<TranslationEntryService['generateForValues']>[0] =
@@ -282,6 +297,14 @@ export class AiTranslationEventHandlerService {
         sourceText: doc.introduce,
       })
     }
+    if (doc.description) {
+      values.push({
+        keyPath: 'topic.description',
+        keyType: 'entity',
+        lookupKey: id,
+        sourceText: doc.description,
+      })
+    }
     if (!values.length) return
     await this.translationEntryService
       .generateForValues(values)
@@ -296,6 +319,7 @@ export class AiTranslationEventHandlerService {
     if (!id) return
     await this.translationEntryService.deleteByKeyPath('topic.name', id)
     await this.translationEntryService.deleteByKeyPath('topic.introduce', id)
+    await this.translationEntryService.deleteByKeyPath('topic.description', id)
   }
 
   // === Translation Entry: Note mood/weather ===

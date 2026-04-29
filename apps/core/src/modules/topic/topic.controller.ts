@@ -16,6 +16,11 @@ const topicTranslateFields = [
     keyPath: 'topic.introduce' as const,
     idField: '_id' as const,
   },
+  {
+    path: 'description',
+    keyPath: 'topic.description' as const,
+    idField: '_id' as const,
+  },
 ]
 
 const topicTranslateListFields = [
@@ -23,6 +28,11 @@ const topicTranslateListFields = [
   {
     path: '[].introduce',
     keyPath: 'topic.introduce' as const,
+    idField: '_id' as const,
+  },
+  {
+    path: '[].description',
+    keyPath: 'topic.description' as const,
     idField: '_id' as const,
   },
 ]

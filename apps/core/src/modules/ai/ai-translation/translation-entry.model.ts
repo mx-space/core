@@ -7,6 +7,7 @@ export type TranslationEntryKeyPath =
   | 'category.name'
   | 'topic.name'
   | 'topic.introduce'
+  | 'topic.description'
   | 'note.mood'
   | 'note.weather'
 

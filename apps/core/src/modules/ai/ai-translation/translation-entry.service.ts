@@ -221,7 +221,10 @@ export class TranslationEntryService {
       }
     }
 
-    const topics = await this.topicModel.find().select('name introduce').lean()
+    const topics = await this.topicModel
+      .find()
+      .select('name introduce description')
+      .lean()
     for (const topic of topics) {
       if (topic.name) {
         values.push({
@@ -237,6 +240,14 @@ export class TranslationEntryService {
           keyType: 'entity',
           lookupKey: topic._id.toString(),
           sourceText: topic.introduce,
+        })
+      }
+      if (topic.description) {
+        values.push({
+          keyPath: 'topic.description',
+          keyType: 'entity',
+          lookupKey: topic._id.toString(),
+          sourceText: topic.description,
         })
       }
     }

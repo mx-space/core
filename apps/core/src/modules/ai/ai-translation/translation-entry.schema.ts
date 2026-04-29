@@ -5,6 +5,7 @@ const validKeyPaths = [
   'category.name',
   'topic.name',
   'topic.introduce',
+  'topic.description',
   'note.mood',
   'note.weather',
 ] as const
