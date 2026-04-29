@@ -176,7 +176,7 @@ export class PostService implements OnApplicationBootstrap {
     }
     if (
       newDocument.categoryId &&
-      oldDocument.categoryId !== newDocument.categoryId
+      String(oldDocument.categoryId) !== String(newDocument.categoryId)
     ) {
       return trackSlugChanges()
     }
@@ -269,7 +269,7 @@ export class PostService implements OnApplicationBootstrap {
 
     // 看看 category 改了没
     const { categoryId } = data
-    if (categoryId && categoryId !== oldDocument.categoryId) {
+    if (categoryId && String(categoryId) !== String(oldDocument.categoryId)) {
       const category = await this.categoryService.findCategoryById(
         categoryId as any as string,
       )
@@ -430,7 +430,7 @@ export class PostService implements OnApplicationBootstrap {
     }
 
     return relatedPosts.map((i) => {
-      if (i.related && (i.related as string[]).includes(data.id!)) {
+      if (i.related?.some((rel) => String(rel) === data.id)) {
         throw new BizException(ErrorCodeEnum.PostSelfRelation)
       }
       return i.id

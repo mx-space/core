@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import type { ReturnModelType } from '@typegoose/typegoose'
+
 import type { ArticleTypeEnum } from '~/constants/article.constant'
 import { InjectModel } from '~/transformers/model.transformer'
+
 import { SlugTrackerModel } from './slug-tracker.model'
 
 @Injectable()
@@ -12,7 +14,11 @@ export class SlugTrackerService {
   ) {}
 
   createTracker(slug: string, type: ArticleTypeEnum, targetId: string) {
-    return this.slugTrackerModel.create({ slug, type, targetId })
+    return this.slugTrackerModel.updateOne(
+      { slug, type, targetId },
+      { $setOnInsert: { slug, type, targetId } },
+      { upsert: true },
+    )
   }
 
   findTrackerBySlug(slug: string, type: ArticleTypeEnum) {
