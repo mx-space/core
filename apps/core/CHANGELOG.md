@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [11.4.6](https://github.com/mx-space/core/compare/v11.4.5...v11.4.6) (2026-04-29)
+
+
+### Bug Fixes
+
+* **post,slug-tracker:** correct ObjectId vs string comparisons ([e86be85](https://github.com/mx-space/core/commit/e86be8563c48b1a6ad0d204b0866f741b62b4eec))
+
+
+### Features
+
+* **ai-translation:** add topic.description as translatable field ([27734a9](https://github.com/mx-space/core/commit/27734a9044e1726ab5734ec2e188dbd2394609d6))
+* **poll:** add poll vote module backing [@haklex](https://github.com/haklex) poll node ([3aa1848](https://github.com/mx-space/core/commit/3aa18487e8eb3a5d0df40ad9a39ec046002c9cd1))
+
+
+
 ## [11.4.5](https://github.com/mx-space/core/compare/v11.4.4...v11.4.5) (2026-04-29)
 
 
