@@ -28,6 +28,7 @@ describe('TopicBaseController translation (e2e)', () => {
       {
         name: '前端',
         introduce: '前端介绍',
+        description: '前端描述',
         slug: 'frontend',
       },
     ])
@@ -77,6 +78,10 @@ describe('TopicBaseController translation (e2e)', () => {
       entityMaps: new Map([
         ['topic.name', new Map([[translatedTopicId, 'Frontend']])],
         ['topic.introduce', new Map([[translatedTopicId, 'Frontend Intro']])],
+        [
+          'topic.description',
+          new Map([[translatedTopicId, 'Frontend Description']]),
+        ],
       ]),
       dictMaps: new Map(),
     })
@@ -91,6 +96,7 @@ describe('TopicBaseController translation (e2e)', () => {
       entityLookups: [
         { keyPath: 'topic.name', lookupKeys: [translatedTopicId] },
         { keyPath: 'topic.introduce', lookupKeys: [translatedTopicId] },
+        { keyPath: 'topic.description', lookupKeys: [translatedTopicId] },
       ],
       dictLookups: [],
     })
@@ -99,6 +105,7 @@ describe('TopicBaseController translation (e2e)', () => {
     expect(json.data).toHaveLength(1)
     expect(json.data[0].name).toBe('Frontend')
     expect(json.data[0].introduce).toBe('Frontend Intro')
+    expect(json.data[0].description).toBe('Frontend Description')
   })
 
   test('GET /topics/slug/:slug returns a topic by slug', async () => {
