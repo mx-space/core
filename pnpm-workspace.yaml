@@ -1,6 +1,16 @@
 packages:
   - packages/*
   - apps/*
+overrides:
+  rolldown: 1.0.0-rc.16
+  "get-pixels@^3>request": ./external/request
+  mongodb: ~7.1.0
+  pino: ./external/pino
+  semver: 7.7.4
+  typescript: 6.0.3
+  whatwg-url: 14.1.1
+  zod: 4.3.6
+  "eslint-plugin-react-compiler>zod": 3.24.2
 allowBuilds:
   "@nestjs/core": true
   "@swc/core": true
