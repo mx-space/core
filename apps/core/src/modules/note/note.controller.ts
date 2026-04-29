@@ -722,6 +722,18 @@ export class NoteController {
     return result
   }
 
+  @Get('/topics/:id/recent-update')
+  async getTopicRecentUpdate(
+    @Param() params: MongoIdDto,
+    @HasAdminAccess() isAuthenticated: boolean,
+  ) {
+    const ts = await this.noteService.getTopicRecentUpdate(
+      params.id,
+      isAuthenticated,
+    )
+    return { ts }
+  }
+
   @Patch('/:id/publish')
   @Auth()
   async setPublishStatus(

@@ -604,4 +604,21 @@ export class NoteService {
       },
     )
   }
+
+  async getTopicRecentUpdate(
+    topicId: string,
+    isAuthenticated: boolean,
+  ): Promise<Date | null> {
+    const objectId = new this.model.base.Types.ObjectId(topicId)
+    const match: Record<string, unknown> = { topicId: objectId }
+    if (!isAuthenticated) match.isPublished = true
+
+    const [doc] = await this.model.aggregate<{ ts: Date }>([
+      { $match: match },
+      { $project: { ts: { $ifNull: ['$modified', '$created'] } } },
+      { $sort: { ts: -1 } },
+      { $limit: 1 },
+    ])
+    return doc?.ts ?? null
+  }
 }

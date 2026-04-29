@@ -213,4 +213,14 @@ export class NoteController<ResponseWrapper> implements IController {
       params: { page, size, lang, ...sortOptions },
     })
   }
+
+  /**
+   * 获取专栏的最近更新时间（取该专栏下所有可见日记 max(modified, created)）
+   * @param topicId 专栏 ID
+   */
+  getTopicRecentUpdate(topicId: string) {
+    return this.proxy.topics(topicId)['recent-update'].get<{
+      ts: string | null
+    }>()
+  }
 }

@@ -1,9 +1,10 @@
+import { vi } from 'vitest'
+
 import { mockRequestInstance } from '~/__tests__/helpers/instance'
 import { mockResponse } from '~/__tests__/helpers/response'
 import { axiosAdaptor } from '~/adaptors/axios'
 import { NoteController } from '~/controllers'
 import { RequestError } from '~/core'
-import { vi } from 'vitest'
 
 const { spyOn } = vi
 
@@ -118,5 +119,15 @@ describe('test note client', () => {
     const data = await client.note.getNoteByTopicId('11111111')
 
     expect(data).toEqual({ data: [], pagination: {} })
+  })
+
+  test('GET /notes/topics/:id/recent-update', async () => {
+    mockResponse('/notes/topics/11111111/recent-update', {
+      ts: '2025-10-19T14:57:30.803Z',
+    })
+
+    const data = await client.note.getTopicRecentUpdate('11111111')
+
+    expect(data).toEqual({ ts: '2025-10-19T14:57:30.803Z' })
   })
 })
