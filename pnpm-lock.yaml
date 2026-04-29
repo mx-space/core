@@ -13,7 +13,7 @@ overrides:
   typescript: 6.0.3
   whatwg-url: 14.1.1
   zod: 4.3.6
-  eslint-plugin-react-compiler>zod: 3.24.2
+  eslint-plugin-react-compiler>zod: 3.24.4
 
 importers:
 
@@ -6777,8 +6777,8 @@ packages:
     peerDependencies:
       zod: 4.3.6
 
-  zod@3.24.2:
-    resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
+  zod@3.24.4:
+    resolution: {integrity: sha512-OdqJE9UDRPwWsrHjLN2F8bPxvwJBK22EHLWtanu0LSYr5YqzsaaW3RMgmjwr8Rypg5k+meEJdSPXJZXE/yqOMg==}
 
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
@@ -10188,8 +10188,8 @@ snapshots:
       '@babel/plugin-proposal-private-methods': 7.18.6(@babel/core@7.29.0)
       eslint: 10.2.1
       hermes-parser: 0.25.1
-      zod: 3.24.2
-      zod-validation-error: 3.5.4(zod@3.24.2)
+      zod: 3.24.4
+      zod-validation-error: 3.5.4(zod@3.24.4)
     transitivePeerDependencies:
       - supports-color
 
@@ -13406,10 +13406,10 @@ snapshots:
       cookie: 1.1.1
       youch-core: 0.3.3
 
-  zod-validation-error@3.5.4(zod@3.24.2):
+  zod-validation-error@3.5.4(zod@3.24.4):
     dependencies:
-      zod: 3.24.2
+      zod: 3.24.4
 
-  zod@3.24.2: {}
+  zod@3.24.4: {}
 
   zod@4.3.6: {}
