@@ -15,6 +15,7 @@ import { MetaPresetModel } from '~/modules/meta-preset/meta-preset.model'
 import { NoteModel } from '~/modules/note/note.model'
 import { OwnerProfileModel } from '~/modules/owner/owner-profile.model'
 import { PageModel } from '~/modules/page/page.model'
+import { PollVoteModel } from '~/modules/poll/poll-vote.model'
 import { PostModel } from '~/modules/post/post.model'
 import { ProjectModel } from '~/modules/project/project.model'
 import { ReaderModel } from '~/modules/reader/reader.model'
@@ -47,6 +48,7 @@ export const databaseModels = [
   NoteModel,
   OptionModel,
   PageModel,
+  PollVoteModel,
   PostModel,
   ProjectModel,
   ReaderModel,

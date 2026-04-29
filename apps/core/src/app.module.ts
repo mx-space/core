@@ -47,6 +47,7 @@ import { OptionModule } from './modules/option/option.module'
 import { OwnerModule } from './modules/owner/owner.module'
 import { PageModule } from './modules/page/page.module'
 import { PageProxyModule } from './modules/pageproxy/pageproxy.module'
+import { PollModule } from './modules/poll/poll.module'
 import { PostModule } from './modules/post/post.module'
 import { ProjectModule } from './modules/project/project.module'
 import { ReaderModule } from './modules/reader/reader.module'
@@ -101,6 +102,7 @@ import { TaskQueueModule } from './processors/task-queue/task-queue.module'
     NoteModule,
     OptionModule,
     PageModule,
+    PollModule,
     PostModule,
     ProjectModule,
     RecentlyModule,
