@@ -1,6 +1,10 @@
-import { $toMarkdown, allHeadlessNodes } from '@haklex/rich-headless'
+import {
+  $toMarkdown,
+  allHeadlessNodes,
+  sanitizeSerializedJSON,
+} from '@haklex/rich-headless'
 import { createHeadlessEditor } from '@lexical/headless'
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { nanoid } from 'nanoid'
 
 import {
@@ -45,6 +49,8 @@ export interface LexicalRootBlock {
 
 @Injectable()
 export class LexicalService {
+  private readonly logger = new Logger(LexicalService.name)
+
   private createBlockId() {
     return nanoid(8)
   }
@@ -243,7 +249,17 @@ export class LexicalService {
       },
     })
 
-    const parsed = editor.parseEditorState(editorState)
+    const sanitized = sanitizeSerializedJSON(editorState, {
+      nodes: allHeadlessNodes,
+      onUnknown: (type) => {
+        this.logger.warn(
+          `lexicalToMarkdown: unknown node type "${type}" dropped — ` +
+            `bump @haklex/rich-headless if this type was added upstream`,
+        )
+      },
+    })
+
+    const parsed = editor.parseEditorState(sanitized)
     editor.setEditorState(parsed)
 
     let markdown = ''
