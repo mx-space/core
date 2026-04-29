@@ -12,14 +12,46 @@ export interface CategoryModel extends BaseModel {
   slug: string
   name: string
 }
+
+export type CategoryChildPost = Pick<
+  PostModel,
+  | 'id'
+  | 'title'
+  | 'slug'
+  | 'modified'
+  | 'created'
+  | 'summary'
+  | 'tags'
+  | 'pin'
+  | 'count'
+  | 'images'
+>
+
 export type CategoryWithChildrenModel = CategoryModel & {
-  children: Pick<PostModel, 'id' | 'title' | 'slug' | 'modified' | 'created'>[]
+  children: CategoryChildPost[]
+  /** Aggregated tag-name → post-count for posts under this category. */
+  tagsSum?: Array<{ name: string; count: number }>
 }
 
 export type CategoryEntries = {
   entries: Record<string, CategoryWithChildrenModel>
 }
+
 export interface TagModel {
   count: number
   name: string
 }
+
+export type TagDetailPost = Pick<
+  PostModel,
+  | 'id'
+  | 'title'
+  | 'slug'
+  | 'category'
+  | 'created'
+  | 'modified'
+  | 'summary'
+  | 'tags'
+  | 'pin'
+  | 'count'
+>

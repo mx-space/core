@@ -3,6 +3,7 @@ import { ModuleRef } from '@nestjs/core'
 import type { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { omit } from 'es-toolkit/compat'
 import type { QueryFilter } from 'mongoose'
+import { Types } from 'mongoose'
 
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -20,6 +21,19 @@ import type { PostModel } from '../post/post.model'
 import type { PostService } from '../post/post.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
 import { CategoryModel, CategoryType } from './category.model'
+
+type TagDetailMapped = {
+  _id: Types.ObjectId
+  title: string
+  slug: string
+  category: Record<string, unknown>
+  created?: Date
+  modified?: Date | null
+  summary?: string | null
+  tags?: string[]
+  pin?: Date | null
+  count?: { read?: number; like?: number }
+}
 
 @Injectable()
 export class CategoryService implements OnApplicationBootstrap {
@@ -91,10 +105,24 @@ export class CategoryService implements OnApplicationBootstrap {
     return data
   }
 
+  async getCategoryTagsSum(categoryId: string) {
+    const data = await this.postService.model.aggregate([
+      {
+        $match: { categoryId: Types.ObjectId.createFromHexString(categoryId) },
+      },
+      { $project: { tags: 1 } },
+      { $unwind: '$tags' },
+      { $group: { _id: '$tags', count: { $sum: 1 } } },
+      { $project: { _id: 0, name: '$_id', count: 1 } },
+      { $sort: { count: -1, name: 1 } },
+    ])
+    return data as Array<{ name: string; count: number }>
+  }
+
   async findArticleWithTag(
     tag: string,
     condition: QueryFilter<DocumentType<PostModel>> = {},
-  ): Promise<null | any[]> {
+  ): Promise<TagDetailMapped[]> {
     const posts = await this.postService.model
       .find(
         {
@@ -108,13 +136,31 @@ export class CategoryService implements OnApplicationBootstrap {
     if (posts.length === 0) {
       throw new CannotFindException()
     }
-    return posts.map(({ _id, title, slug, category, created }) => ({
-      _id,
-      title,
-      slug,
-      category: omit(category, ['count', '__v', 'created', 'modified']),
-      created,
-    }))
+    return posts.map(
+      ({
+        _id,
+        title,
+        slug,
+        category,
+        created,
+        modified,
+        summary,
+        tags,
+        pin,
+        count,
+      }) => ({
+        _id,
+        title,
+        slug,
+        category: omit(category, ['count', '__v', 'created', 'modified']),
+        created,
+        modified,
+        summary,
+        tags,
+        pin,
+        count: count ? { read: count.read, like: count.like } : undefined,
+      }),
+    )
   }
 
   async findCategoryPost(categoryId: string, condition: any = {}) {
@@ -123,8 +169,9 @@ export class CategoryService implements OnApplicationBootstrap {
         categoryId,
         ...condition,
       })
-      .select('title created slug _id')
-      .sort({ created: -1 })
+      .select('title slug created modified summary tags pin count images')
+      .sort({ pin: -1, created: -1 })
+      .lean()
   }
 
   async findPostsInCategory(id: string) {

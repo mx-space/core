@@ -1,7 +1,8 @@
+import camelcaseKeys from 'camelcase-keys'
+
 import { mockRequestInstance } from '~/__tests__/helpers/instance'
 import { mockResponse } from '~/__tests__/helpers/response'
 import { CategoryController } from '~/controllers'
-import camelcaseKeys from 'camelcase-keys'
 
 describe('test Category client', () => {
   const client = mockRequestInstance(CategoryController)
@@ -41,13 +42,30 @@ describe('test Category client', () => {
               title: 'pageproxy，为 spa 提供初始数据注入',
               slug: 'pageproxy-spa-inject',
               created: '2021-08-14T04:37:29.880Z',
+              modified: '2021-08-14T04:37:29.880Z',
+              summary: 'A short summary',
+              tags: ['spa', 'inject'],
+              pin: null,
+              count: { read: 100, like: 5 },
+              images: [],
             },
             {
               id: '60cffff50ec52e0349cbb29f',
               title: '曲折的 Vue 3 重构后台之路',
               slug: 'mx-space-vue-3',
               created: '2021-06-21T02:56:53.126Z',
+              modified: '2021-06-21T02:56:53.126Z',
+              summary: 'Refactor journey',
+              tags: ['vue3'],
+              pin: 'pin-id',
+              count: { read: 200, like: 12 },
+              images: [],
             },
+          ],
+          tagsSum: [
+            { name: 'spa', count: 1 },
+            { name: 'inject', count: 1 },
+            { name: 'vue3', count: 1 },
           ],
         },
       })
@@ -72,13 +90,30 @@ describe('test Category client', () => {
               title: 'pageproxy，为 spa 提供初始数据注入',
               slug: 'pageproxy-spa-inject',
               created: '2021-08-14T04:37:29.880Z',
+              modified: '2021-08-14T04:37:29.880Z',
+              summary: 'A short summary',
+              tags: ['spa', 'inject'],
+              pin: null,
+              count: { read: 100, like: 5 },
+              images: [],
             },
             {
               id: '60cffff50ec52e0349cbb29f',
               title: '曲折的 Vue 3 重构后台之路',
               slug: 'mx-space-vue-3',
               created: '2021-06-21T02:56:53.126Z',
+              modified: '2021-06-21T02:56:53.126Z',
+              summary: 'Refactor journey',
+              tags: ['vue3'],
+              pin: 'pin-id',
+              count: { read: 200, like: 12 },
+              images: [],
             },
+          ],
+          tagsSum: [
+            { name: 'spa', count: 1 },
+            { name: 'inject', count: 1 },
+            { name: 'vue3', count: 1 },
           ],
         },
       })
@@ -106,6 +141,11 @@ describe('test Category client', () => {
             slug: 'programming',
           },
           created: '2021-04-18T09:33:33.271Z',
+          modified: '2021-04-18T09:33:33.271Z',
+          summary: 'A summary',
+          tags: ['react', 'scroll'],
+          pin: null,
+          count: { read: 80, like: 3 },
         },
       ],
     })

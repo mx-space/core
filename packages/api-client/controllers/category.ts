@@ -7,16 +7,17 @@ import type {
 } from '~/interfaces/request'
 import { attachRawFromOneToAnthor, destructureData } from '~/utils'
 import { autoBind } from '~/utils/auto-bind'
+
 import type { HTTPClient } from '../core/client'
 import { RequestError } from '../core/error'
 import type {
   CategoryEntries,
   CategoryModel,
   CategoryWithChildrenModel,
+  TagDetailPost,
   TagModel,
 } from '../models/category'
 import { CategoryType } from '../models/category'
-import type { PostModel } from '../models/post'
 
 declare module '../core/client' {
   interface HTTPClient<
@@ -106,7 +107,7 @@ export class CategoryController<ResponseWrapper> implements IController {
   async getTagByName(name: string) {
     const res = await this.proxy(name).get<{
       tag: string
-      data: Pick<PostModel, 'id' | 'title' | 'slug' | 'category' | 'created'>[]
+      data: TagDetailPost[]
     }>({
       params: {
         tag: 1,
