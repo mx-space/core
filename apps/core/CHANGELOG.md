@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.4.5](https://github.com/mx-space/core/compare/v11.4.4...v11.4.5) (2026-04-29)
+
+
+### Features
+
+* **note:** add topic recent-update endpoint and api-client method ([d72cb29](https://github.com/mx-space/core/commit/d72cb29f82a009697af59469fb339382a9df218e))
+
+
+
 ## [11.4.4](https://github.com/mx-space/core/compare/v11.4.3...v11.4.4) (2026-04-29)
 
 
