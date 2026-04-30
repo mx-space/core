@@ -46,21 +46,30 @@ The `apps/core/package.json` `bump` block:
 }
 ```
 
-`bump` defaults: bumps `version` in `apps/core/package.json` → updates `CHANGELOG.md` → commits as `release: vX.Y.Z` → tags `vX.Y.Z` → pushes commit + tag to `origin`.
+**Hook ordering (nbump, not standard npm semantics):** `before` runs first as "leading hooks", then `after` runs as "tailing hooks" — **both before the version bump commit**. So `assets-push.sh` ships the admin assets *before* the `release: vX.Y.Z` commit + tag are made and pushed, not after.
+
+Full sequence nbump performs:
+1. `before` hooks (git pull, pnpm i, sync admin version)
+2. `after` hooks (assets-push.sh)
+3. Edit `apps/core/package.json` version → `git commit -a -m 'release: vX.Y.Z' --no-verify`
+4. Generate `CHANGELOG.md` → `git commit --amend --no-verify --no-edit`
+5. `git tag -a vX.Y.Z`
+6. `git push` (master) + `git push origin vX.Y.Z`
 
 ### Commands
-
-From repo root (preferred — uses the workspace shortcut):
 
 ```bash
 # Preview first (no write, no commit, no push)
 pnpm -C apps/core exec bump --dry-run patch
 
-# Then actually run it
-pnpm publish:core         # equivalent to: cd apps/core && npm run publish → bump
+# Then actually run it — pick ONE:
+pnpm publish:core                              # from repo root; cd's into apps/core for you
+cd apps/core && pnpm exec bump patch           # from apps/core directly
 ```
 
-`bump` is interactive if you don't pass a version type. Pass one to skip the prompt:
+**Critical:** `bump` reads its config from the *current directory's* `package.json`. Repo root's `package.json` has no `bump` field, so `pnpm exec bump` from root throws `Error: package.json not found`. Stay inside `apps/core` (or use the `pnpm publish:core` shortcut).
+
+`bump` is interactive even when you pass a version type — nbump 2.1.8 still asks `Continue? (Y/n)` to confirm. To run unattended, pipe `yes "" | …`. Version types you can pass:
 
 | Type | Effect | When |
 |------|--------|------|
