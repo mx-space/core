@@ -2,7 +2,7 @@ packages:
   - packages/*
   - apps/*
 overrides:
-  rolldown: 1.0.0-rc.16
+  rolldown: 1.0.0-rc.18
   "get-pixels@^3>request": ./external/request
   mongodb: ~7.1.0
   pino: ./external/pino
