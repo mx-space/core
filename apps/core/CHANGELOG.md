@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [11.4.7](https://github.com/mx-space/core/compare/v11.4.6...v11.4.7) (2026-04-30)
+
+
+### Bug Fixes
+
+* **category:** include category total post count in detail response ([82e4aa9](https://github.com/mx-space/core/commit/82e4aa9fa87b3c451ce21d4810acdd0dd0d71ef2))
+
+
+### Features
+
+* **category:** enrich detail responses with summary/tags/pin/count and tagsSum ([ff7d9cd](https://github.com/mx-space/core/commit/ff7d9cd55651f17f89225e7773422838cf996231))
+
+
+
 ## [11.4.6](https://github.com/mx-space/core/compare/v11.4.5...v11.4.6) (2026-04-29)
 
 
