@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.4.8](https://github.com/mx-space/core/compare/v11.4.7...v11.4.8) (2026-04-30)
+
+
+### Bug Fixes
+
+* **post:** surface hasInsightsInLocale on detail response ([78d142c](https://github.com/mx-space/core/commit/78d142cacff32c59634bcb031f29d85673a058da))
+
+
+
 ## [11.4.7](https://github.com/mx-space/core/compare/v11.4.6...v11.4.7) (2026-04-30)
 
 
