@@ -123,11 +123,12 @@ export class CategoryController {
       throw new CannotFindException()
     }
 
-    const [postsResult, tagsSum] = await Promise.all([
+    const [postsResult, tagsSum, count] = await Promise.all([
       this.categoryService.findCategoryPost(res._id.toHexString(), {
         $and: [tag ? { tags: tag } : {}],
       }),
       this.categoryService.getCategoryTagsSum(res._id.toHexString()),
+      this.postService.model.countDocuments({ categoryId: res._id }),
     ])
 
     let children: any[] = postsResult || []
@@ -136,7 +137,7 @@ export class CategoryController {
       children = await this.translatePostTitles(children, lang)
     }
 
-    return { data: { ...res, children, tagsSum } }
+    return { data: { ...res, count, children, tagsSum } }
   }
 
   private translatePostTitles(posts: any[], lang: string) {
