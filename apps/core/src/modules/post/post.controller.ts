@@ -28,6 +28,8 @@ import { MongoIdDto } from '~/shared/dto/id.dto'
 import { addYearCondition } from '~/transformers/db-query.transformer'
 import { applyContentPreference } from '~/utils/content.util'
 
+import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
+import { parseLanguageCode } from '../ai/ai-language.util'
 import type { CategoryModel } from '../category/category.model'
 import { PostModel } from './post.model'
 import {
@@ -46,6 +48,7 @@ export class PostController {
     private readonly postService: PostService,
     private readonly countingService: CountingService,
     private readonly translationService: TranslationService,
+    private readonly aiInsightsService: AiInsightsService,
   ) {}
 
   @Get('/')
@@ -338,20 +341,25 @@ export class PostController {
       .map((item) => item?._id?.toString?.() ?? item?.id)
       .filter((id): id is string => Boolean(id))
 
-    const [translationResult, relatedTitleMap] = await Promise.all([
-      this.translationService.translateArticle({
-        articleId: postDocument.id,
-        targetLang: lang,
-        allowHidden: Boolean(isAuthenticated),
-        originalData: {
-          title: baseData.title,
-          text: baseData.text,
-          summary: baseData.summary,
-          tags: baseData.tags,
-        },
-      }),
-      this.translationService.getCachedTitles(relatedIds, lang),
-    ])
+    const insightsLang = parseLanguageCode(lang)
+    const [translationResult, relatedTitleMap, hasInsightsInLocale] =
+      await Promise.all([
+        this.translationService.translateArticle({
+          articleId: postDocument.id,
+          targetLang: lang,
+          allowHidden: Boolean(isAuthenticated),
+          originalData: {
+            title: baseData.title,
+            text: baseData.text,
+            summary: baseData.summary,
+            tags: baseData.tags,
+          },
+        }),
+        this.translationService.getCachedTitles(relatedIds, lang),
+        this.aiInsightsService
+          .hasInsightsInLang(postDocument.id, insightsLang)
+          .catch(() => false),
+      ])
 
     const translatedRelated = relatedTitleMap.size
       ? relatedList.map((item) => {
@@ -377,6 +385,7 @@ export class PostController {
         sourceLang: translationResult.sourceLang,
         translationMeta: translationResult.translationMeta,
         availableTranslations: translationResult.availableTranslations,
+        hasInsightsInLocale,
         liked,
       },
       query.prefer,

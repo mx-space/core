@@ -21,6 +21,7 @@ import {
   DRAFT_SERVICE_TOKEN,
   POST_SERVICE_TOKEN,
 } from '~/constants/injection.constant'
+import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { CategoryModel } from '~/modules/category/category.model'
 import { CategoryService } from '~/modules/category/category.service'
 import { CommentModel } from '~/modules/comment/comment.model'
@@ -83,6 +84,12 @@ describe('PostController (e2e)', async () => {
       },
       fileReferenceProvider,
       translationProvider,
+      {
+        provide: AiInsightsService,
+        useValue: {
+          hasInsightsInLang: vi.fn().mockResolvedValue(false),
+        },
+      },
     ],
     imports: [],
     models: [
