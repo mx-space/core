@@ -15,6 +15,8 @@ import { scheduleManager } from '~/utils/schedule.util'
 import { getAvatar } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
+import { FileDeletionReason } from '../file/file-reference.model'
+import { FileReferenceService } from '../file/file-reference.service'
 import { OwnerModel } from '../owner/owner.model'
 import { OwnerService } from '../owner/owner.service'
 import { ReaderService } from '../reader/reader.service'
@@ -53,6 +55,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     private readonly serverlessService: ServerlessService,
     private readonly eventManager: EventManagerService,
     private readonly barkService: BarkPushService,
+    private readonly fileReferenceService: FileReferenceService,
   ) {}
 
   async onModuleInit() {
@@ -92,10 +95,22 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     this.commentCreateListenerDisposer?.()
   }
 
-  async afterCreateComment(
-    commentId: string,
-    ipLocation: { ip: string },
-  ) {
+  private async cascadeDeleteFilesIfSpamConfigured(commentId: string) {
+    try {
+      const config = await this.configsService.get('commentUploadOptions')
+      if (config.deleteFilesOnSpam === false) return
+      await this.fileReferenceService.hardDeleteFilesForComment(
+        commentId,
+        FileDeletionReason.CommentSpam,
+      )
+    } catch (err) {
+      this.logger.warn(
+        `cascade file delete after spam(${commentId}) failed: ${err instanceof Error ? err.message : err}`,
+      )
+    }
+  }
+
+  async afterCreateComment(commentId: string, ipLocation: { ip: string }) {
     const comment = await this.commentModel
       .findById(commentId)
       .lean({ getters: true })
@@ -121,6 +136,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
           { _id: commentId },
           { state: CommentState.Junk },
         )
+        await this.cascadeDeleteFilesIfSpamConfigured(commentId)
         return
       }
 
@@ -142,10 +158,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     })
   }
 
-  async afterReplyComment(
-    comment: CommentModel,
-    ipLocation: { ip: string },
-  ) {
+  async afterReplyComment(comment: CommentModel, ipLocation: { ip: string }) {
     const commentId = comment.id ?? (comment as any)._id?.toString()
     const isLoggedInComment = !!comment.readerId
 
@@ -187,7 +200,9 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       .then((readers) => readers[0] ?? null)
   }
 
-  private toOwnerIdentity(ownerInfo: Awaited<ReturnType<OwnerService['getOwnerInfo']>>) {
+  private toOwnerIdentity(
+    ownerInfo: Awaited<ReturnType<OwnerService['getOwnerInfo']>>,
+  ) {
     return {
       role: 'owner' as const,
       author: ownerInfo.name || '',
@@ -221,7 +236,9 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
           author: reader.name || comment.author || '',
           mail: reader.email || comment.mail || '',
           avatar:
-            reader.image || comment.avatar || getAvatar(reader.email || comment.mail),
+            reader.image ||
+            comment.avatar ||
+            getAvatar(reader.email || comment.mail),
         }
       }
     }
@@ -257,14 +274,20 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     const parentIdentity = await this.resolveCommentIdentity(parent, ownerInfo)
 
     if (!refDoc || !ownerInfo.mail) return
-    if (type === CommentReplyMailType.Guest && commentIdentity.role === 'guest') {
+    if (
+      type === CommentReplyMailType.Guest &&
+      commentIdentity.role === 'guest'
+    ) {
       commentIdentity =
         !comment.author && !comment.mail && !comment.avatar
           ? this.toOwnerIdentity(ownerInfo)
           : commentIdentity
     }
 
-    if (type === CommentReplyMailType.Owner && commentIdentity.role === 'owner') {
+    if (
+      type === CommentReplyMailType.Owner &&
+      commentIdentity.role === 'owner'
+    ) {
       return
     }
 

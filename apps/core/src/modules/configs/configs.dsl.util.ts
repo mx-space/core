@@ -114,9 +114,13 @@ const groupConfigs: GroupConfig[] = [
   {
     key: 'storage',
     title: '存储',
-    description: '备份、图床',
+    description: '备份、图床、评论图片上传',
     icon: 'database',
-    sectionKeys: ['backupOptions', 'imageStorageOptions'],
+    sectionKeys: [
+      'backupOptions',
+      'imageStorageOptions',
+      'commentUploadOptions',
+    ],
   },
   {
     key: 'ai',

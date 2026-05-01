@@ -41,6 +41,7 @@ import {
   RenameFileQueryDto,
 } from './file.schema'
 import { FileService } from './file.service'
+import { FileDeletionReason, FileReferenceStatus } from './file-reference.model'
 import { FileReferenceService } from './file-reference.service'
 
 @ApiController(['objects', 'files'])
@@ -62,14 +63,15 @@ export class FileController {
   @Auth()
   async getOrphanFiles(@Query() query: PagerDto) {
     const { page = 1, size = 20 } = query
+    const filter = { status: { $in: ['pending', 'detached'] } }
     const [files, total] = await Promise.all([
       this.fileReferenceService.model
-        .find({ status: 'pending' })
+        .find(filter)
         .sort({ created: -1 })
         .skip((page - 1) * size)
         .limit(size)
         .lean(),
-      this.fileReferenceService.model.countDocuments({ status: 'pending' }),
+      this.fileReferenceService.model.countDocuments(filter),
     ])
 
     return {
@@ -77,6 +79,14 @@ export class FileController {
         id: file._id,
         fileName: file.fileName,
         fileUrl: file.fileUrl,
+        status: file.status,
+        uploadedBy: file.uploadedBy,
+        readerId: file.readerId,
+        mimeType: file.mimeType,
+        byteSize: file.byteSize,
+        refType: file.refType,
+        refId: file.refId,
+        detachedAt: file.detachedAt,
         created: file.created,
       })),
       pagination: {
@@ -101,6 +111,64 @@ export class FileController {
   @Auth()
   async cleanupOrphanFiles(@Query('maxAgeMinutes') maxAgeMinutes?: number) {
     return this.fileReferenceService.cleanupOrphanFiles(maxAgeMinutes || 60)
+  }
+
+  @Get('/comment-uploads/list')
+  @Auth()
+  async getCommentUploads(
+    @Query()
+    query: PagerDto & {
+      status?: FileReferenceStatus
+      readerId?: string
+      refId?: string
+    },
+  ) {
+    const { page = 1, size = 24, status, readerId, refId } = query
+    const { files, total } = await this.fileReferenceService.listReaderUploads({
+      page,
+      size,
+      status,
+      readerId,
+      refId,
+    })
+
+    return {
+      data: files.map((file) => ({
+        id: file._id,
+        fileName: file.fileName,
+        fileUrl: file.fileUrl,
+        status: file.status,
+        readerId: file.readerId,
+        mimeType: file.mimeType,
+        byteSize: file.byteSize,
+        refType: file.refType,
+        refId: file.refId,
+        detachedAt: file.detachedAt,
+        created: file.created,
+      })),
+      pagination: {
+        currentPage: page,
+        totalPage: Math.ceil(total / size),
+        size,
+        total,
+        hasNextPage: page * size < total,
+        hasPrevPage: page > 1,
+      },
+    }
+  }
+
+  @Delete('/comment-uploads/:id')
+  @Auth()
+  async deleteCommentUpload(@Param('id') id: string) {
+    const file = await this.fileReferenceService.getReferenceById(id)
+    if (!file) {
+      throw new CannotFindException()
+    }
+    const { storageRemoved } = await this.fileReferenceService.hardDeleteFile(
+      file,
+      FileDeletionReason.Manual,
+    )
+    return { storageRemoved }
   }
 
   @Get('/:type')

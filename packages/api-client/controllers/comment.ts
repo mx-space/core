@@ -12,7 +12,12 @@ import type {
 import { autoBind } from '~/utils/auto-bind'
 
 import type { HTTPClient } from '../core'
-import type { AnonymousCommentDto, ReaderCommentDto } from '../dtos/comment'
+import type {
+  AnonymousCommentDto,
+  CommentUploadConfigDto,
+  CommentUploadResultDto,
+  ReaderCommentDto,
+} from '../dtos/comment'
 
 declare module '../core/client' {
   interface HTTPClient<
@@ -103,6 +108,25 @@ export class CommentController<ResponseWrapper> implements IController {
   readerReply(commentId: string, data: ReaderCommentDto) {
     return this.proxy.reader.reply(commentId).post<CommentModel>({
       data,
+    })
+  }
+
+  /**
+   * 取评论图片上传之公开配置（启用状态、限额、MIME 白名单等）
+   */
+  getUploadConfig() {
+    return this.proxy.uploads.config.get<CommentUploadConfigDto>()
+  }
+
+  /**
+   * 已登录读者上传评论图片
+   * @param file - 浏览器 File / Blob 或 node 之 Buffer 包装
+   */
+  uploadImage(file: File | Blob) {
+    const form = new FormData()
+    form.append('file', file)
+    return this.proxy.uploads.post<CommentUploadResultDto>({
+      data: form,
     })
   }
 }

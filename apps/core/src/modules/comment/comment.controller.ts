@@ -382,6 +382,10 @@ export class CommentController {
         updateResult,
       )
 
+      if (!isUndefined(state)) {
+        await this.commentService.cascadeFilesForCommentsIfSpam([id], state)
+      }
+
       return
     } catch {
       throw new NoContentCanBeModifiedException()
@@ -409,17 +413,28 @@ export class CommentController {
   async batchUpdateState(@Body() body: BatchCommentStateDto) {
     const { ids, all, state, currentState } = body
 
+    let affected: string[] = []
     if (all) {
       const filter: Record<string, any> = {}
       if (!isUndefined(currentState)) {
         filter.state = currentState
       }
+      const docs = await this.commentService.model
+        .find(filter)
+        .select('_id')
+        .lean()
+      affected = docs.map((d) => d._id.toString())
       await this.commentService.model.updateMany(filter, { state })
     } else if (ids?.length) {
+      affected = ids.map((id) => id.toString())
       await this.commentService.model.updateMany(
         { _id: { $in: ids } },
         { state },
       )
+    }
+
+    if (affected.length) {
+      await this.commentService.cascadeFilesForCommentsIfSpam(affected, state)
     }
 
     return

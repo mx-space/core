@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommentState } from '~/modules/comment/comment.model'
 import { CommentService } from '~/modules/comment/comment.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { OwnerService } from '~/modules/owner/owner.service'
 import { ReaderService } from '~/modules/reader/reader.service'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -85,6 +86,16 @@ describe('CommentService thread model', () => {
             get: vi.fn().mockResolvedValue({
               commentShouldAudit: false,
             }),
+          },
+        },
+        {
+          provide: FileReferenceService,
+          useValue: {
+            attachReaderImagesToComment: vi.fn().mockResolvedValue({
+              attachedCount: 0,
+              detachedCount: 0,
+            }),
+            hardDeleteFilesForComment: vi.fn().mockResolvedValue(0),
           },
         },
       ],

@@ -9,6 +9,7 @@ import {
   type BarkOptionsSchema,
   type BingSearchOptionsSchema,
   type CommentOptionsSchema,
+  type CommentUploadOptionsSchema,
   configSchemaMapping,
   type FeatureListSchema,
   type FileUploadOptionsSchema,
@@ -41,6 +42,7 @@ export abstract class IConfig {
   backupOptions: Required<z.infer<typeof BackupOptionsSchema>>
   imageStorageOptions: Required<z.infer<typeof ImageStorageOptionsSchema>>
   fileUploadOptions: Required<z.infer<typeof FileUploadOptionsSchema>>
+  commentUploadOptions: Required<z.infer<typeof CommentUploadOptionsSchema>>
   baiduSearchOptions: Required<z.infer<typeof BaiduSearchOptionsSchema>>
   bingSearchOptions: Required<z.infer<typeof BingSearchOptionsSchema>>
   featureList: Required<z.infer<typeof FeatureListSchema>>

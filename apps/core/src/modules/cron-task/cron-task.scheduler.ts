@@ -103,4 +103,14 @@ export class CronTaskScheduler {
       `rebuildSearchIndex task ${result.created ? 'created' : 'already exists'}: ${result.taskId}`,
     )
   }
+
+  @CronOnce('*/15 * * * *', { name: 'cleanCommentUploads' })
+  async scheduleCleanCommentUploads() {
+    const result = await this.cronTaskService.createCronTask(
+      CronTaskType.CleanCommentUploads,
+    )
+    if (result.created) {
+      this.logger.log(`cleanCommentUploads task created: ${result.taskId}`)
+    }
+  }
 }

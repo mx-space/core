@@ -23,6 +23,9 @@ import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar, md5 } from '~/utils/tool.util'
 
 import { AITranslationModel } from '../ai/ai-translation/ai-translation.model'
+import { ConfigsService } from '../configs/configs.service'
+import { FileDeletionReason } from '../file/file-reference.model'
+import { FileReferenceService } from '../file/file-reference.service'
 import { OwnerService } from '../owner/owner.service'
 import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
@@ -56,7 +59,30 @@ export class CommentService {
     private readonly lexicalService: LexicalService,
     @InjectModel(AITranslationModel)
     private readonly aiTranslationModel: MongooseModel<AITranslationModel>,
+    private readonly fileReferenceService: FileReferenceService,
+    private readonly commentConfigsService: ConfigsService,
   ) {}
+
+  private async attachReaderImagesOrRollback(
+    commentId: string,
+    readerId: string,
+    text: string,
+    mode: 'create' | 'update',
+  ) {
+    try {
+      await this.fileReferenceService.attachReaderImagesToComment({
+        commentId,
+        readerId,
+        text,
+        mode,
+      })
+    } catch (err) {
+      if (mode === 'create') {
+        await this.commentModel.deleteOne({ _id: commentId }).catch(() => {})
+      }
+      throw err
+    }
+  }
 
   public get model() {
     return this.commentModel
@@ -716,6 +742,15 @@ export class CommentService {
       isDeleted: false,
     })
 
+    if (reader) {
+      await this.attachReaderImagesOrRollback(
+        comment._id.toString(),
+        reader.id,
+        doc.text ?? '',
+        'create',
+      )
+    }
+
     await this.databaseService.getModelByRefType(refType!).updateOne(
       { _id: ref._id },
       {
@@ -768,6 +803,15 @@ export class CommentService {
       isDeleted: false,
     })) as CommentModel & { _id: Types.ObjectId; created?: Date }
 
+    if (reader) {
+      await this.attachReaderImagesOrRollback(
+        comment._id.toString(),
+        reader.id,
+        doc.text ?? '',
+        'create',
+      )
+    }
+
     await this.commentModel.updateOne(
       { _id: rootCommentId },
       {
@@ -807,6 +851,14 @@ export class CommentService {
         },
       },
     )
+
+    void this.fileReferenceService
+      .hardDeleteFilesForComment(id, FileDeletionReason.CommentDeleted)
+      .catch((err) =>
+        this.logger.warn(
+          `cascade file delete after softDeleteComment(${id}) failed: ${err instanceof Error ? err.message : err}`,
+        ),
+      )
   }
 
   async deleteComments(id: string) {
@@ -1225,6 +1277,30 @@ export class CommentService {
     await this.reanchorCommentsByRef(CollectionRefTypes.Page, payload.id)
   }
 
+  async cascadeFilesForCommentsIfSpam(
+    commentIds: string[],
+    targetState: CommentState,
+  ) {
+    if (targetState !== CommentState.Junk || commentIds.length === 0) return
+    try {
+      const config = await this.commentConfigsService.get(
+        'commentUploadOptions',
+      )
+      if (config.deleteFilesOnSpam === false) return
+    } catch {
+      // 若 config 拉不到，按默认 true 处理
+    }
+    for (const commentId of commentIds) {
+      void this.fileReferenceService
+        .hardDeleteFilesForComment(commentId, FileDeletionReason.CommentSpam)
+        .catch((err) =>
+          this.logger.warn(
+            `cascade file delete after admin spam(${commentId}) failed: ${err instanceof Error ? err.message : err}`,
+          ),
+        )
+    }
+  }
+
   async editComment(id: string, text: string) {
     const comment = await this.commentModel.findById(id).lean()
     if (!comment) {
@@ -1237,6 +1313,22 @@ export class CommentService {
       { _id: id },
       { text, editedAt: new Date() },
     )
+    if (comment.readerId) {
+      try {
+        await this.fileReferenceService.attachReaderImagesToComment({
+          commentId: id,
+          readerId: comment.readerId,
+          text,
+          mode: 'update',
+        })
+      } catch (err) {
+        await this.commentModel.updateOne(
+          { _id: id },
+          { text: comment.text, editedAt: comment.editedAt ?? null },
+        )
+        throw err
+      }
+    }
     await this.eventManager.broadcast(
       BusinessEvents.COMMENT_UPDATE,
       { id, text },

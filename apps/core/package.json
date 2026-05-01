@@ -102,6 +102,7 @@
     "dotenv-expand": "^13.0.0",
     "ejs": "5.0.2",
     "es-toolkit": "^1.46.0",
+    "file-type": "^22.0.1",
     "form-data": "4.0.5",
     "inquirer": "^13.4.2",
     "isbot": "5.1.39",

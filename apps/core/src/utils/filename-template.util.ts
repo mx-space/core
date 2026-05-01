@@ -26,6 +26,7 @@ import { alphabet } from '~/constants/other.constant'
  * - {ext} 扩展名 (包含点号)
  * - {type} 文件类型
  * - {localFolder:数字} 原文件所在文件夹 (数字表示层级)
+ * - {readerId} 读者 ID (评论上传专用)
  */
 export interface FilenameTemplateContext {
   /**
@@ -42,6 +43,11 @@ export interface FilenameTemplateContext {
    * 本地文件夹路径 (用于 localFolder 占位符)
    */
   localFolderPath?: string
+
+  /**
+   * 读者 ID (用于评论上传 {readerId} 占位符)
+   */
+  readerId?: string
 }
 
 /**
@@ -93,7 +99,12 @@ export function replaceFilenameTemplate(
   context: FilenameTemplateContext,
 ): string {
   const now = new Date()
-  const { originalFilename, fileType = '', localFolderPath } = context
+  const {
+    originalFilename,
+    fileType = '',
+    localFolderPath,
+    readerId = '',
+  } = context
 
   // 提取文件名和扩展名
   const ext = path.extname(originalFilename).toLowerCase()
@@ -131,6 +142,9 @@ export function replaceFilenameTemplate(
 
   // 文件类型占位符
   result = result.replaceAll('{type}', fileType)
+
+  // 读者 ID 占位符（评论上传专用）
+  result = result.replaceAll('{readerId}', readerId)
 
   // 本地文件夹占位符 {localFolder:数字}
   // eslint-disable-next-line unicorn/better-regex

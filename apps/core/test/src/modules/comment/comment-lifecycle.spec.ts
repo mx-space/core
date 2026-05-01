@@ -6,6 +6,7 @@ import { CommentReplyMailType } from '~/modules/comment/comment.enum'
 import { CommentLifecycleService } from '~/modules/comment/comment.lifecycle.service'
 import { CommentSpamFilterService } from '~/modules/comment/comment.spam-filter'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { OwnerService } from '~/modules/owner/owner.service'
 import { ReaderService } from '~/modules/reader/reader.service'
 import { ServerlessService } from '~/modules/serverless/serverless.service'
@@ -159,6 +160,12 @@ describe('CommentLifecycleService email routing', () => {
         {
           provide: CommentSpamFilterService,
           useValue: mockSpamFilterService,
+        },
+        {
+          provide: FileReferenceService,
+          useValue: {
+            hardDeleteFilesForComment: vi.fn().mockResolvedValue(0),
+          },
         },
       ],
     }).compile()

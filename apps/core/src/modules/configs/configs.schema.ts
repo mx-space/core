@@ -177,12 +177,122 @@ export const ImageStorageOptionsSchema = section('图床设置', {
     description:
       '上传到 S3 的文件路径前缀，支持模板占位符: {Y}年4位, {y}年2位, {m}月, {d}日, {h}时, {i}分, {s}秒, {md5}随机MD5, {type}文件类型等。例如: blog/{Y}/{m}/{d} 或 images/',
   }),
+  commentUploadPrefix: field.plain(z.string().optional(), '评论图片路径前缀', {
+    description:
+      '读者评论上传专用路径前缀，留空则使用 comments/{readerId}/{Y}/{m}/{md5}.{ext}。占位符同 prefix，且额外支持 {readerId}',
+  }),
 })
 export class ImageStorageOptionsDto extends createZodDto(
   ImageStorageOptionsSchema,
 ) {}
 export type ImageStorageOptionsConfig = z.infer<
   typeof ImageStorageOptionsSchema
+>
+
+// ==================== Comment Upload Options ====================
+export const CommentUploadOptionsSchema = section('评论图片上传', {
+  enable: field.toggle(z.boolean().optional(), '启用读者评论图片上传', {
+    description: '关闭则前端隐藏上传入口，且后端接口返回 503',
+  }),
+  pendingTtlMinutes: field.number(
+    z.preprocess(
+      (val) => (val ? Number(val) : val),
+      z.number().int().min(5).optional(),
+    ),
+    'Pending TTL（分钟）',
+    {
+      'ui:options': { halfGrid: true },
+      description: '上传后未被评论引用之保留时长，过期清除。默认 120',
+    },
+  ),
+  detachedTtlMinutes: field.number(
+    z.preprocess(
+      (val) => (val ? Number(val) : val),
+      z.number().int().min(1).optional(),
+    ),
+    'Detached TTL（分钟）',
+    {
+      'ui:options': { halfGrid: true },
+      description: '评论编辑后被移除之图保留时长。默认 30',
+    },
+  ),
+  cronIntervalMinutes: field.number(
+    z.preprocess(
+      (val) => (val ? Number(val) : val),
+      z.number().int().min(1).optional(),
+    ),
+    '清理巡检间隔（分钟）',
+    { 'ui:options': { halfGrid: true }, description: '默认 15' },
+  ),
+  singleFileSizeMB: field.number(
+    z.preprocess(
+      (val) => (val ? Number(val) : val),
+      z.number().int().min(1).max(50).optional(),
+    ),
+    '单图最大大小（MB）',
+    { 'ui:options': { halfGrid: true }, description: '默认 5' },
+  ),
+  commentImageMaxCount: field.number(
+    z.preprocess(
+      (val) => (val ? Number(val) : val),
+      z.number().int().min(1).max(20).optional(),
+    ),
+    '单评论图片张数上限',
+    { 'ui:options': { halfGrid: true }, description: '默认 4' },
+  ),
+  readerHourlyUploadCount: field.number(
+    z.preprocess(
+      (val) => (val ? Number(val) : val),
+      z.number().int().min(1).optional(),
+    ),
+    '单读者每小时上传上限',
+    { 'ui:options': { halfGrid: true }, description: '默认 10' },
+  ),
+  readerTotalActiveBytesMB: field.number(
+    z.preprocess(
+      (val) => (val ? Number(val) : val),
+      z.number().int().min(1).optional(),
+    ),
+    '单读者活跃图总容量上限（MB）',
+    { 'ui:options': { halfGrid: true }, description: '默认 50' },
+  ),
+  readerMinAccountAgeHours: field.number(
+    z.preprocess(
+      (val) => (val ? Number(val) : val),
+      z.number().int().min(0).optional(),
+    ),
+    '读者账号最小年龄（小时）',
+    {
+      'ui:options': { halfGrid: true },
+      description: '准入门槛，0 表示不限。默认 0',
+    },
+  ),
+  readerMinCommentCount: field.number(
+    z.preprocess(
+      (val) => (val ? Number(val) : val),
+      z.number().int().min(0).optional(),
+    ),
+    '读者最小已发评论数',
+    {
+      'ui:options': { halfGrid: true },
+      description: '准入门槛，0 表示不限。默认 0',
+    },
+  ),
+  deleteFilesOnSpam: field.toggle(
+    z.boolean().optional(),
+    '评论标记 spam 时同步删图',
+    { description: '默认开启。关闭则仅删评论，保留图待手动处理' },
+  ),
+  mimeWhitelist: field.array(z.array(z.string()).optional(), 'MIME 白名单', {
+    description:
+      '默认 image/jpeg, image/png, image/webp, image/gif。修改后立即生效',
+  }),
+})
+export class CommentUploadOptionsDto extends createZodDto(
+  CommentUploadOptionsSchema,
+) {}
+export type CommentUploadOptionsConfig = z.infer<
+  typeof CommentUploadOptionsSchema
 >
 
 // ==================== File Upload Options ====================
@@ -506,6 +616,7 @@ export const configSchemaMapping = {
   backupOptions: BackupOptionsSchema,
   imageStorageOptions: ImageStorageOptionsSchema,
   fileUploadOptions: FileUploadOptionsSchema,
+  commentUploadOptions: CommentUploadOptionsSchema,
   baiduSearchOptions: BaiduSearchOptionsSchema,
   bingSearchOptions: BingSearchOptionsSchema,
   featureList: FeatureListSchema,
@@ -531,6 +642,7 @@ export const FullConfigSchema = withMeta(
     backupOptions: BackupOptionsSchema,
     imageStorageOptions: ImageStorageOptionsSchema,
     fileUploadOptions: FileUploadOptionsSchema,
+    commentUploadOptions: CommentUploadOptionsSchema,
     baiduSearchOptions: BaiduSearchOptionsSchema,
     bingSearchOptions: BingSearchOptionsSchema,
     featureList: FeatureListSchema,

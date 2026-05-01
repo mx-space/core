@@ -9,6 +9,7 @@ import { STATIC_FILE_TRASH_DIR, TEMP_DIR } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeModel } from '~/modules/analyze/analyze.model'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { SearchService } from '~/modules/search/search.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import type { StoreJWTPayload } from '~/processors/helper/helper.jwt.service'
@@ -37,6 +38,7 @@ export class CronBusinessService {
     private readonly aggregateService: AggregateService,
 
     private readonly searchService: SearchService,
+    private readonly fileReferenceService: FileReferenceService,
   ) {
     this.logger = new Logger(CronBusinessService.name)
   }
@@ -221,6 +223,18 @@ export class CronBusinessService {
 
     this.logger.log(`--> 删除了 ${deleteCount} 个过期的 token`)
     return { deletedCount: deleteCount }
+  }
+
+  /**
+   * 清理评论图片上传：pending 超 TTL + detached 超 TTL 双 pass。
+   */
+  async cleanCommentUploads() {
+    this.logger.log('--> 开始清理评论图片上传')
+    const result = await this.fileReferenceService.cleanupCommentUploads()
+    this.logger.log(
+      `--> 清理评论图片上传完成 pending=${result.pendingDeleted} detached=${result.detachedDeleted}`,
+    )
+    return result
   }
 
   /**

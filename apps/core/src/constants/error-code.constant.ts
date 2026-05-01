@@ -56,6 +56,7 @@ export enum ErrorCodeEnum {
   PasswordLoginDisabled = 13006,
   AIProviderNotEnabled = 13007,
   ImageStorageNotConfigured = 13008,
+  CommentUploadDisabled = 13009,
 
   // biz - forbidden (403)
   NoteForbidden = 14000,
@@ -105,6 +106,15 @@ export enum ErrorCodeEnum {
   // biz - config validation (422)
   ConfigValidationFailed = 19100,
   CannotGetIp = 19101,
+  CommentUploadFileTooLarge = 19102,
+  CommentUploadInvalidMime = 19103,
+  CommentImageCapExceeded = 19104,
+  CommentUploadFileNotOwned = 19105,
+  CommentUploadFileAlreadyBound = 19106,
+  CommentUploadRateLimited = 19107,
+  CommentUploadQuotaExceeded = 19108,
+  CommentUploadAccountTooNew = 19109,
+  CommentUploadInsufficientComments = 19110,
 
   // comment
   CommentDisabled = 30000,
@@ -213,6 +223,7 @@ export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
       'S3 图床未配置或配置不完整',
       400,
     ],
+    [ErrorCodeEnum.CommentUploadDisabled]: ['评论图片上传未启用', 503],
 
     // forbidden (403)
     [ErrorCodeEnum.NoteForbidden]: ['不要偷看人家的小心思啦~', 403],
@@ -265,6 +276,24 @@ export const ErrorCode = Object.freeze<Record<ErrorCodeEnum, [string, number]>>(
     // config validation (422)
     [ErrorCodeEnum.ConfigValidationFailed]: ['配置验证失败', 422],
     [ErrorCodeEnum.CannotGetIp]: ['无法获取 IP', 422],
+    [ErrorCodeEnum.CommentUploadFileTooLarge]: ['图片大小超出限制', 413],
+    [ErrorCodeEnum.CommentUploadInvalidMime]: ['不支持的图片格式', 415],
+    [ErrorCodeEnum.CommentImageCapExceeded]: ['评论图片数量超过上限', 422],
+    [ErrorCodeEnum.CommentUploadFileNotOwned]: ['不能引用他人上传的图片', 403],
+    [ErrorCodeEnum.CommentUploadFileAlreadyBound]: [
+      '该图片已绑定其他评论，请重新上传',
+      409,
+    ],
+    [ErrorCodeEnum.CommentUploadRateLimited]: ['上传过于频繁，请稍后再试', 429],
+    [ErrorCodeEnum.CommentUploadQuotaExceeded]: ['图片总容量超出限制', 429],
+    [ErrorCodeEnum.CommentUploadAccountTooNew]: [
+      '账号注册时间不足，暂无法上传',
+      403,
+    ],
+    [ErrorCodeEnum.CommentUploadInsufficientComments]: [
+      '需累计更多评论后方可上传',
+      403,
+    ],
 
     [ErrorCodeEnum.MineZip]: ['文件格式必须是 zip 类型', 422],
 
