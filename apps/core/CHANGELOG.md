@@ -1,5 +1,19 @@
 # CHANGELOG
 
+# [11.5.0](https://github.com/mx-space/core/compare/v11.4.8...v11.5.0) (2026-05-01)
+
+
+### Bug Fixes
+
+* **deps:** update dependency nanoid to v5.1.11 ([#2651](https://github.com/mx-space/core/issues/2651)) ([02fd3ec](https://github.com/mx-space/core/commit/02fd3ecf8b924a84660862a6575b182317c21d6e))
+
+
+### Features
+
+* **comment:** reader image upload, quotas, ttl cleanup, admin mgmt ([bce602f](https://github.com/mx-space/core/commit/bce602fc2b6f9fe78cd13d67410f75e31c196b01))
+
+
+
 ## [11.4.8](https://github.com/mx-space/core/compare/v11.4.7...v11.4.8) (2026-04-30)
 
 
