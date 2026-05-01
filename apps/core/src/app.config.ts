@@ -1,11 +1,13 @@
 import { readFileSync } from 'node:fs'
 import https from 'node:https'
 import path from 'node:path'
+
 import { seconds } from '@nestjs/throttler'
 import type { AxiosRequestConfig } from 'axios'
 import { program } from 'commander'
 import { load as yamlLoad } from 'js-yaml'
 import nodeMachineId from 'node-machine-id'
+
 import { isDebugMode, isDev } from './global/env.global'
 import { parseBooleanishValue } from './utils/tool.util'
 
@@ -191,6 +193,12 @@ const commander = program
   // telemetry
   .option('--disable_telemetry', 'disable anonymous telemetry')
 
+  // snowflake
+  .option(
+    '--snowflake_worker_id <number>',
+    'snowflake worker id (integer 0-1023). Required in production.',
+  )
+
 commander.parse()
 
 const argv = commander.opts()
@@ -349,4 +357,31 @@ if (ENCRYPT.enable && (!ENCRYPT.key || ENCRYPT.key.length !== 64))
 
 export const TELEMETRY = {
   enable: !parseBooleanishValue(argv.disable_telemetry ?? MX_DISABLE_TELEMETRY),
+}
+
+function parseSnowflakeWorkerId(): number {
+  const raw = argv.snowflake_worker_id ?? process.env.SNOWFLAKE_WORKER_ID
+  if (raw === undefined || raw === null || raw === '') {
+    if (isDev) {
+      // Dev fallback: avoid forcing every local checkout to set a worker id.
+      // Production deployments must allocate explicitly to prevent collisions.
+      return 0
+    }
+    throw new Error(
+      'SNOWFLAKE_WORKER_ID is required. Set the SNOWFLAKE_WORKER_ID env var or --snowflake_worker_id flag (integer 0-1023).',
+    )
+  }
+  const value = Number(raw)
+  if (!Number.isInteger(value) || value < 0 || value > 1023) {
+    throw new Error(
+      `SNOWFLAKE_WORKER_ID must be an integer in [0, 1023]; received "${raw}"`,
+    )
+  }
+  return value
+}
+
+export const SNOWFLAKE = {
+  workerId: parseSnowflakeWorkerId(),
+  // 2026-05-02T00:00:00.000Z
+  epochMs: 1746144000000,
 }

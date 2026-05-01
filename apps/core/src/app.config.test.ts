@@ -71,3 +71,9 @@ export const THROTTLE_OPTIONS = {
   ttl: 10_000,
   limit: 50,
 }
+
+export const SNOWFLAKE = {
+  workerId: Number(process.env.SNOWFLAKE_WORKER_ID ?? 1),
+  // 2026-05-02T00:00:00.000Z
+  epochMs: 1746144000000,
+}
