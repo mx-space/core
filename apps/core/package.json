@@ -124,7 +124,7 @@
     "mongoose-lean-getters": "2.3.1",
     "mongoose-lean-virtuals": "2.1.0",
     "mongoose-paginate-v2": "1.9.4",
-    "nanoid": "5.1.9",
+    "nanoid": "5.1.11",
     "nestjs-zod": "^5.3.0",
     "node-machine-id": "1.1.12",
     "nodemailer": "8.0.7",
