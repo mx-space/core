@@ -197,6 +197,144 @@ JSON-like application data should use `jsonb`, not stringified JSON.
 | `webhooks` | `webhooks` | Secret columns remain non-selected at repository boundary. |
 | `webhook_events` | `webhook_events` | `headers jsonb`, `payload jsonb`, `response jsonb/text`. |
 
+### Target Schema Inventory
+
+The following inventory is the minimum target schema set for the first PostgreSQL cutover. It intentionally lists the ID-bearing tables and relationship columns even when MongoDB currently stores the relationship without a constraint.
+
+#### Core Content Tables
+
+| Table | Minimum Columns | Keys and Indexes |
+|---|---|---|
+| `categories` | `id bigint pk`, `created_at timestamptz`, `name text not null`, `type integer not null default 0`, `slug text not null` | `unique(name)`, `unique(slug)`, index `slug`. |
+| `topics` | `id bigint pk`, `created_at timestamptz`, `description text default ''`, `introduce text`, `name text not null`, `slug text not null`, `icon text` | `unique(name)`, `unique(slug)`. |
+| `posts` | `id bigint pk`, `created_at timestamptz`, `title text not null`, `text text`, `content_format text not null`, `content text`, `images jsonb`, `modified_at timestamptz`, `meta jsonb`, `slug text not null`, `summary text`, `category_id bigint not null`, `copyright boolean`, `is_published boolean`, `tags text[]`, `read_count integer not null default 0`, `like_count integer not null default 0`, `pin_at timestamptz`, `pin_order integer` | `unique(slug)`, index `modified_at`, index `created_at`, FK `category_id -> categories.id on delete restrict`. |
+| `post_related_posts` | `post_id bigint not null`, `related_post_id bigint not null`, `position integer default 0` | Primary key `(post_id, related_post_id)`, FK both columns to `posts.id on delete cascade`. |
+| `notes` | `id bigint pk`, `created_at timestamptz`, `title text`, `text text`, `content_format text not null`, `content text`, `images jsonb`, `modified_at timestamptz`, `meta jsonb`, `nid integer not null`, `slug text`, `is_published boolean`, `password text`, `public_at timestamptz`, `mood text`, `weather text`, `bookmark boolean`, `coordinates jsonb`, `location text`, `read_count integer not null default 0`, `like_count integer not null default 0`, `topic_id bigint` | `unique(nid)`, `unique(slug) where slug is not null`, index `nid desc`, index `modified_at`, FK `topic_id -> topics.id on delete set null`. |
+| `pages` | `id bigint pk`, `created_at timestamptz`, `title text not null`, `text text`, `content_format text not null`, `content text`, `images jsonb`, `modified_at timestamptz`, `meta jsonb`, `slug text not null`, `subtitle text`, `order integer not null default 1` | `unique(slug)`, index `order`. |
+| `recentlies` | `id bigint pk`, `created_at timestamptz`, `comments_index integer default 0`, `allow_comment boolean default true`, `content text not null default ''`, `type text not null`, `metadata jsonb`, `ref_type text`, `ref_id bigint`, `modified_at timestamptz`, `up integer default 0`, `down integer default 0` | Index `(ref_type, ref_id)`, index `created_at`. Polymorphic ref is validated by repository code. |
+| `comments` | `id bigint pk`, `created_at timestamptz`, `ref_type text not null`, `ref_id bigint not null`, `author text`, `mail text`, `url text`, `text text not null`, `state integer default 0`, `parent_comment_id bigint`, `root_comment_id bigint`, `reply_count integer default 0`, `latest_reply_at timestamptz`, `is_deleted boolean default false`, `deleted_at timestamptz`, `ip text`, `agent text`, `pin boolean default false`, `location text`, `is_whispers boolean default false`, `avatar text`, `auth_provider text`, `meta text`, `reader_id bigint`, `edited_at timestamptz`, `anchor jsonb` | Index `(ref_type, ref_id, parent_comment_id, pin, created_at)`, index `(root_comment_id, created_at)`, FK parent/root to `comments.id on delete cascade`, FK `reader_id -> readers.id on delete set null`, polymorphic content ref validated by repository code. |
+| `drafts` | `id bigint pk`, `created_at timestamptz`, `updated_at timestamptz`, `ref_type text not null`, `ref_id bigint`, `title text not null default ''`, `text text not null default ''`, `content_format text not null`, `content text`, `images jsonb`, `meta jsonb`, `type_specific_data jsonb`, `version integer not null default 1`, `published_version integer` | Index `(ref_type, ref_id) where ref_id is not null`, index `updated_at`, polymorphic content ref validated by repository code. |
+| `draft_histories` | `id bigint pk`, `draft_id bigint not null`, `version integer not null`, `title text not null`, `text text`, `content_format text not null`, `content text`, `type_specific_data jsonb`, `saved_at timestamptz not null`, `is_full_snapshot boolean not null`, `ref_version integer`, `base_version integer` | `unique(draft_id, version)`, FK `draft_id -> drafts.id on delete cascade`. |
+
+#### Identity and Auth Tables
+
+| Table | Minimum Columns | Keys and Indexes |
+|---|---|---|
+| `readers` | `id bigint pk`, `created_at timestamptz`, `updated_at timestamptz`, `email text`, `email_verified boolean`, `name text`, `handle text`, `username text`, `display_username text`, `image text`, `role text not null default 'reader'` | `unique(email) where email is not null`, `unique(username) where username is not null`, index `role`. |
+| `owner_profiles` | `id bigint pk`, `created_at timestamptz`, `reader_id bigint not null`, `mail text`, `url text`, `introduce text`, `last_login_ip text`, `last_login_time timestamptz`, `social_ids jsonb` | `unique(reader_id)`, FK `reader_id -> readers.id on delete cascade`. |
+| `accounts` | `id bigint pk`, `created_at timestamptz`, `updated_at timestamptz`, `user_id bigint not null`, `account_id text`, `provider_id text not null`, `provider_account_id text`, `password text`, `type text`, `access_token text`, `refresh_token text`, `expires_at timestamptz`, `raw jsonb` | FK `user_id -> readers.id on delete cascade`, unique adapter key after Better Auth schema validation. |
+| `sessions` | `id bigint pk`, `created_at timestamptz`, `updated_at timestamptz`, `user_id bigint not null`, `token text not null`, `expires_at timestamptz`, `ip_address text`, `user_agent text`, `provider text` | `unique(token)`, FK `user_id -> readers.id on delete cascade`. |
+| `api_keys` | `id bigint pk`, `created_at timestamptz`, `updated_at timestamptz`, `user_id bigint`, `reference_id bigint`, `config_id text`, `name text`, `key text not null`, `start text`, `prefix text`, `enabled boolean`, `rate_limit_enabled boolean`, `request_count integer`, `expires_at timestamptz` | `unique(key)`, FK `user_id -> readers.id on delete cascade`, FK `reference_id -> readers.id on delete cascade`. |
+| `passkeys` | `id bigint pk`, `created_at timestamptz`, `updated_at timestamptz`, `user_id bigint not null`, `credential_id text not null`, `public_key text not null`, `counter integer`, `device_type text`, `backed_up boolean`, `transports text[]` | `unique(credential_id)`, FK `user_id -> readers.id on delete cascade`. |
+
+Better Auth owns exact adapter column requirements. The migration must verify adapter-generated schema names before implementation, but all user/account/session/API-key relationships must resolve to Snowflake reader IDs.
+
+#### AI, Search, and Translation Tables
+
+| Table | Minimum Columns | Keys and Indexes |
+|---|---|---|
+| `ai_translations` | `id bigint pk`, `created_at timestamptz`, `hash text not null`, `ref_id bigint not null`, `ref_type text not null`, `lang text not null`, `source_lang text not null`, `title text not null`, `text text not null`, `subtitle text`, `summary text`, `tags text[]`, `source_modified_at timestamptz`, `ai_model text`, `ai_provider text`, `content_format text`, `content text`, `source_block_snapshots jsonb`, `source_meta_hashes jsonb` | `unique(ref_id, ref_type, lang)`, index `ref_id`; polymorphic ref validated by repository code. |
+| `translation_entries` | `id bigint pk`, `created_at timestamptz`, `key_path text not null`, `lang text not null`, `key_type text not null`, `lookup_key text not null`, `source_text text not null`, `translated_text text not null`, `source_updated_at timestamptz` | `unique(key_path, lang, key_type, lookup_key)`, index `(key_path, lang)`, index `lookup_key`. |
+| `ai_summaries` | `id bigint pk`, `created_at timestamptz`, `hash text not null`, `summary text not null`, `ref_id bigint not null`, `lang text` | Index `ref_id`; polymorphic ref validated by repository code. |
+| `ai_insights` | `id bigint pk`, `created_at timestamptz`, `ref_id bigint not null`, `lang text not null`, `hash text not null`, `content text not null`, `is_translation boolean default false`, `source_insights_id bigint`, `source_lang text`, `model_info jsonb` | `unique(ref_id, lang)`, FK `source_insights_id -> ai_insights.id on delete set null`, polymorphic ref validated by repository code. |
+| `ai_agent_conversations` | `id bigint pk`, `created_at timestamptz`, `updated_at timestamptz`, `ref_id bigint not null`, `ref_type text not null`, `title text`, `messages jsonb not null`, `model text not null`, `provider_id text not null`, `review_state jsonb`, `diff_state jsonb`, `message_count integer default 0` | Index `(ref_id, ref_type)`, index `updated_at`; polymorphic ref validated by repository code. |
+| `search_documents` | `id bigint pk`, `ref_type text not null`, `ref_id bigint not null`, `title text not null`, `search_text text not null`, `terms text[] not null default '{}'`, `title_term_freq jsonb not null default '{}'`, `body_term_freq jsonb not null default '{}'`, `title_length integer default 0`, `body_length integer default 0`, `slug text`, `nid integer`, `is_published boolean default true`, `public_at timestamptz`, `has_password boolean default false`, `created_at timestamptz`, `modified_at timestamptz` | `unique(ref_type, ref_id)`, indexes matching current filters; optional future `tsvector` index is out of first cutover. |
+
+#### Operational Tables
+
+| Table | Minimum Columns | Keys and Indexes |
+|---|---|---|
+| `options` | `id bigint pk`, `name text not null`, `value jsonb` | `unique(name)`. |
+| `activities` | `id bigint pk`, `created_at timestamptz`, `type integer`, `payload jsonb` | Index `created_at`, optional generated indexes after query profiling. |
+| `analyzes` | `id bigint pk`, `timestamp timestamptz not null`, `ip text`, `ua jsonb`, `country text`, `path text`, `referer text` | Index `timestamp`, `(timestamp, path)`, `(timestamp, referer)`, `(timestamp, ip)`. |
+| `links` | `id bigint pk`, `created_at timestamptz`, `name text not null`, `url text not null`, `avatar text`, `description text`, `type integer`, `state integer`, `email text` | `unique(name)`, `unique(url)`. |
+| `projects` | `id bigint pk`, `created_at timestamptz`, `name text not null`, `preview_url text`, `doc_url text`, `project_url text`, `images text[]`, `description text not null`, `avatar text`, `text text` | `unique(name)`. |
+| `says` | `id bigint pk`, `created_at timestamptz`, `text text not null`, `source text`, `author text` | Index `created_at`. |
+| `snippets` | `id bigint pk`, `created_at timestamptz`, `updated_at timestamptz`, `type text`, `private boolean`, `raw text not null`, `name text not null`, `reference text not null default 'root'`, `comment text`, `metatype text`, `schema text`, `method text`, `custom_path text`, `secret text`, `enable boolean`, `built_in boolean`, `compiled_code text` | Index `(name, reference)`, index `type`, `unique(custom_path) where custom_path is not null`. |
+| `subscribes` | `id bigint pk`, `created_at timestamptz`, `email text not null`, `cancel_token text not null`, `subscribe integer not null`, `verified boolean default false` | `unique(email)`, `unique(cancel_token)`. |
+| `file_references` | `id bigint pk`, `created_at timestamptz`, `file_url text not null`, `file_name text not null`, `status text not null`, `ref_id bigint`, `ref_type text`, `s3_object_key text` | Index `file_url`, `(ref_id, ref_type)`, `(status, created_at)`; polymorphic ref validated by repository code because delete may set pending rather than cascade. |
+| `poll_votes` | `id bigint pk`, `created_at timestamptz`, `poll_id text not null`, `voter_fingerprint text not null` | `unique(poll_id, voter_fingerprint)`, index `poll_id`. |
+| `poll_vote_options` | `vote_id bigint not null`, `option_id text not null` | Primary key `(vote_id, option_id)`, FK `vote_id -> poll_votes.id on delete cascade`, index `option_id`. |
+| `slug_trackers` | `id bigint pk`, `slug text not null`, `type text not null`, `target_id bigint not null` | Index `(type, target_id)`, optional `unique(slug, type)` if implementation confirms no duplicate history requirement. |
+| `serverless_storages` | `id bigint pk`, `namespace text not null`, `key text not null`, `value jsonb not null` | `unique(namespace, key)`. |
+| `serverless_logs` | `id bigint pk`, `created_at timestamptz`, `function_id bigint`, `reference text not null`, `name text not null`, `method text`, `ip text`, `status text not null`, `execution_time integer not null`, `logs jsonb`, `error jsonb` | Index `created_at`, `(function_id, created_at)`, `(reference, name, created_at)`; TTL becomes scheduled cleanup. |
+| `webhooks` | `id bigint pk`, `timestamp timestamptz`, `payload_url text not null`, `events text[] not null`, `enabled boolean not null`, `secret text not null`, `scope integer` | Index `enabled`. |
+| `webhook_events` | `id bigint pk`, `timestamp timestamptz`, `headers jsonb`, `payload jsonb`, `event text`, `response jsonb`, `success boolean`, `hook_id bigint not null`, `status integer default 0` | FK `hook_id -> webhooks.id on delete cascade`, index `hook_id`, index `timestamp`. |
+
+### ID Relationship Matrix
+
+| Relationship | PostgreSQL Constraint | Delete Policy |
+|---|---|---|
+| `posts.category_id -> categories.id` | Direct FK | `on delete restrict`; category deletion no longer needs manual post-count guard. |
+| `post_related_posts.post_id -> posts.id` | Direct FK | `on delete cascade`. |
+| `post_related_posts.related_post_id -> posts.id` | Direct FK | `on delete cascade`. |
+| `notes.topic_id -> topics.id` | Direct FK | `on delete set null`; topic deletion keeps notes readable. |
+| `comments.parent_comment_id -> comments.id` | Direct self FK | `on delete cascade`. |
+| `comments.root_comment_id -> comments.id` | Direct self FK | `on delete cascade`. |
+| `comments.reader_id -> readers.id` | Direct FK | `on delete set null`; historical comments remain. |
+| `owner_profiles.reader_id -> readers.id` | Direct FK | `on delete cascade`. |
+| `accounts.user_id -> readers.id` | Direct FK | `on delete cascade`. |
+| `sessions.user_id -> readers.id` | Direct FK | `on delete cascade`. |
+| `api_keys.user_id/reference_id -> readers.id` | Direct FK | `on delete cascade`. |
+| `passkeys.user_id -> readers.id` | Direct FK | `on delete cascade`. |
+| `draft_histories.draft_id -> drafts.id` | Direct FK | `on delete cascade`. |
+| `ai_insights.source_insights_id -> ai_insights.id` | Direct self FK | `on delete set null`. |
+| `poll_vote_options.vote_id -> poll_votes.id` | Direct FK | `on delete cascade`. |
+| `webhook_events.hook_id -> webhooks.id` | Direct FK | `on delete cascade`. |
+| `comments/ref_id`, `drafts/ref_id`, `recentlies/ref_id`, `search_documents/ref_id`, `ai_* ref_id`, `file_references/ref_id`, `slug_trackers.target_id`, `ai_agent_conversations.ref_id` | Polymorphic relationship | Validate through repository and migration reports; use cascade only through explicit service methods or table-specific triggers if later justified. |
+
+### Deletion and Constraint Policy
+
+PostgreSQL constraints should replace business-code checks where the relationship is direct and the desired behavior is unambiguous.
+
+| Existing Mongo Pattern | PostgreSQL Improvement |
+|---|---|
+| Check whether a category has posts before deletion. | FK `posts.category_id -> categories.id on delete restrict` lets the database reject invalid deletion. |
+| Delete child rows manually after deleting a webhook, draft, poll vote, or related-post edge. | `on delete cascade` handles dependent rows. |
+| Clear owner profile, accounts, sessions, API keys, and passkeys manually after deleting a reader. | Auth-related FKs cascade from `readers.id`. |
+| Delete comment replies and maintain thread integrity in application code. | Self-referential FKs maintain parent/root validity; transaction code still updates counters. |
+| Remove or reset file references on article deletion. | Keep explicit service logic because the desired behavior is stateful: references may become pending instead of being deleted. |
+
+Constraint use must remain semantic. Do not add cascade merely to reduce code if the domain expects data preservation, auditability, or state transitions.
+
+### Transaction Policy
+
+The first schema cutover should identify transaction boundaries even if full transaction refactoring happens later.
+
+| Business Operation | Required Transaction Boundary |
+|---|---|
+| Create owner by credential | Insert reader, account, and owner profile atomically. |
+| Transfer owner role | Demote previous owner and promote target reader atomically; enforce exactly one owner after commit. |
+| Create/update post | Validate category, write post, update related posts, update draft published state, and emit post-write side effects after commit. |
+| Delete post/note/page | Delete or detach dependent drafts, comments, AI rows, search documents, file references, and activity records according to table policy. |
+| Save draft with history | Update draft row and insert draft history row atomically. |
+| Create comment reply | Insert comment, update root/parent counters, and update target comment index atomically. |
+| Create API key | Insert adapter row and legacy compatibility fields atomically. |
+| Dispatch webhook | Persist webhook event and update dispatch status atomically where retry state depends on the row. |
+
+Repository methods should accept an optional transaction handle so services can compose multi-table writes without opening nested transactions.
+
+### Nested Model Conversion Policy
+
+Mongo nested models and `Mixed` fields must be classified before migration. The target is not to flatten everything; the target is to make queryable relationships relational and keep value objects as typed JSON or structured columns.
+
+| Current Nested Shape | Target Shape | Rationale |
+|---|---|---|
+| `CountModel` on posts/notes | `read_count`, `like_count` columns | Frequently aggregated and sorted. |
+| `ImageModel[]` on posts/notes/pages/drafts | `images jsonb` | Value object, not independently referenced. |
+| `WriteBaseModel.meta` and `DraftModel.meta` | `meta jsonb` | User-defined metadata; avoid heuristic ObjectId rewriting inside arbitrary JSON. |
+| `Coordinate` on notes | `coordinates jsonb` initially | Value object; can become latitude/longitude columns if geo queries are added. |
+| `CommentAnchorModel` | `anchor jsonb` | Structured value object tied to one comment. |
+| `DraftHistoryModel[]` | `draft_histories` table | Versioned repeating data with identity and growth risk. |
+| `MetaFieldOption[]` and `MetaPresetChild[]` | `jsonb` columns | Configuration value objects; no independent lifecycle. |
+| `AIAgentConversation.messages` | `messages jsonb` | External rich-agent message format should remain verbatim. |
+| `AITranslation.sourceBlockSnapshots` and `sourceMetaHashes` | `jsonb` | Audit/debug metadata, not relational query surface. |
+| `ServerlessStorage.value`, `ServerlessLog.logs`, `ServerlessLog.error` | `jsonb` | Arbitrary user/runtime payloads. |
+| `WebhookEvent.headers`, `payload`, `response` | `jsonb` | Structured event payloads; easier to inspect than stringified JSON. |
+| `PollVote.optionIds` | `poll_vote_options` child table | SQL tallying becomes a simple `group by option_id`. |
+
+During data migration, ID rewriting must be schema-aware. Known relationship fields are rewritten through `mongo_id_map`; arbitrary JSON fields are not traversed for ObjectId-looking strings unless the target field is explicitly listed as a relationship.
+
 ### Migration Metadata Tables
 
 ```sql
