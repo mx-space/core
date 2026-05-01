@@ -116,7 +116,7 @@
     "lexical": "^0.44.0",
     "linkedom": "0.18.12",
     "lru-cache": "11.3.5",
-    "marked": "18.0.2",
+    "marked": "18.0.3",
     "mime-types": "^3.0.2",
     "mkdirp": "^3.0.1",
     "mongoose": "~9.5.0",
