@@ -195,4 +195,29 @@ export class RecentlyRepository extends BaseRepository {
       .limit(Math.max(1, size))
     return rows.map(mapRow)
   }
+
+  async findArchiveBuckets(): Promise<
+    Array<{ year: number; month: number; count: number }>
+  > {
+    const rows = await this.db
+      .select({
+        year: sql<number>`extract(year from ${recentlies.createdAt})::int`,
+        month: sql<number>`extract(month from ${recentlies.createdAt})::int`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(recentlies)
+      .groupBy(
+        sql`extract(year from ${recentlies.createdAt})`,
+        sql`extract(month from ${recentlies.createdAt})`,
+      )
+      .orderBy(
+        sql`extract(year from ${recentlies.createdAt}) desc`,
+        sql`extract(month from ${recentlies.createdAt}) desc`,
+      )
+    return rows.map((r) => ({
+      year: Number(r.year),
+      month: Number(r.month),
+      count: Number(r.count ?? 0),
+    }))
+  }
 }

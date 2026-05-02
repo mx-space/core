@@ -343,6 +343,31 @@ export class NoteRepository extends BaseRepository {
     return this.attachTopic(mapBase(row))
   }
 
+  async findArchiveBuckets(): Promise<
+    Array<{ year: number; month: number; count: number }>
+  > {
+    const rows = await this.db
+      .select({
+        year: sql<number>`extract(year from ${notes.createdAt})::int`,
+        month: sql<number>`extract(month from ${notes.createdAt})::int`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(notes)
+      .groupBy(
+        sql`extract(year from ${notes.createdAt})`,
+        sql`extract(month from ${notes.createdAt})`,
+      )
+      .orderBy(
+        sql`extract(year from ${notes.createdAt}) desc`,
+        sql`extract(month from ${notes.createdAt}) desc`,
+      )
+    return rows.map((r) => ({
+      year: Number(r.year),
+      month: Number(r.month),
+      count: Number(r.count ?? 0),
+    }))
+  }
+
   private async attachTopic(row: NoteRow): Promise<NoteRow> {
     if (!row.topicId) return { ...row, topic: null }
     const [topic] = await this.db

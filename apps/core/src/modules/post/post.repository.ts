@@ -70,6 +70,18 @@ export interface PostListParams {
   publishedOnly?: boolean
 }
 
+export interface PostTagCount {
+  [key: string]: unknown
+  name: string
+  count: number
+}
+
+export interface PostListByCategoryOptions {
+  includeCategory?: boolean
+  limit?: number
+  publishedOnly?: boolean
+}
+
 const mapBase = (row: typeof posts.$inferSelect): PostRow => ({
   id: toEntityId(row.id) as EntityId,
   title: row.title,
@@ -261,6 +273,10 @@ export class PostRepository extends BaseRepository {
     return Number(row?.count ?? 0)
   }
 
+  async countByCategoryId(categoryId: EntityId | string): Promise<number> {
+    return this.countByCategory(categoryId)
+  }
+
   async count(): Promise<number> {
     const [row] = await this.db
       .select({ count: sql<number>`count(*)::int` })
@@ -294,6 +310,76 @@ export class PostRepository extends BaseRepository {
     return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
   }
 
+  async aggregateAllTagCounts(): Promise<PostTagCount[]> {
+    const result = await this.db.execute<PostTagCount>(sql`
+      select unnest(tags) as name, count(*)::int
+      from posts
+      group by name
+      order by count desc, name asc
+    `)
+    return result.rows.map((row) => ({
+      name: row.name,
+      count: Number(row.count ?? 0),
+    }))
+  }
+
+  async aggregateTagCountsByCategory(
+    categoryId: EntityId | string,
+  ): Promise<PostTagCount[]> {
+    const result = await this.db.execute<PostTagCount>(sql`
+      select unnest(tags) as name, count(*)::int
+      from posts
+      where category_id = ${parseEntityId(categoryId)}
+      group by name
+      order by count desc, name asc
+    `)
+    return result.rows.map((row) => ({
+      name: row.name,
+      count: Number(row.count ?? 0),
+    }))
+  }
+
+  async findByTag(
+    tag: string,
+    options: { includeCategory?: boolean } = {},
+  ): Promise<PostRow[]> {
+    const rows = await this.db
+      .select()
+      .from(posts)
+      .where(sql`${tag} = any(${posts.tags})`)
+      .orderBy(desc(posts.pinAt), desc(posts.createdAt))
+
+    const mapped = rows.map(mapBase)
+    if (!options.includeCategory) return mapped
+    return Promise.all(mapped.map((row) => this.attachCategory(row)))
+  }
+
+  async listByCategory(
+    categoryId: EntityId | string,
+    options: PostListByCategoryOptions = {},
+  ): Promise<PostRow[]> {
+    const filters: SQL[] = [eq(posts.categoryId, parseEntityId(categoryId))]
+    if (options.publishedOnly) filters.push(eq(posts.isPublished, true))
+
+    const query = this.db
+      .select()
+      .from(posts)
+      .where(and(...filters))
+      .orderBy(desc(posts.pinAt), desc(posts.createdAt))
+
+    const rows =
+      options.limit === undefined
+        ? await query
+        : await query.limit(Math.max(1, options.limit))
+    const mapped = rows.map(mapBase)
+    if (options.includeCategory === false) return mapped
+    return Promise.all(mapped.map((row) => this.attachCategory(row)))
+  }
+
+  async findByCategoryId(categoryId: EntityId | string): Promise<PostRow[]> {
+    return this.listByCategory(categoryId)
+  }
+
   async findAdjacent(
     direction: 'before' | 'after',
     pivotDate: Date,
@@ -316,6 +402,30 @@ export class PostRepository extends BaseRepository {
       .limit(1)
     if (!row) return null
     return this.attachCategory(mapBase(row))
+  }
+
+  async findOldest(): Promise<PostRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(posts)
+      .orderBy(posts.createdAt)
+      .limit(1)
+    return row ? this.attachCategory(mapBase(row)) : null
+  }
+
+  async topTagsByCount(limit: number): Promise<PostTagCount[]> {
+    const result = await this.db.execute<PostTagCount>(sql`
+      select unnest(tags) as name, count(*)::int
+      from posts
+      where is_published = true
+      group by name
+      order by count desc, name asc
+      limit ${Math.max(1, limit)}
+    `)
+    return result.rows.map((row) => ({
+      name: row.name,
+      count: Number(row.count ?? 0),
+    }))
   }
 
   async findArchiveBuckets(): Promise<

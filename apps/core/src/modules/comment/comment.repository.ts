@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, asc, desc, eq, inArray, type SQL, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, inArray, type SQL, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { comments } from '~/database/schema'
@@ -12,7 +12,15 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export type CommentRefType = 'Post' | 'Note' | 'Page' | 'Recently'
+export type CommentRefType =
+  | 'Post'
+  | 'Note'
+  | 'Page'
+  | 'Recently'
+  | 'posts'
+  | 'notes'
+  | 'pages'
+  | 'recentlies'
 
 export interface CommentRow {
   id: EntityId
@@ -41,6 +49,8 @@ export interface CommentRow {
   agent: string | null
   location: string | null
   createdAt: Date
+  parent?: CommentRow | null
+  children?: CommentRow[]
 }
 
 export interface CommentCreateInput {
@@ -64,6 +74,27 @@ export interface CommentCreateInput {
   agent?: string | null
   location?: string | null
 }
+
+export interface CommentFindFilter {
+  state?: number
+  refType?: CommentRefType
+  refId?: EntityId | string
+  search?: string
+}
+
+const COMMENT_REF_TYPE_ALIASES: Record<CommentRefType, string> = {
+  Post: 'posts',
+  Note: 'notes',
+  Page: 'pages',
+  Recently: 'recentlies',
+  posts: 'posts',
+  notes: 'notes',
+  pages: 'pages',
+  recentlies: 'recentlies',
+}
+
+const normalizeCommentRefType = (refType: CommentRefType): string =>
+  COMMENT_REF_TYPE_ALIASES[refType]
 
 const mapBase = (row: typeof comments.$inferSelect): CommentRow => ({
   id: toEntityId(row.id) as EntityId,
@@ -117,6 +148,39 @@ export class CommentRepository extends BaseRepository {
     return row ? mapBase(row) : null
   }
 
+  async findByIdWithRelations(
+    id: EntityId | string,
+  ): Promise<CommentRow | null> {
+    const idBig = parseEntityId(id)
+    const [row] = await this.db
+      .select()
+      .from(comments)
+      .where(eq(comments.id, idBig))
+      .limit(1)
+    if (!row) return null
+
+    const [parent, children] = await Promise.all([
+      row.parentCommentId
+        ? this.db
+            .select()
+            .from(comments)
+            .where(eq(comments.id, row.parentCommentId))
+            .limit(1)
+        : Promise.resolve([]),
+      this.db
+        .select()
+        .from(comments)
+        .where(eq(comments.parentCommentId, idBig))
+        .orderBy(asc(comments.createdAt)),
+    ])
+
+    return {
+      ...mapBase(row),
+      parent: parent[0] ? mapBase(parent[0]) : null,
+      children: children.map(mapBase),
+    }
+  }
+
   async findThreadFor(
     refType: CommentRefType,
     refId: EntityId | string,
@@ -127,7 +191,7 @@ export class CommentRepository extends BaseRepository {
     size = Math.min(50, Math.max(1, size))
     const offset = (page - 1) * size
     const where = and(
-      eq(comments.refType, refType),
+      eq(comments.refType, normalizeCommentRefType(refType)),
       eq(comments.refId, parseEntityId(refId)),
       sql`${comments.parentCommentId} is null`,
       eq(comments.isDeleted, false),
@@ -188,7 +252,7 @@ export class CommentRepository extends BaseRepository {
       .insert(comments)
       .values({
         id,
-        refType: input.refType,
+        refType: normalizeCommentRefType(input.refType),
         refId: parseEntityId(input.refId),
         text: input.text,
         author: input.author ?? null,
@@ -238,7 +302,7 @@ export class CommentRepository extends BaseRepository {
         .insert(comments)
         .values({
           id,
-          refType: input.refType,
+          refType: normalizeCommentRefType(input.refType),
           refId: parseEntityId(input.refId),
           text: input.text,
           author: input.author ?? null,
@@ -318,7 +382,7 @@ export class CommentRepository extends BaseRepository {
     extra?: SQL,
   ): Promise<number> {
     const where = and(
-      eq(comments.refType, refType),
+      eq(comments.refType, normalizeCommentRefType(refType)),
       eq(comments.refId, parseEntityId(refId)),
       eq(comments.isDeleted, false),
       ...(extra ? [extra] : []),
@@ -327,6 +391,22 @@ export class CommentRepository extends BaseRepository {
       .select({ count: sql<number>`count(*)::int` })
       .from(comments)
       .where(where)
+    return Number(row?.count ?? 0)
+  }
+
+  async countByRef(
+    refType: CommentRefType,
+    refId: EntityId | string,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(comments)
+      .where(
+        and(
+          eq(comments.refType, normalizeCommentRefType(refType)),
+          eq(comments.refId, parseEntityId(refId)),
+        ),
+      )
     return Number(row?.count ?? 0)
   }
 
@@ -388,7 +468,7 @@ export class CommentRepository extends BaseRepository {
       .from(comments)
       .where(
         and(
-          eq(comments.refType, refType),
+          eq(comments.refType, normalizeCommentRefType(refType)),
           inArray(comments.refId, bigInts),
           eq(comments.isDeleted, false),
         )!,
@@ -404,7 +484,7 @@ export class CommentRepository extends BaseRepository {
       .delete(comments)
       .where(
         and(
-          eq(comments.refType, refType),
+          eq(comments.refType, normalizeCommentRefType(refType)),
           eq(comments.refId, parseEntityId(refId)),
         )!,
       )
@@ -422,7 +502,7 @@ export class CommentRepository extends BaseRepository {
       .set({ state })
       .where(
         and(
-          eq(comments.refType, refType),
+          eq(comments.refType, normalizeCommentRefType(refType)),
           eq(comments.refId, parseEntityId(refId)),
         )!,
       )
@@ -442,5 +522,47 @@ export class CommentRepository extends BaseRepository {
       .where(inArray(comments.id, bigInts))
       .returning({ id: comments.id })
     return result.length
+  }
+
+  async paginatedFind(
+    filter: CommentFindFilter,
+    page = 1,
+    size = 10,
+  ): Promise<PaginationResult<CommentRow>> {
+    page = Math.max(1, page)
+    size = Math.min(50, Math.max(1, size))
+    const offset = (page - 1) * size
+    const where = this.buildFindFilter(filter)
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(comments)
+        .where(where)
+        .orderBy(desc(comments.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(comments)
+        .where(where),
+    ])
+    return {
+      data: rows.map(mapBase),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
+  private buildFindFilter(filter: CommentFindFilter): SQL | undefined {
+    const filters: SQL[] = []
+    if (filter.state !== undefined)
+      filters.push(eq(comments.state, filter.state))
+    if (filter.refType)
+      filters.push(
+        eq(comments.refType, normalizeCommentRefType(filter.refType)),
+      )
+    if (filter.refId)
+      filters.push(eq(comments.refId, parseEntityId(filter.refId)))
+    if (filter.search) filters.push(ilike(comments.text, `%${filter.search}%`))
+    return filters.length > 0 ? and(...filters) : undefined
   }
 }

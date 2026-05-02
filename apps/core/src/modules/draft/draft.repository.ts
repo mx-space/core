@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, ilike, or, type SQL, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { drafts } from '~/database/schema'
@@ -63,6 +63,12 @@ export type DraftPatchInput = Partial<DraftCreateInput> & {
   history?: DraftHistoryEntry[]
 }
 
+export interface DraftListFilter {
+  refType?: DraftRefType
+  search?: string
+  hasRef?: boolean
+}
+
 const mapRow = (row: typeof drafts.$inferSelect): DraftRow => ({
   id: toEntityId(row.id) as EntityId,
   refType: row.refType as DraftRefType,
@@ -91,14 +97,41 @@ export class DraftRepository extends BaseRepository {
   }
 
   async list(
+    page?: number,
+    size?: number,
+    filter?: DraftListFilter,
+  ): Promise<PaginationResult<DraftRow>>
+  async list(
     refType?: DraftRefType,
-    page = 1,
-    size = 10,
+    page?: number,
+    size?: number,
+  ): Promise<PaginationResult<DraftRow>>
+  async list(
+    pageOrRefType: number | DraftRefType = 1,
+    sizeOrPage = 10,
+    filterOrSize: DraftListFilter | number = {},
   ): Promise<PaginationResult<DraftRow>> {
+    const filter: DraftListFilter = {}
+    let page: number
+    let size: number
+
+    if (typeof pageOrRefType === 'string') {
+      filter.refType = pageOrRefType
+      page = sizeOrPage
+      size = typeof filterOrSize === 'number' ? filterOrSize : 10
+    } else {
+      page = pageOrRefType
+      size = sizeOrPage
+      Object.assign(
+        filter,
+        typeof filterOrSize === 'number' ? {} : filterOrSize,
+      )
+    }
+
     page = Math.max(1, page)
     size = Math.min(50, Math.max(1, size))
     const offset = (page - 1) * size
-    const where = refType ? eq(drafts.refType, refType) : undefined
+    const where = this.buildFilter(filter)
     const [rows, [{ count }]] = await Promise.all([
       this.db
         .select()
@@ -116,6 +149,14 @@ export class DraftRepository extends BaseRepository {
       data: rows.map(mapRow),
       pagination: this.paginationOf(Number(count ?? 0), page, size),
     }
+  }
+
+  async count(filter: DraftListFilter = {}): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(drafts)
+      .where(this.buildFilter(filter))
+    return Number(row?.count ?? 0)
   }
 
   async findById(id: EntityId | string): Promise<DraftRow | null> {
@@ -142,6 +183,23 @@ export class DraftRepository extends BaseRepository {
         )!,
       )
       .limit(1)
+    return row ? mapRow(row) : null
+  }
+
+  async linkToPublished(
+    draftId: EntityId | string,
+    publishedId: EntityId | string,
+    refType: DraftRefType,
+  ): Promise<DraftRow | null> {
+    const [row] = await this.db
+      .update(drafts)
+      .set({
+        refType,
+        refId: parseEntityId(publishedId),
+        updatedAt: new Date(),
+      })
+      .where(eq(drafts.id, parseEntityId(draftId)))
+      .returning()
     return row ? mapRow(row) : null
   }
 
@@ -236,5 +294,28 @@ export class DraftRepository extends BaseRepository {
       .where(eq(drafts.id, idBig))
       .returning()
     return row ? mapRow(row) : null
+  }
+
+  private buildFilter(filter: DraftListFilter): SQL | undefined {
+    const filters: SQL[] = []
+    if (filter.refType) filters.push(eq(drafts.refType, filter.refType))
+    if (filter.hasRef !== undefined) {
+      filters.push(
+        filter.hasRef
+          ? sql`${drafts.refId} is not null`
+          : sql`${drafts.refId} is null`,
+      )
+    }
+    if (filter.search) {
+      const pattern = `%${filter.search}%`
+      filters.push(
+        or(
+          ilike(drafts.title, pattern),
+          ilike(drafts.text, pattern),
+          ilike(drafts.content, pattern),
+        )!,
+      )
+    }
+    return filters.length > 0 ? and(...filters) : undefined
   }
 }
