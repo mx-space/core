@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { eq, sql } from 'drizzle-orm'
+import { and, desc, eq, notInArray, or, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { links } from '~/database/schema'
 import {
   BaseRepository,
+  type PaginationResult,
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -71,8 +72,47 @@ export class LinkRepository extends BaseRepository {
     super(db)
   }
 
+  async list(
+    page = 1,
+    size = 10,
+    filter: { state?: LinkState } = {},
+  ): Promise<PaginationResult<LinkRow>> {
+    page = Math.max(1, page)
+    size = Math.min(50, Math.max(1, size))
+    const offset = (page - 1) * size
+    const where =
+      filter.state !== undefined ? eq(links.state, filter.state) : undefined
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(links)
+        .where(where)
+        .orderBy(desc(links.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(links)
+        .where(where),
+    ])
+    return {
+      data: rows.map(mapRow),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
   async findAll(): Promise<LinkRow[]> {
     const rows = await this.db.select().from(links).orderBy(links.createdAt)
+    return rows.map(mapRow)
+  }
+
+  /** Public listing — excludes Audit and Reject. */
+  async findAvailable(): Promise<LinkRow[]> {
+    const rows = await this.db
+      .select()
+      .from(links)
+      .where(notInArray(links.state, [LinkState.Audit, LinkState.Reject]))
+      .orderBy(desc(links.createdAt))
     return rows.map(mapRow)
   }
 
@@ -148,5 +188,52 @@ export class LinkRepository extends BaseRepository {
       .select({ count: sql<number>`count(*)::int` })
       .from(links)
     return Number(row?.count ?? 0)
+  }
+
+  async countByState(state: LinkState): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(links)
+      .where(eq(links.state, state))
+    return Number(row?.count ?? 0)
+  }
+
+  async countByType(type: LinkType): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(links)
+      .where(eq(links.type, type))
+    return Number(row?.count ?? 0)
+  }
+
+  async countByTypeAndState(type: LinkType, state: LinkState): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(links)
+      .where(and(eq(links.type, type), eq(links.state, state)))
+    return Number(row?.count ?? 0)
+  }
+
+  async findByUrlOrName(url: string, name: string): Promise<LinkRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(links)
+      .where(or(eq(links.url, url), eq(links.name, name)))
+      .limit(1)
+    return row ? mapRow(row) : null
+  }
+
+  async updateState(
+    id: EntityId | string,
+    state: LinkState,
+  ): Promise<LinkRow | null> {
+    return this.update(id, { state })
+  }
+
+  async updateAvatar(
+    id: EntityId | string,
+    avatar: string,
+  ): Promise<LinkRow | null> {
+    return this.update(id, { avatar })
   }
 }

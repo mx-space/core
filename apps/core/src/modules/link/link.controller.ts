@@ -1,63 +1,46 @@
 import { Body, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators, Paginator } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'
-import type { BaseCrudModuleType } from '~/transformers/crud-factor.transformer'
+import { BasePgCrudFactory } from '~/transformers/crud-factor.pg.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
-import type mongoose from 'mongoose'
-import { LinkModel, LinkState } from './link.model'
+
+import { LinkRepository, LinkState } from './link.repository'
 import { AuditReasonDto, LinkDto } from './link.schema'
 import { LinkService } from './link.service'
 
 const paths = ['links', 'friends']
 
 @ApiController(paths)
-export class LinkControllerCrud extends BaseCrudFactory({
-  model: LinkModel,
+export class LinkControllerCrud extends BasePgCrudFactory({
+  repository: LinkRepository,
 }) {
   @Get('/')
   @Paginator
   async gets(
-    this: BaseCrudModuleType<LinkModel>,
     @Query() pager: PagerDto,
     @HasAdminAccess() hasAdminAccess: boolean,
   ) {
-    const { size, page, state } = pager
-
-    return await this._model.paginate(state !== undefined ? { state } : {}, {
-      limit: size,
-      page,
-      sort: { created: -1 },
-      select: hasAdminAccess ? '' : '-email',
+    const { size = 10, page = 1, state } = pager
+    const result = await this.repository.list(page, size, {
+      state: state !== undefined ? (Number(state) as LinkState) : undefined,
     })
+    if (!hasAdminAccess) {
+      result.data = result.data.map((row) => ({ ...row, email: null }))
+    }
+    return result
   }
 
   @Get('/all')
-  async getAll(
-    this: BaseCrudModuleType<LinkModel>,
-    @HasAdminAccess() hasAdminAccess: boolean,
-  ) {
-    // 过滤未通过审核和被拒绝的
-    const condition: mongoose.QueryFilter<LinkModel> = {
-      $nor: [
-        { state: LinkState.Audit },
-        {
-          state: LinkState.Reject,
-        },
-      ],
-    }
-
-    return await this._model
-      .find(condition)
-      .sort({ created: -1 })
-      .select(hasAdminAccess ? '' : '-email')
-      .lean()
+  async getAll(@HasAdminAccess() hasAdminAccess: boolean) {
+    const rows = await this.repository.findAvailable()
+    return hasAdminAccess ? rows : rows.map((row) => ({ ...row, email: null }))
   }
 }
 
@@ -67,15 +50,13 @@ export class LinkController {
 
   @Get('/audit')
   async canApplyLink() {
-    return {
-      can: await this.linkService.canApplyLink(),
-    }
+    return { can: await this.linkService.canApplyLink() }
   }
 
   @Get('/state')
   @Auth()
   async getLinkCount() {
-    return await this.linkService.getCount()
+    return this.linkService.getCount()
   }
 
   /** 申请友链 */
@@ -88,13 +69,9 @@ export class LinkController {
     if (!(await this.linkService.canApplyLink())) {
       throw new BizException(ErrorCodeEnum.LinkApplyDisabled)
     }
-
-    await this.linkService.applyForLink(body as unknown as LinkModel)
+    await this.linkService.applyForLink(body as any)
     scheduleManager.schedule(async () => {
-      await this.linkService.sendToOwner(
-        body.author,
-        body as unknown as LinkModel,
-      )
+      await this.linkService.sendToOwner(body.author, body as any)
     })
   }
 
@@ -102,23 +79,19 @@ export class LinkController {
   @Auth()
   async approveLink(@Param('id') id: string) {
     const { link, convertedAvatar } = await this.linkService.approveLink(id)
-
     scheduleManager.schedule(async () => {
       if (link.email) {
-        await this.linkService.sendToCandidate(link as any)
+        await this.linkService.sendToCandidate(link)
       }
     })
-    return {
-      link,
-      convertedAvatar,
-    }
+    return { link, convertedAvatar }
   }
 
   @Post('/audit/reason/:id')
   @Auth()
   @HttpCode(201)
   async sendReasonByEmail(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: AuditReasonDto,
   ) {
     const { id } = params

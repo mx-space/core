@@ -30,7 +30,7 @@ import type { CategoryService } from '../category/category.service'
 import { CommentState } from '../comment/comment.model'
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
-import { LinkState } from '../link/link.model'
+import { LinkState } from '../link/link.repository'
 import { LinkService } from '../link/link.service'
 import type { NoteModel } from '../note/note.model'
 import { NoteService } from '../note/note.service'
@@ -462,12 +462,8 @@ export class AggregateService {
       this.commentService.model.countDocuments({
         state: CommentState.Unread,
       }),
-      this.linkService.model.countDocuments({
-        state: LinkState.Pass,
-      }),
-      this.linkService.model.countDocuments({
-        state: LinkState.Audit,
-      }),
+      this.linkService.countByState(LinkState.Pass),
+      this.linkService.countByState(LinkState.Audit),
       this.categoryService.model.countDocuments({}),
       this.recentlyService.model.countDocuments({}),
     ])
