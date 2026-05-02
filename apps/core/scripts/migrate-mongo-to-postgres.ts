@@ -49,9 +49,19 @@ async function main() {
   const { formatReport, runMigration } =
     await import('../src/migration/postgres-data-migration/runner.js')
 
+  const summarizeUrl = (raw: string): string => {
+    try {
+      const u = new URL(raw)
+      const target = u.pathname.replace(/^\//, '') || '(default)'
+      return `${u.protocol}//${u.hostname}${u.port ? `:${u.port}` : ''}/${target}`
+    } catch {
+      return '(unparsable URL — connection details elided)'
+    }
+  }
+
   console.log(`Mongo → PostgreSQL migration (${mode})`)
-  console.log(`  mongo: ${mongoUri.replace(/:[^/:@]+@/, ':***@')}`)
-  console.log(`  pg:    ${pgUrl.replace(/:[^/:@]+@/, ':***@')}`)
+  console.log(`  mongo: ${summarizeUrl(mongoUri)}`)
+  console.log(`  pg:    ${summarizeUrl(pgUrl)}`)
 
   const mongo = new MongoClient(mongoUri)
   await mongo.connect()
