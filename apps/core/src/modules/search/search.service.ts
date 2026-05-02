@@ -38,6 +38,12 @@ type SearchDocumentLean = SearchDocumentModel & {
   _id?: { toString: () => string }
 }
 
+const SEARCH_SOURCE_PROJECTIONS: Record<SearchDocumentRefType, string> = {
+  post: 'title text content contentFormat slug created modified isPublished',
+  page: 'title text content contentFormat slug created modified',
+  note: 'title text content contentFormat nid slug created modified isPublished publicAt +password',
+}
+
 type SearchCorpusStats = {
   totalDocs: number
   avgTitleLength: number
@@ -100,22 +106,9 @@ export class SearchService {
 
   async buildSearchDocuments() {
     const [posts, pages, notes] = await Promise.all([
-      this.postService.model
-        .find()
-        .select(
-          'title text content contentFormat slug created modified isPublished',
-        )
-        .lean(),
-      this.pageService.model
-        .find()
-        .select('title text content contentFormat slug created modified')
-        .lean(),
-      this.noteService.model
-        .find()
-        .select(
-          'title text content contentFormat nid slug created modified isPublished publicAt +password',
-        )
-        .lean(),
+      this.loadSearchSourceDocs(this.postService.model, 'post'),
+      this.loadSearchSourceDocs(this.pageService.model, 'page'),
+      this.loadSearchSourceDocs(this.noteService.model, 'note'),
     ])
 
     return [
@@ -123,6 +116,13 @@ export class SearchService {
       ...pages.map((doc) => this.toSearchDocument('page', doc)),
       ...notes.map((doc) => this.toSearchDocument('note', doc)),
     ]
+  }
+
+  private loadSearchSourceDocs(
+    model: { find: () => any },
+    refType: SearchDocumentRefType,
+  ) {
+    return model.find().select(SEARCH_SOURCE_PROJECTIONS[refType]).lean()
   }
 
   @OnEvent(BusinessEvents.POST_CREATE)
@@ -534,28 +534,16 @@ export class SearchService {
   }
 
   private async loadSourceDocument(refType: SearchDocumentRefType, id: string) {
+    const projection = SEARCH_SOURCE_PROJECTIONS[refType]
     switch (refType) {
       case 'post': {
-        return this.postService.model
-          .findById(id)
-          .select(
-            'title text content contentFormat slug created modified isPublished',
-          )
-          .lean()
+        return this.postService.model.findById(id).select(projection).lean()
       }
       case 'note': {
-        return this.noteService.model
-          .findById(id)
-          .select(
-            'title text content contentFormat nid slug created modified isPublished publicAt +password',
-          )
-          .lean()
+        return this.noteService.model.findById(id).select(projection).lean()
       }
       case 'page': {
-        return this.pageService.model
-          .findById(id)
-          .select('title text content contentFormat slug created modified')
-          .lean()
+        return this.pageService.model.findById(id).select(projection).lean()
       }
     }
   }

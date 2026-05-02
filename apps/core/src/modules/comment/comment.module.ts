@@ -10,6 +10,8 @@ import { CommentController } from './comment.controller'
 import { CommentLifecycleService } from './comment.lifecycle.service'
 import { CommentService } from './comment.service'
 import { CommentSpamFilterService } from './comment.spam-filter'
+import { CommentAnchorService } from './comment-anchor.service'
+import { CommentReaderFillService } from './comment-reader-fill.service'
 
 @Module({
   controllers: [CommentController],
@@ -17,6 +19,8 @@ import { CommentSpamFilterService } from './comment.spam-filter'
     CommentService,
     CommentLifecycleService,
     CommentSpamFilterService,
+    CommentAnchorService,
+    CommentReaderFillService,
   ],
   exports: [CommentService, CommentLifecycleService, CommentSpamFilterService],
   imports: [

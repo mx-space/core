@@ -176,15 +176,10 @@ export class AggregateService {
         .limit(limit)
         .lean()
 
-    const tasks: Promise<any>[] = []
-    if (shouldFetchPosts) tasks.push(getPosts())
-    if (shouldFetchNotes) tasks.push(getNotes())
-
-    const results = await Promise.all(tasks)
-
-    let postIdx = 0
-    const posts = shouldFetchPosts ? results[postIdx++] : undefined
-    const notes = shouldFetchNotes ? results[postIdx] : undefined
+    const [posts, notes] = await Promise.all([
+      shouldFetchPosts ? getPosts() : undefined,
+      shouldFetchNotes ? getNotes() : undefined,
+    ])
 
     if (combined) {
       const items: any[] = []
@@ -259,6 +254,10 @@ export class AggregateService {
     return data
   }
 
+  private pickPublishedAt(doc: { modified?: Date | null; created?: Date }) {
+    return doc.modified ? new Date(doc.modified) : new Date(doc.created!)
+  }
+
   async getSiteMapContent() {
     const {
       url: { webUrl: baseURL },
@@ -271,9 +270,7 @@ export class AggregateService {
         .then((list) =>
           list.map((doc) => ({
             url: new URL(`/${doc.slug}`, baseURL),
-            published_at: doc.modified
-              ? new Date(doc.modified)
-              : new Date(doc.created!),
+            published_at: this.pickPublishedAt(doc),
           })),
         ),
 
@@ -299,34 +296,26 @@ export class AggregateService {
         })
         .lean()
         .then((list) =>
-          list.map((doc) => {
-            return {
-              url: new URL(
-                this.noteService.buildPublicPath(doc as NoteModel),
-                baseURL,
-              ),
-              published_at: doc.modified
-                ? new Date(doc.modified)
-                : new Date(doc.created!),
-            }
-          }),
+          list.map((doc) => ({
+            url: new URL(
+              this.noteService.buildPublicPath(doc as NoteModel),
+              baseURL,
+            ),
+            published_at: this.pickPublishedAt(doc),
+          })),
         ),
 
       this.postService.model
         .find()
         .populate('category')
         .then((list) =>
-          list.map((doc) => {
-            return {
-              url: new URL(
-                `/posts/${(doc.category as CategoryModel).slug}/${doc.slug}`,
-                baseURL,
-              ),
-              published_at: doc.modified
-                ? new Date(doc.modified)
-                : new Date(doc.created!),
-            }
-          }),
+          list.map((doc) => ({
+            url: new URL(
+              `/posts/${(doc.category as CategoryModel).slug}/${doc.slug}`,
+              baseURL,
+            ),
+            published_at: this.pickPublishedAt(doc),
+          })),
         ),
     ])
 
@@ -396,32 +385,27 @@ export class AggregateService {
         .sort({ created: -1 }),
     ])
 
-    const postsRss: RSSProps['data'] = posts.map((post) => {
-      return {
-        id: post.id,
-        title: post.title,
-        text: post.text,
-        created: post.created!,
-        modified: post.modified,
-        link: baseURL + this.urlService.build(post),
-        images: post.images || [],
-        contentFormat: post.contentFormat,
-        content: post.content,
-      }
+    const toRssEntry = (
+      doc: any,
+      _type: 'post' | 'note',
+    ): RSSProps['data'][number] => ({
+      id: doc.id,
+      title: doc.title,
+      text: doc.text,
+      created: doc.created!,
+      modified: doc.modified,
+      link: baseURL + this.urlService.build(doc),
+      images: doc.images || [],
+      contentFormat: doc.contentFormat,
+      content: doc.content,
     })
-    const notesRss: RSSProps['data'] = notes.map((note) => {
-      return {
-        id: note.id,
-        title: note.title,
-        text: note.text,
-        created: note.created!,
-        modified: note.modified,
-        link: baseURL + this.urlService.build(note),
-        images: note.images || [],
-        contentFormat: note.contentFormat,
-        content: note.content,
-      }
-    })
+
+    const postsRss: RSSProps['data'] = posts.map((post) =>
+      toRssEntry(post, 'post'),
+    )
+    const notesRss: RSSProps['data'] = notes.map((note) =>
+      toRssEntry(note, 'note'),
+    )
 
     return postsRss
       .concat(notesRss)
@@ -537,37 +521,41 @@ export class AggregateService {
       },
     ]
 
-    let counts = {
-      totalLikes: 0,
-      totalReads: 0,
+    const aggregateOne = async (
+      model: typeof this.postService.model | typeof this.noteService.model,
+    ) => {
+      const result = await model.aggregate(pipeline)
+      return (
+        (result[0] as { totalLikes: number; totalReads: number }) ?? {
+          totalLikes: 0,
+          totalReads: 0,
+        }
+      )
     }
 
     switch (type) {
       case ReadAndLikeCountDocumentType.Post: {
-        const result = await this.postService.model.aggregate(pipeline)
-        if (result[0]) counts = result[0]
-
-        break
+        return aggregateOne(this.postService.model)
       }
       case ReadAndLikeCountDocumentType.Note: {
-        const result = await this.noteService.model.aggregate(pipeline)
-        if (result[0]) counts = result[0]
-        break
+        return aggregateOne(this.noteService.model)
       }
       case ReadAndLikeCountDocumentType.All: {
         const results = await Promise.all([
-          this.getAllReadAndLikeCount(ReadAndLikeCountDocumentType.Post),
-          this.getAllReadAndLikeCount(ReadAndLikeCountDocumentType.Note),
+          aggregateOne(this.postService.model),
+          aggregateOne(this.noteService.model),
         ])
-
-        for (const result of results) {
-          counts.totalLikes += result.totalLikes
-          counts.totalReads += result.totalReads
-        }
+        return results.reduce(
+          (acc, curr) => ({
+            totalLikes: acc.totalLikes + curr.totalLikes,
+            totalReads: acc.totalReads + curr.totalReads,
+          }),
+          { totalLikes: 0, totalReads: 0 },
+        )
       }
     }
 
-    return counts
+    return { totalLikes: 0, totalReads: 0 }
   }
 
   async getAllSiteWordsCount() {
@@ -595,11 +583,10 @@ export class AggregateService {
       this.pageService.model.aggregate(pipeline),
     ])
 
-    return results.reduce((prev, curr) => {
-      const [result] = curr
-      if (!result) return prev
-      return prev + result.totalCharacters
-    }, 0)
+    return results.reduce(
+      (sum, [result]) => sum + (result?.totalCharacters ?? 0),
+      0,
+    )
   }
 
   async getSiteInfo() {

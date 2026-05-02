@@ -1,7 +1,6 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import type { ReturnModelType } from '@typegoose/typegoose/lib/types'
-import DiffMatchPatch from 'diff-match-patch'
 import { Types } from 'mongoose'
 
 import { RequestContext } from '~/common/contexts/request.context'
@@ -13,31 +12,20 @@ import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import {
-  type LexicalRootBlock,
-  LexicalService,
-} from '~/processors/helper/helper.lexical.service'
 import type { WriteBaseModel } from '~/shared/model/write-base.model'
-import { ContentFormat } from '~/shared/types/content-format.type'
 import { InjectModel } from '~/transformers/model.transformer'
-import { getAvatar, md5 } from '~/utils/tool.util'
 
-import { AITranslationModel } from '../ai/ai-translation/ai-translation.model'
 import { ConfigsService } from '../configs/configs.service'
 import { FileDeletionReason } from '../file/file-reference.model'
 import { FileReferenceService } from '../file/file-reference.service'
 import { OwnerService } from '../owner/owner.service'
 import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
-import {
-  CommentAnchorMode,
-  type CommentAnchorModel,
-  CommentModel,
-  CommentState,
-} from './comment.model'
+import { CommentModel, CommentState } from './comment.model'
 import type { CommentAnchorInput } from './comment.schema'
+import { CommentAnchorService } from './comment-anchor.service'
+import { CommentReaderFillService } from './comment-reader-fill.service'
 
-const dmp = new DiffMatchPatch()
 const COMMENT_REPLY_THRESHOLD = 20
 const COMMENT_REPLY_EDGE_SIZE = 3
 const COMMENT_THREAD_BATCH_SIZE = 10
@@ -56,11 +44,10 @@ export class CommentService {
     private readonly eventManager: EventManagerService,
     @Inject(forwardRef(() => ReaderService))
     private readonly readerService: ReaderService,
-    private readonly lexicalService: LexicalService,
-    @InjectModel(AITranslationModel)
-    private readonly aiTranslationModel: MongooseModel<AITranslationModel>,
     private readonly fileReferenceService: FileReferenceService,
     private readonly commentConfigsService: ConfigsService,
+    private readonly anchorService: CommentAnchorService,
+    private readonly readerFillService: CommentReaderFillService,
   ) {}
 
   private async attachReaderImagesOrRollback(
@@ -68,6 +55,7 @@ export class CommentService {
     readerId: string,
     text: string,
     mode: 'create' | 'update',
+    onRollback?: () => Promise<void>,
   ) {
     try {
       await this.fileReferenceService.attachReaderImagesToComment({
@@ -79,6 +67,8 @@ export class CommentService {
     } catch (err) {
       if (mode === 'create') {
         await this.commentModel.deleteOne({ _id: commentId }).catch(() => {})
+      } else if (onRollback) {
+        await onRollback().catch(() => {})
       }
       throw err
     }
@@ -94,7 +84,9 @@ export class CommentService {
     }
 
     if (typeof id === 'object' && id && '_id' in id) {
-      return this.toObjectId((id as { _id?: unknown })._id as any)
+      const inner = (id as { _id?: unknown })._id
+      if (inner instanceof Types.ObjectId) return inner
+      return new Types.ObjectId(String(inner))
     }
 
     return new Types.ObjectId(String(id))
@@ -202,444 +194,10 @@ export class CommentService {
     }
   }
 
-  private collectNestedReaderIds(
-    comments: Array<CommentModel & { replies?: CommentModel[] }>,
-  ) {
-    const readerIds = new Set<string>()
-
-    for (const comment of comments) {
-      if (comment.readerId) {
-        readerIds.add(comment.readerId)
-      }
-
-      for (const reply of comment.replies || []) {
-        if (reply.readerId) {
-          readerIds.add(reply.readerId)
-        }
-      }
-    }
-
-    return [...readerIds]
-  }
-
   private getModelByRefType(
     type: CollectionRefTypes,
   ): ReturnModelType<typeof WriteBaseModel> {
     return this.databaseService.getModelByRefType(type) as any
-  }
-
-  private findRangeByQuoteContext(
-    text: string,
-    quote: string,
-    prefix = '',
-    suffix = '',
-  ): { startOffset: number; endOffset: number } | null {
-    if (!quote) return null
-
-    const indexes: number[] = []
-    let cursor = 0
-    while (cursor <= text.length - quote.length) {
-      const index = text.indexOf(quote, cursor)
-      if (index === -1) break
-      indexes.push(index)
-      cursor = index + 1
-    }
-
-    if (!indexes.length) return null
-
-    const expectedPrefix = prefix || ''
-    const expectedSuffix = suffix || ''
-
-    const withContext = indexes.find((index) => {
-      const left = text.slice(Math.max(0, index - expectedPrefix.length), index)
-      const right = text.slice(
-        index + quote.length,
-        index + quote.length + expectedSuffix.length,
-      )
-      const prefixMatched = expectedPrefix ? left === expectedPrefix : true
-      const suffixMatched = expectedSuffix ? right === expectedSuffix : true
-      return prefixMatched && suffixMatched
-    })
-
-    const picked = withContext ?? (indexes.length === 1 ? indexes[0] : null)
-    if (picked == null) {
-      return null
-    }
-
-    return {
-      startOffset: picked,
-      endOffset: picked + quote.length,
-    }
-  }
-
-  private projectRangeFromSnapshot(
-    snapshotText: string,
-    currentText: string,
-    startOffset: number,
-    endOffset: number,
-  ): { startOffset: number; endOffset: number } | null {
-    const safeStart = Math.max(0, Math.min(startOffset, snapshotText.length))
-    const safeEnd = Math.max(
-      safeStart,
-      Math.min(endOffset, snapshotText.length),
-    )
-    const selected = snapshotText.slice(safeStart, safeEnd)
-    if (!selected) return null
-
-    const patches = dmp.patch_make(snapshotText, currentText)
-    const [projectedPrefix, prefixFlags] = dmp.patch_apply(
-      patches,
-      snapshotText.slice(0, safeStart),
-    )
-    const [projectedSelection, selectionFlags] = dmp.patch_apply(
-      patches,
-      snapshotText.slice(0, safeEnd),
-    )
-
-    if (
-      !prefixFlags.every(Boolean) ||
-      !selectionFlags.every(Boolean) ||
-      typeof projectedPrefix !== 'string' ||
-      typeof projectedSelection !== 'string'
-    ) {
-      return null
-    }
-
-    const nextStart = projectedPrefix.length
-    const nextEnd = projectedSelection.length
-
-    if (nextEnd < nextStart || nextEnd > currentText.length) {
-      return null
-    }
-
-    return {
-      startOffset: nextStart,
-      endOffset: nextEnd,
-    }
-  }
-
-  private findBlockByAnchor(
-    anchor: Pick<
-      CommentAnchorModel,
-      'blockId' | 'blockFingerprint' | 'blockType' | 'snapshotText'
-    >,
-    blocks: LexicalRootBlock[],
-  ): LexicalRootBlock | null {
-    const blockById = blocks.find((block) => block.id === anchor.blockId)
-    if (blockById) {
-      return blockById
-    }
-
-    const byFingerprint = blocks.find((block) => {
-      if (!anchor.blockFingerprint) return false
-      if (block.fingerprint !== anchor.blockFingerprint) return false
-      if (anchor.blockType && block.type !== anchor.blockType) return false
-      return true
-    })
-    if (byFingerprint) {
-      return byFingerprint
-    }
-
-    if (anchor.blockType) {
-      const bySnapshot = blocks.find(
-        (block) =>
-          block.type === anchor.blockType && block.text === anchor.snapshotText,
-      )
-      if (bySnapshot) {
-        return bySnapshot
-      }
-    }
-
-    return null
-  }
-
-  private async resolveAnchorForCreate(
-    anchor: CommentAnchorInput | undefined,
-    refDoc: Pick<WriteBaseModel, 'contentFormat' | 'content'> & { _id: any },
-  ): Promise<CommentAnchorModel | undefined> {
-    if (!anchor) {
-      return undefined
-    }
-
-    let lexicalContent: string | undefined
-
-    if (anchor.lang) {
-      const translation = await this.aiTranslationModel
-        .findOne({ refId: refDoc._id.toString(), lang: anchor.lang })
-        .lean()
-
-      if (
-        translation?.contentFormat === ContentFormat.Lexical &&
-        translation.content &&
-        typeof translation.content === 'string'
-      ) {
-        lexicalContent = translation.content
-      }
-    }
-
-    if (!lexicalContent) {
-      if (
-        refDoc.contentFormat !== ContentFormat.Lexical ||
-        !refDoc.content ||
-        typeof refDoc.content !== 'string'
-      ) {
-        throw new BizException(
-          ErrorCodeEnum.InvalidParameter,
-          'Anchor comments are only supported for lexical content.',
-        )
-      }
-      lexicalContent = refDoc.content
-    }
-
-    const blocks = this.lexicalService.extractRootBlocks(lexicalContent)
-    const block = this.findBlockByAnchor(anchor, blocks)
-    if (!block || !block.id) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'Cannot find the anchor block in current lexical document.',
-      )
-    }
-
-    const now = new Date()
-    const contentHash = md5(lexicalContent)
-    const langField = anchor.lang ?? undefined
-
-    if (anchor.mode === CommentAnchorMode.Block) {
-      return {
-        mode: CommentAnchorMode.Block,
-        blockId: block.id,
-        blockType: block.type,
-        blockFingerprint: block.fingerprint,
-        snapshotText: block.text,
-        contentHashAtCreate: contentHash,
-        contentHashCurrent: contentHash,
-        lastResolvedAt: now,
-        lang: langField,
-      }
-    }
-
-    const quote = anchor.quote
-    if (!quote) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'Range anchor quote cannot be empty.',
-      )
-    }
-
-    const initialSlice = block.text.slice(anchor.startOffset, anchor.endOffset)
-
-    const range =
-      initialSlice === quote
-        ? {
-            startOffset: anchor.startOffset,
-            endOffset: anchor.endOffset,
-          }
-        : this.findRangeByQuoteContext(
-            block.text,
-            quote,
-            anchor.prefix,
-            anchor.suffix,
-          )
-
-    if (!range) {
-      throw new BizException(
-        ErrorCodeEnum.InvalidParameter,
-        'Cannot resolve selected text in current block.',
-      )
-    }
-
-    return {
-      mode: CommentAnchorMode.Range,
-      blockId: block.id,
-      blockType: block.type,
-      blockFingerprint: block.fingerprint,
-      snapshotText: block.text,
-      quote,
-      prefix: anchor.prefix ?? '',
-      suffix: anchor.suffix ?? '',
-      startOffset: range.startOffset,
-      endOffset: range.endOffset,
-      contentHashAtCreate: contentHash,
-      contentHashCurrent: contentHash,
-      lastResolvedAt: now,
-      lang: langField,
-    }
-  }
-
-  private resolveAnchorForUpdatedContent(
-    anchor: CommentAnchorModel,
-    blocks: LexicalRootBlock[],
-    contentHash: string,
-  ): CommentAnchorModel | null {
-    const targetBlock = this.findBlockByAnchor(anchor, blocks)
-    if (!targetBlock || !targetBlock.id) {
-      return null
-    }
-
-    const baseAnchor = {
-      ...anchor,
-      blockId: targetBlock.id,
-      blockType: targetBlock.type,
-      blockFingerprint: targetBlock.fingerprint,
-      snapshotText: targetBlock.text,
-      contentHashCurrent: contentHash,
-      lastResolvedAt: new Date(),
-    }
-
-    if (anchor.mode === CommentAnchorMode.Block) {
-      return {
-        ...baseAnchor,
-        mode: CommentAnchorMode.Block,
-      }
-    }
-
-    const quote = anchor.quote
-    if (!quote) {
-      return null
-    }
-
-    const currentSlice = targetBlock.text.slice(
-      anchor.startOffset ?? 0,
-      anchor.endOffset ?? 0,
-    )
-
-    let range =
-      currentSlice === quote
-        ? {
-            startOffset: anchor.startOffset ?? 0,
-            endOffset: anchor.endOffset ?? 0,
-          }
-        : this.findRangeByQuoteContext(
-            targetBlock.text,
-            quote,
-            anchor.prefix ?? '',
-            anchor.suffix ?? '',
-          )
-
-    if (!range && typeof anchor.snapshotText === 'string') {
-      const projected = this.projectRangeFromSnapshot(
-        anchor.snapshotText,
-        targetBlock.text,
-        anchor.startOffset ?? 0,
-        anchor.endOffset ?? 0,
-      )
-      if (
-        projected &&
-        targetBlock.text.slice(projected.startOffset, projected.endOffset) ===
-          quote
-      ) {
-        range = projected
-      }
-    }
-
-    if (!range) {
-      range = this.findRangeByQuoteContext(targetBlock.text, quote)
-    }
-
-    if (!range) {
-      return null
-    }
-
-    return {
-      ...baseAnchor,
-      mode: CommentAnchorMode.Range,
-      quote,
-      prefix: anchor.prefix ?? '',
-      suffix: anchor.suffix ?? '',
-      startOffset: range.startOffset,
-      endOffset: range.endOffset,
-    }
-  }
-
-  private async reanchorCommentsByRef(
-    refType: CollectionRefTypes,
-    refId: string,
-  ) {
-    if (!refId) return
-
-    const refModel = this.getModelByRefType(refType)
-    const refDoc = await refModel
-      .findById(refId)
-      .select('content contentFormat')
-      .lean()
-
-    if (
-      !refDoc ||
-      refDoc.contentFormat !== ContentFormat.Lexical ||
-      !refDoc.content ||
-      typeof refDoc.content !== 'string'
-    ) {
-      return
-    }
-
-    const blocks = this.lexicalService.extractRootBlocks(refDoc.content)
-    const contentHash = md5(refDoc.content)
-
-    const comments = await this.commentModel
-      .find({
-        $and: [
-          {
-            ref: refId,
-            refType,
-          },
-          {
-            $or: [
-              { parentCommentId: null },
-              { parentCommentId: { $exists: false } },
-            ],
-          },
-          {
-            $or: [
-              { 'anchor.lang': null },
-              { 'anchor.lang': { $exists: false } },
-            ],
-          },
-        ],
-        anchor: { $exists: true },
-      })
-      .lean()
-
-    const deleting: string[] = []
-
-    for (const comment of comments) {
-      if (!comment.anchor) continue
-
-      const nextAnchor = this.resolveAnchorForUpdatedContent(
-        comment.anchor as CommentAnchorModel,
-        blocks,
-        contentHash,
-      )
-
-      if (!nextAnchor) {
-        deleting.push(comment.id ?? comment._id.toString())
-        continue
-      }
-
-      await this.commentModel.updateOne(
-        { _id: comment._id },
-        {
-          $set: {
-            anchor: nextAnchor,
-          },
-        },
-      )
-    }
-
-    for (const id of deleting) {
-      try {
-        await this.hardDeleteRootComment(id)
-        await this.eventManager.emit(
-          BusinessEvents.COMMENT_DELETE,
-          { id },
-          {
-            scope: EventScope.TO_SYSTEM_VISITOR,
-            nextTick: true,
-          },
-        )
-      } catch (error) {
-        this.logger.error(`failed to delete orphan anchor comment ${id}`, error)
-      }
-    }
   }
 
   async assignReaderToComment(): Promise<
@@ -703,7 +261,7 @@ export class CommentService {
     if (!ref) {
       throw new BizException(ErrorCodeEnum.CommentPostNotExists)
     }
-    const normalizedAnchor = await this.resolveAnchorForCreate(
+    const normalizedAnchor = await this.anchorService.resolveAnchorForCreate(
       doc.anchor as CommentAnchorInput | undefined,
       ref,
     )
@@ -859,16 +417,6 @@ export class CommentService {
           `cascade file delete after softDeleteComment(${id}) failed: ${err instanceof Error ? err.message : err}`,
         ),
       )
-  }
-
-  async deleteComments(id: string) {
-    return this.softDeleteComment(id)
-  }
-
-  private async hardDeleteRootComment(id: string) {
-    await this.commentModel.deleteMany({
-      $or: [{ _id: id }, { rootCommentId: id }],
-    })
   }
 
   async allowComment(id: string, type?: CollectionRefTypes) {
@@ -1184,97 +732,38 @@ export class CommentService {
   collectThreadReaderIds(
     comments: Array<CommentModel & { replies?: CommentModel[] }>,
   ) {
-    return this.collectNestedReaderIds(comments)
+    return this.readerFillService.collectThreadReaderIds(comments)
   }
 
-  cleanDirtyData<T>(docs: T[]) {
-    return docs
-  }
-
-  async fillAndReplaceAvatarUrl(comments: CommentModel[]) {
-    const owner = await this.ownerService.getOwner()
-    const readerIds = new Set<string>()
-
-    comments.forEach(function collect(comment) {
-      if (typeof comment == 'string') {
-        return
-      }
-      if (comment.readerId) {
-        readerIds.add(comment.readerId)
-      }
-
-      const replies = (comment as CommentModel & { replies?: CommentModel[] })
-        .replies
-      if (replies?.length) {
-        replies.forEach((child) => {
-          collect(child as CommentModel)
-        })
-      }
-    })
-
-    const readers = readerIds.size
-      ? await this.readerService.findReaderInIds([...readerIds])
-      : []
-    const readerMap = new Map<string, ReaderModel>()
-    readers.forEach((reader) => {
-      const id = (reader as any).id || (reader as any)._id?.toString?.()
-      if (id) {
-        readerMap.set(id, reader)
-      }
-    })
-
-    comments.forEach(function process(comment) {
-      if (typeof comment == 'string') {
-        return
-      }
-      const reader = comment.readerId ? readerMap.get(comment.readerId) : null
-      if (reader) {
-        const isOwner = reader.role === 'owner'
-        comment.author =
-          isOwner && owner.name ? owner.name : reader.name || comment.author
-        comment.avatar =
-          (isOwner ? owner.avatar : undefined) ||
-          reader.image ||
-          getAvatar(reader.email)
-      }
-      if (comment.author === owner.name) {
-        comment.avatar = owner.avatar || comment.avatar
-      }
-
-      if (!comment.avatar) {
-        comment.avatar = getAvatar(comment.mail)
-      }
-
-      const replies = (comment as CommentModel & { replies?: CommentModel[] })
-        .replies
-      if (replies?.length) {
-        replies.forEach((child) => {
-          process(child as CommentModel)
-        })
-      }
-
-      return comment
-    })
-
-    return comments
+  fillAndReplaceAvatarUrl(comments: CommentModel[]) {
+    return this.readerFillService.fillAndReplaceAvatarUrl(comments)
   }
 
   @OnEvent(BusinessEvents.POST_UPDATE)
   async handlePostUpdate(payload: { id?: string }) {
     if (!payload?.id) return
-    await this.reanchorCommentsByRef(CollectionRefTypes.Post, payload.id)
+    await this.anchorService.reanchorCommentsByRef(
+      CollectionRefTypes.Post,
+      payload.id,
+    )
   }
 
   @OnEvent(BusinessEvents.NOTE_UPDATE)
   async handleNoteUpdate(payload: { id?: string }) {
     if (!payload?.id) return
-    await this.reanchorCommentsByRef(CollectionRefTypes.Note, payload.id)
+    await this.anchorService.reanchorCommentsByRef(
+      CollectionRefTypes.Note,
+      payload.id,
+    )
   }
 
   @OnEvent(BusinessEvents.PAGE_UPDATE)
   async handlePageUpdate(payload: { id?: string }) {
     if (!payload?.id) return
-    await this.reanchorCommentsByRef(CollectionRefTypes.Page, payload.id)
+    await this.anchorService.reanchorCommentsByRef(
+      CollectionRefTypes.Page,
+      payload.id,
+    )
   }
 
   async cascadeFilesForCommentsIfSpam(
@@ -1314,20 +803,18 @@ export class CommentService {
       { text, editedAt: new Date() },
     )
     if (comment.readerId) {
-      try {
-        await this.fileReferenceService.attachReaderImagesToComment({
-          commentId: id,
-          readerId: comment.readerId,
-          text,
-          mode: 'update',
-        })
-      } catch (err) {
-        await this.commentModel.updateOne(
-          { _id: id },
-          { text: comment.text, editedAt: comment.editedAt ?? null },
-        )
-        throw err
-      }
+      await this.attachReaderImagesOrRollback(
+        id,
+        comment.readerId,
+        text,
+        'update',
+        async () => {
+          await this.commentModel.updateOne(
+            { _id: id },
+            { text: comment.text, editedAt: comment.editedAt ?? null },
+          )
+        },
+      )
     }
     await this.eventManager.broadcast(
       BusinessEvents.COMMENT_UPDATE,
