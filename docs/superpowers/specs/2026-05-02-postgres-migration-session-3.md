@@ -15,8 +15,8 @@ cutover, and lays out the per-module plan for finishing the work.
 > `BasePgCrudFactory` scaffold are all committed and verified end-to-end
 > (dry-run + apply round-trip succeed against real Mongo data with 16
 > acceptable orphan refs out of ~100K rows). **Wave 1 of the service
-> cutover is in progress: `project`, `topic`, `subscribe`, and `say`
-> are flipped to PostgreSQL; the remaining ~32 modules are still on
+> cutover has flipped `project`, `topic`, `subscribe`, `say`, and
+> `link` to PostgreSQL; the remaining ~31 modules are still on
 > Mongoose.** The architectural blocker (cross-module
 > `service.model.X` calls) means future waves must port a producer and
 > all of its consumers in the same commit — see §3 for the dependency
@@ -189,6 +189,7 @@ branch:
 | `8e824b09` | `project`, `topic` | Project uses `BasePgCrudFactory` directly. Topic deletes its passthrough `TopicService` and registers `TopicRepository` directly. `TranslateFields` rules switch from `_id` to `id`. |
 | `3f5cb542` | `subscribe` | `SubscribeService` is rewritten to consume `SubscribeRepository`. Repository grows `list`, `updateByEmail`, `deleteByEmail`, `deleteByEmails`, `deleteAll`. Controller's `service.model.paginate` becomes `service.list(page, size)`. `cancelToken` is coerced through `String()` because `hashString` returns a number whereas the PG schema column is `text`. |
 | `8a6a11a0` | `say` (+ `aggregate` patch) | First module that had cross-module consumers. `SayService` exposes `findRecent(size)` and `count()`; `aggregate.service.ts` swaps the two `sayService.model` call sites at the same commit. Establishes the "leaf + consumer-fix in one commit" pattern. |
+| `ca19fbed` | `link` (+ `link-avatar`, CRUD controller, `aggregate` patch) | LinkService and LinkAvatarService both stop holding `LinkModel` — they consume `LinkRepository`. The CRUD controller switches to `BasePgCrudFactory`; `gets`/`getAll` overrides project away the `email` field for non-admin requests in the controller layer. `aggregate.service.ts` swaps the two `linkService.model.countDocuments` calls to `linkService.countByState`. `LinkState` import source moves from `link.model` to `link.repository`. `approveLink` returns the `LinkRow` directly; `sendAuditResultByEmail` upserts state via repository. |
 
 Compile is green after each commit. The 32 existing PG/foundation
 tests still pass. Mongo and PG continue to coexist — the runtime is
@@ -197,16 +198,6 @@ roughly 90% Mongoose, 10% PostgreSQL after these three flips.
 **Wave 1 modules still to cut** (no cross-module model consumers, so
 each can be done as its own commit without breaking the build):
 
-- `link` — service 299 lines + `link-avatar.service.ts` 216 lines both
-  use `LinkModel`. Controller has `LinkControllerCrud` extending
-  `BaseCrudFactory` with overrides for /\.gets and /all that filter by
-  state and project away `email` for non-admins. `aggregate.service.ts`
-  consumes `linkService.model.countDocuments({state})` twice. Plan:
-  add to `LinkRepository` — `list(page, size, {state})`,
-  `listAvailable()` (excludes Audit + Reject), `findByUrlOrName`,
-  `countByState`, `countByTypeAndState`, `countByType`, `updateState`.
-  Refactor link-avatar.service to consume `LinkRepository`. Estimate:
-  1.5 hours.
 - `snippet` — 471-line service with redis caching, custom paths, raw
   `aggregate(body)` controller endpoint that exposes Mongo aggregation
   pipelines. The raw `aggregate(body)` endpoint and the
