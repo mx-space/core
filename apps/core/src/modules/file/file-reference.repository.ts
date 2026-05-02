@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { fileReferences } from '~/database/schema'
 import {
   BaseRepository,
+  type PaginationResult,
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -67,6 +68,15 @@ export class FileReferenceRepository extends BaseRepository {
     return rows.map(mapRow)
   }
 
+  async findFirstByUrl(fileUrl: string): Promise<FileReferenceRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(fileReferences)
+      .where(eq(fileReferences.fileUrl, fileUrl))
+      .limit(1)
+    return row ? mapRow(row) : null
+  }
+
   async findByRef(
     refType: FileReferenceType,
     refId: EntityId | string,
@@ -118,6 +128,117 @@ export class FileReferenceRepository extends BaseRepository {
       .where(eq(fileReferences.id, idBig))
       .returning()
     return row ? mapRow(row) : null
+  }
+
+  async activateByUrls(
+    fileUrls: string[],
+    refType: FileReferenceType,
+    refId: EntityId | string,
+  ): Promise<number> {
+    if (!fileUrls.length) return 0
+    const result = await this.db
+      .update(fileReferences)
+      .set({
+        status: FileReferenceStatus.Active,
+        refType,
+        refId: parseEntityId(refId),
+      })
+      .where(inArray(fileReferences.fileUrl, fileUrls))
+      .returning({ id: fileReferences.id })
+    return result.length
+  }
+
+  async markDocumentPending(
+    refType: FileReferenceType,
+    refId: EntityId | string,
+  ): Promise<number> {
+    const result = await this.db
+      .update(fileReferences)
+      .set({
+        status: FileReferenceStatus.Pending,
+        refId: null,
+      })
+      .where(
+        and(
+          eq(fileReferences.refType, refType),
+          eq(fileReferences.refId, parseEntityId(refId)),
+        )!,
+      )
+      .returning({ id: fileReferences.id })
+    return result.length
+  }
+
+  async activateUrl(
+    fileUrl: string,
+    refType: FileReferenceType,
+    refId: EntityId | string,
+  ): Promise<FileReferenceRow | null> {
+    const [row] = await this.db
+      .update(fileReferences)
+      .set({
+        status: FileReferenceStatus.Active,
+        refType,
+        refId: parseEntityId(refId),
+      })
+      .where(eq(fileReferences.fileUrl, fileUrl))
+      .returning()
+    return row ? mapRow(row) : null
+  }
+
+  async listPending(
+    page = 1,
+    size = 20,
+  ): Promise<PaginationResult<FileReferenceRow>> {
+    page = Math.max(1, page)
+    size = Math.min(100, Math.max(1, size))
+    const offset = (page - 1) * size
+    const where = eq(fileReferences.status, FileReferenceStatus.Pending)
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(fileReferences)
+        .where(where)
+        .orderBy(desc(fileReferences.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(fileReferences)
+        .where(where),
+    ])
+    return {
+      data: rows.map(mapRow),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
+  async findPendingOlderThan(threshold: Date): Promise<FileReferenceRow[]> {
+    const rows = await this.db
+      .select()
+      .from(fileReferences)
+      .where(
+        and(
+          eq(fileReferences.status, FileReferenceStatus.Pending),
+          sql`${fileReferences.createdAt} < ${threshold}`,
+        )!,
+      )
+    return rows.map(mapRow)
+  }
+
+  async findPending(): Promise<FileReferenceRow[]> {
+    const rows = await this.db
+      .select()
+      .from(fileReferences)
+      .where(eq(fileReferences.status, FileReferenceStatus.Pending))
+    return rows.map(mapRow)
+  }
+
+  async countPending(): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(fileReferences)
+      .where(eq(fileReferences.status, FileReferenceStatus.Pending))
+    return Number(row?.count ?? 0)
   }
 
   async deleteById(id: EntityId | string): Promise<FileReferenceRow | null> {

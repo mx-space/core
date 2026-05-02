@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { aiInsights } from '~/database/schema'
 import {
   BaseRepository,
+  type PaginationResult,
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -61,6 +62,15 @@ export class AiInsightsRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
+  async findById(id: EntityId | string): Promise<AiInsightsRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(aiInsights)
+      .where(eq(aiInsights.id, parseEntityId(id)))
+      .limit(1)
+    return row ? mapRow(row) : null
+  }
+
   async listForRef(refId: EntityId | string): Promise<AiInsightsRow[]> {
     const refBig = parseEntityId(refId)
     const rows = await this.db
@@ -68,6 +78,105 @@ export class AiInsightsRepository extends BaseRepository {
       .from(aiInsights)
       .where(eq(aiInsights.refId, refBig))
     return rows.map(mapRow)
+  }
+
+  async listByRefIds(
+    refIds: Array<EntityId | string>,
+  ): Promise<AiInsightsRow[]> {
+    if (!refIds.length) return []
+    const rows = await this.db
+      .select()
+      .from(aiInsights)
+      .where(
+        inArray(
+          aiInsights.refId,
+          refIds.map((id) => parseEntityId(id)),
+        ),
+      )
+      .orderBy(desc(aiInsights.createdAt))
+    return rows.map(mapRow)
+  }
+
+  async findSourceForRef(
+    refId: EntityId | string,
+  ): Promise<AiInsightsRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(aiInsights)
+      .where(
+        and(
+          eq(aiInsights.refId, parseEntityId(refId)),
+          eq(aiInsights.isTranslation, false),
+        )!,
+      )
+      .orderBy(desc(aiInsights.createdAt))
+      .limit(1)
+    return row ? mapRow(row) : null
+  }
+
+  async list(page = 1, size = 20): Promise<PaginationResult<AiInsightsRow>> {
+    page = Math.max(1, page)
+    size = Math.min(100, Math.max(1, size))
+    const offset = (page - 1) * size
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(aiInsights)
+        .orderBy(desc(aiInsights.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db.select({ count: sql<number>`count(*)::int` }).from(aiInsights),
+    ])
+    return {
+      data: rows.map(mapRow),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
+  async groupedByRef(
+    page = 1,
+    size = 20,
+    refIds?: Array<EntityId | string>,
+  ): Promise<
+    PaginationResult<{ refId: EntityId; latestCreated: Date; count: number }>
+  > {
+    page = Math.max(1, page)
+    size = Math.min(100, Math.max(1, size))
+    const offset = (page - 1) * size
+    const where = refIds?.length
+      ? inArray(
+          aiInsights.refId,
+          refIds.map((id) => parseEntityId(id)),
+        )
+      : undefined
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select({
+          refId: aiInsights.refId,
+          latestCreated: sql<Date>`max(${aiInsights.createdAt})`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(aiInsights)
+        .where(where)
+        .groupBy(aiInsights.refId)
+        .orderBy(sql`max(${aiInsights.createdAt}) desc`)
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({
+          count: sql<number>`count(distinct ${aiInsights.refId})::int`,
+        })
+        .from(aiInsights)
+        .where(where),
+    ])
+    return {
+      data: rows.map((row) => ({
+        refId: toEntityId(row.refId) as EntityId,
+        latestCreated: row.latestCreated,
+        count: Number(row.count ?? 0),
+      })),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
   }
 
   async upsert(input: {
@@ -132,6 +241,43 @@ export class AiInsightsRepository extends BaseRepository {
       .where(eq(aiInsights.refId, refBig))
       .returning({ id: aiInsights.id })
     return result.length
+  }
+
+  async deleteById(id: EntityId | string): Promise<boolean> {
+    const result = await this.db
+      .delete(aiInsights)
+      .where(eq(aiInsights.id, parseEntityId(id)))
+      .returning({ id: aiInsights.id })
+    return result.length > 0
+  }
+
+  async deleteTranslationsWithDifferentHash(
+    refId: EntityId | string,
+    hash: string,
+  ): Promise<number> {
+    const result = await this.db
+      .delete(aiInsights)
+      .where(
+        and(
+          eq(aiInsights.refId, parseEntityId(refId)),
+          eq(aiInsights.isTranslation, true),
+          sql`${aiInsights.hash} <> ${hash}`,
+        )!,
+      )
+      .returning({ id: aiInsights.id })
+    return result.length
+  }
+
+  async updateContent(
+    id: EntityId | string,
+    content: string,
+  ): Promise<AiInsightsRow | null> {
+    const [row] = await this.db
+      .update(aiInsights)
+      .set({ content })
+      .where(eq(aiInsights.id, parseEntityId(id)))
+      .returning()
+    return row ? mapRow(row) : null
   }
 
   async count(): Promise<number> {

@@ -10,7 +10,6 @@ import {
   Logger,
 } from '@nestjs/common'
 import { isPlainObject } from 'es-toolkit/compat'
-import { Types } from 'mongoose'
 import qs from 'qs'
 
 import { BizException } from '~/common/exceptions/biz.exception'
@@ -22,16 +21,13 @@ import { RedisKeys } from '~/constants/cache.constant'
 import {
   OWNER_PROFILE_COLLECTION_NAME,
   READER_COLLECTION_NAME,
-  SERVERLESS_STORAGE_COLLECTION_NAME,
 } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { isDev } from '~/global/env.global'
-import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
 import type { SandboxResult } from '~/utils/sandbox'
@@ -48,8 +44,11 @@ import type {
   FunctionContextResponse,
 } from './function.types'
 import { allBuiltInSnippetPack as builtInSnippets } from './pack'
+import {
+  ServerlessLogRepository,
+  ServerlessStorageRepository,
+} from './serverless.repository'
 import { complieTypeScriptBabelOptions } from './serverless.util'
-import { ServerlessLogModel } from './serverless-log.model'
 
 type ScopeContext = {
   req: FunctionContextRequest
@@ -64,10 +63,9 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private readonly snippetRepository: SnippetRepository,
-    @InjectModel(ServerlessLogModel)
-    private readonly logModel: MongooseModel<ServerlessLogModel>,
+    private readonly storageRepository: ServerlessStorageRepository,
+    private readonly logRepository: ServerlessLogRepository,
     private readonly assetService: AssetService,
-    private readonly databaseService: DatabaseService,
 
     private readonly redisService: RedisService,
     private readonly configService: ConfigsService,
@@ -181,48 +179,17 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     },
   })
   private async mockGetOwner() {
-    const owner = await this.databaseService.db
-      .collection(READER_COLLECTION_NAME)
-      .find({ role: 'owner' })
-      .sort({ createdAt: 1, _id: 1 })
-      .limit(1)
-      .next()
-
-    if (!owner?._id) {
-      return null
-    }
-
-    const ownerProfile = await this.databaseService.db
-      .collection(OWNER_PROFILE_COLLECTION_NAME)
-      .findOne({
-        readerId:
-          Types.ObjectId.isValid(owner._id?.toString?.()) && owner._id
-            ? new Types.ObjectId(owner._id.toString())
-            : owner._id,
-      })
-
-    return {
-      id: owner._id.toString(),
-      _id: owner._id,
-      username: owner.username ?? owner.handle ?? '',
-      name: owner.name,
-      introduce: ownerProfile?.introduce,
-      avatar: owner.image,
-      mail: ownerProfile?.mail ?? owner.email,
-      url: ownerProfile?.url,
-      lastLoginTime: ownerProfile?.lastLoginTime,
-      lastLoginIp: ownerProfile?.lastLoginIp,
-      socialIds: ownerProfile?.socialIds,
-    }
+    // TODO(wave 4): restore owner lookup through the reader/owner PG
+    // repositories after those modules leave Mongoose.
+    this.logger.warn(
+      `getOwner serverless shim is unavailable until ${READER_COLLECTION_NAME}/${OWNER_PROFILE_COLLECTION_NAME} cutover`,
+    )
+    return null
   }
 
   private mockDb(namespace: string) {
-    const db = this.databaseService.db
-    const collection = db.collection(SERVERLESS_STORAGE_COLLECTION_NAME)
-
     const checkRecordIsExist = async (key: string) => {
-      const count = await collection.countDocuments({ namespace, key })
-      return count > 0
+      return (await this.storageRepository.get(namespace, key)) !== null
     }
 
     const updateKey = async (key: string, value: any) => {
@@ -230,49 +197,31 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
         throw new InternalServerErrorException('key not exist')
       }
 
-      return collection.updateOne(
-        {
-          namespace,
-          key,
-        },
-        {
-          $set: {
-            value,
-          },
-        },
-      )
+      return this.storageRepository.upsert(namespace, key, value)
     }
 
     return {
       async get(key: string) {
-        return collection
-          .findOne({
-            namespace,
-            key,
-          })
-          .then((doc) => {
-            return doc?.value ?? null
-          })
+        return this.storageRepository.get(namespace, key)
       },
       async find(condition: KV) {
         if (typeof condition !== 'object') {
           throw new InternalServerErrorException('condition must be object')
         }
 
-        condition.namespace = namespace
-
-        return collection
-          .aggregate([
-            { $match: condition },
-            {
-              $project: {
-                value: 1,
-                key: 1,
-                _id: 1,
-              },
-            },
-          ])
-          .toArray()
+        const entries = await this.storageRepository.listNamespace(namespace)
+        return entries
+          .filter((entry) =>
+            Object.entries(condition).every(
+              ([key, value]) => (entry.value as any)?.[key] === value,
+            ),
+          )
+          .map((entry) => ({
+            _id: entry.id,
+            id: entry.id,
+            key: entry.key,
+            value: entry.value,
+          }))
       },
       async set(key: string, value: any) {
         if (typeof key !== 'string') {
@@ -283,29 +232,18 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
           return updateKey(key, value)
         }
 
-        return collection.insertOne({
-          namespace,
-          key,
-          value,
-        })
+        return this.storageRepository.upsert(namespace, key, value)
       },
       async insert(key: string, value: any) {
         if (await checkRecordIsExist(key)) {
           throw new InternalServerErrorException('key already exists')
         }
 
-        return collection.insertOne({
-          namespace,
-          key,
-          value,
-        })
+        return this.storageRepository.upsert(namespace, key, value)
       },
       update: updateKey,
       del(key: string) {
-        return collection.deleteOne({
-          namespace,
-          key,
-        })
+        return this.storageRepository.delete(namespace, key)
       },
     } as const
   }
@@ -418,8 +356,8 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     context: ScopeContext,
     result: SandboxResult,
   ) {
-    await this.logModel.create({
-      functionId: model.id || '',
+    await this.logRepository.record({
+      functionId: model.id || null,
       reference: model.reference,
       name: model.name,
       method: context.req.method,
@@ -436,36 +374,28 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     options: { page: number; size: number; status?: 'success' | 'error' },
   ) {
     const { page, size, status } = options
-    const condition: Record<string, unknown> = { functionId }
-    if (status) condition.status = status
-
-    const [data, total] = await Promise.all([
-      this.logModel
-        .find(condition)
-        .sort({ created: -1 })
-        .skip((page - 1) * size)
-        .limit(size)
-        .select('-logs')
-        .lean({ getters: true }),
-      this.logModel.countDocuments(condition),
-    ])
-
-    const totalPage = Math.ceil(total / size)
+    const result = await this.logRepository.list({
+      page,
+      size,
+      functionId,
+      status,
+    } as Parameters<ServerlessLogRepository['list']>[0])
+    const totalPage = result.pagination.totalPage
     return {
-      data,
+      data: result.data.map(({ logs: _logs, ...row }) => row),
       pagination: {
-        total,
+        total: result.pagination.total,
         size,
         currentPage: page,
         totalPage,
-        hasNextPage: page < totalPage,
-        hasPrevPage: page > 1,
+        hasNextPage: result.pagination.hasNextPage,
+        hasPrevPage: result.pagination.hasPrevPage,
       },
     }
   }
 
   async getInvocationLogDetail(id: string) {
-    return this.logModel.findById(id).lean({ getters: true })
+    return this.logRepository.findLogById(id)
   }
 
   async isValidServerlessFunction(raw: string) {

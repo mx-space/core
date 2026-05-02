@@ -177,6 +177,33 @@ export class WebhookRepository extends BaseRepository {
     return mapEvent(row)
   }
 
+  async updateEvent(
+    id: EntityId | string,
+    patch: Partial<{
+      response: unknown
+      success: boolean | null
+      status: number
+    }>,
+  ): Promise<WebhookEventRow | null> {
+    const idBig = parseEntityId(id)
+    const [row] = await this.db
+      .update(webhookEvents)
+      .set(patch)
+      .where(eq(webhookEvents.id, idBig))
+      .returning()
+    return row ? mapEvent(row) : null
+  }
+
+  async findEventById(id: EntityId | string): Promise<WebhookEventRow | null> {
+    const idBig = parseEntityId(id)
+    const [row] = await this.db
+      .select()
+      .from(webhookEvents)
+      .where(eq(webhookEvents.id, idBig))
+      .limit(1)
+    return row ? mapEvent(row) : null
+  }
+
   async listEvents(
     hookId: EntityId | string,
     page = 1,
@@ -204,5 +231,13 @@ export class WebhookRepository extends BaseRepository {
       data: rows.map(mapEvent),
       pagination: this.paginationOf(Number(count ?? 0), page, size),
     }
+  }
+
+  async deleteEventsByHookId(hookId: EntityId | string): Promise<number> {
+    const result = await this.db
+      .delete(webhookEvents)
+      .where(eq(webhookEvents.hookId, parseEntityId(hookId)))
+      .returning({ id: webhookEvents.id })
+    return result.length
   }
 }

@@ -1,14 +1,11 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
-import type { ReturnModelType } from '@typegoose/typegoose'
-import type { QueryFilter } from 'mongoose'
 
 import { RequestContext } from '~/common/contexts/request.context'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import type { SearchDto } from '~/modules/search/search.schema'
 import type { Pagination } from '~/shared/interface/paginator.interface'
-import { InjectModel } from '~/transformers/model.transformer'
 
 import { NoteService } from '../note/note.service'
 import { PageService } from '../page/page.service'
@@ -23,6 +20,7 @@ import {
   SEARCH_MAX_CANDIDATES,
   SEARCH_PREFIX_TITLE_BONUS,
 } from './search.constants'
+import { type SearchDocumentRow, SearchRepository } from './search.repository'
 import {
   SearchDocumentModel,
   type SearchDocumentRefType,
@@ -33,7 +31,9 @@ import {
   tokenizeSearchText,
 } from './search-document.util'
 
-type SearchDocumentLean = SearchDocumentModel & {
+type SearchDocumentLean = SearchDocumentRow & {
+  created?: Date | null
+  modified?: Date | null
   id?: string
   _id?: { toString: () => string }
 }
@@ -63,10 +63,7 @@ export class SearchService {
     @Inject(forwardRef(() => PageService))
     private readonly pageService: PageService,
 
-    @InjectModel(SearchDocumentModel)
-    private readonly searchDocumentModel: ReturnModelType<
-      typeof SearchDocumentModel
-    >,
+    private readonly searchRepository: SearchRepository,
   ) {}
 
   async search(searchOption: SearchDto) {
@@ -87,10 +84,10 @@ export class SearchService {
 
   async rebuildSearchDocuments() {
     const documents = await this.buildSearchDocuments()
-    await this.searchDocumentModel.deleteMany({})
+    await this.searchRepository.deleteAll()
 
-    if (documents.length) {
-      await this.searchDocumentModel.insertMany(documents, { ordered: false })
+    for (const document of documents) {
+      await this.searchRepository.upsert(document as any)
     }
 
     this.logger.log(`rebuilt local search index, total: ${documents.length}`)
@@ -228,16 +225,9 @@ export class SearchService {
       return []
     }
 
-    return this.searchDocumentModel
-      .find({
-        $and: [
-          this.buildVisibilityQuery(refType, hasAdminAccess),
-          { terms: { $in: searchTerms } },
-        ],
-      })
-      .select(this.searchProjection)
-      .limit(limit)
-      .lean()
+    return (
+      await this.searchRepository.findByTerms(searchTerms, refType, limit)
+    ).filter((doc) => this.isVisible(doc, hasAdminAccess))
   }
 
   private async searchByText(
@@ -250,16 +240,9 @@ export class SearchService {
       return []
     }
 
-    return this.searchDocumentModel
-      .find({
-        $and: [
-          this.buildVisibilityQuery(refType, hasAdminAccess),
-          { $text: { $search: keyword.trim() } },
-        ],
-      })
-      .select(this.searchProjection)
-      .limit(limit)
-      .lean()
+    return (
+      await this.searchRepository.findByKeyword(keyword, refType, limit)
+    ).filter((doc) => this.isVisible(doc, hasAdminAccess))
   }
 
   private async searchByRegex(
@@ -268,52 +251,33 @@ export class SearchService {
     hasAdminAccess: boolean,
     limit: number,
   ) {
-    const clauses = this.buildRegexClauses(keywordRegexes)
-    if (!clauses.length) {
-      return []
-    }
-
-    return this.searchDocumentModel
-      .find({
-        $and: [
-          this.buildVisibilityQuery(refType, hasAdminAccess),
-          { $or: clauses },
-        ],
-      })
-      .select(this.searchProjection)
-      .limit(limit)
-      .lean()
+    if (!keywordRegexes.length) return []
+    const candidates = await this.searchRepository.findAll(refType)
+    return candidates
+      .filter((doc) => this.isVisible(doc, hasAdminAccess))
+      .filter((doc) =>
+        keywordRegexes.some(
+          (regex) => regex.test(doc.title) || regex.test(doc.searchText),
+        ),
+      )
+      .slice(0, limit)
   }
 
   private async getCorpusStats(
     refType: SearchDocumentRefType | undefined,
     hasAdminAccess: boolean,
   ): Promise<SearchCorpusStats> {
-    const visibilityMatch = this.buildVisibilityQuery(
-      refType,
-      hasAdminAccess,
-    ) as Record<string, any>
-
-    const [stats] = await this.searchDocumentModel.aggregate<{
-      totalDocs: number
-      avgTitleLength: number
-      avgBodyLength: number
-    }>([
-      { $match: visibilityMatch },
-      {
-        $group: {
-          _id: null,
-          totalDocs: { $sum: 1 },
-          avgTitleLength: { $avg: '$titleLength' },
-          avgBodyLength: { $avg: '$bodyLength' },
-        },
-      },
-    ])
+    const docs = (await this.searchRepository.findAll(refType)).filter((doc) =>
+      this.isVisible(doc, hasAdminAccess),
+    )
+    const totalDocs = docs.length
+    const totalTitleLength = docs.reduce((sum, doc) => sum + doc.titleLength, 0)
+    const totalBodyLength = docs.reduce((sum, doc) => sum + doc.bodyLength, 0)
 
     return {
-      totalDocs: stats?.totalDocs ?? 0,
-      avgTitleLength: stats?.avgTitleLength ?? 1,
-      avgBodyLength: stats?.avgBodyLength ?? 1,
+      totalDocs,
+      avgTitleLength: totalDocs ? totalTitleLength / totalDocs : 1,
+      avgBodyLength: totalDocs ? totalBodyLength / totalDocs : 1,
     }
   }
 
@@ -326,75 +290,40 @@ export class SearchService {
       return new Map<string, number>()
     }
 
-    const visibilityMatch = this.buildVisibilityQuery(
-      refType,
-      hasAdminAccess,
-    ) as Record<string, any>
-
-    const matched = await this.searchDocumentModel.aggregate<{
-      _id: string
-      count: number
-    }>([
-      {
-        $match: {
-          $and: [visibilityMatch, { terms: { $in: searchTerms } }],
-        },
-      },
-      { $unwind: '$terms' },
-      { $match: { terms: { $in: searchTerms } } },
-      { $group: { _id: '$terms', count: { $sum: 1 } } },
-    ])
-
-    return new Map(matched.map((item) => [item._id, item.count]))
+    const docs = (
+      await this.searchRepository.findByTerms(
+        searchTerms,
+        refType,
+        SEARCH_MAX_CANDIDATES,
+      )
+    ).filter((doc) => this.isVisible(doc, hasAdminAccess))
+    const counts = new Map<string, number>()
+    for (const doc of docs) {
+      for (const term of new Set(
+        doc.terms.filter((t) => searchTerms.includes(t)),
+      )) {
+        counts.set(term, (counts.get(term) ?? 0) + 1)
+      }
+    }
+    return counts
   }
 
-  private buildVisibilityQuery(
-    refType: SearchDocumentRefType | undefined,
+  private isVisible(
+    doc: Pick<
+      SearchDocumentRow,
+      'refType' | 'isPublished' | 'hasPassword' | 'publicAt'
+    >,
     hasAdminAccess: boolean,
-  ): QueryFilter<SearchDocumentModel> {
-    if (hasAdminAccess) {
-      return refType ? { refType } : {}
-    }
-
+  ) {
+    if (hasAdminAccess) return true
     const now = new Date()
-    if (refType === 'post') {
-      return {
-        refType,
-        isPublished: { $ne: false },
-      }
-    }
-    if (refType === 'page') {
-      return { refType }
-    }
-    if (refType === 'note') {
-      return {
-        refType,
-        isPublished: true,
-        hasPassword: { $ne: true },
-        $or: [
-          { publicAt: null },
-          { publicAt: { $exists: false } },
-          { publicAt: { $lte: now } },
-        ],
-      }
-    }
-
-    return {
-      $or: [
-        { refType: 'page' },
-        { refType: 'post', isPublished: { $ne: false } },
-        {
-          refType: 'note',
-          isPublished: true,
-          hasPassword: { $ne: true },
-          $or: [
-            { publicAt: null },
-            { publicAt: { $exists: false } },
-            { publicAt: { $lte: now } },
-          ],
-        },
-      ],
-    }
+    if (doc.refType === 'post') return doc.isPublished !== false
+    if (doc.refType === 'page') return true
+    return (
+      doc.isPublished &&
+      !doc.hasPassword &&
+      (!doc.publicAt || doc.publicAt <= now)
+    )
   }
 
   private async loadSearchResultData(
@@ -476,10 +405,8 @@ export class SearchService {
       return
     }
 
-    await this.searchDocumentModel.updateOne(
-      { refType, refId: id },
-      { $set: this.toSearchDocument(refType, sourceDocument) },
-      { upsert: true },
+    await this.searchRepository.upsert(
+      this.toSearchDocument(refType, sourceDocument) as any,
     )
   }
 
@@ -487,7 +414,7 @@ export class SearchService {
     refType: SearchDocumentRefType,
     id: string,
   ) {
-    await this.searchDocumentModel.deleteOne({ refType, refId: id })
+    await this.searchRepository.deleteByRef(refType, id)
   }
 
   private async loadSourceDocument(refType: SearchDocumentRefType, id: string) {
@@ -638,25 +565,9 @@ export class SearchService {
   }
 
   private getSearchDocumentKey(
-    doc: Pick<SearchDocumentModel, 'refType' | 'refId'>,
+    doc: Pick<SearchDocumentRow, 'refType' | 'refId'>,
   ) {
     return `${doc.refType}:${doc.refId}`
-  }
-
-  private get searchProjection() {
-    return {
-      refType: 1,
-      refId: 1,
-      title: 1,
-      searchText: 1,
-      terms: 1,
-      titleTermFreq: 1,
-      bodyTermFreq: 1,
-      titleLength: 1,
-      bodyLength: 1,
-      created: 1,
-      modified: 1,
-    }
   }
 
   private buildSearchHighlight(

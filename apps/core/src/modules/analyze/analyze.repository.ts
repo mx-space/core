@@ -64,6 +64,30 @@ export class AnalyzeRepository extends BaseRepository {
     return mapRow(row)
   }
 
+  async recordMany(
+    inputs: Array<{
+      ip?: string | null
+      ua?: Record<string, unknown> | null
+      country?: string | null
+      path?: string | null
+      referer?: string | null
+    }>,
+  ): Promise<number> {
+    if (inputs.length === 0) return 0
+    await this.db.insert(analyzes).values(
+      inputs.map((input) => ({
+        id: this.snowflake.nextBigInt(),
+        timestamp: new Date(),
+        ip: input.ip ?? null,
+        ua: input.ua ?? null,
+        country: input.country ?? null,
+        path: input.path ?? null,
+        referer: input.referer ?? null,
+      })),
+    )
+    return inputs.length
+  }
+
   async list(
     params: {
       page?: number
@@ -138,6 +162,121 @@ export class AnalyzeRepository extends BaseRepository {
         sql`to_char(${analyzes.timestamp} at time zone 'UTC', 'YYYY-MM-DD')`,
       )
     return rows.map((r) => ({ day: r.day, count: Number(r.count ?? 0) }))
+  }
+
+  async aggregateIpPvByRange(
+    from: Date,
+    to: Date,
+    granularity: 'hour' | 'date',
+  ): Promise<Array<{ key: string; pv: number; ip: number }>> {
+    const keyExpr =
+      granularity === 'hour'
+        ? sql<string>`to_char(${analyzes.timestamp} at time zone '+08:00', 'HH24')`
+        : sql<string>`to_char(${analyzes.timestamp} at time zone '+08:00', 'YYYY-MM-DD')`
+    const rows = await this.db
+      .select({
+        key: keyExpr,
+        pv: sql<number>`count(*)::int`,
+        ip: sql<number>`count(distinct ${analyzes.ip})::int`,
+      })
+      .from(analyzes)
+      .where(and(gte(analyzes.timestamp, from), lte(analyzes.timestamp, to))!)
+      .groupBy(keyExpr)
+      .orderBy(desc(keyExpr))
+    return rows.map((r) => ({
+      key: r.key,
+      pv: Number(r.pv ?? 0),
+      ip: Number(r.ip ?? 0),
+    }))
+  }
+
+  async aggregateDeviceDistribution(
+    from: Date,
+    to: Date,
+  ): Promise<{
+    browsers: Array<{ name: string; value: number }>
+    os: Array<{ name: string; value: number }>
+    devices: Array<{ name: string; value: number }>
+  }> {
+    const where = and(
+      gte(analyzes.timestamp, from),
+      lte(analyzes.timestamp, to),
+    )
+    const [browsers, os, devices] = await Promise.all([
+      this.db
+        .select({
+          name: sql<string>`coalesce(${analyzes.ua}->'browser'->>'name', 'Unknown')`,
+          value: sql<number>`count(*)::int`,
+        })
+        .from(analyzes)
+        .where(where!)
+        .groupBy(sql`coalesce(${analyzes.ua}->'browser'->>'name', 'Unknown')`)
+        .orderBy(sql`count(*) desc`)
+        .limit(10),
+      this.db
+        .select({
+          name: sql<string>`coalesce(${analyzes.ua}->'os'->>'name', 'Unknown')`,
+          value: sql<number>`count(*)::int`,
+        })
+        .from(analyzes)
+        .where(where!)
+        .groupBy(sql`coalesce(${analyzes.ua}->'os'->>'name', 'Unknown')`)
+        .orderBy(sql`count(*) desc`)
+        .limit(10),
+      this.db
+        .select({
+          name: sql<string>`coalesce(${analyzes.ua}->'device'->>'type', 'desktop')`,
+          value: sql<number>`count(*)::int`,
+        })
+        .from(analyzes)
+        .where(where!)
+        .groupBy(sql`coalesce(${analyzes.ua}->'device'->>'type', 'desktop')`)
+        .orderBy(sql`count(*) desc`),
+    ])
+    return {
+      browsers: browsers.map((item) => ({
+        name: item.name || 'Unknown',
+        value: Number(item.value ?? 0),
+      })),
+      os: os.map((item) => ({
+        name: item.name || 'Unknown',
+        value: Number(item.value ?? 0),
+      })),
+      devices: devices.map((item) => ({
+        name: item.name || 'desktop',
+        value: Number(item.value ?? 0),
+      })),
+    }
+  }
+
+  async aggregateReferers(
+    from: Date,
+    to: Date,
+  ): Promise<Array<{ referer: string; count: number }>> {
+    const rows = await this.db
+      .select({
+        referer: sql<string>`coalesce(${analyzes.referer}, '')`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(analyzes)
+      .where(and(gte(analyzes.timestamp, from), lte(analyzes.timestamp, to))!)
+      .groupBy(sql`coalesce(${analyzes.referer}, '')`)
+      .orderBy(sql`count(*) desc`)
+    return rows.map((r) => ({
+      referer: r.referer,
+      count: Number(r.count ?? 0),
+    }))
+  }
+
+  async deleteByRange(from?: Date, to?: Date): Promise<number> {
+    const filters: SQL[] = []
+    if (from) filters.push(gte(analyzes.timestamp, from))
+    if (to) filters.push(lte(analyzes.timestamp, to))
+    const result = await this.db
+      .delete(analyzes)
+      .where(filters.length > 0 ? and(...filters) : undefined)
+      .returning({ id: analyzes.id })
+    return result.length
   }
 
   async deleteOlderThan(threshold: Date): Promise<number> {

@@ -13,8 +13,6 @@ import {
   TaskStatus,
 } from '~/processors/task-queue'
 import type { PagerDto } from '~/shared/dto/pager.dto'
-import { InjectModel } from '~/transformers/model.transformer'
-import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { createAbortError } from '~/utils/abort.util'
 import { md5 } from '~/utils/tool.util'
 
@@ -35,14 +33,14 @@ import { resolveTargetLanguages } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
 import { AISummaryModel } from './ai-summary.model'
+import { AiSummaryRepository, type AiSummaryRow } from './ai-summary.repository'
 import type { GetSummariesGroupedQueryInput } from './ai-summary.schema'
 
 @Injectable()
 export class AiSummaryService implements OnModuleInit {
   private readonly logger: Logger
   constructor(
-    @InjectModel(AISummaryModel)
-    private readonly aiSummaryModel: MongooseModel<AISummaryModel>,
+    private readonly aiSummaryRepository: AiSummaryRepository,
     private readonly databaseService: DatabaseService,
     private readonly configService: ConfigsService,
 
@@ -172,6 +170,19 @@ export class AiSummaryService implements OnModuleInit {
     return md5(this.serializeText(text))
   }
 
+  private toSummaryDoc(row: AiSummaryRow | null): AISummaryModel | null {
+    if (!row) return null
+    return {
+      ...row,
+      _id: row.id,
+      created: row.createdAt,
+    } as unknown as AISummaryModel
+  }
+
+  private toSummaryDocs(rows: AiSummaryRow[]): AISummaryModel[] {
+    return rows.map((row) => this.toSummaryDoc(row)!)
+  }
+
   /**
    * 获取并验证文章，用于摘要相关操作
    */
@@ -207,13 +218,9 @@ export class AiSummaryService implements OnModuleInit {
   ): Promise<AISummaryModel | null> {
     const contentHash = this.computeContentHash(text)
 
-    const doc = await this.aiSummaryModel.findOne({
-      refId: articleId,
-      lang,
-      hash: contentHash,
-    })
-
-    return doc
+    return this.toSummaryDoc(
+      await this.aiSummaryRepository.findByHash(articleId, contentHash),
+    )
   }
 
   /**
@@ -315,17 +322,21 @@ export class AiSummaryService implements OnModuleInit {
         )
         const contentMd5 = md5(text)
 
-        const doc = await this.aiSummaryModel.create({
-          hash: contentMd5,
-          lang,
-          refId: articleId,
-          summary,
-        })
+        const doc = this.toSummaryDoc(
+          await this.aiSummaryRepository.upsert({
+            refId: articleId,
+            hash: contentMd5,
+            summary,
+            lang,
+          }),
+        )!
 
         return { result: doc, resultId: doc.id }
       },
       parseResult: async (resultId) => {
-        const doc = await this.aiSummaryModel.findById(resultId)
+        const doc = this.toSummaryDoc(
+          await this.aiSummaryRepository.findById(resultId),
+        )
         if (!doc) {
           throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
         }
@@ -375,13 +386,7 @@ export class AiSummaryService implements OnModuleInit {
   ): Promise<Map<string, string>> {
     if (!refIds.length) return new Map()
 
-    const summaries = await this.aiSummaryModel
-      .find({
-        refId: { $in: refIds },
-        lang,
-      })
-      .sort({ created: -1 })
-      .lean()
+    const summaries = await this.aiSummaryRepository.listByRefIds(refIds, lang)
 
     const map = new Map<string, string>()
     for (const s of summaries) {
@@ -398,9 +403,9 @@ export class AiSummaryService implements OnModuleInit {
     if (!article) {
       throw new BizException(ErrorCodeEnum.ContentNotFound)
     }
-    const summaries = await this.aiSummaryModel.find({
-      refId,
-    })
+    const summaries = this.toSummaryDocs(
+      await this.aiSummaryRepository.listForRef(refId),
+    )
 
     return {
       summaries,
@@ -410,101 +415,26 @@ export class AiSummaryService implements OnModuleInit {
 
   async getAllSummaries(pager: PagerDto) {
     const { page, size } = pager
-    const summaries = await this.aiSummaryModel.paginate(
-      {},
-      {
-        page,
-        limit: size,
-        sort: {
-          created: -1,
-        },
-        lean: true,
-        leanWithId: true,
-      },
-    )
-    const data = transformDataToPaginate(summaries)
+    const summaries = await this.aiSummaryRepository.list(page, size)
+    const docs = this.toSummaryDocs(summaries.data)
+    const data = {
+      data: docs,
+      pagination: summaries.pagination,
+    }
 
     return {
       ...data,
-      articles: await this.getRefArticles(summaries.docs),
+      articles: await this.getRefArticles(docs),
     }
   }
 
   async getAllSummariesGrouped(query: GetSummariesGroupedQueryInput) {
-    const { page, size, search } = query
+    const { page, size, search: _search } = query
 
-    // 如果有搜索关键词，先搜索文章
-    let matchedRefIds: string[] | null = null
-    if (search && search.trim()) {
-      const keyword = search.trim()
-      const postModel = this.databaseService.getModelByRefType(
-        CollectionRefTypes.Post,
-      )
-      const noteModel = this.databaseService.getModelByRefType(
-        CollectionRefTypes.Note,
-      )
-
-      const [matchedPosts, matchedNotes] = await Promise.all([
-        postModel
-          .find({ title: { $regex: keyword, $options: 'i' } })
-          .select('_id')
-          .lean(),
-        noteModel
-          .find({ title: { $regex: keyword, $options: 'i' } })
-          .select('_id')
-          .lean(),
-      ])
-
-      matchedRefIds = [
-        ...matchedPosts.map((p) => p._id.toString()),
-        ...matchedNotes.map((n) => n._id.toString()),
-      ]
-
-      if (matchedRefIds.length === 0) {
-        return {
-          data: [],
-          pagination: {
-            total: 0,
-            currentPage: page,
-            totalPage: 0,
-            size,
-            hasNextPage: false,
-            hasPrevPage: false,
-          },
-        }
-      }
-    }
-
-    const matchStage = matchedRefIds
-      ? { $match: { refId: { $in: matchedRefIds } } }
-      : null
-
-    const pipeline: any[] = []
-    if (matchStage) {
-      pipeline.push(matchStage)
-    }
-    pipeline.push(
-      {
-        $group: {
-          _id: '$refId',
-          latestCreated: { $max: '$created' },
-          summaryCount: { $sum: 1 },
-        },
-      },
-      { $sort: { latestCreated: -1 } },
-      {
-        $facet: {
-          metadata: [{ $count: 'total' }],
-          data: [{ $skip: (page - 1) * size }, { $limit: size }],
-        },
-      },
-    )
-
-    const aggregateResult = await this.aiSummaryModel.aggregate(pipeline)
-
-    const metadata = aggregateResult[0]?.metadata[0]
-    const groupedRefIds = aggregateResult[0]?.data || []
-    const total = metadata?.total || 0
+    // TODO: wave 3 — wire `_search` into the repository to filter grouped refs
+    const grouped = await this.aiSummaryRepository.groupedByRef(page, size)
+    const groupedRefIds = grouped.data
+    const total = grouped.pagination.total
 
     if (groupedRefIds.length === 0) {
       return {
@@ -521,11 +451,10 @@ export class AiSummaryService implements OnModuleInit {
     }
 
     // Get all summaries for these refIds
-    const refIds = groupedRefIds.map((g: { _id: string }) => g._id)
-    const summaries = await this.aiSummaryModel
-      .find({ refId: { $in: refIds } })
-      .sort({ created: -1 })
-      .lean()
+    const refIds = groupedRefIds.map((g) => g.refId)
+    const summaries = this.toSummaryDocs(
+      await this.aiSummaryRepository.listByRefIds(refIds),
+    )
 
     // Get article info
     const articles = await this.databaseService.findGlobalByIds(refIds)
@@ -613,14 +542,14 @@ export class AiSummaryService implements OnModuleInit {
   }
 
   async updateSummaryInDb(id: string, summary: string) {
-    const doc = await this.aiSummaryModel.findById(id)
+    const doc = this.toSummaryDoc(await this.aiSummaryRepository.findById(id))
     if (!doc) {
       throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
     }
 
-    doc.summary = summary
-    await doc.save()
-    return doc
+    return this.toSummaryDoc(
+      await this.aiSummaryRepository.updateSummary(id, summary),
+    )
   }
   async getSummaryByArticleId(articleId: string, lang = DEFAULT_SUMMARY_LANG) {
     const { document } = await this.resolveArticleForSummary(articleId)
@@ -628,7 +557,7 @@ export class AiSummaryService implements OnModuleInit {
   }
 
   async getSummaryById(id: string) {
-    const doc = await this.aiSummaryModel.findById(id)
+    const doc = this.toSummaryDoc(await this.aiSummaryRepository.findById(id))
     if (!doc) {
       throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
     }
@@ -694,15 +623,11 @@ export class AiSummaryService implements OnModuleInit {
   }
 
   async deleteSummaryByArticleId(articleId: string) {
-    await this.aiSummaryModel.deleteMany({
-      refId: articleId,
-    })
+    await this.aiSummaryRepository.deleteForRef(articleId)
   }
 
   async deleteSummaryInDb(id: string) {
-    await this.aiSummaryModel.deleteOne({
-      _id: id,
-    })
+    await this.aiSummaryRepository.deleteById(id)
   }
 
   @OnEvent(BusinessEvents.POST_DELETE)
@@ -779,7 +704,9 @@ export class AiSummaryService implements OnModuleInit {
       return
     }
 
-    const existingSummaries = await this.aiSummaryModel.find({ refId: id })
+    const existingSummaries = this.toSummaryDocs(
+      await this.aiSummaryRepository.listForRef(id),
+    )
     if (!existingSummaries.length) {
       return
     }

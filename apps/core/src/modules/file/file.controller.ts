@@ -62,31 +62,17 @@ export class FileController {
   @Auth()
   async getOrphanFiles(@Query() query: PagerDto) {
     const { page = 1, size = 20 } = query
-    const [files, total] = await Promise.all([
-      this.fileReferenceService.model
-        .find({ status: 'pending' })
-        .sort({ created: -1 })
-        .skip((page - 1) * size)
-        .limit(size)
-        .lean(),
-      this.fileReferenceService.model.countDocuments({ status: 'pending' }),
-    ])
+    const { data: files, pagination } =
+      await this.fileReferenceService.listOrphanFiles(page, size)
 
     return {
       data: files.map((file) => ({
-        id: file._id,
+        id: file.id,
         fileName: file.fileName,
         fileUrl: file.fileUrl,
         created: file.created,
       })),
-      pagination: {
-        currentPage: page,
-        totalPage: Math.ceil(total / size),
-        size,
-        total,
-        hasNextPage: page * size < total,
-        hasPrevPage: page > 1,
-      },
+      pagination,
     }
   }
 

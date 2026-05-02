@@ -1,25 +1,38 @@
 import { Injectable } from '@nestjs/common'
-import type { ReturnModelType } from '@typegoose/typegoose'
+
 import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
-import type { PipelineStage } from 'mongoose'
-import { OptionModel } from '../configs/configs.model'
-import { AnalyzeModel } from './analyze.model'
+
+import { OptionsRepository } from '../configs/options.repository'
+import { AnalyzeRepository } from './analyze.repository'
 
 @Injectable()
 export class AnalyzeService {
   constructor(
-    @InjectModel(OptionModel)
-    private readonly options: ReturnModelType<typeof OptionModel>,
-    @InjectModel(AnalyzeModel)
-    private readonly analyzeModel: MongooseModel<AnalyzeModel>,
+    private readonly optionsRepository: OptionsRepository,
+    private readonly analyzeRepository: AnalyzeRepository,
     private readonly redisService: RedisService,
   ) {}
 
-  public get model() {
-    return this.analyzeModel
+  async recordMany(
+    records: Array<{
+      ip?: string | null
+      ua?: Record<string, unknown> | null
+      country?: string | null
+      path?: string | null
+      referer?: string | null
+    }>,
+  ) {
+    return this.analyzeRepository.recordMany(records)
+  }
+
+  async incrementApiCallTime(count: number) {
+    await this.optionsRepository.increment('apiCallTime', count)
+  }
+
+  async incrementUv(count = 1) {
+    await this.optionsRepository.increment('uv', count)
   }
 
   async getRangeAnalyzeData(
@@ -31,66 +44,33 @@ export class AnalyzeService {
     },
   ) {
     const { limit = 50, page = 1 } = options || {}
-    const condition = {
-      $and: [
-        {
-          timestamp: {
-            $gte: from,
-          },
-        },
-        {
-          timestamp: {
-            $lte: to,
-          },
-        },
-      ],
-    }
-
-    return await this.analyzeModel.paginate(condition, {
-      sort: { timestamp: -1 },
+    const result = await this.analyzeRepository.list({
+      from,
+      to,
       page,
-      limit,
+      size: limit,
     })
+    return {
+      docs: result.data,
+      totalDocs: result.pagination.total,
+      page: result.pagination.currentPage,
+      totalPages: result.pagination.totalPage,
+      limit: result.pagination.size,
+      hasNextPage: result.pagination.hasNextPage,
+      hasPrevPage: result.pagination.hasPrevPage,
+    }
   }
 
   async getCallTime() {
-    const callTime =
-      (
-        await this.options
-          .findOne({
-            name: 'apiCallTime',
-          })
-          .lean()
-      )?.value || 0
-
-    const uv =
-      (
-        await this.options
-          .findOne({
-            name: 'uv',
-          })
-          .lean()
-      )?.value || 0
+    const callTime = (await this.optionsRepository.get('apiCallTime')) || 0
+    const uv = (await this.optionsRepository.get('uv')) || 0
 
     return { callTime, uv }
   }
   async cleanAnalyzeRange(range: { from?: Date; to?: Date }) {
     const { from, to } = range
 
-    await this.analyzeModel.deleteMany({
-      $and: [
-        {
-          timestamp: {
-            $gte: from,
-          },
-        },
-        {
-          timestamp: {
-            $lte: to,
-          },
-        },
-      ],
-    })
+    await this.analyzeRepository.deleteByRange(from, to)
   }
 
   async getIpAndPvAggregateByRange(
@@ -105,60 +85,20 @@ export class AnalyzeService {
     },
     returnObj?: boolean,
   ) {
-    const format = granularity === 'hour' ? '%H' : '%Y-%m-%d'
     const keyField = granularity === 'hour' ? 'hour' : 'date'
-
-    const [result] = await this.analyzeModel.aggregate([
-      {
-        $match: {
-          timestamp: {
-            $gte: from,
-            $lte: to,
-          },
-        },
-      },
-      {
-        $project: {
-          ip: 1,
-          key: {
-            $dateToString: {
-              format,
-              date: { $subtract: ['$timestamp', 0] },
-              timezone: '+08:00',
-            },
-          },
-        },
-      },
-      {
-        $facet: {
-          pv: [
-            { $group: { _id: '$key', pv: { $sum: 1 } } },
-            { $project: { _id: 0, key: '$_id', pv: 1 } },
-          ],
-          ip: [
-            { $group: { _id: { key: '$key', ip: '$ip' } } },
-            { $group: { _id: '$_id.key', ip: { $sum: 1 } } },
-            { $project: { _id: 0, key: '$_id', ip: 1 } },
-          ],
-        },
-      },
-    ])
+    const result = await this.analyzeRepository.aggregateIpPvByRange(
+      from,
+      to,
+      granularity,
+    )
 
     const records = new Map<
       string,
       { [key: string]: string | number | undefined }
     >()
 
-    for (const item of result?.pv ?? []) {
-      records.set(item.key, { [keyField]: item.key, pv: item.pv })
-    }
-    for (const item of result?.ip ?? []) {
-      const existing = records.get(item.key)
-      if (existing) {
-        existing.ip = item.ip
-      } else {
-        records.set(item.key, { [keyField]: item.key, ip: item.ip })
-      }
+    for (const item of result) {
+      records.set(item.key, { [keyField]: item.key, pv: item.pv, ip: item.ip })
     }
 
     if (returnObj) {
@@ -180,42 +120,7 @@ export class AnalyzeService {
     from = from ?? new Date(Date.now() - 1000 * 24 * 3600 * 7)
     to = to ?? new Date()
 
-    const pipeline: PipelineStage[] = [
-      {
-        $match: {
-          timestamp: {
-            $gte: from,
-            $lte: to,
-          },
-        },
-      },
-      {
-        $group: {
-          _id: '$path',
-          count: {
-            $sum: 1,
-          },
-        },
-      },
-
-      {
-        $sort: {
-          count: -1,
-        },
-      },
-      {
-        $limit: 50,
-      },
-      {
-        $project: {
-          _id: 0,
-          path: '$_id',
-          count: 1,
-        },
-      },
-    ]
-
-    return this.analyzeModel.aggregate(pipeline).exec()
+    return this.analyzeRepository.aggregateByPath(from, to, 50)
   }
 
   async getTodayAccessIp(): Promise<string[]> {
@@ -227,43 +132,10 @@ export class AnalyzeService {
     from = from ?? new Date(Date.now() - 1000 * 24 * 3600 * 7)
     to = to ?? new Date()
 
-    const result = await this.analyzeModel.aggregate([
-      {
-        $match: {
-          timestamp: {
-            $gte: from,
-            $lte: to,
-          },
-        },
-      },
-      {
-        $project: {
-          browser: { $ifNull: ['$ua.browser.name', 'Unknown'] },
-          os: { $ifNull: ['$ua.os.name', 'Unknown'] },
-          device: { $ifNull: ['$ua.device.type', 'desktop'] },
-        },
-      },
-      {
-        $facet: {
-          browsers: [
-            { $group: { _id: '$browser', count: { $sum: 1 } } },
-            { $sort: { count: -1 } },
-            { $limit: 10 },
-          ],
-          os: [
-            { $group: { _id: '$os', count: { $sum: 1 } } },
-            { $sort: { count: -1 } },
-            { $limit: 10 },
-          ],
-          devices: [
-            { $group: { _id: '$device', count: { $sum: 1 } } },
-            { $sort: { count: -1 } },
-          ],
-        },
-      },
-    ])
-
-    const data = result[0] || { browsers: [], os: [], devices: [] }
+    const data = await this.analyzeRepository.aggregateDeviceDistribution(
+      from,
+      to,
+    )
 
     const deviceTypeMap: Record<string, string> = {
       desktop: '桌面端',
@@ -273,17 +145,11 @@ export class AnalyzeService {
     }
 
     return {
-      browsers: data.browsers.map((item: any) => ({
-        name: item._id || 'Unknown',
-        value: item.count,
-      })),
-      os: data.os.map((item: any) => ({
-        name: item._id || 'Unknown',
-        value: item.count,
-      })),
-      devices: data.devices.map((item: any) => ({
-        name: deviceTypeMap[item._id?.toLowerCase()] || item._id || '桌面端',
-        value: item.count,
+      browsers: data.browsers,
+      os: data.os,
+      devices: data.devices.map((item) => ({
+        name: deviceTypeMap[item.name?.toLowerCase()] || item.name || '桌面端',
+        value: item.value,
       })),
     }
   }
@@ -292,30 +158,7 @@ export class AnalyzeService {
     from = from ?? new Date(Date.now() - 1000 * 24 * 3600 * 7)
     to = to ?? new Date()
 
-    const result = await this.analyzeModel.aggregate([
-      {
-        $match: {
-          timestamp: {
-            $gte: from,
-            $lte: to,
-          },
-        },
-      },
-      {
-        $project: {
-          referer: { $ifNull: ['$referer', ''] },
-        },
-      },
-      {
-        $group: {
-          _id: '$referer',
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $sort: { count: -1 },
-      },
-    ])
+    const result = await this.analyzeRepository.aggregateReferers(from, to)
 
     const categories: Record<string, number> = {
       direct: 0,
@@ -356,8 +199,8 @@ export class AnalyzeService {
     const details: Array<{ source: string; count: number }> = []
 
     for (const item of result) {
-      const referer = (item._id as string).toLowerCase()
-      const count = item.count as number
+      const referer = item.referer.toLowerCase()
+      const count = item.count
 
       if (!referer || referer === '') {
         categories.direct += count

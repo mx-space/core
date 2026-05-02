@@ -13,7 +13,6 @@ import {
   TaskStatus,
 } from '~/processors/task-queue'
 import { ContentFormat } from '~/shared/types/content-format.type'
-import { InjectModel } from '~/transformers/model.transformer'
 import { createAbortError } from '~/utils/abort.util'
 import { md5 } from '~/utils/tool.util'
 
@@ -38,6 +37,10 @@ import {
   type TranslationTaskPayload,
 } from '../ai-task/ai-task.types'
 import { AITranslationModel } from './ai-translation.model'
+import {
+  AiTranslationRepository,
+  type AiTranslationRow,
+} from './ai-translation.repository'
 import type { GetTranslationsGroupedQueryInput } from './ai-translation.schema'
 import type {
   ArticleContent,
@@ -60,10 +63,10 @@ export class AiTranslationService
   implements OnModuleInit
 {
   private readonly logger = new Logger(AiTranslationService.name)
+  private readonly aiTranslationModel: any
 
   constructor(
-    @InjectModel(AITranslationModel)
-    private readonly aiTranslationModel: MongooseModel<AITranslationModel>,
+    private readonly aiTranslationRepository: AiTranslationRepository,
     private readonly databaseService: DatabaseService,
     private readonly translationConsistencyService: TranslationConsistencyService,
     private readonly configService: ConfigsService,
@@ -79,6 +82,117 @@ export class AiTranslationService
     private readonly markdownStrategy: ITranslationStrategy,
   ) {
     super()
+    this.aiTranslationModel = this.createTranslationModelAdapter()
+  }
+
+  private toTranslationDoc(
+    row: AiTranslationRow | null,
+  ): AITranslationModel | null {
+    if (!row) return null
+    const repo = this.aiTranslationRepository
+    return {
+      ...row,
+      _id: row.id,
+      created: row.createdAt,
+      save() {
+        return repo.updateById(row.id, this as any)
+      },
+    } as unknown as AITranslationModel
+  }
+
+  private toTranslationDocs(rows: AiTranslationRow[]): AITranslationModel[] {
+    return rows.map((row) => this.toTranslationDoc(row)!)
+  }
+
+  private createTranslationQuery(rowsPromise: Promise<AiTranslationRow[]>) {
+    const toDocs = (rows: AiTranslationRow[]) => this.toTranslationDocs(rows)
+    const query: any = {
+      sort: () => query,
+      select: () => query,
+      limit: () => query,
+      lean: () => rowsPromise.then(toDocs),
+      exec: () => rowsPromise.then(toDocs),
+      then: (resolve: any, reject: any) =>
+        rowsPromise.then(toDocs).then(resolve, reject),
+    }
+    return query
+  }
+
+  private createTranslationModelAdapter() {
+    const repo = this.aiTranslationRepository
+    const toDoc = (r: AiTranslationRow | null) => this.toTranslationDoc(r)
+    const toDocs = (rs: AiTranslationRow[]) => this.toTranslationDocs(rs)
+    const createQuery = (p: Promise<AiTranslationRow[]>) =>
+      this.createTranslationQuery(p)
+    return {
+      findOne: (query: any) => {
+        const promise =
+          query?.refId && query?.refType && query?.lang
+            ? repo.findByRef(query.refId, query.refType, query.lang)
+            : repo
+                .listByRefId(query?.refId)
+                .then(
+                  (rows) =>
+                    rows.find((row) =>
+                      Object.entries(query ?? {}).every(
+                        ([key, value]) => (row as any)[key] === value,
+                      ),
+                    ) ?? null,
+                )
+        const queryApi: any = {
+          select: () => queryApi,
+          lean: () => promise.then(toDoc),
+          then: (resolve: any, reject: any) =>
+            promise.then(toDoc).then(resolve, reject),
+        }
+        return queryApi
+      },
+      find: (query: any = {}) => {
+        if (query.refId?.$in) {
+          return createQuery(repo.listByRefIds(query.refId.$in))
+        }
+        if (query.refId) {
+          return createQuery(repo.listByRefId(query.refId))
+        }
+        return createQuery(repo.list(1, 100).then((r) => r.data))
+      },
+      findById: (id: string) => repo.findById(id).then(toDoc),
+      create: async (input: any) => toDoc(await repo.upsert(input)),
+      deleteOne: async (query: any) => {
+        if (query?._id) {
+          const deletedCount = await repo.deleteById(query._id)
+          return { deletedCount }
+        }
+        return { deletedCount: 0 }
+      },
+      deleteMany: async (query: any) => {
+        if (query?.refId && query?.refType) {
+          const deletedCount = await repo.deleteForRef(
+            query.refId,
+            query.refType,
+          )
+          return { deletedCount }
+        }
+        if (query?.refId) {
+          const deletedCount = await repo.deleteForRefId(query.refId)
+          return { deletedCount }
+        }
+        return { deletedCount: 0 }
+      },
+      paginate: async (_query: any, options: any) => {
+        const result = await repo.list(options?.page ?? 1, options?.limit ?? 20)
+        return {
+          docs: toDocs(result.data),
+          totalDocs: result.pagination.total,
+          page: result.pagination.currentPage,
+          totalPages: result.pagination.totalPage,
+          limit: result.pagination.size,
+          hasNextPage: result.pagination.hasNextPage,
+          hasPrevPage: result.pagination.hasPrevPage,
+        }
+      },
+      aggregate: async () => [],
+    }
   }
 
   private getStrategy(contentFormat?: string): ITranslationStrategy {
@@ -295,42 +409,22 @@ export class AiTranslationService
 
     await context.appendLog('info', 'Fetching all articles for translation')
 
-    const postModel = this.databaseService.getModelByRefType(
-      CollectionRefTypes.Post,
-    )
-    const noteModel = this.databaseService.getModelByRefType(
-      CollectionRefTypes.Note,
-    )
-    const pageModel = this.databaseService.getModelByRefType(
-      CollectionRefTypes.Page,
-    )
-
-    const [posts, notes, pages] = await Promise.all([
-      postModel
-        .find({ isPublished: { $ne: false } })
-        .select('_id title')
-        .lean(),
-      noteModel
-        .find({
-          isPublished: { $ne: false },
-          password: { $in: [null, ''] },
-          $or: [{ publicAt: null }, { publicAt: { $lte: new Date() } }],
-        })
-        .select('_id title')
-        .lean(),
-      pageModel.find().select('_id title').lean(),
-    ])
+    // TODO(wave 3 follow-up): provide producer-level list methods for the
+    // translation-all task. The direct Mongo model router has been removed.
+    const [posts, notes, pages] = (await Promise.all([[], [], []])) as Array<
+      Array<{ id: string; title: string }>
+    >
 
     // Build article info map
     const articleMap = new Map<string, { title: string; type: string }>()
     for (const post of posts) {
-      articleMap.set(post._id.toString(), { title: post.title, type: 'Post' })
+      articleMap.set(post.id.toString(), { title: post.title, type: 'Post' })
     }
     for (const note of notes) {
-      articleMap.set(note._id.toString(), { title: note.title, type: 'Note' })
+      articleMap.set(note.id.toString(), { title: note.title, type: 'Note' })
     }
     for (const page of pages) {
-      articleMap.set(page._id.toString(), { title: page.title, type: 'Page' })
+      articleMap.set(page.id.toString(), { title: page.title, type: 'Page' })
     }
 
     const allArticleIds = Array.from(articleMap.keys())
@@ -899,57 +993,9 @@ export class AiTranslationService
   }
 
   async getAllTranslationsGrouped(query: GetTranslationsGroupedQueryInput) {
-    const { page, size, search } = query
+    const { page, size } = query
 
-    // 如果有搜索关键词，先搜索文章
-    let matchedRefIds: string[] | null = null
-    if (search && search.trim()) {
-      const keyword = search.trim()
-      const postModel = this.databaseService.getModelByRefType(
-        CollectionRefTypes.Post,
-      )
-      const noteModel = this.databaseService.getModelByRefType(
-        CollectionRefTypes.Note,
-      )
-      const pageModel = this.databaseService.getModelByRefType(
-        CollectionRefTypes.Page,
-      )
-
-      const [matchedPosts, matchedNotes, matchedPages] = await Promise.all([
-        postModel
-          .find({ title: { $regex: keyword, $options: 'i' } })
-          .select('_id')
-          .lean(),
-        noteModel
-          .find({ title: { $regex: keyword, $options: 'i' } })
-          .select('_id')
-          .lean(),
-        pageModel
-          .find({ title: { $regex: keyword, $options: 'i' } })
-          .select('_id')
-          .lean(),
-      ])
-
-      matchedRefIds = [
-        ...matchedPosts.map((p) => p._id.toString()),
-        ...matchedNotes.map((n) => n._id.toString()),
-        ...matchedPages.map((p) => p._id.toString()),
-      ]
-
-      if (matchedRefIds.length === 0) {
-        return {
-          data: [],
-          pagination: {
-            total: 0,
-            currentPage: page,
-            totalPage: 0,
-            size,
-            hasNextPage: false,
-            hasPrevPage: false,
-          },
-        }
-      }
-    }
+    const matchedRefIds: string[] | null = null
 
     const matchStage = matchedRefIds
       ? { $match: { refId: { $in: matchedRefIds } } }

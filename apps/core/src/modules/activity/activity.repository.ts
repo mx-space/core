@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { activities } from '~/database/schema'
@@ -35,18 +35,27 @@ export class ActivityRepository extends BaseRepository {
     super(db)
   }
 
-  async list(page = 1, size = 10): Promise<PaginationResult<ActivityRow>> {
+  async list(
+    page = 1,
+    size = 10,
+    type?: number,
+  ): Promise<PaginationResult<ActivityRow>> {
     page = Math.max(1, page)
     size = Math.min(50, Math.max(1, size))
     const offset = (page - 1) * size
+    const where = type === undefined ? undefined : eq(activities.type, type)
     const [rows, [{ count }]] = await Promise.all([
       this.db
         .select()
         .from(activities)
+        .where(where)
         .orderBy(desc(activities.createdAt))
         .limit(size)
         .offset(offset),
-      this.db.select({ count: sql<number>`count(*)::int` }).from(activities),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(activities)
+        .where(where),
     ])
     return {
       data: rows.map(mapRow),
@@ -95,5 +104,43 @@ export class ActivityRepository extends BaseRepository {
       .where(sql`${activities.createdAt} < ${threshold}`)
       .returning({ id: activities.id })
     return result.length
+  }
+
+  async deleteByTypeBefore(type: number, threshold: Date): Promise<number> {
+    const result = await this.db
+      .delete(activities)
+      .where(
+        and(
+          eq(activities.type, type),
+          sql`${activities.createdAt} < ${threshold}`,
+        )!,
+      )
+      .returning({ id: activities.id })
+    return result.length
+  }
+
+  async deleteAll(): Promise<number> {
+    const result = await this.db.delete(activities).returning({
+      id: activities.id,
+    })
+    return result.length
+  }
+
+  async findByTypeInRange(
+    type: number,
+    startAt: Date,
+    endAt: Date,
+  ): Promise<ActivityRow[]> {
+    const rows = await this.db
+      .select()
+      .from(activities)
+      .where(
+        and(
+          eq(activities.type, type),
+          gte(activities.createdAt, startAt),
+          lte(activities.createdAt, endAt),
+        )!,
+      )
+    return rows.map(mapRow)
   }
 }

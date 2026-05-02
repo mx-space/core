@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { aiSummaries } from '~/database/schema'
 import {
   BaseRepository,
+  type PaginationResult,
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -70,6 +71,115 @@ export class AiSummaryRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
+  async findById(id: EntityId | string): Promise<AiSummaryRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(aiSummaries)
+      .where(eq(aiSummaries.id, parseEntityId(id)))
+      .limit(1)
+    return row ? mapRow(row) : null
+  }
+
+  async listForRef(refId: EntityId | string): Promise<AiSummaryRow[]> {
+    const rows = await this.db
+      .select()
+      .from(aiSummaries)
+      .where(eq(aiSummaries.refId, parseEntityId(refId)))
+      .orderBy(desc(aiSummaries.createdAt))
+    return rows.map(mapRow)
+  }
+
+  async listByRefIds(
+    refIds: Array<EntityId | string>,
+    lang?: string | null,
+  ): Promise<AiSummaryRow[]> {
+    if (!refIds.length) return []
+    const filters = [
+      inArray(
+        aiSummaries.refId,
+        refIds.map((id) => parseEntityId(id)),
+      ),
+    ]
+    if (lang !== undefined) {
+      filters.push(
+        lang === null
+          ? sql`${aiSummaries.lang} is null`
+          : eq(aiSummaries.lang, lang),
+      )
+    }
+    const rows = await this.db
+      .select()
+      .from(aiSummaries)
+      .where(and(...filters))
+      .orderBy(desc(aiSummaries.createdAt))
+    return rows.map(mapRow)
+  }
+
+  async list(page = 1, size = 20): Promise<PaginationResult<AiSummaryRow>> {
+    page = Math.max(1, page)
+    size = Math.min(100, Math.max(1, size))
+    const offset = (page - 1) * size
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(aiSummaries)
+        .orderBy(desc(aiSummaries.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db.select({ count: sql<number>`count(*)::int` }).from(aiSummaries),
+    ])
+    return {
+      data: rows.map(mapRow),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
+  async groupedByRef(
+    page = 1,
+    size = 20,
+    refIds?: Array<EntityId | string>,
+  ): Promise<
+    PaginationResult<{ refId: EntityId; latestCreated: Date; count: number }>
+  > {
+    page = Math.max(1, page)
+    size = Math.min(100, Math.max(1, size))
+    const offset = (page - 1) * size
+    const where = refIds?.length
+      ? inArray(
+          aiSummaries.refId,
+          refIds.map((id) => parseEntityId(id)),
+        )
+      : undefined
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select({
+          refId: aiSummaries.refId,
+          latestCreated: sql<Date>`max(${aiSummaries.createdAt})`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(aiSummaries)
+        .where(where)
+        .groupBy(aiSummaries.refId)
+        .orderBy(sql`max(${aiSummaries.createdAt}) desc`)
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({
+          count: sql<number>`count(distinct ${aiSummaries.refId})::int`,
+        })
+        .from(aiSummaries)
+        .where(where),
+    ])
+    return {
+      data: rows.map((row) => ({
+        refId: toEntityId(row.refId) as EntityId,
+        latestCreated: row.latestCreated,
+        count: Number(row.count ?? 0),
+      })),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
   async upsert(input: {
     refId: EntityId | string
     hash: string
@@ -108,6 +218,18 @@ export class AiSummaryRepository extends BaseRepository {
     return mapRow(row)
   }
 
+  async updateSummary(
+    id: EntityId | string,
+    summary: string,
+  ): Promise<AiSummaryRow | null> {
+    const [row] = await this.db
+      .update(aiSummaries)
+      .set({ summary })
+      .where(eq(aiSummaries.id, parseEntityId(id)))
+      .returning()
+    return row ? mapRow(row) : null
+  }
+
   async deleteForRef(refId: EntityId | string): Promise<number> {
     const refBig = parseEntityId(refId)
     const result = await this.db
@@ -115,5 +237,13 @@ export class AiSummaryRepository extends BaseRepository {
       .where(eq(aiSummaries.refId, refBig))
       .returning({ id: aiSummaries.id })
     return result.length
+  }
+
+  async deleteById(id: EntityId | string): Promise<boolean> {
+    const result = await this.db
+      .delete(aiSummaries)
+      .where(eq(aiSummaries.id, parseEntityId(id)))
+      .returning({ id: aiSummaries.id })
+    return result.length > 0
   }
 }

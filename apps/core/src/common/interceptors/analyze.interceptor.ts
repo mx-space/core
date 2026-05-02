@@ -1,4 +1,5 @@
 import { URL } from 'node:url'
+
 import type {
   CallHandler,
   ExecutionContext,
@@ -6,21 +7,19 @@ import type {
 } from '@nestjs/common'
 import { Inject, Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import type { ReturnModelType } from '@typegoose/typegoose'
-import { RedisKeys } from '~/constants/cache.constant'
-import * as SYSTEM from '~/constants/system.constant'
-import { REFLECTOR } from '~/constants/system.constant'
-import { AnalyzeModel } from '~/modules/analyze/analyze.model'
-import { OptionModel } from '~/modules/configs/configs.model'
-import { RedisService } from '~/processors/redis/redis.service'
-import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-import { InjectModel } from '~/transformers/model.transformer'
-import { getIp } from '~/utils/ip.util'
-import { getRedisKey } from '~/utils/redis.util'
-import { scheduleManager } from '~/utils/schedule.util'
 import { isbot } from 'isbot'
 import { Observable } from 'rxjs'
 import { UAParser } from 'ua-parser-js'
+
+import { RedisKeys } from '~/constants/cache.constant'
+import * as SYSTEM from '~/constants/system.constant'
+import { REFLECTOR } from '~/constants/system.constant'
+import { AnalyzeService } from '~/modules/analyze/analyze.service'
+import { RedisService } from '~/processors/redis/redis.service'
+import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+import { getIp } from '~/utils/ip.util'
+import { getRedisKey } from '~/utils/redis.util'
+import { scheduleManager } from '~/utils/schedule.util'
 
 @Injectable()
 export class AnalyzeInterceptor implements NestInterceptor {
@@ -28,19 +27,13 @@ export class AnalyzeInterceptor implements NestInterceptor {
   private readonly queue: TaskQueuePool<any>
 
   constructor(
-    @InjectModel(AnalyzeModel)
-    private readonly model: ReturnModelType<typeof AnalyzeModel>,
-    @InjectModel(OptionModel)
-    private readonly options: ReturnModelType<typeof OptionModel>,
+    private readonly analyzeService: AnalyzeService,
     private readonly redisService: RedisService,
     @Inject(REFLECTOR) private readonly reflector: Reflector,
   ) {
-    this.queue = new TaskQueuePool(1000, this.model, async (count) => {
-      await this.options.updateOne(
-        { name: 'apiCallTime' },
-        { $inc: { value: count } },
-        { upsert: true },
-      )
+    this.queue = new TaskQueuePool(1000, async (items) => {
+      await this.analyzeService.recordMany(items)
+      await this.analyzeService.incrementApiCallTime(items.length)
     })
   }
 
@@ -104,11 +97,7 @@ export class AnalyzeInterceptor implements NestInterceptor {
         const client = this.redisService.getClient()
         const count = await client.sadd(getRedisKey(RedisKeys.AccessIp), ip)
         if (count) {
-          await this.options.updateOne(
-            { name: 'uv' },
-            { $inc: { value: 1 } },
-            { upsert: true },
-          )
+          await this.analyzeService.incrementUv()
         }
       } catch (error) {
         console.error(error)
@@ -125,8 +114,7 @@ class TaskQueuePool<T> {
 
   constructor(
     private readonly interval: number = 1000,
-    private readonly collection: any,
-    private readonly onBatch: (count: number) => any,
+    private readonly onBatch: (items: T[]) => any,
   ) {}
 
   push(model: T) {
@@ -143,8 +131,7 @@ class TaskQueuePool<T> {
   private async batchInsert() {
     if (this.pool.length === 0) return
 
-    await this.collection.insertMany(this.pool)
-    await this.onBatch(this.pool.length)
+    await this.onBatch(this.pool)
     this.pool = []
   }
 }

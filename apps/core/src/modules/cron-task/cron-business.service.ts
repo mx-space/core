@@ -7,14 +7,13 @@ import { mkdirp } from 'mkdirp'
 import { RedisKeys } from '~/constants/cache.constant'
 import { STATIC_FILE_TRASH_DIR, TEMP_DIR } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
-import { AnalyzeModel } from '~/modules/analyze/analyze.model'
+import { AnalyzeRepository } from '~/modules/analyze/analyze.repository'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { SearchService } from '~/modules/search/search.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import type { StoreJWTPayload } from '~/processors/helper/helper.jwt.service'
 import { JWTService } from '~/processors/helper/helper.jwt.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 
 /**
@@ -29,8 +28,7 @@ export class CronBusinessService {
   constructor(
     private readonly http: HttpService,
     private readonly configs: ConfigsService,
-    @InjectModel(AnalyzeModel)
-    private readonly analyzeModel: MongooseModel<AnalyzeModel>,
+    private readonly analyzeRepository: AnalyzeRepository,
     private readonly redisService: RedisService,
 
     @Inject(forwardRef(() => AggregateService))
@@ -47,14 +45,12 @@ export class CronBusinessService {
   async cleanAccessRecord() {
     const cleanDate = dayjs().add(-7, 'd')
 
-    const result = await this.analyzeModel.deleteMany({
-      timestamp: {
-        $lte: cleanDate.toDate(),
-      },
-    })
+    const deletedCount = await this.analyzeRepository.deleteOlderThan(
+      cleanDate.toDate(),
+    )
 
     this.logger.log('--> 清理访问记录成功')
-    return { deletedCount: result.deletedCount }
+    return { deletedCount }
   }
 
   /**

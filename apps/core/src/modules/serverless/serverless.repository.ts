@@ -156,6 +156,7 @@ export class ServerlessLogRepository extends BaseRepository {
       functionId?: EntityId | string
       reference?: string
       name?: string
+      status?: string
     } = {},
   ): Promise<PaginationResult<ServerlessLogRow>> {
     const page = Math.max(1, params.page ?? 1)
@@ -171,6 +172,7 @@ export class ServerlessLogRepository extends BaseRepository {
       filters.push(eq(serverlessLogs.reference, params.reference))
     }
     if (params.name) filters.push(eq(serverlessLogs.name, params.name))
+    if (params.status) filters.push(eq(serverlessLogs.status, params.status))
     const where = filters.length > 0 ? and(...filters) : undefined
     const [rows, [{ count }]] = await Promise.all([
       this.db
@@ -219,6 +221,16 @@ export class ServerlessLogRepository extends BaseRepository {
       })
       .returning()
     return mapLog(row)
+  }
+
+  async findLogById(id: EntityId | string): Promise<ServerlessLogRow | null> {
+    const idBig = parseEntityId(id)
+    const [row] = await this.db
+      .select()
+      .from(serverlessLogs)
+      .where(eq(serverlessLogs.id, idBig))
+      .limit(1)
+    return row ? mapLog(row) : null
   }
 
   async deleteOlderThan(threshold: Date): Promise<number> {

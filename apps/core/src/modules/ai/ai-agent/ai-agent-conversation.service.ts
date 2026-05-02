@@ -2,18 +2,16 @@ import { Injectable, Logger } from '@nestjs/common'
 
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { InjectModel } from '~/transformers/model.transformer'
 
 import { AiAgentChatService } from './ai-agent-chat.service'
-import { AIAgentConversationModel } from './ai-agent-conversation.model'
+import { AiAgentConversationRepository } from './ai-agent-conversation.repository'
 
 @Injectable()
 export class AiAgentConversationService {
   private readonly logger = new Logger(AiAgentConversationService.name)
 
   constructor(
-    @InjectModel(AIAgentConversationModel)
-    private readonly conversationModel: MongooseModel<AIAgentConversationModel>,
+    private readonly conversationRepository: AiAgentConversationRepository,
     private readonly chatService: AiAgentChatService,
   ) {}
 
@@ -25,21 +23,17 @@ export class AiAgentConversationService {
     model: string
     providerId: string
   }) {
-    return this.conversationModel.create({
-      ...data,
-      messageCount: data.messages.length,
-    })
+    return this.conversationRepository.create(data)
   }
 
   async listByRef(refId: string, refType: string) {
-    return this.conversationModel
-      .find({ refId, refType }, { messages: 0 })
-      .sort({ updated: -1 })
-      .lean()
+    return (
+      await this.conversationRepository.list({ refId, refType, size: 100 })
+    ).data.map(({ messages: _messages, ...row }) => row)
   }
 
   async getById(id: string) {
-    const doc = await this.conversationModel.findById(id).lean()
+    const doc = await this.conversationRepository.findById(id)
     if (!doc) {
       throw new BizException(
         ErrorCodeEnum.ContentNotFoundCantProcess,
@@ -50,15 +44,12 @@ export class AiAgentConversationService {
   }
 
   async appendMessages(id: string, messages: Record<string, unknown>[]) {
-    const result = await this.conversationModel.findByIdAndUpdate(
-      id,
-      {
-        $push: { messages: { $each: messages } },
-        $set: { updated: new Date() },
-        $inc: { messageCount: messages.length },
-      },
-      { returnDocument: 'after', lean: true },
-    )
+    const existing = await this.conversationRepository.findById(id)
+    const result = existing
+      ? await this.conversationRepository.update(id, {
+          messages: [...existing.messages, ...messages],
+        })
+      : null
     if (!result) {
       throw new BizException(
         ErrorCodeEnum.ContentNotFoundCantProcess,
@@ -70,7 +61,12 @@ export class AiAgentConversationService {
       !result.title &&
       messages.some((m) => m.role === 'assistant' || m.type === 'assistant')
     ) {
-      this.generateTitle(id, result.messages, result.model, result.providerId)
+      this.generateTitle(
+        id,
+        result.messages as unknown as Record<string, unknown>[],
+        result.model,
+        result.providerId,
+      )
     }
 
     const { messages: _messages, ...rest } = result
@@ -78,17 +74,7 @@ export class AiAgentConversationService {
   }
 
   async replaceMessages(id: string, messages: Record<string, unknown>[]) {
-    const result = await this.conversationModel.findByIdAndUpdate(
-      id,
-      {
-        $set: {
-          messages,
-          messageCount: messages.length,
-          updated: new Date(),
-        },
-      },
-      { returnDocument: 'after', lean: true },
-    )
+    const result = await this.conversationRepository.update(id, { messages })
     if (!result) {
       throw new BizException(
         ErrorCodeEnum.ContentNotFoundCantProcess,
@@ -115,16 +101,7 @@ export class AiAgentConversationService {
       diffState?: Record<string, unknown> | null
     },
   ) {
-    const $set: Record<string, unknown> = { updated: new Date() }
-    if (data.title !== undefined) $set.title = data.title
-    if (data.reviewState !== undefined) $set.reviewState = data.reviewState
-    if (data.diffState !== undefined) $set.diffState = data.diffState
-
-    const result = await this.conversationModel.findByIdAndUpdate(
-      id,
-      { $set },
-      { returnDocument: 'after', projection: { messages: 0 }, lean: true },
-    )
+    const result = await this.conversationRepository.update(id, data)
     if (!result) {
       throw new BizException(
         ErrorCodeEnum.ContentNotFoundCantProcess,
@@ -135,7 +112,7 @@ export class AiAgentConversationService {
   }
 
   async deleteById(id: string) {
-    await this.conversationModel.deleteOne({ _id: id })
+    await this.conversationRepository.deleteById(id)
   }
 
   private generateTitle(
@@ -201,10 +178,7 @@ export class AiAgentConversationService {
             .replaceAll(/^["'「]|["'」]$/g, '')
             .trim()
             .slice(0, 30)
-          return this.conversationModel.updateOne(
-            { _id: conversationId },
-            { $set: { title } },
-          )
+          return this.conversationRepository.update(conversationId, { title })
         }
       })
       .catch((err) => {

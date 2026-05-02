@@ -10,10 +10,8 @@ import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar } from '~/utils/tool.util'
 
-import { AITranslationModel } from '../ai/ai-translation/ai-translation.model'
 import { OwnerService } from '../owner/owner.service'
 import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
@@ -38,8 +36,6 @@ export class CommentService {
     private readonly eventManager: EventManagerService,
     @Inject(forwardRef(() => ReaderService))
     private readonly readerService: ReaderService,
-    @InjectModel(AITranslationModel)
-    private readonly aiTranslationModel: MongooseModel<AITranslationModel>,
   ) {}
 
   public get repository() {

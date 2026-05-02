@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, type SQL, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { aiTranslations, translationEntries } from '~/database/schema'
 import {
   BaseRepository,
+  type PaginationResult,
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -112,6 +113,15 @@ export class AiTranslationRepository extends BaseRepository {
     return row ? mapTranslation(row) : null
   }
 
+  async findById(id: EntityId | string): Promise<AiTranslationRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(aiTranslations)
+      .where(eq(aiTranslations.id, parseEntityId(id)))
+      .limit(1)
+    return row ? mapTranslation(row) : null
+  }
+
   async listForRef(
     refId: EntityId | string,
     refType: string,
@@ -127,6 +137,53 @@ export class AiTranslationRepository extends BaseRepository {
         )!,
       )
     return rows.map(mapTranslation)
+  }
+
+  async listByRefId(refId: EntityId | string): Promise<AiTranslationRow[]> {
+    const rows = await this.db
+      .select()
+      .from(aiTranslations)
+      .where(eq(aiTranslations.refId, parseEntityId(refId)))
+      .orderBy(desc(aiTranslations.createdAt))
+    return rows.map(mapTranslation)
+  }
+
+  async listByRefIds(
+    refIds: Array<EntityId | string>,
+  ): Promise<AiTranslationRow[]> {
+    if (!refIds.length) return []
+    const rows = await this.db
+      .select()
+      .from(aiTranslations)
+      .where(
+        inArray(
+          aiTranslations.refId,
+          refIds.map((id) => parseEntityId(id)),
+        ),
+      )
+      .orderBy(desc(aiTranslations.createdAt))
+    return rows.map(mapTranslation)
+  }
+
+  async list(page = 1, size = 20): Promise<PaginationResult<AiTranslationRow>> {
+    page = Math.max(1, page)
+    size = Math.min(100, Math.max(1, size))
+    const offset = (page - 1) * size
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(aiTranslations)
+        .orderBy(desc(aiTranslations.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(aiTranslations),
+    ])
+    return {
+      data: rows.map(mapTranslation),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
   }
 
   async upsert(
@@ -196,6 +253,40 @@ export class AiTranslationRepository extends BaseRepository {
     return mapTranslation(row)
   }
 
+  async updateById(
+    id: EntityId | string,
+    patch: Partial<Omit<AiTranslationRow, 'id' | 'createdAt'>>,
+  ): Promise<AiTranslationRow | null> {
+    const update: Partial<typeof aiTranslations.$inferInsert> = {}
+    if (patch.hash !== undefined) update.hash = patch.hash
+    if (patch.refId !== undefined) update.refId = parseEntityId(patch.refId)
+    if (patch.refType !== undefined) update.refType = patch.refType
+    if (patch.lang !== undefined) update.lang = patch.lang
+    if (patch.sourceLang !== undefined) update.sourceLang = patch.sourceLang
+    if (patch.title !== undefined) update.title = patch.title
+    if (patch.text !== undefined) update.text = patch.text
+    if (patch.subtitle !== undefined) update.subtitle = patch.subtitle
+    if (patch.summary !== undefined) update.summary = patch.summary
+    if (patch.tags !== undefined) update.tags = patch.tags
+    if (patch.sourceModifiedAt !== undefined)
+      update.sourceModifiedAt = patch.sourceModifiedAt
+    if (patch.aiModel !== undefined) update.aiModel = patch.aiModel
+    if (patch.aiProvider !== undefined) update.aiProvider = patch.aiProvider
+    if (patch.contentFormat !== undefined)
+      update.contentFormat = patch.contentFormat
+    if (patch.content !== undefined) update.content = patch.content
+    if (patch.sourceBlockSnapshots !== undefined)
+      update.sourceBlockSnapshots = patch.sourceBlockSnapshots
+    if (patch.sourceMetaHashes !== undefined)
+      update.sourceMetaHashes = patch.sourceMetaHashes
+    const [row] = await this.db
+      .update(aiTranslations)
+      .set(update)
+      .where(eq(aiTranslations.id, parseEntityId(id)))
+      .returning()
+    return row ? mapTranslation(row) : null
+  }
+
   async deleteForRef(
     refId: EntityId | string,
     refType: string,
@@ -209,6 +300,22 @@ export class AiTranslationRepository extends BaseRepository {
           eq(aiTranslations.refType, refType),
         )!,
       )
+      .returning({ id: aiTranslations.id })
+    return result.length
+  }
+
+  async deleteForRefId(refId: EntityId | string): Promise<number> {
+    const result = await this.db
+      .delete(aiTranslations)
+      .where(eq(aiTranslations.refId, parseEntityId(refId)))
+      .returning({ id: aiTranslations.id })
+    return result.length
+  }
+
+  async deleteById(id: EntityId | string): Promise<number> {
+    const result = await this.db
+      .delete(aiTranslations)
+      .where(eq(aiTranslations.id, parseEntityId(id)))
       .returning({ id: aiTranslations.id })
     return result.length
   }
@@ -258,6 +365,63 @@ export class TranslationEntryRepository extends BaseRepository {
         )!,
       )
     return rows.map(mapEntry)
+  }
+
+  async listByBatch(
+    lang: string,
+    lookups: Array<{
+      keyPath: string
+      keyType: string
+      lookupKeys: string[]
+    }>,
+  ): Promise<TranslationEntryRow[]> {
+    if (!lookups.length) return []
+    const rows: TranslationEntryRow[] = []
+    for (const lookup of lookups) {
+      if (!lookup.lookupKeys.length) continue
+      const found = await this.db
+        .select()
+        .from(translationEntries)
+        .where(
+          and(
+            eq(translationEntries.lang, lang),
+            eq(translationEntries.keyPath, lookup.keyPath),
+            eq(translationEntries.keyType, lookup.keyType),
+            inArray(translationEntries.lookupKey, lookup.lookupKeys),
+          )!,
+        )
+      rows.push(...found.map(mapEntry))
+    }
+    return rows
+  }
+
+  async listByKeyPath(
+    keyPath: string,
+    lookupKey: string,
+  ): Promise<TranslationEntryRow[]> {
+    const rows = await this.db
+      .select()
+      .from(translationEntries)
+      .where(
+        and(
+          eq(translationEntries.keyPath, keyPath),
+          eq(translationEntries.lookupKey, lookupKey),
+        )!,
+      )
+    return rows.map(mapEntry)
+  }
+
+  async deleteByKeyPath(keyPath: string, lookupKey: string): Promise<number> {
+    const result = await this.db
+      .delete(translationEntries)
+      .where(
+        and(
+          eq(translationEntries.keyPath, keyPath),
+          eq(translationEntries.lookupKey, lookupKey),
+        )!,
+      )
+      .returning({ id: translationEntries.id })
+    return result.length
   }
 
   async upsert(input: {
@@ -315,5 +479,56 @@ export class TranslationEntryRepository extends BaseRepository {
       .select({ count: sql<number>`count(*)::int` })
       .from(translationEntries)
     return Number(row?.count ?? 0)
+  }
+
+  async listFiltered(
+    filter: {
+      keyPath?: string
+      lang?: string
+      lookupKey?: string
+    } = {},
+  ): Promise<TranslationEntryRow[]> {
+    const conditions: SQL<unknown>[] = []
+    if (filter.keyPath)
+      conditions.push(eq(translationEntries.keyPath, filter.keyPath))
+    if (filter.lang) conditions.push(eq(translationEntries.lang, filter.lang))
+    if (filter.lookupKey)
+      conditions.push(eq(translationEntries.lookupKey, filter.lookupKey))
+    const where = conditions.length ? and(...conditions) : undefined
+    const rows = await this.db
+      .select()
+      .from(translationEntries)
+      .where(where)
+      .orderBy(desc(translationEntries.createdAt))
+    return rows.map(mapEntry)
+  }
+
+  async findById(id: EntityId | string): Promise<TranslationEntryRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(translationEntries)
+      .where(eq(translationEntries.id, parseEntityId(id)))
+      .limit(1)
+    return row ? mapEntry(row) : null
+  }
+
+  async updateTranslatedText(
+    id: EntityId | string,
+    translatedText: string,
+  ): Promise<TranslationEntryRow | null> {
+    const [row] = await this.db
+      .update(translationEntries)
+      .set({ translatedText })
+      .where(eq(translationEntries.id, parseEntityId(id)))
+      .returning()
+    return row ? mapEntry(row) : null
+  }
+
+  async deleteById(id: EntityId | string): Promise<TranslationEntryRow | null> {
+    const [row] = await this.db
+      .delete(translationEntries)
+      .where(eq(translationEntries.id, parseEntityId(id)))
+      .returning()
+    return row ? mapEntry(row) : null
   }
 }

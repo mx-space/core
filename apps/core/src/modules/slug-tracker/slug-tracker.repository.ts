@@ -80,6 +80,14 @@ export class SlugTrackerRepository extends BaseRepository {
     return result.length
   }
 
+  async deleteAllForTargetId(targetId: EntityId | string): Promise<number> {
+    const result = await this.db
+      .delete(slugTrackers)
+      .where(eq(slugTrackers.targetId, parseEntityId(targetId)))
+      .returning({ id: slugTrackers.id })
+    return result.length
+  }
+
   async count(): Promise<number> {
     const [row] = await this.db
       .select({ count: sql<number>`count(*)::int` })

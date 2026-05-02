@@ -42,6 +42,30 @@ export class PollVoteRepository extends BaseRepository {
     return Boolean(row)
   }
 
+  async findByPollAndFingerprint(
+    pollId: string,
+    fingerprint: string,
+  ): Promise<PollVoteRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(pollVotes)
+      .where(
+        and(
+          eq(pollVotes.pollId, pollId),
+          eq(pollVotes.voterFingerprint, fingerprint),
+        )!,
+      )
+      .limit(1)
+    if (!row) return null
+    return {
+      id: toEntityId(row.id) as EntityId,
+      pollId: row.pollId,
+      voterFingerprint: row.voterFingerprint,
+      optionIds: await this.listOptionsForVote(row.id.toString()),
+      createdAt: row.createdAt,
+    }
+  }
+
   async castVote(input: {
     pollId: string
     voterFingerprint: string

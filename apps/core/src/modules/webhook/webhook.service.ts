@@ -2,7 +2,6 @@ import { createHmac } from 'node:crypto'
 
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
-import type { ReturnModelType } from '@typegoose/typegoose'
 
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
@@ -12,11 +11,9 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { EventPayloadEnricherService } from '~/processors/helper/helper.event-payload.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import type { PagerDto } from '~/shared/dto/pager.dto'
-import { InjectModel } from '~/transformers/model.transformer'
-import { dbTransforms } from '~/utils/db-transform.util'
 
 import { WebhookModel } from './webhook.model'
-import { WebhookEventModel } from './webhook-event.model'
+import { WebhookRepository, type WebhookRow } from './webhook.repository'
 
 const ACCEPT_EVENTS = new Set(Object.values(BusinessEvents))
 
@@ -35,10 +32,7 @@ function scopeToSource(scope: EventScope): WebhookEventSource {
 @Injectable()
 export class WebhookService implements OnModuleInit, OnModuleDestroy {
   constructor(
-    @InjectModel(WebhookModel)
-    private readonly webhookModel: ReturnModelType<typeof WebhookModel>,
-    @InjectModel(WebhookEventModel)
-    private readonly webhookEventModel: MongooseModel<WebhookEventModel>,
+    private readonly webhookRepository: WebhookRepository,
     private readonly httpService: HttpService,
     private readonly eventService: EventManagerService,
     private readonly enricher: EventPayloadEnricherService,
@@ -61,8 +55,21 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
   }
 
   async createWebhook(model: WebhookModel) {
-    const document = await this.webhookModel.create(model)
-    return await this.sendWebhookEvent('health_check', {}, document)
+    const document = await this.webhookRepository.create({
+      payloadUrl: model.payloadUrl,
+      events: model.events,
+      secret: model.secret,
+      enabled: model.enabled,
+      scope: model.scope,
+    })
+    return await this.sendWebhookEvent(
+      'health_check',
+      {},
+      {
+        ...document,
+        secret: model.secret,
+      },
+    )
   }
 
   transformEvents(events: string[]) {
@@ -80,50 +87,36 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
   }
 
   async deleteWebhook(id: string) {
-    await this.webhookModel.deleteOne({
-      _id: id,
-    })
-    await this.webhookEventModel.deleteMany({
-      hookId: id,
-    })
+    await this.webhookRepository.deleteById(id)
+    await this.webhookRepository.deleteEventsByHookId(id)
   }
 
   async updateWebhook(id: string, model: Partial<WebhookModel>) {
-    await this.webhookModel.updateOne(
-      {
-        _id: id,
-      },
-      model,
-    )
-    const document = await this.webhookModel
-      .findById(id)
-      .lean()
-      .select('+secret')
+    await this.webhookRepository.update(id, model)
+    const document = await this.webhookRepository.findById(id)
     if (document)
       return await this.sendWebhookEvent('health_check', {}, document)
   }
 
   getAllWebhooks() {
-    return this.webhookModel.find().lean()
+    return this.webhookRepository.findAll()
   }
 
   async sendWebhook(event: string, rawPayload: any, scope: EventScope) {
-    const enabledWebHooks = await this.webhookModel
-      .find({
-        events: {
-          $in: [event, 'all'],
-        },
-        enabled: true,
-      })
-      .select('+secret')
-      .lean()
+    const enabledWebHooks = (await this.webhookRepository.findEnabled()).filter(
+      (webhook) =>
+        webhook.events.some((item) => item === event || item === 'all'),
+    )
 
-    const scopedWebhooks = enabledWebHooks.filter((webhook) => {
-      if (typeof webhook.scope === 'undefined') {
-        return true
+    const scopedWebhooks: Array<WebhookRow & { secret: string }> = []
+    for (const webhook of enabledWebHooks) {
+      if (!webhook.scope) {
+        continue
       }
-      return (webhook.scope & scope) !== 0
-    })
+      if ((webhook.scope & scope) !== 0) {
+        scopedWebhooks.push(webhook)
+      }
+    }
 
     if (scopedWebhooks.length === 0) return
 
@@ -144,7 +137,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
   private async sendWebhookEvent(
     event: string,
     payload: object,
-    webhook: WebhookModel,
+    webhook: WebhookRow & { secret: string },
     source: WebhookEventSource = 'system',
   ) {
     const stringifyPayload = JSON.stringify(payload)
@@ -164,13 +157,13 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
       ),
       'X-Webhook-Source': source,
     }
-    const webhookEvent = await this.webhookEventModel.create({
+    const webhookEvent = await this.webhookRepository.logEvent({
       event,
-      headers: dbTransforms.json(headers),
+      headers,
       success: false,
-      payload: stringifyPayload,
-      hookId: webhook.id as unknown as WebhookEventModel['hookId'],
-      response: null as unknown as string,
+      payload: clonedPayload,
+      hookId: webhook.id,
+      response: null,
     })
     return this.httpService.axiosRef
       .post(webhook.payloadUrl, clonedPayload, {
@@ -180,67 +173,68 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
         },
       })
       .then(async (response) => {
-        webhookEvent.response = JSON.stringify({
-          headers: response.headers,
-          data: response.data,
-          timestamp: Date.now(),
+        await this.webhookRepository.updateEvent(webhookEvent.id, {
+          response: {
+            headers: response.headers,
+            data: response.data,
+            timestamp: Date.now(),
+          },
+          status: response.status,
+          success: true,
         })
-        webhookEvent.status = response.status
-        webhookEvent.success = true
-        await webhookEvent.save()
       })
       .catch((error) => {
         if (!error.response) {
           return
         }
-        webhookEvent.response = JSON.stringify({
-          headers: error.response.headers,
-          data: error.response.data,
-          timestamp: Date.now(),
+        this.webhookRepository.updateEvent(webhookEvent.id, {
+          response: {
+            headers: error.response.headers,
+            data: error.response.data,
+            timestamp: Date.now(),
+          },
+          status: error.response.status,
+          success: false,
         })
-        webhookEvent.status = error.response.status
-        webhookEvent.success = false
-        webhookEvent.save()
       })
   }
 
   async redispatch(id: string) {
-    const record = await this.webhookEventModel.findById(id)
+    const record = await this.webhookRepository.findEventById(id)
     if (!record) {
       throw new BizException(ErrorCodeEnum.WebhookEventNotFound)
     }
-    const hook = await this.webhookModel
-      .findById(record.hookId)
-      .select('+secret')
-      .lean()
+    const hook = await this.webhookRepository.findById(record.hookId)
     if (!hook) {
       throw new BizException(ErrorCodeEnum.WebhookNotFound)
     }
 
-    await this.sendWebhookEvent(record.event, JSON.parse(record.payload), hook)
+    await this.sendWebhookEvent(
+      record.event ?? 'unknown',
+      typeof record.payload === 'string'
+        ? JSON.parse(record.payload)
+        : (record.payload as object),
+      hook,
+    )
   }
 
   async getEventsByHookId(hookId: string, query: PagerDto) {
     const { page, size } = query
 
-    return this.webhookEventModel.paginate(
-      {
-        hookId,
-      },
-      {
-        limit: size,
-        page,
-        sort: {
-          timestamp: -1,
-        },
-      },
-    )
+    const result = await this.webhookRepository.listEvents(hookId, page, size)
+    return {
+      docs: result.data,
+      totalDocs: result.pagination.total,
+      page: result.pagination.currentPage,
+      totalPages: result.pagination.totalPage,
+      limit: result.pagination.size,
+      hasNextPage: result.pagination.hasNextPage,
+      hasPrevPage: result.pagination.hasPrevPage,
+    }
   }
 
   clearDispatchEvents(hookId: string) {
-    return this.webhookEventModel.deleteMany({
-      hookId,
-    })
+    return this.webhookRepository.deleteEventsByHookId(hookId)
   }
 }
 

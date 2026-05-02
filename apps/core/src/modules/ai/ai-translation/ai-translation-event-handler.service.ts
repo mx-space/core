@@ -3,12 +3,11 @@ import { OnEvent } from '@nestjs/event-emitter'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { DatabaseService } from '~/processors/database/database.service'
-import { InjectModel } from '~/transformers/model.transformer'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { resolveTargetLanguages } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
-import { AITranslationModel } from './ai-translation.model'
+import { AiTranslationRepository } from './ai-translation.repository'
 import { AiTranslationService } from './ai-translation.service'
 import type {
   ArticleDocument,
@@ -25,8 +24,7 @@ export class AiTranslationEventHandlerService {
     private readonly configService: ConfigsService,
     private readonly databaseService: DatabaseService,
     private readonly aiTaskService: AiTaskService,
-    @InjectModel(AITranslationModel)
-    private readonly aiTranslationModel: MongooseModel<AITranslationModel>,
+    private readonly aiTranslationRepository: AiTranslationRepository,
     private readonly translationEntryService: TranslationEntryService,
   ) {}
 
@@ -107,9 +105,8 @@ export class AiTranslationEventHandlerService {
       return
     }
 
-    const existingTranslations = await this.aiTranslationModel
-      .find({ refId: id })
-      .select('hash lang sourceLang')
+    const existingTranslations =
+      await this.aiTranslationRepository.listByRefId(id)
     if (!existingTranslations.length) {
       await this.aiTranslationService.cancelActiveTranslationTasks(id)
       this.logger.log(

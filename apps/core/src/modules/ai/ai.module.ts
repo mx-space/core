@@ -1,18 +1,26 @@
 import { Module } from '@nestjs/common'
 
+import { TopicModule } from '../topic/topic.module'
 import { AiController } from './ai.controller'
 import { AiService } from './ai.service'
 import { AiAgentController } from './ai-agent/ai-agent.controller'
 import { AiAgentChatService } from './ai-agent/ai-agent-chat.service'
+import { AiAgentConversationRepository } from './ai-agent/ai-agent-conversation.repository'
 import { AiAgentConversationService } from './ai-agent/ai-agent-conversation.service'
 import { AiInFlightService } from './ai-inflight/ai-inflight.service'
 import { AiInsightsController } from './ai-insights/ai-insights.controller'
+import { AiInsightsRepository } from './ai-insights/ai-insights.repository'
 import { AiInsightsService } from './ai-insights/ai-insights.service'
 import { AiInsightsTranslationService } from './ai-insights/ai-insights-translation.service'
 import { AiSummaryController } from './ai-summary/ai-summary.controller'
+import { AiSummaryRepository } from './ai-summary/ai-summary.repository'
 import { AiSummaryService } from './ai-summary/ai-summary.service'
 import { AiTaskModule } from './ai-task/ai-task.module'
 import { AiTranslationController } from './ai-translation/ai-translation.controller'
+import {
+  AiTranslationRepository,
+  TranslationEntryRepository,
+} from './ai-translation/ai-translation.repository'
 import { AiTranslationService } from './ai-translation/ai-translation.service'
 import { AiTranslationEventHandlerService } from './ai-translation/ai-translation-event-handler.service'
 import { LexicalTranslationStrategy } from './ai-translation/strategies/lexical-translation.strategy'
@@ -29,10 +37,12 @@ import { AiWriterController } from './ai-writer/ai-writer.controller'
 import { AiWriterService } from './ai-writer/ai-writer.service'
 
 @Module({
-  imports: [AiTaskModule],
+  imports: [AiTaskModule, TopicModule],
   providers: [
     AiSummaryService,
+    AiSummaryRepository,
     AiInsightsService,
+    AiInsightsRepository,
     AiInsightsTranslationService,
     AiInFlightService,
     AiService,
@@ -48,10 +58,13 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     },
     TranslationConsistencyService,
     AiTranslationService,
+    AiTranslationRepository,
+    TranslationEntryRepository,
     AiTranslationEventHandlerService,
     TranslationEntryService,
     AiAgentChatService,
     AiAgentConversationService,
+    AiAgentConversationRepository,
   ],
   controllers: [
     AiController,

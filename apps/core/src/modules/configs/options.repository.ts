@@ -68,6 +68,12 @@ export class OptionsRepository extends BaseRepository {
     return mapRow(row)
   }
 
+  async increment(name: string, delta = 1): Promise<OptionRow> {
+    const current = await this.get<number>(name)
+    const next = Number(current ?? 0) + delta
+    return this.upsert(name, next)
+  }
+
   async deleteByName(name: string): Promise<OptionRow | null> {
     const [row] = await this.db
       .delete(options)

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, inArray, type SQL, sql } from 'drizzle-orm'
+import { and, desc, eq, ilike, inArray, or, type SQL, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { searchDocuments } from '~/database/schema'
@@ -100,6 +100,19 @@ export class SearchRepository extends BaseRepository {
     return rows.map(mapRow)
   }
 
+  async findAll(refType?: SearchDocumentRefType): Promise<SearchDocumentRow[]> {
+    const where = refType ? eq(searchDocuments.refType, refType) : undefined
+    const rows = await this.db
+      .select()
+      .from(searchDocuments)
+      .where(where)
+      .orderBy(
+        desc(searchDocuments.modifiedAt),
+        desc(searchDocuments.createdAt),
+      )
+    return rows.map(mapRow)
+  }
+
   /**
    * List visible documents (published, public time elapsed, not password
    * gated). Mirrors the legacy filter precisely.
@@ -148,6 +161,7 @@ export class SearchRepository extends BaseRepository {
   async findByTerms(
     terms: string[],
     refType?: SearchDocumentRefType,
+    limit = 100,
   ): Promise<SearchDocumentRow[]> {
     if (terms.length === 0) return []
     const filters: SQL[] = [sql`${searchDocuments.terms} && ${terms}::text[]`]
@@ -156,7 +170,37 @@ export class SearchRepository extends BaseRepository {
       .select()
       .from(searchDocuments)
       .where(and(...filters))
+      .limit(limit)
     return rows.map(mapRow)
+  }
+
+  async findByKeyword(
+    keyword: string,
+    refType?: SearchDocumentRefType,
+    limit = 100,
+  ): Promise<SearchDocumentRow[]> {
+    if (!keyword.trim()) return []
+    const pattern = `%${keyword.trim()}%`
+    const filters: SQL[] = [
+      or(
+        ilike(searchDocuments.title, pattern),
+        ilike(searchDocuments.searchText, pattern),
+      )!,
+    ]
+    if (refType) filters.push(eq(searchDocuments.refType, refType))
+    const rows = await this.db
+      .select()
+      .from(searchDocuments)
+      .where(and(...filters))
+      .limit(limit)
+    return rows.map(mapRow)
+  }
+
+  async deleteAll(): Promise<number> {
+    const result = await this.db
+      .delete(searchDocuments)
+      .returning({ id: searchDocuments.id })
+    return result.length
   }
 
   async upsert(input: SearchDocumentUpsertInput): Promise<SearchDocumentRow> {

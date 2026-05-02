@@ -6,15 +6,15 @@ import { Injectable, Logger } from '@nestjs/common'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import type { ContentFormat } from '~/shared/types/content-format.type'
-import { InjectModel } from '~/transformers/model.transformer'
 import { extractImagesFromContent } from '~/utils/content.util'
 import { S3Uploader } from '~/utils/s3.util'
 
 import {
-  FileReferenceModel,
+  FileReferenceRepository,
+  type FileReferenceRow,
   FileReferenceStatus,
-  FileReferenceType,
-} from './file-reference.model'
+  type FileReferenceType,
+} from './file-reference.repository'
 
 interface ContentLike {
   text: string
@@ -51,13 +51,19 @@ export class FileReferenceService {
   }
 
   constructor(
-    @InjectModel(FileReferenceModel)
-    private readonly fileReferenceModel: MongooseModel<FileReferenceModel>,
+    private readonly fileReferenceRepository: FileReferenceRepository,
     private readonly configsService: ConfigsService,
   ) {}
 
-  get model() {
-    return this.fileReferenceModel
+  private toLegacy(row: FileReferenceRow): FileReferenceRow & {
+    _id: string
+    created: Date
+  } {
+    return {
+      ...row,
+      _id: row.id,
+      created: row.createdAt,
+    }
   }
 
   async createPendingReference(
@@ -65,17 +71,19 @@ export class FileReferenceService {
     fileName: string,
     s3ObjectKey?: string,
   ) {
-    const existing = await this.fileReferenceModel.findOne({ fileUrl })
+    const existing = await this.fileReferenceRepository.findFirstByUrl(fileUrl)
     if (existing) {
-      return existing
+      return this.toLegacy(existing)
     }
 
-    return this.fileReferenceModel.create({
-      fileUrl,
-      fileName,
-      status: FileReferenceStatus.Pending,
-      ...(s3ObjectKey && { s3ObjectKey }),
-    })
+    return this.toLegacy(
+      await this.fileReferenceRepository.create({
+        fileUrl,
+        fileName,
+        status: FileReferenceStatus.Pending,
+        s3ObjectKey,
+      }),
+    )
   }
 
   async activateReferences(
@@ -86,18 +94,7 @@ export class FileReferenceService {
     const imageUrls = extractImagesFromContent(doc)
     if (imageUrls.length === 0) return
 
-    await this.fileReferenceModel.updateMany(
-      {
-        fileUrl: { $in: imageUrls },
-      },
-      {
-        $set: {
-          status: FileReferenceStatus.Active,
-          refId,
-          refType,
-        },
-      },
-    )
+    await this.fileReferenceRepository.activateByUrls(imageUrls, refType, refId)
   }
 
   async updateReferencesForDocument(
@@ -107,41 +104,24 @@ export class FileReferenceService {
   ) {
     const imageUrls = extractImagesFromContent(doc)
 
-    await this.fileReferenceModel.updateMany(
-      { refId, refType },
-      { $set: { status: FileReferenceStatus.Pending, refId: null } },
-    )
+    await this.fileReferenceRepository.markDocumentPending(refType, refId)
 
     if (imageUrls.length > 0) {
       for (const fileUrl of imageUrls) {
-        await this.fileReferenceModel.updateOne(
-          { fileUrl },
-          {
-            $set: {
-              status: FileReferenceStatus.Active,
-              refId,
-              refType,
-            },
-          },
-        )
+        await this.fileReferenceRepository.activateUrl(fileUrl, refType, refId)
       }
     }
   }
 
   async removeReferencesForDocument(refId: string, refType: FileReferenceType) {
-    await this.fileReferenceModel.updateMany(
-      { refId, refType },
-      { $set: { status: FileReferenceStatus.Pending, refId: null } },
-    )
+    await this.fileReferenceRepository.markDocumentPending(refType, refId)
   }
 
   async cleanupOrphanFiles(maxAgeMinutes = 60) {
     const cutoffTime = new Date(Date.now() - maxAgeMinutes * 60 * 1000)
 
-    const orphanFiles = await this.fileReferenceModel.find({
-      status: FileReferenceStatus.Pending,
-      created: { $lt: cutoffTime },
-    })
+    const orphanFiles =
+      await this.fileReferenceRepository.findPendingOlderThan(cutoffTime)
 
     const s3Uploader = await this.buildS3Uploader()
     let deletedCount = 0
@@ -159,7 +139,7 @@ export class FileReferenceService {
         } else {
           continue
         }
-        await this.fileReferenceModel.deleteOne({ _id: file._id })
+        await this.fileReferenceRepository.deleteById(file.id)
         deletedCount++
         this.logger.log(`Deleted orphan file: ${file.fileName}`)
       } catch {
@@ -171,27 +151,33 @@ export class FileReferenceService {
   }
 
   async getFileReferences(fileUrl: string) {
-    return this.fileReferenceModel.find({ fileUrl })
+    return (await this.fileReferenceRepository.findByUrl(fileUrl)).map((row) =>
+      this.toLegacy(row),
+    )
   }
 
   async getReferencesForDocument(refId: string, refType: FileReferenceType) {
-    return this.fileReferenceModel.find({
-      refId,
-      refType,
-      status: FileReferenceStatus.Active,
-    })
+    return (await this.fileReferenceRepository.findByRef(refType, refId))
+      .filter((row) => row.status === FileReferenceStatus.Active)
+      .map((row) => this.toLegacy(row))
   }
 
   async getOrphanFilesCount() {
-    return this.fileReferenceModel.countDocuments({
-      status: FileReferenceStatus.Pending,
-    })
+    return this.fileReferenceRepository.countPending()
+  }
+
+  async listOrphanFiles(page = 1, size = 20) {
+    const result = await this.fileReferenceRepository.listPending(page, size)
+    return {
+      data: result.data.map((row) => this.toLegacy(row)),
+      pagination: result.pagination,
+    }
   }
 
   async batchDeleteOrphans(options: { ids?: string[]; all?: boolean }) {
     const s3Uploader = await this.buildS3Uploader()
 
-    const deleteFile = async (file: FileReferenceModel): Promise<boolean> => {
+    const deleteFile = async (file: FileReferenceRow): Promise<boolean> => {
       if (file.s3ObjectKey) {
         if (!s3Uploader) return false
         await s3Uploader.deleteObject(file.s3ObjectKey)
@@ -205,15 +191,13 @@ export class FileReferenceService {
     }
 
     if (options.all) {
-      const orphanFiles = await this.fileReferenceModel.find({
-        status: FileReferenceStatus.Pending,
-      })
+      const orphanFiles = await this.fileReferenceRepository.findPending()
 
       let deletedCount = 0
       for (const file of orphanFiles) {
         try {
           if (await deleteFile(file)) {
-            await this.fileReferenceModel.deleteOne({ _id: file._id })
+            await this.fileReferenceRepository.deleteById(file.id)
             deletedCount++
           }
         } catch {
@@ -226,11 +210,11 @@ export class FileReferenceService {
     if (options.ids?.length) {
       let deletedCount = 0
       for (const id of options.ids) {
-        const ref = await this.fileReferenceModel.findById(id)
+        const ref = await this.fileReferenceRepository.findById(id)
         if (ref && ref.status === FileReferenceStatus.Pending) {
           try {
             if (await deleteFile(ref)) {
-              await this.fileReferenceModel.deleteOne({ _id: id })
+              await this.fileReferenceRepository.deleteById(id)
               deletedCount++
             }
           } catch {

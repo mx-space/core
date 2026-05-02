@@ -1,6 +1,5 @@
 import type { OnModuleInit } from '@nestjs/common'
 import { Injectable, Logger } from '@nestjs/common'
-import type { ReturnModelType } from '@typegoose/typegoose'
 import { cloneDeep, merge, mergeWith } from 'es-toolkit/compat'
 import type { z, ZodError } from 'zod'
 
@@ -16,7 +15,6 @@ import {
   ConfigVersionService,
 } from '~/processors/redis/config-version.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { getRedisKey } from '~/utils/redis.util'
 import { camelcaseKeys } from '~/utils/tool.util'
 
@@ -28,8 +26,8 @@ import {
   sanitizeConfigForResponse,
 } from './configs.encrypt.util'
 import { configDtoMapping, IConfig } from './configs.interface'
-import { OptionModel } from './configs.model'
 import type { OAuthConfig } from './configs.schema'
+import { OptionsRepository } from './options.repository'
 
 const configsKeySet = new Set(Object.keys(configDtoMapping))
 const aggregateConfigKeys = new Set<keyof IConfig>([
@@ -52,8 +50,7 @@ export class ConfigsService implements OnModuleInit {
   private configInitPromise?: Promise<void>
 
   constructor(
-    @InjectModel(OptionModel)
-    private readonly optionModel: ReturnModelType<typeof OptionModel>,
+    private readonly optionsRepository: OptionsRepository,
 
     private readonly redisService: RedisService,
     private readonly configVersionService: ConfigVersionService,
@@ -108,6 +105,15 @@ export class ConfigsService implements OnModuleInit {
     return this.getConfig()
   }
 
+  public async getOptionValue<T>(name: string, fallback: T): Promise<T> {
+    const value = await this.optionsRepository.get<T>(name)
+    return value ?? fallback
+  }
+
+  public async incrementOption(name: string, delta = 1) {
+    return this.optionsRepository.increment(name, delta)
+  }
+
   public get defaultConfig() {
     return generateDefaultConfig()
   }
@@ -117,8 +123,19 @@ export class ConfigsService implements OnModuleInit {
       return
     }
 
-    const configs = await this.optionModel.find().lean()
+    const configs = await this.optionsRepository.findAll()
     const mergedConfig = generateDefaultConfig()
+    const mergeStoredConfig = <T extends keyof IConfig>(
+      name: T,
+      value: unknown,
+    ) => {
+      const storedValue =
+        value && typeof value === 'object' ? (value as Partial<IConfig[T]>) : {}
+      mergedConfig[name] = {
+        ...mergedConfig[name],
+        ...storedValue,
+      }
+    }
     configs.forEach((field) => {
       const name = field.name as keyof IConfig
 
@@ -129,8 +146,7 @@ export class ConfigsService implements OnModuleInit {
       if (isDev && name === 'url') {
         return
       }
-      const value = field.value
-      mergedConfig[name] = { ...mergedConfig[name], ...value }
+      mergeStoredConfig(name, field.value)
     })
 
     await this.setConfig(mergedConfig)
@@ -193,25 +209,20 @@ export class ConfigsService implements OnModuleInit {
     data: Partial<IConfig[T]>,
   ): Promise<IConfig[T]> {
     const config = await this.getConfig()
-    const updatedConfigRow = await this.optionModel
-      .findOneAndUpdate(
-        { name: key as string },
-        {
-          value: mergeWith(cloneDeep(config[key]), data, (old, newer) => {
-            // 数组不合并
-            if (Array.isArray(old)) {
-              return newer
-            }
-            // 对象合并
-            if (typeof old === 'object' && typeof newer === 'object') {
-              return { ...old, ...newer }
-            }
-          }),
-        },
-        { upsert: true, returnDocument: 'after' },
-      )
-      .lean()
-    const newData = updatedConfigRow.value
+    const updatedConfigRow = await this.optionsRepository.upsert(
+      key as string,
+      mergeWith(cloneDeep(config[key]), data, (old, newer) => {
+        // 数组不合并
+        if (Array.isArray(old)) {
+          return newer
+        }
+        // 对象合并
+        if (typeof old === 'object' && typeof newer === 'object') {
+          return { ...old, ...newer }
+        }
+      }),
+    )
+    const newData = updatedConfigRow.value as IConfig[T]
     const mergedFullConfig = Object.assign({}, config, { [key]: newData })
 
     await this.setConfig(mergedFullConfig)
@@ -425,8 +436,10 @@ export class ConfigsService implements OnModuleInit {
       return null
     }
 
-    const row = await this.optionModel.findOne({ name: 'ai' }).lean()
-    const providers = row?.value?.providers as AIProviderConfig[] | undefined
+    const row = await this.optionsRepository.get<{
+      providers?: AIProviderConfig[]
+    }>('ai')
+    const providers = row?.providers
     const storedProvider = providers?.find((p) => p.id === providerId)
 
     if (storedProvider) {
