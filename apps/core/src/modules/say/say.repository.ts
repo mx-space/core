@@ -64,6 +64,16 @@ export class SayRepository extends BaseRepository {
     }
   }
 
+  async findRecent(size: number): Promise<SayRow[]> {
+    size = Math.min(50, Math.max(1, size))
+    const rows = await this.db
+      .select()
+      .from(says)
+      .orderBy(desc(says.createdAt))
+      .limit(size)
+    return rows.map(mapRow)
+  }
+
   async findAll(): Promise<SayRow[]> {
     const rows = await this.db.select().from(says).orderBy(desc(says.createdAt))
     return rows.map(mapRow)

@@ -131,7 +131,7 @@ export class AggregateService {
           })
         }),
 
-      this.sayService.model.find({}).sort({ create: -1 }).limit(size),
+      this.sayService.findRecent(size),
       this.recentlyService.model.find({}).sort({ create: -1 }).limit(size),
     ])
 
@@ -451,7 +451,7 @@ export class AggregateService {
       this.postService.model.countDocuments(),
       this.noteService.model.countDocuments(),
       this.pageService.model.countDocuments(),
-      this.sayService.model.countDocuments(),
+      this.sayService.count(),
       this.commentService.model.countDocuments({
         parent: null,
         $or: [{ state: CommentState.Read }, { state: CommentState.Unread }],
