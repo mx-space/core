@@ -36,6 +36,26 @@ export const mongoIdMap = pgTable(
   ],
 )
 
+export const authIdMap = pgTable(
+  'auth_id_map',
+  {
+    collection: text('collection').notNull(),
+    mongoId: text('mongo_id').notNull(),
+    pgId: text('pg_id').notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    uniqueIndex('auth_id_map_collection_mongo_uniq').on(
+      table.collection,
+      table.mongoId,
+    ),
+    uniqueIndex('auth_id_map_collection_pg_uniq').on(
+      table.collection,
+      table.pgId,
+    ),
+  ],
+)
+
 export const dataMigrationRuns = pgTable('data_migration_runs', {
   id: pkBigInt(),
   name: text('name').notNull(),

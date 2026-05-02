@@ -1,18 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { eq, sql } from 'drizzle-orm'
+import { asc, eq, inArray, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
-import { ownerProfiles, readers } from '~/database/schema'
+import { readers } from '~/database/schema'
 import {
   BaseRepository,
-  toEntityId,
+  type PaginationResult,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
-import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
-import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 export interface ReaderRow {
-  id: EntityId
+  id: string
   email: string | null
   emailVerified: boolean
   name: string | null
@@ -26,7 +24,7 @@ export interface ReaderRow {
 }
 
 const mapRow = (row: typeof readers.$inferSelect): ReaderRow => ({
-  id: toEntityId(row.id) as EntityId,
+  id: row.id,
   email: row.email,
   emailVerified: row.emailVerified,
   name: row.name,
@@ -41,19 +39,15 @@ const mapRow = (row: typeof readers.$inferSelect): ReaderRow => ({
 
 @Injectable()
 export class ReaderRepository extends BaseRepository {
-  constructor(
-    @Inject(PG_DB_TOKEN) db: AppDatabase,
-    private readonly snowflake: SnowflakeService,
-  ) {
+  constructor(@Inject(PG_DB_TOKEN) db: AppDatabase) {
     super(db)
   }
 
-  async findById(id: EntityId | string): Promise<ReaderRow | null> {
-    const idBig = parseEntityId(id)
+  async findById(id: string): Promise<ReaderRow | null> {
     const [row] = await this.db
       .select()
       .from(readers)
-      .where(eq(readers.id, idBig))
+      .where(eq(readers.id, id))
       .limit(1)
     return row ? mapRow(row) : null
   }
@@ -81,25 +75,61 @@ export class ReaderRepository extends BaseRepository {
       .select()
       .from(readers)
       .where(eq(readers.role, 'owner'))
+      .orderBy(asc(readers.createdAt), asc(readers.id))
       .limit(1)
     return row ? mapRow(row) : null
   }
 
+  async findByIds(ids: string[]): Promise<ReaderRow[]> {
+    if (ids.length === 0) return []
+    const rows = await this.db
+      .select()
+      .from(readers)
+      .where(inArray(readers.id, ids))
+    return rows.map(mapRow)
+  }
+
+  async list(page = 1, size = 20): Promise<PaginationResult<ReaderRow>> {
+    page = Math.max(1, page)
+    size = Math.min(100, Math.max(1, size))
+    const offset = (page - 1) * size
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(readers)
+        .orderBy(asc(readers.createdAt), asc(readers.id))
+        .limit(size)
+        .offset(offset),
+      this.db.select({ count: sql<number>`count(*)::int` }).from(readers),
+    ])
+    return {
+      data: rows.map(mapRow),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
   async create(input: {
+    id: string
     email?: string | null
+    emailVerified?: boolean
     name?: string | null
+    handle?: string | null
     username?: string | null
+    displayUsername?: string | null
+    image?: string | null
     role?: string
   }): Promise<ReaderRow> {
-    const id = this.snowflake.nextBigInt()
     const [row] = await this.db
       .insert(readers)
       .values({
-        id,
+        id: input.id,
         email: input.email ?? null,
-        emailVerified: false,
+        emailVerified: input.emailVerified ?? false,
         name: input.name ?? null,
+        handle: input.handle ?? null,
         username: input.username ?? null,
+        displayUsername: input.displayUsername ?? null,
+        image: input.image ?? null,
         role: input.role ?? 'reader',
       })
       .returning()
@@ -107,10 +137,9 @@ export class ReaderRepository extends BaseRepository {
   }
 
   async update(
-    id: EntityId | string,
+    id: string,
     patch: Partial<Omit<ReaderRow, 'id' | 'createdAt'>>,
   ): Promise<ReaderRow | null> {
-    const idBig = parseEntityId(id)
     const update: Partial<typeof readers.$inferInsert> = {
       updatedAt: new Date(),
     }
@@ -127,82 +156,17 @@ export class ReaderRepository extends BaseRepository {
     const [row] = await this.db
       .update(readers)
       .set(update)
-      .where(eq(readers.id, idBig))
+      .where(eq(readers.id, id))
       .returning()
     return row ? mapRow(row) : null
   }
 
-  async deleteById(id: EntityId | string): Promise<ReaderRow | null> {
-    const idBig = parseEntityId(id)
+  async deleteById(id: string): Promise<ReaderRow | null> {
     const [row] = await this.db
       .delete(readers)
-      .where(eq(readers.id, idBig))
+      .where(eq(readers.id, id))
       .returning()
     return row ? mapRow(row) : null
-  }
-
-  async upsertOwnerProfile(
-    readerId: EntityId | string,
-    patch: Partial<{
-      mail: string | null
-      url: string | null
-      introduce: string | null
-      lastLoginIp: string | null
-      lastLoginTime: Date | null
-      socialIds: Record<string, unknown> | null
-    }>,
-  ): Promise<void> {
-    const readerBig = parseEntityId(readerId)
-    const [existing] = await this.db
-      .select()
-      .from(ownerProfiles)
-      .where(eq(ownerProfiles.readerId, readerBig))
-      .limit(1)
-    if (existing) {
-      await this.db
-        .update(ownerProfiles)
-        .set({
-          mail: patch.mail ?? existing.mail,
-          url: patch.url ?? existing.url,
-          introduce: patch.introduce ?? existing.introduce,
-          lastLoginIp: patch.lastLoginIp ?? existing.lastLoginIp,
-          lastLoginTime: patch.lastLoginTime ?? existing.lastLoginTime,
-          socialIds: patch.socialIds ?? existing.socialIds,
-        })
-        .where(eq(ownerProfiles.readerId, readerBig))
-      return
-    }
-    await this.db.insert(ownerProfiles).values({
-      id: this.snowflake.nextBigInt(),
-      readerId: readerBig,
-      mail: patch.mail ?? null,
-      url: patch.url ?? null,
-      introduce: patch.introduce ?? null,
-      lastLoginIp: patch.lastLoginIp ?? null,
-      lastLoginTime: patch.lastLoginTime ?? null,
-      socialIds: patch.socialIds ?? null,
-    })
-  }
-
-  async getOwnerProfile(readerId: EntityId | string) {
-    const readerBig = parseEntityId(readerId)
-    const [row] = await this.db
-      .select()
-      .from(ownerProfiles)
-      .where(eq(ownerProfiles.readerId, readerBig))
-      .limit(1)
-    if (!row) return null
-    return {
-      id: toEntityId(row.id) as EntityId,
-      readerId: toEntityId(row.readerId) as EntityId,
-      mail: row.mail,
-      url: row.url,
-      introduce: row.introduce,
-      lastLoginIp: row.lastLoginIp,
-      lastLoginTime: row.lastLoginTime,
-      socialIds: row.socialIds,
-      createdAt: row.createdAt,
-    }
   }
 
   async count(): Promise<number> {

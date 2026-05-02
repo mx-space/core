@@ -1,5 +1,5 @@
 {
-  "id": "a99f6361-2d76-4f57-a9ac-bc27d1ae98fe",
+  "id": "5b0198b0-9d68-4c2f-b6ab-8609719cccc2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -787,7 +787,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": true,
           "notNull": true
         },
@@ -806,7 +806,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -948,7 +948,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": true,
           "notNull": true
         },
@@ -967,13 +967,13 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
         "reference_id": {
           "name": "reference_id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -1021,6 +1021,18 @@
           "notNull": true,
           "default": false
         },
+        "rate_limit_time_window": {
+          "name": "rate_limit_time_window",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rate_limit_max": {
+          "name": "rate_limit_max",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "request_count": {
           "name": "request_count",
           "type": "integer",
@@ -1028,8 +1040,32 @@
           "notNull": true,
           "default": 0
         },
+        "remaining": {
+          "name": "remaining",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refill_interval": {
+          "name": "refill_interval",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refill_amount": {
+          "name": "refill_amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "expires_at": {
           "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_refill_at": {
+          "name": "last_refill_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
@@ -1125,7 +1161,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": true,
           "notNull": true
         },
@@ -1138,7 +1174,7 @@
         },
         "reader_id": {
           "name": "reader_id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -1223,7 +1259,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": true,
           "notNull": true
         },
@@ -1242,7 +1278,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -1356,7 +1392,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": true,
           "notNull": true
         },
@@ -1486,7 +1522,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": true,
           "notNull": true
         },
@@ -1505,7 +1541,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -1599,7 +1635,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "bigint",
+          "type": "text",
           "primaryKey": true,
           "notNull": true
         },
@@ -3155,6 +3191,87 @@
           "columns": [
             {
               "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.auth_id_map": {
+      "name": "auth_id_map",
+      "schema": "",
+      "columns": {
+        "collection": {
+          "name": "collection",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mongo_id": {
+          "name": "mongo_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pg_id": {
+          "name": "pg_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "auth_id_map_collection_mongo_uniq": {
+          "name": "auth_id_map_collection_mongo_uniq",
+          "columns": [
+            {
+              "expression": "collection",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "mongo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "auth_id_map_collection_pg_uniq": {
+          "name": "auth_id_map_collection_pg_uniq",
+          "columns": [
+            {
+              "expression": "collection",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "pg_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

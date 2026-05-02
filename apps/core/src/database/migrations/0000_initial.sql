@@ -90,10 +90,10 @@ CREATE TABLE "translation_entries" (
 );
 --> statement-breakpoint
 CREATE TABLE "accounts" (
-	"id" bigint PRIMARY KEY NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone,
-	"user_id" bigint NOT NULL,
+	"user_id" text NOT NULL,
 	"account_id" text,
 	"provider_id" text NOT NULL,
 	"provider_account_id" text,
@@ -109,11 +109,11 @@ CREATE TABLE "accounts" (
 );
 --> statement-breakpoint
 CREATE TABLE "api_keys" (
-	"id" bigint PRIMARY KEY NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone,
-	"user_id" bigint,
-	"reference_id" bigint,
+	"user_id" text,
+	"reference_id" text,
 	"config_id" text,
 	"name" text,
 	"key" text NOT NULL,
@@ -121,17 +121,23 @@ CREATE TABLE "api_keys" (
 	"prefix" text,
 	"enabled" boolean DEFAULT true NOT NULL,
 	"rate_limit_enabled" boolean DEFAULT false NOT NULL,
+	"rate_limit_time_window" integer,
+	"rate_limit_max" integer,
 	"request_count" integer DEFAULT 0 NOT NULL,
+	"remaining" integer,
+	"refill_interval" integer,
+	"refill_amount" integer,
 	"expires_at" timestamp with time zone,
+	"last_refill_at" timestamp with time zone,
 	"last_request" timestamp with time zone,
 	"permissions" jsonb,
 	"metadata" jsonb
 );
 --> statement-breakpoint
 CREATE TABLE "owner_profiles" (
-	"id" bigint PRIMARY KEY NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"reader_id" bigint NOT NULL,
+	"reader_id" text NOT NULL,
 	"mail" text,
 	"url" text,
 	"introduce" text,
@@ -141,10 +147,10 @@ CREATE TABLE "owner_profiles" (
 );
 --> statement-breakpoint
 CREATE TABLE "passkeys" (
-	"id" bigint PRIMARY KEY NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone,
-	"user_id" bigint NOT NULL,
+	"user_id" text NOT NULL,
 	"name" text,
 	"credential_id" text NOT NULL,
 	"public_key" text NOT NULL,
@@ -156,7 +162,7 @@ CREATE TABLE "passkeys" (
 );
 --> statement-breakpoint
 CREATE TABLE "readers" (
-	"id" bigint PRIMARY KEY NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone,
 	"email" text,
@@ -170,10 +176,10 @@ CREATE TABLE "readers" (
 );
 --> statement-breakpoint
 CREATE TABLE "sessions" (
-	"id" bigint PRIMARY KEY NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone,
-	"user_id" bigint NOT NULL,
+	"user_id" text NOT NULL,
 	"token" text NOT NULL,
 	"expires_at" timestamp with time zone,
 	"ip_address" text,
@@ -182,7 +188,7 @@ CREATE TABLE "sessions" (
 );
 --> statement-breakpoint
 CREATE TABLE "verifications" (
-	"id" bigint PRIMARY KEY NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone,
 	"identifier" text NOT NULL,
@@ -351,6 +357,13 @@ CREATE TABLE "topics" (
 	"description" text DEFAULT '' NOT NULL,
 	"introduce" text,
 	"icon" text
+);
+--> statement-breakpoint
+CREATE TABLE "auth_id_map" (
+	"collection" text NOT NULL,
+	"mongo_id" text NOT NULL,
+	"pg_id" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "data_migration_runs" (
@@ -607,6 +620,8 @@ CREATE INDEX "recentlies_ref_idx" ON "recentlies" USING btree ("ref_type","ref_i
 CREATE INDEX "recentlies_created_at_idx" ON "recentlies" USING btree ("created_at");--> statement-breakpoint
 CREATE UNIQUE INDEX "topics_name_uniq" ON "topics" USING btree ("name");--> statement-breakpoint
 CREATE UNIQUE INDEX "topics_slug_uniq" ON "topics" USING btree ("slug");--> statement-breakpoint
+CREATE UNIQUE INDEX "auth_id_map_collection_mongo_uniq" ON "auth_id_map" USING btree ("collection","mongo_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "auth_id_map_collection_pg_uniq" ON "auth_id_map" USING btree ("collection","pg_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "mongo_id_map_pk" ON "mongo_id_map" USING btree ("collection","mongo_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "mongo_id_map_snowflake_uniq" ON "mongo_id_map" USING btree ("snowflake_id");--> statement-breakpoint
 CREATE INDEX "activities_created_at_idx" ON "activities" USING btree ("created_at");--> statement-breakpoint

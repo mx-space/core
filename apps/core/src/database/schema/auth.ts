@@ -9,12 +9,12 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
-import { createdAt, pkBigInt, refBigInt, tsCol, updatedAt } from './columns'
+import { createdAt, tsCol, updatedAt } from './columns'
 
 export const readers = pgTable(
   'readers',
   {
-    id: pkBigInt(),
+    id: text('id').primaryKey().notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     email: text('email'),
@@ -40,9 +40,9 @@ export const readers = pgTable(
 export const ownerProfiles = pgTable(
   'owner_profiles',
   {
-    id: pkBigInt(),
+    id: text('id').primaryKey().notNull(),
     createdAt: createdAt(),
-    readerId: refBigInt('reader_id')
+    readerId: text('reader_id')
       .notNull()
       .references(() => readers.id, { onDelete: 'cascade' }),
     mail: text('mail'),
@@ -58,10 +58,10 @@ export const ownerProfiles = pgTable(
 export const accounts = pgTable(
   'accounts',
   {
-    id: pkBigInt(),
+    id: text('id').primaryKey().notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
-    userId: refBigInt('user_id')
+    userId: text('user_id')
       .notNull()
       .references(() => readers.id, { onDelete: 'cascade' }),
     accountId: text('account_id'),
@@ -89,10 +89,10 @@ export const accounts = pgTable(
 export const sessions = pgTable(
   'sessions',
   {
-    id: pkBigInt(),
+    id: text('id').primaryKey().notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
-    userId: refBigInt('user_id')
+    userId: text('user_id')
       .notNull()
       .references(() => readers.id, { onDelete: 'cascade' }),
     token: text('token').notNull(),
@@ -110,13 +110,13 @@ export const sessions = pgTable(
 export const apiKeys = pgTable(
   'api_keys',
   {
-    id: pkBigInt(),
+    id: text('id').primaryKey().notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
-    userId: refBigInt('user_id').references(() => readers.id, {
+    userId: text('user_id').references(() => readers.id, {
       onDelete: 'cascade',
     }),
-    referenceId: refBigInt('reference_id').references(() => readers.id, {
+    referenceId: text('reference_id').references(() => readers.id, {
       onDelete: 'cascade',
     }),
     configId: text('config_id'),
@@ -126,8 +126,14 @@ export const apiKeys = pgTable(
     prefix: text('prefix'),
     enabled: boolean('enabled').notNull().default(true),
     rateLimitEnabled: boolean('rate_limit_enabled').notNull().default(false),
+    rateLimitTimeWindow: integer('rate_limit_time_window'),
+    rateLimitMax: integer('rate_limit_max'),
     requestCount: integer('request_count').notNull().default(0),
+    remaining: integer('remaining'),
+    refillInterval: integer('refill_interval'),
+    refillAmount: integer('refill_amount'),
     expiresAt: tsCol('expires_at'),
+    lastRefillAt: tsCol('last_refill_at'),
     lastRequest: tsCol('last_request'),
     permissions: jsonb('permissions').$type<unknown>(),
     metadata: jsonb('metadata').$type<unknown>(),
@@ -141,10 +147,10 @@ export const apiKeys = pgTable(
 export const passkeys = pgTable(
   'passkeys',
   {
-    id: pkBigInt(),
+    id: text('id').primaryKey().notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
-    userId: refBigInt('user_id')
+    userId: text('user_id')
       .notNull()
       .references(() => readers.id, { onDelete: 'cascade' }),
     name: text('name'),
@@ -165,7 +171,7 @@ export const passkeys = pgTable(
 export const verifications = pgTable(
   'verifications',
   {
-    id: pkBigInt(),
+    id: text('id').primaryKey().notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     identifier: text('identifier').notNull(),

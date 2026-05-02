@@ -1,10 +1,13 @@
 import {
+  accounts,
   activities,
   aiAgentConversations,
   aiInsights,
   aiSummaries,
   aiTranslations,
   analyzes,
+  apiKeys,
+  authIdMap,
   categories,
   comments,
   drafts,
@@ -14,6 +17,7 @@ import {
   options,
   ownerProfiles,
   pages,
+  passkeys,
   pollVoteOptions,
   pollVotes,
   posts,
@@ -24,16 +28,18 @@ import {
   searchDocuments,
   serverlessLogs,
   serverlessStorages,
+  sessions,
   slugTrackers,
   snippets,
   subscribes,
   topics,
   translationEntries,
+  verifications,
   webhookEvents,
   webhooks,
 } from '~/database/schema'
 
-import { allocateForCollection, createResolver } from './id-map'
+import { allocateForCollection, createResolver, mongoHexOf } from './id-map'
 import type { MigrationContext, MigrationStep } from './types'
 
 const upsert = async <T extends Record<string, unknown>>(
@@ -69,6 +75,42 @@ const collect = async <T>(
 ): Promise<T[]> => {
   const docs = await ctx.mongo.collection(collection).find({}).toArray()
   return docs as unknown as T[]
+}
+
+const collectAuth = async <T>(
+  ctx: MigrationContext,
+  collection: string,
+  aliases: string[] = [],
+): Promise<T[]> => {
+  const docs = await collect<T>(ctx, collection)
+  if (docs.length > 0 || aliases.length === 0) return docs
+  for (const alias of aliases) {
+    const aliasDocs = await collect<T>(ctx, alias)
+    if (aliasDocs.length > 0) return aliasDocs
+  }
+  return docs
+}
+
+const recordAuthIds = async (
+  ctx: MigrationContext,
+  collection: string,
+  ids: string[],
+) => {
+  if (ctx.mode !== 'apply' || ids.length === 0) return
+  const now = new Date()
+  const rows = ids.map((id) => ({
+    collection,
+    mongoId: id,
+    pgId: id,
+    createdAt: now,
+  }))
+  const chunkSize = 500
+  for (let i = 0; i < rows.length; i += chunkSize) {
+    await ctx.pg
+      .insert(authIdMap)
+      .values(rows.slice(i, i + chunkSize))
+      .onConflictDoNothing()
+  }
 }
 
 const CONTENT_REF_TYPE_ALIASES: Record<string, string> = {
@@ -147,44 +189,57 @@ export const stepReaders: MigrationStep = {
   name: 'readers',
   async allocate(ctx) {
     await allocateForCollection(ctx, 'readers')
-    await allocateForCollection(ctx, 'owner_profiles')
   },
   async load(ctx) {
-    const readerResolver = createResolver(ctx, 'readers')
-    const profileResolver = createResolver(ctx, 'owner_profiles')
-
-    const readerDocs = await collect<any>(ctx, 'readers')
-    await upsert(
+    const readerDocs = await collectAuth<any>(ctx, 'readers')
+    const readerRows = readerDocs
+      .map((d) => {
+        const id = mongoHexOf(d._id)
+        if (!id) return null
+        return {
+          id,
+          email: d.email ?? null,
+          emailVerified: Boolean(d.emailVerified ?? false),
+          name: d.name ?? null,
+          handle: d.handle ?? null,
+          username: d.username ?? null,
+          displayUsername: d.displayUsername ?? null,
+          image: d.image ?? null,
+          role: d.role ?? 'reader',
+          createdAt: dateOrNull(d.createdAt ?? d.created) ?? new Date(),
+          updatedAt: dateOrNull(d.updatedAt ?? d.updated),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, readers, readerRows)
+    await recordAuthIds(
       ctx,
-      readers,
-      readerDocs.map((d) => ({
-        id: readerResolver.self(d._id),
-        email: d.email ?? null,
-        emailVerified: Boolean(d.emailVerified ?? false),
-        name: d.name ?? null,
-        handle: d.handle ?? null,
-        username: d.username ?? null,
-        displayUsername: d.displayUsername ?? null,
-        image: d.image ?? null,
-        role: d.role ?? 'reader',
-        createdAt: dateOrNull(d.createdAt ?? d.created) ?? new Date(),
-        updatedAt: dateOrNull(d.updatedAt ?? d.updated),
-      })),
+      'readers',
+      readerRows.map((row) => row.id),
     )
-    recordLoad(ctx, 'readers', readerDocs.length)
+    recordLoad(ctx, 'readers', readerRows.length)
+  },
+}
 
-    const profileDocs = await collect<any>(ctx, 'owner_profiles')
+export const stepOwnerProfiles: MigrationStep = {
+  name: 'owner_profiles',
+  dependsOn: ['readers'],
+  async load(ctx) {
+    const profileDocs = await collectAuth<any>(ctx, 'owner_profiles')
     const profileRows = profileDocs
       .map((d) => {
-        const readerId = readerResolver.ref(
-          'readers',
-          d.readerId,
-          'readerId',
-          true,
-        )
-        if (!readerId) return null
+        const id = mongoHexOf(d._id)
+        const readerId = mongoHexOf(d.readerId)
+        if (!id || !readerId) {
+          ctx.reports.missingRefs.push({
+            collection: 'owner_profiles',
+            field: !id ? '_id' : 'readerId',
+            mongoId: String(!id ? d._id : d.readerId),
+          })
+          return null
+        }
         return {
-          id: profileResolver.self(d._id),
+          id,
           readerId,
           mail: d.mail ?? null,
           url: d.url ?? null,
@@ -197,7 +252,218 @@ export const stepReaders: MigrationStep = {
       })
       .filter((r): r is NonNullable<typeof r> => r !== null)
     await upsert(ctx, ownerProfiles, profileRows)
+    await recordAuthIds(
+      ctx,
+      'owner_profiles',
+      profileRows.map((row) => row.id),
+    )
     recordLoad(ctx, 'owner_profiles', profileRows.length)
+  },
+}
+
+export const stepAccounts: MigrationStep = {
+  name: 'accounts',
+  dependsOn: ['readers'],
+  async load(ctx) {
+    const docs = await collectAuth<any>(ctx, 'accounts')
+    const rows = docs
+      .map((d) => {
+        const id = mongoHexOf(d._id)
+        const userId = mongoHexOf(d.userId)
+        if (!id || !userId) {
+          ctx.reports.missingRefs.push({
+            collection: 'accounts',
+            field: !id ? '_id' : 'userId',
+            mongoId: String(!id ? d._id : d.userId),
+          })
+          return null
+        }
+        return {
+          id,
+          userId,
+          accountId: d.accountId ?? d.providerAccountId ?? userId,
+          providerId: d.providerId ?? d.provider ?? 'credential',
+          providerAccountId: d.providerAccountId ?? null,
+          password: d.password ?? null,
+          type: d.type ?? null,
+          accessToken: d.accessToken ?? null,
+          refreshToken: d.refreshToken ?? null,
+          accessTokenExpiresAt: dateOrNull(d.accessTokenExpiresAt),
+          refreshTokenExpiresAt: dateOrNull(d.refreshTokenExpiresAt),
+          scope: d.scope ?? null,
+          idToken: d.idToken ?? null,
+          raw: d.raw ?? null,
+          createdAt: dateOrNull(d.createdAt ?? d.created) ?? new Date(),
+          updatedAt: dateOrNull(d.updatedAt ?? d.updated),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, accounts, rows)
+    await recordAuthIds(
+      ctx,
+      'accounts',
+      rows.map((row) => row.id),
+    )
+    recordLoad(ctx, 'accounts', rows.length)
+  },
+}
+
+export const stepSessions: MigrationStep = {
+  name: 'sessions',
+  dependsOn: ['readers'],
+  async load(ctx) {
+    const docs = await collectAuth<any>(ctx, 'sessions')
+    const rows = docs
+      .map((d) => {
+        const id = mongoHexOf(d._id)
+        const userId = mongoHexOf(d.userId)
+        if (!id || !userId) {
+          ctx.reports.missingRefs.push({
+            collection: 'sessions',
+            field: !id ? '_id' : 'userId',
+            mongoId: String(!id ? d._id : d.userId),
+          })
+          return null
+        }
+        return {
+          id,
+          userId,
+          token: d.token ?? d.sessionToken,
+          expiresAt: dateOrNull(d.expiresAt),
+          ipAddress: d.ipAddress ?? null,
+          userAgent: d.userAgent ?? null,
+          provider: d.provider ?? null,
+          createdAt: dateOrNull(d.createdAt ?? d.created) ?? new Date(),
+          updatedAt: dateOrNull(d.updatedAt ?? d.updated),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, sessions, rows)
+    await recordAuthIds(
+      ctx,
+      'sessions',
+      rows.map((row) => row.id),
+    )
+    recordLoad(ctx, 'sessions', rows.length)
+  },
+}
+
+export const stepApiKeys: MigrationStep = {
+  name: 'api_keys',
+  dependsOn: ['readers'],
+  async load(ctx) {
+    const docs = await collectAuth<any>(ctx, 'api_keys', ['apikey'])
+    const rows = docs
+      .map((d) => {
+        const id = mongoHexOf(d._id)
+        const userId = mongoHexOf(d.userId)
+        const referenceId = mongoHexOf(d.referenceId ?? d.userId)
+        if (!id) return null
+        return {
+          id,
+          userId,
+          referenceId,
+          configId: d.configId ?? 'default',
+          name: d.name ?? null,
+          key: d.key,
+          start: d.start ?? null,
+          prefix: d.prefix ?? null,
+          enabled: d.enabled ?? true,
+          rateLimitEnabled: d.rateLimitEnabled ?? false,
+          rateLimitTimeWindow: d.rateLimitTimeWindow ?? null,
+          rateLimitMax: d.rateLimitMax ?? null,
+          requestCount: d.requestCount ?? 0,
+          remaining: d.remaining ?? null,
+          refillInterval: d.refillInterval ?? null,
+          refillAmount: d.refillAmount ?? null,
+          expiresAt: dateOrNull(d.expiresAt),
+          lastRefillAt: dateOrNull(d.lastRefillAt),
+          lastRequest: dateOrNull(d.lastRequest),
+          permissions: d.permissions ?? null,
+          metadata: d.metadata ?? null,
+          createdAt: dateOrNull(d.createdAt ?? d.created) ?? new Date(),
+          updatedAt: dateOrNull(d.updatedAt ?? d.updated),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, apiKeys, rows)
+    await recordAuthIds(
+      ctx,
+      'api_keys',
+      rows.map((row) => row.id),
+    )
+    recordLoad(ctx, 'api_keys', rows.length)
+  },
+}
+
+export const stepPasskeys: MigrationStep = {
+  name: 'passkeys',
+  dependsOn: ['readers'],
+  async load(ctx) {
+    const docs = await collectAuth<any>(ctx, 'passkeys', ['passkey'])
+    const rows = docs
+      .map((d) => {
+        const id = mongoHexOf(d._id)
+        const userId = mongoHexOf(d.userId)
+        if (!id || !userId) {
+          ctx.reports.missingRefs.push({
+            collection: 'passkeys',
+            field: !id ? '_id' : 'userId',
+            mongoId: String(!id ? d._id : d.userId),
+          })
+          return null
+        }
+        return {
+          id,
+          userId,
+          name: d.name ?? null,
+          credentialId: d.credentialId ?? d.credentialID,
+          publicKey: d.publicKey,
+          counter: d.counter ?? 0,
+          deviceType: d.deviceType ?? null,
+          backedUp: d.backedUp ?? false,
+          transports: d.transports ?? null,
+          aaguid: d.aaguid ?? null,
+          createdAt: dateOrNull(d.createdAt ?? d.created) ?? new Date(),
+          updatedAt: dateOrNull(d.updatedAt ?? d.updated),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, passkeys, rows)
+    await recordAuthIds(
+      ctx,
+      'passkeys',
+      rows.map((row) => row.id),
+    )
+    recordLoad(ctx, 'passkeys', rows.length)
+  },
+}
+
+export const stepVerifications: MigrationStep = {
+  name: 'verifications',
+  async load(ctx) {
+    const docs = await collectAuth<any>(ctx, 'verifications', ['verification'])
+    const rows = docs
+      .map((d) => {
+        const id = mongoHexOf(d._id)
+        if (!id) return null
+        return {
+          id,
+          identifier: d.identifier,
+          value: d.value,
+          expiresAt: dateOrNull(d.expiresAt) ?? new Date(),
+          createdAt: dateOrNull(d.createdAt ?? d.created) ?? new Date(),
+          updatedAt: dateOrNull(d.updatedAt ?? d.updated),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, verifications, rows)
+    await recordAuthIds(
+      ctx,
+      'verifications',
+      rows.map((row) => row.id),
+    )
+    recordLoad(ctx, 'verifications', rows.length)
   },
 }
 
@@ -1036,6 +1302,12 @@ export const ALL_STEPS: MigrationStep[] = [
   stepCategories,
   stepTopics,
   stepReaders,
+  stepOwnerProfiles,
+  stepAccounts,
+  stepSessions,
+  stepApiKeys,
+  stepPasskeys,
+  stepVerifications,
   stepPosts,
   stepNotes,
   stepPages,

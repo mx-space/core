@@ -21,6 +21,16 @@ let cachedPool: PgPool | null = null
 let cachedDb: AppDatabase | null = null
 let migrationsApplied = false
 
+export const db = new Proxy({} as AppDatabase, {
+  get(_target, prop) {
+    if (!cachedDb) {
+      throw new Error('PostgreSQL db requested before initialization')
+    }
+    const value = Reflect.get(cachedDb, prop, cachedDb)
+    return typeof value === 'function' ? value.bind(cachedDb) : value
+  },
+})
+
 export async function createPool(): Promise<PgPool> {
   if (cachedPool) return cachedPool
   const pool = new Pool({

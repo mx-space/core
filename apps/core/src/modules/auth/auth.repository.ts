@@ -9,17 +9,12 @@ import {
   sessions,
   verifications,
 } from '~/database/schema'
-import {
-  BaseRepository,
-  toEntityId,
-} from '~/processors/database/base.repository'
+import { BaseRepository } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
-import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
-import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 export interface AccountRow {
-  id: EntityId
-  userId: EntityId
+  id: string
+  userId: string
   accountId: string | null
   providerId: string
   providerAccountId: string | null
@@ -37,8 +32,8 @@ export interface AccountRow {
 }
 
 export interface SessionRow {
-  id: EntityId
-  userId: EntityId
+  id: string
+  userId: string
   token: string
   expiresAt: Date | null
   ipAddress: string | null
@@ -49,9 +44,9 @@ export interface SessionRow {
 }
 
 export interface ApiKeyRow {
-  id: EntityId
-  userId: EntityId | null
-  referenceId: EntityId | null
+  id: string
+  userId: string | null
+  referenceId: string | null
   configId: string | null
   name: string | null
   key: string
@@ -59,8 +54,14 @@ export interface ApiKeyRow {
   prefix: string | null
   enabled: boolean
   rateLimitEnabled: boolean
+  rateLimitTimeWindow: number | null
+  rateLimitMax: number | null
   requestCount: number
+  remaining: number | null
+  refillInterval: number | null
+  refillAmount: number | null
   expiresAt: Date | null
+  lastRefillAt: Date | null
   lastRequest: Date | null
   permissions: unknown
   metadata: unknown
@@ -68,9 +69,31 @@ export interface ApiKeyRow {
   updatedAt: Date | null
 }
 
+export interface VerificationRow {
+  id: string
+  identifier: string
+  value: string
+  expiresAt: Date
+}
+
+export interface PasskeyRow {
+  id: string
+  userId: string
+  name: string | null
+  credentialId: string
+  publicKey: string
+  counter: number
+  deviceType: string | null
+  backedUp: boolean
+  transports: string[] | null
+  aaguid: string | null
+  createdAt: Date
+  updatedAt: Date | null
+}
+
 const mapAccount = (row: typeof accounts.$inferSelect): AccountRow => ({
-  id: toEntityId(row.id) as EntityId,
-  userId: toEntityId(row.userId) as EntityId,
+  id: row.id,
+  userId: row.userId,
   accountId: row.accountId,
   providerId: row.providerId,
   providerAccountId: row.providerAccountId,
@@ -88,8 +111,8 @@ const mapAccount = (row: typeof accounts.$inferSelect): AccountRow => ({
 })
 
 const mapSession = (row: typeof sessions.$inferSelect): SessionRow => ({
-  id: toEntityId(row.id) as EntityId,
-  userId: toEntityId(row.userId) as EntityId,
+  id: row.id,
+  userId: row.userId,
   token: row.token,
   expiresAt: row.expiresAt,
   ipAddress: row.ipAddress,
@@ -100,11 +123,9 @@ const mapSession = (row: typeof sessions.$inferSelect): SessionRow => ({
 })
 
 const mapApiKey = (row: typeof apiKeys.$inferSelect): ApiKeyRow => ({
-  id: toEntityId(row.id) as EntityId,
-  userId: row.userId ? (toEntityId(row.userId) as EntityId) : null,
-  referenceId: row.referenceId
-    ? (toEntityId(row.referenceId) as EntityId)
-    : null,
+  id: row.id,
+  userId: row.userId,
+  referenceId: row.referenceId,
   configId: row.configId,
   name: row.name,
   key: row.key,
@@ -112,8 +133,14 @@ const mapApiKey = (row: typeof apiKeys.$inferSelect): ApiKeyRow => ({
   prefix: row.prefix,
   enabled: row.enabled,
   rateLimitEnabled: row.rateLimitEnabled,
+  rateLimitTimeWindow: row.rateLimitTimeWindow,
+  rateLimitMax: row.rateLimitMax,
   requestCount: row.requestCount,
+  remaining: row.remaining,
+  refillInterval: row.refillInterval,
+  refillAmount: row.refillAmount,
   expiresAt: row.expiresAt,
+  lastRefillAt: row.lastRefillAt,
   lastRequest: row.lastRequest,
   permissions: row.permissions,
   metadata: row.metadata,
@@ -123,10 +150,7 @@ const mapApiKey = (row: typeof apiKeys.$inferSelect): ApiKeyRow => ({
 
 @Injectable()
 export class AuthRepository extends BaseRepository {
-  constructor(
-    @Inject(PG_DB_TOKEN) db: AppDatabase,
-    private readonly snowflake: SnowflakeService,
-  ) {
+  constructor(@Inject(PG_DB_TOKEN) db: AppDatabase) {
     super(db)
   }
 
@@ -149,16 +173,17 @@ export class AuthRepository extends BaseRepository {
     return row ? mapAccount(row) : null
   }
 
-  async findAccountsForUser(userId: EntityId | string): Promise<AccountRow[]> {
+  async findAccountsForUser(userId: string): Promise<AccountRow[]> {
     const rows = await this.db
       .select()
       .from(accounts)
-      .where(eq(accounts.userId, parseEntityId(userId)))
+      .where(eq(accounts.userId, userId))
     return rows.map(mapAccount)
   }
 
   async createAccount(input: {
-    userId: EntityId | string
+    id: string
+    userId: string
     providerId: string
     providerAccountId?: string | null
     password?: string | null
@@ -171,12 +196,11 @@ export class AuthRepository extends BaseRepository {
     idToken?: string | null
     raw?: Record<string, unknown> | null
   }): Promise<AccountRow> {
-    const id = this.snowflake.nextBigInt()
     const [row] = await this.db
       .insert(accounts)
       .values({
-        id,
-        userId: parseEntityId(input.userId),
+        id: input.id,
+        userId: input.userId,
         providerId: input.providerId,
         providerAccountId: input.providerAccountId ?? null,
         password: input.password ?? null,
@@ -193,15 +217,11 @@ export class AuthRepository extends BaseRepository {
     return mapAccount(row)
   }
 
-  async updateAccountPassword(
-    id: EntityId | string,
-    password: string,
-  ): Promise<void> {
-    const idBig = parseEntityId(id)
+  async updateAccountPassword(id: string, password: string): Promise<void> {
     await this.db
       .update(accounts)
       .set({ password, updatedAt: new Date() })
-      .where(eq(accounts.id, idBig))
+      .where(eq(accounts.id, id))
   }
 
   // ── sessions ─────────────────────────────────────────────────────────
@@ -216,19 +236,19 @@ export class AuthRepository extends BaseRepository {
   }
 
   async createSession(input: {
-    userId: EntityId | string
+    id: string
+    userId: string
     token: string
     expiresAt?: Date | null
     ipAddress?: string | null
     userAgent?: string | null
     provider?: string | null
   }): Promise<SessionRow> {
-    const id = this.snowflake.nextBigInt()
     const [row] = await this.db
       .insert(sessions)
       .values({
-        id,
-        userId: parseEntityId(input.userId),
+        id: input.id,
+        userId: input.userId,
         token: input.token,
         expiresAt: input.expiresAt ?? null,
         ipAddress: input.ipAddress ?? null,
@@ -266,17 +286,18 @@ export class AuthRepository extends BaseRepository {
     return row ? mapApiKey(row) : null
   }
 
-  async listApiKeysForUser(userId: EntityId | string): Promise<ApiKeyRow[]> {
+  async listApiKeysForUser(userId: string): Promise<ApiKeyRow[]> {
     const rows = await this.db
       .select()
       .from(apiKeys)
-      .where(eq(apiKeys.userId, parseEntityId(userId)))
+      .where(eq(apiKeys.userId, userId))
     return rows.map(mapApiKey)
   }
 
   async createApiKey(input: {
-    userId?: EntityId | string | null
-    referenceId?: EntityId | string | null
+    id: string
+    userId?: string | null
+    referenceId?: string | null
     configId?: string | null
     name?: string | null
     key: string
@@ -284,19 +305,22 @@ export class AuthRepository extends BaseRepository {
     prefix?: string | null
     enabled?: boolean
     rateLimitEnabled?: boolean
+    rateLimitTimeWindow?: number | null
+    rateLimitMax?: number | null
+    remaining?: number | null
+    refillInterval?: number | null
+    refillAmount?: number | null
     expiresAt?: Date | null
+    lastRefillAt?: Date | null
     permissions?: unknown
     metadata?: unknown
   }): Promise<ApiKeyRow> {
-    const id = this.snowflake.nextBigInt()
     const [row] = await this.db
       .insert(apiKeys)
       .values({
-        id,
-        userId: input.userId ? parseEntityId(input.userId) : null,
-        referenceId: input.referenceId
-          ? parseEntityId(input.referenceId)
-          : null,
+        id: input.id,
+        userId: input.userId ?? null,
+        referenceId: input.referenceId ?? null,
         configId: input.configId ?? null,
         name: input.name ?? null,
         key: input.key,
@@ -304,7 +328,13 @@ export class AuthRepository extends BaseRepository {
         prefix: input.prefix ?? null,
         enabled: input.enabled ?? true,
         rateLimitEnabled: input.rateLimitEnabled ?? false,
+        rateLimitTimeWindow: input.rateLimitTimeWindow ?? null,
+        rateLimitMax: input.rateLimitMax ?? null,
+        remaining: input.remaining ?? null,
+        refillInterval: input.refillInterval ?? null,
+        refillAmount: input.refillAmount ?? null,
         expiresAt: input.expiresAt ?? null,
+        lastRefillAt: input.lastRefillAt ?? null,
         permissions: input.permissions,
         metadata: input.metadata,
       })
@@ -312,22 +342,20 @@ export class AuthRepository extends BaseRepository {
     return mapApiKey(row)
   }
 
-  async incrementApiKeyUsage(id: EntityId | string): Promise<void> {
-    const idBig = parseEntityId(id)
+  async incrementApiKeyUsage(id: string): Promise<void> {
     await this.db
       .update(apiKeys)
       .set({
         requestCount: sql`${apiKeys.requestCount} + 1`,
         lastRequest: new Date(),
       })
-      .where(eq(apiKeys.id, idBig))
+      .where(eq(apiKeys.id, id))
   }
 
-  async deleteApiKey(id: EntityId | string): Promise<boolean> {
-    const idBig = parseEntityId(id)
+  async deleteApiKey(id: string): Promise<boolean> {
     const result = await this.db
       .delete(apiKeys)
-      .where(eq(apiKeys.id, idBig))
+      .where(eq(apiKeys.id, id))
       .returning({ id: apiKeys.id })
     return result.length > 0
   }
@@ -335,36 +363,29 @@ export class AuthRepository extends BaseRepository {
   // ── verifications (Better Auth uses these for email flows) ───────────
 
   async createVerification(input: {
+    id: string
     identifier: string
     value: string
     expiresAt: Date
-  }): Promise<{
-    id: EntityId
-    identifier: string
-    value: string
-    expiresAt: Date
-  }> {
-    const id = this.snowflake.nextBigInt()
+  }): Promise<VerificationRow> {
     const [row] = await this.db
       .insert(verifications)
       .values({
-        id,
+        id: input.id,
         identifier: input.identifier,
         value: input.value,
         expiresAt: input.expiresAt,
       })
       .returning()
     return {
-      id: toEntityId(row.id) as EntityId,
+      id: row.id,
       identifier: row.identifier,
       value: row.value,
       expiresAt: row.expiresAt,
     }
   }
 
-  async findVerification(
-    identifier: string,
-  ): Promise<{ id: EntityId; value: string; expiresAt: Date } | null> {
+  async findVerification(identifier: string): Promise<VerificationRow | null> {
     const [row] = await this.db
       .select()
       .from(verifications)
@@ -372,7 +393,8 @@ export class AuthRepository extends BaseRepository {
       .limit(1)
     if (!row) return null
     return {
-      id: toEntityId(row.id) as EntityId,
+      id: row.id,
+      identifier: row.identifier,
       value: row.value,
       expiresAt: row.expiresAt,
     }
@@ -388,7 +410,9 @@ export class AuthRepository extends BaseRepository {
 
   // ── passkeys ─────────────────────────────────────────────────────────
 
-  async findPasskeyByCredentialId(credentialId: string) {
+  async findPasskeyByCredentialId(
+    credentialId: string,
+  ): Promise<PasskeyRow | null> {
     const [row] = await this.db
       .select()
       .from(passkeys)
@@ -396,8 +420,8 @@ export class AuthRepository extends BaseRepository {
       .limit(1)
     if (!row) return null
     return {
-      id: toEntityId(row.id) as EntityId,
-      userId: toEntityId(row.userId) as EntityId,
+      id: row.id,
+      userId: row.userId,
       name: row.name,
       credentialId: row.credentialId,
       publicKey: row.publicKey,
@@ -412,7 +436,8 @@ export class AuthRepository extends BaseRepository {
   }
 
   async createPasskey(input: {
-    userId: EntityId | string
+    id: string
+    userId: string
     name?: string | null
     credentialId: string
     publicKey: string
@@ -421,11 +446,10 @@ export class AuthRepository extends BaseRepository {
     backedUp?: boolean
     transports?: string[] | null
     aaguid?: string | null
-  }): Promise<EntityId> {
-    const id = this.snowflake.nextBigInt()
+  }): Promise<string> {
     await this.db.insert(passkeys).values({
-      id,
-      userId: parseEntityId(input.userId),
+      id: input.id,
+      userId: input.userId,
       name: input.name ?? null,
       credentialId: input.credentialId,
       publicKey: input.publicKey,
@@ -435,7 +459,7 @@ export class AuthRepository extends BaseRepository {
       transports: input.transports ?? null,
       aaguid: input.aaguid ?? null,
     })
-    return toEntityId(id) as EntityId
+    return input.id
   }
 
   async incrementPasskeyCounter(credentialId: string, by = 1): Promise<void> {

@@ -1,81 +1,51 @@
 import { Injectable, Logger } from '@nestjs/common'
-import type { ReturnModelType } from '@typegoose/typegoose'
-import { Types } from 'mongoose'
 
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import {
-  OWNER_PROFILE_COLLECTION_NAME,
-  READER_COLLECTION_NAME,
-} from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar } from '~/utils/tool.util'
 
+import { ReaderRepository, type ReaderRow } from '../reader/reader.repository'
 import type { OwnerDocument } from './owner.model'
 import { OwnerModel } from './owner.model'
-import { OwnerProfileModel } from './owner-profile.model'
+import { type OwnerProfileRow, OwnerRepository } from './owner.repository'
 
 @Injectable()
 export class OwnerService {
   private logger = new Logger(OwnerService.name)
 
   constructor(
-    private readonly databaseService: DatabaseService,
-    @InjectModel(OwnerProfileModel)
-    private readonly ownerProfileModel: ReturnModelType<
-      typeof OwnerProfileModel
-    >,
+    private readonly readerRepository: ReaderRepository,
+    private readonly ownerRepository: OwnerRepository,
     private readonly eventManager: EventManagerService,
   ) {}
 
-  private get readersCollection() {
-    return this.databaseService.db.collection(READER_COLLECTION_NAME)
-  }
-
-  private get ownerProfileCollection() {
-    return this.databaseService.db.collection(OWNER_PROFILE_COLLECTION_NAME)
-  }
-
   private async getOwnerReader() {
-    return this.readersCollection
-      .find({ role: 'owner' })
-      .sort({ createdAt: 1, _id: 1 })
-      .limit(1)
-      .next()
+    return this.readerRepository.findOwner()
   }
 
-  private async getOwnerProfile(
-    readerId: string | Types.ObjectId,
-    withIp: boolean,
-  ) {
-    const objectId =
-      typeof readerId === 'string' && Types.ObjectId.isValid(readerId)
-        ? new Types.ObjectId(readerId)
-        : readerId
-    const projection = withIp
-      ? undefined
-      : {
-          lastLoginIp: 0,
-        }
-    return this.ownerProfileCollection.findOne(
-      { readerId: objectId },
-      projection ? { projection } : undefined,
-    )
+  private async getOwnerProfile(readerId: string, withIp: boolean) {
+    const profile = await this.ownerRepository.findByReaderId(readerId)
+    if (profile && !withIp) {
+      return { ...profile, lastLoginIp: null }
+    }
+    return profile
   }
 
-  private toOwnerModel(reader: any, profile: any): OwnerDocument {
+  private toOwnerModel(
+    reader: ReaderRow,
+    profile: OwnerProfileRow | null | undefined,
+  ): OwnerDocument {
     const mail = profile?.mail ?? reader?.email ?? ''
     const avatar =
       reader?.image ??
       getAvatar(mail || reader?.email || reader?.username || 'owner@local')
 
     return {
-      id: reader?._id?.toString?.() || reader?.id || '',
-      _id: reader?._id,
+      id: reader.id,
+      _id: reader.id,
 
       username: reader?.username ?? reader?.handle ?? '',
       name:
@@ -84,19 +54,19 @@ export class OwnerService {
         reader?.username ??
         reader?.handle ??
         'owner',
-      introduce: profile?.introduce,
+      introduce: profile?.introduce ?? undefined,
       avatar,
       mail,
-      url: profile?.url,
-      lastLoginTime: profile?.lastLoginTime,
-      lastLoginIp: profile?.lastLoginIp,
-      socialIds: profile?.socialIds,
+      url: profile?.url ?? undefined,
+      lastLoginTime: profile?.lastLoginTime ?? undefined,
+      lastLoginIp: profile?.lastLoginIp ?? undefined,
+      socialIds: profile?.socialIds ?? undefined,
       role: 'owner',
-      email: reader?.email,
-      image: reader?.image,
-      handle: reader?.handle,
-      displayUsername: reader?.displayUsername,
-      created: reader?.createdAt ?? profile?.created,
+      email: reader?.email ?? undefined,
+      image: reader?.image ?? undefined,
+      handle: reader?.handle ?? undefined,
+      displayUsername: reader?.displayUsername ?? undefined,
+      created: reader?.createdAt ?? profile?.createdAt,
     }
   }
 
@@ -106,12 +76,12 @@ export class OwnerService {
       throw new BizException(ErrorCodeEnum.MasterLost)
     }
 
-    const profile = await this.getOwnerProfile(reader._id, getLoginIp)
+    const profile = await this.getOwnerProfile(reader.id, getLoginIp)
     return this.toOwnerModel(reader, profile)
   }
 
   async hasOwner() {
-    return (await this.readersCollection.countDocuments({ role: 'owner' })) > 0
+    return !!(await this.getOwnerReader())
   }
 
   public async getOwner() {
@@ -124,7 +94,7 @@ export class OwnerService {
 
   async patchOwnerData(data: Partial<OwnerModel>) {
     const reader = await this.getOwnerReader()
-    if (!reader?._id) {
+    if (!reader?.id) {
       throw new BizException(ErrorCodeEnum.MasterLost)
     }
 
@@ -138,11 +108,7 @@ export class OwnerService {
 
     const hasReaderPatch = Object.keys(readerPatch).length > 0
     if (hasReaderPatch) {
-      readerPatch.updatedAt = new Date()
-      await this.readersCollection.updateOne(
-        { _id: reader._id },
-        { $set: readerPatch },
-      )
+      await this.readerRepository.update(reader.id, readerPatch)
     }
 
     const profilePatch: Record<string, any> = {}
@@ -161,17 +127,7 @@ export class OwnerService {
 
     const hasProfilePatch = Object.keys(profilePatch).length > 0
     if (hasProfilePatch) {
-      await this.ownerProfileModel.updateOne(
-        { readerId: reader._id },
-        {
-          $set: profilePatch,
-          $setOnInsert: {
-            readerId: reader._id,
-            created: new Date(),
-          },
-        },
-        { upsert: true },
-      )
+      await this.ownerRepository.upsertByReaderId(reader.id, profilePatch)
     }
 
     if (hasReaderPatch || hasProfilePatch) {
@@ -199,33 +155,19 @@ export class OwnerService {
     ip: string,
   ): Promise<Record<string, Date | string | null>> {
     const reader = await this.getOwnerReader()
-    if (!reader?._id) {
+    if (!reader?.id) {
       throw new BizException(ErrorCodeEnum.MasterLost)
     }
-    const profile = await this.getOwnerProfile(reader._id, true)
+    const profile = await this.getOwnerProfile(reader.id, true)
     const prevFootstep = {
       lastLoginTime: profile?.lastLoginTime || new Date(1586090559569),
       lastLoginIp: profile?.lastLoginIp || null,
     }
 
-    await this.ownerProfileModel.updateOne(
-      {
-        readerId: reader._id,
-      },
-      {
-        $set: {
-          lastLoginTime: new Date(),
-          lastLoginIp: ip,
-        },
-        $setOnInsert: {
-          readerId: reader._id,
-          created: new Date(),
-        },
-      },
-      {
-        upsert: true,
-      },
-    )
+    await this.ownerRepository.upsertByReaderId(reader.id, {
+      lastLoginTime: new Date(),
+      lastLoginIp: ip,
+    })
 
     this.logger.warn(`主人已登录，IP: ${ip}`)
     return prevFootstep
