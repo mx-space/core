@@ -1,6 +1,7 @@
-import { BaseCrudFactory } from '~/transformers/crud-factor.transformer'
-import { ProjectModel } from './project.model'
+import { BasePgCrudFactory } from '~/transformers/crud-factor.pg.transformer'
 
-export class ProjectController extends BaseCrudFactory({
-  model: ProjectModel,
+import { ProjectRepository } from './project.repository'
+
+export class ProjectController extends BasePgCrudFactory({
+  repository: ProjectRepository,
 }) {}

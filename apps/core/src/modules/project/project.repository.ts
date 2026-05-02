@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { eq, sql } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { projects } from '~/database/schema'
 import {
   BaseRepository,
+  type PaginationResult,
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -57,6 +58,25 @@ export class ProjectRepository extends BaseRepository {
     private readonly snowflake: SnowflakeService,
   ) {
     super(db)
+  }
+
+  async list(page = 1, size = 10): Promise<PaginationResult<ProjectRow>> {
+    page = Math.max(1, page)
+    size = Math.min(50, Math.max(1, size))
+    const offset = (page - 1) * size
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(projects)
+        .orderBy(desc(projects.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db.select({ count: sql<number>`count(*)::int` }).from(projects),
+    ])
+    return {
+      data: rows.map(mapRow),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
   }
 
   async findAll(): Promise<ProjectRow[]> {
