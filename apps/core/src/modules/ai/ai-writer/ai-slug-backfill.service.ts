@@ -5,10 +5,9 @@ import {
   type TaskExecuteContext,
   TaskQueueProcessor,
 } from '~/processors/task-queue'
-import { InjectModel } from '~/transformers/model.transformer'
 import { createAbortError } from '~/utils/abort.util'
 
-import { NoteModel } from '../../note/note.model'
+import { NoteService } from '../../note/note.service'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   AITaskType,
@@ -20,8 +19,7 @@ import { AiWriterService } from './ai-writer.service'
 export class AiSlugBackfillService implements OnModuleInit {
   private readonly logger: Logger
   constructor(
-    @InjectModel(NoteModel)
-    private readonly noteModel: MongooseModel<NoteModel>,
+    private readonly noteService: NoteService,
     private readonly aiWriterService: AiWriterService,
     private readonly taskProcessor: TaskQueueProcessor,
     private readonly aiTaskService: AiTaskService,
@@ -40,29 +38,24 @@ export class AiSlugBackfillService implements OnModuleInit {
   }
 
   private async ensureSlugAvailable(slug: string): Promise<boolean> {
-    const existing = await this.noteModel.findOne({ slug }).lean()
+    const existing = await this.noteService.findBySlug(slug)
     return !existing
   }
 
   async getNotesWithoutSlugCount() {
-    return this.noteModel.countDocuments({
-      $or: [{ slug: { $exists: false } }, { slug: null }, { slug: '' }],
-    })
+    return (await this.getNotesWithoutSlug()).length
   }
 
   async getNotesWithoutSlug(limit = 0) {
-    const query = this.noteModel
-      .find({
-        $or: [{ slug: { $exists: false } }, { slug: null }, { slug: '' }],
-      })
-      .select('_id title nid')
-      .sort({ created: -1 })
-
-    if (limit > 0) {
-      query.limit(limit)
-    }
-
-    return query.lean()
+    const notes = (await this.noteService.findRecent(limit > 0 ? limit : 100))
+      .filter((note) => !note.slug)
+      .map((note) => ({
+        _id: note.id,
+        id: note.id,
+        title: note.title,
+        nid: note.nid,
+      }))
+    return limit > 0 ? notes.slice(0, limit) : notes
   }
 
   async createBackfillTask() {
@@ -85,16 +78,7 @@ export class AiSlugBackfillService implements OnModuleInit {
   }
 
   private getSluglessQuery(noteIds?: string[]) {
-    return {
-      ...(noteIds?.length
-        ? {
-            _id: {
-              $in: noteIds,
-            },
-          }
-        : {}),
-      $or: [{ slug: { $exists: false } }, { slug: null }, { slug: '' }],
-    }
+    return noteIds
   }
 
   private describeBackfillScope(payload: SlugBackfillTaskPayload) {
@@ -114,11 +98,12 @@ export class AiSlugBackfillService implements OnModuleInit {
       ) => {
         await context.appendLog('info', this.describeBackfillScope(payload))
 
-        const notes = await this.noteModel
-          .find(this.getSluglessQuery(payload.noteIds))
-          .select('_id title nid')
-          .sort({ created: -1 })
-          .lean()
+        const queryIds = this.getSluglessQuery(payload.noteIds)
+        const notes = queryIds?.length
+          ? (await this.noteService.findManyByIds(queryIds)).filter(
+              (note) => !note.slug,
+            )
+          : await this.getNotesWithoutSlug()
 
         if (notes.length === 0) {
           await context.appendLog('info', 'No notes without slug found')
@@ -163,19 +148,10 @@ export class AiSlugBackfillService implements OnModuleInit {
               continue
             }
 
-            const updated = await this.noteModel.updateOne(
-              {
-                _id: note._id,
-                $or: [
-                  { slug: { $exists: false } },
-                  { slug: null },
-                  { slug: '' },
-                ],
-              },
-              { $set: { slug } },
-            )
-
-            if (updated.modifiedCount === 0) {
+            const updated = await this.noteService.updateById(note.id, {
+              slug,
+            } as any)
+            if (!updated) {
               skipped++
               await context.appendLog(
                 'warn',

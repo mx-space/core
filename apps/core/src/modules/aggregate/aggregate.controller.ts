@@ -430,7 +430,7 @@ export class AggregateController {
 
     if (lang && result.length) {
       return this.translationService.translateList({
-        items: result,
+        items: result as Array<Record<string, any>>,
         targetLang: lang,
         translationFields: ['title'] as const,
         getInput: (item) => ({

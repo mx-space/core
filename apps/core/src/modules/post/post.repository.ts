@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, inArray, type SQL, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, type SQL, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { categories, postRelatedPosts, posts } from '~/database/schema'
@@ -66,8 +66,12 @@ export interface PostListParams {
   page?: number
   size?: number
   categoryId?: EntityId | string
+  categoryIds?: Array<EntityId | string>
   tag?: string
   publishedOnly?: boolean
+  year?: number
+  sortBy?: keyof PostRow
+  sortOrder?: 1 | -1
 }
 
 export interface PostTagCount {
@@ -152,20 +156,47 @@ export class PostRepository extends BaseRepository {
     if (params.categoryId) {
       filters.push(eq(posts.categoryId, parseEntityId(params.categoryId)))
     }
+    if (params.categoryIds?.length) {
+      filters.push(
+        inArray(
+          posts.categoryId,
+          params.categoryIds.map((id) => parseEntityId(id)),
+        ),
+      )
+    }
     if (params.publishedOnly) {
       filters.push(eq(posts.isPublished, true))
     }
     if (params.tag) {
       filters.push(sql`${posts.tags} @> array[${params.tag}]::text[]`)
     }
+    if (params.year) {
+      filters.push(
+        sql`extract(year from ${posts.createdAt})::int = ${params.year}`,
+      )
+    }
     const whereClause = filters.length > 0 ? and(...filters) : undefined
+    const orderBy =
+      params.sortBy === 'createdAt'
+        ? params.sortOrder === 1
+          ? asc(posts.createdAt)
+          : desc(posts.createdAt)
+        : params.sortBy === 'modifiedAt'
+          ? params.sortOrder === 1
+            ? asc(posts.modifiedAt)
+            : desc(posts.modifiedAt)
+          : params.sortBy === 'pinAt'
+            ? params.sortOrder === 1
+              ? asc(posts.pinAt)
+              : desc(posts.pinAt)
+            : null
 
     const [rows, [{ count }]] = await Promise.all([
       this.db
         .select()
         .from(posts)
         .where(whereClause)
-        .orderBy(desc(posts.pinAt), desc(posts.createdAt))
+        .orderBy(orderBy ?? desc(posts.pinAt), desc(posts.createdAt))
         .limit(size)
         .offset(offset),
       this.db
@@ -380,6 +411,28 @@ export class PostRepository extends BaseRepository {
     return this.listByCategory(categoryId)
   }
 
+  async findByCategoryAndSlug(
+    categoryId: EntityId | string,
+    slug: string,
+    options: { publishedOnly?: boolean } = {},
+  ): Promise<PostRow | null> {
+    const filters: SQL[] = [
+      eq(posts.categoryId, parseEntityId(categoryId)),
+      eq(posts.slug, slug),
+    ]
+    if (options.publishedOnly) filters.push(eq(posts.isPublished, true))
+    const [row] = await this.db
+      .select()
+      .from(posts)
+      .where(and(...filters))
+      .limit(1)
+    return row ? this.attachCategory(mapBase(row)) : null
+  }
+
+  async setImages(id: EntityId | string, images: unknown[]): Promise<void> {
+    await this.update(id, { images })
+  }
+
   async findAdjacent(
     direction: 'before' | 'after',
     pivotDate: Date,
@@ -411,6 +464,29 @@ export class PostRepository extends BaseRepository {
       .orderBy(posts.createdAt)
       .limit(1)
     return row ? this.attachCategory(mapBase(row)) : null
+  }
+
+  async findByCreatedWindow(
+    pivotDate: Date,
+    direction: 'before' | 'after',
+    limit: number,
+    options: { publishedOnly?: boolean } = {},
+  ): Promise<PostRow[]> {
+    const filters: SQL[] = [
+      direction === 'before'
+        ? sql`${posts.createdAt} < ${pivotDate}`
+        : sql`${posts.createdAt} > ${pivotDate}`,
+    ]
+    if (options.publishedOnly) filters.push(eq(posts.isPublished, true))
+    const rows = await this.db
+      .select()
+      .from(posts)
+      .where(and(...filters))
+      .orderBy(
+        direction === 'before' ? desc(posts.createdAt) : asc(posts.createdAt),
+      )
+      .limit(Math.max(1, limit))
+    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
   }
 
   async topTagsByCount(limit: number): Promise<PostTagCount[]> {

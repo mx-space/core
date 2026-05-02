@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, type SQL, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, type SQL, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { recentlies } from '~/database/schema'
@@ -96,6 +96,20 @@ export class RecentlyRepository extends BaseRepository {
       .where(eq(recentlies.id, idBig))
       .limit(1)
     return row ? mapRow(row) : null
+  }
+
+  async findManyByIds(ids: Array<EntityId | string>): Promise<RecentlyRow[]> {
+    if (ids.length === 0) return []
+    const rows = await this.db
+      .select()
+      .from(recentlies)
+      .where(
+        inArray(
+          recentlies.id,
+          ids.map((id) => parseEntityId(id)),
+        ),
+      )
+    return rows.map(mapRow)
   }
 
   async findByRef(

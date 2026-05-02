@@ -344,6 +344,7 @@ export class CommentRepository extends BaseRepository {
       meta: string | null
       anchor: Record<string, unknown> | null
       editedAt: Date | null
+      location: string | null
     }>,
   ): Promise<CommentRow | null> {
     const idBig = parseEntityId(id)
@@ -359,6 +360,7 @@ export class CommentRepository extends BaseRepository {
     if (patch.meta !== undefined) update.meta = patch.meta
     if (patch.anchor !== undefined) update.anchor = patch.anchor
     if (patch.editedAt !== undefined) update.editedAt = patch.editedAt
+    if (patch.location !== undefined) update.location = patch.location
     const [row] = await this.db
       .update(comments)
       .set(update)

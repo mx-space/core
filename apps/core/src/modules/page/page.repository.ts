@@ -5,6 +5,7 @@ import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { pages } from '~/database/schema'
 import {
   BaseRepository,
+  type PaginationResult,
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -70,6 +71,25 @@ export class PageRepository extends BaseRepository {
       .from(pages)
       .orderBy(asc(pages.order), asc(pages.createdAt))
     return rows.map(mapRow)
+  }
+
+  async list(page = 1, size = 10): Promise<PaginationResult<PageRow>> {
+    page = Math.max(1, page)
+    size = Math.min(50, Math.max(1, size))
+    const offset = (page - 1) * size
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(pages)
+        .orderBy(asc(pages.order), asc(pages.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db.select({ count: sql<number>`count(*)::int` }).from(pages),
+    ])
+    return {
+      data: rows.map(mapRow),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
   }
 
   async findById(id: EntityId | string): Promise<PageRow | null> {
@@ -144,6 +164,14 @@ export class PageRepository extends BaseRepository {
       .where(eq(pages.id, idBig))
       .returning()
     return row ? mapRow(row) : null
+  }
+
+  async updateOrder(id: EntityId | string, order: number): Promise<void> {
+    await this.update(id, { order })
+  }
+
+  async setImages(id: EntityId | string, images: unknown[]): Promise<void> {
+    await this.update(id, { images })
   }
 
   async count(): Promise<number> {

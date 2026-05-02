@@ -100,22 +100,9 @@ export class SearchService {
 
   async buildSearchDocuments() {
     const [posts, pages, notes] = await Promise.all([
-      this.postService.model
-        .find()
-        .select(
-          'title text content contentFormat slug created modified isPublished',
-        )
-        .lean(),
-      this.pageService.model
-        .find()
-        .select('title text content contentFormat slug created modified')
-        .lean(),
-      this.noteService.model
-        .find()
-        .select(
-          'title text content contentFormat nid slug created modified isPublished publicAt +password',
-        )
-        .lean(),
+      this.postService.findRecent(100),
+      this.pageService.findRecent(100),
+      this.noteService.findRecent(100),
     ])
 
     return [
@@ -433,49 +420,19 @@ export class SearchService {
     const now = new Date()
     const [posts, notes, pages] = await Promise.all([
       idsByType.post.length
-        ? this.postService.model
-            .find({
-              _id: { $in: idsByType.post },
-              ...(hasAdminAccess ? {} : { isPublished: { $ne: false } }),
-            })
-            .select('_id title created modified categoryId slug')
-            .populate('category', 'name slug')
-            .lean({ getters: true, autopopulate: true })
+        ? (await this.postService.findManyByIds(idsByType.post)).filter(
+            (post) => hasAdminAccess || post.isPublished !== false,
+          )
         : [],
       idsByType.note.length
-        ? this.noteService.model
-            .find({
-              _id: { $in: idsByType.note },
-              ...(hasAdminAccess
-                ? {}
-                : {
-                    isPublished: true,
-                    $and: [
-                      {
-                        $or: [
-                          { password: null },
-                          { password: '' },
-                          { password: { $exists: false } },
-                        ],
-                      },
-                      {
-                        $or: [
-                          { publicAt: null },
-                          { publicAt: { $exists: false } },
-                          { publicAt: { $lte: now } },
-                        ],
-                      },
-                    ],
-                  }),
-            })
-            .select('_id title created modified nid slug')
-            .lean({ getters: true, autopopulate: true })
+        ? (await this.noteService.findManyByIds(idsByType.note)).filter(
+            (note) =>
+              hasAdminAccess ||
+              (note.isPublished && (!note.publicAt || note.publicAt <= now)),
+          )
         : [],
       idsByType.page.length
-        ? this.pageService.model
-            .find({ _id: { $in: idsByType.page } })
-            .select('_id title created modified slug subtitle')
-            .lean({ getters: true })
+        ? this.pageService.findManyByIds(idsByType.page)
         : [],
     ])
 
@@ -536,26 +493,13 @@ export class SearchService {
   private async loadSourceDocument(refType: SearchDocumentRefType, id: string) {
     switch (refType) {
       case 'post': {
-        return this.postService.model
-          .findById(id)
-          .select(
-            'title text content contentFormat slug created modified isPublished',
-          )
-          .lean()
+        return this.postService.findById(id)
       }
       case 'note': {
-        return this.noteService.model
-          .findById(id)
-          .select(
-            'title text content contentFormat nid slug created modified isPublished publicAt +password',
-          )
-          .lean()
+        return this.noteService.findById(id)
       }
       case 'page': {
-        return this.pageService.model
-          .findById(id)
-          .select('title text content contentFormat slug created modified')
-          .lean()
+        return this.pageService.findById(id)
       }
     }
   }

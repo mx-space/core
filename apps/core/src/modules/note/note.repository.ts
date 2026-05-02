@@ -62,6 +62,7 @@ export interface NoteCreateInput {
   isPublished?: boolean
   password?: string | null
   publicAt?: Date | null
+  createdAt?: Date
   mood?: string | null
   weather?: string | null
   bookmark?: boolean
@@ -231,6 +232,7 @@ export class NoteRepository extends BaseRepository {
     if (patch.isPublished !== undefined) update.isPublished = patch.isPublished
     if (patch.password !== undefined) update.password = patch.password
     if (patch.publicAt !== undefined) update.publicAt = patch.publicAt
+    if (patch.createdAt !== undefined) update.createdAt = patch.createdAt
     if (patch.mood !== undefined) update.mood = patch.mood
     if (patch.weather !== undefined) update.weather = patch.weather
     if (patch.bookmark !== undefined) update.bookmark = patch.bookmark
@@ -286,6 +288,25 @@ export class NoteRepository extends BaseRepository {
     return Number(row?.count ?? 0)
   }
 
+  async listAll(page = 1, size = 10): Promise<PaginationResult<NoteRow>> {
+    page = Math.max(1, page)
+    size = Math.min(50, Math.max(1, size))
+    const offset = (page - 1) * size
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(notes)
+        .orderBy(desc(notes.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db.select({ count: sql<number>`count(*)::int` }).from(notes),
+    ])
+    return {
+      data: await Promise.all(rows.map((r) => this.attachTopic(mapBase(r)))),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
   async findRecent(
     size: number,
     options: { visibleOnly?: boolean } = {},
@@ -330,6 +351,109 @@ export class NoteRepository extends BaseRepository {
       .limit(1)
     if (!row) return null
     return this.attachTopic(mapBase(row))
+  }
+
+  async findByCreatedWindow(
+    pivotDate: Date,
+    direction: 'before' | 'after',
+    limit: number,
+    options: { visibleOnly?: boolean } = {},
+  ): Promise<NoteRow[]> {
+    const filters: SQL[] = [
+      direction === 'before'
+        ? lt(notes.createdAt, pivotDate)
+        : gt(notes.createdAt, pivotDate),
+    ]
+    if (options.visibleOnly) filters.push(this.visibleClause())
+    const rows = await this.db
+      .select()
+      .from(notes)
+      .where(and(...filters))
+      .orderBy(
+        direction === 'before' ? desc(notes.createdAt) : asc(notes.createdAt),
+      )
+      .limit(Math.max(1, limit))
+    return Promise.all(rows.map((r) => this.attachTopic(mapBase(r))))
+  }
+
+  async findOneByDateAndSlug(
+    start: Date,
+    end: Date,
+    slug: string,
+  ): Promise<NoteRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(notes)
+      .where(
+        and(
+          eq(notes.slug, slug),
+          sql`${notes.createdAt} >= ${start}`,
+          sql`${notes.createdAt} < ${end}`,
+        ),
+      )
+      .limit(1)
+    return row ? this.attachTopic(mapBase(row)) : null
+  }
+
+  async listByTopicId(
+    topicId: EntityId | string,
+    page = 1,
+    size = 10,
+    options: { visibleOnly?: boolean } = {},
+  ): Promise<PaginationResult<NoteRow>> {
+    page = Math.max(1, page)
+    size = Math.min(50, Math.max(1, size))
+    const offset = (page - 1) * size
+    const filters: SQL[] = [eq(notes.topicId, parseEntityId(topicId))]
+    if (options.visibleOnly) filters.push(this.visibleClause())
+    const where = and(...filters)
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(notes)
+        .where(where)
+        .orderBy(desc(notes.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(notes)
+        .where(where),
+    ])
+    return {
+      data: await Promise.all(rows.map((r) => this.attachTopic(mapBase(r)))),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
+  async getTopicRecentUpdate(
+    topicId: EntityId | string,
+    options: { visibleOnly?: boolean } = {},
+  ): Promise<Date | null> {
+    const filters: SQL[] = [eq(notes.topicId, parseEntityId(topicId))]
+    if (options.visibleOnly) filters.push(this.visibleClause())
+    const [row] = await this.db
+      .select({
+        ts: sql<Date>`coalesce(${notes.modifiedAt}, ${notes.createdAt})`,
+      })
+      .from(notes)
+      .where(and(...filters))
+      .orderBy(sql`coalesce(${notes.modifiedAt}, ${notes.createdAt}) desc`)
+      .limit(1)
+    return row?.ts ?? null
+  }
+
+  async findOldest(): Promise<NoteRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(notes)
+      .orderBy(notes.createdAt)
+      .limit(1)
+    return row ? this.attachTopic(mapBase(row)) : null
+  }
+
+  async setImages(id: EntityId | string, images: unknown[]): Promise<void> {
+    await this.update(id, { images })
   }
 
   async getLatestVisible(): Promise<NoteRow | null> {

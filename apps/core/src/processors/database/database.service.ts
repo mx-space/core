@@ -1,132 +1,68 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { mongoose } from '@typegoose/typegoose'
-import type { ReturnModelType } from '@typegoose/typegoose'
-import type { ArticleTypeEnum } from '~/constants/article.constant'
+
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { DB_CONNECTION_TOKEN } from '~/constants/system.constant'
-import { NoteModel } from '~/modules/note/note.model'
-import { PageModel } from '~/modules/page/page.model'
-import { PostModel } from '~/modules/post/post.model'
-import { RecentlyModel } from '~/modules/recently/recently.model'
-import type { WriteBaseModel } from '~/shared/model/write-base.model'
-import { InjectModel } from '~/transformers/model.transformer'
+import { NoteRepository } from '~/modules/note/note.repository'
+import { PageRepository } from '~/modules/page/page.repository'
+import { PostRepository } from '~/modules/post/post.repository'
+import { RecentlyRepository } from '~/modules/recently/recently.repository'
+import { parseEntityId } from '~/shared/id/entity-id'
 
 @Injectable()
 export class DatabaseService {
   constructor(
-    @InjectModel(PostModel)
-    private readonly postModel: ReturnModelType<typeof PostModel>,
-    @InjectModel(NoteModel)
-    private readonly noteModel: ReturnModelType<typeof NoteModel>,
-    @InjectModel(PageModel)
-    private readonly pageModel: ReturnModelType<typeof PageModel>,
-    @InjectModel(RecentlyModel)
-    private readonly recentlyModel: ReturnModelType<typeof RecentlyModel>,
+    private readonly postRepository: PostRepository,
+    private readonly noteRepository: NoteRepository,
+    private readonly pageRepository: PageRepository,
+    private readonly recentlyRepository: RecentlyRepository,
     @Inject(DB_CONNECTION_TOKEN) private connection: mongoose.Connection,
   ) {}
 
-  // @ts-ignore
-  public getModelByRefType(
-    type: CollectionRefTypes,
-  ): ReturnModelType<typeof WriteBaseModel>
-  // @ts-ignore
-  public getModelByRefType(
-    type: ArticleTypeEnum,
-  ): ReturnModelType<typeof WriteBaseModel>
-  public getModelByRefType(type: 'post'): ReturnModelType<typeof PostModel>
-  public getModelByRefType(
-    type: CollectionRefTypes.Post,
-  ): ReturnModelType<typeof PostModel>
-
-  public getModelByRefType(type: 'note'): ReturnModelType<typeof NoteModel>
-  public getModelByRefType(
-    type: CollectionRefTypes.Note,
-  ): ReturnModelType<typeof NoteModel>
-
-  public getModelByRefType(type: 'page'): ReturnModelType<typeof PageModel>
-  public getModelByRefType(
-    type: CollectionRefTypes.Page,
-  ): ReturnModelType<typeof PageModel>
-  public getModelByRefType(
-    type: 'recently',
-  ): ReturnModelType<typeof RecentlyModel>
-  public getModelByRefType(
-    type: 'Recently',
-  ): ReturnModelType<typeof RecentlyModel>
-  public getModelByRefType(
-    type: CollectionRefTypes.Recently,
-  ): ReturnModelType<typeof RecentlyModel>
-  public getModelByRefType(type: any) {
-    type = type.toLowerCase() as any
-    // FIXME: lowercase key
+  private repositoryByType(type: any) {
+    const normalized = String(type).toLowerCase()
     const map = new Map<any, any>([
-      ['post', this.postModel],
-      ['note', this.noteModel],
-      ['page', this.pageModel],
-      ['recently', this.recentlyModel],
-
-      [CollectionRefTypes.Post, this.postModel],
-      [CollectionRefTypes.Note, this.noteModel],
-      [CollectionRefTypes.Page, this.pageModel],
-      [CollectionRefTypes.Recently, this.recentlyModel],
-    ] as any)
-    return map.get(type) as any as ReturnModelType<
-      | typeof NoteModel
-      | typeof PostModel
-      | typeof PageModel
-      | typeof RecentlyModel
-    >
+      ['post', this.postRepository],
+      ['posts', this.postRepository],
+      ['note', this.noteRepository],
+      ['notes', this.noteRepository],
+      ['page', this.pageRepository],
+      ['pages', this.pageRepository],
+      ['recently', this.recentlyRepository],
+      ['recentlies', this.recentlyRepository],
+    ])
+    return map.get(normalized)
   }
 
-  /**
-   * find document by id in `post`, `note`, `page`, `recently` collections
-   * @param id
-   * @returns
-   */
-  // @ts-ignore
-  public async findGlobalById(id: string): Promise<
-    | {
-        document: PostModel
-        type: CollectionRefTypes.Post
-      }
-    | {
-        document: NoteModel
-        type: CollectionRefTypes.Note
-      }
-    | {
-        document: PageModel
-        type: CollectionRefTypes.Page
-      }
-    | {
-        document: RecentlyModel
-        type: CollectionRefTypes.Recently
-      }
-    | null
-  >
+  public getModelByRefType(type: any): any {
+    const repository = this.repositoryByType(type)
+    return {
+      findById: (id: string) => ({
+        lean: async () => repository.findById(id),
+        select: () => ({ lean: async () => repository.findById(id) }),
+        then: (resolve: any, reject: any) =>
+          repository.findById(id).then(resolve, reject),
+      }),
+      find: (filter: { _id?: { $in?: string[] } } = {}) => ({
+        lean: async () =>
+          filter._id?.$in ? repository.findManyByIds(filter._id.$in) : [],
+      }),
+      updateOne: async () => ({ modifiedCount: 0 }),
+    }
+  }
 
-  public async findGlobalById(id: string): Promise<null>
-  public async findGlobalById(id: string) {
+  public async findGlobalById(id: string): Promise<any> {
+    parseEntityId(id)
     const doc = await Promise.all([
-      this.postModel.findById(id).populate('category').lean(),
-      this.noteModel
-        .findById(id)
-        .lean({ autopopulate: true })
-        .select('+password'),
-      this.pageModel.findById(id).lean(),
-      this.recentlyModel.findById(id).lean(),
+      this.postRepository.findById(id),
+      this.noteRepository.findById(id),
+      this.pageRepository.findById(id),
+      this.recentlyRepository.findById(id),
     ])
     const index = doc.findIndex(Boolean)
-    if (index == -1) {
-      return {
-        document: null,
-        type: null,
-      }
-    }
-    const document = doc[index]
-    if (!document) return null
+    if (index === -1) return null
     return {
-      document,
-
+      document: doc[index],
       type: [
         CollectionRefTypes.Post,
         CollectionRefTypes.Note,
@@ -136,48 +72,23 @@ export class DatabaseService {
     }
   }
 
-  public async findGlobalByIds(ids: string[]): Promise<IdsCollection>
-  public async findGlobalByIds(ids: string[]) {
-    const combinedCollection = await Promise.all([
-      this.postModel
-        .find({
-          _id: { $in: ids },
-        })
-        .populate('category')
-        .lean(),
-      this.noteModel
-        .find({
-          _id: { $in: ids },
-        })
-        .lean({ autopopulate: true })
-        .select('+password'),
-      this.pageModel
-        .find({
-          _id: { $in: ids },
-        })
-        .lean(),
-      this.recentlyModel
-        .find({
-          _id: { $in: ids },
-        })
-        .lean(),
+  public async findGlobalByIds(ids: string[]): Promise<IdsCollection> {
+    const [posts, notes, pages, recentlies] = await Promise.all([
+      this.postRepository.findManyByIds(ids),
+      this.noteRepository.findManyByIds(ids),
+      this.pageRepository.findManyByIds(ids),
+      this.recentlyRepository.findManyByIds(ids),
     ])
-
-    const result = combinedCollection.reduce((acc, list, index) => {
-      return {
-        ...acc,
-        [(['posts', 'notes', 'pages', 'recentlies'] as const)[index]]: list,
-      }
-    }, {} as IdsCollection)
-
-    return result as any
+    return {
+      posts: posts as any[],
+      notes: notes as any[],
+      pages: pages as any[],
+      recentlies: recentlies as any[],
+    }
   }
 
   flatCollectionToMap(combinedCollection: IdsCollection) {
-    const all = {} as Record<
-      string,
-      PostModel | NoteModel | PageModel | RecentlyModel
-    >
+    const all = {} as Record<string, any>
     for (const key in combinedCollection) {
       const collection = combinedCollection[key]
       for (const item of collection) {
@@ -201,8 +112,8 @@ export class DatabaseService {
 }
 
 type IdsCollection = {
-  posts: PostModel[]
-  notes: NoteModel[]
-  pages: PageModel[]
-  recentlies: RecentlyModel[]
+  posts: any[]
+  notes: any[]
+  pages: any[]
+  recentlies: any[]
 }

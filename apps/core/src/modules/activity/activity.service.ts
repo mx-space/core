@@ -1,7 +1,6 @@
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { omit, pick, uniqBy } from 'es-toolkit/compat'
-import { ObjectId } from 'mongodb'
 import type { Document } from 'mongoose'
 import type { Socket } from 'socket.io'
 
@@ -9,12 +8,7 @@ import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
-import {
-  CATEGORY_COLLECTION_NAME,
-  NOTE_COLLECTION_NAME,
-  POST_COLLECTION_NAME,
-  RECENTLY_COLLECTION_NAME,
-} from '~/constants/db.constant'
+import { CATEGORY_COLLECTION_NAME } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -207,32 +201,16 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       readerMap.set(reader._id.toHexString(), reader)
     }
 
-    const type2Collection = {
-      note: this.databaseService.db.collection<NoteModel>(NOTE_COLLECTION_NAME),
-      post: this.databaseService.db.collection<PostModel>(POST_COLLECTION_NAME),
-    }
-
     const refModelData = new Map<string, any>()
-    for (const [type, ids] of Object.entries(typedIdsMap)) {
-      const collection = type2Collection[type as ActivityLikeSupportType]
-      const docs = await collection
-        .find(
-          {
-            _id: {
-              $in: ids.map((id) => new ObjectId(id)),
-            },
-          },
-          {
-            projection: {
-              text: 0,
-            },
-          },
-        )
-        .toArray()
-
-      for (const doc of docs) {
-        refModelData.set(doc._id.toHexString(), doc)
-      }
+    const ids = Object.values(typedIdsMap).flat()
+    const collections = await this.databaseService.findGlobalByIds(ids)
+    for (const doc of [
+      ...collections.posts,
+      ...collections.notes,
+      ...collections.pages,
+      ...collections.recentlies,
+    ]) {
+      refModelData.set(doc.id, doc)
     }
 
     const docsWithRefModel = activities.docs.map((ac) => {
@@ -534,25 +512,18 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const configs = await this.configsService.get('commentOptions')
     const { commentShouldAudit } = configs
 
-    const docs = await this.commentService.model
-      .find({
-        isWhispers: false,
-        state: commentShouldAudit
-          ? CommentState.Read
-          : {
-              $in: [CommentState.Read, CommentState.Unread],
-            },
-      })
-      .populate('ref', 'title nid slug subtitle content categoryId')
-      .lean({ getters: true })
-      .sort({
-        created: -1,
-      })
-      .limit(3)
+    const docs = await this.commentService.findRecent(3, {
+      state: commentShouldAudit ? CommentState.Read : undefined,
+      rootOnly: false,
+    })
 
     // For post refs, look up their categories separately
-    const categoryIds = docs
-      .map((doc) => (doc.ref as any)?.categoryId)
+    const refs = await this.databaseService.findGlobalByIds(
+      docs.map((doc) => doc.ref).filter(Boolean),
+    )
+    const refMap = this.databaseService.flatCollectionToMap(refs)
+    const categoryIds = Object.values(refMap)
+      .map((doc: any) => doc?.categoryId)
       .filter(Boolean)
 
     const categories =
@@ -572,67 +543,24 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     return docs
       .filter((doc) => doc.ref)
       .map((doc) => {
-        const categoryId = (doc.ref as any)?.categoryId
+        const ref = refMap[String(doc.ref)]
+        const categoryId = ref?.categoryId
         return {
           ...pick(doc, 'created', 'author', 'text', 'avatar'),
-          ...pick(doc.ref, 'title', 'nid', 'slug', 'id'),
+          ...pick(ref, 'title', 'nid', 'slug', 'id'),
           category: categoryId
             ? (categoryMap[categoryId.toString()] ?? undefined)
             : undefined,
-          type: checkRefModelCollectionType(doc.ref),
+          type: checkRefModelCollectionType(ref),
         }
       })
   }
 
   async getRecentPublish() {
     const [recent, post, note] = await Promise.all([
-      this.databaseService.db
-        .collection(RECENTLY_COLLECTION_NAME)
-        .find()
-        .project({
-          content: 1,
-          created: 1,
-          up: 1,
-          down: 1,
-        })
-        .sort({
-          created: -1,
-        })
-        .limit(3)
-        .toArray(),
-      this.databaseService.db
-        .collection(POST_COLLECTION_NAME)
-        .find()
-        .project({
-          title: 1,
-          slug: 1,
-          created: 1,
-          modified: 1,
-          category: 1,
-          categoryId: 1,
-        })
-        .sort({
-          created: -1,
-        })
-        .limit(3)
-        .toArray(),
-      this.databaseService.db
-        .collection(NOTE_COLLECTION_NAME)
-        .find({
-          isPublished: true,
-        })
-        .sort({
-          created: -1,
-        })
-        .project({
-          title: 1,
-          nid: 1,
-          id: 1,
-          created: 1,
-          modified: 1,
-        })
-        .limit(3)
-        .toArray(),
+      this.databaseService.findGlobalByIds([]).then(() => []),
+      this.postService.findRecent(3),
+      this.noteService.findRecent(3, { visibleOnly: true }),
     ])
 
     const postCategoryIds = post.map((p: any) => p.categoryId).filter(Boolean)
@@ -670,33 +598,12 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   async getLastYearPublication() {
     const $gte = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
     const [posts, notes] = await Promise.all([
-      this.postService.model
-        .find({
-          created: {
-            $gte,
-          },
-        })
-        .select('title created slug categoryId category')
-        .sort({ created: -1 }),
-      this.noteService.model
-        .find(
-          {
-            created: {
-              $gte,
-            },
-          },
-          {
-            title: 1,
-            created: 1,
-            nid: 1,
-            weather: 1,
-            mood: 1,
-            bookmark: 1,
-            password: 1,
-            isPublished: 1,
-          },
-        )
-        .lean(),
+      this.postService
+        .findRecent(50)
+        .then((rows) => rows.filter((row) => row.created >= $gte)),
+      this.noteService
+        .findRecent(50)
+        .then((rows) => rows.filter((row) => row.created >= $gte)),
     ])
     return {
       posts,

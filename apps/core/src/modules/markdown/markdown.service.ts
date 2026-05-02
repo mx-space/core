@@ -3,21 +3,23 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common'
-import type { ReturnModelType } from '@typegoose/typegoose'
+import { omit } from 'es-toolkit/compat'
+import { dump } from 'js-yaml'
+import JSZip from 'jszip'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
-import { InjectModel } from '~/transformers/model.transformer'
-import { omit } from 'es-toolkit/compat'
-import { dump } from 'js-yaml'
-import JSZip from 'jszip'
-import { Types } from 'mongoose'
-import { CategoryModel } from '../category/category.model'
+import { ContentFormat } from '~/shared/types/content-format.type'
+
+import { CategoryService } from '../category/category.service'
 import { NoteModel } from '../note/note.model'
-import { PageModel } from '../page/page.model'
+import { NoteService } from '../note/note.service'
+import { PageService } from '../page/page.service'
 import { PostModel } from '../post/post.model'
+import { PostService } from '../post/post.service'
 import type { MarkdownYAMLProperty } from './markdown.interface'
 import type { DatatypeDto } from './markdown.schema'
 import { markdownToHtml } from './markdown.util'
@@ -28,26 +30,20 @@ export class MarkdownService {
 
   constructor(
     private readonly assetService: AssetService,
-
-    @InjectModel(CategoryModel)
-    private readonly categoryModel: ReturnModelType<typeof CategoryModel>,
-    @InjectModel(PostModel)
-    private readonly postModel: ReturnModelType<typeof PostModel>,
-    @InjectModel(NoteModel)
-    private readonly noteModel: ReturnModelType<typeof NoteModel>,
-    @InjectModel(PageModel)
-    private readonly pageModel: ReturnModelType<typeof PageModel>,
-
+    private readonly categoryService: CategoryService,
+    private readonly postService: PostService,
+    private readonly noteService: NoteService,
+    private readonly pageService: PageService,
     private readonly databaseService: DatabaseService,
   ) {}
 
   async insertPostsToDb(data: DatatypeDto[]) {
     let count = 1
-    const categoryNameAndId = (await this.categoryModel.find().lean()).map(
-      (c) => {
-        return { name: c.name, _id: c._id, slug: c.slug }
-      },
-    )
+    const categoryNameAndId = (
+      await this.categoryService.findAllCategory()
+    ).map((c) => {
+      return { name: c.name, _id: c._id, slug: c.slug }
+    })
 
     const insertOrCreateCategory = async (name?: string) => {
       if (!name) {
@@ -59,18 +55,12 @@ export class MarkdownService {
       )
 
       if (!hasCategory) {
-        const newCategoryDoc = await this.categoryModel.create({
-          name,
-          slug: name,
-          type: 0,
-        })
+        const newCategoryDoc = await this.categoryService.create(name, name)
         categoryNameAndId.push({
           name: newCategoryDoc.name,
           _id: newCategoryDoc._id,
           slug: newCategoryDoc.slug,
         })
-
-        await newCategoryDoc.save()
         return newCategoryDoc
       } else {
         return hasCategory
@@ -78,7 +68,7 @@ export class MarkdownService {
     }
     const genDate = this.genDate
     const models = [] as PostModel[]
-    const defaultCategory = await this.categoryModel.findOne()
+    const defaultCategory = categoryNameAndId[0]
     if (!defaultCategory) {
       throw new InternalServerErrorException('分类不存在')
     }
@@ -89,7 +79,7 @@ export class MarkdownService {
           slug: Date.now(),
           text: item.text,
           ...genDate(item),
-          categoryId: new Types.ObjectId(defaultCategory._id),
+          categoryId: defaultCategory._id,
         } as any as PostModel)
       } else {
         const category = await insertOrCreateCategory(
@@ -105,11 +95,16 @@ export class MarkdownService {
         } as PostModel)
       }
     }
-    return await this.postModel
-      .insertMany(models, { ordered: false })
-      .catch(() => {
-        this.logger.warn('一篇文章导入失败')
-      })
+    return await Promise.all(
+      models.map((model) =>
+        this.postService.create({
+          ...model,
+          contentFormat: model.contentFormat ?? ContentFormat.Markdown,
+        } as any),
+      ),
+    ).catch(() => {
+      this.logger.warn('一篇文章导入失败')
+    })
   }
 
   async insertNotesToDb(data: DatatypeDto[]) {
@@ -122,7 +117,14 @@ export class MarkdownService {
       } as NoteModel)
     }
 
-    return await this.noteModel.create(models)
+    return await Promise.all(
+      models.map((model) =>
+        this.noteService.create({
+          ...model,
+          contentFormat: model.contentFormat ?? ContentFormat.Markdown,
+        } as any),
+      ),
+    )
   }
 
   private readonly genDate = (item: DatatypeDto) => {
@@ -146,9 +148,9 @@ export class MarkdownService {
 
   async extractAllArticle() {
     const [posts, notes, pages] = await Promise.all([
-      this.postModel.find().populate('category').lean(),
-      this.noteModel.find().lean(),
-      this.pageModel.find().lean(),
+      this.postService.findRecent(100),
+      this.noteService.findRecent(100),
+      this.pageService.findAll(),
     ])
     return {
       posts,

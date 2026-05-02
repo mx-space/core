@@ -10,7 +10,6 @@ import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getAvatar } from '~/utils/tool.util'
 
@@ -30,6 +29,7 @@ import {
 } from './comment.email.default'
 import { CommentReplyMailType } from './comment.enum'
 import { CommentModel, CommentState } from './comment.model'
+import { CommentService } from './comment.service'
 import { CommentSpamFilterService } from './comment.spam-filter'
 
 @Injectable()
@@ -38,9 +38,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
   private commentCreateListenerDisposer?: IEventManagerHandlerDisposer
 
   constructor(
-    @InjectModel(CommentModel)
-    private readonly commentModel: MongooseModel<CommentModel>,
-
+    private readonly commentService: CommentService,
     private readonly databaseService: DatabaseService,
     private readonly configsService: ConfigsService,
     private readonly ownerService: OwnerService,
@@ -91,10 +89,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
   }
 
   async afterCreateComment(commentId: string, ipLocation: { ip: string }) {
-    const comment = await this.commentModel
-      .findById(commentId)
-      .lean({ getters: true })
-      .select('+ip +agent')
+    const comment = await this.commentService.findById(commentId)
 
     if (!comment) return
     const isLoggedInComment = !!comment.readerId
@@ -112,10 +107,9 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
         (await this.spamFilterService.checkSpam(comment)) &&
         !isLoggedInComment
       ) {
-        await this.commentModel.updateOne(
-          { _id: commentId },
-          { state: CommentState.Junk },
-        )
+        await this.commentService.updateComment(commentId, {
+          state: CommentState.Junk,
+        })
         return
       }
 
@@ -239,12 +233,14 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     const ownerInfo = await this.ownerService.getOwnerInfo()
 
     const refType = comment.refType
-    const refModel = this.getModelByRefType(refType)
-    const refDoc = await refModel.findById(comment.ref)
+    const result = await this.databaseService.findGlobalById(
+      String(comment.ref),
+    )
+    const refDoc = result?.document as any
     const time = new Date(comment.created!)
-    const parent: CommentModel | null = await this.commentModel
-      .findOne({ _id: comment.parentCommentId })
-      .lean()
+    const parent: CommentModel | null = comment.parentCommentId
+      ? await this.commentService.findById(String(comment.parentCommentId))
+      : null
 
     const parsedTime = `${time.getDate()}/${
       time.getMonth() + 1
@@ -337,7 +333,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     const { recordIpLocation } = await this.configsService.get('commentOptions')
     if (!recordIpLocation) return
 
-    const model = this.commentModel.findById(id).lean()
+    const model = await this.commentService.findById(id)
     if (!model) return
 
     const fnModel =
@@ -367,7 +363,8 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
           : ''
       }${result.cityName ? String(result.cityName) : ''}` || undefined
 
-    if (location) await this.commentModel.updateOne({ _id: id }, { location })
+    if (location)
+      await this.commentService.updateComment(id, { location } as any)
   }
 
   async pushCommentEvent(comment: CommentModel) {
@@ -389,10 +386,6 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       icon: comment.avatar,
       url: `${adminUrl}#/comments`,
     })
-  }
-
-  private getModelByRefType(type: CollectionRefTypes) {
-    return this.databaseService.getModelByRefType(type) as any
   }
 
   private async resolveUrlByType(type: CollectionRefTypes, model: any) {

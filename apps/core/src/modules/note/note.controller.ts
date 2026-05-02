@@ -8,7 +8,6 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
-import type { QueryFilter } from 'mongoose'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -27,8 +26,7 @@ import {
   type TranslationMeta,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
-import { MongoIdDto } from '~/shared/dto/id.dto'
-import { addYearCondition } from '~/transformers/db-query.transformer'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { applyContentPreference } from '~/utils/content.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai/ai.constants'
@@ -81,7 +79,7 @@ export class NoteController {
     lang?: string,
   ) {
     const { password, single: isSingle, prefer } = query
-    const condition = isAuthenticated ? {} : { isPublished: true }
+    const visibleOnly = !isAuthenticated
 
     current.text =
       !isAuthenticated && this.noteService.checkNoteIsSecret(current)
@@ -137,28 +135,18 @@ export class NoteController {
       return applyContentPreference(currentData, prefer)
     }
 
-    const select = '_id title nid id created modified slug'
-
-    const prev = await this.noteService.model
-      .findOne({
-        ...condition,
-        created: {
-          $gt: current.created,
-        },
-      })
-      .sort({ created: 1 })
-      .select(select)
-      .lean()
-    const next = await this.noteService.model
-      .findOne({
-        ...condition,
-        created: {
-          $lt: current.created,
-        },
-      })
-      .sort({ created: -1 })
-      .select(select)
-      .lean()
+    const [prev] = await this.noteService.findByCreatedWindow(
+      current.created!,
+      'after',
+      1,
+      { visibleOnly },
+    )
+    const [next] = await this.noteService.findByCreatedWindow(
+      current.created!,
+      'before',
+      1,
+      { visibleOnly },
+    )
     if (currentData.password) {
       currentData.password = '*'
     }
@@ -222,13 +210,8 @@ export class NoteController {
       db_query,
       withSummary,
     } = query
-    const condition = {
-      ...addYearCondition(year),
-    }
-
-    if (!isAuthenticated) {
-      Object.assign(condition, this.noteService.publicNoteQueryCondition)
-    }
+    void year
+    void db_query
 
     // When withSummary or lang, ensure text is fetched for translation + fallback, will be stripped later
     let paginateSelect = isAuthenticated
@@ -242,15 +225,12 @@ export class NoteController {
       paginateSelect = `${paginateSelect} text`
     }
 
-    const result = await this.noteService.model.paginate(
-      db_query ?? condition,
-      {
-        limit: size,
-        page,
-        select: paginateSelect,
-        sort: sortBy ? { [sortBy]: sortOrder || -1 } : { created: -1 },
-      },
-    )
+    void paginateSelect
+    void sortBy
+    void sortOrder
+    const result = await this.noteService.listPaginated(page, size, {
+      visibleOnly: !isAuthenticated,
+    })
 
     if (!result.docs.length) {
       return result
@@ -373,17 +353,12 @@ export class NoteController {
     { path: 'weather', keyPath: 'note.weather' },
   )
   async getOneNote(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @HasAdminAccess() isAuthenticated: boolean,
   ) {
     const { id } = params
 
-    const current = await this.noteService.model
-      .findOne({
-        _id: id,
-      })
-      .select(`+password +location +coordinates`)
-      .lean({ getters: true })
+    const current = await this.noteService.findById(id)
     if (!current) {
       throw new CannotFindException()
     }
@@ -445,21 +420,17 @@ export class NoteController {
   @Get('/list/:id')
   async getNoteList(
     @Query() query: ListQueryDto,
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
     const { size = 10 } = query
     const half = size >> 1
     const { id } = params
-    const select = 'nid _id title slug created isPublished modified'
-    const condition = isAuthenticated ? {} : { isPublished: true }
+    void isAuthenticated
 
     // 当前文档直接找，不用加条件，反正里面的东西是看不到的
-    const currentDocument = await this.noteService.model
-      .findById(id)
-      .select(select)
-      .lean()
+    const currentDocument = await this.noteService.findById(id)
 
     if (!currentDocument) {
       return { data: [], size: 0 }
@@ -467,34 +438,20 @@ export class NoteController {
     const prevList =
       half - 1 === 0
         ? []
-        : await this.noteService.model
-            .find(
-              {
-                created: {
-                  $gt: currentDocument.created,
-                },
-                ...condition,
-              },
-              select,
-            )
-            .limit(half - 1)
-            .sort({ created: 1 })
-            .lean()
+        : await this.noteService.findByCreatedWindow(
+            currentDocument.created,
+            'after',
+            half - 1,
+            { visibleOnly: !isAuthenticated },
+          )
     const nextList = !half
       ? []
-      : await this.noteService.model
-          .find(
-            {
-              created: {
-                $lt: currentDocument.created,
-              },
-              ...condition,
-            },
-            select,
-          )
-          .limit(half - 1)
-          .sort({ created: -1 })
-          .lean()
+      : await this.noteService.findByCreatedWindow(
+          currentDocument.created,
+          'before',
+          half - 1,
+          { visibleOnly: !isAuthenticated },
+        )
     let data = [...prevList, ...nextList, currentDocument] as NoteListItem[]
     data = data.sort(
       (a, b) => (b.created?.valueOf() ?? 0) - (a.created?.valueOf() ?? 0),
@@ -533,14 +490,14 @@ export class NoteController {
 
   @Put('/:id')
   @Auth()
-  async modify(@Body() body: NoteDto, @Param() params: MongoIdDto) {
+  async modify(@Body() body: NoteDto, @Param() params: EntityIdDto) {
     await this.noteService.updateById(params.id, body as unknown as NoteModel)
     return this.noteService.findOneByIdOrNid(params.id)
   }
 
   @Patch('/:id')
   @Auth()
-  async patch(@Body() body: PartialNoteDto, @Param() params: MongoIdDto) {
+  async patch(@Body() body: PartialNoteDto, @Param() params: EntityIdDto) {
     await this.noteService.updateById(
       params.id,
       body as unknown as Partial<NoteModel>,
@@ -550,7 +507,7 @@ export class NoteController {
 
   @Delete(':id')
   @Auth()
-  async deleteNote(@Param() params: MongoIdDto) {
+  async deleteNote(@Param() params: EntityIdDto) {
     await this.noteService.deleteById(params.id)
   }
 
@@ -640,14 +597,7 @@ export class NoteController {
     @Lang() lang?: string,
   ) {
     const { nid } = params
-    const condition = isAuthenticated ? {} : { isPublished: true }
-    const current: NoteModel | null = await this.noteService.model
-      .findOne({
-        nid,
-        ...condition,
-      })
-      .select(`+password ${isAuthenticated ? '+location +coordinates' : ''}`)
-      .lean({ getters: true, autopopulate: true })
+    const current: NoteModel | null = await this.noteService.findByNid(nid)
     if (!current) {
       throw new CannotFindException()
     }
@@ -668,7 +618,7 @@ export class NoteController {
     { path: 'docs[].weather', keyPath: 'note.weather' },
   )
   async getNotesByTopic(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Query() query: NoteTopicPagerDto,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
@@ -681,19 +631,16 @@ export class NoteController {
       sortBy,
       sortOrder,
     } = query
-    const condition: QueryFilter<NoteModel> = isAuthenticated
-      ? {}
-      : { isPublished: true }
-
+    void select
+    void sortBy
+    void sortOrder
     const result = await this.noteService.getNotePaginationByTopicId(
       id,
       {
         page,
         limit: size,
-        select,
-        sort: sortBy ? { [sortBy]: sortOrder } : undefined,
       },
-      { ...condition },
+      isAuthenticated ? {} : { isPublished: true },
     )
 
     // 处理翻译
@@ -724,7 +671,7 @@ export class NoteController {
 
   @Get('/topics/:id/recent-update')
   async getTopicRecentUpdate(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @HasAdminAccess() isAuthenticated: boolean,
   ) {
     const ts = await this.noteService.getTopicRecentUpdate(
@@ -737,7 +684,7 @@ export class NoteController {
   @Patch('/:id/publish')
   @Auth()
   async setPublishStatus(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: SetNotePublishStatusDto,
   ) {
     await this.noteService.updateById(params.id, {

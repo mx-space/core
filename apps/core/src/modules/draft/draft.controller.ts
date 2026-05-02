@@ -1,8 +1,10 @@
 import { Body, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
+
 import { DraftRefType } from './draft.model'
 import {
   CreateDraftDto,
@@ -34,18 +36,16 @@ export class DraftController {
       filter.refType = refType
     }
     if (hasRef !== undefined) {
-      filter.refId = hasRef ? { $exists: true } : { $exists: false }
+      filter.hasRef = hasRef
     }
 
-    const [data, total] = await Promise.all([
-      this.draftService.model
-        .find(filter)
-        .sort(sortBy ? { [sortBy]: sortOrder || -1 } : { updated: -1 })
-        .skip((page - 1) * size)
-        .limit(size)
-        .lean({ getters: true }),
-      this.draftService.model.countDocuments(filter),
+    void sortBy
+    void sortOrder
+    const [result, total] = await Promise.all([
+      this.draftService.list(page, size, filter),
+      this.draftService.count(filter),
     ])
+    const data = result.data.map((item) => this.draftService.toLegacy(item))
 
     // Transform typeSpecificData for each draft
     const transformedData = data.map((d) => {
@@ -91,7 +91,7 @@ export class DraftController {
 
   @Get('/:id')
   @Auth()
-  async getById(@Param() params: MongoIdDto) {
+  async getById(@Param() params: EntityIdDto) {
     const draft = await this.draftService.findById(params.id)
     if (!draft) {
       throw new CannotFindException()
@@ -101,27 +101,27 @@ export class DraftController {
 
   @Put('/:id')
   @Auth()
-  async update(@Param() params: MongoIdDto, @Body() body: UpdateDraftDto) {
+  async update(@Param() params: EntityIdDto, @Body() body: UpdateDraftDto) {
     return await this.draftService.update(params.id, body)
   }
 
   @Delete('/:id')
   @Auth()
-  async delete(@Param() params: MongoIdDto) {
+  async delete(@Param() params: EntityIdDto) {
     await this.draftService.delete(params.id)
     return { success: true }
   }
 
   @Get('/:id/history')
   @Auth()
-  async getHistory(@Param() params: MongoIdDto) {
+  async getHistory(@Param() params: EntityIdDto) {
     return await this.draftService.getHistory(params.id)
   }
 
   @Get('/:id/history/:version')
   @Auth()
   async getHistoryVersion(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Param() versionParams: RestoreVersionDto,
   ) {
     return await this.draftService.getHistoryVersion(
@@ -133,7 +133,7 @@ export class DraftController {
   @Post('/:id/restore/:version')
   @Auth()
   async restore(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Param() versionParams: RestoreVersionDto,
   ) {
     return await this.draftService.restoreVersion(

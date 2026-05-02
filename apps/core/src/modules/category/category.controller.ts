@@ -10,7 +10,6 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
-import { isValidObjectId } from 'mongoose'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -22,7 +21,7 @@ import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 
 import type { PostService } from '../post/post.service'
 import { CategoryType } from './category.model'
@@ -61,10 +60,16 @@ export class CategoryController {
 
       await Promise.all(
         ids.map(async (id) => {
-          let posts: any[] = await this.postService.model
-            .find({ categoryId: id }, ignoreKeys)
-            .sort({ created: -1 })
-            .lean()
+          let posts: any[] = await this.postService.listByCategory(id, {
+            includeCategory: false,
+          })
+          posts = posts.map((post) => {
+            const cloned = { ...post }
+            for (const field of ignoreKeys.split(' ')) {
+              delete cloned[field.replace(/^-/, '')]
+            }
+            return cloned
+          })
 
           if (lang && posts.length) {
             posts = await this.translatePostTitles(posts, lang)
@@ -108,27 +113,21 @@ export class CategoryController {
       return { tag: query, data }
     }
 
-    const isId = isValidObjectId(query)
-    const res = isId
-      ? await this.categoryService.model
-          .findById(query)
-          .sort({ created: -1 })
-          .lean()
-      : await this.categoryService.model
-          .findOne({ slug: query })
-          .sort({ created: -1 })
-          .lean()
+    const res =
+      /^\d+$/.test(query) || /^[\da-f]{24}$/i.test(query)
+        ? await this.categoryService.findById(query)
+        : await this.categoryService.findBySlug(query)
 
     if (!res) {
       throw new CannotFindException()
     }
 
     const [postsResult, tagsSum, count] = await Promise.all([
-      this.categoryService.findCategoryPost(res._id.toHexString(), {
-        $and: [tag ? { tags: tag } : {}],
+      this.categoryService.findCategoryPost(res._id.toString(), {
+        tags: typeof tag === 'string' ? tag : undefined,
       }),
-      this.categoryService.getCategoryTagsSum(res._id.toHexString()),
-      this.postService.model.countDocuments({ categoryId: res._id }),
+      this.categoryService.getCategoryTagsSum(res._id.toString()),
+      this.postService.countByCategoryId(res._id.toString()),
     ])
 
     let children: any[] = postsResult || []
@@ -175,7 +174,7 @@ export class CategoryController {
 
   @Put('/:id')
   @Auth()
-  async modify(@Param() params: MongoIdDto, @Body() body: CategoryDto) {
+  async modify(@Param() params: EntityIdDto, @Body() body: CategoryDto) {
     const { type, slug, name } = body
     const { id } = params
     await this.categoryService.update(id, {
@@ -183,13 +182,13 @@ export class CategoryController {
       type,
       name,
     })
-    return await this.categoryService.model.findById(id)
+    return await this.categoryService.findById(id)
   }
 
   @Patch('/:id')
   @HttpCode(204)
   @Auth()
-  async patch(@Param() params: MongoIdDto, @Body() body: PartialCategoryDto) {
+  async patch(@Param() params: EntityIdDto, @Body() body: PartialCategoryDto) {
     const { id } = params
     await this.categoryService.update(id, body)
     return
@@ -197,7 +196,7 @@ export class CategoryController {
 
   @Delete('/:id')
   @Auth()
-  async deleteCategory(@Param() params: MongoIdDto) {
+  async deleteCategory(@Param() params: EntityIdDto) {
     const { id } = params
 
     return await this.categoryService.deleteById(id)

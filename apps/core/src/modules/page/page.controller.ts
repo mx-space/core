@@ -20,7 +20,7 @@ import {
   type ArticleTranslationInput,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { applyContentPreference } from '~/utils/content.util'
 
@@ -43,7 +43,7 @@ export class PageController {
   @Get('/')
   @Paginator
   async getPagesSummary(@Query() query: PagerDto, @Lang() lang?: string) {
-    const { size, select, page, sortBy, sortOrder } = query
+    const { size, select, page } = query
 
     // When lang is present, ensure text/meta are fetched for translation even if not in select
     let paginateSelect = select
@@ -63,15 +63,7 @@ export class PageController {
       }
     }
 
-    const result = await this.pageService.model.paginate(
-      {},
-      {
-        limit: size,
-        page,
-        select: paginateSelect,
-        sort: sortBy ? { [sortBy]: sortOrder || -1 } : { order: -1 },
-      },
-    )
+    const result = await this.pageService.listPaginated(page, size)
 
     if (!lang || !result.docs.length) {
       return result
@@ -144,10 +136,8 @@ export class PageController {
 
   @Get('/:id')
   @Auth()
-  async getPageById(@Param() params: MongoIdDto) {
-    const page = await this.pageService.model
-      .findById(params.id)
-      .lean({ getters: true })
+  async getPageById(@Param() params: EntityIdDto) {
+    const page = await this.pageService.findById(params.id)
     if (!page) {
       throw new CannotFindException()
     }
@@ -163,11 +153,7 @@ export class PageController {
     if (typeof slug !== 'string') {
       throw new BizException(ErrorCodeEnum.InvalidSlug)
     }
-    const page = await this.pageService.model
-      .findOne({
-        slug,
-      })
-      .lean({ getters: true })
+    const page = await this.pageService.findBySlug(slug)
 
     if (!page) {
       throw new CannotFindException()
@@ -211,16 +197,16 @@ export class PageController {
 
   @Put('/:id')
   @Auth()
-  async modify(@Body() body: PageDto, @Param() params: MongoIdDto) {
+  async modify(@Body() body: PageDto, @Param() params: EntityIdDto) {
     const { id } = params
     await this.pageService.updateById(id, body as unknown as PageModel)
 
-    return await this.pageService.model.findById(id).lean()
+    return await this.pageService.findById(id)
   }
 
   @Patch('/:id')
   @Auth()
-  async patch(@Body() body: PartialPageDto, @Param() params: MongoIdDto) {
+  async patch(@Body() body: PartialPageDto, @Param() params: EntityIdDto) {
     const { id } = params
     await this.pageService.updateById(id, body as unknown as Partial<PageModel>)
 
@@ -237,21 +223,14 @@ export class PageController {
       throw new BizException(ErrorCodeEnum.InvalidOrderValue)
     }
     const tasks = seq.map(({ id, order }) => {
-      return this.pageService.model.updateOne(
-        {
-          _id: id,
-        },
-        {
-          order,
-        },
-      )
+      return this.pageService.updateOrder(id, order)
     })
     await Promise.all(tasks)
   }
 
   @Delete('/:id')
   @Auth()
-  async deletePage(@Param() params: MongoIdDto) {
+  async deletePage(@Param() params: EntityIdDto) {
     await this.pageService.deleteById(params.id)
     return
   }

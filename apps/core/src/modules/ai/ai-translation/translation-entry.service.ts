@@ -3,8 +3,8 @@ import { createHash } from 'node:crypto'
 import { Injectable, Logger } from '@nestjs/common'
 
 import { RedisKeys } from '~/constants/cache.constant'
-import { CategoryModel } from '~/modules/category/category.model'
-import { NoteModel } from '~/modules/note/note.model'
+import { CategoryService } from '~/modules/category/category.service'
+import { NoteService } from '~/modules/note/note.service'
 import { TopicModel } from '~/modules/topic/topic.model'
 import { RedisService } from '~/processors/redis/redis.service'
 import { InjectModel } from '~/transformers/model.transformer'
@@ -61,10 +61,8 @@ export class TranslationEntryService {
   constructor(
     @InjectModel(TranslationEntryModel)
     private readonly entryModel: MongooseModel<TranslationEntryModel>,
-    @InjectModel(CategoryModel)
-    private readonly categoryModel: MongooseModel<CategoryModel>,
-    @InjectModel(NoteModel)
-    private readonly noteModel: MongooseModel<NoteModel>,
+    private readonly categoryService: CategoryService,
+    private readonly noteService: NoteService,
     @InjectModel(TopicModel)
     private readonly topicModel: MongooseModel<TopicModel>,
     private readonly aiService: AiService,
@@ -209,13 +207,13 @@ export class TranslationEntryService {
   async collectSourceValues(): Promise<CollectedValue[]> {
     const values: CollectedValue[] = []
 
-    const categories = await this.categoryModel.find().select('name').lean()
+    const categories = await this.categoryService.findAllCategory()
     for (const cat of categories) {
       if (cat.name) {
         values.push({
           keyPath: 'category.name',
           keyType: 'entity',
-          lookupKey: cat._id.toString(),
+          lookupKey: cat.id.toString(),
           sourceText: cat.name,
         })
       }
@@ -252,7 +250,8 @@ export class TranslationEntryService {
       }
     }
 
-    const moods = await this.noteModel.distinct('mood')
+    const notes = await this.noteService.findRecent(100)
+    const moods = [...new Set(notes.map((note) => note.mood).filter(Boolean))]
     for (const mood of moods) {
       if (mood) {
         values.push({
@@ -264,7 +263,9 @@ export class TranslationEntryService {
       }
     }
 
-    const weathers = await this.noteModel.distinct('weather')
+    const weathers = [
+      ...new Set(notes.map((note) => note.weather).filter(Boolean)),
+    ]
     for (const weather of weathers) {
       if (weather) {
         values.push({

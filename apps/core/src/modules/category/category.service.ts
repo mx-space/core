@@ -1,9 +1,6 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
-import type { DocumentType, ReturnModelType } from '@typegoose/typegoose'
 import { omit } from 'es-toolkit/compat'
-import type { QueryFilter } from 'mongoose'
-import { Types } from 'mongoose'
 
 import { BizException } from '~/common/exceptions/biz.exception'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
@@ -14,16 +11,20 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 
-import type { PostModel } from '../post/post.model'
 import type { PostService } from '../post/post.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
-import { CategoryModel, CategoryType } from './category.model'
+import { CategoryType } from './category.model'
+import {
+  type CategoryPatchInput,
+  CategoryRepository,
+  type CategoryRow,
+  type CategoryWithCount,
+} from './category.repository'
 
 type TagDetailMapped = {
-  _id: Types.ObjectId
+  _id: string
   title: string
   slug: string
   category: Record<string, unknown>
@@ -40,103 +41,76 @@ export class CategoryService implements OnApplicationBootstrap {
   private postService: PostService
 
   constructor(
-    @InjectModel(CategoryModel)
-    private readonly categoryModel: ReturnModelType<typeof CategoryModel>,
+    private readonly categoryRepository: CategoryRepository,
     private readonly eventManager: EventManagerService,
     private readonly slugTrackerService: SlugTrackerService,
     private readonly moduleRef: ModuleRef,
   ) {
-    this.createDefaultCategory()
+    void this.createDefaultCategory()
   }
 
   onApplicationBootstrap() {
     this.postService = this.moduleRef.get(POST_SERVICE_TOKEN, { strict: false })
   }
 
-  async findCategoryById(categoryId: string) {
-    const [category, count] = await Promise.all([
-      this.model.findById(categoryId).lean(),
-      this.postService.model.countDocuments({ categoryId }),
-    ])
-    if (!category) {
-      return null
-    }
+  public get repository() {
+    return this.categoryRepository
+  }
+
+  toLegacy(row: (CategoryRow | CategoryWithCount) | null): any {
+    if (!row) return null
     return {
-      ...category,
-      count,
+      ...row,
+      _id: row.id,
+      created: row.createdAt,
+      modified: null,
     }
+  }
+
+  toLegacyMany(rows: Array<CategoryRow | CategoryWithCount>) {
+    return rows.map((row) => this.toLegacy(row))
+  }
+
+  async findCategoryById(categoryId: string) {
+    return this.toLegacy(await this.categoryRepository.findById(categoryId))
+  }
+
+  async findById(categoryId: string) {
+    return this.findCategoryById(categoryId)
+  }
+
+  async findBySlug(slug: string) {
+    return this.toLegacy(await this.categoryRepository.findBySlug(slug))
   }
 
   async findAllCategory() {
-    const data = await this.model.find({ type: CategoryType.Category }).lean()
-    const counts = await Promise.all(
-      data.map((item) => {
-        const id = item._id
-        return this.postService.model.countDocuments({ categoryId: id })
-      }),
+    return this.toLegacyMany(
+      await this.categoryRepository.findAll(CategoryType.Category),
     )
-
-    for (const [i, datum] of data.entries()) {
-      ;(datum as any).count = counts[i]
-    }
-
-    return data
-  }
-
-  get model() {
-    return this.categoryModel
   }
 
   async getPostTagsSum() {
-    const data = await this.postService.model.aggregate([
-      { $project: { tags: 1 } },
-      {
-        $unwind: '$tags',
-      },
-      { $group: { _id: '$tags', count: { $sum: 1 } } },
-      {
-        $project: {
-          _id: 0,
-          name: '$_id',
-          count: 1,
-        },
-      },
-    ])
-    return data
+    return this.postService.aggregateAllTagCounts()
   }
 
   async getCategoryTagsSum(categoryId: string) {
-    const data = await this.postService.model.aggregate([
-      {
-        $match: { categoryId: Types.ObjectId.createFromHexString(categoryId) },
-      },
-      { $project: { tags: 1 } },
-      { $unwind: '$tags' },
-      { $group: { _id: '$tags', count: { $sum: 1 } } },
-      { $project: { _id: 0, name: '$_id', count: 1 } },
-      { $sort: { count: -1, name: 1 } },
-    ])
-    return data as Array<{ name: string; count: number }>
+    return this.postService.aggregateTagCountsByCategory(categoryId)
   }
 
   async findArticleWithTag(
     tag: string,
-    condition: QueryFilter<DocumentType<PostModel>> = {},
+    condition: { isPublished?: boolean } = {},
   ): Promise<TagDetailMapped[]> {
-    const posts = await this.postService.model
-      .find(
-        {
-          tags: tag,
-          ...condition,
-        },
-        undefined,
-        { lean: true },
-      )
-      .populate('category')
-    if (posts.length === 0) {
-      throw new CannotFindException()
-    }
-    return posts.map(
+    const posts = await this.postService.findByTag(tag, {
+      includeCategory: true,
+    })
+    const filtered = posts.filter((post) =>
+      condition.isPublished === undefined
+        ? true
+        : post.isPublished === condition.isPublished,
+    )
+    if (filtered.length === 0) throw new CannotFindException()
+    return filtered.map(
       ({
         _id,
         title,
@@ -158,30 +132,32 @@ export class CategoryService implements OnApplicationBootstrap {
         summary,
         tags,
         pin,
-        count: count ? { read: count.read, like: count.like } : undefined,
+        count,
       }),
     )
   }
 
-  async findCategoryPost(categoryId: string, condition: any = {}) {
-    return await this.postService.model
-      .find({
-        categoryId,
-        ...condition,
-      })
-      .select('title slug created modified summary tags pin count images')
-      .sort({ pin: -1, created: -1 })
-      .lean()
+  async findCategoryPost(
+    categoryId: string,
+    condition: { isPublished?: boolean; tags?: string } = {},
+  ) {
+    const posts = await this.postService.listByCategory(categoryId, {
+      includeCategory: false,
+      publishedOnly: condition.isPublished,
+    })
+    return condition.tags
+      ? posts.filter((post) => post.tags?.includes(condition.tags))
+      : posts
   }
 
   async findPostsInCategory(id: string) {
-    return await this.postService.model.find({
-      categoryId: id,
-    })
+    return this.postService.findByCategoryId(id)
   }
 
   async create(name: string, slug?: string) {
-    const doc = await this.model.create({ name, slug: slug ?? name })
+    const doc = this.toLegacy(
+      await this.categoryRepository.create({ name, slug: slug ?? name }),
+    )
     this.clearCache()
     this.eventManager.emit(BusinessEvents.CATEGORY_CREATE, doc, {
       scope: EventScope.TO_SYSTEM_VISITOR,
@@ -190,15 +166,11 @@ export class CategoryService implements OnApplicationBootstrap {
   }
 
   private async trackerSlugChanges(documentId: string, newSlug: string) {
-    const category = await this.model.findById(documentId).select('slug')
-    if (!category) return
-    if (category.slug === newSlug) return
+    const category = await this.categoryRepository.findById(documentId)
+    if (!category || category.slug === newSlug) return
 
     const originalSlug = `/${category.slug}`
-
-    const posts = await this.postService.model.find({
-      categoryId: documentId,
-    })
+    const posts = await this.postService.findByCategoryId(documentId)
 
     for (const post of posts) {
       await this.slugTrackerService.createTracker(
@@ -208,44 +180,38 @@ export class CategoryService implements OnApplicationBootstrap {
       )
     }
   }
-  async update(id: string, partialDoc: Partial<CategoryModel>) {
+
+  async update(id: string, partialDoc: CategoryPatchInput) {
     if (partialDoc?.slug) await this.trackerSlugChanges(id, partialDoc.slug)
-    const newDoc = await this.model.findOneAndUpdate({ _id: id }, partialDoc, {
-      returnDocument: 'after',
-    })
-
+    const newDoc = this.toLegacy(
+      await this.categoryRepository.update(id, partialDoc),
+    )
     this.clearCache()
-
     this.eventManager.emit(BusinessEvents.CATEGORY_UPDATE, newDoc, {
       scope: EventScope.TO_SYSTEM_VISITOR,
     })
     return newDoc
   }
+
   async deleteById(id: string) {
-    const category = await this.model.findById(id)
-    if (!category) {
-      throw new NoContentCanBeModifiedException()
-    }
+    const category = await this.categoryRepository.findById(id)
+    if (!category) throw new NoContentCanBeModifiedException()
+
     const postsInCategory = await this.findPostsInCategory(category.id)
     if (postsInCategory.length > 0) {
       throw new BizException(ErrorCodeEnum.CategoryHasPosts)
     }
-    const res = await this.model.deleteOne({
-      _id: category._id,
-    })
-    if ((await this.model.countDocuments({})) === 0) {
+    const deleted = await this.categoryRepository.deleteById(category.id)
+    if ((await this.categoryRepository.countAll()) === 0) {
       await this.createDefaultCategory()
     }
     this.clearCache()
-
     this.eventManager.emit(
       BusinessEvents.CATEGORY_DELETE,
       { id },
-      {
-        scope: EventScope.TO_SYSTEM_VISITOR,
-      },
+      { scope: EventScope.TO_SYSTEM_VISITOR },
     )
-    return res
+    return { deletedCount: deleted ? 1 : 0 }
   }
 
   private clearCache() {
@@ -257,11 +223,13 @@ export class CategoryService implements OnApplicationBootstrap {
   }
 
   async createDefaultCategory() {
-    if ((await this.model.countDocuments()) === 0) {
-      return await this.model.create({
-        name: '默认分类',
-        slug: 'default',
-      })
+    if ((await this.categoryRepository.countAll()) === 0) {
+      return this.toLegacy(
+        await this.categoryRepository.create({
+          name: '默认分类',
+          slug: 'default',
+        }),
+      )
     }
   }
 }

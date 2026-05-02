@@ -7,7 +7,7 @@ import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { OffsetDto } from '~/shared/dto/pager.dto'
 
 import { RecentlyModel } from './recently.model'
@@ -43,7 +43,7 @@ export class RecentlyController {
   }
 
   @Get('/:id')
-  async getOne(@Param() { id }: MongoIdDto) {
+  async getOne(@Param() { id }: EntityIdDto) {
     return await this.recentlyService.getOne(id)
   }
 
@@ -56,7 +56,7 @@ export class RecentlyController {
 
   @Delete('/:id')
   @Auth()
-  async del(@Param() { id }: MongoIdDto) {
+  async del(@Param() { id }: EntityIdDto) {
     const res = await this.recentlyService.delete(id)
     if (!res) {
       throw new BizException(ErrorCodeEnum.EntryNotFound)
@@ -67,7 +67,7 @@ export class RecentlyController {
 
   @Put('/:id')
   @Auth()
-  async update(@Param() { id }: MongoIdDto, @Body() body: RecentlyDto) {
+  async update(@Param() { id }: EntityIdDto, @Body() body: RecentlyDto) {
     const res = await this.recentlyService.update(id, body)
     if (!res) {
       throw new BizException(ErrorCodeEnum.EntryNotFound)
@@ -81,7 +81,7 @@ export class RecentlyController {
    */
   @Get('/attitude/:id')
   async attitude(
-    @Param() { id }: MongoIdDto,
+    @Param() { id }: EntityIdDto,
     @Query() { attitude }: RecentlyAttitudeDto,
     @IpLocation() { ip }: IpRecord,
   ) {
