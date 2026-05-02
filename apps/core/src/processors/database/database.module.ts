@@ -1,33 +1,18 @@
 import { Global, Module } from '@nestjs/common'
 
-import { NoteRepository } from '~/modules/note/note.repository'
-import { PageRepository } from '~/modules/page/page.repository'
-import { PostRepository } from '~/modules/post/post.repository'
-import { RecentlyRepository } from '~/modules/recently/recently.repository'
+import { NoteModule } from '~/modules/note/note.module'
+import { PageModule } from '~/modules/page/page.module'
+import { PostModule } from '~/modules/post/post.module'
+import { RecentlyModule } from '~/modules/recently/recently.module'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import { DatabaseService } from './database.service'
 import { postgresProviders } from './postgres.provider'
 
 @Module({
-  providers: [
-    DatabaseService,
-    ...postgresProviders,
-    SnowflakeService,
-    PostRepository,
-    NoteRepository,
-    PageRepository,
-    RecentlyRepository,
-  ],
-  exports: [
-    DatabaseService,
-    ...postgresProviders,
-    SnowflakeService,
-    PostRepository,
-    NoteRepository,
-    PageRepository,
-    RecentlyRepository,
-  ],
+  imports: [PostModule, NoteModule, PageModule, RecentlyModule],
+  providers: [DatabaseService, ...postgresProviders, SnowflakeService],
+  exports: [DatabaseService, ...postgresProviders, SnowflakeService],
 })
 @Global()
 export class DatabaseModule {}

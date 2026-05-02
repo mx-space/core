@@ -4,11 +4,12 @@ import type {
   NestModule,
   Provider,
 } from '@nestjs/common'
+import { forwardRef } from '@nestjs/common'
 
 import { API_VERSION } from '~/app.config'
 
-import { OwnerRepository } from '../owner/owner.repository'
-import { ReaderRepository } from '../reader/reader.repository'
+import { OwnerModule } from '../owner/owner.module'
+import { ReaderModule } from '../reader/reader.module'
 import { AuthInstanceInjectKey } from './auth.constant'
 import { AuthController } from './auth.controller'
 import type { AuthInstance } from './auth.interface'
@@ -35,16 +36,11 @@ export class AuthModule implements NestModule {
     return {
       controllers: [AuthController],
       exports: [AuthService, authProvider],
+      imports: [forwardRef(() => ReaderModule), OwnerModule],
       module: AuthModule,
       global: true,
 
-      providers: [
-        AuthService,
-        AuthRepository,
-        ReaderRepository,
-        OwnerRepository,
-        authProvider,
-      ],
+      providers: [AuthService, AuthRepository, authProvider],
     }
   }
 
