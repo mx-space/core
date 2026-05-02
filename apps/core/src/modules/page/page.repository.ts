@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { asc, eq, sql } from 'drizzle-orm'
+import { asc, desc, eq, inArray, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { pages } from '~/database/schema'
@@ -151,5 +151,24 @@ export class PageRepository extends BaseRepository {
       .select({ count: sql<number>`count(*)::int` })
       .from(pages)
     return Number(row?.count ?? 0)
+  }
+
+  async findRecent(size: number): Promise<PageRow[]> {
+    const rows = await this.db
+      .select()
+      .from(pages)
+      .orderBy(desc(pages.createdAt))
+      .limit(Math.max(1, size))
+    return rows.map(mapRow)
+  }
+
+  async findManyByIds(ids: Array<EntityId | string>): Promise<PageRow[]> {
+    if (ids.length === 0) return []
+    const bigInts = ids.map((id) => parseEntityId(id))
+    const rows = await this.db
+      .select()
+      .from(pages)
+      .where(inArray(pages.id, bigInts))
+    return rows.map(mapRow)
   }
 }

@@ -179,4 +179,20 @@ export class RecentlyRepository extends BaseRepository {
       .set({ down: sql`${recentlies.down} + ${by}` })
       .where(eq(recentlies.id, idBig))
   }
+
+  async count(): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(recentlies)
+    return Number(row?.count ?? 0)
+  }
+
+  async findRecent(size: number): Promise<RecentlyRow[]> {
+    const rows = await this.db
+      .select()
+      .from(recentlies)
+      .orderBy(desc(recentlies.createdAt))
+      .limit(Math.max(1, size))
+    return rows.map(mapRow)
+  }
 }

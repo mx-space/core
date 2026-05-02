@@ -1,5 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, lte, or, type SQL, sql } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  inArray,
+  lt,
+  lte,
+  or,
+  type SQL,
+  sql,
+} from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { notes, topics } from '~/database/schema'
@@ -257,6 +269,78 @@ export class NoteRepository extends BaseRepository {
       .update(notes)
       .set({ likeCount: sql`${notes.likeCount} + ${by}` })
       .where(eq(notes.id, idBig))
+  }
+
+  async count(): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(notes)
+    return Number(row?.count ?? 0)
+  }
+
+  async countVisible(): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(notes)
+      .where(this.visibleClause())
+    return Number(row?.count ?? 0)
+  }
+
+  async findRecent(
+    size: number,
+    options: { visibleOnly?: boolean } = {},
+  ): Promise<NoteRow[]> {
+    const where = options.visibleOnly ? this.visibleClause() : undefined
+    const rows = await this.db
+      .select()
+      .from(notes)
+      .where(where)
+      .orderBy(desc(notes.createdAt))
+      .limit(Math.max(1, size))
+    return Promise.all(rows.map((r) => this.attachTopic(mapBase(r))))
+  }
+
+  async findManyByIds(ids: Array<EntityId | string>): Promise<NoteRow[]> {
+    if (ids.length === 0) return []
+    const bigInts = ids.map((id) => parseEntityId(id))
+    const rows = await this.db
+      .select()
+      .from(notes)
+      .where(inArray(notes.id, bigInts))
+    return Promise.all(rows.map((r) => this.attachTopic(mapBase(r))))
+  }
+
+  async findAdjacent(
+    direction: 'before' | 'after',
+    pivot: { nid: number },
+    options: { visibleOnly?: boolean } = {},
+  ): Promise<NoteRow | null> {
+    const filters: SQL[] = [
+      direction === 'before'
+        ? lt(notes.nid, pivot.nid)
+        : gt(notes.nid, pivot.nid),
+    ]
+    if (options.visibleOnly) filters.push(this.visibleClause())
+    const where = and(...filters)!
+    const [row] = await this.db
+      .select()
+      .from(notes)
+      .where(where)
+      .orderBy(direction === 'before' ? desc(notes.nid) : asc(notes.nid))
+      .limit(1)
+    if (!row) return null
+    return this.attachTopic(mapBase(row))
+  }
+
+  async getLatestVisible(): Promise<NoteRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(notes)
+      .where(this.visibleClause())
+      .orderBy(desc(notes.createdAt))
+      .limit(1)
+    if (!row) return null
+    return this.attachTopic(mapBase(row))
   }
 
   private async attachTopic(row: NoteRow): Promise<NoteRow> {

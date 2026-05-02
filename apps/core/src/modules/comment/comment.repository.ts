@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, asc, desc, eq, type SQL, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, type SQL, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { comments } from '~/database/schema'
@@ -328,5 +328,119 @@ export class CommentRepository extends BaseRepository {
       .from(comments)
       .where(where)
     return Number(row?.count ?? 0)
+  }
+
+  async count(): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(comments)
+    return Number(row?.count ?? 0)
+  }
+
+  async countByState(state: number, rootOnly = false): Promise<number> {
+    const filters: SQL[] = [
+      eq(comments.state, state),
+      eq(comments.isDeleted, false),
+    ]
+    if (rootOnly) filters.push(sql`${comments.parentCommentId} is null`)
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(comments)
+      .where(and(...filters))
+    return Number(row?.count ?? 0)
+  }
+
+  async findRecent(
+    size: number,
+    options: { state?: number; rootOnly?: boolean } = {},
+  ): Promise<CommentRow[]> {
+    const filters: SQL[] = [eq(comments.isDeleted, false)]
+    if (options.state !== undefined)
+      filters.push(eq(comments.state, options.state))
+    if (options.rootOnly) filters.push(sql`${comments.parentCommentId} is null`)
+    const rows = await this.db
+      .select()
+      .from(comments)
+      .where(and(...filters))
+      .orderBy(desc(comments.createdAt))
+      .limit(Math.max(1, size))
+    return rows.map(mapBase)
+  }
+
+  async findManyByIds(ids: Array<EntityId | string>): Promise<CommentRow[]> {
+    if (ids.length === 0) return []
+    const bigInts = ids.map((id) => parseEntityId(id))
+    const rows = await this.db
+      .select()
+      .from(comments)
+      .where(inArray(comments.id, bigInts))
+    return rows.map(mapBase)
+  }
+
+  async findByRefIds(
+    refType: CommentRefType,
+    refIds: Array<EntityId | string>,
+  ): Promise<CommentRow[]> {
+    if (refIds.length === 0) return []
+    const bigInts = refIds.map((id) => parseEntityId(id))
+    const rows = await this.db
+      .select()
+      .from(comments)
+      .where(
+        and(
+          eq(comments.refType, refType),
+          inArray(comments.refId, bigInts),
+          eq(comments.isDeleted, false),
+        )!,
+      )
+    return rows.map(mapBase)
+  }
+
+  async deleteForRef(
+    refType: CommentRefType,
+    refId: EntityId | string,
+  ): Promise<number> {
+    const result = await this.db
+      .delete(comments)
+      .where(
+        and(
+          eq(comments.refType, refType),
+          eq(comments.refId, parseEntityId(refId)),
+        )!,
+      )
+      .returning({ id: comments.id })
+    return result.length
+  }
+
+  async updateStateForRef(
+    refType: CommentRefType,
+    refId: EntityId | string,
+    state: number,
+  ): Promise<number> {
+    const result = await this.db
+      .update(comments)
+      .set({ state })
+      .where(
+        and(
+          eq(comments.refType, refType),
+          eq(comments.refId, parseEntityId(refId)),
+        )!,
+      )
+      .returning({ id: comments.id })
+    return result.length
+  }
+
+  async updateStateBulk(
+    ids: Array<EntityId | string>,
+    state: number,
+  ): Promise<number> {
+    if (ids.length === 0) return 0
+    const bigInts = ids.map((id) => parseEntityId(id))
+    const result = await this.db
+      .update(comments)
+      .set({ state })
+      .where(inArray(comments.id, bigInts))
+      .returning({ id: comments.id })
+    return result.length
   }
 }

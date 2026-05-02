@@ -261,6 +261,88 @@ export class PostRepository extends BaseRepository {
     return Number(row?.count ?? 0)
   }
 
+  async count(): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(posts)
+    return Number(row?.count ?? 0)
+  }
+
+  async findRecent(
+    size: number,
+    options: { publishedOnly?: boolean } = {},
+  ): Promise<PostRow[]> {
+    const where = options.publishedOnly
+      ? eq(posts.isPublished, true)
+      : undefined
+    const rows = await this.db
+      .select()
+      .from(posts)
+      .where(where)
+      .orderBy(desc(posts.createdAt))
+      .limit(Math.max(1, size))
+    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
+  }
+
+  async findManyByIds(ids: Array<EntityId | string>): Promise<PostRow[]> {
+    if (ids.length === 0) return []
+    const bigInts = ids.map((id) => parseEntityId(id))
+    const rows = await this.db
+      .select()
+      .from(posts)
+      .where(inArray(posts.id, bigInts))
+    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
+  }
+
+  async findAdjacent(
+    direction: 'before' | 'after',
+    pivotDate: Date,
+    options: { publishedOnly?: boolean } = {},
+  ): Promise<PostRow | null> {
+    const filters: SQL[] = [
+      direction === 'before'
+        ? sql`${posts.createdAt} < ${pivotDate}`
+        : sql`${posts.createdAt} > ${pivotDate}`,
+    ]
+    if (options.publishedOnly) {
+      filters.push(eq(posts.isPublished, true))
+    }
+    const where = and(...filters)
+    const [row] = await this.db
+      .select()
+      .from(posts)
+      .where(where)
+      .orderBy(direction === 'before' ? desc(posts.createdAt) : posts.createdAt)
+      .limit(1)
+    if (!row) return null
+    return this.attachCategory(mapBase(row))
+  }
+
+  async findArchiveBuckets(): Promise<
+    Array<{ year: number; month: number; count: number }>
+  > {
+    const rows = await this.db
+      .select({
+        year: sql<number>`extract(year from ${posts.createdAt})::int`,
+        month: sql<number>`extract(month from ${posts.createdAt})::int`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(posts)
+      .groupBy(
+        sql`extract(year from ${posts.createdAt})`,
+        sql`extract(month from ${posts.createdAt})`,
+      )
+      .orderBy(
+        sql`extract(year from ${posts.createdAt}) desc`,
+        sql`extract(month from ${posts.createdAt}) desc`,
+      )
+    return rows.map((r) => ({
+      year: Number(r.year),
+      month: Number(r.month),
+      count: Number(r.count ?? 0),
+    }))
+  }
+
   async setRelatedPosts(
     postId: EntityId | string,
     relatedIds: Array<EntityId | string>,
