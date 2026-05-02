@@ -15,8 +15,8 @@ cutover, and lays out the per-module plan for finishing the work.
 > `BasePgCrudFactory` scaffold are all committed and verified end-to-end
 > (dry-run + apply round-trip succeed against real Mongo data with 16
 > acceptable orphan refs out of ~100K rows). **Wave 1 of the service
-> cutover is in progress: `project`, `topic`, and `subscribe` are
-> flipped to PostgreSQL; the remaining ~33 modules are still on
+> cutover is in progress: `project`, `topic`, `subscribe`, and `say`
+> are flipped to PostgreSQL; the remaining ~32 modules are still on
 > Mongoose.** The architectural blocker (cross-module
 > `service.model.X` calls) means future waves must port a producer and
 > all of its consumers in the same commit — see §3 for the dependency
@@ -188,6 +188,7 @@ branch:
 |---|---|---|
 | `8e824b09` | `project`, `topic` | Project uses `BasePgCrudFactory` directly. Topic deletes its passthrough `TopicService` and registers `TopicRepository` directly. `TranslateFields` rules switch from `_id` to `id`. |
 | `3f5cb542` | `subscribe` | `SubscribeService` is rewritten to consume `SubscribeRepository`. Repository grows `list`, `updateByEmail`, `deleteByEmail`, `deleteByEmails`, `deleteAll`. Controller's `service.model.paginate` becomes `service.list(page, size)`. `cancelToken` is coerced through `String()` because `hashString` returns a number whereas the PG schema column is `text`. |
+| `8a6a11a0` | `say` (+ `aggregate` patch) | First module that had cross-module consumers. `SayService` exposes `findRecent(size)` and `count()`; `aggregate.service.ts` swaps the two `sayService.model` call sites at the same commit. Establishes the "leaf + consumer-fix in one commit" pattern. |
 
 Compile is green after each commit. The 32 existing PG/foundation
 tests still pass. Mongo and PG continue to coexist — the runtime is
@@ -196,20 +197,27 @@ roughly 90% Mongoose, 10% PostgreSQL after these three flips.
 **Wave 1 modules still to cut** (no cross-module model consumers, so
 each can be done as its own commit without breaking the build):
 
+- `link` — service 299 lines + `link-avatar.service.ts` 216 lines both
+  use `LinkModel`. Controller has `LinkControllerCrud` extending
+  `BaseCrudFactory` with overrides for /\.gets and /all that filter by
+  state and project away `email` for non-admins. `aggregate.service.ts`
+  consumes `linkService.model.countDocuments({state})` twice. Plan:
+  add to `LinkRepository` — `list(page, size, {state})`,
+  `listAvailable()` (excludes Audit + Reject), `findByUrlOrName`,
+  `countByState`, `countByTypeAndState`, `countByType`, `updateState`.
+  Refactor link-avatar.service to consume `LinkRepository`. Estimate:
+  1.5 hours.
 - `snippet` — 471-line service with redis caching, custom paths, raw
   `aggregate(body)` controller endpoint that exposes Mongo aggregation
-  pipelines. The raw aggregate endpoint and `aggregatePaginate` over
-  group-by-reference need a different shape in PG (or deprecation).
-  Estimate: 2-3 hours.
+  pipelines. The raw `aggregate(body)` endpoint and the
+  `aggregatePaginate` over group-by-reference don't translate to PG.
+  Plan: deprecate `/snippets/aggregate`; replace
+  `/snippets/group` with a typed query
+  `SnippetRepository.groupByReference()`. Estimate: 2-3 hours.
 - `draft` — controller uses `draftService.model` twice (paginate +
-  countDocuments). Service is 303 lines. Estimate: 1 hour.
-- `link` — service is 299 lines. `linkService.model` is consumed twice
-  by `aggregate.service.ts` (countDocuments only). Add a
-  `linkService.countByState(state)` shim and update aggregate in the
-  same commit. Estimate: 1.5 hours.
-- `say` — service is 14 lines (just a model holder). Aggregate
-  consumes `sayService.model.find` and `countDocuments`. Add named
-  shim methods. Estimate: 30 min.
+  countDocuments). Service is 303 lines and uses `Types.ObjectId` for
+  cross-collection refs (`refType` + `refId` to posts/notes/pages).
+  After cutover, `refId` becomes EntityId/bigint. Estimate: 1 hour.
 - `recently` — 406-line service uses `commentService.model` twice
   (countDocuments + deleteMany). Need a shim on `commentService` first;
   defer until comment is cut over.
