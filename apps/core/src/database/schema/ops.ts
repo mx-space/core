@@ -1,11 +1,13 @@
 import { sql } from 'drizzle-orm'
 import {
+  bigint,
   boolean,
   index,
   integer,
   jsonb,
   pgTable,
   text,
+  timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
@@ -173,6 +175,11 @@ export const fileReferences = pgTable(
     refId: refBigInt('ref_id'),
     refType: text('ref_type'),
     s3ObjectKey: text('s3_object_key'),
+    readerId: text('reader_id'),
+    uploadedBy: text('uploaded_by'),
+    mimeType: text('mime_type'),
+    byteSize: bigint('byte_size', { mode: 'number' }),
+    detachedAt: timestamp('detached_at', { withTimezone: false, mode: 'date' }),
   },
   (table) => [
     index('file_references_file_url_idx').on(table.fileUrl),
@@ -180,6 +187,15 @@ export const fileReferences = pgTable(
     index('file_references_status_created_idx').on(
       table.status,
       table.createdAt,
+    ),
+    index('file_references_reader_status_created_idx').on(
+      table.readerId,
+      table.status,
+      table.createdAt,
+    ),
+    index('file_references_status_detached_idx').on(
+      table.status,
+      table.detachedAt,
     ),
   ],
 )

@@ -21,6 +21,8 @@ import { CommentReaderFillService } from './comment-reader-fill.service'
     CommentRepository,
     CommentLifecycleService,
     CommentSpamFilterService,
+    CommentAnchorService,
+    CommentReaderFillService,
   ],
   exports: [
     CommentService,

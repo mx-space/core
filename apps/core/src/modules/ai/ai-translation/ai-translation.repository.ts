@@ -113,6 +113,24 @@ export class AiTranslationRepository extends BaseRepository {
     return row ? mapTranslation(row) : null
   }
 
+  async findByRefAndLang(
+    refId: EntityId | string,
+    lang: string,
+  ): Promise<AiTranslationRow | null> {
+    const refBig = parseEntityId(refId)
+    const [row] = await this.db
+      .select()
+      .from(aiTranslations)
+      .where(
+        and(
+          eq(aiTranslations.refId, refBig),
+          eq(aiTranslations.lang, lang),
+        )!,
+      )
+      .limit(1)
+    return row ? mapTranslation(row) : null
+  }
+
   async findById(id: EntityId | string): Promise<AiTranslationRow | null> {
     const [row] = await this.db
       .select()

@@ -81,6 +81,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     AiWriterService,
     AiSlugBackfillService,
     AiTranslationService,
+    AiTranslationRepository,
     AiSummaryService,
     AiInsightsService,
     TranslationEntryService,

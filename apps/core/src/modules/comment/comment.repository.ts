@@ -1,5 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, asc, desc, eq, ilike, inArray, type SQL, sql } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  ne,
+  type SQL,
+  sql,
+} from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { comments } from '~/database/schema'
@@ -429,6 +439,20 @@ export class CommentRepository extends BaseRepository {
       .select({ count: sql<number>`count(*)::int` })
       .from(comments)
       .where(and(...filters))
+    return Number(row?.count ?? 0)
+  }
+
+  async countActiveByReader(readerId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(comments)
+      .where(
+        and(
+          eq(comments.readerId, parseEntityId(readerId)),
+          eq(comments.isDeleted, false),
+          ne(comments.state, 2),
+        )!,
+      )
     return Number(row?.count ?? 0)
   }
 

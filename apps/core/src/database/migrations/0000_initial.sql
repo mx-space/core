@@ -411,7 +411,12 @@ CREATE TABLE "file_references" (
 	"status" text NOT NULL,
 	"ref_id" bigint,
 	"ref_type" text,
-	"s3_object_key" text
+	"s3_object_key" text,
+	"reader_id" text,
+	"uploaded_by" text,
+	"mime_type" text,
+	"byte_size" bigint,
+	"detached_at" timestamp
 );
 --> statement-breakpoint
 CREATE TABLE "links" (
@@ -632,6 +637,8 @@ CREATE INDEX "analyzes_timestamp_ip_idx" ON "analyzes" USING btree ("timestamp",
 CREATE INDEX "file_references_file_url_idx" ON "file_references" USING btree ("file_url");--> statement-breakpoint
 CREATE INDEX "file_references_ref_idx" ON "file_references" USING btree ("ref_id","ref_type");--> statement-breakpoint
 CREATE INDEX "file_references_status_created_idx" ON "file_references" USING btree ("status","created_at");--> statement-breakpoint
+CREATE INDEX "file_references_reader_status_created_idx" ON "file_references" USING btree ("reader_id","status","created_at");--> statement-breakpoint
+CREATE INDEX "file_references_status_detached_idx" ON "file_references" USING btree ("status","detached_at");--> statement-breakpoint
 CREATE UNIQUE INDEX "links_name_uniq" ON "links" USING btree ("name");--> statement-breakpoint
 CREATE UNIQUE INDEX "links_url_uniq" ON "links" USING btree ("url");--> statement-breakpoint
 CREATE UNIQUE INDEX "meta_presets_name_uniq" ON "meta_presets" USING btree ("name");--> statement-breakpoint
