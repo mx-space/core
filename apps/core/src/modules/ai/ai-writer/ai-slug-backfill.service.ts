@@ -1,13 +1,14 @@
-import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
+import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import slugify from 'slugify'
 
+import { NOTE_SERVICE_TOKEN } from '~/constants/injection.constant'
 import {
   type TaskExecuteContext,
   TaskQueueProcessor,
 } from '~/processors/task-queue'
 import { createAbortError } from '~/utils/abort.util'
 
-import { NoteService } from '../../note/note.service'
+import type { NoteService } from '../../note/note.service'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   AITaskType,
@@ -19,6 +20,7 @@ import { AiWriterService } from './ai-writer.service'
 export class AiSlugBackfillService implements OnModuleInit {
   private readonly logger: Logger
   constructor(
+    @Inject(NOTE_SERVICE_TOKEN)
     private readonly noteService: NoteService,
     private readonly aiWriterService: AiWriterService,
     private readonly taskProcessor: TaskQueueProcessor,

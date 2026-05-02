@@ -1,11 +1,16 @@
 import { eq, sql } from 'drizzle-orm'
 
 import { readers } from '~/database/schema'
-import { createDb, createPool } from '~/processors/database/postgres.provider'
+import {
+  applyMigrations,
+  createDb,
+  createPool,
+} from '~/processors/database/postgres.provider'
 
 export const checkInit = async () => {
   const pool = await createPool()
   const db = createDb(pool)
+  await applyMigrations(db)
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(readers)

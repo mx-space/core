@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common'
 
+import { NOTE_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { GatewayModule } from '~/processors/gateway/gateway.module'
 
 import { AiModule } from '../ai/ai.module'
@@ -13,11 +14,15 @@ import { NoteService } from './note.service'
 
 @Module({
   controllers: [NoteController],
-  providers: [NoteService, NoteRepository],
-  exports: [NoteService, NoteRepository],
+  providers: [
+    NoteService,
+    NoteRepository,
+    { provide: NOTE_SERVICE_TOKEN, useExisting: NoteService },
+  ],
+  exports: [NoteService, NoteRepository, NOTE_SERVICE_TOKEN],
   imports: [
     GatewayModule,
-    AiModule,
+    forwardRef(() => AiModule),
     DraftModule,
     SlugTrackerModule,
     forwardRef(() => CommentModule),

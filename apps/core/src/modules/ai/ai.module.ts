@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 
+import { NoteModule } from '../note/note.module'
 import { TopicModule } from '../topic/topic.module'
 import { AiController } from './ai.controller'
 import { AiService } from './ai.service'
@@ -37,7 +38,7 @@ import { AiWriterController } from './ai-writer/ai-writer.controller'
 import { AiWriterService } from './ai-writer/ai-writer.service'
 
 @Module({
-  imports: [AiTaskModule, TopicModule],
+  imports: [AiTaskModule, TopicModule, forwardRef(() => NoteModule)],
   providers: [
     AiSummaryService,
     AiSummaryRepository,
