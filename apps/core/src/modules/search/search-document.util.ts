@@ -5,7 +5,7 @@ import { extractTextFromContent } from '~/utils/content.util'
 import type {
   SearchDocumentModel,
   SearchDocumentRefType,
-} from './search-document.model'
+} from './search-document.types'
 
 type SearchDocumentSource = {
   id?: string

@@ -64,7 +64,7 @@ export class AiInsightsController {
     }
     return this.taskService.createInsightsTranslationTask({
       refId: body.refId,
-      sourceInsightsId: source.id,
+      sourceInsightsId: source.id!,
       targetLang: body.targetLang,
     })
   }

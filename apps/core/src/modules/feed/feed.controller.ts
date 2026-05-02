@@ -9,7 +9,7 @@ import { ContentFormat } from '~/shared/types/content-format.type'
 import { escapeXml } from '~/utils/tool.util'
 
 import { AggregateService } from '../aggregate/aggregate.service'
-import type { CategoryModel } from '../category/category.model'
+import type { CategoryModel } from '../category/category.types'
 import { ConfigsService } from '../configs/configs.service'
 import { MarkdownService } from '../markdown/markdown.service'
 import { OwnerService } from '../owner/owner.service'

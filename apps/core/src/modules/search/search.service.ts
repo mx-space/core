@@ -24,7 +24,7 @@ import { type SearchDocumentRow, SearchRepository } from './search.repository'
 import {
   SearchDocumentModel,
   type SearchDocumentRefType,
-} from './search-document.model'
+} from './search-document.types'
 import {
   buildSearchDocument,
   normalizeSearchText,

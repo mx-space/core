@@ -14,9 +14,9 @@ import { scheduleManager } from '~/utils/schedule.util'
 
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
-import { RecentlyModel } from './recently.model'
 import { RecentlyRepository, type RecentlyRow } from './recently.repository'
 import { RecentlyAttitudeEnum } from './recently.schema'
+import { RecentlyModel } from './recently.types'
 
 @Injectable()
 export class RecentlyService {

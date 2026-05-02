@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { normalizeRefType } from '~/utils/database.util'
 
-import { CommentAnchorMode } from './comment.model'
+import { CommentAnchorMode } from './comment.enum'
 
 const BlockCommentAnchorSchema = z.object({
   mode: z.literal(CommentAnchorMode.Block),

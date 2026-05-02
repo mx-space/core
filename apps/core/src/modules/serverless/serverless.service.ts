@@ -18,10 +18,6 @@ import {
   SERVERLESS_EVENT_PREFIX,
 } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
-import {
-  OWNER_PROFILE_COLLECTION_NAME,
-  READER_COLLECTION_NAME,
-} from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { isDev } from '~/global/env.global'
@@ -35,9 +31,11 @@ import { SandboxService } from '~/utils/sandbox'
 import { safePathJoin } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
-import { SnippetType } from '../snippet/snippet.model'
+import { OwnerRepository } from '../owner/owner.repository'
+import { ReaderRepository } from '../reader/reader.repository'
 import type { SnippetRow } from '../snippet/snippet.repository'
 import { SnippetRepository } from '../snippet/snippet.repository'
+import { SnippetType } from '../snippet/snippet.schema'
 import type {
   BuiltInFunctionObject,
   FunctionContextRequest,
@@ -69,6 +67,8 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
 
     private readonly redisService: RedisService,
     private readonly configService: ConfigsService,
+    private readonly readerRepository: ReaderRepository,
+    private readonly ownerRepository: OwnerRepository,
 
     private readonly eventService: EventManagerService,
   ) {
@@ -179,12 +179,33 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     },
   })
   private async mockGetOwner() {
-    // TODO(wave 4): restore owner lookup through the reader/owner PG
-    // repositories after those modules leave Mongoose.
-    this.logger.warn(
-      `getOwner serverless shim is unavailable until ${READER_COLLECTION_NAME}/${OWNER_PROFILE_COLLECTION_NAME} cutover`,
-    )
-    return null
+    const reader = await this.readerRepository.findOwner()
+    if (!reader) return null
+
+    const profile = await this.ownerRepository.findByReaderId(reader.id)
+    return {
+      id: reader.id,
+      _id: reader.id,
+      username: reader.username ?? reader.handle ?? '',
+      name:
+        reader.name ??
+        reader.displayUsername ??
+        reader.username ??
+        reader.handle ??
+        'owner',
+      introduce: profile?.introduce ?? undefined,
+      mail: profile?.mail ?? reader.email ?? undefined,
+      url: profile?.url ?? undefined,
+      lastLoginTime: profile?.lastLoginTime ?? undefined,
+      lastLoginIp: profile?.lastLoginIp ?? undefined,
+      socialIds: profile?.socialIds ?? undefined,
+      role: 'owner',
+      email: reader.email ?? undefined,
+      image: reader.image ?? undefined,
+      handle: reader.handle ?? undefined,
+      displayUsername: reader.displayUsername ?? undefined,
+      created: reader.createdAt ?? profile?.createdAt,
+    }
   }
 
   private mockDb(namespace: string) {

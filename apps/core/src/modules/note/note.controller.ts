@@ -33,7 +33,6 @@ import { DEFAULT_SUMMARY_LANG } from '../ai/ai.constants'
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
 import { AiSummaryService } from '../ai/ai-summary/ai-summary.service'
-import { NoteModel } from './note.model'
 import {
   ListQueryDto,
   NidType,
@@ -46,6 +45,7 @@ import {
   SetNotePublishStatusDto,
 } from './note.schema'
 import { NoteService } from './note.service'
+import { NoteModel } from './note.types'
 
 type NoteListItem = {
   _id?: { toString?: () => string } | string

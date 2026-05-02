@@ -24,7 +24,6 @@ import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { applyContentPreference } from '~/utils/content.util'
 
-import { PageModel } from './page.model'
 import {
   PageDetailQueryDto,
   PageDto,
@@ -32,6 +31,7 @@ import {
   PartialPageDto,
 } from './page.schema'
 import { PageService } from './page.service'
+import { PageModel } from './page.types'
 
 @ApiController('pages')
 export class PageController {

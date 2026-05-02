@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common'
 
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { FileReferenceType } from '~/modules/file/file-reference.model'
+import { FileReferenceType } from '~/modules/file/file-reference.enum'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
-import { DraftHistoryModel, DraftModel, DraftRefType } from './draft.model'
+import { DraftRefType } from './draft.enum'
 import { DraftRepository, type DraftRow } from './draft.repository'
 import type { CreateDraftDto, UpdateDraftDto } from './draft.schema'
+import type { DraftHistoryModel, DraftModel } from './draft.types'
 import { DraftHistoryService } from './draft-history.service'
 
 @Injectable()

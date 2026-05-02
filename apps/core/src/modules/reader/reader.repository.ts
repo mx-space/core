@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { asc, eq, inArray, sql } from 'drizzle-orm'
+import { and, asc, eq, inArray, ne, or, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { readers } from '~/database/schema'
@@ -70,6 +70,15 @@ export class ReaderRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
+  async existsByUsernameOrEmail(username: string, email: string) {
+    const [row] = await this.db
+      .select({ id: readers.id })
+      .from(readers)
+      .where(or(eq(readers.username, username), eq(readers.email, email)))
+      .limit(1)
+    return !!row
+  }
+
   async findOwner(): Promise<ReaderRow | null> {
     const [row] = await this.db
       .select()
@@ -78,6 +87,58 @@ export class ReaderRepository extends BaseRepository {
       .orderBy(asc(readers.createdAt), asc(readers.id))
       .limit(1)
     return row ? mapRow(row) : null
+  }
+
+  async countOwners(): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(readers)
+      .where(eq(readers.role, 'owner'))
+    return Number(row?.count ?? 0)
+  }
+
+  async createReader(input: {
+    id: string
+    email?: string | null
+    emailVerified?: boolean
+    name?: string | null
+    handle?: string | null
+    username?: string | null
+    displayUsername?: string | null
+    image?: string | null
+    role?: string
+  }): Promise<ReaderRow> {
+    const [row] = await this.db
+      .insert(readers)
+      .values({
+        id: input.id,
+        email: input.email ?? null,
+        emailVerified: input.emailVerified ?? false,
+        name: input.name ?? null,
+        handle: input.handle ?? null,
+        username: input.username ?? null,
+        displayUsername: input.displayUsername ?? null,
+        image: input.image ?? null,
+        role: input.role ?? 'reader',
+      })
+      .returning()
+    return mapRow(row)
+  }
+
+  async setRole(id: string, role: string): Promise<boolean> {
+    const result = await this.db
+      .update(readers)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(readers.id, id))
+      .returning({ id: readers.id })
+    return result.length > 0
+  }
+
+  async setOwnersExceptToReader(id: string): Promise<void> {
+    await this.db
+      .update(readers)
+      .set({ role: 'reader', updatedAt: new Date() })
+      .where(and(eq(readers.role, 'owner'), ne(readers.id, id))!)
   }
 
   async findByIds(ids: string[]): Promise<ReaderRow[]> {

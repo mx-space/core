@@ -13,15 +13,16 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getAvatar } from '~/utils/tool.util'
 
 import { OwnerService } from '../owner/owner.service'
-import { ReaderModel } from '../reader/reader.model'
 import { ReaderService } from '../reader/reader.service'
-import { CommentModel, CommentState } from './comment.model'
+import { ReaderModel } from '../reader/reader.types'
+import { CommentState } from './comment.enum'
 import {
   type CommentFindFilter,
   type CommentRefType,
   CommentRepository,
   type CommentRow,
 } from './comment.repository'
+import type { CommentModel } from './comment.types'
 
 const COMMENT_DELETED_PLACEHOLDER = '该评论已删除'
 
@@ -385,7 +386,7 @@ export class CommentService {
         comment.avatar =
           (isOwner ? owner.avatar : undefined) ||
           reader.image ||
-          getAvatar(reader.email)
+          getAvatar(reader.email ?? undefined)
       }
       if (comment.author === owner.name) {
         comment.avatar = owner.avatar || comment.avatar

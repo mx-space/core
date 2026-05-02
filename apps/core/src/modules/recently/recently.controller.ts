@@ -10,9 +10,9 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { OffsetDto } from '~/shared/dto/pager.dto'
 
-import { RecentlyModel } from './recently.model'
 import { RecentlyAttitudeDto, RecentlyDto } from './recently.schema'
 import { RecentlyService } from './recently.service'
+import { RecentlyModel } from './recently.types'
 
 @ApiController(['recently', 'shorthand'])
 export class RecentlyController {

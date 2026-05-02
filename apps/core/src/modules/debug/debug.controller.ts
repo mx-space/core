@@ -7,8 +7,8 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
-import { SnippetType } from '../snippet/snippet.model'
 import type { SnippetRow } from '../snippet/snippet.repository'
+import { SnippetType } from '../snippet/snippet.schema'
 import { DebugService } from './debug.service'
 
 @ApiController('debug')

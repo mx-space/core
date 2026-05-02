@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, eq, lte, sql } from 'drizzle-orm'
+import { and, eq, lte, or, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import {
@@ -181,9 +181,21 @@ export class AuthRepository extends BaseRepository {
     return rows.map(mapAccount)
   }
 
+  async findAccountByProviderAccountId(
+    providerAccountId: string,
+  ): Promise<AccountRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(accounts)
+      .where(eq(accounts.providerAccountId, providerAccountId))
+      .limit(1)
+    return row ? mapAccount(row) : null
+  }
+
   async createAccount(input: {
     id: string
     userId: string
+    accountId?: string | null
     providerId: string
     providerAccountId?: string | null
     password?: string | null
@@ -201,6 +213,7 @@ export class AuthRepository extends BaseRepository {
       .values({
         id: input.id,
         userId: input.userId,
+        accountId: input.accountId ?? null,
         providerId: input.providerId,
         providerAccountId: input.providerAccountId ?? null,
         password: input.password ?? null,
@@ -286,11 +299,20 @@ export class AuthRepository extends BaseRepository {
     return row ? mapApiKey(row) : null
   }
 
+  async findApiKeyById(id: string): Promise<ApiKeyRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(apiKeys)
+      .where(eq(apiKeys.id, id))
+      .limit(1)
+    return row ? mapApiKey(row) : null
+  }
+
   async listApiKeysForUser(userId: string): Promise<ApiKeyRow[]> {
     const rows = await this.db
       .select()
       .from(apiKeys)
-      .where(eq(apiKeys.userId, userId))
+      .where(or(eq(apiKeys.userId, userId), eq(apiKeys.referenceId, userId)))
     return rows.map(mapApiKey)
   }
 
@@ -433,6 +455,14 @@ export class AuthRepository extends BaseRepository {
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     }
+  }
+
+  async countPasskeysForUser(userId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(passkeys)
+      .where(eq(passkeys.userId, userId))
+    return Number(row?.count ?? 0)
   }
 
   async createPasskey(input: {

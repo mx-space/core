@@ -30,12 +30,12 @@ import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type InsightsTaskPayload } from '../ai-task/ai-task.types'
-import { AIInsightsModel } from './ai-insights.model'
 import {
   AiInsightsRepository,
   type AiInsightsRow,
 } from './ai-insights.repository'
 import type { GetInsightsGroupedQueryInput } from './ai-insights.schema'
+import { AIInsightsModel } from './ai-insights.types'
 import { stripTopLevelCodeFence } from './insights.util'
 
 interface ArticleForInsights {
@@ -258,7 +258,7 @@ export class AiInsightsService implements OnModuleInit {
           insightsId: doc.id,
           sourceHash: contentMd5,
         })
-        return { result: doc, resultId: doc.id }
+        return { result: doc, resultId: doc.id! }
       },
       parseResult: async (resultId) => {
         const doc = this.toInsightsDoc(
@@ -310,7 +310,7 @@ export class AiInsightsService implements OnModuleInit {
     result: Promise<AIInsightsModel>
   } {
     const events = (async function* () {
-      yield { type: 'done' as const, data: { resultId: doc.id } }
+      yield { type: 'done' as const, data: { resultId: doc.id! } }
     })()
     return { events, result: Promise.resolve(doc) }
   }

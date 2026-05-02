@@ -1,3 +1,6 @@
+import { createZodDto } from 'nestjs-zod'
+import { z } from 'zod'
+
 import {
   zCoerceBoolean,
   zMongoId,
@@ -6,9 +9,8 @@ import {
   zSortOrder,
 } from '~/common/zod'
 import { ContentFormat } from '~/shared/types/content-format.type'
-import { createZodDto } from 'nestjs-zod'
-import { z } from 'zod'
-import { DraftRefType } from './draft.model'
+
+import { DraftRefType } from './draft.enum'
 
 const ImageModelSchema = z.object({
   src: z.string(),

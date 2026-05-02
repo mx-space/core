@@ -54,7 +54,7 @@ export interface BasePgCrudOptions<TRepo extends PgCrudRepository<any>> {
 /**
  * PostgreSQL-backed sibling of {@link BaseCrudFactory}. Same routes and
  * event semantics, but reads/writes through a {@link PgCrudRepository}
- * instead of a Mongoose model.
+ * instead of an ODM model.
  */
 export function BasePgCrudFactory<TRepo extends PgCrudRepository<any>>({
   repository,

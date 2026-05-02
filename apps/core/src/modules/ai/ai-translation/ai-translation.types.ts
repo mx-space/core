@@ -1,8 +1,8 @@
 import type { CollectionRefTypes } from '~/constants/db.constant'
 
-import type { NoteModel } from '../../note/note.model'
-import type { PageModel } from '../../page/page.model'
-import type { PostModel } from '../../post/post.model'
+import type { NoteModel } from '../../note/note.types'
+import type { PageModel } from '../../page/page.types'
+import type { PostModel } from '../../post/post.types'
 
 export interface ArticleContent {
   title: string

@@ -5,7 +5,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { CannotFindException } from '~/common/exceptions/cant-find.exception'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 
-import { DraftRefType } from './draft.model'
+import { DraftRefType } from './draft.enum'
 import {
   CreateDraftDto,
   DraftPagerDto,

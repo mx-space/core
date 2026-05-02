@@ -14,7 +14,7 @@ import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import { FileReferenceType } from '~/modules/file/file-reference.model'
+import { FileReferenceType } from '~/modules/file/file-reference.enum'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
@@ -27,11 +27,15 @@ import { isDefined } from '~/utils/validator.util'
 
 import { AiSlugBackfillService } from '../ai/ai-writer/ai-slug-backfill.service'
 import { CommentService } from '../comment/comment.service'
-import { DraftRefType } from '../draft/draft.model'
+import { DraftRefType } from '../draft/draft.enum'
 import { DraftService } from '../draft/draft.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
-import { NoteModel } from './note.model'
 import { NoteRepository, type NoteRow } from './note.repository'
+import {
+  type Coordinate,
+  NOTE_PROTECTED_KEYS,
+  type NoteModel,
+} from './note.types'
 
 @Injectable()
 export class NoteService {
@@ -54,6 +58,20 @@ export class NoteService {
   }
 
   public readonly publicNoteQueryCondition = { isPublished: true }
+
+  private normalizeCoordinates(coordinates: Coordinate | null | undefined) {
+    if (!coordinates) return coordinates
+    if (
+      typeof coordinates.latitude !== 'number' ||
+      typeof coordinates.longitude !== 'number'
+    ) {
+      return null
+    }
+    return {
+      latitude: coordinates.latitude,
+      longitude: coordinates.longitude,
+    }
+  }
 
   toLegacy(row: NoteRow | null): any {
     if (!row) return null
@@ -316,7 +334,7 @@ export class NoteService {
         mood: document.mood,
         weather: document.weather,
         bookmark: document.bookmark,
-        coordinates: document.coordinates,
+        coordinates: this.normalizeCoordinates(document.coordinates),
         location: document.location,
         topicId: document.topicId as string | undefined,
       }),
@@ -397,7 +415,7 @@ export class NoteService {
       isDefined(data[key as keyof NoteModel]),
     )
 
-    const patch = omit(data, NoteModel.protectedKeys.concat('slug' as any))
+    const patch = omit(data, [...NOTE_PROTECTED_KEYS, 'slug'] as const)
     const updated = this.toLegacy(
       await this.noteRepository.update(id, {
         title: patch.title,
@@ -416,7 +434,7 @@ export class NoteService {
         mood: patch.mood,
         weather: patch.weather,
         bookmark: patch.bookmark,
-        coordinates: patch.coordinates,
+        coordinates: this.normalizeCoordinates(patch.coordinates),
         location: patch.location,
         topicId: patch.topicId as string | undefined,
         createdAt: data.created ? getLessThanNow(data.created) : undefined,

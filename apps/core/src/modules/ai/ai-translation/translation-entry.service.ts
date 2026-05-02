@@ -21,7 +21,7 @@ import {
   type TranslationEntryKeyPath,
   type TranslationEntryKeyType,
   TranslationEntryModel,
-} from './translation-entry.model'
+} from './translation-entry.types'
 
 interface CollectedValue {
   keyPath: TranslationEntryKeyPath

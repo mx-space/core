@@ -6,7 +6,7 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { FileReferenceType } from '~/modules/file/file-reference.model'
+import { FileReferenceType } from '~/modules/file/file-reference.enum'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
@@ -16,10 +16,10 @@ import { isLexical } from '~/utils/content.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { isDefined } from '~/utils/validator.util'
 
-import { DraftRefType } from '../draft/draft.model'
+import { DraftRefType } from '../draft/draft.enum'
 import { DraftService } from '../draft/draft.service'
-import { PageModel } from './page.model'
 import { PageRepository, type PageRow } from './page.repository'
+import { PAGE_PROTECTED_KEYS, type PageModel } from './page.types'
 
 @Injectable()
 export class PageService {
@@ -179,7 +179,7 @@ export class PageService {
       doc.slug = slugify(doc.slug)
     }
 
-    const patch = omit(doc, PageModel.protectedKeys)
+    const patch = omit(doc, PAGE_PROTECTED_KEYS as any) as Partial<PageModel>
     const newDoc = this.toLegacy(
       await this.pageRepository.update(id, {
         title: patch.title,

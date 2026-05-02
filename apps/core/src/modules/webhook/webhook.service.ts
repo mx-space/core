@@ -12,8 +12,8 @@ import { EventPayloadEnricherService } from '~/processors/helper/helper.event-pa
 import { HttpService } from '~/processors/helper/helper.http.service'
 import type { PagerDto } from '~/shared/dto/pager.dto'
 
-import { WebhookModel } from './webhook.model'
 import { WebhookRepository, type WebhookRow } from './webhook.repository'
+import { WebhookModel } from './webhook.types'
 
 const ACCEPT_EVENTS = new Set(Object.values(BusinessEvents))
 

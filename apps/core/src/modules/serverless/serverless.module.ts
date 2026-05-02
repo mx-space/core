@@ -1,5 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common'
 
+import { OwnerRepository } from '../owner/owner.repository'
+import { ReaderRepository } from '../reader/reader.repository'
 import { SnippetModule } from '../snippet/snippet.module'
 import { ServerlessController } from './serverless.controller'
 import {
@@ -13,6 +15,8 @@ import { ServerlessService } from './serverless.service'
   controllers: [ServerlessController],
   providers: [
     ServerlessService,
+    ReaderRepository,
+    OwnerRepository,
     ServerlessStorageRepository,
     ServerlessLogRepository,
   ],

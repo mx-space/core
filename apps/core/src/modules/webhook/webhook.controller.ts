@@ -7,9 +7,9 @@ import { BusinessEvents } from '~/constants/business-event.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 
-import { WebhookModel } from './webhook.model'
 import { WebhookDto, WebhookDtoPartial } from './webhook.schema'
 import { WebhookService } from './webhook.service'
+import { WebhookModel } from './webhook.types'
 
 @ApiController('/webhooks')
 @Auth()

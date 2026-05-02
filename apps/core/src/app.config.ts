@@ -22,7 +22,6 @@ const {
   ENCRYPT_ENABLE: ENV_ENCRYPT_ENABLE,
   CDN_CACHE_HEADER,
   FORCE_CACHE_HEADER,
-  MONGO_CONNECTION,
   THROTTLE_TTL,
   THROTTLE_LIMIT,
   JWT_SECRET,
@@ -122,18 +121,6 @@ const commander = program
   .option('-c, --config <path>', 'load yaml config from file')
   .option('--demo', 'enable demo mode')
 
-  // db
-  .option('--collection_name <string>', 'mongodb collection name')
-  .option('--db_host <string>', 'mongodb database host')
-  .option('--db_port <number>', 'mongodb database port')
-  .option('--db_user <string>', 'mongodb database user')
-  .option('--db_password <string>', 'mongodb database password')
-  .option('--db_options <string>', 'mongodb database options')
-  .option(
-    '--db_connection_string <string>',
-    'mongodb connection string',
-    MONGO_CONNECTION,
-  )
   // redis
   .option('--redis_connection_string <string>', 'redis connection string')
   .option('--redis_host <string>', 'redis host')
@@ -252,39 +239,6 @@ export const CROSS_DOMAIN = {
       ],
 
   // allowedReferer: 'innei.ren',
-}
-
-const customConnectionString = argv.db_connection_string || MONGO_CONNECTION
-
-function buildMongoConnectionString(
-  connectionString: string,
-  dbName: string,
-): string {
-  const url = new URL(connectionString)
-  // Replace or set the pathname to the database name
-  url.pathname = `/${dbName}`
-  return url.toString()
-}
-
-export const MONGO_DB = {
-  dbName: argv.collection_name || 'mx-space',
-  host: argv.db_host || '127.0.0.1',
-  // host: argv.db_host || '10.0.0.33',
-  port: argv.db_port || 27017,
-  user: argv.db_user || '',
-  password: argv.db_password || '',
-  options: argv.db_options || '',
-  get uri() {
-    const userPassword =
-      this.user && this.password ? `${this.user}:${this.password}@` : ''
-    const dbOptions = this.options ? `?${this.options}` : ''
-    return `mongodb://${userPassword}${this.host}:${this.port}/${this.dbName}${dbOptions}`
-  },
-  get customConnectionString() {
-    return customConnectionString
-      ? buildMongoConnectionString(customConnectionString, this.dbName)
-      : undefined
-  },
 }
 
 const redisConnection = argv.redis_connection_string

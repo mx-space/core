@@ -12,7 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-import type { MetaPresetModel } from './meta-preset.model'
+import type { MetaPresetModel } from './meta-preset.types'
 
 export type MetaPresetRow = MetaPresetModel & {
   id: EntityId

@@ -32,10 +32,9 @@ import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
 import { ConfigsService } from '../configs/configs.service'
 import { ReaderService } from '../reader/reader.service'
+import { CommentState } from './comment.enum'
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
 import { CommentLifecycleService } from './comment.lifecycle.service'
-import type { CommentModel } from './comment.model'
-import { CommentState } from './comment.model'
 import {
   BatchCommentDeleteDto,
   BatchCommentStateDto,
@@ -48,6 +47,7 @@ import {
   ReplyCommentDto,
 } from './comment.schema'
 import { CommentService } from './comment.service'
+import type { CommentModel } from './comment.types'
 
 const idempotenceMessage = '哦吼，这句话你已经说过啦'
 @ApiController({ path: 'comments' })

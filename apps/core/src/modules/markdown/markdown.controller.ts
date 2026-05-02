@@ -1,15 +1,18 @@
 import { join } from 'node:path'
 import { Readable } from 'node:stream'
+
 import { CacheTTL } from '@nestjs/cache-manager'
 import { Body, Get, Header, Param, Post, Query } from '@nestjs/common'
+import { omit } from 'es-toolkit/compat'
+import JSZip from 'jszip'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { MongoIdDto } from '~/shared/dto/id.dto'
-import { omit } from 'es-toolkit/compat'
-import JSZip from 'jszip'
-import type { CategoryModel } from '../category/category.model'
+
+import type { CategoryModel } from '../category/category.types'
 import type { MarkdownYAMLProperty } from './markdown.interface'
 import { DataListDto, ExportMarkdownQueryDto } from './markdown.schema'
 import { MarkdownService } from './markdown.service'

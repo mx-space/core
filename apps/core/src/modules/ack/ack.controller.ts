@@ -1,12 +1,14 @@
 import { Body, HttpCode, Post, Res } from '@nestjs/common'
+import type { FastifyReply } from 'fastify'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
-import type { CountModel } from '~/shared/model/count.model'
-import type { FastifyReply } from 'fastify'
+import type { CountModel } from '~/shared/types/legacy-model.type'
+
 import { AckDto, AckEventType, AckReadPayloadSchema } from './ack.schema'
 
 @ApiController('ack')

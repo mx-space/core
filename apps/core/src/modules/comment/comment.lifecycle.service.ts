@@ -14,8 +14,8 @@ import { scheduleManager } from '~/utils/schedule.util'
 import { getAvatar } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
-import { OwnerModel } from '../owner/owner.model'
 import { OwnerService } from '../owner/owner.service'
+import { OwnerModel } from '../owner/owner.types'
 import { ReaderService } from '../reader/reader.service'
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
@@ -27,10 +27,10 @@ import {
   baseRenderProps,
   defaultCommentModelKeys,
 } from './comment.email.default'
-import { CommentReplyMailType } from './comment.enum'
-import { CommentModel, CommentState } from './comment.model'
+import { CommentReplyMailType, CommentState } from './comment.enum'
 import { CommentService } from './comment.service'
 import { CommentSpamFilterService } from './comment.spam-filter'
+import type { CommentModel } from './comment.types'
 
 @Injectable()
 export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {

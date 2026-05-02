@@ -4,16 +4,13 @@ import { Injectable } from '@nestjs/common'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 
-import {
-  MetaFieldType,
-  MetaPresetModel,
-  MetaPresetScope,
-} from './meta-preset.model'
+import { MetaFieldType, MetaPresetScope } from './meta-preset.enum'
 import { MetaPresetRepository } from './meta-preset.repository'
 import type {
   CreateMetaPresetDto,
   UpdateMetaPresetDto,
 } from './meta-preset.schema'
+import type { MetaPresetModel } from './meta-preset.types'
 
 /**
  * 内置预设字段种子数据

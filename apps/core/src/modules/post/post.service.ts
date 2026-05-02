@@ -16,7 +16,7 @@ import {
   CATEGORY_SERVICE_TOKEN,
   DRAFT_SERVICE_TOKEN,
 } from '~/constants/injection.constant'
-import { FileReferenceType } from '~/modules/file/file-reference.model'
+import { FileReferenceType } from '~/modules/file/file-reference.enum'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
@@ -29,15 +29,15 @@ import { isDefined } from '~/utils/validator.util'
 
 import type { CategoryService } from '../category/category.service'
 import { CommentService } from '../comment/comment.service'
-import { DraftRefType } from '../draft/draft.model'
+import { DraftRefType } from '../draft/draft.enum'
 import type { DraftService } from '../draft/draft.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
-import { PostModel } from './post.model'
 import {
   type PostListParams,
   PostRepository,
   type PostRow,
 } from './post.repository'
+import { POST_PROTECTED_KEYS, type PostModel } from './post.types'
 
 @Injectable()
 export class PostService implements OnApplicationBootstrap {
@@ -394,7 +394,7 @@ export class PostService implements OnApplicationBootstrap {
       await this.removeRelatedEachOther(oldDocument)
     }
 
-    const patch = omit(data, PostModel.protectedKeys)
+    const patch = omit(data, POST_PROTECTED_KEYS as any) as Partial<PostModel>
     const updated = await this.postRepository.update(id, {
       title: patch.title,
       slug: patch.slug,

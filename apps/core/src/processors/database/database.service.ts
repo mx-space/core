@@ -1,8 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common'
-import { mongoose } from '@typegoose/typegoose'
+import { Injectable } from '@nestjs/common'
 
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { DB_CONNECTION_TOKEN } from '~/constants/system.constant'
 import { NoteRepository } from '~/modules/note/note.repository'
 import { PageRepository } from '~/modules/page/page.repository'
 import { PostRepository } from '~/modules/post/post.repository'
@@ -16,7 +14,6 @@ export class DatabaseService {
     private readonly noteRepository: NoteRepository,
     private readonly pageRepository: PageRepository,
     private readonly recentlyRepository: RecentlyRepository,
-    @Inject(DB_CONNECTION_TOKEN) private connection: mongoose.Connection,
   ) {}
 
   private repositoryByType(type: any) {
@@ -96,18 +93,6 @@ export class DatabaseService {
       }
     }
     return all
-  }
-
-  public get db() {
-    return this.connection.db!
-  }
-
-  public get mongooseConnection() {
-    return this.connection
-  }
-
-  public get client() {
-    return this.connection.getClient()
   }
 }
 

@@ -5,7 +5,6 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - NODE_ENV=production
-      - DB_HOST=mongo
       - REDIS_HOST=redis
       - PG_HOST=postgres
       - PG_PORT=5432
@@ -20,7 +19,6 @@ services:
     ports:
       - '2333:2333'
     depends_on:
-      - mongo
       - postgres
       - redis
     networks:
@@ -32,15 +30,6 @@ services:
       timeout: 30s
       retries: 5
       start_period: 30s
-
-  mongo:
-    container_name: mongo
-    image: mongo:7
-    volumes:
-      - ./data/db:/data/db
-    networks:
-      - mx-space
-    restart: unless-stopped
 
   postgres:
     container_name: postgres

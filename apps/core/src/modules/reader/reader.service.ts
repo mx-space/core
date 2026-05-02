@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 
 import { AuthService } from '../auth/auth.service'
-import type { ReaderModel } from './reader.model'
 import { ReaderRepository, type ReaderRow } from './reader.repository'
+import type { ReaderModel } from './reader.types'
 
 type LegacyReaderId = {
   toHexString: () => string

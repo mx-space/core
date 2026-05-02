@@ -24,7 +24,7 @@ import { TranslationService } from '~/processors/helper/helper.translation.servi
 import { EntityIdDto } from '~/shared/dto/id.dto'
 
 import type { PostService } from '../post/post.service'
-import { CategoryType } from './category.model'
+import { CategoryType } from './category.enum'
 import {
   CategoryDto,
   MultiCategoriesQueryDto,

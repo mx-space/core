@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common'
 
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import type { TranslationSourceSnapshot } from '~/modules/ai/ai-translation/translation-consistency.types'
-import type { TranslationEntryKeyPath } from '~/modules/ai/ai-translation/translation-entry.model'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
+import type { TranslationEntryKeyPath } from '~/modules/ai/ai-translation/translation-entry.types'
 import { normalizeLanguageCode } from '~/utils/lang.util'
 
 export interface TranslationMeta {

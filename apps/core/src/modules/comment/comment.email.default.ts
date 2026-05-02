@@ -1,6 +1,7 @@
 import dayjs from 'dayjs'
-import type { OwnerModel, OwnerModelSecurityKeys } from '../owner/owner.model'
-import type { CommentModel } from './comment.model'
+
+import type { OwnerModel, OwnerModelSecurityKeys } from '../owner/owner.types'
+import type { CommentModel } from './comment.types'
 
 export interface CommentModelRenderProps {
   author: string
@@ -29,9 +30,9 @@ const defaultCommentModelForRenderProps: CommentModelRenderProps = {
   url: 'https://blog.commentor.com' as string,
 }
 
-export const defaultCommentModelKeys = [
-  ...Object.keys(defaultCommentModelForRenderProps),
-]
+export const defaultCommentModelKeys = Object.keys(
+  defaultCommentModelForRenderProps,
+)
 
 const defaultPostModelForRenderProps = {
   title: '匆匆',

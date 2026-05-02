@@ -4,7 +4,7 @@ import { encode } from 'blurhash'
 import type { Sharp } from 'sharp'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
-import type { ImageModel } from '~/shared/model/image.model'
+import type { ImageModel } from '~/shared/types/legacy-model.type'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
 import { AsyncQueue } from '~/utils/queue.util'
 import { requireDepsWithInstall } from '~/utils/tool.util'

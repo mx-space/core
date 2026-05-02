@@ -32,9 +32,9 @@ import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { resolveTargetLanguages } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type SummaryTaskPayload } from '../ai-task/ai-task.types'
-import { AISummaryModel } from './ai-summary.model'
 import { AiSummaryRepository, type AiSummaryRow } from './ai-summary.repository'
 import type { GetSummariesGroupedQueryInput } from './ai-summary.schema'
+import { AISummaryModel } from './ai-summary.types'
 
 @Injectable()
 export class AiSummaryService implements OnModuleInit {
@@ -107,7 +107,7 @@ export class AiSummaryService implements OnModuleInit {
               context.incrementTokens,
             )
             summaries.push({
-              summaryId: result.id,
+              summaryId: result.id!,
               lang: result.lang!,
               summary: result.summary,
             })
@@ -231,7 +231,7 @@ export class AiSummaryService implements OnModuleInit {
     result: Promise<AISummaryModel>
   } {
     const events = (async function* () {
-      yield { type: 'done' as const, data: { resultId: summary.id } }
+      yield { type: 'done' as const, data: { resultId: summary.id! } }
     })()
 
     return {
@@ -331,7 +331,7 @@ export class AiSummaryService implements OnModuleInit {
           }),
         )!
 
-        return { result: doc, resultId: doc.id }
+        return { result: doc, resultId: doc.id! }
       },
       parseResult: async (resultId) => {
         const doc = this.toSummaryDoc(

@@ -1,10 +1,12 @@
 import { URL } from 'node:url'
+
 import { Injectable } from '@nestjs/common'
-import type { CategoryModel } from '~/modules/category/category.model'
+
+import type { CategoryModel } from '~/modules/category/category.types'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import type { NoteModel } from '~/modules/note/note.model'
-import type { PageModel } from '~/modules/page/page.model'
-import type { PostModel } from '~/modules/post/post.model'
+import type { NoteModel } from '~/modules/note/note.types'
+import type { PageModel } from '~/modules/page/page.types'
+import type { PostModel } from '~/modules/post/post.types'
 import { isDefined } from '~/utils/validator.util'
 
 @Injectable()

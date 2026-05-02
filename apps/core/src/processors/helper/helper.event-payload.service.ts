@@ -37,14 +37,16 @@ export class EventPayloadEnricherService {
       return {
         ...data,
         author: owner?.name || reader.name || data.author,
-        avatar: owner?.avatar || reader.image || getAvatar(reader.email),
+        avatar:
+          owner?.avatar || reader.image || getAvatar(reader.email ?? undefined),
       }
     }
 
     return {
       ...data,
       author: reader.name || data.author,
-      avatar: reader.image || data.avatar || getAvatar(reader.email),
+      avatar:
+        reader.image || data.avatar || getAvatar(reader.email ?? undefined),
     }
   }
 

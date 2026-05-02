@@ -8,9 +8,9 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getAvatar } from '~/utils/tool.util'
 
 import { ReaderRepository, type ReaderRow } from '../reader/reader.repository'
-import type { OwnerDocument } from './owner.model'
-import { OwnerModel } from './owner.model'
 import { type OwnerProfileRow, OwnerRepository } from './owner.repository'
+import type { OwnerDocument } from './owner.types'
+import { OwnerModel } from './owner.types'
 
 @Injectable()
 export class OwnerService {

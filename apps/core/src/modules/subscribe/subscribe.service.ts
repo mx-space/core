@@ -21,9 +21,9 @@ import { UrlBuilderService } from '~/processors/helper/helper.url-builder.servic
 import { hashString, md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
-import type { NoteModel } from '../note/note.model'
+import type { NoteModel } from '../note/note.types'
 import { OwnerService } from '../owner/owner.service'
-import type { PostModel } from '../post/post.model'
+import type { PostModel } from '../post/post.types'
 import {
   SubscribeNoteCreateBit,
   SubscribePostCreateBit,

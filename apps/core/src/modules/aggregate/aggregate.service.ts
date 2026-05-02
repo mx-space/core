@@ -11,7 +11,7 @@ import { RedisService } from '~/processors/redis/redis.service'
 
 import { AnalyzeService } from '../analyze/analyze.service'
 import type { CategoryService } from '../category/category.service'
-import { CommentState } from '../comment/comment.model'
+import { CommentState } from '../comment/comment.enum'
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
 import { LinkState } from '../link/link.repository'

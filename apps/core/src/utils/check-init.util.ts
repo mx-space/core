@@ -1,14 +1,17 @@
-import { READER_COLLECTION_NAME } from '~/constants/db.constant'
+import { eq, sql } from 'drizzle-orm'
 
-import { getDatabaseConnection } from './database.util'
+import { readers } from '~/database/schema'
+import { createDb, createPool } from '~/processors/database/postgres.provider'
 
 export const checkInit = async () => {
-  const connection = await getDatabaseConnection()
-  const db = connection.db!
-  const isUserExist =
-    (await db
-      .collection(READER_COLLECTION_NAME)
-      .countDocuments({ role: 'owner' })) > 0
+  const pool = await createPool()
+  const db = createDb(pool)
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(readers)
+    .where(eq(readers.role, 'owner'))
+
+  const isUserExist = Number(row?.count ?? 0) > 0
 
   return isUserExist
 }

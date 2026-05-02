@@ -15,7 +15,7 @@ import { scheduleManager } from '~/utils/schedule.util'
 
 import type { PostService } from '../post/post.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
-import { CategoryType } from './category.model'
+import { CategoryType } from './category.enum'
 import {
   type CategoryPatchInput,
   CategoryRepository,

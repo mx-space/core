@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common'
 
 import { DatabaseService } from '~/processors/database/database.service'
 
-import { AITranslationModel } from './ai-translation.model'
 import type { ArticleDocument } from './ai-translation.types'
+import { AITranslationModel } from './ai-translation.types-model'
 import { BaseTranslationService } from './base-translation.service'
 import {
   TRANSLATION_VALIDATION_DEFAULT_SELECT,
@@ -14,7 +14,7 @@ import {
 export type FreshnessStatus = 'valid' | 'stale' | 'unknown'
 type TranslationSnapshot = Pick<
   AITranslationModel,
-  'refId' | 'hash' | 'sourceLang' | 'sourceModified' | 'created'
+  'refId' | 'hash' | 'sourceLang' | 'sourceModifiedAt' | 'created'
 >
 
 @Injectable()
@@ -85,12 +85,21 @@ export class TranslationConsistencyService extends BaseTranslationService {
       return []
     }
 
-    const refIds = [...new Set(translations.map((t) => t.refId))]
+    const refIds = [
+      ...new Set(
+        translations
+          .map((translation) => translation.refId)
+          .filter((refId): refId is string => typeof refId === 'string'),
+      ),
+    ]
     const groupedArticles = await this.databaseService.findGlobalByIds(refIds)
     const articleMap = this.databaseService.flatCollectionToMap(groupedArticles)
     const staleRefIds = new Set<string>()
 
     for (const translation of translations) {
+      if (!translation.refId) {
+        continue
+      }
       const document = articleMap[translation.refId]
       if (!this.isTranslatableDocument(document)) {
         continue
@@ -118,15 +127,15 @@ export class TranslationConsistencyService extends BaseTranslationService {
     const articleTimestamp = article.modified ?? article.created ?? null
 
     if (
-      translation.sourceModified &&
+      translation.sourceModifiedAt &&
       articleTimestamp &&
-      translation.sourceModified >= articleTimestamp
+      translation.sourceModifiedAt >= articleTimestamp
     ) {
       return 'valid'
     }
 
     if (
-      !translation.sourceModified &&
+      !translation.sourceModifiedAt &&
       articleTimestamp &&
       translation.created &&
       translation.created >= articleTimestamp

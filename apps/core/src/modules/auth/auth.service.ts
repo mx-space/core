@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { IncomingMessage } from 'node:http'
 
 import {
@@ -6,24 +7,20 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 import { hashPassword } from 'better-auth/crypto'
-import { Types } from 'mongoose'
 import { customAlphabet } from 'nanoid'
 
 import { RequestContext } from '~/common/contexts/request.context'
 import { BizException } from '~/common/exceptions/biz.exception'
-import {
-  ACCOUNT_COLLECTION_NAME,
-  OWNER_PROFILE_COLLECTION_NAME,
-  READER_COLLECTION_NAME,
-} from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { alphabet } from '~/constants/other.constant'
-import { DatabaseService } from '~/processors/database/database.service'
 import { getAvatar } from '~/utils/tool.util'
 
+import { OwnerRepository } from '../owner/owner.repository'
+import { ReaderRepository } from '../reader/reader.repository'
 import { AuthInstanceInjectKey } from './auth.constant'
 import type { TokenDto } from './auth.controller'
 import type { InjectAuthInstance } from './auth.interface'
+import { AuthRepository } from './auth.repository'
 import type { SessionUser } from './auth.types'
 
 type CreateOwnerByCredentialInput = {
@@ -37,60 +34,15 @@ type CreateOwnerByCredentialInput = {
   socialIds?: Record<string, string | number>
 }
 
-type ApiKeyDocument = {
-  _id?: Types.ObjectId
-  id?: string
-  key: string
-  name?: string | null
-  createdAt?: Date
-  updatedAt?: Date
-  expiresAt?: Date | null
-  userId?: string | Types.ObjectId | null
-  referenceId?: string | null
-  configId?: string | null
-  start?: string | null
-  prefix?: string | null
-  enabled?: boolean
-  rateLimitEnabled?: boolean
-  requestCount?: number
-}
-
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly databaseService: DatabaseService,
+    private readonly authRepository: AuthRepository,
+    private readonly readerRepository: ReaderRepository,
+    private readonly ownerRepository: OwnerRepository,
     @Inject(AuthInstanceInjectKey)
     private readonly authInstance: InjectAuthInstance,
   ) {}
-
-  private get readersCollection() {
-    return this.databaseService.db.collection(READER_COLLECTION_NAME)
-  }
-
-  private get accountsCollection() {
-    return this.databaseService.db.collection(ACCOUNT_COLLECTION_NAME)
-  }
-
-  private resolveObjectId(id: string) {
-    return Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : null
-  }
-
-  private buildUserIdQuery(userId: string): Record<string, any> {
-    const objectId = this.resolveObjectId(userId)
-    return objectId ? { _id: objectId } : { _id: userId }
-  }
-
-  private buildAccountUserIdQuery(userId: string): Record<string, any> {
-    const objectId = this.resolveObjectId(userId)
-    return objectId ? { userId: { $in: [userId, objectId] } } : { userId }
-  }
-
-  private buildApiKeyOwnerQuery(userId: string): Record<string, any> {
-    const legacyUserQuery = this.buildAccountUserIdQuery(userId)
-    return {
-      $or: [{ referenceId: userId }, legacyUserQuery],
-    }
-  }
 
   private normalizeOptional(value?: string | null) {
     if (typeof value !== 'string') {
@@ -109,7 +61,8 @@ export class AuthService {
       !!error &&
       typeof error === 'object' &&
       'code' in error &&
-      (error as { code?: number }).code === 11000
+      ((error as { code?: number | string }).code === 11000 ||
+        (error as { code?: number | string }).code === '23505')
     )
   }
 
@@ -118,13 +71,10 @@ export class AuthService {
     if (!ownerId) {
       return []
     }
-    const keys = await this.databaseService.db
-      .collection('apikey')
-      .find(this.buildApiKeyOwnerQuery(ownerId))
-      .toArray()
+    const keys = await this.authRepository.listApiKeysForUser(ownerId)
 
     return keys.map((token) => ({
-      id: token._id?.toString(),
+      id: token.id,
       token: token.key,
       name: token.name,
       created: token.createdAt,
@@ -133,18 +83,13 @@ export class AuthService {
   }
 
   async getTokenSecret(id: string) {
-    if (!Types.ObjectId.isValid(id)) {
-      return null
-    }
-    const token = await this.databaseService.db
-      .collection('apikey')
-      .findOne({ _id: new Types.ObjectId(id) })
+    const token = await this.authRepository.findApiKeyById(id)
 
     if (!token) {
       return null
     }
     return {
-      id: token._id?.toString(),
+      id: token.id,
       token: token.key,
       name: token.name,
       created: token.createdAt,
@@ -218,29 +163,24 @@ export class AuthService {
     const now = new Date()
     const start = model.token.slice(0, 6)
     const prefix = model.token.startsWith('txo') ? 'txo' : undefined
-    await this.databaseService.db.collection('apikey').insertOne({
+    await this.authRepository.createApiKey({
+      id: randomUUID(),
       name: model.name,
       start,
       prefix,
       key: model.token,
       userId: ownerId,
+      referenceId: ownerId,
       enabled: true,
       rateLimitEnabled: true,
-      requestCount: 0,
-      createdAt: now,
-      updatedAt: now,
       expiresAt: model.expired ?? null,
+      lastRefillAt: now,
     })
     return model
   }
 
   async deleteToken(id: string) {
-    if (!Types.ObjectId.isValid(id)) {
-      return
-    }
-    await this.databaseService.db
-      .collection('apikey')
-      .deleteOne({ _id: new Types.ObjectId(id) })
+    await this.authRepository.deleteApiKey(id)
   }
 
   async createOwnerByCredential(input: CreateOwnerByCredentialInput) {
@@ -262,16 +202,14 @@ export class AuthService {
       throw new BizException(ErrorCodeEnum.InvalidParameter, 'mail is required')
     }
 
-    const ownerCount = await this.readersCollection.countDocuments({
-      role: 'owner',
-    })
+    const ownerCount = await this.readerRepository.countOwners()
     if (ownerCount > 0) {
       throw new BizException(ErrorCodeEnum.UserAlreadyExists)
     }
 
-    const exists = await this.readersCollection.findOne(
-      { $or: [{ username: normalizedUsername }, { email: mail }] },
-      { projection: { _id: 1 } },
+    const exists = await this.readerRepository.existsByUsernameOrEmail(
+      normalizedUsername,
+      mail,
     )
     if (exists) {
       throw new BizException(ErrorCodeEnum.UserAlreadyExists)
@@ -281,12 +219,8 @@ export class AuthService {
       this.normalizeOptional(input.username) || normalizedUsername
     const displayName = this.normalizeOptional(input.name) || rawUsername
     const avatar = this.normalizeOptional(input.avatar) || getAvatar(mail)
-    const now = new Date()
-    const readerId = new Types.ObjectId()
+    const readerId = randomUUID()
     const passwordHash = await hashPassword(input.password)
-    const ownerProfileCollection = this.databaseService.db.collection(
-      OWNER_PROFILE_COLLECTION_NAME,
-    )
 
     const profilePatch: Record<string, any> = {
       mail,
@@ -303,55 +237,32 @@ export class AuthService {
       profilePatch.socialIds = input.socialIds
     }
 
-    let readerInserted = false
     try {
-      await this.readersCollection.insertOne({
-        _id: readerId,
+      await this.readerRepository.createReader({
+        id: readerId,
         name: displayName,
         email: mail,
         emailVerified: true,
         image: avatar,
-        createdAt: now,
-        updatedAt: now,
         role: 'owner',
         handle: rawUsername,
         username: normalizedUsername,
         displayUsername: displayName,
       })
-      readerInserted = true
 
-      await this.accountsCollection.insertOne({
-        accountId: readerId.toString(),
+      await this.authRepository.createAccount({
+        id: randomUUID(),
+        providerAccountId: readerId,
         providerId: 'credential',
         userId: readerId,
         password: passwordHash,
-        createdAt: now,
-        updatedAt: now,
       })
 
-      await ownerProfileCollection.updateOne(
-        { readerId },
-        {
-          $set: profilePatch,
-          $setOnInsert: {
-            readerId,
-            created: now,
-          },
-        },
-        { upsert: true },
-      )
+      await this.ownerRepository.upsertByReaderId(readerId, {
+        id: readerId,
+        ...profilePatch,
+      })
     } catch (error) {
-      if (readerInserted) {
-        await Promise.all([
-          this.readersCollection.deleteOne({ _id: readerId }),
-          this.accountsCollection.deleteMany({
-            providerId: 'credential',
-            userId: { $in: [readerId, readerId.toString()] },
-          }),
-          ownerProfileCollection.deleteOne({ readerId }),
-        ])
-      }
-
       if (this.isDuplicateKeyError(error)) {
         throw new BizException(ErrorCodeEnum.UserAlreadyExists)
       }
@@ -410,10 +321,7 @@ export class AuthService {
       handle?: string
     }
     if (sessionUser?.id && !sessionUser.role) {
-      const reader = await this.readersCollection.findOne(
-        this.buildUserIdQuery(sessionUser.id),
-        { projection: { role: 1 } },
-      )
+      const reader = await this.readerRepository.findById(sessionUser.id)
       if (reader?.role) {
         sessionUser = { ...sessionUser, role: reader.role }
       }
@@ -445,27 +353,15 @@ export class AuthService {
   }
 
   async transferOwnerRole(targetUserId: string) {
-    const target = await this.readersCollection.findOne(
-      this.buildUserIdQuery(targetUserId),
-      { projection: { _id: 1 } },
-    )
-    if (!target?._id) {
+    const target = await this.readerRepository.findById(targetUserId)
+    if (!target?.id) {
       throw new BizException(ErrorCodeEnum.AuthUserIdNotFound)
     }
 
-    const now = new Date()
-    await this.readersCollection.updateMany(
-      { role: 'owner', _id: { $ne: target._id } },
-      { $set: { role: 'reader', updatedAt: now } },
-    )
-    await this.readersCollection.updateOne(
-      { _id: target._id },
-      { $set: { role: 'owner', updatedAt: now } },
-    )
+    await this.readerRepository.setOwnersExceptToReader(target.id)
+    await this.readerRepository.setRole(target.id, 'owner')
 
-    const ownerCount = await this.readersCollection.countDocuments({
-      role: 'owner',
-    })
+    const ownerCount = await this.readerRepository.countOwners()
     if (ownerCount !== 1) {
       throw new BizException(
         ErrorCodeEnum.AuthFailed,
@@ -476,20 +372,15 @@ export class AuthService {
   }
 
   async revokeOwnerRole(targetUserId: string) {
-    const target = await this.readersCollection.findOne(
-      this.buildUserIdQuery(targetUserId),
-      { projection: { _id: 1, role: 1 } },
-    )
-    if (!target?._id) {
+    const target = await this.readerRepository.findById(targetUserId)
+    if (!target?.id) {
       throw new BizException(ErrorCodeEnum.AuthUserIdNotFound)
     }
     if (target.role !== 'owner') {
       return 'OK'
     }
 
-    const ownerCount = await this.readersCollection.countDocuments({
-      role: 'owner',
-    })
+    const ownerCount = await this.readerRepository.countOwners()
     if (ownerCount <= 1) {
       throw new BizException(
         ErrorCodeEnum.InvalidParameter,
@@ -497,60 +388,38 @@ export class AuthService {
       )
     }
 
-    await this.readersCollection.updateOne(
-      { _id: target._id },
-      { $set: { role: 'reader', updatedAt: new Date() } },
-    )
+    await this.readerRepository.setRole(target.id, 'reader')
     return 'OK'
   }
 
   async getOauthUserAccount(providerAccountId: string) {
-    const account = await this.databaseService.db
-      .collection(ACCOUNT_COLLECTION_NAME)
-      .findOne(
-        {
-          providerAccountId,
-        },
-        {
-          projection: {
-            providerAccountId: 1,
-            provider: 1,
-            providerId: 1,
-            type: 1,
-            userId: 1,
-          },
-        },
+    const account =
+      await this.authRepository.findAccountByProviderAccountId(
+        providerAccountId,
       )
 
-    if (account?.providerId && !account.provider) {
-      account.provider = account.providerId
+    if (!account) {
+      return { id: undefined }
     }
 
-    if (account?.userId) {
-      const user = await this.databaseService.db
-        .collection(READER_COLLECTION_NAME)
-        .findOne(
-          {
-            _id: account.userId,
-          },
-          {
-            projection: {
-              email: 1,
-              name: 1,
-              image: 1,
-              role: 1,
-              handle: 1,
-              _id: 1,
-            },
-          },
-        )
-
-      if (user) Object.assign(account, user)
-    }
+    const user = account.userId
+      ? await this.readerRepository.findById(account.userId)
+      : null
 
     return {
       ...account,
-      id: account?.userId.toString(),
+      provider: account.providerId,
+      ...(user
+        ? {
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            role: user.role,
+            handle: user.handle,
+            _id: user.id,
+          }
+        : {}),
+      id: account.userId,
     }
   }
 
@@ -563,11 +432,8 @@ export class AuthService {
     if (!ownerId) {
       return false
     }
-    const count = await this.accountsCollection.countDocuments({
-      ...this.buildAccountUserIdQuery(ownerId),
-      providerId: 'credential',
-    })
-    return count > 0
+    const accounts = await this.authRepository.findAccountsForUser(ownerId)
+    return accounts.some((account) => account.providerId === 'credential')
   }
 
   async hasPasskey() {
@@ -575,9 +441,7 @@ export class AuthService {
     if (!ownerId) {
       return false
     }
-    const count = await this.databaseService.db
-      .collection('passkey')
-      .countDocuments(this.buildAccountUserIdQuery(ownerId))
+    const count = await this.authRepository.countPasskeysForUser(ownerId)
     return count > 0
   }
 
@@ -632,11 +496,7 @@ export class AuthService {
   }
 
   private async verifyLegacyApiKey(token: string) {
-    const legacyDoc = (await this.databaseService.db
-      .collection('apikey')
-      .findOne({
-        key: token,
-      })) as ApiKeyDocument | null
+    const legacyDoc = await this.authRepository.findApiKey(token)
 
     if (!legacyDoc) {
       return null
@@ -658,8 +518,6 @@ export class AuthService {
       return null
     }
 
-    await this.migrateLegacyApiKey(legacyDoc, referenceId)
-
     return {
       ...legacyDoc,
       referenceId,
@@ -670,69 +528,17 @@ export class AuthService {
     }
   }
 
-  private async migrateLegacyApiKey(
-    legacyDoc: ApiKeyDocument,
-    referenceId: string,
-  ) {
-    if (
-      legacyDoc.referenceId &&
-      legacyDoc.configId &&
-      legacyDoc.requestCount !== undefined &&
-      legacyDoc.rateLimitEnabled !== undefined
-    ) {
-      return
-    }
-
-    if (!legacyDoc._id) {
-      return
-    }
-
-    const now = new Date()
-
-    await this.databaseService.db.collection('apikey').updateOne(
-      { _id: legacyDoc._id },
-      {
-        $set: {
-          configId: legacyDoc.configId ?? 'default',
-          referenceId,
-          start: legacyDoc.start ?? legacyDoc.key.slice(0, 6),
-          ...(legacyDoc.prefix !== undefined
-            ? { prefix: legacyDoc.prefix }
-            : legacyDoc.key.startsWith('txo')
-              ? { prefix: 'txo' }
-              : {}),
-          enabled: legacyDoc.enabled ?? true,
-          rateLimitEnabled: legacyDoc.rateLimitEnabled ?? true,
-          requestCount: legacyDoc.requestCount ?? 0,
-          createdAt: legacyDoc.createdAt ?? now,
-          updatedAt: now,
-        },
-      },
-    )
-  }
-
   private async getOwnerReaderId() {
-    const owner = await this.readersCollection
-      .find({ role: 'owner' }, { projection: { _id: 1 } })
-      .sort({ createdAt: 1, _id: 1 })
-      .limit(1)
-      .next()
-    if (!owner?._id) {
+    const owner = await this.readerRepository.findOwner()
+    if (!owner?.id) {
       return null
     }
-    return owner._id.toString()
+    return owner.id
   }
 
-  async isOwnerReaderId(userId: string | Types.ObjectId) {
-    const id = typeof userId === 'string' ? userId : userId.toString()
-    if (!Types.ObjectId.isValid(id)) {
-      return false
-    }
-    const owner = await this.readersCollection.findOne(
-      { _id: new Types.ObjectId(id), role: 'owner' },
-      { projection: { _id: 1 } },
-    )
-    return !!owner
+  async isOwnerReaderId(userId: string) {
+    const owner = await this.readerRepository.findById(userId)
+    return owner?.role === 'owner'
   }
 
   private buildHeadersFromRequest(
@@ -756,30 +562,16 @@ export class AuthService {
     if (!userId) {
       return null
     }
-    const reader = await this.readersCollection.findOne(
-      this.buildUserIdQuery(userId),
-      {
-        projection: {
-          _id: 1,
-          email: 1,
-          name: 1,
-          image: 1,
-          role: 1,
-          handle: 1,
-          username: 1,
-          displayUsername: 1,
-        },
-      },
-    )
+    const reader = await this.readerRepository.findById(userId)
     if (!reader) {
       return null
     }
     return {
-      id: reader._id?.toString(),
+      id: reader.id,
       email: reader.email,
       name: reader.name,
       image: reader.image,
-      role: reader.role,
+      role: reader.role as 'reader' | 'owner',
       handle: reader.handle,
       username: reader.username,
       displayUsername: reader.displayUsername,

@@ -36,7 +36,6 @@ import {
   type TranslationBatchTaskPayload,
   type TranslationTaskPayload,
 } from '../ai-task/ai-task.types'
-import { AITranslationModel } from './ai-translation.model'
 import {
   AiTranslationRepository,
   type AiTranslationRow,
@@ -48,6 +47,7 @@ import type {
   ArticleEventDocument,
   ArticleEventPayload,
 } from './ai-translation.types'
+import { AITranslationModel } from './ai-translation.types-model'
 import { BaseTranslationService } from './base-translation.service'
 import { TranslationConsistencyService } from './translation-consistency.service'
 import type { TranslationSourceSnapshot } from './translation-consistency.types'
@@ -286,7 +286,7 @@ export class AiTranslationService
           context.signal,
         )
         translations.push({
-          translationId: result.id,
+          translationId: result.id!,
           lang: result.lang,
           title: result.title,
         })
@@ -636,7 +636,7 @@ export class AiTranslationService
     result: Promise<AITranslationModel>
   } {
     const events = (async function* () {
-      yield { type: 'done' as const, data: { resultId: translation.id } }
+      yield { type: 'done' as const, data: { resultId: translation.id! } }
     })()
 
     return {
@@ -821,7 +821,7 @@ export class AiTranslationService
 
           this.emitTranslationEvent(BusinessEvents.TRANSLATION_UPDATE, existing)
 
-          return { result: existing, resultId: existing.id }
+          return { result: existing, resultId: existing.id! }
         }
 
         const created = await this.aiTranslationModel.create({
@@ -849,7 +849,7 @@ export class AiTranslationService
 
         this.emitTranslationEvent(BusinessEvents.TRANSLATION_CREATE, created)
 
-        return { result: created, resultId: created.id }
+        return { result: created, resultId: created.id! }
       },
       parseResult: async (resultId) => {
         const doc = await this.aiTranslationModel.findById(resultId)
@@ -897,8 +897,8 @@ export class AiTranslationService
     eventType: BusinessEvents,
     translation: AITranslationModel,
   ) {
-    // `translation` can be a live Mongoose document. Its array fields may carry
-    // Mongoose-specific internals that fail the gateway's `structuredClone()`.
+    // `translation` can be a live persistence object. Its array fields may carry
+    // non-cloneable internals that fail the gateway's `structuredClone()`.
     // Materialize `tags` into a plain array before emitting.
     const tags = Array.isArray(translation.tags)
       ? [...translation.tags]

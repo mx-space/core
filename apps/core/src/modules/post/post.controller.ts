@@ -28,7 +28,6 @@ import { applyContentPreference } from '~/utils/content.util'
 
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
-import { PostModel } from './post.model'
 import {
   CategoryAndSlugDto,
   PartialPostDto,
@@ -38,6 +37,7 @@ import {
   SetPostPublishStatusDto,
 } from './post.schema'
 import { PostService } from './post.service'
+import { PostModel } from './post.types'
 
 @ApiController('posts')
 export class PostController {

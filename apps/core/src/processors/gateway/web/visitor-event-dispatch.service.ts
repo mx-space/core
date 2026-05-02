@@ -10,9 +10,9 @@ import {
   SERVERLESS_EVENT_PREFIX,
 } from '~/constants/business-event.constant'
 import { buildArticleRoomName } from '~/modules/activity/activity.util'
-import { NoteModel } from '~/modules/note/note.model'
-import { PageModel } from '~/modules/page/page.model'
-import { PostModel } from '~/modules/post/post.model'
+import { NoteModel } from '~/modules/note/note.types'
+import { PageModel } from '~/modules/page/page.types'
+import { PostModel } from '~/modules/post/post.types'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { EventPayloadEnricherService } from '~/processors/helper/helper.event-payload.service'
 import { TranslationService } from '~/processors/helper/helper.translation.service'

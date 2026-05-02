@@ -1,7 +1,9 @@
-import { zCoerceBoolean, zMongoId, zNonEmptyString } from '~/common/zod'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
-import { MetaFieldType, MetaPresetScope } from './meta-preset.model'
+
+import { zCoerceBoolean, zMongoId, zNonEmptyString } from '~/common/zod'
+
+import { MetaFieldType, MetaPresetScope } from './meta-preset.enum'
 
 const MetaFieldOptionSchema = z.object({
   value: z.any(),

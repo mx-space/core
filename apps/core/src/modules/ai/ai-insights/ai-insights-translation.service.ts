@@ -26,11 +26,11 @@ import {
   AITaskType,
   type InsightsTranslationTaskPayload,
 } from '../ai-task/ai-task.types'
-import { AIInsightsModel } from './ai-insights.model'
 import {
   AiInsightsRepository,
   type AiInsightsRow,
 } from './ai-insights.repository'
+import { AIInsightsModel } from './ai-insights.types'
 import { stripTopLevelCodeFence } from './insights.util'
 
 @Injectable()
@@ -171,7 +171,7 @@ export class AiInsightsTranslationService implements OnModuleInit {
               sourceLang: source.sourceLang || source.lang,
             }),
           )!
-          return { result: doc, resultId: doc.id }
+          return { result: doc, resultId: doc.id! }
         },
         parseResult: async (resultId) => {
           const doc = this.toInsightsDoc(
