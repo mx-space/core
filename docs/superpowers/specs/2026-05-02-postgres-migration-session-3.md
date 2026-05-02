@@ -11,13 +11,16 @@ architectural blocker that prevents single-session completion of service
 cutover, and lays out the per-module plan for finishing the work.
 
 > **TL;DR for the next operator:** Foundation, schema, 28 typed
-> repositories, and the Mongo→PG migration CLI are committed and verified
-> end-to-end (dry-run + apply round-trip succeed against real Mongo data
-> with 16 acceptable orphan refs out of ~100K rows). `BasePgCrudFactory`
-> is in place. Service-layer cutover is **not yet started** because the
-> services are deeply coupled across modules via `service.model.X` calls
-> (see §3 — the dependency wall). The recommended approach is the
-> "all-services-at-once" cutover described in §5.
+> repositories, the Mongo→PG migration CLI, and the
+> `BasePgCrudFactory` scaffold are all committed and verified end-to-end
+> (dry-run + apply round-trip succeed against real Mongo data with 16
+> acceptable orphan refs out of ~100K rows). **Wave 1 of the service
+> cutover is in progress: `project`, `topic`, and `subscribe` are
+> flipped to PostgreSQL; the remaining ~33 modules are still on
+> Mongoose.** The architectural blocker (cross-module
+> `service.model.X` calls) means future waves must port a producer and
+> all of its consumers in the same commit — see §3 for the dependency
+> wall and §5 for the per-module checklist.
 
 ---
 
@@ -173,6 +176,50 @@ when needed.
 
 This scaffold typechecks but is **not yet exercised at runtime** because
 no controller has been cut over (see §3).
+
+### 2.4 Wave 1 service cutover (in progress)
+
+After the scaffolding landed, three modules with no cross-module
+`service.model.X` consumers were flipped to PostgreSQL as the proof
+that the pattern compiles end-to-end. Each is its own commit on the
+branch:
+
+| Commit prefix | Module | Notes |
+|---|---|---|
+| `8e824b09` | `project`, `topic` | Project uses `BasePgCrudFactory` directly. Topic deletes its passthrough `TopicService` and registers `TopicRepository` directly. `TranslateFields` rules switch from `_id` to `id`. |
+| `3f5cb542` | `subscribe` | `SubscribeService` is rewritten to consume `SubscribeRepository`. Repository grows `list`, `updateByEmail`, `deleteByEmail`, `deleteByEmails`, `deleteAll`. Controller's `service.model.paginate` becomes `service.list(page, size)`. `cancelToken` is coerced through `String()` because `hashString` returns a number whereas the PG schema column is `text`. |
+
+Compile is green after each commit. The 32 existing PG/foundation
+tests still pass. Mongo and PG continue to coexist — the runtime is
+roughly 90% Mongoose, 10% PostgreSQL after these three flips.
+
+**Wave 1 modules still to cut** (no cross-module model consumers, so
+each can be done as its own commit without breaking the build):
+
+- `snippet` — 471-line service with redis caching, custom paths, raw
+  `aggregate(body)` controller endpoint that exposes Mongo aggregation
+  pipelines. The raw aggregate endpoint and `aggregatePaginate` over
+  group-by-reference need a different shape in PG (or deprecation).
+  Estimate: 2-3 hours.
+- `draft` — controller uses `draftService.model` twice (paginate +
+  countDocuments). Service is 303 lines. Estimate: 1 hour.
+- `link` — service is 299 lines. `linkService.model` is consumed twice
+  by `aggregate.service.ts` (countDocuments only). Add a
+  `linkService.countByState(state)` shim and update aggregate in the
+  same commit. Estimate: 1.5 hours.
+- `say` — service is 14 lines (just a model holder). Aggregate
+  consumes `sayService.model.find` and `countDocuments`. Add named
+  shim methods. Estimate: 30 min.
+- `recently` — 406-line service uses `commentService.model` twice
+  (countDocuments + deleteMany). Need a shim on `commentService` first;
+  defer until comment is cut over.
+- `category` — 267 lines. Uses `postService.model` 8 times
+  (countDocuments, aggregate, find). Defer until post is cut over.
+- `page`, `post`, `note`, `comment`, `draft-history`, `aggregate`,
+  `search` — wave 2; deeply interlinked, must move together.
+
+The pattern is now clear and reproducible. The remaining gating
+factor is wall-clock time for the per-module audit and rewrite.
 
 ---
 
