@@ -114,9 +114,13 @@ const groupConfigs: GroupConfig[] = [
   {
     key: 'storage',
     title: '存储',
-    description: '备份、图床',
+    description: '备份、图床、评论图片上传',
     icon: 'database',
-    sectionKeys: ['backupOptions', 'imageStorageOptions'],
+    sectionKeys: [
+      'backupOptions',
+      'imageStorageOptions',
+      'commentUploadOptions',
+    ],
   },
   {
     key: 'ai',
@@ -154,15 +158,29 @@ function unwrapZodType(schema: z.ZodTypeAny): z.ZodTypeAny {
   return schema
 }
 
+interface ZodEnumLike {
+  enum?: Record<string, unknown>
+  options?: unknown[]
+}
+
+function asEnumLike(schema: z.ZodTypeAny): ZodEnumLike {
+  return schema as unknown as ZodEnumLike
+}
+
 function isEnumLikeSchema(schema: z.ZodTypeAny): boolean {
   if (schema instanceof z.ZodEnum) return true
-  const enumObj = (schema as any)?.enum
-  if (enumObj && typeof enumObj === 'object') return true
+  const candidate = asEnumLike(schema)
+  if (
+    'enum' in candidate &&
+    candidate.enum &&
+    typeof candidate.enum === 'object'
+  ) {
+    return true
+  }
   // ZodUnion also has an `options` property, but it contains Zod schemas, not enum values
   // We need to exclude ZodUnion to avoid misidentifying union types as enums
   if (schema instanceof z.ZodUnion) return false
-  const options = (schema as any)?.options
-  return Array.isArray(options)
+  return 'options' in candidate && Array.isArray(candidate.options)
 }
 
 function inferUIComponent(

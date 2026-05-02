@@ -66,6 +66,20 @@ export class AuthService {
     )
   }
 
+  private pickFirstHeader(
+    headers: Record<string, string | string[] | undefined>,
+    ...names: string[]
+  ): string | undefined {
+    for (const name of names) {
+      const value = headers[name]
+      const picked = Array.isArray(value) ? value[0] : value
+      if (typeof picked === 'string' && picked.length > 0) {
+        return picked
+      }
+    }
+    return undefined
+  }
+
   async getAllAccessToken() {
     const ownerId = await this.getOwnerReaderId()
     if (!ownerId) {
@@ -451,20 +465,17 @@ export class AuthService {
   }) {
     const headers = req.headers || {}
     const query = req.query || {}
-    const apiKeyHeaderValue =
-      headers['x-api-key'] || headers['X-API-Key'] || undefined
-    const apiKeyHeader = Array.isArray(apiKeyHeaderValue)
-      ? apiKeyHeaderValue[0]
-      : apiKeyHeaderValue
+
+    const apiKeyHeader = this.pickFirstHeader(headers, 'x-api-key', 'X-API-Key')
     if (apiKeyHeader) {
       return { key: apiKeyHeader, deprecated: false }
     }
 
-    const authorizationValue =
-      headers.authorization || headers.Authorization || undefined
-    const authorization = Array.isArray(authorizationValue)
-      ? authorizationValue[0]
-      : authorizationValue
+    const authorization = this.pickFirstHeader(
+      headers,
+      'authorization',
+      'Authorization',
+    )
     if (authorization) {
       const match = authorization.match(/^bearer\s+(\S+)$/i)
       if (match) {
@@ -545,14 +556,12 @@ export class AuthService {
     headers: Record<string, string | string[] | undefined>,
   ) {
     const header = new Headers()
-    const cookieValue = headers.cookie
-    const cookie = Array.isArray(cookieValue) ? cookieValue[0] : cookieValue
-    if (typeof cookie === 'string' && cookie.length > 0) {
+    const cookie = this.pickFirstHeader(headers, 'cookie')
+    if (cookie) {
       header.set('cookie', cookie)
     }
-    const originValue = headers.origin
-    const origin = Array.isArray(originValue) ? originValue[0] : originValue
-    if (typeof origin === 'string' && origin.length > 0) {
+    const origin = this.pickFirstHeader(headers, 'origin')
+    if (origin) {
       header.set('origin', origin)
     }
     return header

@@ -19,3 +19,19 @@ export interface ReaderCommentDto {
 }
 
 export type CommentDto = AnonymousCommentDto | ReaderCommentDto
+
+export interface CommentUploadConfigDto {
+  enable: boolean
+  singleFileSizeMB: number
+  commentImageMaxCount: number
+  mimeWhitelist: string[]
+  pendingTtlMinutes: number
+}
+
+export interface CommentUploadResultDto {
+  url: string
+  fileName: string
+  byteSize: number
+  mimeType: string
+  expireAt: string
+}

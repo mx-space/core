@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/core",
-  "version": "11.4.8",
+  "version": "11.5.1",
   "type": "module",
   "private": true,
   "engines": {
@@ -15,7 +15,7 @@
   "author": "Innei <https://innei.in>",
   "dashboard": {
     "repo": "mx-space/mx-admin",
-    "version": "6.7.4"
+    "version": "6.8.1"
   },
   "issues": "https://github.com/mx-space/core/issues",
   "scripts": {
@@ -101,6 +101,7 @@
     "drizzle-orm": "^0.36.4",
     "ejs": "5.0.2",
     "es-toolkit": "^1.46.0",
+    "file-type": "^22.0.1",
     "form-data": "4.0.5",
     "inquirer": "^13.4.2",
     "isbot": "5.1.39",
@@ -114,7 +115,7 @@
     "lexical": "^0.44.0",
     "linkedom": "0.18.12",
     "lru-cache": "11.3.5",
-    "marked": "18.0.2",
+    "marked": "18.0.3",
     "mime-types": "^3.0.2",
     "mkdirp": "^3.0.1",
     "nanoid": "5.1.11",
@@ -146,7 +147,7 @@
     "@nestjs/schematics": "11.1.0",
     "@nestjs/testing": "11.1.19",
     "@swc/cli": "^0.8.1",
-    "@swc/core": "1.15.32",
+    "@swc/core": "1.15.33",
     "@testcontainers/postgresql": "^10.16.0",
     "@types/babel__core": "7.20.5",
     "@types/diff-match-patch": "^1.0.36",

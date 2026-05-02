@@ -12,6 +12,8 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { getAvatar } from '~/utils/tool.util'
 
+import { FileDeletionReason } from '../file/file-reference.repository'
+import { FileReferenceService } from '../file/file-reference.service'
 import { OwnerService } from '../owner/owner.service'
 import { ReaderService } from '../reader/reader.service'
 import { ReaderModel } from '../reader/reader.types'
@@ -37,7 +39,29 @@ export class CommentService {
     private readonly eventManager: EventManagerService,
     @Inject(forwardRef(() => ReaderService))
     private readonly readerService: ReaderService,
+    @Inject(forwardRef(() => FileReferenceService))
+    private readonly fileReferenceService: FileReferenceService,
   ) {}
+
+  /**
+   * 评论批量更新状态时之级联清图。
+   * Junk(state=2) 转移会触发关联 reader-uploaded 文件之硬删除（按配置）。
+   */
+  async cascadeFilesForCommentsIfSpam(commentIds: string[], state: number) {
+    if (state !== CommentState.Junk) return
+    for (const id of commentIds) {
+      try {
+        await this.fileReferenceService.hardDeleteFilesForComment(
+          id,
+          FileDeletionReason.CommentSpam,
+        )
+      } catch (err) {
+        this.logger.warn(
+          `cascadeFilesForCommentsIfSpam(${id}) failed: ${err instanceof Error ? err.message : err}`,
+        )
+      }
+    }
+  }
 
   public get repository() {
     return this.commentRepository
@@ -246,6 +270,16 @@ export class CommentService {
       text: COMMENT_DELETED_PLACEHOLDER,
       editedAt: new Date(),
     })
+    try {
+      await this.fileReferenceService.hardDeleteFilesForComment(
+        id,
+        FileDeletionReason.CommentDeleted,
+      )
+    } catch (err) {
+      this.logger.warn(
+        `cascade file delete after comment ${id} delete failed: ${err instanceof Error ? err.message : err}`,
+      )
+    }
   }
 
   async deleteComments(id: string) {

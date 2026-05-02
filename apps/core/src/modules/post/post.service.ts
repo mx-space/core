@@ -295,22 +295,21 @@ export class PostService implements OnApplicationBootstrap {
       categorySlug: oldDocumentRefCategory.slug,
     }
 
+    const createSlugChangeTracker = () =>
+      this.slugTrackerService.createTracker(
+        `/${oldSlugMeta.categorySlug}/${oldSlugMeta.slug}`,
+        ArticleTypeEnum.Post,
+        oldDocument.id,
+      )
+
     if (newDocument.slug && oldSlugMeta.slug !== newDocument.slug) {
-      return trackSlugChanges.call(this)
+      return createSlugChangeTracker()
     }
     if (
       newDocument.categoryId &&
       String(oldDocument.categoryId) !== String(newDocument.categoryId)
     ) {
-      return trackSlugChanges.call(this)
-    }
-
-    async function trackSlugChanges(this: PostService) {
-      return this.slugTrackerService.createTracker(
-        `/${oldSlugMeta.categorySlug}/${oldSlugMeta.slug}`,
-        ArticleTypeEnum.Post,
-        oldDocument.id,
-      )
+      return createSlugChangeTracker()
     }
   }
 
@@ -371,7 +370,7 @@ export class PostService implements OnApplicationBootstrap {
       if (!category) throw new BizException(ErrorCodeEnum.CategoryNotFound)
     }
 
-    if ([data.text, data.title, data.slug].some((i) => isDefined(i))) {
+    if ([data.text, data.title, data.slug].some(isDefined)) {
       data.modified = new Date()
     }
 

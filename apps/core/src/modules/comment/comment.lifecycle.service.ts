@@ -14,6 +14,8 @@ import { scheduleManager } from '~/utils/schedule.util'
 import { getAvatar } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
+import { FileDeletionReason } from '../file/file-reference.repository'
+import { FileReferenceService } from '../file/file-reference.service'
 import { OwnerService } from '../owner/owner.service'
 import { OwnerModel } from '../owner/owner.types'
 import { ReaderService } from '../reader/reader.service'
@@ -49,6 +51,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     private readonly serverlessService: ServerlessService,
     private readonly eventManager: EventManagerService,
     private readonly barkService: BarkPushService,
+    private readonly fileReferenceService: FileReferenceService,
   ) {}
 
   async onModuleInit() {
@@ -88,6 +91,21 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     this.commentCreateListenerDisposer?.()
   }
 
+  private async cascadeDeleteFilesIfSpamConfigured(commentId: string) {
+    try {
+      const config = await this.configsService.get('commentUploadOptions')
+      if (config.deleteFilesOnSpam === false) return
+      await this.fileReferenceService.hardDeleteFilesForComment(
+        commentId,
+        FileDeletionReason.CommentSpam,
+      )
+    } catch (err) {
+      this.logger.warn(
+        `cascade file delete after spam(${commentId}) failed: ${err instanceof Error ? err.message : err}`,
+      )
+    }
+  }
+
   async afterCreateComment(commentId: string, ipLocation: { ip: string }) {
     const comment = await this.commentService.findById(commentId)
 
@@ -110,6 +128,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
         await this.commentService.updateComment(commentId, {
           state: CommentState.Junk,
         })
+        await this.cascadeDeleteFilesIfSpamConfigured(commentId)
         return
       }
 
@@ -356,12 +375,13 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
         } as any,
       )
 
-    const location =
-      `${result.countryName || ''}${
-        result.regionName && result.regionName !== result.cityName
-          ? String(result.regionName)
-          : ''
-      }${result.cityName ? String(result.cityName) : ''}` || undefined
+    const country = result.countryName ? String(result.countryName) : ''
+    let region = ''
+    if (result.regionName && result.regionName !== result.cityName) {
+      region = String(result.regionName)
+    }
+    const city = result.cityName ? String(result.cityName) : ''
+    const location = `${country}${region}${city}` || undefined
 
     if (location)
       await this.commentService.updateComment(id, { location } as any)
@@ -442,10 +462,8 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       ),
     }
     if (isDev) {
-      // @ts-ignore
-      delete options.html
-      Object.assign(options, { source })
-      this.logger.log(options)
+      const { html: _html, ...rest } = options
+      this.logger.log({ ...rest, source })
       return
     }
     await this.mailService.send(options)

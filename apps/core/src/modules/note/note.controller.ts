@@ -60,6 +60,34 @@ type NoteListItem = {
   translationMeta?: TranslationMeta
 }
 
+// Shared @TranslateFields rule sets — kept top-of-file so detail/list endpoints
+// stay in sync without copy-paste drift.
+const NOTE_LIST_TRANSLATE_FIELDS = [
+  { path: 'docs[].mood', keyPath: 'note.mood' },
+  { path: 'docs[].weather', keyPath: 'note.weather' },
+  { path: 'docs[].topic.name', keyPath: 'topic.name', idField: '_id' },
+  {
+    path: 'docs[].topic.introduce',
+    keyPath: 'topic.introduce',
+    idField: '_id',
+  },
+] as const
+
+const NOTE_DETAIL_TRANSLATE_FIELDS = [
+  { path: 'mood', keyPath: 'note.mood' },
+  { path: 'weather', keyPath: 'note.weather' },
+  { path: 'topic.name', keyPath: 'topic.name', idField: '_id' },
+  { path: 'topic.introduce', keyPath: 'topic.introduce', idField: '_id' },
+  { path: 'data.mood', keyPath: 'note.mood' },
+  { path: 'data.weather', keyPath: 'note.weather' },
+  { path: 'data.topic.name', keyPath: 'topic.name', idField: '_id' },
+  {
+    path: 'data.topic.introduce',
+    keyPath: 'topic.introduce',
+    idField: '_id',
+  },
+] as const
+
 @ApiController({ path: 'notes' })
 export class NoteController {
   constructor(
@@ -185,16 +213,7 @@ export class NoteController {
 
   @Get('/')
   @Paginator
-  @TranslateFields(
-    { path: 'docs[].mood', keyPath: 'note.mood' },
-    { path: 'docs[].weather', keyPath: 'note.weather' },
-    { path: 'docs[].topic.name', keyPath: 'topic.name', idField: '_id' },
-    {
-      path: 'docs[].topic.introduce',
-      keyPath: 'topic.introduce',
-      idField: '_id',
-    },
-  )
+  @TranslateFields(...NOTE_LIST_TRANSLATE_FIELDS)
   async getNotes(
     @HasAdminAccess() isAuthenticated: boolean,
     @Query() query: NoteQueryDto,
@@ -372,20 +391,7 @@ export class NoteController {
   }
 
   @Get('/:year/:month/:day/:slug')
-  @TranslateFields(
-    { path: 'mood', keyPath: 'note.mood' },
-    { path: 'weather', keyPath: 'note.weather' },
-    { path: 'topic.name', keyPath: 'topic.name', idField: '_id' },
-    { path: 'topic.introduce', keyPath: 'topic.introduce', idField: '_id' },
-    { path: 'data.mood', keyPath: 'note.mood' },
-    { path: 'data.weather', keyPath: 'note.weather' },
-    { path: 'data.topic.name', keyPath: 'topic.name', idField: '_id' },
-    {
-      path: 'data.topic.introduce',
-      keyPath: 'topic.introduce',
-      idField: '_id',
-    },
-  )
+  @TranslateFields(...NOTE_DETAIL_TRANSLATE_FIELDS)
   async getNoteByDateAndSlug(
     @Param() params: NoteSlugDateParamsDto,
     @HasAdminAccess() isAuthenticated: boolean,
@@ -435,23 +441,20 @@ export class NoteController {
     if (!currentDocument) {
       return { data: [], size: 0 }
     }
-    const prevList =
-      half - 1 === 0
-        ? []
-        : await this.noteService.findByCreatedWindow(
-            currentDocument.created,
-            'after',
-            half - 1,
-            { visibleOnly: !isAuthenticated },
-          )
-    const nextList = !half
-      ? []
-      : await this.noteService.findByCreatedWindow(
-          currentDocument.created,
-          'before',
-          half - 1,
-          { visibleOnly: !isAuthenticated },
-        )
+    const findAdjacent = (direction: 'prev' | 'next', count: number) => {
+      if (count <= 0) return Promise.resolve([])
+      return this.noteService.findByCreatedWindow(
+        currentDocument.created,
+        direction === 'prev' ? 'after' : 'before',
+        count,
+        { visibleOnly: !isAuthenticated },
+      )
+    }
+
+    const [prevList, nextList] = await Promise.all([
+      findAdjacent('prev', half - 1),
+      findAdjacent('next', half ? half - 1 : 0),
+    ])
     let data = [...prevList, ...nextList, currentDocument] as NoteListItem[]
     data = data.sort(
       (a, b) => (b.created?.valueOf() ?? 0) - (a.created?.valueOf() ?? 0),
@@ -512,20 +515,7 @@ export class NoteController {
   }
 
   @Get('/latest')
-  @TranslateFields(
-    { path: 'mood', keyPath: 'note.mood' },
-    { path: 'weather', keyPath: 'note.weather' },
-    { path: 'topic.name', keyPath: 'topic.name', idField: '_id' },
-    { path: 'topic.introduce', keyPath: 'topic.introduce', idField: '_id' },
-    { path: 'data.mood', keyPath: 'note.mood' },
-    { path: 'data.weather', keyPath: 'note.weather' },
-    { path: 'data.topic.name', keyPath: 'topic.name', idField: '_id' },
-    {
-      path: 'data.topic.introduce',
-      keyPath: 'topic.introduce',
-      idField: '_id',
-    },
-  )
+  @TranslateFields(...NOTE_DETAIL_TRANSLATE_FIELDS)
   async getLatestOne(
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
@@ -575,20 +565,7 @@ export class NoteController {
 
   // C 端入口
   @Get('/nid/:nid')
-  @TranslateFields(
-    { path: 'mood', keyPath: 'note.mood' },
-    { path: 'weather', keyPath: 'note.weather' },
-    { path: 'topic.name', keyPath: 'topic.name', idField: '_id' },
-    { path: 'topic.introduce', keyPath: 'topic.introduce', idField: '_id' },
-    { path: 'data.mood', keyPath: 'note.mood' },
-    { path: 'data.weather', keyPath: 'note.weather' },
-    { path: 'data.topic.name', keyPath: 'topic.name', idField: '_id' },
-    {
-      path: 'data.topic.introduce',
-      keyPath: 'topic.introduce',
-      idField: '_id',
-    },
-  )
+  @TranslateFields(...NOTE_DETAIL_TRANSLATE_FIELDS)
   async getNoteByNid(
     @Param() params: NidType,
     @HasAdminAccess() isAuthenticated: boolean,

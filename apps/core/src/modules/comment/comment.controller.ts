@@ -50,6 +50,7 @@ import { CommentService } from './comment.service'
 import type { CommentModel } from './comment.types'
 
 const idempotenceMessage = '哦吼，这句话你已经说过啦'
+
 @ApiController({ path: 'comments' })
 @UseInterceptors(CommentFilterEmailInterceptor)
 export class CommentController {
@@ -356,6 +357,10 @@ export class CommentController {
     try {
       await this.commentService.updateComment(id, updateResult)
 
+      if (!isUndefined(state)) {
+        await this.commentService.cascadeFilesForCommentsIfSpam([id], state)
+      }
+
       return
     } catch {
       throw new NoContentCanBeModifiedException()
@@ -383,14 +388,22 @@ export class CommentController {
   async batchUpdateState(@Body() body: BatchCommentStateDto) {
     const { ids, all, state, currentState } = body
 
+    let affected: string[] = []
     if (all) {
       const filter: Record<string, any> = {}
       if (!isUndefined(currentState)) {
         filter.state = currentState
       }
+      const matched = await this.commentService.findByFilter(filter)
+      affected = matched.map((c) => String(c._id ?? c.id))
       await this.commentService.updateStateByFilter(filter, state)
     } else if (ids?.length) {
+      affected = ids.map((id) => id.toString())
       await this.commentService.updateStateBulk(ids, state)
+    }
+
+    if (affected.length) {
+      await this.commentService.cascadeFilesForCommentsIfSpam(affected, state)
     }
 
     return
@@ -407,13 +420,17 @@ export class CommentController {
         filter.state = state
       }
       const comments = await this.commentService.findByFilter(filter)
-      for (const comment of comments) {
-        await this.commentService.softDeleteComment(comment._id.toString())
-      }
+      await Promise.all(
+        comments.map((comment) =>
+          this.commentService.softDeleteComment(
+            String(comment._id ?? comment.id),
+          ),
+        ),
+      )
     } else if (ids?.length) {
-      for (const id of ids) {
-        await this.commentService.softDeleteComment(id)
-      }
+      await Promise.all(
+        ids.map((id) => this.commentService.softDeleteComment(id)),
+      )
     }
 
     return

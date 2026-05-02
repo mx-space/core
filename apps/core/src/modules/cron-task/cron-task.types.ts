@@ -7,6 +7,7 @@ export const CronTaskType = {
   PushToBingSearch: 'cron:push-to-bing-search',
   DeleteExpiredJWT: 'cron:delete-expired-jwt',
   RebuildSearchIndex: 'cron:rebuild-search-index',
+  CleanCommentUploads: 'cron:clean-comment-uploads',
 } as const
 
 export type CronTaskTypeValue = (typeof CronTaskType)[keyof typeof CronTaskType]
@@ -70,6 +71,12 @@ export const CronTaskMetas: Record<
     description: '重建搜索索引',
     cronExpression: 'EVERY_DAY_AT_4AM',
     methodName: 'rebuildSearchIndex',
+  },
+  [CronTaskType.CleanCommentUploads]: {
+    name: 'cleanCommentUploads',
+    description: '清理评论图片上传',
+    cronExpression: '*/15 * * * *',
+    methodName: 'cleanCommentUploads',
   },
 }
 
