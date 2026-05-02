@@ -7,7 +7,8 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
-import { SnippetModel, SnippetType } from '../snippet/snippet.model'
+import { SnippetType } from '../snippet/snippet.model'
+import type { SnippetRow } from '../snippet/snippet.repository'
 import { DebugService } from './debug.service'
 
 @ApiController('debug')
@@ -64,11 +65,25 @@ export class DebugController {
     @Request() req,
     @Response() res,
   ) {
-    const model = new SnippetModel()
-    model.name = 'debug'
-    model.raw = functionString
-    model.private = false
-    model.type = SnippetType.Function
+    const model: SnippetRow = {
+      id: '' as any,
+      name: 'debug',
+      raw: functionString,
+      private: false,
+      type: SnippetType.Function,
+      reference: 'root',
+      comment: null,
+      metatype: null,
+      schema: null,
+      method: null,
+      customPath: null,
+      secret: null,
+      enable: true,
+      builtIn: false,
+      compiledCode: null,
+      createdAt: new Date(),
+      updatedAt: null,
+    }
 
     const result =
       await this.serverlessService.injectContextIntoServerlessFunctionAndCall(

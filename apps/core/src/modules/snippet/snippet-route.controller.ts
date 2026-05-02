@@ -1,14 +1,16 @@
 import { All, Request, Response } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import type { FastifyReply, FastifyRequest } from 'fastify'
+
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
-import type { SnippetModel } from './snippet.model'
+import type { SnippetRow } from './snippet.repository'
 import { SnippetService } from './snippet.service'
 
 const MAX_PREFIX_DEPTH = 10
@@ -49,22 +51,15 @@ export class SnippetRouteController {
       }
 
       // check cache
-      let cached: string | null = null
-      if (hasAdminAccess) {
-        cached =
-          (
+      const cached = hasAdminAccess
+        ? (
             await Promise.all(
               (['public', 'private'] as const).map((type) =>
                 this.snippetService.getCachedSnippetByCustomPath(path, type),
               ),
             )
           ).find(Boolean) || null
-      } else {
-        cached = await this.snippetService.getCachedSnippetByCustomPath(
-          path,
-          'public',
-        )
-      }
+        : await this.snippetService.getCachedSnippetByCustomPath(path, 'public')
 
       if (cached) {
         const json = JSON.safeParse(cached)
@@ -115,7 +110,7 @@ export class SnippetRouteController {
   }
 
   private async executeFunction(
-    snippet: SnippetModel,
+    snippet: SnippetRow,
     hasAdminAccess: boolean,
     req: FastifyRequest,
     reply: FastifyReply,

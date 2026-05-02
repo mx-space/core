@@ -39,7 +39,9 @@ import { SandboxService } from '~/utils/sandbox'
 import { safePathJoin } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
-import { SnippetModel, SnippetType } from '../snippet/snippet.model'
+import { SnippetType } from '../snippet/snippet.model'
+import type { SnippetRow } from '../snippet/snippet.repository'
+import { SnippetRepository } from '../snippet/snippet.repository'
 import type {
   BuiltInFunctionObject,
   FunctionContextRequest,
@@ -61,8 +63,7 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   private readonly sandboxService: SandboxService
 
   constructor(
-    @InjectModel(SnippetModel)
-    private readonly snippetModel: MongooseModel<SnippetModel>,
+    private readonly snippetRepository: SnippetRepository,
     @InjectModel(ServerlessLogModel)
     private readonly logModel: MongooseModel<ServerlessLogModel>,
     private readonly assetService: AssetService,
@@ -154,8 +155,8 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     await this.pourBuiltInFunctions()
   }
 
-  public get model() {
-    return this.snippetModel
+  public get repository() {
+    return this.snippetRepository
   }
 
   private mockStorageCache = Object.freeze({
@@ -310,19 +311,19 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   }
 
   async injectContextIntoServerlessFunctionAndCall(
-    model: SnippetModel,
+    model: SnippetRow,
     context: ScopeContext,
   ): Promise<any> {
     const { raw: functionString } = model
     const scope = `${model.reference}/${model.name}`
 
-    let compiledCode = model.compiledCode
+    let compiledCode = model.compiledCode ?? undefined
     if (!compiledCode) {
       compiledCode =
         (await this.compileTypescriptCode(functionString)) ?? undefined
-      if (compiledCode) {
-        this.snippetModel
-          .updateOne({ _id: model.id }, { compiledCode })
+      if (compiledCode && model.id) {
+        this.snippetRepository
+          .update(model.id, { compiledCode })
           .catch((error) => {
             this.logger.error(
               `Backfill compiledCode failed for ${scope}: ${error.message}`,
@@ -368,7 +369,7 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
       isAuthenticated: context.hasAdminAccess,
       secret: secretObj as Record<string, unknown>,
       model: {
-        id: model.id,
+        id: model.id ?? '',
         name: model.name,
         reference: model.reference,
       },
@@ -413,12 +414,12 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async saveInvocationLog(
-    model: SnippetModel,
+    model: SnippetRow,
     context: ScopeContext,
     result: SandboxResult,
   ) {
     await this.logModel.create({
-      functionId: model.id || (model as any)._id?.toString(),
+      functionId: model.id || '',
       reference: model.reference,
       name: model.name,
       method: context.req.method,
@@ -504,22 +505,19 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    const result = await this.model.find({
-      name: {
-        $in: paths,
-      },
-      reference: {
-        $in: ['built-in'].concat(Array.from(references.values())),
-      },
-      type: SnippetType.Function,
-    })
+    const result = await this.snippetRepository.findFunctionsByNamesReferences(
+      paths,
+      ['built-in', ...Array.from(references.values())],
+    )
 
     const migrationTasks = [] as Promise<any>[]
     for (const doc of result) {
       pathCodeMap.delete(doc.name)
 
       if (!doc.builtIn) {
-        migrationTasks.push(doc.updateOne({ builtIn: true }))
+        migrationTasks.push(
+          this.snippetRepository.update(doc.id, { builtIn: true }),
+        )
       }
     }
     await Promise.all(migrationTasks)
@@ -527,12 +525,12 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     for (const [path, { code, method, name, reference }] of pathCodeMap) {
       this.logger.log(`pour built-in function: ${name}`)
       const compiledCode = await this.compileTypescriptCode(code)
-      await this.model.create({
+      await this.snippetRepository.create({
         type: SnippetType.Function,
         name: path,
         reference: reference || 'built-in',
         raw: code,
-        compiledCode: compiledCode ?? undefined,
+        compiledCode: compiledCode ?? null,
         method: method || 'get',
         enable: true,
         private: false,
@@ -542,7 +540,7 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   }
 
   async isBuiltInFunction(id: string) {
-    const document = await this.model.findById(id).lean()
+    const document = await this.snippetRepository.findById(id)
     if (!document) return false
     const isBuiltin = document.type == SnippetType.Function && document.builtIn
     return isBuiltin
@@ -563,12 +561,10 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     }
 
     const compiledCode = await this.compileTypescriptCode(builtInSnippet.code)
-    await this.model.updateOne(
-      {
-        name,
-      },
-      { raw: builtInSnippet.code, compiledCode: compiledCode ?? undefined },
-    )
+    await this.snippetRepository.updateByName(name, {
+      raw: builtInSnippet.code,
+      compiledCode: compiledCode ?? null,
+    })
   }
 }
 

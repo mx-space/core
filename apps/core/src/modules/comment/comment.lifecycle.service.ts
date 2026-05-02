@@ -20,8 +20,6 @@ import { OwnerService } from '../owner/owner.service'
 import { ReaderService } from '../reader/reader.service'
 import { createMockedContextResponse } from '../serverless/mock-response.util'
 import { ServerlessService } from '../serverless/serverless.service'
-import type { SnippetModel } from '../snippet/snippet.model'
-import { SnippetType } from '../snippet/snippet.model'
 import type {
   CommentEmailTemplateRenderProps,
   CommentModelRenderProps,
@@ -92,10 +90,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     this.commentCreateListenerDisposer?.()
   }
 
-  async afterCreateComment(
-    commentId: string,
-    ipLocation: { ip: string },
-  ) {
+  async afterCreateComment(commentId: string, ipLocation: { ip: string }) {
     const comment = await this.commentModel
       .findById(commentId)
       .lean({ getters: true })
@@ -142,10 +137,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     })
   }
 
-  async afterReplyComment(
-    comment: CommentModel,
-    ipLocation: { ip: string },
-  ) {
+  async afterReplyComment(comment: CommentModel, ipLocation: { ip: string }) {
     const commentId = comment.id ?? (comment as any)._id?.toString()
     const isLoggedInComment = !!comment.readerId
 
@@ -187,7 +179,9 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       .then((readers) => readers[0] ?? null)
   }
 
-  private toOwnerIdentity(ownerInfo: Awaited<ReturnType<OwnerService['getOwnerInfo']>>) {
+  private toOwnerIdentity(
+    ownerInfo: Awaited<ReturnType<OwnerService['getOwnerInfo']>>,
+  ) {
     return {
       role: 'owner' as const,
       author: ownerInfo.name || '',
@@ -221,7 +215,9 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
           author: reader.name || comment.author || '',
           mail: reader.email || comment.mail || '',
           avatar:
-            reader.image || comment.avatar || getAvatar(reader.email || comment.mail),
+            reader.image ||
+            comment.avatar ||
+            getAvatar(reader.email || comment.mail),
         }
       }
     }
@@ -257,14 +253,20 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     const parentIdentity = await this.resolveCommentIdentity(parent, ownerInfo)
 
     if (!refDoc || !ownerInfo.mail) return
-    if (type === CommentReplyMailType.Guest && commentIdentity.role === 'guest') {
+    if (
+      type === CommentReplyMailType.Guest &&
+      commentIdentity.role === 'guest'
+    ) {
       commentIdentity =
         !comment.author && !comment.mail && !comment.avatar
           ? this.toOwnerIdentity(ownerInfo)
           : commentIdentity
     }
 
-    if (type === CommentReplyMailType.Owner && commentIdentity.role === 'owner') {
+    if (
+      type === CommentReplyMailType.Owner &&
+      commentIdentity.role === 'owner'
+    ) {
       return
     }
 
@@ -338,14 +340,11 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     const model = this.commentModel.findById(id).lean()
     if (!model) return
 
-    const fnModel = (await this.serverlessService.model
-      .findOne({
-        name: 'ip',
-        reference: 'built-in',
-        type: SnippetType.Function,
-      })
-      .select('+secret')
-      .lean({ getters: true })) as SnippetModel
+    const fnModel =
+      await this.serverlessService.repository.findFunctionByNameReference(
+        'ip',
+        'built-in',
+      )
 
     if (!fnModel) {
       this.logger.error('[Serverless Fn] ip query function is missing.')

@@ -6,11 +6,9 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
-import { SnippetModel } from './snippet.model'
 import { SnippetDto, SnippetMoreDto } from './snippet.schema'
 import { SnippetService } from './snippet.service'
 
@@ -21,19 +19,8 @@ export class SnippetController {
   @Get('/')
   @Auth()
   async getList(@Query() query: PagerDto) {
-    const { page, size, select = '', db_query } = query
-
-    return transformDataToPaginate(
-      await this.snippetService.model.paginate(db_query ?? {}, {
-        page,
-        limit: size,
-        select,
-        sort: {
-          reference: 1,
-          created: -1,
-        },
-      }),
-    )
+    const { page, size } = query
+    return this.snippetService.repository.list(page, size)
   }
 
   @Post('/import')
@@ -41,7 +28,7 @@ export class SnippetController {
   async importSnippets(@Body() body: SnippetMoreDto) {
     const { snippets } = body
     const tasks = snippets.map((snippet) =>
-      this.snippetService.create(snippet as unknown as SnippetModel),
+      this.snippetService.create(snippet as any),
     )
 
     await Promise.all(tasks)
@@ -53,48 +40,20 @@ export class SnippetController {
   @Auth()
   @HTTPDecorators.Idempotence()
   async create(@Body() body: SnippetDto) {
-    return await this.snippetService.create(body as unknown as SnippetModel)
+    return await this.snippetService.create(body as any)
   }
 
   @Get('/:id')
   @Auth()
-  async getSnippetById(@Param() param: MongoIdDto) {
+  async getSnippetById(@Param() param: EntityIdDto) {
     return this.snippetService.getSnippetById(param.id)
   }
 
   @Get('/group')
   @Auth()
-  @HTTPDecorators.Paginator
   async getGroup(@Query() query: PagerDto) {
     const { page, size = 30 } = query
-    return this.snippetService.model.aggregatePaginate(
-      this.snippetService.model.aggregate([
-        {
-          $group: {
-            _id: {
-              reference: '$reference',
-            },
-            count: { $sum: 1 },
-          },
-        },
-        {
-          $sort: {
-            '_id.reference': 1,
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            reference: '$_id.reference',
-            count: 1,
-          },
-        },
-      ]),
-      {
-        page,
-        limit: size,
-      },
-    )
+    return this.snippetService.repository.listGrouped(page, size)
   }
 
   @Get('/group/:reference')
@@ -104,13 +63,16 @@ export class SnippetController {
       throw new BizException(ErrorCodeEnum.InvalidReference)
     }
 
-    return this.snippetService.model.find({ reference }).lean()
+    return this.snippetService.repository.findAll(reference)
   }
 
   @Post('/aggregate')
   @Auth()
-  async aggregate(@Body() body: any) {
-    return this.snippetService.model.aggregate(body)
+  async aggregate() {
+    throw new BizException(
+      ErrorCodeEnum.InvalidParameter,
+      'POST /snippets/aggregate is removed in PostgreSQL mode. Use GET /snippets/group or /snippets/group/:reference instead.',
+    )
   }
 
   @Get('/:reference/:name')
@@ -127,23 +89,15 @@ export class SnippetController {
     if (typeof reference !== 'string') {
       throw new BizException(ErrorCodeEnum.InvalidReference)
     }
-    let cached: string | null = null
-    if (hasAdminAccess) {
-      cached =
-        (
+    const cached = hasAdminAccess
+      ? (
           await Promise.all(
-            (['public', 'private'] as const).map((type) => {
-              return this.snippetService.getCachedSnippet(reference, name, type)
-            }),
+            (['public', 'private'] as const).map((type) =>
+              this.snippetService.getCachedSnippet(reference, name, type),
+            ),
           )
         ).find(Boolean) || null
-    } else {
-      cached = await this.snippetService.getCachedSnippet(
-        reference,
-        name,
-        'public',
-      )
-    }
+      : await this.snippetService.getCachedSnippet(reference, name, 'public')
 
     if (cached) {
       const json = JSON.safeParse(cached)
@@ -156,15 +110,15 @@ export class SnippetController {
 
   @Put('/:id')
   @Auth()
-  async update(@Param() param: MongoIdDto, @Body() body: SnippetDto) {
+  async update(@Param() param: EntityIdDto, @Body() body: SnippetDto) {
     const { id } = param
 
-    return await this.snippetService.update(id, body as unknown as SnippetModel)
+    return await this.snippetService.update(id, body as any)
   }
 
   @Delete('/:id')
   @Auth()
-  async delete(@Param() param: MongoIdDto) {
+  async delete(@Param() param: EntityIdDto) {
     const { id } = param
     await this.snippetService.delete(id)
   }
