@@ -153,7 +153,7 @@
     "@nestjs/schematics": "11.1.0",
     "@nestjs/testing": "11.1.19",
     "@swc/cli": "^0.8.1",
-    "@swc/core": "1.15.32",
+    "@swc/core": "1.15.33",
     "@types/babel__core": "7.20.5",
     "@types/diff-match-patch": "^1.0.36",
     "@types/ejs": "3.1.5",
