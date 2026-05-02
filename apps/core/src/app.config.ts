@@ -199,6 +199,19 @@ const commander = program
     'snowflake worker id (integer 0-1023). Required in production.',
   )
 
+  // postgres
+  .option(
+    '--pg_connection_string <string>',
+    'PostgreSQL connection string (overrides individual flags)',
+  )
+  .option('--pg_host <string>', 'PostgreSQL host')
+  .option('--pg_port <number>', 'PostgreSQL port')
+  .option('--pg_user <string>', 'PostgreSQL user')
+  .option('--pg_password <string>', 'PostgreSQL password')
+  .option('--pg_database <string>', 'PostgreSQL database name')
+  .option('--pg_max_pool_size <number>', 'PostgreSQL pool size')
+  .option('--pg_ssl', 'enable PostgreSQL TLS')
+
 commander.parse()
 
 const argv = commander.opts()
@@ -384,4 +397,33 @@ export const SNOWFLAKE = {
   workerId: parseSnowflakeWorkerId(),
   // 2026-05-02T00:00:00.000Z
   epochMs: 1746144000000,
+}
+
+const PG_CONNECTION_FROM_ENV =
+  argv.pg_connection_string ||
+  process.env.PG_URL ||
+  process.env.PG_CONNECTION_STRING
+
+function parseInt32(input: unknown, fallback: number): number {
+  if (input === undefined || input === null || input === '') return fallback
+  const n = Number(input)
+  if (!Number.isInteger(n) || n <= 0) return fallback
+  return n
+}
+
+export const POSTGRES = {
+  connectionString: PG_CONNECTION_FROM_ENV as string | undefined,
+  host: argv.pg_host || process.env.PG_HOST || '127.0.0.1',
+  port: parseInt32(argv.pg_port ?? process.env.PG_PORT, 5432),
+  user: argv.pg_user || process.env.PG_USER || 'mx',
+  password: argv.pg_password || process.env.PG_PASSWORD || 'mx',
+  database: argv.pg_database || process.env.PG_DATABASE || 'mx_core',
+  maxPoolSize: parseInt32(
+    argv.pg_max_pool_size ?? process.env.PG_MAX_POOL_SIZE,
+    20,
+  ),
+  ssl:
+    parseBooleanishValue(argv.pg_ssl ?? process.env.PG_SSL) === true
+      ? { rejectUnauthorized: false }
+      : false,
 }

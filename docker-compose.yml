@@ -7,6 +7,12 @@ services:
       - NODE_ENV=production
       - DB_HOST=mongo
       - REDIS_HOST=redis
+      - PG_HOST=postgres
+      - PG_PORT=5432
+      - PG_USER=mx
+      - PG_PASSWORD=mx
+      - PG_DATABASE=mx_core
+      - SNOWFLAKE_WORKER_ID=1
       - ALLOWED_ORIGINS=localhost
       - JWT_SECRET=YOUR_SUPER_SECURED_JWT_SECRET_STRING
     volumes:
@@ -15,6 +21,7 @@ services:
       - '2333:2333'
     depends_on:
       - mongo
+      - postgres
       - redis
     networks:
       - mx-space
@@ -31,6 +38,25 @@ services:
     image: mongo:7
     volumes:
       - ./data/db:/data/db
+    networks:
+      - mx-space
+    restart: unless-stopped
+
+  postgres:
+    container_name: postgres
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=mx
+      - POSTGRES_PASSWORD=mx
+      - POSTGRES_DB=mx_core
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U mx -d mx_core']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - mx-space
     restart: unless-stopped
