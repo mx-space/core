@@ -1,0 +1,1041 @@
+import {
+  activities,
+  aiAgentConversations,
+  aiInsights,
+  aiSummaries,
+  aiTranslations,
+  analyzes,
+  categories,
+  comments,
+  drafts,
+  fileReferences,
+  links,
+  notes,
+  options,
+  ownerProfiles,
+  pages,
+  pollVoteOptions,
+  pollVotes,
+  posts,
+  projects,
+  readers,
+  recentlies,
+  says,
+  searchDocuments,
+  serverlessLogs,
+  serverlessStorages,
+  slugTrackers,
+  snippets,
+  subscribes,
+  topics,
+  translationEntries,
+  webhookEvents,
+  webhooks,
+} from '~/database/schema'
+
+import { allocateForCollection, createResolver } from './id-map'
+import type { MigrationContext, MigrationStep } from './types'
+
+const upsert = async <T extends Record<string, unknown>>(
+  ctx: MigrationContext,
+  table: any,
+  rows: T[],
+) => {
+  if (ctx.mode !== 'apply' || rows.length === 0) return
+  const chunkSize = 200
+  for (let i = 0; i < rows.length; i += chunkSize) {
+    const chunk = rows.slice(i, i + chunkSize)
+    try {
+      await ctx.pg.insert(table).values(chunk).onConflictDoNothing()
+    } catch (err) {
+      ctx.reports.warnings.push({
+        collection:
+          table[Symbol.for('drizzle:Name') as any]?.toString() ?? 'unknown',
+        mongoId: 'batch',
+        reason: (err as Error).message,
+      })
+    }
+  }
+}
+
+const recordLoad = (ctx: MigrationContext, collection: string, n: number) => {
+  ctx.reports.rowsLoaded[collection] =
+    (ctx.reports.rowsLoaded[collection] ?? 0) + n
+}
+
+const collect = async <T>(
+  ctx: MigrationContext,
+  collection: string,
+): Promise<T[]> => {
+  const docs = await ctx.mongo.collection(collection).find({}).toArray()
+  return docs as unknown as T[]
+}
+
+const dateOrNull = (value: unknown): Date | null => {
+  if (!value) return null
+  if (value instanceof Date) return value
+  if (typeof value === 'string' || typeof value === 'number') {
+    const d = new Date(value)
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+  return null
+}
+
+export const stepCategories: MigrationStep = {
+  name: 'categories',
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'categories')
+  },
+  async load(ctx) {
+    const resolver = createResolver(ctx, 'categories')
+    const docs = await collect<any>(ctx, 'categories')
+    const rows = docs.map((d) => ({
+      id: resolver.self(d._id),
+      name: d.name,
+      slug: d.slug,
+      type: d.type ?? 0,
+      createdAt: dateOrNull(d.created) ?? new Date(),
+    }))
+    await upsert(ctx, categories, rows)
+    recordLoad(ctx, 'categories', rows.length)
+  },
+}
+
+export const stepTopics: MigrationStep = {
+  name: 'topics',
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'topics')
+  },
+  async load(ctx) {
+    const resolver = createResolver(ctx, 'topics')
+    const docs = await collect<any>(ctx, 'topics')
+    const rows = docs.map((d) => ({
+      id: resolver.self(d._id),
+      name: d.name,
+      slug: d.slug ?? d.name,
+      description: d.description ?? '',
+      introduce: d.introduce ?? null,
+      icon: d.icon ?? null,
+      createdAt: dateOrNull(d.created) ?? new Date(),
+    }))
+    await upsert(ctx, topics, rows)
+    recordLoad(ctx, 'topics', rows.length)
+  },
+}
+
+export const stepReaders: MigrationStep = {
+  name: 'readers',
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'readers')
+    await allocateForCollection(ctx, 'owner_profiles')
+  },
+  async load(ctx) {
+    const readerResolver = createResolver(ctx, 'readers')
+    const profileResolver = createResolver(ctx, 'owner_profiles')
+
+    const readerDocs = await collect<any>(ctx, 'readers')
+    await upsert(
+      ctx,
+      readers,
+      readerDocs.map((d) => ({
+        id: readerResolver.self(d._id),
+        email: d.email ?? null,
+        emailVerified: Boolean(d.emailVerified ?? false),
+        name: d.name ?? null,
+        handle: d.handle ?? null,
+        username: d.username ?? null,
+        displayUsername: d.displayUsername ?? null,
+        image: d.image ?? null,
+        role: d.role ?? 'reader',
+        createdAt: dateOrNull(d.createdAt ?? d.created) ?? new Date(),
+        updatedAt: dateOrNull(d.updatedAt ?? d.updated),
+      })),
+    )
+    recordLoad(ctx, 'readers', readerDocs.length)
+
+    const profileDocs = await collect<any>(ctx, 'owner_profiles')
+    const profileRows = profileDocs
+      .map((d) => {
+        const readerId = readerResolver.ref(
+          'readers',
+          d.readerId,
+          'readerId',
+          true,
+        )
+        if (!readerId) return null
+        return {
+          id: profileResolver.self(d._id),
+          readerId,
+          mail: d.mail ?? null,
+          url: d.url ?? null,
+          introduce: d.introduce ?? null,
+          lastLoginIp: d.lastLoginIp ?? null,
+          lastLoginTime: dateOrNull(d.lastLoginTime),
+          socialIds: d.socialIds ?? null,
+          createdAt: dateOrNull(d.created) ?? new Date(),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, ownerProfiles, profileRows)
+    recordLoad(ctx, 'owner_profiles', profileRows.length)
+  },
+}
+
+export const stepPosts: MigrationStep = {
+  name: 'posts',
+  dependsOn: ['categories'],
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'posts')
+  },
+  async load(ctx) {
+    const resolver = createResolver(ctx, 'posts')
+    const docs = await collect<any>(ctx, 'posts')
+    const rows = docs
+      .map((d) => {
+        const categoryId = resolver.ref(
+          'categories',
+          d.categoryId,
+          'categoryId',
+          true,
+        )
+        if (!categoryId) return null
+        return {
+          id: resolver.self(d._id),
+          title: d.title,
+          slug: d.slug,
+          text: d.text ?? null,
+          content: d.content ?? null,
+          contentFormat: d.contentFormat ?? 'markdown',
+          summary: d.summary ?? null,
+          images: d.images ?? null,
+          meta: d.meta ?? null,
+          tags: d.tags ?? [],
+          modifiedAt: dateOrNull(d.modified),
+          categoryId,
+          copyright: d.copyright ?? true,
+          isPublished: d.isPublished ?? true,
+          readCount: d.count?.read ?? 0,
+          likeCount: d.count?.like ?? 0,
+          pinAt: dateOrNull(d.pin),
+          pinOrder: typeof d.pinOrder === 'number' ? d.pinOrder : null,
+          createdAt: dateOrNull(d.created) ?? new Date(),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, posts, rows)
+    recordLoad(ctx, 'posts', rows.length)
+  },
+}
+
+export const stepNotes: MigrationStep = {
+  name: 'notes',
+  dependsOn: ['topics'],
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'notes')
+  },
+  async load(ctx) {
+    const resolver = createResolver(ctx, 'notes')
+    const docs = await collect<any>(ctx, 'notes')
+    const rows = docs.map((d) => ({
+      id: resolver.self(d._id),
+      nid: d.nid,
+      title: d.title ?? null,
+      slug: d.slug ?? null,
+      text: d.text ?? null,
+      content: d.content ?? null,
+      contentFormat: d.contentFormat ?? 'markdown',
+      images: d.images ?? null,
+      meta: d.meta ?? null,
+      isPublished: d.isPublished ?? true,
+      password: d.password ?? null,
+      publicAt: dateOrNull(d.publicAt),
+      mood: d.mood ?? null,
+      weather: d.weather ?? null,
+      bookmark: Boolean(d.bookmark ?? false),
+      coordinates: d.coordinates ?? null,
+      location: d.location ?? null,
+      readCount: d.count?.read ?? 0,
+      likeCount: d.count?.like ?? 0,
+      topicId: resolver.ref('topics', d.topicId, 'topicId', false),
+      createdAt: dateOrNull(d.created) ?? new Date(),
+      modifiedAt: dateOrNull(d.modified),
+    }))
+    await upsert(ctx, notes, rows)
+    recordLoad(ctx, 'notes', rows.length)
+  },
+}
+
+export const stepPages: MigrationStep = {
+  name: 'pages',
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'pages')
+  },
+  async load(ctx) {
+    const resolver = createResolver(ctx, 'pages')
+    const docs = await collect<any>(ctx, 'pages')
+    const rows = docs.map((d) => ({
+      id: resolver.self(d._id),
+      title: d.title,
+      slug: d.slug,
+      subtitle: d.subtitle ?? null,
+      text: d.text ?? null,
+      content: d.content ?? null,
+      contentFormat: d.contentFormat ?? 'markdown',
+      images: d.images ?? null,
+      meta: d.meta ?? null,
+      order: d.order ?? 1,
+      createdAt: dateOrNull(d.created) ?? new Date(),
+      modifiedAt: dateOrNull(d.modified),
+    }))
+    await upsert(ctx, pages, rows)
+    recordLoad(ctx, 'pages', rows.length)
+  },
+}
+
+export const stepRecentlies: MigrationStep = {
+  name: 'recentlies',
+  dependsOn: ['posts', 'notes', 'pages'],
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'recentlies')
+  },
+  async load(ctx) {
+    const resolver = createResolver(ctx, 'recentlies')
+    const docs = await collect<any>(ctx, 'recentlies')
+    const rows = docs.map((d) => {
+      let refCollection: string | null = null
+      if (d.refType === 'Post') refCollection = 'posts'
+      else if (d.refType === 'Note') refCollection = 'notes'
+      else if (d.refType === 'Page') refCollection = 'pages'
+      else if (d.refType === 'Recently') refCollection = 'recentlies'
+      const refId = refCollection
+        ? resolver.ref(refCollection, d.ref ?? d.refId, 'refId', false)
+        : null
+      return {
+        id: resolver.self(d._id),
+        content: d.content ?? '',
+        type: d.type ?? 'text',
+        metadata: d.metadata ?? null,
+        refType: d.refType ?? null,
+        refId,
+        commentsIndex: d.commentsIndex ?? 0,
+        allowComment: d.allowComment ?? true,
+        up: d.up ?? 0,
+        down: d.down ?? 0,
+        createdAt: dateOrNull(d.created) ?? new Date(),
+        modifiedAt: dateOrNull(d.modified),
+      }
+    })
+    await upsert(ctx, recentlies, rows)
+    recordLoad(ctx, 'recentlies', rows.length)
+  },
+}
+
+export const stepComments: MigrationStep = {
+  name: 'comments',
+  dependsOn: ['posts', 'notes', 'pages', 'recentlies', 'readers'],
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'comments')
+  },
+  async load(ctx) {
+    const resolver = createResolver(ctx, 'comments')
+    const docs = await collect<any>(ctx, 'comments')
+    const rows = docs
+      .map((d) => {
+        const refTypeMap: Record<string, string> = {
+          Post: 'posts',
+          Note: 'notes',
+          Page: 'pages',
+          Recently: 'recentlies',
+        }
+        const refColl = refTypeMap[d.refType]
+        if (!refColl) {
+          ctx.reports.warnings.push({
+            collection: 'comments',
+            mongoId: String(d._id),
+            reason: `unknown refType ${d.refType}`,
+          })
+          return null
+        }
+        const refId = resolver.ref(refColl, d.ref ?? d.refId, 'refId', true)
+        if (!refId) return null
+        return {
+          id: resolver.self(d._id),
+          refType: d.refType,
+          refId,
+          author: d.author ?? null,
+          mail: d.mail ?? null,
+          url: d.url ?? null,
+          text: d.text,
+          state: d.state ?? 0,
+          parentCommentId: resolver.ref(
+            'comments',
+            d.parent,
+            'parentCommentId',
+            false,
+          ),
+          rootCommentId: resolver.ref(
+            'comments',
+            d.root,
+            'rootCommentId',
+            false,
+          ),
+          replyCount: d.replyCount ?? 0,
+          latestReplyAt: dateOrNull(d.latestReplyAt),
+          isDeleted: Boolean(d.isDeleted ?? false),
+          deletedAt: dateOrNull(d.deletedAt),
+          ip: d.ip ?? null,
+          agent: d.agent ?? null,
+          pin: Boolean(d.pin ?? false),
+          location: d.location ?? null,
+          isWhispers: Boolean(d.isWhispers ?? false),
+          avatar: d.avatar ?? null,
+          authProvider: d.authProvider ?? null,
+          meta: d.meta ?? null,
+          readerId: resolver.ref('readers', d.readerId, 'readerId', false),
+          editedAt: dateOrNull(d.editedAt),
+          anchor: d.anchor ?? null,
+          createdAt: dateOrNull(d.created) ?? new Date(),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, comments, rows)
+    recordLoad(ctx, 'comments', rows.length)
+  },
+}
+
+export const stepDrafts: MigrationStep = {
+  name: 'drafts',
+  dependsOn: ['posts', 'notes', 'pages'],
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'drafts')
+  },
+  async load(ctx) {
+    const resolver = createResolver(ctx, 'drafts')
+    const docs = await collect<any>(ctx, 'drafts')
+    const rows = docs.map((d) => {
+      const refType: 'posts' | 'notes' | 'pages' | string = d.refType
+      const refId = resolver.ref(refType, d.refId, 'refId', false)
+      return {
+        id: resolver.self(d._id),
+        refType: refType as 'posts' | 'notes' | 'pages',
+        refId,
+        title: d.title ?? '',
+        text: d.text ?? '',
+        content: d.content ?? null,
+        contentFormat: d.contentFormat ?? 'markdown',
+        images: d.images ?? null,
+        meta: d.meta ?? null,
+        typeSpecificData: d.typeSpecificData ?? null,
+        history: d.history ?? [],
+        version: d.version ?? 1,
+        publishedVersion: d.publishedVersion ?? null,
+        createdAt: dateOrNull(d.created) ?? new Date(),
+        updatedAt: dateOrNull(d.updated),
+      }
+    })
+    await upsert(ctx, drafts, rows)
+    recordLoad(ctx, 'drafts', rows.length)
+  },
+}
+
+export const stepSimpleCollections: MigrationStep[] = [
+  {
+    name: 'options',
+    async allocate(ctx) {
+      await allocateForCollection(ctx, 'options')
+    },
+    async load(ctx) {
+      const resolver = createResolver(ctx, 'options')
+      const docs = await collect<any>(ctx, 'options')
+      const rows = docs.map((d) => ({
+        id: resolver.self(d._id),
+        name: d.name,
+        value: d.value ?? null,
+      }))
+      await upsert(ctx, options, rows)
+      recordLoad(ctx, 'options', rows.length)
+    },
+  },
+  {
+    name: 'links',
+    async allocate(ctx) {
+      await allocateForCollection(ctx, 'links')
+    },
+    async load(ctx) {
+      const resolver = createResolver(ctx, 'links')
+      const docs = await collect<any>(ctx, 'links')
+      const rows = docs.map((d) => ({
+        id: resolver.self(d._id),
+        name: d.name,
+        url: d.url,
+        avatar: d.avatar ?? null,
+        description: d.description ?? null,
+        type: d.type ?? 0,
+        state: d.state ?? 0,
+        email: d.email ?? null,
+        createdAt: dateOrNull(d.created) ?? new Date(),
+      }))
+      await upsert(ctx, links, rows)
+      recordLoad(ctx, 'links', rows.length)
+    },
+  },
+  {
+    name: 'projects',
+    async allocate(ctx) {
+      await allocateForCollection(ctx, 'projects')
+    },
+    async load(ctx) {
+      const resolver = createResolver(ctx, 'projects')
+      const docs = await collect<any>(ctx, 'projects')
+      const rows = docs.map((d) => ({
+        id: resolver.self(d._id),
+        name: d.name,
+        description: d.description,
+        previewUrl: d.previewUrl ?? null,
+        docUrl: d.docUrl ?? null,
+        projectUrl: d.projectUrl ?? null,
+        images: d.images ?? null,
+        avatar: d.avatar ?? null,
+        text: d.text ?? null,
+        createdAt: dateOrNull(d.created) ?? new Date(),
+      }))
+      await upsert(ctx, projects, rows)
+      recordLoad(ctx, 'projects', rows.length)
+    },
+  },
+  {
+    name: 'says',
+    async allocate(ctx) {
+      await allocateForCollection(ctx, 'says')
+    },
+    async load(ctx) {
+      const resolver = createResolver(ctx, 'says')
+      const docs = await collect<any>(ctx, 'says')
+      const rows = docs.map((d) => ({
+        id: resolver.self(d._id),
+        text: d.text,
+        source: d.source ?? null,
+        author: d.author ?? null,
+        createdAt: dateOrNull(d.created) ?? new Date(),
+      }))
+      await upsert(ctx, says, rows)
+      recordLoad(ctx, 'says', rows.length)
+    },
+  },
+  {
+    name: 'snippets',
+    async allocate(ctx) {
+      await allocateForCollection(ctx, 'snippets')
+    },
+    async load(ctx) {
+      const resolver = createResolver(ctx, 'snippets')
+      const docs = await collect<any>(ctx, 'snippets')
+      const rows = docs.map((d) => ({
+        id: resolver.self(d._id),
+        type: d.type ?? null,
+        private: Boolean(d.private ?? false),
+        raw: d.raw ?? '',
+        name: d.name,
+        reference: d.reference ?? 'root',
+        comment: d.comment ?? null,
+        metatype: d.metatype ?? null,
+        schema: d.schema ?? null,
+        method: d.method ?? null,
+        customPath: d.customPath ?? null,
+        secret: d.secret ?? null,
+        enable: d.enable ?? true,
+        builtIn: Boolean(d.builtIn ?? false),
+        compiledCode: d.compiledCode ?? null,
+        createdAt: dateOrNull(d.created) ?? new Date(),
+        updatedAt: dateOrNull(d.updated),
+      }))
+      await upsert(ctx, snippets, rows)
+      recordLoad(ctx, 'snippets', rows.length)
+    },
+  },
+  {
+    name: 'subscribes',
+    async allocate(ctx) {
+      await allocateForCollection(ctx, 'subscribes')
+    },
+    async load(ctx) {
+      const resolver = createResolver(ctx, 'subscribes')
+      const docs = await collect<any>(ctx, 'subscribes')
+      const rows = docs.map((d) => ({
+        id: resolver.self(d._id),
+        email: d.email,
+        cancelToken: d.cancelToken,
+        subscribe: d.subscribe ?? 0,
+        verified: Boolean(d.verified ?? false),
+        createdAt: dateOrNull(d.created) ?? new Date(),
+      }))
+      await upsert(ctx, subscribes, rows)
+      recordLoad(ctx, 'subscribes', rows.length)
+    },
+  },
+  {
+    name: 'activities',
+    async allocate(ctx) {
+      await allocateForCollection(ctx, 'activities')
+    },
+    async load(ctx) {
+      const resolver = createResolver(ctx, 'activities')
+      const docs = await collect<any>(ctx, 'activities')
+      const rows = docs.map((d) => ({
+        id: resolver.self(d._id),
+        type: d.type ?? null,
+        payload: d.payload ?? null,
+        createdAt: dateOrNull(d.created) ?? new Date(),
+      }))
+      await upsert(ctx, activities, rows)
+      recordLoad(ctx, 'activities', rows.length)
+    },
+  },
+  {
+    name: 'analyzes',
+    async allocate(ctx) {
+      await allocateForCollection(ctx, 'analyzes')
+    },
+    async load(ctx) {
+      const resolver = createResolver(ctx, 'analyzes')
+      const docs = await collect<any>(ctx, 'analyzes')
+      const rows = docs.map((d) => ({
+        id: resolver.self(d._id),
+        timestamp: dateOrNull(d.timestamp ?? d.created) ?? new Date(),
+        ip: d.ip ?? null,
+        ua: d.ua ?? null,
+        country: d.country ?? null,
+        path: d.path ?? null,
+        referer: d.referer ?? null,
+      }))
+      await upsert(ctx, analyzes, rows)
+      recordLoad(ctx, 'analyzes', rows.length)
+    },
+  },
+]
+
+export const stepFileReferences: MigrationStep = {
+  name: 'file_references',
+  dependsOn: ['posts', 'notes', 'pages', 'drafts'],
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'file_references')
+  },
+  async load(ctx) {
+    const resolver = createResolver(ctx, 'file_references')
+    const docs = await collect<any>(ctx, 'file_references')
+    const refMap: Record<string, string> = {
+      post: 'posts',
+      note: 'notes',
+      page: 'pages',
+      draft: 'drafts',
+    }
+    const rows = docs.map((d) => {
+      const coll = d.refType ? refMap[d.refType] : null
+      const refId = coll ? resolver.ref(coll, d.refId, 'refId', false) : null
+      return {
+        id: resolver.self(d._id),
+        fileUrl: d.fileUrl,
+        fileName: d.fileName,
+        status: d.status ?? 'pending',
+        refId,
+        refType: d.refType ?? null,
+        s3ObjectKey: d.s3ObjectKey ?? null,
+        createdAt: dateOrNull(d.created) ?? new Date(),
+      }
+    })
+    await upsert(ctx, fileReferences, rows)
+    recordLoad(ctx, 'file_references', rows.length)
+  },
+}
+
+export const stepPolls: MigrationStep = {
+  name: 'poll_votes',
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'poll_votes')
+  },
+  async load(ctx) {
+    const resolver = createResolver(ctx, 'poll_votes')
+    const docs = await collect<any>(ctx, 'poll_votes')
+    const voteRows = docs.map((d) => ({
+      id: resolver.self(d._id),
+      pollId: d.pollId,
+      voterFingerprint: d.voterFingerprint,
+      createdAt: dateOrNull(d.created) ?? new Date(),
+    }))
+    await upsert(ctx, pollVotes, voteRows)
+    recordLoad(ctx, 'poll_votes', voteRows.length)
+
+    const optionRows = docs.flatMap((d) => {
+      const voteId = resolver.self(d._id)
+      const optionIds: string[] = Array.isArray(d.optionIds) ? d.optionIds : []
+      return optionIds.map((optionId) => ({ voteId, optionId }))
+    })
+    await upsert(ctx, pollVoteOptions, optionRows)
+    recordLoad(ctx, 'poll_vote_options', optionRows.length)
+  },
+}
+
+export const stepSlugTrackers: MigrationStep = {
+  name: 'slug_trackers',
+  dependsOn: ['posts', 'notes', 'pages'],
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'slug_trackers')
+  },
+  async load(ctx) {
+    const resolver = createResolver(ctx, 'slug_trackers')
+    const docs = await collect<any>(ctx, 'slug_trackers')
+    const rows = docs
+      .map((d) => {
+        // Resolve target by inspecting collection candidates
+        const candidates = ['posts', 'notes', 'pages']
+        let targetId: bigint | null = null
+        for (const coll of candidates) {
+          const t = resolver.ref(coll, d.targetId, 'targetId', false)
+          if (t) {
+            targetId = t
+            break
+          }
+        }
+        if (!targetId) {
+          ctx.reports.missingRefs.push({
+            collection: 'slug_trackers',
+            field: 'targetId',
+            mongoId: String(d.targetId ?? 'null'),
+          })
+          return null
+        }
+        return {
+          id: resolver.self(d._id),
+          slug: d.slug,
+          type: d.type,
+          targetId,
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, slugTrackers, rows)
+    recordLoad(ctx, 'slug_trackers', rows.length)
+  },
+}
+
+export const stepWebhooks: MigrationStep = {
+  name: 'webhooks',
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'webhooks')
+    await allocateForCollection(ctx, 'webhook_events')
+  },
+  async load(ctx) {
+    const hookResolver = createResolver(ctx, 'webhooks')
+    const eventResolver = createResolver(ctx, 'webhook_events')
+
+    const hookDocs = await collect<any>(ctx, 'webhooks')
+    await upsert(
+      ctx,
+      webhooks,
+      hookDocs.map((d) => ({
+        id: hookResolver.self(d._id),
+        timestamp: dateOrNull(d.timestamp ?? d.created) ?? new Date(),
+        payloadUrl: d.payloadUrl,
+        events: d.events ?? [],
+        enabled: d.enabled ?? true,
+        secret: d.secret ?? '',
+        scope: d.scope ?? null,
+      })),
+    )
+    recordLoad(ctx, 'webhooks', hookDocs.length)
+
+    const eventDocs = await collect<any>(ctx, 'webhook_events')
+    const eventRows = eventDocs
+      .map((d) => {
+        const hookId = eventResolver.ref(
+          'webhooks',
+          d.hookId ?? d.webhookId,
+          'hookId',
+          true,
+        )
+        if (!hookId) return null
+        return {
+          id: eventResolver.self(d._id),
+          timestamp: dateOrNull(d.timestamp ?? d.created),
+          headers: d.headers ?? null,
+          payload: d.payload ?? null,
+          event: d.event ?? null,
+          response: d.response ?? null,
+          success: d.success ?? null,
+          hookId,
+          status: d.status ?? 0,
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, webhookEvents, eventRows)
+    recordLoad(ctx, 'webhook_events', eventRows.length)
+  },
+}
+
+export const stepAi: MigrationStep = {
+  name: 'ai',
+  dependsOn: ['posts', 'notes', 'pages'],
+  async allocate(ctx) {
+    await Promise.all([
+      allocateForCollection(ctx, 'ai_summaries'),
+      allocateForCollection(ctx, 'ai_insights'),
+      allocateForCollection(ctx, 'ai_translations'),
+      allocateForCollection(ctx, 'translation_entries'),
+      allocateForCollection(ctx, 'ai_agent_conversations'),
+    ])
+  },
+  async load(ctx) {
+    const summaryResolver = createResolver(ctx, 'ai_summaries')
+    const insightsResolver = createResolver(ctx, 'ai_insights')
+    const translationResolver = createResolver(ctx, 'ai_translations')
+    const entryResolver = createResolver(ctx, 'translation_entries')
+    const agentResolver = createResolver(ctx, 'ai_agent_conversations')
+
+    const candidates = ['posts', 'notes', 'pages']
+    const resolveContentRef = (
+      mongoId: any,
+      sourceColl: string,
+    ): bigint | null => {
+      for (const coll of candidates) {
+        const t = ctx.idMap.get(coll)?.get(String(mongoId))
+        if (t) return t
+      }
+      ctx.reports.missingRefs.push({
+        collection: sourceColl,
+        field: 'refId',
+        mongoId: String(mongoId),
+      })
+      return null
+    }
+
+    const summaryDocs = await collect<any>(ctx, 'ai_summaries')
+    const summaryRows = summaryDocs
+      .map((d) => {
+        const refId = resolveContentRef(d.refId, 'ai_summaries')
+        if (!refId) return null
+        return {
+          id: summaryResolver.self(d._id),
+          hash: d.hash,
+          summary: d.summary,
+          refId,
+          lang: d.lang ?? null,
+          createdAt: dateOrNull(d.created) ?? new Date(),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, aiSummaries, summaryRows)
+    recordLoad(ctx, 'ai_summaries', summaryRows.length)
+
+    const insightsDocs = await collect<any>(ctx, 'ai_insights')
+    const insightsRows = insightsDocs
+      .map((d) => {
+        const refId = resolveContentRef(d.refId, 'ai_insights')
+        if (!refId) return null
+        return {
+          id: insightsResolver.self(d._id),
+          refId,
+          lang: d.lang,
+          hash: d.hash,
+          content: d.content,
+          isTranslation: Boolean(d.isTranslation ?? false),
+          sourceInsightsId: d.sourceInsightsId
+            ? insightsResolver.ref(
+                'ai_insights',
+                d.sourceInsightsId,
+                'sourceInsightsId',
+                false,
+              )
+            : null,
+          sourceLang: d.sourceLang ?? null,
+          modelInfo: d.modelInfo ?? null,
+          createdAt: dateOrNull(d.created) ?? new Date(),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, aiInsights, insightsRows)
+    recordLoad(ctx, 'ai_insights', insightsRows.length)
+
+    const translationDocs = await collect<any>(ctx, 'ai_translations')
+    const translationRows = translationDocs
+      .map((d) => {
+        const refId = resolveContentRef(d.refId, 'ai_translations')
+        if (!refId) return null
+        return {
+          id: translationResolver.self(d._id),
+          hash: d.hash,
+          refId,
+          refType: d.refType,
+          lang: d.lang,
+          sourceLang: d.sourceLang,
+          title: d.title,
+          text: d.text,
+          subtitle: d.subtitle ?? null,
+          summary: d.summary ?? null,
+          tags: d.tags ?? [],
+          sourceModifiedAt: dateOrNull(d.sourceModifiedAt),
+          aiModel: d.aiModel ?? null,
+          aiProvider: d.aiProvider ?? null,
+          contentFormat: d.contentFormat ?? null,
+          content: d.content ?? null,
+          sourceBlockSnapshots: d.sourceBlockSnapshots ?? null,
+          sourceMetaHashes: d.sourceMetaHashes ?? null,
+          createdAt: dateOrNull(d.created) ?? new Date(),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, aiTranslations, translationRows)
+    recordLoad(ctx, 'ai_translations', translationRows.length)
+
+    const entryDocs = await collect<any>(ctx, 'translation_entries')
+    await upsert(
+      ctx,
+      translationEntries,
+      entryDocs.map((d) => ({
+        id: entryResolver.self(d._id),
+        keyPath: d.keyPath,
+        lang: d.lang,
+        keyType: d.keyType,
+        lookupKey: d.lookupKey,
+        sourceText: d.sourceText,
+        translatedText: d.translatedText,
+        sourceUpdatedAt: dateOrNull(d.sourceUpdatedAt),
+        createdAt: dateOrNull(d.created) ?? new Date(),
+      })),
+    )
+    recordLoad(ctx, 'translation_entries', entryDocs.length)
+
+    const agentDocs = await collect<any>(ctx, 'ai_agent_conversations')
+    const agentRows = agentDocs
+      .map((d) => {
+        const refId = resolveContentRef(d.refId, 'ai_agent_conversations')
+        if (!refId) return null
+        return {
+          id: agentResolver.self(d._id),
+          refId,
+          refType: d.refType,
+          title: d.title ?? null,
+          messages: d.messages ?? [],
+          model: d.model,
+          providerId: d.providerId,
+          reviewState: d.reviewState ?? null,
+          diffState: d.diffState ?? null,
+          messageCount: Array.isArray(d.messages) ? d.messages.length : 0,
+          createdAt: dateOrNull(d.created) ?? new Date(),
+          updatedAt: dateOrNull(d.updated),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, aiAgentConversations, agentRows)
+    recordLoad(ctx, 'ai_agent_conversations', agentRows.length)
+  },
+}
+
+export const stepSearchDocuments: MigrationStep = {
+  name: 'search_documents',
+  dependsOn: ['posts', 'notes', 'pages'],
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'search_documents')
+  },
+  async load(ctx) {
+    const resolver = createResolver(ctx, 'search_documents')
+    const docs = await collect<any>(ctx, 'search_documents')
+    const refMap: Record<string, string> = {
+      post: 'posts',
+      note: 'notes',
+      page: 'pages',
+    }
+    const rows = docs
+      .map((d) => {
+        const coll = refMap[d.refType]
+        if (!coll) return null
+        const refId = resolver.ref(coll, d.refId, 'refId', true)
+        if (!refId) return null
+        return {
+          id: resolver.self(d._id),
+          refType: d.refType,
+          refId,
+          title: d.title,
+          searchText: d.searchText,
+          terms: d.terms ?? [],
+          titleTermFreq: d.titleTermFreq ?? {},
+          bodyTermFreq: d.bodyTermFreq ?? {},
+          titleLength: d.titleLength ?? 0,
+          bodyLength: d.bodyLength ?? 0,
+          slug: d.slug ?? null,
+          nid: d.nid ?? null,
+          isPublished: d.isPublished ?? true,
+          publicAt: dateOrNull(d.publicAt),
+          hasPassword: Boolean(d.hasPassword ?? false),
+          createdAt: dateOrNull(d.created) ?? new Date(),
+          modifiedAt: dateOrNull(d.modified),
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+    await upsert(ctx, searchDocuments, rows)
+    recordLoad(ctx, 'search_documents', rows.length)
+  },
+}
+
+export const stepServerless: MigrationStep = {
+  name: 'serverless',
+  async allocate(ctx) {
+    await allocateForCollection(ctx, 'serverless_storages')
+    await allocateForCollection(ctx, 'serverless_logs')
+  },
+  async load(ctx) {
+    const storageResolver = createResolver(ctx, 'serverless_storages')
+    const logResolver = createResolver(ctx, 'serverless_logs')
+
+    const storageDocs = await collect<any>(ctx, 'serverless_storages')
+    await upsert(
+      ctx,
+      serverlessStorages,
+      storageDocs.map((d) => ({
+        id: storageResolver.self(d._id),
+        namespace: d.namespace,
+        key: d.key,
+        value: d.value,
+      })),
+    )
+    recordLoad(ctx, 'serverless_storages', storageDocs.length)
+
+    const logDocs = await collect<any>(ctx, 'serverless_logs')
+    await upsert(
+      ctx,
+      serverlessLogs,
+      logDocs.map((d) => ({
+        id: logResolver.self(d._id),
+        functionId: null,
+        reference: d.reference,
+        name: d.name,
+        method: d.method ?? null,
+        ip: d.ip ?? null,
+        status: d.status ?? 'success',
+        executionTime: d.executionTime ?? 0,
+        logs: d.logs ?? null,
+        error: d.error ?? null,
+        createdAt: dateOrNull(d.created) ?? new Date(),
+      })),
+    )
+    recordLoad(ctx, 'serverless_logs', logDocs.length)
+  },
+}
+
+export const ALL_STEPS: MigrationStep[] = [
+  stepCategories,
+  stepTopics,
+  stepReaders,
+  stepPosts,
+  stepNotes,
+  stepPages,
+  stepRecentlies,
+  stepComments,
+  stepDrafts,
+  ...stepSimpleCollections,
+  stepFileReferences,
+  stepPolls,
+  stepSlugTrackers,
+  stepWebhooks,
+  stepAi,
+  stepSearchDocuments,
+  stepServerless,
+]
