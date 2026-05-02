@@ -14,6 +14,8 @@ import {
   ReaderReplyCommentSchema,
 } from '~/modules/comment/comment.schema'
 import { CommentService } from '~/modules/comment/comment.service'
+import { CommentAnchorService } from '~/modules/comment/comment-anchor.service'
+import { CommentReaderFillService } from '~/modules/comment/comment-reader-fill.service'
 import { generateDefaultConfig } from '~/modules/configs/configs.default'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
@@ -172,6 +174,18 @@ describe('CommentService logged-in identity handling', () => {
             waitForConfigReady: vi.fn().mockResolvedValue({}),
           },
         },
+        {
+          provide: CommentAnchorService,
+          useValue: {
+            resolveAnchorForCreate: vi.fn().mockResolvedValue(undefined),
+            resolveAnchorForUpdatedContent: vi.fn().mockReturnValue(null),
+            reanchorCommentsByRef: vi.fn().mockResolvedValue(undefined),
+            findRangeByQuoteContext: vi.fn().mockReturnValue(null),
+            projectRangeFromSnapshot: vi.fn().mockReturnValue(null),
+            findBlockByAnchor: vi.fn().mockReturnValue(null),
+          },
+        },
+        CommentReaderFillService,
       ],
     }).compile()
 

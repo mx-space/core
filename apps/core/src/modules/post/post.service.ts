@@ -156,10 +156,6 @@ export class PostService implements OnApplicationBootstrap {
     oldDocument: PostModel,
     newDocument: Partial<PostModel>,
   ) {
-    const createTracker = this.slugTrackerService.createTracker.bind(
-      this.slugTrackerService,
-    )
-
     const oldDocumentRefCategory = await this.categoryService.findCategoryById(
       oldDocument.categoryId.toString(),
     )
@@ -171,22 +167,21 @@ export class PostService implements OnApplicationBootstrap {
       categorySlug: oldDocumentRefCategory.slug,
     }
 
+    const createSlugChangeTracker = () =>
+      this.slugTrackerService.createTracker(
+        `/${oldSlugMeta.categorySlug}/${oldSlugMeta.slug}`,
+        ArticleTypeEnum.Post,
+        oldDocument.id,
+      )
+
     if (newDocument.slug && oldSlugMeta.slug !== newDocument.slug) {
-      return trackSlugChanges()
+      return createSlugChangeTracker()
     }
     if (
       newDocument.categoryId &&
       String(oldDocument.categoryId) !== String(newDocument.categoryId)
     ) {
-      return trackSlugChanges()
-    }
-
-    function trackSlugChanges() {
-      return createTracker(
-        `/${oldSlugMeta.categorySlug}/${oldSlugMeta.slug}`,
-        ArticleTypeEnum.Post,
-        oldDocument.id,
-      )
+      return createSlugChangeTracker()
     }
   }
 
@@ -278,7 +273,7 @@ export class PostService implements OnApplicationBootstrap {
       }
     }
     // 只有修改了 text title slug 的值才触发更新 modified 的时间
-    if ([data.text, data.title, data.slug].some((i) => isDefined(i))) {
+    if ([data.text, data.title, data.slug].some(isDefined)) {
       const now = new Date()
 
       data.modified = now

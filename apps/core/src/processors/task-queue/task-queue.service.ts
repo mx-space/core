@@ -1,8 +1,10 @@
 import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { getRedisKey } from '~/utils/redis.util'
 import { md5 } from '~/utils/tool.util'
+
 import { RedisService } from '../redis/redis.service'
 import {
   TASK_QUEUE_KEYS,
@@ -19,15 +21,24 @@ import {
 } from './task-queue.lua'
 import {
   parseTask,
-  TaskStatus,
   type SubTaskStats,
   type Task,
   type TaskRedis,
+  TaskStatus,
 } from './task-queue.types'
 
 const BATCH_TASK_TYPES = ['ai:translation:batch', 'ai:translation:all']
 
 type LogLevel = 'info' | 'warn' | 'error'
+
+function isTerminalStatus(status: TaskStatus): boolean {
+  return (
+    status === TaskStatus.Completed ||
+    status === TaskStatus.PartialFailed ||
+    status === TaskStatus.Failed ||
+    status === TaskStatus.Cancelled
+  )
+}
 
 export interface CreateTaskOptions {
   type: string
@@ -63,6 +74,23 @@ export class TaskQueueService implements OnModuleDestroy {
 
   private getKey(key: string) {
     return getRedisKey(key as any)
+  }
+
+  private pickIndexKeyByOption(opts: {
+    type?: string
+    scope?: string
+    status?: TaskStatus
+  }): string {
+    if (opts.type) {
+      return this.getKey(TASK_QUEUE_KEYS.indexByType(opts.type))
+    }
+    if (opts.scope) {
+      return this.getKey(TASK_QUEUE_KEYS.indexByScope(opts.scope))
+    }
+    if (opts.status) {
+      return this.getKey(TASK_QUEUE_KEYS.indexByStatus(opts.status))
+    }
+    return this.getKey(TASK_QUEUE_KEYS.indexAll)
   }
 
   private computeDedupHash(type: string, dedupKey?: string): string {
@@ -218,24 +246,30 @@ export class TaskQueueService implements OnModuleDestroy {
     for (const [err, status] of results) {
       if (err || !status) continue
       switch (status as string) {
-        case TaskStatus.Completed:
+        case TaskStatus.Completed: {
           stats.completed++
           break
-        case TaskStatus.PartialFailed:
+        }
+        case TaskStatus.PartialFailed: {
           stats.partialFailed++
           break
-        case TaskStatus.Failed:
+        }
+        case TaskStatus.Failed: {
           stats.failed++
           break
-        case TaskStatus.Running:
+        }
+        case TaskStatus.Running: {
           stats.running++
           break
-        case TaskStatus.Pending:
+        }
+        case TaskStatus.Pending: {
           stats.pending++
           break
-        case TaskStatus.Cancelled:
+        }
+        case TaskStatus.Cancelled: {
           stats.failed++ // Count cancelled as failed for simplicity
           break
+        }
       }
     }
 
@@ -252,16 +286,7 @@ export class TaskQueueService implements OnModuleDestroy {
   }): Promise<{ data: Task[]; total: number }> {
     const { status, type, scope, page, size, includeSubTasks = false } = options
 
-    let indexKey: string
-    if (type) {
-      indexKey = this.getKey(TASK_QUEUE_KEYS.indexByType(type))
-    } else if (scope) {
-      indexKey = this.getKey(TASK_QUEUE_KEYS.indexByScope(scope))
-    } else if (status) {
-      indexKey = this.getKey(TASK_QUEUE_KEYS.indexByStatus(status))
-    } else {
-      indexKey = this.getKey(TASK_QUEUE_KEYS.indexAll)
-    }
+    const indexKey = this.pickIndexKeyByOption({ type, scope, status })
 
     // Get all task IDs from the index first, then filter
     const allTaskIds = await this.redis.zrevrange(indexKey, 0, -1)
@@ -305,12 +330,7 @@ export class TaskQueueService implements OnModuleDestroy {
       throw new BizException(ErrorCodeEnum.AITaskNotFound)
     }
 
-    if (
-      task.status === TaskStatus.Completed ||
-      task.status === TaskStatus.PartialFailed ||
-      task.status === TaskStatus.Failed ||
-      task.status === TaskStatus.Cancelled
-    ) {
+    if (isTerminalStatus(task.status)) {
       throw new BizException(ErrorCodeEnum.AITaskAlreadyCompleted)
     }
 
@@ -436,16 +456,7 @@ export class TaskQueueService implements OnModuleDestroy {
       )
     }
 
-    let indexKey: string
-    if (type) {
-      indexKey = this.getKey(TASK_QUEUE_KEYS.indexByType(type))
-    } else if (scope) {
-      indexKey = this.getKey(TASK_QUEUE_KEYS.indexByScope(scope))
-    } else if (status) {
-      indexKey = this.getKey(TASK_QUEUE_KEYS.indexByStatus(status))
-    } else {
-      indexKey = this.getKey(TASK_QUEUE_KEYS.indexAll)
-    }
+    const indexKey = this.pickIndexKeyByOption({ type, scope, status })
 
     const taskIds = await this.redis.zrangebyscore(indexKey, '-inf', before)
 
@@ -459,12 +470,7 @@ export class TaskQueueService implements OnModuleDestroy {
         const task = await this.getTask(taskId)
         if (!task) continue
         if (scope && task.scope !== scope) continue
-        const isTerminal =
-          task.status === TaskStatus.Completed ||
-          task.status === TaskStatus.PartialFailed ||
-          task.status === TaskStatus.Failed ||
-          task.status === TaskStatus.Cancelled
-        if (!isTerminal) continue
+        if (!isTerminalStatus(task.status)) continue
         if (status && task.status !== status) continue
         await this.deleteTask(taskId)
         deleted++
@@ -605,12 +611,7 @@ export class TaskQueueService implements OnModuleDestroy {
       ...extraArgs,
     )
 
-    if (
-      status === TaskStatus.Completed ||
-      status === TaskStatus.PartialFailed ||
-      status === TaskStatus.Failed ||
-      status === TaskStatus.Cancelled
-    ) {
+    if (isTerminalStatus(status)) {
       const logsKey = this.getKey(TASK_QUEUE_KEYS.logs(taskId))
       await this.redis.expire(taskKey, TASK_QUEUE_TTL.taskCompleted)
       await this.redis.expire(logsKey, TASK_QUEUE_TTL.taskCompleted)

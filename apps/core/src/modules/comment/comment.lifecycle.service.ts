@@ -384,12 +384,13 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
         } as any,
       )
 
-    const location =
-      `${result.countryName || ''}${
-        result.regionName && result.regionName !== result.cityName
-          ? String(result.regionName)
-          : ''
-      }${result.cityName ? String(result.cityName) : ''}` || undefined
+    const country = result.countryName ? String(result.countryName) : ''
+    let region = ''
+    if (result.regionName && result.regionName !== result.cityName) {
+      region = String(result.regionName)
+    }
+    const city = result.cityName ? String(result.cityName) : ''
+    const location = `${country}${region}${city}` || undefined
 
     if (location) await this.commentModel.updateOne({ _id: id }, { location })
   }
@@ -473,10 +474,8 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       ),
     }
     if (isDev) {
-      // @ts-ignore
-      delete options.html
-      Object.assign(options, { source })
-      this.logger.log(options)
+      const { html: _html, ...rest } = options
+      this.logger.log({ ...rest, source })
       return
     }
     await this.mailService.send(options)

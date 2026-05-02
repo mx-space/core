@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CommentState } from '~/modules/comment/comment.model'
 import { CommentService } from '~/modules/comment/comment.service'
+import { CommentAnchorService } from '~/modules/comment/comment-anchor.service'
+import { CommentReaderFillService } from '~/modules/comment/comment-reader-fill.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { OwnerService } from '~/modules/owner/owner.service'
@@ -96,6 +98,27 @@ describe('CommentService thread model', () => {
               detachedCount: 0,
             }),
             hardDeleteFilesForComment: vi.fn().mockResolvedValue(0),
+          },
+        },
+        {
+          provide: CommentAnchorService,
+          useValue: {
+            resolveAnchorForCreate: vi.fn().mockResolvedValue(undefined),
+            resolveAnchorForUpdatedContent: vi.fn().mockReturnValue(null),
+            reanchorCommentsByRef: vi.fn().mockResolvedValue(undefined),
+            findRangeByQuoteContext: vi.fn().mockReturnValue(null),
+            projectRangeFromSnapshot: vi.fn().mockReturnValue(null),
+            findBlockByAnchor: vi.fn().mockReturnValue(null),
+          },
+        },
+        {
+          provide: CommentReaderFillService,
+          useValue: {
+            collectNestedReaderIds: vi.fn().mockReturnValue([]),
+            collectThreadReaderIds: vi.fn().mockReturnValue([]),
+            fillAndReplaceAvatarUrl: vi
+              .fn()
+              .mockImplementation(async (comments: any[]) => comments),
           },
         },
       ],

@@ -50,6 +50,7 @@ import {
 import { CommentService } from './comment.service'
 
 const idempotenceMessage = '哦吼，这句话你已经说过啦'
+
 @ApiController({ path: 'comments' })
 @UseInterceptors(CommentFilterEmailInterceptor)
 export class CommentController {
@@ -451,13 +452,15 @@ export class CommentController {
         filter.state = state
       }
       const comments = await this.commentService.model.find(filter).lean()
-      for (const comment of comments) {
-        await this.commentService.softDeleteComment(comment._id.toString())
-      }
+      await Promise.all(
+        comments.map((comment) =>
+          this.commentService.softDeleteComment(comment._id.toString()),
+        ),
+      )
     } else if (ids?.length) {
-      for (const id of ids) {
-        await this.commentService.softDeleteComment(id)
-      }
+      await Promise.all(
+        ids.map((id) => this.commentService.softDeleteComment(id)),
+      )
     }
 
     return

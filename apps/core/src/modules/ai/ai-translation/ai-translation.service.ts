@@ -54,6 +54,41 @@ import {
   MARKDOWN_TRANSLATION_STRATEGY,
 } from './translation-strategy.interface'
 
+function isDataEvent(event: ArticleEventPayload): event is { data: string } {
+  return 'data' in event
+}
+
+function isIdEvent(event: ArticleEventPayload): event is { id: string } {
+  return 'id' in event && typeof (event as { id?: unknown }).id === 'string'
+}
+
+const TRANSLATION_LANGUAGE_CONCURRENCY = 3
+
+/**
+ * Run an async mapper over `items` with bounded concurrency, preserving the
+ * input order in the returned results array.
+ */
+async function runWithConcurrency<T, R>(
+  items: readonly T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = Array.from({ length: items.length })
+  let cursor = 0
+  const workers = Array.from(
+    { length: Math.min(limit, items.length) },
+    async () => {
+      while (true) {
+        const index = cursor++
+        if (index >= items.length) return
+        results[index] = await fn(items[index], index)
+      }
+    },
+  )
+  await Promise.all(workers)
+  return results
+}
+
 @Injectable()
 export class AiTranslationService
   extends BaseTranslationService
@@ -128,6 +163,17 @@ export class AiTranslationService
     this.logger.log('AI translation task handlers registered')
   }
 
+  // NOTE: `executeTranslationTask` and `executeTranslationAllTask` share a
+  // surface-level "loop + checkAborted + appendLog + updateProgress" shape, but
+  // their per-iteration semantics differ enough to keep them apart:
+  //   - this method tracks per-language failures + sets PartialFailed/Failed
+  //     status, updates progress every iteration, and wraps each call in
+  //     try/catch with re-throw on AbortError;
+  //   - `executeTranslationAllTask` has no per-iteration try/catch (createTask
+  //     never throws here), throttles progress updates to every 10 items, and
+  //     reports `createdCount` rather than success/fail counts.
+  // Extracting `forEachWithProgress` would force callers to thread these as
+  // options and would make both call sites harder to read than they are now.
   private async executeTranslationTask(
     payload: TranslationTaskPayload,
     context: TaskExecuteContext,
@@ -176,7 +222,7 @@ export class AiTranslationService
           lang: result.lang,
           title: result.title,
         })
-      } catch (error) {
+      } catch (error: any) {
         if (error.name === 'AbortError') throw error
         failedCount++
         await context.appendLog(
@@ -223,7 +269,7 @@ export class AiTranslationService
 
     // Fetch article info for all refIds
     const articles = await this.databaseService.findGlobalByIds(refIds)
-    const articleMap = this.buildArticleInfoMap(articles)
+    const articleMap = this.mapArticlesByRefId(articles)
 
     const createdTaskIds: string[] = []
 
@@ -321,17 +367,11 @@ export class AiTranslationService
       pageModel.find().select('_id title').lean(),
     ])
 
-    // Build article info map
-    const articleMap = new Map<string, { title: string; type: string }>()
-    for (const post of posts) {
-      articleMap.set(post._id.toString(), { title: post.title, type: 'Post' })
-    }
-    for (const note of notes) {
-      articleMap.set(note._id.toString(), { title: note.title, type: 'Note' })
-    }
-    for (const page of pages) {
-      articleMap.set(page._id.toString(), { title: page.title, type: 'Page' })
-    }
+    const articleMap = this.mapArticlesByRefId({
+      posts: posts.map((p) => ({ id: p._id.toString(), title: p.title })),
+      notes: notes.map((n) => ({ id: n._id.toString(), title: n.title })),
+      pages: pages.map((p) => ({ id: p._id.toString(), title: p.title })),
+    })
 
     const allArticleIds = Array.from(articleMap.keys())
     const total = allArticleIds.length
@@ -408,20 +448,23 @@ export class AiTranslationService
     )
   }
 
-  private buildArticleInfoMap(articles: {
+  // Article ref-type is normalized to `CollectionRefTypes` enum values
+  // everywhere (post/note/page collection names), avoiding 'Post'/'Note'/'Page'
+  // string literals that previously diverged from the enum form.
+  private mapArticlesByRefId(articles: {
     posts: Array<{ id: string; title: string }>
     notes: Array<{ id: string; title: string }>
     pages: Array<{ id: string; title: string }>
-  }): Map<string, { title: string; type: string }> {
-    const map = new Map<string, { title: string; type: string }>()
+  }): Map<string, { title: string; type: CollectionRefTypes }> {
+    const map = new Map<string, { title: string; type: CollectionRefTypes }>()
     for (const post of articles.posts) {
-      map.set(post.id, { title: post.title, type: 'Post' })
+      map.set(post.id, { title: post.title, type: CollectionRefTypes.Post })
     }
     for (const note of articles.notes) {
-      map.set(note.id, { title: note.title, type: 'Note' })
+      map.set(note.id, { title: note.title, type: CollectionRefTypes.Note })
     }
     for (const page of articles.pages) {
-      map.set(page.id, { title: page.title, type: 'Page' })
+      map.set(page.id, { title: page.title, type: CollectionRefTypes.Page })
     }
     return map
   }
@@ -465,14 +508,14 @@ export class AiTranslationService
   }
 
   extractIdFromEvent(event: ArticleEventPayload): string | null {
-    if ('data' in event) {
-      return (event as { data: string }).data ?? null
+    if (isDataEvent(event)) {
+      return event.data ?? null
     }
-    if ('id' in event && typeof event.id === 'string') {
+    if (isIdEvent(event)) {
       return event.id
     }
     const doc = event as ArticleEventDocument
-    if (doc._id && typeof doc._id === 'string') {
+    if (typeof doc._id === 'string') {
       return doc._id
     }
     return doc.id ?? doc._id?.toString?.() ?? null
@@ -649,7 +692,7 @@ export class AiTranslationService
         }`,
       )
       return translated
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof BizException || error.name === 'AbortError') {
         throw error
       }
@@ -803,27 +846,30 @@ export class AiTranslationService
     eventType: BusinessEvents,
     translation: AITranslationModel,
   ) {
-    // `translation` can be a live Mongoose document. Its array fields may carry
-    // Mongoose-specific internals that fail the gateway's `structuredClone()`.
-    // Materialize `tags` into a plain array before emitting.
-    const tags = Array.isArray(translation.tags)
-      ? [...translation.tags]
-      : translation.tags
+    // `translation` may be a live Mongoose document carrying internals that
+    // fail the gateway's `structuredClone()`. Materialize to a plain object
+    // before picking the published fields.
+    const plain =
+      (
+        translation as AITranslationModel & {
+          toObject?: () => AITranslationModel & { id: string }
+        }
+      ).toObject?.() ?? translation
 
     const payload = {
-      id: translation.id,
-      refId: translation.refId,
-      refType: translation.refType,
-      lang: translation.lang,
-      sourceLang: translation.sourceLang,
-      title: translation.title,
-      text: translation.text,
-      subtitle: translation.subtitle,
-      summary: translation.summary,
-      tags,
-      hash: translation.hash,
-      aiModel: translation.aiModel,
-      aiProvider: translation.aiProvider,
+      id: plain.id,
+      refId: plain.refId,
+      refType: plain.refType,
+      lang: plain.lang,
+      sourceLang: plain.sourceLang,
+      title: plain.title,
+      text: plain.text,
+      subtitle: plain.subtitle,
+      summary: plain.summary,
+      tags: plain.tags,
+      hash: plain.hash,
+      aiModel: plain.aiModel,
+      aiProvider: plain.aiProvider,
     }
 
     this.eventManager.emit(eventType, payload, {
@@ -845,19 +891,22 @@ export class AiTranslationService
       return []
     }
 
-    const results: AITranslationModel[] = []
-    for (const lang of languages) {
-      try {
-        const translation = await this.generateTranslation(articleId, lang)
-        results.push(translation)
-      } catch (error) {
-        this.logger.error(
-          `Failed to generate translation for ${articleId} to ${lang}: ${error.message}`,
-        )
-      }
-    }
+    const settled = await runWithConcurrency(
+      languages,
+      TRANSLATION_LANGUAGE_CONCURRENCY,
+      async (lang) => {
+        try {
+          return await this.generateTranslation(articleId, lang)
+        } catch (error: any) {
+          this.logger.error(
+            `Failed to generate translation for ${articleId} to ${lang}: ${error.message}`,
+          )
+          return null
+        }
+      },
+    )
 
-    return results
+    return settled.filter((t): t is AITranslationModel => t !== null)
   }
 
   async findCachedTitlesByRefIds(
@@ -1005,31 +1054,7 @@ export class AiTranslationService
       this.databaseService.findGlobalByIds(refIds),
     ])
 
-    const articleMap = {} as Record<
-      string,
-      { title: string; id: string; type: CollectionRefTypes }
-    >
-    for (const a of articles.posts) {
-      articleMap[a.id] = {
-        title: a.title,
-        id: a.id,
-        type: CollectionRefTypes.Post,
-      }
-    }
-    for (const a of articles.notes) {
-      articleMap[a.id] = {
-        title: a.title,
-        id: a.id,
-        type: CollectionRefTypes.Note,
-      }
-    }
-    for (const a of articles.pages) {
-      articleMap[a.id] = {
-        title: a.title,
-        id: a.id,
-        type: CollectionRefTypes.Page,
-      }
-    }
+    const articleMap = this.mapArticlesByRefId(articles)
 
     const translationsByRefId = translations.reduce(
       (acc, trans) => {
@@ -1044,10 +1069,10 @@ export class AiTranslationService
 
     const groupedData = refIds
       .map((refId: string) => {
-        const article = articleMap[refId]
-        if (!article) return null
+        const info = articleMap.get(refId)
+        if (!info) return null
         return {
-          article,
+          article: { id: refId, title: info.title, type: info.type },
           translations: translationsByRefId[refId] || [],
         }
       })
@@ -1304,7 +1329,6 @@ export class AiTranslationService
     const snapshot = this.buildSnapshotFromDocument(articleId, document)
     const validLangs: string[] = []
     const staleLangs: string[] = []
-    let matchedTranslation: AITranslationModel | null = null
 
     for (const t of translations) {
       const status =
@@ -1314,21 +1338,18 @@ export class AiTranslationService
         )
       if (status === 'valid') {
         validLangs.push(t.lang)
-        if (targetLang && t.lang === targetLang) {
-          matchedTranslation = t
-        }
       } else if (status === 'stale') {
         staleLangs.push(t.lang)
       }
     }
 
-    if (targetLang && matchedTranslation) {
-      const fullTranslation = await this.aiTranslationModel.findOne({
-        refId: articleId,
-        lang: targetLang,
-      })
-      matchedTranslation = fullTranslation
-    }
+    const matchedTranslation =
+      targetLang && validLangs.includes(targetLang)
+        ? await this.aiTranslationModel.findOne({
+            refId: articleId,
+            lang: targetLang,
+          })
+        : null
 
     if (staleLangs.length && targetLang) {
       this.scheduleRegenerationForStaleTranslations(

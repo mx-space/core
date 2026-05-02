@@ -125,18 +125,16 @@ export class FileReferenceService {
     )
 
     if (imageUrls.length > 0) {
-      for (const fileUrl of imageUrls) {
-        await this.fileReferenceModel.updateOne(
-          { fileUrl },
-          {
-            $set: {
-              status: FileReferenceStatus.Active,
-              refId,
-              refType,
-            },
+      await this.fileReferenceModel.updateMany(
+        { fileUrl: { $in: imageUrls } },
+        {
+          $set: {
+            status: FileReferenceStatus.Active,
+            refId,
+            refType,
           },
-        )
-      }
+        },
+      )
     }
   }
 
@@ -532,6 +530,31 @@ export class FileReferenceService {
   }
 
   /**
+   * 删除 orphan 文件之 storage：S3 或本地 image 目录。
+   * 返回 removed 表示是否真删；reason 用于上层决定告警。
+   */
+  private async deleteOrphanStorage(
+    file: FileReferenceModel,
+    s3Uploader: S3Uploader | null,
+  ): Promise<{
+    removed: boolean
+    reason?: 'no-s3' | 'unknown-backend'
+  }> {
+    if (file.s3ObjectKey) {
+      if (!s3Uploader) {
+        return { removed: false, reason: 'no-s3' }
+      }
+      await s3Uploader.deleteObject(file.s3ObjectKey)
+      return { removed: true }
+    }
+    if (file.fileUrl.includes('/objects/image/')) {
+      await this.unlinkLocalImage(file.fileName)
+      return { removed: true }
+    }
+    return { removed: false, reason: 'unknown-backend' }
+  }
+
+  /**
    * Owner 路径之既有清扫（保持向后兼容）：仅扫 uploadedBy != Reader 的 pending 文件。
    */
   async cleanupOrphanFiles(maxAgeMinutes = 60) {
@@ -548,15 +571,11 @@ export class FileReferenceService {
 
     for (const file of orphanFiles) {
       try {
-        if (file.s3ObjectKey) {
-          if (!s3Uploader) {
+        const result = await this.deleteOrphanStorage(file, s3Uploader)
+        if (!result.removed) {
+          if (result.reason === 'no-s3') {
             this.logger.warn(`S3 not configured, skip: ${file.fileName}`)
-            continue
           }
-          await s3Uploader.deleteObject(file.s3ObjectKey)
-        } else if (file.fileUrl.includes('/objects/image/')) {
-          await this.unlinkLocalImage(file.fileName)
-        } else {
           continue
         }
         await this.fileReferenceModel.deleteOne({ _id: file._id })
@@ -626,19 +645,6 @@ export class FileReferenceService {
   async batchDeleteOrphans(options: { ids?: string[]; all?: boolean }) {
     const s3Uploader = await this.buildS3Uploader()
 
-    const deleteFile = async (file: FileReferenceModel): Promise<boolean> => {
-      if (file.s3ObjectKey) {
-        if (!s3Uploader) return false
-        await s3Uploader.deleteObject(file.s3ObjectKey)
-        return true
-      }
-      if (file.fileUrl.includes('/objects/image/')) {
-        await this.unlinkLocalImage(file.fileName)
-        return true
-      }
-      return false
-    }
-
     if (options.all) {
       const orphanFiles = await this.fileReferenceModel.find({
         status: FileReferenceStatus.Pending,
@@ -647,7 +653,8 @@ export class FileReferenceService {
       let deletedCount = 0
       for (const file of orphanFiles) {
         try {
-          if (await deleteFile(file)) {
+          const { removed } = await this.deleteOrphanStorage(file, s3Uploader)
+          if (removed) {
             await this.fileReferenceModel.deleteOne({ _id: file._id })
             deletedCount++
           }
@@ -664,7 +671,8 @@ export class FileReferenceService {
         const ref = await this.fileReferenceModel.findById(id)
         if (ref && ref.status === FileReferenceStatus.Pending) {
           try {
-            if (await deleteFile(ref)) {
+            const { removed } = await this.deleteOrphanStorage(ref, s3Uploader)
+            if (removed) {
               await this.fileReferenceModel.deleteOne({ _id: id })
               deletedCount++
             }

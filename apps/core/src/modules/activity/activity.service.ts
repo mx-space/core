@@ -154,6 +154,25 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     return this.activityModel
   }
 
+  private async loadCategoryMap(
+    categoryIds: any[],
+  ): Promise<Record<string, { slug: string; name: string }>> {
+    if (categoryIds.length === 0) {
+      return {}
+    }
+    const categories = await this.databaseService.db
+      .collection(CATEGORY_COLLECTION_NAME)
+      .find({ _id: { $in: categoryIds } })
+      .project({ slug: 1, name: 1 })
+      .toArray()
+    return Object.fromEntries(
+      categories.map((c: any) => [
+        c._id.toString(),
+        { slug: c.slug, name: c.name },
+      ]),
+    )
+  }
+
   async getLikeActivities(page = 1, size = 10) {
     const activities = await this.model.paginate(
       {
@@ -169,32 +188,23 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     )
 
     const transformedPager = transformDataToPaginate(activities)
-    const typedIdsMap = transformedPager.data.reduce(
-      (acc, item) => {
-        const { type, id } = item.payload as ActivityLikePayload
-
-        switch (type.toLowerCase()) {
-          case 'note': {
-            acc.note.push(id)
-            break
-          }
-          case 'post': {
-            acc.post.push(id)
-
-            break
-          }
+    const typedIdsMap: Record<ActivityLikeSupportType, string[]> = {
+      post: [],
+      note: [],
+    }
+    const readerIds: string[] = []
+    for (const item of transformedPager.data) {
+      const { type, id, readerId } = item.payload as ActivityLikePayload
+      switch (type.toLowerCase()) {
+        case 'note': {
+          typedIdsMap.note.push(id)
+          break
         }
-        return acc
-      },
-      {
-        post: [],
-        note: [],
-      } as Record<ActivityLikeSupportType, string[]>,
-    )
-
-    const readerIds = [] as string[]
-    for (const item of activities.docs) {
-      const readerId = item.payload.readerId
+        case 'post': {
+          typedIdsMap.post.push(id)
+          break
+        }
+      }
       if (readerId) {
         readerIds.push(readerId)
       }
@@ -277,22 +287,23 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     )
     const data = transformDataToPaginate(activities)
 
-    const articleIds = [] as string[]
-    for (let i = 0; i < data.data.length; i++) {
-      const item = data.data[i]
-      const roomName = item.payload.roomName
-      if (!roomName) continue
+    const articleIds: string[] = []
+    const mapped = data.data.map((item) => {
+      const roomName = item.payload?.roomName
+      if (!roomName) {
+        return item
+      }
       const refId = extractArticleIdFromRoomName(roomName)
       articleIds.push(refId)
-
-      const document = data.data[i] as Document & ActivityModel
-      data.data[i] = document.toObject()
-      ;(data.data[i] as any).refId = refId
-    }
+      const plain = (item as Document & ActivityModel).toObject()
+      ;(plain as any).refId = refId
+      return plain
+    })
 
     const documentMap = await this.databaseService.findGlobalByIds(articleIds)
     return {
       ...data,
+      data: mapped,
       objects: documentMap,
     }
   }
@@ -555,18 +566,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       .map((doc) => (doc.ref as any)?.categoryId)
       .filter(Boolean)
 
-    const categories =
-      categoryIds.length > 0
-        ? await this.databaseService.db
-            .collection(CATEGORY_COLLECTION_NAME)
-            .find({ _id: { $in: categoryIds } })
-            .project({ slug: 1, name: 1 })
-            .toArray()
-        : []
-
-    const categoryMap = Object.fromEntries(
-      categories.map((c) => [c._id.toString(), { slug: c.slug, name: c.name }]),
-    )
+    const categoryMap = await this.loadCategoryMap(categoryIds)
 
     await this.commentService.fillAndReplaceAvatarUrl(docs)
     return docs
@@ -636,20 +636,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     ])
 
     const postCategoryIds = post.map((p: any) => p.categoryId).filter(Boolean)
-    const categories =
-      postCategoryIds.length > 0
-        ? await this.databaseService.db
-            .collection(CATEGORY_COLLECTION_NAME)
-            .find({ _id: { $in: postCategoryIds } })
-            .project({ slug: 1, name: 1 })
-            .toArray()
-        : []
-    const categoryMap = Object.fromEntries(
-      categories.map((c: any) => [
-        c._id.toString(),
-        { slug: c.slug, name: c.name },
-      ]),
-    )
+    const categoryMap = await this.loadCategoryMap(postCategoryIds)
     const enrichedPost = post.map((p: any) => ({
       ...p,
       category: p.categoryId
