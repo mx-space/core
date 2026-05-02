@@ -33,7 +33,7 @@ describe('TranslationConsistencyService', () => {
             refId: 'article-1',
             hash: 'outdated-hash',
             sourceLang: 'zh',
-            sourceModified: new Date('2024-01-02T00:00:00.000Z'),
+            sourceModifiedAt: new Date('2024-01-02T00:00:00.000Z'),
           } as any,
         ],
       )
@@ -162,7 +162,7 @@ describe('TranslationConsistencyService', () => {
         refId: 'a1',
         hash: 'wrong',
         sourceLang: 'zh',
-        sourceModified: new Date('2024-01-02'),
+        sourceModifiedAt: new Date('2024-01-02'),
         created: new Date('2024-01-02'),
       }
 
@@ -178,7 +178,7 @@ describe('TranslationConsistencyService', () => {
         refId: 'a1',
         hash: 'wrong',
         sourceLang: 'zh',
-        sourceModified: ts,
+        sourceModifiedAt: ts,
         created: ts,
       }
 
@@ -198,7 +198,7 @@ describe('TranslationConsistencyService', () => {
         refId: 'a1',
         hash: 'wrong',
         sourceLang: 'zh',
-        sourceModified: undefined as any,
+        sourceModifiedAt: undefined as any,
         created: new Date('2024-01-02'),
       }
 
@@ -213,7 +213,7 @@ describe('TranslationConsistencyService', () => {
         refId: 'a1',
         hash: 'some-hash',
         sourceLang: 'zh',
-        sourceModified: undefined as any,
+        sourceModifiedAt: undefined as any,
         created: undefined as any,
       }
 
@@ -237,7 +237,7 @@ describe('TranslationConsistencyService', () => {
         refId: 'a1',
         hash,
         sourceLang: 'zh',
-        sourceModified: undefined as any,
+        sourceModifiedAt: undefined as any,
         created: undefined as any,
       }
 
@@ -257,7 +257,7 @@ describe('TranslationConsistencyService', () => {
         refId: 'a1',
         hash: 'outdated-hash',
         sourceLang: 'zh',
-        sourceModified: undefined as any,
+        sourceModifiedAt: undefined as any,
         created: undefined as any,
       }
 
@@ -278,7 +278,7 @@ describe('TranslationConsistencyService', () => {
         refId: 'a1',
         hash: 'wrong',
         sourceLang: 'zh',
-        sourceModified: new Date('2024-03-02'),
+        sourceModifiedAt: new Date('2024-03-02'),
         created: new Date('2024-03-02'),
       }
 
