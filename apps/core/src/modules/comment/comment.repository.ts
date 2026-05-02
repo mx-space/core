@@ -1,0 +1,332 @@
+import { Inject, Injectable } from '@nestjs/common'
+import { and, asc, desc, eq, type SQL, sql } from 'drizzle-orm'
+
+import { PG_DB_TOKEN } from '~/constants/system.constant'
+import { comments } from '~/database/schema'
+import {
+  BaseRepository,
+  type PaginationResult,
+  toEntityId,
+} from '~/processors/database/base.repository'
+import type { AppDatabase } from '~/processors/database/postgres.provider'
+import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
+import { SnowflakeService } from '~/shared/id/snowflake.service'
+
+export type CommentRefType = 'Post' | 'Note' | 'Page' | 'Recently'
+
+export interface CommentRow {
+  id: EntityId
+  refType: CommentRefType
+  refId: EntityId
+  author: string | null
+  mail: string | null
+  url: string | null
+  text: string
+  state: number
+  parentCommentId: EntityId | null
+  rootCommentId: EntityId | null
+  replyCount: number
+  latestReplyAt: Date | null
+  isDeleted: boolean
+  deletedAt: Date | null
+  pin: boolean
+  isWhispers: boolean
+  avatar: string | null
+  authProvider: string | null
+  meta: string | null
+  readerId: EntityId | null
+  editedAt: Date | null
+  anchor: Record<string, unknown> | null
+  ip: string | null
+  agent: string | null
+  location: string | null
+  createdAt: Date
+}
+
+export interface CommentCreateInput {
+  refType: CommentRefType
+  refId: EntityId | string
+  text: string
+  author?: string | null
+  mail?: string | null
+  url?: string | null
+  state?: number
+  parentCommentId?: EntityId | string | null
+  rootCommentId?: EntityId | string | null
+  pin?: boolean
+  isWhispers?: boolean
+  avatar?: string | null
+  authProvider?: string | null
+  meta?: string | null
+  readerId?: EntityId | string | null
+  anchor?: Record<string, unknown> | null
+  ip?: string | null
+  agent?: string | null
+  location?: string | null
+}
+
+const mapBase = (row: typeof comments.$inferSelect): CommentRow => ({
+  id: toEntityId(row.id) as EntityId,
+  refType: row.refType as CommentRefType,
+  refId: toEntityId(row.refId) as EntityId,
+  author: row.author,
+  mail: row.mail,
+  url: row.url,
+  text: row.text,
+  state: row.state,
+  parentCommentId: row.parentCommentId
+    ? (toEntityId(row.parentCommentId) as EntityId)
+    : null,
+  rootCommentId: row.rootCommentId
+    ? (toEntityId(row.rootCommentId) as EntityId)
+    : null,
+  replyCount: row.replyCount,
+  latestReplyAt: row.latestReplyAt,
+  isDeleted: row.isDeleted,
+  deletedAt: row.deletedAt,
+  pin: row.pin,
+  isWhispers: row.isWhispers,
+  avatar: row.avatar,
+  authProvider: row.authProvider,
+  meta: row.meta,
+  readerId: row.readerId ? (toEntityId(row.readerId) as EntityId) : null,
+  editedAt: row.editedAt,
+  anchor: row.anchor,
+  ip: row.ip,
+  agent: row.agent,
+  location: row.location,
+  createdAt: row.createdAt,
+})
+
+@Injectable()
+export class CommentRepository extends BaseRepository {
+  constructor(
+    @Inject(PG_DB_TOKEN) db: AppDatabase,
+    private readonly snowflake: SnowflakeService,
+  ) {
+    super(db)
+  }
+
+  async findById(id: EntityId | string): Promise<CommentRow | null> {
+    const idBig = parseEntityId(id)
+    const [row] = await this.db
+      .select()
+      .from(comments)
+      .where(eq(comments.id, idBig))
+      .limit(1)
+    return row ? mapBase(row) : null
+  }
+
+  async findThreadFor(
+    refType: CommentRefType,
+    refId: EntityId | string,
+    page = 1,
+    size = 20,
+  ): Promise<PaginationResult<CommentRow>> {
+    page = Math.max(1, page)
+    size = Math.min(50, Math.max(1, size))
+    const offset = (page - 1) * size
+    const where = and(
+      eq(comments.refType, refType),
+      eq(comments.refId, parseEntityId(refId)),
+      sql`${comments.parentCommentId} is null`,
+      eq(comments.isDeleted, false),
+    )!
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(comments)
+        .where(where)
+        .orderBy(desc(comments.pin), desc(comments.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(comments)
+        .where(where),
+    ])
+    return {
+      data: rows.map(mapBase),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
+  async findReplies(
+    rootCommentId: EntityId | string,
+    page = 1,
+    size = 20,
+  ): Promise<PaginationResult<CommentRow>> {
+    page = Math.max(1, page)
+    size = Math.min(50, Math.max(1, size))
+    const offset = (page - 1) * size
+    const where = and(
+      eq(comments.rootCommentId, parseEntityId(rootCommentId)),
+      eq(comments.isDeleted, false),
+    )!
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(comments)
+        .where(where)
+        .orderBy(asc(comments.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(comments)
+        .where(where),
+    ])
+    return {
+      data: rows.map(mapBase),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
+  async create(input: CommentCreateInput): Promise<CommentRow> {
+    const id = this.snowflake.nextBigInt()
+    const [row] = await this.db
+      .insert(comments)
+      .values({
+        id,
+        refType: input.refType,
+        refId: parseEntityId(input.refId),
+        text: input.text,
+        author: input.author ?? null,
+        mail: input.mail ?? null,
+        url: input.url ?? null,
+        state: input.state ?? 0,
+        parentCommentId: input.parentCommentId
+          ? parseEntityId(input.parentCommentId)
+          : null,
+        rootCommentId: input.rootCommentId
+          ? parseEntityId(input.rootCommentId)
+          : null,
+        pin: input.pin ?? false,
+        isWhispers: input.isWhispers ?? false,
+        avatar: input.avatar ?? null,
+        authProvider: input.authProvider ?? null,
+        meta: input.meta ?? null,
+        readerId: input.readerId ? parseEntityId(input.readerId) : null,
+        anchor: input.anchor ?? null,
+        ip: input.ip ?? null,
+        agent: input.agent ?? null,
+        location: input.location ?? null,
+      })
+      .returning()
+    return mapBase(row)
+  }
+
+  /**
+   * Atomic reply insertion that updates parent + root counters.
+   */
+  async createReply(input: CommentCreateInput): Promise<CommentRow> {
+    if (!input.parentCommentId) {
+      throw new Error('createReply requires parentCommentId')
+    }
+    const parentBig = parseEntityId(input.parentCommentId)
+    return this.db.transaction(async (tx) => {
+      const [parent] = await tx
+        .select()
+        .from(comments)
+        .where(eq(comments.id, parentBig))
+        .limit(1)
+      if (!parent) throw new Error('parent comment not found')
+      const rootBig = parent.rootCommentId ?? parent.id
+      const id = this.snowflake.nextBigInt()
+      const now = new Date()
+      const [reply] = await tx
+        .insert(comments)
+        .values({
+          id,
+          refType: input.refType,
+          refId: parseEntityId(input.refId),
+          text: input.text,
+          author: input.author ?? null,
+          mail: input.mail ?? null,
+          url: input.url ?? null,
+          state: input.state ?? 0,
+          parentCommentId: parentBig,
+          rootCommentId: rootBig,
+          isWhispers: input.isWhispers ?? false,
+          avatar: input.avatar ?? null,
+          authProvider: input.authProvider ?? null,
+          meta: input.meta ?? null,
+          readerId: input.readerId ? parseEntityId(input.readerId) : null,
+          anchor: input.anchor ?? null,
+          ip: input.ip ?? null,
+          agent: input.agent ?? null,
+          location: input.location ?? null,
+        })
+        .returning()
+      await tx
+        .update(comments)
+        .set({
+          replyCount: sql`${comments.replyCount} + 1`,
+          latestReplyAt: now,
+        })
+        .where(eq(comments.id, rootBig))
+      return mapBase(reply)
+    })
+  }
+
+  async update(
+    id: EntityId | string,
+    patch: Partial<{
+      text: string
+      state: number
+      pin: boolean
+      isDeleted: boolean
+      isWhispers: boolean
+      meta: string | null
+      anchor: Record<string, unknown> | null
+      editedAt: Date | null
+    }>,
+  ): Promise<CommentRow | null> {
+    const idBig = parseEntityId(id)
+    const update: Partial<typeof comments.$inferInsert> = {}
+    if (patch.text !== undefined) update.text = patch.text
+    if (patch.state !== undefined) update.state = patch.state
+    if (patch.pin !== undefined) update.pin = patch.pin
+    if (patch.isDeleted !== undefined) {
+      update.isDeleted = patch.isDeleted
+      update.deletedAt = patch.isDeleted ? new Date() : null
+    }
+    if (patch.isWhispers !== undefined) update.isWhispers = patch.isWhispers
+    if (patch.meta !== undefined) update.meta = patch.meta
+    if (patch.anchor !== undefined) update.anchor = patch.anchor
+    if (patch.editedAt !== undefined) update.editedAt = patch.editedAt
+    const [row] = await this.db
+      .update(comments)
+      .set(update)
+      .where(eq(comments.id, idBig))
+      .returning()
+    return row ? mapBase(row) : null
+  }
+
+  async deleteById(id: EntityId | string): Promise<CommentRow | null> {
+    const idBig = parseEntityId(id)
+    const [row] = await this.db
+      .delete(comments)
+      .where(eq(comments.id, idBig))
+      .returning()
+    return row ? mapBase(row) : null
+  }
+
+  async countForRef(
+    refType: CommentRefType,
+    refId: EntityId | string,
+    extra?: SQL,
+  ): Promise<number> {
+    const where = and(
+      eq(comments.refType, refType),
+      eq(comments.refId, parseEntityId(refId)),
+      eq(comments.isDeleted, false),
+      ...(extra ? [extra] : []),
+    )!
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(comments)
+      .where(where)
+    return Number(row?.count ?? 0)
+  }
+}
