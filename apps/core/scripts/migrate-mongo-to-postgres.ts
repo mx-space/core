@@ -15,28 +15,20 @@
  * resolves all references to validate they will succeed, and emits the same
  * report that apply mode would produce — but writes nothing to PostgreSQL.
  */
-import path from 'node:path'
 import process from 'node:process'
 
-import { drizzle } from 'drizzle-orm/node-postgres'
-import { migrate } from 'drizzle-orm/node-postgres/migrator'
-import { MongoClient } from 'mongodb'
-import { Pool } from 'pg'
-
-import {
-  formatReport,
-  runMigration,
-} from '../src/migration/postgres-data-migration/runner.js'
-
-const args = process.argv.slice(2)
-const mode = args.includes('--mode')
-  ? (args[args.indexOf('--mode') + 1] as 'dry-run' | 'apply')
+const cliArgs = process.argv.slice(2)
+const mode = cliArgs.includes('--mode')
+  ? (cliArgs[cliArgs.indexOf('--mode') + 1] as 'dry-run' | 'apply')
   : 'dry-run'
 
 if (mode !== 'dry-run' && mode !== 'apply') {
   console.error(`unknown mode "${mode}" (expected dry-run | apply)`)
   process.exit(2)
 }
+
+// Strip migration-only flags before app.config's commander sees them.
+process.argv = [process.argv[0], process.argv[1]]
 
 const mongoUri =
   process.env.MONGO_URI ||
@@ -49,6 +41,14 @@ const pgUrl =
   `postgres://${process.env.PG_USER ?? 'mx'}:${process.env.PG_PASSWORD ?? 'mx'}@${process.env.PG_HOST ?? '127.0.0.1'}:${process.env.PG_PORT ?? 5432}/${process.env.PG_DATABASE ?? 'mx_core'}`
 
 async function main() {
+  const path = (await import('node:path')).default
+  const { drizzle } = await import('drizzle-orm/node-postgres')
+  const { migrate } = await import('drizzle-orm/node-postgres/migrator')
+  const { MongoClient } = await import('mongodb')
+  const { Pool } = await import('pg')
+  const { formatReport, runMigration } =
+    await import('../src/migration/postgres-data-migration/runner.js')
+
   console.log(`Mongo → PostgreSQL migration (${mode})`)
   console.log(`  mongo: ${mongoUri.replace(/:[^/:@]+@/, ':***@')}`)
   console.log(`  pg:    ${pgUrl.replace(/:[^/:@]+@/, ':***@')}`)
