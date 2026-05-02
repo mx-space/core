@@ -16,23 +16,79 @@ next operator a concrete plan with file pointers.
 | `bcdaf76a` | Spec §18 Phase 0 decisions pinned. | ✓ done |
 | `14f5bafa` | PR 1: `EntityId`, `SnowflakeGenerator`, `SnowflakeService`, app.config wiring, 21 unit tests. | ✓ done — `pnpm exec vitest run test/src/shared/id` passes 21/21. |
 | `038ffa7d` | PR 2: 43-table drizzle schema, `0000_initial.sql`, `postgres.provider.ts`, repository token map, docker-compose `postgres:16-alpine` service, smoke spec. | ✓ done — `PG_VERIFY_URL=… pnpm exec vitest run test/src/database` passes 4/4 against an ephemeral PG container. |
-| `4a534fbe` | PR 3 partial (1/2): `BaseRepository`, `CategoryRepository` (+ 7 integration tests), `TopicRepository`, `PageRepository`. | ✓ done. |
-| `<batch 2>` | PR 3 partial (2/2): `PostRepository`, `NoteRepository`, `CommentRepository`, `ReaderRepository`. | ✓ done — `tsc -p tsconfig.json --noEmit` clean. |
+| `4a534fbe` | PR 3 batch 1: `BaseRepository`, `CategoryRepository` (+ 7 integration tests), `TopicRepository`, `PageRepository`. | ✓ done. |
+| `973ed84a` | PR 3 batch 2: `PostRepository`, `NoteRepository`, `CommentRepository`, `ReaderRepository`. | ✓ done. |
+| `<batch 3>` | PR 3 batch 3: 17 more repositories (link, project, say, recently, draft, options, activity, analyze, file-reference, subscribe, snippet, slug-tracker, webhook, poll-vote, serverless storage + log, ai-summary, ai-insights, ai-translation, translation-entries). | ✓ done. |
+| `<batch 4>` | PR 3 batch 4 + PR 4 partial: `SearchRepository`, `AiAgentConversationRepository`, `AuthRepository`. | ✓ repositories done; auth.implement.ts adapter swap deferred. |
+| `<PR 6>` | Mongo→PG migration CLI: `scripts/migrate-mongo-to-postgres.ts`, `src/migration/postgres-data-migration/{types,id-map,steps,runner}.ts`. | ✓ done; dry-run + apply modes; emits row count, missing-ref, and warning reports. |
+
+## Repositories shipped (28 / 28 first-class tables)
+
+PR 3 of the spec is repository-complete. Every first-class table has a
+typed `Repository` class that:
+
+1. Constructor takes `@Inject(PG_DB_TOKEN) AppDatabase` plus `SnowflakeService`.
+2. Public methods accept `EntityId | string` for IDs and return rows whose
+   `id` is `EntityId` (decimal string).
+3. Internal SQL uses `bigint` exclusively. Conversion happens at the boundary
+   via `parseEntityId` / `toEntityId` (see `base.repository.ts`).
+4. Replaces every Mongoose call (`findById`, `populate`, `aggregate`,
+   `lean`, `paginate`) with explicit drizzle SQL.
+
+Located at:
+
+```
+apps/core/src/processors/database/base.repository.ts          ← shared helpers
+apps/core/src/modules/category/category.repository.ts         ← canonical template
+apps/core/src/modules/topic/topic.repository.ts
+apps/core/src/modules/page/page.repository.ts
+apps/core/src/modules/post/post.repository.ts
+apps/core/src/modules/note/note.repository.ts
+apps/core/src/modules/comment/comment.repository.ts
+apps/core/src/modules/reader/reader.repository.ts
+apps/core/src/modules/recently/recently.repository.ts
+apps/core/src/modules/draft/draft.repository.ts
+apps/core/src/modules/link/link.repository.ts
+apps/core/src/modules/project/project.repository.ts
+apps/core/src/modules/say/say.repository.ts
+apps/core/src/modules/snippet/snippet.repository.ts
+apps/core/src/modules/subscribe/subscribe.repository.ts
+apps/core/src/modules/activity/activity.repository.ts
+apps/core/src/modules/analyze/analyze.repository.ts
+apps/core/src/modules/file/file-reference.repository.ts
+apps/core/src/modules/poll/poll-vote.repository.ts
+apps/core/src/modules/slug-tracker/slug-tracker.repository.ts
+apps/core/src/modules/configs/options.repository.ts
+apps/core/src/modules/serverless/serverless.repository.ts     ← storage + log
+apps/core/src/modules/webhook/webhook.repository.ts           ← hooks + events
+apps/core/src/modules/search/search.repository.ts
+apps/core/src/modules/ai/ai-summary/ai-summary.repository.ts
+apps/core/src/modules/ai/ai-insights/ai-insights.repository.ts
+apps/core/src/modules/ai/ai-translation/ai-translation.repository.ts  ← + entries
+apps/core/src/modules/ai/ai-agent/ai-agent-conversation.repository.ts
+apps/core/src/modules/auth/auth.repository.ts                 ← accounts/sessions/api-keys/passkeys/verifications
+```
+
+Only `MetaPresetModel` is intentionally not yet ported because of the
+deeply nested option/child schema; the Mongo model can stay until a
+service explicitly needs it.
 
 ## What is **not** done
 
 - **No service-layer cutover yet.** Every service (`category.service.ts`,
   `post.service.ts`, …) still uses `@InjectModel(...)` against Mongoose. The
   repositories are wired into `DatabaseModule` but no consumer has switched
-  over.
-- **No auth migration (PR 4).** Better Auth still runs on the Mongo adapter.
-- **No aggregate/search/AI/ops cutover (PR 5).** All AI/aggregate/serverless
-  modules remain Mongo-only.
-- **No Mongo → PG data migration tool (PR 6).** `mongo_id_map` /
-  `data_migration_runs` tables exist in the schema but the CLI script is not
-  written.
-- **No Mongo cleanup (PR 7).** README, backup service, vitest helpers, and
-  package dependencies still assume MongoDB at runtime.
+  over. This is the largest remaining chunk.
+- **No `auth.implement.ts` adapter swap (PR 4).** `AuthRepository` exists
+  and the schema is in place; the actual `betterAuth({...})` call still uses
+  `mongodbAdapter`. Replace with `drizzleAdapter(db, { provider: 'pg' })`
+  and remove the bespoke `mongo-collection`-based hooks.
+- **No `BasePgCrudFactory`.** Many simple modules (Say, Link, Project,
+  Subscribe, Snippet, Say) inherit from `BaseCrudFactory` which is built on
+  Mongoose. A repository-based mirror has to be written before those
+  controllers can be cut over.
+- **No Mongo cleanup (PR 7).** README, backup service, vitest helpers,
+  `mongodb-memory-server`, and `mongoose`/`@typegoose` deps still ship.
 
 ## Phase 0 decisions (from spec §18)
 
@@ -54,53 +110,12 @@ These are fixed contracts that downstream work depends on:
 - Test infra replaces `mongodb-memory-server` with `@testcontainers/postgresql`
   + `postgres:16-alpine`. Local devs must have Docker.
 
-## Repositories shipped (8/≈26)
+## Repositories still to write
 
-```
-apps/core/src/processors/database/base.repository.ts   ← shared helpers
-apps/core/src/modules/category/category.repository.ts  ← canonical template
-apps/core/src/modules/topic/topic.repository.ts
-apps/core/src/modules/page/page.repository.ts
-apps/core/src/modules/post/post.repository.ts
-apps/core/src/modules/note/note.repository.ts
-apps/core/src/modules/comment/comment.repository.ts
-apps/core/src/modules/reader/reader.repository.ts
-```
-
-Each follows the same pattern:
-
-1. Constructor takes `@Inject(PG_DB_TOKEN) AppDatabase` plus `SnowflakeService`.
-2. Public methods accept `EntityId | string` for IDs and return rows whose
-   `id` is `EntityId` (decimal string).
-3. Internal SQL uses `bigint` exclusively. Conversion happens at the boundary
-   via `parseEntityId` / `toEntityId` (see `base.repository.ts`).
-
-## Repositories still to write (PR 3 + PR 5)
-
-| Module | Schema entity | Notes |
-|---|---|---|
-| `recently` | `recentlies` | Polymorphic `ref_type`/`ref_id`. Mirror NoteRepository. |
-| `draft` | `drafts` (+ `draft_histories` later) | Versioned save with history JSONB; service does diff math. |
-| `search` | `search_documents` | Heavy bigram/term-frequency math; preserve current cache. |
-| `aiSummary` | `ai_summaries` | Hash-keyed cache. |
-| `aiInsights` | `ai_insights` | Includes self-FK for translation chain. |
-| `aiTranslation` | `ai_translations` | Unique `(ref_id, ref_type, lang)`. |
-| `translationEntry` | `translation_entries` | Path/lang/lookup-key composite key. |
-| `aiAgentConversation` | `ai_agent_conversations` | Rich JSONB messages array. |
-| `activity` | `activities` | Index on `created_at`, payload jsonb. |
-| `analyze` | `analyzes` | High-volume time-series; partition later if needed. |
-| `link` | `links` | Two unique columns. |
-| `project` | `projects` | Simple. |
-| `say` | `says` | Simple. |
-| `snippet` | `snippets` | `customPath` partial unique. |
-| `subscribe` | `subscribes` | Email + cancel-token unique. |
-| `fileReference` | `file_references` | Polymorphic ref; status state machine. |
-| `pollVote` | `poll_votes` + `poll_vote_options` | Multi-table aggregate. |
-| `slugTracker` | `slug_trackers` | Used for slug rewriting. |
-| `serverlessStorage` / `serverlessLog` | `serverless_*` | Per-fn isolation already enforced by namespace. |
-| `webhook` / `webhookEvent` | `webhooks` + `webhook_events` | FK cascade. |
-| `options` / `metaPreset` | `options`, `meta_presets` | Configuration tables. |
-| Auth (PR 4) | `accounts`, `sessions`, `api_keys`, `passkeys`, `verifications`, `owner_profiles` | Better Auth owns most schema. Extend `ReaderRepository` and add `AuthRepository` per spec §12. |
+Only `MetaPresetRepository` remains. The model has nested `MetaFieldOption`
+and `MetaPresetChild` arrays that map cleanly to `jsonb` columns once the
+service no longer treats them as embedded sub-documents. Defer until the
+service is being cut over.
 
 ## How a follow-up operator should proceed
 
@@ -171,19 +186,49 @@ adapter expectations. If Better Auth complains about column name mismatches,
 update the schema in `apps/core/src/database/schema/auth.ts` (preferred)
 rather than changing Better Auth conventions.
 
-### Step 6 — data migration tool (PR 6)
+### Step 6 — data migration tool (PR 6) — DONE
 
-Implementation-ready notes:
+Implemented at:
 
-- Entrypoint: `apps/core/scripts/migrate-mongo-to-postgres.ts`.
-- Phase 1: read every Mongo collection, allocate Snowflake IDs (use a
-  dedicated migration worker ID range like 900–999), insert rows into
-  `mongo_id_map` (`(collection, mongo_id) → snowflake_id`).
-- Phase 2: load tables in the dependency order from spec §11 ("Migration
-  Ordering"). Use a transaction per table.
-- Phase 3: emit per-table count/missing-ref/duplicate-key/checksum reports
-  to stdout and `data_migration_runs`.
-- Failure policy from spec §11.4 must be enforced exactly.
+- `apps/core/scripts/migrate-mongo-to-postgres.ts` (entrypoint).
+- `apps/core/src/migration/postgres-data-migration/types.ts` — step contract.
+- `apps/core/src/migration/postgres-data-migration/id-map.ts` — allocate / resolve helpers.
+- `apps/core/src/migration/postgres-data-migration/steps.ts` — every collection step.
+- `apps/core/src/migration/postgres-data-migration/runner.ts` — phase orchestration.
+
+Run as:
+
+```
+SNOWFLAKE_WORKER_ID=900 \
+MONGO_URI="mongodb://localhost:27017/mx-space" \
+PG_URL="postgres://mx:mx@localhost:5432/mx_core" \
+  pnpm -C apps/core exec tsx scripts/migrate-mongo-to-postgres.ts --mode dry-run
+```
+
+Then re-run with `--mode apply`. Apply mode persists `mongo_id_map` first
+(safe to re-run), runs schema migrations, loads tables in dependency
+order, and writes a row to `data_migration_runs`.
+
+Steps the tool covers (in order): categories, topics, readers (+
+owner_profiles), posts, notes, pages, recentlies, comments, drafts,
+options, links, projects, says, snippets, subscribes, activities,
+analyzes, file_references, poll_votes (+ poll_vote_options), slug_trackers,
+webhooks (+ webhook_events), AI (summaries, insights, translations,
+translation_entries, agent conversations), search_documents, serverless
+storage + logs.
+
+Behaviors that may need follow-up:
+
+- Polymorphic refs (`comments.refType`, `drafts.refType`,
+  `slug_trackers.targetId`, `ai_*.refId`) probe candidate collections
+  in id-map order and emit a missing-ref warning if no match; tighten
+  per-step lookup if the source data is known to be cleaner.
+- `serverless_logs.functionId` is currently set to null because the
+  legacy schema stores a string identifier. If a snippet→function mapping
+  exists in production data, add a step before serverless to populate it.
+- The migration tool does not yet checksum row counts cross-database; if
+  you want stronger guarantees, extend `runner.ts` to compare
+  `mongo.collection.countDocuments()` to `pg.select(count()).from(table)`.
 
 ### Step 7 — cleanup (PR 7)
 
