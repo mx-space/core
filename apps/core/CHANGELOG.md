@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [11.5.1](https://github.com/mx-space/core/compare/v11.5.0...v11.5.1) (2026-05-02)
+
+
+### Bug Fixes
+
+* **deps:** update dependency marked to v18.0.3 ([#2654](https://github.com/mx-space/core/issues/2654)) ([3c86d7e](https://github.com/mx-space/core/commit/3c86d7e9fa0318759d6f13ba1a80e5f98deb9ed4))
+
+
+
 # [11.5.0](https://github.com/mx-space/core/compare/v11.4.8...v11.5.0) (2026-05-01)
 
 
