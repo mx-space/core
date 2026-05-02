@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { eq, sql } from 'drizzle-orm'
+import { desc, eq, inArray, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { subscribes } from '~/database/schema'
 import {
   BaseRepository,
+  type PaginationResult,
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -36,6 +37,25 @@ export class SubscribeRepository extends BaseRepository {
     private readonly snowflake: SnowflakeService,
   ) {
     super(db)
+  }
+
+  async list(page = 1, size = 10): Promise<PaginationResult<SubscribeRow>> {
+    page = Math.max(1, page)
+    size = Math.min(50, Math.max(1, size))
+    const offset = (page - 1) * size
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(subscribes)
+        .orderBy(desc(subscribes.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db.select({ count: sql<number>`count(*)::int` }).from(subscribes),
+    ])
+    return {
+      data: rows.map(mapRow),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
   }
 
   async findAll(): Promise<SubscribeRow[]> {
@@ -122,6 +142,50 @@ export class SubscribeRepository extends BaseRepository {
       .where(eq(subscribes.id, idBig))
       .returning()
     return row ? mapRow(row) : null
+  }
+
+  async updateByEmail(
+    email: string,
+    patch: Partial<{
+      subscribe: number
+      verified: boolean
+      cancelToken: string
+    }>,
+  ): Promise<SubscribeRow | null> {
+    const update: Partial<typeof subscribes.$inferInsert> = {}
+    if (patch.subscribe !== undefined) update.subscribe = patch.subscribe
+    if (patch.verified !== undefined) update.verified = patch.verified
+    if (patch.cancelToken !== undefined) update.cancelToken = patch.cancelToken
+    const [row] = await this.db
+      .update(subscribes)
+      .set(update)
+      .where(eq(subscribes.email, email))
+      .returning()
+    return row ? mapRow(row) : null
+  }
+
+  async deleteByEmail(email: string): Promise<SubscribeRow | null> {
+    const [row] = await this.db
+      .delete(subscribes)
+      .where(eq(subscribes.email, email))
+      .returning()
+    return row ? mapRow(row) : null
+  }
+
+  async deleteByEmails(emails: string[]): Promise<number> {
+    if (emails.length === 0) return 0
+    const rows = await this.db
+      .delete(subscribes)
+      .where(inArray(subscribes.email, emails))
+      .returning({ id: subscribes.id })
+    return rows.length
+  }
+
+  async deleteAll(): Promise<number> {
+    const rows = await this.db
+      .delete(subscribes)
+      .returning({ id: subscribes.id })
+    return rows.length
   }
 
   async count(): Promise<number> {

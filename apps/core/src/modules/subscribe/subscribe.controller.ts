@@ -1,10 +1,12 @@
 import { Body, Delete, Get, Post, Query } from '@nestjs/common'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { PagerDto } from '~/shared/dto/pager.dto'
+
 import { SubscribeTypeToBitMap } from './subscribe.constant'
 import {
   BatchUnsubscribeDto,
@@ -33,19 +35,8 @@ export class SubscribeController {
   @HTTPDecorators.Paginator
   @Auth()
   async list(@Query() query: PagerDto) {
-    const { page, size, sortBy, sortOrder } = query
-    return this.service.model.paginate(
-      {},
-      {
-        page,
-        limit: size,
-        sort: sortBy
-          ? {
-              [sortBy]: sortOrder,
-            }
-          : undefined,
-      },
-    )
+    const { page = 1, size = 10 } = query
+    return this.service.list(page, size)
   }
 
   @Post('/')

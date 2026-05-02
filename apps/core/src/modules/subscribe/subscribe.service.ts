@@ -1,8 +1,14 @@
 import cluster from 'node:cluster'
+
 import type { CoAction } from '@innei/next-async'
 import { Co } from '@innei/next-async'
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
+import ejs from 'ejs'
+import { LRUCache } from 'lru-cache'
+import { nanoid } from 'nanoid'
+import type Mail from 'nodemailer/lib/mailer'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
@@ -12,17 +18,12 @@ import { EmailService } from '~/processors/helper/helper.email.service'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { hashString, md5 } from '~/utils/tool.util'
-import ejs from 'ejs'
-import { LRUCache } from 'lru-cache'
-import { nanoid } from 'nanoid'
-import type Mail from 'nodemailer/lib/mailer'
+
 import { ConfigsService } from '../configs/configs.service'
 import type { NoteModel } from '../note/note.model'
 import { OwnerService } from '../owner/owner.service'
 import type { PostModel } from '../post/post.model'
-import { SubscribeMailType } from './subscribe-mail.enum'
 import {
   SubscribeNoteCreateBit,
   SubscribePostCreateBit,
@@ -30,7 +31,8 @@ import {
 } from './subscribe.constant'
 import type { SubscribeTemplateRenderProps } from './subscribe.email.default'
 import { defaultSubscribeForRenderProps } from './subscribe.email.default'
-import { SubscribeModel } from './subscribe.model'
+import { SubscribeRepository } from './subscribe.repository'
+import { SubscribeMailType } from './subscribe-mail.enum'
 
 type Email = string
 type SubscribeBit = number
@@ -38,12 +40,9 @@ type SubscribeBit = number
 @Injectable()
 export class SubscribeService implements OnModuleInit, OnModuleDestroy {
   constructor(
-    @InjectModel(SubscribeModel)
-    private readonly subscribeModel: MongooseModel<SubscribeModel>,
-
+    private readonly subscribeRepository: SubscribeRepository,
     private readonly eventManager: EventManagerService,
     private readonly databaseService: DatabaseService,
-
     private readonly configService: ConfigsService,
     private readonly urlBuilderService: UrlBuilderService,
     private readonly emailService: EmailService,
@@ -51,11 +50,17 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   private subscribeMap = new Map<Email, SubscribeBit>()
-  get model() {
-    return this.subscribeModel
+
+  public get repository() {
+    return this.subscribeRepository
+  }
+
+  list(page: number, size: number) {
+    return this.subscribeRepository.list(page, size)
   }
 
   private eventDispose: IEventManagerHandlerDisposer[] = []
+
   async onModuleInit() {
     const [disposer] = await Promise.all([
       this.observeEvents(),
@@ -63,6 +68,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     ])
     disposer && this.eventDispose.push(...disposer)
   }
+
   async onModuleDestroy() {
     for (const dispose of this.eventDispose) {
       dispose()
@@ -87,7 +93,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
   private async observeEvents() {
     if (!isMainProcess && cluster.isWorker && cluster.worker?.id !== 1) return
 
-    const docs = await this.model.find().lean()
+    const docs = await this.subscribeRepository.findAll()
 
     for (const doc of docs) {
       this.subscribeMap.set(doc.email, doc.subscribe)
@@ -96,8 +102,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     const scopeCfg = { scope: EventScope.TO_VISITOR }
 
     const getUnsubscribeLink = async (email: string) => {
-      const document = await this.model.findOne({ email }).lean()
-
+      const document = await this.subscribeRepository.findByEmail(email)
       if (!document) return ''
       const { serverUrl } = await this.configService.get('url')
       return `${serverUrl}/subscribe/unsubscribe?email=${email}&cancelToken=${document.cancelToken}`
@@ -118,13 +123,11 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       const owner = await self.ownerService.getOwner()
       for (const [email, subscribe] of self.subscribeMap.entries()) {
         const unsubscribeLink = await getUnsubscribeLink(email)
-
         if (!unsubscribeLink) continue
         const isNote = self.urlBuilderService.isNoteModel(noteOrPost)
-
         if (
           subscribe & (isNote ? SubscribeNoteCreateBit : SubscribePostCreateBit)
-        )
+        ) {
           self.sendEmail(
             email,
             {
@@ -135,13 +138,9 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
               title: noteOrPost.title,
               unsubscribe_link: unsubscribeLink,
               owner: owner.name,
-
               aggregate: {
                 owner,
-                subscriber: {
-                  subscribe,
-                  email,
-                },
+                subscriber: { subscribe, email },
                 post: {
                   text: noteOrPost.text,
                   created: new Date(noteOrPost.created!).toISOString(),
@@ -152,6 +151,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
             },
             unsubscribeLink,
           )
+        }
       }
     }
 
@@ -168,7 +168,6 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       )
         return this.abort()
       const enable = await self.checkEnable()
-
       if (enable) {
         await this.next()
         return
@@ -184,74 +183,49 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
 
     return [
       this.eventManager.on(BusinessEvents.NOTE_CREATE, handleEvent, scopeCfg),
-
       this.eventManager.on(BusinessEvents.POST_CREATE, handleEvent, scopeCfg),
     ]
   }
 
   async subscribe(email: string, subscribe: number) {
-    const isExist = await this.model
-      .findOne({
-        email,
-      })
-      .lean()
-
+    const isExist = await this.subscribeRepository.findByEmail(email)
     if (isExist) {
-      await this.model.updateOne(
-        {
-          email,
-        },
-        {
-          $set: {
-            subscribe,
-          },
-        },
-      )
+      await this.subscribeRepository.updateByEmail(email, { subscribe })
     } else {
-      const token = this.createCancelToken(email)
-      await this.model.create({
+      const token = String(this.createCancelToken(email))
+      await this.subscribeRepository.create({
         email,
-        subscribe,
         cancelToken: token,
-      } as unknown as Partial<SubscribeModel>)
+        subscribe,
+      })
     }
-
     this.subscribeMap.set(email, subscribe)
   }
 
   async unsubscribe(email: string, token: string) {
-    const model = await this.model
-      .findOne({
-        email,
-      })
-      .lean()
-    if (!model) {
-      return false
-    }
+    const model = await this.subscribeRepository.findByEmail(email)
+    if (!model) return false
     if (model.cancelToken === token) {
-      await this.model.deleteOne({ email })
-
+      await this.subscribeRepository.deleteByEmail(email)
       this.subscribeMap.delete(email)
-
       return true
     }
+    return false
   }
 
   async unsubscribeBatch(emails?: string[], all?: boolean) {
     if (all) {
-      const result = await this.model.deleteMany({})
+      const count = await this.subscribeRepository.deleteAll()
       this.subscribeMap.clear()
-      return result.deletedCount
+      return count
     }
-
     if (emails && emails.length > 0) {
-      const result = await this.model.deleteMany({ email: { $in: emails } })
+      const count = await this.subscribeRepository.deleteByEmails(emails)
       for (const email of emails) {
         this.subscribeMap.delete(email)
       }
-      return result.deletedCount
+      return count
     }
-
     return 0
   }
 
@@ -265,10 +239,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     return SubscribeTypeToBitMap[type]
   }
 
-  private lruCache = new LRUCache<string, any>({
-    ttl: 20000,
-    max: 2,
-  })
+  private lruCache = new LRUCache<string, any>({ ttl: 20000, max: 2 })
 
   async sendEmail(
     email: string,
@@ -280,7 +251,6 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
     const cacheKey = 'template'
     let finalTemplate = this.lruCache.get(cacheKey)
-
     if (!finalTemplate) {
       finalTemplate = await this.emailService.readTemplate(
         SubscribeMailType.Newsletter,
@@ -293,9 +263,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       subject: `[${seo.title || 'Mx Space'}] 发布了新内容~`,
       to: email,
       html: ejs.render(finalTemplate, source),
-      headers: {
-        'List-Unsubscribe': `<${unsubscribeLink}>`,
-      },
+      headers: { 'List-Unsubscribe': `<${unsubscribeLink}>` },
     }
 
     await this.emailService.send(options)
@@ -306,7 +274,6 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       featureList: { emailSubscribe },
       mailOptions: { enable },
     } = await this.configService.waitForConfigReady()
-
     return emailSubscribe && enable
   }
 }
