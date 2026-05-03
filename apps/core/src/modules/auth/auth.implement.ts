@@ -168,7 +168,7 @@ export async function CreateAuth(
               and(
                 eq(authSchema.accounts.userId, userId),
                 eq(authSchema.accounts.providerId, 'credential'),
-              )!,
+              ),
             )
             .limit(1)
 

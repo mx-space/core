@@ -52,7 +52,6 @@ export class AiSlugBackfillService implements OnModuleInit {
     const notes = (await this.noteService.findRecent(limit > 0 ? limit : 100))
       .filter((note) => !note.slug)
       .map((note) => ({
-        _id: note.id,
         id: note.id,
         title: note.title,
         nid: note.nid,

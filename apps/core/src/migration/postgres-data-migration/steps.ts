@@ -50,10 +50,16 @@ const upsert = async <T extends Record<string, unknown>>(
 ) => {
   if (ctx.mode !== 'apply' || rows.length === 0) return
   const chunkSize = 200
+  let inserted = 0
   for (let i = 0; i < rows.length; i += chunkSize) {
     const chunk = rows.slice(i, i + chunkSize)
     try {
-      await ctx.pg.insert(table).values(chunk).onConflictDoNothing()
+      const result = await ctx.pg
+        .insert(table)
+        .values(chunk)
+        .onConflictDoNothing()
+        .returning({ id: (table as any).id })
+      inserted += result.length
     } catch (err) {
       ctx.reports.warnings.push({
         collection:
@@ -62,6 +68,16 @@ const upsert = async <T extends Record<string, unknown>>(
         reason: (err as Error).message,
       })
     }
+  }
+  const skipped = rows.length - inserted
+  if (skipped > 0) {
+    const name =
+      table[Symbol.for('drizzle:Name') as any]?.toString() ?? 'unknown'
+    ctx.reports.warnings.push({
+      collection: name,
+      mongoId: `${skipped}/${rows.length} rows`,
+      reason: `skipped (conflict) — re-run detected existing rows`,
+    })
   }
 }
 
