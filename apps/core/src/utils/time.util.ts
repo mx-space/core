@@ -40,12 +40,10 @@ export const getWeekStart = (today: Date) =>
     .set('minute', 0)
     .toDate()
 
-export function getLessThanNow(date: Date | undefined) {
+export function getLessThanNow(date: Date | undefined): Date {
   const now = new Date()
-
   if (!date) {
     return now
   }
-  const created = date ? (dayjs(date).diff(now) > 0 ? now : date) : now
-  return created
+  return dayjs(date).diff(now) > 0 ? now : date
 }

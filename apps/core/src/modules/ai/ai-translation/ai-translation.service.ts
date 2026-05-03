@@ -342,15 +342,11 @@ export class AiTranslationService
 
     // TODO(wave 3 follow-up): provide producer-level list methods for the
     // translation-all task. The direct Mongo model router has been removed.
-    const [posts, notes, pages] = (await Promise.all([[], [], []])) as Array<
-      Array<{ id: string; title: string }>
-    >
+    const posts: Array<{ id: string; title: string }> = []
+    const notes: Array<{ id: string; title: string }> = []
+    const pages: Array<{ id: string; title: string }> = []
 
-    const articleMap = this.mapArticlesByRefId({
-      posts: posts.map((p) => ({ id: p.id, title: p.title })),
-      notes: notes.map((n) => ({ id: n.id, title: n.title })),
-      pages: pages.map((p) => ({ id: p.id, title: p.title })),
-    })
+    const articleMap = this.mapArticlesByRefId({ posts, notes, pages })
 
     const allArticleIds = Array.from(articleMap.keys())
     const total = allArticleIds.length

@@ -58,17 +58,16 @@ export const uploadFileToCOS = async (
     formData.append(key, value)
   })
 
-  formData.append(
-    'file',
-    typeof localFilePathOrBuffer == 'string'
-      ? await fs.readFile(localFilePathOrBuffer)
-      : Buffer.isBuffer(localFilePathOrBuffer)
-        ? localFilePathOrBuffer
-        : Buffer.from(localFilePathOrBuffer),
-    {
-      filename: remoteFileKey,
-    },
-  )
+  let fileBuffer: Buffer
+  if (typeof localFilePathOrBuffer === 'string') {
+    fileBuffer = await fs.readFile(localFilePathOrBuffer)
+  } else if (Buffer.isBuffer(localFilePathOrBuffer)) {
+    fileBuffer = localFilePathOrBuffer
+  } else {
+    fileBuffer = Buffer.from(localFilePathOrBuffer)
+  }
+
+  formData.append('file', fileBuffer, { filename: remoteFileKey })
 
   await axios
     .post(endpoint, formData, {

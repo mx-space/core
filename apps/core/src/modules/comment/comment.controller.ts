@@ -80,13 +80,12 @@ export class CommentController {
     const comment = await this.commentService.createComment(id, model, ref)
 
     this.lifecycleService.afterCreateComment(
-      String((comment as any).id || (comment as any).id),
+      String((comment as any).id),
       ipLocation,
     )
 
-    return this.commentService
-      .fillAndReplaceAvatarUrl([comment])
-      .then((docs) => docs[0])
+    const [doc] = await this.commentService.fillAndReplaceAvatarUrl([comment])
+    return doc
   }
 
   private async replyCommentWithBody(
@@ -113,9 +112,8 @@ export class CommentController {
 
     this.lifecycleService.afterReplyComment(comment, ipLocation)
 
-    return this.commentService
-      .fillAndReplaceAvatarUrl([comment])
-      .then((docs) => docs[0])
+    const [doc] = await this.commentService.fillAndReplaceAvatarUrl([comment])
+    return doc
   }
 
   @Get('/')
@@ -391,7 +389,7 @@ export class CommentController {
         filter.state = currentState
       }
       const matched = await this.commentService.findByFilter(filter)
-      affected = matched.map((c) => String(c.id ?? c.id))
+      affected = matched.map((c) => String(c.id))
       await this.commentService.updateStateByFilter(filter, state)
     } else if (ids?.length) {
       affected = ids.map((id) => id.toString())
@@ -418,9 +416,7 @@ export class CommentController {
       const comments = await this.commentService.findByFilter(filter)
       await Promise.all(
         comments.map((comment) =>
-          this.commentService.softDeleteComment(
-            String(comment.id ?? comment.id),
-          ),
+          this.commentService.softDeleteComment(String(comment.id)),
         ),
       )
     } else if (ids?.length) {

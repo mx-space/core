@@ -53,9 +53,8 @@ export class AuthController {
     @Query('id') id?: string,
   ) {
     if (typeof token === 'string') {
-      return await this.authService
-        .verifyCustomToken(token)
-        .then(([isValid]) => isValid)
+      const [isValid] = await this.authService.verifyCustomToken(token)
+      return isValid
     }
     if (typeof id === 'string') {
       return await this.authService.getTokenSecret(id)

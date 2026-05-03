@@ -93,8 +93,9 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
             value as object | string,
             ttl?.toString(),
           ),
-        'storage.cache.del': (key: string) =>
-          this.mockStorageCache.del(key).then(() => {}),
+        'storage.cache.del': async (key: string) => {
+          await this.mockStorageCache.del(key)
+        },
         'storage.db.get': (namespace: string, key: string) =>
           this.mockDb(namespace).get(key),
         'storage.db.find': (namespace: string, condition: unknown) =>
@@ -135,22 +136,25 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
-    mkdir(NODE_REQUIRE_PATH, { recursive: true }).then(async () => {
-      const pkgPath = path.join(DATA_DIR, 'package.json')
-
-      const isPackageFileExist = await stat(pkgPath)
-        .then(() => true)
-        .catch(() => false)
-
-      if (!isPackageFileExist) {
-        await fs.writeFile(
-          pkgPath,
-          JSON.stringify({ name: 'modules' }, null, 2),
-        )
-      }
-    })
-
+    this.initNodeRequirePath().catch(() => {})
     await this.pourBuiltInFunctions()
+  }
+
+  private async initNodeRequirePath() {
+    await mkdir(NODE_REQUIRE_PATH, { recursive: true })
+    const pkgPath = path.join(DATA_DIR, 'package.json')
+
+    let isPackageFileExist = false
+    try {
+      await stat(pkgPath)
+      isPackageFileExist = true
+    } catch {
+      // file does not exist, leave as false
+    }
+
+    if (!isPackageFileExist) {
+      await fs.writeFile(pkgPath, JSON.stringify({ name: 'modules' }, null, 2))
+    }
   }
 
   public get repository() {
@@ -160,12 +164,11 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   private mockStorageCache = Object.freeze({
     get: async (key: string) => {
       const client = this.redisService.getClient()
-      return client
-        .get(getRedisKey(RedisKeys.ServerlessStorage, key))
-        .then((string) => {
-          if (!string) return null
-          return JSON.safeParse(string)
-        })
+      const val = await client.get(
+        getRedisKey(RedisKeys.ServerlessStorage, key),
+      )
+      if (!val) return null
+      return JSON.safeParse(val)
     },
     set: async (key: string, value: object | string, ttl?: string) => {
       const client = this.redisService.getClient()
@@ -208,8 +211,9 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   }
 
   private mockDb(namespace: string) {
+    const storageRepository = this.storageRepository
     const checkRecordIsExist = async (key: string) => {
-      return (await this.storageRepository.get(namespace, key)) !== null
+      return (await storageRepository.get(namespace, key)) !== null
     }
 
     const updateKey = async (key: string, value: any) => {
@@ -217,19 +221,19 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
         throw new InternalServerErrorException('key not exist')
       }
 
-      return this.storageRepository.upsert(namespace, key, value)
+      return storageRepository.upsert(namespace, key, value)
     }
 
     return {
       async get(key: string) {
-        return this.storageRepository.get(namespace, key)
+        return storageRepository.get(namespace, key)
       },
       async find(condition: KV) {
         if (typeof condition !== 'object') {
           throw new InternalServerErrorException('condition must be object')
         }
 
-        const entries = await this.storageRepository.listNamespace(namespace)
+        const entries = await storageRepository.listNamespace(namespace)
         return entries
           .filter((entry) =>
             Object.entries(condition).every(
@@ -251,18 +255,18 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
           return updateKey(key, value)
         }
 
-        return this.storageRepository.upsert(namespace, key, value)
+        return storageRepository.upsert(namespace, key, value)
       },
       async insert(key: string, value: any) {
         if (await checkRecordIsExist(key)) {
           throw new InternalServerErrorException('key already exists')
         }
 
-        return this.storageRepository.upsert(namespace, key, value)
+        return storageRepository.upsert(namespace, key, value)
       },
       update: updateKey,
       del(key: string) {
-        return this.storageRepository.delete(namespace, key)
+        return storageRepository.delete(namespace, key)
       },
     } as const
   }

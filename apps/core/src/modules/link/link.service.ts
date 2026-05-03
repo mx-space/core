@@ -218,28 +218,28 @@ export class LinkService {
 
   async checkLinkHealth() {
     const links = await this.linkRepository.findByState(LinkState.Pass)
-    const health = await Promise.all(
-      links.map(({ id, url }) => {
+    const results = await Promise.all(
+      links.map(async ({ id, url }) => {
         this.logger.debug(`检查友链 ${id} 的健康状态：GET -> ${url}`)
-        return this.http.axiosRef
-          .get(url, {
+        try {
+          const res = await this.http.axiosRef.get(url, {
             timeout: 5000,
             'axios-retry': { retries: 1, shouldResetTimeout: true },
           })
-          .then((res) => ({ status: res.status, id }))
-          .catch((error) => ({
+          return { status: res.status, id }
+        } catch (error: any) {
+          return {
             id,
             status: error.response?.status || 'ERROR',
             message: error.message,
-          }))
+          }
+        }
       }),
-    ).then((arr) =>
-      arr.reduce<Record<string, unknown>>((acc, cur) => {
-        acc[cur.id] = cur
-        return acc
-      }, {}),
     )
-    return health
+    return results.reduce<Record<string, unknown>>((acc, cur) => {
+      acc[cur.id] = cur
+      return acc
+    }, {})
   }
 
   async canApplyLink() {

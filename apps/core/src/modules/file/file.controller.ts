@@ -165,7 +165,7 @@ export class FileController {
     const { type = 'file' } = params
     // const { page, size } = query
     const dir = await this.service.getDir(type)
-    return Promise.all(
+    const files = await Promise.all(
       dir.map(async (name) => {
         const { birthtime } = await fs.stat(
           path.resolve(STATIC_FILE_DIR, type, name),
@@ -176,9 +176,8 @@ export class FileController {
           created: +birthtime,
         }
       }),
-    ).then((data) => {
-      return data.sort((a, b) => b.created - a.created)
-    })
+    )
+    return files.sort((a, b) => b.created - a.created)
   }
 
   @Get('/:type/:name')

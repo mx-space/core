@@ -1,9 +1,12 @@
 import path from 'node:path'
 import { URL } from 'node:url'
+
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
+import { parseHTML } from 'linkedom'
+
 import { API_VERSION } from '~/app.config'
 import { PKG } from '~/utils/pkg.util'
-import { parseHTML } from 'linkedom'
+
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerService } from '../owner/owner.service'
 
@@ -27,12 +30,13 @@ export class PageProxyService {
     const { githubToken } = await this.configs.get(
       'thirdPartyServiceIntegration',
     )
-    const { tag_name } = await fetch(
+    const response = await fetch(
       `https://api.github.com/repos/${PKG.dashboard!.repo}/releases/latest`,
       {
         headers: githubToken ? { Authorization: `Bearer ${githubToken}` } : {},
       },
-    ).then((data) => data.json())
+    )
+    const { tag_name } = await response.json()
 
     return tag_name.replace(/^v/, '')
   }

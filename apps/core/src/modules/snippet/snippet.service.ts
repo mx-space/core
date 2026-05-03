@@ -369,10 +369,9 @@ export class SnippetService {
       throw new BizException(ErrorCodeEnum.SnippetPrivate)
     }
 
-    return this.attachSnippet(snippet).then((res) => {
-      this.cacheSnippet(res, res.data)
-      return res.data
-    })
+    const res = await this.attachSnippet(snippet)
+    this.cacheSnippet(res, res.data)
+    return res.data
   }
 
   async attachSnippet<T extends SnippetRow>(

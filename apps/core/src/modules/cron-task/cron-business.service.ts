@@ -71,14 +71,12 @@ export class CronBusinessService {
   async resetLikedOrReadArticleRecord() {
     const redis = this.redisService.getClient()
 
-    await Promise.all(
-      [
-        redis.keys(getRedisKey(RedisKeys.Like, '*')),
-        redis.keys(getRedisKey(RedisKeys.Read, '*')),
-      ].map((keys) => {
-        return keys.then((keys) => keys.map((key) => redis.del(key)))
-      }),
-    )
+    const keyGroups = await Promise.all([
+      redis.keys(getRedisKey(RedisKeys.Like, '*')),
+      redis.keys(getRedisKey(RedisKeys.Read, '*')),
+    ])
+    const allKeys = keyGroups.flat()
+    await Promise.all(allKeys.map((key) => redis.del(key)))
 
     this.logger.log('--> 清理喜欢数成功')
     return { success: true }
@@ -207,11 +205,9 @@ export class CronBusinessService {
             )}`,
           )
 
-          return await redis
-            .hdel(getRedisKey(RedisKeys.JWTStore), key)
-            .then(() => {
-              deleteCount += 1
-            })
+          await redis.hdel(getRedisKey(RedisKeys.JWTStore), key)
+          deleteCount += 1
+          return
         }
         return null
       }),

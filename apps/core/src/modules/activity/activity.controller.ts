@@ -103,16 +103,13 @@ export class ActivityController {
     const readerIds = roomPresence
       .map((item) => item.readerId)
       .filter(Boolean) as string[]
-    const readers = await this.readerService
-      .findReaderInIds(readerIds)
-      .then((arr) => {
-        return arr.map((item) => {
-          return snakecaseKeysWithCompat({
-            ...item,
-            id: item.id,
-          })
-        })
-      })
+    const readerRows = await this.readerService.findReaderInIds(readerIds)
+    const readers = readerRows.map((item) =>
+      snakecaseKeysWithCompat({
+        ...item,
+        id: item.id,
+      }),
+    )
 
     return {
       data: keyBy(

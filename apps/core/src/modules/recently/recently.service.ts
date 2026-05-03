@@ -256,47 +256,53 @@ export class RecentlyService {
 
     const redis = this.redisService.getClient()
     const key = `${id}:${ip}`
-    const currentAttitude = await redis.hget(
-      getRedisKey(RedisKeys.RecentlyAttitude),
-      key,
-    )
+    const redisKey = getRedisKey(RedisKeys.RecentlyAttitude)
+    const currentAttitude = await redis.hget(redisKey, key)
 
     if (currentAttitude) {
       const { attitude: prevAttitude } = JSON.parse(currentAttitude)
       if (prevAttitude === attitude) {
-        if (prevAttitude === RecentlyAttitudeEnum.Up) {
-          await this.recentlyRepository.incrementUp(id, -1)
-        } else {
-          await this.recentlyRepository.incrementDown(id, -1)
-        }
-        await redis.hdel(getRedisKey(RedisKeys.RecentlyAttitude), key)
+        await this.adjustScore(id, prevAttitude, -1)
+        await redis.hdel(redisKey, key)
         return -1
       }
-      if (prevAttitude === RecentlyAttitudeEnum.Up) {
-        await this.recentlyRepository.incrementUp(id, -1)
-        await this.recentlyRepository.incrementDown(id, 1)
-      } else {
-        await this.recentlyRepository.incrementDown(id, -1)
-        await this.recentlyRepository.incrementUp(id, 1)
-      }
+      await this.switchScore(id, prevAttitude)
       await redis.hset(
-        getRedisKey(RedisKeys.RecentlyAttitude),
+        redisKey,
         key,
         JSON.stringify({ attitude, date: new Date().toISOString() }),
       )
       return 1
     }
 
-    if (attitude === RecentlyAttitudeEnum.Up) {
-      await this.recentlyRepository.incrementUp(id, 1)
-    } else {
-      await this.recentlyRepository.incrementDown(id, 1)
-    }
+    await this.adjustScore(id, attitude, 1)
     await redis.hset(
-      getRedisKey(RedisKeys.RecentlyAttitude),
+      redisKey,
       key,
       JSON.stringify({ attitude, date: new Date().toISOString() }),
     )
     return 1
+  }
+
+  private async adjustScore(
+    id: string,
+    attitude: RecentlyAttitudeEnum,
+    delta: number,
+  ) {
+    if (attitude === RecentlyAttitudeEnum.Up) {
+      await this.recentlyRepository.incrementUp(id, delta)
+    } else {
+      await this.recentlyRepository.incrementDown(id, delta)
+    }
+  }
+
+  private async switchScore(id: string, prevAttitude: RecentlyAttitudeEnum) {
+    if (prevAttitude === RecentlyAttitudeEnum.Up) {
+      await this.recentlyRepository.incrementUp(id, -1)
+      await this.recentlyRepository.incrementDown(id, 1)
+    } else {
+      await this.recentlyRepository.incrementDown(id, -1)
+      await this.recentlyRepository.incrementUp(id, 1)
+    }
   }
 }

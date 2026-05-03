@@ -46,9 +46,7 @@ export class UpdateInstallService {
       }
 
       const distPath = path.join(tempDir, 'dist')
-      const contentPath = await access(distPath)
-        .then(() => distPath)
-        .catch(() => tempDir)
+      const contentPath = (await this.pathExists(distPath)) ? distPath : tempDir
 
       const backupPath = `${LOCAL_ADMIN_ASSET_PATH}_backup_${Date.now()}`
       try {
@@ -72,19 +70,11 @@ export class UpdateInstallService {
 
         await pushProgress(pc.green('Installation completed successfully.\n'))
 
-        if (
-          await access(backupPath)
-            .then(() => true)
-            .catch(() => false)
-        ) {
+        if (await this.pathExists(backupPath)) {
           await rm(backupPath, { recursive: true, force: true })
         }
       } catch (installError) {
-        if (
-          await access(backupPath)
-            .then(() => true)
-            .catch(() => false)
-        ) {
+        if (await this.pathExists(backupPath)) {
           await rm(LOCAL_ADMIN_ASSET_PATH, { recursive: true, force: true })
           await this.moveDirectory(backupPath, LOCAL_ADMIN_ASSET_PATH)
           await pushProgress(
@@ -118,6 +108,15 @@ export class UpdateInstallService {
       throw new Error(
         'Installation verification failed: required files not found',
       )
+    }
+  }
+
+  private async pathExists(targetPath: string): Promise<boolean> {
+    try {
+      await access(targetPath)
+      return true
+    } catch {
+      return false
     }
   }
 }

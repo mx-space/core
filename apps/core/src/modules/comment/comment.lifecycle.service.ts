@@ -187,9 +187,8 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       return null
     }
 
-    return this.readerService
-      .findReaderInIds([readerId])
-      .then((readers) => readers[0] ?? null)
+    const readers = await this.readerService.findReaderInIds([readerId])
+    return readers[0] ?? null
   }
 
   private toOwnerIdentity(
@@ -244,9 +243,8 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
   }
 
   async sendEmail(comment: CommentModel, type: CommentReplyMailType) {
-    const enable = await this.configsService
-      .get('mailOptions')
-      .then((config) => config.enable)
+    const mailOptions = await this.configsService.get('mailOptions')
+    const enable = mailOptions.enable
     if (!enable) return
 
     const ownerInfo = await this.ownerService.getOwnerInfo()
@@ -308,10 +306,10 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
           type === CommentReplyMailType.Guest
             ? commentIdentity.author || ownerInfo.name
             : ownerInfo.name,
-        link: await this.resolveUrlByType(
+        link: `${await this.resolveUrlByType(
           refType as CollectionRefTypes,
           refDoc,
-        ).then((url) => `${url}#comments-${comment.id}`),
+        )}#comments-${comment.id}`,
         time: parsedTime,
         mail: senderMail,
         ip: comment.ip || '',

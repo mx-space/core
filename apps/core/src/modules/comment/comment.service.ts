@@ -94,9 +94,8 @@ export class CommentService {
   > {
     const readerId = RequestContext.currentReaderId()
     if (!readerId) return null
-    const reader = await this.readerService
-      .findReaderInIds([readerId])
-      .then((readers) => readers[0] ?? null)
+    const readers = await this.readerService.findReaderInIds([readerId])
+    const reader = readers[0] ?? null
     return reader ? { ...reader, id: readerId } : null
   }
 
@@ -337,14 +336,7 @@ export class CommentService {
     return this.softDeleteComment(id)
   }
 
-  async allowComment(id: string, type?: CollectionRefTypes) {
-    if (type) {
-      const result = await this.databaseService.findGlobalById(id)
-      if (!result) throw new CannotFindException()
-      return 'allowComment' in result.document
-        ? (result.document as any).allowComment
-        : true
-    }
+  async allowComment(id: string, _type?: CollectionRefTypes) {
     const result = await this.databaseService.findGlobalById(id)
     if (!result) throw new CannotFindException()
     return 'allowComment' in result.document

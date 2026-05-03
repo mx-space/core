@@ -165,38 +165,40 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
       hookId: webhook.id,
       response: null,
     })
-    return this.httpService.axiosRef
-      .post(webhook.payloadUrl, clonedPayload, {
-        headers,
-        'axios-retry': {
-          retries: 10,
+    try {
+      const response = await this.httpService.axiosRef.post(
+        webhook.payloadUrl,
+        clonedPayload,
+        {
+          headers,
+          'axios-retry': {
+            retries: 10,
+          },
         },
+      )
+      await this.webhookRepository.updateEvent(webhookEvent.id, {
+        response: {
+          headers: response.headers,
+          data: response.data,
+          timestamp: Date.now(),
+        },
+        status: response.status,
+        success: true,
       })
-      .then(async (response) => {
-        await this.webhookRepository.updateEvent(webhookEvent.id, {
-          response: {
-            headers: response.headers,
-            data: response.data,
-            timestamp: Date.now(),
-          },
-          status: response.status,
-          success: true,
-        })
+    } catch (error: any) {
+      if (!error.response) {
+        return
+      }
+      this.webhookRepository.updateEvent(webhookEvent.id, {
+        response: {
+          headers: error.response.headers,
+          data: error.response.data,
+          timestamp: Date.now(),
+        },
+        status: error.response.status,
+        success: false,
       })
-      .catch((error) => {
-        if (!error.response) {
-          return
-        }
-        this.webhookRepository.updateEvent(webhookEvent.id, {
-          response: {
-            headers: error.response.headers,
-            data: error.response.data,
-            timestamp: Date.now(),
-          },
-          status: error.response.status,
-          success: false,
-        })
-      })
+    }
   }
 
   async redispatch(id: string) {

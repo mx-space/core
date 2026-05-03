@@ -15,6 +15,27 @@ import type {
 } from './ai-translation.types'
 import { TranslationEntryService } from './translation-entry.service'
 
+interface CategoryEventPayload {
+  id: string
+  name?: string
+}
+
+interface TopicEventPayload {
+  id: string
+  name?: string
+  introduce?: string
+  description?: string
+}
+
+interface NoteEventPayload {
+  id: string
+}
+
+interface NoteDocumentLike {
+  mood?: unknown
+  weather?: unknown
+}
+
 @Injectable()
 export class AiTranslationEventHandlerService {
   private readonly logger = new Logger(AiTranslationEventHandlerService.name)
@@ -150,207 +171,206 @@ export class AiTranslationEventHandlerService {
   // === Translation Entry: Category ===
 
   @OnEvent(BusinessEvents.CATEGORY_CREATE)
-  async handleCategoryCreate(event: any) {
+  async handleCategoryCreate(event: CategoryEventPayload) {
     if (!(await this.isAutoEntryEnabled())) return
-    const doc = event
-    if (!doc?.id || !doc?.name) return
-    const id = doc.id
-    this.logger.log(`Auto-generating translation entry for category: ${id}`)
-    await this.translationEntryService
-      .generateForValues([
+    if (!event.id || !event.name) return
+    this.logger.log(
+      `Auto-generating translation entry for category: ${event.id}`,
+    )
+    try {
+      await this.translationEntryService.generateForValues([
         {
           keyPath: 'category.name',
           keyType: 'entity',
-          lookupKey: id,
-          sourceText: doc.name,
+          lookupKey: event.id,
+          sourceText: event.name,
         },
       ])
-      .catch((err) =>
-        this.logger.error(`Category entry generation failed: ${err.message}`),
-      )
+    } catch (err: any) {
+      this.logger.error(`Category entry generation failed: ${err.message}`)
+    }
   }
 
   @OnEvent(BusinessEvents.CATEGORY_UPDATE)
-  async handleCategoryUpdate(event: any) {
-    const doc = event
-    if (!doc?.id || !doc?.name) return
-    const id = doc.id
+  async handleCategoryUpdate(event: CategoryEventPayload) {
+    if (!event.id || !event.name) return
     await this.translationEntryService.handleEntityUpdate(
       'category.name',
-      id,
-      doc.name,
+      event.id,
+      event.name,
     )
 
     if (!(await this.isAutoEntryEnabled())) return
-    await this.translationEntryService
-      .generateForValues([
+    try {
+      await this.translationEntryService.generateForValues([
         {
           keyPath: 'category.name',
           keyType: 'entity',
-          lookupKey: id,
-          sourceText: doc.name,
+          lookupKey: event.id,
+          sourceText: event.name,
         },
       ])
-      .catch((err) =>
-        this.logger.error(
-          `Category entry re-generation failed: ${err.message}`,
-        ),
-      )
+    } catch (err: any) {
+      this.logger.error(`Category entry re-generation failed: ${err.message}`)
+    }
   }
 
   @OnEvent(BusinessEvents.CATEGORY_DELETE)
-  async handleCategoryDelete(event: any) {
-    const id = event?.id?.toString?.()
-    if (!id) return
-    await this.translationEntryService.deleteByKeyPath('category.name', id)
+  async handleCategoryDelete(event: { id: string }) {
+    if (!event.id) return
+    await this.translationEntryService.deleteByKeyPath(
+      'category.name',
+      event.id,
+    )
   }
 
   // === Translation Entry: Topic ===
 
   @OnEvent(BusinessEvents.TOPIC_CREATE)
-  async handleTopicCreate(event: any) {
+  async handleTopicCreate(event: TopicEventPayload) {
     if (!(await this.isAutoEntryEnabled())) return
-    const doc = event
-    if (!doc?.id) return
-    const id = doc.id
+    if (!event.id) return
     const values: Parameters<TranslationEntryService['generateForValues']>[0] =
       []
-    if (doc.name) {
+    if (event.name) {
       values.push({
         keyPath: 'topic.name',
         keyType: 'entity',
-        lookupKey: id,
-        sourceText: doc.name,
+        lookupKey: event.id,
+        sourceText: event.name,
       })
     }
-    if (doc.introduce) {
+    if (event.introduce) {
       values.push({
         keyPath: 'topic.introduce',
         keyType: 'entity',
-        lookupKey: id,
-        sourceText: doc.introduce,
+        lookupKey: event.id,
+        sourceText: event.introduce,
       })
     }
-    if (doc.description) {
+    if (event.description) {
       values.push({
         keyPath: 'topic.description',
         keyType: 'entity',
-        lookupKey: id,
-        sourceText: doc.description,
+        lookupKey: event.id,
+        sourceText: event.description,
       })
     }
     if (!values.length) return
-    this.logger.log(`Auto-generating translation entries for topic: ${id}`)
-    await this.translationEntryService
-      .generateForValues(values)
-      .catch((err) =>
-        this.logger.error(`Topic entry generation failed: ${err.message}`),
-      )
+    this.logger.log(
+      `Auto-generating translation entries for topic: ${event.id}`,
+    )
+    try {
+      await this.translationEntryService.generateForValues(values)
+    } catch (err: any) {
+      this.logger.error(`Topic entry generation failed: ${err.message}`)
+    }
   }
 
   @OnEvent(BusinessEvents.TOPIC_UPDATE)
-  async handleTopicUpdate(event: any) {
-    const doc = event
-    if (!doc?.id) return
-    const id = doc.id
-    if (doc.name != null) {
+  async handleTopicUpdate(event: TopicEventPayload) {
+    if (!event.id) return
+    if (event.name != null) {
       await this.translationEntryService.handleEntityUpdate(
         'topic.name',
-        id,
-        doc.name,
+        event.id,
+        event.name,
       )
     }
-    if (doc.introduce != null) {
+    if (event.introduce != null) {
       await this.translationEntryService.handleEntityUpdate(
         'topic.introduce',
-        id,
-        doc.introduce,
+        event.id,
+        event.introduce,
       )
     }
-    if (doc.description != null) {
+    if (event.description != null) {
       await this.translationEntryService.handleEntityUpdate(
         'topic.description',
-        id,
-        doc.description,
+        event.id,
+        event.description,
       )
     }
 
     if (!(await this.isAutoEntryEnabled())) return
     const values: Parameters<TranslationEntryService['generateForValues']>[0] =
       []
-    if (doc.name) {
+    if (event.name) {
       values.push({
         keyPath: 'topic.name',
         keyType: 'entity',
-        lookupKey: id,
-        sourceText: doc.name,
+        lookupKey: event.id,
+        sourceText: event.name,
       })
     }
-    if (doc.introduce) {
+    if (event.introduce) {
       values.push({
         keyPath: 'topic.introduce',
         keyType: 'entity',
-        lookupKey: id,
-        sourceText: doc.introduce,
+        lookupKey: event.id,
+        sourceText: event.introduce,
       })
     }
-    if (doc.description) {
+    if (event.description) {
       values.push({
         keyPath: 'topic.description',
         keyType: 'entity',
-        lookupKey: id,
-        sourceText: doc.description,
+        lookupKey: event.id,
+        sourceText: event.description,
       })
     }
     if (!values.length) return
-    await this.translationEntryService
-      .generateForValues(values)
-      .catch((err) =>
-        this.logger.error(`Topic entry re-generation failed: ${err.message}`),
-      )
+    try {
+      await this.translationEntryService.generateForValues(values)
+    } catch (err: any) {
+      this.logger.error(`Topic entry re-generation failed: ${err.message}`)
+    }
   }
 
   @OnEvent(BusinessEvents.TOPIC_DELETE)
-  async handleTopicDelete(event: any) {
-    const id = event?.id?.toString?.()
-    if (!id) return
-    await this.translationEntryService.deleteByKeyPath('topic.name', id)
-    await this.translationEntryService.deleteByKeyPath('topic.introduce', id)
-    await this.translationEntryService.deleteByKeyPath('topic.description', id)
+  async handleTopicDelete(event: { id: string }) {
+    if (!event.id) return
+    await this.translationEntryService.deleteByKeyPath('topic.name', event.id)
+    await this.translationEntryService.deleteByKeyPath(
+      'topic.introduce',
+      event.id,
+    )
+    await this.translationEntryService.deleteByKeyPath(
+      'topic.description',
+      event.id,
+    )
   }
 
   // === Translation Entry: Note mood/weather ===
 
   @OnEvent(BusinessEvents.NOTE_CREATE)
-  async handleNoteCreateEntry(event: any) {
+  async handleNoteCreateEntry(event: NoteEventPayload) {
     if (!(await this.isAutoEntryEnabled())) return
-    const id = event?.id?.toString?.()
-    if (!id) return
-    const note = await this.databaseService.findGlobalById(id)
+    if (!event.id) return
+    const note = await this.databaseService.findGlobalById(event.id)
     if (!note) return
     const values = this.collectNoteDictValues(note.document)
     if (!values.length) return
-    await this.translationEntryService
-      .generateForValues(values)
-      .catch((err) =>
-        this.logger.error(`Note entry generation failed: ${err.message}`),
-      )
+    try {
+      await this.translationEntryService.generateForValues(values)
+    } catch (err: any) {
+      this.logger.error(`Note entry generation failed: ${err.message}`)
+    }
   }
 
   @OnEvent(BusinessEvents.NOTE_UPDATE)
-  async handleNoteUpdateEntry(event: any) {
+  async handleNoteUpdateEntry(event: NoteEventPayload) {
     if (!(await this.isAutoEntryEnabled())) return
-    const id = event?.id?.toString?.()
-    if (!id) return
-    const note = await this.databaseService.findGlobalById(id)
+    if (!event.id) return
+    const note = await this.databaseService.findGlobalById(event.id)
     if (!note) return
     const values = this.collectNoteDictValues(note.document)
     if (!values.length) return
-    await this.translationEntryService
-      .generateForValues(values)
-      .catch((err) =>
-        this.logger.error(`Note entry generation failed: ${err.message}`),
-      )
+    try {
+      await this.translationEntryService.generateForValues(values)
+    } catch (err: any) {
+      this.logger.error(`Note entry generation failed: ${err.message}`)
+    }
   }
 
   // === Helpers ===
@@ -363,24 +383,25 @@ export class AiTranslationEventHandlerService {
   }
 
   private collectNoteDictValues(
-    doc: any,
+    doc: unknown,
   ): Parameters<TranslationEntryService['generateForValues']>[0] {
     const values: Parameters<TranslationEntryService['generateForValues']>[0] =
       []
-    if (doc?.mood && typeof doc.mood === 'string') {
+    const note = doc as NoteDocumentLike
+    if (typeof note.mood === 'string') {
       values.push({
         keyPath: 'note.mood',
         keyType: 'dict',
-        lookupKey: TranslationEntryService.hashSourceText(doc.mood),
-        sourceText: doc.mood,
+        lookupKey: TranslationEntryService.hashSourceText(note.mood),
+        sourceText: note.mood,
       })
     }
-    if (doc?.weather && typeof doc.weather === 'string') {
+    if (typeof note.weather === 'string') {
       values.push({
         keyPath: 'note.weather',
         keyType: 'dict',
-        lookupKey: TranslationEntryService.hashSourceText(doc.weather),
-        sourceText: doc.weather,
+        lookupKey: TranslationEntryService.hashSourceText(note.weather),
+        sourceText: note.weather,
       })
     }
     return values

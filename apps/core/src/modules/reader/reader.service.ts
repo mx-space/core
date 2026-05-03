@@ -32,10 +32,9 @@ export class ReaderService {
     } as ReaderShape
   }
 
-  find() {
-    return this.readerRepository
-      .list(1, 100)
-      .then((result) => result.data.map((row) => this.toReaderShape(row)))
+  async find() {
+    const result = await this.readerRepository.list(1, 100)
+    return result.data.map((row) => this.toReaderShape(row))
   }
 
   async findPaginated(page: number, size: number) {

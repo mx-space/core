@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, inArray, type SQL, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, or, type SQL, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { aiTranslations, translationEntries } from '~/database/schema'
@@ -11,6 +11,8 @@ import {
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
+
+import type { TranslationEntryKeyPath } from './translation-entry.types'
 
 export interface AiTranslationRow {
   id: EntityId
@@ -36,7 +38,7 @@ export interface AiTranslationRow {
 
 export interface TranslationEntryRow {
   id: EntityId
-  keyPath: string
+  keyPath: TranslationEntryKeyPath
   lang: string
   keyType: string
   lookupKey: string
@@ -74,7 +76,7 @@ const mapEntry = (
   row: typeof translationEntries.$inferSelect,
 ): TranslationEntryRow => ({
   id: toEntityId(row.id) as EntityId,
-  keyPath: row.keyPath,
+  keyPath: row.keyPath as TranslationEntryKeyPath,
   lang: row.lang,
   keyType: row.keyType,
   lookupKey: row.lookupKey,
@@ -610,5 +612,77 @@ export class TranslationEntryRepository extends BaseRepository {
       .where(eq(translationEntries.id, parseEntityId(id)))
       .returning()
     return row ? mapEntry(row) : null
+  }
+
+  async listByKeyPathLookupKeys(
+    keyPathLookupKeys: Array<{ keyPath: string; lookupKey: string }>,
+  ): Promise<TranslationEntryRow[]> {
+    if (!keyPathLookupKeys.length) return []
+    const rows = await this.db
+      .select()
+      .from(translationEntries)
+      .where(
+        or(
+          ...keyPathLookupKeys.map(
+            ({ keyPath, lookupKey }) =>
+              and(
+                eq(translationEntries.keyPath, keyPath),
+                eq(translationEntries.lookupKey, lookupKey),
+              )!,
+          ),
+        )!,
+      )
+    return rows.map(mapEntry)
+  }
+
+  async listPaginated(
+    filter: { keyPath?: string; lang?: string },
+    page = 1,
+    size = 20,
+  ): Promise<PaginationResult<TranslationEntryRow>> {
+    page = Math.max(1, page)
+    size = Math.min(100, Math.max(1, size))
+    const offset = (page - 1) * size
+    const conditions: SQL<unknown>[] = []
+    if (filter.keyPath)
+      conditions.push(eq(translationEntries.keyPath, filter.keyPath))
+    if (filter.lang) conditions.push(eq(translationEntries.lang, filter.lang))
+    const where = conditions.length ? and(...conditions) : undefined
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(translationEntries)
+        .where(where)
+        .orderBy(desc(translationEntries.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(translationEntries)
+        .where(where),
+    ])
+    return {
+      data: rows.map(mapEntry),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
+  async deleteMany(filter: {
+    keyPath: string
+    lookupKey?: string
+    langs?: string[]
+  }): Promise<number> {
+    const conditions: SQL<unknown>[] = [
+      eq(translationEntries.keyPath, filter.keyPath),
+    ]
+    if (filter.lookupKey)
+      conditions.push(eq(translationEntries.lookupKey, filter.lookupKey))
+    if (filter.langs?.length)
+      conditions.push(inArray(translationEntries.lang, filter.langs))
+    const result = await this.db
+      .delete(translationEntries)
+      .where(and(...conditions)!)
+      .returning({ id: translationEntries.id })
+    return result.length
   }
 }

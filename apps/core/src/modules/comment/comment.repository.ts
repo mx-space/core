@@ -1,5 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, asc, desc, eq, ilike, inArray, ne, type SQL, sql } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  ne,
+  type SQL,
+  sql,
+} from 'drizzle-orm'
 
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { PG_DB_TOKEN } from '~/constants/system.constant'
@@ -714,17 +724,19 @@ export class CommentRepository extends BaseRepository {
       .limit(1)
     if (!target) return null
 
-    const beforeFilter =
-      sort === 'oldest'
-        ? sql`${comments.createdAt} < ${target.createdAt}`
-        : sort === 'newest'
-          ? sql`${comments.createdAt} > ${target.createdAt}`
-          : target.pin
-            ? and(
-                eq(comments.pin, true),
-                sql`${comments.createdAt} > ${target.createdAt}`,
-              )
-            : sql`(${comments.pin} = true or ${comments.createdAt} > ${target.createdAt})`
+    let beforeFilter: SQL
+    if (sort === 'oldest') {
+      beforeFilter = sql`${comments.createdAt} < ${target.createdAt}`
+    } else if (sort === 'newest') {
+      beforeFilter = sql`${comments.createdAt} > ${target.createdAt}`
+    } else if (target.pin) {
+      beforeFilter = and(
+        eq(comments.pin, true),
+        sql`${comments.createdAt} > ${target.createdAt}`,
+      )!
+    } else {
+      beforeFilter = sql`(${comments.pin} = true or ${comments.createdAt} > ${target.createdAt})`
+    }
 
     const [row] = await this.db
       .select({ count: sql<number>`count(*)::int` })

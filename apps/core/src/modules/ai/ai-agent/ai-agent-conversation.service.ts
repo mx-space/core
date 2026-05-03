@@ -115,7 +115,7 @@ export class AiAgentConversationService {
     await this.conversationRepository.deleteById(id)
   }
 
-  private generateTitle(
+  private async generateTitle(
     conversationId: string,
     allMessages: Record<string, unknown>[],
     model: string,
@@ -142,49 +142,44 @@ export class AiAgentConversationService {
       { role: 'user', content: '请用 10 字以内概括以上对话主题' },
     ]
 
-    this.chatService
-      .resolveProvider(providerId)
-      .then((provider) => {
-        const { url, headers, body } = this.chatService.buildRequestBody(
-          provider,
-          model,
-          titleMessages,
-        )
+    try {
+      const provider = await this.chatService.resolveProvider(providerId)
+      const { url, headers, body } = this.chatService.buildRequestBody(
+        provider,
+        model,
+        titleMessages,
+      )
 
-        const bodyObj = JSON.parse(body)
-        bodyObj.stream = false
-        delete bodyObj.thinking
-        delete bodyObj.tools
+      const bodyObj = JSON.parse(body)
+      bodyObj.stream = false
+      delete bodyObj.thinking
+      delete bodyObj.tools
 
-        return fetch(url, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(bodyObj),
-        })
+      const res = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(bodyObj),
       })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Title gen failed: ${res.status}`)
-        return res.json()
-      })
-      .then((json: any) => {
-        let title: string | undefined
-        if (json.content?.[0]?.text) {
-          title = json.content[0].text
-        } else if (json.choices?.[0]?.message?.content) {
-          title = json.choices[0].message.content
-        }
-        if (title) {
-          title = title
-            .replaceAll(/^["'「]|["'」]$/g, '')
-            .trim()
-            .slice(0, 30)
-          return this.conversationRepository.update(conversationId, { title })
-        }
-      })
-      .catch((err) => {
-        this.logger.warn(
-          `Title generation failed for ${conversationId}: ${err.message}`,
-        )
-      })
+      if (!res.ok) throw new Error(`Title gen failed: ${res.status}`)
+      const json: any = await res.json()
+
+      let title: string | undefined
+      if (json.content?.[0]?.text) {
+        title = json.content[0].text
+      } else if (json.choices?.[0]?.message?.content) {
+        title = json.choices[0].message.content
+      }
+      if (title) {
+        title = title
+          .replaceAll(/^["'「]|["'」]$/g, '')
+          .trim()
+          .slice(0, 30)
+        await this.conversationRepository.update(conversationId, { title })
+      }
+    } catch (err: any) {
+      this.logger.warn(
+        `Title generation failed for ${conversationId}: ${err.message}`,
+      )
+    }
   }
 }

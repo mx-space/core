@@ -58,28 +58,27 @@ export class UpdateController {
         const versionPath = path.resolve(adminAssetRoot, 'version')
         const isHasVersion = existsSync(versionPath)
         if (isHasVersion) {
-          const versionInfo = await readFile(versionPath, {
-            encoding: 'utf8',
-          })
-            .then((data) => data.split('\n')[0])
-            .catch(() => '')
+          let versionInfo: string
+          try {
+            const data = await readFile(versionPath, { encoding: 'utf8' })
+            versionInfo = data.split('\n')[0]
+          } catch {
+            versionInfo = ''
+          }
           if (isSemVer(versionInfo)) {
             currentVersion = versionInfo
           }
         }
 
         // 3. fetch latest admin version
-        const latestVersion = await this.service
-          .getLatestAdminVersion()
-          .catch((error) => {
-            observer.next(
-              pc.red(`Fetching latest admin version error: ${error.message}\n`),
-            )
-            observer.complete()
-            return ''
-          })
-
-        if (!latestVersion) {
+        let latestVersion: string
+        try {
+          latestVersion = await this.service.getLatestAdminVersion()
+        } catch (error: any) {
+          observer.next(
+            pc.red(`Fetching latest admin version error: ${error.message}\n`),
+          )
+          observer.complete()
           return
         }
 

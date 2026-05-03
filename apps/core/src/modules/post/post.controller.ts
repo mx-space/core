@@ -71,86 +71,84 @@ export class PostController {
       categoryIds,
     } = query
 
-    return this.postService
-      .listPaginated({
-        size,
-        page,
-        year,
-        categoryIds,
-        publishedOnly: !isAuthenticated,
-        sortBy: sortBy as any,
-        sortOrder: sortOrder as 1 | -1 | undefined,
-      })
-      .then(async (res) => {
-        const translationInputs: ArticleTranslationInput[] = []
-        for (const doc of res.data) {
-          const originalText = doc.text
+    const res = await this.postService.listPaginated({
+      size,
+      page,
+      year,
+      categoryIds,
+      publishedOnly: !isAuthenticated,
+      sortBy: sortBy as any,
+      sortOrder: sortOrder as 1 | -1 | undefined,
+    })
 
-          if (lang && typeof originalText === 'string') {
-            translationInputs.push({
-              id: String(doc.id),
-              title: doc.title,
-              text: originalText,
-              summary: doc.summary,
-              tags: doc.tags,
-              meta: doc.meta as { lang?: string } | undefined,
-              contentFormat: doc.contentFormat,
-              content: doc.content,
-              modifiedAt: doc.modifiedAt,
-              createdAt: doc.createdAt,
-            })
-          }
+    const translationInputs: ArticleTranslationInput[] = []
+    for (const doc of res.data) {
+      const originalText = doc.text
 
-          doc.text = truncate ? doc.text.slice(0, truncate) : doc.text
+      if (lang && typeof originalText === 'string') {
+        translationInputs.push({
+          id: String(doc.id),
+          title: doc.title,
+          text: originalText,
+          summary: doc.summary,
+          tags: doc.tags,
+          meta: doc.meta as { lang?: string } | undefined,
+          contentFormat: doc.contentFormat,
+          content: doc.content,
+          modifiedAt: doc.modifiedAt,
+          createdAt: doc.createdAt,
+        })
+      }
+
+      doc.text = truncate ? doc.text.slice(0, truncate) : doc.text
+    }
+
+    if (select) {
+      // Always preserve `id` and `category` to keep response shape sound:
+      // `id` is the row key, `category` is a joined value the legacy
+      // aggregate pipeline emitted after the `$project` stage.
+      const selected = new Set(
+        select
+          .split(' ')
+          .map((s) => s.trim().replace(/^[+-]/, ''))
+          .filter(Boolean),
+      )
+      selected.add('id')
+      selected.add('category')
+      res.data = res.data.map((doc) =>
+        Object.fromEntries(
+          Object.entries(doc).filter(([key]) => selected.has(key)),
+        ),
+      ) as typeof res.data
+    }
+
+    if (lang && translationInputs.length) {
+      const translationResults =
+        await this.translationService.translateArticleList({
+          articles: translationInputs,
+          targetLang: lang,
+        })
+
+      res.data = res.data.map((doc) => {
+        const docId = String(doc.id)
+        const translation = translationResults.get(docId)
+        if (!translation?.isTranslated) {
+          return doc
         }
 
-        if (select) {
-          // Always preserve `id` and `category` to keep response shape sound:
-          // `id` is the row key, `category` is a joined value the legacy
-          // aggregate pipeline emitted after the `$project` stage.
-          const selected = new Set(
-            select
-              .split(' ')
-              .map((s) => s.trim().replace(/^[+-]/, ''))
-              .filter(Boolean),
-          )
-          selected.add('id')
-          selected.add('category')
-          res.data = res.data.map((doc) =>
-            Object.fromEntries(
-              Object.entries(doc).filter(([key]) => selected.has(key)),
-            ),
-          ) as typeof res.data
+        return {
+          ...doc,
+          title: translation.title,
+          text: translation.text,
+          summary: translation.summary,
+          tags: translation.tags,
+          isTranslated: translation.isTranslated,
+          translationMeta: translation.translationMeta,
         }
+      }) as typeof res.data
+    }
 
-        if (lang && translationInputs.length) {
-          const translationResults =
-            await this.translationService.translateArticleList({
-              articles: translationInputs,
-              targetLang: lang,
-            })
-
-          res.data = res.data.map((doc) => {
-            const docId = String(doc.id)
-            const translation = translationResults.get(docId)
-            if (!translation?.isTranslated) {
-              return doc
-            }
-
-            return {
-              ...doc,
-              title: translation.title,
-              text: translation.text,
-              summary: translation.summary,
-              tags: translation.tags,
-              isTranslated: translation.isTranslated,
-              translationMeta: translation.translationMeta,
-            }
-          }) as typeof res.data
-        }
-
-        return res
-      })
+    return res
   }
 
   @Get('/get-url/:slug')

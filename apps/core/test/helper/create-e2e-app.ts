@@ -10,30 +10,14 @@ import { ResponseInterceptor } from '~/common/interceptors/response.interceptor'
 import { redisHelper } from './redis-mock.helper'
 import { setupE2EApp } from './setup-e2e'
 
-type ClassType = new (...args: any[]) => any
-
-type ModelMap = Map<
-  ClassType,
-  {
-    name: string
-    model: never
-  }
->
-interface E2EAppMetaData {
-  models?: ClassType[]
-  pourData?: (modelMap: ModelMap) => Promise<void | (() => Promise<any>)>
-}
-
-export const createE2EApp = (module: ModuleMetadata & E2EAppMetaData) => {
+export const createE2EApp = (module: ModuleMetadata) => {
   const proxy: {
     app: NestFastifyApplication
   } = {} as any
 
-  let pourDataCleanup: (() => Promise<void>) | undefined
-
   beforeAll(async () => {
     const { CacheService, token } = await redisHelper
-    const { models, pourData, ...nestModule } = module
+    const nestModule = module
     nestModule.providers ||= []
 
     nestModule.providers.push(
@@ -59,28 +43,12 @@ export const createE2EApp = (module: ModuleMetadata & E2EAppMetaData) => {
     )
 
     nestModule.providers.push({ provide: token, useValue: CacheService })
-    const modelMap = new Map() as ModelMap
-    // TODO(wave-5): refactor E2E fixtures to seed through PG repositories.
-    models?.forEach((model) => {
-      modelMap.set(model, {
-        name: model.name,
-        model: undefined as never,
-      })
-    })
-    if (pourData) {
-      const cleanup = await pourData(modelMap)
-      // @ts-ignore
-      pourDataCleanup = cleanup
-    }
     const app = await setupE2EApp(nestModule)
 
     proxy.app = app
   })
 
   afterAll(async () => {
-    if (pourDataCleanup) {
-      await pourDataCleanup()
-    }
     // Close the app to ensure all pending async operations complete
     if (proxy.app) {
       await proxy.app.close()

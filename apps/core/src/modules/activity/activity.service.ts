@@ -291,33 +291,27 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     let reader: ReaderModel | null = null
     if (readerId) {
-      reader = await this.readerService
-        .findReaderInIds([readerId])
-        .then((res) => res[0])
+      const readers = await this.readerService.findReaderInIds([readerId])
+      reader = readers[0] ?? null
     }
 
-    try {
-      const mapping = {
-        post: ArticleTypeEnum.Post,
-        note: ArticleTypeEnum.Note,
-      }
-
-      // TODO 改成 reader 维度
-      const res = await this.countingService.updateLikeCountWithIp(
-        mapping[type],
-        id,
-        ip,
-      )
-      if (!res) {
-        throw new BizException(ErrorCodeEnum.AlreadySupported)
-      }
-    } catch (error: any) {
-      throw new BizException(ErrorCodeEnum.AlreadySupported, error?.message)
+    const mapping = {
+      post: ArticleTypeEnum.Post,
+      note: ArticleTypeEnum.Note,
     }
 
-    const refModel = await this.databaseService
-      .findGlobalById(id)
-      .then((res) => res?.document)
+    // TODO 改成 reader 维度
+    const res = await this.countingService.updateLikeCountWithIp(
+      mapping[type],
+      id,
+      ip,
+    )
+    if (!res) {
+      throw new BizException(ErrorCodeEnum.AlreadySupported)
+    }
+
+    const globalResult = await this.databaseService.findGlobalById(id)
+    const refModel = globalResult?.document
     this.eventService.emit(
       BusinessEvents.ACTIVITY_LIKE,
       {
@@ -540,14 +534,13 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getRecentPublish() {
-    const [recent, post, note] = await Promise.all([
-      this.databaseService.findGlobalByIds([]).then(() => []),
+    const [post, note] = await Promise.all([
       this.postService.findRecent(3),
       this.noteService.findRecent(3, { visibleOnly: true }),
     ])
 
     return {
-      recent,
+      recent: [],
       post,
       note,
     }
@@ -558,23 +551,19 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
    */
   async getLastYearPublication() {
     const $gte = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
-    const [posts, notes] = await Promise.all([
-      this.postService
-        .findRecent(50)
-        .then((rows) => rows.filter((row) => row.createdAt >= $gte)),
-      this.noteService
-        .findRecent(50)
-        .then((rows) => rows.filter((row) => row.createdAt >= $gte)),
+    const [allPosts, allNotes] = await Promise.all([
+      this.postService.findRecent(50),
+      this.noteService.findRecent(50),
     ])
-    return {
-      posts,
-      notes: notes.map((note) => {
+    const posts = allPosts.filter((row) => row.createdAt >= $gte)
+    const notes = allNotes
+      .filter((row) => row.createdAt >= $gte)
+      .map((note) => {
         if (note.hasPassword || !note.isPublished) {
           note.title = '未公开的日记'
         }
-
         return omit(note, 'isPublished')
-      }),
-    }
+      })
+    return { posts, notes }
   }
 }
