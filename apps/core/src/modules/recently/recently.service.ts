@@ -13,7 +13,6 @@ import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
 
 import { CommentService } from '../comment/comment.service'
-import { ConfigsService } from '../configs/configs.service'
 import { RecentlyRepository } from './recently.repository'
 import { RecentlyAttitudeEnum } from './recently.schema'
 import { RecentlyModel } from './recently.types'
@@ -27,7 +26,6 @@ export class RecentlyService {
     private readonly redisService: RedisService,
     @Inject(forwardRef(() => CommentService))
     private readonly commentService: CommentService,
-    private readonly configsService: ConfigsService,
   ) {}
 
   public get repository() {
@@ -68,10 +66,11 @@ export class RecentlyService {
     size?: number
     after?: string
   }) {
-    void before
-    void after
-    void (await this.configsService.get('commentOptions'))
-    return this.findRecent(size ?? 10)
+    return this.recentlyRepository.findOffset({
+      before,
+      after,
+      size: size ?? 10,
+    })
   }
 
   async getLatestOne() {

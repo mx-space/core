@@ -25,6 +25,9 @@ import {
 } from './comment.repository'
 import type { CommentModel } from './comment.types'
 
+const COMMENT_REPLY_THRESHOLD = 20
+const COMMENT_REPLY_EDGE_SIZE = 3
+const COMMENT_THREAD_BATCH_SIZE = 10
 const COMMENT_DELETED_PLACEHOLDER = '该评论已删除'
 
 @Injectable()
@@ -306,25 +309,60 @@ export class CommentService {
       around?: string
     },
   ) {
-    void isAuthenticated
-    void commentShouldAudit
-    void hasAnchor
-    void sort
-    void around
-    const result = await this.commentRepository.paginatedFind(
-      { refId },
+    const result = await this.commentRepository.findRootThreadsByRef(refId, {
       page,
       size,
+      isAuthenticated,
+      commentShouldAudit,
+      hasAnchor,
+      sort,
+      around,
+    })
+
+    const rootIds = result.data.map((comment) => comment.id)
+    const replies = await this.commentRepository.findVisibleRepliesForRoots(
+      rootIds,
+      {
+        isAuthenticated,
+        commentShouldAudit,
+      },
     )
-    await this.fillAndReplaceAvatarUrl(result.data)
-    return result
+    const repliesByRootId = new Map<string, CommentModel[]>()
+    for (const reply of replies) {
+      const rootId = reply.rootCommentId
+      if (!rootId) continue
+      const current = repliesByRootId.get(rootId) ?? []
+      current.push(reply as CommentModel)
+      repliesByRootId.set(rootId, current)
+    }
+
+    const data = result.data.map((comment) => {
+      const threadReplies = repliesByRootId.get(comment.id) ?? []
+      const { replies, replyWindow } = this.buildReplyWindow(threadReplies)
+      return {
+        ...comment,
+        rootCommentId: comment.rootCommentId ?? null,
+        parentCommentId: comment.parentCommentId ?? null,
+        replies,
+        replyWindow,
+      }
+    })
+
+    await this.fillAndReplaceAvatarUrl([
+      ...(data as CommentModel[]),
+      ...data.flatMap((comment) => comment.replies),
+    ])
+    return {
+      ...result,
+      data,
+    }
   }
 
   async getThreadReplies(
     rootCommentId: string,
     {
       cursor,
-      size = 10,
+      size = COMMENT_THREAD_BATCH_SIZE,
       isAuthenticated,
       commentShouldAudit,
     }: {
@@ -334,14 +372,81 @@ export class CommentService {
       commentShouldAudit: boolean
     },
   ) {
-    void cursor
-    void isAuthenticated
-    void commentShouldAudit
-    const replies = (
-      await this.commentRepository.findReplies(rootCommentId, 1, size)
-    ).data
-    await this.fillAndReplaceAvatarUrl(replies)
-    return { replies, remaining: 0, done: true }
+    const replies = await this.commentRepository.findVisibleRepliesForRoot(
+      rootCommentId,
+      {
+        isAuthenticated,
+        commentShouldAudit,
+      },
+    )
+
+    const total = replies.length
+    if (total <= COMMENT_REPLY_THRESHOLD) {
+      await this.fillAndReplaceAvatarUrl(replies)
+      return { replies, remaining: 0, done: true }
+    }
+
+    const headSize = Math.min(COMMENT_REPLY_EDGE_SIZE, total)
+    const tailStart = Math.max(headSize, total - COMMENT_REPLY_EDGE_SIZE)
+    const middleStart = headSize
+    const middleEnd = tailStart
+
+    let startIndex = middleStart
+    if (cursor) {
+      const cursorIndex = replies.findIndex((reply) => reply.id === cursor)
+      if (cursorIndex >= middleStart) startIndex = cursorIndex + 1
+    }
+
+    const nextReplies = replies.slice(
+      startIndex,
+      Math.min(startIndex + size, middleEnd),
+    )
+    await this.fillAndReplaceAvatarUrl(nextReplies)
+
+    const consumedEnd = startIndex + nextReplies.length
+
+    return {
+      replies: nextReplies,
+      nextCursor: nextReplies.at(-1)?.id,
+      remaining: Math.max(0, middleEnd - consumedEnd),
+      done: consumedEnd >= middleEnd,
+    }
+  }
+
+  private buildReplyWindow(replies: CommentModel[]) {
+    if (replies.length <= COMMENT_REPLY_THRESHOLD) {
+      return {
+        replies,
+        replyWindow: {
+          total: replies.length,
+          returned: replies.length,
+          threshold: COMMENT_REPLY_THRESHOLD,
+          hasHidden: false,
+          hiddenCount: 0,
+        },
+      }
+    }
+
+    const head = replies.slice(0, COMMENT_REPLY_EDGE_SIZE)
+    const tail = replies.slice(-COMMENT_REPLY_EDGE_SIZE)
+    const selected = [...head]
+
+    const seen = new Set(head.map((reply) => reply.id))
+    for (const reply of tail) {
+      if (!seen.has(reply.id)) selected.push(reply)
+    }
+
+    return {
+      replies: selected,
+      replyWindow: {
+        total: replies.length,
+        returned: selected.length,
+        threshold: COMMENT_REPLY_THRESHOLD,
+        hasHidden: true,
+        hiddenCount: replies.length - selected.length,
+        nextCursor: head.at(-1)?.id,
+      },
+    }
   }
 
   collectThreadReaderIds(

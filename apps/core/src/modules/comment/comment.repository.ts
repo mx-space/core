@@ -1,15 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  ilike,
-  inArray,
-  ne,
-  type SQL,
-  sql,
-} from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, inArray, ne, type SQL, sql } from 'drizzle-orm'
 
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { PG_DB_TOKEN } from '~/constants/system.constant'
@@ -22,6 +12,8 @@ import {
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
+
+import { CommentState } from './comment.enum'
 
 export type CommentRefType = `${CollectionRefTypes}`
 
@@ -83,6 +75,21 @@ export interface CommentFindFilter {
   refType?: CommentRefType
   refId?: EntityId | string
   search?: string
+}
+
+export type CommentRootSort = 'pinned' | 'newest' | 'oldest'
+
+export interface CommentPublicFilterOptions {
+  isAuthenticated: boolean
+  commentShouldAudit: boolean
+  hasAnchor?: boolean
+}
+
+export interface CommentRootListOptions extends CommentPublicFilterOptions {
+  page: number
+  size: number
+  sort: CommentRootSort
+  around?: EntityId | string
 }
 
 const normalizeCommentRefType = (refType: CommentRefType): CommentRefType =>
@@ -236,6 +243,80 @@ export class CommentRepository extends BaseRepository {
       data: rows.map(mapBase),
       pagination: this.paginationOf(Number(count ?? 0), page, size),
     }
+  }
+
+  async findRootThreadsByRef(
+    refId: EntityId | string,
+    options: CommentRootListOptions,
+  ): Promise<PaginationResult<CommentRow>> {
+    const size = Math.min(50, Math.max(1, options.size))
+    let page = Math.max(1, options.page)
+    const baseFilters = this.buildPublicThreadFilters(options)
+
+    if (options.around) {
+      const aroundPage = await this.findPageContainingRootComment(
+        refId,
+        options.around,
+        size,
+        options.sort,
+        baseFilters,
+      )
+      if (aroundPage !== null) page = aroundPage
+    }
+
+    const offset = (page - 1) * size
+    const where = and(
+      eq(comments.refId, parseEntityId(refId)),
+      sql`${comments.parentCommentId} is null`,
+      ...baseFilters,
+    )!
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(comments)
+        .where(where)
+        .orderBy(...this.orderByRootThreads(options.sort))
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(comments)
+        .where(where),
+    ])
+
+    return {
+      data: rows.map(mapBase),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
+  async findVisibleRepliesForRoots(
+    rootCommentIds: Array<EntityId | string>,
+    options: CommentPublicFilterOptions,
+  ): Promise<CommentRow[]> {
+    if (rootCommentIds.length === 0) return []
+    const rows = await this.db
+      .select()
+      .from(comments)
+      .where(
+        and(
+          inArray(
+            comments.rootCommentId,
+            rootCommentIds.map((id) => parseEntityId(id)),
+          ),
+          sql`${comments.parentCommentId} is not null`,
+          ...this.buildPublicThreadFilters(options),
+        ),
+      )
+      .orderBy(asc(comments.createdAt))
+    return rows.map(mapBase)
+  }
+
+  async findVisibleRepliesForRoot(
+    rootCommentId: EntityId | string,
+    options: CommentPublicFilterOptions,
+  ): Promise<CommentRow[]> {
+    return this.findVisibleRepliesForRoots([rootCommentId], options)
   }
 
   async create(input: CommentCreateInput): Promise<CommentRow> {
@@ -572,5 +653,84 @@ export class CommentRepository extends BaseRepository {
       filters.push(eq(comments.refId, parseEntityId(filter.refId)))
     if (filter.search) filters.push(ilike(comments.text, `%${filter.search}%`))
     return filters.length > 0 ? and(...filters) : undefined
+  }
+
+  private buildPublicThreadFilters({
+    isAuthenticated,
+    commentShouldAudit,
+    hasAnchor,
+  }: CommentPublicFilterOptions): SQL[] {
+    const filters: SQL[] = [eq(comments.isDeleted, false)]
+    if (commentShouldAudit) {
+      filters.push(eq(comments.state, CommentState.Read))
+    } else {
+      filters.push(
+        inArray(comments.state, [CommentState.Unread, CommentState.Read]),
+      )
+    }
+    if (!isAuthenticated) {
+      filters.push(eq(comments.isWhispers, false))
+    }
+    if (hasAnchor) {
+      filters.push(sql`${comments.anchor} is not null`)
+    }
+    return filters
+  }
+
+  private orderByRootThreads(sort: CommentRootSort): SQL[] {
+    if (sort === 'oldest') return [asc(comments.createdAt)]
+    if (sort === 'newest') return [desc(comments.createdAt)]
+    return [desc(comments.pin), desc(comments.createdAt)]
+  }
+
+  private async findPageContainingRootComment(
+    refId: EntityId | string,
+    commentId: EntityId | string,
+    size: number,
+    sort: CommentRootSort,
+    filters: SQL[],
+  ): Promise<number | null> {
+    let refIdBig: bigint
+    let commentIdBig: bigint
+    try {
+      refIdBig = parseEntityId(refId)
+      commentIdBig = parseEntityId(commentId)
+    } catch {
+      return null
+    }
+
+    const baseWhere = and(
+      eq(comments.refId, refIdBig),
+      sql`${comments.parentCommentId} is null`,
+      ...filters,
+    )!
+    const [target] = await this.db
+      .select({
+        createdAt: comments.createdAt,
+        pin: comments.pin,
+      })
+      .from(comments)
+      .where(and(eq(comments.id, commentIdBig), baseWhere))
+      .limit(1)
+    if (!target) return null
+
+    const beforeFilter =
+      sort === 'oldest'
+        ? sql`${comments.createdAt} < ${target.createdAt}`
+        : sort === 'newest'
+          ? sql`${comments.createdAt} > ${target.createdAt}`
+          : target.pin
+            ? and(
+                eq(comments.pin, true),
+                sql`${comments.createdAt} > ${target.createdAt}`,
+              )
+            : sql`(${comments.pin} = true or ${comments.createdAt} > ${target.createdAt})`
+
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(comments)
+      .where(and(baseWhere, beforeFilter!))
+
+    return Math.floor(Number(row?.count ?? 0) / size) + 1
   }
 }

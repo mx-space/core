@@ -44,6 +44,7 @@ export interface PostCreateInput {
   title: string
   slug: string
   contentFormat: string
+  createdAt?: Date
   text?: string | null
   content?: string | null
   summary?: string | null
@@ -108,6 +109,8 @@ const mapBase = (row: typeof posts.$inferSelect): PostRow => ({
   createdAt: row.createdAt,
 })
 
+const pinAtDescNullsLast = sql`${posts.pinAt} desc nulls last`
+
 @Injectable()
 export class PostRepository extends BaseRepository {
   constructor(
@@ -144,7 +147,7 @@ export class PostRepository extends BaseRepository {
       .select()
       .from(posts)
       .where(eq(posts.categoryId, idBig))
-      .orderBy(desc(posts.pinAt), desc(posts.createdAt))
+      .orderBy(pinAtDescNullsLast, desc(posts.createdAt))
     return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
   }
 
@@ -188,7 +191,7 @@ export class PostRepository extends BaseRepository {
           : params.sortBy === 'pinAt'
             ? params.sortOrder === 1
               ? asc(posts.pinAt)
-              : desc(posts.pinAt)
+              : pinAtDescNullsLast
             : null
 
     const [rows, [{ count }]] = await Promise.all([
@@ -196,7 +199,7 @@ export class PostRepository extends BaseRepository {
         .select()
         .from(posts)
         .where(whereClause)
-        .orderBy(orderBy ?? desc(posts.pinAt), desc(posts.createdAt))
+        .orderBy(orderBy ?? pinAtDescNullsLast, desc(posts.createdAt))
         .limit(size)
         .offset(offset),
       this.db
@@ -220,6 +223,7 @@ export class PostRepository extends BaseRepository {
       .insert(posts)
       .values({
         id,
+        ...(input.createdAt ? { createdAt: input.createdAt } : {}),
         title: input.title,
         slug: input.slug,
         text: input.text ?? null,
@@ -246,6 +250,7 @@ export class PostRepository extends BaseRepository {
     const idBig = parseEntityId(id)
     const update: Partial<typeof posts.$inferInsert> = {}
     if (patch.title !== undefined) update.title = patch.title
+    if (patch.createdAt !== undefined) update.createdAt = patch.createdAt
     if (patch.slug !== undefined) update.slug = patch.slug
     if (patch.text !== undefined) update.text = patch.text
     if (patch.content !== undefined) update.content = patch.content
@@ -386,7 +391,7 @@ export class PostRepository extends BaseRepository {
       .select()
       .from(posts)
       .where(sql`${tag} = any(${posts.tags})`)
-      .orderBy(desc(posts.pinAt), desc(posts.createdAt))
+      .orderBy(pinAtDescNullsLast, desc(posts.createdAt))
 
     const mapped = rows.map(mapBase)
     if (!options.includeCategory) return mapped
@@ -404,7 +409,7 @@ export class PostRepository extends BaseRepository {
       .select()
       .from(posts)
       .where(and(...filters))
-      .orderBy(desc(posts.pinAt), desc(posts.createdAt))
+      .orderBy(pinAtDescNullsLast, desc(posts.createdAt))
 
     const rows =
       options.limit === undefined

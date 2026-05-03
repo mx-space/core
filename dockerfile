@@ -14,7 +14,7 @@ RUN node apps/core/download-latest-admin-assets.js
 
 FROM node:22-alpine AS runner
 
-RUN apk add zip unzip mongodb-tools bash fish rsync jq curl openrc --no-cache
+RUN apk add zip unzip mongodb-tools postgresql-client bash fish rsync jq curl openrc --no-cache
 
 WORKDIR /app
 COPY --from=builder /app/out .

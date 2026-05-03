@@ -165,10 +165,12 @@ export class PostService implements OnApplicationBootstrap {
     }
 
     const relatedIds = await this.checkRelated(post)
-    const createdAt = getLessThanNow(post.createdAt)
+    const createdAt = getLessThanNow(post.createdAt ?? (post as any).created)
+    const pinAt = post.pinAt ?? (post as any).pin ?? null
     let doc = await this.postRepository.create({
       title: post.title,
       slug,
+      createdAt,
       text: post.text,
       content: post.content,
       contentFormat: post.contentFormat ?? ContentFormat.Markdown,
@@ -179,7 +181,7 @@ export class PostService implements OnApplicationBootstrap {
       categoryId: category.id,
       copyright: post.copyright,
       isPublished: post.isPublished,
-      pinAt: post.pinAt,
+      pinAt,
       pinOrder: post.pinOrder,
     })
     if (createdAt && createdAt.valueOf() !== doc.createdAt.valueOf()) {
@@ -343,9 +345,15 @@ export class PostService implements OnApplicationBootstrap {
     }
 
     const patch = omit(data, POST_PROTECTED_KEYS as any) as Partial<PostModel>
+    const createdAt = (data as any).created
+      ? getLessThanNow((data as any).created)
+      : patch.createdAt
+    const pinAt =
+      (data as any).pin !== undefined ? (data as any).pin : patch.pinAt
     const updated = await this.postRepository.update(id, {
       title: patch.title,
       slug: patch.slug,
+      createdAt,
       text: patch.text,
       content: patch.content,
       contentFormat: patch.contentFormat,
@@ -359,7 +367,7 @@ export class PostService implements OnApplicationBootstrap {
       categoryId: patch.categoryId as string | undefined,
       copyright: patch.copyright,
       isPublished: patch.isPublished,
-      pinAt: patch.pinAt,
+      pinAt,
       pinOrder: patch.pinOrder,
       modifiedAt: data.modifiedAt,
     })

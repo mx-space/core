@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, inArray, type SQL, sql } from 'drizzle-orm'
+import { and, desc, eq, gt, inArray, lt, type SQL, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { recentlies } from '~/database/schema'
@@ -205,7 +205,47 @@ export class RecentlyRepository extends BaseRepository {
     const rows = await this.db
       .select()
       .from(recentlies)
-      .orderBy(desc(recentlies.createdAt))
+      .orderBy(desc(recentlies.createdAt), desc(recentlies.id))
+      .limit(Math.max(1, size))
+    return rows.map(mapRow)
+  }
+
+  async findOffset({
+    before,
+    after,
+    size,
+  }: {
+    before?: EntityId | string
+    after?: EntityId | string
+    size: number
+  }): Promise<RecentlyRow[]> {
+    const filters: SQL[] = []
+    const cursor = after || before
+    if (cursor) {
+      const cursorId = parseEntityId(cursor)
+      const [pivot] = await this.db
+        .select({ id: recentlies.id, createdAt: recentlies.createdAt })
+        .from(recentlies)
+        .where(eq(recentlies.id, cursorId))
+        .limit(1)
+
+      if (pivot) {
+        filters.push(
+          after
+            ? sql`(${recentlies.createdAt} > ${pivot.createdAt} or (${recentlies.createdAt} = ${pivot.createdAt} and ${recentlies.id} > ${pivot.id}))`
+            : sql`(${recentlies.createdAt} < ${pivot.createdAt} or (${recentlies.createdAt} = ${pivot.createdAt} and ${recentlies.id} < ${pivot.id}))`,
+        )
+      } else {
+        filters.push(
+          after ? gt(recentlies.id, cursorId) : lt(recentlies.id, cursorId),
+        )
+      }
+    }
+    const rows = await this.db
+      .select()
+      .from(recentlies)
+      .where(filters.length > 0 ? and(...filters) : undefined)
+      .orderBy(desc(recentlies.createdAt), desc(recentlies.id))
       .limit(Math.max(1, size))
     return rows.map(mapRow)
   }
