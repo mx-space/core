@@ -116,6 +116,7 @@ jobs:
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
           JWT_SECRET: test-bundle-server-jwt-secret
+          MIGRATIONS_DIR: ${{ github.workspace }}/apps/core/src/database/migrations
 
   test:
     name: Test
