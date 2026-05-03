@@ -68,7 +68,6 @@ declare enum SnippetType {
 
 declare interface OwnerModel {
   id: string
-  _id: string
   username: string
   name: string
   introduce?: string

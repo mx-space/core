@@ -1,9 +1,8 @@
-import type { BaseCommentIndexModel } from './base'
-
 export enum RecentlyRefTypes {
-  Post = 'Post',
-  Note = 'Note',
-  Page = 'Page',
+  Post = 'post',
+  Note = 'note',
+  Page = 'page',
+  Recently = 'recently',
 }
 
 export type RecentlyRefType = {
@@ -91,17 +90,21 @@ export type RecentlyMetadata =
   | AcademicMetadata
   | CodeMetadata
 
-export interface RecentlyModel extends BaseCommentIndexModel {
+export interface RecentlyModel {
+  id: string
+  createdAt: string
+  modifiedAt: string | null
+
   content: string
   type: RecentlyTypeEnum
-  metadata?: RecentlyMetadata
+  metadata: RecentlyMetadata | null
 
-  ref?: RecentlyRefType & { [key: string]: any }
-  refId?: string
-  refType?: RecentlyRefTypes
+  refType: RecentlyRefTypes
+  refId: string | null
 
   up: number
   down: number
 
-  modified?: string
+  commentsIndex: number
+  allowComment: boolean
 }

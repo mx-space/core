@@ -44,7 +44,13 @@ export class CommentController<ResponseWrapper> implements IController {
    * 根据 comment id 获取评论，包括子评论
    */
   getById(id: string) {
-    return this.proxy(id).get<CommentModel & { ref: string }>()
+    return this.proxy(id).get<
+      CommentModel & {
+        parent?: CommentModel | null
+        children?: CommentModel[]
+        reader?: ReaderModel
+      }
+    >()
   }
 
   /**
@@ -60,7 +66,7 @@ export class CommentController<ResponseWrapper> implements IController {
   ) {
     const { page, size, sort, around } = params
     return this.proxy.ref(refId).get<
-      PaginateResult<CommentThreadItem & { ref: string }> & {
+      PaginateResult<CommentThreadItem> & {
         readers: Record<string, ReaderModel>
       }
     >({

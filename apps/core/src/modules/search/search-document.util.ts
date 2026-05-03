@@ -63,8 +63,8 @@ export function buildSearchDocument(
     isPublished: refType === 'page' ? true : data.isPublished !== false,
     publicAt: data.publicAt ?? null,
     hasPassword: data.hasPassword ?? Boolean(data.password),
-    created: data.createdAt ?? new Date(),
-    modified: data.modifiedAt ?? null,
+    createdAt: data.createdAt ?? new Date(),
+    modifiedAt: data.modifiedAt ?? null,
   }
 }
 

@@ -37,7 +37,6 @@ export const DRAFT_PROTECTED_KEYS = [
   'history',
   'updated',
   'publishedVersion',
-  'created',
+  'createdAt',
   'id',
-  '_id',
 ]

@@ -38,6 +38,23 @@ export interface PostRow {
   pinAt: Date | null
   pinOrder: number | null
   createdAt: Date
+  related?: PostRelatedSummary[]
+}
+
+export interface PostRelatedSummary {
+  id: EntityId
+  title: string
+  slug: string
+  summary: string | null
+  categoryId: EntityId
+  category?: {
+    id: EntityId
+    name: string
+    slug: string
+    type: number
+  }
+  createdAt: Date
+  modifiedAt: Date | null
 }
 
 export interface PostCreateInput {
@@ -128,7 +145,9 @@ export class PostRepository extends BaseRepository {
       .where(eq(posts.id, idBig))
       .limit(1)
     if (!row) return null
-    return this.attachCategory(mapBase(row))
+    const withCategory = await this.attachCategory(mapBase(row))
+    const [withRelated] = await this.attachRelated([withCategory])
+    return withRelated
   }
 
   async findBySlug(slug: string): Promise<PostRow | null> {
@@ -138,7 +157,9 @@ export class PostRepository extends BaseRepository {
       .where(eq(posts.slug, slug))
       .limit(1)
     if (!row) return null
-    return this.attachCategory(mapBase(row))
+    const withCategory = await this.attachCategory(mapBase(row))
+    const [withRelated] = await this.attachRelated([withCategory])
+    return withRelated
   }
 
   async findByCategory(categoryId: EntityId | string): Promise<PostRow[]> {
@@ -208,9 +229,10 @@ export class PostRepository extends BaseRepository {
         .where(whereClause),
     ])
 
-    const data = await Promise.all(
+    const dataWithCategory = await Promise.all(
       rows.map((r) => this.attachCategory(mapBase(r))),
     )
+    const data = await this.attachRelated(dataWithCategory)
     return {
       data,
       pagination: this.paginationOf(Number(count ?? 0), page, size),
@@ -333,7 +355,10 @@ export class PostRepository extends BaseRepository {
       .where(where)
       .orderBy(desc(posts.createdAt))
       .limit(Math.max(1, size))
-    return Promise.all(rows.map((r) => this.attachCategory(mapBase(r))))
+    const withCategory = await Promise.all(
+      rows.map((r) => this.attachCategory(mapBase(r))),
+    )
+    return this.attachRelated(withCategory)
   }
 
   async findManyByIds(ids: Array<EntityId | string>): Promise<PostRow[]> {
@@ -439,7 +464,10 @@ export class PostRepository extends BaseRepository {
       .from(posts)
       .where(and(...filters))
       .limit(1)
-    return row ? this.attachCategory(mapBase(row)) : null
+    if (!row) return null
+    const withCategory = await this.attachCategory(mapBase(row))
+    const [withRelated] = await this.attachRelated([withCategory])
+    return withRelated
   }
 
   async setImages(id: EntityId | string, images: unknown[]): Promise<void> {
@@ -596,5 +624,94 @@ export class PostRepository extends BaseRepository {
         type: cat.type,
       },
     }
+  }
+
+  private async attachRelated(rows: PostRow[]): Promise<PostRow[]> {
+    if (rows.length === 0) return rows
+    const postIdBigs = rows.map((row) => parseEntityId(row.id))
+    const links = await this.db
+      .select({
+        postId: postRelatedPosts.postId,
+        relatedPostId: postRelatedPosts.relatedPostId,
+        position: postRelatedPosts.position,
+      })
+      .from(postRelatedPosts)
+      .where(inArray(postRelatedPosts.postId, postIdBigs))
+      .orderBy(postRelatedPosts.position)
+
+    if (links.length === 0) {
+      for (const row of rows) row.related = []
+      return rows
+    }
+
+    const relatedIdSet = new Set(
+      links.map((link) => link.relatedPostId.toString()),
+    )
+    const relatedBigInts = [...relatedIdSet].map((id) => BigInt(id))
+    const relatedRows = await this.db
+      .select({
+        id: posts.id,
+        title: posts.title,
+        slug: posts.slug,
+        summary: posts.summary,
+        categoryId: posts.categoryId,
+        createdAt: posts.createdAt,
+        modifiedAt: posts.modifiedAt,
+      })
+      .from(posts)
+      .where(inArray(posts.id, relatedBigInts))
+
+    const categoryIdSet = new Set(
+      relatedRows.map((row) => row.categoryId.toString()),
+    )
+    const categoryBigInts = [...categoryIdSet].map((id) => BigInt(id))
+    const categoryRows = categoryBigInts.length
+      ? await this.db
+          .select()
+          .from(categories)
+          .where(inArray(categories.id, categoryBigInts))
+      : []
+    const categoryById = new Map(
+      categoryRows.map((cat) => [
+        cat.id.toString(),
+        {
+          id: toEntityId(cat.id) as EntityId,
+          name: cat.name,
+          slug: cat.slug,
+          type: cat.type,
+        },
+      ]),
+    )
+
+    const summaryById = new Map<string, PostRelatedSummary>(
+      relatedRows.map((row) => [
+        row.id.toString(),
+        {
+          id: toEntityId(row.id) as EntityId,
+          title: row.title,
+          slug: row.slug,
+          summary: row.summary,
+          categoryId: toEntityId(row.categoryId) as EntityId,
+          category: categoryById.get(row.categoryId.toString()),
+          createdAt: row.createdAt,
+          modifiedAt: row.modifiedAt,
+        },
+      ]),
+    )
+
+    const groupedByPost = new Map<string, PostRelatedSummary[]>()
+    for (const link of links) {
+      const summary = summaryById.get(link.relatedPostId.toString())
+      if (!summary) continue
+      const key = link.postId.toString()
+      const list = groupedByPost.get(key) ?? []
+      list.push(summary)
+      groupedByPost.set(key, list)
+    }
+
+    for (const row of rows) {
+      row.related = groupedByPost.get(row.id.toString()) ?? []
+    }
+    return rows
   }
 }

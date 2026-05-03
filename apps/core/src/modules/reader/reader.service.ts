@@ -4,13 +4,7 @@ import { AuthService } from '../auth/auth.service'
 import { ReaderRepository, type ReaderRow } from './reader.repository'
 import type { ReaderModel } from './reader.types'
 
-type LegacyReaderId = {
-  toHexString: () => string
-  toString: () => string
-}
-
-type LegacyReader = ReaderModel & {
-  _id: LegacyReaderId
+type ReaderShape = ReaderModel & {
   id: string
   email: string | null
   name: string | null
@@ -30,30 +24,25 @@ export class ReaderService {
     private readonly readerRepository: ReaderRepository,
   ) {}
 
-  private toLegacyReader(row: ReaderRow): LegacyReader {
-    const id = {
-      toHexString: () => row.id,
-      toString: () => row.id,
-    }
+  private toReaderShape(row: ReaderRow): ReaderShape {
     return {
       ...row,
-      _id: id,
       id: row.id,
       role: row.role as 'reader' | 'owner',
-    } as LegacyReader
+    } as ReaderShape
   }
 
   find() {
     return this.readerRepository
       .list(1, 100)
-      .then((result) => result.data.map((row) => this.toLegacyReader(row)))
+      .then((result) => result.data.map((row) => this.toReaderShape(row)))
   }
 
   async findPaginated(page: number, size: number) {
     const result = await this.readerRepository.list(page, size)
 
     return {
-      docs: result.data.map((row) => this.toLegacyReader(row)),
+      docs: result.data.map((row) => this.toReaderShape(row)),
       totalDocs: result.pagination.total,
       page: result.pagination.currentPage,
       limit: result.pagination.size,
@@ -70,6 +59,6 @@ export class ReaderService {
   }
   async findReaderInIds(ids: string[]) {
     const rows = await this.readerRepository.findByIds(ids)
-    return rows.map((row) => this.toLegacyReader(row))
+    return rows.map((row) => this.toReaderShape(row))
   }
 }

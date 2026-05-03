@@ -35,8 +35,7 @@ export class SlugTrackerRepository extends BaseRepository {
   }
 
   /**
-   * Idempotent insert. The legacy Mongo implementation used upsert against
-   * `(slug, type, targetId)`; PG does the same via ON CONFLICT DO NOTHING.
+   * Idempotent insert against `(slug, type, targetId)` via ON CONFLICT DO NOTHING.
    */
   async createTracker(
     slug: string,

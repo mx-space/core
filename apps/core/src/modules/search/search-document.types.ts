@@ -16,6 +16,6 @@ export interface SearchDocumentModel {
   isPublished?: boolean
   hasPassword?: boolean
   publicAt?: Date | null
-  created?: Date | null
-  modified?: Date | null
+  createdAt?: Date | null
+  modifiedAt?: Date | null
 }

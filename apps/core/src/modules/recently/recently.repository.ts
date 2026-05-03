@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { and, desc, eq, gt, inArray, lt, type SQL, sql } from 'drizzle-orm'
 
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { recentlies } from '~/database/schema'
 import {
@@ -12,7 +13,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export type RecentlyRefType = 'Post' | 'Note' | 'Page' | 'Recently' | null
+export type RecentlyRefType = `${CollectionRefTypes}` | null
 
 export interface RecentlyRow {
   id: EntityId

@@ -19,14 +19,14 @@ export interface RoomOmittedNote {
   title: string
   nid: number
   id: string
-  created: string
+  createdAt: string
 }
 
 export interface RoomOmittedPage {
   title: string
   slug: string
   id: string
-  created: string
+  createdAt: string
 }
 
 export interface RoomOmittedPost {
@@ -35,7 +35,7 @@ export interface RoomOmittedPost {
   categoryId: string
   category: CategoryModel
   id: string
-  created: string
+  createdAt: string
 }
 export interface RoomsData {
   rooms: string[]
@@ -58,7 +58,7 @@ export interface RecentActivities {
 }
 
 export interface RecentComment {
-  created: string
+  createdAt: string
   author: string
   text: string
   id: string
@@ -71,7 +71,7 @@ export interface RecentComment {
 }
 
 export interface RecentLike {
-  created: string
+  createdAt: string
   id: string
   type: CollectionRefTypes.Post | CollectionRefTypes.Note
   nid?: number
@@ -81,17 +81,17 @@ export interface RecentLike {
 
 export interface RecentNote {
   id: string
-  created: string
+  createdAt: string
   title: string
-  modified: string
+  modifiedAt: string | null
   nid: number
 }
 
 export interface RecentPost {
   id: string
-  created: string
+  createdAt: string
   title: string
-  modified: string
+  modifiedAt: string | null
   slug: string
   category?: { slug: string; name: string }
 }
@@ -102,7 +102,7 @@ export interface RecentRecent {
   content: string
   up: number
   down: number
-  created: string
+  createdAt: string
 }
 
 export interface LastYearPublication {
@@ -112,7 +112,7 @@ export interface LastYearPublication {
 
 interface PostsItem {
   id: string
-  created: string
+  createdAt: string
   title: string
   slug: string
   categoryId: string
@@ -123,11 +123,11 @@ interface Category {
   type: number
   name: string
   slug: string
-  created: string
+  createdAt: string
 }
 interface NotesItem {
   id: string
-  created: string
+  createdAt: string
   title: string
   mood: string
   weather: string

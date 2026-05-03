@@ -1,4 +1,3 @@
-import type { BaseModel } from './base'
 import type { PostModel } from './post'
 
 export enum CategoryType {
@@ -6,11 +5,13 @@ export enum CategoryType {
   Tag,
 }
 
-export interface CategoryModel extends BaseModel {
+export interface CategoryModel {
+  id: string
+  createdAt: string
   type: CategoryType
-  count: number
   slug: string
   name: string
+  count?: number
 }
 
 export type CategoryChildPost = Pick<
@@ -18,13 +19,12 @@ export type CategoryChildPost = Pick<
   | 'id'
   | 'title'
   | 'slug'
-  | 'modified'
-  | 'created'
-  | 'summary'
+  | 'modifiedAt'
+  | 'createdAt'
   | 'tags'
-  | 'pin'
-  | 'count'
-  | 'images'
+  | 'pinAt'
+  | 'readCount'
+  | 'likeCount'
 >
 
 export type CategoryWithChildrenModel = CategoryModel & {
@@ -48,10 +48,11 @@ export type TagDetailPost = Pick<
   | 'title'
   | 'slug'
   | 'category'
-  | 'created'
-  | 'modified'
+  | 'createdAt'
+  | 'modifiedAt'
   | 'summary'
   | 'tags'
-  | 'pin'
-  | 'count'
+  | 'pinAt'
+  | 'readCount'
+  | 'likeCount'
 >

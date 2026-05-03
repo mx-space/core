@@ -42,8 +42,11 @@ export class TranslationConsistencyService extends BaseTranslationService {
       }
     }
 
-    const translationMap = new Map(
-      translations.map((translation) => [translation.refId, translation]),
+    const translationMap = new Map<string, AITranslationModel>(
+      translations.map((translation) => [
+        translation.refId as string,
+        translation,
+      ]),
     )
     const validTranslations = new Map<string, AITranslationModel>()
     const unknownTranslations = new Map<string, AITranslationModel>()
@@ -84,8 +87,8 @@ export class TranslationConsistencyService extends BaseTranslationService {
     const refIds = [
       ...new Set(
         translations
-          .map((translation) => translation.refId)
-          .filter((refId): refId is string => typeof refId === 'string'),
+          .map((translation) => translation.refId as string)
+          .filter((refId) => typeof refId === 'string'),
       ),
     ]
     const groupedArticles = await this.databaseService.findGlobalByIds(refIds)

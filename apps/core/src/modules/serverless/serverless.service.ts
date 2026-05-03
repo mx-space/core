@@ -185,7 +185,6 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     const profile = await this.ownerRepository.findByReaderId(reader.id)
     return {
       id: reader.id,
-      _id: reader.id,
       username: reader.username ?? reader.handle ?? '',
       name:
         reader.name ??
@@ -238,7 +237,6 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
             ),
           )
           .map((entry) => ({
-            _id: entry.id,
             id: entry.id,
             key: entry.key,
             value: entry.value,

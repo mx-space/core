@@ -87,7 +87,8 @@ export class PollService {
         optionIds,
       })
     } catch (err: any) {
-      if (err?.code === 11_000) {
+      // PG unique_violation
+      if (err?.code === '23505') {
         const state = await this.getState(pollId, voterFingerprint)
         return { ...state, status: 'error', errorMessage: 'Already voted' }
       }

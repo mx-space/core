@@ -45,7 +45,6 @@ export class OwnerService {
 
     return {
       id: reader.id,
-      _id: reader.id,
 
       username: reader?.username ?? reader?.handle ?? '',
       name:
@@ -66,7 +65,7 @@ export class OwnerService {
       image: reader?.image ?? undefined,
       handle: reader?.handle ?? undefined,
       displayUsername: reader?.displayUsername ?? undefined,
-      created: reader?.createdAt ?? profile?.createdAt,
+      createdAt: reader?.createdAt ?? profile?.createdAt,
     }
   }
 

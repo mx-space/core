@@ -84,7 +84,7 @@ export class PartialNoteDto extends createZodDto(PartialNoteSchema) {}
  */
 export const NoteQuerySchema = PagerSchema.extend({
   sortBy: z
-    .enum(['title', 'created', 'modified', 'weather', 'mood'])
+    .enum(['title', 'createdAt', 'modifiedAt', 'weather', 'mood'])
     .optional(),
   sortOrder: z.preprocess(
     (val) => (typeof val === 'string' ? Math.trunc(Number(val)) : val),

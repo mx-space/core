@@ -25,9 +25,12 @@ export class WebhookController {
 
   @Get('/')
   async getAll() {
-    const data = await this.service.getAllWebhooks()
-    Reflect.deleteProperty(data, 'secret')
-    return data
+    return await this.service.getAllWebhooks()
+  }
+
+  @Get('/events')
+  getEventsEnum() {
+    return Object.values(BusinessEvents)
   }
 
   @Patch('/:id')
@@ -46,11 +49,6 @@ export class WebhookController {
   @HTTPDecorators.Paginator
   getEventsByHookId(@Param() { id }: EntityIdDto, @Query() query: PagerDto) {
     return this.service.getEventsByHookId(id, query)
-  }
-
-  @Get('/events')
-  getEventsEnum() {
-    return Object.values(BusinessEvents)
   }
 
   @Post('/redispatch/:id')

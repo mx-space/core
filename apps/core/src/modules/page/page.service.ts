@@ -40,7 +40,6 @@ export class PageService {
   private normalizeMeta(meta: unknown) {
     if (meta === undefined) return undefined
     if (meta === null) return null
-    if (typeof meta === 'string') return JSON.safeParse(meta) ?? null
     return meta as Record<string, unknown>
   }
 

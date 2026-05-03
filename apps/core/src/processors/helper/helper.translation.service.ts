@@ -97,8 +97,8 @@ export class TranslationService {
         translationMeta: {
           sourceLang: translation.sourceLang,
           targetLang: translation.lang,
-          translatedAt: translation.createdAt!,
-          model: translation.aiModel,
+          translatedAt: translation.createdAt,
+          model: translation.aiModel ?? undefined,
         },
         availableTranslations,
       }
@@ -275,8 +275,8 @@ export class TranslationService {
                 subtitle: translation.subtitle ?? article.subtitle,
                 summary: translation.summary ?? article.summary,
                 tags: translation.tags ?? article.tags,
-                content: translation.content,
-                contentFormat: translation.contentFormat,
+                content: translation.content ?? undefined,
+                contentFormat: translation.contentFormat ?? undefined,
                 isTranslated: true,
                 translationMeta: translationFieldList.includes(
                   'translationMeta',
@@ -284,8 +284,8 @@ export class TranslationService {
                   ? {
                       sourceLang: translation.sourceLang,
                       targetLang: translation.lang,
-                      translatedAt: translation.createdAt!,
-                      model: translation.aiModel,
+                      translatedAt: translation.createdAt,
+                      model: translation.aiModel ?? undefined,
                     }
                   : undefined,
               },

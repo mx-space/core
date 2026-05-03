@@ -1,15 +1,15 @@
 export interface AISummaryModel {
   id: string
-  created: string
+  createdAt: string
   summary: string
   hash: string
   refId: string
-  lang: string
+  lang: string | null
 }
 
 export interface AITranslationModel {
   id: string
-  created: string
+  createdAt: string
   hash: string
   refId: string
   refType: string
@@ -17,11 +17,13 @@ export interface AITranslationModel {
   sourceLang: string
   title: string
   text: string
-  subtitle?: string
-  summary?: string
-  tags?: string[]
-  aiModel?: string
-  aiProvider?: string
+  subtitle: string | null
+  summary: string | null
+  tags: string[]
+  aiModel: string | null
+  aiProvider: string | null
+  contentFormat: string | null
+  content: string | null
 }
 
 export interface AIDeepReadingModel {
@@ -52,16 +54,15 @@ export type AITranslationStreamEvent =
 
 export interface AIInsightsModel {
   id: string
-  created: string
-  updated?: string
+  createdAt: string
   hash: string
   refId: string
   lang: string
   content: string
   isTranslation: boolean
-  sourceInsightsId?: string
-  sourceLang?: string
-  modelInfo?: { provider: string; model: string }
+  sourceInsightsId: string | null
+  sourceLang: string | null
+  modelInfo: Record<string, unknown> | null
 }
 
 export type AIInsightsStreamEvent =

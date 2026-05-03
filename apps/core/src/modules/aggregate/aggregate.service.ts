@@ -274,8 +274,12 @@ export class AggregateService {
     return posts.map((post) => ({
       id: post.id,
       title: post.title,
-      read: post.readCount ?? 0,
-      like: post.likeCount ?? 0,
+      slug: post.slug,
+      reads: post.readCount ?? 0,
+      likes: post.likeCount ?? 0,
+      category: post.category
+        ? { name: post.category.name, slug: post.category.slug }
+        : null,
     }))
   }
 

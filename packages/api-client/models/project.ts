@@ -1,12 +1,12 @@
-import type { BaseModel } from './base'
-
-export interface ProjectModel extends BaseModel {
+export interface ProjectModel {
+  id: string
+  createdAt: string
   name: string
-  previewUrl?: string
-  docUrl?: string
-  projectUrl?: string
-  images?: string[]
   description: string
-  avatar?: string
-  text: string
+  previewUrl: string | null
+  docUrl: string | null
+  projectUrl: string | null
+  images: string[] | null
+  avatar: string | null
+  text: string | null
 }

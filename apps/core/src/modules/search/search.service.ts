@@ -31,12 +31,7 @@ import {
   tokenizeSearchText,
 } from './search-document.util'
 
-type SearchDocumentLean = SearchDocumentRow & {
-  created?: Date | null
-  modified?: Date | null
-  id?: string
-  _id?: { toString: () => string }
-}
+type SearchDocumentLean = SearchDocumentRow
 
 type SearchCorpusStats = {
   totalDocs: number

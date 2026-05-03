@@ -185,17 +185,17 @@ export class MarkdownService {
     showHeader?: boolean,
   ) {
     const {
-      meta: { created, modified, title },
+      meta: { createdAt, modifiedAt, title },
       text,
     } = property
     if (!includeYAMLHeader) {
       return `${showHeader ? `# ${title}\n\n` : ''}${text.trim()}`
     }
     const header = {
-      date: created,
-      updated: modified,
+      date: createdAt,
+      updated: modifiedAt,
       title,
-      ...omit(property.meta, ['created', 'modified', 'title']),
+      ...omit(property.meta, ['createdAt', 'modifiedAt', 'title']),
     }
     const toYaml = dump(header, { skipInvalid: true })
     const res = `

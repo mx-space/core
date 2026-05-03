@@ -36,10 +36,7 @@ import {
   type TranslationBatchTaskPayload,
   type TranslationTaskPayload,
 } from '../ai-task/ai-task.types'
-import {
-  AiTranslationRepository,
-  type AiTranslationRow,
-} from './ai-translation.repository'
+import { AiTranslationRepository } from './ai-translation.repository'
 import type { GetTranslationsGroupedQueryInput } from './ai-translation.schema'
 import type {
   ArticleContent,
@@ -98,7 +95,6 @@ export class AiTranslationService
   implements OnModuleInit
 {
   private readonly logger = new Logger(AiTranslationService.name)
-  private readonly aiTranslationModel: any
 
   constructor(
     private readonly aiTranslationRepository: AiTranslationRepository,
@@ -117,117 +113,6 @@ export class AiTranslationService
     private readonly markdownStrategy: ITranslationStrategy,
   ) {
     super()
-    this.aiTranslationModel = this.createTranslationModelAdapter()
-  }
-
-  private toTranslationDoc(
-    row: AiTranslationRow | null,
-  ): AITranslationModel | null {
-    if (!row) return null
-    const repo = this.aiTranslationRepository
-    return {
-      ...row,
-      _id: row.id,
-      createdAt: row.createdAt,
-      save() {
-        return repo.updateById(row.id, this as any)
-      },
-    } as unknown as AITranslationModel
-  }
-
-  private toTranslationDocs(rows: AiTranslationRow[]): AITranslationModel[] {
-    return rows.map((row) => this.toTranslationDoc(row)!)
-  }
-
-  private createTranslationQuery(rowsPromise: Promise<AiTranslationRow[]>) {
-    const toDocs = (rows: AiTranslationRow[]) => this.toTranslationDocs(rows)
-    const query: any = {
-      sort: () => query,
-      select: () => query,
-      limit: () => query,
-      lean: () => rowsPromise.then(toDocs),
-      exec: () => rowsPromise.then(toDocs),
-      then: (resolve: any, reject: any) =>
-        rowsPromise.then(toDocs).then(resolve, reject),
-    }
-    return query
-  }
-
-  private createTranslationModelAdapter() {
-    const repo = this.aiTranslationRepository
-    const toDoc = (r: AiTranslationRow | null) => this.toTranslationDoc(r)
-    const toDocs = (rs: AiTranslationRow[]) => this.toTranslationDocs(rs)
-    const createQuery = (p: Promise<AiTranslationRow[]>) =>
-      this.createTranslationQuery(p)
-    return {
-      findOne: (query: any) => {
-        const promise =
-          query?.refId && query?.refType && query?.lang
-            ? repo.findByRef(query.refId, query.refType, query.lang)
-            : repo
-                .listByRefId(query?.refId)
-                .then(
-                  (rows) =>
-                    rows.find((row) =>
-                      Object.entries(query ?? {}).every(
-                        ([key, value]) => (row as any)[key] === value,
-                      ),
-                    ) ?? null,
-                )
-        const queryApi: any = {
-          select: () => queryApi,
-          lean: () => promise.then(toDoc),
-          then: (resolve: any, reject: any) =>
-            promise.then(toDoc).then(resolve, reject),
-        }
-        return queryApi
-      },
-      find: (query: any = {}) => {
-        if (query.refId?.$in) {
-          return createQuery(repo.listByRefIds(query.refId.$in))
-        }
-        if (query.refId) {
-          return createQuery(repo.listByRefId(query.refId))
-        }
-        return createQuery(repo.list(1, 100).then((r) => r.data))
-      },
-      findById: (id: string) => repo.findById(id).then(toDoc),
-      create: async (input: any) => toDoc(await repo.upsert(input)),
-      deleteOne: async (query: any) => {
-        if (query?.id) {
-          const deletedCount = await repo.deleteById(query.id)
-          return { deletedCount }
-        }
-        return { deletedCount: 0 }
-      },
-      deleteMany: async (query: any) => {
-        if (query?.refId && query?.refType) {
-          const deletedCount = await repo.deleteForRef(
-            query.refId,
-            query.refType,
-          )
-          return { deletedCount }
-        }
-        if (query?.refId) {
-          const deletedCount = await repo.deleteForRefId(query.refId)
-          return { deletedCount }
-        }
-        return { deletedCount: 0 }
-      },
-      paginate: async (_query: any, options: any) => {
-        const result = await repo.list(options?.page ?? 1, options?.limit ?? 20)
-        return {
-          docs: toDocs(result.data),
-          totalDocs: result.pagination.total,
-          page: result.pagination.currentPage,
-          totalPages: result.pagination.totalPage,
-          limit: result.pagination.size,
-          hasNextPage: result.pagination.hasNextPage,
-          hasPrevPage: result.pagination.hasPrevPage,
-        }
-      },
-      aggregate: async () => [],
-    }
   }
 
   private getStrategy(contentFormat?: string | null): ITranslationStrategy {
@@ -332,7 +217,7 @@ export class AiTranslationService
           context.signal,
         )
         translations.push({
-          translationId: result.id!,
+          translationId: result.id,
           lang: result.lang,
           title: result.title,
         })
@@ -648,10 +533,10 @@ export class AiTranslationService
     targetLang: string,
     document: ArticleDocument,
   ): Promise<AITranslationModel | null> {
-    const translation = await this.aiTranslationModel.findOne({
-      refId: articleId,
-      lang: targetLang,
-    })
+    const translation = await this.aiTranslationRepository.findByRefAndLang(
+      articleId,
+      targetLang,
+    )
 
     if (!translation) {
       return null
@@ -679,7 +564,7 @@ export class AiTranslationService
     result: Promise<AITranslationModel>
   } {
     const events = (async function* () {
-      yield { type: 'done' as const, data: { resultId: translation.id! } }
+      yield { type: 'done' as const, data: { resultId: translation.id } }
     })()
 
     return {
@@ -819,11 +704,11 @@ export class AiTranslationService
       idleTimeoutMs: AI_STREAM_IDLE_TIMEOUT_MS,
       onLeader: async ({ push }) => {
         // Fetch existing translation for incremental path
-        const existing = await this.aiTranslationModel.findOne({
-          refId: articleId,
+        const existing = await this.aiTranslationRepository.findByRef(
+          articleId,
           refType,
-          lang: targetLang,
-        })
+          targetLang,
+        )
 
         const translated = await this.translateContentStream(
           content,
@@ -840,34 +725,7 @@ export class AiTranslationService
         const sourceSnapshots = this.buildSourceSnapshots(content)
         const sourceMetaHashes = this.buildSourceMetaHashes(content)
 
-        if (existing) {
-          existing.hash = hash
-          existing.sourceLang = sourceLang
-          existing.title = translated.title
-          existing.text = translated.text
-          existing.subtitle = translated.subtitle ?? undefined
-          existing.summary = translated.summary ?? undefined
-          existing.tags = translated.tags ?? undefined
-          existing.contentFormat = translated.contentFormat
-          existing.content = translated.content
-          if (sourceModified) {
-            existing.sourceModified = sourceModified
-          }
-          existing.aiModel = translated.aiModel
-          existing.aiProvider = translated.aiProvider
-          existing.sourceBlockSnapshots = sourceSnapshots
-          existing.sourceMetaHashes = sourceMetaHashes
-          await existing.save()
-          this.logger.log(
-            `AI translation updated: article=${articleId} target=${targetLang}`,
-          )
-
-          this.emitTranslationEvent(BusinessEvents.TRANSLATION_UPDATE, existing)
-
-          return { result: existing, resultId: existing.id! }
-        }
-
-        const created = await this.aiTranslationModel.create({
+        const persisted = await this.aiTranslationRepository.upsert({
           hash,
           refId: articleId,
           refType,
@@ -875,27 +733,41 @@ export class AiTranslationService
           sourceLang,
           title: translated.title,
           text: translated.text,
-          subtitle: translated.subtitle ?? undefined,
-          summary: translated.summary ?? undefined,
-          tags: translated.tags ?? undefined,
-          contentFormat: translated.contentFormat,
-          content: translated.content,
-          sourceModified,
+          subtitle: translated.subtitle ?? null,
+          summary: translated.summary ?? null,
+          tags: translated.tags ?? [],
+          sourceModifiedAt:
+            sourceModified ?? existing?.sourceModifiedAt ?? null,
           aiModel: translated.aiModel,
           aiProvider: translated.aiProvider,
+          contentFormat: translated.contentFormat ?? null,
+          content: translated.content ?? null,
           sourceBlockSnapshots: sourceSnapshots,
           sourceMetaHashes,
         })
-        this.logger.log(
-          `AI translation created: article=${articleId} target=${targetLang}`,
-        )
 
-        this.emitTranslationEvent(BusinessEvents.TRANSLATION_CREATE, created)
+        if (existing) {
+          this.logger.log(
+            `AI translation updated: article=${articleId} target=${targetLang}`,
+          )
+          this.emitTranslationEvent(
+            BusinessEvents.TRANSLATION_UPDATE,
+            persisted,
+          )
+        } else {
+          this.logger.log(
+            `AI translation created: article=${articleId} target=${targetLang}`,
+          )
+          this.emitTranslationEvent(
+            BusinessEvents.TRANSLATION_CREATE,
+            persisted,
+          )
+        }
 
-        return { result: created, resultId: created.id! }
+        return { result: persisted, resultId: persisted.id }
       },
       parseResult: async (resultId) => {
-        const doc = await this.aiTranslationModel.findById(resultId)
+        const doc = await this.aiTranslationRepository.findById(resultId)
         if (!doc) {
           throw new BizException(ErrorCodeEnum.AITranslationNotFound)
         }
@@ -1005,10 +877,10 @@ export class AiTranslationService
     lang: string,
   ): Promise<Map<string, string>> {
     if (!refIds.length || !lang) return new Map()
-    const rows = await this.aiTranslationModel
-      .find({ refId: { $in: refIds }, lang })
-      .select('refId title')
-      .lean()
+    const rows = await this.aiTranslationRepository.listByRefIdsAndLang(
+      refIds,
+      lang,
+    )
     const map = new Map<string, string>()
     for (const row of rows) {
       if (row.refId && row.title) {
@@ -1021,7 +893,7 @@ export class AiTranslationService
   async getTranslationsByRefId(refId: string) {
     const [article, translations] = await Promise.all([
       this.databaseService.findGlobalById(refId),
-      this.aiTranslationModel.find({ refId }),
+      this.aiTranslationRepository.listByRefId(refId),
     ])
     if (!article) {
       throw new BizException(ErrorCodeEnum.ContentNotFound)
@@ -1031,7 +903,7 @@ export class AiTranslationService
   }
 
   async getTranslationById(id: string) {
-    const doc = await this.aiTranslationModel.findById(id)
+    const doc = await this.aiTranslationRepository.findById(id)
     if (!doc) {
       throw new BizException(ErrorCodeEnum.AITranslationNotFound)
     }
@@ -1041,44 +913,16 @@ export class AiTranslationService
   async getAllTranslationsGrouped(query: GetTranslationsGroupedQueryInput) {
     const { page, size } = query
 
-    const matchedRefIds: string[] | null = null
-
-    const matchStage = matchedRefIds
-      ? { $match: { refId: { $in: matchedRefIds } } }
-      : null
-
-    const pipeline: any[] = []
-    if (matchStage) {
-      pipeline.push(matchStage)
-    }
-    pipeline.push(
-      {
-        $group: {
-          _id: '$refId',
-          latestCreated: { $max: '$created' },
-          translationCount: { $sum: 1 },
-        },
-      },
-      { $sort: { latestCreated: -1 } },
-      {
-        $facet: {
-          metadata: [{ $count: 'total' }],
-          data: [{ $skip: (page - 1) * size }, { $limit: size }],
-        },
-      },
+    const grouped = await this.aiTranslationRepository.groupByRefIdPaginated(
+      page,
+      size,
     )
 
-    const aggregateResult = await this.aiTranslationModel.aggregate(pipeline)
-
-    const metadata = aggregateResult[0]?.metadata[0]
-    const groupedRefIds = aggregateResult[0]?.data || []
-    const total = metadata?.total || 0
-
-    if (groupedRefIds.length === 0) {
+    if (grouped.data.length === 0) {
       return {
         data: [],
         pagination: {
-          total: 0,
+          total: grouped.pagination.total,
           currentPage: page,
           totalPage: 0,
           size,
@@ -1088,12 +932,9 @@ export class AiTranslationService
       }
     }
 
-    const refIds = groupedRefIds.map((g: { _id: string }) => g._id)
+    const refIds = grouped.data.map((g) => g.refId as string)
     const [translations, articles] = await Promise.all([
-      this.aiTranslationModel
-        .find({ refId: { $in: refIds } })
-        .sort({ created: -1 })
-        .lean(),
+      this.aiTranslationRepository.listByRefIds(refIds),
       this.databaseService.findGlobalByIds(refIds),
     ])
 
@@ -1111,7 +952,7 @@ export class AiTranslationService
     )
 
     const groupedData = refIds
-      .map((refId: string) => {
+      .map((refId) => {
         const info = articleMap.get(refId)
         if (!info) return null
         return {
@@ -1121,18 +962,9 @@ export class AiTranslationService
       })
       .filter(Boolean)
 
-    const totalPage = Math.ceil(total / size)
-
     return {
       data: groupedData,
-      pagination: {
-        total,
-        currentPage: page,
-        totalPage,
-        size,
-        hasNextPage: page < totalPage,
-        hasPrevPage: page > 1,
-      },
+      pagination: grouped.pagination,
     }
   }
 
@@ -1147,36 +979,41 @@ export class AiTranslationService
       content?: string
     },
   ) {
-    const doc = await this.aiTranslationModel.findById(id)
-    if (!doc) {
+    const existing = await this.aiTranslationRepository.findById(id)
+    if (!existing) {
       throw new BizException(ErrorCodeEnum.AITranslationNotFound)
     }
 
-    if (data.title !== undefined) doc.title = data.title
-    if (data.subtitle !== undefined) doc.subtitle = data.subtitle ?? undefined
-    if (data.summary !== undefined) doc.summary = data.summary
-    if (data.tags !== undefined) doc.tags = data.tags
+    const patch: Parameters<typeof this.aiTranslationRepository.updateById>[1] =
+      {}
+    if (data.title !== undefined) patch.title = data.title
+    if (data.subtitle !== undefined) patch.subtitle = data.subtitle ?? null
+    if (data.summary !== undefined) patch.summary = data.summary
+    if (data.tags !== undefined) patch.tags = data.tags
 
     if (data.content !== undefined) {
-      doc.content = data.content
-      doc.text = this.lexicalService.lexicalToMarkdown(data.content)
+      patch.content = data.content
+      patch.text = this.lexicalService.lexicalToMarkdown(data.content)
     } else if (data.text !== undefined) {
-      doc.text = data.text
+      patch.text = data.text
     }
 
-    await doc.save()
-    return doc
+    const updated = await this.aiTranslationRepository.updateById(id, patch)
+    if (!updated) {
+      throw new BizException(ErrorCodeEnum.AITranslationNotFound)
+    }
+    return updated
   }
 
   async deleteTranslation(id: string) {
-    const result = await this.aiTranslationModel.deleteOne({ _id: id })
-    if (result.deletedCount === 0) {
+    const deletedCount = await this.aiTranslationRepository.deleteById(id)
+    if (deletedCount === 0) {
       throw new BizException(ErrorCodeEnum.AITranslationNotFound)
     }
   }
 
   async deleteTranslationsByRefId(refId: string) {
-    await this.aiTranslationModel.deleteMany({ refId })
+    await this.aiTranslationRepository.deleteForRefId(refId)
   }
 
   async getTranslationForArticle(
@@ -1197,10 +1034,10 @@ export class AiTranslationService
     }
 
     const document = article.document as ArticleDocument
-    const translation = await this.aiTranslationModel.findOne({
-      refId: articleId,
-      lang: targetLang,
-    })
+    const translation = await this.aiTranslationRepository.findByRefAndLang(
+      articleId,
+      targetLang,
+    )
 
     if (!translation) {
       return null
@@ -1219,7 +1056,7 @@ export class AiTranslationService
   async getValidTranslationsForArticles(
     articles: TranslationSourceSnapshot[],
     targetLang: string,
-    options?: {
+    _options?: {
       select?: string
     },
   ): Promise<{
@@ -1230,18 +1067,10 @@ export class AiTranslationService
       return { validTranslations: new Map(), staleRefIds: [] }
     }
 
-    const select = this.translationConsistencyService.buildValidationSelect(
-      options?.select,
+    const translations = await this.aiTranslationRepository.listByRefIdsAndLang(
+      articles.map((article) => article.id),
+      targetLang,
     )
-
-    const query = this.aiTranslationModel.find({
-      refId: { $in: articles.map((article) => article.id) },
-      lang: targetLang,
-    })
-
-    query.select(select)
-
-    const translations = await query
 
     if (!translations.length) {
       return { validTranslations: new Map(), staleRefIds: [] }
@@ -1295,9 +1124,8 @@ export class AiTranslationService
     }
 
     const document = article.document as ArticleDocument
-    const translations = await this.aiTranslationModel
-      .find({ refId: articleId })
-      .select('hash lang sourceLang sourceModified created')
+    const translations =
+      await this.aiTranslationRepository.listByRefId(articleId)
 
     if (!translations.length) {
       return []
@@ -1359,9 +1187,8 @@ export class AiTranslationService
     }
 
     const document = article.document as ArticleDocument
-    const translations = await this.aiTranslationModel
-      .find({ refId: articleId })
-      .select('hash lang sourceLang sourceModified created')
+    const translations =
+      await this.aiTranslationRepository.listByRefId(articleId)
 
     if (!translations.length) {
       return { availableTranslations: [], sourceLang: null, translation: null }
@@ -1388,10 +1215,10 @@ export class AiTranslationService
 
     const matchedTranslation =
       targetLang && validLangs.includes(targetLang)
-        ? await this.aiTranslationModel.findOne({
-            refId: articleId,
-            lang: targetLang,
-          })
+        ? await this.aiTranslationRepository.findByRefAndLang(
+            articleId,
+            targetLang,
+          )
         : null
 
     if (staleLangs.length && targetLang) {
@@ -1427,13 +1254,11 @@ export class AiTranslationService
       return
     }
 
-    const existingTranslations = await this.aiTranslationModel
-      .find({
-        refId: { $in: articleIds },
-        lang: targetLang,
-      })
-      .select('refId hash sourceLang')
-      .lean()
+    const existingTranslations =
+      await this.aiTranslationRepository.listByRefIdsAndLang(
+        articleIds,
+        targetLang,
+      )
 
     if (!existingTranslations.length) return
 

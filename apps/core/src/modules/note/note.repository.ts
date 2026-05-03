@@ -135,7 +135,8 @@ export class NoteRepository extends BaseRepository {
       .where(eq(notes.id, idBig))
       .limit(1)
     if (!row) return null
-    return this.attachTopic(mapBase(row))
+    const [withTopic] = await this.attachTopics([mapBase(row)])
+    return withTopic
   }
 
   async findByNid(nid: number): Promise<NoteRow | null> {
@@ -145,7 +146,8 @@ export class NoteRepository extends BaseRepository {
       .where(eq(notes.nid, nid))
       .limit(1)
     if (!row) return null
-    return this.attachTopic(mapBase(row))
+    const [withTopic] = await this.attachTopics([mapBase(row)])
+    return withTopic
   }
 
   async findBySlug(slug: string): Promise<NoteRow | null> {
@@ -155,7 +157,8 @@ export class NoteRepository extends BaseRepository {
       .where(eq(notes.slug, slug))
       .limit(1)
     if (!row) return null
-    return this.attachTopic(mapBase(row))
+    const [withTopic] = await this.attachTopics([mapBase(row)])
+    return withTopic
   }
 
   /**
@@ -169,17 +172,22 @@ export class NoteRepository extends BaseRepository {
     )!
   }
 
-  async listVisible(page = 1, size = 10): Promise<PaginationResult<NoteRow>> {
+  async listVisible(
+    page = 1,
+    size = 10,
+    options: NoteSortOptions = {},
+  ): Promise<PaginationResult<NoteRow>> {
     page = Math.max(1, page)
     size = Math.min(50, Math.max(1, size))
     const offset = (page - 1) * size
     const where = this.visibleClause()
+    const orderBy = this.resolveOrderBy(options)
     const [rows, [{ count }]] = await Promise.all([
       this.db
         .select()
         .from(notes)
         .where(where)
-        .orderBy(desc(notes.createdAt))
+        .orderBy(...orderBy)
         .limit(size)
         .offset(offset),
       this.db
@@ -187,9 +195,7 @@ export class NoteRepository extends BaseRepository {
         .from(notes)
         .where(where),
     ])
-    const data = await Promise.all(
-      rows.map((r) => this.attachTopic(mapBase(r))),
-    )
+    const data = await this.attachTopics(rows.map(mapBase))
     return {
       data,
       pagination: this.paginationOf(Number(count ?? 0), page, size),
@@ -221,7 +227,8 @@ export class NoteRepository extends BaseRepository {
         topicId: input.topicId ? parseEntityId(input.topicId) : null,
       })
       .returning()
-    return this.attachTopic(mapBase(row))
+    const [withTopic] = await this.attachTopics([mapBase(row)])
+    return withTopic
   }
 
   async update(
@@ -256,7 +263,9 @@ export class NoteRepository extends BaseRepository {
       .set(update)
       .where(eq(notes.id, idBig))
       .returning()
-    return row ? this.attachTopic(mapBase(row)) : null
+    if (!row) return null
+    const [withTopic] = await this.attachTopics([mapBase(row)])
+    return withTopic
   }
 
   async deleteById(id: EntityId | string): Promise<NoteRow | null> {
@@ -299,21 +308,26 @@ export class NoteRepository extends BaseRepository {
     return Number(row?.count ?? 0)
   }
 
-  async listAll(page = 1, size = 10): Promise<PaginationResult<NoteRow>> {
+  async listAll(
+    page = 1,
+    size = 10,
+    options: NoteSortOptions = {},
+  ): Promise<PaginationResult<NoteRow>> {
     page = Math.max(1, page)
     size = Math.min(50, Math.max(1, size))
     const offset = (page - 1) * size
+    const orderBy = this.resolveOrderBy(options)
     const [rows, [{ count }]] = await Promise.all([
       this.db
         .select()
         .from(notes)
-        .orderBy(desc(notes.createdAt))
+        .orderBy(...orderBy)
         .limit(size)
         .offset(offset),
       this.db.select({ count: sql<number>`count(*)::int` }).from(notes),
     ])
     return {
-      data: await Promise.all(rows.map((r) => this.attachTopic(mapBase(r)))),
+      data: await this.attachTopics(rows.map(mapBase)),
       pagination: this.paginationOf(Number(count ?? 0), page, size),
     }
   }
@@ -329,7 +343,7 @@ export class NoteRepository extends BaseRepository {
       .where(where)
       .orderBy(desc(notes.createdAt))
       .limit(Math.max(1, size))
-    return Promise.all(rows.map((r) => this.attachTopic(mapBase(r))))
+    return this.attachTopics(rows.map(mapBase))
   }
 
   async findManyByIds(ids: Array<EntityId | string>): Promise<NoteRow[]> {
@@ -339,7 +353,7 @@ export class NoteRepository extends BaseRepository {
       .select()
       .from(notes)
       .where(inArray(notes.id, bigInts))
-    return Promise.all(rows.map((r) => this.attachTopic(mapBase(r))))
+    return this.attachTopics(rows.map(mapBase))
   }
 
   async findIdsByTitle(search: string): Promise<EntityId[]> {
@@ -369,7 +383,8 @@ export class NoteRepository extends BaseRepository {
       .orderBy(direction === 'before' ? desc(notes.nid) : asc(notes.nid))
       .limit(1)
     if (!row) return null
-    return this.attachTopic(mapBase(row))
+    const [withTopic] = await this.attachTopics([mapBase(row)])
+    return withTopic
   }
 
   async findByCreatedWindow(
@@ -392,7 +407,7 @@ export class NoteRepository extends BaseRepository {
         direction === 'before' ? desc(notes.createdAt) : asc(notes.createdAt),
       )
       .limit(Math.max(1, limit))
-    return Promise.all(rows.map((r) => this.attachTopic(mapBase(r))))
+    return this.attachTopics(rows.map(mapBase))
   }
 
   async findOneByDateAndSlug(
@@ -411,14 +426,16 @@ export class NoteRepository extends BaseRepository {
         ),
       )
       .limit(1)
-    return row ? this.attachTopic(mapBase(row)) : null
+    if (!row) return null
+    const [withTopic] = await this.attachTopics([mapBase(row)])
+    return withTopic
   }
 
   async listByTopicId(
     topicId: EntityId | string,
     page = 1,
     size = 10,
-    options: { visibleOnly?: boolean } = {},
+    options: { visibleOnly?: boolean } & NoteSortOptions = {},
   ): Promise<PaginationResult<NoteRow>> {
     page = Math.max(1, page)
     size = Math.min(50, Math.max(1, size))
@@ -426,12 +443,13 @@ export class NoteRepository extends BaseRepository {
     const filters: SQL[] = [eq(notes.topicId, parseEntityId(topicId))]
     if (options.visibleOnly) filters.push(this.visibleClause())
     const where = and(...filters)
+    const orderBy = this.resolveOrderBy(options)
     const [rows, [{ count }]] = await Promise.all([
       this.db
         .select()
         .from(notes)
         .where(where)
-        .orderBy(desc(notes.createdAt))
+        .orderBy(...orderBy)
         .limit(size)
         .offset(offset),
       this.db
@@ -440,7 +458,7 @@ export class NoteRepository extends BaseRepository {
         .where(where),
     ])
     return {
-      data: await Promise.all(rows.map((r) => this.attachTopic(mapBase(r)))),
+      data: await this.attachTopics(rows.map(mapBase)),
       pagination: this.paginationOf(Number(count ?? 0), page, size),
     }
   }
@@ -468,7 +486,9 @@ export class NoteRepository extends BaseRepository {
       .from(notes)
       .orderBy(notes.createdAt)
       .limit(1)
-    return row ? this.attachTopic(mapBase(row)) : null
+    if (!row) return null
+    const [withTopic] = await this.attachTopics([mapBase(row)])
+    return withTopic
   }
 
   async setImages(id: EntityId | string, images: unknown[]): Promise<void> {
@@ -483,7 +503,8 @@ export class NoteRepository extends BaseRepository {
       .orderBy(desc(notes.createdAt))
       .limit(1)
     if (!row) return null
-    return this.attachTopic(mapBase(row))
+    const [withTopic] = await this.attachTopics([mapBase(row)])
+    return withTopic
   }
 
   async findArchiveBuckets(): Promise<
@@ -511,22 +532,66 @@ export class NoteRepository extends BaseRepository {
     }))
   }
 
-  private async attachTopic(row: NoteRow): Promise<NoteRow> {
-    if (!row.topicId) return { ...row, topic: null }
-    const [topic] = await this.db
+  private async attachTopics(rows: NoteRow[]): Promise<NoteRow[]> {
+    if (rows.length === 0) return rows
+    const topicIdSet = new Set<string>()
+    for (const row of rows) {
+      if (row.topicId) topicIdSet.add(row.topicId.toString())
+    }
+    if (topicIdSet.size === 0) {
+      for (const row of rows) row.topic = null
+      return rows
+    }
+    const topicBigInts = [...topicIdSet].map((id) => BigInt(id))
+    const topicRows = await this.db
       .select({ id: topics.id, name: topics.name, slug: topics.slug })
       .from(topics)
-      .where(eq(topics.id, parseEntityId(row.topicId)))
-      .limit(1)
-    return {
-      ...row,
-      topic: topic
-        ? {
-            id: toEntityId(topic.id) as EntityId,
-            name: topic.name,
-            slug: topic.slug,
-          }
-        : null,
+      .where(inArray(topics.id, topicBigInts))
+    const topicById = new Map(
+      topicRows.map((t) => [
+        t.id.toString(),
+        {
+          id: toEntityId(t.id) as EntityId,
+          name: t.name,
+          slug: t.slug,
+        },
+      ]),
+    )
+    for (const row of rows) {
+      row.topic = row.topicId
+        ? (topicById.get(row.topicId.toString()) ?? null)
+        : null
+    }
+    return rows
+  }
+
+  private resolveOrderBy(options: NoteSortOptions): SQL[] {
+    const { sortBy, sortOrder } = options
+    const direction = sortOrder === 1 ? asc : desc
+    switch (sortBy) {
+      case 'modifiedAt': {
+        return [
+          direction(sql`coalesce(${notes.modifiedAt}, ${notes.createdAt})`),
+          desc(notes.createdAt),
+        ]
+      }
+      case 'title': {
+        return [direction(notes.title), desc(notes.createdAt)]
+      }
+      case 'mood': {
+        return [direction(notes.mood), desc(notes.createdAt)]
+      }
+      case 'weather': {
+        return [direction(notes.weather), desc(notes.createdAt)]
+      }
+      default: {
+        return [direction(notes.createdAt)]
+      }
     }
   }
+}
+
+export interface NoteSortOptions {
+  sortBy?: 'createdAt' | 'modifiedAt' | 'title' | 'mood' | 'weather'
+  sortOrder?: 1 | -1
 }

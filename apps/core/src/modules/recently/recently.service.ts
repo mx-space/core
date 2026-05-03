@@ -13,9 +13,25 @@ import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
 
 import { CommentService } from '../comment/comment.service'
-import { RecentlyRepository } from './recently.repository'
+import { RecentlyRepository, type RecentlyRow } from './recently.repository'
 import { RecentlyAttitudeEnum } from './recently.schema'
 import { RecentlyModel } from './recently.types'
+
+/**
+ * Minimal hydrated reference returned alongside a recently row when its
+ * `refType`/`refId` point at a post/note/page/recently. Mirrors the small
+ * surface that admin and Yohaku consumers actually read from `item.ref`.
+ */
+export type RecentlyRefSummary = {
+  id: string
+  type: CollectionRefTypes
+  title?: string
+  slug?: string | null
+  nid?: number
+  url?: string
+}
+
+export type RecentlyWithRef = RecentlyRow & { ref?: RecentlyRefSummary | null }
 
 @Injectable()
 export class RecentlyService {
@@ -33,11 +49,15 @@ export class RecentlyService {
   }
 
   async findById(id: string) {
-    return this.recentlyRepository.findById(id)
+    const row = await this.recentlyRepository.findById(id)
+    if (!row) return row
+    const [withRef] = await this.attachRef([row])
+    return withRef
   }
 
   async findRecent(size: number) {
-    return this.recentlyRepository.findRecent(size)
+    const rows = await this.recentlyRepository.findRecent(size)
+    return this.attachRef(rows)
   }
 
   async count() {
@@ -46,15 +66,94 @@ export class RecentlyService {
 
   async getAll() {
     const result = await this.recentlyRepository.list(1, 50)
-    return result.data
+    return this.attachRef(result.data)
   }
 
   async getOne(id: string) {
     return this.findById(id)
   }
 
+  /**
+   * @deprecated kept for backward compat; ref hydration is now centralized in
+   * {@link attachRef} and applied automatically on read paths.
+   */
   async populateRef<T extends RecentlyModel>(result: T[], _omit = ['text']) {
     return result
+  }
+
+  /**
+   * Resolve `refType`/`refId` on each row to a small joined `ref` summary.
+   * Batched via `databaseService.findGlobalByIds` to avoid N+1.
+   *
+   * Rows whose `refId` is null get `ref: null`. Rows whose ref points at a
+   * deleted entity also get `ref: null` (orphan refs must never crash the
+   * response).
+   */
+  private async attachRef<T extends RecentlyRow>(
+    rows: T[],
+  ): Promise<Array<T & { ref?: RecentlyRefSummary | null }>> {
+    if (rows.length === 0) return []
+    const refIds = [
+      ...new Set(
+        rows
+          .map((r) => r.refId)
+          .filter((id): id is NonNullable<typeof id> => !!id)
+          .map(String),
+      ),
+    ]
+    if (refIds.length === 0) {
+      return rows.map((row) => ({
+        ...row,
+        ref: row.refId ? null : undefined,
+      }))
+    }
+
+    const collection = await this.databaseService.findGlobalByIds(refIds)
+    const flat = this.databaseService.flatCollectionToMap(collection)
+    const typeMap = new Map<string, CollectionRefTypes>()
+    for (const item of collection.posts)
+      typeMap.set(item.id, CollectionRefTypes.Post)
+    for (const item of collection.notes)
+      typeMap.set(item.id, CollectionRefTypes.Note)
+    for (const item of collection.pages)
+      typeMap.set(item.id, CollectionRefTypes.Page)
+    for (const item of collection.recentlies)
+      typeMap.set(item.id, CollectionRefTypes.Recently)
+
+    return rows.map((row) => {
+      if (!row.refId) return { ...row, ref: undefined }
+      const refIdStr = String(row.refId)
+      const doc = flat[refIdStr]
+      const type = typeMap.get(refIdStr)
+      if (!doc || !type) return { ...row, ref: null }
+      return { ...row, ref: this.buildRefSummary(type, doc) }
+    })
+  }
+
+  private buildRefSummary(
+    type: CollectionRefTypes,
+    doc: any,
+  ): RecentlyRefSummary {
+    const summary: RecentlyRefSummary = {
+      id: doc.id,
+      type,
+      title: doc.title,
+    }
+    if (type === CollectionRefTypes.Note) {
+      summary.nid = doc.nid
+      summary.url = `/notes/${doc.nid}`
+    } else if (type === CollectionRefTypes.Post) {
+      summary.slug = doc.slug
+      const categorySlug = doc.category?.slug
+      if (categorySlug)
+        summary.url = `/posts/${categorySlug}/${encodeURIComponent(doc.slug)}`
+    } else if (type === CollectionRefTypes.Page) {
+      summary.slug = doc.slug
+      summary.url = `/${doc.slug}`
+    } else if (type === CollectionRefTypes.Recently) {
+      summary.url = `/thinking/${doc.id}`
+    }
+    return summary
   }
 
   async getOffset({
@@ -66,11 +165,12 @@ export class RecentlyService {
     size?: number
     after?: string
   }) {
-    return this.recentlyRepository.findOffset({
+    const rows = await this.recentlyRepository.findOffset({
       before,
       after,
       size: size ?? 10,
     })
+    return this.attachRef(rows)
   }
 
   async getLatestOne() {

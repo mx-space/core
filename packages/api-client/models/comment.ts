@@ -1,36 +1,39 @@
 import { CollectionRefTypes } from '@core/constants/db.constant'
 
-import type { BaseModel } from './base'
 import type { CategoryModel } from './category'
 
 export { CollectionRefTypes }
-export interface CommentModel extends BaseModel {
+
+export interface CommentModel {
+  id: string
+  createdAt: string
   refType: CollectionRefTypes
-  ref: string
+  refId: string
   state: number
-  author: string
+  author: string | null
   text: string
-  mail?: string
-  url?: string
-  ip?: string
-  agent?: string
-  pin?: boolean
+  mail: string | null
+  url: string | null
+  ip: string | null
+  agent: string | null
+  pin: boolean
 
-  avatar: string
+  avatar: string | null
 
-  parentCommentId?: string | null
-  rootCommentId?: string | null
-  replyCount?: number
-  latestReplyAt?: string | null
-  isDeleted?: boolean
-  deletedAt?: string
+  parentCommentId: string | null
+  rootCommentId: string | null
+  replyCount: number
+  latestReplyAt: string | null
+  isDeleted: boolean
+  deletedAt: string | null
 
-  isWhispers?: boolean
-  location?: string
+  isWhispers: boolean
+  location: string | null
 
-  authProvider?: string
-  readerId?: string
-  editedAt?: string
+  authProvider: string | null
+  readerId: string | null
+  editedAt: string | null
+  anchor: Record<string, unknown> | null
 }
 
 export interface CommentReplyWindow {

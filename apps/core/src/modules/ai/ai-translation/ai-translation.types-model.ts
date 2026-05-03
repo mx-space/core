@@ -1,21 +1,10 @@
-export interface AITranslationModel {
-  id: string
-  hash: string
-  refId: string
-  refType: string
-  lang: string
-  sourceLang: string
-  title: string
-  text: string
-  subtitle?: string | null
-  summary?: string | null
-  tags: string[]
-  sourceModifiedAt?: Date | null
-  aiModel?: string
-  aiProvider?: string
-  contentFormat?: string
-  content?: string
-  sourceBlockSnapshots?: any[]
-  sourceMetaHashes?: any
-  createdAt?: Date | null
-}
+import type { AiTranslationRow } from './ai-translation.repository'
+
+/**
+ * Plain row shape for AI translations. Mirrors `AiTranslationRow` from the
+ * repository (which is the canonical PostgreSQL row contract).
+ *
+ * After the MongoDB → PostgreSQL cutover this type carries no Mongoose
+ * machinery (`_id`, `save()`, etc.).
+ */
+export type AITranslationModel = AiTranslationRow

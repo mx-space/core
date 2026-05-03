@@ -47,8 +47,7 @@ interface ActivityPayloadWithRef {
   roomName?: string
 }
 
-type LegacyActivityWithRef = ActivityRow & {
-  _id: ActivityRow['id']
+type ActivityWithRef = ActivityRow & {
   created: Date
   ref?: PostModel | NoteModel
   reader?: ReaderModel
@@ -153,31 +152,28 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     this.cleanupFnList = q
   }
 
-  private toLegacyActivity(row: ActivityRow) {
+  private toActivity(row: ActivityRow) {
     return {
       ...row,
-      _id: row.id,
       createdAt: row.createdAt,
     }
   }
 
-  private toLegacyPager(
-    result: Awaited<ReturnType<ActivityRepository['list']>>,
-  ) {
+  private toPager(result: Awaited<ReturnType<ActivityRepository['list']>>) {
     return {
-      docs: result.data.map((row) => this.toLegacyActivity(row)),
+      docs: result.data.map((row) => this.toActivity(row)),
       totalDocs: result.pagination.total,
       page: result.pagination.currentPage,
       totalPages: result.pagination.totalPage,
       limit: result.pagination.size,
       hasNextPage: result.pagination.hasNextPage,
       hasPrevPage: result.pagination.hasPrevPage,
-      data: result.data.map((row) => this.toLegacyActivity(row)),
+      data: result.data.map((row) => this.toActivity(row)),
     }
   }
 
   async getLikeActivities(page = 1, size = 10) {
-    const activities = this.toLegacyPager(
+    const activities = this.toPager(
       await this.activityRepository.list(page, size, Activity.Like),
     )
     const typedIdsMap = activities.data.reduce(
@@ -239,7 +235,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     }
 
     const docsWithRefModel = activities.docs.map((ac) => {
-      const nextAc = { ...ac } as LegacyActivityWithRef
+      const nextAc = { ...ac } as ActivityWithRef
       if (!ac.payload || typeof ac.payload !== 'object') {
         return nextAc
       }
@@ -267,7 +263,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getReadDurationActivities(page = 1, size = 10) {
-    const data = this.toLegacyPager(
+    const data = this.toPager(
       await this.activityRepository.list(page, size, Activity.ReadDuration),
     )
 
@@ -280,7 +276,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       if (typeof roomName !== 'string') continue
       const refId = extractArticleIdFromRoomName(roomName)
       articleIds.push(refId)
-      ;(data.data[i] as LegacyActivityWithRef).refId = refId
+      ;(data.data[i] as ActivityWithRef).refId = refId
     }
 
     const documentMap = await this.databaseService.findGlobalByIds(articleIds)
@@ -330,13 +326,12 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         reader,
         ref: pick(refModel, [
           'id',
-          '_id',
           'title',
           'nid',
           'slug',
           'category',
           'categoryId',
-          'created',
+          'createdAt',
         ]),
       },
       {
@@ -389,7 +384,6 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         Object.assign(serializedPresenceData, {
           reader: camelcaseKeys({
             ...reader[0],
-            _id: undefined,
             id: reader[0].id.toString(),
           }),
         })

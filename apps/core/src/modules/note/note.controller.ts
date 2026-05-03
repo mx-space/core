@@ -101,6 +101,11 @@ export class NoteController {
     const { password, single: isSingle, prefer } = query
     const visibleOnly = !isAuthenticated
 
+    if (!isAuthenticated) {
+      current.location = null
+      current.coordinates = null
+    }
+
     current.text =
       !isAuthenticated && this.noteService.checkNoteIsSecret(current)
         ? ''
@@ -167,6 +172,13 @@ export class NoteController {
       1,
       { visibleOnly },
     )
+    if (!isAuthenticated) {
+      for (const adj of [prev, next]) {
+        if (!adj) continue
+        adj.location = null
+        adj.coordinates = null
+      }
+    }
     await this.translateAdjacentNoteTitles([prev, next], lang)
 
     return { data: applyContentPreference(currentData, prefer), next, prev }
@@ -203,37 +215,26 @@ export class NoteController {
     @Query() query: NoteQueryDto,
     @Lang() lang?: string,
   ) {
-    const {
-      size,
-      select,
-      page,
-      sortBy,
-      sortOrder,
-      year,
-      db_query,
-      withSummary,
-    } = query
-    void year
-    void db_query
+    const { size, select, page, sortBy, sortOrder, withSummary } = query
 
-    // When withSummary or lang, ensure text is fetched for translation + fallback, will be stripped later
-    let paginateSelect = isAuthenticated
-      ? select
-      : select?.replaceAll(/[+-]?(coordinates|location|password)/g, '')
-    if (
-      (withSummary || lang) &&
-      paginateSelect &&
-      !paginateSelect.includes('text')
-    ) {
-      paginateSelect = `${paginateSelect} text`
-    }
-
-    void paginateSelect
-    void sortBy
-    void sortOrder
     const result = await this.noteService.listPaginated(page, size, {
       visibleOnly: !isAuthenticated,
+      sortBy: sortBy as
+        | 'createdAt'
+        | 'modifiedAt'
+        | 'title'
+        | 'mood'
+        | 'weather'
+        | undefined,
+      sortOrder: sortOrder as 1 | -1 | undefined,
     })
+
+    if (!isAuthenticated) {
+      for (const doc of result.data) {
+        doc.location = null
+        doc.coordinates = null
+      }
+    }
 
     if (!result.data.length) {
       return result
@@ -241,19 +242,17 @@ export class NoteController {
 
     if (withSummary && !lang) {
       await this.enrichDocsWithSummary(result)
+      this.applyNoteSelect(result.data, select)
       return result
     }
 
     if (!lang) {
+      this.applyNoteSelect(result.data, select)
       return result
     }
 
     const translationInputs: ArticleTranslationInput[] = []
     for (const doc of result.data) {
-      if (doc.meta && typeof doc.meta === 'string') {
-        doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
-      }
-
       if (typeof doc.text === 'string') {
         translationInputs.push({
           id: String(doc.id),
@@ -272,6 +271,7 @@ export class NoteController {
       if (withSummary) {
         await this.enrichDocsWithSummary(result, lang)
       }
+      this.applyNoteSelect(result.data, select)
       return result
     }
 
@@ -301,7 +301,9 @@ export class NoteController {
       return doc
     })
 
-    // Strip text/content if not originally requested (added only for translation)
+    // Strip text/content if not originally requested (added only for translation).
+    // Cast is required because `delete` on typed required properties needs an
+    // index-signature target.
     const originalSelectHasText = select?.includes('text')
     const originalSelectHasContent = select?.includes('content')
     if (!originalSelectHasText || !originalSelectHasContent) {
@@ -315,7 +317,30 @@ export class NoteController {
       await this.enrichDocsWithSummary(result, lang)
     }
 
+    this.applyNoteSelect(result.data, select)
     return result
+  }
+
+  private applyNoteSelect(rows: object[], select: string | undefined): void {
+    if (!select) return
+    const selected = new Set(
+      select
+        .split(' ')
+        .map((s) => s.trim().replace(/^[+-]/, ''))
+        .filter(Boolean),
+    )
+    // Always preserve `id` and `topic` to keep response shape sound:
+    // `id` is the row key, `topic` is a joined value the legacy aggregate
+    // pipeline emitted after the `$project` stage.
+    selected.add('id')
+    selected.add('topic')
+    for (let i = 0; i < rows.length; i++) {
+      rows[i] = Object.fromEntries(
+        Object.entries(rows[i] as Record<string, unknown>).filter(([key]) =>
+          selected.has(key),
+        ),
+      )
+    }
   }
 
   private async enrichDocsWithSummary(
@@ -358,6 +383,11 @@ export class NoteController {
     // 非认证用户只能查看已发布的手记
     if (!isAuthenticated && !current.isPublished) {
       throw new CannotFindException()
+    }
+
+    if (!isAuthenticated) {
+      current.location = null
+      current.coordinates = null
     }
 
     return current
@@ -433,6 +463,13 @@ export class NoteController {
       (a, b) => (b.createdAt?.valueOf() ?? 0) - (a.createdAt?.valueOf() ?? 0),
     )
 
+    if (!isAuthenticated) {
+      for (const doc of data) {
+        doc.location = null
+        doc.coordinates = null
+      }
+    }
+
     // 处理翻译
     data = await this.translationService.translateList({
       items: data,
@@ -500,6 +537,14 @@ export class NoteController {
 
     if (!result) return null
     const { latest, next } = result
+    if (!isAuthenticated) {
+      latest.location = null
+      latest.coordinates = null
+      if (next) {
+        next.location = null
+        next.coordinates = null
+      }
+    }
     latest.text = this.noteService.checkNoteIsSecret(latest) ? '' : latest.text
 
     const translationResult = await this.translationService.translateArticle({
@@ -574,24 +619,30 @@ export class NoteController {
     @Lang() lang?: string,
   ) {
     const { id } = params
-    const {
-      size,
-      page,
-      select = '_id title nid id created modified text',
-      sortBy,
-      sortOrder,
-    } = query
-    void select
-    void sortBy
-    void sortOrder
+    const { size, page, sortBy, sortOrder } = query
     const result = await this.noteService.getNotePaginationByTopicId(
       id,
       {
         page,
         limit: size,
+        sortBy: sortBy as
+          | 'createdAt'
+          | 'modifiedAt'
+          | 'title'
+          | 'mood'
+          | 'weather'
+          | undefined,
+        sortOrder: sortOrder as 1 | -1 | undefined,
       },
       isAuthenticated ? {} : { isPublished: true },
     )
+
+    if (!isAuthenticated) {
+      for (const doc of result.data) {
+        doc.location = null
+        doc.coordinates = null
+      }
+    }
 
     // 处理翻译
     const translatedDocs = await this.translationService.translateList({

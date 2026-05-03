@@ -53,7 +53,7 @@ export class PostController {
   @TranslateFields({
     path: 'docs[].category.name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getPaginate(
     @Query() query: PostPagerDto,
@@ -85,9 +85,6 @@ export class PostController {
         const translationInputs: ArticleTranslationInput[] = []
         for (const doc of res.data) {
           const originalText = doc.text
-          if (doc.meta && typeof doc.meta === 'string') {
-            doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
-          }
 
           if (lang && typeof originalText === 'string') {
             translationInputs.push({
@@ -108,12 +105,17 @@ export class PostController {
         }
 
         if (select) {
+          // Always preserve `id` and `category` to keep response shape sound:
+          // `id` is the row key, `category` is a joined value the legacy
+          // aggregate pipeline emitted after the `$project` stage.
           const selected = new Set(
             select
               .split(' ')
               .map((s) => s.trim().replace(/^[+-]/, ''))
               .filter(Boolean),
           )
+          selected.add('id')
+          selected.add('category')
           res.data = res.data.map((doc) =>
             Object.fromEntries(
               Object.entries(doc).filter(([key]) => selected.has(key)),
@@ -170,7 +172,7 @@ export class PostController {
   @TranslateFields({
     path: 'category.name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getById(
     @Param() params: EntityIdDto,
@@ -194,7 +196,7 @@ export class PostController {
   @TranslateFields({
     path: 'category.name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getLatest(
     @IpLocation() ip: IpRecord,
@@ -317,7 +319,6 @@ export class PostController {
       ...(body as unknown as PostModel),
       modifiedAt: null,
       slug: body.slug,
-      related: body.relatedId as any,
     })
   }
 

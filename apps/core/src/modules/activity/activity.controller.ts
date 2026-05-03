@@ -32,7 +32,7 @@ const ARTICLE_REF_FIELDS = [
   'title',
   'slug',
   'cover',
-  'created',
+  'createdAt',
   'category',
   'categoryId',
   'id',
@@ -302,7 +302,7 @@ export class ActivityController {
     let transformedLike = [] as any[]
 
     for (const item of like.data) {
-      const likeData = pick(item, 'created', 'id') as any
+      const likeData = pick(item, 'createdAt', 'id') as any
 
       if (!item.ref) {
         likeData.title = '已删除的内容'
@@ -315,7 +315,7 @@ export class ActivityController {
           likeData.slug = item.ref.slug
         }
         likeData.title = item.ref.title
-        likeData._articleId = (item as any).payload?.id
+        likeData.articleId = (item.payload as { id?: string } | null)?.id
       }
 
       transformedLike.push(likeData)
@@ -330,7 +330,7 @@ export class ActivityController {
         targetLang: lang,
         translationFields: ['title'] as const,
         getInput: (item) => ({
-          id: item._articleId ?? '',
+          id: item.articleId ?? '',
           title: item.title ?? '',
         }),
         applyResult: (item, translation) => {
@@ -373,7 +373,7 @@ export class ActivityController {
     }
 
     for (const item of transformedLike) {
-      delete item._articleId
+      delete item.articleId
     }
 
     return {

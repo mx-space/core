@@ -26,7 +26,7 @@ declare module '../core/client' {
 export type NoteListOptions = {
   select?: SelectFields<keyof NoteModel>
   year?: number
-  sortBy?: 'weather' | 'mood' | 'title' | 'created' | 'modified'
+  sortBy?: 'weather' | 'mood' | 'title' | 'createdAt' | 'modifiedAt'
   sortOrder?: 1 | -1
   lang?: string
   withSummary?: boolean
@@ -51,7 +51,7 @@ export type NoteTopicListOptions = SortOptions & {
 
 export type NoteTimelineItem = Pick<
   NoteModel,
-  'id' | 'title' | 'nid' | 'slug' | 'created' | 'isPublished'
+  'id' | 'title' | 'nid' | 'slug' | 'createdAt' | 'isPublished'
 > & {
   isTranslated?: boolean
   translationMeta?: TranslationMeta

@@ -37,9 +37,6 @@ export interface WriteBaseModel extends BaseCommentIndexModel {
   meta?: Record<string, any>
 }
 
-export const BASE_MODEL_PROTECTED_KEYS = ['created', 'id', '_id']
-export const BASE_COMMENT_INDEX_PROTECTED_KEYS = [
-  'commentsIndex',
-  ...BASE_MODEL_PROTECTED_KEYS,
-]
+export const BASE_MODEL_PROTECTED_KEYS = ['createdAt', 'id']
+export const BASE_COMMENT_INDEX_PROTECTED_KEYS = [...BASE_MODEL_PROTECTED_KEYS]
 export const WRITE_BASE_MODEL_PROTECTED_KEYS = BASE_COMMENT_INDEX_PROTECTED_KEYS

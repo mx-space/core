@@ -336,8 +336,19 @@ export class SnippetService {
         secretObj[key] = ''
       }
       next.secret = secretObj as any
+    } else if (snippet.secret) {
+      // Never expose stored encrypted secret payload outside Function type.
+      next.secret = null
     }
     return next
+  }
+
+  transformLeanSnippet(snippet: SnippetRow): SnippetRow {
+    return this.transformLeanSnippetModel(snippet)
+  }
+
+  transformLeanSnippetList(rows: SnippetRow[]): SnippetRow[] {
+    return rows.map((row) => this.transformLeanSnippetModel(row))
   }
 
   async getSnippetByName(name: string, reference: string): Promise<SnippetRow> {

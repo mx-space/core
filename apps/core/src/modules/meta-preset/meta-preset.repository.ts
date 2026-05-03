@@ -16,7 +16,6 @@ import type { MetaPresetModel } from './meta-preset.types'
 
 export type MetaPresetRow = MetaPresetModel & {
   id: EntityId
-  _id: EntityId
   createdAt: Date
   created: Date
   updatedAt: Date | null
@@ -51,7 +50,6 @@ const mapRow = (row: typeof metaPresets.$inferSelect): MetaPresetRow => {
   return {
     ...field,
     id,
-    _id: id,
     key: row.name,
     label: String(field.label ?? row.name),
     type: field.type as MetaPresetModel['type'],

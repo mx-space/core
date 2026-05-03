@@ -71,9 +71,6 @@ export class PageController {
 
     const translationInputs: ArticleTranslationInput[] = []
     for (const doc of result.data) {
-      if (doc.meta && typeof doc.meta === 'string') {
-        doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
-      }
       translationInputs.push({
         id: String(doc.id),
         title: doc.title,

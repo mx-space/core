@@ -30,7 +30,11 @@ import { CommentService } from '../comment/comment.service'
 import { DraftRefType } from '../draft/draft.enum'
 import { DraftService } from '../draft/draft.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
-import { NoteRepository, type NoteRow } from './note.repository'
+import {
+  NoteRepository,
+  type NoteRow,
+  type NoteSortOptions,
+} from './note.repository'
 import {
   type Coordinate,
   NOTE_PROTECTED_KEYS,
@@ -76,7 +80,6 @@ export class NoteService {
   private normalizeMeta(meta: unknown) {
     if (meta === undefined) return undefined
     if (meta === null) return null
-    if (typeof meta === 'string') return JSON.safeParse(meta) ?? null
     return meta as Record<string, unknown>
   }
 
@@ -169,11 +172,12 @@ export class NoteService {
   async listPaginated(
     page: number,
     size: number,
-    options: { visibleOnly?: boolean } = {},
+    options: { visibleOnly?: boolean } & NoteSortOptions = {},
   ) {
-    return options.visibleOnly
-      ? this.noteRepository.listVisible(page, size)
-      : this.noteRepository.listAll(page, size)
+    const { visibleOnly, ...sort } = options
+    return visibleOnly
+      ? this.noteRepository.listVisible(page, size, sort)
+      : this.noteRepository.listAll(page, size, sort)
   }
 
   async count() {
@@ -297,9 +301,11 @@ export class NoteService {
       topicId: document.topicId as string | undefined,
     })
 
-    if (document.createdAt) {
+    const userSuppliedCreatedAt =
+      document.createdAt ?? (document as any).created
+    if (userSuppliedCreatedAt) {
       const refreshed = await this.noteRepository.update(note.id, {
-        createdAt: getLessThanNow(document.createdAt),
+        createdAt: getLessThanNow(userSuppliedCreatedAt),
       })
       if (refreshed) note = refreshed
     }
@@ -374,6 +380,7 @@ export class NoteService {
     )
 
     const patch = omit(data, [...NOTE_PROTECTED_KEYS, 'slug'] as const)
+    const userSuppliedCreatedAt = data.createdAt ?? (data as any).created
     const updated = await this.noteRepository.update(id, {
       title: patch.title,
       slug: hasSlugInput ? normalizedSlug : undefined,
@@ -394,7 +401,9 @@ export class NoteService {
       coordinates: this.normalizeCoordinates(patch.coordinates),
       location: patch.location,
       topicId: patch.topicId as string | undefined,
-      createdAt: data.createdAt ? getLessThanNow(data.createdAt) : undefined,
+      createdAt: userSuppliedCreatedAt
+        ? getLessThanNow(userSuppliedCreatedAt)
+        : undefined,
       modifiedAt: hasContentChanged || hasFieldChanged ? new Date() : undefined,
     })
     if (!updated) throw new NoContentCanBeModifiedException()
@@ -402,7 +411,7 @@ export class NoteService {
     await this.trackSeoPathChanges(
       oldDoc,
       {
-        createdAt: data.createdAt ?? oldDoc.createdAt,
+        createdAt: userSuppliedCreatedAt ?? oldDoc.createdAt,
         slug: hasSlugInput ? normalizedSlug : oldDoc.slug,
       },
       id,
@@ -490,12 +499,14 @@ export class NoteService {
 
   async getNotePaginationByTopicId(
     topicId: string,
-    pagination: { page?: number; limit?: number } = {},
+    pagination: { page?: number; limit?: number } & NoteSortOptions = {},
     condition?: { isPublished?: boolean },
   ) {
-    const { page = 1, limit = 10 } = pagination
+    const { page = 1, limit = 10, sortBy, sortOrder } = pagination
     return this.noteRepository.listByTopicId(topicId, page, limit, {
       visibleOnly: condition?.isPublished === true,
+      sortBy,
+      sortOrder,
     })
   }
 

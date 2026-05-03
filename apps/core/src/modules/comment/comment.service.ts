@@ -22,8 +22,24 @@ import {
   type CommentFindFilter,
   type CommentRefType,
   CommentRepository,
+  type CommentRow,
 } from './comment.repository'
 import type { CommentModel } from './comment.types'
+
+/**
+ * Minimal hydrated reference attached to a comment when its `refType`/`refId`
+ * resolve to a post/note/page/recently. Mirrors the surface that admin
+ * `comment-detail.tsx` reads (`ref.title`, `ref.slug`, `ref.nid`,
+ * `ref.category.slug`).
+ */
+export type CommentRefSummary = {
+  id: string
+  type: CollectionRefTypes
+  title?: string
+  slug?: string | null
+  nid?: number
+  category?: { name: string; slug: string } | null
+}
 
 const COMMENT_REPLY_THRESHOLD = 20
 const COMMENT_REPLY_EDGE_SIZE = 3
@@ -101,7 +117,73 @@ export class CommentService {
   }
 
   async findByIdWithRelations(id: string) {
-    return this.commentRepository.findByIdWithRelations(id)
+    const comment = await this.commentRepository.findByIdWithRelations(id)
+    if (!comment) return comment
+    const [withRef] = await this.attachRef([comment])
+    return withRef
+  }
+
+  /**
+   * Resolve the polymorphic `(refType, refId)` on each comment to a small
+   * joined `ref` summary. Batched via `databaseService.findGlobalByIds`.
+   *
+   * Orphan refs (target deleted) become `ref: null` so consumers may render a
+   * degraded label instead of crashing on `comment.ref.title`.
+   */
+  async attachRef<
+    T extends Pick<CommentRow, 'refId' | 'refType'> & { id: any },
+  >(rows: T[]): Promise<Array<T & { ref?: CommentRefSummary | null }>> {
+    if (rows.length === 0) return []
+    const refIds = [
+      ...new Set(rows.map((r) => r.refId).filter((id): id is any => !!id)),
+    ].map(String)
+    if (refIds.length === 0) {
+      return rows.map((row) => ({ ...row, ref: null }))
+    }
+
+    const collection = await this.databaseService.findGlobalByIds(refIds)
+    const flat = this.databaseService.flatCollectionToMap(collection)
+    const typeMap = new Map<string, CollectionRefTypes>()
+    for (const item of collection.posts)
+      typeMap.set(item.id, CollectionRefTypes.Post)
+    for (const item of collection.notes)
+      typeMap.set(item.id, CollectionRefTypes.Note)
+    for (const item of collection.pages)
+      typeMap.set(item.id, CollectionRefTypes.Page)
+    for (const item of collection.recentlies)
+      typeMap.set(item.id, CollectionRefTypes.Recently)
+
+    return rows.map((row) => {
+      if (!row.refId) return { ...row, ref: null }
+      const refIdStr = String(row.refId)
+      const doc = flat[refIdStr]
+      const type = typeMap.get(refIdStr)
+      if (!doc || !type) return { ...row, ref: null }
+      return { ...row, ref: this.buildCommentRefSummary(type, doc) }
+    })
+  }
+
+  private buildCommentRefSummary(
+    type: CollectionRefTypes,
+    doc: any,
+  ): CommentRefSummary {
+    const summary: CommentRefSummary = {
+      id: doc.id,
+      type,
+      title: doc.title,
+    }
+    if (type === CollectionRefTypes.Note) {
+      summary.nid = doc.nid
+      summary.slug = doc.slug ?? null
+    } else if (type === CollectionRefTypes.Post) {
+      summary.slug = doc.slug
+      summary.category = doc.category
+        ? { name: doc.category.name, slug: doc.category.slug }
+        : null
+    } else if (type === CollectionRefTypes.Page) {
+      summary.slug = doc.slug
+    }
+    return summary
   }
 
   async deleteForRef(
@@ -286,7 +368,8 @@ export class CommentService {
       size,
     )
     await this.fillAndReplaceAvatarUrl(queryList.data)
-    return queryList
+    const dataWithRef = await this.attachRef(queryList.data)
+    return { ...queryList, data: dataWithRef }
   }
 
   async getCommentsByRefId(
@@ -336,7 +419,8 @@ export class CommentService {
       repliesByRootId.set(rootId, current)
     }
 
-    const data = result.data.map((comment) => {
+    const dataWithRef = await this.attachRef(result.data)
+    const data = dataWithRef.map((comment) => {
       const threadReplies = repliesByRootId.get(comment.id) ?? []
       const { replies, replyWindow } = this.buildReplyWindow(threadReplies)
       return {

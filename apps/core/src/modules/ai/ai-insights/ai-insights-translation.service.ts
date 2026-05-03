@@ -50,7 +50,6 @@ export class AiInsightsTranslationService implements OnModuleInit {
     if (!row) return null
     return {
       ...row,
-      _id: row.id,
       createdAt: row.createdAt,
     } as unknown as AIInsightsModel
   }

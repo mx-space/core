@@ -21,8 +21,6 @@ export {
   zEmptyStringToNull,
   zHexColor,
   zHttpsUrl,
-  zMongoId,
-  zMongoIdOrInt,
   zNilOrString,
   zNonEmptyString,
   zOptionalBoolean,

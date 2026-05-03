@@ -19,7 +19,7 @@ declare module '../core/client' {
 
 export type PageListOptions = {
   select?: SelectFields<keyof PageModel>
-  sortBy?: 'order' | 'subtitle' | 'title' | 'created' | 'modified'
+  sortBy?: 'order' | 'subtitle' | 'title' | 'createdAt' | 'modifiedAt'
   sortOrder?: 1 | -1
 }
 

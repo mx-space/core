@@ -430,7 +430,6 @@ export class AuthService {
             image: user.image,
             role: user.role,
             handle: user.handle,
-            _id: user.id,
           }
         : {}),
       id: account.userId,

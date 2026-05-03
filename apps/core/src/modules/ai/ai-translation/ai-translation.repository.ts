@@ -122,10 +122,7 @@ export class AiTranslationRepository extends BaseRepository {
       .select()
       .from(aiTranslations)
       .where(
-        and(
-          eq(aiTranslations.refId, refBig),
-          eq(aiTranslations.lang, lang),
-        )!,
+        and(eq(aiTranslations.refId, refBig), eq(aiTranslations.lang, lang))!,
       )
       .limit(1)
     return row ? mapTranslation(row) : null
@@ -183,6 +180,70 @@ export class AiTranslationRepository extends BaseRepository {
     return rows.map(mapTranslation)
   }
 
+  async listByRefIdsAndLang(
+    refIds: Array<EntityId | string>,
+    lang: string,
+  ): Promise<AiTranslationRow[]> {
+    if (!refIds.length) return []
+    const rows = await this.db
+      .select()
+      .from(aiTranslations)
+      .where(
+        and(
+          inArray(
+            aiTranslations.refId,
+            refIds.map((id) => parseEntityId(id)),
+          ),
+          eq(aiTranslations.lang, lang),
+        )!,
+      )
+      .orderBy(desc(aiTranslations.createdAt))
+    return rows.map(mapTranslation)
+  }
+
+  async groupByRefIdPaginated(
+    page = 1,
+    size = 20,
+  ): Promise<
+    PaginationResult<{
+      refId: EntityId
+      latestCreatedAt: Date
+      translationCount: number
+    }>
+  > {
+    page = Math.max(1, page)
+    size = Math.min(100, Math.max(1, size))
+    const offset = (page - 1) * size
+    const latestCreatedAtCol = sql<Date>`max(${aiTranslations.createdAt})`
+    const countCol = sql<number>`count(*)::int`
+    const [rows, [{ total }]] = await Promise.all([
+      this.db
+        .select({
+          refId: aiTranslations.refId,
+          latestCreatedAt: latestCreatedAtCol,
+          translationCount: countCol,
+        })
+        .from(aiTranslations)
+        .groupBy(aiTranslations.refId)
+        .orderBy(desc(latestCreatedAtCol))
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({
+          total: sql<number>`count(distinct ${aiTranslations.refId})::int`,
+        })
+        .from(aiTranslations),
+    ])
+    return {
+      data: rows.map((row) => ({
+        refId: toEntityId(row.refId) as EntityId,
+        latestCreatedAt: row.latestCreatedAt,
+        translationCount: Number(row.translationCount ?? 0),
+      })),
+      pagination: this.paginationOf(Number(total ?? 0), page, size),
+    }
+  }
+
   async list(page = 1, size = 20): Promise<PaginationResult<AiTranslationRow>> {
     page = Math.max(1, page)
     size = Math.min(100, Math.max(1, size))
@@ -205,8 +266,9 @@ export class AiTranslationRepository extends BaseRepository {
   }
 
   async upsert(
-    input: Omit<AiTranslationRow, 'id' | 'createdAt'> & {
+    input: Omit<AiTranslationRow, 'id' | 'refId' | 'createdAt'> & {
       id?: EntityId | string
+      refId: EntityId | string
     },
   ): Promise<AiTranslationRow> {
     const refBig = parseEntityId(input.refId)

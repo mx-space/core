@@ -20,7 +20,11 @@ export class SnippetController {
   @Auth()
   async getList(@Query() query: PagerDto) {
     const { page, size } = query
-    return this.snippetService.repository.list(page, size)
+    const result = await this.snippetService.repository.list(page, size)
+    return {
+      ...result,
+      data: this.snippetService.transformLeanSnippetList(result.data),
+    }
   }
 
   @Post('/import')
@@ -43,12 +47,6 @@ export class SnippetController {
     return await this.snippetService.create(body as any)
   }
 
-  @Get('/:id')
-  @Auth()
-  async getSnippetById(@Param() param: EntityIdDto) {
-    return this.snippetService.getSnippetById(param.id)
-  }
-
   @Get('/group')
   @Auth()
   async getGroup(@Query() query: PagerDto) {
@@ -63,7 +61,14 @@ export class SnippetController {
       throw new BizException(ErrorCodeEnum.InvalidReference)
     }
 
-    return this.snippetService.repository.findAll(reference)
+    const rows = await this.snippetService.repository.findAll(reference)
+    return this.snippetService.transformLeanSnippetList(rows)
+  }
+
+  @Get('/:id')
+  @Auth()
+  async getSnippetById(@Param() param: EntityIdDto) {
+    return this.snippetService.getSnippetById(param.id)
   }
 
   @Post('/aggregate')

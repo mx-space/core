@@ -3,6 +3,7 @@ import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
 import type { RecentlyModel } from '~/models/recently'
 import { autoBind } from '~/utils/auto-bind'
+
 import type { HTTPClient } from '../core'
 
 declare module '../core/client' {
@@ -40,13 +41,11 @@ export class RecentlyController<ResponseWrapper> implements IController {
    * 获取最新一条
    */
   getLatestOne() {
-    return this.proxy.latest.get<RecentlyModel & { comments: number }>()
+    return this.proxy.latest.get<RecentlyModel | null>()
   }
 
   getAll() {
-    return this.proxy.all.get<{
-      data: RecentlyModel[] & { comments: number }
-    }>()
+    return this.proxy.all.get<{ data: RecentlyModel[] }>()
   }
 
   getList({
@@ -58,7 +57,7 @@ export class RecentlyController<ResponseWrapper> implements IController {
     after?: string | undefined
     size?: number | number
   } = {}) {
-    return this.proxy.get<{ data: RecentlyModel[] & { comments: number } }>({
+    return this.proxy.get<{ data: RecentlyModel[] }>({
       params: {
         before,
         after,
@@ -68,7 +67,7 @@ export class RecentlyController<ResponseWrapper> implements IController {
   }
 
   getById(id: string) {
-    return this.proxy(id).get<RecentlyModel & { comments: number }>()
+    return this.proxy(id).get<RecentlyModel>()
   }
 
   /**  表态：点赞，点踩 */

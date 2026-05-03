@@ -204,8 +204,7 @@ export class CategoryRepository extends BaseRepository {
 
   /**
    * Aggregate tag→post-count distribution either across all categories or
-   * scoped to a single one. Replaces the historic Mongo `$unwind`/`$group`
-   * pipeline.
+   * scoped to a single one.
    */
   async sumPostTags(
     options: { categoryId?: EntityId | string } = {},
