@@ -1,5 +1,7 @@
 import {
+  resolveSnowflakeWorkerId,
   SNOWFLAKE_EPOCH_MS,
+  SNOWFLAKE_WORKER_OFFSET_ENV,
   SnowflakeGenerator,
 } from '~/shared/id/snowflake.service'
 
@@ -123,5 +125,33 @@ describe('SnowflakeGenerator', () => {
     const env = buildGenerator({ workerId: 1023 })
     const decoded = env.generator.decode(env.generator.nextBigInt())
     expect(decoded.workerId).toBe(1023n)
+  })
+
+  it('derives an effective worker ID from cluster and PM2 offsets', () => {
+    expect(
+      resolveSnowflakeWorkerId(10, {
+        [SNOWFLAKE_WORKER_OFFSET_ENV]: '2',
+      }),
+    ).toBe(12)
+    expect(resolveSnowflakeWorkerId(10, { NODE_APP_INSTANCE: '3' })).toBe(13)
+    expect(
+      resolveSnowflakeWorkerId(10, {
+        [SNOWFLAKE_WORKER_OFFSET_ENV]: '4',
+        NODE_APP_INSTANCE: '3',
+      }),
+    ).toBe(14)
+  })
+
+  it('rejects effective worker IDs outside the Snowflake worker range', () => {
+    expect(() =>
+      resolveSnowflakeWorkerId(1023, {
+        [SNOWFLAKE_WORKER_OFFSET_ENV]: '1',
+      }),
+    ).toThrow(/out of range/)
+    expect(() =>
+      resolveSnowflakeWorkerId(1, {
+        [SNOWFLAKE_WORKER_OFFSET_ENV]: 'bad',
+      }),
+    ).toThrow(/non-negative integer/)
   })
 })

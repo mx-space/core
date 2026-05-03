@@ -12,8 +12,11 @@ const TIMESTAMP_LEFT_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS
 const WORKER_ID_LEFT_SHIFT = SEQUENCE_BITS
 const TIMESTAMP_BITS = 41n
 const TIMESTAMP_MAX = (1n << TIMESTAMP_BITS) - 1n
+const WORKER_ID_MAX_NUMBER = Number(WORKER_ID_MAX)
 
 export const SNOWFLAKE_EPOCH_MS = 1746144000000n
+export const SNOWFLAKE_WORKER_OFFSET_ENV = 'SNOWFLAKE_WORKER_OFFSET'
+const PM2_INSTANCE_ID_ENV = 'NODE_APP_INSTANCE'
 
 export interface SnowflakeOptions {
   workerId: number
@@ -27,6 +30,49 @@ interface DecodedSnowflake {
   timestampMs: bigint
   workerId: bigint
   sequence: bigint
+}
+
+const parseWorkerIdPart = (value: number, label: string): number => {
+  if (!Number.isInteger(value) || value < 0 || value > WORKER_ID_MAX_NUMBER) {
+    throw new Error(
+      `Snowflake worker ${label} must be an integer in [0, ${WORKER_ID_MAX_NUMBER}], got ${value}`,
+    )
+  }
+  return value
+}
+
+const parseWorkerOffset = (raw: string | undefined, source: string): number => {
+  if (raw === undefined || raw === '') return 0
+  const value = Number(raw)
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(
+      `Snowflake worker offset from ${source} must be a non-negative integer, got "${raw}"`,
+    )
+  }
+  return value
+}
+
+export function resolveSnowflakeWorkerId(
+  baseWorkerId: number,
+  env: Record<string, string | undefined> = process.env,
+): number {
+  const base = parseWorkerIdPart(baseWorkerId, 'base id')
+  const explicitOffset = env[SNOWFLAKE_WORKER_OFFSET_ENV]
+  const offsetSource =
+    explicitOffset === undefined
+      ? PM2_INSTANCE_ID_ENV
+      : SNOWFLAKE_WORKER_OFFSET_ENV
+  const offset = parseWorkerOffset(
+    explicitOffset ?? env[PM2_INSTANCE_ID_ENV],
+    offsetSource,
+  )
+  const workerId = base + offset
+  if (workerId > WORKER_ID_MAX_NUMBER) {
+    throw new Error(
+      `Snowflake worker id ${workerId} out of range [0, ${WORKER_ID_MAX_NUMBER}]; base ${base} + ${offsetSource} ${offset}`,
+    )
+  }
+  return workerId
 }
 
 /**
@@ -141,12 +187,13 @@ export class SnowflakeService extends SnowflakeGenerator {
   private readonly nestLogger = new Logger(SnowflakeService.name)
 
   constructor() {
+    const workerId = resolveSnowflakeWorkerId(SNOWFLAKE.workerId)
     super({
-      workerId: SNOWFLAKE.workerId,
+      workerId,
       epochMs: BigInt(SNOWFLAKE.epochMs),
     })
     this.nestLogger.log(
-      `Snowflake worker ${SNOWFLAKE.workerId} ready (epoch ${SNOWFLAKE.epochMs})`,
+      `Snowflake worker ${workerId} ready (epoch ${SNOWFLAKE.epochMs})`,
     )
   }
 }

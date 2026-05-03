@@ -158,6 +158,45 @@ const dateOrNull = (value: unknown): Date | null => {
   return null
 }
 
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+export const normalizeLegacyJsonbObject = (
+  ctx: MigrationContext,
+  collection: string,
+  mongoId: unknown,
+  field: string,
+  value: unknown,
+): Record<string, unknown> | null => {
+  if (value === undefined || value === null || value === '') return null
+
+  let normalized = value
+  if (typeof value === 'string') {
+    try {
+      normalized = JSON.parse(value)
+    } catch {
+      ctx.reports.warnings.push({
+        collection,
+        mongoId: String(mongoId),
+        reason: `${field} contains invalid JSON string`,
+      })
+      return null
+    }
+  }
+
+  if (normalized === null) return null
+  if (isPlainObject(normalized)) return normalized
+
+  ctx.reports.warnings.push({
+    collection,
+    mongoId: String(mongoId),
+    reason: `${field} must be a JSON object; received ${
+      Array.isArray(normalized) ? 'array' : typeof normalized
+    }`,
+  })
+  return null
+}
+
 export const stepCategories: MigrationStep = {
   name: 'categories',
   async allocate(ctx) {
@@ -509,7 +548,7 @@ export const stepPosts: MigrationStep = {
           contentFormat: d.contentFormat ?? 'markdown',
           summary: d.summary ?? null,
           images: d.images ?? null,
-          meta: d.meta ?? null,
+          meta: normalizeLegacyJsonbObject(ctx, 'posts', d._id, 'meta', d.meta),
           tags: d.tags ?? [],
           modifiedAt: dateOrNull(d.modified),
           categoryId,
@@ -546,7 +585,7 @@ export const stepNotes: MigrationStep = {
       content: d.content ?? null,
       contentFormat: d.contentFormat ?? 'markdown',
       images: d.images ?? null,
-      meta: d.meta ?? null,
+      meta: normalizeLegacyJsonbObject(ctx, 'notes', d._id, 'meta', d.meta),
       isPublished: d.isPublished ?? true,
       password: d.password ?? null,
       publicAt: dateOrNull(d.publicAt),
@@ -583,7 +622,7 @@ export const stepPages: MigrationStep = {
       content: d.content ?? null,
       contentFormat: d.contentFormat ?? 'markdown',
       images: d.images ?? null,
-      meta: d.meta ?? null,
+      meta: normalizeLegacyJsonbObject(ctx, 'pages', d._id, 'meta', d.meta),
       order: d.order ?? 1,
       createdAt: dateOrNull(d.created) ?? new Date(),
       modifiedAt: dateOrNull(d.modified),
@@ -722,7 +761,7 @@ export const stepDrafts: MigrationStep = {
         content: d.content ?? null,
         contentFormat: d.contentFormat ?? 'markdown',
         images: d.images ?? null,
-        meta: d.meta ?? null,
+        meta: normalizeLegacyJsonbObject(ctx, 'drafts', d._id, 'meta', d.meta),
         typeSpecificData: d.typeSpecificData ?? null,
         history: d.history ?? [],
         version: d.version ?? 1,
