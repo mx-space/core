@@ -103,7 +103,7 @@ export class RenderEjsController {
       )}，由 marked.js 解析生成，用时 ${(performance.now() - now).toFixed(
         2,
       )}ms</div>
-      <div>作者：${username}，撰写于${dayjs(document.created).format(
+      <div>作者：${username}，撰写于${dayjs(document.createdAt).format(
         'llll',
       )}</div>
         <div>原文地址：<a href="${url}">${decodeURIComponent(

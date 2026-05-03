@@ -11,6 +11,7 @@ import {
   sql,
 } from 'drizzle-orm'
 
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { comments } from '~/database/schema'
 import {
@@ -22,15 +23,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export type CommentRefType =
-  | 'Post'
-  | 'Note'
-  | 'Page'
-  | 'Recently'
-  | 'posts'
-  | 'notes'
-  | 'pages'
-  | 'recentlies'
+export type CommentRefType = `${CollectionRefTypes}`
 
 export interface CommentRow {
   id: EntityId
@@ -92,19 +85,8 @@ export interface CommentFindFilter {
   search?: string
 }
 
-const COMMENT_REF_TYPE_ALIASES: Record<CommentRefType, string> = {
-  Post: 'posts',
-  Note: 'notes',
-  Page: 'pages',
-  Recently: 'recentlies',
-  posts: 'posts',
-  notes: 'notes',
-  pages: 'pages',
-  recentlies: 'recentlies',
-}
-
-const normalizeCommentRefType = (refType: CommentRefType): string =>
-  COMMENT_REF_TYPE_ALIASES[refType]
+const normalizeCommentRefType = (refType: CommentRefType): CommentRefType =>
+  refType
 
 const mapBase = (row: typeof comments.$inferSelect): CommentRow => ({
   id: toEntityId(row.id) as EntityId,

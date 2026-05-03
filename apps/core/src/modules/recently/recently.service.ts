@@ -14,7 +14,7 @@ import { scheduleManager } from '~/utils/schedule.util'
 
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
-import { RecentlyRepository, type RecentlyRow } from './recently.repository'
+import { RecentlyRepository } from './recently.repository'
 import { RecentlyAttitudeEnum } from './recently.schema'
 import { RecentlyModel } from './recently.types'
 
@@ -34,28 +34,12 @@ export class RecentlyService {
     return this.recentlyRepository
   }
 
-  toLegacy(row: RecentlyRow | null): any {
-    if (!row) return null
-    return {
-      ...row,
-      _id: row.id,
-      created: row.createdAt,
-      modified: row.modifiedAt,
-      ref: row.refId,
-      comments: row.commentsIndex,
-    }
-  }
-
-  toLegacyMany(rows: RecentlyRow[]) {
-    return rows.map((row) => this.toLegacy(row))
-  }
-
   async findById(id: string) {
-    return this.toLegacy(await this.recentlyRepository.findById(id))
+    return this.recentlyRepository.findById(id)
   }
 
   async findRecent(size: number) {
-    return this.toLegacyMany(await this.recentlyRepository.findRecent(size))
+    return this.recentlyRepository.findRecent(size)
   }
 
   async count() {
@@ -64,7 +48,7 @@ export class RecentlyService {
 
   async getAll() {
     const result = await this.recentlyRepository.list(1, 50)
-    return this.toLegacyMany(result.data)
+    return result.data
   }
 
   async getOne(id: string) {
@@ -93,11 +77,11 @@ export class RecentlyService {
   async getLatestOne() {
     const [latest] = await this.findRecent(1)
     if (!latest) return null
-    const commentCount = await this.commentService.countByRef(
+    const commentsIndex = await this.commentService.countByRef(
       CollectionRefTypes.Recently,
       latest.id,
     )
-    return { ...latest, comments: commentCount }
+    return { ...latest, commentsIndex }
   }
 
   async create(model: RecentlyModel) {
@@ -111,15 +95,13 @@ export class RecentlyService {
       refType = existModel.type
     }
 
-    const withRef = this.toLegacy(
-      await this.recentlyRepository.create({
-        content: model.content,
-        type: (model as any).type,
-        metadata: (model as any).metadata,
-        refId,
-        refType: refType as any,
-      }),
-    )
+    const withRef = await this.recentlyRepository.create({
+      content: model.content,
+      type: (model as any).type,
+      metadata: (model as any).metadata,
+      refId,
+      refType: refType as any,
+    })
     scheduleManager.schedule(async () => {
       await this.eventManager.emit(BusinessEvents.RECENTLY_CREATE, withRef, {
         scope: EventScope.TO_SYSTEM_VISITOR,
@@ -145,14 +127,12 @@ export class RecentlyService {
   }
 
   async update(id: string, model: Partial<RecentlyModel>) {
-    const withRef = this.toLegacy(
-      await this.recentlyRepository.update(id, {
-        content: model.content,
-        type: model.type,
-        metadata: model.metadata,
-        modifiedAt: new Date(),
-      }),
-    )
+    const withRef = await this.recentlyRepository.update(id, {
+      content: model.content,
+      type: model.type,
+      metadata: model.metadata,
+      modifiedAt: new Date(),
+    })
     if (!withRef) return null
     scheduleManager.schedule(async () => {
       await this.eventManager.emit(BusinessEvents.RECENTLY_UPDATE, withRef, {

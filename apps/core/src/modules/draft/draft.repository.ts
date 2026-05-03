@@ -12,7 +12,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-export type DraftRefType = 'posts' | 'notes' | 'pages'
+export type DraftRefType = 'post' | 'note' | 'page'
 
 export interface DraftHistoryEntry {
   version: number

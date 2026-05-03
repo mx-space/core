@@ -188,7 +188,7 @@ export class CommentAnchorService {
 
     const refDocId =
       (refDoc.id as string | undefined) ||
-      (refDoc._id ? String(refDoc._id) : undefined)
+      (refDoc.id ? String(refDoc.id) : undefined)
 
     let lexicalContent: string | undefined
 

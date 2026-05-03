@@ -45,10 +45,8 @@ export class DraftController {
       this.draftService.list(page, size, filter),
       this.draftService.count(filter),
     ])
-    const data = result.data.map((item) => this.draftService.toLegacy(item))
-
     // Transform typeSpecificData for each draft
-    const transformedData = data.map((d) => {
+    const transformedData = result.data.map((d) => {
       if (d.typeSpecificData && typeof d.typeSpecificData === 'string') {
         try {
           ;(d as any).typeSpecificData = JSON.parse(d.typeSpecificData)

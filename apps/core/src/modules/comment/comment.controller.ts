@@ -28,7 +28,6 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
 import { ConfigsService } from '../configs/configs.service'
 import { ReaderService } from '../reader/reader.service'
@@ -81,7 +80,7 @@ export class CommentController {
     const comment = await this.commentService.createComment(id, model, ref)
 
     this.lifecycleService.afterCreateComment(
-      String((comment as any).id || (comment as any)._id),
+      String((comment as any).id || (comment as any).id),
       ipLocation,
     )
 
@@ -130,14 +129,12 @@ export class CommentController {
       state,
     })
     const readers = await this.readerService.findReaderInIds(
-      comments.docs.map((doc) => doc.readerId).filter(Boolean) as string[],
+      comments.data.map((doc) => doc.readerId).filter(Boolean) as string[],
     )
 
-    const res = transformDataToPaginate(comments as any)
-    Object.assign(res, {
+    return Object.assign({}, comments, {
       readers: keyBy(readers, 'id'),
     })
-    return res
   }
 
   @Get('/ref/:id')
@@ -170,11 +167,10 @@ export class CommentController {
       around,
     })
 
-    const result = transformDataToPaginate(comments as any)
-    const readerIds = this.commentService.collectThreadReaderIds(comments.docs)
+    const readerIds = this.commentService.collectThreadReaderIds(comments.data)
     const readers = await this.readerService.findReaderInIds(readerIds)
 
-    Object.assign(result, {
+    const result = Object.assign({}, comments, {
       readers: keyBy(readers, 'id'),
     })
 
@@ -395,7 +391,7 @@ export class CommentController {
         filter.state = currentState
       }
       const matched = await this.commentService.findByFilter(filter)
-      affected = matched.map((c) => String(c._id ?? c.id))
+      affected = matched.map((c) => String(c.id ?? c.id))
       await this.commentService.updateStateByFilter(filter, state)
     } else if (ids?.length) {
       affected = ids.map((id) => id.toString())
@@ -423,7 +419,7 @@ export class CommentController {
       await Promise.all(
         comments.map((comment) =>
           this.commentService.softDeleteComment(
-            String(comment._id ?? comment.id),
+            String(comment.id ?? comment.id),
           ),
         ),
       )

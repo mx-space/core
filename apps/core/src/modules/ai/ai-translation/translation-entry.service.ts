@@ -81,7 +81,7 @@ export class TranslationEntryService {
     return {
       ...row,
       _id: row.id,
-      created: row.createdAt,
+      createdAt: row.createdAt,
     } as unknown as TranslationEntryModel
   }
 
@@ -310,7 +310,7 @@ export class TranslationEntryService {
         values.push({
           keyPath: 'category.name',
           keyType: 'entity',
-          lookupKey: cat.id.toString(),
+          lookupKey: cat.id,
           sourceText: cat.name,
         })
       }
@@ -322,7 +322,7 @@ export class TranslationEntryService {
         values.push({
           keyPath: 'topic.name',
           keyType: 'entity',
-          lookupKey: topic.id.toString(),
+          lookupKey: topic.id,
           sourceText: topic.name,
         })
       }
@@ -330,7 +330,7 @@ export class TranslationEntryService {
         values.push({
           keyPath: 'topic.introduce',
           keyType: 'entity',
-          lookupKey: topic.id.toString(),
+          lookupKey: topic.id,
           sourceText: topic.introduce,
         })
       }
@@ -338,7 +338,7 @@ export class TranslationEntryService {
         values.push({
           keyPath: 'topic.description',
           keyType: 'entity',
-          lookupKey: topic.id.toString(),
+          lookupKey: topic.id,
           sourceText: topic.description,
         })
       }

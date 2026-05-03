@@ -153,8 +153,8 @@ export class AiTranslationEventHandlerService {
   async handleCategoryCreate(event: any) {
     if (!(await this.isAutoEntryEnabled())) return
     const doc = event
-    if (!doc?._id || !doc?.name) return
-    const id = doc._id.toString()
+    if (!doc?.id || !doc?.name) return
+    const id = doc.id
     this.logger.log(`Auto-generating translation entry for category: ${id}`)
     await this.translationEntryService
       .generateForValues([
@@ -173,8 +173,8 @@ export class AiTranslationEventHandlerService {
   @OnEvent(BusinessEvents.CATEGORY_UPDATE)
   async handleCategoryUpdate(event: any) {
     const doc = event
-    if (!doc?._id || !doc?.name) return
-    const id = doc._id.toString()
+    if (!doc?.id || !doc?.name) return
+    const id = doc.id
     await this.translationEntryService.handleEntityUpdate(
       'category.name',
       id,
@@ -200,7 +200,7 @@ export class AiTranslationEventHandlerService {
 
   @OnEvent(BusinessEvents.CATEGORY_DELETE)
   async handleCategoryDelete(event: any) {
-    const id = event?.id?.toString?.() ?? event?._id?.toString?.()
+    const id = event?.id?.toString?.()
     if (!id) return
     await this.translationEntryService.deleteByKeyPath('category.name', id)
   }
@@ -211,8 +211,8 @@ export class AiTranslationEventHandlerService {
   async handleTopicCreate(event: any) {
     if (!(await this.isAutoEntryEnabled())) return
     const doc = event
-    if (!doc?._id) return
-    const id = doc._id.toString()
+    if (!doc?.id) return
+    const id = doc.id
     const values: Parameters<TranslationEntryService['generateForValues']>[0] =
       []
     if (doc.name) {
@@ -251,8 +251,8 @@ export class AiTranslationEventHandlerService {
   @OnEvent(BusinessEvents.TOPIC_UPDATE)
   async handleTopicUpdate(event: any) {
     const doc = event
-    if (!doc?._id) return
-    const id = doc._id.toString()
+    if (!doc?.id) return
+    const id = doc.id
     if (doc.name != null) {
       await this.translationEntryService.handleEntityUpdate(
         'topic.name',
@@ -312,7 +312,7 @@ export class AiTranslationEventHandlerService {
 
   @OnEvent(BusinessEvents.TOPIC_DELETE)
   async handleTopicDelete(event: any) {
-    const id = event?.id?.toString?.() ?? event?._id?.toString?.()
+    const id = event?.id?.toString?.()
     if (!id) return
     await this.translationEntryService.deleteByKeyPath('topic.name', id)
     await this.translationEntryService.deleteByKeyPath('topic.introduce', id)
@@ -324,7 +324,7 @@ export class AiTranslationEventHandlerService {
   @OnEvent(BusinessEvents.NOTE_CREATE)
   async handleNoteCreateEntry(event: any) {
     if (!(await this.isAutoEntryEnabled())) return
-    const id = event?.id?.toString?.() ?? event?._id?.toString?.()
+    const id = event?.id?.toString?.()
     if (!id) return
     const note = await this.databaseService.findGlobalById(id)
     if (!note) return
@@ -340,7 +340,7 @@ export class AiTranslationEventHandlerService {
   @OnEvent(BusinessEvents.NOTE_UPDATE)
   async handleNoteUpdateEntry(event: any) {
     if (!(await this.isAutoEntryEnabled())) return
-    const id = event?.id?.toString?.() ?? event?._id?.toString?.()
+    const id = event?.id?.toString?.()
     if (!id) return
     const note = await this.databaseService.findGlobalById(id)
     if (!note) return

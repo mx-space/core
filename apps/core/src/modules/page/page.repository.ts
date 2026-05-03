@@ -17,7 +17,7 @@ export interface PageRow {
   title: string
   slug: string
   subtitle: string | null
-  text: string | null
+  text: string
   content: string | null
   contentFormat: string
   images: unknown[] | null
@@ -46,7 +46,7 @@ const mapRow = (row: typeof pages.$inferSelect): PageRow => ({
   title: row.title,
   slug: row.slug,
   subtitle: row.subtitle,
-  text: row.text,
+  text: row.text ?? '',
   content: row.content,
   contentFormat: row.contentFormat,
   images: row.images,

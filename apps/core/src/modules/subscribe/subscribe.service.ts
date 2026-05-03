@@ -143,7 +143,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
                 subscriber: { subscribe, email },
                 post: {
                   text: noteOrPost.text,
-                  created: new Date(noteOrPost.created!).toISOString(),
+                  created: new Date(noteOrPost.createdAt!).toISOString(),
                   id: noteOrPost.id!,
                   title: noteOrPost.title,
                 },

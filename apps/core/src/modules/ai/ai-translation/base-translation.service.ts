@@ -27,8 +27,11 @@ export abstract class BaseTranslationService {
     }
   }
 
-  getMetaLang(document: { meta?: { lang?: string } }): string | undefined {
-    return document.meta?.lang
+  getMetaLang(document: {
+    meta?: Record<string, unknown> | null
+  }): string | undefined {
+    const lang = document.meta?.lang
+    return typeof lang === 'string' ? lang : undefined
   }
 
   computeContentHash(document: ArticleContent, sourceLang: string): string {

@@ -65,25 +65,25 @@ export class PageController {
 
     const result = await this.pageService.listPaginated(page, size)
 
-    if (!lang || !result.docs.length) {
+    if (!lang || !result.data.length) {
       return result
     }
 
     const translationInputs: ArticleTranslationInput[] = []
-    for (const doc of result.docs) {
+    for (const doc of result.data) {
       if (doc.meta && typeof doc.meta === 'string') {
         doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
       }
       translationInputs.push({
-        id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
+        id: String(doc.id),
         title: doc.title,
         text: doc.text,
         subtitle: doc.subtitle,
         meta: doc.meta as { lang?: string } | undefined,
         contentFormat: doc.contentFormat,
         content: doc.content,
-        modified: doc.modified,
-        created: doc.created,
+        modifiedAt: doc.modifiedAt,
+        createdAt: doc.createdAt,
       })
     }
 
@@ -94,15 +94,15 @@ export class PageController {
           targetLang: lang,
         })
 
-      result.docs = result.docs.map((doc) => {
-        const docId = doc._id?.toString?.() ?? doc.id ?? String(doc._id)
+      result.data = result.data.map((doc) => {
+        const docId = String(doc.id)
         const translation = translationResults.get(docId)
         if (!translation?.isTranslated) {
           return doc
         }
         doc.title = translation.title
         doc.text = translation.text
-        doc.subtitle = translation.subtitle
+        doc.subtitle = translation.subtitle ?? null
         ;(doc as { isTranslated?: boolean }).isTranslated =
           translation.isTranslated
         ;(doc as { translationMeta?: unknown }).translationMeta =
@@ -123,7 +123,7 @@ export class PageController {
         'created',
       ].filter((f) => !select.includes(f))
       if (stripFields.length) {
-        for (const doc of result.docs) {
+        for (const doc of result.data) {
           for (const field of stripFields) {
             delete (doc as any)[field]
           }
@@ -160,7 +160,7 @@ export class PageController {
     }
 
     const translationResult = await this.translationService.translateArticle({
-      articleId: page._id?.toString?.() ?? page.id ?? String(page._id),
+      articleId: String(page.id),
       targetLang: lang,
       originalData: {
         title: page.title,

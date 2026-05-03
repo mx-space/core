@@ -73,46 +73,6 @@ export class NoteService {
     }
   }
 
-  toLegacy(row: NoteRow | null): any {
-    if (!row) return null
-    const plain: any = {
-      ...row,
-      _id: row.id,
-      created: row.createdAt,
-      modified: row.modifiedAt,
-      updated: row.modifiedAt,
-      secret: row.publicAt,
-      password: row.hasPassword ? '*' : null,
-      count: { read: row.readCount, like: row.likeCount },
-      commentsIndex: 0,
-      allowComment: true,
-      topic: row.topic
-        ? {
-            ...row.topic,
-            _id: row.topic.id,
-          }
-        : row.topic,
-    }
-    plain.toObject = () => ({ ...plain, toObject: undefined })
-    return plain
-  }
-
-  toLegacyMany(rows: NoteRow[]) {
-    return rows.map((row) => this.toLegacy(row))
-  }
-
-  toPaginate(result: Awaited<ReturnType<NoteRepository['listVisible']>>) {
-    return {
-      docs: this.toLegacyMany(result.data),
-      totalDocs: result.pagination.total,
-      page: result.pagination.currentPage,
-      totalPages: result.pagination.totalPage,
-      limit: result.pagination.size,
-      hasNextPage: result.pagination.hasNextPage,
-      hasPrevPage: result.pagination.hasPrevPage,
-    }
-  }
-
   private normalizeMeta(meta: unknown) {
     if (meta === undefined) return undefined
     if (meta === null) return null
@@ -120,9 +80,9 @@ export class NoteService {
     return meta as Record<string, unknown>
   }
 
-  public checkNoteIsSecret(note: NoteModel | any) {
-    if (!note.publicAt && !note.secret) return false
-    return dayjs(note.publicAt ?? note.secret).isAfter(new Date())
+  public checkNoteIsSecret(note: { publicAt?: Date | null }) {
+    if (!note.publicAt) return false
+    return dayjs(note.publicAt).isAfter(new Date())
   }
 
   private normalizeSlug(slug?: string | null) {
@@ -148,14 +108,18 @@ export class NoteService {
     return value >= start && value < end
   }
 
-  public buildSeoPath(note: Pick<NoteModel, 'created' | 'slug'>) {
-    const normalizedSlug = this.normalizeSlug(note.slug)
-    if (!normalizedSlug || !note.created) return null
-    const date = new Date(note.created)
+  public buildSeoPath(note: { createdAt?: Date | null; slug?: string | null }) {
+    const normalizedSlug = this.normalizeSlug(note.slug ?? undefined)
+    if (!normalizedSlug || !note.createdAt) return null
+    const date = new Date(note.createdAt)
     return `/notes/${date.getUTCFullYear()}/${date.getUTCMonth() + 1}/${date.getUTCDate()}/${normalizedSlug}`
   }
 
-  public buildPublicPath(note: Pick<NoteModel, 'created' | 'slug' | 'nid'>) {
+  public buildPublicPath(note: {
+    createdAt?: Date | null
+    slug?: string | null
+    nid: number
+  }) {
     return this.buildSeoPath(note) ?? `/notes/${note.nid}`
   }
 
@@ -168,8 +132,8 @@ export class NoteService {
   }
 
   private async trackSeoPathChanges(
-    oldDocument: NoteModel,
-    nextState: Pick<NoteModel, 'created' | 'slug'>,
+    oldDocument: { createdAt?: Date | null; slug?: string | null },
+    nextState: { createdAt?: Date | null; slug?: string | null },
     targetId: string,
   ) {
     const oldPath = this.buildSeoPath(oldDocument)
@@ -183,25 +147,23 @@ export class NoteService {
   }
 
   async findById(id: string) {
-    return this.toLegacy(await this.noteRepository.findById(id))
+    return this.noteRepository.findById(id)
   }
 
   async findByNid(nid: number) {
-    return this.toLegacy(await this.noteRepository.findByNid(nid))
+    return this.noteRepository.findByNid(nid)
   }
 
   async findBySlug(slug: string) {
-    return this.toLegacy(await this.noteRepository.findBySlug(slug))
+    return this.noteRepository.findBySlug(slug)
   }
 
   async findManyByIds(ids: string[]) {
-    return this.toLegacyMany(await this.noteRepository.findManyByIds(ids))
+    return this.noteRepository.findManyByIds(ids)
   }
 
   async findRecent(size: number, options: { visibleOnly?: boolean } = {}) {
-    return this.toLegacyMany(
-      await this.noteRepository.findRecent(size, options),
-    )
+    return this.noteRepository.findRecent(size, options)
   }
 
   async listPaginated(
@@ -209,11 +171,9 @@ export class NoteService {
     size: number,
     options: { visibleOnly?: boolean } = {},
   ) {
-    return this.toPaginate(
-      options.visibleOnly
-        ? await this.noteRepository.listVisible(page, size)
-        : await this.noteRepository.listAll(page, size),
-    )
+    return options.visibleOnly
+      ? this.noteRepository.listVisible(page, size)
+      : this.noteRepository.listAll(page, size)
   }
 
   async count() {
@@ -229,9 +189,7 @@ export class NoteService {
     pivot: { nid: number },
     options: { visibleOnly?: boolean } = {},
   ) {
-    return this.toLegacy(
-      await this.noteRepository.findAdjacent(direction, pivot, options),
-    )
+    return this.noteRepository.findAdjacent(direction, pivot, options)
   }
 
   async findByCreatedWindow(
@@ -240,13 +198,11 @@ export class NoteService {
     limit: number,
     options: { visibleOnly?: boolean } = {},
   ) {
-    return this.toLegacyMany(
-      await this.noteRepository.findByCreatedWindow(
-        pivotDate,
-        direction,
-        limit,
-        options,
-      ),
+    return this.noteRepository.findByCreatedWindow(
+      pivotDate,
+      direction,
+      limit,
+      options,
     )
   }
 
@@ -266,7 +222,7 @@ export class NoteService {
       end,
       normalizedSlug,
     )
-    if (direct) return this.toLegacy(direct)
+    if (direct) return direct
 
     const tracked = await this.slugTrackerService.findTrackerBySlug(
       `/notes/${year}/${month}/${day}/${normalizedSlug}`,
@@ -276,7 +232,7 @@ export class NoteService {
 
     const trackedDocument = await this.findById(tracked.targetId)
     if (!trackedDocument) return null
-    if (!this.isDateWithinRange(trackedDocument.created!, year, month, day)) {
+    if (!this.isDateWithinRange(trackedDocument.createdAt, year, month, day)) {
       return null
     }
     return trackedDocument
@@ -296,16 +252,22 @@ export class NoteService {
       visibleOnly: condition.isPublished === true,
     })
     if (!latest) return null
-    const [next] = await this.findByCreatedWindow(latest.created, 'before', 1, {
-      visibleOnly: condition.isPublished === true,
-    })
+    const [next] = await this.findByCreatedWindow(
+      latest.createdAt,
+      'before',
+      1,
+      {
+        visibleOnly: condition.isPublished === true,
+      },
+    )
     return { latest, next }
   }
 
-  checkPasswordToAccess<T extends NoteModel>(doc: T, password?: string) {
-    if (!(doc as any).password || (doc as any).password === '*') return true
+  async checkPasswordToAccess(noteId: string, password?: string) {
+    const stored = await this.noteRepository.getPassword(noteId)
+    if (!stored) return true
     if (!password) return false
-    return Object.is(password, (doc as any).password)
+    return Object.is(password, stored)
   }
 
   public async create(document: NoteModel & { draftId?: string }) {
@@ -315,35 +277,31 @@ export class NoteService {
     await this.ensureSlugAvailable(normalizedSlug)
     if (normalizedSlug) document.slug = normalizedSlug
 
-    const note = this.toLegacy(
-      await this.noteRepository.create({
-        nid: document.nid ?? (await this.noteRepository.nextNid()),
-        title: document.title,
-        slug: normalizedSlug,
-        text: document.text,
-        content: document.content,
-        contentFormat: document.contentFormat ?? ContentFormat.Markdown,
-        images: document.images as unknown[],
-        meta: this.normalizeMeta(document.meta) as Record<
-          string,
-          unknown
-        > | null,
-        isPublished: document.isPublished,
-        password: document.password,
-        publicAt: document.publicAt,
-        mood: document.mood,
-        weather: document.weather,
-        bookmark: document.bookmark,
-        coordinates: this.normalizeCoordinates(document.coordinates),
-        location: document.location,
-        topicId: document.topicId as string | undefined,
-      }),
-    )
+    let note = await this.noteRepository.create({
+      nid: document.nid ?? (await this.noteRepository.nextNid()),
+      title: document.title,
+      slug: normalizedSlug,
+      text: document.text,
+      content: document.content,
+      contentFormat: document.contentFormat ?? ContentFormat.Markdown,
+      images: document.images as unknown[],
+      meta: this.normalizeMeta(document.meta) as Record<string, unknown> | null,
+      isPublished: document.isPublished,
+      password: document.password,
+      publicAt: document.publicAt,
+      mood: document.mood,
+      weather: document.weather,
+      bookmark: document.bookmark,
+      coordinates: this.normalizeCoordinates(document.coordinates),
+      location: document.location,
+      topicId: document.topicId as string | undefined,
+    })
 
-    if (document.created) {
-      await this.noteRepository.update(note.id, {
-        createdAt: getLessThanNow(document.created),
+    if (document.createdAt) {
+      const refreshed = await this.noteRepository.update(note.id, {
+        createdAt: getLessThanNow(document.createdAt),
       })
+      if (refreshed) note = refreshed
     }
 
     if (draftId) {
@@ -416,40 +374,37 @@ export class NoteService {
     )
 
     const patch = omit(data, [...NOTE_PROTECTED_KEYS, 'slug'] as const)
-    const updated = this.toLegacy(
-      await this.noteRepository.update(id, {
-        title: patch.title,
-        slug: hasSlugInput ? normalizedSlug : undefined,
-        text: patch.text,
-        content: patch.content,
-        contentFormat: patch.contentFormat,
-        images: patch.images as unknown[] | undefined,
-        meta:
-          patch.meta !== undefined
-            ? (this.normalizeMeta(patch.meta) as Record<string, unknown> | null)
-            : undefined,
-        isPublished: patch.isPublished,
-        password: patch.password,
-        publicAt: patch.publicAt,
-        mood: patch.mood,
-        weather: patch.weather,
-        bookmark: patch.bookmark,
-        coordinates: this.normalizeCoordinates(patch.coordinates),
-        location: patch.location,
-        topicId: patch.topicId as string | undefined,
-        createdAt: data.created ? getLessThanNow(data.created) : undefined,
-        modifiedAt:
-          hasContentChanged || hasFieldChanged ? new Date() : undefined,
-      }),
-    )
+    const updated = await this.noteRepository.update(id, {
+      title: patch.title,
+      slug: hasSlugInput ? normalizedSlug : undefined,
+      text: patch.text,
+      content: patch.content,
+      contentFormat: patch.contentFormat,
+      images: patch.images as unknown[] | undefined,
+      meta:
+        patch.meta !== undefined
+          ? (this.normalizeMeta(patch.meta) as Record<string, unknown> | null)
+          : undefined,
+      isPublished: patch.isPublished,
+      password: patch.password,
+      publicAt: patch.publicAt,
+      mood: patch.mood,
+      weather: patch.weather,
+      bookmark: patch.bookmark,
+      coordinates: this.normalizeCoordinates(patch.coordinates),
+      location: patch.location,
+      topicId: patch.topicId as string | undefined,
+      createdAt: data.createdAt ? getLessThanNow(data.createdAt) : undefined,
+      modifiedAt: hasContentChanged || hasFieldChanged ? new Date() : undefined,
+    })
     if (!updated) throw new NoContentCanBeModifiedException()
 
     await this.trackSeoPathChanges(
-      oldDoc as NoteModel,
+      oldDoc,
       {
-        created: (data.created as Date | undefined) ?? oldDoc.created,
+        createdAt: data.createdAt ?? oldDoc.createdAt,
         slug: hasSlugInput ? normalizedSlug : oldDoc.slug,
-      } as Pick<NoteModel, 'created' | 'slug'>,
+      },
       id,
     )
 
@@ -481,7 +436,7 @@ export class NoteService {
   }
 
   private broadcastNoteUpdateEvent = debounce(
-    async (updated: NoteModel) => {
+    async (updated: NoteRow) => {
       if (!updated) return
       this.eventManager.emit(
         BusinessEvents.NOTE_UPDATE,
@@ -528,7 +483,7 @@ export class NoteService {
   async findOneByIdOrNid(unique: any) {
     if (!/^\d{15,}$/.test(String(unique))) {
       const byNid = await this.noteRepository.findByNid(Number(unique))
-      if (byNid) return this.toLegacy(byNid)
+      if (byNid) return byNid
     }
     return this.findById(String(unique))
   }
@@ -539,11 +494,9 @@ export class NoteService {
     condition?: { isPublished?: boolean },
   ) {
     const { page = 1, limit = 10 } = pagination
-    return this.toPaginate(
-      await this.noteRepository.listByTopicId(topicId, page, limit, {
-        visibleOnly: condition?.isPublished === true,
-      }),
-    )
+    return this.noteRepository.listByTopicId(topicId, page, limit, {
+      visibleOnly: condition?.isPublished === true,
+    })
   }
 
   async getTopicRecentUpdate(topicId: string, isAuthenticated: boolean) {

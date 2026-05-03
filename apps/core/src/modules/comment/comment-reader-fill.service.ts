@@ -60,7 +60,7 @@ export class CommentReaderFillService {
       : []
     const readerMap = new Map<string, any>()
     readers.forEach((reader: any) => {
-      const id = reader.id || reader._id?.toString?.()
+      const id = reader.id || reader.id?.toString?.()
       if (id) {
         readerMap.set(id, reader)
       }

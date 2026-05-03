@@ -123,11 +123,11 @@ export class CategoryController {
     }
 
     const [postsResult, tagsSum, count] = await Promise.all([
-      this.categoryService.findCategoryPost(res._id.toString(), {
+      this.categoryService.findCategoryPost(res.id, {
         tags: typeof tag === 'string' ? tag : undefined,
       }),
-      this.categoryService.getCategoryTagsSum(res._id.toString()),
-      this.postService.countByCategoryId(res._id.toString()),
+      this.categoryService.getCategoryTagsSum(res.id),
+      this.postService.countByCategoryId(res.id),
     ])
 
     let children: any[] = postsResult || []
@@ -145,10 +145,10 @@ export class CategoryController {
       targetLang: lang,
       translationFields: ['title', 'translationMeta'] as const,
       getInput: (item: any) => ({
-        id: item._id?.toString?.() ?? item.id ?? '',
+        id: item.id,
         title: item.title ?? '',
-        created: item.created,
-        modified: item.modified,
+        createdAt: item.createdAt,
+        modifiedAt: item.modifiedAt,
       }),
       applyResult: (item: any, translation) => {
         if (!translation?.isTranslated) return item

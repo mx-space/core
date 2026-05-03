@@ -128,7 +128,7 @@ export class AiTranslationService
     return {
       ...row,
       _id: row.id,
-      created: row.createdAt,
+      createdAt: row.createdAt,
       save() {
         return repo.updateById(row.id, this as any)
       },
@@ -194,8 +194,8 @@ export class AiTranslationService
       findById: (id: string) => repo.findById(id).then(toDoc),
       create: async (input: any) => toDoc(await repo.upsert(input)),
       deleteOne: async (query: any) => {
-        if (query?._id) {
-          const deletedCount = await repo.deleteById(query._id)
+        if (query?.id) {
+          const deletedCount = await repo.deleteById(query.id)
           return { deletedCount }
         }
         return { deletedCount: 0 }
@@ -230,7 +230,7 @@ export class AiTranslationService
     }
   }
 
-  private getStrategy(contentFormat?: string): ITranslationStrategy {
+  private getStrategy(contentFormat?: string | null): ITranslationStrategy {
     return contentFormat === ContentFormat.Lexical
       ? this.lexicalStrategy
       : this.markdownStrategy
@@ -462,9 +462,9 @@ export class AiTranslationService
     >
 
     const articleMap = this.mapArticlesByRefId({
-      posts: posts.map((p) => ({ id: p.id.toString(), title: p.title })),
-      notes: notes.map((n) => ({ id: n.id.toString(), title: n.title })),
-      pages: pages.map((p) => ({ id: p.id.toString(), title: p.title })),
+      posts: posts.map((p) => ({ id: p.id, title: p.title })),
+      notes: notes.map((n) => ({ id: n.id, title: n.title })),
+      pages: pages.map((p) => ({ id: p.id, title: p.title })),
     })
 
     const allArticleIds = Array.from(articleMap.keys())
@@ -609,10 +609,10 @@ export class AiTranslationService
       return event.id
     }
     const doc = event as ArticleEventDocument
-    if (typeof doc._id === 'string') {
-      return doc._id
+    if (typeof doc.id === 'string') {
+      return doc.id
     }
-    return doc.id ?? doc._id?.toString?.() ?? null
+    return (doc.id as { toString?: () => string })?.toString?.() ?? null
   }
 
   /**
@@ -807,7 +807,7 @@ export class AiTranslationService
     signal?: AbortSignal,
   ) {
     const content = this.toArticleContent(document)
-    const sourceModified = document.modified ?? undefined
+    const sourceModified = document.modifiedAt ?? undefined
     const key = this.buildTranslationKey(articleId, targetLang, content)
 
     return this.aiInFlightService.runWithStream<AITranslationModel>({
@@ -1329,11 +1329,11 @@ export class AiTranslationService
       summary:
         'summary' in document ? (document.summary ?? undefined) : undefined,
       tags: 'tags' in document ? document.tags : undefined,
-      meta: document.meta,
+      meta: (document.meta ?? undefined) as { lang?: string } | undefined,
       contentFormat: document.contentFormat,
       content: document.content,
-      modified: document.modified,
-      created: document.created,
+      modifiedAt: document.modifiedAt,
+      createdAt: document.createdAt,
     }
   }
 

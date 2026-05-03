@@ -83,7 +83,7 @@ export class PostController {
       })
       .then(async (res) => {
         const translationInputs: ArticleTranslationInput[] = []
-        for (const doc of res.docs) {
+        for (const doc of res.data) {
           const originalText = doc.text
           if (doc.meta && typeof doc.meta === 'string') {
             doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
@@ -91,16 +91,16 @@ export class PostController {
 
           if (lang && typeof originalText === 'string') {
             translationInputs.push({
-              id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
+              id: String(doc.id),
               title: doc.title,
               text: originalText,
               summary: doc.summary,
               tags: doc.tags,
-              meta: doc.meta,
+              meta: doc.meta as { lang?: string } | undefined,
               contentFormat: doc.contentFormat,
               content: doc.content,
-              modified: doc.modified,
-              created: doc.created,
+              modifiedAt: doc.modifiedAt,
+              createdAt: doc.createdAt,
             })
           }
 
@@ -114,11 +114,11 @@ export class PostController {
               .map((s) => s.trim().replace(/^[+-]/, ''))
               .filter(Boolean),
           )
-          res.docs = res.docs.map((doc) =>
+          res.data = res.data.map((doc) =>
             Object.fromEntries(
               Object.entries(doc).filter(([key]) => selected.has(key)),
             ),
-          )
+          ) as typeof res.data
         }
 
         if (lang && translationInputs.length) {
@@ -128,8 +128,8 @@ export class PostController {
               targetLang: lang,
             })
 
-          res.docs = res.docs.map((doc) => {
-            const docId = doc._id?.toString?.() ?? doc.id ?? String(doc._id)
+          res.data = res.data.map((doc) => {
+            const docId = String(doc.id)
             const translation = translationResults.get(docId)
             if (!translation?.isTranslated) {
               return doc
@@ -144,7 +144,7 @@ export class PostController {
               isTranslated: translation.isTranslated,
               translationMeta: translation.translationMeta,
             }
-          })
+          }) as typeof res.data
         }
 
         return res
@@ -207,11 +207,9 @@ export class PostController {
     if (!last) {
       throw new CannotFindException()
     }
+    if (!last.category?.slug) throw new CannotFindException()
     return this.getByCateAndSlug(
-      {
-        category: last.category?.slug,
-        slug: last.slug,
-      },
+      { category: last.category.slug, slug: last.slug },
       {} as any,
       ip,
       isAuthenticated,
@@ -223,7 +221,7 @@ export class PostController {
   @TranslateFields({
     path: 'category.name',
     keyPath: 'category.name',
-    idField: '_id',
+    idField: 'id',
   })
   async getByCateAndSlug(
     @Param() params: CategoryAndSlugDto,
@@ -252,15 +250,12 @@ export class PostController {
       ip,
     )
 
-    const baseData =
-      typeof postDocument.toObject === 'function'
-        ? postDocument.toObject()
-        : postDocument
-    const relatedList = Array.isArray(baseData.related)
-      ? (baseData.related as any[])
+    const baseData = postDocument
+    const relatedList = Array.isArray((baseData as any).related)
+      ? ((baseData as any).related as any[])
       : []
     const relatedIds = relatedList
-      .map((item) => item?._id?.toString?.() ?? item?.id)
+      .map((item) => item?.id)
       .filter((id): id is string => Boolean(id))
 
     const insightsLang = parseLanguageCode(lang)
@@ -285,7 +280,7 @@ export class PostController {
 
     const translatedRelated = relatedTitleMap.size
       ? relatedList.map((item) => {
-          const refId = item?._id?.toString?.() ?? item?.id
+          const refId = item?.id
           const translatedTitle = refId ? relatedTitleMap.get(refId) : undefined
           return translatedTitle ? { ...item, title: translatedTitle } : item
         })
@@ -320,7 +315,7 @@ export class PostController {
   async create(@Body() body: PostDto) {
     return await this.postService.create({
       ...(body as unknown as PostModel),
-      modified: null,
+      modifiedAt: null,
       slug: body.slug,
       related: body.relatedId as any,
     })

@@ -9,7 +9,7 @@ import { ContentFormat } from '~/shared/types/content-format.type'
 import { DraftRefType } from './draft.enum'
 import { DraftRepository, type DraftRow } from './draft.repository'
 import type { CreateDraftDto, UpdateDraftDto } from './draft.schema'
-import type { DraftHistoryModel, DraftModel } from './draft.types'
+import type { DraftHistoryModel } from './draft.types'
 import { DraftHistoryService } from './draft-history.service'
 
 @Injectable()
@@ -24,21 +24,6 @@ export class DraftService {
     return this.draftRepository
   }
 
-  toLegacy(row: DraftRow | null): any {
-    if (!row) return null
-    return {
-      ...row,
-      _id: row.id,
-      created: row.createdAt,
-      updated: row.updatedAt,
-      typeSpecificData: row.typeSpecificData,
-    }
-  }
-
-  toLegacyMany(rows: DraftRow[]) {
-    return rows.map((row) => this.toLegacy(row))
-  }
-
   async list(page: number, size: number, filter: any = {}) {
     return this.draftRepository.list(page, size, filter)
   }
@@ -47,7 +32,7 @@ export class DraftService {
     return this.draftRepository.count(filter)
   }
 
-  async create(dto: CreateDraftDto): Promise<DraftModel> {
+  async create(dto: CreateDraftDto): Promise<DraftRow> {
     if (dto.refId) {
       const existing = await this.draftRepository.findByRef(
         dto.refType as DraftRefType,
@@ -56,15 +41,13 @@ export class DraftService {
       if (existing) return this.update(existing.id, dto)
     }
 
-    const draft = this.toLegacy(
-      await this.draftRepository.create({
-        ...dto,
-        refType: dto.refType as DraftRefType,
-        contentFormat: dto.contentFormat ?? ContentFormat.Markdown,
-        typeSpecificData: dto.typeSpecificData,
-        meta: dto.meta,
-      }),
-    )
+    const draft = await this.draftRepository.create({
+      ...dto,
+      refType: dto.refType as DraftRefType,
+      contentFormat: dto.contentFormat ?? ContentFormat.Markdown,
+      typeSpecificData: dto.typeSpecificData,
+      meta: dto.meta,
+    })
 
     if (draft.text) {
       await this.fileReferenceService.updateReferencesForDocument(
@@ -77,7 +60,7 @@ export class DraftService {
     return draft
   }
 
-  async update(id: string, dto: UpdateDraftDto): Promise<DraftModel> {
+  async update(id: string, dto: UpdateDraftDto): Promise<DraftRow> {
     const draft = await this.draftRepository.findById(id)
     if (!draft) throw new BizException(ErrorCodeEnum.DraftNotFound)
 
@@ -108,16 +91,15 @@ export class DraftService {
       ).history as any
     }
 
-    const updated = this.toLegacy(
-      await this.draftRepository.update(id, {
-        ...dto,
-        contentFormat: dto.contentFormat,
-        typeSpecificData: dto.typeSpecificData,
-        meta: dto.meta,
-        version: hasContentChange ? draft.version + 1 : draft.version,
-        history,
-      }),
-    )
+    const updated = await this.draftRepository.update(id, {
+      ...dto,
+      contentFormat: dto.contentFormat,
+      typeSpecificData: dto.typeSpecificData,
+      meta: dto.meta,
+      version: hasContentChange ? draft.version + 1 : draft.version,
+      history,
+    })
+    if (!updated) throw new BizException(ErrorCodeEnum.DraftNotFound)
 
     if (dto.text !== undefined) {
       await this.fileReferenceService.updateReferencesForDocument(
@@ -130,14 +112,14 @@ export class DraftService {
     return updated
   }
 
-  async findById(id: string): Promise<DraftModel | null> {
-    return this.toLegacy(await this.draftRepository.findById(id))
+  async findById(id: string): Promise<DraftRow | null> {
+    return this.draftRepository.findById(id)
   }
 
   async findByRef(
     refType: DraftRefType,
     refId: string,
-  ): Promise<DraftModel | null> {
+  ): Promise<DraftRow | null> {
     const draft = await this.draftRepository.findByRef(refType, refId)
     if (!draft) return null
     if (
@@ -146,15 +128,15 @@ export class DraftService {
     ) {
       return null
     }
-    return this.toLegacy(draft)
+    return draft
   }
 
-  async findNewDrafts(refType: DraftRefType): Promise<DraftModel[]> {
+  async findNewDrafts(refType: DraftRefType): Promise<DraftRow[]> {
     const result = await this.draftRepository.list(1, 50, {
       refType,
       hasRef: false,
     })
-    return this.toLegacyMany(result.data)
+    return result.data
   }
 
   async delete(id: string): Promise<void> {
@@ -199,7 +181,7 @@ export class DraftService {
     )
   }
 
-  async restoreVersion(id: string, version: number): Promise<DraftModel> {
+  async restoreVersion(id: string, version: number): Promise<DraftRow> {
     const draft = await this.draftRepository.findById(id)
     if (!draft) throw new BizException(ErrorCodeEnum.DraftNotFound)
     const historyEntry = draft.history.find((h) => h.version === version)

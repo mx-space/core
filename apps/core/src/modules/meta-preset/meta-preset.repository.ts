@@ -64,9 +64,7 @@ const mapRow = (row: typeof metaPresets.$inferSelect): MetaPresetRow => {
     order: Number(field.order ?? 0),
     enabled: field.enabled !== false,
     createdAt: row.createdAt,
-    created: row.createdAt,
     updatedAt: row.updatedAt,
-    updated: row.updatedAt,
   } as MetaPresetRow
 }
 

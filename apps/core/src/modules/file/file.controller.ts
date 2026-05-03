@@ -82,7 +82,7 @@ export class FileController {
         refType: file.refType,
         refId: file.refId,
         detachedAt: file.detachedAt,
-        created: file.created,
+        createdAt: file.createdAt,
       })),
       pagination,
     }
@@ -122,7 +122,7 @@ export class FileController {
 
     return {
       data: files.map((file) => ({
-        id: file._id,
+        id: file.id,
         fileName: file.fileName,
         fileUrl: file.fileUrl,
         status: file.status,
@@ -132,7 +132,7 @@ export class FileController {
         refType: file.refType,
         refId: file.refId,
         detachedAt: file.detachedAt,
-        created: file.created,
+        createdAt: file.createdAt,
       })),
       pagination: {
         currentPage: page,

@@ -1,14 +1,5 @@
-import type { WriteBaseModel } from '~/shared/types/legacy-model.type'
+import type { PageRow } from './page.repository'
 
-export interface PageModel extends WriteBaseModel {
-  slug: string
-  subtitle?: string | null
-  order: number
-}
+export type PageModel = PageRow
 
-export const PAGE_PROTECTED_KEYS = [
-  'commentsIndex',
-  'created',
-  'id',
-  '_id',
-] as const
+export const PAGE_PROTECTED_KEYS = ['id', 'createdAt'] as const

@@ -11,15 +11,13 @@ export interface ArticleContent {
   summary?: string | null
   tags?: string[]
   meta?: { lang?: string }
-  contentFormat?: string
-  content?: string
+  contentFormat?: string | null
+  content?: string | null
 }
 
 export type ArticleDocument = PostModel | NoteModel | PageModel
 
-export type ArticleEventDocument = ArticleDocument & {
-  _id?: { toString?: () => string } | string
-}
+export type ArticleEventDocument = ArticleDocument
 
 export type ArticleEventPayload =
   | ArticleEventDocument

@@ -57,11 +57,12 @@ export class PollVoteRepository extends BaseRepository {
       )
       .limit(1)
     if (!row) return null
+    const id = toEntityId(row.id) as EntityId
     return {
-      id: toEntityId(row.id) as EntityId,
+      id,
       pollId: row.pollId,
       voterFingerprint: row.voterFingerprint,
-      optionIds: await this.listOptionsForVote(row.id.toString()),
+      optionIds: await this.listOptionsForVote(id),
       createdAt: row.createdAt,
     }
   }

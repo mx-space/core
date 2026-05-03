@@ -42,7 +42,7 @@ export class MarkdownService {
     const categoryNameAndId = (
       await this.categoryService.findAllCategory()
     ).map((c) => {
-      return { name: c.name, _id: c._id, slug: c.slug }
+      return { name: c.name, id: c.id, slug: c.slug }
     })
 
     const insertOrCreateCategory = async (name?: string) => {
@@ -58,7 +58,7 @@ export class MarkdownService {
         const newCategoryDoc = await this.categoryService.create(name, name)
         categoryNameAndId.push({
           name: newCategoryDoc.name,
-          _id: newCategoryDoc._id,
+          id: newCategoryDoc.id,
           slug: newCategoryDoc.slug,
         })
         return newCategoryDoc
@@ -76,10 +76,10 @@ export class MarkdownService {
       if (!item.meta) {
         models.push({
           title: `未命名-${count++}`,
-          slug: Date.now(),
+          slug: String(Date.now()),
           text: item.text,
           ...genDate(item),
-          categoryId: defaultCategory._id,
+          categoryId: defaultCategory.id,
         } as any as PostModel)
       } else {
         const category = await insertOrCreateCategory(
@@ -90,7 +90,7 @@ export class MarkdownService {
           slug: item.meta.slug || item.meta.title,
           text: item.text,
           ...genDate(item),
-          categoryId: category?._id.toHexString() || defaultCategory._id,
+          categoryId: category?.id ?? defaultCategory.id,
           tags: item.meta.tags || [],
         } as PostModel)
       }
@@ -131,14 +131,14 @@ export class MarkdownService {
     const { meta } = item
     if (!meta) {
       return {
-        created: new Date(),
-        modified: new Date(),
+        createdAt: new Date(),
+        modifiedAt: new Date(),
       }
     }
     const { date, updated } = meta
     return {
-      created: date ? new Date(date) : new Date(),
-      modified: updated
+      createdAt: date ? new Date(date) : new Date(),
+      modifiedAt: updated
         ? new Date(updated)
         : date
           ? new Date(date)

@@ -1,7 +1,5 @@
-import type { CollectionRefTypes } from '~/constants/db.constant'
-import type { BaseModel } from '~/shared/types/legacy-model.type'
-
-import type { CommentAnchorMode, CommentState } from './comment.enum'
+import type { CommentAnchorMode } from './comment.enum'
+import type { CommentRow } from './comment.repository'
 
 export interface CommentAnchorModel {
   mode: CommentAnchorMode
@@ -20,33 +18,4 @@ export interface CommentAnchorModel {
   lang?: string | null
 }
 
-export interface CommentModel extends BaseModel {
-  ref?: any
-  refType: CollectionRefTypes
-  author?: string
-  mail?: string
-  url?: string
-  text: string
-  state?: CommentState
-  parentCommentId?: any
-  rootCommentId?: any
-  replyCount?: number
-  latestReplyAt?: Date
-  isDeleted?: boolean
-  deletedAt?: Date
-  ip?: string
-  agent?: string
-  pin?: boolean
-  post?: any
-  note?: any
-  page?: any
-  recently?: any
-  location?: string
-  isWhispers?: boolean
-  avatar?: string
-  authProvider?: string
-  meta?: string
-  readerId?: string
-  editedAt?: Date
-  anchor?: CommentAnchorModel
-}
+export type CommentModel = CommentRow

@@ -1,5 +1,5 @@
 export enum DraftRefType {
-  Post = 'posts',
-  Note = 'notes',
-  Page = 'pages',
+  Post = 'post',
+  Note = 'note',
+  Page = 'page',
 }

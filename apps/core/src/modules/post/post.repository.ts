@@ -16,7 +16,7 @@ export interface PostRow {
   id: EntityId
   title: string
   slug: string
-  text: string | null
+  text: string
   content: string | null
   contentFormat: string
   summary: string | null
@@ -90,7 +90,7 @@ const mapBase = (row: typeof posts.$inferSelect): PostRow => ({
   id: toEntityId(row.id) as EntityId,
   title: row.title,
   slug: row.slug,
-  text: row.text,
+  text: row.text ?? '',
   content: row.content,
   contentFormat: row.contentFormat,
   summary: row.summary,

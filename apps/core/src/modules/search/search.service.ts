@@ -435,7 +435,7 @@ export class SearchService {
     refType: SearchDocumentRefType,
     data: Record<string, any>,
   ): SearchDocumentModel {
-    return buildSearchDocument(refType, data) as SearchDocumentModel
+    return buildSearchDocument(refType, data as any) as SearchDocumentModel
   }
 
   private buildSearchKeywordRegexes(keyword: string) {
@@ -491,8 +491,8 @@ export class SearchService {
           return b.__searchWeight - a.__searchWeight
         }
 
-        const dateA = new Date(a.modified ?? a.created ?? 0).valueOf()
-        const dateB = new Date(b.modified ?? b.created ?? 0).valueOf()
+        const dateA = new Date(a.modifiedAt ?? a.createdAt ?? 0).valueOf()
+        const dateB = new Date(b.modifiedAt ?? b.createdAt ?? 0).valueOf()
         return dateB - dateA
       })
       .map(

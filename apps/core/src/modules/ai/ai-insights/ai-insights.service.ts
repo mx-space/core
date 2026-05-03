@@ -99,7 +99,7 @@ export class AiInsightsService implements OnModuleInit {
     return {
       ...row,
       _id: row.id,
-      created: row.createdAt,
+      createdAt: row.createdAt,
     } as unknown as AIInsightsModel
   }
 

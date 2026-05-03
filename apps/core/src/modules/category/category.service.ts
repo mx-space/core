@@ -19,21 +19,20 @@ import { CategoryType } from './category.enum'
 import {
   type CategoryPatchInput,
   CategoryRepository,
-  type CategoryRow,
-  type CategoryWithCount,
 } from './category.repository'
 
 type TagDetailMapped = {
-  _id: string
+  id: string
   title: string
   slug: string
   category: Record<string, unknown>
-  created?: Date
-  modified?: Date | null
+  createdAt?: Date
+  modifiedAt?: Date | null
   summary?: string | null
   tags?: string[]
-  pin?: Date | null
-  count?: { read?: number; like?: number }
+  pinAt?: Date | null
+  readCount?: number
+  likeCount?: number
 }
 
 @Injectable()
@@ -57,22 +56,8 @@ export class CategoryService implements OnApplicationBootstrap {
     return this.categoryRepository
   }
 
-  toLegacy(row: (CategoryRow | CategoryWithCount) | null): any {
-    if (!row) return null
-    return {
-      ...row,
-      _id: row.id,
-      created: row.createdAt,
-      modified: null,
-    }
-  }
-
-  toLegacyMany(rows: Array<CategoryRow | CategoryWithCount>) {
-    return rows.map((row) => this.toLegacy(row))
-  }
-
   async findCategoryById(categoryId: string) {
-    return this.toLegacy(await this.categoryRepository.findById(categoryId))
+    return this.categoryRepository.findById(categoryId)
   }
 
   async findById(categoryId: string) {
@@ -80,13 +65,11 @@ export class CategoryService implements OnApplicationBootstrap {
   }
 
   async findBySlug(slug: string) {
-    return this.toLegacy(await this.categoryRepository.findBySlug(slug))
+    return this.categoryRepository.findBySlug(slug)
   }
 
   async findAllCategory() {
-    return this.toLegacyMany(
-      await this.categoryRepository.findAll(CategoryType.Category),
-    )
+    return this.categoryRepository.findAll(CategoryType.Category)
   }
 
   async getPostTagsSum() {
@@ -112,27 +95,29 @@ export class CategoryService implements OnApplicationBootstrap {
     if (filtered.length === 0) throw new CannotFindException()
     return filtered.map(
       ({
-        _id,
+        id,
         title,
         slug,
         category,
-        created,
-        modified,
+        createdAt,
+        modifiedAt,
         summary,
         tags,
-        pin,
-        count,
+        pinAt,
+        readCount,
+        likeCount,
       }) => ({
-        _id,
+        id,
         title,
         slug,
-        category: omit(category, ['count', '__v', 'created', 'modified']),
-        created,
-        modified,
+        category: omit(category ?? {}, ['createdAt', 'modifiedAt']),
+        createdAt,
+        modifiedAt,
         summary,
         tags,
-        pin,
-        count,
+        pinAt,
+        readCount,
+        likeCount,
       }),
     )
   }
@@ -145,9 +130,8 @@ export class CategoryService implements OnApplicationBootstrap {
       includeCategory: false,
       publishedOnly: condition.isPublished,
     })
-    return condition.tags
-      ? posts.filter((post) => post.tags?.includes(condition.tags))
-      : posts
+    const tag = condition.tags
+    return tag ? posts.filter((post) => post.tags?.includes(tag)) : posts
   }
 
   async findPostsInCategory(id: string) {
@@ -155,9 +139,10 @@ export class CategoryService implements OnApplicationBootstrap {
   }
 
   async create(name: string, slug?: string) {
-    const doc = this.toLegacy(
-      await this.categoryRepository.create({ name, slug: slug ?? name }),
-    )
+    const doc = await this.categoryRepository.create({
+      name,
+      slug: slug ?? name,
+    })
     this.clearCache()
     this.eventManager.emit(BusinessEvents.CATEGORY_CREATE, doc, {
       scope: EventScope.TO_SYSTEM_VISITOR,
@@ -183,9 +168,7 @@ export class CategoryService implements OnApplicationBootstrap {
 
   async update(id: string, partialDoc: CategoryPatchInput) {
     if (partialDoc?.slug) await this.trackerSlugChanges(id, partialDoc.slug)
-    const newDoc = this.toLegacy(
-      await this.categoryRepository.update(id, partialDoc),
-    )
+    const newDoc = await this.categoryRepository.update(id, partialDoc)
     this.clearCache()
     this.eventManager.emit(BusinessEvents.CATEGORY_UPDATE, newDoc, {
       scope: EventScope.TO_SYSTEM_VISITOR,
@@ -224,12 +207,10 @@ export class CategoryService implements OnApplicationBootstrap {
 
   async createDefaultCategory() {
     if ((await this.categoryRepository.countAll()) === 0) {
-      return this.toLegacy(
-        await this.categoryRepository.create({
-          name: '默认分类',
-          slug: 'default',
-        }),
-      )
+      return this.categoryRepository.create({
+        name: '默认分类',
+        slug: 'default',
+      })
     }
   }
 }

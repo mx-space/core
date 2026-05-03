@@ -1,9 +1,6 @@
-import type { BaseModel } from '~/shared/types/legacy-model.type'
-
-export interface AITranslationModel extends BaseModel {
+export interface AITranslationModel {
   id: string
   hash: string
-  ref: any
   refId: string
   refType: string
   lang: string
@@ -13,7 +10,6 @@ export interface AITranslationModel extends BaseModel {
   subtitle?: string | null
   summary?: string | null
   tags: string[]
-  sourceModified?: Date | null
   sourceModifiedAt?: Date | null
   aiModel?: string
   aiProvider?: string
@@ -21,4 +17,5 @@ export interface AITranslationModel extends BaseModel {
   content?: string
   sourceBlockSnapshots?: any[]
   sourceMetaHashes?: any
+  createdAt?: Date | null
 }

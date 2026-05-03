@@ -91,7 +91,7 @@ export class AuthService {
       id: token.id,
       token: token.key,
       name: token.name,
-      created: token.createdAt,
+      createdAt: token.createdAt,
       expired: token.expiresAt ?? undefined,
     }))
   }
@@ -106,7 +106,7 @@ export class AuthService {
       id: token.id,
       token: token.key,
       name: token.name,
-      created: token.createdAt,
+      createdAt: token.createdAt,
       expired: token.expiresAt ?? undefined,
     }
   }

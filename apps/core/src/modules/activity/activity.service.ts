@@ -157,7 +157,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     return {
       ...row,
       _id: row.id,
-      created: row.createdAt,
+      createdAt: row.createdAt,
     }
   }
 
@@ -223,7 +223,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     const readerMap = new Map<string, ReaderModel>()
     for (const reader of readers) {
-      readerMap.set(reader._id.toHexString(), reader)
+      readerMap.set(reader.id, reader)
     }
 
     const refModelData = new Map<string, any>()
@@ -390,7 +390,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
           reader: camelcaseKeys({
             ...reader[0],
             _id: undefined,
-            id: reader[0]._id.toHexString(),
+            id: reader[0].id.toString(),
           }),
         })
       }
@@ -529,16 +529,16 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
     // For post refs, look up their categories separately
     const refs = await this.databaseService.findGlobalByIds(
-      docs.map((doc) => doc.ref).filter(Boolean),
+      docs.map((doc) => doc.refId).filter(Boolean),
     )
     const refMap = this.databaseService.flatCollectionToMap(refs)
     await this.commentService.fillAndReplaceAvatarUrl(docs)
     return docs
-      .filter((doc) => doc.ref)
+      .filter((doc) => doc.refId)
       .map((doc) => {
-        const ref = refMap[String(doc.ref)]
+        const ref = refMap[String(doc.refId)]
         return {
-          ...pick(doc, 'created', 'author', 'text', 'avatar'),
+          ...pick(doc, 'createdAt', 'author', 'text', 'avatar'),
           ...pick(ref, 'title', 'nid', 'slug', 'id', 'category'),
           type: checkRefModelCollectionType(ref),
         }
@@ -567,19 +567,19 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const [posts, notes] = await Promise.all([
       this.postService
         .findRecent(50)
-        .then((rows) => rows.filter((row) => row.created >= $gte)),
+        .then((rows) => rows.filter((row) => row.createdAt >= $gte)),
       this.noteService
         .findRecent(50)
-        .then((rows) => rows.filter((row) => row.created >= $gte)),
+        .then((rows) => rows.filter((row) => row.createdAt >= $gte)),
     ])
     return {
       posts,
       notes: notes.map((note) => {
-        if (note.password || !note.isPublished) {
+        if (note.hasPassword || !note.isPublished) {
           note.title = '未公开的日记'
         }
 
-        return omit(note, 'password', 'isPublished')
+        return omit(note, 'isPublished')
       }),
     }
   }

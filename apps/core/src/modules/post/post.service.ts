@@ -32,11 +32,7 @@ import { CommentService } from '../comment/comment.service'
 import { DraftRefType } from '../draft/draft.enum'
 import type { DraftService } from '../draft/draft.service'
 import { SlugTrackerService } from '../slug-tracker/slug-tracker.service'
-import {
-  type PostListParams,
-  PostRepository,
-  type PostRow,
-} from './post.repository'
+import { type PostListParams, PostRepository } from './post.repository'
 import { POST_PROTECTED_KEYS, type PostModel } from './post.types'
 
 @Injectable()
@@ -75,61 +71,20 @@ export class PostService implements OnApplicationBootstrap {
     return meta as Record<string, unknown>
   }
 
-  toLegacy(row: PostRow | null): any {
-    if (!row) return null
-    const category = row.category
-      ? {
-          ...row.category,
-          _id: row.category.id,
-          created: undefined,
-          modified: null,
-        }
-      : undefined
-    const plain: any = {
-      ...row,
-      _id: row.id,
-      created: row.createdAt,
-      modified: row.modifiedAt,
-      category,
-      pin: row.pinAt,
-      count: { read: row.readCount, like: row.likeCount },
-      commentsIndex: 0,
-      allowComment: true,
-    }
-    plain.toObject = () => ({ ...plain, toObject: undefined })
-    return plain
-  }
-
-  toLegacyMany(rows: PostRow[]) {
-    return rows.map((row) => this.toLegacy(row))
-  }
-
-  toPaginate(result: Awaited<ReturnType<PostRepository['list']>>) {
-    return {
-      docs: this.toLegacyMany(result.data),
-      totalDocs: result.pagination.total,
-      page: result.pagination.currentPage,
-      totalPages: result.pagination.totalPage,
-      limit: result.pagination.size,
-      hasNextPage: result.pagination.hasNextPage,
-      hasPrevPage: result.pagination.hasPrevPage,
-    }
-  }
-
   async list(params: PostListParams = {}) {
     return this.postRepository.list(params)
   }
 
   async listPaginated(params: PostListParams = {}) {
-    return this.toPaginate(await this.postRepository.list(params))
+    return this.postRepository.list(params)
   }
 
   async findById(id: string) {
-    return this.toLegacy(await this.postRepository.findById(id))
+    return this.postRepository.findById(id)
   }
 
   async findBySlug(slug: string) {
-    return this.toLegacy(await this.postRepository.findBySlug(slug))
+    return this.postRepository.findBySlug(slug)
   }
 
   async findByCategoryAndSlug(
@@ -137,21 +92,17 @@ export class PostService implements OnApplicationBootstrap {
     slug: string,
     isAuthenticated?: boolean,
   ) {
-    return this.toLegacy(
-      await this.postRepository.findByCategoryAndSlug(categoryId, slug, {
-        publishedOnly: !isAuthenticated,
-      }),
-    )
+    return this.postRepository.findByCategoryAndSlug(categoryId, slug, {
+      publishedOnly: !isAuthenticated,
+    })
   }
 
   async findRecent(size: number, options: { publishedOnly?: boolean } = {}) {
-    return this.toLegacyMany(
-      await this.postRepository.findRecent(size, options),
-    )
+    return this.postRepository.findRecent(size, options)
   }
 
   async findManyByIds(ids: string[]) {
-    return this.toLegacyMany(await this.postRepository.findManyByIds(ids))
+    return this.postRepository.findManyByIds(ids)
   }
 
   async count() {
@@ -170,9 +121,7 @@ export class PostService implements OnApplicationBootstrap {
       publishedOnly?: boolean
     } = {},
   ) {
-    return this.toLegacyMany(
-      await this.postRepository.listByCategory(categoryId, options),
-    )
+    return this.postRepository.listByCategory(categoryId, options)
   }
 
   async findByCategoryId(categoryId: string) {
@@ -180,7 +129,7 @@ export class PostService implements OnApplicationBootstrap {
   }
 
   async findByTag(tag: string, options: { includeCategory?: boolean } = {}) {
-    return this.toLegacyMany(await this.postRepository.findByTag(tag, options))
+    return this.postRepository.findByTag(tag, options)
   }
 
   async aggregateAllTagCounts() {
@@ -196,9 +145,7 @@ export class PostService implements OnApplicationBootstrap {
     pivotDate: Date,
     options: { publishedOnly?: boolean } = {},
   ) {
-    return this.toLegacy(
-      await this.postRepository.findAdjacent(direction, pivotDate, options),
-    )
+    return this.postRepository.findAdjacent(direction, pivotDate, options)
   }
 
   async create(post: PostModel & { draftId?: string }) {
@@ -218,8 +165,8 @@ export class PostService implements OnApplicationBootstrap {
     }
 
     const relatedIds = await this.checkRelated(post)
-    const createdAt = getLessThanNow(post.created)
-    const created = await this.postRepository.create({
+    const createdAt = getLessThanNow(post.createdAt)
+    let doc = await this.postRepository.create({
       title: post.title,
       slug,
       text: post.text,
@@ -229,16 +176,18 @@ export class PostService implements OnApplicationBootstrap {
       images: post.images as unknown[],
       meta: this.normalizeMeta(post.meta) as Record<string, unknown> | null,
       tags: post.tags,
-      categoryId: category.id ?? category._id,
+      categoryId: category.id,
       copyright: post.copyright,
       isPublished: post.isPublished,
-      pinAt: post.pin,
+      pinAt: post.pinAt,
       pinOrder: post.pinOrder,
     })
-    if (createdAt && createdAt.valueOf() !== created.createdAt.valueOf()) {
-      await this.postRepository.update(created.id, { modifiedAt: null })
+    if (createdAt && createdAt.valueOf() !== doc.createdAt.valueOf()) {
+      const refreshed = await this.postRepository.update(doc.id, {
+        modifiedAt: null,
+      })
+      if (refreshed) doc = refreshed
     }
-    const doc = this.toLegacy(created)
 
     await this.relatedEachOther(doc, relatedIds)
 
@@ -337,7 +286,7 @@ export class PostService implements OnApplicationBootstrap {
     }
 
     const postDocument = await this.findByCategoryAndSlug(
-      categoryDocument.id ?? categoryDocument._id,
+      categoryDocument.id,
       slug,
       isAuthenticated,
     )
@@ -371,7 +320,7 @@ export class PostService implements OnApplicationBootstrap {
     }
 
     if ([data.text, data.title, data.slug].some(isDefined)) {
-      data.modified = new Date()
+      data.modifiedAt = new Date()
     }
 
     if (data.slug && data.slug !== oldDocument.slug) {
@@ -410,9 +359,9 @@ export class PostService implements OnApplicationBootstrap {
       categoryId: patch.categoryId as string | undefined,
       copyright: patch.copyright,
       isPublished: patch.isPublished,
-      pinAt: patch.pin,
+      pinAt: patch.pinAt,
       pinOrder: patch.pinOrder,
-      modifiedAt: data.modified,
+      modifiedAt: data.modifiedAt,
     })
 
     if (draftId) {
@@ -420,7 +369,7 @@ export class PostService implements OnApplicationBootstrap {
     }
 
     scheduleManager.schedule(() => this.afterUpdatePost(id))
-    return this.toLegacy(updated)
+    return updated
   }
 
   afterUpdatePost = debounce(

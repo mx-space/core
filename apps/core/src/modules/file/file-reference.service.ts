@@ -22,9 +22,9 @@ import {
 } from './file-reference.repository'
 
 interface ContentLike {
-  text: string
-  contentFormat?: ContentFormat | string
-  content?: string
+  text: string | null
+  contentFormat?: ContentFormat | string | null
+  content?: string | null
 }
 
 export interface ReaderImageDiff {
@@ -67,17 +67,6 @@ export class FileReferenceService {
     private readonly configsService: ConfigsService,
   ) {}
 
-  private toLegacy(row: FileReferenceRow): FileReferenceRow & {
-    _id: string
-    created: Date
-  } {
-    return {
-      ...row,
-      _id: row.id,
-      created: row.createdAt,
-    }
-  }
-
   async createPendingReference(
     fileUrl: string,
     fileName: string,
@@ -85,17 +74,15 @@ export class FileReferenceService {
   ) {
     const existing = await this.fileReferenceRepository.findFirstByUrl(fileUrl)
     if (existing) {
-      return this.toLegacy(existing)
+      return existing
     }
 
-    return this.toLegacy(
-      await this.fileReferenceRepository.create({
-        fileUrl,
-        fileName,
-        status: FileReferenceStatus.Pending,
-        s3ObjectKey,
-      }),
-    )
+    return this.fileReferenceRepository.create({
+      fileUrl,
+      fileName,
+      status: FileReferenceStatus.Pending,
+      s3ObjectKey,
+    })
   }
 
   async createReaderPendingReference(input: {
@@ -106,18 +93,16 @@ export class FileReferenceService {
     byteSize: number
     s3ObjectKey?: string | null
   }) {
-    return this.toLegacy(
-      await this.fileReferenceRepository.create({
-        fileUrl: input.fileUrl,
-        fileName: input.fileName,
-        status: FileReferenceStatus.Pending,
-        readerId: input.readerId,
-        uploadedBy: FileUploadedBy.Reader,
-        mimeType: input.mimeType,
-        byteSize: input.byteSize,
-        s3ObjectKey: input.s3ObjectKey ?? null,
-      }),
-    )
+    return this.fileReferenceRepository.create({
+      fileUrl: input.fileUrl,
+      fileName: input.fileName,
+      status: FileReferenceStatus.Pending,
+      readerId: input.readerId,
+      uploadedBy: FileUploadedBy.Reader,
+      mimeType: input.mimeType,
+      byteSize: input.byteSize,
+      s3ObjectKey: input.s3ObjectKey ?? null,
+    })
   }
 
   async activateReferences(
@@ -510,15 +495,13 @@ export class FileReferenceService {
   }
 
   async getFileReferences(fileUrl: string) {
-    return (await this.fileReferenceRepository.findByUrl(fileUrl)).map((row) =>
-      this.toLegacy(row),
-    )
+    return this.fileReferenceRepository.findByUrl(fileUrl)
   }
 
   async getReferencesForDocument(refId: string, refType: FileReferenceType) {
-    return (await this.fileReferenceRepository.findByRef(refType, refId))
-      .filter((row) => row.status === FileReferenceStatus.Active)
-      .map((row) => this.toLegacy(row))
+    return (
+      await this.fileReferenceRepository.findByRef(refType, refId)
+    ).filter((row) => row.status === FileReferenceStatus.Active)
   }
 
   async getOrphanFilesCount() {
@@ -526,11 +509,7 @@ export class FileReferenceService {
   }
 
   async listOrphanFiles(page = 1, size = 20) {
-    const result = await this.fileReferenceRepository.listOrphans(page, size)
-    return {
-      data: result.data.map((row) => this.toLegacy(row)),
-      pagination: result.pagination,
-    }
+    return this.fileReferenceRepository.listOrphans(page, size)
   }
 
   async listReaderUploads(params: {
@@ -542,15 +521,14 @@ export class FileReferenceService {
   }) {
     const result = await this.fileReferenceRepository.listReaderUploads(params)
     return {
-      files: result.data.map((row) => this.toLegacy(row)),
+      files: result.data,
       total: result.pagination.total,
       pagination: result.pagination,
     }
   }
 
   async getReferenceById(id: string) {
-    const row = await this.fileReferenceRepository.findById(id)
-    return row ? this.toLegacy(row) : null
+    return this.fileReferenceRepository.findById(id)
   }
 
   async batchDeleteOrphans(options: { ids?: string[]; all?: boolean }) {

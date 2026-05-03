@@ -16,38 +16,6 @@ export class DatabaseService {
     private readonly recentlyRepository: RecentlyRepository,
   ) {}
 
-  private repositoryByType(type: any) {
-    const normalized = String(type).toLowerCase()
-    const map = new Map<any, any>([
-      ['post', this.postRepository],
-      ['posts', this.postRepository],
-      ['note', this.noteRepository],
-      ['notes', this.noteRepository],
-      ['page', this.pageRepository],
-      ['pages', this.pageRepository],
-      ['recently', this.recentlyRepository],
-      ['recentlies', this.recentlyRepository],
-    ])
-    return map.get(normalized)
-  }
-
-  public getModelByRefType(type: any): any {
-    const repository = this.repositoryByType(type)
-    return {
-      findById: (id: string) => ({
-        lean: async () => repository.findById(id),
-        select: () => ({ lean: async () => repository.findById(id) }),
-        then: (resolve: any, reject: any) =>
-          repository.findById(id).then(resolve, reject),
-      }),
-      find: (filter: { _id?: { $in?: string[] } } = {}) => ({
-        lean: async () =>
-          filter._id?.$in ? repository.findManyByIds(filter._id.$in) : [],
-      }),
-      updateOne: async () => ({ modifiedCount: 0 }),
-    }
-  }
-
   public async findGlobalById(id: string): Promise<any> {
     parseEntityId(id)
     const doc = await Promise.all([

@@ -18,7 +18,7 @@ import { isDefined } from '~/utils/validator.util'
 
 import { DraftRefType } from '../draft/draft.enum'
 import { DraftService } from '../draft/draft.service'
-import { PageRepository, type PageRow } from './page.repository'
+import { PageRepository } from './page.repository'
 import { PAGE_PROTECTED_KEYS, type PageModel } from './page.types'
 
 @Injectable()
@@ -44,60 +44,32 @@ export class PageService {
     return meta as Record<string, unknown>
   }
 
-  toLegacy(row: PageRow | null): any {
-    if (!row) return null
-    return {
-      ...row,
-      _id: row.id,
-      created: row.createdAt,
-      modified: row.modifiedAt,
-      commentsIndex: 0,
-      allowComment: true,
-    }
-  }
-
-  toLegacyMany(rows: PageRow[]) {
-    return rows.map((row) => this.toLegacy(row))
-  }
-
-  toPaginate(result: Awaited<ReturnType<PageRepository['list']>>) {
-    return {
-      docs: this.toLegacyMany(result.data),
-      totalDocs: result.pagination.total,
-      page: result.pagination.currentPage,
-      totalPages: result.pagination.totalPage,
-      limit: result.pagination.size,
-      hasNextPage: result.pagination.hasNextPage,
-      hasPrevPage: result.pagination.hasPrevPage,
-    }
-  }
-
   async list(page = 1, size = 10) {
     return this.pageRepository.list(page, size)
   }
 
   async listPaginated(page = 1, size = 10) {
-    return this.toPaginate(await this.pageRepository.list(page, size))
+    return this.pageRepository.list(page, size)
   }
 
   async findAll() {
-    return this.toLegacyMany(await this.pageRepository.findAll())
+    return this.pageRepository.findAll()
   }
 
   async findRecent(size: number) {
-    return this.toLegacyMany(await this.pageRepository.findRecent(size))
+    return this.pageRepository.findRecent(size)
   }
 
   async findById(id: string) {
-    return this.toLegacy(await this.pageRepository.findById(id))
+    return this.pageRepository.findById(id)
   }
 
   async findBySlug(slug: string) {
-    return this.toLegacy(await this.pageRepository.findBySlug(slug))
+    return this.pageRepository.findBySlug(slug)
   }
 
   async findManyByIds(ids: string[]) {
-    return this.toLegacyMany(await this.pageRepository.findManyByIds(ids))
+    return this.pageRepository.findManyByIds(ids)
   }
 
   public async create(doc: PageModel & { draftId?: string }) {
@@ -111,19 +83,17 @@ export class PageService {
     if (!doc.order) {
       doc.order = count + 1
     }
-    const res = this.toLegacy(
-      await this.pageRepository.create({
-        title: doc.title,
-        slug: slugify(doc.slug),
-        subtitle: doc.subtitle,
-        text: doc.text,
-        content: doc.content,
-        contentFormat: doc.contentFormat ?? ContentFormat.Markdown,
-        images: doc.images as unknown[],
-        meta: this.normalizeMeta(doc.meta) as Record<string, unknown> | null,
-        order: doc.order,
-      }),
-    )
+    const res = await this.pageRepository.create({
+      title: doc.title,
+      slug: slugify(doc.slug),
+      subtitle: doc.subtitle,
+      text: doc.text,
+      content: doc.content,
+      contentFormat: doc.contentFormat ?? ContentFormat.Markdown,
+      images: doc.images as unknown[],
+      meta: this.normalizeMeta(doc.meta) as Record<string, unknown> | null,
+      order: doc.order,
+    })
 
     if (draftId) {
       await this.fileReferenceService.removeReferencesForDocument(
@@ -173,29 +143,27 @@ export class PageService {
     const { draftId } = doc
 
     if (['text', 'title', 'subtitle'].some((key) => isDefined(doc[key]))) {
-      doc.modified = new Date()
+      doc.modifiedAt = new Date()
     }
     if (doc.slug) {
       doc.slug = slugify(doc.slug)
     }
 
     const patch = omit(doc, PAGE_PROTECTED_KEYS as any) as Partial<PageModel>
-    const newDoc = this.toLegacy(
-      await this.pageRepository.update(id, {
-        title: patch.title,
-        slug: patch.slug,
-        subtitle: patch.subtitle,
-        text: patch.text,
-        content: patch.content,
-        contentFormat: patch.contentFormat,
-        images: patch.images as unknown[] | undefined,
-        meta:
-          patch.meta !== undefined
-            ? (this.normalizeMeta(patch.meta) as Record<string, unknown> | null)
-            : undefined,
-        order: patch.order,
-      }),
-    )
+    const newDoc = await this.pageRepository.update(id, {
+      title: patch.title,
+      slug: patch.slug,
+      subtitle: patch.subtitle,
+      text: patch.text,
+      content: patch.content,
+      contentFormat: patch.contentFormat,
+      images: patch.images as unknown[] | undefined,
+      meta:
+        patch.meta !== undefined
+          ? (this.normalizeMeta(patch.meta) as Record<string, unknown> | null)
+          : undefined,
+      order: patch.order,
+    })
 
     if (!newDoc) {
       throw new NoContentCanBeModifiedException()

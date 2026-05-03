@@ -204,7 +204,7 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
       image: reader.image ?? undefined,
       handle: reader.handle ?? undefined,
       displayUsername: reader.displayUsername ?? undefined,
-      created: reader.createdAt ?? profile?.createdAt,
+      createdAt: reader.createdAt ?? profile?.createdAt,
     }
   }
 

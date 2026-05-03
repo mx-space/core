@@ -87,7 +87,7 @@ export class AggregateService {
       ]
         .sort(
           (a, b) =>
-            new Date(b.created).getTime() - new Date(a.created).getTime(),
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         )
         .slice(0, limit)
     }
@@ -115,14 +115,15 @@ export class AggregateService {
         ? this.noteService.findRecent(100, { visibleOnly: true })
         : [],
     ])
-    const filterYear = <T extends { created?: Date }>(items: T[]) =>
+    const filterYear = <T extends { createdAt?: Date }>(items: T[]) =>
       year
-        ? items.filter((item) => item.created?.getFullYear() === year)
+        ? items.filter((item) => item.createdAt?.getFullYear() === year)
         : items
-    const sort = <T extends { created?: Date }>(items: T[]) =>
+    const sort = <T extends { createdAt?: Date }>(items: T[]) =>
       items.sort(
         (a, b) =>
-          ((a.created?.getTime() ?? 0) - (b.created?.getTime() ?? 0)) * sortBy,
+          ((a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0)) *
+          sortBy,
       )
     return {
       posts: sort(filterYear(posts)),
@@ -130,13 +131,36 @@ export class AggregateService {
     }
   }
 
-  async getSiteMapContent() {
+  async getSiteMapContent(): Promise<
+    Array<{ url: string; published_at: Date | null }>
+  > {
+    const baseUrl =
+      (await this.configs.get('url')).webUrl?.replace(/\/$/, '') ?? ''
     const [pages, posts, notes] = await Promise.all([
       this.pageService.findAll(),
       this.postService.findRecent(100, { publishedOnly: true }),
       this.noteService.findRecent(100, { visibleOnly: true }),
     ])
-    return [...pages, ...posts, ...notes]
+    const pageEntries = pages.map((p) => ({
+      url: `${baseUrl}/${p.slug}`,
+      published_at: p.modifiedAt ?? p.createdAt ?? null,
+    }))
+    const postEntries = await Promise.all(
+      posts.map(async (p) => {
+        const cat = p.category?.slug
+          ? p.category
+          : await this.categoryService.findCategoryById(String(p.categoryId))
+        return {
+          url: `${baseUrl}/posts/${cat?.slug ?? 'unknown'}/${p.slug}`,
+          published_at: p.modifiedAt ?? p.createdAt ?? null,
+        }
+      }),
+    )
+    const noteEntries = notes.map((n) => ({
+      url: `${baseUrl}/notes/${n.nid}`,
+      published_at: n.modifiedAt ?? n.createdAt ?? null,
+    }))
+    return [...pageEntries, ...postEntries, ...noteEntries]
   }
 
   async buildRssStructure(): Promise<RSSProps> {
@@ -151,8 +175,8 @@ export class AggregateService {
       author: owner.name || '',
       description: seo.description || '',
       data: (latest as any[]).map((item) => ({
-        created: item.created ?? null,
-        modified: item.modified ?? null,
+        created: item.createdAt ?? null,
+        modified: item.modifiedAt ?? null,
         link: item.slug ?? '',
         title: item.title ?? '',
         text: item.text ?? '',
@@ -161,7 +185,7 @@ export class AggregateService {
         contentFormat: item.contentFormat,
         content: item.content,
       })),
-    } as RSSProps
+    }
   }
 
   async getRSSFeedContent() {
@@ -250,8 +274,8 @@ export class AggregateService {
     return posts.map((post) => ({
       id: post.id,
       title: post.title,
-      read: post.count?.read ?? 0,
-      like: post.count?.like ?? 0,
+      read: post.readCount ?? 0,
+      like: post.likeCount ?? 0,
     }))
   }
 

@@ -151,7 +151,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
   }
 
   async afterReplyComment(comment: CommentModel, ipLocation: { ip: string }) {
-    const commentId = comment.id ?? (comment as any)._id?.toString()
+    const commentId = comment.id ?? (comment as any).id?.toString()
     const isLoggedInComment = !!comment.readerId
 
     scheduleManager.schedule(async () => {
@@ -253,10 +253,10 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
 
     const refType = comment.refType
     const result = await this.databaseService.findGlobalById(
-      String(comment.ref),
+      String(comment.refId),
     )
     const refDoc = result?.document as any
-    const time = new Date(comment.created!)
+    const time = new Date(comment.createdAt!)
     const parent: CommentModel | null = comment.parentCommentId
       ? await this.commentService.findById(String(comment.parentCommentId))
       : null
@@ -308,9 +308,10 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
           type === CommentReplyMailType.Guest
             ? commentIdentity.author || ownerInfo.name
             : ownerInfo.name,
-        link: await this.resolveUrlByType(refType, refDoc).then(
-          (url) => `${url}#comments-${comment.id}`,
-        ),
+        link: await this.resolveUrlByType(
+          refType as CollectionRefTypes,
+          refDoc,
+        ).then((url) => `${url}#comments-${comment.id}`),
         time: parsedTime,
         mail: senderMail,
         ip: comment.ip || '',
@@ -321,7 +322,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
             author: commentIdentity.author,
             avatar: commentIdentity.avatar,
             mail: senderMail,
-            created: new Date(comment.created!).toISOString(),
+            created: new Date(comment.createdAt!).toISOString(),
             isWhispers: comment.isWhispers || false,
           } as CommentModelRenderProps,
           parent: parent
@@ -334,10 +335,10 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
             : null,
           post: {
             title: refDoc.title,
-            created: new Date(refDoc.created!).toISOString(),
+            created: new Date(refDoc.createdAt!).toISOString(),
             id: refDoc.id!,
-            modified: refDoc.modified
-              ? new Date(refDoc.modified!).toISOString()
+            modified: refDoc.modifiedAt
+              ? new Date(refDoc.modifiedAt!).toISOString()
               : null,
             text: refDoc.text,
           },
@@ -403,7 +404,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
       body: `${comment.author} 评论了你的${
         comment.refType === CollectionRefTypes.Recently ? '速记' : '文章'
       }：${comment.text}`,
-      icon: comment.avatar,
+      icon: comment.avatar ?? undefined,
       url: `${adminUrl}#/comments`,
     })
   }
@@ -426,7 +427,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
         ).toString()
       }
       case CollectionRefTypes.Recently: {
-        return new URL(`/thinking/${model._id}`, base).toString()
+        return new URL(`/thinking/${model.id}`, base).toString()
       }
     }
   }

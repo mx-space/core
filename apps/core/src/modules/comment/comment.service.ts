@@ -22,7 +22,6 @@ import {
   type CommentFindFilter,
   type CommentRefType,
   CommentRepository,
-  type CommentRow,
 } from './comment.repository'
 import type { CommentModel } from './comment.types'
 
@@ -67,37 +66,6 @@ export class CommentService {
     return this.commentRepository
   }
 
-  toLegacy(row: CommentRow | null): any {
-    if (!row) return null
-    const plain: any = {
-      ...row,
-      _id: row.id,
-      ref: row.refId,
-      created: row.createdAt,
-      parentCommentId: row.parentCommentId,
-      rootCommentId: row.rootCommentId,
-      replies: row.children?.map((child) => this.toLegacy(child)),
-      parent: this.toLegacy(row.parent ?? null),
-    }
-    return plain
-  }
-
-  toLegacyMany(rows: CommentRow[]) {
-    return rows.map((row) => this.toLegacy(row))
-  }
-
-  toPaginate(result: Awaited<ReturnType<CommentRepository['paginatedFind']>>) {
-    return {
-      docs: this.toLegacyMany(result.data),
-      totalDocs: result.pagination.total,
-      page: result.pagination.currentPage,
-      totalPages: result.pagination.totalPage,
-      limit: result.pagination.size,
-      hasNextPage: result.pagination.hasNextPage,
-      hasPrevPage: result.pagination.hasPrevPage,
-    }
-  }
-
   private normalizeRefType(type: CollectionRefTypes | CommentRefType) {
     return type as CommentRefType
   }
@@ -126,11 +94,11 @@ export class CommentService {
   }
 
   async findById(id: string) {
-    return this.toLegacy(await this.commentRepository.findById(id))
+    return this.commentRepository.findById(id)
   }
 
   async findByIdWithRelations(id: string) {
-    return this.toLegacy(await this.commentRepository.findByIdWithRelations(id))
+    return this.commentRepository.findByIdWithRelations(id)
   }
 
   async deleteForRef(
@@ -165,9 +133,7 @@ export class CommentService {
     size: number,
     options: { state?: number; rootOnly?: boolean } = {},
   ) {
-    return this.toLegacyMany(
-      await this.commentRepository.findRecent(size, options),
-    )
+    return this.commentRepository.findRecent(size, options)
   }
 
   async createComment(
@@ -211,7 +177,7 @@ export class CommentService {
       readerId: reader ? reader.id : undefined,
     })
 
-    return this.toLegacy(comment)
+    return comment
   }
 
   async validAuthorName(author: string): Promise<void> {
@@ -258,7 +224,7 @@ export class CommentService {
       isWhispers: parent.isWhispers,
       readerId: reader ? reader.id : undefined,
     })
-    return this.toLegacy(comment)
+    return comment
   }
 
   async softDeleteComment(id: string) {
@@ -311,10 +277,12 @@ export class CommentService {
   }
 
   async getComments({ page, size, state } = { page: 1, size: 10, state: 0 }) {
-    const queryList = this.toPaginate(
-      await this.commentRepository.paginatedFind({ state }, page, size),
+    const queryList = await this.commentRepository.paginatedFind(
+      { state },
+      page,
+      size,
     )
-    await this.fillAndReplaceAvatarUrl(queryList.docs)
+    await this.fillAndReplaceAvatarUrl(queryList.data)
     return queryList
   }
 
@@ -343,10 +311,12 @@ export class CommentService {
     void hasAnchor
     void sort
     void around
-    const result = this.toPaginate(
-      await this.commentRepository.paginatedFind({ refId }, page, size),
+    const result = await this.commentRepository.paginatedFind(
+      { refId },
+      page,
+      size,
     )
-    await this.fillAndReplaceAvatarUrl(result.docs)
+    await this.fillAndReplaceAvatarUrl(result.data)
     return result
   }
 
@@ -367,9 +337,9 @@ export class CommentService {
     void cursor
     void isAuthenticated
     void commentShouldAudit
-    const replies = this.toLegacyMany(
-      (await this.commentRepository.findReplies(rootCommentId, 1, size)).data,
-    )
+    const replies = (
+      await this.commentRepository.findReplies(rootCommentId, 1, size)
+    ).data
     await this.fillAndReplaceAvatarUrl(replies)
     return { replies, remaining: 0, done: true }
   }
@@ -406,7 +376,7 @@ export class CommentService {
       : []
     const readerMap = new Map<string, ReaderModel>()
     readers.forEach((reader) => {
-      const id = (reader as any).id || (reader as any)._id?.toString?.()
+      const id = (reader as any).id || (reader as any).id?.toString?.()
       if (id) readerMap.set(id, reader)
     })
 
@@ -447,7 +417,7 @@ export class CommentService {
       location: string | null
     }>,
   ) {
-    return this.toLegacy(await this.commentRepository.update(id, patch))
+    return this.commentRepository.update(id, patch)
   }
 
   async clearPinForRefOfComment(id: string) {
@@ -478,9 +448,7 @@ export class CommentService {
   }
 
   async findByFilter(filter: CommentFindFilter) {
-    return this.toLegacyMany(
-      (await this.commentRepository.paginatedFind(filter, 1, 50)).data,
-    )
+    return (await this.commentRepository.paginatedFind(filter, 1, 50)).data
   }
 
   @OnEvent(BusinessEvents.POST_UPDATE)

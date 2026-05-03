@@ -27,9 +27,9 @@ import { SnowflakeService } from '~/shared/id/snowflake.service'
 export interface NoteRow {
   id: EntityId
   nid: number
-  title: string | null
+  title: string
   slug: string | null
-  text: string | null
+  text: string
   content: string | null
   contentFormat: string
   images: unknown[] | null
@@ -78,9 +78,9 @@ export type NotePatchInput = Partial<NoteCreateInput> & {
 const mapBase = (row: typeof notes.$inferSelect): NoteRow => ({
   id: toEntityId(row.id) as EntityId,
   nid: row.nid,
-  title: row.title,
+  title: row.title ?? '',
   slug: row.slug,
-  text: row.text,
+  text: row.text ?? '',
   content: row.content,
   contentFormat: row.contentFormat,
   images: row.images,
@@ -114,6 +114,16 @@ export class NoteRepository extends BaseRepository {
       .select({ max: sql<number>`coalesce(max(${notes.nid}), 0)::int` })
       .from(notes)
     return Number(row?.max ?? 0) + 1
+  }
+
+  async getPassword(id: EntityId | string): Promise<string | null> {
+    const idBig = parseEntityId(id)
+    const [row] = await this.db
+      .select({ password: notes.password })
+      .from(notes)
+      .where(eq(notes.id, idBig))
+      .limit(1)
+    return row?.password ?? null
   }
 
   async findById(id: EntityId | string): Promise<NoteRow | null> {

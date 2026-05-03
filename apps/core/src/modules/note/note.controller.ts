@@ -47,15 +47,7 @@ import {
 import { NoteService } from './note.service'
 import { NoteModel } from './note.types'
 
-type NoteListItem = {
-  _id?: { toString?: () => string } | string
-  id?: string
-  nid?: number
-  title: string
-  slug?: string
-  created?: Date | null
-  modified?: Date | null
-  isPublished?: boolean
+type NoteListItem = NoteModel & {
   isTranslated?: boolean
   translationMeta?: TranslationMeta
 }
@@ -63,28 +55,28 @@ type NoteListItem = {
 // Shared @TranslateFields rule sets — kept top-of-file so detail/list endpoints
 // stay in sync without copy-paste drift.
 const NOTE_LIST_TRANSLATE_FIELDS = [
-  { path: 'docs[].mood', keyPath: 'note.mood' },
-  { path: 'docs[].weather', keyPath: 'note.weather' },
-  { path: 'docs[].topic.name', keyPath: 'topic.name', idField: '_id' },
+  { path: 'data[].mood', keyPath: 'note.mood' },
+  { path: 'data[].weather', keyPath: 'note.weather' },
+  { path: 'data[].topic.name', keyPath: 'topic.name', idField: 'id' },
   {
-    path: 'docs[].topic.introduce',
+    path: 'data[].topic.introduce',
     keyPath: 'topic.introduce',
-    idField: '_id',
+    idField: 'id',
   },
 ] as const
 
 const NOTE_DETAIL_TRANSLATE_FIELDS = [
   { path: 'mood', keyPath: 'note.mood' },
   { path: 'weather', keyPath: 'note.weather' },
-  { path: 'topic.name', keyPath: 'topic.name', idField: '_id' },
-  { path: 'topic.introduce', keyPath: 'topic.introduce', idField: '_id' },
+  { path: 'topic.name', keyPath: 'topic.name', idField: 'id' },
+  { path: 'topic.introduce', keyPath: 'topic.introduce', idField: 'id' },
   { path: 'data.mood', keyPath: 'note.mood' },
   { path: 'data.weather', keyPath: 'note.weather' },
-  { path: 'data.topic.name', keyPath: 'topic.name', idField: '_id' },
+  { path: 'data.topic.name', keyPath: 'topic.name', idField: 'id' },
   {
     path: 'data.topic.introduce',
     keyPath: 'topic.introduce',
-    idField: '_id',
+    idField: 'id',
   },
 ] as const
 
@@ -115,7 +107,7 @@ export class NoteController {
         : current.text
 
     if (
-      !this.noteService.checkPasswordToAccess(current, password) &&
+      !(await this.noteService.checkPasswordToAccess(current.id, password)) &&
       !isAuthenticated
     ) {
       throw new BizException(ErrorCodeEnum.NoteForbidden)
@@ -164,21 +156,17 @@ export class NoteController {
     }
 
     const [prev] = await this.noteService.findByCreatedWindow(
-      current.created!,
+      current.createdAt!,
       'after',
       1,
       { visibleOnly },
     )
     const [next] = await this.noteService.findByCreatedWindow(
-      current.created!,
+      current.createdAt!,
       'before',
       1,
       { visibleOnly },
     )
-    if (currentData.password) {
-      currentData.password = '*'
-    }
-
     await this.translateAdjacentNoteTitles([prev, next], lang)
 
     return { data: applyContentPreference(currentData, prefer), next, prev }
@@ -192,11 +180,7 @@ export class NoteController {
     const idMap = new Map<NoteListItem, string>()
     for (const note of notes) {
       if (!note) continue
-      const id =
-        typeof note._id === 'string'
-          ? note._id
-          : (note._id?.toString?.() ?? note.id ?? '')
-      if (id) idMap.set(note, id)
+      idMap.set(note, note.id)
     }
     if (!idMap.size) return
 
@@ -251,7 +235,7 @@ export class NoteController {
       visibleOnly: !isAuthenticated,
     })
 
-    if (!result.docs.length) {
+    if (!result.data.length) {
       return result
     }
 
@@ -265,21 +249,21 @@ export class NoteController {
     }
 
     const translationInputs: ArticleTranslationInput[] = []
-    for (const doc of result.docs) {
+    for (const doc of result.data) {
       if (doc.meta && typeof doc.meta === 'string') {
         doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
       }
 
       if (typeof doc.text === 'string') {
         translationInputs.push({
-          id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
+          id: String(doc.id),
           title: doc.title,
           text: doc.text,
           meta: doc.meta as { lang?: string } | undefined,
           contentFormat: doc.contentFormat,
           content: doc.content,
-          modified: doc.modified,
-          created: doc.created,
+          modifiedAt: doc.modifiedAt,
+          createdAt: doc.createdAt,
         })
       }
     }
@@ -297,8 +281,8 @@ export class NoteController {
         targetLang: lang,
       })
 
-    result.docs = result.docs.map((doc) => {
-      const docId = doc._id?.toString?.() ?? doc.id ?? String(doc._id)
+    result.data = result.data.map((doc) => {
+      const docId = String(doc.id)
       const translation = translationResults.get(docId)
       if (!translation?.isTranslated) {
         return doc
@@ -321,7 +305,7 @@ export class NoteController {
     const originalSelectHasText = select?.includes('text')
     const originalSelectHasContent = select?.includes('content')
     if (!originalSelectHasText || !originalSelectHasContent) {
-      for (const doc of result.docs) {
+      for (const doc of result.data) {
         if (!originalSelectHasText && !withSummary) delete (doc as any).text
         if (!originalSelectHasContent) delete (doc as any).content
       }
@@ -335,35 +319,24 @@ export class NoteController {
   }
 
   private async enrichDocsWithSummary(
-    result: {
-      docs: (NoteModel & {
-        _id?: { toString: () => string }
-        toObject?: () => Record<string, unknown>
-      })[]
-    },
+    result: { data: NoteModel[] },
     lang?: string,
   ) {
-    const ids = result.docs.map((d) => d.id || d._id!.toString())
+    const ids = result.data.map((d) => d.id)
     const summaryMap = await this.aiSummaryService.batchGetSummariesByRefIds(
       ids,
       lang || DEFAULT_SUMMARY_LANG,
     )
 
-    const enriched = result.docs.map((doc) => {
-      const plain = (
-        typeof doc.toObject === 'function' ? doc.toObject() : doc
-      ) as Record<string, unknown>
-      const docId =
-        (plain.id as string) ||
-        (plain._id as { toString: () => string })?.toString()
-      plain.summary =
-        summaryMap.get(docId) ?? (plain.text as string)?.slice(0, 150) ?? ''
+    const enriched = result.data.map((doc) => {
+      const plain = { ...doc } as Record<string, unknown>
+      plain.summary = summaryMap.get(doc.id) ?? (doc.text ?? '').slice(0, 150)
       delete plain.text
       delete plain.content
       return plain
     })
 
-    ;(result as unknown as { docs: typeof enriched }).docs = enriched
+    ;(result as unknown as { data: typeof enriched }).data = enriched
   }
 
   @Get(':id')
@@ -444,7 +417,7 @@ export class NoteController {
     const findAdjacent = (direction: 'prev' | 'next', count: number) => {
       if (count <= 0) return Promise.resolve([])
       return this.noteService.findByCreatedWindow(
-        currentDocument.created,
+        currentDocument.createdAt,
         direction === 'prev' ? 'after' : 'before',
         count,
         { visibleOnly: !isAuthenticated },
@@ -457,7 +430,7 @@ export class NoteController {
     ])
     let data = [...prevList, ...nextList, currentDocument] as NoteListItem[]
     data = data.sort(
-      (a, b) => (b.created?.valueOf() ?? 0) - (a.created?.valueOf() ?? 0),
+      (a, b) => (b.createdAt?.valueOf() ?? 0) - (a.createdAt?.valueOf() ?? 0),
     )
 
     // 处理翻译
@@ -466,10 +439,10 @@ export class NoteController {
       targetLang: lang,
       translationFields: ['title', 'translationMeta'] as const,
       getInput: (item) => ({
-        id: item._id?.toString?.() ?? item.id ?? String(item._id),
+        id: String(item.id),
         title: item.title,
-        modified: item.modified,
-        created: item.created,
+        modifiedAt: item.modifiedAt,
+        createdAt: item.createdAt,
       }),
       applyResult: (item, translation) => {
         if (translation?.isTranslated) {
@@ -622,14 +595,14 @@ export class NoteController {
 
     // 处理翻译
     const translatedDocs = await this.translationService.translateList({
-      items: result.docs as unknown as NoteListItem[],
+      items: result.data as unknown as NoteListItem[],
       targetLang: lang,
       translationFields: ['title', 'translationMeta'] as const,
       getInput: (item) => ({
-        id: item._id?.toString?.() ?? item.id ?? String(item._id),
+        id: String(item.id),
         title: item.title,
-        modified: item.modified,
-        created: item.created,
+        modifiedAt: item.modifiedAt,
+        createdAt: item.createdAt,
       }),
       applyResult: (item, translation) => {
         delete (item as { text?: string }).text // 始终移除 text
@@ -641,7 +614,7 @@ export class NoteController {
         return item
       },
     })
-    result.docs = translatedDocs as typeof result.docs
+    result.data = translatedDocs as typeof result.data
 
     return result
   }

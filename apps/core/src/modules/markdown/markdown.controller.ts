@@ -48,21 +48,21 @@ export class MarkdownController {
     const convertor = <
       T extends {
         text: string
-        created?: Date
-        modified?: Date | null
+        createdAt?: Date
+        modifiedAt?: Date | null
         title: string
         id: string
-        slug?: string
+        slug?: string | null
       },
     >(
       item: T,
       extraMetaData: Record<string, any> = {},
     ): MarkdownYAMLProperty => {
       const meta = {
-        created: item.created!,
-        modified: item.modified,
+        createdAt: item.createdAt!,
+        modifiedAt: item.modifiedAt ?? null,
         title: item.title,
-        slug: item.slug || item.title,
+        slug: item.slug ?? item.title,
         oid: item.id,
         ...extraMetaData,
       }
