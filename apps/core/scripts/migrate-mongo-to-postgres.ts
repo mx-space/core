@@ -72,7 +72,8 @@ async function main() {
 
   if (mode === 'apply') {
     const migrationsFolder = path.resolve(
-      process.cwd(),
+      import.meta.dirname,
+      '..',
       'src',
       'database',
       'migrations',

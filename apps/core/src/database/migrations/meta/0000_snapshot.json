@@ -3701,7 +3701,7 @@
         },
         "detached_at": {
           "name": "detached_at",
-          "type": "timestamp",
+          "type": "timestamptz",
           "primaryKey": false,
           "notNull": false
         }

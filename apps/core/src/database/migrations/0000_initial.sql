@@ -416,7 +416,7 @@ CREATE TABLE "file_references" (
 	"uploaded_by" text,
 	"mime_type" text,
 	"byte_size" bigint,
-	"detached_at" timestamp
+	"detached_at" timestamptz
 );
 --> statement-breakpoint
 CREATE TABLE "links" (

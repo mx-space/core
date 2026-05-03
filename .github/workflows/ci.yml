@@ -163,3 +163,4 @@ jobs:
           PG_USER: mx
           PG_PASSWORD: mx
           PG_DATABASE: mx_core
+          MIGRATIONS_DIR: ${{ github.workspace }}/apps/core/src/database/migrations
