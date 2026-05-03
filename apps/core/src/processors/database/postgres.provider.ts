@@ -58,12 +58,9 @@ export function createDb(pool: PgPool): AppDatabase {
 
 export async function applyMigrations(db: AppDatabase): Promise<void> {
   if (migrationsApplied) return
-  const migrationsFolder = path.resolve(
-    process.cwd(),
-    'src',
-    'database',
-    'migrations',
-  )
+  const migrationsFolder = process.env.MIGRATIONS_DIR
+    ? path.resolve(process.env.MIGRATIONS_DIR)
+    : path.resolve(process.cwd(), 'src', 'database', 'migrations')
   await drizzleMigrate(db, { migrationsFolder })
   migrationsApplied = true
   logger.log(`Drizzle migrations applied from ${migrationsFolder}`)

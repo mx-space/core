@@ -1221,15 +1221,22 @@ export const stepSearchDocuments: MigrationStep = {
   async load(ctx) {
     const resolver = createResolver(ctx, 'search_documents')
     const docs = await collect<any>(ctx, 'search_documents')
+    const SINGULAR: Record<string, 'post' | 'note' | 'page'> = {
+      posts: 'post',
+      notes: 'note',
+      pages: 'page',
+    }
     const rows = docs
       .map((d) => {
         const coll = normalizeContentRefType(d.refType)
         if (!coll) return null
+        const singular = SINGULAR[coll]
+        if (!singular) return null
         const refId = resolver.ref(coll, d.refId, 'refId', true)
         if (!refId) return null
         return {
           id: resolver.self(d._id),
-          refType: coll,
+          refType: singular,
           refId,
           title: d.title,
           searchText: d.searchText,

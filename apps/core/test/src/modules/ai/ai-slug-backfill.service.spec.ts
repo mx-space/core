@@ -8,11 +8,11 @@ describe('AiSlugBackfillService', () => {
   let service: AiSlugBackfillService
   let registeredHandler: TaskHandler<SlugBackfillTaskPayload> | undefined
 
-  const noteModel = {
-    countDocuments: vi.fn(),
-    findOne: vi.fn(),
-    find: vi.fn(),
-    updateOne: vi.fn(),
+  const noteService = {
+    findBySlug: vi.fn(),
+    findManyByIds: vi.fn(),
+    findRecent: vi.fn(),
+    updateById: vi.fn(),
   }
 
   const aiWriterService = {
@@ -51,23 +51,18 @@ describe('AiSlugBackfillService', () => {
     registeredHandler = undefined
     vi.clearAllMocks()
 
-    noteModel.findOne.mockReturnValue({
-      lean: vi.fn().mockResolvedValue(null),
-    })
-    noteModel.updateOne.mockResolvedValue({ modifiedCount: 1 })
-    noteModel.find.mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      sort: vi.fn().mockReturnThis(),
-      lean: vi
-        .fn()
-        .mockResolvedValue([{ _id: 'note-1', title: 'First', nid: 1 }]),
-    })
+    noteService.findBySlug.mockResolvedValue(null)
+    noteService.findManyByIds.mockResolvedValue([
+      { id: 'note-1', title: 'First', nid: 1, slug: undefined },
+    ])
+    noteService.findRecent.mockResolvedValue([])
+    noteService.updateById.mockResolvedValue({ id: 'note-1', slug: 'first' })
     aiWriterService.generateSlugByTitleViaOpenAI.mockResolvedValue({
       slug: 'first',
     })
 
     service = new AiSlugBackfillService(
-      noteModel as any,
+      noteService as any,
       aiWriterService as any,
       taskProcessor as any,
       aiTaskService as any,

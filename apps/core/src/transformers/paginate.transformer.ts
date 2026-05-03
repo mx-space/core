@@ -1,6 +1,6 @@
 import type { Pagination } from '~/shared/interface/paginator.interface'
 
-type PaginateResult<T> = {
+type MongoosePaginateResult<T> = {
   docs: T[]
   totalDocs: number
   page?: number
@@ -11,17 +11,27 @@ type PaginateResult<T> = {
 }
 
 export function transformDataToPaginate<T = any>(
-  data: PaginateResult<T>,
+  data: MongoosePaginateResult<T> | Pagination<T>,
 ): Pagination<T> {
+  if (
+    data &&
+    typeof data === 'object' &&
+    Array.isArray((data as Pagination<T>).data) &&
+    (data as Pagination<T>).pagination &&
+    typeof (data as Pagination<T>).pagination === 'object'
+  ) {
+    return data as Pagination<T>
+  }
+  const m = data as MongoosePaginateResult<T>
   return {
-    data: data.docs,
+    data: m.docs,
     pagination: {
-      total: data.totalDocs,
-      currentPage: data.page as number,
-      totalPage: data.totalPages as number,
-      size: data.limit,
-      hasNextPage: data.hasNextPage,
-      hasPrevPage: data.hasPrevPage,
+      total: m.totalDocs,
+      currentPage: m.page as number,
+      totalPage: m.totalPages as number,
+      size: m.limit,
+      hasNextPage: m.hasNextPage,
+      hasPrevPage: m.hasPrevPage,
     },
   }
 }

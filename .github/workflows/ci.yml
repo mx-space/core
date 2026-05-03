@@ -77,12 +77,20 @@ jobs:
     needs: quality
     env:
       REDISMS_DISABLE_POSTINSTALL: 1
-      MONGOMS_DISABLE_POSTINSTALL: 1
     services:
-      mongodb:
-        image: mongo
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: mx
+          POSTGRES_PASSWORD: mx
+          POSTGRES_DB: mx_core
         ports:
-          - 27017:27017
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mx -d mx_core"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
       redis:
         image: redis
         ports:
@@ -98,6 +106,16 @@ jobs:
         run: npm run bundle
       - name: Test Bundle Server
         run: bash scripts/workflow/test-server.sh
+        env:
+          SNOWFLAKE_WORKER_ID: 1
+          PG_HOST: 127.0.0.1
+          PG_PORT: 5432
+          PG_USER: mx
+          PG_PASSWORD: mx
+          PG_DATABASE: mx_core
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+          JWT_SECRET: test-bundle-server-jwt-secret
 
   test:
     name: Test
@@ -105,10 +123,19 @@ jobs:
     runs-on: ubuntu-latest
     needs: quality
     services:
-      mongodb:
-        image: mongo
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: mx
+          POSTGRES_PASSWORD: mx
+          POSTGRES_DB: mx_core
         ports:
-          - 27017:27017
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mx -d mx_core"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
       redis:
         image: redis
         ports:
@@ -129,3 +156,9 @@ jobs:
         env:
           CI: true
           REDIS_BINARY_PATH: /usr/bin/redis-server
+          SNOWFLAKE_WORKER_ID: 1
+          PG_HOST: 127.0.0.1
+          PG_PORT: 5432
+          PG_USER: mx
+          PG_PASSWORD: mx
+          PG_DATABASE: mx_core

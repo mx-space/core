@@ -9,6 +9,7 @@ RUN corepack prepare --activate
 RUN pnpm install
 RUN pnpm bundle
 RUN mv apps/core/out ./out
+RUN cp -R apps/core/src/database/migrations ./out/migrations
 RUN node apps/core/download-latest-admin-assets.js
 
 FROM node:22-alpine AS runner
@@ -25,6 +26,7 @@ RUN npm i sharp
 COPY --chmod=755 docker-entrypoint.sh .
 
 ENV TZ=Asia/Shanghai
+ENV MIGRATIONS_DIR=/app/migrations
 
 EXPOSE 2333
 

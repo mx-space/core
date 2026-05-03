@@ -24,14 +24,12 @@ describe('ConfigsService', () => {
       getClient: vi.fn(() => redisClient),
       waitForReady: vi.fn(() => ready.promise),
     }
-    const optionModel = {
-      find: vi.fn(() => ({
-        lean: vi.fn().mockResolvedValue([]),
-      })),
+    const optionsRepository = {
+      findAll: vi.fn().mockResolvedValue([]),
     }
 
     const service = new ConfigsService(
-      optionModel as any,
+      optionsRepository as any,
       redisService as any,
       {} as any,
       { emit: vi.fn() } as any,
@@ -66,14 +64,12 @@ describe('ConfigsService', () => {
         .mockImplementationOnce(() => initReady)
         .mockImplementation(() => readReady.promise),
     }
-    const optionModel = {
-      find: vi.fn(() => ({
-        lean: vi.fn().mockResolvedValue([]),
-      })),
+    const optionsRepository = {
+      findAll: vi.fn().mockResolvedValue([]),
     }
 
     const service = new ConfigsService(
-      optionModel as any,
+      optionsRepository as any,
       redisService as any,
       {} as any,
       { emit: vi.fn() } as any,

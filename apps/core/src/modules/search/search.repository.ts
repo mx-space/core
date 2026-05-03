@@ -1,5 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, ilike, inArray, or, type SQL, sql } from 'drizzle-orm'
+import {
+  and,
+  arrayOverlaps,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  or,
+  type SQL,
+  sql,
+} from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { searchDocuments } from '~/database/schema'
@@ -164,7 +174,7 @@ export class SearchRepository extends BaseRepository {
     limit = 100,
   ): Promise<SearchDocumentRow[]> {
     if (terms.length === 0) return []
-    const filters: SQL[] = [sql`${searchDocuments.terms} && ${terms}::text[]`]
+    const filters: SQL[] = [arrayOverlaps(searchDocuments.terms, terms)]
     if (refType) filters.push(eq(searchDocuments.refType, refType))
     const rows = await this.db
       .select()
