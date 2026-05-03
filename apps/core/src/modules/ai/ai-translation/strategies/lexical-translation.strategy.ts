@@ -7,8 +7,8 @@ import { extractDocumentContext } from '~/utils/content.util'
 import { md5 } from '~/utils/tool.util'
 
 import type { IModelRuntime } from '../../runtime'
-import type { AITranslationModel } from '../ai-translation.model'
 import type { ArticleContent } from '../ai-translation.types'
+import type { AITranslationModel } from '../ai-translation.types-model'
 import {
   type LexicalTranslationResult,
   parseLexicalForTranslation,
@@ -40,6 +40,29 @@ interface BlockTranslationSegments {
   propertySegments: PropertySegment[]
 }
 
+interface LexicalTranslationInput {
+  title?: string | null
+  subtitle?: string | null
+  summary?: string | null
+  tags?: string[] | null
+  [key: string]: unknown
+}
+
+interface LexicalSourceMetaHashes extends Omit<
+  LexicalTranslationInput,
+  'tags'
+> {
+  tags?: string | null
+}
+
+interface LexicalSourceBlockSnapshot {
+  id: string
+  fingerprint: string
+  type?: string
+  index?: number
+  [key: string]: unknown
+}
+
 const GROUP_UNIT_PREFIX = '__inline_group__'
 const REMOVED_SUBTITLE_KEY = '__subtitle__'
 const REMOVED_SUMMARY_KEY = '__summary__'
@@ -63,8 +86,11 @@ export class LexicalTranslationStrategy
   ): Promise<TranslationResult> {
     const { onToken, signal, existing } = options
     const isLexical = content.contentFormat === ContentFormat.Lexical
+    const existingBlockSnapshots = existing?.sourceBlockSnapshots as
+      | LexicalSourceBlockSnapshot[]
+      | undefined
     const canIncremental =
-      isLexical && existing?.content && existing.sourceBlockSnapshots?.length
+      isLexical && existing?.content && existingBlockSnapshots?.length
 
     if (canIncremental) {
       try {
@@ -189,7 +215,8 @@ export class LexicalTranslationStrategy
     const currentBlocks = this.lexicalService.extractRootBlocks(
       content.content!,
     )
-    const oldSnapshots = existing.sourceBlockSnapshots!
+    const oldSnapshots =
+      existing.sourceBlockSnapshots as LexicalSourceBlockSnapshot[]
     const oldFpMap = new Map(oldSnapshots.map((s) => [s.id, s.fingerprint]))
 
     const changedBlockIds = new Set<string | null>()
@@ -249,7 +276,10 @@ export class LexicalTranslationStrategy
     )
 
     const metaUnits: TranslationUnit[] = []
-    const oldMetaHashes = existing.sourceMetaHashes
+    const oldMetaHashes = existing.sourceMetaHashes as
+      | LexicalSourceMetaHashes
+      | null
+      | undefined
 
     const currentTitleHash = md5(content.title)
     if (!oldMetaHashes || oldMetaHashes.title !== currentTitleHash) {
@@ -294,7 +324,9 @@ export class LexicalTranslationStrategy
 
     if (content.tags?.length) {
       const currentTagsHash = md5(content.tags.join('|||'))
-      if (!oldMetaHashes || oldMetaHashes.tags !== currentTagsHash) {
+      const oldTagsHash =
+        typeof oldMetaHashes?.tags === 'string' ? oldMetaHashes.tags : undefined
+      if (!oldMetaHashes || oldTagsHash !== currentTagsHash) {
         metaUnits.push({
           id: REMOVED_TAGS_KEY,
           payload: content.tags.join('|||'),

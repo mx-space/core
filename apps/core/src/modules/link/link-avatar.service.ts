@@ -1,18 +1,19 @@
 import { Readable } from 'node:stream'
 import { URL } from 'node:url'
+
 import { Injectable, Logger } from '@nestjs/common'
-import type { DocumentType } from '@typegoose/typegoose'
+import { customAlphabet } from 'nanoid'
+
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { alphabet } from '~/constants/other.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { validateImageBuffer } from '~/utils/image.util'
-import { customAlphabet } from 'nanoid'
+
 import { ConfigsService } from '../configs/configs.service'
 import { FileService } from '../file/file.service'
 import type { FileType } from '../file/file.type'
-import { LinkModel, LinkState } from './link.model'
+import { LinkRepository, type LinkRow, LinkState } from './link.repository'
 
 const AVATAR_TYPE: FileType = 'avatar'
 
@@ -39,8 +40,7 @@ export class LinkAvatarService {
   private readonly logger: Logger
 
   constructor(
-    @InjectModel(LinkModel)
-    private readonly linkModel: MongooseModel<LinkModel>,
+    private readonly linkRepository: LinkRepository,
     private readonly configsService: ConfigsService,
     private readonly fileService: FileService,
     private readonly http: HttpService,
@@ -48,11 +48,9 @@ export class LinkAvatarService {
     this.logger = new Logger(LinkAvatarService.name)
   }
 
-  async convertToInternal(
-    link: string | DocumentType<LinkModel>,
-  ): Promise<boolean> {
+  async convertToInternal(link: string | LinkRow): Promise<boolean> {
     const doc =
-      typeof link === 'string' ? await this.linkModel.findById(link) : link
+      typeof link === 'string' ? await this.linkRepository.findById(link) : link
     if (!doc) {
       if (typeof link === 'string') {
         throw new BizException(ErrorCodeEnum.LinkNotFound)
@@ -81,7 +79,7 @@ export class LinkAvatarService {
         }
       } catch (error: any) {
         this.logger.warn(
-          `解析友链 ${doc._id} 的站点地址失败: ${error?.message || String(error)}`,
+          `解析友链 ${doc.id} 的站点地址失败: ${error?.message || String(error)}`,
         )
       }
       return webUrl
@@ -107,7 +105,7 @@ export class LinkAvatarService {
       !this.isAllowedMimeType(normalizedContentType)
     ) {
       this.logger.warn(
-        `友链 ${doc._id} 头像响应类型 ${contentType || 'unknown'} 不在受支持图片范围，跳过内链转换`,
+        `友链 ${doc.id} 头像响应类型 ${contentType || 'unknown'} 不在受支持图片范围，跳过内链转换`,
       )
       return false
     }
@@ -141,10 +139,9 @@ export class LinkAvatarService {
       filename,
     )
 
-    doc.avatar = internalUrl
-    await doc.save()
+    await this.linkRepository.updateAvatar(doc.id, internalUrl)
 
-    this.logger.log(`友链 ${doc._id} 头像已转换为内部链接`)
+    this.logger.log(`友链 ${doc.id} 头像已转换为内部链接`)
 
     return true
   }
@@ -155,40 +152,28 @@ export class LinkAvatarService {
   }> {
     const { friendLinkOptions } = await this.configsService.waitForConfigReady()
     if (!friendLinkOptions.enableAvatarInternalization) {
-      return {
-        updatedCount: 0,
-        updatedIds: [],
-      }
+      return { updatedCount: 0, updatedIds: [] }
     }
 
-    const links = await this.linkModel
-      .find({
-        state: LinkState.Pass,
-        avatar: { $exists: true, $ne: null },
-      })
-      .lean()
-
+    const links = await this.linkRepository.findByState(LinkState.Pass)
     const updatedIds: string[] = []
 
     for (const link of links) {
       try {
-        if (this.isExternalAvatar(link.avatar as string)) {
-          const converted = await this.convertToInternal(String(link._id))
+        if (this.isExternalAvatar(link.avatar)) {
+          const converted = await this.convertToInternal(link.id)
           if (converted) {
-            updatedIds.push(String(link._id))
+            updatedIds.push(link.id)
           }
         }
       } catch (error: any) {
         this.logger.error(
-          `迁移友链头像失败: ${link._id} - ${error?.message || String(error)}`,
+          `迁移友链头像失败: ${link.id} - ${error?.message || String(error)}`,
         )
       }
     }
 
-    return {
-      updatedCount: updatedIds.length,
-      updatedIds,
-    }
+    return { updatedCount: updatedIds.length, updatedIds }
   }
 
   private isExternalAvatar(avatar: string | undefined | null): boolean {
@@ -201,7 +186,6 @@ export class LinkAvatarService {
     if (avatar.includes('/objects/avatar/')) {
       return false
     }
-
     return true
   }
 

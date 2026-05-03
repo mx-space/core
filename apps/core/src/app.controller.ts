@@ -5,18 +5,19 @@ import {
   Post,
   UseInterceptors,
 } from '@nestjs/common'
+import dayjs from 'dayjs'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { InjectModel } from '~/transformers/model.transformer'
 import { PKG } from '~/utils/pkg.util'
-import dayjs from 'dayjs'
+
 import { HttpCache } from './common/decorators/cache.decorator'
 import { HTTPDecorators } from './common/decorators/http.decorator'
-import { IpLocation } from './common/decorators/ip.decorator'
 import type { IpRecord } from './common/decorators/ip.decorator'
+import { IpLocation } from './common/decorators/ip.decorator'
 import { AllowAllCorsInterceptor } from './common/interceptors/allow-all-cors.interceptor'
 import { RedisKeys } from './constants/cache.constant'
-import { OptionModel } from './modules/configs/configs.model'
+import { ConfigsService } from './modules/configs/configs.service'
 import { RedisService } from './processors/redis/redis.service'
 import { getRedisKey } from './utils/redis.util'
 
@@ -24,8 +25,7 @@ import { getRedisKey } from './utils/redis.util'
 export class AppController {
   constructor(
     private readonly redisService: RedisService,
-    @InjectModel(OptionModel)
-    private readonly optionModel: MongooseModel<OptionModel>,
+    private readonly configsService: ConfigsService,
   ) {}
 
   @Get('/uptime')
@@ -73,24 +73,13 @@ export class AppController {
       redis.sadd(getRedisKey(RedisKeys.LikeSite), ip)
     }
 
-    await this.optionModel.updateOne(
-      {
-        name: 'like',
-      },
-      {
-        $inc: {
-          value: 1,
-        },
-      },
-      { upsert: true },
-    )
+    await this.configsService.incrementOption('like')
   }
 
   @Get('/like_this')
   @HttpCache.disable
   async getLikeNumber() {
-    const doc = await this.optionModel.findOne({ name: 'like' }).lean()
-    return doc ? doc.value : 0
+    return this.configsService.getOptionValue('like', 0)
   }
 
   @Get('/clean_catch')

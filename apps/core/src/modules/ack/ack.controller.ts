@@ -1,12 +1,13 @@
 import { Body, HttpCode, Post, Res } from '@nestjs/common'
+import type { FastifyReply } from 'fastify'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
-import type { CountModel } from '~/shared/model/count.model'
-import type { FastifyReply } from 'fastify'
+
 import { AckDto, AckEventType, AckReadPayloadSchema } from './ack.schema'
 
 @ApiController('ack')
@@ -39,16 +40,13 @@ export class AckController {
         const { id, type } = result.data
         const doc = await this.countingService.updateReadCount(type, id)
 
-        if ('count' in doc)
+        if (doc) {
           this.webGateway.broadcast(BusinessEvents.ARTICLE_READ_COUNT_UPDATE, {
-            count: -~(
-              doc as {
-                count: CountModel
-              }
-            ).count.read!,
+            count: doc.readCount,
             id,
             type,
           })
+        }
 
         return res.send()
       }

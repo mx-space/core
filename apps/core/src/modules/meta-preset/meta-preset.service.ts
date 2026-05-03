@@ -1,20 +1,16 @@
 import type { OnModuleInit } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
-import type { ReturnModelType } from '@typegoose/typegoose'
 
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { InjectModel } from '~/transformers/model.transformer'
 
-import {
-  MetaFieldType,
-  MetaPresetModel,
-  MetaPresetScope,
-} from './meta-preset.model'
+import { MetaFieldType, MetaPresetScope } from './meta-preset.enum'
+import { MetaPresetRepository } from './meta-preset.repository'
 import type {
   CreateMetaPresetDto,
   UpdateMetaPresetDto,
 } from './meta-preset.schema'
+import type { MetaPresetModel } from './meta-preset.types'
 
 /**
  * 内置预设字段种子数据
@@ -113,14 +109,7 @@ const BUILTIN_PRESETS: Partial<MetaPresetModel>[] = [
 
 @Injectable()
 export class MetaPresetService implements OnModuleInit {
-  constructor(
-    @InjectModel(MetaPresetModel)
-    private readonly metaPresetModel: ReturnModelType<typeof MetaPresetModel>,
-  ) {}
-
-  get model() {
-    return this.metaPresetModel
-  }
+  constructor(private readonly metaPresetRepository: MetaPresetRepository) {}
 
   /**
    * 模块初始化时初始化内置预设
@@ -134,27 +123,20 @@ export class MetaPresetService implements OnModuleInit {
    */
   private async initBuiltinPresets() {
     for (const preset of BUILTIN_PRESETS) {
-      const exists = await this.metaPresetModel.findOne({
-        key: preset.key,
-        isBuiltin: true,
-      })
+      const exists = await this.metaPresetRepository.findByName(preset.key!)
 
       if (!exists) {
-        await this.metaPresetModel.create(preset)
+        await this.metaPresetRepository.create(preset)
       } else {
         // 更新内置预设的 options 和 children（保持最新）
-        await this.metaPresetModel.updateOne(
-          { key: preset.key, isBuiltin: true },
-          {
-            $set: {
-              options: preset.options,
-              children: preset.children,
-              label: preset.label,
-              description: preset.description,
-              placeholder: preset.placeholder,
-            },
-          },
-        )
+        await this.metaPresetRepository.update(exists.id, {
+          options: preset.options,
+          children: preset.children,
+          label: preset.label,
+          description: preset.description,
+          placeholder: preset.placeholder,
+          isBuiltin: true,
+        })
       }
     }
   }
@@ -163,52 +145,47 @@ export class MetaPresetService implements OnModuleInit {
    * 获取所有预设字段
    */
   async findAll(scope?: MetaPresetScope, enabledOnly = false) {
-    const query: Record<string, any> = {}
-
-    if (scope && scope !== MetaPresetScope.Both) {
-      query.$or = [{ scope }, { scope: MetaPresetScope.Both }]
-    }
-
-    if (enabledOnly) {
-      query.enabled = true
-    }
-
-    return this.metaPresetModel.find(query).sort({ order: 1 }).lean()
+    return (await this.metaPresetRepository.findAll()).filter((preset) => {
+      if (
+        scope &&
+        scope !== MetaPresetScope.Both &&
+        ![scope, MetaPresetScope.Both].includes(preset.scope)
+      )
+        return false
+      if (enabledOnly && !preset.enabled) return false
+      return true
+    })
   }
 
   /**
    * 根据 ID 获取单个预设字段
    */
   async findById(id: string) {
-    return this.metaPresetModel.findById(id).lean()
+    return this.metaPresetRepository.findById(id)
   }
 
   /**
    * 根据 key 获取预设字段
    */
   async findByKey(key: string) {
-    return this.metaPresetModel.findOne({ key }).lean()
+    return this.metaPresetRepository.findByName(key)
   }
 
   /**
    * 创建自定义预设字段
    */
   async create(dto: CreateMetaPresetDto) {
-    const exists = await this.metaPresetModel.findOne({ key: dto.key })
+    const exists = await this.metaPresetRepository.findByName(dto.key)
     if (exists) {
       throw new BizException(ErrorCodeEnum.PresetKeyExists, `key: "${dto.key}"`)
     }
 
     // 获取最大 order 值
-    const maxOrder = await this.metaPresetModel
-      .findOne()
-      .sort({ order: -1 })
-      .select('order')
-      .lean()
+    const maxOrder = await this.metaPresetRepository.findMaxOrder()
 
-    const order = dto.order ?? (maxOrder?.order ?? -1) + 1
+    const order = dto.order ?? maxOrder + 1
 
-    return this.metaPresetModel.create({
+    return this.metaPresetRepository.create({
       ...dto,
       isBuiltin: false,
       order,
@@ -219,7 +196,7 @@ export class MetaPresetService implements OnModuleInit {
    * 更新预设字段
    */
   async update(id: string, dto: UpdateMetaPresetDto) {
-    const preset = await this.metaPresetModel.findById(id)
+    const preset = await this.metaPresetRepository.findById(id)
     if (!preset) {
       throw new BizException(ErrorCodeEnum.PresetNotFound)
     }
@@ -235,18 +212,12 @@ export class MetaPresetService implements OnModuleInit {
         }
       }
 
-      return this.metaPresetModel
-        .findByIdAndUpdate(
-          id,
-          { $set: updateData },
-          { returnDocument: 'after' },
-        )
-        .lean()
+      return this.metaPresetRepository.update(id, updateData)
     }
 
     // 检查 key 是否重复
     if (dto.key && dto.key !== preset.key) {
-      const exists = await this.metaPresetModel.findOne({ key: dto.key })
+      const exists = await this.metaPresetRepository.findByName(dto.key)
       if (exists) {
         throw new BizException(
           ErrorCodeEnum.PresetKeyExists,
@@ -255,16 +226,14 @@ export class MetaPresetService implements OnModuleInit {
       }
     }
 
-    return this.metaPresetModel
-      .findByIdAndUpdate(id, { $set: dto }, { returnDocument: 'after' })
-      .lean()
+    return this.metaPresetRepository.update(id, dto)
   }
 
   /**
    * 删除预设字段
    */
   async delete(id: string) {
-    const preset = await this.metaPresetModel.findById(id)
+    const preset = await this.metaPresetRepository.findById(id)
     if (!preset) {
       throw new BizException(ErrorCodeEnum.PresetNotFound)
     }
@@ -273,21 +242,14 @@ export class MetaPresetService implements OnModuleInit {
       throw new BizException(ErrorCodeEnum.BuiltinPresetCannotDelete)
     }
 
-    return this.metaPresetModel.findByIdAndDelete(id)
+    return this.metaPresetRepository.deleteById(id)
   }
 
   /**
    * 批量更新排序
    */
   async updateOrder(ids: string[]) {
-    const bulkOps = ids.map((id, index) => ({
-      updateOne: {
-        filter: { _id: id },
-        update: { $set: { order: index } },
-      },
-    }))
-
-    await this.metaPresetModel.bulkWrite(bulkOps)
+    await this.metaPresetRepository.updateOrder(ids)
     return this.findAll()
   }
 }

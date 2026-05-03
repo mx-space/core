@@ -10,7 +10,6 @@ import {
   Logger,
 } from '@nestjs/common'
 import { isPlainObject } from 'es-toolkit/compat'
-import { Types } from 'mongoose'
 import qs from 'qs'
 
 import { BizException } from '~/common/exceptions/biz.exception'
@@ -19,19 +18,12 @@ import {
   SERVERLESS_EVENT_PREFIX,
 } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
-import {
-  OWNER_PROFILE_COLLECTION_NAME,
-  READER_COLLECTION_NAME,
-  SERVERLESS_STORAGE_COLLECTION_NAME,
-} from '~/constants/db.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { DATA_DIR, NODE_REQUIRE_PATH } from '~/constants/path.constant'
 import { isDev } from '~/global/env.global'
-import { DatabaseService } from '~/processors/database/database.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
 import type { SandboxResult } from '~/utils/sandbox'
@@ -39,15 +31,22 @@ import { SandboxService } from '~/utils/sandbox'
 import { safePathJoin } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
-import { SnippetModel, SnippetType } from '../snippet/snippet.model'
+import { OwnerRepository } from '../owner/owner.repository'
+import { ReaderRepository } from '../reader/reader.repository'
+import type { SnippetRow } from '../snippet/snippet.repository'
+import { SnippetRepository } from '../snippet/snippet.repository'
+import { SnippetType } from '../snippet/snippet.schema'
 import type {
   BuiltInFunctionObject,
   FunctionContextRequest,
   FunctionContextResponse,
 } from './function.types'
 import { allBuiltInSnippetPack as builtInSnippets } from './pack'
+import {
+  ServerlessLogRepository,
+  ServerlessStorageRepository,
+} from './serverless.repository'
 import { complieTypeScriptBabelOptions } from './serverless.util'
-import { ServerlessLogModel } from './serverless-log.model'
 
 type ScopeContext = {
   req: FunctionContextRequest
@@ -61,15 +60,15 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   private readonly sandboxService: SandboxService
 
   constructor(
-    @InjectModel(SnippetModel)
-    private readonly snippetModel: MongooseModel<SnippetModel>,
-    @InjectModel(ServerlessLogModel)
-    private readonly logModel: MongooseModel<ServerlessLogModel>,
+    private readonly snippetRepository: SnippetRepository,
+    private readonly storageRepository: ServerlessStorageRepository,
+    private readonly logRepository: ServerlessLogRepository,
     private readonly assetService: AssetService,
-    private readonly databaseService: DatabaseService,
 
     private readonly redisService: RedisService,
     private readonly configService: ConfigsService,
+    private readonly readerRepository: ReaderRepository,
+    private readonly ownerRepository: OwnerRepository,
 
     private readonly eventService: EventManagerService,
   ) {
@@ -154,8 +153,8 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     await this.pourBuiltInFunctions()
   }
 
-  public get model() {
-    return this.snippetModel
+  public get repository() {
+    return this.snippetRepository
   }
 
   private mockStorageCache = Object.freeze({
@@ -180,48 +179,38 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     },
   })
   private async mockGetOwner() {
-    const owner = await this.databaseService.db
-      .collection(READER_COLLECTION_NAME)
-      .find({ role: 'owner' })
-      .sort({ createdAt: 1, _id: 1 })
-      .limit(1)
-      .next()
+    const reader = await this.readerRepository.findOwner()
+    if (!reader) return null
 
-    if (!owner?._id) {
-      return null
-    }
-
-    const ownerProfile = await this.databaseService.db
-      .collection(OWNER_PROFILE_COLLECTION_NAME)
-      .findOne({
-        readerId:
-          Types.ObjectId.isValid(owner._id?.toString?.()) && owner._id
-            ? new Types.ObjectId(owner._id.toString())
-            : owner._id,
-      })
-
+    const profile = await this.ownerRepository.findByReaderId(reader.id)
     return {
-      id: owner._id.toString(),
-      _id: owner._id,
-      username: owner.username ?? owner.handle ?? '',
-      name: owner.name,
-      introduce: ownerProfile?.introduce,
-      avatar: owner.image,
-      mail: ownerProfile?.mail ?? owner.email,
-      url: ownerProfile?.url,
-      lastLoginTime: ownerProfile?.lastLoginTime,
-      lastLoginIp: ownerProfile?.lastLoginIp,
-      socialIds: ownerProfile?.socialIds,
+      id: reader.id,
+      _id: reader.id,
+      username: reader.username ?? reader.handle ?? '',
+      name:
+        reader.name ??
+        reader.displayUsername ??
+        reader.username ??
+        reader.handle ??
+        'owner',
+      introduce: profile?.introduce ?? undefined,
+      mail: profile?.mail ?? reader.email ?? undefined,
+      url: profile?.url ?? undefined,
+      lastLoginTime: profile?.lastLoginTime ?? undefined,
+      lastLoginIp: profile?.lastLoginIp ?? undefined,
+      socialIds: profile?.socialIds ?? undefined,
+      role: 'owner',
+      email: reader.email ?? undefined,
+      image: reader.image ?? undefined,
+      handle: reader.handle ?? undefined,
+      displayUsername: reader.displayUsername ?? undefined,
+      createdAt: reader.createdAt ?? profile?.createdAt,
     }
   }
 
   private mockDb(namespace: string) {
-    const db = this.databaseService.db
-    const collection = db.collection(SERVERLESS_STORAGE_COLLECTION_NAME)
-
     const checkRecordIsExist = async (key: string) => {
-      const count = await collection.countDocuments({ namespace, key })
-      return count > 0
+      return (await this.storageRepository.get(namespace, key)) !== null
     }
 
     const updateKey = async (key: string, value: any) => {
@@ -229,49 +218,31 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
         throw new InternalServerErrorException('key not exist')
       }
 
-      return collection.updateOne(
-        {
-          namespace,
-          key,
-        },
-        {
-          $set: {
-            value,
-          },
-        },
-      )
+      return this.storageRepository.upsert(namespace, key, value)
     }
 
     return {
       async get(key: string) {
-        return collection
-          .findOne({
-            namespace,
-            key,
-          })
-          .then((doc) => {
-            return doc?.value ?? null
-          })
+        return this.storageRepository.get(namespace, key)
       },
       async find(condition: KV) {
         if (typeof condition !== 'object') {
           throw new InternalServerErrorException('condition must be object')
         }
 
-        condition.namespace = namespace
-
-        return collection
-          .aggregate([
-            { $match: condition },
-            {
-              $project: {
-                value: 1,
-                key: 1,
-                _id: 1,
-              },
-            },
-          ])
-          .toArray()
+        const entries = await this.storageRepository.listNamespace(namespace)
+        return entries
+          .filter((entry) =>
+            Object.entries(condition).every(
+              ([key, value]) => (entry.value as any)?.[key] === value,
+            ),
+          )
+          .map((entry) => ({
+            _id: entry.id,
+            id: entry.id,
+            key: entry.key,
+            value: entry.value,
+          }))
       },
       async set(key: string, value: any) {
         if (typeof key !== 'string') {
@@ -282,47 +253,36 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
           return updateKey(key, value)
         }
 
-        return collection.insertOne({
-          namespace,
-          key,
-          value,
-        })
+        return this.storageRepository.upsert(namespace, key, value)
       },
       async insert(key: string, value: any) {
         if (await checkRecordIsExist(key)) {
           throw new InternalServerErrorException('key already exists')
         }
 
-        return collection.insertOne({
-          namespace,
-          key,
-          value,
-        })
+        return this.storageRepository.upsert(namespace, key, value)
       },
       update: updateKey,
       del(key: string) {
-        return collection.deleteOne({
-          namespace,
-          key,
-        })
+        return this.storageRepository.delete(namespace, key)
       },
     } as const
   }
 
   async injectContextIntoServerlessFunctionAndCall(
-    model: SnippetModel,
+    model: SnippetRow,
     context: ScopeContext,
   ): Promise<any> {
     const { raw: functionString } = model
     const scope = `${model.reference}/${model.name}`
 
-    let compiledCode = model.compiledCode
+    let compiledCode = model.compiledCode ?? undefined
     if (!compiledCode) {
       compiledCode =
         (await this.compileTypescriptCode(functionString)) ?? undefined
-      if (compiledCode) {
-        this.snippetModel
-          .updateOne({ _id: model.id }, { compiledCode })
+      if (compiledCode && model.id) {
+        this.snippetRepository
+          .update(model.id, { compiledCode })
           .catch((error) => {
             this.logger.error(
               `Backfill compiledCode failed for ${scope}: ${error.message}`,
@@ -368,7 +328,7 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
       isAuthenticated: context.hasAdminAccess,
       secret: secretObj as Record<string, unknown>,
       model: {
-        id: model.id,
+        id: model.id ?? '',
         name: model.name,
         reference: model.reference,
       },
@@ -413,12 +373,12 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async saveInvocationLog(
-    model: SnippetModel,
+    model: SnippetRow,
     context: ScopeContext,
     result: SandboxResult,
   ) {
-    await this.logModel.create({
-      functionId: model.id || (model as any)._id?.toString(),
+    await this.logRepository.record({
+      functionId: model.id || null,
       reference: model.reference,
       name: model.name,
       method: context.req.method,
@@ -435,36 +395,28 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     options: { page: number; size: number; status?: 'success' | 'error' },
   ) {
     const { page, size, status } = options
-    const condition: Record<string, unknown> = { functionId }
-    if (status) condition.status = status
-
-    const [data, total] = await Promise.all([
-      this.logModel
-        .find(condition)
-        .sort({ created: -1 })
-        .skip((page - 1) * size)
-        .limit(size)
-        .select('-logs')
-        .lean({ getters: true }),
-      this.logModel.countDocuments(condition),
-    ])
-
-    const totalPage = Math.ceil(total / size)
+    const result = await this.logRepository.list({
+      page,
+      size,
+      functionId,
+      status,
+    } as Parameters<ServerlessLogRepository['list']>[0])
+    const totalPage = result.pagination.totalPage
     return {
-      data,
+      data: result.data.map(({ logs: _logs, ...row }) => row),
       pagination: {
-        total,
+        total: result.pagination.total,
         size,
         currentPage: page,
         totalPage,
-        hasNextPage: page < totalPage,
-        hasPrevPage: page > 1,
+        hasNextPage: result.pagination.hasNextPage,
+        hasPrevPage: result.pagination.hasPrevPage,
       },
     }
   }
 
   async getInvocationLogDetail(id: string) {
-    return this.logModel.findById(id).lean({ getters: true })
+    return this.logRepository.findLogById(id)
   }
 
   async isValidServerlessFunction(raw: string) {
@@ -504,22 +456,19 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    const result = await this.model.find({
-      name: {
-        $in: paths,
-      },
-      reference: {
-        $in: ['built-in'].concat(Array.from(references.values())),
-      },
-      type: SnippetType.Function,
-    })
+    const result = await this.snippetRepository.findFunctionsByNamesReferences(
+      paths,
+      ['built-in', ...Array.from(references.values())],
+    )
 
     const migrationTasks = [] as Promise<any>[]
     for (const doc of result) {
       pathCodeMap.delete(doc.name)
 
       if (!doc.builtIn) {
-        migrationTasks.push(doc.updateOne({ builtIn: true }))
+        migrationTasks.push(
+          this.snippetRepository.update(doc.id, { builtIn: true }),
+        )
       }
     }
     await Promise.all(migrationTasks)
@@ -527,12 +476,12 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     for (const [path, { code, method, name, reference }] of pathCodeMap) {
       this.logger.log(`pour built-in function: ${name}`)
       const compiledCode = await this.compileTypescriptCode(code)
-      await this.model.create({
+      await this.snippetRepository.create({
         type: SnippetType.Function,
         name: path,
         reference: reference || 'built-in',
         raw: code,
-        compiledCode: compiledCode ?? undefined,
+        compiledCode: compiledCode ?? null,
         method: method || 'get',
         enable: true,
         private: false,
@@ -542,7 +491,7 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
   }
 
   async isBuiltInFunction(id: string) {
-    const document = await this.model.findById(id).lean()
+    const document = await this.snippetRepository.findById(id)
     if (!document) return false
     const isBuiltin = document.type == SnippetType.Function && document.builtIn
     return isBuiltin
@@ -563,12 +512,10 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     }
 
     const compiledCode = await this.compileTypescriptCode(builtInSnippet.code)
-    await this.model.updateOne(
-      {
-        name,
-      },
-      { raw: builtInSnippet.code, compiledCode: compiledCode ?? undefined },
-    )
+    await this.snippetRepository.updateByName(name, {
+      raw: builtInSnippet.code,
+      compiledCode: compiledCode ?? null,
+    })
   }
 }
 

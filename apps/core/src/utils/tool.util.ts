@@ -11,7 +11,7 @@ import { logger } from '~/global/consola.global'
 export const md5 = (text: string) =>
   createHash('md5').update(text).digest('hex') as string
 
-export function getAvatar(mail: string | undefined) {
+export function getAvatar(mail: string | null | undefined) {
   if (!mail) {
     return ''
   }

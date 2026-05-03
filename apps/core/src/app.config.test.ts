@@ -71,3 +71,20 @@ export const THROTTLE_OPTIONS = {
   ttl: 10_000,
   limit: 50,
 }
+
+export const SNOWFLAKE = {
+  workerId: Number(process.env.SNOWFLAKE_WORKER_ID ?? 1),
+  // 2026-05-02T00:00:00.000Z
+  epochMs: 1746144000000,
+}
+
+export const POSTGRES = {
+  connectionString: process.env.PG_URL || process.env.PG_CONNECTION_STRING,
+  host: process.env.PG_HOST || '127.0.0.1',
+  port: Number(process.env.PG_PORT || 5432),
+  user: process.env.PG_USER || 'mx',
+  password: process.env.PG_PASSWORD || 'mx',
+  database: process.env.PG_DATABASE || 'mx_core_test',
+  maxPoolSize: Number(process.env.PG_MAX_POOL_SIZE || 5),
+  ssl: false as const,
+}

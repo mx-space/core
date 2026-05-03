@@ -8,29 +8,29 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import type { ContentFormat } from '~/shared/types/content-format.type'
-import { InjectModel } from '~/transformers/model.transformer'
 import { extractImagesFromContent } from '~/utils/content.util'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
 import { S3Uploader } from '~/utils/s3.util'
 
 import {
   FileDeletionReason,
-  FileReferenceModel,
+  FileReferenceRepository,
+  type FileReferenceRow,
   FileReferenceStatus,
-  FileReferenceType,
+  type FileReferenceType,
   FileUploadedBy,
-} from './file-reference.model'
+} from './file-reference.repository'
 
 interface ContentLike {
-  text: string
-  contentFormat?: ContentFormat | string
-  content?: string
+  text: string | null
+  contentFormat?: ContentFormat | string | null
+  content?: string | null
 }
 
 export interface ReaderImageDiff {
-  toAttach: FileReferenceModel[]
-  toDetach: FileReferenceModel[]
-  toRevive: FileReferenceModel[]
+  toAttach: FileReferenceRow[]
+  toDetach: FileReferenceRow[]
+  toRevive: FileReferenceRow[]
   totalReferenced: number
 }
 
@@ -63,30 +63,45 @@ export class FileReferenceService {
   }
 
   constructor(
-    @InjectModel(FileReferenceModel)
-    private readonly fileReferenceModel: MongooseModel<FileReferenceModel>,
+    private readonly fileReferenceRepository: FileReferenceRepository,
     private readonly configsService: ConfigsService,
   ) {}
-
-  get model() {
-    return this.fileReferenceModel
-  }
 
   async createPendingReference(
     fileUrl: string,
     fileName: string,
     s3ObjectKey?: string,
   ) {
-    const existing = await this.fileReferenceModel.findOne({ fileUrl })
+    const existing = await this.fileReferenceRepository.findFirstByUrl(fileUrl)
     if (existing) {
       return existing
     }
 
-    return this.fileReferenceModel.create({
+    return this.fileReferenceRepository.create({
       fileUrl,
       fileName,
       status: FileReferenceStatus.Pending,
-      ...(s3ObjectKey && { s3ObjectKey }),
+      s3ObjectKey,
+    })
+  }
+
+  async createReaderPendingReference(input: {
+    fileUrl: string
+    fileName: string
+    readerId: string
+    mimeType: string
+    byteSize: number
+    s3ObjectKey?: string | null
+  }) {
+    return this.fileReferenceRepository.create({
+      fileUrl: input.fileUrl,
+      fileName: input.fileName,
+      status: FileReferenceStatus.Pending,
+      readerId: input.readerId,
+      uploadedBy: FileUploadedBy.Reader,
+      mimeType: input.mimeType,
+      byteSize: input.byteSize,
+      s3ObjectKey: input.s3ObjectKey ?? null,
     })
   }
 
@@ -98,18 +113,7 @@ export class FileReferenceService {
     const imageUrls = extractImagesFromContent(doc)
     if (imageUrls.length === 0) return
 
-    await this.fileReferenceModel.updateMany(
-      {
-        fileUrl: { $in: imageUrls },
-      },
-      {
-        $set: {
-          status: FileReferenceStatus.Active,
-          refId,
-          refType,
-        },
-      },
-    )
+    await this.fileReferenceRepository.activateByUrls(imageUrls, refType, refId)
   }
 
   async updateReferencesForDocument(
@@ -119,30 +123,17 @@ export class FileReferenceService {
   ) {
     const imageUrls = extractImagesFromContent(doc)
 
-    await this.fileReferenceModel.updateMany(
-      { refId, refType },
-      { $set: { status: FileReferenceStatus.Pending, refId: null } },
-    )
+    await this.fileReferenceRepository.markDocumentPending(refType, refId)
 
     if (imageUrls.length > 0) {
-      await this.fileReferenceModel.updateMany(
-        { fileUrl: { $in: imageUrls } },
-        {
-          $set: {
-            status: FileReferenceStatus.Active,
-            refId,
-            refType,
-          },
-        },
-      )
+      for (const fileUrl of imageUrls) {
+        await this.fileReferenceRepository.activateUrl(fileUrl, refType, refId)
+      }
     }
   }
 
   async removeReferencesForDocument(refId: string, refType: FileReferenceType) {
-    await this.fileReferenceModel.updateMany(
-      { refId, refType },
-      { $set: { status: FileReferenceStatus.Pending, refId: null } },
-    )
+    await this.fileReferenceRepository.markDocumentPending(refType, refId)
   }
 
   /**
@@ -199,17 +190,16 @@ export class FileReferenceService {
 
   /**
    * 计算评论 update 时之 attach/detach/revive 三类文件。
-   * 仅在调用方完成校验（cap、ownership、status）后使用。
    */
   diffReaderImages(
-    refs: FileReferenceModel[],
+    refs: FileReferenceRow[],
     newUrls: string[],
     commentId: string,
   ): ReaderImageDiff {
     const newUrlSet = new Set(newUrls)
-    const toAttach: FileReferenceModel[] = []
-    const toRevive: FileReferenceModel[] = []
-    const toDetach: FileReferenceModel[] = []
+    const toAttach: FileReferenceRow[] = []
+    const toRevive: FileReferenceRow[] = []
+    const toDetach: FileReferenceRow[] = []
 
     for (const ref of refs) {
       if (newUrlSet.has(ref.fileUrl)) {
@@ -224,7 +214,7 @@ export class FileReferenceService {
       } else if (
         ref.status === FileReferenceStatus.Active &&
         ref.refId === commentId &&
-        ref.refType === FileReferenceType.Comment
+        ref.refType === 'comment'
       ) {
         toDetach.push(ref)
       }
@@ -239,24 +229,17 @@ export class FileReferenceService {
   }
 
   async findReferencesByUrls(urls: string[]) {
-    if (urls.length === 0) return []
-    return this.fileReferenceModel.find({ fileUrl: { $in: urls } })
+    return this.fileReferenceRepository.findByUrls(urls)
   }
 
   async findActiveByCommentId(commentId: string) {
-    return this.fileReferenceModel.find({
-      refType: FileReferenceType.Comment,
-      refId: commentId,
-      status: {
-        $in: [FileReferenceStatus.Active, FileReferenceStatus.Detached],
-      },
-    })
+    return this.fileReferenceRepository.findActiveOrDetachedByCommentId(
+      commentId,
+    )
   }
 
   /**
    * 评论 create / update 时之 attach。
-   * 校验 cap、ownership、bound 状态后执行 attach/revive；update 路径还会标 detached。
-   * 校验失败抛 BizException，由调用方决定回滚。
    */
   async attachReaderImagesToComment(params: {
     commentId: string
@@ -291,10 +274,7 @@ export class FileReferenceService {
 
     for (const ref of candidates) {
       if (ref.status !== FileReferenceStatus.Active) continue
-      if (
-        ref.refType === FileReferenceType.Comment &&
-        ref.refId === commentId
-      ) {
+      if (ref.refType === 'comment' && ref.refId === commentId) {
         continue
       }
       throw new BizException(ErrorCodeEnum.CommentUploadFileAlreadyBound)
@@ -313,91 +293,46 @@ export class FileReferenceService {
 
     let attachedCount = 0
     for (const ref of diff.toAttach) {
-      await this.markActive(ref.id, commentId)
+      await this.fileReferenceRepository.markActive(
+        ref.id,
+        commentId,
+        'comment',
+      )
       attachedCount++
     }
     for (const ref of diff.toRevive) {
-      await this.markActive(ref.id, commentId)
+      await this.fileReferenceRepository.markActive(
+        ref.id,
+        commentId,
+        'comment',
+      )
       attachedCount++
     }
     let detachedCount = 0
     for (const ref of diff.toDetach) {
-      await this.markDetached(ref.id)
+      await this.fileReferenceRepository.markDetached(ref.id)
       detachedCount++
     }
 
     return { attachedCount, detachedCount }
   }
 
-  async markActive(
-    fileId: string,
-    commentId: string,
-    s3ObjectKeyKnown?: string,
-  ) {
-    await this.fileReferenceModel.updateOne(
-      { _id: fileId },
-      {
-        $set: {
-          status: FileReferenceStatus.Active,
-          refId: commentId,
-          refType: FileReferenceType.Comment,
-          detachedAt: null,
-          ...(s3ObjectKeyKnown && { s3ObjectKey: s3ObjectKeyKnown }),
-        },
-      },
-    )
-  }
-
-  async markDetached(fileId: string) {
-    await this.fileReferenceModel.updateOne(
-      { _id: fileId },
-      {
-        $set: {
-          status: FileReferenceStatus.Detached,
-          detachedAt: new Date(),
-        },
-      },
-    )
-  }
-
   async countReaderUploadsSince(
     readerId: string,
     since: Date,
   ): Promise<number> {
-    return this.fileReferenceModel.countDocuments({
-      readerId,
-      uploadedBy: FileUploadedBy.Reader,
-      created: { $gte: since },
-    })
+    return this.fileReferenceRepository.countReaderUploadsSince(readerId, since)
   }
 
   async sumReaderActiveBytes(readerId: string): Promise<number> {
-    const result = await this.fileReferenceModel.aggregate<{ total: number }>([
-      {
-        $match: {
-          readerId,
-          uploadedBy: FileUploadedBy.Reader,
-          status: {
-            $in: [FileReferenceStatus.Pending, FileReferenceStatus.Active],
-          },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: { $ifNull: ['$byteSize', 0] } },
-        },
-      },
-    ])
-    return result[0]?.total ?? 0
+    return this.fileReferenceRepository.sumReaderActiveBytes(readerId)
   }
 
   /**
-   * 硬删之核心：删 storage 对象 → 删 record。
-   * 删除审计仅落 stdout（structured log），不入 DB。
+   * 硬删之核心：删 storage 对象 → 删 record。删除审计仅落 stdout 结构化日志。
    */
   async hardDeleteFile(
-    file: FileReferenceModel,
+    file: FileReferenceRow,
     reason: FileDeletionReason,
   ): Promise<{ storageRemoved: boolean }> {
     let storageRemoved = false
@@ -422,7 +357,7 @@ export class FileReferenceService {
       storageError = err instanceof Error ? err.message : String(err)
     }
 
-    await this.fileReferenceModel.deleteOne({ _id: file.id })
+    await this.fileReferenceRepository.deleteById(file.id)
 
     const logPayload = {
       event: 'file_hard_delete',
@@ -448,16 +383,12 @@ export class FileReferenceService {
 
   /**
    * 级联清除某评论挂之全部文件（reader uploads）。
-   * cron / hook 调用，不抛错。
    */
   async hardDeleteFilesForComment(
     commentId: string,
     reason: FileDeletionReason,
   ): Promise<number> {
-    const files = await this.fileReferenceModel.find({
-      refType: FileReferenceType.Comment,
-      refId: commentId,
-    })
+    const files = await this.fileReferenceRepository.findByCommentId(commentId)
     let deleted = 0
     for (const file of files) {
       try {
@@ -486,11 +417,10 @@ export class FileReferenceService {
     const pendingCutoff = new Date(Date.now() - pendingTtlMinutes * 60 * 1000)
     const detachedCutoff = new Date(Date.now() - detachedTtlMinutes * 60 * 1000)
 
-    const pendingFiles = await this.fileReferenceModel.find({
-      uploadedBy: FileUploadedBy.Reader,
-      status: FileReferenceStatus.Pending,
-      created: { $lt: pendingCutoff },
-    })
+    const pendingFiles =
+      await this.fileReferenceRepository.findReaderPendingOlderThan(
+        pendingCutoff,
+      )
     let pendingDeleted = 0
     for (const file of pendingFiles) {
       try {
@@ -503,11 +433,10 @@ export class FileReferenceService {
       }
     }
 
-    const detachedFiles = await this.fileReferenceModel.find({
-      uploadedBy: FileUploadedBy.Reader,
-      status: FileReferenceStatus.Detached,
-      detachedAt: { $lt: detachedCutoff },
-    })
+    const detachedFiles =
+      await this.fileReferenceRepository.findReaderDetachedOlderThan(
+        detachedCutoff,
+      )
     let detachedDeleted = 0
     for (const file of detachedFiles) {
       try {
@@ -530,55 +459,31 @@ export class FileReferenceService {
   }
 
   /**
-   * 删除 orphan 文件之 storage：S3 或本地 image 目录。
-   * 返回 removed 表示是否真删；reason 用于上层决定告警。
-   */
-  private async deleteOrphanStorage(
-    file: FileReferenceModel,
-    s3Uploader: S3Uploader | null,
-  ): Promise<{
-    removed: boolean
-    reason?: 'no-s3' | 'unknown-backend'
-  }> {
-    if (file.s3ObjectKey) {
-      if (!s3Uploader) {
-        return { removed: false, reason: 'no-s3' }
-      }
-      await s3Uploader.deleteObject(file.s3ObjectKey)
-      return { removed: true }
-    }
-    if (file.fileUrl.includes('/objects/image/')) {
-      await this.unlinkLocalImage(file.fileName)
-      return { removed: true }
-    }
-    return { removed: false, reason: 'unknown-backend' }
-  }
-
-  /**
-   * Owner 路径之既有清扫（保持向后兼容）：仅扫 uploadedBy != Reader 的 pending 文件。
+   * Owner 路径之既有清扫：仅扫 uploadedBy != Reader 之 pending 文件。
    */
   async cleanupOrphanFiles(maxAgeMinutes = 60) {
     const cutoffTime = new Date(Date.now() - maxAgeMinutes * 60 * 1000)
 
-    const orphanFiles = await this.fileReferenceModel.find({
-      uploadedBy: { $ne: FileUploadedBy.Reader },
-      status: FileReferenceStatus.Pending,
-      created: { $lt: cutoffTime },
-    })
+    const orphanFiles =
+      await this.fileReferenceRepository.findOwnerPendingOlderThan(cutoffTime)
 
     const s3Uploader = await this.buildS3Uploader()
     let deletedCount = 0
 
     for (const file of orphanFiles) {
       try {
-        const result = await this.deleteOrphanStorage(file, s3Uploader)
-        if (!result.removed) {
-          if (result.reason === 'no-s3') {
+        if (file.s3ObjectKey) {
+          if (!s3Uploader) {
             this.logger.warn(`S3 not configured, skip: ${file.fileName}`)
+            continue
           }
+          await s3Uploader.deleteObject(file.s3ObjectKey)
+        } else if (file.fileUrl.includes('/objects/image/')) {
+          await this.unlinkLocalImage(file.fileName)
+        } else {
           continue
         }
-        await this.fileReferenceModel.deleteOne({ _id: file._id })
+        await this.fileReferenceRepository.deleteById(file.id)
         deletedCount++
         this.logger.log(`Deleted orphan file: ${file.fileName}`)
       } catch {
@@ -590,26 +495,23 @@ export class FileReferenceService {
   }
 
   async getFileReferences(fileUrl: string) {
-    return this.fileReferenceModel.find({ fileUrl })
+    return this.fileReferenceRepository.findByUrl(fileUrl)
   }
 
   async getReferencesForDocument(refId: string, refType: FileReferenceType) {
-    return this.fileReferenceModel.find({
-      refId,
-      refType,
-      status: FileReferenceStatus.Active,
-    })
+    return (
+      await this.fileReferenceRepository.findByRef(refType, refId)
+    ).filter((row) => row.status === FileReferenceStatus.Active)
   }
 
   async getOrphanFilesCount() {
-    return this.fileReferenceModel.countDocuments({
-      status: FileReferenceStatus.Pending,
-    })
+    return this.fileReferenceRepository.countPending()
   }
 
-  /**
-   * 列分页之 reader 上传文件（admin 管理用）。
-   */
+  async listOrphanFiles(page = 1, size = 20) {
+    return this.fileReferenceRepository.listOrphans(page, size)
+  }
+
   async listReaderUploads(params: {
     page: number
     size: number
@@ -617,45 +519,42 @@ export class FileReferenceService {
     readerId?: string
     refId?: string
   }) {
-    const { page, size, status, readerId, refId } = params
-    const filter: Record<string, unknown> = {
-      uploadedBy: FileUploadedBy.Reader,
+    const result = await this.fileReferenceRepository.listReaderUploads(params)
+    return {
+      files: result.data,
+      total: result.pagination.total,
+      pagination: result.pagination,
     }
-    if (status) filter.status = status
-    if (readerId) filter.readerId = readerId
-    if (refId) filter.refId = refId
-
-    const [files, total] = await Promise.all([
-      this.fileReferenceModel
-        .find(filter)
-        .sort({ created: -1 })
-        .skip((page - 1) * size)
-        .limit(size)
-        .lean(),
-      this.fileReferenceModel.countDocuments(filter),
-    ])
-
-    return { files, total }
   }
 
   async getReferenceById(id: string) {
-    return this.fileReferenceModel.findById(id)
+    return this.fileReferenceRepository.findById(id)
   }
 
   async batchDeleteOrphans(options: { ids?: string[]; all?: boolean }) {
     const s3Uploader = await this.buildS3Uploader()
 
+    const deleteFile = async (file: FileReferenceRow): Promise<boolean> => {
+      if (file.s3ObjectKey) {
+        if (!s3Uploader) return false
+        await s3Uploader.deleteObject(file.s3ObjectKey)
+        return true
+      }
+      if (file.fileUrl.includes('/objects/image/')) {
+        await this.unlinkLocalImage(file.fileName)
+        return true
+      }
+      return false
+    }
+
     if (options.all) {
-      const orphanFiles = await this.fileReferenceModel.find({
-        status: FileReferenceStatus.Pending,
-      })
+      const orphanFiles = await this.fileReferenceRepository.findPending()
 
       let deletedCount = 0
       for (const file of orphanFiles) {
         try {
-          const { removed } = await this.deleteOrphanStorage(file, s3Uploader)
-          if (removed) {
-            await this.fileReferenceModel.deleteOne({ _id: file._id })
+          if (await deleteFile(file)) {
+            await this.fileReferenceRepository.deleteById(file.id)
             deletedCount++
           }
         } catch {
@@ -668,12 +567,11 @@ export class FileReferenceService {
     if (options.ids?.length) {
       let deletedCount = 0
       for (const id of options.ids) {
-        const ref = await this.fileReferenceModel.findById(id)
+        const ref = await this.fileReferenceRepository.findById(id)
         if (ref && ref.status === FileReferenceStatus.Pending) {
           try {
-            const { removed } = await this.deleteOrphanStorage(ref, s3Uploader)
-            if (removed) {
-              await this.fileReferenceModel.deleteOne({ _id: id })
+            if (await deleteFile(ref)) {
+              await this.fileReferenceRepository.deleteById(id)
               deletedCount++
             }
           } catch {

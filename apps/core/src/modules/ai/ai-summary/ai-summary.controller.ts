@@ -14,7 +14,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { CreateSummaryTaskDto } from '~/modules/ai/ai-task/ai-task.dto'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
@@ -43,7 +43,7 @@ export class AiSummaryController {
 
   @Get('/ref/:id')
   @Auth()
-  async getSummaryByRefId(@Param() params: MongoIdDto) {
+  async getSummaryByRefId(@Param() params: EntityIdDto) {
     return this.service.getSummariesByRefId(params.id)
   }
 
@@ -62,7 +62,7 @@ export class AiSummaryController {
   @Patch('/:id')
   @Auth()
   async updateSummary(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: UpdateSummaryDto,
   ) {
     return this.service.updateSummaryInDb(params.id, body.summary)
@@ -70,13 +70,13 @@ export class AiSummaryController {
 
   @Delete('/:id')
   @Auth()
-  async deleteSummary(@Param() params: MongoIdDto) {
+  async deleteSummary(@Param() params: EntityIdDto) {
     return this.service.deleteSummaryInDb(params.id)
   }
 
   @Get('/article/:id')
   async getArticleSummary(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Query() query: GetSummaryQueryDto,
   ) {
     return this.service.getOrGenerateSummaryForArticle(params.id, {
@@ -87,7 +87,7 @@ export class AiSummaryController {
 
   @Get('/article/:id/generate')
   async generateArticleSummary(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Query() query: GetSummaryStreamQueryDto,
     @Res() reply: FastifyReply,
   ) {

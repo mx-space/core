@@ -7,27 +7,19 @@ import { passkey } from '@better-auth/passkey'
 import { compare } from 'bcryptjs'
 import type { BetterAuthOptions } from 'better-auth'
 import { betterAuth } from 'better-auth'
-import { mongodbAdapter } from 'better-auth/adapters/mongodb'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { APIError, createAuthMiddleware } from 'better-auth/api'
 import { hashPassword, verifyPassword } from 'better-auth/crypto'
 import { toNodeHandler } from 'better-auth/node'
 import { username } from 'better-auth/plugins'
-import { MongoClient, ObjectId } from 'mongodb'
+import { and, eq } from 'drizzle-orm'
 
-import { API_VERSION, CROSS_DOMAIN, MONGO_DB } from '~/app.config'
+import { API_VERSION, CROSS_DOMAIN } from '~/app.config'
 import { SECURITY } from '~/app.config.test'
-import {
-  ACCOUNT_COLLECTION_NAME,
-  OWNER_PROFILE_COLLECTION_NAME,
-  READER_COLLECTION_NAME,
-  SESSION_COLLECTION_NAME,
-} from '~/constants/db.constant'
+import * as authSchema from '~/database/schema/auth'
+import { db } from '~/processors/database/postgres.provider'
 
 import { validateMxUsername } from './auth.username-validator'
-
-const client = new MongoClient(MONGO_DB.customConnectionString || MONGO_DB.uri)
-
-const db = client.db()
 
 const bcryptRegex = /^\$2[aby]\$/
 const isBcryptHash = (value?: string | null) =>
@@ -39,7 +31,11 @@ export async function CreateAuth(
 ) {
   const auth = betterAuth({
     telemetry: { enabled: false },
-    database: mongodbAdapter(db),
+    database: drizzleAdapter(db, {
+      provider: 'pg',
+      schema: authSchema,
+      usePlural: true,
+    }),
     socialProviders: providers,
     basePath: isDev ? '/auth' : `/api/v${API_VERSION}/auth`,
     trustedOrigins: async (request) => {
@@ -65,7 +61,6 @@ export async function CreateAuth(
       )
     },
     account: {
-      modelName: ACCOUNT_COLLECTION_NAME,
       accountLinking: {
         enabled: true,
         trustedProviders: ['google', 'github'],
@@ -86,7 +81,6 @@ export async function CreateAuth(
       },
     },
     session: {
-      modelName: SESSION_COLLECTION_NAME,
       additionalFields: {
         provider: {
           type: 'string',
@@ -98,6 +92,11 @@ export async function CreateAuth(
     secret: SECURITY.jwtSecret,
     plugins: [
       apiKey({
+        schema: {
+          apikey: {
+            modelName: 'apiKey',
+          },
+        },
         apiKeyHeaders: ['x-api-key'],
         disableKeyHashing: true,
         defaultKeyLength: 43,
@@ -114,7 +113,19 @@ export async function CreateAuth(
           return match
         },
       }),
-      passkey(passkeyOptions),
+      passkey({
+        ...passkeyOptions,
+        schema: {
+          ...passkeyOptions?.schema,
+          passkey: {
+            ...passkeyOptions?.schema?.passkey,
+            fields: {
+              ...passkeyOptions?.schema?.passkey?.fields,
+              credentialID: 'credentialId',
+            },
+          },
+        },
+      } as PasskeyOptions),
       username({
         usernameValidator: validateMxUsername,
       }),
@@ -147,62 +158,57 @@ export async function CreateAuth(
           userId &&
           ['/sign-in/username', '/sign-in/email'].includes(ctx.path || '')
         ) {
-          const userObjectId = ObjectId.isValid(userId)
-            ? new ObjectId(userId)
-            : null
-          const account = await db.collection(ACCOUNT_COLLECTION_NAME).findOne(
-            userObjectId
-              ? {
-                  userId: { $in: [userId, userObjectId] },
-                  providerId: 'credential',
-                }
-              : { userId, providerId: 'credential' },
-            {
-              projection: {
-                _id: 1,
-                password: 1,
-              },
-            },
-          )
+          const [account] = await db
+            .select({
+              id: authSchema.accounts.id,
+              password: authSchema.accounts.password,
+            })
+            .from(authSchema.accounts)
+            .where(
+              and(
+                eq(authSchema.accounts.userId, userId),
+                eq(authSchema.accounts.providerId, 'credential'),
+              )!,
+            )
+            .limit(1)
 
           if (account?.password && isBcryptHash(account.password)) {
             const password = ctx.body?.password
             if (typeof password === 'string' && password.length > 0) {
               const nextHash = await hashPassword(password)
               await db
-                .collection(ACCOUNT_COLLECTION_NAME)
-                .updateOne(
-                  { _id: account._id },
-                  { $set: { password: nextHash, updatedAt: new Date() } },
-                )
+                .update(authSchema.accounts)
+                .set({ password: nextHash, updatedAt: new Date() })
+                .where(eq(authSchema.accounts.id, account.id))
             }
           }
         }
 
         if (userId) {
-          const userObjectId = ObjectId.isValid(userId)
-            ? new ObjectId(userId)
-            : null
-          const reader = userObjectId
-            ? await db
-                .collection(READER_COLLECTION_NAME)
-                .findOne({ _id: userObjectId }, { projection: { role: 1 } })
-            : null
+          const [reader] = await db
+            .select({
+              id: authSchema.readers.id,
+              role: authSchema.readers.role,
+            })
+            .from(authSchema.readers)
+            .where(eq(authSchema.readers.id, userId))
+            .limit(1)
           if (reader?.role === 'owner') {
-            await db.collection(OWNER_PROFILE_COLLECTION_NAME).updateOne(
-              { readerId: reader._id },
-              {
-                $set: {
+            await db
+              .insert(authSchema.ownerProfiles)
+              .values({
+                id: reader.id,
+                readerId: reader.id,
+                lastLoginTime: new Date(),
+                ...(loginIp ? { lastLoginIp: loginIp } : {}),
+              })
+              .onConflictDoUpdate({
+                target: authSchema.ownerProfiles.readerId,
+                set: {
                   lastLoginTime: new Date(),
                   ...(loginIp ? { lastLoginIp: loginIp } : {}),
                 },
-                $setOnInsert: {
-                  readerId: reader._id,
-                  created: new Date(),
-                },
-              },
-              { upsert: true },
-            )
+              })
           }
         }
 
@@ -227,16 +233,14 @@ export async function CreateAuth(
           return
         }
 
-        await db.collection(SESSION_COLLECTION_NAME).updateOne(
-          {
-            token: sessionToken,
-          },
-          { $set: { provider } },
-        )
+        await db
+          .update(authSchema.sessions)
+          .set({ provider })
+          .where(eq(authSchema.sessions.token, sessionToken))
       }),
     },
     user: {
-      modelName: READER_COLLECTION_NAME,
+      modelName: 'reader',
       additionalFields: {
         role: {
           type: 'string',

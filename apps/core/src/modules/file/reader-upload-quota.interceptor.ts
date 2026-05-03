@@ -7,12 +7,11 @@ import { Injectable, Logger } from '@nestjs/common'
 
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
+import { CommentRepository } from '~/modules/comment/comment.repository'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { ReaderModel } from '~/modules/reader/reader.model'
+import { ReaderRepository } from '~/modules/reader/reader.repository'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
-import { InjectModel } from '~/transformers/model.transformer'
 
-import { CommentModel, CommentState } from '../comment/comment.model'
 import { FileReferenceService } from './file-reference.service'
 
 @Injectable()
@@ -20,10 +19,8 @@ export class ReaderUploadQuotaInterceptor implements NestInterceptor {
   private readonly logger = new Logger(ReaderUploadQuotaInterceptor.name)
 
   constructor(
-    @InjectModel(ReaderModel)
-    private readonly readerModel: MongooseModel<ReaderModel>,
-    @InjectModel(CommentModel)
-    private readonly commentModel: MongooseModel<CommentModel>,
+    private readonly readerRepository: ReaderRepository,
+    private readonly commentRepository: CommentRepository,
     private readonly fileReferenceService: FileReferenceService,
     private readonly configsService: ConfigsService,
   ) {}
@@ -44,11 +41,8 @@ export class ReaderUploadQuotaInterceptor implements NestInterceptor {
 
     const minAccountAgeHours = config.readerMinAccountAgeHours ?? 0
     if (minAccountAgeHours > 0) {
-      const reader = await this.readerModel
-        .findById(readerId)
-        .select('created')
-        .lean()
-      const createdAt = reader?.created ? new Date(reader.created) : null
+      const reader = await this.readerRepository.findById(readerId)
+      const createdAt = reader?.createdAt ? new Date(reader.createdAt) : null
       if (
         !createdAt ||
         Date.now() - createdAt.getTime() < minAccountAgeHours * 60 * 60 * 1000
@@ -59,11 +53,7 @@ export class ReaderUploadQuotaInterceptor implements NestInterceptor {
 
     const minCommentCount = config.readerMinCommentCount ?? 0
     if (minCommentCount > 0) {
-      const count = await this.commentModel.countDocuments({
-        readerId,
-        isDeleted: { $ne: true },
-        state: { $ne: CommentState.Junk },
-      })
+      const count = await this.commentRepository.countActiveByReader(readerId)
       if (count < minCommentCount) {
         throw new BizException(ErrorCodeEnum.CommentUploadInsufficientComments)
       }

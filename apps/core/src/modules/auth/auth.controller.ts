@@ -19,9 +19,8 @@ import { HttpCache } from '~/common/decorators/cache.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { StringIdDto } from '~/shared/dto/id.dto'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
-import { isMongoId } from '~/utils/validator.util'
 
 import { AuthInstanceInjectKey } from './auth.constant'
 import type { InjectAuthInstance } from './auth.interface'
@@ -58,7 +57,7 @@ export class AuthController {
         .verifyCustomToken(token)
         .then(([isValid]) => isValid)
     }
-    if (typeof id === 'string' && isMongoId(id)) {
+    if (typeof id === 'string') {
       return await this.authService.getTokenSecret(id)
     }
     return await this.authService.getAllAccessToken()
@@ -72,7 +71,7 @@ export class AuthController {
 
   @Delete('token')
   @Auth()
-  async deleteToken(@Query() query: MongoIdDto) {
+  async deleteToken(@Query() query: StringIdDto) {
     const { id } = query
     const models = await this.authService.getAllAccessToken()
     const token = models.find((model) => model.id === id)?.token

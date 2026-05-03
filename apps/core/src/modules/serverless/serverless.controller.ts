@@ -10,16 +10,17 @@ import {
   Response,
 } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { BizException } from '~/common/exceptions/biz.exception'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { getSandboxTypeDeclaration } from '~/utils/sandbox'
-import type { FastifyReply, FastifyRequest } from 'fastify'
-import { SnippetType } from '../snippet/snippet.model'
+
 import { createMockedContextResponse } from './mock-response.util'
 import {
   ServerlessLogQueryDto,
@@ -42,7 +43,7 @@ export class ServerlessController {
   @Get('/logs/:id')
   @Auth()
   async getInvocationLogs(
-    @Param() param: MongoIdDto,
+    @Param() param: EntityIdDto,
     @Query() query: ServerlessLogQueryDto,
   ) {
     const { id } = param
@@ -57,11 +58,8 @@ export class ServerlessController {
   @Get('/compiled/:id')
   @Auth()
   @HTTPDecorators.Bypass
-  async getCompiledCode(@Param() param: MongoIdDto) {
-    const snippet = await this.serverlessService.model
-      .findById(param.id)
-      .select('+compiledCode')
-      .lean()
+  async getCompiledCode(@Param() param: EntityIdDto) {
+    const snippet = await this.serverlessService.repository.findById(param.id)
     if (!snippet) {
       throw new NotFoundException('Snippet not found')
     }
@@ -113,24 +111,12 @@ export class ServerlessController {
   ) {
     const requestMethod = req.method.toUpperCase()
     const { name, reference } = param
-    const snippet = await this.serverlessService.model
-      .findOne({
+    const snippet =
+      await this.serverlessService.repository.findFunctionByNameReference(
         name,
         reference,
-        type: SnippetType.Function,
-        $or: [
-          {
-            method: 'ALL',
-          },
-          {
-            method: requestMethod,
-          },
-        ],
-      })
-      .select('+secret +compiledCode')
-      .lean({
-        getters: true,
-      })
+        requestMethod,
+      )
 
     const errorPath = `Path: /${reference}/${name}`
     if (!snippet) {
@@ -170,11 +156,11 @@ export class ServerlessController {
   async resetBuiltInFunction(@Param('id') id: string) {
     const builtIn = await this.serverlessService.isBuiltInFunction(id)
     if (!builtIn) {
-      const snippet = await this.serverlessService.model.findById(id)
+      const snippet = await this.serverlessService.repository.findById(id)
       if (!snippet) {
         throw new BizException(ErrorCodeEnum.FunctionNotFound)
       }
-      await this.serverlessService.model.deleteOne({ _id: id })
+      await this.serverlessService.repository.deleteById(id)
       return
     }
     await this.serverlessService.resetBuiltInFunction(builtIn)

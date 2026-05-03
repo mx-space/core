@@ -7,7 +7,7 @@
  * @Coding with Love
  */
 import { Global, Module } from '@nestjs/common'
-import { AuthService } from '~/modules/auth/auth.service'
+
 import { AdminEventsGateway } from './admin/events.gateway'
 import { GatewayService } from './gateway.service'
 import { SharedGateway } from './shared/events.gateway'
@@ -21,8 +21,6 @@ import { VisitorEventDispatchService } from './web/visitor-event-dispatch.servic
     AdminEventsGateway,
     WebEventsGateway,
     SharedGateway,
-
-    AuthService,
 
     GatewayService,
 

@@ -1,7 +1,9 @@
-import { zCoerceBoolean, zMongoId, zNonEmptyString } from '~/common/zod'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
-import { CategoryType } from './category.model'
+
+import { zCoerceBoolean, zEntityId, zNonEmptyString } from '~/common/zod'
+
+import { CategoryType } from './category.enum'
 
 /**
  * Category schema for API validation
@@ -54,33 +56,29 @@ export class MultiQueryTagAndCategoryDto extends createZodDto(
  */
 export const MultiCategoriesQuerySchema = z.object({
   ids: z
-    .preprocess(
-      (val) => {
-        if (typeof val === 'string') {
-          return [...new Set(val.split(','))]
-        }
-        return val
-      },
-      z
-        .array(zMongoId)
-        .refine((arr) => arr.every((id) => /^[0-9a-f]{24}$/i.test(id)), {
-          message: '多分类查询使用逗号分隔，应为 mongoID',
-        }),
-    )
+    .preprocess((val) => {
+      if (typeof val === 'string') {
+        return [...new Set(val.split(','))]
+      }
+      return val
+    }, z.array(zEntityId))
     .optional(),
   joint: zCoerceBoolean.optional(),
   type: z
     .preprocess((val) => {
       if (typeof val !== 'string') return CategoryType.Category
       switch (val.toLowerCase()) {
-        case 'category':
+        case 'category': {
           return CategoryType.Category
-        case 'tag':
+        }
+        case 'tag': {
           return CategoryType.Tag
-        default:
+        }
+        default: {
           return Object.values(CategoryType).includes(+val)
             ? +val
             : CategoryType.Category
+        }
       }
     }, z.enum(CategoryType))
     .optional(),

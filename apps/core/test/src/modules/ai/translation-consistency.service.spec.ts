@@ -25,7 +25,7 @@ describe('TranslationConsistencyService', () => {
             id: 'article-1',
             title: 'Title',
             text: 'Text',
-            modified: new Date('2024-01-01T00:00:00.000Z'),
+            modifiedAt: new Date('2024-01-01T00:00:00.000Z'),
           },
         ],
         [
@@ -33,7 +33,7 @@ describe('TranslationConsistencyService', () => {
             refId: 'article-1',
             hash: 'outdated-hash',
             sourceLang: 'zh',
-            sourceModified: new Date('2024-01-02T00:00:00.000Z'),
+            sourceModifiedAt: new Date('2024-01-02T00:00:00.000Z'),
           } as any,
         ],
       )
@@ -50,7 +50,7 @@ describe('TranslationConsistencyService', () => {
             id: 'article-1',
             title: 'Title',
             text: 'Text',
-            created: new Date('2024-01-01T00:00:00.000Z'),
+            createdAt: new Date('2024-01-01T00:00:00.000Z'),
           },
         ],
         [
@@ -58,7 +58,7 @@ describe('TranslationConsistencyService', () => {
             refId: 'article-1',
             hash: 'outdated-hash',
             sourceLang: 'zh',
-            created: new Date('2024-01-02T00:00:00.000Z'),
+            createdAt: new Date('2024-01-02T00:00:00.000Z'),
           } as any,
         ],
       )
@@ -156,14 +156,14 @@ describe('TranslationConsistencyService', () => {
         id: 'a1',
         title: 'T',
         text: 'X',
-        modified: new Date('2024-01-01'),
+        modifiedAt: new Date('2024-01-01'),
       }
       const translation = {
         refId: 'a1',
         hash: 'wrong',
         sourceLang: 'zh',
-        sourceModified: new Date('2024-01-02'),
-        created: new Date('2024-01-02'),
+        sourceModifiedAt: new Date('2024-01-02'),
+        createdAt: new Date('2024-01-02'),
       }
 
       expect(service.evaluateTranslationFreshness(article, translation)).toBe(
@@ -173,13 +173,13 @@ describe('TranslationConsistencyService', () => {
 
     it('should return valid when sourceModified equals article modified', () => {
       const ts = new Date('2024-06-15')
-      const article = { id: 'a1', title: 'T', text: 'X', modified: ts }
+      const article = { id: 'a1', title: 'T', text: 'X', modifiedAt: ts }
       const translation = {
         refId: 'a1',
         hash: 'wrong',
         sourceLang: 'zh',
-        sourceModified: ts,
-        created: ts,
+        sourceModifiedAt: ts,
+        createdAt: ts,
       }
 
       expect(service.evaluateTranslationFreshness(article, translation)).toBe(
@@ -192,14 +192,14 @@ describe('TranslationConsistencyService', () => {
         id: 'a1',
         title: 'T',
         text: 'X',
-        created: new Date('2024-01-01'),
+        createdAt: new Date('2024-01-01'),
       }
       const translation = {
         refId: 'a1',
         hash: 'wrong',
         sourceLang: 'zh',
-        sourceModified: undefined as any,
-        created: new Date('2024-01-02'),
+        sourceModifiedAt: undefined as any,
+        createdAt: new Date('2024-01-02'),
       }
 
       expect(service.evaluateTranslationFreshness(article, translation)).toBe(
@@ -213,7 +213,7 @@ describe('TranslationConsistencyService', () => {
         refId: 'a1',
         hash: 'some-hash',
         sourceLang: 'zh',
-        sourceModified: undefined as any,
+        sourceModifiedAt: undefined as any,
         created: undefined as any,
       }
 
@@ -237,7 +237,7 @@ describe('TranslationConsistencyService', () => {
         refId: 'a1',
         hash,
         sourceLang: 'zh',
-        sourceModified: undefined as any,
+        sourceModifiedAt: undefined as any,
         created: undefined as any,
       }
 
@@ -257,7 +257,7 @@ describe('TranslationConsistencyService', () => {
         refId: 'a1',
         hash: 'outdated-hash',
         sourceLang: 'zh',
-        sourceModified: undefined as any,
+        sourceModifiedAt: undefined as any,
         created: undefined as any,
       }
 
@@ -272,14 +272,14 @@ describe('TranslationConsistencyService', () => {
         title: 'T',
         text: 'X',
         modified: null,
-        created: new Date('2024-03-01'),
+        createdAt: new Date('2024-03-01'),
       }
       const translation = {
         refId: 'a1',
         hash: 'wrong',
         sourceLang: 'zh',
-        sourceModified: new Date('2024-03-02'),
-        created: new Date('2024-03-02'),
+        sourceModifiedAt: new Date('2024-03-02'),
+        createdAt: new Date('2024-03-02'),
       }
 
       expect(service.evaluateTranslationFreshness(article, translation)).toBe(

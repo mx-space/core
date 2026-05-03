@@ -24,11 +24,11 @@ import { pickImagesFromMarkdown } from './pic.util'
 import { md5 } from './tool.util'
 
 interface ContentDoc {
-  text: string
+  text: string | null
   title: string
   subtitle?: string | null
-  contentFormat?: ContentFormat | string
-  content?: string
+  contentFormat?: ContentFormat | string | null
+  content?: string | null
   summary?: string | null
   tags?: string[]
   meta?: Record<string, any> | string | null
@@ -127,7 +127,10 @@ export function extractImagesFromContent(
   const coverUrl = extractCoverUrlFromMeta(doc.meta)
 
   if (!isLexical(doc)) {
-    return dedupeImageUrls([...pickImagesFromMarkdown(doc.text), coverUrl])
+    return dedupeImageUrls([
+      ...pickImagesFromMarkdown(doc.text ?? ''),
+      coverUrl,
+    ])
   }
 
   if (!doc.content) {
@@ -262,7 +265,7 @@ export function computeContentHash(
   sourceLang: string,
 ): string {
   const sourceOfTruth = isLexical(doc)
-    ? canonicalizeLexicalContentForHash(doc.content)
+    ? canonicalizeLexicalContentForHash(doc.content ?? undefined)
     : doc.text
 
   return md5(
@@ -278,7 +281,11 @@ export function computeContentHash(
 }
 
 export function applyContentPreference<
-  T extends { text?: string; contentFormat?: string; content?: string },
+  T extends {
+    text?: string | null
+    contentFormat?: string | null
+    content?: string | null
+  },
 >(doc: T, prefer?: string): T {
   if (
     prefer === 'lexical' &&

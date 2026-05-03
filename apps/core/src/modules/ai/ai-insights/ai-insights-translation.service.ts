@@ -8,7 +8,6 @@ import {
   type TaskExecuteContext,
   TaskQueueProcessor,
 } from '~/processors/task-queue'
-import { InjectModel } from '~/transformers/model.transformer'
 import { md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../../configs/configs.service'
@@ -27,7 +26,11 @@ import {
   AITaskType,
   type InsightsTranslationTaskPayload,
 } from '../ai-task/ai-task.types'
-import { AIInsightsModel } from './ai-insights.model'
+import {
+  AiInsightsRepository,
+  type AiInsightsRow,
+} from './ai-insights.repository'
+import { AIInsightsModel } from './ai-insights.types'
 import { stripTopLevelCodeFence } from './insights.util'
 
 @Injectable()
@@ -35,14 +38,22 @@ export class AiInsightsTranslationService implements OnModuleInit {
   private readonly logger = new Logger(AiInsightsTranslationService.name)
 
   constructor(
-    @InjectModel(AIInsightsModel)
-    private readonly aiInsightsModel: MongooseModel<AIInsightsModel>,
+    private readonly aiInsightsRepository: AiInsightsRepository,
     private readonly configService: ConfigsService,
     private readonly aiService: AiService,
     private readonly aiInFlightService: AiInFlightService,
     private readonly taskProcessor: TaskQueueProcessor,
     private readonly aiTaskService: AiTaskService,
   ) {}
+
+  private toInsightsDoc(row: AiInsightsRow | null): AIInsightsModel | null {
+    if (!row) return null
+    return {
+      ...row,
+      _id: row.id,
+      createdAt: row.createdAt,
+    } as unknown as AIInsightsModel
+  }
 
   onModuleInit() {
     this.taskProcessor.registerHandler({
@@ -75,12 +86,11 @@ export class AiInsightsTranslationService implements OnModuleInit {
       (lang: string) => lang && lang !== event.sourceLang,
     )
     for (const targetLang of targets) {
-      const existing = await this.aiInsightsModel.findOne({
-        refId: event.refId,
-        lang: targetLang,
-        hash: event.sourceHash,
-      })
-      if (existing) continue
+      const existing = await this.aiInsightsRepository.findByRefAndLang(
+        event.refId,
+        targetLang,
+      )
+      if (existing?.hash === event.sourceHash) continue
       await this.aiTaskService.createInsightsTranslationTask({
         refId: event.refId,
         sourceInsightsId: event.insightsId,
@@ -92,7 +102,9 @@ export class AiInsightsTranslationService implements OnModuleInit {
   async translateInsights(
     payload: InsightsTranslationTaskPayload,
   ): Promise<AIInsightsModel> {
-    const source = await this.aiInsightsModel.findById(payload.sourceInsightsId)
+    const source = this.toInsightsDoc(
+      await this.aiInsightsRepository.findById(payload.sourceInsightsId),
+    )
     if (!source || source.isTranslation) {
       throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
     }
@@ -148,9 +160,8 @@ export class AiInsightsTranslationService implements OnModuleInit {
               'Insights translation returned empty content',
             )
           }
-          const doc = await this.aiInsightsModel.findOneAndUpdate(
-            { refId: payload.refId, lang: payload.targetLang },
-            {
+          const doc = this.toInsightsDoc(
+            await this.aiInsightsRepository.upsert({
               refId: payload.refId,
               lang: payload.targetLang,
               hash: source.hash,
@@ -158,13 +169,14 @@ export class AiInsightsTranslationService implements OnModuleInit {
               isTranslation: true,
               sourceInsightsId: source.id,
               sourceLang: source.sourceLang || source.lang,
-            },
-            { upsert: true, new: true },
-          )
-          return { result: doc, resultId: doc.id }
+            }),
+          )!
+          return { result: doc, resultId: doc.id! }
         },
         parseResult: async (resultId) => {
-          const doc = await this.aiInsightsModel.findById(resultId)
+          const doc = this.toInsightsDoc(
+            await this.aiInsightsRepository.findById(resultId),
+          )
           if (!doc)
             throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
           return doc

@@ -15,8 +15,8 @@ import {
   TRANSLATE_FIELDS_KEY,
   type TranslateFieldRule,
 } from '~/common/decorators/translate-fields.decorator'
-import type { TranslationEntryKeyPath } from '~/modules/ai/ai-translation/translation-entry.model'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
+import type { TranslationEntryKeyPath } from '~/modules/ai/ai-translation/translation-entry.types'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { resolveRequestedLanguage } from '~/utils/lang.util'
 
@@ -87,7 +87,7 @@ export class TranslationEntryInterceptor implements NestInterceptor {
     if (data == null) return data
 
     // Always convert to plain objects first to ensure objectScan can
-    // traverse Mongoose documents (e.g. populated refs like category).
+    // traverse persistence documents (e.g. populated refs like category).
     // Without this, a mix of .lean() and non-.lean() data causes partial
     // scan success, skipping the fallback for the non-plain parts.
     const plainData = this.toScannableObject(data)

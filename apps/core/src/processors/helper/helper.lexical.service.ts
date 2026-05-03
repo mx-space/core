@@ -272,8 +272,8 @@ export class LexicalService {
 
   populateText<
     T extends {
-      contentFormat?: ContentFormat | string
-      content?: string
+      contentFormat?: ContentFormat | string | null
+      content?: string | null
       text: string
     },
   >(doc: T): boolean {
@@ -282,7 +282,7 @@ export class LexicalService {
       if (normalized.changed) {
         doc.content = normalized.content
       }
-      doc.text = this.lexicalToMarkdown(doc.content)
+      doc.text = this.lexicalToMarkdown(doc.content ?? '')
       return true
     }
     return false

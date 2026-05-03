@@ -1,7 +1,9 @@
-import { zEmail, zHttpsUrl, zMaxLengthString } from '~/common/zod'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
-import { LinkState, LinkType } from './link.model'
+
+import { zEmail, zHttpsUrl, zMaxLengthString } from '~/common/zod'
+
+import { LinkState, LinkType } from './link.enum'
 
 /**
  * Link schema for API validation

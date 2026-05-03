@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-import { zMongoId } from '~/common/zod'
+import { zEntityId } from '~/common/zod'
 
 export enum RecentlyAttitudeEnum {
   Up,
@@ -84,7 +84,7 @@ export const CodeMetaSchema = z.object({
 // --- Shared optional fields ---
 
 const refFields = {
-  ref: zMongoId.optional(),
+  ref: zEntityId.optional(),
   refType: z.string().optional(),
 }
 

@@ -1,7 +1,8 @@
-import { zMongoId } from '~/common/zod'
-import { ArticleTypeEnum } from '~/constants/article.constant'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
+
+import { zEntityId } from '~/common/zod'
+import { ArticleTypeEnum } from '~/constants/article.constant'
 
 export enum AckEventType {
   READ = 'read',
@@ -16,5 +17,5 @@ export class AckDto extends createZodDto(AckSchema) {}
 
 export const AckReadPayloadSchema = z.object({
   type: z.enum(ArticleTypeEnum),
-  id: zMongoId,
+  id: zEntityId,
 })

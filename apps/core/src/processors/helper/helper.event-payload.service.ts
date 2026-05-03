@@ -1,23 +1,19 @@
 import { Injectable } from '@nestjs/common'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { NoteModel } from '~/modules/note/note.model'
+import { NoteService } from '~/modules/note/note.service'
 import { OwnerService } from '~/modules/owner/owner.service'
-import { PageModel } from '~/modules/page/page.model'
-import { PostModel } from '~/modules/post/post.model'
+import { PageService } from '~/modules/page/page.service'
+import { PostService } from '~/modules/post/post.service'
 import { ReaderService } from '~/modules/reader/reader.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { getAvatar } from '~/utils/tool.util'
 
 @Injectable()
 export class EventPayloadEnricherService {
   constructor(
-    @InjectModel(PostModel)
-    private readonly postModel: MongooseModel<PostModel>,
-    @InjectModel(NoteModel)
-    private readonly noteModel: MongooseModel<NoteModel>,
-    @InjectModel(PageModel)
-    private readonly pageModel: MongooseModel<PageModel>,
+    private readonly postService: PostService,
+    private readonly noteService: NoteService,
+    private readonly pageService: PageService,
     private readonly readerService: ReaderService,
     private readonly ownerService: OwnerService,
   ) {}
@@ -41,14 +37,16 @@ export class EventPayloadEnricherService {
       return {
         ...data,
         author: owner?.name || reader.name || data.author,
-        avatar: owner?.avatar || reader.image || getAvatar(reader.email),
+        avatar:
+          owner?.avatar || reader.image || getAvatar(reader.email ?? undefined),
       }
     }
 
     return {
       ...data,
       author: reader.name || data.author,
-      avatar: reader.image || data.avatar || getAvatar(reader.email),
+      avatar:
+        reader.image || data.avatar || getAvatar(reader.email ?? undefined),
     }
   }
 
@@ -57,38 +55,18 @@ export class EventPayloadEnricherService {
 
     switch (event) {
       case BusinessEvents.POST_CREATE: {
-        return (
-          (await this.postModel
-            .findById(data.id)
-            .populate('category')
-            .lean({ getters: true })) ?? data
-        )
+        return (await this.postService.findById(data.id)) ?? data
       }
       case BusinessEvents.POST_UPDATE: {
-        return (
-          (await this.postModel
-            .findById(data.id)
-            .populate('category')
-            .populate({
-              path: 'related',
-              select: 'title slug id _id categoryId category',
-            })
-            .lean({ getters: true })) ?? data
-        )
+        return (await this.postService.findById(data.id)) ?? data
       }
       case BusinessEvents.NOTE_CREATE:
       case BusinessEvents.NOTE_UPDATE: {
-        return (
-          (await this.noteModel.findById(data.id).lean({ getters: true })) ??
-          data
-        )
+        return (await this.noteService.findById(data.id)) ?? data
       }
       case BusinessEvents.PAGE_CREATE:
       case BusinessEvents.PAGE_UPDATE: {
-        return (
-          (await this.pageModel.findById(data.id).lean({ getters: true })) ??
-          data
-        )
+        return (await this.pageService.findById(data.id)) ?? data
       }
       case BusinessEvents.COMMENT_CREATE: {
         return this.enrichCommentPayload(data)

@@ -1,14 +1,16 @@
+import { createZodDto } from 'nestjs-zod'
+import { z } from 'zod'
+
 import {
   zCoerceBoolean,
-  zMongoId,
+  zEntityId,
   zPaginationPage,
   zPaginationSize,
   zSortOrder,
 } from '~/common/zod'
 import { ContentFormat } from '~/shared/types/content-format.type'
-import { createZodDto } from 'nestjs-zod'
-import { z } from 'zod'
-import { DraftRefType } from './draft.model'
+
+import { DraftRefType } from './draft.enum'
 
 const ImageModelSchema = z.object({
   src: z.string(),
@@ -17,7 +19,7 @@ const ImageModelSchema = z.object({
 
 export const CreateDraftSchema = z.object({
   refType: z.enum(DraftRefType),
-  refId: zMongoId.optional(),
+  refId: zEntityId.optional(),
   title: z.string().optional(),
   text: z.string().optional(),
   contentFormat: z
@@ -55,7 +57,7 @@ export const DraftRefTypeSchema = z.object({
 export class DraftRefTypeDto extends createZodDto(DraftRefTypeSchema) {}
 
 export const DraftRefTypeAndIdSchema = DraftRefTypeSchema.extend({
-  refId: zMongoId,
+  refId: zEntityId,
 })
 
 export class DraftRefTypeAndIdDto extends createZodDto(

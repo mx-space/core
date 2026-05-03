@@ -41,7 +41,10 @@ import {
   RenameFileQueryDto,
 } from './file.schema'
 import { FileService } from './file.service'
-import { FileDeletionReason, FileReferenceStatus } from './file-reference.model'
+import {
+  FileDeletionReason,
+  FileReferenceStatus,
+} from './file-reference.repository'
 import { FileReferenceService } from './file-reference.service'
 
 @ApiController(['objects', 'files'])
@@ -63,20 +66,12 @@ export class FileController {
   @Auth()
   async getOrphanFiles(@Query() query: PagerDto) {
     const { page = 1, size = 20 } = query
-    const filter = { status: { $in: ['pending', 'detached'] } }
-    const [files, total] = await Promise.all([
-      this.fileReferenceService.model
-        .find(filter)
-        .sort({ created: -1 })
-        .skip((page - 1) * size)
-        .limit(size)
-        .lean(),
-      this.fileReferenceService.model.countDocuments(filter),
-    ])
+    const { data: files, pagination } =
+      await this.fileReferenceService.listOrphanFiles(page, size)
 
     return {
       data: files.map((file) => ({
-        id: file._id,
+        id: file.id,
         fileName: file.fileName,
         fileUrl: file.fileUrl,
         status: file.status,
@@ -87,16 +82,9 @@ export class FileController {
         refType: file.refType,
         refId: file.refId,
         detachedAt: file.detachedAt,
-        created: file.created,
+        createdAt: file.createdAt,
       })),
-      pagination: {
-        currentPage: page,
-        totalPage: Math.ceil(total / size),
-        size,
-        total,
-        hasNextPage: page * size < total,
-        hasPrevPage: page > 1,
-      },
+      pagination,
     }
   }
 
@@ -134,7 +122,7 @@ export class FileController {
 
     return {
       data: files.map((file) => ({
-        id: file._id,
+        id: file.id,
         fileName: file.fileName,
         fileUrl: file.fileUrl,
         status: file.status,
@@ -144,7 +132,7 @@ export class FileController {
         refType: file.refType,
         refId: file.refId,
         detachedAt: file.detachedAt,
-        created: file.created,
+        createdAt: file.createdAt,
       })),
       pagination: {
         currentPage: page,

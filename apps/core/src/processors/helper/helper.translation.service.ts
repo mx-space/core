@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common'
 
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import type { TranslationSourceSnapshot } from '~/modules/ai/ai-translation/translation-consistency.types'
-import type { TranslationEntryKeyPath } from '~/modules/ai/ai-translation/translation-entry.model'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
+import type { TranslationEntryKeyPath } from '~/modules/ai/ai-translation/translation-entry.types'
 import { normalizeLanguageCode } from '~/utils/lang.util'
 
 export interface TranslationMeta {
@@ -86,24 +86,26 @@ export class TranslationService {
         }
       }
 
-      return {
+      const result: TranslationResult = {
         title: translation.title,
         text: translation.text,
         subtitle: translation.subtitle ?? originalData.subtitle,
         summary: translation.summary ?? originalData.summary,
         tags: translation.tags ?? originalData.tags,
-        content: translation.content,
-        contentFormat: translation.contentFormat,
         isTranslated: true,
         sourceLang: translation.sourceLang,
         translationMeta: {
           sourceLang: translation.sourceLang,
           targetLang: translation.lang,
-          translatedAt: translation.created!,
+          translatedAt: translation.createdAt!,
           model: translation.aiModel,
         },
         availableTranslations,
       }
+      if (translation.content) result.content = translation.content
+      if (translation.contentFormat)
+        result.contentFormat = translation.contentFormat
+      return result
     } catch (error) {
       this.logger.error(error)
       return { ...originalData, isTranslated: false }
@@ -173,7 +175,7 @@ export class TranslationService {
       'refId',
       'hash',
       'sourceLang',
-      'sourceModified',
+      'sourceModifiedAt',
     ])
 
     if (fields.includes('title')) selectFields.add('title')
@@ -282,7 +284,7 @@ export class TranslationService {
                   ? {
                       sourceLang: translation.sourceLang,
                       targetLang: translation.lang,
-                      translatedAt: translation.created!,
+                      translatedAt: translation.createdAt!,
                       model: translation.aiModel,
                     }
                   : undefined,

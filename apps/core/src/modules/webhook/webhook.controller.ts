@@ -4,12 +4,12 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
 
-import { WebhookModel } from './webhook.model'
 import { WebhookDto, WebhookDtoPartial } from './webhook.schema'
 import { WebhookService } from './webhook.service'
+import { WebhookModel } from './webhook.types'
 
 @ApiController('/webhooks')
 @Auth()
@@ -31,20 +31,20 @@ export class WebhookController {
   }
 
   @Patch('/:id')
-  update(@Body() body: WebhookDtoPartial, @Param() { id }: MongoIdDto) {
+  update(@Body() body: WebhookDtoPartial, @Param() { id }: EntityIdDto) {
     if (body.events) body.events = this.service.transformEvents(body.events)
 
     return this.service.updateWebhook(id, body)
   }
 
   @Delete('/:id')
-  delete(@Param() { id }: MongoIdDto) {
+  delete(@Param() { id }: EntityIdDto) {
     return this.service.deleteWebhook(id)
   }
 
   @Get('/:id')
   @HTTPDecorators.Paginator
-  getEventsByHookId(@Param() { id }: MongoIdDto, @Query() query: PagerDto) {
+  getEventsByHookId(@Param() { id }: EntityIdDto, @Query() query: PagerDto) {
     return this.service.getEventsByHookId(id, query)
   }
 
@@ -55,12 +55,12 @@ export class WebhookController {
 
   @Post('/redispatch/:id')
   @HTTPDecorators.Idempotence()
-  redispatch(@Param() { id }: MongoIdDto) {
+  redispatch(@Param() { id }: EntityIdDto) {
     return this.service.redispatch(id)
   }
 
   @Delete('/clear/:id')
-  clear(@Param() { id }: MongoIdDto) {
+  clear(@Param() { id }: EntityIdDto) {
     return this.service.clearDispatchEvents(id)
   }
 }

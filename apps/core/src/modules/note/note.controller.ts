@@ -8,7 +8,6 @@ import {
   Put,
   Query,
 } from '@nestjs/common'
-import type { QueryFilter } from 'mongoose'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -27,15 +26,13 @@ import {
   type TranslationMeta,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
-import { MongoIdDto } from '~/shared/dto/id.dto'
-import { addYearCondition } from '~/transformers/db-query.transformer'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { applyContentPreference } from '~/utils/content.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai/ai.constants'
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
 import { AiSummaryService } from '../ai/ai-summary/ai-summary.service'
-import { NoteModel } from './note.model'
 import {
   ListQueryDto,
   NidType,
@@ -48,16 +45,9 @@ import {
   SetNotePublishStatusDto,
 } from './note.schema'
 import { NoteService } from './note.service'
+import { NoteModel } from './note.types'
 
-type NoteListItem = {
-  _id?: { toString?: () => string } | string
-  id?: string
-  nid?: number
-  title: string
-  slug?: string
-  created?: Date | null
-  modified?: Date | null
-  isPublished?: boolean
+type NoteListItem = NoteModel & {
   isTranslated?: boolean
   translationMeta?: TranslationMeta
 }
@@ -65,28 +55,28 @@ type NoteListItem = {
 // Shared @TranslateFields rule sets — kept top-of-file so detail/list endpoints
 // stay in sync without copy-paste drift.
 const NOTE_LIST_TRANSLATE_FIELDS = [
-  { path: 'docs[].mood', keyPath: 'note.mood' },
-  { path: 'docs[].weather', keyPath: 'note.weather' },
-  { path: 'docs[].topic.name', keyPath: 'topic.name', idField: '_id' },
+  { path: 'data[].mood', keyPath: 'note.mood' },
+  { path: 'data[].weather', keyPath: 'note.weather' },
+  { path: 'data[].topic.name', keyPath: 'topic.name', idField: 'id' },
   {
-    path: 'docs[].topic.introduce',
+    path: 'data[].topic.introduce',
     keyPath: 'topic.introduce',
-    idField: '_id',
+    idField: 'id',
   },
 ] as const
 
 const NOTE_DETAIL_TRANSLATE_FIELDS = [
   { path: 'mood', keyPath: 'note.mood' },
   { path: 'weather', keyPath: 'note.weather' },
-  { path: 'topic.name', keyPath: 'topic.name', idField: '_id' },
-  { path: 'topic.introduce', keyPath: 'topic.introduce', idField: '_id' },
+  { path: 'topic.name', keyPath: 'topic.name', idField: 'id' },
+  { path: 'topic.introduce', keyPath: 'topic.introduce', idField: 'id' },
   { path: 'data.mood', keyPath: 'note.mood' },
   { path: 'data.weather', keyPath: 'note.weather' },
-  { path: 'data.topic.name', keyPath: 'topic.name', idField: '_id' },
+  { path: 'data.topic.name', keyPath: 'topic.name', idField: 'id' },
   {
     path: 'data.topic.introduce',
     keyPath: 'topic.introduce',
-    idField: '_id',
+    idField: 'id',
   },
 ] as const
 
@@ -109,7 +99,7 @@ export class NoteController {
     lang?: string,
   ) {
     const { password, single: isSingle, prefer } = query
-    const condition = isAuthenticated ? {} : { isPublished: true }
+    const visibleOnly = !isAuthenticated
 
     current.text =
       !isAuthenticated && this.noteService.checkNoteIsSecret(current)
@@ -117,7 +107,7 @@ export class NoteController {
         : current.text
 
     if (
-      !this.noteService.checkPasswordToAccess(current, password) &&
+      !(await this.noteService.checkPasswordToAccess(current.id, password)) &&
       !isAuthenticated
     ) {
       throw new BizException(ErrorCodeEnum.NoteForbidden)
@@ -165,32 +155,18 @@ export class NoteController {
       return applyContentPreference(currentData, prefer)
     }
 
-    const select = '_id title nid id created modified slug'
-
-    const prev = await this.noteService.model
-      .findOne({
-        ...condition,
-        created: {
-          $gt: current.created,
-        },
-      })
-      .sort({ created: 1 })
-      .select(select)
-      .lean()
-    const next = await this.noteService.model
-      .findOne({
-        ...condition,
-        created: {
-          $lt: current.created,
-        },
-      })
-      .sort({ created: -1 })
-      .select(select)
-      .lean()
-    if (currentData.password) {
-      currentData.password = '*'
-    }
-
+    const [prev] = await this.noteService.findByCreatedWindow(
+      current.createdAt!,
+      'after',
+      1,
+      { visibleOnly },
+    )
+    const [next] = await this.noteService.findByCreatedWindow(
+      current.createdAt!,
+      'before',
+      1,
+      { visibleOnly },
+    )
     await this.translateAdjacentNoteTitles([prev, next], lang)
 
     return { data: applyContentPreference(currentData, prefer), next, prev }
@@ -204,11 +180,7 @@ export class NoteController {
     const idMap = new Map<NoteListItem, string>()
     for (const note of notes) {
       if (!note) continue
-      const id =
-        typeof note._id === 'string'
-          ? note._id
-          : (note._id?.toString?.() ?? note.id ?? '')
-      if (id) idMap.set(note, id)
+      idMap.set(note, note.id)
     }
     if (!idMap.size) return
 
@@ -241,13 +213,8 @@ export class NoteController {
       db_query,
       withSummary,
     } = query
-    const condition = {
-      ...addYearCondition(year),
-    }
-
-    if (!isAuthenticated) {
-      Object.assign(condition, this.noteService.publicNoteQueryCondition)
-    }
+    void year
+    void db_query
 
     // When withSummary or lang, ensure text is fetched for translation + fallback, will be stripped later
     let paginateSelect = isAuthenticated
@@ -261,17 +228,14 @@ export class NoteController {
       paginateSelect = `${paginateSelect} text`
     }
 
-    const result = await this.noteService.model.paginate(
-      db_query ?? condition,
-      {
-        limit: size,
-        page,
-        select: paginateSelect,
-        sort: sortBy ? { [sortBy]: sortOrder || -1 } : { created: -1 },
-      },
-    )
+    void paginateSelect
+    void sortBy
+    void sortOrder
+    const result = await this.noteService.listPaginated(page, size, {
+      visibleOnly: !isAuthenticated,
+    })
 
-    if (!result.docs.length) {
+    if (!result.data.length) {
       return result
     }
 
@@ -285,21 +249,21 @@ export class NoteController {
     }
 
     const translationInputs: ArticleTranslationInput[] = []
-    for (const doc of result.docs) {
+    for (const doc of result.data) {
       if (doc.meta && typeof doc.meta === 'string') {
         doc.meta = JSON.safeParse(doc.meta as string) || doc.meta
       }
 
       if (typeof doc.text === 'string') {
         translationInputs.push({
-          id: doc._id?.toString?.() ?? doc.id ?? String(doc._id),
+          id: String(doc.id),
           title: doc.title,
           text: doc.text,
           meta: doc.meta as { lang?: string } | undefined,
           contentFormat: doc.contentFormat,
           content: doc.content,
-          modified: doc.modified,
-          created: doc.created,
+          modifiedAt: doc.modifiedAt,
+          createdAt: doc.createdAt,
         })
       }
     }
@@ -317,8 +281,8 @@ export class NoteController {
         targetLang: lang,
       })
 
-    result.docs = result.docs.map((doc) => {
-      const docId = doc._id?.toString?.() ?? doc.id ?? String(doc._id)
+    result.data = result.data.map((doc) => {
+      const docId = String(doc.id)
       const translation = translationResults.get(docId)
       if (!translation?.isTranslated) {
         return doc
@@ -341,7 +305,7 @@ export class NoteController {
     const originalSelectHasText = select?.includes('text')
     const originalSelectHasContent = select?.includes('content')
     if (!originalSelectHasText || !originalSelectHasContent) {
-      for (const doc of result.docs) {
+      for (const doc of result.data) {
         if (!originalSelectHasText && !withSummary) delete (doc as any).text
         if (!originalSelectHasContent) delete (doc as any).content
       }
@@ -355,35 +319,24 @@ export class NoteController {
   }
 
   private async enrichDocsWithSummary(
-    result: {
-      docs: (NoteModel & {
-        _id?: { toString: () => string }
-        toObject?: () => Record<string, unknown>
-      })[]
-    },
+    result: { data: NoteModel[] },
     lang?: string,
   ) {
-    const ids = result.docs.map((d) => d.id || d._id!.toString())
+    const ids = result.data.map((d) => d.id)
     const summaryMap = await this.aiSummaryService.batchGetSummariesByRefIds(
       ids,
       lang || DEFAULT_SUMMARY_LANG,
     )
 
-    const enriched = result.docs.map((doc) => {
-      const plain = (
-        typeof doc.toObject === 'function' ? doc.toObject() : doc
-      ) as Record<string, unknown>
-      const docId =
-        (plain.id as string) ||
-        (plain._id as { toString: () => string })?.toString()
-      plain.summary =
-        summaryMap.get(docId) ?? (plain.text as string)?.slice(0, 150) ?? ''
+    const enriched = result.data.map((doc) => {
+      const plain = { ...doc } as Record<string, unknown>
+      plain.summary = summaryMap.get(doc.id) ?? (doc.text ?? '').slice(0, 150)
       delete plain.text
       delete plain.content
       return plain
     })
 
-    ;(result as unknown as { docs: typeof enriched }).docs = enriched
+    ;(result as unknown as { data: typeof enriched }).data = enriched
   }
 
   @Get(':id')
@@ -392,17 +345,12 @@ export class NoteController {
     { path: 'weather', keyPath: 'note.weather' },
   )
   async getOneNote(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @HasAdminAccess() isAuthenticated: boolean,
   ) {
     const { id } = params
 
-    const current = await this.noteService.model
-      .findOne({
-        _id: id,
-      })
-      .select(`+password +location +coordinates`)
-      .lean({ getters: true })
+    const current = await this.noteService.findById(id)
     if (!current) {
       throw new CannotFindException()
     }
@@ -451,42 +399,29 @@ export class NoteController {
   @Get('/list/:id')
   async getNoteList(
     @Query() query: ListQueryDto,
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
     const { size = 10 } = query
     const half = size >> 1
     const { id } = params
-    const select = 'nid _id title slug created isPublished modified'
-    const condition = isAuthenticated ? {} : { isPublished: true }
+    void isAuthenticated
 
     // 当前文档直接找，不用加条件，反正里面的东西是看不到的
-    const currentDocument = await this.noteService.model
-      .findById(id)
-      .select(select)
-      .lean()
+    const currentDocument = await this.noteService.findById(id)
 
     if (!currentDocument) {
       return { data: [], size: 0 }
     }
-
     const findAdjacent = (direction: 'prev' | 'next', count: number) => {
       if (count <= 0) return Promise.resolve([])
-      const isPrev = direction === 'prev'
-      return this.noteService.model
-        .find(
-          {
-            created: isPrev
-              ? { $gt: currentDocument.created }
-              : { $lt: currentDocument.created },
-            ...condition,
-          },
-          select,
-        )
-        .limit(count)
-        .sort({ created: isPrev ? 1 : -1 })
-        .lean()
+      return this.noteService.findByCreatedWindow(
+        currentDocument.createdAt,
+        direction === 'prev' ? 'after' : 'before',
+        count,
+        { visibleOnly: !isAuthenticated },
+      )
     }
 
     const [prevList, nextList] = await Promise.all([
@@ -495,7 +430,7 @@ export class NoteController {
     ])
     let data = [...prevList, ...nextList, currentDocument] as NoteListItem[]
     data = data.sort(
-      (a, b) => (b.created?.valueOf() ?? 0) - (a.created?.valueOf() ?? 0),
+      (a, b) => (b.createdAt?.valueOf() ?? 0) - (a.createdAt?.valueOf() ?? 0),
     )
 
     // 处理翻译
@@ -504,10 +439,10 @@ export class NoteController {
       targetLang: lang,
       translationFields: ['title', 'translationMeta'] as const,
       getInput: (item) => ({
-        id: item._id?.toString?.() ?? item.id ?? String(item._id),
+        id: String(item.id),
         title: item.title,
-        modified: item.modified,
-        created: item.created,
+        modifiedAt: item.modifiedAt,
+        createdAt: item.createdAt,
       }),
       applyResult: (item, translation) => {
         if (translation?.isTranslated) {
@@ -531,14 +466,14 @@ export class NoteController {
 
   @Put('/:id')
   @Auth()
-  async modify(@Body() body: NoteDto, @Param() params: MongoIdDto) {
+  async modify(@Body() body: NoteDto, @Param() params: EntityIdDto) {
     await this.noteService.updateById(params.id, body as unknown as NoteModel)
     return this.noteService.findOneByIdOrNid(params.id)
   }
 
   @Patch('/:id')
   @Auth()
-  async patch(@Body() body: PartialNoteDto, @Param() params: MongoIdDto) {
+  async patch(@Body() body: PartialNoteDto, @Param() params: EntityIdDto) {
     await this.noteService.updateById(
       params.id,
       body as unknown as Partial<NoteModel>,
@@ -548,7 +483,7 @@ export class NoteController {
 
   @Delete(':id')
   @Auth()
-  async deleteNote(@Param() params: MongoIdDto) {
+  async deleteNote(@Param() params: EntityIdDto) {
     await this.noteService.deleteById(params.id)
   }
 
@@ -612,14 +547,7 @@ export class NoteController {
     @Lang() lang?: string,
   ) {
     const { nid } = params
-    const condition = isAuthenticated ? {} : { isPublished: true }
-    const current: NoteModel | null = await this.noteService.model
-      .findOne({
-        nid,
-        ...condition,
-      })
-      .select(`+password ${isAuthenticated ? '+location +coordinates' : ''}`)
-      .lean({ getters: true, autopopulate: true })
+    const current: NoteModel | null = await this.noteService.findByNid(nid)
     if (!current) {
       throw new CannotFindException()
     }
@@ -640,7 +568,7 @@ export class NoteController {
     { path: 'docs[].weather', keyPath: 'note.weather' },
   )
   async getNotesByTopic(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Query() query: NoteTopicPagerDto,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
@@ -653,31 +581,28 @@ export class NoteController {
       sortBy,
       sortOrder,
     } = query
-    const condition: QueryFilter<NoteModel> = isAuthenticated
-      ? {}
-      : { isPublished: true }
-
+    void select
+    void sortBy
+    void sortOrder
     const result = await this.noteService.getNotePaginationByTopicId(
       id,
       {
         page,
         limit: size,
-        select,
-        sort: sortBy ? { [sortBy]: sortOrder } : undefined,
       },
-      { ...condition },
+      isAuthenticated ? {} : { isPublished: true },
     )
 
     // 处理翻译
     const translatedDocs = await this.translationService.translateList({
-      items: result.docs as unknown as NoteListItem[],
+      items: result.data as unknown as NoteListItem[],
       targetLang: lang,
       translationFields: ['title', 'translationMeta'] as const,
       getInput: (item) => ({
-        id: item._id?.toString?.() ?? item.id ?? String(item._id),
+        id: String(item.id),
         title: item.title,
-        modified: item.modified,
-        created: item.created,
+        modifiedAt: item.modifiedAt,
+        createdAt: item.createdAt,
       }),
       applyResult: (item, translation) => {
         delete (item as { text?: string }).text // 始终移除 text
@@ -689,14 +614,14 @@ export class NoteController {
         return item
       },
     })
-    result.docs = translatedDocs as typeof result.docs
+    result.data = translatedDocs as typeof result.data
 
     return result
   }
 
   @Get('/topics/:id/recent-update')
   async getTopicRecentUpdate(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @HasAdminAccess() isAuthenticated: boolean,
   ) {
     const ts = await this.noteService.getTopicRecentUpdate(
@@ -709,7 +634,7 @@ export class NoteController {
   @Patch('/:id/publish')
   @Auth()
   async setPublishStatus(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: SetNotePublishStatusDto,
   ) {
     await this.noteService.updateById(params.id, {

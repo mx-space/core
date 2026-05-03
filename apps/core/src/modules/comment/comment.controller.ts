@@ -26,16 +26,14 @@ import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { MongoIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto } from '~/shared/dto/id.dto'
 import { PagerDto } from '~/shared/dto/pager.dto'
-import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 
 import { ConfigsService } from '../configs/configs.service'
 import { ReaderService } from '../reader/reader.service'
+import { CommentState } from './comment.enum'
 import { CommentFilterEmailInterceptor } from './comment.interceptor'
 import { CommentLifecycleService } from './comment.lifecycle.service'
-import type { CommentModel } from './comment.model'
-import { CommentState } from './comment.model'
 import {
   BatchCommentDeleteDto,
   BatchCommentStateDto,
@@ -48,6 +46,7 @@ import {
   ReplyCommentDto,
 } from './comment.schema'
 import { CommentService } from './comment.service'
+import type { CommentModel } from './comment.types'
 
 const idempotenceMessage = '哦吼，这句话你已经说过啦'
 
@@ -64,7 +63,7 @@ export class CommentController {
   ) {}
 
   private async createCommentWithBody(
-    params: MongoIdDto,
+    params: EntityIdDto,
     body: Partial<CommentModel>,
     ipLocation: IpRecord,
     query: CommentRefTypesDto,
@@ -81,7 +80,7 @@ export class CommentController {
     const comment = await this.commentService.createComment(id, model, ref)
 
     this.lifecycleService.afterCreateComment(
-      String((comment as any).id || (comment as any)._id),
+      String((comment as any).id || (comment as any).id),
       ipLocation,
     )
 
@@ -91,7 +90,7 @@ export class CommentController {
   }
 
   private async replyCommentWithBody(
-    params: MongoIdDto,
+    params: EntityIdDto,
     body: Partial<CommentModel>,
     ipLocation: IpRecord,
   ) {
@@ -130,19 +129,17 @@ export class CommentController {
       state,
     })
     const readers = await this.readerService.findReaderInIds(
-      comments.docs.map((doc) => doc.readerId).filter(Boolean) as string[],
+      comments.data.map((doc) => doc.readerId).filter(Boolean) as string[],
     )
 
-    const res = transformDataToPaginate(comments)
-    Object.assign(res, {
+    return Object.assign({}, comments, {
       readers: keyBy(readers, 'id'),
     })
-    return res
   }
 
   @Get('/ref/:id')
   async getCommentsByRefId(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Query() query: PagerDto,
     @Query('hasAnchor') hasAnchor: string,
     @Query('sort') sort: string | undefined,
@@ -170,11 +167,10 @@ export class CommentController {
       around,
     })
 
-    const result = transformDataToPaginate(comments)
-    const readerIds = this.commentService.collectThreadReaderIds(comments.docs)
+    const readerIds = this.commentService.collectThreadReaderIds(comments.data)
     const readers = await this.readerService.findReaderInIds(readerIds)
 
-    Object.assign(result, {
+    const result = Object.assign({}, comments, {
       readers: keyBy(readers, 'id'),
     })
 
@@ -201,16 +197,12 @@ export class CommentController {
 
   @Get('/:id')
   async getComments(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @HasAdminAccess() hasAdminAccess: boolean,
   ) {
     const { id } = params
-    const data: CommentModel | null = await this.commentService.model
-      .findOne({
-        _id: id,
-      })
-      .populate('parentCommentId')
-      .lean()
+    const data: CommentModel | null =
+      await this.commentService.findByIdWithRelations(id)
 
     if (!data) {
       throw new CannotFindException()
@@ -236,7 +228,7 @@ export class CommentController {
     errorMessage: idempotenceMessage,
   })
   async guestComment(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: CommentDto,
     @IpLocation() ipLocation: IpRecord,
     @Query() query: CommentRefTypesDto,
@@ -261,7 +253,7 @@ export class CommentController {
     errorMessage: idempotenceMessage,
   })
   async readerComment(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: ReaderCommentDto,
     @CurrentReaderId() readerId: string,
     @IpLocation() ipLocation: IpRecord,
@@ -284,7 +276,7 @@ export class CommentController {
     errorMessage: idempotenceMessage,
   })
   async guestReplyByCid(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: ReplyCommentDto,
     @IpLocation() ipLocation: IpRecord,
   ) {
@@ -310,7 +302,7 @@ export class CommentController {
     errorMessage: idempotenceMessage,
   })
   async replyByCid(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: ReaderReplyCommentDto,
     @IpLocation() ipLocation: IpRecord,
   ) {
@@ -323,7 +315,7 @@ export class CommentController {
     errorMessage: idempotenceMessage,
   })
   async readerReplyByCid(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: ReaderReplyCommentDto,
     @CurrentReaderId() readerId: string,
     @IpLocation() ipLocation: IpRecord,
@@ -343,7 +335,7 @@ export class CommentController {
   @Patch('/:id')
   @Auth()
   async modifyCommentState(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: CommentStatePatchDto,
   ) {
     const { id } = params
@@ -355,33 +347,11 @@ export class CommentController {
     if (!isUndefined(pin)) updateResult.pin = pin
 
     if (pin) {
-      const currentRefModel = await this.commentService.model
-        .findOne({
-          _id: id,
-        })
-        .lean()
-        .populate('ref')
-
-      const refId = (currentRefModel?.ref as any)?._id
-      if (refId) {
-        await this.commentService.model.updateMany(
-          {
-            ref: refId,
-          },
-          {
-            pin: false,
-          },
-        )
-      }
+      await this.commentService.clearPinForRefOfComment(id)
     }
 
     try {
-      await this.commentService.model.updateOne(
-        {
-          _id: id,
-        },
-        updateResult,
-      )
+      await this.commentService.updateComment(id, updateResult)
 
       if (!isUndefined(state)) {
         await this.commentService.cascadeFilesForCommentsIfSpam([id], state)
@@ -395,7 +365,7 @@ export class CommentController {
 
   @Delete('/:id')
   @Auth()
-  async deleteComment(@Param() params: MongoIdDto) {
+  async deleteComment(@Param() params: EntityIdDto) {
     const { id } = params
     await this.commentService.softDeleteComment(id)
     await this.eventManager.emit(
@@ -420,18 +390,12 @@ export class CommentController {
       if (!isUndefined(currentState)) {
         filter.state = currentState
       }
-      const docs = await this.commentService.model
-        .find(filter)
-        .select('_id')
-        .lean()
-      affected = docs.map((d) => d._id.toString())
-      await this.commentService.model.updateMany(filter, { state })
+      const matched = await this.commentService.findByFilter(filter)
+      affected = matched.map((c) => String(c.id ?? c.id))
+      await this.commentService.updateStateByFilter(filter, state)
     } else if (ids?.length) {
       affected = ids.map((id) => id.toString())
-      await this.commentService.model.updateMany(
-        { _id: { $in: ids } },
-        { state },
-      )
+      await this.commentService.updateStateBulk(ids, state)
     }
 
     if (affected.length) {
@@ -451,10 +415,12 @@ export class CommentController {
       if (!isUndefined(state)) {
         filter.state = state
       }
-      const comments = await this.commentService.model.find(filter).lean()
+      const comments = await this.commentService.findByFilter(filter)
       await Promise.all(
         comments.map((comment) =>
-          this.commentService.softDeleteComment(comment._id.toString()),
+          this.commentService.softDeleteComment(
+            String(comment.id ?? comment.id),
+          ),
         ),
       )
     } else if (ids?.length) {
@@ -468,14 +434,14 @@ export class CommentController {
 
   @Patch('/edit/:id')
   async editComment(
-    @Param() params: MongoIdDto,
+    @Param() params: EntityIdDto,
     @Body() body: EditCommentDto,
     @HasAdminAccess() hasAdminAccess: boolean,
     @CurrentReaderId() readerId: string,
   ) {
     const { id } = params
     const { text } = body
-    const comment = await this.commentService.model.findById(id).lean()
+    const comment = await this.commentService.findById(id)
     if (!comment) {
       throw new CannotFindException()
     }

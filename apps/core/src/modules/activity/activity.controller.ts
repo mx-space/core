@@ -1,16 +1,18 @@
 import { Body, Delete, Get, Param, Post, Query } from '@nestjs/common'
+import { keyBy, pick } from 'es-toolkit/compat'
+
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IpLocation } from '~/common/decorators/ip.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import { TranslationService } from '~/processors/helper/helper.translation.service'
 import { PagerDto } from '~/shared/dto/pager.dto'
 import { snakecaseKeysWithCompat } from '~/utils/case.util'
-import { keyBy, pick } from 'es-toolkit/compat'
+
 import { ReaderService } from '../reader/reader.service'
 import { Activity } from './activity.constant'
 import {
@@ -74,11 +76,13 @@ export class ActivityController {
     const { page, size, type } = pager
 
     switch (type) {
-      case Activity.Like:
+      case Activity.Like: {
         return this.service.getLikeActivities(page, size)
+      }
 
-      case Activity.ReadDuration:
+      case Activity.ReadDuration: {
         return this.service.getReadDurationActivities(page, size)
+      }
     }
   }
 
@@ -105,7 +109,7 @@ export class ActivityController {
         return arr.map((item) => {
           return snakecaseKeysWithCompat({
             ...item,
-            id: item._id.toHexString(),
+            id: item.id,
           })
         })
       })
@@ -159,9 +163,9 @@ export class ActivityController {
             targetLang: lang,
             translationFields: ['title', 'translationMeta'] as const,
             getInput: (item: any) => ({
-              id: item.id ?? item._id?.toString?.() ?? '',
+              id: item.id ?? '',
               title: item.title ?? '',
-              created: item.created,
+              createdAt: item.createdAt,
             }),
             applyResult: (item: any, translation) => {
               if (!translation?.isTranslated) return item
@@ -221,7 +225,7 @@ export class ActivityController {
           return {
             id: item.refId,
             title: ref?.title ?? '',
-            created: ref?.created,
+            created: ref?.createdAt,
           }
         },
         applyResult: (item, translation) => {
@@ -269,7 +273,7 @@ export class ActivityController {
           return {
             id: item.refId,
             title: ref?.title ?? '',
-            created: ref?.created,
+            created: ref?.createdAt,
           }
         },
         applyResult: (item, translation) => {
@@ -340,10 +344,10 @@ export class ActivityController {
         targetLang: lang,
         translationFields: ['title'] as const,
         getInput: (item) => ({
-          id: item._id?.toString?.() ?? '',
+          id: item.id,
           title: item.title ?? '',
-          created: item.created,
-          modified: item.modified,
+          createdAt: item.createdAt,
+          modifiedAt: item.modifiedAt,
         }),
         applyResult: (item, translation) => {
           if (!translation?.isTranslated) return item
@@ -356,10 +360,10 @@ export class ActivityController {
         targetLang: lang,
         translationFields: ['title'] as const,
         getInput: (item) => ({
-          id: item._id?.toString?.() ?? '',
+          id: item.id,
           title: item.title ?? '',
-          created: item.created,
-          modified: item.modified,
+          createdAt: item.createdAt,
+          modifiedAt: item.modifiedAt,
         }),
         applyResult: (item, translation) => {
           if (!translation?.isTranslated) return item
@@ -402,7 +406,7 @@ export class ActivityController {
 
     const postList = post
       .filter((item) => {
-        return new Date(item.created) > fromDate
+        return new Date(item.createdAt) > fromDate
       })
       .map((item) => {
         return {
@@ -414,7 +418,7 @@ export class ActivityController {
       })
     const noteList = note
       .filter((item) => {
-        return new Date(item.created) > fromDate
+        return new Date(item.createdAt) > fromDate
       })
       .map((item) => {
         return {
@@ -438,9 +442,9 @@ export class ActivityController {
           targetLang: lang,
           translationFields: ['title', 'translationMeta'] as const,
           getInput: (item: any) => ({
-            id: item._id?.toString?.() ?? item.id ?? '',
+            id: item.id,
             title: item.title ?? '',
-            created: item.created,
+            createdAt: item.createdAt,
           }),
           applyResult: (item: any, translation) => {
             if (!translation?.isTranslated) return item
@@ -462,12 +466,9 @@ export class ActivityController {
           targetLang: lang,
           translationFields: ['title', 'translationMeta'] as const,
           getInput: (item: any) => ({
-            id:
-              item.title === '未公开的日记'
-                ? ''
-                : (item._id?.toString?.() ?? ''),
+            id: item.title === '未公开的日记' ? '' : item.id,
             title: item.title ?? '',
-            created: item.created,
+            createdAt: item.createdAt,
           }),
           applyResult: (item: any, translation) => {
             if (!translation?.isTranslated) return item

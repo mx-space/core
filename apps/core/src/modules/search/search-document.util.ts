@@ -5,11 +5,10 @@ import { extractTextFromContent } from '~/utils/content.util'
 import type {
   SearchDocumentModel,
   SearchDocumentRefType,
-} from './search-document.model'
+} from './search-document.types'
 
 type SearchDocumentSource = {
-  id?: string
-  _id?: { toString: () => string }
+  id: string
   title?: string | null
   text?: string | null
   contentFormat?: string | null
@@ -19,14 +18,15 @@ type SearchDocumentSource = {
   isPublished?: boolean | null
   publicAt?: Date | null
   password?: string | null
-  created?: Date | null
-  modified?: Date | null
+  hasPassword?: boolean
+  createdAt?: Date | null
+  modifiedAt?: Date | null
 }
 
 export function buildSearchDocument(
   refType: SearchDocumentRefType,
   data: SearchDocumentSource,
-): Omit<SearchDocumentModel, '_id'> {
+): Omit<SearchDocumentModel, 'id'> {
   const normalizedTitle = normalizeSearchText(data.title)
   const normalizedBody = normalizeSearchText(
     extractTextFromContent({
@@ -48,7 +48,7 @@ export function buildSearchDocument(
 
   return {
     refType,
-    refId: data.id ?? data._id?.toString?.() ?? '',
+    refId: data.id,
     title: normalizedTitle,
     searchText: normalizedBody,
     terms: [
@@ -62,9 +62,9 @@ export function buildSearchDocument(
     nid: data.nid ?? undefined,
     isPublished: refType === 'page' ? true : data.isPublished !== false,
     publicAt: data.publicAt ?? null,
-    hasPassword: Boolean(data.password),
-    created: data.created ?? null,
-    modified: data.modified ?? null,
+    hasPassword: data.hasPassword ?? Boolean(data.password),
+    created: data.createdAt ?? new Date(),
+    modified: data.modifiedAt ?? null,
   }
 }
 

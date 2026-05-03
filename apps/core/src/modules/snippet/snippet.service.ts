@@ -1,7 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { load } from 'js-yaml'
 import JSON5 from 'json5'
-import type { AggregatePaginateModel, Document } from 'mongoose'
 import qs from 'qs'
 
 import { RequestContext } from '~/common/contexts/request.context'
@@ -12,27 +11,45 @@ import { ErrorCodeEnum } from '~/constants/error-code.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import { InjectModel } from '~/transformers/model.transformer'
 import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { ServerlessService } from '../serverless/serverless.service'
-import { SnippetModel, SnippetType } from './snippet.model'
+import type { SnippetRow } from './snippet.repository'
+import { SnippetRepository } from './snippet.repository'
+import { SnippetType } from './snippet.schema'
+
+export interface SnippetCreateInput {
+  type?: SnippetType
+  private?: boolean
+  raw: string
+  name: string
+  reference?: string
+  comment?: string
+  metatype?: string
+  schema?: string
+  method?: string | null
+  customPath?: string | null
+  secret?: string
+  enable?: boolean
+  builtIn?: boolean
+  compiledCode?: string | null
+}
+
+export type SnippetUpdateInput = SnippetCreateInput
 
 @Injectable()
 export class SnippetService {
   constructor(
-    @InjectModel(SnippetModel)
-    private readonly snippetModel: MongooseModel<SnippetModel> &
-      AggregatePaginateModel<SnippetModel & Document>,
+    private readonly snippetRepository: SnippetRepository,
     @Inject(forwardRef(() => ServerlessService))
     private readonly serverlessService: ServerlessService,
     private readonly redisService: RedisService,
     private readonly eventManager: EventManagerService,
   ) {}
 
-  get model() {
-    return this.snippetModel
+  get repository() {
+    return this.snippetRepository
   }
 
   private readonly reservedReferenceKeys = ['system', 'built-in']
@@ -55,33 +72,35 @@ export class SnippetService {
     ])
   }
 
-  async create(model: SnippetModel) {
+  async create(model: SnippetCreateInput): Promise<SnippetRow> {
     if (model.type === SnippetType.Function) {
       model.method ??= 'GET'
       model.enable ??= true
 
-      if (this.reservedReferenceKeys.includes(model.reference)) {
+      const reference = model.reference ?? 'root'
+      if (this.reservedReferenceKeys.includes(reference)) {
         throw new BizException(
           ErrorCodeEnum.InvalidParameter,
-          `"${model.reference}" as reference is reserved`,
+          `"${reference}" as reference is reserved`,
         )
       }
     }
-    const isExist = await this.model.countDocuments({
-      name: model.name,
-      reference: model.reference || 'root',
-      method: model.method,
-    })
 
-    if (isExist) {
+    const reference = model.reference ?? 'root'
+    const exists = await this.snippetRepository.countByNameReferenceMethod(
+      model.name,
+      reference,
+      model.method ?? null,
+    )
+    if (exists > 0) {
       throw new BizException(ErrorCodeEnum.SnippetExists)
     }
 
     if (model.customPath) {
-      const cpExists = await this.model.countDocuments({
-        customPath: model.customPath,
-      })
-      if (cpExists) {
+      const cpExists = await this.snippetRepository.countByCustomPath(
+        model.customPath,
+      )
+      if (cpExists > 0) {
         throw new BizException(
           ErrorCodeEnum.InvalidParameter,
           'customPath already exists',
@@ -100,21 +119,34 @@ export class SnippetService {
       }
     }
 
-    const created = await this.model.create({ ...model, created: new Date() })
-    if (model.reference === 'theme') {
+    const created = await this.snippetRepository.create({
+      type: model.type ?? SnippetType.JSON,
+      private: model.private ?? false,
+      raw: model.raw,
+      name: model.name,
+      reference,
+      comment: model.comment ?? null,
+      metatype: model.metatype ?? null,
+      schema: model.schema ?? null,
+      method: model.method ?? null,
+      customPath: model.customPath ?? null,
+      secret: model.secret ? EncryptUtil.encrypt(model.secret) : null,
+      enable: model.enable ?? true,
+      builtIn: model.builtIn ?? false,
+      compiledCode: model.compiledCode ?? null,
+    })
+
+    if (reference === 'theme') {
       await this.notifyAggregateThemeUpdate()
     }
 
     return created
   }
 
-  async update(id: string, newModel: SnippetModel) {
+  async update(id: string, newModel: SnippetUpdateInput): Promise<SnippetRow> {
     await this.validateTypeAndCleanup(newModel)
-    delete newModel.created
-    const old = await this.model.findById(id).select('+secret').lean({
-      getters: true,
-    })
 
+    const old = await this.snippetRepository.findById(id)
     if (!old) {
       throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
@@ -129,10 +161,9 @@ export class SnippetService {
       )
     }
 
-    // merge secret
+    let mergedSecret = newModel.secret
     if (old.secret && newModel.secret) {
-      const oldSecret = qs.parse(old.secret)
-
+      const oldSecret = qs.parse(EncryptUtil.decrypt(old.secret))
       const newSecret = qs.parse(newModel.secret)
 
       for (const key in oldSecret) {
@@ -147,16 +178,16 @@ export class SnippetService {
         }
       }
 
-      newModel.secret = qs.stringify({ ...oldSecret, ...newSecret })
+      mergedSecret = qs.stringify({ ...oldSecret, ...newSecret })
     }
 
     if (newModel.customPath !== undefined) {
       if (newModel.customPath) {
-        const cpExists = await this.model.countDocuments({
-          customPath: newModel.customPath,
-          _id: { $ne: id },
-        })
-        if (cpExists) {
+        const cpExists = await this.snippetRepository.countByCustomPath(
+          newModel.customPath,
+          id,
+        )
+        if (cpExists > 0) {
           throw new BizException(
             ErrorCodeEnum.InvalidParameter,
             'customPath already exists',
@@ -180,36 +211,43 @@ export class SnippetService {
       }
     }
 
-    const updateOp: any = { ...newModel, modified: new Date() }
-    const unsetFields: Record<string, 1> = {}
-
-    if ('customPath' in newModel && !newModel.customPath) {
-      delete updateOp.customPath
-      unsetFields.customPath = 1
+    const patch: Record<string, unknown> = {
+      type: newModel.type ?? old.type,
+      private: newModel.private ?? old.private,
+      raw: newModel.raw,
+      name: newModel.name,
+      reference: newModel.reference ?? 'root',
+      comment: newModel.comment ?? null,
+      metatype: newModel.metatype ?? null,
+      schema: newModel.schema ?? null,
+      method: newModel.method ?? null,
+      enable: newModel.enable ?? old.enable,
+      builtIn: newModel.builtIn ?? old.builtIn,
+      compiledCode: newModel.compiledCode ?? old.compiledCode,
     }
 
-    const updateQuery: any = { $set: updateOp }
-    if (Object.keys(unsetFields).length > 0) {
-      updateQuery.$unset = unsetFields
+    if (mergedSecret !== undefined) {
+      patch.secret = mergedSecret ? EncryptUtil.encrypt(mergedSecret) : null
     }
 
-    const newerDoc = await this.model.findByIdAndUpdate(id, updateQuery, {
-      returnDocument: 'after',
-    })
+    if ('customPath' in newModel) {
+      patch.customPath = newModel.customPath || null
+    }
+
+    const updated = await this.snippetRepository.update(id, patch)
+    if (!updated) {
+      throw new BizException(ErrorCodeEnum.SnippetNotFound)
+    }
 
     if (old.reference === 'theme' || newModel.reference === 'theme') {
       await this.notifyAggregateThemeUpdate()
     }
 
-    if (!newerDoc) {
-      return newerDoc
-    }
-
-    return this.transformLeanSnippetModel(newerDoc.toObject())
+    return this.transformLeanSnippetModel(updated)
   }
 
-  async delete(id: string) {
-    const doc = await this.model.findOneAndDelete({ _id: id }).lean()
+  async delete(id: string): Promise<void> {
+    const doc = await this.snippetRepository.findById(id)
     if (!doc) {
       throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
@@ -221,6 +259,8 @@ export class SnippetService {
       )
     }
 
+    await this.snippetRepository.deleteById(id)
+
     await this.deleteCachedSnippet(doc.reference, doc.name)
     if (doc.customPath) {
       await this.deleteCachedSnippetByCustomPath(doc.customPath)
@@ -230,7 +270,7 @@ export class SnippetService {
     }
   }
 
-  private async validateTypeAndCleanup(model: SnippetModel) {
+  private async validateTypeAndCleanup(model: SnippetCreateInput) {
     switch (model.type) {
       case SnippetType.JSON: {
         try {
@@ -260,7 +300,6 @@ export class SnippetService {
         const isValid = await this.serverlessService.isValidServerlessFunction(
           model.raw,
         )
-        // if isValid is string, eq error message
         if (typeof isValid === 'string') {
           throw new BizException(ErrorCodeEnum.SnippetInvalidFunction, isValid)
         }
@@ -270,7 +309,6 @@ export class SnippetService {
         break
       }
 
-      case SnippetType.Text:
       default: {
         break
       }
@@ -282,32 +320,28 @@ export class SnippetService {
     }
   }
 
-  async getSnippetById(id: string) {
-    const doc = await this.model.findById(id).select('+secret').lean({
-      getters: true,
-    })
+  async getSnippetById(id: string): Promise<SnippetRow> {
+    const doc = await this.snippetRepository.findById(id)
     if (!doc) {
       throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
     return this.transformLeanSnippetModel(doc)
   }
 
-  private transformLeanSnippetModel(snippet: SnippetModel) {
-    const nextSnippet = { ...snippet }
+  private transformLeanSnippetModel(snippet: SnippetRow): SnippetRow {
+    const next = { ...snippet }
     if (snippet.type === SnippetType.Function && snippet.secret) {
       const secretObj = qs.parse(EncryptUtil.decrypt(snippet.secret))
       for (const key in secretObj) {
         secretObj[key] = ''
       }
-      nextSnippet.secret = secretObj as any
+      next.secret = secretObj as any
     }
-    return nextSnippet
+    return next
   }
 
-  async getSnippetByName(name: string, reference: string) {
-    const doc = await this.model
-      .findOne({ name, reference, type: { $ne: SnippetType.Function } })
-      .lean()
+  async getSnippetByName(name: string, reference: string): Promise<SnippetRow> {
+    const doc = await this.snippetRepository.findPublicByName(name, reference)
     if (!doc) {
       throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
@@ -330,7 +364,9 @@ export class SnippetService {
     })
   }
 
-  async attachSnippet(model: SnippetModel) {
+  async attachSnippet<T extends SnippetRow>(
+    model: T,
+  ): Promise<T & { data: any }> {
     if (!model) {
       throw new BizException(ErrorCodeEnum.SnippetNotFound)
     }
@@ -353,10 +389,10 @@ export class SnippetService {
       }
     }
 
-    return model as SnippetModel & { data: any }
+    return model as T & { data: any }
   }
 
-  async cacheSnippet(model: SnippetModel, value: any) {
+  async cacheSnippet(model: SnippetRow, value: any) {
     const { reference, name } = model
     const key = `${reference}:${name}:${model.private ? 'private' : ''}`
     const client = this.redisService.getClient()
@@ -394,44 +430,27 @@ export class SnippetService {
 
   // --- customPath methods ---
 
-  async getSnippetByCustomPath(
-    customPath: string,
-  ): Promise<SnippetModel | null> {
-    return this.model
-      .findOne({ customPath, type: { $ne: SnippetType.Function } })
-      .lean()
+  async getSnippetByCustomPath(customPath: string): Promise<SnippetRow | null> {
+    const row = await this.snippetRepository.findByCustomPath(customPath)
+    if (!row) return null
+    if (row.type === SnippetType.Function) return null
+    return row
   }
 
   async getFunctionSnippetByCustomPath(
     customPath: string,
     method: string,
-  ): Promise<SnippetModel | null> {
-    return this.model
-      .findOne({
-        customPath,
-        type: SnippetType.Function,
-        $or: [{ method: 'ALL' }, { method }],
-      })
-      .select('+secret +compiledCode')
-      .lean({ getters: true })
+  ): Promise<SnippetRow | null> {
+    return this.snippetRepository.findFunctionByCustomPath(customPath, method)
   }
 
   async getFunctionSnippetByCustomPathPrefix(
     candidatePaths: string[],
     method: string,
-  ): Promise<SnippetModel | null> {
-    const results = await this.model
-      .find({
-        customPath: { $in: candidatePaths },
-        type: SnippetType.Function,
-        $or: [{ method: 'ALL' }, { method }],
-      })
-      .select('+secret +compiledCode')
-      .lean({ getters: true })
-
-    if (results.length === 0) return null
-    return results.reduce((a, b) =>
-      (a.customPath?.length ?? 0) >= (b.customPath?.length ?? 0) ? a : b,
+  ): Promise<SnippetRow | null> {
+    return this.snippetRepository.findFunctionByCustomPathPrefix(
+      candidatePaths,
+      method,
     )
   }
 

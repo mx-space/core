@@ -6,26 +6,25 @@ import { BizException } from '~/common/exceptions/biz.exception'
 import { NoContentCanBeModifiedException } from '~/common/exceptions/no-content-canbe-modified.exception'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { ErrorCodeEnum } from '~/constants/error-code.constant'
-import { FileReferenceType } from '~/modules/file/file-reference.model'
+import { FileReferenceType } from '~/modules/file/file-reference.enum'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
-import { InjectModel } from '~/transformers/model.transformer'
+import { ContentFormat } from '~/shared/types/content-format.type'
 import { isLexical } from '~/utils/content.util'
-import { dbTransforms } from '~/utils/db-transform.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { isDefined } from '~/utils/validator.util'
 
-import { DraftRefType } from '../draft/draft.model'
+import { DraftRefType } from '../draft/draft.enum'
 import { DraftService } from '../draft/draft.service'
-import { PageModel } from './page.model'
+import { PageRepository } from './page.repository'
+import { PAGE_PROTECTED_KEYS, type PageModel } from './page.types'
 
 @Injectable()
 export class PageService {
   constructor(
-    @InjectModel(PageModel)
-    private readonly pageModel: MongooseModel<PageModel>,
+    private readonly pageRepository: PageRepository,
     private readonly imageService: ImageService,
     private readonly fileReferenceService: FileReferenceService,
     private readonly eventManager: EventManagerService,
@@ -34,34 +33,69 @@ export class PageService {
     private readonly draftService: DraftService,
   ) {}
 
-  public get model() {
-    return this.pageModel
+  public get repository() {
+    return this.pageRepository
+  }
+
+  private normalizeMeta(meta: unknown) {
+    if (meta === undefined) return undefined
+    if (meta === null) return null
+    if (typeof meta === 'string') return JSON.safeParse(meta) ?? null
+    return meta as Record<string, unknown>
+  }
+
+  async list(page = 1, size = 10) {
+    return this.pageRepository.list(page, size)
+  }
+
+  async listPaginated(page = 1, size = 10) {
+    return this.pageRepository.list(page, size)
+  }
+
+  async findAll() {
+    return this.pageRepository.findAll()
+  }
+
+  async findRecent(size: number) {
+    return this.pageRepository.findRecent(size)
+  }
+
+  async findById(id: string) {
+    return this.pageRepository.findById(id)
+  }
+
+  async findBySlug(slug: string) {
+    return this.pageRepository.findBySlug(slug)
+  }
+
+  async findManyByIds(ids: string[]) {
+    return this.pageRepository.findManyByIds(ids)
   }
 
   public async create(doc: PageModel & { draftId?: string }) {
     this.lexicalService.populateText(doc as any)
 
     const { draftId } = doc
-    const count = await this.model.countDocuments({})
+    const count = await this.pageRepository.count()
     if (count >= 10) {
       throw new BizException(ErrorCodeEnum.MaxCountLimit)
     }
-    // `0` or `undefined` or `null`
     if (!doc.order) {
       doc.order = count + 1
     }
-    const res = await this.model.create({
-      ...doc,
+    const res = await this.pageRepository.create({
+      title: doc.title,
       slug: slugify(doc.slug),
-      created: new Date(),
-      meta: doc.meta
-        ? (dbTransforms.json(doc.meta) as unknown as PageModel['meta'])
-        : undefined,
+      subtitle: doc.subtitle,
+      text: doc.text,
+      content: doc.content,
+      contentFormat: doc.contentFormat ?? ContentFormat.Markdown,
+      images: doc.images as unknown[],
+      meta: this.normalizeMeta(doc.meta) as Record<string, unknown> | null,
+      order: doc.order,
     })
 
-    // 处理草稿：标记为已发布，并关联到新创建的页面
     if (draftId) {
-      // Release draft's file references first, they will be re-associated to the page
       await this.fileReferenceService.removeReferencesForDocument(
         draftId,
         FileReferenceType.Draft,
@@ -71,7 +105,6 @@ export class PageService {
     }
 
     scheduleManager.schedule(async () => {
-      // Track file references
       await this.fileReferenceService.activateReferences(
         res,
         res.id,
@@ -83,8 +116,7 @@ export class PageService {
           res.text,
           res.images,
           async (images) => {
-            res.images = images
-            await res.save()
+            await this.pageRepository.setImages(res.id, images)
             this.eventManager.broadcast(BusinessEvents.PAGE_UPDATE, res, {
               scope: EventScope.TO_SYSTEM,
             })
@@ -96,9 +128,7 @@ export class PageService {
     this.eventManager.emit(
       BusinessEvents.PAGE_CREATE,
       { id: res.id },
-      {
-        scope: EventScope.TO_SYSTEM_VISITOR,
-      },
+      { scope: EventScope.TO_SYSTEM_VISITOR },
     )
 
     return res
@@ -113,36 +143,37 @@ export class PageService {
     const { draftId } = doc
 
     if (['text', 'title', 'subtitle'].some((key) => isDefined(doc[key]))) {
-      doc.modified = new Date()
+      doc.modifiedAt = new Date()
     }
     if (doc.slug) {
       doc.slug = slugify(doc.slug)
     }
 
-    const newDoc = await this.model
-      .findOneAndUpdate(
-        { _id: id },
-        {
-          ...omit(doc, PageModel.protectedKeys),
-          ...(doc.meta !== undefined
-            ? { meta: dbTransforms.json(doc.meta) }
-            : {}),
-        },
-        { returnDocument: 'after' },
-      )
-      .lean({ getters: true })
+    const patch = omit(doc, PAGE_PROTECTED_KEYS as any) as Partial<PageModel>
+    const newDoc = await this.pageRepository.update(id, {
+      title: patch.title,
+      slug: patch.slug,
+      subtitle: patch.subtitle,
+      text: patch.text,
+      content: patch.content,
+      contentFormat: patch.contentFormat,
+      images: patch.images as unknown[] | undefined,
+      meta:
+        patch.meta !== undefined
+          ? (this.normalizeMeta(patch.meta) as Record<string, unknown> | null)
+          : undefined,
+      order: patch.order,
+    })
 
     if (!newDoc) {
       throw new NoContentCanBeModifiedException()
     }
 
-    // 处理草稿：标记为已发布
     if (draftId) {
       await this.draftService.markAsPublished(draftId)
     }
 
     scheduleManager.schedule(async () => {
-      // Update file references
       await this.fileReferenceService.updateReferencesForDocument(
         newDoc,
         newDoc.id,
@@ -154,28 +185,26 @@ export class PageService {
           this.imageService.saveImageDimensionsFromMarkdownText(
             newDoc.text,
             newDoc.images,
-            (images) => {
-              return this.model
-                .updateOne({ _id: id }, { $set: { images } })
-                .exec()
+            async (images) => {
+              await this.pageRepository.setImages(id, images)
             },
           ),
         this.eventManager.emit(
           BusinessEvents.PAGE_UPDATE,
           { id: newDoc.id },
-          {
-            scope: EventScope.TO_SYSTEM_VISITOR,
-          },
+          { scope: EventScope.TO_SYSTEM_VISITOR },
         ),
       ])
     })
   }
 
+  async updateOrder(id: string, order: number) {
+    return this.pageRepository.updateOrder(id, order)
+  }
+
   async deleteById(id: string) {
     await Promise.all([
-      this.model.deleteOne({
-        _id: id,
-      }),
+      this.pageRepository.deleteById(id),
       this.draftService.deleteByRef(DraftRefType.Page, id),
       this.fileReferenceService.removeReferencesForDocument(
         id,
@@ -185,9 +214,7 @@ export class PageService {
     this.eventManager.emit(
       BusinessEvents.PAGE_DELETE,
       { id },
-      {
-        scope: EventScope.TO_SYSTEM_VISITOR,
-      },
+      { scope: EventScope.TO_SYSTEM_VISITOR },
     )
   }
 }

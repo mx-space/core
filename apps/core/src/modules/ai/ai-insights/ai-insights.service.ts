@@ -12,8 +12,6 @@ import {
   TaskQueueProcessor,
 } from '~/processors/task-queue'
 import type { PagerDto } from '~/shared/dto/pager.dto'
-import { InjectModel } from '~/transformers/model.transformer'
-import { transformDataToPaginate } from '~/transformers/paginate.transformer'
 import { createAbortError } from '~/utils/abort.util'
 import { md5 } from '~/utils/tool.util'
 
@@ -32,8 +30,12 @@ import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type InsightsTaskPayload } from '../ai-task/ai-task.types'
-import { AIInsightsModel } from './ai-insights.model'
+import {
+  AiInsightsRepository,
+  type AiInsightsRow,
+} from './ai-insights.repository'
 import type { GetInsightsGroupedQueryInput } from './ai-insights.schema'
+import { AIInsightsModel } from './ai-insights.types'
 import { stripTopLevelCodeFence } from './insights.util'
 
 interface ArticleForInsights {
@@ -49,8 +51,7 @@ export class AiInsightsService implements OnModuleInit {
   private readonly logger = new Logger(AiInsightsService.name)
 
   constructor(
-    @InjectModel(AIInsightsModel)
-    private readonly aiInsightsModel: MongooseModel<AIInsightsModel>,
+    private readonly aiInsightsRepository: AiInsightsRepository,
     private readonly databaseService: DatabaseService,
     private readonly configService: ConfigsService,
     private readonly aiService: AiService,
@@ -91,6 +92,19 @@ export class AiInsightsService implements OnModuleInit {
 
   private computeContentHash(text: string): string {
     return md5(this.serializeText(text))
+  }
+
+  private toInsightsDoc(row: AiInsightsRow | null): AIInsightsModel | null {
+    if (!row) return null
+    return {
+      ...row,
+      _id: row.id,
+      createdAt: row.createdAt,
+    } as unknown as AIInsightsModel
+  }
+
+  private toInsightsDocs(rows: AiInsightsRow[]): AIInsightsModel[] {
+    return rows.map((row) => this.toInsightsDoc(row)!)
   }
 
   private buildInsightsKey(articleId: string, lang: string, text: string) {
@@ -137,11 +151,11 @@ export class AiInsightsService implements OnModuleInit {
     text: string,
   ): Promise<AIInsightsModel | null> {
     const contentHash = this.computeContentHash(text)
-    return this.aiInsightsModel.findOne({
-      refId: articleId,
+    const row = await this.aiInsightsRepository.findByRefAndLang(
+      articleId,
       lang,
-      hash: contentHash,
-    })
+    )
+    return row?.hash === contentHash ? this.toInsightsDoc(row) : null
   }
 
   private resolveSourceLang(article: ArticleForInsights): string {
@@ -221,36 +235,35 @@ export class AiInsightsService implements OnModuleInit {
         const contentMd5 = md5(text)
         const sourceLang = lang
         // Invalidate stale translations before writing the new source row.
-        await this.aiInsightsModel.deleteMany({
-          refId: articleId,
-          isTranslation: true,
-          hash: { $ne: contentMd5 },
-        })
+        await this.aiInsightsRepository.deleteTranslationsWithDifferentHash(
+          articleId,
+          contentMd5,
+        )
         // Upsert source row to satisfy the unique (refId, lang) index when
         // a previous source row exists (e.g. on article text update).
-        const doc = await this.aiInsightsModel.findOneAndUpdate(
-          { refId: articleId, lang },
-          {
+        const doc = this.toInsightsDoc(
+          await this.aiInsightsRepository.upsert({
             hash: contentMd5,
             lang,
             refId: articleId,
             content,
             isTranslation: false,
             sourceLang,
-            $unset: { sourceInsightsId: '' },
-          },
-          { upsert: true, new: true, setDefaultsOnInsert: true },
-        )
+            sourceInsightsId: null,
+          }),
+        )!
         this.eventEmitter.emit(BusinessEvents.INSIGHTS_GENERATED, {
           refId: articleId,
           sourceLang,
           insightsId: doc.id,
           sourceHash: contentMd5,
         })
-        return { result: doc, resultId: doc.id }
+        return { result: doc, resultId: doc.id! }
       },
       parseResult: async (resultId) => {
-        const doc = await this.aiInsightsModel.findById(resultId)
+        const doc = this.toInsightsDoc(
+          await this.aiInsightsRepository.findById(resultId),
+        )
         if (!doc) {
           throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
         }
@@ -297,7 +310,7 @@ export class AiInsightsService implements OnModuleInit {
     result: Promise<AIInsightsModel>
   } {
     const events = (async function* () {
-      yield { type: 'done' as const, data: { resultId: doc.id } }
+      yield { type: 'done' as const, data: { resultId: doc.id! } }
     })()
     return { events, result: Promise.resolve(doc) }
   }
@@ -342,9 +355,9 @@ export class AiInsightsService implements OnModuleInit {
   async findSourceInsightsForArticle(
     refId: string,
   ): Promise<AIInsightsModel | null> {
-    return this.aiInsightsModel
-      .findOne({ refId, isTranslation: false })
-      .sort({ created: -1 })
+    return this.toInsightsDoc(
+      await this.aiInsightsRepository.findSourceForRef(refId),
+    )
   }
 
   /**
@@ -354,12 +367,11 @@ export class AiInsightsService implements OnModuleInit {
    * only answers "do we have any insights document for (refId, lang)?".
    */
   async hasInsightsInLang(refId: string, lang: string): Promise<boolean> {
-    const exists = await this.aiInsightsModel.exists({ refId, lang })
-    return !!exists
+    return !!(await this.aiInsightsRepository.findByRefAndLang(refId, lang))
   }
 
   async getInsightsById(id: string) {
-    const doc = await this.aiInsightsModel.findById(id)
+    const doc = this.toInsightsDoc(await this.aiInsightsRepository.findById(id))
     if (!doc) throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
     return doc
   }
@@ -367,91 +379,51 @@ export class AiInsightsService implements OnModuleInit {
   async getInsightsByRefId(refId: string) {
     const article = await this.databaseService.findGlobalById(refId)
     if (!article) throw new BizException(ErrorCodeEnum.ContentNotFound)
-    const insights = await this.aiInsightsModel.find({ refId })
+    const insights = this.toInsightsDocs(
+      await this.aiInsightsRepository.listForRef(refId),
+    )
     return { insights, article }
   }
 
   async getAllInsights(pager: PagerDto) {
     const { page, size } = pager
-    const result = await this.aiInsightsModel.paginate(
-      {},
-      {
-        page,
-        limit: size,
-        sort: { created: -1 },
-        lean: true,
-        leanWithId: true,
-      },
-    )
-    const data = transformDataToPaginate(result)
-    return { ...data, articles: await this.getRefArticles(result.docs) }
+    const result = await this.aiInsightsRepository.list(page, size)
+    const docs = this.toInsightsDocs(result.data)
+    return {
+      data: docs,
+      pagination: result.pagination,
+      articles: await this.getRefArticles(docs),
+    }
   }
 
   async getAllInsightsGrouped(query: GetInsightsGroupedQueryInput) {
-    const { page, size, search } = query
+    const { page, size } = query
+    const search = query.search?.trim()
+    const searchableRefIds = search
+      ? await this.databaseService.findPostAndNoteIdsByTitle(search)
+      : undefined
 
-    let matchedRefIds: string[] | null = null
-    if (search?.trim()) {
-      const keyword = search.trim()
-      const postModel = this.databaseService.getModelByRefType(
-        CollectionRefTypes.Post,
-      )
-      const noteModel = this.databaseService.getModelByRefType(
-        CollectionRefTypes.Note,
-      )
-      const [matchedPosts, matchedNotes] = await Promise.all([
-        postModel
-          .find({ title: { $regex: keyword, $options: 'i' } })
-          .select('_id')
-          .lean(),
-        noteModel
-          .find({ title: { $regex: keyword, $options: 'i' } })
-          .select('_id')
-          .lean(),
-      ])
-      matchedRefIds = [
-        ...matchedPosts.map((p) => p._id.toString()),
-        ...matchedNotes.map((n) => n._id.toString()),
-      ]
-      if (!matchedRefIds.length) {
-        return {
-          data: [],
-          pagination: {
-            total: 0,
-            currentPage: page,
-            totalPage: 0,
-            size,
-            hasNextPage: false,
-            hasPrevPage: false,
-          },
-        }
+    if (search && searchableRefIds?.length === 0) {
+      return {
+        data: [],
+        pagination: {
+          total: 0,
+          currentPage: page,
+          totalPage: 0,
+          size,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
       }
     }
 
-    const pipeline: any[] = []
-    if (matchedRefIds)
-      pipeline.push({ $match: { refId: { $in: matchedRefIds } } })
-    pipeline.push(
-      {
-        $group: {
-          _id: '$refId',
-          latestCreated: { $max: '$created' },
-          insightsCount: { $sum: 1 },
-        },
-      },
-      { $sort: { latestCreated: -1 } },
-      {
-        $facet: {
-          metadata: [{ $count: 'total' }],
-          data: [{ $skip: (page - 1) * size }, { $limit: size }],
-        },
-      },
+    const grouped = await this.aiInsightsRepository.groupedByRef(
+      page,
+      size,
+      searchableRefIds,
     )
-
-    const aggResult = await this.aiInsightsModel.aggregate(pipeline)
-    const metadata = aggResult[0]?.metadata[0]
-    const groupedRefIds = aggResult[0]?.data || []
-    const total = metadata?.total || 0
+    const groupedRefIds = grouped.data
+    const total = grouped.pagination.total
     if (!groupedRefIds.length) {
       return {
         data: [],
@@ -466,11 +438,10 @@ export class AiInsightsService implements OnModuleInit {
       }
     }
 
-    const refIds = groupedRefIds.map((g: { _id: string }) => g._id)
-    const insights = await this.aiInsightsModel
-      .find({ refId: { $in: refIds } })
-      .sort({ created: -1 })
-      .lean()
+    const refIds = groupedRefIds.map((g) => g.refId)
+    const insights = this.toInsightsDocs(
+      await this.aiInsightsRepository.listByRefIds(refIds),
+    )
     const articles = await this.databaseService.findGlobalByIds(refIds)
     const articleMap: Record<
       string,
@@ -544,19 +515,19 @@ export class AiInsightsService implements OnModuleInit {
   }
 
   async updateInsightsInDb(id: string, content: string) {
-    const doc = await this.aiInsightsModel.findById(id)
+    const doc = this.toInsightsDoc(await this.aiInsightsRepository.findById(id))
     if (!doc) throw new BizException(ErrorCodeEnum.ContentNotFoundCantProcess)
-    doc.content = content
-    await doc.save()
-    return doc
+    return this.toInsightsDoc(
+      await this.aiInsightsRepository.updateContent(id, content),
+    )
   }
 
   async deleteInsightsInDb(id: string) {
-    await this.aiInsightsModel.deleteOne({ _id: id })
+    await this.aiInsightsRepository.deleteById(id)
   }
 
   async deleteInsightsByArticleId(refId: string) {
-    await this.aiInsightsModel.deleteMany({ refId })
+    await this.aiInsightsRepository.deleteForRef(refId)
   }
 
   @OnEvent(BusinessEvents.POST_DELETE)
@@ -620,12 +591,9 @@ export class AiInsightsService implements OnModuleInit {
       return
     }
     const newHash = this.computeContentHash(article.text)
-    const existing = await this.aiInsightsModel.find({
-      refId: event.id,
-      isTranslation: false,
-    })
-    if (!existing.length) return
-    const stale = existing.some((doc) => doc.hash !== newHash)
+    const existing = await this.aiInsightsRepository.findSourceForRef(event.id)
+    if (!existing) return
+    const stale = existing.hash !== newHash
     if (!stale) return
     this.logger.log(
       `AI auto insights task created (update): article=${event.id}`,

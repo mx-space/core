@@ -1,6 +1,8 @@
 import type { ExecutionContext } from '@nestjs/common'
 import { UnauthorizedException } from '@nestjs/common'
-import type { OwnerModel } from '~/modules/owner/owner.model'
+
+import type { OwnerModel } from '~/modules/owner/owner.types'
+
 import { authJWTToken } from '../constants/token'
 
 export const mockUser1: Partial<OwnerModel> = {

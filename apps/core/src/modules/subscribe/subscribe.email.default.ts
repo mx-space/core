@@ -1,4 +1,4 @@
-import type { OwnerModel, OwnerModelSecurityKeys } from '../owner/owner.model'
+import type { OwnerModel, OwnerModelSecurityKeys } from '../owner/owner.types'
 import { SubscribeAllBit } from './subscribe.constant'
 
 const defaultPostProps = {
