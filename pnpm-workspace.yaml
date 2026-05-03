@@ -4,14 +4,14 @@ packages:
 allowBuilds:
   "@nestjs/core": true
   "@swc/core": true
-  cpu-features: set this to true or false
+  cpu-features: false
   esbuild: true
   mongodb-memory-server: true
-  protobufjs: set this to true or false
+  protobufjs: false
   redis-memory-server: true
   sharp: true
   simple-git-hooks: true
-  ssh2: set this to true or false
+  ssh2: false
   unrs-resolver: true
   workerd: true
 overrides:
